@@ -1001,3 +1001,39 @@ o previsto até ela sair do documento.
 ```bash
 MEDIDAS_CAMPOS=scrollWidth,altura,titulo,h1,conjunto,violacoes python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-091/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-091/depois/resultados.json
 ```
+
+## Depois da 092
+
+A [`092`](specs/092-folha-estatica-do-portal-e-csp/spec.md) leva a folha do portal do `<style>` do
+`portal/base.html` para `portal/static/portal/portal.css`, troca o `style=""` da barra de documentos por
+classe, e passa a política de segurança de conteúdo a recusa em toda resposta HTML. A gestão não muda;
+o que se mede é o portal.
+
+O portal não tinha inventário de rotas como o da gestão. O
+[`capturar_portal.py`](inventario-visual-da-gestao-2026-10-16/depois-da-092/capturar_portal.py) as acha
+seguindo os links da vitrine, sem sessão, e da área de seis candidatas do seed, com a sessão aberta no
+banco — 103 telas, com o protótipo do painel —, e grava a lista para a passada seguinte. Três rascunhos
+preparados (`preparar_rascunhos.py`) mostram a barra de documentos em 0, 50 e 100%. Banco
+`ps_inventario_092` (cópia do `ps_inventario_091`, com os rascunhos), copiado de novo para cada
+passada; antes por `git archive` da branch do PR #308 em `2615b738`. Em
+[`depois-da-092/`](inventario-visual-da-gestao-2026-10-16/depois-da-092/) estão os `resultados.json`, a
+lista de rotas, o peso, os relatórios de pixel e as provas de equivalência e de mutação.
+
+| | Antes da 092 | Depois |
+|---|---|---|
+| Telas do portal que carregam | 103 | 103 |
+| `status` diferente | — | nenhum |
+| Estouram a 375 ou a 1280 px | 0 | 0 |
+| Medida ou conjunto de regras diferente | — | nenhum (as 101 classes de percentual à parte) |
+| Pixels acima do ruído | — | 8, todas dado na tela do comprovante |
+| Bases e papel | — | idênticos (8 de 8, 15 de 15) |
+| Cabeçalho da política | `-Report-Only` nas 103 | `Content-Security-Policy` nas 103 |
+| Violações da política | 1 por tela, 2 nos rascunhos, em observação | 0 |
+
+As oito variantes acima do ruído são do comprovante, e diferem no que ele escreve: o endereço do
+servidor, com a porta da passada (8921 antes, 8923 depois), a hora de emissão e o SHA-256 do PDF, que
+muda com ela. O papel do mesmo comprovante, capturado com a mesma porta, é idêntico.
+
+```bash
+MEDIDAS_CAMPOS=scrollWidth,altura,titulo,h1,conjunto python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-092/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-092/depois/resultados.json
+```

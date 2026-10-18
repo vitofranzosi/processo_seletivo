@@ -1,0 +1,152 @@
+[
+ {
+  "id": "12-ana-selecoes-inscricoes-id",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "19-ana-selecoes-inscricoes-id-comprovante",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "28-bruno-selecoes-inscricoes-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "34-bruno-selecoes-inscricoes-id-comprovante",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "43-clara-selecoes-inscricoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 2
+ },
+ {
+  "id": "44-clara-selecoes-inscricoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "51-clara-selecoes-inscricoes-id-comprovante",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "60-daniel-selecoes-inscricoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 2
+ },
+ {
+  "id": "61-daniel-selecoes-inscricoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "68-daniel-selecoes-inscricoes-id-comprovante",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "76-elisa-selecoes-inscricoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 2
+ },
+ {
+  "id": "77-elisa-selecoes-inscricoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "84-elisa-selecoes-inscricoes-id-comprovante",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "92-amanda.sorteio-selecoes-inscricoes-id",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ },
+ {
+  "id": "98-amanda.sorteio-selecoes-inscricoes-id-comprovante",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "paginas_do_pdf": 1
+ }
+]

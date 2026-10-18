@@ -1,0 +1,1 @@
+comparadas: 15; idênticas: 15; dentro do ruído: 0; reprovadas: 0; só numa das passadas: []
