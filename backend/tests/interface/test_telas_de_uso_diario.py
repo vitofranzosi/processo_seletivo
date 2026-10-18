@@ -158,17 +158,18 @@ def test_na_inscricao_da_mesa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado,
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_fora_das_telas_de_uso_diario_o_cabecalho_e_o_da_076(client, seletor_ligado, cenario):
-    """`FR-1748`: a Supervisão do Processo continua com a trilha no conteúdo, e o cabeçalho para na
-    seção. Era a trilha da avaliação até a 080 (`FR-1800` da 080), e a auditoria do Edital até a
-    083 (`FR-1850` da 083), que as levaram ao cabeçalho."""
-    identificar(client, "carlos", ["gestor", "auditor"])
-    corpo = client.get(
-        reverse("interface:supervisao", args=[cenario["processo"].id])
-    ).content.decode()
+    """`FR-1748`: fora das telas que levaram a trilha ao cabeçalho, o cabeçalho para na seção. Era a
+    trilha da avaliação até a 080 (`FR-1800` da 080), a auditoria do Edital até a 083 (`FR-1850` da
+    083) e a Supervisão até a 087 (`FR-1970` da 087); desde então, só a recusa usa o cabeçalho da
+    076, e é ela que prova que o bloco padrão continua de pé."""
+    identificar(client, "joana.avaliadora", [])
+    resposta = client.get(reverse("interface:avisos-do-edital", args=[cenario["edital"].id]))
+    corpo = resposta.content.decode()
 
+    assert resposta.status_code == 404
     assert '<p class="caminho-da-secao">' in cabecalho(corpo)
     assert 'aria-label="Trilha de navegação"' not in cabecalho(corpo)
-    assert 'aria-label="Trilha de navegação"' in conteudo(corpo)
+    assert 'aria-label="Trilha de navegação"' not in conteudo(corpo)
 
 
 # ---- nenhuma tela rola para o lado -----------------------------------------------------------
