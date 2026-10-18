@@ -73,6 +73,10 @@ mudam.
    conferência de dois passos abre como antes.
 3. **Given** a Distribuição a 375 px, **When** a página abre, **Then** os dois botões e a marca cabem
    na largura, quebrando a linha se preciso.
+4. **Given** a Distribuição com inscrições prontas, **When** a página abre, **Then** "Consolidar as N
+   prontas" tem o mesmo desenho e a mesma marca, e nenhum botão cheio leva à consolidação.
+5. **Given** o leitor de tela, **When** o foco chega a uma das duas consolidações, **Then** ele anuncia
+   "irreversível" junto do rótulo.
 
 ---
 
@@ -117,9 +121,12 @@ teste que quebraria em silêncio quem mexesse no módulo da `012`.
 
 - **A marca no celular.** A 375 px, a linha das ações sobre a seleção quebra; a marca acompanha o
   botão que ela qualifica e não estica até a altura dele.
+- **A marca para quem não a vê.** Quem chega ao botão pelo teclado ou pelo leitor de tela ouve a
+  marca junto do rótulo, no foco (`FR-1827`), e não só ao percorrer a página linha a linha.
 - **Distribuição sem inscrição.** Sem linhas, a tabela e os dois botões não aparecem, como antes.
 - **"Consolidar as N prontas".** O botão da consolidação de todas as prontas, mais acima, está sozinho
-  no formulário dele e leva à mesma conferência: não disputa a seleção com a rotina, e não muda (D-006).
+  no formulário dele e leva à mesma conferência; tem o mesmo desenho e a mesma marca do de baixo
+  (`FR-1828`), porque é o mesmo ato (D-006, emendada na revisão do PR).
 - **A recusa do domínio.** Quem enviar a alocação à mão, sem presidência, recebe a recusa do domínio,
   que diz "antes de distribuir trabalho" e não muda (D-007).
 - **Impressão.** A barra e o cabeçalho de contexto continuam fora do papel (`076`; D-002).
@@ -137,7 +144,13 @@ teste que quebraria em silêncio quem mexesse no módulo da `012`.
 - **FR-1821**: O rótulo, o destino, o nome, o valor e o lugar de "Consolidar as selecionadas" MUST
   continuar os mesmos, e a frase que explica a consolidação (`FR-422` da `030`) MUST continuar antes
   dos dois botões. "Retirar as selecionadas" e as demais ações da tela MUST continuar com o desenho de
-  antes.
+  antes, exceto "Consolidar as N prontas" (`FR-1828`).
+- **FR-1827**: A marca "irreversível" MUST descrever o botão que qualifica para a tecnologia
+  assistiva: quem chega a ele pelo teclado ou pelo leitor de tela MUST ouvir "irreversível" junto do
+  rótulo. *Emenda da revisão do PR, 18/10/2026.*
+- **FR-1828**: "Consolidar as N prontas" (e "Consolidar a inscrição pronta") MUST ter o mesmo desenho
+  e a mesma marca de "Consolidar as selecionadas" — nenhum botão cheio da Distribuição MUST levar à
+  consolidação —, com o mesmo rótulo, destino e lugar. *Emenda da revisão do PR, 18/10/2026.*
 
 #### A microcópia da Alocação
 
@@ -148,8 +161,9 @@ teste que quebraria em silêncio quem mexesse no módulo da `012`.
 #### O apoio dos testes
 
 - **FR-1823**: O cenário da presidência usado pelos testes da `012`, da `077`, da `079` e da `080` MUST
-  ter uma montagem só, no apoio comum dos testes, e nenhum módulo de teste MUST importar a fixture
-  dele de outro módulo de teste.
+  ter uma montagem só, no apoio comum dos testes, composta sobre a banca que o apoio já monta, com
+  código e chaves derivados do `seed`; e nenhum módulo de teste MUST importar a fixture dele de outro
+  módulo de teste — de nenhum dos módulos que a declaram.
 - **FR-1824**: Toda tela que sobrescreve a trilha do cabeçalho de contexto MUST abri-la com a mesma
   navegação nomeada — o mesmo rótulo e a mesma classe —, verificada por guardião em todos os
   templates, e não só nos que os testes de tela abrem.
@@ -179,7 +193,7 @@ O destino de cada um dos dez achados, na ordem em que foram registrados.
 | Abertura da trilha copiada nos templates | revisão do PR da `077` | em parte pela `078`; o resto, guardião — `FR-1824`, D-003 |
 | Correção geral na folha comum | revisão do PR da `077` | D-004 — já corrigido pela `078` |
 | O teste das correções confere texto, não largura | revisão do PR da `077` | D-005 — não corrigido, pede navegador no CI |
-| Dois botões cheios sobre a seleção, um irreversível | pesquisa da `079` | corrigido — `FR-1820`, `FR-1821`; D-006 |
+| Dois botões cheios sobre a seleção, um irreversível | pesquisa da `079` | corrigido — `FR-1820`, `FR-1821`, `FR-1827`, `FR-1828`; D-006 |
 | O aviso "antes de distribuir" da Alocação | pesquisa da `079` | corrigido — `FR-1822`; D-007 |
 | As filhas da Distribuição com a trilha no conteúdo | pesquisa da `079` | D-008 — já corrigido pela `080` |
 | O `comparar.py` não compara altura | pesquisa da `079` | D-009 — fica, o `medidas.py` cobre |
@@ -225,13 +239,15 @@ cabe em 375 px. Provar largura pede um motor de layout no CI — um navegador, q
 e o projeto prova largura pelo inventário visual, refeito a cada incremento e guardado no repositório.
 Depois da `078`, o teste cobre uma regra só, a do sorteio. Fica como está.
 
-### D-006 — "Consolidar as N prontas" continua com o desenho de ação principal
+### D-006 — "Consolidar as N prontas" tem o desenho de "Consolidar as selecionadas"
 
-O botão que consolida todas as prontas está sozinho no formulário dele, logo depois do número que
-consolida, e leva à mesma conferência de dois passos — onde o ato se confirma. Não disputa a mesma
-seleção com uma ação de rotina, que é o que a pesquisa da `079` apontou nos dois botões de baixo. A
-regra é a da `080` (a decisão 005 da `080`): o que leva à conferência pode ter o desenho principal; o ato
-irreversível, na conferência, não muda aqui.
+*Emendada na revisão do PR, em 18/10/2026.* A primeira versão deixava este botão com o desenho de ação
+principal: ele está sozinho no formulário dele e leva à mesma conferência de dois passos, e a regra da
+`080` (a decisão 005 da `080`) admite o desenho principal para o que leva à conferência. A revisão
+apontou o custo: o mesmo ato passava a ter dois desenhos na mesma página — cheio e sem aviso no alto,
+contornado e marcado embaixo —, e o desenho dizia que a consolidação em lote era menos grave que a da
+seleção. Os dois têm agora o desenho secundário e a marca (`FR-1828`). A decisão da `080` continua
+valendo para as telas dela; o ato irreversível, na conferência, não muda aqui.
 
 ### D-007 — A recusa do domínio continua dizendo "distribuir trabalho"
 
@@ -254,8 +270,9 @@ esta usam os dois. Fica como está.
 
 - **SC-710**: Dos dez achados registrados nas revisões da `077` e da `079`, **dez** têm destino escrito
   nesta spec — corrigido, com requisito e teste, ou decisão, com motivo.
-- **SC-711**: Na Distribuição, os botões cheios sobre a seleção passam de **dois** para **um**, e a
-  ação que não se desfaz passa a ter a marca "irreversível".
+- **SC-711**: Na Distribuição, os botões cheios sobre a seleção passam de **dois** para **um**, os
+  botões cheios que levam à consolidação passam de **dois** para **zero**, e as duas consolidações
+  passam a ter a marca "irreversível", anunciada com o botão.
 - **SC-712**: Na Alocação, os textos visíveis que chamam o ato da tela de "distribuir" passam de
   **um** para **zero**.
 - **SC-713**: Os módulos de teste que importam o `cenario` de outro módulo passam de **três** para

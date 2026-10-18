@@ -24,7 +24,7 @@ Nenhuma.
 **Independent Test**: "Consolidar as selecionadas" é `botao secundario` seguido da marca; "Distribuir as selecionadas" é `botao`.
 
 - [x] T004 [US1] `distribuicao.html`: "Consolidar as selecionadas" com `botao secundario` e a marca (R-001; FR-1820, FR-1821)
-- [x] T005 [US1] `base.html`: `.acoes .marca-irreversivel{align-self:center}` (R-002; FR-1820)
+- [x] T005 [US1] `base.html`: `align-self:center` na regra da `.marca-irreversivel` (R-002; FR-1820)
 - [x] T006 [US1] Testes em `tests/interface/test_achados_das_revisoes.py`: o desenho dos dois botões, a marca logo depois, a frase antes deles, destino e valor iguais; a regra da marca na folha (FR-1820, FR-1821, SC-711)
 - [x] T007 [US1] `test_telas_da_presidencia.py::test_nenhuma_acao_da_distribuicao_sai_do_lugar`: a contagem de `class="botao"` passa de 6 para 5, com o porquê (R-006)
 
@@ -45,3 +45,12 @@ Nenhuma.
 - [x] T014 Teto da distribuição (`performance/test_escala_da_mesa.py`) medido antes e depois
 - [x] T015 README (a linha da `081` na tabela de incrementos) e o inventário em `doc/`
 - [x] T016 `make lint check test-pg DB_NAME=ps_081` (FR-1826, SC-715)
+
+## Phase 7: Emenda da revisão do PR (18/10)
+
+- [x] T017 `distribuicao.html`: `aria-describedby` das duas consolidações para a marca; "Consolidar as N prontas" com `botao secundario` e a marca (R-007; FR-1827, FR-1828)
+- [x] T018 `base.html`: a regra da marca sem o contêiner (R-002; FR-1820)
+- [x] T019 `tests/fixtures/mesa.py`: a montagem sobre `montar_banca`, com código e chaves do `seed` (R-004; FR-1823)
+- [x] T020 `test_achados_das_revisoes.py`: testes da descrição acessível e das prontas; o guardião da fixture sobre todos os donos; o da trilha sem rigidez; o aviso e a regra sem texto literal; mutação nos dois guardiões (R-005, R-007; FR-1823, FR-1824, FR-1827, FR-1828, SC-711)
+- [x] T021 `test_telas_da_presidencia.py`: a contagem de cheios passa a 4, e o comentário diz o que mudou (R-006)
+- [x] T022 Inventário de depois refeito nos dois estados da barra; `make lint check test-pg DB_NAME=ps_081` (FR-1825, FR-1826, SC-714, SC-715)

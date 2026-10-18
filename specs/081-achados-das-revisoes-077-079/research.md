@@ -20,18 +20,21 @@ altura do principal (`.botao`), e a linha continua de uma família só (`UX-135`
   a lado.
 - *Separar os dois botões em formulários* — a seleção é a mesma, e o comentário do template registra
   por que o `formaction` existe: duplicar as caixas obrigaria a marcar duas vezes.
-- *Mudar também "Consolidar as N prontas"* — está sozinho no formulário dele e leva à mesma
-  conferência (D-006 da spec).
+- *Deixar "Consolidar as N prontas" cheio* — foi a primeira versão, por estar sozinho no formulário
+  dele; a revisão do PR mostrou o mesmo ato com dois desenhos na mesma página, e ele passou ao mesmo
+  desenho (R-007; D-006 da spec, emendada).
 
-## R-002 — A marca dentro de `.acoes`
+## R-002 — A marca não estica em linha flexível
 
-**Decisão**: `.acoes .marca-irreversivel{align-self:center}` na folha comum, ao lado da regra da
-marca.
+**Decisão**: `align-self:center` na própria regra de `.marca-irreversivel`, na folha comum.
 
 **Por quê**: `.acoes` é flexível, e um item flexível estica até a altura da linha por padrão — a
-marca, que tem fundo, viraria uma faixa da altura do botão. Nas outras telas a marca está num `li`
-comum, onde não estica. A regra é geral porque a causa é a combinação das duas classes, e não a
-tela; hoje ela só alcança a Distribuição.
+marca, que tem fundo, viraria uma faixa da altura do botão. A primeira versão escreveu
+`.acoes .marca-irreversivel{align-self:center}`; a revisão do PR apontou que a causa é a marca ser
+item de **qualquer** linha flexível (`.acoes-do-painel`, `.salvar`, `.linha-de-acoes` também são), e
+a próxima tela pediria outro seletor. Fora de flex e de grid, `align-self` não faz nada; na
+`.lista-acoes` do detalhe do Processo, cujo `li` já centraliza, também não muda nada (o inventário
+confere).
 
 ## R-003 — "antes de alocar"
 
@@ -45,8 +48,10 @@ aviso porque um teste o guardava como frase. O teste muda junto (R-006). A recus
 ## R-004 — A montagem do `cenario` vai para o apoio comum, e a fixture fica em cada módulo
 
 **Decisão**: o corpo da fixture `cenario` de `test_acessibilidade_da_012.py` passa a ser a função
-`montar_cenario_da_presidencia`, em `tests/fixtures/mesa.py`, ao lado de `distribuir_para`, que ela
-usa. O módulo da `012` e os três que importavam a fixture — os da `077`, da `079` e da `080` —
+`montar_cenario_da_presidencia`, em `tests/fixtures/mesa.py`, composta sobre `montar_banca`, que já
+publicava, constituía com presidência e alocava — ganhou só `com_documentos`. O código do Processo e
+as chaves de idempotência vêm do `seed`, como na banca (revisão do PR: com eles fixos, dois cenários
+no mesmo teste reproduziam um ao outro). O módulo da `012` e os três que importavam a fixture — os da `077`, da `079` e da `080` —
 declaram cada um a sua `cenario`, de duas linhas, que chama a função; saem o import, o `noqa: F401` e
 os `noqa: F811`. Um guardião lê, pela árvore sintática, todo módulo de teste da interface e falha se
 algum voltar a importar o `cenario` do módulo da `012`.
@@ -80,13 +85,15 @@ produto.
 **Por quê**: `trilha_unica_no_cabecalho` confere essa abertura, mas só nas telas que os testes de tela
 abrem; o guardião da `078` confere o parcial em todos os templates, mas não a `nav` em volta. O
 achado da revisão da `077` era esquecer uma tela ao trocar o rótulo ou a classe — com o guardião, o
-esquecimento reprova a suíte. Extrair a abertura foi descartado (D-003 da spec).
+esquecimento reprova a suíte. Extrair a abertura foi descartado (D-003 da spec). Depois da revisão,
+um bloco sem `nav` — o cabeçalho da `076` refeito, ou só o `block.super` — não reprova: não é trilha;
+e a leitura se confere pela presença da lista da `077`, e não por um total que muda.
 
 ## R-006 — O que muda nos testes
 
 | Guardião | O que muda |
 |---|---|
-| `test_telas_da_presidencia.py::test_nenhuma_acao_da_distribuicao_sai_do_lugar` (a contagem de `class="botao"` no template) | a contagem de `class="botao"` passa de 6 para 5, porque o botão de consolidar deixou de ser `botao` puro — é o achado; o comentário diz por quê |
+| `test_telas_da_presidencia.py::test_nenhuma_acao_da_distribuicao_sai_do_lugar` (a contagem de `class="botao"` no template) | a contagem de `class="botao"` passa de 6 para 4, porque as duas consolidações deixaram de ser `botao` puro — é o achado; o comentário, que dizia "as cheias continuam cheias", passa a dizer o que mudou |
 | `test_alocacoes.py::test_comissao_sem_presidente_nao_deixa_distribuir` | a frase passa a "antes de alocar" — é o achado |
 | `test_telas_da_presidencia.py::test_sem_presidencia_a_alocacao_continua_sem_botao` | idem |
 | `test_distribuicao.py` (a frase antes de "Consolidar as selecionadas") | continua igual |
@@ -95,6 +102,25 @@ esquecimento reprova a suíte. Extrair a abertura foi descartado (D-003 da spec)
 | `performance/test_escala_da_mesa.py` (120 000 caracteres) | medido antes e depois |
 
 Testes novos em `tests/interface/test_achados_das_revisoes.py`.
+
+## R-007 — A revisão do PR (18/10)
+
+A revisão do PR 298 apontou nove achados, e o usuário pediu a correção de todos:
+
+| Achado | Correção |
+|---|---|
+| A marca não chega ao leitor de tela | `aria-describedby` do botão para a marca, com `id` (`FR-1827`) |
+| "Consolidar as N prontas" cheio e sem marca, na mesma página | o mesmo desenho e a mesma marca (`FR-1828`; D-006, emendada) |
+| `seed` não isolava o cenário | código e chaves derivados do `seed` (R-004) |
+| O guardião da fixture só olhava o módulo da `012` | lê todos os módulos que declaram o `cenario` da presidência, pela árvore sintática |
+| A montagem repetia `montar_banca` | composta sobre ela (R-004) |
+| A regra da marca presa a `.acoes` | na própria marca (R-002) |
+| Comentário do teste da `079` contradito pela linha seguinte | reescrito (R-006) |
+| Testes casando indentação e CSS literal | o aviso por partes; a regra da marca por expressão, tolerante a espaço |
+| Guardião da trilha rígido demais | bloco sem `nav` não reprova; sem número mágico (R-005) |
+
+Os dois guardiões novos foram provados por mutação: com a classe da trilha trocada na lista, e com o
+`cenario` importado de `test_telas_da_presidencia.py`, cada um reprova.
 
 ## Achados registrados, fora do escopo
 

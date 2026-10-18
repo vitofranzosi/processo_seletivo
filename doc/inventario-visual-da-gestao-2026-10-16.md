@@ -513,8 +513,9 @@ A [`081`](../specs/081-achados-das-revisoes-077-079/spec.md) corrigiu os achados
 `077` e da `079` que cabiam em apresentação: na Distribuição, "Consolidar as selecionadas" passou ao
 desenho secundário, com a marca "irreversível" logo depois — o desenho dos atos do Processo —, e
 "Distribuir as selecionadas" ficou como o único botão cheio sobre a seleção; na Alocação sem
-presidência, o aviso diz "antes de alocar". A folha comum ganhou uma regra, para a marca não esticar
-na linha flexível das ações.
+presidência, o aviso diz "antes de alocar". A folha comum ganhou `align-self:center`
+na própria marca, para ela não esticar em linha flexível. Na revisão do PR, a marca passou a descrever
+o botão para o leitor de tela, e "Consolidar as N prontas" ganhou o mesmo desenho e a mesma marca.
 
 O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_081` — cópia
 do `ps_inventario_080` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra, antes e
@@ -544,5 +545,9 @@ a altura do principal (40 px, medido no navegador).
 
 **Pixel a pixel.** Fora da Distribuição, as capturas de antes e de depois diferem só no que muda entre
 duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas, no aviso
-e no pulso do Processo, e marcas de cursor e de suavização em pontos isolados. O detalhe do Processo,
-que também usa a marca, a põe numa `.lista-acoes`, e não em `.acoes`: a regra nova não o alcança.
+e no pulso do Processo, e marcas de cursor e de suavização em pontos isolados. O depois foi refeito
+depois da revisão do PR, já em 18/10, e o pulso do Processo e as Autoridades mostram também a data
+nova (a série de submissões passou de 2 para 3 dias). O detalhe do Processo, que também usa a marca,
+a põe num `li` da `.lista-acoes`, que já centraliza: mover `align-self` para a marca não o move. O
+botão das prontas não aparece no banco do inventário, que não tem inscrição pronta: é provado pelos
+testes.

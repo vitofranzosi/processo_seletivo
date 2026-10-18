@@ -420,11 +420,12 @@ ação de linha continua pequena, que é o que ela é numa tabela.
 .acao.desabilitado{color:var(--texto-fraco);border-color:var(--borda);
   background:var(--cinza-fundo);cursor:not-allowed}
 .acao.perigoso:hover{background:var(--vermelho);color:var(--branco)}
+{% comment %} `align-self` na própria marca, e não por contêiner (081, R-002): em qualquer linha flexível
+   ela esticaria até a altura do botão ao lado, e o fundo viraria uma faixa; fora de flex, não faz
+   nada. {% endcomment %}
 .marca-irreversivel{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
-  color:var(--vermelho);background:var(--vermelho-fundo);padding:.1rem .45rem;border-radius:3px}
-{% comment %} Na linha flexível das ações, a marca esticaria até a altura do botão ao lado, e o fundo dela
-   viraria uma faixa (081, R-002). {% endcomment %}
-.acoes .marca-irreversivel{align-self:center}
+  color:var(--vermelho);background:var(--vermelho-fundo);padding:.1rem .45rem;border-radius:3px;
+  align-self:center}
 .remover-linha{margin:.75rem 0 0;padding-top:.75rem;border-top:1px solid var(--borda);
   display:flex;align-items:center;gap:.4rem;font-size:.875rem}
 .remover-linha .ajuda{margin-left:.25rem}

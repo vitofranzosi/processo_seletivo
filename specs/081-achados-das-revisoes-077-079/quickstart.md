@@ -24,7 +24,9 @@ cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.developm
 2. Abaixo da tabela das inscrições: "Distribuir as selecionadas" é o botão cheio; "Consolidar as
    selecionadas" é o secundário, contornado e da mesma altura, com a marca "irreversível" logo depois,
    centrada na linha. A frase "Consolidar é transformar…" continua antes dos dois.
-3. A 375 px, a linha quebra dentro da largura, e a marca não estica.
+3. A 375 px, a linha quebra dentro da largura, e a marca não estica. Se houver inscrições prontas,
+   "Consolidar as N prontas", no alto, tem o mesmo desenho e a mesma marca. Na árvore de
+   acessibilidade, as duas consolidações têm "irreversível" como descrição.
 4. Marcar uma inscrição e apertar "Consolidar as selecionadas": abre a conferência de dois passos, como
    antes. Voltar sem confirmar.
 5. A Alocação sem presidência não está no banco do inventário; o aviso "Designe a presidência antes de

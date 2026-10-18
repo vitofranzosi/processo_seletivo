@@ -171,7 +171,12 @@ FR-422).
   <p class="definicoes"><dfn>Consolidar</dfn> transforma as avaliações concluídas no
     <strong>Resultado da Etapa</strong> de cada inscrição, e não se desfaz. Antes de confirmar, a
     próxima tela mostra cada uma e a consequência dela.</p>
-  <p class="acoes"><button type="submit" class="botao">{% if resumo.prontas == 1 %}Consolidar a inscrição pronta{% else %}Consolidar as {{ resumo.prontas }} prontas{% endif %}</button></p>
+  {% comment %}
+  Secundário e marcado, como "Consolidar as selecionadas" lá embaixo (081, FR-1828): é o mesmo ato,
+  e com dois desenhos a página dizia que a consolidação em lote era menos grave que a da seleção.
+  {% endcomment %}
+  <p class="acoes"><button type="submit" class="botao secundario" aria-describedby="consolidar-prontas-irreversivel">{% if resumo.prontas == 1 %}Consolidar a inscrição pronta{% else %}Consolidar as {{ resumo.prontas }} prontas{% endif %}</button>
+    <span class="marca-irreversivel" id="consolidar-prontas-irreversivel">irreversível</span></p>
 </form>
 {% endif %}
 
@@ -439,14 +444,16 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       Secundário e marcado, e não cheio como o vizinho (081, FR-1820): os dois agem sobre a mesma
       seleção, e o desenho igual dizia que eram ações da mesma natureza — uma se retira na própria
       tela, a outra começa um ato que não se corrige. É o desenho dos atos do Processo, que também
-      levam a uma conferência antes do ato.
+      levam a uma conferência antes do ato. A marca descreve o botão (FR-1827): sem isso, quem chega
+      a ele pelo teclado ou pelo leitor de tela ouvia só o rótulo, e a diferença era só visual.
       {% endcomment %}
       <button type="submit" class="botao secundario"
               formaction="{% url 'interface:consolidar-resultados' edital.id etapa.id %}"
-              name="chave_idempotencia" value="{{ chave_consolidacao }}">
+              name="chave_idempotencia" value="{{ chave_consolidacao }}"
+              aria-describedby="consolidar-selecionadas-irreversivel">
         Consolidar as selecionadas
       </button>
-      <span class="marca-irreversivel">irreversível</span>
+      <span class="marca-irreversivel" id="consolidar-selecionadas-irreversivel">irreversível</span>
     </p>
   </form>
 

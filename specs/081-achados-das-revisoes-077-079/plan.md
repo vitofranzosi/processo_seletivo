@@ -32,7 +32,7 @@ descartadas estão em [research.md](research.md). Não há entidade nem contrato
 - **Rastreabilidade (V)**: requisitos em `spec.md`, matriz em `rastreabilidade.md`, cobrada por
   `tests/test_citacoes_de_requisito.py`; cada achado tem destino na tabela de decisões da spec.
 - **Simplicidade (V)**: classes que já existem — `botao secundario` e `marca-irreversivel` —, e uma
-  regra na folha comum para a marca não esticar dentro de `.acoes`. Nenhum script.
+  regra na folha comum para a marca não esticar em linha flexível. Nenhum script.
 - **Completude de jornada (VI)**: a Distribuição é vista no navegador a 1280 e a 375 px, e o
   inventário inteiro é refeito nos dois estados da barra.
 
@@ -42,10 +42,10 @@ Sem violação a justificar.
 
 | Peça | Mudança |
 |---|---|
-| `interface/templates/interface/distribuicao.html` | "Consolidar as selecionadas" com `botao secundario` e a marca "irreversível" logo depois (R-001) |
-| `interface/templates/interface/base.html` | `.acoes .marca-irreversivel{align-self:center}`, para a marca não esticar até a altura do botão na linha flexível (R-002) |
+| `interface/templates/interface/distribuicao.html` | as duas consolidações — "Consolidar as selecionadas" e "Consolidar as N prontas" — com `botao secundario` e a marca "irreversível" logo depois, que descreve o botão por `aria-describedby` (R-001, R-007) |
+| `interface/templates/interface/base.html` | `align-self:center` na própria `.marca-irreversivel`, para ela não esticar até a altura do botão em linha flexível (R-002) |
 | `interface/templates/interface/alocacoes.html` | "Designe a presidência antes de alocar." (R-003) |
-| `tests/fixtures/mesa.py` | `montar_cenario_da_presidencia`, o corpo do `cenario` de `test_acessibilidade_da_012.py` (R-004) |
+| `tests/fixtures/mesa.py` | `montar_cenario_da_presidencia`, o corpo do `cenario` de `test_acessibilidade_da_012.py`, composto sobre `montar_banca`, que ganha `com_documentos` (R-004) |
 | `tests/interface/test_telas_de_uso_diario.py`, `test_telas_da_presidencia.py`, `test_telas_filhas_da_distribuicao.py`, `test_acessibilidade_da_012.py` | cada um declara a fixture `cenario`, que chama a montagem; sem o import e sem os `noqa` (R-004) |
 | `tests/interface/test_achados_das_revisoes.py` (novo) | os testes desta feature, inclusive os dois guardiões (R-004, R-005) |
 | `doc/inventario-visual-da-gestao-2026-10-16.md` e `depois-da-081/` | o inventário de antes e o de depois nos dois estados da barra, a comparação e as capturas da Distribuição e da Alocação |

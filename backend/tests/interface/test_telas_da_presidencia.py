@@ -204,11 +204,11 @@ def test_nenhuma_acao_da_distribuicao_sai_do_lugar():
     ]
     niveis_em_ordem(corpo, marcos)
     assert corpo.count('<p class="acoes-do-painel">') == 1
-    # O desenho das ações não muda: as cheias continuam cheias, e a retirada contornada de perigo.
+    # A retirada continua contornada de perigo. As cheias eram seis até a 081, que tirou o desenho
+    # cheio das duas consolidações — a da seleção e a das prontas —, porque o ato não se desfaz
+    # (`FR-1820` e `FR-1828` da 081); as outras quatro não mudaram.
     assert '<button type="submit" class="acao perigoso">Retirar as selecionadas</button>' in corpo
-    # Eram seis até a 081: "Consolidar as selecionadas" passou a `botao secundario`, porque pesava o
-    # mesmo que "Distribuir as selecionadas" sobre a mesma seleção (`FR-1820` da 081).
-    assert corpo.count('class="botao"') == 5
+    assert corpo.count('class="botao"') == 4
 
 
 # ---- a Comissão ------------------------------------------------------------------------------

@@ -16,13 +16,17 @@ from django.urls import reverse
 
 from tests.fixtures.comissao import constituir
 from tests.fixtures.mesa import montar_cenario_da_presidencia
+from tests.fixtures.resultado import montar_etapa_de_leitura_unica, semear_prontas
 from tests.interface.conftest import identificar
 from tests.interface.test_telas_de_uso_diario import TEMPLATES, conteudo
 
 TESTES_DA_INTERFACE = Path(__file__).resolve().parent
 
 DISTRIBUIR = '<button type="submit" class="botao">Distribuir as selecionadas</button>'
-MARCA = '<span class="marca-irreversivel">irreversível</span>'
+
+
+def marca(identificador):
+    return f'<span class="marca-irreversivel" id="{identificador}">irreversível</span>'
 
 
 @pytest.fixture
@@ -62,7 +66,49 @@ def test_consolidar_as_selecionadas_tem_o_desenho_dos_atos_irreversiveis(
     rotulo, depois = consolidar.split("</button>")
     assert "Consolidar as selecionadas" in rotulo
     # A marca acompanha o botão que qualifica, e é a última coisa da linha.
-    assert depois.strip() == MARCA
+    assert depois.strip() == marca("consolidar-selecionadas-irreversivel")
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_a_marca_descreve_o_botao_para_quem_nao_a_ve(client, seletor_ligado, cenario):
+    """`FR-1827`: o leitor de tela anuncia "irreversível" junto do botão, no foco, e não só quem
+    percorre a página linha a linha."""
+    acoes = acoes_sobre_a_selecao(distribuicao(client, cenario))
+
+    abertura = acoes.split('class="botao secundario"')[1].split(">")[0]
+    alvo = re.search(r'aria-describedby="([^"]+)"', abertura).group(1)
+    assert f'id="{alvo}">irreversível</span>' in acoes
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_consolidar_as_prontas_tem_o_mesmo_desenho(
+    client, seletor_ligado, gestor, api_client, manager_headers
+):
+    """`FR-1828`: o mesmo ato com o mesmo desenho nos dois lugares da página — nenhum botão cheio
+    leva à consolidação, e as duas marcas descrevem os seus botões."""
+    etapa = montar_etapa_de_leitura_unica(
+        gestor, api_client, manager_headers, seed=1811, codigo="1811"
+    )
+    semear_prontas(etapa, 2, primeiro=1)
+    identificar(client, "maria", ["gestor"])
+    pagina = conteudo(
+        client.get(
+            reverse("interface:distribuicao", args=[etapa["edital"].id, etapa["primeira"]])
+        ).content.decode()
+    )
+
+    linha = pagina.split('<input type="hidden" name="alcance" value="prontas">')[1]
+    linha = linha[
+        linha.index('<p class="acoes">') : linha.index("</p>", linha.index('<p class="acoes">'))
+    ]
+    assert '<button type="submit" class="botao secundario"' in linha
+    assert 'aria-describedby="consolidar-prontas-irreversivel"' in linha
+    assert "Consolidar as 2 prontas</button>" in linha
+    assert marca("consolidar-prontas-irreversivel") in linha
+    cheios = re.findall(r'<button type="submit" class="botao"[^>]*>\s*([^<]*)', pagina)
+    assert not [rotulo for rotulo in cheios if "Consolidar" in rotulo]
 
 
 @pytest.mark.django_db
@@ -84,10 +130,16 @@ def test_consolidar_as_selecionadas_continua_onde_e_como_estava(client, seletor_
     assert '<button type="submit" class="acao perigoso">Retirar as selecionadas</button>' in pagina
 
 
-def test_a_marca_nao_estica_na_linha_das_acoes():
-    """`FR-1820`: `.acoes` é flexível, e a marca, que tem fundo, esticaria até a altura do botão."""
+def test_a_marca_nao_estica_em_linha_flexivel():
+    """`FR-1820`: em linha flexível a marca, que tem fundo, esticaria até a altura do botão; a
+    regra mora na própria marca, e não num contêiner (R-002)."""
     folha = (TEMPLATES / "base.html").read_text()
-    assert ".acoes .marca-irreversivel{align-self:center}" in folha
+    regra = re.search(r"^\.marca-irreversivel\s*\{([^}]*)\}", folha, re.M)
+    assert regra, "a marca perdeu a regra própria"
+    assert re.search(r"align-self\s*:\s*center", regra.group(1))
+    # E nenhum seletor de contêiner em volta dela (`.acoes .marca-irreversivel`), que era a primeira
+    # versão: valia numa linha flexível só.
+    assert not re.search(r"^[^\n{}]*\S[ \t]+\.marca-irreversivel\s*\{", folha, re.M)
 
 
 # ---- a Alocação diz alocar -------------------------------------------------------------------
@@ -101,28 +153,49 @@ def test_a_alocacao_sem_presidencia_diz_alocar(client, seletor_ligado, gestor, p
     identificar(client, "carlos", ["gestor"])
     corpo = client.get(reverse("interface:alocacoes", args=[processo_a.id])).content.decode()
 
+    aviso = corpo.split('<p class="aviso" role="status">')[1].split("</p>")[0]
+    assert "<strong>Designe a presidência antes de alocar.</strong>" in aviso
     comissao = reverse("interface:comissao", args=[processo_a.id])
-    assert (
-        '<p class="aviso" role="status"><strong>Designe a presidência antes de alocar.</strong>\n'
-        f'  <a href="{comissao}">Ir para a Comissão</a></p>'
-    ) in corpo
+    assert f'<a href="{comissao}">Ir para a Comissão</a>' in aviso
     assert "antes de distribuir" not in corpo
 
 
 # ---- o apoio dos testes ----------------------------------------------------------------------
 
 
+def declara_o_cenario_da_presidencia(arvore):
+    """O módulo declara uma fixture `cenario` que chama `montar_cenario_da_presidencia`."""
+    for no in arvore.body:
+        if isinstance(no, ast.FunctionDef) and no.name == "cenario":
+            chamadas = {
+                chamada.func.id
+                for chamada in ast.walk(no)
+                if isinstance(chamada, ast.Call) and isinstance(chamada.func, ast.Name)
+            }
+            if "montar_cenario_da_presidencia" in chamadas:
+                return True
+    return False
+
+
 def test_nenhum_modulo_importa_o_cenario_da_presidencia():
     """`FR-1823`, `SC-713`: a montagem mora em `tests/fixtures/mesa.py`, e cada módulo declara a
-    fixture dele — importada, ela sombreava o parâmetro e pedia dois `noqa`."""
-    importadores = []
-    for modulo in TESTES_DA_INTERFACE.glob("test_*.py"):
-        for no in ast.walk(ast.parse(modulo.read_text())):
-            if isinstance(no, ast.ImportFrom) and no.module == (
-                "tests.interface.test_acessibilidade_da_012"
-            ):
-                if any(nome.name == "cenario" for nome in no.names):
-                    importadores.append(modulo.name)
+    fixture dele — importada, ela sombreava o parâmetro e pedia dois `noqa`. Vale para todo módulo
+    que a declara, e não só para o da `012`, de onde ela saiu: os da 077, da 079 e da 080 também
+    são lidos por outros, que importam deles os auxiliares."""
+    arvores = {
+        f"tests.interface.{modulo.stem}": ast.parse(modulo.read_text())
+        for modulo in TESTES_DA_INTERFACE.glob("test_*.py")
+    }
+    donos = {nome for nome, arvore in arvores.items() if declara_o_cenario_da_presidencia(arvore)}
+    assert "tests.interface.test_acessibilidade_da_012" in donos
+    importadores = [
+        nome
+        for nome, arvore in arvores.items()
+        for no in ast.walk(arvore)
+        if isinstance(no, ast.ImportFrom)
+        and no.module in donos
+        and any(apelido.name == "cenario" for apelido in no.names)
+    ]
     assert importadores == []
 
 
@@ -144,12 +217,13 @@ def test_toda_trilha_do_cabecalho_abre_com_a_mesma_navegacao():
         texto = sem_espaco(template.read_text())
         if template.name != "base.html" and inicio in texto:
             blocos[template.name] = texto.split(inicio)[1].split(fim)[0]
-    assert len(blocos) >= 17, "as telas da 077 à 080 sobrescrevem a trilha"
-    # Toda `nav` do bloco, e não só a primeira: a auditoria tem uma por ramo.
+    # A lista da 077 é a primeira tela a sobrescrever: se ela sumir daqui, a leitura falhou.
+    assert "lista.html" in blocos
+    # Toda `nav` do bloco, e não só a primeira: a auditoria tem uma por ramo. Um bloco sem `nav` —
+    # o cabeçalho da 076 refeito, ou só o `block.super` — não é trilha, e não é desta regra.
     fora = [
         nome
         for nome, bloco in blocos.items()
-        if "<nav" not in bloco
-        or any(not ("<nav" + resto).startswith(abertura) for resto in bloco.split("<nav")[1:])
+        if any(not ("<nav" + resto).startswith(abertura) for resto in bloco.split("<nav")[1:])
     ]
     assert fora == []
