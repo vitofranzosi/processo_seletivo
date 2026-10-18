@@ -1,6 +1,7 @@
 {% extends "interface/base.html" %}
 {% load interface_extras %}
 {% block titulo %}Respostas do assistente de dúvidas — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Respostas do assistente de dúvidas</span></nav>{% endblock %}
 {% block estilo_da_pagina %}
 {% comment %} As regras desta tela, e só dela (070, contracts/tela.md). O grupo das perguntas quebra
    linha: sem `flex-wrap`, o `fieldset` cresce até o conteúdo mínimo e alarga a página a 375 px. {% endcomment %}
@@ -23,12 +24,6 @@
 .pontos li{margin:0 0 .5rem}
 {% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Respostas do assistente de dúvidas</span>
-</nav>
-
 <h1>Respostas do assistente de dúvidas</h1>
 <p class="sub">{{ processo.title }} · {{ edital.title }}</p>
 <p class="imutavel">Validação interna: esta tela mostra o que o futuro assistente de dúvidas responderia sobre o Edital publicado. Nada dela é exibido a candidatos. Cada resposta diz de qual versão vem, e separa o texto do Edital, os dados da versão vigente e a explicação do sistema.</p>

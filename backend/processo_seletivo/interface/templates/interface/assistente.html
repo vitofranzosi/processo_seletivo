@@ -1,5 +1,6 @@
 {% extends "interface/base.html" %}
 {% block titulo %}Assistente do Edital (piloto) — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Assistente do Edital (piloto)</span></nav>{% endblock %}
 {% block estilo_da_pagina %}
 {% comment %} As regras desta tela, e só dela (071, contracts/tela.md). Sem largura fixa: a 375 px a
    página não rola na horizontal, e o texto longo quebra em qualquer ponto. {% endcomment %}
@@ -21,12 +22,6 @@
 .conversa-nova{margin:1.5rem 0 0}
 {% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Assistente do Edital (piloto)</span>
-</nav>
-
 <h1>Assistente do Edital (piloto)</h1>
 <p class="sub">{{ processo.title }} · {{ edital.title }}</p>
 <p class="piloto">Piloto interno do assistente do Edital. As respostas podem conter erros: confira cada uma nas fontes. Nada desta tela é visto por candidatos.</p>
@@ -95,7 +90,9 @@
     <textarea id="pergunta" name="pergunta" rows="3" maxlength="{{ pergunta_maxima }}" required aria-describedby="ajuda-pergunta"></textarea>
     <span class="ajuda" id="ajuda-pergunta">Até {{ pergunta_maxima }} caracteres.</span>
   </p>
-  <p class="campo escolha"><button type="submit" class="acao">Perguntar</button></p>
+  {% comment %} A ação da tela, com o desenho de ação principal (087, D-003; `FR-1008` da 055): tinha o de
+     "Começar outra conversa", que recomeça, e que continua com ele. {% endcomment %}
+  <p class="campo escolha"><button type="submit" class="botao">Perguntar</button></p>
 </form>
 
 <form method="post" action="{% url 'interface:assistente-nova' edital.id %}" class="conversa-nova">
