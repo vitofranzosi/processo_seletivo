@@ -22,7 +22,7 @@ Nenhuma: o bloco `caminho_do_contexto` existe desde a `077`, e o parcial do prod
 **Independent Test**: a página tem uma `nav` "Trilha de navegação", no cabeçalho de contexto, e o `main` começa pelo título, pelos dois caminhos.
 
 - [x] T002 [US1] `consolidacao_confirmar.html`: a trilha no bloco `caminho_do_contexto`, e a `nav.trilha` fora do conteúdo (R-001; FR-1840, FR-1841, FR-1842)
-- [x] T003 [US1] Testes em `tests/interface/test_trilha_da_conferencia_da_consolidacao.py`, com cenário próprio: a trilha pela seleção e por todas as prontas; o alcance, o que fica de fora e o botão de perigo iguais, e nada consolidado; a abertura da trilha (R-002; FR-1840 a FR-1844, SC-720, SC-721) — conferidos contra o template de antes: os de trilha reprovam, os de "não muda" passam
+- [x] T003 [US1] Testes em `tests/interface/test_trilha_da_conferencia_da_consolidacao.py`, com cenário próprio: a trilha pela seleção, por todas as prontas e sem nada a consolidar; o alcance, o que fica de fora e o botão de perigo iguais, e nada consolidado; a abertura da trilha (R-002; FR-1840 a FR-1844, SC-720, SC-721) — conferidos contra o template de antes: os de trilha reprovam, os de "não muda" passam
 - [x] T004 [US1] `FR-1803` da `080` anotada como emendada, na spec e na matriz
 
 ## Phase 4: Polish

@@ -19,12 +19,9 @@ from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.fixtures.comissao import inscrever
 from tests.fixtures.resultado import montar_etapa_de_leitura_unica, semear_prontas
 from tests.interface.conftest import identificar
-from tests.interface.test_telas_da_presidencia import (
-    ate_o_processo,
-    comeca_pelo_titulo,
-    niveis_em_ordem,
-)
+from tests.interface.test_telas_da_presidencia import comeca_pelo_titulo, niveis_em_ordem
 from tests.interface.test_telas_de_uso_diario import conteudo, trilha_unica_no_cabecalho
+from tests.interface.test_telas_filhas_da_distribuicao import ate_a_etapa
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -61,21 +58,17 @@ def _por_todas_as_prontas(client, etapa):
     return _conferir(client, etapa, {"alcance": "prontas"})
 
 
-def ate_a_etapa(etapa):
-    processo = etapa["processo"]
-    alocacoes = reverse("interface:alocacoes", args=[processo.id])
-    distribuicao = reverse("interface:distribuicao", args=[etapa["edital"].id, etapa["primeira"]])
-    return [
-        *ate_o_processo(processo),
-        f'<a href="{alocacoes}">Alocação por Etapa</a> ›',
-        f'<a href="{distribuicao}">',
-    ]
+def _so_as_pendentes(client, etapa):
+    return _conferir(client, etapa, {"inscricao_id": [str(i.id) for i in etapa["pendentes"]]})
 
 
-@pytest.mark.parametrize("abrir", [_pela_selecao, _por_todas_as_prontas])
+# A trilha é a da Distribuição — `ate_a_etapa` é o mesmo auxiliar das filhas da 080, para que as
+# sete telas não divirjam sobre o que isso quer dizer. O cenário dá as chaves que ele lê.
+@pytest.mark.parametrize("abrir", [_pela_selecao, _por_todas_as_prontas, _so_as_pendentes])
 def test_a_trilha_e_a_da_distribuicao_com_conferir(client, seletor_ligado, etapa, abrir):
     """`FR-1840`, `FR-1841`, `FR-1842`, `FR-1843`, `SC-720`, `SC-721`: GPS › Processos Seletivos ›
-    código › Alocação por Etapa › Etapa › Conferir, uma vez só, pelos dois caminhos."""
+    código › Alocação por Etapa › Etapa › Conferir, uma vez só, pelos dois caminhos — e também sem
+    nada a consolidar, o ramo sem o botão."""
     identificar(client, "maria", [])
     corpo = abrir(client, etapa)
 
@@ -136,3 +129,22 @@ def test_a_trilha_abre_com_a_mesma_navegacao_das_outras_telas():
         '{%include"interface/_produto_na_trilha.html"%}'
     )
     assert 'class="trilha"' not in texto, "a trilha do conteúdo saiu"
+
+
+def test_sem_nada_a_consolidar_so_a_trilha_sobe(client, seletor_ligado, etapa):
+    """`FR-1844` e o caso-limite "nada a consolidar": sem o botão, com a frase que diz por quê e
+    "Cancelar e voltar", como antes."""
+    identificar(client, "maria", [])
+    pagina = conteudo(_so_as_pendentes(client, etapa))
+
+    assert '<button type="submit"' not in pagina, "não se oferece o ato que recusaria tudo"
+    assert '<h2 id="alcance">' not in pagina
+    niveis_em_ordem(
+        pagina,
+        [
+            f'<h2 id="fora">O que ficará de fora — {PENDENTES} inscrições</h2>',
+            "Nenhuma das inscrições selecionadas está em condição de ser consolidada",
+            "Cancelar e voltar",
+        ],
+    )
+    assert ResultadoEtapa.objects.count() == 0

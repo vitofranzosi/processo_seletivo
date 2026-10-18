@@ -35,6 +35,10 @@ cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.developm
 Medido em 17/10/2026: a 1280, uma trilha só, quatro links (lista, Processo, Alocação, Distribuição),
 o `main` começando pelo `h1`, 1280 = 1280; a 375, a trilha em duas linhas de 24 a 351 px, nenhum
 elemento além da largura.
+Pelo teclado, medido em 18/10/2026 com um registro de `focusin`, a partir do topo: o salto, os cinco
+itens da barra (a marca, Processos Seletivos, Minhas Etapas, Sair, Recolher a barra lateral), os
+quatro links da trilha, "Trocar identidade" e, só então, "Cancelar e voltar" — todos com contorno de
+foco.
 
 O caso com inscrições prontas — a tabela do alcance e "Consolidar N inscrições" — não existe no banco
 da demonstração (achado registrado na pesquisa) e é provado por
