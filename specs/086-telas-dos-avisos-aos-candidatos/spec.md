@@ -189,6 +189,9 @@ botões das duas telas vêm no rodapé comum, com os mesmos rótulos, desenhos e
 - **O link de salto.** Continua levando ao conteúdo, que agora começa pelo título.
 - **Impressão.** A barra e o cabeçalho de contexto não saem no papel (`076`). O título e a linha de baixo
   dele continuam identificando o Edital e o aviso impressos.
+  *Substituído pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026, por decisão do
+  usuário*: a trilha do cabeçalho de contexto sai no papel; ficam fora só a barra e "Trocar
+  identidade".
 
 ## Requirements *(mandatory)*
 
@@ -205,6 +208,8 @@ botões das duas telas vêm no rodapé comum, com os mesmos rótulos, desenhos e
   histórico de um aviso, o nível seguinte MUST ser os Avisos aos candidatos; na conferência da
   interrupção, os Avisos aos candidatos e o aviso. Os rótulos da página atual MUST ser os que cada tela
   já mostrava: *Avisos aos candidatos*, *Aviso de DD/MM/AAAA*, *Interromper*.
+  *Substituída em parte pela [`088`](../088-decisoes-da-etapa-4/spec.md) em 18/10/2026* (`FR-2010`,
+  `FR-2011`): o rótulo do aviso é *Aviso de DD/MM/AAAA às HH:MM*.
 - **FR-1942**: Na prévia de um aviso, o nível acima da tela MUST ser a tela de onde ela se abre — os
   Avisos aos candidatos, no aviso de resultado; a Convocação do marco, no mesmo recorte de lista a que
   "Cancelar" leva, no aviso de chamada; os Avisos aos candidatos e o aviso anterior, no reenvio —, e a

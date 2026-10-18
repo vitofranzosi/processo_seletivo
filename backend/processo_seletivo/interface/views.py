@@ -6730,13 +6730,22 @@ def _navegacao_do_recorte(edital, marco_id, *, rota, atual):
     Perfil tem um recorte só — é a contraprova da `FR-493` —, e derivar o endereço dali faria a
     volta sumir justamente no Edital sem reserva, que é onde ela sempre funcionou.
     """
-    destino = reverse(rota, args=[edital.id, marco_id])
     recortes = _recortes_navegaveis(edital, marco_id, rota=rota, atual=atual)
     return {
         "recortes": recortes,
         "recorte_atual": next((item for item in recortes if item["atual"]), None),
-        "url_do_recorte": f"{destino}?lista={atual}" if atual else destino,
+        "url_do_recorte": _url_no_recorte(edital, marco_id, rota=rota, lista_id=atual),
     }
+
+
+def _url_no_recorte(edital, marco_id, *, rota, lista_id):
+    """O endereço de uma tela do marco num recorte — `None` é a ampla concorrência, sem `?lista=`.
+
+    À parte de `_navegacao_do_recorte` porque o Ato de classificação precisa só dele (088): pedir a
+    navegação inteira leria os recortes do Perfil para descartá-los.
+    """
+    destino = reverse(rota, args=[edital.id, marco_id])
+    return f"{destino}?lista={lista_id}" if lista_id else destino
 
 
 @require_http_methods(["GET"])
@@ -8003,6 +8012,13 @@ def ato_de_ordenacao(request, edital_id, marco_id, ato_id):
                 "processo": edital.processo,
                 "edital": edital,
                 "ato": ato,
+                # "Classificação", na trilha, volta ao recorte **deste** ato (088, D-004): sem ele,
+                # o ato de uma lista levava à ampla concorrência — o desvio que a `FR-497` da 034
+                # fechou na conferência. O endereço é o mesmo que "Cancelar e voltar" usa lá; se a
+                # Retificação tirou o recorte, a Classificação o recusa, e não esconde (D-006).
+                "url_da_classificacao": _url_no_recorte(
+                    edital, marco_id, rota="interface:ordenacao", lista_id=ato.lista_id
+                ),
                 # Os nomes vêm da versão que **este** ato cita, e acompanham os identificadores
                 # sem os substituir: na proveniência o UUID é a âncora de auditoria, e o nome é o
                 # que torna a página citável fora da máquina (E2E15-006).

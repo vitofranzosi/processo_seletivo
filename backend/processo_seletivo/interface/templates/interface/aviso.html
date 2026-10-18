@@ -1,7 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Aviso aos candidatos — {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block estilo_da_pagina %}{% include "interface/_estilo_do_aviso.html" %}{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a> › <span aria-current="page">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }}</span></nav>{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a> › <span aria-current="page">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }} às {{ aviso.solicitado_em|date:"H:i" }}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }} às {{ aviso.solicitado_em|date:"H:i" }}</h1>
 <p class="sub">{{ processo.title }} · Edital {{ edital.number }}/{{ edital.year }} · confirmado por {{ aviso.solicitado_por }}</p>

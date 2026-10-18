@@ -1,11 +1,11 @@
 # Feature Specification: As quatro decisões de produto da etapa 4
 
-**Feature Branch**: `claude/decisoes-da-etapa-4-088-698fba`, sobre a `main` em `cf6d7372`; a
-implementação espera a `081`, a `084`, a `085` e a `086` na `main` (ver *Dependências*)
+**Feature Branch**: `claude/decisoes-da-etapa-4-088-698fba`, especificada sobre a `main` em
+`cf6d7372` e implementada sobre a `main` em `c97ff8af`, que traz da `081` à `087`
 
 **Created**: 2026-10-18
 
-**Status**: Especificada — implementação aguardando o merge das features de que depende
+**Status**: Implementada — PR aberto, merge com o usuário
 
 **Input**: as quatro perguntas de produto que as revisões dos incrementos da etapa 4 do
 [estudo da entrada na gestão](../../doc/estudo-acesso-a-gestao-2026-10-16.md) deixaram abertas — duas
@@ -60,8 +60,8 @@ As telas que esta feature toca ganharam a trilha no cabeçalho em PRs ainda aber
 | 302 | `086` | a trilha dos avisos no cabeçalho e a `FR-1941` da `086` |
 | 304 | `085` | a trilha da Inscrição recebida e do Recurso no cabeçalho |
 
-A implementação começa só com os quatro na `main`, e depois de trazer a `main` para esta branch. A
-spec, o plano e as tarefas não dependem deles.
+Os sete PRs entraram na `main` em 18/10/2026 (`c97ff8af`), e a implementação começou depois de
+trazê-la para esta branch.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -143,9 +143,9 @@ concorrência, o link é o de antes.
 
 ### Edge Cases
 
-- **Tela sem trilha, impressa.** As telas que ainda têm o cabeçalho da `076` imprimem o caminho até
-  a seção (*GPS › Processos Seletivos*). É menos que uma trilha, e é o que a tela diz na tela; não
-  se inventa trilha só para o papel (D-005).
+- **Tela sem trilha, impressa.** Depois da `087`, só a recusa tem o cabeçalho da `076`, e ela
+  imprime o caminho até a seção (*GPS › Processos Seletivos*). É menos que uma trilha, e é o que a
+  tela diz na tela; não se inventa trilha só para o papel (D-005).
 - **"Trocar identidade" no papel.** Não sai: é ação, não identificação, e no papel não leva a lugar
   nenhum.
 - **A trilha longa no papel.** A folha impressa é mais estreita que a tela larga; a trilha quebra a

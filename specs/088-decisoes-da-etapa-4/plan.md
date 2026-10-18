@@ -23,7 +23,7 @@ a implementação começa com eles na `main`, por `git merge origin/main` (ver *
 O fuso de exibição é o `TIME_ZONE = "America/Sao_Paulo"` das settings, com `USE_TZ`; o filtro `date`
 do template já converte. O recorte do ato é `AtoDeOrdenacao.lista_id` (`NULL` = ampla
 concorrência), e o endereço de uma tela num recorte é o que `_navegacao_do_recorte` calcula como
-`url_do_recorte` desde a `034`. Não há entidade nem contrato externo: `data-model.md` e `contracts/`
+`url_do_recorte` desde a `034`; a `088` extrai essa parte em `_url_no_recorte`. Não há entidade nem contrato externo: `data-model.md` e `contracts/`
 não se aplicam; as decisões e as alternativas descartadas estão na própria spec, e não há
 `research.md`.
 
@@ -49,7 +49,7 @@ Sem violação a justificar.
 | Peça | Mudança |
 |---|---|
 | `interface/templates/interface/base.html` | no `@media print`, a regra deixa de esconder `.cabecalho-de-contexto`; passa a esconder `.cabecalho-de-contexto>a`, e o cabeçalho sai em bloco, sem altura mínima, sem moldura e com a trilha quebrando a linha. Comentário de Django explica a troca e cita a decisão; sem `}}` numa linha (D-001, D-005) |
-| `interface/views.py` (`ato_de_ordenacao`) | entrega `url_da_classificacao`, o `url_do_recorte` de `_navegacao_do_recorte(edital, marco_id, rota="interface:ordenacao", atual=ato.lista_id)`; nenhuma consulta nova além da que a função faz, e nenhuma mudança de porta (D-004, D-006) |
+| `interface/views.py` | `_url_no_recorte`, extraído de `_navegacao_do_recorte`, que passa a usá-lo para o `url_do_recorte`; `ato_de_ordenacao` entrega `url_da_classificacao = _url_no_recorte(edital, marco_id, rota="interface:ordenacao", lista_id=ato.lista_id)`. Nenhuma consulta nova — a navegação inteira leria os recortes do Perfil para descartá-los —, e nenhuma mudança de porta (D-004, D-006) |
 | `ato_ordenacao.html` | o link "Classificação" da trilha usa `url_da_classificacao` |
 | `aviso.html`, `aviso_interromper.html`, `aviso_previa.html` | o rótulo do aviso na trilha leva `às {{ …|date:"H:i" }}`, como o título (D-003) |
 | `tests/interface/test_decisoes_da_etapa_4.py` | testes novos (ver *Testes*) |
@@ -59,7 +59,8 @@ Sem violação a justificar.
 
 **Por que a variável na view, e não `?lista=` no template.** A docstring de `_navegacao_do_recorte`
 diz por que nenhum template monta `?lista=` à mão: é o mesmo endereço que "Cancelar e voltar" usa, e
-derivá-lo de dois jeitos é o que deixa um deles divergir em silêncio (`FR-2021`).
+derivá-lo de dois jeitos é o que deixa um deles divergir em silêncio (`FR-2021`). Por isso a parte do
+endereço sai de uma função só, que as duas usam.
 
 **Por que o `@media print` não reescreve a trilha.** A trilha já é `nav.caminho-da-secao` em todas
 as telas; ela herda a cor e o tamanho da tela, que são legíveis no papel. A regra só desfaz o que a
