@@ -214,6 +214,9 @@ consultas ficaram de fora porque não foram medidas, e não por decisão.
   a ter a trilha no cabeçalho, com as outras telas que se abrem do detalhe do Edital (`FR-1850` da
   `083`); o modelo das três auditorias não tem mais trilha no conteúdo. O guardião das demais telas
   passou à Supervisão do Processo (`FR-1853` da `083`).
+  *Emendada pela [`086`](../086-telas-dos-avisos-aos-candidatos/spec.md) em 18/10/2026*: os Avisos aos
+  candidatos, o histórico de um aviso, a prévia, a conferência da interrupção, os Modelos de aviso e a
+  edição de um modelo também passaram a ter a trilha no cabeçalho (`FR-1940` da `086`).
 - **FR-1804**: A trilha MUST ser a mesma para quem preside e para quem audita: nenhum nível MUST
   aparecer, sumir ou deixar de ser link conforme quem lê.
 - **FR-1805**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar

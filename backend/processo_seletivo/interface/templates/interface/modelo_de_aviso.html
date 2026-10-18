@@ -1,13 +1,8 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{% if modelo %}Editar modelo{% else %}Novo modelo{% endif %} de aviso{% endblock %}
 {% block estilo_da_pagina %}{% include "interface/_estilo_do_aviso.html" %}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:modelos-de-aviso' %}">Modelos de aviso</a> › <span aria-current="page">{% if modelo %}{{ modelo.nome }}{% else %}Novo modelo{% endif %}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:modelos-de-aviso' %}">Modelos de aviso</a> ›
-  <span aria-current="page">{% if modelo %}{{ modelo.nome }}{% else %}Novo modelo{% endif %}</span>
-</nav>
-
 <h1>{% if modelo %}Editar modelo{% else %}Novo modelo{% endif %}</h1>
 {% if modelo %}<p class="sub">Editar este modelo não muda nenhum aviso já confirmado: cada aviso guarda o texto como saiu.</p>{% endif %}
 
@@ -33,7 +28,9 @@
   </ul>
   <p><strong>Rodapé fixo</strong>, acrescentado pelo sistema a toda mensagem e não editável:</p>
   <pre class="texto-do-aviso rodape-fixo">{{ rodape }}</pre>
-  <button type="submit" class="botao">Salvar o modelo</button>
-  <a class="botao secundario" href="{% url 'interface:modelos-de-aviso' %}">Cancelar</a>
+  <p class="salvar">
+    <button type="submit" class="botao">Salvar o modelo</button>
+    <a class="botao secundario" href="{% url 'interface:modelos-de-aviso' %}">Cancelar</a>
+  </p>
 </form>
 {% endblock %}
