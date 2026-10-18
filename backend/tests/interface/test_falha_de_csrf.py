@@ -6,6 +6,7 @@ que a política de segurança de conteúdo não deixa aplicar, e sem caminho de 
 """
 
 import logging
+import re
 from html.parser import HTMLParser
 
 import pytest
@@ -142,8 +143,11 @@ def test_sem_estilo_nem_script_embutido_e_sob_a_politica(cliente_rigoroso, selet
     assert resposta[CABECALHO] == POLITICA
     assert "Content-Security-Policy-Report-Only" not in resposta
     assert "<style" not in corpo
-    assert " style=" not in corpo
-    assert "<script>" not in corpo
+    assert not re.search(r"\sstyle\s*=", corpo)
+    assert not re.search(r"\son[a-z]+\s*=", corpo)
+    # Todo `<script>` da página aponta para um arquivo: o que não tem `src` é embutido.
+    scripts = re.findall(r"<script\b[^>]*>", corpo)
+    assert all(" src=" in script for script in scripts), scripts
     assert 'rel="stylesheet"' in corpo
 
 

@@ -163,18 +163,18 @@ def falha_de_csrf(request, reason=""):
     aplica, e a página saía crua, em inglês, falando em "cookie" a quem só tinha deixado a aba
     aberta de um dia para o outro (093). Só trocar o modelo, por `CSRF_FAILURE_TEMPLATE_NAME`, não
     bastaria: o framework o renderiza sem a requisição, e as bases das duas áreas precisam dela
-    (D-001).
+    (D-001 da `093`).
 
-    **A moldura pelo caminho, e a do portal fora da gestão** (D-002). As recusas do domínio, fora
-    dos dois prefixos, deixam a resposta do framework; esta não pode, porque é ela que sai sem
-    desenho. E `path_info`, e não `path`: com a aplicação sob um prefixo, `path` o traria, e a
-    gestão inteira receberia a moldura do portal (o achado da revisão da `091` sobre a política).
+    **A moldura pelo caminho, e a do portal fora da gestão** (D-002 da `093`). As recusas do
+    domínio, fora dos dois prefixos, deixam a resposta do framework; esta não pode, porque é ela que
+    sai sem desenho. E `path_info`, e não `path`: com a aplicação sob um prefixo, `path` o traria, e
+    a gestão inteira receberia a moldura do portal (o achado da revisão da `091` sobre a política).
 
     **O motivo vai ao registro, e não à página.** Para quem lê, o que fazer é o mesmo qualquer que
-    seja a causa; o motivo do framework só serve a quem diagnostica (D-003). O Django já o registra,
-    em `django.security.csrf` — mas o manipulador que o `LOGGING` padrão dele dá a esse logger só
-    escreve com a depuração ligada, e em produção a linha não chegava a lugar nenhum. Daí o registro
-    no logger do projeto, que é o que a produção coleta (R-003 da `093`).
+    seja a causa; o motivo do framework só serve a quem diagnostica (D-003 da `093`). O Django já o
+    registra, em `django.security.csrf` — mas o manipulador que o `LOGGING` padrão dele dá a esse
+    logger só escreve com a depuração ligada, e em produção a linha não chegava a lugar nenhum. Daí
+    o registro no logger do projeto, que é o que a produção coleta (R-003 da `093`).
     """
     logger.warning("Envio recusado pela verificação de CSRF em %s: %r", request.path, reason)
     contexto = {
@@ -189,9 +189,12 @@ def falha_de_csrf(request, reason=""):
         ),
         "reabrir": _tela_de_origem(request),
     }
-    template = (
-        "interface/recusa.html"
-        if request.path_info.startswith("/gestao/")
-        else "portal/recusa.html"
+    template = next(
+        (
+            pagina
+            for prefixo, pagina in PAGINA_DA_RECUSA.items()
+            if request.path_info.startswith(prefixo)
+        ),
+        PAGINA_DA_RECUSA["/selecoes/"],
     )
     return render(request, template, contexto, status=403)
