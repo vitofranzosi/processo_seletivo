@@ -95,6 +95,18 @@ def test_o_fundo_do_portal_fica_sob_a_politica_do_portal(client, edital_91):
     assert "Content-Security-Policy" not in resposta
 
 
+def test_a_resposta_que_nao_e_a_pagina_do_portal_fica_em_recusa(client, edital):
+    """Só a página do portal vai em observação. O aviso que a mesma view dá a um Edital sem versão
+    vigente — texto da gestão, sem estilo embutido — continua em recusa; e a recusa por falta do
+    piloto, que é exceção e vira página pelo middleware, também (`test_politica_de_conteudo`)."""
+    identificar(client, "pessoa", PILOTO)
+    resposta = client.get(_url(edital))
+
+    assert "Só Edital publicado tem página pública" in resposta.content.decode()
+    assert resposta["Content-Security-Policy"] == politica.POLITICA
+    assert "Content-Security-Policy-Report-Only" not in resposta
+
+
 @pytest.mark.parametrize(("estado", "_nome"), painel_.ESTADOS_SIMULADOS)
 def test_os_estados_simulados_nao_chamam_nem_gravam(client, edital_91, porta_falsa, estado, _nome):
     porta = porta_falsa()

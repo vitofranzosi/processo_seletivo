@@ -148,10 +148,21 @@ MUTACOES = [
     (41, POLITICA, "    if _e_pagina_de_depuracao(resposta):\n        return None\n", "",
      f"{T_POL}::test_a_pagina_de_depuracao_fica_fora_so_com_debug"),
     # Reconhecer a depuração pelo status, e não pela marca: a recusa da própria gestão (404) perde a política.
-    (42, POLITICA, "_MARCA_DA_DEPURACAO in resposta.content[:2048]", "resposta.status_code in (404, 500)",
+    (42, POLITICA, "return _MARCA_DA_DEPURACAO in cabeca", "return resposta.status_code in (404, 500)",
      f"{T_POL}::test_a_recusa_da_propria_gestao_recebe_a_politica_mesmo_com_debug"),
-    (43, Path("processo_seletivo/interface/prototipo_do_assistente.py"), "@em_observacao\n", "",
+    (43, Path("processo_seletivo/interface/prototipo_do_assistente.py"), "return em_observacao(HttpResponse(html))", "return HttpResponse(html)",
      "tests/interface/test_prototipo_do_assistente.py::test_o_fundo_do_portal_fica_sob_a_politica_do_portal"),
+    # A observação também no aviso de Edital sem versão vigente, que é texto da gestão.
+    (44, Path("processo_seletivo/interface/prototipo_do_assistente.py"),
+     "        return HttpResponse(\n            \"<p>Só Edital publicado tem página pública, e este não tem versão vigente agora.</p>\"\n        )",
+     "        return em_observacao(HttpResponse(\n            \"<p>Só Edital publicado tem página pública, e este não tem versão vigente agora.</p>\"\n        ))",
+     "tests/interface/test_prototipo_do_assistente.py::test_a_resposta_que_nao_e_a_pagina_do_portal_fica_em_recusa"),
+    (45, POLITICA, "cabecalho_para(request.path_info, resposta)", "cabecalho_para(request.path, resposta)",
+     f"{T_POL}::test_o_caminho_e_o_da_rota_e_nao_o_do_prefixo"),
+    (46, POLITICA, 'resposta.content.split(b"</head>", 1)[0]', "resposta.content[:2048]",
+     f"{T_POL}::test_a_marca_da_depuracao_vale_depois_de_um_titulo_longo"),
+    (47, MODELOS / "lista.html", "{% block estilo_da_pagina %}", "{% block estilo_da_pagina %}.x{color:red}",
+     f"{T_POL}::test_o_bloco_de_estilo_da_pagina_so_carrega_folhas"),
 ]
 
 

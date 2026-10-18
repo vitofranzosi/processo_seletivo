@@ -3,11 +3,13 @@
 Até a 089 a folha comum era o `<style>` do `interface/base.html`: 53 KB de regras em toda
 resposta HTML da gestão, sem cache, e o obstáculo maior a uma política de segurança de conteúdo.
 Ela saiu para `interface/static/interface/gestao.css`, e os tokens para
-`shared/static/shared/tokens.css`.
+`shared/static/shared/tokens.css`. Na 091 a folha comum se dividiu por área, nos arquivos de
+`FOLHAS_DA_GESTAO` (`interface/gestao/`), e o estilo de cada tela saiu para `interface/telas/` e
+`interface/grupos/`.
 
-A equivalência das regras — as mesmas, na mesma ordem — é provada uma vez, pelo script de
-`doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/`, contra o modelo de antes. Aqui fica o
-que tem de continuar verdade daqui em diante.
+A equivalência das regras é provada uma vez, pelos scripts do inventário (`depois-da-089/` e
+`depois-da-091/`, em `doc/inventario-visual-da-gestao-2026-10-16/`), contra a folha de antes. Aqui
+fica o que tem de continuar verdade daqui em diante.
 """
 
 import re

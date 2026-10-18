@@ -49,7 +49,6 @@ def _destino(edital):
 
 
 @require_http_methods(["GET"])
-@em_observacao
 def prototipo(request, edital_id):
     edital, recusa = _edital_do_piloto(request, edital_id)
     if recusa is not None:
@@ -75,7 +74,8 @@ def prototipo(request, edital_id):
     )
     painel = render_to_string(painel_.TEMPLATE, dados, request=request)
     html = pagina.content.decode("utf-8").replace("</body>", painel + "</body>", 1)
-    return HttpResponse(html)
+    # A página é a do portal, com a folha dele no documento: a política do portal (091).
+    return em_observacao(HttpResponse(html))
 
 
 @require_http_methods(["POST"])

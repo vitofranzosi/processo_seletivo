@@ -370,7 +370,7 @@ estilo no texto do modelo; a varredura das asserções achou os demais. Como cad
 - os arquivos novos varridos pelo guardião de sintaxe de modelo da `089` (FR-2111).
 
 **A mutação** (`mutacoes.py`, saída em `mutacoes.txt`): as 28 da `089`, repontadas para o arquivo de
-área onde a regra mora agora, mais 29 dos guardiões repontados e novos — o estilo das telas, a carga
+área onde a regra mora agora, mais 33 dos guardiões repontados e novos (4 da revisão do PR) — 61 ao todo — o estilo das telas, a carga
 por tela, as classes por valor, os modelos, os scripts, o `<meta>` do htmx, a política, a página de
 depuração e o protótipo. **Todas reprovam**; sem mutação, os mesmos testes passam. Uma, na primeira
 rodada, não reprovou — e era a mutação que estava errada: renomear `.filtros-da-visao{` não tira a
@@ -399,8 +399,8 @@ por `git archive`, banco `ps_inventario_091`, cópia do `ps_inventario_090`):
   estados. Na vitrine e na entrada do portal, uma em observação cada — o `<style>` da folha do portal,
   a prevista. No protótipo do painel (a página do portal sob a gestão), uma em observação, a mesma.
   **Na primeira passada**, o protótipo acusou uma violação em **recusa**: a view sob `/gestao/` serve a
-  página do portal, com a folha dele no documento. Corrigido com `em_observacao` (FR-2104), e a passada
-  final já não a tem.
+  página do portal, com a folha dele no documento. Corrigido com `em_observacao` (FR-2104), que marca
+  essa resposta, e a passada final já não a tem.
 
 O inventário da `089` (`capturar.py` com `ESTILOS=1`, `capturar_bases.py`, `comparar.py`, `medidas.py`,
 `pixels.py`, `imprimir.py` da `088`) é refeito antes e depois, numa pasta `depois-da-091/`, com vários
@@ -454,4 +454,16 @@ PR e D num segundo, da mesma spec, aberto a partir do primeiro.
   série, o lote, a paginação; a leitura das classes dos modelos tem (R-003).
 - **A gestão serve página do portal** no protótipo do painel: a política por caminho não basta, e a
   view declara a da página que serve.
-- **Os números da suíte** (`make test-pg`, 4 workers, `ps_091`): 12.178 passando, 11 pulados.
+- **A página de falha de CSRF do Django** (`csrf_403.html`, com `<style>` embutido) sai sob
+  `/gestao/` em recusa, em produção: um envio com token vencido mostra o 403 sem desenho. Legível, e é
+  página do framework; com `DEBUG` ela escapa pela mesma marca da depuração. Um `CSRF_FAILURE_VIEW`
+  na moldura da gestão resolveria — registrado, e não feito (achado da revisão do PR).
+- **A revisão do PR** trocou três coisas: a observação do protótipo marca a **resposta** que é página
+  do portal, e não a view inteira — o aviso que a mesma view dá a um Edital sem versão vigente, texto
+  da gestão, continua em recusa (a recusa por falta do piloto é exceção, e nunca passou pela view); o
+  middleware lê `path_info`, e não `path`, que com a aplicação sob um prefixo tiraria a gestão inteira
+  da recusa; e a marca da depuração é procurada no `<head>` inteiro, porque no `technical_404.html`
+  ela vem depois de um `<title>` com o caminho pedido. E um guardião novo: o bloco
+  `estilo_da_pagina` só carrega folhas — fora de `<style>`, uma regra escrita nele sairia como texto.
+- **Os números da suíte** (`make test-pg`, 4 workers, `ps_091`): 12.212 passando, 11 pulados, depois
+  da revisão do PR (12.178 antes dela).

@@ -147,6 +147,26 @@ DEPURACAO = (
 )
 
 
+def test_a_marca_da_depuracao_vale_depois_de_um_titulo_longo(settings):
+    """O `technical_404.html` põe o caminho pedido no `<title>`, antes da marca: um endereço longo
+    não pode empurrá-la para fora da leitura."""
+    settings.DEBUG = True
+    longa = DEPURACAO.replace(
+        '<meta name="robots"', "<title>" + "x" * 5000 + '</title><meta name="robots"'
+    )
+
+    assert politica.cabecalho_para("/gestao/x", HttpResponse(longa, status=404)) is None
+
+
+def test_o_caminho_e_o_da_rota_e_nao_o_do_prefixo(rf):
+    """Montada sob um prefixo, a gestão continua em recusa: o middleware lê `path_info`."""
+    pedido = rf.get("/gestao/")
+    pedido.path = "/prefixo/gestao/"
+    resposta = politica.PoliticaDeConteudoMiddleware(lambda _: HttpResponse("<p>x</p>"))(pedido)
+
+    assert resposta[RECUSA] == politica.POLITICA
+
+
 @pytest.mark.parametrize("status", [404, 500])
 def test_a_pagina_de_depuracao_fica_fora_so_com_debug(settings, status):
     """`FR-2108`, D-010: a página do Django com `DEBUG` traz estilo e script embutidos. Sem `DEBUG`,
@@ -186,6 +206,22 @@ def test_o_middleware_e_o_primeiro_da_lista(settings):
 
 
 # ---- o que a política recusaria, e por isso não pode existir ----------------------------------
+
+
+@pytest.mark.parametrize(
+    "modelo",
+    [m for m in MODELOS_DA_GESTAO if "block estilo_da_pagina" in m.read_text()],
+    ids=_nome,
+)
+def test_o_bloco_de_estilo_da_pagina_so_carrega_folhas(modelo):
+    """Desde a 091 o bloco está fora de `<style>`: uma regra escrita nele como antes da 091 não
+    viraria estilo embutido — sairia como texto na página, e nenhum outro guardião a leria."""
+    for corpo in re.findall(
+        r"\{%\s*block\s+estilo_da_pagina\s*%\}(.*?)\{%\s*endblock\s*%\}", _texto(modelo), re.S
+    ):
+        sobra = re.sub(r"""<link rel="stylesheet" href="\{% estatico '[^']+' %\}">""", "", corpo)
+        sobra = re.sub(r"\{%\s*load [^%]*%\}", "", sobra)
+        assert sobra.strip() == "", sobra.strip()[:80]
 
 
 @pytest.mark.parametrize("modelo", MODELOS_DA_GESTAO, ids=_nome)
