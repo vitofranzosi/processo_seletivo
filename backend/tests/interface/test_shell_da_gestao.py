@@ -245,7 +245,10 @@ def test_a_view_pode_declarar_a_secao_que_o_endereco_nao_diz(settings):
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
-    """`FR-1716`, `FR-1718`: na Visão Geral o item é a página atual, e o caminho acaba nela."""
+    """`FR-1716`, `FR-1718`: na Visão Geral o item é a página atual, e o caminho acaba nela.
+
+    O caminho era o texto da 076; desde a 087 é a trilha de um nível, como a da lista (`FR-1971`
+    da 087)."""
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = client.get(reverse("interface:visao-geral")).content.decode()
 
@@ -256,7 +259,8 @@ def test_na_propria_secao_o_item_e_a_pagina_atual(client, seletor_ligado):
         barra(corpo),
     )
     assert barra(corpo).count("aria-current") == 1
-    assert caminho(corpo).endswith("› Visão Geral")
+    contexto = corpo.split('<header class="cabecalho-de-contexto">')[1].split("</header>")[0]
+    assert contexto.split("</nav>")[0].endswith('› <span aria-current="page">Visão Geral</span>')
 
 
 @pytest.mark.django_db

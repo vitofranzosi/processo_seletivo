@@ -783,3 +783,53 @@ dos avisos têm a largura de leitura, e por isso as medidas são as mesmas nos d
 entre duas capturas do mesmo código — a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e
 no pulso do Processo, e marcas de suavização isoladas (até 39 de 255) —, nos dois estados da barra. É
 também o que o diff permite: ele só toca os seis templates do escopo.
+
+## Depois da 087
+
+O último grupo da modernização por tela ([`087`](../specs/087-paineis-e-telas-de-apoio/spec.md)) mudou
+os dois painéis e as telas de apoio: a trilha da Visão Geral e das Autoridades da unidade — a seção,
+como página atual —, da Supervisão, da conferência dos atos do Processo, das Respostas do assistente
+de dúvidas, do Assistente do Edital, da conferência dos atos do Edital e de Criar Processo Seletivo
+subiu ao cabeçalho de contexto; a das telas do Edital passa pelo Processo; e "Perguntar" tem o
+desenho de ação principal no Assistente. Nenhuma regra da folha comum mudou, e nenhum número entrou
+nos painéis.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_087` — cópia
+do `ps_inventario_080` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra, antes e
+depois da mudança. **O de antes reproduz `depois-da-080/` em todas as medidas**, variante a variante,
+nos dois estados.
+
+Em [`depois-da-087/`](inventario-visual-da-gestao-2026-10-16/depois-da-087/) estão o `resultados.json`
+com a barra expandida, o de [`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-087/recolhida/),
+e as capturas, a 1280 e a 375 px e com a barra expandida, de uma variante por tela do escopo — as
+conferências pela de encerrar o Processo e pela de publicar o Edital — e as de antes, em `antes/`.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-087/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-087/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-087/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-087/resultados.json
+```
+
+| | Antes da 087 | Depois da 087, expandida | Depois da 087, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 087 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`; 21
+variantes, as mesmas nos dois estados da barra. Com a barra expandida:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `supervisao` | 2077 → 2040 | 3089 → 3066 | a trilha saiu do conteúdo |
+| `duvidas` | 1281 → 1244 | 1952 → 1950 | a trilha saiu; a 375 a do cabeçalho, mais longa, quebra em mais linhas |
+| `assistente` | 900 → 900 | 906 → 898 | idem; a 1280 a página cabe na janela |
+| `processo-criar` | 923 → 900 | 1343 → 1321 | a trilha saiu do conteúdo |
+| `processo-ato-encerrar`, `-cancelar` | 967 → 930, 938 → 901 | 1528 → 1505, 1477 → 1454 | a trilha saiu do conteúdo |
+| `processo-ato-ativar` | 900 → 900 | 885 → 862 | idem; a 1280 cabe na janela |
+| `ato-submeter`, `ato-publicar` | 2082 → 2045, 2294 → 2257 | 3209 → 3186, 3551 → 3550 | a trilha saiu; a 375 a do cabeçalho tem cinco níveis |
+| `ato-homologar`, `-devolver`, `-revogar-homologacao`, `-encerrar`, `-cancelar` | 900 → 900 | entre −1 e −23 | idem; a 1280 cabem na janela |
+| `visao-geral`, `autoridades` | sem mudança | sem mudança | o texto do cabeçalho virou trilha de um nível, da mesma altura; não havia trilha no conteúdo |
+
+Com a barra recolhida, as mesmas 21 variantes e as mesmas diferenças; só `duvidas` a 1280 parte de
+outra altura (1257 → 1220).
