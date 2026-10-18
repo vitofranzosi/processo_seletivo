@@ -1,86 +1,110 @@
 # Quickstart — 089
 
+Caminhos de roteiro relativos a `doc/inventario-visual-da-gestao-2026-10-16/`; comandos a partir de
+`backend/`. `$DEV` abrevia o ambiente do inventário:
+
+```bash
+export LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_089 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ASSISTENTE_PILOTO=true AVISO=c1841d6c-924b-41a8-8d9a-99a17aacb900
+```
+
 ## Ambiente
 
-O banco do inventário, numa cópia própria, para não mexer no das features anteriores:
+O banco do inventário, numa cópia própria; o de teste, `DB_NAME=ps_089`:
 
 ```bash
-createdb -T ps_inventario_087 ps_inventario_089
-```
-
-O teste, num banco próprio: `DB_NAME=ps_089`. Uma vez por worktree:
-
-```bash
-cd backend && uv sync --extra dev --extra assistente
-```
-
-## Antes: três capturas
-
-Na `main` com o PR #305, antes de qualquer mudança desta feature. Duas passadas com a barra expandida
-— a segunda é a **linha de ruído**, o quanto duas capturas do mesmo código já diferem — e uma com ela
-recolhida:
-
-```bash
-cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_089 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ASSISTENTE_PILOTO=true AVISO=c1841d6c-924b-41a8-8d9a-99a17aacb900 BARRA=expandida PORTA=8189 uv run --with playwright --with pillow python ../doc/inventario-visual-da-gestao-2026-10-16/capturar.py ../doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/antes
-```
-
-O mesmo para `depois-da-089/ruido` e, com `BARRA=recolhida`, para `depois-da-089/antes/recolhida`.
-As bases fora da gestão — a página de acesso já está no inventário (`identificar`), e o roteiro
-`capturar_bases.py` captura a vitrine e o acesso do portal e a página de erro, a 1280 e a 375 px —
-para `depois-da-089/bases/antes` e `depois-da-089/bases/ruido`.
-
-O peso das respostas, antes (R-008):
-
-```bash
-cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_089 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python ../doc/inventario-visual-da-gestao-2026-10-16/pesar.py
-```
-
-## Depois
-
-As mesmas capturas para `depois-da-089/` (expandida), `depois-da-089/recolhida/` e
-`depois-da-089/bases/`, e o mesmo `pesar.py`. A comparação:
-
-```bash
-python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/resultados.json
+createdb -T ps_inventario_088 ps_inventario_089
 ```
 
 ```bash
-python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/resultados.json
+uv sync --extra dev --extra assistente
+```
+
+## A equivalência das regras
+
+Contra o commit de antes da mudança (`41cf1b4c`, a `main` com a `088`):
+
+```bash
+uv run python ../doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/equivalencia.py 41cf1b4c
+```
+
+Esperado: `IGUAIS`, 818 linhas de regra dos dois lados, 163 comentários.
+
+## O inventário, antes e depois
+
+O código de antes sai de um `git archive`, e o roteiro roda de dentro dele com o ambiente do projeto:
+
+```bash
+git archive 41cf1b4c backend | tar -x -C /tmp/codigo-antes
+```
+
+Em cada lado (`backend/` da worktree, ou `/tmp/codigo-antes/backend`), com a barra expandida e
+recolhida, e com o resumo das regras ligado:
+
+```bash
+ESTILOS=1 BARRA=expandida PORTA=8189 uv run --project <worktree>/backend --with playwright --with pillow python <worktree>/doc/inventario-visual-da-gestao-2026-10-16/capturar.py <saída>
 ```
 
 ```bash
-uv run --with pillow python doc/inventario-visual-da-gestao-2026-10-16/pixels.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/antes doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/ruido doc/inventario-visual-da-gestao-2026-10-16/depois-da-089
+uv run --project <worktree>/backend --with playwright --with pillow python <worktree>/doc/inventario-visual-da-gestao-2026-10-16/capturar_bases.py <saída>/bases
 ```
 
-Esperado: nenhum problema; nenhuma variante com medida diferente; e, pixel a pixel, nenhuma variante
-cuja diferença antes→depois saia da faixa de ruído antes→ruído (mesmas regiões, intensidade máxima
-não maior). O mesmo com a barra recolhida e para as bases.
+Uma segunda passada de cada lado dá os pares de ruído. A comparação:
+
+```bash
+python3 medidas.py antes/resultados.json depois/resultados.json
+```
+
+```bash
+uv run --with pillow python pixels.py <antes> <depois> <antes> <antes-2ª> <depois> <depois-2ª>
+```
+
+Esperado: `variantes que mudaram: 0` no `medidas.py`, com o campo `estilos` comparado; nenhuma
+`REPROVA` no `pixels.py`; o mesmo com a barra recolhida e para as bases. Os `resultados.json` e a saída
+do `pixels.py` estão em `depois-da-089/`.
+
+## O peso
+
+```bash
+uv run python ../doc/inventario-visual-da-gestao-2026-10-16/pesar.py
+```
+
+E o número do guardião da Distribuição: trocar à mão `< 120_000` por `< 0` em
+`test_a_tela_de_distribuicao_nao_cresce_com_o_trabalho_ja_feito`, rodar, ler o `len(corpo)` da
+mensagem, e desfazer (`git checkout`).
+
+## A impressão
+
+O `imprimir.py` da `088`, antes (de `/tmp/codigo-antes/backend`) e depois; `impressao.json` igual, os
+`--papel.png` iguais pelo `pixels.py`, o texto dos PDF igual por `pdftotext -layout`.
 
 ## No navegador
 
-O runserver da worktree, à mão, porta 8189 — o `.claude/launch.json` não ganha entrada:
+O runserver da worktree, à mão e sem recarga automática, na porta 8189 — o `.claude/launch.json` não
+ganha entrada:
 
 ```bash
-cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_089 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8189
+uv run python manage.py runserver 8189 --noreload
 ```
 
-1. A 1280 e a 375 px: a lista, Minhas Etapas, a Distribuição, a página de acesso, a vitrine do portal.
-   Iguais às capturas.
-2. **Cache da segunda página.** Abrir a lista e depois Minhas Etapas; em
-   `performance.getEntriesByType('resource')`, a `gestao.css` da segunda tem `transferSize` de
-   cabeçalho só (revalidada) ou zero.
-3. **Edição sem reiniciar.** Mudar uma cor em `gestao.css`, recarregar: o `?v=` do `<link>` muda e a
-   cor nova aparece. Desfazer e recarregar: o `?v=` volta ao de antes.
-4. **Impressão.** Emular mídia de impressão numa tela com trilha no cabeçalho: a barra some e a
-   trilha sai como a `088` decidiu, igual ao antes (`imprimir.py` da `088`).
+1. Identificar-se como gestor e abrir a lista e depois a Visão Geral. Em
+   `performance.getEntriesByType('resource')`, na segunda página, a `gestao.css` tem `decodedBodySize`
+   0: veio do cache, só revalidada.
+2. **Edição sem reiniciar.** Acrescentar `h1{color:rgb(255, 0, 0)}` ao fim de `gestao.css` e
+   recarregar: o `?v=` do `<link>` muda e o `h1` fica vermelho. Desfazer e recarregar: o `?v=` volta.
+3. A 375 px, a lista sem rolagem horizontal; `document.styleSheets` com 1 regra em `tokens.css`, 561 em
+   `gestao.css` e as da página.
 
 ## Mutação dos guardiões
 
-Para cada linha do R-005 da pesquisa: plantar no arquivo estático a violação indicada, rodar o teste
-indicado, ver reprovar; desfazer, ver passar. O registro está na própria tabela do R-005.
+```bash
+LC_ALL=pt_BR.UTF-8 TEST_DB_ENGINE=postgresql DB_USER=$USER DB_RUNTIME_USER=$USER DB_NAME=ps_089 DJANGO_SETTINGS_MODULE=config.settings.test uv run python ../doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/mutacoes.py
+```
+
+Esperado: todas as linhas `REPROVA`, e `sem mutação: passa`. O script restaura cada arquivo depois de
+cada mutação; não rode a suíte ao mesmo tempo.
 
 ## Suíte
 
 ```bash
-cd backend && LC_ALL=pt_BR.UTF-8 make lint check test-pg DB_NAME=ps_089 POSTGRES_USER=$USER
+LC_ALL=pt_BR.UTF-8 make lint check test-pg DB_NAME=ps_089 POSTGRES_USER=$USER
 ```

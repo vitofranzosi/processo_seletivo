@@ -1,11 +1,11 @@
-{% load static %}<!DOCTYPE html>
+{% load static estaticos %}<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titulo %}Acesso à gestão{% endblock %} — Gestão de Processos Seletivos · Cefor/Ifes</title>
+<link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 <style>
-{% include "shared/_tokens.css.html" %}
 {% block estilo_da_pagina %}{% include "interface/_estilo_do_acesso.html" %}{% endblock %}
 </style>
 </head>

@@ -11,6 +11,7 @@ from django.urls import reverse
 from processo_seletivo.comissoes.models import AlocacaoEtapa
 from tests.fixtures.comissao import alocar_em, constituir
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_aplicada
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -215,7 +216,8 @@ def test_cada_celula_diz_de_quem_e_de_qual_etapa(
 
 
 def folha_de_estilo(corpo):
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+    # A folha que a página aplica (089): o primeiro `<style>` só tem o estilo da página.
+    return folha_aplicada(corpo)
 
 
 def test_a_celula_inteira_e_o_alvo_da_marca(

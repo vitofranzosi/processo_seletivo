@@ -1,11 +1,11 @@
 # Feature Specification: A folha comum da gestão em arquivo estático, sem mudar regra nenhuma
 
-**Feature Branch**: `claude/folha-estatica-089-1fcd9d`, sobre a `main` em `c97ff8af`; a implementação
-espera o PR #305 (`088`), que acrescenta uma regra `@media print` à mesma folha
+**Feature Branch**: `claude/folha-estatica-089-1fcd9d`, sobre a `main` em `46c374cc`, com o PR #305
+(`088`), que acrescentou uma regra `@media print` à mesma folha
 
 **Created**: 2026-10-18
 
-**Status**: Especificada — implementação depois do merge do PR #305
+**Status**: Implementada — PR aberto, merge com o usuário
 
 **Input**: passo 1 de três, aprovado pelo usuário em 18/10/2026, depois de a etapa 4 do redesign da
 gestão terminar a modernização tela a tela (`075` a `088`): mover a folha de estilo comum da gestão para
@@ -101,7 +101,7 @@ O desenvolvedor acrescenta, por engano, uma largura fixa em pixels ou uma classe
 comum — agora num arquivo estático. Os mesmos testes que reprovavam o engano quando a folha estava no
 modelo continuam reprovando.
 
-**Why this priority**: 22 arquivos de teste leem a folha como texto ou renderizada, e em 14 deles há
+**Why this priority**: 23 arquivos de teste leem a folha como texto ou renderizada, e em 14 deles há
 pelo menos uma verificação que, lendo o modelo depois da mudança, passaria sem examinar nada — o pior
 defeito possível de uma mudança "sem mudança" (R-005 da pesquisa).
 
@@ -286,8 +286,8 @@ usuário decidir se a folha ganha teto próprio.
 - **SC-791**: Cada resposta HTML da gestão diminui **pelo menos 50.000 bytes**, medidos na Distribuição,
   na lista de Processos e em Minhas Etapas.
 - **SC-792**: Da segunda tela da gestão em diante, numa mesma sessão do navegador, a folha comum
-  transfere **zero** bytes da rede.
-- **SC-793**: **Todos** os 22 arquivos de guardião que liam a folha comum ou os tokens reprovam diante de uma violação
+  transfere **zero** bytes de conteúdo — só a revalidação do cache.
+- **SC-793**: **Todos** os 23 arquivos de guardião que liam a folha comum ou os tokens reprovam diante de uma violação
   plantada no arquivo estático, um a um.
 - **SC-794**: A suíte contra PostgreSQL continua sem falhas.
 - **SC-795**: O modelo comum da gestão passa de 1.471 linhas de estilo para **zero** regras da folha

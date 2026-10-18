@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from processo_seletivo.comissoes.models import MembroComissao
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_aplicada
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -175,7 +176,8 @@ def test_formulario_sem_o_campo_funcao_nao_rebaixa_ninguem(
 
 
 def folha_de_estilo(corpo):
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+    # A folha que a página aplica (089): o primeiro `<style>` só tem o estilo da página.
+    return folha_aplicada(corpo)
 
 
 def test_a_funcao_na_comissao_tem_cor_e_nao_so_forma(

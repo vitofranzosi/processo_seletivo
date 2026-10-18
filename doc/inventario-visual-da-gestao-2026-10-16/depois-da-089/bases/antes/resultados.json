@@ -1,0 +1,83 @@
+[
+ {
+  "id": "portal-vitrine",
+  "caminho": "/selecoes/",
+  "status": 200,
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1158,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "style 396"
+   ],
+   "estilos": "cce754b1 / 396 regras"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1992,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "style 396"
+   ],
+   "estilos": "cce754b1 / 396 regras"
+  }
+ },
+ {
+  "id": "portal-acesso",
+  "caminho": "/selecoes/acesso",
+  "status": 200,
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Entrar — Cefor/Ifes",
+   "h1": "Entrar",
+   "folhas": [
+    "style 396"
+   ],
+   "estilos": "cce754b1 / 396 regras"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Entrar — Cefor/Ifes",
+   "h1": "Entrar",
+   "folhas": [
+    "style 396"
+   ],
+   "estilos": "cce754b1 / 396 regras"
+  }
+ },
+ {
+  "id": "pagina-de-erro",
+  "caminho": "/selecoes/nao-existe",
+  "status": 404,
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Página não encontrada — Cefor/Ifes",
+   "h1": "Página não encontrada",
+   "folhas": [
+    "style 11"
+   ],
+   "estilos": "bfc82ff9 / 11 regras"
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Página não encontrada — Cefor/Ifes",
+   "h1": "Página não encontrada",
+   "folhas": [
+    "style 11"
+   ],
+   "estilos": "bfc82ff9 / 11 regras"
+  }
+ }
+]

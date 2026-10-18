@@ -29,6 +29,7 @@ from django.urls import reverse
 from processo_seletivo.editais.models.etapas import EtapaAvaliacao
 from processo_seletivo.interface.forms import _regra_de_corte
 from tests.interface.conftest import compor_rascunho, identificar
+from tests.interface.folha import folha_aplicada
 from tests.interface.test_compor import PERFIL, etapa, etapas_form, eventos, perfis
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -223,8 +224,8 @@ def test_a_ajuda_do_limite_deixou_de_pedir_desculpa_pela_propria_posicao(client,
 @pytest.fixture
 def folha(client, seletor_ligado):
     identificar(client, "carlos", ["gestor"])
-    corpo = client.get(reverse("interface:lista")).content.decode()
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+    # A folha que a página aplica (089): o primeiro `<style>` só tem o estilo da página.
+    return folha_aplicada(client.get(reverse("interface:lista")).content)
 
 
 @pytest.mark.parametrize(

@@ -16,6 +16,7 @@ from processo_seletivo.interface import navegacao
 from processo_seletivo.interface.identidade import CHAVE_SESSAO, PAPEIS
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
+from tests.interface.folha import FOLHA_COMUM
 
 DESTINOS = [reverse(secao.rota) for secao in navegacao.SECOES]
 
@@ -313,9 +314,7 @@ def test_na_alocacao_a_barra_fica_no_topo(
 def test_sem_popover_o_painel_toma_a_largura_da_barra():
     """Navegador sem `popover` não esconde o painel: no celular e na Alocação, a barra do topo
     quebra a linha e o painel ocupa a largura toda, em vez de se espremer ao lado da marca."""
-    from pathlib import Path
-
-    folha = (Path(navegacao.__file__).parent / "templates/interface/base.html").read_text()
+    folha = FOLHA_COMUM  # a folha comum saiu do modelo na 089
     bloco = folha.split("@supports not selector(:popover-open){")[1].split("\n}")[0]
 
     assert ".barra-lateral{flex-wrap:wrap}" in bloco
@@ -406,9 +405,7 @@ def test_a_pessoa_aparece_como_avatar_e_nome(client, seletor_ligado):
 def test_a_folha_recolhe_so_na_tela_larga_e_sem_movimento_forcado():
     """`FR-1727`, `FR-1730`: os dois estados são da tela larga, a transição só existe a partir de um
     gesto e some sob movimento reduzido."""
-    from pathlib import Path
-
-    folha = (Path(navegacao.__file__).parent / "templates/interface/base.html").read_text()
+    folha = FOLHA_COMUM  # a folha comum saiu do modelo na 089
     larga = next(
         bloco
         for bloco in folha.split("@media (min-width:64rem){")[1:]

@@ -1,0 +1,30 @@
+== expandida: antes x depois, contra três pares de ruído (antes x ruído, antes x antes do archive, depois x depois)
+no ruído  compor--375.png: depois 28 px, máx 15; ruído 28 px, máx 15
+no ruído  compor-identificacao--375.png: depois 28 px, máx 15; ruído 28 px, máx 15
+no ruído  compor-revisao--375.png: depois 151 px, máx 28; ruído 151 px, máx 28
+no ruído  duvidas--1280.png: depois 315 px, máx 255; ruído 639 px, máx 255
+no ruído  duvidas--375.png: depois 315 px, máx 255; ruído 639 px, máx 255
+no ruído  processo-detalhe--1280.png: depois 398 px, máx 170; ruído 1724 px, máx 179
+no ruído  processo-detalhe--375.png: depois 422 px, máx 170; ruído 897 px, máx 179
+no ruído  supervisao--1280.png: depois 175 px, máx 163; ruído 441 px, máx 163
+no ruído  supervisao--375.png: depois 175 px, máx 163; ruído 469 px, máx 163
+no ruído  visao-geral--1280.png: depois 122 px, máx 152; ruído 231 px, máx 152
+no ruído  visao-geral--375.png: depois 122 px, máx 152; ruído 231 px, máx 152
+comparadas: 168; idênticas: 157; dentro do ruído: 11; reprovadas: 0; só numa das passadas: []
+== recolhida: antes x depois, contra três pares de ruído (antes x ruído, antes x antes do archive, depois x depois)
+no ruído  aviso--375.png: depois 4 px, máx 1; ruído 4 px, máx 1
+no ruído  compor-conteudo--1280.png: depois 18 px, máx 4; ruído 18 px, máx 4
+no ruído  compor-identificacao--375.png: depois 28 px, máx 15; ruído 28 px, máx 15
+no ruído  compor-revisao--375.png: depois 151 px, máx 28; ruído 151 px, máx 28
+no ruído  duvidas--1280.png: depois 368 px, máx 255; ruído 644 px, máx 255
+no ruído  duvidas--375.png: depois 382 px, máx 255; ruído 658 px, máx 255
+no ruído  processo-detalhe--1280.png: depois 1065 px, máx 179; ruído 1700 px, máx 179
+no ruído  processo-detalhe--375.png: depois 679 px, máx 170; ruído 1063 px, máx 179
+no ruído  recurso-pendente--375.png: depois 9 px, máx 14; ruído 9 px, máx 14
+no ruído  supervisao--1280.png: depois 211 px, máx 163; ruído 410 px, máx 163
+no ruído  supervisao--375.png: depois 211 px, máx 163; ruído 438 px, máx 163
+no ruído  visao-geral--1280.png: depois 135 px, máx 152; ruído 213 px, máx 152
+no ruído  visao-geral--375.png: depois 135 px, máx 152; ruído 213 px, máx 152
+comparadas: 168; idênticas: 155; dentro do ruído: 13; reprovadas: 0; só numa das passadas: []
+== bases: antes x depois, contra antes x ruído
+comparadas: 6; idênticas: 6; dentro do ruído: 0; reprovadas: 0; só numa das passadas: []

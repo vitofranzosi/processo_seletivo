@@ -10,6 +10,7 @@ from django.urls import reverse
 from processo_seletivo.processos.models import ProcessoSeletivo
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_aplicada
 
 
 @pytest.fixture
@@ -185,7 +186,8 @@ def test_plural_de_edital_em_portugues(
 
 
 def folha(corpo):
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+    # A folha que a página aplica (089): o primeiro `<style>` só tem o estilo da página.
+    return folha_aplicada(corpo)
 
 
 @pytest.mark.django_db

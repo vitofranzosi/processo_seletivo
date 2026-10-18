@@ -95,14 +95,15 @@ no lugar do `{% include %}`.
 ## R-005 — Os guardiões que leem a folha
 
 **Medido** (18/10, `c97ff8af`): **22 arquivos de teste** leem a folha comum ou os tokens — não os 14
-que o pedido estimava. A folha comum renderizada tem 53.381 bytes; os tokens, 1.326. Fora destes, ~30
+que o pedido estimava. O merge da `088` trouxe o 23º (`test_decisoes_da_etapa_4.py`, a regra de
+impressão), achado pela suíte e não pela varredura, que tinha sido feita antes dele. A folha comum renderizada tem 53.381 bytes; os tokens, 1.326. Fora destes, ~30
 arquivos citam `<style>` ou o modelo só para tirar o estilo do texto que examinam, ou leem só marcação;
 ficam iguais ou mais estritos, e estão listados no fim desta seção.
 
 **O risco não é o teste que quebra — é o que passa.** Hoje, `corpo[corpo.index("<style>"):…]` devolve a
 folha inteira. Depois da mudança, toda tela ainda tem um `<style>`, só com o bloco da página — na lista,
 duas regras; na Comissão, uma. Uma afirmação negativa (`regra(x) is None`, `x not in folha`) sobre esse
-resto passa sem examinar nada. **Em 14 dos 22 arquivos há pelo menos uma verificação assim.**
+resto passa sem examinar nada. **Em 14 dos 23 arquivos há pelo menos uma verificação assim.**
 
 ### Como cada um lê, e como passa a ler
 
@@ -123,36 +124,39 @@ Três formas, e um apoio comum para cada (T013):
 `gestao.css`. `TOKENS` lê `shared/static/shared/tokens.css`; com o parcial apagado e o nome velho, o
 módulo e os quatro `test_polish_da_05x` que o importam quebrariam na coleta.
 
-### Os 22, por risco
+### Os 23, por risco
 
 "Silencioso" é a verificação que passaria sem examinar a folha comum; a mutação planta, no `.css`, a
-violação que essa verificação existe para pegar. A coluna do resultado é preenchida na implementação
-(T015).
+violação que essa verificação existe para pegar. Rodado em 18/10/2026 por
+[`mutacoes.py`](../../doc/inventario-visual-da-gestao-2026-10-16/depois-da-089/mutacoes.py), com a
+saída em `mutacoes.txt` ao lado: **28 mutações, 28 reprovam**; sem mutação, os 509 casos dos mesmos
+testes passam.
 
 | # | Arquivo (`tests/…`) | Lê | Silencioso hoje se não repontado | Mutação planejada | Resultado |
 |---|---|---|---|---|---|
-| 1 | `interface/test_acessibilidade.py` | texto (`FONTE`, `TOKENS`, `sem_prosa`, `folha_da_pagina`) | `test_nenhum_modificador_fica_sem_a_base_que_o_usa` (as bases nunca são achadas) | modificador `.botao.x{}` sem `.botao` em `gestao.css`; classe da marcação sem regra; `--texto` com contraste baixo em `tokens.css` | |
-| 2 | `interface/test_polish_da_057.py` | texto (`sem_prosa(FONTE)`, `regra`) | `test_o_detalhe_desenha_as_terminais…`, `test_os_documentos_da_inscricao_seguem_a_mesa` inteiros; L321 | `.terminais .botao{}` e `.requisitos-apresentados{}` em `gestao.css` | |
-| 3 | `interface/test_polish_da_058.py` | texto (o `regra` da 057) | `test_as_terminais_moram_num_parcial_das_duas_telas` inteiro; L137 | `.colunas.ao-topo{}` em `gestao.css` | |
-| 4 | `interface/test_telas_de_uso_diario.py` | texto (`base.html`) | `test_cada_correcao_vale_so_na_sua_tela` (L194) | a correção do sorteio copiada para `gestao.css` | |
-| 5 | `interface/test_larguras.py` | renderizada (`folha`) | gestão de `test_nenhuma_das_bases_crava_largura_em_pixel`; `test_a_marca_de_atencao_nao_alcanca…`; L115, L261 | `max-width:600px` numa regra de `gestao.css` | |
-| 6 | `interface/test_campos_que_a_escolha_governa.py` | renderizada (`folha`) | `test_a_folha_nunca_esconde_por_padrao` | `.so-admite{display:none}` em `gestao.css` | |
-| 7 | `interface/test_polish_da_056.py` | texto (`sem_prosa(FONTE)`) | L42, L51, L162–163 | o contorno proibido em `.etapa-situacao` | |
-| 8 | `interface/test_achados_das_revisoes.py` | texto (`base.html`, `^` multilinha) | L142 | `.acoes .marca-irreversivel{…}` em `gestao.css` | |
-| 9 | `interface/test_alocacoes.py` | renderizada (`folha_de_estilo`) | L254 | `.distribuicao thead th .codigo{}` em `gestao.css` | |
-| 10 | `interface/test_lista.py` | renderizada (`folha`) | L206 | a regra proibida de L206 em `gestao.css` | |
-| 11 | `interface/test_comissao.py` | renderizada (`folha_de_estilo`) | — (só positivas) | `.s-PRESIDENTE{}` removida de `gestao.css` | |
-| 12 | `performance/test_escala_da_mesa.py` | tamanho da resposta | o teto ganha ≈ 54 KB de folga (D-006) | — o teto não muda; registrado no R-008 | |
-| 13 | `interface/test_estaticos.py` | página renderizada | nenhum, mas ganha ponto cego: `gestao.css` não é renderizado nem varrido, e um `{% comment %}` esquecido na conversão iria como CSS quebrado | `{% comment %}` plantado em `gestao.css` (guardião novo, FR-2043) | |
-| 14 | `portal/test_resultado_publico.py` | renderizada do portal | `"--pagina" in folha` passa a casar só com o `var(--pagina)` | `--pagina` removido de `tokens.css` | |
-| 15 | `interface/test_polish_da_055.py` | texto (`sem_prosa(FONTE)`) | — (quebra alto) | uma regra positiva removida de `gestao.css` | |
-| 16 | `interface/test_medida_dos_campos.py` | renderizada (`folha`, `regras()`) | — | `--leitura` mudado em `tokens.css` | |
-| 17 | `interface/test_shell_da_gestao.py` | texto (`base.html`, divide em `@media`/`\n}`) | — | o gradiente da barra recolhida removido de `gestao.css` | |
-| 18 | `interface/test_telas_de_quem_elabora.py` | texto (`FOLHA`, `sem_comentarios`) e varredura de `templates/*.html` | — mas a varredura de molduras que rolam não alcança `gestao.css`: passa a incluí-lo | moldura com `overflow-x:auto` sem `position:relative` em `gestao.css` | |
-| 19 | `interface/test_acessibilidade_da_classificacao.py` | texto (substring) | — | `.tabela-rolavel{overflow-x:auto}` removida | |
-| 20 | `interface/test_visao_dos_perfis.py` | corpo inteiro (regex) | — | `position:relative` removido de `.tabela-rolavel` | |
-| 21 | `interface/test_visao_da_classificacao.py` | corpo inteiro (regex) | — | idem | |
-| 22 | `integration/interface/test_inscricoes_recebidas.py` | corpo inteiro (substring) | — | `.tabela-rolavel{overflow-x:auto}` removida | |
+| 1 | `interface/test_acessibilidade.py` | texto (`FONTE`, `TOKENS`, `sem_prosa`, `folha_da_pagina`) | `test_nenhum_modificador_fica_sem_a_base_que_o_usa` (as bases nunca são achadas) | 4 mutações: `.marca-irreversivel{` → `.zzmut.marca-irreversivel{` (modificador sem a base); `.oculto{` → `.ocultx{` (classe órfã); `--texto` a `#bbbbbb` em `tokens.css` (contraste); `.distribuicao-moldura` com `overflow-x:auto` | reprova |
+| 2 | `interface/test_polish_da_057.py` | texto (`sem_prosa(FONTE)`, `regra`) | `test_o_detalhe_desenha_as_terminais…`, `test_os_documentos_da_inscricao_seguem_a_mesa` inteiros; L321 | `.terminais .botao{color:red}`; `.requisitos-apresentados{color:red}` | reprova |
+| 3 | `interface/test_polish_da_058.py` | texto (o `regra` da 057) | `test_as_terminais_moram_num_parcial_das_duas_telas` inteiro; L137 | `.colunas.ao-topo{color:red}` | reprova |
+| 4 | `interface/test_telas_de_uso_diario.py` | texto (`base.html`) | `test_cada_correcao_vale_so_na_sua_tela` (L194) | `.imutavel code{overflow-wrap:anywhere}` acrescentada | reprova |
+| 5 | `interface/test_larguras.py` | renderizada (`folha`) | gestão de `test_nenhuma_das_bases_crava_largura_em_pixel`; `test_a_marca_de_atencao_nao_alcanca…`; L115, L261 | `main .zzmut{max-width:600px}` | reprova |
+| 6 | `interface/test_campos_que_a_escolha_governa.py` | renderizada (`folha`) | `test_a_folha_nunca_esconde_por_padrao` | `.so-admite{display:none}` | reprova |
+| 7 | `interface/test_polish_da_056.py` | texto (`sem_prosa(FONTE)`) | L42, L51, L162–163 | `text-transform:uppercase` na regra existente de `.assistente .estado` | reprova |
+| 8 | `interface/test_achados_das_revisoes.py` | texto (`base.html`, `^` multilinha) | L142 | `.acoes .marca-irreversivel{align-self:center}` | reprova |
+| 9 | `interface/test_alocacoes.py` | renderizada (`folha_de_estilo`) | L254 | `.distribuicao thead th .codigo{display:block}` | reprova |
+| 10 | `interface/test_lista.py` | renderizada (`folha`) | L206 | `.acao.desabilitado` com `color:var(--verde)` | reprova |
+| 11 | `interface/test_comissao.py` | renderizada (`folha_de_estilo`) | — (só positivas) | `.s-PRESIDENTE{` → `.s-PRESIDENTX{` | reprova |
+| 12 | `performance/test_escala_da_mesa.py` | tamanho da resposta | o teto ganha ≈ 54 KB de folga (D-006) | — (o teto não muda; R-008) | — |
+| 13 | `interface/test_estaticos.py` | página renderizada | nenhum, mas ganha ponto cego: `gestao.css` não é renderizado nem varrido, e um `{% comment %}` esquecido na conversão iria como CSS quebrado | `{% comment %}` plantado em `gestao.css` | reprova |
+| 14 | `portal/test_resultado_publico.py` | renderizada do portal | `"--pagina" in folha` casava com o `var(--pagina)` — já antes da 089; apertado para `--pagina:` | `--pagina:96rem` tirado de `tokens.css` (reprova também `test_larguras`) | reprova |
+| 15 | `interface/test_polish_da_055.py` | texto (`sem_prosa(FONTE)`) | — (quebra alto) | `th,td` com `padding:.4rem .75rem` | reprova |
+| 16 | `interface/test_medida_dos_campos.py` | renderizada (`folha`, `regras()`) | — | `--leitura:70ch` em `tokens.css` | reprova |
+| 17 | `interface/test_shell_da_gestao.py` | texto (`base.html`, divide em `@media`/`\n}`) | — | o gradiente da barra recolhida `to left` | reprova |
+| 18 | `interface/test_telas_de_quem_elabora.py` | texto (`FOLHA`, `sem_comentarios`) e varredura de `templates/*.html` | — mas a varredura de molduras que rolam não alcança `gestao.css`: passa a incluí-lo | `.zzmoldura{overflow-x:auto}` sem posição | reprova |
+| 19 | `interface/test_acessibilidade_da_classificacao.py` | texto (substring) | — | `.tabela-rolavel{overflow-x:scroll}` | reprova |
+| 20 | `interface/test_visao_dos_perfis.py` | corpo inteiro (regex) | — | `.tabela-rolavel` fora da regra de `position:relative` | reprova |
+| 21 | `interface/test_visao_da_classificacao.py` | corpo inteiro (regex) | — | idem | reprova |
+| 22 | `integration/interface/test_inscricoes_recebidas.py` | corpo inteiro (substring) | — | `.tabela-rolavel{overflow-x:scroll}` | reprova |
+| 23 | `interface/test_decisoes_da_etapa_4.py` (da `088`) | texto (`base.html`, sem `{% comment %}`, o `@media print`) | — (quebra alto: o `index` não acha a regra) | o `>a` tirado do esconder do papel; `white-space:nowrap` no cabeçalho impresso | reprova |
 
 Os três de corpo inteiro (20–22) procuram a regra comum no HTML da página; passam a procurá-la na
 folha que a página aplica, que é onde ela está.
@@ -220,20 +224,61 @@ código; a memória "Pixel a pixel precisa de linha de ruído" registra o que mu
 cursor, suavização em moldura que rola). Uma variante passa quando a contagem antes→depois não é maior
 que a antes→ruído **ou** quando as duas são zero.
 
+**Na implementação, um par de ruído não bastou** (ver os achados): a suavização muda de lugar a cada
+passada. O `pixels.py` toma vários pares de capturas do mesmo código — antes × segunda passada,
+antes × captura do `git archive`, depois × segunda passada — e a linha de ruído de cada variante é o
+maior deles. E entrou uma terceira prova, sem ruído nenhum: o resumo das regras que a página aplica,
+como o Chrome as interpretou (`estilos.py`, `ESTILOS=1` no `capturar.py`), comparado pelo
+`medidas.py`.
+
 As bases fora da gestão não estão no inventário, salvo a página de acesso. `capturar_bases.py` captura
 a vitrine e a entrada do portal e a página de erro (com `DEBUG=False`, para o 404 do sistema, e não a
 página de depuração), a 1280 e a 375 px, no mesmo formato.
 
 ## R-008 — O peso das páginas
 
-*(Preenchido na implementação, antes e depois.)* O que se mede:
+**Medido em 18/10/2026**, antes sobre `41cf1b4c` (a `main` com a `088`) e depois sobre a branch, no
+mesmo banco (`ps_inventario_089`) e no mesmo banco de teste (`ps_089`):
 
-| Página | Como |
-|---|---|
-| Distribuição com 500 conclusões | o `len(corpo)` de `test_a_tela_de_distribuicao_nao_cresce_com_o_trabalho_ja_feito`, o mesmo número que o teto prende |
-| Distribuição, lista de Processos, Minhas Etapas | `pesar.py`, no banco do inventário: bytes da resposta HTML |
-| `gestao.css`, `tokens.css` | bytes do arquivo |
+| Página | Antes | Depois | Diferença |
+|---|---|---|---|
+| Distribuição com 500 conclusões — o `len(corpo)` que o teto de 120.000 prende | 95.385 | 40.796 | −54.589 |
+| Distribuição (`pesar.py`, bytes da resposta) | 72.967 | 18.358 | −54.609 |
+| Lista de Processos | 65.604 | 10.995 | −54.609 |
+| Minhas Etapas | 61.873 | 7.264 | −54.609 |
+
+O `<style>` da resposta caiu de 54.760 bytes para 3 (a Distribuição e Minhas Etapas não preenchem o
+bloco) e 145 (a lista, com as duas regras dela). O guardião da Distribuição mede caracteres
+(`len` do texto decodificado), e por isso a diferença dele é 20 menor que a dos bytes.
+
+| Arquivo | Bytes | Sem comentários | Comprimido (gzip) |
+|---|---|---|---|
+| `interface/static/interface/gestao.css` | 106.280 | 53.430 | 32.516 |
+| `shared/static/shared/tokens.css` | 1.704 | 386 | — |
+
+A primeira página da sessão baixa ≈ 108 KB de folhas (≈ 33 KB se o servidor comprimir); da segunda em
+diante, nada além da revalidação. Antes, cada página levava ≈ 55 KB de folha no próprio HTML: a conta
+empata na segunda página e ganha daí em diante.
 
 ## Achados
 
-*(Preenchido na implementação.)*
+- **Uma mutação que não reprovou era mutação errada, não guardião fraco.** A primeira versão da do
+  `test_polish_da_056` acrescentava `.assistente .estado{text-transform:uppercase}` no fim da folha; o
+  `regra()` dos polish devolve a **primeira** regra do seletor, a que já existia. Refeita na regra
+  existente, reprova. Vale para quem escrever mutação contra esses guardiões.
+- **O `"--pagina" in folha` do resultado público nunca pegou a declaração.** Casava também com o
+  `var(--pagina)` da folha do portal, antes e depois da 089 — tirar a declaração de `tokens.css` não o
+  reprovava. Apertado para `--pagina:`, reprova; o `test_larguras` já pegava o mesmo defeito.
+- **O estilo computado não serve de prova de "nada mudou".** O resumo dos estilos computados de cada
+  elemento diferiu entre duas passadas do **mesmo** código em 44 e 50 das 168 variantes — larguras
+  usadas, transições. A sequência de regras do CSSOM, como o Chrome as interpretou, é estável e foi a
+  prova adotada (`estilos.py`).
+- **A linha de ruído de um par só reprova telas sem defeito.** Com um par (antes × ruído), quatro
+  variantes da barra recolhida acusavam diferenças de 1 a 15 de intensidade — e as mesmas apareceram
+  entre duas passadas do código novo. O `pixels.py` passou a tomar o maior de vários pares.
+- **O teto da Distribuição passou a sobrar 79 mil caracteres** (40.796 de 120.000). O crescimento da
+  folha comum deixa de ser cobrado por ele; se a folha deve ganhar teto próprio é decisão do usuário
+  (D-006).
+- **Próximos passos possíveis, fora do escopo**: os 30 blocos `estilo_da_pagina` e os 5 parciais
+  `_estilo_*` em arquivos (passo 2); a mesma tag `estatico` nos scripts, que continuam sem versão; a CSP
+  (passo 3), que ainda esbarraria nos 5 `style=""` e nos `<style>` que ficam.

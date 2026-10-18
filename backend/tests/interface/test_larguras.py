@@ -17,13 +17,15 @@ import pytest
 from django.urls import reverse
 
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_aplicada
 
 pytestmark = [pytest.mark.django_db]
 
 
 def folha(cliente, url):
-    corpo = cliente.get(url).content.decode()
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+    # A folha que a página aplica, e não o primeiro `<style>`: desde a 089 ele só tem o estilo da
+    # página, e a regra do pixel cravado passaria sobre ele sem ver a folha comum.
+    return folha_aplicada(cliente.get(url).content)
 
 
 @pytest.fixture
