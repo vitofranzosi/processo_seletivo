@@ -35,6 +35,7 @@
   grupo: pendem do Edital e vêm depois da inscrição.
 - Escolhas que o pedido não fixava, decididas e registradas: a trilha é a do Edital mais os níveis
   que cada tela já tinha (D-001), os rótulos da página atual não mudam (D-002), as mensagens não sobem
-  acima dos termos (D-003) e nenhum ato muda de peso (D-004).
+  acima dos termos (D-003) e nenhum ato muda de peso (D-004). A revisão do PR acrescentou dois
+  achados registrados sem correção: a impressão (D-005) e o recorte do link no Ato (D-006).
 - `FR-1888` e `SC-740`/`SC-741` citam o inventário visual: é o instrumento de verificação que o estudo
   exige em todo incremento.

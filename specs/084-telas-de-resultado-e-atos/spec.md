@@ -118,8 +118,10 @@ mesmos antes e depois.
   para quem alcança o Edital, e a porta de cada destino continua a dela — a trilha não concede nem
   esconde acesso.
 - **Sem população a exportar.** O estado vazio de Exportar para matrícula continua; só a trilha sobe.
-- **Impressão.** A barra e o cabeçalho de contexto não saem no papel (`076`). O título e a linha de
-  baixo dele continuam identificando o marco, o Perfil e o Edital impressos.
+- **Impressão.** A barra e o cabeçalho de contexto não saem no papel (`076`), e a trilha sai com eles.
+  Na conferência da emissão e no Ato, a linha abaixo do título nomeia o Edital; nas outras nove, o
+  título e a linha de baixo nomeiam o marco, o Perfil ou a tela, e a folha impressa deixa de dizer de
+  que Edital ela é (D-005).
 - **O link de salto.** Continua levando ao conteúdo, que agora começa pelo título.
 
 ## Requirements *(mandatory)*
@@ -212,6 +214,24 @@ tela — e os termos precisam vir antes: definem *recorte*, *faixa* e *geração
   registrada como achado na pesquisa.
 - **Nenhum texto muda.** Nem os títulos, nem os termos, nem as mensagens; o vocabulário destas telas é
   varrido por listas literais.
+
+### D-005 — A impressão fica como a folha comum a desenha, e a pergunta, com o produto
+
+Antes, a trilha morava no conteúdo e saía no papel com "Edital N/AAAA"; no cabeçalho, ela não sai,
+porque a `076` tira o cabeçalho de contexto da impressão. Achado pela revisão do PR, em 18/10: das
+onze telas, nove deixam de dizer, impressas, de que Edital são. Corrigir pede uma de duas coisas, e
+nenhuma cabe aqui: imprimir a trilha do cabeçalho é regra da folha comum, que vale para todas as
+telas modernizadas, e é a mesma pergunta sobre impressão que a `081` deixou com o produto; e
+acrescentar o Edital à linha abaixo do título muda texto, que a `FR-1887` proíbe. Fica registrado,
+com a contagem, na pesquisa.
+
+### D-006 — No Ato, "Classificação" continua levando à ampla concorrência
+
+O link "Classificação" da trilha do Ato leva à Classificação do marco sem o recorte do ato: num ato da
+lista PPI, ele abre a ordem da ampla concorrência — o desvio que a `FR-497` da `034` fechou na
+conferência. É anterior a esta feature; ela só o levou ao cabeçalho. Levar o recorte muda o destino
+de um link, e a `FR-1881` pede o mesmo destino de antes. Fica registrado como achado, para uma feature
+que possa mudar o destino.
 
 ## Success Criteria *(mandatory)*
 

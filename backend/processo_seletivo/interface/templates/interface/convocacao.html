@@ -1,6 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Convocação — quem foi chamado e o que respondeu{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Convocação</span></nav>{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Convocação</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Convocação</h1>
 <p class="sub">Quem a ordem indica para as vagas que faltam, o que cada pessoa respondeu, e quem é a próxima da fila.</p>

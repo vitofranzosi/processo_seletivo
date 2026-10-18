@@ -8,7 +8,7 @@ Só apresentação, em onze templates, e um movimento só: a trilha sai do conte
 `caminho_do_contexto` que a `077` criou, com o produto pelo parcial da `078` e os níveis do Edital —
 Processos Seletivos, o Processo e o Edital — no começo, como o detalhe do Edital tem desde a `078`.
 Nenhuma migration, nenhuma permissão, nenhum endereço, nenhuma view, nenhuma regra na folha comum,
-nenhuma classe nova, nenhum texto de conteúdo.
+nenhuma classe nova, nenhum texto de conteúdo; um parcial novo, com os níveis do Edital.
 
 ## Technical Context
 
@@ -47,6 +47,7 @@ Sem violação a justificar.
 | `ato_ordenacao.html` | o mesmo, com o Edital, que faltava, antes de *Classificação › Ato …* (R-001) |
 | `corte_historico.html` | o mesmo, terminando em *Corte de data e hora* (R-001) |
 | `ocupacao_historico.html`, `convocacao_historico.html` | o mesmo, com a tela de origem antes de *Histórico* — a Convocação no mesmo recorte (R-001) |
+| `_ate_o_edital_na_trilha.html` | novo: os três níveis do Edital, numa fonte só, incluídos logo depois do produto nas onze telas (R-001) |
 | `tests/interface/test_telas_de_resultado_e_atos.py` | novo (R-003) |
 | `doc/inventario-visual-da-gestao-2026-10-16.md` e `depois-da-084/` | o inventário de antes e o de depois nos dois estados da barra, a comparação e as capturas das telas do escopo |
 

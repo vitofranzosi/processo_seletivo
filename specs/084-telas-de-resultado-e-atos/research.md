@@ -42,6 +42,13 @@ passando sem mudança.
 **Nenhuma consulta a mais.** As onze views já passam `processo` ao contexto; o Processo vem do
 `select_related` da porta.
 
+**Uma fonte só para os níveis do Edital.** Os três níveis — Processos Seletivos, o Processo e o Edital
+— vêm do parcial `_ate_o_edital_na_trilha.html`, incluído logo depois do produto. Na primeira versão
+do PR eram copiados letra a letra nas onze telas, e a revisão o apontou: é a cópia que o parcial do
+produto existe para impedir (`078`). O parcial lê o Processo pelo Edital (`edital.processo_id`,
+`edital.processo.institutional_code`), e não pela variável `processo` de cada view, para servir a
+qualquer tela que tenha o Edital; termina sem quebra de linha, e o HTML da trilha não muda.
+
 **Alternativas**:
 - *O marco como nível entre o Edital e a tela* — D-001.
 - *Trocar o rótulo do Ato pelo nome do marco* — D-002.
@@ -64,7 +71,9 @@ Novos em `tests/interface/test_telas_de_resultado_e_atos.py`:
 | Teste | Prova |
 |---|---|
 | `test_a_trilha_mora_no_bloco_do_cabecalho` | nas onze, pela fonte: o bloco com o produto e os três níveis do Edital, uma página atual, nenhuma trilha no conteúdo, o conteúdo pelo `h1` |
-| `test_nenhum_botao_muda_de_rotulo_desenho_ou_lugar`, `test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso` | os 24 botões de envio, na ordem, com o desenho de antes |
+| `test_os_niveis_do_edital_tem_uma_fonte_so` | o parcial dos níveis do Edital, e nenhuma das onze com cópia deles |
+| `test_nenhum_botao_muda_de_rotulo_desenho_ou_lugar` | os 24 botões de envio, na ordem, com o desenho de antes |
+| `test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso` | a contagem de desenhos lida dos templates, e não da lista do teste — a primeira versão contava a lista, e não reprovaria nunca (revisão do PR) |
 | `test_nas_telas_do_marco_a_trilha_e_a_do_edital_com_a_tela` | Classificação, Corte, Ocupação e Convocação renderizadas |
 | `test_nos_historicos_a_trilha_passa_pela_tela_de_origem_no_mesmo_recorte` | os dois históricos num recorte reservado |
 | `test_na_conferencia_da_emissao_o_marco_volta_ao_recorte` | a conferência, pelo POST, num recorte reservado |
@@ -81,6 +90,18 @@ ou o cabeçalho de contexto passou sem emenda — nenhum deles fixava a trilha n
 telas, nem o cabeçalho da `076` nelas.
 
 ## Achados registrados, fora do escopo
+
+Os dois primeiros vieram da revisão do PR (`/code-review`, 18/10), e cada um tem decisão na spec.
+
+- **Impressas, nove telas deixam de dizer de que Edital são** (D-005). Contado pelo `h1` e pelo
+  `p.sub` de cada uma: só `ordenacao_confirmar` ("marco — Perfil, Edital N/AAAA") e `ato_ordenacao`
+  (`nomes.edital`) nomeiam o Edital abaixo do título. Na Classificação, no Sorteio, no Corte, no corte
+  histórico, na Ocupação, na Convocação, nos dois históricos e em Exportar para matrícula, a trilha do
+  conteúdo era a única linha impressa com o Edital. A resposta é do produto: imprimir a trilha do
+  cabeçalho (regra na folha comum, para todas as telas modernizadas) ou pôr o Edital na linha abaixo
+  do título (texto novo, tela a tela).
+- **O link "Classificação" do Ato perde o recorte** (D-006). `AtoDeOrdenacao.lista_id` diz o recorte;
+  o link é `{% url 'interface:ordenacao' edital.id ato.marco_id %}`, sem `?lista=`. Anterior à `084`.
 
 - **Atos que não se desfazem saem de botão de ação principal.** Das onze telas, só a emissão da
   ordem (pela conferência) e a anulação do sorteio têm o desenho de perigo. Realizar o sorteio,

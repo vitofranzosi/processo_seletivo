@@ -80,17 +80,30 @@ def test_a_trilha_mora_no_bloco_do_cabecalho(tela):
     assert bloco.startswith(
         '<nav aria-label="Trilha de navegação" class="caminho-da-secao">'
         '{% include "interface/_produto_na_trilha.html" %} '
-        "<a href=\"{% url 'interface:lista' %}\">Processos Seletivos</a> › "
-        "<a href=\"{% url 'interface:processo-detalhe' processo.id %}\">"
-        "{{ processo.institutional_code }}</a> › "
-        "<a href=\"{% url 'interface:detalhe' edital.id %}\">"
-        "Edital {{ edital.number }}/{{ edital.year }}</a> › "
+        '{% include "interface/_ate_o_edital_na_trilha.html" %} '
     )
     assert bloco.count('aria-current="page"') == 1
     corpo = fonte.split("{% block conteudo %}", 1)[1]
     assert "Trilha de navegação" not in corpo
     assert 'class="trilha"' not in corpo
     assert corpo.lstrip().startswith("<h1>")
+
+
+def test_os_niveis_do_edital_tem_uma_fonte_so():
+    """`FR-1881`: os três níveis vêm de um parcial, como o produto (`078`), e nenhuma das onze os
+    copia — a cópia letra a letra em onze telas é o que o parcial do produto existe para impedir."""
+    parcial = (GESTAO / "_ate_o_edital_na_trilha.html").read_text()
+    niveis = (
+        "<a href=\"{% url 'interface:lista' %}\">Processos Seletivos</a> › "
+        "<a href=\"{% url 'interface:processo-detalhe' edital.processo_id %}\">"
+        "{{ edital.processo.institutional_code }}</a> › "
+        "<a href=\"{% url 'interface:detalhe' edital.id %}\">"
+        "Edital {{ edital.number }}/{{ edital.year }}</a> ›"
+    )
+
+    assert parcial.endswith("{% endcomment %}" + niveis), "sem quebra de linha: o HTML não muda"
+    for tela in TELAS:
+        assert "interface:processo-detalhe" not in (GESTAO / tela).read_text(), tela
 
 
 # O que cada tela oferecia antes da 084, botão a botão — rótulo e desenho. Os atos que não se
@@ -163,8 +176,16 @@ def test_nenhum_botao_muda_de_rotulo_desenho_ou_lugar(tela):
 
 
 def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
-    """`FR-1886`: a contagem de desenhos das onze, somada — duas de perigo, duas secundárias."""
-    desenhos = Counter(classe for botoes in BOTOES.values() for classe, _ in botoes)
+    """`FR-1886`: a contagem de desenhos nas onze, lida dos templates — duas de perigo, duas
+    secundárias. Prova à parte da lista acima: quem mudar um desenho e emendar `BOTOES` no mesmo
+    commit ainda reprova aqui."""
+    desenhos = Counter(
+        classe
+        for tela in TELAS
+        for classe in re.findall(
+            r'<button type="submit" class="([^"]+)"', (GESTAO / tela).read_text()
+        )
+    )
 
     assert desenhos == {"botao": 20, "botao perigoso": 2, "acao": 2}
 

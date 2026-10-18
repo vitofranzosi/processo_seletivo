@@ -41,6 +41,7 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 - [x] T009 Inventário refeito com `BARRA=expandida` e `BARRA=recolhida` em `doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/`, comparado por `comparar.py`, por `medidas.py` e pixel a pixel com o de antes; as capturas das dez telas do escopo, antes e depois; a seção "Depois da 084" no `doc/inventario-visual-da-gestao-2026-10-16.md` (FR-1884, FR-1888, SC-740, SC-741)
 - [x] T010 O percurso do quickstart no navegador, a 1280 e a 375 px, pelo teclado (FR-1884, SC-745)
 - [x] T011 `rastreabilidade.md` com cada FR e SC; a emenda da `FR-1803` da `080` declarada na spec; a linha da `084` no README
+- [x] T012 Revisão do PR (`/code-review`, 18/10): os níveis do Edital num parcial, `_ate_o_edital_na_trilha.html`, com guardião; a contagem de desenhos lida dos templates; a impressão sem o Edital (D-005) e o link da Classificação sem o recorte no Ato (D-006) registrados na spec e na pesquisa, sem correção
 
 ## Dependencies
 
