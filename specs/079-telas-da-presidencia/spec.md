@@ -213,7 +213,9 @@ sem presidência, não há botão, como antes.
   Registrar ocorrência, Resultados, Trilha da avaliação, as Conclusões preservadas, a conferência da
   retirada e a Auditoria da comissão também passaram a ter a trilha no cabeçalho (`FR-1800` da
   `080`). "As demais telas" são, daí em diante, as que nem a `077`, nem a `078`, nem esta, nem a
-  `080` nomeiam — entre elas, a Auditoria do Edital (`FR-1803` da `080`).
+  `080` nomeiam — entre elas, a Auditoria do Edital (`FR-1803` da `080`). *Emendada de novo pela
+  [`083`](../083-telas-do-edital/spec.md) em 18/10/2026*: a Auditoria do Edital e as outras onze telas
+  que se abrem do detalhe do Edital passaram ao cabeçalho (`FR-1850` da `083`).
 - **FR-1783**: A 375 px, a trilha do cabeçalho MUST quebrar a linha dentro da largura, e "Trocar
   identidade" MUST continuar alcançável.
 - **FR-1784**: Na Alocação por Etapa, a barra MUST continuar recolhida em qualquer largura (DP-4 da

@@ -133,7 +133,8 @@ def test_na_distribuicao_a_trilha_continua_pela_alocacao(client, seletor_ligado,
 
 # As filhas da Distribuição tinham aqui o guardião da `FR-1782`, com o cabeçalho da 076 e a trilha
 # no conteúdo. A 080 as levou ao cabeçalho (`FR-1800` da 080), e o guardião mudou para lá:
-# `test_telas_filhas_da_distribuicao.py`, que também prova a Auditoria do Edital ainda de fora.
+# `test_telas_filhas_da_distribuicao.py`. A Auditoria do Edital, que ficou de fora até a 083, também
+# tem a trilha no cabeçalho (`test_telas_do_edital.py`).
 
 
 # ---- os lugares da Etapa, na Distribuição ----------------------------------------------------

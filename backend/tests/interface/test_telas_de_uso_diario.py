@@ -158,10 +158,13 @@ def test_na_inscricao_da_mesa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado,
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_fora_das_telas_de_uso_diario_o_cabecalho_e_o_da_076(client, seletor_ligado, cenario):
-    """`FR-1748`: a auditoria do Edital continua com a trilha no conteúdo, e o cabeçalho para na
-    seção. Era a trilha da avaliação até a 080, que a levou ao cabeçalho (`FR-1800` da 080)."""
+    """`FR-1748`: a Supervisão do Processo continua com a trilha no conteúdo, e o cabeçalho para na
+    seção. Era a trilha da avaliação até a 080 (`FR-1800` da 080), e a auditoria do Edital até a
+    083 (`FR-1850` da 083), que as levaram ao cabeçalho."""
     identificar(client, "carlos", ["gestor", "auditor"])
-    corpo = client.get(reverse("interface:auditoria", args=[cenario["edital"].id])).content.decode()
+    corpo = client.get(
+        reverse("interface:supervisao", args=[cenario["processo"].id])
+    ).content.decode()
 
     assert '<p class="caminho-da-secao">' in cabecalho(corpo)
     assert 'aria-label="Trilha de navegação"' not in cabecalho(corpo)

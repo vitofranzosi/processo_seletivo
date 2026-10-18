@@ -1,0 +1,3 @@
+{% comment %} Os níveis de cima da trilha das telas que se abrem do Edital (083): a seção, o Processo e o Edital,
+   que se copiavam em onze telas. Uma fonte só, como a do produto: renomear um nível não pode esquecer
+   uma tela. O nível de baixo é de cada tela. {% endcomment %}<a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
