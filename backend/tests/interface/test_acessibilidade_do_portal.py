@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.interface.folha import FOLHA_DO_PORTAL
+
 PORTAL = (
     Path(__file__).resolve().parents[2] / "processo_seletivo" / "portal" / "templates" / "portal"
 )
@@ -84,8 +86,12 @@ def test_nada_no_portal_fixa_largura_em_pixel():
     `.oculto`, que completa o nome acessível dos links de resultado —, e uma caixa de um pixel não
     empurra a página de lado. Trocar a unidade para escapar da regra esconderia a exceção; aqui ela
     fica escrita.
+
+    A folha era o `<style>` do `base.html` até a 092; lido o modelo, a busca acharia só a marcação,
+    e passaria sem examinar regra nenhuma. Lê a folha, e a base junto, onde uma regra não pode
+    voltar.
     """
-    corpo = (PORTAL / "base.html").read_text()
+    corpo = FOLHA_DO_PORTAL + (PORTAL / "base.html").read_text()
     regras = [
         largura
         for largura in re.findall(r"(?<!max-)(?<!min-)width:\s*(\d+)px", corpo)
@@ -258,7 +264,7 @@ def test_a_mensagem_de_volta_e_anunciada_e_o_resumo_e_uma_regiao_nomeada():
 
 def test_a_vaga_indicada_nao_depende_so_de_cor():
     """072, FR-1617 — borda mais grossa e etiqueta em texto, além do tom de fundo."""
-    folha = (PORTAL / "base.html").read_text()
+    folha = FOLHA_DO_PORTAL
 
     assert ".perfil:target{border-left:6px solid" in folha
     assert '.perfil:target::before{content:"Vaga indicada"' in folha

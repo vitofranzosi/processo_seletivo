@@ -9,6 +9,12 @@ As da 089 (1 a 23) plantavam no `gestao.css`, que a 091 dividiu: aqui, `COMUM` �
 comum que tem o trecho" — achado entre os sete —, e o que se acrescentava no fim do `gestao.css` vai
 para o fim do último deles, `telas.css`, que é onde a soma termina. As de 24 em diante são dos
 guardiões que a 091 repontou para os arquivos de tela, e dos que ela criou.
+
+**Prova a árvore da 091** (`2615b738`). A 092 tirou o que algumas destas mutações procuram — o
+`EM_RECUSA`, o `cabecalho_para`, o `em_observacao`, o caso `…_da_gestao_tem_estilo_embutido` —, e
+rodado sobre a árvore de depois este roteiro dá "reprova" falso na 35 (o caso pedido não existe mais)
+e para no `assert` da 40. Para refazê-lo, rode-o num `git archive 2615b738`; a prova da 092 é a de
+`depois-da-092/mutacoes.py`.
 """
 
 import subprocess

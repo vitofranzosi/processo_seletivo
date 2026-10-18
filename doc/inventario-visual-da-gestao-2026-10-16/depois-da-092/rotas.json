@@ -1,0 +1,414 @@
+[
+ {
+  "quem": null,
+  "caminho": "/selecoes/"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/acesso"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/acesso?destino=%2Fselecoes%2Faf86be76-27f3-4e6a-b621-2b0771c323b2%2F"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/"
+ },
+ {
+  "quem": null,
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/conta"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/convocacao"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/acompanhamento"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/meus-dados"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/comprovante"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/requerimento"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/recorrer"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/"
+ },
+ {
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/conta"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/acompanhamento"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/meus-dados"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/comprovante"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/recursos/6539ef46-cee4-4d45-b9f8-8fe605b312ac"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/recorrer"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/"
+ },
+ {
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/conta"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/acompanhamento"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/meus-dados"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/requerimento"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/comprovante"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/recursos/c7b47be9-fdcd-488d-8e3d-fe6be445072e"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/recorrer"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/"
+ },
+ {
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/conta"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/acompanhamento"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/meus-dados"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/requerimento"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/comprovante"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/recorrer"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/"
+ },
+ {
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/conta"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/acompanhamento"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/meus-dados"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/requerimento"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/comprovante"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/recorrer"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/"
+ },
+ {
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/conta"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/acompanhamento"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/meus-dados"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/comprovante"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/"
+ },
+ {
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar"
+ },
+ {
+  "quem": "inventario.piloto",
+  "caminho": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/prototipo/"
+ }
+]

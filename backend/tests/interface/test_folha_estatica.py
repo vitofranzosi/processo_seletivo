@@ -129,6 +129,7 @@ def test_a_verificacao_de_sistema_acusa_a_folha_que_falta(monkeypatch):
         "shared/tokens.css",
         *estaticos.FOLHAS_DA_GESTAO,
         "shared/erro.css",
+        "portal/portal.css",
     }
     assert "interface/telas/visao-geral.css" in exigidas
 
@@ -166,12 +167,13 @@ def test_as_outras_bases_carregam_os_tokens_antes_de_qualquer_regra(client, sele
     resposta = client.get(caminho)
 
     assert resposta.status_code == (404 if pagina == "página de erro" else 200)
-    # O portal ainda tem a folha no documento (091, D-007); a página de acesso e a de erro, não.
+    # O portal teve a folha no documento até a 092 (`FR-2130`); a página de acesso e a de erro, até
+    # a 091.
     assert ordem_das_folhas(resposta.content) == [
         "/static/shared/tokens.css",
         {
             "acesso da gestão": "/static/interface/grupos/acesso.css",
-            "vitrine do portal": "<style>",
+            "vitrine do portal": "/static/portal/portal.css",
             "página de erro": "/static/shared/erro.css",
         }[pagina],
     ]
@@ -328,3 +330,14 @@ def test_a_pagina_de_erro_carrega_a_folha_dela():
     assert "{% estatico 'shared/erro.css' %}" in modelo
     assert "<style" not in modelo
     assert finders.find("shared/erro.css")
+
+
+def test_a_base_do_portal_carrega_a_folha_dele():
+    """`FR-2130`, `FR-2133`, `FR-2134`: a folha do portal saiu do `<style>` do `base.html` na 092,
+    para um arquivo achado pelos finders e conferido pela verificação de sistema."""
+    modelo = sem_comentarios((RAIZ / "portal/templates/portal/base.html").read_text())
+
+    assert "{% estatico 'portal/portal.css' %}" in modelo
+    assert "<style" not in modelo
+    assert finders.find("portal/portal.css")
+    assert "portal/portal.css" in estaticos.FOLHAS

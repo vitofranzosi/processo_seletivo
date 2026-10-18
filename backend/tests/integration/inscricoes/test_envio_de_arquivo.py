@@ -20,6 +20,7 @@ from tests.fixtures.selecao import (
     DOCUMENTO_DE_TODOS,
     DOCUMENTO_DO_PERFIL,
 )
+from tests.interface.folha import folha_aplicada
 
 
 def _enviar(client, inscricao, requisito, arquivo):
@@ -174,7 +175,12 @@ def test_quantos_documentos_faltam_aparece_junto_ao_cabecalho(client, inscricao_
     corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
 
     assert 'id="resumo-documentos"' in corpo
-    assert corpo.index("resumo-documentos") < corpo.index("Seus dados"), "acima da dobra"
+    # O resumo antes da seção "Seus dados", e não antes da palavra: até a 092 a primeira
+    # "resumo-documentos" da página era a regra da folha embutida, no `<head>`, e a comparação
+    # passava sem olhar a marcação — onde "Seus dados" aparece antes, no indicador de etapas.
+    assert corpo.index('id="resumo-documentos"') < corpo.index('<h2 id="seus-dados">'), (
+        "acima da dobra"
+    )
     assert "Faltam" in corpo
 
 
@@ -210,7 +216,8 @@ def test_o_aviso_de_nao_fechar_a_pagina_fica_escondido_em_repouso(client, inscri
     corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
 
     assert '<p class="progresso" hidden>' in corpo
-    assert ".progresso[hidden]{display:none}" in corpo
+    # A regra está na folha que a página aplica, de arquivo desde a 092 (`FR-2139`).
+    assert ".progresso[hidden]{display:none}" in folha_aplicada(corpo)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -301,7 +308,9 @@ def test_o_campo_de_arquivo_do_navegador_nao_aparece_cru(client, inscricao_de_ma
     assert 'class="botao-arquivo"' in corpo
     assert "Escolher arquivo PDF" in corpo
     assert "data-nome-do-arquivo" in corpo, "o nome do escolhido tem onde aparecer"
-    assert ".escolher input[type=file]{position:absolute" in corpo, "escondido, não removido"
+    assert ".escolher input[type=file]{position:absolute" in folha_aplicada(corpo), (
+        "escondido, não removido"
+    )
     assert 'type="file"' in corpo and 'name="arquivo"' in corpo, "e continua sendo o que envia"
     assert "portal/arquivo.js" in corpo
 
@@ -320,7 +329,7 @@ def test_o_progresso_dos_documentos_e_barra_e_nao_segunda_frase(client, inscrica
     corpo = client.get(reverse("portal:inscricao", args=[inscricao_de_maria.id])).content.decode()
 
     assert 'class="progresso-documentos' in corpo
-    assert 'class="feito" style="width:50%"' in corpo, "metade da barra, sem modalidade escolhida"
+    assert 'class="feito largura-50"' in corpo, "metade da barra, sem modalidade escolhida"
     texto = " ".join(corpo.split())
     assert "1 de 2 documentos obrigatórios enviados." in texto
     assert texto.count("documentos obrigatórios enviados.") == 1, "uma contagem, não duas"

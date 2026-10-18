@@ -53,9 +53,10 @@ FOLHAS_DA_GESTAO = tuple(
     )
 )
 
-# As folhas que as bases carregam por esta tag, além das de tela. A verificação de sistema abaixo
-# confere cada uma, e também toda folha que um modelo cita pela tag (`folhas_citadas`).
-FOLHAS = ("shared/tokens.css", *FOLHAS_DA_GESTAO, "shared/erro.css")
+# As folhas que as bases carregam por esta tag, além das de tela — a do portal desde a 092. A
+# verificação de sistema abaixo confere cada uma, e também toda folha que um modelo cita pela tag
+# (`folhas_citadas`).
+FOLHAS = ("shared/tokens.css", *FOLHAS_DA_GESTAO, "shared/erro.css", "portal/portal.css")
 
 
 @cache

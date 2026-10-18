@@ -13,7 +13,13 @@ from django.urls import reverse
 
 from processo_seletivo.processos.models import Edital
 from tests.interface.conftest import compor_rascunho, identificar
-from tests.interface.folha import FOLHA_COMUM, TOKENS, estilo_do_bloco, sem_comentarios
+from tests.interface.folha import (
+    FOLHA_COMUM,
+    FOLHA_DO_PORTAL,
+    TOKENS,
+    estilo_do_bloco,
+    sem_comentarios,
+)
 
 BASE = (
     Path(__file__).resolve().parents[2]
@@ -444,8 +450,8 @@ def test_todo_botao_de_envio_declara_o_seu_peso(template):
 PORTAL = Path(__file__).resolve().parents[2] / "processo_seletivo/portal/templates/portal/base.html"
 # Dois canais, duas folhas, e a varredura valia só para um. O portal é o que o candidato vê. A folha
 # da gestão é a comum mais o que ficou no modelo (089): só o modelo, e as bases nunca seriam
-# achadas.
-CANAIS = [(BASE.parent, FOLHA_COMUM + FONTE), (PORTAL.parent, PORTAL.read_text())]
+# achadas. A do portal é o arquivo dele desde a 092, mais a base, pela mesma razão.
+CANAIS = [(BASE.parent, FOLHA_COMUM + FONTE), (PORTAL.parent, FOLHA_DO_PORTAL + PORTAL.read_text())]
 
 
 _INCLUI = re.compile(r'\{%\s*include\s+"[\w/]+/([\w.\-]+)"')

@@ -15,10 +15,14 @@ exige.
   Barra, e não uma segunda frase: o resumo do cabeçalho já diz em palavras quantos faltam, e
   repetir a mesma frase aqui era ruído. A barra diz o mesmo de relance; o texto ao lado mantém o
   número para quem lê com leitor de tela.
+
+  A largura preenchida vem de uma classe por percentual inteiro, de `.largura-0` a `.largura-100`, na
+  folha do portal (092): o atributo de estilo que a dava é recusado pela política de segurança de
+  conteúdo.
   {% endcomment %}
   <div class="progresso-documentos{% if not documentos.faltam %} completo{% endif %}">
     <div class="trilha" aria-hidden="true">
-      <div class="feito" style="width:{% widthratio documentos.recebidos documentos.total 100 %}%"></div>
+      <div class="feito largura-{% widthratio documentos.recebidos documentos.total 100 %}"></div>
     </div>
     <p class="contagem" role="status">
       {{ documentos.recebidos }} de {{ documentos.total }}

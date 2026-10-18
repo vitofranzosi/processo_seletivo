@@ -36,7 +36,9 @@ CONJUNTO = r"""() => {
   for (const folha of document.styleSheets) andar(folha.cssRules, '');
   // As regras que a 091 acrescenta no lugar dos `style=""` (`.simbolos`, `.largura-N`, `.altura-N`)
   // não existiam antes; contadas, o conjunto mudaria em toda tela. Ficam de fora da soma, e a
-  // contagem as declara à parte.
+  // contagem as declara à parte. A 092 acrescenta as `.largura-N` do portal, que caem no mesmo
+  // filtro; o rótulo "da 091" ficou, para os `resultados.json` das duas continuarem comparáveis, e
+  // numa tela do portal ele quer dizer "da 092".
   const novas = linhas.filter((t) => /^\.(simbolos|largura-\d+|altura-\d+) \{/.test(t)).length;
   const antigas = linhas.filter((t) => !/^\.(simbolos|largura-\d+|altura-\d+) \{/.test(t));
   linhas.length = 0; linhas.push(...antigas);

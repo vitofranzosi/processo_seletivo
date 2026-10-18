@@ -215,3 +215,22 @@ def test_nova_conversa_tem_teto_por_sessao_e_edital(client, edital_91, ligada, s
     conversa = client.session["assistente_do_edital"][str(edital_91.id)]
     assert not TrocaDoPiloto.objects.filter(conversa=conversa).exists()
     assert TrocaDoPiloto.objects.count() == 1
+
+
+def test_ligada_a_pagina_com_o_painel_fica_sob_a_recusa(client, edital_91, ligada):
+    """092, `FR-2136`: com a chave da 074 ligada, a página pública traz o painel do protótipo, e o
+    inventário da 092 não a captura — ela só existe no desenvolvimento local. A página inteira vai
+    em recusa, como o resto do portal, e o painel não pode trazer estilo embutido: a folha dele vem
+    por `<link>` (091), e a política recusaria qualquer outra."""
+    from processo_seletivo.shared import politica_de_conteudo as politica
+    from tests.interface.folha import folha_aplicada
+
+    resposta = client.get(_pagina(edital_91) + "?painel=1")
+    corpo = resposta.content.decode()
+
+    assert "pd-painel" in corpo
+    assert resposta["Content-Security-Policy"] == politica.POLITICA
+    assert "Content-Security-Policy-Report-Only" not in resposta
+    assert not re.search(r"<style\b|\sstyle\s*=", corpo)
+    assert "interface/telas/prototipo-do-assistente.css" in corpo
+    assert "--verde:" in folha_aplicada(corpo)

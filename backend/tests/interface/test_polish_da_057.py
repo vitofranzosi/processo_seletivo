@@ -17,7 +17,7 @@ from processo_seletivo.interface import acoes, revisao
 from processo_seletivo.interface.acoes import Acao
 from processo_seletivo.interface.templatetags.interface_extras import contagem
 from tests.interface.conftest import identificar
-from tests.interface.folha import FOLHA_COMUM, estilo_do_bloco
+from tests.interface.folha import FOLHA_COMUM, FOLHA_DO_PORTAL, estilo_do_bloco
 from tests.interface.test_acessibilidade import PORTAL, _estilo_proprio, sem_prosa
 from tests.interface.test_acoes import homologado
 
@@ -334,4 +334,5 @@ def test_o_envio_de_documento_e_uma_linha():
     assert "data-arquivo" in escolher and "data-nome-do-arquivo" in escolher
     assert '<button type="submit" class="acao">Enviar</button>' in escolher
     assert '<div class="linha">' not in documentos
-    assert ".envio .linha{" not in PORTAL.read_text()
+    # A folha do portal é arquivo desde a 092; o modelo base, sozinho, não tem regra a examinar.
+    assert ".envio .linha{" not in FOLHA_DO_PORTAL + PORTAL.read_text()
