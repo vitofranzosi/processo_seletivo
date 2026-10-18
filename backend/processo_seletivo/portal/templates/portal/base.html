@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% comment %} O htmx, ao carregar, injeta um `<style>` com as regras do indicador de carregamento — que
+   nenhuma tela usa —, e pode avaliar texto de atributo como código — que nenhuma tela escreve. A
+   política de segurança de conteúdo recusaria os dois. Esta configuração os desliga sem script
+   embutido: o htmx a lê do `<meta>` ao iniciar (091, D-009). {% endcomment %}
+<meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
 <title>{% block titulo %}Seleções abertas{% endblock %} — Cefor/Ifes</title>
 <link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 <style>

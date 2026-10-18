@@ -223,3 +223,104 @@ def test_a_folha_aplicada_le_o_link_escrito_de_qualquer_jeito():
     assert folha.index("--verde:") < folha.index(".tabela-rolavel{") < folha.index(".da-pagina{")
     assert ".do-corpo" not in folha
     assert "/*" not in folha.split(".da-pagina")[0]
+
+
+# ---- o estilo de cada tela em arquivo (091) -------------------------------------------------------
+
+MODELOS = RAIZ / "interface/templates/interface"
+
+# Quem carrega cada arquivo de `telas/` e de `grupos/`. Escrito à mão, e não derivado dos modelos: é
+# a afirmação que o teste confere — "o estilo de uma tela não viaja nas outras" (040, FR-2096).
+QUEM_CARREGA = {
+    "interface/grupos/acesso.css": {
+        "base_de_acesso.html",
+        "identificar.html",
+        "identificar_demonstracao.html",
+        "sem_autenticacao.html",
+    },
+    "interface/grupos/assistente.css": {"assistente.html", "duvidas.html"},
+    "interface/grupos/aviso.css": {"aviso.html", "aviso_previa.html", "modelo_de_aviso.html"},
+    "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
+    "interface/grupos/serie.css": {"processo_detalhe.html", "supervisao.html"},
+    "interface/grupos/terminais.css": {
+        "detalhe.html",
+        "processo_detalhe.html",
+        "retificacao_detalhe.html",
+    },
+    "interface/grupos/vista.css": {"compor_classificacao.html", "compor_perfis.html"},
+    **{
+        f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
+        for tela in (
+            "alocacoes",
+            "assistente",
+            "comissao",
+            "compor-anexos",
+            "compor-conteudo",
+            "compor-cronograma",
+            "compor-revisao",
+            "duvidas",
+            "inscricao-detalhe",
+            "lista",
+            "marco",
+            "minhas-etapas",
+            "prototipo-do-assistente",
+            "retificar",
+            "sorteio",
+            "visao-geral",
+        )
+    },
+}
+
+
+def test_cada_folha_de_tela_e_carregada_so_por_quem_a_usa():
+    """`FR-2096`, `SC-815`: nenhum arquivo de tela viaja numa tela que não o usa, e nenhuma tela que
+    tinha estilo deixa de carregá-lo. A base nunca cita arquivo de tela — senão ele iria em todas."""
+    citacoes = {}
+    for modelo in sorted(MODELOS.glob("*.html")):
+        for caminho in re.findall(r"""\{%\s*estatico\s+'(interface/(?:telas|grupos)/[^']+)'""", modelo.read_text()):
+            citacoes.setdefault(caminho, set()).add(modelo.name)
+
+    assert citacoes == QUEM_CARREGA
+    arquivos = {
+        str(p.relative_to(RAIZ / "interface/static"))
+        for p in (RAIZ / "interface/static/interface").glob("*/*.css")
+        if p.parent.name in ("telas", "grupos")
+    }
+    assert arquivos == set(QUEM_CARREGA), "arquivo de tela que ninguém carrega, ou o contrário"
+    assert "base.html" not in set().union(*QUEM_CARREGA.values())
+
+
+def test_os_parciais_de_estilo_sairam():
+    """`FR-2095`: os cinco parciais viraram arquivos de `grupos/`; o `include` não tem mais alvo."""
+    assert list(MODELOS.glob("_estilo_*.html")) == []
+
+
+@pytest.mark.django_db
+def test_a_pagina_da_tela_carrega_o_grupo_antes_do_proprio(client, seletor_ligado):
+    """`FR-2096`: na ordem de antes — o parcial vinha antes das regras próprias no bloco."""
+    identificar(client, "carlos", ["gestor", "participante-piloto-assistente"])
+    corpo = client.get(reverse("interface:visao-geral")).content
+    folhas = ordem_das_folhas(corpo)
+
+    assert folhas[: 1 + len(estaticos.FOLHAS_DA_GESTAO)] == [
+        "/static/shared/tokens.css",
+        *(f"/static/{c}" for c in estaticos.FOLHAS_DA_GESTAO),
+    ]
+    assert folhas[-1] == "/static/interface/telas/visao-geral.css"
+
+
+def test_o_fragmento_do_prototipo_carrega_a_folha_dele():
+    """`FR-2099`: no corpo da página pública, por `<link>`, e sem `<style>`."""
+    modelo = sem_comentarios((MODELOS / "prototipo_do_assistente.html").read_text())
+
+    assert "{% estatico 'interface/telas/prototipo-do-assistente.css' %}" in modelo
+    assert "<style" not in modelo
+
+
+def test_a_pagina_de_erro_carrega_a_folha_dela():
+    """`FR-2100`: o estilo do `404.html` em `shared/erro.css`, como os tokens."""
+    modelo = sem_comentarios((RAIZ / "shared/templates/404.html").read_text())
+
+    assert "{% estatico 'shared/erro.css' %}" in modelo
+    assert "<style" not in modelo
+    assert finders.find("shared/erro.css")
