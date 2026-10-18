@@ -112,6 +112,14 @@ def test_na_inscricao_recebida_a_trilha_passa_pelas_inscricoes(client, seletor_l
     assert f"Protocolo {inscricao.protocolo}" in conteudo(corpo)
     assert sem_consulta_ao_processo(captura)
 
+    # `FR-1913`: a trilha só leva a portas que quem consulta a inscrição já abre.
+    for destino in (
+        reverse("interface:processo-detalhe", args=[edital.processo_id]),
+        reverse("interface:detalhe", args=[edital.id]),
+        inscricoes,
+    ):
+        assert client.get(destino).status_code == 200, destino
+
 
 @pytest.mark.django_db
 @pytest.mark.integration
@@ -195,7 +203,8 @@ def test_nos_recursos_e_no_recurso_a_trilha_e_a_do_edital(client, seletor_ligado
 @pytest.mark.integration
 def test_o_recurso_continua_condicionando_os_caminhos(client, seletor_ligado, peca):
     """`FR-1914`, `FR-1920`: quem só julga não recebe caminho para a inscrição — nem na trilha, nem
-    no bloco de conferir —, e as ações e o impedimento ficam onde estavam."""
+    no bloco de conferir —, e as ações ficam onde estavam. O impedimento antes de qualquer botão é
+    provado em `authorization/test_julgamento_de_recurso.py`, que esta feature não muda."""
     recurso, inscricao = peca["recurso"], peca["recurso"].inscricao
     identificar(client, JULGADORA, ["julgador"])
     corpo = abrir(client, "interface:recurso", recurso.id)
@@ -203,7 +212,7 @@ def test_o_recurso_continua_condicionando_os_caminhos(client, seletor_ligado, pe
 
     documentos = reverse("interface:inscricao-recebida", args=[inscricao.id])
     assert documentos not in corpo
-    assert "Os\n    documentos da inscrição" not in corpo
+    assert "documentos da inscrição</a>" not in corpo
     assert inscricao.nome not in trilha
     assert "Julgar não as concede." in conteudo(corpo)
     assert '<button type="submit" class="botao">Registrar a decisão</button>' in corpo

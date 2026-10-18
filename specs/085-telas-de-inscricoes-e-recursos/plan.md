@@ -47,7 +47,7 @@ Sem violação a justificar.
 | `inscricao_detalhe.html` | o bloco com a trilha, terminando no protocolo ou em "Em preenchimento" (R-001) |
 | `recursos.html` | o bloco com a trilha (R-001) |
 | `recurso.html` | o bloco com a trilha, terminando no protocolo do recurso (R-001) |
-| `inscricoes/application/consulta.py` | `select_related("processo")` em `_edital_no_escopo`; `edital__processo` em `inscricao_para_consulta` (R-002) |
+| `inscricoes/application/consulta.py` | `_edital_no_escopo(..., com_processo=True)` só na lista; `edital__processo` em `inscricao_para_consulta` (R-002) |
 | `doc/inventario-visual-da-gestao-2026-10-16.md` e `depois-da-085/` | o inventário de antes e o de depois nos dois estados da barra, a comparação e as capturas das telas do escopo |
 
 ## Testes

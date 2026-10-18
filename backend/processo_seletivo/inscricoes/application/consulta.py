@@ -40,14 +40,14 @@ from processo_seletivo.shared.arquivos import tamanho_legivel
 CONSULTAR = "inscricao:consultar"
 
 
-def _edital_no_escopo(actor, edital_id):
+def _edital_no_escopo(actor, edital_id, *, com_processo=False):
     require_permission(actor, CONSULTAR)
+    # O Processo na mesma leitura só para quem o usa: a trilha das Inscrições passa por ele (085,
+    # D-003). As outras chamadas só conferem o escopo e descartam o Edital, e a junção ali seria
+    # colunas lidas para nada a cada documento aberto.
+    editais = Edital.objects.select_related("processo") if com_processo else Edital.objects
     try:
-        # O Processo na mesma leitura: a trilha das Inscrições passa por ele (085, D-003), e sem a
-        # junção cada abertura da tela custaria uma consulta a mais.
-        return Edital.objects.select_related("processo").get(
-            pk=edital_id, institution_scope=actor.institution_scope
-        )
+        return editais.get(pk=edital_id, institution_scope=actor.institution_scope)
     except Edital.DoesNotExist as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
 
@@ -96,7 +96,7 @@ def consulta_de_inscricoes(
     As duas seções paginam em separado porque são dois conjuntos com prazos distintos: o que
     chegou é trabalho, e o que está em preenchimento ainda pode nunca chegar.
     """
-    edital = _edital_no_escopo(actor, edital_id)
+    edital = _edital_no_escopo(actor, edital_id, com_processo=True)
     vigente = selectors.selecao_publica(edital_id=edital.id)
     consulta = Inscricao.objects.filter(edital=edital).select_related("versao_aceita")
     contagens = _contagens(edital, vigente)

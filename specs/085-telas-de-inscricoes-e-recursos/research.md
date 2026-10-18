@@ -43,9 +43,9 @@ quatro níveis do Recurso como quem só julga, e todos respondem 200.
 
 ## R-002 — O Processo na mesma leitura
 
-**Decisão**: em `inscricoes/application/consulta.py`, `_edital_no_escopo` lê o Edital com
-`select_related("processo")`, e `inscricao_para_consulta` lê a inscrição com `edital__processo` em
-vez de `edital`.
+**Decisão**: em `inscricoes/application/consulta.py`, `_edital_no_escopo` ganha
+`com_processo=False`, e só `consulta_de_inscricoes` o pede verdadeiro; `inscricao_para_consulta` lê a
+inscrição com `edital__processo` em vez de `edital`.
 
 **Medido em 18/10/2026, antes da mudança**, com o cenário da `012` e o recurso de `cenario_julgavel`:
 Inscrições 15 consultas, Inscrição recebida 6, Recursos 5, Recurso 8. Os Recursos e o Recurso já liam
@@ -55,8 +55,9 @@ prova é o teste `sem_consulta_ao_processo`, que reprova as duas telas quando a 
 
 **Por quê nesta função e não na view**: é dela que as views recebem o Edital; uma segunda leitura na
 view seria a consulta que se quer evitar. `_edital_no_escopo` também é chamada por duas leituras que só
-conferem o escopo e descartam o Edital — `inscricao_para_consulta` e `documento_para_consulta`; nelas a
-junção custa colunas a mais na mesma ida ao banco, e não uma ida.
+conferem o escopo e descartam o Edital — `inscricao_para_consulta` e `documento_para_consulta` —, e
+por isso a junção é pedida, e não posta na função para todas: na primeira versão ela valia para as
+três, e cada documento aberto lia as colunas do Processo para nada (achado da revisão de código).
 
 **Alternativa**: *aceitar a consulta a mais* — é constante por página e não cresceria com o certame
 (`test_inscricoes_em_escala.py` continua verde de qualquer modo); mas o repositório prende orçamento
@@ -119,3 +120,27 @@ Testes novos em `tests/interface/test_telas_de_inscricoes_e_recursos.py`; as fix
   da trilha varre todo template que sobrescreve o bloco, e as quatro telas daqui já abrem com a mesma
   `nav`. O que proíbe importar o `cenario` do módulo da `012` reprovaria este arquivo de testes se ele
   o importasse — e por isso ele declara a fixture dele.
+
+## Achados da revisão de código (18/10), registrados e não corrigidos
+
+A revisão do PR 304 levantou sete achados; quatro foram corrigidos — a junção do Processo pedida só
+pela lista (R-002), uma asserção presa à indentação do template, a docstring que prometia provar o
+impedimento e a prova das portas da trilha da Inscrição recebida. Ficam três:
+
+- **A impressão perde o Edital na Inscrição recebida e nos Recursos.** É a troca da D-004, e a
+  resposta é do produto: a `081`, no PR 298, registra a pergunta sobre impressão (caso-limite da `076` e da
+  `077`). Pô-lo de volta na linha abaixo do título mudaria o que se vê na tela, e é por isso que não
+  se faz aqui sem a resposta.
+- **O guardião da `076` mora numa tela escolhida à mão.**
+  `test_abaixo_da_secao_o_caminho_a_nomeia_e_nao_repete_a_trilha` precisa de uma tela abaixo do Edital
+  com o cabeçalho antigo; a `078` o moveu do detalhe do Edital para as Inscrições, e esta feature, das
+  Inscrições para os Avisos do Edital. A quebra só aparece na suíte completa, e quando a última tela
+  for modernizada o guardião não terá onde morar. A correção de raiz — decidir se o caminho da `076`
+  abaixo da seção continua sendo requisito quando nenhuma tela o usar — é de governança (`FR-1716` e
+  `FR-1718` da `076`).
+- **O prefixo da trilha até o Edital está copiado em seis templates** — estas quatro telas, o detalhe
+  do Edital e a base da composição. Um parcial o tornaria uma fonte só, como o do produto na `078`;
+  mas tocaria `detalhe.html` e `compor_base.html`, que estão no escopo da `083`, em paralelo, e a
+  `081`, no PR 298 ainda aberto, decide manter a abertura da trilha escrita em cada tela (a decisão
+003 dela). Fica para
+  quando os incrementos paralelos estiverem na `main`.

@@ -24,7 +24,7 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 **Independent Test**: a página tem uma `nav` "Trilha de navegação", no cabeçalho de contexto, e o `main` começa pelo título.
 
 - [x] T004 [P] [US1] `inscricoes.html`, `inscricao_detalhe.html`, `recursos.html`, `recurso.html`: a trilha do Edital com a tela no fim, no bloco `caminho_do_contexto` (R-001; FR-1910, FR-1911, FR-1912)
-- [x] T005 [US1] `inscricoes/application/consulta.py`: o Processo na mesma leitura do Edital, em `_edital_no_escopo` e em `inscricao_para_consulta` (R-002; FR-1917)
+- [x] T005 [US1] `inscricoes/application/consulta.py`: o Processo na mesma leitura do Edital — `_edital_no_escopo(..., com_processo=True)` na lista e `edital__processo` em `inscricao_para_consulta` (R-002; FR-1917)
 - [x] T006 [US1] Testes em `tests/interface/test_telas_de_inscricoes_e_recursos.py`: a trilha única no cabeçalho e o conteúdo pelo título nas quatro telas e no rascunho; nenhuma consulta só pelo Processo; cada nível do Recurso abre para quem julga; nada da pessoa além do protocolo; o Recurso sem caminho para a inscrição de quem só julga; a recusa com o cabeçalho da `076` (FR-1910 a FR-1915, FR-1917, FR-1920, SC-752 a SC-754)
 - [x] T007 [US1] Conferir que o teste de consulta reprova sem a junção — retirada a mudança de T005, as duas telas das inscrições falham (R-002)
 
@@ -45,6 +45,8 @@ Nenhuma: o bloco `caminho_do_contexto` do cabeçalho existe desde a `077`, e o p
 - [x] T014 O percurso do quickstart no navegador, pelo teclado: do Processo ao Edital, às Inscrições (e às de um Edital sem inscrição, no estado vazio), à inscrição de Ana Silva e de volta pela trilha, com foco visível; como `inventario.julgadora`, aos Recursos e ao recurso pendente, sem caminho para a inscrição; a 375 px, a trilha do Recurso em três linhas dentro do cabeçalho e nenhuma rolagem lateral (FR-1916, SC-756)
 - [x] T015 `make lint check` e `make test-pg DB_NAME=ps_085` (FR-1922, SC-755)
 - [x] T016 `rastreabilidade.md` com cada FR e SC; a linha da `085` no README
+
+- [x] T017 Revisão de código do PR 304: quatro achados corrigidos — a junção só onde se usa, a asserção presa à indentação, a docstring do impedimento, as portas da trilha da Inscrição recebida —; três registrados no fim da pesquisa
 
 ## Dependencies
 
