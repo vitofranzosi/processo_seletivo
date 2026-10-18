@@ -507,6 +507,283 @@ pulso do Processo, e marcas de cursor e de suavização em Minhas Etapas, na dev
 pontos isolados (até 4 de 255). É também o que o diff permite: ele só toca os seis templates do
 escopo.
 
+## Depois da 081
+
+A [`081`](../specs/081-achados-das-revisoes-077-079/spec.md) corrigiu os achados das revisões da
+`077` e da `079` que cabiam em apresentação: na Distribuição, "Consolidar as selecionadas" passou ao
+desenho secundário, com a marca "irreversível" logo depois — o desenho dos atos do Processo —, e
+"Distribuir as selecionadas" ficou como o único botão cheio sobre a seleção; na Alocação sem
+presidência, o aviso diz "antes de alocar". A folha comum ganhou `align-self:center`
+na própria marca, para ela não esticar em linha flexível. Na revisão do PR, a marca passou a descrever
+o botão para o leitor de tela, e "Consolidar as N prontas" ganhou o mesmo desenho e a mesma marca.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_081` — cópia
+do `ps_inventario_080` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra, antes e
+depois da mudança. O de antes não difere em medida nenhuma de `depois-da-080/`, pelo `medidas.py`.
+
+Em [`depois-da-081/`](inventario-visual-da-gestao-2026-10-16/depois-da-081/) estão os dois
+`resultados.json`, de antes e de depois, com a barra expandida e recolhida, e as capturas da
+Distribuição e da Alocação, a 1280 e a 375 px. A Alocação do banco do inventário tem presidência, e o
+aviso não aparece nela: a frase é provada pelos testes.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-081/resultados.json
+```
+
+| | Antes da 081 | Depois da 081, expandida | Depois da 081, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só a Distribuição mudou de medida**, e só a 375 px: 3306 → 3332, nos dois estados da barra. Ali os
+dois botões já ficavam um sobre o outro, e a marca, que acompanha o segundo, ocupa uma linha a mais. A
+1280 px a altura não muda (2168): a marca cabe na linha dos botões, centrada, e o botão secundário tem
+a altura do principal (40 px, medido no navegador).
+
+**Pixel a pixel.** Fora da Distribuição, as capturas de antes e de depois diferem só no que muda entre
+duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas, no aviso
+e no pulso do Processo, e marcas de cursor e de suavização em pontos isolados. O depois foi refeito
+depois da revisão do PR, já em 18/10, e o pulso do Processo e as Autoridades mostram também a data
+nova (a série de submissões passou de 2 para 3 dias). O detalhe do Processo, que também usa a marca,
+a põe num `li` da `.lista-acoes`, que já centraliza: mover `align-self` para a marca não o move. O
+botão das prontas não aparece no banco do inventário, que não tem inscrição pronta: é provado pelos
+testes.
+
+## Depois da 083
+
+O quinto incremento da modernização por tela ([`083`](../specs/083-telas-do-edital/spec.md)) mudou as
+telas que se abrem do detalhe do Edital e que a `078` não cobriu: em Novo Edital, Retificar, no
+detalhe da Retificação e na conferência de cada ato, na Prévia, em Partir de um Edital anterior e na
+conferência da troca, na Condução do marco e na conferência do gesto, na Prévia de publicação, nos
+Resultados divulgados e na Auditoria do Edital, a trilha subiu ao cabeçalho de contexto, com o
+Processo entre a seção e o Edital; a recusa do último envio sobe para logo abaixo do título em
+Retificar e na Prévia de publicação; no detalhe da Retificação, "O que fazer agora" vem antes da
+Vigência; e "Filtrar", em Partir de um Edital anterior, tem o desenho de ação principal. Nenhuma
+regra da folha comum mudou.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_083` — cópia
+do `ps_inventario_telas` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra, antes e
+depois da mudança. O de antes é **idêntico**, campo a campo, a `depois-da-080/` (`comparar.py`: zero
+variantes mudaram, nos dois estados), e está guardado em
+[`depois-da-083/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-083/antes/).
+
+Em [`depois-da-083/`](inventario-visual-da-gestao-2026-10-16/depois-da-083/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-083/recolhida/), e as capturas, a
+1280 e a 375 px e com a barra expandida, das telas do escopo — e as de antes, em `antes/`. Da
+conferência de um ato da Retificação ficam duas das cinco variantes (publicar e submeter: o mesmo
+template); de Retificar, só o topo, os primeiros 1400 px de uma página de 15 a 27 mil. As conferências
+da troca de origem e do gesto do marco não estão no inventário — são a resposta a um envio —, e foram
+vistas no navegador.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-083/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-083/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-083/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-083/resultados.json
+```
+
+| | Antes da 083 | Depois da 083, expandida | Depois da 083, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 083 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. Com a
+barra expandida:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `retificar` | 14889 → 14852 | 26986 → 26984 | a trilha saiu do conteúdo |
+| `retificacao-detalhe` | 900 → 900 | 1471 → 1469 | a trilha saiu; "O que fazer agora" trocou de lugar com a Vigência, sem mudar a soma, e os cartões vão pelo topo¹ |
+| `retificacao-ato-publicar` | 1429 → 1392 | 2168 → 2166 | a trilha saiu do conteúdo |
+| `retificacao-ato-devolver` | 966 → 929 | 1395 → 1393 | idem |
+| `retificacao-ato-cancelar`, `-homologar` | 937 → 900 | 1300 → 1298 | idem; a 1280 a página passa a caber na janela |
+| `retificacao-ato-submeter` | 900 → 900 | 1242 → 1240 | idem |
+| `reaproveitar` | 1516 → 1479 | 2090 → 2088 | idem |
+| `previa-de-publicacao` | 1282 → 1245 | 1901 → 1900 | idem |
+| `auditoria` | 1033 → 996 | 2310 → 2309 | idem |
+| `edital-criar` | 900 → 900 | 1071 → 1048 | idem; a trilha do conteúdo tinha duas linhas a 375 |
+| `marco` | 900 → 900 | 1308 → 1285 | idem |
+| `previa`, `publicacoes-do-marco` | 900 → 900 | sem mudança | cabem na janela; muda o desenho, não a medida |
+
+¹ Recapturada depois da revisão do PR, com `SO=retificacao-detalhe` nos dois estados da barra: o
+`ao-topo` muda o desenho a 1280 px (o cartão sem ato deixa de se esticar à altura da Vigência), e não
+a medida.
+
+Com a barra recolhida, as mesmas telas e as mesmas diferenças; mudam só as alturas de partida a 1280
+(`reaproveitar` 1301 → 1264, `retificacao-ato-publicar` 1389 → 1352, `retificar` 13952 → 13915).
+
+**Pixel a pixel.** Fora das telas do escopo, as capturas de antes e de depois diferem só no que muda
+entre duas capturas do mesmo código: a hora da leitura nas Dúvidas, na Supervisão, na Visão Geral e
+no pulso do Processo; o cursor de texto no título das Autoridades, com a barra recolhida; e
+suavização em pontos isolados das Inscrições e das Conclusões preservadas (até 20 de 255). É também o
+que o diff permite: ele só toca os doze templates do escopo.
+
+## Depois da 084
+
+Um dos três incrementos paralelos da modernização por tela ([`084`](../specs/084-telas-de-resultado-e-atos/spec.md))
+mudou as telas de resultado e dos atos depois da inscrição: na Classificação, na conferência da
+emissão, no Ato de classificação, no Sorteio, no Corte e no corte histórico, na Ocupação e no
+histórico dela, na Convocação e no histórico dela e em Exportar para matrícula, a trilha subiu ao
+cabeçalho de contexto — a do Edital, com os níveis que cada tela já tinha depois dele e a tela no
+fim. Nada mais mudou: nenhum texto, nenhum botão, nenhuma regra da folha comum.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_084` —
+cópia do `ps_inventario_telas` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra,
+antes e depois da mudança. **O de antes reproduz `depois-da-080/` sem nenhuma variante diferente**,
+nos dois estados; ele é a linha de base desta comparação, guardado em
+[`depois-da-084/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-084/antes/).
+
+Em [`depois-da-084/`](inventario-visual-da-gestao-2026-10-16/depois-da-084/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-084/recolhida/), e as capturas, a
+1280 e a 375 px e com a barra expandida, das dez telas do escopo que o inventário abre — e as de
+antes, em `antes/`. A conferência da emissão não está no inventário — é a resposta a um envio —, e foi
+vista no navegador.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/resultados.json
+```
+
+| | Antes da 084 | Depois da 084, expandida | Depois da 084, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 084 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. Com a
+barra expandida:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `ordenacao` | 1360 → 1323 | 1959 → 1936 | a trilha saiu do conteúdo |
+| `ato-de-ordenacao` | 1703 → 1666 | 2578 → 2577 | a trilha saiu; a 375, a do cabeçalho ganhou o Processo e o Edital, e o identificador do ato quebra em duas linhas |
+| `sorteio` | 2593 → 2556 | 3550 → 3527 | a trilha saiu do conteúdo |
+| `corte` | 1264 → 1227 | 2015 → 2013 | a trilha saiu do conteúdo |
+| `corte-historico` | 1158 → 1121 | 1842 → 1819 | a trilha saiu do conteúdo |
+| `ocupacao` | 1147 → 1110 | 1503 → 1480 | a trilha saiu do conteúdo |
+| `ocupacao-historico` | 900 → 900 | 1138 → 1115 | a trilha saiu; a 1280 a página cabe na janela |
+| `convocacao` | 2640 → 2603 | 3871 → 3848 | a trilha saiu do conteúdo |
+| `exportar-matriculas` | 900 → 900 | 854 → 831 | a trilha saiu; a 1280 a página cabe na janela |
+| `convocacao-historico` | 900 → 900 | 812 → 812 | cabe na janela nas duas larguras; muda o desenho, não a medida |
+
+Com a barra recolhida, as mesmas telas e as mesmas diferenças; três partem, a 1280, de outra altura,
+e perdem o mesmo: `ato-de-ordenacao` 1613 → 1576, `corte` 1240 → 1203 e `ordenacao` 1336 → 1299.
+
+**Pixel a pixel.** Fora das dez telas, as capturas de antes e de depois diferem só no que muda entre
+duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e no
+pulso do Processo, e marcas de suavização em pontos isolados da composição, das inscrições, da Mesa,
+do recurso, dos avisos e da Retificação (até 28 de 255). É também o que o diff permite: ele só toca
+os onze templates do escopo.
+
+## Depois da 085
+
+O sétimo incremento ([`085`](../specs/085-telas-de-inscricoes-e-recursos/spec.md)) mudou as telas de
+inscrições e de recursos: a trilha das Inscrições, da Inscrição recebida, dos Recursos e do Recurso
+subiu ao cabeçalho de contexto — a do Edital com a tela no fim, passando pelo Processo —; sem
+inscrição recebida, a lista mostra o estado vazio; e os rascunhos são região nomeada. A tela de
+recusa ficou fora (a decisão 002 da spec). Nenhuma regra da folha comum mudou.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_085` — cópia
+do `ps_inventario_080` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra, antes e
+depois da mudança. **O de antes reproduz `depois-da-080/`**: nenhuma variante muda de medida, nos dois
+estados da barra. Ele está em [`depois-da-085/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-085/antes/);
+em [`depois-da-085/`](inventario-visual-da-gestao-2026-10-16/depois-da-085/), o de depois, com
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-085/recolhida/), e as capturas, a 1280
+e a 375 px e com a barra expandida, das cinco variantes do escopo, antes e depois.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-085/resultados.json
+```
+
+| | Antes da 085 | Depois da 085, expandida | Depois da 085, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 085 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. Com a
+barra expandida:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `inscricao-recebida` | 1924 → 1887 | 2452 → 2450 | a trilha saiu do conteúdo |
+| `inscricoes` | 1021 → 984 | 1336 → 1335 | a trilha saiu do conteúdo |
+| `recurso-admitido` | 1527 → 1490 | 2108 → 2106 | a trilha saiu do conteúdo |
+| `recurso-pendente` | 1067 → 1030 | 1670 → 1669 | a trilha saiu do conteúdo |
+| `recursos` | 900 → 900 | 812 → 812 | cabe na janela nas duas larguras; muda o desenho, não a medida |
+
+A 375 px a página quase não encurta: a trilha sai do conteúdo e cresce no cabeçalho, onde quebra em
+duas ou três linhas. Com a barra recolhida, as mesmas diferenças, menos `inscricoes` a 1280, que cabe na
+janela (900 → 900). O estado vazio das Inscrições não aparece: o Edital do inventário tem inscrições.
+
+**Pixel a pixel.** Fora das cinco variantes, as capturas de antes e de depois diferem só no que muda
+entre duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e no
+pulso do Processo, e pontos isolados de suavização (de 6 a 151 px, espalhados) na lista, em duas
+confirmações da Retificação, no novo modelo de aviso e na Revisão da composição. O diff de
+`backend/processo_seletivo/` toca os quatro templates do escopo e uma função de consulta.
+
+## Depois da 086
+
+O grupo das telas dos avisos aos candidatos ([`086`](../specs/086-telas-dos-avisos-aos-candidatos/spec.md))
+mudou os Avisos aos candidatos de um Edital, o histórico de um aviso, a prévia (de resultado, de
+chamada e de reenvio), a conferência da interrupção, os Modelos de aviso e a edição de um modelo: a
+trilha subiu ao cabeçalho de contexto — as telas de um Edital passam pelo Processo, a prévia diz a
+porta por onde se chegou, e os modelos começam na seção da barra —; os três estados vazios passaram a
+`.vazio`, os botões de dois formulários a `.salvar`, e "Novo modelo" a `.acoes-do-painel`. Nenhuma
+regra da folha comum mudou.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_086` —
+cópia do `ps_inventario_telas` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra,
+antes e depois da mudança. O de antes é igual, variante a variante, a `depois-da-080/`, e está em
+[`depois-da-086/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-086/antes/).
+
+Em [`depois-da-086/`](inventario-visual-da-gestao-2026-10-16/depois-da-086/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-086/recolhida/), e as capturas, a
+1280 e a 375 px e com a barra expandida, das nove variantes do escopo — e as de antes, em `antes/`. A
+prévia da chamada continua fora do inventário (pede uma comunicação por publicação que o seed não
+emite), e os estados vazios não aparecem nele (o banco tem resultado, aviso e modelos): foram vistos
+no navegador e são provados pelos testes.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-086/resultados.json
+```
+
+| | Antes da 086 | Depois da 086, expandida | Depois da 086, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 086 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. As telas
+dos avisos têm a largura de leitura, e por isso as medidas são as mesmas nos dois estados da barra:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `aviso` | 1188 → 1151 | 1674 → 1672 | a trilha saiu do conteúdo |
+| `aviso-do-resultado` | 2031 → 1994 | 2819 → 2817 | a trilha saiu do conteúdo |
+| `aviso-reenviar` | 1442 → 1405 | 2146 → 2144 | a trilha saiu do conteúdo |
+| `aviso-interromper` | 900 → 900 | 902 → 948 | a trilha saiu, e os botões ganharam o rodapé, que a 375 quebra o rótulo |
+| `avisos-do-edital`, `avisos-do-edital-antes` | 900 → 900 | 814 → 812 | a trilha saiu; a 1280 a página cabe na janela |
+| `modelos-de-aviso` | 900 → 900 | 904 → 875 | a trilha saiu; a 1280 a página cabe na janela |
+| `modelo-de-aviso` | 1288 → 1315 | 1837 → 1858 | a trilha saiu, e os botões ganharam o rodapé |
+| `modelo-de-aviso-novo` | 1216 → 1243 | 1741 → 1762 | a trilha saiu, e os botões ganharam o rodapé |
+
+**Pixel a pixel.** Fora das nove variantes, as capturas de antes e de depois diferem só no que muda
+entre duas capturas do mesmo código — a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e
+no pulso do Processo, e marcas de suavização isoladas (até 39 de 255) —, nos dois estados da barra. É
+também o que o diff permite: ele só toca os seis templates do escopo.
+
 ## Depois da 087
 
 O último grupo da modernização por tela ([`087`](../specs/087-paineis-e-telas-de-apoio/spec.md)) mudou

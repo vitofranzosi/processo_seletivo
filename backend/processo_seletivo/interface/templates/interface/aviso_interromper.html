@@ -1,13 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Interromper o aviso — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a> › <a href="{% url 'interface:aviso' aviso.id %}">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }}</a> › <span aria-current="page">Interromper</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:aviso' aviso.id %}">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }}</a> ›
-  <span aria-current="page">Interromper</span>
-</nav>
-
 <h1>Interromper o envio</h1>
 <p class="sub">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }} às {{ aviso.solicitado_em|date:"H:i" }}, confirmado por {{ aviso.solicitado_por }}</p>
 
@@ -29,7 +23,9 @@
     <label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
     <textarea id="motivo" name="motivo" rows="3" required aria-required="true">{{ motivo }}</textarea>
   </div>
-  <button type="submit" class="botao perigoso">Interromper o envio</button>
-  <a class="botao secundario" href="{% url 'interface:aviso' aviso.id %}">Voltar sem interromper</a>
+  <p class="salvar">
+    <button type="submit" class="botao perigoso">Interromper o envio</button>
+    <a class="botao secundario" href="{% url 'interface:aviso' aviso.id %}">Voltar sem interromper</a>
+  </p>
 </form>
 {% endblock %}

@@ -1,12 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Avisos aos candidatos — {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Avisos aos candidatos</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Avisos aos candidatos</span>
-</nav>
-
 <h1>Avisos aos candidatos</h1>
 <p class="sub">{{ processo.title }} · Edital {{ edital.number }}/{{ edital.year }}</p>
 <p class="imutavel">O aviso é um e-mail complementar a um ato já publicado: ele aponta a publicação oficial, não a substitui e não muda prazo, situação nem direito de ninguém.</p>
@@ -27,7 +22,7 @@
   {% endfor %}
   </ul>
   {% else %}
-  <p class="nenhuma">Nenhum resultado foi publicado neste Edital ainda.</p>
+  <p class="vazio">Nenhum resultado foi publicado neste Edital ainda.</p>
   {% endif %}
   <p class="ajuda">A chamada de convocação publicada é avisada pela tela da convocação do marco.</p>
 </section>
@@ -53,7 +48,7 @@
   </table>
   </div>
   {% else %}
-  <p class="nenhuma">Nenhum aviso foi confirmado neste Edital.</p>
+  <p class="vazio">Nenhum aviso foi confirmado neste Edital.</p>
   {% endif %}
 </section>
 {% endblock %}

@@ -1,17 +1,13 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Modelos de aviso{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">Modelos de aviso</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <span aria-current="page">Modelos de aviso</span>
-</nav>
-
 <h1>Modelos de aviso</h1>
 <p class="sub">Os textos que a unidade reutiliza nos avisos aos candidatos. Editar um modelo não muda aviso já confirmado, e inativá-lo só o tira da lista de escolha.</p>
 
 {% if salvo %}<p class="sucesso" role="status" tabindex="-1" autofocus>Modelo “{{ salvo }}” salvo.</p>{% endif %}
 
-<p><a class="botao" href="{% url 'interface:modelo-de-aviso-novo' %}">Novo modelo</a></p>
+<p class="acoes-do-painel"><a class="botao" href="{% url 'interface:modelo-de-aviso-novo' %}">Novo modelo</a></p>
 
 {% if modelos %}
 <div class="tabela-rolavel">
@@ -37,6 +33,6 @@
 </table>
 </div>
 {% else %}
-<p class="nenhuma">A unidade ainda não tem modelos de aviso.</p>
+<p class="vazio">A unidade ainda não tem modelos de aviso.</p>
 {% endif %}
 {% endblock %}
