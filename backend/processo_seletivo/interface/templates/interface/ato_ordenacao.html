@@ -1,12 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Ato de classificação{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:ordenacao' edital.id ato.marco_id %}">Classificação</a> › <span aria-current="page">Ato {{ ato.id }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:ordenacao' edital.id ato.marco_id %}">Classificação</a> ›
-  <span aria-current="page">Ato {{ ato.id }}</span>
-</nav>
-
 <h1>Ato de classificação</h1>
 <p class="sub">{{ nomes.edital }}{% if nomes.perfil %} — {{ nomes.perfil }}{% endif %}{% if nomes.marco %} — {{ nomes.marco }}{% endif %}. Emitido por {{ ato.emitido_por }} em {{ ato.emitido_em|date:"d/m/Y H:i" }}.</p>
 <p class="imutavel">Este snapshot é imutável. A consulta abaixo lê o que foi registrado; não recalcula o passado.</p>

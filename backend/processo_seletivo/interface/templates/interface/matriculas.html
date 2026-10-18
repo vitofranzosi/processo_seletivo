@@ -1,12 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Exportar para matrícula — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Exportar para matrícula</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Exportar para matrícula</span>
-</nav>
-
 <h1>Exportar para matrícula</h1>
 <p class="sub">O que cada pessoa declarou no Requerimento de Matrícula, no formato que o Registro
   Acadêmico importa — sem redigitação e sem planilha montada à mão.</p>

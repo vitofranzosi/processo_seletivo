@@ -506,3 +506,62 @@ duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Gera
 pulso do Processo, e marcas de cursor e de suavização em Minhas Etapas, na devolução do ato e em
 pontos isolados (até 4 de 255). É também o que o diff permite: ele só toca os seis templates do
 escopo.
+
+## Depois da 084
+
+Um dos três incrementos paralelos da modernização por tela ([`084`](../specs/084-telas-de-resultado-e-atos/spec.md))
+mudou as telas de resultado e dos atos depois da inscrição: na Classificação, na conferência da
+emissão, no Ato de classificação, no Sorteio, no Corte e no corte histórico, na Ocupação e no
+histórico dela, na Convocação e no histórico dela e em Exportar para matrícula, a trilha subiu ao
+cabeçalho de contexto — a do Edital, com os níveis que cada tela já tinha depois dele e a tela no
+fim. Nada mais mudou: nenhum texto, nenhum botão, nenhuma regra da folha comum.
+
+O inventário foi refeito sobre a `main` em `cf6d7372`, num banco próprio, `ps_inventario_084` —
+cópia do `ps_inventario_telas` —, com o mesmo roteiro e o mesmo `AVISO`, nos dois estados da barra,
+antes e depois da mudança. **O de antes reproduz `depois-da-080/` sem nenhuma variante diferente**,
+nos dois estados; ele é a linha de base desta comparação, guardado em
+[`depois-da-084/antes/`](inventario-visual-da-gestao-2026-10-16/depois-da-084/antes/).
+
+Em [`depois-da-084/`](inventario-visual-da-gestao-2026-10-16/depois-da-084/) estão o
+`resultados.json` com a barra expandida, o de
+[`recolhida/`](inventario-visual-da-gestao-2026-10-16/depois-da-084/recolhida/), e as capturas, a
+1280 e a 375 px e com a barra expandida, das dez telas do escopo que o inventário abre — e as de
+antes, em `antes/`. A conferência da emissão não está no inventário — é a resposta a um envio —, e foi
+vista no navegador.
+
+```bash
+python3 doc/inventario-visual-da-gestao-2026-10-16/comparar.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/resultados.json
+python3 doc/inventario-visual-da-gestao-2026-10-16/medidas.py doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/antes/resultados.json doc/inventario-visual-da-gestao-2026-10-16/depois-da-084/resultados.json
+```
+
+| | Antes da 084 | Depois da 084, expandida | Depois da 084, recolhida |
+|---|---|---|---|
+| Variantes que carregam | 84 de 85 | 84 de 85 | 84 de 85 |
+| `status` diferente | — | nenhum | nenhum |
+| Estouram a 375 px | 0 | 0 | 0 |
+| Estouram a 1280 px | 0 | 0 | 0 |
+
+**Só as telas da 084 mudaram de medida**, e só de altura — nenhuma largura, título ou `h1`. Com a
+barra expandida:
+
+| Tela | 1280 px | 375 px | Por quê |
+|---|---|---|---|
+| `ordenacao` | 1360 → 1323 | 1959 → 1936 | a trilha saiu do conteúdo |
+| `ato-de-ordenacao` | 1703 → 1666 | 2578 → 2577 | a trilha saiu; a 375, a do cabeçalho ganhou o Processo e o Edital, e o identificador do ato quebra em duas linhas |
+| `sorteio` | 2593 → 2556 | 3550 → 3527 | a trilha saiu do conteúdo |
+| `corte` | 1264 → 1227 | 2015 → 2013 | a trilha saiu do conteúdo |
+| `corte-historico` | 1158 → 1121 | 1842 → 1819 | a trilha saiu do conteúdo |
+| `ocupacao` | 1147 → 1110 | 1503 → 1480 | a trilha saiu do conteúdo |
+| `ocupacao-historico` | 900 → 900 | 1138 → 1115 | a trilha saiu; a 1280 a página cabe na janela |
+| `convocacao` | 2640 → 2603 | 3871 → 3848 | a trilha saiu do conteúdo |
+| `exportar-matriculas` | 900 → 900 | 854 → 831 | a trilha saiu; a 1280 a página cabe na janela |
+| `convocacao-historico` | 900 → 900 | 812 → 812 | cabe na janela nas duas larguras; muda o desenho, não a medida |
+
+Com a barra recolhida, as mesmas telas e as mesmas diferenças; três partem, a 1280, de outra altura,
+e perdem o mesmo: `ato-de-ordenacao` 1613 → 1576, `corte` 1240 → 1203 e `ordenacao` 1336 → 1299.
+
+**Pixel a pixel.** Fora das dez telas, as capturas de antes e de depois diferem só no que muda entre
+duas capturas do mesmo código: a hora da leitura na Supervisão, na Visão Geral, nas dúvidas e no
+pulso do Processo, e marcas de suavização em pontos isolados da composição, das inscrições, da Mesa,
+do recurso, dos avisos e da Retificação (até 28 de 255). É também o que o diff permite: ele só toca
+os onze templates do escopo.

@@ -6,13 +6,8 @@
 .imutavel code{overflow-wrap:anywhere}
 {% endblock %}
 {% block titulo %}Sorteio — {{ marco.name }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Sorteio — {{ marco.name }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Sorteio — {{ marco.name }}</span>
-</nav>
-
 <h1>Sorteio — {{ marco.name }}</h1>
 <p class="sub">{{ perfil.name }} — o universo é comprometido <strong>antes</strong> de a semente existir.</p>
 {% comment %}
