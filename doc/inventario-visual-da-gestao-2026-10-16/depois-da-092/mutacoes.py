@@ -22,6 +22,7 @@ DOCUMENTOS = MODELOS / "_documentos.html"
 INSCRICAO = MODELOS / "inscricao.html"
 POLITICA = Path("processo_seletivo/shared/politica_de_conteudo.py")
 PROTOTIPO = Path("processo_seletivo/interface/prototipo_do_assistente.py")
+PAINEL = Path("processo_seletivo/interface/templates/interface/prototipo_do_assistente.html")
 
 T_ACESS = "tests/interface/test_acessibilidade.py"
 T_ACESS_P = "tests/interface/test_acessibilidade_do_portal.py"
@@ -115,6 +116,9 @@ MUTACOES = [
      f"{T_POL}::test_o_portal_e_o_resto_do_html_recebem_a_politica_em_recusa"),
     (32, PROTOTIPO, [("    return HttpResponse(html)\n", "    return HttpResponse(html, headers={\"Content-Security-Policy-Report-Only\": \"default-src *\"})\n")],
      "tests/interface/test_prototipo_do_assistente.py::test_o_fundo_do_portal_fica_sob_a_recusa"),
+    # Da revisão do PR: a página pública com o painel da 074, que o inventário não captura.
+    (35, PAINEL, [('<dialog id="pd-painel"', '<b style="color:red"></b><dialog id="pd-painel"')],
+     "tests/portal/test_assistente_na_pagina.py::test_ligada_a_pagina_com_o_painel_fica_sob_a_recusa"),
 ]
 
 

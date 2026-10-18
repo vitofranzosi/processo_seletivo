@@ -201,3 +201,38 @@ branch, cada passada num banco copiado de `ps_inventario_092`):
   provado igual byte a byte (R-002).
 - **Os números da suíte** (`make lint check test-pg`, 4 workers, `ps_092`, 18/10/2026): **12.267
   passando, 11 pulados**, nenhuma falha — os 12.212 da `091` mais os casos novos e parametrizados desta.
+
+## R-008 — A revisão do PR
+
+`/code-review` (alto) sobre o PR #309, no que é da `092` (`2615b738..d6180a02`): **8 achados, 5
+corrigidos, 3 registrados**.
+
+**Corrigidos:**
+
+- **A página pública com o painel da `074`** ficava sob a recusa sem que nada a exercitasse: o
+  inventário roda com a chave desligada, e a suíte só via o protótipo. Caso novo em
+  `portal/test_assistente_na_pagina.py` — cabeçalho em recusa, nenhum estilo embutido, a folha do painel
+  por `<link>` —, provado pela mutação 35.
+- **A matriz da `091` apontava para casos que esta feature trocou**, para a FR-2104, que a FR-2137
+  substitui; o guardião da matriz só confere identificadores, e ficava verde. A linha diz agora que foi
+  substituída, e por quais casos.
+- **O roteiro de mutação da `091`** procura trechos que esta feature tirou, e rodado na árvore nova
+  dava "reprova" falso e parava num `assert`. O cabeçalho dele diz que prova a árvore de `2615b738`, e
+  como refazê-lo.
+- **O rótulo "da 091" do `estilos.py`** conta também as classes do portal; o comentário diz que, numa
+  tela do portal, ele quer dizer "da 092" (o rótulo fica, para os `resultados.json` continuarem
+  comparáveis).
+- **Um comentário do `capturar_bases.py`** falava da página de erro "que recusa em vez de observar".
+
+**Registrados, e não feitos:**
+
+- **A página de falha de CSRF do Django sai sem desenho no portal**, como já saía na gestão desde a
+  `091`: o `csrf_403.html` traz `<style>` embutido. Quem mais a vê é o candidato com a sessão vencida
+  que clica em Enviar ou em Sair. Resolver é uma view nova (`CSRF_FAILURE_VIEW`), e a FR-2145 proíbe
+  view nova nesta feature; fica para um passo próprio, que decida também o texto da página.
+- **As 101 classes de percentual existem em três cópias** (`minhas-etapas.css`, `grupos/serie.css` em
+  altura, `portal.css`). Um arquivo comum em `shared/`, carregado pelas duas bases, seria uma cópia só;
+  a decisão 004 escolheu não acoplar a base do portal a mais um arquivo por uma tela. Passo possível.
+- **O comprovante salvo como "só HTML"** perde o desenho, porque a folha deixou de estar no documento.
+  O navegador salva a página completa com a folha, e a ação que a página oferece é baixar o PDF, que é
+  o documento oficial; aceito.

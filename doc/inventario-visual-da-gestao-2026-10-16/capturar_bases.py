@@ -54,7 +54,8 @@ ROTAS = [
     ("portal-vitrine", "/selecoes/", 200),
     ("portal-acesso", "/selecoes/acesso", 200),
     ("pagina-de-erro", "/selecoes/nao-existe", 404),
-    # A mesma página de erro sob a gestão, onde a política da 091 recusa em vez de observar.
+    # A mesma página de erro sob a gestão. Na 091 a política recusava aqui e observava na de cima;
+    # desde a 092 as duas vão em recusa, e as duas ficam para provar que nenhuma perdeu o desenho.
     ("pagina-de-erro-da-gestao", "/gestao/nao-existe", 404),
 ]
 

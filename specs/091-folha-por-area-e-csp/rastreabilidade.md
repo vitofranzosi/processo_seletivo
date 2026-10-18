@@ -21,7 +21,7 @@ Caminhos de teste relativos a `backend/tests/`. "Inventário" é a comparação 
 | FR-2101 | `interface/test_politica_de_conteudo.py` (nenhum `style=` nos modelos da gestão; as classes de 0 a 100 existem) |
 | FR-2102 | R-007 da pesquisa |
 | FR-2103 | `interface/test_politica_de_conteudo.py` (o cabeçalho em tela, fragmento, acesso e página de erro sob `/gestao/`; nenhuma diretiva com `unsafe-`) |
-| FR-2104 | `interface/test_politica_de_conteudo.py` (portal com `-Report-Only`); `interface/test_prototipo_do_assistente.py` (`test_o_fundo_do_portal_fica_sob_a_politica_do_portal`); D-007 |
+| FR-2104 | **Substituído na `092`** (FR-2137: o modo de observação saiu, e os dois casos abaixo foram trocados por `test_o_portal_e_o_resto_do_html_recebem_a_politica_em_recusa` e `test_o_fundo_do_portal_fica_sob_a_recusa`). Na `091`: `interface/test_politica_de_conteudo.py` (portal com `-Report-Only`); `interface/test_prototipo_do_assistente.py` (`test_o_fundo_do_portal_fica_sob_a_politica_do_portal`); D-007 |
 | FR-2105 | `interface/test_politica_de_conteudo.py` (JSON, PDF e `/health` sem cabeçalho; a constante é a única fonte); `pyproject.toml` sem dependência nova |
 | FR-2106 | `interface/test_politica_de_conteudo.py` (nenhum script embutido, `on*=` ou `javascript:` nos modelos; nenhum script escreve o atributo `style`) |
 | FR-2107 | `interface/test_politica_de_conteudo.py` (o `<meta>` do htmx em toda base que leva a tela com htmx); inventário (zero violações nas telas com htmx) |
