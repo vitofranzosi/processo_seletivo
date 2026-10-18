@@ -34,7 +34,6 @@ from processo_seletivo.duvidas.application.consultar import SemVersaoVigente, co
 from processo_seletivo.interface import painel_do_assistente as painel_
 from processo_seletivo.interface.assistente import _edital_do_piloto
 from processo_seletivo.portal import views as portal
-from processo_seletivo.shared.politica_de_conteudo import em_observacao
 
 CHAVE_DA_SESSAO = "assistente_prototipo"
 ROTA = "interface:assistente-prototipo"
@@ -74,8 +73,9 @@ def prototipo(request, edital_id):
     )
     painel = render_to_string(painel_.TEMPLATE, dados, request=request)
     html = pagina.content.decode("utf-8").replace("</body>", painel + "</body>", 1)
-    # A página é a do portal, com a folha dele no documento: a política do portal (091).
-    return em_observacao(HttpResponse(html))
+    # A página é a do portal. Na 091 ela ia em observação, porque a folha do portal estava no
+    # documento; desde a 092 a folha é arquivo, e a página fica sob a recusa, como toda outra.
+    return HttpResponse(html)
 
 
 @require_http_methods(["POST"])
