@@ -1,0 +1,136 @@
+/*
+A folha do protótipo da 094. Os tokens são os de `shared/tokens.css`, copiados para que o protótipo
+rode sem o produto; a fronteira de 64rem é a da gestão (`moldura.css`), onde a barra vira popover.
+
+O painel abre sem script: `:has()` acende a segunda coluna quando o painel tem conteúdo. Abaixo de
+64rem ele cobre a tela, com rolagem própria, e a página por baixo não rola na horizontal.
+*/
+:root{
+  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
+  --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
+  --amarelo:#8a5300; --amarelo-fundo:#fdf5e5; --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9;
+  --cinza-fundo:#eee; --azul:#1d4f91; --azul-fundo:#e8f0fb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
+  background:var(--fundo);line-height:1.5;font-size:16px}
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+h1{font-size:1.5rem;margin:0 0 1rem}
+h2{font-size:1.15rem;margin:0}
+code{font-size:.9em}
+.oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* A faixa que diz o que é o protótipo, sempre à vista. */
+.faixa-do-prototipo{background:var(--azul-fundo);border-bottom:1px solid var(--azul);
+  padding:.75rem 1rem;font-size:.95rem}
+.faixa-do-prototipo p{margin:0 0 .25rem}
+.legenda,.exemplos{margin:0;padding:0;list-style:none}
+.legenda li{margin:.15rem 0}
+.faixa-do-prototipo nav{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline;
+  margin-top:.4rem}
+.faixa-do-prototipo nav p{margin:0}
+.exemplos{display:flex;flex-wrap:wrap;gap:.25rem .75rem}
+.exemplos a[aria-current]{font-weight:700}
+.selo{display:inline-block;font-size:.75rem;font-weight:700;padding:0 .4rem;border-radius:.25rem;
+  vertical-align:middle;letter-spacing:.02em}
+.selo-motor{background:var(--verde-claro);color:var(--verde-escuro);border:1px solid var(--verde)}
+.selo-demo{background:var(--amarelo-fundo);color:var(--amarelo);border:1px solid var(--amarelo)}
+
+/* A página: uma coluna; duas quando o painel tem conteúdo e a tela é larga. */
+.pagina{max-width:96rem;margin:0 auto;padding:1rem}
+main{min-width:0}
+@media (min-width:64rem){
+  .pagina:has(#painel-da-previa:not(:empty)){display:grid;
+    grid-template-columns:minmax(0,.85fr) minmax(0,1.3fr);gap:1.25rem;align-items:start}
+  #painel-da-previa:not(:empty){position:sticky;top:1rem;max-height:calc(100vh - 2rem);
+    overflow:auto}
+}
+@media not all and (min-width:64rem){
+  #painel-da-previa:not(:empty){position:fixed;inset:0;z-index:20;overflow:auto}
+  /* No celular a tabela empilhada é longa: o fechar fica à mão. */
+  .cabeca-do-painel{position:sticky;top:-1rem;background:var(--branco);padding:.5rem 0;z-index:1}
+}
+
+/* O cartão, no desenho da composição. */
+fieldset{border:1px solid var(--borda);border-radius:.4rem;background:var(--branco);
+  padding:.75rem 1rem;margin:0 0 1rem;min-width:0}
+legend{font-weight:600;padding:0 .25rem}
+.campos{display:flex;flex-wrap:wrap;gap:.5rem 1rem}
+.campo{margin:.25rem 0;display:flex;flex-direction:column;min-width:0;flex:1 1 14rem}
+.campo.curto{flex:0 1 8rem}
+.campo.largo{flex:1 1 100%}
+.campo label,.rotulo{font-size:.9rem;font-weight:600}
+select,input{font:inherit;padding:.3rem .4rem;border:1px solid var(--borda);border-radius:.25rem;
+  max-width:100%;background:var(--branco)}
+input[type=number]{width:7rem}
+.etapas{display:flex;flex-wrap:wrap;gap:.25rem 1rem}
+.escolha{display:inline-flex;gap:.35rem;align-items:center}
+.criterio{background:var(--fundo)}
+.bloco-do-marco{margin:.5rem 0}
+.bloco-do-marco summary,.de-outros-passos summary{font-weight:600;cursor:pointer}
+.resumo-do-bloco{font-weight:400;color:var(--texto-fraco);margin-left:.5rem}
+.de-outros-passos{border:1px dashed var(--amarelo);border-radius:.4rem;padding:.5rem 1rem;
+  margin:0 0 1rem;background:var(--amarelo-fundo)}
+.pesos{list-style:none;padding:0;margin:.25rem 0;display:flex;flex-wrap:wrap;gap:.25rem 1.25rem}
+.pesos input{width:5rem}
+.porta{color:var(--texto-fraco);font-size:.9rem}
+.ajuda{color:var(--texto-fraco);font-size:.9rem;margin:.25rem 0}
+.acoes-do-marco{margin:.75rem 0 0}
+.acao{font:inherit;font-weight:600;padding:.45rem .9rem;border-radius:.3rem;cursor:pointer;
+  background:var(--branco);color:var(--verde-texto);border:2px solid var(--verde)}
+.acao:hover{background:var(--verde-claro)}
+
+/* O painel. */
+.painel-da-previa:not(:empty){background:var(--branco);border:1px solid var(--borda);
+  border-radius:.4rem;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.cabeca-do-painel{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.cabeca-do-painel h2:focus{outline:none}
+.fechar{font:inherit;padding:.3rem .8rem;border:1px solid var(--borda);border-radius:.3rem;
+  background:var(--branco);cursor:pointer}
+.contexto,.descricao-do-cenario,.ancora{margin:.35rem 0;font-size:.95rem}
+.descricao-do-cenario,.ancora{color:var(--texto-fraco)}
+.reposicionado{color:var(--azul);font-weight:600}
+.resumo{margin:.75rem 0}
+.resumo-da-faixa{margin:.25rem 0}
+.resultado{margin:.5rem 0;padding:.5rem .75rem;border-radius:.3rem;border-left:4px solid}
+.resultado p{margin:.25rem 0}
+.resultado ul{margin:.25rem 0;padding-left:1.25rem}
+.resultado.saiu{border-color:var(--verde);background:var(--verde-claro)}
+.resultado.neutro{border-color:var(--borda);background:var(--fundo)}
+/* A recusa é resultado da regra, e não erro de preenchimento (D-005): âmbar, e não vermelho. */
+.resultado.parado,.resultado.aviso{border-color:var(--amarelo);background:var(--amarelo-fundo)}
+.resultado.incompleto{border-color:var(--azul);background:var(--azul-fundo)}
+.comparacao,.comportamento-atual,.suposicao{font-size:.9rem;color:var(--texto-fraco);margin:.25rem 0}
+.conferencia{font-size:.85rem;color:var(--texto-fraco);margin:.75rem 0 0}
+.conferencia.divergiu{color:var(--vermelho);font-weight:700}
+
+/* A tabela: rola dentro do painel, nunca a página. */
+.rolavel{overflow-x:auto;max-width:100%}
+table.previa{border-collapse:collapse;width:100%;font-size:.9rem}
+.previa th,.previa td{border-bottom:1px solid var(--borda);padding:.4rem .5rem;text-align:left;
+  vertical-align:top}
+.previa th{background:var(--fundo);font-size:.85rem}
+.previa td:first-child{white-space:nowrap;font-weight:600}
+.dividida,.detalhe,.consequencia{display:block;font-size:.8rem;color:var(--texto-fraco);
+  font-weight:400}
+.agrupada td{font-style:italic;color:var(--texto-fraco);background:var(--fundo)}
+[class^=marca-]{display:inline-block;font-weight:700;font-size:.8rem;padding:0 .35rem;
+  border-radius:.25rem}
+.marca-alvo{background:var(--verde-claro);color:var(--verde-escuro)}
+.marca-suplente{background:var(--azul-fundo);color:var(--azul)}
+.marca-excedente,.marca-fronteira{background:var(--amarelo-fundo);color:var(--amarelo)}
+.marca-fora,.marca-sem-posicao,.marca-sem-corte{background:var(--cinza-fundo);color:var(--texto)}
+.marca-parado{background:var(--amarelo-fundo);color:var(--amarelo)}
+.situacao-fora td,.situacao-sem-posicao td{color:var(--texto-fraco)}
+
+/* No estreito, cada linha vira um bloco com o rótulo da coluna antes do valor. */
+@media (max-width:40rem){
+  .previa thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .previa tr{display:block;border-bottom:2px solid var(--borda);padding:.4rem 0}
+  .previa td{display:block;border:0;padding:.15rem .25rem}
+  .previa td::before{content:attr(data-rotulo);display:block;font-size:.75rem;font-weight:700;
+    color:var(--texto-fraco);text-transform:uppercase;letter-spacing:.03em}
+  .agrupada td::before{content:none}
+  .previa td:first-child{white-space:normal}
+  .pagina{padding:.75rem}
+}

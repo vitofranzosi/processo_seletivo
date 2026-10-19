@@ -382,6 +382,16 @@
         "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_inventario_082 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8084"
       ],
       "port": 8084
+    },
+    {
+      "name": "previa-094",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && uv run python ../specs/094-previa-da-classificacao/prototipo/servidor.py 8094"
+      ],
+      "port": 8094,
+      "url": "http://localhost:8094"
     }
   ]
 }
