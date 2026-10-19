@@ -1,0 +1,323 @@
+{
+  "fase": "5B.2-A.2",
+  "data": "2026-10-16",
+  "head": "6fc3a85a9ce58a973dc0e29bc38085dfd055f171",
+  "verificacoes": {
+    "python_ast": 8,
+    "json_yaml": "validos",
+    "hashes_tecnicos": 12,
+    "copias_anteriores": 6,
+    "acoes_preparadas": 6,
+    "acoes_no_grafo_de_planejamento": 18,
+    "receitas_preservadas": 14,
+    "arquivos_operacionais_ausentes": true,
+    "referencias_locais_e_espacos": "sem erros",
+    "chamadas_operador_sem_start_pull_build_migrations_seed_remocao": [
+      {
+        "funcao": "docker",
+        "linha": 164,
+        "argumentos_literais": [
+          "inspect",
+          "--format"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 175,
+        "argumentos_literais": [
+          "--format"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 183,
+        "argumentos_literais": [
+          "compose",
+          "--project-name",
+          "--file",
+          "--env-file"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 273,
+        "argumentos_literais": [
+          "info",
+          "--format",
+          "{{.ID}}"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 195,
+        "argumentos_literais": [
+          "info",
+          "--format",
+          "{{.ID}}"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 245,
+        "argumentos_literais": [
+          "container",
+          "inspect",
+          "--format",
+          "{{json .HostConfig.PortBindings}}"
+        ]
+      },
+      {
+        "funcao": "compose",
+        "linha": 295,
+        "argumentos_literais": [
+          "--profile",
+          "operacional",
+          "create",
+          "--no-build",
+          "--pull",
+          "never",
+          "banco-homologacao",
+          "aplicacao-homologacao"
+        ]
+      },
+      {
+        "funcao": "compose",
+        "linha": 327,
+        "argumentos_literais": [
+          "--profile",
+          "manutencao",
+          "run",
+          "--pull",
+          "never",
+          "--name",
+          "--no-deps",
+          "preparacao-homologacao",
+          "conferir"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 341,
+        "argumentos_literais": [
+          "container",
+          "stop"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 215,
+        "argumentos_literais": [
+          "inspect",
+          "--format",
+          "{{json .Options}}"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 344,
+        "argumentos_literais": [
+          "container",
+          "stop"
+        ]
+      }
+    ],
+    "bootstrap_sem_banco_da_aplicacao": true
+  },
+  "testes_puros": {
+    "executados": 29,
+    "falhas": 0,
+    "erros": 0,
+    "duracao_observada_segundos": 0.033,
+    "resultado": "OK",
+    "rede_banco_subprocessos_reais": false,
+    "reuso": "19 regressoes A1 com fixture nova e 10 verificacoes de escopo/grafo"
+  },
+  "consulta_publica": {
+    "metodo": "GET HTTPS TLS sem proxy, credencial institucional, Docker, blobs ou camadas; tokens anonimos apenas em memoria",
+    "indices_sha256_verificados": 3,
+    "manifestos_de_plataforma_sha256_verificados": 6,
+    "digests": [
+      {
+        "nome": "postgres",
+        "indice": "sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336",
+        "plataformas": [
+          {
+            "plataforma": {
+              "architecture": "amd64",
+              "os": "linux"
+            },
+            "digest": "sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b"
+          },
+          {
+            "plataforma": {
+              "architecture": "arm64",
+              "os": "linux",
+              "variant": "v8"
+            },
+            "digest": "sha256:a63b24165ea0eacced7585766d790ac08bbaefe10a1841f87783a4505d29a69c"
+          }
+        ]
+      },
+      {
+        "nome": "python",
+        "indice": "sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641",
+        "plataformas": [
+          {
+            "plataforma": {
+              "architecture": "amd64",
+              "os": "linux"
+            },
+            "digest": "sha256:f040863673aea2570c3ff6a5c3fb4c673a016cbc5375005ad145915922b6b78a"
+          },
+          {
+            "plataforma": {
+              "architecture": "arm64",
+              "os": "linux",
+              "variant": "v8"
+            },
+            "digest": "sha256:55432fc4ef6d07e33c10449312f0ec00071bbb310bb9bd7ba626a31fbbc2cb0d"
+          }
+        ]
+      },
+      {
+        "nome": "uv",
+        "indice": "sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4",
+        "plataformas": [
+          {
+            "plataforma": {
+              "architecture": "amd64",
+              "os": "linux"
+            },
+            "digest": "sha256:e96d483a9ed7924d2acf01bdd1d537d0d5e6d8f21b74fff3373005f6c9446696"
+          },
+          {
+            "plataforma": {
+              "architecture": "arm64",
+              "os": "linux"
+            },
+            "digest": "sha256:10e89aa55522210851c055c9b261c9c9b4a50ea8ab891e23fe7e138a56287a3e"
+          }
+        ]
+      }
+    ],
+    "limite": "Metadados observados nao aprovam imagem, plataforma, procedencia criptografica ou funcionamento."
+  },
+  "arquivos_modificados": [
+    "doc/saneamento-2026-10-16/fase-5b.1/README.md",
+    "doc/saneamento-2026-10-16/fase-5b.1/autorizacao.example.json",
+    "doc/saneamento-2026-10-16/fase-5b.1/compose.homologacao.yaml",
+    "doc/saneamento-2026-10-16/fase-5b.1/integridade.json",
+    "doc/saneamento-2026-10-16/fase-5b.1/operar.py",
+    "doc/saneamento-2026-10-16/fase-5b.1/procedimentos.md"
+  ],
+  "arquivos_criados": [
+    "doc/saneamento-2026-10-16/fase-5b.1/isolamento/politica_operacional.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/Dockerfile.homologacao.proposta",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/README.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/baseline-e-aceite.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/consultar_metadados_publicos.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/evidencia-a2.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/hashes-antes.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/README.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/autorizacao.example.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/compose.homologacao.yaml",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/integridade.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/operar.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/procedimentos.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/inventario-imagens.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/matriz-autorizacao.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/metadados-publicos.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/plano-inicializacao.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/proposta-primeira-validacao.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/sessoes-web.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/test_guardas_a2.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/testes-e-bloqueios.md"
+  ],
+  "hashes_antes_5b1": {
+    "autorizacao.example.json": "8a5aed2ed22f889da1037fd5b62adafd90d67bcbcfcd90d0d55feff795b49a3e",
+    "baseline.json": "9766ace9d1fd8a7250dd409b2b8dabcafbbdd11e0ce29ae261cfd9d59c54e97b",
+    "cenarios.json": "3813b6193ca68e6b828391d2e5463206e1b541552710c46488835d2518ca4d97",
+    "compose.homologacao.yaml": "f85b126b5e63005f5370b8d325362f08d7d1567984869f5a67ecf3c99ac88603",
+    "homologacao.env.example": "5e3f08e55f99db85c0331ba5b6cfe1a8d0183d0a77e0752239f21c45e83cdf07",
+    "integridade.json": "4ec8e0aaba84aec85a260c8f168e3c1a9232cf5dff7e1287497c8b41b89830b3",
+    "operar.py": "006dcdf52014c0a01acd0543a247932d6e906b51ef203a7fff584929d79c21bf",
+    "procedimentos.md": "ed50bea1a00b142657737c3e45352e8d5faa9f2cffe2596c82d9d41c4117578b",
+    "README.md": "8d2da3e5ed0ab36cb5482c5ebdee417101c67674542a14b7adec0e77ad7861f2",
+    "revisao-estatica.json": "408975a7b2532eaad33198ed6faef1e39c4d65d564d2f3ea773380d6890914a6",
+    "revisao-estatica.md": "35122cb15beba895d307b1f131cd6b13aeb28847b0caa3806f006be2599ee433",
+    "isolamento/contrato.py": "80b0316aafcac4c97532080402bcbfbfbca75bec5cb55cae3a2db13742876747",
+    "isolamento/iniciar_aplicacao.py": "51552a3c9f62d0d311d6d5dcdd203a5d357786912e9d3ee2c63c3aaedb5df21f",
+    "isolamento/politica-protecoes.json": "1fba2dac871dd024ff06e1f2f6f91882474b88f03bc2029e9eb1498bb022598d",
+    "isolamento/settings_homologacao.py": "cdb95950abace0b6c7710cb7f93c2b0a911f12789c4508226b654bec0f37a81f",
+    "isolamento/tarefas.py": "d6b7b61a429cd922663b0d89269477d91770b4052c78030e421bf85f337d07b4"
+  },
+  "hashes_depois_5b1": {
+    "autorizacao.example.json": "a0fed569fccf98a22b0181f8c6fab2b79ad3c5125a52bae2ac507a1568b5d000",
+    "baseline.json": "9766ace9d1fd8a7250dd409b2b8dabcafbbdd11e0ce29ae261cfd9d59c54e97b",
+    "cenarios.json": "3813b6193ca68e6b828391d2e5463206e1b541552710c46488835d2518ca4d97",
+    "compose.homologacao.yaml": "1dcbb2314a5e7b3e3c2ec2fb135bbb3daad73b884137c0092c349597eeebc06f",
+    "homologacao.env.example": "5e3f08e55f99db85c0331ba5b6cfe1a8d0183d0a77e0752239f21c45e83cdf07",
+    "integridade.json": "cfedd1455cd34e91679115e9c7e30d2f05a53afd63efe961271fda03c3eb7982",
+    "operar.py": "cceeb2aa92d6b8271dab8891c2b31ef873c318495c715115c9734962e3b0ca78",
+    "procedimentos.md": "10123faac99e4b4ebffb1b6b067decdbce34b11b8364fafaa7edce59a6293656",
+    "README.md": "707c6fe3c622331404d784ec95bf3e9741aee15e976608ffd003fb5ef0ec4a81",
+    "revisao-estatica.json": "408975a7b2532eaad33198ed6faef1e39c4d65d564d2f3ea773380d6890914a6",
+    "revisao-estatica.md": "35122cb15beba895d307b1f131cd6b13aeb28847b0caa3806f006be2599ee433",
+    "isolamento/contrato.py": "80b0316aafcac4c97532080402bcbfbfbca75bec5cb55cae3a2db13742876747",
+    "isolamento/iniciar_aplicacao.py": "51552a3c9f62d0d311d6d5dcdd203a5d357786912e9d3ee2c63c3aaedb5df21f",
+    "isolamento/politica-protecoes.json": "1fba2dac871dd024ff06e1f2f6f91882474b88f03bc2029e9eb1498bb022598d",
+    "isolamento/politica_operacional.py": "36c2d9441e048c3931f217531178b917ea9bd4f0f13bd7980ee9a06da18f1fef",
+    "isolamento/settings_homologacao.py": "cdb95950abace0b6c7710cb7f93c2b0a911f12789c4508226b654bec0f37a81f",
+    "isolamento/tarefas.py": "d6b7b61a429cd922663b0d89269477d91770b4052c78030e421bf85f337d07b4"
+  },
+  "hashes_documentos_e_propostas": {
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/baseline-e-aceite.md": "034de0fcd95336b665b24d626d26588daa26ea0514682e84683627dc996e770f",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/consultar_metadados_publicos.py": "2dec743e3a37f48d8d736859343e8cf78e9510522ecd29879745525a99186fb1",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/Dockerfile.homologacao.proposta": "5967642beed56184cd895016cba5d2df8574eea70f66bf0f9309ad417668e2bb",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/hashes-antes.json": "312c03b7650ad6c7c927df46cd58043fb39839fd7902a515c05d490ec3d2a5e0",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/inventario-imagens.md": "9dd46415bc558c43a81b3984e111172c61c9cacc581fce180310cbb0378961c3",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/matriz-autorizacao.md": "d843b138aa6bbd78b37fd2ec4a22bfd97833f72c5b0732c02fbb1dd5a06edaa2",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/metadados-publicos.json": "498b27bc248d1aefc2d3a38018299fd0682fcb7ceed2f366276c99f1e3ef8719",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/plano-inicializacao.md": "8039051aab0b11cad97048ee24e3d4adc5f92780bbd1b596cd363d248df85b75",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/proposta-primeira-validacao.md": "f38c2338c7a383921ea3d06dc3f47b944fae7be3b5f00f1c7ed8f88f5a404b4f",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/README.md": "6e5f95cee13e189a009954a842aa5ffe3e8e6b843c11b1d7d2f73bc22b0203b3",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/sessoes-web.md": "28aceb625d3b5a2deb442d1f852e23fab92fd37355730bca96f31711b7155913",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/testes-e-bloqueios.md": "a64c6d6098a244ef714fcf051283b6a6b6e3baa19912cf70961e56d7af313444",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/test_guardas_a2.py": "ed0a6448f69e346bdec43c8b5c90409a0e0caf72c0315900867285ce4137a395",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/autorizacao.example.json": "8a5aed2ed22f889da1037fd5b62adafd90d67bcbcfcd90d0d55feff795b49a3e",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/compose.homologacao.yaml": "f85b126b5e63005f5370b8d325362f08d7d1567984869f5a67ecf3c99ac88603",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/integridade.json": "4ec8e0aaba84aec85a260c8f168e3c1a9232cf5dff7e1287497c8b41b89830b3",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/operar.py": "006dcdf52014c0a01acd0543a247932d6e906b51ef203a7fff584929d79c21bf",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/procedimentos.md": "ed50bea1a00b142657737c3e45352e8d5faa9f2cffe2596c82d9d41c4117578b",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/fechamento-a2/historico-a1/README.md": "8d2da3e5ed0ab36cb5482c5ebdee417101c67674542a14b7adec0e77ad7861f2"
+  },
+  "preservacao": {
+    "arquivos_rastreados_alterados": [],
+    "artefatos_5b1_nao_modificados": [
+      "baseline.json",
+      "cenarios.json",
+      "homologacao.env.example",
+      "isolamento/contrato.py",
+      "isolamento/iniciar_aplicacao.py",
+      "isolamento/politica-protecoes.json",
+      "isolamento/settings_homologacao.py",
+      "isolamento/tarefas.py",
+      "revisao-estatica.json",
+      "revisao-estatica.md"
+    ],
+    "documentos_e_resultados_a1": "nao alterados"
+  },
+  "operacoes_nao_executadas": [
+    "Docker ou Compose",
+    "pull/build",
+    "engine local",
+    "criacao/inicializacao de containers/bancos/redes/volumes",
+    "migrations/carga/demonstracoes",
+    "testes persistentes",
+    "emails",
+    "commits/pushes/merges"
+  ],
+  "isolamento_operacional_comprovado": false,
+  "autorizacao_operacional_concedida": false,
+  "limite_hash": "Este manifesto nao inclui hash de si mesmo."
+}

@@ -1,0 +1,120 @@
+name: cefor_homologacao_f4_20261016
+
+x-labels: &labels
+  br.edu.ifes.cefor.finalidade: homologacao-sintetica
+  br.edu.ifes.cefor.identidade: 5dadcc37-7015-4a5a-b1a1-727dd7e3d901
+
+x-ambiente: &ambiente
+  HOMOLOGACAO_SELECIONADA: "SIM"
+  HOMOLOGACAO_ID: 5dadcc37-7015-4a5a-b1a1-727dd7e3d901
+  PYTHONPATH: /isolamento:/app/backend
+  PYTHONDONTWRITEBYTECODE: "1"
+  DJANGO_SETTINGS_MODULE: settings_homologacao
+  DJANGO_SECRET_KEY: somente-laboratorio-ficticio-sem-valor-institucional
+  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+  DB_HOST: banco-homologacao
+  DB_PORT: "5432"
+  DB_NAME: ps_homologacao_f4_20261016
+  DB_RUNTIME_USER: ps_f4_runtime
+  DB_RUNTIME_PASSWORD: ${HOM_RUNTIME_PASSWORD:?configuracao_sintetica_obrigatoria}
+  DJANGO_EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+  EMAIL_HOST: ""
+  EMAIL_HOST_USER: ""
+  EMAIL_HOST_PASSWORD: ""
+  ASSISTENTE_PILOTO: "false"
+  ASSISTENTE_SERVICO: ""
+  ASSISTENTE_ENDERECO: ""
+  ASSISTENTE_CREDENCIAL: ""
+  ASSISTENTE_TOKENIZER: ""
+  ASSISTENTE_NA_PAGINA_DO_EDITAL: "false"
+  INTERFACE_SELETOR_IDENTIDADE: "true"
+  ARQUIVOS_CANDIDATOS_RAIZ: /var/lib/processo-seletivo/arquivos
+
+services:
+  banco-homologacao:
+    profiles: [operacional]
+    image: ${HOM_POSTGRES_IMAGE:?digest_postgres_obrigatorio}
+    pull_policy: never
+    container_name: cefor-f4-pg-20261016
+    labels: *labels
+    environment:
+      # Bootstrap oficial cria somente estruturas administrativas; banco da app é gate posterior.
+      # O start segue bloqueado no operador: isto não é autorização de initdb.
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ps_f4_admin
+      POSTGRES_PASSWORD: ${HOM_ADMIN_PASSWORD:?configuracao_sintetica_obrigatoria}
+    networks: [rede-homologacao]
+    volumes:
+      - type: volume
+        source: banco-exclusivo
+        target: /var/lib/postgresql
+    restart: "no"
+
+  aplicacao-homologacao:
+    profiles: [operacional]
+    image: ${HOM_APP_IMAGE:?digest_aplicacao_obrigatorio}
+    pull_policy: never
+    container_name: cefor-f4-app-20261016
+    labels: *labels
+    environment: *ambiente
+    entrypoint: [python, /isolamento/iniciar_aplicacao.py]
+    command: []
+    working_dir: /app/backend
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
+    networks: [rede-homologacao]
+    ports: ["127.0.0.1:18084:8000"]
+    volumes:
+      - type: bind
+        source: ./isolamento
+        target: /isolamento
+        read_only: true
+      - type: volume
+        source: midia-exclusiva
+        target: /var/lib/processo-seletivo/arquivos
+    restart: "no"
+
+  preparacao-homologacao:
+    profiles: [manutencao]
+    image: ${HOM_APP_IMAGE:?digest_aplicacao_obrigatorio}
+    pull_policy: never
+    container_name: cefor-f4-preparacao-20261016
+    labels: *labels
+    environment:
+      <<: *ambiente
+      HOM_TAREFA: conferir
+    entrypoint: [python, /isolamento/tarefas.py]
+    command: [bloqueado]
+    working_dir: /app/backend
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
+    networks: [rede-homologacao]
+    volumes:
+      - type: bind
+        source: ./isolamento
+        target: /isolamento
+        read_only: true
+      - type: volume
+        source: midia-exclusiva
+        target: /var/lib/processo-seletivo/arquivos
+    restart: "no"
+
+networks:
+  rede-homologacao:
+    name: cefor-f4-rede-20261016
+    internal: true
+    labels: *labels
+
+volumes:
+  banco-exclusivo:
+    name: cefor_f4_pg_20261016
+    labels: *labels
+  midia-exclusiva:
+    name: cefor_f4_midia_20261016
+    labels: *labels

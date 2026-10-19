@@ -1,0 +1,17 @@
+{
+  "identidade": "5dadcc37-7015-4a5a-b1a1-727dd7e3d901",
+  "baseline": "f4-sintetico-v1",
+  "agora": "2026-10-16T12:00:00-03:00",
+  "gerador": "seed_demo",
+  "parametros": {"codigo": "HOMOLOGACAO-F4-SINTETICA-01", "numero": "31", "ano": 2026, "dias_atras": 0, "janela_recursal": "declarada"},
+  "reprodutibilidade": "Semântica: parâmetros, relógio e caminhos fixados; UUIDs gerados, metadados de arquivos e ordem de armazenamento não são prometidos bit a bit.",
+  "dados_reais": false,
+  "complementos": {
+    "P01": "Criar variantes separadas de primeira publicação cancelada, cancelamento por Retificação e redesignação, pelo roteiro F4; não mutar a baseline para esconder achados.",
+    "P06": "Separar snapshot histórico, método declarado antes do sorteio e tentativa de mudança de espécie; preservar recusa e relação congelada.",
+    "P07": "Fundamento fictício, versão e vigência; tentativa de troca de ID deve respeitar recusa. Substituição legítima depende de deliberação.",
+    "P15": "População agregada, nominal, erro, assinatura obsoleta e atores sem permissão/outro escopo. Sem RA real."
+  },
+  "limite_proposto": {"editais": 20, "inscricoes": 100, "eventos": 5000},
+  "estado": "BLOQUEADA em 5B.2-A.1: gerador anterior preservado no histórico; orçamento, cobertura, relógio e recuperação pendentes; nenhuma carga autorizável no operador atual"
+}

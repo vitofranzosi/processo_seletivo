@@ -1,0 +1,12 @@
+{
+  "autorizacao.example.json": "0df11adf11ec09a0ab59516cc3836654908ccce879b472984f039fcb5358eec4",
+  "baseline.json": "1c3fa946a51da738f2c666cecb4601f79234c53441959646085a2cad8716ac37",
+  "cenarios.json": "3813b6193ca68e6b828391d2e5463206e1b541552710c46488835d2518ca4d97",
+  "compose.homologacao.yaml": "8b33a11d89269634753a9be8f0d4f3472a296ce106e7e4a6a31ed0065c695ce9",
+  "homologacao.env.example": "889a2cecf34a3cfd814319dd3e909bb9adb3186e2f1842fbf7e311a614bc7501",
+  "isolamento/contrato.py": "3a9097de00a69db6c4adc3b3e51a893097ce2b29142044c45a9e948c29628617",
+  "isolamento/iniciar_aplicacao.py": "bf0a2c368701dc3dc75216dd579a76b578feb4937e686e0a05caa80248c03a21",
+  "isolamento/settings_homologacao.py": "cdb95950abace0b6c7710cb7f93c2b0a911f12789c4508226b654bec0f37a81f",
+  "isolamento/tarefas.py": "869fcd8c313fb8b45910da2dc93553359566fa5196521dd3fef09824954c5919",
+  "operar.py": "20af954d51cad18f2643932b7d80b79a4a3336cc68bac56389fac86b58eb1c92"
+}

@@ -1,0 +1,25 @@
+# Proposta exclusiva A2, NÃO construída/aprovada para execução.
+# Digests observados por HTTPS em 16/10/2026; plataforma deve ser aprovada no build futuro.
+FROM ghcr.io/astral-sh/uv@sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4 AS ferramenta_uv
+FROM docker.io/library/python@sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641
+
+COPY --from=ferramenta_uv /uv /uvx /bin/
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_LINK_MODE=copy \
+    PATH=/opt/venv/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+WORKDIR /app/backend
+COPY backend/pyproject.toml backend/uv.lock ./
+# Sem apt, make, tokenizer ou build a partir de sdist. Wheel ausente deve interromper.
+# A fonte do projeto será importada do working_dir, sem instalação/editable/hatchling implícita.
+RUN uv sync --locked --extra dev --no-install-project --no-build
+COPY backend/ ./
+RUN useradd --create-home --uid 10001 aplicacao \
+    && mkdir -p /var/lib/processo-seletivo/arquivos \
+    && chown -R aplicacao:aplicacao /var/lib/processo-seletivo
+LABEL org.opencontainers.image.revision="6fc3a85a9ce58a973dc0e29bc38085dfd055f171"
+USER 10001:10001
+# Mesmo fora do Compose, imagem proposta não inicializa Django, banco ou migrations.
+ENTRYPOINT ["python", "-c", "raise SystemExit('Operacao explicita de homologacao obrigatoria; inicializacao bloqueada')"]

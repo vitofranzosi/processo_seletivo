@@ -1,0 +1,225 @@
+{
+  "fase": "5B.2-A.1",
+  "data": "2026-10-16",
+  "head": "6fc3a85a9ce58a973dc0e29bc38085dfd055f171",
+  "verificacoes": {
+    "ast_python": 6,
+    "json_yaml": "validos",
+    "servicos": 3,
+    "hashes_tecnicos": 11,
+    "copias_historicas_conferidas": 15,
+    "receitas_preservadas": 14,
+    "autorizacao_exemplo_vazia": true,
+    "chamadas_operador_sem_start_migrate_seed_remocao": [
+      {
+        "funcao": "docker",
+        "linha": 161,
+        "literais": [
+          "inspect",
+          "--format"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 172,
+        "literais": [
+          "--format"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 180,
+        "literais": [
+          "compose",
+          "--project-name",
+          "--file",
+          "--env-file"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 270,
+        "literais": [
+          "info",
+          "--format",
+          "{{.ID}}"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 192,
+        "literais": [
+          "info",
+          "--format",
+          "{{.ID}}"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 242,
+        "literais": [
+          "container",
+          "inspect",
+          "--format",
+          "{{json .HostConfig.PortBindings}}"
+        ]
+      },
+      {
+        "funcao": "compose",
+        "linha": 292,
+        "literais": [
+          "--profile",
+          "operacional",
+          "create",
+          "--no-build",
+          "--pull",
+          "never",
+          "banco-homologacao",
+          "aplicacao-homologacao"
+        ]
+      },
+      {
+        "funcao": "compose",
+        "linha": 324,
+        "literais": [
+          "--profile",
+          "manutencao",
+          "run",
+          "--pull",
+          "never",
+          "--name",
+          "--no-deps",
+          "preparacao-homologacao",
+          "conferir"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 338,
+        "literais": [
+          "container",
+          "stop"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 212,
+        "literais": [
+          "inspect",
+          "--format",
+          "{{json .Options}}"
+        ]
+      },
+      {
+        "funcao": "docker",
+        "linha": 341,
+        "literais": [
+          "container",
+          "stop"
+        ]
+      }
+    ],
+    "links_e_espacos": "sem problemas nas paginas vigentes verificadas",
+    "arquivos_operacionais_ausentes": true
+  },
+  "testes_puros": {
+    "executados": 19,
+    "falhas": 0,
+    "erros": 0,
+    "resultado": "OK",
+    "duracao_observada_segundos": 0.024,
+    "limite": "Modulos de guarda importados; main exercitada somente com mocks. Sem subprocesso externo, rede, banco, temporarios ou bytecode."
+  },
+  "arquivos_modificados_5b1": [
+    "README.md",
+    "autorizacao.example.json",
+    "baseline.json",
+    "compose.homologacao.yaml",
+    "homologacao.env.example",
+    "integridade.json",
+    "isolamento/contrato.py",
+    "isolamento/iniciar_aplicacao.py",
+    "isolamento/tarefas.py",
+    "operar.py",
+    "procedimentos.md"
+  ],
+  "arquivos_5b1_preservados_sem_alteracao": [
+    "cenarios.json",
+    "isolamento/settings_homologacao.py",
+    "revisao-estatica.json",
+    "revisao-estatica.md"
+  ],
+  "outros_modificados": [
+    "doc/saneamento-2026-10-16/fase-5b.2-a/README.md"
+  ],
+  "arquivos_criados": [
+    "doc/saneamento-2026-10-16/fase-5b.1/isolamento/politica-protecoes.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/README.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/estado-anterior.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/evidencia-a1.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/README.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/autorizacao.example.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/baseline.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/cenarios.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/compose.homologacao.yaml",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/homologacao.env.example",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/integridade.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/isolamento/contrato.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/isolamento/iniciar_aplicacao.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/isolamento/settings_homologacao.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/isolamento/tarefas.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/operar.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/procedimentos.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/revisao-estatica.json",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/historico-5b1/revisao-estatica.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/matriz-correcao.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/operacoes-e-metadados.md",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/test_guardas_puras.py",
+    "doc/saneamento-2026-10-16/fase-5b.2-a/correcao-a1/validacao-e-negativos.md"
+  ],
+  "hashes_anteriores_5b1": {
+    "autorizacao.example.json": "0df11adf11ec09a0ab59516cc3836654908ccce879b472984f039fcb5358eec4",
+    "baseline.json": "1c3fa946a51da738f2c666cecb4601f79234c53441959646085a2cad8716ac37",
+    "cenarios.json": "3813b6193ca68e6b828391d2e5463206e1b541552710c46488835d2518ca4d97",
+    "compose.homologacao.yaml": "8b33a11d89269634753a9be8f0d4f3472a296ce106e7e4a6a31ed0065c695ce9",
+    "homologacao.env.example": "889a2cecf34a3cfd814319dd3e909bb9adb3186e2f1842fbf7e311a614bc7501",
+    "integridade.json": "da4a15af9ef69c74c8446d5b46bff72d6a1d345d378283c5a8cb51f8ba2d7a10",
+    "isolamento/contrato.py": "3a9097de00a69db6c4adc3b3e51a893097ce2b29142044c45a9e948c29628617",
+    "isolamento/iniciar_aplicacao.py": "bf0a2c368701dc3dc75216dd579a76b578feb4937e686e0a05caa80248c03a21",
+    "isolamento/settings_homologacao.py": "cdb95950abace0b6c7710cb7f93c2b0a911f12789c4508226b654bec0f37a81f",
+    "isolamento/tarefas.py": "869fcd8c313fb8b45910da2dc93553359566fa5196521dd3fef09824954c5919",
+    "operar.py": "20af954d51cad18f2643932b7d80b79a4a3336cc68bac56389fac86b58eb1c92",
+    "procedimentos.md": "40c7814aadca53c58feb0808b27edab69b61777c92585210e963aa6a46311ff6",
+    "README.md": "e7408060b4e72b306ed18bb207e7f41b53f4d69a6a8781433825b94fb3c2a7de",
+    "revisao-estatica.json": "408975a7b2532eaad33198ed6faef1e39c4d65d564d2f3ea773380d6890914a6",
+    "revisao-estatica.md": "35122cb15beba895d307b1f131cd6b13aeb28847b0caa3806f006be2599ee433"
+  },
+  "hashes_atuais_5b1": {
+    "autorizacao.example.json": "8a5aed2ed22f889da1037fd5b62adafd90d67bcbcfcd90d0d55feff795b49a3e",
+    "baseline.json": "9766ace9d1fd8a7250dd409b2b8dabcafbbdd11e0ce29ae261cfd9d59c54e97b",
+    "cenarios.json": "3813b6193ca68e6b828391d2e5463206e1b541552710c46488835d2518ca4d97",
+    "compose.homologacao.yaml": "f85b126b5e63005f5370b8d325362f08d7d1567984869f5a67ecf3c99ac88603",
+    "homologacao.env.example": "5e3f08e55f99db85c0331ba5b6cfe1a8d0183d0a77e0752239f21c45e83cdf07",
+    "integridade.json": "4ec8e0aaba84aec85a260c8f168e3c1a9232cf5dff7e1287497c8b41b89830b3",
+    "operar.py": "006dcdf52014c0a01acd0543a247932d6e906b51ef203a7fff584929d79c21bf",
+    "procedimentos.md": "ed50bea1a00b142657737c3e45352e8d5faa9f2cffe2596c82d9d41c4117578b",
+    "README.md": "8d2da3e5ed0ab36cb5482c5ebdee417101c67674542a14b7adec0e77ad7861f2",
+    "revisao-estatica.json": "408975a7b2532eaad33198ed6faef1e39c4d65d564d2f3ea773380d6890914a6",
+    "revisao-estatica.md": "35122cb15beba895d307b1f131cd6b13aeb28847b0caa3806f006be2599ee433",
+    "isolamento/contrato.py": "80b0316aafcac4c97532080402bcbfbfbca75bec5cb55cae3a2db13742876747",
+    "isolamento/iniciar_aplicacao.py": "51552a3c9f62d0d311d6d5dcdd203a5d357786912e9d3ee2c63c3aaedb5df21f",
+    "isolamento/politica-protecoes.json": "1fba2dac871dd024ff06e1f2f6f91882474b88f03bc2029e9eb1498bb022598d",
+    "isolamento/settings_homologacao.py": "cdb95950abace0b6c7710cb7f93c2b0a911f12789c4508226b654bec0f37a81f",
+    "isolamento/tarefas.py": "d6b7b61a429cd922663b0d89269477d91770b4052c78030e421bf85f337d07b4"
+  },
+  "limites": {
+    "isolamento_operacional_comprovado": false,
+    "docker_compose_executado": false,
+    "pull_build": false,
+    "banco_migrations_carga": false,
+    "servicos_demonstracoes_email": false,
+    "commit_push_merge": false,
+    "arquivos_rastreados_alterados": [],
+    "observacao": "Saneamento permanece nao rastreado. Diff vazio nao substitui hashes nem aprovacao humana."
+  }
+}

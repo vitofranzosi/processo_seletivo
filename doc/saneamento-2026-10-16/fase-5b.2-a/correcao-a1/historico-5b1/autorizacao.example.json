@@ -1,0 +1,12 @@
+{
+  "identidade": "5dadcc37-7015-4a5a-b1a1-727dd7e3d901",
+  "aprovador": "PENDENTE",
+  "referencia_da_deliberacao": "PENDENTE",
+  "manifesto_sha256": "PENDENTE",
+  "integridade_sha256": "PENDENTE",
+  "configuracao_sha256": "PENDENTE",
+  "engine_id": "PENDENTE",
+  "acoes": [],
+  "cenarios": [],
+  "observacao": "Exemplo sem autorização. Preencher somente após deliberação humana expressa; este arquivo não é assinatura digital."
+}

@@ -1,0 +1,13 @@
+{
+  "fase": "5B.1",
+  "revisao": 3,
+  "metodo": "AST Python, parse JSON/YAML e assercoes de estrutura; sem execucao dos scripts novos",
+  "python_analisados": 5,
+  "servicos": 3,
+  "receitas_de_cenarios": 14,
+  "artefatos_integridade": 10,
+  "scripts_executados": false,
+  "docker_executado": false,
+  "banco_acessado": false,
+  "isolamento_runtime_comprovado": false
+}

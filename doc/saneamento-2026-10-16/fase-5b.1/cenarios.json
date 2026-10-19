@@ -1,0 +1,23 @@
+{
+  "identidade": "5dadcc37-7015-4a5a-b1a1-727dd7e3d901",
+  "modo": "receitas de variantes manuais sobre dados sintéticos; nenhum cenário executado",
+  "relogio_base": "2026-10-16T12:00:00-03:00",
+  "resolucao_de_ids": "Obter IDs do manifesto de saída do cenário; não presumir UUID de registro real ou escolher por posição.",
+  "roteiro_detalhado": "../fase-4/plano-demonstracoes.md",
+  "casos": [
+    {"id": "P01-A", "inicial": "Edital completo homologado, não publicado", "variante": "Evento único designado CANCELADO", "operacao": "solicitar primeira publicação", "esperado": "registration_period_cancelled, sem ato publicado"},
+    {"id": "P01-B", "inicial": "Edital publicado e inscrições sintéticas rascunho/enviada", "variante": "Retificação declara CANCELADO no Evento", "operacao": "publicar Retificação e tentar novo envio", "esperado": "sem aquele impeditivo no ato; recepção conforme período cancelado; aceitas preservadas"},
+    {"id": "P01-C", "inicial": "Evento antigo cancelado e outro válido com janela aberta sintética", "variante": "isRegistrationPeriod falso no antigo e verdadeiro no novo", "operacao": "Retificação e leitura de calendário/envio", "esperado": "uma designação; efeitos por vigência; histórico intacto"},
+    {"id": "P06-A", "inicial": "snapshot sintético em versão anterior ao degrau 10", "variante": "drawMethod ausente", "operacao": "elevar em memória, depois declarar método completo se autorizado", "esperado": "não inventar padrão; método nulo até declaração explícita"},
+    {"id": "P06-B", "inicial": "Edital prevê sorteio, antes de realização", "variante": "subcasos sem relação e com relação sintética congelada", "operacao": "retificar método e comparar relação/versão", "esperado": "relação antiga não relê nem muda seu hash"},
+    {"id": "P06-C", "inicial": "Edital de pontuação", "variante": "subcasos sem ordem e com ordem emitida", "operacao": "tentar mudança pelos comandos existentes, sem bypass", "esperado": "registrar fronteiras/recusas; não ratificar conversão administrativa"},
+    {"id": "P07-A", "inicial": "regra com fundamento explicitamente fictício", "variante": "mesmo id; foundation corrigida, version e effectiveFrom declarados", "operacao": "Retificação e leitura de versões/vínculos", "esperado": "campos permitidos endereçáveis, histórico preservado"},
+    {"id": "P07-B", "inicial": "duas identidades fictícias distintas", "variante": "tentativa de REPLACE de normativeRule/id", "operacao": "demonstrar recusa e mapear referências", "esperado": "recusa estrutural; substituição legítima continua dependente de deliberação"},
+    {"id": "P15-A", "inicial": "operador sintético com permissão, sem população escolhida", "variante": "GET inicial", "operacao": "inspecionar rótulos e trilha", "esperado": "inventário de metadados, sem inferir anonimização"},
+    {"id": "P15-B", "inicial": "relatório com lacunas agregadas, não nominais", "variante": "GET de prévia", "operacao": "comparar HTML e eventos antes/depois", "esperado": "observar política atual sem ratificá-la"},
+    {"id": "P15-C", "inicial": "declaração sintética de cor/raça não comportada pelo destino", "variante": "relatório nominal", "operacao": "GET e leitura da trilha", "esperado": "MATRICULA_PREVER sem cópia da declaração no evento"},
+    {"id": "P15-D", "inicial": "população incompleta ou modalidade fictícia não reconhecida", "variante": "erro de composição", "operacao": "ler recusa e trilha", "esperado": "inventariar dados expostos pela mensagem e eventual lacuna de auditoria"},
+    {"id": "P15-E", "inicial": "prévia válida com requerimentos sintéticos enviados", "variante": "assinatura válida e obsoleta em tentativas separadas", "operacao": "POST, registro de geração e recebimento local", "esperado": "distinguir geração/resposta/recebimento; recusar resumo obsoleto; não importar no RA"},
+    {"id": "P15-F", "inicial": "atores sintéticos sem permissão e de outro escopo", "variante": "GET/POST de exportação", "operacao": "observar recusa e ausência de arquivo", "esperado": "não conceder automaticamente nem vazar conteúdo"}
+  ]
+}

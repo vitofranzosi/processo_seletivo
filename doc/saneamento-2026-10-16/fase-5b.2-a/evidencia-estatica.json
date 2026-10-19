@@ -1,0 +1,70 @@
+{
+  "fase": "5B.2-A",
+  "data": "2026-10-16",
+  "metodo": "Leitura, ast.parse sem import dos m?dulos inspecionados, JSON/YAML e SHA-256. Nenhum script inspecionado executado.",
+  "verificacoes": {
+    "python_ast": [
+      "isolamento/contrato.py",
+      "isolamento/iniciar_aplicacao.py",
+      "isolamento/settings_homologacao.py",
+      "isolamento/tarefas.py",
+      "operar.py"
+    ],
+    "yaml_parse": true,
+    "integridade": {
+      "autorizacao.example.json": true,
+      "baseline.json": true,
+      "cenarios.json": true,
+      "compose.homologacao.yaml": true,
+      "homologacao.env.example": true,
+      "isolamento/contrato.py": true,
+      "isolamento/iniciar_aplicacao.py": true,
+      "isolamento/settings_homologacao.py": true,
+      "isolamento/tarefas.py": true,
+      "operar.py": true
+    },
+    "receitas_unicas": 14,
+    "links_inexistentes": [],
+    "links_e_espacos_finais": "sem problemas nas quatro p?ginas"
+  },
+  "artefatos_5b1_observados": {
+    "autorizacao.example.json": "0df11adf11ec09a0ab59516cc3836654908ccce879b472984f039fcb5358eec4",
+    "baseline.json": "1c3fa946a51da738f2c666cecb4601f79234c53441959646085a2cad8716ac37",
+    "cenarios.json": "3813b6193ca68e6b828391d2e5463206e1b541552710c46488835d2518ca4d97",
+    "compose.homologacao.yaml": "8b33a11d89269634753a9be8f0d4f3472a296ce106e7e4a6a31ed0065c695ce9",
+    "homologacao.env.example": "889a2cecf34a3cfd814319dd3e909bb9adb3186e2f1842fbf7e311a614bc7501",
+    "integridade.json": "da4a15af9ef69c74c8446d5b46bff72d6a1d345d378283c5a8cb51f8ba2d7a10",
+    "isolamento/contrato.py": "3a9097de00a69db6c4adc3b3e51a893097ce2b29142044c45a9e948c29628617",
+    "isolamento/iniciar_aplicacao.py": "bf0a2c368701dc3dc75216dd579a76b578feb4937e686e0a05caa80248c03a21",
+    "isolamento/settings_homologacao.py": "cdb95950abace0b6c7710cb7f93c2b0a911f12789c4508226b654bec0f37a81f",
+    "isolamento/tarefas.py": "869fcd8c313fb8b45910da2dc93553359566fa5196521dd3fef09824954c5919",
+    "operar.py": "20af954d51cad18f2643932b7d80b79a4a3336cc68bac56389fac86b58eb1c92",
+    "procedimentos.md": "40c7814aadca53c58feb0808b27edab69b61777c92585210e963aa6a46311ff6",
+    "README.md": "e7408060b4e72b306ed18bb207e7f41b53f4d69a6a8781433825b94fb3c2a7de",
+    "revisao-estatica.json": "408975a7b2532eaad33198ed6faef1e39c4d65d564d2f3ea773380d6890914a6",
+    "revisao-estatica.md": "35122cb15beba895d307b1f131cd6b13aeb28847b0caa3806f006be2599ee433"
+  },
+  "operacoes_nao_executadas": [
+    "Docker/Compose",
+    "pull/build",
+    "inicializa??o de daemon/servi?os",
+    "operador",
+    "gerador/receitas",
+    "banco/migrations/testes persistentes",
+    "email",
+    "commit/push/merge"
+  ],
+  "limite": "Hashes dos dez itens coincidem com o manifesto anterior; demais hashes s?o fotografia atual, n?o prova de execu??o ou isolamento.",
+  "git": {
+    "head": "6fc3a85a9ce58a973dc0e29bc38085dfd055f171",
+    "arquivos_rastreados_alterados": [],
+    "limite": "Documenta??o de saneamento j? n?o rastreada; git diff sozinho n?o prova preserva??o dela. Dez hashes foram confrontados com o manifesto anterior."
+  },
+  "arquivos_criados_5b2a": [
+    "README.md",
+    "acoes-e-baseline.md",
+    "evidencia-estatica.json",
+    "imagens-e-autorizacao.md",
+    "inspecao-e-guardas.md"
+  ]
+}

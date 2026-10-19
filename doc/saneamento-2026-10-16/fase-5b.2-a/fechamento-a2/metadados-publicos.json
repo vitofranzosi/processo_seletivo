@@ -1,0 +1,939 @@
+{
+  "fase": "5B.2-A.2",
+  "escopo": "somente manifestos p\u00fablicos; nenhuma camada/config blob",
+  "registros": [
+    {
+      "nome": "postgres",
+      "registry": "registry-1.docker.io",
+      "repositorio": "library/postgres",
+      "tag_consultada": "18",
+      "instante_utc": "2026-10-16T14:14:36.229377+00:00",
+      "digest_indice": "sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336",
+      "headers_publicos": {
+        "Docker-Content-Digest": "sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336",
+        "Content-Type": "application/vnd.oci.image.index.v1+json",
+        "Date": "Fri, 16 Oct 2026 14:14:36 GMT"
+      },
+      "indice_bytes_utf8": "{\"manifests\":[{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"amd64\",\"org.opencontainers.image.base.digest\":\"sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:32:19Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"amd64\",\"os\":\"linux\"},\"size\":3439},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"amd64\",\"vnd.docker.reference.digest\":\"sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:a0694154be01f273c26b7be37257b9388aef3c3843c51f4484fb7df248ec508c\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm32v5\",\"org.opencontainers.image.base.digest\":\"sha256:dbc392c622e7b6974de6c1923c46b70ba614fd9d4fb10da0911d24d1e62454b7\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:36:54Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:f999d2cde93ef81bd1dcbcd245c7bf767adbca02dbe6c92a661a9f852de705d9\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"arm\",\"os\":\"linux\",\"variant\":\"v5\"},\"size\":3440},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm32v5\",\"vnd.docker.reference.digest\":\"sha256:f999d2cde93ef81bd1dcbcd245c7bf767adbca02dbe6c92a661a9f852de705d9\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:29017ab82e7806066ce0e7bf5b5f683a3e010aa411a45dde9676888b58c6cb58\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm32v7\",\"org.opencontainers.image.base.digest\":\"sha256:7b9750e81f0da658a9dea52ae99ed35bbaf98abb4984e057947d18a2da2b87f1\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-06T02:01:42Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:06bfcdeb7719e2730a9852ff32a4b487aa01efaad7844833262955b1d1f88aea\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"arm\",\"os\":\"linux\",\"variant\":\"v7\"},\"size\":3440},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm32v7\",\"vnd.docker.reference.digest\":\"sha256:06bfcdeb7719e2730a9852ff32a4b487aa01efaad7844833262955b1d1f88aea\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:65b00dacb9bc36aa1f33d704277072ab690e79cbc083e6f7259325ce77dfc881\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm64v8\",\"org.opencontainers.image.base.digest\":\"sha256:a2ca65377c251208de42e1a2722cb949211236c161b634f6f3663754e2d06850\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:34:42Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:a63b24165ea0eacced7585766d790ac08bbaefe10a1841f87783a4505d29a69c\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"arm64\",\"os\":\"linux\",\"variant\":\"v8\"},\"size\":3441},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm64v8\",\"vnd.docker.reference.digest\":\"sha256:a63b24165ea0eacced7585766d790ac08bbaefe10a1841f87783a4505d29a69c\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:441c79f80b21b9981f1ccadc5f2d9e54eb17e9cbef4446b48ddf09fa615cf37b\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"i386\",\"org.opencontainers.image.base.digest\":\"sha256:2a0e51379197f8ad59a9736ed1dd0acb9ab90b8a0c71908a792e48ed38044de5\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:33:25Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:05464a702a665b5cc80c5b5d842ffd31c5503be58274f4c8cf96c50d3fa4d7a3\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"386\",\"os\":\"linux\"},\"size\":3437},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"i386\",\"vnd.docker.reference.digest\":\"sha256:05464a702a665b5cc80c5b5d842ffd31c5503be58274f4c8cf96c50d3fa4d7a3\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:e74003681cd9cc6b004ed45e384cef11d839e46f1f0cc05a427ec8d6f5987077\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"ppc64le\",\"org.opencontainers.image.base.digest\":\"sha256:0b675684a76c6f792a69e35abd30baaaedb6ed66234c398f2add624106814ff5\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-06T04:09:49Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:58fff7c2d8fad6acec136b663c917c56f33ec82ef1ca32aefc94e1b0687bfbf2\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"ppc64le\",\"os\":\"linux\"},\"size\":3441},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"ppc64le\",\"vnd.docker.reference.digest\":\"sha256:58fff7c2d8fad6acec136b663c917c56f33ec82ef1ca32aefc94e1b0687bfbf2\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:9d0bd7eeaee4c65b0222fe2fb0e91de08f5121a321be78131f12b92f1021621b\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"riscv64\",\"org.opencontainers.image.base.digest\":\"sha256:c6d58429cec88e03b2fe5c3d285bf90517be50b20bc1151b1b5a436d05865a9d\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-07T07:37:23Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:2337683c7a1556e93a8472ecb3c23a86d8d4c34daa534ef6ea0af23c082037f2\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"riscv64\",\"os\":\"linux\"},\"size\":3440},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"riscv64\",\"vnd.docker.reference.digest\":\"sha256:2337683c7a1556e93a8472ecb3c23a86d8d4c34daa534ef6ea0af23c082037f2\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:2aa0f3ec573a73a04926158ac131db33c271b32990e2922fd96f548ef6f3e57a\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"s390x\",\"org.opencontainers.image.base.digest\":\"sha256:e081eba2bd0cad190f03f0580e07f35c4c51f19ba19fe3c9243b3a48426ecc3e\",\"org.opencontainers.image.base.name\":\"debian:trixie-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:38:54Z\",\"org.opencontainers.image.revision\":\"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18\\/trixie\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/postgres\",\"org.opencontainers.image.version\":\"18.6\"},\"digest\":\"sha256:3b1b1289edf5a217a154b5e64c4eba5844f393b9b81e08995a043c5a9acdf81b\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"s390x\",\"os\":\"linux\"},\"size\":3439},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"s390x\",\"vnd.docker.reference.digest\":\"sha256:3b1b1289edf5a217a154b5e64c4eba5844f393b9b81e08995a043c5a9acdf81b\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:2c3cdda80eceaf969f7f1671182328968c8f24b50e541c1c008592f884239eab\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841}],\"mediaType\":\"application\\/vnd.oci.image.index.v1+json\",\"schemaVersion\":2}",
+      "indice": {
+        "manifests": [
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "amd64",
+              "org.opencontainers.image.base.digest": "sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:32:19Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "amd64",
+              "os": "linux"
+            },
+            "size": 3439
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "amd64",
+              "vnd.docker.reference.digest": "sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:a0694154be01f273c26b7be37257b9388aef3c3843c51f4484fb7df248ec508c",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm32v5",
+              "org.opencontainers.image.base.digest": "sha256:dbc392c622e7b6974de6c1923c46b70ba614fd9d4fb10da0911d24d1e62454b7",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:36:54Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:f999d2cde93ef81bd1dcbcd245c7bf767adbca02dbe6c92a661a9f852de705d9",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "arm",
+              "os": "linux",
+              "variant": "v5"
+            },
+            "size": 3440
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm32v5",
+              "vnd.docker.reference.digest": "sha256:f999d2cde93ef81bd1dcbcd245c7bf767adbca02dbe6c92a661a9f852de705d9",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:29017ab82e7806066ce0e7bf5b5f683a3e010aa411a45dde9676888b58c6cb58",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm32v7",
+              "org.opencontainers.image.base.digest": "sha256:7b9750e81f0da658a9dea52ae99ed35bbaf98abb4984e057947d18a2da2b87f1",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T02:01:42Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:06bfcdeb7719e2730a9852ff32a4b487aa01efaad7844833262955b1d1f88aea",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "arm",
+              "os": "linux",
+              "variant": "v7"
+            },
+            "size": 3440
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm32v7",
+              "vnd.docker.reference.digest": "sha256:06bfcdeb7719e2730a9852ff32a4b487aa01efaad7844833262955b1d1f88aea",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:65b00dacb9bc36aa1f33d704277072ab690e79cbc083e6f7259325ce77dfc881",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm64v8",
+              "org.opencontainers.image.base.digest": "sha256:a2ca65377c251208de42e1a2722cb949211236c161b634f6f3663754e2d06850",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:34:42Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:a63b24165ea0eacced7585766d790ac08bbaefe10a1841f87783a4505d29a69c",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "arm64",
+              "os": "linux",
+              "variant": "v8"
+            },
+            "size": 3441
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm64v8",
+              "vnd.docker.reference.digest": "sha256:a63b24165ea0eacced7585766d790ac08bbaefe10a1841f87783a4505d29a69c",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:441c79f80b21b9981f1ccadc5f2d9e54eb17e9cbef4446b48ddf09fa615cf37b",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "i386",
+              "org.opencontainers.image.base.digest": "sha256:2a0e51379197f8ad59a9736ed1dd0acb9ab90b8a0c71908a792e48ed38044de5",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:33:25Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:05464a702a665b5cc80c5b5d842ffd31c5503be58274f4c8cf96c50d3fa4d7a3",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "386",
+              "os": "linux"
+            },
+            "size": 3437
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "i386",
+              "vnd.docker.reference.digest": "sha256:05464a702a665b5cc80c5b5d842ffd31c5503be58274f4c8cf96c50d3fa4d7a3",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:e74003681cd9cc6b004ed45e384cef11d839e46f1f0cc05a427ec8d6f5987077",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "ppc64le",
+              "org.opencontainers.image.base.digest": "sha256:0b675684a76c6f792a69e35abd30baaaedb6ed66234c398f2add624106814ff5",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T04:09:49Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:58fff7c2d8fad6acec136b663c917c56f33ec82ef1ca32aefc94e1b0687bfbf2",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "ppc64le",
+              "os": "linux"
+            },
+            "size": 3441
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "ppc64le",
+              "vnd.docker.reference.digest": "sha256:58fff7c2d8fad6acec136b663c917c56f33ec82ef1ca32aefc94e1b0687bfbf2",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:9d0bd7eeaee4c65b0222fe2fb0e91de08f5121a321be78131f12b92f1021621b",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "riscv64",
+              "org.opencontainers.image.base.digest": "sha256:c6d58429cec88e03b2fe5c3d285bf90517be50b20bc1151b1b5a436d05865a9d",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-07T07:37:23Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:2337683c7a1556e93a8472ecb3c23a86d8d4c34daa534ef6ea0af23c082037f2",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "riscv64",
+              "os": "linux"
+            },
+            "size": 3440
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "riscv64",
+              "vnd.docker.reference.digest": "sha256:2337683c7a1556e93a8472ecb3c23a86d8d4c34daa534ef6ea0af23c082037f2",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:2aa0f3ec573a73a04926158ac131db33c271b32990e2922fd96f548ef6f3e57a",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "s390x",
+              "org.opencontainers.image.base.digest": "sha256:e081eba2bd0cad190f03f0580e07f35c4c51f19ba19fe3c9243b3a48426ecc3e",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:38:54Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            },
+            "digest": "sha256:3b1b1289edf5a217a154b5e64c4eba5844f393b9b81e08995a043c5a9acdf81b",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "s390x",
+              "os": "linux"
+            },
+            "size": 3439
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "s390x",
+              "vnd.docker.reference.digest": "sha256:3b1b1289edf5a217a154b5e64c4eba5844f393b9b81e08995a043c5a9acdf81b",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:2c3cdda80eceaf969f7f1671182328968c8f24b50e541c1c008592f884239eab",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          }
+        ],
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "schemaVersion": 2
+      },
+      "plataformas_verificadas": [
+        {
+          "plataforma": {
+            "architecture": "amd64",
+            "os": "linux"
+          },
+          "digest": "sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b",
+          "headers_publicos": {
+            "Docker-Content-Digest": "sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b",
+            "Content-Type": "application/vnd.oci.image.manifest.v1+json",
+            "Date": "Fri, 16 Oct 2026 14:14:37 GMT"
+          },
+          "manifesto_bytes_utf8": "{\n  \"schemaVersion\": 2,\n  \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n  \"config\": {\n    \"mediaType\": \"application/vnd.oci.image.config.v1+json\",\n    \"digest\": \"sha256:29754c7520f4b9654cf8ff98e19ac73b88e255c3a53f6236ebe9d52249bb6df3\",\n    \"size\": 10046\n  },\n  \"layers\": [\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e\",\n      \"size\": 29843350\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:4a3cafbebf6d72be6d033fcb2d9e8bbc6a11b1ff4f5bc20d976d5e2e37a947cb\",\n      \"size\": 1167\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:28ced28a309b096ff42953cb0a86595627a4bd07a944dd2f05528926cd41f12b\",\n      \"size\": 6442966\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:ab69e2551985a1719a3fe5f74400d8c9679f5ea751674fde5c41263fd488e278\",\n      \"size\": 1256746\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:1f04dfa92b9fc0d0350a96394660839240ef586ef175c5ef17c6bbe1ada94f0a\",\n      \"size\": 8203845\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:5a487c9461a5f7f1edbe60a1be3743aa0e981d4d2e2a33128804b85269526438\",\n      \"size\": 1311698\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:e0d4a6e58470239e79b596b9bf4a6d955ee89f429cb56b35ccfed96610df0024\",\n      \"size\": 116\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:496ce2ef5b2f05e2b5202ed5d3ef40bbfb10ebc68b1b84db6a43add5ca242a70\",\n      \"size\": 3141\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:c8145e79cc2b7fe25d7126d75537c22ce81846a82aa37a865ff93ed48c7c36b5\",\n      \"size\": 115397466\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:06ea90d3bcc9736cff0ca6c77451bdd1e86b5d9cbde2b57b67ca92ec1a260699\",\n      \"size\": 19423\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:dc25540d793fe1b9809eb7b63f8d4f4f5a9edf3b114eb7be98b90c1723eb97c7\",\n      \"size\": 128\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:7967f593457f7c184ea02818bd060182f3802c95d34bbe132c5eee070cb1abd1\",\n      \"size\": 6109\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:d23c975c469304d5e8513f74ab43e3ee9f4721208b9c502bac8b6bb37dbfe168\",\n      \"size\": 185\n    }\n  ],\n  \"annotations\": {\n    \"com.docker.official-images.bashbrew.arch\": \"amd64\",\n    \"org.opencontainers.image.base.digest\": \"sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483\",\n    \"org.opencontainers.image.base.name\": \"debian:trixie-slim\",\n    \"org.opencontainers.image.created\": \"2026-10-06T01:32:19Z\",\n    \"org.opencontainers.image.revision\": \"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\n    \"org.opencontainers.image.source\": \"https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie\",\n    \"org.opencontainers.image.url\": \"https://hub.docker.com/_/postgres\",\n    \"org.opencontainers.image.version\": \"18.6\"\n  }\n}",
+          "manifesto": {
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "config": {
+              "mediaType": "application/vnd.oci.image.config.v1+json",
+              "digest": "sha256:29754c7520f4b9654cf8ff98e19ac73b88e255c3a53f6236ebe9d52249bb6df3",
+              "size": 10046
+            },
+            "layers": [
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e",
+                "size": 29843350
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:4a3cafbebf6d72be6d033fcb2d9e8bbc6a11b1ff4f5bc20d976d5e2e37a947cb",
+                "size": 1167
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:28ced28a309b096ff42953cb0a86595627a4bd07a944dd2f05528926cd41f12b",
+                "size": 6442966
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:ab69e2551985a1719a3fe5f74400d8c9679f5ea751674fde5c41263fd488e278",
+                "size": 1256746
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:1f04dfa92b9fc0d0350a96394660839240ef586ef175c5ef17c6bbe1ada94f0a",
+                "size": 8203845
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:5a487c9461a5f7f1edbe60a1be3743aa0e981d4d2e2a33128804b85269526438",
+                "size": 1311698
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:e0d4a6e58470239e79b596b9bf4a6d955ee89f429cb56b35ccfed96610df0024",
+                "size": 116
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:496ce2ef5b2f05e2b5202ed5d3ef40bbfb10ebc68b1b84db6a43add5ca242a70",
+                "size": 3141
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:c8145e79cc2b7fe25d7126d75537c22ce81846a82aa37a865ff93ed48c7c36b5",
+                "size": 115397466
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:06ea90d3bcc9736cff0ca6c77451bdd1e86b5d9cbde2b57b67ca92ec1a260699",
+                "size": 19423
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:dc25540d793fe1b9809eb7b63f8d4f4f5a9edf3b114eb7be98b90c1723eb97c7",
+                "size": 128
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:7967f593457f7c184ea02818bd060182f3802c95d34bbe132c5eee070cb1abd1",
+                "size": 6109
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:d23c975c469304d5e8513f74ab43e3ee9f4721208b9c502bac8b6bb37dbfe168",
+                "size": 185
+              }
+            ],
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "amd64",
+              "org.opencontainers.image.base.digest": "sha256:918311b7b6c4c6f68b232ba516584925f6c78ad82b6fd534b98979df6438e483",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:32:19Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            }
+          }
+        },
+        {
+          "plataforma": {
+            "architecture": "arm64",
+            "os": "linux",
+            "variant": "v8"
+          },
+          "digest": "sha256:a63b24165ea0eacced7585766d790ac08bbaefe10a1841f87783a4505d29a69c",
+          "headers_publicos": {
+            "Docker-Content-Digest": "sha256:a63b24165ea0eacced7585766d790ac08bbaefe10a1841f87783a4505d29a69c",
+            "Content-Type": "application/vnd.oci.image.manifest.v1+json",
+            "Date": "Fri, 16 Oct 2026 14:14:37 GMT"
+          },
+          "manifesto_bytes_utf8": "{\n  \"schemaVersion\": 2,\n  \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n  \"config\": {\n    \"mediaType\": \"application/vnd.oci.image.config.v1+json\",\n    \"digest\": \"sha256:0336095afa072c685c93021dcfa4a5fee9cbce25ecd65121b58226c787afc0d0\",\n    \"size\": 10061\n  },\n  \"layers\": [\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:bbeda6b4abb749f743f4547ef5a28070a14de8caef211daa5afb78d5b5fa21ba\",\n      \"size\": 30200282\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:19fcd068927b801804ac060488c3e2fc847235ddad9bc85b4ef428b42360e2a4\",\n      \"size\": 1169\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:dae9c1725998f87ffa10ea48b0e721bd0811a210f1d4b455cbe40cdec5a5504a\",\n      \"size\": 6234900\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:a97c43a6325af3fb25e5cb685a4e69818a27d0ab2e3fb82e67f45619152e224c\",\n      \"size\": 1209570\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:adef3e37879a0f92b9059c5fe890781e2152ae4695205d0567e794c7d7e8d0b6\",\n      \"size\": 8203957\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:729e9c64421046235cce6d7692a32d1a56e0f34f3335835833ae27023598d456\",\n      \"size\": 1220633\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:21a9e5df9938c451bb22c30cc640943b04e7ec7e4e1e5d9bbe3d0551fd47b394\",\n      \"size\": 116\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:c344258f5c4bc9bb0894ad6ec4e2b9771f15abf7d3f3abcb90daadb2ab508457\",\n      \"size\": 3144\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:9aa353a8667f923050c13d703fb58e1cc96acc3af57e5d6fe5f2bb25a188baec\",\n      \"size\": 113999078\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:145ddee77a61759aba901cc36e455a32e290a9c974c725ffc365ea5ffaa853c6\",\n      \"size\": 19420\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:364028cfe3c1ee2de27acfa56ca0bb3a5311bc5ff2ea412969ca71000096738b\",\n      \"size\": 128\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:7f4f6f4ec9d3cce467496527d4bbc46517e06eda9df67b628c7eec49939096a0\",\n      \"size\": 6109\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:7ceb07498658e554031bde97144f5e6ad3183192c942bcf6dd6ddf64c6615053\",\n      \"size\": 186\n    }\n  ],\n  \"annotations\": {\n    \"com.docker.official-images.bashbrew.arch\": \"arm64v8\",\n    \"org.opencontainers.image.base.digest\": \"sha256:a2ca65377c251208de42e1a2722cb949211236c161b634f6f3663754e2d06850\",\n    \"org.opencontainers.image.base.name\": \"debian:trixie-slim\",\n    \"org.opencontainers.image.created\": \"2026-10-06T01:34:42Z\",\n    \"org.opencontainers.image.revision\": \"e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc\",\n    \"org.opencontainers.image.source\": \"https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie\",\n    \"org.opencontainers.image.url\": \"https://hub.docker.com/_/postgres\",\n    \"org.opencontainers.image.version\": \"18.6\"\n  }\n}",
+          "manifesto": {
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "config": {
+              "mediaType": "application/vnd.oci.image.config.v1+json",
+              "digest": "sha256:0336095afa072c685c93021dcfa4a5fee9cbce25ecd65121b58226c787afc0d0",
+              "size": 10061
+            },
+            "layers": [
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:bbeda6b4abb749f743f4547ef5a28070a14de8caef211daa5afb78d5b5fa21ba",
+                "size": 30200282
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:19fcd068927b801804ac060488c3e2fc847235ddad9bc85b4ef428b42360e2a4",
+                "size": 1169
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:dae9c1725998f87ffa10ea48b0e721bd0811a210f1d4b455cbe40cdec5a5504a",
+                "size": 6234900
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:a97c43a6325af3fb25e5cb685a4e69818a27d0ab2e3fb82e67f45619152e224c",
+                "size": 1209570
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:adef3e37879a0f92b9059c5fe890781e2152ae4695205d0567e794c7d7e8d0b6",
+                "size": 8203957
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:729e9c64421046235cce6d7692a32d1a56e0f34f3335835833ae27023598d456",
+                "size": 1220633
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:21a9e5df9938c451bb22c30cc640943b04e7ec7e4e1e5d9bbe3d0551fd47b394",
+                "size": 116
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:c344258f5c4bc9bb0894ad6ec4e2b9771f15abf7d3f3abcb90daadb2ab508457",
+                "size": 3144
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:9aa353a8667f923050c13d703fb58e1cc96acc3af57e5d6fe5f2bb25a188baec",
+                "size": 113999078
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:145ddee77a61759aba901cc36e455a32e290a9c974c725ffc365ea5ffaa853c6",
+                "size": 19420
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:364028cfe3c1ee2de27acfa56ca0bb3a5311bc5ff2ea412969ca71000096738b",
+                "size": 128
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:7f4f6f4ec9d3cce467496527d4bbc46517e06eda9df67b628c7eec49939096a0",
+                "size": 6109
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:7ceb07498658e554031bde97144f5e6ad3183192c942bcf6dd6ddf64c6615053",
+                "size": 186
+              }
+            ],
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm64v8",
+              "org.opencontainers.image.base.digest": "sha256:a2ca65377c251208de42e1a2722cb949211236c161b634f6f3663754e2d06850",
+              "org.opencontainers.image.base.name": "debian:trixie-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:34:42Z",
+              "org.opencontainers.image.revision": "e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc",
+              "org.opencontainers.image.source": "https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/trixie",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/postgres",
+              "org.opencontainers.image.version": "18.6"
+            }
+          }
+        }
+      ],
+      "estado": "metadados e SHA-256 verificados; imagem n\u00e3o adquirida nem aprovada"
+    },
+    {
+      "nome": "python",
+      "registry": "registry-1.docker.io",
+      "repositorio": "library/python",
+      "tag_consultada": "3.13-slim-bookworm",
+      "instante_utc": "2026-10-16T14:14:37.904416+00:00",
+      "digest_indice": "sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641",
+      "headers_publicos": {
+        "Docker-Content-Digest": "sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641",
+        "Content-Type": "application/vnd.oci.image.index.v1+json",
+        "Date": "Fri, 16 Oct 2026 14:14:38 GMT"
+      },
+      "indice_bytes_utf8": "{\"manifests\":[{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"amd64\",\"org.opencontainers.image.base.digest\":\"sha256:a4672c0cb26fbdde88e38fa2dfb6c681942306680e41e4378b28770b6e79ee91\",\"org.opencontainers.image.base.name\":\"debian:bookworm-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:55:45Z\",\"org.opencontainers.image.revision\":\"d2a898cb88e46203577eabc62cdcf6e92aaee176\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13\\/slim-bookworm\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/python\",\"org.opencontainers.image.version\":\"3.13.16-slim-bookworm\"},\"digest\":\"sha256:f040863673aea2570c3ff6a5c3fb4c673a016cbc5375005ad145915922b6b78a\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"amd64\",\"os\":\"linux\"},\"size\":1752},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"amd64\",\"vnd.docker.reference.digest\":\"sha256:f040863673aea2570c3ff6a5c3fb4c673a016cbc5375005ad145915922b6b78a\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:f309b3daadcdc353c160108793f6b63686b04b59ec97d12392de5f412497f2a8\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm32v7\",\"org.opencontainers.image.base.digest\":\"sha256:be90e120e527cbcc03b57353d003f8bbb9cb746eeb8ac0648029254b608c1447\",\"org.opencontainers.image.base.name\":\"debian:bookworm-slim\",\"org.opencontainers.image.created\":\"2026-10-06T02:40:30Z\",\"org.opencontainers.image.revision\":\"d2a898cb88e46203577eabc62cdcf6e92aaee176\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13\\/slim-bookworm\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/python\",\"org.opencontainers.image.version\":\"3.13.16-slim-bookworm\"},\"digest\":\"sha256:d583c8e19a2ccd702a9a2c4e78d2c2b2c219fe4f4d6714673d79dbb4d1d420db\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"arm\",\"os\":\"linux\",\"variant\":\"v7\"},\"size\":1754},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm32v7\",\"vnd.docker.reference.digest\":\"sha256:d583c8e19a2ccd702a9a2c4e78d2c2b2c219fe4f4d6714673d79dbb4d1d420db\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:c5f60c6acb7b9bdcd76ee8809a3a8acdf085e2ed776d55c19d8ce48546ad94ba\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm64v8\",\"org.opencontainers.image.base.digest\":\"sha256:a1b86db52ce3daef089e45aabe36dfec4091f82464c25c1fdcf03de197cbe82a\",\"org.opencontainers.image.base.name\":\"debian:bookworm-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:59:14Z\",\"org.opencontainers.image.revision\":\"d2a898cb88e46203577eabc62cdcf6e92aaee176\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13\\/slim-bookworm\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/python\",\"org.opencontainers.image.version\":\"3.13.16-slim-bookworm\"},\"digest\":\"sha256:55432fc4ef6d07e33c10449312f0ec00071bbb310bb9bd7ba626a31fbbc2cb0d\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"arm64\",\"os\":\"linux\",\"variant\":\"v8\"},\"size\":1754},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"arm64v8\",\"vnd.docker.reference.digest\":\"sha256:55432fc4ef6d07e33c10449312f0ec00071bbb310bb9bd7ba626a31fbbc2cb0d\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:bf4e177da7eb1d4aa8d6208108f3e9a1ffce6072e8815621cd3c8902816fe4d6\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"i386\",\"org.opencontainers.image.base.digest\":\"sha256:227236678b453cb31ec4d1386dce87c9f76b9682288f365b0139f0d47522d3f3\",\"org.opencontainers.image.base.name\":\"debian:bookworm-slim\",\"org.opencontainers.image.created\":\"2026-10-06T01:54:30Z\",\"org.opencontainers.image.revision\":\"d2a898cb88e46203577eabc62cdcf6e92aaee176\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13\\/slim-bookworm\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/python\",\"org.opencontainers.image.version\":\"3.13.16-slim-bookworm\"},\"digest\":\"sha256:b8f3fd737519a13d037ce55f795a1a7bdb9ed226f6bb1960397e62450ada1b9f\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"386\",\"os\":\"linux\"},\"size\":1751},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"i386\",\"vnd.docker.reference.digest\":\"sha256:b8f3fd737519a13d037ce55f795a1a7bdb9ed226f6bb1960397e62450ada1b9f\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:c6dcbaea398188d1a6fde404891e1e4f819ad3276a8c94fa7b269fe247f1863d\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"ppc64le\",\"org.opencontainers.image.base.digest\":\"sha256:653232568eb256bba43ecb106f1410fdedd5070507d83bb546f09e1a1b617e09\",\"org.opencontainers.image.base.name\":\"debian:bookworm-slim\",\"org.opencontainers.image.created\":\"2026-10-06T07:47:17Z\",\"org.opencontainers.image.revision\":\"d2a898cb88e46203577eabc62cdcf6e92aaee176\",\"org.opencontainers.image.source\":\"https:\\/\\/github.com\\/docker-library\\/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13\\/slim-bookworm\",\"org.opencontainers.image.url\":\"https:\\/\\/hub.docker.com\\/_\\/python\",\"org.opencontainers.image.version\":\"3.13.16-slim-bookworm\"},\"digest\":\"sha256:a0a3cf9ba0faa7b897b6a3e2348068e41e7b8131c39ee19f214cacd30631de94\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"ppc64le\",\"os\":\"linux\"},\"size\":1754},{\"annotations\":{\"com.docker.official-images.bashbrew.arch\":\"ppc64le\",\"vnd.docker.reference.digest\":\"sha256:a0a3cf9ba0faa7b897b6a3e2348068e41e7b8131c39ee19f214cacd30631de94\",\"vnd.docker.reference.type\":\"attestation-manifest\"},\"digest\":\"sha256:a55f25548b6cf1d873f7e77fa4f64d712860137ab11721f4d23c6e34e74feb44\",\"mediaType\":\"application\\/vnd.oci.image.manifest.v1+json\",\"platform\":{\"architecture\":\"unknown\",\"os\":\"unknown\"},\"size\":841}],\"mediaType\":\"application\\/vnd.oci.image.index.v1+json\",\"schemaVersion\":2}",
+      "indice": {
+        "manifests": [
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "amd64",
+              "org.opencontainers.image.base.digest": "sha256:a4672c0cb26fbdde88e38fa2dfb6c681942306680e41e4378b28770b6e79ee91",
+              "org.opencontainers.image.base.name": "debian:bookworm-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:55:45Z",
+              "org.opencontainers.image.revision": "d2a898cb88e46203577eabc62cdcf6e92aaee176",
+              "org.opencontainers.image.source": "https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/python",
+              "org.opencontainers.image.version": "3.13.16-slim-bookworm"
+            },
+            "digest": "sha256:f040863673aea2570c3ff6a5c3fb4c673a016cbc5375005ad145915922b6b78a",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "amd64",
+              "os": "linux"
+            },
+            "size": 1752
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "amd64",
+              "vnd.docker.reference.digest": "sha256:f040863673aea2570c3ff6a5c3fb4c673a016cbc5375005ad145915922b6b78a",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:f309b3daadcdc353c160108793f6b63686b04b59ec97d12392de5f412497f2a8",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm32v7",
+              "org.opencontainers.image.base.digest": "sha256:be90e120e527cbcc03b57353d003f8bbb9cb746eeb8ac0648029254b608c1447",
+              "org.opencontainers.image.base.name": "debian:bookworm-slim",
+              "org.opencontainers.image.created": "2026-10-06T02:40:30Z",
+              "org.opencontainers.image.revision": "d2a898cb88e46203577eabc62cdcf6e92aaee176",
+              "org.opencontainers.image.source": "https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/python",
+              "org.opencontainers.image.version": "3.13.16-slim-bookworm"
+            },
+            "digest": "sha256:d583c8e19a2ccd702a9a2c4e78d2c2b2c219fe4f4d6714673d79dbb4d1d420db",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "arm",
+              "os": "linux",
+              "variant": "v7"
+            },
+            "size": 1754
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm32v7",
+              "vnd.docker.reference.digest": "sha256:d583c8e19a2ccd702a9a2c4e78d2c2b2c219fe4f4d6714673d79dbb4d1d420db",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:c5f60c6acb7b9bdcd76ee8809a3a8acdf085e2ed776d55c19d8ce48546ad94ba",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm64v8",
+              "org.opencontainers.image.base.digest": "sha256:a1b86db52ce3daef089e45aabe36dfec4091f82464c25c1fdcf03de197cbe82a",
+              "org.opencontainers.image.base.name": "debian:bookworm-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:59:14Z",
+              "org.opencontainers.image.revision": "d2a898cb88e46203577eabc62cdcf6e92aaee176",
+              "org.opencontainers.image.source": "https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/python",
+              "org.opencontainers.image.version": "3.13.16-slim-bookworm"
+            },
+            "digest": "sha256:55432fc4ef6d07e33c10449312f0ec00071bbb310bb9bd7ba626a31fbbc2cb0d",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "arm64",
+              "os": "linux",
+              "variant": "v8"
+            },
+            "size": 1754
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm64v8",
+              "vnd.docker.reference.digest": "sha256:55432fc4ef6d07e33c10449312f0ec00071bbb310bb9bd7ba626a31fbbc2cb0d",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:bf4e177da7eb1d4aa8d6208108f3e9a1ffce6072e8815621cd3c8902816fe4d6",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "i386",
+              "org.opencontainers.image.base.digest": "sha256:227236678b453cb31ec4d1386dce87c9f76b9682288f365b0139f0d47522d3f3",
+              "org.opencontainers.image.base.name": "debian:bookworm-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:54:30Z",
+              "org.opencontainers.image.revision": "d2a898cb88e46203577eabc62cdcf6e92aaee176",
+              "org.opencontainers.image.source": "https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/python",
+              "org.opencontainers.image.version": "3.13.16-slim-bookworm"
+            },
+            "digest": "sha256:b8f3fd737519a13d037ce55f795a1a7bdb9ed226f6bb1960397e62450ada1b9f",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "386",
+              "os": "linux"
+            },
+            "size": 1751
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "i386",
+              "vnd.docker.reference.digest": "sha256:b8f3fd737519a13d037ce55f795a1a7bdb9ed226f6bb1960397e62450ada1b9f",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:c6dcbaea398188d1a6fde404891e1e4f819ad3276a8c94fa7b269fe247f1863d",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "ppc64le",
+              "org.opencontainers.image.base.digest": "sha256:653232568eb256bba43ecb106f1410fdedd5070507d83bb546f09e1a1b617e09",
+              "org.opencontainers.image.base.name": "debian:bookworm-slim",
+              "org.opencontainers.image.created": "2026-10-06T07:47:17Z",
+              "org.opencontainers.image.revision": "d2a898cb88e46203577eabc62cdcf6e92aaee176",
+              "org.opencontainers.image.source": "https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/python",
+              "org.opencontainers.image.version": "3.13.16-slim-bookworm"
+            },
+            "digest": "sha256:a0a3cf9ba0faa7b897b6a3e2348068e41e7b8131c39ee19f214cacd30631de94",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "ppc64le",
+              "os": "linux"
+            },
+            "size": 1754
+          },
+          {
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "ppc64le",
+              "vnd.docker.reference.digest": "sha256:a0a3cf9ba0faa7b897b6a3e2348068e41e7b8131c39ee19f214cacd30631de94",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "digest": "sha256:a55f25548b6cf1d873f7e77fa4f64d712860137ab11721f4d23c6e34e74feb44",
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            },
+            "size": 841
+          }
+        ],
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "schemaVersion": 2
+      },
+      "plataformas_verificadas": [
+        {
+          "plataforma": {
+            "architecture": "amd64",
+            "os": "linux"
+          },
+          "digest": "sha256:f040863673aea2570c3ff6a5c3fb4c673a016cbc5375005ad145915922b6b78a",
+          "headers_publicos": {
+            "Docker-Content-Digest": "sha256:f040863673aea2570c3ff6a5c3fb4c673a016cbc5375005ad145915922b6b78a",
+            "Content-Type": "application/vnd.oci.image.manifest.v1+json",
+            "Date": "Fri, 16 Oct 2026 14:14:39 GMT"
+          },
+          "manifesto_bytes_utf8": "{\n  \"schemaVersion\": 2,\n  \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n  \"config\": {\n    \"mediaType\": \"application/vnd.oci.image.config.v1+json\",\n    \"digest\": \"sha256:4143a73d5a9804c1bb2f93cc823a7c173dbc62964d4a5ccabcb1167229b0e2b9\",\n    \"size\": 5538\n  },\n  \"layers\": [\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39\",\n      \"size\": 28249323\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:29a6e787b2e07b2b8a2c88b600812f9f7588374cf74e6f17d696695c8984d900\",\n      \"size\": 3342349\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:aded561bdc17f79b65ec824282d38146fac0eb9d8951b9a7a4ca462bbea8c21d\",\n      \"size\": 14892797\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:29d8700fe216d98a8d918ecf891265355e2ca697f9c11e8290d00813caaed60d\",\n      \"size\": 250\n    }\n  ],\n  \"annotations\": {\n    \"com.docker.official-images.bashbrew.arch\": \"amd64\",\n    \"org.opencontainers.image.base.digest\": \"sha256:a4672c0cb26fbdde88e38fa2dfb6c681942306680e41e4378b28770b6e79ee91\",\n    \"org.opencontainers.image.base.name\": \"debian:bookworm-slim\",\n    \"org.opencontainers.image.created\": \"2026-10-06T01:55:45Z\",\n    \"org.opencontainers.image.revision\": \"d2a898cb88e46203577eabc62cdcf6e92aaee176\",\n    \"org.opencontainers.image.source\": \"https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm\",\n    \"org.opencontainers.image.url\": \"https://hub.docker.com/_/python\",\n    \"org.opencontainers.image.version\": \"3.13.16-slim-bookworm\"\n  }\n}",
+          "manifesto": {
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "config": {
+              "mediaType": "application/vnd.oci.image.config.v1+json",
+              "digest": "sha256:4143a73d5a9804c1bb2f93cc823a7c173dbc62964d4a5ccabcb1167229b0e2b9",
+              "size": 5538
+            },
+            "layers": [
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39",
+                "size": 28249323
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:29a6e787b2e07b2b8a2c88b600812f9f7588374cf74e6f17d696695c8984d900",
+                "size": 3342349
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:aded561bdc17f79b65ec824282d38146fac0eb9d8951b9a7a4ca462bbea8c21d",
+                "size": 14892797
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:29d8700fe216d98a8d918ecf891265355e2ca697f9c11e8290d00813caaed60d",
+                "size": 250
+              }
+            ],
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "amd64",
+              "org.opencontainers.image.base.digest": "sha256:a4672c0cb26fbdde88e38fa2dfb6c681942306680e41e4378b28770b6e79ee91",
+              "org.opencontainers.image.base.name": "debian:bookworm-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:55:45Z",
+              "org.opencontainers.image.revision": "d2a898cb88e46203577eabc62cdcf6e92aaee176",
+              "org.opencontainers.image.source": "https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/python",
+              "org.opencontainers.image.version": "3.13.16-slim-bookworm"
+            }
+          }
+        },
+        {
+          "plataforma": {
+            "architecture": "arm64",
+            "os": "linux",
+            "variant": "v8"
+          },
+          "digest": "sha256:55432fc4ef6d07e33c10449312f0ec00071bbb310bb9bd7ba626a31fbbc2cb0d",
+          "headers_publicos": {
+            "Docker-Content-Digest": "sha256:55432fc4ef6d07e33c10449312f0ec00071bbb310bb9bd7ba626a31fbbc2cb0d",
+            "Content-Type": "application/vnd.oci.image.manifest.v1+json",
+            "Date": "Fri, 16 Oct 2026 14:14:39 GMT"
+          },
+          "manifesto_bytes_utf8": "{\n  \"schemaVersion\": 2,\n  \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n  \"config\": {\n    \"mediaType\": \"application/vnd.oci.image.config.v1+json\",\n    \"digest\": \"sha256:da841a7026abc0089180121604f6d0ba4324998e2d133eccae13f22707055dc1\",\n    \"size\": 5553\n  },\n  \"layers\": [\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:c75f989a229d12b2d2613a5997de9ff3546f664c22da9248720033a2410220f6\",\n      \"size\": 28137179\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:aa08835651e777794bde3e8c99bee012c418f60d0d164df22497fa01dc72aca5\",\n      \"size\": 3176232\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:7b2df2902dddd1a4510670c4d3a6d61b4458fa3e7c1ae0b262d75bde1349ab14\",\n      \"size\": 14748696\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:32020fed7f2a057b9cee7fdbfa3ea9fc394149118d7a951c462c7055c3cd3f56\",\n      \"size\": 250\n    }\n  ],\n  \"annotations\": {\n    \"com.docker.official-images.bashbrew.arch\": \"arm64v8\",\n    \"org.opencontainers.image.base.digest\": \"sha256:a1b86db52ce3daef089e45aabe36dfec4091f82464c25c1fdcf03de197cbe82a\",\n    \"org.opencontainers.image.base.name\": \"debian:bookworm-slim\",\n    \"org.opencontainers.image.created\": \"2026-10-06T01:59:14Z\",\n    \"org.opencontainers.image.revision\": \"d2a898cb88e46203577eabc62cdcf6e92aaee176\",\n    \"org.opencontainers.image.source\": \"https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm\",\n    \"org.opencontainers.image.url\": \"https://hub.docker.com/_/python\",\n    \"org.opencontainers.image.version\": \"3.13.16-slim-bookworm\"\n  }\n}",
+          "manifesto": {
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "config": {
+              "mediaType": "application/vnd.oci.image.config.v1+json",
+              "digest": "sha256:da841a7026abc0089180121604f6d0ba4324998e2d133eccae13f22707055dc1",
+              "size": 5553
+            },
+            "layers": [
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:c75f989a229d12b2d2613a5997de9ff3546f664c22da9248720033a2410220f6",
+                "size": 28137179
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:aa08835651e777794bde3e8c99bee012c418f60d0d164df22497fa01dc72aca5",
+                "size": 3176232
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:7b2df2902dddd1a4510670c4d3a6d61b4458fa3e7c1ae0b262d75bde1349ab14",
+                "size": 14748696
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:32020fed7f2a057b9cee7fdbfa3ea9fc394149118d7a951c462c7055c3cd3f56",
+                "size": 250
+              }
+            ],
+            "annotations": {
+              "com.docker.official-images.bashbrew.arch": "arm64v8",
+              "org.opencontainers.image.base.digest": "sha256:a1b86db52ce3daef089e45aabe36dfec4091f82464c25c1fdcf03de197cbe82a",
+              "org.opencontainers.image.base.name": "debian:bookworm-slim",
+              "org.opencontainers.image.created": "2026-10-06T01:59:14Z",
+              "org.opencontainers.image.revision": "d2a898cb88e46203577eabc62cdcf6e92aaee176",
+              "org.opencontainers.image.source": "https://github.com/docker-library/python.git#d2a898cb88e46203577eabc62cdcf6e92aaee176:3.13/slim-bookworm",
+              "org.opencontainers.image.url": "https://hub.docker.com/_/python",
+              "org.opencontainers.image.version": "3.13.16-slim-bookworm"
+            }
+          }
+        }
+      ],
+      "estado": "metadados e SHA-256 verificados; imagem n\u00e3o adquirida nem aprovada"
+    },
+    {
+      "nome": "uv",
+      "registry": "ghcr.io",
+      "repositorio": "astral-sh/uv",
+      "tag_consultada": "0.9",
+      "instante_utc": "2026-10-16T14:14:40.536703+00:00",
+      "digest_indice": "sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4",
+      "headers_publicos": {
+        "Docker-Content-Digest": "sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4",
+        "Content-Type": "application/vnd.oci.image.index.v1+json",
+        "Date": "Fri, 16 Oct 2026 14:14:40 GMT"
+      },
+      "indice_bytes_utf8": "{\n  \"schemaVersion\": 2,\n  \"mediaType\": \"application/vnd.oci.image.index.v1+json\",\n  \"manifests\": [\n    {\n      \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n      \"digest\": \"sha256:e96d483a9ed7924d2acf01bdd1d537d0d5e6d8f21b74fff3373005f6c9446696\",\n      \"size\": 669,\n      \"platform\": {\n        \"architecture\": \"amd64\",\n        \"os\": \"linux\"\n      }\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n      \"digest\": \"sha256:072a1d3d8ad9d1aafea97d2a7d7df02df808061123399a34419c40a732ef529f\",\n      \"size\": 567,\n      \"annotations\": {\n        \"vnd.docker.reference.digest\": \"sha256:e96d483a9ed7924d2acf01bdd1d537d0d5e6d8f21b74fff3373005f6c9446696\",\n        \"vnd.docker.reference.type\": \"attestation-manifest\"\n      },\n      \"platform\": {\n        \"architecture\": \"unknown\",\n        \"os\": \"unknown\"\n      }\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n      \"digest\": \"sha256:10e89aa55522210851c055c9b261c9c9b4a50ea8ab891e23fe7e138a56287a3e\",\n      \"size\": 669,\n      \"platform\": {\n        \"architecture\": \"arm64\",\n        \"os\": \"linux\"\n      }\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n      \"digest\": \"sha256:38310af203fb1f2610827d07f76eb52ab390526ab4aca3094b2c8eef66721d50\",\n      \"size\": 567,\n      \"annotations\": {\n        \"vnd.docker.reference.digest\": \"sha256:10e89aa55522210851c055c9b261c9c9b4a50ea8ab891e23fe7e138a56287a3e\",\n        \"vnd.docker.reference.type\": \"attestation-manifest\"\n      },\n      \"platform\": {\n        \"architecture\": \"unknown\",\n        \"os\": \"unknown\"\n      }\n    }\n  ],\n  \"annotations\": {\n    \"org.opencontainers.image.created\": \"2026-02-04T21:22:13.756Z\",\n    \"org.opencontainers.image.description\": \"An extremely fast Python package and project manager, written in Rust.\",\n    \"org.opencontainers.image.licenses\": \"Apache-2.0\",\n    \"org.opencontainers.image.revision\": \"ea4560831e503c6ce34d18739476a71ac6e9a9de\",\n    \"org.opencontainers.image.source\": \"https://github.com/astral-sh/uv\",\n    \"org.opencontainers.image.title\": \"uv\",\n    \"org.opencontainers.image.url\": \"https://github.com/astral-sh/uv\",\n    \"org.opencontainers.image.version\": \"0.9.30\"\n  }\n}",
+      "indice": {
+        "schemaVersion": 2,
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "manifests": [
+          {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:e96d483a9ed7924d2acf01bdd1d537d0d5e6d8f21b74fff3373005f6c9446696",
+            "size": 669,
+            "platform": {
+              "architecture": "amd64",
+              "os": "linux"
+            }
+          },
+          {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:072a1d3d8ad9d1aafea97d2a7d7df02df808061123399a34419c40a732ef529f",
+            "size": 567,
+            "annotations": {
+              "vnd.docker.reference.digest": "sha256:e96d483a9ed7924d2acf01bdd1d537d0d5e6d8f21b74fff3373005f6c9446696",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            }
+          },
+          {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:10e89aa55522210851c055c9b261c9c9b4a50ea8ab891e23fe7e138a56287a3e",
+            "size": 669,
+            "platform": {
+              "architecture": "arm64",
+              "os": "linux"
+            }
+          },
+          {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:38310af203fb1f2610827d07f76eb52ab390526ab4aca3094b2c8eef66721d50",
+            "size": 567,
+            "annotations": {
+              "vnd.docker.reference.digest": "sha256:10e89aa55522210851c055c9b261c9c9b4a50ea8ab891e23fe7e138a56287a3e",
+              "vnd.docker.reference.type": "attestation-manifest"
+            },
+            "platform": {
+              "architecture": "unknown",
+              "os": "unknown"
+            }
+          }
+        ],
+        "annotations": {
+          "org.opencontainers.image.created": "2026-02-04T21:22:13.756Z",
+          "org.opencontainers.image.description": "An extremely fast Python package and project manager, written in Rust.",
+          "org.opencontainers.image.licenses": "Apache-2.0",
+          "org.opencontainers.image.revision": "ea4560831e503c6ce34d18739476a71ac6e9a9de",
+          "org.opencontainers.image.source": "https://github.com/astral-sh/uv",
+          "org.opencontainers.image.title": "uv",
+          "org.opencontainers.image.url": "https://github.com/astral-sh/uv",
+          "org.opencontainers.image.version": "0.9.30"
+        }
+      },
+      "plataformas_verificadas": [
+        {
+          "plataforma": {
+            "architecture": "amd64",
+            "os": "linux"
+          },
+          "digest": "sha256:e96d483a9ed7924d2acf01bdd1d537d0d5e6d8f21b74fff3373005f6c9446696",
+          "headers_publicos": {
+            "Docker-Content-Digest": "sha256:e96d483a9ed7924d2acf01bdd1d537d0d5e6d8f21b74fff3373005f6c9446696",
+            "Content-Type": "application/vnd.oci.image.manifest.v1+json",
+            "Date": "Fri, 16 Oct 2026 14:14:41 GMT"
+          },
+          "manifesto_bytes_utf8": "{\n  \"schemaVersion\": 2,\n  \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n  \"config\": {\n    \"mediaType\": \"application/vnd.oci.image.config.v1+json\",\n    \"digest\": \"sha256:2a3c532732c723941140e1dc337c040a82db38fc81be761f9bc883fa3d08c88d\",\n    \"size\": 1299\n  },\n  \"layers\": [\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:4e478d39b8c609fa493a14508eae84e3617d1fbeeb2201599b942068dd7c57bc\",\n      \"size\": 22794512\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:9129ac345f4409cda4889dd4ef88bbddb282b665c66f45660fbbe7eb239fe3a0\",\n      \"size\": 98\n    }\n  ]\n}",
+          "manifesto": {
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "config": {
+              "mediaType": "application/vnd.oci.image.config.v1+json",
+              "digest": "sha256:2a3c532732c723941140e1dc337c040a82db38fc81be761f9bc883fa3d08c88d",
+              "size": 1299
+            },
+            "layers": [
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:4e478d39b8c609fa493a14508eae84e3617d1fbeeb2201599b942068dd7c57bc",
+                "size": 22794512
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:9129ac345f4409cda4889dd4ef88bbddb282b665c66f45660fbbe7eb239fe3a0",
+                "size": 98
+              }
+            ]
+          }
+        },
+        {
+          "plataforma": {
+            "architecture": "arm64",
+            "os": "linux"
+          },
+          "digest": "sha256:10e89aa55522210851c055c9b261c9c9b4a50ea8ab891e23fe7e138a56287a3e",
+          "headers_publicos": {
+            "Docker-Content-Digest": "sha256:10e89aa55522210851c055c9b261c9c9b4a50ea8ab891e23fe7e138a56287a3e",
+            "Content-Type": "application/vnd.oci.image.manifest.v1+json",
+            "Date": "Fri, 16 Oct 2026 14:14:41 GMT"
+          },
+          "manifesto_bytes_utf8": "{\n  \"schemaVersion\": 2,\n  \"mediaType\": \"application/vnd.oci.image.manifest.v1+json\",\n  \"config\": {\n    \"mediaType\": \"application/vnd.oci.image.config.v1+json\",\n    \"digest\": \"sha256:0193cb1e0700aff3a01f8109a5657123e167eb03d3bc65f29806501aa82bdb63\",\n    \"size\": 1299\n  },\n  \"layers\": [\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844\",\n      \"size\": 21482765\n    },\n    {\n      \"mediaType\": \"application/vnd.oci.image.layer.v1.tar+gzip\",\n      \"digest\": \"sha256:597c034a97ce4bf4c99a8bed53cfeb67bc186e49f5cc84a1090eb9b7e661a4a3\",\n      \"size\": 98\n    }\n  ]\n}",
+          "manifesto": {
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "config": {
+              "mediaType": "application/vnd.oci.image.config.v1+json",
+              "digest": "sha256:0193cb1e0700aff3a01f8109a5657123e167eb03d3bc65f29806501aa82bdb63",
+              "size": 1299
+            },
+            "layers": [
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:42006da38f928f0b8e4dee2797da8e1e00389a680b41a27234a2aae8cd930844",
+                "size": 21482765
+              },
+              {
+                "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+                "digest": "sha256:597c034a97ce4bf4c99a8bed53cfeb67bc186e49f5cc84a1090eb9b7e661a4a3",
+                "size": 98
+              }
+            ]
+          }
+        }
+      ],
+      "estado": "metadados e SHA-256 verificados; imagem n\u00e3o adquirida nem aprovada"
+    }
+  ]
+}

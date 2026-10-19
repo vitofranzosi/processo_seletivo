@@ -1,0 +1,5 @@
+{
+  "estado": "PENDENTE",
+  "tabelas": {},
+  "instrucao": "Preencher somente depois de revisar as migrations e aprovar nomes/definicoes de triggers e funcoes. Mapa vazio bloqueia verificacao. Hashes sao de pg_get_triggerdef e pg_get_functiondef UTF-8, sem normalizacao. Nao substituir por qualquer trigger habilitada."
+}

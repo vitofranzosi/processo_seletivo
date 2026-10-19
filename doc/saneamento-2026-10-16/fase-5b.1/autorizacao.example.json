@@ -1,0 +1,17 @@
+{
+  "identidade": "5dadcc37-7015-4a5a-b1a1-727dd7e3d901",
+  "revisao_operador": "5B.2-A.2",
+  "escopo": {"recursos": [], "operacoes": []},
+  "endpoint_local": "PENDENTE",
+  "cliente_sha256": "PENDENTE",
+  "exclusividade_engine": false,
+  "aprovador": "PENDENTE",
+  "referencia_da_deliberacao": "PENDENTE",
+  "manifesto_sha256": "PENDENTE",
+  "integridade_sha256": "PENDENTE",
+  "configuracao_sha256": "PENDENTE",
+  "engine_id": "PENDENTE",
+  "acoes": [],
+  "cenarios": [],
+  "observacao": "Exemplo sem autorização. Preencher somente após deliberação humana expressa; este arquivo não é assinatura digital."
+}

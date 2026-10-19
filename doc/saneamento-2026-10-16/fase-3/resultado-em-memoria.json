@@ -1,0 +1,63 @@
+{
+  "escopo": "Somente memória; conexões de banco proibidas",
+  "periodos": [
+    {
+      "cenario": "primeira_publicacao_cancelada",
+      "ato": "publicacao",
+      "impeditivo_cancelado": [
+        "BLOCKING_ERROR"
+      ],
+      "outros_codigos": [
+        "description_missing",
+        "field_format_invalid",
+        "field_required",
+        "profiles_required"
+      ]
+    },
+    {
+      "cenario": "retificacao_cancelamento",
+      "ato": "retificacao",
+      "impeditivo_cancelado": [],
+      "outros_codigos": [
+        "description_missing",
+        "field_format_invalid",
+        "field_required",
+        "profiles_required"
+      ]
+    },
+    {
+      "cenario": "retificacao_substituicao",
+      "ato": "retificacao",
+      "impeditivo_cancelado": [],
+      "outros_codigos": [
+        "description_missing",
+        "field_format_invalid",
+        "field_required",
+        "profiles_required"
+      ]
+    }
+  ],
+  "normativa": [
+    {
+      "campo": "foundation",
+      "resultado": "aceito_em_memoria",
+      "valor": "Fundamento sintético corrigido"
+    },
+    {
+      "campo": "version",
+      "resultado": "aceito_em_memoria",
+      "valor": "sintetica-2"
+    },
+    {
+      "campo": "effectiveFrom",
+      "resultado": "aceito_em_memoria",
+      "valor": "2026-02-01"
+    },
+    {
+      "campo": "id",
+      "resultado": "recusado_em_memoria",
+      "tipo": "CampoNaoRetificavel",
+      "mensagem": "/profiles/id=22222222-2222-2222-2222-222222222222/competitionModalities/id=55555555-5555-5555-5555-555555555555/normativeRule/id endereça um campo que a Retificação não altera no lugar. Ele é identidade ou estrutura, e não conteúdo normativo: é o substrato pelo qual a Retificação endereça o que ela corrige."
+    }
+  ]
+}
