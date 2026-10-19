@@ -116,12 +116,13 @@ def test_a_tela_de_identificacao_oferece_quem_tem_trabalho(client, seletor_ligad
     Quem digitava o próprio nome entrava sem vínculo e via uma página vazia, sem nada dizendo que
     os nomes com trabalho eram outros — o campo em branco era uma parede antes do percurso.
     """
-    corpo = client.get(reverse("interface:identificar")).content.decode()
+    # A escolha passou a ter página própria na 075, atrás da página de acesso.
+    corpo = client.get(reverse("interface:identificar-demonstracao")).content.decode()
 
-    assert "Quem tem trabalho de comissão neste ambiente" in corpo
+    assert "Comissões" in corpo
     assert "maria" in corpo and "joao" in corpo
     # E o que cada identidade alcança, não só que ela existe.
-    assert "preside" in corpo
+    assert "Presidência de comissão" in corpo
     assert "Etapa alocada" in corpo or "Etapas alocadas" in corpo
 
 
@@ -151,7 +152,7 @@ def test_a_identidade_escolhida_tem_prioridade_sobre_o_campo(client, seletor_lig
 
 def test_a_lista_nao_promete_papel_que_ela_nao_concede(client, seletor_ligado, cenario):
     """O texto precisa dizer de onde vem a autorização, senão a lista vira mais uma caixa."""
-    corpo = client.get(reverse("interface:identificar")).content.decode()
+    corpo = client.get(reverse("interface:identificar-demonstracao")).content.decode()
 
     assert "não são papéis" in corpo
     assert "vêm do vínculo com a comissão" in corpo

@@ -1,26 +1,8 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Alocação por Etapa — {{ processo.institutional_code }}{% endblock %}
-{% block estilo_da_pagina %}
-{% comment %} **O cabeçalho inteiro fica fixo, e não cada célula** (057, D-016): com a linha de grupo do Edital
-   em cima, `sticky` em cada `th` com `top:0` sobrepunha as duas linhas.
-
-   E a altura dele é decidida aqui (057, FR-1061): eram 174 px. Entrelinha curta para o nome de duas
-   linhas, e o respiro de cada degrau reduzido ao que ainda os separa. "Distribuir" na linha dele, em
-   negrito: leva a outra tela, e "Distribuir Todos" numa linha só se lia como um comando. {% endcomment %}
-.distribuicao thead{position:sticky;top:0;z-index:2}
-.distribuicao thead .grupos th[scope=colgroup]{padding-block:.1rem;border-bottom:1px solid var(--fundo);
-  font-weight:600;font-size:.8125rem}
-.distribuicao thead tr+tr th{padding-block:.3rem}
-.distribuicao thead th .situacao{padding-block:.05rem}
-.coluna-toda .destino{display:block;font-weight:600}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/alocacoes.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">Alocação por Etapa</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
-  <span aria-current="page">Alocação por Etapa</span>
-</nav>
-
 {% comment %}
 “Alocação”, e não “Distribuição”. Esta tela põe **pessoas em Etapas** (011); a da 012 põe
 **inscrições em avaliadores**, e as duas se chamavam Distribuição em telas vizinhas — com
@@ -38,7 +20,7 @@
 </p>
 
 {% if not tem_presidente %}
-<p class="aviso" role="status"><strong>Designe a presidência antes de distribuir.</strong>
+<p class="aviso" role="status"><strong>Designe a presidência antes de alocar.</strong>
   <a href="{% url 'interface:comissao' processo.id %}">Ir para a Comissão</a></p>
 {% endif %}
 
@@ -221,8 +203,10 @@
     </table>
   </div>
 
+  {% comment %} "Alocação", e não "distribuição" (079, `FR-1790`): a decisão do título, acima, valia em toda a
+     tela menos no botão que ela existe para apertar — e a resposta dele já dizia "Alocação salva.". {% endcomment %}
   {% if matriz.linhas and tem_presidente %}
-  <p class="salvar"><button type="submit" class="botao">Salvar distribuição</button></p>
+  <p class="salvar"><button type="submit" class="botao">Salvar alocação</button></p>
   {% endif %}
 </form>
 {% else %}

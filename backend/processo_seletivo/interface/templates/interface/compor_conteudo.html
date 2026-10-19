@@ -1,4 +1,4 @@
-{% extends "interface/compor_base.html" %}
+{% extends "interface/compor_base.html" %}{% load estaticos %}
 {% block etapa_titulo %}Conteúdo{% endblock %}
 {% comment %}
 O Conteúdo em pouco mais de três telas (056, FR-1029 a FR-1032, D-007). Eram 4.876 px: 22 caixas da
@@ -18,15 +18,7 @@ A marca de estado muda de desenho, e não de texto (D-008): ela é o fim do nome
 ("Público-Alvo (vazia — não sai no documento)"), e o `conteudo.js` a reescreve enquanto se digita. O
 que a fazia longa era a caixa-alta espaçada da legenda, que dobrava a largura dela.
 {% endcomment %}
-{% block estilo_da_pagina %}
-fieldset.secao{max-width:calc(var(--leitura) + 2rem + 2px);padding:.5rem 1rem .6rem;margin-bottom:.5rem}
-fieldset.secao .campo{margin:0}
-.secao>legend [data-estado-texto]{text-transform:none;letter-spacing:0;font-weight:400}
-fieldset.secao.gerada{border:0;background:none;padding:0;margin-bottom:.9rem}
-fieldset.secao.gerada>legend{float:left;padding:0;margin-right:.6rem;line-height:1.5rem}
-fieldset.secao.gerada .ajuda{margin:0;font-size:.8125rem;line-height:1.5rem}
-fieldset.secao.gerada .acao{margin-left:.35rem}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/compor-conteudo.css' %}">{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario">
   {% csrf_token %}

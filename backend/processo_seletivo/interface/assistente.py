@@ -87,7 +87,7 @@ def _edital_do_piloto(request, edital_id):
     """O Edital, ou a recusa — a mesma para as três ausências (`FR-1460`, `FR-1464`)."""
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return None, redirect(reverse("interface:identificar"))
+        return None, identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None or not settings.ASSISTENTE_PILOTO or not ator.can(PERMISSAO):
         raise DomainError("not_found", "Recurso não encontrado.", 404)

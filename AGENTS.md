@@ -99,7 +99,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **11297 passando e 11 pulados**, nenhuma falha (medido em 2026-10-15, na `main` em `db428b30`, com o grupo `assistente` instalado, em 1312s; a medição anterior, de 14/10 em `55889d11`, dava 11263 e 12 sem o grupo). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
+Contra PostgreSQL a suíte fecha em **12268 passando e 11 pulados**, nenhuma falha (medido em 2026-10-18, na `main` em `2abd18db`, com o grupo `assistente` instalado e 4 workers, em 525s; a medição anterior, de 17/10 em `a41b67c0`, dava 11457 e 11 — a diferença é a dos testes das telas, da folha e da CSP, da `081` à `092`, e os pulados são os mesmos onze). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. Os
 doze — onze com o grupo — são deliberados, e se repartem em quatro: **9** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da
@@ -113,18 +113,35 @@ conectar como a role de runtime, que não pode criar banco de teste. Nenhum dos 
 `DB_RUNTIME_USER` no ambiente, as settings o preferem a `DB_USER`, e então é ele que precisa ser o
 superusuário — é o que o `make test-pg` faz, a partir do `POSTGRES_USER`.
 
-**A suíte leva de 12 a 18 minutos — 733s em 09/20, 1069s em 09/28 —, e a preparação do banco não
-tem nada com isso.** Criar o banco de teste e aplicar as 80 migrations — hoje são 94 — custa
-**~2 segundos**, medido em 2026-09-20, isolando a preparação com `--reuse-db` sobre um caso só. O
-custo está nos casos transacionais: **2599 dos 8375 coletados, ~31%**, alcançados por 847
-declarações de `transaction=True` em 319 dos 660 arquivos de teste (medido em 2026-09-28). Eles
-não podem terminar em `ROLLBACK`, e o Django limpa truncando as tabelas depois de cada um. A versão
-anterior deste parágrafo contava as declarações (791, em 09/20) como se fossem casos e concluía
-"~10%"; uma marca de classe ou de módulo alcança todos os casos abaixo dela, e é por isso que os
-dois números divergem por um fator de três. Não é desleixo de quem os
-escreveu: é consequência de as garantias deste sistema morarem no banco — gatilho append-only,
-privilégio ausente e `select_for_update` que realmente tranca não são observáveis dentro de uma
-transação que vai ser desfeita.
+**A suíte roda em paralelo, e leva ~10 minutos com 4 workers — 600s, contra 1441s em série** (medido
+em 2026-10-17, em `a41b67c0`). O `make test-pg` e o CI passam `-n 4 --dist worksteal`; cada worker
+cria o seu banco, `test_<DB_NAME>_gwN`, com os seus gatilhos e privilégios. **O `worksteal` é o que
+rende**: com a distribuição padrão os mesmos 4 workers deram 1057s, porque três ficavam ~6 minutos
+ociosos esperando o quarto. E 8 workers deram 549s — quase nada a mais, porque o WAL e o disco do
+cluster são um só, e cada caso transacional fica ~1,8× mais caro em companhia. Para o caso que só
+falha junto de outros, `make test-pg PYTEST_WORKERS=0` volta ao serial. As medições estão em
+[doc/estudo-paralelizacao-da-suite.md](doc/estudo-paralelizacao-da-suite.md). No CI, o primeiro run
+paralelo levou 836s de pytest e 14m35s de job, contra 1729s a 2856s em série — o runner varia muito.
+
+**A preparação do banco não tem nada com o tempo.** Criar o banco de teste e aplicar as 80
+migrations — hoje são 94 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
+`--reuse-db` sobre um caso só. O custo está nos casos transacionais: **3108 dos 11 468 coletados,
+27%, e 79% do tempo em série** (medido em 2026-10-17). Eles não podem terminar em `ROLLBACK`, e o
+Django limpa depois de cada um truncando as tabelas e refazendo o `post_migrate` — só essa limpeza
+é 44% da suíte serial. A versão de 09/28 deste parágrafo contava 2599 de 8375; a de 09/20 contava as
+declarações de `transaction=True` como se fossem casos e concluía "~10%" — uma marca de classe ou de
+módulo alcança todos os casos abaixo dela. Não é desleixo de quem os escreveu: é consequência de as
+garantias deste sistema morarem no banco — gatilho append-only, privilégio ausente e
+`select_for_update` que realmente tranca não são observáveis dentro de uma transação que vai ser
+desfeita.
+
+**A limpeza depois de cada caso transacional não é a do Django** desde 10/17. O `tests/conftest.py`
+trunca só as tabelas com linha, mais as que têm chave estrangeira para elas, que o PostgreSQL exige
+no mesmo `TRUNCATE`. E só emite o `post_migrate` quando `django_content_type` ou `auth_permission`
+mudaram. O banco que o caso seguinte recebe é o mesmo, e a suíte cai ~20% (576s → 451s, em rodadas
+seguidas). Desconfiou dela? `LIMPEZA_INTEGRAL=1` devolve a do Django. As medições, e a variante com
+`DELETE` que tiraria 60% mas expõe um teste dependente da ordem física das linhas, estão em
+[doc/estudo-limpeza-dos-casos-transacionais.md](doc/estudo-limpeza-dos-casos-transacionais.md).
 
 **`--reuse-db` não economiza nada, e já foi medido — não repita o experimento.** Duas rodadas com a
 bandeira ligada deram 670s e 686s, contra 733s sem ela; e a segunda, que **reusava** o banco, saiu
@@ -133,11 +150,16 @@ de grandeza acima do que a bandeira poupa. Ela trocaria 2 segundos por um banco 
 silêncio quando uma migration muda.
 
 **Um banco de teste por worktree.** Suítes paralelas disputam `test_processo_seletivo` e se
-derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão.
+derrubam. Passe um `DB_NAME` próprio quando houver mais de uma sessão. Os workers de uma mesma suíte
+não precisam disso — o sufixo `_gwN` já os separa —, mas duas suítes com o mesmo `DB_NAME` geram os
+mesmos `_gwN` e voltam a se derrubar. Os papéis de conformidade de `test_database_permissions.py`,
+que são do cluster e não do banco, levam o worker e o `DB_NAME` no nome desde 10/17: com o nome
+fixo, os workers se derrubavam ali — 51 erros em 92 casos com `-n 4`.
 
 **`/gestao/` não abre sem o seletor de identidade.** Sem `INTERFACE_SELETOR_IDENTIDADE=true` o
 runserver local devolve 503. Ele deixa qualquer pessoa declarar quem é, e produção recusa subir com
-ele. O portal do candidato **não** precisa de `PORTAL_IDENTIDADE_DEMO`: a tela que a chave
+ele. Desde a `075`, desligá-lo também **derruba a sessão de demonstração já aberta** — ligar de novo
+não a traz de volta —, e a vitrine deixa de oferecer "Área de gestão". O portal do candidato **não** precisa de `PORTAL_IDENTIDADE_DEMO`: a tela que a chave
 habilitava saiu na `010`, e o candidato entra por código enviado ao e-mail. A chave sobrevive só
 como armadilha — `production.py` recusa subir com ela ligada (`portal/identidade.py`,
 `provedor_de_demonstracao`, que ninguém chama).
@@ -167,6 +189,16 @@ pergunta livre chama, e custa.
 
 **404 na gestão costuma ser autorização, não rota quebrada.** Reproduza com o papel exato do ator
 antes de sair caçando URL.
+
+**Estilo e script escritos no template não funcionam: a CSP os recusa.** Desde a `091` e a `092`,
+`processo_seletivo/shared/politica_de_conteudo.py` responde todo HTML com `style-src 'self'` e
+`script-src 'self'`, sem `unsafe-inline`. Um `style="..."`, um `<style>`, um `<script>` ou um `onclick=` no
+template renderiza sem efeito e sem erro no servidor — a única pista é a violação no console do
+navegador. Estilo vai para arquivo: a folha comum da gestão em `interface/static/interface/gestao/`
+(sete arquivos, na ordem de `FOLHAS_DA_GESTAO`, em `shared/estaticos.py`), o de uma tela só em
+`interface/grupos/` ou `interface/telas/`, pelo bloco `estilo_da_pagina`, e a do portal em
+`portal/static/portal/portal.css`. Os guardiões que exigem regra para toda classe citada leem esses
+arquivos. A exceção conhecida é a página de falha de CSRF do próprio Django, que sai sem desenho.
 
 **O código de acesso do portal sai no terminal do servidor.** Na execução nativa o backend de
 e-mail é o de console: a mensagem é impressa onde o `runserver` está rodando, e não há outro lugar

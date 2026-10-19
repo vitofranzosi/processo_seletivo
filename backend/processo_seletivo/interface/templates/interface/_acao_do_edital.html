@@ -5,11 +5,14 @@ declara, e a folha as contorna dentro de `.terminais`.
 
 Ação indisponível aparece **desabilitada com o motivo** (FR-024), não escondida: esconder devolve a
 pessoa ao mesmo beco, só que em silêncio.
+
+A marca "irreversível" descreve a ação que acompanha (090, `FR-2060`), como na Distribuição (081,
+`FR-1827`): o `id` sai da chave, que já forma o do motivo e é única no cartão.
 {% endcomment %}
 <li>
   {% if acao.disponivel %}
-  <a class="botao{% if peso %} {{ peso }}{% endif %}" href="{{ acao.url }}">{{ acao.rotulo }}</a>
-  {% if acao.irreversivel %}<span class="marca-irreversivel">irreversível</span>{% endif %}
+  <a class="botao{% if peso %} {{ peso }}{% endif %}" href="{{ acao.url }}"{% if acao.irreversivel %} aria-describedby="irreversivel-{{ acao.chave }}"{% endif %}>{{ acao.rotulo }}</a>
+  {% if acao.irreversivel %}<span class="marca-irreversivel" id="irreversivel-{{ acao.chave }}">irreversível</span>{% endif %}
   {% else %}
   <span class="botao desabilitado" aria-disabled="true"
         aria-describedby="motivo-{{ acao.chave }}">{{ acao.rotulo }}</span>

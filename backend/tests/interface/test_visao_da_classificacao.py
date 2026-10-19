@@ -25,6 +25,7 @@ import pytest
 
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
 from tests.interface.conftest import ETAPA_CLASSIFICATORIA
+from tests.interface.folha import folha_aplicada
 from tests.interface.test_aplicar_a_todos import (
     MARCO,
     P1,
@@ -149,7 +150,13 @@ def test_sem_script_a_etapa_e_a_de_sempre(client, tres_perfis):
     )
     for perfil in (P1, P2, P3):
         assert " hidden" not in _cartao(corpo, perfil)
-    assert ".visao-dos-perfis .tabela-rolavel{position:relative}" in corpo
+    # A moldura da vista é presa pela regra da folha comum desde a 078 (`FR-1760` da 078), e não
+    # por uma cópia desta etapa.
+    # Na folha que a página aplica: a regra comum saiu do HTML para `gestao.css` na 089.
+    assert re.search(
+        r"(?m)^[^{}]*\.tabela-rolavel[,{][^{}]*\{?position:relative\}", folha_aplicada(corpo)
+    )
+    assert ".visao-dos-perfis .tabela-rolavel{position:relative}" not in corpo
 
 
 def test_as_frases_curtas_da_linha_moram_no_template(client, tres_perfis):

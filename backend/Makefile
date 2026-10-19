@@ -40,10 +40,19 @@ test:
 # não tem.
 # `DB_RUNTIME_USER` é o que precisa ser sobrescrito, e não `DB_USER`: as settings preferem o
 # primeiro, e mexer só no segundo não muda conexão nenhuma.
+#
+# **Em paralelo, e com `worksteal`.** Cada worker tem o seu banco, `test_<DB_NAME>_gwN`, com os seus
+# gatilhos e privilégios: nenhuma garantia deixa de ser provada. A distribuição decide mais que o
+# número de workers — com a padrão, três de quatro ficavam ~6 minutos ociosos esperando o quarto
+# (1057s, contra 600s com `worksteal` e 1441s em série). Mais de 4 quase não rende, porque o WAL e o
+# disco do cluster são um só. `PYTEST_WORKERS=0` volta ao serial, para o caso que só falha em
+# companhia. As medições estão em `doc/estudo-paralelizacao-da-suite.md`.
+PYTEST_WORKERS ?= 4
+
 test-pg:
 	TEST_DB_ENGINE=postgresql \
 	DB_RUNTIME_USER='$(POSTGRES_USER)' DB_RUNTIME_PASSWORD='$(POSTGRES_PASSWORD)' \
-	uv run pytest
+	uv run pytest -n $(PYTEST_WORKERS) --dist worksteal
 
 contract:
 	uv run pytest -m contract

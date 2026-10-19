@@ -1,12 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}{{ ato.rotulo }} — Retificação{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:retificacao-detalhe' retificacao.id %}">Retificação</a> › <span aria-current="page">{{ ato.rotulo }}</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{% url 'interface:retificacao-detalhe' retificacao.id %}">Retificação</a> ›
-  <span aria-current="page">{{ ato.rotulo }}</span>
-</nav>
-
 <h1>{{ ato.rotulo }}</h1>
 <p class="sub">{{ retificacao.justification }}</p>
 

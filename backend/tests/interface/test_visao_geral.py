@@ -662,7 +662,10 @@ def test_t011_o_controle_tem_dois_rotulos_e_a_legenda_e_invisivel(client, certam
     # A legenda fica no documento e não é desenhada.
     assert '<caption class="oculto">' in corpo
     # **Zero** JavaScript novo: a página não carrega script algum além do que a `040` já não tinha.
-    assert "<script" not in corpo
+    # No **conteúdo** da tela, que é o que a `SC-226` protege: a moldura da gestão traz o script da
+    # barra retrátil desde a emenda da 076 (DP-6), e ele não toca a expansão dos Perfis.
+    conteudo = corpo.split('<main id="conteudo"')[1]
+    assert "<script" not in conteudo
 
 
 def test_t012_os_rotulos_de_ordenacao_nao_embutem_direcao(client, certame):

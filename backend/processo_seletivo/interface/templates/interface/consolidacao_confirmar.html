@@ -1,12 +1,12 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Conferir consolidação — {{ etapa.name }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Conferir</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> ›
-  <span aria-current="page">Conferir</span>
-</nav>
-
+{% comment %}
+**A trilha mora no cabeçalho, e é a da Distribuição com Conferir no fim** (082), como a da conferência
+da retirada desde a 080. Aqui ela pulava o Processo e a Alocação, e era a única tela aberta pela
+Distribuição que ainda dizia o caminho no conteúdo — justamente a do ato que não se desfaz.
+{% endcomment %}
 <h1>Confira antes de consolidar</h1>
 <p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
 

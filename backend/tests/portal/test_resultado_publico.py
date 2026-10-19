@@ -15,6 +15,7 @@ from tests.fixtures.divulgacao import (
     montar_ato_publicavel,
     publicar_o_ato,
 )
+from tests.interface.folha import folha_aplicada
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -266,9 +267,12 @@ def test_a_pagina_nao_tem_largura_fixa_que_force_rolagem_horizontal(client, publ
     assert 'class="tabela-rolavel"' in conteudo, (
         "a tabela larga rola dentro do próprio contêiner, e não empurra a página"
     )
-    folha = corpo[corpo.index("<style>") : corpo.index("</style>")]
+    # A folha que a página aplica: os tokens, com `--pagina`, saíram do `<style>` na 089.
+    folha = folha_aplicada(corpo)
     assert not re.search(r"\bmain\{[^}]*width:\d+px", folha)
-    assert "--pagina" in folha
+    # A declaração, e não só o uso: `var(--pagina)` também casava com "--pagina", e a página podia
+    # perder o token sem que ninguém visse (089, quando os tokens saíram do `<style>`).
+    assert "--pagina:" in folha
 
 
 def test_a_publicacao_mais_antiga_leva_a_vigente_e_nao_a_sucessora_imediata(

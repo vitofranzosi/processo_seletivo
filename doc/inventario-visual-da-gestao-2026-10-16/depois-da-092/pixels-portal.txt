@@ -1,0 +1,16 @@
+no ruído  19-ana-selecoes-inscricoes-id-comprovante--1280.png: depois 10093 px, máx 220; ruído 10235 px, máx 220
+no ruído  19-ana-selecoes-inscricoes-id-comprovante--375.png: depois 5040 px, máx 220; ruído 5375 px, máx 220
+REPROVA   34-bruno-selecoes-inscricoes-id-comprovante--1280.png: depois (10123, 220); ruído (9963, 220)
+no ruído  34-bruno-selecoes-inscricoes-id-comprovante--375.png: depois 5112 px, máx 220; ruído 5118 px, máx 220
+no ruído  50-clara-selecoes-inscricoes-id-requerimento--375.png: depois 23 px, máx 10; ruído 23 px, máx 10
+REPROVA   51-clara-selecoes-inscricoes-id-comprovante--1280.png: depois (10324, 220); ruído (9964, 220)
+REPROVA   51-clara-selecoes-inscricoes-id-comprovante--375.png: depois (5302, 220); ruído (5112, 220)
+no ruído  63-daniel-selecoes-id--375.png: depois 32 px, máx 14; ruído 32 px, máx 14
+REPROVA   68-daniel-selecoes-inscricoes-id-comprovante--1280.png: depois (10274, 220); ruído (10154, 220)
+no ruído  68-daniel-selecoes-inscricoes-id-comprovante--375.png: depois 5257 px, máx 220; ruído 5305 px, máx 220
+REPROVA   84-elisa-selecoes-inscricoes-id-comprovante--1280.png: depois (10372, 220); ruído (9941, 220)
+REPROVA   84-elisa-selecoes-inscricoes-id-comprovante--375.png: depois (5372, 220); ruído (5089, 220)
+no ruído  94-amanda.sorteio-selecoes-id--375.png: depois 31 px, máx 14; ruído 31 px, máx 14
+REPROVA   98-amanda.sorteio-selecoes-inscricoes-id-comprovante--1280.png: depois (10493, 220); ruído (10034, 220)
+REPROVA   98-amanda.sorteio-selecoes-inscricoes-id-comprovante--375.png: depois (5488, 220); ruído (5194, 220)
+comparadas: 206; idênticas: 191; dentro do ruído: 7; reprovadas: 8; só numa das passadas: []

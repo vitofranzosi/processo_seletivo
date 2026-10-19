@@ -1,0 +1,16 @@
+/* A largura da barra de cada Etapa, em Minhas Etapas (091, D-005). Era `style="width:N%"` no modelo,
+   e a política de segurança de conteúdo recusa atributo de estilo. O percentual é inteiro de 0 a 100
+   (`avaliacoes/application/selectors.py`, `round`), e há uma classe por valor: a mesma medida, sem
+   atributo e sem script. Cada regra termina em `%;}`, e não em porcentagem seguida da chave: a dupla
+   que esta sequenciaria é a que fecha uma tag de modelo, e a varredura de sintaxe vazada a acusaria. */
+.largura-0{width:0%;} .largura-1{width:1%;} .largura-2{width:2%;} .largura-3{width:3%;} .largura-4{width:4%;} .largura-5{width:5%;} .largura-6{width:6%;} .largura-7{width:7%;} .largura-8{width:8%;} .largura-9{width:9%;}
+.largura-10{width:10%;} .largura-11{width:11%;} .largura-12{width:12%;} .largura-13{width:13%;} .largura-14{width:14%;} .largura-15{width:15%;} .largura-16{width:16%;} .largura-17{width:17%;} .largura-18{width:18%;} .largura-19{width:19%;}
+.largura-20{width:20%;} .largura-21{width:21%;} .largura-22{width:22%;} .largura-23{width:23%;} .largura-24{width:24%;} .largura-25{width:25%;} .largura-26{width:26%;} .largura-27{width:27%;} .largura-28{width:28%;} .largura-29{width:29%;}
+.largura-30{width:30%;} .largura-31{width:31%;} .largura-32{width:32%;} .largura-33{width:33%;} .largura-34{width:34%;} .largura-35{width:35%;} .largura-36{width:36%;} .largura-37{width:37%;} .largura-38{width:38%;} .largura-39{width:39%;}
+.largura-40{width:40%;} .largura-41{width:41%;} .largura-42{width:42%;} .largura-43{width:43%;} .largura-44{width:44%;} .largura-45{width:45%;} .largura-46{width:46%;} .largura-47{width:47%;} .largura-48{width:48%;} .largura-49{width:49%;}
+.largura-50{width:50%;} .largura-51{width:51%;} .largura-52{width:52%;} .largura-53{width:53%;} .largura-54{width:54%;} .largura-55{width:55%;} .largura-56{width:56%;} .largura-57{width:57%;} .largura-58{width:58%;} .largura-59{width:59%;}
+.largura-60{width:60%;} .largura-61{width:61%;} .largura-62{width:62%;} .largura-63{width:63%;} .largura-64{width:64%;} .largura-65{width:65%;} .largura-66{width:66%;} .largura-67{width:67%;} .largura-68{width:68%;} .largura-69{width:69%;}
+.largura-70{width:70%;} .largura-71{width:71%;} .largura-72{width:72%;} .largura-73{width:73%;} .largura-74{width:74%;} .largura-75{width:75%;} .largura-76{width:76%;} .largura-77{width:77%;} .largura-78{width:78%;} .largura-79{width:79%;}
+.largura-80{width:80%;} .largura-81{width:81%;} .largura-82{width:82%;} .largura-83{width:83%;} .largura-84{width:84%;} .largura-85{width:85%;} .largura-86{width:86%;} .largura-87{width:87%;} .largura-88{width:88%;} .largura-89{width:89%;}
+.largura-90{width:90%;} .largura-91{width:91%;} .largura-92{width:92%;} .largura-93{width:93%;} .largura-94{width:94%;} .largura-95{width:95%;} .largura-96{width:96%;} .largura-97{width:97%;} .largura-98{width:98%;} .largura-99{width:99%;}
+.largura-100{width:100%;}

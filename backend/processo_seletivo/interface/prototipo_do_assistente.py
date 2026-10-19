@@ -73,6 +73,8 @@ def prototipo(request, edital_id):
     )
     painel = render_to_string(painel_.TEMPLATE, dados, request=request)
     html = pagina.content.decode("utf-8").replace("</body>", painel + "</body>", 1)
+    # A página é a do portal. Na 091 ela ia em observação, porque a folha do portal estava no
+    # documento; desde a 092 a folha é arquivo, e a página fica sob a recusa, como toda outra.
     return HttpResponse(html)
 
 

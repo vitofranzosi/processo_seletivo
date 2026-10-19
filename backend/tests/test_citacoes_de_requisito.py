@@ -80,7 +80,9 @@ def arquivos_que_citam() -> list[Path]:
     """Onde uma citação pode aparecer: no código, nos testes e nos artefatos de especificação."""
     fontes = [
         arquivo
-        for padrao in ("*.py", "*.html", "*.js")
+        # `*.css` desde a 092: as folhas citam requisitos nos comentários, e saíram dos modelos — a
+        # da gestão na 089, a do portal na 092 —, levando as citações para onde a varredura não ia.
+        for padrao in ("*.py", "*.html", "*.js", "*.css")
         for arquivo in BACKEND.rglob(padrao)
         if _relevante(arquivo)
     ]
@@ -230,6 +232,7 @@ def test_a_varredura_alcanca_o_que_promete():
     assert len(definidos) >= 150, "as especificações deixaram de ser lidas"
     assert len(arquivos) >= 300, "a árvore varrida encolheu"
     assert any(a.suffix == ".py" for a in arquivos) and any(a.suffix == ".md" for a in arquivos)
+    assert any(a.suffix == ".css" for a in arquivos), "as folhas saíram da varredura"
     citam = sum(
         1 for a in arquivos if CITACAO.search(a.read_text(encoding="utf-8", errors="ignore"))
     )

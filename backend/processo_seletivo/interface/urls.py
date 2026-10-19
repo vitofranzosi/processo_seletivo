@@ -14,9 +14,13 @@ urlpatterns = [
     path("", views.lista, name="lista"),
     path("identificar", views.identificar, name="identificar"),
     path("sair", views.sair, name="sair"),
-    # A visão institucional (040). **Rota de primeiro nível, e não sob `processos/`**: a página é
-    # do escopo, como a lista, e não de agregado nenhum — ela observa a fronteira **entre** os
-    # Processos, que é justamente o nível que não existia (FR-581).
+    # A escolha de identidades da demonstração, em etapa própria da página de acesso (075). O envio
+    # continua indo a `identificar`, como sempre foi.
+    path(
+        "identificar/demonstracao",
+        views.identificar_demonstracao,
+        name="identificar-demonstracao",
+    ),
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # As autoridades da unidade (060): de topo, como a visão geral, porque não pertencem a Processo
     # nenhum — respondem pelos atos de todos os da unidade.

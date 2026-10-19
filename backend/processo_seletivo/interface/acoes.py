@@ -296,6 +296,17 @@ def da_linha(conjunto):
 # ---------------------------------------------------------------------------
 
 
+def pode_consultar_a_divulgacao(ator):
+    """Quem abre os Resultados divulgados de um marco: quem publica o resultado, ou quem audita.
+
+    **Uma pergunta, três lugares**: a porta da consulta (`_edital_para_publicar` com `consulta`), o
+    atalho do Ato de classificação e a trilha da prévia do aviso aberta pelos Resultados divulgados
+    (090, `FR-2068`). Com três cópias, a porta podia mudar e a trilha continuar oferecendo o
+    caminho de volta a quem ela passou a recusar — o 403 na trilha que a 090 existe para tirar.
+    """
+    return ator.can("resultado:publicar") or ator.can("auditoria:consultar")
+
+
 def do_ato_de_ordenacao(ato, ator, *, edital):
     """O que se pode fazer com um ato de classificação emitido.
 
@@ -315,7 +326,7 @@ def do_ato_de_ordenacao(ato, ator, *, edital):
             estilo=PRIMARIA,
             irreversivel=True,
         )
-    if ator.can("resultado:publicar") or ator.can("auditoria:consultar"):
+    if pode_consultar_a_divulgacao(ator):
         yield Acao(
             "publicacoes-do-marco",
             "Resultados divulgados",

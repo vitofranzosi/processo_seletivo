@@ -70,7 +70,11 @@ jobs:
       # `ruff format` pela primeira vez.
       - run: uv run ruff format --check .
       - run: uv run python manage.py makemigrations --check --dry-run
-      - run: uv run pytest
+      # **Quatro workers, porque o runner tem quatro vCPUs** — o `ubuntu-latest` de repositório
+      # público —, e o PostgreSQL do serviço divide com eles. `worksteal`, e não a distribuição
+      # padrão, que deixava três workers ociosos esperando o quarto. Cada worker cria o seu banco de
+      # teste no mesmo serviço; as medições estão em `doc/estudo-paralelizacao-da-suite.md`.
+      - run: uv run pytest -n 4 --dist worksteal
 
   # O ambiente containerizado é o caminho canônico de desenvolvimento, e caminho documentado que
   # ninguém executa apodrece calado. Este job é o que impede isso: ele sobe a mesma pilha que a

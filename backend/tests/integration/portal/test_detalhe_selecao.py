@@ -8,6 +8,7 @@ from django.urls import reverse
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.edital import actor_headers
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
+from tests.interface.folha import folha_aplicada
 
 
 @pytest.mark.django_db(transaction=True)
@@ -96,7 +97,8 @@ def test_ler_o_edital_nao_disputa_a_decisao_com_inscrever_se(
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
 
     assert 'class="documento secundaria"' in corpo
-    assert ".documento.secundaria{background:var(--branco)" in corpo
+    # A regra está na folha que a página aplica, de arquivo desde a 092 (`FR-2139`).
+    assert ".documento.secundaria{background:var(--branco)" in folha_aplicada(corpo)
     assert corpo.count('class="documento secundaria"') == 1, "só o PDF é secundário"
 
 
@@ -144,8 +146,10 @@ def test_o_cartao_da_vitrine_e_alvo_inteiro(client, api_client, manager_headers,
 
     corpo = client.get(reverse("portal:vitrine")).content.decode()
 
-    assert '.selecao a.titulo::after{content:"";position:absolute;inset:0}' in corpo
-    assert ".selecao:focus-within{outline:" in corpo, "o teclado continua vendo o foco"
+    # A folha que a página aplica, de arquivo desde a 092 (`FR-2139`).
+    folha = folha_aplicada(corpo)
+    assert '.selecao a.titulo::after{content:"";position:absolute;inset:0}' in folha
+    assert ".selecao:focus-within{outline:" in folha, "o teclado continua vendo o foco"
 
 
 @pytest.mark.django_db(transaction=True)

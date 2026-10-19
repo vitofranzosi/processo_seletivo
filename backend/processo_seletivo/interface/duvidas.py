@@ -15,8 +15,7 @@ leitura serve a resposta e os pontos para revisão: um instante, uma versão (`F
 from datetime import UTC, datetime
 from uuid import UUID
 
-from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -71,7 +70,7 @@ def _modalidades_por_perfil(conteudo):
 def respostas_do_assistente(request, edital_id):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
-        return redirect(reverse("interface:identificar"))
+        return identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)

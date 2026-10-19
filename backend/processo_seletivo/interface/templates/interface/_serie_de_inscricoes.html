@@ -21,7 +21,7 @@ dependia de abrir a tabela. O eixo nomeia alguns dias, e não todos: quais, deci
     <ul class="barras" aria-hidden="true">
       {% for marcado in item.eixo %}
       <li title="{{ marcado.ponto.dia|date:'d/m' }}: {{ marcado.ponto.quantidade }}">
-        <span class="coluna"><span class="barra" style="height:{% widthratio marcado.ponto.quantidade item.pico 100 %}%"></span></span>
+        <span class="coluna"><span class="barra altura-{% widthratio marcado.ponto.quantidade item.pico 100 %}"></span></span>
         <span class="dia">{% if marcado.rotulado %}{{ marcado.ponto.dia|date:"d/m" }}{% endif %}</span>
       </li>
       {% endfor %}

@@ -17,12 +17,13 @@ from processo_seletivo.interface import acoes, revisao
 from processo_seletivo.interface.acoes import Acao
 from processo_seletivo.interface.templatetags.interface_extras import contagem
 from tests.interface.conftest import identificar
-from tests.interface.test_acessibilidade import FONTE, PORTAL, _estilo_proprio, sem_prosa
+from tests.interface.folha import FOLHA_COMUM, FOLHA_DO_PORTAL, estilo_do_bloco
+from tests.interface.test_acessibilidade import PORTAL, _estilo_proprio, sem_prosa
 from tests.interface.test_acoes import homologado
 
 RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
 GESTAO = RAIZ / "interface/templates/interface"
-FOLHA = sem_prosa(FONTE)
+FOLHA = sem_prosa(FOLHA_COMUM)
 
 
 def regra(seletor, folha=FOLHA):
@@ -126,9 +127,10 @@ def test_o_homologado_tem_publicar_como_unica_cheia(
 
     corpo = client.get(reverse("interface:detalhe", args=[alvo.id])).content.decode()
 
+    # Depois do `href`, a ação irreversível traz a marca como descrição (090, `FR-2060`).
     cheias = [
         rotulo
-        for classes, rotulo in re.findall(r'<a class="([^"]*)" href="[^"]*">([^<]+)<', corpo)
+        for classes, rotulo in re.findall(r'<a class="([^"]*)" href="[^"]*"[^>]*>([^<]+)<', corpo)
         if classes.split() == ["botao"]
     ]
     assert cheias == ["Publicar"], cheias
@@ -143,7 +145,8 @@ def test_a_conducao_destaca_so_o_primeiro_gesto():
     marco = (GESTAO / "marco.html").read_text()
     assert 'class="botao{% if not forloop.first %} secundario{% endif %}"' in marco
     assert '<div class="gestos">' in marco
-    assert re.search(r"\.gestos\{display:flex;flex-wrap:wrap", marco)
+    # A regra mora no arquivo que o bloco da tela carrega (091).
+    assert re.search(r"\.gestos\{display:flex;flex-wrap:wrap", estilo_do_bloco(marco))
 
 
 # --- T1 — a coluna da Lista (FR-1049, FR-1050) -------------------------------------------------
@@ -331,4 +334,5 @@ def test_o_envio_de_documento_e_uma_linha():
     assert "data-arquivo" in escolher and "data-nome-do-arquivo" in escolher
     assert '<button type="submit" class="acao">Enviar</button>' in escolher
     assert '<div class="linha">' not in documentos
-    assert ".envio .linha{" not in PORTAL.read_text()
+    # A folha do portal é arquivo desde a 092; o modelo base, sozinho, não tem regra a examinar.
+    assert ".envio .linha{" not in FOLHA_DO_PORTAL + PORTAL.read_text()

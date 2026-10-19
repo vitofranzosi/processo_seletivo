@@ -18,6 +18,7 @@ from django.urls import reverse
 from processo_seletivo.duvidas.domain.estruturas_do_piloto import RESPOSTA_DA_SUGESTAO
 from processo_seletivo.duvidas.models import TrocaDoPiloto
 from processo_seletivo.interface import painel_do_assistente as painel_
+from processo_seletivo.shared import politica_de_conteudo as politica
 from tests.fixtures.corpus import publicar_do_corpus
 from tests.fixtures.inferencia import devolucao, saida
 from tests.fixtures.inferencia_corpus import fonte
@@ -82,6 +83,28 @@ def test_o_fundo_e_a_pagina_publica_e_o_painel_nasce_fechado(client, edital_91):
     assert " open>" not in re.search(r'<dialog id="pd-painel"[^>]*>', corpo).group(0)
     assert 'aria-expanded="false"' in corpo
     assert 'aria-expanded="true"' in _texto(client.get(_url(edital_91) + "?painel=1"))
+
+
+def test_o_fundo_do_portal_fica_sob_a_recusa(client, edital_91):
+    """092, `FR-2137`: a página é a do portal, que na 091 ia em observação porque tinha a folha no
+    documento. Desde a 092 a folha é arquivo, e o protótipo fica sob a recusa, como a gestão."""
+    identificar(client, "pessoa", PILOTO)
+    resposta = client.get(_url(edital_91))
+
+    assert resposta["Content-Security-Policy"] == politica.POLITICA
+    assert "Content-Security-Policy-Report-Only" not in resposta
+    assert "<style" not in resposta.content.decode()
+
+
+def test_o_aviso_sem_versao_vigente_tambem_fica_em_recusa(client, edital):
+    """O aviso que a mesma view dá a um Edital sem versão vigente — texto da gestão, sem estilo
+    embutido — continua em recusa, como na 091."""
+    identificar(client, "pessoa", PILOTO)
+    resposta = client.get(_url(edital))
+
+    assert "Só Edital publicado tem página pública" in resposta.content.decode()
+    assert resposta["Content-Security-Policy"] == politica.POLITICA
+    assert "Content-Security-Policy-Report-Only" not in resposta
 
 
 @pytest.mark.parametrize(("estado", "_nome"), painel_.ESTADOS_SIMULADOS)

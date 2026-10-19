@@ -1,28 +1,24 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Publicar resultado — {{ cabecalho.marco }}{% endblock %}
+{% comment %}
+O degrau nomeia de onde esta tela vem, e nomear não é abrir: a tela do ato é da presidência e da
+auditoria, e quem só publica recebe 404 nela. Sem o link, a trilha continua dizendo onde a
+prévia fica — que é o que ela existe para dizer — sem fingir um acesso que não há (E2E17-002). No
+cabeçalho de contexto desde a 083, com a mesma condição (D-003 da 083).
+{% endcomment %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} {% if pode_ver_a_classificacao %}<a href="{% url 'interface:ato-de-ordenacao' edital.id marco_id ato.id %}">Ato de classificação</a>{% else %}Ato de classificação{% endif %} › <span aria-current="page">Publicar resultado</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  {% comment %}
-  O degrau nomeia de onde esta tela vem, e nomear não é abrir: a tela do ato é da presidência e da
-  auditoria, e quem só publica recebe 404 nela. Sem o link, a trilha continua dizendo onde a
-  prévia fica — que é o que ela existe para dizer — sem fingir um acesso que não há (E2E17-002).
-  {% endcomment %}
-  {% if pode_ver_a_classificacao %}<a href="{% url 'interface:ato-de-ordenacao' edital.id marco_id ato.id %}">Ato de classificação</a>{% else %}Ato de classificação{% endif %} ›
-  <span aria-current="page">Publicar resultado</span>
-</nav>
-
 <h1>Publicar resultado</h1>
 <p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}</p>
+
+{% comment %} A recusa do envio logo abaixo do título, antes da frase da prévia (083, `FR-1856`). {% endcomment %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível publicar:</strong> {{ erro }}</p>{% endif %}
 
 {% comment %}
 Nada foi gravado até aqui, e é isto que a frase diz (FR-035). Não existe rascunho de publicação a
 retomar: sair desta tela não deixa nada para trás, e voltar a ela recompõe a mesma leitura.
 {% endcomment %}
 <p class="imutavel">Esta é uma <strong>prévia</strong>: nada foi gravado. A publicação só existe depois de você confirmar.</p>
-
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível publicar:</strong> {{ erro }}</p>{% endif %}
 
 {% if publicabilidade.publicavel %}
 {% comment %}

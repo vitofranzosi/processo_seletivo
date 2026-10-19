@@ -1,0 +1,35 @@
+ 1 REPROVA portal.css: '\n.abertas-agora{' -> '.zzmut.abertas-agora{' | test_nenhum_modificador_fica_sem_a_base_que_o_usa | 1 failed, 163 passed in 2.06s
+ 2 REPROVA portal.css: '\n.acao-principal{' -> '.acao-principalx{' | test_nenhuma_classe_citada_deixa_de_existir_na_folha | 1 failed, 142 passed in 1.01s
+ 3 REPROVA portal.css: '+' -> '.zzmut{width:600px}' | test_nada_no_portal_fixa_largura_em_pixel | 1 failed in 0.04s
+ 4 REPROVA portal.css: '.perfil:target{border-left:6px solid' -> '.perfil:target{border-left:5px solid' | test_a_vaga_indicada_nao_depende_so_de_cor | 1 failed in 0.04s
+ 5 REPROVA portal.css: '[type=file]){height:2.625rem}' -> '[type=file]){height:2.5rem}' | test_uma_altura_por_folha_para_os_controles_de_uma_linha | 1 failed in 0.91s
+ 6 REPROVA portal.css: '.grade-de-campos .largo>:is(input,select' -> '.grade-de-campos .largo>:is(input,select' | test_o_campo_curto_do_requerimento_nao_estica_a_linha | 1 failed in 0.86s
+ 7 REPROVA portal.css: '+' -> '.envio .linha{display:flex}' | test_o_envio_de_documento_e_uma_linha | 1 failed in 0.90s
+ 8 REPROVA portal.css: '  .timbre{display:block;' -> '.timbre{display:flex;' | test_o_papel_nao_leva_navegacao_nem_botao | 1 failed in 3.49s
+ 9 REPROVA portal.css: 'html,body{font-size:10.5pt;' -> 'html,body{font-size:11pt;' | test_o_comprovante_cabe_em_uma_pagina | 1 failed in 3.53s
+10 REPROVA portal.css: '@media print{' -> '@media screen and (max-width:0){' | test_o_comprovante_e_privado_e_imprimivel | 1 failed in 3.58s
+11 REPROVA portal.css: 'a.principal{display:inline-block;' -> 'a.principal{display:block;' | test_o_comprovante_pode_ser_baixado_e_reencontrado | 1 failed in 3.58s
+12 REPROVA portal.css: '.progresso[hidden]{display:none}' -> '.progresso[hidden]{display:block}' | test_o_aviso_de_nao_fechar_a_pagina_fica_escondido_em_repous | 1 failed in 3.63s
+13 REPROVA portal.css: '.escolher input[type=file]{position:abso' -> '.escolher input[type=file]{position:rela' | test_o_campo_de_arquivo_do_navegador_nao_aparece_cru | 1 failed in 3.45s
+14 REPROVA portal.css: '.selecao .situacao{font-size:.9375rem}' -> '.selecao .situacao{color:red;font-size:.' | test_a_situacao_da_vitrine_nao_e_pintada_pela_regra_da_outra | 1 failed in 3.35s
+15 REPROVA portal.css: '+' -> 'main{width:900px}' | test_a_pagina_nao_tem_largura_fixa_que_force_rolagem_horizon | 1 failed in 3.68s
+16 REPROVA portal.css: '+' -> '.zzmut{max-width:600px}' | test_nenhuma_das_bases_crava_largura_em_pixel | 1 failed in 3.26s
+17 REPROVA portal.css: 'repeat(auto-fill,minmax(min(26rem' -> 'repeat(auto-fit,minmax(min(26rem' | test_a_vitrine_usa_a_tela_em_duas_colunas | 1 failed in 3.30s
+33 REPROVA portal.css: '.documento.secundaria{background:var(--b' -> '.documento.secundaria{background:var(--v' | test_ler_o_edital_nao_disputa_a_decisao_com_inscrever_se | 1 failed in 3.54s
+34 REPROVA portal.css: 'a.titulo::after{content:"";position:abso' -> 'a.titulo::after{content:"";position:abso' | test_o_cartao_da_vitrine_e_alvo_inteiro | 1 failed in 3.60s
+18 REPROVA portal.css: '+' -> '{% comment %}' | test_nenhuma_sintaxe_de_template_nas_folhas_estaticas | 1 failed, 32 passed in 0.05s
+19 REPROVA portal.css: '+' -> '/* FR-9999 */' | test_nenhuma_citacao_aponta_para_requisito_inexistente | 1 failed in 0.96s
+20 REPROVA portal.css: '.largura-37{width:37%;} ' -> '' | test_uma_classe_por_valor_de_zero_a_cem | 1 failed, 2 passed in 0.06s
+21 REPROVA _documentos.html: '<div class="feito largura-' -> '<div style="width:1%" class="feito largu' | test_nenhum_modelo_tem_estilo_embutido | 1 failed, 129 passed in 0.09s
+22 REPROVA base.html: '</head>' -> '<style></style>\n</head>' | test_nenhum_modelo_tem_estilo_embutido | 1 failed, 143 passed in 0.10s
+23 REPROVA _documentos.html: 'documentos.total 100 %}' -> 'documentos.total 10 %}' | test_a_barra_de_documentos_leva_a_classe_do_percentual | 1 failed, 1 passed in 0.06s
+24 REPROVA _documentos.html: 'class="feito largura-{%' -> 'class="feito largurx-{%' | test_o_progresso_dos_documentos_e_barra_e_nao_segunda_frase | 1 failed in 3.58s
+25 REPROVA base.html: '<link rel="stylesheet" href="{% estatico' -> '' | test_a_base_do_portal_carrega_a_folha_dele | 1 failed in 0.04s
+26 REPROVA base.html: '<link rel="stylesheet" href="{% estatico' -> '' | test_as_outras_bases_carregam_os_tokens_antes_de_qualquer_re | 1 failed, 1 passed in 3.30s
+27 REPROVA inscricao.html: '{% include "portal/_resumo_documentos.ht' -> '' | test_quantos_documentos_faltam_aparece_junto_ao_cabecalho | 1 failed in 3.57s
+28 REPROVA base.html: '<body>\n' -> '<body>\n<p>Acontecendo agora</p>' | test_evento_sem_termino_nao_acontece_para_sempre | 1 failed in 3.63s
+29 REPROVA base.html: '<body>\n' -> '<body>\n<p class="linha-do-tempo"></p>' | test_sem_evento_publicado_a_secao_some_inteira | 1 failed in 3.64s
+30 REPROVA politica_de_conteudo.py: '            resposta[CABECALHO] = POLITI' -> 'resposta[CABECALHO + "-Report-Only"] = P' | test_o_portal_e_o_resto_do_html_recebem_a_politica_em_recusa | 1 failed in 3.35s
+31 REPROVA politica_de_conteudo.py: '    if CABECALHO in resposta:\n        re' -> 'if CABECALHO in resposta:\n        return' | test_o_portal_e_o_resto_do_html_recebem_a_politica_em_recusa | 1 failed in 3.33s
+32 REPROVA prototipo_do_assistente.py: '    return HttpResponse(html)\n' -> 'return HttpResponse(html, headers={"Cont' | test_o_fundo_do_portal_fica_sob_a_recusa | 1 failed in 3.69s
+sem mutação: passa | 565 passed in 9.73s

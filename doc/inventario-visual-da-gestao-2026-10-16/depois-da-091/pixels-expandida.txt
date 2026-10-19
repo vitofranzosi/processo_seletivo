@@ -1,0 +1,11 @@
+no ruído  compor-revisao--375.png: depois 151 px, máx 28; ruído 151 px, máx 28
+REPROVA   duvidas--1280.png: depois (339, 255); ruído (165, 255)
+REPROVA   duvidas--375.png: depois (339, 255); ruído (165, 255)
+REPROVA   processo-detalhe--1280.png: depois (1436, 179); ruído (1369, 179)
+REPROVA   processo-detalhe--375.png: depois (637, 179); ruído (555, 179)
+no ruído  retificacao-ato-homologar--375.png: depois 4 px, máx 4; ruído 4 px, máx 4
+REPROVA   supervisao--1280.png: depois (204, 163); ruído (104, 163)
+REPROVA   supervisao--375.png: depois (232, 163); ruído (132, 163)
+REPROVA   visao-geral--1280.png: depois (126, 152); ruído (68, 152)
+REPROVA   visao-geral--375.png: depois (126, 152); ruído (68, 152)
+comparadas: 170; idênticas: 160; dentro do ruído: 2; reprovadas: 8; só numa das passadas: []

@@ -1,7 +1,6 @@
-{% extends "interface/compor_base.html" %}{% load interface_extras %}
+{% extends "interface/compor_base.html" %}{% load interface_extras estaticos %}
 {% block etapa_titulo %}Perfis de Vaga{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_da_vista.html" %}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/vista.css' %}">{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"

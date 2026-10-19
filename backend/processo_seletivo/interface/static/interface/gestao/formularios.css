@@ -1,0 +1,250 @@
+/* Os formulários: campos, linhas de campos, escolhas, filtros, a barra de gravação, os controles.
+   Depois dos componentes, na ordem em que as regras já se aplicavam (091). */
+/* O que se escreve acompanha a medida do que se lê: o parecer de uma avaliação se esticava por
+   1.052 px, e ninguém redige assim. Campos dentro de `.campos` já flexionam e não são tocados. */
+.campo>textarea,.campo>input[type=text],.campo>input[type=search],.campo>input[type=email]{
+  max-width:var(--leitura)}
+/* E o mesmo teto para `select`: escolher entre cinco nomes não precisa de 1.200 px. A regra já
+   valia para o que se escreve; valer também para o que se escolhe é a mesma ideia — o campo tem
+   a largura do que recebe, e não a da página. */
+.campo>select{max-width:var(--leitura)}
+/* Data não tem medida de leitura: o conteúdo é `dd/mm/aaaa, --:--` e quem desenha o tamanho é o
+   navegador. Fora da lista do teto, o campo esticava com a linha — 647 px para dezesseis
+   caracteres, no Cronograma —, e eram os dois deles que empurravam o Evento para duas linhas.
+   O teto é folgado de propósito: o desenho do controle varia por navegador e por idioma, e cortar
+   um segmento de data é pior do que sobrar espaço. */
+input[type=date],input[type=datetime-local]{max-width:18rem}
+/* E a linha deixa de reservar mais largura do que o campo aceita. Sem isto o teto resolvia o campo
+   e não a coluna: o `p` continuava esticando, e o vão apenas mudava de lugar — saía da ponta da
+   linha e ia para dentro dela, entre o campo de data e o rótulo seguinte. */
+.campo:has(>input[type=date]),.campo:has(>input[type=datetime-local]){flex:0 1 18rem}
+.campo.caracter label{display:inline-flex;align-items:center;gap:.35rem;margin-right:1rem}
+/* A caixa herdava `width:100%` de `.campo input`, e cem por cento de um rótulo `inline-flex`, que
+   mede o próprio conteúdo, é circular: o Chrome desenhava a marca, o Safari a resolvia em zero e
+   restavam só as palavras "Eliminatória" e "Classificatória". Dois nomes de classe, como em
+   `.campo.escolha input`, para não depender da ordem na folha. */
+.campo.caracter input{width:auto;flex:none;margin:0;padding:0;border:0;background:none}
+/* O mesmo "aqui não há nada", no tamanho de um campo. Solto, `.vazio` é caixa de página inteira:
+   como `span` dentro de um `.campo`, os 2,5rem de respiro vazavam por cima da linha seguinte. */
+.campo>.vazio{display:block;padding:.7rem .9rem;text-align:left}
+form.confirmar{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1.25rem}
+/* Caráter agrupado sob legenda (FR-037), sem a moldura pesada de um fieldset de linha. */
+fieldset.caracter{border:none;padding:0;margin:0}
+/* A mesma voz de `.opcoes>legend` e de `.campo label`: um grupo que nomeia controles do mesmo
+   nível dos campos ao lado se lê como rótulo de campo, e não como um terceiro tamanho. */
+fieldset.caracter legend{font-size:.8125rem;font-weight:600;color:var(--texto);padding:0;
+  margin-bottom:.3rem}
+/* FR-032: em todo o produto não havia asterisco, etiqueta nem marca separando o campo
+   exigido do opcional — descobria-se falhando. O asterisco é `aria-hidden` porque quem usa
+   leitor de tela recebe a informação por `aria-required`, e ouvir "asterisco" seria ruído. */
+.obrigatorio{color:var(--vermelho);font-weight:700;margin-left:.15rem}
+/* A marca de opcional é o contrário do asterisco, e por isso não grita: ela vale para quem se
+   pergunta "posso deixar em branco?" e não deve competir com o rótulo que a carrega. Anda em par
+   com o `placeholder`, que diz **o que acontece** se ficar em branco. */
+.opcional{font-weight:400;color:var(--texto-fraco);font-size:.9em}
+/* Resumo de erros ancorado (FR-033): o resumo sozinho obriga a procurar; a marca junto do
+   campo sozinha obriga a rolar até achar. */
+.erro ol{margin:.4rem 0 0 1.2rem}
+.campo .recusa{display:block;color:var(--vermelho);font-size:.8125rem;margin-top:.25rem}
+.escolha{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;line-height:1.4}
+/* Caixa de marcar não é campo de texto. Dentro de `.campo`, ela herdava `width:100%` e virava um
+   bloco da largura do filtro: o rótulo caía para a linha de baixo, e a marca ficava solta no meio
+   da barra, sem nada ao lado. A classe existe para isso — e reconhecer a marca pela classe, e não
+   pelo atributo de tipo, é o que mantém a folha fora do alcance do guarda que proíbe oferecer
+   papel na tela de indisponibilidade. */
+.escolha input{margin:0;flex:none}
+/* `.campo.escolha`, e não `.escolha`: a marca de filtrar vive dentro de um `.campo`, e a
+   regra genérica dos campos — `width:100%` — mora **depois** nesta folha. Empatadas em
+   especificidade, quem vem depois ganha, e a caixa de marcar esticava à largura do rótulo,
+   empurrando a frase para uma coluna de uma palavra por linha. Dois nomes de classe no
+   seletor resolvem sem depender da ordem — que muda a cada regra inserida acima. */
+.campo.escolha input{width:auto;padding:0;border:0;background:none}
+/* A marca ocupa o que a frase dela ocupa. Como `.campo`, ela disputava a barra em partes iguais
+   com o campo de busca e recebia largura de sobra — "Só quem está sem Etapa (1 de 7)" quebrava
+   uma palavra por linha, e a marca ficava solta ao lado de uma coluna de texto. */
+.campo.escolha{display:flex;align-items:center;flex:0 0 auto}
+.campo.escolha label{display:flex;align-items:center;gap:.5rem;margin:0;font-weight:400;
+  font-size:.9375rem}
+.alocar-em-lote fieldset,.remover-em-lote fieldset{border:1px solid var(--borda);border-radius:4px;
+  padding:.75rem 1rem;margin:.75rem 0 0}
+/* `.filtro` e `.filtros`: a mesma barra, escrita no plural numa tela e no singular nas outras.
+   Só o singular tinha regra, e a busca da distribuição saía solta na página enquanto a da
+   comissão e a da alocação eram cartão. Um conceito, um desenho — os dois nomes até que
+   alguém unifique a marcação. */
+.filtro,.filtros{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:1rem 1.5rem;flex-wrap:wrap;
+  align-items:flex-start}
+.filtro .campo,.filtros .campo{margin:0}
+/* `.salvar` é a barra de gravação, e traz consigo filete e rodapé. Dentro do filtro, ela
+   desenhava um traço solto acima do "Filtrar" — um separador sem nada para separar. */
+.filtro .salvar{border-top:0;padding:0}
+/*
+A barra alinha pelo topo (055, FR-1013, FR-1014): pela base, a ajuda sob um campo o empurrava para
+cima, e na distribuição os dois controles ficavam 22 px desnivelados. O que não tem rótulo desce a
+altura dele — 13 px de fonte vezes 1,5 de entrelinha, mais 4 de margem — e a marca de escolha ganha
+a altura do controle para se centrar nele (D-006).
+*/
+.filtro .salvar,.filtros .acoes,.filtro .escolha{margin:1.46875rem 0 0}
+/* "nome ou identificador" não precisa de 850 px, e o campo esticado empurrava o botão
+   para o extremo oposto da tela. */
+/* Só o campo de digitar. A regra pegava também a marca de "Só quem está sem Etapa", que é
+   `.campo` e vinha antes na folha: com 26rem de base, a frase dela quebrava uma palavra por
+   linha, e a marca ficava solta ao lado de uma coluna de texto. */
+.filtro .campo:not(.escolha),.filtros .campo{flex:0 1 26rem}
+.filtro .escolha{height:2.5rem}
+fieldset.linha{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem 0.5rem;margin-bottom:1rem;position:relative}
+/* `>`, e não descendente: a caixa alta com espaçamento é a faixa de identidade **do cartão** —
+   "PERFIL DE VAGA", "ETAPA DE AVALIAÇÃO 1 DE 3" —, e vazava para todo grupo aninhado dentro dele.
+   O resultado era "CADASTRO RESERVA" gritando ao lado de "Vagas imediatas", que rotula um campo
+   irmão e é escrito em caixa normal. Um grupo de opções nomeia controles do mesmo nível dos campos
+   ao lado; quem nomeia o cartão inteiro é outro nível, e só ele leva a faixa. */
+fieldset.linha>legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);font-weight:600}
+.campos{display:flex;gap:1rem;flex-wrap:wrap}
+.campo{flex:1 1 200px;margin:0 0 .9rem}
+/* A coluna tem a largura do que ela **carrega**, e não 150 px cravados. O `input` continua curto
+   — `.campo.curto>input` o limita em 10rem —; o que crescia junto era só o rótulo e a ajuda, que
+   quebravam em duas linhas dentro dos 150 px. Duas consequências: "Avaliações por inscrição"
+   deixa de quebrar, e os controles da linha voltam a ficar na mesma altura; e a ajuda cabe numa
+   linha, o que tirou 88 px da Etapa sem apagar uma palavra. */
+.campo.curto{flex:0 1 auto;min-width:9.5rem}
+/* `.curto` só encolhia dentro de `.campos`, onde `flex-basis` tem efeito. Solto — como na
+   avaliação —, o campo é bloco e `width:100%` dava 1.350 px a uma caixa de quatro dígitos,
+   ao lado de um parecer limitado à medida de leitura. O desencontro parecia defeito, e era:
+   cada campo tem a largura do que recebe. */
+.campo.curto>input{max-width:10rem}
+.campo.largo{flex:2 1 320px}
+.campo label{font-size:.8125rem;font-weight:600;margin-bottom:.25rem}
+/* `1rem`, e não `.9375rem`, porque a diferença não era escolha: ela nascia de duas regras com a
+   mesma especificidade, resolvidas pela ordem na folha. `input[type=text]` (0,1,1), mais abaixo na
+   folha, ganhava de `.campo input` (0,1,1) e dava 16px ao campo de texto; `.campo textarea`
+   (0,1,1) ganhava de `textarea` (0,0,1) e dava 15px à área de texto. Dois controles do mesmo
+   cartão em tamanhos diferentes.
+
+   O efeito não parava no texto. `--leitura` é `68ch`, e `ch` é a largura do "0" **na fonte do
+   próprio elemento**: com 15px contra 16px, "68 caracteres" virava 642 px contra 685 px, e os dois
+   campos do cartão de Identificação terminavam 43 px um do outro. Era isso que se via como
+   desalinhamento — a causa era o tamanho da fonte, e não a largura declarada. */
+.campo input,.campo select,.campo textarea{width:100%;padding:.5rem;border:1px solid var(--borda);
+  border-radius:4px;font-size:1rem;font-family:inherit}
+.campo textarea{resize:vertical}
+/*
+**Na linha da legenda, e não numa linha só dela** (056, FR-1023, FR-1026, D-003). Evento, Etapa,
+Documento e Modalidade gastavam uma faixa inteira do cartão com ↑ ↓ 🗑 — ou dividiam a última com
+um campo que ficava sozinho ao lado delas. O grupo é o filho seguinte à `legend`, e aqui vai para o
+canto direito da borda de cima: a legenda está sobre a borda à esquerda, e o grupo sobre a borda à
+direita, com o fundo do cartão cortando a linha como a legenda corta.
+
+Posicionado, e não dentro da `legend`: a legenda é o nome do grupo de campos, e o grupo passaria a
+se chamar "… Subir Descer Remover este Evento" (FR-1027). O deslocamento centra o grupo na borda
+qualquer que seja a altura dele — símbolo de 40 px ou ação em texto da Modalidade —, e o meio
+`rem` a mais é a metade da altura da legenda, cuja base é onde o preenchimento do cartão começa.
+
+Em janela estreita não há lado: a legenda da Modalidade e as duas ações dela não cabem juntas, e o
+grupo volta ao fluxo, abaixo da legenda e à direita, como era. No fluxo ele **quebra**: o `fieldset`
+cresce até o conteúdo mínimo dele, e as duas ações em texto da Modalidade, numa fileira só, alargavam
+o cartão do Perfil inteiro para 481 px numa janela de 375.
+*/
+fieldset.linha>.acoes-da-linha{position:absolute;top:0;right:1rem;margin:0;padding:0 .4rem;
+  background:var(--branco);transform:translateY(calc(-50% - .7rem))}
+@media (max-width:60rem){
+  fieldset.linha>.acoes-da-linha{position:static;transform:none;padding:0;margin:0 0 .75rem}
+  fieldset.linha>.acoes-da-linha .grupo{flex-wrap:wrap;justify-content:flex-end}
+}
+/* O rodapé quebra a linha entre os botões (090, `FR-2065`): sem `flex-wrap`, a 375 px eles encolhiam
+   lado a lado e cada rótulo ia a duas linhas — "Interromper o envio" e "Voltar sem interromper" na
+   interrupção de um aviso. Quando cabem, nada muda. */
+.salvar{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;padding:1rem 0 2rem;border-top:1px solid var(--borda)}
+/* As escolhas do ato de instrução: uma linha por item anexável, e o controle junto do rótulo. Sem
+   isto elas herdam o empilhamento de `.campo`, e a caixa fica longe do texto que ela marca. */
+.campo.escolha label{display:inline-flex;align-items:center;gap:.4rem}
+/* `min-width:0` (078, `FR-1761`): por padrão do navegador o `fieldset` não encolhe abaixo da largura
+   mínima do que carrega, e a tabela dentro dele nunca chegava a rolar na própria moldura — reaproveitar
+   tinha 994 px a 375 —, nem o campo de arquivo cabia no anexo novo. A 077 corrigiu as duas telas; a
+   causa é de todo grupo de campos. */
+fieldset{border:1px solid var(--borda);border-radius:4px;padding:1rem;margin:0 0 1.25rem;min-width:0}
+legend{font-weight:600;padding:0 .4rem}
+label{display:block;margin-bottom:.5rem}
+/*
+FR-034: a regra cobria só `input[type=text]`, e `Ano` — que é `number` — ficava com a aparência
+padrão do navegador: 22px de altura e fonte de 13px ao lado de vizinhos de 39px e 16px. O mesmo
+valia para `textarea` e `select` fora do agrupamento do assistente.
+
+**E aconteceu de novo, com `search`.** A busca da Visão Geral (`040`) foi o primeiro
+`type="search"` desta folha, e caiu exatamente aqui: 22px de altura, fonte de 13,33px e borda
+`2px inset` ao lado de selects de 41px — e, como a barra alinha por `flex-end`, o rótulo *Buscar*
+descia os mesmos 19px de diferença. Uma lista que enumera tipos esquece o tipo seguinte, e foi por
+isso que o guardião passou a varrer os templates em vez de conferir a lista.
+
+**E o comentário é de Django, não de CSS.** Comentário de CSS viaja em toda página: escrito como
+comentário de CSS, este bloco estourou em 40 bytes o teto de 120.000 da tela de distribuição, que é a mais
+pesada do sistema. `
+
+**Desde a 089 a premissa não vale mais:** a folha saiu do HTML para este arquivo, que viaja uma vez e
+fica no cache, e os comentários vieram com ela, junto de cada regra (D-002 da `089`).
+*/
+input[type=text],input[type=number],input[type=date],input[type=datetime-local],
+input[type=email],input[type=url],input[type=search],input[type=tel],
+input[type=password],select,textarea{
+  width:100%;padding:.55rem;border:1px solid var(--borda);border-radius:4px;
+  font-size:1rem;font-family:inherit}
+/*
+Uma altura para todo controle de uma linha (055, FR-1012). Com o mesmo preenchimento, o `select`
+sai 2 px mais alto que o `input`, e o de data mais ainda: a Comissão tinha 35, 36 e 38 px na
+mesma tela. A negação, e não a lista de tipos, pelo mesmo motivo do comentário acima (D-009).
+`$=box`, e não o nome inteiro do tipo da caixa de marcar: a tela de identificação indisponível tem um
+guardião que recusa essa palavra em qualquer lugar do corpo, e a folha vai junto — é a mesma razão de
+`.escolha input` reconhecer a marca pela classe.
+*/
+select,input:not([type$=box],[type=radio],[type=file]){height:2.5rem}
+textarea{resize:vertical}
+/* `.curto` existia só dentro de `.campo`, e na criação de Processo a classe está no próprio
+   controle — a largura declarada no template não tinha efeito. */
+input.curto,select.curto{width:150px}
+input.largo,textarea.largo{width:100%;}
+.erro{background:var(--vermelho-fundo);border-left:4px solid var(--vermelho);
+  padding:.75rem 1rem;margin-bottom:1rem;border-radius:0 4px 4px 0}
+
+/* O controle de arquivo da gestão (020). Ficava no desenho do navegador — cinza, em inglês em
+   alguns sistemas — ao lado de uma tela inteira desenhada, enquanto o portal já estilizava o dele.
+   O `input` continua sendo o que envia e o que recebe foco; o que muda é o botão que ele desenha. */
+input[type="file"].arquivo{font:inherit;color:var(--texto);max-width:100%;width:auto}
+input[type="file"].arquivo::file-selector-button{font:inherit;font-weight:600;cursor:pointer;
+  color:var(--verde-texto);background:var(--branco);border:1px solid var(--verde-texto);
+  border-radius:6px;padding:.35rem .7rem;margin-right:.6rem}
+input[type="file"].arquivo::file-selector-button:hover{background:var(--fundo)}
+
+/* Uma escolha que governa campos, e os campos de cada opção logo abaixo dela.
+
+   Antes, os campos dependentes eram irmãos da escolha numa fileira `.campos`: na Etapa, oito
+   colunas em que "Como esta Etapa é concluída" era a segunda de oito, governando a terceira, a
+   quarta, a quinta e a sexta; no marco, o prazo do recurso ao lado da opção que diz não declarar
+   nenhum. Aninhar é o que torna a dependência visível sem precisar lê-la numa frase de ajuda. */
+fieldset.opcoes{border:none;padding:0;margin:0 0 .9rem;min-width:0}
+/* Quando a escolha divide a linha com um campo — "Vagas imediatas" ao lado de "Cadastro Reserva",
+   que são as duas metades da mesma pergunta —, ela precisa de base própria: sem `flex`, o
+   `fieldset` entrava como item de largura automática e empurrava o vizinho. */
+/* 22rem, e não 18: a base precisa comportar os **campos que a opção pede**, e não só as opções.
+   Com a marca de opcional no rótulo, os dois campos de pontuação passaram a pedir 355 px
+   lado a lado e o grupo oferecia 349 — os seis px que faltavam empilhavam os dois e faziam o
+   cartão crescer, apesar de a ajuda visível ter ido embora. */
+.campos>fieldset.opcoes{flex:1 1 22rem}
+fieldset.opcoes>legend{font-size:.8125rem;font-weight:600;color:var(--texto);padding:0;
+  margin-bottom:.25rem}
+.opcoes .opcao{display:flex;align-items:center;gap:.5rem;margin:0 0 .4rem}
+/* A bolinha herdava `width:100%` de `.campo input` e virava uma faixa da largura da coluna, com o
+   marcador centralizado longe do texto que ele marca. */
+.opcoes .opcao input[type=radio]{width:auto;flex:none;margin:0;padding:0;border:0;background:none}
+.opcoes .opcao label{margin:0;font-weight:400;font-size:.9375rem}
+.opcoes .dependentes{margin:0 0 .9rem 1.65rem}
+.opcoes .dependentes .campo{margin-bottom:0}
+/* Sozinho na linha, um `.curto` prende a ajuda numa coluna de 150 px e a quebra em quatro linhas.
+   O `input` continua curto — `.campo.curto>input` o limita —; quem cresce é a coluna, e a ajuda
+   pára na medida de leitura como qualquer outra. */
+.opcoes .dependentes .campo.curto:only-child{flex-basis:auto}
+/* A entrelinha do nome é a da categoria (056): com a do corpo, o nome maior fazia a legenda 4 px
+   mais alta, e todo cartão que passou a dizer qual item é crescia por isso. */
+fieldset.linha>legend .nome{font-size:.9375rem;text-transform:none;letter-spacing:0;
+  color:var(--texto);font-weight:600;line-height:1.2}

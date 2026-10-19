@@ -1,0 +1,29 @@
+[
+ {
+  "tela": "distribuicao",
+  "bytes": 18358,
+  "style": 3,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao.css?v=799315e29d1a"
+  ]
+ },
+ {
+  "tela": "lista",
+  "bytes": 10995,
+  "style": 145,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao.css?v=799315e29d1a"
+  ]
+ },
+ {
+  "tela": "minhas-etapas",
+  "bytes": 7264,
+  "style": 3,
+  "folhas": [
+   "/static/shared/tokens.css?v=239e9b1475d4",
+   "/static/interface/gestao.css?v=799315e29d1a"
+  ]
+ }
+]

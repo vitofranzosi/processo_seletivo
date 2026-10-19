@@ -323,3 +323,175 @@ def edital_c(db, api_client, manager_headers, processo_a):
             etapas=[etapa_ligada(SEGUNDO_SEED)],
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# A limpeza depois de cada caso transacional, medida em
+# `doc/estudo-limpeza-dos-casos-transacionais.md`: o teardown desses casos era a maior parcela da
+# suíte, e quase todo ele era trabalho que não muda o banco que o caso seguinte recebe.
+# ---------------------------------------------------------------------------
+
+# As duas tabelas que o `post_migrate` repovoa. Ninguém no sistema lê tipo de conteúdo nem
+# permissão do Django — a autorização é a do domínio —, mas elas ficam povoadas como em produção, e
+# não vazias, para que o teste que um dia precisar delas não quebre em silêncio.
+_TABELAS_DE_REFERENCIA = frozenset({"django_content_type", "auth_permission"})
+
+# Por banco de teste: as tabelas, quem referencia cada uma, a consulta de sujas e a impressão das
+# tabelas de referência. Tudo sai da primeira limpeza, que é a do Django inteira.
+_limpeza_por_banco = {}
+
+
+def _impressao_das_tabelas_de_referencia(cursor):
+    cursor.execute(
+        "SELECT"
+        " (SELECT md5(coalesce(string_agg(t::text, ',' ORDER BY id), ''))"
+        " FROM django_content_type t),"
+        " (SELECT md5(coalesce(string_agg(t::text, ',' ORDER BY id), '')) FROM auth_permission t)"
+    )
+    return cursor.fetchone()
+
+
+def _quem_referencia(cursor, tabelas):
+    cursor.execute(
+        "SELECT referenciada.relname, referenciadora.relname FROM pg_constraint c"
+        " JOIN pg_class referenciada ON referenciada.oid = c.confrelid"
+        " JOIN pg_class referenciadora ON referenciadora.oid = c.conrelid"
+        " WHERE c.contype = 'f' AND c.confrelid <> c.conrelid"
+    )
+    mapa = {tabela: set() for tabela in tabelas}
+    for referenciada, referenciadora in cursor.fetchall():
+        if referenciada in mapa and referenciadora in mapa:
+            mapa[referenciada].add(referenciadora)
+    return mapa
+
+
+def _fecho(sujas, quem_referencia):
+    fecho, fila = set(sujas), list(sujas)
+    while fila:
+        for referenciadora in quem_referencia[fila.pop()]:
+            if referenciadora not in fecho:
+                fecho.add(referenciadora)
+                fila.append(referenciadora)
+    return fecho
+
+
+def _preparar_limpeza(conexao):
+    from django.db import DatabaseError
+
+    tabelas = conexao.introspection.django_table_names(only_existing=True, include_views=False)
+    try:
+        with conexao.cursor() as cursor:
+            return {
+                "tabelas": tabelas,
+                "quem_referencia": _quem_referencia(cursor, tabelas),
+                "impressao": _impressao_das_tabelas_de_referencia(cursor),
+                # Uma ida ao banco, e não uma por tabela.
+                "sujas": " UNION ALL ".join(
+                    f"SELECT '{tabela}' WHERE EXISTS (SELECT 1 FROM {nome})"
+                    for tabela, nome in ((t, conexao.ops.quote_name(t)) for t in tabelas)
+                ),
+            }
+    except DatabaseError:
+        # Um caso de `tests/migrations/` que falhou no meio pode deixar o banco sem as tabelas de
+        # referência. Sem preparo, a próxima limpeza é a do Django de novo.
+        return None
+
+
+def _limpar_como_o_django(db_name):
+    from django.core.management import call_command
+
+    call_command(
+        "flush",
+        verbosity=0,
+        interactive=False,
+        database=db_name,
+        reset_sequences=False,
+        allow_cascade=False,
+        inhibit_post_migrate=False,
+    )
+
+
+def _limpar_so_o_que_mudou(conexao, preparo, db_name):
+    """Devolve `False` quando o banco não está como o preparo o viu, e a limpeza não foi feita."""
+    from django.core.management.color import no_style
+    from django.core.management.sql import emit_post_migrate_signal
+    from django.db import DatabaseError
+
+    try:
+        with conexao.cursor() as cursor:
+            cursor.execute(preparo["sujas"])
+            sujas = {linha[0] for linha in cursor.fetchall()}
+            intactas = _impressao_das_tabelas_de_referencia(cursor) == preparo["impressao"]
+    except DatabaseError:
+        # Tabela que sumiu: um caso de `tests/migrations/` deixou o esquema noutro estado.
+        return False
+    if intactas:
+        sujas -= _TABELAS_DE_REFERENCIA
+    alvo = _fecho(sujas, preparo["quem_referencia"])
+    # Nenhuma tabela suja é referenciada pelas de referência hoje, e o fecho não chega a elas. Se
+    # um dia chegar, elas são truncadas, e então precisam do sinal que as repovoa.
+    repovoar = not intactas or bool(alvo & _TABELAS_DE_REFERENCIA)
+    if alvo:
+        conexao.ops.execute_sql_flush(
+            conexao.ops.sql_flush(no_style(), sorted(alvo), reset_sequences=False)
+        )
+    if repovoar:
+        emit_post_migrate_signal(0, False, db_name)
+        # Repovoadas, as linhas voltam com ids novos. Sem a impressão nova, toda limpeza seguinte
+        # deste banco as julgaria alteradas e refaria o sinal — foi o que a primeira versão fez,
+        # depois do primeiro caso que mexeu nelas.
+        with conexao.cursor() as cursor:
+            preparo["impressao"] = _impressao_das_tabelas_de_referencia(cursor)
+    return True
+
+
+def _limpeza_enxuta(self):
+    """O `TransactionTestCase._fixture_teardown`, sem o trabalho que não muda o banco.
+
+    **Trunca só as tabelas com linha, e as que as referenciam.** O PostgreSQL só aceita truncar
+    uma tabela junto de todas as que têm chave estrangeira para ela, vazias ou não — o fecho é
+    dessas, e não um excesso de zelo. As que ficam de fora já estavam vazias, e o `TRUNCATE` do
+    Django não reinicia sequência: o banco que o caso seguinte recebe é o mesmo.
+
+    **Não emite o `post_migrate` quando as tabelas de referência continuam como estavam.** Ele só
+    recria tipos de conteúdo e permissões, e elas ficam fora do `TRUNCATE`. Se um caso mexer
+    nelas, a impressão muda, e a limpeza volta a ser a do Django.
+
+    Fica com a limpeza do Django o que ela trata de outro jeito — `available_apps`,
+    `serialized_rollback` — e o que não é PostgreSQL. `LIMPEZA_INTEGRAL=1` a devolve inteira, para
+    o caso em que se suspeitar desta.
+    """
+    import os
+
+    from django.db import connections as conexoes
+
+    if (
+        self.available_apps is not None
+        or self.serialized_rollback
+        or os.environ.get("LIMPEZA_INTEGRAL") == "1"
+    ):
+        return _limpeza_do_django(self)
+    for db_name in self._databases_names(include_mirrors=False):
+        conexao = conexoes[db_name]
+        if conexao.vendor != "postgresql":
+            _limpar_como_o_django(db_name)
+            continue
+        chave = (db_name, conexao.settings_dict["NAME"])
+        preparo = _limpeza_por_banco.get(chave)
+        if preparo is None or not _limpar_so_o_que_mudou(conexao, preparo, db_name):
+            _limpar_como_o_django(db_name)
+            _limpeza_por_banco[chave] = _preparar_limpeza(conexao)
+
+
+def _instalar_limpeza_enxuta():
+    from django.test import TransactionTestCase
+
+    global _limpeza_do_django
+    # Uma vez só: envolver a si mesma faria a "limpeza do Django" de reserva ser esta outra vez.
+    if getattr(TransactionTestCase._fixture_teardown, "__name__", "") == "_limpeza_enxuta":
+        return
+    _limpeza_do_django = TransactionTestCase._fixture_teardown
+    TransactionTestCase._fixture_teardown = _limpeza_enxuta
+
+
+_instalar_limpeza_enxuta()

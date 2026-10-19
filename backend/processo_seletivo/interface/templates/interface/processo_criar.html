@@ -1,11 +1,7 @@
 {% extends "interface/base.html" %}
 {% block titulo %}Criar Processo Seletivo{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <span aria-current="page">Criar</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <span aria-current="page">Criar</span>
-</nav>
-
 <h1>Criar Processo Seletivo</h1>
 <p class="sub">Um Processo Seletivo nasce com o primeiro Edital. São conceitos distintos: o
   Processo reúne Editais que podem ter cronogramas próprios, e nenhum Edital existe sem ele.</p>

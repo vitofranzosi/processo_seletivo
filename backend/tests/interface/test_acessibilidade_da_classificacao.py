@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.interface.folha import FOLHA_COMUM
+
 
 def test_toda_tabela_da_classificacao_tem_conteiner_rolavel():
     templates = (
@@ -20,15 +22,8 @@ def test_toda_tabela_da_classificacao_tem_conteiner_rolavel():
 
 
 def test_o_conteiner_limita_a_rolagem_horizontal():
-    base = (
-        Path(__file__).resolve().parents[2]
-        / "processo_seletivo"
-        / "interface"
-        / "templates"
-        / "interface"
-        / "base.html"
-    )
-    assert ".tabela-rolavel{overflow-x:auto}" in base.read_text()
+    # Na folha comum, que saiu do `base.html` para `gestao.css` na 089.
+    assert ".tabela-rolavel{overflow-x:auto}" in FOLHA_COMUM
 
 
 # --- Nenhum campo obrigatório fora da tela (030, FR-414 a FR-418) ----------------------------

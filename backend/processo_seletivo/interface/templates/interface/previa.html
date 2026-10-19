@@ -1,12 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Prévia — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Prévia</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <span aria-current="page">Prévia</span>
-</nav>
-
 <h1>Prévia do Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">{{ edital.title }}
   <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></p>

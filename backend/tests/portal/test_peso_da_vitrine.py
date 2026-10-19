@@ -21,13 +21,16 @@ import re
 import pytest
 from django.urls import reverse
 
+from tests.interface.folha import folha_aplicada
+
 pytestmark = [pytest.mark.django_db]
 
 
 @pytest.fixture
 def folha(client):
-    corpo = client.get(reverse("portal:vitrine")).content.decode()
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
+    # A folha que a vitrine aplica. Até a 092 era o `<style>` do documento; agora é o arquivo do
+    # portal, e o recorte entre `<style>` e `</style>` não acharia nada (`FR-2139`).
+    return folha_aplicada(client.get(reverse("portal:vitrine")).content)
 
 
 def regra(folha, seletor):

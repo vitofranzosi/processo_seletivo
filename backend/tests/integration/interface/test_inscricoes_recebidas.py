@@ -14,6 +14,7 @@ from processo_seletivo.inscricoes.models import DocumentoSubmetido
 from tests.fixtures.candidato import MARIA, MODALIDADE_AC, pdf
 from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_aplicada
 
 
 @pytest.fixture
@@ -223,7 +224,9 @@ def test_a_tabela_larga_rola_dentro_de_si_mesma(gestor, selecao, inscricao_envia
     corpo = gestor.get(reverse("interface:inscricoes", args=[selecao.id])).content.decode()
 
     assert '<div class="tabela-rolavel">' in corpo
-    assert ".tabela-rolavel{overflow-x:auto}" in corpo
+    assert ".tabela-rolavel{overflow-x:auto}" in folha_aplicada(
+        corpo
+    )  # em `gestao.css` desde a 089
 
 
 @pytest.mark.django_db(transaction=True)

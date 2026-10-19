@@ -1,0 +1,159 @@
+/* Os componentes comuns: botões e ações, marcas, cartões, a ajuda, o vazio, a situação. A área de
+   cada regra é a do seletor; as poucas que ficaram noutro arquivo para não trocar de ordem com uma
+   regra que disputa a mesma propriedade estão listadas no R-002 da 091. */
+/* Texto corrido e ajuda de campo em linha curta. Dentro de cartão ou coluna estreita o limite não
+   morde — ele só age onde havia largura sobrando. */
+main>p,main>section>p,.sub,.ajuda,.vazio,legend+p{max-width:var(--leitura)}
+.sub{color:var(--texto-fraco);margin:0 0 1.5rem}
+.aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
+  margin-bottom:1.5rem;border-radius:0 4px 4px 0}
+.aviso strong{color:var(--amarelo)}
+.conferencia{margin-bottom:1rem}
+.conferencia>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.conferencia h3{margin:0 0 .5rem}
+.conferencia .detalhe{display:block;color:var(--texto-fraco);font-size:.875rem}
+.resumo{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:0;list-style:none}
+.resumo li{background:var(--branco);border:1px solid var(--borda);border-radius:4px;
+  padding:.5rem .85rem;font-size:.875rem}
+.resumo strong{font-size:1.25rem;display:block;font-weight:600}
+.codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
+  background:var(--verde-claro);color:var(--verde-escuro);padding:.15rem .5rem;border-radius:3px}
+.situacao{display:inline-block;padding:.2rem .6rem;border-radius:12px;font-size:.75rem;
+  font-weight:600;white-space:nowrap}
+.s-EM_ELABORACAO{background:var(--cinza-fundo);color:#333}
+.s-EM_REVISAO{background:var(--amarelo-fundo);color:var(--amarelo)}
+.s-HOMOLOGADO{background:var(--verde-claro);color:var(--verde-escuro)}
+.s-PUBLICADO{background:var(--sucesso-fundo);color:var(--sucesso)}
+.s-ENCERRADO{background:var(--cinza-fundo);color:var(--texto-fraco)}
+.s-CANCELADO{background:var(--vermelho-fundo);color:var(--vermelho)}
+.s-ATIVO{background:var(--sucesso-fundo);color:var(--sucesso)}
+/* Função na comissão. Quatro telas escreviam `s-PRESIDENTE` e `s-MEMBRO`, e nenhuma das duas
+   existia aqui: a pastilha ficava com a forma e sem a cor, e "Presidente" saía como texto em
+   negrito ao lado do nome — indistinguível de "Membro", que é a única distinção que a tela
+   precisa fazer. Presidir é o que autoriza; ser membro é o estado comum, e fica quieto. */
+.s-PRESIDENTE{background:var(--verde-claro);color:var(--verde-escuro)}
+.s-MEMBRO{background:var(--cinza-fundo);color:var(--texto-fraco);font-weight:400}
+.acoes{display:flex;gap:.4rem;flex-wrap:wrap}
+.paginacao [aria-current]{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.oculto{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0}
+/* A microcópia que explica a decisão, e que precisa ser vista para explicar (027, UX-041). */
+.ajuda{display:block;color:var(--texto-fraco);font-size:.8125rem;margin-top:.2rem;max-width:44rem}
+.explicacao{color:var(--texto-fraco);font-size:.8125rem;margin:.2rem 0 .6rem;max-width:44rem}
+.acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde-texto);
+  background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
+.acao:hover{background:var(--verde-claro)}
+/*
+A ação de rótulo longo quebra em caixa, e não em linha (PV-04 da auditoria de 15/10). O `nowrap` da
+`.acao` é o certo na linha de tabela, mas o rótulo de validação do assistente, fixado pelo contrato
+da 070, levava o detalhe do Edital a 440 px num celular de 375. Em bloco embutido a borda contorna
+as duas linhas, em vez de se partir com o texto.
+*/
+.acao.longa{display:inline-block;max-width:100%;white-space:normal}
+.nenhuma{color:var(--texto-fraco);font-size:.8125rem}
+.botao{background:var(--verde);color:var(--branco);border:1px solid transparent;cursor:pointer;
+  text-decoration:none;display:inline-block}
+.botao:hover{background:var(--verde-escuro)}
+.vazio{background:var(--branco);border:1px dashed var(--borda);border-radius:6px;
+  padding:2.5rem 1.5rem;text-align:center;color:var(--texto-fraco)}
+.etapas{display:flex;list-style:none;padding:0;margin:0 0 1.5rem;gap:0;flex-wrap:wrap;
+  background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:1rem 1.25rem}
+.etapas li{flex:1 1 0;display:flex;flex-direction:column;gap:.3rem;position:relative;
+  padding-right:.5rem;min-width:110px}
+.etapas .ponto{width:12px;height:12px;border-radius:50%;background:var(--borda);
+  border:2px solid var(--borda);display:block}
+.etapas .rotulo{font-size:.8125rem;color:var(--texto-fraco)}
+.etapas .agora{font-size:.7rem;font-weight:700;color:var(--verde-texto);text-transform:uppercase;
+  letter-spacing:.03em}
+.etapas .e-concluida .ponto{background:var(--sucesso);border-color:var(--sucesso)}
+.etapas .e-concluida .rotulo{color:var(--texto)}
+.etapas .e-atual .ponto{background:var(--branco);border-color:var(--verde);
+  box-shadow:0 0 0 3px var(--verde-claro)}
+.etapas .e-atual .rotulo{color:var(--texto);font-weight:600}
+.etapas .e-fora .ponto{background:var(--vermelho-fundo);border-color:var(--vermelho)}
+.colunas{display:flex;gap:1.25rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.cartao{flex:1 1 320px;background:var(--branco);border:1px solid var(--borda);
+  border-radius:6px;padding:1rem 1.25rem}
+.cartao h2{margin-bottom:.75rem}
+/* O cartão em `.colunas` é item flex, e item flex não encolhe abaixo do conteúdo mínimo — a mesma
+   família do `fieldset` (078, `FR-1777`). A tabela dos Editais, no detalhe do Processo, deixou o
+   cartão com 384 px a 375 de janela; encolhendo, a tabela rola na própria moldura. A sonda da 078,
+   com esta regra, não move caixa nenhuma nas 84 variantes do inventário. */
+.colunas>.cartao{min-width:0}
+.botao.perigoso{background:var(--vermelho);color:var(--branco)}
+.botao.perigoso:hover{background:#8a1515}
+/* A mesma advertência na escala de uma ação de linha: `.perigoso` só existia para `.botao`, e
+   remover uma pessoa saía com a aparência de uma ação segura (UX-004). */
+.acao.perigoso{color:var(--vermelho);border-color:var(--vermelho)}
+/* Indisponível não pode parecer clicável. `.desabilitado` só existia para `.botao`, e a ação
+   de linha continuava com a borda verde e a cor de link — oferecendo o que não se pode fazer,
+   que é pior do que não oferecer (FR-024 mostra o controle **e** o motivo). */
+.acao.desabilitado{color:var(--texto-fraco);border-color:var(--borda);
+  background:var(--cinza-fundo);cursor:not-allowed}
+.acao.perigoso:hover{background:var(--vermelho);color:var(--branco)}
+/* `align-self` na própria marca, e não por contêiner (081, R-002): em qualquer linha flexível
+   ela esticaria até a altura do botão ao lado, e o fundo viraria uma faixa. Em grid ela também se
+   centraliza na célula; fora de flex e de grid, não faz nada. */
+.marca-irreversivel{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  color:var(--vermelho);background:var(--vermelho-fundo);padding:.1rem .45rem;border-radius:3px;
+  align-self:center}
+.remover-linha{margin:.75rem 0 0;padding-top:.75rem;border-top:1px solid var(--borda);
+  display:flex;align-items:center;gap:.4rem;font-size:.875rem}
+.acoes-linha{margin:.5rem 0 0;text-align:right}
+.nao-enviado{font-size:.8125rem;color:var(--amarelo);background:var(--amarelo-fundo);
+  padding:.25rem .6rem;border-radius:3px;margin-left:.5rem}
+.imutavel{background:var(--verde-claro);border-left:4px solid var(--sucesso);padding:.7rem 1rem;
+  border-radius:0 4px 4px 0;font-size:.9375rem;margin:0 0 1rem}
+.legenda-obrigatorio{font-size:.8125rem;color:var(--texto-fraco);margin:0 0 1rem}
+.antes{color:var(--texto-fraco);text-decoration:line-through}
+.depois{color:var(--sucesso);font-weight:600}
+.sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
+  padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 4px 4px 0;color:var(--sucesso);font-weight:600}
+section[aria-labelledby]{margin-bottom:2rem}
+section h2{margin-bottom:.75rem}
+.ajuda{display:block;font-size:.75rem;color:var(--texto-fraco);margin-top:.25rem}
+/* A nota de rodapé de um bloco: a frase que explica o número acima dela, e que não é ajuda de
+   campo. `.ajuda` pende de um controle e nasce dentro do `<p class="campo">`; esta pende do bloco
+   inteiro. A distinção importa porque a segunda é lida **depois** do que explica, e por isso não
+   pode ter o tamanho de um rótulo.
+
+   A regra faltava, e cinco telas já a citavam — `ocupacao`, `ocupacao_historico`, `mesa_inscricao`
+   e as duas da `019`. Classe sem regra não quebra nada em execução: ela some, e a frase que
+   explicava o número passa a ter o peso do próprio número. */
+.nota{color:var(--texto-fraco);font-size:.875rem;margin:.5rem 0 0}
+.ajuda code{background:var(--fundo);padding:.05rem .3rem;border-radius:3px}
+.remover{margin:.25rem 0 .75rem;text-align:right}
+/* As três ações da linha em símbolo (ver `_acoes_da_linha.html` para o porquê).
+
+   Quadrado de 2,5rem — 40 px, contra os 24×24 que a WCAG 2.2 AA pede como mínimo de alvo. O
+   `padding` some porque quem dá a medida agora é a caixa, e não o texto dentro dela. */
+.acao.simbolo{display:inline-flex;align-items:center;justify-content:center;
+  width:2.5rem;height:2.5rem;padding:0;font-size:1rem;line-height:1}
+.acoes-da-linha{margin:.25rem 0 .75rem;display:flex;justify-content:flex-end}
+.acoes-da-linha .grupo{display:flex;gap:.4rem}
+/* Alvos iguais e encostados viram um alvo só, e o vizinho aqui descarta trabalho não enviado.
+   As duas advertências: `.perigo` na linha de formulário, `.perigoso` no Anexo, onde remover
+   apaga o arquivo no servidor. */
+.acoes-da-linha .simbolo.perigo,.acoes-da-linha .simbolo.perigoso{margin-left:.7rem}
+.acao.perigo{border-color:var(--vermelho);color:var(--vermelho)}
+.acao.perigo:hover{background:var(--vermelho-fundo)}
+/* Indisponível não pode parecer disponível. `ordenacao.js` desabilita "Subir" na primeira linha e
+   "Descer" na última — e a folha não tinha regra alguma para `:disabled`, de modo que o botão
+   inerte continuava com a borda verde e a cor de link. Com o rótulo em símbolo isso pesa mais: a
+   seta é a única coisa que resta dizendo o que o botão faz.
+
+   Convive com `.acao.desabilitado` e não a substitui: a classe existe para a âncora, que não
+   aceita o atributo. Depois de `.acao.perigo` porque as duas têm a mesma especificidade, e o
+   indisponível precisa vencer a advertência: oferecer em vermelho o que não se pode fazer é o
+   pior dos dois. */
+.acao:disabled{color:var(--texto-fraco);border-color:var(--borda);
+  background:var(--cinza-fundo);cursor:not-allowed}
+.acao:disabled:hover{background:var(--cinza-fundo)}
+.botao.secundario{background:var(--branco);color:var(--verde-texto);border-color:var(--verde)}
+/* Ação prevista como recusada: visível, legível e inoperante — FR-024. Contraste mantido
+   acima de 4.5:1 para que o motivo ao lado continue lendo-se como informação, não ruído. */
+.botao.desabilitado{background:var(--cinza-fundo);color:#4a4a4a;border:1px solid #9a9a9a;
+  cursor:not-allowed}
+.botao.secundario:hover{background:var(--verde-claro)}
+.linha-secundaria{color:var(--texto-fraco);font-size:.875rem}
+.meta{color:var(--texto-fraco);font-size:.875rem}

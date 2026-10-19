@@ -1,8 +1,7 @@
 {% extends "interface/compor_base.html" %}
-{% load interface_extras %}
+{% load interface_extras estaticos %}
 {% block etapa_titulo %}Classificação{% endblock %}
-{% block estilo_da_pagina %}{% include "interface/_estilo_da_vista.html" %}
-{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/vista.css' %}">{% endblock %}
 {% block etapa %}
 {% comment %}
 **O rascunho local, pelo mecanismo das outras quatro etapas** (053, FR-979, D-007). A etapa de

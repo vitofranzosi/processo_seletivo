@@ -10,6 +10,7 @@ from django.urls import reverse
 from processo_seletivo.processos.models import ProcessoSeletivo
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_da_pagina
 
 
 @pytest.fixture
@@ -22,7 +23,8 @@ def cenario(api_client, manager_headers, process_payload):
 def test_lista_exige_identificacao(client, seletor_ligado):
     resposta = client.get(reverse("interface:lista"))
     assert resposta.status_code == 302
-    assert resposta["Location"] == reverse("interface:identificar")
+    # E leva o próprio endereço como destino, para a pessoa voltar a ele (075, `FR-1696`).
+    assert resposta["Location"] == reverse("interface:identificar") + "?proximo=%2Fgestao%2F"
 
 
 @pytest.mark.django_db
@@ -183,10 +185,6 @@ def test_plural_de_edital_em_portugues(
     assert "2 Editais neste Processo" in corpo
 
 
-def folha(corpo):
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
-
-
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_a_acao_indisponivel_nao_se_parece_com_a_disponivel(client, seletor_ligado):
@@ -198,7 +196,7 @@ def test_a_acao_indisponivel_nao_se_parece_com_a_disponivel(client, seletor_liga
     """
     identificar(client, "carlos", ["gestor"])
 
-    css = folha(client.get(reverse("interface:lista")).content.decode())
+    css = folha_da_pagina(client, reverse("interface:lista"))
 
     regra = css.split(".acao.desabilitado{")[1].split("}")[0]
     assert "cursor:not-allowed" in regra

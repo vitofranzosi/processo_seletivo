@@ -338,7 +338,10 @@ def test_a_marca_de_obrigatorio_tem_coluna_propria(
         reverse("interface:mesa-inscricao", args=[edital_com_documentos.id, etapa_a1, cenario.id])
     ).content.decode()
 
-    linha = re.search(r"<li>(.*?)</li>", corpo, re.S).group(1)
+    # O primeiro item **do conteúdo**: a barra do shell (076) também tem itens de lista, antes do
+    # `main`, e são as seções da gestão, e não os documentos.
+    conteudo = corpo.split('<main id="conteudo"')[1]
+    linha = re.search(r"<li>(.*?)</li>", conteudo, re.S).group(1)
     assert linha.index("requisito") < linha.index("marca")
 
 

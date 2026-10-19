@@ -134,7 +134,7 @@ Tudo nesta seção é **constatado**.
 | Documentos do candidato | Disco, em `ARQUIVOS_CANDIDATOS_RAIZ`, como `inscricoes/<uuid>/<uuid>.pdf`. O arquivo nunca tem URL, e todo download passa pela aplicação | `inscricoes/storage.py:27-72`, `portal/arquivos.py` |
 | Anexos do Edital e PDFs publicados | Bytes **no banco**, em `BinaryField`. O PDF é gerado em Python puro, com fontes base-14, sem dependência de sistema | `editais/models/anexos.py:43`, `publicacoes/infrastructure/pdf.py`, `divulgacao/models.py` |
 | Exportação de matrículas | `.xlsx` montado em memória e **não guardado**; fica só o registro da geração | `matriculas/infrastructure/planilha.py`, `matriculas/models.py` |
-| Arquivos estáticos | 22 arquivos JS em `interface/static/interface/` e `portal/static/portal/`; o CSS é inline. **Não há `STATIC_ROOT`** — o `collectstatic` falha (ensaiado) | `config/settings/base.py:150` |
+| Arquivos estáticos | 22 arquivos JS em `interface/static/interface/` e `portal/static/portal/`; desde a `089`, a folha comum da gestão — por área desde a `091`, em `interface/static/interface/gestao/` — e os tokens dos dois canais (`shared/static/shared/tokens.css`, por `STATICFILES_DIRS`); desde a `091`, o estilo de cada tela (`interface/telas/`, `interface/grupos/`) e o da página de erro (`shared/erro.css`). Só o portal ainda tem CSS no documento. **Não há `STATIC_ROOT`** — o `collectstatic` falha (ensaiado) | `config/settings/base.py` (`STATIC_URL`, `STATICFILES_DIRS`) |
 | Integrações externas | SMTP. Loteria Federal (`https://servicebus2.caixa.gov.br/...`), chamada **só por ação do gestor**. Base de CEP carregada de arquivo `.zip` local | `sorteios/infrastructure/fontes/loteria_federal.py:22`, `doc/runbook-base-de-cep.md` |
 | Saúde | `/health` (não toca o banco), `/readiness` (banco e migrations pendentes, 503 se falhar), `/metrics` (exige autenticação da API) | `processo_seletivo/shared/api/operacional.py` |
 | Logs | JSON, uma linha por evento, no **stdout**, com `correlationId`. Não há arquivo de log | `config/settings/base.py:281-294`, `shared/observability.py` |
@@ -170,8 +170,8 @@ Recomendação. Nada disto está no repositório.
                 │      80, 443           │
                 └───────────┬────────────┘
                             │ :443 (TLS) / :80 (ACME e 301)
-                ┌───────────▼────────────┐   /static/interface/, /static/portal/
-                │ nginx (www-data)       │── alias para a release ativa (só JS)
+                ┌───────────▼────────────┐   /static/interface/, /static/portal/, /static/shared/
+                │ nginx (www-data)       │── alias para a release ativa (JS e CSS)
                 │ TLS · limites de corpo │
                 │ X-Forwarded-* · manut. │
                 └───────────┬────────────┘
@@ -1597,6 +1597,15 @@ HTML
 
 ```bash
 sudo tee /etc/nginx/sites-available/processoseletivo >/dev/null <<'CONF'
+# Cache dos estáticos (089). As folhas de estilo vêm com `?v=<resumo do conteúdo>`, que muda quando o
+# arquivo muda: com o endereço versionado, o navegador pode guardá-las sem perguntar de novo, e cada
+# página deixa de esperar duas revalidações antes de desenhar. Sem `v` — os scripts, que não têm
+# versão —, "no-cache": revalida sempre, ou o navegador usaria o JS da release anterior.
+map $arg_v $cache_do_estatico {
+    ""      "no-cache";
+    default "public, max-age=31536000, immutable";
+}
+
 # Host desconhecido: recusa sem responder. ALLOWED_HOSTS já devolveria 400, mas assim a varredura
 # não chega à aplicação.
 server {
@@ -1649,17 +1658,33 @@ server {
     location ^~ /_erro/ { internal; root /var/www/processoseletivo; }
 
     # Estáticos: o projeto não tem STATIC_ROOT (gap I-3), e o collectstatic falha. Servem-se direto
-    # da release ativa; os diretórios só têm JS. "no-cache" porque os nomes não são versionados —
-    # sem isso, o navegador usaria o JS da release anterior depois de um deploy.
+    # da release ativa: JS, e desde a 089 a folha comum da gestão e os tokens (desde a 091, por
+    # área e com o estilo de cada tela, nos subdiretórios — este `alias` já os cobre; desde a 092, a
+    # folha do portal, em `/static/portal/`, que o bloco do portal já cobre). O cache vem
+    # do `map` do topo: imutável para o que é pedido com `?v=` (as folhas), "no-cache" para o resto
+    # (os scripts, cujos nomes não são versionados).
+    #
+    # Nenhum `add_header Content-Security-Policy` aqui (091): a política sai da aplicação
+    # (`shared/politica_de_conteudo.py`), igual no runserver e em produção, e muda junto com as
+    # páginas que protege. Duas políticas no mesmo documento se somam, e a mais restrita venceria em
+    # silêncio. Num estático ela não teria efeito.
     location ^~ /static/interface/ {
         alias /opt/processoseletivo/current/backend/processo_seletivo/interface/static/interface/;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control $cache_do_estatico always;
         add_header X-Content-Type-Options "nosniff" always;
         access_log off;
     }
     location ^~ /static/portal/ {
         alias /opt/processoseletivo/current/backend/processo_seletivo/portal/static/portal/;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control $cache_do_estatico always;
+        add_header X-Content-Type-Options "nosniff" always;
+        access_log off;
+    }
+    # Os tokens visuais dos dois canais (089). Sem este bloco, o `return 404` abaixo os recusa, e a
+    # gestão, o portal e a página de erro perdem a paleta inteira.
+    location ^~ /static/shared/ {
+        alias /opt/processoseletivo/current/backend/processo_seletivo/shared/static/shared/;
+        add_header Cache-Control $cache_do_estatico always;
         add_header X-Content-Type-Options "nosniff" always;
         access_log off;
     }
@@ -1706,6 +1731,18 @@ curl -s -o /dev/null -w '%{http_code}\n' https://<DOMINIO>/readiness   # 403 de 
 curl -s -o /dev/null -w '%{http_code}\n' https://<DOMINIO>/metrics     # 403
 curl -sI https://<DOMINIO>/static/interface/htmx.min.js | grep -Ei '^(HTTP|content-type|cache-control)'
 #   HTTP/2 200 · application/javascript · no-cache
+curl -sI 'https://<DOMINIO>/static/interface/gestao/base.css?v=1' | grep -Ei '^(HTTP|content-type|cache-control)'
+#   HTTP/2 200 · text/css · public, max-age=31536000, immutable
+curl -sI 'https://<DOMINIO>/static/interface/telas/visao-geral.css?v=1' | grep -Ei '^(HTTP|content-type)'
+#   HTTP/2 200 · text/css
+curl -sI https://<DOMINIO>/gestao/identificar | grep -i '^content-security-policy'
+#   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; … (091)
+curl -sI https://<DOMINIO>/selecoes/ | grep -i '^content-security-policy'
+#   Content-Security-Policy: … — o portal em recusa desde a 092, como a gestão; nenhum -Report-Only
+curl -sI 'https://<DOMINIO>/static/portal/portal.css?v=1' | grep -Ei '^(HTTP|content-type|cache-control)'
+#   HTTP/2 200 · text/css · public, max-age=31536000, immutable
+curl -sI 'https://<DOMINIO>/static/shared/tokens.css?v=1' | grep -Ei '^(HTTP|content-type|cache-control)'
+#   HTTP/2 200 · text/css · public, max-age=31536000, immutable
 curl -sI --path-as-is https://<DOMINIO>/static/interface/../../../config/settings/base.py | head -1   # 400 ou 404, nunca 200
 curl -sk -o /dev/null -w '%{http_code}\n' -H 'Host: outro.exemplo' https://<IP_DO_SERVIDOR>/   # falha no handshake (000)
 curl -sI https://<DOMINIO>/selecoes/ | grep -Ei 'strict-transport|x-frame|x-content-type|referrer|cross-origin|server'
@@ -1723,7 +1760,7 @@ Recomenda-se também um teste externo de TLS, como o SSL Labs, com nota A espera
 
 | | O que é | Onde mora | Como é servido | Público? |
 |---|---|---|---|---|
-| **Static** | 22 arquivos JS do código | na release, `.../static/interface/` e `.../static/portal/` | nginx, por `alias` (§14) | sim, e é código |
+| **Static** | 22 arquivos JS e, desde a `089`, duas folhas de estilo | na release, `.../static/interface/`, `.../static/portal/` e `.../static/shared/` | nginx, por `alias` (§14) | sim, e é código |
 | **Documentos do candidato** | PDFs de inscrição, os mais sensíveis | `/var/lib/processoseletivo/arquivos/inscricoes/<uuid-inscrição>/<uuid>.pdf` | **só pela aplicação**, com autorização | **nunca** |
 | **Anexos do Edital** | PDFs publicados pela instituição | banco (`ArtefatoAnexo.bytes`) | `/api/v1/public/anexos/<uuid>`, só depois de congelado na publicação | sim, por decisão normativa |
 | **PDFs do Edital e do resultado** | documento oficial | banco (`DocumentoPublicado`, `DocumentoDoResultado`) | API pública e portal | sim |
@@ -2775,6 +2812,8 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 - Evidência: `base.py:150`; o `collectstatic` falha (ensaiado).
 - Paliativo: `alias` do nginx para os diretórios `static/` da release (§14).
 - Correção: `STATIC_ROOT` e `collectstatic`, idealmente com nomes versionados (`ManifestStaticFilesStorage`).
+- Desde a `089`, as duas folhas de estilo levam a versão no endereço (`?v=` com o resumo do conteúdo,
+  `shared/estaticos.py`), sem coleta: a lacuna continua, mas o CSS não depende de fechá-la.
 
 **I-4 — Não há `EMAIL_TIMEOUT` nem `EMAIL_USE_SSL`.** *O timeout foi resolvido pela 066
 (`EMAIL_TIMEOUT`, padrão 20 s); falta o `EMAIL_USE_SSL`.*
@@ -2823,7 +2862,10 @@ acesso, sem alternativa. Ação: SMTP institucional com redundância e monitorad
 
 ### MELHORIA
 
-- **M-1 — Não há Content-Security-Policy.** Teste em modo *Report-Only* antes de aplicar: há `<style>`
+- **M-1 — Não há Content-Security-Policy.** *Resolvido para a gestão em 18/10/2026 (`091`): a política
+  sai da aplicação, em recusa sob `/gestao/` e em observação (`Report-Only`) no portal, que ainda tinha
+  a folha no documento. Resolvido para o portal no mesmo dia (`092`): a folha dele virou arquivo, e a
+  política vale em recusa em toda resposta HTML.* O texto de antes: teste em modo *Report-Only* antes de aplicar: há `<style>`
   inline e htmx.
 - **M-2 — Não há `500.html` institucional.** A resposta é o texto genérico do Django.
 - **M-3 — Arquivos gravados com `0644`**, o padrão do Django. Mitigado pelo diretório 0700.
@@ -2855,7 +2897,6 @@ Nenhuma é requisito inicial. Cada uma tem um gatilho objetivo.
 | Segunda VM de aplicação e balanceador | quando indisponibilidade de minutos no último dia de inscrições for inaceitável e medida como risco |
 | Armazenamento de objetos para documentos | quando o volume de documentos não couber com folga num volume da VM |
 | Antivírus (ClamAV) nos uploads | se a política institucional exigir, ou se os documentos passarem a ser abertos fora do navegador |
-| CSP | depois do *Report-Only* sem violações (M-1) |
 | Egress restrito no firewall (SMTP, DNS, NTP, apt, PyPI e GitHub no deploy, Caixa, backup) | se a instituição exigir contenção de exfiltração |
 | Logs centralizados (SIEM institucional) | se a instituição já tiver um: envie journald e nginx |
 | Métricas (Prometheus e afins) | depois de M-7 e com equipe para operar |
@@ -3025,7 +3066,8 @@ APLICAÇÃO
 [ ] Provisionamento: "N de N tabelas append-only" na 2ª passada
 [ ] Unidades: "Unidades: … criadas" no ps-migrar; o Cefor em unidades_unidade
 [ ] gunicorn como processoseletivo, em 127.0.0.1:8000; systemd-analyze security revisado
-[ ] Estáticos: /static/interface/htmx.min.js = 200
+[ ] Estáticos: /static/interface/htmx.min.js = 200; /static/interface/gestao/base.css e /static/shared/tokens.css = 200, text/css
+[ ] CSP: /gestao/identificar e /selecoes/ com Content-Security-Policy, nenhum -Report-Only (091, 092)
 [ ] Base de CEP carregada (se usada): situacao_dos_ceps = 0
 
 SEGURANÇA

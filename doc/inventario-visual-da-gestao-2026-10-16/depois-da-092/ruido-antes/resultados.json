@@ -1,0 +1,4233 @@
+[
+ {
+  "id": "00-anonimo-selecoes",
+  "quem": null,
+  "caminho": "/selecoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1158,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1992,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "01-anonimo-selecoes-acesso",
+  "quem": null,
+  "caminho": "/selecoes/acesso",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Entrar — Cefor/Ifes",
+   "h1": "Entrar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/acesso:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Entrar — Cefor/Ifes",
+   "h1": "Entrar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/acesso:10 "
+   ]
+  }
+ },
+ {
+  "id": "02-anonimo-selecoes-id",
+  "quem": null,
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1750,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2926,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  }
+ },
+ {
+  "id": "03-anonimo-selecoes-id",
+  "quem": null,
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1778,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2722,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  }
+ },
+ {
+  "id": "04-anonimo-selecoes-id",
+  "quem": null,
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1240,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2212,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  }
+ },
+ {
+  "id": "05-anonimo-selecoes-resultados-id",
+  "quem": null,
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 946,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "06-anonimo-selecoes-acesso-destino--2-selecoes-2-id-2-",
+  "quem": null,
+  "caminho": "/selecoes/acesso?destino=%2Fselecoes%2Faf86be76-27f3-4e6a-b621-2b0771c323b2%2F",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Entrar — Cefor/Ifes",
+   "h1": "Entrar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/acesso:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Entrar — Cefor/Ifes",
+   "h1": "Entrar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/acesso:10 "
+   ]
+  }
+ },
+ {
+  "id": "07-anonimo-selecoes-sorteio-relacoes-id",
+  "quem": null,
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1035,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1358,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  }
+ },
+ {
+  "id": "08-anonimo-selecoes-sorteio-id-verificar",
+  "quem": null,
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1184,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1824,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  }
+ },
+ {
+  "id": "09-ana-selecoes-inscricoes",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "10-ana-selecoes",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1166,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2034,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "11-ana-selecoes-conta",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/conta",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  }
+ },
+ {
+  "id": "12-ana-selecoes-inscricoes-id",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1136,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1209,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "13-ana-selecoes-inscricoes-id-convocacao",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/convocacao",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Convocação — Cefor/Ifes",
+   "h1": "Convocação",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/convocacao:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Convocação — Cefor/Ifes",
+   "h1": "Convocação",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/convocacao:10 "
+   ]
+  }
+ },
+ {
+  "id": "14-ana-selecoes-inscricoes-id-acompanhamento",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/acompanhamento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2103,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/acompanhamento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2504,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/acompanhamento:10 "
+   ]
+  }
+ },
+ {
+  "id": "15-ana-selecoes-id",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1720,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2916,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  }
+ },
+ {
+  "id": "16-ana-selecoes-id",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1787,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2874,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  }
+ },
+ {
+  "id": "17-ana-selecoes-id",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1248,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2254,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  }
+ },
+ {
+  "id": "18-ana-selecoes-meus-dados",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/meus-dados",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  }
+ },
+ {
+  "id": "19-ana-selecoes-inscricoes-id-comprovante",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1288,
+   "titulo": "Comprovante INS-2026-AF86BE7601 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/comprovante:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2097,
+   "titulo": "Comprovante INS-2026-AF86BE7601 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/comprovante:10 "
+   ]
+  }
+ },
+ {
+  "id": "20-ana-selecoes-inscricoes-id-requerimento",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/requerimento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2836,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/requerimento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 3216,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/requerimento:10 "
+   ]
+  }
+ },
+ {
+  "id": "21-ana-selecoes-inscricoes-id-recorrer",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/recorrer",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/recorrer:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/3cd5294d-bbf6-4fbe-88fc-95c3a62b927b/recorrer:10 "
+   ]
+  }
+ },
+ {
+  "id": "22-ana-selecoes-resultados-id",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 988,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "23-ana-selecoes-sorteio-relacoes-id",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1044,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1400,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  }
+ },
+ {
+  "id": "24-ana-selecoes-sorteio-id-verificar",
+  "quem": "ana@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1193,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1866,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  }
+ },
+ {
+  "id": "25-bruno-selecoes-inscricoes",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "26-bruno-selecoes",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1166,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2034,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "27-bruno-selecoes-conta",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/conta",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  }
+ },
+ {
+  "id": "28-bruno-selecoes-inscricoes-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1136,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1209,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/:10 "
+   ]
+  }
+ },
+ {
+  "id": "29-bruno-selecoes-inscricoes-id-acompanhamento",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/acompanhamento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1883,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/acompanhamento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2369,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/acompanhamento:10 "
+   ]
+  }
+ },
+ {
+  "id": "30-bruno-selecoes-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1720,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2916,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  }
+ },
+ {
+  "id": "31-bruno-selecoes-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1787,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2874,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  }
+ },
+ {
+  "id": "32-bruno-selecoes-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1248,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2254,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  }
+ },
+ {
+  "id": "33-bruno-selecoes-meus-dados",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/meus-dados",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  }
+ },
+ {
+  "id": "34-bruno-selecoes-inscricoes-id-comprovante",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1288,
+   "titulo": "Comprovante INS-2026-AF86BE7602 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/comprovante:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2097,
+   "titulo": "Comprovante INS-2026-AF86BE7602 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/comprovante:10 "
+   ]
+  }
+ },
+ {
+  "id": "35-bruno-selecoes-recursos-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/recursos/6539ef46-cee4-4d45-b9f8-8fe605b312ac",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recurso REC-2026-H6KTWZE7 — Cefor/Ifes",
+   "h1": "Recurso REC-2026-H6KTWZE7",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/recursos/6539ef46-cee4-4d45-b9f8-8fe605b312ac:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Recurso REC-2026-H6KTWZE7 — Cefor/Ifes",
+   "h1": "Recurso REC-2026-H6KTWZE7",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/recursos/6539ef46-cee4-4d45-b9f8-8fe605b312ac:10 "
+   ]
+  }
+ },
+ {
+  "id": "36-bruno-selecoes-inscricoes-id-recorrer",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/recorrer",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/recorrer:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/c8d048ef-dbef-49b3-adee-d3e1932db1ed/recorrer:10 "
+   ]
+  }
+ },
+ {
+  "id": "37-bruno-selecoes-resultados-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 988,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "38-bruno-selecoes-sorteio-relacoes-id",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1044,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1400,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  }
+ },
+ {
+  "id": "39-bruno-selecoes-sorteio-id-verificar",
+  "quem": "bruno@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1193,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1866,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  }
+ },
+ {
+  "id": "40-clara-selecoes-inscricoes",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "41-clara-selecoes",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1166,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2034,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "42-clara-selecoes-conta",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/conta",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  }
+ },
+ {
+  "id": "43-clara-selecoes-inscricoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1861,
+   "titulo": "Sua inscrição — Cefor/Ifes",
+   "h1": "Sua inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/:10 ",
+    "report style-src-attr inline /selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/:1102 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2367,
+   "titulo": "Sua inscrição — Cefor/Ifes",
+   "h1": "Sua inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/:10 ",
+    "report style-src-attr inline /selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/:1102 "
+   ]
+  }
+ },
+ {
+  "id": "44-clara-selecoes-inscricoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1136,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1209,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/:10 "
+   ]
+  }
+ },
+ {
+  "id": "45-clara-selecoes-inscricoes-id-acompanhamento",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/acompanhamento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1883,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/acompanhamento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2344,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/acompanhamento:10 "
+   ]
+  }
+ },
+ {
+  "id": "46-clara-selecoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1720,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2947,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  }
+ },
+ {
+  "id": "47-clara-selecoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1787,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2874,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  }
+ },
+ {
+  "id": "48-clara-selecoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1248,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2254,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  }
+ },
+ {
+  "id": "49-clara-selecoes-meus-dados",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/meus-dados",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  }
+ },
+ {
+  "id": "50-clara-selecoes-inscricoes-id-requerimento",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/requerimento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2670,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/requerimento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 4252,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6bdbf163-300f-484c-8681-15c1d5011a9c/requerimento:10 "
+   ]
+  }
+ },
+ {
+  "id": "51-clara-selecoes-inscricoes-id-comprovante",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1288,
+   "titulo": "Comprovante INS-2026-AF86BE7603 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/comprovante:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2097,
+   "titulo": "Comprovante INS-2026-AF86BE7603 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/comprovante:10 "
+   ]
+  }
+ },
+ {
+  "id": "52-clara-selecoes-recursos-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/recursos/c7b47be9-fdcd-488d-8e3d-fe6be445072e",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recurso REC-2026-K97GMU9C — Cefor/Ifes",
+   "h1": "Recurso REC-2026-K97GMU9C",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/recursos/c7b47be9-fdcd-488d-8e3d-fe6be445072e:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 900,
+   "titulo": "Recurso REC-2026-K97GMU9C — Cefor/Ifes",
+   "h1": "Recurso REC-2026-K97GMU9C",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/recursos/c7b47be9-fdcd-488d-8e3d-fe6be445072e:10 "
+   ]
+  }
+ },
+ {
+  "id": "53-clara-selecoes-inscricoes-id-recorrer",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/recorrer",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/recorrer:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/cb835b07-8ca1-46f3-9fea-c42715ba9709/recorrer:10 "
+   ]
+  }
+ },
+ {
+  "id": "54-clara-selecoes-resultados-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 988,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "55-clara-selecoes-sorteio-relacoes-id",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1044,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1400,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  }
+ },
+ {
+  "id": "56-clara-selecoes-sorteio-id-verificar",
+  "quem": "clara@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1193,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1866,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  }
+ },
+ {
+  "id": "57-daniel-selecoes-inscricoes",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "58-daniel-selecoes",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1166,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2034,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "59-daniel-selecoes-conta",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/conta",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  }
+ },
+ {
+  "id": "60-daniel-selecoes-inscricoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1855,
+   "titulo": "Sua inscrição — Cefor/Ifes",
+   "h1": "Sua inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/:10 ",
+    "report style-src-attr inline /selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/:1102 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2392,
+   "titulo": "Sua inscrição — Cefor/Ifes",
+   "h1": "Sua inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/:10 ",
+    "report style-src-attr inline /selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/:1102 "
+   ]
+  }
+ },
+ {
+  "id": "61-daniel-selecoes-inscricoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1136,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1209,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/:10 "
+   ]
+  }
+ },
+ {
+  "id": "62-daniel-selecoes-inscricoes-id-acompanhamento",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/acompanhamento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1579,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/acompanhamento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1953,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/acompanhamento:10 "
+   ]
+  }
+ },
+ {
+  "id": "63-daniel-selecoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1720,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2947,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  }
+ },
+ {
+  "id": "64-daniel-selecoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1787,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2874,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  }
+ },
+ {
+  "id": "65-daniel-selecoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1248,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2254,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  }
+ },
+ {
+  "id": "66-daniel-selecoes-meus-dados",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/meus-dados",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  }
+ },
+ {
+  "id": "67-daniel-selecoes-inscricoes-id-requerimento",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/requerimento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2670,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/requerimento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 4277,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/6b804b52-c0b9-48c4-a30c-feb26afa15ac/requerimento:10 "
+   ]
+  }
+ },
+ {
+  "id": "68-daniel-selecoes-inscricoes-id-comprovante",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1288,
+   "titulo": "Comprovante INS-2026-AF86BE7604 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/comprovante:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2097,
+   "titulo": "Comprovante INS-2026-AF86BE7604 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/comprovante:10 "
+   ]
+  }
+ },
+ {
+  "id": "69-daniel-selecoes-inscricoes-id-recorrer",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/recorrer",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/recorrer:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/ffa5bd85-c9f9-4e53-bd92-e0a29d4a6b10/recorrer:10 "
+   ]
+  }
+ },
+ {
+  "id": "70-daniel-selecoes-resultados-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 988,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "71-daniel-selecoes-sorteio-relacoes-id",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1044,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1400,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  }
+ },
+ {
+  "id": "72-daniel-selecoes-sorteio-id-verificar",
+  "quem": "daniel@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1193,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1866,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  }
+ },
+ {
+  "id": "73-elisa-selecoes-inscricoes",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "74-elisa-selecoes",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1166,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2034,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "75-elisa-selecoes-conta",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/conta",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  }
+ },
+ {
+  "id": "76-elisa-selecoes-inscricoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1849,
+   "titulo": "Sua inscrição — Cefor/Ifes",
+   "h1": "Sua inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/:10 ",
+    "report style-src-attr inline /selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/:1099 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2387,
+   "titulo": "Sua inscrição — Cefor/Ifes",
+   "h1": "Sua inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/:10 ",
+    "report style-src-attr inline /selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/:1099 "
+   ]
+  }
+ },
+ {
+  "id": "77-elisa-selecoes-inscricoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1136,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1209,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/:10 "
+   ]
+  }
+ },
+ {
+  "id": "78-elisa-selecoes-inscricoes-id-acompanhamento",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/acompanhamento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1286,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/acompanhamento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1507,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/acompanhamento:10 "
+   ]
+  }
+ },
+ {
+  "id": "79-elisa-selecoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1720,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2947,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  }
+ },
+ {
+  "id": "80-elisa-selecoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1787,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2874,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  }
+ },
+ {
+  "id": "81-elisa-selecoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1248,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2254,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  }
+ },
+ {
+  "id": "82-elisa-selecoes-meus-dados",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/meus-dados",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  }
+ },
+ {
+  "id": "83-elisa-selecoes-inscricoes-id-requerimento",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/requerimento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 2670,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/requerimento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 4277,
+   "titulo": "Requerimento de Matrícula — Cefor/Ifes",
+   "h1": "Requerimento de Matrícula",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/e1809168-8924-42c3-8e1f-31756a8b36e0/requerimento:10 "
+   ]
+  }
+ },
+ {
+  "id": "84-elisa-selecoes-inscricoes-id-comprovante",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1288,
+   "titulo": "Comprovante INS-2026-AF86BE7605 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/comprovante:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2097,
+   "titulo": "Comprovante INS-2026-AF86BE7605 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/comprovante:10 "
+   ]
+  }
+ },
+ {
+  "id": "85-elisa-selecoes-inscricoes-id-recorrer",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/recorrer",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/recorrer:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Recorrer — Cefor/Ifes",
+   "h1": "Recorrer",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/1bcb7af2-c9a7-4241-99e3-4065ce2e0e3d/recorrer:10 "
+   ]
+  }
+ },
+ {
+  "id": "86-elisa-selecoes-resultados-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 988,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "87-elisa-selecoes-sorteio-relacoes-id",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1044,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1400,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  }
+ },
+ {
+  "id": "88-elisa-selecoes-sorteio-id-verificar",
+  "quem": "elisa@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1193,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1866,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  }
+ },
+ {
+  "id": "89-amanda.sorteio-selecoes-inscricoes",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Minhas inscrições — Cefor/Ifes",
+   "h1": "Minhas inscrições",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "90-amanda.sorteio-selecoes",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1166,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2034,
+   "titulo": "Processos seletivos — Cefor/Ifes",
+   "h1": "Processos seletivos do Cefor/Ifes",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/:10 "
+   ]
+  }
+ },
+ {
+  "id": "91-amanda.sorteio-selecoes-conta",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/conta",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Acesso à conta — Cefor/Ifes",
+   "h1": "Acesso à conta",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/conta:10 "
+   ]
+  }
+ },
+ {
+  "id": "92-amanda.sorteio-selecoes-inscricoes-id",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1073,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1147,
+   "titulo": "Minha inscrição — Cefor/Ifes",
+   "h1": "Minha inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/:10 "
+   ]
+  }
+ },
+ {
+  "id": "93-amanda.sorteio-selecoes-inscricoes-id-acompanhamento",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/acompanhamento",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 922,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/acompanhamento:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1072,
+   "titulo": "Acompanhar — Cefor/Ifes",
+   "h1": "Acompanhar",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/acompanhamento:10 "
+   ]
+  }
+ },
+ {
+  "id": "94-amanda.sorteio-selecoes-id",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/ec6018d1-6970-4bfb-8697-350922669a20/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1720,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2916,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/ec6018d1-6970-4bfb-8697-350922669a20/:10 "
+   ]
+  }
+ },
+ {
+  "id": "95-amanda.sorteio-selecoes-id",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1652,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2603,
+   "titulo": "Edital 51/2026 — seleção concluída — Cefor/Ifes",
+   "h1": "Edital 51/2026 — seleção concluída",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/af86be76-27f3-4e6a-b621-2b0771c323b2/:10 "
+   ]
+  }
+ },
+ {
+  "id": "96-amanda.sorteio-selecoes-id",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1248,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2364,
+   "titulo": "Edital 26/2026 — seleção por sorteio — Cefor/Ifes",
+   "h1": "Edital 26/2026 — seleção por sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/bd6e4985-c88c-4b8f-a04d-ea380376d781/:10 "
+   ]
+  }
+ },
+ {
+  "id": "97-amanda.sorteio-selecoes-meus-dados",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/meus-dados",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 812,
+   "titulo": "Seus dados — Cefor/Ifes",
+   "h1": "Seus dados",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/meus-dados:10 "
+   ]
+  }
+ },
+ {
+  "id": "98-amanda.sorteio-selecoes-inscricoes-id-comprovante",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/comprovante",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1252,
+   "titulo": "Comprovante INS-2026-BD6E498501 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/comprovante:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2033,
+   "titulo": "Comprovante INS-2026-BD6E498501 — Cefor/Ifes",
+   "h1": "Comprovante de inscrição",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/inscricoes/470ca03e-c9b1-4776-8557-d59d643e6eac/comprovante:10 "
+   ]
+  }
+ },
+ {
+  "id": "99-amanda.sorteio-selecoes-resultados-id",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 900,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 988,
+   "titulo": "Resultado preliminar — Professor de Informática — Ampla concorrência — Cefor/Ifes",
+   "h1": "Resultado preliminar — Ampla concorrência",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/resultados/23d1023e-e7b9-48d0-a834-6fba7a18fd6b/:10 "
+   ]
+  }
+ },
+ {
+  "id": "100-amanda.sorteio-selecoes-sorteio-relacoes-id",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1044,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1400,
+   "titulo": "Relação de habilitados ao sorteio — Cefor/Ifes",
+   "h1": "Relação de habilitados ao sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/relacoes/81377d54-8bf4-474c-a5b0-c2e99d1e4e8c/:10 "
+   ]
+  }
+ },
+ {
+  "id": "101-amanda.sorteio-selecoes-sorteio-id-verificar",
+  "quem": "amanda.sorteio@exemplo.test",
+  "caminho": "/selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1193,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 1866,
+   "titulo": "Verificar este sorteio — Cefor/Ifes",
+   "h1": "Verificar este sorteio",
+   "folhas": [
+    "link 1",
+    "style 395"
+   ],
+   "estilos": "cce754b1 / 396 regras",
+   "conjunto": "81431f1f / 440 regras",
+   "violacoes": [
+    "report style-src-elem inline /selecoes/sorteio/b0b8ae5f-3c14-43a4-8cac-c52f67c2d8bf/verificar:10 "
+   ]
+  }
+ },
+ {
+  "id": "102-inventario.piloto-gestao-editais-id-assistente-prototipo",
+  "quem": "inventario.piloto",
+  "caminho": "/gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/prototipo/",
+  "status": 200,
+  "politica": {
+   "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'"
+  },
+  "1280": {
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "altura": 1822,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395",
+    "link 67"
+   ],
+   "estilos": "9fb9084d / 463 regras",
+   "conjunto": "6a5ff006 / 507 regras",
+   "violacoes": [
+    "report style-src-elem inline /gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/prototipo/:10 "
+   ]
+  },
+  "375": {
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "altura": 2998,
+   "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo — Cefor/Ifes",
+   "h1": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+   "folhas": [
+    "link 1",
+    "style 395",
+    "link 67"
+   ],
+   "estilos": "9fb9084d / 463 regras",
+   "conjunto": "6a5ff006 / 507 regras",
+   "violacoes": [
+    "report style-src-elem inline /gestao/editais/ec6018d1-6970-4bfb-8697-350922669a20/assistente/prototipo/:10 "
+   ]
+  }
+ }
+]

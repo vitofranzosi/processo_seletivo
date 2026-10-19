@@ -1,13 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Confirmar a troca de origem — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:compor' edital.id %}">Compor</a> › <a href="{{ voltar }}">Partir de um Edital anterior</a> › <span aria-current="page">Confirmar</span></nav>{% endblock %}
 {% block conteudo %}
-<nav aria-label="Trilha de navegação" class="trilha">
-  <a href="{% url 'interface:lista' %}">Processos Seletivos</a> ›
-  <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> ›
-  <a href="{{ voltar }}">Partir de um Edital anterior</a> ›
-  <span aria-current="page">Confirmar</span>
-</nav>
-
 <h1>Isto substitui o que já está composto</h1>
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
 

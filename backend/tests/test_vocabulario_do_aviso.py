@@ -50,7 +50,7 @@ def _sem_prosa(texto):
 
 def test_a_lista_literal_alcanca_toda_tela_dos_avisos():
     assert all(arquivo.exists() for arquivo in DA_066)
-    telas = {p.name for p in TEMPLATES.glob("*aviso*.html")} - {"_estilo_do_aviso.html"}
+    telas = {p.name for p in TEMPLATES.glob("*aviso*.html")}
     assert telas == {p.name for p in DA_066 if p.suffix == ".html"}
 
 

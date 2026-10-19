@@ -18,10 +18,13 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
 def test_a_vitrine_oferece_entrar_para_quem_nao_esta_identificado(client):
+    """A porta se chama pelo que há do outro lado (075, `FR-1699`): "Entrar" não dizia de quem era,
+    e quem gere o lia como seu. O destino continua o acesso do candidato."""
     corpo = client.get(reverse("portal:vitrine")).content.decode()
 
     assert reverse("portal:acesso") in corpo
-    assert "Entrar" in corpo
+    assert "Minhas inscrições" in corpo
+    assert "Entrar</a>" not in corpo
 
 
 def test_com_sessao_o_cabecalho_leva_as_inscricoes(client, candidatos_registrados):
@@ -31,7 +34,9 @@ def test_com_sessao_o_cabecalho_leva_as_inscricoes(client, candidatos_registrado
 
     assert "Minhas inscrições" in corpo
     assert reverse("portal:inscricoes") in corpo
-    assert "Entrar" not in corpo, "quem já está dentro não é convidado a entrar de novo"
+    assert reverse("portal:acesso") not in corpo.split("</header>")[0], (
+        "quem já está dentro não é convidado a entrar de novo"
+    )
 
 
 def test_a_porta_acompanha_a_pessoa_pelas_paginas_publicas(client, selecao):
@@ -46,4 +51,4 @@ def test_as_telas_do_acesso_nao_convidam_a_entrar(client):
     for rota in ("portal:acesso", "portal:acesso-codigo"):
         corpo = client.get(reverse(rota), follow=True).content.decode()
         cabecalho = corpo.split("</header>")[0]
-        assert "Entrar</a>" not in cabecalho, rota
+        assert reverse("portal:acesso") + '"' not in cabecalho, rota

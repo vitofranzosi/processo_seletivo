@@ -270,7 +270,9 @@ def test_encerrar_nao_se_parece_com_cancelar(
     botoes = dict(
         (rotulo, classe)
         for classe, rotulo in re.findall(
-            r'class="botao ([^"]*)"\s+href="[^"]*">(Encerrar|Cancelar)</a>', corpo
+            # Depois do `href`, a marca como descrição (090, `FR-2060`).
+            r'class="botao ([^"]*)"\s+href="[^"]*"[^>]*>(Encerrar|Cancelar)</a>',
+            corpo,
         )
     )
     assert "perigoso" in botoes["Cancelar"], "cancelar é interrupção e recebe tratamento próprio"

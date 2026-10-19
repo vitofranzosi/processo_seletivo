@@ -11,6 +11,7 @@ from processo_seletivo.inscricoes.application.rascunho import anexar_documento, 
 from processo_seletivo.inscricoes.models import Inscricao
 from tests.fixtures.candidato import MARIA, MODALIDADE_AC, identificar, pdf
 from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
+from tests.interface.folha import FOLHA_DO_PORTAL, folha_aplicada
 
 
 def _completar(inscricao, *, faltando=False):
@@ -129,7 +130,8 @@ def test_o_comprovante_e_privado_e_imprimivel(client, inscricao_de_maria):
     resposta = client.get(reverse("portal:comprovante", args=[completa.id]))
 
     assert "no-store" in resposta.headers["Cache-Control"]
-    assert "@media print" in resposta.content.decode(), "a página se prepara para o papel"
+    # A folha que a página aplica, e não o corpo: desde a 092 ela vem de arquivo (`FR-2139`).
+    assert "@media print" in folha_aplicada(resposta.content), "a página se prepara para o papel"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -230,9 +232,9 @@ def test_o_comprovante_pode_ser_baixado_e_reencontrado(client, inscricao_de_mari
     assert "Baixar o comprovante em PDF" in corpo, "e é a única ação"
     assert reverse("portal:comprovante-pdf", args=[enviada.id]) in corpo
     assert "Imprimir esta página" not in corpo, "duas ações dividiam a mesma decisão"
-    assert 'class="principal"' in corpo and "a.principal{display:inline-block" in corpo, (
-        "o link é estilizado como ação principal — `button.principal` o deixava sem estilo"
-    )
+    assert 'class="principal"' in corpo and "a.principal{display:inline-block" in folha_aplicada(
+        corpo
+    ), "o link é estilizado como ação principal — `button.principal` o deixava sem estilo"
     assert "Guarde o número do protocolo" in corpo
     # Diz como voltar — e diz o que é verdade desde a 010: entra-se por e-mail e código, não por
     # CPF. O texto herdado da 009 mandava o candidato procurar um campo que não existe mais.
@@ -308,11 +310,8 @@ def test_o_comprovante_se_identifica_como_documento(client, inscricao_de_maria):
 @pytest.mark.integration
 def test_o_papel_nao_leva_navegacao_nem_botao(client, inscricao_de_maria):
     """No papel, um "Etapa 3 de 3" faz o comprovante parecer a captura de uma tela pela metade."""
-    corpo = (
-        __import__("pathlib")
-        .Path("processo_seletivo/portal/templates/portal/base.html")
-        .read_text(encoding="utf-8")
-    )
+    # A folha do portal saiu do `base.html` na 092 (`FR-2139`).
+    corpo = FOLHA_DO_PORTAL
 
     impressao = corpo[corpo.index("@media print{") :]
     for fora_do_papel in ("header.topo", ".nao-imprime", ".pular", ".etapas"):
@@ -361,11 +360,8 @@ def test_o_comprovante_cabe_em_uma_pagina(client, inscricao_de_maria):
     papel é tratado como o meio que é: corpo menor, dados em duas colunas, e nenhum documento
     partido ao meio.
     """
-    corpo = (
-        __import__("pathlib")
-        .Path("processo_seletivo/portal/templates/portal/base.html")
-        .read_text(encoding="utf-8")
-    )
+    # A folha do portal saiu do `base.html` na 092 (`FR-2139`).
+    corpo = FOLHA_DO_PORTAL
 
     impressao = corpo[corpo.index("@media print{") :]
     assert "@page{margin:" in impressao, "margem do papel definida pelo documento"

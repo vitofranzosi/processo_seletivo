@@ -8,7 +8,12 @@ produção**. O adaptador não é fronteira de segurança: quem decide autoriza�
 backend, em cada command.
 """
 
+from urllib.parse import urlencode, urlsplit
+
 from django.conf import settings
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from processo_seletivo.seguranca.domain import Actor
 
@@ -126,23 +131,57 @@ PAPEIS = {
 }
 
 
+# O que cada papel faz, em palavras de quem o exerce (075, `FR-1692`, `D-004`). A tela de entrada
+# mostra isto **no lugar** dos códigos de permissão, que continuam sendo o que a autorização lê.
+# Mapa à parte, e não terceiro elemento da tupla: cinco testes de autorização leem o papel como par
+# (`T-004` da 075). O guardião de `FR-1701` cobra que as chaves dos dois mapas sejam as mesmas.
+DESCRICOES = {
+    "elaborador": "Redige Editais e Retificações e os envia para homologação.",
+    "homologador": "Confere e homologa Editais e Retificações antes da publicação.",
+    "publicador": "Publica Editais, Retificações e resultados, e avisa os candidatos.",
+    "gestor": (
+        "Conduz os Processos da unidade: abre e encerra, constitui comissões, consulta inscrições "
+        "e mantém as autoridades."
+    ),
+    "julgador": "Julga os recursos interpostos pelos candidatos.",
+    "auditor": "Consulta a trilha de auditoria dos atos praticados.",
+    "exportador": "Exporta o arquivo de matrículas dos convocados.",
+    "participante-piloto-assistente": "Participa do piloto do assistente do Edital.",
+}
+
+# A origem da identidade na sessão (075, `FR-1698`). Hoje só existe uma; o diretório institucional
+# será a segunda, e é ela que continua valendo com o seletor desligado.
+ORIGEM_DEMONSTRACAO = "demonstracao"
+
+
 def permissoes_de(papeis):
     return frozenset(permissao for papel in papeis for permissao in PAPEIS.get(papel, ("", []))[1])
 
 
 def ator_da_sessao(request):
-    """Ator autenticado, ou None quando ninguém foi identificado ainda."""
+    """Ator autenticado, ou None quando ninguém foi identificado ainda.
+
+    **A identidade da demonstração não sobrevive ao seletor desligado** (075, `FR-1698`). Antes, a
+    sessão aberta pelo seletor valia para sempre: desligar a chave no mesmo banco de sessões não
+    tirava ninguém de dentro. Sessão sem origem é anterior à 075, e a única origem que existia era
+    a demonstração (`D-005`). Apagar, e não só ignorar, impede que ela volte a valer quando a chave
+    for religada sem nova escolha.
+    """
     dados = request.session.get(CHAVE_SESSAO)
     if not dados:
+        return None
+    if dados.get("origem", ORIGEM_DEMONSTRACAO) == ORIGEM_DEMONSTRACAO and not seletor_disponivel():
+        encerrar(request)
         return None
     return Actor(dados["subject"], dados["escopo"], permissoes_de(dados["papeis"]))
 
 
-def identificar(request, *, subject, papeis, escopo=ESCOPO_PADRAO):
+def identificar(request, *, subject, papeis, escopo=ESCOPO_PADRAO, origem=ORIGEM_DEMONSTRACAO):
     request.session[CHAVE_SESSAO] = {
         "subject": subject,
         "escopo": escopo,
         "papeis": list(papeis),
+        "origem": origem,
     }
 
 
@@ -154,12 +193,59 @@ def seletor_disponivel():
     return bool(getattr(settings, "INTERFACE_SELETOR_IDENTIDADE", False))
 
 
+def metodos_disponiveis():
+    """Por onde se entra na gestão neste ambiente (075, `FR-1691`).
+
+    A página de acesso desenha o que esta lista disser, e só isso. Quando o diretório
+    institucional chegar, ele entra aqui como outro método, e a página não precisa ser redesenhada.
+    Lista vazia é produção hoje: a página diz que a entrada não está configurada.
+    """
+    return [ORIGEM_DEMONSTRACAO] if seletor_disponivel() else []
+
+
+def destino_seguro(request, valor):
+    """O destino pedido, se ele for um caminho da própria gestão — ou None (075, `FR-1696`).
+
+    `url_has_allowed_host_and_scheme` sozinho aceitaria qualquer caminho do mesmo host, e o portal é
+    o mesmo host: a pessoa sairia da gestão depois de se identificar nela (`T-001`). A identificação
+    e a saída ficam de fora para não haver laço.
+    """
+    if not valor:
+        return None
+    if not url_has_allowed_host_and_scheme(
+        valor, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return None
+    caminho = urlsplit(valor).path
+    if not caminho.startswith(reverse("interface:lista")):
+        return None
+    if caminho.startswith((reverse("interface:identificar"), reverse("interface:sair"))):
+        return None
+    return valor
+
+
+def pedir_identificacao(request):
+    """O redirecionamento de toda porta da gestão para quem ainda não tem identidade (075, `D-002`).
+
+    Leva o próprio endereço como destino, e por isso a pessoa volta a ele depois de se identificar.
+    **Só em GET**: um POST não se repete por redirecionamento, e reenviar o ato depois da
+    identificação seria praticar algo que a pessoa não confirmou.
+    """
+    destino = reverse("interface:identificar")
+    if request.method == "GET" and destino_seguro(request, request.get_full_path()):
+        destino += "?" + urlencode({"proximo": request.get_full_path()})
+    return redirect(destino)
+
+
 def contexto_identidade(request):
     """Disponibiliza a identidade a todos os templates, sem cada view precisar repassá-la."""
     ator = ator_da_sessao(request)
-    dados = request.session.get(CHAVE_SESSAO) or {}
+    dados = (request.session.get(CHAVE_SESSAO) or {}) if ator else {}
     return {
         "ator": ator,
         "papeis_do_ator": [PAPEIS[p][0] for p in dados.get("papeis", []) if p in PAPEIS],
         "seletor_identidade": seletor_disponivel(),
+        # O portal oferece a porta da gestão só onde há por onde entrar (075, `FR-1699`). É o único
+        # dado da gestão que o portal lê, e não diz nada sobre quem está identificado.
+        "metodos_de_acesso": metodos_disponiveis(),
     }

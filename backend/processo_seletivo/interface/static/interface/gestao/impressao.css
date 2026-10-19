@@ -1,0 +1,14 @@
+/* O que a gestão põe no papel (088). Terceiro arquivo, e não o último: a regra de impressão estava
+   logo depois do shell, e disputa propriedade com centenas de regras que vêm depois dela — no fim da
+   folha, ela passaria a vencê-las no papel (091, R-002). */
+/* **A trilha sai no papel** (088, D-001, aprovada pelo usuário em 18/10/2026). A 076 tirava
+   o cabeçalho de contexto inteiro, quando ele era só a seção e "Trocar identidade"; desde a 077 a
+   trilha mora nele, e a Mesa, o Ato, a Inscrição recebida e o Recurso, impressos, deixaram de dizer
+   de que Edital ou Etapa eram. Fica fora só o que é ação — "Trocar identidade" — e a moldura da
+   tela: a altura mínima e o fio de baixo, que no papel só separam uma linha do título (D-005).
+   */
+@media print{
+  .shell{display:block}
+  .barra-lateral,.cabecalho-de-contexto>a{display:none}
+  .cabecalho-de-contexto{display:block;min-height:0;border-bottom:0;padding-bottom:0}
+}

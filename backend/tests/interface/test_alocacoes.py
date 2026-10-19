@@ -11,6 +11,7 @@ from django.urls import reverse
 from processo_seletivo.comissoes.models import AlocacaoEtapa
 from tests.fixtures.comissao import alocar_em, constituir
 from tests.interface.conftest import identificar
+from tests.interface.folha import folha_aplicada, folha_da_pagina
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -156,8 +157,10 @@ def test_comissao_sem_presidente_nao_deixa_distribuir(client, seletor_ligado, ge
 
     corpo = client.get(url(processo_a)).content.decode()
 
-    assert "Designe a presidência antes de distribuir" in corpo
-    assert "Salvar distribuição" not in corpo
+    # "alocar" desde a 081 (`FR-1822`): distribuir é o ato da tela vizinha.
+    assert "Designe a presidência antes de alocar" in corpo
+    # O rótulo é "Salvar alocação" desde a 079 (`FR-1790`): o antigo não acusaria mais nada.
+    assert "Salvar alocação" not in corpo
     assert "disabled" in corpo
 
 
@@ -212,10 +215,6 @@ def test_cada_celula_diz_de_quem_e_de_qual_etapa(
     assert 'aria-label="maria em Prova didática' in corpo
 
 
-def folha_de_estilo(corpo):
-    return corpo[corpo.index("<style>") : corpo.index("</style>")]
-
-
 def test_a_celula_inteira_e_o_alvo_da_marca(
     client, seletor_ligado, gestor, processo_a, edital_a, comissao_de_a, etapa_a1
 ):
@@ -233,7 +232,7 @@ def test_a_celula_inteira_e_o_alvo_da_marca(
     celula = corpo.split('<td class="marca">')[1].split("</td>")[0]
     assert "<label>" in celula, "a marca vive dentro de um rótulo, e o rótulo preenche a célula"
     assert celula.index("<label>") < celula.index('type="checkbox"')
-    assert "padding:0" in folha_de_estilo(corpo).split(".distribuicao td.marca{")[1].split("}")[0]
+    assert "padding:0" in folha_aplicada(corpo).split(".distribuicao td.marca{")[1].split("}")[0]
 
 
 def test_as_pastilhas_do_cabecalho_abracam_o_proprio_conteudo(
@@ -247,7 +246,7 @@ def test_as_pastilhas_do_cabecalho_abracam_o_proprio_conteudo(
     """
     identificar(client, "carlos", ["gestor"])
 
-    css = folha_de_estilo(client.get(url(processo_a)).content.decode())
+    css = folha_da_pagina(client, url(processo_a))
 
     assert ".distribuicao thead th .codigo" not in css, "a regra que esticava não existe mais"
     regra = css.split(".etapa-medida .codigo,.etapa-medida .situacao{")[1].split("}")[0]

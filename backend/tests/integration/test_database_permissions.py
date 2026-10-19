@@ -9,6 +9,9 @@ aplica em produção. Montá-la aqui à mão faria o teste verificar a si mesmo:
 provisionamento real concedesse privilégio demais.
 """
 
+import os
+import re
+
 import psycopg
 import pytest
 from django.db import DatabaseError, connection
@@ -23,8 +26,19 @@ from processo_seletivo.seguranca.papeis import (
 )
 from tests.fixtures.publicacao import publish_original
 
-RUNTIME_ROLE = "ps_runtime_conformance"
-MIGRATION_ROLE = "ps_migration_conformance"
+# **Um par de papéis por banco de teste, e não um nome fixo.** Papel é do cluster, e não do banco:
+# com o nome fixo, duas suítes ao mesmo tempo — dois workers do `pytest-xdist`, ou duas worktrees —
+# criavam e derrubavam o mesmo papel, e este arquivo errava em bloco (`role ... cannot be dropped
+# because some objects depend on it`, com o `DETAIL` citando o banco de teste da outra). O sufixo é
+# o que já separa os bancos de teste: o worker e o `DB_NAME`. O worker vai na frente porque o limite
+# do PostgreSQL é de 63 caracteres, e o corte, se vier, tem de cair no nome do banco.
+_SUFIXO = re.sub(
+    r"\W",
+    "_",
+    f"{os.environ.get('PYTEST_XDIST_WORKER', 'serial')}_{connection.settings_dict['NAME']}",
+).lower()[:38]
+RUNTIME_ROLE = f"ps_runtime_conformance_{_SUFIXO}"
+MIGRATION_ROLE = f"ps_migration_conformance_{_SUFIXO}"
 RUNTIME_PASSWORD = "conformance-only"
 MIGRATION_PASSWORD = "conformance-migration"
 # Chave primária de cada tabela append-only, usada no UPDATE inócuo que testa o privilégio.

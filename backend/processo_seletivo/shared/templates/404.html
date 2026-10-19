@@ -1,4 +1,4 @@
-{% comment %}
+{% load estaticos %}{% comment %}
 A resposta institucional para endereço que não abre — nos dois canais.
 
 Django procura este template sempre que uma view levanta `Http404`. Sem ele, quem elabora recebia
@@ -18,20 +18,8 @@ canais e a resposta é a mesma: o endereço não abre para você, e daqui você 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Página não encontrada — Cefor/Ifes</title>
-<style>
-{% include "shared/_tokens.css.html" %}
-*{box-sizing:border-box}
-body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
-  background:var(--fundo);line-height:1.6;font-size:16px}
-a{color:var(--verde-texto)}
-*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
-header.topo{background:var(--verde-escuro);color:var(--branco);padding:.85rem 1.5rem}
-header.topo .marca{font-weight:600;letter-spacing:.02em}
-header.topo .marca span{font-weight:300;opacity:.85}
-main{max-width:var(--leitura);margin:0 auto;padding:2.5rem 1.5rem}
-h1{font-size:1.6rem;margin:0 0 .5rem;font-weight:600}
-p{margin:0 0 1rem}
-</style>
+<link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
+<link rel="stylesheet" href="{% estatico 'shared/erro.css' %}">
 </head>
 <body>
 <header class="topo"><span class="marca">Cefor<span>/Ifes</span> · Processos Seletivos</span></header>
