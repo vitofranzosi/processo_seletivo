@@ -384,6 +384,16 @@
       "port": 8084
     },
     {
+      "name": "previa-094",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && uv run python ../specs/094-previa-da-classificacao/prototipo/servidor.py 8094"
+      ],
+      "port": 8094,
+      "url": "http://localhost:8094"
+    },
+    {
       "name": "visao-do-sistema",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8090", "--bind", "127.0.0.1", "--directory", "docs/visao-sistema"],

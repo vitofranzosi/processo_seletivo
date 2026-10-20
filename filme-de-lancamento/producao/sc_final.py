@@ -7,12 +7,12 @@ NODES = [  # rótulo, captura, recorte, posição 3D (x, y, z)
     ("Editais", "pdf_edital01_01.png", (0, 0, 1785, 1400), (-620, -260, 900)),
     ("Candidatos", "m_ana_minhas.png", (0, 0, 1170, 1600), (520, -300, 1500)),
     ("Inscrições", "p_insc01_11_comprovante.png", (0, 0, 2880, 1700), (-380, 260, 2100)),
-    ("Documentos", "g_avaliacao_docs.png", (0, 0, 2880, 1700), (640, 220, 2700)),
-    ("Comissões", "g_comissao.png", (0, 0, 2880, 1700), (-700, -120, 3300)),
-    ("Avaliações", "g_mesa51_d1.png", (0, 0, 2880, 1700), (300, -330, 3900)),
+    ("Documentos", "g_avaliacao_docs_gps.png", (0, 0, 2880, 1700), (640, 220, 2700)),
+    ("Comissões", "g_comissao_gps.png", (0, 0, 2880, 1700), (-700, -120, 3300)),
+    ("Avaliações", "g_mesa51_d1_gps.png", (0, 0, 2880, 1700), (300, -330, 3900)),
     ("Resultados", "p_resultado51.png", (0, 0, 2880, 1400), (-640, 120, 4500)),
-    ("Recursos", "g_recurso.png", (0, 0, 2880, 1700), (-120, 330, 5100)),
-    ("Convocações", "g_convocacao51.png", (0, 400, 2880, 1300), (-520, -200, 5700)),
+    ("Recursos", "g_recurso_gps.png", (0, 0, 2880, 1700), (-120, 330, 5100)),
+    ("Convocações", "g_convocacao51_gps.png", (0, 0, 2880, 1700), (-520, -200, 5700)),
 ]
 CHAIN = ["EDITAL", "INSCRIÇÃO", "AVALIAÇÃO", "RESULTADO", "RECURSO", "CONVOCAÇÃO"]
 CHAIN_FROM = [0, 2, 5, 6, 7, 8]

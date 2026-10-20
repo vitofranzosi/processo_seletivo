@@ -7,5 +7,12 @@ significa nada, e o que resolve a situação é a frase, não a etiqueta.
 {% endcomment %}
 <h1>{{ titulo }}</h1>
 <p>{{ detalhe }}</p>
+{% comment %}
+**A recusa da verificação anti-falsificação traz o que fazer, e a página de onde veio** (093,
+`erros.falha_de_csrf`): ali a pessoa não errou nada, e o caminho é reabrir o formulário e enviar de
+novo. O link só aparece quando a origem é do próprio sistema.
+{% endcomment %}
+{% if ajuda %}<p>{{ ajuda }}</p>{% endif %}
+{% if reabrir %}<p><a href="{{ reabrir }}">Abrir a página do formulário de novo</a></p>{% endif %}
 <p><a href="{% url 'portal:vitrine' %}">Voltar às seleções</a></p>
 {% endblock %}
