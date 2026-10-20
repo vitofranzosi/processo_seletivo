@@ -3,14 +3,13 @@
 Não é a implementação, nem protótipo de tela: é o roteiro que sustenta as afirmações da spec. Cada
 cenário monta candidatos fictícios com Modalidade, passa-os pelas funções **do produto** —
 `universo_classificavel.preparar` com recorte, `desempate.ordenar`, `faixa.calcular`,
-`apuracao.titulares_iniciais`, `apuracao.ocupantes`, `apuracao.apurar` e
+`apuracao.apurar`, `apuracao.ocupantes_pela_ampla`, `reversao.ha_quem_ocupar` e
 `reversao.quantidade_a_reverter` — e imprime, por recorte, o que a prévia diria.
 
-**O que é esboço, e está marcado**: as duas decisões que o caminho oficial toma dentro de funções
-que leem banco (D-005). `ocupantes_pela_ampla` reproduz `selectors.ocupantes_da_ampla` —
-titulares da ampla, **sem** filtrar habilitação, como o original — e `ha_quem_ocupar` reproduz
-`movimento.ha_quem_ocupar` — pessoas com posição na ordem do recorte contra vagas ocupadas. As duas
-são as que a T004 extrai; até lá, divergência entre elas e o original é defeito deste roteiro.
+As duas decisões que o caminho oficial tomava dentro de funções que leem banco — quem ocupa pela
+ampla e se a reservada tem quem ocupar — eram esboços neste roteiro até a T004 e a T005 as
+extraírem para o domínio (D-005). Desde então ele chama as funções do produto, as mesmas que
+`selectors.ocupantes_da_ampla` e `movimento.ha_quem_ocupar` chamam.
 
 Rodar, de dentro de `backend/`:
 
@@ -75,23 +74,6 @@ def ordem_e_faixa(inscritos, *, recorte, alvo, suplentes, desfecho):
     return ordem, progrediram, empates, None
 
 
-# --- esboços das duas decisões que a T004 extrai (D-005) ------------------------------------
-
-
-def ocupantes_pela_ampla(*, progrediram, efetivas, empates):
-    """`selectors.ocupantes_da_ampla` sem banco: titulares da ampla, sem filtro de habilitação."""
-    return apuracao.ocupantes(
-        titulares=apuracao.titulares_iniciais(
-            progrediram_em_ordem=progrediram, efetivas=efetivas, empates_residuais=empates
-        )
-    )
-
-
-def ha_quem_ocupar(*, ordem, ja_ocupadas):
-    """`movimento.ha_quem_ocupar` sem banco: pessoas com posição na ordem contra vagas ocupadas."""
-    return sum(1 for item in ordem if item["posicao"] is not None) > ja_ocupadas
-
-
 # --- a rodada da prévia (D-002) ---------------------------------------------------------------
 
 
@@ -113,8 +95,11 @@ def rodada(inscritos, *, vagas, alvo, suplentes=0, desfecho=faixa.EMPATE_ADMITE_
                 habilitadas=faixa_a,
                 empates_residuais=empates_a,
             )
-            pela_ampla = ocupantes_pela_ampla(
-                progrediram=faixa_a, efetivas=vagas[AMPLA], empates=empates_a
+            pela_ampla = apuracao.ocupantes_pela_ampla(
+                progrediram_em_ordem=faixa_a,
+                publicadas=vagas[AMPLA],
+                empates_residuais=empates_a,
+                habilitadas=faixa_a,
             )
             linhas.append(
                 ("ampla", len(ordem_a), f"faixa {len(faixa_a)}; {pub}/{efe}/{ocu}/{efe - ocu}")
@@ -144,7 +129,9 @@ def rodada(inscritos, *, vagas, alvo, suplentes=0, desfecho=faixa.EMPATE_ADMITE_
         except apuracao.EmpateNaFronteiraDoAlvo as erro:
             linhas.append((recorte, len(ordem_r), f"apuração pararia na {erro.posicao}ª"))
             continue
-        ha = ha_quem_ocupar(ordem=ordem_r, ja_ocupadas=ocu)
+        ha = reversao.ha_quem_ocupar(
+            posicoes=[item["posicao"] for item in ordem_r], ja_ocupadas=ocu
+        )
         cede = reversao.quantidade_a_reverter(
             especie=especie, efetivas=efe, ocupadas=ocu, ha_quem_ocupar=ha
         )

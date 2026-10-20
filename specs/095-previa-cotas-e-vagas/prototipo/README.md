@@ -18,12 +18,12 @@ quantidade que a reversão cederia. As tabelas da R-001 saem daqui.
 
 ## O que é real e o que é esboço
 
-| Real — o motor do produto, importado e chamado | Esboço — marcado no código |
+| Real — o motor do produto, importado e chamado | Esboço |
 |---|---|
-| `universo_classificavel.preparar` com recorte | `ocupantes_pela_ampla`, que reproduz `selectors.ocupantes_da_ampla` sem banco |
-| `desempate.ordenar`, `faixa.calcular` | `ha_quem_ocupar`, que reproduz `movimento.ha_quem_ocupar` sem banco |
-| `apuracao.apurar`, `titulares_iniciais`, `ocupantes` | as vagas por recorte num dicionário, no lugar de `linha_do_quadro` sobre o snapshot |
-| `reversao.quantidade_a_reverter` | as populações |
+| `universo_classificavel.preparar` com recorte | as vagas por recorte num dicionário, no lugar de `linha_do_quadro` sobre o snapshot |
+| `desempate.ordenar`, `faixa.calcular` | as populações |
+| `apuracao.apurar`, `apuracao.ocupantes_pela_ampla` | |
+| `reversao.ha_quem_ocupar`, `reversao.quantidade_a_reverter` | |
 
-Os dois esboços são as funções que a T004 e a T005 extraem (D-005); até lá, divergência entre eles e o
-original é defeito deste roteiro, e não do produto.
+`ocupantes_pela_ampla` e `ha_quem_ocupar` eram esboços até a T004 e a T005 as extraírem para o
+domínio (D-005); desde então o roteiro chama as mesmas funções que o caminho oficial chama.

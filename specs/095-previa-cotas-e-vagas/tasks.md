@@ -12,7 +12,11 @@ com a linha de base escrita antes.
 **Organization**: a Fase 2 são as duas extrações da ocupação — **independentes da interface da `094`**,
 e autorizáveis à parte, como as T003 a T009 da `094` foram. A Fase 3 é o motor da prévia por recorte, e
 depende da `simular` da `094` (a T013 de lá). As fases das histórias dependem da interface da `094`
-inteira (D-001). Nada aqui está autorizado: a decisão é do usuário.
+inteira (D-001).
+
+**20/10/2026**: o usuário autorizou seguir com a `095`, e a Fase 2 — a única que não depende da
+interface da `094` — foi feita numa branch própria, `claude/095-extracao-da-ocupacao`. As fases 3 em
+diante continuam esperando a interface da `094`.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -38,10 +42,10 @@ oficial, sem mudar resultado nenhum. Não dependem da `094`.
 
 **⚠️ CRITICAL**: a T003 entra verde **antes** da T004 e da T005, contra o código de hoje.
 
-- [ ] T003 Escrever a linha de base em `backend/tests/integration/ocupacao/test_extracao_da_ocupacao_equivale.py`: por cenário com reserva no banco — concomitância dentro das vagas da ampla; autodeclarado suplente da ampla; titular da ampla eliminado na Etapa governada (o achado da R-002, que **continua** excluído da reservada); reservada toda ocupando pela ampla; reservada sem ato vigente; empate não julgado na fronteira da ampla (a exceção crua, como hoje) —, fixar o valor de `ocupacao.application.selectors.ocupantes_da_ampla` e de `ocupacao.application.movimento.ha_quem_ocupar`, e o número de consultas de `ocupacao.application.emissao._apurar` e da fila em `convocacao/application/selectors.py`. Verde contra o código atual
-- [ ] T004 Extrair `ocupantes_pela_ampla` para `backend/processo_seletivo/ocupacao/domain/apuracao.py` conforme `specs/095-previa-cotas-e-vagas/contracts/ocupacao-pura.md` — `habilitadas` em `titulares_iniciais` e **não** em `ocupantes` —, fazer `selectors.ocupantes_da_ampla` consultar e delegar, e cobrir a função pura em `backend/tests/unit/ocupacao/test_ocupantes_pela_ampla.py`
-- [ ] T005 [P] Extrair `ha_quem_ocupar(*, posicoes, ja_ocupadas)` para `backend/processo_seletivo/ocupacao/domain/reversao.py`, fazer `ocupacao/application/movimento.py::ha_quem_ocupar` ler as posições e delegar, e cobrir a função pura — inclusive posições de quem ocupa pela ampla contando — em `backend/tests/unit/ocupacao/test_ha_quem_ocupar.py`
-- [ ] T006 Rodar a T003 e as suítes de `backend/tests/unit/ocupacao/`, `backend/tests/integration/ocupacao/`, `backend/tests/unit/convocacao/`, `backend/tests/integration/convocacao/` e `backend/tests/performance/test_convocacao.py` sem alterar teste nenhum; e `make lint check test-pg` em `backend/`
+- [x] T003 Escrever a linha de base em `backend/tests/integration/ocupacao/test_extracao_da_ocupacao_equivale.py`: por cenário com reserva no banco — concomitância dentro das vagas da ampla; autodeclarado suplente da ampla; titular da ampla eliminado na Etapa governada (o achado da R-002, que **continua** excluído da reservada); reservada toda ocupando pela ampla; reservada sem ato vigente; empate não julgado na fronteira da ampla (a exceção crua, como hoje) —, fixar o valor de `ocupacao.application.selectors.ocupantes_da_ampla` e de `ocupacao.application.movimento.ha_quem_ocupar`, e o número de consultas de `ocupacao.application.emissao._apurar` e da fila em `convocacao/application/selectors.py`. Verde contra o código atual. *Feito com uma diferença: o empate na fronteira da ampla ficou no unitário da T004 — o sorteio do certame de teste não produz empate residual —, e o número de consultas foi preso nas duas funções (8 e 2), e não em `_apurar` e na fila, que as chamam sem consulta a mais; os orçamentos delas são os da suíte (T006).*
+- [x] T004 Extrair `ocupantes_pela_ampla` para `backend/processo_seletivo/ocupacao/domain/apuracao.py` conforme `specs/095-previa-cotas-e-vagas/contracts/ocupacao-pura.md` — `habilitadas` em `titulares_iniciais` e **não** em `ocupantes` —, fazer `selectors.ocupantes_da_ampla` consultar e delegar, e cobrir a função pura em `backend/tests/unit/ocupacao/test_ocupantes_pela_ampla.py`
+- [x] T005 [P] Extrair `ha_quem_ocupar(*, posicoes, ja_ocupadas)` para `backend/processo_seletivo/ocupacao/domain/reversao.py`, fazer `ocupacao/application/movimento.py::ha_quem_ocupar` ler as posições e delegar, e cobrir a função pura — inclusive posições de quem ocupa pela ampla contando — em `backend/tests/unit/ocupacao/test_ha_quem_ocupar.py`
+- [x] T006 Rodar a T003 e as suítes de `backend/tests/unit/ocupacao/`, `backend/tests/integration/ocupacao/`, `backend/tests/unit/convocacao/`, `backend/tests/integration/convocacao/` e `backend/tests/performance/test_convocacao.py` sem alterar teste nenhum; e `make lint check test-pg` em `backend/`. *Em 20/10: 12357 passando e 12 pulados — os onze da suíte e o da contagem de tokens, sem o grupo `assistente` nesta worktree —, nenhum teste existente alterado.*
 
 **Checkpoint**: caminho oficial igual, com as duas decisões no domínio.
 
