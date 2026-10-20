@@ -239,6 +239,172 @@ def caso_limite(chave, *, etapas_enumeradas, etapa_do_marco, fatos, alvo, suplen
     return candidatos, onde
 
 
+#: Os casos-limite de reserva (095, FR-2332): oferecidos só quando o Perfil declara Modalidade
+#: reservada, e plantados sobre a **primeira** delas, na ordem declarada.
+CASOS_DE_RESERVA = {
+    "concomitante": (
+        "Autodeclarado dentro das vagas da ampla",
+        "Um autodeclarado entre as primeiras vagas da ampla, e os demais abaixo da faixa dela: ele "
+        "ocupa pela ampla, e a vaga reservada continua da reserva.",
+    ),
+    "reserva_curta": (
+        "Reserva com menos autodeclarados que vagas",
+        "Menos autodeclarados do que as vagas da reservada, todos abaixo da faixa da ampla: sobram "
+        "vagas sem ocupante, e é a reversão declarada que diz o que acontece com elas.",
+    ),
+    "reserva_vazia": (
+        "Reserva sem autodeclarados",
+        "Ninguém se autodeclarou na reservada: a ordem dela é vazia, e todas as vagas ficam sem "
+        "ocupante.",
+    ),
+    "empate_vaga_ampla": (
+        "Empate na última vaga da ampla",
+        "Dois candidatos iguais em tudo na última vaga da ampla: a apuração dela pararia, e as "
+        "reservadas, que dependem de quem ocupa pela ampla, não seriam apuradas.",
+    ),
+    "empate_vaga_reservada": (
+        "Empate na última vaga da reservada",
+        "Dois autodeclarados iguais em tudo na última vaga da reservada, abaixo da faixa da ampla: "
+        "só a apuração da reservada pararia.",
+    ),
+    "alvo_fixo_reservada": (
+        "Alvo fixo diferente das vagas da reservada",
+        "Mais autodeclarados do que as vagas da reservada: com alvo fixo, a faixa dela tem o "
+        "tamanho do alvo, e não o das vagas.",
+    ),
+}
+
+
+def _livres(candidatos):
+    """Os candidatos que podem receber Modalidade sem mudar a explicação de outra situação.
+
+    Ficam de fora quem divide nota com o vizinho — os empates e o trio que a população planta — e
+    quem está sem nota ou eliminado: a explicação deles é a da fatia 1, e uma Modalidade a mais a
+    misturaria com a da concomitância.
+    """
+    livres = []
+    for indice, candidato in enumerate(candidatos):
+        notas = candidato["notas"]
+        if candidato["eliminado_em"] or any(n is None for n in notas.values()):
+            continue
+        vizinhos = candidatos[max(indice - 1, 0) : indice] + candidatos[indice + 1 : indice + 2]
+        if any(v["notas"] == notas for v in vizinhos):
+            continue
+        livres.append(indice)
+    return livres
+
+
+def atribuir_modalidades(
+    candidatos, reservadas, *, vagas_da_ampla, faixa_da_ampla, faixas, ja_usados=()
+):
+    """Atribui uma Modalidade reservada a candidatos que já existem, sem mudar nota (095, D-003).
+
+    **Atribuir, e não acrescentar**: a ordem da ampla de um Perfil que passa a declarar uma
+    Modalidade é a mesma de antes, e só quem concorre em qual lista muda. Para cada reservada, na
+    ordem declarada: um candidato entre as vagas da ampla (a concomitância), um na faixa da ampla e
+    além das vagas (o suplente da ampla, que não ocupa vaga), e os demais abaixo, até preencher a
+    faixa da reservada **e deixar um além dela** — o que uma faixa seguinte alcançaria.
+
+    `reservadas` é `[(lista_id, rótulo)]`; `faixas`, `{lista_id: tamanho da faixa da reservada}` na
+    montagem. `ja_usados` são índices que outro plantio já tomou. Devolve `(candidatos, plantados)`,
+    com o que foi plantado e o que não coube, em palavras. Determinística: os mesmos argumentos dão
+    as mesmas atribuições.
+    """
+    livres = _livres(candidatos)
+    usados, plantados = set(ja_usados), []
+    limite = vagas_da_ampla or 0
+    fim_da_faixa = max(faixa_da_ampla or 0, limite)
+    for posicao, (lista_id, rotulo) in enumerate(reservadas):
+        quer = (faixas.get(lista_id) or 0) + 1
+        escolhidos = []
+        dentro = [i for i in livres if i < limite and i not in usados]
+        if dentro:
+            # Do meio das vagas para baixo, uma reservada por vez: duas concomitâncias na mesma
+            # linha da tabela confundiriam quem lê.
+            meio = min(len(dentro) - 1, len(dentro) // 2 + posicao)
+            escolhidos.append(dentro[meio])
+        suplente = [i for i in livres if limite <= i < fim_da_faixa and i not in usados]
+        if suplente and len(escolhidos) < quer:
+            escolhidos.append(suplente[0])
+        abaixo = [i for i in livres if i >= limite and i not in usados and i not in escolhidos]
+        for indice in abaixo:
+            if len(escolhidos) >= quer:
+                break
+            escolhidos.append(indice)
+        for indice in escolhidos:
+            candidatos[indice]["modalidade"] = lista_id
+        usados.update(escolhidos)
+        if len(escolhidos) < quer:
+            plantados.append(
+                f"{rotulo}: {len(escolhidos)} autodeclarados — a população não comporta os "
+                f"{quer} que mostrariam a faixa da reservada inteira e um além dela"
+            )
+        else:
+            plantados.append(
+                f"{rotulo}: {len(escolhidos)} autodeclarados, o primeiro entre as vagas da ampla"
+                if dentro
+                else f"{rotulo}: {len(escolhidos)} autodeclarados"
+            )
+    return candidatos, plantados
+
+
+def caso_de_reserva(
+    chave, candidatos, reservadas, *, vagas_da_ampla, faixa_da_ampla, vagas, faixas
+):
+    """O caso-limite de reserva `chave`, sobre a primeira reservada. `(candidatos, onde)`.
+
+    Os outros recortes recebem a atribuição da população estável, para que o caso mostre uma coisa
+    só. `vagas` é `{lista_id: vagas da linha}` e `faixas`, `{lista_id: tamanho da faixa}`.
+    """
+    primeira, rotulo = reservadas[0]
+    demais = reservadas[1:]
+    limite = vagas_da_ampla or 0
+    fim = max(faixa_da_ampla or 0, limite)
+    livres = _livres(candidatos)
+    abaixo = [i for i in livres if i >= fim]
+    vagas_r = vagas.get(primeira) or 0
+    faixa_r = faixas.get(primeira) or 0
+    onde = ""
+    if chave == "concomitante":
+        dentro = [i for i in livres if i < limite]
+        escolhidos = dentro[-1:] + abaixo[: max(faixa_r, 1)]
+        onde = f"{rotulo}: um entre as vagas da ampla, {len(escolhidos) - 1} abaixo da faixa dela"
+    elif chave == "reserva_curta":
+        escolhidos = abaixo[: max(vagas_r - 1, 0)]
+        onde = f"{rotulo}: {len(escolhidos)} autodeclarados para {vagas_r} vagas"
+    elif chave == "reserva_vazia":
+        escolhidos = []
+        onde = f"{rotulo}: nenhum autodeclarado"
+    elif chave == "empate_vaga_ampla":
+        ultima = limite or faixa_da_ampla or 0
+        if 1 <= ultima < len(candidatos):
+            _igualar(candidatos, ultima, ultima - 1)
+        livres = _livres(candidatos)
+        escolhidos = [i for i in livres if i >= fim][: max(faixa_r, 1)]
+        onde = f"o empate fica na {ultima}ª posição da ampla, a última das vagas dela"
+    elif chave == "empate_vaga_reservada":
+        quer = max(vagas_r, 1) + 1
+        escolhidos = abaixo[:quer]
+        if len(escolhidos) >= 2:
+            _igualar(candidatos, escolhidos[-1], escolhidos[-2])
+        onde = f"{rotulo}: o empate fica na {max(vagas_r, 1)}ª posição, a última das vagas"
+    else:  # alvo_fixo_reservada
+        escolhidos = abaixo[: max(vagas_r, 1) + 3]
+        onde = f"{rotulo}: {len(escolhidos)} autodeclarados para {vagas_r} vagas"
+    for indice in escolhidos:
+        candidatos[indice]["modalidade"] = primeira
+    if demais:
+        atribuir_modalidades(
+            candidatos,
+            demais,
+            vagas_da_ampla=vagas_da_ampla,
+            faixa_da_ampla=faixa_da_ampla,
+            faixas=faixas,
+            ja_usados=escolhidos,
+        )
+    return candidatos, onde
+
+
 def inscritos(candidatos):
     """Os candidatos na forma de `universo_classificavel.preparar` — a do caminho oficial."""
 
@@ -280,9 +446,9 @@ def inscritos(candidatos):
                 "protocolo": f"FICTICIO-{c['slot']:03d}",
                 "nome": c["nome"],
                 "identity_subject": "",
-                # A porta da fatia 2: a Modalidade do candidato fictício. Nula em toda a fatia 1,
-                # que é o universo inteiro (D-008 da 094).
-                "modalidade_id": None,
+                # A Modalidade do candidato fictício: nula na fatia 1, que é o universo inteiro, e
+                # atribuída pela fatia 2 (`atribuir_modalidades`, 095, D-003).
+                "modalidade_id": c.get("modalidade"),
                 "fatos": c["fatos"],
                 "resultados": resultados,
             }
@@ -292,6 +458,9 @@ def inscritos(candidatos):
 
 __all__ = [
     "CASOS",
+    "CASOS_DE_RESERVA",
+    "atribuir_modalidades",
+    "caso_de_reserva",
     "ETAPAS_COM_NOTA",
     "TETO",
     "caso_limite",

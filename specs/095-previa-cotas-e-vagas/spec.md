@@ -4,9 +4,9 @@
 
 **Created**: 2026-10-20
 
-**Status**: Especificada — spec, plan, tasks e protótipo de cálculo no PR; implementação não iniciada
-e não autorizada. Depende da interface da fatia 1 (`094`), que também não está autorizada. O merge é do
-usuário.
+**Status**: Implementada em 20/10/2026, por autorização do usuário: a Fase 2 no PR #319 e as demais
+num PR empilhado sobre o da interface da `094` (#320). A validação com elaboradores (SC-870, T031) fica
+aberta até o relato do usuário. O merge é do usuário.
 
 **Input**: decisão do usuário de 19/10/2026, registrada na decisão 008 da `094`: as cotas ficaram fora
 da fatia 1 e são a fatia 2 do mesmo produto — ampla como universo inteiro, Modalidades reservadas
