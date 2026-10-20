@@ -112,8 +112,10 @@ def ha_quem_ocupar(*, edital, marco_id, lista_id, ja_ocupadas):
     ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
     if ato is None:
         return False
-    com_posicao = sum(1 for posicao in ato.posicoes.all() if posicao.posicao is not None)
-    return com_posicao > ja_ocupadas
+    # A conta é do domínio (095, D-005): a prévia da classificação a faz sobre a ordem fictícia.
+    return reversao.ha_quem_ocupar(
+        posicoes=[posicao.posicao for posicao in ato.posicoes.all()], ja_ocupadas=ja_ocupadas
+    )
 
 
 __all__ = [
