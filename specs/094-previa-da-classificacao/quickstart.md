@@ -26,7 +26,7 @@ da tabela do achado.
 | No detalhe, leia o bloco tracejado | "Depois do corte: a apuração das vagas — hipótese": pararia na 10ª |
 | Troque o desfecho para "A faixa para no alvo", **sem salvar** | os mesmos 23 candidatos; na jornada, "Ninguém avançaria por enquanto" e, na Entrevista, "Ninguém, por enquanto"; quadro "O que mudou": corte emitível → impedido na 15ª, avançam 16 → 0 |
 | Suplentes 0 | "impedido na 15ª → impedido na 10ª": o empate continuou na 10ª, a regra mudou o desfecho |
-| Desfecho de volta para "Todos os empatados progridem" | 11 progridem; João e Karina "Progride pelo empate", marcados "mudou" |
+| Desfecho de volta para "Todos os empatados progridem" | 11 avançam; no detalhe, João e Karina "Avança pelo empate", marcados "mudou" |
 | Alvo 30 | "a faixa passa dos 21 classificados: todos cabem — remonte"; botão "Remontar para esta configuração" |
 | Role até "Empates na pontuação" | uma tabela por grupo, critério a critério, com o que separou destacado e a linha que o empate atravessa |
 | Seletor "Candidatos fictícios" → um caso-limite | o aviso de que o caso acompanha a fronteira |
@@ -38,7 +38,7 @@ da tabela do achado.
 A comparação com a primeira versão, nos três cenários e com as cinco perguntas, está em
 [`prototipo/comparacao-v1-v2.md`](prototipo/comparacao-v1-v2.md).
 
-As capturas validadas em 19/10 estão em `prototipo/capturas/v1/` e `prototipo/capturas/v2/`.
+As capturas validadas em 19/10 estão em `prototipo/capturas/v1/`, `v2/` e `v3/`.
 
 ## 2. A feature (depois da implementação)
 
