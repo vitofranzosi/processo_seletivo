@@ -90,16 +90,15 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     </p>
   </div>
   <div class="campos">
-    <p class="campo largo">
-      <label for="marco-{{ indice }}-{{ sub }}-stages">Etapas que entram na ordem {% if not marco|ordena_por_sorteio %}<span class="obrigatorio" aria-hidden="true">*</span>{% endif %}</label>
+    <div class="campo largo">
       {% comment %}
       Sem Etapa classificatória, isto era uma caixa vazia, obrigatória e impossível de preencher: o
       navegador recusava a submissão apontando para um retângulo em branco, e a única explicação
-      estava num aviso no alto da página, fora da tela de quem já rolou até aqui. O `required` sai
-      junto com o seletor — o rascunho continua salvável, e é a validação da publicação que cobra as
-      Etapas, como sempre cobrou.
+      estava num aviso no alto da página, fora da tela de quem já rolou até aqui. O `required` saiu
+      do campo — o rascunho continua salvável, e é a validação da publicação que cobra as Etapas,
+      como sempre cobrou.
 
-      **E sai também quando a ordem nasce de sorteio** (030, FR-432). A ajuda do método, logo
+      **E não é cobrado quando a ordem nasce de sorteio** (030, FR-432). A ajuda do método, logo
       abaixo, sempre mandou deixar a habilitação em nenhuma quando o sorteio precede a análise
       documental — e a validação, ao mesmo tempo, exigia Etapa de todo marco. A tela contradizia a
       si mesma, e quem seguia a ajuda não conseguia publicar. A exigência não foi removida: foi
@@ -109,22 +108,70 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       para duas faz a combinação voltar a ser perguntada (FR-415).
       {% endcomment %}
       {% if etapas_classificatorias %}
-      <select id="marco-{{ indice }}-{{ sub }}-stages" name="marco-{{ indice }}-{{ sub }}-stages"
-              multiple {% if not marco|ordena_por_sorteio %}required aria-required="true"{% endif %}
-              hx-get="{% url 'interface:fragmento-marco-recomposto' indice sub %}?edital={{ edital.id }}"
-              hx-trigger="change"
-              hx-include="closest fieldset"
-              hx-target="closest fieldset"
-              hx-swap="outerHTML"
-              aria-describedby="ajuda-etapas-{{ indice }}-{{ sub }}">
+      {% with unica=etapas_classificatorias.0 %}
+      {% if etapas_classificatorias|length == 1 and unica.id in marco.etapas and not marco|ordena_por_sorteio %}
+      {% comment %}
+      **Uma Etapa classificatória só, e a pergunta deixa de existir** (030, SC-139). "Quais entram"
+      tinha uma resposta possível, e o cartão a oferecia como escolha. A frase diz o que entra e por
+      quê; o valor viaja oculto, e é ele que o recompor e a gravação leem — o mesmo caminho da
+      combinação, que com uma Etapa já é declaração derivada, e não pergunta.
+
+      Sob sorteio a pergunta volta: ali enumerar a Etapa, ou nenhuma, é escolha de verdade.
+
+      O `id` do campo fica no parágrafo: é para ele que aponta o item "Etapas que entram na ordem"
+      da ajuda da etapa.
+      {% endcomment %}
+      <p class="declaracao-derivada" id="marco-{{ indice }}-{{ sub }}-stages">Entra na ordem
+        <strong>{{ unica.rotulo }}</strong>{% if unica.nao_pontua %} (não pontua){% elif unica.peso %} (peso {{ unica.peso }}){% endif %},
+        a única Etapa classificatória deste Edital.</p>
+      <input type="hidden" name="marco-{{ indice }}-{{ sub }}-stages" value="{{ unica.id }}">
+      {% else %}
+      {% comment %}
+      **Caixas de marcação, e não lista de escolha múltipla.** A lista era a única da interface: a
+      seleção aparecia em cinza, como campo desabilitado; um clique simples desmarcava as outras
+      Etapas, e marcar duas pedia Cmd+clique, que ninguém descobre sozinho. Para uma lista de duas a cinco Etapas, a caixa mostra todas e o estado de cada uma, e
+      um clique muda só aquela.
+
+      **O servidor não muda**: caixas com o mesmo nome enviam a mesma lista que a lista enviava, e
+      `forms` continua lendo por `getlist`.
+
+      **O `required` não vai para as caixas**: num grupo, ele exigiria todas marcadas. A falta de
+      Etapa continua cobrada onde sempre foi — na validação da publicação, e no bloco de pendências
+      da etapa.
+
+      **O recompor sai de cada caixa**, e não do grupo: o pedido mora no controle nativo, como em
+      todo o resto da interface. Ele leva o cartão inteiro — `closest fieldset.marco`, e não
+      `closest fieldset`, que daqui seria o próprio grupo e levaria só as caixas. As caixas têm `id`
+      estável, e é por ele que o htmx devolve o foco à caixa que acabou de ser marcada.
+
+      **O peso ao lado de cada Etapa**, como o documento o escreve: quem escolhe as parcelas de uma
+      soma ponderada decide sobre os fatores, e eles foram declarados três passos antes. É dado, e
+      não ajuda — a FR-428 da 030 fica como está. Sem peso declarado, nada se escreve aqui: a
+      cobrança logo abaixo já nomeia a Etapa assim que ela é marcada.
+      {% endcomment %}
+      <fieldset class="opcoes etapas-do-marco" id="marco-{{ indice }}-{{ sub }}-stages"
+                aria-describedby="ajuda-etapas-{{ indice }}-{{ sub }}">
+        <legend>Etapas que entram na ordem {% if not marco|ordena_por_sorteio %}<span class="obrigatorio" aria-hidden="true">*</span>{% endif %}</legend>
         {% for etapa in etapas_classificatorias %}
-        <option value="{{ etapa.id }}" {% if etapa.id in marco.etapas %}selected{% endif %}>{{ etapa.rotulo }}</option>
+        <p class="opcao">
+          <input type="checkbox" id="marco-{{ indice }}-{{ sub }}-stages-{{ forloop.counter0 }}"
+                 name="marco-{{ indice }}-{{ sub }}-stages" value="{{ etapa.id }}"
+                 {% if etapa.id in marco.etapas %}checked{% endif %}
+                 hx-get="{% url 'interface:fragmento-marco-recomposto' indice sub %}?edital={{ edital.id }}"
+                 hx-trigger="change"
+                 hx-include="closest fieldset.marco"
+                 hx-target="closest fieldset.marco"
+                 hx-swap="outerHTML">
+          <label for="marco-{{ indice }}-{{ sub }}-stages-{{ forloop.counter0 }}">{{ etapa.rotulo }}{% if etapa.nao_pontua %} <span class="peso-da-etapa">não pontua</span>{% elif etapa.peso %} <span class="peso-da-etapa">peso {{ etapa.peso }}</span>{% endif %}</label>
+        </p>
         {% endfor %}
-      </select>
+      </fieldset>
       <span class="oculto" id="ajuda-etapas-{{ indice }}-{{ sub }}">Só Etapas classificatórias. O
         peso de cada uma é o que ela já publica; aqui se escolhe quais entram.{% if marco|ordena_por_sorteio %} Um
         marco de sorteio pode não enumerar nenhuma: é o caso de quem sorteia antes da análise
         documental.{% endif %}</span>
+      {% endif %}
+      {% endwith %}
       {% comment %}
       A contradição que aparecia nove etapas adiante, dita onde ela nasce (037, FR-551). A
       conferência de publicação já sabe que a Etapa enumerada precisa de peso — e o domínio
@@ -137,9 +184,8 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       promessa precisa ler esta antes. Microcópia que ensina continua indo para o bloco de ajuda
       da etapa, onde a 030 a pôs.
 
-      **Nenhum controle novo** (FR-551a): o cartão já carrega 28, e a densidade dele é achado
-      próprio. O que entrou foi um campo na lista que a tela já recebia — `tem_peso` —, e o
-      cruzamento com a seleção é filtro, não consulta.
+      **Nenhum controle novo** (FR-551a): o cruzamento com a seleção é filtro, não consulta, e o
+      que entrou foi um campo na lista que a tela já recebia — `tem_peso`.
 
       A frase não contradiz a de cima: lá se diz que o peso é o que a Etapa publica, e aqui se diz
       quais delas ainda não publicaram nenhum. Nem contradiz as duas que cobram o peso na
@@ -151,13 +197,14 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       {% endif %}
       {% endwith %}
       {% else %}
+      <label for="marco-{{ indice }}-{{ sub }}-stages">Etapas que entram na ordem {% if not marco|ordena_por_sorteio %}<span class="obrigatorio" aria-hidden="true">*</span>{% endif %}</label>
       <span class="vazio" id="ajuda-etapas-{{ indice }}-{{ sub }}">Nenhuma Etapa deste Edital foi
         marcada como <strong>Classificatória</strong>.{% if marco|ordena_por_sorteio %} Este marco
         ordena por sorteio, e pode ficar assim — a ordem vem da relação de habilitados, e não de
         nota.{% else %} Volte ao passo <strong>Etapas de Avaliação</strong> e marque as que entram
         na ordem; elas aparecem aqui.{% endif %}</span>
       {% endif %}
-    </p>
+    </div>
   </div>
   {% comment %}
   **Sob sorteio declarado o arredondamento sai da tela** (067, ED-03, D-008): a ordem sorteada não

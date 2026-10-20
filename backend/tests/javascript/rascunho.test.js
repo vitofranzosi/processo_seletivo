@@ -200,6 +200,39 @@ test("grupo sem opção marcada não inventa escolha nenhuma", async () => {
   assert.equal("forma" in (await gravado(comGrupo(null))), false);
 });
 
+/* As Etapas do marco viraram caixas que dividem o `name` (030, SC-139). Guardadas caixa a caixa, a
+   última sobrescrevia as anteriores: com duas Etapas marcadas e uma terceira desmarcada no fim, o
+   lido dizia "" — e o rascunho guardava um marco sem Etapa nenhuma. */
+
+function comCaixas(marcadas) {
+  return new Formulario(
+    [
+      linha("etapa", 0, {
+        id: "e1",
+        name: "Prova",
+        stages: ["a", "b", "c"].map((valor) => ({
+          type: "checkbox",
+          value: valor,
+          checked: marcadas.includes(valor),
+        })),
+      }),
+    ],
+    { rascunho: "edital:etapas:ana", lista: "#etapas", fragmento: "/fragmentos/etapa" }
+  );
+}
+
+test("o grupo de caixas guarda todas as marcadas, e não só a última", async () => {
+  assert.deepEqual((await gravado(comCaixas(["a", "b"]))).stages, ["a", "b"]);
+});
+
+test("a caixa desmarcada no fim do grupo não apaga as marcadas antes dela", async () => {
+  assert.deepEqual((await gravado(comCaixas(["a"]))).stages, ["a"]);
+});
+
+test("grupo sem caixa marcada guarda a lista vazia, e não uma escolha", async () => {
+  assert.deepEqual((await gravado(comCaixas([]))).stages, []);
+});
+
 /* RC-08 da auditoria de consolidação (AX-16 de 15/09) — restaurar perdia o que era aninhado.
 
    A restauração remontava cada linha a partir do fragmento **vazio** do Perfil e casava os nomes
