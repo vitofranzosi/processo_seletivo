@@ -148,7 +148,7 @@ class TestOcupantesDaAmpla:
         assert chaves(ocupantes(com_suplentes)) == set(ordem[:2])
 
     def test_sem_corte_emitido_a_ordem_inteira_e_a_sequencia(self, com_suplentes):
-        """Sem corte, quem "progrediu" é a ordem com posição, e os titulares são as duas primeiras."""
+        """Sem corte, quem progrediu é a ordem com posição, e os titulares, as duas primeiras."""
         ordem = ordem_da_ampla(com_suplentes)
 
         assert chaves(ocupantes(com_suplentes)) == set(ordem[:2])
