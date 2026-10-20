@@ -355,3 +355,47 @@ def test_cada_recorte_tem_o_universo_e_a_ordem_da_tabela(
 
     esperado = _esperado_do_recorte(cenario, inscricoes, ordem, sem_posicao, lista_id)
     assert divergencias(obtido, esperado) == []
+
+
+# --- A sentinela: a comparação acusa quando o caminho oficial muda ------------------------------
+#
+# Uma comparação que nunca reprova não prova nada. Cada caso altera **só o caminho oficial** — o
+# vocabulário da eliminação, o sentido de um critério, o texto do motivo — e espera que a tabela
+# acuse a diferença na chave certa. Quando a prévia chegar, os mesmos desvios terão de reprovar a
+# equivalência entre os dois lados (spec 094).
+
+
+@pytest.mark.parametrize(
+    ("modulo", "atributo", "desvio", "chaves"),
+    [
+        (
+            "processo_seletivo.classificacao.domain.universo_classificavel",
+            "ELIMINADA",
+            "ELIMINADA_POR_OUTRO_NOME",
+            {"posicoes", "sem_posicao"},
+        ),
+        (
+            "processo_seletivo.classificacao.domain.desempate",
+            "MAIOR_PRIMEIRO",
+            frozenset(),
+            {"posicoes"},
+        ),
+        (
+            "processo_seletivo.classificacao.domain.universo_classificavel",
+            "_motivo_da_pontuacao_ausente",
+            lambda *_: "Sem nota.",
+            {"sem_posicao"},
+        ),
+    ],
+    ids=["eliminacao-ignorada", "criterio-invertido", "motivo-reescrito"],
+)
+def test_a_tabela_acusa_o_caminho_oficial_alterado(
+    com_criterios, monkeypatch, modulo, atributo, desvio, chaves
+):
+    cenario, inscricoes = com_criterios
+    esperado = esperado_com_criterios(cenario, inscricoes)
+    monkeypatch.setattr(f"{modulo}.{atributo}", desvio)
+
+    obtido = retrato(_calcular(cenario))
+
+    assert {item.split(":")[0] for item in divergencias(obtido, esperado)} == chaves
