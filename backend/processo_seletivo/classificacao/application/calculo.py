@@ -7,7 +7,7 @@ traria uma cópia do JSON inteiro do Edital por Resultado sem alterar a contagem
 
 from collections import defaultdict
 
-from processo_seletivo.classificacao.domain.combinacao import SEM_PONTUACAO, combinar
+from processo_seletivo.classificacao.domain import universo_classificavel
 from processo_seletivo.classificacao.domain.desempate import ordenar
 from processo_seletivo.editais.domain.recortes import normalizar_recorte
 from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
@@ -130,59 +130,25 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
             fato["valor_data"] if fato["valor_data"] is not None else fato["valor_inteiro"]
         )
 
-    classificaveis, sem_posicao = [], []
-    for inscricao in inscricoes:
-        da_inscricao = resultados_por_inscricao[inscricao["id"]]
-        pontuacoes = {
-            str(resultado["etapa_id"]): resultado["pontuacao"] for resultado in da_inscricao
-        }
-        base = {
+    # **A decisão sobre quem tem posição mora em `universo_classificavel`**, que a prévia também
+    # chama (094, D-004): uma montagem só do universo, e não duas que divergiriam em silêncio. Aqui
+    # ficam as consultas — e a ordem dos Resultados de cada inscrição, que é a do `order_by` acima
+    # e decide o colapso por Etapa.
+    inscritos = [
+        {
             "inscricao_id": str(inscricao["id"]),
             "protocolo": inscricao["protocolo"],
             "nome": inscricao["nome"],
             "identity_subject": inscricao["identity_subject"],
             "modalidade_id": (str(inscricao["modality_id"]) if inscricao["modality_id"] else None),
-            "pontuacoes": pontuacoes,
             "fatos": fatos_por_inscricao[inscricao["id"]],
-            "resultados": [str(resultado["id"]) for resultado in da_inscricao],
+            "resultados": resultados_por_inscricao[inscricao["id"]],
         }
-        eliminacao = _eliminacao_mais_recente(da_inscricao, etapas)
-        if eliminacao is not None:
-            sem_posicao.append(
-                {
-                    **base,
-                    "posicao": None,
-                    "pontuacao": None,
-                    "consequencia": eliminacao["consequencia"],
-                    "motivo": eliminacao["motivo"],
-                    "empate_residual": False,
-                    "separado_por": None,
-                }
-            )
-            continue
-
-        pontuacao = combinar(marco, etapas, pontuacoes)
-        if pontuacao is SEM_PONTUACAO:
-            sem_posicao.append(
-                {
-                    **base,
-                    "posicao": None,
-                    "pontuacao": None,
-                    "consequencia": "",
-                    "motivo": _motivo_da_pontuacao_ausente(enumeradas, pontuacoes, etapas),
-                    "empate_residual": False,
-                    "separado_por": None,
-                }
-            )
-            continue
-        classificaveis.append(
-            {
-                **base,
-                "pontuacao": pontuacao,
-                "consequencia": ResultadoEtapa.Consequencia.HABILITADA,
-                "motivo": "",
-            }
-        )
+        for inscricao in inscricoes
+    ]
+    classificaveis, sem_posicao = universo_classificavel.preparar(
+        marco, etapas, inscritos, recorte=recorte
+    )
 
     posicoes = ordenar(classificaveis, marco.get("tiebreakers") or [])
     return {
@@ -247,27 +213,6 @@ def _fatos_consumidos(marco):
         for criterio in marco.get("tiebreakers") or []
         if (criterio.get("parameters") or {}).get("factId")
     }
-
-
-def _eliminacao_mais_recente(resultados, etapas):
-    eliminadas = [
-        item for item in resultados if item["consequencia"] == ResultadoEtapa.Consequencia.ELIMINADA
-    ]
-    if not eliminadas:
-        return None
-    return max(
-        eliminadas,
-        key=lambda item: (etapas.get(str(item["etapa_id"])) or {}).get("order") or 0,
-    )
-
-
-def _motivo_da_pontuacao_ausente(enumeradas, pontuacoes, etapas):
-    faltantes = [
-        (etapas.get(etapa_id) or {}).get("name") or etapa_id
-        for etapa_id in enumeradas
-        if pontuacoes.get(etapa_id) is None
-    ]
-    return "Sem pontuação nas Etapas enumeradas: " + ", ".join(faltantes) + "."
 
 
 def _resumo_do_universo(edital, perfil, marco, versao, inscricoes, resultados):

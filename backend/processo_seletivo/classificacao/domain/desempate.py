@@ -83,38 +83,53 @@ def _grupos_por_valor(criterio, grupo):
     return saida
 
 
-def _particionar(grupo, criterios):
+def _particionar(grupo, criterios, trajetoria=()):
     """O grupo, quebrado pelo primeiro critério que o particiona, recursivamente.
 
-    Devolve lista de `(subgrupo, criterio_que_separou)`. Um critério que não particiona **não
-    encerra a sequência**: o próximo é oferecido ao mesmo grupo (FR-072).
+    Devolve lista de `(subgrupo, trajetoria)`. Um critério que não particiona **não encerra a
+    sequência**: o próximo é oferecido ao mesmo grupo (FR-072).
+
+    A trajetória é o caminho do subgrupo — cada critério oferecido a ele ou a um grupo que o
+    continha, com o que fez: `("separou", criterio, grupo)` ou `("nao_separou", criterio, grupo)`.
+    O critério que separou, que o ato grava, é o último `separou` dela. Registrar o caminho inteiro
+    custa uma tupla por critério oferecido, e é o que deixa a prévia explicar a ordem sem fazer uma
+    segunda partição por fora (094, D-011).
     """
     if len(grupo) <= 1:
-        return [(grupo, None)]
+        return [(grupo, trajetoria)]
     ordenados = sorted(criterios, key=lambda item: item.get("order") or 0)
     for indice, criterio in enumerate(ordenados):
         if not particiona_o_grupo(criterio, grupo):
+            trajetoria = (*trajetoria, ("nao_separou", criterio, grupo))
             continue
         saida = []
+        separou = (*trajetoria, ("separou", criterio, grupo))
         for subgrupo in _grupos_por_valor(criterio, grupo):
-            saida.extend(
-                (sub, quem or criterio)
-                for sub, quem in _particionar(subgrupo, ordenados[indice + 1 :])
-            )
+            saida.extend(_particionar(subgrupo, ordenados[indice + 1 :], separou))
         return saida
-    return [(grupo, None)]
+    return [(grupo, trajetoria)]
 
 
-def ordenar(participantes, criterios):
-    """Os classificáveis em ordem, com posição, empate residual e o critério que separou.
+def _ultimo_que_separou(trajetoria):
+    return next(
+        (criterio for passo, criterio, _ in reversed(trajetoria) if passo == "separou"), None
+    )
 
-    **Partição sucessiva de grupos, e não comparação par a par.** A pontuação combinada separa
-    primeiro; dentro de cada grupo empatado, cada critério publicado é oferecido na ordem, e o
-    primeiro que particiona o grupo o quebra em subgrupos — sobre os quais os critérios seguintes
-    são oferecidos de novo. Um critério que não particiona não encerra a sequência.
 
-    É essa forma que torna a ordem **transitiva**, e portanto determinística: ela não depende de
-    comparar pares, e por isso não pode ter ciclo (FR-070, FR-071, FR-072).
+def ordenar_com_trajetoria(participantes, criterios):
+    """`ordenar`, com o caminho que levou cada um à sua posição (094, D-011).
+
+    Cada item traz, além do que `ordenar` devolve, `trajetoria` — a lista de
+    `(passo, criterio, grupo)` na ordem em que os critérios foram oferecidos ao grupo dele — e
+    `grupo_da_pontuacao`, os participantes com a mesma pontuação combinada.
+
+    **É uma partição só.** `ordenar` é esta função sem as duas chaves, e não uma segunda
+    implementação: recompor a trajetória fora daqui seria outra ordenação, que poderia discordar da
+    oficial em silêncio. As chaves também não vão para `ordenar` direto, porque a saída dela chega à
+    emissão do ato, e uma chave com listas de participantes viajaria até onde ninguém a espera.
+
+    **A ordem dos critérios é a norma.** Eles são aplicados na sequência que o Edital publicou;
+    o elaborador declara quais existem e com quais parâmetros, e o código só os aplica (D-004).
     """
     por_pontuacao = {}
     for participante in participantes:
@@ -127,23 +142,47 @@ def ordenar(participantes, criterios):
         valor = par[1][0].get("pontuacao")
         return Decimal("0") if valor is None else Decimal(str(valor))
 
-    grupos = []
-    for _, grupo in sorted(por_pontuacao.items(), key=_do_maior_para_o_menor, reverse=True):
-        grupos.extend(_particionar(grupo, criterios))
-
     resultado = []
-    for grupo, separou in grupos:
-        # A posição é quantos estão à frente mais um: o grupo anterior consome as posições que
-        # ocupou, e este começa na seguinte — `1, 1, 3` (FR-026).
-        posicao = len(resultado) + 1
-        empatado = len(grupo) > 1
-        for item in grupo:
-            resultado.append(
-                {
-                    **item,
-                    "posicao": posicao,
-                    "separado_por": separou,
-                    "empate_residual": empatado,
-                }
-            )
+    for _, grupo in sorted(por_pontuacao.items(), key=_do_maior_para_o_menor, reverse=True):
+        for subgrupo, trajetoria in _particionar(grupo, criterios):
+            # A posição é quantos estão à frente mais um: o grupo anterior consome as posições que
+            # ocupou, e este começa na seguinte — `1, 1, 3` (FR-026).
+            posicao = len(resultado) + 1
+            empatado = len(subgrupo) > 1
+            separou = _ultimo_que_separou(trajetoria)
+            for item in subgrupo:
+                resultado.append(
+                    {
+                        **item,
+                        "posicao": posicao,
+                        "separado_por": separou,
+                        "empate_residual": empatado,
+                        "trajetoria": list(trajetoria),
+                        "grupo_da_pontuacao": grupo,
+                    }
+                )
     return resultado
+
+
+def ordenar(participantes, criterios):
+    """Os classificáveis em ordem, com posição, empate residual e o critério que separou.
+
+    **Partição sucessiva de grupos, e não comparação par a par.** A pontuação combinada separa
+    primeiro; dentro de cada grupo empatado, cada critério publicado é oferecido na ordem, e o
+    primeiro que particiona o grupo o quebra em subgrupos — sobre os quais os critérios seguintes
+    são oferecidos de novo. Um critério que não particiona não encerra a sequência.
+
+    É essa forma que torna a ordem **transitiva**, e portanto determinística: ela não depende de
+    comparar pares, e por isso não pode ter ciclo (FR-070, FR-071, FR-072).
+
+    É `ordenar_com_trajetoria` sem `trajetoria` e `grupo_da_pontuacao`: a saída daqui chega ao ato,
+    e o caminho da partição é só da prévia.
+    """
+    return [
+        {
+            chave: valor
+            for chave, valor in item.items()
+            if chave not in ("trajetoria", "grupo_da_pontuacao")
+        }
+        for item in ordenar_com_trajetoria(participantes, criterios)
+    ]
