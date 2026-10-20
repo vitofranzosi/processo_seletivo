@@ -93,26 +93,51 @@
     return campo.type === "checkbox" ? (campo.checked ? campo.value : "") : campo.value;
   }
 
+  /* Caixas que dividem o `name` são um grupo, e valem pelas marcadas — como a lista múltipla, que
+     era o que as Etapas do marco foram até virarem caixas. Guardadas caixa a caixa, a última
+     sobrescrevia as outras: o lido dizia "" com duas Etapas marcadas, e a comparação com o
+     renderizado acusava diferença onde não havia. A caixa sozinha continua valendo pelo `value`. */
+  function caixasPorNome() {
+    var quantas = {};
+    Array.prototype.forEach.call(form.elements, function (campo) {
+      if (campo.type === "checkbox" && campo.name) {
+        quantas[campo.name] = (quantas[campo.name] || 0) + 1;
+      }
+    });
+    return quantas;
+  }
+
+  function anotar(destino, chave, campo, emGrupo) {
+    if (!emGrupo) {
+      destino[chave] = valorDe(campo);
+      return;
+    }
+    if (!destino[chave]) destino[chave] = [];
+    if (campo.checked) destino[chave].push(campo.value);
+  }
+
   function ler() {
     var linhas = {};
     var ordem = [];
     var simples = {};
+    var caixas = caixasPorNome();
     Array.prototype.forEach.call(form.elements, function (campo) {
       if (!campo.name || IGNORADOS.indexOf(campo.name) >= 0) return;
       // Rádio não marcado não tem escolha a guardar: os do grupo dividem o `name`, e ler todos
       // fazia o último sobrescrever o escolhido — o rascunho registrava sempre a última opção da
       // lista, e mudar de opção nem marcava o formulário como não enviado.
       if (campo.type === "radio" && !campo.checked) return;
+      var emGrupo = campo.type === "checkbox" && caixas[campo.name] > 1;
       var partes = campo.name.match(/^([a-z]+)-(\d+)-(\w+)$/);
       if (!partes) {
-        simples[campo.name] = valorDe(campo);
+        anotar(simples, campo.name, campo, emGrupo);
         return;
       }
       if (!linhas[partes[2]]) {
         linhas[partes[2]] = {};
         ordem.push(partes[2]);
       }
-      linhas[partes[2]][partes[3]] = valorDe(campo);
+      anotar(linhas[partes[2]], partes[3], campo, emGrupo);
     });
     return {
       simples: simples,

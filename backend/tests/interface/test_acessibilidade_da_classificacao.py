@@ -93,12 +93,12 @@ def test_nenhum_campo_obrigatorio_e_renderizado_fora_da_tela(estado):
 
 def test_o_marco_de_sorteio_nao_exige_etapa_na_tela():
     """FR-432 na folha: a exigência sai junto com a regra que deixou de valer."""
-    seletor = re.search(
-        r'<select[^>]*name="marco-p0-0-stages"[^>]*>', _cartao(orderProduction="POR_SORTEIO")
+    caixas = re.findall(
+        r'<input[^>]*name="marco-p0-0-stages"[^>]*>', _cartao(orderProduction="POR_SORTEIO")
     )
 
-    assert seletor is not None
-    assert "required" not in seletor.group(0)
+    assert len(caixas) == 2
+    assert not [caixa for caixa in caixas if "required" in caixa]
 
 
 # --- Nenhuma ajuda visível dentro dos cartões de composição (030, FR-428) --------------------

@@ -42,6 +42,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
 from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
 from processo_seletivo.classificacao.application.corte import (
     calcular_corte,
@@ -200,6 +201,7 @@ from processo_seletivo.publicacoes.application.selectors import (
 )
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.elevacao import elevar
+from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.recursos.application import admitir as recursos_admitir
@@ -2961,6 +2963,12 @@ def _etapas_e_fatos_do_edital(edital):
             # arquivo, e acrescentar o campo em três deixaria o cartão mudo numa das rotas —
             # justamente o fragmento recomposto, que é o que dá o "no momento em que enumera".
             "tem_peso": etapa.weight is not None,
+            # **O peso escrito ao lado da caixa**, como o documento o escreve (`_etapa_com_o_peso`):
+            # quem escolhe as Etapas de uma soma ponderada decide sobre os fatores, e eles foram
+            # declarados três passos antes. É dado do Edital, e não ajuda — a FR-428 da 030 fica
+            # como está. A Etapa decisória não pondera: é porta (015, FR-074), e diz-se isso.
+            "peso": humano.decimal(etapa.weight),
+            "nao_pontua": etapa.forma == Forma.DECISORIA,
         }
         for etapa in edital.etapas.filter(classificatory=True).order_by("order")
     ]
@@ -3019,6 +3027,16 @@ def _marco_novo(edital, indice, *, marcos_na_tela=0):
                 "corte_padrao": True,
             }
         )
+    # **A Etapa, quando só uma pode entrar.** Com uma Etapa classificatória no Edital, "quais
+    # entram na ordem" tem resposta dedutível — e a 030 não pergunta o que já se sabe (SC-139). O
+    # marco nasce com ela, e o cartão a diz numa frase em vez de oferecê-la como escolha. Só aqui,
+    # pela mesma razão do arredondamento: marco já declarado não é alcançado (FR-421).
+    if edital is not None:
+        classificatorias = list(
+            edital.etapas.filter(classificatory=True).values_list("id", flat=True)[:2]
+        )
+        if len(classificatorias) == 1:
+            novo["etapas"] = [str(classificatorias[0])]
     perfil = None if edital is None else edital.perfis.filter(pk=indice).first()
     if perfil is None:
         return novo

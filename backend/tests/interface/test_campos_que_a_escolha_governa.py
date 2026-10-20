@@ -279,10 +279,14 @@ def test_sem_etapa_classificatoria_o_seletor_diz_o_que_fazer(client, elaborando)
     assert not re.search(r'name="marco-[^"]*-stages"[^>]*required', corpo)
 
 
-def test_com_etapa_classificatoria_o_seletor_volta_a_ser_seletor(client, com_etapas):
+def test_com_etapa_classificatoria_o_campo_diz_qual_entra(client, com_etapas):
+    """Com uma Etapa classificatória só, o marco novo nasce com ela, dita numa frase (030, SC-139).
+
+    As caixas, com duas ou mais, estão em `test_etapas_do_marco_em_caixas.py`.
+    """
     corpo = marco_de(client, com_etapas)
 
-    assert re.search(r'name="marco-[^"]*-stages"[^>]*multiple', corpo)
+    assert re.search(r'name="marco-[^"]*-stages" value="[^"]+"', corpo)
     assert "Prova didática" in corpo
 
 
