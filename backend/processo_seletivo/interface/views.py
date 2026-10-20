@@ -3128,6 +3128,69 @@ def fragmento_marco_recomposto(request, indice, sub):
     )
 
 
+@require_http_methods(["GET"])
+def fragmento_previa_da_classificacao(request, indice, sub):
+    """A prévia da classificação do marco `sub` do Perfil `indice` (094).
+
+    **Só leitura e cálculo** (FR-2234): o marco vem do formulário — o que está digitado agora, pelo
+    mesmo leitor da gravação —, as Etapas, os fatos e o quadro vêm do rascunho gravado, e os
+    candidatos são fictícios. Nenhuma escrita, nenhum ato, nenhum evento de trilha: a prévia existe
+    só nesta resposta.
+
+    **A autorização é a dos demais fragmentos da composição** (FR-2235): `_edital_do_fragmento`
+    recusa o Edital fora do escopo com 404, como a tela. Sem Edital na query, ou com um Perfil que
+    o rascunho ainda não tem, não há o que simular, e o painel diz isso — é estado da tela, e não
+    recurso inexistente.
+    """
+    from processo_seletivo.classificacao.application.corte import linha_do_quadro
+    from processo_seletivo.classificacao.domain.universo import por_identidade
+    from processo_seletivo.interface import previa_da_classificacao as previa
+
+    edital = _edital_do_fragmento(request)
+    if edital is None:
+        return HttpResponse(status=204)
+    # O snapshot é o conteúdo do rascunho na forma publicada — a mesma que a etapa monta para as
+    # pendências, e a mesma que o caminho oficial lê da versão publicada. Lidas dele, Etapas e
+    # pesos chegam à prévia com a grafia que o motor recebe de verdade.
+    snapshot = edital_snapshot(edital)
+    perfil = por_identidade(snapshot.get("profiles"), indice)
+    try:
+        marcos = [
+            {**marco, "sub": chave}
+            for chave, marco in forms.marcos_do_formulario(request.GET, indice)
+        ]
+    except (ValueError, KeyError):
+        marcos = []
+    if perfil is None or not any(marco["sub"] == str(sub) for marco in marcos):
+        return render(
+            request,
+            "interface/_previa_da_classificacao.html",
+            {"previa_url": request.path, "indice": indice, "sem_marco": True},
+        )
+    linha = linha_do_quadro(snapshot, perfil_id=perfil["id"], lista_id=None)
+    contexto = previa.contexto(
+        perfil=perfil,
+        marcos=marcos,
+        sub=str(sub),
+        etapas=snapshot.get("stages") or [],
+        fatos=perfil.get("declaredFacts") or [],
+        vagas=(linha or {}).get("immediateVacancies"),
+        dados=request.GET,
+        edital=edital,
+        indice=indice,
+    )
+    return render(request, "interface/_previa_da_classificacao.html", contexto)
+
+
+@require_http_methods(["GET"])
+def fragmento_previa_da_classificacao_fechar(request):
+    """O painel vazio, e o anúncio de que fechou. O foco volta ao botão pelo script estático."""
+    return HttpResponse(
+        '<p id="anuncio-da-previa" class="oculto" role="status" aria-live="polite" '
+        'hx-swap-oob="true">Prévia fechada.</p>'
+    )
+
+
 def fragmento_criterio(request, indice, sub):
     """Um nível mais fundo: o critério pertence ao marco, e não ao Perfil.
 

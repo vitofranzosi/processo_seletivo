@@ -69,6 +69,7 @@ def rascunho_com_marco(
     criterios=None,
     regra_da_etapa=None,
     janela_recursal=None,
+    regra_de_corte=None,
 ):
     """O rascunho da 015: duas Etapas, a segunda enumerada por um marco classificatório.
 
@@ -102,7 +103,7 @@ def rascunho_com_marco(
             # O marco final corta sem governar Etapa (046, `FR-752`): sem ele, o Perfil não
             # convocaria ninguém e não seria publicado. O intermediário continua sem corte — é o
             # Cenário D, o marco que legitimamente não corta num Perfil que corta.
-            "cutRule": corte_que_nao_governa(),
+            "cutRule": regra_de_corte or corte_que_nao_governa(),
         }
     ]
     if janela_recursal is not None:
@@ -152,14 +153,20 @@ def montar_marco(
     fatos=None,
     regra_da_etapa=None,
     janela_recursal=None,
+    regra_de_corte=None,
 ):
-    """Edital publicado, comissão constituída e banca alocada nas duas Etapas."""
+    """Edital publicado, comissão constituída e banca alocada nas duas Etapas.
+
+    `regra_de_corte` entrou com a `094`: a equivalência da prévia corta pelo caminho oficial, e
+    `calcular_corte` lê a regra do conteúdo publicado — trocá-la depois exigiria Retificação.
+    """
     rascunho = rascunho_com_marco(
         seed,
         com_intermediario=com_intermediario,
         criterios=criterios,
         regra_da_etapa=regra_da_etapa,
         janela_recursal=janela_recursal,
+        regra_de_corte=regra_de_corte,
     )
     if fatos is not None:
         rascunho["profiles"][0]["declaredFacts"] = fatos

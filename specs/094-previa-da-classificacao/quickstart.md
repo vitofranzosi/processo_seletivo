@@ -40,19 +40,42 @@ A comparação com a primeira versão, nos três cenários e com as cinco pergun
 
 As capturas validadas em 19/10 estão em `prototipo/capturas/v1/`, `v2/` e `v3/`.
 
-## 2. A feature (depois da implementação)
+## 2. A feature (implementada em 20/10)
 
-**Pré-requisitos**: banco preparado (`make preparar`), `INTERFACE_SELETOR_IDENTIDADE=true`, um Edital em
-elaboração com ao menos uma Etapa classificatória com peso, um Perfil com quadro de vagas e um marco
-pela pontuação.
+**O ambiente da validação** — o banco próprio, o Edital de demonstração e o servidor na porta 8095. As
+senhas são as do `.env.example`, e os papéis são os do cluster local:
 
-1. Etapa Classificação da composição → cartão do marco → **Simular classificação**. O painel nomeia o
-   Perfil e o marco, e os candidatos estão marcados como fictícios.
-2. Repita a tabela da seção 1 sobre o cartão real. Os números devem ser os mesmos do protótipo para a
-   mesma configuração — os dois chamam o mesmo motor.
-3. Recarregue a página: o marco continua como estava gravado. Nada do que foi alterado só para ver a
+```bash
+cd backend && createdb ps_094_ui
+cd backend && LC_ALL=pt_BR.UTF-8 DB_HOST=localhost DB_NAME=ps_094_ui DB_MIGRATION_USER=processo_seletivo_owner DB_MIGRATION_PASSWORD=change-me DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me make preparar POSTGRES_USER=$USER DB_NAME=ps_094_ui
+```
+
+```bash
+cd backend && LC_ALL=pt_BR.UTF-8 DB_HOST=localhost DB_NAME=ps_094_ui DJANGO_SETTINGS_MODULE=config.settings.development DB_ROLE=runtime DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me uv run python manage.py shell < ../specs/094-previa-da-classificacao/ambiente-de-compreensao.py
+```
+
+O servidor é a entrada `interface-094` do `.claude/launch.json`. O `make preparar` imprime
+`40 de 40` na segunda passada; `0 de 40` é a segunda passada que não rodou. O banco de 20/10 recebeu
+também o `seed_demo` (com as mesmas variáveis e `manage.py seed_demo`), antes do script; o roteiro só
+usa o Edital 94/2026, e não se conferiu se o ambiente de demonstração abre sem o `seed_demo`.
+
+**O percurso**:
+
+1. Ambiente de demonstração → Elaborador → Edital 94/2026 → Elaborar → **Classificação** → cartão do
+   marco → **Simular classificação**. O painel nomeia o Perfil e o marco, abre na jornada, e os
+   candidatos estão marcados como fictícios.
+2. Mude o desfecho do empate no cartão: o painel recalcula sobre os mesmos 48 candidatos e diz o que
+   mudou, sem tirar o foco do campo.
+3. **Explorar classificação e desempate** → o detalhe; **Voltar ao processo** → a jornada; **Fechar** → o
+   foco volta ao botão do cartão.
+4. Recarregue a página: o marco continua como estava gravado. Nada do que foi alterado só para ver a
    prévia foi salvo.
-4. Marco por sorteio: o botão não aparece.
+5. Marco por sorteio: o botão não aparece.
+6. Repita em 375 px: o painel cobre a tela, e as tabelas viram blocos, sem rolagem lateral.
+
+As capturas de 20/10, em desktop e em 375 px, estão em
+[`capturas-da-interface/`](capturas-da-interface/). O roteiro com pessoas é o
+[roteiro de compreensão](roteiro-de-compreensao.md).
 
 **Verificação automática**:
 
@@ -63,7 +86,7 @@ cd backend && make lint check test-pg
 Os testes da feature, isolados:
 
 ```bash
-cd backend && uv run pytest tests/unit/classificacao/test_universo_classificavel.py tests/unit/classificacao/test_ordenar_com_trajetoria.py tests/unit/classificacao/test_cenarios_da_previa.py tests/integration/classificacao/test_previa_equivale_ao_oficial.py tests/integration/classificacao/test_previa_sem_efeito.py tests/interface/test_previa_da_classificacao.py
+cd backend && uv run pytest tests/unit/classificacao/test_universo_classificavel.py tests/unit/classificacao/test_ordenar_com_trajetoria.py tests/unit/classificacao/test_cenarios_da_previa.py tests/unit/classificacao/test_jornada.py tests/unit/classificacao/test_previa.py tests/integration/classificacao/test_previa_equivale_ao_oficial.py tests/interface/test_previa_da_classificacao.py
 ```
 
 Os de integração e interface pedem PostgreSQL: `TEST_DB_ENGINE=postgresql` **e** `DB_USER` (ver

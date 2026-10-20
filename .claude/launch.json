@@ -399,6 +399,12 @@
       "runtimeArgs": ["-m", "http.server", "8090", "--bind", "127.0.0.1", "--directory", "docs/visao-sistema"],
       "port": 8090,
       "url": "http://localhost:8090"
+    },
+    {
+      "name": "interface-094",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_094_ui DB_HOST=localhost DB_ROLE=runtime DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8095"],
+      "port": 8095
     }
   ]
 }
