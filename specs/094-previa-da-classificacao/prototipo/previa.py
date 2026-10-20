@@ -689,7 +689,7 @@ def comparar(anterior, atual, nomes):
         mudancas.append(f"Corte: {corte_legivel(a_corte)} → {corte_legivel(b_corte)}.")
     avancam = lambda cod: sum(1 for c in cod if c in (PROGRIDE, PELO_EMPATE, SEGUE))  # noqa: E731
     if avancam(a_cod) != avancam(b_cod):
-        mudancas.append(f"Progridem: {avancam(a_cod)} → {avancam(b_cod)}.")
+        mudancas.append(f"Avançam: {avancam(a_cod)} → {avancam(b_cod)}.")
     legivel = {"possivel": "possível", "nao-avaliada": "não avaliada"}
 
     def vagas_legivel(valor):

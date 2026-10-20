@@ -190,6 +190,53 @@ details.completa summary,details.como-calcula summary{cursor:pointer;font-weight
   border-radius:.3rem}
 .incompleto ul{margin:.25rem 0;padding-left:1.1rem}
 
+/* 8. A jornada (terceira rodada): as Etapas e os marcos do Perfil, na ordem do Edital. As Etapas
+   são caixas numeradas; os marcos, passagens entre elas, com a borda à esquerda; o simulado abre. */
+.jornada{list-style:none;padding:0;margin:.5rem 0 .75rem}
+.ponto{position:relative;border:1px solid var(--borda);border-radius:.45rem;padding:.6rem .8rem;
+  background:var(--branco);margin:0 0 1.6rem}
+.ponto + .ponto::before{content:"↓";position:absolute;left:50%;top:-1.45rem;
+  transform:translateX(-50%);color:var(--texto-fraco);font-weight:700}
+.ponto:last-child{margin-bottom:0}
+.ponto-cabeca{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;
+  flex-wrap:wrap}
+.ponto h3{font-size:1rem;margin:0}
+.ponto p{margin:.3rem 0}
+.ponto.marco{border-left:5px solid var(--texto-fraco);background:var(--fundo)}
+.ponto.marco-selecionado{border-color:var(--verde);border-left-color:var(--verde);
+  background:var(--branco);box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.ponto.porta{border-style:dashed}
+.selo-ponto{font-size:.72rem;font-weight:700;padding:.05rem .45rem;border-radius:1rem;
+  white-space:nowrap}
+.selo-simulado{background:var(--verde-claro);color:var(--verde-escuro)}
+.selo-parcial{background:var(--azul-fundo);color:var(--azul)}
+.selo-contexto{background:var(--cinza-fundo);color:var(--texto-fraco)}
+.selo-indeterminado{background:var(--amarelo-fundo);color:var(--amarelo)}
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.5rem;
+  margin:.5rem 0}
+.numero{background:var(--fundo);border-radius:.4rem;padding:.5rem .7rem;margin:0;
+  display:flex;flex-direction:column}
+.numero strong{font-size:2rem;line-height:1.1}
+.numero span{font-size:.9rem;color:var(--texto-fraco)}
+.numero-dentro strong{color:var(--verde)}
+.numero-fraco strong{color:var(--texto-fraco)}
+.regra{font-size:.9rem;color:var(--texto-fraco)}
+.bloqueio{border-left:4px solid var(--amarelo);background:var(--amarelo-fundo);padding:.45rem .6rem;
+  border-radius:.3rem}
+.aviso-curto{font-size:.88rem;color:var(--amarelo)}
+.mudou-curto{font-size:.88rem;color:var(--azul)}
+.fim-da-jornada{font-size:.88rem;color:var(--texto-fraco)}
+.destaque{font-size:1.05rem}
+.acao-largo{display:block;width:100%;margin:.5rem 0 0;font:inherit;font-weight:600;padding:.5rem;
+  border:1px solid var(--texto-fraco);border-radius:2rem;background:var(--branco);cursor:pointer}
+.acao-largo:hover{background:var(--fundo)}
+.voltar{font:inherit;padding:.3rem .7rem;border:1px solid var(--borda);border-radius:.3rem;
+  background:var(--branco);cursor:pointer}
+.limites{font-size:.85rem;color:var(--texto-fraco);border-top:1px solid var(--borda);
+  padding-top:.4rem}
+.limites summary{cursor:pointer;font-weight:600;color:var(--texto)}
+.limites ul{padding-left:1.1rem}
+
 /* No estreito: o fluxo em coluna, com a seta para baixo; as tabelas de linhas viram blocos. */
 @media (max-width:40rem){
   .fluxo{grid-template-columns:1fr;gap:1.3rem}

@@ -1,5 +1,11 @@
 # Protótipo da 094 — prévia da classificação
 
+**Terceira versão, de 19/10/2026.** O painel abre na **jornada do Perfil** — as Etapas com os nomes
+cadastrados e os dois marcos, na ordem do Edital, cada ponto dizendo se é simulado, se só quem chega é
+calculado, se não é calculado aqui ou se é indeterminado (`jornada.py`). O simulador da segunda versão
+é o detalhe do marco, a um clique. As capturas estão em `capturas/v3/`, e o que a prévia simula, e o
+que não, em [`../variaveis-simuladas.md`](../variaveis-simuladas.md).
+
 **Segunda versão, de 19/10/2026.** A primeira demonstrava o algoritmo; esta começa pela consequência —
 manchete, fluxo classificação → corte → Etapa seguinte, apuração das vagas como hipótese, a fronteira, os
 empates lado a lado — e usa por padrão uma **população estável**, que não muda quando a regra muda, com
@@ -38,7 +44,9 @@ Se a trajetória do esboço divergir de `ordenar`, o painel diz, em vermelho, qu
 - `servidor.py` — rotas `/`, `/previa`, `/fechar`, `/estatico/…`, `/saude`.
 - `previa.py` — população estável, casos-limite, esboço da extração, trajetória, corte, fronteira das
   vagas, consequências e o estado comparável.
-- `pagina.py` — o cartão, o painel e as frases.
+- `pagina.py` — os dois cartões, o painel (jornada e detalhe) e as frases.
+- `jornada.py` — os pontos da jornada do Perfil, derivados da configuração, sem cálculo.
 - `estatico/` — a folha e o script de foco. Nenhum estilo ou script inline.
-- `capturas/v1/` e `capturas/v2/` — desktop e 375 px das duas versões, validados em 19/10/2026.
+- `capturas/v1/`, `capturas/v2/` e `capturas/v3/` — desktop e 375 px das três versões, validados em
+  19/10/2026.
 - `comparacao-v1-v2.md` — os três cenários de comparação e as cinco perguntas.

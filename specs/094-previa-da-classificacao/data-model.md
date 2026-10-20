@@ -82,6 +82,20 @@ Saída de `classificacao/application/previa.simular(...)`; a interface a transfo
 | `aviso_das_vagas` | dicionário | `avaliado`, `para`, `posicao`, `quantas`, ou `motivo` de não avaliado |
 | `faltas` | lista de texto | o que falta declarar; quando não vazia, nada mais é calculado (FR-2227) |
 
+## Ponto da jornada *(terceira rodada)*
+
+Saída de `jornada(etapas, marcos, selecionado)` (R-013). Derivado da configuração; não é gravado.
+
+| Campo | Conteúdo |
+|---|---|
+| `tipo` | `avaliacoes`, `porta`, `etapa_alimentada`, `fora` ou `marco` |
+| `estado` | `simulado`, `parcial`, `contexto` ou `indeterminado`, em relação ao marco selecionado |
+| `etapas` / `etapa` | a Etapa, ou as Etapas agrupadas, com o nome cadastrado |
+| `marco` | o marco, com `governada`, `terminal`, `corta`, `por_sorteio`, `continua`, as Etapas já mostradas e as não simuladas |
+| `portas_antes` | as Etapas decisórias entre o marco e a Etapa que ele alimenta — o que faz o "até N" |
+
+O único número da jornada vem da prévia do marco selecionado; a função não calcula.
+
 ## Mudança *(segunda rodada)*
 
 Saída de `comparar(anterior, atual)` (R-010), ou nada quando os estados são de populações ou modos

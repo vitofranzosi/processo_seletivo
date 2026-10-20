@@ -27,6 +27,14 @@ apuração das vagas como hipótese, começa a tabela pelos limites e compara os
 revista), e o estado anterior viaja no painel para dizer o que mudou (R-010). A US3 passou a P1. A
 comparação com a primeira versão está em `prototipo/comparacao-v1-v2.md`.
 
+**Terceira rodada (19/10).** A visão principal passa a ser a **jornada do Perfil** — Etapas e marcos
+na ordem do Edital, derivados de uma função pura sobre o snapshot, com o estado de cada ponto (R-013,
+D-015) —, e a prévia da segunda rodada vira o detalhe do marco. A 094 continua calculando só o marco
+selecionado: o encadeamento entre marcos fica para evolução posterior (D-017, R-014). A matriz do que é
+simulado está em `variaveis-simuladas.md`, e o roteiro de compreensão em `roteiro-de-compreensao.md`. A
+extração das funções puras e os testes de equivalência (T003 a T009) foram autorizados à parte, e estão
+em implementação isolada, num PR próprio.
+
 ## Technical Context
 
 **Language/Version**: Python 3.13 (o `backend/pyproject.toml` do projeto)
@@ -105,7 +113,8 @@ backend/processo_seletivo/
 │   ├── domain/
 │   │   ├── universo_classificavel.py   # NOVO — preparar(...) puro, com recorte (D-004)
 │   │   ├── desempate.py                # + ordenar_com_trajetoria; ordenar passa a derivar dela (D-011)
-│   │   └── cenarios_da_previa.py       # NOVO — os cenários e os candidatos fictícios (D-003)
+│   │   ├── cenarios_da_previa.py       # NOVO — os cenários e os candidatos fictícios (D-003)
+│   │   └── jornada.py                  # NOVO — os pontos da jornada do Perfil (R-013, D-015)
 │   └── application/
 │       ├── calculo.py                  # calcular_ordem chama universo_classificavel.preparar
 │       └── previa.py                   # NOVO — simular(marco, etapas, fatos, vagas, cenario)
@@ -126,6 +135,7 @@ backend/tests/
 │   ├── test_universo_classificavel.py
 │   ├── test_ordenar_com_trajetoria.py
 │   ├── test_cenarios_da_previa.py
+│   ├── test_jornada.py                    # a sequência, os tipos e os estados (T051)
 │   └── test_previa.py                     # a matriz do achado sobre simular
 ├── integration/classificacao/
 │   ├── test_previa_equivale_ao_oficial.py     # matriz da FR-2233 + sentinela
@@ -147,7 +157,8 @@ tela, e o vocabulário da composição é varrido lá (`test_vocabulario_da_comp
 fica na consulta e o que sai), R-003 (a irmã de `ordenar`), R-004 (fragmento e alvo do troco), R-005
 (população estável e casos-limite), R-006 (limites), R-007 (fronteira das vagas na prévia), R-008 (CSP e
 foco), R-009 (o protótipo e o que ele prova), R-010 (o que mudou), R-011 (as linhas da tabela inicial),
-R-012 (a terminologia).
+R-012 (a terminologia), R-013 (a derivação da jornada), R-014 (o que cabe na 094), R-015 (o que a
+terceira versão pegou).
 
 ### Fase 1 — Desenho
 

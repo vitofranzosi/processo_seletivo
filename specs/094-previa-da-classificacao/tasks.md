@@ -15,6 +15,11 @@ todas as histórias. Depois, uma fase por história, na ordem de prioridade da s
 hierarquia, as frases, as marcas, o agrupamento e a folha foram validados nele, no navegador, em desktop
 e 375 px — a segunda versão, de 19/10.
 
+**Terceira rodada (19/10)**: a US6 (o processo inteiro) é P1 e entra no MVP; as tarefas T050 a T055 são
+dela. **T003 a T009** — a extração e a equivalência — foram autorizadas à parte, e estão em
+implementação isolada, num PR próprio; a interface (Fases 3 a 8) espera a decisão do usuário sobre
+esta rodada.
+
 **Segunda rodada (19/10)**: a US3 passou a P1 e vem logo depois da US2; as tarefas T040 e T044 a T049 são
 da rodada de UX e estão nas fases a que pertencem, com numeração própria para não renumerar as referências
 da matriz. As tarefas da primeira versão que a rodada alterou dizem isso no texto.
@@ -101,6 +106,25 @@ oficial com os mesmos dados.
 
 ---
 
+## Phase 3A: User Story 6 — O processo seletivo inteiro (Priority: P1, terceira rodada)
+
+**Goal**: a visão principal é a jornada do Perfil, com os nomes cadastrados, o marco simulado aberto e
+o resto descrito como contexto ou indeterminado; o detalhe da US1 a um clique.
+
+**Independent Test**: num Perfil com quatro Etapas e dois marcos, a jornada lista tudo na ordem, só o
+marco selecionado tem números, e nenhum ponto indeterminado mostra número.
+
+- [ ] T051 [P] [US6] Testes de `jornada` em `backend/tests/unit/classificacao/test_jornada.py`: a sequência do Perfil de quatro Etapas e dois marcos, com cada um deles selecionado; Etapa em dois marcos aparece uma vez; porta entre o corte e a Etapa alimentada; marco sem corte; marco terminal; marco por sorteio; Etapa fora de todo marco; o caso de marcos que se cruzam fora da ordem (R-013), preso como está (FR-2247, FR-2248, FR-2251, SC-852)
+- [ ] T050 [US6] Criar `backend/processo_seletivo/classificacao/domain/jornada.py` com `jornada(etapas, marcos, selecionado)`, pura, conforme R-013 e `prototipo/jornada.py`
+- [ ] T052 [P] [US6] Testes de interface em `backend/tests/interface/test_previa_da_classificacao.py`: o painel abre na jornada; os sete cenários de aceitação da US6; nenhum número em ponto indeterminado (SC-853); "até N" com porta; a nota de que a prévia dá nota fictícia a todos na Etapa alimentada por outro marco (FR-2249); a lista do que a prévia simula e do que não (FR-2254); o Perfil nomeado (FR-2255)
+- [ ] T053 [US6] O parâmetro `vista` (`processo` ou `detalhe`) e o `marco` no fragmento da T017, e o template `_jornada_da_classificacao.html`; os botões "Explorar classificação e desempate", "Voltar ao processo" e "Simular este marco", com o `hx-include` de cada um conforme `prototipo/pagina.py` (`ESTADO_DO_PAINEL`); o recálculo mantém a vista (FR-2252)
+- [ ] T054 [US6] As regras de folha da jornada em `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css`, a partir de `prototipo/estatico/prototipo.css` (seção 8), e o foco no título em toda troca de vista, de volta ao botão do cartão certo ao fechar (`prototipo/estatico/prototipo.js`)
+- [ ] T055 [US6] O vocabulário de D-016 na jornada e no detalhe — "avança", "não avançaria nesta faixa", "poderiam participar", "posições adicionais (suplentes)", e "na faixa"/"fora da faixa" nos marcos terminais —, conferido pela T022 (FR-2253)
+
+**Checkpoint**: o elaborador vê o processo, e aprofunda o marco quando quer.
+
+---
+
 ## Phase 4: User Story 2 — Corte, progressão e recusas (Priority: P1)
 
 **Goal**: situação no corte e consequência para a Etapa seguinte em cada linha; a recusa sob `STRICT`
@@ -174,7 +198,7 @@ nomeada e resumo anunciado.
 - [ ] T036 [P] Escrever `specs/094-previa-da-classificacao/rastreabilidade.md` com cada FR e SC → tarefa → teste, completando a versão do PR da spec
 - [ ] T037 [P] Acrescentar a prévia ao `README.md` (seção da composição) e, em `CLAUDE.md`, a armadilha de que a prévia não grava nem lê inscrição real — só se a implementação a confirmar
 - [ ] T038 `cd backend && make lint check test-pg` verde; depois o roteiro 2 de `quickstart.md` no navegador do app, em desktop e 375 px, com captura
-- [ ] T039 Validação humana: o teste de uso da SC-840 e da SC-848 com ao menos cinco elaboradores, nos três cenários de `prototipo/comparacao-v1-v2.md` e com as cinco perguntas de lá, registrado em `specs/094-previa-da-classificacao/validacao-de-uso.md`. Não é tarefa de código, e fica pendente até ser feita
+- [ ] T039 Validação humana: o roteiro de `specs/094-previa-da-classificacao/roteiro-de-compreensao.md` (SC-851) e o teste de uso da SC-840 e da SC-848 com ao menos cinco elaboradores, nos três cenários de `prototipo/comparacao-v1-v2.md` e com as cinco perguntas de lá, registrado em `specs/094-previa-da-classificacao/validacao-de-uso.md`. Não é tarefa de código, e fica pendente até ser feita
 
 ---
 
@@ -188,6 +212,8 @@ nomeada e resumo anunciado.
   **Bloqueia todas as histórias.**
 - **US1 (3)**: depende do motor.
 - **US2 (4)**: depende de US1 (o painel e a view existem).
+- **US6 (3A)**: depende de US1 (o fragmento e o detalhe existem); P1 desde a terceira rodada. T051
+  antes de T050; T050 antes de T053.
 - **US3 (5)**: depende de US1; é P1 desde a segunda rodada, e entra no MVP.
 - **US4 (6)**, **US5 (7)**: dependem de US1; independentes entre si e da US3.
 - **Polish (8)**: T034 e T035 dependem de T013; T038 depende de tudo.
@@ -216,14 +242,15 @@ Task: "T010 Testes de gerar em backend/tests/unit/classificacao/test_cenarios_da
 
 ### MVP
 
-Fases 1 a 5 — motor, US1, US2 e US3. Desde a segunda rodada a US3 é P1: alterar um parâmetro e ver o
+Fases 1 a 5, com a 3A — motor, US1, US6, US2 e US3. Desde a segunda rodada a US3 é P1: alterar um parâmetro e ver o
 efeito sobre as mesmas pessoas é a proposta do simulador. A US2 é P1 porque sem ela o painel poderia
 mostrar tudo verde onde o motor recusa — e isso é pior que nenhuma prévia (FR-2222).
 
 ### Incremental
 
 1. Motor (Fase 2) → a suíte inteira verde, o caminho oficial igual.
-2. US1 + US2 + US3 → MVP; validar no navegador com os três cenários de `prototipo/comparacao-v1-v2.md`.
+2. US1 + US6 + US2 + US3 → MVP; validar no navegador com os três cenários de
+   `prototipo/comparacao-v1-v2.md` e com o roteiro de `roteiro-de-compreensao.md`.
 3. US4 → casos-limite; US5 → celular e leitor de tela.
 4. Polish → matriz de equivalência completa, sentinela, rastreabilidade, `make lint check test-pg`.
 

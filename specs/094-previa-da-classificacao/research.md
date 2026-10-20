@@ -226,3 +226,55 @@ orçamento de consulta.
 6. **Cabeçalho escondido por recorte empurrava a rolagem** da tabela a 375 px, e a primeira coluna com
    `nowrap` impedia a linha de limite de quebrar: no estreito o cabeçalho sai com `display:none`, e as
    linhas de limite e agrupadas quebram.
+
+## R-013 — A derivação da jornada *(terceira rodada)*
+
+**Decisão**: `classificacao/domain/jornada.py`, `jornada(etapas, marcos, selecionado) -> [ponto]`,
+pura, sobre o snapshot do rascunho que a etapa Classificação já monta (`edital_snapshot`). O protótipo
+tem o esboço em `prototipo/jornada.py`. Regras:
+
+- **Ordem**: a `order` das Etapas. Cada marco entra logo depois da última Etapa que enumera, que é a
+  "Etapa do marco" de `calcular_ordem`.
+- **Tipos de ponto**: `avaliacoes` (Etapas com nota que entram em algum marco, agrupadas até o marco
+  seguinte); `porta` (Etapa decisória que não entra em marco nenhum); `etapa_alimentada` (a Etapa que
+  algum marco governa); `fora` (Etapa que não entra em marco nenhum e não é decisória); `marco`.
+- **Estado** em relação ao selecionado: `simulado`, `parcial` (a Etapa que ele alimenta: quem chega é
+  calculado, as notas não), `contexto` (existe e é descrito, sem cálculo) e `indeterminado`.
+- **"Até N"**: quando há porta entre o marco e a Etapa que ele alimenta, porque a eliminação nela não é
+  simulada (variaveis-simuladas.md, seção 3).
+
+**Conferido no protótipo** com o Perfil de quatro Etapas e dois marcos: os dois marcos selecionados
+produzem as sequências esperadas, a Prova Escrita aparece uma vez embora entre nos dois marcos, e a
+Entrevista é, ao mesmo tempo, alimentada pelo primeiro marco e enumerada pelo segundo.
+
+**Não cobre** nesta fatia: Perfis cujos marcos se cruzam fora da ordem das Etapas (um marco que enumera
+uma Etapa posterior à que governa). A função os desenha na ordem das Etapas, e a T051 prende o caso com
+um teste, para que a decisão de como mostrá-los seja tomada quando houver um Edital assim.
+
+## R-014 — O impacto arquitetural: o que cabe na 094 e o que não *(terceira rodada)*
+
+| Mudança | Cabe na 094? | Por quê |
+|---|---|---|
+| Derivar a jornada da configuração (R-013) | **Sim** | Função pura sobre o snapshot que a tela já monta: nenhuma consulta nova, nenhum motor novo |
+| Vista principal (jornada) e detalhe no mesmo fragmento | **Sim** | Um parâmetro `vista` no fragmento da T017; o detalhe é a prévia da segunda rodada |
+| "Simular este marco" para outro marco do Perfil | **Sim** | O mesmo fragmento, com outro `sub`; a população é montada para o marco aberto |
+| Mostrar "até N" e "indeterminado" | **Sim** | Leitura da configuração, sem cálculo |
+| Encadear marcos: o universo do marco seguinte a partir de quem avançou no anterior | **Não** | Exige a regra de participação (`restringir_a_participantes` e o corte) reproduzida em memória, em ordem, sobre a população fictícia — hoje ela é consulta SQL. Seria uma orquestração nova |
+| Notas fictícias para Etapas posteriores ao corte, e o resultado da Classificação final a partir delas | **Não** | Depende do encadeamento, e de decidir como gerar notas fictícias "de quem chegou" |
+| Eliminação por nota mínima em Etapa com nota | **Não** | É consolidação (`013`), não classificação; a prévia teria de simular a consolidação |
+| Reservas, concomitância, ocupação, reversão | **Não** | Fatia 2 (D-008) |
+
+**A porta para o encadeamento já existe**: `universo_classificavel.preparar` recebe inscritos e
+devolve classificáveis e sem posição, e `faixa.calcular` devolve quem progrediu. Um orquestrador futuro
+encadearia as duas, marco a marco, filtrando os inscritos do marco seguinte pelo resultado do anterior —
+sem tocar no motor. É evolução, e não a 094.
+
+## R-015 — O que a terceira versão do protótipo pegou *(terceira rodada)*
+
+7. **"Simulado" na Etapa seguinte**: a Entrevista aparecia com o mesmo selo do marco calculado, quando
+   só quem chega a ela é calculado. Ganhou o estado `parcial`, "quem chega é calculado".
+8. **"Marcados na tabela" na jornada**, que não tem tabela: o quadro "O que mudou" diz "veja no
+   detalhe" quando está na jornada.
+9. **"Avança" num marco terminal**: a Classificação final não alimenta Etapa, e "avança pelo empate"
+   afirmava uma passagem que não existe. Nos marcos terminais, a prévia diz "na faixa" e "fora da faixa".
+

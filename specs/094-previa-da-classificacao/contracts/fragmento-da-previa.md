@@ -18,6 +18,7 @@ Irmã de `fragmento-marco-recomposto` (mesmo prefixo, mesmos `indice` e `sub`), 
 |---|---|
 | Query da rota | `edital` — o mesmo dos demais fragmentos da composição |
 | `hx-include` do cartão | todos os campos `marco-<indice>-<sub>-…` e `criterio-<indice>-<sub>-<n>-…` — lidos por `forms.marco_do_formulario(request.GET, indice, sub)` |
+| Rota e painel *(terceira rodada)* | `marco` (o `sub` do marco simulado; o botão de cada cartão leva o seu, e "Simular este marco" troca); `vista` (`processo`, o padrão, ou `detalhe`) |
 | Painel *(segunda rodada)* | `candidatos` (`estavel`, o padrão, ou `caso:<chave>`); `populacao` (`alvo:faixa:vagas` da montagem, só na população estável); `anterior` (o estado do cálculo anterior, para "O que mudou", R-010) |
 
 Nenhum parâmetro de Etapa, fato ou quadro: esses vêm do rascunho gravado, lidos no servidor pelo
@@ -30,7 +31,8 @@ Sempre `200 text/html`, com o conteúdo do painel e, fora de banda, o anúncio:
 
 | Estado | Conteúdo |
 |---|---|
-| Calculada *(segunda rodada)* | cabeça (título, fechar, Perfil e marco); seletor de candidatos; manchete; "O que mudou", quando comparável; fluxo de três passos e ramo da continuação; apuração das vagas como hipótese; tabela da fronteira; comparação dos empates; `<details>` da classificação completa e da explicação técnica; e, ocultos, `populacao` e `anterior` |
+| Jornada *(terceira rodada, `vista=processo`)* | cabeça ("Simulação do processo seletivo", "Exemplo fictício", o Perfil e o marco simulado); seletor de candidatos; "O que mudou"; os pontos da jornada, com o marco simulado aberto e o botão do detalhe; o que a prévia simula e o que não; e, ocultos, `marco`, `vista`, `populacao` e `anterior` |
+| Calculada *(segunda rodada; `vista=detalhe` desde a terceira)* | cabeça (título, fechar, Perfil e marco); seletor de candidatos; manchete; "O que mudou", quando comparável; fluxo de três passos e ramo da continuação; apuração das vagas como hipótese; tabela da fronteira; comparação dos empates; `<details>` da classificação completa e da explicação técnica; e, ocultos, `populacao` e `anterior` |
 | Incompleta | cabeça e a lista do que falta (FR-2227) |
 | Fora da fatia | marco por sorteio ou sem forma: a frase de que a prévia cobre marcos pela pontuação (o botão não aparece nesses casos; a resposta existe para o pedido forjado) |
 | Fechar | `GET …/previa/fechar` → corpo vazio, e o anúncio "Prévia fechada" fora de banda |

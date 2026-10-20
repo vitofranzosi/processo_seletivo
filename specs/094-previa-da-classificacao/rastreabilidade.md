@@ -31,6 +31,14 @@ marcadas com *(2ª)* e revisou as tarefas de FR-2205 a FR-2214.
 | SC-845 (recusa e aviso sempre visíveis) | T025 | T023 |
 | SC-846 (375 px) | T021 | T033 |
 | SC-847 (CSP) | T021, T032 | T033 |
+| FR-2247, FR-2248 e FR-2251 *(3ª)* (a jornada derivada, os estados, os casos não lineares) | T050 | `tests/unit/classificacao/test_jornada.py` (T051); interface (T052) |
+| FR-2249 e FR-2250 *(3ª)* (Etapa alimentada, marcos anterior e posterior) | T050, T053 | T051, T052 |
+| FR-2252 *(3ª)* (detalhe a um clique, a vista preservada) | T053, T054 | interface (T052) |
+| FR-2253 *(3ª)* (linguagem administrativa, D-016) | T055 | T022 |
+| FR-2254 e FR-2255 *(3ª)* (o que a prévia simula; o Perfil nomeado) | T053 | T052 |
 | SC-848 *(2ª)* (as cinco perguntas sem abrir detalhes) | T039 | validação humana, nos três cenários de `prototipo/comparacao-v1-v2.md` |
 | SC-849 *(2ª)* (população estável não muda) | T046 | T045 |
 | SC-850 *(2ª)* (o que mudou, sempre) | T048, T029 | T047, T049 |
+| SC-851 *(3ª)* (compreensão da jornada) | T039 | validação humana, `roteiro-de-compreensao.md` |
+| SC-852 *(3ª)* (jornada completa e na ordem) | T050 | T051 |
+| SC-853 *(3ª)* (nenhum número no indeterminado) | T050, T053 | T052 |

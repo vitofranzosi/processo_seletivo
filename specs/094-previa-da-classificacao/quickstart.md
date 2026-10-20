@@ -20,10 +20,11 @@ da tabela do achado.
 
 | Faça | Espere |
 |---|---|
-| "Simular classificação" | o painel abre à direita, pela **manchete**: "16 de 23 candidatos progridem para a Entrevista, 1 além da faixa pelo empate na 15ª…"; o título recebe o foco |
-| Leia o fluxo | Classificação (21 com posição) → Corte (Emitível, faixa de 15 = alvo 10 + 5 suplentes) → Entrevista (16 participam); abaixo, o ramo da continuação |
-| Leia o bloco tracejado | "Depois do corte: a apuração das vagas — hipótese": pararia na 10ª |
-| Troque o desfecho para "A faixa para no alvo", **sem salvar** | os mesmos 23 candidatos; manchete "O corte não seria emitido"; quadro "O que mudou": corte emitível → impedido na 15ª, progridem 16 → 0 |
+| "Simular classificação" no primeiro cartão | o painel abre na **jornada** (terceira rodada): Prova Escrita + Prova de Títulos → Classificação para a Entrevista (16 avançariam, 5 não, 2 sem posição) → Análise documental (indeterminado) → Entrevista ("Até 16 candidatos poderiam participar") → Classificação final (indeterminado); o título recebe o foco |
+| "Simular este marco" na Classificação final | a jornada pelo segundo marco: o primeiro "não calculado aqui", a Entrevista com a nota de que a prévia dá nota fictícia a todos, e "Ficariam dentro da faixa" |
+| "Explorar classificação e desempate" | o **detalhe** (a segunda rodada): manchete, fluxo, apuração das vagas como hipótese, fronteira e empates; "Voltar ao processo" volta à jornada com a mesma população |
+| No detalhe, leia o bloco tracejado | "Depois do corte: a apuração das vagas — hipótese": pararia na 10ª |
+| Troque o desfecho para "A faixa para no alvo", **sem salvar** | os mesmos 23 candidatos; na jornada, "Ninguém avançaria por enquanto" e, na Entrevista, "Ninguém, por enquanto"; quadro "O que mudou": corte emitível → impedido na 15ª, avançam 16 → 0 |
 | Suplentes 0 | "impedido na 15ª → impedido na 10ª": o empate continuou na 10ª, a regra mudou o desfecho |
 | Desfecho de volta para "Todos os empatados progridem" | 11 progridem; João e Karina "Progride pelo empate", marcados "mudou" |
 | Alvo 30 | "a faixa passa dos 21 classificados: todos cabem — remonte"; botão "Remontar para esta configuração" |

@@ -16,6 +16,16 @@ implementação não iniciada, e só autorizada pelo usuário depois desta rodad
 > cada alteração diz o que mudou (FR-2244). A história de recálculo passou a P1. Os requisitos
 > substituídos estão marcados no lugar, e a comparação entre as duas versões está em
 > [`prototipo/comparacao-v1-v2.md`](prototipo/comparacao-v1-v2.md).
+>
+> **Terceira rodada (19/10/2026).** O usuário apontou uma lacuna de concepção: a prévia explicava **um
+> marco**, e o elaborador precisa enxergar **o processo seletivo** que está configurando. A visão
+> principal passou a ser a **jornada do Perfil** — as Etapas com os nomes cadastrados e os marcos, na
+> ordem do Edital, cada ponto dizendo o que é calculado e o que permanece indeterminado (FR-2247 a
+> FR-2255, D-015) —, e o simulador da segunda rodada virou o **detalhe** do marco, a um clique. A 094
+> continua calculando **só o marco selecionado**: não encadeia marcos nem inventa resultado de Etapa
+> futura (D-017). O que a prévia simula, e o que não, está em
+> [`variaveis-simuladas.md`](variaveis-simuladas.md). O usuário autorizou a implementação isolada da
+> extração das funções puras e dos testes de equivalência (T003 a T009); a interface ainda não.
 
 **Input**: decisão do usuário de 19/10/2026, a partir de uma sessão real em que um elaborador não
 conseguiu prever o efeito das regras de corte da etapa Classificação, e do achado
@@ -25,7 +35,7 @@ obrigatória: esta spec mostra o que o motor faz, e não decide nenhuma das leit
 aberto.
 
 > **Faixa de identificadores.** Esta spec abre em **FR-2200** e **SC-840**; a segunda rodada
-> acrescentou FR-2238 a FR-2246 e SC-848 a SC-850. A `093` (PR #311, aberto)
+> acrescentou FR-2238 a FR-2246 e SC-848 a SC-850; a terceira, FR-2247 a FR-2255 e SC-851 a SC-853. A `093` (PR #311, aberto)
 > vai até o 2160 da faixa de requisitos e o 829 da de critérios — sem o prefixo aqui, porque ela ainda
 > não está na `main` e a varredura de citações não a vê. Nenhuma branch aberta usava `094` nem número
 > acima desses, conferido em `git ls-tree` e `git grep` de todas as branches remotas em 19/10/2026.
@@ -245,6 +255,53 @@ nomeia; com outra configuração, o painel diz se a situação ocorre ou não.
 
 ---
 
+### User Story 6 — Ver o processo seletivo inteiro, e onde a regra atua (Priority: P1) *(terceira rodada)*
+
+O elaborador aperta "Simular classificação" no marco "Classificação para a Entrevista". O painel abre
+em **"Simulação do processo seletivo"**: *1. Prova Escrita + Prova de Títulos* (23 candidatos
+fictícios, com notas fictícias) → **Classificação para a Entrevista** (16 avançariam, 5 não avançariam
+nesta faixa, 2 sem posição; a regra em uma frase) → *2. Análise documental* (decide quem segue; não
+simulada) → *3. Entrevista* (até 16 poderiam participar; as notas dela não são simuladas) →
+**Classificação final** (resultado indeterminado: depende das notas da Entrevista). Ele reconhece as
+avaliações que cadastrou, sabe quem avança e para onde, e vê até onde a prévia consegue calcular.
+"Explorar classificação e desempate" abre o detalhe; "Simular este marco", num marco posterior, abre a
+prévia dele.
+
+**Why this priority**: P1 por decisão do usuário (terceira rodada). Sem a jornada, a prévia responde
+corretamente a uma pergunta que o elaborador não faz — o que acontece num marco — e não à que ele faz: o
+que acontece com os candidatos ao longo do processo.
+
+**Independent Test**: num Perfil com duas Etapas com nota, uma decisória, uma Entrevista e dois
+marcos, a jornada lista as quatro Etapas e os dois marcos na ordem, com os nomes cadastrados; só o
+marco selecionado tem números; a Etapa que ele alimenta diz quantos poderiam participar; o marco
+seguinte diz que o resultado é indeterminado e por quê.
+
+**Acceptance Scenarios**:
+
+1. **Given** o Perfil acima e o primeiro marco selecionado, **When** o painel abre, **Then** a visão
+   principal é a jornada, com os nomes das Etapas e dos marcos na ordem do Edital, antes de qualquer
+   tabela (FR-2247).
+2. **Given** a mesma jornada, **When** o elaborador lê a Entrevista, **Then** ela diz "Até 16 candidatos
+   poderiam participar", porque a Análise documental, decisória, fica entre o corte e a Entrevista, e
+   diz que as notas da Entrevista não são simuladas (FR-2249).
+3. **Given** a mesma jornada, **When** o elaborador lê a Classificação final, **Then** ela diz que o
+   resultado é indeterminado, nomeia a Entrevista como a Etapa cujas notas faltam, **não mostra número
+   nenhum**, e oferece simular aquele marco (FR-2250).
+4. **Given** a Classificação final selecionada, **When** o painel abre, **Then** o primeiro marco
+   aparece como "não calculado aqui", e a Entrevista diz que a prévia dá nota fictícia a todos os
+   candidatos, quando no Edital real só quem chegar a ela a faria (FR-2249, `variaveis-simuladas.md`).
+5. **Given** a jornada aberta, **When** o elaborador troca o desfecho para `STRICT`, **Then** a jornada
+   se recalcula sem trocar de vista, o marco diz "Ninguém avançaria por enquanto", e a Entrevista diz
+   "Ninguém, por enquanto" (FR-2252).
+6. **Given** a jornada, **When** o elaborador aperta "Explorar classificação e desempate" e depois
+   "Voltar ao processo", **Then** o detalhe e a jornada usam a mesma população, e o foco vai ao título de
+   cada vista (FR-2252).
+7. **Given** um marco que não alimenta Etapa, **When** ele é simulado, **Then** os números dizem
+   "Ficariam dentro da faixa" e "Ficariam fora da faixa", e a jornada diz que ali ela termina, sem
+   afirmar que quem está na faixa foi nomeado (FR-2253).
+
+---
+
 ### User Story 5 — No celular e com leitor de tela (Priority: P3)
 
 A 375 px, o mesmo botão abre a prévia ocupando a tela, com um botão de fechar que devolve ao cartão.
@@ -451,6 +508,40 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
 - **FR-2246**: Quando a faixa passa do total de classificados, o passo do corte MUST dizer que todos
   cabem pelo tamanho da população, e não pela regra; na população estável, MUST oferecer remontá-la.
 
+#### A jornada do processo seletivo *(terceira rodada)*
+
+- **FR-2247**: A visão principal do painel MUST ser a jornada do Perfil: as Etapas, com os nomes
+  cadastrados, e os marcos classificatórios, na ordem derivada da configuração — a `order` das Etapas,
+  com cada marco depois da última Etapa que enumera. A sequência MUST ser derivada da configuração, e
+  MUST NOT ser fixada pela tela. Etapas consecutivas que entram no mesmo marco MAY aparecer juntas.
+- **FR-2248**: Cada ponto da jornada MUST dizer o seu estado em relação ao marco selecionado:
+  **simulado** (calculado agora, com os candidatos fictícios); **quem chega é calculado** (a Etapa que o
+  marco simulado alimenta); **não calculado aqui** (existe no Edital, e a prévia diz o que ele faz, sem
+  calcular); ou **indeterminado** (depende de notas ou regras que a prévia não simula).
+- **FR-2249**: A Etapa alimentada pelo marco simulado MUST dizer quantos candidatos poderiam participar
+  — "até", quando houver Etapa decisória entre o marco e ela — e que as notas dela não são simuladas. A
+  Etapa que o marco simulado enumera e que outro marco alimenta MUST dizer que a prévia dá nota fictícia
+  a todos, quando no Edital real só quem chegar a ela a faria.
+- **FR-2250**: Marco posterior ao simulado MUST aparecer como resultado indeterminado, nomeando as
+  Etapas cujas notas não foram simuladas, MUST NOT mostrar número de candidatos, e MUST oferecer abrir a
+  prévia dele. Marco anterior MUST dizer o que decide e que a prévia do selecionado supõe que todos
+  passaram por ele.
+- **FR-2251**: A jornada MUST NOT supor que o Edital é linear: Etapa decisória que não entra em marco
+  (porta), Etapa que entra em mais de um marco, marco que não corta, marco que não alimenta Etapa (fim da
+  jornada), faixa seguinte (um ramo, e não um passo) e marco por sorteio (não simulado, D-007) MUST
+  aparecer cada um como o que é.
+- **FR-2252**: O detalhe do marco — a prévia da segunda rodada — MUST estar a um clique do marco
+  simulado na jornada, e MUST voltar a ela preservando a população, o marco e o estado anterior. O
+  recálculo MUST manter a vista em que o elaborador está.
+- **FR-2253**: A jornada MUST falar a linguagem administrativa de D-016: "avançariam", "não avançariam
+  nesta faixa", "poderiam participar", "posições adicionais (suplentes)"; num marco que não alimenta
+  Etapa, "ficariam dentro da faixa" e "fora da faixa".
+- **FR-2254**: O painel MUST dizer o que a prévia simula e o que não — só o marco selecionado é
+  calculado; o resto é lido da configuração; marcos não se encadeiam; reservas, ocupação, chamadas,
+  recurso e sorteio não são simulados — e MUST NOT afirmar que o Edital inteiro foi simulado.
+- **FR-2255**: A jornada é a de **um Perfil**. As Etapas são do Edital, e o painel MUST nomear o Perfil
+  cuja jornada mostra.
+
 #### O comportamento pendente de decisão
 
 - **FR-2229**: O painel MUST descrever o desfecho do empate pelo que o sistema faz hoje, identificado
@@ -501,6 +592,8 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
   oficial e a prévia compartilham.
 - **População estável**: os candidatos fictícios padrão, montados uma vez ao abrir o painel e mantidos
   enquanto ele estiver aberto; levam consigo as fronteiras da montagem.
+- **Ponto da jornada**: uma Etapa, um grupo de Etapas que entram no mesmo marco, ou um marco, com o
+  estado em relação ao marco selecionado. Derivado da configuração; não é gravado.
 - **Mudança**: a diferença entre dois cálculos sobre a mesma população — corte, número dos que
   progridem, apuração das vagas e quem mudou de consequência. Existe só na resposta, como a prévia.
 
@@ -676,6 +769,44 @@ coluna por candidato, uma linha por critério, os valores, e o efeito — lidos 
 liga o empate à consequência ("é ele que impede o corte", "é ele que pararia a apuração", "não muda o
 corte").
 
+### D-015 — A jornada do Perfil é a visão principal; o marco, o detalhe *(terceira rodada)*
+
+O elaborador pensa em provas, entrevistas, análises e resultados, e a prévia falava de classificação,
+corte e apuração. A visão principal passa a ser a jornada: os pontos do Perfil na ordem do Edital,
+derivados de uma função pura sobre o snapshot do rascunho, que lê Etapas (ordem, forma, nome) e marcos
+(Etapas enumeradas, regra de corte) e **não calcula nada**. O único número da jornada é o do marco
+selecionado, que já vem do motor. O detalhe da segunda rodada continua inteiro, como aprofundamento: a
+auditoria precisa dele; a compreensão, da jornada.
+
+**Por que no mesmo painel, e não numa tela nova**: o elaborador está decidindo a regra de um marco, no
+cartão dele; a jornada é o contexto dessa decisão, e não outra tarefa. A troca de vista é um fragmento
+htmx, como o recálculo.
+
+**Alternativa descartada**: uma tela de "simulação do Edital" fora da composição, com todos os marcos
+calculados juntos. Exigiria encadear resultados (D-017), e afastaria a prévia do campo que está sendo
+alterado.
+
+### D-016 — "Avançar" na tela, "progredir" no domínio *(terceira rodada)*
+
+A linguagem ubíqua da `014` diz que quem fica na faixa **progride** (`ItemDoCorte.Consequencia.PROGREDIU`),
+e o cartão pergunta "Quantos progridem". A prévia, que é tela de compreensão, passa a dizer **avança**:
+"16 avançariam", "não avançariam nesta faixa", "poderiam participar". A justificativa que o Princípio I
+exige para dois termos do mesmo conceito: a prévia responde à pergunta do elaborador ("quantos avançam
+para a Entrevista?"), e "progride" é o termo do ato. O conceito é o mesmo, e a prévia não o redefine:
+"avançaria" é sempre "estaria entre os que o corte faz progredir". O rótulo do cartão não muda. Num
+marco que não alimenta Etapa, não há para onde avançar, e a prévia diz "dentro" e "fora da faixa". A
+confirmação do termo é do usuário (DP-5).
+
+### D-017 — A 094 calcula um marco, e mostra o processo; não encadeia marcos *(terceira rodada)*
+
+Mostrar o processo inteiro não exige calculá-lo inteiro. A 094 calcula fielmente o marco selecionado
+e põe esse cálculo no contexto da jornada. Encadear — fazer a Classificação final partir de quem
+avançou no corte anterior, foi habilitado na Análise documental e recebeu nota de Entrevista — exigiria
+notas fictícias para Etapas posteriores, a regra de participação (eliminação anterior, habilitação na
+Etapa imediata, faixa do corte) reproduzida em memória, e uma ordem de cálculo entre marcos: uma
+orquestração nova, que fica para evolução posterior (R-014). Até lá, a jornada diz "indeterminado" onde
+o cálculo não alcança, e não inventa candidato classificado em Etapa futura.
+
 ## Decisões pendentes do usuário
 
 Registradas, não decididas. Esta feature não altera nenhuma delas; o painel descreve o comportamento
@@ -703,6 +834,11 @@ canônico. A prévia avisa, e não propõe campo.
 
 A relação entre os dois quando há cadastro é a pendência DP-05 que `frases_do_corte` cita. A prévia não
 mostra cadastro de reserva, e não sugere relação nenhuma.
+
+### DP-5 — "Avançar" como termo de tela *(terceira rodada)*
+
+D-016 adota "avança" na prévia para o que o domínio chama de "progride". Confirmar o termo — ou levá-lo
+também ao cartão — é do usuário.
 
 ## Success Criteria *(mandatory)*
 
@@ -734,6 +870,13 @@ mostra cadastro de reserva, e não sugere relação nenhuma.
   e as mesmas notas.
 - **SC-850**: Em 100% das alterações que mudam a consequência de alguém, o painel diz o que mudou e marca
   quem mudou; nas que não mudam, diz que nada mudou.
+- **SC-851**: *(terceira rodada)* No roteiro de compreensão
+  ([`roteiro-de-compreensao.md`](roteiro-de-compreensao.md)), sem explicação prévia, ao menos 4 de cada
+  5 elaboradores dizem, olhando só a jornada, quantos avançam, para qual Etapa, e o que falta para o
+  resultado seguinte.
+- **SC-852**: Para toda configuração de Perfil das fixtures e dos Editais da amostra, a jornada lista
+  todas as Etapas e todos os marcos do Perfil, na ordem, sem omitir nem acrescentar nenhum.
+- **SC-853**: Em 100% dos pontos indeterminados, nenhum número de candidatos aparece.
 
 ## Assumptions
 
@@ -751,6 +894,8 @@ mostra cadastro de reserva, e não sugere relação nenhuma.
   de valor ausente é eliminado nela.
 - **Todos os candidatos fictícios participam do marco**: a restrição a participantes
   (`restringir_a_participantes`) é consulta de banco sobre a progressão real, e a prévia não a simula.
+  A jornada diz isso no ponto em que acontece (FR-2249), e a matriz de
+  [`variaveis-simuladas.md`](variaveis-simuladas.md) o registra.
 - **A apuração da prévia não tem movimentos**: efetivas = publicadas da linha geral do quadro.
 - **O vocabulário dos rótulos do painel é o do cartão** — ninguém precisa aprender termo novo
   (`FR-425` da `030`) — e a descrição do efeito do desfecho é do comportamento atual (FR-2229).

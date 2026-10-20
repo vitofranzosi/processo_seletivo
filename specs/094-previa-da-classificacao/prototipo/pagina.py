@@ -15,11 +15,26 @@ import datetime
 from decimal import Decimal
 from html import escape
 
+import jornada
 import previa
 
 from processo_seletivo.classificacao.domain import faixa
 
-P = "marco-0-0"
+#: Os marcos do Perfil do protótipo. O primeiro corta para a Entrevista; o segundo é a classificação
+#: final, sobre as vagas do quadro, e não alimenta Etapa nenhuma. Dois marcos são o mínimo para a
+#: jornada (terceira rodada) ter o que mostrar antes e depois do marco simulado.
+MARCOS = {
+    "0": ("CLASS-ENT", "Classificação para a Entrevista"),
+    "1": ("CLASS-FINAL", "Classificação final"),
+}
+
+
+def prefixo(sub):
+    return f"marco-0-{sub}"
+
+
+# Compatibilidade com o código da segunda rodada, que conhecia um marco só.
+P = prefixo("0")
 
 
 # ---------------------------------------------------------------------------------------------
@@ -39,10 +54,11 @@ def _inteiro(dados, nome):
         return None
 
 
-def ler_marco(dados):
+def ler_marco(dados, sub="0"):
+    p = prefixo(sub)
     criterios = []
     for k in range(3):
-        base = f"criterio-0-0-{k}"
+        base = f"criterio-0-{sub}-{k}"
         tipo = _um(dados, f"{base}-type")
         if not tipo:
             continue
@@ -57,30 +73,36 @@ def ler_marco(dados):
                 "whenMissing": _um(dados, f"{base}-whenMissing"),
             }
         )
-    especie = _um(dados, f"{P}-cutTargetKind")
+    especie = _um(dados, f"{p}-cutTargetKind")
     regra = None
     if especie:
         regra = {
             "targetKind": especie,
-            "targetCount": _inteiro(dados, f"{P}-cutTargetCount")
+            "targetCount": _inteiro(dados, f"{p}-cutTargetCount")
             if especie == faixa.ALVO_FIXO
             else None,
-            "surplusCount": _inteiro(dados, f"{P}-cutSurplusCount") or 0,
-            "tieOutcome": _um(dados, f"{P}-cutTieOutcome"),
-            "governedStage": _um(dados, f"{P}-cutGovernedStage"),
-            "continuation": _um(dados, f"{P}-cutContinuation"),
+            "surplusCount": _inteiro(dados, f"{p}-cutSurplusCount") or 0,
+            "tieOutcome": _um(dados, f"{p}-cutTieOutcome"),
+            "governedStage": _um(dados, f"{p}-cutGovernedStage"),
+            "continuation": _um(dados, f"{p}-cutContinuation"),
         }
+    codigo, nome = MARCOS.get(sub, MARCOS["0"])
     return {
-        "code": "CLASS-FINAL",
-        "name": "Classificação para a Entrevista",
+        "sub": sub,
+        "code": codigo,
+        "name": nome,
         "orderProduction": "POR_PONTUACAO",
-        "stages": [s for s in dados.get(f"{P}-stages", []) if s],
-        "operation": _um(dados, f"{P}-operation", "SOMA_PONDERADA"),
-        "normalization": _um(dados, f"{P}-normalization", "NENHUMA"),
-        "rounding": {"scale": _inteiro(dados, f"{P}-scale"), "mode": _um(dados, f"{P}-mode")},
+        "stages": [s for s in dados.get(f"{p}-stages", []) if s],
+        "operation": _um(dados, f"{p}-operation", "SOMA_PONDERADA"),
+        "normalization": _um(dados, f"{p}-normalization", "NENHUMA"),
+        "rounding": {"scale": _inteiro(dados, f"{p}-scale"), "mode": _um(dados, f"{p}-mode")},
         "tiebreakers": criterios,
         "cutRule": regra,
     }
+
+
+def ler_marcos(dados):
+    return [ler_marco(dados, sub) for sub in MARCOS]
 
 
 def ler_etapas(dados):
@@ -100,6 +122,7 @@ def ler_vagas(dados):
 # A configuração inicial e os exemplos do achado (só do protótipo)
 # ---------------------------------------------------------------------------------------------
 
+F = prefixo("1")
 PADRAO = {
     f"{P}-stages": ["e-escrita", "e-titulos"],
     f"{P}-operation": ["SOMA_PONDERADA"],
@@ -121,6 +144,23 @@ PADRAO = {
     f"{P}-cutTieOutcome": ["ADMITS_SURPLUS"],
     f"{P}-cutGovernedStage": ["e-entrevista"],
     f"{P}-cutContinuation": ["ALLOWED"],
+    # A classificação final: as três Etapas com nota, sobre as vagas do quadro, sem Etapa seguinte.
+    f"{F}-stages": ["e-escrita", "e-titulos", "e-entrevista"],
+    f"{F}-operation": ["SOMA_PONDERADA"],
+    f"{F}-normalization": ["NENHUMA"],
+    f"{F}-scale": ["2"],
+    f"{F}-mode": ["MEIO_PARA_CIMA"],
+    "criterio-0-1-0-type": ["MAIOR_PONTUACAO_NA_ETAPA"],
+    "criterio-0-1-0-target": ["e-entrevista"],
+    "criterio-0-1-0-whenMissing": ["ULTIMO_NO_CRITERIO"],
+    "criterio-0-1-1-type": ["MENOR_VALOR_DE_FATO"],
+    "criterio-0-1-1-target": ["f-nascimento"],
+    "criterio-0-1-1-whenMissing": ["ULTIMO_NO_CRITERIO"],
+    f"{F}-cutTargetKind": ["FROM_VACANCY_TABLE"],
+    f"{F}-cutSurplusCount": ["0"],
+    f"{F}-cutTieOutcome": ["ADMITS_SURPLUS"],
+    f"{F}-cutGovernedStage": ["NONE"],
+    f"{F}-cutContinuation": ["ALLOWED"],
     "quadro-vagas": ["10"],
 }
 
@@ -205,29 +245,15 @@ def _input(nome, valor, rotulo, *, tipo="number", classe="campo curto"):
 # ---------------------------------------------------------------------------------------------
 
 
-def pagina(dados, exemplo):
+def _cartao(dados, sub, etapas):
+    """O cartão do marco, no desenho da composição — o mesmo para os dois marcos do Perfil."""
     um = lambda nome: _um(dados, nome)  # noqa: E731
-    etapas = ler_etapas(dados)
+    p = prefixo(sub)
+    codigo, nome = MARCOS[sub]
     com_nota = [e for e in etapas if e["forma"] != previa.DECISORIA]
-    escolhidas = set(dados.get(f"{P}-stages", []))
-    exemplos = "".join(
-        f'<li><a href="/?exemplo={chave}"{' aria-current="page"' if chave == exemplo else ""}>'
-        f"{escape(rotulo)}</a></li>"
-        for chave, (rotulo, _) in EXEMPLOS.items()
-    )
-    pesos = "".join(
-        f'<li><label for="etapa-{e["id"]}-weight">{escape(e["name"])}</label> '
-        + (
-            f'<input type="number" step="0.5" min="0" id="etapa-{e["id"]}-weight" '
-            f'name="etapa-{e["id"]}-weight" value="{escape(e["weight"] or "")}">'
-            if e["forma"] != previa.DECISORIA
-            else '<span class="porta">decisória, sem peso</span>'
-        )
-        + "</li>"
-        for e in etapas
-    )
+    escolhidas = set(dados.get(f"{p}-stages", []))
     etapas_do_marco = "".join(
-        f'<label class="escolha"><input type="checkbox" name="{P}-stages" value="{e["id"]}"'
+        f'<label class="escolha"><input type="checkbox" name="{p}-stages" value="{e["id"]}"'
         f"{' checked' if e['id'] in escolhidas else ''}> {escape(e['name'])}</label>"
         for e in etapas
     )
@@ -236,7 +262,7 @@ def pagina(dados, exemplo):
     ]
     criterios = ""
     for k in range(3):
-        base = f"criterio-0-0-{k}"
+        base = f"criterio-0-{sub}-{k}"
         criterios += (
             f'<fieldset class="linha criterio"><legend>{k + 1}º critério de desempate</legend>'
             f'<input type="hidden" name="{base}-order" value="{k + 1}"><div class="campos">'
@@ -267,40 +293,40 @@ def pagina(dados, exemplo):
     governaveis = [("", "Escolha a Etapa"), ("NONE", "Não governa Etapa alguma")] + [
         (e["id"], e["name"]) for e in etapas
     ]
-    cartao = (
-        f'<fieldset class="linha marco" id="{P}"><legend>Marco classificatório</legend>'
+    return (
+        f'<fieldset class="linha marco" id="{p}"><legend>Marco classificatório</legend>'
         '<div class="campos"><p class="campo largo"><span class="rotulo">Como a ordem deste marco '
         "é produzida</span> <strong>Pela pontuação combinada das Etapas</strong></p>"
         '<p class="campo largo"><span class="rotulo">Código e denominação</span> '
-        "<strong>CLASS-FINAL — Classificação para a Entrevista</strong></p></div>"
+        f"<strong>{codigo} — {escape(nome)}</strong></p></div>"
         f'<fieldset class="campos etapas"><legend>Etapas que entram neste marco</legend>'
         f"{etapas_do_marco}</fieldset>"
         '<div class="campos">'
         + _select(
-            f"{P}-operation",
+            f"{p}-operation",
             [
                 ("SOMA_PONDERADA", "Soma ponderada pelos pesos das Etapas"),
                 ("MEDIA_PONDERADA", "Média ponderada pelos pesos das Etapas"),
             ],
-            um(f"{P}-operation"),
+            um(f"{p}-operation"),
             "Como as pontuações se combinam",
         )
         + _select(
-            f"{P}-normalization",
+            f"{p}-normalization",
             [("NENHUMA", "Nenhuma"), ("PELA_SOMA_DOS_PESOS", "Dividir pela soma dos pesos")],
-            um(f"{P}-normalization"),
+            um(f"{p}-normalization"),
             "Normalização",
         )
-        + _input(f"{P}-scale", um(f"{P}-scale"), "Casas decimais")
+        + _input(f"{p}-scale", um(f"{p}-scale"), "Casas decimais")
         + _select(
-            f"{P}-mode",
+            f"{p}-mode",
             [
                 ("", "Escolha o arredondamento"),
                 ("MEIO_PARA_CIMA", "Meio para cima (2,5 vira 3)"),
                 ("MEIO_PARA_PAR", "Meio para par (2,5 vira 2)"),
                 ("TRUNCAR", "Truncar (2,9 vira 2)"),
             ],
-            um(f"{P}-mode"),
+            um(f"{p}-mode"),
             "Arredondamento",
         )
         + "</div>"
@@ -308,50 +334,73 @@ def pagina(dados, exemplo):
         + '<details class="bloco-do-marco" open><summary>Regra de corte</summary>'
         '<div class="campos">'
         + _select(
-            f"{P}-cutTargetKind",
+            f"{p}-cutTargetKind",
             [
                 ("", "Este marco não corta"),
                 ("FIXED", "Uma quantidade fixa, publicada abaixo"),
                 ("FROM_VACANCY_TABLE", "Quantas vagas o quadro publicar no recorte"),
             ],
-            um(f"{P}-cutTargetKind"),
+            um(f"{p}-cutTargetKind"),
             "Quantos progridem",
         )
-        + _input(f"{P}-cutTargetCount", um(f"{P}-cutTargetCount"), "Alvo")
-        + _input(f"{P}-cutSurplusCount", um(f"{P}-cutSurplusCount"), "Suplentes")
+        + _input(f"{p}-cutTargetCount", um(f"{p}-cutTargetCount"), "Alvo")
+        + _input(f"{p}-cutSurplusCount", um(f"{p}-cutSurplusCount"), "Suplentes")
         + _select(
-            f"{P}-cutTieOutcome",
+            f"{p}-cutTieOutcome",
             [
                 ("", "Escolha o desfecho"),
                 ("ADMITS_SURPLUS", "Todos os empatados progridem"),
                 ("STRICT", "A faixa para no alvo"),
             ],
-            um(f"{P}-cutTieOutcome"),
+            um(f"{p}-cutTieOutcome"),
             "Empate na última posição",
         )
         + _select(
-            f"{P}-cutGovernedStage",
+            f"{p}-cutGovernedStage",
             governaveis,
-            um(f"{P}-cutGovernedStage"),
+            um(f"{p}-cutGovernedStage"),
             "Etapa que o corte alimenta",
         )
         + _select(
-            f"{P}-cutContinuation",
+            f"{p}-cutContinuation",
             [
                 ("", "Escolha"),
                 ("ALLOWED", "Admite continuar além da faixa publicada"),
                 ("NONE", "Não admite: a faixa é o que foi publicado"),
             ],
-            um(f"{P}-cutContinuation"),
+            um(f"{p}-cutContinuation"),
             "Faixa seguinte",
         )
         + "</div></details>"
-        # O botão: controle, e não ajuda — o resultado mora fora do cartão (D-001).
+        # O botão: controle, e não ajuda — o resultado mora fora do cartão (D-001). O marco viaja
+        # na rota, e não no formulário: cada cartão pede a prévia dele.
         + '<p class="acoes-do-marco"><button type="button" class="acao" data-abre-previa '
-        'hx-get="/previa" hx-include="#composicao" hx-target="#painel-da-previa" '
+        f'hx-get="/previa?marco={sub}" hx-include="#composicao" hx-target="#painel-da-previa" '
         'hx-swap="innerHTML" aria-controls="painel-da-previa">Simular classificação</button></p>'
         "</fieldset>"
     )
+
+
+def pagina(dados, exemplo):
+    um = lambda nome: _um(dados, nome)  # noqa: E731
+    etapas = ler_etapas(dados)
+    exemplos = "".join(
+        f'<li><a href="/?exemplo={chave}"{' aria-current="page"' if chave == exemplo else ""}>'
+        f"{escape(rotulo)}</a></li>"
+        for chave, (rotulo, _) in EXEMPLOS.items()
+    )
+    pesos = "".join(
+        f'<li><label for="etapa-{e["id"]}-weight">{escape(e["name"])}</label> '
+        + (
+            f'<input type="number" step="0.5" min="0" id="etapa-{e["id"]}-weight" '
+            f'name="etapa-{e["id"]}-weight" value="{escape(e["weight"] or "")}">'
+            if e["forma"] != previa.DECISORIA
+            else '<span class="porta">decisória, sem peso</span>'
+        )
+        + "</li>"
+        for e in etapas
+    )
+    cartoes = "".join(_cartao(dados, sub, etapas) for sub in MARCOS)
     candidatos = um("candidatos") or "estavel"
     return f"""<!doctype html>
 <html lang="pt-BR">
@@ -371,8 +420,8 @@ def pagina(dados, exemplo):
     <li><span class="selo selo-motor">motor oficial</span> executado de verdade:
       <code>combinar</code>, <code>ordenar</code>, <code>faixa.calcular</code>,
       <code>titulares_iniciais</code></li>
-    <li><span class="selo selo-demo">demonstrativo</span> cenários, a função extraída em esboço,
-      as frases, este cartão simplificado</li>
+    <li><span class="selo selo-demo">demonstrativo</span> a jornada, os candidatos, a função
+      extraída em esboço, as frases, estes cartões simplificados</li>
   </ul>
   <nav aria-label="Configurações de exemplo"><p>Configurações de exemplo:</p>
     <ul class="exemplos"><li><a href="/">População estável (padrão)</a></li>{exemplos}</ul></nav>
@@ -385,8 +434,9 @@ def pagina(dados, exemplo):
 <details class="de-outros-passos" open>
   <summary>Vem de outros passos
     <span class="resumo-do-bloco">no produto, só leitura</span></summary>
-  <p class="ajuda">No produto, os pesos são do passo Etapas e o quadro de vagas do passo Perfis.
-    Aqui eles se editam só para a avaliação.</p>
+  <p class="ajuda">No produto, as Etapas e os pesos são do passo Etapas, e o quadro de vagas do
+    passo Perfis. Aqui eles se editam só para a avaliação. Etapas, na ordem: Prova Escrita, Prova de
+    Títulos, Análise documental (decisória) e Entrevista.</p>
   <ul class="pesos">{pesos}</ul>
   <p class="campo curto"><label for="quadro-vagas">Vagas na linha geral do quadro</label>
     <input type="number" min="0" id="quadro-vagas" name="quadro-vagas"
@@ -395,7 +445,7 @@ def pagina(dados, exemplo):
     (inteiro).</p>
 </details>
 <fieldset class="linha perfil"><legend>PROF-MAT — Professor de Matemática</legend>
-{cartao}
+{cartoes}
 </fieldset>
 </form>
 </main>
@@ -418,17 +468,17 @@ def pagina(dados, exemplo):
 C = previa
 
 CONSEQUENCIA = {
-    C.PROGRIDE: ("progride", "Progride"),
-    C.PELO_EMPATE: ("pelo-empate", "Progride pelo empate"),
-    C.NAO_PROGRIDE: ("nao-progride", "Não progride"),
+    C.PROGRIDE: ("progride", "Avança"),
+    C.PELO_EMPATE: ("pelo-empate", "Avança pelo empate"),
+    C.NAO_PROGRIDE: ("nao-progride", "Não avança"),
     C.AGUARDA: ("aguarda", "Aguarda desempate"),
     C.SEM_POSICAO: ("sem-posicao", "Sem posição"),
     C.SEGUE: ("segue", "Segue — sem corte"),
 }
 PLURAL = {
-    C.PROGRIDE: "progridem",
-    C.PELO_EMPATE: "progridem pelo empate",
-    C.NAO_PROGRIDE: "não progridem",
+    C.PROGRIDE: "avançam",
+    C.PELO_EMPATE: "avançam pelo empate",
+    C.NAO_PROGRIDE: "não avançam",
     C.AGUARDA: "aguardam o desempate",
     C.SEM_POSICAO: "sem posição",
     C.SEGUE: "seguem, sem corte",
@@ -521,7 +571,7 @@ def _manchete(r):
         return (
             "<strong>O corte não seria emitido.</strong> "
             f"{corte['quantas']} candidatos empatam na {corte['posicao']}ª posição, a última da "
-            "faixa, e o desfecho declarado não deixa todos entrarem. Ninguém progride até o "
+            "faixa, e o desfecho declarado não deixa todos entrarem. Ninguém avança até o "
             "desempate ser julgado ou o desfecho ser retificado.",
             f"Corte impedido: empate na {corte['posicao']}ª posição.",
         )
@@ -540,10 +590,10 @@ def _manchete(r):
         else ""
     )
     return (
-        f"<strong>{n['progridem']} de {n['total']} candidatos progridem {escape(destino)}</strong>"
-        f"{pelo_empate}. {n['nao_progridem']} não progridem"
+        f"<strong>{n['progridem']} de {n['total']} candidatos avançam {escape(destino)}</strong>"
+        f"{pelo_empate}. {n['nao_progridem']} não avançam"
         + (f"; {n['sem_posicao']} ficam sem posição." if n["sem_posicao"] else "."),
-        f"{n['progridem']} de {n['total']} progridem.",
+        f"{n['progridem']} de {n['total']} avançam.",
     )
 
 
@@ -585,7 +635,7 @@ def _fluxo(r):
         elif corte.get("sem_desfecho") and corte.get("atravessa"):
             estado, marca, detalhe = "impedido", "Depende do desfecho", "não declarado"
         else:
-            estado, marca = "emitivel", "Emitível"
+            estado, marca = "emitivel", "Pode ser emitido"
             detalhe = (
                 f"+{n['alem_da_faixa']} além da faixa, pelo empate na {corte['ultima']}ª"
                 if n["alem_da_faixa"]
@@ -609,7 +659,7 @@ def _fluxo(r):
         elif nome is None and regra.get("governedStage") == "NONE":
             quantos, sub = f"{n['progridem']} na faixa", "o corte não alimenta Etapa"
         else:
-            quantos, sub = f"{n['progridem']} participam", "os que progridem no corte"
+            quantos, sub = f"{n['progridem']} participam", "os que avançam no corte"
         seguinte = (
             f'<li class="passo"><span class="passo-nome">{escape(rotulo)}</span>'
             f"<strong>{quantos}</strong><span>{sub}</span></li>"
@@ -624,7 +674,7 @@ def _fluxo(r):
         }.get(continuacao, "a continuação não foi declarada.")
         ramo = (
             f'<p class="ramo"><span aria-hidden="true">↳</span> Os {n["nao_progridem"]} que não '
-            f"progridem: {texto}</p>"
+            f"avançam: {texto}</p>"
         )
     return (
         '<ol class="fluxo" aria-label="Da classificação à Etapa seguinte">'
@@ -667,7 +717,7 @@ def _ocupacao(r):
 # --- 3. O que mudou ----------------------------------------------------------------------------
 
 
-def _o_que_mudou(diff, r):
+def _o_que_mudou(diff, r, onde="marcados na tabela"):
     if diff is None:
         return ""
     if not diff["mudancas"] and not diff["quantos"]:
@@ -679,9 +729,9 @@ def _o_que_mudou(diff, r):
     quem = sorted(nomes[i] for i in diff["mudaram"] if i in nomes)
     itens = "".join(f"<li>{escape(m)}</li>" for m in diff["mudancas"])
     if len(quem) > 5:
-        itens += f"<li>{len(quem)} candidatos mudaram de situação (marcados na tabela).</li>"
+        itens += f"<li>{len(quem)} candidatos mudaram de situação ({onde}).</li>"
     elif quem:
-        itens += f"<li>Mudaram de situação: {escape(_lista(quem))} (marcados na tabela).</li>"
+        itens += f"<li>Mudaram de situação: {escape(_lista(quem))} ({onde}).</li>"
     return (
         '<section class="mudou" aria-labelledby="titulo-mudou">'
         '<h3 id="titulo-mudou">O que mudou com a sua alteração</h3>'
@@ -726,8 +776,14 @@ def _grupos_empatados(r, *, so_residuais=False):
 
 def _marca(codigo, r):
     classe, rotulo = CONSEQUENCIA[codigo]
-    if codigo == C.PROGRIDE and (r["regra"] or {}).get("governedStage") == "NONE":
-        rotulo = "Na faixa"
+    # O marco que não alimenta Etapa não tem para onde avançar: o que ele diz é dentro ou fora da
+    # faixa, e "avança" afirmaria uma passagem que não existe.
+    if (r["regra"] or {}).get("governedStage") == "NONE":
+        rotulo = {
+            C.PROGRIDE: "Na faixa",
+            C.PELO_EMPATE: "Na faixa pelo empate",
+            C.NAO_PROGRIDE: "Fora da faixa",
+        }.get(codigo, rotulo)
     return f'<span class="marca marca-{classe}">{rotulo}</span>'
 
 
@@ -901,9 +957,14 @@ def _por_que_importa(membros, r):
                     f"Atravessa a última posição da faixa ({k}): é ele que impede o corte."
                 )
             else:
+                verbo = (
+                    "ficarem na faixa"
+                    if (r["regra"] or {}).get("governedStage") == "NONE"
+                    else "avançarem"
+                )
                 frases.append(
                     f"Atravessa a última posição da faixa ({k}): o desfecho declarado faz todos "
-                    "progredirem."
+                    f"{verbo}."
                 )
         else:
             frases.append(f"Atravessa a linha do alvo ({k}), dentro da faixa: não muda o corte.")
@@ -1072,7 +1133,7 @@ def _como_calcula(r):
             a = corte["comparacao"]["admite"]
             linhas.append(
                 f"Sem desfecho declarado: com “Todos os empatados progridem”, "
-                f"{len(a['progrediram'])} progridem; com “A faixa para no alvo”, o corte não "
+                f"{len(a['progrediram'])} avançam; com “A faixa para no alvo”, o corte não "
                 "seria emitido. Sem a declaração, o Edital não publica."
             )
     conferencia = (
@@ -1105,7 +1166,8 @@ def _candidatos(r, escolha, dados):
     seletor = (
         '<p class="campo"><label for="candidatos-da-previa">Candidatos fictícios</label>'
         '<select id="candidatos-da-previa" name="candidatos" hx-get="/previa" '
-        'hx-include="#composicao, #anterior-da-previa" hx-target="#painel-da-previa" '
+        'hx-include="#composicao, #marco-da-previa, #vista-da-previa" '
+        'hx-target="#painel-da-previa" '
         f'hx-swap="innerHTML">{opcoes}</select></p>'
     )
     if r is None:
@@ -1137,8 +1199,9 @@ def _candidatos(r, escolha, dados):
             '<p class="aviso-do-modo">A regra mudou desde a montagem; os empates continuam onde '
             "estavam, e é isso que deixa ver o efeito. "
             '<button type="button" class="acao-discreta" hx-get="/previa" '
-            'hx-include="#composicao, #candidatos-da-previa" hx-target="#painel-da-previa" '
-            'hx-swap="innerHTML">Remontar para esta configuração</button></p>'
+            'hx-include="#composicao, #candidatos-da-previa, #marco-da-previa, #vista-da-previa" '
+            'hx-target="#painel-da-previa" hx-swap="innerHTML">Remontar para esta configuração'
+            "</button></p>"
         )
     return f'<div class="candidatos">{seletor}{corpo}</div>'
 
@@ -1159,24 +1222,280 @@ def _populacao(dados):
     return alvo, faixa_total, vagas
 
 
+# --- 8. A jornada do Perfil: a visão principal (terceira rodada, D-015) -------------------------
+
+#: O que o painel inclui quando muda de vista ou recalcula. Fica num lugar só porque cada botão leva
+#: um subconjunto, e um campo esquecido num deles faz a vista perder a população ou o marco.
+ESTADO_DO_PAINEL = "#candidatos-da-previa, #populacao-da-previa, #marco-da-previa"
+
+
+def _nomes_das_etapas(etapas):
+    return _lista(e["name"] for e in etapas)
+
+
+def _botao(rotulo, url, inclui, *, classe="acao-largo"):
+    return (
+        f'<button type="button" class="{classe}" data-foco-no-titulo hx-get="{url}" '
+        f'hx-include="{inclui}" hx-target="#painel-da-previa" hx-swap="innerHTML">'
+        f"{escape(rotulo)}</button>"
+    )
+
+
+def _cartao_do_selecionado(r, diff):
+    """O marco simulado, aberto: os números grandes, a regra em uma frase e o caminho ao detalhe."""
+    n = _contagens(r)
+    corte = r["corte"]
+    regra = r["regra"] or {}
+    terminal = regra.get("governedStage") == "NONE"
+    if _impedido(r):
+        numeros = '<p class="bloqueio"><strong>Ninguém avançaria por enquanto.</strong> ' + (
+            f"Há empate na {corte['posicao']}ª posição, a última da faixa, e a regra não deixa "
+            "todos os empatados entrarem: a lista de quem avança não pode ser emitida até o "
+            "desempate ser julgado ou a regra ser retificada.</p>"
+            if corte.get("recusado")
+            else "O desfecho do empate não está declarado, e há empate na última posição: o "
+            "resultado depende dele.</p>"
+        )
+    else:
+        rotulo_dentro = "Ficariam dentro da faixa" if terminal else "Avançariam"
+        rotulo_fora = "Ficariam fora da faixa" if terminal else "Não avançariam nesta faixa"
+        if not corte["declarado"]:
+            rotulo_dentro, rotulo_fora = "Seguem — o marco não corta", "Excluídos por este marco"
+        numeros = (
+            '<div class="numeros">'
+            f'<p class="numero numero-dentro"><strong>{n["progridem"]}</strong>'
+            f"<span>{rotulo_dentro}</span></p>"
+            f'<p class="numero"><strong>{n["nao_progridem"]}</strong><span>{rotulo_fora}</span></p>'
+            + (
+                f'<p class="numero numero-fraco"><strong>{n["sem_posicao"]}</strong>'
+                "<span>Sem posição</span></p>"
+                if n["sem_posicao"]
+                else ""
+            )
+            + "</div>"
+        )
+    if corte["declarado"]:
+        alvo, suplentes = r["alvo"], r["suplentes"]
+        origem = "as vagas do quadro" if regra.get("targetKind") == "FROM_VACANCY_TABLE" else ""
+        partes = [f"alvo de {alvo}" + (f" ({origem})" if origem else "")]
+        if suplentes:
+            partes.append(f"{suplentes} posições adicionais (suplentes)")
+        desfecho = {
+            "ADMITS_SURPLUS": "com empate na última posição, todos os empatados "
+            + ("ficam na faixa" if terminal else "avançam"),
+            "STRICT": "com empate na última posição, a lista não sai até o desempate",
+        }.get(regra.get("tieOutcome"), "o desfecho do empate não está declarado")
+        regra_texto = f"Regra: {' + '.join(partes)}; {desfecho}."
+    else:
+        regra_texto = "Regra: este marco ordena, e não corta."
+    avisos = ""
+    aviso = r["aviso_das_vagas"]
+    if aviso.get("para"):
+        avisos += (
+            '<p class="aviso-curto"><span aria-hidden="true">⚠</span> Atenção às vagas: um '
+            f"empate na {aviso['posicao']}ª pararia a apuração das {r['vagas']} vagas "
+            "(hipótese; veja o detalhe).</p>"
+        )
+    if diff and (diff["mudancas"] or diff["quantos"]):
+        avisos += (
+            '<p class="mudou-curto"><strong>Mudou:</strong> '
+            + escape(" ".join(diff["mudancas"]) or f"{diff['quantos']} mudaram de situação.")
+            + "</p>"
+        )
+    ramo = ""
+    if corte["declarado"] and not _impedido(r) and n["nao_progridem"] and not terminal:
+        texto = {
+            "ALLOWED": "uma faixa seguinte, emitida depois, pode alcançá-los",
+            "NONE": "o Edital não admite faixa seguinte, e a participação deles termina aqui",
+        }.get(regra.get("continuation"), "a continuação não foi declarada")
+        ramo = (
+            f'<p class="ramo"><span aria-hidden="true">↳</span> Os {n["nao_progridem"]} que não '
+            f"avançam: {texto}.</p>"
+        )
+    fim = (
+        '<p class="fim-da-jornada">Fim da jornada: este marco não alimenta outra Etapa. Quem fica '
+        "dentro da faixa não está, só por isso, nomeado — a ocupação das vagas é outro ato.</p>"
+        if terminal
+        else ""
+    )
+    return f'{numeros}<p class="regra">{escape(regra_texto)}</p>{avisos}{ramo}{fim}' + _botao(
+        "Explorar classificação e desempate",
+        "/previa?vista=detalhe",
+        f"#composicao, {ESTADO_DO_PAINEL}",
+    )
+
+
+def _ponto(ponto, numero_do_passo, r, sel, total, diff):
+    tipo, estado = ponto["tipo"], ponto["estado"]
+    selo = {
+        "simulado": '<span class="selo-ponto selo-simulado">simulado</span>',
+        "contexto": '<span class="selo-ponto selo-contexto">não calculado aqui</span>',
+        "indeterminado": '<span class="selo-ponto selo-indeterminado">indeterminado</span>',
+        "parcial": '<span class="selo-ponto selo-parcial">quem chega é calculado</span>',
+    }[estado]
+    if tipo == "avaliacoes":
+        titulo = f"{numero_do_passo}. " + " + ".join(e["name"] for e in ponto["etapas"])
+        if estado == "simulado":
+            corpo = (
+                f"{total} candidatos fictícios, com notas fictícias "
+                + ("nesta Etapa" if len(ponto["etapas"]) == 1 else "nestas Etapas")
+                + f", considerados na {sel['name']}."
+            )
+        else:
+            corpo = "Não entram no marco simulado."
+        return _caixa("etapa", titulo, selo, f"<p>{escape(corpo)}</p>")
+    if tipo == "porta":
+        titulo = f"{numero_do_passo}. {ponto['etapa']['name']}"
+        if ponto["antes_da_governada"]:
+            corpo = (
+                f"Etapa decisória: só quem for habilitado nela faz a {ponto['governada']['name']}. "
+                "A prévia não simula quantos seriam eliminados aqui."
+            )
+        else:
+            corpo = "Etapa decisória: habilita ou elimina, e não entra em classificação."
+        return _caixa("etapa porta", titulo, selo, f"<p>{escape(corpo)}</p>")
+    if tipo == "fora":
+        titulo = f"{numero_do_passo}. {ponto['etapa']['name']}"
+        return _caixa(
+            "etapa", titulo, selo, "<p>Não entra em classificação nenhuma deste Perfil.</p>"
+        )
+    if tipo == "etapa_alimentada":
+        etapa, por = ponto["etapa"], ponto["por"]
+        titulo = f"{numero_do_passo}. {etapa['name']}"
+        if ponto["do_selecionado"]:
+            n = _contagens(r)
+            if _impedido(r):
+                corpo = (
+                    '<p class="destaque"><strong>Ninguém, por enquanto.</strong></p>'
+                    "<p>A lista de quem avança não pode ser emitida.</p>"
+                )
+            else:
+                ate = "Até " if ponto["portas_antes"] else ""
+                corpo = (
+                    f'<p class="destaque"><span aria-hidden="true">👥</span> <strong>{ate}'
+                    f"{n['progridem']} candidatos poderiam participar</strong></p>"
+                    + (
+                        "<p>Menos, se alguém for eliminado em "
+                        f"{escape(_nomes_das_etapas(ponto['portas_antes']))}.</p>"
+                        if ponto["portas_antes"]
+                        else ""
+                    )
+                    + f"<p>As notas da {escape(etapa['name'])} não são simuladas aqui.</p>"
+                )
+            return _caixa("etapa", titulo, selo, corpo)
+        if ponto["usada_no_selecionado"]:
+            corpo = (
+                f"Participam os que avançarem na {por['name']}, que esta prévia não simula. Para a "
+                f"{sel['name']}, a prévia dá nota fictícia de {etapa['name']} a todos os {total} "
+                "— no Edital real, só quem chegar a ela."
+            )
+        else:
+            corpo = f"Participam os que avançarem na {por['name']}: não simulado nesta prévia."
+        return _caixa("etapa", titulo, selo, f"<p>{escape(corpo)}</p>")
+    # Um marco: o simulado abre; os outros dizem o que fazem e oferecem a prévia deles.
+    marco = ponto["marco"]
+    titulo = marco["name"]
+    if estado == "simulado":
+        return _caixa("marco marco-selecionado", titulo, selo, _cartao_do_selecionado(r, diff))
+    if ponto["antes_do_selecionado"]:
+        destino = ponto["governada"]["name"] if ponto["governada"] else "a Etapa seguinte"
+        corpo = (
+            f"<p>Decide quem chega à {escape(destino)}. Não é calculado nesta prévia: a da "
+            f"{escape(sel['name'])} supõe que todos chegaram.</p>"
+        )
+    else:
+        faltam = ponto["nao_simuladas"]
+        corpo = (
+            "<p><strong>Resultado indeterminado.</strong> Depende "
+            + (
+                f"das notas de {escape(_nomes_das_etapas(faltam))}, que não foram simuladas, e "
+                if faltam
+                else ""
+            )
+            + "da regra deste marco.</p>"
+        )
+    corpo += _botao(
+        "Simular este marco",
+        f"/previa?marco={marco['sub']}",
+        "#composicao, #candidatos-da-previa",
+        classe="acao-discreta",
+    )
+    return _caixa("marco", titulo, selo, corpo)
+
+
+def _caixa(classe, titulo, selo, corpo):
+    return (
+        f'<li class="ponto {classe}"><div class="ponto-cabeca"><h3>{escape(titulo)}</h3>{selo}'
+        f"</div>{corpo}</li>"
+    )
+
+
+def _jornada(r, pontos, sel, diff):
+    total = r["total"]
+    itens, numero_do_passo = [], 0
+    for ponto in pontos:
+        if ponto["tipo"] != "marco":
+            numero_do_passo += 1
+        itens.append(_ponto(ponto, numero_do_passo, r, sel, total, diff))
+    return (
+        '<ol class="jornada" aria-label="A jornada dos candidatos neste Perfil">'
+        f"{''.join(itens)}</ol>"
+        '<details class="limites"><summary>O que esta prévia simula, e o que não</summary><ul>'
+        f"<li>Calcula só a <strong>{escape(sel['name'])}</strong>, com o motor oficial e os "
+        "candidatos fictícios. Os outros pontos são lidos da configuração, sem cálculo.</li>"
+        "<li>Lê o que está digitado neste cartão, e o que está gravado nos outros passos: pesos, "
+        "Etapas, fatos e vagas.</li>"
+        "<li>Não encadeia marcos: não sabe quem passaria numa Etapa posterior, nem quantos seriam "
+        "eliminados numa Etapa decisória.</li>"
+        "<li>Não simula reservas de vagas, ocupação, chamadas, recurso nem sorteio.</li>"
+        "</ul></details>"
+    )
+
+
 def painel(dados):
-    marco = ler_marco(dados)
+    marcos = ler_marcos(dados)
+    sub = _um(dados, "marco") or "0"
+    sub = sub if sub in MARCOS else "0"
+    vista = "detalhe" if _um(dados, "vista") == "detalhe" else "processo"
+    marco = next(m for m in marcos if m["sub"] == sub)
     etapas = ler_etapas(dados)
     vagas = ler_vagas(dados)
     escolha, modo, chave = _escolha(dados)
-    cabecalho = (
-        '<div class="cabeca-do-painel">'
-        '<h2 id="titulo-da-previa" tabindex="-1">Prévia da classificação</h2>'
-        '<button type="button" class="fechar" hx-get="/fechar" hx-target="#painel-da-previa" '
-        'hx-swap="innerHTML">Fechar</button></div>'
-        '<p class="contexto">PROF-MAT · CLASS-FINAL — Classificação para a Entrevista</p>'
+    ocultos = (
+        f'<input type="hidden" id="marco-da-previa" name="marco" value="{sub}">'
+        f'<input type="hidden" id="vista-da-previa" name="vista" value="{vista}">'
     )
+    if vista == "processo":
+        cabecalho = (
+            '<div class="cabeca-do-painel">'
+            '<h2 id="titulo-da-previa" tabindex="-1">Simulação do processo seletivo</h2>'
+            '<span class="selo selo-demo">Exemplo fictício</span>'
+            '<button type="button" class="fechar" hx-get="/fechar" hx-target="#painel-da-previa" '
+            'hx-swap="innerHTML">Fechar</button></div>'
+            f'<p class="contexto">PROF-MAT — Professor de Matemática · simulando a '
+            f"<strong>{escape(marco['name'])}</strong></p>"
+        )
+    else:
+        cabecalho = (
+            '<div class="cabeca-do-painel">'
+            + _botao(
+                "← Voltar ao processo",
+                "/previa?vista=processo",
+                f"#composicao, {ESTADO_DO_PAINEL}",
+                classe="voltar",
+            )
+            + '<button type="button" class="fechar" hx-get="/fechar" '
+            'hx-target="#painel-da-previa" hx-swap="innerHTML">Fechar</button></div>'
+            f'<h2 id="titulo-da-previa" tabindex="-1">{escape(marco["name"])}: classificação e '
+            "desempate</h2>"
+            '<p class="contexto">PROF-MAT — Professor de Matemática · detalhe do cálculo</p>'
+        )
     # O recálculo: qualquer mudança no formulário de composição pede o painel de novo, com o que
-    # está digitado, a população e o estado anterior. O cálculo é no servidor (D-002).
+    # está digitado, a população, o marco, a vista e o estado anterior. O cálculo é no servidor.
     gatilho = (
         '<div class="recalculo" hx-get="/previa" '
-        'hx-include="#composicao, #candidatos-da-previa, #populacao-da-previa, '
-        '#anterior-da-previa" hx-target="#painel-da-previa" hx-swap="innerHTML" '
+        f'hx-include="#composicao, {ESTADO_DO_PAINEL}, #vista-da-previa, #anterior-da-previa" '
+        'hx-target="#painel-da-previa" hx-swap="innerHTML" '
         'hx-trigger="change from:#composicao, input changed delay:400ms from:#composicao">'
     )
     try:
@@ -1196,6 +1515,7 @@ def painel(dados):
             + _candidatos(None, escolha, dados)
             + '<div class="incompleto"><p><strong>A prévia ainda não calcula.</strong> Falta:</p>'
             f"<ul>{faltas}</ul></div>"
+            + ocultos
             + '<input type="hidden" id="anterior-da-previa" name="anterior" value="'
             + escape(_um(dados, "anterior"))
             + '"></div>'
@@ -1209,6 +1529,22 @@ def painel(dados):
     manchete, anuncio = _manchete(r)
     if diff and (diff["mudancas"] or diff["quantos"]):
         anuncio += " Mudou: " + " ".join(diff["mudancas"])
+    fim = (
+        ocultos
+        + f'<input type="hidden" id="anterior-da-previa" name="anterior" value="{escape(atual)}">'
+        + "</div>"
+        + _anuncio(anuncio)
+    )
+    if vista == "processo":
+        pontos = jornada.jornada(etapas, marcos, sub)
+        return (
+            gatilho
+            + cabecalho
+            + _candidatos(r, escolha, dados)
+            + _o_que_mudou(diff, r, onde="veja no detalhe")
+            + _jornada(r, pontos, marco, diff)
+            + fim
+        )
     estado_geral = "impedido" if _impedido(r) else "emitivel"
     return (
         gatilho
@@ -1222,9 +1558,7 @@ def painel(dados):
         + _empates(r)
         + _completa(r, mudaram)
         + _como_calcula(r)
-        + f'<input type="hidden" id="anterior-da-previa" name="anterior" value="{escape(atual)}">'
-        + "</div>"
-        + _anuncio(anuncio)
+        + fim
     )
 
 
