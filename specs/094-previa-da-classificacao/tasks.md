@@ -16,9 +16,11 @@ hierarquia, as frases, as marcas, o agrupamento e a folha foram validados nele, 
 e 375 px — a segunda versão, de 19/10.
 
 **Terceira rodada (19/10)**: a US6 (o processo inteiro) é P1 e entra no MVP; as tarefas T050 a T055 são
-dela. **T003 a T009** — a extração e a equivalência — foram autorizadas à parte, e estão em
-implementação isolada, num PR próprio; a interface (Fases 3 a 8) espera a decisão do usuário sobre
-esta rodada.
+dela. **T003 a T009** — a extração e a equivalência — foram autorizadas à parte e estão **feitas**: PR
+vitofranzosi/processo_seletivo#317, mergeado em 20/10 (`e7e22b89`). Da T034 e da T035 entrou só a
+sentinela do lado oficial — com o caminho oficial alterado, a linha de base reprova —; o lado da prévia,
+o `+1` na faixa e a matriz completa da equivalência dependem de `simular` (T013). A interface (Fases 3 a
+8) espera a decisão do usuário.
 
 **Segunda rodada (19/10)**: a US3 passou a P1 e vem logo depois da US2; as tarefas T040 e T044 a T049 são
 da rodada de UX e estão nas fases a que pertencem, com numeração própria para não renumerar as referências
@@ -50,16 +52,16 @@ trajetória, e gerar e simular os cenários — tudo puro, testado antes da inte
 
 ### Linha de base e testes, antes da extração
 
-- [ ] T003 Escrever a linha de base do caminho oficial em `backend/tests/integration/classificacao/test_previa_equivale_ao_oficial.py`: um apoio `persistir_cenario(edital, perfil, inscritos)` que grava os candidatos de cada cenário como `Inscricao` `SUBMETIDA`, `ResultadoEtapa` e `ValorDeFato` sobre um Edital publicado (fixtures de `backend/tests/fixtures/corte.py` e `edital.py`), chama `calcular_ordem` e congela `posicoes` (id, posição, `empate_residual`, ordem de `separado_por`), `sem_posicao` (id, `consequencia`, `motivo`) e `universo`; e um teste por cenário que compara com a tabela esperada. Deve passar no código atual
-- [ ] T004 [P] Testes unitários de `preparar` em `backend/tests/unit/classificacao/test_universo_classificavel.py`: eliminação mais recente pela `order` da Etapa; `SEM_PONTUACAO` com motivo nomeando as Etapas; marco só de portas (pontuação nula); `RegraIncompleta` sobe; ordem de entrada preservada; `recorte` filtra por `modalidade_id` e é idempotente sobre entrada já filtrada; `ELIMINADA` e `HABILITADA` iguais às de `ResultadoEtapa.Consequencia`
-- [ ] T005 [P] Testes unitários de `ordenar_com_trajetoria` em `backend/tests/unit/classificacao/test_ordenar_com_trajetoria.py`: para toda entrada da tabela-verdade de `backend/tests/unit/classificacao/test_desempate.py` e de `test_numeracao_e_ausencia.py`, `ordenar(...)` é igual à irmã sem `trajetoria` e `grupo_da_pontuacao`; a trajetória registra `nao_separou` para critério que não particiona (valores iguais e `CRITERIO_NAO_SE_APLICA` com ausente) e `separou` para o que particiona, na ordem de `order`
+- [x] T003 Escrever a linha de base do caminho oficial em `backend/tests/integration/classificacao/test_previa_equivale_ao_oficial.py`: um apoio `persistir_cenario(edital, perfil, inscritos)` que grava os candidatos de cada cenário como `Inscricao` `SUBMETIDA`, `ResultadoEtapa` e `ValorDeFato` sobre um Edital publicado (fixtures de `backend/tests/fixtures/corte.py` e `edital.py`), chama `calcular_ordem` e congela `posicoes` (id, posição, `empate_residual`, ordem de `separado_por`), `sem_posicao` (id, `consequencia`, `motivo`) e `universo`; e um teste por cenário que compara com a tabela esperada. Deve passar no código atual
+- [x] T004 [P] Testes unitários de `preparar` em `backend/tests/unit/classificacao/test_universo_classificavel.py`: eliminação mais recente pela `order` da Etapa; `SEM_PONTUACAO` com motivo nomeando as Etapas; marco só de portas (pontuação nula); `RegraIncompleta` sobe; ordem de entrada preservada; `recorte` filtra por `modalidade_id` e é idempotente sobre entrada já filtrada; `ELIMINADA` e `HABILITADA` iguais às de `ResultadoEtapa.Consequencia`
+- [x] T005 [P] Testes unitários de `ordenar_com_trajetoria` em `backend/tests/unit/classificacao/test_ordenar_com_trajetoria.py`: para toda entrada da tabela-verdade de `backend/tests/unit/classificacao/test_desempate.py` e de `test_numeracao_e_ausencia.py`, `ordenar(...)` é igual à irmã sem `trajetoria` e `grupo_da_pontuacao`; a trajetória registra `nao_separou` para critério que não particiona (valores iguais e `CRITERIO_NAO_SE_APLICA` com ausente) e `separou` para o que particiona, na ordem de `order`
 
 ### Extração
 
-- [ ] T006 Criar `backend/processo_seletivo/classificacao/domain/universo_classificavel.py` com `ELIMINADA`, `HABILITADA` e `preparar(marco, etapas, inscritos, *, recorte=None)`, movendo de `classificacao/application/calculo.py` o laço de classificáveis e sem posição, `_eliminacao_mais_recente` e `_motivo_da_pontuacao_ausente`, sem mudar uma vírgula do comportamento (contrato em `contracts/universo-classificavel.md`)
-- [ ] T007 Refatorar `calcular_ordem` em `backend/processo_seletivo/classificacao/application/calculo.py` para montar `inscritos` (com `resultados` por inscrição, na ordem de hoje) e chamar `universo_classificavel.preparar(..., recorte=recorte)`; as consultas, o `order_by` dos `vigentes` e o filtro do recorte na consulta ficam onde estão. T003 e T004 verdes
-- [ ] T008 Em `backend/processo_seletivo/classificacao/domain/desempate.py`, criar `ordenar_com_trajetoria` sobre a partição de `_particionar` com o caminho registrado, e reescrever `ordenar` como a irmã sem as duas chaves novas. T005 e `test_desempate.py` verdes
-- [ ] T009 Rodar, sem alterar nenhum teste: `backend/tests/unit/classificacao/`, `backend/tests/integration/classificacao/`, `backend/tests/integration/ocupacao/`, `backend/tests/performance/test_ordenacao.py`, `test_corte.py`, `test_ocupacao.py` e `backend/tests/test_vigencia_do_resultado.py`. Qualquer diferença de contagem de consultas reprova a extração (SC-844)
+- [x] T006 Criar `backend/processo_seletivo/classificacao/domain/universo_classificavel.py` com `ELIMINADA`, `HABILITADA` e `preparar(marco, etapas, inscritos, *, recorte=None)`, movendo de `classificacao/application/calculo.py` o laço de classificáveis e sem posição, `_eliminacao_mais_recente` e `_motivo_da_pontuacao_ausente`, sem mudar uma vírgula do comportamento (contrato em `contracts/universo-classificavel.md`)
+- [x] T007 Refatorar `calcular_ordem` em `backend/processo_seletivo/classificacao/application/calculo.py` para montar `inscritos` (com `resultados` por inscrição, na ordem de hoje) e chamar `universo_classificavel.preparar(..., recorte=recorte)`; as consultas, o `order_by` dos `vigentes` e o filtro do recorte na consulta ficam onde estão. T003 e T004 verdes
+- [x] T008 Em `backend/processo_seletivo/classificacao/domain/desempate.py`, criar `ordenar_com_trajetoria` sobre a partição de `_particionar` com o caminho registrado, e reescrever `ordenar` como a irmã sem as duas chaves novas. T005 e `test_desempate.py` verdes
+- [x] T009 Rodar, sem alterar nenhum teste: `backend/tests/unit/classificacao/`, `backend/tests/integration/classificacao/`, `backend/tests/integration/ocupacao/`, `backend/tests/performance/test_ordenacao.py`, `test_corte.py`, `test_ocupacao.py` e `backend/tests/test_vigencia_do_resultado.py`. Qualquer diferença de contagem de consultas reprova a extração (SC-844)
 
 ### Cenários e simulação
 
