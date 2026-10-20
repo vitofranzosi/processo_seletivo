@@ -138,7 +138,7 @@ fronteira da gestão, ele cobre a tela, com rolagem própria (FR-2202).
 
 /* A fronteira e os empates: quatro colunas, e uma linha onde cada limite passa (FR-2241, FR-2242). */
 .painel-da-previa section h3{font-size:1rem;margin:1rem 0 .35rem}
-.painel-da-previa .rolavel-da-previa{overflow-x:auto;max-width:100%;}
+.painel-da-previa .rolavel-da-previa{position:relative;overflow-x:auto;max-width:100%;}
 .painel-da-previa table{border-collapse:collapse;width:100%;font-size:.9rem}
 .painel-da-previa th,.painel-da-previa td{border-bottom:1px solid var(--borda);padding:.35rem .5rem;
   text-align:left;vertical-align:top}

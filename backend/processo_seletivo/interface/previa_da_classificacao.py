@@ -169,8 +169,10 @@ def manchete(p):
     sem = f"; {n['sem_posicao']} ficam sem posição." if n["sem_posicao"] else "."
     return {
         "estado": "emitivel",
-        "forte": f"{n['avancam']} de {n['total']} candidatos avançam {destino}",
-        "resto": f"{alem}. {n['nao_avancam']} não avançam{sem}",
+        # A pontuação fecha dentro do negrito: o modelo junta as duas partes com um espaço, e o
+        # resto que começava por vírgula ou ponto saía "Entrevista , 1 além".
+        "forte": f"{n['avancam']} de {n['total']} candidatos avançam {destino}{alem}.",
+        "resto": f"{n['nao_avancam']} não avançam{sem}",
         "anuncio": f"{n['avancam']} de {n['total']} avançam.",
     }
 
@@ -293,17 +295,21 @@ def o_que_mudou(diff, p, onde):
 
 
 def _limites(p):
-    """`[(quantos, rótulo)]` — onde a tabela traça uma linha: alvo, fim da faixa, última vaga."""
+    """`[(quantos, rótulo)]` — onde a tabela traça uma linha: alvo, fim da faixa, última vaga.
+
+    O artigo vai em cada rótulo, e não no "Linha" que os junta: "Linha do última vaga" saiu assim
+    enquanto ele morava lá.
+    """
     limites = {}
     if p["corte"]["declarado"]:
         alvo, suplentes = p["alvo"], p["suplentes"]
-        limites.setdefault(alvo, []).append(f"alvo ({alvo})")
+        limites.setdefault(alvo, []).append(f"do alvo ({alvo})")
         if suplentes:
             limites.setdefault(alvo + suplentes, []).append(
-                f"fim da faixa ({alvo} + {suplentes} suplentes)"
+                f"do fim da faixa ({alvo} + {suplentes} suplentes)"
             )
     if p["vagas"]:
-        limites.setdefault(p["vagas"], []).append(f"última vaga ({p['vagas']})")
+        limites.setdefault(p["vagas"], []).append(f"da última vaga ({p['vagas']})")
     return sorted((k, " · ".join(v)) for k, v in limites.items() if k)
 
 
@@ -398,7 +404,7 @@ def fronteira(p, mudaram):
             linhas.append(
                 {
                     "tipo": "limite",
-                    "texto": f"Linha do {por_limite[indice + 1]}"
+                    "texto": f"Linha {por_limite[indice + 1]}"
                     + (
                         f" — o empate da {item['posicao']}ª atravessa esta linha"
                         if atravessa
@@ -705,8 +711,10 @@ def _selecionado(p):
         aberto["regra"] = ""
     aviso = p["aviso_das_vagas"]
     aberto["aviso_das_vagas"] = (
-        f"Atenção às vagas: um empate na {aviso['posicao']}ª pararia a apuração das "
-        f"{p['vagas']} vagas (hipótese; veja o detalhe)."
+        # Condicional, como a D-006 manda: a apuração é pedida por marco, e o intermediário pode
+        # não ser o que ela usa. Sem o "se", o cartão afirmava um efeito que talvez não exista.
+        f"Atenção às vagas: se forem apuradas sobre este marco, um empate na "
+        f"{aviso['posicao']}ª pararia a apuração das {p['vagas']} vagas (hipótese; veja o detalhe)."
         if aviso.get("para")
         else ""
     )

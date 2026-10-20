@@ -6,6 +6,7 @@ recálculo sobre o que está digitado com o que mudou, e nenhuma escrita. O cál
 `tests/integration/classificacao/test_previa_equivale_ao_oficial.py`; aqui se confere a tela.
 """
 
+import json
 import re
 
 import pytest
@@ -13,7 +14,9 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
+from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from tests.interface.conftest import ETAPA_CLASSIFICATORIA, ETAPA_SO_ELIMINATORIA, identificar
+from tests.interface.folha import folha_da_pagina
 from tests.interface.test_compor import PERFIL
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -123,11 +126,20 @@ def test_a_etapa_alimentada_diz_que_as_notas_dela_nao_sao_simuladas(client, com_
     assert "quem chega é calculado" in visivel
 
 
+def test_a_manchete_nao_separa_a_pontuacao(client, com_marco):
+    """O negrito e o resto se juntam com um espaço, e o resto não pode começar por vírgula."""
+    corpo = previa(client, com_marco, vista="detalhe")
+    manchete = re.search(r'<p class="manchete[^>]*>(.*?)</p>', corpo, re.S).group(1)
+    assert not re.search(r"\s[,.;]", re.sub(r"<[^>]+>", "", manchete))
+
+
 def test_o_detalhe_esta_a_um_clique_e_volta(client, com_marco):
     detalhe = texto(previa(client, com_marco, vista="detalhe"))
     assert "classificação e desempate" in detalhe
     assert "Voltar ao processo" in detalhe
     assert "Quem está perto dos limites" in detalhe
+    assert "Linha do alvo (10)" in detalhe
+    assert "Linha do fim da faixa (10 + 5 suplentes)" in detalhe
     assert "Depois do corte: a apuração das vagas" in detalhe and "hipótese" in detalhe
     assert "Classificação completa" in detalhe
     assert "Como a prévia chega a este resultado" in detalhe
@@ -221,6 +233,28 @@ def test_nada_escrito_no_modelo_que_a_csp_recusaria(client, com_marco, vista):
     assert not re.search(r"\sstyle=|<style|<script|\son[a-z]+=", corpo, re.I)
 
 
+def test_no_estreito_o_painel_cobre_a_tela_e_as_linhas_viram_blocos(client, com_marco):
+    """SC-846, pela folha que a página aplica: abaixo de 64rem o painel é a tela inteira, com
+    rolagem própria, e a 40rem as tabelas deixam de ter colunas — é o que segura os 375 px sem
+    rolagem lateral, conferidos no navegador em 20/10 (`capturas-da-interface/`)."""
+    folha = re.sub(
+        r"\s+",
+        "",
+        folha_da_pagina(
+            client, reverse("interface:compor-etapa", args=[com_marco.id, "classificacao"])
+        ),
+    )
+    # A folha comum também tem blocos desses: o da prévia é o que fala do painel.
+    estreito = "".join(re.findall(r"@medianotalland\(min-width:64rem\)\{(.*?)\}\}", folha))
+    assert ".painel-da-previa:has(>*){position:fixed;inset:0" in estreito
+    assert "overflow:auto" in estreito
+    celular = "".join(re.findall(r"@media\(max-width:40rem\)\{(.*?)\}\}", folha))
+    assert ".painel-da-previa.fronteirathead,.painel-da-previa.detalhadathead{display:none}" in (
+        celular
+    )
+    assert "white-space:normal" in celular
+
+
 def test_o_resumo_e_anunciado_fora_de_banda(client, com_marco):
     corpo = previa(client, com_marco)
     assert 'id="anuncio-da-previa"' in corpo and 'hx-swap-oob="true"' in corpo
@@ -231,6 +265,7 @@ def test_o_resumo_e_anunciado_fora_de_banda(client, com_marco):
 
 
 def test_abrir_recalcular_e_fechar_nao_escrevem_nada(client, com_marco):
+    rascunho = json.dumps(edital_snapshot(com_marco), sort_keys=True, default=str)
     with CaptureQueriesContext(connection) as consultas:
         primeiro = previa(client, com_marco)
         previa(
@@ -249,6 +284,32 @@ def test_abrir_recalcular_e_fechar_nao_escrevem_nada(client, com_marco):
         and "django_session" not in c["sql"]
     ]
     assert escritas == []
+    # O rascunho que a prévia lê sai igual, byte a byte (SC-843).
+    com_marco.refresh_from_db()
+    assert json.dumps(edital_snapshot(com_marco), sort_keys=True, default=str) == rascunho
+
+
+def test_o_recalculo_custa_as_mesmas_consultas_que_a_abertura(client, com_marco):
+    """O cálculo é em memória (SC-841): quem digita não paga consulta a mais por recálculo, nem
+    por um caso-limite maior. O número é o do snapshot do rascunho e da sessão, e só."""
+
+    def consultas(**dados):
+        with CaptureQueriesContext(connection) as capturadas:
+            previa(client, com_marco, **dados)
+        return len(capturadas.captured_queries)
+
+    primeiro = previa(client, com_marco)
+    abertura = consultas()
+    assert (
+        consultas(
+            populacao=_oculto(primeiro, "populacao"),
+            anterior=_oculto(primeiro, "anterior"),
+            **{f"{B}-cutTieOutcome": "STRICT"},
+        )
+        == abertura
+    )
+    assert consultas(**{f"{B}-cutTargetCount": "400", f"{B}-cutSurplusCount": "100"}) == abertura
+    assert consultas(vista="detalhe", candidatos="caso:valor_ausente") == abertura
 
 
 def test_edital_fora_do_escopo_recebe_404(client, com_marco):
