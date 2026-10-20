@@ -16,13 +16,16 @@ CAPTIONS = [(16.0, "Um formulário se conecta a uma planilha."), (19.1, "A plani
             (22.2, "Documentos chegam por diferentes canais."), (25.3, "Resultados precisam ser consolidados."),
             (28.4, "Recursos precisam ser analisados."), (31.0, "Convocações precisam ser acompanhadas.")]
 
-VIS = "g_visao.png"
+# a Visão Geral com o visual da gestão de 18/10 (barra lateral GPS), capturada na janela de 1440 × 810;
+# os alvos dos ícones foram medidos no DOM dessa captura (cap/g_visao_gps.json). A barra lateral, que
+# antes não existia, recebe o ícone da mensagem, que ia para a faixa verde do topo
+VIS = "g_visao_gps.png"
 VIS_CROP = (0, 0, 2880, 1620)
 S = 1920 / 2880
 TARGETS = {  # px da captura
-    "form": (48, 335, 2784, 305), "sheet": (48, 1000, 2784, 620), "pdf": (48, 685, 672, 255),
-    "mail": (752, 685, 672, 255), "folder": (1456, 685, 672, 255), "check": (2160, 685, 672, 255),
-    "calendar": (40, 150, 1500, 140), "msg": (0, 0, 2880, 100),
+    "form": (560, 341, 2272, 314), "sheet": (560, 992, 2272, 628), "pdf": (560, 695, 544, 258),
+    "mail": (1136, 695, 544, 258), "folder": (1712, 695, 544, 258), "check": (2288, 695, 544, 258),
+    "calendar": (560, 160, 1500, 133), "msg": (0, 0, 512, 1620),
 }
 
 # duplicatas ao fundo (profundidade), a cada batida entre os compassos 13 e 18
@@ -46,9 +49,15 @@ def icon_state(i, T):
     k = e_outback(prog(t, SPAWN[i], SPAWN[i] + 0.55), 1.2)
     return x, y, k, rz
 
+# a câmera do ato I termina aproximada em 4% (z de draw); a tela real e os alvos dos ícones desfazem essa
+# aproximação, para a Visão Geral caber inteira no quadro — a barra lateral fica na borda e era cortada
+ZF = 1 / 1.04
+def unzoom(x, y, w, h):
+    return (W / 2 + (x - W / 2) * ZF, H / 2 + (y - H / 2) * ZF, w * ZF, h * ZF)
+
 def target_rect(kind):
     x, y, w, h = TARGETS[kind]
-    return (x * S, y * S, w * S, h * S)
+    return unzoom(x * S, y * S, w * S, h * S)
 
 def organize_k(i, T):
     st = b(22) + 0.35 + i * BEAT * 0.5
@@ -191,7 +200,7 @@ def draw(c, T):
         # a tela real se forma por baixo dos fragmentos
         full = e_io3(prog(T, b(24.2), b(25)))
         if full > 0:
-            card(c, VIS, skia.Rect.MakeXYWH(*VIS_CROP), dst=rect(0, 0, W, H), radius=0, alpha=full, shadow=0, border=0)
+            card(c, VIS, skia.Rect.MakeXYWH(*VIS_CROP), dst=rect(*unzoom(0, 0, W, H)), radius=0, alpha=full, shadow=0, border=0)
         draw_icons(c, T, gray)
         if layer:
             c.restore()
