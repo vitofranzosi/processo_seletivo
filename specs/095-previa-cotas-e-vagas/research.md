@@ -185,8 +185,9 @@ T030, depois do merge do #316.
    pela ampla. Na abertura do painel de um Perfil com reserva, portanto, o bloco da ocupação diz que
    as reservadas não foram avaliadas. É o que o motor faria, e a prévia não o esconde nem o contorna;
    o painel aponta o caso-limite "Autodeclarado dentro das vagas da ampla" como o caminho para ver o
-   resto. **Se a população estável deve ou não plantar esse empate quando o Perfil tem reserva é
-   pergunta de UX para o usuário**, e não foi decidida aqui.
+   resto. **Decidido pelo usuário em 20/10/2026: a população estável continua plantando o empate**
+   também quando o Perfil tem reserva; o caminho para ver as reservadas é o caso-limite que o
+   painel aponta.
 4. **A Modalidade declarada e não apontada como a ampla vira recorte reservado**, como na
    classificação e na ocupação (`FR-503` da `034`). O Perfil padrão das fixtures de interface declara
    "Ampla concorrência (AC)" sem apontá-la, e a prévia dele mostra esse recorte, sem linha no quadro.
