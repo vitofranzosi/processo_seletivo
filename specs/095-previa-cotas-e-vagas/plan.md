@@ -99,7 +99,8 @@ backend/processo_seletivo/
 ├── ocupacao/
 │   ├── domain/
 │   │   ├── apuracao.py            # + ocupantes_pela_ampla (D-005, R-003)
-│   │   └── reversao.py            # + ha_quem_ocupar (D-005, R-003)
+│   │   ├── reversao.py            # + ha_quem_ocupar (D-005, R-003)
+│   │   └── rodada_da_previa.py    # NOVO na implementação — a rodada, injetada em simular (R-010)
 │   └── application/
 │       ├── selectors.py           # ocupantes_da_ampla consulta e chama a função pura
 │       └── movimento.py           # ha_quem_ocupar lê as posições e chama a função pura
@@ -112,24 +113,26 @@ backend/processo_seletivo/
     ├── previa_da_classificacao.py # (094) + frases dos recortes, da ocupação e da reversão
     ├── views.py                   # (094) fragmento lê `recorte`
     ├── templates/interface/
-    │   └── _previa_da_classificacao.html   # (094) + seletor, resumo por recorte, bloco da ocupação
+    │   ├── _previa_da_classificacao.html   # (094) + seletor, resumo por recorte, bloco da ocupação
+    │   ├── _ocupacao_da_previa.html        # NOVO — a ocupação por recorte, como hipótese
+    │   └── _marcas_do_recorte.html         # NOVO — Modalidade, posição na ampla, "ocuparia pela ampla"
     └── static/interface/telas/
         └── previa-da-classificacao.css     # (094) + regras dos blocos novos
 
 backend/tests/
 ├── unit/ocupacao/
 │   ├── test_ocupantes_pela_ampla.py
-│   └── test_ha_quem_ocupar.py
+│   ├── test_ha_quem_ocupar.py
+│   └── test_rodada_da_previa.py            # a matriz da R-001 sobre a rodada
 ├── unit/classificacao/
 │   ├── test_cenarios_com_modalidade.py
 │   └── test_previa_por_recorte.py          # a matriz da R-001 sobre simular
 ├── integration/ocupacao/
 │   └── test_extracao_da_ocupacao_equivale.py   # linha de base antes, igualdade depois
 ├── integration/classificacao/
-│   ├── test_previa_por_recorte_equivale_ao_oficial.py   # FR-2340 + sentinela
-│   └── test_previa_por_recorte_sem_efeito.py            # FR-2341
+│   └── test_previa_por_recorte_equivale_ao_oficial.py   # FR-2340 + sentinela
 └── interface/
-    └── test_previa_por_recorte.py          # seletor, blocos, vocabulário, CSP, 375 px
+    └── test_previa_por_recorte.py          # seletor, blocos, vocabulário, CSP, sem efeito (FR-2341)
 ```
 
 **Structure Decision**: o que decide ocupação fica na ocupação (`ocupacao/domain`), e a prévia o

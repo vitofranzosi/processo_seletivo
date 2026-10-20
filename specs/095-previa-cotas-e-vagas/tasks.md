@@ -15,8 +15,21 @@ depende da `simular` da `094` (a T013 de lá). As fases das histórias dependem 
 inteira (D-001).
 
 **20/10/2026**: o usuário autorizou seguir com a `095`, e a Fase 2 — a única que não depende da
-interface da `094` — foi feita numa branch própria, `claude/095-extracao-da-ocupacao`. As fases 3 em
-diante continuam esperando a interface da `094`.
+interface da `094` — foi feita numa branch própria, `claude/095-extracao-da-ocupacao` (PR #319).
+As fases 3 em diante foram feitas no mesmo dia, depois que a interface da `094` foi publicada no
+PR #320: a branch `claude/095-previa-por-recorte` sai da dela e traz a Fase 2 junto, e o PR é
+empilhado sobre o #320, sem merge.
+
+**O que mudou em relação ao planejado, e por quê:**
+
+- **A rodada de ocupação mora na `ocupacao`, e não em `classificacao/application/previa.py`.** A `094`
+  já tinha mostrado o limite: `classificacao` não importa `ocupacao` (`tests/test_dependencia_da_ocupacao.py`).
+  A rodada é `ocupacao/domain/rodada_da_previa.py`, pura, e chega a `simular` injetada em
+  `apurar_recortes`, como a fronteira das vagas chega em `apurar_vagas`.
+- **A T028 está em `tests/interface/test_previa_por_recorte.py`**, como a da `094` está no teste de
+  interface dela: a captura de consultas é a do pedido real.
+- **A T030 não foi feita**, por decisão do usuário de 20/10: nenhuma rodada nova de protótipo; a
+  experiência se avalia na interface real.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -30,8 +43,8 @@ diante continuam esperando a interface da `094`.
 
 **Purpose**: ponto de partida conferido
 
-- [ ] T001 Conferir que a interface da `094` está na `main` — `classificacao/application/previa.py`, `classificacao/domain/cenarios_da_previa.py`, `interface/previa_da_classificacao.py`, `interface/templates/interface/_previa_da_classificacao.html` e `interface/static/interface/telas/previa-da-classificacao.css` em `backend/processo_seletivo/` —, e ler o contrato do fragmento dela em `specs/094-previa-da-classificacao/contracts/fragmento-da-previa.md`. Sem isso, só a Fase 2 pode começar
-- [ ] T002 [P] Rodar `specs/095-previa-cotas-e-vagas/prototipo/reproducao.py` de dentro de `backend/` e conferir a saída contra a R-001 de `specs/095-previa-cotas-e-vagas/research.md`; divergência é sinal de que o motor mudou desde 20/10, e a R-001 precisa ser refeita antes de seguir
+- [x] T001 Conferir que a interface da `094` está na `main` — `classificacao/application/previa.py`, `classificacao/domain/cenarios_da_previa.py`, `interface/previa_da_classificacao.py`, `interface/templates/interface/_previa_da_classificacao.html` e `interface/static/interface/telas/previa-da-classificacao.css` em `backend/processo_seletivo/` —, e ler o contrato do fragmento dela em `specs/094-previa-da-classificacao/contracts/fragmento-da-previa.md`. Sem isso, só a Fase 2 pode começar
+- [x] T002 [P] Rodar `specs/095-previa-cotas-e-vagas/prototipo/reproducao.py` de dentro de `backend/` e conferir a saída contra a R-001 de `specs/095-previa-cotas-e-vagas/research.md`; divergência é sinal de que o motor mudou desde 20/10, e a R-001 precisa ser refeita antes de seguir
 
 ---
 
@@ -56,11 +69,11 @@ oficial, sem mudar resultado nenhum. Não dependem da `094`.
 **Purpose**: recortes, rodada de ocupação, participantes e população com Modalidades, puros. Depende
 da `simular` da `094`.
 
-- [ ] T007 [P] Escrever `backend/tests/unit/classificacao/test_cenarios_com_modalidade.py`: a atribuição da R-005 é determinística; não muda nota nem a ordem da ampla (com e sem Modalidades declaradas, a ampla é igual); cada candidato tem no máximo uma Modalidade; os plantados da fatia 1 não recebem Modalidade; nenhum nome fictício contém código ou nome de Modalidade; a falta de espaço para plantar é dita
-- [ ] T008 Implementar a atribuição de Modalidade em `backend/processo_seletivo/classificacao/domain/cenarios_da_previa.py`, depois da população estável da `094`, com as fronteiras de cada reservada viajando em `populacao` (R-005, contrato do fragmento)
-- [ ] T009 [P] Escrever `backend/tests/unit/classificacao/test_previa_por_recorte.py` com a matriz da R-001 sobre `simular`: ordem e faixa por recorte; alvo fixo e suplentes iguais em todo recorte; recorte sem linha; quem ocupa pela ampla dentro e fora das vagas; posições da faixa tomadas e autodeclarados além; as quatro quantidades; reversão ausente, por saldo e por esgotamento; efetivas da próxima apuração da ampla; empate na fronteira da ampla (reservadas dependentes) e da reservada; corte impedido na ampla e numa reservada; ordem vazia; união dos participantes; limite de recortes; e `simular` em até 1 segundo com 500 candidatos e 7 recortes (SC-876)
-- [ ] T010 Estender `backend/processo_seletivo/classificacao/application/previa.py`: `recortes_do_perfil` e `linha_do_quadro` sobre o snapshot; ordem, corte e trajetória por recorte; a rodada da R-004 com `apurar`, `ocupantes_pela_ampla`, `reversao.ha_quem_ocupar` e `quantidade_a_reverter`; os estados da ocupação do `data-model.md`; os participantes da R-008; o limite da R-006
-- [ ] T011 Escrever `backend/tests/integration/classificacao/test_previa_por_recorte_equivale_ao_oficial.py`: os casos da FR-2340 pelos dois caminhos — o oficial com ordens, cortes e apurações emitidos no banco, a prévia com os mesmos dados —, comparando ordens, faixas, quem ocupa pela ampla, quantidades e cedido por recorte; e a sentinela: com o caminho oficial alterado (`monkeypatch` em `ocupantes_pela_ampla` e em `ha_quem_ocupar`), o teste reprova
+- [x] T007 [P] Escrever `backend/tests/unit/classificacao/test_cenarios_com_modalidade.py`: a atribuição da R-005 é determinística; não muda nota nem a ordem da ampla (com e sem Modalidades declaradas, a ampla é igual); cada candidato tem no máximo uma Modalidade; os plantados da fatia 1 não recebem Modalidade; nenhum nome fictício contém código ou nome de Modalidade; a falta de espaço para plantar é dita
+- [x] T008 Implementar a atribuição de Modalidade em `backend/processo_seletivo/classificacao/domain/cenarios_da_previa.py`, depois da população estável da `094`, com as fronteiras de cada reservada viajando em `populacao` (R-005, contrato do fragmento)
+- [x] T009 [P] Escrever `backend/tests/unit/classificacao/test_previa_por_recorte.py` com a matriz da R-001 sobre `simular`: ordem e faixa por recorte; alvo fixo e suplentes iguais em todo recorte; recorte sem linha; quem ocupa pela ampla dentro e fora das vagas; posições da faixa tomadas e autodeclarados além; as quatro quantidades; reversão ausente, por saldo e por esgotamento; efetivas da próxima apuração da ampla; empate na fronteira da ampla (reservadas dependentes) e da reservada; corte impedido na ampla e numa reservada; ordem vazia; união dos participantes; limite de recortes; e `simular` em até 1 segundo com 500 candidatos e 7 recortes (SC-876)
+- [x] T010 Estender `backend/processo_seletivo/classificacao/application/previa.py`: `recortes_do_perfil` e `linha_do_quadro` sobre o snapshot; ordem, corte e trajetória por recorte; a rodada da R-004 com `apurar`, `ocupantes_pela_ampla`, `reversao.ha_quem_ocupar` e `quantidade_a_reverter`; os estados da ocupação do `data-model.md`; os participantes da R-008; o limite da R-006
+- [x] T011 Escrever `backend/tests/integration/classificacao/test_previa_por_recorte_equivale_ao_oficial.py`: os casos da FR-2340 pelos dois caminhos — o oficial com ordens, cortes e apurações emitidos no banco, a prévia com os mesmos dados —, comparando ordens, faixas, quem ocupa pela ampla, quantidades e cedido por recorte; e a sentinela: com o caminho oficial alterado (`monkeypatch` em `ocupantes_pela_ampla` e em `ha_quem_ocupar`), o teste reprova
 
 **Checkpoint**: `simular` responde por recorte, e a equivalência prova que é o motor oficial.
 
@@ -73,10 +86,10 @@ da `simular` da `094`.
 **Independent Test**: num Perfil com duas reservadas, cada recorte mostra a ordem do caminho oficial; a
 ampla contém todos; Perfil sem reservada fica igual à fatia 1.
 
-- [ ] T012 [P] [US1] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 5 da US1: resumo por recorte no marco da jornada, seletor de recorte no detalhe com a mesma população, posição na ampla e Modalidade nas linhas, a Modalidade apontada como ampla fora dos recortes, Perfil sem reservada sem seletor, recorte vazio dito como tal, `recorte` inválido caindo na ampla com a frase
-- [ ] T013 [US1] Ler `recorte` no fragmento em `backend/processo_seletivo/interface/views.py` (R-007) e passá-lo a `simular`
-- [ ] T014 [US1] Escrever as frases dos recortes em `backend/processo_seletivo/interface/previa_da_classificacao.py`: o rótulo da ampla como universo inteiro, o resumo por recorte, a frase do recorte vazio, os dois números quando a faixa da reservada difere das vagas (FR-2307), o corte não apurável sem linha, a recusa nomeando o recorte
-- [ ] T015 [US1] Acrescentar o seletor de recorte (`<select>` com `<label>`, `hx-get` no `change`, dentro do formulário do painel), o resumo por recorte na jornada e as colunas da posição na ampla e da Modalidade em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`
+- [x] T012 [P] [US1] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 5 da US1: resumo por recorte no marco da jornada, seletor de recorte no detalhe com a mesma população, posição na ampla e Modalidade nas linhas, a Modalidade apontada como ampla fora dos recortes, Perfil sem reservada sem seletor, recorte vazio dito como tal, `recorte` inválido caindo na ampla com a frase
+- [x] T013 [US1] Ler `recorte` no fragmento em `backend/processo_seletivo/interface/views.py` (R-007) e passá-lo a `simular`
+- [x] T014 [US1] Escrever as frases dos recortes em `backend/processo_seletivo/interface/previa_da_classificacao.py`: o rótulo da ampla como universo inteiro, o resumo por recorte, a frase do recorte vazio, os dois números quando a faixa da reservada difere das vagas (FR-2307), o corte não apurável sem linha, a recusa nomeando o recorte
+- [x] T015 [US1] Acrescentar o seletor de recorte (`<select>` com `<label>`, `hx-get` no `change`, dentro do formulário do painel), o resumo por recorte na jornada e as colunas da posição na ampla e da Modalidade em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`
 
 **Checkpoint**: a US1 funciona sozinha, com o bloco da ocupação ainda o da fatia 1.
 
@@ -89,9 +102,9 @@ ampla contém todos; Perfil sem reservada fica igual à fatia 1.
 **Independent Test**: as quantidades e o conjunto dos que ocupam pela ampla são os da equivalência
 (T011); nenhum recorte não avaliado mostra número.
 
-- [ ] T016 [P] [US2] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 8 da US2: "ocuparia pela ampla" e a vaga que continua reservada, sem movimento; suplente da ampla sem a marca; a frase da faixa tomada e dos que ficaram além; a ampla parada e as reservadas dependentes, sem número; só a reservada parada; sem linha, não avaliada; as hipóteses e "uma rodada"; o Perfil sem reservada com as quatro quantidades da ampla
-- [ ] T017 [US2] Escrever as frases da ocupação em `backend/processo_seletivo/interface/previa_da_classificacao.py`: as quatro quantidades com "vagas sem ocupante nesta hipótese", as hipóteses da FR-2320, os estados do `data-model.md`, a frase da FR-2319 como comportamento atual (DP-1), e a concomitância como regra que vale sempre (FR-2316)
-- [ ] T018 [US2] Acrescentar o bloco da ocupação por recorte e a marca "ocuparia pela ampla" em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`, e as regras de toda classe nova em `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css`
+- [x] T016 [P] [US2] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 8 da US2: "ocuparia pela ampla" e a vaga que continua reservada, sem movimento; suplente da ampla sem a marca; a frase da faixa tomada e dos que ficaram além; a ampla parada e as reservadas dependentes, sem número; só a reservada parada; sem linha, não avaliada; as hipóteses e "uma rodada"; o Perfil sem reservada com as quatro quantidades da ampla
+- [x] T017 [US2] Escrever as frases da ocupação em `backend/processo_seletivo/interface/previa_da_classificacao.py`: as quatro quantidades com "vagas sem ocupante nesta hipótese", as hipóteses da FR-2320, os estados do `data-model.md`, a frase da FR-2319 como comportamento atual (DP-1), e a concomitância como regra que vale sempre (FR-2316)
+- [x] T018 [US2] Acrescentar o bloco da ocupação por recorte e a marca "ocuparia pela ampla" em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`, e as regras de toda classe nova em `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css`
 
 ---
 
@@ -102,9 +115,9 @@ ampla contém todos; Perfil sem reservada fica igual à fatia 1.
 **Independent Test**: para cada espécie e para a ausência, o cedido é o da equivalência (T011), e sem
 declaração nenhuma quantidade cedida aparece.
 
-- [ ] T019 [P] [US3] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 5 da US3: "não reverte" sem declaração; cedido por saldo e as efetivas da próxima apuração da ampla, sem refazê-la; esgotamento sem cessão com a frase do comportamento atual e os dois números; nada a reverter; a espécie lida do gravado, com a origem dita
-- [ ] T020 [US3] Escrever as frases da reversão em `backend/processo_seletivo/interface/previa_da_classificacao.py`, com a espécie pelo rótulo do passo Perfis, o destino "a ampla concorrência deste Perfil", "seria cedida" (nunca no passado) e a frase de DP-2 como comportamento atual (FR-2328, FR-2337)
-- [ ] T021 [US3] Acrescentar a reversão ao bloco da ocupação em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`
+- [x] T019 [P] [US3] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 5 da US3: "não reverte" sem declaração; cedido por saldo e as efetivas da próxima apuração da ampla, sem refazê-la; esgotamento sem cessão com a frase do comportamento atual e os dois números; nada a reverter; a espécie lida do gravado, com a origem dita
+- [x] T020 [US3] Escrever as frases da reversão em `backend/processo_seletivo/interface/previa_da_classificacao.py`, com a espécie pelo rótulo do passo Perfis, o destino "a ampla concorrência deste Perfil", "seria cedida" (nunca no passado) e a frase de DP-2 como comportamento atual (FR-2328, FR-2337)
+- [x] T021 [US3] Acrescentar a reversão ao bloco da ocupação em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`
 
 **Checkpoint**: as três histórias P1 entregam o critério de sucesso.
 
@@ -116,8 +129,8 @@ declaração nenhuma quantidade cedida aparece.
 
 **Independent Test**: o número de quem poderia participar é o tamanho da união por pessoa das faixas.
 
-- [ ] T022 [P] [US4] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 3 da US4: a união e quantos as reservadas acrescentam, a ocupação fora da sequência, o número dependente quando o corte de uma reservada não sairia
-- [ ] T023 [US4] Estender a Etapa alimentada e o ponto do marco em `backend/processo_seletivo/interface/previa_da_classificacao.py` e no template da jornada em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`, e o "o que mudou" por recorte (FR-2334) em `backend/processo_seletivo/classificacao/application/previa.py`
+- [x] T022 [P] [US4] Escrever em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 3 da US4: a união e quantos as reservadas acrescentam, a ocupação fora da sequência, o número dependente quando o corte de uma reservada não sairia
+- [x] T023 [US4] Estender a Etapa alimentada e o ponto do marco em `backend/processo_seletivo/interface/previa_da_classificacao.py` e no template da jornada em `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html`, e o "o que mudou" por recorte (FR-2334) em `backend/processo_seletivo/classificacao/application/previa.py`
 
 ---
 
@@ -127,8 +140,8 @@ declaração nenhuma quantidade cedida aparece.
 
 **Independent Test**: cada caso, com a configuração de referência, produz a situação que o nomeia.
 
-- [ ] T024 [P] [US5] Escrever em `backend/tests/unit/classificacao/test_cenarios_com_modalidade.py` e em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 3 da US5 e um por caso-limite, inclusive o "não ocorre e por quê"
-- [ ] T025 [US5] Acrescentar os seis casos-limite a `backend/processo_seletivo/classificacao/domain/cenarios_da_previa.py`, no mesmo seletor da `094`, sem regra por nome de Modalidade (D-006)
+- [x] T024 [P] [US5] Escrever em `backend/tests/unit/classificacao/test_cenarios_com_modalidade.py` e em `backend/tests/interface/test_previa_por_recorte.py` os cenários 1 a 3 da US5 e um por caso-limite, inclusive o "não ocorre e por quê"
+- [x] T025 [US5] Acrescentar os seis casos-limite a `backend/processo_seletivo/classificacao/domain/cenarios_da_previa.py`, no mesmo seletor da `094`, sem regra por nome de Modalidade (D-006)
 
 ---
 
@@ -138,17 +151,17 @@ declaração nenhuma quantidade cedida aparece.
 
 **Independent Test**: sem rolagem horizontal ao trocar recorte; o anúncio tem o resumo de cada recorte.
 
-- [ ] T026 [P] [US6] Escrever em `backend/tests/interface/test_previa_por_recorte.py` a medida por CSSOM a 375 px do seletor e do bloco da ocupação empilhado, o anúncio por recorte e a ausência de estilo e script no HTML devolvido
-- [ ] T027 [US6] Ajustar `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css` (bloco empilhado abaixo de 40rem, seletor na cabeça do detalhe) e a frase do anúncio em `backend/processo_seletivo/interface/previa_da_classificacao.py`
+- [x] T026 [P] [US6] Escrever em `backend/tests/interface/test_previa_por_recorte.py` a medida por CSSOM a 375 px do seletor e do bloco da ocupação empilhado, o anúncio por recorte e a ausência de estilo e script no HTML devolvido
+- [x] T027 [US6] Ajustar `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css` (bloco empilhado abaixo de 40rem, seletor na cabeça do detalhe) e a frase do anúncio em `backend/processo_seletivo/interface/previa_da_classificacao.py`
 
 ---
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T028 [P] Escrever `backend/tests/integration/classificacao/test_previa_por_recorte_sem_efeito.py`: nenhuma escrita em ordem, corte, apuração, movimento, efeito, rascunho ou trilha em abrir, recalcular, trocar recorte e cenário e fechar; nenhuma consulta a `Inscricao` nem a documentos (FR-2341, FR-2342)
-- [ ] T029 [P] Passar pelos guardiões do repositório: a lista literal de `backend/tests/interface/test_vocabulario_da_composicao.py`, uma regra na folha para toda classe nova, a varredura de vocabulário proibido ("convocado", "aprovado", "matriculado", "cotista aprovado") nas frases de `backend/processo_seletivo/interface/previa_da_classificacao.py`, e nenhum `}}` em CSS
-- [ ] T030 Estender o protótipo navegável da `094` (`specs/094-previa-da-classificacao/prototipo/`, depois do merge do #316) com o seletor de recorte, o bloco da ocupação e a reversão, reaproveitando `specs/095-previa-cotas-e-vagas/prototipo/reproducao.py`, e capturar desktop e 375 px em `specs/095-previa-cotas-e-vagas/prototipo/capturas/`
-- [ ] T031 Estender o roteiro de compreensão da `094` com as perguntas da SC-870 em `specs/095-previa-cotas-e-vagas/roteiro-de-compreensao.md`
+- [x] T028 [P] Escrever, em `backend/tests/interface/test_previa_por_recorte.py`, nenhuma escrita em ordem, corte, apuração, movimento, efeito, rascunho ou trilha em abrir, recalcular, trocar recorte e cenário e fechar; nenhuma consulta a `Inscricao` nem a documentos (FR-2341, FR-2342)
+- [x] T029 [P] Passar pelos guardiões do repositório: a lista literal de `backend/tests/test_vocabulario_da_composicao.py`, uma regra na folha para toda classe nova, a varredura de vocabulário proibido ("convocado", "aprovado", "matriculado", "cotista aprovado") nas frases de `backend/processo_seletivo/interface/previa_da_classificacao.py`, e nenhum `}}` em CSS
+- [ ] ~~T030~~ *Não feita: decisão do usuário de 20/10, sem nova rodada de protótipo.* Estender o protótipo navegável da `094` (`specs/094-previa-da-classificacao/prototipo/`, depois do merge do #316) com o seletor de recorte, o bloco da ocupação e a reversão, reaproveitando `specs/095-previa-cotas-e-vagas/prototipo/reproducao.py`, e capturar desktop e 375 px em `specs/095-previa-cotas-e-vagas/prototipo/capturas/`
+- [x] T031 *Roteiro escrito; a validação com pessoas fica aberta até o relato do usuário.* Estender o roteiro de compreensão da `094` com as perguntas da SC-870 em `specs/095-previa-cotas-e-vagas/roteiro-de-compreensao.md`
 - [ ] T032 Conferir `specs/095-previa-cotas-e-vagas/rastreabilidade.md` contra o implementado, rodar o roteiro de `specs/095-previa-cotas-e-vagas/quickstart.md` e `make lint check test-pg` em `backend/`
 
 ---

@@ -208,3 +208,15 @@ fronteira da gestão, ele cobre a tela, com rolagem própria (FR-2202).
     color:var(--texto-fraco)}
   .painel-da-previa .efeito-separou .efeito-curto{color:var(--verde-escuro);font-weight:700}
 }
+
+/* Os recortes da fatia 2 (095): o resumo por recorte no marco aberto, a ocupação por recorte como
+   hipótese e as marcas de Modalidade e de quem ocuparia pela ampla nas linhas. */
+.painel-da-previa .recortes-do-marco{margin:.35rem 0;padding-left:1.1rem;font-size:.9rem}
+.painel-da-previa .recortes-do-marco li{margin:.1rem 0}
+.painel-da-previa .ocupacao-dos-recortes{margin-top:.5rem}
+.painel-da-previa .linhas-de-ocupacao{margin:.2rem 0;padding-left:1.1rem;font-size:.9rem}
+.painel-da-previa .linhas-de-ocupacao li{margin:.3rem 0}
+.painel-da-previa .frase-do-recorte{display:block;font-size:.85rem;color:var(--texto-fraco)}
+.painel-da-previa .etiqueta-modalidade{border-color:#1d4f91;color:#1d4f91}
+.painel-da-previa .etiqueta-pela-ampla{border-color:var(--verde);color:var(--verde-escuro);
+  background:var(--verde-claro)}

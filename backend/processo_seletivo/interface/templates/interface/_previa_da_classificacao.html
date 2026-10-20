@@ -9,7 +9,7 @@ folha da página — `telas/previa-da-classificacao.css` — valer para estas cl
 varreduras de vocabulário descerem nele; sem contexto, ele não desenha nada.
 
 **O recálculo é do servidor** (D-002): qualquer mudança no Perfil pede o painel de novo, com o que está
-digitado, a população, a vista e o estado anterior. A CSP proíbe script e estilo no modelo, e o único
+digitado, a população, a vista, o recorte em vista (095) e o estado anterior. A CSP proíbe script e estilo no modelo, e o único
 script da prévia, `previa-da-classificacao.js`, só move o foco.
 {% endcomment %}
 {% if sem_marco %}
@@ -17,7 +17,7 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
   de novo pelo cartão do marco.</p>
 {% elif previa_url %}
 <div class="recalculo" hx-get="{{ previa_url }}"
-     hx-include="#cartao-{{ indice }}, #candidatos-da-previa, #populacao-da-previa, #vista-da-previa, #anterior-da-previa"
+     hx-include="#cartao-{{ indice }}, #candidatos-da-previa, #populacao-da-previa, #vista-da-previa, #recorte-da-previa, #anterior-da-previa"
      hx-target="#painel-da-previa" hx-swap="innerHTML"
      hx-trigger="change from:#cartao-{{ indice }}, input changed delay:400ms from:#cartao-{{ indice }}">
   <div class="cabeca-do-painel">
@@ -35,6 +35,18 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
   {% if vista == "detalhe" %}
   <h2 id="titulo-da-previa" tabindex="-1">{{ marco_nome }}: classificação e desempate</h2>
   <p class="contexto">{{ perfil.code }} — {{ perfil.name }} · detalhe do cálculo</p>
+  {% if seletor_de_recorte %}
+  {# Um recorte por vez no detalhe; a jornada mostra todos (D-007 da 095). #}
+  <p class="campo-da-previa"><label for="recorte-da-previa">Recorte</label>
+    {% comment %}Sem o estado anterior: trocar de recorte não altera a regra, e o "o que mudou" diria
+    que nada mudou para ninguém — verdade sobre a regra, e confuso sobre a troca.{% endcomment %}
+    <select id="recorte-da-previa" name="recorte" hx-get="{{ previa_url }}"
+            hx-include="#cartao-{{ indice }}, #candidatos-da-previa, #populacao-da-previa, #vista-da-previa"
+            hx-target="#painel-da-previa" hx-swap="innerHTML">
+      {% for valor, rotulo in seletor_de_recorte.opcoes %}<option value="{{ valor }}"{% if valor == seletor_de_recorte.escolhido %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select></p>
+  {% if seletor_de_recorte.aviso %}<p class="aviso-do-modo">{{ seletor_de_recorte.aviso }}</p>{% endif %}
+  {% endif %}
   {% else %}
   <p class="contexto">{{ perfil.code }} — {{ perfil.name }} · simulando a <strong>{{ marco_nome }}</strong></p>
   {% endif %}
@@ -54,6 +66,11 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
         <optgroup label="Caso-limite — demonstração dirigida">
           {% for valor, rotulo in candidatos.casos %}<option value="{{ valor }}"{% if valor == candidatos.escolha %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
         </optgroup>
+        {% if candidatos.reservas %}
+        <optgroup label="Caso-limite de reserva — demonstração dirigida">
+          {% for valor, rotulo in candidatos.reservas %}<option value="{{ valor }}"{% if valor == candidatos.escolha %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+        </optgroup>
+        {% endif %}
       </select></p>
     {% if candidatos.caso %}
     <p class="aviso-do-modo">Caso construído para demonstração: ele acompanha alvo, suplentes e
@@ -114,6 +131,12 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
         {% endfor %}
       </div>
       {% endif %}
+      {% if ponto.aberto.recortes %}
+      {# Um resumo por recorte: a ampla, que é o universo inteiro, e cada reservada (FR-2310). #}
+      <ul class="recortes-do-marco" aria-label="Por recorte">
+        {% for recorte in ponto.aberto.recortes %}<li><strong>{{ recorte.rotulo }}:</strong> {{ recorte.texto }}</li>{% endfor %}
+      </ul>
+      {% endif %}
       {% if ponto.aberto.aviso_das_vagas %}<p class="aviso-curto">{{ ponto.aberto.aviso_das_vagas }}</p>{% endif %}
       {% if ponto.aberto.ramo %}<p class="ramo">{{ ponto.aberto.ramo }}</p>{% endif %}
       {% if ponto.aberto.terminal %}
@@ -136,15 +159,23 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
     </li>
     {% endfor %}
   </ol>
+  {% if ocupacao_dos_recortes %}
+  {# A ocupação fica fora da sequência de Etapas e marcos, como hipótese (FR-2312). #}
+  {% include "interface/_ocupacao_da_previa.html" with o=ocupacao_dos_recortes %}
+  {% endif %}
   <details class="limites"><summary>O que esta prévia simula, e o que não</summary>
     <ul>
-      <li>Calcula só o marco simulado, com o motor oficial da classificação e candidatos fictícios.
-        Os outros pontos são lidos da configuração, sem cálculo.</li>
+      <li>Calcula só o marco simulado, com o motor oficial da classificação e candidatos fictícios:
+        a ordem e o corte de cada recorte — a ampla, que é o universo inteiro, e cada Modalidade
+        reservada —, e a primeira apuração das vagas de cada um, sob hipóteses. Os outros pontos são
+        lidos da configuração, sem cálculo.</li>
       <li>Lê o que está digitado nos cartões deste Perfil, e o que está gravado nos outros passos:
-        Etapas, pesos, fatos declarados e quadro de vagas.</li>
-      <li>Não encadeia marcos: não sabe quem passaria numa Etapa posterior, nem quantos seriam
-        eliminados numa Etapa decisória.</li>
-      <li>Não simula reservas de vagas, ocupação, chamadas, recurso nem sorteio. Nada é gravado.</li>
+        Etapas, pesos, fatos declarados, Modalidades, quadro de vagas e reversão.</li>
+      <li>Não encadeia marcos nem apurações: não sabe quem passaria numa Etapa posterior, quantos
+        seriam eliminados numa Etapa decisória, nem o que uma faixa seguinte alcançaria.</li>
+      <li>Não simula chamadas, aceites, desistências, movimentos de vaga anteriores, cascata entre
+        recortes, remanejamento entre Perfis, recurso nem sorteio. O percentual da Modalidade
+        fundamenta a reserva e não entra na conta. Nada é gravado.</li>
     </ul></details>
 
   {% else %}
@@ -162,10 +193,13 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
     <h3 id="titulo-ocupacao">Depois do corte: a apuração das vagas
       <span class="selo-hipotese">hipótese</span></h3>
     <p class="estado-{{ ocupacao.estado }}"><strong>{{ ocupacao.forte }}</strong> {{ ocupacao.texto }}</p>
-    <p class="nota">Se a ocupação for apurada sobre este marco, com as vagas da linha geral do quadro e
-      todos os que avançaram habilitados. A prévia não simula chamadas, desistências, movimentos nem
-      reversão.</p>
+    <p class="nota">Se a ocupação for apurada sobre este marco, com as vagas da linha do quadro e
+      todos os que avançaram habilitados. A prévia não simula chamadas, desistências, movimentos
+      anteriores nem faixa seguinte.</p>
   </section>
+  {% if ocupacao_dos_recortes %}
+  {% include "interface/_ocupacao_da_previa.html" with o=ocupacao_dos_recortes %}
+  {% endif %}
 
   <section aria-labelledby="titulo-fronteira">
     <h3 id="titulo-fronteira">Quem está perto dos limites</h3>
@@ -180,11 +214,11 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
         <tr class="limite"><td colspan="4"><span>{{ linha.texto }}</span></td></tr>
         {% elif linha.tipo == "sem-posicao" %}
         <tr class="linha-sem-posicao"><td>—</td>
-          <td>{{ linha.nome }}<span class="etiqueta">{{ linha.etiqueta }}</span></td><td>—</td>
+          <td>{{ linha.nome }}<span class="etiqueta">{{ linha.etiqueta }}</span>{% include "interface/_marcas_do_recorte.html" %}</td><td>—</td>
           <td><span class="marca marca-{{ linha.marca.classe }}">{{ linha.marca.rotulo }}</span>{% if linha.mudou %}<span class="etiqueta etiqueta-mudou">mudou</span>{% endif %}</td></tr>
         {% else %}
         <tr class="linha-{{ linha.marca.classe }}"><td>{{ linha.posicao.numero }}{% if linha.posicao.dividida %}<span class="dividida">dividida por {{ linha.posicao.dividida }}</span>{% endif %}</td>
-          <td>{{ linha.nome }}{% if linha.etiqueta %}<span class="etiqueta{% if linha.etiqueta == 'empate não resolvido' %} etiqueta-empate{% endif %}">{{ linha.etiqueta }}</span>{% endif %}</td>
+          <td>{{ linha.nome }}{% if linha.etiqueta %}<span class="etiqueta{% if linha.etiqueta == 'empate não resolvido' %} etiqueta-empate{% endif %}">{{ linha.etiqueta }}</span>{% endif %}{% include "interface/_marcas_do_recorte.html" %}</td>
           <td><span class="rotulo-no-estreito">pontuação </span>{{ linha.pontuacao }}</td>
           <td><span class="marca marca-{{ linha.marca.classe }}">{{ linha.marca.rotulo }}</span>{% if linha.mudou %}<span class="etiqueta etiqueta-mudou">mudou</span>{% endif %}</td></tr>
         {% endif %}

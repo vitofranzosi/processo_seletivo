@@ -3144,7 +3144,9 @@ def fragmento_previa_da_classificacao(request, indice, sub):
     """
     from processo_seletivo.classificacao.application.corte import linha_do_quadro
     from processo_seletivo.classificacao.domain.universo import por_identidade
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
     from processo_seletivo.interface import previa_da_classificacao as previa
+    from processo_seletivo.ocupacao.domain import reversao
 
     edital = _edital_do_fragmento(request)
     if edital is None:
@@ -3168,6 +3170,19 @@ def fragmento_previa_da_classificacao(request, indice, sub):
             {"previa_url": request.path, "indice": indice, "sem_marco": True},
         )
     linha = linha_do_quadro(snapshot, perfil_id=perfil["id"], lista_id=None)
+    # Os recortes são os da derivação única que a classificação e a ocupação usam (095, FR-2301),
+    # e a linha de cada um é a que o corte e a apuração leriam. A espécie de reversão é a do
+    # Perfil gravado no passo Perfis: não é campo deste cartão (FR-2326).
+    recortes = []
+    for lista_id, rotulo in recortes_do_perfil(snapshot, perfil_id=perfil["id"]):
+        do_recorte = linha_do_quadro(snapshot, perfil_id=perfil["id"], lista_id=lista_id)
+        recortes.append(
+            {
+                "lista_id": lista_id,
+                "rotulo": rotulo,
+                "vagas": (do_recorte or {}).get("immediateVacancies"),
+            }
+        )
     contexto = previa.contexto(
         perfil=perfil,
         marcos=marcos,
@@ -3178,6 +3193,8 @@ def fragmento_previa_da_classificacao(request, indice, sub):
         dados=request.GET,
         edital=edital,
         indice=indice,
+        recortes=recortes,
+        especie=reversao.declarada(perfil),
     )
     return render(request, "interface/_previa_da_classificacao.html", contexto)
 

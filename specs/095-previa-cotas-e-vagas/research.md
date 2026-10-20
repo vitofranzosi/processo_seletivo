@@ -54,7 +54,9 @@ só pela ampla; 13 com alvo fixo 10; 17 com 5 suplentes, contra 15.
 
 ## R-002 — Achados fora do escopo, registrados
 
-Conferidos por leitura em 20/10; **não** reproduzidos em teste de integração. Não mudam o que a prévia
+Conferidos por leitura em 20/10. O primeiro foi **reproduzido** depois, no banco, pela equivalência da
+T011 (`test_empate_na_ultima_vaga_da_ampla`, que prende a recusa crua como ela é); o segundo, só por
+leitura e pela linha de base da T003. Não mudam o que a prévia
 mostra sob as hipóteses dela, e por isso ficam registrados, e não são escopo (D-005 manda preservá-los
 na extração).
 
@@ -167,3 +169,26 @@ ampla → reservadas → reversão.
 **Não prova**: a derivação dos recortes e a leitura da linha a partir do snapshot (o roteiro usa um
 dicionário); as duas extrações (esboçadas); a tela. A extensão visual do protótipo da `094` é a
 T030, depois do merge do #316.
+
+## R-010 — O que a implementação acrescentou *(20/10, PR empilhado sobre o #320)*
+
+1. **A apuração da reservada nasce com a efetiva líquida da cessão.** `emissao._apurar` desconta o
+   que a cota cede antes de gravar, e a apuração registra `efetivas = publicadas − cedidas` e
+   `faltando = 0`. A rodada da prévia faz o mesmo, e o painel mostra as vagas sem ocupante **antes**
+   da cessão, dizendo à parte o que a apuração registraria depois — mostrar só o número líquido
+   esconderia a vaga que a reversão levou.
+2. **A rodada mora na `ocupacao`.** `classificacao` não importa `ocupacao`, e a rodada é decisão da
+   ocupação: `ocupacao/domain/rodada_da_previa.py`, injetada em `simular` pela interface, como a
+   fronteira das vagas da `094`.
+3. **A população estável da `094` planta um empate na última vaga da ampla** (decisão 003 de lá), e
+   ele para a apuração da ampla — e, com ela, a de toda reservada, que depende de saber quem ocupa
+   pela ampla. Na abertura do painel de um Perfil com reserva, portanto, o bloco da ocupação diz que
+   as reservadas não foram avaliadas. É o que o motor faria, e a prévia não o esconde nem o contorna;
+   o painel aponta o caso-limite "Autodeclarado dentro das vagas da ampla" como o caminho para ver o
+   resto. **Decidido pelo usuário em 20/10/2026: a população estável continua plantando o empate**
+   também quando o Perfil tem reserva; o caminho para ver as reservadas é o caso-limite que o
+   painel aponta.
+4. **A Modalidade declarada e não apontada como a ampla vira recorte reservado**, como na
+   classificação e na ocupação (`FR-503` da `034`). O Perfil padrão das fixtures de interface declara
+   "Ampla concorrência (AC)" sem apontá-la, e a prévia dele mostra esse recorte, sem linha no quadro.
+   O roteiro de compreensão manda apontá-la antes da sessão.

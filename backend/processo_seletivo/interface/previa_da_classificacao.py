@@ -11,6 +11,11 @@ lado a lado, classificação completa e explicação técnica — fica a um cliq
 
 **A fronteira das vagas é injetada aqui.** `classificacao` não importa `ocupacao`, e quem pode
 importar os dois é a interface: `apurar_vagas` é a verificação que `simular` recebe.
+
+**E a rodada de ocupação por recorte também** (095): `apurar_recortes` liga `simular` à rodada da
+`ocupacao` — quem ocupa pela ampla, as quatro quantidades de cada recorte e a reversão declarada. O
+que o painel diz dela é comportamento atual do motor, inclusive onde a spec 095 o registra como
+pendente (DP-1, DP-2), e nunca leitura definitiva da norma.
 """
 
 from django.urls import reverse
@@ -19,7 +24,7 @@ from processo_seletivo.classificacao.application import previa as calculo
 from processo_seletivo.classificacao.domain import cenarios_da_previa as cenarios
 from processo_seletivo.classificacao.domain import jornada as jornada_do_perfil
 from processo_seletivo.classificacao.domain.desempate import _valor_do_criterio
-from processo_seletivo.ocupacao.domain import apuracao
+from processo_seletivo.ocupacao.domain import apuracao, rodada_da_previa
 
 C = calculo
 
@@ -47,6 +52,11 @@ TERMINAL = {
     C.NAO_AVANCA: "Fora da faixa",
 }
 DESFECHO = {"ADMITS_SURPLUS": "“Todos os empatados progridem”", "STRICT": "“A faixa para no alvo”"}
+#: A espécie de reversão pelo rótulo do passo Perfis (`_perfil.html`), e não pelo código.
+REVERSAO = {
+    "ON_EXHAUSTION": "“Só quando a lista reservada esgota”",
+    "ON_BALANCE": "“A quantidade que ficou sem preencher”",
+}
 
 
 def apurar_vagas(progrediram, vagas, empates):
@@ -58,6 +68,15 @@ def apurar_vagas(progrediram, vagas, empates):
     except apuracao.EmpateNaFronteiraDoAlvo as erro:
         return erro.posicao, erro.quantas
     return None
+
+
+def apurar_recortes_com(especie):
+    """A rodada de ocupação da `ocupacao`, com a reversão declarada no Perfil gravado (095)."""
+
+    def apurar(entradas):
+        return rodada_da_previa.rodada(entradas, especie=especie)
+
+    return apurar
 
 
 # --- Formatação ---------------------------------------------------------------------------------
@@ -151,6 +170,14 @@ def manchete(p):
             "o desempate ser julgado ou o desfecho ser retificado.",
             "anuncio": f"Corte impedido: empate na {corte['posicao']}ª posição.",
         }
+    if corte.get("sem_linha"):
+        return {
+            "estado": "impedido",
+            "forte": "O corte deste recorte não é apurável.",
+            "resto": "O alvo vem do quadro de vagas, e esta Modalidade não tem linha nele: "
+            "ausência não vira zero.",
+            "anuncio": "Corte não apurável: sem linha no quadro.",
+        }
     if corte.get("sem_desfecho") and corte.get("atravessa"):
         estrito = corte["comparacao"]["estrito"]
         return {
@@ -220,6 +247,24 @@ def fluxo(p):
     tamanho = f"faixa de {alvo + suplentes} = alvo {alvo}" + (
         f" + {suplentes} suplentes" if suplentes else ""
     )
+    if corte.get("sem_linha"):
+        passos.append(
+            {
+                "nome": "Corte",
+                "classe": "passo-impedido",
+                "valor": "Não apurável",
+                "linhas": ["o alvo vem do quadro, e esta Modalidade não tem linha"],
+            }
+        )
+        passos.append(
+            {
+                "nome": rotulo,
+                "classe": "",
+                "valor": "Ninguém deste recorte",
+                "linhas": ["sem faixa, ninguém avança por ele"],
+            }
+        )
+        return {"passos": passos, "ramo": ""}
     if corte.get("recusado"):
         classe, valor, detalhe = "passo-impedido", "Impedido", f"empate na {corte['posicao']}ª"
     elif corte.get("sem_desfecho") and corte.get("atravessa"):
@@ -265,14 +310,16 @@ def ocupacao(p):
         return {
             "estado": "aviso",
             "forte": f"Pararia na {aviso['posicao']}ª posição.",
-            "texto": f"{aviso['quantas']} empatados disputam a última das {vagas} vagas do "
-            "quadro, e a apuração não escolhe entre eles — qualquer que seja o desfecho "
+            "texto": f"{aviso['quantas']} empatados disputam "
+            + ("a única vaga do " if vagas == 1 else f"a última das {vagas} vagas do ")
+            + "quadro, e a apuração não escolhe entre eles — qualquer que seja o desfecho "
             "declarado para o corte. Nenhum campo deste cartão trata disso.",
         }
     return {
         "estado": "ok",
         "forte": "Seria possível:",
-        "texto": f"nenhum empate atravessa a última das {vagas} vagas.",
+        "texto": "nenhum empate atravessa "
+        + ("a única vaga." if vagas == 1 else f"a última das {vagas} vagas."),
     }
 
 
@@ -342,15 +389,23 @@ def _motivo_curto(item):
     return motivo
 
 
-def fronteira(p, mudaram):
-    """Só quem ajuda a entender: perto de cada limite, nos empates, e quem mudou (R-011)."""
+def fronteira(p, mudaram, destacar=frozenset()):
+    """Só quem ajuda a entender: perto de cada limite, nos empates, e quem mudou (R-011).
+
+    `destacar` são linhas que outra explicação aponta — na reservada, quem ocuparia pela ampla
+    (095, FR-2314) — e que por isso não podem sumir num trecho agrupado.
+    """
     ordem = p["ordem"]
     limites = _limites(p)
     relevantes = set()
     for quantos, _ in limites:
         relevantes.update(range(max(quantos - 2, 0), min(quantos + 2, len(ordem))))
     for indice, item in enumerate(ordem):
-        if len(item["grupo_da_pontuacao"]) > 1 or item["inscricao_id"] in mudaram:
+        if (
+            len(item["grupo_da_pontuacao"]) > 1
+            or item["inscricao_id"] in mudaram
+            or item["inscricao_id"] in destacar
+        ):
             relevantes.add(indice)
     if not limites:
         relevantes.update(range(min(5, len(ordem))))
@@ -383,6 +438,7 @@ def fronteira(p, mudaram):
             linhas.append(
                 {
                     "tipo": "linha",
+                    "id": item["inscricao_id"],
                     "posicao": _posicao(item, p),
                     "nome": item["nome"],
                     "etiqueta": (
@@ -417,6 +473,7 @@ def fronteira(p, mudaram):
         linhas.append(
             {
                 "tipo": "sem-posicao",
+                "id": item["inscricao_id"],
                 "nome": item["nome"],
                 "etiqueta": _motivo_curto(item),
                 "marca": _marca(C.SEM_POSICAO, p),
@@ -670,7 +727,9 @@ def _selecionado(p):
     corte, regra = p["corte"], p["regra"] or {}
     terminal = _terminal(p)
     aberto = {"impedido": calculo.impedido(corte), "terminal": terminal, "numeros": []}
-    if aberto["impedido"]:
+    if aberto["impedido"] and corte.get("sem_linha"):
+        aberto["bloqueio"] = "O alvo vem do quadro de vagas, e este recorte não tem linha nele."
+    elif aberto["impedido"]:
         aberto["bloqueio"] = (
             f"Há empate na {corte['posicao']}ª posição, a última da faixa, e a regra não deixa "
             "todos os empatados entrarem: a lista de quem avança não pode ser emitida até o "
@@ -768,7 +827,11 @@ def jornada(p, marcos, sub, url_do_marco):
         elif tipo == "etapa_alimentada":
             etapa, por = ponto["etapa"], ponto["por"]
             item.update(classe="ponto-etapa", titulo=f"{passo}. {etapa['name']}")
-            if ponto["do_selecionado"]:
+            if ponto["do_selecionado"] and p.get("recortes"):
+                item["destaque"], frases = _participantes(p, ponto)
+                item["frases"].extend(frases)
+                item["frases"].append(f"As notas da {etapa['name']} não são simuladas aqui.")
+            elif ponto["do_selecionado"]:
                 if calculo.impedido(p["corte"]):
                     item["destaque"] = "Ninguém, por enquanto."
                     item["frases"].append("A lista de quem avança não pode ser emitida.")
@@ -799,6 +862,7 @@ def jornada(p, marcos, sub, url_do_marco):
             if ponto["estado"] == jornada_do_perfil.SIMULADO:
                 item["classe"] = "ponto-marco ponto-selecionado"
                 item["aberto"] = _selecionado(p)
+                item["aberto"]["recortes"] = resumo_dos_recortes(p)
             else:
                 if ponto["por_sorteio"]:
                     item["frases"].append(
@@ -831,30 +895,380 @@ def jornada(p, marcos, sub, url_do_marco):
     return saida
 
 
+# --- Os recortes, a ocupação e a reversão (095) -------------------------------------------------
+
+RODADA = rodada_da_previa
+
+
+def _n(quantos, singular, plural):
+    return f"{quantos} {singular if quantos == 1 else plural}"
+
+
+def _nomes(ids, p):
+    nomes = {i["inscricao_id"]: i["nome"] for i in p["ordem"] + p["sem_posicao"]}
+    return _lista(sorted(nomes[i] for i in ids if i in nomes))
+
+
+def _avancam(calculado):
+    return sum(
+        1 for c in calculado["consequencias"].values() if c in (C.AVANCA, C.PELO_EMPATE, C.SEGUE)
+    )
+
+
+def _rotulo_da_ampla(p):
+    return f"{p.get('rotulo_da_ampla') or 'Ampla concorrência'}, todos os candidatos"
+
+
+def resumo_dos_recortes(p):
+    """Uma linha por recorte, no marco aberto da jornada (FR-2310). Vazio sem reservada."""
+    if not p.get("recortes"):
+        return []
+    linhas = [
+        {
+            "rotulo": _rotulo_da_ampla(p),
+            "texto": _resumo_do_recorte(p, f"{p['total']} candidatos"),
+        }
+    ]
+    for r in p["recortes"]:
+        quantos = len(r["ordem"]) + len(r["sem_posicao"])
+        universo = f"{quantos} autodeclarado{'s' if quantos != 1 else ''}"
+        linhas.append({"rotulo": r["rotulo"], "texto": _resumo_do_recorte(r, universo)})
+    return linhas
+
+
+def _resumo_do_recorte(calculado, universo):
+    corte = calculado["corte"]
+    if not (calculado["ordem"] or calculado["sem_posicao"]):
+        return "ninguém concorreu neste recorte na população fictícia."
+    if corte.get("sem_linha"):
+        return f"{universo}; o corte não é apurável: o alvo vem do quadro, e falta a linha."
+    if corte.get("recusado"):
+        return f"{universo}; o corte não seria emitido (empate na {corte['posicao']}ª)."
+    if calculo.impedido(corte):
+        return f"{universo}; o resultado depende do desfecho do empate, que não está declarado."
+    if not corte["declarado"]:
+        return f"{universo}; o marco não corta."
+    avancam = _avancam(calculado)
+    return f"{universo}; {avancam} {'avançaria' if avancam == 1 else 'avançariam'}."
+
+
+def _participantes(p, ponto):
+    """A Etapa alimentada recebe a união das faixas, contando cada pessoa uma vez (FR-2311)."""
+    dados = p["participantes"]
+    frases = []
+    ate = "Até " if ponto["portas_antes"] else ""
+    if dados["depende_de"]:
+        destaque = "O número depende de um corte que não seria emitido."
+        frases.append(
+            f"O corte de {_lista(dados['depende_de'])} não seria emitido: quem chega à "
+            f"{ponto['etapa']['name']} por ele só se sabe depois do desempate."
+        )
+        return destaque, frases
+    acrescentados = dados["uniao"] - dados["so_pela_ampla"]
+    destaque = f"{ate}{dados['uniao']} candidatos poderiam participar"
+    frases.append(
+        f"Os {dados['so_pela_ampla']} da faixa da ampla"
+        + (
+            f" e mais {acrescentados} que só a faixa de uma reservada alcança"
+            if acrescentados
+            else "; nenhuma reservada acrescenta alguém"
+        )
+        + ". Quem está em duas faixas conta uma vez."
+    )
+    if ponto["portas_antes"]:
+        frases.append(
+            f"Menos, se alguém for eliminado em {_nomes_das_etapas(ponto['portas_antes'])}."
+        )
+    return destaque, frases
+
+
+def _frase_da_reversao(apurado, rotulo, especie):
+    if apurado.get("sem_ocupante_antes", 0) == 0:
+        return "Não há o que reverter: nenhuma vaga ficaria sem ocupante." if especie else ""
+    if not especie:
+        return "Este Perfil não declara reversão: a vaga reservada sem ocupante continua reservada."
+    nome = REVERSAO.get(especie, especie)
+    if apurado["cederia"]:
+        cede = apurado["cederia"]
+        verbo = "seria cedida" if cede == 1 else "seriam cedidas"
+        return (
+            f"Pela reversão declarada, {nome}, {_n(cede, 'vaga', 'vagas')} {verbo} à ampla "
+            f"concorrência deste Perfil, e a apuração de {rotulo} registraria "
+            f"{_n(apurado['efetivas'], 'efetiva', 'efetivas')}, "
+            + (
+                f"{apurado['faltando']} sem ocupante."
+                if apurado["faltando"]
+                else "nenhuma sem ocupante."
+            )
+        )
+    return (
+        f"Pela reversão declarada, {nome}, nenhuma vaga seria cedida: pela regra de hoje, "
+        f"{rotulo} ainda tem quem ocupar — "
+        f"{_n(apurado['pessoas_com_posicao'], 'pessoa', 'pessoas')} com posição para "
+        f"{_n(apurado['ocupadas'], 'vaga ocupada', 'vagas ocupadas')} —, e a conta inclui quem "
+        "ocupa pela ampla. "
+        "É o comportamento atual do sistema, registrado como pendente de decisão na spec 095."
+    )
+
+
+def _quantidades(apurado):
+    """As quatro quantidades, com as vagas sem ocupante **antes** da cessão: a reversão vem dita à
+    parte, com o que a apuração registraria depois dela (095, R-004)."""
+    sem = apurado.get("sem_ocupante_antes", apurado["faltando"])
+    return (
+        f"{_n(apurado['publicadas'], 'publicada', 'publicadas')}, "
+        f"{_n(apurado['ocupadas'], 'ocupada', 'ocupadas')}, "
+        + (f"{sem} sem ocupante nesta hipótese" if sem else "nenhuma sem ocupante nesta hipótese")
+        + "."
+    )
+
+
+def _motivo_nao_avaliado(apurado):
+    estado = apurado["estado"]
+    if estado == RODADA.SEM_LINHA:
+        return "este recorte não tem linha no quadro de vagas, e ausência não vira zero."
+    if estado == RODADA.CORTE_NAO_EMITIDO:
+        return "o corte deste recorte não seria emitido, e não há quem apurar."
+    return "depende de quem ocupa pela ampla, e a apuração da ampla não seria possível."
+
+
+def _estado_nao_avaliado(apurado, rotulo):
+    if apurado["estado"] == RODADA.PAROU_NA_FRONTEIRA:
+        return (
+            f"Pararia na {apurado['posicao']}ª posição: {apurado['quantas']} empatados disputam a "
+            "última vaga, e a apuração não escolhe entre eles."
+        )
+    return "Não avaliada: " + _motivo_nao_avaliado(apurado)
+
+
+def ocupacao_dos_recortes(p):
+    """O bloco da ocupação por recorte, sempre como hipótese (FR-2320 a FR-2330)."""
+    rodada = p.get("ocupacao_por_recorte")
+    if not rodada:
+        return None
+    apurados, especie = rodada["recortes"], rodada["especie"]
+    recortes = [(None, p.get("rotulo_da_ampla") or "Ampla concorrência", p)] + [
+        (r["lista_id"], r["rotulo"], r) for r in p.get("recortes") or []
+    ]
+    linhas = []
+    for lista_id, rotulo, calculado in recortes:
+        apurado = apurados.get(lista_id) or {"estado": RODADA.SEM_LINHA}
+        linha = {"rotulo": rotulo, "frases": []}
+        if apurado["estado"] != RODADA.AVALIADA:
+            linha["estado"] = (
+                "neutro" if apurado["estado"] != RODADA.PAROU_NA_FRONTEIRA else "aviso"
+            )
+            linha["texto"] = _estado_nao_avaliado(apurado, rotulo)
+            linhas.append(linha)
+            continue
+        linha["estado"] = (
+            "aviso" if apurado.get("sem_ocupante_antes", apurado["faltando"]) else "ok"
+        )
+        linha["texto"] = _quantidades(apurado)
+        if lista_id is not None:
+            if apurado["ocupam_pela_ampla"]:
+                quem = apurado["ocupam_pela_ampla"]
+                linha["frases"].append(
+                    f"{_nomes(quem, calculado)} ocupa{'m' if len(quem) > 1 else ''} pela ampla: "
+                    f"não conta{'m' if len(quem) > 1 else ''} aqui, e a vaga reservada continua "
+                    f"de {rotulo}."
+                )
+            if apurado["tomadas_pela_ampla"]:
+                faixa = len(calculado["corte"].get("progrediram") or [])
+                tomadas, alem = apurado["tomadas_pela_ampla"], apurado["alem_da_faixa"]
+                linha["frases"].append(
+                    f"Das {_n(faixa, 'posição', 'posições')} da faixa de {rotulo}, {tomadas} "
+                    + ("é de quem ocupa" if tomadas == 1 else "são de quem ocupa")
+                    + " pela ampla"
+                    + (
+                        f"; {_n(alem, 'autodeclarado', 'autodeclarados')} com posição "
+                        + ("ficou" if alem == 1 else "ficaram")
+                        + " além da faixa, e alcançá-"
+                        + ("lo" if alem == 1 else "los")
+                        + " seria faixa seguinte, que a prévia não simula"
+                        if alem
+                        else ""
+                    )
+                    + ". É como o sistema calcula hoje: a faixa da reservada conta quem ocupa pela "
+                    "ampla, e a apuração o tira depois."
+                )
+            reversao = _frase_da_reversao(apurado, rotulo, especie)
+            if reversao:
+                linha["frases"].append(reversao)
+        linhas.append(linha)
+    proxima = (
+        f"A próxima apuração da ampla leria {rodada['efetivas_da_proxima_ampla']} vagas efetivas, "
+        "com as cedidas; a prévia não a refaz."
+        if rodada["efetivas_da_proxima_ampla"]
+        else ""
+    )
+    # A população estável planta um empate na última vaga da ampla (decisão 003 da `094`), e ele
+    # para também as reservadas. É o que o motor faria; o painel diz como ver o resto, e não o
+    # inventa.
+    dependentes = any(
+        (apurados.get(r["lista_id"]) or {}).get("estado") == RODADA.DEPENDE_DA_AMPLA
+        for r in p.get("recortes") or []
+    )
+    caminho = (
+        "Para ver a ocupação das reservadas e quem ocuparia pela ampla, escolha o caso-limite "
+        "“Autodeclarado dentro das vagas da ampla”, ou julgue o empate da ampla."
+        if dependentes
+        else ""
+    )
+    return {
+        "linhas": linhas,
+        "proxima": proxima,
+        "caminho": caminho,
+        "concomitancia": (
+            "Quem concorre por uma reservada concorre também pela ampla; se ocupar vaga pela "
+            "ampla, não conta na reservada. Vale para todo Perfil com reserva, e não é campo "
+            "do Edital."
+            if p.get("recortes")
+            else ""
+        ),
+    }
+
+
+def recorte_em_vista(p, pedido):
+    """O cálculo do recorte escolhido no detalhe, na forma que as funções do painel leem (FR-2313).
+
+    Devolve `(cálculo, escolhido, aviso)`. Recorte que não existe mais no rascunho volta à ampla, e
+    o painel diz isso, em vez de 404: a Modalidade pode ter saído entre dois recálculos (R-007).
+    """
+    if not pedido or not p.get("recortes"):
+        return p, "", ""
+    r = next((r for r in p["recortes"] if str(r["lista_id"]) == str(pedido)), None)
+    if r is None:
+        return p, "", "O recorte pedido não existe mais no rascunho; a prévia mostra a ampla."
+    apurado = ((p.get("ocupacao_por_recorte") or {}).get("recortes") or {}).get(r["lista_id"])
+    apurado = apurado or {"estado": RODADA.SEM_LINHA}
+    if apurado["estado"] == RODADA.PAROU_NA_FRONTEIRA:
+        aviso = {
+            "avaliado": True,
+            "para": True,
+            "posicao": apurado["posicao"],
+            "quantas": apurado["quantas"],
+        }
+    elif apurado["estado"] == RODADA.AVALIADA:
+        aviso = {"avaliado": True, "para": False}
+    else:
+        aviso = {"avaliado": False, "motivo": _motivo_nao_avaliado(apurado)}
+    return {**p, **r, "aviso_das_vagas": aviso}, str(r["lista_id"]), ""
+
+
+def _ocupam_pela_ampla(p, em_vista):
+    if not em_vista.get("lista_id"):
+        return frozenset()
+    apurado = ((p.get("ocupacao_por_recorte") or {}).get("recortes") or {}).get(
+        em_vista["lista_id"]
+    ) or {}
+    return frozenset(apurado.get("ocupam_pela_ampla") or ())
+
+
+def decorar_completa(tabela, p, em_vista):
+    """A classificação completa ganha a coluna do recorte: a Modalidade, na ampla; a posição na
+    ampla, na reservada (FR-2314)."""
+    if not p.get("recortes"):
+        return tabela
+    rotulos = {r["lista_id"]: r["rotulo"] for r in p["recortes"]}
+    itens = em_vista["ordem"] + em_vista["sem_posicao"]
+    if em_vista.get("lista_id"):
+        coluna = "Na ampla"
+        valores = [
+            f"{p['posicao_na_ampla'][i['inscricao_id']]}ª"
+            if i["inscricao_id"] in p["posicao_na_ampla"]
+            else "—"
+            for i in itens
+        ]
+    else:
+        coluna = "Modalidade"
+        valores = [rotulos.get(i.get("modalidade_id")) or "—" for i in itens]
+    cabeca = list(tabela["cabeca"])
+    cabeca.insert(2, coluna)
+    linhas = [
+        {**linha, "celulas": [*linha["celulas"][:2], (coluna, valor), *linha["celulas"][2:]]}
+        for linha, valor in zip(tabela["linhas"], valores, strict=True)
+    ]
+    return {"cabeca": cabeca, "linhas": linhas}
+
+
+def _fluxo_do_recorte(passos, p, em_vista):
+    """Com alvo fixo, a faixa de uma reservada não é a linha dela, e o painel diz os dois números
+    (FR-2307)."""
+    regra = p["regra"] or {}
+    corte = em_vista["corte"]
+    if not em_vista.get("lista_id") or regra.get("targetKind") != "FIXED" or not corte["declarado"]:
+        return passos
+    if corte.get("sem_linha") or em_vista["vagas"] is None:
+        return passos
+    tamanho = (em_vista["alvo"] or 0) + (em_vista["suplentes"] or 0)
+    if tamanho != em_vista["vagas"]:
+        passos["passos"][1]["linhas"].append(
+            f"o alvo fixo vale em todo recorte: a faixa é de {tamanho}, e esta reservada tem "
+            f"{em_vista['vagas']} vagas na linha dela"
+        )
+    return passos
+
+
+def decorar_fronteira(linhas, p, em_vista):
+    """A Modalidade na ampla; a posição na ampla e "ocuparia pela ampla" na reservada (FR-2314)."""
+    if not p.get("recortes"):
+        return linhas
+    rotulos = {r["lista_id"]: r["rotulo"] for r in p["recortes"]}
+    modalidade = {
+        i["inscricao_id"]: rotulos.get(i.get("modalidade_id"))
+        for i in p["ordem"] + p["sem_posicao"]
+    }
+    apurado = {}
+    if em_vista.get("lista_id"):
+        apurado = ((p.get("ocupacao_por_recorte") or {}).get("recortes") or {}).get(
+            em_vista["lista_id"]
+        ) or {}
+    pela_ampla = apurado.get("ocupam_pela_ampla") or set()
+    for linha in linhas:
+        ident = linha.get("id")
+        if not ident:
+            continue
+        if em_vista.get("lista_id"):
+            posicao = p["posicao_na_ampla"].get(ident)
+            linha["na_ampla"] = f"{posicao}ª na ampla" if posicao else "sem posição na ampla"
+            linha["pela_ampla"] = ident in pela_ampla
+        else:
+            linha["modalidade"] = modalidade.get(ident) or ""
+    return linhas
+
+
 # --- O painel inteiro ---------------------------------------------------------------------------
 
 
-def candidatos(p, escolha):
+def candidatos(p, escolha, *, com_reservas=False):
     opcoes = [("estavel", "População estável — testar a regra")]
     casos = [(f"caso:{k}", v[0]) for k, v in cenarios.CASOS.items()]
-    bloco = {"escolha": escolha, "opcoes": opcoes, "casos": casos}
+    reservas = (
+        [(f"caso:{k}", v[0]) for k, v in cenarios.CASOS_DE_RESERVA.items()] if com_reservas else []
+    )
+    bloco = {"escolha": escolha, "opcoes": opcoes, "casos": casos, "reservas": reservas}
     if p is None:
         return bloco
     if p["modo"] == C.CASO_LIMITE:
-        bloco.update(
-            caso=True,
-            descricao=cenarios.CASOS[p["caso"]][1],
-            onde=p["onde"] or "",
-        )
+        descricao = (cenarios.CASOS.get(p["caso"]) or cenarios.CASOS_DE_RESERVA[p["caso"]])[1]
+        onde = p["onde"] or ""
+        if p["caso"] == "alvo_fixo_reservada" and (p["regra"] or {}).get("targetKind") != "FIXED":
+            # O caso diz quando a configuração o desfaz, e por quê (FR-2332).
+            onde += (
+                " — e com o alvo do quadro a situação não ocorre: a faixa de cada reservada é a "
+                "linha dela"
+            )
+        bloco.update(caso=True, descricao=descricao, onde=onde)
         return bloco
-    alvo, faixa, vagas = p["ancoras"]
+    alvo, faixa, vagas = p["ancoras"][:3]
     bloco.update(
         caso=False,
         total=p["total"],
         montagem=f"Para alvo {alvo}, faixa de {faixa} e {vagas} vagas, com "
         + (_lista(p["plantados"]) if p["plantados"] else "nenhum empate plantado")
         + ", mais uma candidata sem nota e um candidato eliminado.",
-        populacao=f"{alvo}:{faixa}:{vagas}",
+        populacao=":".join(str(n) for n in p["ancoras"]),
         remontar=tuple(p["fronteiras"]) != tuple(p["ancoras"]),
     )
     return bloco
@@ -862,20 +1276,24 @@ def candidatos(p, escolha):
 
 def escolha_de_candidatos(dados):
     escolha = (dados.get("candidatos") or "estavel").strip()
-    if escolha.startswith("caso:") and escolha[5:] in cenarios.CASOS:
+    casos = {**cenarios.CASOS, **cenarios.CASOS_DE_RESERVA}
+    if escolha.startswith("caso:") and escolha[5:] in casos:
         return escolha, C.CASO_LIMITE, escolha[5:]
     return "estavel", C.ESTAVEL, ""
 
 
 def populacao_digitada(dados):
     try:
-        alvo, faixa, vagas = (int(n) for n in (dados.get("populacao") or "").split(":"))
+        ancoras = tuple(int(n) for n in (dados.get("populacao") or "").split(":"))
     except ValueError:
         return None
-    return alvo, faixa, vagas
+    # As três da fatia 1 — alvo, faixa e vagas da ampla — e, na fatia 2, a faixa de cada reservada.
+    return ancoras if len(ancoras) >= 3 else None
 
 
-def contexto(*, perfil, marcos, sub, etapas, fatos, vagas, dados, edital, indice):
+def contexto(
+    *, perfil, marcos, sub, etapas, fatos, vagas, dados, edital, indice, recortes=None, especie=None
+):
     """Tudo o que `_previa_da_classificacao.html` desenha, ou o que falta para desenhar."""
     marco = next(m for m in marcos if m["sub"] == sub)
     escolha, modo, caso = escolha_de_candidatos(dados)
@@ -905,6 +1323,8 @@ def contexto(*, perfil, marcos, sub, etapas, fatos, vagas, dados, edital, indice
             caso=caso,
             populacao=populacao_digitada(dados) if modo == C.ESTAVEL else None,
             apurar_vagas=apurar_vagas,
+            recortes=recortes,
+            apurar_recortes=apurar_recortes_com(especie),
         )
     except calculo.ForaDaFatia:
         return {**base, "fora_da_fatia": True, "anuncio": "A prévia cobre marcos pela pontuação."}
@@ -912,7 +1332,7 @@ def contexto(*, perfil, marcos, sub, etapas, fatos, vagas, dados, edital, indice
         return {
             **base,
             "faltas": erro.faltas,
-            "candidatos": candidatos(None, escolha),
+            "candidatos": candidatos(None, escolha, com_reservas=len(recortes or []) > 1),
             "anterior": dados.get("anterior") or "",
             "anuncio": f"Prévia não calculada: falta declarar {len(erro.faltas)}.",
         }
@@ -920,15 +1340,20 @@ def contexto(*, perfil, marcos, sub, etapas, fatos, vagas, dados, edital, indice
     p["fatos"] = fatos
     p["fatos_por_id"] = {str(f["id"]): f.get("label") or f.get("code") for f in fatos}
     atual = calculo.estado(p)
-    diff = calculo.comparar(dados.get("anterior") or "", atual)
+    rotulos = [p.get("rotulo_da_ampla") or "Ampla", *(r["rotulo"] for r in p["recortes"])]
+    diff = calculo.comparar(dados.get("anterior") or "", atual, rotulos)
     mudaram = diff["mudaram"] if diff else set()
     cabeca = manchete(p)
     anuncio = cabeca["anuncio"]
     if diff and diff["mudancas"]:
         anuncio += " Mudou: " + " ".join(diff["mudancas"])
+    resumo = resumo_dos_recortes(p)
+    if resumo:
+        anuncio += " " + " ".join(f"{linha['rotulo']}: {linha['texto']}" for linha in resumo[1:])
     contexto_ = {
         **base,
-        "candidatos": candidatos(p, escolha),
+        "candidatos": candidatos(p, escolha, com_reservas=bool(p["recortes"])),
+        "ocupacao_dos_recortes": ocupacao_dos_recortes(p),
         "anterior": atual,
         "anuncio": anuncio,
         "total": p["total"],
@@ -939,14 +1364,30 @@ def contexto(*, perfil, marcos, sub, etapas, fatos, vagas, dados, edital, indice
             jornada=jornada(p, marcos, sub, url_do_marco),
         )
         return contexto_
+    em_vista, escolhido, aviso_do_recorte = recorte_em_vista(p, dados.get("recorte"))
     contexto_.update(
-        manchete=cabeca,
+        manchete=manchete(em_vista),
         mudou=o_que_mudou(diff, p, "marcados na tabela"),
-        fluxo=fluxo(p),
-        ocupacao=ocupacao(p),
-        fronteira=fronteira(p, mudaram),
-        empates=empates(p),
-        completa=completa(p, mudaram),
-        como_calcula=como_calcula(p),
+        fluxo=_fluxo_do_recorte(fluxo(em_vista), p, em_vista),
+        ocupacao=ocupacao(em_vista),
+        fronteira=decorar_fronteira(
+            fronteira(em_vista, mudaram, _ocupam_pela_ampla(p, em_vista)), p, em_vista
+        ),
+        empates=empates(em_vista),
+        completa=decorar_completa(completa(em_vista, mudaram), p, em_vista),
+        como_calcula=como_calcula(em_vista),
+        seletor_de_recorte=(
+            {
+                "escolhido": escolhido,
+                "opcoes": [("", _rotulo_da_ampla(p))]
+                + [(str(r["lista_id"]), r["rotulo"]) for r in p["recortes"]],
+                "aviso": aviso_do_recorte,
+            }
+            if p["recortes"]
+            else None
+        ),
+        em_reservada=bool(escolhido),
+        # A classificação completa conta o recorte em vista, e não a ampla.
+        total=em_vista["total"],
     )
     return contexto_
