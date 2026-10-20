@@ -635,6 +635,20 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
             hx-get="{% url 'interface:fragmento-criterio' indice sub %}?edital={{ edital.id }}"
             hx-target="#criterios-{{ indice }}-{{ sub }}" hx-swap="beforeend">Acrescentar critério</button>
   </section>
+  {% comment %}
+  **"Simular classificação"** (094, FR-2200). Só no marco pela pontuação: a fatia 1 não simula
+  sorteio (D-007). É controle, e não ajuda — o resultado abre fora do cartão, no painel da etapa, e a
+  FR-428 da 030 fica como está (D-001). O `hx-include` leva o cartão do **Perfil** inteiro, e não só
+  este marco: a jornada que o painel mostra precisa dos outros marcos do Perfil, como estão digitados.
+  {% endcomment %}
+  {% if marco.orderProduction == "POR_PONTUACAO" %}
+  <p class="simular-classificacao">
+    <button type="button" class="acao" data-abre-previa aria-controls="painel-da-previa"
+            hx-get="{% url 'interface:fragmento-previa-da-classificacao' indice sub %}?edital={{ edital.id }}"
+            hx-include="#cartao-{{ indice }}" hx-target="#painel-da-previa"
+            hx-swap="innerHTML">Simular classificação</button>
+  </p>
+  {% endif %}
   <p class="remover">
     {% comment %}
     **"Aplicar aos demais Perfis"** (051, UX-110). Um envio do formulário, e não um fragmento: a

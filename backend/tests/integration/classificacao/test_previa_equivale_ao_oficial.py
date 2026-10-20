@@ -24,8 +24,12 @@ from decimal import Decimal
 import pytest
 from django.utils import timezone
 
+from processo_seletivo.classificacao.application import previa
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
+from processo_seletivo.classificacao.domain import cenarios_da_previa as cenarios
+from processo_seletivo.classificacao.domain import desempate, faixa
 from processo_seletivo.inscricoes.models import ValorDeFato
+from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.resultados.models import ResultadoEtapa
 from tests.fixtures.divulgacao import montar_marco, pontuar
@@ -361,8 +365,7 @@ def test_cada_recorte_tem_o_universo_e_a_ordem_da_tabela(
 #
 # Uma comparação que nunca reprova não prova nada. Cada caso altera **só o caminho oficial** — o
 # vocabulário da eliminação, o sentido de um critério, o texto do motivo — e espera que a tabela
-# acuse a diferença na chave certa. Quando a prévia chegar, os mesmos desvios terão de reprovar a
-# equivalência entre os dois lados (spec 094).
+# acuse a diferença na chave certa. A sentinela da equivalência com a prévia está no fim do arquivo.
 
 
 @pytest.mark.parametrize(
@@ -399,3 +402,222 @@ def test_a_tabela_acusa_o_caminho_oficial_alterado(
     obtido = retrato(_calcular(cenario))
 
     assert {item.split(":")[0] for item in divergencias(obtido, esperado)} == chaves
+
+
+# --- A prévia contra o caminho oficial, sobre os mesmos candidatos (T034, T035) ----------------
+#
+# A outra metade da equivalência da spec 094. Os candidatos fictícios de cada caso-limite são
+# **gravados** pelo caminho normal — inscrição, avaliação, consolidação, fatos congelados — e o
+# caminho oficial calcula sobre eles; a prévia calcula sobre os mesmos candidatos, em memória.
+# Ordem, empates, critério que separou, sem posição e corte precisam coincidir. Dentro de um empate
+# residual a ordem não é normativa (o motor não ordena empatados): compara-se por posição.
+
+ALVO, VAGAS = 5, 5
+CASOS_DA_EQUIVALENCIA = [
+    # caso-limite, suplentes, desfecho
+    ("sem_empate", 2, "ADMITS_SURPLUS"),
+    ("criterios_sucessivos", 2, "ADMITS_SURPLUS"),
+    ("empate_na_faixa", 2, "ADMITS_SURPLUS"),
+    ("empate_na_faixa", 2, "STRICT"),
+    ("empate_nas_vagas", 0, "ADMITS_SURPLUS"),
+    ("valor_ausente", 2, "ADMITS_SURPLUS"),
+]
+
+
+def _marco_publicado(cenario, suplentes, desfecho):
+    conteudo = effective_version(edital_id=cenario["edital"].id).content
+    perfil = next(p for p in conteudo["profiles"] if str(p["id"]) == str(cenario["perfil"]))
+    marco = next(
+        m for m in perfil["classificationMilestones"] if str(m["id"]) == str(cenario["marco"])
+    )
+    regra = {
+        "targetKind": "FIXED",
+        "targetCount": ALVO,
+        "surplusCount": suplentes,
+        "tieOutcome": desfecho,
+        "governedStage": "NONE",
+        "continuation": "NONE",
+    }
+    return {**marco, "cutRule": regra}, conteudo["stages"], perfil.get("declaredFacts") or []
+
+
+def _populacao(caso, marco, etapas, fatos, suplentes):
+    """Os candidatos que `simular` vai gerar — os mesmos argumentos, os mesmos candidatos."""
+    por_id = {str(e["id"]): e for e in etapas}
+    enumeradas = [por_id[e] for e in marco["stages"] if e in por_id]
+    candidatos, _ = cenarios.caso_limite(
+        caso,
+        etapas_enumeradas=enumeradas,
+        etapa_do_marco=max(enumeradas, key=lambda e: e["order"]),
+        fatos=fatos,
+        alvo=ALVO,
+        suplentes=suplentes,
+        vagas=VAGAS,
+        corta=True,
+    )
+    return candidatos
+
+
+def _gravar(cenario, gestor, candidatos, primeiro):
+    """Nota abaixo da mínima (60) para quem a prévia elimina: é como o produto elimina."""
+    etapa = str(cenario["etapa"])
+    notas = []
+    for candidato in candidatos:
+        nota = candidato["notas"].get(etapa)
+        if candidato["eliminado_em"] == etapa:
+            notas.append("50.0000")
+        else:
+            notas.append(None if nota is None else f"{nota:.4f}")
+    inscricoes = pontuar(cenario, gestor, notas, primeiro=primeiro, sufixo=f"094p-{primeiro}")
+    versao = VersaoConsolidada.objects.filter(edital=cenario["edital"]).latest("materialized_at")
+    agora = timezone.now()
+    valores = []
+    for inscricao, candidato in zip(inscricoes, candidatos, strict=True):
+        for fato_id, valor in candidato["fatos"].items():
+            campo = "valor_data" if isinstance(valor, datetime.date) else "valor_inteiro"
+            valores.append(
+                ValorDeFato(
+                    inscricao=inscricao,
+                    fato_id=fato_id,
+                    congelado_em=agora,
+                    versao=versao,
+                    **{campo: valor},
+                )
+            )
+    ValorDeFato.objects.bulk_create(valores)
+    return inscricoes
+
+
+def _lado_oficial(cenario, inscricoes, marco):
+    indice = {str(i.id): n for n, i in enumerate(inscricoes)}
+    proposta = _calcular(cenario)
+    ordem = sorted(
+        (
+            item["posicao"],
+            indice[str(item["inscricao_id"])],
+            item["empate_residual"],
+            (item["separado_por"] or {}).get("id"),
+        )
+        for item in proposta["posicoes"]
+    )
+    sem_posicao = sorted(
+        (indice[str(item["inscricao_id"])], item["consequencia"])
+        for item in proposta["sem_posicao"]
+    )
+    regra = marco["cutRule"]
+    try:
+        progrediram, excedentes, _, _ = faixa.calcular(
+            [(indice[str(i["inscricao_id"])], i["posicao"]) for i in proposta["posicoes"]]
+            + [(indice[str(i["inscricao_id"])], None) for i in proposta["sem_posicao"]],
+            alvo=regra["targetCount"],
+            excedente=regra["surplusCount"],
+            desfecho=regra["tieOutcome"],
+        )
+        corte = ("emitido", sorted(progrediram), len(excedentes))
+    except faixa.EmpateAtravessaOCorte as erro:
+        corte = ("recusado", erro.posicao, erro.quantas)
+    return {"ordem": ordem, "sem_posicao": sem_posicao, "corte": corte}
+
+
+def _lado_da_previa(caso, marco, etapas, fatos):
+    r = previa.simular(marco, etapas, fatos, vagas=VAGAS, modo="caso", caso=caso)
+
+    def indice(ident):
+        return int(ident[1:])
+
+    ordem = sorted(
+        (
+            item["posicao"],
+            indice(item["inscricao_id"]),
+            item["empate_residual"],
+            (item["separado_por"] or {}).get("id"),
+        )
+        for item in r["ordem"]
+    )
+    sem_posicao = sorted(
+        (indice(item["inscricao_id"]), item["consequencia"]) for item in r["sem_posicao"]
+    )
+    corte = r["corte"]
+    if corte.get("recusado"):
+        corte = ("recusado", corte["posicao"], corte["quantas"])
+    else:
+        corte = (
+            "emitido",
+            sorted(indice(i) for i in corte["progrediram"]),
+            len(corte["excedentes"]),
+        )
+    return {"ordem": ordem, "sem_posicao": sem_posicao, "corte": corte}
+
+
+@pytest.fixture
+def montar(gestor, api_client, manager_headers, process_payload):
+    """Um Edital publicado por caso, com o marco da linha de base e os candidatos da prévia."""
+
+    def _montar(caso, suplentes, desfecho, numero):
+        cenario = montar_marco(
+            gestor,
+            api_client,
+            manager_headers,
+            process_payload,
+            seed=SEED + 10 + numero,
+            codigo=f"09{50 + numero}",
+            criterios=CRITERIOS,
+            fatos=FATOS,
+            regra_da_etapa={"minimumScore": "60.0000", "eliminatory": True},
+        )
+        marco, etapas, fatos = _marco_publicado(cenario, suplentes, desfecho)
+        candidatos = _populacao(caso, marco, etapas, fatos, suplentes)
+        inscricoes = _gravar(cenario, gestor, candidatos, primeiro=9500 + 50 * numero)
+        return cenario, inscricoes, marco, etapas, fatos
+
+    return _montar
+
+
+@pytest.mark.parametrize(
+    ("numero", "caso", "suplentes", "desfecho"),
+    [(n, *linha) for n, linha in enumerate(CASOS_DA_EQUIVALENCIA)],
+    ids=[f"{c}-{s}-{d}" for c, s, d in CASOS_DA_EQUIVALENCIA],
+)
+def test_a_previa_e_o_caminho_oficial_concordam(montar, numero, caso, suplentes, desfecho):
+    cenario, inscricoes, marco, etapas, fatos = montar(caso, suplentes, desfecho, numero)
+
+    oficial = _lado_oficial(cenario, inscricoes, marco)
+    da_previa = _lado_da_previa(caso, marco, etapas, fatos)
+
+    assert da_previa == oficial
+    # O caso tem de exercitar o que o nomeia — senão a igualdade é entre duas ordens triviais.
+    assert oficial["corte"][0] == ("recusado" if desfecho == "STRICT" else "emitido")
+    assert any(empate for _, _, empate, _ in oficial["ordem"]) == caso.startswith("empate")
+    if caso == "criterios_sucessivos":
+        # Os três diferem já no primeiro critério deste marco — a experiência —, e a data fica sem
+        # uso: é a ordem de critérios deste Edital, e não defeito do caso.
+        assert POR_EXPERIENCIA in {separou for *_, separou in oficial["ordem"]}
+    if caso == "valor_ausente":
+        assert [c for _, c in oficial["sem_posicao"]] == ["", "ELIMINADA"]
+
+
+def _criterios_invertidos(participantes, criterios):
+    """Os critérios aplicados de trás para a frente — `ordenar` os reordena por `order`."""
+    return desempate.ordenar(
+        participantes, [{**c, "order": -(c.get("order") or 0)} for c in criterios]
+    )
+
+
+@pytest.mark.parametrize(
+    ("atributo", "desvio"),
+    [
+        ("processo_seletivo.classificacao.application.calculo.ordenar", "criterios-invertidos"),
+        ("processo_seletivo.classificacao.domain.universo_classificavel.ELIMINADA", "OUTRA"),
+    ],
+    ids=["ordem-dos-criterios", "eliminacao"],
+)
+def test_a_equivalencia_acusa_o_caminho_oficial_alterado(montar, monkeypatch, atributo, desvio):
+    """A sentinela da FR-2233: mudado só o caminho oficial, a prévia deixa de concordar com ele."""
+    caso = "criterios_sucessivos" if desvio == "criterios-invertidos" else "valor_ausente"
+    cenario, inscricoes, marco, etapas, fatos = montar(caso, 2, "ADMITS_SURPLUS", 9)
+    da_previa = _lado_da_previa(caso, marco, etapas, fatos)
+    monkeypatch.setattr(
+        atributo, _criterios_invertidos if desvio == "criterios-invertidos" else desvio
+    )
+
+    assert _lado_oficial(cenario, inscricoes, marco) != da_previa

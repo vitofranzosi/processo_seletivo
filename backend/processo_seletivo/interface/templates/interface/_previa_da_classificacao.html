@@ -1,0 +1,240 @@
+{% comment %}
+**A prévia da classificação** (094). O painel que o botão "Simular classificação" do cartão do marco
+abre fora do cartão (D-001, FR-428 da 030): a jornada do Perfil como visão principal, e o detalhe do
+marco a um clique (D-015). Tudo o que ele diz vem de `interface/previa_da_classificacao.py`, que lê o
+cálculo do motor oficial; nada aqui calcula.
+
+**Incluído vazio pela etapa Classificação**, e preenchido pelo fragmento. A inclusão é o que faz a
+folha da página — `telas/previa-da-classificacao.css` — valer para estas classes, e o que faz as
+varreduras de vocabulário descerem nele; sem contexto, ele não desenha nada.
+
+**O recálculo é do servidor** (D-002): qualquer mudança no Perfil pede o painel de novo, com o que está
+digitado, a população, a vista e o estado anterior. A CSP proíbe script e estilo no modelo, e o único
+script da prévia, `previa-da-classificacao.js`, só move o foco.
+{% endcomment %}
+{% if sem_marco %}
+<p class="incompleto">Este marco não está no formulário desta tela. Recarregue a etapa e peça a prévia
+  de novo pelo cartão do marco.</p>
+{% elif previa_url %}
+<div class="recalculo" hx-get="{{ previa_url }}"
+     hx-include="#cartao-{{ indice }}, #candidatos-da-previa, #populacao-da-previa, #vista-da-previa, #anterior-da-previa"
+     hx-target="#painel-da-previa" hx-swap="innerHTML"
+     hx-trigger="change from:#cartao-{{ indice }}, input changed delay:400ms from:#cartao-{{ indice }}">
+  <div class="cabeca-do-painel">
+    {% if vista == "detalhe" %}
+    <button type="button" class="voltar" data-foco-no-titulo hx-get="{{ previa_url }}&amp;vista=processo"
+            hx-include="#cartao-{{ indice }}, #candidatos-da-previa, #populacao-da-previa"
+            hx-target="#painel-da-previa" hx-swap="innerHTML">← Voltar ao processo</button>
+    {% else %}
+    <h2 id="titulo-da-previa" tabindex="-1">Simulação do processo seletivo</h2>
+    <span class="selo-ficticio">Exemplo fictício</span>
+    {% endif %}
+    <button type="button" class="fechar" hx-get="{{ fechar_url }}" hx-target="#painel-da-previa"
+            hx-swap="innerHTML">Fechar</button>
+  </div>
+  {% if vista == "detalhe" %}
+  <h2 id="titulo-da-previa" tabindex="-1">{{ marco_nome }}: classificação e desempate</h2>
+  <p class="contexto">{{ perfil.code }} — {{ perfil.name }} · detalhe do cálculo</p>
+  {% else %}
+  <p class="contexto">{{ perfil.code }} — {{ perfil.name }} · simulando a <strong>{{ marco_nome }}</strong></p>
+  {% endif %}
+  <input type="hidden" id="vista-da-previa" name="vista" value="{{ vista }}">
+  <input type="hidden" id="anterior-da-previa" name="anterior" value="{{ anterior }}">
+
+  {% if fora_da_fatia %}
+  <p class="incompleto">A prévia cobre marcos que ordenam pela pontuação. Este marco ordena por sorteio,
+    e a ordem por sorteio nasce da semente, que a composição ainda não tem.</p>
+  {% else %}
+  <div class="candidatos">
+    <p class="campo-da-previa"><label for="candidatos-da-previa">Candidatos fictícios</label>
+      <select id="candidatos-da-previa" name="candidatos" hx-get="{{ previa_url }}"
+              hx-include="#cartao-{{ indice }}, #vista-da-previa" hx-target="#painel-da-previa"
+              hx-swap="innerHTML">
+        {% for valor, rotulo in candidatos.opcoes %}<option value="{{ valor }}"{% if valor == candidatos.escolha %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+        <optgroup label="Caso-limite — demonstração dirigida">
+          {% for valor, rotulo in candidatos.casos %}<option value="{{ valor }}"{% if valor == candidatos.escolha %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+        </optgroup>
+      </select></p>
+    {% if candidatos.caso %}
+    <p class="aviso-do-modo">Caso construído para demonstração: ele acompanha alvo, suplentes e
+      vagas, e os candidatos mudam junto. Para comparar a mesma gente, use a população estável.</p>
+    <details class="montagem"><summary>O que este caso mostra</summary>
+      <p>{{ candidatos.descricao }}{% if candidatos.onde %} Agora: {{ candidatos.onde }}.{% endif %}</p></details>
+    {% elif candidatos.total %}
+    <p class="descricao">{{ candidatos.total }} candidatos fixos enquanto o painel estiver aberto: mude
+      a regra e compare.</p>
+    <details class="montagem"><summary>Como foram montados</summary><p>{{ candidatos.montagem }}</p></details>
+    <input type="hidden" id="populacao-da-previa" name="populacao" value="{{ candidatos.populacao }}">
+    {% if candidatos.remontar %}
+    <p class="aviso-do-modo">A regra mudou desde a montagem; os empates continuam onde estavam, e é
+      isso que deixa ver o efeito.
+      <button type="button" class="acao-discreta" hx-get="{{ previa_url }}"
+              hx-include="#cartao-{{ indice }}, #candidatos-da-previa, #vista-da-previa"
+              hx-target="#painel-da-previa" hx-swap="innerHTML">Remontar para esta configuração</button></p>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  {% if faltas %}
+  <div class="incompleto"><p><strong>A prévia ainda não calcula.</strong> Falta:</p>
+    <ul>{% for falta in faltas %}<li>{{ falta }}</li>{% endfor %}</ul></div>
+  {% else %}
+
+  {% if mudou %}
+  {% if mudou.nada %}
+  <p class="mudou nada">Com a última alteração, a consequência não mudou para ninguém.</p>
+  {% else %}
+  <section class="mudou" aria-labelledby="titulo-mudou">
+    <h3 id="titulo-mudou">O que mudou com a sua alteração</h3>
+    <ul>{% for item in mudou.itens %}<li>{{ item }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% endif %}
+
+  {% if vista == "processo" %}
+  {# A jornada do Perfil: a visão principal (FR-2247). #}
+  <ol class="jornada" aria-label="A jornada dos candidatos neste Perfil">
+    {% for ponto in jornada %}
+    <li class="ponto {{ ponto.classe }}">
+      <div class="ponto-cabeca"><h3>{{ ponto.titulo }}</h3>
+        <span class="selo-ponto selo-{{ ponto.selo.classe }}">{{ ponto.selo.rotulo }}</span></div>
+      {% if ponto.aberto %}
+      {% if ponto.aberto.regra %}
+      <p class="regra">A <dfn>faixa</dfn> é o trecho da ordem que esta regra seleciona:
+        {{ ponto.aberto.regra }}</p>
+      {% else %}
+      <p class="regra">Este marco ordena, e não corta: ninguém é excluído por ele.</p>
+      {% endif %}
+      {% if ponto.aberto.impedido %}
+      <p class="bloqueio"><strong>Ninguém avançaria por enquanto.</strong> {{ ponto.aberto.bloqueio }}</p>
+      {% else %}
+      <div class="numeros">
+        {% for numero in ponto.aberto.numeros %}
+        <p class="numero {{ numero.classe }}"><strong>{{ numero.valor }}</strong><span>{{ numero.rotulo }}</span></p>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if ponto.aberto.aviso_das_vagas %}<p class="aviso-curto">{{ ponto.aberto.aviso_das_vagas }}</p>{% endif %}
+      {% if ponto.aberto.ramo %}<p class="ramo">{{ ponto.aberto.ramo }}</p>{% endif %}
+      {% if ponto.aberto.terminal %}
+      <p class="fim-da-jornada">Fim da jornada: este marco não alimenta outra Etapa. Quem fica dentro
+        não está, só por isso, nomeado — a ocupação das vagas é outro ato.</p>
+      {% endif %}
+      <button type="button" class="acao-larga" data-foco-no-titulo hx-get="{{ previa_url }}&amp;vista=detalhe"
+              hx-include="#cartao-{{ indice }}, #candidatos-da-previa, #populacao-da-previa"
+              hx-target="#painel-da-previa" hx-swap="innerHTML">Explorar classificação e desempate</button>
+      {% else %}
+      {% if ponto.destaque %}<p class="destaque"><strong>{{ ponto.destaque }}</strong></p>{% endif %}
+      {% if ponto.indeterminado %}<p><strong>Resultado indeterminado.</strong></p>{% endif %}
+      {% for frase in ponto.frases %}<p>{{ frase }}</p>{% endfor %}
+      {% if ponto.simular %}
+      <button type="button" class="acao-discreta" data-foco-no-titulo hx-get="{{ ponto.simular }}"
+              hx-include="#cartao-{{ indice }}" hx-target="#painel-da-previa"
+              hx-swap="innerHTML">Simular este marco</button>
+      {% endif %}
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  <details class="limites"><summary>O que esta prévia simula, e o que não</summary>
+    <ul>
+      <li>Calcula só o marco simulado, com o motor oficial da classificação e candidatos fictícios.
+        Os outros pontos são lidos da configuração, sem cálculo.</li>
+      <li>Lê o que está digitado nos cartões deste Perfil, e o que está gravado nos outros passos:
+        Etapas, pesos, fatos declarados e quadro de vagas.</li>
+      <li>Não encadeia marcos: não sabe quem passaria numa Etapa posterior, nem quantos seriam
+        eliminados numa Etapa decisória.</li>
+      <li>Não simula reservas de vagas, ocupação, chamadas, recurso nem sorteio. Nada é gravado.</li>
+    </ul></details>
+
+  {% else %}
+  {# O detalhe do marco: a prévia da segunda rodada (FR-2252). #}
+  <p class="manchete manchete-{{ manchete.estado }}"><strong>{{ manchete.forte }}</strong> {{ manchete.resto }}</p>
+  <ol class="fluxo" aria-label="Da classificação à Etapa seguinte">
+    {% for passo in fluxo.passos %}
+    <li class="passo {{ passo.classe }}"><span class="passo-nome">{{ passo.nome }}</span>
+      <strong>{{ passo.valor }}</strong>{% for linha in passo.linhas %}<span>{{ linha }}</span>{% endfor %}</li>
+    {% endfor %}
+  </ol>
+  {% if fluxo.ramo %}<p class="ramo">{{ fluxo.ramo }}</p>{% endif %}
+
+  <section class="ocupacao" aria-labelledby="titulo-ocupacao">
+    <h3 id="titulo-ocupacao">Depois do corte: a apuração das vagas
+      <span class="selo-hipotese">hipótese</span></h3>
+    <p class="estado-{{ ocupacao.estado }}"><strong>{{ ocupacao.forte }}</strong> {{ ocupacao.texto }}</p>
+    <p class="nota">Se a ocupação for apurada sobre este marco, com as vagas da linha geral do quadro e
+      todos os que avançaram habilitados. A prévia não simula chamadas, desistências, movimentos nem
+      reversão.</p>
+  </section>
+
+  <section aria-labelledby="titulo-fronteira">
+    <h3 id="titulo-fronteira">Quem está perto dos limites</h3>
+    <div class="rolavel-da-previa"><table class="fronteira">
+      <caption class="oculto">Os candidatos fictícios perto do alvo, do fim e das vagas, com a consequência</caption>
+      <thead><tr><th scope="col">Posição</th><th scope="col">Candidato</th><th scope="col">Pontuação</th><th scope="col">Consequência</th></tr></thead>
+      <tbody>
+        {% for linha in fronteira %}
+        {% if linha.tipo == "agrupada" %}
+        <tr class="agrupada"><td colspan="4">{{ linha.texto }}</td></tr>
+        {% elif linha.tipo == "limite" %}
+        <tr class="limite"><td colspan="4"><span>{{ linha.texto }}</span></td></tr>
+        {% elif linha.tipo == "sem-posicao" %}
+        <tr class="linha-sem-posicao"><td>—</td>
+          <td>{{ linha.nome }}<span class="etiqueta">{{ linha.etiqueta }}</span></td><td>—</td>
+          <td><span class="marca marca-{{ linha.marca.classe }}">{{ linha.marca.rotulo }}</span>{% if linha.mudou %}<span class="etiqueta etiqueta-mudou">mudou</span>{% endif %}</td></tr>
+        {% else %}
+        <tr class="linha-{{ linha.marca.classe }}"><td>{{ linha.posicao.numero }}{% if linha.posicao.dividida %}<span class="dividida">dividida por {{ linha.posicao.dividida }}</span>{% endif %}</td>
+          <td>{{ linha.nome }}{% if linha.etiqueta %}<span class="etiqueta{% if linha.etiqueta == 'empate não resolvido' %} etiqueta-empate{% endif %}">{{ linha.etiqueta }}</span>{% endif %}</td>
+          <td><span class="rotulo-no-estreito">pontuação </span>{{ linha.pontuacao }}</td>
+          <td><span class="marca marca-{{ linha.marca.classe }}">{{ linha.marca.rotulo }}</span>{% if linha.mudou %}<span class="etiqueta etiqueta-mudou">mudou</span>{% endif %}</td></tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="titulo-empates">
+    <h3 id="titulo-empates">Empates na pontuação</h3>
+    {% for empate in empates %}
+    <section class="empate" aria-labelledby="empate-{{ forloop.counter }}">
+      <h4 id="empate-{{ forloop.counter }}">{{ empate.titulo }}</h4>
+      <p class="resultado-do-empate"><strong>{{ empate.forte }}</strong> {{ empate.resultado }}
+        {% if empate.importa %}<span class="importa">{{ empate.importa }}</span>{% endif %}</p>
+      <div class="rolavel-da-previa"><table class="comparacao">
+        <caption class="oculto">Os critérios aplicados a {{ empate.titulo }}, na ordem, com os valores comparados</caption>
+        <thead><tr><th scope="col">Critério, na ordem</th>{% for nome in empate.nomes %}<th scope="col">{{ nome }}</th>{% endfor %}<th scope="col" class="coluna-efeito">Efeito</th></tr></thead>
+        <tbody>
+          {% for linha in empate.linhas %}
+          <tr class="{{ linha.classe }}"><th scope="row">{{ linha.criterio }}<span class="efeito-curto" aria-hidden="true">{{ linha.efeito }}</span></th>
+            {% for valor in linha.valores %}<td>{{ valor }}</td>{% endfor %}<td class="coluna-efeito">{{ linha.efeito }}</td></tr>
+          {% endfor %}
+          {% if empate.sem_criterios %}<tr class="efeito-nao-usado"><th scope="row">Critérios de desempate</th><td colspan="{{ empate.nomes|length|add:1 }}">Este marco não declara nenhum</td></tr>{% endif %}
+        </tbody>
+      </table></div>
+    </section>
+    {% empty %}
+    <p class="estado-neutro">Nenhum empate na pontuação: nenhum critério de desempate precisou ser usado.</p>
+    {% endfor %}
+  </section>
+
+  <details class="completa"><summary>Classificação completa — {{ total }} candidatos, com as notas e
+    os dados de desempate</summary>
+    <div class="rolavel-da-previa"><table class="detalhada">
+      <caption class="oculto">Todos os candidatos fictícios, com as notas, a pontuação e os dados de desempate</caption>
+      <thead><tr>{% for coluna in completa.cabeca %}<th scope="col">{{ coluna }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for linha in completa.linhas %}
+        <tr>{% for rotulo, valor in linha.celulas %}<td data-rotulo="{{ rotulo }}">{{ valor }}</td>{% endfor %}
+          <td data-rotulo="Consequência"><span class="marca marca-{{ linha.marca.classe }}">{{ linha.marca.rotulo }}</span>{% if linha.mudou %}<span class="etiqueta etiqueta-mudou">mudou</span>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </details>
+  <details class="como-calcula"><summary>Como a prévia chega a este resultado</summary>
+    <ul>{% for item in como_calcula %}<li>{{ item }}</li>{% endfor %}</ul></details>
+  {% endif %}
+  {% endif %}
+  {% endif %}
+</div>
+<p id="anuncio-da-previa" class="oculto" role="status" aria-live="polite" hx-swap-oob="true">{{ anuncio }}</p>
+{% endif %}

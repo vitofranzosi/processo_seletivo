@@ -1,7 +1,7 @@
 {% extends "interface/compor_base.html" %}
 {% load interface_extras estaticos %}
 {% block etapa_titulo %}Classificação{% endblock %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/vista.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/vista.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/previa-da-classificacao.css' %}">{% endblock %}
 {% block etapa %}
 {% comment %}
 **O rascunho local, pelo mecanismo das outras quatro etapas** (053, FR-979, D-007). A etapa de
@@ -9,6 +9,12 @@ cartões mais longos era a única sem ele; com um Perfil à vista por vez, o que
 vista, e perdê-lo numa sessão expirada seria perder sem ver o quê. A metade do servidor já existia: a
 restauração é um envio que devolve o digitado sem gravar, que é o que esta etapa já faz na recusa.
 {% endcomment %}
+{% comment %}
+**A composição e a prévia lado a lado** (094, FR-2202). O painel mora fora do formulário e fora de
+todo cartão: os campos dele — o cenário, a população, o estado anterior — não são declaração do
+Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe por cima da tela.
+{% endcomment %}
+<div class="composicao-com-previa">
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
       data-lista="#classificacao-perfis"{% endif %}>
@@ -227,6 +233,9 @@ restauração é um envio que devolve o digitado sem gravar, que é o que esta e
 </section>
 {% include "interface/_navegacao_etapa.html" %}
 </form>
+<aside id="painel-da-previa" class="painel-da-previa" aria-label="Prévia da classificação">{% include "interface/_previa_da_classificacao.html" %}</aside>
+</div>
+<p id="anuncio-da-previa" class="oculto" role="status" aria-live="polite"></p>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/assistente.js' %}" defer></script>
 <script src="{% static 'interface/ordenacao.js' %}" defer></script>
@@ -234,4 +243,5 @@ restauração é um envio que devolve o digitado sem gravar, que é o que esta e
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
 <script src="{% static 'interface/vista-do-conjunto.js' %}" defer></script>
 <script src="{% static 'interface/classificacao.js' %}" defer></script>
+<script src="{% static 'interface/previa-da-classificacao.js' %}" defer></script>
 {% endblock %}
