@@ -44,6 +44,9 @@ FATOS = [
     {"id": "f-servico", "name": "Tempo de serviço (meses)", "type": "INTEIRO"},
 ]
 
+#: Os casos-limite: construídos para demonstrar uma situação, e por isso refeitos sobre a fronteira
+#: a cada mudança de alvo, suplentes ou vagas. A experiência principal é a população estável
+#: (D-003).
 CENARIOS = {
     "sem_empate": (
         "Classificação sem empate",
@@ -178,6 +181,77 @@ def cenario(chave, *, enumeradas, etapa_do_marco, alvo, suplentes, vagas, corta)
         candidatos[5]["fatos"]["f-servico"], candidatos[6]["fatos"]["f-servico"] = 30, 72
         ancora_nota = "as ausências ficam na 2ª, na 4ª e na 7ª linha"
     return candidatos, ancora_nota
+
+
+def _candidatos_base(total, notas, portas):
+    return [
+        {
+            "slot": slot,
+            "nome": _nome(slot),
+            "notas": {etapa["id"]: _nota(slot, total) for etapa in notas},
+            "portas": [etapa["id"] for etapa in portas],
+            "eliminado_em": None,
+            "fatos": _fatos_padrao(slot),
+        }
+        for slot in range(total)
+    ]
+
+
+def populacao_estavel(*, enumeradas, etapa_do_marco, alvo, faixa_total, vagas):
+    """A população que **não muda** enquanto o painel está aberto (D-003, revisão de 19/10).
+
+    `alvo`, `faixa_total` e `vagas` são os do momento em que a população foi montada, e viajam no
+    painel: alterar a regra depois não refaz ninguém. É o que deixa ver o efeito causal da
+    mudança — o empate que estava na 10ª continua na 10ª quando os suplentes passam de 5 a 0, e o
+    que muda é só a consequência.
+
+    Ela já traz o que costuma importar: um empate residual na última vaga (ou no alvo, sem quadro),
+    outro na última posição da faixa, um trio que só os fatos separam, uma candidata sem nota e um
+    candidato eliminado — estes dois por último, fora da contagem de posições.
+    """
+    referencia = max(faixa_total or 0, vagas or 0, alvo or 0, 12)
+    total = min(referencia + 6, 600)
+    notas = [etapa for etapa in enumeradas if etapa["forma"] != DECISORIA]
+    portas = [etapa for etapa in enumeradas if etapa["forma"] == DECISORIA]
+    candidatos = _candidatos_base(total, notas, portas)
+    ocupados = set()
+    plantados = []
+
+    def par(ultima, rotulo):
+        # Slots `ultima - 1` e `ultima`: os dois dividem a posição `ultima`. Com folga de um slot
+        # para cada lado, para que dois empates não se fundam num só.
+        if not ultima or ultima < 2 or ultima >= total - 1:
+            return
+        if {ultima - 2, ultima - 1, ultima, ultima + 1} & ocupados:
+            return
+        candidatos[ultima]["notas"] = dict(candidatos[ultima - 1]["notas"])
+        candidatos[ultima]["fatos"] = dict(candidatos[ultima - 1]["fatos"])
+        ocupados.update({ultima - 1, ultima})
+        plantados.append(f"empate de dois na {ultima}ª posição ({rotulo})")
+
+    par(vagas or alvo, "última vaga" if vagas else "último do alvo")
+    if faixa_total and faixa_total != (vagas or alvo):
+        par(faixa_total, "última da faixa")
+    for inicio in range(2, total - 3):
+        if not {inicio - 1, inicio, inicio + 1, inicio + 2, inicio + 3} & ocupados:
+            for slot in (inicio + 1, inicio + 2):
+                candidatos[slot]["notas"] = dict(candidatos[inicio]["notas"])
+            x, y, z = (candidatos[inicio + i]["fatos"] for i in range(3))
+            x["f-nascimento"] = datetime.date(1961, 5, 4)
+            y["f-nascimento"] = z["f-nascimento"] = datetime.date(1979, 8, 19)
+            y["f-servico"], z["f-servico"] = 84, 60
+            plantados.append(f"trio que só os fatos separam, a partir da {inicio + 1}ª posição")
+            break
+    # Os dois sem posição vão no fim da lista: não ocupam posição, e por isso não deslocam os
+    # empates plantados. As notas altas são de propósito — "teria ficado entre os primeiros".
+    extras = _candidatos_base(total + 2, notas, portas)[total:]
+    for extra, nota in zip(extras, (Decimal(96), Decimal(94)), strict=True):
+        extra["notas"] = {etapa["id"]: nota for etapa in notas}
+    if notas:
+        extras[0]["notas"][notas[-1]["id"]] = None
+    if etapa_do_marco is not None:
+        extras[1]["eliminado_em"] = etapa_do_marco["id"]
+    return candidatos + extras, plantados
 
 
 # ---------------------------------------------------------------------------------------------
@@ -325,8 +399,15 @@ def _faltas_do_marco(marco, etapas):
     return faltas
 
 
-def calcular(marco, etapas_publicadas, *, chave_do_cenario, vagas):
-    """Tudo o que o painel mostra, ou `Incompleto` com o que falta."""
+ESTAVEL, CASO_LIMITE = "estavel", "caso"
+
+
+def calcular(marco, etapas_publicadas, *, chave_do_cenario, vagas, modo=ESTAVEL, populacao=None):
+    """Tudo o que o painel mostra, ou `Incompleto` com o que falta.
+
+    `populacao` é `(alvo, faixa, vagas)` com que a população estável foi montada; `None` monta
+    agora, com a configuração digitada.
+    """
     etapas = {e["id"]: e for e in etapas_publicadas}
     faltas = _faltas_do_marco(marco, etapas)
     regra = marco.get("cutRule")
@@ -353,15 +434,30 @@ def calcular(marco, etapas_publicadas, *, chave_do_cenario, vagas):
     enumeradas = [etapas[e] for e in marco["stages"] if e in etapas]
     etapa_do_marco = max(enumeradas, key=lambda e: e["order"]) if enumeradas else None
     chave = chave_do_cenario if chave_do_cenario in CENARIOS else "sem_empate"
-    candidatos, ancora = cenario(
-        chave,
-        enumeradas=enumeradas,
-        etapa_do_marco=etapa_do_marco,
-        alvo=alvo,
-        suplentes=suplentes,
-        vagas=vagas,
-        corta=bool(regra),
-    )
+    faixa_total = (alvo or 0) + (suplentes or 0) if regra else 0
+    fronteiras = (alvo or 0, faixa_total, vagas or 0)
+    if modo == CASO_LIMITE:
+        candidatos, ancora = cenario(
+            chave,
+            enumeradas=enumeradas,
+            etapa_do_marco=etapa_do_marco,
+            alvo=alvo,
+            suplentes=suplentes,
+            vagas=vagas,
+            corta=bool(regra),
+        )
+        ancoras = fronteiras
+        plantados = [ancora] if ancora else []
+    else:
+        ancoras = populacao or fronteiras
+        candidatos, plantados = populacao_estavel(
+            enumeradas=enumeradas,
+            etapa_do_marco=etapa_do_marco,
+            alvo=ancoras[0],
+            faixa_total=ancoras[1],
+            vagas=ancoras[2],
+        )
+        ancora = None
     inscritos = [
         {
             "inscricao_id": f"F{c['slot']:03d}",
@@ -407,8 +503,14 @@ def calcular(marco, etapas_publicadas, *, chave_do_cenario, vagas):
     corte = _corte(regra, ordem, sem_posicao, alvo=alvo, suplentes=suplentes)
     vagas_aviso = _fronteira_das_vagas(corte, ordem, vagas)
     return {
+        "modo": modo,
         "cenario": chave,
         "ancora": ancora,
+        "plantados": plantados,
+        "ancoras": ancoras,
+        "fronteiras": fronteiras,
+        "total": len(candidatos),
+        "consequencias": consequencias(ordem, sem_posicao, corte),
         "ordem": ordem,
         "sem_posicao": sem_posicao,
         "conferida": conferida,
@@ -500,3 +602,106 @@ def _fronteira_das_vagas(corte, ordem, vagas):
     except apuracao.EmpateNaFronteiraDoAlvo as erro:
         return {"avaliado": True, "para": True, "posicao": erro.posicao, "quantas": erro.quantas}
     return {"avaliado": True, "para": False}
+
+
+# ---------------------------------------------------------------------------------------------
+# A consequência de cada um, e o que mudou desde o cálculo anterior (demonstrativo)
+# ---------------------------------------------------------------------------------------------
+
+PROGRIDE, PELO_EMPATE, NAO_PROGRIDE, AGUARDA, SEM_POSICAO, SEGUE = "PENASC"
+
+
+def consequencias(ordem, sem_posicao, corte):
+    """`{inscricao_id: código}` — a resposta curta a "esta pessoa avança?".
+
+    O empate que entra pelo desfecho marca o **grupo** inteiro: o motor não ordena os empatados
+    entre si, e marcar um como "progride" e o outro como "pelo empate" seria escolher entre eles.
+    """
+    saida = {i["inscricao_id"]: SEM_POSICAO for i in sem_posicao}
+    if not corte["declarado"]:
+        saida.update({i["inscricao_id"]: SEGUE for i in ordem})
+        return saida
+    if corte.get("recusado") or (corte.get("sem_desfecho") and corte.get("atravessa")):
+        saida.update({i["inscricao_id"]: AGUARDA for i in ordem})
+        return saida
+    dentro = set(corte["progrediram"])
+    excedentes = set(corte.get("excedentes") or [])
+    for item in ordem:
+        ident = item["inscricao_id"]
+        if ident not in dentro:
+            saida[ident] = NAO_PROGRIDE
+        elif excedentes and any(o["inscricao_id"] in excedentes for o in item["grupo_final"]):
+            saida[ident] = PELO_EMPATE
+        else:
+            saida[ident] = PROGRIDE
+    return saida
+
+
+def estado(r):
+    """O estado comparável do cálculo, para o próximo pedido dizer o que mudou."""
+    corte = r["corte"]
+    if not corte["declarado"]:
+        situacao_do_corte = "sem-corte"
+    elif corte.get("recusado"):
+        situacao_do_corte = f"impedido-{corte['posicao']}"
+    elif corte.get("sem_desfecho") and corte.get("atravessa"):
+        situacao_do_corte = "sem-desfecho"
+    else:
+        situacao_do_corte = "emitivel"
+    aviso = r["aviso_das_vagas"]
+    vagas = (
+        "nao-avaliada"
+        if not aviso["avaliado"]
+        else f"para-{aviso['posicao']}"
+        if aviso["para"]
+        else "possivel"
+    )
+    codigos = "".join(r["consequencias"].get(f"F{slot:03d}", "-") for slot in range(r["total"]))
+    populacao = ":".join(str(n) for n in r["ancoras"])
+    chave = r["cenario"] if r["modo"] == CASO_LIMITE else ESTAVEL
+    return "~".join([chave, populacao, situacao_do_corte, vagas, codigos])
+
+
+def comparar(anterior, atual, nomes):
+    """O que mudou entre dois estados da **mesma** população — ou `None` se não são comparáveis."""
+    if not anterior:
+        return None
+    try:
+        a_chave, a_pop, a_corte, a_vagas, a_cod = anterior.split("~")
+        b_chave, b_pop, b_corte, b_vagas, b_cod = atual.split("~")
+    except ValueError:
+        return None
+    if (a_chave, a_pop) != (b_chave, b_pop) or len(a_cod) != len(b_cod):
+        return None
+    mudancas = []
+    rotulo_do_corte = {
+        "emitivel": "emitível",
+        "sem-corte": "sem corte",
+        "sem-desfecho": "sem desfecho declarado",
+    }
+
+    def corte_legivel(valor):
+        if valor.startswith("impedido-"):
+            return f"impedido na {valor.split('-')[1]}ª"
+        return rotulo_do_corte.get(valor, valor)
+
+    if a_corte != b_corte:
+        mudancas.append(f"Corte: {corte_legivel(a_corte)} → {corte_legivel(b_corte)}.")
+    avancam = lambda cod: sum(1 for c in cod if c in (PROGRIDE, PELO_EMPATE, SEGUE))  # noqa: E731
+    if avancam(a_cod) != avancam(b_cod):
+        mudancas.append(f"Progridem: {avancam(a_cod)} → {avancam(b_cod)}.")
+    legivel = {"possivel": "possível", "nao-avaliada": "não avaliada"}
+
+    def vagas_legivel(valor):
+        if valor.startswith("para-"):
+            return f"pararia na {valor.split('-')[1]}ª"
+        return legivel.get(valor, valor)
+
+    if a_vagas != b_vagas:
+        mudancas.append(f"Apuração das vagas: {vagas_legivel(a_vagas)} → {vagas_legivel(b_vagas)}.")
+    mudaram = [i for i, (x, y) in enumerate(zip(a_cod, b_cod, strict=True)) if x != y]
+    return {
+        "mudancas": mudancas,
+        "mudaram": {f"F{i:03d}" for i in mudaram},
+        "quantos": len(mudaram),
+    }

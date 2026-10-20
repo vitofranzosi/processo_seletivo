@@ -81,10 +81,27 @@ campos no gatilho seria uma segunda lista para envelhecer. O protótipo validou 
 **Conteúdo incompleto**: diferente da recomposição, que responde 204, a prévia responde 200 com o que
 falta (FR-2227): o painel está aberto e precisa dizer por que não calcula.
 
-## R-005 — A geração dos cenários
+## R-005 — A geração dos candidatos: população estável e casos-limite
 
-**Decisão**: `cenarios_da_previa.gerar(chave, *, etapas_com_nota, portas, etapa_do_marco, fatos, alvo,
-suplentes, vagas, corta)`, puro e determinístico. Regras validadas no protótipo:
+*Revista na segunda rodada (D-003).* Dois geradores, puros e determinísticos, no mesmo módulo.
+
+**População estável** — `populacao_estavel(*, enumeradas, etapa_do_marco, alvo, faixa_total, vagas)`,
+chamada com as fronteiras **da montagem**, que o painel carrega num campo oculto (`populacao=a:f:v`) e
+devolve a cada recálculo. Regras validadas no protótipo:
+
+- **Tamanho**: `min(max(faixa, vagas, alvo, 12) + 6, 600)`, mais dois sem posição no fim.
+- **Plantados**, nesta ordem, com um slot de folga para não se fundirem: empate de dois iguais em tudo
+  na última vaga (ou no alvo, sem quadro); outro na última posição da faixa, se diferente; e um trio de
+  notas iguais que só os fatos separam, no primeiro trecho livre a partir da 3ª posição.
+- **Sem posição**: uma candidata sem nota na última Etapa com nota e um candidato eliminado na Etapa do
+  marco, com notas altas de propósito — "teria ficado entre os primeiros". Ficam depois dos demais na
+  lista, e por isso não deslocam as posições plantadas.
+- **Medido no protótipo**: com a montagem em 10 + 5 e 10 vagas (23 candidatos), as alterações
+  `ADMITS_SURPLUS` → `STRICT`, suplentes 5 → 0, desfecho de volta e alvo 30 + 10 mantiveram os 23, e
+  a matriz do achado saiu igual linha a linha.
+
+**Casos-limite** — `gerar(chave, *, etapas_com_nota, portas, etapa_do_marco, fatos, alvo, suplentes,
+vagas, corta)`, o gerador da primeira versão, que acompanha a fronteira. Regras:
 
 - **Tamanho**: `min(max(alvo + suplentes, vagas, alvo, 8) + 4, 600)`.
 - **Notas**: cada candidato tem **a mesma nota em toda Etapa com nota**, de 95 para baixo, inteiras até
@@ -101,6 +118,40 @@ suplentes, vagas, corta)`, puro e determinístico. Regras validadas no protótip
 conjunto de pesos — dependeria do peso, contrariando D-003. Com notas iguais, o critério por Etapa não
 separa (e a linha diz por quê), e os critérios por fato separam em sequência. A primeira versão do
 protótipo usava notas trocadas; foi descartada pela dependência do peso.
+
+## R-010 — "O que mudou": o estado anterior viaja no painel
+
+**Decisão**: depois de cada cálculo, o servidor devolve no painel um campo oculto `anterior` com o
+estado comparável — `modo~população~corte~apuração~códigos`, em que `códigos` é uma letra de
+consequência por candidato, na ordem de montagem (P progride, E pelo empate, N não progride, A aguarda,
+S sem posição, C segue sem corte). O recálculo inclui `anterior`; o servidor compara com o estado novo e
+devolve as diferenças. Nada fica na sessão nem no banco (FR-2234). Para 600 candidatos o campo tem
+~620 caracteres, que cabem no GET do htmx.
+
+**Comparação só na mesma população**: modo e fronteiras de montagem precisam coincidir; senão a
+comparação devolve nada, e o painel não inventa diferença (FR-2244).
+
+**Alternativas descartadas**: guardar o anterior na sessão (estado de servidor por aba, e uma escrita a
+cada tecla); comparar no navegador (seria regra no navegador, FR-2224).
+
+## R-011 — Quais linhas a tabela inicial mostra
+
+**Decisão**: as linhas a até duas posições de cada limite (alvo, fim da faixa, última vaga), todos os
+membros de grupos empatados na pontuação, e quem mudou de consequência na última alteração; sem limite
+nenhum, as cinco primeiras. O resto vira linhas agrupadas por consequência ("1ª a 8ª: 8 candidatos sem
+empate — progridem"). Os limites são linhas tracejadas na tabela, com "o empate da Xª atravessa esta
+linha" quando atravessa. Os sem posição vêm sempre, no fim.
+
+**Por quê**: as cinco perguntas do usuário — quantos avançam, quem não, por que empatou, o que vem
+depois, o que mudou — se respondem com a manchete, o fluxo e essas linhas. A classificação completa
+continua a um clique (FR-2241).
+
+## R-012 — A terminologia, avaliada
+
+Ver D-012 da spec. Na avaliação de 19/10, a pergunta "quem não avançaria?" exigia, na primeira versão,
+ler a coluna "Corte e próxima Etapa" linha a linha e distinguir "Fora da faixa" de "Suplente" e de
+"Além da faixa, por empate"; na segunda, é a marca cinza "Não progride" abaixo da linha tracejada do fim
+da faixa, e a manchete já diz quantos. "Suplente" deixou de ser situação de candidato por causa da DP-4.
 
 ## R-006 — Limites
 
@@ -164,3 +215,14 @@ orçamento de consulta.
    painel é a única fonte do cenário.
 3. **"E não a do alvo" sem suplentes**: com alvo igual à faixa, a frase afirmava uma diferença que não
    existe.
+
+**Da segunda versão (19/10)**:
+
+4. **"2 deles pelo empate" onde o corte registra 1**: os dois empatados na última posição progridem pelo
+   desfecho, mas só um está **além** da faixa. O número do resumo é `len(excedentes)`; a marca da linha é
+   do grupo. Confundir os dois diria ao elaborador que a faixa cresceu dois.
+5. **A trajetória guarda os participantes crus**, sem posição: a comparação dos empates precisa ler a
+   posição da ordem final, por identificador.
+6. **Cabeçalho escondido por recorte empurrava a rolagem** da tabela a 375 px, e a primeira coluna com
+   `nowrap` impedia a linha de limite de quebrar: no estreito o cabeçalho sai com `display:none`, e as
+   linhas de limite e agrupadas quebram.

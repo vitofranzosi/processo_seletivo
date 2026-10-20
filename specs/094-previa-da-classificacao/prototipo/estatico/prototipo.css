@@ -87,50 +87,127 @@ input[type=number]{width:7rem}
 .cabeca-do-painel h2:focus{outline:none}
 .fechar{font:inherit;padding:.3rem .8rem;border:1px solid var(--borda);border-radius:.3rem;
   background:var(--branco);cursor:pointer}
-.contexto,.descricao-do-cenario,.ancora{margin:.35rem 0;font-size:.95rem}
-.descricao-do-cenario,.ancora{color:var(--texto-fraco)}
-.reposicionado{color:var(--azul);font-weight:600}
-.resumo{margin:.75rem 0}
-.resumo-da-faixa{margin:.25rem 0}
-.resultado{margin:.5rem 0;padding:.5rem .75rem;border-radius:.3rem;border-left:4px solid}
-.resultado p{margin:.25rem 0}
-.resultado ul{margin:.25rem 0;padding-left:1.25rem}
-.resultado.saiu{border-color:var(--verde);background:var(--verde-claro)}
-.resultado.neutro{border-color:var(--borda);background:var(--fundo)}
-/* A recusa é resultado da regra, e não erro de preenchimento (D-005): âmbar, e não vermelho. */
-.resultado.parado,.resultado.aviso{border-color:var(--amarelo);background:var(--amarelo-fundo)}
-.resultado.incompleto{border-color:var(--azul);background:var(--azul-fundo)}
-.comparacao,.comportamento-atual,.suposicao{font-size:.9rem;color:var(--texto-fraco);margin:.25rem 0}
-.conferencia{font-size:.85rem;color:var(--texto-fraco);margin:.75rem 0 0}
-.conferencia.divergiu{color:var(--vermelho);font-weight:700}
+.contexto{margin:.25rem 0 .5rem;font-size:.9rem;color:var(--texto-fraco)}
 
-/* A tabela: rola dentro do painel, nunca a página. */
+/* Os candidatos: o controle fica no alto, compacto; a explicação, em letra menor. */
+.candidatos{border-top:1px solid var(--borda);border-bottom:1px solid var(--borda);
+  padding:.35rem 0;margin:.25rem 0 .75rem}
+.candidatos .campo{flex-direction:row;align-items:center;gap:.5rem;flex-wrap:wrap;margin:0}
+.candidatos select{flex:1 1 14rem}
+.candidatos .descricao,.aviso-do-modo{font-size:.85rem;color:var(--texto-fraco);margin:.3rem 0}
+.aviso-do-modo{color:var(--azul)}
+.acao-discreta{font:inherit;font-size:.85rem;padding:.1rem .5rem;border:1px solid var(--azul);
+  color:var(--azul);background:var(--branco);border-radius:.25rem;cursor:pointer}
+
+/* 1. A manchete: a consequência geral, antes de tudo. */
+.manchete{font-size:1.1rem;line-height:1.45;margin:.5rem 0 .75rem;padding:.6rem .8rem;
+  border-radius:.35rem;border-left:5px solid var(--verde);background:var(--verde-claro)}
+.manchete-impedido{border-color:var(--amarelo);background:var(--amarelo-fundo)}
+
+/* 3. O que mudou: o efeito causal da última alteração. */
+.mudou{border:2px solid var(--azul);border-radius:.35rem;padding:.4rem .75rem;margin:0 0 .75rem;
+  background:var(--azul-fundo)}
+.mudou h3{font-size:.95rem;margin:0 0 .2rem;color:var(--azul)}
+.mudou ul{margin:0;padding-left:1.1rem}
+.mudou.nada{border-width:1px;color:var(--texto-fraco);font-size:.9rem}
+
+/* 2. O fluxo: três passos, com seta; no estreito, em coluna. */
+.fluxo{list-style:none;padding:0;margin:0 0 .25rem;display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.4rem}
+.passo{position:relative;border:1px solid var(--borda);border-radius:.35rem;padding:.45rem .6rem;
+  background:var(--branco);display:flex;flex-direction:column;min-width:0}
+.passo + .passo::before{content:"→";position:absolute;left:-1.15rem;top:50%;
+  transform:translateY(-50%);font-weight:700;color:var(--texto-fraco)}
+.passo-nome{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco)}
+.passo strong{font-size:1.05rem}
+.passo span:not(.passo-nome){font-size:.85rem;color:var(--texto-fraco)}
+.passo-emitivel{border-color:var(--verde);box-shadow:inset 0 3px 0 var(--verde)}
+.passo-impedido{border-color:var(--amarelo);box-shadow:inset 0 3px 0 var(--amarelo)}
+.passo-neutro{box-shadow:inset 0 3px 0 var(--borda)}
+.ramo{margin:.35rem 0 .75rem;font-size:.85rem;color:var(--texto-fraco)}
+
+/* A ocupação: depois do corte, separada, tracejada — é hipótese, e não resultado. */
+.ocupacao{border:1px dashed var(--texto-fraco);border-radius:.35rem;padding:.4rem .75rem;
+  margin:0 0 1rem}
+.ocupacao h3{font-size:.95rem;margin:0 0 .2rem}
+.ocupacao p{margin:.2rem 0}
+.selo-hipotese{background:var(--cinza-fundo);color:var(--texto);border:1px solid var(--texto-fraco)}
+.estado-aviso{color:var(--amarelo)}
+.estado-ok{color:var(--verde-escuro)}
+.estado-neutro{color:var(--texto-fraco)}
+.nota{font-size:.8rem;color:var(--texto-fraco)}
+
+/* 4. A fronteira: quatro colunas, e uma linha onde cada limite passa. */
+section h3{font-size:1rem;margin:1rem 0 .35rem}
 .rolavel{overflow-x:auto;max-width:100%}
-table.previa{border-collapse:collapse;width:100%;font-size:.9rem}
-.previa th,.previa td{border-bottom:1px solid var(--borda);padding:.4rem .5rem;text-align:left;
-  vertical-align:top}
-.previa th{background:var(--fundo);font-size:.85rem}
-.previa td:first-child{white-space:nowrap;font-weight:600}
-.dividida,.detalhe,.consequencia{display:block;font-size:.8rem;color:var(--texto-fraco);
-  font-weight:400}
-.agrupada td{font-style:italic;color:var(--texto-fraco);background:var(--fundo)}
-[class^=marca-]{display:inline-block;font-weight:700;font-size:.8rem;padding:0 .35rem;
-  border-radius:.25rem}
-.marca-alvo{background:var(--verde-claro);color:var(--verde-escuro)}
-.marca-suplente{background:var(--azul-fundo);color:var(--azul)}
-.marca-excedente,.marca-fronteira{background:var(--amarelo-fundo);color:var(--amarelo)}
-.marca-fora,.marca-sem-posicao,.marca-sem-corte{background:var(--cinza-fundo);color:var(--texto)}
-.marca-parado{background:var(--amarelo-fundo);color:var(--amarelo)}
-.situacao-fora td,.situacao-sem-posicao td{color:var(--texto-fraco)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{border-bottom:1px solid var(--borda);padding:.35rem .5rem;text-align:left;vertical-align:top}
+thead th{background:var(--fundo);font-size:.8rem}
+.fronteira td:first-child{white-space:nowrap;font-weight:600}
+.dividida{display:block;font-size:.75rem;font-weight:400;color:var(--amarelo)}
+.agrupada td{font-style:italic;color:var(--texto-fraco);background:var(--fundo);font-size:.85rem}
+.fronteira .limite td,.fronteira .agrupada td{padding:0;border-bottom:0;white-space:normal}
+.fronteira .agrupada td{padding:.35rem .5rem}
+.limite span{display:block;border-top:2px dashed var(--texto);font-size:.75rem;font-weight:700;
+  padding:.1rem .5rem .25rem;color:var(--texto)}
+.linha-nao-progride td,.linha-sem-posicao td{color:var(--texto-fraco)}
+.marca{display:inline-block;font-weight:700;font-size:.8rem;padding:.05rem .45rem;
+  border-radius:1rem;white-space:nowrap}
+.marca-progride,.marca-segue{background:var(--verde-claro);color:var(--verde-escuro)}
+.marca-pelo-empate{background:var(--amarelo-fundo);color:var(--amarelo);
+  border:1px solid var(--amarelo)}
+.marca-aguarda{background:var(--amarelo-fundo);color:var(--amarelo)}
+.marca-nao-progride,.marca-sem-posicao{background:var(--cinza-fundo);color:var(--texto)}
+.etiqueta{display:inline-block;margin-left:.35rem;font-size:.72rem;padding:0 .35rem;
+  border-radius:.25rem;background:var(--fundo);border:1px solid var(--borda);color:var(--texto-fraco)}
+.etiqueta-empate{border-color:var(--amarelo);color:var(--amarelo)}
+.etiqueta-mudou{border-color:var(--azul);color:var(--azul);background:var(--azul-fundo);
+  font-weight:700}
 
-/* No estreito, cada linha vira um bloco com o rótulo da coluna antes do valor. */
+/* 5. Os empates, lado a lado: a linha que separou se destaca. */
+.empate{border:1px solid var(--borda);border-radius:.35rem;padding:.4rem .6rem;margin:0 0 .6rem}
+.empate h4{margin:0;font-size:.95rem}
+.resultado-do-empate{margin:.2rem 0 .4rem;font-size:.9rem}
+.importa{display:block;margin-top:.15rem;color:var(--amarelo);font-weight:600}
+.montagem{font-size:.8rem;color:var(--texto-fraco)}
+.montagem summary{cursor:pointer}
+.montagem p{margin:.2rem 0}
+.comparacao th[scope=row]{font-weight:600;font-size:.85rem}
+.comparacao .efeito{font-size:.8rem;color:var(--texto-fraco)}
+.efeito-curto{display:none}
+.efeito-separou th,.efeito-separou td{background:var(--verde-claro)}
+.efeito-separou .efeito{color:var(--verde-escuro);font-weight:700}
+.efeito-nao-usado th,.efeito-nao-usado td{color:var(--texto-fraco)}
+
+/* 6. Atrás de um clique. */
+details.completa,details.como-calcula{margin:.75rem 0 0;border-top:1px solid var(--borda);
+  padding-top:.5rem}
+details.completa summary,details.como-calcula summary{cursor:pointer;font-weight:600}
+.como-calcula ul{font-size:.85rem;padding-left:1.1rem}
+.divergiu{color:var(--vermelho)}
+.incompleto{border-left:4px solid var(--azul);background:var(--azul-fundo);padding:.5rem .75rem;
+  border-radius:.3rem}
+.incompleto ul{margin:.25rem 0;padding-left:1.1rem}
+
+/* No estreito: o fluxo em coluna, com a seta para baixo; as tabelas de linhas viram blocos. */
 @media (max-width:40rem){
-  .previa thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  .previa tr{display:block;border-bottom:2px solid var(--borda);padding:.4rem 0}
-  .previa td{display:block;border:0;padding:.15rem .25rem}
-  .previa td::before{content:attr(data-rotulo);display:block;font-size:.75rem;font-weight:700;
-    color:var(--texto-fraco);text-transform:uppercase;letter-spacing:.03em}
-  .agrupada td::before{content:none}
-  .previa td:first-child{white-space:normal}
+  .fluxo{grid-template-columns:1fr;gap:1.3rem}
+  .passo + .passo::before{content:"↓";left:50%;top:-1.15rem;transform:translateX(-50%)}
+  /* O cabeçalho sai do fluxo: em bloco, cada célula diz o que é, e o thead escondido por recorte
+     ainda empurrava a largura da rolagem. */
+  .fronteira thead,.detalhada thead{display:none}
+  .fronteira tr,.detalhada tr{display:grid;grid-template-columns:auto 1fr;gap:0 .75rem;
+    border-bottom:1px solid var(--borda);padding:.35rem 0}
+  .fronteira td,.detalhada td{border:0;padding:.05rem .25rem}
+  .detalhada td::before{content:attr(data-rotulo) ": ";font-size:.75rem;font-weight:700;
+    color:var(--texto-fraco)}
+  .detalhada td{grid-column:1 / -1}
+  .fronteira td:nth-child(3)::before{content:"pontuação ";font-size:.75rem;
+    color:var(--texto-fraco)}
+  .agrupada td,.limite td{grid-column:1 / -1}
+  .comparacao .efeito,.comparacao thead th:last-child{display:none}
+  .efeito-curto{display:block;font-size:.75rem;font-weight:400;color:var(--texto-fraco)}
+  .efeito-separou .efeito-curto{color:var(--verde-escuro);font-weight:700}
   .pagina{padding:.75rem}
 }

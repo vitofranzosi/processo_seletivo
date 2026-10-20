@@ -4,8 +4,18 @@
 
 **Created**: 2026-10-19
 
-**Status**: Especificada — spec, plan, tasks e protótipo no PR; implementação não iniciada. O merge é
-do usuário.
+**Status**: Especificada, com a segunda rodada de UX de 19/10 — spec, plan, tasks e protótipo no PR;
+implementação não iniciada, e só autorizada pelo usuário depois desta rodada. O merge é do usuário.
+
+> **Segunda rodada (19/10/2026).** O usuário aprovou a direção técnica — o motor puro, a reprodução
+> dos empates, o recálculo por htmx — e pediu que a prévia deixasse de *demonstrar o algoritmo* para
+> *tornar as consequências compreensíveis*. Mudou a apresentação, e não o cálculo: a consequência geral
+> vem primeiro (FR-2238), o fluxo classificação → corte → Etapa seguinte fica explícito (FR-2239), a
+> ocupação sai como hipótese separada (FR-2240), a tabela começa pela fronteira (FR-2241), os empates
+> se comparam lado a lado (FR-2242), a população estável vira o padrão (FR-2243, D-003 revista), e
+> cada alteração diz o que mudou (FR-2244). A história de recálculo passou a P1. Os requisitos
+> substituídos estão marcados no lugar, e a comparação entre as duas versões está em
+> [`prototipo/comparacao-v1-v2.md`](prototipo/comparacao-v1-v2.md).
 
 **Input**: decisão do usuário de 19/10/2026, a partir de uma sessão real em que um elaborador não
 conseguiu prever o efeito das regras de corte da etapa Classificação, e do achado
@@ -14,7 +24,8 @@ conseguiu prever o efeito das regras de corte da etapa Classificação, e do ach
 obrigatória: esta spec mostra o que o motor faz, e não decide nenhuma das leituras que ele deixou em
 aberto.
 
-> **Faixa de identificadores.** Esta spec abre em **FR-2200** e **SC-840**. A `093` (PR #311, aberto)
+> **Faixa de identificadores.** Esta spec abre em **FR-2200** e **SC-840**; a segunda rodada
+> acrescentou FR-2238 a FR-2246 e SC-848 a SC-850. A `093` (PR #311, aberto)
 > vai até o 2160 da faixa de requisitos e o 829 da de critérios — sem o prefixo aqui, porque ela ainda
 > não está na `main` e a varredura de citações não a vê. Nenhuma branch aberta usava `094` nem número
 > acima desses, conferido em `git ls-tree` e `git grep` de todas as branches remotas em 19/10/2026.
@@ -74,9 +85,11 @@ inclusive do acervo — é o mesmo antes e depois desta feature.
 O elaborador compõe o marco "Classificação final" do Perfil "Professor de Matemática": Prova Escrita e
 Prova de Títulos, soma ponderada, dois critérios de desempate. No cartão, ele aperta "Simular
 classificação". Ao lado do cartão abre um painel com candidatos fictícios — identificados como
-fictícios —, cada um com as notas por Etapa, a pontuação combinada, a posição e uma frase que diz
-**por que** ele está ali: pontuação distinta de todas; empatou na pontuação e o 1º critério o separou,
-com os valores comparados; empatou em tudo e divide a posição; ou não tem posição, e por quê.
+fictícios. A primeira coisa que ele lê é a consequência geral: *"16 de 23 candidatos progridem para a
+Entrevista; 5 não progridem; 2 ficam sem posição."* Logo abaixo, os candidatos perto dos limites, em
+quatro colunas — posição, candidato, pontuação, consequência —, e cada empate numa tabela comparativa
+que mostra, critério a critério, os valores lado a lado e qual critério separou. A classificação
+completa, com as notas e os dados de desempate, fica a um clique.
 
 **Why this priority**: é o núcleo do critério de sucesso. Sem a explicação por linha, a prévia vira
 mais uma tabela que o elaborador precisa interpretar sozinho — que é o problema de hoje.
@@ -89,31 +102,37 @@ por linha; a ordem e as posições são idênticas às que o caminho oficial pro
 
 1. **Given** um marco por pontuação com Etapas e arredondamento declarados, **When** o elaborador
    aperta "Simular classificação", **Then** o painel abre fora do cartão, nomeia o Perfil e o marco, e
-   lista os candidatos fictícios do cenário padrão em ordem, cada um com o motivo da posição.
+   começa pela consequência geral — quantos são, quantos progridem, quantos não, quantos sem posição,
+   se o corte é emitível e qual a Etapa seguinte (FR-2238) —, antes de qualquer tabela.
 2. **Given** dois candidatos com a mesma pontuação combinada e um critério que os separa, **When** a
-   prévia é calculada, **Then** a linha de cada um diz qual critério os separou, com o valor de cada
-   um, e as posições são consecutivas.
+   prévia é calculada, **Then** a comparação do empate mostra os valores dos dois em cada critério, na
+   ordem, marca o critério que os separou e diz dos anteriores que não separaram (FR-2242).
 3. **Given** dois candidatos iguais na pontuação e em todos os critérios declarados, **When** a prévia
-   é calculada, **Then** os dois aparecem na mesma posição (por exemplo, 10ª e 10ª), a linha diz que
-   nenhum critério declarado os separa e que o sistema não escolhe entre eles, e o candidato seguinte
-   aparece na 12ª.
+   é calculada, **Then** os dois aparecem na mesma posição (por exemplo, 10ª e 10ª), a comparação diz
+   que nenhum critério declarado os separa e que o sistema não escolhe entre eles, diz que linha o
+   empate atravessa e o que isso causa, e o candidato seguinte aparece na 12ª.
 4. **Given** um candidato fictício sem nota numa Etapa enumerada, **When** a prévia é calculada,
    **Then** ele aparece sem posição, com o motivo nomeando a Etapa, e não com nota zero.
 5. **Given** um critério com valor ausente declarado como "último no critério", e um candidato sem o
-   fato que ele consome, **When** a prévia é calculada, **Then** a linha diz que ele ficou atrás
-   naquele critério por não ter o valor.
+   fato que ele consome, **When** a prévia é calculada, **Then** a comparação do empate mostra a célula
+   vazia e diz que ele ficou atrás naquele critério por não ter o valor.
+6. **Given** o painel aberto, **When** o elaborador quer as notas por Etapa e os fatos de todos, **Then**
+   eles estão na classificação completa, a um clique, e não repetidos em cada linha da tabela inicial
+   (FR-2241).
 
 ---
 
 ### User Story 2 — Ver se alcança o corte e se progride, inclusive quando o corte não sai (Priority: P1)
 
-Com a regra de corte declarada — alvo 10, 5 suplentes, Etapa governada "Entrevista" —, o painel mostra,
-para cada candidato, a situação no corte (dentro do alvo, suplente, além do alvo por empate, fora da
-faixa, sem posição) e a consequência para a Entrevista. Quando o empate atravessa a última posição da
-faixa sob `STRICT`, o painel diz que **o corte não seria emitido**, em que posição e com quantos
-empatados — como resultado da regra, e não como erro de preenchimento. Quando um empate cai na
-fronteira das vagas, o painel avisa que **a apuração da ocupação pararia ali**, mesmo com o corte
-saindo.
+Com a regra de corte declarada — alvo 10, 5 suplentes, Etapa governada "Entrevista" —, o painel mostra
+o caminho em três passos: **Classificação** (21 com posição, 2 sem), **Corte** (emitível, faixa de 15 =
+alvo 10 + 5 suplentes) e **Entrevista** (16 participam), com o que acontece a quem não progride. Cada
+candidato perto dos limites tem uma consequência curta — progride, progride pelo empate, não progride,
+aguarda desempate, sem posição —, e uma linha tracejada marca onde passam o alvo, o fim da faixa e a
+última vaga. Quando o empate atravessa a última posição da faixa sob `STRICT`, a manchete diz que **o
+corte não seria emitido** — como resultado da regra, e não como erro de preenchimento. Depois do corte,
+num bloco separado e marcado como hipótese, o painel diz se **a apuração das vagas** seria possível ou
+pararia.
 
 **Why this priority**: é o que o achado mostrou que ninguém prevê. A prévia que pintasse tudo de verde
 num caso em que o motor recusa seria pior do que nenhuma prévia.
@@ -138,25 +157,31 @@ suplentes, empate na 10ª ou na 15ª, `ADMITS_SURPLUS` e `STRICT`), o painel mos
    **Then** o painel diz que o corte não seria emitido, na posição 15 — a última da faixa, e não a do
    alvo.
 5. **Given** um corte com Etapa governada "Entrevista" e continuação admitida, **When** a prévia é
-   calculada, **Then** quem está na faixa aparece "progride para a Entrevista", e quem está fora
-   aparece "não progride nesta faixa; o Edital admite faixa seguinte"; com continuação não admitida,
-   "não progride; o Edital não admite faixa seguinte".
-6. **Given** um marco que declara não governar Etapa alguma, **When** a prévia é calculada, **Then**
-   quem está na faixa aparece "dentro da faixa; este corte não alimenta Etapa".
-7. **Given** um marco sem regra de corte, **When** a prévia é calculada, **Then** o painel mostra a
-   ordem e diz que o marco não corta: ninguém é excluído da Etapa seguinte por ele.
+   calculada, **Then** o terceiro passo do fluxo é "Entrevista: N participam", quem está na faixa
+   aparece "Progride", e um ramo sob o fluxo diz que os que não progridem podem ser alcançados por uma
+   faixa seguinte; com continuação não admitida, que a participação deles termina ali (FR-2239).
+6. **Given** um marco que declara não governar Etapa alguma, **When** a prévia é calculada, **Then** o
+   terceiro passo é "Nenhuma Etapa", e quem está na faixa aparece "Na faixa".
+7. **Given** um marco sem regra de corte, **When** a prévia é calculada, **Then** o passo do corte diz
+   "Não corta", a manchete diz que os classificados seguem, e ninguém aparece excluído por este marco.
+8. **Given** um empate residual na última das vagas, **When** a prévia é calculada, **Then** o bloco da
+   apuração das vagas, separado do corte e marcado como hipótese, diz que a apuração pararia na
+   posição, sob as hipóteses declaradas, e diz que a prévia não simula a ocupação completa (FR-2240).
 
 ---
 
-### User Story 3 — Mudar um campo e ver o efeito sem salvar (Priority: P2)
+### User Story 3 — Mudar um campo e ver o efeito sem salvar (Priority: P1)
 
 O elaborador troca o desfecho do empate de `ADMITS_SURPLUS` para `STRICT` no cartão, sem gravar. O painel
-se recalcula sobre o que está digitado, com os mesmos candidatos fictícios, e passa a mostrar o corte
-recusado. Ele acrescenta um critério de desempate, e o empate residual se desfaz. Nada foi salvo: o
+se recalcula sobre o que está digitado, **com os mesmos candidatos e as mesmas notas**, e um quadro "O
+que mudou com a sua alteração" diz: *corte: emitível → impedido na 15ª; progridem: 16 → 0*. As linhas
+que mudaram de consequência levam a marca "mudou". Ele baixa os suplentes de 5 para 0: o empate que
+estava na 10ª continua na 10ª, e o quadro diz *impedido na 15ª → impedido na 10ª*. Nada foi salvo: o
 rascunho, os atos e a trilha não mudaram.
 
-**Why this priority**: é o que transforma a tabela em ferramenta de decisão. P2 porque as histórias 1 e
-2, abertas sobre o que está digitado no momento do clique, já entregam valor.
+**Why this priority**: P1 desde a segunda rodada, por decisão do usuário: alterar um parâmetro e ver o
+resultado na hora é a proposta do simulador. Sem a comparação causal, a prévia é uma tabela estática
+que o elaborador precisa reler inteira a cada mudança.
 
 **Independent Test**: com o painel aberto, alterar cada campo do marco que a prévia lê produz um novo
 cálculo sobre o digitado; o banco não recebe nenhuma escrita, e a página não perde o que foi digitado.
@@ -167,21 +192,30 @@ cálculo sobre o digitado; o banco não recebe nenhuma escrita, e a página não
    Etapas enumeradas, critérios, valor ausente, espécie do alvo, alvo, suplentes, desfecho, Etapa
    governada ou continuação — os campos do cartão —, **Then** o painel se recalcula sobre o valor
    digitado, sem gravar. O peso não está na lista: é campo do passo Etapas, lido do gravado.
-2. **Given** o painel aberto num cenário, **When** o elaborador altera um campo que não define
-   fronteira (operação, critérios, desfecho, Etapa governada, continuação), **Then** os candidatos
-   fictícios são os mesmos de antes, e só o resultado muda.
-3. **Given** o painel aberto, **When** o elaborador altera alvo, suplentes ou espécie do alvo,
-   **Then** o painel diz que o cenário foi reposicionado sobre a nova fronteira (D-003).
-4. **Given** um campo apagado no meio da digitação (alvo vazio, por exemplo), **When** a prévia é
+2. **Given** o painel aberto na população estável, **When** o elaborador altera **qualquer** campo do
+   cartão — inclusive alvo, suplentes e espécie do alvo —, **Then** os candidatos e as notas são os
+   mesmos de antes, e só a consequência muda (FR-2243).
+3. **Given** uma alteração que muda a consequência de alguém, **When** o painel se recalcula, **Then**
+   o quadro "O que mudou" diz o que mudou no corte, no número dos que progridem e na apuração das
+   vagas, e marca as linhas que mudaram; quando nada mudou, diz isso em uma linha (FR-2244).
+4. **Given** a população estável montada para alvo 10 e a regra alterada para alvo 30, **When** a faixa
+   passa do total de classificados, **Then** o painel diz que todos cabem por causa do tamanho da
+   amostra, e oferece remontar a população para a configuração atual — sem remontar sozinho.
+5. **Given** um caso-limite escolhido, **When** o elaborador altera alvo, suplentes ou vagas, **Then**
+   o caso é refeito sobre a nova fronteira, e o painel diz que, nesse modo, os candidatos mudam junto
+   (D-003).
+6. **Given** um campo apagado no meio da digitação (alvo vazio, por exemplo), **When** a prévia é
    pedida, **Then** o painel diz o que falta para calcular, e não mostra um resultado inventado.
-5. **Given** uma série de aberturas e recálculos, **When** se conferem as tabelas do banco e a trilha,
+7. **Given** uma série de aberturas e recálculos, **When** se conferem as tabelas do banco e a trilha,
    **Then** nada foi gravado.
 
 ---
 
-### User Story 4 — Escolher um cenário predefinido (Priority: P2)
+### User Story 4 — Escolher um caso-limite para demonstração (Priority: P2)
 
-Dentro do painel, o elaborador escolhe entre cenários predefinidos: classificação sem empate,
+Os candidatos padrão são a **população estável**, que já traz um empate na última vaga, outro na
+última posição da faixa e um trio que só os fatos separam. Para uma demonstração dirigida, o elaborador
+escolhe, no mesmo seletor, um **caso-limite**: classificação sem empate,
 desempate por critérios sucessivos, corte impedido por empate na última posição da faixa, empate na
 fronteira das vagas, e valor ausente. Cada cenário diz o que foi construído para mostrar e, quando a
 configuração digitada desfaz a situação, diz que ela não ocorre e por quê.
@@ -199,11 +233,11 @@ nomeia; com outra configuração, o painel diz se a situação ocorre ou não.
 2. **Given** o cenário "Desempate por critérios sucessivos" e os critérios "maior pontuação na Prova
    Escrita", "menor data de nascimento" e "maior tempo de serviço", **When** a prévia é calculada,
    **Then** três candidatos empatam na pontuação, qualquer que seja o peso; o 1º critério não os separa
-   (notas iguais), o 2º separa um deles, o 3º separa os outros dois, e cada linha diz qual critério agiu
-   e qual não agiu, com os valores.
+   (notas iguais), o 2º separa um deles, o 3º separa os outros dois, e a comparação lado a lado mostra
+   qual critério agiu e qual não agiu, com os valores.
 3. **Given** o mesmo cenário num marco cujos critérios só comparam pontuação de Etapa, **When** a
-   prévia é calculada, **Then** os três dividem a mesma posição, e a linha de cada um diz que nenhum
-   critério declarado os separa porque as notas são iguais.
+   prévia é calculada, **Then** os três dividem a mesma posição, e a comparação diz que nenhum critério
+   declarado os separa porque as notas são iguais.
 4. **Given** o cenário "Empate na fronteira das vagas", **When** o corte sai, **Then** o aviso de que a
    apuração pararia aparece, com a posição e o tamanho do empate, qualquer que seja o desfecho.
 5. **Given** o cenário "Classificação sem empate", **When** a prévia é calculada, **Then** nenhum aviso
@@ -254,10 +288,11 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
 - **Alvo do quadro, sem linha geral no quadro do Perfil**: a prévia mostra a ordem, diz que o alvo não é
   apurável, e não lê ausência como zero (`FR-183` da `014`).
 - **Alvo zero, ou alvo maior que o número de classificáveis**: zero não faz ninguém progredir; maior faz
-  todos os classificáveis progredirem, e o painel diz que a faixa não se completa.
-- **Faixa grande** (alvo do quadro de centenas): a tabela agrupa os trechos sem nada a dizer — "posições
-  4 a 37: 34 candidatos com pontuações distintas, dentro do alvo" — e mostra por inteiro as linhas
-  próximas de cada fronteira e as que têm empate ou não têm posição.
+  todos os classificáveis progredirem, e o painel diz que a faixa passa do total. Na população estável,
+  isso costuma ser efeito de uma alteração depois da montagem, e o painel oferece remontar.
+- **Faixa grande** (alvo do quadro de centenas): a tabela inicial agrupa os trechos sem nada a dizer —
+  "4ª a 37ª: 34 candidatos sem empate — progridem" — e mostra por inteiro só as linhas próximas de cada
+  limite, as que empatam e as que mudaram; a classificação completa fica a um clique.
 - **Mais Etapas enumeradas do que o cenário define notas**: o cenário tem notas para até quatro Etapas
   não decisórias; acima disso o painel diz que a prévia cobre até quatro, e não calcula (R-006).
 - **Sem quadro de vagas no Perfil**: o aviso da fronteira das vagas não é avaliado, e o painel diz isso
@@ -289,43 +324,50 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
 
 #### Os candidatos fictícios
 
-- **FR-2204**: Os candidatos da prévia MUST ser fictícios, gerados por cenário, e MUST ser identificados
-  como fictícios no painel. A prévia MUST NOT ler, exibir nem derivar dado de inscrição real.
-- **FR-2205**: Para os mesmos cenário, Etapas enumeradas, fatos declarados do Perfil, alvo, suplentes e
-  vagas, os candidatos fictícios MUST ser os mesmos — determinísticos, sem acaso. Alterar pesos,
-  operação, arredondamento, critérios, desfecho, Etapa governada ou continuação MUST NOT alterá-los
-  (D-003).
-- **FR-2206**: Quando alvo, suplentes ou vagas mudam, o cenário MUST ser reposicionado sobre a nova
-  fronteira, e o painel MUST dizer que foi.
+- **FR-2204**: Os candidatos da prévia MUST ser fictícios, gerados pela população estável ou por um
+  caso-limite, e MUST ser identificados como fictícios no painel. A prévia MUST NOT ler, exibir nem
+  derivar dado de inscrição real.
+- **FR-2205**: *(revisto na segunda rodada)* Na **população estável**, que é o padrão, os candidatos e as
+  notas MUST ser os mesmos enquanto o painel estiver aberto, **qualquer que seja o campo alterado** —
+  inclusive alvo, suplentes e vagas. Eles são função determinística das Etapas enumeradas, dos fatos
+  declarados e das fronteiras do momento da montagem, sem acaso (D-003).
+- **FR-2206**: *(revisto na segunda rodada)* A população estável MUST ser remontada só a pedido
+  explícito do elaborador. No **caso-limite**, alterar alvo, suplentes ou vagas MUST refazer o caso
+  sobre a nova fronteira, e o painel MUST dizer, enquanto esse modo estiver escolhido, que os candidatos
+  mudam junto.
 
 #### O que cada linha diz
 
-- **FR-2207**: Cada linha MUST mostrar a posição, o candidato fictício, as notas por Etapa enumerada, a
-  pontuação combinada na escala e no modo publicados, e os valores de fato que algum critério consome.
+- **FR-2207**: *(revisto na segunda rodada)* A tabela inicial MUST ter quatro colunas — posição,
+  candidato, pontuação combinada (na escala e no modo publicados) e consequência. As notas por Etapa e
+  os valores de fato que algum critério consome MUST estar na classificação completa (FR-2241).
 - **FR-2208**: Posições compartilhadas MUST seguir a numeração do motor — quantos estão à frente mais
   um, com as posições consumidas puladas (`FR-026` da `015`) — e o painel MUST dizer que a posição é
   dividida e com quantos.
-- **FR-2209**: Cada linha MUST dizer **por que** o candidato está ali, numa frase: pontuação distinta de
-  todas; empatou na pontuação e foi separado por um critério, nomeado com os valores comparados; empatou
-  em tudo e divide a posição, sem que o sistema escolha; ou não tem posição, com a causa (Etapa sem
-  nota, eliminação).
-- **FR-2210**: Quando um critério foi oferecido a um grupo e não o separou, a frase MUST dizer por quê:
-  valores iguais, ou valor ausente com "o critério não se aplica" (`FR-071` da `015`).
+- **FR-2209**: *(revisto na segunda rodada)* Cada linha MUST dizer por que o candidato está ali com uma
+  etiqueta curta — sem etiqueta quando a pontuação basta; "desempatado"; "empate não resolvido"; ou a
+  causa de não ter posição (Etapa sem nota, eliminação). A explicação completa de um empate MUST estar
+  na comparação do grupo (FR-2242), e não repetida em parágrafo em cada linha.
+- **FR-2210**: Quando um critério foi oferecido a um grupo e não o separou, a comparação MUST dizer por
+  quê: valores iguais, ou valor ausente com "o critério não se aplica" (`FR-071` da `015`).
 - **FR-2211**: A explicação MUST sair da mesma partição que produz a ordem oficial, e não de uma segunda
   implementação da ordem (D-011).
 
 #### O corte e a progressão
 
-- **FR-2212**: Com regra de corte declarada, cada linha MUST mostrar a situação no corte: dentro do alvo;
-  suplente (na faixa, além do alvo); empate na fronteira do alvo; empate na última posição da faixa,
-  que progride pelo desfecho `ADMITS_SURPLUS`; fora da faixa; corte não emitido; ou sem posição. Os
-  membros de um mesmo grupo de empate residual MUST receber a mesma situação: o motor não os ordena
-  entre si, e a prévia MUST NOT sugerir que um deles é titular e o outro excedente.
-- **FR-2213**: Cada linha MUST mostrar a consequência para a Etapa seguinte: progride para a Etapa
-  governada, nomeada; dentro da faixa de corte que não alimenta Etapa; fora da faixa, com o que a
-  continuação declarada permite; ou sem posição, que nunca entra na faixa (`FR-191` da `014`).
-- **FR-2214**: O painel MUST resumir a faixa: alvo, suplentes, tamanho da faixa, quantos progridem,
-  quantos por empate, quantos sem posição.
+- **FR-2212**: *(revisto na segunda rodada)* Cada linha MUST mostrar uma consequência, no vocabulário de
+  D-012: "Progride", "Progride pelo empate", "Não progride", "Aguarda desempate", "Sem posição", "Na
+  faixa" (corte que não alimenta Etapa) ou "Segue — sem corte". As posições do alvo, do fim da faixa e
+  da última vaga MUST ser marcadas por uma linha na tabela, e não por um rótulo em cada linha. Os
+  membros de um mesmo grupo de empate residual MUST receber a mesma consequência: o motor não os ordena
+  entre si, e a prévia MUST NOT sugerir que um deles entrou e o outro excedeu.
+- **FR-2213**: *(revisto na segunda rodada)* A consequência para a Etapa seguinte MUST aparecer no fluxo
+  (FR-2239): a Etapa governada, nomeada, com quantos participam; "Nenhuma Etapa" quando o corte não
+  alimenta Etapa; e, para quem não progride, o que a continuação declarada permite. Sem posição nunca
+  entra na faixa (`FR-191` da `014`).
+- **FR-2214**: *(revisto na segunda rodada)* O passo do corte, no fluxo, MUST dizer o tamanho da faixa
+  e de onde ele vem (alvo + suplentes), se o corte é emitível e quantos entraram **além da faixa** pelo
+  empate — o número que o corte registra (`FR-196` da `014`), e não o tamanho do grupo empatado.
 - **FR-2215**: Empate residual que atravessa a última posição da faixa sob `STRICT` MUST aparecer como
   **resultado**: o corte não seria emitido, com a posição e o tamanho do empate, e o que destrava —
   julgar o desempate ou retificar o desfecho. Nenhuma linha MUST aparecer como "progride" nesse caso.
@@ -352,22 +394,62 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
   sairia ou quando a apuração pararia. Quando não há empate em fronteira nenhuma, MUST dizer isso
   explicitamente.
 
-#### Recálculo e cenários
+#### Recálculo, população e casos-limite
 
 - **FR-2223**: A prévia MUST ser calculada sobre o marco **digitado**, lido pelo mesmo leitor que a
   gravação usa, e MUST se recalcular a cada alteração de campo que ela lê, sem gravar (D-002).
 - **FR-2224**: O cálculo MUST acontecer no servidor. Nenhuma regra de combinação, ordenação, corte ou
   apuração MUST existir em código do navegador.
-- **FR-2225**: A prévia MUST oferecer, no mínimo, os cenários: classificação sem empate; desempate por
-  critérios sucessivos; corte impedido por empate residual na última posição da faixa; empate na
-  fronteira das vagas; valor ausente (sem nota em Etapa, eliminado na Etapa do marco, fato ausente).
-- **FR-2226**: Cada cenário MUST dizer o que foi construído para mostrar e, quando a configuração digitada
-  desfaz a situação, MUST dizer que ela não ocorre e por quê.
+- **FR-2225**: Além da população estável, a prévia MUST oferecer, no mínimo, os casos-limite:
+  classificação sem empate; desempate por critérios sucessivos; corte impedido por empate residual na
+  última posição da faixa; empate na fronteira das vagas; valor ausente (sem nota em Etapa, eliminado na
+  Etapa do marco, fato ausente).
+- **FR-2226**: Cada caso-limite MUST dizer o que foi construído para mostrar e, quando a configuração
+  digitada desfaz a situação, MUST dizer que ela não ocorre e por quê. Cada empate MUST dizer que linha
+  atravessa e o que isso causa — impede o corte, para a apuração, ou não muda nada.
 - **FR-2227**: Declaração incompleta que o motor exige para calcular MUST ser nomeada no painel, campo a
   campo, sem resultado presumido.
-- **FR-2228**: Faixas maiores que a tela MUST agrupar os trechos sem empate, sem fronteira e sem ausência
-  numa linha que diz o intervalo e quantos são, e MUST mostrar por inteiro as linhas próximas de cada
-  fronteira.
+- **FR-2228**: A tabela inicial MUST agrupar os trechos sem empate, sem limite e sem mudança numa linha
+  que diz o intervalo, quantos são e a consequência comum, e MUST mostrar por inteiro as linhas próximas
+  de cada limite, as que empatam e as que mudaram com a última alteração.
+
+#### A hierarquia da prévia *(segunda rodada)*
+
+- **FR-2238**: A primeira informação do painel, antes de qualquer tabela, MUST ser a consequência geral
+  da regra, numa frase: quantos candidatos compõem o universo simulado, quantos progridem e para que
+  Etapa, quantos não progridem, quantos ficam sem posição — ou, quando o corte não seria emitido, isso e
+  por quê; ou, sem desfecho declarado, que o resultado depende dele.
+- **FR-2239**: O painel MUST mostrar a relação entre classificação, corte e Etapa seguinte num fluxo de
+  três passos — Classificação (com e sem posição, empates não resolvidos), Corte (emitível, impedido,
+  dependente do desfecho, ou não corta) e Etapa seguinte (quantos participam, ninguém por enquanto, ou
+  nenhuma Etapa). O fluxo MUST NOT se apresentar como linear quando o domínio admite outro caminho: o
+  que acontece a quem não progride (faixa seguinte admitida, não admitida, não declarada), o marco sem
+  corte e o corte que não alimenta Etapa MUST aparecer como tal.
+- **FR-2240**: A apuração das vagas MUST aparecer **separada** do corte e da progressão, marcada como
+  hipótese, com as hipóteses declaradas (vagas da linha geral, todos os que progrediram habilitados, a
+  ocupação apurada sobre este marco), e MUST dizer que a prévia não simula a ocupação completa —
+  chamadas, desistências, movimentos e reversão.
+- **FR-2241**: A tabela inicial MUST mostrar primeiro os candidatos que ajudam a entender o cenário
+  (FR-2228). A classificação completa — todos os candidatos, com as notas por Etapa, a pontuação, os
+  valores de fato usados no desempate, o motivo curto e a consequência — MUST estar disponível a um
+  clique, sem ser obrigatória para entender o resultado. A explicação técnica (numeração, comportamento
+  atual do desfecho, hipóteses, conferência com o motor) MUST estar igualmente a um clique.
+- **FR-2242**: Todo grupo empatado na pontuação MUST ter uma comparação lado a lado: uma coluna por
+  candidato, uma linha por critério na ordem declarada, os valores considerados, e o efeito de cada
+  critério sobre o grupo — separou (e em que ordem), não separou (e por quê), ou não chegou a ser usado.
+  A linha do critério que separou MUST se distinguir. O resultado do grupo — separados, ou dividindo a
+  posição — MUST vir antes da tabela.
+- **FR-2243**: A população estável MUST ser o padrão ao abrir o painel, e os casos-limite MUST estar no
+  mesmo seletor, marcados como demonstração dirigida (D-003).
+- **FR-2244**: Depois de cada alteração que recalcula a prévia sobre a mesma população, o painel MUST
+  dizer o que mudou — a situação do corte, o número dos que progridem, a situação da apuração das
+  vagas, e quem mudou de consequência, marcado na tabela — ou que nada mudou. Entre populações
+  diferentes, MUST NOT comparar.
+- **FR-2245**: O vocabulário do painel MUST seguir a tabela de D-012. "Suplente" MUST aparecer só como o
+  nome do campo da regra ("10 + 5 suplentes"), e não como situação de candidato, enquanto a relação com
+  o cadastro de reserva estiver pendente (DP-4).
+- **FR-2246**: Quando a faixa passa do total de classificados, o passo do corte MUST dizer que todos
+  cabem pelo tamanho da população, e não pela regra; na população estável, MUST oferecer remontá-la.
 
 #### O comportamento pendente de decisão
 
@@ -417,6 +499,10 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
   vagas, declarações que faltam. Existe só na resposta.
 - **Universo classificável**: a função pura extraída — classificáveis e sem posição — que o caminho
   oficial e a prévia compartilham.
+- **População estável**: os candidatos fictícios padrão, montados uma vez ao abrir o painel e mantidos
+  enquanto ele estiver aberto; levam consigo as fronteiras da montagem.
+- **Mudança**: a diferença entre dois cálculos sobre a mesma população — corte, número dos que
+  progridem, apuração das vagas e quem mudou de consequência. Existe só na resposta, como a prévia.
 
 ## Decisões
 
@@ -447,19 +533,34 @@ gravação —, calcula e devolve o painel. Nada de regra no navegador (a CSP pr
 `hx-vals` com `js:`), e nenhuma segunda leitura do formulário. A diferença em relação à recomposição: o
 alvo do troco é o painel, e não o cartão — trocar o cartão a cada tecla perderia o foco do campo.
 
-### D-003 — Os candidatos dependem do cenário e das fronteiras, e de nada mais
+### D-003 — População estável por padrão; caso-limite para demonstração *(revista na segunda rodada)*
 
-Candidatos fixos em números absolutos esconderiam a fronteira assim que o alvo passasse do tamanho
-do cenário: com alvo 40, um cenário de 18 pessoas faz todos progredirem e não mostra nada. Candidatos
-gerados a cada recálculo mudariam o que se compara. A escolha é a do meio: cada cenário ancora as suas
-situações em posições **relativas** — à última do alvo, à última da faixa, à última das vagas —, e os
-candidatos são função determinística do cenário, das Etapas enumeradas, dos fatos declarados do Perfil
-e dos três números (alvo, suplentes, vagas). Alterar pesos, critérios, desfecho, Etapa governada ou
-continuação não muda ninguém; alterar um dos três números reposiciona o cenário, e o painel diz que
-reposicionou.
+**A primeira versão** fazia os candidatos dependerem das fronteiras: cada cenário plantava o empate na
+última posição da faixa ou das vagas, e alterar alvo, suplentes ou vagas **refazia** a população. Era
+útil para demonstrar, e o usuário apontou o defeito: ao alterar a regra, mudavam juntos a regra e os
+dados, e o efeito da regra ficava mascarado. Baixar os suplentes de 5 para 0 movia o empate da 15ª para
+a 10ª — e o elaborador via o mesmo resultado antes e depois, sem entender que a regra tinha mudado o
+desfecho.
 
-O cenário "Empate na fronteira das vagas" ancora o empate nas **vagas**, e não na faixa: é o que mostra
-o caso da primeira linha da reprodução do achado — com 10 vagas e 10 + 5, o empate na 10ª fica dentro da
+**A decisão agora são dois modos, no mesmo seletor:**
+
+- **População estável** (padrão, para testar a regra). Montada **uma vez**, quando o painel abre, a
+  partir das fronteiras daquele momento: um empate residual na última vaga (ou no alvo, sem quadro),
+  outro na última posição da faixa, um trio que só os fatos separam, uma candidata sem nota e um
+  candidato eliminado. As fronteiras da montagem viajam no painel, e **nenhuma** alteração do cartão a
+  refaz: o empate que estava na 10ª continua na 10ª. Quando a regra se afasta muito da montagem — a
+  faixa passa do total, por exemplo —, o painel diz isso e oferece "Remontar para esta configuração",
+  que é ato explícito do elaborador.
+- **Caso-limite** (demonstração dirigida). O comportamento da primeira versão: o caso acompanha a
+  fronteira, e o painel diz, enquanto o modo estiver escolhido, que os candidatos mudam junto.
+
+A comparação "o que mudou" (FR-2244) só existe **dentro da mesma população**: entre populações
+diferentes, a diferença seria dos dados, e não da regra. Alternativa descartada: uma população única e
+fixa, do mesmo tamanho para todo Edital — com alvo 40, um conjunto de 18 pessoas faria todos
+progredirem e não mostraria fronteira nenhuma.
+
+O caso-limite "Empate na fronteira das vagas" continua ancorado nas **vagas**, e não na faixa: é o que
+mostra a primeira linha da reprodução do achado — com 10 vagas e 10 + 5, o empate na 10ª fica dentro da
 faixa, o corte sai, e a apuração para.
 
 ### D-004 — A preparação do universo sai de `calcular_ordem` para uma função pura
@@ -540,6 +641,41 @@ segunda ordenação. A solução é uma irmã de `ordenar` que devolve a mesma l
 item — quais critérios foram oferecidos ao grupo dele e qual separou —, e `ordenar` passa a ser essa
 irmã sem a trajetória. A igualdade das duas saídas, menos a chave nova, é teste.
 
+### D-012 — O vocabulário do painel *(segunda rodada)*
+
+O painel responde "esta pessoa avança?", e a primeira versão respondia com o vocabulário do algoritmo.
+Os termos revistos, sem alterar rótulo do cartão, texto publicado nem regra:
+
+| Primeira versão | Agora | Por quê |
+|---|---|---|
+| "Dentro do alvo" (por linha) | "Progride", e uma linha na tabela onde o alvo passa | O elaborador pergunta se avança; dentro ou fora do alvo é posição na faixa, e a linha mostra isso de uma vez |
+| "Suplente" (por linha) | "Progride", abaixo da linha do alvo; "suplentes" só como nome do campo ("10 + 5 suplentes") | A relação entre suplentes e cadastro de reserva está pendente (DP-4); chamar a pessoa de suplente reforçaria uma leitura não decidida |
+| "Além da faixa, por empate" | "Progride pelo empate", para o **grupo** inteiro; e, no corte, "+1 além da faixa, pelo empate na 15ª" | A marca é do grupo (o motor não os ordena); o número "além da faixa" é o que o corte registra |
+| "Fora da faixa" | "Não progride", com o ramo da continuação abaixo do fluxo | Diz a consequência; a continuação diz se ela é definitiva |
+| "Progride para a Entrevista" (por linha) | "Progride" na linha; "Entrevista: 16 participam" no fluxo | A Etapa seguinte é a mesma para todos; repeti-la em cada linha era ruído |
+| "Corte não emitido" / "corte recusado" | Manchete "O corte não seria emitido"; passo "Impedido"; linha "Aguarda desempate" | "Recusado" soa a erro de preenchimento (D-005); "aguarda" diz o que destrava |
+| "A apuração das vagas pararia" | "Pararia na 10ª posição", num bloco separado e marcado como **hipótese** | É condicional a hipóteses que a composição não conhece (D-013) |
+
+Os rótulos de `cutTieOutcome` no cartão continuam os de hoje, e aparecem entre aspas quando o painel os
+cita: mudá-los é DP-1.
+
+### D-013 — A ocupação é hipótese, e fica fora do fluxo *(segunda rodada)*
+
+O fluxo do painel tem três passos — classificação, corte, Etapa seguinte —, que são o que esta fatia
+calcula. A apuração das vagas vem **depois**, num bloco tracejado com o selo "hipótese", e diz as três
+suposições (linha geral do quadro, todos habilitados, ocupação apurada sobre este marco) e o que a
+prévia não faz (chamadas, desistências, movimentos, reversão). Pôr a apuração como quarto passo do
+fluxo sugeriria que a fatia 1 simula a ocupação, e ela só antecipa uma das recusas.
+
+### D-014 — O porquê do empate é uma comparação, e não um parágrafo por linha *(segunda rodada)*
+
+A primeira versão repetia, em cada linha empatada, um parágrafo com todos os critérios. Agora a linha
+leva uma etiqueta ("desempatado", "empate não resolvido"), e cada grupo empatado ganha uma tabela: uma
+coluna por candidato, uma linha por critério, os valores, e o efeito — lidos da trajetória do motor
+(D-011). Antes da tabela, o resultado do grupo e **que linha o empate atravessa**: é essa frase que
+liga o empate à consequência ("é ele que impede o corte", "é ele que pararia a apuração", "não muda o
+corte").
+
 ## Decisões pendentes do usuário
 
 Registradas, não decididas. Esta feature não altera nenhuma delas; o painel descreve o comportamento
@@ -589,6 +725,15 @@ mostra cadastro de reserva, e não sugere relação nenhuma.
 - **SC-846**: A 375 px de largura, abrir, recalcular, trocar cenário e fechar não produzem rolagem
   horizontal da página; posição, candidato, motivo e situação ficam legíveis.
 - **SC-847**: Zero violações da política de conteúdo no console do navegador em toda a jornada da prévia.
+- **SC-848**: *(segunda rodada)* Nos três cenários de comparação — classificação comum, empate residual
+  na fronteira do corte, corte emitível com impedimento na fronteira das vagas —, um elaborador responde
+  "quantos avançam?", "quem não avança?", "por que houve empate?", "o que acontece depois?" e "o que
+  mudou com a minha alteração?" **sem abrir** a classificação completa nem a explicação técnica, em ao
+  menos 4 de cada 5 tentativas no teste de uso da SC-840.
+- **SC-849**: Na população estável, 100% das alterações de campo do cartão mantêm os mesmos candidatos
+  e as mesmas notas.
+- **SC-850**: Em 100% das alterações que mudam a consequência de alguém, o painel diz o que mudou e marca
+  quem mudou; nas que não mudam, diz que nada mudou.
 
 ## Assumptions
 

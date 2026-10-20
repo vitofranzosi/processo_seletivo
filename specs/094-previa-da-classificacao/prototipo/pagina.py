@@ -125,25 +125,29 @@ PADRAO = {
 }
 
 EXEMPLOS = {
+    "sem-empate": (
+        "Classificação comum, sem empate",
+        {"candidatos": ["caso:sem_empate"]},
+    ),
     "achado-1": (
         "Achado, linha 1: 10 + 5, empate na 10ª",
-        {f"{P}-cutSurplusCount": ["5"], "cenario": ["empate_nas_vagas"]},
+        {f"{P}-cutSurplusCount": ["5"], "candidatos": ["caso:empate_nas_vagas"]},
     ),
     "achado-2": (
         "Achado, linha 2: 10 + 5, empate na 15ª, STRICT",
         {
             f"{P}-cutSurplusCount": ["5"],
             f"{P}-cutTieOutcome": ["STRICT"],
-            "cenario": ["empate_na_faixa"],
+            "candidatos": ["caso:empate_na_faixa"],
         },
     ),
     "achado-3": (
         "Achado, linha 3: 10 sem suplentes, empate na 10ª",
-        {f"{P}-cutSurplusCount": ["0"], "cenario": ["empate_nas_vagas"]},
+        {f"{P}-cutSurplusCount": ["0"], "candidatos": ["caso:empate_nas_vagas"]},
     ),
     "sem-desfecho": (
         "Desfecho não declarado",
-        {f"{P}-cutTieOutcome": [""], "cenario": ["empate_na_faixa"]},
+        {f"{P}-cutTieOutcome": [""], "candidatos": ["caso:empate_na_faixa"]},
     ),
 }
 
@@ -348,7 +352,7 @@ def pagina(dados, exemplo):
         'hx-swap="innerHTML" aria-controls="painel-da-previa">Simular classificação</button></p>'
         "</fieldset>"
     )
-    cenario = um("cenario") or "sem_empate"
+    candidatos = um("candidatos") or "estavel"
     return f"""<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -371,13 +375,13 @@ def pagina(dados, exemplo):
       as frases, este cartão simplificado</li>
   </ul>
   <nav aria-label="Configurações de exemplo"><p>Configurações de exemplo:</p>
-    <ul class="exemplos"><li><a href="/">Padrão</a></li>{exemplos}</ul></nav>
+    <ul class="exemplos"><li><a href="/">População estável (padrão)</a></li>{exemplos}</ul></nav>
 </header>
 <div class="pagina">
 <main>
 <h1>Etapa Classificação <span class="selo selo-demo">demonstrativo</span></h1>
 <form id="composicao" action="/" method="get">
-<input type="hidden" name="cenario-inicial" value="{escape(cenario)}">
+<input type="hidden" name="candidatos-inicial" value="{escape(candidatos)}">
 <details class="de-outros-passos" open>
   <summary>Vem de outros passos
     <span class="resumo-do-bloco">no produto, só leitura</span></summary>
@@ -403,8 +407,32 @@ def pagina(dados, exemplo):
 
 
 # ---------------------------------------------------------------------------------------------
-# O painel
+# O painel — segunda rodada (19/10): a consequência primeiro, a tabela depois
 # ---------------------------------------------------------------------------------------------
+#
+# A primeira versão abria com a tabela inteira, e cada linha repetia um parágrafo. Ela demonstrava o
+# algoritmo; não respondia, de relance, "quantos avançam, quem fica de fora, por que empatou, o que
+# acontece depois, o que mudou". A ordem agora é essa: manchete, fluxo, o que mudou, a fronteira, os
+# empates lado a lado — e a classificação completa e a explicação técnica atrás de um clique.
+
+C = previa
+
+CONSEQUENCIA = {
+    C.PROGRIDE: ("progride", "Progride"),
+    C.PELO_EMPATE: ("pelo-empate", "Progride pelo empate"),
+    C.NAO_PROGRIDE: ("nao-progride", "Não progride"),
+    C.AGUARDA: ("aguarda", "Aguarda desempate"),
+    C.SEM_POSICAO: ("sem-posicao", "Sem posição"),
+    C.SEGUE: ("segue", "Segue — sem corte"),
+}
+PLURAL = {
+    C.PROGRIDE: "progridem",
+    C.PELO_EMPATE: "progridem pelo empate",
+    C.NAO_PROGRIDE: "não progridem",
+    C.AGUARDA: "aguardam o desempate",
+    C.SEM_POSICAO: "sem posição",
+    C.SEGUE: "seguem, sem corte",
+}
 
 
 def _desfecho(valor):
@@ -414,19 +442,22 @@ def _desfecho(valor):
     }.get(valor, "não declarado")
 
 
-def _criterio(criterio, etapas):
-    alvo = (criterio.get("parameters") or {}).get("stageId") or (
-        criterio.get("parameters") or {}
-    ).get("factId")
+def _alvo_do_criterio(criterio):
+    parametros = criterio.get("parameters") or {}
+    return parametros.get("stageId") or parametros.get("factId")
+
+
+def _criterio(criterio, etapas, *, curto=False):
+    alvo = _alvo_do_criterio(criterio)
     nome = (etapas.get(alvo) or {}).get("name") or next(
         (f["name"] for f in previa.FATOS if f["id"] == alvo), alvo
     )
     tipo = {
-        "MAIOR_PONTUACAO_NA_ETAPA": f"maior pontuação na {nome}",
+        "MAIOR_PONTUACAO_NA_ETAPA": f"maior nota na {nome}",
         "MAIOR_VALOR_DE_FATO": f"maior {nome.lower()}",
         "MENOR_VALOR_DE_FATO": f"menor {nome.lower()}",
     }.get(criterio.get("type"), criterio.get("type"))
-    return f"{criterio['order']}º critério ({tipo})"
+    return tipo if curto else f"{criterio['order']}º · {tipo}"
 
 
 def _valor(criterio, item):
@@ -435,394 +466,763 @@ def _valor(criterio, item):
     return _valor_do_criterio(criterio, item)
 
 
-def _nomes(itens, exceto):
-    outros = [i["nome"] for i in itens if i["inscricao_id"] != exceto["inscricao_id"]]
-    if len(outros) <= 3:
-        return " e ".join([", ".join(outros[:-1]), outros[-1]] if len(outros) > 1 else outros)
-    return f"{', '.join(outros[:3])} e mais {len(outros) - 3}"
+def _lista(nomes):
+    nomes = list(nomes)
+    if len(nomes) <= 1:
+        return "".join(nomes)
+    return ", ".join(nomes[:-1]) + " e " + nomes[-1]
 
 
-def porque(item, etapas, escala):
-    """A frase da linha — da trajetória da partição, e não de uma segunda ordenação (D-011)."""
-    pontuacao = numero(item["pontuacao"], escala)
-    grupo = item["grupo_da_pontuacao"]
-    if len(grupo) == 1:
-        return f"Pontuação combinada {pontuacao}, distinta de todas."
-    partes = [f"Empatou na pontuação ({pontuacao}) com {_nomes(grupo, item)}."]
-    for passo, criterio, sub in item["trajetoria"]:
-        rotulo = _criterio(criterio, etapas)
-        meu = _valor(criterio, item)
-        if passo == "separou":
-            outros = [o for o in sub if _valor(criterio, o) != meu]
-            if meu is None:
-                partes.append(f"No {rotulo}, não tem o valor e fica por último nele.")
-            else:
-                valores = {_valor(criterio, o) for o in outros}
-                contra = ", ".join(sorted(numero(v) for v in valores if v is not None))
-                if None in valores:
-                    contra = ", ".join(filter(None, [contra, "quem não tem o valor"]))
-                partes.append(f"Separado pelo {rotulo}: {numero(meu)}, contra {contra}.")
-        else:
-            valores = {_valor(criterio, o) for o in sub}
-            if None in valores and criterio.get("whenMissing") == "CRITERIO_NAO_SE_APLICA":
-                partes.append(
-                    f"O {rotulo} não se aplica a este grupo: alguém nele não tem o valor."
-                )
-            elif valores == {None}:
-                partes.append(f"O {rotulo} não separou: ninguém no grupo tem o valor.")
-            else:
-                partes.append(
-                    f"O {rotulo} não separou: valores iguais ({numero(next(iter(valores)))})."
-                )
-    if item["empate_residual"]:
-        quantos = len(item["grupo_final"])
-        partes.append(
-            f"Nenhum critério declarado separa os {quantos}: dividem a {ordinal(item['posicao'])} "
-            "posição, e o sistema não escolhe entre eles."
-        )
-    return " ".join(partes)
+def _contagens(r):
+    codigos = list(r["consequencias"].values())
+    return {
+        "total": r["total"],
+        "com_posicao": len(r["ordem"]),
+        "sem_posicao": len(r["sem_posicao"]),
+        "progridem": sum(1 for c in codigos if c in (C.PROGRIDE, C.PELO_EMPATE, C.SEGUE)),
+        "pelo_empate": sum(1 for c in codigos if c == C.PELO_EMPATE),
+        # Quantos entraram **além da faixa** — o número que o corte registra (FR-196 da `014`).
+        # Não é o tamanho do grupo empatado: dois empatados na 15ª de uma faixa de 15 são um dentro
+        # e um além, e os dois progridem pelo desfecho.
+        "alem_da_faixa": len(r["corte"].get("excedentes") or []),
+        "nao_progridem": sum(1 for c in codigos if c == C.NAO_PROGRIDE),
+        "empates": len(_grupos_empatados(r, so_residuais=True)),
+    }
 
 
-def _situacao(item, r):
-    corte = r["corte"]
-    if not corte["declarado"]:
-        return "sem-corte", "Classificado — o marco não corta"
-    if corte.get("recusado") or (corte.get("sem_desfecho") and corte.get("atravessa")):
-        return "parado", "Corte não emitido"
-    progrediram = corte["progrediram"]
-    if item["inscricao_id"] not in progrediram:
-        return "fora", "Fora da faixa"
-    # O empate divide a posição, e a marca é do grupo inteiro: dizer que um é suplente e o outro
-    # entrou por empate seria escolher entre eles pela ordem de entrada, que o motor não faz.
-    excedentes = set(corte.get("excedentes", []))
-    if excedentes and any(o["inscricao_id"] in excedentes for o in item["grupo_final"]):
-        return "excedente", "Empate na última posição da faixa — todos progridem pelo desfecho"
-    alvo = r["alvo"] or 0
-    antes = sum(1 for o in r["ordem"] if o["posicao"] < item["posicao"])
-    juntos = sum(1 for o in r["ordem"] if o["posicao"] == item["posicao"])
-    if antes < alvo < antes + juntos:
-        return "fronteira", "Na faixa — empate na fronteira do alvo"
-    if antes < alvo:
-        return "alvo", "Dentro do alvo"
-    return "suplente", "Suplente"
-
-
-def _consequencia(classe, r):
-    regra = r["regra"] or {}
-    governada = regra.get("governedStage")
-    nome = (r["etapas"].get(governada) or {}).get("name")
-    if classe == "sem-corte":
-        return "Ninguém é excluído da Etapa seguinte por este marco"
-    if classe == "parado":
-        return "Aguarda o desempate julgado ou a Retificação do desfecho"
-    if classe == "fora":
-        continuacao = regra.get("continuation")
-        if continuacao == "ALLOWED":
-            return "Não progride nesta faixa; o Edital admite faixa seguinte"
-        if continuacao == "NONE":
-            return "Não progride; o Edital não admite faixa seguinte"
-        return "Não progride nesta faixa; a continuação não foi declarada"
+def _etapa_seguinte(r):
+    governada = (r["regra"] or {}).get("governedStage")
     if governada == "NONE":
-        return "Dentro da faixa; este corte não alimenta Etapa"
-    if not nome:
-        return "Dentro da faixa; a Etapa governada não foi declarada"
-    return f"Progride para a {nome}"
+        return None, "Nenhuma Etapa"
+    nome = (r["etapas"].get(governada) or {}).get("name")
+    return nome, nome or "Etapa seguinte não declarada"
 
 
-def _interessante(item, r, total):
-    pos = item["posicao"]
-    fronteiras = [
-        r["alvo"],
-        (r["alvo"] or 0) + (r["suplentes"] or 0) if r["regra"] else None,
-        r["vagas"],
-    ]
-    if (
-        pos <= 3
-        or pos > total - 2
-        or item["empate_residual"]
-        or len(item["grupo_da_pontuacao"]) > 1
-    ):
-        return True
-    return any(f and abs(pos - f) <= 2 for f in fronteiras)
-
-
-def _linhas(r):
-    escala = r["escala"]
-    linhas = []
-    pulados = []
-    total = len(r["ordem"])
-
-    def fechar_pulados():
-        if not pulados:
-            return
-        primeiro, ultimo = pulados[0]["posicao"], pulados[-1]["posicao"]
-        _, rotulo = _situacao(pulados[0], r)
-        linhas.append(
-            f'<tr class="agrupada"><td colspan="5">Posições {primeiro} a {ultimo}: '
-            f"{len(pulados)} candidatos com pontuações distintas — "
-            f"{escape(rotulo.lower())}.</td></tr>"
-        )
-        pulados.clear()
-
-    notas = [e for e in r["etapas_do_marco"] if e["forma"] != previa.DECISORIA]
-    for item in r["ordem"]:
-        classe, rotulo = _situacao(item, r)
-        if not _interessante(item, r, total) and (
-            not pulados or _situacao(pulados[-1], r)[0] == classe
-        ):
-            pulados.append(item)
-            continue
-        fechar_pulados()
-        dividida = sum(1 for o in r["ordem"] if o["posicao"] == item["posicao"])
-        posicao = ordinal(item["posicao"]) + (
-            f'<span class="dividida">dividida por {dividida}</span>' if dividida > 1 else ""
-        )
-        detalhe = " · ".join(
-            f"{escape(e['name'])} {numero(item['pontuacoes'].get(e['id']), escala)}" for e in notas
-        )
-        fatos = " · ".join(
-            f"{escape(f['name'])} {numero(item['fatos'].get(f['id']))}"
-            for f in previa.FATOS
-            if any((c.get("parameters") or {}).get("factId") == f["id"] for c in r["criterios"])
-        )
-        linhas.append(
-            f'<tr class="situacao-{classe}"><td data-rotulo="Posição">{posicao}</td>'
-            f'<td data-rotulo="Candidato"><strong>{escape(item["nome"])}</strong>'
-            f'<span class="detalhe">{detalhe}{" · " + fatos if fatos else ""}</span></td>'
-            f'<td data-rotulo="Pontuação">{numero(item["pontuacao"], escala)}</td>'
-            f'<td data-rotulo="Por quê">{escape(porque(item, r["etapas"], escala))}</td>'
-            f'<td data-rotulo="Corte e próxima Etapa"><span class="marca-{classe}">'
-            f"{escape(rotulo)}</span>"
-            f'<span class="consequencia">{escape(_consequencia(classe, r))}</span></td></tr>'
-        )
-    fechar_pulados()
-    for item in r["sem_posicao"]:
-        linhas.append(
-            '<tr class="situacao-sem-posicao"><td data-rotulo="Posição">sem posição</td>'
-            f'<td data-rotulo="Candidato"><strong>{escape(item["nome"])}</strong></td>'
-            '<td data-rotulo="Pontuação">—</td>'
-            f'<td data-rotulo="Por quê">{escape(item["motivo"])}</td>'
-            '<td data-rotulo="Corte e próxima Etapa"><span class="marca-sem-posicao">Sem posição'
-            '</span><span class="consequencia">Nunca entra na faixa</span></td></tr>'
-        )
-    return "".join(linhas)
-
-
-def _bloco_do_corte(r):
+def _impedido(r):
     corte = r["corte"]
+    return bool(corte.get("recusado") or (corte.get("sem_desfecho") and corte.get("atravessa")))
+
+
+# --- 1. A manchete ----------------------------------------------------------------------------
+
+
+def _manchete(r):
+    """A consequência geral, em uma frase — a primeira coisa que o painel diz."""
+    n = _contagens(r)
+    corte = r["corte"]
+    nome, rotulo = _etapa_seguinte(r)
     if not corte["declarado"]:
         return (
-            '<p class="resultado neutro">Este marco não corta: a ordem é o resultado, e ninguém é '
-            "excluído da Etapa seguinte por ele.</p>"
-        )
-    alvo, suplentes = r["alvo"], r["suplentes"]
-    faixa_total = alvo + suplentes
-    origem = escape(r["origem_do_alvo"])
-    resumo = (
-        f'<p class="resumo-da-faixa">Faixa: alvo {alvo} ({origem}) + {suplentes} suplentes = '
-        f"<strong>{faixa_total} posições</strong>. Desfecho do empate: "
-        f"{_desfecho(corte.get('desfecho'))}.</p>"
-    )
-    atual = (
-        '<p class="comportamento-atual"><span class="selo selo-motor">comportamento atual</span> '
-        "É o que o sistema faz hoje. O rótulo do campo e a frase do Edital sobre este caso estão "
-        "em revisão, e esta prévia não os substitui.</p>"
-    )
-    if corte.get("sem_desfecho"):
-        if not corte["atravessa"]:
-            return resumo + (
-                '<p class="resultado neutro">Nenhum empate atravessa a última posição da faixa: '
-                "nesta configuração o desfecho não muda nada. Sem a declaração, porém, o Edital "
-                "não publica.</p>"
-            )
-        a, e = corte["comparacao"]["admite"], corte["comparacao"]["estrito"]
-        return (
-            resumo
-            + '<div class="resultado parado" role="group" aria-label="Desfecho não declarado">'
-            f"<p><strong>O desfecho do empate não está declarado</strong>, e há empate residual "
-            f"na {ordinal(e['posicao'])} posição, a última da faixa, com {e['quantas']} "
-            "candidatos. A prévia não escolhe:</p><ul>"
-            f"<li>com “Todos os empatados progridem”: {len(a['progrediram'])} progridem, "
-            f"{len(a['excedentes'])} além da faixa por empate;</li>"
-            "<li>com “A faixa para no alvo”: o corte não seria emitido.</li></ul>"
-            "<p>Sem a declaração, o Edital não publica.</p></div>" + atual
+            f"<strong>Este marco não corta:</strong> os {n['com_posicao']} classificados seguem, "
+            f"e {n['sem_posicao']} ficam sem posição.",
+            f"Sem corte: {n['com_posicao']} classificados seguem.",
         )
     if corte.get("recusado"):
-        alternativo = corte.get("alternativo") or {}
-        # Com suplentes, a fronteira que o motor confere não é a do alvo, e é isso que o rótulo
-        # atual não diz (achado de 19/10). Sem suplentes, as duas coincidem.
-        nao_a_do_alvo = f", e não a do alvo ({alvo})" if suplentes else ""
         return (
-            resumo + '<div class="resultado parado" role="group" aria-label="Corte não emitido">'
-            f"<p><strong>O corte não seria emitido.</strong> Há empate residual de "
-            f"{corte['quantas']} candidatos na {ordinal(corte['posicao'])} posição — a última "
-            f"da faixa de {faixa_total}{nao_a_do_alvo} —, e o desfecho declarado é "
-            f"{_desfecho(corte['desfecho'])}. Ninguém progride até que o desempate seja julgado "
-            "ou o desfecho retificado.</p>"
-            + (
-                f"<p>Com o outro desfecho, {_desfecho(alternativo['desfecho'])}, "
-                f"{len(alternativo['progrediram'])} progrediriam, "
-                f"{len(alternativo['excedentes'])} além da faixa por empate.</p>"
-                if alternativo and not alternativo.get("recusado")
-                else ""
-            )
-            + "</div>"
-            + atual
+            "<strong>O corte não seria emitido.</strong> "
+            f"{corte['quantas']} candidatos empatam na {corte['posicao']}ª posição, a última da "
+            "faixa, e o desfecho declarado não deixa todos entrarem. Ninguém progride até o "
+            "desempate ser julgado ou o desfecho ser retificado.",
+            f"Corte impedido: empate na {corte['posicao']}ª posição.",
         )
-    progrediram, excedentes = len(corte["progrediram"]), len(corte["excedentes"])
-    texto = (
-        f'<p class="resultado saiu"><strong>O corte sairia:</strong> {progrediram} progridem'
-        + (f", {excedentes} além da faixa por empate" if excedentes else "")
-        + f"; {len(r['sem_posicao'])} sem posição.</p>"
+    if corte.get("sem_desfecho") and corte.get("atravessa"):
+        estrito = corte["comparacao"]["estrito"]
+        return (
+            "<strong>Falta declarar o desfecho do empate.</strong> "
+            f"Há empate na {estrito['posicao']}ª posição, a última da faixa, e o resultado depende "
+            "dele: veja as duas possibilidades no corte, abaixo.",
+            "Desfecho do empate não declarado.",
+        )
+    destino = f"para a {nome}" if nome else "na faixa"
+    pelo_empate = (
+        f", {n['alem_da_faixa']} além da faixa pelo empate na {corte['ultima']}ª"
+        if n["alem_da_faixa"]
+        else ""
     )
-    if corte.get("alternativo"):
-        alt = corte["alternativo"]
-        texto += (
-            '<p class="comparacao">Há empate na última posição da faixa. Com o outro desfecho, '
-            f"{_desfecho(alt['desfecho'])}, "
-            + (
-                f"o corte não seria emitido (empate de {alt['quantas']} na "
-                f"{ordinal(alt['posicao'])} posição)."
-                if alt.get("recusado")
-                else f"{len(alt['progrediram'])} progrediriam."
+    return (
+        f"<strong>{n['progridem']} de {n['total']} candidatos progridem {escape(destino)}</strong>"
+        f"{pelo_empate}. {n['nao_progridem']} não progridem"
+        + (f"; {n['sem_posicao']} ficam sem posição." if n["sem_posicao"] else "."),
+        f"{n['progridem']} de {n['total']} progridem.",
+    )
+
+
+# --- 2. O fluxo: classificação → corte → Etapa seguinte, e depois a ocupação ------------------
+
+
+def _fluxo(r):
+    n = _contagens(r)
+    corte = r["corte"]
+    regra = r["regra"] or {}
+    nome, rotulo = _etapa_seguinte(r)
+    empates = (
+        f"{n['empates']} empate{'s' if n['empates'] > 1 else ''} não resolvido"
+        f"{'s' if n['empates'] > 1 else ''}"
+        if n["empates"]
+        else "nenhum empate não resolvido"
+    )
+    classificacao = (
+        '<li class="passo"><span class="passo-nome">Classificação</span>'
+        f"<strong>{n['com_posicao']} com posição</strong>"
+        f"<span>{n['sem_posicao']} sem posição · {empates}</span></li>"
+    )
+    if not corte["declarado"]:
+        passo_corte = (
+            '<li class="passo passo-neutro"><span class="passo-nome">Corte</span>'
+            "<strong>Não corta</strong><span>ninguém é excluído por este marco</span></li>"
+        )
+        seguinte = (
+            '<li class="passo"><span class="passo-nome">Depois</span>'
+            f"<strong>{n['com_posicao']} seguem</strong><span>na ordem acima</span></li>"
+        )
+    else:
+        alvo, suplentes = r["alvo"], r["suplentes"]
+        tamanho = f"faixa de {alvo + suplentes}" + (
+            f" = alvo {alvo} + {suplentes} suplentes" if suplentes else f" = alvo {alvo}"
+        )
+        if corte.get("recusado"):
+            estado, marca, detalhe = "impedido", "Impedido", f"empate na {corte['posicao']}ª"
+        elif corte.get("sem_desfecho") and corte.get("atravessa"):
+            estado, marca, detalhe = "impedido", "Depende do desfecho", "não declarado"
+        else:
+            estado, marca = "emitivel", "Emitível"
+            detalhe = (
+                f"+{n['alem_da_faixa']} além da faixa, pelo empate na {corte['ultima']}ª"
+                if n["alem_da_faixa"]
+                else "nenhum empate na última posição"
             )
-            + "</p>"
-            + atual
+            if alvo + suplentes >= n["com_posicao"]:
+                # Na população estável a faixa pode passar do total depois de uma mudança: dizer
+                # isso evita ler "todos progridem" como efeito da regra, e não da amostra.
+                detalhe = (
+                    f"a faixa passa dos {n['com_posicao']} classificados: todos cabem — "
+                    "remonte a população para ver a fronteira"
+                    if r["modo"] == previa.ESTAVEL
+                    else f"a faixa passa dos {n['com_posicao']} classificados: todos cabem"
+                )
+        passo_corte = (
+            f'<li class="passo passo-{estado}"><span class="passo-nome">Corte</span>'
+            f"<strong>{marca}</strong><span>{tamanho}</span><span>{escape(detalhe)}</span></li>"
         )
-    return resumo + texto
-
-
-def _bloco_das_vagas(r):
-    aviso = r["aviso_das_vagas"]
-    if not aviso["avaliado"]:
-        return (
-            '<p class="resultado neutro">Fronteira das vagas não avaliada: '
-            f"{escape(aviso['motivo'])}</p>"
+        if _impedido(r):
+            quantos, sub = "Ninguém, por enquanto", "até o desempate ou a Retificação"
+        elif nome is None and regra.get("governedStage") == "NONE":
+            quantos, sub = f"{n['progridem']} na faixa", "o corte não alimenta Etapa"
+        else:
+            quantos, sub = f"{n['progridem']} participam", "os que progridem no corte"
+        seguinte = (
+            f'<li class="passo"><span class="passo-nome">{escape(rotulo)}</span>'
+            f"<strong>{quantos}</strong><span>{sub}</span></li>"
         )
-    if aviso["para"]:
-        return (
-            '<div class="resultado aviso" role="group" aria-label="Fronteira das vagas">'
-            f"<p><strong>A apuração das vagas pararia</strong> na {ordinal(aviso['posicao'])} "
-            f"posição, se a ocupação fosse apurada sobre este marco: o empate residual de "
-            f"{aviso['quantas']} candidatos fica parte dentro e parte fora das {r['vagas']} vagas "
-            "do quadro. Isso acontece qualquer que seja o desfecho declarado para o corte, e "
-            "nenhum campo deste cartão o declara.</p>"
-            '<p class="suposicao">A prévia supõe todos os que progrediram habilitados na Etapa '
-            "governada.</p></div>"
+    ramo = ""
+    if corte["declarado"] and not _impedido(r) and n["nao_progridem"]:
+        continuacao = regra.get("continuation")
+        texto = {
+            "ALLOWED": "o Edital admite faixa seguinte: um novo corte, emitido depois, pode "
+            "alcançá-los.",
+            "NONE": "o Edital não admite faixa seguinte: a participação deles termina aqui.",
+        }.get(continuacao, "a continuação não foi declarada.")
+        ramo = (
+            f'<p class="ramo"><span aria-hidden="true">↳</span> Os {n["nao_progridem"]} que não '
+            f"progridem: {texto}</p>"
         )
     return (
-        f'<p class="resultado neutro">Nenhum empate na fronteira das {r["vagas"]} vagas: a '
-        "apuração das vagas não pararia por empate.</p>"
+        '<ol class="fluxo" aria-label="Da classificação à Etapa seguinte">'
+        f"{classificacao}{passo_corte}{seguinte}</ol>{ramo}"
     )
+
+
+def _ocupacao(r):
+    """A apuração das vagas — separada do corte, e sempre como hipótese (D-006)."""
+    aviso = r["aviso_das_vagas"]
+    vagas = r["vagas"]
+    cabeca = (
+        '<section class="ocupacao" aria-labelledby="titulo-ocupacao">'
+        '<h3 id="titulo-ocupacao">Depois do corte: a apuração das vagas '
+        '<span class="selo selo-hipotese">hipótese</span></h3>'
+    )
+    if not aviso["avaliado"]:
+        corpo = f'<p class="estado-neutro">Não avaliada: {escape(aviso["motivo"])}</p>'
+    elif aviso["para"]:
+        corpo = (
+            f'<p class="estado-aviso"><strong>Pararia na {aviso["posicao"]}ª posição.</strong> '
+            f"{aviso['quantas']} empatados disputam a última das {vagas} vagas do quadro, e a "
+            "apuração não escolhe entre eles — qualquer que seja o desfecho declarado para o "
+            "corte. Nenhum campo deste cartão trata disso.</p>"
+        )
+    else:
+        corpo = (
+            f'<p class="estado-ok">Seria possível: nenhum empate atravessa a última das {vagas} '
+            "vagas.</p>"
+        )
+    return (
+        cabeca
+        + corpo
+        + '<p class="nota">Se a ocupação for apurada sobre este marco, com as vagas da linha geral '
+        "do quadro e todos os que progrediram habilitados. A prévia não simula chamadas, "
+        "desistências, movimentos nem reversão.</p></section>"
+    )
+
+
+# --- 3. O que mudou ----------------------------------------------------------------------------
+
+
+def _o_que_mudou(diff, r):
+    if diff is None:
+        return ""
+    if not diff["mudancas"] and not diff["quantos"]:
+        return (
+            '<p class="mudou nada">Com a última alteração, a consequência não mudou para '
+            "ninguém.</p>"
+        )
+    nomes = {i["inscricao_id"]: i["nome"] for i in r["ordem"] + r["sem_posicao"]}
+    quem = sorted(nomes[i] for i in diff["mudaram"] if i in nomes)
+    itens = "".join(f"<li>{escape(m)}</li>" for m in diff["mudancas"])
+    if len(quem) > 5:
+        itens += f"<li>{len(quem)} candidatos mudaram de situação (marcados na tabela).</li>"
+    elif quem:
+        itens += f"<li>Mudaram de situação: {escape(_lista(quem))} (marcados na tabela).</li>"
+    return (
+        '<section class="mudou" aria-labelledby="titulo-mudou">'
+        '<h3 id="titulo-mudou">O que mudou com a sua alteração</h3>'
+        f"<ul>{itens}</ul></section>"
+    )
+
+
+# --- 4. A fronteira ---------------------------------------------------------------------------
+
+
+def _limites(r):
+    """`[(quantos, rótulo)]` — onde a tabela traça uma linha: alvo, fim da faixa, vagas."""
+    limites = {}
+    if r["corte"]["declarado"]:
+        alvo, suplentes = r["alvo"], r["suplentes"]
+        limites.setdefault(alvo, []).append(f"alvo ({alvo})")
+        if suplentes:
+            limites.setdefault(alvo + suplentes, []).append(
+                f"fim da faixa ({alvo} + {suplentes} suplentes)"
+            )
+    if r["vagas"]:
+        limites.setdefault(r["vagas"], []).append(f"última vaga ({r['vagas']})")
+    return sorted((k, " · ".join(v)) for k, v in limites.items() if k)
+
+
+def _na_ordem(r, itens):
+    """Os participantes como a ordem final os tem — com posição. A trajetória guarda os crus."""
+    por_id = {i["inscricao_id"]: i for i in r["ordem"]}
+    return [por_id[i["inscricao_id"]] for i in itens]
+
+
+def _grupos_empatados(r, *, so_residuais=False):
+    vistos, grupos = set(), []
+    for item in r["ordem"]:
+        grupo = item["grupo_final"] if so_residuais else item["grupo_da_pontuacao"]
+        chave = tuple(sorted(i["inscricao_id"] for i in grupo))
+        if len(grupo) > 1 and chave not in vistos:
+            vistos.add(chave)
+            grupos.append(_na_ordem(r, grupo))
+    return grupos
+
+
+def _marca(codigo, r):
+    classe, rotulo = CONSEQUENCIA[codigo]
+    if codigo == C.PROGRIDE and (r["regra"] or {}).get("governedStage") == "NONE":
+        rotulo = "Na faixa"
+    return f'<span class="marca marca-{classe}">{rotulo}</span>'
+
+
+def _rotulo_de_posicao(item, r):
+    juntos = sum(1 for o in r["ordem"] if o["posicao"] == item["posicao"])
+    dividida = f'<span class="dividida">dividida por {juntos}</span>' if juntos > 1 else ""
+    return f"{item['posicao']}ª{dividida}"
+
+
+def _linha(item, r, mudaram):
+    codigo = r["consequencias"][item["inscricao_id"]]
+    etiqueta = ""
+    if item["empate_residual"]:
+        etiqueta = '<span class="etiqueta etiqueta-empate">empate não resolvido</span>'
+    elif len(item["grupo_da_pontuacao"]) > 1:
+        etiqueta = '<span class="etiqueta">desempatado</span>'
+    mudou = (
+        '<span class="etiqueta etiqueta-mudou">mudou</span>'
+        if item["inscricao_id"] in mudaram
+        else ""
+    )
+    return (
+        f'<tr class="linha-{CONSEQUENCIA[codigo][0]}">'
+        f'<td data-rotulo="Posição">{_rotulo_de_posicao(item, r)}</td>'
+        f'<td data-rotulo="Candidato">{escape(item["nome"])}{etiqueta}</td>'
+        f'<td data-rotulo="Pontuação">{numero(item["pontuacao"], r["escala"])}</td>'
+        f'<td data-rotulo="Consequência">{_marca(codigo, r)}{mudou}</td></tr>'
+    )
+
+
+def _fronteira(r, mudaram):
+    """Só quem ajuda a entender o cenário: perto de cada limite, nos empates, e quem mudou."""
+    ordem = r["ordem"]
+    limites = _limites(r)
+    relevantes = set()
+    for quantos, _ in limites:
+        relevantes.update(range(max(quantos - 2, 0), min(quantos + 2, len(ordem))))
+    for indice, item in enumerate(ordem):
+        if len(item["grupo_da_pontuacao"]) > 1 or item["inscricao_id"] in mudaram:
+            relevantes.add(indice)
+    if not limites:
+        relevantes.update(range(min(5, len(ordem))))
+    linhas, pulados = [], []
+
+    def fechar():
+        if pulados:
+            codigo = r["consequencias"][pulados[0]["inscricao_id"]]
+            linhas.append(
+                '<tr class="agrupada"><td colspan="4">'
+                f"{_intervalo(pulados)} sem empate — "
+                f"{PLURAL[codigo] if len(pulados) > 1 else CONSEQUENCIA[codigo][1].lower()}"
+                "</td></tr>"
+            )
+            pulados.clear()
+
+    por_limite = dict(limites)
+    for indice, item in enumerate(ordem):
+        codigo = r["consequencias"][item["inscricao_id"]]
+        if indice not in relevantes:
+            if pulados and r["consequencias"][pulados[-1]["inscricao_id"]] != codigo:
+                fechar()
+            pulados.append(item)
+        else:
+            fechar()
+            linhas.append(_linha(item, r, mudaram))
+        if indice + 1 in por_limite:
+            fechar()
+            proximo = ordem[indice + 1] if indice + 1 < len(ordem) else None
+            atravessa = (
+                f" — o empate da {item['posicao']}ª atravessa esta linha"
+                if proximo and proximo["posicao"] == item["posicao"]
+                else ""
+            )
+            linhas.append(
+                f'<tr class="limite"><td colspan="4"><span>Linha do '
+                f"{escape(por_limite[indice + 1])}{atravessa}</span></td></tr>"
+            )
+    fechar()
+    for item in r["sem_posicao"]:
+        linhas.append(
+            '<tr class="linha-sem-posicao"><td data-rotulo="Posição">—</td>'
+            f'<td data-rotulo="Candidato">{escape(item["nome"])}'
+            f'<span class="etiqueta">{escape(_motivo_curto(item))}</span></td>'
+            '<td data-rotulo="Pontuação">—</td>'
+            f'<td data-rotulo="Consequência">{_marca(C.SEM_POSICAO, r)}</td></tr>'
+        )
+    return (
+        '<section aria-labelledby="titulo-fronteira"><h3 id="titulo-fronteira">Quem está perto '
+        'dos limites</h3><div class="rolavel"><table class="fronteira"><thead><tr>'
+        '<th scope="col">Posição</th><th scope="col">Candidato</th>'
+        '<th scope="col">Pontuação</th><th scope="col">Consequência</th></tr></thead>'
+        f"<tbody>{''.join(linhas)}</tbody></table></div></section>"
+    )
+
+
+def _intervalo(itens):
+    if len(itens) == 1:
+        return f"{itens[0]['posicao']}ª: 1 candidato"
+    return f"{itens[0]['posicao']}ª a {itens[-1]['posicao']}ª: {len(itens)} candidatos"
+
+
+def _motivo_curto(item):
+    motivo = item.get("motivo") or ""
+    if motivo.startswith("Eliminado"):
+        return motivo.rstrip(".").lower()
+    if motivo.startswith("Sem nota em "):
+        return "sem nota na " + motivo.removeprefix("Sem nota em ").split(":")[0]
+    return motivo
+
+
+# --- 5. Os empates, lado a lado ---------------------------------------------------------------
+
+
+def _efeito(criterio, grupo, r):
+    """O que este critério fez **com este grupo**, lido da trajetória do motor (D-011)."""
+    passos = [
+        (passo, sub)
+        for item in grupo
+        for passo, c, sub in item["trajetoria"]
+        if c is criterio or c == criterio
+    ]
+    if not passos:
+        return "nao-usado", "Não chegou a ser usado: o grupo já estava separado"
+    separou = [sub for passo, sub in passos if passo == "separou"]
+    if separou:
+        sub = _na_ordem(r, max(separou, key=len))
+        ordenados = sorted(sub, key=lambda i: i["posicao"])
+        blocos, atual = [], [ordenados[0]]
+        for anterior, item in zip(ordenados, ordenados[1:], strict=False):
+            if _valor(criterio, item) == _valor(criterio, anterior):
+                atual.append(item)
+            else:
+                blocos.append(atual)
+                atual = [item]
+        blocos.append(atual)
+        texto = " › ".join(" = ".join(i["nome"] for i in bloco) for bloco in blocos)
+        return "separou", f"Separou: {texto}"
+    _, sub = passos[0]
+    valores = [_valor(criterio, i) for i in sub]
+    if None in valores and criterio.get("whenMissing") == "CRITERIO_NAO_SE_APLICA":
+        faltam = _lista(i["nome"] for i in sub if _valor(criterio, i) is None)
+        return "nao-separou", f"Não se aplica: falta o valor de {faltam}"
+    if all(v is None for v in valores):
+        return "nao-separou", "Ninguém no grupo tem o valor"
+    return "nao-separou", "Não separou: valores iguais"
+
+
+def _por_que_importa(membros, r):
+    """Que linha este empate atravessa, e o que isso causa — a pergunta que a tabela não faz."""
+    antes = sum(1 for o in r["ordem"] if o["posicao"] < membros[0]["posicao"])
+    juntos = len(membros)
+    corte = r["corte"]
+    linhas = []
+    if corte["declarado"]:
+        linhas.append(("alvo", r["alvo"]))
+        if r["suplentes"]:
+            linhas.append(("faixa", r["alvo"] + r["suplentes"]))
+    if r["vagas"]:
+        linhas.append(("vagas", r["vagas"]))
+    frases = []
+    for tipo, k in linhas:
+        if not antes < k < antes + juntos:
+            continue
+        if tipo == "vagas":
+            frases.append(
+                f"Atravessa a última das {k} vagas: é ele que pararia a apuração das vagas."
+            )
+        elif tipo == "faixa" or (tipo == "alvo" and not r["suplentes"]):
+            if _impedido(r):
+                frases.append(
+                    f"Atravessa a última posição da faixa ({k}): é ele que impede o corte."
+                )
+            else:
+                frases.append(
+                    f"Atravessa a última posição da faixa ({k}): o desfecho declarado faz todos "
+                    "progredirem."
+                )
+        else:
+            frases.append(f"Atravessa a linha do alvo ({k}), dentro da faixa: não muda o corte.")
+    if not frases:
+        return "Não atravessa nenhuma linha: o empate não muda a consequência de ninguém."
+    return " ".join(frases)
+
+
+def _empates(r):
+    grupos = _grupos_empatados(r)
+    if not grupos:
+        return (
+            '<section aria-labelledby="titulo-empates"><h3 id="titulo-empates">Empates</h3>'
+            '<p class="estado-neutro">Nenhum empate na pontuação: nenhum critério de desempate '
+            "precisou ser usado.</p></section>"
+        )
+    blocos = []
+    for numero_do_grupo, grupo in enumerate(grupos):
+        membros = sorted(grupo, key=lambda i: (i["posicao"], i["inscricao_id"]))
+        nomes = _lista(i["nome"] for i in membros)
+        posicoes = {i["posicao"] for i in membros}
+        if len(posicoes) == 1:
+            resultado = (
+                f"<strong>Dividem a {membros[0]['posicao']}ª posição:</strong> nenhum critério "
+                "declarado os separa, e o sistema não escolhe entre eles."
+            )
+        elif len(posicoes) == len(membros):
+            resultado = "<strong>Separados:</strong> " + escape(
+                ", ".join(f"{i['nome']} {i['posicao']}ª" for i in membros)
+            )
+        else:
+            resultado = "<strong>Separados em parte:</strong> " + escape(
+                ", ".join(f"{i['nome']} {i['posicao']}ª" for i in membros)
+            )
+        importa = _por_que_importa(membros, r) if len(posicoes) == 1 else ""
+        if importa:
+            resultado += f'<span class="importa">{escape(importa)}</span>'
+        cabeca = "".join(f'<th scope="col">{escape(i["nome"])}</th>' for i in membros)
+        linhas = (
+            '<tr class="base"><th scope="row">Pontuação combinada</th>'
+            + "".join(f"<td>{numero(i['pontuacao'], r['escala'])}</td>" for i in membros)
+            + '<td class="efeito">Iguais: empate</td></tr>'
+        )
+        for criterio in r["criterios"]:
+            classe, efeito = _efeito(criterio, membros, r)
+            celulas = "".join(f"<td>{numero(_valor(criterio, i))}</td>" for i in membros)
+            # O efeito sai duas vezes: na coluna própria, e sob o nome do critério para o estreito,
+            # onde a coluna some — a folha escolhe qual se vê, e o leitor de tela lê a da coluna.
+            linhas += (
+                f'<tr class="efeito-{classe}"><th scope="row">'
+                f"{escape(_criterio(criterio, r['etapas']))}"
+                f'<span class="efeito-curto" aria-hidden="true">{escape(efeito)}</span></th>'
+                f'{celulas}<td class="efeito">{escape(efeito)}</td></tr>'
+            )
+        if not r["criterios"]:
+            linhas += (
+                '<tr class="efeito-nao-usado"><th scope="row">Critérios de desempate</th>'
+                f'<td colspan="{len(membros) + 1}">Este marco não declara nenhum</td></tr>'
+            )
+        blocos.append(
+            f'<section class="empate" aria-labelledby="empate-{numero_do_grupo}">'
+            f'<h4 id="empate-{numero_do_grupo}">{escape(nomes)}</h4>'
+            f'<p class="resultado-do-empate">{resultado}</p>'
+            '<div class="rolavel"><table class="comparacao"><thead><tr>'
+            f'<th scope="col">Critério, na ordem</th>{cabeca}<th scope="col">Efeito</th>'
+            f"</tr></thead><tbody>{linhas}</tbody></table></div></section>"
+        )
+    return (
+        '<section aria-labelledby="titulo-empates"><h3 id="titulo-empates">Empates na '
+        f"pontuação</h3>{''.join(blocos)}</section>"
+    )
+
+
+# --- 6. O que fica atrás de um clique ---------------------------------------------------------
+
+
+def _completa(r, mudaram):
+    notas = [e for e in r["etapas_do_marco"] if e["forma"] != previa.DECISORIA]
+    fatos = [
+        f for f in previa.FATOS if any(_alvo_do_criterio(c) == f["id"] for c in r["criterios"])
+    ]
+    cabeca = (
+        '<th scope="col">Posição</th><th scope="col">Candidato</th>'
+        + "".join(f'<th scope="col">{escape(e["name"])}</th>' for e in notas)
+        + '<th scope="col">Pontuação</th>'
+        + "".join(f'<th scope="col">{escape(f["name"])}</th>' for f in fatos)
+        + '<th scope="col">Por quê</th><th scope="col">Consequência</th>'
+    )
+    linhas = []
+    for item in r["ordem"]:
+        if item["empate_residual"]:
+            motivo = "empate não resolvido"
+        elif item["trajetoria"]:
+            ultimo = [c for p, c, _ in item["trajetoria"] if p == "separou"][-1]
+            motivo = f"desempate pelo {ultimo['order']}º critério"
+        else:
+            motivo = "pontuação"
+        codigo = r["consequencias"][item["inscricao_id"]]
+        mudou = (
+            '<span class="etiqueta etiqueta-mudou">mudou</span>'
+            if item["inscricao_id"] in mudaram
+            else ""
+        )
+        linhas.append(
+            f'<tr><td data-rotulo="Posição">{_rotulo_de_posicao(item, r)}</td>'
+            f'<td data-rotulo="Candidato">{escape(item["nome"])}</td>'
+            + "".join(
+                f'<td data-rotulo="{escape(e["name"])}">'
+                f"{numero(item['pontuacoes'].get(e['id']), r['escala'])}</td>"
+                for e in notas
+            )
+            + f'<td data-rotulo="Pontuação">{numero(item["pontuacao"], r["escala"])}</td>'
+            + "".join(
+                f'<td data-rotulo="{escape(f["name"])}">{numero(item["fatos"].get(f["id"]))}</td>'
+                for f in fatos
+            )
+            + f'<td data-rotulo="Por quê">{motivo}</td>'
+            f'<td data-rotulo="Consequência">{_marca(codigo, r)}{mudou}</td></tr>'
+        )
+    for item in r["sem_posicao"]:
+        linhas.append(
+            '<tr><td data-rotulo="Posição">—</td>'
+            f'<td data-rotulo="Candidato">{escape(item["nome"])}</td>'
+            + "".join(
+                f'<td data-rotulo="{escape(e["name"])}">'
+                f"{numero(item['pontuacoes'].get(e['id']), r['escala'])}</td>"
+                for e in notas
+            )
+            + '<td data-rotulo="Pontuação">—</td>'
+            + "".join(f'<td data-rotulo="{escape(f["name"])}">—</td>' for f in fatos)
+            + f'<td data-rotulo="Por quê">{escape(item["motivo"])}</td>'
+            f'<td data-rotulo="Consequência">{_marca(C.SEM_POSICAO, r)}</td></tr>'
+        )
+    return (
+        '<details class="completa"><summary>Classificação completa — '
+        f"{r['total']} candidatos, com as notas e os dados de desempate</summary>"
+        '<div class="rolavel"><table class="detalhada"><thead><tr>'
+        f"{cabeca}</tr></thead><tbody>{''.join(linhas)}</tbody></table></div></details>"
+    )
+
+
+def _como_calcula(r):
+    corte = r["corte"]
+    linhas = [
+        "As posições seguem a numeração do sistema: empatados dividem a posição, e a seguinte é "
+        "pulada (10ª, 10ª, 12ª).",
+        "Quem não tem nota numa Etapa enumerada fica sem posição: ausência não vira zero.",
+    ]
+    if corte["declarado"]:
+        linhas.append(
+            f"O desfecho do empate declarado é {_desfecho(corte.get('desfecho'))}. A prévia "
+            "mostra o <strong>comportamento atual do sistema</strong>: com “A faixa para no alvo”, "
+            "um empate na última posição da faixa — alvo mais suplentes, e não só o alvo — impede "
+            "a emissão do corte. O rótulo do campo e a frase do Edital sobre este caso estão em "
+            "revisão (DP-1 e DP-2 da spec), e esta prévia não os substitui."
+        )
+        if corte.get("alternativo"):
+            alt = corte["alternativo"]
+            efeito = (
+                f"o corte não seria emitido (empate na {alt['posicao']}ª)"
+                if alt.get("recusado")
+                else f"{len(alt['progrediram'])} progrediriam"
+            )
+            linhas.append(f"Com o outro desfecho, {_desfecho(alt['desfecho'])}, {efeito}.")
+        if corte.get("sem_desfecho") and corte.get("atravessa"):
+            a = corte["comparacao"]["admite"]
+            linhas.append(
+                f"Sem desfecho declarado: com “Todos os empatados progridem”, "
+                f"{len(a['progrediram'])} progridem; com “A faixa para no alvo”, o corte não "
+                "seria emitido. Sem a declaração, o Edital não publica."
+            )
+    conferencia = (
+        "A ordem foi conferida com <code>desempate.ordenar</code>: idêntica."
+        if r["conferida"]
+        else '<strong class="divergiu">A trajetória divergiu de <code>desempate.ordenar</code>: '
+        "não leia esta prévia.</strong>"
+    )
+    linhas.append(
+        "Calculado pelo motor oficial (<code>combinar</code>, <code>ordenar</code>, "
+        "<code>faixa.calcular</code>, <code>titulares_iniciais</code>). " + conferencia
+    )
+    linhas.append("Nada foi gravado: nem candidatos, nem configuração, nem ato.")
+    itens = "".join(f"<li>{texto}</li>" for texto in linhas)
+    return (
+        '<details class="como-calcula"><summary>Como a prévia chega a este resultado</summary>'
+        f"<ul>{itens}</ul></details>"
+    )
+
+
+# --- 7. Os candidatos: população estável ou caso-limite ---------------------------------------
+
+
+def _candidatos(r, escolha, dados):
+    opcoes = _opcao("estavel", "População estável — testar a regra", escolha) + (
+        '<optgroup label="Caso-limite — demonstração dirigida">'
+        + "".join(_opcao(f"caso:{k}", v[0], escolha) for k, v in previa.CENARIOS.items())
+        + "</optgroup>"
+    )
+    seletor = (
+        '<p class="campo"><label for="candidatos-da-previa">Candidatos fictícios</label>'
+        '<select id="candidatos-da-previa" name="candidatos" hx-get="/previa" '
+        'hx-include="#composicao, #anterior-da-previa" hx-target="#painel-da-previa" '
+        f'hx-swap="innerHTML">{opcoes}</select></p>'
+    )
+    if r is None:
+        return f'<div class="candidatos">{seletor}</div>'
+    if r["modo"] == previa.CASO_LIMITE:
+        descricao = previa.CENARIOS[r["cenario"]][1]
+        agora = f" Agora: {escape(r['ancora'])}." if r["ancora"] else ""
+        corpo = (
+            '<p class="aviso-do-modo">Caso construído para demonstração: ele acompanha alvo, '
+            "suplentes e vagas, e os candidatos mudam junto. Para comparar a mesma gente, use a "
+            "população estável.</p>"
+            f'<details class="montagem"><summary>O que este caso mostra</summary><p>'
+            f"{escape(descricao)}{agora}</p></details>"
+        )
+        return f'<div class="candidatos">{seletor}{corpo}</div>'
+    alvo0, faixa0, vagas0 = r["ancoras"]
+    plantados = _lista(r["plantados"]) if r["plantados"] else "nenhum empate plantado"
+    corpo = (
+        f'<p class="descricao">{r["total"]} candidatos fixos enquanto o painel estiver aberto: '
+        "mude a regra e compare.</p>"
+        f'<details class="montagem"><summary>Como foram montados</summary><p>Para alvo {alvo0}, '
+        f"faixa de {faixa0} e {vagas0} vagas, com {escape(plantados)}, mais uma candidata sem "
+        "nota e um candidato eliminado.</p></details>"
+        f'<input type="hidden" id="populacao-da-previa" name="populacao" '
+        f'value="{alvo0}:{faixa0}:{vagas0}">'
+    )
+    if tuple(r["fronteiras"]) != tuple(r["ancoras"]):
+        corpo += (
+            '<p class="aviso-do-modo">A regra mudou desde a montagem; os empates continuam onde '
+            "estavam, e é isso que deixa ver o efeito. "
+            '<button type="button" class="acao-discreta" hx-get="/previa" '
+            'hx-include="#composicao, #candidatos-da-previa" hx-target="#painel-da-previa" '
+            'hx-swap="innerHTML">Remontar para esta configuração</button></p>'
+        )
+    return f'<div class="candidatos">{seletor}{corpo}</div>'
+
+
+def _escolha(dados):
+    escolha = _um(dados, "candidatos") or _um(dados, "candidatos-inicial") or "estavel"
+    if escolha.startswith("caso:") and escolha[5:] in previa.CENARIOS:
+        return escolha, previa.CASO_LIMITE, escolha[5:]
+    return "estavel", previa.ESTAVEL, ""
+
+
+def _populacao(dados):
+    bruto = _um(dados, "populacao")
+    try:
+        alvo, faixa_total, vagas = (int(n) for n in bruto.split(":"))
+    except ValueError:
+        return None
+    return alvo, faixa_total, vagas
 
 
 def painel(dados):
     marco = ler_marco(dados)
     etapas = ler_etapas(dados)
     vagas = ler_vagas(dados)
-    # O cenário do painel vence; o inicial é só o da configuração de exemplo, na primeira abertura.
-    chave = _um(dados, "cenario") or _um(dados, "cenario-inicial") or "sem_empate"
-    opcoes = "".join(_opcao(k, v[0], chave) for k, v in previa.CENARIOS.items())
-    descricao = previa.CENARIOS.get(chave, previa.CENARIOS["sem_empate"])[1]
+    escolha, modo, chave = _escolha(dados)
     cabecalho = (
         '<div class="cabeca-do-painel">'
         '<h2 id="titulo-da-previa" tabindex="-1">Prévia da classificação</h2>'
         '<button type="button" class="fechar" hx-get="/fechar" hx-target="#painel-da-previa" '
         'hx-swap="innerHTML">Fechar</button></div>'
-        '<p class="contexto">PROF-MAT · CLASS-FINAL — Classificação para a Entrevista. '
-        '<span class="selo selo-demo">candidatos fictícios</span></p>'
-        '<p class="campo"><label for="cenario-da-previa">Cenário</label>'
-        '<select id="cenario-da-previa" name="cenario" hx-get="/previa" '
-        'hx-include="#composicao" hx-target="#painel-da-previa" hx-swap="innerHTML">'
-        f"{opcoes}</select></p>"
-        f'<p class="descricao-do-cenario">{escape(descricao)}</p>'
+        '<p class="contexto">PROF-MAT · CLASS-FINAL — Classificação para a Entrevista</p>'
     )
     # O recálculo: qualquer mudança no formulário de composição pede o painel de novo, com o que
-    # está digitado. O cálculo é no servidor; o navegador só leva os campos (D-002).
+    # está digitado, a população e o estado anterior. O cálculo é no servidor (D-002).
     gatilho = (
         '<div class="recalculo" hx-get="/previa" '
-        'hx-include="#composicao, #cenario-da-previa, #fronteiras-da-previa" '
-        'hx-target="#painel-da-previa" hx-swap="innerHTML" '
+        'hx-include="#composicao, #candidatos-da-previa, #populacao-da-previa, '
+        '#anterior-da-previa" hx-target="#painel-da-previa" hx-swap="innerHTML" '
         'hx-trigger="change from:#composicao, input changed delay:400ms from:#composicao">'
     )
     try:
-        r = previa.calcular(marco, etapas, chave_do_cenario=chave, vagas=vagas)
+        r = previa.calcular(
+            marco,
+            etapas,
+            chave_do_cenario=chave,
+            vagas=vagas,
+            modo=modo,
+            populacao=_populacao(dados) if modo == previa.ESTAVEL else None,
+        )
     except previa.Incompleto as erro:
         faltas = "".join(f"<li>{escape(f)}</li>" for f in erro.faltas)
-        anuncio = "Prévia não calculada: falta declarar " + str(len(erro.faltas)) + " item(ns)."
         return (
             gatilho
             + cabecalho
-            + '<div class="resultado incompleto"><p><strong>A prévia ainda não calcula.</strong> '
-            f"Falta:</p><ul>{faltas}</ul></div></div>" + _anuncio(anuncio)
+            + _candidatos(None, escolha, dados)
+            + '<div class="incompleto"><p><strong>A prévia ainda não calcula.</strong> Falta:</p>'
+            f"<ul>{faltas}</ul></div>"
+            + '<input type="hidden" id="anterior-da-previa" name="anterior" value="'
+            + escape(_um(dados, "anterior"))
+            + '"></div>'
+            + _anuncio("Prévia não calculada: falta declarar " + str(len(erro.faltas)) + ".")
         )
     r["escala"] = marco["rounding"]["scale"]
     r["etapas_do_marco"] = [r["etapas"][e] for e in marco["stages"] if e in r["etapas"]]
-    tem_problema = (
-        r["corte"].get("recusado")
-        or r["aviso_das_vagas"].get("para")
-        or (r["corte"].get("sem_desfecho") and r["corte"].get("atravessa"))
-    )
-    tranquilo = ""
-    if not tem_problema and not any(i["empate_residual"] for i in r["ordem"]):
-        tranquilo = (
-            '<p class="resultado neutro">Nenhum empate residual nesta ordem: nenhuma fronteira '
-            "é atravessada por empate.</p>"
-        )
-    conferencia = (
-        '<p class="conferencia"><span class="selo selo-motor">motor oficial</span> Ordem conferida '
-        "com <code>desempate.ordenar</code>: idêntica.</p>"
-        if r["conferida"]
-        else '<p class="conferencia divergiu">A trajetória do esboço divergiu de '
-        "<code>desempate.ordenar</code>: a prévia não deve ser lida.</p>"
-    )
-    ancora = (
-        f'<p class="ancora">Posicionamento do cenário: {escape(r["ancora"])}.</p>'
-        if r["ancora"]
-        else ""
-    )
-    # As fronteiras com que o cenário foi posicionado viajam no painel: mudou alvo, suplentes ou
-    # vagas, e o painel diz que os candidatos foram reposicionados (FR-2206).
-    regra = marco["cutRule"] or {}
-    fronteiras = f"{r['alvo']}:{regra.get('surplusCount') if regra else ''}:{vagas}"
-    anteriores = _um(dados, "fronteiras")
-    if anteriores and anteriores != fronteiras:
-        ancora += (
-            '<p class="ancora reposicionado">Alvo, suplentes ou vagas mudaram: o cenário foi '
-            "refeito sobre a nova fronteira.</p>"
-        )
-    ancora += (
-        f'<input type="hidden" id="fronteiras-da-previa" name="fronteiras" '
-        f'value="{escape(fronteiras)}">'
-    )
-    tabela = (
-        '<div class="rolavel"><table class="previa"><caption class="oculto">Candidatos '
-        "fictícios em ordem, com o motivo da posição e a situação no corte</caption><thead><tr>"
-        '<th scope="col">Posição</th><th scope="col">Candidato fictício</th>'
-        '<th scope="col">Pontuação</th><th scope="col">Por quê</th>'
-        '<th scope="col">Corte e próxima Etapa</th></tr></thead><tbody>'
-        f"{_linhas(r)}</tbody></table></div>"
-    )
-    corte = r["corte"]
-    if corte.get("recusado"):
-        anuncio = f"Corte não emitido: empate na {ordinal(corte['posicao'])} posição."
-    elif corte["declarado"] and not corte.get("sem_desfecho"):
-        anuncio = f"O corte sairia com {len(corte['progrediram'])} candidatos."
-    else:
-        anuncio = "Prévia recalculada."
-    if r["aviso_das_vagas"].get("para"):
-        anuncio += " A apuração das vagas pararia."
+    atual = previa.estado(r)
+    diff = previa.comparar(_um(dados, "anterior"), atual, None)
+    mudaram = diff["mudaram"] if diff else set()
+    manchete, anuncio = _manchete(r)
+    if diff and (diff["mudancas"] or diff["quantos"]):
+        anuncio += " Mudou: " + " ".join(diff["mudancas"])
+    estado_geral = "impedido" if _impedido(r) else "emitivel"
     return (
         gatilho
         + cabecalho
-        + ancora
-        + '<section class="resumo" aria-label="Resumo">'
-        + _bloco_do_corte(r)
-        + _bloco_das_vagas(r)
-        + tranquilo
-        + "</section>"
-        + tabela
-        + conferencia
+        + _candidatos(r, escolha, dados)
+        + f'<p class="manchete manchete-{estado_geral}">{manchete}</p>'
+        + _o_que_mudou(diff, r)
+        + _fluxo(r)
+        + _ocupacao(r)
+        + _fronteira(r, mudaram)
+        + _empates(r)
+        + _completa(r, mudaram)
+        + _como_calcula(r)
+        + f'<input type="hidden" id="anterior-da-previa" name="anterior" value="{escape(atual)}">'
         + "</div>"
         + _anuncio(anuncio)
     )

@@ -18,7 +18,7 @@ Irmã de `fragmento-marco-recomposto` (mesmo prefixo, mesmos `indice` e `sub`), 
 |---|---|
 | Query da rota | `edital` — o mesmo dos demais fragmentos da composição |
 | `hx-include` do cartão | todos os campos `marco-<indice>-<sub>-…` e `criterio-<indice>-<sub>-<n>-…` — lidos por `forms.marco_do_formulario(request.GET, indice, sub)` |
-| Painel | `cenario` (chave do cenário; padrão `sem_empate`) e `fronteiras` (as do cálculo anterior, para o aviso de reposicionamento) |
+| Painel *(segunda rodada)* | `candidatos` (`estavel`, o padrão, ou `caso:<chave>`); `populacao` (`alvo:faixa:vagas` da montagem, só na população estável); `anterior` (o estado do cálculo anterior, para "O que mudou", R-010) |
 
 Nenhum parâmetro de Etapa, fato ou quadro: esses vêm do rascunho gravado, lidos no servidor pelo
 `edital_snapshot(edital)` — a mesma montagem que a etapa Classificação já faz —, e as vagas pela
@@ -30,10 +30,11 @@ Sempre `200 text/html`, com o conteúdo do painel e, fora de banda, o anúncio:
 
 | Estado | Conteúdo |
 |---|---|
-| Calculada | cabeça (título, fechar, Perfil e marco, seletor de cenário, descrição e âncora), resumo da faixa, bloco do corte (saiu, recusado, sem desfecho, sem corte), bloco das vagas, tabela |
+| Calculada *(segunda rodada)* | cabeça (título, fechar, Perfil e marco); seletor de candidatos; manchete; "O que mudou", quando comparável; fluxo de três passos e ramo da continuação; apuração das vagas como hipótese; tabela da fronteira; comparação dos empates; `<details>` da classificação completa e da explicação técnica; e, ocultos, `populacao` e `anterior` |
 | Incompleta | cabeça e a lista do que falta (FR-2227) |
 | Fora da fatia | marco por sorteio ou sem forma: a frase de que a prévia cobre marcos pela pontuação (o botão não aparece nesses casos; a resposta existe para o pedido forjado) |
 | Fechar | `GET …/previa/fechar` → corpo vazio, e o anúncio "Prévia fechada" fora de banda |
+| Remontar | o mesmo `GET …/previa`, sem `populacao` nem `anterior`: monta a população com a configuração digitada |
 
 O anúncio é sempre `<p id="anuncio-da-previa" role="status" hx-swap-oob="true">` com uma frase.
 

@@ -11,8 +11,13 @@ efeito (FR-2234) são requisitos, e a extração (FR-2232) só é segura com a l
 **Organization**: a Fase 2 é o motor — extração, irmã de `ordenar`, cenários e simulação —, e bloqueia
 todas as histórias. Depois, uma fase por história, na ordem de prioridade da spec.
 
-**O protótipo** (`prototipo/`) é a referência de comportamento e de desenho para as Fases 3 a 7: as
-frases, as marcas, o agrupamento e a folha já foram validados nele, no navegador, em desktop e 375 px.
+**O protótipo** (`prototipo/`) é a referência de comportamento e de desenho para as Fases 3 a 7: a
+hierarquia, as frases, as marcas, o agrupamento e a folha foram validados nele, no navegador, em desktop
+e 375 px — a segunda versão, de 19/10.
+
+**Segunda rodada (19/10)**: a US3 passou a P1 e vem logo depois da US2; as tarefas T040 e T044 a T049 são
+da rodada de UX e estão nas fases a que pertencem, com numeração própria para não renumerar as referências
+da matriz. As tarefas da primeira versão que a rodada alterou dizem isso no texto.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -53,10 +58,15 @@ trajetória, e gerar e simular os cenários — tudo puro, testado antes da inte
 
 ### Cenários e simulação
 
-- [ ] T010 [P] Testes de `gerar` em `backend/tests/unit/classificacao/test_cenarios_da_previa.py`: determinismo (duas chamadas iguais); independência de pesos, operação, critérios, desfecho, Etapa governada e continuação (FR-2205); dependência de alvo, suplentes e vagas; âncoras de cada cenário (R-005); tamanho máximo 600; `modalidade_id` sempre nulo
+- [ ] T010 [P] Testes de `gerar` (os casos-limite) em `backend/tests/unit/classificacao/test_cenarios_da_previa.py`: determinismo (duas chamadas iguais); independência de pesos, operação, critérios, desfecho, Etapa governada e continuação (FR-2205); dependência de alvo, suplentes e vagas; âncoras de cada cenário (R-005); tamanho máximo 600; `modalidade_id` sempre nulo
 - [ ] T011 Criar `backend/processo_seletivo/classificacao/domain/cenarios_da_previa.py` com `CENARIOS` (chave, rótulo, descrição) e `gerar(...)` conforme R-005 e o `previa.cenario` do protótipo, devolvendo inscritos na forma de `preparar`
+- [ ] T045 [P] Testes de `populacao_estavel` em `backend/tests/unit/classificacao/test_cenarios_da_previa.py`: os mesmos candidatos e notas para as mesmas Etapas, fatos e fronteiras de montagem, **qualquer que seja a regra digitada** (SC-849); empate de dois na última vaga e na última posição da faixa, sem fusão quando as duas coincidem ou são vizinhas; trio separado só pelos fatos; os dois sem posição no fim, sem deslocar as posições plantadas; teto de 600 (FR-2205, FR-2243)
+- [ ] T046 Acrescentar `populacao_estavel(*, enumeradas, etapa_do_marco, alvo, faixa_total, vagas)` a `backend/processo_seletivo/classificacao/domain/cenarios_da_previa.py`, conforme R-005 e `prototipo/previa.py`; `simular` (T013) recebe `modo` e `populacao` (as fronteiras da montagem) e devolve `ancoras`, `fronteiras` e `consequencias` por candidato
 - [ ] T012 [P] Testes de `simular` em `backend/tests/unit/classificacao/test_previa.py`: a matriz do achado (R-007) linha a linha; desfecho não declarado devolve as duas consequências sem escolher (FR-2216); `alternativo` só quando o empate atravessa (FR-2217); `faltas` para alvo vazio, quadro sem linha geral, mais de quatro Etapas com nota, critério sem alvo e critério sem valor ausente declarado quando alguém não tem o valor (FR-2227); aviso das vagas não avaliado com corte recusado ou sem quadro (FR-2221); e `simular` com alvo 400 e 100 suplentes em todos os cenários abaixo de 1 s cada, medido com `time.perf_counter` (SC-841)
 - [ ] T013 Criar `backend/processo_seletivo/classificacao/application/previa.py` com `simular(marco, etapas, fatos, *, vagas, cenario)`: `faixa.normalizar`, `alvo_apurado`, `cenarios_da_previa.gerar`, `universo_classificavel.preparar`, `ordenar_com_trajetoria`, `faixa.calcular` (com o desfecho declarado e o outro), `apuracao.titulares_iniciais`; devolve a forma "Prévia" de `data-model.md`. Nenhuma consulta: quem chama entrega Etapas, fatos e vagas
+
+- [ ] T047 [P] Testes de `estado` e `comparar` em `backend/tests/unit/classificacao/test_previa.py`: a mudança de desfecho de `ADMITS_SURPLUS` para `STRICT` na população estável dá "corte: emitível → impedido na 15ª" e "progridem: 16 → 0"; suplentes de 5 a 0 sob `STRICT` dá "impedido na 15ª → impedido na 10ª" e nenhum candidato mudado; alteração sem efeito dá lista vazia; estados de populações ou modos diferentes não se comparam (FR-2244, SC-850)
+- [ ] T048 Acrescentar `consequencias`, `estado(prévia)` e `comparar(anterior, atual)` a `backend/processo_seletivo/classificacao/application/previa.py`, puras, com o estado serializado em texto curto (R-010)
 
 **Checkpoint**: o motor está pronto, o caminho oficial é o mesmo de antes, e a prévia calcula sem interface.
 
@@ -64,26 +74,28 @@ trajetória, e gerar e simular os cenários — tudo puro, testado antes da inte
 
 ## Phase 3: User Story 1 — Ver por que cada pessoa ficou onde ficou (Priority: P1) 🎯 MVP
 
-**Goal**: o botão no cartão abre o painel fora dele, com candidatos fictícios, posições e o porquê de
-cada linha.
+**Goal**: o botão no cartão abre o painel fora dele, que começa pela consequência geral, mostra o
+fluxo, os candidatos perto dos limites e a comparação de cada empate (segunda rodada).
 
-**Independent Test**: com um marco por pontuação válido, o painel lista os candidatos com posição,
-pontuação e motivo; a ordem é a do caminho oficial com os mesmos dados.
+**Independent Test**: com um marco por pontuação válido, o painel abre pela manchete; a tabela inicial
+tem quatro colunas e as linhas de limite; cada empate tem a sua comparação; a ordem é a do caminho
+oficial com os mesmos dados.
 
 ### Tests for User Story 1
 
 - [ ] T014 [P] [US1] Testes de interface em `backend/tests/interface/test_previa_da_classificacao.py`: o botão existe sob `POR_PONTUACAO` e não sob `POR_SORTEIO` nem sem forma (FR-2200); o painel é renderizado em `#painel-da-previa`, fora do `fieldset.marco` (FR-2201); o cartão não ganha texto visível além do rótulo do botão (FR-428 da `030`); o painel nomeia Perfil e marco e marca os candidatos como fictícios (FR-2204)
-- [ ] T015 [P] [US1] Testes das frases em `backend/tests/interface/test_previa_da_classificacao.py`: pontuação distinta; separado por critério com os valores comparados; critério que não separou por valores iguais e por `CRITERIO_NAO_SE_APLICA`; empate residual que divide a posição e "o sistema não escolhe"; sem posição por eliminação e por Etapa sem nota; posição dividida "por N" e a seguinte pulada (FR-2207 a FR-2210); agrupamento das linhas sem nada a dizer, nunca misturando situações (FR-2228)
+- [ ] T015 [P] [US1] *(revista na segunda rodada)* Testes das linhas e da comparação em `backend/tests/interface/test_previa_da_classificacao.py`: a tabela inicial tem quatro colunas e nenhum parágrafo por linha (FR-2207, FR-2209); etiquetas "desempatado" e "empate não resolvido"; posição dividida "por N" e a seguinte pulada (FR-2208); linhas de limite no alvo, no fim da faixa e na última vaga, com "o empate atravessa esta linha" quando atravessa; agrupamento sem misturar consequências e com o plural certo (FR-2228); a classificação completa e a explicação técnica atrás de `<details>` (FR-2241); na comparação de um empate, os valores lado a lado, "separou: A › B = C", "não separou: valores iguais", "não se aplica: falta o valor de X" e "não chegou a ser usado" (FR-2210, FR-2242); o resultado do grupo e a linha que ele atravessa (FR-2226)
+- [ ] T040 [P] [US1] Testes da manchete e do fluxo em `backend/tests/interface/test_previa_da_classificacao.py`: a manchete vem antes de toda tabela, nas variantes emitível, impedido, sem desfecho, sem corte e corte que não alimenta Etapa (FR-2238); os três passos com seus estados; o ramo da continuação admitida, não admitida e não declarada; nenhum ramo quando o corte é impedido (FR-2239); "+1 além da faixa" com dois empatados na última posição (FR-2214); "a faixa passa dos N classificados" (FR-2246)
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Criar `backend/processo_seletivo/interface/previa_da_classificacao.py` com as linhas e as frases do painel a partir da saída de `simular` — o `porque` lê a `trajetoria`, nunca reordena (FR-2211) —, e o agrupamento de R-006
+- [ ] T016 [US1] *(revista na segunda rodada)* Criar `backend/processo_seletivo/interface/previa_da_classificacao.py` com a apresentação da saída de `simular`, na ordem de `prototipo/pagina.py` (`painel`): manchete, o que mudou, fluxo, ocupação, fronteira, empates, classificação completa, explicação técnica. A comparação dos empates lê a `trajetoria`, nunca reordena (FR-2211, D-014); a seleção de linhas relevantes segue R-011
 - [ ] T017 [US1] Acrescentar `fragmento_previa_da_classificacao` em `backend/processo_seletivo/interface/views.py` (autorização por `_edital_do_fragmento`, leitura por `forms.marco_do_formulario`, Etapas — com `weight`, `forma`, `order` e `name`, que `combinar` exige —, fatos declarados e quadro de vagas lidos do snapshot do rascunho por `publicacoes.application.publish_edital.edital_snapshot(edital)`, o mesmo que a etapa Classificação já monta em `views.py`; vagas por `classificacao.application.corte.linha_do_quadro(snapshot, perfil_id=…, lista_id=None)`. O snapshot se monta uma vez por pedido, e a contagem de consultas do fragmento fica presa por teste na T027) e as rotas `…/marco/<sub>/previa` e `…/previa/fechar` em `backend/processo_seletivo/interface/urls.py`
 - [ ] T018 [US1] Teste de negativa em `backend/tests/authorization/test_classificacao.py`: ator sem escopo sobre o Edital recebe a mesma recusa dos demais fragmentos da composição, e sem sessão também (FR-2235); e classificar o 404 de Edital fora do escopo do fragmento novo em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` (o guardião `backend/tests/test_gramatica_das_portas.py` varre `views.py` por AST)
-- [ ] T019 [US1] Criar `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html` (cabeça, resumo, tabela) e acrescentar o botão "Simular classificação" ao fim do cartão em `backend/processo_seletivo/interface/templates/interface/_marco.html`, só sob `POR_PONTUACAO`, com `hx-include="closest fieldset"` e `hx-target="#painel-da-previa"`
+- [ ] T019 [US1] Criar `backend/processo_seletivo/interface/templates/interface/_previa_da_classificacao.html` (cabeça, seletor de candidatos, manchete, fluxo, ocupação, fronteira, empates, `<details>` da completa e da explicação) e acrescentar o botão "Simular classificação" ao fim do cartão em `backend/processo_seletivo/interface/templates/interface/_marco.html`, só sob `POR_PONTUACAO`, com `hx-include="closest fieldset"` e `hx-target="#painel-da-previa"`
 - [ ] T020 [US1] Acrescentar `<aside id="painel-da-previa">` e o `role="status"` do anúncio em `backend/processo_seletivo/interface/templates/interface/compor_classificacao.html`, irmãos da seção, fora de todo cartão
 - [ ] T021 [P] [US1] Criar `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css` a partir de `prototipo/estatico/prototipo.css` (só as regras do painel, com os tokens de `shared/tokens.css`) e carregá-la pelo bloco `estilo_da_pagina` de `compor_classificacao.html`; toda classe do template com regra na folha; nenhuma `}}` na mesma linha (guardião de `test_estaticos`)
-- [ ] T022 [US1] Acrescentar `_previa_da_classificacao.html` à lista literal de `backend/tests/test_vocabulario_da_composicao.py` e conferir o vocabulário do painel contra o do cartão (FR-425 da `030`)
+- [ ] T022 [US1] Acrescentar `_previa_da_classificacao.html` à lista literal de `backend/tests/test_vocabulario_da_composicao.py` e conferir o vocabulário do painel contra o do cartão (FR-425 da `030`) e contra a tabela de D-012: nenhuma consequência "Suplente" nem "Dentro do alvo" em linha, e "suplentes" só como nome do campo (FR-2245)
 
 **Checkpoint**: US1 entregue — o elaborador abre a prévia e lê o porquê de cada posição.
 
@@ -98,23 +110,26 @@ como resultado; o aviso da fronteira das vagas.
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] Testes do painel em `backend/tests/interface/test_previa_da_classificacao.py` para os sete cenários de aceitação da US2: as três linhas do achado nos dois desfechos; "a última da faixa, e não a do alvo" só com suplentes; nenhuma linha "progride" sob recusa (FR-2215); o grupo empatado com a mesma marca (FR-2212); "progride para a Entrevista", corte terminal, continuação admitida, não admitida e não declarada (FR-2213); marco sem corte (FR-2219); nenhum estado de sucesso com recusa ou aviso (FR-2222)
+- [ ] T023 [P] [US2] Testes do painel em `backend/tests/interface/test_previa_da_classificacao.py` para os oito cenários de aceitação da US2: as três linhas do achado nos dois desfechos; "a última da faixa, e não a do alvo" só com suplentes; nenhuma linha "progride" sob recusa (FR-2215); o grupo empatado com a mesma marca (FR-2212); "progride para a Entrevista", corte terminal, continuação admitida, não admitida e não declarada (FR-2213); marco sem corte (FR-2219); nenhum estado de sucesso com recusa ou aviso (FR-2222)
 - [ ] T024 [P] [US2] Teste de não-regressão do texto em `backend/tests/interface/test_previa_da_classificacao.py`: a opção `STRICT` do cartão continua "A faixa para no alvo" e `frases_do_corte` devolve as mesmas frases para o marco do achado (FR-2229); o painel diz "comportamento atual"
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] Implementar situação, consequência e os blocos do corte (saiu, recusado com o outro desfecho, sem desfecho, sem corte) e das vagas em `backend/processo_seletivo/interface/previa_da_classificacao.py` e no template do painel, com a cor âmbar da recusa (D-005)
+- [ ] T025 [US2] *(revista na segunda rodada)* Implementar as consequências de D-012, o passo do corte no fluxo (emitível, impedido, depende do desfecho, não corta) com a comparação do outro desfecho na explicação técnica, em `backend/processo_seletivo/interface/previa_da_classificacao.py` e no template, com a cor âmbar da recusa (D-005)
+- [ ] T044 [US2] O bloco da apuração das vagas, separado do fluxo, tracejado, com o selo "hipótese", as três suposições e o que a prévia não simula (FR-2240, D-013); teste em `backend/tests/interface/test_previa_da_classificacao.py` de que ele nunca aparece como passo do fluxo
 - [ ] T026 [US2] Alvo do quadro: em `fragmento_previa_da_classificacao`, ler a linha geral por `linha_do_quadro(snapshot, perfil_id=…, lista_id=None)` sobre o `edital_snapshot` da T017 e dizer a origem; sem linha, `faltas` com "não apurável", nunca zero (FR-2218)
 
 **Checkpoint**: US1 e US2 entregam o critério de sucesso do usuário sobre o que está digitado no clique.
 
 ---
 
-## Phase 5: User Story 3 — Mudar um campo e ver o efeito sem salvar (Priority: P2)
+## Phase 5: User Story 3 — Mudar um campo e ver o efeito sem salvar (Priority: P1 desde a segunda rodada)
 
-**Goal**: recálculo a cada alteração, com os mesmos candidatos, e nenhum efeito persistente.
+**Goal**: recálculo a cada alteração, sobre a população estável, com o que mudou dito e marcado, e
+nenhum efeito persistente.
 
-**Independent Test**: alterar cada campo do marco recalcula sobre o digitado; o banco não recebe escrita.
+**Independent Test**: alterar cada campo do marco recalcula sobre o digitado com os mesmos candidatos;
+o quadro "O que mudou" acompanha; o banco não recebe escrita.
 
 ### Tests for User Story 3
 
@@ -123,18 +138,20 @@ como resultado; o aviso da fronteira das vagas.
 
 ### Implementation for User Story 3
 
-- [ ] T029 [US3] No template do painel, o contêiner com `hx-trigger="change from:#marco-<indice>-<sub>, input changed delay:400ms from:#marco-<indice>-<sub>"`, `hx-include` do cartão, do seletor de cenário e do campo oculto das fronteiras, e o estado "incompleto" (R-004)
+- [ ] T049 [P] [US3] Testes em `backend/tests/interface/test_previa_da_classificacao.py`: o painel leva `populacao` e `anterior` ocultos; uma alteração do cartão mantém `populacao` e produz "O que mudou" com a marca "mudou" nas linhas certas; alteração sem efeito dá "a consequência não mudou para ninguém"; trocar entre população estável e caso-limite não compara; "Remontar para esta configuração" só aparece quando as fronteiras saíram da montagem, e não inclui a `populacao` antiga (FR-2243, FR-2244, FR-2246)
+- [ ] T029 [US3] *(revista na segunda rodada)* No template do painel, o contêiner com `hx-trigger="change from:#marco-<indice>-<sub>, input changed delay:400ms from:#marco-<indice>-<sub>"`, `hx-include` do cartão, do seletor de candidatos, da `populacao` e do `anterior`; o quadro "O que mudou"; o botão "Remontar"; e o estado "incompleto" (R-004, R-010)
 
 ---
 
-## Phase 6: User Story 4 — Cenários predefinidos (Priority: P2)
+## Phase 6: User Story 4 — Casos-limite para demonstração (Priority: P2)
 
-**Goal**: escolher entre os cinco cenários; cada um diz o que mostra e quando não ocorre.
+**Goal**: escolher, no mesmo seletor da população estável, entre os cinco casos-limite; cada um diz o
+que mostra, que acompanha a fronteira, e quando a situação não ocorre.
 
-**Independent Test**: cada cenário, na configuração de referência, produz a situação que o nomeia.
+**Independent Test**: cada caso, na configuração de referência, produz a situação que o nomeia.
 
 - [ ] T030 [P] [US4] Testes dos cinco cenários de aceitação da US4 em `backend/tests/interface/test_previa_da_classificacao.py`, incluindo o trio sem critério por fato (dividem a posição) e "Classificação sem empate" dizendo que não houve empate em fronteira nenhuma
-- [ ] T031 [US4] Seletor de cenário com `hx-get` próprio, descrição e âncora no painel, e as frases de "a situação não ocorre nesta configuração" (FR-2226) em `previa_da_classificacao.py` e no template
+- [ ] T031 [US4] Seletor de candidatos (população estável e o grupo "Caso-limite") com `hx-get` próprio, o aviso de que o caso acompanha a fronteira, descrição e âncora no painel, e as frases de "a situação não ocorre nesta configuração" (FR-2226) em `previa_da_classificacao.py` e no template
 
 ---
 
@@ -157,7 +174,7 @@ nomeada e resumo anunciado.
 - [ ] T036 [P] Escrever `specs/094-previa-da-classificacao/rastreabilidade.md` com cada FR e SC → tarefa → teste, completando a versão do PR da spec
 - [ ] T037 [P] Acrescentar a prévia ao `README.md` (seção da composição) e, em `CLAUDE.md`, a armadilha de que a prévia não grava nem lê inscrição real — só se a implementação a confirmar
 - [ ] T038 `cd backend && make lint check test-pg` verde; depois o roteiro 2 de `quickstart.md` no navegador do app, em desktop e 375 px, com captura
-- [ ] T039 Validação humana: o teste de uso da SC-840 com ao menos cinco elaboradores, registrado em `specs/094-previa-da-classificacao/validacao-de-uso.md`. Não é tarefa de código, e fica pendente até ser feita
+- [ ] T039 Validação humana: o teste de uso da SC-840 e da SC-848 com ao menos cinco elaboradores, nos três cenários de `prototipo/comparacao-v1-v2.md` e com as cinco perguntas de lá, registrado em `specs/094-previa-da-classificacao/validacao-de-uso.md`. Não é tarefa de código, e fica pendente até ser feita
 
 ---
 
@@ -166,11 +183,13 @@ nomeada e resumo anunciado.
 ### Phase Dependencies
 
 - **Setup (1)**: sem dependência.
-- **Motor (2)**: depende do Setup. T003 antes de T006/T007; T004 e T005 antes de T006 e T008; T010 antes
-  de T011; T011 e T008 antes de T013; T012 antes de T013. **Bloqueia todas as histórias.**
+- **Motor (2)**: depende do Setup. T003 antes de T006/T007; T004 e T005 antes de T006 e T008; T010 e
+  T045 antes de T011 e T046; T011, T046 e T008 antes de T013; T012 antes de T013; T047 antes de T048.
+  **Bloqueia todas as histórias.**
 - **US1 (3)**: depende do motor.
 - **US2 (4)**: depende de US1 (o painel e a view existem).
-- **US3 (5)**, **US4 (6)**, **US5 (7)**: dependem de US1; independentes entre si.
+- **US3 (5)**: depende de US1; é P1 desde a segunda rodada, e entra no MVP.
+- **US4 (6)**, **US5 (7)**: dependem de US1; independentes entre si e da US3.
 - **Polish (8)**: T034 e T035 dependem de T013; T038 depende de tudo.
 
 ### Within Each User Story
@@ -179,8 +198,9 @@ Testes primeiro, falhando; depois a implementação; o checkpoint fecha a histó
 
 ### Parallel Opportunities
 
-- Fase 2: T004, T005 e T010 em paralelo (arquivos distintos), enquanto T003 é escrito.
-- US1: T014, T015 e T021 em paralelo.
+- Fase 2: T004, T005, T010, T045 e T047 em paralelo (testes, arquivos distintos ou blocos distintos),
+  enquanto T003 é escrito.
+- US1: T014, T015, T040 e T021 em paralelo.
 - Depois de US1: US3, US4 e US5 em paralelo, se houver mais de uma pessoa.
 - Polish: T036 e T037 em paralelo com T034.
 
@@ -196,15 +216,15 @@ Task: "T010 Testes de gerar em backend/tests/unit/classificacao/test_cenarios_da
 
 ### MVP
 
-Fases 1, 2 e 3 (US1), mais a US2: juntas entregam o critério de sucesso do usuário sobre o que está
-digitado no momento do clique. A US2 é P1 porque sem ela o painel poderia mostrar tudo verde onde o motor
-recusa — e isso é pior que nenhuma prévia (FR-2222).
+Fases 1 a 5 — motor, US1, US2 e US3. Desde a segunda rodada a US3 é P1: alterar um parâmetro e ver o
+efeito sobre as mesmas pessoas é a proposta do simulador. A US2 é P1 porque sem ela o painel poderia
+mostrar tudo verde onde o motor recusa — e isso é pior que nenhuma prévia (FR-2222).
 
 ### Incremental
 
 1. Motor (Fase 2) → a suíte inteira verde, o caminho oficial igual.
-2. US1 + US2 → MVP; validar no navegador.
-3. US3 → recálculo; US4 → cenários; US5 → celular e leitor de tela.
+2. US1 + US2 + US3 → MVP; validar no navegador com os três cenários de `prototipo/comparacao-v1-v2.md`.
+3. US4 → casos-limite; US5 → celular e leitor de tela.
 4. Polish → matriz de equivalência completa, sentinela, rastreabilidade, `make lint check test-pg`.
 
 ### O que esta spec não implementa

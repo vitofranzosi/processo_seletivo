@@ -5,7 +5,20 @@ fragmento (FR-2234). As formas abaixo são dicionários Python, como o resto do 
 `classificacao`, e as chaves seguem as que `calcular_ordem` já usa para que a função extraída sirva aos
 dois caminhos sem tradução.
 
-## Cenário
+## População estável *(segunda rodada)*
+
+Os candidatos padrão (D-003, R-005), gerados por `populacao_estavel` a partir das **fronteiras da
+montagem** — `(alvo, faixa, vagas)` do momento em que o painel abriu. Essas três viajam no painel, num
+campo oculto, e voltam a cada recálculo: é o que mantém as mesmas pessoas quando a regra muda. Remontar
+é pedido explícito do elaborador.
+
+| Campo | Regra |
+|---|---|
+| fronteiras da montagem | `alvo:faixa:vagas`, inteiros; ausentes, monta com a configuração digitada |
+| plantados | empate na última vaga, empate na última posição da faixa, trio separado só pelos fatos — cada um só se couber sem se fundir com outro |
+| sem posição | uma candidata sem nota e um candidato eliminado, depois dos demais |
+
+## Caso-limite (antes, "Cenário")
 
 Constante de domínio em `classificacao/domain/cenarios_da_previa.py`.
 
@@ -58,6 +71,9 @@ Saída de `classificacao/application/previa.simular(...)`; a interface a transfo
 | `cenario` | texto | a chave efetivamente usada |
 | `ancora` | texto | onde o cenário plantou a situação, para o painel dizer |
 | `fronteiras` | `(alvo, suplentes, vagas)` | as que posicionaram o cenário; o painel as devolve no próximo pedido para dizer que reposicionou (FR-2206) |
+| `modo` | texto | `estavel` ou `caso` |
+| `ancoras` | `(alvo, faixa, vagas)` | as fronteiras com que a população foi montada |
+| `consequencias` | dicionário | `{inscricao_id: código}` — a resposta curta a "progride?" (D-012); o empate pelo desfecho marca o grupo inteiro |
 | `ordem` | lista | `ordenar_com_trajetoria(...)`: posição, `empate_residual`, `separado_por`, `trajetoria`, `grupo_da_pontuacao` |
 | `sem_posicao` | lista | do universo classificável |
 | `regra` | dicionário ou nulo | o `cutRule` digitado, normalizado por `faixa.normalizar` |
@@ -66,7 +82,21 @@ Saída de `classificacao/application/previa.simular(...)`; a interface a transfo
 | `aviso_das_vagas` | dicionário | `avaliado`, `para`, `posicao`, `quantas`, ou `motivo` de não avaliado |
 | `faltas` | lista de texto | o que falta declarar; quando não vazia, nada mais é calculado (FR-2227) |
 
-### Situação de cada linha (FR-2212)
+## Mudança *(segunda rodada)*
+
+Saída de `comparar(anterior, atual)` (R-010), ou nada quando os estados são de populações ou modos
+diferentes.
+
+| Campo | Conteúdo |
+|---|---|
+| `mudancas` | frases: corte (`emitível → impedido na 15ª`), número dos que progridem (`16 → 0`), apuração das vagas |
+| `mudaram` | os identificadores cuja consequência mudou — a tabela os marca |
+| `quantos` | quantos mudaram |
+
+O estado comparável é texto curto (`modo~população~corte~apuração~códigos`), devolvido no painel e
+reenviado no recálculo; não fica na sessão nem no banco.
+
+### Situação de cada linha (FR-2212) — *a primeira versão; a segunda usa o vocabulário de D-012*
 
 | Situação | Quando |
 |---|---|

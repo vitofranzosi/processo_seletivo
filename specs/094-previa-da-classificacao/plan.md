@@ -20,6 +20,13 @@ tarefas começa por elas, com a equivalência escrita antes, e só depois a inte
 O protótipo da spec (`prototipo/`, D-010) já executa o motor oficial e serve de referência visual e de
 comportamento para a implementação; ele não é a implementação.
 
+**Segunda rodada de UX (19/10).** O cálculo não mudou; mudou a apresentação e a origem dos candidatos.
+O painel abre pela consequência geral, mostra o fluxo classificação → corte → Etapa seguinte, separa a
+apuração das vagas como hipótese, começa a tabela pelos limites e compara os empates lado a lado
+(FR-2238 a FR-2242). A população estável vira o padrão, com os casos-limite como demonstração (D-003
+revista), e o estado anterior viaja no painel para dizer o que mudou (R-010). A US3 passou a P1. A
+comparação com a primeira versão está em `prototipo/comparacao-v1-v2.md`.
+
 ## Technical Context
 
 **Language/Version**: Python 3.13 (o `backend/pyproject.toml` do projeto)
@@ -86,7 +93,8 @@ specs/094-previa-da-classificacao/
     ├── README.md
     ├── servidor.py  previa.py  pagina.py
     ├── estatico/prototipo.css  estatico/prototipo.js
-    └── capturas/                # desktop e 375 px, validados em 19/10
+    ├── comparacao-v1-v2.md      # os três cenários × as cinco perguntas, com as capturas
+    └── capturas/v1/, capturas/v2/  # desktop e 375 px, das duas versões, em 19/10
 ```
 
 ### Source Code (repository root)
@@ -137,8 +145,9 @@ tela, e o vocabulário da composição é varrido lá (`test_vocabulario_da_comp
 
 [research.md](research.md): R-001 (a extração é o caminho certo, conferida no código), R-002 (o que
 fica na consulta e o que sai), R-003 (a irmã de `ordenar`), R-004 (fragmento e alvo do troco), R-005
-(geração dos cenários), R-006 (limites), R-007 (fronteira das vagas na prévia), R-008 (CSP e foco),
-R-009 (o protótipo e o que ele prova).
+(população estável e casos-limite), R-006 (limites), R-007 (fronteira das vagas na prévia), R-008 (CSP e
+foco), R-009 (o protótipo e o que ele prova), R-010 (o que mudou), R-011 (as linhas da tabela inicial),
+R-012 (a terminologia).
 
 ### Fase 1 — Desenho
 
