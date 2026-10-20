@@ -1,3 +1,105 @@
+# Revisão de 19/10/2026 da Visão do Sistema
+
+A documentação descrevia o sistema até a spec 072 (15/10), e a 073 só como especificada. Desde então
+entraram na `main` a implementação da 073, o lote de correções da auditoria de 15/10 (PR 285) e as specs
+074 a 092 — a maior parte delas o redesenho da gestão. Quem abria a gestão encontrava uma página de
+acesso, uma barra lateral e um caminho no topo de cada tela que a documentação não mencionava, e
+algumas frases ficaram falsas: o botão *Visão Geral* na lista de Processos, que virou item da barra; o
+*Salvar distribuição* da Alocação, que se chama *Salvar alocação*; a Revisão de um Edital publicado,
+que mostrava a norma de antes da Retificação e desde 15/10 mostra a vigente; e o assistente, que tinha
+*“nenhuma rota pública”* e desde a 074 tem três, só no desenvolvimento local. Esta revisão descreve
+tudo isso contra a `main` em `745f115f`.
+
+## Como foi conferido
+
+- Seis leituras paralelas confrontaram cada grupo de specs com o código da `main`, e não só com a
+  própria spec: 073 com o PR 285 e a 074; 075 e 076; 077 a 082; 083 a 087; 088 a 092 com o portal; e a
+  recontagem dos números e das rotas. Onde spec e código divergiam, valeu o código. Os rótulos novos
+  foram conferidos de novo nos *templates* antes de entrar no texto, entre eles:
+  - `identificar.html`, `identificar_demonstracao.html` e o cabeçalho do portal;
+  - `SECOES` e `TELAS_LARGAS` em `interface/navegacao.py`, e o início da barra em `shell.js`;
+  - `alocacoes.html`, `comissao.html`, `impedimentos.html`, `processo_detalhe.html` e
+    `consolidacao_confirmar.html`;
+  - `aviso.html`, `retificar.html`, `previa_de_publicacao.html` e `retificacao_detalhe.html`;
+  - `compor_revisao.html` e a recusa do SMTP sem servidor em `config/settings/production.py`;
+  - as diretivas e o lugar do middleware em `shared/politica_de_conteudo.py`;
+  - o desenho dos botões dos atos irreversíveis em `sorteio.html`, `corte.html`, `ocupacao.html` e
+    `convocacao.html`.
+- Os números de *Maturidade* foram recontados pelo método da própria página. Rodado sobre `db428b30`,
+  a base da revisão de 15/10, ele reproduz todos os números publicados naquela data. Uma regra do
+  método mudou: o `interface` ganhou `apps.py` na 089 e passou a ser excluído da contagem de módulos
+  de domínio, que continua 22.
+- **Não se rodou a suíte nem se percorreu o produto.** O total da suíte (12 268 passando, 11 pulados)
+  é o medido em 18/10 e registrado no `AGENTS.md`. Nenhum teste lê `docs/`.
+- A própria página foi aberta no navegador, servida pela entrada nova `visao-do-sistema` do
+  `.claude/launch.json` (porta 8090): sem erro no console, sem rolagem horizontal a 375 px, e a busca
+  encontra os termos novos. Todas as âncoras internas têm destino, nenhum `id` se repete, e o HTML
+  fecha as tags que abre.
+
+## O que mudou na documentação
+
+- **Entrada e navegação da gestão (075, 076, 077 a 088).** Entrou a seção nova *Entrar na gestão e
+  navegar nela* (`#entrar-e-navegar`), em *Quem pode fazer o quê*. Ela traz:
+  - os quatro passos da entrada: a *Área de gestão* do portal, a página de acesso, a escolha da
+    identidade e o destino;
+  - o que cada entrada concede: a de comissão, nenhum papel; a de responsabilidade, aquele papel e só
+    ele;
+  - o que acontece sem método de entrada, inclusive a sessão de demonstração que cai;
+  - a barra lateral, o que cada papel vê nela e como ela fica em cada largura;
+  - o caminho no topo de cada tela, e o que sai na impressão.
+
+  O tutorial, *Papéis*, *Conceitos que o domínio não tem*, *Segurança*, *Maturidade* e *Onde fica cada
+  coisa* passaram a apontar para ela. As linhas *“Gestão › …”* do tutorial ficaram, e a seção diz que
+  elas descrevem o mesmo caminho, mais curto.
+- **Telas redesenhadas (077 a 087).** Foram corrigidos os rótulos e a ordem que a página citava:
+  - *Salvar alocação*, e o aviso de presidência ausente;
+  - a seção *Membros (N)* da comissão, com *Só quem está sem Etapa*;
+  - os blocos da página do Processo, na ordem nova;
+  - a tela de distribuição, com os lugares da Etapa no topo e os botões de consolidar contornados;
+  - o impedimento, com *“Confirme antes de registrar.”*;
+  - a ordem do detalhe da Retificação e onde as recusas aparecem;
+  - o rótulo do aviso com a hora, a interrupção, o reenvio e a volta da prévia;
+  - *Visão Geral* e *Autoridades da unidade* como itens da barra.
+- **Implantação (073).** A linha *Implantação* da maturidade, o piloto do assistente, *Segurança* e o
+  caso do código de acesso dizem agora o que o §10.4 do guia ensina e as duas correções de código.
+  Entraram também uma pergunta e uma linha no catálogo.
+- **Correções da auditoria de 15/10 (PR 285).** A Revisão de um Edital publicado lê a versão vigente,
+  e isso foi corrigido nos sete lugares que diziam o contrário. A descrição da Modalidade não se
+  perde mais, e a linha dela saiu de *Configuração sem consumidor*. A advertência da Retificação não é
+  mais apagada por impeditivo de outro Perfil. O Requerimento sem protocolo não mostra a linha vazia.
+  Os identificadores ED- da auditoria de 15/10 colidem com os da auditoria do PDF de 08/10, que a
+  página já usava, e por isso não foram citados.
+- **O assistente na página da seleção (074).** Entrou a subseção *Na página da seleção, só no
+  desenvolvimento local*. As frases *“nenhuma rota pública”* e *“Nenhuma rota do portal os alcança”*
+  foram corrigidas em todos os lugares em que apareciam, sempre dizendo que nenhum candidato real vê o
+  painel, e por quê.
+- **Política de segurança de conteúdo (089, 091, 092).** Entrou a subseção em *Segurança*, com o que
+  ela recusa, de onde sai e o que fica de fora — a página de falha de CSRF do Django.
+- **Portal.** O topo, com o nome novo e *Minhas inscrições*, entrou na área do candidato, e o
+  Requerimento diz quando a linha *Protocolo* aparece.
+- **Estado do produto:**
+  - 93 pastas de especificação, 439 arquivos Python de aplicação, 165 templates, 871 + 15 arquivos de
+    teste e 117 + 36 rotas; migrations, tabelas append-only, gatilhos e módulos não mudaram;
+  - 62 das 93 specs dizem `Draft`, e dezesseis das novas ainda dizem *“PR aberto”*;
+  - *Domínio a domínio* ganhou a linha *Entrada e navegação da gestão*;
+  - *Fechados desde 20/09* ganhou onze linhas;
+  - entrou a subseção *Abertas desde 15/10*, com nove itens, entre eles a validação do redesenho com
+    a equipe, os atos irreversíveis com botão comum e a página de CSRF sem desenho;
+  - *Superadas por decisão* ganhou as duas decisões da 081 respondidas em 18/10.
+- **Catálogo e glossário.** O catálogo passou de 123 a 129 capacidades e o glossário de 115 a 118
+  termos: *Ambiente de demonstração*, *Barra lateral* e *GPS*. O índice alfabético ganhou o B.
+- **Âncoras.** Nenhuma foi removida. As novas são `#entrar-e-navegar`, `#entrar`,
+  `#barra-da-gestao`, `#caminho-no-topo` e as dos três termos do glossário.
+
+## O que não foi verificado, e o que ficou de fora
+
+- Nada foi percorrido no produto. Os rótulos vêm dos *templates*, e o comportamento, das views e dos
+  testes.
+- Os achados internos das specs 081 a 092 que não mudam o que o usuário vê ficaram fora: os
+  guardiões de teste, as fixtures, as cópias de regras de folha e o inventário visual.
+- A página não diz que o nome do produto mudou. O título continua *Sistema de Processos Seletivos e
+  Editais*, e só o glossário (*GPS*) e o portal falam do nome novo.
+
 # Revisão de 15/10/2026 da Visão do Sistema
 
 A documentação descrevia o sistema até a spec 068 (10/10). Desde então entraram na `main` quatro
