@@ -151,9 +151,10 @@ as duas linhas continuam lá e a efetiva diz 1.
    motivo, **Then** a efetiva passa a 1, e a ocupação mostra o acréscimo e o desfazimento, cada um com
    autor e instante.
 2. **Given** 1 vaga acrescida e o titular dela já convocado, **When** alguém tenta desfazê-la, **Then**
-   o ato é recusado e a recusa diz que a vaga tem ocupante ou chamada em aberto, e o que registrar
-   antes.
-3. **Given** um desfazimento sem motivo, **When** alguém confirma, **Then** o ato é recusado.
+   o ato é recusado e a recusa diz que alguém já foi chamado para ela, e o desfecho a registrar antes.
+3. **Given** 1 vaga acrescida e o titular dela ainda não convocado, **When** quem conduz a desfaz,
+   **Then** o ato é aceito, e o 1º do sorteio deixa de ser titular.
+4. **Given** um desfazimento sem motivo, **When** alguém confirma, **Then** o ato é recusado.
 
 ---
 
@@ -229,8 +230,9 @@ os demais são consequência do que já existe.
 - **FR-2461**: A apuração MUST descontar o desfazimento das vagas efetivas pelas mesmas regras de
   congelamento, obsolescência e emissão da `FR-2452` à `FR-2454`.
 - **FR-2462**: O desfazimento MUST ser recusado quando deixaria o recorte com menos vagas efetivas do
-  que ocupantes somados às chamadas em aberto que acrescentariam alguém, e a recusa MUST dizer qual
-  desfecho registrar antes. Ele MUST ser recusado também quando a quantidade exceder o que resta do
+  que pessoas com convocação em aberto ou atendida nele, e a recusa MUST dizer qual desfecho registrar
+  antes. Quem só está entre os titulares que a apuração conta, sem ter sido chamado, MUST NOT impedir o
+  desfazimento: sai da conta, e ninguém lhe disse nada. Ele MUST ser recusado também quando a quantidade exceder o que resta do
   acréscimo citado.
 
 ### Quem pode, e onde
@@ -238,11 +240,13 @@ os demais são consequência do que já existe.
 - **FR-2463**: O acréscimo MUST ser recusado em Perfil cujo conteúdo vigente não declare cadastro de
   reserva (`LIMITED` ou `UNLIMITED`), com recusa que diga que, sem reserva publicada, chamar além das
   vagas exige Retificação (`D-002`).
-- **FR-2464**: O acréscimo MUST alcançar só a linha geral do quadro — a ampla concorrência. Em Perfil
-  cujo quadro tenha linha de Modalidade reservada com vaga, ou com reversão declarada, ele MUST ser
-  recusado, com recusa que diga que a repartição entre modalidades está fora desta feature (`D-003`).
-- **FR-2465**: Registrar e desfazer acréscimo MUST exigir permissão própria e verificação de escopo do
-  Processo, concedida por padrão aos mesmos papéis que emitem a apuração de ocupação (`D-004`).
+- **FR-2464**: O acréscimo MUST alcançar só a linha geral do quadro — a ampla concorrência — e vale
+  no recorte em que foi registrado. Em Perfil cujo quadro tenha qualquer linha de Modalidade, com vaga
+  ou sem, ou que declare reversão, ele MUST ser recusado, com recusa que diga que a repartição entre
+  modalidades está fora desta feature (`D-003`).
+- **FR-2465**: Registrar e desfazer acréscimo MUST exigir a mesma autorização e a mesma verificação de
+  escopo que a emissão da apuração de ocupação já exige — a gestão da comissão do Processo —, e MUST
+  NOT criar autoridade nova (`D-004`).
 - **FR-2466**: Acréscimo e desfazimento MUST entrar na trilha de auditoria do Processo com ator, ação,
   recorte, quantidade, origem ou motivo, apuração anterior e seguinte, instante e correlação.
 - **FR-2467**: A tela MUST orientar que origem e fundamento não identifiquem pessoas do outro Edital:
@@ -327,11 +331,18 @@ O TMD não tem cotas, e a repartição de uma vaga superveniente entre modalidad
 entre modalidades (P-1 dos achados), que a `DP-05` listou e esta spec não decide. Recusar é mais
 honesto do que escolher um recorte.
 
-### D-004 — Permissão própria, com os papéis de quem apura
+### D-004 — A autoridade de quem apura, e nenhuma nova
 
 O acréscimo muda o número que decide quem é chamado, e o Princípio III pede autorização específica
-para isso. Concedê-la por padrão a quem já emite a apuração evita criar papel novo numa equipe de duas
-ou três pessoas, e deixa separar depois sem migração de regra.
+para isso. A autorização específica já existe: é a gestão da comissão do Processo, que a emissão da
+apuração, a do corte e a convocação exigem — o gestor, ou a presidência daquele Processo. Uma
+capacidade nova seria concedida por papel, e a presidência, que hoje apura e convoca, deixaria de
+poder acrescentar a vaga do próprio certame. É a regra que a ocupação já registra no código, *"a
+autoridade é consumida, não inventada"*, e a que a `FR-887` da `050` repetiu para os gestos dela.
+
+*Revista ao planejar, em 21/10/2026.* A primeira redação pedia permissão própria, concedida por padrão
+aos papéis de quem apura; o mapeamento mostrou que a ocupação não é autorizada por papel, e sim pela
+comissão (`research.md`, T-007).
 
 ### D-005 — O prazo final das convocações é da equipe, e não do sistema
 
