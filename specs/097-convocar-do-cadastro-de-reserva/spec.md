@@ -263,9 +263,10 @@ os demais são consequência do que já existe.
 
 - **FR-2474**: O aviso `reserve_only_convocation_external` MUST deixar de dizer que a convocação é feita
   fora do sistema, e MUST passar a dizer que ela depende de vagas acrescidas depois da publicação,
-  registradas na ocupação. Ele MUST continuar advertência, e só no ato de publicação. Quando a faixa do
-  corte publicado não alcançar além do alvo fixo e a continuação não for admitida, o aviso MUST dizer
-  quantos classificados a convocação poderá alcançar.
+  registradas na ocupação. Ele MUST continuar advertência, e só no ato de publicação. Quando a regra de corte
+  do marco não admitir continuação, o aviso MUST dizer quantos classificados a faixa publicada poderá
+  alcançar — o alvo fixo mais o excedente, ou só o excedente quando o alvo é o do quadro, que neste
+  Perfil é zero.
 - **FR-2475**: Em Perfil só de reserva com Modalidade reservada no quadro, a Revisão MUST avisar que o
   acréscimo desta feature não alcança aquele Perfil (`FR-2464`).
 - **FR-2476**: Editais já publicados MUST NOT ser reavaliados nem republicados: a advertência é da
