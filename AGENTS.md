@@ -99,7 +99,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **12268 passando e 11 pulados**, nenhuma falha (medido em 2026-10-18, na `main` em `2abd18db`, com o grupo `assistente` instalado e 4 workers, em 525s; a medição anterior, de 17/10 em `a41b67c0`, dava 11457 e 11 — a diferença é a dos testes das telas, da folha e da CSP, da `081` à `092`, e os pulados são os mesmos onze). Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são onze pulados. **A `097` acrescentou um** — a conferência da vaga acrescida entrou na varredura de vocabulário e não usa «geração» —, e na worktree dela, sem o grupo, a suíte fechou em 12677 passando e 13 pulados (21/10, 4 workers, 437s). Os
+Contra PostgreSQL a suíte fecha em **12775 passando e 12 pulados** (medido em 2026-10-21, sobre a árvore da `main` em `e869d7a2`, com o grupo `assistente` instalado e 4 workers, em 498s; a medição anterior, de 18/10 em `2abd18db`, dava 12268 e 11 — a diferença é a dos testes da `093` à `097`, e o pulado a mais é o da `097`, descrito abaixo). Aquela rodada teve ainda **uma falha, que não é defeito**: o teste de tempo da ocupação, que oscila com 4 workers e passa isolado — ver *Um teste de tempo oscila sob carga*, adiante. Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são doze pulados. **A `097` acrescentou um** — a conferência da vaga acrescida entrou na varredura de vocabulário e não usa «geração» —, e na worktree dela, sem o grupo, a suíte fechou em 12677 passando e 13 pulados (21/10, 4 workers, 437s). Os
 treze — doze com o grupo — são deliberados, e se repartem em quatro: **10** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da
@@ -123,8 +123,20 @@ falha junto de outros, `make test-pg PYTEST_WORKERS=0` volta ao serial. As medi�
 [doc/estudo-paralelizacao-da-suite.md](doc/estudo-paralelizacao-da-suite.md). No CI, o primeiro run
 paralelo levou 836s de pytest e 14m35s de job, contra 1729s a 2856s em série — o runner varia muito.
 
+**Um teste de tempo oscila sob carga.**
+`tests/performance/test_ocupacao.py::test_a_apuracao_cabe_no_dobro_do_tempo_da_emissao_da_ordem`
+exige que a apuração de um recorte custe no máximo o dobro da emissão da ordem, e os dois tempos são
+de poucos milissegundos: com 4 workers dividindo o cluster, um pico qualquer passa do teto. Em 21/10
+ele falhou uma vez na suíte paralela (0,0115s contra 0,0038s) e passou seis de seis isolado, com e
+sem a `097`. A falha cai justamente quando um PR mexe na ocupação, e parece regressão. Antes de
+recusá-lo, meça a razão isolada nos dois commits, várias vezes —
+`PYTEST_ADDOPTS="tests/performance/test_ocupacao.py -k dobro" make test-pg PYTEST_WORKERS=0`, e com
+`RAZAO_MAXIMA` zerada numa cópia descartável o teste imprime os dois tempos. Ali, oito rodadas deram
+razão de 0,88 a 1,49 com a `097` e de 0,64 a 1,06 sem ela, longe do 2,0. Uma rodada sob carga não é
+sinal; uma distribuição que se desloca é.
+
 **A preparação do banco não tem nada com o tempo.** Criar o banco de teste e aplicar as 80
-migrations — hoje são 94 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
+migrations — hoje são 95 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
 `--reuse-db` sobre um caso só. O custo está nos casos transacionais: **3108 dos 11 468 coletados,
 27%, e 79% do tempo em série** (medido em 2026-10-17). Eles não podem terminar em `ROLLBACK`, e o
 Django limpa depois de cada um truncando as tabelas e refazendo o `post_migrate` — só essa limpeza
