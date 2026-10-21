@@ -18,7 +18,7 @@ from urllib.parse import urlencode
 
 from django.utils.dateparse import parse_datetime
 
-from processo_seletivo.editais.domain import calendario
+from processo_seletivo.editais.domain import calendario, quadro
 from processo_seletivo.editais.domain.fase_do_evento import (
     descricao_do_evento,
     esta_cancelado,
@@ -564,7 +564,8 @@ def prazos_de_recurso(vigentes_por_edital, conteudo_vigente, agora):
 # A oferta de cada Perfil, dita do mesmo jeito no cartão e na página (072, research T-005)
 # ---------------------------------------------------------------------------
 
-TIPOS_COM_RESERVA = ("LIMITED", "UNLIMITED")
+# Os mesmos que o documento lê para imprimir `CR` (096): uma lista só, no domínio.
+TIPOS_COM_RESERVA = quadro.TIPOS_DE_CADASTRO
 
 
 def quantidade_da_oferta(vagas, tipo_de_reserva):
