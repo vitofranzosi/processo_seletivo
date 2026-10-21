@@ -91,10 +91,10 @@ Perfil só de reserva com linha de Modalidade é avisado de que o acréscimo nã
 
 **Independent Test**: levar à Revisão um rascunho com Perfil só de reserva e ler os avisos.
 
-- [ ] T026 [P] [US2] Em `backend/tests/unit/editais/test_reserva_convocada_fora.py`, trocar a frase esperada: o aviso diz que a convocação depende de vagas acrescidas depois da publicação e **não** contém *"fora"* (`FR-2474`, `SC-923`); com corte `FIXED` 20 + 0 e sem continuação, diz *"até 20 classificados"*; com `FROM_VACANCY_TABLE` e excedente 3, *"até 3"*; com continuação admitida, nenhum número (`T-011`); continua advertência, só na publicação (`FR-2476`); e o achado novo `reserve_only_with_reserved_lines` no Perfil só de reserva com linha de Modalidade (`FR-2475`)
-- [ ] T027 [US2] Rodar T026: falha pela frase e pelo achado ausente
-- [ ] T028 [US2] Em `backend/processo_seletivo/editais/domain/validation.py`, `_reserva_convocada_fora` com a frase nova, o alcance pela regra de corte (`T-011`) e o docstring revisto — a `DP-05` voltou a A em 21/10, e o código do achado continua o mesmo (`T-008`); `_reserva_com_linhas_reservadas` ao lado
-- [ ] T029 [US2] Rodar T026, `backend/tests/unit/editais` e `backend/tests/interface/test_advertencias_do_quadro.py`: verdes
+- [X] T026 [P] [US2] Em `backend/tests/unit/editais/test_reserva_convocada_fora.py`, trocar a frase esperada: o aviso diz que a convocação depende de vagas acrescidas depois da publicação e **não** contém *"fora"* (`FR-2474`, `SC-923`); com corte `FIXED` 20 + 0 e sem continuação, diz *"até 20 classificados"*; com `FROM_VACANCY_TABLE` e excedente 3, *"até 3"*; com continuação admitida, nenhum número (`T-011`); continua advertência, só na publicação (`FR-2476`); e o achado novo `reserve_only_with_reserved_lines` no Perfil só de reserva com linha de Modalidade (`FR-2475`)
+- [X] T027 [US2] Rodar T026: falha pela frase e pelo achado ausente
+- [X] T028 [US2] Em `backend/processo_seletivo/editais/domain/validation.py`, `_reserva_convocada_fora` com a frase nova, o alcance pela regra de corte (`T-011`) e o docstring revisto — a `DP-05` voltou a A em 21/10, e o código do achado continua o mesmo (`T-008`); `_reserva_com_linhas_reservadas` ao lado
+- [X] T029 [US2] Rodar T026, `backend/tests/unit/editais` e `backend/tests/interface/test_advertencias_do_quadro.py`: verdes
 
 ---
 

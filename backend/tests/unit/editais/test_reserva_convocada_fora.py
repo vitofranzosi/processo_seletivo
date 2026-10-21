@@ -89,7 +89,7 @@ def test_a_retificacao_nao_repete_o_aviso():
 
 
 class TestOAlcanceDaFaixa:
-    """`FR-2474`, `T-011`: sem continuação, a Revisão diz quantos a faixa publicada pode alcançar."""
+    """`FR-2474`, `T-011`: sem continuação, a Revisão diz quantos a faixa pode alcançar."""
 
     def test_alvo_fixo_diz_alvo_mais_excedente(self):
         um_perfil = so_reserva(classificationMilestones=[marco(targetCount=20, surplusCount=2)])
