@@ -371,6 +371,10 @@ def depois(conteudo):
         (pre[primeira_de_modalidades:], conhecidos),
     ):
         for frase in _paragrafos([token for token in trecho if token[0] == "t" and token[3] == 0]):
+            # A nota da sigla é da tabela de Perfis, e não regra de Perfil nenhum (096, D-002): ela
+            # diz o que `CR` quer dizer, e sai abaixo da tabela, em recuo 0 como as frases.
+            if frase == pdf.NOTA_DO_CADASTRO:
+                continue
             prefixo = re.match(r"^(No Perfil|Nos Perfis) ", frase)
             if not prefixo:
                 for codigo in alcance:

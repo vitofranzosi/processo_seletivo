@@ -11,6 +11,11 @@ guardando `0` vagas imediatas, mas o documento do Edital deixa de imprimir esse 
 `CR`, com uma nota que diz o que a sigla quer dizer, como a equipe já faz nos Editais que escreve à mão.
 No portal, a oferta continua dita por extenso, e a linha com o zero sai.
 
+**Acréscimo de 21/10/2026, na implementação, por decisão do usuário** (D-012): a nota empurrou o
+cenário B uma linha, e a última seção passou a saltar com o fecho do ato só no publicado — um defeito
+latente desde a `069`, que a `096` acordou. A prévia passa a reservar o espaço efetivamente
+necessário para o fecho, para que o corpo normativo pagine igual nos dois modos (User Story 6).
+
 > **Faixa de identificadores.** Esta spec abre em **FR-2400** e **SC-900**. Na `main` (`717fc057`), e
 > nas worktrees e branches remotas medidas em 21/10, o maior FR é o 2345, o maior SC é o 878 e o maior
 > UX é o 216. Esta spec não usa UX.
@@ -152,24 +157,53 @@ vaga, e ler o bloco de cada Perfil.
 
 A Retificação que dá vaga imediata a um Perfil que só tinha cadastro de reserva, ou que zera as vagas de
 um Perfil que tem cadastro de reserva, produz um consolidado composto pela regra vigente: o Perfil
-passa de `CR` ao número, ou do número a `CR`. O quadro de alterações continua registrando o campo como
-ele mudou, com os números.
+passa de `CR` ao número, ou do número a `CR`. A tela de homologação, na gestão, continua dizendo o
+antes e o depois do campo com os números.
 
 **Why this priority**: é raro, e o consolidado já é um documento novo, composto pela regra vigente no
 momento em que é composto, pelo princípio da `FR-1196` da `064`, como a `067` assumiu.
 
 **Independent Test**: retificar as vagas imediatas de um Perfil de cadastro de reserva e ler o
-consolidado e o quadro de alterações.
+consolidado e a tela de homologação.
 
 **Acceptance Scenarios**:
 
 1. **Given** uma Retificação que muda as vagas imediatas de um Perfil de cadastro de reserva de 0 para
    2, **When** o consolidado é composto, **Then** a célula do Perfil diz `2`, e a nota só sai se outra
    célula da tabela continuar `CR`.
-2. **Given** a mesma Retificação, **When** o quadro de alterações é composto, **Then** ele diz a mudança
-   de vagas imediatas de `0` para `2`, como hoje.
+2. **Given** a mesma Retificação, **When** a tela de homologação a mostra, **Then** ela diz as vagas
+   imediatas antes, `0`, e depois, `2`, como hoje.
 3. **Given** uma Retificação que zera as vagas de um Perfil com cadastro de reserva, **When** o
    consolidado é composto, **Then** a célula diz `CR`, e a nota sai.
+
+### User Story 6 — Quem revisa a prévia vê a paginação do publicado (Priority: P1)
+
+*Acrescentada na implementação, por decisão do usuário em 21/10/2026 (D-012).*
+
+Quem elabora abre a prévia do Edital de tutores antes de publicar. A última seção, "Disposições
+finais", sai na página em que vai sair no publicado, e o sumário diz o mesmo número de página nos
+dois. No lugar do fecho, a prévia diz que local, data, autoridade e verificação saem na publicação,
+e ocupa o espaço que eles vão ocupar.
+
+**Why this priority**: a prévia existe para que quem revisa veja o documento que vai sair (a `FR-042`
+da `008`). Um sumário que diz uma página e um publicado que diz outra é exatamente o que ela promete
+não ter. É P1 porque a `096`, sem esta história, deixaria o cenário B nesse estado.
+
+**Independent Test**: compor o cenário B em prévia e em publicado, nas três composições (plana, por
+perguntas e a variante) e com autoridades de alturas diferentes, e comparar o corpo normativo página
+a página.
+
+**Acceptance Scenarios**:
+
+1. **Given** o cenário B na apresentação plana e uma autoridade com nome, cargo e ato de nomeação,
+   **When** a prévia e o publicado são compostos, **Then** os dois têm o mesmo número de páginas, o
+   mesmo corpo normativo em cada página e o mesmo sumário.
+2. **Given** o mesmo cenário sem a reserva do fecho, **When** os dois são compostos, **Then** eles
+   divergem: é o defeito que a história corrige, e o teste o prova.
+3. **Given** uma autoridade prevista, **When** a reserva é composta, **Then** ela tem a mesma sequência
+   de linhas, alturas, espaços e ligações de paginação do fecho real.
+4. **Given** a prévia, **When** ela é lida, **Then** não traz o nome, o cargo, o ato de nomeação, a data
+   nem o resumo criptográfico, e diz que o fecho sai na publicação.
 
 ### Edge Cases
 
@@ -192,6 +226,12 @@ consolidado e o quadro de alterações.
   e não entra na lista de itens que a conferência usa.
 - **Extração de texto e leitura em voz alta.** `CR` sai como texto comum. A nota logo abaixo é o que
   diz a sigla por extenso, a quem lê o documento e a quem o ouve.
+- **Várias autoridades vigentes, de alturas diferentes.** A prévia não sabe qual será escolhida no
+  ato, e reserva a mais alta (FR-2420). Com a mais alta, a paginação é a mesma; com outra, a prévia
+  pode mostrar a última seção uma página adiante do publicado. Hoje cada unidade tem uma autoridade
+  vigente, e o limite fica registrado.
+- **Nenhuma autoridade vigente.** A publicação é recusada até haver uma; a prévia reserva o fecho sem
+  nome nem cargo.
 - **O assistente de dúvidas** (a `071` e a `074`). Ele lê o conteúdo publicado, em que o campo continua
   `0`, e pode responder "0 vagas". Isso fica fora desta feature e registrado como achado.
 
@@ -236,8 +276,14 @@ consolidado e o quadro de alterações.
 
 - **FR-2411**: O consolidado da Retificação MUST aplicar as regras de FR-2402 a FR-2410 ao estado
   vigente de cada Perfil.
-- **FR-2412**: O quadro de alterações da Retificação MUST continuar registrando a mudança de vagas
-  imediatas com os números, inclusive o `0` (D-003).
+- **FR-2412**: A tela de homologação da Retificação, na gestão, MUST continuar dizendo o antes e o
+  depois das vagas imediatas com os números, inclusive o `0` (D-003). O documento da Retificação e o
+  histórico do portal não listam valores alterados, e continuam sem listar.
+
+  *Corrigido na implementação (21/10):* esta exigência falava num "quadro de alterações" com
+  valores. O antes e o depois só existem na tela de homologação (`interface/views.py`,
+  `_alteracoes_legiveis`); o histórico do portal diz onde e qual campo, sem valor
+  (`publicacoes/domain/alteracoes.py`), e o documento não tem quadro de alterações.
 
 #### Os documentos já publicados
 
@@ -257,6 +303,20 @@ consolidado e o quadro de alterações.
 
 - **FR-2417**: As telas da gestão MUST continuar mostrando as vagas imediatas como número, inclusive o
   `0`. A prévia do documento MUST seguir a composição do documento.
+
+#### A paginação da prévia (D-012)
+
+- **FR-2418**: A prévia MUST paginar o corpo normativo como o publicado: o mesmo número de páginas, as
+  mesmas linhas em cada página e o mesmo sumário, com a última seção junto do fecho nos dois modos,
+  como pede a `FR-1391` da `069`.
+- **FR-2419**: No lugar do fecho, a prévia MUST reservar o espaço efetivamente necessário para ele: o
+  fecho composto com a autoridade prevista, linha a linha, com a mesma altura, o mesmo espaço antes e
+  a mesma ligação de paginação de cada linha. Um aviso de altura menor MUST NOT bastar.
+- **FR-2420**: As autoridades previstas MUST ser as vigentes da unidade do Edital na data da prévia.
+  Com várias, a reserva MUST ser a do fecho mais alto; sem nenhuma, a do fecho sem nome nem cargo.
+- **FR-2421**: A prévia MUST NOT imprimir a autoridade prevista, o local, a data nem o resumo
+  criptográfico, e MUST dizer, na primeira linha do espaço reservado, que o fecho sai na publicação. O
+  documento publicado MUST recusar autoridade prevista, e continua a compor o fecho como hoje.
 
 ### Key Entities
 
@@ -282,9 +342,9 @@ uma vez só no documento: quem procura o seu Perfil salta direto para a tabela, 
 em outra página não seria lida. **Descartadas:** a sigla sem nota, que o candidato de primeira viagem não
 conhece; e uma tabela de siglas no começo do documento, longe do lugar onde a sigla aparece.
 
-### D-003 — O quadro de alterações guarda o número
+### D-003 — A homologação guarda o número
 
-O quadro de alterações da Retificação diz que campo mudou, de quanto para quanto. Ele registra o ato, e
+A tela de homologação da Retificação diz que campo mudou, de quanto para quanto. Ela registra o ato, e
 o campo é numérico: "de CR para 2" diria uma mudança de tipo que não aconteceu. O consolidado, que é o
 que o candidato lê como o Edital vigente, é que usa `CR`.
 
@@ -295,6 +355,24 @@ Decisão do usuário em 21/10/2026. O portal já dá destaque à oferta de cadas
 lê como ausência logo abaixo da oferta. A web não tem legenda de tabela para explicar a sigla, então o
 portal continua por extenso. **Descartadas:** a sigla `CR` também no portal, para o portal e o documento
 dizerem o mesmo; e deixar o portal como está.
+
+### D-012 — A prévia reserva o espaço do fecho
+
+Decisão do usuário em 21/10/2026, na implementação. A nota da sigla empurrou o cenário B uma linha, e a
+última seção, que terminava a uma linha do pé da página, passou a não caber com o fecho: no publicado
+ela salta para a página seguinte com ele (a `FR-1391` da `069`); na prévia, que não tem fecho, ela
+ficava. O sumário da prévia dizia "15", o do publicado "16", e o guardião da `FR-042` da `008`
+reprovou. O defeito existe desde a `069`: qualquer linha a mais ou a menos perto do fim o acorda.
+
+A prévia passa a reservar, no lugar do fecho, o espaço **efetivamente necessário**: o fecho é composto
+de verdade, com a autoridade que pode responder pelo ato, e cada linha passa à prévia com a mesma
+geometria; só o texto muda. O escopo é só a paginação do corpo normativo: o publicado não muda, e os
+documentos já publicados também não. Como a reserva é feita está em `research.md` (D-013).
+
+**Descartadas:** declarar no teste da `008` que a última seção pode saltar só no publicado, o que
+deixaria a prévia mostrando uma página a menos; parar a `096` e registrar o achado, com a suíte
+vermelha; e um aviso de uma linha no lugar do fecho, que só trocaria um acaso por outro, porque o
+salto depende da altura.
 
 ## Success Criteria *(mandatory)*
 
@@ -307,6 +385,9 @@ dizerem o mesmo; e deixar o portal como está.
   Perfil de cadastro de reserva sem vaga imediata.
 - **SC-903**: A suíte contra PostgreSQL continua sem falhas, e **nenhum** teste de apuração, ocupação,
   classificação ou convocação muda.
+- **SC-904**: No cenário B, nas três composições (plana, por perguntas e a variante) e com **três**
+  autoridades de alturas diferentes, prévia e publicado têm o **mesmo** número de páginas e o **mesmo**
+  corpo normativo página a página; sem a reserva, o B plano diverge, e o teste o acusa.
 
 ## Assumptions
 

@@ -53,14 +53,24 @@ os dois pontos de `apresentacao._vagas_em_partes` passam a chamá-la. `apresenta
 `CR` vale `0` (`FR-2407`). A decisão de qual tabela sai (`com_vaga`, `_matriz_de_vagas` contra
 `_vagas_em_partes`) também não muda: ela é pelo número.
 
-## D-007 — A nota como parâmetro da tabela, colada à última linha
+## D-007 — A nota como parâmetro da tabela, logo depois da grade
 
 `_tabela` ganha `nota=None`, que escreve a linha **depois** da grade, em `CORPO_TABELA`, alinhada ao
-recuo da tabela, com `antes=ANTES_DE_LINHA` e `junto=True`. O `junto` é o que a paginação já usa para
-a legenda, e impede a nota de começar a página seguinte sozinha, longe da tabela que explica. Cada
-ponto de escrita passa `nota=nota_da_sigla(perfis)`, que devolve `NOTA_DO_CADASTRO`
+recuo da tabela, com `antes=ANTES_DE_LINHA`. Ela segue a tabela como a frase de reversão segue o
+quadro (`_reversao_declarada`): na posição seguinte, sem garantia de página.
+
+**Corrigido na implementação (21/10).** O plano dizia `junto=True`, "como a legenda", para a nota não
+começar a página seguinte sozinha. Mas o `junto` prende uma linha à **seguinte**, e não à anterior: é
+por isso que serve à legenda, que precede a tabela. Prender a última linha da tabela à nota também não
+existe, e de propósito: `prender_a_ultima_linha` recusa a linha de dentro de um quadro, porque a
+quebra leva a linha e não a grade, e a célula já saiu sozinha no alto da página, fora da tabela. Uma
+nota no alto da página seguinte, ainda logo abaixo da tabela que ela explica, é o defeito menor. Fazê-lo
+direito pediria ensinar o paginador a levar a grade, e isso é desenho de paginação, não desta feature.
+
+Cada ponto de escrita passa `nota=nota_da_sigla(perfis)`, que devolve `NOTA_DO_CADASTRO`
 (`"CR: cadastro de reserva."`) quando algum dos Perfis da tabela é `CR`, e `None` nos outros casos.
-Na ficha do Perfil único, a mesma linha sai depois de `_pares`, dentro do mesmo bloco.
+Na ficha do Perfil único, a mesma linha sai depois de `_pares`, dentro do mesmo bloco, e lá ela pode
+ir `junto` do último par, que é texto comum e não linha de quadro.
 
 **Descartadas:** `CORPO_NOTA` (7,5 pt), que é o corpo do rodapé técnico e do resumo criptográfico e
 ficaria ilegível como nota do ato; a nota na legenda, que fica acima da tabela, antes de o leitor
@@ -104,9 +114,55 @@ afirmar a parte da `FR-136` que esta feature revisa, e continua afirmando o rest
 
 - **A gestão.** `_perfil.html`, a Revisão (`interface/revisao.py`) e a visão institucional continuam
   lendo o número. A prévia do documento passa pelo mesmo compositor, e diz `CR` sem mudança própria.
-- **O quadro de alterações** (`publicacoes/domain/alteracoes.py`) registra o valor do campo (D-003).
+- **A tela de homologação** (`interface/views.py`, `_alteracoes_legiveis`) diz o antes e o depois do
+  campo, com os números (D-003). O histórico do portal (`publicacoes/domain/alteracoes.py`) não diz
+  valor nenhum, e o documento não tem quadro de alterações.
 - **O conteúdo canônico e o assistente.** O snapshot continua com `immediateVacancies: 0`. O corpus da
   `070` (`tests/fixtures/corpus_070/`) é conteúdo canônico, e não documento composto, e não muda.
 - **As células de lista do quadro** de um Perfil com vaga. Uma lista declarada em `0` num Perfil com
   6 vagas continua `0` (o cenário 2 da história 4 da `067`). A regra é sobre o Perfil, e não sobre a
   linha.
+
+## D-013 — Como a prévia reserva o fecho
+
+A decisão de produto é a D-012 da spec, de 21/10/2026. Aqui fica como ela é feita.
+
+**O defeito, medido.** No publicado, `com_o_fecho` (a `069`) abre um bloco com a última seção e o
+fecho, e o bloco salta quando os dois não cabem. Na prévia, `fecho_do_ato` era `None`, e a última
+seção não tinha com quem saltar. No cenário B plano, com a autoridade do contrato, a seção 15 (5
+linhas) passou da página 15 à 16 só no publicado. Em 9 combinações, 3 composições do B por 3
+autoridades, o salto só acontece no B plano e com os dois fechos mais altos: nome, cargo e ato de
+nomeação.
+
+**Por que não um aviso, nem um espaço em branco.** A paginação lê, de cada linha, a altura
+(`antes + tamanho × 1,45`) e o `junto`. A linha `junto` procura a seguinte **com texto**, e é com
+ela que a última linha da seção (marcada por `prender_a_ultima_linha`) mede se cabe. Em branco, a
+última linha não encontraria o fecho, e decidiria outra quebra. Um aviso de uma linha mede menos que
+o fecho, e o salto depende da altura.
+
+**Como.** `_reservar_o_fecho` compõe o fecho de verdade num rascunho (`_fecho_medido`: o mesmo
+`_autoridade` e o mesmo `_integridade` do publicado, com a autoridade prevista, o local da unidade,
+uma data de mês longo e um resumo de 64 zeros) e copia cada item para a prévia:
+
+- a mesma altura, o mesmo `antes`, o mesmo `junto` e os mesmos blocos;
+- o texto da primeira linha vira `FECHO_NA_PUBLICACAO`, e o das demais um espaço, invisível mas não
+  vazio;
+- a régua, que não tem altura, não é desenhada.
+
+Como a altura de uma linha não depende do texto, a prévia pagina como o publicado **por construção**,
+e não por coincidência de medida.
+
+**De onde vêm as previstas.** `render_edital_pdf` ganha `fechos_previstos`, lido só na prévia e
+recusado no publicado. A tela da prévia passa `contexto_do_ato.fechos_previstos(unidade, hoje)`: as
+autoridades vigentes da unidade, que são as que a tela de publicação oferece. Com várias, vale a mais
+alta (`FR-2420`, o limite do caso-limite da spec). O teste de contrato passa a da fixture, que é a do
+publicado.
+
+**O que não muda.** O publicado compõe o fecho como antes, e os bytes do cenário A e da fixture de
+contrato continuam iguais. O que o teste da `008` chama de corpo normativo também continua igual: ele
+passa a reconhecer `Fecho do ato: ` como começo do fecho na prévia, como já reconhecia o local e a data
+no publicado.
+
+**Descartada:** passar a autoridade prevista em `autoridade=`. A prévia continua recusando autoridade
+(`FR-035`): a prevista mede, e não é impressa, e um parâmetro com outro nome deixa isso escrito na
+assinatura da função.

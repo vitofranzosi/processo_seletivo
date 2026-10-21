@@ -26,8 +26,8 @@ DB_RUNTIME_USER=$(whoami)`); `ps_096_b` para a validação pelo fluxo real, novo
 
 ## Phase 1: Setup
 
-- [ ] T001 Medir o ponto de partida: `uv run pytest -q` contra PostgreSQL (variáveis acima) sobre `tests/unit/editais tests/unit/publicacoes tests/contract tests/integration/publicacoes tests/integration/portal`; verde, e o total registrado num `specs/096-cadastro-de-reserva-como-cr/verificacao.md` novo, seção "Ponto de partida"
-- [ ] T002 [P] Conferir as premissas do `SC-901` e registrá-las em `verificacao.md`: o snapshot congelado do cenário A (`doc/auditoria-edital-pdf-2026-10-08/snapshots/A-conteudo-publicado.json`) e a fixture de contrato (`backend/tests/contract/fixtures/snapshot_publicado.json`) não têm Perfil com 0 vaga e cadastro `LIMITED`/`UNLIMITED`; o B tem 16 (medido em 21/10: A 0 de 4, B 16 de 18, contrato 0 de 1). Se alguma contagem divergir, parar e rever o `SC-901` com o usuário
+- [X] T001 Medir o ponto de partida: `uv run pytest -q` contra PostgreSQL (variáveis acima) sobre `tests/unit/editais tests/unit/publicacoes tests/contract tests/integration/publicacoes tests/integration/portal`; verde, e o total registrado num `specs/096-cadastro-de-reserva-como-cr/verificacao.md` novo, seção "Ponto de partida"
+- [X] T002 [P] Conferir as premissas do `SC-901` e registrá-las em `verificacao.md`: o snapshot congelado do cenário A (`doc/auditoria-edital-pdf-2026-10-08/snapshots/A-conteudo-publicado.json`) e a fixture de contrato (`backend/tests/contract/fixtures/snapshot_publicado.json`) não têm Perfil com 0 vaga e cadastro `LIMITED`/`UNLIMITED`; o B tem 16 (medido em 21/10: A 0 de 4, B 16 de 18, contrato 0 de 1). Se alguma contagem divergir, parar e rever o `SC-901` com o usuário
 
 ---
 
@@ -37,16 +37,16 @@ Bloqueia todas as histórias do documento (US1, US2, US3, US5). A US4, do portal
 
 ### Testes (primeiro; falham por `ImportError`/`AttributeError`/`TypeError`)
 
-- [ ] T003 [P] Em `backend/tests/unit/editais/test_cadastro_sem_vaga_imediata.py` (novo), `quadro.cadastro_sem_vaga_imediata` pela tabela-verdade de [data-model.md](data-model.md) (`FR-2402`, `D-005`): verdadeiro com total 0 sem quadro e `LIMITED`; com total 0, quadro todo em 0 e `UNLIMITED`; falso com total 0 e uma linha positiva (o caso-limite incoerente); com total 0 e `NONE`, `reserveType` ausente ou desconhecido; com total 3 e `LIMITED`; com `immediateVacancies` `False`, `True`, `"0"` ou ausente; com `perfil` que não é `dict`
-- [ ] T004 [P] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py` (novo), as peças do compositor ([contracts/celula-de-vagas-e-nota.md](contracts/celula-de-vagas-e-nota.md) §1 e §2): `pdf.vagas_impressas` devolve `"CR"` para o Perfil do predicado, `"0"` para 0 com `NONE`, `"0"` para o incoerente e `"7"` para 7 com cadastro (`FR-2408`); `pdf.nota_da_sigla(perfis)` devolve `"CR: cadastro de reserva."` quando algum Perfil é `CR`, e `None` quando nenhum é; `pdf.SIGLA_DO_CADASTRO == "CR"` e `pdf.NOTA_DO_CADASTRO == "CR: cadastro de reserva."`
-- [ ] T005 [P] No mesmo arquivo, `_tabela(..., nota=...)`: compor um documento com uma tabela com nota e conferir, pelo `texto_de` de `tests/unit/publicacoes/test_pdf.py`, que a nota sai **depois** da última linha da grade, em `CORPO_TABELA`; que `nota=None` dá os mesmos bytes de antes; e, com a tabela empurrada para o pé da página por parágrafos de enchimento, que a nota não começa a página seguinte sozinha (`D-007`)
-- [ ] T006 Rodar T003 a T005: falham pelas razões esperadas, e nenhum por outra
+- [X] T003 [P] Em `backend/tests/unit/editais/test_cadastro_sem_vaga_imediata.py` (novo), `quadro.cadastro_sem_vaga_imediata` pela tabela-verdade de [data-model.md](data-model.md) (`FR-2402`, `D-005`): verdadeiro com total 0 sem quadro e `LIMITED`; com total 0, quadro todo em 0 e `UNLIMITED`; falso com total 0 e uma linha positiva (o caso-limite incoerente); com total 0 e `NONE`, `reserveType` ausente ou desconhecido; com total 3 e `LIMITED`; com `immediateVacancies` `False`, `True`, `"0"` ou ausente; com `perfil` que não é `dict`
+- [X] T004 [P] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py` (novo), as peças do compositor ([contracts/celula-de-vagas-e-nota.md](contracts/celula-de-vagas-e-nota.md) §1 e §2): `pdf.vagas_impressas` devolve `"CR"` para o Perfil do predicado, `"0"` para 0 com `NONE`, `"0"` para o incoerente e `"7"` para 7 com cadastro (`FR-2408`); `pdf.nota_da_sigla(perfis)` devolve `"CR: cadastro de reserva."` quando algum Perfil é `CR`, e `None` quando nenhum é; `pdf.SIGLA_DO_CADASTRO == "CR"` e `pdf.NOTA_DO_CADASTRO == "CR: cadastro de reserva."`
+- [X] T005 [P] No mesmo arquivo, `_tabela(..., nota=...)`: compor um documento com uma tabela com nota e conferir, pelo `texto_de` de `tests/unit/publicacoes/test_pdf.py`, que a nota sai **depois** da última linha da grade, em `CORPO_TABELA`; que `nota=None` dá os mesmos itens de antes; e que a nota não marca `junto` (`D-007`, corrigido na implementação: o paginador não leva a grade com a linha seguinte)
+- [X] T006 Rodar T003 a T005: falham pelas razões esperadas, e nenhum por outra
 
 ### Implementação
 
-- [ ] T007 [P] Em `backend/processo_seletivo/editais/domain/quadro.py`, `cadastro_sem_vaga_imediata(perfil)` ao lado de `sem_vaga_imediata`, com docstring que diga por que não é o mesmo predicado (o acervo sem quadro, `D-005`) e por que recusa `bool`
-- [ ] T008 Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `SIGLA_DO_CADASTRO`, `NOTA_DO_CADASTRO`, `vagas_impressas(perfil)` e `nota_da_sigla(perfis)`, perto de `_reserva` e `frase_do_cadastro`; e `_tabela` ganha `nota=None`, escrita depois da grade com `tamanho=CORPO_TABELA`, `recuo=recuo`, `antes=ANTES_DE_LINHA` e `junto=True`, com comentário do porquê do `junto` e do corpo (`D-007`: `CORPO_NOTA` é o do rodapé técnico)
-- [ ] T009 Rodar T003 a T005: verdes; rodar `tests/contract/test_documento_publicado.py` e os guardiões de bytes: verdes, porque nada chama a nota ainda
+- [X] T007 [P] Em `backend/processo_seletivo/editais/domain/quadro.py`, `cadastro_sem_vaga_imediata(perfil)` ao lado de `sem_vaga_imediata`, com docstring que diga por que não é o mesmo predicado (o acervo sem quadro, `D-005`) e por que recusa `bool`
+- [X] T008 Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `SIGLA_DO_CADASTRO`, `NOTA_DO_CADASTRO`, `vagas_impressas(perfil)` e `nota_da_sigla(perfis)`, perto de `_reserva` e `frase_do_cadastro`; e `_tabela` ganha `nota=None`, escrita depois da grade com `tamanho=CORPO_TABELA`, `recuo=recuo`, `antes=ANTES_DE_LINHA`, com comentário do porquê do corpo (`CORPO_NOTA` é o do rodapé técnico) e de a nota não ir `junto` (`D-007`)
+- [X] T009 Rodar T003 a T005: verdes; rodar `tests/contract/test_documento_publicado.py` e os guardiões de bytes: verdes, porque nada chama a nota ainda
 
 **Checkpoint**: as peças existem; o documento ainda não muda.
 
@@ -62,13 +62,13 @@ cadastro de reserva sem vaga, com a nota abaixo da tabela e o total pela soma da
 
 ### Testes
 
-- [ ] T010 [P] [US1] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py`, a tabela de Perfis composta de snapshots mínimos, nas redações 1 e 2 (os seis cenários de aceitação da US1): `LIMITED` → `CR`; `UNLIMITED` → `CR`; a nota logo abaixo da tabela com `CR` (`FR-2403`, `FR-2406`); com Perfis `CR` e com vaga, a linha de total soma só as vagas e sai (`FR-2407`); com todos `CR`, sem linha de total; sem nenhum `CR`, a tabela sai sem nota e com os mesmos bytes de antes (`FR-2409`)
-- [ ] T011 [P] [US1] No mesmo arquivo, os casos-limite da tabela: o Perfil com 0 e `NONE` sai `0` ao lado de Perfis `CR`, e a nota sai pelos outros; o incoerente sai `0`; o Perfil com 0 e cadastro limitado em 0 sai `CR`; a numeração das "Tabela N" e `pdf.tabelas_do_documento(snapshot)` são as mesmas com e sem `CR` (`FR-2410`, `D-008`)
-- [ ] T012 [US1] Rodar T010 e T011: falham porque a célula ainda diz `0` e a nota não sai
+- [X] T010 [P] [US1] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py`, a tabela de Perfis composta de snapshots mínimos, nas redações 1 e 2 (os seis cenários de aceitação da US1): `LIMITED` → `CR`; `UNLIMITED` → `CR`; a nota logo abaixo da tabela com `CR` (`FR-2403`, `FR-2406`); com Perfis `CR` e com vaga, a linha de total soma só as vagas e sai (`FR-2407`); com todos `CR`, sem linha de total; sem nenhum `CR`, a tabela sai sem nota e com os mesmos bytes de antes (`FR-2409`)
+- [X] T011 [P] [US1] No mesmo arquivo, os casos-limite da tabela: o Perfil com 0 e `NONE` sai `0` ao lado de Perfis `CR`, e a nota sai pelos outros; o incoerente sai `0`; o Perfil com 0 e cadastro limitado em 0 sai `CR`; a numeração das "Tabela N" e `pdf.tabelas_do_documento(snapshot)` são as mesmas com e sem `CR` (`FR-2410`, `D-008`)
+- [X] T012 [US1] Rodar T010 e T011: falham porque a célula ainda diz `0` e a nota não sai
 
 ### Implementação
 
-- [ ] T013 [US1] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `_quadro_de_perfis` passa a usar `vagas_impressas(perfil)` na coluna de vagas e `nota=nota_da_sigla(perfis)` em `_tabela`; o comentário da linha de total ganha uma frase: o `CR` vale zero na soma (`FR-2407`). Rodar T010 e T011: verdes
+- [X] T013 [US1] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `_quadro_de_perfis` passa a usar `vagas_impressas(perfil)` na coluna de vagas e `nota=nota_da_sigla(perfis)` em `_tabela`; o comentário da linha de total ganha uma frase: o `CR` vale zero na soma (`FR-2407`). Rodar T010 e T011: verdes
 
 **Checkpoint**: a tabela de Perfis da apresentação plana diz `CR`. Os guardiões de bytes do B
 **falham** a partir daqui, de propósito, até a Phase 8.
@@ -84,12 +84,12 @@ ficha.
 
 ### Testes
 
-- [ ] T014 [P] [US2] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py`, o Edital de um Perfil só nas duas redações da apresentação plana: com 0 vaga e cadastro, `Vagas imediatas: CR` e a nota logo depois do último par (`FR-2404`, `FR-2406`); com 3 vagas, `Vagas imediatas: 3` e sem nota; com 0 e `NONE`, `Vagas imediatas: 0` e sem nota
-- [ ] T015 [US2] Rodar T014: falha
+- [X] T014 [P] [US2] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py`, o Edital de um Perfil só nas duas redações da apresentação plana: com 0 vaga e cadastro, `Vagas imediatas: CR` e a nota logo depois do último par (`FR-2404`, `FR-2406`); com 3 vagas, `Vagas imediatas: 3` e sem nota; com 0 e `NONE`, `Vagas imediatas: 0` e sem nota
+- [X] T015 [US2] Rodar T014: falha
 
 ### Implementação
 
-- [ ] T016 [US2] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `_perfil_unico` usa `vagas_impressas(perfil)` no par e escreve `nota_da_sigla([perfil])`, quando houver, logo depois de `_pares`, dentro do mesmo `composicao.bloco()`, com os mesmos parâmetros da nota de `_tabela`. Rodar T014: verde; rodar `tests/contract/test_documento_publicado.py`: verde **sem** tocar a fixture (`SC-901`)
+- [X] T016 [US2] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `_perfil_unico` usa `vagas_impressas(perfil)` no par e escreve `nota_da_sigla([perfil])`, quando houver, logo depois de `_pares`, dentro do mesmo `composicao.bloco()`, com os mesmos parâmetros da nota de `_tabela`, depois de `prender_a_ultima_linha` (o último par é texto, e pode levá-la). Rodar T014: verde; rodar `tests/contract/test_documento_publicado.py`: verde **sem** tocar a fixture (`SC-901`)
 
 ---
 
@@ -102,13 +102,34 @@ nota em cada tabela que tiver `CR`; a tabela por lista e o resumo não mudam.
 
 ### Testes
 
-- [ ] T017 [P] [US3] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py`, por `tests.unit.publicacoes.cenarios_da_auditoria.por_perguntas("B")`: nenhuma tabela de Perfis traz `0` para Perfil com cadastro; 16 células `CR`; uma nota por tabela com `CR`, e nenhuma nas outras (`FR-2405`, `FR-2406`); a tabela por lista de concorrência continua só com TD-ADM e TD-INFO-EDU; a linha "Vagas" do resumo continua com o texto de hoje (os três cenários de aceitação da US3)
-- [ ] T018 [P] [US3] No mesmo arquivo, um snapshot mínimo por perguntas com um Perfil só, `CR`: "Não há vagas imediatas.", a tabela "Perfis" com `CR` e a nota
-- [ ] T019 [US3] Rodar T017 e T018: falham
+- [X] T017 [P] [US3] Em `backend/tests/unit/publicacoes/test_cadastro_de_reserva_como_cr.py`, por `tests.unit.publicacoes.cenarios_da_auditoria.por_perguntas("B")`: nenhuma tabela de Perfis traz `0` para Perfil com cadastro; 16 células `CR`; uma nota por tabela com `CR`, e nenhuma nas outras (`FR-2405`, `FR-2406`); a tabela por lista de concorrência continua só com TD-ADM e TD-INFO-EDU; a linha "Vagas" do resumo continua com o texto de hoje (os três cenários de aceitação da US3)
+- [X] T018 [P] [US3] No mesmo arquivo, um snapshot mínimo por perguntas com um Perfil só, `CR`: "Não há vagas imediatas.", a tabela "Perfis" com `CR` e a nota
+- [X] T019 [US3] Rodar T017 e T018: falham
 
 ### Implementação
 
-- [ ] T020 [US3] Em `backend/processo_seletivo/publicacoes/infrastructure/apresentacao.py`, `_vagas_em_partes` usa `composicao_pdf.vagas_impressas(perfil)` na coluna de vagas imediatas das tabelas de avulsos e de grupo, e passa `nota=composicao_pdf.nota_da_sigla(...)` com os Perfis de cada tabela; `_total`, `com_vaga` e a escolha entre `_matriz_de_vagas` e `_vagas_em_partes` ficam como estão (`D-006`). Rodar T017 e T018: verdes
+- [X] T020 [US3] Em `backend/processo_seletivo/publicacoes/infrastructure/apresentacao.py`, `_vagas_em_partes` usa `composicao_pdf.vagas_impressas(perfil)` na coluna de vagas imediatas das tabelas de avulsos e de grupo, e passa `nota=composicao_pdf.nota_da_sigla(...)` com os Perfis de cada tabela; `_total`, `com_vaga` e a escolha entre `_matriz_de_vagas` e `_vagas_em_partes` ficam como estão (`D-006`). Rodar T017 e T018: verdes
+
+---
+
+## Phase 5b: User Story 6 — A prévia reserva o fecho (P1)
+
+*Acrescentada na implementação, por decisão do usuário em 21/10/2026 (D-012).* A nota empurrou o
+cenário B uma linha, e o guardião da `008` (`test_documento_publicado.py`, `consolidado-B`) reprovou:
+a última seção saltava com o fecho só no publicado.
+
+**Goal**: a prévia pagina o corpo normativo como o publicado, reservando o espaço real do fecho.
+
+**Independent Test**: o B em prévia e em publicado, três composições por três autoridades, página a
+página.
+
+- [X] T040 [US6] Em `backend/tests/unit/publicacoes/test_previa_reserva_o_fecho.py` (novo), a regressão do B (`SC-904`, `FR-2418`): corpo normativo página a página e sumário iguais em B plano, por perguntas e variante, com as autoridades "só o cargo", "nome, cargo e ato" e a do contrato; e a prova de que, sem a reserva, o B plano com a autoridade do contrato diverge
+- [X] T041 [US6] No mesmo arquivo, a reserva (`FR-2419` a `FR-2421`): a mesma geometria do fecho real em A e B; nenhuma linha vazia onde o fecho tem texto; a mais alta entre várias, em qualquer ordem; sem prevista, o fecho sem nome nem cargo; a prévia sem nome, ato, "Autoridade responsável", "SHA-256" nem o resumo de medida, e com o aviso; o publicado recusa `fechos_previstos`
+- [X] T042 [US6] Em `backend/processo_seletivo/publicacoes/infrastructure/pdf.py`, `render_edital_pdf(fechos_previstos=())`, recusado no publicado; `DATA_DE_MEDIDA`, `RESUMO_DE_MEDIDA`, `FECHO_NA_PUBLICACAO`, `_fecho_medido` e `_reservar_o_fecho` (`D-013`); a prévia passa `fecho_reservado` a `com_o_fecho` no lugar de `None`
+- [X] T043 [US6] Em `backend/processo_seletivo/publicacoes/application/contexto_do_ato.py`, `fechos_previstos(unidade, data)`, pelas autoridades vigentes; `backend/processo_seletivo/interface/views.py::previa_documento` as passa com a data de hoje no fuso institucional
+- [X] T044 [US6] Em `backend/tests/contract/test_documento_publicado.py`, o `documento` da prévia passa a autoridade da fixture como prevista, e `corpo_normativo` reconhece `Fecho do ato: ` como começo do fecho; os testes continuam exigindo a mesma paginação (o `consolidado-B` volta ao verde sem afrouxar nada)
+- [X] T046 [US6] Em `backend/tests/unidades/test_previa_mede_o_fecho.py` (novo), as previstas são as vigentes na data (nem a encerrada nem a futura), e a tela da prévia mede por elas sem imprimir nome, cargo nem ato (`FR-2420`, `FR-2421`)
+- [X] T045 [US6] Registrar a decisão: a User Story 6, `FR-2418` a `FR-2421`, `SC-904`, o caso-limite das várias autoridades e a D-012 na spec; `D-013` na research; o plano, o contrato §6 e esta fase
 
 ---
 
@@ -124,28 +145,28 @@ Independente das Phases 2 a 5: toca só o portal.
 
 ### Testes
 
-- [ ] T021 [US4] Em `backend/tests/integration/portal/test_detalhe_selecao.py`, o teste da `FR-136` (o que hoje afirma `"0 vagas imediatas agora" in segunda_vaga`) muda de propósito: continua afirmando `reserva-primeiro`, `<strong>Cadastro reserva</strong>`, a ausência de `<strong>0</strong>` e o convite; passa a afirmar que `"0 vaga"` e `"CR"` não aparecem no bloco; a docstring cita `FR-2414`, `FR-2415` e a decisão D-004 desta feature, e diz que o trecho da `FR-136` que afirmava o zero foi revisto (`D-010`)
-- [ ] T022 [P] [US4] No mesmo arquivo, um teste novo: no mesmo Edital, o bloco do Perfil com vaga continua com o número em destaque e a reserva como hoje (`FR-2416`); e nenhum bloco da página contém `CR` (`FR-2415`)
-- [ ] T023 [US4] Rodar T021 e T022: T021 falha pelo `0 vaga`; T022 passa (prende o que não pode mudar)
+- [X] T021 [US4] Em `backend/tests/integration/portal/test_detalhe_selecao.py`, o teste da `FR-136` (o que hoje afirma `"0 vagas imediatas agora" in segunda_vaga`) muda de propósito: continua afirmando `reserva-primeiro`, `<strong>Cadastro reserva</strong>`, a ausência de `<strong>0</strong>` e o convite; passa a afirmar que `"0 vaga"` e `"CR"` não aparecem no bloco; a docstring cita `FR-2414`, `FR-2415` e a decisão D-004 desta feature, e diz que o trecho da `FR-136` que afirmava o zero foi revisto (`D-010`)
+- [X] T022 [P] [US4] No mesmo arquivo, um teste novo: no mesmo Edital, o bloco do Perfil com vaga continua com o número em destaque e a reserva como hoje (`FR-2416`); e nenhum bloco da página contém `CR` (`FR-2415`)
+- [X] T023 [US4] Rodar T021 e T022: T021 falha pelo `0 vaga`; T022 passa (prende o que não pode mudar)
 
 ### Implementação
 
-- [ ] T024 [US4] Em `backend/processo_seletivo/portal/templates/portal/selecao.html`, no ramo `{% if perfil.oferta %}`, sai o `<span class="reserva">` com "vagas imediatas agora"; o `{% comment %}` do bloco ganha uma frase: desde a `096` o zero não é dito, e por quê (`FR-2414`). A folha `backend/processo_seletivo/portal/static/portal/portal.css` não muda: `.vagas-numero .reserva` continua usada pelo ramo com vaga (conferido em 21/10). Rodar T021, T022 e `tests/portal`: verdes
+- [X] T024 [US4] Em `backend/processo_seletivo/portal/templates/portal/selecao.html`, no ramo `{% if perfil.oferta %}`, sai o `<span class="reserva">` com "vagas imediatas agora"; o `{% comment %}` do bloco ganha uma frase: desde a `096` o zero não é dito, e por quê (`FR-2414`). A folha `backend/processo_seletivo/portal/static/portal/portal.css` não muda: `.vagas-numero .reserva` continua usada pelo ramo com vaga (conferido em 21/10). Rodar T021, T022 e `tests/portal`: verdes
 
 ---
 
 ## Phase 7: User Story 5 — A Retificação (P3)
 
-**Goal**: o consolidado aplica a regra ao estado vigente; o quadro de alterações guarda os números.
+**Goal**: o consolidado aplica a regra ao estado vigente; a tela de homologação guarda os números.
 
 **Independent Test**: retificar as vagas imediatas de um Perfil de cadastro de reserva e ler o
-consolidado e o quadro de alterações.
+consolidado e a tela de homologação.
 
 ### Testes
 
-- [ ] T025 [P] [US5] Em `backend/tests/integration/publicacoes/test_cadastro_de_reserva_na_retificacao.py` (novo), pelo caminho de `tests/integration/publicacoes/test_documento_da_retificacao_que_acrescenta.py` (publicar pela API, retificar, ler `Publicacao.documento`): um Edital com dois Perfis, um `CR` e um com vaga; a Retificação que muda o `CR` de 0 para 2 dá um consolidado com `2` na célula e sem nota (`FR-2411`); o quadro de alterações diz a mudança de vagas imediatas de `0` para `2` (`FR-2412`, `D-003`); a Retificação que zera o outro Perfil, que tem cadastro, dá `CR` e a nota
-- [ ] T026 [P] [US5] No mesmo arquivo, o acervo: um documento publicado antes da feature, gravado com bytes de um PDF com `0` num Perfil de cadastro, é servido com os mesmos bytes e o mesmo hash (`FR-2413`)
-- [ ] T027 [US5] Rodar T025 e T026: verdes se as Phases 3 e 4 já entraram (o consolidado usa o compositor). Se T025 falhar, a causa é um caminho do consolidado que não passa por `_quadro_de_perfis`, e ele precisa entrar na Phase 3
+- [X] T025 [P] [US5] Em `backend/tests/integration/publicacoes/test_cadastro_de_reserva_na_retificacao.py` (novo), pelo caminho da publicação: um Edital com P2 só de cadastro (0, `LIMITED`) e P3 com vaga e cadastro; o original já sai com P2 em `CR` e a nota; a Retificação de P2 de 0 para 2 dá `2` e tira a nota (`FR-2411`); a de P3 de 1 para 0 dá `CR` e a nota; nos dois, a tela de homologação (`_alteracoes_legiveis`) diz o antes e o depois com os números (`FR-2412`, `D-003`). *Feito com uma correção:* sem lista reservada, o total e a linha geral derivada mudam no mesmo ato (027), e a Retificação leva os dois
+- [X] T026 [P] [US5] No mesmo arquivo, o documento já publicado: os bytes e o resumo do documento da publicação original são os mesmos depois da Retificação, e continuam dizendo `CR` (`FR-2413`)
+- [X] T027 [US5] Rodar T025 e T026: verdes se as Phases 3 e 4 já entraram (o consolidado usa o compositor). Se T025 falhar, a causa é um caminho do consolidado que não passa por `_quadro_de_perfis`, e ele precisa entrar na Phase 3
 
 ---
 
@@ -157,7 +178,7 @@ Depende das Phases 3, 4 e 5: o documento final precisa existir.
 - [ ] T029 Gravar `specs/096-cadastro-de-reserva-como-cr/demonstracao/B-plana-096.pdf`, `B-publicado-096.pdf` e `B-variante-096.pdf` pelas mesmas chamadas dos guardiões (`congelado`, unidade, autoridade e data fixas; `por_perguntas` e `variante_de_b` de `cenarios_da_auditoria.py`)
 - [ ] T030 Em `backend/tests/unit/publicacoes/test_itens_do_documento.py`, o guardião de bytes passa a esperar o B de `specs/096-…/demonstracao/` e continua esperando o A de `specs/069-…/demonstracao/` (o A não muda: `SC-901`); o comentário da sequência 067 → 068 → 069 ganha o parágrafo da `096`
 - [ ] T031 Em `backend/tests/unit/publicacoes/test_documento_da_auditoria_depois_da_069.py`, `test_o_documento_sai_com_os_bytes_gravados` passa a ler o B da `096` e o A da `069`; os demais testes do arquivo, que comparam os PDFs gravados entre si, ficam como estão
-- [ ] T032 Rodar `tests/unit/publicacoes` inteiro: verde. Se `test_equivalencia_da_consolidacao.py`, `test_consolidacao_por_perfil.py` ou `test_perfil_sem_vaga_imediata.py` reprovarem, ler a asserção: se prende o `0` de um Perfil `CR`, atualizar de propósito, com a razão no commit; se prende outra coisa, a implementação está errada
+- [ ] T032 Rodar `tests/unit/publicacoes` inteiro: verde. *Já atualizados de propósito na Phase 3 e na 5:* `test_equivalencia_da_consolidacao.py` (a nota não é frase de Perfil) e `test_perfil_sem_vaga_imediata.py` (a nota não é regra de reserva no cadastro, decisão 003 da `067`). Se `test_equivalencia_da_consolidacao.py`, `test_consolidacao_por_perfil.py` ou `test_perfil_sem_vaga_imediata.py` reprovarem, ler a asserção: se prende o `0` de um Perfil `CR`, atualizar de propósito, com a razão no commit; se prende outra coisa, a implementação está errada
 
 ---
 

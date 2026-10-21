@@ -26,7 +26,8 @@ A coluna do cadastro, ao lado, não muda: `limitado em 15` / `ilimitado` / `não
 - Texto: `CR: cadastro de reserva.`
 - Sai logo abaixo da última linha da tabela, ou do último par da ficha, quando **pelo menos uma**
   célula dela é `CR`. Não sai em tabela ou ficha sem `CR`.
-- Corpo de tabela, regular, alinhada à esquerda da tabela, presa à linha anterior na paginação.
+- Corpo de tabela, regular, alinhada à esquerda da tabela, na posição logo depois da grade. Se a
+  tabela terminar no pé da página, a nota pode abrir a seguinte, como a frase de reversão (D-007).
 - Não tem número, não é tabela e não entra em `tabelas_do_documento`.
 
 ## 3. A linha de total da tabela de Perfis
@@ -57,3 +58,13 @@ CR: cadastro de reserva.
 | 0 vaga, cadastro `NONE` | `0` | `vagas imediatas` | como hoje |
 
 O portal nunca mostra `CR`.
+
+## 6. O fim da prévia (D-012, D-013)
+
+| | Publicado | Prévia |
+|---|---|---|
+| última seção | no bloco do fecho, como desde a `069` | no bloco do espaço reservado |
+| linha do local e data | `Vitória (ES), 8 de outubro de 2026.` | `Fecho do ato: local, data, autoridade e verificação, na publicação.` |
+| demais linhas do fecho | autoridade, cargo, ato de nomeação, verificação | um espaço em cada uma, com a mesma altura |
+| régua da verificação | desenhada | não desenhada (não tem altura) |
+| páginas, linhas por página e sumário | — | **iguais** às do publicado com a autoridade prevista |

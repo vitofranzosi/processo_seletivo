@@ -829,7 +829,7 @@ def _vagas_em_partes(composicao, perfis, com_vaga, listas, tabelas):
                         perfil.get("code", ""),
                         perfil.get("name", ""),
                         perfil.get("locality", "") or "—",
-                        str(_total(perfil)),
+                        composicao_pdf.vagas_impressas(perfil, _total(perfil)),
                     ]
                     for perfil in avulsos
                 ],
@@ -841,6 +841,9 @@ def _vagas_em_partes(composicao, perfis, com_vaga, listas, tabelas):
                     composicao_pdf.CENTRO,
                 ],
                 legenda=tabelas.legenda("Perfis"),
+                # O Perfil de cadastro de reserva sem vaga sai `CR`, com a nota abaixo (096, D-006):
+                # a mesma regra da tabela de Perfis da apresentação plana, pela mesma função.
+                nota=composicao_pdf.nota_da_sigla(avulsos),
             )
     for nome, grupo in grupos:
         if len(grupo) == 1:
@@ -851,7 +854,11 @@ def _vagas_em_partes(composicao, perfis, com_vaga, listas, tabelas):
                 composicao,
                 ["Código", "Localidade", "Vagas imediatas"],
                 [
-                    [perfil.get("code", ""), perfil.get("locality", "") or "—", str(_total(perfil))]
+                    [
+                        perfil.get("code", ""),
+                        perfil.get("locality", "") or "—",
+                        composicao_pdf.vagas_impressas(perfil, _total(perfil)),
+                    ]
                     for perfil in grupo
                 ],
                 recuo=0.0,
@@ -861,6 +868,7 @@ def _vagas_em_partes(composicao, perfis, com_vaga, listas, tabelas):
                     composicao_pdf.CENTRO,
                 ],
                 legenda=tabelas.legenda(f"{nome} — Perfis {codigos}"),
+                nota=composicao_pdf.nota_da_sigla(grupo),
             )
     if com_vaga:
         with composicao.bloco():

@@ -294,14 +294,17 @@ def test_campo_nao_declarado_nao_vira_rotulo_vazio_nem_nao_informado(
 def test_cadastro_reserva_sem_vaga_imediata_e_oferta_e_nao_ausencia(
     client, api_client, manager_headers, process_payload
 ):
-    """FR-136, D-007 — o zero deixa de ser a manchete.
+    """FR-136, D-007 — o zero deixa de ser a manchete; e, desde a `096`, deixa a página (FR-2414).
 
     O segundo Perfil da fixture tem zero vagas imediatas e cadastro reserva ilimitado. A tela punha
     o `0` em corpo 28, com a reserva de legenda: "0 vagas imediatas, com cadastro reserva
     ilimitado" lê-se como contradição, não como oportunidade.
 
-    O que se prende aqui: a oferta é o que salta, o número continua dito, e o convite continua de
-    pé — porque a vaga existe e a inscrição é legítima.
+    A `024` tirou o zero do destaque e o deixou em posição secundária, "0 vagas imediatas agora".
+    A `096` revê esse trecho da FR-136, por decisão do usuário (a decisão 004 dela): logo abaixo da
+    oferta, o zero ainda lia como ausência. O resto da FR-136 fica, e é o que se prende aqui: a
+    oferta é o que salta, por extenso e sem a sigla `CR` do documento (FR-2415), e o convite
+    continua de pé — porque a vaga existe e a inscrição é legítima.
     """
     edital = publicar_selecao(
         api_client, manager_headers, process_payload, rascunho=rascunho_aberto()
@@ -314,9 +317,12 @@ def test_cadastro_reserva_sem_vaga_imediata_e_oferta_e_nao_ausencia(
 
     assert "reserva-primeiro" in segunda_vaga
     assert "<strong>Cadastro reserva</strong>" in segunda_vaga
-    # O zero continua na página — em posição secundária, e não como a leitura principal.
-    assert "0 vagas imediatas agora" in segunda_vaga
-    assert "<strong>0</strong>" not in segunda_vaga, "o zero voltou a ser a manchete"
+    # O bloco do Perfil: da oferta até o convite. O zero não está nele, nem como manchete nem em
+    # posição secundária (096, FR-2414); e a sigla do documento não chega ao portal (FR-2415).
+    bloco = segunda_vaga[: segunda_vaga.index("Inscrever-se nesta vaga")]
+    assert "<strong>0</strong>" not in bloco, "o zero voltou a ser a manchete"
+    assert "0 vaga" not in bloco, "o zero voltou à posição secundária"
+    assert not re.search(r"\bCR\b", bloco)
     # E o convite continua de pé: cadastro reserva recebe inscrição como qualquer outra vaga.
     assert "Inscrever-se nesta vaga" in segunda_vaga
 
@@ -582,3 +588,30 @@ def test_o_requerimento_e_anunciado_so_quando_e_pedido_na_inscricao(
     if anuncia:
         assert vagas.index(frase) < vagas.index('<li class="perfil"'), "antes do primeiro Perfil"
     assert "documentos que serão pedidos" in corpo, "os documentos continuam anunciados (FR-1628)"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+def test_o_perfil_com_vaga_continua_com_o_numero_e_a_pagina_nao_usa_a_sigla(
+    client, api_client, manager_headers, process_payload
+):
+    """FR-2416, FR-2415: a `096` muda só o bloco do cadastro sem vaga.
+
+    O primeiro Perfil da fixture tem 2 vagas imediatas e cadastro limitado: o número continua em
+    destaque, com o cadastro de legenda, como antes. E a página inteira não usa a sigla `CR`, que
+    é do documento, onde a nota a explica.
+    """
+    edital = publicar_selecao(
+        api_client, manager_headers, process_payload, rascunho=rascunho_aberto()
+    )
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+    vagas = corpo[corpo.index('id="vagas-titulo"') :]
+    primeira_vaga = vagas[
+        vagas.index("Professor de Informática") : vagas.index("Técnico de Laboratório")
+    ]
+
+    assert '<p class="vagas-numero"><strong>2</strong>' in primeira_vaga
+    assert "vagas imediatas" in primeira_vaga
+    assert 'class="reserva"' in primeira_vaga, "o cadastro do Perfil com vaga continua dito"
+    assert not re.search(r"\bCR\b", corpo)
