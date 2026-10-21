@@ -190,7 +190,7 @@ Depende das Phases 3, 4 e 5: o documento final precisa existir.
 - [X] T036 [P] `specs/096-cadastro-de-reserva-como-cr/rastreabilidade.md`: cada `FR-`, `SC-`, decisão e caso-limite com o teste que o prende (modelo da `067`); o caso-limite do assistente e o do limite 0 como fora do escopo, apontando para o registro
 - [X] T037 [P] Registrar os dois achados que a spec deixou fora, sem corrigi-los: o cadastro limitado em 0, que o domínio aceita, e o assistente, que lê o `0` do conteúdo publicado. Uma nota curta em `doc/achados-editais-externos.md`, abaixo do P-2, dizendo também que o `CR` da amostra foi atendido pela `096`
 - [X] T038 [P] `README.md`: a linha da `096` na tabela de incrementos passa de "Especificada" ao estado real; `verificacao.md` completo, e o status da spec para "Implementada"
-- [ ] T039 (`SC-903`) `cd backend && make lint check` e a suíte completa contra PostgreSQL com `DB_NAME=ps096`; registrar o total e os pulados em `verificacao.md`; se os números de `AGENTS.md` mudarem, atualizá-los
+- [X] T039 (`SC-903`) `cd backend && make lint check` e a suíte completa contra PostgreSQL com `DB_NAME=ps096`; registrar o total e os pulados em `verificacao.md`; se os números de `AGENTS.md` mudarem, atualizá-los
 
 ---
 

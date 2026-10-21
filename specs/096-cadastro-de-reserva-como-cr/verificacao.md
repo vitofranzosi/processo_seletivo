@@ -84,3 +84,16 @@ Pela entrada `cadastro-reserva-096` do `.claude/launch.json` (porta 8097, banco 
   presenciais com `0`, e nenhum `CR` na página (`FR-2417`).
 - **A prévia da gestão** é a do `comum.previa`, pelo mesmo caminho da tela; a ligação da tela com as
   autoridades vigentes está presa por `tests/unidades/test_previa_mede_o_fecho.py`.
+
+## Suíte completa (T039, SC-903)
+
+21/10/2026, em `2462a9a7`, sobre a `main` em `717fc057`, contra PostgreSQL com `DB_NAME=ps096` e 4
+workers (`make lint check test-pg`, sem `.env`, com as variáveis na linha de comando):
+
+- `ruff check` e `ruff format --check`: verdes (1574 arquivos).
+- `manage.py check` e `makemigrations --check`: sem problema e sem migration.
+- `test-pg`: **12 662 passados, 12 pulados**, nenhuma falha, em 420 s.
+
+Os doze pulados são os onze deliberados do `AGENTS.md` mais o da contagem real de tokens, que pula
+sem o grupo opcional `assistente` (esta worktree tem só `--extra dev`). Os números do `AGENTS.md`
+não foram atualizados: eles são medidos com o grupo instalado, e esta medição não o tem.
