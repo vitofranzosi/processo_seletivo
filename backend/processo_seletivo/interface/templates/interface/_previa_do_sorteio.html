@@ -1,0 +1,133 @@
+{% comment %}
+**A prévia do sorteio** (098). O mesmo painel da prévia da classificação, para o marco que ordena por
+sorteio: uma semente fictícia, a ordem de cada lista pelo algoritmo do certame, a ocupação das vagas
+numa rodada e o resumo de muitas rodadas. Tudo o que ele diz vem de `interface/previa_do_sorteio.py`,
+que lê `sorteios/application/simulacao.py`; nada aqui calcula.
+
+**Incluído vazio pela etapa Classificação**, como o da `094`: é o que faz a folha da prévia valer para
+estas classes e as varreduras de vocabulário descerem nele. Sem contexto, não desenha nada.
+
+**A semente não tem campo** (D-001, FR-2483): ela viaja no campo oculto `semente` como token que o
+servidor assinou, e só "Sortear de novo" a troca (D-006).
+
+**Recalcula na mudança do cartão, e não a cada pausa de digitação**, como a da `094` faz: cada
+recálculo do sorteio refaz as 1.000 rodadas do resumo, e digitar o nome do marco dispararia um
+pedido caro a cada 400 ms (revisão do #328).
+
+**A população vem antes do estado da semente**: na recusa, o "Sortear de novo" leva as quantidades
+que o elaborador digitou, em vez de voltar à sugestão sem avisar.
+{% endcomment %}
+{% if previa_url %}
+<div class="recalculo" hx-get="{{ previa_url }}"
+     hx-include="#cartao-{{ indice }}, #semente-da-previa, [data-populacao], #vista-da-previa, #recorte-da-previa"
+     hx-target="#painel-da-previa" hx-swap="innerHTML"
+     hx-trigger="change from:#cartao-{{ indice }}">
+  <div class="cabeca-do-painel">
+    {% if vista == "detalhe" %}
+    <button type="button" class="voltar" data-foco-no-titulo hx-get="{{ previa_url }}&amp;vista=processo"
+            hx-include="#cartao-{{ indice }}, #semente-da-previa, [data-populacao]"
+            hx-target="#painel-da-previa" hx-swap="innerHTML">← Voltar ao sorteio</button>
+    {% else %}
+    <h2 id="titulo-da-previa" tabindex="-1">Simulação do sorteio</h2>
+    <span class="selo-ficticio">Exemplo fictício</span>
+    {% endif %}
+    <button type="button" class="fechar" hx-get="{{ fechar_url }}" hx-target="#painel-da-previa"
+            hx-swap="innerHTML">Fechar</button>
+  </div>
+  {% if vista == "detalhe" %}
+  <h2 id="titulo-da-previa" tabindex="-1">{{ marco_nome }}: a ordem sorteada de cada lista</h2>
+  <p class="contexto">{{ perfil.code }} — {{ perfil.name }} · detalhe do sorteio</p>
+  {% else %}
+  <p class="contexto">{{ perfil.code }} — {{ perfil.name }} · simulando o marco <strong>{{ marco_nome }}</strong></p>
+  {% endif %}
+  <input type="hidden" id="vista-da-previa" name="vista" value="{{ vista }}">
+
+  {% if estado == "recusada" %}
+  <div class="incompleto"><p><strong>A semente desta prévia não foi reconhecida.</strong> A prévia só
+    usa sementes que o próprio sistema gerou para este marco, e nenhuma ordem foi calculada.</p>
+    <button type="button" class="acao-discreta" hx-get="{{ previa_url }}&amp;sortear=1"
+            hx-include="#cartao-{{ indice }}, [data-populacao], #vista-da-previa"
+            hx-target="#painel-da-previa" hx-swap="innerHTML">Sortear de novo</button></div>
+  {% include "interface/_populacao_do_sorteio.html" %}
+  {% else %}
+  {% include "interface/_semente_ficticia.html" %}
+  {% include "interface/_populacao_do_sorteio.html" %}
+
+  {% if estado == "limite" %}
+  <div class="incompleto"><p><strong>A prévia não calcula.</strong> {{ limite }}</p></div>
+  {% elif estado == "regra" %}
+  <div class="incompleto"><p><strong>A prévia não calcula.</strong> {{ recusa }}</p></div>
+  {% elif faltas %}
+  <div class="incompleto"><p><strong>A prévia ainda não calcula.</strong> Falta:</p>
+    <ul>{% for falta in faltas %}<li>{{ falta }}</li>{% endfor %}</ul></div>
+  {% elif vista == "processo" %}
+
+  <section class="ocupacao" aria-labelledby="titulo-das-listas">
+    <h3 id="titulo-das-listas">A ordem sorteada de cada lista</h3>
+    <p class="regra">{{ regra_do_marco }}</p>
+    <ul class="recortes-do-marco" aria-label="Por lista">
+      {% for linha in recortes %}<li><strong>{{ linha.rotulo }}:</strong> {{ linha.texto }}</li>{% endfor %}
+    </ul>
+    {% if recortes|length > 1 %}
+    <p class="nota">Quem se declara numa reservada concorre também na ampla, e cada lista é sorteada
+      à parte, com a mesma semente: a mesma pessoa tem uma posição em cada uma.</p>
+    {% endif %}
+    <button type="button" class="acao-larga" data-foco-no-titulo hx-get="{{ previa_url }}&amp;vista=detalhe"
+            hx-include="#cartao-{{ indice }}, #semente-da-previa, [data-populacao]"
+            hx-target="#painel-da-previa" hx-swap="innerHTML">Ver a ordem sorteada de cada lista</button>
+  </section>
+
+  {% if ocupacao_dos_recortes %}
+  {% include "interface/_ocupacao_da_previa.html" with o=ocupacao_dos_recortes %}
+  {% endif %}
+  {% if rodadas %}{% include "interface/_rodadas_do_sorteio.html" %}{% endif %}
+
+  <details class="limites"><summary>O que esta prévia simula, e o que não</summary>
+    <ul>
+      <li>Sorteia, com uma semente fictícia e o algoritmo publicado no método, uma lista por recorte:
+        a ampla, com todos os inscritos fictícios, e cada Modalidade reservada, com os autodeclarados
+        nela. Corta cada lista pela regra do marco e faz a primeira apuração das vagas de cada uma,
+        sob hipóteses; repete isso em muitas rodadas para o resumo.</li>
+      <li>Lê o que está digitado nos cartões deste Perfil, e o que está gravado nos outros passos:
+        Modalidades, quadro de vagas e reversão.</li>
+      <li>Não simula convocação, aceite, desistência, indeferimento na análise documental, faixa
+        seguinte, encadeamento de marcos nem Etapa de habilitação antes do sorteio: supõe todos
+        habilitados. Os candidatos e a semente são fictícios, e nada é gravado.</li>
+    </ul></details>
+
+  {% else %}
+  {# O detalhe de uma lista: a ordem sorteada inteira (FR-2494). #}
+  {% if seletor.opcoes %}
+  <p class="campo-da-previa"><label for="recorte-da-previa">Lista</label>
+    <select id="recorte-da-previa" name="recorte" hx-get="{{ previa_url }}"
+            hx-include="#cartao-{{ indice }}, #semente-da-previa, [data-populacao], #vista-da-previa"
+            hx-target="#painel-da-previa" hx-swap="innerHTML">
+      {% for valor, rotulo in seletor.opcoes %}<option value="{{ valor }}"{% if valor == seletor.escolhido %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select></p>
+  {% if seletor.aviso %}<p class="aviso-do-modo">{{ seletor.aviso }}</p>{% endif %}
+  {% endif %}
+  {% if em_vista.reservada %}
+  <p class="nota">Cada lista é sorteada à parte: a posição de alguém aqui e a posição dele na ampla
+    são diferentes, e é o esperado.</p>
+  {% endif %}
+  {% if em_vista.vazia %}
+  <p class="estado-neutro">Ninguém concorreu nesta lista na população fictícia: ela não seria sorteada.</p>
+  {% else %}
+  <div class="rolavel-da-previa"><table class="fronteira">
+    <caption class="oculto">A ordem sorteada de {{ em_vista.rotulo }}, com o número de cada um na relação e a consequência</caption>
+    <thead><tr><th scope="col">Posição sorteada</th><th scope="col">Candidato</th><th scope="col">Número na relação</th><th scope="col">Consequência</th></tr></thead>
+    <tbody>
+      {% for linha in em_vista.linhas %}
+      <tr class="linha-{{ linha.marca.classe }}"><td>{{ linha.posicao }}ª</td>
+        <td>{{ linha.nome }}{% include "interface/_marcas_do_recorte.html" %}</td>
+        <td><span class="rotulo-no-estreito">número </span>{{ linha.numero }}</td>
+        <td><span class="marca marca-{{ linha.marca.classe }}">{{ linha.marca.rotulo }}</span></td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% endif %}
+  {% endif %}
+  {% endif %}
+</div>
+<p id="anuncio-da-previa" class="oculto" role="status" aria-live="polite" hx-swap-oob="true">{{ anuncio }}</p>
+{% endif %}

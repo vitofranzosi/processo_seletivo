@@ -233,7 +233,7 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
 </section>
 {% include "interface/_navegacao_etapa.html" %}
 </form>
-<aside id="painel-da-previa" class="painel-da-previa" aria-label="Prévia da classificação">{% include "interface/_previa_da_classificacao.html" %}</aside>
+<aside id="painel-da-previa" class="painel-da-previa" aria-label="Prévia da classificação">{% include "interface/_previa_da_classificacao.html" %}{% include "interface/_previa_do_sorteio.html" %}</aside>
 </div>
 <p id="anuncio-da-previa" class="oculto" role="status" aria-live="polite"></p>
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>

@@ -369,7 +369,9 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
 
 - **FR-2200**: O cartão de todo marco cuja forma de produção é **pela pontuação** MUST oferecer o botão
   "Simular classificação". O botão MUST NOT aparecer em marco por sorteio nem em marco sem forma
-  escolhida.
+  escolhida. *Emendada em 21/10/2026 pela `098` (FR-2477), por decisão do usuário que revê a D-007:
+  o marco por sorteio oferece "Simular sorteio", pela mesma rota. A redação anterior acima continua
+  valendo para o "Simular classificação", que segue fora do marco por sorteio.*
 - **FR-2201**: A prévia MUST abrir num painel **fora do cartão**, contextual ao marco que a pediu, que
   nomeia o Perfil e o marco. O cartão MUST NOT ganhar texto de ajuda visível por causa desta feature:
   o botão é controle, e o resultado mora fora do cartão (D-001, `FR-428` da `030`).
@@ -529,7 +531,9 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
 - **FR-2251**: A jornada MUST NOT supor que o Edital é linear: Etapa decisória que não entra em marco
   (porta), Etapa que entra em mais de um marco, marco que não corta, marco que não alimenta Etapa (fim da
   jornada), faixa seguinte (um ramo, e não um passo) e marco por sorteio (não simulado, D-007) MUST
-  aparecer cada um como o que é.
+  aparecer cada um como o que é. *Emendada em 21/10/2026 pela `098` (FR-2480): o marco por sorteio
+  deixa de aparecer como "não simulado" — a jornada diz que ele tem prévia própria, com semente
+  fictícia, e oferece abri-la. Redação anterior: "marco por sorteio (não simulado, D-007)".*
 - **FR-2252**: O detalhe do marco — a prévia da segunda rodada — MUST estar a um clique do marco
   simulado na jornada, e MUST voltar a ela preservando a população, o marco e o estado anterior. O
   recálculo MUST manter a vista em que o elaborador está.
@@ -539,6 +543,9 @@ página; com leitor de tela, o painel é região nomeada e o resumo é anunciado
 - **FR-2254**: O painel MUST dizer o que a prévia simula e o que não — só o marco selecionado é
   calculado; o resto é lido da configuração; marcos não se encadeiam; reservas, ocupação, chamadas,
   recurso e sorteio não são simulados — e MUST NOT afirmar que o Edital inteiro foi simulado.
+  *Emendada em 21/10/2026 pela `098` (FR-2480): o "sorteio" sai da lista do que não se simula, e o
+  painel diz que o marco por sorteio tem prévia própria pelo cartão dele. Reservas e ocupação já
+  tinham saído pela `095`. Redação anterior: a frase acima.*
 - **FR-2255**: A jornada é a de **um Perfil**. As Etapas são do Edital, e o painel MUST nomear o Perfil
   cuja jornada mostra.
 

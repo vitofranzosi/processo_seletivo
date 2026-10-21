@@ -53,10 +53,6 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
   <input type="hidden" id="vista-da-previa" name="vista" value="{{ vista }}">
   <input type="hidden" id="anterior-da-previa" name="anterior" value="{{ anterior }}">
 
-  {% if fora_da_fatia %}
-  <p class="incompleto">A prévia cobre marcos que ordenam pela pontuação. Este marco ordena por sorteio,
-    e a ordem por sorteio nasce da semente, que a composição ainda não tem.</p>
-  {% else %}
   <div class="candidatos">
     <p class="campo-da-previa"><label for="candidatos-da-previa">Candidatos fictícios</label>
       <select id="candidatos-da-previa" name="candidatos" hx-get="{{ previa_url }}"
@@ -174,8 +170,9 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
       <li>Não encadeia marcos nem apurações: não sabe quem passaria numa Etapa posterior, quantos
         seriam eliminados numa Etapa decisória, nem o que uma faixa seguinte alcançaria.</li>
       <li>Não simula chamadas, aceites, desistências, movimentos de vaga anteriores, cascata entre
-        recortes, remanejamento entre Perfis, recurso nem sorteio. O percentual da Modalidade
-        fundamenta a reserva e não entra na conta. Nada é gravado.</li>
+        recortes, remanejamento entre Perfis nem recurso. O percentual da Modalidade fundamenta a
+        reserva e não entra na conta. Nada é gravado.</li>
+      <li>Marco que ordena por sorteio tem prévia própria, com semente fictícia, pelo cartão dele.</li>
     </ul></details>
 
   {% else %}
@@ -266,7 +263,6 @@ script da prévia, `previa-da-classificacao.js`, só move o foco.
   </details>
   <details class="como-calcula"><summary>Como a prévia chega a este resultado</summary>
     <ul>{% for item in como_calcula %}<li>{{ item }}</li>{% endfor %}</ul></details>
-  {% endif %}
   {% endif %}
   {% endif %}
 </div>

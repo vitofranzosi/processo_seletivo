@@ -3204,6 +3204,25 @@ def fragmento_previa_da_classificacao(request, indice, sub):
                 "vagas": (do_recorte or {}).get("immediateVacancies"),
             }
         )
+    # **A forma do marco digitado decide qual prévia responde** (098, R-007). A rota é uma só: a
+    # autorização, a leitura do rascunho e a derivação dos recortes acima valem para as duas, e o
+    # botão do cartão não precisa escolher URL pela forma — é decisão que o servidor toma melhor.
+    marco = next(m for m in marcos if m["sub"] == str(sub))
+    if marco.get("orderProduction") == "POR_SORTEIO":
+        from processo_seletivo.interface import previa_do_sorteio
+
+        contexto = previa_do_sorteio.contexto(
+            perfil=perfil,
+            marco=marco,
+            sub=str(sub),
+            snapshot=snapshot,
+            edital=edital,
+            indice=indice,
+            recortes=recortes,
+            especie=reversao.declarada(perfil),
+            dados=request.GET,
+        )
+        return render(request, "interface/_previa_do_sorteio.html", contexto)
     contexto = previa.contexto(
         perfil=perfil,
         marcos=marcos,
