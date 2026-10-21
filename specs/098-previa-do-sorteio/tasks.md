@@ -24,6 +24,24 @@ tabela de incrementos do README, acrescentada em seguida. **O que mudou em rela�
 - **Sem regra de corte, nenhuma apuração** (T008): a rodada devolve `sem_corte` e não chama a ocupação,
   e o resumo não repete mil vezes "não há faixa".
 
+**21/10/2026, a interface**: o usuário mandou seguir, e as fases 3 a 8 (T012 a T034) foram feitas na
+branch `claude/098-interface-da-previa`, empilhada sobre a do motor (#327). Demonstrada pela interface
+real, num banco próprio com o Edital de demonstração da `094`, a 1280 e a 375 px. **O que mudou em
+relação ao planejado:**
+
+- **A prévia do sorteio não desenha a jornada do Perfil** (T019): a `jornada` da `094` é feita da
+  população com notas, e reescrevê-la para o sorteio seria a maior parte da feature. O painel do sorteio
+  mostra a ordem de cada lista, a ocupação e as rodadas; a jornada da `094` diz que o marco por sorteio
+  tem prévia própria e oferece abri-la (FR-2480), pela mesma rota.
+- **O bloco da ocupação é o da `095`, chamado com a ordem do sorteio** (T021, T022): as mesmas frases,
+  inclusive a do comportamento atual da DP-1; o "caminho" que manda escolher caso-limite sai, porque o
+  sorteio não tem caso-limite nem empate.
+- **A medida a 375 px foi feita no navegador, e não por CSSOM no teste** (T028): o teste prende a regra
+  que quebra a semente entre os grupos; a medida (`scrollWidth` igual a `clientWidth`, 375) está na
+  demonstração.
+- **A lista literal da varredura de vocabulário não precisou de linha** (T032): ela desce nos parciais
+  de `compor_classificacao.html`, e o painel do sorteio é incluído ali como o da `094`.
+
 **Organization**: a Fase 2 é o motor — ordem fictícia, rodada, resumo e equivalência —, puro e sem tela.
 As fases das histórias são a interface, e dependem da Fase 2 inteira. A US1 é o MVP; a US2 e a US3
 escrevem no mesmo template e no mesmo módulo de frases, e correm depois dela.
@@ -74,14 +92,14 @@ escrevem no mesmo template e no mesmo módulo de frases, e correm depois dela.
 **Independent Test**: para um token de semente e uma população, a ordem de cada recorte no painel é a de
 `ordem_do_recorte`; a ampla tem todos; "Sortear de novo" troca a semente e mudar quantidade a mantém.
 
-- [ ] T012 [P] [US1] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 7 da US1: "Simular sorteio" no cartão do marco por sorteio e "Simular classificação" ausente; a faixa da semente com cinco números de seis dígitos, o selo e a frase do certame; nenhum campo de semente no HTML; `sortear=1` troca a semente e as ordens; mudar quantidade mantém a semente e o anúncio diz "mantida"; o detalhe da PPI com posição na PPI e na ampla e a frase de listas sorteadas à parte; menos inscritos que vagas com todos com posição e a frase de que sorteia mesmo assim; Perfil sem reservada sem seletor
-- [ ] T013 [P] [US1] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` a recusa da semente (FR-2483, SC-931): token forjado, token de outro marco e `material=`/`seed=` na query — os dois primeiros respondem o estado `semente_recusada` (200, como toda recusa de fragmento htmx da gestão) sem ordem nenhuma, e o terceiro é ignorado
-- [ ] T014 [US1] Criar `backend/processo_seletivo/interface/previa_do_sorteio.py`: o material por `secrets.randbelow(10**6)` cinco vezes; o token por `django.core.signing.dumps` com `salt="previa-do-sorteio"` e Edital, Perfil e marco dentro; a leitura do token com recusa; a população do formulário (`inscritos-ampla`, `inscritos-<lista_id>`) com a sugestão; o método que governa o marco (o do cartão, senão o comum do rascunho); e `contexto(...)` chamando `simular_sorteio` com `apurar_recortes_com(especie)` de `interface/previa_da_classificacao.py`
-- [ ] T015 [US1] Despachar o fragmento em `backend/processo_seletivo/interface/views.py::fragmento_previa_da_classificacao` pela forma do marco digitado (R-007): `POR_SORTEIO` vai para `previa_do_sorteio.contexto` e `_previa_do_sorteio.html`; o resto, como hoje
-- [ ] T016 [US1] Escrever as frases da US1 em `backend/processo_seletivo/interface/previa_do_sorteio.py`: o selo e a frase da semente (FR-2482), "semente mantida" e "semente nova" (FR-2485), a ampla como universo inteiro com a soma (FR-2488), as listas sorteadas à parte (FR-2494), sorteia mesmo com sobra de vaga (FR-2496), a regra de normalização suposta (D-007) e a lista da Modalidade apontada como ampla que a prévia não simula (D-005)
-- [ ] T017 [US1] Criar `backend/processo_seletivo/interface/templates/interface/_previa_do_sorteio.html` e `backend/processo_seletivo/interface/templates/interface/_semente_ficticia.html` — a faixa da semente, o campo oculto `semente`, o botão "Sortear de novo" com `hx-get` e `sortear=1`, a jornada e o detalhe com o seletor de recorte e `_marcas_do_recorte.html` da `095` —, e as regras de toda classe nova em `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css`
-- [ ] T018 [US1] Acrescentar "Simular sorteio" em `backend/processo_seletivo/interface/templates/interface/_marco.html` na condição `marco.orderProduction == "POR_SORTEIO"`, com o mesmo `hx-get`, `hx-include` do cartão do Perfil e `hx-target` do painel do "Simular classificação", e o comentário de por quê no tom do que está lá
-- [ ] T019 [US1] Fazer a jornada em `backend/processo_seletivo/interface/previa_da_classificacao.py` aceitar o marco por sorteio simulado (FR-2480): quando ele é o simulado, o ponto do marco mostra o resumo por recorte do sorteio; quando outro marco é o simulado, o marco por sorteio diz que tem prévia própria no cartão dele, e a frase da FR-2254 da `094` perde o "sorteio" nesse caso
+- [x] T012 [P] [US1] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 7 da US1: "Simular sorteio" no cartão do marco por sorteio e "Simular classificação" ausente; a faixa da semente com cinco números de seis dígitos, o selo e a frase do certame; nenhum campo de semente no HTML; `sortear=1` troca a semente e as ordens; mudar quantidade mantém a semente e o anúncio diz "mantida"; o detalhe da PPI com posição na PPI e na ampla e a frase de listas sorteadas à parte; menos inscritos que vagas com todos com posição e a frase de que sorteia mesmo assim; Perfil sem reservada sem seletor
+- [x] T013 [P] [US1] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` a recusa da semente (FR-2483, SC-931): token forjado, token de outro marco e `material=`/`seed=` na query — os dois primeiros respondem o estado `semente_recusada` (200, como toda recusa de fragmento htmx da gestão) sem ordem nenhuma, e o terceiro é ignorado
+- [x] T014 [US1] Criar `backend/processo_seletivo/interface/previa_do_sorteio.py`: o material por `secrets.randbelow(10**6)` cinco vezes; o token por `django.core.signing.dumps` com `salt="previa-do-sorteio"` e Edital, Perfil e marco dentro; a leitura do token com recusa; a população do formulário (`inscritos-ampla`, `inscritos-<lista_id>`) com a sugestão; o método que governa o marco (o do cartão, senão o comum do rascunho); e `contexto(...)` chamando `simular_sorteio` com `apurar_recortes_com(especie)` de `interface/previa_da_classificacao.py`
+- [x] T015 [US1] Despachar o fragmento em `backend/processo_seletivo/interface/views.py::fragmento_previa_da_classificacao` pela forma do marco digitado (R-007): `POR_SORTEIO` vai para `previa_do_sorteio.contexto` e `_previa_do_sorteio.html`; o resto, como hoje
+- [x] T016 [US1] Escrever as frases da US1 em `backend/processo_seletivo/interface/previa_do_sorteio.py`: o selo e a frase da semente (FR-2482), "semente mantida" e "semente nova" (FR-2485), a ampla como universo inteiro com a soma (FR-2488), as listas sorteadas à parte (FR-2494), sorteia mesmo com sobra de vaga (FR-2496), a regra de normalização suposta (D-007) e a lista da Modalidade apontada como ampla que a prévia não simula (D-005)
+- [x] T017 [US1] Criar `backend/processo_seletivo/interface/templates/interface/_previa_do_sorteio.html` e `backend/processo_seletivo/interface/templates/interface/_semente_ficticia.html` — a faixa da semente, o campo oculto `semente`, o botão "Sortear de novo" com `hx-get` e `sortear=1`, a jornada e o detalhe com o seletor de recorte e `_marcas_do_recorte.html` da `095` —, e as regras de toda classe nova em `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css`
+- [x] T018 [US1] Acrescentar "Simular sorteio" em `backend/processo_seletivo/interface/templates/interface/_marco.html` na condição `marco.orderProduction == "POR_SORTEIO"`, com o mesmo `hx-get`, `hx-include` do cartão do Perfil e `hx-target` do painel do "Simular classificação", e o comentário de por quê no tom do que está lá
+- [x] T019 [US1] Fazer a jornada em `backend/processo_seletivo/interface/previa_da_classificacao.py` aceitar o marco por sorteio simulado (FR-2480): quando ele é o simulado, o ponto do marco mostra o resumo por recorte do sorteio; quando outro marco é o simulado, o marco por sorteio diz que tem prévia própria no cartão dele, e a frase da FR-2254 da `094` perde o "sorteio" nesse caso
 
 **Checkpoint**: a US1 funciona sozinha: o elaborador vê as ordens por lista com semente fictícia, sem bloco de ocupação.
 
@@ -95,9 +113,9 @@ reversão.
 **Independent Test**: as quantidades, quem ocupa pela ampla e as cedidas no painel são as da equivalência
 (T009) para a mesma semente.
 
-- [ ] T020 [P] [US2] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 6 da US2: ocupantes pela ampla e a vaga que continua reservada, sem movimento; posições da faixa tomadas e autodeclarados além, com "comportamento atual"; cessão por saldo; esgotamento sem cessão com "comportamento atual"; "o Edital não reverte" sem declaração; sem regra de corte, as ordens e a frase de que não há faixa, sem quantidades
-- [ ] T021 [US2] Escrever as frases da ocupação da rodada em `backend/processo_seletivo/interface/previa_do_sorteio.py`, reaproveitando as de `backend/processo_seletivo/interface/previa_da_classificacao.py` (`ocupacao_dos_recortes`, `_frase_da_reversao`) onde servem, com as hipóteses da FR-2320 da `095`, a frase da FR-2498 e a de DP-1 e DP-2 como comportamento atual (FR-2507)
-- [ ] T022 [US2] Incluir `_ocupacao_da_previa.html` da `095` em `backend/processo_seletivo/interface/templates/interface/_previa_do_sorteio.html`, com a marca "ocuparia pela ampla" no detalhe, e a frase de sem corte (FR-2500)
+- [x] T020 [P] [US2] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 6 da US2: ocupantes pela ampla e a vaga que continua reservada, sem movimento; posições da faixa tomadas e autodeclarados além, com "comportamento atual"; cessão por saldo; esgotamento sem cessão com "comportamento atual"; "o Edital não reverte" sem declaração; sem regra de corte, as ordens e a frase de que não há faixa, sem quantidades
+- [x] T021 [US2] Escrever as frases da ocupação da rodada em `backend/processo_seletivo/interface/previa_do_sorteio.py`, reaproveitando as de `backend/processo_seletivo/interface/previa_da_classificacao.py` (`ocupacao_dos_recortes`, `_frase_da_reversao`) onde servem, com as hipóteses da FR-2320 da `095`, a frase da FR-2498 e a de DP-1 e DP-2 como comportamento atual (FR-2507)
+- [x] T022 [US2] Incluir `_ocupacao_da_previa.html` da `095` em `backend/processo_seletivo/interface/templates/interface/_previa_do_sorteio.html`, com a marca "ocuparia pela ampla" no detalhe, e a frase de sem corte (FR-2500)
 
 **Checkpoint**: US1 e US2 mostram a rodada inteira.
 
@@ -110,9 +128,9 @@ reversão.
 **Independent Test**: com o mesmo token e a mesma população, o resumo é o mesmo nas duas chamadas e é o
 de `resumir` (T007).
 
-- [ ] T023 [P] [US3] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 5 da US3: o número de rodadas e a origem das sementes ditos; o mesmo resumo com o mesmo token; o resumo recalculado com "Sortear de novo"; Perfil sem reservada sem falar de cotas; "em todas as rodadas" em vez de porcentagem quando constante; e a frase de que as frequências são da população fictícia e não previsão (FR-2505)
-- [ ] T024 [US3] Chamar `resumir` em `backend/processo_seletivo/interface/previa_do_sorteio.py` e escrever as frases do resumo (FR-2503, FR-2505), com porcentagem inteira e médias com uma casa decimal, e a de DP-1/DP-2 como comportamento atual quando a cessão for sempre zero ou a sobra for frequente
-- [ ] T025 [US3] Criar `backend/processo_seletivo/interface/templates/interface/_rodadas_do_sorteio.html` e incluí-lo abaixo da rodada em `_previa_do_sorteio.html`, com as regras novas na folha da prévia
+- [x] T023 [P] [US3] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 5 da US3: o número de rodadas e a origem das sementes ditos; o mesmo resumo com o mesmo token; o resumo recalculado com "Sortear de novo"; Perfil sem reservada sem falar de cotas; "em todas as rodadas" em vez de porcentagem quando constante; e a frase de que as frequências são da população fictícia e não previsão (FR-2505)
+- [x] T024 [US3] Chamar `resumir` em `backend/processo_seletivo/interface/previa_do_sorteio.py` e escrever as frases do resumo (FR-2503, FR-2505), com porcentagem inteira e médias com uma casa decimal, e a de DP-1/DP-2 como comportamento atual quando a cessão for sempre zero ou a sobra for frequente
+- [x] T025 [US3] Criar `backend/processo_seletivo/interface/templates/interface/_rodadas_do_sorteio.html` e incluí-lo abaixo da rodada em `_previa_do_sorteio.html`, com as regras novas na folha da prévia
 
 **Checkpoint**: as três histórias P1 entregam o critério de sucesso (SC-925).
 
@@ -125,8 +143,8 @@ de `resumir` (T007).
 **Independent Test**: uma quantidade digitada muda a soma da ampla e só acrescenta gente na lista
 alterada, com a mesma semente.
 
-- [ ] T026 [P] [US4] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 4 da US4: a sugestão e a frase de como sugeriu; a soma nova na ampla e os nomes mantidos; zero numa reservada; acima de 600 com o estado `acima_do_limite` e sem cálculo; e valor inválido (texto, negativo) caindo na sugestão daquela lista, com a frase
-- [ ] T027 [US4] Criar `backend/processo_seletivo/interface/templates/interface/_populacao_do_sorteio.html` — um `<input type="number" min="0">` com `<label>` por lista, `hx-get` no `change` dentro do formulário do painel — e incluí-lo acima da rodada em `_previa_do_sorteio.html`; e as frases da sugestão e do limite em `backend/processo_seletivo/interface/previa_do_sorteio.py`
+- [x] T026 [P] [US4] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` os cenários 1 a 4 da US4: a sugestão e a frase de como sugeriu; a soma nova na ampla e os nomes mantidos; zero numa reservada; acima de 600 com o estado `acima_do_limite` e sem cálculo; e valor inválido (texto, negativo) caindo na sugestão daquela lista, com a frase
+- [x] T027 [US4] Criar `backend/processo_seletivo/interface/templates/interface/_populacao_do_sorteio.html` — um `<input type="number" min="0">` com `<label>` por lista, `hx-get` no `change` dentro do formulário do painel — e incluí-lo acima da rodada em `_previa_do_sorteio.html`; e as frases da sugestão e do limite em `backend/processo_seletivo/interface/previa_do_sorteio.py`
 
 ---
 
@@ -137,18 +155,18 @@ alterada, com a mesma semente.
 **Independent Test**: sem rolagem horizontal ao sortear de novo e trocar de lista; o anúncio diz se a
 semente mudou ou foi mantida.
 
-- [ ] T028 [P] [US5] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` a medida por CSSOM a 375 px da faixa da semente, da população e do resumo, o anúncio da região `aria-live` com a semente mudada ou mantida e a frase de maior consequência do resumo (FR-2511), e a ausência de `style=`, `<style>`, `<script>` e `on*=` no HTML devolvido (FR-2512)
-- [ ] T029 [US5] Ajustar `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css` (a semente quebra em grupos de seis dígitos; a população empilha abaixo de 40rem; o resumo em lista, e não em tabela, no estreito) e a frase do anúncio em `backend/processo_seletivo/interface/previa_do_sorteio.py`
+- [x] T028 [P] [US5] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` a medida por CSSOM a 375 px da faixa da semente, da população e do resumo, o anúncio da região `aria-live` com a semente mudada ou mantida e a frase de maior consequência do resumo (FR-2511), e a ausência de `style=`, `<style>`, `<script>` e `on*=` no HTML devolvido (FR-2512)
+- [x] T029 [US5] Ajustar `backend/processo_seletivo/interface/static/interface/telas/previa-da-classificacao.css` (a semente quebra em grupos de seis dígitos; a população empilha abaixo de 40rem; o resumo em lista, e não em tabela, no estreito) e a frase do anúncio em `backend/processo_seletivo/interface/previa_do_sorteio.py`
 
 ---
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T030 [P] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` a ausência de efeito (FR-2509, SC-930): nenhuma escrita em relação, ocorrência, sorteio, ordem, corte, apuração, movimento, rascunho, sessão ou trilha ao abrir, recalcular, sortear de novo, trocar lista, mudar quantidade e fechar; nenhuma consulta a `Inscricao`
-- [ ] T031 Emendar a `094` (D-008, R-010): em `specs/094-previa-da-classificacao/spec.md`, a FR-2200, a FR-2251 e a FR-2254 com a redação nova e a anterior registrada, citando a FR-2477 e a FR-2480; em `backend/tests/interface/test_previa_da_classificacao.py`, `test_marco_por_sorteio_pedido_a_mao_fica_fora_da_fatia` passa a afirmar que o fragmento responde a prévia do sorteio, e `test_o_botao_nao_aparece_no_marco_por_sorteio` ganha a afirmação de que "Simular sorteio" aparece; o comentário do `_marco.html` sobre a decisão 007 da `094` atualizado
-- [ ] T032 [P] Passar pelos guardiões do repositório: a lista literal de `backend/tests/test_vocabulario_da_composicao.py` (os templates novos entram nela); uma regra na folha para toda classe nova (`backend/tests/interface/test_acessibilidade.py`); a varredura de vocabulário proibido ("convocado", "aprovado", "matriculado") nas frases de `previa_do_sorteio.py`; nenhum `}}` em CSS; `backend/tests/unit/sorteios/test_sem_gerador_pseudoaleatorio.py` verde sem emenda
-- [ ] T033 [P] Escrever `specs/098-previa-do-sorteio/roteiro-de-compreensao.md` com as perguntas da SC-925 e da SC-926 — inclusive uma sobre a sobra frequente de vaga de PPI (R-001) —, sobre o roteiro da `094` e o da `095`
-- [ ] T034 Escrever `specs/098-previa-do-sorteio/rastreabilidade.md` (FR-2477 a FR-2512 e SC-925 a SC-931 → tarefa → teste), rodar o roteiro de `specs/098-previa-do-sorteio/quickstart.md` pela interface e `make lint check test-pg` em `backend/`
+- [x] T030 [P] Escrever em `backend/tests/interface/test_previa_do_sorteio.py` a ausência de efeito (FR-2509, SC-930): nenhuma escrita em relação, ocorrência, sorteio, ordem, corte, apuração, movimento, rascunho, sessão ou trilha ao abrir, recalcular, sortear de novo, trocar lista, mudar quantidade e fechar; nenhuma consulta a `Inscricao`
+- [x] T031 Emendar a `094` (D-008, R-010): em `specs/094-previa-da-classificacao/spec.md`, a FR-2200, a FR-2251 e a FR-2254 com a redação nova e a anterior registrada, citando a FR-2477 e a FR-2480; em `backend/tests/interface/test_previa_da_classificacao.py`, `test_marco_por_sorteio_pedido_a_mao_fica_fora_da_fatia` passa a afirmar que o fragmento responde a prévia do sorteio, e `test_o_botao_nao_aparece_no_marco_por_sorteio` ganha a afirmação de que "Simular sorteio" aparece; o comentário do `_marco.html` sobre a decisão 007 da `094` atualizado
+- [x] T032 [P] Passar pelos guardiões do repositório: a lista literal de `backend/tests/test_vocabulario_da_composicao.py` (os templates novos entram nela); uma regra na folha para toda classe nova (`backend/tests/interface/test_acessibilidade.py`); a varredura de vocabulário proibido ("convocado", "aprovado", "matriculado") nas frases de `previa_do_sorteio.py`; nenhum `}}` em CSS; `backend/tests/unit/sorteios/test_sem_gerador_pseudoaleatorio.py` verde sem emenda
+- [x] T033 *Roteiro escrito; a validação com pessoas fica aberta até o relato do usuário.* [P] Escrever `specs/098-previa-do-sorteio/roteiro-de-compreensao.md` com as perguntas da SC-925 e da SC-926 — inclusive uma sobre a sobra frequente de vaga de PPI (R-001) —, sobre o roteiro da `094` e o da `095`
+- [x] T034 Escrever `specs/098-previa-do-sorteio/rastreabilidade.md` (FR-2477 a FR-2512 e SC-925 a SC-931 → tarefa → teste), rodar o roteiro de `specs/098-previa-do-sorteio/quickstart.md` pela interface e `make lint check test-pg` em `backend/`
 
 ---
 

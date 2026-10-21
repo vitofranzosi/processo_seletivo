@@ -23,8 +23,32 @@ reversão ON_EXHAUSTION — … média cedida 0.00 …
 
 ## Depois da implementação: pela interface
 
-Pré-requisitos: banco migrado e preparado (`make preparar`), `INTERFACE_SELETOR_IDENTIDADE=true`, uma
-identidade com permissão de compor Edital.
+O caminho medido em 21/10/2026, num banco próprio e com o Edital de demonstração da `094` — o
+rascunho do 94/2026 —, sem tocar no banco de quem desenvolve. De dentro de `backend/`:
+
+```bash
+createdb -h localhost ps_098_ui
+```
+
+```bash
+make preparar DB_NAME=ps_098_ui DB_HOST=localhost DB_PORT=5432 POSTGRES_USER=$USER POSTGRES_PASSWORD= DB_MIGRATION_USER=processo_seletivo_owner DB_MIGRATION_PASSWORD=change-me DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me DJANGO_SETTINGS_MODULE=config.settings.development
+```
+
+```bash
+DB_HOST=localhost DB_NAME=ps_098_ui DJANGO_SETTINGS_MODULE=config.settings.development DB_ROLE=runtime DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me uv run python manage.py shell < ../specs/094-previa-da-classificacao/ambiente-de-compreensao.py
+```
+
+```bash
+LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_098_ui DB_HOST=localhost DB_ROLE=runtime DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8098
+```
+
+Entre como a elaboradora de demonstração e abra o link que o script imprime, trocando a porta para
+8098. No marco, escolha a forma **por sorteio** e aperte **Simular sorteio**. O Edital de
+demonstração declara a Modalidade AC sem apontá-la como a ampla, e por isso a prévia a mostra como
+lista reservada sem linha — o mesmo que o sistema faz hoje; o roteiro de compreensão manda corrigir
+isso no passo Perfis antes de cada pessoa.
+
+O roteiro genérico, para um Edital qualquer:
 
 1. Na composição de um Edital em rascunho, crie um Perfil com 10 vagas na linha geral e as Modalidades
    PPI (3 vagas) e PcD (2 vagas). Grave.
@@ -33,7 +57,7 @@ identidade com permissão de compor Edital.
 3. Aperte **Simular sorteio**. Confira:
    - a faixa da semente, com cinco números de seis dígitos e o selo de fictícia (FR-2481, FR-2482);
    - a população sugerida: 20 só na ampla, 6 PPI, 4 PcD (FR-2487);
-   - a jornada com o resumo por recorte, e a ampla dizendo que tem os 30 (FR-2488);
+   - o resumo por lista, e a ampla dizendo que tem os 30 (FR-2488);
    - o resumo das rodadas, dizendo que fez 1.000, com a PPI sobrando vaga perto de 72% das vezes
      (FR-2501, FR-2503) e a frase de comportamento atual (FR-2507).
 4. Aperte **Sortear de novo**: a semente muda, a rodada muda, o resumo varia poucos pontos (FR-2484,

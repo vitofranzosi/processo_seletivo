@@ -4,7 +4,9 @@
 
 **Created**: 2026-10-21
 
-**Status**: Draft
+**Status**: Implementada em 21/10/2026, por autorização do usuário: o motor no PR #327 e a interface num
+PR empilhado sobre ele. A validação com elaboradores (SC-925, SC-926, T033) fica aberta até o relato do
+usuário. O merge é do usuário.
 
 **Input**: pedido do usuário de 21/10/2026 — *"escreve a spec da prévia do sorteio reaproveitando o
 motor da 095, com semente fictícia anunciada como tal"* —, depois de a conversa medir que quem compõe
