@@ -1,0 +1,23 @@
+{% comment %}
+**A ocupação por recorte, na prévia da classificação** (095). Uma linha por recorte — a ampla
+primeiro —, com as quatro quantidades da primeira apuração, quem ocuparia pela ampla, a faixa tomada
+por essas pessoas e a reversão declarada. Sempre como hipótese, e fora da sequência de Etapas e
+marcos (FR-2312). Tudo o que ela diz vem de `ocupacao_dos_recortes`, em
+`interface/previa_da_classificacao.py`; nada aqui calcula.
+{% endcomment %}
+<section class="ocupacao ocupacao-dos-recortes" aria-labelledby="titulo-ocupacao-dos-recortes">
+  <h3 id="titulo-ocupacao-dos-recortes">A ocupação das vagas, por recorte
+    <span class="selo-hipotese">hipótese</span></h3>
+  <ul class="linhas-de-ocupacao">
+    {% for linha in o.linhas %}
+    <li><strong>{{ linha.rotulo }}:</strong> <span class="estado-{{ linha.estado }}">{{ linha.texto }}</span>
+      {% for frase in linha.frases %}<span class="frase-do-recorte">{{ frase }}</span>{% endfor %}</li>
+    {% endfor %}
+  </ul>
+  {% if o.concomitancia %}<p class="nota">{{ o.concomitancia }}</p>{% endif %}
+  {% if o.proxima %}<p class="nota">{{ o.proxima }}</p>{% endif %}
+  {% if o.caminho %}<p class="aviso-do-modo">{{ o.caminho }}</p>{% endif %}
+  <p class="nota">Uma rodada só: a ampla com as vagas publicadas, cada reservada sem quem ocupa pela
+    ampla, e a reversão declarada. Supõe todos os que avançaram habilitados, nenhuma chamada, aceite,
+    desistência nem movimento anterior, e a apuração feita sobre este marco.</p>
+</section>

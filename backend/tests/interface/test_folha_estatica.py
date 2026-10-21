@@ -252,6 +252,8 @@ QUEM_CARREGA = {
         "retificacao_detalhe.html",
     },
     "interface/grupos/vista.css": {"compor_classificacao.html", "compor_perfis.html"},
+    # A prévia da classificação (094): o painel só existe na etapa Classificação.
+    "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
         for tela in (

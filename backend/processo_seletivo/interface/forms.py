@@ -539,6 +539,22 @@ def marco_do_formulario(dados, indice, sub):
     return None
 
 
+def marcos_do_formulario(dados, indice):
+    """Todos os marcos do Perfil `indice`, lidos do formulário: `[(sub, marco)]`, na ordem da tela.
+
+    A prévia da classificação (094) mostra a jornada do Perfil inteiro, e não só do marco simulado:
+    os outros marcos entram como contexto, com o que está **digitado** neles agora. Lê pelo mesmo
+    caminho de `marco_do_formulario`, e pela mesma razão — duas leituras do mesmo formulário
+    divergiriam no primeiro campo novo.
+    """
+    return [
+        (str(posicao), marco)
+        for posicao, marco in zip(
+            _indices(dados, f"marco-{indice}"), _marcos(dados, f"marco-{indice}"), strict=True
+        )
+    ]
+
+
 def blocos_opcionais_do_marco(marco):
     """Janela recursal, método do sorteio e regra de corte — do contrato para a tela.
 

@@ -83,8 +83,9 @@ def test_get_oferece_so_etapas_classificatorias(client, com_etapas):
 
 
 def _seletor_de_etapas_do_marco(corpo):
-    abertura = corpo.index(f'name="marco-{PERFIL}-0-stages"')
-    return corpo[abertura : corpo.index("</select>", abertura)]
+    """O campo das Etapas do marco, até o fim do campo: as caixas, ou a frase da Etapa única."""
+    abertura = corpo.index(f'id="marco-{PERFIL}-0-stages"')
+    return corpo[abertura : corpo.index("</div>", abertura)]
 
 
 def test_recusa_reexibe_o_que_foi_digitado(client, com_etapas):
@@ -103,7 +104,8 @@ def test_recusa_reexibe_o_que_foi_digitado(client, com_etapas):
     assert resposta.status_code == 200
     corpo = resposta.content.decode()
     assert nome_digitado in corpo
-    assert f'<option value="{ETAPA_CLASSIFICATORIA}" selected>' in corpo
+    # Uma Etapa classificatória só: a escolha é a frase, e o valor viaja oculto (030, SC-139).
+    assert f'name="marco-{PERFIL}-0-stages" value="{ETAPA_CLASSIFICATORIA}"' in corpo
     assert 'value="2" required' in corpo
     assert '<option value="MEIO_PARA_CIMA" selected>' in corpo
 

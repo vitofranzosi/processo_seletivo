@@ -38,6 +38,20 @@ def quantidade_a_reverter(*, especie, efetivas, ocupadas, ha_quem_ocupar):
     return saldo
 
 
+def ha_quem_ocupar(*, posicoes, ja_ocupadas):
+    """Se a ordem do recorte tem mais gente com posição do que vagas ocupadas (095, D-005).
+
+    É a pergunta que separa as duas espécies, e saiu de `movimento.ha_quem_ocupar` para que a
+    prévia da classificação a faça igual sobre a ordem fictícia.
+
+    **Conta toda posição da ordem** — inclusive a de quem já ocupa pela ampla e a de quem ficou fora
+    da faixa —, como a função de origem contava. Por isso uma reservada cujos autodeclarados todos
+    ocupam pela ampla nunca esgota sob esta regra (DP-2 da `095`); a leitura da norma é do usuário,
+    e a extração não a muda.
+    """
+    return sum(1 for posicao in posicoes if posicao is not None) > ja_ocupadas
+
+
 def declarada(perfil):
     """A espécie declarada no Perfil publicado, ou `None`.
 

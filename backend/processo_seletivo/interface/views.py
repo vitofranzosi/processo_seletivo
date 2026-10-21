@@ -42,6 +42,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
 from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
+from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
 from processo_seletivo.classificacao.application.corte import (
     calcular_corte,
@@ -200,6 +201,7 @@ from processo_seletivo.publicacoes.application.selectors import (
 )
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.elevacao import elevar
+from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.recursos.application import admitir as recursos_admitir
@@ -2961,6 +2963,12 @@ def _etapas_e_fatos_do_edital(edital):
             # arquivo, e acrescentar o campo em três deixaria o cartão mudo numa das rotas —
             # justamente o fragmento recomposto, que é o que dá o "no momento em que enumera".
             "tem_peso": etapa.weight is not None,
+            # **O peso escrito ao lado da caixa**, como o documento o escreve (`_etapa_com_o_peso`):
+            # quem escolhe as Etapas de uma soma ponderada decide sobre os fatores, e eles foram
+            # declarados três passos antes. É dado do Edital, e não ajuda — a FR-428 da 030 fica
+            # como está. A Etapa decisória não pondera: é porta (015, FR-074), e diz-se isso.
+            "peso": humano.decimal(etapa.weight),
+            "nao_pontua": etapa.forma == Forma.DECISORIA,
         }
         for etapa in edital.etapas.filter(classificatory=True).order_by("order")
     ]
@@ -3019,6 +3027,16 @@ def _marco_novo(edital, indice, *, marcos_na_tela=0):
                 "corte_padrao": True,
             }
         )
+    # **A Etapa, quando só uma pode entrar.** Com uma Etapa classificatória no Edital, "quais
+    # entram na ordem" tem resposta dedutível — e a 030 não pergunta o que já se sabe (SC-139). O
+    # marco nasce com ela, e o cartão a diz numa frase em vez de oferecê-la como escolha. Só aqui,
+    # pela mesma razão do arredondamento: marco já declarado não é alcançado (FR-421).
+    if edital is not None:
+        classificatorias = list(
+            edital.etapas.filter(classificatory=True).values_list("id", flat=True)[:2]
+        )
+        if len(classificatorias) == 1:
+            novo["etapas"] = [str(classificatorias[0])]
     perfil = None if edital is None else edital.perfis.filter(pk=indice).first()
     if perfil is None:
         return novo
@@ -3125,6 +3143,86 @@ def fragmento_marco_recomposto(request, indice, sub):
             "fatos_declarados": fatos,
             "edital": edital,
         },
+    )
+
+
+@require_http_methods(["GET"])
+def fragmento_previa_da_classificacao(request, indice, sub):
+    """A prévia da classificação do marco `sub` do Perfil `indice` (094).
+
+    **Só leitura e cálculo** (FR-2234): o marco vem do formulário — o que está digitado agora, pelo
+    mesmo leitor da gravação —, as Etapas, os fatos e o quadro vêm do rascunho gravado, e os
+    candidatos são fictícios. Nenhuma escrita, nenhum ato, nenhum evento de trilha: a prévia existe
+    só nesta resposta.
+
+    **A autorização é a dos demais fragmentos da composição** (FR-2235): `_edital_do_fragmento`
+    recusa o Edital fora do escopo com 404, como a tela. Sem Edital na query, ou com um Perfil que
+    o rascunho ainda não tem, não há o que simular, e o painel diz isso — é estado da tela, e não
+    recurso inexistente.
+    """
+    from processo_seletivo.classificacao.application.corte import linha_do_quadro
+    from processo_seletivo.classificacao.domain.universo import por_identidade
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
+    from processo_seletivo.interface import previa_da_classificacao as previa
+    from processo_seletivo.ocupacao.domain import reversao
+
+    edital = _edital_do_fragmento(request)
+    if edital is None:
+        return HttpResponse(status=204)
+    # O snapshot é o conteúdo do rascunho na forma publicada — a mesma que a etapa monta para as
+    # pendências, e a mesma que o caminho oficial lê da versão publicada. Lidas dele, Etapas e
+    # pesos chegam à prévia com a grafia que o motor recebe de verdade.
+    snapshot = edital_snapshot(edital)
+    perfil = por_identidade(snapshot.get("profiles"), indice)
+    try:
+        marcos = [
+            {**marco, "sub": chave}
+            for chave, marco in forms.marcos_do_formulario(request.GET, indice)
+        ]
+    except (ValueError, KeyError):
+        marcos = []
+    if perfil is None or not any(marco["sub"] == str(sub) for marco in marcos):
+        return render(
+            request,
+            "interface/_previa_da_classificacao.html",
+            {"previa_url": request.path, "indice": indice, "sem_marco": True},
+        )
+    linha = linha_do_quadro(snapshot, perfil_id=perfil["id"], lista_id=None)
+    # Os recortes são os da derivação única que a classificação e a ocupação usam (095, FR-2301),
+    # e a linha de cada um é a que o corte e a apuração leriam. A espécie de reversão é a do
+    # Perfil gravado no passo Perfis: não é campo deste cartão (FR-2326).
+    recortes = []
+    for lista_id, rotulo in recortes_do_perfil(snapshot, perfil_id=perfil["id"]):
+        do_recorte = linha_do_quadro(snapshot, perfil_id=perfil["id"], lista_id=lista_id)
+        recortes.append(
+            {
+                "lista_id": lista_id,
+                "rotulo": rotulo,
+                "vagas": (do_recorte or {}).get("immediateVacancies"),
+            }
+        )
+    contexto = previa.contexto(
+        perfil=perfil,
+        marcos=marcos,
+        sub=str(sub),
+        etapas=snapshot.get("stages") or [],
+        fatos=perfil.get("declaredFacts") or [],
+        vagas=(linha or {}).get("immediateVacancies"),
+        dados=request.GET,
+        edital=edital,
+        indice=indice,
+        recortes=recortes,
+        especie=reversao.declarada(perfil),
+    )
+    return render(request, "interface/_previa_da_classificacao.html", contexto)
+
+
+@require_http_methods(["GET"])
+def fragmento_previa_da_classificacao_fechar(request):
+    """O painel vazio, e o anúncio de que fechou. O foco volta ao botão pelo script estático."""
+    return HttpResponse(
+        '<p id="anuncio-da-previa" class="oculto" role="status" aria-live="polite" '
+        'hx-swap-oob="true">Prévia fechada.</p>'
     )
 
 

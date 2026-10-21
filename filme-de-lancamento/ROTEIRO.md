@@ -330,3 +330,28 @@ avaliada por pessoas. A sequência passou a ser: *A comissão avalia. → O sist
 discorda, pode recorrer.* e só então *Outra forma de classificar — Por sorteio.* (as três garantias),
 seguido da convocação. O filme não afirma que o sorteio não tem recurso: no sistema, o prazo de
 recurso é da publicação do resultado (`018`), não do método de classificação.
+
+## Revisão de 18/10 — o visual novo da gestão
+
+Entre 16 e 18/10 a gestão mudou de moldura (specs `075`–`092`): a faixa verde do topo deu lugar à
+barra lateral "GPS — Gestão de Processos Seletivos", com a navegação por capacidade e a identidade no
+rodapé. O portal do candidato não mudou: recapturadas na `main` de 18/10, as telas do portal que o
+filme usa diferem das antigas só no ruído de pixel. Dentro dos recortes da gestão o conteúdo — cartões,
+tabelas, barra de etapas — é o mesmo; a moldura antiga só aparecia em dois lugares, e só esses foram
+refeitos:
+
+- **Abertura (0:42–0:56).** A Visão Geral que se forma sob os ícones e recua para o título é a nova,
+  capturada na janela de 1440 × 810 (`g_visao_gps.png`). Os alvos dos ícones foram remedidos no DOM; o
+  ícone que ia para a faixa do topo vai agora para a barra lateral. A aproximação de 4% da câmera do ato
+  I passou a ser desfeita na tela real: antes cortava a borda sem que se notasse, e agora cortaria a
+  barra lateral. O título do filme continua "Sistema de Processo Seletivo".
+- **Clímax (3:55–4:38).** As miniaturas de Documentos, Comissões, Avaliações, Recursos e Convocações
+  são as capturas novas (`*_gps.png`); Editais, Candidatos, Inscrições e Resultados são do portal e do
+  PDF, e ficaram.
+
+As demais cenas da gestão (composição, publicação, Mesa, avaliação, auditoria) seguem com as capturas
+de 14–15/10: os recortes começam abaixo do topo, e as caixas de destaque foram medidas nelas. A Visão
+Geral recebe agora o Edital 02/2026 publicado (4 Editais, 48 vagas), coerente com o filme.
+
+As capturas novas saíram de `producao/cap_gps.py`, contra uma cópia do banco (`ps_filme_main`) servida
+pelo código da `main` numa worktree à parte; o `ps_filme` não foi tocado.

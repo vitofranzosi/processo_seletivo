@@ -198,7 +198,8 @@ navegador. Estilo vai para arquivo: a folha comum da gestão em `interface/stati
 (sete arquivos, na ordem de `FOLHAS_DA_GESTAO`, em `shared/estaticos.py`), o de uma tela só em
 `interface/grupos/` ou `interface/telas/`, pelo bloco `estilo_da_pagina`, e a do portal em
 `portal/static/portal/portal.css`. Os guardiões que exigem regra para toda classe citada leem esses
-arquivos. A exceção conhecida é a página de falha de CSRF do próprio Django, que sai sem desenho.
+arquivos. A página de falha de CSRF do próprio Django, que tem `<style>` embutido, foi a última
+exceção: desde a `093` quem responde é `erros.falha_de_csrf`, na recusa da área.
 
 **O código de acesso do portal sai no terminal do servidor.** Na execução nativa o backend de
 e-mail é o de console: a mensagem é impressa onde o `runserver` está rodando, e não há outro lugar

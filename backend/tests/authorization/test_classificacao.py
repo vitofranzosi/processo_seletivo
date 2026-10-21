@@ -162,3 +162,26 @@ def test_fato_usado_no_desempate_so_aparece_para_gestao_e_auditoria(
     # mudo que ela substituiu (033).
     assert negada.status_code == 403
     assert str(segredo) not in negada.content.decode()
+
+
+# --- A prévia da classificação (094, FR-2235) ---------------------------------------------------
+
+
+def _fragmentos(edital):
+    """A prévia e um fragmento irmão da composição, para provar que a recusa é a mesma."""
+    consulta = f"?edital={edital.id}"
+    return [
+        reverse("interface:fragmento-previa-da-classificacao", args=[PROFILE_ID, "0"]) + consulta,
+        reverse("interface:fragmento-criterio", args=[PROFILE_ID, "0"]) + consulta,
+    ]
+
+
+def test_a_previa_recusa_como_os_demais_fragmentos(client, seletor_ligado, edital_com_marco):
+    """Sem sessão e fora do escopo, 404 — a mesma resposta do fragmento do critério, ao lado."""
+    previa, irmao = _fragmentos(edital_com_marco)
+    assert client.get(previa).status_code == client.get(irmao).status_code == 404
+    identificar(client, "gestora", ["gestor"], escopo="outra-unidade")
+    assert client.get(previa).status_code == client.get(irmao).status_code == 404
+    identificar(client, "gestora", ["gestor"])
+    assert client.get(previa).status_code == client.get(irmao).status_code == 200
+    assert AtoDeOrdenacao.objects.count() == 0

@@ -362,6 +362,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+# A recusa da verificação acima na moldura da área, e não na página do framework, que traz o estilo
+# embutido e sairia sem desenho sob a política de segurança de conteúdo (093, `erros.py`).
+CSRF_FAILURE_VIEW = "processo_seletivo.interface.erros.falha_de_csrf"
 database_role = os.getenv("DB_ROLE", "runtime")
 database_user = os.getenv(
     "DB_MIGRATION_USER" if database_role == "migration" else "DB_RUNTIME_USER",

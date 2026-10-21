@@ -528,22 +528,20 @@ def ocupantes_da_ampla(*, edital, perfil_id, marco_id, versao):
     lidos = [
         (m.especie, calculo.mesma_lista(m.destino_lista_id, None), m.quantidade) for m in movimentos
     ]
-    recebidas = sum(q for _, recebida, q in lidos if recebida)
-    cedidas = sum(q for _, recebida, q in lidos if not recebida)
-    efetivas = (_quantidade(linha) or 0) + recebidas - cedidas
     efeitos = efeitos_de_ocupacao.efeitos_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=None
     )
-    # **Os efeitos da ampla entram**: quem desistiu de uma vaga de ampla deixou de ocupá-la, e
-    # continuar subtraindo essa pessoa da reserva a manteria fora das duas listas ao mesmo tempo.
-    return calculo.ocupantes(
-        titulares=calculo.titulares_iniciais(
-            progrediram_em_ordem=progrediram,
-            habilitadas=habilitadas,
-            efetivas=efetivas,
-            empates_residuais=empates,
-        ),
+    # **A decisão é do domínio, e esta função só consulta** (095, D-005): a prévia da classificação
+    # chama a mesma conta sobre candidatos fictícios. Os efeitos da ampla entram — quem desistiu de
+    # uma vaga de ampla deixou de ocupá-la, e continuar subtraindo essa pessoa da reserva a manteria
+    # fora das duas listas ao mesmo tempo.
+    return calculo.ocupantes_pela_ampla(
+        progrediram_em_ordem=progrediram,
+        publicadas=_quantidade(linha) or 0,
+        movimentos_lidos=lidos,
         efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos),
+        empates_residuais=empates,
+        habilitadas=habilitadas,
     )
 
 

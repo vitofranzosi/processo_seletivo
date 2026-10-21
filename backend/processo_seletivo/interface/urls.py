@@ -192,6 +192,16 @@ urlpatterns = [
         name="fragmento-marco-recomposto",
     ),
     path(
+        "fragmentos/perfil/<str:indice>/marco/<str:sub>/previa",
+        views.fragmento_previa_da_classificacao,
+        name="fragmento-previa-da-classificacao",
+    ),
+    path(
+        "fragmentos/previa-da-classificacao/fechar",
+        views.fragmento_previa_da_classificacao_fechar,
+        name="fragmento-previa-da-classificacao-fechar",
+    ),
+    path(
         "fragmentos/perfil/<str:indice>/marco/<str:sub>/criterio",
         views.fragmento_criterio,
         name="fragmento-criterio",

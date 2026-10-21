@@ -237,7 +237,12 @@ fieldset.opcoes>legend{font-size:.8125rem;font-weight:600;color:var(--texto);pad
 /* A bolinha herdava `width:100%` de `.campo input` e virava uma faixa da largura da coluna, com o
    marcador centralizado longe do texto que ele marca. */
 .opcoes .opcao input[type=radio]{width:auto;flex:none;margin:0;padding:0;border:0;background:none}
+.opcoes .opcao input[type=checkbox]{width:auto;flex:none;margin:0;padding:0;border:0;background:none}
 .opcoes .opcao label{margin:0;font-weight:400;font-size:.9375rem}
+/* As Etapas que o marco enumera (030): caixas, e não lista de escolha múltipla. O peso vem ao lado
+   do nome com a voz do resumo do bloco, porque é dado lido de outro passo, e não parte do rótulo. */
+fieldset.etapas-do-marco{margin-bottom:.4rem}
+.opcoes .opcao .peso-da-etapa{font-size:.8125rem;color:var(--texto-fraco);margin-left:.35rem}
 .opcoes .dependentes{margin:0 0 .9rem 1.65rem}
 .opcoes .dependentes .campo{margin-bottom:0}
 /* Sozinho na linha, um `.curto` prende a ajuda numa coluna de 150 px e a quebra em quatro linhas.

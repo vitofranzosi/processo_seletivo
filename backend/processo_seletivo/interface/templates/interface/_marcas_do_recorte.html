@@ -1,0 +1,4 @@
+{% comment %}
+As marcas de recorte de uma linha da prévia (095, FR-2314): na ampla, a Modalidade fictícia do
+autodeclarado; na reservada, a posição dele na ampla e se ocuparia pela ampla.
+{% endcomment %}{% if linha.modalidade %}<span class="etiqueta etiqueta-modalidade">{{ linha.modalidade }}</span>{% endif %}{% if linha.na_ampla %}<span class="etiqueta">{{ linha.na_ampla }}</span>{% endif %}{% if linha.pela_ampla %}<span class="etiqueta etiqueta-pela-ampla">ocuparia pela ampla</span>{% endif %}

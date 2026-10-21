@@ -1,0 +1,260 @@
+/*
+A folha do protótipo da 094. Os tokens são os de `shared/tokens.css`, copiados para que o protótipo
+rode sem o produto; a fronteira de 64rem é a da gestão (`moldura.css`), onde a barra vira popover.
+
+O painel abre sem script: `:has()` acende a segunda coluna quando o painel tem conteúdo. Abaixo de
+64rem ele cobre a tela, com rolagem própria, e a página por baixo não rola na horizontal.
+*/
+:root{
+  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
+  --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
+  --amarelo:#8a5300; --amarelo-fundo:#fdf5e5; --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9;
+  --cinza-fundo:#eee; --azul:#1d4f91; --azul-fundo:#e8f0fb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);
+  background:var(--fundo);line-height:1.5;font-size:16px}
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+h1{font-size:1.5rem;margin:0 0 1rem}
+h2{font-size:1.15rem;margin:0}
+code{font-size:.9em}
+.oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* A faixa que diz o que é o protótipo, sempre à vista. */
+.faixa-do-prototipo{background:var(--azul-fundo);border-bottom:1px solid var(--azul);
+  padding:.75rem 1rem;font-size:.95rem}
+.faixa-do-prototipo p{margin:0 0 .25rem}
+.legenda,.exemplos{margin:0;padding:0;list-style:none}
+.legenda li{margin:.15rem 0}
+.faixa-do-prototipo nav{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline;
+  margin-top:.4rem}
+.faixa-do-prototipo nav p{margin:0}
+.exemplos{display:flex;flex-wrap:wrap;gap:.25rem .75rem}
+.exemplos a[aria-current]{font-weight:700}
+.selo{display:inline-block;font-size:.75rem;font-weight:700;padding:0 .4rem;border-radius:.25rem;
+  vertical-align:middle;letter-spacing:.02em}
+.selo-motor{background:var(--verde-claro);color:var(--verde-escuro);border:1px solid var(--verde)}
+.selo-demo{background:var(--amarelo-fundo);color:var(--amarelo);border:1px solid var(--amarelo)}
+
+/* A página: uma coluna; duas quando o painel tem conteúdo e a tela é larga. */
+.pagina{max-width:96rem;margin:0 auto;padding:1rem}
+main{min-width:0}
+@media (min-width:64rem){
+  .pagina:has(#painel-da-previa:not(:empty)){display:grid;
+    grid-template-columns:minmax(0,.85fr) minmax(0,1.3fr);gap:1.25rem;align-items:start}
+  #painel-da-previa:not(:empty){position:sticky;top:1rem;max-height:calc(100vh - 2rem);
+    overflow:auto}
+}
+@media not all and (min-width:64rem){
+  #painel-da-previa:not(:empty){position:fixed;inset:0;z-index:20;overflow:auto}
+  /* No celular a tabela empilhada é longa: o fechar fica à mão. */
+  .cabeca-do-painel{position:sticky;top:-1rem;background:var(--branco);padding:.5rem 0;z-index:1}
+}
+
+/* O cartão, no desenho da composição. */
+fieldset{border:1px solid var(--borda);border-radius:.4rem;background:var(--branco);
+  padding:.75rem 1rem;margin:0 0 1rem;min-width:0}
+legend{font-weight:600;padding:0 .25rem}
+.campos{display:flex;flex-wrap:wrap;gap:.5rem 1rem}
+.campo{margin:.25rem 0;display:flex;flex-direction:column;min-width:0;flex:1 1 14rem}
+.campo.curto{flex:0 1 8rem}
+.campo.largo{flex:1 1 100%}
+.campo label,.rotulo{font-size:.9rem;font-weight:600}
+select,input{font:inherit;padding:.3rem .4rem;border:1px solid var(--borda);border-radius:.25rem;
+  max-width:100%;background:var(--branco)}
+input[type=number]{width:7rem}
+.etapas{display:flex;flex-wrap:wrap;gap:.25rem 1rem}
+.escolha{display:inline-flex;gap:.35rem;align-items:center}
+.criterio{background:var(--fundo)}
+.bloco-do-marco{margin:.5rem 0}
+.bloco-do-marco summary,.de-outros-passos summary{font-weight:600;cursor:pointer}
+.resumo-do-bloco{font-weight:400;color:var(--texto-fraco);margin-left:.5rem}
+.de-outros-passos{border:1px dashed var(--amarelo);border-radius:.4rem;padding:.5rem 1rem;
+  margin:0 0 1rem;background:var(--amarelo-fundo)}
+.pesos{list-style:none;padding:0;margin:.25rem 0;display:flex;flex-wrap:wrap;gap:.25rem 1.25rem}
+.pesos input{width:5rem}
+.porta{color:var(--texto-fraco);font-size:.9rem}
+.ajuda{color:var(--texto-fraco);font-size:.9rem;margin:.25rem 0}
+.acoes-do-marco{margin:.75rem 0 0}
+.acao{font:inherit;font-weight:600;padding:.45rem .9rem;border-radius:.3rem;cursor:pointer;
+  background:var(--branco);color:var(--verde-texto);border:2px solid var(--verde)}
+.acao:hover{background:var(--verde-claro)}
+
+/* O painel. */
+.painel-da-previa:not(:empty){background:var(--branco);border:1px solid var(--borda);
+  border-radius:.4rem;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.cabeca-do-painel{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.cabeca-do-painel h2:focus{outline:none}
+.fechar{font:inherit;padding:.3rem .8rem;border:1px solid var(--borda);border-radius:.3rem;
+  background:var(--branco);cursor:pointer}
+.contexto{margin:.25rem 0 .5rem;font-size:.9rem;color:var(--texto-fraco)}
+
+/* Os candidatos: o controle fica no alto, compacto; a explicação, em letra menor. */
+.candidatos{border-top:1px solid var(--borda);border-bottom:1px solid var(--borda);
+  padding:.35rem 0;margin:.25rem 0 .75rem}
+.candidatos .campo{flex-direction:row;align-items:center;gap:.5rem;flex-wrap:wrap;margin:0}
+.candidatos select{flex:1 1 14rem}
+.candidatos .descricao,.aviso-do-modo{font-size:.85rem;color:var(--texto-fraco);margin:.3rem 0}
+.aviso-do-modo{color:var(--azul)}
+.acao-discreta{font:inherit;font-size:.85rem;padding:.1rem .5rem;border:1px solid var(--azul);
+  color:var(--azul);background:var(--branco);border-radius:.25rem;cursor:pointer}
+
+/* 1. A manchete: a consequência geral, antes de tudo. */
+.manchete{font-size:1.1rem;line-height:1.45;margin:.5rem 0 .75rem;padding:.6rem .8rem;
+  border-radius:.35rem;border-left:5px solid var(--verde);background:var(--verde-claro)}
+.manchete-impedido{border-color:var(--amarelo);background:var(--amarelo-fundo)}
+
+/* 3. O que mudou: o efeito causal da última alteração. */
+.mudou{border:2px solid var(--azul);border-radius:.35rem;padding:.4rem .75rem;margin:0 0 .75rem;
+  background:var(--azul-fundo)}
+.mudou h3{font-size:.95rem;margin:0 0 .2rem;color:var(--azul)}
+.mudou ul{margin:0;padding-left:1.1rem}
+.mudou.nada{border-width:1px;color:var(--texto-fraco);font-size:.9rem}
+
+/* 2. O fluxo: três passos, com seta; no estreito, em coluna. */
+.fluxo{list-style:none;padding:0;margin:0 0 .25rem;display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.4rem}
+.passo{position:relative;border:1px solid var(--borda);border-radius:.35rem;padding:.45rem .6rem;
+  background:var(--branco);display:flex;flex-direction:column;min-width:0}
+.passo + .passo::before{content:"→";position:absolute;left:-1.15rem;top:50%;
+  transform:translateY(-50%);font-weight:700;color:var(--texto-fraco)}
+.passo-nome{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco)}
+.passo strong{font-size:1.05rem}
+.passo span:not(.passo-nome){font-size:.85rem;color:var(--texto-fraco)}
+.passo-emitivel{border-color:var(--verde);box-shadow:inset 0 3px 0 var(--verde)}
+.passo-impedido{border-color:var(--amarelo);box-shadow:inset 0 3px 0 var(--amarelo)}
+.passo-neutro{box-shadow:inset 0 3px 0 var(--borda)}
+.ramo{margin:.35rem 0 .75rem;font-size:.85rem;color:var(--texto-fraco)}
+
+/* A ocupação: depois do corte, separada, tracejada — é hipótese, e não resultado. */
+.ocupacao{border:1px dashed var(--texto-fraco);border-radius:.35rem;padding:.4rem .75rem;
+  margin:0 0 1rem}
+.ocupacao h3{font-size:.95rem;margin:0 0 .2rem}
+.ocupacao p{margin:.2rem 0}
+.selo-hipotese{background:var(--cinza-fundo);color:var(--texto);border:1px solid var(--texto-fraco)}
+.estado-aviso{color:var(--amarelo)}
+.estado-ok{color:var(--verde-escuro)}
+.estado-neutro{color:var(--texto-fraco)}
+.nota{font-size:.8rem;color:var(--texto-fraco)}
+
+/* 4. A fronteira: quatro colunas, e uma linha onde cada limite passa. */
+section h3{font-size:1rem;margin:1rem 0 .35rem}
+.rolavel{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{border-bottom:1px solid var(--borda);padding:.35rem .5rem;text-align:left;vertical-align:top}
+thead th{background:var(--fundo);font-size:.8rem}
+.fronteira td:first-child{white-space:nowrap;font-weight:600}
+.dividida{display:block;font-size:.75rem;font-weight:400;color:var(--amarelo)}
+.agrupada td{font-style:italic;color:var(--texto-fraco);background:var(--fundo);font-size:.85rem}
+.fronteira .limite td,.fronteira .agrupada td{padding:0;border-bottom:0;white-space:normal}
+.fronteira .agrupada td{padding:.35rem .5rem}
+.limite span{display:block;border-top:2px dashed var(--texto);font-size:.75rem;font-weight:700;
+  padding:.1rem .5rem .25rem;color:var(--texto)}
+.linha-nao-progride td,.linha-sem-posicao td{color:var(--texto-fraco)}
+.marca{display:inline-block;font-weight:700;font-size:.8rem;padding:.05rem .45rem;
+  border-radius:1rem;white-space:nowrap}
+.marca-progride,.marca-segue{background:var(--verde-claro);color:var(--verde-escuro)}
+.marca-pelo-empate{background:var(--amarelo-fundo);color:var(--amarelo);
+  border:1px solid var(--amarelo)}
+.marca-aguarda{background:var(--amarelo-fundo);color:var(--amarelo)}
+.marca-nao-progride,.marca-sem-posicao{background:var(--cinza-fundo);color:var(--texto)}
+.etiqueta{display:inline-block;margin-left:.35rem;font-size:.72rem;padding:0 .35rem;
+  border-radius:.25rem;background:var(--fundo);border:1px solid var(--borda);color:var(--texto-fraco)}
+.etiqueta-empate{border-color:var(--amarelo);color:var(--amarelo)}
+.etiqueta-mudou{border-color:var(--azul);color:var(--azul);background:var(--azul-fundo);
+  font-weight:700}
+
+/* 5. Os empates, lado a lado: a linha que separou se destaca. */
+.empate{border:1px solid var(--borda);border-radius:.35rem;padding:.4rem .6rem;margin:0 0 .6rem}
+.empate h4{margin:0;font-size:.95rem}
+.resultado-do-empate{margin:.2rem 0 .4rem;font-size:.9rem}
+.importa{display:block;margin-top:.15rem;color:var(--amarelo);font-weight:600}
+.montagem{font-size:.8rem;color:var(--texto-fraco)}
+.montagem summary{cursor:pointer}
+.montagem p{margin:.2rem 0}
+.comparacao th[scope=row]{font-weight:600;font-size:.85rem}
+.comparacao .efeito{font-size:.8rem;color:var(--texto-fraco)}
+.efeito-curto{display:none}
+.efeito-separou th,.efeito-separou td{background:var(--verde-claro)}
+.efeito-separou .efeito{color:var(--verde-escuro);font-weight:700}
+.efeito-nao-usado th,.efeito-nao-usado td{color:var(--texto-fraco)}
+
+/* 6. Atrás de um clique. */
+details.completa,details.como-calcula{margin:.75rem 0 0;border-top:1px solid var(--borda);
+  padding-top:.5rem}
+details.completa summary,details.como-calcula summary{cursor:pointer;font-weight:600}
+.como-calcula ul{font-size:.85rem;padding-left:1.1rem}
+.divergiu{color:var(--vermelho)}
+.incompleto{border-left:4px solid var(--azul);background:var(--azul-fundo);padding:.5rem .75rem;
+  border-radius:.3rem}
+.incompleto ul{margin:.25rem 0;padding-left:1.1rem}
+
+/* 8. A jornada (terceira rodada): as Etapas e os marcos do Perfil, na ordem do Edital. As Etapas
+   são caixas numeradas; os marcos, passagens entre elas, com a borda à esquerda; o simulado abre. */
+.jornada{list-style:none;padding:0;margin:.5rem 0 .75rem}
+.ponto{position:relative;border:1px solid var(--borda);border-radius:.45rem;padding:.6rem .8rem;
+  background:var(--branco);margin:0 0 1.6rem}
+.ponto + .ponto::before{content:"↓";position:absolute;left:50%;top:-1.45rem;
+  transform:translateX(-50%);color:var(--texto-fraco);font-weight:700}
+.ponto:last-child{margin-bottom:0}
+.ponto-cabeca{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;
+  flex-wrap:wrap}
+.ponto h3{font-size:1rem;margin:0}
+.ponto p{margin:.3rem 0}
+.ponto.marco{border-left:5px solid var(--texto-fraco);background:var(--fundo)}
+.ponto.marco-selecionado{border-color:var(--verde);border-left-color:var(--verde);
+  background:var(--branco);box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.ponto.porta{border-style:dashed}
+.selo-ponto{font-size:.72rem;font-weight:700;padding:.05rem .45rem;border-radius:1rem;
+  white-space:nowrap}
+.selo-simulado{background:var(--verde-claro);color:var(--verde-escuro)}
+.selo-parcial{background:var(--azul-fundo);color:var(--azul)}
+.selo-contexto{background:var(--cinza-fundo);color:var(--texto-fraco)}
+.selo-indeterminado{background:var(--amarelo-fundo);color:var(--amarelo)}
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.5rem;
+  margin:.5rem 0}
+.numero{background:var(--fundo);border-radius:.4rem;padding:.5rem .7rem;margin:0;
+  display:flex;flex-direction:column}
+.numero strong{font-size:2rem;line-height:1.1}
+.numero span{font-size:.9rem;color:var(--texto-fraco)}
+.numero-dentro strong{color:var(--verde)}
+.numero-fraco strong{color:var(--texto-fraco)}
+.regra{font-size:.9rem;color:var(--texto-fraco)}
+.bloqueio{border-left:4px solid var(--amarelo);background:var(--amarelo-fundo);padding:.45rem .6rem;
+  border-radius:.3rem}
+.aviso-curto{font-size:.88rem;color:var(--amarelo)}
+.mudou-curto{font-size:.88rem;color:var(--azul)}
+.fim-da-jornada{font-size:.88rem;color:var(--texto-fraco)}
+.destaque{font-size:1.05rem}
+.acao-largo{display:block;width:100%;margin:.5rem 0 0;font:inherit;font-weight:600;padding:.5rem;
+  border:1px solid var(--texto-fraco);border-radius:2rem;background:var(--branco);cursor:pointer}
+.acao-largo:hover{background:var(--fundo)}
+.voltar{font:inherit;padding:.3rem .7rem;border:1px solid var(--borda);border-radius:.3rem;
+  background:var(--branco);cursor:pointer}
+.limites{font-size:.85rem;color:var(--texto-fraco);border-top:1px solid var(--borda);
+  padding-top:.4rem}
+.limites summary{cursor:pointer;font-weight:600;color:var(--texto)}
+.limites ul{padding-left:1.1rem}
+
+/* No estreito: o fluxo em coluna, com a seta para baixo; as tabelas de linhas viram blocos. */
+@media (max-width:40rem){
+  .fluxo{grid-template-columns:1fr;gap:1.3rem}
+  .passo + .passo::before{content:"↓";left:50%;top:-1.15rem;transform:translateX(-50%)}
+  /* O cabeçalho sai do fluxo: em bloco, cada célula diz o que é, e o thead escondido por recorte
+     ainda empurrava a largura da rolagem. */
+  .fronteira thead,.detalhada thead{display:none}
+  .fronteira tr,.detalhada tr{display:grid;grid-template-columns:auto 1fr;gap:0 .75rem;
+    border-bottom:1px solid var(--borda);padding:.35rem 0}
+  .fronteira td,.detalhada td{border:0;padding:.05rem .25rem}
+  .detalhada td::before{content:attr(data-rotulo) ": ";font-size:.75rem;font-weight:700;
+    color:var(--texto-fraco)}
+  .detalhada td{grid-column:1 / -1}
+  .fronteira td:nth-child(3)::before{content:"pontuação ";font-size:.75rem;
+    color:var(--texto-fraco)}
+  .agrupada td,.limite td{grid-column:1 / -1}
+  .comparacao .efeito,.comparacao thead th:last-child{display:none}
+  .efeito-curto{display:block;font-size:.75rem;font-weight:400;color:var(--texto-fraco)}
+  .efeito-separou .efeito-curto{color:var(--verde-escuro);font-weight:700}
+  .pagina{padding:.75rem}
+}

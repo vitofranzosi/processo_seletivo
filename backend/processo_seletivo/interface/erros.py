@@ -66,6 +66,20 @@ class RecusaDoDominioMiddleware:
         )
 
 
+def _tela_de_origem(request):
+    """A página de onde o envio veio, quando é do próprio servidor; senão, vazio.
+
+    O `Referer` é o que o navegador diz, e numa falsificação ele é o site de quem a montou: um link
+    para ele seria o sistema convidando a pessoa a voltar lá (D-005 da `093`).
+    """
+    origem = request.headers.get("referer", "")
+    if not url_has_allowed_host_and_scheme(
+        origem, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return ""
+    return origem
+
+
 def _o_que_passou(exception):
     """O limite que o envio passou, com o número — é o que quem administra o sistema precisa ler."""
     if isinstance(exception, TooManyFieldsSent):
@@ -113,11 +127,6 @@ class EnvioAcimaDoLimiteMiddleware:
         logger.warning(
             "Envio acima do limite recusado em %s: %s", request.path, type(exception).__name__
         )
-        origem = request.headers.get("referer", "")
-        if not url_has_allowed_host_and_scheme(
-            origem, allowed_hosts={request.get_host()}, require_https=request.is_secure()
-        ):
-            origem = ""
         return render(
             request,
             "interface/recusa.html",
@@ -140,7 +149,52 @@ class EnvioAcimaDoLimiteMiddleware:
                     "administra o sistema no Cefor, dizendo o Edital e a tela: até lá, esta tela "
                     "não consegue gravar."
                 ),
-                "reabrir": origem,
+                "reabrir": _tela_de_origem(request),
             },
             status=413,
         )
+
+
+def falha_de_csrf(request, reason=""):
+    """A recusa da verificação anti-falsificação na moldura da área, e não na página do framework.
+
+    O `CSRF_FAILURE_VIEW` do Django responde com o `403_csrf.html` dele, que traz o estilo num
+    `<style>`: sob a política de segurança de conteúdo em recusa (091, 092), o navegador não o
+    aplica, e a página saía crua, em inglês, falando em "cookie" a quem só tinha deixado a aba
+    aberta de um dia para o outro (093). Só trocar o modelo, por `CSRF_FAILURE_TEMPLATE_NAME`, não
+    bastaria: o framework o renderiza sem a requisição, e as bases das duas áreas precisam dela
+    (D-001 da `093`).
+
+    **A moldura pelo caminho, e a do portal fora da gestão** (D-002 da `093`). As recusas do
+    domínio, fora dos dois prefixos, deixam a resposta do framework; esta não pode, porque é ela que
+    sai sem desenho. E `path_info`, e não `path`: com a aplicação sob um prefixo, `path` o traria, e
+    a gestão inteira receberia a moldura do portal (o achado da revisão da `091` sobre a política).
+
+    **O motivo vai ao registro, e não à página.** Para quem lê, o que fazer é o mesmo qualquer que
+    seja a causa; o motivo do framework só serve a quem diagnostica (D-003 da `093`). O Django já o
+    registra, em `django.security.csrf` — mas o manipulador que o `LOGGING` padrão dele dá a esse
+    logger só escreve com a depuração ligada, e em produção a linha não chegava a lugar nenhum. Daí
+    o registro no logger do projeto, que é o que a produção coleta (R-003 da `093`).
+    """
+    logger.warning("Envio recusado pela verificação de CSRF em %s: %r", request.path, reason)
+    contexto = {
+        "titulo": "O formulário não pôde ser enviado",
+        "detalhe": (
+            "Nada foi gravado. O formulário expirou ou foi enviado de outra página, e por "
+            "segurança o envio foi recusado."
+        ),
+        "ajuda": (
+            "Volte à página do formulário, recarregue-a e envie de novo. Ao recarregar, o que você "
+            "digitou e não foi gravado se perde: copie antes o que quiser manter."
+        ),
+        "reabrir": _tela_de_origem(request),
+    }
+    template = next(
+        (
+            pagina
+            for prefixo, pagina in PAGINA_DA_RECUSA.items()
+            if request.path_info.startswith(prefixo)
+        ),
+        PAGINA_DA_RECUSA["/selecoes/"],
+    )
+    return render(request, template, contexto, status=403)

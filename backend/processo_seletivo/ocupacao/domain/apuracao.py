@@ -216,6 +216,44 @@ def ocupantes(*, titulares, habilitadas=None, efeitos_lidos=()):
     return ocupando
 
 
+def ocupantes_pela_ampla(
+    *,
+    progrediram_em_ordem,
+    publicadas,
+    movimentos_lidos=(),
+    efeitos_lidos=(),
+    empates_residuais=None,
+    habilitadas=None,
+):
+    """Quem ocupa vaga pela ampla: os titulares dela, mais e menos os efeitos (095, D-005).
+
+    É a decisão que `selectors.ocupantes_da_ampla` tomava depois das consultas, e saiu de lá para
+    que a prévia da classificação a tome igual sobre candidatos fictícios. Duas contas de "quem
+    ocupa pela ampla" divergiriam na primeira regra nova, e a prévia mostraria uma concomitância
+    que o caminho oficial não aplica.
+
+    **`habilitadas` vai a `titulares_iniciais`, e não a `ocupantes`** — é o que a função de origem
+    fazia, e a extração não muda resultado. O efeito é que o titular da ampla eliminado na Etapa
+    governada continua contando como ocupante dela, embora `apurar` não o conte (R-002 da `095`).
+    Mudar isso é decisão do usuário, e não de uma refatoração.
+
+    **As efetivas são somadas aqui e em `apurar`, cada uma por si**, de propósito: unificar as duas
+    seria mudança no caminho oficial sem efeito na prévia (R-003 da `095`).
+    """
+    recebidas = sum(q for _, recebida, q in movimentos_lidos if recebida)
+    cedidas = sum(q for _, recebida, q in movimentos_lidos if not recebida)
+    efetivas = int(publicadas) + recebidas - cedidas
+    return ocupantes(
+        titulares=titulares_iniciais(
+            progrediram_em_ordem=progrediram_em_ordem,
+            habilitadas=habilitadas,
+            efetivas=efetivas,
+            empates_residuais=empates_residuais,
+        ),
+        efeitos_lidos=efeitos_lidos,
+    )
+
+
 def apurar(
     *,
     publicadas,
