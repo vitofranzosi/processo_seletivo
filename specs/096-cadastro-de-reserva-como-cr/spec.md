@@ -102,23 +102,24 @@ dizendo `0`.
 
 ---
 
-### User Story 3 — O Edital em linguagem simples (Priority: P2)
+### User Story 3 — O Edital na apresentação por perguntas (Priority: P2)
 
-Na redação da `069`, os Perfis sem vaga imediata saem em tabelas por Perfil ou por grupo de Perfis de
-mesmo nome, com a coluna "Vagas imediatas". Nos Perfis de cadastro de reserva, essa coluna diz `CR`, e
-cada tabela com pelo menos uma célula `CR` traz a nota logo abaixo. O resumo do começo do documento já
-diz *"não há vaga imediata; há cadastro de reserva"*, e continua igual.
+Na apresentação por perguntas da `069`, os Perfis sem vaga imediata saem em tabelas por Perfil ou
+por grupo de Perfis de mesmo nome, com a coluna "Vagas imediatas". Nos Perfis de cadastro de reserva,
+essa coluna diz `CR`, e cada tabela com pelo menos uma célula `CR` traz a nota logo abaixo. O resumo
+do começo do documento já diz *"não há vaga imediata; há cadastro de reserva"*, e continua igual.
 
-**Why this priority**: é a redação dos Editais novos. É P2 só porque depende da mesma regra da história
-1, e não porque importe menos.
+**Why this priority**: é a apresentação dos Editais novos. É P2 só porque depende da mesma regra da
+história 1, e não porque importe menos.
 
-**Independent Test**: compor o cenário B na redação da `069` e contar as células `CR`, as células `0` e
-as notas de cada tabela.
+**Independent Test**: compor o cenário B na apresentação por perguntas e contar as células `CR`, as
+células `0` e as notas de cada tabela.
 
 **Acceptance Scenarios**:
 
-1. **Given** o cenário B na redação da `069`, **When** o documento é composto, **Then** nenhuma tabela
-   de Perfis traz `0` para Perfil com cadastro de reserva, e toda tabela com `CR` traz a nota.
+1. **Given** o cenário B na apresentação por perguntas, **When** o documento é composto, **Then**
+   nenhuma tabela de Perfis traz `0` para Perfil com cadastro de reserva, e toda tabela com `CR` traz a
+   nota.
 2. **Given** o mesmo cenário, **When** o documento é composto, **Then** a tabela de vagas por lista de
    concorrência continua só com os Perfis que têm vaga, como desde a `067`.
 3. **Given** o mesmo cenário, **When** o resumo é composto, **Then** ele diz o que diz hoje.
@@ -174,6 +175,9 @@ consolidado e o quadro de alterações.
 
 - **Perfil com 0 vaga imediata e sem cadastro de reserva.** Continua imprimindo `0`. O Perfil não
   oferece nada, e `CR` afirmaria um cadastro que o Edital não declara.
+- **Perfil com 0 no total e uma linha do quadro positiva.** É incoerente, e a validação o recusa. Se
+  chegar ao documento, continua imprimindo `0`, como a `067` o trata ao imprimir o quadro, para que o
+  erro se veja na prévia.
 - **Perfil com vaga imediata e cadastro de reserva.** Continua imprimindo o número. O cadastro já está
   na coluna ao lado, e a vaga é a notícia.
 - **Cadastro de reserva limitado em 0.** O domínio aceita o limite zero, e `CR` sai porque o tipo
@@ -206,14 +210,16 @@ consolidado e o quadro de alterações.
 #### O documento do Edital
 
 - **FR-2402**: **Perfil de cadastro de reserva sem vaga imediata** MUST significar o Perfil com 0 vaga
-  imediata e cadastro de reserva limitado ou ilimitado. Esta regra MUST ser a única que decide entre o
-  número e `CR`, nas duas redações do documento.
+  imediata, nenhuma linha do quadro de vagas com quantidade positiva e cadastro de reserva limitado ou
+  ilimitado. Esta regra MUST ser a única que decide entre o
+  número e `CR`, nas duas redações e nas duas apresentações do documento, a plana e a por perguntas.
 - **FR-2403**: Na tabela de Perfis, a célula de vagas de um Perfil de cadastro de reserva sem vaga
-  imediata MUST dizer `CR`, nas duas redações.
+  imediata MUST dizer `CR`, nas duas redações da apresentação plana.
 - **FR-2404**: Na ficha do Edital de um Perfil só, o valor do par "Vagas imediatas" de um Perfil de
   cadastro de reserva sem vaga imediata MUST dizer `CR`.
-- **FR-2405**: Na redação da `069`, as tabelas de Perfis por Perfil e por grupo de Perfis de mesmo nome
-  MUST dizer `CR` na coluna de vagas imediatas de todo Perfil de cadastro de reserva sem vaga imediata.
+- **FR-2405**: Na apresentação por perguntas da `069`, as tabelas de Perfis por Perfil e por grupo de
+  Perfis de mesmo nome MUST dizer `CR` na coluna de vagas imediatas de todo Perfil de cadastro de
+  reserva sem vaga imediata.
 - **FR-2406**: Logo abaixo de toda tabela ou ficha que imprimir pelo menos um `CR`, o documento MUST
   imprimir a nota "CR: cadastro de reserva.". Tabela ou ficha sem `CR` MUST NOT trazer a nota (D-002).
 - **FR-2407**: A linha de total da tabela de Perfis MUST somar só as vagas imediatas, sem contar as
@@ -292,10 +298,10 @@ dizerem o mesmo; e deixar o portal como está.
 
 ## Success Criteria *(mandatory)*
 
-- **SC-900**: No documento do cenário B composto nas duas redações, **zero** células `0` de vagas
-  imediatas em Perfis com cadastro de reserva, **16** células `CR` em cada redação, e a nota em **toda**
+- **SC-900**: No documento do cenário B composto nas duas apresentações, **zero** células `0` de vagas
+  imediatas em Perfis com cadastro de reserva, **16** células `CR` em cada apresentação, e a nota em **toda**
   tabela que tiver `CR`.
-- **SC-901**: Um Edital sem Perfil de cadastro de reserva sem vaga imediata sai, nas duas redações, com
+- **SC-901**: Um Edital sem Perfil de cadastro de reserva sem vaga imediata sai, nas duas apresentações, com
   o texto extraído **idêntico** ao composto antes desta feature.
 - **SC-902**: Na página da seleção do portal, **zero** ocorrências de "0 vaga" e de `CR` nos blocos de
   Perfil de cadastro de reserva sem vaga imediata.
