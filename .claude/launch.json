@@ -411,6 +411,12 @@
       "runtimeExecutable": "bash",
       "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_095_ui DB_HOST=localhost DB_ROLE=runtime DB_RUNTIME_USER=processo_seletivo_runtime DB_RUNTIME_PASSWORD=change-me INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8096"],
       "port": 8096
+    },
+    {
+      "name": "cadastro-reserva-096",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_096_b DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8097"],
+      "port": 8097
     }
   ]
 }

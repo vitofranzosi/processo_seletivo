@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-21
 
-**Status**: Draft
+**Status**: Implementada — sem PR ainda; merge com o usuário
 
 **Input**: pedido do usuário em 21/10/2026. O Perfil de cadastro de reserva sem vaga imediata continua
 guardando `0` vagas imediatas, mas o documento do Edital deixa de imprimir esse `0`: no lugar dele sai

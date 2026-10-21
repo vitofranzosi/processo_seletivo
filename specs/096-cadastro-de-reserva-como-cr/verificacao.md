@@ -46,3 +46,41 @@ e sem a reserva:
 | variante | as três | igual | igual |
 
 O caso que diverge sem a reserva é o que `test_sem_a_reserva_o_cenario_b_volta_a_divergir` prende.
+
+## O cenário B pelo fluxo real (T033, T034)
+
+21/10/2026, banco novo `ps_096_b` (`createdb` e `migrate` com o superusuário, `sincronizar_unidades`),
+pelo roteiro da `069` (`specs/069-…/demonstracao/cenarios/cenario_b_069.py`), que corrige a numeração
+do B para o catálogo novo. O roteiro corrigido da auditoria (`cenario_b_corrigido.py`) é anterior ao
+catálogo da `069`, e a submissão o recusa por cinco conflitos de numeração, como a `069` registrou.
+Caminhos do scratchpad ajustados numa cópia; a `previa` do `comum.py` passou a chamar o compositor
+como a tela chama desde a `096`, com as autoridades previstas.
+
+| O que se mediu | Resultado |
+|---|---|
+| Submissão | publicada; 16 avisos "oferta só cadastro de reserva" e o aviso de prazos de recurso, nenhum impeditivo |
+| Tabela 2 — Tutor presencial — Perfis TP-01 a TP-16 | **16** `CR`, **0** células `0`, a nota **uma** vez, logo abaixo |
+| Resumo ("São 10 vagas imediatas, nos Perfis TD-ADM e TD-INFO-EDU.") | igual ao de antes |
+| Prévia e publicado | **10** páginas cada; corpo normativo **igual** página a página; a prévia diz "Fecho do ato: local, data, autoridade e verificação, na publicação." |
+| Contra `demonstracao/B-publicado-096.pdf` | 11 trechos diferentes, todos da numeração que o roteiro corrige e da data do ato |
+
+Páginas por CoreGraphics (`qrender_all.py` com `uv run --no-project --with pyobjc-framework-Quartz`),
+gravadas em `demonstracao/`: `B-fluxo-real-p04-tabela-do-grupo.png` (a tabela do grupo com `CR` e a
+nota) e `B-fluxo-real-p10-previa-e-publicado.png` (a última página dos dois modos, lado a lado). Os PDFs
+do fluxo real estão em `demonstracao/B-fluxo-real-096.pdf` e `B-fluxo-real-previa-096.pdf`.
+
+## Portal e gestão pelo navegador (T035)
+
+Pela entrada `cadastro-reserva-096` do `.claude/launch.json` (porta 8097, banco `ps_096_b`; a 8096 já
+é da `interface-095`).
+
+- **Portal, `/selecoes/<id>/`, a 1280 px:** 18 blocos de Perfil; **nenhum** com "0 vaga", **nenhum**
+  `CR` na página; o tutor a distância com "4 vagas imediatas com cadastro reserva", o presencial com
+  "Cadastro reserva — até 15 classificados, para convocação futura". Console sem erro.
+  `demonstracao/portal-1280-tutor-presencial.jpg`.
+- **Portal a 375 px:** sem estouro (`scrollWidth` 375 = `clientWidth` 375).
+  `demonstracao/portal-375-tutor-presencial.jpg`.
+- **Gestão, tela de Retificação do mesmo Edital:** os campos "Vagas imediatas" dos dezesseis tutores
+  presenciais com `0`, e nenhum `CR` na página (`FR-2417`).
+- **A prévia da gestão** é a do `comum.previa`, pelo mesmo caminho da tela; a ligação da tela com as
+  autoridades vigentes está presa por `tests/unidades/test_previa_mede_o_fecho.py`.

@@ -184,12 +184,12 @@ Depende das Phases 3, 4 e 5: o documento final precisa existir.
 
 ## Phase 9: Polish, fluxo real e verificação
 
-- [ ] T033 O cenário B pelo fluxo real ([quickstart.md](quickstart.md) §2), num banco novo `ps_096_b` (`make preparar DB_NAME=ps_096_b`): publicar pelo roteiro `cenario_b_corrigido.py` da auditoria; `pdftotext -layout` do PDF publicado; contar 16 `CR`, 0 `0` em tutor presencial, a soma no total e as notas (`SC-900`); registrar em `verificacao.md`
-- [ ] T034 Páginas do B por CoreGraphics (não `pdftoppm`, que perde o negrito): a tabela de Perfis com a nota, na plana e por perguntas; gravar as escolhidas em `specs/096-cadastro-de-reserva-como-cr/demonstracao/`
-- [ ] T035 Portal e gestão pelo navegador, com o banco de T033 ([quickstart.md](quickstart.md) §3 e §4): o bloco de um tutor presencial sem `0 vaga` e sem `CR`; o de um tutor a distância com o número; a etapa Perfis e a Revisão com `0`; a prévia com `CR` (`FR-2417`); capturas a 1280 e 375 px em `demonstracao/`
-- [ ] T036 [P] `specs/096-cadastro-de-reserva-como-cr/rastreabilidade.md`: cada `FR-`, `SC-`, decisão e caso-limite com o teste que o prende (modelo da `067`); o caso-limite do assistente e o do limite 0 como fora do escopo, apontando para o registro
-- [ ] T037 [P] Registrar os dois achados que a spec deixou fora, sem corrigi-los: o cadastro limitado em 0, que o domínio aceita, e o assistente, que lê o `0` do conteúdo publicado. Uma nota curta em `doc/achados-editais-externos.md`, abaixo do P-2, dizendo também que o `CR` da amostra foi atendido pela `096`
-- [ ] T038 [P] `README.md`: a linha da `096` na tabela de incrementos passa de "Especificada" ao estado real; `verificacao.md` completo, e o status da spec para "Implementada"
+- [X] T033 O cenário B pelo fluxo real ([quickstart.md](quickstart.md) §2), num banco novo `ps_096_b` (`make preparar DB_NAME=ps_096_b`): publicar pelo roteiro `cenario_b_corrigido.py` da auditoria; `pdftotext -layout` do PDF publicado; contar 16 `CR`, 0 `0` em tutor presencial, a soma no total e as notas (`SC-900`); registrar em `verificacao.md`
+- [X] T034 Páginas do B por CoreGraphics (não `pdftoppm`, que perde o negrito): a tabela de Perfis com a nota, na plana e por perguntas; gravar as escolhidas em `specs/096-cadastro-de-reserva-como-cr/demonstracao/`
+- [X] T035 Portal e gestão pelo navegador, com o banco de T033 ([quickstart.md](quickstart.md) §3 e §4): o bloco de um tutor presencial sem `0 vaga` e sem `CR`; o de um tutor a distância com o número; a etapa Perfis e a Revisão com `0`; a prévia com `CR` (`FR-2417`); capturas a 1280 e 375 px em `demonstracao/`
+- [X] T036 [P] `specs/096-cadastro-de-reserva-como-cr/rastreabilidade.md`: cada `FR-`, `SC-`, decisão e caso-limite com o teste que o prende (modelo da `067`); o caso-limite do assistente e o do limite 0 como fora do escopo, apontando para o registro
+- [X] T037 [P] Registrar os dois achados que a spec deixou fora, sem corrigi-los: o cadastro limitado em 0, que o domínio aceita, e o assistente, que lê o `0` do conteúdo publicado. Uma nota curta em `doc/achados-editais-externos.md`, abaixo do P-2, dizendo também que o `CR` da amostra foi atendido pela `096`
+- [X] T038 [P] `README.md`: a linha da `096` na tabela de incrementos passa de "Especificada" ao estado real; `verificacao.md` completo, e o status da spec para "Implementada"
 - [ ] T039 (`SC-903`) `cd backend && make lint check` e a suíte completa contra PostgreSQL com `DB_NAME=ps096`; registrar o total e os pulados em `verificacao.md`; se os números de `AGENTS.md` mudarem, atualizá-los
 
 ---
