@@ -16,11 +16,15 @@ LINHA_PPI = "00000000-0000-4000-8000-000000000472"
 MODALIDADE_PPI = "00000000-0000-4000-8000-000000000473"
 
 
-def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None, forma=None):
+def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None, forma=None, reserva=None):
     """O rascunho do corte com quadro de vagas publicado.
 
     `geral` é a linha da ampla concorrência — a de `modalityId` nulo, que é onde a quantidade da
     ampla mora. `ppi` acrescenta a cota, e `reversao` declara a espécie do gatilho.
+
+    `reserva` declara o cadastro de reserva (`LIMITED` ou `UNLIMITED`). Com `geral=0` é o Perfil do
+    Edital de remanescentes do TMD, o que a `097` existe para convocar: zero vaga publicada, e as
+    vagas chegam depois, por acréscimo.
 
     **O padrão é 3 vagas na linha geral de propósito**: o cenário da `014` tem quatro inscritos e
     alvo 2, e um quadro com 3 deixa o caso interessante — a faixa alcança 2, a ocupação conta
@@ -49,6 +53,9 @@ def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None, forma=Non
     perfil["immediateVacancies"] = geral + (ppi or 0)
     if reversao is not None:
         perfil["vacancyReversion"] = {"kind": reversao}
+    if reserva is not None:
+        perfil["reserveType"] = reserva
+        perfil["reserveLimit"] = 30 if reserva == "LIMITED" else None
     # A forma de comunicar a convocação (019, degrau 15). `None` fica com a do rascunho de base,
     # que a declara desde a `051` (FR-943: quem corta declara como convoca). **`""` é "não
     # declarou"** — o acervo anterior à `019`, que só se publica no instante do acervo.

@@ -263,6 +263,7 @@ def apurar(
     ocupantes_da_ampla=(),
     efeitos_lidos=(),
     empates_residuais=None,
+    acrescidas=0,
 ):
     """`(publicadas, efetivas, ocupadas)` para um recorte.
 
@@ -299,10 +300,14 @@ def apurar(
     `movimentos_lidos` são os `(especie, recebida, quantidade)` e `efeitos_lidos` os
     `(especie, inscricao_id)` que **esta** apuração leu, e não os de hoje: é o congelamento que
     torna a reprodução determinística.
+
+    `acrescidas` é o saldo das vagas acrescidas depois da publicação que esta apuração leu (097),
+    já líquido dos desfazimentos. **Entra antes da janela de titulares**, como os movimentos: é por
+    isso que, no recorte de 0 vagas publicadas, a vaga acrescida faz do 1º da ordem um titular.
     """
     recebidas = sum(q for _, recebida, q in movimentos_lidos if recebida)
     cedidas = sum(q for _, recebida, q in movimentos_lidos if not recebida)
-    efetivas = int(publicadas) + recebidas - cedidas
+    efetivas = int(publicadas) + recebidas - cedidas + int(acrescidas)
     # **Suplente não ocupa vaga, e o teto diz isso.** A faixa pode ser maior que o quadro: no
     # 77/2026 são 40 vagas com 30 suplentes alcançados na mesma faixa (`D-011` da `014`), e se
     # todos habilitarem a interseção dá 70. Ocupar 70 de 40 não é um número grande — é um número
