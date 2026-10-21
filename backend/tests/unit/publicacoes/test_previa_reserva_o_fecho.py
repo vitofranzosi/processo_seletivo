@@ -97,7 +97,7 @@ def test_no_cenario_b_o_sumario_da_previa_diz_as_paginas_do_publicado(caso, prev
 
 def test_sem_a_reserva_o_cenario_b_volta_a_divergir(monkeypatch):
     """A prova reprova o defeito que existe para pegar: sem a reserva, a última seção não salta."""
-    monkeypatch.setattr(pdf, "_reservar_o_fecho", lambda composicao, medir, previstos: None)
+    monkeypatch.setattr(pdf, "fecho_reservado", lambda *args, **kwargs: [])
     conteudo, autoridade = CONTEUDOS_DE_B["B plana"](), PREVISTAS["a do contrato"]
 
     previa = _corpo_por_pagina(_previa(conteudo, (autoridade,)))
@@ -118,13 +118,7 @@ def _fecho_real(previsto, conteudo):
 
 
 def _reservado(previstos, conteudo):
-    composicao = pdf.Composicao(metrica=pdf.METRICA_DO_EDITAL)
-    pdf._reservar_o_fecho(
-        composicao,
-        lambda rascunho, previsto: pdf._fecho_medido(rascunho, previsto, conteudo, UNIDADE),
-        previstos,
-    )
-    return composicao.itens
+    return pdf.fecho_reservado(previstos, conteudo, UNIDADE, metrica=pdf.METRICA_DO_EDITAL)
 
 
 def _geometria(itens):
@@ -195,6 +189,35 @@ def test_o_publicado_recusa_fecho_previsto():
             pdf.MODO_PUBLICADO,
             unidade=UNIDADE,
             autoridade=AUTORIDADES["A"],
-            data_do_ato=pdf.DATA_DE_MEDIDA,
+            data_do_ato=DATA_DO_ATO,
             fechos_previstos=(AUTORIDADES["A"],),
         )
+
+
+def test_a_data_de_medida_e_a_de_linha_mais_larga_do_calendario():
+    """A linha de local e data é medida com o mês mais largo na fonte, não o de mais letras."""
+    from datetime import date
+
+    metrica, local = pdf.METRICA_DO_EDITAL, UNIDADE.local
+
+    def largura(dia):
+        return metrica.largura(pdf.fecho(local, dia), pdf.CORPO_TEXTO, pdf.REGULAR)
+
+    medida = pdf.data_de_medida(metrica, local)
+
+    assert all(largura(medida) >= largura(date(2000, mes, 28)) for mes in range(1, 13))
+
+
+def test_a_reserva_e_medida_uma_vez_e_nao_a_cada_passada(monkeypatch):
+    """O sumário converge em até quatro composições; a medida do fecho não depende delas."""
+    chamadas = []
+    original = pdf.fecho_reservado
+
+    def contando(*args, **kwargs):
+        chamadas.append(1)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(pdf, "fecho_reservado", contando)
+    _previa(CONTEUDOS_DE_B["B plana"](), (AUTORIDADES["B"],))
+
+    assert len(chamadas) == 1

@@ -598,7 +598,7 @@ def test_o_perfil_com_vaga_continua_com_o_numero_e_a_pagina_nao_usa_a_sigla(
     """FR-2416, FR-2415: a `096` muda só o bloco do cadastro sem vaga.
 
     O primeiro Perfil da fixture tem 2 vagas imediatas e cadastro limitado: o número continua em
-    destaque, com o cadastro de legenda, como antes. E a página inteira não usa a sigla `CR`, que
+    destaque, com o cadastro de legenda, como antes. E nenhum bloco de oferta usa a sigla `CR`, que
     é do documento, onde a nota a explica.
     """
     edital = publicar_selecao(
@@ -614,4 +614,8 @@ def test_o_perfil_com_vaga_continua_com_o_numero_e_a_pagina_nao_usa_a_sigla(
     assert '<p class="vagas-numero"><strong>2</strong>' in primeira_vaga
     assert "vagas imediatas" in primeira_vaga
     assert 'class="reserva"' in primeira_vaga, "o cadastro do Perfil com vaga continua dito"
-    assert not re.search(r"\bCR\b", corpo)
+    # Os blocos de oferta, e não a página inteira: o texto livre do Edital pode usar a sigla, e o
+    # que a FR-2415 proíbe é o portal imprimi-la no lugar da quantidade.
+    ofertas = re.findall(r'<div class="lateral-vaga">(.*?)</p>', vagas, re.S)
+    assert len(ofertas) == 2
+    assert not [oferta for oferta in ofertas if re.search(r"\bCR\b", oferta)]

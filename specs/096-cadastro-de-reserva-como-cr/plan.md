@@ -98,7 +98,7 @@ backend/processo_seletivo/
 ├── publicacoes/infrastructure/
 │   ├── pdf.py                        # SIGLA_DO_CADASTRO, NOTA_DO_CADASTRO, vagas_impressas,
 │   │                                 # nota_da_sigla; _tabela(nota=); _quadro_de_perfis; _perfil_unico;
-│   │                                 # render_edital_pdf(fechos_previstos=), _reservar_o_fecho (D-013)
+│   │                                 # render_edital_pdf(fechos_previstos=), fecho_reservado (D-013)
 │   └── apresentacao.py               # _vagas_em_partes: avulsos e grupos
 ├── publicacoes/application/
 │   └── contexto_do_ato.py            # fechos_previstos(unidade, data) (D-013)

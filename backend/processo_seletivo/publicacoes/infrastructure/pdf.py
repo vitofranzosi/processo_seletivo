@@ -4835,12 +4835,23 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=CORPO_NOTA)
 
 
-# A data com que o fecho reservado é medido. Qualquer data cabe numa linha; esta tem o mês mais
-# longo do calendário, para que nenhuma o exceda.
-DATA_DE_MEDIDA = date(2000, 9, 30)
 RESUMO_DE_MEDIDA = "0" * 64
 #: O que a prévia mostra no lugar do fecho, na linha em que o publicado põe o local e a data.
 FECHO_NA_PUBLICACAO = "Fecho do ato: local, data, autoridade e verificação, na publicação."
+
+
+def data_de_medida(metrica, local):
+    """A data cuja linha de local e data é a mais larga na fonte do Edital (096, D-013).
+
+    A prévia não sabe em que dia o ato sai, e a linha pode refluir em duas com um local longo.
+    Mede-se pela largura de cada mês na fonte, e não pelo número de letras: "setembro" tem menos
+    letras que "fevereiro" e pode ser mais largo. O dia 28 existe em todo mês, e os algarismos têm a
+    mesma largura.
+    """
+    return max(
+        (date(2000, mes, 28) for mes in range(1, 13)),
+        key=lambda dia: metrica.largura(fecho(local, dia), CORPO_TEXTO, REGULAR),
+    )
 
 
 def _fecho_medido(rascunho, previsto, snapshot, unidade):
@@ -4850,11 +4861,13 @@ def _fecho_medido(rascunho, previsto, snapshot, unidade):
     qualquer resumo de 64 dígitos.
     """
     with rascunho.bloco():
-        _autoridade(rascunho, previsto, DATA_DE_MEDIDA, unidade.local)
+        _autoridade(
+            rascunho, previsto, data_de_medida(rascunho.metrica, unidade.local), unidade.local
+        )
         _integridade(rascunho, snapshot, RESUMO_DE_MEDIDA)
 
 
-def _reservar_o_fecho(composicao, medir, previstos):
+def fecho_reservado(previstos, snapshot, unidade, *, metrica):
     """Na prévia, o espaço exato do fecho do ato — e não um aviso curto no lugar dele (096, D-012).
 
     **A paginação do corpo normativo tem de ser a mesma nos dois modos** (008, FR-042), e desde a
@@ -4871,23 +4884,28 @@ def _reservar_o_fecho(composicao, medir, previstos):
     régua, que não tem altura, não é desenhada.
 
     **O mais alto dos previstos.** A autoridade é escolhida no ato, entre as vigentes da unidade, e
-    a prévia não a conhece. Com uma vigente — o caso de hoje —, a reserva é exata; com várias de
-    alturas diferentes, é exata para a mais alta (limite registrado na `096`).
+    a prévia não a conhece. Com uma vigente, a reserva é exata; com várias de alturas diferentes, é
+    exata para a mais alta, e a prévia pode divergir quando outra é escolhida (limite registrado na
+    `096`).
+
+    Devolve os itens, e não os escreve: a composição roda até quatro vezes para o sumário convergir,
+    e a medida não depende da passada.
     """
     candidatos = []
     for previsto in previstos or (AutoridadeSignataria(nome="", cargo=""),):
-        rascunho = Composicao(metrica=composicao.metrica, redacao=composicao.redacao)
-        medir(rascunho, previsto)
+        rascunho = Composicao(metrica=metrica)
+        _fecho_medido(rascunho, previsto, snapshot, unidade)
         candidatos.append((sum(Composicao._altura(item) for item in rascunho.itens), rascunho))
     _, rascunho = max(candidatos, key=lambda candidato: candidato[0])
-    primeira = True
+    itens, primeira = [], True
     for item in rascunho.itens:
         if item[0] == "regua":
             continue
         if item[0] == "texto" and item[1]:
             item = ("texto", FECHO_NA_PUBLICACAO if primeira else " ", *item[2:])
             primeira = False
-        composicao.itens.append(item)
+        itens.append(item)
+    return itens
 
 
 def _fluxo_da_pagina(
@@ -5053,6 +5071,11 @@ def render_edital_pdf(
 
     snapshot = _grafado(snapshot, previa=previa)
     perguntas = por_perguntas(snapshot)
+    reserva = (
+        fecho_reservado(fechos_previstos, snapshot, unidade, metrica=METRICA_DO_EDITAL)
+        if previa
+        else ()
+    )
 
     def compor(paginas):
         # A fonte embutida mede o texto do Edital (069, FR-1381): a quebra, a justificação e a
@@ -5069,17 +5092,13 @@ def render_edital_pdf(
                 _autoridade(composicao, autoridade, data_do_ato, unidade.local)
                 _integridade(composicao, snapshot, content_hash)
 
-        def fecho_reservado():
-            _reservar_o_fecho(
-                composicao,
-                lambda rascunho, previsto: _fecho_medido(rascunho, previsto, snapshot, unidade),
-                fechos_previstos,
-            )
+        def espaco_do_fecho():
+            composicao.itens.extend(reserva)
 
         # O fecho entra **dentro** do bloco da última seção (069): ver `com_o_fecho`. Na prévia,
         # entra o espaço dele, e não nada (096, D-012): sem o fecho, a última seção ficava solta na
         # prévia e saltava com ele no publicado, e quem revisava via uma página a menos.
-        fecho_do_ato = fecho_reservado if previa else fecho
+        fecho_do_ato = espaco_do_fecho if previa else fecho
         if perguntas:
             plano = _apresentacao().compor(
                 composicao, snapshot, paginas=paginas, fecho=fecho_do_ato

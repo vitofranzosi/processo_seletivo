@@ -46,7 +46,7 @@ abaixo.
 | FR-2416 | PO `test_o_perfil_com_vaga_continua_com_o_numero_e_a_pagina_nao_usa_a_sigla` |
 | FR-2417 | Nenhum código da gestão mudou, e os testes dela continuam verdes; conferido pelo navegador (`verificacao.md`, T035: os dezesseis "Vagas imediatas" em `0` na tela de Retificação); a prévia, por RF e PM |
 | FR-2418 | RF `test_no_cenario_b_a_previa_pagina_o_corpo_como_o_publicado`, `test_no_cenario_b_o_sumario_da_previa_diz_as_paginas_do_publicado`, `test_sem_a_reserva_o_cenario_b_volta_a_divergir`; CT `test_o_corpo_normativo_quebra_nas_mesmas_paginas_na_previa_e_no_publicado`, `test_removidas_as_diferencas_permitidas_as_composicoes_sao_equivalentes` |
-| FR-2419 | RF `test_a_reserva_tem_a_geometria_do_fecho_real`, `test_nenhuma_linha_da_reserva_e_vazia_onde_o_fecho_tem_texto` |
+| FR-2419 | RF `test_a_reserva_tem_a_geometria_do_fecho_real`, `test_nenhuma_linha_da_reserva_e_vazia_onde_o_fecho_tem_texto`, `test_a_data_de_medida_e_a_de_linha_mais_larga_do_calendario` |
 | FR-2420 | RF `test_entre_varias_previstas_reserva_a_mais_alta`, `test_sem_prevista_reserva_o_fecho_sem_nome_nem_cargo`; PM `test_as_previstas_sao_as_vigentes_na_data`, `test_a_tela_da_previa_mede_pelas_vigentes_e_nao_as_imprime` |
 | FR-2421 | RF `test_a_previa_nao_imprime_a_autoridade_nem_o_resumo`, `test_o_publicado_recusa_fecho_previsto`; PM `test_a_tela_da_previa_mede_pelas_vigentes_e_nao_as_imprime` |
 
@@ -76,7 +76,7 @@ abaixo.
 | D-010 | PO `test_cadastro_reserva_sem_vaga_imediata_e_oferta_e_nao_ausencia` |
 | D-011 | FR-2417 e D-003 acima; o corpus da `070` sem mudança (`git diff main -- backend/tests/fixtures/corpus_070` vazio) |
 | D-012 | RF, todos; PM, todos |
-| D-013 | RF `test_a_reserva_tem_a_geometria_do_fecho_real`, `test_nenhuma_linha_da_reserva_e_vazia_onde_o_fecho_tem_texto`; CT (o `corpo_normativo` reconhece `Fecho do ato: `) |
+| D-013 | RF `test_a_reserva_tem_a_geometria_do_fecho_real`, `test_nenhuma_linha_da_reserva_e_vazia_onde_o_fecho_tem_texto`, `test_a_data_de_medida_e_a_de_linha_mais_larga_do_calendario`, `test_a_reserva_e_medida_uma_vez_e_nao_a_cada_passada`; CT (o `corpo_normativo` reconhece `Fecho do ato: `) |
 
 ## Casos-limite
 

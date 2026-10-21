@@ -140,14 +140,19 @@ ela que a última linha da seção (marcada por `prender_a_ultima_linha`) mede s
 última linha não encontraria o fecho, e decidiria outra quebra. Um aviso de uma linha mede menos que
 o fecho, e o salto depende da altura.
 
-**Como.** `_reservar_o_fecho` compõe o fecho de verdade num rascunho (`_fecho_medido`: o mesmo
+**Como.** `fecho_reservado` compõe o fecho de verdade num rascunho (`_fecho_medido`: o mesmo
 `_autoridade` e o mesmo `_integridade` do publicado, com a autoridade prevista, o local da unidade,
-uma data de mês longo e um resumo de 64 zeros) e copia cada item para a prévia:
+a data de linha mais larga e um resumo de 64 zeros) e devolve os itens que a prévia escreve:
 
 - a mesma altura, o mesmo `antes`, o mesmo `junto` e os mesmos blocos;
 - o texto da primeira linha vira `FECHO_NA_PUBLICACAO`, e o das demais um espaço, invisível mas não
   vazio;
 - a régua, que não tem altura, não é desenhada.
+
+A data de medida (`data_de_medida`) é a do mês cuja linha de local e data é a mais larga **na fonte
+do Edital**, e não a do mês de mais letras: com um local longo, a linha pode refluir em duas, e a
+medida tem de cobrir o pior mês. A reserva é medida **uma vez**, antes do laço que faz o sumário
+convergir, porque não depende da passada (correções do code review de 21/10).
 
 Como a altura de uma linha não depende do texto, a prévia pagina como o publicado **por construção**,
 e não por coincidência de medida.

@@ -230,8 +230,9 @@ a página.
   diz a sigla por extenso, a quem lê o documento e a quem o ouve.
 - **Várias autoridades vigentes, de alturas diferentes.** A prévia não sabe qual será escolhida no
   ato, e reserva a mais alta (FR-2420). Com a mais alta, a paginação é a mesma; com outra, a prévia
-  pode mostrar a última seção uma página adiante do publicado. Hoje cada unidade tem uma autoridade
-  vigente, e o limite fica registrado.
+  pode mostrar a última seção uma página adiante do publicado. As autoridades são cadastradas pela
+  gestão, e quantas cada unidade tem vigentes não é dado do repositório; na suíte, o Cefor tem duas,
+  de alturas diferentes. O limite fica registrado.
 - **Nenhuma autoridade vigente.** A publicação é recusada até haver uma; a prévia reserva o fecho sem
   nome nem cargo.
 - **O assistente de dúvidas** (a `071` e a `074`). Ele lê o conteúdo publicado, em que o campo continua

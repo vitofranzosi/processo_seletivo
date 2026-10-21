@@ -53,13 +53,13 @@ def test_a_tela_da_previa_mede_pelas_vigentes_e_nao_as_imprime(
     )
     edital = Edital.objects.get(processo_id=criado.json()["id"])
     medidas = []
-    original = pdf._reservar_o_fecho
+    original = pdf.fecho_reservado
 
-    def registrando(composicao, medir, previstos):
+    def registrando(previstos, *args, **kwargs):
         medidas.append(previstos)
-        return original(composicao, medir, previstos)
+        return original(previstos, *args, **kwargs)
 
-    monkeypatch.setattr(pdf, "_reservar_o_fecho", registrando)
+    monkeypatch.setattr(pdf, "fecho_reservado", registrando)
     identificar(client, "auditor", ["auditor"])
 
     resposta = client.get(reverse("interface:previa-documento", args=[edital.id]))
