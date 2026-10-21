@@ -76,7 +76,8 @@ Pela entrada `cadastro-reserva-096` do `.claude/launch.json` (porta 8097, banco 
 
 - **Portal, `/selecoes/<id>/`, a 1280 px:** 18 blocos de Perfil; **nenhum** com "0 vaga", **nenhum**
   `CR` na página; o tutor a distância com "4 vagas imediatas com cadastro reserva", o presencial com
-  "Cadastro reserva — até 15 classificados, para convocação futura". Console sem erro.
+  "Cadastro reserva — até 15 classificados, para convocação futura" (o 15 é o limite fictício do
+  roteiro `cenario_b.py`; o 140/2025 real não declara limite). Console sem erro.
   `demonstracao/portal-1280-tutor-presencial.jpg`.
 - **Portal a 375 px:** sem estouro (`scrollWidth` 375 = `clientWidth` 375).
   `demonstracao/portal-375-tutor-presencial.jpg`.

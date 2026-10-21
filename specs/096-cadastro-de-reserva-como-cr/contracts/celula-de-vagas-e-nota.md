@@ -18,8 +18,9 @@ apresentação por perguntas. Vale nas duas redações.
 | 0 vaga, alguma linha positiva (incoerente) | `0` |
 | N > 0 vagas, com ou sem cadastro | `N` |
 
-A coluna do cadastro, ao lado, não muda: `limitado em 15` / `ilimitado` / `não há` na redação 1, e
-`até 15 (quinze) classificados` / `sem limite` / `Não há` na redação 2.
+A coluna do cadastro, ao lado, não muda: `limitado em N` / `ilimitado` / `não há` na redação 1, e
+`até N (por extenso) classificados` / `sem limite` / `Não há` na redação 2. O N é o limite que quem
+elabora declara no Perfil; o sistema não o deriva de nada.
 
 ## 2. A nota
 
@@ -37,10 +38,13 @@ só quando a soma é maior que zero (`FR-997` da `054`).
 
 ## 4. Exemplo, cenário B, apresentação plana
 
+O cenário B é fictício (auditoria de 08/10/2026). O limite 15 do cadastro é o padrão do roteiro
+`cenario_b.py`, e não dado de Edital real: o 140/2025, que o cenário imita, não declara limite.
+
 ```text
 Tabela N — Perfis de vaga
 Perfil                       Localidade   Vagas   Cadastro de reserva   Carga horária
-TP-AFC — Tutor presencial    Afonso…      CR      até 15 (quinze)…      20 h
+TP-01 — Tutor presencial     Afonso…      CR      até 15 (quinze)…      20 h
 …                                                  (16 linhas em CR)
 TD-ADM — Tutor a distância   —            6       até 15 (quinze)…      20 h
 TD-INFO-EDU — …              —            4       até 15 (quinze)…      20 h

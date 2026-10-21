@@ -49,7 +49,8 @@ Edital.
 Com o runserver da worktree e o banco do passo 2, abra `/selecoes/<id do Edital>/` e confira, num
 Perfil de tutor presencial:
 
-- `Cadastro reserva` em destaque, com `até 15 classificados, para convocação futura`;
+- `Cadastro reserva` em destaque, com `até 15 classificados, para convocação futura` (o 15 é o limite
+  fictício do roteiro do cenário B, e não dado de Edital real);
 - nenhum `0 vaga` e nenhum `CR` no bloco;
 - num Perfil de tutor a distância, o número em destaque, como antes.
 

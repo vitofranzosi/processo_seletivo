@@ -91,7 +91,8 @@ células `CR` e as células `0` da tabela de Perfis, e a nota.
 
 O Edital de cadastro de reserva de Designer Educacional tem um Perfil só, e o documento o apresenta numa
 ficha de pares, sem tabela de Perfis. O par "Vagas imediatas" diz `CR`, o par seguinte diz o cadastro de
-reserva ("até 30 classificados" ou "sem limite de classificados"), e a nota sai logo abaixo dos pares.
+reserva ("até N classificados", com o limite que o Perfil declara, ou "sem limite de classificados"), e
+a nota sai logo abaixo dos pares.
 
 **Why this priority**: é a outra composição do mesmo dado. Sem ela, o Edital de um Perfil só continuaria
 dizendo `0`.
@@ -134,7 +135,8 @@ células `0` e as notas de cada tabela.
 ### User Story 4 — O candidato no portal (Priority: P2)
 
 A candidata abre a página da seleção no portal. No Perfil de cadastro de reserva, o destaque continua
-"Cadastro reserva", com o detalhe ("até 15 classificados, para convocação futura"), como desde a `024`.
+"Cadastro reserva", com o detalhe ("até N classificados, para convocação futura", quando o Perfil declara
+limite), como desde a `024`.
 A linha secundária *"0 vagas imediatas agora"* sai. Nada de sigla no portal.
 
 **Why this priority**: o portal já dá destaque à oferta. O que sobrava era o zero em posição
