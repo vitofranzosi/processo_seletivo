@@ -15,3 +15,12 @@ tests/test_dependencia_da_convocacao.py
 
 413 passed in 27.71s
 ```
+
+## Ordem dos testes
+
+**A US1 não teve a fase vermelha que as tarefas pedem.** O módulo `ocupacao/application/acrescimo.py`
+foi escrito antes de os testes de T014 e T015 rodarem pela primeira vez, e eles já rodaram verdes.
+Os da Phase 2 e o de convocação (T016) falharam primeiro pelas razões esperadas — `ImportError` e,
+em T016, a recusa `fundamento_obrigatorio` da convocação individual, que levou o teste a conferir o
+fundamento pela prévia do gesto. Registrado por honestidade: a cobertura é a mesma, mas não houve
+prova de que cada teste reprovaria sem o código.

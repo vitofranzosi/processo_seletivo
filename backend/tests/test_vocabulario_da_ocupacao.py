@@ -32,6 +32,11 @@ TEMPLATES = RAIZ / "interface/templates/interface"
 DA_016 = [
     TEMPLATES / "ocupacao.html",
     TEMPLATES / "ocupacao_historico.html",
+    # A conferência da vaga acrescida e o módulo dela (097): a tela é da ocupação, e a fronteira
+    # vale para ela inteira — o acréscimo conta vaga, e quem chama para ela é a `019`.
+    TEMPLATES / "ocupacao_acrescimo.html",
+    RAIZ / "ocupacao/application/acrescimo.py",
+    RAIZ / "ocupacao/domain/acrescimo.py",
     RAIZ / "ocupacao/application/emissao.py",
     RAIZ / "ocupacao/application/movimento.py",
     RAIZ / "ocupacao/application/selectors.py",

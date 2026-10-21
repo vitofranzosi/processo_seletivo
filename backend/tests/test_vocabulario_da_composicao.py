@@ -42,6 +42,8 @@ TELAS = (
     "ordenacao.html",
     "ocupacao.html",
     "ocupacao_historico.html",
+    # A conferência da vaga acrescida (097): entra no mesmo commit em que nasce.
+    "ocupacao_acrescimo.html",
     "sorteio.html",
     "convocacao.html",
     "convocacao_historico.html",
