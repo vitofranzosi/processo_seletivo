@@ -1,0 +1,22 @@
+{% comment %}
+**Quantos se inscrevem em cada lista** (098, FR-2487 a FR-2491, D-003). Sem notas, a procura por lista
+é o que decide se sobra vaga de cota. Os campos ficam no painel, fora do cartão, e por isso não
+esbarram na FR-428 da `030`. Mudar um número recalcula com a mesma semente (D-006).
+{% endcomment %}
+<fieldset class="populacao-do-sorteio">
+  <legend>Inscritos fictícios por lista</legend>
+  {% for linha in populacao.linhas %}
+  <p class="campo-da-previa"><label for="{{ linha.campo }}">{{ linha.rotulo }}</label>
+    <input type="number" min="0" step="1" inputmode="numeric" id="{{ linha.campo }}" name="{{ linha.campo }}"
+           value="{{ linha.valor }}" data-populacao hx-get="{{ previa_url }}" hx-trigger="change"
+           hx-include="#cartao-{{ indice }}, #semente-da-previa, [data-populacao], #vista-da-previa, #recorte-da-previa"
+           hx-target="#painel-da-previa" hx-swap="innerHTML"></p>
+  {% endfor %}
+  <p class="descricao">A ampla será sorteada com os {{ populacao.soma }}: quem se declara numa reservada
+    também concorre nela. Os números começam no dobro das vagas de cada lista (dez quando a lista não
+    tem quantidade no quadro); troque pela procura que você espera.</p>
+  {% if populacao.invalidos %}
+  <p class="aviso-do-modo">Valor que não é um número inteiro a partir de zero em
+    {{ populacao.invalidos|join:", " }}: a prévia usou a sugestão.</p>
+  {% endif %}
+</fieldset>

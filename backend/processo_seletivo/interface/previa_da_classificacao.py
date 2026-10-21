@@ -865,9 +865,11 @@ def jornada(p, marcos, sub, url_do_marco):
                 item["aberto"]["recortes"] = resumo_dos_recortes(p)
             else:
                 if ponto["por_sorteio"]:
+                    # Desde a `098`, o sorteio tem prévia própria, pela mesma rota: o link abre a
+                    # dele, com semente fictícia (FR-2480).
                     item["frases"].append(
-                        "Ordena por sorteio: a prévia não o simula (a fatia 1 cobre só a "
-                        "pontuação)."
+                        "Ordena por sorteio: tem prévia própria, com semente fictícia — simule-o "
+                        "pelo cartão dele, ou por aqui."
                     )
                 elif ponto["antes_do_selecionado"]:
                     destino = (
@@ -889,8 +891,7 @@ def jornada(p, marcos, sub, url_do_marco):
                         )
                         + "da regra deste marco."
                     )
-                if not ponto["por_sorteio"]:
-                    item["simular"] = url_do_marco(marco["sub"])
+                item["simular"] = url_do_marco(marco["sub"])
         saida.append(item)
     return saida
 

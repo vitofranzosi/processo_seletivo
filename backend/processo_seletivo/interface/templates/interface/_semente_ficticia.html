@@ -1,0 +1,17 @@
+{% comment %}
+**A semente fictícia da prévia do sorteio** (098, FR-2481 a FR-2485). Cinco números no formato da
+Loteria Federal, gerados pelo sistema, com o selo e a frase de que o certame terá outra. O campo
+oculto leva o token assinado, e não os números: é ele que o servidor confere (D-001).
+{% endcomment %}
+<section class="semente-ficticia" aria-labelledby="titulo-da-semente">
+  <h3 id="titulo-da-semente">Semente fictícia <span class="selo-ficticio">fictícia</span></h3>
+  <p class="grupos-da-semente">{% for grupo in semente.grupos %}<span>{{ grupo }}</span>{% endfor %}</p>
+  <p class="nota">Gerada agora pelo sistema, só para esta prévia{% if not semente.nova %}, e mantida
+    desde o último sorteio: o que mudou é efeito da sua alteração, e não da sorte{% endif %}. No dia do
+    certame, a semente sairá do concurso que o Edital declarar, e a ordem será outra.</p>
+  {% for frase in frases_da_semente %}<p class="nota">{{ frase }}</p>{% endfor %}
+  <input type="hidden" id="semente-da-previa" name="semente" value="{{ semente.token }}">
+  <button type="button" class="acao-discreta" hx-get="{{ previa_url }}&amp;sortear=1"
+          hx-include="#cartao-{{ indice }}, [data-populacao], #vista-da-previa, #recorte-da-previa"
+          hx-target="#painel-da-previa" hx-swap="innerHTML">Sortear de novo</button>
+</section>
