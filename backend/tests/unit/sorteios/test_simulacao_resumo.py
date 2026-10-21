@@ -274,26 +274,67 @@ def test_alvo_fixo_sem_quantidade_e_incompleto():
         _rodada(marco={"cutRule": {"targetKind": "FIXED", "surplusCount": 0}})
 
 
-@pytest.mark.parametrize(
-    ("so_ampla", "por_reservada"), [(500, 0), (260, 40)], ids=["sem-reserva", "seis-reservadas"]
-)
-def test_o_pior_caso_cabe_no_orcamento(so_ampla, por_reservada):
-    """SC-928: a rodada em até 1 s e o resumo em até 5 s, com 500 inscritos."""
+def _pior_caso(so_ampla, por_reservada):
     listas = [(f"00000000-0000-4000-8000-00000000099{i}", por_reservada) for i in range(6)]
     listas = listas if por_reservada else []
     candidatos = simulacao.populacao(so_ampla, listas, nomear=nome_ficticio)
     recortes = [{"lista_id": None, "rotulo": "", "vagas": 10}] + [
         {"lista_id": lista, "rotulo": lista, "vagas": 3} for lista, _ in listas
     ]
+    return candidatos, recortes
+
+
+PIOR_CASO = pytest.mark.parametrize(
+    ("so_ampla", "por_reservada"), [(500, 0), (260, 40)], ids=["sem-reserva", "seis-reservadas"]
+)
+
+
+@PIOR_CASO
+def test_a_rodada_do_pior_caso_cabe_em_um_segundo(so_ampla, por_reservada):
+    """SC-928, a rodada: ~1,6 ms medidos (R-003), e a folha de 1 s sobra mesmo sob carga."""
+    candidatos, recortes = _pior_caso(so_ampla, por_reservada)
 
     inicio = time.perf_counter()
-    aplicacao.resumir(
+    aplicacao.simular_sorteio(
         MARCO,
         perfil_id=PERFIL,
-        semente="orcamento",
+        metodo={},
+        material=MATERIAL,
         candidatos=candidatos,
         recortes=recortes,
         apurar_recortes=_apurar("ON_BALANCE"),
     )
 
-    assert time.perf_counter() - inicio < 5
+    assert time.perf_counter() - inicio < 1
+
+
+@PIOR_CASO
+def test_o_resumo_cresce_linear_com_as_rodadas(so_ampla, por_reservada):
+    """SC-928, o resumo: **linearidade, e não segundos de relógio**.
+
+    O limite absoluto de 5 s caiu no CI em 21/10/2026 — 7,6 s com 4 workers dividindo o runner,
+    contra 1,4 s medidos nesta máquina (R-003). Relógio sob carga é ruído, e a armadilha já tinha
+    custado um teste da ocupação (`tests/performance/test_ocupacao.py` compara razões pelo mesmo
+    motivo). O que este teste prende é o que estraga o orçamento em qualquer máquina: preparo
+    refeito a cada rodada, ou custo que cresce mais que linear. 1.000 rodadas custam no máximo o
+    dobro de 50 vezes 20 rodadas, em tempo de CPU do processo, que a disputa com os outros workers
+    não infla. Os segundos absolutos ficam no protótipo da pesquisa (`prototipo/medicao.py`).
+    """
+    candidatos, recortes = _pior_caso(so_ampla, por_reservada)
+
+    def custo(rodadas):
+        inicio = time.process_time()
+        aplicacao.resumir(
+            MARCO,
+            perfil_id=PERFIL,
+            semente="orcamento",
+            candidatos=candidatos,
+            recortes=recortes,
+            apurar_recortes=_apurar("ON_BALANCE"),
+            rodadas=rodadas,
+        )
+        return time.process_time() - inicio
+
+    curto, longo = custo(20), custo(1000)
+
+    assert longo <= curto * 50 * 2, f"1.000 rodadas {longo:.2f}s contra 20 rodadas {curto:.3f}s"
