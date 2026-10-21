@@ -77,6 +77,13 @@ def _nome(slot):
     return base if volta == 0 else f"{base} {volta + 1}"
 
 
+# **O repertório é um só, e a prévia do sorteio o recebe por aqui** (098, R-005). O domínio do
+# sorteio não importa a prévia da classificação; quem liga os dois é a camada de aplicação do
+# sorteio, que entrega esta função por parâmetro. Uma segunda lista de nomes lá deixaria as duas
+# prévias chamando de "Alice" pessoas diferentes por razões diferentes.
+nome_ficticio = _nome
+
+
 def _nota(slot, total):
     """Notas inteiras e distintas enquanto couberem; com mais gente, duas casas.
 
