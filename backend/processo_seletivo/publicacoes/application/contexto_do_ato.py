@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from processo_seletivo.publicacoes.infrastructure.pdf import AutoridadeSignataria, UnidadeDoAto
 from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.unidades.application.autoridades import autoridade_para_o_ato
-from processo_seletivo.unidades.application.selectors import exigir_unidade
+from processo_seletivo.unidades.application.selectors import autoridades_vigentes, exigir_unidade
 
 
 @dataclass(frozen=True)
@@ -62,6 +62,21 @@ def unidade_para_o_compositor(unidade):
     """A Unidade registrada, como a prévia a compõe — a prévia não é ato e não congela nada."""
     return UnidadeDoAto(
         cabecalho=tuple(unidade.cabecalho), local=unidade.local, sigla=unidade.sigla
+    )
+
+
+def fechos_previstos(unidade, data):
+    """As autoridades que podem responder pelo ato em `data`, como a prévia as mede (096, D-012).
+
+    A prévia não é ato e não tem autoridade (FR-035): estas não são impressas, só dão a altura do
+    fecho que a publicação vai compor, para que a última seção salte igual nos dois modos. São as
+    mesmas que a tela de publicação oferece.
+    """
+    return tuple(
+        AutoridadeSignataria(
+            nome=autoridade.nome, cargo=autoridade.cargo, ato_de_nomeacao=autoridade.ato_de_nomeacao
+        )
+        for autoridade in autoridades_vigentes(unidade.codigo, data)
     )
 
 

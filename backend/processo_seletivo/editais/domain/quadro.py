@@ -125,3 +125,41 @@ def sem_vaga_imediata(perfil) -> bool:
         and linha.get("immediateVacancies") == 0
         for linha in linhas
     )
+
+
+#: Os tipos de cadastro de reserva que declaram oferta de cadastro.
+TIPOS_DE_CADASTRO = ("LIMITED", "UNLIMITED")
+
+
+def cadastro_sem_vaga_imediata(perfil) -> bool:
+    """O Perfil oferece cadastro de reserva e nenhuma vaga imediata? (096, FR-2402, D-005)
+
+    É o Perfil que o documento imprime como `CR`, no lugar do `0`: a tabela de Perfis, a ficha do
+    Perfil único e as duas tabelas da apresentação por perguntas leem este predicado, e nenhuma
+    decide sozinha. O dado continua `0` — é o que a apuração lê, e a `027` existe para que ele diga
+    zero —; o que muda é só como o documento o apresenta.
+
+    **Não é o `sem_vaga_imediata` da `067`**, que responde se o quadro e a reversão saem, e por isso
+    diz não quando o Perfil não declara quadro. O acervo anterior à `025` não tem quadro, e o
+    consolidado de uma Retificação dele imprimiria `0` num Perfil de cadastro. Os dois concordam
+    sobre o incoerente — total zero com uma linha positiva, que a validação recusa —: ele "tem
+    vaga", e continua `0`, para que o erro se veja na prévia.
+
+    **`bool` não é zero.** O snapshot é JSON, e `False` é `int` em Python: zero declarado é o
+    inteiro, e nada mais, como no predicado da `067`.
+    """
+    if not isinstance(perfil, dict):
+        return False
+    total = perfil.get("immediateVacancies")
+    if not isinstance(total, int) or isinstance(total, bool) or total != 0:
+        return False
+    if perfil.get("reserveType") not in TIPOS_DE_CADASTRO:
+        return False
+    linhas = perfil.get("vacancyTable")
+    return not any(
+        isinstance(linha, dict)
+        and isinstance(linha.get("immediateVacancies"), int)
+        and not isinstance(linha.get("immediateVacancies"), bool)
+        and linha["immediateVacancies"] > 0
+        for linha in (linhas if isinstance(linhas, list) else [])
+    )

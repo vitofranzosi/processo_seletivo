@@ -97,6 +97,17 @@ executa**. Ocupar sem quantidade é caso normal, não borda.
 
 *Evidência: 76 (`CR` em cinco polos); 173 (cadastro de reserva puro).*
 
+> **Atendido em parte pela `096` (21/10/2026).** O documento passou a imprimir `CR` no lugar do `0`
+> do Perfil de cadastro de reserva sem vaga imediata, com a nota "CR: cadastro de reserva." abaixo
+> de cada tabela que usa a sigla; o dado continua `0`. Ocupar e convocar sem quantidade continuam
+> fora do piloto (`DP-05`). Dois achados ficaram registrados, e não corrigidos:
+>
+> - **O cadastro limitado em 0** é aceito pelo domínio (só o limite negativo é recusado), e o
+>   documento o imprime como cadastro: `CR` na célula de vagas, com o limite zero na coluna ao lado.
+>   É um cadastro que não cadastra ninguém, e a validação não diz nada.
+> - **O assistente de dúvidas** (`071`, `074`) lê o conteúdo publicado, em que o Perfil continua com
+>   `immediateVacancies: 0`, e pode responder "0 vagas" sobre um Perfil que o documento diz `CR`.
+
 ### P-3 · Por quanto tempo uma classificação produz efeito, e sobre qual oferta?
 
 Processos têm prazo de validade, prorrogável, e dentro dele a classificação **sobrevive ao próprio

@@ -187,7 +187,10 @@ from processo_seletivo.processos.application.selectors import (
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL, pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.aplicacao import criar_retificacao_com_gestos
-from processo_seletivo.publicacoes.application.contexto_do_ato import unidade_para_o_compositor
+from processo_seletivo.publicacoes.application.contexto_do_ato import (
+    fechos_previstos,
+    unidade_para_o_compositor,
+)
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
@@ -3665,11 +3668,15 @@ def previa_documento(request, edital_id):
     # A unidade registrada agora: a prévia não é ato e não congela nada, mas abre com o cabeçalho
     # que o documento publicado vai ter (060, FR-1112).
     unidade = unidades_selectors.exigir_unidade(edital.institution_scope)
+    hoje = timezone.now().astimezone(ZONA_INSTITUCIONAL).date()
     documento = render_edital_pdf(
         edital_snapshot(edital),
         "",
         modo=MODO_PREVIA,
         unidade=unidade_para_o_compositor(unidade),
+        # O espaço do fecho, medido pelas autoridades que podem responder pelo ato (096, D-012):
+        # sem ele, a última seção saltava só no publicado, e a prévia mostrava uma página a menos.
+        fechos_previstos=fechos_previstos(unidade, hoje),
     )
     resposta = HttpResponse(documento, content_type="application/pdf")
     nome = f"previa-edital-{edital.number}-{edital.year}.pdf".replace("/", "-")
