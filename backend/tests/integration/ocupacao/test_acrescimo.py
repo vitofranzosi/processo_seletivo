@@ -378,6 +378,32 @@ class TestOAto:
         assert effective_version(edital_id=edital.id).content == conteudo
 
 
+class TestOAcrescimoSobreviveAoQueSucedeDepois:
+    """`FR-2452`: o acréscimo é do recorte, e não do corte nem da ordem que estavam vigentes."""
+
+    def test_o_corte_sucedido_nao_o_desfaz_nem_o_duplica(self, cenario_reserva, gestor):
+        from processo_seletivo.classificacao.application.corte import geracao_vigente
+        from tests.fixtures.corte import emitir as emitir_corte
+
+        edital, _, _ = cenario_reserva
+        acrescentar(edital, gestor, 2)
+        vigente = selectors.apuracao_vigente(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+        assert vigente.efetivas == 2
+
+        emitir_corte(
+            edital,
+            gestor,
+            chave="097-corte-sucessor",
+            motivo="a comissão revisou o alvo",
+            geracao=geracao_vigente(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO),
+        )
+
+        assert causas(vigente) == {nomes.CAUSA_CORTE_OBSOLETO}, "o corte, e não o acréscimo"
+        seguinte = apurar(edital, gestor, chave="097-depois-do-corte", motivo="Corte sucedido")
+        assert seguinte["efetivas"] == 2, "nem desfeito, nem somado de novo"
+        assert seguinte["universo"]["acrescimosLidos"] == vigente.universo["acrescimosLidos"]
+
+
 class TestALinhaGeral:
     """`FR-2464`: só a ampla de Perfil cujo quadro tem só a linha geral (`T-006`)."""
 

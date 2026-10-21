@@ -25,9 +25,11 @@ required`) e o botão *"Conferir o desfazimento"*.
 **O formulário do acréscimo**, só para quem apura e só no Perfil que o aceita: quantidade, origem
 (`input type="text" required`), fundamento (`textarea`), referência (opcional) e o botão
 *"Conferir o acréscimo"*. A ajuda diz: *"Escreva de onde a vaga veio — o número do Edital e o campus — e
-por quê. Não escreva o nome de pessoas do outro Edital."* No Perfil que não aceita, no lugar do
-formulário, a frase da recusa que o ato daria (`acrescimo_sem_cadastro_de_reserva` ou
-`acrescimo_fora_da_linha_geral`).
+por quê. Não escreva o nome de pessoas do outro Edital."* No Perfil que publicou cadastro de reserva e
+reparte vagas entre modalidades, no lugar do formulário, a frase da recusa que o ato daria
+(`acrescimo_fora_da_linha_geral`). No Perfil sem reserva — a maioria dos Editais —, nem formulário nem
+frase: o acréscimo não é caminho de nada ali, e a recusa em toda tela de ocupação seria ruído
+(*alinhado à implementação na convergência, T044*).
 
 **Os botões** novos de `ocupacao.html`, na ordem, entram em `BOTOES` de
 `tests/interface/test_telas_de_resultado_e_atos.py`: `("botao", "Conferir o acréscimo")` e

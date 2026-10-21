@@ -121,7 +121,7 @@ Perfil só de reserva com linha de Modalidade é avisado de que o acréscimo nã
 - [X] T039 [P] `specs/097-convocar-do-cadastro-de-reserva/rastreabilidade.md` (novo): cada `FR-`, `SC-` e `UX-` desta spec com o teste que o prova; e, em `specs/050-convocacao-como-fluxo/rastreabilidade.md`, a nota de que a `FR-889` foi revista pela `FR-2455`
 - [X] T040 `cd backend && make lint check` e a suíte inteira contra PostgreSQL com `DB_NAME=ps_097`: verde, com os números em `verificacao.md`
 - [X] T041 Demonstração pela interface, num banco `ps_097_demo` novo, dos passos 1 a 11 do [quickstart.md](quickstart.md), com captura; o registro em `verificacao.md` (`SC-920`)
-- [ ] T042 `/speckit-converge`: o que faltar vira tarefa nova neste arquivo
+- [X] T042 `/speckit-converge`: o que faltar vira tarefa nova neste arquivo
 
 ---
 
@@ -145,3 +145,10 @@ Perfil só de reserva com linha de Modalidade é avisado de que o acréscimo nã
 sozinho: sem a US3, um acréscimo registrado por engano não tem saída, e a equipe recorreria à
 Retificação que esta spec existe para evitar. A US2 é pequena e entra no mesmo PR, para que a Revisão
 não diga coisa falsa no dia em que a US1 chegar à `main`. Um PR só, com as três.
+
+---
+
+## Phase 7: Convergence
+
+- [X] T043 Em `backend/tests/integration/ocupacao/test_acrescimo.py`, provar que o corte sucedido depois de um acréscimo torna a apuração obsoleta pela causa do corte, e que a apuração seguinte soma o acréscimo uma vez, sem desfazê-lo nem duplicá-lo per FR-2452 (partial)
+- [X] T044 Em `specs/097-convocar-do-cadastro-de-reserva/contracts/tela.md`, alinhar a regra da frase da recusa à decisão implementada — ela aparece só no Perfil que publicou cadastro de reserva, e não em todo Perfil — per plan: contracts/tela.md (contradicts)
