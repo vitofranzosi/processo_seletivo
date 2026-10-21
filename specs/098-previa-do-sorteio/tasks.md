@@ -42,6 +42,15 @@ relação ao planejado:**
 - **A lista literal da varredura de vocabulário não precisou de linha** (T032): ela desce nos parciais
   de `compor_classificacao.html`, e o painel do sorteio é incluído ali como o da `094`.
 
+**21/10/2026, a revisão de código** (`/code-review` nos dois PRs, a pedido do usuário): 8 achados no
+motor e 10 na interface, todos corrigidos. Os de efeito no que o elaborador lê: a média de
+autodeclarados que ocupam a ampla esquecia quem é de reservada não apurada; o resumo era recalculado
+no detalhe e a cada pausa de digitação no cartão; "menos inscritos que vagas" saía também com
+números iguais; a recusa da semente descartava a população digitada. E um defeito que a revisão não
+nomeou e o teste dela expôs: o token da semente era reassinado a cada pedido, e o `signing` carimba o
+instante — o painel mudava de um segundo para o outro. A equivalência passou a cobrir o alvo fixo com
+suplente.
+
 **Organization**: a Fase 2 é o motor — ordem fictícia, rodada, resumo e equivalência —, puro e sem tela.
 As fases das histórias são a interface, e dependem da Fase 2 inteira. A US1 é o MVP; a US2 e a US3
 escrevem no mesmo template e no mesmo módulo de frases, e correm depois dela.

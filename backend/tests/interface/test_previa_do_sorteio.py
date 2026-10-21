@@ -92,7 +92,8 @@ def test_a_semente_e_ficticia_tem_cinco_grupos_de_seis_digitos_e_nao_tem_campo(
     corpo = previa(client, com_reservas)
 
     assert [len(g) for g in grupos(corpo)] == [6, 6, 6, 6, 6]
-    assert "selo-ficticio" in bloco(corpo, "semente-ficticia") or "fictícia" in texto(corpo)
+    # O elemento do selo, e não a palavra: "fictícia" já está no título (revisão do #328).
+    assert '<span class="selo-ficticio">fictícia</span>' in corpo
     assert "a semente sairá do concurso que o Edital declarar, e a ordem será outra" in texto(corpo)
     # O único campo de semente é o oculto, com o token; nenhum se digita (FR-2483).
     campos = re.findall(r'<input[^>]*name="(semente|seed|material)"[^>]*>', corpo)
@@ -153,6 +154,42 @@ def test_a_lista_pedida_que_nao_existe_mostra_a_ampla_e_diz(client, com_reservas
 
     assert "A lista pedida não existe mais no rascunho; a prévia mostra a ampla." in visivel
     assert "ª na ampla" not in visivel
+
+
+def test_tantos_inscritos_quantas_vagas_nao_se_diz_menos(client, com_reservas):
+    """Revisão do #328: 3 PPI para 3 vagas não são "menos inscritos que vagas"."""
+    visivel = texto(previa(client, com_reservas, **{f"inscritos-{PPI}": "3"}))
+
+    assert "Há tantos inscritos quantas vagas" in visivel
+    assert "PPI): 3 autodeclarados; 3 avançariam. Há menos" not in visivel
+
+
+def test_o_detalhe_nao_calcula_o_resumo_das_rodadas(client, com_reservas):
+    """Revisão do #328: o detalhe não desenha o resumo, e não paga as 1.000 rodadas."""
+    from unittest import mock
+
+    with mock.patch.object(
+        previa_do_sorteio.aplicacao, "resumir", side_effect=AssertionError("resumo no detalhe")
+    ):
+        corpo = previa(client, com_reservas, vista="detalhe", recorte=PPI)
+
+    assert "rodadas-do-sorteio" not in corpo
+
+
+def test_a_recusa_da_semente_mantem_a_populacao_digitada(client, com_reservas):
+    """Revisão do #328: o "Sortear de novo" da recusa leva as quantidades que estavam no painel."""
+    corpo = previa(client, com_reservas, semente="forjada", **{f"inscritos-{PCD}": "3"})
+
+    assert "A semente desta prévia não foi reconhecida." in texto(corpo)
+    assert re.search(rf'id="inscritos-{PCD}"[^>]*value="3"', corpo)
+    assert "data-populacao" in corpo
+
+
+def test_o_painel_recalcula_na_mudanca_e_nao_a_cada_digitacao(client, com_reservas):
+    corpo = previa(client, com_reservas)
+
+    assert 'hx-trigger="change from:#cartao-' in corpo
+    assert "input changed delay" not in corpo
 
 
 def test_menos_inscritos_que_vagas_sorteia_mesmo_assim(client, com_reservas):
@@ -363,13 +400,10 @@ def test_o_anuncio_diz_se_a_semente_mudou_ou_foi_mantida(client, com_reservas):
 
 def test_a_semente_quebra_entre_grupos_e_nunca_dentro_de_um():
     """A 375 px, os cinco grupos empilham inteiros (FR-2510): a regra está na folha da prévia."""
-    from tests.interface.folha import folha_da_pagina  # noqa: F401 — só para garantir o módulo
+    from tests.interface.folha import FOLHAS_DE_TELA
 
-    folha = (
-        __import__("pathlib")
-        .Path(previa_do_sorteio.__file__)
-        .parent.joinpath("static/interface/telas/previa-da-classificacao.css")
-        .read_text(encoding="utf-8")
+    folha = next(f for f in FOLHAS_DE_TELA if f.name == "previa-da-classificacao.css").read_text(
+        encoding="utf-8"
     )
     assert ".grupos-da-semente{display:flex;flex-wrap:wrap" in folha
     assert ".grupos-da-semente span{white-space:nowrap}" in folha

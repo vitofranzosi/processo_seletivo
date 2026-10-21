@@ -55,13 +55,20 @@ def assinar(material, *, edital, perfil_id, marco_id):
 
 
 def semente_do_pedido(dados, *, edital, perfil_id, marco_id):
-    """`(material, nova)` — ou `None`, quando o token não é deste servidor para este marco.
+    """`(material, token, nova)` — ou `None`, quando o token não é deste servidor para este marco.
 
-    Sem token, ou com "Sortear de novo", a semente é nova. Com token válido, a mesma (D-006).
+    Sem token, ou com "Sortear de novo", a semente é nova, e assinada agora. Com token válido, a
+    mesma, **com o mesmo token** (D-006): `signing.dumps` carimba o instante, e reassinar a cada
+    pedido mudaria o painel de um segundo para o outro sem que nada tivesse mudado.
     """
     token = (dados.get("semente") or "").strip()
     if dados.get("sortear") or not token:
-        return material_ficticio(), True
+        material = material_ficticio()
+        return (
+            material,
+            assinar(material, edital=edital, perfil_id=perfil_id, marco_id=marco_id),
+            True,
+        )
     try:
         conteudo = signing.loads(token, salt=SAL)
     except signing.BadSignature:
@@ -72,7 +79,7 @@ def semente_do_pedido(dados, *, edital, perfil_id, marco_id):
     ):
         return None
     material = conteudo.get("material")
-    return (material, False) if isinstance(material, str) and material else None
+    return (material, token, False) if isinstance(material, str) and material else None
 
 
 # --- A população informada (FR-2487 a FR-2491) ---------------------------------------------------
@@ -163,11 +170,11 @@ def contexto(*, perfil, marco, sub, snapshot, edital, indice, recortes, especie,
             "estado": SEMENTE_RECUSADA,
             "anuncio": "A semente desta prévia não foi reconhecida. Sorteie de novo.",
         }
-    material, nova = pedido
+    material, token, nova = pedido
     base["semente"] = {
         "material": material,
         "grupos": material.split(),
-        "token": assinar(material, edital=edital, perfil_id=perfil["id"], marco_id=marco["id"]),
+        "token": token,
         "nova": nova,
     }
     limite = aplicacao.acima_do_limite(so_ampla, por_reservada)
@@ -186,6 +193,8 @@ def contexto(*, perfil, marco, sub, snapshot, edital, indice, recortes, especie,
             recortes=recortes,
             apurar_recortes=apurar,
         )
+        # **O resumo só na vista do processo**: o detalhe não o desenha, e as 1.000 rodadas custam
+        # até ~1,4 s por pedido (revisão do #328).
         resumo = (
             aplicacao.resumir(
                 marco,
@@ -194,8 +203,9 @@ def contexto(*, perfil, marco, sub, snapshot, edital, indice, recortes, especie,
                 candidatos=candidatos,
                 recortes=recortes,
                 apurar_recortes=apurar,
+                preparo=p["preparo"],
             )
-            if len(recortes) > 1
+            if len(recortes) > 1 and vista == "processo"
             else None
         )
     except calculo.Incompleto as erro:
@@ -224,7 +234,7 @@ def contexto(*, perfil, marco, sub, snapshot, edital, indice, recortes, especie,
         "regra_do_marco": _regra_do_marco(p),
         "recortes": resumo_por_recorte,
         "ocupacao_dos_recortes": _ocupacao(p),
-        "rodadas": _rodadas(resumo, p, recortes),
+        "rodadas": _rodadas(resumo, p, recortes) if vista == "processo" else None,
     }
     contexto_["anuncio"] = _anuncio(nova, resumo_por_recorte, contexto_["rodadas"])
     if vista == "detalhe":
@@ -235,12 +245,9 @@ def contexto(*, perfil, marco, sub, snapshot, edital, indice, recortes, especie,
 # --- As frases -----------------------------------------------------------------------------------
 
 
-def _n(quantos, singular, plural):
-    return f"{quantos} {singular if quantos == 1 else plural}"
-
-
-def _decimal(valor):
-    return f"{valor:.1f}".replace(".", ",")
+def _media(valor):
+    """Uma casa decimal, com vírgula — o `numero` da prévia da pontuação."""
+    return pontuacao.numero(float(valor), 1)
 
 
 def _frases_da_semente(p, perfil):
@@ -295,7 +302,7 @@ def _resumo_por_recorte(p):
             universo = f"todos os {p['total']} inscritos, autodeclarados inclusive"
             rotulo = r["rotulo"] or "Ampla concorrência"
         else:
-            universo = _n(r["total"], "autodeclarado", "autodeclarados")
+            universo = pontuacao.contagem(r["total"], "autodeclarado", "autodeclarados")
         if not r["total"]:
             texto = (
                 "ninguém concorreu nesta lista na população fictícia. O sistema não sorteia lista "
@@ -310,9 +317,14 @@ def _resumo_por_recorte(p):
             avancam = len(r["corte"]["progrediram"])
             texto = f"{universo}; {avancam} {'avançaria' if avancam == 1 else 'avançariam'}."
             if r["vagas"] is not None and r["total"] <= r["vagas"]:
+                quantos = (
+                    "menos inscritos que vagas"
+                    if r["total"] < r["vagas"]
+                    else "tantos inscritos quantas vagas"
+                )
                 texto += (
-                    " Há menos inscritos que vagas, e o sistema sorteia mesmo assim: a posição "
-                    "decide a ordem de chamada"
+                    f" Há {quantos}, e o sistema sorteia mesmo assim: a posição decide a ordem "
+                    "de chamada"
                     + (", e quem também concorre por uma reservada." if indice == 0 else ".")
                 )
         linhas.append({"lista_id": r["lista_id"], "rotulo": rotulo, "texto": texto})
@@ -341,9 +353,9 @@ def _ocupacao(p):
     # O caminho da `095` manda escolher um caso-limite ou julgar o empate da ampla, e o sorteio não
     # tem nem um nem outro: a ampla só deixa de ser apurável por falta de linha no quadro.
     bloco["caminho"] = ""
-    vazias = {r["rotulo"] for r in p["recortes"][1:] if not r["total"]}
+    vazias = {r["lista_id"] for r in p["recortes"][1:] if not r["total"]}
     for linha in bloco["linhas"]:
-        if linha["rotulo"] in vazias:
+        if linha["lista_id"] is not None and linha["lista_id"] in vazias:
             linha["texto"] = (
                 "Não apurada: ninguém concorreu, e a lista não seria sorteada. Por isso a vaga "
                 "dela ficaria sem ocupante e não seria cedida à ampla, nem pela reversão "
@@ -376,7 +388,8 @@ def _rodadas(resumo, p, recortes):
                 and not next(r for r in p["recortes"] if r["lista_id"] == recorte["lista_id"])[
                     "total"
                 ]
-                else "não avaliada em rodada nenhuma: " + _motivo(dados["estado"])
+                else "não avaliada em rodada nenhuma: "
+                + pontuacao.motivo_nao_avaliado(dados).rstrip(".")
             )
             linhas.append({"rotulo": rotulo, "frases": [frase], "destaque": False})
             continue
@@ -396,13 +409,13 @@ def _rodadas(resumo, p, recortes):
         sem = dados["sem_ocupante"]
         if sem["media"]:
             frases.append(
-                f"{_n(sem['valor'], 'vaga', 'vagas')} sem ocupante em todas"
+                f"{pontuacao.contagem(sem['valor'], 'vaga', 'vagas')} sem ocupante em todas"
                 if sem["constante"]
-                else f"em média, {_decimal(sem['media'])} sem ocupante"
+                else f"em média, {_media(sem['media'])} sem ocupante"
             )
         pela = dados["pela_ampla"]["media"]
         frases.append(
-            f"em média, {_decimal(pela)} "
+            f"em média, {_media(pela)} "
             + ("autodeclarado ocuparia" if pela == 1 else "autodeclarados ocupariam")
             + " pela ampla"
         )
@@ -422,7 +435,7 @@ def _rodadas(resumo, p, recortes):
             else:
                 media = cedidas["media"]
                 frases.append(
-                    f"em média, {_decimal(media)} "
+                    f"em média, {_media(media)} "
                     + ("vaga seria cedida" if media == 1 else "vagas seriam cedidas")
                     + f" à ampla, em {round(dados['com_cessao']['porcentagem'])}% das rodadas"
                 )
@@ -433,7 +446,7 @@ def _rodadas(resumo, p, recortes):
     ampla = resumo["ampla"]
     vagas = recortes[0]["vagas"]
     frase_da_ampla = (
-        f"Em média, {_decimal(ampla['autodeclarados_ocupando']['media'])} das {vagas} vagas da "
+        f"Em média, {_media(ampla['autodeclarados_ocupando']['media'])} das {vagas} vagas da "
         "ampla seriam ocupadas por autodeclarados."
         if ampla.get("avaliadas")
         else ""
@@ -444,14 +457,6 @@ def _rodadas(resumo, p, recortes):
         "ampla": frase_da_ampla,
         "dp1": any(linha["destaque"] for linha in linhas),
     }
-
-
-def _motivo(estado):
-    return {
-        "sem_linha": "a lista não tem linha no quadro de vagas, e ausência não vira zero",
-        "corte_nao_emitido": "o corte desta lista não seria emitido",
-        "depende_da_ampla": "depende da ampla, que não é apurável sem a linha geral do quadro",
-    }.get(estado, "a apuração não é possível")
 
 
 def _anuncio(nova, recortes, rodadas):
@@ -498,7 +503,7 @@ def _detalhe(p, pedido):
                     f"{p['posicao_na_ampla'][identificador]}ª na ampla" if reservada else ""
                 ),
                 "pela_ampla": reservada and identificador in ocupam,
-                "marca": pontuacao._marca(em_vista["consequencias"][identificador], p),
+                "marca": pontuacao.marca(em_vista["consequencias"][identificador], p),
             }
         )
     return {

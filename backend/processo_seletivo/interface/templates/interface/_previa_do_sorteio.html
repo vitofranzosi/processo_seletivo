@@ -9,12 +9,19 @@ estas classes e as varreduras de vocabulário descerem nele. Sem contexto, não 
 
 **A semente não tem campo** (D-001, FR-2483): ela viaja no campo oculto `semente` como token que o
 servidor assinou, e só "Sortear de novo" a troca (D-006).
+
+**Recalcula na mudança do cartão, e não a cada pausa de digitação**, como a da `094` faz: cada
+recálculo do sorteio refaz as 1.000 rodadas do resumo, e digitar o nome do marco dispararia um
+pedido caro a cada 400 ms (revisão do #328).
+
+**A população vem antes do estado da semente**: na recusa, o "Sortear de novo" leva as quantidades
+que o elaborador digitou, em vez de voltar à sugestão sem avisar.
 {% endcomment %}
 {% if previa_url %}
 <div class="recalculo" hx-get="{{ previa_url }}"
      hx-include="#cartao-{{ indice }}, #semente-da-previa, [data-populacao], #vista-da-previa, #recorte-da-previa"
      hx-target="#painel-da-previa" hx-swap="innerHTML"
-     hx-trigger="change from:#cartao-{{ indice }}, input changed delay:400ms from:#cartao-{{ indice }}">
+     hx-trigger="change from:#cartao-{{ indice }}">
   <div class="cabeca-do-painel">
     {% if vista == "detalhe" %}
     <button type="button" class="voltar" data-foco-no-titulo hx-get="{{ previa_url }}&amp;vista=processo"
@@ -41,6 +48,7 @@ servidor assinou, e só "Sortear de novo" a troca (D-006).
     <button type="button" class="acao-discreta" hx-get="{{ previa_url }}&amp;sortear=1"
             hx-include="#cartao-{{ indice }}, [data-populacao], #vista-da-previa"
             hx-target="#painel-da-previa" hx-swap="innerHTML">Sortear de novo</button></div>
+  {% include "interface/_populacao_do_sorteio.html" %}
   {% else %}
   {% include "interface/_semente_ficticia.html" %}
   {% include "interface/_populacao_do_sorteio.html" %}

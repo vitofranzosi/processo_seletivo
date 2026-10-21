@@ -104,7 +104,8 @@ def _terminal(p):
     return (p["regra"] or {}).get("governedStage") == "NONE"
 
 
-def _marca(codigo, p):
+def marca(codigo, p):
+    """A marca da consequência de uma pessoa. Pública desde a `098`: a prévia do sorteio a usa."""
     classe, rotulo = CONSEQUENCIA[codigo]
     if _terminal(p):
         rotulo = TERMINAL.get(codigo, rotulo)
@@ -417,7 +418,7 @@ def fronteira(p, mudaram, destacar=frozenset()):
         codigo = p["consequencias"][pulados[0]["inscricao_id"]]
         if len(pulados) == 1:
             intervalo = f"{pulados[0]['posicao']}ª: 1 candidato"
-            rotulo = _marca(codigo, p)["rotulo"].lower()
+            rotulo = marca(codigo, p)["rotulo"].lower()
         else:
             intervalo = (
                 f"{pulados[0]['posicao']}ª a {pulados[-1]['posicao']}ª: {len(pulados)} candidatos"
@@ -449,7 +450,7 @@ def fronteira(p, mudaram, destacar=frozenset()):
                         else ""
                     ),
                     "pontuacao": numero(item["pontuacao"], p["escala"]),
-                    "marca": _marca(codigo, p),
+                    "marca": marca(codigo, p),
                     "mudou": item["inscricao_id"] in mudaram,
                 }
             )
@@ -476,7 +477,7 @@ def fronteira(p, mudaram, destacar=frozenset()):
                 "id": item["inscricao_id"],
                 "nome": item["nome"],
                 "etiqueta": _motivo_curto(item),
-                "marca": _marca(C.SEM_POSICAO, p),
+                "marca": marca(C.SEM_POSICAO, p),
                 "mudou": item["inscricao_id"] in mudaram,
             }
         )
@@ -647,7 +648,7 @@ def completa(p, mudaram):
         linhas.append(
             {
                 "celulas": list(zip(cabeca[:-1], valores, strict=True)),
-                "marca": _marca(p["consequencias"][item["inscricao_id"]], p),
+                "marca": marca(p["consequencias"][item["inscricao_id"]], p),
                 "mudou": item["inscricao_id"] in mudaram,
             }
         )
@@ -663,7 +664,7 @@ def completa(p, mudaram):
         linhas.append(
             {
                 "celulas": list(zip(cabeca[:-1], valores, strict=True)),
-                "marca": _marca(C.SEM_POSICAO, p),
+                "marca": marca(C.SEM_POSICAO, p),
                 "mudou": item["inscricao_id"] in mudaram,
             }
         )
@@ -901,7 +902,8 @@ def jornada(p, marcos, sub, url_do_marco):
 RODADA = rodada_da_previa
 
 
-def _n(quantos, singular, plural):
+def contagem(quantos, singular, plural):
+    """`1 vaga`, `2 vagas`. Pública desde a `098`, que a usa nas frases do sorteio."""
     return f"{quantos} {singular if quantos == 1 else plural}"
 
 
@@ -993,9 +995,9 @@ def _frase_da_reversao(apurado, rotulo, especie):
         cede = apurado["cederia"]
         verbo = "seria cedida" if cede == 1 else "seriam cedidas"
         return (
-            f"Pela reversão declarada, {nome}, {_n(cede, 'vaga', 'vagas')} {verbo} à ampla "
+            f"Pela reversão declarada, {nome}, {contagem(cede, 'vaga', 'vagas')} {verbo} à ampla "
             f"concorrência deste Perfil, e a apuração de {rotulo} registraria "
-            f"{_n(apurado['efetivas'], 'efetiva', 'efetivas')}, "
+            f"{contagem(apurado['efetivas'], 'efetiva', 'efetivas')}, "
             + (
                 f"{apurado['faltando']} sem ocupante."
                 if apurado["faltando"]
@@ -1005,9 +1007,9 @@ def _frase_da_reversao(apurado, rotulo, especie):
     return (
         f"Pela reversão declarada, {nome}, nenhuma vaga seria cedida: pela regra de hoje, "
         f"{rotulo} ainda tem quem ocupar — "
-        f"{_n(apurado['pessoas_com_posicao'], 'pessoa', 'pessoas')} com posição para "
-        f"{_n(apurado['ocupadas'], 'vaga ocupada', 'vagas ocupadas')} —, e a conta inclui quem "
-        "ocupa pela ampla. "
+        f"{contagem(apurado['pessoas_com_posicao'], 'pessoa', 'pessoas')} com posição para "
+        f"{contagem(apurado['ocupadas'], 'vaga ocupada', 'vagas ocupadas')} —, e a conta inclui "
+        "quem ocupa pela ampla. "
         "É o comportamento atual do sistema, registrado como pendente de decisão na spec 095."
     )
 
@@ -1017,14 +1019,15 @@ def _quantidades(apurado):
     parte, com o que a apuração registraria depois dela (095, R-004)."""
     sem = apurado.get("sem_ocupante_antes", apurado["faltando"])
     return (
-        f"{_n(apurado['publicadas'], 'publicada', 'publicadas')}, "
-        f"{_n(apurado['ocupadas'], 'ocupada', 'ocupadas')}, "
+        f"{contagem(apurado['publicadas'], 'publicada', 'publicadas')}, "
+        f"{contagem(apurado['ocupadas'], 'ocupada', 'ocupadas')}, "
         + (f"{sem} sem ocupante nesta hipótese" if sem else "nenhuma sem ocupante nesta hipótese")
         + "."
     )
 
 
-def _motivo_nao_avaliado(apurado):
+def motivo_nao_avaliado(apurado):
+    """Por que a apuração de um recorte não foi avaliada. Pública desde a `098`."""
     estado = apurado["estado"]
     if estado == RODADA.SEM_LINHA:
         return "este recorte não tem linha no quadro de vagas, e ausência não vira zero."
@@ -1039,11 +1042,18 @@ def _estado_nao_avaliado(apurado, rotulo):
             f"Pararia na {apurado['posicao']}ª posição: {apurado['quantas']} empatados disputam a "
             "última vaga, e a apuração não escolhe entre eles."
         )
-    return "Não avaliada: " + _motivo_nao_avaliado(apurado)
+    return "Não avaliada: " + motivo_nao_avaliado(apurado)
 
 
 def ocupacao_dos_recortes(p):
-    """O bloco da ocupação por recorte, sempre como hipótese (FR-2320 a FR-2330)."""
+    """O bloco da ocupação por recorte, sempre como hipótese (FR-2320 a FR-2330).
+
+    **O que ela lê de `p`** — e é o contrato com a prévia do sorteio, que a chama com um `p` montado
+    para ela (098): `ocupacao_por_recorte` (a rodada da `ocupacao`), `rotulo_da_ampla`, `recortes`
+    (cada um com `lista_id`, `rotulo`, `corte`, `ordem` e `sem_posicao`), e `ordem` e
+    `sem_posicao` da ampla, cujos itens trazem `inscricao_id` e `nome`. Cada linha devolvida leva o
+    `lista_id` do recorte, para quem precisa achá-la sem depender do rótulo.
+    """
     rodada = p.get("ocupacao_por_recorte")
     if not rodada:
         return None
@@ -1054,7 +1064,7 @@ def ocupacao_dos_recortes(p):
     linhas = []
     for lista_id, rotulo, calculado in recortes:
         apurado = apurados.get(lista_id) or {"estado": RODADA.SEM_LINHA}
-        linha = {"rotulo": rotulo, "frases": []}
+        linha = {"lista_id": lista_id, "rotulo": rotulo, "frases": []}
         if apurado["estado"] != RODADA.AVALIADA:
             linha["estado"] = (
                 "neutro" if apurado["estado"] != RODADA.PAROU_NA_FRONTEIRA else "aviso"
@@ -1078,11 +1088,11 @@ def ocupacao_dos_recortes(p):
                 faixa = len(calculado["corte"].get("progrediram") or [])
                 tomadas, alem = apurado["tomadas_pela_ampla"], apurado["alem_da_faixa"]
                 linha["frases"].append(
-                    f"Das {_n(faixa, 'posição', 'posições')} da faixa de {rotulo}, {tomadas} "
+                    f"Das {contagem(faixa, 'posição', 'posições')} da faixa de {rotulo}, {tomadas} "
                     + ("é de quem ocupa" if tomadas == 1 else "são de quem ocupa")
                     + " pela ampla"
                     + (
-                        f"; {_n(alem, 'autodeclarado', 'autodeclarados')} com posição "
+                        f"; {contagem(alem, 'autodeclarado', 'autodeclarados')} com posição "
                         + ("ficou" if alem == 1 else "ficaram")
                         + " além da faixa, e alcançá-"
                         + ("lo" if alem == 1 else "los")
@@ -1153,7 +1163,7 @@ def recorte_em_vista(p, pedido):
     elif apurado["estado"] == RODADA.AVALIADA:
         aviso = {"avaliado": True, "para": False}
     else:
-        aviso = {"avaliado": False, "motivo": _motivo_nao_avaliado(apurado)}
+        aviso = {"avaliado": False, "motivo": motivo_nao_avaliado(apurado)}
     return {**p, **r, "aviso_das_vagas": aviso}, str(r["lista_id"]), ""
 
 
@@ -1328,7 +1338,16 @@ def contexto(
             apurar_recortes=apurar_recortes_com(especie),
         )
     except calculo.ForaDaFatia:
-        return {**base, "fora_da_fatia": True, "anuncio": "A prévia cobre marcos pela pontuação."}
+        # Desde a `098`, o marco por sorteio é despachado antes de chegar aqui, e a forma em branco
+        # cai na pontuação. Sobra só uma forma que o vocabulário não tem, e ela é falta a declarar.
+        faltas = ["Escolha como o marco produz a ordem: pela pontuação ou por sorteio."]
+        return {
+            **base,
+            "faltas": faltas,
+            "candidatos": candidatos(None, escolha),
+            "anterior": dados.get("anterior") or "",
+            "anuncio": "Prévia não calculada: falta declarar a forma do marco.",
+        }
     except calculo.Incompleto as erro:
         return {
             **base,
