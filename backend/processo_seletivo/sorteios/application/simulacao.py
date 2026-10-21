@@ -83,6 +83,9 @@ def simular_sorteio(
     previa = _rodada(preparo, semente, apurar_recortes, perfil_id)
     return {
         **previa,
+        # O que não muda entre rodadas, para o `resumir` da mesma requisição não refazer as
+        # relações e os resumos delas.
+        "preparo": preparo,
         "material": material,
         "semente": semente,
         "regra_de_normalizacao": regra_norm,
@@ -94,25 +97,47 @@ def simular_sorteio(
     }
 
 
-def resumir(marco, *, perfil_id, semente, candidatos, recortes, apurar_recortes, rodadas=RODADAS):
+def resumir(
+    marco,
+    *,
+    perfil_id,
+    semente,
+    candidatos,
+    recortes,
+    apurar_recortes,
+    rodadas=RODADAS,
+    preparo=None,
+):
     """O resumo de `rodadas` rodadas com sementes derivadas da exibida (FR-2501 a FR-2505).
 
-    Não guarda ordem nenhuma: cada rodada deixa só os contadores do `data-model.md`.
+    Não guarda ordem nenhuma: cada rodada deixa só os contadores do `data-model.md`. `preparo` é o
+    que `simular_sorteio` devolveu na mesma requisição; sem ele, as relações são feitas aqui.
     """
-    preparo = _preparar(marco, perfil_id, candidatos, recortes, None)
+    if apurar_recortes is None:
+        # O resumo é de ocupação: sem a rodada da `ocupacao` não há o que contar, e um resumo vazio
+        # se leria como "nunca sobra vaga".
+        raise ValueError("O resumo das rodadas precisa da rodada de ocupação (`apurar_recortes`).")
+    preparo = preparo or _preparar(marco, perfil_id, candidatos, recortes, None)
     if not preparo["regra"]:
         # Sem corte, toda rodada daria "não há faixa": repetir isso mil vezes não é resumo.
         return {"rodadas": 0, "semente": semente, "sem_corte": True}
     reservadas = [r["lista_id"] for r in recortes if r["lista_id"] is not None]
+    # **Quem ocupa a ampla sendo autodeclarado sai dos ocupantes da ampla, e não das reservadas**:
+    # somar `ocupam_pela_ampla` das reservadas deixava de fora quem é de uma reservada que não foi
+    # apurada (sem linha no quadro, ou vazia), e a média da ampla saía menor que a verdade.
+    autodeclarados = {c.id for c in candidatos if c.lista_id is not None}
     contas = {lista: _Conta() for lista in reservadas}
     ampla = _Conta()
     estados = {}
     for indice in range(rodadas):
         rodada = _rodada(
-            preparo, simulacao.semente_da_rodada(semente, indice), apurar_recortes, perfil_id
+            preparo,
+            simulacao.semente_da_rodada(semente, indice),
+            apurar_recortes,
+            perfil_id,
+            completa=False,
         )
         ocupacao = rodada["ocupacao_por_recorte"]["recortes"]
-        pela_ampla = 0
         for lista in reservadas:
             apurado = ocupacao.get(lista) or {}
             estados.setdefault(lista, apurado.get("estado"))
@@ -120,7 +145,6 @@ def resumir(marco, *, perfil_id, semente, candidatos, recortes, apurar_recortes,
                 continue
             sobra = apurado["sem_ocupante_antes"]
             ocupam = len(apurado["ocupam_pela_ampla"])
-            pela_ampla += ocupam
             contas[lista].somar(
                 sem_ocupante=sobra,
                 com_sobra=int(sobra > 0),
@@ -128,16 +152,19 @@ def resumir(marco, *, perfil_id, semente, candidatos, recortes, apurar_recortes,
                 cedidas=apurado.get("cederia") or 0,
                 com_cessao=int((apurado.get("cederia") or 0) > 0),
             )
-        estados.setdefault(None, (ocupacao.get(None) or {}).get("estado"))
-        if (ocupacao.get(None) or {}).get("estado") == AVALIADA:
-            ampla.somar(autodeclarados_ocupando=pela_ampla, ocupadas=ocupacao[None]["ocupadas"])
+        da_ampla = ocupacao.get(None) or {}
+        estados.setdefault(None, da_ampla.get("estado"))
+        if da_ampla.get("estado") == AVALIADA:
+            ampla.somar(
+                autodeclarados_ocupando=len(set(da_ampla["ocupantes"]) & autodeclarados),
+                ocupadas=da_ampla["ocupadas"],
+            )
     return {
         "rodadas": rodadas,
         "semente": semente,
-        "ampla": {"estado": estados.get(None), **ampla.resumo(rodadas)},
+        "ampla": {"estado": estados.get(None), **ampla.resumo()},
         "reservadas": {
-            lista: {"estado": estados.get(lista), **contas[lista].resumo(rodadas)}
-            for lista in reservadas
+            lista: {"estado": estados.get(lista), **contas[lista].resumo()} for lista in reservadas
         },
     }
 
@@ -155,7 +182,8 @@ class _Conta:
             self.minimo[nome] = min(self.minimo.get(nome, valor), valor)
             self.maximo[nome] = max(self.maximo.get(nome, valor), valor)
 
-    def resumo(self, rodadas):
+    def resumo(self):
+        """As médias são sobre as rodadas **em que o recorte foi apurado** (`avaliadas`)."""
         if not self.vezes:
             return {"avaliadas": 0}
         saida = {"avaliadas": self.vezes}
@@ -203,7 +231,9 @@ def _preparar(marco, perfil_id, candidatos, recortes, resumos_oficiais):
     return {"regra": regra, "alvo": alvo, "suplentes": suplentes, "recortes": por_recorte}
 
 
-def _rodada(preparo, semente, apurar_recortes, perfil_id):
+def _rodada(preparo, semente, apurar_recortes, perfil_id, *, completa=True):
+    """Uma rodada. `completa=False` é a do resumo: só ordem, corte e ocupação, sem as consequências
+    por pessoa nem o mapa de posições na ampla, que o resumo não lê."""
     regra, suplentes = preparo["regra"], preparo["suplentes"]
     calculados, entradas = [], []
     for recorte in preparo["recortes"]:
@@ -213,8 +243,7 @@ def _rodada(preparo, semente, apurar_recortes, perfil_id):
             semente=semente,
             relation_hash=recorte["resumo_oficial"],
         )
-        sem_relacao = not recorte["relacao"].participantes
-        if sem_relacao:
+        if not recorte["relacao"].participantes:
             # **Lista vazia não é sorteada, e por isso não corta nem apura** — é o que o caminho
             # oficial faz, medido em 21/10/2026: `publicar_relacao` recusa a relação vazia
             # (`relation_would_be_empty`), o corte recusa por `sem_ato_vigente` e a apuração por
@@ -223,7 +252,7 @@ def _rodada(preparo, semente, apurar_recortes, perfil_id):
             # usuário, e está registrada em `doc/achado-reservada-vazia-nao-reverte.md`.
             corte = {
                 "declarado": bool(regra),
-                "sem_relacao": True,
+                "sem_ordem": True,
                 "progrediram": [],
                 "excedentes": [],
             }
@@ -239,25 +268,20 @@ def _rodada(preparo, semente, apurar_recortes, perfil_id):
             }
         else:
             corte = corte_da_ordem(regra, ordem, [], alvo=recorte["alvo"], suplentes=suplentes)
-        calculados.append(
-            {
-                "lista_id": recorte["lista_id"],
-                "rotulo": recorte["rotulo"],
-                "vagas": recorte["vagas"],
-                "alvo": recorte["alvo"],
-                "ordem": ordem,
-                "corte": corte,
-                "consequencias": consequencias(ordem, [], corte),
-                "total": len(ordem),
-            }
-        )
-        entrada = entrada_da_rodada(recorte["lista_id"], recorte["vagas"], ordem, [], corte)
-        if sem_relacao:
-            # `impedido` da prévia da pontuação não conhece a lista sem relação — lá, todo recorte
-            # tem a população inteira a ordenar. Aqui o corte não seria emitido, e a rodada da
-            # `ocupacao` precisa ler isso como lê o corte recusado.
-            entrada["impedido"] = True
-        entradas.append(entrada)
+        if completa:
+            calculados.append(
+                {
+                    "lista_id": recorte["lista_id"],
+                    "rotulo": recorte["rotulo"],
+                    "vagas": recorte["vagas"],
+                    "alvo": recorte["alvo"],
+                    "ordem": ordem,
+                    "corte": corte,
+                    "consequencias": consequencias(ordem, [], corte),
+                    "total": len(ordem),
+                }
+            )
+        entradas.append(entrada_da_rodada(recorte["lista_id"], recorte["vagas"], ordem, [], corte))
     ampla = calculados[0]["ordem"] if calculados else []
     return {
         "recortes": calculados,

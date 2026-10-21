@@ -68,10 +68,17 @@ INSCRITOS = 12
 RECORTES = (None, MODALIDADE_PCD, MODALIDADE_PPI)
 
 
-def _rascunho(especie):
+#: O alvo fixo com suplentes: a regra que vale igual em toda lista, e que a `095` achou ser o caso
+#: em que a prévia e o oficial mais podiam divergir. Acrescentado pela revisão do #327.
+FIXO_COM_SUPLENTES = regra_do_quadro(
+    targetKind="FIXED", targetCount=3, surplusCount=1, governedStage="NONE"
+)
+
+
+def _rascunho(especie, corte=None):
     """O 7/1/2 da `034` com outro quadro, e o marco dele trocado para sorteio."""
     base, _ = rascunho_7_1_2(
-        cut=regra_do_quadro(governedStage="NONE"),
+        cut=corte or regra_do_quadro(governedStage="NONE"),
         geral=VAGAS[None],
         pcd=VAGAS[MODALIDADE_PCD],
         ppi=VAGAS[MODALIDADE_PPI],
@@ -92,9 +99,9 @@ def montar(gestor, api_client, manager_headers, process_payload, monkeypatch):
 
     monkeypatch.setitem(FonteDeTeste.MATERIAL, METODO["occurrence"], MATERIAL)
 
-    def _montar(prefixo, *, especie=None, autodeclaracoes=AUTODECLARACOES):
+    def _montar(prefixo, *, especie=None, autodeclaracoes=AUTODECLARACOES, corte=None):
         edital = publish_original(
-            api_client, manager_headers, process_payload, draft=_rascunho(especie)
+            api_client, manager_headers, process_payload, draft=_rascunho(especie, corte)
         )
         constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo=prefixo)
         inscricoes = inscrever(edital, INSCRITOS, primeiro=981)
@@ -306,6 +313,23 @@ def test_ordem_faixa_ocupacao_e_reversao_coincidem(montar, gestor, especie):
     # E não é igualdade de vazio: cada recorte sorteou todos os seus, e a faixa tem as vagas dele.
     assert [len(oficial[lista]["ordem"]) for lista in RECORTES] == [INSCRITOS, 2, 3]
     assert [len(oficial[lista]["faixa"]) for lista in RECORTES] == [4, 1, 2]
+
+
+@pytest.mark.parametrize(
+    "especie", [None, nomes.REVERSAO_POR_SALDO], ids=["sem-reversao", "por-saldo"]
+)
+def test_alvo_fixo_com_suplentes_coincide(montar, gestor, especie):
+    """O alvo fixo vale em toda lista, e o suplente alonga a faixa sem ocupar vaga."""
+    prefixo = f"previa-098-fixo-{especie or 'nada'}"
+    edital, inscricoes = montar(prefixo, especie=especie, corte=FIXO_COM_SUPLENTES)
+    resumos = _sortear(edital, prefixo)
+
+    da_previa = _lado_da_previa(edital, inscricoes, especie, resumos)
+    oficial = _lado_oficial(edital, gestor, inscricoes, prefixo)
+
+    assert da_previa == oficial
+    # Alvo 3 + 1 suplente em toda lista: a ampla corta em 4, a PcD (2) e a PPI (3) levam todos.
+    assert [len(oficial[lista]["faixa"]) for lista in RECORTES] == [4, 2, 3]
 
 
 def test_reservada_sem_inscritos_coincide(montar, gestor):
