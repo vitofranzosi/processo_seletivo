@@ -116,11 +116,11 @@ Perfil só de reserva com linha de Modalidade é avisado de que o acréscimo nã
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T037 [P] Em `backend/tests/performance/test_ocupacao.py`, a leitura da ocupação, a conferência e o ato com 1 e com 10 acréscimos no recorte têm o mesmo número de consultas (`SC-924`)
-- [ ] T038 [P] Em `AGENTS.md`, *"são **41** desde as vagas acrescidas da `097`"* no parágrafo do `N de M`; em `README.md`, a linha da `097` passa a *"Implementada"* com o que a interface faz
-- [ ] T039 [P] `specs/097-convocar-do-cadastro-de-reserva/rastreabilidade.md` (novo): cada `FR-`, `SC-` e `UX-` desta spec com o teste que o prova; e, em `specs/050-convocacao-como-fluxo/rastreabilidade.md`, a nota de que a `FR-889` foi revista pela `FR-2455`
-- [ ] T040 `cd backend && make lint check` e a suíte inteira contra PostgreSQL com `DB_NAME=ps_097`: verde, com os números em `verificacao.md`
-- [ ] T041 Demonstração pela interface, num banco `ps_097_demo` novo, dos passos 1 a 11 do [quickstart.md](quickstart.md), com captura; o registro em `verificacao.md` (`SC-920`)
+- [X] T037 [P] Em `backend/tests/performance/test_ocupacao.py`, a leitura da ocupação, a conferência e o ato com 1 e com 10 acréscimos no recorte têm o mesmo número de consultas (`SC-924`)
+- [X] T038 [P] Em `AGENTS.md`, *"são **41** desde as vagas acrescidas da `097`"* no parágrafo do `N de M`; em `README.md`, a linha da `097` passa a *"Implementada"* com o que a interface faz
+- [X] T039 [P] `specs/097-convocar-do-cadastro-de-reserva/rastreabilidade.md` (novo): cada `FR-`, `SC-` e `UX-` desta spec com o teste que o prova; e, em `specs/050-convocacao-como-fluxo/rastreabilidade.md`, a nota de que a `FR-889` foi revista pela `FR-2455`
+- [X] T040 `cd backend && make lint check` e a suíte inteira contra PostgreSQL com `DB_NAME=ps_097`: verde, com os números em `verificacao.md`
+- [X] T041 Demonstração pela interface, num banco `ps_097_demo` novo, dos passos 1 a 11 do [quickstart.md](quickstart.md), com captura; o registro em `verificacao.md` (`SC-920`)
 - [ ] T042 `/speckit-converge`: o que faltar vira tarefa nova neste arquivo
 
 ---

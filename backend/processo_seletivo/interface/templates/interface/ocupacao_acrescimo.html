@@ -28,6 +28,8 @@ frase diz quantas ficam sem ninguem.
 {% endcomment %}
 <h2>Quem a ordem alcança</h2>
 {% if previa.alcancados %}
+<p class="nota">As primeiras posições da ordem, tantas quantas as vagas efetivas depois deste ato —
+  inclusive quem já ocupava as vagas anteriores. Não é a lista de quem será chamado agora.</p>
 <ol class="consequencias">
   {% for pessoa in previa.alcancados %}
   <li>{{ pessoa.nome }}{% if pessoa.posicao %}, na {{ pessoa.posicao }}ª posição da ordem{% endif %}</li>
