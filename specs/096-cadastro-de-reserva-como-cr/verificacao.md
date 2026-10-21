@@ -98,3 +98,16 @@ workers (`make lint check test-pg`, sem `.env`, com as variáveis na linha de co
 Os doze pulados são os onze deliberados do `AGENTS.md` mais o da contagem real de tokens, que pula
 sem o grupo opcional `assistente` (esta worktree tem só `--extra dev`). Os números do `AGENTS.md`
 não foram atualizados: eles são medidos com o grupo instalado, e esta medição não o tem.
+
+## Code review e suíte de novo (21/10)
+
+O code review da branch (nível alto, oito ângulos) apontou oito achados. Cinco foram corrigidos no
+commit `fix(096): achados do code review…`: a data de medida passou a ser a do mês de linha mais
+larga na fonte; a reserva é medida uma vez, antes do laço do sumário, sem callback; o portal lê os
+tipos de cadastro do domínio; o teste do portal proíbe `CR` só nos blocos de oferta; e a afirmação de
+que cada unidade tem uma autoridade vigente saiu da spec e do código. Três ficaram como estão: a
+reserva da mais alta entre várias autoridades (limite registrado na spec), a leitura da célula no teste
+de Retificação e a falta de teste automático da `FR-2417`, conferida pelo navegador.
+
+Depois das correções, `make lint check test-pg` com `DB_NAME=ps096`: **12 664 passados, 12 pulados**,
+nenhuma falha, em 499 s.
