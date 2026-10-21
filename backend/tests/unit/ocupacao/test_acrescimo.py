@@ -5,6 +5,8 @@ que a soma entra no lugar certo — antes do recorte da janela de titulares — 
 desfazimento conta quem foi chamado, e não quem a conta alcança (`T-005`).
 """
 
+import pytest
+
 from processo_seletivo.ocupacao.domain import acrescimo, nomes
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 
@@ -88,3 +90,89 @@ class TestATravaDoDesfazimento:
             acrescimo.recusa_do_desfazimento(efetivas=3, quantidade=2, chamadas=2)
             == nomes.DESFAZIMENTO_COM_PESSOAS_CHAMADAS
         )
+
+
+class TestOPerfilAceita:
+    """`impedimento`, puro: a resposta única que a tela e o ato leem (`FR-2463`, `FR-2464`)."""
+
+    PERFIL = "aaaaaaaa-0000-4000-8000-000000000971"
+    AMPLA = "aaaaaaaa-0000-4000-8000-000000000972"
+    PPI = "aaaaaaaa-0000-4000-8000-000000000973"
+
+    def conteudo(self, **perfil):
+        base = {
+            "id": self.PERFIL,
+            "reserveType": "UNLIMITED",
+            "vacancyTable": [{"id": "l1", "modalityId": None, "immediateVacancies": 0}],
+        }
+        return {"profiles": [{**base, **perfil}]}
+
+    def codigo(self, conteudo, lista_id=None):
+        from processo_seletivo.ocupacao.application.acrescimo import impedimento
+
+        recusa = impedimento(conteudo, perfil_id=self.PERFIL, lista_id=lista_id)
+        return recusa[0] if recusa else None
+
+    def test_so_reserva_e_so_a_linha_geral_aceita(self):
+        assert self.codigo(self.conteudo()) is None
+        assert self.codigo(self.conteudo(reserveType="LIMITED")) is None
+
+    def test_sem_reserva_recusa(self):
+        assert (
+            self.codigo(self.conteudo(reserveType="NONE"))
+            == nomes.ACRESCIMO_SEM_CADASTRO_DE_RESERVA
+        )
+
+    def test_linha_de_modalidade_ate_com_zero_recusa(self):
+        linhas = [
+            {"id": "l1", "modalityId": None, "immediateVacancies": 0},
+            {"id": "l2", "modalityId": self.PPI, "immediateVacancies": 0},
+        ]
+
+        assert (
+            self.codigo(self.conteudo(vacancyTable=linhas)) == nomes.ACRESCIMO_FORA_DA_LINHA_GERAL
+        )
+
+    def test_reversao_declarada_recusa(self):
+        conteudo = self.conteudo(vacancyReversion={"kind": "ON_BALANCE"})
+
+        assert self.codigo(conteudo) == nomes.ACRESCIMO_FORA_DA_LINHA_GERAL
+
+    def test_a_modalidade_declarada_como_ampla_le_a_linha_geral(self):
+        """As duas grafias da ampla: o recorte nulo e a Modalidade que o Perfil aponta como ela."""
+        conteudo = self.conteudo(generalCompetitionModalityId=self.AMPLA)
+
+        assert self.codigo(conteudo, lista_id=self.AMPLA) is None
+        assert self.codigo(conteudo, lista_id=self.PPI) == nomes.ACRESCIMO_FORA_DA_LINHA_GERAL
+
+
+class TestAsRecusasDoRecorte:
+    """`FR-2459`, e a ordem do contrato: a mais específica primeiro."""
+
+    def recusa(self, **previa):
+        from processo_seletivo.ocupacao.application.acrescimo import conferir_recorte
+        from processo_seletivo.shared.api.problems import DomainError
+
+        base = {"impedimento": None, "temOrdem": True, "temQuadro": True}
+        with pytest.raises(DomainError) as erro:
+            conferir_recorte({**base, **previa})
+        return erro.value.code
+
+    def test_sem_ordem_vigente(self):
+        assert self.recusa(temOrdem=False) == nomes.ORDEM_NAO_VIGENTE
+
+    def test_sem_linha_no_quadro(self):
+        assert self.recusa(temQuadro=False) == nomes.SEM_QUADRO_PUBLICADO
+
+    def test_o_impedimento_do_perfil_vem_antes(self):
+        impedido = (nomes.ACRESCIMO_SEM_CADASTRO_DE_RESERVA, "frase")
+
+        assert (
+            self.recusa(impedimento=impedido, temOrdem=False)
+            == nomes.ACRESCIMO_SEM_CADASTRO_DE_RESERVA
+        )
+
+    def test_o_recorte_completo_passa(self):
+        from processo_seletivo.ocupacao.application.acrescimo import conferir_recorte
+
+        assert conferir_recorte({"impedimento": None, "temOrdem": True, "temQuadro": True}) is None
