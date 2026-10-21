@@ -18,7 +18,7 @@ em 21/10/2026 (T034). As tarefas estão em [tasks.md](tasks.md).
 | FR-2510 a FR-2512 (375 px, anúncio, CSP) | T028, T029 | `test_previa_do_sorteio.py::test_a_semente_quebra_entre_grupos_*`, `::test_o_anuncio_*`, `::test_sem_estilo_nem_script_embutido`; `tests/interface/test_estaticos.py`, `tests/interface/test_acessibilidade.py`; a medida a 375 px na demonstração |
 | SC-925 e SC-926 (compreensão) | T033 | [roteiro de compreensão](roteiro-de-compreensao.md), com elaboradores |
 | SC-927 (equivalência) | T009 | `test_previa_do_sorteio_equivale_ao_oficial.py` |
-| SC-928 (1 s e 5 s) | T007 | `test_simulacao_resumo.py::test_o_pior_caso_cabe_no_orcamento` |
+| SC-928 (1 s e 5 s) | T007 | `test_simulacao_resumo.py::test_a_rodada_do_pior_caso_cabe_em_um_segundo`; `::test_o_resumo_cresce_linear_com_as_rodadas` (linearidade, porque relógio sob 4 workers é ruído); os 5 s absolutos medidos em `prototipo/medicao.py` (R-003) |
 | SC-929 (variação de amostragem) | T007 | `test_simulacao_resumo.py::test_duas_sementes_diferem_pouco_*` |
 | SC-930 (zero escritas) | T030 | `test_previa_do_sorteio.py::test_nada_e_gravado_e_ninguem_e_lido` |
 | SC-931 (semente forjada recusada) | T013 | `test_previa_do_sorteio.py::test_token_forjado_*`, `::test_token_de_outro_marco_*` |
