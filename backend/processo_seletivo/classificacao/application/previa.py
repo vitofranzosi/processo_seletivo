@@ -463,11 +463,13 @@ def corte_da_ordem(regra, ordem, sem_posicao, *, alvo, suplentes):
 
 
 def impedido(corte):
-    """O corte não seria emitido — recusado, dependente de um desfecho que falta, ou sem a linha do
-    quadro de que o alvo do recorte depende (095)."""
+    """O corte não seria emitido — recusado, dependente de um desfecho que falta, sem a linha do
+    quadro de que o alvo do recorte depende (095), ou sem ordem a cortar (098: o sorteio não sorteia
+    lista vazia, e sem ordem o corte oficial recusa por `sem_ato_vigente`)."""
     return bool(
         corte.get("recusado")
         or corte.get("sem_linha")
+        or corte.get("sem_ordem")
         or (corte.get("sem_desfecho") and corte.get("atravessa"))
     )
 

@@ -57,6 +57,15 @@ def test_nomes_sao_distintos_e_sem_marca_de_grupo():
         assert "PPI" not in nome and "PcD" not in nome and PPI not in nome
 
 
+def test_a_setima_reservada_e_recusada_no_dominio():
+    """Revisão do #327: a sétima lista usaria as vagas de nome da ampla, e repetiria nomes."""
+    sete = [(f"lista-{i}", 1) for i in range(7)]
+
+    with pytest.raises(ValueError, match="Até 6 listas reservadas"):
+        simulacao.populacao(2, sete, nomear=nome_ficticio)
+    assert len(simulacao.populacao(2, sete[:6], nomear=nome_ficticio)) == 8
+
+
 @pytest.mark.parametrize(
     ("so_ampla", "por_reservada", "recusa"),
     [

@@ -152,13 +152,67 @@ def test_reservada_sem_inscritos_nao_e_sorteada_nem_apurada_e_nao_reverte():
     previa = _rodada("ON_BALANCE", ppi=0)
     ppi = next(r for r in previa["recortes"] if r["lista_id"] == PPI)
 
-    assert ppi["ordem"] == [] and ppi["corte"]["sem_relacao"] is True
+    assert ppi["ordem"] == [] and ppi["corte"]["sem_ordem"] is True
+    # `impedido` reconhece a lista sem ordem, sem remendo na entrada da rodada (revisão do #327).
+    from processo_seletivo.classificacao.application.previa import impedido
+
+    assert impedido(ppi["corte"]) is True
     assert previa["ocupacao_por_recorte"]["recortes"][PPI] == {"estado": "corte_nao_emitido"}
     assert previa["ocupacao_por_recorte"]["cedido"] == previa["ocupacao_por_recorte"]["recortes"][
         PCD
     ].get("cederia")
     resumo = _resumo("ON_BALANCE", ppi=0)
     assert resumo["reservadas"][PPI] == {"estado": "corte_nao_emitido", "avaliadas": 0}
+
+
+def test_autodeclarado_de_reservada_nao_apurada_conta_na_ampla():
+    """Revisão do #327: a PcD sem linha no quadro não é apurada, mas os PcD que entram pela ampla
+    ocupam a ampla do mesmo jeito, e a média da ampla precisa contá-los."""
+    sem_linha_pcd = [*RECORTES[:2], {"lista_id": PCD, "rotulo": "PcD", "vagas": None}]
+    com, sem = (
+        aplicacao.resumir(
+            MARCO,
+            perfil_id=PERFIL,
+            semente="contagem-da-ampla",
+            candidatos=_candidatos(),
+            recortes=recortes,
+            apurar_recortes=_apurar(None),
+            rodadas=300,
+        )["ampla"]["autodeclarados_ocupando"]["media"]
+        for recortes in (RECORTES, sem_linha_pcd)
+    )
+
+    # 10 vagas, 10 autodeclarados entre 30: o esperado é ~3,3 nos dois casos.
+    assert com == pytest.approx(10 / 3, abs=0.3)
+    assert sem == pytest.approx(com, abs=0.01)
+
+
+def test_resumir_sem_a_rodada_de_ocupacao_recusa_com_clareza():
+    with pytest.raises(ValueError, match="rodada de ocupação"):
+        aplicacao.resumir(
+            MARCO,
+            perfil_id=PERFIL,
+            semente="s",
+            candidatos=_candidatos(),
+            recortes=RECORTES,
+            apurar_recortes=None,
+        )
+
+
+def test_o_preparo_da_rodada_serve_ao_resumo_sem_mudar_o_resultado():
+    previa = _rodada()
+    com_preparo = aplicacao.resumir(
+        MARCO,
+        perfil_id=PERFIL,
+        semente=previa["semente"],
+        candidatos=_candidatos(),
+        recortes=RECORTES,
+        apurar_recortes=_apurar(None),
+        rodadas=20,
+        preparo=previa["preparo"],
+    )
+
+    assert com_preparo == _resumo(semente=previa["semente"], rodadas=20)
 
 
 def test_recorte_sem_linha_no_quadro_nao_e_avaliado():

@@ -61,7 +61,15 @@ def populacao(so_ampla, por_reservada, *, nomear):
     `por_reservada` é `[(lista_id, quantos)]`, na ordem da derivação dos recortes. **O nome é da
     vaga da pessoa na lista dela, e não da posição na população**: a i-ésima autodeclarada da PPI
     tem sempre o mesmo nome, ainda que a ampla ganhe vinte pessoas antes dela.
+
+    **Até seis reservadas, e a recusa mora aqui**: a sétima usaria as vagas de nome da ampla, e duas
+    pessoas teriam o mesmo nome em silêncio. O limite da aplicação (`acima_do_limite`) diz a frase
+    ao elaborador; este garante que nenhum outro chamador produza nomes repetidos.
     """
+    if len(por_reservada) >= LISTAS_DE_NOMES:
+        raise ValueError(
+            f"Até {LISTAS_DE_NOMES - 1} listas reservadas: a seguinte repetiria os nomes da ampla."
+        )
     candidatos = [
         CandidatoFicticio(id=f"a{i}", nome=nomear(i * LISTAS_DE_NOMES), lista_id=None)
         for i in range(int(so_ampla))
