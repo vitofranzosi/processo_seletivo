@@ -17,10 +17,12 @@ O recorte vai no campo `lista`, como nas rotas da ocupação. As duas views abre
 **Os números** (`UX-220`): o resumo ganha *"Vagas acrescidas depois da publicação"* entre *publicadas* e
 *efetivas*, só quando há acréscimo; o número é link para a lista, logo abaixo, com âncora no recorte.
 
-**A lista dos acréscimos**: uma tabela por recorte — data, espécie (*"Acréscimo"* ou *"Desfazimento"*),
-quantidade, origem, fundamento, referência, quem registrou. Cada acréscimo com saldo tem o formulário
-de desfazimento: quantidade (`input type="number" min="1"`), motivo (`p.campo` + `textarea rows="3"
-required`) e o botão *"Conferir o desfazimento"*.
+**A lista dos acréscimos**: uma lista por recorte (`ul.consequencias`, uma linha por ato) — data,
+espécie (*"acréscimo"* ou *"desfazimento"*), quantidade, origem ou motivo, fundamento, referência, quem
+registrou. Cada acréscimo com saldo tem o formulário de desfazimento: quantidade
+(`input type="number" min="1" max="<saldo>"`) e o botão *"Conferir o desfazimento"*. O motivo é pedido
+na conferência, depois de a pessoa ler o que o desfazimento muda (*alinhado à implementação na
+convergência*).
 
 **O formulário do acréscimo**, só para quem apura e só no Perfil que o aceita: quantidade, origem
 (`input type="text" required`), fundamento (`textarea`), referência (opcional) e o botão
