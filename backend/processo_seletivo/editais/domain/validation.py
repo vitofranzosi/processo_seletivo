@@ -3091,6 +3091,7 @@ def _coerencia_do_quadro_de_vagas(
             continue
         base = _caminho_da_entidade("profiles", perfil, posicao)
         findings.extend(_reserva_convocada_fora(perfil, base=base, ato=ato))
+        findings.extend(_reserva_com_linhas_reservadas(perfil, base=base, ato=ato))
         linhas = perfil.get("vacancyTable")
         if not isinstance(linhas, list) or not linhas:
             # **Quadro ausente tem duas leituras, e é o ato que decide qual vale** (027, FR-323).
@@ -3310,14 +3311,20 @@ def _acervo_sem_quadro(perfil, *, base, ato) -> list[ValidationFinding]:
 
 
 def _reserva_convocada_fora(perfil, *, base, ato) -> list[ValidationFinding]:
-    """Perfil só de cadastro de reserva: o sistema classifica, e a convocação é feita fora dele.
+    """Perfil só de cadastro de reserva: a convocação depende de vagas acrescidas depois (097).
 
-    **O Edital publica, classifica e divulga o resultado — e não convoca.** Convocar exige vaga
-    faltante apurada (`convocar.py`, `_recusar_por_deficit`), e com zero vagas imediatas a apuração
-    nunca tem déficit: toda chamada é recusada. Retificar as vagas a cada chamada seria usar ato
-    normativo para registrar fato operacional. A DP-05 decidiu, em 26/09, que essa família fica
-    fora do piloto; dizê-lo na Revisão é o que impede que o operador descubra meses depois, na tela
-    de convocação (RC-58).
+    **O código continua o mesmo, e a frase mudou** (`T-008`). Até a `097` este aviso dizia que a
+    convocação era feita fora do sistema: convocar exige vaga faltante apurada, e com zero vagas
+    imediatas a apuração nunca tinha déficit. A `DP-05` voltou à opção A em 21/10/2026, com o Edital
+    de remanescentes do TMD: a vaga que o Edital regular libera é registrada na ocupação, e a
+    convocação que já existe chama o próximo da ordem. Frase verdadeira que vira falsa é defeito
+    maior do que frase ausente — quem a lesse convocaria por planilha um recorte que o sistema
+    convoca (`FR-2474`). O código não mudou porque Revisões registradas e a `096` o citam.
+
+    **O alcance entra quando a faixa não cresce sozinha** (`T-011`). Sem continuação admitida, a
+    convocação alcança só quem o corte publicado selecionou; com alvo do quadro, o alvo é o zero
+    deste Perfil, e o acréscimo não o recalcula. Dizer o número antes de publicar é o que evita
+    descobri-lo na primeira vaga.
 
     **Advertência, e só na publicação.** O Edital é legítimo — os 140/2025 e 173/2025 são assim —,
     e recusá-lo afirmaria o contrário. Na Retificação o aviso repetiria, a cada correção de data,
@@ -3326,10 +3333,7 @@ def _reserva_convocada_fora(perfil, *, base, ato) -> list[ValidationFinding]:
     **Zero sem reserva não entra aqui.** Oferta sem vaga e sem cadastro é outra pergunta, e este
     aviso a responderia errado.
     """
-    total = perfil.get("immediateVacancies")
-    if ato != ATO_DE_PUBLICACAO or isinstance(total, bool) or total != 0:
-        return []
-    if perfil.get("reserveType") not in ("LIMITED", "UNLIMITED"):
+    if not _so_de_reserva(perfil, ato):
         return []
     rotulo = perfil.get("code") or perfil.get("name") or ""
     return [
@@ -3337,12 +3341,71 @@ def _reserva_convocada_fora(perfil, *, base, ato) -> list[ValidationFinding]:
             Severity.WARNING,
             "reserve_only_convocation_external",
             f"O Perfil '{rotulo}' oferta só cadastro de reserva, com 0 vaga imediata. A "
-            "classificação e o resultado serão conduzidos no sistema; a convocação dos "
-            "classificados será feita fora dele, porque o sistema só convoca para vaga imediata "
-            "apurada.",
+            "classificação e o resultado são conduzidos no sistema, e a convocação depende de "
+            "vagas acrescidas depois da publicação, registradas na ocupação."
+            + _alcance_da_faixa(perfil),
             f"{base}/immediateVacancies",
         )
     ]
+
+
+def _reserva_com_linhas_reservadas(perfil, *, base, ato) -> list[ValidationFinding]:
+    """Perfil só de reserva com linha de Modalidade: o acréscimo da `097` não o alcança (`FR-2475`).
+
+    A vaga acrescida vale só na ampla de Perfil cujo quadro tem só a linha geral (`D-003`): com
+    linha de Modalidade, a concorrência concomitante faria a vaga da ampla mudar quem ocupa a
+    reservada, e a repartição entre modalidades — a sequência de convocação dos Editais de
+    bolsista — é spec própria. Advertir antes de publicar evita procurar, na ocupação, um formulário
+    que não vem.
+    """
+    if not _so_de_reserva(perfil, ato):
+        return []
+    linhas = perfil.get("vacancyTable") or []
+    if not any(isinstance(item, dict) and item.get("modalityId") for item in linhas):
+        return []
+    rotulo = perfil.get("code") or perfil.get("name") or ""
+    return [
+        ValidationFinding(
+            Severity.WARNING,
+            "reserve_only_with_reserved_lines",
+            f"O Perfil '{rotulo}' oferta só cadastro de reserva e reparte vagas entre "
+            "modalidades. O acréscimo de vagas depois da publicação alcança só a ampla "
+            "concorrência de Perfil cujo quadro tem só a linha geral: a convocação deste Perfil "
+            "será feita fora do sistema.",
+            f"{base}/vacancyTable",
+        )
+    ]
+
+
+def _so_de_reserva(perfil, ato):
+    total = perfil.get("immediateVacancies")
+    if ato != ATO_DE_PUBLICACAO or isinstance(total, bool) or total != 0:
+        return False
+    return perfil.get("reserveType") in ("LIMITED", "UNLIMITED")
+
+
+def _alcance_da_faixa(perfil):
+    """A frase do alcance, ou nada quando a faixa pode crescer por continuação (`T-011`)."""
+    alcances = []
+    for marco in perfil.get("classificationMilestones") or []:
+        regra = marco.get("cutRule") if isinstance(marco, dict) else None
+        if not isinstance(regra, dict) or regra.get("continuation") != "NONE":
+            continue
+        excedente = regra.get("surplusCount") or 0
+        if regra.get("targetKind") == "FIXED":
+            alcance = (regra.get("targetCount") or 0) + excedente
+        elif regra.get("targetKind") == "FROM_VACANCY_TABLE":
+            alcance = excedente
+        else:
+            continue
+        if isinstance(alcance, int) and not isinstance(alcance, bool):
+            alcances.append(alcance)
+    if not alcances:
+        return ""
+    return (
+        f" Sem continuação admitida no corte, a convocação poderá alcançar até {max(alcances)} "
+        "classificados."
+    )
 
 
 def _linha_geral_exigida(perfil, *, base, ato) -> list[ValidationFinding]:

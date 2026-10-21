@@ -19,9 +19,10 @@ from processo_seletivo.classificacao.models import ItemDoCorte
 # e não acidental (032, T034).
 from processo_seletivo.editais.domain import marcos
 from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupacao
+from processo_seletivo.ocupacao.domain import acrescimo as conta_do_acrescimo
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.ocupacao.domain import nomes
-from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao, MovimentoDeVaga
+from processo_seletivo.ocupacao.models import AcrescimoDeVagas, ApuracaoDeOcupacao, MovimentoDeVaga
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.resultados.models import ResultadoEtapa
 
@@ -64,8 +65,65 @@ def movimentos_lidos_por(apuracao):
     return lidos
 
 
+def acrescimos_do_recorte(*, edital, perfil_id, marco_id, lista_id=None):
+    """As vagas acrescidas e desfeitas do recorte **exato**, na ordem do registro (097).
+
+    O recorte é o exato, e não "a linha geral" (`T-002`): a ampla pode ter duas grafias, e a vaga
+    vale onde foi registrada. A ordem `(registrado_em, id)` é a que a apuração congela, e a que a
+    tela mostra como linha do tempo.
+    """
+    return list(
+        AcrescimoDeVagas.objects.filter(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        ).order_by("registrado_em", "id")
+    )
+
+
+def acrescimos_lidos_por(apuracao):
+    """`(especie, quantidade)` das vagas acrescidas que **aquela** apuração congelou.
+
+    Lê os ids de `universo.acrescimosLidos`, e não os acréscimos de hoje — a mesma disciplina de
+    `movimentos_lidos_por` (`FR-244`, `SC-922`). Apuração anterior à `097` não tem a chave, e leu
+    nenhum.
+    """
+    ids = (apuracao.universo or {}).get("acrescimosLidos") or []
+    if not ids:
+        return []
+    encontrados = {str(a.id): a for a in AcrescimoDeVagas.objects.filter(id__in=ids)}
+    return [
+        (encontrados[str(i)].especie, encontrados[str(i)].quantidade)
+        for i in ids
+        if str(i) in encontrados
+    ]
+
+
+def com_o_restante(acrescimos):
+    """Os registros do recorte, cada acréscimo com o que ainda tem para desfazer (`FR-2462`).
+
+    Uma passada sobre a lista que a tela já leu, e nenhuma consulta: os desfazimentos citam o
+    acréscimo pela FK, e a lista é do mesmo recorte.
+    """
+    desfeitas = {}
+    for registro in acrescimos:
+        if registro.especie == nomes.DESFAZIMENTO:
+            desfeitas.setdefault(registro.desfaz_id, []).append(registro.quantidade)
+    return [
+        {
+            "registro": registro,
+            "restante": (
+                conta_do_acrescimo.restante(
+                    quantidade=registro.quantidade, desfeitas=desfeitas.get(registro.id, [])
+                )
+                if registro.especie == nomes.ACRESCIMO
+                else 0
+            ),
+        }
+        for registro in acrescimos
+    ]
+
+
 def causas_de_obsolescencia(apuracao, *, at=None):
-    """As **cinco** causas, nomeadas (`FR-263`, e a quinta veio com a `019`).
+    """As **seis** causas, nomeadas (`FR-263`; a quinta veio com a `019`, a sexta com a `097`).
 
     A quarta — movimento posterior que alcança o recorte — é o que dispensa orquestração: a reversão
     não precisa disparar, em cascata, a emissão do destino. O destino aparece obsoleto, com a causa
@@ -161,6 +219,16 @@ def causas_de_obsolescencia(apuracao, *, at=None):
                 ),
             }
         )
+    if _acrescimo_posterior(apuracao):
+        causas.append(
+            {
+                "causa": nomes.CAUSA_ACRESCIMO_POSTERIOR,
+                "descricao": (
+                    "Uma vaga acrescida ou desfeita depois desta apuração mudou as vagas deste "
+                    "recorte."
+                ),
+            }
+        )
     return causas
 
 
@@ -191,6 +259,9 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # vagas neste recorte, e a ocupação ainda não foi apurada" é verdadeiro nas duas metades.
     marco = marcos.marco_no_conteudo(versao.content, perfil_id=perfil_id, marco_id=marco_id)
     sem_apuracao = vigente is None
+    acrescimos = acrescimos_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
     return {
         "perfilId": str(perfil_id),
         "marcoId": str(marco_id),
@@ -205,6 +276,11 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         # considerou, que é o mesmo critério da `FR-244`. Movimento posterior aparece como causa de
         # obsolescência, e não como linha que o número não explica.
         "movimentos": _movimentos_lidos_por_apuracao(vigente),
+        # **As vagas acrescidas de hoje, e não as que a vigente leu** (097, `UX-220`). A diferença
+        # aparece como a sexta causa de obsolescência, e a tela mostra as duas coisas: o que a
+        # apuração considerou nos números dela, e a lista inteira dos atos ao lado.
+        "acrescimos": com_o_restante(acrescimos),
+        "acrescidas": conta_do_acrescimo.saldo((a.especie, a.quantidade) for a in acrescimos),
         "apuracao": vigente,
         # **Dois booleanos aditivos, e nenhum valor novo em `estado`** (032, `data-model.md`). Um
         # recorte reservado em marco computado **é**, de fato, `NOT_APPRAISED`, e continuará
@@ -545,6 +621,26 @@ def ocupantes_da_ampla(*, edital, perfil_id, marco_id, versao):
     )
 
 
+def _acrescimo_posterior(apuracao):
+    """Vaga acrescida ou desfeita no recorte, e que a apuração não leu (097, `FR-2453`).
+
+    **Por id congelado, e não por instante**, pela razão de `_efeito_posterior`: o ato do acréscimo
+    grava o registro e emite a apuração no mesmo `now`. E respondida no banco, pela mesma razão
+    também — esta função corre uma vez por recorte na tela da ocupação.
+    """
+    lidos = [str(i) for i in (apuracao.universo or {}).get("acrescimosLidos") or []]
+    return (
+        AcrescimoDeVagas.objects.filter(
+            edital=apuracao.edital_id,
+            perfil_id=apuracao.perfil_id,
+            marco_id=apuracao.marco_id,
+            lista_id=apuracao.lista_id,
+        )
+        .exclude(id__in=lidos)
+        .exists()
+    )
+
+
 def _efeito_posterior(apuracao):
     """Efeito de ocupação que alcança o recorte e não estava entre os que a apuração leu.
 
@@ -577,7 +673,10 @@ def _efeito_posterior(apuracao):
 
 
 __all__ = [
+    "acrescimos_do_recorte",
+    "acrescimos_lidos_por",
     "apuracao_vigente",
+    "com_o_restante",
     "recortes_do_marco",
     "causas_de_obsolescencia",
     "dentro_da_faixa",

@@ -19,6 +19,7 @@ from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupacao
 from processo_seletivo.ocupacao.application import movimento as movimento_de_vaga
 from processo_seletivo.ocupacao.application import selectors
+from processo_seletivo.ocupacao.domain import acrescimo as conta_do_acrescimo
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.ocupacao.domain import reversao
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
@@ -177,6 +178,12 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     movimentos = selectors._movimentos_que_alcancam(
         edital=edital, perfil=perfil, marco=marco, lista=lista
     )
+    # **As vagas acrescidas depois da publicação, congeladas como os movimentos** (097, `T-002`).
+    # O recorte é o exato; o saldo vai à conta, e os ids ao universo, para que a apuração antiga
+    # relida devolva o número dela (`SC-922`).
+    acrescimos = selectors.acrescimos_do_recorte(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
+    )
     lidos = [
         (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
         for m in movimentos
@@ -200,6 +207,7 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
             ocupantes_da_ampla=ocupantes_da_ampla,
             efeitos_lidos=efeitos_de_ocupacao.efeitos_lidos_por(efeitos),
             empates_residuais=empates,
+            acrescidas=conta_do_acrescimo.saldo((a.especie, a.quantidade) for a in acrescimos),
         )
     except calculo.EmpateNaFronteiraDoAlvo as erro:
         # **Recusar é o desfecho, e não escolher** (019, `R-002`). A mensagem nomeia a posição
@@ -264,6 +272,7 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
             "movimentosLidos": [str(m.id) for m in movimentos]
             + ([str(identidade_do_movimento)] if identidade_do_movimento else []),
             "efeitosLidos": [str(e.id) for e in efeitos],
+            "acrescimosLidos": [str(a.id) for a in acrescimos],
         },
         emitida_por=str(getattr(actor, "subject", actor)),
         emitida_em=now,
