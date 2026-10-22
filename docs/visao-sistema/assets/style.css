@@ -651,3 +651,31 @@ kbd { font-family: var(--fonte-mono); font-size: .78em; padding: .05em .35em; bo
   .evidencia-corpo dl { grid-template-columns: minmax(0, 1fr); }
   .evidencia-corpo dd { margin-bottom: .4rem; }
 }
+
+.simbolos-do-manual { position: absolute; }
+
+.voltar-a-gestao {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  min-height: 2.5rem;
+  margin-top: 1rem;
+  padding: .4rem .75rem .4rem .8125rem;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.voltar-a-gestao:hover { background: var(--fundo-suave); }
+.voltar-a-gestao:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.voltar-a-gestao svg {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

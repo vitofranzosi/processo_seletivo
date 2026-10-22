@@ -3,6 +3,7 @@ from django.urls import path
 from processo_seletivo.interface import (
     assistente,
     avisos,
+    documentacao,
     duvidas,
     prototipo_do_assistente,
     views,
@@ -11,6 +12,8 @@ from processo_seletivo.interface import (
 app_name = "interface"
 
 urlpatterns = [
+    path("documentacao/", documentacao.consultar, name="documentacao"),
+    path("documentacao/<path:arquivo>", documentacao.consultar, name="documentacao-arquivo"),
     path("", views.lista, name="lista"),
     path("identificar", views.identificar, name="identificar"),
     path("sair", views.sair, name="sair"),

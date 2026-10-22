@@ -1,0 +1,45 @@
+{
+  "identidade": "5dadcc37-7015-4a5a-b1a1-727dd7e3d901",
+  "revisao_operador": "5B.2-A.2",
+  "estado": "PREPARACAO_DOCUMENTAL_SEM_AUTORIZACAO_OPERACIONAL",
+  "autorizacao_operacional": false,
+  "acoes": [],
+  "cenarios": [],
+  "escopo": {
+    "recursos": [],
+    "operacoes": []
+  },
+  "endpoint_local": "PENDENTE",
+  "engine_id": "PENDENTE",
+  "aprovador": "PENDENTE",
+  "referencia_da_deliberacao": "PENDENTE",
+  "manifesto_sha256": "1dcbb2314a5e7b3e3c2ec2fb135bbb3daad73b884137c0092c349597eeebc06f",
+  "integridade_sha256": "c82d449005a8161d3ef8b40d84f09a3055c749d8e152ac504bfadb79d22d5405",
+  "cliente_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+  "configuracao_sha256": "PENDENTE",
+  "exclusividade_engine": false,
+  "preparacao_documental": {
+    "data": "2026-10-19",
+    "branch": "001-decisoes-pendentes",
+    "head_inicial": "550f5bb8983bcdbf32eff210622449a0c959d12d",
+    "referencia_autorizacao": "Solicitacao humana AUTORIZACAO PARCIAL - FASE 5B.2-A.3 nesta sessao; somente criacao dos dois arquivos, sem consulta operacional",
+    "finalidade": "Arquivo preparatorio; nao representa aprovacao operacional nem autoriza executar scripts"
+  },
+  "confirmacoes_pendentes": {
+    "endpoint_local_ativo": "PENDENTE",
+    "localidade_e_ausencia_de_ativacao_automatica": "PENDENTE",
+    "responsavel_execucao": "PENDENTE",
+    "responsavel_supervisao": "PENDENTE",
+    "janela_operacional": "PENDENTE",
+    "destino_evidencias": "PENDENTE",
+    "custodia_e_retencao": "PENDENTE",
+    "timeout": "PENDENTE",
+    "mecanismo_interrupcao": "PENDENTE",
+    "binario_caminho": "PENDENTE",
+    "binario_identidade": "PENDENTE",
+    "binario_sha256": "PENDENTE",
+    "head_para_eventual_execucao": "PENDENTE",
+    "integridade_artefatos": "PENDENTE - operar.py e isolamento/tarefas.py divergem do manifesto por representacao CRLF/LF; nao corrigido nem dispensado"
+  },
+  "observacao": "Somente preparacao autorizada. Acoes e escopo vazios mantem a recusa do operador. Campos adicionais sao documentais e nao implementam timeout ou novas guardas. Nenhum endpoint, binario, responsavel ou parametro operacional foi presumido."
+}

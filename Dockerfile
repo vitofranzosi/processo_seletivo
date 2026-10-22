@@ -41,6 +41,7 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --extra dev --locked --no-install-project
 
 COPY backend/ ./
+COPY docs/visao-sistema/ /app/docs/visao-sistema/
 RUN uv sync --extra dev --locked
 
 COPY scripts/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
