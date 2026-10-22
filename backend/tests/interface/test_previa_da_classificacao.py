@@ -85,11 +85,13 @@ def test_o_botao_esta_no_cartao_do_marco_pela_pontuacao(client, com_marco):
 
 
 def test_o_botao_nao_aparece_no_marco_por_sorteio(client, com_marco):
+    """Emendada pela `098` (FR-2477): o marco por sorteio ganha o botão dele, e não este."""
     cartao = client.get(
         reverse("interface:fragmento-marco-recomposto", args=[PERFIL, "0"]),
         {"edital": str(com_marco.id), **marco_form(**{f"{B}-orderProduction": "POR_SORTEIO"})},
     ).content.decode()
     assert "Simular classificação" not in cartao
+    assert "Simular sorteio" in cartao
 
 
 def test_o_painel_mora_fora_do_formulario_e_de_todo_cartao(client, com_marco):
@@ -204,9 +206,13 @@ def test_campo_apagado_diz_o_que_falta(client, com_marco):
     assert "Declare o alvo" in visivel
 
 
-def test_marco_por_sorteio_pedido_a_mao_fica_fora_da_fatia(client, com_marco):
+def test_marco_por_sorteio_pedido_a_mao_responde_a_previa_do_sorteio(client, com_marco):
+    """Emendada pela `098` (R-010): antes a resposta era "fora da fatia"; agora a mesma rota
+    despacha pela forma, e o marco por sorteio recebe a prévia dele, com semente fictícia."""
     visivel = texto(previa(client, com_marco, **{f"{B}-orderProduction": "POR_SORTEIO"}))
-    assert "A prévia cobre marcos que ordenam pela pontuação." in visivel
+    assert "A prévia cobre marcos que ordenam pela pontuação." not in visivel
+    assert "Simulação do sorteio" in visivel
+    assert "Semente fictícia" in visivel
 
 
 # --- Vocabulário, comportamento atual e CSP (FR-2229, FR-2237, FR-2245) ------------------------

@@ -279,3 +279,91 @@ class EfeitoDeOcupacao(models.Model):
 
     def delete(self, *args, **kwargs):
         raise TypeError("EfeitoDeOcupacao é append-only")
+
+
+class AcrescimoDeVagas(models.Model):
+    """A vaga que entra num recorte depois da publicação, e o ato contrário que a devolve (097).
+
+    **É fato operacional, e não norma** (`D-001`). O Edital continua dizendo as vagas que publicou;
+    este registro diz que um fato de fora o completou — no TMD, a matrícula que não se efetivou no
+    Edital regular libera a vaga aqui. Retificar as vagas a cada chamada usaria ato normativo
+    público, com versão e documento, para registrar um fato de outro certame (`DP-05`).
+
+    **Não é `MovimentoDeVaga`** (`T-001`). O movimento nasce com a apuração que o causa, move vaga
+    entre dois recortes e não tem texto; este precede a apuração que o lê — pode nem produzi-la, se
+    outra causa a deixou obsoleta —, não tem recorte de origem e carrega origem e fundamento.
+    Afrouxar as três constraints do movimento para caber nele apagaria o que elas protegem.
+
+    **Uma tabela para as duas espécies.** Acréscimo e desfazimento são lidos pela mesma conta,
+    congelados na mesma lista e mostrados na mesma linha do tempo. A quantidade é sempre positiva,
+    e o sinal vem da espécie: um `-1` digitado seria desfazimento sem motivo nem citação.
+
+    **O que o banco não garante, a aplicação garante sob a trava do Processo**: que o desfazimento
+    não passe do que resta do acréscimo, e que não tire a vaga de quem já foi chamado (`FR-2462`).
+    `CHECK` não agrega.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    edital = models.ForeignKey(Edital, on_delete=models.PROTECT, related_name="acrescimos_de_vagas")
+    perfil_id = models.UUIDField()
+    marco_id = models.UUIDField()
+    # **O recorte exato em que foi registrado** (`T-002`). A ampla tem duas grafias — o recorte nulo
+    # e a Modalidade declarada como ampla —, e gravar "na linha geral" faria a vaga valer nas duas.
+    lista_id = models.UUIDField(null=True, blank=True)
+    especie = models.CharField(
+        max_length=16,
+        choices=[(nomes.ACRESCIMO, "Acréscimo"), (nomes.DESFAZIMENTO, "Desfazimento")],
+    )
+    quantidade = models.PositiveIntegerField()
+    origem = models.TextField(blank=True)
+    # O porquê do acréscimo, ou o motivo do desfazimento. Um campo para os dois, porque os dois
+    # respondem a mesma pergunta — por que este número mudou —, e a trilha os lê no mesmo lugar.
+    fundamento = models.TextField()
+    referencia = models.CharField(max_length=255, blank=True)
+    desfaz = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="desfazimentos"
+    )
+    # **A versão que declarou o cadastro de reserva que autorizou o ato** (`FR-2463`). Uma
+    # Retificação posterior pode mudar a reserva; a pergunta "com que norma isto foi aceito"
+    # continua tendo resposta.
+    versao = models.ForeignKey(
+        VersaoConsolidada, on_delete=models.PROTECT, related_name="acrescimos_de_vagas"
+    )
+    registrado_por = models.CharField(max_length=255)
+    registrado_em = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(quantidade__gt=0), name="ck_acrescimo_quantidade_positiva"
+            ),
+            models.CheckConstraint(
+                condition=Q(especie__in=list(nomes.ESPECIES_DE_ACRESCIMO)),
+                name="ck_acrescimo_especie",
+            ),
+            models.CheckConstraint(
+                condition=Q(especie=nomes.DESFAZIMENTO) | (~Q(origem="") & Q(desfaz__isnull=True)),
+                name="ck_acrescimo_com_origem",
+            ),
+            models.CheckConstraint(
+                condition=Q(especie=nomes.ACRESCIMO) | (Q(desfaz__isnull=False) & Q(origem="")),
+                name="ck_desfazimento_cita_o_acrescimo",
+            ),
+            models.CheckConstraint(condition=~Q(fundamento=""), name="ck_acrescimo_com_fundamento"),
+        ]
+        indexes = [
+            models.Index(
+                fields=["edital", "perfil_id", "marco_id", "lista_id"], name="ix_acrescimo_recorte"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.especie} {self.quantidade} no marco {self.marco_id}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("AcrescimoDeVagas é append-only")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("AcrescimoDeVagas é append-only")

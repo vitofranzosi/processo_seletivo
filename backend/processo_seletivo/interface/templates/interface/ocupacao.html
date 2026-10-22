@@ -30,9 +30,12 @@ comissão.</p>
 {% endif %}
 
 
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível apurar:</strong> {{ erro }}</p>{% endif %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>{% if acao_do_erro == "acrescimo" %}Não foi possível acrescentar a vaga:{% elif acao_do_erro == "desfazimento" %}Não foi possível desfazer a vaga acrescida:{% else %}Não foi possível apurar:{% endif %}</strong> {{ erro }}</p>{% endif %}
 {% if resultado %}
 {% if acao == "faixa" %}<p class="sucesso" role="status" tabindex="-1">Faixa seguinte emitida com o déficit apurado como causa. A faixa anterior não foi revogada, e quem já progrediu continua nela.</p>
+{% elif acao == "acrescimo" or acao == "desfazimento" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "acrescimo" %}Vaga acrescida: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% else %}Vaga acrescida desfeita: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% endif %}
+  {% if resultado.apuracaoSeguinte %}A apuração seguinte foi emitida por este ato, em seu nome.{% else %}A apuração seguinte não foi emitida: {{ resultado.apuracaoPendente.detalhe }}{% endif %}
+  O ato é imutável; corrigir é praticar outro, com motivo.</p>
 {% else %}<p class="sucesso" role="status" tabindex="-1">Apuração emitida. O ato é imutável; corrigir é emitir uma sucessora com motivo.</p>{% endif %}
 {% endif %}
 
@@ -76,6 +79,7 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   <p class="aviso" role="status">Ocupação ainda não apurada.</p>
   <ul class="resumo" aria-label="Vagas publicadas">
     <li><strong>{{ recorte.publicadas }}</strong>Publicadas</li>
+    {% if recorte.acrescidas %}<li><strong><a href="#acrescimos-{{ forloop.counter }}">{{ recorte.acrescidas }}</a></strong>Acrescidas depois da publicação</li>{% endif %}
   </ul>
   <p class="nota">A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas estão ocupadas e quantas faltam só existem depois de uma apuração emitida.</p>
 
@@ -84,18 +88,20 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   <p class="aviso" role="status"><strong>Esta apuração está obsoleta.</strong> O número abaixo é o que ela apurou, e o mundo mudou depois dela:</p>
   <ul class="consequencias">
     {% for causa in recorte.causasDeObsolescencia %}
-    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte deste recorte não é o que ela leu{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% elif causa == "efeito_posterior" %}um efeito registrado depois dela mudou o conjunto de ocupantes deste recorte{% endif %}</li>
+    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte deste recorte não é o que ela leu{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% elif causa == "efeito_posterior" %}um efeito registrado depois dela mudou o conjunto de ocupantes deste recorte{% elif causa == "acrescimo_posterior" %}uma vaga acrescida ou desfeita depois dela mudou as vagas deste recorte{% endif %}</li>
     {% endfor %}
   </ul>
   {% endif %}
   <ul class="resumo" aria-label="Vagas, pela apuração vigente">
     <li><strong>{{ recorte.publicadas }}</strong>Publicadas</li>
+    {% if recorte.acrescidas %}<li><strong><a href="#acrescimos-{{ forloop.counter }}">{{ recorte.acrescidas }}</a></strong>Acrescidas depois da publicação</li>{% endif %}
     <li><strong>{{ recorte.efetivas }}</strong>Efetivas</li>
     <li><strong>{{ recorte.ocupadas }}</strong>Ocupadas</li>
     <li><strong>{{ recorte.faltando }}</strong>A ocupar</li>
   </ul>
   {% if recorte.efetivas != recorte.publicadas %}
-  <p class="nota">As efetivas divergem das publicadas porque um movimento de vaga alcançou este recorte. A quantidade publicada não muda por movimento: o que o Edital publicou é intocável.</p>
+  {% if recorte.movimentos %}<p class="nota">As efetivas divergem das publicadas porque um movimento de vaga alcançou este recorte. A quantidade publicada não muda por movimento: o que o Edital publicou é intocável.</p>{% endif %}
+  {% if recorte.acrescidas %}<p class="nota">As efetivas somam às publicadas as vagas acrescidas depois da publicação. O que o Edital publicou não muda: a vaga acrescida é fato registrado aqui, com origem e autor.</p>{% endif %}
   {% endif %}
   {% comment %}
   Os movimentos nomeados (UX-033), com origem, destino e quantidade — e nao como mudanca silenciosa
@@ -220,6 +226,65 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   {% else %}
   <p class="nota">Este marco não declara regra de corte, e a faixa nasce do corte: sem a regra não há faixa a continuar, e por isso não há faixa seguinte a pedir. Declarar a regra é ato de Retificação do Edital.</p>
   {% endif %}
+  {% endif %}
+
+  {% comment %}
+  As vagas acrescidas depois da publicacao (097, UX-220): a lista inteira dos atos, e nao so o que a
+  apuracao vigente leu. A diferenca entre as duas aparece como causa de obsolescencia, logo acima.
+  Cada acrescimo com saldo tem a porta do desfazimento; a quantidade vai daqui, e o motivo e pedido
+  na conferencia, onde a pessoa ja leu o que o desfazimento muda.
+  {% endcomment %}
+  {% if recorte.acrescimos %}
+  <h3 id="acrescimos-{{ forloop.counter }}">Vagas acrescidas depois da publicação</h3>
+  <ul class="consequencias">
+    {% for item in recorte.acrescimos %}
+    <li>{{ item.registro.registrado_em|date:"d/m/Y H:i" }} — {% if item.registro.especie == "ACRESCIMO" %}acréscimo de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Origem: {{ item.registro.origem }}. Fundamento: {{ item.registro.fundamento }}.{% else %}desfazimento de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Motivo: {{ item.registro.fundamento }}.{% endif %}{% if item.registro.referencia %} Referência: {{ item.registro.referencia }}.{% endif %} Registrado por {{ item.registro.registrado_por }}.
+      {% if pode_emitir and item.restante %}
+      <form method="post" action="{% url 'interface:desfazer-acrescimo' edital.id marco_id %}" class="acoes">
+        {% csrf_token %}
+        <input type="hidden" name="acrescimo" value="{{ item.registro.id }}">
+        <input type="hidden" name="chave" value="{{ chave_idempotencia }}-desfazer-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+        <label for="desfazer-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">Vagas a desfazer</label>
+        <input type="number" id="desfazer-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" name="quantidade" min="1" max="{{ item.restante }}" step="1" value="{{ item.restante }}" required>
+        <button type="submit" class="botao">Conferir o desfazimento</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% comment %}
+  O acrescimo de vaga (097, FR-2450): so para quem apura, so no Perfil que publicou cadastro de
+  reserva e tem so a linha geral, e so onde ha ordem vigente, porque e sobre ela que a prevista
+  alcanca alguem. No Perfil que publicou reserva e reparte vagas, a frase da recusa no lugar.
+  {% endcomment %}
+  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and recorte.temOrdem and recorte.aceitaAcrescimo %}
+  <form method="post" action="{% url 'interface:acrescentar-vagas' edital.id marco_id %}">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-acrescimo-{{ forloop.counter }}">
+    <p class="ajuda" id="acrescimo-ajuda-{{ forloop.counter }}">Uma vaga que chegou depois da publicação, de fora deste Edital — a que o Edital regular deixou de preencher, por exemplo. Escreva de onde ela veio — o número do Edital e o campus — e por quê. Não escreva o nome de pessoas do outro Edital.</p>
+    <p class="campo">
+      <label for="quantidade-{{ forloop.counter }}">Vagas acrescidas</label>
+      <input type="number" id="quantidade-{{ forloop.counter }}" name="quantidade" min="1" step="1" value="1" required>
+    </p>
+    <p class="campo">
+      <label for="origem-{{ forloop.counter }}">De onde a vaga veio</label>
+      <input type="text" id="origem-{{ forloop.counter }}" name="origem" required aria-describedby="acrescimo-ajuda-{{ forloop.counter }}">
+    </p>
+    <p class="campo">
+      <label for="fundamento-{{ forloop.counter }}">Por que ela existe</label>
+      <textarea id="fundamento-{{ forloop.counter }}" name="fundamento" rows="3" required></textarea>
+    </p>
+    <p class="campo">
+      <label for="referencia-{{ forloop.counter }}">Processo administrativo (opcional)</label>
+      <input type="text" id="referencia-{{ forloop.counter }}" name="referencia">
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Conferir o acréscimo</button></p>
+  </form>
+  {% elif pode_emitir and recorte.impedimentoDoAcrescimo %}
+  <p class="nota">{{ recorte.impedimentoDoAcrescimo }}</p>
   {% endif %}
 </section>
 {% endfor %}

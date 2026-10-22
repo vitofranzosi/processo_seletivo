@@ -99,8 +99,11 @@ def test_nenhuma_frase_nova_sobre_a_reserva_no_cadastro():
 
     assert "vaga imediata" not in corrido.lower().replace("vagas imediatas", "")
     # O rótulo do par que diz o cadastro do Perfil é dado, e não frase sobre a reserva: desde a
-    # `069` ele diz "Cadastro de reserva" por extenso (P2), e sai da varredura.
-    assert "cadastro de reserva" not in corrido.lower().replace("cadastro de reserva:", "")
+    # `069` ele diz "Cadastro de reserva" por extenso (P2), e sai da varredura. A nota da sigla
+    # também sai (096, D-002): "CR: cadastro de reserva." diz o que a célula quer dizer, e não
+    # declara regra de reserva no cadastro.
+    sem_rotulos = corrido.lower().replace(pdf.NOTA_DO_CADASTRO.lower(), "")
+    assert "cadastro de reserva" not in sem_rotulos.replace("cadastro de reserva:", "")
 
 
 def test_com_vaga_o_quadro_sai_inteiro_com_a_linha_em_zero_e_a_reversao():

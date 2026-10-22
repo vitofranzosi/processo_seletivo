@@ -71,11 +71,17 @@ def do_quadro(**alteracoes):
     )
 
 
-def montar(client, edital, reversao=""):
+def montar(client, edital, reversao="", *, perfis_=None, eventos_=None):
+    """`perfis_` deixa a prévia do sorteio (098) montar o mesmo Edital com outro Perfil."""
     from tests.interface.test_compor import EVENTO, eventos
 
     identificar(client, "ana.elaboradora", ["elaborador"])
-    compor_rascunho(client, edital, perfis=perfis_com_reserva(reversao), eventos=eventos())
+    compor_rascunho(
+        client,
+        edital,
+        perfis=perfis_ or perfis_com_reserva(reversao),
+        eventos=eventos_ or eventos(),
+    )
     edital.refresh_from_db()
     resposta = client.post(
         reverse("interface:compor-etapa", args=[edital.id, "etapas"]),

@@ -95,3 +95,22 @@ def cenario_por_publicacao(
         prefixo="convocacao-019-publicacao",
         forma=FORMA_POR_PUBLICACAO,
     )
+
+
+@pytest.fixture
+def cenario_reserva(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """O Perfil do TMD com apuração emitida: **0 vagas e cadastro de reserva**, faixa de três (097).
+
+    A apuração diz 0 efetivas, e por isso toda chamada é recusada com `sem_deficit` — é o recorte
+    que a `DP-05` deixou fora do piloto, e que a vaga acrescida destrava.
+    """
+    return montar_cenario_da_convocacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="convocacao-097",
+        geral=0,
+        reserva="UNLIMITED",
+        cut=regra(surplusCount=1),
+    )

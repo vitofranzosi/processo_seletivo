@@ -217,7 +217,7 @@ def simular(
         )
 
     ordem = desempate.ordenar_com_trajetoria(classificaveis, criterios)
-    corte = _corte(regra, ordem, sem_posicao, alvo=alvo, suplentes=suplentes)
+    corte = corte_da_ordem(regra, ordem, sem_posicao, alvo=alvo, suplentes=suplentes)
     inscritos = cenarios.inscritos(candidatos)
     previa = {
         "marco": marco,
@@ -301,7 +301,7 @@ def _recorte(
             "excedentes": [],
         }
     else:
-        corte = _corte(regra, ordem, sem_posicao, alvo=alvo_do_recorte, suplentes=suplentes)
+        corte = corte_da_ordem(regra, ordem, sem_posicao, alvo=alvo_do_recorte, suplentes=suplentes)
     return {
         "ordem": ordem,
         "sem_posicao": sem_posicao,
@@ -312,7 +312,8 @@ def _recorte(
     }
 
 
-def _entrada_da_rodada(lista_id, vagas_do_recorte, ordem, sem_posicao, corte):
+def entrada_da_rodada(lista_id, vagas_do_recorte, ordem, sem_posicao, corte):
+    """O que a rodada de ocupação lê de um recorte — pública desde a `098`, como o corte."""
     return {
         "lista_id": lista_id,
         "vagas": vagas_do_recorte,
@@ -345,7 +346,7 @@ def por_recorte(
     """
     reservadas = []
     entradas = [
-        _entrada_da_rodada(
+        entrada_da_rodada(
             None, ampla["vagas"], ampla["ordem"], ampla["sem_posicao"], ampla["corte"]
         )
     ]
@@ -375,7 +376,7 @@ def por_recorte(
             }
         )
         entradas.append(
-            _entrada_da_rodada(
+            entrada_da_rodada(
                 recorte["lista_id"],
                 recorte["vagas"],
                 calculado["ordem"],
@@ -401,8 +402,12 @@ def por_recorte(
     }
 
 
-def _corte(regra, ordem, sem_posicao, *, alvo, suplentes):
-    """O corte, com as recusas como resultado (D-005) — e o outro desfecho, como comparação."""
+def corte_da_ordem(regra, ordem, sem_posicao, *, alvo, suplentes):
+    """O corte, com as recusas como resultado (D-005) — e o outro desfecho, como comparação.
+
+    Pública desde a `098`, sem mudar de corpo: a prévia do sorteio corta a ordem sorteada por aqui,
+    e um corte próprio lá seria a segunda resposta para a mesma pergunta.
+    """
     if not regra:
         return {"declarado": False, "progrediram": [i["inscricao_id"] for i in ordem]}
     posicoes = [(i["inscricao_id"], i["posicao"]) for i in ordem] + [
@@ -458,11 +463,13 @@ def _corte(regra, ordem, sem_posicao, *, alvo, suplentes):
 
 
 def impedido(corte):
-    """O corte não seria emitido — recusado, dependente de um desfecho que falta, ou sem a linha do
-    quadro de que o alvo do recorte depende (095)."""
+    """O corte não seria emitido — recusado, dependente de um desfecho que falta, sem a linha do
+    quadro de que o alvo do recorte depende (095), ou sem ordem a cortar (098: o sorteio não sorteia
+    lista vazia, e sem ordem o corte oficial recusa por `sem_ato_vigente`)."""
     return bool(
         corte.get("recusado")
         or corte.get("sem_linha")
+        or corte.get("sem_ordem")
         or (corte.get("sem_desfecho") and corte.get("atravessa"))
     )
 
@@ -669,6 +676,8 @@ __all__ = [
     "SEM_POSICAO",
     "comparar",
     "consequencias",
+    "corte_da_ordem",
+    "entrada_da_rodada",
     "estado",
     "impedido",
     "por_recorte",

@@ -126,6 +126,10 @@ BOTOES = {
         ("botao", "Apurar a ocupação deste recorte"),
         ("botao", "Emitir nova apuração"),
         ("botao", "Pedir a faixa seguinte com este déficit"),
+        # A vaga acrescida e o desfazimento dela (097). `botao`, e não `botao perigoso`: os dois
+        # abrem uma conferência, e o acréscimo se desfaz por outro ato.
+        ("botao", "Conferir o desfazimento"),
+        ("botao", "Conferir o acréscimo"),
     ],
     "ocupacao_historico.html": [],
     "convocacao.html": [
@@ -187,7 +191,8 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
         )
     )
 
-    assert desenhos == {"botao": 20, "botao perigoso": 2, "acao": 2}
+    # Eram 20 `botao`; os dois da vaga acrescida (097) abrem conferência, e não praticam ato.
+    assert desenhos == {"botao": 22, "botao perigoso": 2, "acao": 2}
 
 
 # ---- pela página renderizada -------------------------------------------------------------------

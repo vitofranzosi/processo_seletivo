@@ -187,7 +187,10 @@ from processo_seletivo.processos.application.selectors import (
 from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL, pending_editais
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.aplicacao import criar_retificacao_com_gestos
-from processo_seletivo.publicacoes.application.contexto_do_ato import unidade_para_o_compositor
+from processo_seletivo.publicacoes.application.contexto_do_ato import (
+    fechos_previstos,
+    unidade_para_o_compositor,
+)
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
@@ -3201,6 +3204,25 @@ def fragmento_previa_da_classificacao(request, indice, sub):
                 "vagas": (do_recorte or {}).get("immediateVacancies"),
             }
         )
+    # **A forma do marco digitado decide qual prévia responde** (098, R-007). A rota é uma só: a
+    # autorização, a leitura do rascunho e a derivação dos recortes acima valem para as duas, e o
+    # botão do cartão não precisa escolher URL pela forma — é decisão que o servidor toma melhor.
+    marco = next(m for m in marcos if m["sub"] == str(sub))
+    if marco.get("orderProduction") == "POR_SORTEIO":
+        from processo_seletivo.interface import previa_do_sorteio
+
+        contexto = previa_do_sorteio.contexto(
+            perfil=perfil,
+            marco=marco,
+            sub=str(sub),
+            snapshot=snapshot,
+            edital=edital,
+            indice=indice,
+            recortes=recortes,
+            especie=reversao.declarada(perfil),
+            dados=request.GET,
+        )
+        return render(request, "interface/_previa_do_sorteio.html", contexto)
     contexto = previa.contexto(
         perfil=perfil,
         marcos=marcos,
@@ -3665,11 +3687,15 @@ def previa_documento(request, edital_id):
     # A unidade registrada agora: a prévia não é ato e não congela nada, mas abre com o cabeçalho
     # que o documento publicado vai ter (060, FR-1112).
     unidade = unidades_selectors.exigir_unidade(edital.institution_scope)
+    hoje = timezone.now().astimezone(ZONA_INSTITUCIONAL).date()
     documento = render_edital_pdf(
         edital_snapshot(edital),
         "",
         modo=MODO_PREVIA,
         unidade=unidade_para_o_compositor(unidade),
+        # O espaço do fecho, medido pelas autoridades que podem responder pelo ato (096, D-012):
+        # sem ele, a última seção saltava só no publicado, e a prévia mostrava uma página a menos.
+        fechos_previstos=fechos_previstos(unidade, hoje),
     )
     resposta = HttpResponse(documento, content_type="application/pdf")
     nome = f"previa-edital-{edital.number}-{edital.year}.pdf".replace("/", "-")
@@ -4853,6 +4879,9 @@ OPERACOES = {
     # **A `016` estava faltando aqui**, e a trilha exibia `OCUPACAO_APURAR` cru. O achado é da `019`
     # e a correção é de uma linha — deixá-la para depois manteria o código na tela de quem audita.
     "OCUPACAO_APURAR": "Apuração de ocupação de vagas",
+    # A vaga acrescida depois da publicação e o ato que a desfaz (097).
+    "OCUPACAO_ACRESCENTAR_VAGAS": "Acréscimo de vagas depois da publicação",
+    "OCUPACAO_DESFAZER_ACRESCIMO": "Desfazimento de vaga acrescida",
     # **As quatro frases dizem o ato praticado, e não o nome da função** (`FR-296`). "Convocação
     # praticada" é o que aconteceu; `CONVOCACAO_CONVOCAR` é como o sistema o chama internamente, e
     # quem audita não tem por que aprender esse vocabulário.
@@ -4904,6 +4933,7 @@ AGREGADOS = {
     "Avaliacao": "Avaliação",
     "Impedimento": "Impedimento",
     "ApuracaoDeOcupacao": "Apuração de ocupação",
+    "AcrescimoDeVagas": "Vaga acrescida",
     "Convocacao": "Convocação",
     "DesfechoDaConvocacao": "Desfecho de convocação",
     "ComunicacaoEmitida": "Comunicação de convocação",
@@ -7425,6 +7455,7 @@ def ocupacao(request, edital_id, marco_id):
         return identidade.pedir_identificacao(request)
     perfil_id = _perfil_do_marco(edital, marco_id)
     recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+    _com_o_acrescimo(edital, perfil_id, recortes)
     return marcar_como_privada(
         render(
             request,
@@ -7463,9 +7494,35 @@ def ocupacao(request, edital_id, marco_id):
                 # percurso conduzido da `016`.
                 "acao": request.session.pop("acao_da_ocupacao", None),
                 "erro": request.session.pop("erro_da_ocupacao", None),
+                # **De qual ato é a recusa** (097). A frase "Não foi possível apurar" ficava falsa
+                # quando o que se recusou foi o acréscimo, que não apura nada sozinho.
+                "acao_do_erro": request.session.pop("acao_do_erro_da_ocupacao", None),
             },
         )
     )
+
+
+def _com_o_acrescimo(edital, perfil_id, recortes):
+    """Se cada recorte aceita a vaga acrescida, e a frase de quando não aceita (097, `FR-2463`).
+
+    **A frase só aparece no Perfil que publicou cadastro de reserva.** No Perfil sem reserva — a
+    maioria dos Editais — o acréscimo não é caminho de nada, e a frase da recusa em toda tela de
+    ocupação seria ruído. No que publicou reserva e reparte vagas entre modalidades, ela é o que
+    evita procurar um formulário que não vem (`FR-2464`).
+    """
+    from processo_seletivo.ocupacao.application.acrescimo import impedimento
+    from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    conteudo = effective_version(edital_id=edital.id).content
+    for recorte in recortes:
+        recusa = impedimento(conteudo, perfil_id=perfil_id, lista_id=recorte["listaId"])
+        recorte["aceitaAcrescimo"] = recusa is None
+        recorte["impedimentoDoAcrescimo"] = (
+            recusa[1]
+            if recusa and recusa[0] == nomes_da_ocupacao.ACRESCIMO_FORA_DA_LINHA_GERAL
+            else ""
+        )
 
 
 @require_http_methods(["GET"])
@@ -7533,6 +7590,182 @@ def emitir_apuracao_view(request, edital_id, marco_id):
     except DomainError as erro:
         request.session["erro_da_ocupacao"] = erro.detail
     return redirect(destino)
+
+
+@require_http_methods(["POST"])
+def acrescentar_vagas_view(request, edital_id, marco_id):
+    """A vaga acrescida depois da publicação, em dois passos na mesma rota (097, `T-010`).
+
+    **Sem `confirmar`, a conferência; com ele, o ato.** A prévia depende da quantidade digitada, e
+    por isso não pode ser calculada no `GET` da ocupação, como a dos titulares da `050` é. Os campos
+    são conferidos antes de abrir a conferência: mostrar a prévia de uma vaga sem origem é mostrar o
+    que o ato recusaria.
+    """
+    from processo_seletivo.ocupacao.application import acrescimo
+    from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    lista_id = _identidade_ou_404(request.POST.get("lista"))
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
+    campos = {
+        "quantidade": (request.POST.get("quantidade") or "").strip(),
+        "origem": (request.POST.get("origem") or "").strip(),
+        "fundamento": (request.POST.get("fundamento") or "").strip(),
+        "referencia": (request.POST.get("referencia") or "").strip(),
+    }
+    chave = request.POST.get("chave") or uuid4().hex
+    aviso = ""
+    if request.POST.get("confirmar") == "1":
+        try:
+            request.session["resultado_da_ocupacao"] = acrescimo.acrescentar_vagas(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                perfil_id=perfil_id,
+                marco_id=marco_id,
+                lista_id=lista_id,
+                leitura_confirmada=request.POST.get("leitura", ""),
+                idempotency_key=chave,
+                correlation_id=f"interface-acrescimo-{edital_id}",
+                **campos,
+            )
+            request.session["acao_da_ocupacao"] = "acrescimo"
+            return redirect(destino)
+        except DomainError as erro:
+            # **A leitura mudada volta à conferência, recalculada**, e nunca à ocupação, onde a
+            # pessoa teria de digitar tudo de novo (`contracts/tela.md`).
+            if erro.code != nomes_da_ocupacao.LEITURA_DO_RECORTE_MUDOU:
+                return _recusa_da_ocupacao(request, destino, erro, "acrescimo")
+            aviso = erro.detail
+    try:
+        acrescimo.conferir_campos(
+            quantidade=campos["quantidade"],
+            origem=campos["origem"],
+            fundamento=campos["fundamento"],
+        )
+        previa = acrescimo.previa_do_acrescimo(
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            quantidade=campos["quantidade"],
+        )
+        acrescimo.conferir_recorte(previa)
+    except DomainError as erro:
+        return _recusa_da_ocupacao(request, destino, erro, "acrescimo")
+    return _conferencia_da_ocupacao(
+        request,
+        edital,
+        marco_id,
+        modo="acrescimo",
+        previa=previa,
+        lista_id=lista_id,
+        campos=campos,
+        chave=chave,
+        aviso=aviso,
+    )
+
+
+@require_http_methods(["POST"])
+def desfazer_acrescimo_view(request, edital_id, marco_id):
+    """O ato contrário à vaga acrescida, em dois passos, como o acréscimo (097, `FR-2460`).
+
+    **A trava é da convocação, e chega como argumento** (`T-005`): a ocupação não sabe quem foi
+    chamado, e a pergunta é avaliada dentro do ato, sob o lock do Processo.
+    """
+    from processo_seletivo.convocacao.application.selectors import pessoas_chamadas
+    from processo_seletivo.ocupacao.application import acrescimo
+    from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    _perfil_do_marco(edital, marco_id)
+    destino = reverse("interface:ocupacao", args=[edital_id, marco_id])
+    acrescimo_id = (request.POST.get("acrescimo") or "").strip()
+    campos = {
+        "quantidade": (request.POST.get("quantidade") or "").strip(),
+        "motivo": (request.POST.get("motivo") or "").strip(),
+    }
+    chave = request.POST.get("chave") or uuid4().hex
+    aviso = ""
+    if request.POST.get("confirmar") == "1":
+        try:
+            request.session["resultado_da_ocupacao"] = acrescimo.desfazer_acrescimo(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                acrescimo_id=acrescimo_id,
+                pessoas_chamadas=pessoas_chamadas,
+                leitura_confirmada=request.POST.get("leitura", ""),
+                idempotency_key=chave,
+                correlation_id=f"interface-desfazimento-{edital_id}",
+                **campos,
+            )
+            request.session["acao_da_ocupacao"] = "desfazimento"
+            return redirect(destino)
+        except DomainError as erro:
+            if erro.code not in (
+                nomes_da_ocupacao.LEITURA_DO_RECORTE_MUDOU,
+                nomes_da_ocupacao.MOTIVO_OBRIGATORIO,
+            ):
+                return _recusa_da_ocupacao(request, destino, erro, "desfazimento")
+            aviso = erro.detail
+    try:
+        previa = acrescimo.previa_do_desfazimento(
+            edital=edital,
+            acrescimo_id=acrescimo_id,
+            quantidade=campos["quantidade"],
+            pessoas_chamadas=pessoas_chamadas,
+        )
+        acrescimo.conferir_desfazimento(previa)
+    except DomainError as erro:
+        return _recusa_da_ocupacao(request, destino, erro, "desfazimento")
+    return _conferencia_da_ocupacao(
+        request,
+        edital,
+        marco_id,
+        modo="desfazimento",
+        previa=previa,
+        lista_id=previa["acrescimo"].lista_id,
+        campos=campos,
+        chave=chave,
+        aviso=aviso,
+    )
+
+
+def _recusa_da_ocupacao(request, destino, erro, acao):
+    request.session["erro_da_ocupacao"] = erro.detail
+    request.session["acao_do_erro_da_ocupacao"] = acao
+    return redirect(destino)
+
+
+def _conferencia_da_ocupacao(
+    request, edital, marco_id, *, modo, previa, lista_id, campos, chave, aviso
+):
+    """A conferência dos dois atos da vaga acrescida (`contracts/tela.md`)."""
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/ocupacao_acrescimo.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "modo": modo,
+                "previa": previa,
+                "lista_id": lista_id,
+                "campos": campos,
+                # Conferida antes de a conferência abrir: aqui ela já é inteiro a partir de 1.
+                "quantidade": int(campos["quantidade"]),
+                "chave_idempotencia": chave,
+                "aviso": aviso,
+            },
+        )
+    )
 
 
 def convocacao(request, edital_id, marco_id):

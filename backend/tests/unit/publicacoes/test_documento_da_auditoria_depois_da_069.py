@@ -60,10 +60,23 @@ def _em_ordem(palavras, tokens):
     return all(any(token == palavra for token in restantes) for palavra in palavras)
 
 
+# Os do B mudaram de propósito na `096` (o `CR` dos tutores presenciais e a nota), e o composto
+# agora é comparado com os que ela gravou; os da `069` continuam onde estão, como evidência, e os
+# testes de cobertura abaixo os leem. O que mudou entre os dois é preso por
+# `test_documento_da_auditoria_depois_da_096.py`.
+DEMONSTRACAO_096 = RAIZ / "specs" / "096-cadastro-de-reserva-como-cr" / "demonstracao"
+
+
+def gravado_agora(nome):
+    if nome.startswith("B-"):
+        return (DEMONSTRACAO_096 / nome.replace("-069.pdf", "-096.pdf")).read_bytes()
+    return da_069(nome)
+
+
 @pytest.mark.parametrize("nome", sorted(COMPOSTOS))
 def test_o_documento_sai_com_os_bytes_gravados(nome):
     """Os PDFs da demonstração são os que o compositor faz agora — determinísticos (SC-523)."""
-    assert COMPOSTOS[nome]() == da_069(nome)
+    assert COMPOSTOS[nome]() == gravado_agora(nome)
 
 
 @pytest.mark.parametrize("cenario", ["A", "B"])

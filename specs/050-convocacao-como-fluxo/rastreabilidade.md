@@ -47,7 +47,7 @@ estão em `tests/integration/convocacao/test_titulares_em_lote.py` (**TL**),
 | **FR-886** | só `INSERT`: nenhuma tabela, coluna ou migration nova (leitura do diff) | `test_append_only.py`, `test_database_permissions.py` |
 | **FR-887** | os gestos passam por `comando_de_comissao` ou `exigir_base_de_comissao` | TL `test_quem_nao_tem_base_de_comissao_recebe_404` |
 | **FR-888** | as prévias saem da leitura do recorte; as versões das pendentes, por conjunto; `convocar_em_sequencia` lê o contexto uma vez | `performance/test_convocacao.py::test_as_previas_da_050_nao_crescem_com_as_convocacoes_do_recorte` |
-| **FR-889** | nada muda na recusa `sem_deficit`; o gesto só alcança quem ocupa pela contagem (leitura do diff) | `test_fila_so_de_titulares_alcanca_todos_sem_parada`, `test_deficit.py` |
+| **FR-889** | nada muda na recusa `sem_deficit`; o gesto só alcança quem ocupa pela contagem (leitura do diff). *Revista em 21/10/2026 pela `097`, na `FR-2455`: o cadastro de reserva sem vagas imediatas convoca quando há vaga acrescida depois da publicação; a recusa `sem_deficit` continua valendo quando nenhuma vaga, publicada ou acrescida, falta* | `test_fila_so_de_titulares_alcanca_todos_sem_parada`, `test_deficit.py` |
 | **FR-890** | `convocacao.html`: a frase na confirmação do desfecho individual e na do gesto dos vencidos | `test_convocacao_em_fluxo.py::test_a_confirmacao_do_desfecho_anuncia_a_apuracao_seguinte` |
 
 ## 2. Critérios de sucesso

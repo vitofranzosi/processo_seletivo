@@ -198,11 +198,13 @@ def test_a_revisao_mostra_o_total_e_o_que_o_quadro_reparte(client, seletor_ligad
 # --- RC-58 · Perfil só de cadastro de reserva (DP-05) ------------------------------------------
 
 
-def test_a_revisao_diz_que_a_reserva_e_convocada_fora_do_sistema(client, seletor_ligado, edital):
-    """A DP-05 deixou a família fora do piloto: o sistema classifica e não convoca, e diz isso.
+def test_a_revisao_diz_como_a_reserva_e_convocada(client, seletor_ligado, edital):
+    """A Revisão diz que a convocação depende de vaga acrescida depois da publicação (097).
 
     Sem o aviso, a Revisão dizia "Nada pendente" e o operador descobria na tela de convocação,
-    depois do resultado, que toda chamada seria recusada por falta de vaga apurada.
+    depois do resultado, que toda chamada seria recusada por falta de vaga apurada. Até a `097` o
+    aviso dizia que a convocação era feita fora do sistema; a `DP-05` voltou à opção A, e a frase
+    passou a dizer o caminho — a vaga acrescida, na ocupação (`FR-2474`, `SC-923`).
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
     dados = com_ampla_apontada(
@@ -216,4 +218,5 @@ def test_a_revisao_diz_que_a_reserva_e_convocada_fora_do_sistema(client, seletor
     ).content.decode()
 
     assert "Nada pendente" not in corpo
-    assert "a convocação dos classificados será feita fora dele" in corpo
+    assert "a convocação depende de vagas acrescidas depois da publicação" in corpo
+    assert "será feita fora dele" not in corpo

@@ -220,3 +220,24 @@ fronteira da gestão, ele cobre a tela, com rolagem própria (FR-2202).
 .painel-da-previa .etiqueta-modalidade{border-color:#1d4f91;color:#1d4f91}
 .painel-da-previa .etiqueta-pela-ampla{border-color:var(--verde);color:var(--verde-escuro);
   background:var(--verde-claro)}
+
+/* A prévia do sorteio (098): a semente fictícia, a população por lista e o resumo das rodadas. A
+   semente quebra em grupos de seis dígitos, e não no meio de um, para caber a 375 px (FR-2510). */
+.painel-da-previa .semente-ficticia{border:1px dashed var(--amarelo);border-radius:.4rem;
+  background:var(--amarelo-fundo);padding:.5rem .75rem;margin:.25rem 0 .75rem}
+.painel-da-previa .semente-ficticia h3{font-size:.95rem;margin:0 0 .25rem;display:flex;gap:.5rem;
+  align-items:center;flex-wrap:wrap}
+.painel-da-previa .grupos-da-semente{display:flex;flex-wrap:wrap;gap:.35rem .75rem;margin:.2rem 0;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1.05rem;font-weight:700}
+.painel-da-previa .grupos-da-semente span{white-space:nowrap}
+.painel-da-previa .populacao-do-sorteio{border:0;border-top:1px solid var(--borda);
+  border-bottom:1px solid var(--borda);padding:.35rem 0;margin:.25rem 0 .75rem;min-width:0}
+.painel-da-previa .populacao-do-sorteio legend{font-weight:600;font-size:.9rem;padding:0}
+.painel-da-previa .populacao-do-sorteio input{width:6rem;max-width:100%;}
+.painel-da-previa .populacao-do-sorteio .campo-da-previa{margin:.2rem 0}
+.painel-da-previa .populacao-do-sorteio .campo-da-previa label{flex:1 1 12rem;min-width:0}
+.painel-da-previa .rodadas-do-sorteio{border:1px solid var(--borda);border-radius:.4rem;
+  padding:.5rem .75rem;margin:.75rem 0}
+.painel-da-previa .rodadas-do-sorteio h3{font-size:.95rem;margin:0 0 .3rem}
+.painel-da-previa .linhas-de-rodadas{margin:0;padding-left:1.1rem}
+.painel-da-previa .linhas-de-rodadas li{margin:.2rem 0}

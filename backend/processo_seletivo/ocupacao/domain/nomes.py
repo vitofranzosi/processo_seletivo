@@ -29,6 +29,16 @@ ESPECIES_DE_REVERSAO = (REVERSAO_POR_ESGOTAMENTO, REVERSAO_POR_SALDO)
 MOVIMENTO_REVERSAO = "REVERSAO_DE_COTA"
 ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO,)
 
+# --- A vaga acrescida depois da publicação (097, `T-001`) -----------------------------------------
+# **Não é movimento, e a diferença é de onde a quantidade vem.** O movimento leva vaga de um recorte
+# a outro do mesmo Perfil, e nasce com a apuração que o determina. A vaga acrescida chega **de fora
+# do Edital** — no TMD, a matrícula que não se efetivou no Edital regular — e precede a apuração que
+# a lê. As duas espécies são da mesma tabela: o desfazimento é o ato contrário, com motivo, e cita o
+# acréscimo que desfaz. Nada se apaga: o erro se corrige por outro ato (`FR-2460`).
+ACRESCIMO = "ACRESCIMO"
+DESFAZIMENTO = "DESFAZIMENTO"
+ESPECIES_DE_ACRESCIMO = (ACRESCIMO, DESFAZIMENTO)
+
 # --- Estado de um recorte na leitura (016, contrato) --------------------------------------------
 # **Quatro valores, e dois deles não são erro.** `NAO_APURADO` é recorte sem apuração emitida;
 # `SEM_QUADRO` é Edital publicado antes do degrau 12, que não tem quadro. Colapsar os dois em
@@ -59,6 +69,9 @@ CAUSA_MOVIMENTO_POSTERIOR = "movimento_posterior"
 # obsoleta, com a causa dita, e o número novo sai na emissão seguinte (`D-006`). É o mesmo desenho
 # da quarta — obsolescência em vez de orquestração.
 CAUSA_EFEITO_POSTERIOR = "efeito_posterior"
+# **A sexta, e ela chegou com a `097`.** Vaga acrescida ou desfeita depois da apuração muda as
+# efetivas do recorte — o mesmo desenho das duas anteriores: obsolescência em vez de orquestração.
+CAUSA_ACRESCIMO_POSTERIOR = "acrescimo_posterior"
 
 # --- Espécies de efeito de ocupação (019, R-003) ------------------------------------------------
 # **A porta por onde a `019` mexe na contagem, e ela mora aqui porque a tabela mora aqui.** A `016`
@@ -86,3 +99,17 @@ EMPATE_NA_FRONTEIRA_DO_ALVO = "empate_na_fronteira_do_alvo"
 ESPECIE_DE_EFEITO_INVALIDA = "especie_de_efeito_invalida"
 FUNDAMENTO_OBRIGATORIO = "fundamento_obrigatorio"
 PROVENIENCIA_OBRIGATORIA = "proveniencia_obrigatoria"
+
+# --- Recusas dos atos da vaga acrescida (097, contrato `atos.md`) -------------------------------
+# A ordem em que o ato as confere é a do contrato: a mais específica primeiro, e as do recorte —
+# ordem vigente e linha no quadro — com os mesmos códigos que a emissão da apuração já usa.
+QUANTIDADE_INVALIDA = "quantidade_invalida"
+ORIGEM_OBRIGATORIA = "origem_obrigatoria"
+MOTIVO_OBRIGATORIO = "motivo_obrigatorio"
+ACRESCIMO_SEM_CADASTRO_DE_RESERVA = "acrescimo_sem_cadastro_de_reserva"
+ACRESCIMO_FORA_DA_LINHA_GERAL = "acrescimo_fora_da_linha_geral"
+LEITURA_DO_RECORTE_MUDOU = "leitura_do_recorte_mudou"
+ACRESCIMO_INEXISTENTE = "acrescimo_inexistente"
+DESFAZIMENTO_ALEM_DO_ACRESCIMO = "desfazimento_alem_do_acrescimo"
+DESFAZIMENTO_COM_PESSOAS_CHAMADAS = "desfazimento_com_pessoas_chamadas"
+OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"

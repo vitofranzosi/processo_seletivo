@@ -291,11 +291,15 @@ documentos, que é a ordem das perguntas de quem decide.
           Havendo vaga imediata, o número é a notícia e a tela continua como estava. Não havendo, o
           número era `0` em corpo 28 com a reserva de legenda embaixo — e "0 vagas imediatas, com
           cadastro reserva ilimitado" lê-se como contradição, não como oportunidade.
+
+          **E, desde a `096`, o zero não é dito** (FR-2414). A `024` o deixara em posição
+          secundária, "0 vagas imediatas agora", e logo abaixo da oferta ele ainda lia como ausência.
+          O documento diz `CR` com uma nota; aqui não há legenda que explique a sigla, e a oferta
+          continua por extenso.
           {% endcomment %}
           {% if perfil.oferta %}
           <p class="vagas-numero reserva-primeiro"><strong>{{ perfil.oferta.titulo }}</strong>
-            <span>{{ perfil.oferta.detalhe }}</span>
-            <span class="reserva">{{ perfil.vagas }} vaga{{ perfil.vagas|pluralize:"s" }} imediata{{ perfil.vagas|pluralize:"s" }} agora</span></p>
+            <span>{{ perfil.oferta.detalhe }}</span></p>
           {% else %}
           <p class="vagas-numero"><strong>{{ perfil.vagas }}</strong>
             <span>vaga{{ perfil.vagas|pluralize:"s" }} imediata{{ perfil.vagas|pluralize:"s" }}</span>

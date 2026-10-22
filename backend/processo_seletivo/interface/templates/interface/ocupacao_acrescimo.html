@@ -1,0 +1,108 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{% if modo == "acrescimo" %}Conferir o acréscimo de vagas{% else %}Conferir o desfazimento de vaga acrescida{% endif %}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ocupação de vagas</a> › <span aria-current="page">{% if modo == "acrescimo" %}Acrescentar vagas{% else %}Desfazer acréscimo{% endif %}</span></nav>{% endblock %}
+{% block conteudo %}
+<h1>{% if modo == "acrescimo" %}Conferir o acréscimo de {{ quantidade|contagem:"vaga,vagas" }}{% else %}Desfazer {{ quantidade|contagem:"vaga,vagas" }} do acréscimo de {{ previa.acrescimo.registrado_em|date:"d/m/Y" }}{% endif %}</h1>
+<p class="sub">O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado ainda.</p>
+<p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — aqui, a ampla
+  concorrência. <dfn>Faixa</dfn> é o trecho da ordem que o corte publicou, do primeiro colocado ao
+  último que o alvo alcançou.</p>
+
+{% if aviso %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ aviso }}</p>{% endif %}
+
+{% comment %}
+As vagas antes e depois do ato (097, FR-2456). A conta e a mesma da apuracao: as publicadas, que o
+Edital declarou, mais o saldo das vagas acrescidas. O que o ato acrescenta ou desfaz entra no depois.
+{% endcomment %}
+<h2>As vagas</h2>
+<ul class="resumo" aria-label="Vagas deste recorte">
+  <li><strong>{{ previa.publicadas }}</strong>Publicadas</li>
+  <li><strong>{{ previa.acrescidasLiquidas }}</strong>Acrescidas até agora</li>
+  <li><strong>{{ previa.efetivasDepois }}</strong>Efetivas depois deste ato</li>
+</ul>
+
+{% comment %}
+Quem a ordem alcanca para as vagas de depois, pelo nome e pela posicao (UX-221). Sao os titulares
+que a apuracao seguinte vai contar; mais vagas do que pessoas na faixa e o caso-limite da spec, e a
+frase diz quantas ficam sem ninguem.
+{% endcomment %}
+<h2>Quem a ordem alcança</h2>
+{% if previa.alcancados %}
+<p class="nota">As primeiras posições da ordem, tantas quantas as vagas efetivas depois deste ato —
+  inclusive quem já ocupava as vagas anteriores. Não é a lista de quem será chamado agora.</p>
+<ol class="consequencias">
+  {% for pessoa in previa.alcancados %}
+  <li>{{ pessoa.nome }}{% if pessoa.posicao %}, na {{ pessoa.posicao }}ª posição da ordem{% endif %}</li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="nota">Depois deste ato, nenhuma vaga deste recorte alcança pessoa da ordem.</p>
+{% endif %}
+{% if previa.faltamPessoas %}
+<p class="aviso" role="status">{{ previa.efetivasDepois|contagem:"vaga,vagas" }}; a ordem publicada alcança só {{ previa.alcancados|length|contagem:"pessoa,pessoas" }}. A faixa é a do corte publicado, e alcançar mais gente é ato da classificação.</p>
+{% endif %}
+
+{% if previa.acrescimos %}
+<h2>Os atos anteriores deste recorte</h2>
+<ul class="consequencias">
+  {% for item in previa.acrescimos %}
+  <li>{{ item.registro.registrado_em|date:"d/m/Y H:i" }} — {% if item.registro.especie == "ACRESCIMO" %}acréscimo de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Origem: {{ item.registro.origem }}.{% else %}desfazimento de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Motivo: {{ item.registro.fundamento }}.{% endif %} Registrado por {{ item.registro.registrado_por }}.</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<h2>A apuração seguinte</h2>
+{% if previa.emissao %}
+<p class="aviso" role="status">A apuração deste recorte já está obsoleta por outra causa, e por isso este ato não a emite: emita a seguinte na ocupação, onde a causa é dita.</p>
+{% else %}
+<p class="nota">A apuração seguinte será emitida por este ato, em seu nome, com o motivo:
+  {% if modo == "acrescimo" %}“Vaga acrescida depois da publicação: {{ quantidade }}, de {{ campos.origem }}.”{% else %}“Vaga acrescida desfeita: {{ quantidade }}.”, seguido do motivo que você escrever.{% endif %}</p>
+{% endif %}
+
+<p class="imutavel">{% if modo == "acrescimo" %}O acréscimo não se apaga. Se estiver errado, desfaça-o por outro ato, com motivo.{% else %}O desfazimento não se apaga, e o acréscimo continua na lista, ao lado dele.{% endif %}</p>
+
+{% if modo == "acrescimo" %}
+<form method="post" action="{% url 'interface:acrescentar-vagas' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="leitura" value="{{ previa.assinatura }}">
+  <input type="hidden" name="quantidade" value="{{ quantidade }}">
+  <input type="hidden" name="origem" value="{{ campos.origem }}">
+  <input type="hidden" name="fundamento" value="{{ campos.fundamento }}">
+  <input type="hidden" name="referencia" value="{{ campos.referencia }}">
+  <dl class="meta">
+    <dt>De onde a vaga veio</dt><dd>{{ campos.origem }}</dd>
+    <dt>Por que ela existe</dt><dd>{{ campos.fundamento }}</dd>
+    {% if campos.referencia %}<dt>Processo administrativo</dt><dd>{{ campos.referencia }}</dd>{% endif %}
+  </dl>
+  <p class="salvar">
+    <button type="submit" class="botao">Acrescentar {{ quantidade|contagem:"vaga,vagas" }}</button>
+    <a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a>
+  </p>
+</form>
+{% else %}
+<form method="post" action="{% url 'interface:desfazer-acrescimo' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="leitura" value="{{ previa.assinatura }}">
+  <input type="hidden" name="acrescimo" value="{{ previa.acrescimo.id }}">
+  <input type="hidden" name="quantidade" value="{{ quantidade }}">
+  <dl class="meta">
+    <dt>Acréscimo desfeito</dt><dd>{{ previa.acrescimo.quantidade|contagem:"vaga,vagas" }}, de {{ previa.acrescimo.origem }}</dd>
+    <dt>Ainda a desfazer nele</dt><dd>{{ previa.restante|contagem:"vaga,vagas" }}</dd>
+  </dl>
+  <p class="campo">
+    <label for="motivo">Motivo do desfazimento</label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo">{{ campos.motivo }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">O acréscimo não é alterado: o desfazimento o cita, e os dois continuam legíveis.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao">Desfazer {{ quantidade|contagem:"vaga,vagas" }}</button>
+    <a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a>
+  </p>
+</form>
+{% endif %}
+{% endblock %}

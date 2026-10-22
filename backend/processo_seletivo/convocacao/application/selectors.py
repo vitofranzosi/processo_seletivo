@@ -333,6 +333,24 @@ def _situacoes(convocacoes):
     return em_aberto, servidos, encerrados, reclassificados
 
 
+def pessoas_chamadas(*, edital, perfil_id, marco_id, lista_id=None, at=None):
+    """Quantas pessoas do recorte têm chamada em aberto ou atendida — a trava do desfazimento (097).
+
+    **A ocupação pergunta, e a convocação responde** (`T-005`). Desfazer uma vaga acrescida não
+    pode deixar sem vaga quem já recebeu a chamada, e quem foi chamado é fato desta feature, que a
+    ocupação não conhece (`UX-034`). Quem encerrou — indeferimento, desistência, não atendimento,
+    inércia — e o reclassificado não contam: nenhum deles espera a vaga.
+
+    `at` é aceito pela forma da pergunta e não muda nada: as situações não dependem do relógio.
+    """
+    em_aberto, servidos, _, _ = _situacoes(
+        convocacoes_do_recorte(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        )
+    )
+    return len(em_aberto | servidos)
+
+
 def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     """O que a tela do recorte mostra: os quatro números da `016` e o estado de cada chamada.
 
@@ -411,6 +429,7 @@ __all__ = [
     "estado_de",
     "identidades_de",
     "leitura_do_recorte",
+    "pessoas_chamadas",
     "reabilitados_por_deferimento",
     "vigentes",
 ]

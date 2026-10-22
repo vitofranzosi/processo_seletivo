@@ -108,7 +108,8 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
 
 
 def _atos_da_conducao(edital):
-    """Os identificadores dos atos que conduzem o certame: apuração, convocação, e a instrução.
+    """Os identificadores dos atos que conduzem o certame: apuração, vaga acrescida, convocação, e a
+    instrução.
 
     Import tardio porque `auditoria` é lida por todo mundo: um import no topo faria este módulo
     carregar `ocupacao` e `convocacao` em qualquer processo que só quisesse gravar um registro.
@@ -134,7 +135,7 @@ def _atos_da_conducao(edital):
         Convocacao,
         DesfechoDaConvocacao,
     )
-    from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
+    from processo_seletivo.ocupacao.models import AcrescimoDeVagas, ApuracaoDeOcupacao
     from processo_seletivo.recursos.models import AtoDeInstrucao, Recurso
 
     convocacoes = list(Convocacao.objects.filter(edital=edital).values_list("id", flat=True))
@@ -146,6 +147,10 @@ def _atos_da_conducao(edital):
         .distinct()
         .values_list("id", flat=True),
         *ApuracaoDeOcupacao.objects.filter(edital=edital).values_list("id", flat=True),
+        # A vaga acrescida e o desfazimento (097, `FR-2466`): sem eles na trilha do Edital, o
+        # número que mudou entre duas apurações não teria, na tela de quem audita, o ato que o
+        # mudou.
+        *AcrescimoDeVagas.objects.filter(edital=edital).values_list("id", flat=True),
         *convocacoes,
         *DesfechoDaConvocacao.objects.filter(convocacao_id__in=convocacoes).values_list(
             "id", flat=True

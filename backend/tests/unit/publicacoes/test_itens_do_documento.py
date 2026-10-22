@@ -247,9 +247,18 @@ def test_a_funcao_nao_muda_o_snapshot():
 # **E depois a `069`**, que muda a redação, a fonte, a hierarquia e a navegação: os bytes esperados
 # passam a ser os de `specs/069-…/demonstracao/`, e os da `068` ficam como evidência dela. O que a
 # `069` mudou é preso por `test_documento_da_auditoria_depois_da_069.py`.
+#
+# **E depois a `096`, só no B**, que imprime `CR` no lugar do `0` dos dezesseis tutores presenciais
+# e a nota da sigla: os bytes esperados do B passam a ser os de `specs/096-…/demonstracao/`, e os da
+# `069` ficam como evidência dela. O A não tem Perfil de cadastro sem vaga, e continua com os bytes
+# da `069` — é a prova de que a `096` não mexe em quem não é `CR` (SC-901). O que a `096` mudou no B
+# é preso por `test_documento_da_auditoria_depois_da_096.py`.
 
 DOCUMENTOS = RAIZ / "doc" / "auditoria-edital-pdf-2026-10-08" / "pdf"
-ESPERADOS = RAIZ / "specs" / "069-edital-linguagem-simples" / "demonstracao"
+ESPERADOS = {
+    "A": RAIZ / "specs" / "069-edital-linguagem-simples" / "demonstracao" / "A-plana-069.pdf",
+    "B": RAIZ / "specs" / "096-cadastro-de-reserva-como-cr" / "demonstracao" / "B-plana-096.pdf",
+}
 CARGO = "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância"
 # O contexto do ato com que cada cenário foi publicado na auditoria de 08/10/2026: A com nome e ato
 # de nomeação fictícios, B só com o cargo, como o registro inicial do Cefor está hoje.
@@ -282,4 +291,4 @@ def test_o_documento_da_auditoria_sai_com_os_bytes_esperados_depois_da_069(cenar
         autoridade=AUTORIDADES[cenario],
         data_do_ato=date(2026, 10, 8),
     )
-    assert documento == (ESPERADOS / f"{cenario}-plana-069.pdf").read_bytes()
+    assert documento == ESPERADOS[cenario].read_bytes()

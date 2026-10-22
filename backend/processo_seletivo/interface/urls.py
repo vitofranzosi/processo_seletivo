@@ -364,6 +364,19 @@ urlpatterns = [
         views.causar_faixa_view,
         name="causar-faixa",
     ),
+    # A vaga acrescida depois da publicação e o ato que a desfaz (097). Pendem da ocupação porque
+    # mudam o número dela, e cada uma tem dois passos na mesma rota — sem `confirmar`, a
+    # conferência; com ele, o ato —, como a emissão da ordem.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/acrescentar-vagas",
+        views.acrescentar_vagas_view,
+        name="acrescentar-vagas",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-acrescimo",
+        views.desfazer_acrescimo_view,
+        name="desfazer-acrescimo",
+    ),
     # O histórico de um recorte (016, FR-259). O caminho **carrega** o marco, como a leitura, e o
     # recorte vem em `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte
     # identifica.

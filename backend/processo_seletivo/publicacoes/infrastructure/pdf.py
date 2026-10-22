@@ -1326,6 +1326,7 @@ def _tabela(
     alinhamentos=None,
     legenda=None,
     rodape=None,
+    nota=None,
 ):
     """Uma tabela: colunas limitadas, células que refluem dentro da sua coluna.
 
@@ -1334,6 +1335,10 @@ def _tabela(
 
     `rodape` é a última linha, em negrito — o total (054, FR-997). Entra na medida das colunas como
     as demais, para que o número do total caiba na coluna dele.
+
+    `nota` é uma linha de texto logo depois da grade — a que diz a sigla `CR` (096, D-007). Fora da
+    grade, e não como mais uma linha dela, para não entrar na medida das colunas e alargar a de
+    vagas, que é a mais estreita.
     """
     if not linhas:
         return
@@ -1419,6 +1424,15 @@ def _tabela(
             escrever_linha(linha, REGULAR)
         if rodape:
             escrever_linha(rodape, NEGRITO)
+
+    if nota:
+        # **Em corpo de tabela, e não `junto`.** `CORPO_NOTA` é o do rodapé técnico e do resumo
+        # criptográfico, ilegível como nota do ato. E `junto` prende a linha à **seguinte**, não à
+        # anterior: a nota segue a tabela como a frase de reversão segue o quadro, porque o
+        # paginador não leva a grade com a linha que vem depois dela — de propósito, ver
+        # `prender_a_ultima_linha`. No pé da página, a nota pode abrir a seguinte, ainda logo
+        # abaixo da tabela que explica.
+        composicao.escrever(nota, tamanho=CORPO_TABELA, recuo=recuo, antes=ANTES_DE_LINHA)
 
 
 # A grafia publicada vira frase. O documento não imprime `SOMA_PONDERADA` pelo mesmo motivo que
@@ -2956,7 +2970,7 @@ def _quadro_de_perfis(composicao, perfis, tabelas):
             [
                 f"{perfil.get('code', '')} — {perfil.get('name', '')}",
                 perfil.get("locality", "") or "—",
-                str(perfil.get("immediateVacancies", 0)),
+                vagas_impressas(perfil),
                 _reserva(perfil, redacao=composicao.redacao),
                 perfil.get("workload", "") or "—",
             ]
@@ -2984,7 +2998,11 @@ def _quadro_de_perfis(composicao, perfis, tabelas):
         # 89/2026, de Mediadores UAB, cadastrado em 30/09 — a linha dizia "Total 0", e o leitor
         # entendia que o Edital não oferece nada, quando oferece o cadastro. A coluna "Cadastro
         # reserva" da mesma tabela já diz o que há.
+        #
+        # **O `CR` vale zero na soma** (096, FR-2407): a soma é a do número guardado, e a célula que
+        # diz `CR` guarda `0`.
         rodape=["Total", "", str(total), "", ""] if (total := _total_de_vagas(perfis)) else None,
+        nota=nota_da_sigla(perfis),
     )
 
 
@@ -3079,7 +3097,7 @@ def _perfil_unico(composicao, snapshot, perfil, secao, tabelas):
                 composicao,
                 [
                     ["Localidade", perfil.get("locality", "") or "—"],
-                    ["Vagas imediatas", str(perfil.get("immediateVacancies", 0))],
+                    ["Vagas imediatas", vagas_impressas(perfil)],
                     [
                         "Cadastro reserva"
                         if composicao.redacao == REDACAO_1
@@ -3088,6 +3106,11 @@ def _perfil_unico(composicao, snapshot, perfil, secao, tabelas):
                     ],
                 ],
             )
+            if nota := nota_da_sigla([perfil]):
+                # A nota da ficha vai `junto` do último par, ao contrário da da tabela (096, D-007):
+                # o par é texto comum, e não linha de quadro, e a quebra pode levá-lo com ela.
+                prender_a_ultima_linha(composicao)
+                composicao.escrever(nota, tamanho=CORPO_TABELA, recuo=18, antes=ANTES_DE_LINHA)
         _atribuicoes(composicao, perfil)
         for rotulo, chave in (("Carga horária", "workload"), ("Remuneração", "compensation")):
             if perfil.get(chave):
@@ -3856,6 +3879,35 @@ def _reserva(perfil, *, redacao=REDACAO_VIGENTE):
     if perfil.get("reserveLimit") is not None:
         reserva = f"{reserva} em {perfil['reserveLimit']}"
     return reserva or "—"
+
+
+# **O `0` do Perfil de cadastro de reserva sai como `CR`** (096, D-001, D-002). "Vagas: 0" numa
+# tabela de dezoito Perfis dizia que dezesseis não ofereciam nada, quando ofereciam o cadastro — o
+# mesmo defeito da linha "Total 0" tirada em 30/09, uma coluna para dentro. `CR` é como a equipe
+# escreve à mão (o 76/2026), e cabe na coluna estreita; por extenso, "Cadastro de reserva" quebraria
+# a célula em três linhas e repetiria a coluna ao lado. A nota diz a sigla abaixo de **cada** tabela
+# que a usa, porque quem procura o seu Perfil salta direto para ela.
+SIGLA_DO_CADASTRO = "CR"
+NOTA_DO_CADASTRO = "CR: cadastro de reserva."
+
+
+def vagas_impressas(perfil, numero=None):
+    """A célula de vagas imediatas do Perfil: `CR`, ou o número de sempre (096, FR-2403 a FR-2405).
+
+    O dado não muda: é o predicado de domínio que decide, e só para a impressão. `numero` é o valor
+    que o ponto de escrita já imprimia — a apresentação por perguntas soma pelo inteiro, a plana lê
+    a chave crua —, para que o Perfil que não é `CR` saia com os mesmos bytes de antes.
+    """
+    if quadro_do_perfil.cadastro_sem_vaga_imediata(perfil):
+        return SIGLA_DO_CADASTRO
+    return str(perfil.get("immediateVacancies", 0) if numero is None else numero)
+
+
+def nota_da_sigla(perfis):
+    """A nota da sigla, se algum Perfil da tabela sai como `CR`; `None` se nenhum sai (FR-2406)."""
+    if any(quadro_do_perfil.cadastro_sem_vaga_imediata(perfil) for perfil in perfis):
+        return NOTA_DO_CADASTRO
+    return None
 
 
 def _pares(composicao, pares, *, recuo=18.0, antes=ANTES_DE_LINHA):
@@ -4783,6 +4835,79 @@ def _integridade(composicao, snapshot, content_hash):
     composicao.escrever(f"SHA-256 do conteúdo: {content_hash}", tamanho=CORPO_NOTA)
 
 
+RESUMO_DE_MEDIDA = "0" * 64
+#: O que a prévia mostra no lugar do fecho, na linha em que o publicado põe o local e a data.
+FECHO_NA_PUBLICACAO = "Fecho do ato: local, data, autoridade e verificação, na publicação."
+
+
+def data_de_medida(metrica, local):
+    """A data cuja linha de local e data é a mais larga na fonte do Edital (096, D-013).
+
+    A prévia não sabe em que dia o ato sai, e a linha pode refluir em duas com um local longo.
+    Mede-se pela largura de cada mês na fonte, e não pelo número de letras: "setembro" tem menos
+    letras que "fevereiro" e pode ser mais largo. O dia 28 existe em todo mês, e os algarismos têm a
+    mesma largura.
+    """
+    return max(
+        (date(2000, mes, 28) for mes in range(1, 13)),
+        key=lambda dia: metrica.largura(fecho(local, dia), CORPO_TEXTO, REGULAR),
+    )
+
+
+def _fecho_medido(rascunho, previsto, snapshot, unidade):
+    """O fecho do ato como o publicado o compõe, num rascunho que só serve para medir (096, D-012).
+
+    O resumo não é o do conteúdo: a prévia não o lê (FR-014), e a linha dele cabe numa linha com
+    qualquer resumo de 64 dígitos.
+    """
+    with rascunho.bloco():
+        _autoridade(
+            rascunho, previsto, data_de_medida(rascunho.metrica, unidade.local), unidade.local
+        )
+        _integridade(rascunho, snapshot, RESUMO_DE_MEDIDA)
+
+
+def fecho_reservado(previstos, snapshot, unidade, *, metrica):
+    """Na prévia, o espaço exato do fecho do ato — e não um aviso curto no lugar dele (096, D-012).
+
+    **A paginação do corpo normativo tem de ser a mesma nos dois modos** (008, FR-042), e desde a
+    `069` a última seção vai junto do fecho (FR-1391): quando os dois não cabem na página, saltam
+    juntos. Sem o fecho, a prévia deixava a última seção onde estava, e a publicada a levava para a
+    página seguinte — o sumário da prévia dizia uma página a menos. Um aviso de uma linha no lugar
+    do fecho só trocaria o acaso: o salto depende da **altura**.
+
+    Por isso o fecho é composto de verdade, com a autoridade prevista, num rascunho, e cada linha
+    dele passa para a prévia com a mesma altura, o mesmo espaço antes e o mesmo `junto` — que é o
+    que a paginação lê. Só o texto muda: a primeira linha diz que o fecho sai na publicação, e as
+    demais são um espaço, invisível mas não vazio, porque a linha `junto` procura a seguinte **com
+    texto** e a última linha da seção precisa encontrar o fecho como o encontra no publicado. A
+    régua, que não tem altura, não é desenhada.
+
+    **O mais alto dos previstos.** A autoridade é escolhida no ato, entre as vigentes da unidade, e
+    a prévia não a conhece. Com uma vigente, a reserva é exata; com várias de alturas diferentes, é
+    exata para a mais alta, e a prévia pode divergir quando outra é escolhida (limite registrado na
+    `096`).
+
+    Devolve os itens, e não os escreve: a composição roda até quatro vezes para o sumário convergir,
+    e a medida não depende da passada.
+    """
+    candidatos = []
+    for previsto in previstos or (AutoridadeSignataria(nome="", cargo=""),):
+        rascunho = Composicao(metrica=metrica)
+        _fecho_medido(rascunho, previsto, snapshot, unidade)
+        candidatos.append((sum(Composicao._altura(item) for item in rascunho.itens), rascunho))
+    _, rascunho = max(candidatos, key=lambda candidato: candidato[0])
+    itens, primeira = [], True
+    for item in rascunho.itens:
+        if item[0] == "regua":
+            continue
+        if item[0] == "texto" and item[1]:
+            item = ("texto", FECHO_NA_PUBLICACAO if primeira else " ", *item[2:])
+            primeira = False
+        itens.append(item)
+    return itens
+
+
 def _fluxo_da_pagina(
     linhas,
     rodape,
@@ -4907,6 +5032,7 @@ def render_edital_pdf(
     autoridade: AutoridadeSignataria | None = None,
     data_do_ato: date | None = None,
     consolidacao: Consolidacao | None = None,
+    fechos_previstos: tuple = (),
 ) -> bytes:
     """O mesmo documento, em dois modos.
 
@@ -4921,6 +5047,10 @@ def render_edital_pdf(
 
     `unidade` é obrigatória nos dois modos (060, FR-1112): a prévia também abre com o cabeçalho, e
     só o publicado fecha com o local.
+
+    `fechos_previstos` são as autoridades que podem responder pelo ato, e só a prévia as lê — para
+    **medir**, e nunca para imprimir (096, D-012). A prévia reserva, no lugar do fecho, o espaço do
+    mais alto deles; sem nenhuma, o do fecho sem nome nem cargo.
     """
     if modo not in MODOS:
         raise ValueError(f"Modo de renderização desconhecido: {modo!r}.")
@@ -4936,9 +5066,16 @@ def render_edital_pdf(
         raise ValueError("A prévia não decorre de Publicação e não tem data nem consolidação.")
     if not previa and data_do_ato is None:
         raise ValueError("O documento publicado exige a data do ato.")
+    if not previa and fechos_previstos:
+        raise ValueError("O documento publicado tem o fecho do ato, e não reserva espaço para ele.")
 
     snapshot = _grafado(snapshot, previa=previa)
     perguntas = por_perguntas(snapshot)
+    reserva = (
+        fecho_reservado(fechos_previstos, snapshot, unidade, metrica=METRICA_DO_EDITAL)
+        if previa
+        else ()
+    )
 
     def compor(paginas):
         # A fonte embutida mede o texto do Edital (069, FR-1381): a quebra, a justificação e a
@@ -4955,8 +5092,13 @@ def render_edital_pdf(
                 _autoridade(composicao, autoridade, data_do_ato, unidade.local)
                 _integridade(composicao, snapshot, content_hash)
 
-        # O fecho entra **dentro** do bloco da última seção (069): ver `com_o_fecho`.
-        fecho_do_ato = None if previa else fecho
+        def espaco_do_fecho():
+            composicao.itens.extend(reserva)
+
+        # O fecho entra **dentro** do bloco da última seção (069): ver `com_o_fecho`. Na prévia,
+        # entra o espaço dele, e não nada (096, D-012): sem o fecho, a última seção ficava solta na
+        # prévia e saltava com ele no publicado, e quem revisava via uma página a menos.
+        fecho_do_ato = espaco_do_fecho if previa else fecho
         if perguntas:
             plano = _apresentacao().compor(
                 composicao, snapshot, paginas=paginas, fecho=fecho_do_ato

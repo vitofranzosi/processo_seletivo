@@ -1,0 +1,27 @@
+{% comment %}
+**O resumo de muitas rodadas** (098, FR-2501 a FR-2505, D-002). Uma rodada só pode enganar: sobrar vaga
+de cota no sorteio depende da sorte. Aqui ficam as frequências, de sementes fictícias derivadas da
+exibida — a mesma semente e a mesma população dão o mesmo resumo.
+{% endcomment %}
+<section class="rodadas-do-sorteio" aria-labelledby="titulo-das-rodadas">
+  {% if rodadas.sem_cotas %}
+  <h3 id="titulo-das-rodadas">Em muitas rodadas</h3>
+  <p>{{ rodadas.sem_cotas }}</p>
+  {% else %}
+  <h3 id="titulo-das-rodadas">Em {{ rodadas.quantas }} rodadas com esta população
+    <span class="selo-hipotese">hipótese</span></h3>
+  <ul class="linhas-de-rodadas">
+    {% for linha in rodadas.linhas %}
+    <li><strong>{{ linha.rotulo }}:</strong> {{ linha.frases|join:"; " }}.</li>
+    {% endfor %}
+  </ul>
+  {% if rodadas.ampla %}<p>{{ rodadas.ampla }}</p>{% endif %}
+  {% if rodadas.dp1 %}
+  <p class="nota">Sobra vaga reservada porque a faixa de cada reservada conta quem ocupa pela ampla, e
+    a apuração tira essas pessoas depois. É como o sistema calcula hoje, registrado como pendente de
+    decisão na spec 095.</p>
+  {% endif %}
+  <p class="nota">Cada rodada usa uma semente fictícia derivada da exibida. As frequências são da
+    população fictícia informada, e mudam com ela: não são previsão do certame.</p>
+  {% endif %}
+</section>

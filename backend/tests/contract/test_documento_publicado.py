@@ -83,11 +83,17 @@ UNIDADE = UnidadeDoAto(cabecalho=tuple(_UNIDADE["cabecalho"]), local=_UNIDADE["l
 
 
 def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
-    """Compõe como a publicação compõe — em modo publicado, com a autoridade e a data da fixture."""
+    """Compõe como a publicação compõe — em modo publicado, com a autoridade e a data da fixture.
+
+    Na prévia, a mesma autoridade é a prevista (096, D-012): é a vigente da unidade, que a tela da
+    prévia passa para o compositor medir o fecho, e não para imprimi-lo.
+    """
     kwargs.setdefault("unidade", UNIDADE)
     if modo == MODO_PUBLICADO:
         kwargs.setdefault("autoridade", AUTORIDADE)
         kwargs.setdefault("data_do_ato", DATA_DO_ATO)
+    else:
+        kwargs.setdefault("fechos_previstos", (AUTORIDADE,))
     return render_edital_pdf(conteudo, content_hash, modo=modo, **kwargs)
 
 
@@ -137,9 +143,15 @@ def corpo_normativo(pagina: list[str], marca_de_previa: str) -> list[str]:
     for linha in pagina:
         # O fechamento do ato começa no local e data (054, FR-989) e segue pela autoridade
         # signatária: dali em diante é metadado do ato, que só o publicado tem. Antes dele, os dois
-        # modos têm de coincidir linha a linha.
+        # modos têm de coincidir linha a linha. Na prévia, o lugar dele começa pelo aviso de que o
+        # fecho sai na publicação (096, D-012).
         if linha == AUTORIDADE.nome or linha.startswith(
-            ("Vitória (ES), ", "Autoridade responsável pelo ato", "Verificação de integridade")
+            (
+                "Vitória (ES), ",
+                "Autoridade responsável pelo ato",
+                "Verificação de integridade",
+                "Fecho do ato: ",
+            )
         ):
             fora = True
         # O rodapé passou a duas âncoras — identificação à esquerda, página à direita —, e as
