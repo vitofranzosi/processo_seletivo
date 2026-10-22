@@ -72,6 +72,13 @@ SECOES = (
     Secao(
         "Modelos de aviso", "interface:modelos-de-aviso", UNIDADE, pode_gerir_modelos, "i-envelope"
     ),
+    Secao(
+        "Documentação do Sistema",
+        "interface:documentacao",
+        "Ajuda",
+        _toda_identidade,
+        "i-prancheta",
+    ),
 )
 
 
