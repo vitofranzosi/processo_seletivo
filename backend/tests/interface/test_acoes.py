@@ -233,8 +233,9 @@ def test_listagem_e_detalhe_nao_divergem(client, seletor_ligado, edital):
     processo = listagem.context["processos"][0]
     da_lista = {a.chave for a in list(processo.editais.all())[0].acoes}
 
-    # A auditoria é a única ausência deliberada: a listagem não a oferece por linha.
-    assert da_lista == do_detalhe - {"auditoria"}, (
+    # As duas ausências deliberadas: a listagem não oferece auditoria por linha, e o relatório do
+    # Edital (099) é do detalhe — na lista, a porta dele custaria uma consulta à comissão por linha.
+    assert da_lista == do_detalhe - {"auditoria", "relatorio"}, (
         f"listagem {da_lista} diverge do detalhe {do_detalhe}"
     )
 

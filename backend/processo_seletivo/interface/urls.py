@@ -5,6 +5,7 @@ from processo_seletivo.interface import (
     avisos,
     duvidas,
     prototipo_do_assistente,
+    relatorio,
     views,
 )
 
@@ -108,6 +109,18 @@ urlpatterns = [
         name="anexo-arquivo",
     ),
     path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
+    # O relatório do Edital (099): a página que lê e o envio que emite o PDF. A emissão é `POST`
+    # porque fica registrada na trilha (FR-2515).
+    path(
+        "editais/<uuid:edital_id>/relatorio",
+        relatorio.relatorio,
+        name="relatorio-do-edital",
+    ),
+    path(
+        "editais/<uuid:edital_id>/relatorio/pdf",
+        relatorio.emitir,
+        name="relatorio-do-edital-pdf",
+    ),
     # A exportação de matrículas (031). Pende do **Edital**, e não do marco: o que se exporta é o
     # conjunto de pessoas que vai se matricular naquele certame, e a população — convocados de um
     # marco, ou um resultado divulgado — é escolhida **dentro** da tela, porque é a escolha que a

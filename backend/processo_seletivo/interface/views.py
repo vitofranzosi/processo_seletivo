@@ -267,7 +267,9 @@ def lista(request):
             # motivo não cabe transformaria a linha da tabela numa tela de detalhe. O conjunto é o
             # mesmo; o que muda é quanto dele a tela mostra.
             edital.acoes = [
-                acao for acao in acoes.do_edital(edital, ator) if acao.chave != "auditoria"
+                acao
+                for acao in acoes.do_edital(edital, ator, com_relatorio=False)
+                if acao.chave != "auditoria"
             ]
             # A ordem da linha: as frequentes primeiro, as terminais à parte (057, FR-1049).
             edital.grupo = acoes.da_linha(edital.acoes)

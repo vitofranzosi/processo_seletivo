@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from django.db.models import Exists, OuterRef
 from django.urls import reverse
 
+from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import atos
 from processo_seletivo.processos.models import Edital
@@ -88,7 +89,7 @@ def pode_retificar(edital, ator) -> bool:
     return edital.status == "PUBLICADO" and ator.can("retificacao:elaborar")
 
 
-def _navegacao(edital, ator):
+def _navegacao(edital, ator, *, com_relatorio=True):
     """Ações que levam a outra tela. Não são atos: não confirmam, não registram, não alteram."""
     if ator.can("edital:elaborar") and edital.status == "EM_ELABORACAO":
         yield Acao(
@@ -153,6 +154,24 @@ def _navegacao(edital, ator):
             "Exportar para matrícula",
             reverse("interface:exportar-matriculas", args=[edital.id]),
         )
+    # O relatório do Edital (099). Só para quem alcança a porta da Supervisão — gestão do escopo ou
+    # presidência deste Processo (D-003) —, e indisponível, com o motivo, antes da publicação: antes
+    # dela não há fato público a relatar, e esconder a ação faria a pessoa procurá-la.
+    #
+    # **Só no detalhe, e não na lista** (`com_relatorio`): a lista monta ações para cada Edital, e
+    # a porta consulta a comissão — seria uma consulta por linha para uma ação que a linha não usa.
+    if com_relatorio and pode_gerir_comissao(ator, edital.processo) is not None:
+        # Import tardio: a derivação do relatório lê a Supervisão e a Visão Geral, que este módulo
+        # não deve carregar só para montar a lista de ações.
+        from processo_seletivo.interface.relatorio import INDISPONIVEL
+        from processo_seletivo.interface.relatorio_do_edital import ESTADOS_COM_RELATORIO
+
+        yield Acao(
+            "relatorio",
+            "Relatório do Edital",
+            reverse("interface:relatorio-do-edital", args=[edital.id]),
+            motivo="" if edital.status in ESTADOS_COM_RELATORIO else INDISPONIVEL,
+        )
     if ator.can("auditoria:consultar"):
         yield Acao(
             "auditoria",
@@ -208,13 +227,13 @@ def _motivo_previsivel(ato, *, pendencias, segregacao):
     return ""
 
 
-def do_edital(edital, ator, *, pendencias=(), segregacao=False):
+def do_edital(edital, ator, *, pendencias=(), segregacao=False, com_relatorio=True):
     """O conjunto completo: o que se pode fazer, e o que não se pode **e por quê**.
 
     `pendencias` e `segregacao` chegam prontas de quem já as calculou para a tela — recalculá-las
     aqui faria a mesma informação vir de dois lugares, que é o defeito que este módulo corrige.
     """
-    conjunto = list(_navegacao(edital, ator))
+    conjunto = list(_navegacao(edital, ator, com_relatorio=com_relatorio))
     for ato in atos.disponiveis(edital, ator):
         conjunto.append(
             Acao(

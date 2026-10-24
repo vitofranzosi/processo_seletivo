@@ -270,6 +270,7 @@ QUEM_CARREGA = {
             "marco",
             "minhas-etapas",
             "prototipo-do-assistente",
+            "relatorio-do-edital",
             "retificar",
             "sorteio",
             "visao-geral",
