@@ -88,6 +88,23 @@ e o código da `099` como mergeado em `50badd38`.
   (CLAUDE.md, "Um teste de tempo oscila sob carga").
 - **Rationale**: a emissão é síncrona (não há fila, e a Constituição exige necessidade demonstrável
   para criar uma). O limite protege o tempo de resposta e é dito ao usuário.
+- **Medição** (24/10/2026, PostgreSQL local, código desta feature, Editais do cenário coerente — dois
+  Perfis, três listas —, mediana de três leituras):
+
+  | Editais | Consultas | Leitura | Composição do PDF |
+  |---|---|---|---|
+  | 1 | 111 | 0,06 s | 0,02 s |
+  | 5 | 547 | 0,30 s | 0,02 s |
+  | 10 | 1 092 | 0,64 s | 0,02 s |
+  | 20 | 2 182 | 1,32 s | 0,03 s |
+
+  O custo é linear — 109 consultas e ~0,065 s por Edital —, e a composição não pesa. Um conjunto de
+  60 Editais dessa estrutura leria em ~4 s. **O que a medição não cobre**: o número de consultas por
+  Edital cresce com Perfis × marcos × listas (a leitura do resultado vigente é por lista), e o banco
+  de produção não é local. Um Edital de quatro vezes a estrutura levaria 60 Editais a ~16 s. O limite
+  fica em 60, e a revisão dele é a primeira coisa a medir com o acervo real. Os 0,3 s por Edital do estudo
+  eram uma chamada fria, num processo novo de `manage.py shell`; estes são a mediana de três
+  leituras no mesmo processo.
 
 ## R-007 — Privacidade: supressão complementar no Perfil, exclusão no Edital
 

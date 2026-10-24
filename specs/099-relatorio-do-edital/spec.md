@@ -326,6 +326,11 @@ bytes entregues, e "emissão nº 1" e "nº 2" nos documentos.
 - **FR-2551**: Em Perfil com menos de cinco inscrições enviadas, os fatos não públicos MUST ser
   omitidos com a frase de D-006, e os totais do Edital MUST continuar contando-os.
 
+  > **Emenda (100).** Omitir só o Perfil pequeno deixava o fato voltar por subtração — o total do
+  > Edital menos as linhas dos outros Perfis. A FR-2587 da `100` substitui esta regra: o Perfil de
+  > menor procura entre os demais é omitido junto até que os omitidos somem cinco inscrições, e,
+  > quando nem o Edital inteiro chega a cinco, os totais não públicos dele também são omitidos.
+
 #### Forma
 
 - **FR-2552**: O PDF MUST ter, em toda página, a identificação do Edital, o instante dos dados, a

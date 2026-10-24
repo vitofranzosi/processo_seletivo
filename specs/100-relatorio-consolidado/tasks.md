@@ -73,11 +73,11 @@ números da camada executiva iguais à soma dos fatos de cada Edital; baixar o P
 ## Phase 9: Polish & Cross-Cutting
 
 - [x] T029 Orçamento: consultas por Edital constantes entre 1, 2 e 3 Editais e independentes da escala; tempo de um conjunto grande registrado, para confirmar o limite (R-006), em `backend/tests/performance/test_relatorio_consolidado.py`
-- [ ] T030 Guardiões: vocabulário, CSP, folha estática, gramática das portas, larguras — o que a suíte acusar — nos arquivos de teste correspondentes
-- [ ] T031 [P] Matriz de rastreabilidade em `specs/100-relatorio-consolidado/rastreabilidade.md`
-- [ ] T032 [P] README (linha da `100`), CLAUDE.md se a contagem de append-only ou a suíte mudarem de forma relevante, e quickstart executado
-- [ ] T033 PDF demonstrativo gerado pelo sistema e roteiro de semeadura em `doc/estudo-relatorio-consolidado-de-gestao-2026-10-24/`
-- [ ] T034 `cd backend && make lint check test-pg DB_NAME=ps100`
+- [x] T030 Guardiões: vocabulário, CSP, folha estática, gramática das portas, larguras — o que a suíte acusar — nos arquivos de teste correspondentes
+- [x] T031 [P] Matriz de rastreabilidade em `specs/100-relatorio-consolidado/rastreabilidade.md`
+- [x] T032 [P] README (linha da `100`), CLAUDE.md se a contagem de append-only ou a suíte mudarem de forma relevante, e quickstart executado
+- [x] T033 PDF demonstrativo gerado pelo sistema e roteiro de semeadura em `doc/estudo-relatorio-consolidado-de-gestao-2026-10-24/`
+- [x] T034 `cd backend && make lint check test-pg DB_NAME=ps100`
 
 ## Dependencies & Execution Order
 

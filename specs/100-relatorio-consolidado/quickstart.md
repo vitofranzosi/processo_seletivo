@@ -19,10 +19,15 @@ cd backend && PYTEST_ADDOPTS="tests/unit/interface/test_relatorio_consolidado.py
 
 ## Ver pelo navegador
 
-1. Banco de demonstração com Editais do cenário coerente, publicados em datas diferentes:
-   `roteiro/semear_demonstracao.py` da pasta do estudo, executado por `manage.py shell` com o `DB_NAME`
-   de demonstração (o roteiro está em `doc/estudo-relatorio-consolidado-de-gestao-2026-10-24/roteiro/`).
-2. Servidor com `INTERFACE_SELETOR_IDENTIDADE=true` e `DB_NAME` daquele banco.
+1. Banco de demonstração com seis Editais do cenário coerente, publicados em datas diferentes:
+
+   ```bash
+   cd backend && createdb -h /tmp ps_demo_100 && make preparar DB_NAME=ps_demo_100
+   set -a; source .env; set +a
+   DB_NAME=ps_demo_100 uv run python manage.py shell < ../doc/estudo-relatorio-consolidado-de-gestao-2026-10-24/roteiro/semear_demonstracao.py
+   ```
+2. Servidor: a entrada `relatorio-100` do `.claude/launch.json` (porta 8100, seletor de identidade
+   ligado, banco `ps_demo_100`).
 3. Entrar como Gestor do Cefor; **Visão Geral** → **Relatório consolidado**.
 4. Escolher "1º semestre" de 2026, conferir a lista, desmarcar um Edital, **Ver relatório**.
 5. Conferir a ficha (conjunto e data dos dados), os seis números e os pontos de atenção.
