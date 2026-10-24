@@ -407,14 +407,92 @@ def _regra_da_etapa(etapa):
     return "; ".join(partes)
 
 
-def montar(edital, *, agora, enderecos):
-    """A derivação inteira. Supõe a transação de `leitura_consistente` aberta por quem chama.
+# --- Os fatos, separados da redação (100) ---------------------------------------------------------
+#
+# **Uma regra num lugar só** (100, D-002). As pendências saíam daqui já redigidas, e somá-las entre
+# Editais exigiria ler a frase — decidir situação por texto, que a FR-2547 proíbe. Agora a regra
+# produz o tipo, e a frase sai de uma função que só o redige. O relatório do Edital continua o mesmo
+# documento; o consolidado da unidade lê os tipos.
+
+RESULTADO_NAO_DIVULGADO = "RESULTADO_NAO_DIVULGADO"
+DEFINITIVO_NAO_PUBLICADO = "DEFINITIVO_NAO_PUBLICADO"
+REAVALIACAO_PENDENTE = "REAVALIACAO_PENDENTE"
+PROVIDENCIA_PENDENTE = "PROVIDENCIA_PENDENTE"
+APURACAO_DESATUALIZADA = "APURACAO_DESATUALIZADA"
+CONVOCACAO_AGUARDANDO = "CONVOCACAO_AGUARDANDO"
+CONVOCACAO_VENCIDA = "CONVOCACAO_VENCIDA"
+RECURSO_AGUARDANDO = "RECURSO_AGUARDANDO"
+
+#: O que é público por ato: que um resultado previsto ainda não saiu está na página da seleção. O
+#: resto é fato não público, e obedece à privacidade (FR-2550).
+PENDENCIAS_PUBLICAS = frozenset({RESULTADO_NAO_DIVULGADO, DEFINITIVO_NAO_PUBLICADO})
+
+
+@dataclass(frozen=True)
+class Pendencia:
+    tipo: str
+    #: `None` só no recurso aguardando decisão, que o relatório diz do Edital inteiro.
+    perfil_id: str | None
+    quantidade: int = 1
+    #: O nome publicado do marco, nas duas pendências de resultado.
+    marco: str = ""
+    #: O prazo mais distante, na convocação aguardando resposta.
+    ate: datetime | None = None
+
+    @property
+    def publica(self):
+        return self.tipo in PENDENCIAS_PUBLICAS
+
+
+@dataclass
+class FatosDoEdital:
+    """O que a leitura do Edital produz antes de qualquer frase (100, FR-2570).
+
+    Os campos de cima são o que o consolidado da unidade soma; os de baixo, com `_`, são o que só o
+    documento individual consome — mantê-los aqui evita ler duas vezes o que a regra já leu.
+    """
+
+    edital: Edital
+    referencia: datetime
+    unidade: dict
+    especie: str
+    desfecho_em: datetime | None
+    perfis: list
+    pendencias: tuple
+    vagas: int
+    inscricoes: int
+    rascunhos: int
+    periodo_aberto: bool
+    prorrogado: bool
+    envios: tuple
+    marcos_declarados: int
+    marcos_definitivos: int
+    datas_definitivas: tuple
+    #: Soma das apurações vigentes e atualizadas; `None` quando nenhum Perfil foi apurado.
+    vagas_habilitadas: int | None
+    convocacoes: Convocacoes
+    recursos: Recursos
+    posteriores: list
+    cadastros_distintos: int
+    omitidos: frozenset
+    _perfis_publicados: list = field(repr=False, default_factory=list)
+    _etapas: list = field(repr=False, default_factory=list)
+    _original: dict | None = field(repr=False, default=None)
+    _vigente: dict = field(repr=False, default_factory=dict)
+    _primeira: object = field(repr=False, default=None)
+    _periodo: object = field(repr=False, default=None)
+    _evento_vigente: dict | None = field(repr=False, default=None)
+    _termino_original: datetime | None = field(repr=False, default=None)
+    _no_periodo_acrescentado: int = field(repr=False, default=0)
+    _por_etapa: dict = field(repr=False, default_factory=dict)
+    _prazos_em_curso: list = field(repr=False, default_factory=list)
+
+
+def fatos_do_edital(edital, *, agora):
+    """Leituras e regras do relatório do Edital, sem redação. Supõe `leitura_consistente` aberta.
 
     **`agora` é o instante da leitura, e não uma data de retrato** (FR-2521). Ele decide o que é
-    prazo em curso, período aberto e versão vigente; os fatos são os gravados até a leitura. O
-    relatório não reconstitui o passado: chamá-lo com uma data anterior misturaria o cronograma
-    daquele dia com os números de hoje. Os testes o passam fixo porque o relógio da suíte anda, e
-    os fatos da fixture são todos anteriores a ele.
+    prazo em curso, período aberto e versão vigente; os fatos são os gravados até a leitura.
     """
     original, vigente = _versoes(edital, agora)
     vigente = vigente or {}
@@ -437,7 +515,6 @@ def montar(edital, *, agora, enderecos):
     cadastros = enviadas.values("identity_subject").distinct().count()
     instantes = list(enviadas.order_by("submitted_at").values_list("submitted_at", flat=True))
     periodo = periodo_de_inscricoes(vigente, agora)
-    serie = supervisao.serie_do_edital(edital, periodo, agora) if periodo.designado else ()
     evento_original = _evento_das_inscricoes(original)
     evento_vigente = _evento_das_inscricoes(vigente)
     termino_original = _quando((evento_original or {}).get("endAt"))
@@ -481,9 +558,7 @@ def montar(edital, *, agora, enderecos):
     recursos_por_perfil, recursos_total = _recursos(edital)
     convocacoes_por_perfil, pendencias_de_convocacao, prazos_em_curso = _convocacoes(edital, agora)
 
-    pendencias = []
     pendencias_de_resultado = []
-    # `(perfil_id, texto)`: o Perfil só é nomeado na redação, onde o omitido por privacidade não é.
     nao_publicas = []
     omitidos = {
         str(p["id"])
@@ -552,13 +627,13 @@ def montar(edital, *, agora, enderecos):
                 marcos_definitivos += 1
             elif not listas:
                 pendencias_de_resultado.append(
-                    f"{nome}: resultado de “{marco.get('name')}” ainda não divulgado"
+                    Pendencia(RESULTADO_NAO_DIVULGADO, perfil_id, marco=marco.get("name"))
                 )
             else:
                 pendencias_de_resultado.append(
-                    f"{nome}: resultado definitivo de “{marco.get('name')}” ainda não publicado"
+                    Pendencia(DEFINITIVO_NAO_PUBLICADO, perfil_id, marco=marco.get("name"))
                 )
-            nao_publicas.extend((perfil_id, t) for t in _pendencias_de_recurso(edital, marco))
+            nao_publicas.extend(_pendencias_de_recurso(edital, marco, perfil_id))
 
         if tem_publicacao:
             numero_classificadas = Numero.de(len(classificadas))
@@ -576,7 +651,7 @@ def montar(edital, *, agora, enderecos):
         # Vagas com inscrição classificada e habilitada — a apuração vigente, por recorte.
         habilitadas, apurada, obsoleta = _ocupacao(edital, perfil)
         if obsoleta:
-            nao_publicas.append((perfil_id, "apuração das vagas desatualizada"))
+            nao_publicas.append(Pendencia(APURACAO_DESATUALIZADA, perfil_id))
         if vagas == 0:
             numero_habilitadas = Numero.nao_aplicavel("só cadastro de reserva")
         elif omitido:
@@ -629,15 +704,11 @@ def montar(edital, *, agora, enderecos):
         )
 
     # Edital cancelado não terá resultado: o que falta divulgar deixou de ser providência.
-    if edital.status != Edital.Status.CANCELADO:
-        pendencias[:0] = pendencias_de_resultado
-    nao_publicas.extend(pendencias_de_convocacao)
-    pendencias.extend(_redigir(nao_publicas, perfis_publicados, omitidos))
+    pendencias = [] if edital.status == Edital.Status.CANCELADO else list(pendencias_de_resultado)
+    pendencias.extend(nao_publicas)
+    pendencias.extend(pendencias_de_convocacao)
     if recursos_total.aguardando:
-        pendencias.append(
-            f"{recursos_total.aguardando} "
-            f"{_plural(recursos_total.aguardando, 'recurso aguarda', 'recursos aguardam')} decisão"
-        )
+        pendencias.append(Pendencia(RECURSO_AGUARDANDO, None, recursos_total.aguardando))
 
     if edital.status == Edital.Status.CANCELADO:
         especie = INTERRUPCAO
@@ -646,28 +717,123 @@ def montar(edital, *, agora, enderecos):
     else:
         especie = ACOMPANHAMENTO
 
-    posteriores = relatorio_trilha.posteriores(edital, desfecho_em, agora) if desfecho_em else []
+    return FatosDoEdital(
+        edital=edital,
+        referencia=agora,
+        unidade=unidade,
+        especie=especie,
+        desfecho_em=desfecho_em,
+        perfis=linhas,
+        pendencias=tuple(pendencias),
+        vagas=vagas_total,
+        inscricoes=sum(contagem["submetidas"].values()),
+        rascunhos=sum(contagem["rascunhos"].values()),
+        periodo_aberto=periodo.aberto,
+        prorrogado=prorrogado,
+        envios=tuple(instantes),
+        marcos_declarados=marcos_declarados,
+        marcos_definitivos=marcos_definitivos,
+        datas_definitivas=tuple(datas_definitivas),
+        vagas_habilitadas=vagas_habilitadas if vagas_apuradas_algum else None,
+        convocacoes=_somar_convocacoes(convocacoes_por_perfil.values()),
+        recursos=recursos_total,
+        posteriores=(
+            relatorio_trilha.posteriores(edital, desfecho_em, agora) if desfecho_em else []
+        ),
+        cadastros_distintos=cadastros,
+        omitidos=frozenset(omitidos),
+        _perfis_publicados=perfis_publicados,
+        _etapas=etapas,
+        _original=original,
+        _vigente=vigente,
+        _primeira=primeira,
+        _periodo=periodo,
+        _evento_vigente=evento_vigente,
+        _termino_original=termino_original if prorrogado else None,
+        _no_periodo_acrescentado=no_periodo_acrescentado,
+        _por_etapa=por_etapa,
+        _prazos_em_curso=prazos_em_curso,
+    )
+
+
+def texto_da_pendencia(pendencia):
+    """A frase de uma pendência, sem o nome do Perfil — que a redação acrescenta ou cala."""
+    n = pendencia.quantidade
+    if pendencia.tipo == RESULTADO_NAO_DIVULGADO:
+        return f"resultado de “{pendencia.marco}” ainda não divulgado"
+    if pendencia.tipo == DEFINITIVO_NAO_PUBLICADO:
+        return f"resultado definitivo de “{pendencia.marco}” ainda não publicado"
+    if pendencia.tipo == REAVALIACAO_PENDENTE:
+        return "reavaliação determinada por recurso ainda não concluída"
+    if pendencia.tipo == PROVIDENCIA_PENDENTE:
+        return "providência determinada por recurso ainda não cumprida"
+    if pendencia.tipo == APURACAO_DESATUALIZADA:
+        return "apuração das vagas desatualizada"
+    if pendencia.tipo == CONVOCACAO_AGUARDANDO:
+        ate = f", até {data_curta(pendencia.ate)}" if pendencia.ate else ""
+        return f"{n} {_plural(n, 'convocação aguardando', 'convocações aguardando')} resposta{ate}"
+    if pendencia.tipo == CONVOCACAO_VENCIDA:
+        return (
+            f"{n} {_plural(n, 'convocação', 'convocações')} com prazo encerrado sem registro de "
+            "resposta"
+        )
+    if pendencia.tipo == RECURSO_AGUARDANDO:
+        return f"{n} {_plural(n, 'recurso aguarda', 'recursos aguardam')} decisão"
+    raise ValueError(pendencia.tipo)
+
+
+def redigir_pendencias(fatos):
+    """As frases das pendências, na ordem e com a privacidade do relatório do Edital (D-006)."""
+    perfis = fatos._perfis_publicados
+    nomes = {str(p["id"]): p.get("name") or p.get("code") or "Perfil" for p in perfis}
+    redigidas = [
+        f"{nomes.get(p.perfil_id, 'Perfil')}: {texto_da_pendencia(p)}"
+        for p in fatos.pendencias
+        if p.publica
+    ]
+    nao_publicas = [
+        (p.perfil_id, texto_da_pendencia(p))
+        for p in fatos.pendencias
+        if not p.publica and p.tipo != RECURSO_AGUARDANDO
+    ]
+    redigidas.extend(_redigir(nao_publicas, perfis, fatos.omitidos))
+    redigidas.extend(
+        texto_da_pendencia(p) for p in fatos.pendencias if p.tipo == RECURSO_AGUARDANDO
+    )
+    return redigidas
+
+
+def montar(edital, *, agora, enderecos):
+    """Os fatos, as leituras que só o documento individual usa, e a redação.
+
+    Supõe a transação de `leitura_consistente` aberta por quem chama. Os testes passam `agora` fixo
+    porque o relógio da suíte anda, e os fatos da fixture são todos anteriores a ele.
+    """
+    fatos = fatos_do_edital(edital, agora=agora)
+    periodo = fatos._periodo
+    serie = supervisao.serie_do_edital(edital, periodo, agora) if periodo.designado else ()
+    pendencias = redigir_pendencias(fatos)
     retificacoes = _retificacoes(edital, agora)
-    documentos = _documentos(edital, perfis_publicados, enderecos)
+    documentos = _documentos(edital, fatos._perfis_publicados, enderecos)
     datas = _datas(
         edital,
-        primeira,
+        fatos._primeira,
         retificacoes,
-        evento_vigente,
-        termino_original if prorrogado else None,
-        posteriores,
-        desfecho_em,
-        especie,
+        fatos._evento_vigente,
+        fatos._termino_original,
+        fatos.posteriores,
+        fatos.desfecho_em,
+        fatos.especie,
         agora,
-        prazos_em_curso,
+        fatos._prazos_em_curso,
     )
 
     situacao_no_gps = {
         Edital.Status.PUBLICADO: "Publicado",
         Edital.Status.ENCERRADO: "Encerrado"
-        + (f" em {data_curta(desfecho_em)}" if desfecho_em else ""),
+        + (f" em {data_curta(fatos.desfecho_em)}" if fatos.desfecho_em else ""),
         Edital.Status.CANCELADO: "Cancelado"
-        + (f" em {data_curta(desfecho_em)}" if desfecho_em else ""),
+        + (f" em {data_curta(fatos.desfecho_em)}" if fatos.desfecho_em else ""),
     }.get(edital.status, edital.get_status_display())
     if pendencias:
         providencias = "; ".join(pendencias[:2]) + (
@@ -676,51 +842,58 @@ def montar(edital, *, agora, enderecos):
     else:
         providencias = "nenhuma providência pendente registrada no GPS"
 
-    convocacoes_total = _somar_convocacoes(convocacoes_por_perfil.values())
     relatorio = Relatorio(
         referencia=agora,
         edital=edital,
-        unidade=unidade,
-        especie=especie,
+        unidade=fatos.unidade,
+        especie=fatos.especie,
         situacao_no_gps=situacao_no_gps,
         providencias=providencias,
         pendencias=pendencias,
-        posteriores=posteriores,
+        posteriores=fatos.posteriores,
         frases=[],
         indicadores=[],
-        perfis=linhas,
+        perfis=fatos.perfis,
         serie=tuple(serie),
-        termino_original=termino_original if prorrogado else None,
-        no_periodo_acrescentado=no_periodo_acrescentado,
-        periodo_aberto=periodo.aberto,
+        termino_original=fatos._termino_original,
+        no_periodo_acrescentado=fatos._no_periodo_acrescentado,
+        periodo_aberto=fatos.periodo_aberto,
         retificacoes=retificacoes,
-        recursos=recursos_total,
+        recursos=fatos.recursos,
         datas=datas,
         documentos=documentos,
         endereco_da_selecao=enderecos.selecao(),
-        cronograma=_cronograma(original, vigente, retificacoes, instantes, por_etapa, etapas),
-        cadastros_distintos=cadastros,
-        desfecho_em=desfecho_em,
+        cronograma=_cronograma(
+            fatos._original,
+            fatos._vigente,
+            retificacoes,
+            list(fatos.envios),
+            fatos._por_etapa,
+            fatos._etapas,
+        ),
+        cadastros_distintos=fatos.cadastros_distintos,
+        desfecho_em=fatos.desfecho_em,
     )
+    marcos = (fatos.marcos_definitivos, fatos.marcos_declarados, list(fatos.datas_definitivas))
     relatorio.indicadores = _indicadores(
         relatorio,
-        vagas_total=vagas_total,
-        inscricoes=sum(contagem["submetidas"].values()),
-        rascunhos=sum(contagem["rascunhos"].values()),
-        marcos=(marcos_definitivos, marcos_declarados, datas_definitivas),
-        vagas_habilitadas=vagas_habilitadas if vagas_apuradas_algum else None,
-        convocacoes=convocacoes_total,
+        vagas_total=fatos.vagas,
+        inscricoes=fatos.inscricoes,
+        rascunhos=fatos.rascunhos,
+        marcos=marcos,
+        vagas_habilitadas=fatos.vagas_habilitadas,
+        convocacoes=fatos.convocacoes,
     )
     relatorio.frases = _frases(
         relatorio,
-        vagas_total=vagas_total,
-        inscricoes=sum(contagem["submetidas"].values()),
-        instantes=instantes,
-        marcos=(marcos_definitivos, marcos_declarados, datas_definitivas),
-        vagas_habilitadas=vagas_habilitadas if vagas_apuradas_algum else None,
-        convocacoes=convocacoes_total,
+        vagas_total=fatos.vagas,
+        inscricoes=fatos.inscricoes,
+        instantes=list(fatos.envios),
+        marcos=marcos,
+        vagas_habilitadas=fatos.vagas_habilitadas,
+        convocacoes=fatos.convocacoes,
     )
-    relatorio.pontos_de_atencao = _pontos_de_atencao(relatorio, convocacoes_total)
+    relatorio.pontos_de_atencao = _pontos_de_atencao(relatorio, fatos.convocacoes)
     return relatorio
 
 
@@ -791,7 +964,7 @@ def _recursos(edital):
     return {k: recursos_de(c) for k, c in contagem.items()}, recursos_de(total)
 
 
-def _pendencias_de_recurso(edital, marco):
+def _pendencias_de_recurso(edital, marco, perfil_id):
     """Reavaliação e providência pendentes do marco — as perguntas da publicabilidade (R-006)."""
     marco_id = str(marco["id"])
     publicacoes = list(
@@ -803,11 +976,11 @@ def _pendencias_de_recurso(edital, marco):
     if not publicacoes:
         return pendencias
     if recursos.reavaliacoes_pendentes_do_marco(edital=edital, marco=marco):
-        pendencias.append("reavaliação determinada por recurso ainda não concluída")
+        pendencias.append(Pendencia(REAVALIACAO_PENDENTE, perfil_id))
     if recursos.providencias_pendentes_do_marco(
         edital=edital, marco_id=marco_id, marco=marco, publicacoes_do_marco=publicacoes
     ):
-        pendencias.append("providência determinada por recurso ainda não cumprida")
+        pendencias.append(Pendencia(PROVIDENCIA_PENDENTE, perfil_id))
     return pendencias
 
 
@@ -845,7 +1018,7 @@ def _ocupacao(edital, perfil):
 
 
 def _convocacoes(edital, agora):
-    """A cadeia por Perfil, as pendências `(perfil_id, texto)` e os prazos em curso (D-006).
+    """A cadeia por Perfil, as pendências de convocação e os prazos em curso (D-006).
 
     Nunca por lista: a convocação da única vaga reservada, dita por lista, apontaria a primeira
     pessoa da lista publicada. Os prazos são os das convocações **vigentes** sem desfecho — as
@@ -890,25 +1063,9 @@ def _convocacoes(edital, agora):
             outros=tuple(sorted(outros.items())),
         )
         if aguardando:
-            ate = f", até {data_curta(prazo)}" if prazo else ""
-            pendencias.append(
-                (
-                    perfil_id,
-                    f"{aguardando} "
-                    f"{_plural(aguardando, 'convocação aguardando', 'convocações aguardando')}"
-                    " resposta"
-                    f"{ate}",
-                )
-            )
+            pendencias.append(Pendencia(CONVOCACAO_AGUARDANDO, perfil_id, aguardando, ate=prazo))
         if vencidas:
-            pendencias.append(
-                (
-                    perfil_id,
-                    f"{vencidas} "
-                    f"{_plural(vencidas, 'convocação', 'convocações')} com prazo encerrado"
-                    " sem registro de resposta",
-                )
-            )
+            pendencias.append(Pendencia(CONVOCACAO_VENCIDA, perfil_id, vencidas))
     return resultado, pendencias, sorted(prazos)
 
 
