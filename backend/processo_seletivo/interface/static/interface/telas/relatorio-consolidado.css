@@ -1,0 +1,38 @@
+/* O relatório consolidado da unidade (100): a escolha do conjunto e a camada executiva. As regras
+   moram aqui, e só estas duas telas as carregam (091). Os números seguem o desenho do relatório do
+   Edital: o valor em cima, e a base que o explica embaixo. */
+.ficha-do-conjunto{display:grid;gap:.6rem 1.5rem;margin:1rem 0;
+  grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
+.ficha-do-conjunto div{border-top:1px solid var(--borda);padding-top:.35rem}
+.ficha-do-conjunto dt{font-size:.8rem;color:var(--texto-fraco)}
+.ficha-do-conjunto dd{margin:0;font-weight:600}
+.ficha-do-conjunto .nota-da-ficha{font-weight:400;font-size:.85rem;color:var(--texto-fraco)}
+
+.emissao-do-consolidado{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin:1rem 0 1.5rem}
+
+.visao-geral-do-consolidado{max-width:48rem;line-height:1.55}
+
+.numeros-do-consolidado{list-style:none;padding:0;margin:1rem 0;display:grid;gap:.75rem;
+  grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.numeros-do-consolidado li{padding:.75rem .9rem;border:1px solid var(--borda);border-radius:6px}
+.numeros-do-consolidado strong{display:block;font-size:1.6rem;line-height:1.15;
+  font-variant-numeric:tabular-nums}
+.numeros-do-consolidado .rotulo{display:block;font-weight:600;font-size:.9rem;margin-top:.15rem}
+.numeros-do-consolidado .base{display:block;font-size:.8rem;color:var(--texto-fraco);
+  margin-top:.3rem;line-height:1.35}
+
+.atencao-do-consolidado{border-left:3px solid var(--borda);padding:.25rem 0 .25rem 1rem;
+  margin:1.5rem 0}
+.atencao-do-consolidado ol{margin:.25rem 0 0;padding-left:1.2rem}
+.atencao-do-consolidado li{margin:.35rem 0}
+
+/* A escolha: critério e atalhos numa linha que quebra, e a lista dos Editais com a caixa à esquerda. */
+.criterio-do-conjunto{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;align-items:flex-end;
+  border:0;padding:0;margin:1rem 0}
+.criterio-do-conjunto legend{font-weight:600;padding:0;margin-bottom:.35rem}
+.criterio-do-conjunto p{margin:0;display:flex;flex-direction:column;gap:.2rem}
+.editais-do-conjunto{list-style:none;padding:0;margin:.75rem 0}
+.editais-do-conjunto li{border-top:1px solid var(--borda);padding:.45rem 0}
+.editais-do-conjunto label{display:flex;gap:.6rem;align-items:baseline}
+.editais-do-conjunto .detalhe{display:block;font-size:.8rem;color:var(--texto-fraco)}
+.acoes-do-conjunto{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0}

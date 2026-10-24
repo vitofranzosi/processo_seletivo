@@ -1,0 +1,91 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Relatório consolidado da unidade{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:visao-geral' %}">Visão Geral</a> <a href="{{ voltar }}">Relatório consolidado</a> <span aria-current="page">{{ conjunto.criterio.periodo_curto }}</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/relatorio-consolidado.css' %}">{% endblock %}
+{% block conteudo %}
+{% comment %}
+A camada executiva do consolidado (100). Tudo aqui sai do mesmo `Consolidado` que o PDF escreve: a
+tela não calcula número, e não decide universo, ausência nem o que fica fora por privacidade. As
+seções de execução e o anexo ficam no documento.
+{% endcomment %}
+<h1>Relatório consolidado da unidade</h1>
+<p class="sub"><strong>{{ conjunto.criterio.periodo_curto|capfirst }}</strong> — {{ consolidado.editais }} Edita{{ consolidado.editais|pluralize:"l,is" }}</p>
+<p class="nota">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais de cada Edital.</p>
+
+<dl class="ficha-do-conjunto">
+  <div><dt>Conjunto analisado</dt><dd>{{ conjunto.criterio.rotulo }}{% if conjunto.retirados %}; retirados: {% for e in conjunto.retirados %}{{ e.number }}/{{ e.year }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</dd></div>
+  <div><dt>Data dos dados</dt><dd>dados até {{ referencia }}<span class="nota-da-ficha"> — {{ consolidado.data_dos_dados }}</span></dd></div>
+  <div><dt>Situação no GPS</dt><dd>{{ consolidado.situacao_no_gps }}</dd></div>
+  <div><dt>Situação das providências</dt><dd>{{ consolidado.providencias }}</dd></div>
+</dl>
+
+<form method="post" action="{% url 'interface:relatorio-consolidado-pdf' %}" class="emissao-do-consolidado">
+  {% csrf_token %}
+  {% for nome, valor in campos %}<input type="hidden" name="{{ nome }}" value="{{ valor }}">{% endfor %}
+  <button type="submit" class="botao">Baixar PDF</button>
+  <a class="botao secundario" href="{{ voltar }}">Alterar a escolha</a>
+  <span class="nota">O PDF traz também execução, providências e o anexo técnico. Cada emissão fica registrada na trilha da unidade.</span>
+</form>
+
+<h2>Visão geral</h2>
+<p class="visao-geral-do-consolidado">{{ consolidado.frases|join:" " }}</p>
+
+<h2>Principais números</h2>
+<ul class="numeros-do-consolidado">
+  {% for rotulo, valor, base in indicadores %}
+  <li><strong>{{ valor }}</strong><span class="rotulo">{{ rotulo|capfirst }}</span><span class="base">{{ base }}</span></li>
+  {% endfor %}
+</ul>
+
+<section class="atencao-do-consolidado" aria-labelledby="titulo-atencao">
+  <h2 id="titulo-atencao">Pontos de atenção</h2>
+  <ol>
+    {% for titulo, texto in consolidado.pontos_de_atencao %}
+    <li><strong>{{ titulo }}</strong> {{ texto }}</li>
+    {% endfor %}
+  </ol>
+</section>
+
+{% if consolidado.linhas %}
+<h2>Por Edital</h2>
+<div class="tabela-rolavel">
+<table class="tabela">
+  <caption class="oculto">Vagas imediatas, inscrições enviadas e inscrições por vaga de cada Edital do conjunto</caption>
+  <thead>
+    <tr>
+      <th scope="col">Edital</th>
+      <th scope="col" class="numero">Vagas imediatas</th>
+      <th scope="col" class="numero">Inscrições enviadas</th>
+      <th scope="col" class="numero">Por vaga</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for edital, vagas, inscricoes, por_vaga in linhas_por_edital %}
+    <tr>
+      <th scope="row">{{ edital.number }}/{{ edital.year }}<span class="detalhe">{{ edital.title }}</span></th>
+      <td class="numero">{{ vagas }}</td>
+      <td class="numero">{{ inscricoes }}</td>
+      <td class="numero">{{ por_vaga }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="nota">Editais de natureza diferente não são comparáveis por inscrições por vaga, e a tabela não os ordena por ela.</p>
+{% endif %}
+
+{% if consolidado.pendencias_por_tipo %}
+<h2>Providências em curso</h2>
+<div class="tabela-rolavel">
+<table class="tabela">
+  <caption class="oculto">Providências registradas em curso, por tipo</caption>
+  <thead><tr><th scope="col">Tipo</th><th scope="col" class="numero">Editais</th><th scope="col" class="numero">Ocorrências</th></tr></thead>
+  <tbody>
+    {% for tipo, editais, ocorrencias in consolidado.pendencias_por_tipo %}
+    <tr><th scope="row">{{ tipo|capfirst }}</th><td class="numero">{{ editais }}</td><td class="numero">{{ ocorrencias }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

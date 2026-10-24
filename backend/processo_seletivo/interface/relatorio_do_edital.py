@@ -482,6 +482,12 @@ class FatosDoEdital:
     datas_definitivas: tuple
     #: Soma das apurações vigentes e atualizadas; `None` quando nenhum Perfil foi apurado.
     vagas_habilitadas: int | None
+    #: As vagas imediatas dos Perfis com apuração atualizada, e com apuração desatualizada (100).
+    vagas_apuradas: int
+    vagas_desatualizadas: int
+    retificacoes: int
+    #: `(nome, inscrições, vagas, espécies)` dos Perfis com marca de procura da Visão Geral (040).
+    perfis_com_marca: tuple
     convocacoes: Convocacoes
     recursos: Recursos
     posteriores: list
@@ -501,6 +507,7 @@ class FatosDoEdital:
     _no_periodo_acrescentado: int = field(repr=False, default=0)
     _por_etapa: dict = field(repr=False, default_factory=dict)
     _prazos_em_curso: list = field(repr=False, default_factory=list)
+    _retificacoes_lidas: list = field(repr=False, default_factory=list)
 
 
 def fatos_do_edital(edital, *, agora):
@@ -572,6 +579,7 @@ def fatos_do_edital(edital, *, agora):
 
     recursos_por_perfil, recursos_total = _recursos(edital)
     convocacoes_por_perfil, pendencias_de_convocacao, prazos_em_curso = _convocacoes(edital, agora)
+    retificacoes_lidas = _retificacoes_publicadas(edital, agora)
 
     pendencias_de_resultado = []
     nao_publicas = []
@@ -593,6 +601,12 @@ def fatos_do_edital(edital, *, agora):
     vagas_total = 0
     vagas_habilitadas = 0
     vagas_apuradas_algum = False
+    vagas_apuradas = 0
+    vagas_desatualizadas = 0
+    perfis_com_marca = []
+    # As marcas de procura são as da Visão Geral, pela regra dela — período encerrado, sem
+    # inscrição ou razão abaixo de 1 —, e não uma segunda (040, FR-602).
+    periodo_da_visao = visao_geral.situacao_do_periodo(vigente or None, agora)
     for perfil in perfis_publicados:
         perfil_id = str(perfil["id"])
         nome = perfil.get("name") or perfil.get("code") or "Perfil"
@@ -701,6 +715,21 @@ def fatos_do_edital(edital, *, agora):
         if apurada and not obsoleta:
             vagas_habilitadas += habilitadas
             vagas_apuradas_algum = True
+        if vagas and obsoleta:
+            vagas_desatualizadas += vagas
+        elif vagas and apurada:
+            vagas_apuradas += vagas
+        marcas = visao_geral._marcas(
+            periodo_da_visao,
+            Numero.de(inscricoes),
+            Numero.de(visao_geral._razao(inscricoes, vagas))
+            if vagas
+            else Numero.nao_aplicavel("só cadastro de reserva"),
+        )
+        if marcas:
+            perfis_com_marca.append(
+                (nome, inscricoes, vagas, tuple(marca.especie for marca in marcas))
+            )
 
         convocacoes_do_perfil = convocacoes_por_perfil.get(perfil_id)
         recursos_do_perfil = recursos_por_perfil.get(perfil_id)
@@ -770,6 +799,10 @@ def fatos_do_edital(edital, *, agora):
         marcos_definitivos=marcos_definitivos,
         datas_definitivas=tuple(datas_definitivas),
         vagas_habilitadas=vagas_habilitadas if vagas_apuradas_algum else None,
+        vagas_apuradas=vagas_apuradas,
+        vagas_desatualizadas=vagas_desatualizadas,
+        retificacoes=len(retificacoes_lidas),
+        perfis_com_marca=tuple(perfis_com_marca),
         convocacoes=_somar_convocacoes(convocacoes_por_perfil.values()),
         recursos=recursos_total,
         posteriores=(
@@ -790,6 +823,7 @@ def fatos_do_edital(edital, *, agora):
         _no_periodo_acrescentado=no_periodo_acrescentado,
         _por_etapa=por_etapa,
         _prazos_em_curso=prazos_em_curso,
+        _retificacoes_lidas=retificacoes_lidas,
     )
 
 
@@ -885,7 +919,7 @@ def montar(edital, *, agora, enderecos):
                 min(primeira for _, _, primeira in posteriores),
             )
         ]
-    retificacoes = _retificacoes(edital, agora)
+    retificacoes = _retificacoes(fatos._retificacoes_lidas)
     documentos = _documentos(edital, fatos._perfis_publicados, enderecos)
     datas = _datas(
         edital,
@@ -1217,11 +1251,9 @@ def _situacao_das_vagas(vagas, habilitadas, convocacoes, motivo_da_omissao, perf
     return "; ".join(partes)
 
 
-def _retificacoes(edital, agora):
-    from processo_seletivo.interface.views import _alteracoes_legiveis
-
-    lidas = []
-    for numero, retificacao in enumerate(
+def _retificacoes_publicadas(edital, agora):
+    """As Retificações publicadas até `agora`, em ordem — lidas uma vez, nos fatos (100)."""
+    return list(
         Retificacao.objects.filter(
             edital=edital,
             status=Retificacao.Status.PUBLICADA,
@@ -1229,9 +1261,15 @@ def _retificacoes(edital, agora):
         )
         .select_related("base_snapshot", "publication")
         .prefetch_related("alteracoes")
-        .order_by("publication__published_at"),
-        1,
-    ):
+        .order_by("publication__published_at")
+    )
+
+
+def _retificacoes(publicadas):
+    from processo_seletivo.interface.views import _alteracoes_legiveis
+
+    lidas = []
+    for numero, retificacao in enumerate(publicadas, 1):
         lidas.append(
             Retificacao_(
                 numero=numero,
@@ -1527,7 +1565,7 @@ def _frases(
         quando = f" em {data_curta(relatorio.desfecho_em)}" if relatorio.desfecho_em else ""
         frases.append(f"O Edital foi cancelado{quando}.")
     com_vaga = [p for p in perfis if p.vagas.valor]
-    so_reserva = [p for p in perfis if not p.vagas.valor and p.reserva != "não há"]
+    so_reserva = [p for p in perfis if so_cadastro_de_reserva(p)]
     if com_vaga:
         if len(com_vaga) == 1:
             p = com_vaga[0]
@@ -1724,11 +1762,21 @@ def texto_do_indicador(indicador):
     return valor
 
 
+def reservadas_do_perfil(perfil):
+    """As vagas imediatas do Perfil em listas reservadas — o resto é da ampla concorrência."""
+    return sum(n for lista, n in perfil.vagas_por_lista if lista != "Ampla concorrência")
+
+
+def so_cadastro_de_reserva(perfil):
+    """Sem vaga imediata e com cadastro de reserva declarado."""
+    return not perfil.vagas.valor and perfil.reserva != "não há"
+
+
 def texto_das_vagas(perfil):
     """A célula de vagas do Perfil: o total e quantas são reservadas, ou o cadastro de reserva."""
     if not perfil.vagas.valor:
         return f"cadastro de reserva, {perfil.reserva}"
-    reservadas = sum(n for lista, n in perfil.vagas_por_lista if lista != "Ampla concorrência")
+    reservadas = reservadas_do_perfil(perfil)
     if not reservadas:
         return str(perfil.vagas.valor)
     ampla = perfil.vagas.valor - reservadas

@@ -23,6 +23,23 @@ urlpatterns = [
         name="identificar-demonstracao",
     ),
     path("visao-geral", views.visao_geral, name="visao-geral"),
+    # O relatório consolidado da unidade (100): a escolha do conjunto, a camada executiva e o PDF,
+    # sob a porta da Visão Geral, de onde ele parte.
+    path(
+        "visao-geral/relatorio",
+        relatorio.relatorio_consolidado_escolha,
+        name="relatorio-consolidado",
+    ),
+    path(
+        "visao-geral/relatorio/conjunto",
+        relatorio.relatorio_consolidado,
+        name="relatorio-consolidado-ver",
+    ),
+    path(
+        "visao-geral/relatorio/pdf",
+        relatorio.emitir_relatorio_consolidado,
+        name="relatorio-consolidado-pdf",
+    ),
     # As autoridades da unidade (060): de topo, como a visão geral, porque não pertencem a Processo
     # nenhum — respondem pelos atos de todos os da unidade.
     path("autoridades", views.autoridades, name="autoridades"),

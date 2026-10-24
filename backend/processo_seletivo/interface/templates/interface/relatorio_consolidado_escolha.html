@@ -1,0 +1,77 @@
+{% extends "interface/base.html" %}{% load estaticos interface_extras %}
+{% block titulo %}Relatório consolidado da unidade{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:visao-geral' %}">Visão Geral</a> <span aria-current="page">Relatório consolidado</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/relatorio-consolidado.css' %}">{% endblock %}
+{% block conteudo %}
+{% comment %}
+A escolha do conjunto (100). Um formulário só, por GET: "Aplicar" volta a esta tela com o critério
+novo; "Ver relatório" leva o mesmo critério e os marcados à camada executiva. Nada é gravado — o
+endereço reproduz a escolha. Sem script: a política de conteúdo o recusaria, e dois botões com
+destinos diferentes fazem o trabalho.
+{% endcomment %}
+<h1>Relatório consolidado da unidade</h1>
+<p class="sub">Escolha os Editais. O relatório soma o que o relatório de cada um diz, com os dados do momento em que você o abrir.</p>
+
+<form method="get" action="{% url 'interface:relatorio-consolidado-ver' %}">
+  <fieldset class="criterio-do-conjunto">
+    <legend>Como escolher os Editais</legend>
+    <p>
+      <label for="c-criterio">Critério</label>
+      <select name="criterio" id="c-criterio">
+        <option value="publicacao" {% if criterio.modo == "publicacao" %}selected{% endif %}>Primeira publicação no período</option>
+        <option value="numero" {% if criterio.modo == "numero" %}selected{% endif %}>Ano do número do Edital</option>
+        <option value="manual" {% if criterio.modo == "manual" %}selected{% endif %}>Escolha um a um</option>
+      </select>
+    </p>
+    <p>
+      <label for="c-ano">Ano</label>
+      <select name="ano" id="c-ano">
+        {% for ano in anos %}<option value="{{ ano }}" {% if criterio.ano == ano %}selected{% endif %}>{{ ano }}</option>{% endfor %}
+      </select>
+    </p>
+    <p>
+      <label for="c-atalho">Período da publicação</label>
+      <select name="atalho" id="c-atalho">
+        <option value="ano" {% if criterio.atalho == "ano" %}selected{% endif %}>O ano inteiro</option>
+        <option value="s1" {% if criterio.atalho == "s1" %}selected{% endif %}>1º semestre</option>
+        <option value="s2" {% if criterio.atalho == "s2" %}selected{% endif %}>2º semestre</option>
+        <option value="datas" {% if criterio.atalho == "datas" %}selected{% endif %}>Entre as datas abaixo</option>
+      </select>
+    </p>
+    <p>
+      <label for="c-inicio">De</label>
+      <input type="date" name="inicio" id="c-inicio" value="{{ criterio.inicio|date:'Y-m-d' }}">
+    </p>
+    <p>
+      <label for="c-fim">Até</label>
+      <input type="date" name="fim" id="c-fim" value="{{ criterio.fim|date:'Y-m-d' }}">
+    </p>
+    <p>
+      <label for="c-busca">Buscar, na escolha um a um</label>
+      <input type="search" name="busca" id="c-busca" value="{{ criterio.busca }}" placeholder="Número, título ou Processo">
+    </p>
+    <p><button type="submit" name="acao" value="aplicar" formaction="{% url 'interface:relatorio-consolidado' %}" class="botao secundario">Aplicar</button></p>
+  </fieldset>
+
+  <h2>{{ criterio.rotulo }}</h2>
+  <p class="nota">O período escolhe os Editais. Os números de cada um serão os do momento da emissão, e não os do fim do período. Só entram Editais publicados, encerrados ou cancelados; cancelados aparecem na relação e ficam fora dos números.</p>
+
+  <input type="hidden" name="escolha" value="1">
+  {% for edital in marcados_fora_da_lista %}<input type="hidden" name="edital" value="{{ edital.pk }}">{% endfor %}
+  {% if linhas %}
+  <ul class="editais-do-conjunto" aria-label="Editais que o critério alcança">
+    {% for edital, primeira, marcado in linhas %}
+    <li><label for="e-{{ edital.pk }}"><input type="checkbox" name="edital" id="e-{{ edital.pk }}" value="{{ edital.pk }}" {% if marcado %}checked{% endif %}>
+      <span>Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}<span class="detalhe">{{ edital.processo.title }} · primeira publicação {{ primeira }} · {{ edital.status|situacao|lower }}</span></span></label></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>Nenhum Edital publicado é alcançado por este critério.</p>
+  {% endif %}
+  {% if conjunto.fora %}
+  <p class="nota">Ficam fora: {% for edital, motivo in conjunto.fora %}{{ edital.number }}/{{ edital.year }} ({{ motivo }}){% if not forloop.last %}; {% endif %}{% endfor %}.</p>
+  {% endif %}
+  <p class="nota">Até {{ limite }} Editais por relatório.</p>
+  <p class="acoes-do-conjunto"><button type="submit" class="botao">Ver relatório</button> <a class="botao secundario" href="{% url 'interface:visao-geral' %}">Voltar à Visão Geral</a></p>
+</form>
+{% endblock %}

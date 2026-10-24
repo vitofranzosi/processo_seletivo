@@ -40,39 +40,39 @@
 **Independent Test**: três Editais do cenário publicados em datas diferentes; escolher o 1º semestre;
 números da camada executiva iguais à soma dos fatos de cada Edital; baixar o PDF.
 
-- [ ] T012 [US1] `consolidar(fatos, conjunto, agora)` pura — universo, somas, razão Σ/Σ, ausências, cancelados, exclusão do Edital com total omitido, envios por mês, pendências por tipo e por Edital, seis indicadores, frases, pontos de atenção — em `backend/processo_seletivo/interface/relatorio_consolidado.py`
-- [ ] T013 [P] [US1] Unitários da soma com fatos sintéticos: agregação, conjunto vazio, só cancelados, cadastro de reserva, período aberto (parcial), resultado incompleto, registros posteriores, privacidade por exclusão em `backend/tests/unit/interface/test_relatorio_consolidado.py`
-- [ ] T014 [US1] Conjunto por primeira publicação com atalhos de ano e semestre, elegibilidade e "fora do conjunto", escopo do ator, limite, e `ler(conjunto, *, agora)` numa leitura consistente, em `backend/processo_seletivo/interface/relatorio_consolidado.py`
-- [ ] T015 [US1] Composição do PDF (camada executiva, seções, anexo, faixa em toda página, marcadores) em `backend/processo_seletivo/interface/relatorio_consolidado_pdf.py`
-- [ ] T016 [US1] Views de escolha, página e emissão, com a porta `visao:consultar`, resposta privada e recusas do contrato, em `backend/processo_seletivo/interface/relatorio.py`; rotas em `backend/processo_seletivo/interface/urls.py`
-- [ ] T017 [US1] Templates `relatorio_consolidado_escolha.html` e `relatorio_consolidado.html`, folha `static/interface/telas/relatorio-consolidado.css` e o link na Visão Geral em `backend/processo_seletivo/interface/templates/interface/`
-- [ ] T018 [US1] Integração: números do consolidado × soma dos fatos de cada Edital × Visão Geral para o mesmo universo (SC-939); listas sobrepostas contadas uma vez; cadastro de reserva fora da razão, em `backend/tests/integration/relatorio_consolidado/test_numeros.py`
+- [x] T012 [US1] `consolidar(fatos, conjunto, agora)` pura — universo, somas, razão Σ/Σ, ausências, cancelados, exclusão do Edital com total omitido, envios por mês, pendências por tipo e por Edital, seis indicadores, frases, pontos de atenção — em `backend/processo_seletivo/interface/relatorio_consolidado.py`
+- [x] T013 [P] [US1] Unitários da soma com fatos sintéticos: agregação, conjunto vazio, só cancelados, cadastro de reserva, período aberto (parcial), resultado incompleto, registros posteriores, privacidade por exclusão em `backend/tests/unit/interface/test_relatorio_consolidado.py`
+- [x] T014 [US1] Conjunto por primeira publicação com atalhos de ano e semestre, elegibilidade e "fora do conjunto", escopo do ator, limite, e `ler(conjunto, *, agora)` numa leitura consistente, em `backend/processo_seletivo/interface/relatorio_consolidado.py`
+- [x] T015 [US1] Composição do PDF (camada executiva, seções, anexo, faixa em toda página, marcadores) em `backend/processo_seletivo/interface/relatorio_consolidado_pdf.py`
+- [x] T016 [US1] Views de escolha, página e emissão, com a porta `visao:consultar`, resposta privada e recusas do contrato, em `backend/processo_seletivo/interface/relatorio.py`; rotas em `backend/processo_seletivo/interface/urls.py`
+- [x] T017 [US1] Templates `relatorio_consolidado_escolha.html` e `relatorio_consolidado.html`, folha `static/interface/telas/relatorio-consolidado.css` e o link na Visão Geral em `backend/processo_seletivo/interface/templates/interface/`
+- [x] T018 [US1] Integração: números do consolidado × soma dos fatos de cada Edital × Visão Geral para o mesmo universo (SC-939); listas sobrepostas contadas uma vez; cadastro de reserva fora da razão, em `backend/tests/integration/relatorio_consolidado/test_numeros.py`
 
 ## Phase 5: User Story 2 — o que foi analisado, e de quando (P1)
 
-- [ ] T019 [US2] Ficha e anexo com o critério por extenso e a data dos dados (FR-2561, FR-2565); série "Inscrições enviadas, por mês do envio" com a nota (FR-2578) em `backend/processo_seletivo/interface/relatorio_consolidado.py` e `backend/processo_seletivo/interface/relatorio_consolidado_pdf.py`
-- [ ] T020 [US2] Critério por ano do número e a diferença para a primeira publicação (48/2025 publicado em 2026) em `backend/processo_seletivo/interface/relatorio_consolidado.py`
-- [ ] T021 [US2] Integração: partição por semestre, ano do número × publicação, ato depois do fim do período aparecendo, instante único (o `SET TRANSACTION` emitido) em `backend/tests/integration/relatorio_consolidado/test_conjunto.py`
+- [x] T019 [US2] Ficha e anexo com o critério por extenso e a data dos dados (FR-2561, FR-2565); série "Inscrições enviadas, por mês do envio" com a nota (FR-2578) em `backend/processo_seletivo/interface/relatorio_consolidado.py` e `backend/processo_seletivo/interface/relatorio_consolidado_pdf.py`
+- [x] T020 [US2] Critério por ano do número e a diferença para a primeira publicação (48/2025 publicado em 2026) em `backend/processo_seletivo/interface/relatorio_consolidado.py`
+- [x] T021 [US2] Integração: partição por semestre, ano do número × publicação, ato depois do fim do período aparecendo, instante único (o `SET TRANSACTION` emitido) em `backend/tests/integration/relatorio_consolidado/test_conjunto.py`
 
 ## Phase 6: User Story 3 — escolher os Editais à mão (P2)
 
-- [ ] T022 [US3] Escolha manual (critério `manual` com busca) e desmarcação no critério, com retirados e acrescentados ditos, em `backend/processo_seletivo/interface/relatorio_consolidado.py` e no template de escolha
-- [ ] T023 [US3] Integração e interface: desmarcar, escolher cinco, identificador de outro escopo ignorado em `backend/tests/integration/relatorio_consolidado/test_conjunto.py` e `backend/tests/interface/test_relatorio_consolidado.py`
+- [x] T022 [US3] Escolha manual (critério `manual` com busca) e desmarcação no critério, com retirados e acrescentados ditos, em `backend/processo_seletivo/interface/relatorio_consolidado.py` e no template de escolha
+- [x] T023 [US3] Integração e interface: desmarcar, escolher cinco, identificador de outro escopo ignorado em `backend/tests/integration/relatorio_consolidado/test_conjunto.py` e `backend/tests/interface/test_relatorio_consolidado.py`
 
 ## Phase 7: User Story 4 — o que está em curso no conjunto (P2)
 
-- [ ] T024 [US4] Seção de providências por tipo e por Edital, registros na trilha por Edital, "o que este relatório não diz" em `backend/processo_seletivo/interface/relatorio_consolidado_pdf.py` e no template da página
-- [ ] T025 [US4] Integração: encerrado com convocação no prazo, resultado só preliminar, Perfil sem inscrição, registros depois do encerramento em `backend/tests/integration/relatorio_consolidado/test_providencias.py`
+- [x] T024 [US4] Seção de providências por tipo e por Edital, registros na trilha por Edital, "o que este relatório não diz" em `backend/processo_seletivo/interface/relatorio_consolidado_pdf.py` e no template da página
+- [x] T025 [US4] Integração: encerrado com convocação no prazo, resultado só preliminar, Perfil sem inscrição, registros depois do encerramento em `backend/tests/integration/relatorio_consolidado/test_providencias.py`
 
 ## Phase 8: User Story 5 — emissão rastreável e privacidade (P2)
 
-- [ ] T026 [US5] Emissão: trava da Unidade, número pela trilha, evento com o conjunto e o resumo (R-005) em `backend/processo_seletivo/interface/relatorio.py`
-- [ ] T027 [US5] Integração: dois eventos e números 1 e 2; determinismo da composição; nenhum dado pessoal; nada por Perfil ou lista; Edital pequeno igual com e sem ele em `backend/tests/integration/relatorio_consolidado/test_emissao.py` e `backend/tests/integration/relatorio_consolidado/test_privacidade.py`
-- [ ] T028 [US5] Interface: porta (sem capacidade, recusa explicada), páginas renderizam, resposta privada, link na Visão Geral só para quem tem a capacidade em `backend/tests/interface/test_relatorio_consolidado.py`
+- [x] T026 [US5] Emissão: trava da Unidade, número pela trilha, evento com o conjunto e o resumo (R-005) em `backend/processo_seletivo/interface/relatorio.py`
+- [x] T027 [US5] Integração: dois eventos e números 1 e 2; determinismo da composição; nenhum dado pessoal; nada por Perfil ou lista; Edital pequeno igual com e sem ele em `backend/tests/integration/relatorio_consolidado/test_emissao.py` e `backend/tests/integration/relatorio_consolidado/test_privacidade.py`
+- [x] T028 [US5] Interface: porta (sem capacidade, recusa explicada), páginas renderizam, resposta privada, link na Visão Geral só para quem tem a capacidade em `backend/tests/interface/test_relatorio_consolidado.py`
 
 ## Phase 9: Polish & Cross-Cutting
 
-- [ ] T029 Orçamento: consultas por Edital constantes entre 1, 2 e 3 Editais e independentes da escala; tempo de um conjunto grande registrado, para confirmar o limite (R-006), em `backend/tests/performance/test_relatorio_consolidado.py`
+- [x] T029 Orçamento: consultas por Edital constantes entre 1, 2 e 3 Editais e independentes da escala; tempo de um conjunto grande registrado, para confirmar o limite (R-006), em `backend/tests/performance/test_relatorio_consolidado.py`
 - [ ] T030 Guardiões: vocabulário, CSP, folha estática, gramática das portas, larguras — o que a suíte acusar — nos arquivos de teste correspondentes
 - [ ] T031 [P] Matriz de rastreabilidade em `specs/100-relatorio-consolidado/rastreabilidade.md`
 - [ ] T032 [P] README (linha da `100`), CLAUDE.md se a contagem de append-only ou a suíte mudarem de forma relevante, e quickstart executado

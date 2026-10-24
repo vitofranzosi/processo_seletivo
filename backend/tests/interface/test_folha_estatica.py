@@ -252,6 +252,11 @@ QUEM_CARREGA = {
         "retificacao_detalhe.html",
     },
     "interface/grupos/vista.css": {"compor_classificacao.html", "compor_perfis.html"},
+    # O relatório consolidado (100): a escolha do conjunto e a camada executiva dividem a folha.
+    "interface/telas/relatorio-consolidado.css": {
+        "relatorio_consolidado.html",
+        "relatorio_consolidado_escolha.html",
+    },
     # A prévia da classificação (094): o painel só existe na etapa Classificação.
     "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},
     **{

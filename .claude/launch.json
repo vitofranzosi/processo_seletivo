@@ -424,6 +424,13 @@
       "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_maquete_v2 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8099"],
       "port": 8099,
       "url": "http://localhost:8099"
+    },
+    {
+      "name": "relatorio-100",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_100 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8100"],
+      "port": 8100,
+      "url": "http://localhost:8100"
     }
   ]
 }
