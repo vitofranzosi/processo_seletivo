@@ -18,7 +18,9 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 def test_cada_numero_e_a_soma_dos_relatorios_de_cada_edital(tres_editais):
     escolhido = conjunto("criterio=numero&ano=2026")
-    assert [e.number for e in escolhido.incluidos] == ["62", "63", "61"]
+    # O 62 é de fevereiro; o 61 e o 63, do mesmo instante de agosto, sem ordem entre eles.
+    numeros = [e.number for e in escolhido.incluidos]
+    assert numeros[0] == "62" and sorted(numeros[1:]) == ["61", "63"]
     c = ler(escolhido)
     with rel.leitura_consistente():
         fatos = [rel.fatos_do_edital(e, agora=REFERENCIA) for e in escolhido.incluidos]

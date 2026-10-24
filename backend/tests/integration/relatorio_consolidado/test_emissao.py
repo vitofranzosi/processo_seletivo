@@ -40,7 +40,8 @@ def test_cada_emissao_e_numerada_na_unidade_com_o_conjunto(client, seletor_ligad
     assert (
         detalhe["criterio"]["inicio"] == "2026-07-01" and detalhe["criterio"]["fim"] == "2026-12-31"
     )
-    assert [i["edital"] for i in detalhe["incluidos"]] == ["61/2026", "63/2026"]
+    # O 61 e o 63 são publicados no mesmo instante do cenário: a ordem entre eles não é afirmação.
+    assert sorted(i["edital"] for i in detalhe["incluidos"]) == ["61/2026", "63/2026"]
     assert eventos[0].permission == "visao:consultar"
 
 

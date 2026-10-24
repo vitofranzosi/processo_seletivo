@@ -263,10 +263,13 @@ def relatorio_consolidado(request):
     ator = _ator_da_visao(request)
     if ator is None:
         return identidade.pedir_identificacao(request)
-    conjunto = relatorio_consolidado_mod.conjunto_de(ator, request.GET)
-    conjunto.exigir_emissivel()
-    unidade = exigir_unidade(ator.institution_scope)
-    lido = relatorio_consolidado_mod.ler(conjunto, agora=timezone.now(), unidade=unidade)
+    # A escolha dos Editais entra no mesmo instante que os números (FR-2564): lida antes, um Edital
+    # cancelado no meio da leitura entraria com o estado de antes.
+    with relatorio_do_edital.leitura_consistente():
+        conjunto = relatorio_consolidado_mod.conjunto_de(ator, request.GET)
+        conjunto.exigir_emissivel()
+        unidade = exigir_unidade(ator.institution_scope)
+        lido = relatorio_consolidado_mod.montar(conjunto, agora=timezone.now(), unidade=unidade)
     return marcar_como_privada(
         render(
             request,
@@ -304,13 +307,13 @@ def emitir_relatorio_consolidado(request):
     ator = _ator_da_visao(request)
     if ator is None:
         return identidade.pedir_identificacao(request)
-    conjunto = relatorio_consolidado_mod.conjunto_de(ator, request.POST)
-    conjunto.exigir_emissivel()
     agora = timezone.now()
     try:
         with relatorio_do_edital.leitura_consistente():
             # A trava serializa as emissões da unidade: duas simultâneas teriam o mesmo número.
             unidade = Unidade.objects.select_for_update().get(codigo=ator.institution_scope)
+            conjunto = relatorio_consolidado_mod.conjunto_de(ator, request.POST)
+            conjunto.exigir_emissivel()
             emissao = relatorio_consolidado_mod.proxima_emissao(unidade)
             lido = relatorio_consolidado_mod.montar(conjunto, agora=agora, unidade=unidade)
             lido.enderecos = _enderecos_das_selecoes(request, conjunto)
