@@ -29,8 +29,11 @@ def ler(conjunto_, agora=REFERENCIA):
 
 
 def texto_do_documento(consolidado, emissao=1):
-    composicao = relatorio_consolidado_pdf.composicao(consolidado, emissao=emissao)
-    return " ".join(item[1] for item in composicao.itens if item[0] == "texto" and item[1])
+    """O texto realmente desenhado no PDF, com os espaços normalizados entre linhas e trechos."""
+    from tests.interface.test_fluxo import texto_de_pdf_bytes
+
+    texto = texto_de_pdf_bytes(relatorio_consolidado_pdf.compor(consolidado, emissao=emissao))
+    return " ".join(texto.split())
 
 
 @pytest.fixture
