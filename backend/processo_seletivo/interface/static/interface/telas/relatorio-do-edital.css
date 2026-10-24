@@ -1,0 +1,25 @@
+/* O relatório do Edital (099): a camada executiva na tela. As regras moram aqui, e só esta tela
+   as carrega (091). */
+.situacoes-do-relatorio{display:grid;gap:.6rem 1.5rem;margin:1rem 0;
+  grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
+.situacoes-do-relatorio div{border-top:1px solid var(--borda);padding-top:.35rem}
+.situacoes-do-relatorio dt{font-size:.8rem;color:var(--texto-fraco)}
+.situacoes-do-relatorio dd{margin:0;font-weight:600}
+
+.emissao-do-relatorio{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin:1rem 0 1.5rem}
+
+.visao-geral-do-relatorio{max-width:48rem;line-height:1.55}
+
+/* O número em cima, e o que ele diz embaixo: a base explica o número, e não compete com ele. */
+.numeros-do-relatorio{list-style:none;padding:0;margin:1rem 0;display:grid;gap:.75rem;
+  grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.numeros-do-relatorio li{padding:.75rem .9rem;border:1px solid var(--borda);border-radius:6px}
+.numeros-do-relatorio strong{display:block;font-size:1.6rem;line-height:1.15;
+  font-variant-numeric:tabular-nums}
+.numeros-do-relatorio .rotulo{display:block;font-weight:600;font-size:.9rem;margin-top:.15rem}
+.numeros-do-relatorio .base{display:block;font-size:.8rem;color:var(--texto-fraco);margin-top:.3rem;
+  line-height:1.35}
+
+.atencao-do-relatorio{border-left:3px solid var(--borda);padding:.25rem 0 .25rem 1rem;margin:1.5rem 0}
+.atencao-do-relatorio ol{margin:.25rem 0 0;padding-left:1.2rem}
+.atencao-do-relatorio li{margin:.35rem 0}
