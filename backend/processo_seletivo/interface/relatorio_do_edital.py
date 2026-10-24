@@ -84,6 +84,14 @@ OMITIDO = "omitido"
 #: O limiar de D-006, revisável pelo usuário e pelo encarregado de dados.
 MINIMO_PARA_DETALHAR = 5
 FRASE_DE_PRIVACIDADE = f"detalhe omitido: menos de {MINIMO_PARA_DETALHAR} inscrições neste perfil"
+#: O Perfil grande omitido só para que o pequeno não se deduza dos totais (100, FR-2587): a frase do
+#: pequeno seria falsa nele.
+FRASE_COMPLEMENTAR = (
+    f"detalhe omitido para que o de perfil com menos de {MINIMO_PARA_DETALHAR} inscrições não se "
+    "deduza dos totais"
+)
+#: O Edital inteiro abaixo do limiar: os totais não públicos dele também somem.
+FRASE_DO_EDITAL = f"detalhe omitido: menos de {MINIMO_PARA_DETALHAR} inscrições neste Edital"
 
 #: O rótulo de cada desfecho é o que o candidato já lê no portal (FR-2545), **com uma troca**: o
 #: candidato lê "Vaga aceita", e quem dirige leria vaga preenchida. Para a gestão, o aceite é da
@@ -175,6 +183,8 @@ class LinhaDoPerfil:
     etapas: tuple
     listas: tuple
     omitido: bool
+    #: A frase da omissão, quando há: a do Perfil pequeno ou a do complemento (100, FR-2587).
+    motivo_da_omissao: str = ""
 
 
 @dataclass(frozen=True)
@@ -230,6 +240,8 @@ class Relatorio:
     cadastros_distintos: int
     desfecho_em: datetime | None
     pontos_de_atencao: list = field(default_factory=list)
+    #: Edital com menos inscrições que o limiar: os totais não públicos dele não são ditos (100).
+    total_omitido: bool = False
 
     @property
     def titulo(self):
@@ -474,7 +486,10 @@ class FatosDoEdital:
     recursos: Recursos
     posteriores: list
     cadastros_distintos: int
+    #: Os Perfis com detalhe não público omitido — os pequenos e os do complemento (FR-2587).
     omitidos: frozenset
+    complementares: frozenset
+    total_omitido: bool
     _perfis_publicados: list = field(repr=False, default_factory=list)
     _etapas: list = field(repr=False, default_factory=list)
     _original: dict | None = field(repr=False, default=None)
@@ -560,11 +575,17 @@ def fatos_do_edital(edital, *, agora):
 
     pendencias_de_resultado = []
     nao_publicas = []
-    omitidos = {
-        str(p["id"])
+    # Perfil sem inscrição enviada e sem rascunho não tem fato não público a proteger, e por isso
+    # não entra na regra: ele mostraria só zeros, e o complemento esconderia outro Perfil à toa.
+    populacoes = {
+        str(p["id"]): contagem["submetidas"].get(str(p["id"]), 0)
         for p in perfis_publicados
-        if contagem["submetidas"].get(str(p["id"]), 0) < MINIMO_PARA_DETALHAR
+        if contagem["submetidas"].get(str(p["id"]), 0) or contagem["rascunhos"].get(str(p["id"]), 0)
     }
+    primarios, complementares, total_omitido = omitidos_por_complemento(
+        populacoes, MINIMO_PARA_DETALHAR
+    )
+    omitidos = primarios | complementares
     linhas = []
     datas_definitivas = []
     marcos_declarados = 0
@@ -578,6 +599,16 @@ def fatos_do_edital(edital, *, agora):
         inscricoes = contagem["submetidas"].get(perfil_id, 0)
         rascunhos = contagem["rascunhos"].get(perfil_id, 0)
         omitido = perfil_id in omitidos
+        motivo = (
+            FRASE_COMPLEMENTAR
+            if perfil_id in complementares
+            else FRASE_DE_PRIVACIDADE
+            if omitido
+            else ""
+        )
+        # Sem inscrição enviada e com o período fechado, não há o que classificar nem divulgar: o
+        # marco não é previsto nem pendente, e nenhum ato o cumpriria (100, FR-2589, D-007).
+        sem_inscricao = inscricoes == 0 and not periodo.aberto
         vagas = visao_geral.vagas_do_conteudo({"profiles": [perfil]}).total
         vagas_total += vagas
 
@@ -588,9 +619,11 @@ def fatos_do_edital(edital, *, agora):
         tem_publicacao = False
         for marco in perfil.get("classificationMilestones") or []:
             marco_id = str(marco["id"])
-            marcos_declarados += 1
             listas = listas_por_marco.get((perfil_id, marco_id), set())
             emitidas = atos_por_marco.get((perfil_id, marco_id), set())
+            if sem_inscricao and not listas and not emitidas:
+                continue
+            marcos_declarados += 1
             definitivo_em_todas = bool(listas)
             for lista in sorted(listas | emitidas, key=lambda x: x or ""):
                 publicacao = (
@@ -644,6 +677,9 @@ def fatos_do_edital(edital, *, agora):
                 if naturezas == {Natureza.PRELIMINAR}
                 else "preliminar e definitivo"
             )
+        elif sem_inscricao:
+            numero_classificadas = Numero.nao_aplicavel("não se aplica: nenhuma inscrição enviada")
+            natureza = ""
         else:
             numero_classificadas = Numero.nao_disponivel("ainda não divulgado")
             natureza = ""
@@ -655,7 +691,7 @@ def fatos_do_edital(edital, *, agora):
         if vagas == 0:
             numero_habilitadas = Numero.nao_aplicavel("só cadastro de reserva")
         elif omitido:
-            numero_habilitadas = Numero(ausencia=Ausencia(OMITIDO, FRASE_DE_PRIVACIDADE))
+            numero_habilitadas = Numero(ausencia=Ausencia(OMITIDO, motivo))
         elif obsoleta:
             numero_habilitadas = Numero.nao_disponivel("apuração desatualizada")
         elif not apurada:
@@ -678,9 +714,7 @@ def fatos_do_edital(edital, *, agora):
                 reserva=_reserva(perfil),
                 inscricoes=Numero.de(inscricoes, parcial=periodo.aberto),
                 rascunhos=(
-                    Numero(ausencia=Ausencia(OMITIDO, FRASE_DE_PRIVACIDADE))
-                    if omitido
-                    else Numero.de(rascunhos)
+                    Numero(ausencia=Ausencia(OMITIDO, motivo)) if omitido else Numero.de(rascunhos)
                 ),
                 por_vaga=(
                     Numero.de(visao_geral._razao(inscricoes, vagas), parcial=periodo.aberto)
@@ -693,13 +727,14 @@ def fatos_do_edital(edital, *, agora):
                 convocacoes=None if omitido else convocacoes_do_perfil,
                 recursos=None if omitido else recursos_do_perfil,
                 situacao_das_vagas=_situacao_das_vagas(
-                    vagas, numero_habilitadas, convocacoes_do_perfil, omitido, perfil
+                    vagas, numero_habilitadas, convocacoes_do_perfil, motivo, perfil
                 ),
                 etapas=()
                 if omitido
                 else _linhas_das_etapas(perfil_id, _etapas_do_perfil(perfil, etapas), por_etapa),
                 listas=tuple(linhas_das_listas),
                 omitido=omitido,
+                motivo_da_omissao=motivo,
             )
         )
 
@@ -742,6 +777,8 @@ def fatos_do_edital(edital, *, agora):
         ),
         cadastros_distintos=cadastros,
         omitidos=frozenset(omitidos),
+        complementares=frozenset(complementares),
+        total_omitido=total_omitido,
         _perfis_publicados=perfis_publicados,
         _etapas=etapas,
         _original=original,
@@ -754,6 +791,25 @@ def fatos_do_edital(edital, *, agora):
         _por_etapa=por_etapa,
         _prazos_em_curso=prazos_em_curso,
     )
+
+
+def omitidos_por_complemento(populacoes, limiar):
+    """`(pequenos, complemento, total_omitido)` da supressão complementar (100, FR-2587, D-006).
+
+    Omitir só o grupo pequeno deixava o fato voltar por subtração: total menos as linhas dos
+    outros. Por isso, enquanto os omitidos somam menos que o limiar, entra também o grupo de menor
+    população — desempate pelo identificador, para a mesma entrada dar sempre a mesma saída. Se
+    nem todos juntos chegam ao limiar, o próprio total é omitido.
+    """
+    pequenos = frozenset(k for k, n in populacoes.items() if n < limiar)
+    omitidos = set(pequenos)
+    soma = sum(populacoes[k] for k in omitidos)
+    restantes = sorted((n, k) for k, n in populacoes.items() if k not in omitidos)
+    while omitidos and soma < limiar and restantes:
+        n, k = restantes.pop(0)
+        omitidos.add(k)
+        soma += n
+    return pequenos, frozenset(omitidos - pequenos), bool(omitidos) and soma < limiar
 
 
 def texto_da_pendencia(pendencia):
@@ -796,7 +852,13 @@ def redigir_pendencias(fatos):
         for p in fatos.pendencias
         if not p.publica and p.tipo != RECURSO_AGUARDANDO
     ]
-    redigidas.extend(_redigir(nao_publicas, perfis, fatos.omitidos))
+    if fatos.total_omitido:
+        # Nem a quantidade: num Edital abaixo do limiar, quantas providências não públicas há já é
+        # o fato que se protege (FR-2587).
+        if any(not p.publica for p in fatos.pendencias):
+            redigidas.append(f"providência pendente com {FRASE_DO_EDITAL}")
+        return redigidas
+    redigidas.extend(_redigir(nao_publicas, perfis, fatos.omitidos, fatos.complementares))
     redigidas.extend(
         texto_da_pendencia(p) for p in fatos.pendencias if p.tipo == RECURSO_AGUARDANDO
     )
@@ -813,6 +875,16 @@ def montar(edital, *, agora, enderecos):
     periodo = fatos._periodo
     serie = supervisao.serie_do_edital(edital, periodo, agora) if periodo.designado else ()
     pendencias = redigir_pendencias(fatos)
+    posteriores = fatos.posteriores
+    if fatos.total_omitido and posteriores:
+        # O tipo de cada registro diria qual fato não público houve; fica a quantidade.
+        posteriores = [
+            (
+                "registros na trilha",
+                sum(n for _, n, _ in posteriores),
+                min(primeira for _, _, primeira in posteriores),
+            )
+        ]
     retificacoes = _retificacoes(edital, agora)
     documentos = _documentos(edital, fatos._perfis_publicados, enderecos)
     datas = _datas(
@@ -821,11 +893,12 @@ def montar(edital, *, agora, enderecos):
         retificacoes,
         fatos._evento_vigente,
         fatos._termino_original,
-        fatos.posteriores,
+        posteriores,
         fatos.desfecho_em,
         fatos.especie,
         agora,
         fatos._prazos_em_curso,
+        fatos.total_omitido,
     )
 
     situacao_no_gps = {
@@ -850,7 +923,7 @@ def montar(edital, *, agora, enderecos):
         situacao_no_gps=situacao_no_gps,
         providencias=providencias,
         pendencias=pendencias,
-        posteriores=fatos.posteriores,
+        posteriores=posteriores,
         frases=[],
         indicadores=[],
         perfis=fatos.perfis,
@@ -873,6 +946,7 @@ def montar(edital, *, agora, enderecos):
         ),
         cadastros_distintos=fatos.cadastros_distintos,
         desfecho_em=fatos.desfecho_em,
+        total_omitido=fatos.total_omitido,
     )
     marcos = (fatos.marcos_definitivos, fatos.marcos_declarados, list(fatos.datas_definitivas))
     relatorio.indicadores = _indicadores(
@@ -1069,7 +1143,7 @@ def _convocacoes(edital, agora):
     return resultado, pendencias, sorted(prazos)
 
 
-def _redigir(nao_publicas, perfis, omitidos):
+def _redigir(nao_publicas, perfis, omitidos, complementares=frozenset()):
     """As pendências de fato não público, com o nome do Perfil — menos o do Perfil omitido.
 
     O Perfil com menos de cinco inscrições tem o detalhe não público omitido (D-006); nomeá-lo aqui
@@ -1082,9 +1156,14 @@ def _redigir(nao_publicas, perfis, omitidos):
     ]
     escondidas = sum(1 for pid, _ in nao_publicas if pid in omitidos)
     if escondidas:
+        onde = (
+            "em perfis com detalhe omitido por privacidade"
+            if complementares
+            else f"em perfil com menos de {MINIMO_PARA_DETALHAR} inscrições (detalhe omitido)"
+        )
         redigidas.append(
             f"{escondidas} {_plural(escondidas, 'providência pendente', 'providências pendentes')}"
-            f" em perfil com menos de {MINIMO_PARA_DETALHAR} inscrições (detalhe omitido)"
+            f" {onde}"
         )
     return redigidas
 
@@ -1108,13 +1187,13 @@ def _somar_convocacoes(itens):
     )
 
 
-def _situacao_das_vagas(vagas, habilitadas, convocacoes, omitido, perfil):
+def _situacao_das_vagas(vagas, habilitadas, convocacoes, motivo_da_omissao, perfil):
     if vagas == 0:
         if (perfil.get("reserveType") or "NONE") != "NONE":
             return "Sem vaga imediata; os classificados podem ser chamados se surgir vaga"
         return "Sem vaga imediata"
-    if omitido:
-        return FRASE_DE_PRIVACIDADE
+    if motivo_da_omissao:
+        return motivo_da_omissao
     if not habilitadas.existe:
         return f"Vagas: {habilitadas.ausencia.motivo}"
     partes = [f"{habilitadas.valor} de {vagas} com inscrição classificada e habilitada"]
@@ -1223,8 +1302,13 @@ def _datas(
     especie,
     agora,
     prazos_em_curso,
+    total_omitido=False,
 ):
-    """As datas principais, cada uma com a natureza (FR-2538)."""
+    """As datas principais, cada uma com a natureza (FR-2538).
+
+    Com o Edital abaixo do limiar, saem as datas de julgamento e de convocação: elas diriam que
+    houve recurso e convocação, que é o fato não público que se protege (100, FR-2587).
+    """
     datas = []
     if primeira is not None:
         datas.append(Data(primeira.published_at, "Edital publicado", "publicação"))
@@ -1253,10 +1337,14 @@ def _datas(
         )
         for instante in dias:
             datas.append(Data(instante, texto, "publicação"))
-    julgados = sorted(
-        DecisaoRecurso.objects.filter(
-            recurso__inscricao__edital=edital, decidido_em__lte=agora
-        ).values_list("decidido_em", flat=True)
+    julgados = (
+        []
+        if total_omitido
+        else sorted(
+            DecisaoRecurso.objects.filter(
+                recurso__inscricao__edital=edital, decidido_em__lte=agora
+            ).values_list("decidido_em", flat=True)
+        )
     )
     if julgados:
         datas.append(
@@ -1267,10 +1355,14 @@ def _datas(
                 ate=julgados[-1] if julgados[-1].date() != julgados[0].date() else None,
             )
         )
-    convocadas = sorted(
-        Convocacao.objects.filter(
-            inscricao__edital=edital, criado_em__lte=agora, convocacao_anterior__isnull=True
-        ).values_list("criado_em", flat=True)
+    convocadas = (
+        []
+        if total_omitido
+        else sorted(
+            Convocacao.objects.filter(
+                inscricao__edital=edital, criado_em__lte=agora, convocacao_anterior__isnull=True
+            ).values_list("criado_em", flat=True)
+        )
     )
     if convocadas:
         datas.append(Data(convocadas[0], "Convocações para as vagas", "registrado"))
@@ -1285,7 +1377,7 @@ def _datas(
                     "registrado",
                 )
             )
-    for vencimento in prazos_em_curso:
+    for vencimento in [] if total_omitido else prazos_em_curso:
         if vencimento > agora:
             datas.append(Data(vencimento, "Fim de prazo de resposta a convocação", "prazo"))
     return sorted(datas, key=lambda d: d.dia)
@@ -1367,13 +1459,19 @@ def _indicadores(
         if datas
         else "nenhum resultado definitivo publicado ainda"
     )
+    omitido = Numero(ausencia=Ausencia(OMITIDO, FRASE_DO_EDITAL))
     if vagas_total == 0:
         habilitadas = Numero.nao_aplicavel("não há vaga imediata")
+    elif relatorio.total_omitido:
+        habilitadas = omitido
     elif vagas_habilitadas is None:
         habilitadas = Numero.nao_disponivel("ainda não apurada")
     else:
         habilitadas = Numero.de(vagas_habilitadas)
-    if convocacoes.realizadas:
+    if relatorio.total_omitido:
+        aceitas = omitido
+        base_aceitas = FRASE_DO_EDITAL
+    elif convocacoes.realizadas:
         aceitas = Numero.de(convocacoes.aceitas)
         partes = []
         if convocacoes.aguardando:
@@ -1408,13 +1506,13 @@ def _indicadores(
             "vagas com inscrição classificada e habilitada",
             habilitadas,
             "dentro do número de vagas e habilitada em todas as etapas. Não é matrícula",
-            de=vagas_total if vagas_total else None,
+            de=vagas_total if vagas_total and not relatorio.total_omitido else None,
         ),
         Indicador(
             "convocações aceitas",
             aceitas,
             base_aceitas,
-            de=convocacoes.realizadas or None,
+            de=None if relatorio.total_omitido else convocacoes.realizadas or None,
         ),
     ]
 
@@ -1493,7 +1591,7 @@ def _frases(
             else f"Saíram {definitivos} dos {declarados} resultados definitivos previstos,"
         )
         frase = f"{alcance} {quando}"
-        if rec.apresentados and not rec.aguardando:
+        if rec.apresentados and not rec.aguardando and not relatorio.total_omitido:
             deferidos = (
                 "nenhum deles deferido"
                 if not rec.deferidos
@@ -1504,12 +1602,12 @@ def _frases(
                 f"{_plural(rec.apresentados, 'recurso', 'recursos')}, {deferidos}"
             )
         frases.append(frase + ".")
-    if rec.aguardando:
+    if rec.aguardando and not relatorio.total_omitido:
         frases.append(
             f"{rec.aguardando} {_plural(rec.aguardando, 'recurso aguarda', 'recursos aguardam')} "
             "decisão."
         )
-    if vagas_total and vagas_habilitadas is not None:
+    if vagas_total and vagas_habilitadas is not None and not relatorio.total_omitido:
         if vagas_habilitadas == vagas_total:
             sujeito = _plural(vagas_total, "A vaga imediata tem", f"As {vagas_total} vagas têm")
             frase = f"{sujeito} inscrição classificada e habilitada"
@@ -1567,11 +1665,12 @@ def _pontos_de_atencao(relatorio, convocacoes):
         )
         pontos.append(
             (
-                f"Houve {total} {_plural(total, 'registro', 'registros')} depois do encerramento.",
+                f"A trilha de auditoria tem {total} {_plural(total, 'registro', 'registros')} "
+                "depois do encerramento.",
                 f"{itens}. Um relatório emitido antes disso mostraria outros números.",
             )
         )
-    if convocacoes.realizadas or relatorio.especie == ENCERRAMENTO:
+    if relatorio.total_omitido or convocacoes.realizadas or relatorio.especie == ENCERRAMENTO:
         pontos.append(
             (
                 "O GPS não registra matrículas.",

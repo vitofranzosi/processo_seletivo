@@ -15,6 +15,7 @@ alto, como a do Edital (achado de 08/10).
 from processo_seletivo.interface.relatorio_do_edital import (
     ENCERRAMENTO,
     FRASE_DE_PRIVACIDADE,
+    FRASE_DO_EDITAL,
     INTERRUPCAO,
     data_curta,
     dia_e_mes,
@@ -96,6 +97,12 @@ DEFINICOES = (
     (
         "Convocações aceitas",
         "Convocações com o aceite registrado pela comissão. Não é matrícula.",
+    ),
+    (
+        "Registros depois do encerramento",
+        "Registros da trilha de auditoria do GPS sobre o Edital e os atos dele, com data "
+        "posterior ao encerramento. A contagem cobre os atos que a trilha registra, e não todo "
+        "acontecimento.",
     ),
 )
 
@@ -292,7 +299,9 @@ def _alteracoes_e_recursos(composicao, relatorio):
         _nota(composicao, f"Justificativa registrada: “{retificacao.justificativa}”")
     rec = relatorio.recursos
     _subtitulo(composicao, "Recursos")
-    if rec.apresentados:
+    if relatorio.total_omitido:
+        _paragrafo(composicao, FRASE_DO_EDITAL[:1].upper() + FRASE_DO_EDITAL[1:] + ".")
+    elif rec.apresentados:
         partes = [
             f"{n} {singular if n == 1 else plural}"
             for n, singular, plural in (
@@ -364,9 +373,8 @@ def _anexo(composicao, relatorio, emissao):
     for perfil in relatorio.perfis:
         _subtitulo(composicao, perfil.nome)
         if perfil.omitido:
-            _paragrafo(
-                composicao, FRASE_DE_PRIVACIDADE[:1].upper() + FRASE_DE_PRIVACIDADE[1:] + "."
-            )
+            frase = perfil.motivo_da_omissao or FRASE_DE_PRIVACIDADE
+            _paragrafo(composicao, frase[:1].upper() + frase[1:] + ".")
             continue
         linhas = []
         for etapa in perfil.etapas:
@@ -436,7 +444,9 @@ def _anexo(composicao, relatorio, emissao):
     linhas = []
     for perfil in relatorio.perfis:
         if perfil.omitido:
-            linhas.append([perfil.nome, FRASE_DE_PRIVACIDADE, "", "", "", "", ""])
+            linhas.append(
+                [perfil.nome, perfil.motivo_da_omissao or FRASE_DE_PRIVACIDADE, "", "", "", "", ""]
+            )
             continue
         r = perfil.recursos
         c = perfil.convocacoes

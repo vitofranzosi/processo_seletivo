@@ -312,10 +312,12 @@ class _Cenario:
         pedidos += [(x, self.TEC, self.AC_TEC) for x in p[26 * e : 36 * e]]
         # Duas pessoas se inscrevem nos dois Perfis: 38 inscrições de 36 cadastros.
         pedidos += [(p[0], self.TEC, self.AC_TEC), (p[1], self.TEC, self.AC_TEC)]
-        if self.tecnicos is not None:
-            tecnicos = [x for x in pedidos if x[1] == self.TEC][: self.tecnicos]
-            pedidos = [x for x in pedidos if x[1] != self.TEC] + tecnicos
         self.rng.shuffle(pedidos)
+        # Os cortes vêm depois do sorteio da ordem, para que o resto da história — datas, notas,
+        # desempates — seja o do cenário inteiro, e só o que se cortou deixe de existir.
+        if self.tecnicos is not None:
+            manter = {id(x) for x in [x for x in pedidos if x[1] == self.TEC][: self.tecnicos]}
+            pedidos = [x for x in pedidos if x[1] != self.TEC or id(x) in manter]
         if self.maximo is not None:
             pedidos = pedidos[: self.maximo]
         dias = [10, 10, 11, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 24, 25, 26]
@@ -512,6 +514,9 @@ class _Cenario:
                 (self.PROF, self.MARCO_PROF, self.PPP),
                 (self.TEC, self.MARCO_TEC, None),
             ):
+                # Perfil sem inscrição não tem ordem a emitir — e a comissão real não a emitiria.
+                if not any(str(i.profile_id) == perfil for i in self.inscricoes.values()):
+                    continue
                 proposta = calcular_ordem(
                     edital=self.edital, perfil_id=perfil, marco_id=marco, lista_id=lista
                 )

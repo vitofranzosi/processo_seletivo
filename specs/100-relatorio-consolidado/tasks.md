@@ -27,11 +27,11 @@
 
 ## Phase 3: User Story 5 (parte da `099`) — correções autorizadas no relatório do Edital
 
-- [ ] T007 [P] [US5] Função pura `omitidos_por_complemento(populacoes, limiar)` e seus unitários (grupo único, complemento, total omitido, desempate) em `backend/processo_seletivo/interface/relatorio_do_edital.py` e `backend/tests/unit/interface/test_relatorio_do_edital.py`
-- [ ] T008 [US5] Aplicar a supressão complementar aos Perfis e omitir os totais não públicos do Edital quando `total_omitido` (indicadores, frases, recursos, linha de pendências escondidas) em `backend/processo_seletivo/interface/relatorio_do_edital.py` e `backend/processo_seletivo/interface/relatorio_pdf.py` (FR-2587, FR-2588)
-- [ ] T009 [US4] Marco de Perfil sem inscrição, período encerrado, sem publicação e sem ato: fora das pendências e dos resultados previstos, com "não se aplica: nenhuma inscrição enviada" (FR-2589) em `backend/processo_seletivo/interface/relatorio_do_edital.py`
-- [ ] T010 [US4] A trilha dita como registros da trilha de auditoria no ponto de atenção e no anexo (FR-2581) em `backend/processo_seletivo/interface/relatorio_do_edital.py` e `backend/processo_seletivo/interface/relatorio_pdf.py`
-- [ ] T011 [US5] Testes de integração das três correções sobre o cenário coerente (Perfil pequeno, Perfil vazio, frase da trilha) em `backend/tests/integration/relatorio/test_correcoes_da_100.py`
+- [x] T007 [P] [US5] Função pura `omitidos_por_complemento(populacoes, limiar)` e seus unitários (grupo único, complemento, total omitido, desempate) em `backend/processo_seletivo/interface/relatorio_do_edital.py` e `backend/tests/unit/interface/test_relatorio_do_edital.py`
+- [x] T008 [US5] Aplicar a supressão complementar aos Perfis e omitir os totais não públicos do Edital quando `total_omitido` (indicadores, frases, recursos, linha de pendências escondidas) em `backend/processo_seletivo/interface/relatorio_do_edital.py` e `backend/processo_seletivo/interface/relatorio_pdf.py` (FR-2587, FR-2588)
+- [x] T009 [US4] Marco de Perfil sem inscrição, período encerrado, sem publicação e sem ato: fora das pendências e dos resultados previstos, com "não se aplica: nenhuma inscrição enviada" (FR-2589) em `backend/processo_seletivo/interface/relatorio_do_edital.py`
+- [x] T010 [US4] A trilha dita como registros da trilha de auditoria no ponto de atenção e no anexo (FR-2581) em `backend/processo_seletivo/interface/relatorio_do_edital.py` e `backend/processo_seletivo/interface/relatorio_pdf.py`
+- [x] T011 [US5] Testes de integração das três correções sobre o cenário coerente (Perfil pequeno, Perfil vazio, frase da trilha) em `backend/tests/integration/relatorio/test_correcoes_da_100.py`
 
 ## Phase 4: User Story 1 — o balanço do semestre num documento (P1) 🎯 MVP
 
