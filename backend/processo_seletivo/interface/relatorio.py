@@ -52,16 +52,26 @@ CONCORRENCIA = frozenset({"40001", "40P01"})
 
 
 class _Enderecos:
-    """Os endereços públicos, absolutos, como os avisos aos candidatos os montam (R-005)."""
+    """Os endereços públicos, absolutos, como os avisos aos candidatos os montam (R-005).
 
-    def __init__(self, request, edital):
+    No PDF, só quando valem para quem recebe o arquivo (FR-2603): emitido de um host local, o
+    endereço seria `localhost`, que não abre fora da máquina de quem emitiu. Aí não há endereço, e
+    o documento diz por quê. A página da gestão continua com os links: quem a lê está no mesmo host.
+    """
+
+    def __init__(self, request, edital, *, so_publicos=False):
         self.request = request
         self.edital = edital
+        self.vazios = so_publicos and _host_local(request)
 
     def selecao(self):
+        if self.vazios:
+            return ""
         return self.request.build_absolute_uri(reverse("portal:selecao", args=[self.edital.id]))
 
     def resultado(self, publicacao_id):
+        if self.vazios:
+            return ""
         return self.request.build_absolute_uri(reverse("portal:resultado", args=[publicacao_id]))
 
 
@@ -136,7 +146,7 @@ def emitir(request, edital_id):
             Edital.objects.select_for_update().get(pk=edital.pk)
             emissao = relatorio_do_edital.proxima_emissao(edital)
             lido = relatorio_do_edital.montar(
-                edital, agora=agora, enderecos=_Enderecos(request, edital)
+                edital, agora=agora, enderecos=_Enderecos(request, edital, so_publicos=True)
             )
             documento = relatorio_pdf.compor(lido, emissao=emissao)
             resumo = hashlib.sha256(documento).hexdigest()

@@ -51,6 +51,10 @@ sobre o cenário coerente do Edital 61/2026.
 - **Alternatives considered**: acrescentar links a `render_documento` — o comprovante promete ao
   candidato o SHA-256 de um escritor que não pode mudar um byte (FR-1383 da `069`).
 
+> **Substituída em 24/10/2026** pela D-009: o PDF passou ao compositor de blocos da `100`, que
+> também é determinístico, embute a mesma fonte, recusa o caractere sem grafia e faz links e
+> marcadores — e desenha cartão, coluna e gráfico, que o escritor do Edital não desenha.
+
 ## R-005 — Os endereços públicos vêm da requisição
 
 - **Decision**: a view monta os endereços com `request.build_absolute_uri(reverse(...))` — página da

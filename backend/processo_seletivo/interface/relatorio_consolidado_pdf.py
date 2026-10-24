@@ -23,17 +23,12 @@ from processo_seletivo.interface.diagramacao import (
     NEGRITO,
     REGULAR,
     TINTA,
-    TINTA_3,
     Atencao,
     Barras,
-    Cabecalho,
-    Cartao,
-    Cartoes,
     Celula,
     Colunas,
     Definicoes,
     Documento,
-    Ficha,
     Lista,
     Nota,
     QuebraDePagina,
@@ -42,12 +37,14 @@ from processo_seletivo.interface.diagramacao import (
     Texto,
     TituloDeSecao,
     Trecho,
+    abertura,
 )
 from processo_seletivo.interface.relatorio_do_edital import (
     MINIMO_PARA_DETALHAR,
     instante_por_extenso,
     interpretar,
 )
+from processo_seletivo.interface.relatorio_pdf import PE, cartoes
 from processo_seletivo.publicacoes.infrastructure.pdf import INSTITUICAO
 
 NATUREZA = (
@@ -152,69 +149,35 @@ def _cabecalho_e_ficha(c):
         else ""
     )
     sigla = getattr(unidade, "sigla", "") or ""
-    return [
-        Cabecalho(linhas=(INSTITUICAO[0], INSTITUICAO[1], " ".join(linhas_da_unidade))),
-        Texto(
-            rc.TITULO,
-            tamanho=16.5,
-            fonte=NEGRITO,
-            entrelinha=1.18,
-            antes=12.0,
-            tipo="H1",
-            marcador="Relatório consolidado",
-        ),
-        Texto(
-            f"{_maiuscula(criterio.periodo_curto)} — {c.editais} "
-            f"{_plural(c.editais, 'Edital', 'Editais')}",
-            tamanho=10.0,
-            fonte=NEGRITO,
-            cor=DESTAQUE,
-            antes=3.0,
-        ),
-        Texto(NATUREZA, tamanho=8.2, cor=TINTA_3, antes=1.0),
-        Ficha(
-            [
-                (
-                    "Conjunto analisado",
-                    criterio.rotulo + (f", da unidade {sigla}" if sigla else "") + retirados,
-                    "",
-                    False,
-                ),
-                (
-                    "Data dos dados",
-                    f"dados até {instante_por_extenso(c.referencia)}",
-                    c.data_dos_dados,
-                    False,
-                ),
-                ("Situação no GPS", c.situacao_no_gps, "", False),
-                ("Situação das providências", c.providencias, "", bool(c.com_pendencia)),
-            ]
-        ),
-    ]
+    return abertura(
+        orgao=(INSTITUICAO[0], INSTITUICAO[1], " ".join(linhas_da_unidade)),
+        titulo=rc.TITULO,
+        subtitulo=f"{_maiuscula(criterio.periodo_curto)} — {c.editais} "
+        f"{_plural(c.editais, 'Edital', 'Editais')}",
+        natureza=NATUREZA,
+        pares=[
+            (
+                "Conjunto analisado",
+                criterio.rotulo + (f", da unidade {sigla}" if sigla else "") + retirados,
+                "",
+                False,
+            ),
+            (
+                "Data dos dados",
+                f"dados até {instante_por_extenso(c.referencia)}",
+                c.data_dos_dados,
+                False,
+            ),
+            ("Situação no GPS", c.situacao_no_gps, "", False),
+            ("Situação das providências", c.providencias, "", bool(c.com_pendencia)),
+        ],
+        marcador="Relatório consolidado",
+    )
 
 
 def _cartoes(c):
-    cartoes = []
-    for indicador in c.indicadores:
-        numero = indicador.numero
-        if numero.existe:
-            valor = interpretar(numero)
-            de = ""
-            if indicador.de is not None:
-                complemento = COMPLEMENTOS_DO_DE.get(indicador.rotulo, "")
-                de = f"de {indicador.de}" + (f" {complemento}" if complemento else "")
-            if numero.parcial:
-                de = f"{de} · parcial" if de else "parcial"
-            base = indicador.base
-        else:
-            # A ausência é o próprio valor dito: "—" no número, e o motivo na primeira linha.
-            valor, de = "—", ""
-            motivo = interpretar(numero)
-            base = motivo if indicador.base == motivo else f"{motivo}. {indicador.base}"
-        cartoes.append(
-            Cartao(valor=valor, rotulo=_maiuscula(indicador.rotulo), base=_maiuscula(base), de=de)
-        )
-    return Cartoes(cartoes)
+    # A peça é a do relatório do Edital: o mesmo cartão, a mesma ausência dita (099, FR-2601).
+    return cartoes(c.indicadores, COMPLEMENTOS_DO_DE)
 
 
 def _panorama(c):
@@ -699,7 +662,7 @@ def documento(c, *, emissao):
         ],
         faixa_esquerda=f"Relatório Consolidado de Gestão · {c.conjunto.criterio.periodo_curto}",
         faixa_direita=f"dados até {instante_por_extenso(c.referencia)} · emissão nº {emissao}",
-        pe="Relatório gerencial: não é ato administrativo e não substitui as publicações oficiais",
+        pe=PE,
         titulo=f"{rc.TITULO} — {c.conjunto.criterio.periodo_curto}",
         autor=getattr(c.unidade, "nome", "") or "",
     )

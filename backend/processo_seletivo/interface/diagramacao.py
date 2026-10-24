@@ -18,7 +18,9 @@ página são artefatos. É o que o leitor de tela e a extração de texto precis
 
 **A paginação respeita os grupos.** Cartão, faixa de atenção, ficha e colunas não se partem;
 título de seção não fica sozinho no pé da página; tabela longa continua na seguinte com o cabeçalho
-repetido, e linha de tabela não se parte.
+repetido, e linha de tabela não se parte. O relatório do Edital (099), que passou a este compositor
+depois, acrescentou o que o volume dele expôs: a nota fica com o bloco que explica, o título conta a
+cadeia inteira até a tabela, e nenhuma parte de tabela fica com uma linha só.
 """
 
 from dataclasses import dataclass, field
@@ -61,6 +63,8 @@ FUNDO_SUAVE = (0.957, 0.957, 0.941)
 DESTAQUE = (0.122, 0.306, 0.475)
 ATENCAO = (0.541, 0.353, 0.000)
 FUNDO_DE_ATENCAO = (0.984, 0.953, 0.886)
+#: A barra do período anterior a um marco, na série diária: o destaque fica para o que veio depois.
+BARRA = (0.435, 0.498, 0.561)
 
 ESQUERDA, DIREITA = "esquerda", "direita"
 
@@ -170,11 +174,12 @@ class Tela:
             )
         self._artefato(partes)
 
-    def fio(self, x1, y1, x2, y2, *, cor=FIO, espessura=0.5):
+    def fio(self, x1, y1, x2, y2, *, cor=FIO, espessura=0.5, tracejado=False):
+        traco, fim = ("[2 2] 0 d ", " [] 0 d") if tracejado else ("", "")
         self._artefato(
             [
-                f"{_cor(cor, traco=True)} {espessura:.2f} w {x1:.2f} {y1:.2f} m "
-                f"{x2:.2f} {y2:.2f} l S 0 G".encode()
+                f"{_cor(cor, traco=True)} {espessura:.2f} w {traco}{x1:.2f} {y1:.2f} m "
+                f"{x2:.2f} {y2:.2f} l S 0 G{fim}".encode()
             ]
         )
 
@@ -196,6 +201,8 @@ class Bloco:
     antes = 0.0
     #: O bloco não começa no pé da página sem o começo do bloco seguinte (títulos).
     junto_ao_seguinte = False
+    #: O bloco não abre página sozinho: vai junto com o fim do anterior (notas de tabela).
+    preso_ao_anterior = False
     #: O texto do marcador de navegação, quando o bloco abre uma seção.
     marcador = None
     nivel = 1
@@ -292,6 +299,7 @@ class Texto(Bloco):
         marcador=None,
         nivel=1,
         junto=False,
+        preso=False,
         alinhamento=ESQUERDA,
     ):
         self.trechos = (
@@ -306,6 +314,7 @@ class Texto(Bloco):
         self.marcador = marcador
         self.nivel = nivel
         self.junto_ao_seguinte = junto
+        self.preso_ao_anterior = preso
         self.alinhamento = alinhamento
         self._linhas = None
         #: As linhas já decididas, quando o parágrafo é a parte de um que se partiu.
@@ -326,7 +335,11 @@ class Texto(Bloco):
         return len(self.linhas(w)) * self.altura_da_linha
 
     def minimo(self, w):
-        return min(2, len(self.linhas(w))) * self.altura_da_linha
+        # O parágrafo de menos de quatro linhas não se parte: o mínimo dele é ele inteiro. Dizer
+        # duas linhas deixava o título acima no pé da página, sem o parágrafo que ele abria (099).
+        if len(self.linhas(w)) < 4:
+            return self.medir(w)
+        return 2 * self.altura_da_linha
 
     def partir(self, w, disponivel):
         linhas = self.linhas(w)
@@ -421,7 +434,8 @@ class Subtitulo(Texto):
 
 
 def Nota(texto, *, antes=3.0):  # noqa: N802 — um construtor de bloco, como os demais
-    return Texto(texto, tamanho=7.8, cor=TINTA_3, entrelinha=1.35, antes=antes)
+    """A nota explica o bloco de cima, e por isso não abre página sozinha (099)."""
+    return Texto(texto, tamanho=7.8, cor=TINTA_3, entrelinha=1.35, antes=antes, preso=True)
 
 
 @dataclass
@@ -466,7 +480,7 @@ class Ficha(Bloco):
         largura_ = (w - self.espaco * (self.colunas - 1)) / self.colunas
         celulas = []
         for _rotulo, valor, nota, _ in self.pares:
-            linhas_do_valor = quebrar(valor, 9.0, largura_)
+            linhas_do_valor = quebrar(valor, 9.0, largura_, NEGRITO)
             linhas_da_nota = quebrar(nota, 7.4, largura_) if nota else []
             altura = 4 + 9.6 + len(linhas_do_valor) * 11.6 + len(linhas_da_nota) * 9.6 + 4
             celulas.append((linhas_do_valor, linhas_da_nota, altura))
@@ -672,8 +686,14 @@ def _partes(celula, fonte_padrao):
 class Tabela(Bloco):
     """Tabela sem grade pesada: fio escuro sob o cabeçalho, fio claro entre linhas.
 
-    Parte-se entre linhas, e cada parte repete o cabeçalho; uma linha nunca se parte.
+    Parte-se entre linhas, e cada parte repete o cabeçalho; uma linha nunca se parte. Nenhuma
+    parte fica com uma linha só (099): a última linha sozinha no alto da página seguinte, ou a
+    primeira sozinha no pé, deixava uma página quase vazia por causa de uma linha. Por isso a
+    tabela de até três linhas não se parte, e a maior se parte deixando ao menos duas de cada lado.
     """
+
+    #: Quantas linhas cada parte leva, no mínimo.
+    MINIMO_POR_PARTE = 2
 
     def __init__(
         self,
@@ -722,11 +742,20 @@ class Tabela(Bloco):
             alturas.append(self._linha(self.rodape, w, NEGRITO)[1])
         return self._altura_do_cabecalho(w) + sum(alturas)
 
+    def _parte_se(self):
+        return len(self.linhas) >= 2 * self.MINIMO_POR_PARTE
+
     def minimo(self, w):
-        primeira = self._linha(self.linhas[0], w, REGULAR)[1] if self.linhas else 0
-        return self._altura_do_cabecalho(w) + primeira
+        if not self._parte_se():
+            return self.medir(w)
+        primeiras = self.linhas[: self.MINIMO_POR_PARTE]
+        return self._altura_do_cabecalho(w) + sum(
+            self._linha(linha, w, REGULAR)[1] for linha in primeiras
+        )
 
     def partir(self, w, disponivel):
+        if not self._parte_se():
+            return None
         cabem, usado = 0, self._altura_do_cabecalho(w)
         for linha in self.linhas:
             altura = self._linha(linha, w, REGULAR)[1]
@@ -734,7 +763,8 @@ class Tabela(Bloco):
                 break
             usado += altura
             cabem += 1
-        if cabem < 1 or cabem >= len(self.linhas):
+        cabem = min(cabem, len(self.linhas) - self.MINIMO_POR_PARTE)
+        if cabem < self.MINIMO_POR_PARTE:
             return None
         primeiro = Tabela(
             self.cabecalho,
@@ -836,6 +866,109 @@ class Barras(Bloco):
             comprimento = max(disponivel * valor / maior, 1.5 if valor else 0)
             if comprimento:
                 tela.retangulo(inicio, base - 1, comprimento, 8.5, fundo=DESTAQUE)
+
+
+@dataclass
+class BarrasVerticais(Bloco):
+    """A série longa: uma barra por período — dia ou semana —, da esquerda para a direita (099).
+
+    `Barras` escreve o número ao lado de cada barra, e serve a meia dúzia de meses; sessenta dias
+    não cabem assim. Aqui a barra se estreita com o número de períodos — o vão entre elas some
+    quando ficaria mais largo que um quarto da barra —, o eixo nomeia no máximo `ROTULOS` períodos,
+    sempre o primeiro e o último, e o número escrito é só o do pico. A série inteira vai no texto
+    alternativo, que é o que o leitor de tela lê no lugar da figura.
+
+    `marca` é `(índice, rótulo)`: a linha tracejada depois da barra `índice` — o término original
+    de um prazo prorrogado —, com as barras de antes num tom e as de depois no destaque. `legenda`
+    diz o que cada tom soma.
+    """
+
+    itens: list  # (rótulo no eixo, valor)
+    alt: str
+    marca: tuple | None = None
+    legenda: list = field(default_factory=list)  # (texto, cor)
+    antes: float = 4.0
+    ALTURA = 62.0
+    TOPO_LIVRE = 22.0
+    EIXO = 12.0
+    ROTULOS = 5
+
+    def medir(self, w):
+        return self.TOPO_LIVRE + self.ALTURA + self.EIXO + (13.0 if self.legenda else 0.0)
+
+    def _rotulados(self):
+        """Os índices que o eixo nomeia — a regra da série da Supervisão (`PulsoDoEdital.eixo`)."""
+        total = len(self.itens)
+        passo = max(1, -(-total // self.ROTULOS))
+        return {
+            indice
+            for indice in range(total)
+            if indice == total - 1 or (indice % passo == 0 and total - 1 - indice >= passo)
+        }
+
+    def _cor(self, indice):
+        if self.marca is None:
+            return DESTAQUE
+        return BARRA if indice <= self.marca[0] else DESTAQUE
+
+    def desenhar(self, tela, x, y, w, pai):
+        figura = pai.filho("Figure", alt=self.alt)
+        total = len(self.itens)
+        if not total:
+            return
+        fatia = w / total
+        vao = min(1.6, fatia * 0.25) if fatia >= 3 else 0.0
+        maior = max(valor for _, valor in self.itens)
+        base = y - self.TOPO_LIVRE - self.ALTURA
+
+        def centrado(texto, tamanho, centro, fonte=REGULAR):
+            medida = largura(texto, tamanho, fonte)
+            return min(max(centro - medida / 2, x), x + w - medida)
+
+        pico = None
+        for indice, (_, valor) in enumerate(self.itens):
+            if not valor:
+                continue
+            altura = max(self.ALTURA * valor / maior, 0.8)
+            tela.retangulo(
+                x + indice * fatia + vao / 2, base, fatia - vao, altura, fundo=self._cor(indice)
+            )
+            if valor == maior and pico is None:
+                pico = indice
+        tela.fio(x, base, x + w, base)
+        if pico is not None:
+            centro = x + (pico + 0.5) * fatia
+            tela.texto(
+                centrado(str(maior), 8.0, centro, NEGRITO),
+                base + self.ALTURA + 3.0,
+                str(maior),
+                8.0,
+                fonte=NEGRITO,
+                elemento=figura,
+            )
+        for indice in sorted(self._rotulados()):
+            rotulo = self.itens[indice][0]
+            centro = x + (indice + 0.5) * fatia
+            tela.texto(
+                centrado(rotulo, 7.2, centro), base - 9.0, rotulo, 7.2, cor=TINTA_3, elemento=figura
+            )
+        if self.marca is not None:
+            indice, rotulo = self.marca
+            linha = x + (indice + 1) * fatia
+            tela.fio(linha, base, linha, base + self.ALTURA + 8.0, cor=TINTA_2, tracejado=True)
+            medida = largura(rotulo, 7.2)
+            # O rótulo fica do lado da linha onde cabe: à esquerda, colado a ela, se houver espaço.
+            inicio = linha - 3 - medida
+            if inicio < x:
+                inicio = min(linha + 3, x + w - medida)
+            tela.texto(inicio, y - 7.0, rotulo, 7.2, cor=TINTA_2, elemento=figura)
+        cursor = x
+        for texto, cor in self.legenda:
+            tela.retangulo(cursor, base - self.EIXO - 11.0, 6.0, 6.0, fundo=cor)
+            tela.texto(
+                cursor + 9.0, base - self.EIXO - 10.5, texto, 7.4, cor=TINTA_2, elemento=figura
+            )
+            cursor += 9.0 + largura(texto, 7.4) + 14.0
 
 
 @dataclass
@@ -975,6 +1108,30 @@ class Colunas(Bloco):
                 cursor -= bloco.medir(lw)
 
 
+def abertura(*, orgao, titulo, subtitulo, natureza, pares, marcador):
+    """O alto da primeira página dos documentos gerenciais — o mesmo no 099 e no 100.
+
+    Brasão e órgão compactos, o título, a espécie ou o período no destaque, a natureza gerencial em
+    corpo pequeno e a ficha de pares embaixo. Os dois relatórios abrem igual para que quem recebe
+    os dois os reconheça como da mesma família.
+    """
+    return [
+        Cabecalho(linhas=orgao),
+        Texto(
+            titulo,
+            tamanho=16.5,
+            fonte=NEGRITO,
+            entrelinha=1.18,
+            antes=12.0,
+            tipo="H1",
+            marcador=marcador,
+        ),
+        Texto(subtitulo, tamanho=10.0, fonte=NEGRITO, cor=DESTAQUE, antes=3.0),
+        Texto(natureza, tamanho=8.2, cor=TINTA_3, antes=1.0),
+        Ficha(pares),
+    ]
+
+
 # --- A paginação --------------------------------------------------------------------------------
 
 
@@ -983,6 +1140,24 @@ class Colocacao:
     bloco: Bloco
     topo: float
     altura: float
+
+
+def _minimo_da_cadeia(fila, w):
+    """O menor começo de `fila[0]`, contando o que precisa ir junto com ele.
+
+    Título, subtítulo e tabela formam uma cadeia: o título só pode ficar no pé se o subtítulo
+    couber, e o subtítulo só se couber o começo da tabela. Olhar um bloco adiante deixava o título
+    sozinho quando o subtítulo cabia e a tabela não (099). A nota presa entra na cadeia quando o
+    bloco que ela explica não se parte — senão ela iria junto com a parte final dele.
+    """
+    bloco = fila[0]
+    seguinte = fila[1] if len(fila) > 1 and not isinstance(fila[1], QuebraDePagina) else None
+    if seguinte is not None and (
+        bloco.junto_ao_seguinte
+        or (seguinte.preso_ao_anterior and bloco.minimo(w) >= bloco.medir(w))
+    ):
+        return bloco.medir(w) + seguinte.antes + _minimo_da_cadeia(fila[1:], w)
+    return bloco.minimo(w)
 
 
 @dataclass
@@ -1014,9 +1189,9 @@ class Documento:
             disponivel = cursor - BASE - antes
             altura = bloco.medir(w)
             necessario = altura
-            if bloco.junto_ao_seguinte and fila and not isinstance(fila[0], QuebraDePagina):
-                seguinte = fila[0]
-                necessario = altura + seguinte.antes + seguinte.minimo(w)
+            seguinte = fila[0] if fila and not isinstance(fila[0], QuebraDePagina) else None
+            if seguinte is not None and (bloco.junto_ao_seguinte or seguinte.preso_ao_anterior):
+                necessario = altura + seguinte.antes + _minimo_da_cadeia(fila, w)
             if necessario <= disponivel:
                 paginas[-1].append(Colocacao(bloco, cursor - antes, altura))
                 cursor -= antes + altura

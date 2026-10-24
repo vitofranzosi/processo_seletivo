@@ -741,3 +741,10 @@ como está formulado, e registrar os dois achados sobre o ato de encerrar.
 - **Completude × honestidade**: metade do que a proposta lista (homologação, aprovados, matrícula,
   atraso, campus) não tem fonte. O relatório fica mais curto do que a proposta imagina — e é isso
   que o torna confiável.
+
+## Modernização do PDF (24/10/2026)
+
+O PDF da `099` passou ao compositor de blocos da `100`, na organização da maquete v2: painel na
+primeira página, procura em barras por dia, paginação por grupos e endereço só com host público. O
+diagnóstico, a comparação visual e o PDF emitido pelo sistema estão em
+[`modernizacao/`](estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/README.md).

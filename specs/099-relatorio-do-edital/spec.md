@@ -277,10 +277,15 @@ bytes entregues, e "emissão nº 1" e "nº 2" nos documentos.
 - **FR-2535**: A tabela por Perfil de vaga MUST trazer, por Perfil, o nome cadastrado, a localidade,
   as vagas imediatas desdobradas por lista, as inscrições enviadas, as inscrições por vaga, as
   inscrições com classificação no resultado vigente, e a situação das vagas.
-- **FR-2536**: A procura MUST ser mostrada por semana de envio, a contar do primeiro dia do período,
-  com a semana do término original do prazo indicada quando houve prorrogação, e com a contagem de
-  envios no período acrescentado. A tabela é a forma, e é o próprio equivalente textual: o motor de
-  documento não desenha gráfico, e acrescentar a primitiva mudaria o escritor do Edital.
+- **FR-2536**: A procura MUST ser mostrada no PDF como gráfico de barras dos envios por dia, a contar
+  do primeiro dia do período, com o término original do prazo marcado entre duas barras quando
+  houve prorrogação, e a contagem de envios antes e depois dele. Quando os dias não couberem com
+  largura legível, cada barra MUST somar até sete dias, contados a partir do término original, e a
+  nota MUST dizer qual das duas formas é. O gráfico MUST ter texto alternativo com o valor de cada
+  barra. A página da gestão mantém a tabela por semana.
+  > Revisão de 24/10/2026: a redação anterior pedia tabela por semana porque o escritor do Edital
+  > não desenhava gráfico, e acrescentar a primitiva mudaria o escritor dos atos oficiais. O
+  > compositor de blocos da `100` desenha, sem tocar no escritor do Edital (FR-2601).
 - **FR-2537**: Alterações e recursos MUST trazer cada Retificação com data, os campos alterados com o
   valor anterior e o novo quando legíveis, e a justificativa como registrada; e os recursos pelo total
   de apresentados, não admitidos, indeferidos, deferidos e aguardando.
@@ -338,6 +343,32 @@ bytes entregues, e "emissão nº 1" e "nº 2" nos documentos.
 - **FR-2553**: A página MUST seguir a política de conteúdo vigente (estilo e script só por arquivo),
   ter tabelas com cabeçalho associado, e não exigir rolagem horizontal do corpo a 375 px.
 
+#### Diagramação (modernização de 24/10/2026)
+
+- **FR-2601**: O PDF MUST ser composto pelas mesmas peças do relatório consolidado da unidade
+  (`100`) — a abertura (órgão, título, espécie, natureza e ficha), os cartões de indicador, a faixa
+  de atenção, as tabelas sem grade, o gráfico, a faixa do alto e o pé de cada página —, para que
+  os dois documentos gerenciais tenham a mesma identidade.
+- **FR-2602**: A primeira página MUST trazer, juntos, a identificação institucional, o título, a
+  espécie, a ficha (seleção, dados até e emissão, situação no GPS, situação das providências), a
+  visão geral, os seis indicadores em cartões — e não em tabela — e os pontos de atenção. O
+  indicador sem número MUST mostrar o traço e o motivo, e nunca zero.
+- **FR-2603**: O endereço público da seleção e o de cada resultado vigente MUST aparecer no PDF só
+  quando a emissão é feita num host público. Emitido de host local, o PDF MUST NOT trazer endereço
+  nem link, e MUST dizer por quê. A página da gestão mantém os links.
+- **FR-2604**: A paginação MUST preservar os grupos: cartões, faixa de atenção, ficha e colunas não
+  se partem; título de seção ou subtítulo não fica no pé da página sem o começo do que titula,
+  contada a cadeia título, subtítulo e tabela; nota não abre página sem o bloco que explica; tabela
+  longa continua com o cabeçalho repetido, linha não se parte e nenhuma parte fica com uma linha
+  só; parágrafo de até três linhas não se parte; os resultados por perfil e o anexo técnico abrem
+  página. Nenhum texto MUST sair da área útil, e nenhuma palavra MUST ser partida numa coluna.
+- **FR-2605**: A procura e as alterações e recursos MUST ficar lado a lado quando as alterações
+  couberem ao lado do gráfico; senão, em sequência, com o gráfico na largura inteira.
+- **FR-2606**: As datas principais MUST distinguir, por rótulo, publicação, registro no GPS, data
+  prevista no Edital e prazo ainda em curso na data dos dados.
+- **FR-2607**: O PDF MUST ser marcado — títulos, parágrafos, listas, tabelas com cabeçalho e a
+  figura com texto alternativo; faixa, fios e fundos como artefatos —, com o idioma declarado.
+
 ### Key Entities
 
 - **Relatório do Edital**: leitura derivada, não persistida — instante de referência, espécie, duas
@@ -361,6 +392,10 @@ bytes entregues, e "emissão nº 1" e "nº 2" nos documentos.
   composições com os mesmos fatos e o mesmo instante são idênticas.
 - **SC-938**: Pelo navegador, a gestão abre o relatório do Edital e baixa o PDF sem manipular banco
   nem shell (cenário demonstrável da Constituição, princípio VI).
+- **SC-947**: O PDF emitido pelo sistema para o Edital de demonstração, renderizado página a página e
+  posto ao lado da maquete v2, tem a mesma organização — painel na primeira página, cartões, gráfico
+  diário, colunas, anexo em página própria —; e relatórios de 1 a 40 perfis e de 10 a 400 dias de
+  inscrição paginam sem grupo partido, título no pé, nota sozinha ou palavra partida.
 
 ## Assumptions
 
@@ -426,6 +461,18 @@ funciona em qualquer das escolhas.
 O cabeçalho diz "Perfil de vaga" e a linha diz o nome do Perfil como publicado ("Professor de
 Informática"). "Oferta" foi recusada na `040` como segundo nome para o mesmo conceito, e o princípio I
 da Constituição o proíbe; o nome cadastrado já é o termo do Edital.
+
+### D-009 — O PDF passa ao compositor de blocos da `100`
+
+Em 24/10/2026 o usuário pediu o relatório na organização da maquete v2 — cartões, colunas, a série
+dia a dia —, e o escritor do Edital, que é texto corrido, não a alcança: foi a mesma reprovação que
+levou a `100` a escrever o compositor de blocos (`interface/diagramacao.py`). O relatório do Edital
+passa a ele, e as peças comuns — abertura, cartões, pé — ficam num lugar só, usadas pelos dois
+documentos. Alternativas recusadas: acrescentar gráfico e cartão ao escritor do Edital, que mudaria
+os bytes dos atos oficiais; e HTML impresso por navegador, que não é determinístico e traria
+dependência nova. O que a `099` acrescentou ao compositor — barras verticais, nota presa ao bloco,
+cadeia de títulos, linha viúva — vale também para a `100`, cujos bytes não mudaram nos conjuntos de
+teste.
 
 ## Pendências do usuário
 

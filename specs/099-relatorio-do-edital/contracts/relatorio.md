@@ -27,35 +27,36 @@ publicado. Quem não alcança a porta não vê a ação.
 
 ## Ordem do documento
 
-**Camada executiva**:
+**Camada executiva** — a primeira página é o painel (FR-2602):
 
-1. Identificação.
-2. Espécie.
-3. Situação no GPS.
-4. Situação das providências.
-5. Dados até.
-6. Visão geral.
-7. Indicadores.
-8. Pontos de atenção.
-9. Resultados por perfil de vaga.
-10. Procura.
-11. Alterações e recursos.
-12. Datas principais.
-13. Documentos oficiais.
+1. Identificação institucional, título e espécie.
+2. Ficha: seleção; dados até e o número da emissão; situação no GPS; situação das providências.
+3. Visão geral.
+4. Principais números: os seis indicadores em cartões.
+5. Pontos de atenção.
 
-**Anexo**:
+Em página nova:
 
-- A. Etapas por Perfil.
+6. Resultados por perfil de vaga.
+7. Procura ao longo do período (gráfico por dia, ou por semana) ao lado de Alterações e recursos
+   (FR-2536, FR-2605).
+8. Datas principais, com a natureza de cada uma (FR-2606).
+9. Documentos oficiais: a página pública e os resultados vigentes, com link só em host público
+   (FR-2539, FR-2603).
+
+**Anexo técnico**, em página nova:
+
+- A. Etapas de avaliação, por Perfil.
 - B. Classificação e vagas por lista.
-- C. Recursos por Perfil.
-- D. Cronograma.
+- C. Recursos e convocações por perfil.
+- D. Cronograma: previsto, retificado e registrado.
 - E. Documentos e verificação.
 - F. Como cada número foi obtido.
 - G. O que o GPS não registra.
 - H. Sobre esta emissão.
 
-Toda página do PDF traz, no rodapé de identificação, *"Relatório do Edital NN/AAAA · dados até
-DD/MM/AAAA, HHhMM · relatório gerencial"* e a paginação.
+Toda página do PDF traz no alto *"Relatório do Edital NN/AAAA · relatório de <espécie>"* e *"dados até
+DD/MM/AAAA, HHhMM · emissão nº N"*, e no pé a natureza gerencial e *"página X de Y"* (FR-2552).
 
 ## Frases fixas
 
@@ -68,3 +69,4 @@ DD/MM/AAAA, HHhMM · relatório gerencial"* e a paginação.
 | integridade | "O resumo SHA-256 permite conferir que um arquivo tem o mesmo conteúdo do documento registrado no GPS. Ele não comprova, sozinho, a publicação oficial: a referência é a página pública da seleção." |
 | privacidade | "detalhe omitido: menos de 5 inscrições neste perfil" |
 | matrícula | "O GPS não registra matrículas. Este relatório mostra convocações aceitas, e não matrículas efetivadas." |
+| endereço local | "O endereço público da seleção não aparece nesta emissão: ela foi feita num ambiente local, e o endereço não valeria para quem recebe o arquivo." |

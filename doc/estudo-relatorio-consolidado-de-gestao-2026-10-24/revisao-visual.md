@@ -101,5 +101,7 @@ leitura é a do documento (cabeçalho, título, ficha, seções, cartões, tabel
   o espaçamento e as quebras dos cartões são do compositor.
 - **O cenário de demonstração tem a mesma linha do tempo de inscrições** em todos os Editais; a
   série por mês da demonstração fica em dois meses por isso, e não por limitação do relatório.
-- **O relatório individual (`099`) continua no escritor do Edital**, e também imprime o endereço do
-  host da requisição: o mesmo tratamento de host local cabe lá, e fica registrado aqui, não feito.
+- ~~**O relatório individual (`099`) continua no escritor do Edital**, e também imprime o endereço do
+  host da requisição.~~ Feito na modernização da `099` em 24/10/2026: o relatório do Edital passou
+  a este compositor, com o mesmo tratamento de host local
+  ([`modernizacao/`](../estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/README.md)).

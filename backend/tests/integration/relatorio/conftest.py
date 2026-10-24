@@ -23,13 +23,15 @@ def ler(cenario, agora=REFERENCIA):
 
 
 def texto_do_documento(relatorio, emissao=1):
-    """O texto que o PDF escreve, na ordem — as partes que a composição acumulou."""
-    composicao = relatorio_pdf.composicao(relatorio, emissao=emissao)
-    return " ".join(item[1] for item in composicao.itens if item[0] == "texto" and item[1])
+    """O texto realmente desenhado no PDF, com os espaços normalizados entre linhas e trechos."""
+    from tests.interface.test_fluxo import texto_de_pdf_bytes
+
+    texto = texto_de_pdf_bytes(relatorio_pdf.compor(relatorio, emissao=emissao))
+    return " ".join(texto.split())
 
 
 def executiva_e_anexo(texto):
-    executiva, _, anexo = texto.partition("ANEXO TÉCNICO")
+    executiva, _, anexo = texto.partition("Anexo técnico")
     return executiva, anexo
 
 

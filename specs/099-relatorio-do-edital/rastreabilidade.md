@@ -19,7 +19,7 @@ em 24/10/2026. As tarefas estão em [tasks.md](tasks.md). Caminhos de teste rela
 | FR-2528 a FR-2533 (os seis indicadores, a razão, cadastros e não pessoas, habilitadas, cadeia da convocação, matrícula) | T004 | `tests/integration/relatorio/test_numeros.py::test_os_indicadores_sao_os_da_maquete_e_os_das_telas_donas`, `::test_a_tabela_por_perfil_une_as_listas_e_nao_soma_os_marcos`; `tests/unit/interface/test_relatorio_do_edital.py` |
 | FR-2534 (pontos de atenção, no máximo três) | T018 | `test_especie.py::test_encerrado_com_convocacao_no_prazo_e_acompanhamento` |
 | FR-2535 (tabela por perfil de vaga) | T004 | `test_numeros.py::test_a_tabela_por_perfil_une_as_listas_e_nao_soma_os_marcos`; `test_relatorio.py::test_a_gestao_ve_*` |
-| FR-2536 (procura por semana, prorrogação) | T005 | `test_numeros.py::test_procura_recursos_e_retificacao`; `test_relatorio_do_edital.py::test_semanas_marcam_o_termino_original_e_o_periodo_acrescentado` |
+| FR-2536 (procura em barras por dia; por semana quando os dias não cabem; término original entre duas barras) | T005, T030 | `tests/unit/interface/test_diagramacao_do_relatorio_do_edital.py::test_a_serie_e_diaria_quando_cabe_e_semanal_quando_nao`, `::test_semanas_alinhadas_ao_termino_original`, `::test_sem_inicio_declarado_ou_sem_envio_a_ausencia_e_dita`; `tests/integration/relatorio/test_diagramacao.py::test_a_procura_do_cenario_e_diaria_com_o_termino_original`; a tabela da página: `test_relatorio_do_edital.py::test_semanas_marcam_o_termino_original_e_o_periodo_acrescentado` |
 | FR-2537 (retificações com antes e depois; recursos) | T006 | `test_numeros.py::test_procura_recursos_e_retificacao`; `test_conteudo.py::test_retificacao_nao_descrita_e_dita_assim` |
 | FR-2538 (datas com a natureza) | T006 | `test_relatorio.py::test_a_gestao_ve_*`; a tabela de datas no PDF de demonstração |
 | FR-2539 (endereços públicos clicáveis, sem resumo no executivo) | T006, T009 | `test_conteudo.py::test_documentos_com_resumo_endereco_e_frase_de_integridade` |
@@ -38,12 +38,20 @@ em 24/10/2026. As tarefas estão em [tasks.md](tasks.md). Caminhos de teste rela
 | FR-2552 (rodapé, natureza, marcadores) | T009 | `test_conteudo.py::test_documentos_com_resumo_*` (anotações); o rodapé no PDF de demonstração |
 | FR-2553 (CSP, tabelas, 375 px) | T011 | `tests/interface/test_politica_de_conteudo.py`, `test_acessibilidade.py`, `test_folha_estatica.py`; a medida a 375 px na verificação pelo navegador (24/10) |
 | SC-932 (compreensão por destinatários) | T028 | conversa com destinatários reais — **do usuário** |
+| FR-2601 (as peças comuns aos dois documentos gerenciais) | T029, T031 | `test_diagramacao_do_relatorio_do_edital.py::test_ausencia_no_cartao_e_traco_com_o_motivo_e_nao_zero`; os bytes da `100` iguais antes e depois da troca (registrado em `doc/estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/README.md`), e `tests/unit/interface/test_diagramacao_do_consolidado.py` |
+| FR-2602 (painel na primeira página; cartões, e não tabela) | T031 | `test_diagramacao_do_relatorio_do_edital.py::test_a_primeira_pagina_e_o_painel_inteiro`; `test_diagramacao.py::test_o_painel_a_paginacao_e_a_especie_em_cada_cenario`, `::test_em_escala_o_painel_e_os_grupos_continuam` |
+| FR-2603 (endereço só em host público) | T032 | `test_diagramacao_do_relatorio_do_edital.py::test_links_so_com_endereco_publico`; `test_diagramacao.py::test_emissao_em_host_local_nao_leva_endereco`, `::test_emissao_em_host_publico_leva_os_links` |
+| FR-2604 (paginação por grupos) | T030, T033 | `test_diagramacao_do_relatorio_do_edital.py::test_cartao_atencao_e_colunas_nao_se_partem`, `::test_titulo_nunca_fica_no_pe_e_nota_nunca_abre_pagina`, `::test_blocos_cabem_na_pagina_e_nao_se_sobrepoem`, `::test_tabela_partida_repete_o_cabecalho_e_nao_deixa_linha_sozinha`, `::test_nenhuma_palavra_e_partida_numa_coluna`, `::test_paginas_seguem_o_volume_e_o_anexo_abre_pagina`, `::test_titulo_subtitulo_e_tabela_descem_juntos`, `::test_a_nota_desce_com_a_tabela_que_nao_se_parte`, `::test_tabela_partida_deixa_duas_linhas_de_cada_lado`, `::test_paragrafo_curto_nao_se_parte_e_leva_o_titulo` |
+| FR-2605 (procura e alterações lado a lado, ou em sequência) | T031 | `test_diagramacao_do_relatorio_do_edital.py::test_alteracoes_longas_saem_do_lado_do_grafico` |
+| FR-2606 (natureza de cada data) | T031 | o rótulo na tabela (`relatorio_pdf.NATUREZAS`); `test_diagramacao.py::test_o_painel_a_paginacao_e_a_especie_em_cada_cenario` lê o documento inteiro em seis cenários |
+| FR-2607 (PDF marcado) | T030 | `test_diagramacao_do_relatorio_do_edital.py::test_a4_marcado_e_deterministico` |
 | SC-933 (zero divergência com as telas donas) | T014 | `tests/integration/relatorio/test_numeros.py` |
 | SC-934 (nenhum dado pessoal; nada não público por lista) | T015 | `tests/integration/relatorio/test_conteudo.py` |
 | SC-935 (a espécie em todos os estados) | T019 | `tests/integration/relatorio/test_especie.py` |
 | SC-936 (consultas constantes) | T023 | `tests/performance/test_relatorio.py` (119 nas escalas 1 e 10) |
 | SC-937 (emissão registrada; bytes idênticos) | T022 | `tests/integration/relatorio/test_emissao.py` |
 | SC-938 (cenário demonstrável) | T027 | verificação pelo navegador de 24/10 (`quickstart.md`): a ação no detalhe, a página e o PDF pelo formulário |
+| SC-947 (organização da maquete v2; volumes de 1 a 40 perfis e 10 a 400 dias) | T034 | a comparação `doc/estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/comparacao-visual.pdf`; a parametrização de volume em `test_diagramacao_do_relatorio_do_edital.py` |
 
 ## Casos-limite
 
@@ -63,3 +71,7 @@ em 24/10/2026. As tarefas estão em [tasks.md](tasks.md). Caminhos de teste rela
 | Edital sem Retificação, recurso ou convocação | `test_especie.py::test_cancelado_*` (nenhuma convocação: ausência dita) |
 | Registro gravado durante a leitura | `test_emissao.py::test_a_leitura_inteira_ve_um_instante_so` |
 | Caractere sem grafia | `test_emissao.py::test_texto_sem_grafia_recusa_a_emissao` |
+| Emissão feita em host local | `test_diagramacao.py::test_emissao_em_host_local_nao_leva_endereco` |
+| Período de inscrição longo demais para uma barra por dia | `test_diagramacao_do_relatorio_do_edital.py::test_a_serie_e_diaria_quando_cabe_e_semanal_quando_nao` |
+| Muitas Retificações ao lado do gráfico | `test_diagramacao_do_relatorio_do_edital.py::test_alteracoes_longas_saem_do_lado_do_grafico` |
+| Perfil omitido na tabela de recursos e convocações | `test_diagramacao_do_relatorio_do_edital.py::test_perfil_omitido_nao_mostra_numero_nao_publico` |
