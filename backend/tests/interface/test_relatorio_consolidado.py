@@ -71,7 +71,7 @@ def test_a_pagina_traz_a_camada_executiva_e_a_emissao(client, seletor_ligado, do
     assert resposta.status_code == 200
     assert "no-store" in resposta["Cache-Control"]
     for trecho in (
-        "Relatório consolidado da unidade",
+        "Relatório Consolidado de Gestão dos Processos Seletivos",
         "Conjunto analisado",
         "O período escolheu os Editais",
         "Inscrições por vaga",

@@ -41,6 +41,9 @@ from processo_seletivo.shared.api.problems import DomainError
 
 OPERACAO_DA_EMISSAO = "EMITIR_RELATORIO_CONSOLIDADO"
 
+#: O nome do documento, que diz a finalidade institucional (revisão visual de 24/10/2026).
+TITULO = "Relatório Consolidado de Gestão dos Processos Seletivos"
+
 #: Medido na tarefa de orçamento (R-006): a emissão é síncrona, e o limite protege o tempo de
 #: resposta da gestão. É dito a quem pede mais, e não aplicado em silêncio.
 LIMITE_DE_EDITAIS = 60
@@ -401,8 +404,11 @@ class Consolidado:
     com_pendencia: int
     posteriores_por_edital: list
     relacao: list
+    vagas_fora_dos_nao_publicos: int = 0
     situacao_no_gps: str = ""
     providencias: str = ""
+    #: O host da emissão é local (demonstração): os endereços não valem para quem recebe o PDF.
+    enderecos_locais: bool = False
     #: O endereço público da página de cada seleção, que a view monta pela requisição (R-005 da
     #: `099`): a derivação não conhece o host.
     enderecos: dict = field(default_factory=dict)
@@ -412,7 +418,7 @@ class Consolidado:
 
     @property
     def titulo(self):
-        return "Relatório consolidado da unidade"
+        return TITULO
 
     @property
     def data_dos_dados(self):
@@ -575,6 +581,7 @@ def consolidar(fatos, conjunto, *, agora, unidade=None):
         cancelados=cancelados,
         universo=len(universo),
         fora_dos_nao_publicos=len(universo) - len(nao_publicos),
+        vagas_fora_dos_nao_publicos=sum(f.vagas for f in universo if f.total_omitido),
         vagas=vagas,
         vagas_reservadas=sum(rel.reservadas_do_perfil(p) for p in com_vaga),
         perfis=len(perfis),
@@ -660,13 +667,21 @@ def _fora_cancelados(c):
     return "; fora " + _plural(c.cancelados, "o Edital cancelado", f"os {c.cancelados} cancelados")
 
 
-def _fora_pequenos(c):
+def _fora_pequenos(c, *, com_vagas=False):
+    """O subconjunto dito por extenso: o número é de parte dos Editais, e não do universo inteiro.
+
+    Sem isto, "6 de 6" num conjunto de 8 vagas parece o resultado completo (revisão visual de
+    24/10/2026). Diz quantos Editais entram e quantos ficam fora — sem nomeá-los, porque o fato de
+    um Edital pequeno ter este ou aquele número é o que a regra protege. A razão vai no anexo.
+    """
     if not c.fora_dos_nao_publicos:
         return ""
     n = c.fora_dos_nao_publicos
+    v = c.vagas_fora_dos_nao_publicos
+    com = f", com {v} {_plural(v, 'vaga', 'vagas')} e" if com_vagas and v else " com"
     return (
-        f"; fora {n} {_plural(n, 'Edital', 'Editais')} com menos de {rel.MINIMO_PARA_DETALHAR} "
-        "inscrições enviadas, cujo relatório individual omite estes totais"
+        f"; conta {c.universo - n} dos {c.universo} Editais — fora {n} "
+        f"{_plural(n, 'Edital', 'Editais')}{com} menos de {rel.MINIMO_PARA_DETALHAR} inscrições"
     )
 
 
@@ -751,7 +766,7 @@ def _indicadores(c):
                 else ""
             )
             + ". Não é matrícula"
-            + _fora_pequenos(c)
+            + _fora_pequenos(c, com_vagas=True)
         )
         conv = c.convocacoes
         if conv["realizadas"]:
@@ -833,8 +848,13 @@ def _frases(c):
             "resultado previsto, todos os resultados definitivos estão publicados."
         )
     if c.convocacoes is not None and c.vagas_apuradas:
+        em = (
+            f" em {c.universo - c.fora_dos_nao_publicos} dos {c.universo} Editais"
+            if c.fora_dos_nao_publicos
+            else ""
+        )
         frase = (
-            f"{c.vagas_habilitadas} das {c.vagas_apuradas} vagas já apuradas têm inscrição "
+            f"{c.vagas_habilitadas} das {c.vagas_apuradas} vagas já apuradas{em} têm inscrição "
             "classificada e habilitada"
         )
         conv = c.convocacoes

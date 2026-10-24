@@ -1,5 +1,5 @@
 {% extends "interface/base.html" %}{% load estaticos interface_extras %}
-{% block titulo %}Relatório consolidado da unidade{% endblock %}
+{% block titulo %}Relatório Consolidado de Gestão{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:visao-geral' %}">Visão Geral</a> <span aria-current="page">Relatório consolidado</span></nav>{% endblock %}
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/relatorio-consolidado.css' %}">{% endblock %}
 {% block conteudo %}
@@ -9,7 +9,7 @@ novo; "Ver relatório" leva o mesmo critério e os marcados à camada executiva.
 endereço reproduz a escolha. Sem script: a política de conteúdo o recusaria, e dois botões com
 destinos diferentes fazem o trabalho.
 {% endcomment %}
-<h1>Relatório consolidado da unidade</h1>
+<h1>Relatório Consolidado de Gestão dos Processos Seletivos</h1>
 <p class="sub">Escolha os Editais. O relatório soma o que o relatório de cada um diz, com os dados do momento em que você o abrir.</p>
 
 <form method="get" action="{% url 'interface:relatorio-consolidado-ver' %}">

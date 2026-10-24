@@ -1,5 +1,5 @@
 {% extends "interface/base.html" %}{% load estaticos %}
-{% block titulo %}Relatório consolidado da unidade{% endblock %}
+{% block titulo %}Relatório Consolidado de Gestão{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:visao-geral' %}">Visão Geral</a> <a href="{{ voltar }}">Relatório consolidado</a> <span aria-current="page">{{ conjunto.criterio.periodo_curto }}</span></nav>{% endblock %}
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/relatorio-consolidado.css' %}">{% endblock %}
 {% block conteudo %}
@@ -8,7 +8,7 @@ A camada executiva do consolidado (100). Tudo aqui sai do mesmo `Consolidado` qu
 tela não calcula número, e não decide universo, ausência nem o que fica fora por privacidade. As
 seções de execução e o anexo ficam no documento.
 {% endcomment %}
-<h1>Relatório consolidado da unidade</h1>
+<h1>Relatório Consolidado de Gestão dos Processos Seletivos</h1>
 <p class="sub"><strong>{{ conjunto.criterio.periodo_curto|capfirst }}</strong> — {{ consolidado.editais }} Edita{{ consolidado.editais|pluralize:"l,is" }}</p>
 <p class="nota">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais de cada Edital.</p>
 

@@ -368,7 +368,9 @@ def test_edital_pequeno_nao_entra_em_numero_nao_publico():
     assert [p[1:] for p in com.pendencias_por_tipo] == [p[1:] for p in sem.pendencias_por_tipo]
     # Vagas e inscrições — que o relatório do Edital diz mesmo pequeno — continuam somadas.
     assert com.vagas == sem.vagas + 2
-    assert "fora 1 edital com menos de 5 inscrições enviadas" in textos(com)
+    assert "conta 1 dos 2 editais — fora 1 edital, com 2 vagas e menos de 5 inscrições" in textos(
+        com
+    )
     pequeno = next(p for p in com.providencias_por_edital if p.edital.number == "2")
     assert pequeno.omitido and pequeno.itens == ()
 

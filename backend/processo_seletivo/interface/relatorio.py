@@ -192,7 +192,24 @@ def _ator_da_visao(request):
     return ator
 
 
+#: Hosts que só existem na máquina de quem emite: o endereço deles não vale para quem recebe o PDF.
+HOSTS_LOCAIS = frozenset({"localhost", "127.0.0.1", "::1", "[::1]", "testserver"})
+
+
+def _host_local(request):
+    host = request.get_host().rsplit(":", 1)[0] if "]" not in request.get_host() else "[::1]"
+    return host in HOSTS_LOCAIS or host.endswith(".localhost")
+
+
 def _enderecos_das_selecoes(request, conjunto):
+    """Os endereços públicos, ou nenhum, quando a emissão é local (revisão visual de 24/10/2026).
+
+    Em produção o host da requisição é o que a instituição publica (R-005 da `099`). Na
+    demonstração ele é `localhost`, e um link para ele no PDF parece endereço e não abre na mesa de
+    quem o recebe: o documento diz que os endereços não estão disponíveis, em vez de imprimi-los.
+    """
+    if _host_local(request):
+        return {}
     return {
         edital.pk: request.build_absolute_uri(reverse("portal:selecao", args=[edital.pk]))
         for edital in conjunto.incluidos
@@ -317,6 +334,7 @@ def emitir_relatorio_consolidado(request):
             emissao = relatorio_consolidado_mod.proxima_emissao(unidade)
             lido = relatorio_consolidado_mod.montar(conjunto, agora=agora, unidade=unidade)
             lido.enderecos = _enderecos_das_selecoes(request, conjunto)
+            lido.enderecos_locais = _host_local(request)
             documento = relatorio_consolidado_pdf.compor(lido, emissao=emissao)
             resumo = hashlib.sha256(documento).hexdigest()
             record_event(
