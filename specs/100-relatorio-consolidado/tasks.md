@@ -79,6 +79,12 @@ números da camada executiva iguais à soma dos fatos de cada Edital; baixar o P
 - [x] T033 PDF demonstrativo gerado pelo sistema e roteiro de semeadura em `doc/estudo-relatorio-consolidado-de-gestao-2026-10-24/`
 - [x] T034 `cd backend && make lint check test-pg DB_NAME=ps100`
 
+## Phase 10: Revisão visual (pedido do usuário de 24/10/2026)
+
+- [x] T035 Compositor de blocos marcado e o documento reescrito sobre ele, com os testes de diagramação em `backend/processo_seletivo/interface/diagramacao.py`, `backend/processo_seletivo/interface/relatorio_consolidado_pdf.py` e `backend/tests/unit/interface/test_diagramacao_do_consolidado.py`
+- [x] T036 Título institucional, endereços só em host público e o subconjunto dito por extenso em `backend/processo_seletivo/interface/relatorio_consolidado.py` e `backend/processo_seletivo/interface/relatorio.py`
+- [x] T037 Demonstração heterogênea (sete Editais de natureza diferente), PDF emitido pelo endpoint e comparação visual página a página em `doc/estudo-relatorio-consolidado-de-gestao-2026-10-24/`
+
 ## Dependencies & Execution Order
 
 - Phase 2 bloqueia tudo: o consolidado lê `fatos_do_edital`.

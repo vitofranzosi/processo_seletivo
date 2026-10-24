@@ -362,6 +362,37 @@ três inscrições e conferir que nenhuma conta entre os números mostrados recu
 - **FR-2591**: A página MUST seguir a política de conteúdo vigente, ter tabelas com cabeçalho
   associado e não exigir rolagem horizontal do corpo a 375 px.
 
+#### Qualidade editorial do documento (revisão visual de 24/10/2026)
+
+> Acrescentados depois da revisão do usuário sobre o PDF da primeira entrega: os números estavam
+> certos e o documento tinha virado uma exportação de tabelas. A maquete aprovada é a referência
+> de organização e qualidade, e não de valores.
+
+- **FR-2593**: O documento MUST se chamar "Relatório Consolidado de Gestão dos Processos Seletivos",
+  e a primeira página MUST trazer, juntos, a identificação institucional compacta, o título, o
+  período ou critério, a ficha do conjunto (critério, data dos dados, situação no GPS e das
+  providências), a visão geral, os seis indicadores em cartões e os pontos de atenção.
+- **FR-2594**: Os indicadores MUST ser cartões — o número em destaque, o rótulo e a base embaixo —,
+  e MUST NOT ser tabela; nenhum cartão MUST ser deslocado sozinho para outra página.
+- **FR-2595**: A procura por mês MUST ser gráfico de barras com o número escrito ao lado de cada
+  barra, gerado dos dados da consolidação; com um mês só, MUST ser uma frase; sem envio, a
+  ausência dita.
+- **FR-2596**: A paginação MUST preservar os grupos: cartões, faixa de atenção, ficha e blocos lado a
+  lado não se partem; título de seção ou subtítulo não fica sozinho no pé da página; tabela longa
+  continua na página seguinte com o cabeçalho repetido, e linha de tabela não se parte; o anexo
+  técnico abre página própria. Nenhum texto MUST sair da área útil da página.
+- **FR-2597**: As seções MUST pôr lado a lado o que se lê junto (oferta e procura; situação e
+  alterações; resultados e apuração), com tabelas sem grade pesada, e MUST seguir a paleta e a
+  hierarquia tipográfica da maquete, com o brasão em tamanho que não dispute com o título.
+- **FR-2598**: O endereço público de cada seleção MUST aparecer só quando vale para quem recebe o
+  documento; emitido em ambiente local, o documento MUST dizer que os endereços não estão
+  disponíveis, em vez de imprimir endereço local.
+- **FR-2599**: Número calculado sobre parte do universo — por privacidade — MUST dizer, junto dele,
+  quantos Editais entram e quantos ficam fora (e as vagas deles, quando for número de vagas), sem
+  nomeá-los.
+- **FR-2600**: O PDF MUST ser marcado (estrutura de títulos, parágrafos, listas, tabelas e a figura
+  com texto alternativo; faixa, fios e fundos como artefatos), com o idioma declarado.
+
 ### Key Entities
 
 - **Conjunto**: critério (primeira publicação, ano do número ou escolha manual), datas ou ano, Editais
@@ -394,6 +425,9 @@ três inscrições e conferir que nenhuma conta entre os números mostrados recu
   baixa o PDF, sem banco nem shell (princípio VI).
 - **SC-945**: Antes da liberação ampla, ao menos três destinatários de fora da operação dizem, só com a
   primeira página, quantos Editais, o que foi oferecido, o que saiu e o que falta, sem ajuda.
+- **SC-946**: O PDF emitido pelo sistema, renderizado página a página e posto ao lado da maquete
+  aprovada, tem a mesma organização executiva — painel na primeira página, cartões, gráfico,
+  colunas, anexo em página própria —, com conjuntos de 1, 5, 12 e 60 Editais.
 
 ## Assumptions
 
@@ -465,6 +499,16 @@ diz isso, e não "tudo o que aconteceu": ato que o GPS não audita não está al
 O gestor tem `visao:consultar` e passa na porta do relatório do Edital em todo Processo do escopo:
 tudo o que ele consolida, ele já poderia abrir Edital a Edital. A presidência de comissão, que só
 alcança o próprio Processo, fica sem consolidado nesta entrega.
+
+### D-010 — O documento gerencial tem compositor próprio
+
+A primeira entrega compôs o relatório pelo escritor do Edital, que é um paginador de texto corrido:
+sem posição livre, sem colunas, sem cor além de um cinza, sem cartão nem barra. O resultado perdeu a
+organização da maquete (revisão visual de 24/10/2026). Imprimir HTML pelo navegador reproduziria a
+maquete, mas exigiria Chrome ou WeasyPrint no servidor — dependência nova — e o Chrome grava data e
+identificador no arquivo, o que desfaz a FR-2568. O compositor de blocos (`interface/diagramacao.py`)
+reaproveita a fonte embutida, a métrica, a recusa de caractere sem grafia, o brasão e a montagem
+determinística do arquivo do Edital, sem tocar no escritor dele, e acrescenta o que o painel pede.
 
 ## Pendências do usuário
 

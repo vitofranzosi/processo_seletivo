@@ -142,7 +142,7 @@ e o código da `099` como mergeado em `50badd38`.
   lado das da `099`, com quem compartilham o tratamento de concorrência e de caractere sem grafia.
 - **Rationale**: as leituras consumidas moram em `interface/` (R-001 da `099`).
 
-## R-011 — O documento usa o escritor da `099`, e a série é tabela
+## R-011 — O documento usa o escritor da `099`, e a série é tabela *(substituída por R-013)*
 
 - **Decision**: a composição reaproveita os auxiliares de `relatorio_pdf` e de
   `publicacoes/infrastructure/pdf.py` (`Composicao`, `_tabela`, `Navegacao`, `_arquivo_do_edital`).
@@ -158,3 +158,27 @@ e o código da `099` como mergeado em `50badd38`.
   valores padrão reproduzem o cenário atual, e os testes da `099` não mudam.
 - **Rationale**: o consolidado precisa de Editais com o ciclo inteiro, publicados em semestres
   diferentes; um segundo construtor de cenário envelheceria separado deste.
+
+## R-013 — Um compositor de blocos para o documento gerencial (revisão visual de 24/10/2026)
+
+- **Decision**: `interface/diagramacao.py` — blocos com medida e desenho (`Texto`, `TituloDeSecao`,
+  `Subtitulo`, `Cabecalho`, `Ficha`, `Cartoes`, `Atencao`, `Tabela`, `Colunas`, `Barras`, `Lista`,
+  `Definicoes`) e uma paginação que respeita os grupos: bloco atômico salta inteiro, título leva o
+  começo do bloco seguinte, tabela parte entre linhas com o cabeçalho repetido, parágrafo parte
+  deixando duas linhas de cada lado. O arquivo é montado com a fonte embutida do Edital, a métrica
+  dela, `_texto_pdf(estrito=True)`, o brasão e `_montar_o_arquivo`, e é marcado: `StructTreeRoot`,
+  `ParentTree`, `MarkInfo`, `/Lang`, conteúdo marcado por `MCID` e artefatos.
+- **Rationale**: o escritor do Edital é um paginador de texto corrido; as primitivas do painel não
+  existem nele, e acrescentá-las mudaria o documento oficial. A maquete foi impressa pelo Chrome a
+  partir de HTML/CSS — é daí que vinha a diferença, e não dos dados.
+- **Alternatives considered**:
+  - **A. Aperfeiçoar o escritor do Edital** — mudaria o escritor de atos oficiais e os resumos
+    SHA-256 que o comprovante promete (FR-1383 da `069`); recusada.
+  - **B. HTML/CSS impresso em PDF** (Chrome sem cabeça ou WeasyPrint) — fidelidade máxima, mas
+    dependência nova no servidor (binário de ~300 MB, ou Pango e Cairo), um processo por emissão, e,
+    no Chrome, `/CreationDate` e `/ID` no arquivo, que desfazem o determinismo. Exigiria decisão do
+    usuário antes; não foi necessária, porque C chegou ao mesmo resultado.
+  - **C. Compositor próprio sobre as peças de baixo nível** — escolhida: sem dependência, sem tocar
+    no escritor do Edital, determinística, e marcada para leitura acessível.
+- **Custo**: a composição de 60 Editais leva frações de segundo; o tempo da emissão continua sendo
+  o da leitura (R-006).

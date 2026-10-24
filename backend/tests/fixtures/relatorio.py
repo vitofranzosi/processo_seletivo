@@ -154,8 +154,24 @@ def _ator(subject, *permissoes):
 class _Cenario:
     """Os passos, na ordem da história; cada um com o relógio na data do ato."""
 
-    def __init__(self, escala, numero=NUMERO, publicado_em=None, tecnicos=None, maximo=None):
+    def __init__(
+        self,
+        escala,
+        numero=NUMERO,
+        publicado_em=None,
+        tecnicos=None,
+        maximo=None,
+        titulo=None,
+        perfis=None,
+        vagas_tec=None,
+    ):
         self.escala = escala
+        #: `(título do Processo, assunto do Edital)` e `{"prof"|"tec": (nome, localidade)}`: a mesma
+        #: estrutura com a cara de seleções de natureza diferente, para a demonstração da `100`.
+        self.titulo = titulo or ("Processo Seletivo Simplificado 2026/2", None)
+        self.nomes = perfis or {}
+        #: Vagas imediatas no segundo Perfil, que o ciclo do cenário não apura nem convoca.
+        self.vagas_tec = vagas_tec
         # O número entra nos identificadores do conteúdo, nas chaves e no código do Processo, e
         # com ele o mesmo cenário monta vários Editais coerentes na mesma unidade (100, R-012). As
         # mesmas pessoas se inscrevem em todos — o caso real que o consolidado não conta como gente.
@@ -205,11 +221,12 @@ class _Cenario:
                 actor=elaborador,
                 data={
                     "institutionalCode": self.codigo,
-                    "title": "Processo Seletivo Simplificado 2026/2",
+                    "title": self.titulo[0],
                     "firstEdital": {
                         "number": self.numero,
                         "year": 2026,
-                        "title": f"Edital {self.numero}/2026 — Professor de Informática e Técnico",
+                        "title": f"Edital {self.numero}/2026 — "
+                        + (self.titulo[1] or "Professor de Informática e Técnico"),
                         "description": "Seleção simplificada.",
                     },
                 },
@@ -221,7 +238,7 @@ class _Cenario:
                 actor=elaborador,
                 edital_id=self.edital.id,
                 expected_revision=self.edital.revision,
-                profiles=_perfis(self.numero),
+                profiles=self._perfis(),
                 schedule=_cronograma(self.numero),
                 stages=_etapas(self.numero),
                 document_requirements=[],
@@ -285,6 +302,15 @@ class _Cenario:
                 idempotency_key=f"{self.chave}-ret-publicar",
                 correlation_id=CORRELACAO,
             )
+
+    def _perfis(self):
+        perfis = _perfis(self.numero)
+        for perfil, chave in zip(perfis, ("prof", "tec"), strict=False):
+            if chave in self.nomes:
+                perfil["name"], perfil["locality"] = self.nomes[chave]
+        if self.vagas_tec:
+            perfis[1]["immediateVacancies"] = self.vagas_tec
+        return perfis
 
     # -- inscrições -----------------------------------------------------------------------------
 
@@ -769,6 +795,9 @@ def montar_cenario(
     publicado_em=None,
     tecnicos=None,
     maximo=None,
+    titulo=None,
+    perfis=None,
+    vagas_tec=None,
 ):
     """Monta o Edital `numero`/2026 e devolve o cenário, com `edital` e `processo` atualizados.
 
@@ -778,7 +807,7 @@ def montar_cenario(
     """
     if final not in {"pendente", "sem-pendencia", "aberto", "cancelado"}:
         raise ValueError(final)
-    cenario = _Cenario(escala, numero, publicado_em, tecnicos, maximo)
+    cenario = _Cenario(escala, numero, publicado_em, tecnicos, maximo, titulo, perfis, vagas_tec)
     cenario.publicar()
     if final == "aberto":
         cenario.inscrever(ate=REFERENCIA_ABERTA)
