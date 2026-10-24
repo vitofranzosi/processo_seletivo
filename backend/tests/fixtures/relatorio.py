@@ -55,8 +55,8 @@ REFERENCIA = dia(24, 10, 13, 10)
 REFERENCIA_ABERTA = dia(20, 8, 18)
 
 
-def _id(sufixo):
-    return f"00000000-0000-0000-00{NUMERO}-0000000000{sufixo}"
+def _id(sufixo, numero=NUMERO):
+    return f"00000000-0000-0000-00{numero}-0000000000{sufixo}"
 
 
 PROF, TEC = _id("b1"), _id("b2")
@@ -88,7 +88,7 @@ def cpf_valido(base9):
     return f"{s[:3]}.{s[3:6]}.{s[6:9]}-{s[9:]}"
 
 
-def _cronograma():
+def _cronograma(numero=NUMERO):
     eventos = [
         ("Inscrições", "Inscrições pelo sistema.", dia(10, 8, 0), dia(30, 8, 23, 59)),
         ("Prova objetiva", "Aplicação da prova no Campus Vitória.", dia(13, 9, 8), None),
@@ -98,7 +98,7 @@ def _cronograma():
     ]
     return [
         {
-            "id": _id(f"c{i}"),
+            "id": _id(f"c{i}", numero),
             "type": tipo,
             "description": descricao,
             "startAt": inicio,
@@ -110,22 +110,22 @@ def _cronograma():
     ]
 
 
-def _perfis():
+def _perfis(numero=NUMERO):
     from processo_seletivo.processos.management.commands import seed_demo
 
-    perfis = seed_demo.perfis(NUMERO, janela_recursal="declarada")
+    perfis = seed_demo.perfis(numero, janela_recursal="declarada")
     # O marco do cadastro de reserva do semeador não declara prazo recursal, e a definitiva o
     # recusaria; aqui os dois marcos declaram os mesmos cinco dias.
     perfis[1]["classificationMilestones"][0].update(seed_demo._janela_do_marco("declarada"))
     return perfis
 
 
-def _etapas():
+def _etapas(numero=NUMERO):
     from processo_seletivo.processos.management.commands import seed_demo
 
-    etapas = seed_demo.etapas(NUMERO)
-    etapas[0]["scheduleEventId"] = _id("c2")
-    etapas[1]["scheduleEventId"] = _id("c3")
+    etapas = seed_demo.etapas(numero)
+    etapas[0]["scheduleEventId"] = _id("c2", numero)
+    etapas[1]["scheduleEventId"] = _id("c3", numero)
     return etapas
 
 
@@ -154,8 +154,31 @@ def _ator(subject, *permissoes):
 class _Cenario:
     """Os passos, na ordem da história; cada um com o relógio na data do ato."""
 
-    def __init__(self, escala):
+    def __init__(self, escala, numero=NUMERO, publicado_em=None, tecnicos=None, maximo=None):
         self.escala = escala
+        # O número entra nos identificadores do conteúdo, nas chaves e no código do Processo, e
+        # com ele o mesmo cenário monta vários Editais coerentes na mesma unidade (100, R-012). As
+        # mesmas pessoas se inscrevem em todos — o caso real que o consolidado não conta como gente.
+        self.numero = numero
+        self.chave = "099" if numero == NUMERO else f"099-{numero}"
+        self.codigo = "PS-CEFOR-2026-2" if numero == NUMERO else f"PS-CEFOR-2026-{numero}"
+        self.publicado_em = publicado_em
+        #: Quantas inscrições no Técnico, e quantas no total — para o Perfil e o Edital pequenos.
+        self.tecnicos = tecnicos
+        self.maximo = maximo
+        self.PROF, self.TEC = _id("b1", numero), _id("b2", numero)
+        self.MARCO_PROF, self.MARCO_TEC = _id("a1", numero), _id("a2", numero)
+        self.AC_PROF, self.PPP, self.AC_TEC = (
+            _id("e1", numero),
+            _id("e2", numero),
+            _id("e3", numero),
+        )
+        self.PROVA, self.TITULOS, self.DOCUMENTAL = (
+            _id("d1", numero),
+            _id("d2", numero),
+            _id("d3", numero),
+        )
+        self.EVENTO_DAS_INSCRICOES = _id("c1", numero)
         self.rng = random.Random(61)
         self.inscricoes = {}
         self.pessoas = []
@@ -171,7 +194,7 @@ class _Cenario:
         from processo_seletivo.processos.management.commands import seed_demo
         from processo_seletivo.processos.models import Edital
 
-        with em(dia(3, 8, 9)):
+        with em(self.publicado_em or dia(3, 8, 9)):
             self.comando = seed_demo.Command(stdout=io.StringIO())
             self.comando.janela_recursal = "declarada"
             self.comando._unidade_e_autoridades()
@@ -181,16 +204,16 @@ class _Cenario:
             self.processo, _ = create_process_with_first_edital(
                 actor=elaborador,
                 data={
-                    "institutionalCode": "PS-CEFOR-2026-2",
+                    "institutionalCode": self.codigo,
                     "title": "Processo Seletivo Simplificado 2026/2",
                     "firstEdital": {
-                        "number": NUMERO,
+                        "number": self.numero,
                         "year": 2026,
-                        "title": "Edital 61/2026 — Professor de Informática e Técnico",
+                        "title": f"Edital {self.numero}/2026 — Professor de Informática e Técnico",
                         "description": "Seleção simplificada.",
                     },
                 },
-                idempotency_key="099-processo",
+                idempotency_key=f"{self.chave}-processo",
                 correlation_id=CORRELACAO,
             )
             self.edital = Edital.objects.get(processo=self.processo)
@@ -198,9 +221,9 @@ class _Cenario:
                 actor=elaborador,
                 edital_id=self.edital.id,
                 expected_revision=self.edital.revision,
-                profiles=_perfis(),
-                schedule=_cronograma(),
-                stages=_etapas(),
+                profiles=_perfis(self.numero),
+                schedule=_cronograma(self.numero),
+                stages=_etapas(self.numero),
                 document_requirements=[],
                 correlation_id=CORRELACAO,
             )
@@ -232,13 +255,13 @@ class _Cenario:
                     "justification": "Prorrogação do período de inscrições.",
                     "changes": [
                         {
-                            "targetPath": f"/schedule/id={EVENTO_DAS_INSCRICOES}/endAt",
+                            "targetPath": f"/schedule/id={self.EVENTO_DAS_INSCRICOES}/endAt",
                             "operation": "REPLACE",
                             "newValue": dia(4, 9, 23, 59).isoformat(),
                         }
                     ],
                 },
-                idempotency_key="099-ret",
+                idempotency_key=f"{self.chave}-ret",
                 correlation_id=CORRELACAO,
             )
             for acao, quem in (
@@ -251,7 +274,7 @@ class _Cenario:
                     expected_revision=retificacao.revision,
                     action=acao,
                     reason="Conferido.",
-                    idempotency_key=f"099-ret-{acao}",
+                    idempotency_key=f"{self.chave}-ret-{acao}",
                     correlation_id=CORRELACAO,
                 )
             publish_retification(
@@ -259,7 +282,7 @@ class _Cenario:
                 retificacao_id=retificacao.id,
                 expected_revision=retificacao.revision,
                 autoridade_id=self.comando.autoridades[seed_demo.CARGO_DO_EDITAL],
-                idempotency_key="099-ret-publicar",
+                idempotency_key=f"{self.chave}-ret-publicar",
                 correlation_id=CORRELACAO,
             )
 
@@ -284,12 +307,17 @@ class _Cenario:
                 )
             )
         p = self.pessoas
-        pedidos = [(x, PROF, AC_PROF) for x in p[: 20 * e]]
-        pedidos += [(x, PROF, PPP) for x in p[20 * e : 26 * e]]
-        pedidos += [(x, TEC, AC_TEC) for x in p[26 * e : 36 * e]]
+        pedidos = [(x, self.PROF, self.AC_PROF) for x in p[: 20 * e]]
+        pedidos += [(x, self.PROF, self.PPP) for x in p[20 * e : 26 * e]]
+        pedidos += [(x, self.TEC, self.AC_TEC) for x in p[26 * e : 36 * e]]
         # Duas pessoas se inscrevem nos dois Perfis: 38 inscrições de 36 cadastros.
-        pedidos += [(p[0], TEC, AC_TEC), (p[1], TEC, AC_TEC)]
+        pedidos += [(p[0], self.TEC, self.AC_TEC), (p[1], self.TEC, self.AC_TEC)]
+        if self.tecnicos is not None:
+            tecnicos = [x for x in pedidos if x[1] == self.TEC][: self.tecnicos]
+            pedidos = [x for x in pedidos if x[1] != self.TEC] + tecnicos
         self.rng.shuffle(pedidos)
+        if self.maximo is not None:
+            pedidos = pedidos[: self.maximo]
         dias = [10, 10, 11, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 24, 25, 26]
         dias += [27, 28, 28, 29, 29, 30, 30, 30]
         datas = [dia(d, 8, self.rng.randint(8, 22), self.rng.randint(0, 59)) for d in dias]
@@ -325,9 +353,10 @@ class _Cenario:
                     identidade=pessoa,
                     inscricao=rascunho,
                     declaracoes={"veracidade": True, "ciencia": True},
-                    idempotency_key=f"099-envio-{pessoa.subject}-{perfil[-2:]}",
+                    idempotency_key=f"{self.chave}-envio-{pessoa.subject}-{perfil[-2:]}",
                 )
-        if ate is not None:
+        # O Edital encolhido não chega à prorrogação: rascunhos de setembro cairiam fora do prazo.
+        if ate is not None or self.maximo is not None:
             return
         # Quatro rascunhos que nunca foram enviados.
         quando = (dia(14, 8), dia(23, 8), dia(2, 9), dia(4, 9, 21))
@@ -343,7 +372,7 @@ class _Cenario:
                 abrir_inscricao(
                     identidade=pessoa,
                     edital_id=self.edital.id,
-                    profile_id=PROF if indice % 2 else TEC,
+                    profile_id=self.PROF if indice % 2 else self.TEC,
                 )
 
     # -- avaliação ------------------------------------------------------------------------------
@@ -368,10 +397,10 @@ class _Cenario:
                     processo_id=self.processo.id,
                     identity_subject=subject,
                     funcao=funcao,
-                    idempotency_key=f"099-membro-{k}",
+                    idempotency_key=f"{self.chave}-membro-{k}",
                     correlation_id=CORRELACAO,
                 )
-            for etapa in (PROVA, TITULOS, DOCUMENTAL):
+            for etapa in (self.PROVA, self.TITULOS, self.DOCUMENTAL):
                 for nome in ("joana.avaliadora", "otavio.avaliador"):
                     alocar(
                         actor=self.gestor,
@@ -379,7 +408,7 @@ class _Cenario:
                         membro_id=self.membros[nome].id,
                         edital_id=self.edital.id,
                         etapa_id=etapa,
-                        idempotency_key=f"099-aloc-{etapa[-2:]}-{nome[:4]}",
+                        idempotency_key=f"{self.chave}-aloc-{etapa[-2:]}-{nome[:4]}",
                         correlation_id=CORRELACAO,
                     )
         self.presidencia = _ator("paulo.presidente")
@@ -399,7 +428,7 @@ class _Cenario:
                 etapa_id=etapa,
                 membro_ids=[self.membros["joana.avaliadora"].id],
                 inscricao_ids=[i.id for i in alvo],
-                idempotency_key=f"099-lote-{chave}",
+                idempotency_key=f"{self.chave}-lote-{chave}",
                 correlation_id=CORRELACAO,
             )
         for k, inscricao in enumerate(alvo):
@@ -423,7 +452,7 @@ class _Cenario:
                 edital_id=self.edital.id,
                 etapa_id=etapa,
                 inscricao_ids=[i.id for i in alvo],
-                idempotency_key=f"099-consolidar-{chave}",
+                idempotency_key=f"{self.chave}-consolidar-{chave}",
                 correlation_id=CORRELACAO,
             )
 
@@ -432,7 +461,9 @@ class _Cenario:
 
         todas = list(self.inscricoes.values())
         self.ausente = next(
-            i for i in todas if str(i.profile_id) == PROF and str(i.modality_id) == AC_PROF
+            i
+            for i in todas
+            if str(i.profile_id) == self.PROF and str(i.modality_id) == self.AC_PROF
         )
         if self.escala == 1:
             self.nota_prova = {
@@ -453,16 +484,16 @@ class _Cenario:
                 actor=self.presidencia,
                 processo_id=self.processo.id,
                 edital_id=self.edital.id,
-                etapa_id=PROVA,
+                etapa_id=self.PROVA,
                 inscricao_ids=[self.ausente.id],
                 motivo="Ausência na prova objetiva, conforme lista de presença.",
-                idempotency_key="099-ocorrencia",
+                idempotency_key=f"{self.chave}-ocorrencia",
                 correlation_id=CORRELACAO,
             )
         self.presentes = [i for i in todas if i.id != self.ausente.id]
-        self._avaliar(PROVA, self.presentes, self.nota_prova, dia(16, 9, 9), "prova")
+        self._avaliar(self.PROVA, self.presentes, self.nota_prova, dia(16, 9, 9), "prova")
         self.habilitadas = [i for i in self.presentes if self.nota_prova[i.id] >= Decimal("6")]
-        self._avaliar(TITULOS, self.habilitadas, self.nota_titulos, dia(19, 9, 9), "titulos")
+        self._avaliar(self.TITULOS, self.habilitadas, self.nota_titulos, dia(19, 9, 9), "titulos")
 
     # -- resultados -----------------------------------------------------------------------------
 
@@ -477,9 +508,9 @@ class _Cenario:
         self.atos = {}
         with em(dia(24, 9, 15)):
             for perfil, marco, lista in (
-                (PROF, MARCO_PROF, None),
-                (PROF, MARCO_PROF, PPP),
-                (TEC, MARCO_TEC, None),
+                (self.PROF, self.MARCO_PROF, None),
+                (self.PROF, self.MARCO_PROF, self.PPP),
+                (self.TEC, self.MARCO_TEC, None),
             ):
                 proposta = calcular_ordem(
                     edital=self.edital, perfil_id=perfil, marco_id=marco, lista_id=lista
@@ -491,7 +522,7 @@ class _Cenario:
                     perfil_id=perfil,
                     marco_id=marco,
                     lista_id=lista,
-                    idempotency_key=f"099-ordem-{marco[-2:]}-{lista}",
+                    idempotency_key=f"{self.chave}-ordem-{marco[-2:]}-{lista}",
                     correlation_id=CORRELACAO,
                     confirmacao_do_calculo=assinatura_da_proposta(proposta, ato_vigente=None),
                 )
@@ -523,7 +554,7 @@ class _Cenario:
                         publicacao_anterior=anteriores.get((marco, lista)),
                         projecao=compor(ato),
                     ),
-                    idempotency_key=f"099-pub-{natureza}-{marco[-2:]}-{lista}",
+                    idempotency_key=f"{self.chave}-pub-{natureza}-{marco[-2:]}-{lista}",
                     correlation_id=CORRELACAO,
                 )
         return publicadas
@@ -540,9 +571,9 @@ class _Cenario:
                 next(
                     i
                     for i in self.presentes
-                    if str(i.profile_id) == PROF and self.nota_prova[i.id] < 6
+                    if str(i.profile_id) == self.PROF and self.nota_prova[i.id] < 6
                 ),
-                (MARCO_PROF, None),
+                (self.MARCO_PROF, None),
                 dia(26, 9, 14),
                 False,
             ),
@@ -550,19 +581,21 @@ class _Cenario:
                 next(
                     i
                     for i in self.habilitadas
-                    if str(i.profile_id) == PROF and str(i.modality_id) == PPP
+                    if str(i.profile_id) == self.PROF and str(i.modality_id) == self.PPP
                 ),
-                (MARCO_PROF, PPP),
+                (self.MARCO_PROF, self.PPP),
                 dia(27, 9, 16),
                 True,
             ),
             (
-                next(i for i in self.habilitadas if str(i.profile_id) == TEC),
-                (MARCO_TEC, None),
+                next((i for i in self.habilitadas if str(i.profile_id) == self.TEC), None),
+                (self.MARCO_TEC, None),
                 dia(29, 9, 10),
                 True,
             ),
         ]
+        # O Técnico encolhido pode não ter habilitada a quem atribuir o terceiro recurso.
+        recorrentes = [r for r in recorrentes if r[0] is not None]
         for k, (inscricao, chave, quando, admitido) in enumerate(recorrentes):
             publicacao = self.preliminares[chave]
             titular = next(p for p in self.pessoas if p.subject == inscricao.identity_subject)
@@ -573,7 +606,7 @@ class _Cenario:
                     publicacao=publicacao,
                     fundamentacao="Solicito revisão da minha pontuação.",
                     assinatura_do_objeto=str(publicacao.pk),
-                    idempotency_key=f"099-rec-{k}",
+                    idempotency_key=f"{self.chave}-rec-{k}",
                 )
             with em(dia(2, 10, 10 + k)):
                 admitir(
@@ -584,7 +617,7 @@ class _Cenario:
                     if admitido
                     else "O recurso não indica o ponto contestado.",
                     assinatura_do_estado=assinatura_do_estado_da_peca(peca),
-                    idempotency_key=f"099-adm-{k}",
+                    idempotency_key=f"{self.chave}-adm-{k}",
                 )
                 if admitido:
                     peca.refresh_from_db()
@@ -593,7 +626,7 @@ class _Cenario:
                         recurso_id=peca.id,
                         especie="INDEFERIDO",
                         motivacao="A pontuação confere com a planilha da banca.",
-                        idempotency_key=f"099-julgar-{k}",
+                        idempotency_key=f"{self.chave}-julgar-{k}",
                     )
 
     def apurar(self):
@@ -606,19 +639,22 @@ class _Cenario:
         from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
 
         with em(dia(8, 10, 10)):
-            for lista in (None, PPP):
+            for lista in (None, self.PPP):
                 emitir_corte(
                     actor=self.presidencia,
                     processo_id=self.processo.id,
                     edital_id=self.edital.id,
-                    perfil_id=PROF,
-                    marco_id=MARCO_PROF,
+                    perfil_id=self.PROF,
+                    marco_id=self.MARCO_PROF,
                     lista_id=lista,
-                    idempotency_key=f"099-corte-{lista}",
+                    idempotency_key=f"{self.chave}-corte-{lista}",
                     correlation_id=CORRELACAO,
                     confirmacao_do_calculo=assinatura_do_corte(
                         calcular_corte(
-                            edital=self.edital, perfil_id=PROF, marco_id=MARCO_PROF, lista_id=lista
+                            edital=self.edital,
+                            perfil_id=self.PROF,
+                            marco_id=self.MARCO_PROF,
+                            lista_id=lista,
                         )
                     ),
                 )
@@ -631,17 +667,17 @@ class _Cenario:
                 ).select_related("inscricao")
             }.values()
         )
-        self._avaliar(DOCUMENTAL, self.progrediram, None, dia(8, 10, 14), "documental")
+        self._avaliar(self.DOCUMENTAL, self.progrediram, None, dia(8, 10, 14), "documental")
         with em(dia(10, 10, 9)):
-            for lista in (None, PPP):
+            for lista in (None, self.PPP):
                 emitir_apuracao(
                     actor=self.presidencia,
                     processo_id=self.processo.id,
                     edital_id=self.edital.id,
-                    perfil_id=PROF,
-                    marco_id=MARCO_PROF,
+                    perfil_id=self.PROF,
+                    marco_id=self.MARCO_PROF,
                     lista_id=lista,
-                    idempotency_key=f"099-apurar-{lista}",
+                    idempotency_key=f"{self.chave}-apurar-{lista}",
                     correlation_id=CORRELACAO,
                     motivo="",
                 )
@@ -650,8 +686,8 @@ class _Cenario:
         from processo_seletivo.convocacao.application.convocar import convocar
 
         with em(dia(13, 10, 10)):
-            for lista, vencimento in ((None, dia(23, 10, 23, 59)), (PPP, dia(30, 10, 23, 59))):
-                ato = self.atos[(MARCO_PROF, lista)]
+            for lista, vencimento in ((None, dia(23, 10, 23, 59)), (self.PPP, dia(30, 10, 23, 59))):
+                ato = self.atos[(self.MARCO_PROF, lista)]
                 ja = {c["inscricao"] for c in self.convocacoes.values()}
                 primeira = min(
                     (
@@ -667,13 +703,13 @@ class _Cenario:
                     actor=self.presidencia,
                     processo_id=self.processo.id,
                     edital_id=self.edital.id,
-                    perfil_id=PROF,
-                    marco_id=MARCO_PROF,
+                    perfil_id=self.PROF,
+                    marco_id=self.MARCO_PROF,
                     lista_id=lista,
                     inscricao_id=primeira.id,
                     vencimento=vencimento,
                     fundamento="No interesse da Administração, conforme o item 8.2 do Edital.",
-                    idempotency_key=f"099-convocar-{lista}",
+                    idempotency_key=f"{self.chave}-convocar-{lista}",
                     correlation_id=CORRELACAO,
                 )
 
@@ -687,7 +723,7 @@ class _Cenario:
                 convocacao_id=self.convocacoes[lista]["id"],
                 especie="ACEITE",
                 fundamento="Aceite manifestado por mensagem.",
-                idempotency_key=f"099-aceite-{lista}",
+                idempotency_key=f"{self.chave}-aceite-{lista}",
                 correlation_id=CORRELACAO,
             )
 
@@ -701,7 +737,7 @@ class _Cenario:
                 edital_id=self.edital.id,
                 expected_revision=self.edital.revision,
                 reason="Resultados definitivos divulgados e titulares convocados.",
-                idempotency_key="099-encerrar",
+                idempotency_key=f"{self.chave}-encerrar",
                 correlation_id=CORRELACAO,
             )
 
@@ -715,16 +751,29 @@ class _Cenario:
                 edital_id=self.edital.id,
                 expected_revision=self.edital.revision,
                 reason="Cancelado por decisão da direção.",
-                idempotency_key="099-cancelar",
+                idempotency_key=f"{self.chave}-cancelar",
                 correlation_id=CORRELACAO,
             )
 
 
-def montar_cenario(*, escala=1, final="pendente"):
-    """Monta o Edital 61/2026 e devolve o cenário, com `edital` e `processo` atualizados."""
+def montar_cenario(
+    *,
+    escala=1,
+    final="pendente",
+    numero=NUMERO,
+    publicado_em=None,
+    tecnicos=None,
+    maximo=None,
+):
+    """Monta o Edital `numero`/2026 e devolve o cenário, com `edital` e `processo` atualizados.
+
+    `publicado_em` muda só o instante da publicação; o resto da história fica nas datas de sempre.
+    `tecnicos` e `maximo` encolhem o Perfil do Técnico e o Edital inteiro, para os casos de grupo
+    pequeno — `maximo` só serve aos finais `aberto` e `cancelado`, que não passam pela comissão.
+    """
     if final not in {"pendente", "sem-pendencia", "aberto", "cancelado"}:
         raise ValueError(final)
-    cenario = _Cenario(escala)
+    cenario = _Cenario(escala, numero, publicado_em, tecnicos, maximo)
     cenario.publicar()
     if final == "aberto":
         cenario.inscrever(ate=REFERENCIA_ABERTA)
@@ -747,7 +796,7 @@ def montar_cenario(*, escala=1, final="pendente"):
     cenario.convocar()
     if final == "sem-pendencia":
         cenario.aceitar(None, dia(16, 10, 11))
-        cenario.aceitar(PPP, dia(17, 10, 11))
+        cenario.aceitar(cenario.PPP, dia(17, 10, 11))
         cenario.encerrar()
     else:
         cenario.encerrar()

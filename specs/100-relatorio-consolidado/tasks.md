@@ -21,7 +21,7 @@
 - [x] T003 Extrair `fatos_do_edital(edital, *, agora)` de `montar` — leituras e regras, pendências como `Pendencia` —, e a redação das pendências como função sobre os tipos, em `backend/processo_seletivo/interface/relatorio_do_edital.py`
 - [x] T004 Reescrever `montar` sobre `fatos_do_edital` mais as leituras do anexo, sem mudar o documento, em `backend/processo_seletivo/interface/relatorio_do_edital.py`
 - [x] T005 Reaplicar a linha de base de T001 e conferir composição idêntica nos quatro estados (SC-940); rodar `tests/integration/relatorio`, `tests/unit/interface/test_relatorio_do_edital.py`, `tests/interface/test_relatorio.py` e `tests/performance/test_relatorio.py`
-- [ ] T006 Parametrizar o cenário coerente por `numero` e `publicado_em`, com os padrões de hoje, em `backend/tests/fixtures/relatorio.py`
+- [x] T006 Parametrizar o cenário coerente por `numero` e `publicado_em`, com os padrões de hoje, em `backend/tests/fixtures/relatorio.py`
 
 **Checkpoint**: a `099` expõe fatos; o documento individual não mudou.
 
