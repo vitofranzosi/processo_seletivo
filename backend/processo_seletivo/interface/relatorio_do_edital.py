@@ -21,6 +21,7 @@ com menos de cinco inscrições enviadas esses fatos somem com o motivo dito.
 """
 
 import contextlib
+import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -921,8 +922,10 @@ def montar(edital, *, agora, enderecos):
         ]
     retificacoes = _retificacoes(fatos._retificacoes_lidas)
     documentos = _documentos(edital, fatos._perfis_publicados, enderecos)
+    publicados = _resultados_publicados(edital, agora)
     datas = _datas(
         edital,
+        publicados,
         fatos._primeira,
         retificacoes,
         fatos._evento_vigente,
@@ -977,6 +980,7 @@ def montar(edital, *, agora, enderecos):
             list(fatos.envios),
             fatos._por_etapa,
             fatos._etapas,
+            publicados,
         ),
         cadastros_distintos=fatos.cadastros_distintos,
         desfecho_em=fatos.desfecho_em,
@@ -1331,6 +1335,7 @@ def _documentos(edital, perfis, enderecos):
 
 def _datas(
     edital,
+    publicados,
     primeira,
     retificacoes,
     evento,
@@ -1365,15 +1370,7 @@ def _datas(
         (Natureza.PRELIMINAR, "Resultado preliminar publicado"),
         (Natureza.DEFINITIVA, "Resultado definitivo publicado"),
     ):
-        dias = sorted(
-            {
-                p.astimezone(ZONA).date(): p
-                for p in PublicacaoResultado.objects.filter(
-                    edital=edital, natureza=natureza, publicado_em__lte=agora
-                ).values_list("publicado_em", flat=True)
-            }.values()
-        )
-        for instante in dias:
+        for instante in publicados.get(natureza, ()):
             datas.append(Data(instante, texto, "publicação"))
     julgados = (
         []
@@ -1421,8 +1418,53 @@ def _datas(
     return sorted(datas, key=lambda d: d.dia)
 
 
-def _cronograma(original, vigente, retificacoes, instantes, por_etapa, etapas):
-    """Previsto no Edital × após as Retificações × ato registrado, por evento (FR-2542)."""
+def _resultados_publicados(edital, agora):
+    """Os dias com publicação de resultado até `agora`, por natureza — uma consulta, um por dia."""
+    por_natureza = defaultdict(dict)
+    for natureza, instante in PublicacaoResultado.objects.filter(
+        edital=edital, publicado_em__lte=agora
+    ).values_list("natureza", "publicado_em"):
+        dia = instante.astimezone(ZONA).date()
+        por_natureza[natureza][dia] = min(instante, por_natureza[natureza].get(dia, instante))
+    return {natureza: sorted(dias.values()) for natureza, dias in por_natureza.items()}
+
+
+def _natureza_do_evento(evento):
+    """A natureza de resultado que o evento do cronograma anuncia, pelo nome que o Edital lhe deu.
+
+    O cronograma do Edital é texto livre, sem ligação estrutural com o marco nem com a publicação.
+    O nome do evento é comparado ao rótulo que o próprio domínio dá às naturezas ("Resultado
+    preliminar", "Resultado definitivo"), sem acento e sem caixa; "resultado final" é o sinônimo
+    que os Editais usam para o definitivo. Evento de outro nome fica sem ato registrado, como antes.
+    """
+    nome = unicodedata.normalize("NFKD", str(evento.get("type") or "")).lower()
+    nome = "".join(c for c in nome if not unicodedata.combining(c))
+    if "resultado" not in nome:
+        return None
+    if "preliminar" in nome:
+        return Natureza.PRELIMINAR
+    if "definitiv" in nome or "final" in nome:
+        return Natureza.DEFINITIVA
+    return None
+
+
+def _publicacao_registrada(dias):
+    """A publicação como ato registrado — e não como execução: a avaliação pode ter sido antes."""
+    if not dias:
+        return "nenhuma publicação até a data dos dados"
+    if len(dias) == 1:
+        return f"publicado em {dia_e_mes(dias[0])}"
+    return f"publicado de {dia_e_mes(dias[0])} a {dia_e_mes(dias[-1])}"
+
+
+def _cronograma(original, vigente, retificacoes, instantes, por_etapa, etapas, publicados=None):
+    """Previsto no Edital × após as Retificações × ato registrado, por evento (FR-2542).
+
+    O ato registrado de um evento de resultado é a publicação daquela natureza, que a linha do
+    tempo da camada executiva também lista: sem isso, a coluna dizia "—" ao lado de um resultado
+    que o próprio relatório mostrava publicado (homologação de 24/10/2026).
+    """
+    publicados = publicados or {}
 
     def periodo(evento):
         if not evento:
@@ -1452,6 +1494,8 @@ def _cronograma(original, vigente, retificacoes, instantes, por_etapa, etapas):
             ]
             if consolidados:
                 registrado = "resultados da etapa consolidados"
+        elif (natureza := _natureza_do_evento(evento)) is not None:
+            registrado = _publicacao_registrada(publicados.get(natureza, ()))
         linhas.append(
             LinhaDoCronograma(
                 evento=evento.get("type") or evento.get("description") or "",

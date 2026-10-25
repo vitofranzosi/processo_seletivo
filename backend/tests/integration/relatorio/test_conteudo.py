@@ -1,7 +1,6 @@
 """Linguagem, privacidade e verificação no documento (099, FR-2543, FR-2546, FR-2549 a FR-2551).
 
-O texto conferido é o que a composição acumulou, e não o extraído do PDF: a fonte embutida tem
-codificação própria, e o que se quer provar é o que o relatório **diz**.
+O texto conferido é o extraído do PDF: o que o relatório **diz** é o que foi desenhado.
 """
 
 import re
@@ -82,9 +81,10 @@ def test_documentos_com_resumo_endereco_e_frase_de_integridade(pendente):
     assert relatorio_pdf.INTEGRIDADE.split(":")[0] in texto
     executiva, _ = executiva_e_anexo(texto)
     assert not re.search(r"\b[0-9a-f]{64}\b", executiva), "resumo no executivo"
-    composicao = relatorio_pdf.composicao(relatorio, emissao=1)
-    assert SELECAO in composicao.enderecos
-    assert b"/URI" in relatorio_pdf.compor(relatorio, emissao=1)
+    documento = relatorio_pdf.compor(relatorio, emissao=1)
+    assert f"/URI ({SELECAO})".encode() in documento
+    vigentes = [d for d in relatorio.documentos if d.resultado_vigente]
+    assert documento.count(b"/S /URI") == 1 + len(vigentes)
 
 
 def test_retificacao_nao_descrita_e_dita_assim(pendente):

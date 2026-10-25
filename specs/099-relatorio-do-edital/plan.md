@@ -9,7 +9,8 @@
 Uma derivação de leitura por Edital — `interface/relatorio_do_edital.py` — reúne o que as telas donas
 já calculam, decide a espécie, escreve a visão geral por regras e aplica a privacidade por desenho.
 Duas saídas leem a mesma derivação: a página de gestão, com a camada executiva, e o PDF, com a camada
-executiva e o anexo, composto pelo escritor do Edital (links e marcadores). Baixar o PDF é uma emissão:
+executiva e o anexo, composto pelo compositor de blocos da `100` desde 24/10/2026 (D-009; antes, pelo
+escritor do Edital). Baixar o PDF é uma emissão:
 trava o Edital, numera pela trilha e grava o evento com o resumo dos bytes. A leitura inteira vê um
 instante só (`REPEATABLE READ`). Sem migration, sem tabela, sem permissão e sem dependência nova.
 
