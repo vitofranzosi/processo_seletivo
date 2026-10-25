@@ -8,34 +8,59 @@ A camada executiva do relatório (099). Tudo o que aparece aqui sai do mesmo `Re
 escreve: a tela não calcula número, e não decide ausência, espécie nem o que é omitido por
 privacidade (D-001, D-006). O anexo técnico fica no documento.
 {% endcomment %}
-<h1>Relatório do Edital {{ edital.number }}/{{ edital.year }}</h1>
-<p class="sub"><strong>{{ relatorio.especie_por_extenso }}</strong> — {{ relatorio.especie_explicada }}</p>
-<p class="nota">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais.</p>
+<div class="relatorio-do-edital">
+<header class="cabecalho-do-relatorio">
+  <h1>Relatório do Edital {{ edital.number }}/{{ edital.year }}</h1>
+  <p class="especie-do-relatorio"><span class="selo-da-especie">{{ relatorio.especie_por_extenso }}</span> <span class="explicacao-da-especie">{{ relatorio.especie_explicada }}</span></p>
+  <p class="nota">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais.</p>
+</header>
 
-<dl class="situacoes-do-relatorio">
-  <div><dt>Situação no GPS</dt><dd>{{ relatorio.situacao_no_gps }}</dd></div>
-  <div><dt>Situação das providências</dt><dd>{{ relatorio.providencias }}</dd></div>
-  <div><dt>Dados até</dt><dd>{{ referencia }}</dd></div>
-</dl>
+{% comment %}
+O painel separa o que o Edital é no GPS do que ainda está em curso, e põe a emissão junto: é ali que
+se decide emitir. A providência em curso tem marca própria, em texto — e não em cor só —, e o tom é
+o do que está em andamento, e não o de falha: pendência não é irregularidade.
+{% endcomment %}
+<section class="painel-do-relatorio" aria-label="Situação e emissão">
+  <dl class="situacoes-do-relatorio">
+    <div><dt>Situação no GPS</dt><dd>{{ relatorio.situacao_no_gps }}</dd></div>
+    <div{% if relatorio.pendencias %} class="providencias-em-curso"{% endif %}>
+      <dt>Situação das providências</dt>
+      <dd>{% if relatorio.pendencias %}<span class="marca-das-providencias">Em curso</span> {% endif %}{{ relatorio.providencias }}</dd>
+    </div>
+    <div><dt>Dados até</dt><dd>{{ referencia }}</dd></div>
+  </dl>
+  <form method="post" action="{% url 'interface:relatorio-do-edital-pdf' edital.id %}" class="emissao-do-relatorio" data-emissao>
+    {% csrf_token %}
+    <button type="submit" class="botao" aria-describedby="sobre-a-emissao">Emitir e baixar PDF</button>
+    <p id="sobre-a-emissao" class="nota">Gera um relatório com os dados atuais, com o anexo técnico. A emissão fica registrada na trilha do Edital.</p>
+    <p class="situacao-da-emissao" role="status" data-situacao-da-emissao></p>
+  </form>
+</section>
 
-<form method="post" action="{% url 'interface:relatorio-do-edital-pdf' edital.id %}" class="emissao-do-relatorio">
-  {% csrf_token %}
-  <button type="submit" class="botao">Baixar PDF</button>
-  <span class="nota">O PDF traz também o anexo técnico. Cada emissão fica registrada na trilha do Edital.</span>
-</form>
+<section class="secao-do-relatorio" aria-labelledby="titulo-visao-geral">
+  <h2 id="titulo-visao-geral">Visão geral</h2>
+  <p class="visao-geral-do-relatorio">{{ relatorio.frases|join:" " }}</p>
+</section>
 
-<h2>Visão geral</h2>
-<p class="visao-geral-do-relatorio">{{ relatorio.frases|join:" " }}</p>
-
-<h2>Principais números</h2>
-<ul class="numeros-do-relatorio">
-  {% for rotulo, valor, base in indicadores %}
-  <li><strong>{{ valor }}</strong><span class="rotulo">{{ rotulo }}</span><span class="base">{{ base }}</span></li>
-  {% endfor %}
-</ul>
+{% comment %}
+Os cartões são os do PDF (`relatorio_pdf.cartoes`): o mesmo valor, o mesmo "de N", e a ausência
+dita como traço e motivo, e nunca como zero.
+{% endcomment %}
+<section class="secao-do-relatorio" aria-labelledby="titulo-numeros">
+  <h2 id="titulo-numeros">Principais números</h2>
+  <ul class="numeros-do-relatorio">
+    {% for cartao in cartoes %}
+    <li>
+      <p class="valor">{% if cartao.valor == "—" %}<span aria-hidden="true">—</span><span class="oculto">Sem número.</span>{% else %}{{ cartao.valor }}{% endif %}{% if cartao.de %} <span class="de">{{ cartao.de }}</span>{% endif %}</p>
+      <p class="rotulo">{{ cartao.rotulo }}</p>
+      <p class="base">{{ cartao.base }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
 
 {% if relatorio.pontos_de_atencao %}
-<section class="atencao-do-relatorio" aria-labelledby="titulo-atencao">
+<section class="secao-do-relatorio atencao-do-relatorio" aria-labelledby="titulo-atencao">
   <h2 id="titulo-atencao">Pontos de atenção</h2>
   <ol>
     {% for titulo, texto in relatorio.pontos_de_atencao %}
@@ -45,7 +70,8 @@ privacidade (D-001, D-006). O anexo técnico fica no documento.
 </section>
 {% endif %}
 
-<h2>Resultados por perfil de vaga</h2>
+<section class="secao-do-relatorio" aria-labelledby="titulo-perfis">
+<h2 id="titulo-perfis">Resultados por perfil de vaga</h2>
 <div class="tabela-rolavel">
 <table class="tabela">
   <caption class="oculto">Vagas, inscrições, classificação publicada e situação das vagas de cada perfil de vaga</caption>
@@ -73,10 +99,12 @@ privacidade (D-001, D-006). O anexo técnico fica no documento.
   </tbody>
 </table>
 </div>
-<p class="nota">Os totais contam inscrições: quem se inscreve em mais de um perfil conta uma vez em cada um.</p>
+{% if perfis|length > 1 %}<p class="nota">Os totais contam inscrições: quem se inscreve em mais de um perfil conta uma vez em cada um.</p>{% endif %}
+</section>
 
 {% if semanas %}
-<h2>Procura</h2>
+<section class="secao-do-relatorio" aria-labelledby="titulo-procura">
+<h2 id="titulo-procura">Procura</h2>
 <div class="tabela-rolavel">
 <table class="tabela tabela-estreita">
   <caption class="oculto">Inscrições enviadas por semana</caption>
@@ -92,21 +120,29 @@ privacidade (D-001, D-006). O anexo técnico fica no documento.
   </tbody>
 </table>
 </div>
+</section>
 {% endif %}
 
-<h2>Datas principais</h2>
+<section class="secao-do-relatorio" aria-labelledby="titulo-datas">
+<h2 id="titulo-datas">Datas principais</h2>
 <div class="tabela-rolavel">
 <table class="tabela">
   <caption class="oculto">Datas principais, com a natureza de cada uma</caption>
   <thead><tr><th scope="col">Data</th><th scope="col">O que</th><th scope="col">Natureza</th></tr></thead>
   <tbody>
-    {% for data in relatorio.datas %}
-    <tr><td>{{ data.dia|date:"d/m/Y" }}{% if data.ate %} a {{ data.ate|date:"d/m/Y" }}{% endif %}</td><td>{{ data.texto }}</td><td>{{ data.natureza }}</td></tr>
+    {% for data, natureza in datas %}
+    <tr><td>{{ data.dia|date:"d/m/Y" }}{% if data.ate %} a {{ data.ate|date:"d/m/Y" }}{% endif %}</td><td>{{ data.texto }}</td><td class="natureza-da-data">{{ natureza }}</td></tr>
     {% endfor %}
   </tbody>
 </table>
 </div>
+{% if legenda_das_datas %}<p class="nota">{{ legenda_das_datas }}</p>{% endif %}
+</section>
 
-<h2>Documentos oficiais</h2>
+<section class="secao-do-relatorio" aria-labelledby="titulo-documentos">
+<h2 id="titulo-documentos">Documentos oficiais</h2>
 <p>O Edital, as retificações e os resultados estão na <a href="{{ relatorio.endereco_da_selecao }}">página pública da seleção</a>. Os nomes dos classificados estão nos resultados publicados, e não neste relatório.</p>
+</section>
+</div>
+<script src="{% estatico 'interface/relatorio-do-edital.js' %}" defer></script>
 {% endblock %}
