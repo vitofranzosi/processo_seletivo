@@ -105,3 +105,46 @@ leitura é a do documento (cabeçalho, título, ficha, seções, cartões, tabel
   host da requisição.~~ Feito na modernização da `099` em 24/10/2026: o relatório do Edital passou
   a este compositor, com o mesmo tratamento de host local
   ([`modernizacao/`](../estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/README.md)).
+
+## 7. Polish da página da gestão (25/10/2026)
+
+O mesmo polish que a página do relatório do Edital recebeu
+([`modernizacao/`](../estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/README.md)),
+levado à página do consolidado sem mudar regra, número, permissão, auditoria nem o PDF. Comparação
+em [`pagina-antes-e-depois.pdf`](pagina-antes-e-depois.pdf): 1280, 768 e 375 px, na demonstração
+heterogênea (sete Editais de 2026).
+
+**Diagnóstico.**
+- A ficha do conjunto, o botão e a frase da trilha eram três blocos soltos, e a pendência não se
+  distinguia da situação no GPS.
+- O botão dizia "Baixar PDF", mas cada clique é uma emissão nova, numerada na unidade e registrada
+  na trilha. Um segundo clique, de quem achou que o primeiro não pegou, era outra emissão.
+- Os seis números caíam em 4 + 2, sem o "de N" que o PDF mostra ("5" em vez de "5 de 6 com
+  resultado previsto"), e com a base em minúscula.
+- "Providências em curso" começava colada na nota da tabela "Por Edital".
+
+**O que mudou.**
+- **Painel**: a ficha (conjunto, data dos dados, situação no GPS, providências) numa superfície
+  branca, em quatro colunas, ou em duas quando a área estreita — nunca três e uma. A emissão vem
+  embaixo, separada por um fio. A providência em curso tem a marca "Em curso" em texto e o fio âmbar;
+  sem Edital com pendência no conjunto, não há marca. A explicação da data dos dados virou linha
+  própria, sem o travessão.
+- **Emissão**: "Emitir e baixar PDF", com a frase da trilha da unidade ligada ao botão
+  (`aria-describedby`), e "Alterar a escolha" ao lado. O script é o da `099`, renomeado de
+  `relatorio-do-edital.js` para `emissao-do-relatorio.js`: já não nomeava o relatório nas frases, e
+  só o nome e o comentário mudaram. O segundo envio, com o primeiro a caminho, é cancelado.
+- **Números**: os cartões do PDF (`relatorio_pdf.cartoes` com `relatorio_consolidado_pdf.COMPLEMENTOS_DO_DE`),
+  em 3 × 2, 2 × 3 e 1 × 6 por *container query*.
+- **Seções** com espaço próprio; visão geral e pontos de atenção na medida de leitura.
+
+**Verificado no navegador.**
+- Sem rolagem horizontal a 1280, 768 e 375 px; cartões em 3 × 2, 2 × 3 e 1 × 6; console sem erros.
+- Na página real, dois envios seguidos do formulário: o primeiro seguiu (`defaultPrevented` falso), o
+  segundo foi cancelado pelo script; o botão disse "Emitindo…" e a região de situação a frase de
+  emissão a caminho. O envio foi interceptado na verificação, para não gravar emissão na trilha da
+  demonstração; a regra do prazo e da volta do botão está em `tests/javascript/emissao-do-relatorio.test.js`.
+
+**Limitações.**
+- A tela da escolha do conjunto não mudou.
+- A mensagem de recusa por concorrência ("Baixe o relatório de novo") continua compartilhada com a
+  `099`, e não foi trocada.

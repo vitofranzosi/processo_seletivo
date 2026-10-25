@@ -139,7 +139,7 @@ def test_a_emissao_se_diz_emissao_e_e_descrita_ao_botao(client, seletor_ligado, 
     assert 'aria-describedby="sobre-a-emissao">Emitir e baixar PDF</button>' in corpo
     assert "A emissão fica registrada na trilha do Edital." in corpo
     assert 'role="status" data-situacao-da-emissao' in corpo
-    assert "interface/relatorio-do-edital.js" in corpo
+    assert "interface/emissao-do-relatorio.js" in corpo
 
 
 def test_a_providencia_em_curso_tem_marca_em_texto_so_quando_ha(

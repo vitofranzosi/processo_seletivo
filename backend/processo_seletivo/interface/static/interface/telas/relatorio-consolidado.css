@@ -1,30 +1,75 @@
 /* O relatório consolidado da unidade (100): a escolha do conjunto e a camada executiva. As regras
-   moram aqui, e só estas duas telas as carregam (091). Os números seguem o desenho do relatório do
-   Edital: o valor em cima, e a base que o explica embaixo. */
-.ficha-do-conjunto{display:grid;gap:.6rem 1.5rem;margin:1rem 0;
-  grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
-.ficha-do-conjunto div{border-top:1px solid var(--borda);padding-top:.35rem}
+   moram aqui, e só estas duas telas as carregam (091).
+
+   O polish de 25/10/2026 trouxe para cá o da página do relatório do Edital (099), sem copiar a folha
+   dela, que é de outra tela: a ficha e a emissão formam um painel; cada seção respira; e os seis
+   números são os cartões do PDF, em três colunas, e não em quatro e dois. As superfícies, as bordas
+   e as cores são os tokens do GPS (`shared/tokens.css`). */
+
+.relatorio-consolidado{container-type:inline-size}
+
+.cabecalho-do-consolidado .nota{max-width:var(--leitura);margin-top:.35rem}
+
+.painel-do-consolidado{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin:1.25rem 0 0}
+/* Quatro itens: em quatro colunas, ou em duas — nunca três e um, que deixava as providências
+   sozinhas numa linha, como se fossem outro assunto. */
+.ficha-do-conjunto{display:grid;gap:.75rem 1.5rem;margin:0;
+  grid-template-columns:repeat(4,minmax(0,1fr))}
+@container (max-width:56rem){
+  .ficha-do-conjunto{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container (max-width:28rem){
+  .ficha-do-conjunto{grid-template-columns:minmax(0,1fr)}
+}
+.ficha-do-conjunto div{border-left:3px solid var(--borda);padding:.1rem 0 .1rem .75rem}
 .ficha-do-conjunto dt{font-size:.8rem;color:var(--texto-fraco)}
-.ficha-do-conjunto dd{margin:0;font-weight:600}
-.ficha-do-conjunto .nota-da-ficha{font-weight:400;font-size:.85rem;color:var(--texto-fraco)}
+.ficha-do-conjunto dd{margin:.1rem 0 0;font-weight:600}
+.ficha-do-conjunto .nota-da-ficha{display:block;font-weight:400;font-size:.85rem;
+  color:var(--texto-fraco);margin-top:.2rem;line-height:1.45}
+/* Providência em curso: a marca em texto diz o estado, e o tom é o do que está em andamento. */
+.ficha-do-conjunto .providencias-em-curso{border-left-color:var(--amarelo)}
+.marca-das-providencias{display:inline-block;margin-right:.35rem;padding:0 .45rem;
+  border-radius:10px;font-size:.75rem;font-weight:600;background:var(--amarelo-fundo);
+  color:var(--amarelo);vertical-align:.1rem}
 
-.emissao-do-consolidado{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin:1rem 0 1.5rem}
+.emissao-do-consolidado{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;
+  margin:1rem 0 0;padding-top:1rem;border-top:1px solid var(--borda)}
+.acoes-da-emissao{display:flex;flex-wrap:wrap;gap:.75rem;margin:0}
+.emissao-do-consolidado .nota{margin:0;flex:1 1 18rem}
+.emissao-do-consolidado .botao[aria-disabled="true"]{opacity:.7;cursor:progress}
+.situacao-da-emissao{margin:0;flex-basis:100%;font-size:.875rem;color:var(--texto-fraco)}
+.situacao-da-emissao:empty{display:none}
 
-.visao-geral-do-consolidado{max-width:48rem;line-height:1.55}
+.secao-do-consolidado{margin-top:2.25rem}
+.secao-do-consolidado h2{margin-bottom:.6rem}
 
-.numeros-do-consolidado{list-style:none;padding:0;margin:1rem 0;display:grid;gap:.75rem;
-  grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
-.numeros-do-consolidado li{padding:.75rem .9rem;border:1px solid var(--borda);border-radius:6px}
-.numeros-do-consolidado strong{display:block;font-size:1.6rem;line-height:1.15;
+.visao-geral-do-consolidado{max-width:var(--leitura);line-height:1.65;margin:0}
+
+/* Três por linha, em duas linhas para os seis; duas, e depois uma, quando a área estreita. A
+   medida é a da área do relatório, e não a da janela: a barra lateral recolhida ou aberta muda o
+   espaço sem mudar a janela. */
+.numeros-do-consolidado{list-style:none;padding:0;margin:0;display:grid;gap:1rem;
+  grid-template-columns:repeat(3,minmax(0,1fr))}
+@container (max-width:46rem){
+  .numeros-do-consolidado{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container (max-width:28rem){
+  .numeros-do-consolidado{grid-template-columns:minmax(0,1fr)}
+}
+.numeros-do-consolidado li{background:var(--branco);border:1px solid var(--borda);
+  border-top:3px solid var(--verde);border-radius:6px;padding:.85rem 1rem 1rem}
+.numeros-do-consolidado p{margin:0}
+.numeros-do-consolidado .valor{font-size:1.75rem;font-weight:700;line-height:1.15;
   font-variant-numeric:tabular-nums}
-.numeros-do-consolidado .rotulo{display:block;font-weight:600;font-size:.9rem;margin-top:.15rem}
-.numeros-do-consolidado .base{display:block;font-size:.8rem;color:var(--texto-fraco);
-  margin-top:.3rem;line-height:1.35}
+.numeros-do-consolidado .de{font-size:.95rem;font-weight:400;color:var(--texto-fraco)}
+.numeros-do-consolidado .rotulo{font-weight:600;margin-top:.35rem;line-height:1.3}
+.numeros-do-consolidado .base{font-size:.875rem;color:var(--texto-fraco);margin-top:.35rem;
+  line-height:1.45}
 
-.atencao-do-consolidado{border-left:3px solid var(--borda);padding:.25rem 0 .25rem 1rem;
-  margin:1.5rem 0}
-.atencao-do-consolidado ol{margin:.25rem 0 0;padding-left:1.2rem}
-.atencao-do-consolidado li{margin:.35rem 0}
+.atencao-do-consolidado{border-left:3px solid var(--borda);padding:.1rem 0 .1rem 1rem}
+.atencao-do-consolidado ol{margin:0;padding-left:1.2rem;max-width:var(--leitura)}
+.atencao-do-consolidado li{margin:.45rem 0;line-height:1.55}
 
 /* A escolha: critério e atalhos numa linha que quebra, e a lista dos Editais com a caixa à esquerda. */
 .criterio-do-conjunto{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;align-items:flex-end;

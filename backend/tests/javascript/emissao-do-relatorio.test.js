@@ -1,4 +1,4 @@
-/* A emissão do relatório do Edital (099): um clique, uma emissão.
+/* A emissão dos relatórios gerenciais (099 e 100): um clique, uma emissão.
 
    O que se afirma é a regra: o segundo envio, enquanto o primeiro está a caminho, é cancelado; o
    botão diz que está emitindo e volta depois do prazo, com a frase do que fazer. A ligação com o
@@ -7,7 +7,7 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const emissao = require("../../processo_seletivo/interface/static/interface/relatorio-do-edital.js");
+const emissao = require("../../processo_seletivo/interface/static/interface/emissao-do-relatorio.js");
 
 function montar() {
   const ouvintes = {};

@@ -1,14 +1,18 @@
-/* A emissão do relatório do Edital (099): um clique, uma emissão.
+/* A emissão dos relatórios gerenciais — o do Edital (099) e o consolidado da unidade (100): um
+   clique, uma emissão.
 
-   Cada envio do formulário é uma emissão numerada e registrada na trilha do Edital — e a resposta
-   é um download, que não troca a página. Sem este script, o segundo clique de quem achou que o
-   primeiro não pegou virava uma segunda emissão na trilha, e nada na tela dizia que a primeira
-   estava a caminho.
+   Cada envio do formulário é uma emissão numerada e registrada na trilha — a do Edital ou a da
+   unidade —, e a resposta é um download, que não troca a página. Sem este script, o segundo
+   clique de quem achou que o primeiro não pegou virava uma segunda emissão na trilha, e nada na
+   tela dizia que a primeira estava a caminho.
 
    **Por que um prazo, e não o fim do download.** O navegador não avisa a página quando um anexo
    termina de baixar. O botão volta depois de `ESPERA` milissegundos, com a frase que diz o que
    fazer se o arquivo não veio; a recusa do servidor (concorrência, caractere sem grafia) troca a
-   página, e a mensagem dela é a que vale. */
+   página, e a mensagem dela é a que vale.
+
+   As duas páginas marcam o formulário com `data-emissao` e a região de situação com
+   `data-situacao-da-emissao`; as frases não nomeiam o relatório, e servem às duas. */
 (function () {
   var ESPERA = 6000;
   var EMITINDO = "Emitindo…";

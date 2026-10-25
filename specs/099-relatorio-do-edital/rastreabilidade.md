@@ -7,7 +7,7 @@ em 24/10/2026. As tarefas estão em [tasks.md](tasks.md). Caminhos de teste rela
 |---|---|---|
 | FR-2513 (a ação no detalhe, indisponível com motivo antes da publicação) | T010 | `tests/interface/test_relatorio.py::test_a_gestao_ve_a_acao_e_a_pagina_com_a_camada_executiva`, `::test_edital_nao_publicado_tem_a_acao_indisponivel_e_recusa` |
 | FR-2514 (404 fora da unidade; recusa explicada sem a base) | T010, T012 | `test_relatorio.py::test_outra_unidade_recebe_nao_encontrado`, `::test_quem_e_da_unidade_sem_a_base_recebe_a_recusa_explicada`, `::test_a_presidencia_do_processo_tambem_alcanca`; `tests/test_gramatica_das_portas.py` (inventário) |
-| FR-2515 (a página e o envio que emite) | T010, T011, T037 | `test_relatorio.py::test_a_gestao_ve_a_acao_e_a_pagina_com_a_camada_executiva`, `::test_a_emissao_so_aceita_envio`, `::test_a_emissao_se_diz_emissao_e_e_descrita_ao_botao`; `tests/javascript/relatorio-do-edital.test.js` (um clique, uma emissão) |
+| FR-2515 (a página e o envio que emite) | T010, T011, T037 | `test_relatorio.py::test_a_gestao_ve_a_acao_e_a_pagina_com_a_camada_executiva`, `::test_a_emissao_so_aceita_envio`, `::test_a_emissao_se_diz_emissao_e_e_descrita_ao_botao`; `tests/javascript/emissao-do-relatorio.test.js` (um clique, uma emissão) |
 | FR-2516 e FR-2517 (evento com resumo; número da emissão) | T021 | `tests/integration/relatorio/test_emissao.py::test_cada_emissao_e_numerada_e_registrada_com_o_resumo_do_que_saiu` |
 | FR-2518 (resposta privada) | T010 | `test_emissao.py::test_cada_emissao_*` e `test_relatorio.py::test_a_gestao_ve_*` (`no-store`) |
 | FR-2519 (um instante só) | T003 | `test_emissao.py::test_a_leitura_inteira_ve_um_instante_so` |

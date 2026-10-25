@@ -313,11 +313,12 @@ def relatorio_consolidado(request):
                 "consolidado": lido,
                 "conjunto": conjunto,
                 "referencia": relatorio_do_edital.instante_por_extenso(lido.referencia),
-                # Os textos saem das mesmas funções que o PDF usa: a tela não formata número.
-                "indicadores": [
-                    (i.rotulo, relatorio_do_edital.texto_do_indicador(i), i.base)
-                    for i in lido.indicadores
-                ],
+                # Os textos saem das mesmas funções que o PDF usa: a tela não formata número. Os
+                # cartões são os do PDF da unidade, com o "de N" e o complemento dele ("de 6 com
+                # resultado previsto"), e a ausência dita como traço e motivo.
+                "cartoes": relatorio_pdf.cartoes(
+                    lido.indicadores, relatorio_consolidado_pdf.COMPLEMENTOS_DO_DE
+                ).cartoes,
                 "linhas_por_edital": [
                     (
                         linha.edital,
