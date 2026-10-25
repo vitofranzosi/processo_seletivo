@@ -8,6 +8,8 @@ nenhum deles: o painel na primeira página, a regra de grupo, a espécie dita e 
 endereço local.
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 
@@ -125,3 +127,74 @@ def test_emissao_em_host_publico_leva_os_links(client, seletor_ligado, pendente,
     selecao = reverse("portal:selecao", args=[pendente.edital.id])
     assert f"/URI (http://selecao.ifes.edu.br{selecao})".encode() in resposta.content
     assert "ambiente local" not in " ".join(texto_de_pdf_bytes(resposta.content).split())
+
+
+@pytest.mark.django_db
+def test_emissao_em_producao_aponta_https_canonico_para_cada_documento(
+    client, seletor_ligado, pendente, settings
+):
+    """FR-2539 e FR-2603, na topologia de produção de `doc/implantacao-em-producao-ubuntu.md`.
+
+    O nginx repassa `Host` e `X-Forwarded-Proto`, o Django confia no cabeçalho do proxy e só aceita
+    o domínio institucional. Cada link do PDF tem de ser HTTPS nesse domínio, abrir sem sessão, e
+    apontar para o resultado cujo título está ao lado dele — e não para outro.
+    """
+    from urllib.parse import urlsplit
+
+    from django.test import Client
+    from django.urls import resolve
+
+    dominio = "selecao.cefor.ifes.edu.br"
+    settings.ALLOWED_HOSTS = ["testserver", dominio]
+    settings.SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    producao = {"HTTP_HOST": dominio, "HTTP_X_FORWARDED_PROTO": "https"}
+    identificar(client, "gustavo.gestor", ["gestor"])
+    url = reverse("interface:relatorio-do-edital-pdf", args=[pendente.edital.id])
+    resposta = client.post(url, **producao)
+    assert resposta.status_code == 200, resposta.content[:300]
+
+    uris = [u.decode() for u in re.findall(rb"/URI \(([^)]*)\)", resposta.content)]
+    assert uris and all(u.startswith(f"https://{dominio}/") for u in uris), uris
+    selecao, *resultados = (resolve(urlsplit(u).path) for u in uris)
+    assert (selecao.url_name, selecao.kwargs["edital_id"]) == ("selecao", pendente.edital.id)
+
+    # A ordem dos links é a das linhas da tabela: a de cada título vigente, na derivação.
+    vigentes = [d for d in ler(pendente).documentos if d.resultado_vigente]
+    assert len(resultados) == len(vigentes)
+    anonimo = Client()
+    for alvo, documento in zip(resultados, vigentes, strict=True):
+        assert alvo.url_name == "resultado"
+        assert documento.endereco.endswith(f"/{alvo.kwargs['publicacao_id']}/")
+        caminho = reverse("portal:resultado", args=[alvo.kwargs["publicacao_id"]])
+        pagina = anonimo.get(caminho, **producao)
+        assert pagina.status_code == 200
+        perfil = documento.titulo.split(" — ", 1)[1].split(",")[0]
+        assert perfil in pagina.content.decode()
+    assert anonimo.get(urlsplit(uris[0]).path, **producao).status_code == 200
+
+
+def test_o_cronograma_registra_a_publicacao_dos_resultados(pendente):
+    """Homologação de 24/10: o resultado publicado não aparece mais com traço no cronograma.
+
+    A coluna diz a publicação — o ato que o GPS registra —, e a nota diz que ela não é a data da
+    avaliação.
+    """
+    relatorio = ler(pendente)
+    registrado = {c.evento: c.registrado for c in relatorio.cronograma}
+    assert registrado["Resultado preliminar"] == "publicado em 25/09"
+    assert registrado["Resultado definitivo"] == "publicado em 06/10"
+    publicadas = {
+        d.dia.astimezone(rel.ZONA).strftime("%d/%m")
+        for d in relatorio.datas
+        if d.texto.startswith("Resultado") and d.natureza == "publicação"
+    }
+    assert publicadas == {"25/09", "06/10"}, "a linha do tempo e o cronograma dizem o mesmo"
+    _, anexo = executiva_e_anexo(texto_do_documento(relatorio))
+    assert "Publicado: a data em que o GPS publicou o resultado" in anexo
+
+
+def test_antes_da_publicacao_o_cronograma_diz_que_nao_ha(db):
+    relatorio = ler(montar_cenario(final="aberto"), agora=REFERENCIA_ABERTA)
+    registrado = {c.evento: c.registrado for c in relatorio.cronograma}
+    assert registrado["Resultado preliminar"] == "nenhuma publicação até a data dos dados"
+    assert registrado["Resultado definitivo"] == "nenhuma publicação até a data dos dados"

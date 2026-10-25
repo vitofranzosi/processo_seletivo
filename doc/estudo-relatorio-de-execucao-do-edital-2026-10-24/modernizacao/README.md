@@ -8,9 +8,10 @@ FR-2536 revista, FR-2601 a FR-2607, SC-947 e a decisão D-009.
 
 - [`relatorio-61-2026-emitido-pelo-sistema.pdf`](relatorio-61-2026-emitido-pelo-sistema.pdf) — o
   Edital 61/2026 do banco da maquete (`ps_maquete_v2`), emitido pela view da gestão (`POST`,
-  emissão nº 3, registrada na trilha) com host público: os links abrem a seleção e os resultados.
+  emissão nº 7, registrada na trilha) como em produção — host institucional, requisição HTTPS —:
+  os links abrem a seleção e os resultados em `https://`.
 - [`relatorio-61-2026-emitido-em-localhost.pdf`](relatorio-61-2026-emitido-em-localhost.pdf) — a
-  mesma emissão feita de `localhost` (emissão nº 4): sem endereço nem link, e a frase que diz por quê.
+  mesma emissão feita de `localhost` (emissão nº 6): sem endereço nem link, e a frase que diz por quê.
 - [`comparacao-visual.pdf`](comparacao-visual.pdf) — maquete v2 × PDF anterior × PDF novo, página a
   página.
 - Roteiro: [`../roteiro/emitir_pelo_sistema.py`](../roteiro/emitir_pelo_sistema.py).
@@ -97,3 +98,60 @@ pontos de atenção são curtos: a seção 2 abre página por decisão (FR-2604)
   lado seguro da falha.
 - **Este trabalho está empilhado sobre o PR da `100`** (#331), que ainda não foi mergeado: o
   compositor é dela. Os FR-2601 a FR-2607 e o SC-947 continuam a faixa global da `100`.
+
+## Homologação (24/10/2026)
+
+A concepção visual foi aprovada; três verificações pontuais, sem reformulação do motor nem do
+layout. O PDF desta pasta é o da emissão nº 7, já com as três.
+
+### 1. Cronograma: o resultado publicado aparecia com traço
+
+**Causa.** O evento do cronograma do Edital é texto livre ("Resultado preliminar"), sem ligação
+estrutural com o marco nem com a publicação. A coluna "Registrado no GPS" sabia ligar só o período
+de inscrições (pelos envios) e as etapas (pelo `scheduleEventId`); para os eventos de resultado
+caía em "—", enquanto a linha do tempo, que lê as publicações direto, mostrava as duas datas.
+
+**Correção.** O evento cujo nome é o rótulo que o domínio dá à natureza (`Natureza.PRELIMINAR`,
+`Natureza.DEFINITIVA`; sem acento e sem caixa, com "resultado final" como sinônimo do definitivo)
+recebe a publicação daquela natureza: "publicado em 25/09", ou "nenhuma publicação até a data dos
+dados". A nota da seção diz que é a data da publicação, e não a da avaliação. Linha do tempo e
+cronograma leem a mesma consulta — o relatório faz uma consulta a menos (118, constante nas
+escalas 1 e 10). Evento de nome livre fora desse rótulo continua com "—", agora explicado.
+
+### 2. Notas condicionais
+
+Cada nota de tabela aparece só quando a tabela tem o caso (FR-2608): o traço de número omitido,
+só com Perfil omitido; a soma entre perfis, só com mais de um; as listas que não se somam, só com
+lista reservada; a legenda das datas, só com as naturezas presentes; a do cronograma, só com
+"publicado" ou com traço na coluna; a das etapas, só se houver tabela de etapas.
+
+### 3. Hyperlinks oficiais em produção
+
+**Como a URL se forma.** `request.build_absolute_uri(reverse(...))`: o esquema é o de
+`request.is_secure()` e o host é o `Host` validado por `ALLOWED_HOSTS`. Na topologia de
+[`implantacao-em-producao-ubuntu.md`](../../implantacao-em-producao-ubuntu.md), o nginx repassa
+`Host $host` e `X-Forwarded-Proto $scheme`, o Django confia no cabeçalho
+(`DJANGO_TRUST_PROXY_SSL_HEADER=true`, obrigatória ali), `ALLOWED_HOSTS` é o domínio institucional e
+o host desconhecido é recusado pelo nginx. Logo, o link sai `https://<domínio>/selecoes/<edital>/`
+e `https://<domínio>/selecoes/resultados/<publicação>/`.
+
+**Provado por teste** (`test_emissao_em_producao_aponta_https_canonico_para_cada_documento`): a
+emissão com a requisição de produção traz só links HTTPS no domínio; o primeiro resolve para a
+página da seleção daquele Edital; cada um dos outros resolve para a publicação cujo título está na
+mesma linha da tabela, e a página pública abre sem sessão e nomeia o Perfil do título.
+`localhost`, `127.0.0.1`, `::1`, `*.localhost` e `testserver` continuam sem endereço.
+
+**O que fica para decisão** (não feito, por extrapolar o escopo). O endereço segue o host pelo qual
+a gestão foi acessada. Se a operação um dia puser um segundo nome em `ALLOWED_HOSTS` — um nome
+interno para a gestão, por exemplo —, o PDF emitido por ele levaria esse nome. A alternativa
+recomendada é um endereço público canônico configurado (uma variável de ambiente única), usado pelo
+relatório do Edital, pelo consolidado **e** pelos avisos aos candidatos (`066`), que montam o
+endereço do mesmo jeito; mudar só o relatório deixaria os avisos divergentes.
+
+### Regressão
+
+Suíte inteira contra PostgreSQL depois das três correções — números, regras, permissões,
+privacidade e auditoria da `099` e da `100` incluídos. Os bytes do consolidado da `100` nos
+conjuntos de 1, 5, 12 e 60 Editais continuam os mesmos: nenhuma das três correções toca o
+documento dele.
+

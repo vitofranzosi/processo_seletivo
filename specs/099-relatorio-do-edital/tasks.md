@@ -95,6 +95,8 @@
 - [x] T032 Endereço só em host público na emissão (`interface/relatorio.py`, `_Enderecos`) e nos roteiros de demonstração (FR-2603)
 - [x] T033 [P] Testes: `tests/unit/interface/test_diagramacao_do_relatorio_do_edital.py` e `tests/integration/relatorio/test_diagramacao.py`; o texto dos testes de conteúdo passa a ser o extraído do PDF
 - [x] T034 PDF emitido pelo sistema e comparação visual em `doc/estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/` (SC-947)
+- [x] T035 Homologação: o cronograma registra a publicação dos resultados; uma consulta de publicações para a linha do tempo e o cronograma (FR-2542)
+- [x] T036 Homologação: notas só com o caso que explicam; links conferidos na topologia de produção (FR-2603, FR-2608)
 
 ---
 

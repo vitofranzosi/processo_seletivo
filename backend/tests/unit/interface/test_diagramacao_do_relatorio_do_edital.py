@@ -507,3 +507,68 @@ def test_paragrafo_curto_nao_se_parte_e_leva_o_titulo():
     sobra = titulo.medir(w) + 2 * paragrafo.altura_da_linha + 1
     paginas = _paginas(Espaco(UTIL - sobra), titulo, paragrafo)
     assert paginas[1] == [titulo, paragrafo]
+
+
+# --- Notas condicionais (homologação de 24/10/2026) ---------------------------------------------
+
+
+def _texto(r):
+    return " ".join(texto_de_pdf_bytes(pdf.compor(r, emissao=1)).split())
+
+
+def test_a_nota_do_traco_so_aparece_com_perfil_omitido():
+    assert "O traço é número omitido" not in _texto(_relatorio(perfis=3))
+    assert "O traço é número omitido" in _texto(_relatorio(perfis=3, omitidos=1))
+
+
+def test_a_nota_de_varios_perfis_e_a_das_listas_dependem_da_tabela():
+    um = _relatorio(perfis=1)
+    assert "quem se inscreve em mais de um perfil" not in _texto(um)
+    assert "quem se inscreve em mais de um perfil" in _texto(_relatorio(perfis=2))
+    so_ampla = _relatorio(perfis=1)
+    perfil = so_ampla.perfis[0]
+    so_ampla.perfis = [
+        rel.LinhaDoPerfil(**{**vars(perfil), "listas": perfil.listas[:1], "omitido": False})
+    ]
+    assert "as listas não se somam" not in _texto(so_ampla)
+    assert "as listas não se somam" in _texto(_relatorio(perfis=1))
+
+
+def test_a_legenda_das_datas_diz_so_as_naturezas_da_tabela():
+    r = _relatorio()
+    r.datas = [d for d in r.datas if d.natureza in {"publicação", "registrado"}]
+    texto = _texto(r)
+    assert "Publicação: ato publicado." in texto
+    assert "Previsto no Edital: data que" not in texto
+    assert "Prazo em curso:" not in texto
+
+
+def test_a_nota_do_cronograma_segue_a_coluna_de_registro():
+    r = _relatorio()
+    r.cronograma = [rel.LinhaDoCronograma("Inscrições", "10/08", "sem alteração", "envios")]
+    texto = _texto(r)
+    assert "Publicado: a data" not in texto and "Traço no registro" not in texto
+    r.cronograma.append(
+        rel.LinhaDoCronograma(
+            "Resultado definitivo", "06/10", "sem alteração", "publicado em 06/10"
+        )
+    )
+    r.cronograma.append(rel.LinhaDoCronograma("Prova", "13/09", "sem alteração", "—"))
+    texto = _texto(r)
+    assert "Publicado: a data em que o GPS publicou o resultado" in texto
+    assert "Traço no registro: evento sem ato que o GPS registre." in texto
+
+
+@pytest.mark.parametrize(
+    ("nome", "natureza"),
+    [
+        ("Resultado preliminar", "PRELIMINAR"),
+        ("Divulgação do RESULTADO PRELIMINAR", "PRELIMINAR"),
+        ("Resultado definitivo", "DEFINITIVA"),
+        ("Resultado final", "DEFINITIVA"),
+        ("Prova objetiva", None),
+        ("Definição de local", None),
+    ],
+)
+def test_o_evento_de_resultado_e_reconhecido_pelo_rotulo_do_dominio(nome, natureza):
+    assert rel._natureza_do_evento({"type": nome}) == natureza

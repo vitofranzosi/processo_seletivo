@@ -129,6 +129,17 @@ NATUREZAS = {
     "previsto": "Previsto no Edital",
     "prazo": "Prazo em curso",
 }
+#: A legenda das datas diz só as naturezas que a tabela tem (homologação de 24/10/2026).
+EXPLICACOES_DAS_NATUREZAS = (
+    ("publicação", "Publicação: ato publicado."),
+    ("registrado", "Registrado no GPS: ato gravado no GPS."),
+    (
+        "previsto",
+        "Previsto no Edital: data que o Edital declara — o GPS não registra se o evento "
+        "aconteceu nela.",
+    ),
+    ("prazo", "Prazo em curso: prazo ainda aberto na data dos dados."),
+)
 #: O que acompanha o "de N" de cada cartão: "1 de 2 realizadas", e não "1 de 2" solto.
 COMPLEMENTOS_DO_DE = {"convocações aceitas": "realizadas"}
 #: A barra mais estreita que ainda se lê. Abaixo dela, a série passa de dia para semana.
@@ -248,9 +259,15 @@ def _perfis(r):
             alinhamentos=[ESQUERDA, ESQUERDA, DIREITA, DIREITA, DIREITA, ESQUERDA],
             tamanho=8.2,
         ),
-        Nota(
-            "Os totais contam inscrições: quem se inscreve em mais de um perfil conta uma vez em "
-            "cada um."
+        *(
+            [
+                Nota(
+                    "Os totais contam inscrições: quem se inscreve em mais de um perfil conta uma "
+                    "vez em cada um."
+                )
+            ]
+            if len(r.perfis) > 1
+            else []
         ),
     ]
 
@@ -411,9 +428,11 @@ def _datas(r):
         TituloDeSecao("Datas principais", antes=14.0),
         Tabela(["Data", "O que", "Natureza"], linhas, larguras=[1.45, 4.3, 1.35], tamanho=8.2),
         Nota(
-            "Publicação: ato publicado. Registrado no GPS: ato gravado no GPS. Previsto no Edital: "
-            "data que o Edital declara — o GPS não registra se o evento aconteceu nela. Prazo em "
-            "curso: prazo ainda aberto na data dos dados."
+            " ".join(
+                explicacao
+                for natureza, explicacao in EXPLICACOES_DAS_NATUREZAS
+                if natureza in {d.natureza for d in r.datas}
+            )
         ),
     ]
 
@@ -510,13 +529,14 @@ def _etapas(r):
             )
         else:
             blocos.append(Texto("Nenhuma etapa de avaliação declarada.", tamanho=8.6, antes=2.0))
-    blocos.append(
-        Nota(
-            "Avaliadas: inscrições com avaliação registrada na etapa. Por ocorrência: eliminação "
-            "registrada pela comissão sem avaliação, com motivo escrito. O GPS não registra "
-            "presença."
+    if any(isinstance(bloco, Tabela) for bloco in blocos):
+        blocos.append(
+            Nota(
+                "Avaliadas: inscrições com avaliação registrada na etapa. Por ocorrência: "
+                "eliminação registrada pela comissão sem avaliação, com motivo escrito. O GPS não "
+                "registra presença."
+            )
         )
-    )
     return blocos
 
 
@@ -545,12 +565,13 @@ def _listas(r):
             alinhamentos=[ESQUERDA, ESQUERDA, ESQUERDA, DIREITA, DIREITA, ESQUERDA],
         )
     )
-    blocos.append(
-        Nota(
-            "Quem concorre a vaga reservada aparece também na lista de ampla concorrência: as "
-            "listas não se somam."
+    if any(lista[2] != "Ampla concorrência" for lista in linhas):
+        blocos.append(
+            Nota(
+                "Quem concorre a vaga reservada aparece também na lista de ampla concorrência: as "
+                "listas não se somam."
+            )
         )
-    )
     return blocos
 
 
@@ -596,14 +617,29 @@ def _recursos_e_convocacoes(r):
         ),
         Nota(
             "Deferido agrupa os três desfechos favoráveis que o candidato lê no GPS: resultado "
-            "corrigido, etapa reavaliada e ato corretivo pela instituição. O traço é número "
-            "omitido, e não zero."
+            "corrigido, etapa reavaliada e ato corretivo pela instituição."
+            # O traço só existe na linha do Perfil omitido; sem ela, a frase explicaria o nada.
+            + (
+                " O traço é número omitido, e não zero."
+                if any(perfil.omitido for perfil in r.perfis)
+                else ""
+            )
         ),
     ]
 
 
 def _cronograma(r):
-    return [
+    """O cronograma, com a nota que diz só o que a coluna de registro tem."""
+    registrados = [c.registrado for c in r.cronograma]
+    explicacoes = []
+    if any(texto.startswith("publicado") for texto in registrados):
+        explicacoes.append(
+            "Publicado: a data em que o GPS publicou o resultado — e não a da avaliação, que "
+            "pode ter sido antes."
+        )
+    if "—" in registrados:
+        explicacoes.append("Traço no registro: evento sem ato que o GPS registre.")
+    blocos = [
         TituloDeSecao("D. Cronograma: previsto, retificado e registrado", antes=14.0),
         Tabela(
             ["Evento", "Previsto no Edital", "Após retificação", "Registrado no GPS"],
@@ -611,6 +647,9 @@ def _cronograma(r):
             larguras=[1.6, 1.3, 1.3, 1.9],
         ),
     ]
+    if explicacoes:
+        blocos.append(Nota(" ".join(explicacoes)))
+    return blocos
 
 
 def _resumo(sha256):

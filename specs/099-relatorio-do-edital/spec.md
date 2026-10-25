@@ -302,7 +302,12 @@ bytes entregues, e "emissão nº 1" e "nº 2" nos documentos.
 - **FR-2541**: O anexo MUST trazer, por lista de classificação, as inscrições com classificação no
   resultado vigente e as vagas publicadas, e MUST dizer que as listas não se somam.
 - **FR-2542**: O anexo MUST trazer o cronograma em três colunas — previsto no Edital, após cada
-  Retificação, e o ato registrado quando houver —, sem coluna de cumprimento.
+  Retificação, e o ato registrado quando houver —, sem coluna de cumprimento. O ato registrado de
+  um evento de resultado MUST ser a publicação daquela natureza ("publicado em DD/MM"), a mesma que
+  a linha do tempo lista, e MUST NOT ser dito como a data da avaliação.
+  > Revisão de 24/10/2026 (homologação): a coluna dizia "—" ao lado de resultados que a linha do
+  > tempo mostrava publicados, porque o evento do cronograma é texto livre e não se ligava à
+  > publicação. A ligação é pelo rótulo da natureza que o próprio domínio usa.
 - **FR-2543**: O anexo MUST listar os documentos publicados com data e resumo SHA-256, e MUST dizer que
   o resumo permite conferir que um arquivo tem o mesmo conteúdo do registrado no GPS, e não comprova
   sozinho a publicação oficial, cuja referência é a página pública da seleção.
@@ -366,6 +371,10 @@ bytes entregues, e "emissão nº 1" e "nº 2" nos documentos.
   couberem ao lado do gráfico; senão, em sequência, com o gráfico na largura inteira.
 - **FR-2606**: As datas principais MUST distinguir, por rótulo, publicação, registro no GPS, data
   prevista no Edital e prazo ainda em curso na data dos dados.
+- **FR-2608**: Cada nota de tabela MUST aparecer só quando a tabela tiver o caso que ela explica: o
+  traço de número omitido, só com Perfil omitido; a soma entre perfis, só com mais de um; as listas
+  que não se somam, só com lista reservada; a legenda das datas e a do cronograma, só com as
+  naturezas e os registros que a tabela traz.
 - **FR-2607**: O PDF MUST ser marcado — títulos, parágrafos, listas, tabelas com cabeçalho e a
   figura com texto alternativo; faixa, fios e fundos como artefatos —, com o idioma declarado.
 
