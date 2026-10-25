@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório consolidado — maquete</title>
+<style>
+  /* Folha herdada da maquete v2 da 099, com os acréscimos do consolidado. Não é código de produto: o relatório real sairia de
+     publicacoes/infrastructure/pdf.py. Esta folha só imita a sobriedade daquele documento. */
+  :root {
+    --tinta: #1d1d1b;
+    --tinta-2: #45453f;
+    --tinta-3: #6b6b66;
+    --linha: #cfcfc8;
+    --fundo-suave: #f4f4f0;
+    --destaque: #1f4e79;
+    --atencao: #8a5a00;
+    --atencao-fundo: #fbf3e2;
+    --barra: #6f7f8f;
+    --barra-2: #1f4e79;
+  }
+  @page { size: A4; margin: 14mm 16mm 14mm; }
+  * { box-sizing: border-box; }
+  html { background: #e9e9e4; }
+  body { margin: 0; color: var(--tinta); background: #e9e9e4; font: 9.5pt/1.42 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .folha {
+    width: 210mm; min-height: 297mm; margin: 12px auto; padding: 14mm 16mm;
+    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    break-after: page; page-break-after: always;
+  }
+  .folha:last-child { break-after: auto; page-break-after: auto; }
+  @media print {
+    html, body { background: #fff; }
+    .folha { margin: 0; padding: 0; width: auto; min-height: 0; box-shadow: none; }
+  }
+  @media screen and (max-width: 820px) {
+    .folha { width: auto; min-height: 0; margin: 8px 16px; padding: 20px 16px; }
+    .numeros { grid-template-columns: 1fr 1fr !important; }
+    .ficha { grid-template-columns: 1fr !important; }
+    table { font-size: 8.5pt; }
+  }
+
+  .faixa {
+    display: flex; justify-content: space-between; gap: 12px; font-size: 7.8pt; color: var(--tinta-3);
+    border-bottom: 1px solid var(--linha); padding-bottom: 4px; margin-bottom: 12px;
+  }
+  .faixa .maquete { color: var(--atencao); font-weight: bold; }
+  .orgao { text-align: center; font-size: 8.5pt; line-height: 1.35; color: var(--tinta-2); }
+  .orgao strong { color: var(--tinta); }
+
+  h1 { font-size: 17pt; line-height: 1.15; margin: 14px 0 2px; }
+  .especie { font-size: 10pt; color: var(--destaque); font-weight: bold; margin: 0 0 2px; }
+  .natureza { font-size: 8.5pt; color: var(--tinta-3); margin: 0; }
+  h2 { font-size: 11.5pt; margin: 16px 0 6px; padding-bottom: 3px; border-bottom: 1px solid var(--tinta); }
+  h3 { font-size: 9.8pt; margin: 10px 0 4px; }
+  p { margin: 0 0 6px; }
+
+  .ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; margin: 12px 0 4px; font-size: 9pt; }
+  .ficha div { border-top: 1px solid var(--linha); padding-top: 3px; }
+  .ficha .r { display: block; font-size: 7.8pt; color: var(--tinta-3); }
+  .ficha .pendente { color: var(--atencao); font-weight: bold; }
+
+  .sintese { font-size: 10.5pt; line-height: 1.5; margin: 6px 0 4px; }
+
+  .numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+  .numero { border-top: 3px solid var(--destaque); background: var(--fundo-suave); padding: 7px 9px 8px; }
+  .numero .valor { font-size: 19pt; font-weight: bold; line-height: 1.1; }
+  .numero .valor small { font-size: 9.5pt; font-weight: normal; color: var(--tinta-2); }
+  .numero .rotulo { font-size: 8.8pt; font-weight: bold; margin-top: 2px; }
+  .numero .base { font-size: 7.8pt; color: var(--tinta-3); line-height: 1.35; margin-top: 2px; }
+
+  .atencao { border-left: 3px solid var(--atencao); background: var(--atencao-fundo); padding: 7px 11px; margin: 10px 0 0; }
+  .atencao h2 { border: 0; margin: 0 0 4px; padding: 0; font-size: 10.5pt; color: var(--atencao); }
+  .atencao ol { margin: 0; padding-left: 16px; }
+  .atencao li { margin: 3px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 4px 0 6px; }
+  th, td { text-align: left; vertical-align: top; padding: 3px 6px; border-bottom: 1px solid var(--linha); }
+  thead th { border-bottom: 1px solid var(--tinta); font-size: 8.2pt; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .aus { color: var(--tinta-3); font-style: italic; }
+  .nota { font-size: 7.8pt; color: var(--tinta-3); margin: 2px 0 6px; line-height: 1.35; }
+  .hash { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 6.9pt; word-break: break-all; color: var(--tinta-2); }
+  .tag { display: inline-block; font-size: 7pt; text-transform: uppercase; letter-spacing: .03em; color: var(--tinta-3); border: 1px solid var(--linha); padding: 0 3px; margin-left: 4px; }
+  .datas td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; width: 26mm; }
+  .grafico { margin: 2px 0 0; }
+  .grafico svg { width: 100%; height: auto; display: block; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media screen and (max-width: 820px) { .duas { grid-template-columns: 1fr; } }
+  .anexo-titulo { font-size: 13pt; margin: 6px 0 2px; }
+  dl.defs { margin: 0; font-size: 8.4pt; }
+  dl.defs dt { font-weight: bold; margin-top: 4px; }
+  dl.defs dd { margin: 0 0 0 0; color: var(--tinta-2); }
+
+  ul.compacta { margin: 2px 0 6px; padding-left: 16px; font-size: 8.8pt; }
+  ul.compacta li { margin: 2px 0; }
+  .barra { color: var(--barra-2); letter-spacing: -1px; font-size: 8pt; }
+  .numero .valor small { white-space: nowrap; }
+</style>
+</head>
+<body>
+<section class="folha"><div class="faixa"><span><span class="maquete">MAQUETE</span> — dados fictícios</span><span>Relatório consolidado · 1º semestre de 2026 · dados até 24/10/2026, 14h00 · emissão nº 1 · página 1 de 6</span></div>
+<div class="orgao">Ministério da Educação · <strong>Instituto Federal do Espírito Santo</strong><br>Centro de Referência em Formação e em Educação a Distância</div>
+<h1>Relatório Consolidado de Gestão dos Processos Seletivos</h1>
+<p class="especie">1º semestre de 2026 — 12 Editais</p>
+<p class="natureza">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais de cada Edital.</p>
+<div class="ficha">
+  <div><span class="r">Conjunto analisado</span>Editais com primeira publicação entre 01/01/2026 e 30/06/2026, da unidade Cefor</div>
+  <div><span class="r">Data de referência</span>dados até 24/10/2026, 14h00: o relatório mostra a situação de cada Edital neste instante, e não a de 30/06</div>
+  <div><span class="r">Situação no GPS</span>9 encerrados · 2 publicados · 1 cancelado</div>
+  <div><span class="r">Situação das providências</span><span class="pendente">5 Editais com providência registrada em curso</span> · 6 sem nenhuma</div>
+</div>
+
+<h2>Visão geral</h2>
+<p class="sintese">Os 12 Editais publicados no semestre ofereceram <strong>385 vagas imediatas</strong> em 22 perfis de vaga — 131 delas em listas reservadas — e abriram cadastro de reserva em 3 perfis, 2 dos quais só de cadastro de reserva. Receberam <strong>1.012 inscrições enviadas</strong>, sem contar as 14 do Edital cancelado. Em 9 Editais todos os resultados definitivos estão publicados. Há <strong>248 vagas com inscrição classificada e habilitada</strong> entre as 286 vagas já apuradas, e <strong>225 convocações aceitas</strong> de 310 realizadas.</p>
+
+<div class="numeros">
+  <div class="numero"><div class="valor">385</div><div class="rotulo">vagas imediatas</div><div class="base">em 20 de 22 perfis; 2 perfis só de cadastro de reserva. Fora o Edital cancelado</div></div>
+  <div class="numero"><div class="valor">1.012</div><div class="rotulo">inscrições enviadas</div><div class="base">inscrições, e não pessoas: a mesma pessoa pode se inscrever em mais de um Edital. 2 Editais seguem publicados</div></div>
+  <div class="numero"><div class="valor">2,5</div><div class="rotulo">inscrições por vaga</div><div class="base">973 inscrições para 385 vagas, só nos perfis com vaga imediata. Não é média dos Editais</div></div>
+  <div class="numero"><div class="valor">9 <small>de 11</small></div><div class="rotulo">Editais com todos os resultados definitivos</div><div class="base">19 de 22 resultados previstos já são definitivos</div></div>
+  <div class="numero"><div class="valor">248 <small>de 286</small></div><div class="rotulo">vagas com inscrição classificada e habilitada</div><div class="base">nas vagas já apuradas; 99 vagas ainda sem apuração atualizada. Não é matrícula</div></div>
+  <div class="numero"><div class="valor">225 <small>de 310</small></div><div class="rotulo">convocações aceitas</div><div class="base">12 aguardando resposta; 5 com prazo encerrado sem registro de resposta</div></div>
+</div>
+
+<div class="atencao">
+  <h2>Pontos de atenção</h2>
+  <ol>
+    <li><strong>3 Editais estão encerrados no GPS, mas ainda têm providência registrada.</strong> Encerrar o Edital fecha as inscrições, e convocações, recursos e apurações continuam correndo depois. Detalhe na página 4.</li>
+    <li><strong>3 Editais tiveram registros depois do encerramento</strong> — 8 registros no total. Um relatório emitido antes deles mostraria números diferentes.</li>
+    <li><strong>O GPS não registra matrículas.</strong> Este relatório mostra convocações aceitas, e não matrículas efetivadas. A confirmação vem do registro acadêmico.</li>
+  </ol>
+</div>
+</section>
+<section class="folha"><div class="faixa"><span><span class="maquete">MAQUETE</span> — dados fictícios</span><span>Relatório consolidado · 1º semestre de 2026 · dados até 24/10/2026, 14h00 · emissão nº 1 · página 2 de 6</span></div>
+<h2>Oferta e procura</h2>
+<div class="duas">
+<div>
+<h3>O que foi oferecido</h3>
+<table><tbody>
+<tr><td>Vagas imediatas</td><td class="n">385</td></tr>
+<tr><td>— em listas de ampla concorrência</td><td class="n">254</td></tr>
+<tr><td>— em listas reservadas</td><td class="n">131</td></tr>
+<tr><td>Perfis de vaga</td><td class="n">22</td></tr>
+<tr><td>— só cadastro de reserva</td><td class="n">2</td></tr>
+<tr><td>Edital cancelado (fora dos totais)</td><td class="n">8 vagas</td></tr>
+</tbody></table>
+<p class="nota">As listas reservadas não são somadas por modalidade: cada Edital nomeia as suas, e o GPS não tem catálogo comum que permita dizer, por exemplo, quantas vagas foram para pessoas com deficiência em todos eles.</p>
+</div>
+<div>
+<h3>Procura ao longo do semestre</h3>
+<table><thead><tr><th>Mês do envio</th><th class="n">Inscrições</th><th></th></tr></thead><tbody><tr><td>jan/2026</td><td class='n'>41</td><td><span class='barra' data-v='41'>▇▇▇</span></td></tr><tr><td>fev/2026</td><td class='n'>157</td><td><span class='barra' data-v='157'>▇▇▇▇▇▇▇▇▇▇▇▇▇</span></td></tr><tr><td>mar/2026</td><td class='n'>346</td><td><span class='barra' data-v='346'>▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇</span></td></tr><tr><td>abr/2026</td><td class='n'>275</td><td><span class='barra' data-v='275'>▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇</span></td></tr><tr><td>mai/2026</td><td class='n'>49</td><td><span class='barra' data-v='49'>▇▇▇▇</span></td></tr><tr><td>jun/2026</td><td class='n'>103</td><td><span class='barra' data-v='103'>▇▇▇▇▇▇▇▇▇</span></td></tr><tr><td>jul/2026</td><td class='n'>55</td><td><span class='barra' data-v='55'>▇▇▇▇▇</span></td></tr></tbody></table>
+<p class="nota">Envios dos Editais do conjunto, pela data em que cada inscrição foi enviada; inclui o Edital cancelado. 2 Editais tiveram o prazo de inscrição prorrogado.</p>
+</div>
+</div>
+
+<h3>Por Edital</h3>
+<table>
+<thead><tr><th>Edital</th><th>Seleção</th><th class="n">Perfis</th><th class="n">Vagas imediatas</th><th class="n">Inscrições enviadas</th><th class="n">Inscrições por vaga</th></tr></thead>
+<tbody><tr><td>48/2025</td><td>Curso de Aperfeiçoamento em Docência na EaD</td><td class='n'>1</td><td class='n'>50</td><td class='n'>74</td><td class='n'>1,5</td></tr><tr><td>03/2026</td><td>Tutores a distância — Licenciatura em Letras</td><td class='n'>4</td><td class='n'>12</td><td class='n'>95</td><td class='n'>7,9</td></tr><tr><td>05/2026</td><td>Professores formadores — Especialização em Educação Profissional</td><td class='n'>3</td><td class='n'>5</td><td class='n'>29</td><td class='n'>5,8</td></tr><tr><td>07/2026</td><td>Especialização em Informática na Educação — ingresso discente</td><td class='n'>2</td><td class='n'>80</td><td class='n'>308</td><td class='n'>3,9</td></tr><tr><td>09/2026</td><td>Técnico em Administração, modalidade EaD</td><td class='n'>3</td><td class='n'>105</td><td class='n'>229</td><td class='n'>2,2</td></tr><tr><td>11/2026</td><td>Cadastro de reserva de revisores de texto</td><td class='n'>1</td><td class='n'><span class=aus>só CR</span></td><td class='n'>27</td><td class='n'><span class="aus">não se aplica</span></td></tr><tr><td>12/2026</td><td>Designer instrucional</td><td class='n'>2</td><td class='n'>1</td><td class='n'>45</td><td class='n'>33,0</td></tr><tr><td>14/2026</td><td>Curso de extensão em Libras — nível básico</td><td class='n'>1</td><td class='n'>60</td><td class='n'>31</td><td class='n'>0,5</td></tr><tr><td>15/2026</td><td>Professores mediadores — Pedagogia</td><td class='n'>2</td><td class='n'>10</td><td class='n'>16</td><td class='n'>1,6</td></tr><tr><td>17/2026</td><td>Tutores a distância — Pedagogia</td><td class='n'>1</td><td class='n'>8</td><td class='n'>14</td><td class='n'><span class="aus">cancelado</span></td></tr><tr><td>18/2026</td><td>Especialização em Gestão Pública — ingresso discente</td><td class='n'>2</td><td class='n'>60</td><td class='n'>139</td><td class='n'>2,3</td></tr><tr><td>21/2026</td><td>Bolsista de apoio técnico ao laboratório</td><td class='n'>1</td><td class='n'>2</td><td class='n'>19</td><td class='n'>9,5</td></tr></tbody>
+</table>
+<p class="nota">Inscrições por vaga de cada Edital conta só os perfis com vaga imediata. Editais de natureza diferente — cursistas, tutores, bolsistas — não são comparáveis entre si por esta razão, e a tabela não os ordena por ela.</p>
+
+<h3>Perfis com procura menor que a oferta</h3>
+<ul class="compacta"><li>09/2026 — Polo Rio Claro: 28 inscrições para 35 vagas</li><li>14/2026 — Cursista — turma única: 31 inscrições para 60 vagas</li><li>15/2026 — Mediador — Estágio: 2 inscrições para 4 vagas</li></ul>
+<p class="nota">Fato aritmético, com o período de inscrições encerrado. Ele não diz a causa: divulgação, calendário, requisitos e oferta concorrente não são registrados pelo GPS.</p>
+</section>
+<section class="folha"><div class="faixa"><span><span class="maquete">MAQUETE</span> — dados fictícios</span><span>Relatório consolidado · 1º semestre de 2026 · dados até 24/10/2026, 14h00 · emissão nº 1 · página 3 de 6</span></div>
+<h2>Execução das seleções</h2>
+<div class="duas">
+<div>
+<h3>Situação dos Editais</h3>
+<table><thead><tr><th>Espécie do relatório individual</th><th class="n">Editais</th></tr></thead><tbody>
+<tr><td>De encerramento — encerrado, sem providência registrada</td><td class="n">6</td></tr>
+<tr><td>De acompanhamento — encerrado com providência em curso</td><td class="n">3</td></tr>
+<tr><td>De acompanhamento — ainda publicado</td><td class="n">2</td></tr>
+<tr><td>De interrupção — cancelado</td><td class="n">1</td></tr>
+</tbody></table>
+<p class="nota">A espécie é a do relatório individual de cada Edital, pela mesma regra. Encerrado no GPS quer dizer inscrições fechadas, e não seleção concluída.</p>
+</div>
+<div>
+<h3>Alterações</h3>
+<table><tbody>
+<tr><td>Retificações publicadas</td><td class="n">4</td></tr>
+<tr><td>Editais retificados</td><td class="n">3 de 12</td></tr>
+<tr><td>Editais com prazo de inscrição prorrogado</td><td class="n">2</td></tr>
+</tbody></table>
+<p class="nota">A prorrogação é uma Retificação que adia o término das inscrições; outras mudanças de data aparecem só no relatório de cada Edital.</p>
+</div>
+</div>
+
+<h3>Recursos</h3>
+<table><thead><tr><th class="n">Apresentados</th><th class="n">Não admitidos</th><th class="n">Indeferidos</th><th class="n">Deferidos</th><th class="n">Aguardando decisão</th></tr></thead>
+<tbody><tr><td class="n">42</td><td class="n">9</td><td class="n">22</td><td class="n">2</td><td class="n">9</td></tr></tbody></table>
+<p class="nota">Recursos contra etapas e resultados diferentes, somados como pedidos. Não há taxa de deferimento do conjunto: um recurso de prova objetiva e um de análise curricular não são o mesmo objeto.</p>
+
+<h2>Resultados</h2>
+<div class="duas">
+<div>
+<h3>Resultados publicados</h3>
+<table><tbody>
+<tr><td>Resultados previstos nos Editais (um por marco de classificação de cada perfil)</td><td class="n">22</td></tr>
+<tr><td>— com resultado definitivo vigente</td><td class="n">19</td></tr>
+<tr><td>— só com resultado preliminar</td><td class="n">2</td></tr>
+<tr><td>— ainda não divulgados</td><td class="n">1</td></tr>
+</tbody></table>
+</div>
+<div>
+<h3>Vagas imediatas</h3>
+<table><tbody>
+<tr><td>Com inscrição classificada e habilitada</td><td class="n">248</td></tr>
+<tr><td>Apuradas sem inscrição habilitada para elas</td><td class="n">38</td></tr>
+<tr><td>Com apuração desatualizada</td><td class="n">35</td></tr>
+<tr><td>Ainda não apuradas</td><td class="n">64</td></tr>
+<tr><td><strong>Total</strong></td><td class="n"><strong>385</strong></td></tr>
+</tbody></table>
+<p class="nota">Classificada e habilitada é a apuração da vaga, e não matrícula, nem aceite.</p>
+</div>
+</div>
+
+<h3>Convocações</h3>
+<table><thead><tr><th class="n">Realizadas</th><th class="n">Convocação aceita</th><th class="n">Aguardando resposta</th><th class="n">Prazo encerrado sem registro</th><th class="n">Outros desfechos</th></tr></thead>
+<tbody><tr><td class="n">310</td><td class="n">225</td><td class="n">12</td><td class="n">5</td><td class="n">68</td></tr></tbody></table>
+<p class="nota">Outros desfechos são desistência, não atendimento, indeferimento da documentação e os demais registrados pela comissão. Prazo encerrado sem registro não é "não atendida": o não atendimento só existe quando a comissão o registra.</p>
+</section>
+<section class="folha"><div class="faixa"><span><span class="maquete">MAQUETE</span> — dados fictícios</span><span>Relatório consolidado · 1º semestre de 2026 · dados até 24/10/2026, 14h00 · emissão nº 1 · página 4 de 6</span></div>
+<h2>Pontos de atenção</h2>
+<h3>Providências registradas em curso</h3>
+<table><thead><tr><th>Tipo</th><th class="n">Editais</th><th class="n">Ocorrências</th></tr></thead><tbody><tr><td>convocação aguardando resposta</td><td class='n'>2</td><td class='n'>12</td></tr><tr><td>apuração das vagas desatualizada</td><td class='n'>1</td><td class='n'>1</td></tr><tr><td>convocação com prazo encerrado sem registro de resposta</td><td class='n'>2</td><td class='n'>5</td></tr><tr><td>resultado ainda não divulgado</td><td class='n'>1</td><td class='n'>1</td></tr><tr><td>resultado definitivo ainda não publicado</td><td class='n'>1</td><td class='n'>2</td></tr><tr><td>recurso aguardando decisão</td><td class='n'>1</td><td class='n'>9</td></tr></tbody></table>
+<p class="nota">Cada tipo é uma regra do relatório individual. O conjunto não cria pendência nova; ele conta as de cada Edital.</p>
+
+<h3>Por Edital</h3>
+<table><thead><tr><th>Edital</th><th>Situação no GPS</th><th>Providências em curso</th></tr></thead><tbody><tr><td>07/2026</td><td>Encerrado em 30/07</td><td>3 convocações aguardando resposta</td></tr><tr><td>09/2026</td><td>Publicado</td><td>apuração das vagas desatualizada; 9 convocações aguardando resposta; 4 convocações com prazo encerrado sem registro de resposta</td></tr><tr><td>12/2026</td><td>Encerrado em 10/07</td><td>convocação com prazo encerrado sem registro de resposta</td></tr><tr><td>15/2026</td><td>Encerrado em 18/08</td><td>resultado ainda não divulgado</td></tr><tr><td>18/2026</td><td>Publicado</td><td>2 resultados definitivos ainda não publicados; 9 recursos aguardando decisão</td></tr></tbody></table>
+
+<h3>Registros depois do encerramento</h3>
+<table><thead><tr><th>Edital</th><th>Encerrado em</th><th class="n">Registros posteriores</th></tr></thead><tbody>
+<tr><td>05/2026</td><td>05/06</td><td class='n'>2</td></tr><tr><td>07/2026</td><td>30/07</td><td class='n'>5</td></tr><tr><td>21/2026</td><td>04/09</td><td class='n'>1</td></tr>
+</tbody></table>
+<p class="nota">Registros posteriores não são irregularidade: suplência e resposta a convocação depois do encerramento podem ser exatamente o que o Edital previa. O que eles mostram é que encerrado não quer dizer congelado.</p>
+
+<h3>O que este relatório não diz</h3>
+<ul class="compacta">
+<li>quantas <strong>pessoas</strong> participaram: o GPS conta inscrições, e a mesma pessoa pode estar em vários Editais;</li>
+<li>quantas <strong>matrículas</strong> foram efetivadas, nem quantas vagas foram de fato preenchidas;</li>
+<li>se o cronograma foi <strong>cumprido</strong>: o GPS guarda as datas previstas e as dos atos registrados, e não a data em que cada evento aconteceu;</li>
+<li>a <strong>causa</strong> de procura alta ou baixa, nem comparação de desempenho entre Editais de natureza diferente.</li>
+</ul>
+</section>
+<section class="folha"><div class="faixa"><span><span class="maquete">MAQUETE</span> — dados fictícios</span><span>Relatório consolidado · 1º semestre de 2026 · dados até 24/10/2026, 14h00 · emissão nº 1 · página 5 de 6</span></div>
+<p class="anexo-titulo"><strong>Anexo técnico</strong></p>
+<h2>A1. Editais considerados</h2>
+<table><thead><tr><th>Edital</th><th>Seleção</th><th>1ª publicação</th><th>Situação no GPS</th><th>Espécie</th></tr></thead><tbody><tr><td>48/2025</td><td>Curso de Aperfeiçoamento em Docência na EaD</td><td>08/01/2026</td><td>Encerrado em 14/04</td><td>encerramento</td></tr><tr><td>03/2026</td><td>Tutores a distância — Licenciatura em Letras</td><td>19/01/2026</td><td>Encerrado em 22/05</td><td>encerramento</td></tr><tr><td>05/2026</td><td>Professores formadores — Especialização em Educação Profissional</td><td>02/02/2026</td><td>Encerrado em 05/06</td><td>encerramento</td></tr><tr><td>07/2026</td><td>Especialização em Informática na Educação — ingresso discente</td><td>23/02/2026</td><td>Encerrado em 30/07</td><td>acompanhamento</td></tr><tr><td>09/2026</td><td>Técnico em Administração, modalidade EaD</td><td>09/03/2026</td><td>Publicado</td><td>acompanhamento</td></tr><tr><td>11/2026</td><td>Cadastro de reserva de revisores de texto</td><td>16/03/2026</td><td>Encerrado em 26/06</td><td>encerramento</td></tr><tr><td>12/2026</td><td>Designer instrucional</td><td>30/03/2026</td><td>Encerrado em 10/07</td><td>acompanhamento</td></tr><tr><td>14/2026</td><td>Curso de extensão em Libras — nível básico</td><td>13/04/2026</td><td>Encerrado em 29/06</td><td>encerramento</td></tr><tr><td>15/2026</td><td>Professores mediadores — Pedagogia</td><td>27/04/2026</td><td>Encerrado em 18/08</td><td>acompanhamento</td></tr><tr><td>17/2026</td><td>Tutores a distância — Pedagogia</td><td>11/05/2026</td><td>Cancelado em 02/06</td><td>interrupção</td></tr><tr><td>18/2026</td><td>Especialização em Gestão Pública — ingresso discente</td><td>25/05/2026</td><td>Publicado</td><td>acompanhamento</td></tr><tr><td>21/2026</td><td>Bolsista de apoio técnico ao laboratório</td><td>15/06/2026</td><td>Encerrado em 04/09</td><td>encerramento</td></tr></tbody></table>
+<p class="nota">Cada Edital tem relatório individual próprio, emitido na tela dele, com etapas, listas, cronograma e documentos oficiais. A página pública de cada seleção é a referência dos atos.</p>
+
+<h2>A2. Critério do conjunto</h2>
+<table class="datas"><tbody>
+<tr><td>Critério</td><td>Editais com primeira publicação entre 01/01/2026 e 30/06/2026. A data é a da primeira publicação do Edital no GPS, e não a das Retificações.</td></tr>
+<tr><td>Unidade</td><td>Cefor — o relatório só alcança Editais da unidade de quem o emite.</td></tr>
+<tr><td>Ficaram fora</td><td>3 Editais com número de 2026 ainda não publicados (em elaboração ou em revisão), e os publicados a partir de 01/07/2026. O Edital 48/2025 entrou: foi publicado em 08/01/2026.</td></tr>
+<tr><td>Escolha manual</td><td>nenhuma: todos os Editais do critério foram mantidos.</td></tr>
+<tr><td>Data de referência</td><td>24/10/2026, 14h00. O relatório não reconstitui o passado: emitido em outra data, pode trazer números diferentes para os mesmos Editais.</td></tr>
+</tbody></table>
+</section>
+<section class="folha"><div class="faixa"><span><span class="maquete">MAQUETE</span> — dados fictícios</span><span>Relatório consolidado · 1º semestre de 2026 · dados até 24/10/2026, 14h00 · emissão nº 1 · página 6 de 6</span></div>
+<h2>A3. Definição de cada número</h2>
+<dl class="defs">
+<dt>Vagas imediatas</dt><dd>Soma das vagas imediatas publicadas no conteúdo vigente de cada Edital, já com as Retificações. Cadastro de reserva não é vaga e não entra. Fonte: versão consolidada vigente. Aditivo.</dd>
+<dt>Inscrições enviadas</dt><dd>Inscrições com envio concluído e protocolo. Unidade: inscrição, e não pessoa. Inscrições iniciadas e não enviadas não entram. Aditivo; parcial enquanto houver período aberto.</dd>
+<dt>Inscrições por vaga</dt><dd>Soma das inscrições nos perfis com vaga imediata dividida pela soma dessas vagas, com uma casa. Perfis só de cadastro de reserva ficam fora dos dois termos. Nunca média das razões dos Editais.</dd>
+<dt>Resultados definitivos</dt><dd>Marcos de classificação com resultado definitivo vigente em todas as listas. Resultado preliminar substituído pelo definitivo conta uma vez.</dd>
+<dt>Vagas com inscrição classificada e habilitada</dt><dd>Soma das apurações de ocupação vigentes e atualizadas, do último marco de cada perfil. Recorte sem apuração conta como "ainda não apurada"; apuração desatualizada não entra na soma. Não é matrícula nem aceite.</dd>
+<dt>Convocações</dt><dd>Convocações vigentes, contadas pela cadeia de cada uma, com o desfecho registrado mais recente. A mesma inscrição chamada duas vezes conta duas convocações.</dd>
+<dt>Recursos</dt><dd>Pedidos de recurso, pela situação: não admitido, indeferido, deferido (qualquer decisão que não seja indeferimento) e aguardando.</dd>
+<dt>Providência em curso</dt><dd>As do relatório individual: resultado não divulgado ou só preliminar, recurso ou reavaliação pendente, apuração desatualizada, convocação sem desfecho.</dd>
+</dl>
+
+<h2>A4. Limitações</h2>
+<ul class="compacta">
+<li>Fatos não públicos — recursos, convocações, apurações — aparecem no total do conjunto e, nas providências, por Edital, como no relatório individual; nunca por perfil ou por lista. Edital com menos de 5 inscrições enviadas tem o detalhe omitido, e continua nos totais.</li>
+<li>As listas reservadas não se somam entre Editais por modalidade, e localidade de polo é texto livre do Edital: nenhuma das duas vira agrupamento.</li>
+<li>O GPS não registra homologação, cancelamento ou desistência de inscrição, presença em prova, nem matrícula.</li>
+</ul>
+
+<h2>A5. Emissão</h2>
+<table class="datas"><tbody>
+<tr><td>Emissão</td><td>nº 1 do relatório consolidado da unidade Cefor, registrada na trilha de auditoria com o critério, a relação dos Editais, o instante dos dados e o resumo do arquivo.</td></tr>
+<tr><td>Emitido por</td><td>Gestão da unidade (identificação na trilha).</td></tr>
+<tr><td>Resumo SHA-256</td><td class="hash">(calculado na emissão — a maquete não o tem)</td></tr>
+</tbody></table>
+</section>
+</body>
+</html>

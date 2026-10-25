@@ -1,0 +1,92 @@
+
+  /* Folha herdada da maquete v2 da 099, com os acréscimos do consolidado. Não é código de produto: o relatório real sairia de
+     publicacoes/infrastructure/pdf.py. Esta folha só imita a sobriedade daquele documento. */
+  :root {
+    --tinta: #1d1d1b;
+    --tinta-2: #45453f;
+    --tinta-3: #6b6b66;
+    --linha: #cfcfc8;
+    --fundo-suave: #f4f4f0;
+    --destaque: #1f4e79;
+    --atencao: #8a5a00;
+    --atencao-fundo: #fbf3e2;
+    --barra: #6f7f8f;
+    --barra-2: #1f4e79;
+  }
+  @page { size: A4; margin: 14mm 16mm 14mm; }
+  * { box-sizing: border-box; }
+  html { background: #e9e9e4; }
+  body { margin: 0; color: var(--tinta); background: #e9e9e4; font: 9.5pt/1.42 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .folha {
+    width: 210mm; min-height: 297mm; margin: 12px auto; padding: 14mm 16mm;
+    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    break-after: page; page-break-after: always;
+  }
+  .folha:last-child { break-after: auto; page-break-after: auto; }
+  @media print {
+    html, body { background: #fff; }
+    .folha { margin: 0; padding: 0; width: auto; min-height: 0; box-shadow: none; }
+  }
+  @media screen and (max-width: 820px) {
+    .folha { width: auto; min-height: 0; margin: 8px 16px; padding: 20px 16px; }
+    .numeros { grid-template-columns: 1fr 1fr !important; }
+    .ficha { grid-template-columns: 1fr !important; }
+    table { font-size: 8.5pt; }
+  }
+
+  .faixa {
+    display: flex; justify-content: space-between; gap: 12px; font-size: 7.8pt; color: var(--tinta-3);
+    border-bottom: 1px solid var(--linha); padding-bottom: 4px; margin-bottom: 12px;
+  }
+  .faixa .maquete { color: var(--atencao); font-weight: bold; }
+  .orgao { text-align: center; font-size: 8.5pt; line-height: 1.35; color: var(--tinta-2); }
+  .orgao strong { color: var(--tinta); }
+
+  h1 { font-size: 17pt; line-height: 1.15; margin: 14px 0 2px; }
+  .especie { font-size: 10pt; color: var(--destaque); font-weight: bold; margin: 0 0 2px; }
+  .natureza { font-size: 8.5pt; color: var(--tinta-3); margin: 0; }
+  h2 { font-size: 11.5pt; margin: 16px 0 6px; padding-bottom: 3px; border-bottom: 1px solid var(--tinta); }
+  h3 { font-size: 9.8pt; margin: 10px 0 4px; }
+  p { margin: 0 0 6px; }
+
+  .ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; margin: 12px 0 4px; font-size: 9pt; }
+  .ficha div { border-top: 1px solid var(--linha); padding-top: 3px; }
+  .ficha .r { display: block; font-size: 7.8pt; color: var(--tinta-3); }
+  .ficha .pendente { color: var(--atencao); font-weight: bold; }
+
+  .sintese { font-size: 10.5pt; line-height: 1.5; margin: 6px 0 4px; }
+
+  .numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+  .numero { border-top: 3px solid var(--destaque); background: var(--fundo-suave); padding: 7px 9px 8px; }
+  .numero .valor { font-size: 19pt; font-weight: bold; line-height: 1.1; }
+  .numero .valor small { font-size: 9.5pt; font-weight: normal; color: var(--tinta-2); }
+  .numero .rotulo { font-size: 8.8pt; font-weight: bold; margin-top: 2px; }
+  .numero .base { font-size: 7.8pt; color: var(--tinta-3); line-height: 1.35; margin-top: 2px; }
+
+  .atencao { border-left: 3px solid var(--atencao); background: var(--atencao-fundo); padding: 7px 11px; margin: 10px 0 0; }
+  .atencao h2 { border: 0; margin: 0 0 4px; padding: 0; font-size: 10.5pt; color: var(--atencao); }
+  .atencao ol { margin: 0; padding-left: 16px; }
+  .atencao li { margin: 3px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 4px 0 6px; }
+  th, td { text-align: left; vertical-align: top; padding: 3px 6px; border-bottom: 1px solid var(--linha); }
+  thead th { border-bottom: 1px solid var(--tinta); font-size: 8.2pt; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .aus { color: var(--tinta-3); font-style: italic; }
+  .nota { font-size: 7.8pt; color: var(--tinta-3); margin: 2px 0 6px; line-height: 1.35; }
+  .hash { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 6.9pt; word-break: break-all; color: var(--tinta-2); }
+  .tag { display: inline-block; font-size: 7pt; text-transform: uppercase; letter-spacing: .03em; color: var(--tinta-3); border: 1px solid var(--linha); padding: 0 3px; margin-left: 4px; }
+  .datas td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; width: 26mm; }
+  .grafico { margin: 2px 0 0; }
+  .grafico svg { width: 100%; height: auto; display: block; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media screen and (max-width: 820px) { .duas { grid-template-columns: 1fr; } }
+  .anexo-titulo { font-size: 13pt; margin: 6px 0 2px; }
+  dl.defs { margin: 0; font-size: 8.4pt; }
+  dl.defs dt { font-weight: bold; margin-top: 4px; }
+  dl.defs dd { margin: 0 0 0 0; color: var(--tinta-2); }
+
+  ul.compacta { margin: 2px 0 6px; padding-left: 16px; font-size: 8.8pt; }
+  ul.compacta li { margin: 2px 0; }
+  .barra { color: var(--barra-2); letter-spacing: -1px; font-size: 8pt; }
+  .numero .valor small { white-space: nowrap; }

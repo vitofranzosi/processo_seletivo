@@ -23,7 +23,7 @@ def test_encerrado_com_convocacao_no_prazo_e_acompanhamento(pendente):
     titulos = [titulo for titulo, _ in relatorio.pontos_de_atencao]
     assert titulos == [
         "O Edital está encerrado no GPS, mas ainda há providência pendente.",
-        "Houve 2 registros depois do encerramento.",
+        "A trilha de auditoria tem 2 registros depois do encerramento.",
         "O GPS não registra matrículas.",
     ]
 
@@ -60,9 +60,14 @@ def test_inscricoes_abertas_e_acompanhamento_com_numeros_parciais(db):
     assert enviadas.numero.parcial
     assert "segue aberto" in " ".join(relatorio.frases)
     assert any("ainda não divulgado" in p for p in relatorio.pendencias)
-    professor = relatorio.perfis[0]
-    assert professor.etapas and not any(etapa.registrada for etapa in professor.etapas)
+    professor, tecnico = relatorio.perfis
     assert rel.interpretar(professor.classificadas) == "ainda não divulgado"
+    # Em 20/08 o Técnico tem menos de cinco inscrições, e o Professor é omitido com ele, para que
+    # o detalhe do Técnico não se deduza dos totais (100, FR-2587). As etapas sem registro, que
+    # este caso também cobria, estão no unitário de `_linhas_das_etapas`.
+    assert tecnico.motivo_da_omissao == rel.FRASE_DE_PRIVACIDADE
+    assert professor.motivo_da_omissao == rel.FRASE_COMPLEMENTAR
+    assert professor.etapas == () and professor.convocacoes is None
 
 
 def test_cancelado_e_interrupcao_sem_resultado_como_pendencia(db):

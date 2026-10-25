@@ -84,6 +84,14 @@ OMITIDO = "omitido"
 #: O limiar de D-006, revisável pelo usuário e pelo encarregado de dados.
 MINIMO_PARA_DETALHAR = 5
 FRASE_DE_PRIVACIDADE = f"detalhe omitido: menos de {MINIMO_PARA_DETALHAR} inscrições neste perfil"
+#: O Perfil grande omitido só para que o pequeno não se deduza dos totais (100, FR-2587): a frase do
+#: pequeno seria falsa nele.
+FRASE_COMPLEMENTAR = (
+    f"detalhe omitido para que o de perfil com menos de {MINIMO_PARA_DETALHAR} inscrições não se "
+    "deduza dos totais"
+)
+#: O Edital inteiro abaixo do limiar: os totais não públicos dele também somem.
+FRASE_DO_EDITAL = f"detalhe omitido: menos de {MINIMO_PARA_DETALHAR} inscrições neste Edital"
 
 #: O rótulo de cada desfecho é o que o candidato já lê no portal (FR-2545), **com uma troca**: o
 #: candidato lê "Vaga aceita", e quem dirige leria vaga preenchida. Para a gestão, o aceite é da
@@ -175,6 +183,8 @@ class LinhaDoPerfil:
     etapas: tuple
     listas: tuple
     omitido: bool
+    #: A frase da omissão, quando há: a do Perfil pequeno ou a do complemento (100, FR-2587).
+    motivo_da_omissao: str = ""
 
 
 @dataclass(frozen=True)
@@ -230,6 +240,8 @@ class Relatorio:
     cadastros_distintos: int
     desfecho_em: datetime | None
     pontos_de_atencao: list = field(default_factory=list)
+    #: Edital com menos inscrições que o limiar: os totais não públicos dele não são ditos (100).
+    total_omitido: bool = False
 
     @property
     def titulo(self):
@@ -407,14 +419,102 @@ def _regra_da_etapa(etapa):
     return "; ".join(partes)
 
 
-def montar(edital, *, agora, enderecos):
-    """A derivação inteira. Supõe a transação de `leitura_consistente` aberta por quem chama.
+# --- Os fatos, separados da redação (100) ---------------------------------------------------------
+#
+# **Uma regra num lugar só** (100, D-002). As pendências saíam daqui já redigidas, e somá-las entre
+# Editais exigiria ler a frase — decidir situação por texto, que a FR-2547 proíbe. Agora a regra
+# produz o tipo, e a frase sai de uma função que só o redige. O relatório do Edital continua o mesmo
+# documento; o consolidado da unidade lê os tipos.
+
+RESULTADO_NAO_DIVULGADO = "RESULTADO_NAO_DIVULGADO"
+DEFINITIVO_NAO_PUBLICADO = "DEFINITIVO_NAO_PUBLICADO"
+REAVALIACAO_PENDENTE = "REAVALIACAO_PENDENTE"
+PROVIDENCIA_PENDENTE = "PROVIDENCIA_PENDENTE"
+APURACAO_DESATUALIZADA = "APURACAO_DESATUALIZADA"
+CONVOCACAO_AGUARDANDO = "CONVOCACAO_AGUARDANDO"
+CONVOCACAO_VENCIDA = "CONVOCACAO_VENCIDA"
+RECURSO_AGUARDANDO = "RECURSO_AGUARDANDO"
+
+#: O que é público por ato: que um resultado previsto ainda não saiu está na página da seleção. O
+#: resto é fato não público, e obedece à privacidade (FR-2550).
+PENDENCIAS_PUBLICAS = frozenset({RESULTADO_NAO_DIVULGADO, DEFINITIVO_NAO_PUBLICADO})
+
+
+@dataclass(frozen=True)
+class Pendencia:
+    tipo: str
+    #: `None` só no recurso aguardando decisão, que o relatório diz do Edital inteiro.
+    perfil_id: str | None
+    quantidade: int = 1
+    #: O nome publicado do marco, nas duas pendências de resultado.
+    marco: str = ""
+    #: O prazo mais distante, na convocação aguardando resposta.
+    ate: datetime | None = None
+
+    @property
+    def publica(self):
+        return self.tipo in PENDENCIAS_PUBLICAS
+
+
+@dataclass
+class FatosDoEdital:
+    """O que a leitura do Edital produz antes de qualquer frase (100, FR-2570).
+
+    Os campos de cima são o que o consolidado da unidade soma; os de baixo, com `_`, são o que só o
+    documento individual consome — mantê-los aqui evita ler duas vezes o que a regra já leu.
+    """
+
+    edital: Edital
+    referencia: datetime
+    unidade: dict
+    especie: str
+    desfecho_em: datetime | None
+    perfis: list
+    pendencias: tuple
+    vagas: int
+    inscricoes: int
+    rascunhos: int
+    periodo_aberto: bool
+    prorrogado: bool
+    envios: tuple
+    marcos_declarados: int
+    marcos_definitivos: int
+    datas_definitivas: tuple
+    #: Soma das apurações vigentes e atualizadas; `None` quando nenhum Perfil foi apurado.
+    vagas_habilitadas: int | None
+    #: As vagas imediatas dos Perfis com apuração atualizada, e com apuração desatualizada (100).
+    vagas_apuradas: int
+    vagas_desatualizadas: int
+    retificacoes: int
+    #: `(nome, inscrições, vagas, espécies)` dos Perfis com marca de procura da Visão Geral (040).
+    perfis_com_marca: tuple
+    convocacoes: Convocacoes
+    recursos: Recursos
+    posteriores: list
+    cadastros_distintos: int
+    #: Os Perfis com detalhe não público omitido — os pequenos e os do complemento (FR-2587).
+    omitidos: frozenset
+    complementares: frozenset
+    total_omitido: bool
+    _perfis_publicados: list = field(repr=False, default_factory=list)
+    _etapas: list = field(repr=False, default_factory=list)
+    _original: dict | None = field(repr=False, default=None)
+    _vigente: dict = field(repr=False, default_factory=dict)
+    _primeira: object = field(repr=False, default=None)
+    _periodo: object = field(repr=False, default=None)
+    _evento_vigente: dict | None = field(repr=False, default=None)
+    _termino_original: datetime | None = field(repr=False, default=None)
+    _no_periodo_acrescentado: int = field(repr=False, default=0)
+    _por_etapa: dict = field(repr=False, default_factory=dict)
+    _prazos_em_curso: list = field(repr=False, default_factory=list)
+    _retificacoes_lidas: list = field(repr=False, default_factory=list)
+
+
+def fatos_do_edital(edital, *, agora):
+    """Leituras e regras do relatório do Edital, sem redação. Supõe `leitura_consistente` aberta.
 
     **`agora` é o instante da leitura, e não uma data de retrato** (FR-2521). Ele decide o que é
-    prazo em curso, período aberto e versão vigente; os fatos são os gravados até a leitura. O
-    relatório não reconstitui o passado: chamá-lo com uma data anterior misturaria o cronograma
-    daquele dia com os números de hoje. Os testes o passam fixo porque o relógio da suíte anda, e
-    os fatos da fixture são todos anteriores a ele.
+    prazo em curso, período aberto e versão vigente; os fatos são os gravados até a leitura.
     """
     original, vigente = _versoes(edital, agora)
     vigente = vigente or {}
@@ -437,7 +537,6 @@ def montar(edital, *, agora, enderecos):
     cadastros = enviadas.values("identity_subject").distinct().count()
     instantes = list(enviadas.order_by("submitted_at").values_list("submitted_at", flat=True))
     periodo = periodo_de_inscricoes(vigente, agora)
-    serie = supervisao.serie_do_edital(edital, periodo, agora) if periodo.designado else ()
     evento_original = _evento_das_inscricoes(original)
     evento_vigente = _evento_das_inscricoes(vigente)
     termino_original = _quando((evento_original or {}).get("endAt"))
@@ -480,16 +579,21 @@ def montar(edital, *, agora, enderecos):
 
     recursos_por_perfil, recursos_total = _recursos(edital)
     convocacoes_por_perfil, pendencias_de_convocacao, prazos_em_curso = _convocacoes(edital, agora)
+    retificacoes_lidas = _retificacoes_publicadas(edital, agora)
 
-    pendencias = []
     pendencias_de_resultado = []
-    # `(perfil_id, texto)`: o Perfil só é nomeado na redação, onde o omitido por privacidade não é.
     nao_publicas = []
-    omitidos = {
-        str(p["id"])
+    # Perfil sem inscrição enviada e sem rascunho não tem fato não público a proteger, e por isso
+    # não entra na regra: ele mostraria só zeros, e o complemento esconderia outro Perfil à toa.
+    populacoes = {
+        str(p["id"]): contagem["submetidas"].get(str(p["id"]), 0)
         for p in perfis_publicados
-        if contagem["submetidas"].get(str(p["id"]), 0) < MINIMO_PARA_DETALHAR
+        if contagem["submetidas"].get(str(p["id"]), 0) or contagem["rascunhos"].get(str(p["id"]), 0)
     }
+    primarios, complementares, total_omitido = omitidos_por_complemento(
+        populacoes, MINIMO_PARA_DETALHAR
+    )
+    omitidos = primarios | complementares
     linhas = []
     datas_definitivas = []
     marcos_declarados = 0
@@ -497,12 +601,28 @@ def montar(edital, *, agora, enderecos):
     vagas_total = 0
     vagas_habilitadas = 0
     vagas_apuradas_algum = False
+    vagas_apuradas = 0
+    vagas_desatualizadas = 0
+    perfis_com_marca = []
+    # As marcas de procura são as da Visão Geral, pela regra dela — período encerrado, sem
+    # inscrição ou razão abaixo de 1 —, e não uma segunda (040, FR-602).
+    periodo_da_visao = visao_geral.situacao_do_periodo(vigente or None, agora)
     for perfil in perfis_publicados:
         perfil_id = str(perfil["id"])
         nome = perfil.get("name") or perfil.get("code") or "Perfil"
         inscricoes = contagem["submetidas"].get(perfil_id, 0)
         rascunhos = contagem["rascunhos"].get(perfil_id, 0)
         omitido = perfil_id in omitidos
+        motivo = (
+            FRASE_COMPLEMENTAR
+            if perfil_id in complementares
+            else FRASE_DE_PRIVACIDADE
+            if omitido
+            else ""
+        )
+        # Sem inscrição enviada e com o período fechado, não há o que classificar nem divulgar: o
+        # marco não é previsto nem pendente, e nenhum ato o cumpriria (100, FR-2589, D-007).
+        sem_inscricao = inscricoes == 0 and not periodo.aberto
         vagas = visao_geral.vagas_do_conteudo({"profiles": [perfil]}).total
         vagas_total += vagas
 
@@ -513,9 +633,11 @@ def montar(edital, *, agora, enderecos):
         tem_publicacao = False
         for marco in perfil.get("classificationMilestones") or []:
             marco_id = str(marco["id"])
-            marcos_declarados += 1
             listas = listas_por_marco.get((perfil_id, marco_id), set())
             emitidas = atos_por_marco.get((perfil_id, marco_id), set())
+            if sem_inscricao and not listas and not emitidas:
+                continue
+            marcos_declarados += 1
             definitivo_em_todas = bool(listas)
             for lista in sorted(listas | emitidas, key=lambda x: x or ""):
                 publicacao = (
@@ -552,13 +674,13 @@ def montar(edital, *, agora, enderecos):
                 marcos_definitivos += 1
             elif not listas:
                 pendencias_de_resultado.append(
-                    f"{nome}: resultado de “{marco.get('name')}” ainda não divulgado"
+                    Pendencia(RESULTADO_NAO_DIVULGADO, perfil_id, marco=marco.get("name"))
                 )
             else:
                 pendencias_de_resultado.append(
-                    f"{nome}: resultado definitivo de “{marco.get('name')}” ainda não publicado"
+                    Pendencia(DEFINITIVO_NAO_PUBLICADO, perfil_id, marco=marco.get("name"))
                 )
-            nao_publicas.extend((perfil_id, t) for t in _pendencias_de_recurso(edital, marco))
+            nao_publicas.extend(_pendencias_de_recurso(edital, marco, perfil_id))
 
         if tem_publicacao:
             numero_classificadas = Numero.de(len(classificadas))
@@ -569,6 +691,9 @@ def montar(edital, *, agora, enderecos):
                 if naturezas == {Natureza.PRELIMINAR}
                 else "preliminar e definitivo"
             )
+        elif sem_inscricao:
+            numero_classificadas = Numero.nao_aplicavel("não se aplica: nenhuma inscrição enviada")
+            natureza = ""
         else:
             numero_classificadas = Numero.nao_disponivel("ainda não divulgado")
             natureza = ""
@@ -576,11 +701,11 @@ def montar(edital, *, agora, enderecos):
         # Vagas com inscrição classificada e habilitada — a apuração vigente, por recorte.
         habilitadas, apurada, obsoleta = _ocupacao(edital, perfil)
         if obsoleta:
-            nao_publicas.append((perfil_id, "apuração das vagas desatualizada"))
+            nao_publicas.append(Pendencia(APURACAO_DESATUALIZADA, perfil_id))
         if vagas == 0:
             numero_habilitadas = Numero.nao_aplicavel("só cadastro de reserva")
         elif omitido:
-            numero_habilitadas = Numero(ausencia=Ausencia(OMITIDO, FRASE_DE_PRIVACIDADE))
+            numero_habilitadas = Numero(ausencia=Ausencia(OMITIDO, motivo))
         elif obsoleta:
             numero_habilitadas = Numero.nao_disponivel("apuração desatualizada")
         elif not apurada:
@@ -590,6 +715,21 @@ def montar(edital, *, agora, enderecos):
         if apurada and not obsoleta:
             vagas_habilitadas += habilitadas
             vagas_apuradas_algum = True
+        if vagas and obsoleta:
+            vagas_desatualizadas += vagas
+        elif vagas and apurada:
+            vagas_apuradas += vagas
+        marcas = visao_geral._marcas(
+            periodo_da_visao,
+            Numero.de(inscricoes),
+            Numero.de(visao_geral._razao(inscricoes, vagas))
+            if vagas
+            else Numero.nao_aplicavel("só cadastro de reserva"),
+        )
+        if marcas:
+            perfis_com_marca.append(
+                (nome, inscricoes, vagas, tuple(marca.especie for marca in marcas))
+            )
 
         convocacoes_do_perfil = convocacoes_por_perfil.get(perfil_id)
         recursos_do_perfil = recursos_por_perfil.get(perfil_id)
@@ -603,9 +743,7 @@ def montar(edital, *, agora, enderecos):
                 reserva=_reserva(perfil),
                 inscricoes=Numero.de(inscricoes, parcial=periodo.aberto),
                 rascunhos=(
-                    Numero(ausencia=Ausencia(OMITIDO, FRASE_DE_PRIVACIDADE))
-                    if omitido
-                    else Numero.de(rascunhos)
+                    Numero(ausencia=Ausencia(OMITIDO, motivo)) if omitido else Numero.de(rascunhos)
                 ),
                 por_vaga=(
                     Numero.de(visao_geral._razao(inscricoes, vagas), parcial=periodo.aberto)
@@ -618,26 +756,23 @@ def montar(edital, *, agora, enderecos):
                 convocacoes=None if omitido else convocacoes_do_perfil,
                 recursos=None if omitido else recursos_do_perfil,
                 situacao_das_vagas=_situacao_das_vagas(
-                    vagas, numero_habilitadas, convocacoes_do_perfil, omitido, perfil
+                    vagas, numero_habilitadas, convocacoes_do_perfil, motivo, perfil
                 ),
                 etapas=()
                 if omitido
                 else _linhas_das_etapas(perfil_id, _etapas_do_perfil(perfil, etapas), por_etapa),
                 listas=tuple(linhas_das_listas),
                 omitido=omitido,
+                motivo_da_omissao=motivo,
             )
         )
 
     # Edital cancelado não terá resultado: o que falta divulgar deixou de ser providência.
-    if edital.status != Edital.Status.CANCELADO:
-        pendencias[:0] = pendencias_de_resultado
-    nao_publicas.extend(pendencias_de_convocacao)
-    pendencias.extend(_redigir(nao_publicas, perfis_publicados, omitidos))
+    pendencias = [] if edital.status == Edital.Status.CANCELADO else list(pendencias_de_resultado)
+    pendencias.extend(nao_publicas)
+    pendencias.extend(pendencias_de_convocacao)
     if recursos_total.aguardando:
-        pendencias.append(
-            f"{recursos_total.aguardando} "
-            f"{_plural(recursos_total.aguardando, 'recurso aguarda', 'recursos aguardam')} decisão"
-        )
+        pendencias.append(Pendencia(RECURSO_AGUARDANDO, None, recursos_total.aguardando))
 
     if edital.status == Edital.Status.CANCELADO:
         especie = INTERRUPCAO
@@ -646,28 +781,166 @@ def montar(edital, *, agora, enderecos):
     else:
         especie = ACOMPANHAMENTO
 
-    posteriores = relatorio_trilha.posteriores(edital, desfecho_em, agora) if desfecho_em else []
-    retificacoes = _retificacoes(edital, agora)
-    documentos = _documentos(edital, perfis_publicados, enderecos)
+    return FatosDoEdital(
+        edital=edital,
+        referencia=agora,
+        unidade=unidade,
+        especie=especie,
+        desfecho_em=desfecho_em,
+        perfis=linhas,
+        pendencias=tuple(pendencias),
+        vagas=vagas_total,
+        inscricoes=sum(contagem["submetidas"].values()),
+        rascunhos=sum(contagem["rascunhos"].values()),
+        periodo_aberto=periodo.aberto,
+        prorrogado=prorrogado,
+        envios=tuple(instantes),
+        marcos_declarados=marcos_declarados,
+        marcos_definitivos=marcos_definitivos,
+        datas_definitivas=tuple(datas_definitivas),
+        vagas_habilitadas=vagas_habilitadas if vagas_apuradas_algum else None,
+        vagas_apuradas=vagas_apuradas,
+        vagas_desatualizadas=vagas_desatualizadas,
+        retificacoes=len(retificacoes_lidas),
+        perfis_com_marca=tuple(perfis_com_marca),
+        convocacoes=_somar_convocacoes(convocacoes_por_perfil.values()),
+        recursos=recursos_total,
+        posteriores=(
+            relatorio_trilha.posteriores(edital, desfecho_em, agora) if desfecho_em else []
+        ),
+        cadastros_distintos=cadastros,
+        omitidos=frozenset(omitidos),
+        complementares=frozenset(complementares),
+        total_omitido=total_omitido,
+        _perfis_publicados=perfis_publicados,
+        _etapas=etapas,
+        _original=original,
+        _vigente=vigente,
+        _primeira=primeira,
+        _periodo=periodo,
+        _evento_vigente=evento_vigente,
+        _termino_original=termino_original if prorrogado else None,
+        _no_periodo_acrescentado=no_periodo_acrescentado,
+        _por_etapa=por_etapa,
+        _prazos_em_curso=prazos_em_curso,
+        _retificacoes_lidas=retificacoes_lidas,
+    )
+
+
+def omitidos_por_complemento(populacoes, limiar):
+    """`(pequenos, complemento, total_omitido)` da supressão complementar (100, FR-2587, D-006).
+
+    Omitir só o grupo pequeno deixava o fato voltar por subtração: total menos as linhas dos
+    outros. Por isso, enquanto os omitidos somam menos que o limiar, entra também o grupo de menor
+    população — desempate pelo identificador, para a mesma entrada dar sempre a mesma saída. Se
+    nem todos juntos chegam ao limiar, o próprio total é omitido.
+    """
+    pequenos = frozenset(k for k, n in populacoes.items() if n < limiar)
+    omitidos = set(pequenos)
+    soma = sum(populacoes[k] for k in omitidos)
+    restantes = sorted((n, k) for k, n in populacoes.items() if k not in omitidos)
+    while omitidos and soma < limiar and restantes:
+        n, k = restantes.pop(0)
+        omitidos.add(k)
+        soma += n
+    return pequenos, frozenset(omitidos - pequenos), bool(omitidos) and soma < limiar
+
+
+def texto_da_pendencia(pendencia):
+    """A frase de uma pendência, sem o nome do Perfil — que a redação acrescenta ou cala."""
+    n = pendencia.quantidade
+    if pendencia.tipo == RESULTADO_NAO_DIVULGADO:
+        return f"resultado de “{pendencia.marco}” ainda não divulgado"
+    if pendencia.tipo == DEFINITIVO_NAO_PUBLICADO:
+        return f"resultado definitivo de “{pendencia.marco}” ainda não publicado"
+    if pendencia.tipo == REAVALIACAO_PENDENTE:
+        return "reavaliação determinada por recurso ainda não concluída"
+    if pendencia.tipo == PROVIDENCIA_PENDENTE:
+        return "providência determinada por recurso ainda não cumprida"
+    if pendencia.tipo == APURACAO_DESATUALIZADA:
+        return "apuração das vagas desatualizada"
+    if pendencia.tipo == CONVOCACAO_AGUARDANDO:
+        ate = f", até {data_curta(pendencia.ate)}" if pendencia.ate else ""
+        return f"{n} {_plural(n, 'convocação aguardando', 'convocações aguardando')} resposta{ate}"
+    if pendencia.tipo == CONVOCACAO_VENCIDA:
+        return (
+            f"{n} {_plural(n, 'convocação', 'convocações')} com prazo encerrado sem registro de "
+            "resposta"
+        )
+    if pendencia.tipo == RECURSO_AGUARDANDO:
+        return f"{n} {_plural(n, 'recurso aguarda', 'recursos aguardam')} decisão"
+    raise ValueError(pendencia.tipo)
+
+
+def redigir_pendencias(fatos):
+    """As frases das pendências, na ordem e com a privacidade do relatório do Edital (D-006)."""
+    perfis = fatos._perfis_publicados
+    nomes = {str(p["id"]): p.get("name") or p.get("code") or "Perfil" for p in perfis}
+    redigidas = [
+        f"{nomes.get(p.perfil_id, 'Perfil')}: {texto_da_pendencia(p)}"
+        for p in fatos.pendencias
+        if p.publica
+    ]
+    nao_publicas = [
+        (p.perfil_id, texto_da_pendencia(p))
+        for p in fatos.pendencias
+        if not p.publica and p.tipo != RECURSO_AGUARDANDO
+    ]
+    if fatos.total_omitido:
+        # Nem a quantidade: num Edital abaixo do limiar, quantas providências não públicas há já é
+        # o fato que se protege (FR-2587).
+        if any(not p.publica for p in fatos.pendencias):
+            redigidas.append(f"providência pendente com {FRASE_DO_EDITAL}")
+        return redigidas
+    redigidas.extend(_redigir(nao_publicas, perfis, fatos.omitidos, fatos.complementares))
+    redigidas.extend(
+        texto_da_pendencia(p) for p in fatos.pendencias if p.tipo == RECURSO_AGUARDANDO
+    )
+    return redigidas
+
+
+def montar(edital, *, agora, enderecos):
+    """Os fatos, as leituras que só o documento individual usa, e a redação.
+
+    Supõe a transação de `leitura_consistente` aberta por quem chama. Os testes passam `agora` fixo
+    porque o relógio da suíte anda, e os fatos da fixture são todos anteriores a ele.
+    """
+    fatos = fatos_do_edital(edital, agora=agora)
+    periodo = fatos._periodo
+    serie = supervisao.serie_do_edital(edital, periodo, agora) if periodo.designado else ()
+    pendencias = redigir_pendencias(fatos)
+    posteriores = fatos.posteriores
+    if fatos.total_omitido and posteriores:
+        # O tipo de cada registro diria qual fato não público houve; fica a quantidade.
+        posteriores = [
+            (
+                "registros na trilha",
+                sum(n for _, n, _ in posteriores),
+                min(primeira for _, _, primeira in posteriores),
+            )
+        ]
+    retificacoes = _retificacoes(fatos._retificacoes_lidas)
+    documentos = _documentos(edital, fatos._perfis_publicados, enderecos)
     datas = _datas(
         edital,
-        primeira,
+        fatos._primeira,
         retificacoes,
-        evento_vigente,
-        termino_original if prorrogado else None,
+        fatos._evento_vigente,
+        fatos._termino_original,
         posteriores,
-        desfecho_em,
-        especie,
+        fatos.desfecho_em,
+        fatos.especie,
         agora,
-        prazos_em_curso,
+        fatos._prazos_em_curso,
+        fatos.total_omitido,
     )
 
     situacao_no_gps = {
         Edital.Status.PUBLICADO: "Publicado",
         Edital.Status.ENCERRADO: "Encerrado"
-        + (f" em {data_curta(desfecho_em)}" if desfecho_em else ""),
+        + (f" em {data_curta(fatos.desfecho_em)}" if fatos.desfecho_em else ""),
         Edital.Status.CANCELADO: "Cancelado"
-        + (f" em {data_curta(desfecho_em)}" if desfecho_em else ""),
+        + (f" em {data_curta(fatos.desfecho_em)}" if fatos.desfecho_em else ""),
     }.get(edital.status, edital.get_status_display())
     if pendencias:
         providencias = "; ".join(pendencias[:2]) + (
@@ -676,51 +949,59 @@ def montar(edital, *, agora, enderecos):
     else:
         providencias = "nenhuma providência pendente registrada no GPS"
 
-    convocacoes_total = _somar_convocacoes(convocacoes_por_perfil.values())
     relatorio = Relatorio(
         referencia=agora,
         edital=edital,
-        unidade=unidade,
-        especie=especie,
+        unidade=fatos.unidade,
+        especie=fatos.especie,
         situacao_no_gps=situacao_no_gps,
         providencias=providencias,
         pendencias=pendencias,
         posteriores=posteriores,
         frases=[],
         indicadores=[],
-        perfis=linhas,
+        perfis=fatos.perfis,
         serie=tuple(serie),
-        termino_original=termino_original if prorrogado else None,
-        no_periodo_acrescentado=no_periodo_acrescentado,
-        periodo_aberto=periodo.aberto,
+        termino_original=fatos._termino_original,
+        no_periodo_acrescentado=fatos._no_periodo_acrescentado,
+        periodo_aberto=fatos.periodo_aberto,
         retificacoes=retificacoes,
-        recursos=recursos_total,
+        recursos=fatos.recursos,
         datas=datas,
         documentos=documentos,
         endereco_da_selecao=enderecos.selecao(),
-        cronograma=_cronograma(original, vigente, retificacoes, instantes, por_etapa, etapas),
-        cadastros_distintos=cadastros,
-        desfecho_em=desfecho_em,
+        cronograma=_cronograma(
+            fatos._original,
+            fatos._vigente,
+            retificacoes,
+            list(fatos.envios),
+            fatos._por_etapa,
+            fatos._etapas,
+        ),
+        cadastros_distintos=fatos.cadastros_distintos,
+        desfecho_em=fatos.desfecho_em,
+        total_omitido=fatos.total_omitido,
     )
+    marcos = (fatos.marcos_definitivos, fatos.marcos_declarados, list(fatos.datas_definitivas))
     relatorio.indicadores = _indicadores(
         relatorio,
-        vagas_total=vagas_total,
-        inscricoes=sum(contagem["submetidas"].values()),
-        rascunhos=sum(contagem["rascunhos"].values()),
-        marcos=(marcos_definitivos, marcos_declarados, datas_definitivas),
-        vagas_habilitadas=vagas_habilitadas if vagas_apuradas_algum else None,
-        convocacoes=convocacoes_total,
+        vagas_total=fatos.vagas,
+        inscricoes=fatos.inscricoes,
+        rascunhos=fatos.rascunhos,
+        marcos=marcos,
+        vagas_habilitadas=fatos.vagas_habilitadas,
+        convocacoes=fatos.convocacoes,
     )
     relatorio.frases = _frases(
         relatorio,
-        vagas_total=vagas_total,
-        inscricoes=sum(contagem["submetidas"].values()),
-        instantes=instantes,
-        marcos=(marcos_definitivos, marcos_declarados, datas_definitivas),
-        vagas_habilitadas=vagas_habilitadas if vagas_apuradas_algum else None,
-        convocacoes=convocacoes_total,
+        vagas_total=fatos.vagas,
+        inscricoes=fatos.inscricoes,
+        instantes=list(fatos.envios),
+        marcos=marcos,
+        vagas_habilitadas=fatos.vagas_habilitadas,
+        convocacoes=fatos.convocacoes,
     )
-    relatorio.pontos_de_atencao = _pontos_de_atencao(relatorio, convocacoes_total)
+    relatorio.pontos_de_atencao = _pontos_de_atencao(relatorio, fatos.convocacoes)
     return relatorio
 
 
@@ -791,7 +1072,7 @@ def _recursos(edital):
     return {k: recursos_de(c) for k, c in contagem.items()}, recursos_de(total)
 
 
-def _pendencias_de_recurso(edital, marco):
+def _pendencias_de_recurso(edital, marco, perfil_id):
     """Reavaliação e providência pendentes do marco — as perguntas da publicabilidade (R-006)."""
     marco_id = str(marco["id"])
     publicacoes = list(
@@ -803,11 +1084,11 @@ def _pendencias_de_recurso(edital, marco):
     if not publicacoes:
         return pendencias
     if recursos.reavaliacoes_pendentes_do_marco(edital=edital, marco=marco):
-        pendencias.append("reavaliação determinada por recurso ainda não concluída")
+        pendencias.append(Pendencia(REAVALIACAO_PENDENTE, perfil_id))
     if recursos.providencias_pendentes_do_marco(
         edital=edital, marco_id=marco_id, marco=marco, publicacoes_do_marco=publicacoes
     ):
-        pendencias.append("providência determinada por recurso ainda não cumprida")
+        pendencias.append(Pendencia(PROVIDENCIA_PENDENTE, perfil_id))
     return pendencias
 
 
@@ -845,7 +1126,7 @@ def _ocupacao(edital, perfil):
 
 
 def _convocacoes(edital, agora):
-    """A cadeia por Perfil, as pendências `(perfil_id, texto)` e os prazos em curso (D-006).
+    """A cadeia por Perfil, as pendências de convocação e os prazos em curso (D-006).
 
     Nunca por lista: a convocação da única vaga reservada, dita por lista, apontaria a primeira
     pessoa da lista publicada. Os prazos são os das convocações **vigentes** sem desfecho — as
@@ -890,29 +1171,13 @@ def _convocacoes(edital, agora):
             outros=tuple(sorted(outros.items())),
         )
         if aguardando:
-            ate = f", até {data_curta(prazo)}" if prazo else ""
-            pendencias.append(
-                (
-                    perfil_id,
-                    f"{aguardando} "
-                    f"{_plural(aguardando, 'convocação aguardando', 'convocações aguardando')}"
-                    " resposta"
-                    f"{ate}",
-                )
-            )
+            pendencias.append(Pendencia(CONVOCACAO_AGUARDANDO, perfil_id, aguardando, ate=prazo))
         if vencidas:
-            pendencias.append(
-                (
-                    perfil_id,
-                    f"{vencidas} "
-                    f"{_plural(vencidas, 'convocação', 'convocações')} com prazo encerrado"
-                    " sem registro de resposta",
-                )
-            )
+            pendencias.append(Pendencia(CONVOCACAO_VENCIDA, perfil_id, vencidas))
     return resultado, pendencias, sorted(prazos)
 
 
-def _redigir(nao_publicas, perfis, omitidos):
+def _redigir(nao_publicas, perfis, omitidos, complementares=frozenset()):
     """As pendências de fato não público, com o nome do Perfil — menos o do Perfil omitido.
 
     O Perfil com menos de cinco inscrições tem o detalhe não público omitido (D-006); nomeá-lo aqui
@@ -925,9 +1190,14 @@ def _redigir(nao_publicas, perfis, omitidos):
     ]
     escondidas = sum(1 for pid, _ in nao_publicas if pid in omitidos)
     if escondidas:
+        onde = (
+            "em perfis com detalhe omitido por privacidade"
+            if complementares
+            else f"em perfil com menos de {MINIMO_PARA_DETALHAR} inscrições (detalhe omitido)"
+        )
         redigidas.append(
             f"{escondidas} {_plural(escondidas, 'providência pendente', 'providências pendentes')}"
-            f" em perfil com menos de {MINIMO_PARA_DETALHAR} inscrições (detalhe omitido)"
+            f" {onde}"
         )
     return redigidas
 
@@ -951,13 +1221,13 @@ def _somar_convocacoes(itens):
     )
 
 
-def _situacao_das_vagas(vagas, habilitadas, convocacoes, omitido, perfil):
+def _situacao_das_vagas(vagas, habilitadas, convocacoes, motivo_da_omissao, perfil):
     if vagas == 0:
         if (perfil.get("reserveType") or "NONE") != "NONE":
             return "Sem vaga imediata; os classificados podem ser chamados se surgir vaga"
         return "Sem vaga imediata"
-    if omitido:
-        return FRASE_DE_PRIVACIDADE
+    if motivo_da_omissao:
+        return motivo_da_omissao
     if not habilitadas.existe:
         return f"Vagas: {habilitadas.ausencia.motivo}"
     partes = [f"{habilitadas.valor} de {vagas} com inscrição classificada e habilitada"]
@@ -981,11 +1251,9 @@ def _situacao_das_vagas(vagas, habilitadas, convocacoes, omitido, perfil):
     return "; ".join(partes)
 
 
-def _retificacoes(edital, agora):
-    from processo_seletivo.interface.views import _alteracoes_legiveis
-
-    lidas = []
-    for numero, retificacao in enumerate(
+def _retificacoes_publicadas(edital, agora):
+    """As Retificações publicadas até `agora`, em ordem — lidas uma vez, nos fatos (100)."""
+    return list(
         Retificacao.objects.filter(
             edital=edital,
             status=Retificacao.Status.PUBLICADA,
@@ -993,9 +1261,15 @@ def _retificacoes(edital, agora):
         )
         .select_related("base_snapshot", "publication")
         .prefetch_related("alteracoes")
-        .order_by("publication__published_at"),
-        1,
-    ):
+        .order_by("publication__published_at")
+    )
+
+
+def _retificacoes(publicadas):
+    from processo_seletivo.interface.views import _alteracoes_legiveis
+
+    lidas = []
+    for numero, retificacao in enumerate(publicadas, 1):
         lidas.append(
             Retificacao_(
                 numero=numero,
@@ -1066,8 +1340,13 @@ def _datas(
     especie,
     agora,
     prazos_em_curso,
+    total_omitido=False,
 ):
-    """As datas principais, cada uma com a natureza (FR-2538)."""
+    """As datas principais, cada uma com a natureza (FR-2538).
+
+    Com o Edital abaixo do limiar, saem as datas de julgamento e de convocação: elas diriam que
+    houve recurso e convocação, que é o fato não público que se protege (100, FR-2587).
+    """
     datas = []
     if primeira is not None:
         datas.append(Data(primeira.published_at, "Edital publicado", "publicação"))
@@ -1096,10 +1375,14 @@ def _datas(
         )
         for instante in dias:
             datas.append(Data(instante, texto, "publicação"))
-    julgados = sorted(
-        DecisaoRecurso.objects.filter(
-            recurso__inscricao__edital=edital, decidido_em__lte=agora
-        ).values_list("decidido_em", flat=True)
+    julgados = (
+        []
+        if total_omitido
+        else sorted(
+            DecisaoRecurso.objects.filter(
+                recurso__inscricao__edital=edital, decidido_em__lte=agora
+            ).values_list("decidido_em", flat=True)
+        )
     )
     if julgados:
         datas.append(
@@ -1110,10 +1393,14 @@ def _datas(
                 ate=julgados[-1] if julgados[-1].date() != julgados[0].date() else None,
             )
         )
-    convocadas = sorted(
-        Convocacao.objects.filter(
-            inscricao__edital=edital, criado_em__lte=agora, convocacao_anterior__isnull=True
-        ).values_list("criado_em", flat=True)
+    convocadas = (
+        []
+        if total_omitido
+        else sorted(
+            Convocacao.objects.filter(
+                inscricao__edital=edital, criado_em__lte=agora, convocacao_anterior__isnull=True
+            ).values_list("criado_em", flat=True)
+        )
     )
     if convocadas:
         datas.append(Data(convocadas[0], "Convocações para as vagas", "registrado"))
@@ -1128,7 +1415,7 @@ def _datas(
                     "registrado",
                 )
             )
-    for vencimento in prazos_em_curso:
+    for vencimento in [] if total_omitido else prazos_em_curso:
         if vencimento > agora:
             datas.append(Data(vencimento, "Fim de prazo de resposta a convocação", "prazo"))
     return sorted(datas, key=lambda d: d.dia)
@@ -1210,13 +1497,19 @@ def _indicadores(
         if datas
         else "nenhum resultado definitivo publicado ainda"
     )
+    omitido = Numero(ausencia=Ausencia(OMITIDO, FRASE_DO_EDITAL))
     if vagas_total == 0:
         habilitadas = Numero.nao_aplicavel("não há vaga imediata")
+    elif relatorio.total_omitido:
+        habilitadas = omitido
     elif vagas_habilitadas is None:
         habilitadas = Numero.nao_disponivel("ainda não apurada")
     else:
         habilitadas = Numero.de(vagas_habilitadas)
-    if convocacoes.realizadas:
+    if relatorio.total_omitido:
+        aceitas = omitido
+        base_aceitas = FRASE_DO_EDITAL
+    elif convocacoes.realizadas:
         aceitas = Numero.de(convocacoes.aceitas)
         partes = []
         if convocacoes.aguardando:
@@ -1251,13 +1544,13 @@ def _indicadores(
             "vagas com inscrição classificada e habilitada",
             habilitadas,
             "dentro do número de vagas e habilitada em todas as etapas. Não é matrícula",
-            de=vagas_total if vagas_total else None,
+            de=vagas_total if vagas_total and not relatorio.total_omitido else None,
         ),
         Indicador(
             "convocações aceitas",
             aceitas,
             base_aceitas,
-            de=convocacoes.realizadas or None,
+            de=None if relatorio.total_omitido else convocacoes.realizadas or None,
         ),
     ]
 
@@ -1272,7 +1565,7 @@ def _frases(
         quando = f" em {data_curta(relatorio.desfecho_em)}" if relatorio.desfecho_em else ""
         frases.append(f"O Edital foi cancelado{quando}.")
     com_vaga = [p for p in perfis if p.vagas.valor]
-    so_reserva = [p for p in perfis if not p.vagas.valor and p.reserva != "não há"]
+    so_reserva = [p for p in perfis if so_cadastro_de_reserva(p)]
     if com_vaga:
         if len(com_vaga) == 1:
             p = com_vaga[0]
@@ -1336,7 +1629,7 @@ def _frases(
             else f"Saíram {definitivos} dos {declarados} resultados definitivos previstos,"
         )
         frase = f"{alcance} {quando}"
-        if rec.apresentados and not rec.aguardando:
+        if rec.apresentados and not rec.aguardando and not relatorio.total_omitido:
             deferidos = (
                 "nenhum deles deferido"
                 if not rec.deferidos
@@ -1347,12 +1640,12 @@ def _frases(
                 f"{_plural(rec.apresentados, 'recurso', 'recursos')}, {deferidos}"
             )
         frases.append(frase + ".")
-    if rec.aguardando:
+    if rec.aguardando and not relatorio.total_omitido:
         frases.append(
             f"{rec.aguardando} {_plural(rec.aguardando, 'recurso aguarda', 'recursos aguardam')} "
             "decisão."
         )
-    if vagas_total and vagas_habilitadas is not None:
+    if vagas_total and vagas_habilitadas is not None and not relatorio.total_omitido:
         if vagas_habilitadas == vagas_total:
             sujeito = _plural(vagas_total, "A vaga imediata tem", f"As {vagas_total} vagas têm")
             frase = f"{sujeito} inscrição classificada e habilitada"
@@ -1410,11 +1703,12 @@ def _pontos_de_atencao(relatorio, convocacoes):
         )
         pontos.append(
             (
-                f"Houve {total} {_plural(total, 'registro', 'registros')} depois do encerramento.",
+                f"A trilha de auditoria tem {total} {_plural(total, 'registro', 'registros')} "
+                "depois do encerramento.",
                 f"{itens}. Um relatório emitido antes disso mostraria outros números.",
             )
         )
-    if convocacoes.realizadas or relatorio.especie == ENCERRAMENTO:
+    if relatorio.total_omitido or convocacoes.realizadas or relatorio.especie == ENCERRAMENTO:
         pontos.append(
             (
                 "O GPS não registra matrículas.",
@@ -1468,11 +1762,21 @@ def texto_do_indicador(indicador):
     return valor
 
 
+def reservadas_do_perfil(perfil):
+    """As vagas imediatas do Perfil em listas reservadas — o resto é da ampla concorrência."""
+    return sum(n for lista, n in perfil.vagas_por_lista if lista != "Ampla concorrência")
+
+
+def so_cadastro_de_reserva(perfil):
+    """Sem vaga imediata e com cadastro de reserva declarado."""
+    return not perfil.vagas.valor and perfil.reserva != "não há"
+
+
 def texto_das_vagas(perfil):
     """A célula de vagas do Perfil: o total e quantas são reservadas, ou o cadastro de reserva."""
     if not perfil.vagas.valor:
         return f"cadastro de reserva, {perfil.reserva}"
-    reservadas = sum(n for lista, n in perfil.vagas_por_lista if lista != "Ampla concorrência")
+    reservadas = reservadas_do_perfil(perfil)
     if not reservadas:
         return str(perfil.vagas.valor)
     ampla = perfil.vagas.valor - reservadas
