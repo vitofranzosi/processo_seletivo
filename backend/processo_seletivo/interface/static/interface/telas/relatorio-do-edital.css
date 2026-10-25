@@ -1,25 +1,71 @@
 /* O relatório do Edital (099): a camada executiva na tela. As regras moram aqui, e só esta tela
-   as carrega (091). */
-.situacoes-do-relatorio{display:grid;gap:.6rem 1.5rem;margin:1rem 0;
+   as carrega (091).
+
+   O polish de 25/10/2026 aproximou a tela do cuidado do PDF sem copiá-lo: o título manda; a
+   espécie é um selo, e a frase que a explica fica ao lado; situação, providências e a emissão
+   formam um painel; cada seção respira; e os seis números ficam em três colunas, e não em quatro
+   e dois. As superfícies, as bordas e as cores são os tokens do GPS (`shared/tokens.css`). */
+
+.relatorio-do-edital{container-type:inline-size}
+
+.cabecalho-do-relatorio .nota{max-width:var(--leitura);margin-top:.35rem}
+.especie-do-relatorio{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem .6rem;
+  margin:.4rem 0 0}
+/* O selo da espécie é neutro: acompanhamento, encerramento e interrupção se distinguem pelo texto,
+   e não pela cor — a espécie não é bom nem mau sinal. */
+.selo-da-especie{display:inline-block;padding:.15rem .6rem;border-radius:12px;font-size:.85rem;
+  font-weight:600;background:var(--verde-claro);color:var(--verde-escuro)}
+.explicacao-da-especie{display:inline-block;color:var(--texto-fraco)}
+.explicacao-da-especie::first-letter{text-transform:uppercase}
+
+.painel-do-relatorio{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin:1.25rem 0 0}
+.situacoes-do-relatorio{display:grid;gap:.75rem 1.5rem;margin:0;
   grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
-.situacoes-do-relatorio div{border-top:1px solid var(--borda);padding-top:.35rem}
+.situacoes-do-relatorio div{border-left:3px solid var(--borda);padding:.1rem 0 .1rem .75rem}
 .situacoes-do-relatorio dt{font-size:.8rem;color:var(--texto-fraco)}
-.situacoes-do-relatorio dd{margin:0;font-weight:600}
+.situacoes-do-relatorio dd{margin:.1rem 0 0;font-weight:600}
+/* Providência em curso: a marca em texto diz o estado, e o tom é o do que está em andamento. */
+.situacoes-do-relatorio .providencias-em-curso{border-left-color:var(--amarelo)}
+.marca-das-providencias{display:inline-block;margin-right:.35rem;padding:0 .45rem;
+  border-radius:10px;font-size:.75rem;font-weight:600;background:var(--amarelo-fundo);
+  color:var(--amarelo);vertical-align:.1rem}
 
-.emissao-do-relatorio{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin:1rem 0 1.5rem}
+.emissao-do-relatorio{display:flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center;
+  margin:1rem 0 0;padding-top:1rem;border-top:1px solid var(--borda)}
+.emissao-do-relatorio .nota{margin:0;flex:1 1 18rem}
+.emissao-do-relatorio .botao[aria-disabled="true"]{opacity:.7;cursor:progress}
+.situacao-da-emissao{margin:0;flex-basis:100%;font-size:.875rem;color:var(--texto-fraco)}
+.situacao-da-emissao:empty{display:none}
 
-.visao-geral-do-relatorio{max-width:48rem;line-height:1.55}
+.secao-do-relatorio{margin-top:2.25rem}
+.secao-do-relatorio h2{margin-bottom:.6rem}
 
-/* O número em cima, e o que ele diz embaixo: a base explica o número, e não compete com ele. */
-.numeros-do-relatorio{list-style:none;padding:0;margin:1rem 0;display:grid;gap:.75rem;
-  grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
-.numeros-do-relatorio li{padding:.75rem .9rem;border:1px solid var(--borda);border-radius:6px}
-.numeros-do-relatorio strong{display:block;font-size:1.6rem;line-height:1.15;
+.visao-geral-do-relatorio{max-width:var(--leitura);line-height:1.65;margin:0}
+
+/* Três por linha, em duas linhas para os seis; duas, e depois uma, quando a área estreita. A
+   medida é a da área do relatório, e não a da janela: a barra lateral recolhida ou aberta muda o
+   espaço sem mudar a janela. */
+.numeros-do-relatorio{list-style:none;padding:0;margin:0;display:grid;gap:1rem;
+  grid-template-columns:repeat(3,minmax(0,1fr))}
+@container (max-width:46rem){
+  .numeros-do-relatorio{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container (max-width:28rem){
+  .numeros-do-relatorio{grid-template-columns:minmax(0,1fr)}
+}
+.numeros-do-relatorio li{background:var(--branco);border:1px solid var(--borda);
+  border-top:3px solid var(--verde);border-radius:6px;padding:.85rem 1rem 1rem}
+.numeros-do-relatorio p{margin:0}
+.numeros-do-relatorio .valor{font-size:1.75rem;font-weight:700;line-height:1.15;
   font-variant-numeric:tabular-nums}
-.numeros-do-relatorio .rotulo{display:block;font-weight:600;font-size:.9rem;margin-top:.15rem}
-.numeros-do-relatorio .base{display:block;font-size:.8rem;color:var(--texto-fraco);margin-top:.3rem;
-  line-height:1.35}
+.numeros-do-relatorio .de{font-size:.95rem;font-weight:400;color:var(--texto-fraco)}
+.numeros-do-relatorio .rotulo{font-weight:600;margin-top:.35rem;line-height:1.3}
+.numeros-do-relatorio .base{font-size:.875rem;color:var(--texto-fraco);margin-top:.35rem;
+  line-height:1.45}
 
-.atencao-do-relatorio{border-left:3px solid var(--borda);padding:.25rem 0 .25rem 1rem;margin:1.5rem 0}
-.atencao-do-relatorio ol{margin:.25rem 0 0;padding-left:1.2rem}
-.atencao-do-relatorio li{margin:.35rem 0}
+.atencao-do-relatorio{border-left:3px solid var(--borda);padding:.1rem 0 .1rem 1rem}
+.atencao-do-relatorio ol{margin:0;padding-left:1.2rem;max-width:var(--leitura)}
+.atencao-do-relatorio li{margin:.45rem 0;line-height:1.55}
+
+.natureza-da-data{white-space:nowrap}

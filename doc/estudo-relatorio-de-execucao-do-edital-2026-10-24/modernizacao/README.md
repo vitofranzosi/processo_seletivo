@@ -155,3 +155,60 @@ privacidade e auditoria da `099` e da `100` incluídos. Os bytes do consolidado 
 conjuntos de 1, 5, 12 e 60 Editais continuam os mesmos: nenhuma das três correções toca o
 documento dele.
 
+## Polish da página da gestão (25/10/2026)
+
+Melhoria de apresentação da página que consulta e emite o relatório, sem mudar regra, número,
+permissão, auditoria nem o PDF. Comparação em
+[`pagina-antes-e-depois.pdf`](pagina-antes-e-depois.pdf): 1280 px (duas partes), 768 px e 375 px.
+
+**Diagnóstico.**
+- Cabeçalho em quatro blocos de texto seguidos; a espécie era um parágrafo em negrito.
+- Situação no GPS e providências tinham o mesmo peso, e a pendência não se distinguia.
+- O botão dizia "Baixar PDF", mas cada clique é uma emissão nova, numerada e registrada na trilha.
+  Um segundo clique, de quem achou que o primeiro não pegou, era outra emissão.
+- Os seis números caíam em 4 + 2, com rótulo e base em corpo pequeno e em minúscula.
+- As seções seguintes à tabela de perfis não tinham espaço acima do título.
+- As datas mostravam a natureza crua ("registrado"), diferente do PDF.
+
+**O que mudou.**
+- **Cabeçalho**: o título manda. A espécie virou selo neutro, com a frase dela ao lado. A natureza
+  gerencial ficou em nota.
+- **Painel**: situação no GPS, providências e data dos dados ficam numa superfície branca, e a
+  emissão vem em seguida, separada por um fio. A providência em curso tem a marca "Em curso" em
+  texto e o fio âmbar do que está em andamento; sem pendência, não há marca.
+- **Emissão**: o botão agora é "Emitir e baixar PDF", e a frase ligada a ele
+  (`aria-describedby`) diz que a emissão fica registrada na trilha. O script
+  `relatorio-do-edital.js` cancela o segundo envio enquanto o primeiro está a caminho e diz
+  "Emitindo…" numa região `role="status"`. Depois de 6 s, o botão volta com a frase do que fazer se
+  o download não veio. O navegador não avisa a página quando um anexo termina de baixar; por isso
+  é um prazo. A recusa do servidor troca a página, como antes.
+- **Visão geral**: medida de leitura do GPS (`--leitura`, 68ch) e entrelinha 1,65. O texto é o
+  mesmo.
+- **Números**: são os cartões do PDF (`relatorio_pdf.cartoes`), com o mesmo valor, o mesmo "de N" e
+  o traço com o motivo na ausência. Ficam em três colunas, duas abaixo de 46rem e uma abaixo de
+  28rem, por *container query*: a largura que conta é a da área do relatório, e não a da janela,
+  porque a barra lateral muda o espaço.
+- **Seções** com espaço próprio. As datas usam os rótulos e a legenda do PDF. A nota da soma entre
+  perfis só aparece com mais de um perfil.
+
+**Reaproveitado.** Os tokens de `shared/tokens.css` (`--leitura`, `--borda`, `--branco`,
+`--verde`, `--verde-claro`, `--amarelo`, `--amarelo-fundo`), `.botao`, `.nota`, `.oculto`, o foco
+global e a folha da tela, que já existia. Nenhuma biblioteca nova.
+
+**Verificado no navegador.**
+- Sem rolagem horizontal a 1280, 768 e 375 px.
+- Seis cartões em 3 × 2, 2 × 3 e 1 × 6, sem conteúdo cortado; com o texto a 200%, uma coluna, e nada
+  cortado.
+- O foco por teclado chega ao botão com o contorno do GPS. Console sem erros.
+- Dois cliques seguidos geraram **uma** emissão (a trilha foi de 7 para 8 no banco da maquete), e o
+  botão voltou sem trocar de página.
+
+**Limitações.**
+- A página do relatório consolidado (`100`) tem o mesmo desenho antigo — mesmos cartões em 4 + 2,
+  "Baixar PDF" — e continua assim. Ficou fora do escopo desta entrega.
+- A mensagem de recusa por concorrência ("Baixe o relatório de novo") é compartilhada com a `100`,
+  e não foi trocada pelo mesmo motivo.
+- O prazo de 6 s não sabe se o download terminou. Se a rede for mais lenta que isso, um segundo
+  clique depois do prazo é outra emissão, que é o comportamento correto: emitir de novo é
+  permitido, e fica registrado.
+

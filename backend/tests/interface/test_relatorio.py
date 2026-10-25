@@ -30,10 +30,10 @@ def test_a_gestao_ve_a_acao_e_a_pagina_com_a_camada_executiva(client, seletor_li
         "Encerrado em 20/10/2026",
         "Situação das providências",
         "Visão geral",
-        "inscrições por vaga",
+        "Inscrições por vaga",
         "Resultados por perfil de vaga",
         "Professor de Informática",
-        "Baixar PDF",
+        "Emitir e baixar PDF",
     ):
         assert trecho in corpo, trecho
     assert reverse("interface:relatorio-do-edital-pdf", args=[cenario.edital.id]) in corpo
@@ -110,3 +110,59 @@ def test_so_a_falha_de_serializacao_vira_tente_de_novo(
     client.raise_request_exception = True
     with pytest.raises(IntegrityError):
         client.post(url)
+
+
+# --- Polish de 25/10/2026: a página fala como o PDF, e a emissão se diz emissão ---------------
+
+
+def _pagina(client, cenario):
+    identificar(client, "gustavo.gestor", ["gestor"])
+    return client.get(reverse("interface:relatorio-do-edital", args=[cenario.edital.id]))
+
+
+def test_os_cartoes_da_pagina_sao_os_do_pdf(client, seletor_ligado, cenario):
+    """Mesmo valor, mesmo "de N", mesma base: a tela usa a função de cartões do documento."""
+    from processo_seletivo.interface import relatorio_pdf
+
+    resposta = _pagina(client, cenario)
+    lido = resposta.context["relatorio"]
+    esperados = relatorio_pdf.cartoes(lido.indicadores, relatorio_pdf.COMPLEMENTOS_DO_DE).cartoes
+    assert resposta.context["cartoes"] == esperados
+    corpo = resposta.content.decode()
+    assert corpo.count('<p class="rotulo">') == 6
+    assert '<span class="de">de 2 realizadas</span>' in corpo
+
+
+def test_a_emissao_se_diz_emissao_e_e_descrita_ao_botao(client, seletor_ligado, cenario):
+    """O clique gera emissão numerada e auditada: o botão e a frase dizem isso."""
+    corpo = _pagina(client, cenario).content.decode()
+    assert 'aria-describedby="sobre-a-emissao">Emitir e baixar PDF</button>' in corpo
+    assert "A emissão fica registrada na trilha do Edital." in corpo
+    assert 'role="status" data-situacao-da-emissao' in corpo
+    assert "interface/relatorio-do-edital.js" in corpo
+
+
+def test_a_providencia_em_curso_tem_marca_em_texto_so_quando_ha(
+    client, seletor_ligado, cenario, db
+):
+    """A marca é texto, e não só cor; sem pendência, não há marca."""
+    corpo = _pagina(client, cenario).content.decode()
+    assert '<span class="marca-das-providencias">Em curso</span>' in corpo
+    encerrado = montar_cenario(final="sem-pendencia", numero="62")
+    corpo = client.get(
+        reverse("interface:relatorio-do-edital", args=[encerrado.edital.id])
+    ).content.decode()
+    assert "marca-das-providencias" not in corpo
+    assert "nenhuma providência pendente registrada no GPS" in corpo
+
+
+def test_as_datas_usam_os_rotulos_e_a_legenda_do_pdf(client, seletor_ligado, cenario):
+    from processo_seletivo.interface import relatorio_pdf
+
+    resposta = _pagina(client, cenario)
+    corpo = resposta.content.decode()
+    naturezas = {d.natureza for d in resposta.context["relatorio"].datas}
+    for natureza in naturezas:
+        assert f'<td class="natureza-da-data">{relatorio_pdf.NATUREZAS[natureza]}</td>' in corpo
+    for natureza, explicacao in relatorio_pdf.EXPLICACOES_DAS_NATUREZAS:
+        assert (explicacao in corpo) == (natureza in naturezas)

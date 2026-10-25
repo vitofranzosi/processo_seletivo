@@ -112,11 +112,19 @@ def relatorio(request, edital_id):
                 "processo": edital.processo,
                 "relatorio": lido,
                 "referencia": relatorio_do_edital.instante_por_extenso(lido.referencia),
-                # Os textos saem das mesmas funções que o PDF usa: a tela não formata número.
-                "indicadores": [
-                    (i.rotulo, relatorio_do_edital.texto_do_indicador(i), i.base)
-                    for i in lido.indicadores
+                # Os textos saem das mesmas funções que o PDF usa: a tela não formata número. Os
+                # cartões são os do PDF, com o "de N" e a ausência dita como traço e motivo.
+                "cartoes": relatorio_pdf.cartoes(
+                    lido.indicadores, relatorio_pdf.COMPLEMENTOS_DO_DE
+                ).cartoes,
+                "datas": [
+                    (d, relatorio_pdf.NATUREZAS.get(d.natureza, d.natureza)) for d in lido.datas
                 ],
+                "legenda_das_datas": " ".join(
+                    explicacao
+                    for natureza, explicacao in relatorio_pdf.EXPLICACOES_DAS_NATUREZAS
+                    if natureza in {d.natureza for d in lido.datas}
+                ),
                 "perfis": [
                     (
                         p,
