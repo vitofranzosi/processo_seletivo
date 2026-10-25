@@ -8,36 +8,61 @@ A camada executiva do consolidado (100). Tudo aqui sai do mesmo `Consolidado` qu
 tela não calcula número, e não decide universo, ausência nem o que fica fora por privacidade. As
 seções de execução e o anexo ficam no documento.
 {% endcomment %}
-<h1>Relatório Consolidado de Gestão dos Processos Seletivos</h1>
-<p class="sub"><strong>{{ conjunto.criterio.periodo_curto|capfirst }}</strong> — {{ consolidado.editais }} Edita{{ consolidado.editais|pluralize:"l,is" }}</p>
-<p class="nota">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais de cada Edital.</p>
+<div class="relatorio-consolidado">
+<header class="cabecalho-do-consolidado">
+  <h1>Relatório Consolidado de Gestão dos Processos Seletivos</h1>
+  <p class="sub"><strong>{{ conjunto.criterio.periodo_curto|capfirst }}</strong> — {{ consolidado.editais }} Edita{{ consolidado.editais|pluralize:"l,is" }}</p>
+  <p class="nota">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais de cada Edital.</p>
+</header>
 
-<dl class="ficha-do-conjunto">
-  <div><dt>Conjunto analisado</dt><dd>{{ conjunto.criterio.rotulo }}{% if conjunto.retirados %}; retirados: {% for e in conjunto.retirados %}{{ e.number }}/{{ e.year }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</dd></div>
-  <div><dt>Data dos dados</dt><dd>dados até {{ referencia }}<span class="nota-da-ficha"> — {{ consolidado.data_dos_dados }}</span></dd></div>
-  <div><dt>Situação no GPS</dt><dd>{{ consolidado.situacao_no_gps }}</dd></div>
-  <div><dt>Situação das providências</dt><dd>{{ consolidado.providencias }}</dd></div>
-</dl>
+{% comment %}
+O painel junta o que define o conjunto ao que se faz com ele: a ficha e, embaixo, a emissão. A
+providência em curso tem marca própria, em texto — e não em cor só —, no tom do que está em
+andamento, e não no de falha: pendência não é irregularidade. "Alterar a escolha" fica junto do
+botão porque é a outra decisão possível diante da ficha.
+{% endcomment %}
+<section class="painel-do-consolidado" aria-label="Conjunto e emissão">
+  <dl class="ficha-do-conjunto">
+    <div><dt>Conjunto analisado</dt><dd>{{ conjunto.criterio.rotulo }}{% if conjunto.retirados %}; retirados: {% for e in conjunto.retirados %}{{ e.number }}/{{ e.year }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</dd></div>
+    <div><dt>Data dos dados</dt><dd>dados até {{ referencia }}<span class="nota-da-ficha">{{ consolidado.data_dos_dados }}</span></dd></div>
+    <div><dt>Situação no GPS</dt><dd>{{ consolidado.situacao_no_gps }}</dd></div>
+    <div{% if consolidado.com_pendencia %} class="providencias-em-curso"{% endif %}>
+      <dt>Situação das providências</dt>
+      <dd>{% if consolidado.com_pendencia %}<span class="marca-das-providencias">Em curso</span> {% endif %}{{ consolidado.providencias }}</dd>
+    </div>
+  </dl>
+  <form method="post" action="{% url 'interface:relatorio-consolidado-pdf' %}" class="emissao-do-consolidado" data-emissao>
+    {% csrf_token %}
+    {% for nome, valor in campos %}<input type="hidden" name="{{ nome }}" value="{{ valor }}">{% endfor %}
+    <p class="acoes-da-emissao"><button type="submit" class="botao" aria-describedby="sobre-a-emissao">Emitir e baixar PDF</button> <a class="botao secundario" href="{{ voltar }}">Alterar a escolha</a></p>
+    <p id="sobre-a-emissao" class="nota">Gera um relatório com os dados atuais, com execução, providências e o anexo técnico. A emissão fica registrada na trilha da unidade.</p>
+    <p class="situacao-da-emissao" role="status" data-situacao-da-emissao></p>
+  </form>
+</section>
 
-<form method="post" action="{% url 'interface:relatorio-consolidado-pdf' %}" class="emissao-do-consolidado">
-  {% csrf_token %}
-  {% for nome, valor in campos %}<input type="hidden" name="{{ nome }}" value="{{ valor }}">{% endfor %}
-  <button type="submit" class="botao">Baixar PDF</button>
-  <a class="botao secundario" href="{{ voltar }}">Alterar a escolha</a>
-  <span class="nota">O PDF traz também execução, providências e o anexo técnico. Cada emissão fica registrada na trilha da unidade.</span>
-</form>
+<section class="secao-do-consolidado" aria-labelledby="titulo-visao-geral">
+  <h2 id="titulo-visao-geral">Visão geral</h2>
+  <p class="visao-geral-do-consolidado">{{ consolidado.frases|join:" " }}</p>
+</section>
 
-<h2>Visão geral</h2>
-<p class="visao-geral-do-consolidado">{{ consolidado.frases|join:" " }}</p>
+{% comment %}
+Os cartões são os do PDF (`relatorio_pdf.cartoes`, com os complementos do consolidado): o mesmo
+valor, o mesmo "de N", e a ausência dita como traço e motivo, e nunca como zero.
+{% endcomment %}
+<section class="secao-do-consolidado" aria-labelledby="titulo-numeros">
+  <h2 id="titulo-numeros">Principais números</h2>
+  <ul class="numeros-do-consolidado">
+    {% for cartao in cartoes %}
+    <li>
+      <p class="valor">{% if cartao.valor == "—" %}<span aria-hidden="true">—</span><span class="oculto">Sem número.</span>{% else %}{{ cartao.valor }}{% endif %}{% if cartao.de %} <span class="de">{{ cartao.de }}</span>{% endif %}</p>
+      <p class="rotulo">{{ cartao.rotulo }}</p>
+      <p class="base">{{ cartao.base }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
 
-<h2>Principais números</h2>
-<ul class="numeros-do-consolidado">
-  {% for rotulo, valor, base in indicadores %}
-  <li><strong>{{ valor }}</strong><span class="rotulo">{{ rotulo|capfirst }}</span><span class="base">{{ base }}</span></li>
-  {% endfor %}
-</ul>
-
-<section class="atencao-do-consolidado" aria-labelledby="titulo-atencao">
+<section class="secao-do-consolidado atencao-do-consolidado" aria-labelledby="titulo-atencao">
   <h2 id="titulo-atencao">Pontos de atenção</h2>
   <ol>
     {% for titulo, texto in consolidado.pontos_de_atencao %}
@@ -47,7 +72,8 @@ seções de execução e o anexo ficam no documento.
 </section>
 
 {% if consolidado.linhas %}
-<h2>Por Edital</h2>
+<section class="secao-do-consolidado" aria-labelledby="titulo-por-edital">
+<h2 id="titulo-por-edital">Por Edital</h2>
 <div class="tabela-rolavel">
 <table class="tabela">
   <caption class="oculto">Vagas imediatas, inscrições enviadas e inscrições por vaga de cada Edital do conjunto</caption>
@@ -72,10 +98,12 @@ seções de execução e o anexo ficam no documento.
 </table>
 </div>
 <p class="nota">Editais de natureza diferente não são comparáveis por inscrições por vaga, e a tabela não os ordena por ela.</p>
+</section>
 {% endif %}
 
 {% if consolidado.pendencias_por_tipo %}
-<h2>Providências em curso</h2>
+<section class="secao-do-consolidado" aria-labelledby="titulo-providencias">
+<h2 id="titulo-providencias">Providências em curso</h2>
 <div class="tabela-rolavel">
 <table class="tabela">
   <caption class="oculto">Providências registradas em curso, por tipo</caption>
@@ -87,5 +115,8 @@ seções de execução e o anexo ficam no documento.
   </tbody>
 </table>
 </div>
+</section>
 {% endif %}
+</div>
+<script src="{% estatico 'interface/emissao-do-relatorio.js' %}" defer></script>
 {% endblock %}

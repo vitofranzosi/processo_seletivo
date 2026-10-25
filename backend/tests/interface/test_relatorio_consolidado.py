@@ -78,7 +78,7 @@ def test_a_pagina_traz_a_camada_executiva_e_a_emissao(client, seletor_ligado, do
         "Convocações aceitas",
         "Pontos de atenção",
         "O GPS não registra matrículas.",
-        "Baixar PDF",
+        "Emitir e baixar PDF",
         "Por Edital",
     ):
         assert trecho in corpo, trecho
@@ -107,3 +107,53 @@ def test_outra_unidade_nao_ve_os_editais_do_cefor(client, seletor_ligado, dois_e
 def test_a_emissao_so_aceita_envio(client, seletor_ligado, db):
     identificar(client, "gustavo.gestor", ["gestor"])
     assert client.get(reverse("interface:relatorio-consolidado-pdf")).status_code == 405
+
+
+# --- Polish de 25/10/2026: a página fala como o PDF, e a emissão se diz emissão ---------------
+
+
+def _pagina(client, *editais):
+    identificar(client, "gustavo.gestor", ["gestor"])
+    return client.get(
+        reverse("interface:relatorio-consolidado-ver"),
+        {"atalho": "ano", "ano": "2026", "escolha": "1", "edital": [str(e.pk) for e in editais]},
+    )
+
+
+def test_os_cartoes_da_pagina_sao_os_do_pdf(client, seletor_ligado, dois_editais):
+    """Mesmo valor, mesmo "de N" com o complemento do consolidado, mesma base (FR-2574)."""
+    from processo_seletivo.interface import relatorio_consolidado_pdf, relatorio_pdf
+
+    resposta = _pagina(client, *(c.edital for c in dois_editais))
+    lido = resposta.context["consolidado"]
+    esperados = relatorio_pdf.cartoes(
+        lido.indicadores, relatorio_consolidado_pdf.COMPLEMENTOS_DO_DE
+    ).cartoes
+    assert resposta.context["cartoes"] == esperados
+    corpo = resposta.content.decode()
+    assert corpo.count('<p class="rotulo">') == 6
+    for cartao in esperados:
+        if cartao.de:
+            assert f'<span class="de">{cartao.de}</span>' in corpo
+    assert any(c.de.endswith(" realizadas") for c in esperados), "o complemento chega à tela"
+
+
+def test_a_emissao_se_diz_emissao_e_e_descrita_ao_botao(client, seletor_ligado, dois_editais):
+    """Cada clique é emissão numerada e auditada na trilha da unidade: botão e frase dizem isso."""
+    corpo = _pagina(client, *(c.edital for c in dois_editais)).content.decode()
+    assert 'aria-describedby="sobre-a-emissao">Emitir e baixar PDF</button>' in corpo
+    assert "A emissão fica registrada na trilha da unidade." in corpo
+    assert "data-emissao" in corpo
+    assert 'role="status" data-situacao-da-emissao' in corpo
+    assert "interface/emissao-do-relatorio.js" in corpo, "o mesmo script da página do Edital"
+
+
+def test_a_providencia_em_curso_tem_marca_em_texto_so_quando_ha(
+    client, seletor_ligado, dois_editais
+):
+    """A marca é texto, e não só cor; sem Edital com pendência no conjunto, não há marca."""
+    pendente, sem_pendencia = (c.edital for c in dois_editais)
+    corpo = _pagina(client, pendente, sem_pendencia).content.decode()
+    assert '<span class="marca-das-providencias">Em curso</span>' in corpo
+    corpo = _pagina(client, sem_pendencia).content.decode()
+    assert "marca-das-providencias" not in corpo

@@ -97,7 +97,7 @@
 - [x] T034 PDF emitido pelo sistema e comparação visual em `doc/estudo-relatorio-de-execucao-do-edital-2026-10-24/modernizacao/` (SC-947)
 - [x] T035 Homologação: o cronograma registra a publicação dos resultados; uma consulta de publicações para a linha do tempo e o cronograma (FR-2542)
 - [x] T036 Homologação: notas só com o caso que explicam; links conferidos na topologia de produção (FR-2603, FR-2608)
-- [x] T037 Polish da página (25/10/2026): espécie em selo, painel de situação, providências e emissão; cartões do PDF em 3 × 2; "Emitir e baixar PDF" com um clique por emissão (`static/interface/relatorio-do-edital.js`) (FR-2515, FR-2553)
+- [x] T037 Polish da página (25/10/2026): espécie em selo, painel de situação, providências e emissão; cartões do PDF em 3 × 2; "Emitir e baixar PDF" com um clique por emissão (`static/interface/emissao-do-relatorio.js`, comum à `100` desde T038 dela) (FR-2515, FR-2553)
 
 ---
 

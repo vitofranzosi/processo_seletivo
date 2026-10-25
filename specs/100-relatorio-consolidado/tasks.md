@@ -85,6 +85,10 @@ números da camada executiva iguais à soma dos fatos de cada Edital; baixar o P
 - [x] T036 Título institucional, endereços só em host público e o subconjunto dito por extenso em `backend/processo_seletivo/interface/relatorio_consolidado.py` e `backend/processo_seletivo/interface/relatorio.py`
 - [x] T037 Demonstração heterogênea (sete Editais de natureza diferente), PDF emitido pelo endpoint e comparação visual página a página em `doc/estudo-relatorio-consolidado-de-gestao-2026-10-24/`
 
+## Phase 11: Polish da página (pedido de 25/10/2026)
+
+- [x] T038 Ficha e emissão num painel; cartões do PDF em 3 × 2; "Emitir e baixar PDF" com a frase da trilha ligada ao botão e um clique por emissão (`static/interface/emissao-do-relatorio.js`, o da `099`); seções com espaço próprio, em `backend/processo_seletivo/interface/templates/interface/relatorio_consolidado.html` e `telas/relatorio-consolidado.css` (FR-2566, FR-2573, FR-2574, FR-2591)
+
 ## Dependencies & Execution Order
 
 - Phase 2 bloqueia tudo: o consolidado lê `fatos_do_edital`.

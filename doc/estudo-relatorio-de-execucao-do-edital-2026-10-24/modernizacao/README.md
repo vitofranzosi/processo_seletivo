@@ -178,8 +178,9 @@ permissão, auditoria nem o PDF. Comparação em
   texto e o fio âmbar do que está em andamento; sem pendência, não há marca.
 - **Emissão**: o botão agora é "Emitir e baixar PDF", e a frase ligada a ele
   (`aria-describedby`) diz que a emissão fica registrada na trilha. O script
-  `relatorio-do-edital.js` cancela o segundo envio enquanto o primeiro está a caminho e diz
-  "Emitindo…" numa região `role="status"`. Depois de 6 s, o botão volta com a frase do que fazer se
+  `emissao-do-relatorio.js` — que nasceu `relatorio-do-edital.js` e hoje serve também à `100` —
+  cancela o segundo envio enquanto o primeiro está a caminho e diz "Emitindo…" numa região
+  `role="status"`. Depois de 6 s, o botão volta com a frase do que fazer se
   o download não veio. O navegador não avisa a página quando um anexo termina de baixar; por isso
   é um prazo. A recusa do servidor troca a página, como antes.
 - **Visão geral**: medida de leitura do GPS (`--leitura`, 68ch) e entrelinha 1,65. O texto é o
