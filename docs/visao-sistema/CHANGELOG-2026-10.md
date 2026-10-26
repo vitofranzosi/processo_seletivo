@@ -1,3 +1,95 @@
+# Revisão de 21/10/2026 da Visão do Sistema
+
+A documentação descrevia o sistema até a spec 092 (19/10). Desde então entraram na `main` cinco specs,
+entre 20 e 21/10: a recusa do formulário expirado na moldura da área (093), a prévia da classificação
+na composição (094) e por recorte (095), o Perfil só de cadastro de reserva impresso como `CR` (096) e a
+vaga acrescida depois da publicação, que convoca do cadastro de reserva (097). Algumas frases ficaram
+falsas: a página de falha de CSRF *“sem desenho”*, registrada como aberta; o cadastro de reserva
+*“sem execução”* e o Perfil só de reserva que *“não convoca pelo sistema”*, repetidos pela página inteira;
+e a advertência da Revisão, cuja frase a 097 trocou. Esta revisão descreve tudo isso contra a `main`
+em `e869d7a2`. A 097 já tinha acertado, no próprio PR, as duas definições de *Cadastro de reserva* em
+*Comece por aqui* e *Antes de começar*; elas não foram duplicadas, e só o selo mudou de cor.
+
+## Como foi conferido
+
+- Quatro leituras paralelas, uma por spec da 094 à 097, confrontaram cada spec com o código da `main`,
+  e não só com a própria spec; a 093 foi lida diretamente. Onde spec e código divergiam, valeu o código.
+  Os rótulos citados foram conferidos de novo no código antes de entrar no texto, entre eles:
+  - `falha_de_csrf` em `interface/erros.py` e o `CSRF_FAILURE_VIEW` em `config/settings/base.py`;
+  - `_marco.html`, `_previa_da_classificacao.html`, `_ocupacao_da_previa.html` e
+    `interface/previa_da_classificacao.py`;
+  - `ROTULO_DA_AMPLA` em `editais/domain/recortes.py`;
+  - `SIGLA_DO_CADASTRO` e `NOTA_DO_CADASTRO` em `publicacoes/infrastructure/pdf.py`, e o comentário da
+    `096` em `portal/selecao.html`;
+  - `impedimento` em `ocupacao/application/acrescimo.py`, `ocupacao.html` e `ocupacao_acrescimo.html`;
+  - os avisos `reserve_only_convocation_external` e `reserve_only_with_reserved_lines` em
+    `editais/domain/validation.py`.
+- Os números de *Maturidade* foram recontados pelo método da própria página. Rodado sobre `745f115f`, a
+  base da revisão de 19/10, ele reproduz todos os números publicados naquela data.
+- **Não se rodou a suíte nem se percorreu o produto.** O total da suíte (12 775 passando, 12 pulados) é
+  o medido em 21/10 sobre a árvore da `main` em `e869d7a2`, que o PR 325 leva ao `AGENTS.md`. Aquela
+  rodada teve uma falha, que não é defeito: o teste de tempo da ocupação, que oscila com 4 workers. Nenhum
+  teste lê `docs/`.
+- A própria página foi aberta no navegador pela entrada `visao-do-sistema` do `.claude/launch.json`
+  (porta 8090). Todas as âncoras internas têm destino, nenhum `id` se repete, e o HTML fecha as tags que
+  abre.
+
+## O que mudou na documentação
+
+- **A prévia da classificação (094, 095).** Entrou a seção nova *Simular a classificação antes de
+  publicar* (`#previa-da-classificacao`), na página *Marcos, classificação e ocupação*. Ela traz:
+  - o botão *Simular classificação* no cartão do marco pela pontuação, e o painel que ele abre;
+  - a jornada do Perfil, o detalhe do marco, os candidatos fictícios e o recálculo sem salvar;
+  - o seletor *Recorte*, a concorrência concomitante, a ocupação por recorte como hipótese e a
+    reversão declarada;
+  - o que a prévia não simula, e a validação pendente.
+
+  A ficha do marco, a maturidade da classificação, o catálogo, as perguntas, *Onde fica cada coisa* e o
+  glossário passaram a apontar para ela.
+- **A vaga acrescida depois da publicação (097).** Entrou a subseção *A vaga acrescida depois da
+  publicação* (`#vaga-acrescida`), em *Ocupação de vagas*: quem pode, os campos, a conferência, o que se
+  grava, por que não é publicada, o que a convocação faz com ela e como se desfaz. As efetivas e as
+  causas de obsolescência da apuração ganharam a vaga acrescida. Ficaram corrigidas as frases que diziam
+  que o cadastro de reserva não tem execução e que o Perfil só de reserva não convoca, em *Como as peças
+  se encaixam*, no tutorial, em *O que eu consigo configurar?*, em *Se eu mudar isso*, nos exemplos de
+  configuração, no cartão do Perfil, na seção *Cadastro de reserva*, no *Não confunda* do corte, na
+  convocação, na matriz de permissões e na maturidade. O selo do cadastro de reserva passou de
+  *Implementado, não operacionalizado* a *Parcial*: a espécie autoriza a vaga acrescida, e o limite
+  continua sem leitor.
+- **O `CR` no documento (096).** A seção *Cadastro de reserva* diz que o Perfil só de reserva sai com
+  `CR` e a nota *“CR: cadastro de reserva.”*, e que o portal não diz o zero.
+- **A recusa de CSRF (093).** A política de segurança de conteúdo, em *Segurança*, diz o que vê quem
+  envia um formulário expirado. O item que a dava por aberta saiu de *Abertas desde 15/10* e foi para
+  *Fechados desde 20/09*.
+- **Estado do produto:**
+  - 98 pastas de especificação, 41 tabelas append-only, 59 gatilhos (em 25 migrations, sobre 48
+    tabelas), 95 migrations, 447 arquivos Python de aplicação, 169 templates, 900 + 15 arquivos de teste e
+    121 + 36 rotas; módulos e espécies de sinal não mudaram;
+  - 63 das 98 specs dizem `Draft`, entre elas a 097; dezoito ainda dizem *“PR aberto”*, e a 094 diz
+    *“Especificada”*, com a implementação *“não iniciada”*;
+  - *Fechados desde 20/09* ganhou três linhas: a recusa de CSRF, o `0` do Perfil só de reserva e,
+    em parte, o RC-58;
+  - a lacuna *Edital só de cadastro de reserva não convoca* passou a lacuna em parte, e o item da
+    RC-58 em *Encontradas desde 30/09* passou a falar só do limite;
+  - entrou a subseção *Abertas desde 19/10*, com quatro itens: a validação da prévia com elaboradores
+    (T039 da 094, SC-870 e T032 da 095), as três divergências da prévia por recorte com a própria spec, o
+    que a 096 deixou de fora e o que a 097 deixou para spec própria;
+  - *Decisões pendentes* ganhou a linha da prévia, e a lista das decididas diz que a DP-05 foi revista.
+- **Catálogo e glossário.** O catálogo passou de 129 a 134 capacidades, e o glossário de 118 a 121
+  termos: *CR*, *Prévia da classificação* e *Vaga acrescida*.
+- **Âncoras.** Nenhuma foi removida. As novas são `#previa-da-classificacao`, `#vaga-acrescida`,
+  `#abertas-desde-19-10` e as dos três termos do glossário.
+
+## O que não foi verificado, e o que ficou de fora
+
+- Nada foi percorrido no produto. Os rótulos vêm dos *templates* e do código, e o comportamento, das
+  views e dos testes.
+- A prévia aparece como entregue, e não como validada: as duas specs dizem que a validação com quem
+  elabora só fecha com o relato do usuário.
+- Ficaram fora os achados internos que não mudam o que o usuário vê: a extração de duas decisões da
+  ocupação para funções puras (095, citada só numa linha), a reserva do fecho na prévia do documento
+  (096, citada só como limitação) e os guardiões de teste.
+
 # Revisão de 19/10/2026 da Visão do Sistema
 
 A documentação descrevia o sistema até a spec 072 (15/10), e a 073 só como especificada. Desde então

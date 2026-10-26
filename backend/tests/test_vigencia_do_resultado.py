@@ -37,6 +37,12 @@ ESCRITA = {"create", "bulk_create"}
 
 # Cada entrada é um ponto que **precisa** ver o superado, e a razão pela qual precisa.
 EXCECOES = {
+    # Os registros posteriores ao desfecho do Edital (099) contam todo Resultado gravado depois do
+    # encerramento, superado inclusive: o superado também é registro posterior. A dispensa é do
+    # módulo da trilha, e não da derivação do relatório, que lê pela vigência.
+    "interface/relatorio_trilha.py": (
+        "registros posteriores ao desfecho: todo Resultado gravado depois, superado inclusive"
+    ),
     # A reprodução histórica lê os Resultados por `pk__in` dos ids gravados na proveniência do ato.
     # É isso que mantém a IO-5 da `015` verdadeira — a mesma proveniência reproduz a mesma ordem —,
     # e um filtro de vigência aqui quebraria a reprodução no dia do primeiro deferimento.

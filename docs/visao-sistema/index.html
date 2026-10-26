@@ -209,12 +209,12 @@
 <section id="estado-atual">
   <h2>Estado atual do sistema</h2>
   <div class="numeros">
-    <div><b>93</b><span>pastas em <code>specs/</code> (001 a 092)</span></div>
+    <div><b>98</b><span>pastas em <code>specs/</code> (001 a 097)</span></div>
     <div><b>22</b><span>módulos de domínio</span></div>
-    <div><b>40</b><span>tabelas append-only, em duas camadas</span></div>
-    <div><b>58</b><span>gatilhos de banco</span></div>
-    <div><b>117 + 36</b><span>rotas na gestão e no portal</span></div>
-    <div><b>12 268</b><span>testes passando contra PostgreSQL</span></div>
+    <div><b>41</b><span>tabelas append-only, em duas camadas</span></div>
+    <div><b>59</b><span>gatilhos de banco</span></div>
+    <div><b>121 + 36</b><span>rotas na gestão e no portal</span></div>
+    <div><b>12 775</b><span>testes passando contra PostgreSQL</span></div>
   </div>
   <div class="aviso aviso-nota">
     <span class="titulo">Em uma frase</span>
@@ -356,7 +356,7 @@
       <h4>Reserva de vaga ≠ Cadastro de reserva</h4>
       <div class="par">
         <div><strong>Reserva de vaga (cota)</strong><p>Uma parte das vagas imediatas separada para uma lista — PPI, PcD. Tem quantidade no quadro e o sistema a usa para apurar e convocar.</p></div>
-        <div><strong>Cadastro de reserva</strong><p>O que o Edital diz oferecer <em>além</em> das vagas. Sai no documento e no portal. Desde a 097, é o que autoriza a <em>vaga acrescida</em> depois da publicação, na ocupação; o limite “até N” continua sem regra que o execute. <span class="selo selo-nop">Operacionalizado em parte</span></p></div>
+        <div><strong>Cadastro de reserva</strong><p>O que o Edital diz oferecer <em>além</em> das vagas. Sai no documento e no portal. Desde a 097, é o que autoriza a <em>vaga acrescida</em> depois da publicação, na ocupação; o limite “até N” continua sem regra que o execute. <span class="selo selo-parc">Operacionalizado em parte</span></p></div>
       </div>
     </div>
   </section>
@@ -514,7 +514,7 @@
       <h4>Reserva de vaga (cota) ≠ Cadastro de reserva</h4>
       <div class="par">
         <div><strong>Reserva de vaga</strong><p>Parte das vagas imediatas separada para uma lista. Tem linha no quadro, entra na apuração e na convocação.</p></div>
-        <div><strong>Cadastro de reserva</strong><p>O que o Edital declara oferecer <em>além</em> das vagas (“limitado a 20”). É publicado e mostrado; desde a 097, autoriza a vaga acrescida depois da publicação, que a ocupação soma e a convocação chama. O limite declarado continua sem execução. <span class="selo selo-nop">Operacionalizado em parte</span></p></div>
+        <div><strong>Cadastro de reserva</strong><p>O que o Edital declara oferecer <em>além</em> das vagas (“limitado a 20”). É publicado e mostrado; desde a 097, autoriza a vaga acrescida depois da publicação, que a ocupação soma e a convocação chama. O limite declarado continua sem execução. <span class="selo selo-parc">Operacionalizado em parte</span></p></div>
       </div>
       <p class="par-rodape">Quem de fato segue na lista além das vagas é decidido pelos <strong>suplentes</strong> da regra de corte do marco — que é outra coisa (veja abaixo). <a href="#cadastro-de-reserva">Mais →</a></p>
     </div>
@@ -706,7 +706,7 @@
         <a class="no no-norma" href="#modalidades"><strong>Modalidades</strong><span>as cotas, com percentual e fundamento</span></a>
         <a class="no no-norma" href="#quadro-de-vagas"><strong>Quadro de vagas</strong><span>linha geral (ampla) + uma linha por cota</span></a>
         <a class="no no-norma" href="#reversao"><strong>Reversão · forma de convocação</strong><span>o que sobra de cota; como se chama</span></a>
-        <a class="no no-norma" href="#cadastro-de-reserva"><strong>Cadastro de reserva</strong><span>declarado, sem execução</span></a>
+        <a class="no no-norma" href="#cadastro-de-reserva"><strong>Cadastro de reserva</strong><span>declarado; autoriza a vaga acrescida</span></a>
         <a class="no no-norma" href="#g-fato-declarado"><strong>Fatos declarados</strong><span>data ou inteiro, para desempate</span></a>
         <a class="no no-norma" href="#classificacao"><strong>Marcos classificatórios</strong><span>ordem (nota ou sorteio) · desempate · recurso · corte</span></a>
       </div>
@@ -1097,7 +1097,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <p>40 no INF-VIT. Em “Cadastro Reserva”, escolha entre “Não há cadastro reserva”, “Cadastro reserva
       limitado” (com “Limite da reserva”) ou “Cadastro reserva ilimitado”. Sem cota, a vaga da ampla
       concorrência <strong>é</strong> o total — o sistema deriva a linha sozinho.</p>
-      <div class="aviso aviso-risco"><span class="titulo">O cadastro de reserva é só declaração</span><p>Ele sai no documento e no portal. Quem realmente fica na lista além das vagas é decidido pelos <strong>suplentes</strong> da regra de corte (passo 8). Um Perfil com 0 vagas e só cadastro de reserva classifica, mas <strong>não convoca pelo sistema</strong>. <a href="#cadastro-de-reserva">Mais →</a></p></div>
+      <div class="aviso aviso-risco"><span class="titulo">O cadastro de reserva não limita a lista</span><p>Ele sai no documento e no portal. Quem realmente fica na lista além das vagas é decidido pelos <strong>suplentes</strong> da regra de corte (passo 8). Um Perfil com 0 vagas e só cadastro de reserva classifica, e só convoca pelo sistema quando uma <a href="#vaga-acrescida">vaga é acrescida</a> depois da publicação — e só se o quadro do Perfil tiver só a linha geral (097). <a href="#cadastro-de-reserva">Mais →</a></p></div>
       <div class="decisao">
         <div class="d-decide"><b>Você está decidindo</b>Quantas vagas imediatas e o que se declara além delas.</div>
         <div class="d-produz"><b>Isso produzirá</b>O total que o quadro de vagas precisa fechar.</div>
@@ -1387,8 +1387,8 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tbody>
         <tr><td>Quantas ofertas separadas</td><td>Um <a href="#perfis">Perfil de Vaga</a> por disputa; sem limite</td><td>Passo <em>Perfis de Vaga</em></td><td>Curso, campus, turno e polo <strong>não</strong> são eixos: vão no código, denominação e “Localidade”. <span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td>Descrever a oferta</td><td>Denominação, localidade, descrição, requisitos (um por linha), atribuições, carga horária, remuneração</td><td>Cartão do Perfil</td><td>Atribuições, carga e remuneração servem a Editais de bolsista/tutor.</td></tr>
-        <tr><td>Quantas vagas</td><td>Vagas imediatas ≥ 0</td><td>Cartão do Perfil</td><td>Zero é legítimo, mas um Perfil só de cadastro de reserva não convoca pelo sistema.</td></tr>
-        <tr><td>Cadastro de reserva</td><td>Não há · limitado (com limite) · ilimitado</td><td>Fieldset “Cadastro Reserva”</td><td>Publicado, sem execução. <span class="selo selo-nop">Não operacionalizado</span> <a href="#cadastro-de-reserva">Mais</a></td></tr>
+        <tr><td>Quantas vagas</td><td>Vagas imediatas ≥ 0</td><td>Cartão do Perfil</td><td>Zero é legítimo: com cadastro de reserva, o documento imprime <code>CR</code> (096), e o Perfil convoca pela vaga acrescida depois da publicação, só na ampla sem Modalidade (097).</td></tr>
+        <tr><td>Cadastro de reserva</td><td>Não há · limitado (com limite) · ilimitado</td><td>Fieldset “Cadastro Reserva”</td><td>Publicado; a espécie autoriza a vaga acrescida, e o limite não é lido. <span class="selo selo-parc">Parcial</span> <a href="#cadastro-de-reserva">Mais</a></td></tr>
         <tr><td>Criar muitos Perfis parecidos</td><td>Duplicar este Perfil (pede Código e Localidade)</td><td>Cartão do Perfil</td><td>Só antes de publicar. <a href="#duplicar-perfil">O que copia</a></td></tr>
       </tbody>
     </table></div>
@@ -1542,7 +1542,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>a mesma cota em todos os Perfis</td><td class="centro"><span class="m m-sim">✓</span></td><td>“Aplicar aos demais Perfis (N)”</td><td>Cópia, não catálogo único.</td></tr>
         <tr><td>devolver vaga de cota para a ampla</td><td class="centro"><span class="m m-sim">✓</span></td><td>Reversão</td><td>Na apuração da cota.</td></tr>
         <tr><td>limitar o cadastro de reserva a N</td><td class="centro"><span class="m m-parc">◐</span></td><td>Cadastro Reserva limitado</td><td>Só declara. Quem limita de fato são os suplentes do corte.</td></tr>
-        <tr><td>convocar do cadastro de reserva sem vaga imediata</td><td class="centro"><span class="m m-nao">—</span></td><td>—</td><td>Convocação só para vaga imediata apurada (fora do piloto, por decisão).</td></tr>
+        <tr><td>convocar do cadastro de reserva sem vaga imediata</td><td class="centro"><span class="m m-parc">◐</span></td><td>Vaga acrescida, na ocupação</td><td>Só na ampla de Perfil sem linha de Modalidade e sem reversão (097). Com cotas, fora do sistema.</td></tr>
         <tr><td>várias Etapas, com eliminação entre elas</td><td class="centro"><span class="m m-sim">✓</span></td><td>Etapas</td><td>Eliminado sai das seguintes automaticamente.</td></tr>
         <tr><td>só os N primeiros seguirem para a Etapa seguinte</td><td class="centro"><span class="m m-sim">✓</span></td><td>Corte que governa a Etapa</td><td>O corte é um ato emitido.</td></tr>
         <tr><td>dupla avaliação por inscrição</td><td class="centro"><span class="m m-parc">◐</span></td><td>Avaliações por inscrição</td><td>Distribui, mas não consolida.</td></tr>
@@ -1627,7 +1627,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
     </table></div>
 
     <h3>Alterei o cadastro de reserva</h3>
-    <p>Rascunho: livre (a espécie e o limite são conferidos entre si). Retificação: o <strong>limite</strong> é retificável; a <strong>espécie</strong> não (“oferece outra coisa”). Em nenhum caso algo operacional muda: o cadastro de reserva não é lido por corte, ocupação nem convocação.</p>
+    <p>Rascunho: livre (a espécie e o limite são conferidos entre si). Retificação: o <strong>limite</strong> é retificável; a <strong>espécie</strong> não (“oferece outra coisa”). O limite não é lido por corte, ocupação nem convocação; a espécie publicada é o que autoriza a <a href="#vaga-acrescida">vaga acrescida</a> na ocupação (097).</p>
     <div class="aviso aviso-lacuna"><span class="titulo">Lacuna [a validar]</span><p>Na Retificação, a coerência espécie × limite não é conferida: é possível publicar “não há cadastro reserva” com limite 6.</p></div>
   </section>
 
@@ -1858,7 +1858,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tr><th>Quando faz sentido</th><td>O Edital promete chamar, além das vagas, até N classificados.</td></tr>
       <tr><th>O que configurar</th><td>No marco que corta: “Suplentes” = N (é isso que o sistema executa). No Perfil: “Cadastro reserva limitado” com limite N (é isso que o documento publica). Mantenha os dois iguais — nada os confere.</td></tr>
       <tr><th>Decisões</th><td>N; se a faixa pode continuar depois de esgotada (“Faixa seguinte: admite”).</td></tr>
-      <tr><th>Limites</th><td>O cadastro de reserva em si não é executado. Um Perfil <strong>só</strong> de cadastro de reserva (0 vagas imediatas) classifica e publica, mas não convoca pelo sistema — a Revisão avisa que a convocação será externa. <a href="#cadastro-de-reserva">Mais</a></td></tr>
+      <tr><th>Limites</th><td>O limite do cadastro de reserva não é executado. Um Perfil <strong>só</strong> de cadastro de reserva (0 vagas imediatas) classifica e publica, e convoca pela <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação se o quadro tiver só a linha geral; com linha de Modalidade, a Revisão avisa que a convocação será feita fora do sistema (097). <a href="#cadastro-de-reserva">Mais</a></td></tr>
     </tbody></table></div>
 
     <h3 id="r-polos">Receita 8 — Muitos Perfis (vários polos)</h3>
@@ -4076,7 +4076,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td><span class="rotulo-ui">Denominação</span>, <span class="rotulo-ui">Localidade</span>, <span class="rotulo-ui">Descrição</span>, <span class="rotulo-ui">Carga horária</span>, <span class="rotulo-ui">Remuneração</span>, <span class="rotulo-ui">Atribuições</span></td><td>Texto descritivo</td><td>PDF, portal; Localidade vira <code>NOME_POLO</code> na exportação de matrículas</td><td><span class="m m-sim">✓</span></td></tr>
         <tr><td><span class="rotulo-ui">Requisitos</span></td><td>Lista de texto, um por linha</td><td>PDF, portal (não há verificação automática)</td><td><span class="m m-sim">✓</span> lista inteira</td></tr>
         <tr><td><span class="rotulo-ui">Vagas imediatas</span></td><td>Total de vagas do Perfil</td><td><a href="#quadro-de-vagas">Quadro</a>, sugestão pelo percentual, conferência da soma</td><td><span class="m m-sim">✓</span></td></tr>
-        <tr><td><span class="rotulo-ui">Cadastro Reserva</span> + <span class="rotulo-ui">Limite da reserva</span></td><td>Não há / limitado / ilimitado</td><td>Só exibição; ver <a href="#cadastro-de-reserva">cadastro de reserva</a></td><td>espécie <span class="m m-nao">—</span> · limite <span class="m m-sim">✓</span></td></tr>
+        <tr><td><span class="rotulo-ui">Cadastro Reserva</span> + <span class="rotulo-ui">Limite da reserva</span></td><td>Não há / limitado / ilimitado</td><td>A espécie autoriza a vaga acrescida na ocupação (097); o limite é só exibição. Ver <a href="#cadastro-de-reserva">cadastro de reserva</a></td><td>espécie <span class="m m-nao">—</span> · limite <span class="m m-sim">✓</span></td></tr>
         <tr><td><span class="rotulo-ui">Qual delas é a ampla concorrência</span></td><td>Aponta a Modalidade que é a ampla</td><td>Recortes, quadro, corte, ocupação, inscrição</td><td><span class="m m-sim">✓</span></td></tr>
         <tr><td><span class="rotulo-ui">Reverter vaga reservada não preenchida para a ampla concorrência</span></td><td>Espécie da reversão</td><td><a href="#ocupacao">Ocupação</a></td><td><span class="m m-sim">✓</span>, e pode nascer</td></tr>
         <tr><td><span class="rotulo-ui">Como a convocação é comunicada</span></td><td>Por publicação ou por mensagem individual</td><td><a href="#convocacao">Convocação</a>; sem ela, Perfil que corta não publica</td><td><span class="m m-sim">✓</span></td></tr>
@@ -4476,9 +4476,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
 
   <!-- ============================================================ CADASTRO -->
   <section id="cadastro-de-reserva">
-    <h2>Cadastro de reserva <span class="selo selo-nop">Implementado, não operacionalizado</span></h2>
+    <h2>Cadastro de reserva <span class="selo selo-parc">Parcial</span></h2>
     <div class="conceito" id="c-cadastro-de-reserva">
-      <header><h3>Cadastro de reserva</h3><span class="selo selo-nop">Implementado, não operacionalizado</span>
+      <header><h3>Cadastro de reserva</h3><span class="selo selo-parc">Parcial</span>
         <p class="frase">A declaração, por Perfil, de que o Edital forma cadastro reserva: não há,
           limitado a N, ou ilimitado.</p></header>
       <dl>
@@ -4490,17 +4490,19 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <span class="rotulo-ui">Não há cadastro reserva</span> ·
           <span class="rotulo-ui">Cadastro reserva limitado</span> ·
           <span class="rotulo-ui">Cadastro reserva ilimitado</span>. O limite só aparece com “limitado”.</dd>
-        <dt>O que posso fazer</dt><dd>Declarar e publicar. Retificar o limite depois de publicado.</dd>
+        <dt>O que posso fazer</dt><dd>Declarar e publicar. Retificar o limite depois de publicado. Com o cadastro publicado, chamar além das vagas pela <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, na ocupação (097).</dd>
         <dt>O que não posso</dt><dd>Retificar a espécie (“trocá-la depois não corrige um erro de redação,
-          oferece outra coisa”). <strong>Esperar que o sistema limite a lista, a faixa ou a convocação
-          por esse número</strong>: nada lê o limite para decidir.</dd>
+          oferece outra coisa”). <strong>Esperar que o sistema limite a lista, a faixa, a convocação
+          ou as vagas acrescidas por esse número</strong>: nada lê o limite para decidir. Acrescentar vaga
+          num Perfil que reparte vagas entre Modalidades: a convocação desse Perfil é feita fora do sistema (097).</dd>
         <dt>Relaciona-se com</dt><dd><a href="#corte">Corte</a> (os “excedentes” da regra de corte são
           outra coisa) · <a href="#convocacao">Convocação</a> · <a href="#g-cadastro-de-reserva">Glossário</a></dd>
         <dt>Na interface</dt><dd>Etapa Perfis; Retificação (<span class="rotulo-ui">Limite do Cadastro Reserva</span>);
-          PDF (coluna “Cadastro reserva”; o Perfil sem vaga imediata não imprime quadro nem reversão, 067); portal, inclusive no acompanhamento de quem aguarda chamada, como fato do Edital (063); Revisão; tabela da etapa.</dd>
+          PDF (coluna “Cadastro reserva”; o Perfil só de cadastro de reserva sai com <code>CR</code> no lugar das vagas e a nota <em>“CR: cadastro de reserva.”</em>, 096, e não imprime quadro nem reversão, 067); portal, que não diz o zero (096), inclusive no acompanhamento de quem aguarda chamada, como fato do Edital (063); Revisão; tabela da etapa; ocupação, com o formulário da vaga acrescida (097).</dd>
         <dt>Evidência técnica</dt><dd><code>PerfilVaga.reserve_type</code>/<code>reserve_limit</code> ·
           <code>editais/domain/perfis.py</code> (<code>validate_profile</code>) · <code>portal/views.py</code>
-          (<code>_oferta</code>) · <code>publicacoes/infrastructure/pdf.py</code></dd>
+          (<code>_oferta</code>) · <code>publicacoes/infrastructure/pdf.py</code> · <code>editais/domain/quadro.py</code>
+          (<code>cadastro_sem_vaga_imediata</code>) · <code>ocupacao/application/acrescimo.py</code></dd>
       </dl>
     </div>
 
@@ -4509,13 +4511,14 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <thead><tr><th>Lugar</th><th>Lê o cadastro reserva?</th><th>Efeito</th></tr></thead>
       <tbody>
         <tr><td>Gravação do rascunho</td><td><span class="m m-sim">✓</span></td><td>“Cadastro Reserva inexistente não admite limite.” · “…limitado exige limite não negativo.” · “…ilimitado não admite limite.”</td></tr>
-        <tr><td>Revisão / publicação</td><td><span class="m m-parc">◐</span></td><td>Uma advertência: Perfil com 0 vaga imediata e reserva → “…a convocação dos classificados será feita fora dele, porque o sistema só convoca para vaga imediata apurada.”</td></tr>
-        <tr><td>PDF, portal, Revisão, visão institucional, tabela da etapa</td><td><span class="m m-sim">✓</span></td><td>Texto: “limitado em 6”, “até 6 classificados, para convocação futura”</td></tr>
-        <tr><td><a href="#classificacao">Classificação</a>, <a href="#corte">corte</a>, <a href="#ocupacao">ocupação</a>, <a href="#convocacao">convocação</a>, <a href="#sorteio">sorteio</a></td><td><span class="m m-nao">—</span></td><td>Nenhum. A faixa usa o alvo e os <em>excedentes</em> da regra de corte do marco, e nada os compara com o limite.</td></tr>
+        <tr><td>Revisão / publicação</td><td><span class="m m-parc">◐</span></td><td>Duas advertências no Perfil com 0 vaga imediata e reserva: “…a convocação depende de vagas acrescidas depois da publicação, registradas na ocupação.”, com quantos a faixa pode alcançar; e, se ele reparte vagas entre Modalidades, que “a convocação deste Perfil será feita fora do sistema” (097)</td></tr>
+        <tr><td>PDF, portal, Revisão, visão institucional, tabela da etapa</td><td><span class="m m-sim">✓</span></td><td>Texto: “limitado em 6”, “até 6 classificados, para convocação futura”. Sem vaga imediata, o documento imprime <code>CR</code> com nota, e o portal não diz o zero (096)</td></tr>
+        <tr><td><a href="#ocupacao">Ocupação</a>, <a href="#convocacao">convocação</a></td><td><span class="m m-parc">◐</span></td><td>A espécie: com cadastro limitado ou ilimitado, a ocupação aceita a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, e a convocação a chama (097). O limite não é lido</td></tr>
+        <tr><td><a href="#classificacao">Classificação</a>, <a href="#corte">corte</a>, <a href="#sorteio">sorteio</a></td><td><span class="m m-nao">—</span></td><td>Nenhum. A faixa usa o alvo e os <em>excedentes</em> da regra de corte do marco, e nada os compara com o limite.</td></tr>
       </tbody>
     </table></div>
     <div class="aviso aviso-risco"><span class="titulo">Atenção</span>
-      <p>“Limitado em 6” é uma frase publicada, e não uma regra executada. Para que 6 pessoas além das
+      <p>“Limitado em 6” é uma frase publicada, e não uma regra executada — nem o acréscimo de vagas a confere. Para que 6 pessoas além das
         vagas avancem, declare os <strong>excedentes</strong> na regra de corte do
         <a href="#marco">marco</a>, que é o que o sistema executa.</p>
     </div>
@@ -5970,7 +5973,7 @@ Depois das Etapas consolidadas:
         <dt>Tipos</dt><dd>Dois, mutuamente exclusivos: <span class="rotulo-ui">Pela pontuação combinada das Etapas</span> (<code>POR_PONTUACAO</code>) e <span class="rotulo-ui">Por sorteio</span> (<code>POR_SORTEIO</code>). Não há outros. Marcos antigos sem a declaração sorteiam se têm método de sorteio.</dd>
         <dt>Exemplo</dt><dd>“FINAL — Classificação final”, pela pontuação, enumerando Análise documental e Currículo, média ponderada, 2 casas, meio para cima, desempate por tempo de docência, recurso em 3 dias, corte pelo quadro com 10 suplentes.</dd>
         <dt>Quando configurar</dt><dd>Na composição, etapa <span class="rotulo-ui">Classificação</span>, que vem depois das Etapas porque o marco as enumera. Depois de publicado, só por Retificação e dentro dos limites abaixo.</dd>
-        <dt>O que posso fazer</dt><dd>Declarar quantos marcos quiser por Perfil; escolher as Etapas, a combinação, o arredondamento, os critérios de desempate, a janela de recurso, a regra de corte e (no sorteio) o método; usar o método de sorteio comum do Edital; <span class="rotulo-ui">Aplicar aos demais Perfis</span> com prévia (ver <a href="#heranca">padrão, aplicar a todos, exceção</a>).</dd>
+        <dt>O que posso fazer</dt><dd>Declarar quantos marcos quiser por Perfil; escolher as Etapas, a combinação, o arredondamento, os critérios de desempate, a janela de recurso, a regra de corte e (no sorteio) o método; usar o método de sorteio comum do Edital; <span class="rotulo-ui">Aplicar aos demais Perfis</span> com prévia (ver <a href="#heranca">padrão, aplicar a todos, exceção</a>); no marco pela pontuação, <a href="#previa-da-classificacao">simular a classificação</a> sobre candidatos fictícios antes de publicar (094, 095).</dd>
         <dt>O que não posso</dt><dd>Combinar nota e sorteio no mesmo marco. Trocar por Retificação as Etapas enumeradas; na regra de corte, a espécie do alvo, a Etapa governada e a faixa seguinte; num critério de desempate, o tipo, o que ele compara e o comportamento na ausência (remove-se o critério e acrescenta-se outro). Acrescentar um marco novo pela tela de Retificação — ver lacuna abaixo.</dd>
         <dt>Relaciona-se com</dt><dd><a href="#perfis">Perfil</a> · <a href="#etapas">Etapas</a> · <a href="#ato">Ato de ordenação</a> · <a href="#desempate">Desempate</a> · <a href="#corte">Corte</a> · <a href="#sorteio">Sorteio</a> · <a href="#recursos">Janela de recurso</a> · <a href="#g-marco">Glossário</a></dd>
         <dt>Na interface</dt><dd>Gestão › Edital › composição, etapa <span class="rotulo-ui">Classificação</span> (cartão <span class="rotulo-ui">Marco classificatório</span>); na página do Edital, bloco dos marcos com <span class="rotulo-ui">conduzir o marco</span>; tela <a href="#operar-por-marco">Condução do marco</a> (<code>/gestao/editais/&lt;edital&gt;/marcos/&lt;marco&gt;/conducao</code>).</dd>
@@ -6025,6 +6028,95 @@ Depois das Etapas consolidadas:
         pela interface. <span class="selo selo-infer">Inferido</span>
       </p>
     </div>
+  </section>
+
+  <!-- ============================================================ PREVIA -->
+  <section id="previa-da-classificacao">
+    <h2>Simular a classificação antes de publicar <span class="selo selo-impl">Implementado</span></h2>
+    <p class="lead">
+      Quem elabora o Edital pode ver o que a regra do marco faria antes de publicá-la — a ordem, os
+      empates, o corte e a ocupação das vagas —, calculado pelo mesmo motor do certame sobre
+      <strong>candidatos fictícios</strong>. Nada é gravado, e nada disso sai no documento.
+    </p>
+
+    <h3>Onde fica e o que mostra</h3>
+    <p>
+      Na composição, etapa <span class="rotulo-ui">Classificação</span>, o cartão de cada marco pela
+      pontuação tem o botão <span class="rotulo-ui">Simular classificação</span> (094). Ele abre ao lado do
+      formulário — por cima dele, no celular — o painel <span class="rotulo-ui">Simulação do processo
+      seletivo</span>, com o selo <span class="rotulo-ui">Exemplo fictício</span>. O marco por sorteio não
+      tem o botão.
+    </p>
+    <ul>
+      <li><strong>A jornada do Perfil</strong>: as Etapas e os marcos na ordem do Edital. Só o marco
+        escolhido é calculado; os outros aparecem como contexto, com selos como <em>“simulado”</em>,
+        <em>“não calculado aqui”</em> e <em>“indeterminado”</em>. Do marco, saem
+        <span class="rotulo-ui">Avançariam</span>, <span class="rotulo-ui">Não avançariam nesta faixa</span>
+        e <span class="rotulo-ui">Sem posição</span>.</li>
+      <li><strong>O detalhe do marco</strong> (<span class="rotulo-ui">Explorar classificação e
+        desempate</span>): uma manchete — <em>“O corte não seria emitido.”</em>, por exemplo —, o caminho
+        classificação → corte → Etapa seguinte, <span class="rotulo-ui">Quem está perto dos limites</span>,
+        <span class="rotulo-ui">Empates na pontuação</span> e, recolhidas, a classificação completa e
+        <span class="rotulo-ui">Como a prévia chega a este resultado</span>. Cada candidato leva uma marca:
+        avança, avança pelo empate, não avança, aguarda desempate, sem posição.</li>
+      <li><strong>Os candidatos</strong>: por padrão, a <span class="rotulo-ui">População estável — testar a
+        regra</span>, que não muda enquanto o painel está aberto, para que a diferença venha só da regra; ou
+        um caso-limite dirigido, que põe gente exatamente na fronteira do alvo, dos suplentes ou das
+        vagas.</li>
+      <li><strong>O recálculo</strong>: a cada alteração no cartão, o painel recalcula sobre o que está
+        digitado, sem salvar, e diz <span class="rotulo-ui">O que mudou com a sua alteração</span>.</li>
+    </ul>
+
+    <h3>Por recorte: as cotas, a ocupação e a reversão</h3>
+    <p>
+      Num Perfil com Modalidade reservada, o detalhe ganha o seletor <span class="rotulo-ui">Recorte</span>
+      (095): a ampla concorrência, com todos os candidatos, ou cada reservada, só com quem se autodeclarou
+      nela. A concorrência é concomitante — o cotista concorre nas duas listas, e na reservada aparece
+      marcado <em>“ocuparia pela ampla”</em> quem estaria dentro das vagas da ampla. A prévia diz que isso
+      não é campo do Edital: é como o sistema apura.
+    </p>
+    <ul>
+      <li><span class="rotulo-ui">A ocupação das vagas, por recorte</span>, com o selo
+        <em>“hipótese”</em>: uma rodada só — a ampla, as reservadas e a reversão —, supondo habilitados todos
+        os alcançados, com as publicadas, as ocupadas e as vagas sem ocupante nesta hipótese.</li>
+      <li><strong>A reversão declarada no Perfil</strong>: quantas vagas seriam cedidas à ampla, ou por que
+        nenhuma seria. Na espécie <span class="rotulo-ui">Só quando a lista reservada esgota</span>, a prévia
+        mostra o comportamento atual do sistema e diz que ele está registrado como pendente de decisão.</li>
+      <li>Na Etapa que o marco alimenta, a união das faixas: quem está em duas conta uma vez.</li>
+    </ul>
+    <p class="miudo">
+      A ocupação simulada chama as mesmas funções da <a href="#ocupacao">apuração</a> real. Duas decisões
+      foram extraídas dela para funções puras, e o caminho oficial passou a usá-las; um teste prova a
+      equivalência.
+    </p>
+
+    <h3>O que a prévia não simula</h3>
+    <p>
+      O sorteio; a Retificação; o encadeamento entre marcos; recurso, chamadas e desfechos; a faixa
+      seguinte e uma segunda rodada de ocupação; o remanejamento entre Perfis; o cadastro de reserva; o
+      percentual da Modalidade; o Cronograma; a eliminação por nota mínima. Mais de seis Modalidades
+      reservadas o painel recusa.
+    </p>
+
+    <div class="aviso aviso-lacuna"><span class="titulo">Validação pendente</span>
+      <p>
+        As duas specs entraram com a validação com quem elabora em aberto: o roteiro da 094 (T039) e o da
+        095 (SC-870) pedem ao menos cinco elaboradores na interface real, e só fecham com o relato do
+        usuário. A conferência final da 095 (T032) também está aberta. Ao abrir o painel num Perfil com
+        reserva, as reservadas aparecem <em>“Não avaliada”</em>, porque a população estável planta um
+        empate na última vaga da ampla — mantido por decisão de 20/10. Ver
+        <a href="#abertas-desde-19-10">Abertas desde 19/10</a>.
+        <span class="selo selo-parc">Parcial</span>
+      </p>
+    </div>
+
+    <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
+      <dt>A tela</dt><dd><code>interface/previa_da_classificacao.py</code> · <code>_previa_da_classificacao.html</code> · <code>_ocupacao_da_previa.html</code> · <code>previa-da-classificacao.js</code></dd>
+      <dt>O cálculo</dt><dd><code>classificacao/application/previa.py</code> · <code>classificacao/domain/universo_classificavel.py</code>, <code>jornada.py</code> e <code>cenarios_da_previa.py</code></dd>
+      <dt>A ocupação simulada</dt><dd><code>ocupacao/domain/rodada_da_previa.py</code></dd>
+      <dt>As rotas</dt><dd><code>/gestao/fragmentos/perfil/&lt;indice&gt;/marco/&lt;sub&gt;/previa</code> e <code>/gestao/fragmentos/previa-da-classificacao/fechar</code>, com o escopo dos demais fragmentos da composição</dd>
+      <dt>Nada se grava</dt><dd><code>test_abrir_recalcular_e_fechar_nao_escrevem_nada</code>: nenhum <code>INSERT</code>, <code>UPDATE</code> ou <code>DELETE</code>, e o rascunho igual byte a byte</dd>
+    </dl></div></details>
   </section>
 
   <!-- ============================================================ -->
@@ -6357,7 +6449,7 @@ Empate na posição 32 (fronteira do alvo) não interessa ao corte:
       <h4>Suplentes do corte ≠ Cadastro de reserva</h4>
       <div class="par">
         <div><strong>Suplentes da regra de corte</strong><p>Quantos além do alvo entram na faixa, por recorte. <strong>É o que o sistema usa</strong> para saber quem pode ser chamado depois dos titulares.</p></div>
-        <div><strong><a href="#cadastro-de-reserva">Cadastro de reserva</a></strong><p>Declaração do Perfil (<span class="rotulo-ui">Não há cadastro reserva</span>, limitado, ilimitado, com limite). É publicada no Edital, mas <strong>nenhuma regra a consome</strong>: não limita a faixa nem a fila. <span class="selo selo-nop">Implementado, não operacionalizado</span></p></div>
+        <div><strong><a href="#cadastro-de-reserva">Cadastro de reserva</a></strong><p>Declaração do Perfil (<span class="rotulo-ui">Não há cadastro reserva</span>, limitado, ilimitado, com limite). É publicada no Edital e autoriza a <a href="#vaga-acrescida">vaga acrescida</a> na ocupação (097), mas <strong>não limita a faixa nem a fila</strong>. <span class="selo selo-parc">Parcial</span></p></div>
       </div>
       <p class="par-rodape">Um Edital com cadastro limitado a 6 e 30 suplentes no corte publica sem aviso — e chama até 30.</p>
     </div>
@@ -6401,7 +6493,7 @@ Empate na posição 32 (fronteira do alvo) não interessa ao corte:
         <thead><tr><th>Rótulo</th><th>O que é</th><th>Por que é assim</th></tr></thead>
         <tbody>
           <tr><td><span class="rotulo-ui">Publicadas</span></td><td>A quantidade da linha do quadro daquele recorte, na versão vigente</td><td>É o que o Edital publicou. Na ampla, é a linha geral</td></tr>
-          <tr><td><span class="rotulo-ui">Efetivas</span></td><td>Publicadas, mais recebidas, menos cedidas por <a href="#reversao">reversão de cota</a></td><td>Precisa ser gravada: depende de somar movimentos de vaga</td></tr>
+          <tr><td><span class="rotulo-ui">Efetivas</span></td><td>Publicadas, mais recebidas, menos cedidas por <a href="#reversao">reversão de cota</a>, mais as <a href="#vaga-acrescida">vagas acrescidas</a> depois da publicação, menos as desfeitas (097)</td><td>Precisa ser gravada: depende de somar movimentos de vaga</td></tr>
           <tr><td><span class="rotulo-ui">Ocupadas</span></td><td>Titulares habilitados, com os efeitos das convocações aplicados em ordem (inclusão por aceite, exclusão por desistência etc.)</td><td>Nunca passa de efetivas</td></tr>
           <tr><td><span class="rotulo-ui">A ocupar</span></td><td>Efetivas − ocupadas</td><td>Não é gravada: guardar o derivável é o que faz dois números discordarem</td></tr>
         </tbody>
@@ -6482,13 +6574,48 @@ FILA        = chamáveis
     <ul>
       <li><em>“Este Edital não publicou quadro de vagas para este recorte…”</em>, com o caminho da Retificação;</li>
       <li><em>“Ocupação ainda não apurada.”</em>, só com as publicadas, e o botão <span class="rotulo-ui">Apurar a ocupação deste recorte</span>;</li>
-      <li><em>“Esta apuração está obsoleta.”</em>, com as causas (ordem sucedida, corte obsoleto, quadro retificado, movimento de vaga, efeito de convocação) e <span class="rotulo-ui">Motivo da nova apuração</span> + <span class="rotulo-ui">Emitir nova apuração</span>;</li>
+      <li><em>“Esta apuração está obsoleta.”</em>, com as causas (ordem sucedida, corte obsoleto, quadro retificado, movimento de vaga, efeito de convocação, vaga acrescida ou desfeita) e <span class="rotulo-ui">Motivo da nova apuração</span> + <span class="rotulo-ui">Emitir nova apuração</span>;</li>
       <li>os quatro números, com <span class="rotulo-ui">Ver o histórico deste recorte</span> e <span class="rotulo-ui">Abrir a convocação deste recorte</span>.</li>
     </ul>
     <p>
       Com vagas faltando, aparece <span class="rotulo-ui">Pedir a faixa seguinte com este déficit</span>:
       um ato humano, que emite a continuação do corte com o déficit como quantidade e motivo. Não é
       automático.
+    </p>
+    <h3 id="vaga-acrescida">A vaga acrescida depois da publicação</h3>
+    <p>
+      Quando uma vaga aparece depois de publicado o Edital — a matrícula não efetivada num Edital regular,
+      que libera vaga para o cadastro de reserva de outro —, ela entra pela ocupação, e não por
+      Retificação: é fato operacional, com origem e autor, e não norma nova (097). No bloco da ampla
+      concorrência, quem gere a comissão do Processo ou o preside preenche
+      <span class="rotulo-ui">Vagas acrescidas</span>, <span class="rotulo-ui">De onde a vaga veio</span>,
+      <span class="rotulo-ui">Por que ela existe</span> e, se houver,
+      <span class="rotulo-ui">Processo administrativo (opcional)</span>, e passa por
+      <span class="rotulo-ui">Conferir o acréscimo</span>. A conferência mostra as publicadas, as acrescidas
+      até agora e as efetivas depois do ato, <span class="rotulo-ui">Quem a ordem alcança</span> e a apuração
+      seguinte. <span class="rotulo-ui">Acrescentar N vagas</span> grava o ato e, no mesmo gesto, emite a
+      apuração seguinte em nome de quem confirmou.
+    </p>
+    <ul>
+      <li><strong>Só com cadastro de reserva publicado</strong>, limitado ou ilimitado, e só na ampla de
+        Perfil cujo quadro tem só a linha geral e que não declara reversão. Sem cadastro, a tela diz que
+        <em>“não há norma que autorize chamar além das vagas publicadas”</em>; com linha de Modalidade, diz
+        que essa repartição está fora do acréscimo.</li>
+      <li><strong>Não é publicado.</strong> Não gera documento, versão, Publicação nem aviso. Origem e
+        fundamento não saem da gestão, o portal continua dizendo as vagas publicadas, e o convocado vê a
+        convocação como qualquer outra.</li>
+      <li><strong>A convocação não muda</strong>: a vaga acrescida falta como qualquer outra, o primeiro da
+        ordem vira titular, e um desfecho que a libera — não atendimento, desistência — faz chamar o seguinte
+        sem novo acréscimo.</li>
+      <li><strong>Desfazer é outro ato</strong>, com motivo (<span class="rotulo-ui">Vagas a desfazer</span>,
+        <span class="rotulo-ui">Conferir o desfazimento</span>), recusado se deixar sem vaga quem já tem
+        chamada em aberto ou atendida. Os dois atos ficam, numa tabela append-only.</li>
+    </ul>
+    <p class="miudo">
+      Os atos aparecem em <span class="rotulo-ui">Vagas acrescidas depois da publicação</span>, na mesma tela.
+      O limite “até N” do cadastro de reserva continua sem execução: nada compara as vagas acrescidas com
+      ele. Se o corte é sucedido depois de um acréscimo, a apuração fica obsoleta pelo corte, e a seguinte
+      soma a vaga uma vez só.
     </p>
     <div class="aviso aviso-lacuna"><span class="titulo">Lacunas da tela de ocupação</span>
       <ul>
@@ -6506,6 +6633,7 @@ FILA        = chamáveis
       <dt>Efeitos das convocações</dt><dd><code>ocupacao/application/efeitos.py</code></dd>
       <dt>O déficit pede a faixa seguinte</dt><dd><code>ocupacao/application/causar_faixa.py</code></dd>
       <dt>A fila de chamada</dt><dd><code>convocacao/domain/fila.py</code></dd>
+      <dt>A vaga acrescida</dt><dd><code>ocupacao/application/acrescimo.py</code> · <code>ocupacao/domain/acrescimo.py</code> · tabela <code>ocupacao_acrescimodevagas</code>, com gatilho, da migration <code>ocupacao/0004_vaga_acrescida</code></dd>
     </dl></div></details>
   </section>
 
@@ -7475,7 +7603,7 @@ Em paralelo, se o Edital pede:
         <dt>Exemplo</dt><dd>Fundamento derivado de uma vaga inicial: <em>“Convocação para vaga inicial no Edital nº 41/2026, Perfil «ESP-SERRA», recorte «Ampla concorrência»: a posição da pessoa na ordem de classificação vigente está dentro das vagas que a apuração de ocupação emitida em dd/mm/aaaa considerou, na faixa vigente deste recorte.”</em> O <span class="rotulo-ui">Complemento do fundamento</span> entra depois, nunca no lugar.</dd>
         <dt>Quando configurar</dt><dd>Na composição, só a <strong>forma de comunicar</strong>: etapa Perfis › <span class="rotulo-ui">Como a convocação é comunicada</span> (<span class="rotulo-ui">Por publicação no endereço eletrônico do certame</span> ou <span class="rotulo-ui">Por mensagem individual à pessoa convocada</span>). Perfil que corta e não a declara não publica.</dd>
         <dt>O que posso fazer</dt><dd>Convocar os titulares num gesto; chamar um a um (suplente e exceções); convocar à frente com justificativa; convocar para regularizar.</dd>
-        <dt>O que não posso</dt><dd>Convocar fora da faixa, com a lista esgotada, sem apuração ou com apuração obsoleta; convocar alguém que já tem chamada em aberto; chamar suplente para vaga já coberta por outra chamada em aberto; passar à frente de um reabilitado por recurso ou chamar um reclassificado antes do último suplente. Num recorte com zero vagas no quadro (o Edital “só de cadastro de reserva”) também não há quem convocar: não há titular nem vaga faltante apurada — e a declaração de <a href="#cadastro-de-reserva">cadastro de reserva</a> não muda isso, porque nenhuma regra a consome.</dd>
+        <dt>O que não posso</dt><dd>Convocar fora da faixa, com a lista esgotada, sem apuração ou com apuração obsoleta; convocar alguém que já tem chamada em aberto; chamar suplente para vaga já coberta por outra chamada em aberto; passar à frente de um reabilitado por recurso ou chamar um reclassificado antes do último suplente. Num recorte com zero vagas no quadro (o Edital “só de cadastro de reserva”), não há quem convocar enquanto nenhuma vaga for acrescida: não há titular nem vaga faltante apurada. Com o <a href="#cadastro-de-reserva">cadastro de reserva</a> publicado, a <a href="#vaga-acrescida">vaga acrescida</a> na ocupação cria a vaga que falta (097).</dd>
         <dt>Relaciona-se com</dt><dd><a href="#classificacao">Classificação</a> · <a href="#corte">Corte</a> · <a href="#ocupacao">Ocupação</a> · <a href="#reservas">Reservas</a> · <a href="#recursos">Recursos</a> · <a href="#matricula">Requerimento de Matrícula</a></dd>
         <dt>Na interface</dt><dd>Página do Edital › destino <span class="rotulo-ui">convocação</span> de cada marco, ou Ocupação › <span class="rotulo-ui">Abrir a convocação deste recorte</span> (<code>/gestao/editais/&lt;edital&gt;/marcos/&lt;marco&gt;/convocacao?lista=…</code>)</dd>
         <dt>Evidência técnica</dt><dd><code>convocacao/models.py</code> (<code>Convocacao</code>) · <code>convocacao/domain/especie.py</code> · <code>convocacao/domain/fundamento.py</code></dd>
@@ -8645,7 +8773,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
 <tr><td>Abrir inscrição e documentos na Mesa; salvar e concluir avaliação</td><td class="centro"><span class="m m-nao">—</span> <small>404²</small></td><td class="centro"><span class="m m-nao">—</span> <small>404²</small></td><td class="centro"><span class="m m-sim">✓</span> <small>A+T</small></td><td class="centro"><span class="m m-nao">—</span> <small>404</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr class="grupo"><th colspan="10">Classificação, resultado e convocação</th></tr>
 <tr><td>Consultar ordenação, corte, ocupação, convocação, sorteio</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span> <small>consulta</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
-<tr><td>Emitir ordenação, emitir e continuar corte, apurar ocupação</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+<tr><td>Emitir ordenação, emitir e continuar corte, apurar ocupação, acrescentar e desfazer vaga (097)</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Convocar, registrar desfecho, comunicar, atestar</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Conduzir o sorteio</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span> <small>P</small></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
 <tr><td>Divulgar resultado</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
@@ -9363,9 +9491,12 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <p class="miudo">
       O cabeçalho sai da aplicação, e não do servidor web: é o mesmo no servidor local e em produção. Ficam
       sem ele a resposta que não é HTML e a página de depuração do Django, que só existe com
-      <code>DEBUG</code>. A página de falha de CSRF do próprio Django — a que vê quem envia um formulário com
-      a sessão vencida — traz estilo embutido e sai sem desenho, legível; trocá-la por uma página do sistema
-      está registrado, e não feito. Quem impede outra origem de emoldurar a gestão continua sendo o
+      <code>DEBUG</code>. Desde 20/10 (093), quem envia um formulário expirado — a aba aberta de um dia para o
+      outro, o navegador que apagou os dados do site — não vê mais a página de falha de CSRF do próprio
+      Django, que trazia estilo embutido e saía sem desenho: vê, com status 403, a moldura da área de onde o
+      envio veio, gestão ou portal, com <em>“O formulário não pôde ser enviado”</em>, <em>“Nada foi
+      gravado.”</em>, o que fazer e um link que reabre a página de origem. O motivo técnico vai ao registro
+      do servidor, e não à página. Quem impede outra origem de emoldurar a gestão continua sendo o
       <code>X-Frame-Options</code>, que a prévia do PDF afrouxa para <code>SAMEORIGIN</code>.
     </p>
 
@@ -9420,7 +9551,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <header>
     <span class="camada camada-consultar">Consultar</span>
     <h1>Catálogo de capacidades</h1>
-    <p class="lead">O que este sistema consegue modelar hoje — 129 capacidades, cada uma com o selo
+    <p class="lead">O que este sistema consegue modelar hoje — 134 capacidades, cada uma com o selo
     que a cadeia <em>tela → regra → efeito</em> sustenta. Filtre por palavra ou por selo para descobrir,
     em segundos, se o seu cenário é suportado.</p>
   </header>
@@ -9470,6 +9601,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#recursos">Frase de recurso que nomeia o resultado do marco</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>(067)</td></tr>
 <tr data-marca="impl"><td><a href="#marco">Marco por sorteio sem arredondamento nem empate no corte</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Nem pedido, nem gravado, nem impresso (067).</td></tr>
 <tr data-marca="impl"><td><a href="#reversao">Perfil sem vaga imediata sem quadro nem reversão no documento</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>A Revisão diz que não sai (067).</td></tr>
+<tr data-marca="impl"><td><a href="#cadastro-de-reserva">Perfil só de cadastro de reserva impresso como <code>CR</code></a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Com a nota “CR: cadastro de reserva.”; o dado continua 0, e a gestão o mostra (096).</td></tr>
 <tr data-marca="impl"><td><a href="#anexos">Anexos PDF rotulados e congelados na publicação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O sistema não numera.</td></tr>
 <tr data-marca="impl"><td><a href="#estrutura">Encerrar e cancelar Processo e Edital</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Processo só encerra com todos os Editais finais.</td></tr>
 <tr data-marca="nop"><td><a href="#cronograma">Cancelar um Evento do cronograma</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só pela API; tem efeito (período cancelado não recebe).</td></tr>
@@ -9492,10 +9624,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="lacun"><td><a href="#modalidades">Conferência de percentuais entre Perfis</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>A tabela do conjunto põe lado a lado, sem aviso.</td></tr>
 <tr data-marca="lacun"><td><a href="#modalidades">Submodalidades (ex.: PPI por renda e escola)</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Cada uma vira Modalidade própria.</td></tr>
 <tr class="grupo-linha"><td colspan="6">Cadastro de reserva e suplência</td></tr>
-<tr data-marca="nop"><td><a href="#cadastro-de-reserva">Declarar cadastro de reserva (não há / limitado / ilimitado)</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Sai no PDF e no portal; nenhuma regra o executa.</td></tr>
+<tr data-marca="parc"><td><a href="#cadastro-de-reserva">Declarar cadastro de reserva (não há / limitado / ilimitado)</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Sai no PDF e no portal; a espécie autoriza a vaga acrescida (097), e o limite não é lido.</td></tr>
 <tr data-marca="impl"><td><a href="#corte">Suplentes na faixa do corte</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>É o que decide quem é chamável além das vagas.</td></tr>
 <tr data-marca="impl"><td><a href="#ocupacao">Faixa seguinte quando a lista esgota</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só se o Edital admite continuação; o botão aparece mesmo quando não admite.</td></tr>
-<tr data-marca="lacun"><td><a href="#cadastro-de-reserva">Convocar Perfil só de cadastro de reserva</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Fora do piloto por decisão; a Revisão avisa.</td></tr>
+<tr data-marca="parc"><td><a href="#vaga-acrescida">Convocar Perfil só de cadastro de reserva</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Pela vaga acrescida, só na ampla de Perfil sem Modalidade (097); com cotas, a Revisão avisa que é fora do sistema.</td></tr>
+<tr data-marca="impl"><td><a href="#vaga-acrescida">Acrescentar e desfazer vaga depois da publicação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Ato append-only, com origem e fundamento, não publicado; emite a apuração seguinte (097).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Critérios e desempate</td></tr>
 <tr data-marca="impl"><td><a href="#desempate">Desempate por pontuação numa Etapa</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#desempate">Desempate por fato declarado (maior/menor)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Fatos de data ou inteiro, por Perfil.</td></tr>
@@ -9537,6 +9670,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#operar-por-marco">Operar o marco inteiro num gesto</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só o primeiro ato de cada recorte.</td></tr>
 <tr data-marca="impl"><td><a href="#operar-por-marco">Tabela do conjunto na etapa Classificação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#ocupacao">Apuração de ocupação por recorte</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
+<tr data-marca="impl"><td><a href="#previa-da-classificacao">Simular a classificação do marco com candidatos fictícios</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Ordem, empates e corte, sem gravar; validação com elaboradores pendente (094).</td></tr>
+<tr data-marca="impl"><td><a href="#previa-da-classificacao">Simular por recorte, com a ocupação e a reversão</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Uma rodada só, como hipótese; validação com elaboradores pendente (095).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Publicação e recursos</td></tr>
 <tr data-marca="impl"><td><a href="#resultados">Resultado preliminar e definitivo, por recorte</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#resultados">Prévia assinada antes de publicar</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
@@ -9569,6 +9704,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#barra-da-gestao">Barra lateral por capacidade</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Retrátil na tela larga; painel no celular; no topo na Alocação (076).</td></tr>
 <tr data-marca="impl"><td><a href="#caminho-no-topo">Caminho no topo de cada tela</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Em toda tela da gestão, menos a de recusa; sai na impressão (077 a 088).</td></tr>
 <tr data-marca="impl"><td><a href="#maturidade">Configurar e comprovar o correio e o Ollama na implantação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>073: §10.4 do guia de implantação, sem comando novo e sem tela; a produção recusa o SMTP sem servidor. Validação com a TI pendente.</td></tr>
+<tr data-marca="impl"><td><a href="#auditoria">Recusa do formulário expirado na moldura da área</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>403 em português, na gestão e no portal, no lugar da página do Django (093).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Portal e acompanhamento</td></tr>
 <tr data-marca="impl"><td><a href="#area-do-candidato">Acesso sem senha por código no e-mail</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#jornada">Rascunho, documentos, envio, protocolo, comprovante</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
@@ -9629,6 +9765,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <details class="pergunta"><summary>Como distribuo as vagas?</summary><div><p>Informe o total do Perfil em “Vagas imediatas”. Sem cota, pronto. Com cota, preencha o quadro: uma linha por cota (use “Preencher pelo percentual…”) e a linha da ampla com o restante. A Revisão confere a soma. <a href="#quadro-de-vagas">Mais</a></p></div></details>
     <details class="pergunta"><summary>Tenho 40 vagas e várias cotas. Como o sistema distribui?</summary><div><p>Ele não distribui: sugere. PPI 25% → “25% de 40 = 10”; PcD 5% → 2. Você confere, ajusta a ampla para 28 e salva. Se a conta não der inteiro, o “Arredondamento da reserva” da cota decide a sugestão (ou ela mostra “entre 1 e 2”). <a href="#quadro-de-vagas">Exemplo completo</a></p></div></details>
     <details class="pergunta"><summary>O que o sistema calcula automaticamente?</summary><div><p>A linha da ampla quando não há cota; a fase dos Eventos; quem participa de cada Etapa; a pontuação combinada e a ordem proposta; titulares, suplentes e a fila; a apuração seguinte depois de um desfecho (quando nada se move entre listas). Tudo o mais é proposta que alguém confirma. <a href="#decisao-humana">Mais</a></p></div></details>
+    <details class="pergunta"><summary>Posso ver o que a regra do marco faria antes de publicar?</summary><div><p>Pode, no marco pela pontuação: <span class="rotulo-ui">Simular classificação</span>, no cartão do marco, calcula a ordem, os empates, o corte e, com cotas, a ocupação por recorte, sobre candidatos fictícios e sobre o que está digitado. Nada é gravado. <a href="#previa-da-classificacao">Mais</a></p></div></details>
     <details class="pergunta"><summary>Posso alterar manualmente o quadro sugerido?</summary><div><p>Sim — a quantidade digitada é a que vale. Se fugir do percentual, a Revisão avisa, sem impedir. <a href="#quadro-de-vagas">Mais</a></p></div></details>
     <details class="pergunta"><summary>Posso ter regras diferentes entre Perfis?</summary><div><p>Sim, para o que é do Perfil: cotas, quadro, cadastro de reserva, reversão, forma de convocação, fatos e marcos. Não para o que é do Edital: Etapas, cronograma, documentos. <a href="#pg-pecas">Mais</a></p></div></details>
     <details class="pergunta"><summary>Tenho uma regra geral e uma exceção em um Perfil. O sistema suporta?</summary><div><p>Sim: configure a regra, aplique aos demais Perfis e desmarque o Perfil que diverge na prévia — ou edite-o depois. Não há herança, então a exceção não é “sobrescrita” por ninguém. <a href="#heranca">Mais</a></p></div></details>
@@ -9713,7 +9850,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <header>
     <span class="camada camada-consultar">Consultar</span>
     <h1>Glossário</h1>
-    <p class="lead">118 termos, cada um com a definição curta, um exemplo, os termos relacionados e o
+    <p class="lead">121 termos, cada um com a definição curta, um exemplo, os termos relacionados e o
     caminho para a explicação completa. Todos sustentados pelo código — nenhum é aspiracional.</p>
   </header>
 
@@ -9826,9 +9963,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="rel"><a href="#g-papel">Papel</a> · <a href="#g-visao-institucional">Visão institucional</a></dd>
   <dd class="mais"><a href="#barra-da-gestao">Saiba mais →</a></dd>
   <dt id="g-cadastro-de-reserva" data-letra="C">Cadastro de reserva</dt>
-  <dd class="def">A declaração do Perfil sobre o que se oferece além das vagas imediatas: não há, limitado a N, ilimitado. Publicada, sem execução pelo sistema.</dd>
+  <dd class="def">A declaração do Perfil sobre o que se oferece além das vagas imediatas: não há, limitado a N, ilimitado. Publicada; com ela, a ocupação aceita a vaga acrescida depois da publicação. O limite N não é executado.</dd>
   <dd class="ex">“Cadastro reserva limitado em 20”.</dd>
-  <dd class="rel"><a href="#g-suplentes">Suplentes (regra de corte)</a> · <a href="#g-reserva-de-vaga">Reserva de vaga (cota)</a></dd>
+  <dd class="rel"><a href="#g-suplentes">Suplentes (regra de corte)</a> · <a href="#g-reserva-de-vaga">Reserva de vaga (cota)</a> · <a href="#g-vaga-acrescida">Vaga acrescida</a> · <a href="#g-cr">CR</a></dd>
   <dd class="mais"><a href="#cadastro-de-reserva">Saiba mais →</a></dd>
   <dt id="g-comissao" data-letra="C">Comissão</dt>
   <dd class="def">O grupo de pessoas que trabalha num Processo, com duas funções: presidente e membro. Pertence ao Processo, não ao Edital.</dd>
@@ -9865,6 +10002,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">Vagas do quadro (28) + 10 suplentes = 38 na faixa.</dd>
   <dd class="rel"><a href="#g-faixa">Faixa</a> · <a href="#g-etapa-governada">Etapa governada</a> · <a href="#g-suplentes">Suplentes (regra de corte)</a></dd>
   <dd class="mais"><a href="#corte">Saiba mais →</a></dd>
+  <dt id="g-cr" data-letra="C">CR</dt>
+  <dd class="def">A sigla que o documento imprime no lugar das vagas imediatas do Perfil que só oferece cadastro de reserva, com a nota “CR: cadastro de reserva.”. O dado continua 0, e a gestão o mostra.</dd>
+  <dd class="ex">Na tabela de Perfis, “CR” na coluna das vagas, e a nota abaixo da tabela.</dd>
+  <dd class="rel"><a href="#g-cadastro-de-reserva">Cadastro de reserva</a> · <a href="#g-vagas-imediatas">Vagas imediatas</a></dd>
+  <dd class="mais"><a href="#cadastro-de-reserva">Saiba mais →</a></dd>
   <dt id="g-criterio-de-desempate" data-letra="C">Critério de desempate</dt>
   <dd class="def">Regra, em ordem, que separa empatados: maior pontuação numa Etapa, maior ou menor valor de um fato declarado. Declara o que fazer quando o valor falta.</dd>
   <dd class="ex">“Menor valor de Data de nascimento” (quem nasceu antes vem primeiro).</dd>
@@ -10110,6 +10252,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">Prévia de publicação do resultado.</dd>
   <dd class="rel"><a href="#g-gesto">Gesto em lote</a></dd>
   <dd class="mais"><a href="#resultados">Saiba mais →</a></dd>
+  <dt id="g-previa-da-classificacao" data-letra="P">Prévia da classificação</dt>
+  <dd class="def">A simulação, na composição, do que a regra de um marco faria — ordem, empates, corte e, com cotas, a ocupação por recorte — sobre candidatos fictícios, pelo mesmo motor do certame. Não grava nada e não sai no documento.</dd>
+  <dd class="ex">“Simular classificação” no marco FINAL mostra que um empate na 10ª posição impediria o corte.</dd>
+  <dd class="rel"><a href="#g-marco">Marco classificatório</a> · <a href="#g-corte">Corte</a> · <a href="#g-recorte">Recorte</a></dd>
+  <dd class="mais"><a href="#previa-da-classificacao">Saiba mais →</a></dd>
   <dt id="g-processo" data-letra="P">Processo Seletivo</dt>
   <dd class="def">O certame: reúne Editais, é dono da comissão, tem ciclo próprio. Nasce junto com o primeiro Edital.</dd>
   <dd class="ex">“Técnico Subsequente 2027/1”.</dd>
@@ -10141,7 +10288,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="rel"><a href="#g-resultado-preliminar">Resultado preliminar / definitivo</a> · <a href="#g-janela-recursal">Janela recursal</a></dd>
   <dd class="mais"><a href="#resultados">Saiba mais →</a></dd>
   <dt id="g-ocupacao-numeros" data-letra="P">Publicadas · efetivas · ocupadas</dt>
-  <dd class="def">Os números da apuração: o que o quadro publicou; isso mais ou menos o que a reversão moveu; e quantas vagas já estão servidas.</dd>
+  <dd class="def">Os números da apuração: o que o quadro publicou; isso mais ou menos o que a reversão moveu, mais as vagas acrescidas depois da publicação; e quantas vagas já estão servidas.</dd>
   <dd class="ex">PcD: publicadas 2, efetivas 1 (cedeu 1), ocupadas 1.</dd>
   <dd class="rel"><a href="#g-apuracao">Apuração de ocupação</a> · <a href="#g-reversao">Reversão de cota</a></dd>
   <dd class="mais"><a href="#ocupacao">Saiba mais →</a></dd>
@@ -10300,6 +10447,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="ex">As Etapas, pesos e desempates vigentes quando a ordem foi emitida.</dd>
   <dd class="rel"><a href="#g-obsolescencia">Obsolescência</a></dd>
   <dd class="mais"><a href="#ato">Saiba mais →</a></dd>
+  <dt id="g-vaga-acrescida" data-letra="V">Vaga acrescida</dt>
+  <dd class="def">Vaga que entra na ampla de um Perfil com cadastro de reserva depois da publicação, por fato de fora do Edital, registrada na ocupação com origem, fundamento e autor. Não é Retificação nem publicação; desfaz-se por outro ato, com motivo.</dd>
+  <dd class="ex">Uma matrícula não efetivada em outro Edital libera 1 vaga: as efetivas passam de 0 a 1, e o 1º do cadastro é convocado.</dd>
+  <dd class="rel"><a href="#g-cadastro-de-reserva">Cadastro de reserva</a> · <a href="#g-ocupacao-numeros">Publicadas · efetivas · ocupadas</a></dd>
+  <dd class="mais"><a href="#vaga-acrescida">Saiba mais →</a></dd>
   <dt id="g-vagas-imediatas" data-letra="V">Vagas imediatas</dt>
   <dd class="def">O total de vagas de um Perfil. Sem cota, é a ampla; com cota, o quadro o reparte.</dd>
   <dd class="ex">40.</dd>
@@ -10329,8 +10481,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       O que está pronto, o que está pela metade e o que falta, domínio a domínio — e o que a
       confrontação entre código, especificação, interface e documentação encontrou. Lido contra a
       <code>main</code> de 29/09/2026 (<code>3a53b23a</code>), acrescido da spec 054 contra a de
-      30/09/2026 (<code>86bbf49</code>), das 055 a 068 contra a de 10/10 (<code>0edc0f8d</code>) e das
-      069 a 072 contra a de 15/10 (<code>db428b30</code>).
+      30/09/2026 (<code>86bbf49</code>), das 055 a 068 contra a de 10/10 (<code>0edc0f8d</code>), das
+      069 a 072 contra a de 15/10 (<code>db428b30</code>), das 073 a 092 contra a de 19/10
+      (<code>745f115f</code>) e das 093 a 097 contra a de 21/10 (<code>e869d7a2</code>).
     </p>
   </header>
   <div class="nesta-pagina"></div>
@@ -10343,30 +10496,30 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <strong>operação institucional</strong>: não há autenticação real nem caminho de produção.
     </p>
 
-    <h3>Os números de hoje, contra os de 15/10</h3>
+    <h3>Os números de hoje, contra os de 19/10</h3>
     <div class="numeros">
-      <div><b>93</b><span>pastas de especificação (eram 74), até a 092</span></div>
-      <div><b>40</b><span>tabelas append-only (sem mudança): os registros do piloto do assistente não entram, porque se excluem</span></div>
-      <div><b>58</b><span>gatilhos de banco (sem mudança)</span></div>
-      <div><b>94</b><span>migrations (sem mudança): as telas novas não tocaram o banco</span></div>
+      <div><b>98</b><span>pastas de especificação (eram 93), até a 097</span></div>
+      <div><b>41</b><span>tabelas append-only (eram 40): a das vagas acrescidas depois da publicação, da 097; os registros do piloto do assistente não entram, porque se excluem</span></div>
+      <div><b>59</b><span>gatilhos de banco (eram 58): o da mesma tabela</span></div>
+      <div><b>95</b><span>migrations (eram 94): a da vaga acrescida; a prévia da classificação não toca o banco</span></div>
       <div><b>22</b><span>módulos de domínio (sem mudança)</span></div>
-      <div><b>439</b><span>arquivos Python de aplicação (eram 432)</span></div>
-      <div><b>165</b><span>templates (eram 166): o estilo saiu dos templates para arquivos estáticos (089, 091, 092)</span></div>
-      <div><b>871</b><span>arquivos de teste Python, + 15 de JavaScript (eram 849 + 13)</span></div>
-      <div><b>117</b><span>rotas da gestão (eram 116): a do ambiente de demonstração, da 075; o portal vai a 36 (eram 33), com as três do assistente na página da seleção, da 074, que só respondem no desenvolvimento local</span></div>
+      <div><b>447</b><span>arquivos Python de aplicação (eram 439)</span></div>
+      <div><b>169</b><span>templates (eram 165): o painel da prévia da classificação e os dois blocos que a 095 lhe deu, e a conferência da vaga acrescida</span></div>
+      <div><b>900</b><span>arquivos de teste Python, + 15 de JavaScript (eram 871 + 15)</span></div>
+      <div><b>121</b><span>rotas da gestão (eram 117): as duas do painel da prévia da classificação, da 094, e as duas da vaga acrescida, da 097; o portal continua com 36</span></div>
       <div><b>8</b><span>espécies de sinal na Atenção (sem mudança)</span></div>
     </div>
     <details class="evidencia"><summary>Como cada número foi medido</summary><div class="evidencia-corpo"><dl>
-      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code> (001–092 e a revisão 012-013)</dd>
+      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code> (001–097 e a revisão 012-013)</dd>
       <dt>Append-only</dt><dd>itens de <code>TABELAS_APPEND_ONLY</code> em <code>seguranca/papeis.py</code></dd>
-      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 58, em 24 migrations, sobre 47 tabelas</dd>
+      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 59, em 25 migrations, sobre 48 tabelas</dd>
       <dt>Migrations</dt><dd>arquivos em <code>*/migrations/</code>, sem <code>__init__</code></dd>
       <dt>Módulos</dt><dd>apps com <code>apps.py</code>, sem o <code>interface</code>, que ganhou o seu na 089 e não é domínio (o <code>shared</code> não tem)</dd>
-      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 102,8 mil linhas (eram 101,8 mil)</dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 12 268 passando e 11 pulados (medido em 18/10, em <code>2abd18db</code>, com o grupo opcional <code>assistente</code> instalado e 4 workers, em 525s, e registrado no <code>AGENTS.md</code>; sem o grupo, há um pulado a mais: a contagem real de tokens da 071)</dd>
+      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 107,4 mil linhas (eram 102,8 mil)</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 12 775 passando e 12 pulados (medido em 21/10, sobre a árvore da <code>main</code> em <code>e869d7a2</code>, com o grupo opcional <code>assistente</code> instalado e 4 workers, em 498s, e levado ao <code>AGENTS.md</code> pelo PR 325; sem o grupo, há um pulado a mais: a contagem real de tokens da 071). Aquela rodada teve uma falha, que não é defeito: o teste de tempo da ocupação oscila com 4 workers e passa isolado. O pulado novo é da 097</dd>
       <dt>Rotas</dt><dd><code>path(</code> em <code>interface/urls.py</code> e <code>portal/urls.py</code></dd>
       <dt>Espécies de sinal</dt><dd><code>ESPECIES</code> em <code>interface/supervisao.py</code></dd>
-      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 15/10, <code>db428b30</code>, medida pelo mesmo método — que reproduz ali, sem exceção, os números publicados naquela data; 125 <em>commits</em> desde então, até <code>745f115f</code>. A de 10/10, <code>0edc0f8d</code>, também reproduzia os dela. A de 30/09, <code>86bbf49</code>, reproduzia os dela, exceto os arquivos de teste, contados em 29/09</dd>
+      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 19/10, <code>745f115f</code>, medida pelo mesmo método — que reproduz ali, sem exceção, os números publicados naquela data; 65 <em>commits</em> desde então, até <code>e869d7a2</code>. A de 15/10, <code>db428b30</code>, e a de 10/10, <code>0edc0f8d</code>, também reproduziam os delas. A de 30/09, <code>86bbf49</code>, reproduzia os dela, exceto os arquivos de teste, contados em 29/09</dd>
     </dl></div></details>
 
     <h3>Domínio a domínio</h3>
@@ -10425,8 +10578,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#classificacao">Classificação</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Combinação publicada, desempates por grupo, empate residual preservado, ordem por recorte. <a href="#operar-por-marco">Operar por marco</a>: um gesto ordena, corta, apura ou publica todos os recortes, com indicador por recorte</td>
-            <td>Nenhuma validação compara percentual ou desempate entre Perfis — a Revisão só mostra a divergência</td>
+            <td>Combinação publicada, desempates por grupo, empate residual preservado, ordem por recorte. <a href="#operar-por-marco">Operar por marco</a>: um gesto ordena, corta, apura ou publica todos os recortes, com indicador por recorte. <a href="#previa-da-classificacao">Prévia</a> na composição, sobre candidatos fictícios, também por recorte (094, 095)</td>
+            <td>Nenhuma validação compara percentual ou desempate entre Perfis — a Revisão só mostra a divergência. A prévia não foi validada com quem elabora, e não simula sorteio, Retificação nem o encadeamento entre marcos</td>
           </tr>
           <tr>
             <td><strong><a href="#sorteio">Sorteio</a></strong></td>
@@ -10437,7 +10590,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#ocupacao">Ocupação de vagas</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Três números gravados, duas espécies de reversão, histórico por recorte, porta para a convocação do recorte</td>
+            <td>Três números gravados, duas espécies de reversão, histórico por recorte, porta para a convocação do recorte; a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, com o ato que a desfaz (097)</td>
             <td>Uma Retificação da reversão não torna a apuração obsoleta</td>
           </tr>
           <tr>
@@ -10456,7 +10609,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
             <td><strong><a href="#convocacao">Convocação e suplência</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
             <td>3 espécies, 7 desfechos, atestado de fato externo, fila derivada, comunicação append-only. Porta pela página do Edital e pela ocupação; convocar os titulares num ato; registrar o não atendimento de todos os vencidos num gesto; apuração seguinte emitida pelo desfecho</td>
-            <td>Corrigir uma convocação ou um desfecho com motivo não tem tela. <a href="#cadastro-de-reserva">Cadastro de reserva</a> sem vagas imediatas não convoca — fora do piloto, por decisão</td>
+            <td>Corrigir uma convocação ou um desfecho com motivo não tem tela. O <a href="#cadastro-de-reserva">cadastro de reserva</a> convoca pela vaga acrescida só na ampla de Perfil sem Modalidade (097); com cotas, a convocação é feita fora</td>
           </tr>
           <tr>
             <td><strong><a href="#matricula">Requerimento de Matrícula</a></strong></td>
@@ -10622,6 +10775,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>Linha “Protocolo” vazia no Requerimento (PV-05)</td><td>Preenchido antes do envio da inscrição, o Requerimento mostrava o rótulo e a origem, e nada no lugar do valor</td><td>15/10, lote de correções da auditoria: sem protocolo, a linha não aparece</td></tr>
           <tr><td>A marca “irreversível” muda para o leitor de tela</td><td>Nos detalhes do Processo, do Edital e da Retificação, quem chegava a um ato sem volta pelo teclado ouvia só o rótulo</td><td>18/10, spec 090: a marca é a descrição acessível do botão</td></tr>
           <tr><td>O caminho no topo oferecia ao Auditor duas telas que o recusavam</td><td>Em Resultados da Etapa, Trilha da avaliação e Conclusões preservadas, Alocação por Etapa e a Etapa eram links que respondiam 403 a quem audita sem presidir</td><td>18/10, spec 090: os dois níveis viram texto para quem não os abre</td></tr>
+          <tr><td>A recusa de CSRF sem desenho</td><td>O formulário expirado respondia com a página do Django, em inglês, falando em <em>“cookie”</em>, e sem estilo sob a política de conteúdo</td><td>20/10, spec 093: a moldura da área de onde o envio veio, 403, <em>“Nada foi gravado.”</em> e o caminho de volta</td></tr>
+          <tr><td>“0” nas vagas do Perfil só de cadastro de reserva (P-2 dos Editais externos)</td><td>O documento imprimia 0 vaga imediata, que se lia como ausência de oferta; o portal dizia <em>“0 vagas imediatas agora”</em></td><td>21/10, spec 096: <code>CR</code> com a nota <em>“CR: cadastro de reserva.”</em>, e o portal não diz o zero. O dado continua 0, e a gestão o mostra. Atendido em parte: o cadastro limitado em 0 também sai <code>CR</code></td></tr>
+          <tr><td>Edital só de cadastro de reserva sem convocação (RC-58)</td><td>Classificava e divulgava, e convocar era recusado por falta de vaga apurada</td><td>21/10, spec 097, em parte: a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, na ocupação, para a ampla de Perfil sem Modalidade. O limite “até N” continua sem execução, e com cotas a convocação é externa</td></tr>
         </tbody>
       </table>
     </div>
@@ -10640,7 +10796,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td>Campo <code>Status</code> das especificações</td>
             <td><code>Draft</code></td>
-            <td>62 das 93 pastas dizem <code>Draft</code>, inclusive as já implementadas</td>
+            <td>63 das 98 pastas dizem <code>Draft</code>, inclusive as já implementadas</td>
             <td>Primeira linha <code>**Status**</code> de cada <code>spec.md</code>. Quem declara uma spec concluída é decisão ainda pendente (DP-12, no registro de decisões do produto)</td>
           </tr>
           <tr>
@@ -10814,7 +10970,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Respostas do assistente de dúvidas (validação interna) <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/duvidas/</code></td><td>quem alcança a página do Edital; só GET</td></tr>
         <tr><td>Assistente do Edital (piloto) · começar outra conversa <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/assistente/</code> · <code>…/assistente/nova/</code></td><td>Participante do piloto do assistente, com <code>ASSISTENTE_PILOTO</code> ligada; senão, 404</td></tr>
         <tr><td>Protótipo do painel de dúvidas · perguntar · sugestão · nova conversa <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/assistente/prototipo/</code> e sub-rotas</td><td>o mesmo acesso do piloto; nenhum link leva a ela</td></tr>
-        <tr><td>Fragmentos do assistente e da Retificação (Perfil, Modalidade, quadro, fato, marco, critério, Evento, Anexo, linha do quadro; duplicar Perfil <span class="selo selo-impl">nova</span>; Modalidade e critério acrescentados <span class="selo selo-impl">nova</span>)</td><td><code>/gestao/fragmentos/…</code> · <code>/gestao/editais/&lt;id&gt;/fragmentos/…</code></td><td>pedaços de tela carregados pela própria composição</td></tr>
+        <tr><td>Fragmentos do assistente e da Retificação (Perfil, Modalidade, quadro, fato, marco, critério, Evento, Anexo, linha do quadro; duplicar Perfil <span class="selo selo-impl">nova</span>; Modalidade e critério acrescentados <span class="selo selo-impl">nova</span>; prévia da classificação do marco <span class="selo selo-impl">nova</span>)</td><td><code>/gestao/fragmentos/…</code> · <code>/gestao/editais/&lt;id&gt;/fragmentos/…</code></td><td>pedaços de tela carregados pela própria composição</td></tr>
       </tbody>
     </table></div>
 
@@ -10844,7 +11000,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Classificação · Conferir emissão · Ato de classificação</td><td><code>…</code> · <code>…/emitir</code> · <code>…/atos/&lt;ato&gt;</code></td><td>emite quem gere a comissão ou a preside; Auditor lê</td></tr>
         <tr><td>Corte — progressão para a Etapa seguinte · emitir · continuar</td><td><code>…/corte</code> · <code>…/corte/emitir</code> · <code>…/corte/continuar</code></td><td>idem</td></tr>
         <tr><td>Corte histórico</td><td><code>/gestao/editais/&lt;id&gt;/cortes/&lt;corte&gt;</code></td><td>idem</td></tr>
-        <tr><td>Ocupação de vagas · apurar · faixa seguinte · histórico</td><td><code>…/ocupacao</code> e sub-rotas</td><td>idem</td></tr>
+        <tr><td>Ocupação de vagas · apurar · faixa seguinte · histórico · acrescentar e desfazer vaga <span class="selo selo-impl">nova</span></td><td><code>…/ocupacao</code> e sub-rotas</td><td>idem</td></tr>
         <tr><td>Sorteio · publicar a relação · registrar a ocorrência · realizar · anular</td><td><code>…/sorteio</code> e sub-rotas</td><td>idem</td></tr>
         <tr><td>Publicar resultado — prévia e confirmação</td><td><code>…/atos/&lt;ato&gt;/publicar</code> · <code>…/publicar/confirmar</code></td><td>Publicador (<code>resultado:publicar</code>)</td></tr>
         <tr><td>Resultados divulgados</td><td><code>…/publicacoes</code></td><td>Publicador ou Auditor</td></tr>
@@ -11010,16 +11166,20 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h4>Jornada interrompida</h4>
     <div class="aviso aviso-lacuna">
-      <span class="titulo">Lacuna: Edital só de cadastro de reserva não convoca</span>
+      <span class="titulo">Lacuna, em parte: Edital só de cadastro de reserva convoca só pela ampla</span>
       <p>
-        O produto aceita, publica, classifica e divulga um Edital sem vagas imediatas. Convocar é
-        recusado, porque convocar exige vaga faltante apurada. Decidido em 26/09 que essa família fica
-        <strong>fora do piloto</strong>; a Revisão avisa que a convocação será externa. Na mesma família,
+        O produto aceita, publica, classifica e divulga um Edital sem vagas imediatas. Decidido em 26/09
+        que essa família ficava <strong>fora do piloto</strong>; em 21/10, a 097 voltou à opção A da DP-05:
+        a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, registrada na ocupação, faz a
+        convocação chamar o cadastro. Ela vale só na ampla de Perfil cujo quadro tem só a linha geral e que
+        não declara reversão. Os Editais de bolsista, que repartem o cadastro entre Modalidades, ficam para
+        spec própria, e a Revisão avisa que a convocação deles será feita fora do sistema. Na mesma família,
         o Perfil só de reserva com uma única cota ainda põe todo inscrito nela.
       </p>
       <p class="miudo"><strong>Evidência:</strong> <code>convocacao/application/convocar.py</code>
-        (<code>_recusar_por_deficit</code>); aviso <code>reserve_only_convocation_external</code> em
-        <code>editais/domain/validation.py</code>. Ver <a href="#cadastro-de-reserva">Cadastro de reserva</a>.</p>
+        (<code>_recusar_por_deficit</code>); <code>ocupacao/application/acrescimo.py</code>
+        (<code>impedimento</code>); avisos <code>reserve_only_convocation_external</code> e
+        <code>reserve_only_with_reserved_lines</code> em <code>editais/domain/validation.py</code>. Ver <a href="#cadastro-de-reserva">Cadastro de reserva</a>.</p>
     </div>
     <div class="aviso aviso-lacuna">
       <span class="titulo">Lacuna: a reavaliação determinada existe, e a tela não conduz a ela</span>
@@ -11049,7 +11209,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <li><strong>A convocação para heteroidentificação, entrevista ou títulos não tem ato</strong>, e por isso não tem aviso; a 066 declara que não encerra a demanda do setor.</li>
       <li><strong>A marca do Cefor fora do documento.</strong> O título e o topo das telas, os e-mails e a página da seleção no portal (<em>“Unidade: CEFOR”</em>, o código e não a sigla) continuam presos ao Cefor — a vitrine passou a usar a sigla do registro de Unidades com a 072; o seletor de identidade só oferece o escopo <code>cefor</code> (<code>doc/pendencias-da-060.md</code>).</li>
       <li><strong>O documento oficial, depois da auditoria de 08/10.</strong> Fechados ED-01 a ED-04, ED-11 e ED-12; a 069 tratou a linguagem das frases geradas (ED-05), a navegação (ED-08), a parte imediata de ED-07 — título, idioma, marcadores, nome do arquivo — e a fonte embutida (ED-14). Seguem abertos, entre outros, o PDF marcado para leitor de tela (o resto de ED-07), o quadro de alterações no consolidado (ED-06), o endereço do certame (ED-09) e a forma de convocação na margem (ED-15). Na Retificação, uma <em>“Tabela N”</em> renumerada não é acusada (<code>doc/auditoria-edital-pdf-2026-10-08.md</code>).</li>
-      <li><strong>A regra da reserva no cadastro</strong> (RC-58) segue sem decisão, e o Perfil só de reserva ainda imprime o corte <em>“os 10 primeiros”</em>.</li>
+      <li><strong>O limite do cadastro de reserva</strong> — o que <em>“limitado em N”</em> significa, a outra metade da DP-05 — segue sem regra que o execute, e o Perfil só de reserva ainda imprime o corte <em>“os 10 primeiros”</em>. A convocação do cadastro entrou em parte, com a 097 (RC-58).</li>
     </ul>
 
     <h4>Abertas desde 10/10</h4>
@@ -11072,8 +11232,16 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <li><strong>Atos que não se desfazem saem de botão comum, sem conferência.</strong> <span class="rotulo-ui">Realizar o sorteio</span>, <span class="rotulo-ui">Publicar e congelar a relação</span>, <span class="rotulo-ui">Emitir corte</span>, <span class="rotulo-ui">Apurar a ocupação deste recorte</span>, <span class="rotulo-ui">Convocar</span> e <span class="rotulo-ui">Registrar desfecho</span> têm o desenho de ação principal; só a emissão da ordem, pela conferência, e a anulação do sorteio têm o desenho de perigo. Rever isso é decisão de governança (084, <code>research.md</code>).</li>
       <li><strong>A tela de recusa não diz de onde a pessoa veio</strong>: oferece só <span class="rotulo-ui">Voltar aos Processos Seletivos</span> (085). No caminho do topo, o Ato de classificação aparece pelo identificador de 36 caracteres (084), e o nível do marco não diz o Perfil, embora dois marcos de Perfis diferentes costumem ter o mesmo nome (083).</li>
       <li><strong>Três auditorias, um título.</strong> A Trilha da avaliação e a Auditoria da comissão dizem <em>“Trilha de auditoria”</em> no título, enquanto o caminho no topo diz <span class="rotulo-ui">Trilha da avaliação</span> e <span class="rotulo-ui">Auditoria da comissão</span> (080).</li>
-      <li><strong>A página de falha de CSRF do próprio Django sai sem desenho</strong>, porque traz estilo embutido e a política de conteúdo o recusa. Quem mais a vê é o candidato com a sessão vencida que clica em Enviar ou Sair. Trocá-la por uma página do sistema está registrado e não foi feito (091, 092).</li>
       <li><strong>Duas grafias para trocar de identidade</strong>: <span class="rotulo-ui">Trocar identidade</span> no topo das telas e <span class="rotulo-ui">Trocar de identidade</span> na página de acesso; e a lista de Processos ainda diz que a identidade foi escolhida <em>“acima”</em>, quando ela está no pé da barra. Os assuntos dos e-mails do portal ainda dizem <em>“Seleções Cefor/Ifes”</em>, e não o nome novo do produto.</li>
+    </ul>
+
+    <h4 id="abertas-desde-19-10">Abertas desde 19/10</h4>
+    <p>As entregas de 20 e 21/10 entraram com o que segue registrado nas próprias specs:</p>
+    <ul>
+      <li><strong>A <a href="#previa-da-classificacao">prévia da classificação</a> não foi validada com quem elabora.</strong> O roteiro da 094 (T039, para SC-840, SC-848 e SC-851) e o da 095 (SC-870) pedem ao menos cinco elaboradores na interface real, e só fecham com o relato do usuário. Na 095, a conferência da rastreabilidade e do roteiro do <code>quickstart</code> (T032) também está aberta — a rastreabilidade ainda diz que os arquivos de teste não existem —, e a extensão do protótipo (T030) não foi feita, por decisão.</li>
+      <li><strong>Três pontos em que a prévia por recorte difere da própria spec</strong>, e vale o código: ao abrir, as reservadas aparecem <em>“Não avaliada”</em>, porque a população estável planta um empate na última vaga da ampla (mantido em 20/10); trocar de recorte não recalcula <span class="rotulo-ui">O que mudou com a sua alteração</span>; e o rótulo da ampla diz <em>“(linha geral do quadro), todos os candidatos”</em>. As cinco perguntas que a 094 deixou ao produto — entre elas o termo <em>“avançar”</em> e se a fronteira das vagas merece declaração — seguem sem resposta, e a reversão por esgotamento aparece como o comportamento atual, pendente de decisão.</li>
+      <li><strong>O <code>CR</code> do documento</strong> (096): o cadastro limitado em 0 também sai <code>CR</code>; o assistente de dúvidas lê o <code>0</code> publicado e pode responder <em>“0 vagas”</em>; e o texto do portal foi conferido só no navegador, sem teste automático. A prévia do documento passou a reservar o espaço do fecho com a autoridade mais alta da unidade: se outra assinar o ato, a paginação da prévia pode divergir da publicada.</li>
+      <li><strong>A <a href="#vaga-acrescida">vaga acrescida</a></strong> (097) alcança só a ampla de Perfil cujo quadro tem só a linha geral: os Editais de bolsista, que repartem o cadastro entre Modalidades, ficam para spec própria. Nenhum prazo final de convocação foi declarado, e a verificação não percorreu pela tela a Revisão nem o não atendimento depois do acréscimo.</li>
     </ul>
 
     <h4>Configuração sem consumidor</h4>
@@ -11136,7 +11304,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h4>Divergências entre código e documentação</h4>
     <ul>
-      <li>62 das 93 especificações dizem <code>Status: Draft</code>, inclusive as implementadas (DP-12) — entre elas a 069, a 070, a 071 e a 072. Nenhuma das 074 a 092 diz <code>Draft</code>, mas dezesseis delas, da 077 à 092, ainda dizem <em>“PR aberto, merge com o usuário”</em>, e a 076 diz <em>“Em emenda”</em>; todas estão na <code>main</code>.</li>
+      <li>63 das 98 especificações dizem <code>Status: Draft</code>, inclusive as implementadas (DP-12) — entre elas a 069, a 070, a 071, a 072 e a 097. Das 074 à 096, nenhuma diz <code>Draft</code>, mas dezoito — da 077 à 093, e a 096 — ainda dizem <em>“PR aberto, merge com o usuário”</em>, a 076 diz <em>“Em emenda”</em>, e a 094 diz <em>“Especificada”</em>, com a <em>“implementação não iniciada”</em>; todas estão na <code>main</code>.</li>
       <li>O cabeçalho da 071 ainda diz que ela está empilhada sobre a 070, que <em>“não está na <code>main</code>”</em>; as duas estão. A verificação da 071 diz <em>“Nenhuma chamada externa aconteceu”</em> e, adiante, registra o ensaio no OpenRouter de 14/10.</li>
       <li>A 071 manda excluir <em>todo</em> o registro do piloto; o comando exclui as trocas criadas até o dia do relatório final, como diz o contrato do comando.</li>
       <li><code>doc/achado-suite-em-sqlite.md</code> nomeia uma causa; são três (o <code>CLAUDE.md</code> as reparte).</li>
@@ -11182,6 +11350,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Reabilitado antes do marco</strong> (061)</td><td>Estender a pergunta do reingresso, delegá-la à ordem, ou manter e dizer?</td><td>Escolha entre as três saídas do achado</td></tr>
         <tr><td><strong>Frases novas do Edital</strong> (069)</td><td>As frases que a redação 2 acrescenta, listadas na conferência de equivalência, podem ir ao primeiro Edital real?</td><td>Aprovação do responsável pelo produto (SC-517)</td></tr>
         <tr><td><strong>Validação da jornada pública</strong> (072)</td><td>O texto de finalidade de nome e CPF está completo e correto? O percurso com cinco pessoas confirma a jornada?</td><td>Quem responde pela proteção de dados (FR-1627); o percurso com pessoas (SC-605)</td></tr>
+        <tr><td><strong>Prévia da classificação</strong> (094, 095)</td><td>Quem elabora entende, pela prévia, o que a regra do marco faz com as vagas e as cotas? E as cinco perguntas da 094: o rótulo de <em>“A faixa para no alvo”</em>, o referente de <em>“esse número”</em> no documento, a fronteira das vagas, suplentes × cadastro de reserva e o termo <em>“avançar”</em></td><td>O roteiro com ao menos cinco elaboradores (T039; SC-870), e a decisão do usuário</td></tr>
         <tr><td><strong>Respostas prontas do assistente</strong> (070)</td><td>A tabela de pertinência, os termos de dúvida e as formas da explicação servem ao setor?</td><td>Revisão com o setor de seleção (T046)</td></tr>
         <tr><td><strong>Lacunas de domínio da 063</strong></td><td>Ocupante da vaga, corte que chega ao candidato, ato de matrícula, consequência da convocação no Edital, vocabulário da fila, tipo de certame, origem do vencimento (L-1 a L-7)</td><td>Todas registradas na spec 063 para decisão</td></tr>
       </tbody>
@@ -11190,7 +11359,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       Decididas e executadas desde 26/09: DP-01 a DP-06 (painel, reserva fora do piloto, dupla leitura),
       DP-08 item 2, DP-13 (<a href="#heranca">aplicar a todos</a>), DP-14 (ampla na inscrição), DP-16
       (não atendimento em lote), DP-17 (automação explícita na Constituição), DP-19 (campos definitivos na
-      Revisão) e DP-21 (limite de campos da composição).
+      Revisão) e DP-21 (limite de campos da composição). A DP-05 foi revista em 21/10 pela 097, que voltou à opção A
+      — a vaga acrescida depois da publicação — para a ampla de Perfil sem Modalidade.
     </p>
 
     <h3 id="evolucoes-nao-fazer">O que o repositório registra que <em>não</em> se deve fazer</h3>
@@ -11316,6 +11486,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>10/10/2026</td><td><code>main</code> em <code>0edc0f8d</code>, specs 055–068</td><td>As catorze specs mergeadas entre 30/09 e 09/10 descritas como entregues: a convocação com porta no portal, o acompanhamento pela situação, os resultados por Perfil, etapa e lista, as Unidades e autoridades com vigência, os avisos aos candidatos, o corte em dia depois do recurso e o documento que confere a numeração e imprime uma vez o que se repete. Registro em <code>docs/visao-sistema/CHANGELOG-2026-10.md</code>.</td></tr>
           <tr><td>15/10/2026</td><td><code>main</code> em <code>db428b30</code>, specs 069–072</td><td>As quatro specs mergeadas entre 12 e 14/10 descritas como entregues, cada uma com o que espera validação humana: o Edital em linguagem simples, a jornada pública do portal, as respostas prontas do assistente de dúvidas e o piloto interno do assistente, com o oitavo papel. A 073 é citada só como especificada. O fato de o sistema não estar em produção passou a ser dito no início e no estado do produto. Registro no mesmo arquivo.</td></tr>
           <tr><td>19/10/2026</td><td><code>main</code> em <code>745f115f</code>, specs 073–092</td><td>A implementação da 073, o lote de correções da auditoria de 15/10 (PR 285) e as specs 074 a 092 descritos como entregues: o assistente na página da seleção, só local; a página de acesso e a barra lateral da gestão, com a seção nova <a href="#entrar-e-navegar">Entrar na gestão e navegar nela</a>; os rótulos e a ordem das telas redesenhadas; e a política de segurança de conteúdo. Registro no mesmo arquivo.</td></tr>
+          <tr><td>21/10/2026</td><td><code>main</code> em <code>e869d7a2</code>, specs 093–097</td><td>As cinco specs mergeadas entre 20 e 21/10 descritas como entregues: a recusa do formulário expirado na moldura da área (093); a <a href="#previa-da-classificacao">prévia da classificação</a> na composição, sobre candidatos fictícios (094), e por recorte, com a ocupação e a reversão (095), as duas com a validação com elaboradores pendente; o Perfil só de cadastro de reserva impresso como <code>CR</code> (096); e a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, que convoca do cadastro de reserva na ampla (097). Registro no mesmo arquivo.</td></tr>
         </tbody>
       </table>
     </div>
@@ -11327,6 +11498,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>A revisão de 10/10 também foi feita por leitura do código e das specs, sem rodar a suíte nem percorrer o produto; o número da suíte é o do <code>AGENTS.md</code>, medido em 09/10.</li>
         <li>A revisão de 15/10 seguiu o mesmo método: leitura do código e das specs, sem rodar a suíte, sem percorrer o produto e sem chamar o serviço de inferência. O número da suíte é o do <code>AGENTS.md</code>, medido em 14/10. Nada do piloto do assistente foi exercitado aqui.</li>
         <li>A revisão de 19/10 seguiu o mesmo método, por seis leituras paralelas, cada uma de um grupo de specs contra o código; os rótulos novos foram conferidos de novo nos <em>templates</em> antes de entrar no texto. Não se rodou a suíte nem se percorreu o produto: o número da suíte é o do <code>AGENTS.md</code>, medido em 18/10.</li>
+        <li>A revisão de 21/10 seguiu o mesmo método: quatro leituras paralelas, uma por spec da 094 à 097, contra o código da <code>main</code>, e a 093 lida diretamente; as frases citadas foram conferidas de novo no código. Não se rodou a suíte nem se percorreu o produto: o número da suíte é o de 21/10, do PR 325.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
         <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
@@ -11357,8 +11529,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <p>Reconstruída por leitura do código-fonte em 20/09/2026 e revista, de novo contra o código, em
   29/09/2026 (<code>main</code> em <code>3a53b23</code>, specs 001 a 053); a spec 054 foi acrescentada
   em 30/09/2026 (<code>main</code> em <code>86bbf49</code>), as 055 a 068 em 10/10/2026
-  (<code>0edc0f8d</code>), as 069 a 072 em 15/10/2026 (<code>db428b30</code>) e as 073 a 092 em 19/10/2026
-  (<code>745f115f</code>). Onde documentação e código
+  (<code>0edc0f8d</code>), as 069 a 072 em 15/10/2026 (<code>db428b30</code>) as 073 a 092 em 19/10/2026
+  (<code>745f115f</code>) e as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code> e <code>docs/visao-sistema/CHANGELOG-2026-10.md</code>.</p>

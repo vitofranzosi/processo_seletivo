@@ -35,6 +35,9 @@ MODULOS_DE_VIEW = (
     RAIZ / "processo_seletivo/interface/duvidas.py",
     # O piloto do assistente do Edital (071): a negativa é a mesma da página do Edital.
     RAIZ / "processo_seletivo/interface/assistente.py",
+    # O relatório do Edital (099): 404 só para o Edital inexistente ou de outra unidade; a falta de
+    # base é a recusa explicada, por `require_authorization_base`.
+    RAIZ / "processo_seletivo/interface/relatorio.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

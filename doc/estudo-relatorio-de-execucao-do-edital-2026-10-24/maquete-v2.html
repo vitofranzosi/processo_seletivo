@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório do Edital 61/2026 (maquete v2)</title>
+<style>
+  /* Maquete v2 (rodada 2 do estudo). Não é código de produto: o relatório real sairia de
+     publicacoes/infrastructure/pdf.py. Esta folha só imita a sobriedade daquele documento. */
+  :root {
+    --tinta: #1d1d1b;
+    --tinta-2: #45453f;
+    --tinta-3: #6b6b66;
+    --linha: #cfcfc8;
+    --fundo-suave: #f4f4f0;
+    --destaque: #1f4e79;
+    --atencao: #8a5a00;
+    --atencao-fundo: #fbf3e2;
+    --barra: #6f7f8f;
+    --barra-2: #1f4e79;
+  }
+  @page { size: A4; margin: 14mm 16mm 14mm; }
+  * { box-sizing: border-box; }
+  html { background: #e9e9e4; }
+  body { margin: 0; color: var(--tinta); background: #e9e9e4; font: 9.5pt/1.42 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .folha {
+    width: 210mm; min-height: 297mm; margin: 12px auto; padding: 14mm 16mm;
+    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    break-after: page; page-break-after: always;
+  }
+  .folha:last-child { break-after: auto; page-break-after: auto; }
+  @media print {
+    html, body { background: #fff; }
+    .folha { margin: 0; padding: 0; width: auto; min-height: 0; box-shadow: none; }
+  }
+  @media screen and (max-width: 820px) {
+    .folha { width: auto; min-height: 0; margin: 8px 16px; padding: 20px 16px; }
+    .numeros { grid-template-columns: 1fr 1fr !important; }
+    .ficha { grid-template-columns: 1fr !important; }
+    table { font-size: 8.5pt; }
+  }
+
+  .faixa {
+    display: flex; justify-content: space-between; gap: 12px; font-size: 7.8pt; color: var(--tinta-3);
+    border-bottom: 1px solid var(--linha); padding-bottom: 4px; margin-bottom: 12px;
+  }
+  .faixa .maquete { color: var(--atencao); font-weight: bold; }
+  .orgao { text-align: center; font-size: 8.5pt; line-height: 1.35; color: var(--tinta-2); }
+  .orgao strong { color: var(--tinta); }
+
+  h1 { font-size: 17pt; line-height: 1.15; margin: 14px 0 2px; }
+  .especie { font-size: 10pt; color: var(--destaque); font-weight: bold; margin: 0 0 2px; }
+  .natureza { font-size: 8.5pt; color: var(--tinta-3); margin: 0; }
+  h2 { font-size: 11.5pt; margin: 16px 0 6px; padding-bottom: 3px; border-bottom: 1px solid var(--tinta); }
+  h3 { font-size: 9.8pt; margin: 10px 0 4px; }
+  p { margin: 0 0 6px; }
+
+  .ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; margin: 12px 0 4px; font-size: 9pt; }
+  .ficha div { border-top: 1px solid var(--linha); padding-top: 3px; }
+  .ficha .r { display: block; font-size: 7.8pt; color: var(--tinta-3); }
+  .ficha .pendente { color: var(--atencao); font-weight: bold; }
+
+  .sintese { font-size: 10.5pt; line-height: 1.5; margin: 6px 0 4px; }
+
+  .numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+  .numero { border-top: 3px solid var(--destaque); background: var(--fundo-suave); padding: 7px 9px 8px; }
+  .numero .valor { font-size: 19pt; font-weight: bold; line-height: 1.1; }
+  .numero .valor small { font-size: 9.5pt; font-weight: normal; color: var(--tinta-2); }
+  .numero .rotulo { font-size: 8.8pt; font-weight: bold; margin-top: 2px; }
+  .numero .base { font-size: 7.8pt; color: var(--tinta-3); line-height: 1.35; margin-top: 2px; }
+
+  .atencao { border-left: 3px solid var(--atencao); background: var(--atencao-fundo); padding: 7px 11px; margin: 10px 0 0; }
+  .atencao h2 { border: 0; margin: 0 0 4px; padding: 0; font-size: 10.5pt; color: var(--atencao); }
+  .atencao ol { margin: 0; padding-left: 16px; }
+  .atencao li { margin: 3px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 4px 0 6px; }
+  th, td { text-align: left; vertical-align: top; padding: 3px 6px; border-bottom: 1px solid var(--linha); }
+  thead th { border-bottom: 1px solid var(--tinta); font-size: 8.2pt; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .aus { color: var(--tinta-3); font-style: italic; }
+  .nota { font-size: 7.8pt; color: var(--tinta-3); margin: 2px 0 6px; line-height: 1.35; }
+  .hash { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 6.9pt; word-break: break-all; color: var(--tinta-2); }
+  .tag { display: inline-block; font-size: 7pt; text-transform: uppercase; letter-spacing: .03em; color: var(--tinta-3); border: 1px solid var(--linha); padding: 0 3px; margin-left: 4px; }
+  .datas td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; width: 26mm; }
+  .grafico { margin: 2px 0 0; }
+  .grafico svg { width: 100%; height: auto; display: block; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media screen and (max-width: 820px) { .duas { grid-template-columns: 1fr; } }
+  .anexo-titulo { font-size: 13pt; margin: 6px 0 2px; }
+  dl.defs { margin: 0; font-size: 8.4pt; }
+  dl.defs dt { font-weight: bold; margin-top: 4px; }
+  dl.defs dd { margin: 0 0 0 0; color: var(--tinta-2); }
+</style>
+</head>
+<body>
+
+<!-- =========================== RELATÓRIO EXECUTIVO — 1 =========================== -->
+<section class="folha">
+  <div class="faixa"><span><span class="maquete">MAQUETE</span> — dados de demonstração</span><span>Edital 61/2026 · dados até 24/10/2026, 13h10 · página 1 de 4</span></div>
+  <div class="orgao">Ministério da Educação · <strong>Instituto Federal do Espírito Santo</strong><br>Centro de Referência em Formação e em Educação a Distância</div>
+
+  <h1>Relatório do Edital 61/2026</h1>
+  <p class="especie">Relatório de acompanhamento — ainda há providência em curso</p>
+  <p class="natureza">Relatório gerencial com base nos registros do GPS. Não é ato administrativo e não substitui as publicações oficiais.</p>
+
+  <div class="ficha">
+    <div><span class="r">Seleção</span>Professor de Informática e Técnico de Laboratório — Processo Seletivo Simplificado 2026/2</div>
+    <div><span class="r">Período</span>Edital publicado em 03/08/2026; resultados definitivos em 06/10/2026</div>
+    <div><span class="r">Situação no GPS</span>Encerrado em 20/10/2026</div>
+    <div><span class="r">Situação das providências</span><span class="pendente">1 convocação aguardando resposta, até 30/10/2026</span></div>
+  </div>
+
+  <h2>Visão geral</h2>
+  <p class="sintese">O Edital ofereceu <strong>2 vagas imediatas</strong> para Professor de Informática — 1 de ampla concorrência e 1 reservada a pessoas pretas, pardas e indígenas — e abriu cadastro de reserva para Técnico de Laboratório. Recebeu <strong>38 inscrições, de 36 pessoas</strong>, entre 10/08 e 04/09/2026. O prazo de inscrição foi prorrogado uma vez, e 13 inscrições chegaram no período acrescentado. Os <strong>resultados definitivos dos dois perfis</strong> saíram em 06/10/2026, depois do julgamento de 3 recursos, nenhum deles deferido. As duas vagas imediatas têm candidato classificado e habilitado: <strong>uma vaga já foi aceita</strong>, e na outra a pessoa convocada tem prazo até 30/10/2026 para responder.</p>
+
+  <div class="numeros">
+    <div class="numero"><div class="valor">2</div><div class="rotulo">vagas imediatas</div><div class="base">todas em Professor de Informática. Técnico de Laboratório: só cadastro de reserva</div></div>
+    <div class="numero"><div class="valor">38</div><div class="rotulo">inscrições enviadas</div><div class="base">por 36 pessoas: 2 se inscreveram nos dois perfis. Outras 4 foram iniciadas e não enviadas</div></div>
+    <div class="numero"><div class="valor">13</div><div class="rotulo">candidatos por vaga</div><div class="base">em Professor de Informática: 26 candidatos para 2 vagas</div></div>
+    <div class="numero"><div class="valor">2 <small>de 2</small></div><div class="rotulo">resultados definitivos publicados</div><div class="base">um por perfil, ambos em 06/10/2026</div></div>
+    <div class="numero"><div class="valor">2 <small>de 2</small></div><div class="rotulo">vagas com candidato classificado e habilitado</div><div class="base">dentro do número de vagas e com a análise documental deferida. Ainda não é matrícula</div></div>
+    <div class="numero"><div class="valor">1 <small>de 2</small></div><div class="rotulo">vagas aceitas</div><div class="base">a outra convocação está no prazo de resposta, até 30/10/2026</div></div>
+  </div>
+
+  <div class="atencao">
+    <h2>Pontos de atenção</h2>
+    <ol>
+      <li><strong>O Edital está encerrado no GPS, mas a seleção não terminou.</strong> A convocação para a vaga reservada aguarda resposta até 30/10/2026.</li>
+      <li><strong>Houve registro depois do encerramento.</strong> O aceite da vaga de ampla concorrência foi registrado em 21/10, um dia depois de o Edital ser encerrado. O aceite estava dentro do prazo, que ia até 23/10. Um relatório emitido antes de 21/10 mostraria esta vaga como sem resposta.</li>
+      <li><strong>O GPS não registra matrículas.</strong> Este relatório mostra aceites de vaga, e não matrículas efetivadas. A confirmação vem do registro acadêmico.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- =========================== RELATÓRIO EXECUTIVO — 2 =========================== -->
+<section class="folha">
+  <div class="faixa"><span><span class="maquete">MAQUETE</span> — dados de demonstração</span><span>Edital 61/2026 · dados até 24/10/2026, 13h10 · página 2 de 4</span></div>
+
+  <h2>Resultados por perfil de vaga</h2>
+  <table>
+    <thead><tr><th>Perfil de vaga</th><th class="n">Vagas imediatas</th><th class="n">Candidatos</th><th class="n">Por vaga</th><th class="n">Com classificação publicada</th><th>Situação das vagas</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Professor de Informática</strong><br><span class="nota">Campus Serra</span></td><td class="n">2<br><span class="nota">1 ampla · 1 reservada</span></td><td class="n">26</td><td class="n">13,0</td><td class="n">14</td><td>2 com candidato classificado e habilitado: 1 vaga aceita, 1 aguardando resposta até 30/10</td></tr>
+      <tr><td><strong>Técnico de Laboratório</strong><br><span class="nota">Campus Vitória</span></td><td class="n aus">só cadastro de reserva</td><td class="n">12</td><td class="n aus">não se aplica</td><td class="n">6</td><td>Sem vaga imediata. Os 6 classificados podem ser chamados se surgir vaga</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">Dentro de um perfil, cada inscrição é de uma pessoa diferente, e por isso a tabela fala em candidatos. Os totais do Edital falam em inscrições, porque a mesma pessoa pode estar nos dois perfis.</p>
+
+  <div class="duas">
+    <div>
+      <h2>Procura ao longo do período</h2>
+      <div class="grafico">
+        <svg viewBox="0 0 330 132" role="img" aria-labelledby="g-titulo g-desc">
+          <title id="g-titulo">Inscrições enviadas por dia, de 10/08 a 04/09/2026</title>
+          <desc id="g-desc">25 inscrições até 30/08, término original do prazo, e 13 entre 31/08 e 04/09, no período prorrogado. O maior volume, 9 inscrições, foi no último dia.</desc>
+          <g fill="var(--barra)">
+            <rect x="6" y="88" width="9" height="16"/><rect x="18" y="88" width="9" height="16"/><rect x="30" y="96" width="9" height="8"/><rect x="42" y="96" width="9" height="8"/><rect x="54" y="96" width="9" height="8"/><rect x="66" y="96" width="9" height="8"/><rect x="90" y="96" width="9" height="8"/><rect x="102" y="96" width="9" height="8"/><rect x="114" y="96" width="9" height="8"/><rect x="126" y="96" width="9" height="8"/><rect x="138" y="96" width="9" height="8"/><rect x="150" y="96" width="9" height="8"/><rect x="174" y="96" width="9" height="8"/><rect x="186" y="96" width="9" height="8"/><rect x="198" y="96" width="9" height="8"/><rect x="210" y="96" width="9" height="8"/><rect x="222" y="88" width="9" height="16"/><rect x="234" y="88" width="9" height="16"/><rect x="246" y="80" width="9" height="24"/>
+          </g>
+          <g fill="var(--barra-2)">
+            <rect x="270" y="96" width="9" height="8"/><rect x="282" y="96" width="9" height="8"/><rect x="294" y="88" width="9" height="16"/><rect x="306" y="32" width="9" height="72"/>
+          </g>
+          <line x1="261" y1="18" x2="261" y2="106" stroke="var(--tinta-2)" stroke-dasharray="2 2" stroke-width="0.8"/>
+          <text x="257" y="14" font-size="9" text-anchor="end" fill="var(--tinta-2)">término original (30/08)</text>
+          <text x="310" y="27" font-size="9" text-anchor="middle" fill="var(--tinta)">9</text>
+          <line x1="2" y1="104.5" x2="326" y2="104.5" stroke="var(--linha)" stroke-width="1"/>
+          <g font-size="9" fill="var(--tinta-3)" text-anchor="middle">
+            <text x="14" y="117">10/08</text><text x="130" y="116">20/08</text><text x="250" y="116">30/08</text><text x="310" y="116">04/09</text>
+          </g>
+          <g font-size="9" fill="var(--tinta-2)">
+            <rect x="6" y="122" width="7" height="6" fill="var(--barra)"/><text x="16" y="128">no prazo original: 25</text>
+            <rect x="150" y="122" width="7" height="6" fill="var(--barra-2)"/><text x="160" y="128">no período prorrogado: 13</text>
+          </g>
+        </svg>
+      </div>
+      <p class="nota">Cada barra é um dia. O GPS registra o instante de cada envio.</p>
+    </div>
+    <div>
+      <h2>Alterações e recursos</h2>
+      <h3>Retificação nº 1 — 25/08/2026</h3>
+      <p>Prorrogou o fim das inscrições de 30/08 para 04/09/2026. Foi publicada antes do fim do prazo original.</p>
+      <h3>Recursos contra os resultados preliminares</h3>
+      <p>3 recursos, apresentados entre 26 e 29/09 e julgados em 02/10/2026: <strong>2 indeferidos</strong> e <strong>1 não admitido</strong>, isto é, sem análise do pedido. Nenhum mudou resultado.</p>
+    </div>
+  </div>
+
+  <h2>Datas principais</h2>
+  <table class="datas">
+    <tbody>
+      <tr><td>03/08</td><td>Edital publicado <span class="tag">publicação</span></td></tr>
+      <tr><td>10/08 – 04/09</td><td>Inscrições. O edital previa o fim em 30/08; a Retificação de 25/08 prorrogou <span class="tag">registrado</span></td></tr>
+      <tr><td>13/09</td><td>Prova objetiva, data prevista no edital. As notas foram registradas entre 15 e 17/09 <span class="tag">previsto</span></td></tr>
+      <tr><td>25/09</td><td>Resultados preliminares publicados <span class="tag">publicação</span></td></tr>
+      <tr><td>02/10</td><td>Recursos julgados <span class="tag">registrado</span></td></tr>
+      <tr><td>06/10</td><td>Resultados definitivos publicados <span class="tag">publicação</span></td></tr>
+      <tr><td>13/10</td><td>Convocação das 2 pessoas classificadas e habilitadas para as vagas imediatas <span class="tag">registrado</span></td></tr>
+      <tr><td>20/10</td><td>Edital encerrado no GPS <span class="tag">registrado</span></td></tr>
+      <tr><td>21/10</td><td>Vaga de ampla concorrência aceita, registrada depois do encerramento <span class="tag">registrado</span></td></tr>
+      <tr><td>30/10</td><td>Fim do prazo de resposta da convocação para a vaga reservada <span class="tag">prazo</span></td></tr>
+    </tbody>
+  </table>
+  <p class="nota"><strong>Publicação</strong>: ato publicado. <strong>Registrado</strong>: ato gravado no GPS. <strong>Previsto</strong> e <strong>prazo</strong>: datas que o edital ou a convocação declaram. O GPS não registra se um evento previsto aconteceu na data.</p>
+
+  <h2>Documentos oficiais</h2>
+  <p>Edital 61/2026 (03/08), Retificação nº 1 (25/08), resultados preliminares (25/09) e definitivos (06/10) de cada perfil e lista. Todos ficam na página pública da seleção no GPS, e a lista com a identificação de cada arquivo está no anexo. <strong>Os nomes dos classificados estão nesses resultados, e não neste relatório.</strong></p>
+</section>
+
+<!-- =========================== ANEXO TÉCNICO — 3 =========================== -->
+<section class="folha">
+  <div class="faixa"><span><span class="maquete">MAQUETE</span> — dados de demonstração</span><span>Edital 61/2026 · dados até 24/10/2026, 13h10 · página 3 de 4</span></div>
+  <p class="anexo-titulo"><strong>Anexo técnico</strong></p>
+  <p class="nota">Para a equipe responsável e para as instâncias de controle. As regras são as publicadas no Edital vigente.</p>
+
+  <h2>A. Etapas de avaliação</h2>
+  <table>
+    <thead><tr><th>Etapa e regra do edital</th><th>Perfil</th><th class="n">Avaliados</th><th class="n">Habilitados na etapa</th><th class="n">Eliminados pela nota</th><th class="n">Eliminados por ocorrência</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="2">1. Prova objetiva<br><span class="nota">eliminatória e classificatória; nota mínima 6,0; peso 2</span></td><td>Professor</td><td class="n">25</td><td class="n">14</td><td class="n">11</td><td class="n">1</td></tr>
+      <tr><td>Técnico</td><td class="n">12</td><td class="n">6</td><td class="n">6</td><td class="n">0</td></tr>
+      <tr><td rowspan="2">2. Análise de títulos<br><span class="nota">classificatória; peso 1</span></td><td>Professor</td><td class="n">14</td><td class="n">14</td><td class="n aus">não elimina</td><td class="n">0</td></tr>
+      <tr><td>Técnico</td><td class="n">6</td><td class="n">6</td><td class="n aus">não elimina</td><td class="n">0</td></tr>
+      <tr><td>3. Análise documental<br><span class="nota">eliminatória; só para quem ficou dentro do limite de chamada</span></td><td>Professor</td><td class="n">5</td><td class="n">5</td><td class="n">0</td><td class="n">0</td></tr>
+    </tbody>
+  </table>
+  <p class="nota"><strong>Avaliados</strong>: inscrições com avaliação registrada na etapa. <strong>Eliminados por ocorrência</strong>: eliminação registrada pela comissão sem nota, com motivo escrito. O GPS não registra frequência: aqui não há número de presentes.</p>
+
+  <h2>B. Classificação e vagas — Professor de Informática</h2>
+  <p>Nota final: soma ponderada da prova (peso 2) e dos títulos (peso 1), com duas casas. O Edital fixa que, por lista, passam à análise documental 2 classificados mais 1 excedente. Nas duas listas, são 5 pessoas, porque uma está nas duas.</p>
+  <table>
+    <thead><tr><th>Lista</th><th class="n">Classificação publicada</th><th class="n">Vagas</th><th class="n">Na apuração</th><th class="n">Classificado e habilitado</th><th style="width:38%">Convocação</th></tr></thead>
+    <tbody>
+      <tr><td>Ampla concorrência</td><td class="n">14</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td>vaga inicial em 13/10, prazo 23/10 — vaga aceita (registrada em 21/10)</td></tr>
+      <tr><td>Pessoas pretas, pardas e indígenas</td><td class="n">5</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td>vaga inicial em 13/10, prazo 30/10 — aguardando resposta</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">Quem concorre à vaga reservada aparece também na lista de ampla concorrência. Por isso as listas não se somam: 14 pessoas têm classificação publicada neste perfil. "Na apuração": vagas consideradas na apuração vigente, sem causa de desatualização.</p>
+
+  <h2>C. Recursos, por perfil</h2>
+  <table>
+    <thead><tr><th>Perfil</th><th class="n">Apresentados</th><th class="n">Não admitidos</th><th class="n">Indeferidos</th><th class="n">Deferidos</th><th class="n">Aguardando</th></tr></thead>
+    <tbody>
+      <tr><td>Professor de Informática</td><td class="n">2</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td></tr>
+      <tr><td>Técnico de Laboratório</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">"Deferido" agrupa os três desfechos favoráveis, nos rótulos que o candidato já lê no GPS: resultado corrigido, etapa reavaliada e ato corretivo pela instituição. Nenhum sorteio foi realizado neste Edital.</p>
+
+  <h2>D. Cronograma: previsto, retificado e registrado</h2>
+  <table>
+    <thead><tr><th>Evento</th><th>Previsto no Edital</th><th>Após a Retificação nº 1</th><th>Registrado no GPS</th></tr></thead>
+    <tbody>
+      <tr><td>Inscrições</td><td>10/08 a 30/08</td><td><strong>10/08 a 04/09</strong></td><td>envios de 10/08 a 04/09</td></tr>
+      <tr><td>Prova objetiva</td><td>13/09</td><td class="aus">sem alteração</td><td>notas consolidadas de 15 a 17/09</td></tr>
+      <tr><td>Análise de títulos</td><td>16 a 22/09</td><td class="aus">sem alteração</td><td>consolidada em 20/09</td></tr>
+      <tr><td>Resultado preliminar</td><td>25/09</td><td class="aus">sem alteração</td><td>publicado em 25/09</td></tr>
+      <tr><td>Resultado definitivo</td><td>06/10</td><td class="aus">sem alteração</td><td>publicado em 06/10</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================== ANEXO TÉCNICO — 4 =========================== -->
+<section class="folha">
+  <div class="faixa"><span><span class="maquete">MAQUETE</span> — dados de demonstração</span><span>Edital 61/2026 · dados até 24/10/2026, 13h10 · página 4 de 4</span></div>
+
+  <h2>E. Documentos oficiais e verificação</h2>
+  <table>
+    <thead><tr><th>Documento</th><th>Publicado em</th><th>SHA-256 do arquivo</th></tr></thead>
+    <tbody>
+      <tr><td>Edital 61/2026</td><td>03/08/2026</td><td class="hash">2d59819d113a2b0b42d96ab75f1a1263fbd8b4d97d2c70cf3fa2cc7357f5d4d1</td></tr>
+      <tr><td>Retificação nº 1</td><td>25/08/2026</td><td class="hash">d799f17cb2f92066b213149b249287917c1d4c52471e9d12fe3d0f990f0118a1</td></tr>
+      <tr><td>Resultado preliminar — Professor, ampla</td><td>25/09/2026</td><td class="hash">b531596b3430153ef05b52a64e026ae91a5bbb01c161b10f967f36920250cc1a</td></tr>
+      <tr><td>Resultado preliminar — Professor, reservada</td><td>25/09/2026</td><td class="hash">cc169edd26a419089ee3ae377b094ec363748d1416b50b27d55cef95e034a5dd</td></tr>
+      <tr><td>Resultado preliminar — Técnico</td><td>25/09/2026</td><td class="hash">49203a64231a5a47d9bb5630b649cf4f249d330965d4c118e1f33078a949fbc3</td></tr>
+      <tr><td>Resultado definitivo — Professor, ampla</td><td>06/10/2026</td><td class="hash">92e21af8012191611f3c59aa60e9c522c9d23e564f0b1c0409f659168d6a181c</td></tr>
+      <tr><td>Resultado definitivo — Professor, reservada</td><td>06/10/2026</td><td class="hash">d6ea9042b015508864eb07d277c6d8be41a7be1a3a3182f99bee1970ab039624</td></tr>
+      <tr><td>Resultado definitivo — Técnico</td><td>06/10/2026</td><td class="hash">3c8d8f428a3627ad133fd2554dabd743e38e564febf876df21e06b436b72abe2</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">Um arquivo recebido por outro meio é o oficial se o SHA-256 dele for igual ao desta tabela.</p>
+
+  <h2>F. Como cada número foi obtido</h2>
+  <dl class="defs">
+    <dt>Vagas imediatas</dt><dd>Quadro de vagas da versão do Edital em vigor, isto é, com as retificações aplicadas. Unidade: vaga.</dd>
+    <dt>Inscrições enviadas; iniciadas e não enviadas</dt><dd>Inscrições que o candidato enviou, e rascunhos abertos e não enviados. Unidade: inscrição.</dd>
+    <dt>Pessoas</dt><dd>Cadastros de acesso distintos entre as inscrições enviadas. Quem criar dois cadastros conta duas vezes; o CPF é declarado e não comprovado.</dd>
+    <dt>Candidatos por vaga</dt><dd>Inscrições enviadas nos perfis com vaga imediata ÷ vagas imediatas desses perfis. Não se aplica a perfil só de cadastro de reserva.</dd>
+    <dt>Com classificação publicada</dt><dd>Inscrições com posição no resultado definitivo em vigor. Num mesmo perfil, cada pessoa conta uma vez, mesmo se estiver em mais de uma lista.</dd>
+    <dt>Vagas com candidato classificado e habilitado</dt><dd>Apuração das vagas em vigor: pessoa classificada dentro do número de vagas e habilitada na etapa que o Edital exige antes da convocação. Não é matrícula.</dd>
+    <dt>Vagas aceitas</dt><dd>Convocações com resposta "vaga aceita" registrada pela comissão.</dd>
+  </dl>
+
+  <h2>G. O que o GPS não registra</h2>
+  <p>Estes fatos podem ter acontecido, mas o GPS não os controla, e por isso não há números para eles:
+  homologação ou indeferimento de inscrição; desistência antes do resultado; presença em prova; data em que um evento previsto aconteceu; matrícula efetivada.</p>
+
+  <h2>H. Sobre esta emissão</h2>
+  <p class="nota">Emissão nº 1 deste Edital, com dados até 24/10/2026, 13h10. Uma nova emissão pode mostrar números diferentes se houver novos registros, por exemplo a resposta à convocação pendente. Cada emissão fica registrada na auditoria do GPS, com data, autor e identificação do arquivo. Este relatório se chama <strong>de acompanhamento</strong> porque ainda há providência em curso. Quando o Edital estiver encerrado e não houver pendência, a emissão se chamará <strong>de encerramento</strong>.</p>
+</section>
+
+</body>
+</html>

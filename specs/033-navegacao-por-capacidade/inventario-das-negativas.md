@@ -197,6 +197,7 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 7331 | `_marco_do_edital` | sim | não | objeto inexistente | **acrescentada pela `049`** — marco que a norma vigente não publica: removido por Retificação, ou identificador de nada. Os atos do marco removido continuam nas telas de histórico. A porta já filtrou escopo e autorização antes |
 | 7453 | `gesto_do_marco` | sim | não | objeto inexistente | **acrescentada pela `049`** — operação fora de `ordenar`, `cortar`, `apurar` e `publicar`. As portas do ato unitário — `_edital_para_classificar` e `_edital_para_publicar` — decidem escopo e autorização logo depois (`FR-829`) |
 | 9731 | `autoridades` | sim | não | escopo institucional ∪ inexistente | **acrescentada pela `060`** — autoridade de outra unidade, ou identificador de nada, ao corrigir ou encerrar: o comando procura só no escopo do ator, e os dois casos caem no mesmo `not_found` (`FR-1122`). A autorização vem antes, por `require_authorization_base` com a permissão `autoridade:gerir`, que responde **403** e nomeia o que falta |
+| 62 | `_edital_para_relatar` | sim | sim | escopo institucional ∪ inexistente | **acrescentada pela `099`**, em `interface/relatorio.py` — a porta do relatório do Edital: a consulta filtra por `institution_scope`, e Edital de outra unidade cai no mesmo 404 do inexistente. A autorização vem depois, por `require_authorization_base` com as bases da gestão da comissão — gestão do escopo ou presidência do Processo —, e responde **403** nomeando o que falta |
 
 ---
 
@@ -214,6 +215,7 @@ O que mudou desde então, e por quê:
 | **72 → 73** | a `031` acrescentou `exportar_matriculas` |
 | **+3 funções** | a `049` acrescentou a tela do marco: a porta `_marco_para_conduzir`, o marco fora da norma vigente e a operação inexistente. O recorte que a confirmação traz e o marco já não tem **não** é 404 — é recusa nomeada no desfecho, e nada é praticado nele; o que nem identidade é cai no `_identidade_ou_404` de sempre |
 | **+1 função** | a `060` acrescentou a tela das autoridades da unidade: a autoridade de outra unidade ou inexistente, ao corrigir ou encerrar |
+| **+1 função** | a `099` acrescentou a porta do relatório do Edital, em módulo de view próprio: só o Edital inexistente ou de outra unidade |
 
 **A linha da `031` é o detector funcionando, e na primeira oportunidade real.** Ela não veio desta
 feature: entrou pela `main`, no merge, e a `T038` reprovou a suíte pedindo que fosse classificada.
