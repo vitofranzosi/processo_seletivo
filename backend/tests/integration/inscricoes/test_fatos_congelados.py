@@ -101,7 +101,10 @@ def test_editar_o_perfil_depois_nao_muda_valor_congelado(
     enviada = enviar(pronta(selecao), {NASCIMENTO: "1990-05-20"})
     antes = ValorDeFato.objects.get(inscricao=enviada).valor_data
 
-    Inscricao.objects.filter(pk=enviada.pk).update(nome="Maria Editada")
+    # O cadastro pode mudar; a inscrição enviada já é histórica e não pode ser reescrita.
+    from processo_seletivo.identidade.models import CandidateIdentity
+
+    CandidateIdentity.objects.filter(subject=enviada.identity_subject).update(nome="Maria Editada")
 
     assert ValorDeFato.objects.get(inscricao=enviada).valor_data == antes
 

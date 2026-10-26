@@ -6,6 +6,7 @@ from processo_seletivo.interface import (
     documentacao,
     duvidas,
     prototipo_do_assistente,
+    relatorio,
     views,
 )
 
@@ -25,6 +26,23 @@ urlpatterns = [
         name="identificar-demonstracao",
     ),
     path("visao-geral", views.visao_geral, name="visao-geral"),
+    # O relatório consolidado da unidade (100): a escolha do conjunto, a camada executiva e o PDF,
+    # sob a porta da Visão Geral, de onde ele parte.
+    path(
+        "visao-geral/relatorio",
+        relatorio.relatorio_consolidado_escolha,
+        name="relatorio-consolidado",
+    ),
+    path(
+        "visao-geral/relatorio/conjunto",
+        relatorio.relatorio_consolidado,
+        name="relatorio-consolidado-ver",
+    ),
+    path(
+        "visao-geral/relatorio/pdf",
+        relatorio.emitir_relatorio_consolidado,
+        name="relatorio-consolidado-pdf",
+    ),
     # As autoridades da unidade (060): de topo, como a visão geral, porque não pertencem a Processo
     # nenhum — respondem pelos atos de todos os da unidade.
     path("autoridades", views.autoridades, name="autoridades"),
@@ -111,6 +129,18 @@ urlpatterns = [
         name="anexo-arquivo",
     ),
     path("editais/<uuid:edital_id>/auditoria", views.auditoria, name="auditoria"),
+    # O relatório do Edital (099): a página que lê e o envio que emite o PDF. A emissão é `POST`
+    # porque fica registrada na trilha (FR-2515).
+    path(
+        "editais/<uuid:edital_id>/relatorio",
+        relatorio.relatorio,
+        name="relatorio-do-edital",
+    ),
+    path(
+        "editais/<uuid:edital_id>/relatorio/pdf",
+        relatorio.emitir,
+        name="relatorio-do-edital-pdf",
+    ),
     # A exportação de matrículas (031). Pende do **Edital**, e não do marco: o que se exporta é o
     # conjunto de pessoas que vai se matricular naquele certame, e a população — convocados de um
     # marco, ou um resultado divulgado — é escolhida **dentro** da tela, porque é a escolha que a

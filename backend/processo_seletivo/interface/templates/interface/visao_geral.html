@@ -17,6 +17,10 @@ commit, e define o termo.
 <h1>Visão Geral</h1>
 <p class="sub">O conjunto dos Processos Seletivos do escopo <strong>{{ ator.institution_scope }}</strong>.
   <strong>{{ recorte.rotulo }}</strong>.</p>
+{% comment %}
+O relatório consolidado parte daqui (100): a mesma porta, e o documento que esta página não é.
+{% endcomment %}
+<p><a class="botao secundario" href="{% url 'interface:relatorio-consolidado' %}">Relatório consolidado</a></p>
 
 <form method="get" class="filtros-da-visao" aria-label="Filtros da consulta">
   <p>

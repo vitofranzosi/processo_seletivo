@@ -25,6 +25,12 @@ class ProcessoSeletivo(models.Model):
             models.UniqueConstraint(
                 fields=["institution_scope", "institutional_code"],
                 name="uq_processo_scope_institutional_code",
+            ),
+            # O par sustenta a FK composta do Edital: escopo não pode divergir do Processo.
+            models.UniqueConstraint(fields=["id", "institution_scope"], name="uq_processo_id_escopo"),
+            models.CheckConstraint(
+                condition=models.Q(status__in=["EM_ELABORACAO", "ATIVO", "ENCERRADO", "CANCELADO"]),
+                name="ck_processo_status",
             )
         ]
 
@@ -119,6 +125,13 @@ class Edital(models.Model):
             models.UniqueConstraint(
                 fields=["institution_scope", "number", "year"],
                 name="uq_edital_scope_number_year",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(status__in=[
+                    "EM_ELABORACAO", "EM_REVISAO", "HOMOLOGADO",
+                    "PUBLICADO", "ENCERRADO", "CANCELADO",
+                ]),
+                name="ck_edital_status",
             )
         ]
         indexes = [models.Index(fields=["processo", "status"])]
