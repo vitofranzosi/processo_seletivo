@@ -30,22 +30,26 @@ Na ordem do documento:
    em `<time>` (FR-2643).
 2. Abas: `<nav class="abas-da-agenda" aria-label="Visualizações">` com dois links; o da visualização
    ativa tem `aria-current="page"`.
-3. Avisos de Retificação a vigorar, quando há: `<ul class="avisos-de-retificacao">`, um `<li>` por
-   Edital (FR-2614).
-4. Síntese: `<dl class="sintese-da-agenda">` com os quatro números da janela (FR-2634); ausente na
+3. Avisos de Retificação a vigorar, quando há: `<div class="aviso avisos-de-retificacao">` com um
+   `<li>` por Edital (FR-2614).
+4. Síntese: `<section class="sintese-da-agenda">` com um `<dl>` dos quatro números da janela (FR-2634); ausente na
    consulta de um dia.
 5. Filtros: `<form method="get" class="filtros-da-agenda">`, com `visao`, `mes`/`janela` em campos
    ocultos (FR-2637).
 6. O conteúdo da visualização:
    - **mês**: navegação (`<nav class="navegacao-do-mes">`), `<table class="grade-do-mes">` com
-     `<caption>`, sete `<th scope="col">`, células `<td>`; dia com marco tem
-     `<a class="quantidade-do-dia">N marcos</a>`; célula destacada tem a classe `varios`; hoje tem
-     `aria-current="date"`; nomes em `<ul class="nomes-do-dia">`. Depois, a seção *Períodos no mês*
-     (`<section class="periodos-do-mes">`).
+     `<caption>`, sete `<th scope="col">`, células `<td class="dia-do-mes">`. Todo dia do mês é um
+     `<a class="acesso-ao-dia">` para o dia, com o número (oculto para leitor de tela), a data por
+     extenso (`.oculto`) e, quando há marco, `<span class="quantidade-do-dia">N<span
+     class="palavra-dos-marcos"> marcos</span></span>` — abaixo de 60rem a palavra fica só para
+     leitor de tela. Célula destacada tem a classe `varios`; hoje tem `aria-current="date"`; até dois
+     nomes em `<ul class="nomes-do-dia">`, cada um com o número do Edital antes do nome, em até duas
+     linhas com reticências. Depois, a
+     seção *Períodos previstos* (`<section class="periodos-do-mes">`).
    - **dia**: `<section class="dia-consultado">` com os marcos do dia e *Períodos em curso neste
      dia*; link *Voltar a {mês}*.
    - **próximos**: `<section class="em-curso">`, depois um `<section class="dia-da-agenda">` por
-     dia com marco, título `<h2>` com a data e a quantidade.
+     dia com marco, título `<h3>` com a data e a quantidade, sob o `<h2>` da janela.
 7. Legenda fixa de previsto × efetivo (FR-2641).
 
 ## O item (`_agenda_marco.html`)
@@ -53,7 +57,8 @@ Na ordem do documento:
 `<li class="marco-da-agenda">` com: a hora ou *Abre*/*Encerra*; o nome publicado; *Edital NN/AAAA —
 Processo*; o local, quando há; o intervalo, quando é marco de período; *Cancelado* (classe
 `cancelado`) ou *data passada* / *em curso pelo cronograma*; e os dois links — `Edital` →
-`interface:detalhe`, `Cronograma publicado` → `portal:selecao` + `#cronograma-titulo` (FR-2629).
+`interface:detalhe`, `Cronograma publicado` → `portal:selecao` + `#cronograma-titulo` (FR-2629). Cada
+link leva o número do Edital em `.oculto`, para que os nomes repetidos se distingam fora do contexto.
 
 ## Estados
 

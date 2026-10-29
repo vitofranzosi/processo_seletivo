@@ -44,7 +44,7 @@ na implementação (research R-004).
 375 px sem rolagem horizontal; vocabulário que nunca diga executado o que é previsto (FR-2642).
 
 **Scale/Scope**: um módulo novo (`interface/agenda.py`), uma view, uma rota, uma entrada na barra,
-um símbolo SVG, um template com quatro parciais, uma folha de tela. Dezenas de Editais × 4 a 18
+um símbolo SVG, um template com cinco parciais, uma folha de tela. Dezenas de Editais × 4 a 18
 Eventos por unidade.
 
 ## Constitution Check
@@ -93,6 +93,7 @@ backend/processo_seletivo/interface/
 │   ├── _agenda_mes.html                   # NOVO — grade e períodos do mês
 │   ├── _agenda_dia.html                   # NOVO — a relação de um dia
 │   ├── _agenda_proximos.html              # NOVO — em curso e dias
+│   ├── _agenda_marcos.html                # NOVO — os marcos de um dia, agrupados acima de oito
 │   └── _agenda_marco.html                 # NOVO — o item, comum a dia e próximos
 └── static/interface/telas/agenda.css      # NOVO
 

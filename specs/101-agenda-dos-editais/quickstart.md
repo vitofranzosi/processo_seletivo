@@ -50,5 +50,22 @@ cd backend && PYTEST_ADDOPTS="tests/unit/interface/test_agenda.py tests/integrat
 
 ## Desempenho
 
-Preenchido na implementação (research R-004): consultas e tempo da página com 1 e com N Editais, e o
-volume do conteúdo materializado.
+Medido em 29/10/2026 (research R-004), num banco descartável com 30 Editais publicados de cinco
+Eventos cada, publicados pelo canal administrativo. Tempo de `agenda.ler`, mediana de sete leituras,
+sem a renderização do template:
+
+| Editais | Mês | Próximos 30 dias | Dia |
+|---|---|---|---|
+| 1 | 4 consultas, 2,0 ms | 4 consultas, 1,5 ms | 4 consultas, 1,4 ms |
+| 10 | 4 consultas, 3,7 ms | 4 consultas, 2,9 ms | 4 consultas, 2,8 ms |
+| 30 | 4 consultas, 7,5 ms | 4 consultas, 6,5 ms | 4 consultas, 6,3 ms |
+
+O conteúdo materializado foi de ~9,6 kB por versão (288 kB para as 30). **Nenhuma otimização foi
+aplicada**: não há problema mensurável. **Limitação da medida**: o conteúdo de teste tem dois Perfis
+pequenos, e um Edital real com muitos Perfis e documentos tem conteúdo maior; se a agenda de uma
+unidade com centenas de Editais publicados ficar lenta, a saída registrada na R-004 é materializar só
+o cronograma, e não tabela nem cache.
+
+A 375 px (medido no navegador, banco `ps_demo_101`): `scrollWidth` igual à largura da página no mês,
+no dia e em Próximos marcos — sem rolagem horizontal; a grade ocupa 327 px, e os nomes das células
+saem (`display:none`), ficando o dia e o número de marcos.

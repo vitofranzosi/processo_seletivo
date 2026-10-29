@@ -242,8 +242,8 @@ cada caso.
 - **Nenhum Edital publicado no escopo**: a página diz isso e não desenha a grade.
 - **Filtro com identificador de Edital de outra unidade, ou inexistente**: é ignorado, sem distinção
   entre os dois.
-- **Mês ou dia inválido pedido à página** (um mês 13, um dia que não existe): a página cai no mês
-  corrente, ou no dia de hoje, sem erro.
+- **Mês ou dia inválido pedido à página** (um mês 13, um dia que não existe): o mês inválido cai no
+  mês corrente, e o dia inválido é ignorado — a página mostra o mês —, sem erro.
 - **Evento sem descrição**: o nome é a espécie publicada do Evento, como no portal.
 
 ## Requirements *(mandatory)*
@@ -308,8 +308,9 @@ cada caso.
   de cor: a contagem fica escrita, em negrito, com borda. O acesso ao dia MUST dizer a data por
   extenso a quem usa leitor de tela. O dia de hoje MUST ser identificado.
 - **FR-2626**: Em tela larga, cada dia MUST nomear até **dois** marcos — os dois primeiros na ordem do
-  dia (FR-2632) —, cada nome numa linha, cortado com reticências quando não cabe, e dizer quantos mais
-  há. Em tela estreita, o dia MUST mostrar só a data e a quantidade.
+  dia (FR-2632) —, cada nome em até duas linhas, com o número do Edital antes do nome e cortado com
+  reticências quando não cabe, e dizer quantos mais há. Numa linha só, a prova visual de 29/10 mostrou
+  que o número do Edital e *Abre ·* ocupavam a célula inteira, e o nome sumia. Em tela estreita, o dia MUST mostrar só a data e a quantidade.
 - **FR-2627**: Abaixo da grade, a página MUST listar uma vez cada período que toca o mês, com o
   nome, o Edital, o intervalo e a fase, em ordem de início. O período de inscrições sem término toca
   todo mês a partir do início. Período cancelado MUST NOT entrar nessa lista nem no bloco *em curso*:
@@ -332,7 +333,8 @@ cada caso.
 - **FR-2631**: **Próximos marcos** MUST mostrar os próximos sete dias — hoje, desde o começo do dia
   na zona institucional, e os seis seguintes —, e MUST oferecer ampliar para trinta dias.
 - **FR-2632**: A lista MUST agrupar os marcos por dia, com a quantidade de marcos no título de cada
-  dia, e MUST omitir dia sem marco. Dentro do dia, a ordem MUST ser pelo instante, depois pelo Edital
+  dia — e, quando o dia tem marco cancelado, quantos são os cancelados, porque a quantidade não os
+  conta e o item deles está logo abaixo —, e MUST omitir dia sem marco. Dentro do dia, a ordem MUST ser pelo instante, depois pelo Edital
   (ano e número), depois pelo nome — e é a mesma no dia consultado e na célula do mês.
 - **FR-2633**: Um bloco **em curso** MUST listar uma vez cada período aberto no instante da leitura,
   com o tempo que falta para o encerramento previsto — em dias corridos até o dia do término na zona
