@@ -233,8 +233,11 @@ extração no dia do congelamento, e as mensagens das US1 a US3.
 podem ser conferidas por teste automatizado ou no servidor.
 
 **Independent Test**: no ambiente de desenvolvimento, publique um Edital que declara a fonte de
-demonstração "só a data", com o fim das inscrições ontem e a extração hoje. Congele a relação hoje e
-realize o sorteio: o aviso aparece antes do congelamento, e a recusa aparece no sorteio.
+demonstração "só a data", com o fim das inscrições daqui a poucos minutos e a extração amanhã. Depois
+retifique a extração para hoje, o que só gera advertência (FR-2656). Encerradas as inscrições, abra a
+tela do sorteio: o aviso aparece antes do congelamento. Congele e realize o sorteio: a recusa
+aparece. Publicar já com as inscrições encerradas não é caminho, porque a publicação recusa Edital
+com inscrições encerradas (FR-346 da `028`).
 
 **Acceptance Scenarios**:
 
