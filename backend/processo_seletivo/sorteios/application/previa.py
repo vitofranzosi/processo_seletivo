@@ -218,9 +218,9 @@ def _congelar_agora_inviavel(conteudo, metodo, proxima_referencia, agora):
 def _diagnostico_da_relacao(vigente, sorteio, metodo_vigente):
     """Por que esta relação congelada nunca sorteará com a extração dela — ou `None` (102).
 
-    **O método é o da versão que a relação cita, e não o vigente** (FR-2660, FR-2661, R-006). É o que
-    o sorteio lê: a relação comprometeu um método ao congelar, e uma Retificação posterior não o
-    muda. Ler o vigente aqui repetiria, na explicação, o engano que a tela já comete com a
+    **O método é o da versão que a relação cita, e não o vigente** (FR-2660, FR-2661, R-006). É o
+    que o sorteio lê: a relação comprometeu um método ao congelar, e uma Retificação posterior não
+    o muda. Ler o vigente aqui repetiria, na explicação, o engano que a tela já comete com a
     ocorrência da vez — e diria "viável" a uma relação que a constituição vai recusar.
     """
     from processo_seletivo.sorteios.domain import viabilidade
