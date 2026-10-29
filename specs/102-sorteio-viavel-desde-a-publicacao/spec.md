@@ -4,9 +4,10 @@
 
 **Created**: 2026-10-29
 
-**Status**: Draft. Escrita a pedido da sessão que investigou o sorteio recusado do Edital 72/2026. As
-três perguntas de produto marcadas abaixo vão para o usuário, no `/speckit-clarify`. Não há
-autorização para implementar antes de o plan e as tasks serem aprovados.
+**Status**: Draft, clarificada. Escrita a pedido da sessão que investigou o sorteio recusado do
+Edital 72/2026. As três perguntas de produto foram respondidas pelo usuário em 29/10/2026 (ver
+*Clarifications*, e D-005 a D-007). Não há autorização para implementar antes de o plan e as tasks
+serem aprovados.
 
 **Input**: lacuna 1 do achado de 29/10/2026,
 [`doc/achado-sorteio-com-extracao-no-dia-do-congelamento.md`](../../doc/achado-sorteio-com-extracao-no-dia-do-congelamento.md),
@@ -108,6 +109,23 @@ semear"*. A data só funciona porque a fonte de demonstração ignora o instante
   confere contra o limite que o sistema já conhece com certeza, que é o fim das inscrições (D-002).
 - **A publicação da relação declarada no cronograma.** É Evento livre, e só existe quando quem
   elabora o declara (D-002).
+- **A fonte que publica a hora.** Por decisão do usuário (D-006), esta feature só confere a fonte que
+  publica só a data. Hoje nenhuma fonte de produção publica a hora.
+
+---
+
+## Clarifications
+
+### Session 2026-10-29
+
+- Q: O método inviável impede a publicação ou só adverte, e o congelamento de uma relação condenada
+  é recusado ou só avisado? → A: Impede a publicação. No congelamento, só avisa, e o botão continua
+  disponível. Na Retificação, só adverte (D-005).
+- Q: A conferência vale para toda fonte, pela granularidade declarada, ou só para a fonte que publica
+  só a data? → A: Só para a fonte que publica só a data (D-006).
+- Q: Como o caso é reproduzido em desenvolvimento? → A: Por uma segunda fonte de demonstração,
+  declarada como "só a data", que devolve o início do dia corrente. A fonte de demonstração atual e a
+  suíte ficam como estão (D-007).
 
 ---
 
@@ -124,15 +142,15 @@ marco, a fonte, o dia da extração e o fim das inscrições, e diz o que mudar.
 extração é editar o rascunho. Depois dela, é Retificação e sucessão de relação.
 
 **Independent Test**: componha o Edital 72/2026 como foi publicado (inscrições até 28/10, às 9h;
-Loteria Federal, concurso 6113, extração em 28/10, às 20h05) e confira a publicação: aparece o
-achado. Mude a extração para 29/10: o achado some.
+Loteria Federal, concurso 6113, extração em 28/10, às 20h05) e tente publicar: a publicação é
+impedida pelo achado. Mude a extração para 29/10: o achado some, e o Edital publica.
 
 **Acceptance Scenarios**:
 
 1. **Given** um marco por sorteio com a Loteria Federal e a extração em 28/10, às 20h05, e o fim das
    inscrições em 28/10, às 9h, **When** quem elabora confere a publicação, **Then** aparece um achado
-   que nomeia o marco, a fonte, o dia 28/10 e o fim das inscrições, e diz que a extração precisa ser
-   de dia posterior ao fim das inscrições.
+   impeditivo que nomeia o marco, a fonte, o dia 28/10 e o fim das inscrições, e diz que a extração
+   precisa ser de dia posterior ao fim das inscrições. O Edital não publica enquanto o achado existir.
 2. **Given** o mesmo Edital com a extração em 29/10, **When** a publicação é conferida, **Then** não
    há achado.
 3. **Given** a extração em 27/10, antes do fim das inscrições, **When** a publicação é conferida,
@@ -142,6 +160,11 @@ achado. Mude a extração para 29/10: o achado some.
 5. **Given** um Edital sem período de inscrições designado, ou com período sem término, **When** a
    publicação é conferida, **Then** este achado não aparece, porque não há instante contra o qual
    comparar.
+6. **Given** um Edital publicado com a extração no dia do fim das inscrições, **When** quem elabora
+   confere uma Retificação que não mexe no método, **Then** o achado aparece como advertência, e a
+   Retificação pode ser publicada.
+7. **Given** a fonte de demonstração atual, que publica a data e a hora, com a extração em 2020,
+   **When** a publicação é conferida, **Then** este achado não aparece.
 
 ---
 
@@ -152,8 +175,10 @@ Na tela do sorteio, antes de "Publicar e congelar a relação", quem conduz vê 
 em 28/10, às 11h20, o aviso teria dito que congelar naquele dia condenava o sorteio, e que a saída
 era retificar o método antes de congelar.
 
-**Why this priority**: o congelamento é ato append-only. Para Editais já publicados, e para os que
-passarem pela conferência por advertência (se essa for a escolha), este aviso é a última chance.
+**Why this priority**: o congelamento é ato append-only. Para Editais publicados antes desta feature
+e para os que receberam o achado como advertência numa Retificação, este aviso é a última chance. O
+botão continua disponível (D-005): a relação pode ter data de publicação no cronograma, e quem conduz
+decide, ciente do que vai acontecer.
 
 **Independent Test**: com o Edital 72 publicado e as inscrições encerradas, abra a tela do sorteio
 no dia 28/10: o aviso aparece antes do botão. Abra a mesma tela num Edital com extração em 30/10: o
@@ -165,10 +190,12 @@ aviso não aparece.
    declarada, ou depois dele, **When** quem conduz abre a tela do sorteio, **Then** antes do botão de
    congelar aparece um aviso. Ele diz que a fonte publica só a data e que congelar hoje torna
    impossível sortear com aquela extração. Diz também que a saída é retificar o método para uma
-   extração de dia posterior ao do congelamento, e só então congelar.
+   extração de dia posterior ao do congelamento, e só então congelar. O botão continua disponível.
 2. **Given** a extração declarada num dia posterior a hoje, **When** a tela é aberta, **Then** não há
    aviso.
-3. **Given** uma relação já congelada que não pode mais sortear com a extração que o método dela
+3. **Given** a fonte de demonstração atual, que publica a data e a hora, **When** a tela é aberta,
+   **Then** não há aviso, qualquer que seja o instante declarado.
+4. **Given** uma relação já congelada que não pode mais sortear com a extração que o método dela
    declara, **When** a tela é aberta, **Then** antes de "Realizar o sorteio" aparece o mesmo
    diagnóstico, com a saída em três passos: retificar, suceder a relação, observar a nova ocorrência.
 
@@ -205,15 +232,19 @@ extração no dia do congelamento, e as mensagens das US1 a US3.
 **Why this priority**: sem isso, o roteiro local nunca mostra o caso, e as três histórias acima só
 podem ser conferidas por teste automatizado ou no servidor.
 
-**Independent Test**: no ambiente de desenvolvimento, declare a fonte de demonstração que imita a
-Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa aparece.
+**Independent Test**: no ambiente de desenvolvimento, publique um Edital que declara a fonte de
+demonstração "só a data", com o fim das inscrições ontem e a extração hoje. Congele a relação hoje e
+realize o sorteio: o aviso aparece antes do congelamento, e a recusa aparece no sorteio.
 
 **Acceptance Scenarios**:
 
 1. **Given** o ambiente de desenvolvimento com a fonte de demonstração ligada, **When** quem
-   desenvolve declara a variante que imita a fonte real, congela e sorteia no mesmo dia, **Then** o
+   desenvolve declara a fonte de demonstração "só a data", congela e sorteia no mesmo dia, **Then** o
    sorteio é recusado como no servidor de 29/10.
-2. **Given** a fonte de demonstração atual, **When** a `seed_demo` e a suíte rodam, **Then** nada
+2. **Given** a fonte de demonstração "só a data" e uma relação congelada num dia anterior, **When** o
+   sorteio é realizado, **Then** ele é constituído, porque o início do dia corrente é posterior ao
+   congelamento.
+3. **Given** a fonte de demonstração atual, **When** a `seed_demo` e a suíte rodam, **Then** nada
    muda para elas.
 
 ---
@@ -228,8 +259,8 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 - **O dia é o do fuso institucional.** `occurrenceAt` declarado com outro deslocamento é convertido
   para o fuso institucional antes de se tomar o dia, que é como a fonte real interpreta a data dela
   (FR-2650).
-- **Fonte que publica a hora.** O limite previsto é o próprio instante declarado. O achado aparece
-  quando ele não é posterior ao fim das inscrições (FR-2650, FR-2651).
+- **Fonte que publica a hora.** Ela não é conferida, nem na publicação nem na tela do sorteio
+  (FR-2657). A recusa no sorteio continua valendo para ela como hoje (FR-2664).
 - **Período de inscrições ausente, sem término ou cancelado.** Não há fim contra o qual comparar, e o
   achado não aparece. O período cancelado tem sua própria conferência (FR-2655).
 - **Método inválido ou com fonte que o sistema não executa.** Já existe achado próprio para isso, e
@@ -257,7 +288,8 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
   NOT ser deduzida do conteúdo do Edital nem da resposta da fonte.
 - **FR-2648**: A Loteria Federal MUST ser declarada como fonte que publica só a data. A fonte de
   demonstração atual MUST ser declarada como fonte que publica a data e a hora, que é o que ela já
-  faz hoje.
+  faz hoje. A fonte de demonstração "só a data" da FR-2665 MUST ser declarada como fonte que publica
+  só a data.
 - **FR-2649**: O adaptador de uma fonte declarada como "só a data" MUST continuar a devolver o início
   do dia publicado como limite inferior da ocorrência. Uma fonte declarada como "data e hora" MUST
   devolver o horário publicado. A declaração da FR-2647 e o comportamento do adaptador MUST ser
@@ -265,11 +297,11 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 
 #### O limite previsto da ocorrência
 
-- **FR-2650**: O **limite previsto** da ocorrência declarada é o instante mais cedo em que a fonte vai
-  situá-la, calculado a partir de `occurrenceAt` e da granularidade da fonte. Para "só a data", é
-  00h00, no fuso institucional, do dia de `occurrenceAt` tomado nesse fuso. Para "data e hora", é o
-  próprio `occurrenceAt`. Uma regra só MUST calcular esse limite, e a conferência de publicação, a
-  tela do sorteio e a recusa MUST usá-la.
+- **FR-2650**: O **limite previsto** da ocorrência declarada, numa fonte que publica só a data, é
+  00h00, no fuso institucional, do dia de `occurrenceAt` tomado nesse fuso. É o instante mais cedo em
+  que a fonte vai situá-la. Uma regra só MUST calcular esse limite, e a conferência de publicação, a
+  tela do sorteio e a recusa MUST usá-la. Para fonte que publica a data e a hora, a regra não produz
+  limite previsto (FR-2657).
 - **FR-2651**: Uma extração declarada é **inviável** quando o limite previsto não é posterior ao
   instante mais cedo em que a relação pode ser congelada. Na publicação e na Retificação, esse
   instante é o fim do período de inscrições da versão conferida. Na tela do sorteio, é o momento em
@@ -279,10 +311,8 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 
 - **FR-2652**: A conferência de publicação MUST produzir um achado para cada método inviável. Conta
   como método o comum do Edital, uma vez, e o próprio de cada marco que o declara, uma vez cada. Para
-  saber que método governa cada marco, MUST usar a mesma resolução que o congelamento usa. O achado
-  é [NEEDS CLARIFICATION: impeditivo ou advertência na publicação? A recusa é a resposta para um caso
-  que é certo, e não provável. Contra ela pesa que a mesma data passaria a valer com uma fonte que
-  publique a hora. A pergunta Q1 cobre também o congelamento (FR-2659)].
+  saber que método governa cada marco, MUST usar a mesma resolução que o congelamento usa. No ato de
+  publicação, o achado MUST ser impeditivo (D-005).
 - **FR-2653**: O achado MUST nomear o marco (ou dizer "método comum a este Edital"), a fonte, o dia
   da extração declarada e o fim das inscrições, com instantes por extenso no fuso institucional. MUST
   dizer o que mudar: uma extração de dia posterior ao fim das inscrições, ou um fim de inscrições
@@ -297,11 +327,9 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 - **FR-2656**: Na Retificação, o achado MUST ser advertência e nunca impeditivo. A Retificação é a
   saída do Edital que já está condenado. MUST NOT aparecer para um marco que já tenha sorteio
   constituído em todos os recortes.
-- **FR-2657**: Conforme o alcance decidido, [NEEDS CLARIFICATION: a conferência vale para toda fonte,
-  pela granularidade declarada, ou só para fonte que publica só a data? Valer para toda fonte também
-  acusa as fixtures e a `seed_demo`, que declaram a extração em 2020 com a fonte de demonstração.
-  Valer só para "só a data" não toca nelas, mas deixa sem conferência a fonte com hora declarada
-  antes do fim das inscrições].
+- **FR-2657**: A conferência de publicação e de Retificação, o aviso antes do congelamento
+  (FR-2659) e o diagnóstico da relação congelada (FR-2660, FR-2661) MUST valer só para método cuja
+  fonte publica só a data. Para fonte que publica a data e a hora, nenhum deles aparece (D-006).
 
 #### Antes de congelar
 
@@ -311,8 +339,8 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 - **FR-2659**: Quando a extração declarada for inviável para um congelamento feito agora (FR-2651), a
   tela MUST mostrar, antes do botão "Publicar e congelar a relação", um aviso com o diagnóstico e a
   saída: retificar o método para uma extração de dia posterior ao do congelamento, e só então
-  congelar. Na pergunta Q1, a resposta para o congelamento é aviso com o botão disponível, ou recusa.
-  O aviso MUST NOT aparecer para a ocorrência substituta, que não tem instante declarado.
+  congelar. O botão MUST continuar disponível, e o congelamento MUST NOT ser recusado por esta regra
+  (D-005). O aviso MUST NOT aparecer para a ocorrência substituta, que não tem instante declarado.
 - **FR-2660**: Para uma relação já congelada cuja extração declarada é inviável (limite previsto não
   posterior ao congelamento), a tela MUST mostrar, antes de "Realizar o sorteio", que esta relação
   não sorteia com aquela extração. MUST mostrar também a saída em três passos: retificar o método,
@@ -333,13 +361,12 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 
 #### Em desenvolvimento
 
-- **FR-2665**: Conforme a forma decidida, o ambiente de desenvolvimento MUST oferecer um jeito de
-  reproduzir a recusa sem rede [NEEDS CLARIFICATION: uma segunda fonte de demonstração, declarada como
-  "só a data", que devolve o início do dia corrente (a fonte atual e a suíte ficam como estão); a
-  fonte de demonstração atual passando a imitar a real, o que exige levar o instante declarado ao
-  adaptador e mexer nas datas da `seed_demo` e das fixtures; ou nada além dos testes automatizados?].
-- **FR-2666**: Qualquer variante de demonstração MUST continuar fora do vocabulário em produção, como
-  a de hoje.
+- **FR-2665**: Onde a fonte de demonstração está ligada, o vocabulário de fontes MUST oferecer uma
+  segunda fonte de demonstração, declarada como "só a data", que devolve o material fixo da fonte
+  atual e, como limite inferior, o início do dia corrente no fuso institucional. A fonte de
+  demonstração atual MUST NOT mudar (D-007).
+- **FR-2666**: As duas fontes de demonstração MUST continuar fora do vocabulário em produção, e
+  produção MUST continuar recusando subir com a fonte de demonstração ligada.
 
 #### O que não muda
 
@@ -354,6 +381,8 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 
 - **Granularidade da fonte**: "só a data" ou "data e hora", declarada por fonte do vocabulário, junto
   do adaptador. Não é conteúdo do Edital.
+- **Fonte de demonstração "só a data"**: a segunda fonte de demonstração (FR-2665). Existe só onde a
+  fonte de demonstração está ligada, e imita a Loteria Federal no que importa aqui.
 - **Limite previsto da ocorrência**: derivado de `occurrenceAt` e da granularidade (FR-2650). Não se
   grava: é calculado sempre que alguém pergunta.
 - **Congelamento mais cedo possível**: o fim do período de inscrições da versão conferida, na
@@ -363,20 +392,24 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 
 ### Measurable Outcomes
 
-- **SC-954**: Na matriz de casos, com granularidade (só a data, data e hora) cruzada com a posição da
-  extração em relação ao fim das inscrições (dia anterior, mesmo dia antes do fim, mesmo dia depois
-  do fim, dia seguinte à meia-noite, dia seguinte), a conferência de publicação acusa **exatamente**
-  os casos em que um congelamento feito no fim das inscrições seria recusado pelo sorteio. São zero
-  falsos positivos e zero falsos negativos.
-- **SC-955**: O Edital 72/2026 reproduzido como foi publicado recebe o achado na conferência de
-  publicação. Com a extração movida para 29/10, não recebe.
+- **SC-954**: Na matriz de casos com fonte que publica só a data, cruzando a posição da extração em
+  relação ao fim das inscrições (dia anterior, mesmo dia antes do fim, mesmo dia depois do fim, dia
+  seguinte à meia-noite, dia seguinte), a conferência de publicação impede **exatamente** os casos em
+  que um congelamento feito no fim das inscrições seria recusado pelo sorteio. São zero falsos
+  positivos e zero falsos negativos. Com fonte que publica a data e a hora, a mesma matriz produz
+  zero achados.
+- **SC-955**: O Edital 72/2026 reproduzido como foi publicado tem a publicação impedida. Com a
+  extração movida para 29/10, publica.
 - **SC-956**: Na tela do sorteio, o aviso antes do congelamento aparece em 100% dos casos em que
   congelar naquele momento seria seguido de recusa por precedência, e em nenhum outro.
 - **SC-957**: O conjunto de sorteios constituídos pela suíte é o mesmo antes e depois da feature.
-  Nenhuma recusa nova de sorteio é introduzida (FR-2664).
+  Nenhuma recusa nova de sorteio é introduzida (FR-2664), e nenhuma fixture nem a `seed_demo` precisa
+  mudar de data.
 - **SC-958**: Num roteiro com quem conduz o certame, ao menos 4 de cada 5 pessoas que leem só a recusa
   ou o aviso da relação congelada dizem, sem ajuda, os dois atos da saída (retificar e suceder) e a
   ordem entre eles.
+- **SC-959**: No ambiente de desenvolvimento, sem rede, quem segue o roteiro da US4 vê o aviso antes
+  do congelamento e a recusa no sorteio na mesma sessão de trabalho, sem esperar a virada do dia.
 
 ## Assumptions
 
@@ -390,11 +423,13 @@ Loteria Federal, congele a relação e realize o sorteio no mesmo dia: a recusa 
 - **Uma fonte só no vocabulário real.** Hoje a única fonte de produção é a Loteria Federal. A
   granularidade por fonte é o que permite a uma fonte futura com horário não herdar a regra da
   Caixa.
-- **O custo da opção "toda fonte" (FR-2657) é real.** Quatro fixtures centrais e a `seed_demo`
-  declaram a extração em 1º/01/2020 com a fonte de demonstração, e 46 arquivos de teste dependem
-  delas. Se a regra valer para toda fonte, essas datas precisam passar para depois do fim das
-  inscrições de cada cenário. Se a regra for impeditiva, isso precisa acontecer **antes** de a regra
-  entrar, ou a suíte quebra em bloco.
+- **A suíte não muda de data.** Quatro fixtures centrais e a `seed_demo` declaram a extração em
+  1º/01/2020 com a fonte de demonstração atual, e 46 arquivos de teste dependem delas. Essa fonte
+  publica a data e a hora, e por isso fica fora da regra (D-006). A regra impeditiva não as alcança,
+  e não há quebra em bloco a preparar.
+- **Os testes do acervo continuam verdes.** Os casos que provam que um Edital do acervo continua
+  retificável declaram a Loteria Federal com a extração em 2020. Na Retificação o achado só adverte
+  (FR-2656), e por isso eles não passam a recusar.
 - **O aviso na tela do sorteio não precisa de dado novo.** Ele lê o método vigente, o cronograma e a
   hora atual, que a tela já tem.
 
@@ -432,9 +467,34 @@ vigente. Esse é o compromisso que a `021` construiu para impedir que uma Retifi
 em silêncio a regra sob a qual o certame se comprometeu, e esta spec não mexe nele. A consequência é
 que a saída do caso tem dois atos públicos, e a mensagem precisa dizer os dois.
 
+### D-005 — Impede na publicação, avisa no congelamento, adverte na Retificação
+
+Decisão do usuário de 29/10/2026. Com fonte que publica só a data, a extração no dia do fim das
+inscrições **nunca** sorteia. O caso é certo, e não provável, e por isso a publicação é impedida. No
+congelamento, o botão continua disponível com o aviso: a relação pode ter data de publicação no
+cronograma, e recusar o congelamento a impediria de sair na data prometida. Na Retificação, o achado
+adverte pela razão da D-003. As alternativas recusadas foram advertir nos dois momentos, o que deixaria
+o Edital 72 se repetir com um aviso ignorado, e recusar também o congelamento.
+
+### D-006 — Só a fonte que publica só a data é conferida
+
+Decisão do usuário de 29/10/2026. É exatamente o caso do achado, e não toca na suíte nem na
+`seed_demo`, que usam a fonte de demonstração com horário e a extração em 2020. O custo aceito é que
+uma fonte com horário declarado antes do fim das inscrições não é conferida. Hoje nenhuma fonte de
+produção publica a hora, e a recusa no sorteio continua valendo para ela.
+
+### D-007 — O caso se reproduz por uma segunda fonte de demonstração
+
+Decisão do usuário de 29/10/2026. Ela devolve o início do dia corrente, que é o que a Loteria Federal
+devolve para a extração publicada no dia, e basta congelar e sortear no mesmo dia para ver a recusa.
+A alternativa recusada foi fazer a fonte de demonstração atual imitar a real. Isso exigiria levar o
+instante declarado ao adaptador e mover as datas da `seed_demo` e das fixtures, e um roteiro que
+congela e sorteia na mesma sessão passaria a recusar sempre.
+
 ## Pendências do usuário
 
-- **Q1, Q2 e Q3**, marcadas nas FR-2652, FR-2657 e FR-2665, são as perguntas do `/speckit-clarify`.
+- **A fonte que publica a hora fica sem conferência** (D-006). Se uma fonte de produção com horário
+  entrar no vocabulário, a regra precisa ser estendida a ela.
 - **A lacuna 2 do achado** (instantes em UTC na mensagem de recusa), e a varredura das outras
   mensagens de domínio que formatam instantes sem passar pelo fuso, continuam fora daqui.
 - **A Etapa de habilitação antes do sorteio** empurra o congelamento para depois do resultado dela.
