@@ -1,0 +1,35 @@
+{% load interface_extras %}
+{% comment %}
+Próximos marcos (101, FR-2631 a FR-2633): hoje e os dias seguintes, dia a dia, e os períodos que
+correm agora num bloco próprio — ditos uma vez, e não repetidos em cada dia.
+{% endcomment %}
+<nav class="janelas-da-agenda" aria-label="Quantos dias">
+  <a href="{{ leitura.enderecos.janela_7 }}"{% if leitura.janela_em_dias == 7 %} aria-current="page"{% endif %}>Próximos 7 dias</a>
+  <a href="{{ leitura.enderecos.janela_30 }}"{% if leitura.janela_em_dias == 30 %} aria-current="page"{% endif %}>Próximos 30 dias</a>
+</nav>
+
+<section class="em-curso" aria-labelledby="titulo-em-curso">
+  <h2 id="titulo-em-curso">Períodos em curso pelo cronograma</h2>
+  {% if leitura.em_curso %}
+  <ul class="lista-de-periodos">
+    {% for periodo, restante in leitura.em_curso %}
+    <li><span class="nome-do-periodo">{{ periodo.nome }}</span> <span class="intervalo-do-periodo">{{ periodo.intervalo }}</span>
+      <span class="origem-do-marco">{{ periodo.edital.rotulo }} — {{ periodo.edital.processo }}</span>
+      <span class="restante-do-periodo">{{ restante }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhum período previsto está em curso agora.</p>
+  {% endif %}
+</section>
+
+<h2 class="titulo-da-janela">De {{ leitura.janela.rotulo }}</h2>
+{% if leitura.vazia %}
+<p class="nenhuma">Nenhum marco previsto de {{ leitura.janela.rotulo }}{% if leitura.filtros.ativos %} com estes filtros{% endif %}.{% if leitura.proximo %} O próximo é em {{ leitura.proximo.dia|date:"d/m/Y" }}: {{ leitura.proximo.nome }} — {{ leitura.proximo.edital.rotulo }}.{% endif %}</p>
+{% endif %}
+{% for dia in leitura.dias %}
+<section class="dia-da-agenda" aria-labelledby="dia-{{ dia.data|date:'Ymd' }}">
+  <h3 id="dia-{{ dia.data|date:'Ymd' }}">{{ dia.rotulo|capfirst }} · {{ dia.quantidade|contagem:"marco,marcos" }}{% if dia.cancelados %} · {{ dia.cancelados|contagem:"cancelado,cancelados" }}{% endif %}</h3>
+  {% include "interface/_agenda_marcos.html" with nivel=4 %}
+</section>
+{% endfor %}

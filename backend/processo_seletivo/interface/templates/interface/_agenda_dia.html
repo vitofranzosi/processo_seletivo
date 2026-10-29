@@ -1,0 +1,29 @@
+{% load interface_extras %}
+{% comment %}
+O dia consultado (101, FR-2628): todos os marcos dele, inclusive os cancelados, e à parte os períodos
+que correm nele sem começar nem terminar nele — os que começam ou terminam já são marcos do dia.
+{% endcomment %}
+<section class="dia-consultado" aria-labelledby="titulo-do-dia">
+  <p class="volta-ao-mes"><a href="{{ leitura.enderecos.voltar_ao_mes }}">‹ Voltar a {{ leitura.rotulo_do_mes }}</a></p>
+  {% if leitura.dias %}
+  {% with dia=leitura.dias.0 %}
+  <h2 id="titulo-do-dia">{{ leitura.janela.rotulo|capfirst }} · {{ dia.quantidade|contagem:"marco previsto,marcos previstos" }}{% if dia.cancelados %} · {{ dia.cancelados|contagem:"cancelado,cancelados" }}{% endif %}</h2>
+  {% include "interface/_agenda_marcos.html" with nivel=3 %}
+  {% endwith %}
+  {% else %}
+  <h2 id="titulo-do-dia">{{ leitura.janela.rotulo|capfirst }}</h2>
+  <p class="nenhuma">Nenhum marco previsto neste dia{% if leitura.filtros.ativos %} com estes filtros{% endif %}.</p>
+  {% endif %}
+
+  <h3>Períodos em curso neste dia</h3>
+  {% if leitura.periodos_no_dia %}
+  <ul class="lista-de-periodos">
+    {% for periodo in leitura.periodos_no_dia %}
+    <li><span class="nome-do-periodo">{{ periodo.nome }}</span> <span class="intervalo-do-periodo">{{ periodo.intervalo }}</span>
+      <span class="origem-do-marco">{{ periodo.edital.rotulo }} — {{ periodo.edital.processo }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhum período previsto corre neste dia sem começar ou terminar nele.</p>
+  {% endif %}
+</section>

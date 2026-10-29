@@ -1,0 +1,119 @@
+/* A Agenda dos Editais (101). Só pares de cor que o teste de contraste já confere: o destaque do dia
+   é --verde-escuro sobre --verde-claro (o chip de situação publicada), o cancelado é --vermelho
+   sobre --vermelho-fundo, e o texto de apoio é --texto-fraco sobre --branco. Cor nova seria par
+   novo sem conferência. */
+
+.abas-da-agenda,.janelas-da-agenda{display:flex;flex-wrap:wrap;gap:.25rem;margin:0 0 1rem;
+  border-bottom:1px solid var(--borda)}
+.abas-da-agenda a,.janelas-da-agenda a{display:inline-block;padding:.55rem .9rem;
+  text-decoration:none;color:var(--verde-texto);border:1px solid transparent;
+  border-bottom:none;border-radius:6px 6px 0 0;margin-bottom:-1px}
+.abas-da-agenda a[aria-current="page"],.janelas-da-agenda a[aria-current="page"]{
+  background:var(--branco);border-color:var(--borda);color:var(--texto);font-weight:600}
+.janelas-da-agenda{border-bottom:none;margin:.25rem 0 1rem}
+.janelas-da-agenda a{border-radius:6px;border:1px solid var(--borda);margin:0}
+
+.avisos-de-retificacao ul{margin:.4rem 0 0;padding-left:1.2rem}
+.avisos-de-retificacao p{margin:0}
+
+/* Quatro números da janela. Não são carga de trabalho: dizem quantos marcos o cronograma prevê. */
+.sintese-da-agenda dl{display:grid;gap:.75rem;margin:1rem 0;
+  grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+.sintese-da-agenda dl div{padding:.7rem .9rem;border:1px solid var(--borda);border-radius:6px;
+  background:var(--branco)}
+.sintese-da-agenda dt{font-size:.82rem;color:var(--texto-fraco)}
+.sintese-da-agenda dd{margin:0;font-size:1.5rem;font-weight:600;font-variant-numeric:tabular-nums}
+.sintese-da-agenda dd.detalhe-da-sintese{font-size:.82rem;font-weight:400;color:var(--texto-fraco)}
+
+.filtros-da-agenda{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin:1rem 0;
+  padding:.85rem 1rem;border:1px solid var(--borda);border-radius:6px;background:var(--fundo)}
+.filtros-da-agenda p{margin:0;display:flex;flex-direction:column;gap:.25rem}
+.filtros-da-agenda label{font-size:.82rem;color:var(--texto-fraco)}
+.filtros-da-agenda .acoes-dos-filtros{flex-direction:row;align-items:center;gap:.75rem}
+
+/* ---- o mês ------------------------------------------------------------------------------- */
+
+.titulo-do-mes{margin:1.25rem 0 .25rem}
+.navegacao-do-mes{display:flex;flex-wrap:wrap;gap:1rem;margin:0 0 .75rem}
+
+/* Sete colunas iguais, fixas: a grade não cresce com o nome mais longo do mês. A 375 px são ~49 px
+   por coluna, e por isso os nomes saem abaixo de 60rem e fica a data com a contagem. */
+.moldura-da-grade{max-width:100%;margin:0}
+.grade-do-mes{width:100%;table-layout:fixed;border-collapse:collapse;margin:0 0 1.5rem}
+.grade-do-mes caption{text-align:left;font-size:.85rem;color:var(--texto-fraco);padding-bottom:.4rem}
+.grade-do-mes th{font-size:.8rem;font-weight:600;color:var(--texto-fraco);padding:.35rem;
+  text-align:left;border-bottom:1px solid var(--borda)}
+.grade-do-mes th abbr{text-decoration:none}
+.dia-do-mes{vertical-align:top;border:1px solid var(--borda);background:var(--branco);
+  height:7.5rem;padding:0;overflow:hidden}
+.dia-do-mes.fora-do-mes{background:var(--fundo)}
+/* O destaque não depende de cor: a contagem está escrita, e vai em negrito com borda. */
+.dia-do-mes.varios{background:var(--verde-claro);border:2px solid var(--verde-escuro)}
+.dia-do-mes.varios .quantidade-do-dia{color:var(--verde-escuro);font-weight:700}
+.dia-do-mes.hoje .numero-do-dia{background:var(--verde-escuro);color:var(--branco);
+  border-radius:999px;padding:0 .4rem}
+.acesso-ao-dia{display:flex;flex-direction:column;gap:.15rem;padding:.35rem .4rem;
+  text-decoration:none;color:var(--texto);min-height:2.75rem}
+.acesso-ao-dia:hover .quantidade-do-dia{text-decoration:underline}
+.numero-do-dia{font-weight:600;font-variant-numeric:tabular-nums;align-self:flex-start}
+.quantidade-do-dia{font-size:.8rem;color:var(--verde-texto)}
+.palavra-dos-marcos{white-space:nowrap}
+.nomes-do-dia{list-style:none;margin:0;padding:0 .4rem .35rem;font-size:.75rem;line-height:1.3}
+/* Até duas linhas por nome, com reticências: numa linha só, o número do Edital e "Abre ·" já
+   ocupavam a célula, e o nome sumia. */
+.nomes-do-dia li{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;line-clamp:2;margin-bottom:.15rem}
+.edital-do-nome{color:var(--texto-fraco)}
+.mais-no-dia{color:var(--texto-fraco)}
+
+@media (max-width:60rem){
+  .nomes-do-dia{display:none}
+  .dia-do-mes{height:auto}
+  .acesso-ao-dia{padding:.3rem .2rem;min-height:2.75rem}
+  .quantidade-do-dia{font-size:.85rem;line-height:1.2}
+  /* A sete colunas de ~45 px, "6 marcos" não cabe: fica o número, e a palavra continua para
+     quem ouve a tela. Escondida como `.oculto`, e não com `display:none`, que a calaria. */
+  .palavra-dos-marcos{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip-path:inset(50%);white-space:nowrap}
+  .grade-do-mes th{padding:.3rem .2rem}
+}
+
+.periodos-do-mes h2,.em-curso h2{font-size:1.1rem}
+.lista-de-periodos{list-style:none;margin:0 0 1.5rem;padding:0}
+.lista-de-periodos li{padding:.55rem 0;border-bottom:1px solid var(--borda);display:flex;
+  flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline}
+.nome-do-periodo{font-weight:600}
+.intervalo-do-periodo{font-variant-numeric:tabular-nums}
+.restante-do-periodo{color:var(--verde-texto);font-weight:600}
+
+/* ---- o dia e os próximos ------------------------------------------------------------------ */
+
+.dia-consultado{margin-top:1rem}
+.volta-ao-mes{margin:0 0 .5rem}
+.titulo-da-janela{font-size:1.1rem;margin:1.25rem 0 .5rem}
+.dia-da-agenda h3{font-size:1rem;margin:1.25rem 0 .35rem;padding-bottom:.25rem;
+  border-bottom:1px solid var(--borda)}
+.grupo-do-edital{font-size:.92rem;margin:1rem 0 .25rem;color:var(--texto-fraco)}
+.marcos-da-agenda{list-style:none;margin:0;padding:0}
+.marco-da-agenda{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:.15rem .9rem;
+  padding:.6rem 0;border-bottom:1px solid var(--borda)}
+.marco-da-agenda > span:not(.quando-do-marco){grid-column:2}
+.quando-do-marco{grid-row:1 / span 6;font-variant-numeric:tabular-nums;color:var(--texto-fraco)}
+.tipo-do-marco{display:inline-block;margin-left:.3rem;font-size:.78rem;font-weight:600;
+  color:var(--verde-escuro);background:var(--verde-claro);border-radius:3px;padding:0 .35rem}
+.nome-do-marco{font-weight:600}
+.origem-do-marco{color:var(--texto-fraco);font-size:.9rem}
+.local-do-marco,.intervalo-do-marco{font-size:.9rem}
+.fase-do-marco{font-size:.82rem;color:var(--texto-fraco)}
+.marca-de-cancelado{font-size:.82rem;font-weight:600;color:var(--vermelho);background:var(--vermelho-fundo);
+  border-radius:3px;padding:0 .35rem;justify-self:start}
+.marco-da-agenda.cancelado .nome-do-marco{text-decoration:line-through}
+.links-do-marco{display:flex;flex-wrap:wrap;gap:.25rem 1rem;font-size:.9rem}
+
+@media (max-width:40rem){
+  .marco-da-agenda{grid-template-columns:minmax(0,1fr)}
+  .marco-da-agenda > span:not(.quando-do-marco){grid-column:1}
+  .quando-do-marco{grid-row:auto}
+}
+
+.legenda-da-agenda{margin-top:2rem;font-size:.85rem;color:var(--texto-fraco);max-width:var(--leitura)}

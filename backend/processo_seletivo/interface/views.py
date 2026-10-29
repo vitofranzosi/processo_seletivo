@@ -166,6 +166,7 @@ from processo_seletivo.interface import (
     origens,
     revisao,
 )
+from processo_seletivo.interface import agenda as agenda_dos_editais
 from processo_seletivo.interface import aplicacao as aplicacao_ui
 from processo_seletivo.interface import aplicacao_na_retificacao as gesto_na_retificacao
 from processo_seletivo.interface import avisos as avisos_da_interface
@@ -359,6 +360,28 @@ def visao_geral(request):
             # O instante da leitura, declarado — a mesma cortesia que a Supervisão já presta.
             "lido_em": timezone.localtime(),
         },
+    )
+
+
+def agenda(request):
+    """A Agenda dos Editais: os cronogramas publicados e vigentes da unidade, no tempo (101).
+
+    **Toda identidade da gestão entra, e a ausência de recusa é decisão** (`D-004`, decidida pelo
+    usuário em 29/10/2026). A página só mostra o que a página pública de cada Edital já mostra a
+    qualquer pessoa, e a lista de Processos já mostra esses Editais a toda identidade do escopo:
+    pedir a capacidade da visão institucional excluiria a presidência e a comissão, que conduzem
+    os Processos, sem proteger dado nenhum.
+
+    **Não há 404**, pela razão da Visão Geral: é listagem, e o escopo é o filtro da consulta.
+    Parâmetro inválido cai no padrão, e identificador alheio é ignorado (`FR-2610`).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    return render(
+        request,
+        "interface/agenda.html",
+        {"leitura": agenda_dos_editais.ler(ator, request.GET)},
     )
 
 

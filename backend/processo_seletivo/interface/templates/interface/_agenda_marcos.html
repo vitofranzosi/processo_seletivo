@@ -1,0 +1,12 @@
+{% comment %}
+Os marcos de um dia, na ordem do dia (FR-2632). Acima de oito, agrupados por Edital (FR-2630): dez
+descrições soltas não dizem de quem são. `nivel` é o do título do grupo, um abaixo do título do dia.
+{% endcomment %}
+{% if dia.grupos %}
+{% for edital, marcos in dia.grupos %}
+<h{{ nivel }} class="grupo-do-edital">{{ edital.rotulo }} — {{ edital.processo }}</h{{ nivel }}>
+<ul class="marcos-da-agenda">{% for marco in marcos %}{% include "interface/_agenda_marco.html" %}{% endfor %}</ul>
+{% endfor %}
+{% else %}
+<ul class="marcos-da-agenda">{% for marco in dia.marcos %}{% include "interface/_agenda_marco.html" %}{% endfor %}</ul>
+{% endif %}

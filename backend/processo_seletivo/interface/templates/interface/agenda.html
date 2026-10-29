@@ -1,0 +1,94 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}Agenda dos Editais{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/agenda.css' %}">{% endblock %}
+{% block conteudo %}
+{% comment %}
+A Agenda dos Editais (101). Só leitura: nenhum controle de criar, alterar, concluir ou excluir Evento
+(FR-2611). Tudo o que a página diz é o cronograma publicado e vigente; por isso a proveniência vem
+antes de qualquer número, e a legenda de previsto × efetivo fecha a página (FR-2640, FR-2641).
+{% endcomment %}
+<h1>Agenda dos Editais</h1>
+<p class="sub">Os cronogramas publicados e vigentes dos Editais da unidade <strong>{{ ator.institution_scope }}</strong>,
+  consolidados no tempo. As datas são as previstas; o cronograma oficial é o do Edital e de suas Retificações.
+  Lido em <time datetime="{{ leitura.lido_em|date:'c' }}">{{ leitura.lido_em|date:"d/m/Y \à\s H:i" }}</time>.</p>
+
+{% if not leitura.tem_editais %}
+<p class="vazio">Nenhum Edital da unidade tem cronograma publicado.</p>
+{% else %}
+<nav class="abas-da-agenda" aria-label="Visualizações da agenda">
+  <a href="{{ leitura.enderecos.aba_mes }}"{% if leitura.visao == "mes" %} aria-current="page"{% endif %}>Mês</a>
+  <a href="{{ leitura.enderecos.aba_proximos }}"{% if leitura.visao == "proximos" %} aria-current="page"{% endif %}>Próximos marcos</a>
+</nav>
+
+{% if leitura.avisos %}
+<div class="aviso avisos-de-retificacao">
+  <p><strong>Retificação publicada que ainda não vigora.</strong> As datas desta página são as vigentes hoje.</p>
+  <ul>
+    {% for aviso in leitura.avisos %}
+    <li>{{ aviso.edital.rotulo }} — {{ aviso.edital.processo }}: vigora a partir de <time datetime="{{ aviso.vigora_em|date:'c' }}">{{ aviso.vigora_em|date:"d/m/Y" }}</time>.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% if leitura.sintese %}
+{% with s=leitura.sintese %}
+<section class="sintese-da-agenda" aria-labelledby="titulo-da-sintese">
+  <h2 id="titulo-da-sintese" class="oculto">Síntese de {{ leitura.janela.rotulo }}</h2>
+  <dl>
+    <div><dt>Marcos previstos</dt><dd>{{ s.marcos }}</dd></div>
+    <div><dt>Editais envolvidos</dt><dd>{{ s.editais }}</dd></div>
+    <div><dt>Encerramentos de período</dt><dd>{{ s.encerramentos }}</dd></div>
+    {% if leitura.visao == "mes" %}
+    <div><dt>Dias com mais de um marco</dt><dd>{{ s.dias_com_varios }}</dd>
+      {% if s.dia_mais_carregado %}<dd class="detalhe-da-sintese">o de mais marcos: {{ s.dia_mais_carregado.0|date:"d/m" }}, {{ s.dia_mais_carregado.1 }}</dd>{% endif %}</div>
+    {% else %}
+    <div><dt>Dia com mais marcos</dt>
+      {% if s.dia_mais_carregado %}<dd>{{ s.dia_mais_carregado.0|date:"d/m" }}</dd><dd class="detalhe-da-sintese">{{ s.dia_mais_carregado.1|contagem:"marco,marcos" }}</dd>{% else %}<dd>—</dd><dd class="detalhe-da-sintese">nenhum dia com mais de um marco</dd>{% endif %}</div>
+    {% endif %}
+  </dl>
+</section>
+{% endwith %}
+{% endif %}
+
+<form method="get" class="filtros-da-agenda" aria-label="Filtros da agenda">
+  {% for chave, valor in leitura.ocultos %}<input type="hidden" name="{{ chave }}" value="{{ valor }}">{% endfor %}
+  <p>
+    <label for="f-edital">Edital</label>
+    <select name="edital" id="f-edital">
+      <option value="">Todos os Editais</option>
+      {% for edital in leitura.opcoes_de_edital %}
+      <option value="{{ edital.id }}"{% if leitura.filtros.edital == edital.id %} selected{% endif %}>{{ edital.rotulo }} — {{ edital.processo }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="f-especie">Espécie do Evento</label>
+    <select name="especie" id="f-especie">
+      <option value="">Todas</option>
+      {% for valor, rotulo in leitura.especies %}
+      <option value="{{ valor }}"{% if leitura.filtros.especie == valor %} selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="acoes-dos-filtros">
+    <button type="submit" class="botao secundario">Filtrar</button>
+    {% if leitura.filtros.ativos %}<a href="{{ leitura.enderecos.limpar_filtros }}">Limpar filtros</a>{% endif %}
+  </p>
+</form>
+
+{% if leitura.visao == "proximos" %}
+{% include "interface/_agenda_proximos.html" %}
+{% elif leitura.dia %}
+{% include "interface/_agenda_dia.html" %}
+{% else %}
+{% include "interface/_agenda_mes.html" %}
+{% endif %}
+{% endif %}
+
+<p class="legenda-da-agenda">Cada marco é uma data prevista no cronograma publicado: um Evento pontual, ou a
+  abertura ou o encerramento de um período. Uma data prevista que passou não quer dizer que o ato aconteceu.
+  Prazos contados a partir da publicação de um ato — como o de recurso — podem diferir das datas previstas;
+  o prazo em curso está na publicação do ato.</p>
+{% endblock %}

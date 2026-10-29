@@ -50,7 +50,8 @@ class Secao:
     grupo: str
     alcanca: object
     # O símbolo no sprite do `base.html` (`FR-1731`). Pelo significado: a pasta do Processo, a
-    # prancheta do trabalho alocado, o gráfico da visão, o prédio da unidade, o envelope do aviso.
+    # prancheta do trabalho alocado, o gráfico da visão, o calendário da agenda, o prédio da
+    # unidade, o envelope do aviso.
     icone: str
 
 
@@ -62,6 +63,8 @@ SECOES = (
     Secao("Processos Seletivos", "interface:lista", TRABALHO, _toda_identidade, "i-pasta"),
     Secao("Minhas Etapas", "interface:minhas-etapas", TRABALHO, _toda_identidade, "i-prancheta"),
     Secao("Visão Geral", "interface:visao-geral", TRABALHO, pode_ver_visao, "i-grafico"),
+    # Toda identidade, como a lista: a agenda só mostra cronograma publicado (101, `D-004`).
+    Secao("Agenda", "interface:agenda", TRABALHO, _toda_identidade, "i-calendario"),
     Secao(
         "Autoridades da unidade",
         "interface:autoridades",
