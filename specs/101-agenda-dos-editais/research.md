@@ -117,3 +117,24 @@ foi verificado no código em 29/10/2026. Caminhos relativos a `backend/processo_
   → `portal:selecao` + `#cronograma-titulo` (a seção do cronograma na página pública).
 - **Rationale**: a página do Edital na gestão não tem seção de cronograma; a pública tem, com
   âncora estável. O `<li>` do Evento no portal não tem `id`, e acrescentá-lo é a fase 1.1 do estudo.
+
+## R-013 — O indicador de períodos é contado da mesma lista de períodos
+
+- **Decision**: `semanas_do_mes` recebe também os períodos já projetados (os mesmos da lista do mês,
+  depois dos filtros) e conta, para cada dia, os que o abrangem (`Periodo.abrange(dia)`: do dia de
+  início ao de término, inclusive; sem término, de início em diante). O dia consultado lista
+  exatamente os períodos com `abrange(dia)`, e por isso as duas contagens não têm como divergir.
+- **Rationale**: nenhuma consulta nova; nenhuma forma nova persistida; a mesma função de pertinência
+  serve à célula e ao dia (SC-959). Cancelados e encerrados já saem em `periodos_do_conteudo`.
+- **Custo**: até ~30 períodos × 42 células por mês — desprezível perto da leitura.
+- **Alternatives considered**: materializar um item por dia (recusado: é o que `D-002` proíbe);
+  contar só os dias do meio (recusado: o usuário pediu os intervalos que **abrangem** o dia).
+
+## R-014 — A forma do indicador
+
+- **Decision**: na célula, abaixo da quantidade de marcos, `<span class="periodos-do-dia">` com uma
+  barra horizontal desenhada por borda (a forma de um intervalo) e o número; em tela larga, o texto
+  *N períodos*; no estreito, só a barra e o número, com o texto completo para leitor de tela. Cor de
+  apoio (`--texto-fraco`), para não competir com o verde dos marcos. Uma legenda curta junto da
+  grade nomeia as duas marcas.
+- **Rationale**: distinguir por forma e texto, e não por cor (FR-2670); 375 px já está no limite.

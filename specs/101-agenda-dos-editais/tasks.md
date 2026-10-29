@@ -120,3 +120,15 @@ contagens, destaque, nomes e a lista de períodos.
 - [X] T030 Registrar na FR-2626 de `specs/101-agenda-dos-editais/spec.md` o nome em até duas linhas com reticências, decidido na prova visual de 29/10, e alinhar `contracts/agenda.md` per FR-2626 (contradicts)
 - [X] T031 Dizer no título do dia quantos marcos cancelados há, quando houver, em `_agenda_proximos.html` e `_agenda_dia.html`, com `DiaDaAgenda.cancelados` em `backend/processo_seletivo/interface/agenda.py` e teste em `backend/tests/unit/interface/test_agenda.py` per FR-2632 (partial)
 - [X] T032 Alinhar o caso-limite de dia inválido em `specs/101-agenda-dos-editais/spec.md` ao contrato: o dia inválido é ignorado e a página mostra o mês per Spec Edge Cases (partial)
+
+## Phase 10: Revisão de 29/10 — o indicador de períodos
+
+**Purpose**: duas dimensões na grade — marcos previstos e períodos que abrangem o dia —, sem que o
+período deixe de ser um intervalo só (D-002, FR-2619, FR-2669 a FR-2671, SC-959).
+
+- [X] T033 [P] Escrever os unitários do indicador — período que atravessa o mês inteiro (um em todo dia, nenhum marco), sobreposição de cinco, período sem término (todo dia a partir do início), cancelado fora, Edital encerrado só com o que passou, fronteira 31/12 23:30, indicador fora da quantidade, do destaque e da síntese — em `backend/tests/unit/interface/test_agenda.py` (FR-2619, FR-2669, SC-959)
+- [X] T034 Implementar `Periodo.abrange(dia)`, o campo `periodos` de `DiaDaGrade` e a contagem em `semanas_do_mes`, sobre os períodos já projetados e filtrados, e trocar `periodos_no_dia` para todos os que abrangem o dia, com a marca de abertura ou encerramento, em `backend/processo_seletivo/interface/agenda.py` (FR-2628, FR-2669, R-013)
+- [X] T035 Acrescentar o indicador e a legenda da grade em `_agenda_mes.html`, os períodos que abrangem o dia em `_agenda_dia.html`, e o vocabulário temporal — *abrange*, *ainda não começou*, *em curso hoje, pelo cronograma*, *já passou* — nos parciais e em `agenda.py` (FR-2628, FR-2670, FR-2671)
+- [X] T036 Desenhar o indicador em `backend/processo_seletivo/interface/static/interface/telas/agenda.css` — barra por borda, número, texto completo só para leitor de tela no estreito, cor de apoio de par já conferido (FR-2670, R-014)
+- [X] T037 Escrever os testes de tela — indicador na célula do dia sem marco, legenda, dia consultado com todos os períodos que o abrangem e o mesmo número do indicador, nenhum *em curso* no dia consultado nem na grade de outro mês, filtros aplicados ao indicador — e o de integração em que uma Retificação vigente muda o término de um período e o indicador acompanha, em `backend/tests/interface/test_agenda.py` e `backend/tests/integration/agenda/test_fonte.py` (FR-2613, FR-2628, FR-2669 a FR-2671, SC-959)
+- [X] T038 Prova visual a 1280 e a 375 px no banco de demonstração, orçamento de consultas inalterado, rastreabilidade de FR-2669 a FR-2671 e SC-959, suíte completa e `/speckit-converge`

@@ -58,6 +58,19 @@
 .numero-do-dia{font-weight:600;font-variant-numeric:tabular-nums;align-self:flex-start}
 .quantidade-do-dia{font-size:.8rem;color:var(--verde-texto)}
 .palavra-dos-marcos{white-space:nowrap}
+/* O indicador de períodos (FR-2669, FR-2670): a forma de uma barra, como um intervalo, e a cor de
+   apoio, para não competir com o verde dos marcos. A forma e o texto o distinguem; a cor, não. */
+.periodos-do-dia{display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--texto-fraco)}
+.barra-do-periodo{display:inline-block;width:1.1rem;height:.3rem;border-radius:2px;
+  border:1px solid var(--texto-fraco);background:var(--cinza-fundo)}
+.palavra-dos-periodos{white-space:nowrap}
+.legenda-da-grade{display:flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center;margin:-.75rem 0 1.5rem;
+  font-size:.82rem;color:var(--texto-fraco)}
+.exemplo-de-marcos{font-weight:700;color:var(--verde-escuro);background:var(--verde-claro);
+  border:2px solid var(--verde-escuro);border-radius:3px;padding:0 .35rem}
+.exemplo-de-periodos{display:inline-flex;align-items:center;gap:.3rem;color:var(--texto-fraco)}
+.borda-do-periodo{font-size:.8rem;font-weight:600;color:var(--verde-escuro);background:var(--verde-claro);
+  border-radius:3px;padding:0 .35rem}
 .nomes-do-dia{list-style:none;margin:0;padding:0 .4rem .35rem;font-size:.75rem;line-height:1.3}
 /* Até duas linhas por nome, com reticências: numa linha só, o número do Edital e "Abre ·" já
    ocupavam a célula, e o nome sumia. */
@@ -73,8 +86,10 @@
   .quantidade-do-dia{font-size:.85rem;line-height:1.2}
   /* A sete colunas de ~45 px, "6 marcos" não cabe: fica o número, e a palavra continua para
      quem ouve a tela. Escondida como `.oculto`, e não com `display:none`, que a calaria. */
-  .palavra-dos-marcos{position:absolute;width:1px;height:1px;overflow:hidden;
+  .palavra-dos-marcos,.palavra-dos-periodos{position:absolute;width:1px;height:1px;overflow:hidden;
     clip-path:inset(50%);white-space:nowrap}
+  .periodos-do-dia{gap:.15rem;font-size:.7rem}
+  .barra-do-periodo{width:.6rem}
   .grade-do-mes th{padding:.3rem .2rem}
 }
 

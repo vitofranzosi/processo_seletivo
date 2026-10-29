@@ -42,12 +42,16 @@ Na ordem do documento:
      `<a class="acesso-ao-dia">` para o dia, com o número (oculto para leitor de tela), a data por
      extenso (`.oculto`) e, quando há marco, `<span class="quantidade-do-dia">N<span
      class="palavra-dos-marcos"> marcos</span></span>` — abaixo de 60rem a palavra fica só para
-     leitor de tela. Célula destacada tem a classe `varios`; hoje tem `aria-current="date"`; até dois
+     leitor de tela. Quando algum período abrange o dia, `<span class="periodos-do-dia">` com a barra e
+     o número — *N períodos* em tela larga, só a barra e o número no estreito — e o texto completo em
+     `.oculto`. Uma legenda (`<p class="legenda-da-grade">`) nomeia as duas marcas. Célula destacada
+     tem a classe `varios` — pelos marcos, e nunca pelos períodos; hoje tem `aria-current="date"`; até dois
      nomes em `<ul class="nomes-do-dia">`, cada um com o número do Edital antes do nome, em até duas
      linhas com reticências. Depois, a
      seção *Períodos previstos* (`<section class="periodos-do-mes">`).
-   - **dia**: `<section class="dia-consultado">` com os marcos do dia e *Períodos em curso neste
-     dia*; link *Voltar a {mês}*.
+   - **dia**: `<section class="dia-consultado">` com os marcos do dia e *Períodos que abrangem este
+     dia* — todos, com o Edital e o intervalo, e *abre neste dia* / *encerra neste dia* quando for o
+     caso; link *Voltar a {mês}*.
    - **próximos**: `<section class="em-curso">`, depois um `<section class="dia-da-agenda">` por
      dia com marco, título `<h3>` com a data e a quantidade, sob o `<h2>` da janela.
 7. Legenda fixa de previsto × efetivo (FR-2641).
@@ -69,6 +73,9 @@ link leva o número do Edital em `.oculto`, para que os nomes repetidos se disti
 | filtro sem resultado | a mesma frase, mais o link *Limpar filtros* |
 
 ## Vocabulário proibido
+
+Na lista de períodos a fase é *ainda não começou*, *em curso hoje, pelo cronograma* ou *já passou*;
+*em curso* nunca é dito de um dia que não é hoje (FR-2671).
 
 O texto visível não contém *concluído*, *cumprido*, *realizado*, *pendente*, *atrasado* nem
 *prazo* sem *previsto* ao lado (FR-2636, FR-2642).

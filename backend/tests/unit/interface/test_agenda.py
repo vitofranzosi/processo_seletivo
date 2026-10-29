@@ -147,7 +147,7 @@ def test_a_fase_e_dita_sem_afirmar_execucao():
     )
     assert [passado.fase, em_curso.fase, futuro.fase] == [ag.PASSADA, ag.EM_CURSO, ag.POR_VIR]
     assert passado.rotulo_da_fase == "data passada"
-    assert em_curso.rotulo_da_fase == "em curso pelo cronograma"
+    assert em_curso.rotulo_da_fase == "em curso agora, pelo cronograma"
     assert futuro.rotulo_da_fase == ""
 
 
@@ -204,13 +204,13 @@ def test_o_tempo_que_falta_e_em_dias_corridos(fim, esperado):
     assert periodo.restante(HOJE) == esperado
 
 
-def test_periodo_toca_e_contem_um_dia():
+def test_periodo_toca_e_abrange_um_dia_com_as_bordas():
     (periodo,) = ag.periodos_do_conteudo(
         EDITAL_A, conteudo(evento("i", quando(3, 9), quando(15, 18))), AGORA
     )
-    assert periodo.contem_sem_tocar_as_bordas(date(2026, 11, 10))
-    assert not periodo.contem_sem_tocar_as_bordas(date(2026, 11, 3))
-    assert not periodo.contem_sem_tocar_as_bordas(date(2026, 11, 15))
+    assert periodo.abrange(date(2026, 11, 10))
+    assert periodo.abrange(date(2026, 11, 3)) and periodo.abrange(date(2026, 11, 15))
+    assert not periodo.abrange(date(2026, 11, 2)) and not periodo.abrange(date(2026, 11, 16))
     assert periodo.toca(ag.janela_do_mes(2026, 11))
     assert not periodo.toca(ag.janela_do_mes(2026, 12))
 
@@ -350,3 +350,86 @@ def test_o_dia_conta_os_cancelados_a_parte():
         marcos(evento("x", quando(12, 9), status="CANCELADO"), evento("y", quando(12, 10)))
     )
     assert (dia.quantidade, dia.cancelados) == (1, 1)
+
+
+# ---- o indicador de períodos (FR-2619, FR-2669, SC-959, revisão de 29/10) ----------------------
+
+
+def grade_com(*eventos, ano=2026, mes=11, edital=EDITAL_A, agora=AGORA):
+    dados = conteudo(*eventos)
+    janela = ag.janela_do_mes(ano, mes)
+    marcos_do_mes = ag.na_janela(ag.marcos_do_conteudo(edital, dados, agora), janela)
+    periodos = ag.periodos_do_conteudo(edital, dados, agora)
+    grade = ag.semanas_do_mes(ano, mes, marcos_do_mes, HOJE, periodos=periodos)
+    return {dia.data: dia for semana in grade for dia in semana if dia.data}, marcos_do_mes
+
+
+def test_periodo_que_atravessa_o_mes_inteiro_conta_um_em_todo_dia_e_nenhum_marco():
+    dias, marcos_do_mes = grade_com(evento("s", quando(19, 9, mes=10), quando(13, 18, mes=12)))
+    assert {dia.periodos for dia in dias.values()} == {1}
+    assert {dia.quantidade for dia in dias.values()} == {0}
+    assert marcos_do_mes == []
+
+
+def test_periodos_sobrepostos_contam_cada_um_uma_vez_e_os_marcos_so_nas_bordas():
+    dias, _ = grade_com(*(evento(f"i{n}", quando(3, 9), quando(15, 18)) for n in range(5)))
+    assert dias[date(2026, 11, 9)].periodos == 5
+    assert dias[date(2026, 11, 9)].quantidade == 0
+    assert (dias[date(2026, 11, 3)].periodos, dias[date(2026, 11, 3)].quantidade) == (5, 5)
+    assert (dias[date(2026, 11, 2)].periodos, dias[date(2026, 11, 16)].periodos) == (0, 0)
+
+
+def test_periodo_sem_termino_abrange_todo_dia_a_partir_do_inicio():
+    aberto = evento("i", quando(3, 9), isRegistrationPeriod=True)
+    dias, _ = grade_com(aberto)
+    assert (dias[date(2026, 11, 2)].periodos, dias[date(2026, 11, 3)].periodos) == (0, 1)
+    dezembro, _ = grade_com(aberto, mes=12)
+    assert {dia.periodos for dia in dezembro.values()} == {1}
+
+
+def test_periodo_cancelado_e_de_edital_encerrado_que_nao_passou_nao_contam():
+    dias, _ = grade_com(evento("x", quando(3, 9), quando(15, 18), status="CANCELADO"))
+    assert {dia.periodos for dia in dias.values()} == {0}
+    encerrado, _ = grade_com(
+        evento("passou", quando(1, 9), quando(4, 18)),
+        evento("vem", quando(5, 9), quando(20, 18)),
+        edital=ENCERRADO,
+    )
+    assert (encerrado[date(2026, 11, 2)].periodos, encerrado[date(2026, 11, 10)].periodos) == (1, 0)
+
+
+def test_o_indicador_le_o_dia_na_zona_institucional():
+    """Termina às 23:30 de 31/12 em Vitória: em UTC já seria 01/01."""
+    fim_de_ano = evento("v", quando(20, 9, mes=12), quando(31, 23, 30, mes=12))
+    dezembro, _ = grade_com(fim_de_ano, mes=12)
+    janeiro, _ = grade_com(fim_de_ano, ano=2027, mes=1)
+    assert dezembro[date(2026, 12, 31)].periodos == 1
+    assert janeiro[date(2027, 1, 1)].periodos == 0
+
+
+def test_o_indicador_nao_entra_na_quantidade_no_destaque_nem_na_sintese():
+    dias, marcos_do_mes = grade_com(
+        *(evento(f"i{n}", quando(3, 9), quando(15, 18)) for n in range(3)),
+        evento("p", quando(9, 10)),
+    )
+    nove = dias[date(2026, 11, 9)]
+    assert (nove.quantidade, nove.periodos, nove.destaque) == (1, 3, False)
+    assert ag.sintese(marcos_do_mes).marcos == sum(dia.quantidade for dia in dias.values()) == 7
+
+
+def test_a_fase_do_periodo_nao_diz_em_curso_de_outro_dia():
+    """`FR-2671`: a fase é sobre hoje, e dita sem ambiguidade."""
+    passado, hoje, futuro = ag.periodos_do_conteudo(
+        EDITAL_A,
+        conteudo(
+            evento("p", quando(1, 9), quando(4, 18)),
+            evento("h", quando(5, 9), quando(20, 18)),
+            evento("f", quando(21, 9), quando(25, 18)),
+        ),
+        AGORA,
+    )
+    assert [passado.rotulo_da_fase, hoje.rotulo_da_fase, futuro.rotulo_da_fase] == [
+        "já passou",
+        "em curso hoje, pelo cronograma",
+        "ainda não começou",
+    ]

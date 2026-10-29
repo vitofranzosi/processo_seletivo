@@ -47,6 +47,8 @@ cd backend && PYTEST_ADDOPTS="tests/unit/interface/test_agenda.py tests/integrat
 | Filtrar um Edital e trocar de aba | o filtro segue, e a síntese conta só ele | FR-2637, FR-2638 |
 | *Cronograma publicado* | abre a página pública do Edital na seção do cronograma | FR-2629 |
 | 375 px | grade de sete colunas sem nomes, sem rolagem horizontal | FR-2626, FR-2645 |
+| Dia sem marco dentro de períodos | o indicador de períodos (barra e número), sem contagem de marcos; o período que atravessa o mês conta em todo dia | FR-2619, FR-2669 |
+| Escolher um dia | os períodos que o abrangem, com o intervalo e *abre/encerra neste dia*, no mesmo número do indicador | FR-2628, SC-959 |
 
 ## Desempenho
 

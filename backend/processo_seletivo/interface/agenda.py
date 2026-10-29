@@ -59,7 +59,15 @@ PONTUAL, ABERTURA, ENCERRAMENTO = "pontual", "abertura", "encerramento"
 # A fase, dita pela agenda (`D-006`). *Data passada*, e não *concluído*: um *Resultado preliminar*
 # com data passada não prova que o resultado saiu.
 POR_VIR, EM_CURSO, PASSADA = "por_vir", "em_curso", "passada"
-ROTULO_DA_FASE = {POR_VIR: "", EM_CURSO: "em curso pelo cronograma", PASSADA: "data passada"}
+#
+# *Em curso* só se diz do que corre no instante da leitura (`FR-2671`): de um dia qualquer, o
+# período o *abrange*.
+ROTULO_DA_FASE = {POR_VIR: "", EM_CURSO: "em curso agora, pelo cronograma", PASSADA: "data passada"}
+ROTULO_DA_FASE_DO_PERIODO = {
+    POR_VIR: "ainda não começou",
+    EM_CURSO: "em curso hoje, pelo cronograma",
+    PASSADA: "já passou",
+}
 FASE_DA_REGUA = {
     calendario.PLANEJADO: POR_VIR,
     calendario.EM_ANDAMENTO: EM_CURSO,
@@ -189,18 +197,20 @@ class Periodo:
 
     @property
     def rotulo_da_fase(self):
-        return {POR_VIR: "por vir", EM_CURSO: "em curso pelo cronograma", PASSADA: "data passada"}[
-            self.fase
-        ]
+        return ROTULO_DA_FASE_DO_PERIODO[self.fase]
 
     def toca(self, janela):
         return self.dia_inicio <= janela.fim and (
             self.dia_fim is None or self.dia_fim >= janela.inicio
         )
 
-    def contem_sem_tocar_as_bordas(self, dia):
-        """Abertura e encerramento já são marcos do dia; aqui fica o que corre nele."""
-        return self.dia_inicio < dia and (self.dia_fim is None or dia < self.dia_fim)
+    def abrange(self, dia):
+        """Do dia da abertura ao do encerramento, inclusive; sem término, do início em diante.
+
+        É a pertinência do indicador da célula **e** do dia consultado (`FR-2669`, `FR-2628`): uma
+        função só, para que o número da grade e a lista do dia não tenham como divergir (`SC-959`).
+        """
+        return self.dia_inicio <= dia and (self.dia_fim is None or dia <= self.dia_fim)
 
     def restante(self, hoje):
         """O tempo até o encerramento previsto, em dias corridos na zona institucional (`FR-2633`).
@@ -230,6 +240,9 @@ class Janela:
 class DiaDaGrade:
     data: date | None
     quantidade: int = 0
+    # Quantos períodos abrangem o dia (`FR-2669`). Outra dimensão, e não parte da `quantidade`: o
+    # período não vira marco nos dias do meio, e não pesa no destaque nem na síntese (`D-002`).
+    periodos: int = 0
     nomeados: tuple = ()
     mais: int = 0
     destaque: bool = False
@@ -594,12 +607,15 @@ def dias_da_lista(marcos):
     return tuple(dias)
 
 
-def semanas_do_mes(ano, mes, marcos, hoje, endereco_do_dia=None):
+def semanas_do_mes(ano, mes, marcos, hoje, endereco_do_dia=None, *, periodos=()):
     """A grade do mês: domingo primeiro, de quatro a seis semanas, dias de fora vazios (`D-010`).
 
     A célula conta os marcos não cancelados, destaca a partir de dois e nomeia os dois primeiros na
     ordem do dia (`FR-2625`, `FR-2626`). Os dias do mês vizinho ficam vazios: mostrá-los contaria o
     mesmo marco em duas páginas, e a soma das células deixaria de ser a síntese (`FR-2635`).
+
+    `periodos` são os já projetados e filtrados — os mesmos da lista do mês. Cada célula conta os
+    que a abrangem: contagem derivada, sem item por dia (`FR-2669`, research R-013).
     """
     ativos = {}
     for marco in ordenar(marcos):
@@ -617,6 +633,7 @@ def semanas_do_mes(ano, mes, marcos, hoje, endereco_do_dia=None):
                 DiaDaGrade(
                     data=dia,
                     quantidade=len(do_dia),
+                    periodos=sum(1 for periodo in periodos if periodo.abrange(dia)),
                     nomeados=tuple(do_dia[:NOMES_NA_CELULA]),
                     mais=max(0, len(do_dia) - NOMES_NA_CELULA),
                     destaque=len(do_dia) >= 2,
@@ -822,7 +839,7 @@ def ler(ator, parametros, *, agora=None):
     elif dia:
         leitura["periodos_no_dia"] = tuple(
             sorted(
-                (p for p in periodos if p.contem_sem_tocar_as_bordas(dia)),
+                (p for p in periodos if p.abrange(dia)),
                 key=lambda p: (p.dia_inicio, p.edital.chave_de_ordem, p.nome),
             )
         )
@@ -834,7 +851,7 @@ def ler(ator, parametros, *, agora=None):
             )
         )
         leitura["semanas"] = semanas_do_mes(
-            primeiro.year, primeiro.month, na, hoje, endereco_do_dia
+            primeiro.year, primeiro.month, na, hoje, endereco_do_dia, periodos=periodos
         )
         leitura["sintese"] = sintese(na)
     return Leitura(**leitura)

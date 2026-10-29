@@ -1,7 +1,8 @@
 {% load interface_extras %}
 {% comment %}
-O dia consultado (101, FR-2628): todos os marcos dele, inclusive os cancelados, e à parte os períodos
-que correm nele sem começar nem terminar nele — os que começam ou terminam já são marcos do dia.
+O dia consultado (101, FR-2628): todos os marcos dele, inclusive os cancelados, e à parte todos os
+períodos que o abrangem — os mesmos que o indicador da célula conta. *Abrange*, e não *em curso*: o
+dia pode ser passado ou futuro (FR-2671).
 {% endcomment %}
 <section class="dia-consultado" aria-labelledby="titulo-do-dia">
   <p class="volta-ao-mes"><a href="{{ leitura.enderecos.voltar_ao_mes }}">‹ Voltar a {{ leitura.rotulo_do_mes }}</a></p>
@@ -15,15 +16,16 @@ que correm nele sem começar nem terminar nele — os que começam ou terminam j
   <p class="nenhuma">Nenhum marco previsto neste dia{% if leitura.filtros.ativos %} com estes filtros{% endif %}.</p>
   {% endif %}
 
-  <h3>Períodos em curso neste dia</h3>
+  <h3>Períodos que abrangem este dia{% if leitura.periodos_no_dia %} · {{ leitura.periodos_no_dia|length }}{% endif %}</h3>
   {% if leitura.periodos_no_dia %}
   <ul class="lista-de-periodos">
     {% for periodo in leitura.periodos_no_dia %}
     <li><span class="nome-do-periodo">{{ periodo.nome }}</span> <span class="intervalo-do-periodo">{{ periodo.intervalo }}</span>
-      <span class="origem-do-marco">{{ periodo.edital.rotulo }} — {{ periodo.edital.processo }}</span></li>
+      <span class="origem-do-marco">{{ periodo.edital.rotulo }} — {{ periodo.edital.processo }}</span>
+      {% if periodo.dia_inicio == leitura.dia %}<span class="borda-do-periodo">abre neste dia</span>{% elif periodo.dia_fim == leitura.dia %}<span class="borda-do-periodo">encerra neste dia</span>{% endif %}</li>
     {% endfor %}
   </ul>
   {% else %}
-  <p class="nenhuma">Nenhum período previsto corre neste dia sem começar ou terminar nele.</p>
+  <p class="nenhuma">Nenhum período previsto abrange este dia.</p>
   {% endif %}
 </section>

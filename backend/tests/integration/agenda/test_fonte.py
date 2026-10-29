@@ -202,3 +202,29 @@ def test_edital_de_outro_escopo_nao_aparece_nem_pelo_filtro(
 
     serra = agenda.ler(Actor("leitora.serra", "serra", frozenset()), TODOS)
     assert {m.edital.id for m in marcos_de(serra)} == {str(da_serra.id)}
+
+
+def test_retificacao_que_encurta_um_periodo_muda_o_indicador(
+    api_client, manager_headers, process_payload
+):
+    """`FR-2613`, `FR-2669`: o indicador lê a versão vigente, como os marcos."""
+    edital = publicar(api_client, manager_headers, process_payload, 9)
+    dia = em(8).date()
+
+    def periodos_no_dia():
+        leitura = agenda.ler(LEITORA, {"mes": dia.strftime("%Y-%m")})
+        return next(d.periodos for semana in leitura.semanas for d in semana if d.data == dia)
+
+    assert periodos_no_dia() == 1
+    retify(
+        api_client,
+        edital,
+        [
+            {
+                "targetPath": f"/schedule/id={identificador(510, 9)}/endAt",
+                "operation": "REPLACE",
+                "newValue": em(5, 18).isoformat(),
+            }
+        ],
+    )
+    assert periodos_no_dia() == 0

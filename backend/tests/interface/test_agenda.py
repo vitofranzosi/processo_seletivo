@@ -185,9 +185,10 @@ def test_o_dia_lista_todos_os_marcos_com_os_dois_destinos(pessoa, cenario):
     for edital in (a, b, c):
         assert reverse("interface:detalhe", args=[edital.id]) in html
         assert f"{reverse('portal:selecao', args=[edital.id])}#cronograma-titulo" in html
-    em_curso = texto(html.split("Períodos em curso neste dia")[1])
-    assert "Período de análise" in em_curso
-    assert em_curso.count("Período de inscrições") == 2, "o de C começa neste dia: é marco"
+    abrangem = texto(html.split("Períodos que abrangem este dia")[1])
+    assert "Período de análise" in abrangem
+    assert abrangem.count("Período de inscrições") == 3, "o de C, que abre neste dia, também"
+    assert "abre neste dia" in abrangem
     assert "Voltar a" in html
 
 
@@ -351,3 +352,49 @@ def test_o_marco_de_edital_encerrado_se_diz_encerrado():
     html = texto(render_to_string("interface/_agenda_marco.html", {"marco": marco}))
     assert "Edital encerrado" in html
     assert "data passada" in html
+
+
+# ---- o indicador de períodos (FR-2669 a FR-2671, SC-959, revisão de 29/10) ----------------------
+
+
+def periodos_da_celula(td):
+    achado = re.search(r'class="periodos-do-dia">.*?</span>(\d+)<', td, re.S)
+    return int(achado.group(1)) if achado else 0
+
+
+def test_o_dia_sem_marco_mostra_os_periodos_que_o_abrangem(pessoa, cenario):
+    """No sexto dia, nada abre nem encerra; as inscrições de A e de B o abrangem."""
+    html = principal(pessoa.get(URL, {"mes": mes_de(em(6))}))
+    seis = celula(html, em(6).date())
+    assert 'class="quantidade-do-dia"' not in seis, "o período não vira marco no meio"
+    assert periodos_da_celula(seis) == 2
+    assert "2 períodos previstos abrangem o dia" in texto(seis)
+    assert "legenda-da-grade" in html
+
+
+def test_o_indicador_e_o_numero_de_periodos_do_dia_consultado(pessoa, cenario):
+    """`SC-959`: a célula e o dia leem a mesma pertinência."""
+    mes = mes_de(em(3))
+    html = principal(pessoa.get(URL, {"mes": mes}))
+    for dias in (1, 3, 6, 11):
+        if mes_de(em(dias)) != mes:
+            continue
+        dia = em(dias).date()
+        no_dia = principal(pessoa.get(URL, {"dia": dia.isoformat()}))
+        lista = no_dia.split("Períodos que abrangem este dia")[1].split("</section>")[0]
+        assert periodos_da_celula(celula(html, dia)) == lista.count("<li>"), dia
+
+
+def test_o_indicador_obedece_aos_filtros(pessoa, cenario):
+    a, _, _ = cenario
+    html = principal(pessoa.get(URL, {"mes": mes_de(em(6)), "edital": str(a.id)}))
+    assert periodos_da_celula(celula(html, em(6).date())) == 1
+
+
+def test_em_curso_nao_e_dito_de_um_dia_que_nao_e_hoje(pessoa, cenario):
+    """`FR-2671`: o dia consultado e a grade dizem *abrange*."""
+    dia = principal(pessoa.get(URL, {"dia": em(6).date().isoformat()}))
+    secao = dia.split('class="dia-consultado"')[1].split("</section>")[0]
+    assert "em curso" not in texto(secao).lower()
+    grade = principal(pessoa.get(URL, {"mes": mes_de(em(40))}))
+    assert "em curso" not in texto(grade.split("<table")[1].split("</table>")[0]).lower()

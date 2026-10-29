@@ -43,7 +43,9 @@ marco em dia intermediário. Marco cancelado não conta.
 
 ### `Periodo`
 
-Um intervalo, dito uma vez (D-002): `evento_id`, `nome`, `edital`, `inicio`, `fim` (anulável),
+Um intervalo, dito uma vez (D-002). `abrange(dia)`: do dia do início ao do término, inclusive; sem
+término, do início em diante — a mesma pertinência para o indicador da célula e para o dia
+consultado (R-013). `evento_id`, `nome`, `edital`, `inicio`, `fim` (anulável),
 `dia_inicio`, `dia_fim` (anulável), `intervalo`, `especie`, `fase` (a do Evento, pela régua com o
 período de inscrições — FR-2617), `restante` (dias até o encerramento previsto, quando em curso e
 com término). **Período cancelado não entra** nas listas de períodos nem no bloco *em curso*: ele
@@ -58,6 +60,8 @@ e o dia (`dia`).
 ### `DiaDaGrade`
 
 Uma célula: `data` (anulável — célula de fora do mês), `quantidade` (marcos não cancelados),
+`periodos` (quantos períodos não cancelados o abrangem, FR-2669 — contagem derivada, fora de
+`quantidade`, de `destaque` e da síntese),
 `nomeados` (até dois marcos não cancelados), `mais` (`quantidade − len(nomeados)`), `destaque`
 (`quantidade >= 2`, D-010), `hoje`.
 
@@ -84,7 +88,7 @@ os Editais considerados com algum Evento, ordenados por ano e número.
 
 O que a página recebe: `visao`, `janela`, `filtros`, `marcos` (da janela, ordenados por instante,
 Edital e nome), `por_dia` (`[(data, [Marco])]`), `periodos` (que tocam a janela), `em_curso`
-(períodos em curso no instante da leitura), `periodos_no_dia` (no dia consultado), `semanas`
+(períodos em curso no instante da leitura), `periodos_no_dia` (os que abrangem o dia consultado, com a marca de abertura ou encerramento nele), `semanas`
 (no mês), `sintese`, `avisos`, `proximo` (o primeiro marco não cancelado depois da janela, quando
 a janela está vazia), `tem_editais` (algum Edital considerado), `lido_em`, e os endereços de
 navegação (mês anterior, seguinte, corrente; abas; limpar filtros).

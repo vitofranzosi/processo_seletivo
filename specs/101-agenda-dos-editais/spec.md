@@ -17,6 +17,11 @@ com um ajuste: o **mês** é a visualização inicial, e a lista cronológica é
 > 29/10/2026 em `specs/` de todas as worktrees desta máquina, na `main` e nos PRs abertos: `FR-2608`,
 > `SC-947`, `UX-222`. **Nenhum `UX-` é aberto aqui.** As decisões reiniciam em `D-001`.
 >
+> **Revisão de 29/10/2026 (indicador de períodos).** Os requisitos acrescentados abrem em **FR-2669**
+> e **SC-959**: no intervalo, a `102` (em outra worktree, sem merge) tomou os seguintes ao teto
+> desta, até o requisito funcional seiscentos e sessenta e oito da faixa dos dois mil e o critério
+> novecentos e cinquenta e oito.
+>
 > **Como esta spec cita outras.** Requisito de outra feature, pelo identificador e pela feature ("a
 > FR-766 da `047`"); decisão de outra feature, pelo assunto e pela feature, porque `D-` aqui é só
 > desta.
@@ -90,11 +95,28 @@ conservadora que o próprio sistema já aplica, registradas aqui para revisão.
 - Q: Um Evento que é período de inscrições e também está ligado a uma Etapa cai em qual espécie do
   filtro? → A: Em *período de inscrições*; a marca do período é a mais específica, e cada Evento cai
   em uma espécie só.
-- Q: No dia consultado, o que são os "períodos em curso naquele dia"? → A: Os períodos cujo intervalo
+- Q: No dia consultado, o que são os "períodos em curso naquele dia"? → A: *(Substituída pela revisão de
+  29/10 abaixo: o dia consultado lista todos os períodos que o abrangem.)* Os períodos cujo intervalo
   contém o dia sem começar nem terminar nele — os que começam ou terminam nele já são marcos do dia.
 - Q: Quais Editais recebem o aviso de Retificação a vigorar? → A: Todo Edital considerado pela página
   (depois do filtro de Edital) que tem Retificação publicada com vigência futura, tenha ou não marco
   na janela — a Retificação pode trazer um marco para dentro dela.
+
+### Session 2026-10-29 (revisão do indicador de períodos)
+
+Decisão do usuário, depois de ver a grade: o período que atravessa o mês inteiro não deixava marca
+nenhuma nela, e a sobreposição de períodos ficava invisível.
+
+- Q: Como a grade mostra que há períodos abrangendo um dia sem abertura nem encerramento nele? → A:
+  Com um indicador da **quantidade de períodos** que abrangem o dia, separado da quantidade de
+  marcos. São duas dimensões independentes: o período não vira marco, não soma na contagem de marcos
+  nem no destaque, e continua sendo um intervalo só (`D-002`). Linha do tempo horizontal: não nesta
+  etapa.
+- Q: O dia consultado lista quais períodos? → A: Todos os que **abrangem** o dia — inclusive o que
+  abre ou encerra nele —, com o Edital e o intervalo completo; a quantidade listada é a do indicador.
+- Q: Como dizer o tempo de um período sem confundir com o agora? → A: *Em curso* só para o que corre
+  no instante da leitura; para um dia qualquer, *abrange*. O período, na lista, é *ainda não
+  começou*, *em curso hoje, pelo cronograma* ou *já passou*.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -141,7 +163,7 @@ cinco aparecem, cada um com os dois links.
 1. **Given** um dia com cinco marcos, **When** a pessoa escolhe o dia, **Then** os cinco aparecem,
    com a descrição publicada, o Edital, o Processo e os links *Edital* e *Cronograma publicado*.
 2. **Given** um dia sem marco mas dentro de um período, **When** a pessoa escolhe o dia, **Then** a
-   página diz que não há marco naquele dia e lista o período em curso nele.
+   página diz que não há marco naquele dia e lista o período que o abrange.
 3. **Given** um dia consultado, **When** a pessoa volta ao mês, **Then** volta ao mesmo mês, com os
    mesmos filtros.
 
@@ -223,11 +245,15 @@ cada caso.
 - **Evento às 23:30 de 31/12 na zona institucional**: cai em 31/12, na grade de dezembro, e não em
   01/01 — o dia é sempre o da zona, nunca o de UTC.
 - **Período que atravessa o mês**: começa em outubro e termina em dezembro. Em novembro ele não tem
-  marco nenhum na grade, e aparece na lista de períodos do mês.
+  marco nenhum na grade, aparece na lista de períodos do mês e conta **um** no indicador de períodos
+  de todo dia de novembro.
+- **Períodos sobrepostos**: cinco períodos de inscrição abertos ao mesmo tempo contam cinco no
+  indicador de cada dia em que se sobrepõem, e nenhum marco nos dias do meio.
 - **Período que começa e termina no mesmo dia** (prova das 8h às 12h): é marco pontual, com as duas
   horas, e não período.
 - **Período de inscrições sem término declarado**: tem só a abertura, e continua no bloco *em curso*
-  como *sem término declarado*. Nunca ganha encerramento inventado.
+  como *sem término declarado*. Nunca ganha encerramento inventado. No indicador, abrange todo dia a
+  partir do início.
 - **Evento cancelado**: identificado na lista do dia e na de Próximos marcos; fora da grade e de todo
   número. Um dia cujos únicos marcos são cancelados não tem contagem na grade.
 - **Edital encerrado com Evento ainda por vir**: o Evento não aparece. O que a instituição encerrou
@@ -286,7 +312,8 @@ cada caso.
   término, é o Edital que declarou só a data: o marco MUST NOT inventar hora para ele.
 - **FR-2619**: Evento com término em outro dia é **período**, e MUST produzir dois marcos — a
   **abertura**, no dia do início, e o **encerramento**, no dia do término —, ambos com o intervalo
-  escrito. O período MUST NOT ocupar os dias intermediários.
+  escrito. O período MUST NOT produzir marco nos dias intermediários: nesses dias ele só é contado pelo
+  indicador de períodos (FR-2669), que é agregação derivada, e não marco.
 - **FR-2620**: Período sem término declarado MUST produzir só a abertura, e MUST NOT receber
   encerramento presumido.
 - **FR-2621**: Evento cancelado MUST aparecer na relação do dia e em Próximos marcos identificado como
@@ -307,6 +334,16 @@ cada caso.
   acesso ao dia. Dia com **dois ou mais** marcos MUST ser destacado, e o destaque MUST NOT depender só
   de cor: a contagem fica escrita, em negrito, com borda. O acesso ao dia MUST dizer a data por
   extenso a quem usa leitor de tela. O dia de hoje MUST ser identificado.
+- **FR-2669**: Cada dia do mês MUST mostrar, separado da quantidade de marcos, quantos **períodos
+  previstos** distintos o abrangem — do dia da abertura ao do encerramento, inclusive, na zona
+  institucional —, contando cada período uma vez. Período cancelado MUST NOT ser contado; período sem
+  término abrange todo dia a partir do início; de Edital encerrado contam só os períodos que já
+  passaram (FR-2615). O indicador MUST NOT entrar na quantidade de marcos, no destaque (FR-2625) nem
+  na síntese, e MUST obedecer aos filtros da página.
+- **FR-2670**: O indicador MUST se distinguir da quantidade de marcos por forma e por texto, e não só
+  por cor; MUST ser compacto o bastante para caber na célula a 375 px; MUST dizer por extenso, a quem
+  usa leitor de tela, quantos períodos abrangem o dia; e a página MUST ter uma legenda das duas
+  dimensões junto da grade.
 - **FR-2626**: Em tela larga, cada dia MUST nomear até **dois** marcos — os dois primeiros na ordem do
   dia (FR-2632) —, cada nome em até duas linhas, com o número do Edital antes do nome e cortado com
   reticências quando não cabe, e dizer quantos mais há. Numa linha só, a prova visual de 29/10 mostrou
@@ -319,8 +356,10 @@ cada caso.
 #### O dia
 
 - **FR-2628**: Escolher um dia MUST mostrar todos os marcos daquele dia — inclusive os cancelados,
-  identificados — e, à parte, os períodos em curso naquele dia: os que contêm o dia sem começar nem
-  terminar nele. Os marcos seguem a ordem do dia (FR-2632), e o título do dia diz quantos são; o dia
+  identificados — e, à parte, os **períodos que abrangem o dia**, inclusive os que abrem ou encerram
+  nele, cada um com o Edital e o intervalo completo, e dito *abre neste dia* ou *encerra neste dia*
+  quando for o caso. A quantidade de períodos listados MUST ser a do indicador daquele dia
+  (FR-2669). Os marcos seguem a ordem do dia (FR-2632), e o título do dia diz quantos são; o dia
   não tem síntese. A página MUST oferecer a volta ao mês daquele dia.
 - **FR-2629**: Cada marco listado — no dia ou em Próximos marcos — MUST dizer a data e a hora, a
   descrição publicada, o Edital (número e ano), o Processo Seletivo, o local quando declarado, se é
@@ -373,6 +412,10 @@ cada caso.
   recurso — podem diferir das datas previstas. Ela MUST NOT exibir prazo efetivamente aberto por ato.
 - **FR-2642**: Marco cuja data prevista passou MUST ser dito como *data passada*, e MUST NOT ser dito
   concluído, cumprido, realizado ou publicado.
+- **FR-2671**: *Em curso* MUST ser dito só do que corre no instante da leitura — o bloco de Próximos
+  marcos e a fase de hoje —, e nunca de um dia passado ou futuro: o dia consultado e o indicador dizem
+  que o período **abrange** o dia. Na lista de períodos, a fase MUST ser *ainda não começou*, *em
+  curso hoje, pelo cronograma* ou *já passou*.
 
 #### Forma
 
@@ -395,6 +438,8 @@ cada caso.
   fase e a marca de cancelado.
 - **Período** (derivado): um Evento com início e término em dias diferentes, ou o período de
   inscrições sem término; dito uma vez, como intervalo.
+- **Indicador de períodos do dia** (derivado): quantos períodos distintos abrangem um dia. É uma
+  contagem sobre os períodos, e não um marco nem um Evento.
 - **Janela**: o mês, os próximos 7 ou 30 dias, ou um dia — o recorte do tempo de cada visualização.
 - **Síntese**: os quatro números de uma janela, calculados dos marcos exibidos.
 - **Aviso de Retificação a vigorar**: um Edital da agenda e a data em que a Retificação publicada
@@ -420,6 +465,9 @@ Nenhuma entidade persistida é criada.
   futura não se reflete antes dela — em 100% dos cenários de teste.
 - **SC-953**: A página passa nos guardiões de acessibilidade, contraste, política de conteúdo e
   larguras do projeto, e não tem rolagem horizontal a 375 px no mês, no dia e em Próximos marcos.
+- **SC-959**: Em todo mês testado — inclusive com período que atravessa o mês inteiro, períodos
+  sobrepostos e período sem término —, o indicador de cada dia é igual ao número de períodos listados
+  no dia consultado, e a soma das quantidades de marcos é a mesma com e sem o indicador.
 
 ## Assumptions
 
@@ -449,6 +497,14 @@ dezenas de linhas iguais, o dia que concentra marcos de verdade. Ele é dito uma
 na lista de períodos do mês, no bloco *em curso* e no dia consultado. O término no mesmo dia do
 início não faz período: é a régua que o relatório do Edital (`099`) já usa.
 
+**A duração aparece por agregação, e não por repetição** (revisão do usuário, 29/10/2026). Só com
+marcos, o período que atravessa o mês inteiro não deixava rastro na grade, e cinco inscrições abertas
+ao mesmo tempo pareciam um mês vazio. Cada dia ganha, por isso, um indicador de **quantos períodos o
+abrangem** (FR-2669). São duas dimensões que não se somam: marco é ponto previsto, e conta na
+quantidade e no destaque; o indicador é contagem derivada dos intervalos, e não conta em nada além
+de si mesmo. O período continua sendo um intervalo só — nenhum item é criado por dia. Barras
+atravessando as semanas continuam recusadas, e a linha do tempo horizontal ficou para outra etapa.
+
 ### D-003 — O mês é a visualização inicial
 
 O estudo propunha a lista como padrão; o usuário, em 29/10/2026, inverteu: a pergunta original é a
@@ -474,7 +530,8 @@ errada.
 
 A régua de fase chama de *concluído* o Evento cuja data passou. Na agenda, essa fase é dita **data
 passada**: a agenda lê o cronograma, e não os atos, e um *Resultado preliminar* com data passada não
-prova que o resultado saiu. O mesmo vale para *em curso*, dito sempre *em curso pelo cronograma*. O prazo **efetivamente** aberto por ato (o recursal, contado da
+prova que o resultado saiu. O mesmo vale para *em curso*, dito sempre *em curso pelo cronograma* e só
+do que corre no instante da leitura (FR-2671): de um dia passado ou futuro, o período o *abrange*. O prazo **efetivamente** aberto por ato (o recursal, contado da
 publicação) é outra fonte, fica fora desta entrega, e a página diz que ele pode diferir.
 
 ### D-007 — Só filtros que o dado sustenta

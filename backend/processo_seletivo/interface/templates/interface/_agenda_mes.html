@@ -4,6 +4,10 @@ O mês (101, FR-2623 a FR-2627). A célula conta os marcos e leva ao dia; o per�
 meio — ele aparece pela abertura e pelo encerramento, e é dito como intervalo na lista abaixo da grade
 (D-002). A contagem é escrita, e por isso o destaque não depende de cor (FR-2625). O número do
 Edital vem antes do nome: o corte com reticências come o fim, e a origem não pode sumir.
+
+Duas dimensões por dia, que não se somam (revisão de 29/10, FR-2669): os marcos, que contam e
+destacam, e os períodos que abrangem o dia — uma contagem derivada dos intervalos, com a forma de uma
+barra, que não cria item por dia e não pesa no destaque.
 {% endcomment %}
 <h2 class="titulo-do-mes">{{ leitura.janela.rotulo|capfirst }}</h2>
 <nav class="navegacao-do-mes" aria-label="Outros meses">
@@ -28,7 +32,7 @@ Edital vem antes do nome: o corte com reticências come o fim, e a origem não p
       {% for dia in semana %}
       {% if dia.data %}
       <td class="dia-do-mes{% if dia.destaque %} varios{% endif %}{% if dia.hoje %} hoje{% endif %}"{% if dia.hoje %} aria-current="date"{% endif %}>
-        <a class="acesso-ao-dia" href="{{ dia.endereco }}"><span class="numero-do-dia" aria-hidden="true">{{ dia.data.day }}</span><span class="oculto">{{ dia.por_extenso }}{% if dia.hoje %}, hoje{% endif %}{% if not dia.quantidade %}, sem marco{% endif %}</span>{% if dia.quantidade %}<span class="quantidade-do-dia">{{ dia.quantidade }}<span class="palavra-dos-marcos"> {{ dia.quantidade|plural:"marco,marcos" }}</span></span>{% endif %}</a>
+        <a class="acesso-ao-dia" href="{{ dia.endereco }}"><span class="numero-do-dia" aria-hidden="true">{{ dia.data.day }}</span><span class="oculto">{{ dia.por_extenso }}{% if dia.hoje %}, hoje{% endif %}{% if not dia.quantidade %}, sem marco{% endif %}</span>{% if dia.quantidade %}<span class="quantidade-do-dia">{{ dia.quantidade }}<span class="palavra-dos-marcos"> {{ dia.quantidade|plural:"marco,marcos" }}</span></span>{% endif %}{% if dia.periodos %}<span class="periodos-do-dia"><span class="barra-do-periodo" aria-hidden="true"></span>{{ dia.periodos }}<span class="palavra-dos-periodos"> {{ dia.periodos|plural:"período,períodos" }}</span><span class="oculto"> {{ dia.periodos|plural:"previsto abrange,previstos abrangem" }} o dia</span></span>{% endif %}</a>
         {% if dia.nomeados %}
         <ul class="nomes-do-dia">
           {% for marco in dia.nomeados %}<li><span class="edital-do-nome">{{ marco.edital.numero }}/{{ marco.edital.ano }}</span> {% if marco.tipo == "abertura" %}Abre · {% elif marco.tipo == "encerramento" %}Encerra · {% endif %}{{ marco.nome }}</li>{% endfor %}
@@ -45,6 +49,8 @@ Edital vem antes do nome: o corte com reticências come o fim, e a origem não p
   </tbody>
 </table>
 </div>
+<p class="legenda-da-grade"><span class="exemplo-de-marcos">2 marcos</span> marcos previstos no dia: Evento pontual, abertura ou encerramento de período.
+  <span class="exemplo-de-periodos"><span class="barra-do-periodo" aria-hidden="true"></span>3 períodos</span> períodos previstos que abrangem o dia, do primeiro ao último, sem contar como marco.</p>
 
 <section class="periodos-do-mes" aria-labelledby="titulo-dos-periodos">
   <h2 id="titulo-dos-periodos">Períodos previstos em {{ leitura.janela.rotulo }}</h2>

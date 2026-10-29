@@ -114,7 +114,7 @@ delas.
 
 ### Fase 0 — Pesquisa
 
-[research.md](research.md): R-001 a R-012. Sem `NEEDS CLARIFICATION` remanescente.
+[research.md](research.md): R-001 a R-014. Sem `NEEDS CLARIFICATION` remanescente.
 
 ### Fase 1 — Desenho
 
@@ -132,6 +132,10 @@ delas.
    de publicação e Retificação.
 4. View, rota, barra, templates e folha; testes de tela, de consultas e dos guardiões.
 5. Medição do custo do conteúdo inteiro; prova visual; rastreabilidade; README.
+6. Revisão de 29/10 (indicador de períodos, FR-2669 a FR-2671): a pertinência `Periodo.abrange`, a
+   contagem por célula em `semanas_do_mes` sobre os períodos já projetados (research R-013), o dia
+   consultado com todos os períodos que o abrangem, a forma do indicador (R-014) e o vocabulário
+   temporal. Nenhuma consulta nova.
 
 ## Riscos
 
