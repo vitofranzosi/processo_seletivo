@@ -28,6 +28,8 @@ def relacao_vigente(*, edital, perfil_id, marco_id, lista_id=None):
             lista_id=lista_id,
             sucessoras__isnull=True,
         )
+        # A versão viaja junto: a tela do sorteio lê o método que a relação comprometeu (102).
+        .select_related("versao")
         .order_by("-publicada_em")
         .first()
     )

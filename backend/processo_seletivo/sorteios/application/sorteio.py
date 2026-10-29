@@ -232,14 +232,42 @@ def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia, metodo):
         # leitura, e a garantia era contornável: bastava congelar depois de ver a extração na
         # televisão e registrá-la em seguida. E o limite inferior é o que a fonte de fato publica —
         # uma data sem horário vale como o início daquele dia, e não como um horário inventado.
+        #
+        # **E a recusa diz a saída** (102, FR-2662, FR-2663). Sem ela, quem a lia tentava suceder a
+        # relação, que congela ainda mais tarde diante da mesma extração; e quem lia "a partir de
+        # 00:00" concluía que a fonte informou um horário. A primeira frase é a de antes, intocada:
+        # o fuso dela é a lacuna 2 do achado de 29/10, e se corrige noutro PR.
         raise DomainError(
             "occurrence_precedes_freeze",
             "Não é possível afirmar que a ocorrência aconteceu depois do congelamento da relação: "
             f"a fonte a situa a partir de {ocorrencia.ocorrida_nao_antes_de:%d/%m/%Y %H:%M}, e a "
             f"relação foi congelada em {relacao.publicada_em:%d/%m/%Y %H:%M}. A semente é "
-            "posterior ao compromisso do universo, e não o contrário.",
+            "posterior ao compromisso do universo, e não o contrário."
+            + _a_saida_da_precedencia(ocorrencia.fonte),
             409,
         )
+
+
+def _a_saida_da_precedencia(fonte):
+    """O que acrescentar à recusa por precedência: a granularidade, quando é o caso, e a saída.
+
+    **A saída tem dois atos, e a ordem importa** (D-004). A relação congelada lê o método da versão
+    que ela cita, e não o vigente: retificar sem suceder deixa a relação exigindo a extração antiga,
+    e suceder sem retificar congela ainda mais tarde diante dela.
+    """
+    from processo_seletivo.sorteios.infrastructure.fontes import publica_so_a_data
+
+    granularidade = (
+        f" {fonte} publica só a data da extração, sem o horário: a data vale a partir de 00h00."
+        if publica_so_a_data(fonte)
+        else ""
+    )
+    return (
+        granularidade
+        + " Suceder a relação sem retificar não resolve: a relação nova seria congelada ainda "
+        "mais tarde. A saída é retificar o método para uma extração de dia posterior, publicar "
+        "relação nova sucedendo esta, e então observar a ocorrência nova."
+    )
 
 
 def _recusar_ato_ja_existente(edital, relacao, ocorrencia, anterior):

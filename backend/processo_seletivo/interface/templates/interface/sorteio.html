@@ -222,6 +222,20 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   <p class="aviso" role="status"><strong>Ainda não é possível publicar a relação.</strong>
     {{ inscricoes_em_curso.detail }}</p>
   {% endif %}
+  {% comment %}
+  **O congelamento que condena o sorteio, dito antes do botão** (102, FR-2659). Uma vez por marco,
+  porque o método é do marco, e fora do bloco do formulário: enquanto as inscrições correm o botão
+  some, e o aviso precisa aparecer assim mesmo — é quando ainda há tempo de retificar. O botão
+  continua disponível (D-005): a relação pode ter data no cronograma, e quem conduz decide sabendo.
+  {% endcomment %}
+  {% if congelar_agora_inviavel %}
+  <p class="aviso" role="status"><strong>Congelar a relação {% if congelar_agora_inviavel.inscricoes_correndo %}depois do fim das inscrições{% else %}hoje{% endif %} impede o sorteio com a extração declarada.</strong>
+    {{ congelar_agora_inviavel.fonte }} publica só a data da extração ({{ congelar_agora_inviavel.dia|date:"d/m/Y" }}),
+    e a data vale a partir de 00h00. Uma relação congelada {% if congelar_agora_inviavel.inscricoes_correndo %}depois do fim das inscrições{% else %}hoje{% endif %}
+    nunca será anterior a ela, e o sorteio será recusado. Antes de congelar,
+    {% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">retifique o método</a>{% else %}peça a quem elabora Retificações que retifique o método{% endif %}
+    para uma extração de dia posterior ao do congelamento. Congelar não se desfaz.</p>
+  {% endif %}
   {% for recorte in recortes %}
   <article class="recorte">
     <h3>{{ recorte.nome }}</h3>
@@ -290,6 +304,27 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       </table>
     </div>
 
+    {% if recorte.diagnostico_da_relacao %}
+    {% comment %}
+    **A relação que nunca sorteará com a extração dela** (102, FR-2660, FR-2661). O método lido é o
+    da versão que a relação cita, que é o que o sorteio lê, e não o vigente. Bloco próprio, antes
+    dos botões, e não um ramo da cadeia deles: esconder "Realizar o sorteio" não foi decidido.
+    {% endcomment %}
+    {% with d=recorte.diagnostico_da_relacao %}
+    {% if d.metodo_retificado %}
+    <p class="erro"><strong>O método já foi retificado, e esta relação continua comprometida com o anterior.</strong>
+      Uma relação congelada não lê o método vigente. Falta publicar relação nova, sucedendo esta, e
+      então observar a ocorrência nova.</p>
+    {% else %}
+    <p class="erro"><strong>Esta relação não pode ser sorteada com a extração que o método dela declara.</strong>
+      Ela foi congelada em {{ d.congelada_em|date:"d/m/Y" }} às {{ d.congelada_em|date:"H:i" }}, e {{ d.fonte }} situa a extração a
+      partir de 00h00 de {{ d.dia|date:"d/m/Y" }}. A saída tem três passos, nesta ordem: (1) retificar o
+      método para uma extração de dia posterior ao congelamento da relação nova; (2) publicar
+      relação nova, sucedendo esta; (3) observar a ocorrência nova e realizar o sorteio. Suceder a
+      relação sem retificar não resolve.</p>
+    {% endif %}
+    {% endwith %}
+    {% endif %}
     {% comment %}
     Um botão só, e ele publica. **Não existe**, aqui nem em superfície alguma: incluir participante,
     excluir participante, renumerar, campo de semente, simular, refazer (FR-002, FR-017, FR-030).

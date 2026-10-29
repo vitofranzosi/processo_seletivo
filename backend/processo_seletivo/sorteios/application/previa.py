@@ -46,6 +46,7 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     #
     # O rótulo do recorte sem lista passa a dizer o que ele é — o universo inteiro do Perfil —, e
     # cada modalidade carrega o código que o Edital publica.
+    agora = at or timezone.now()
     listas = [(None, "Todos os inscritos do recorte de vaga (sem lista de concorrência)")] + [
         (
             str(modalidade.get("id")),
@@ -54,6 +55,10 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
             else (modalidade.get("name") or ""),
         )
         for modalidade in perfil.get("competitionModalities") or []
+    ]
+    recortes = [
+        _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas, metodo)
+        for lista_id, nome in listas
     ]
     return {
         "perfil": perfil,
@@ -78,12 +83,17 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         # publicação da relação é recusada com o período correndo, e a tela oferecia o botão sem
         # dizer nada. É a mesma recusa, da mesma versão e da mesma função — `None` quando não há.
         "inscricoes_em_curso": recusa_por_inscricoes_em_curso(
-            versao.content, at or timezone.now(), consequencia=CONGELAR_A_RELACAO
+            versao.content, agora, consequencia=CONGELAR_A_RELACAO
         ),
-        "recortes": [
-            _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas)
-            for lista_id, nome in listas
-        ],
+        "recortes": recortes,
+        # **O congelamento que condena o sorteio, dito antes do ato** (102, FR-2659). Congelar é
+        # append-only, e quem congelava no dia da extração só descobria na recusa do sorteio, sem
+        # caminho de volta. O botão continua (D-005): a relação pode ter data no cronograma.
+        "congelar_agora_inviavel": (
+            _congelar_agora_inviavel(versao.content, metodo, proxima_referencia, agora)
+            if any(not recorte["congelada"] for recorte in recortes)
+            else None
+        ),
     }
 
 
@@ -177,7 +187,75 @@ def _causa_da_recusa(recusa, metodo):
     }
 
 
-def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas):
+def _congelar_agora_inviavel(conteudo, metodo, proxima_referencia, agora):
+    """Fonte e dia da extração quando congelar a partir de agora a condena — ou `None` (102).
+
+    **O congelamento mais cedo não é agora quando as inscrições correm** (FR-2651): o congelamento é
+    recusado até o fim delas, e comparar só com agora deixava sem aviso justamente o Edital que uma
+    Retificação de prorrogação levou ao dia da extração.
+
+    **Só a ocorrência declarada** (FR-2659). A substituta não tem instante publicado, e prever o dia
+    dela seria inventar o que o Edital não diz.
+    """
+    from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes
+    from processo_seletivo.sorteios.domain import viabilidade
+    from processo_seletivo.sorteios.infrastructure.fontes import publica_so_a_data
+
+    if not metodo or proxima_referencia != str(metodo.get("occurrence") or ""):
+        return None
+    fonte = metodo.get("source")
+    limite = viabilidade.limite_previsto(
+        metodo.get("occurrenceAt"), so_a_data=publica_so_a_data(fonte)
+    )
+    periodo = periodo_de_inscricoes(conteudo, agora)
+    fim = None if periodo.cancelado else periodo.fim
+    mais_cedo = viabilidade.congelamento_mais_cedo(agora=agora, fim_das_inscricoes=fim)
+    if not viabilidade.inviavel(limite, mais_cedo):
+        return None
+    return {"fonte": fonte, "dia": limite, "inscricoes_correndo": mais_cedo > agora}
+
+
+def _diagnostico_da_relacao(vigente, sorteio, metodo_vigente):
+    """Por que esta relação congelada nunca sorteará com a extração dela — ou `None` (102).
+
+    **O método é o da versão que a relação cita, e não o vigente** (FR-2660, FR-2661, R-006). É o que
+    o sorteio lê: a relação comprometeu um método ao congelar, e uma Retificação posterior não o
+    muda. Ler o vigente aqui repetiria, na explicação, o engano que a tela já comete com a
+    ocorrência da vez — e diria "viável" a uma relação que a constituição vai recusar.
+    """
+    from processo_seletivo.sorteios.domain import viabilidade
+    from processo_seletivo.sorteios.infrastructure.fontes import publica_so_a_data
+    from processo_seletivo.sorteios.models import OcorrenciaDaFonte
+
+    if vigente is None or (sorteio is not None and sorteio.relacao_id == vigente.id):
+        return None
+    comprometido = dominio_do_metodo.metodo_declarado(
+        vigente.versao.content, perfil_id=vigente.perfil_id, marco_id=vigente.marco_id
+    )
+    if not comprometido:
+        return None
+    fonte = comprometido.get("source")
+    declarada = str(comprometido.get("occurrence") or "")
+    if OcorrenciaDaFonte.objects.filter(
+        fonte=fonte, referencia=declarada, indisponivel=True
+    ).exists():
+        # A substituta não tem instante publicado (FR-2660): a recusa, se vier, é a de sempre.
+        return None
+    limite = viabilidade.limite_previsto(
+        comprometido.get("occurrenceAt"), so_a_data=publica_so_a_data(fonte)
+    )
+    if not viabilidade.inviavel(limite, vigente.publicada_em):
+        return None
+    return {
+        "fonte": fonte,
+        "dia": limite,
+        "congelada_em": vigente.publicada_em,
+        "metodo_retificado": bool(metodo_vigente)
+        and dominio_do_metodo.resumo_do_metodo(metodo_vigente) != vigente.metodo_hash,
+    }
+
+
+def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas, metodo=None):
     vigente = relacao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
@@ -212,6 +290,7 @@ def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitada
         "relacao": vigente,
         "congelada": vigente is not None,
         "sorteio": sorteio,
+        "diagnostico_da_relacao": _diagnostico_da_relacao(vigente, sorteio, metodo),
     }
 
 
