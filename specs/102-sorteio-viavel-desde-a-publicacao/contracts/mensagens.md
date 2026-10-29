@@ -29,8 +29,9 @@ sentença trocada por:
 
 ## 3. Aviso antes de congelar (FR-2659)
 
-Na tela do sorteio, dentro do recorte, antes de "Publicar e congelar a relação", com a classe
-`aviso` e `role="status"`:
+Na tela do sorteio, uma vez por marco, antes dos botões "Publicar e congelar a relação" dos
+recortes, com a classe `aviso` e `role="status"`. Enquanto as inscrições correm, ele aparece logo
+depois do aviso de inscrições em curso, e "hoje" vira "depois do fim das inscrições" (FR-2651):
 
 > **Congelar a relação hoje impede o sorteio com a extração declarada.** {fonte} publica só a data da
 > extração ({dia da extração}), e a data vale a partir de 00h00. Uma relação congelada hoje nunca

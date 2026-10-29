@@ -36,8 +36,8 @@ fonte declarada em `drawMethod/source`.
 | Onde se pergunta | Congelamento mais cedo | Método conferido | Efeito |
 |---|---|---|---|
 | Publicação do Edital | fim do período de inscrições da versão conferida (R-003) | comum do Edital e próprio de cada marco | achado impeditivo |
-| Retificação | o mesmo, na versão que vai vigorar | os mesmos, menos os marcos já sorteados em todos os recortes (R-005) | advertência |
-| Tela do sorteio, recorte não congelado | o instante em que a tela é montada | o vigente, que a relação comprometeria | aviso, e o botão continua |
+| Retificação | o mesmo, na versão que vai vigorar | os mesmos, menos os marcos já sorteados em todos os recortes; o comum, enquanto algum marco governado por ele não estiver assim (R-005) | advertência |
+| Tela do sorteio, recorte não congelado | o mais tarde entre o instante em que a tela é montada e o fim das inscrições da versão vigente | o vigente, que a relação comprometeria | aviso uma vez por marco, também com as inscrições correndo, e o botão continua |
 | Tela do sorteio, recorte congelado | `publicada_em` da relação | o da versão que a relação cita | diagnóstico e saída em três passos |
 | Recusa `occurrence_precedes_freeze` | `publicada_em` da relação (comparação inalterada, FR-2664) | o comprometido | frases acrescentadas à mensagem |
 

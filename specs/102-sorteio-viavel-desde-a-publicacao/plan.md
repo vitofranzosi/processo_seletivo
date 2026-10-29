@@ -91,6 +91,8 @@ specs/102-sorteio-viavel-desde-a-publicacao/
 ├── contracts/
 │   └── mensagens.md        # as cinco frases e onde não aparece nada
 ├── checklists/requirements.md
+├── roteiro-de-compreensao.md  # na implementação (SC-958)
+├── verificacao.md          # na implementação (SC-959)
 ├── rastreabilidade.md      # na implementação
 └── tasks.md                # /speckit-tasks
 ```
@@ -123,6 +125,8 @@ backend/tests/
 ├── integration/sorteios/test_recusa_diz_a_saida.py       # FR-2662–2664, comparação inalterada
 ├── integration/publicacoes/test_retificacao_extracao_inviavel.py  # advertência, marco sorteado
 ├── integration/editais/test_edital_72.py                 # SC-955
+├── integration/sorteios/test_demonstracao_so_a_data.py   # FR-2665, a fonte nova ponta a ponta
+├── interface/test_revisao_extracao_inviavel.py           # FR-2654, o achado na revisão
 └── interface/test_sorteio_extracao_inviavel.py           # FR-2659–2661, botão disponível, CSP
 ```
 

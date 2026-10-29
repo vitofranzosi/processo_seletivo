@@ -75,6 +75,9 @@ cujo sorteio já foi constituído em todos os recortes, com padrão vazio. Só `
 passa, a partir de um seletor novo em `sorteios/application/selectors.py`. Esse seletor deriva os
 recortes de cada marco por `recortes_do_perfil` e procura um `Sorteio` sem sucessor em cada um.
 
+O método comum do Edital é excluído só quando **todos** os marcos que ele governa (por
+`marcos.metodo_que_governa`) estão no conjunto (FR-2656).
+
 **Rationale**: a validação é pura sobre o snapshot, e é assim que a topologia de referência já chega
 a ela (`topologia`, `054`). Com o padrão vazio, o erro cai para o lado que acusa, a mesma escolha que
 a docstring de `validate_for_publication` registra para o ato.
@@ -88,8 +91,11 @@ recorte que ainda falta sortear.
 **Decision**: `sorteios/application/previa.py::recortes_do_marco`, que já monta o método vigente, o
 `ocorre_em` e a recusa de inscrições em curso, passa a devolver:
 
-- para o marco, um diagnóstico de congelamento agora, que vale quando a fonte do método vigente
-  publica só a data e o limite previsto não é posterior a `at`;
+- para o marco, um diagnóstico de congelamento, que vale quando a fonte do método vigente publica só
+  a data e o limite previsto não é posterior ao congelamento mais cedo possível. Esse instante é o
+  mais tarde entre `at` e o fim do período de inscrições lido por `periodo_de_inscricoes` (FR-2651).
+  Comparar só com `at` deixaria sem aviso o Edital com as inscrições correndo até o dia da extração,
+  que é justamente o que uma Retificação de prorrogação produz;
 - para cada recorte congelado, um diagnóstico da relação. Ele usa o método **da versão que a relação
   cita** (`relacao.versao.content`) e o compara com o `publicada_em` dela. Diz também se o método
   vigente difere do comprometido (resumo diferente de `relacao.metodo_hash`), que é o caso da

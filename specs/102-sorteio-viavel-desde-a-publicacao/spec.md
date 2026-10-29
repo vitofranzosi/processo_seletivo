@@ -259,6 +259,9 @@ com inscrições encerradas (FR-346 da `028`).
 - **O fim das inscrições às 23h59 e a extração no dia seguinte.** Ainda é viável, desde que o
   congelamento aconteça antes da meia-noite. A conferência de publicação não acusa (FR-2651). O aviso
   da tela do sorteio cobre quem deixar para congelar no dia seguinte (FR-2659).
+- **As inscrições ainda correm e terminam no dia da extração.** Esse Edital só pode ter chegado aí
+  por Retificação ou antes desta feature. O congelamento mais cedo é o fim das inscrições, e não a
+  hora atual: o aviso aparece já enquanto as inscrições correm (FR-2651, FR-2659).
 - **O dia é o do fuso institucional.** `occurrenceAt` declarado com outro deslocamento é convertido
   para o fuso institucional antes de se tomar o dia, que é como a fonte real interpreta a data dela
   (FR-2650).
@@ -295,20 +298,24 @@ com inscrições encerradas (FR-346 da `028`).
   só a data.
 - **FR-2649**: O adaptador de uma fonte declarada como "só a data" MUST continuar a devolver o início
   do dia publicado como limite inferior da ocorrência. Uma fonte declarada como "data e hora" MUST
-  devolver o horário publicado. A declaração da FR-2647 e o comportamento do adaptador MUST ser
-  conferidos um contra o outro por teste.
+  devolver um instante que não é, por construção, o início do dia: o horário que a fonte publica, ou,
+  na fonte de demonstração atual, o instante corrente. A declaração da FR-2647 e o comportamento do
+  adaptador MUST ser conferidos um contra o outro por teste.
 
 #### O limite previsto da ocorrência
 
 - **FR-2650**: O **limite previsto** da ocorrência declarada, numa fonte que publica só a data, é
   00h00, no fuso institucional, do dia de `occurrenceAt` tomado nesse fuso. É o instante mais cedo em
-  que a fonte vai situá-la. Uma regra só MUST calcular esse limite, e a conferência de publicação, a
-  tela do sorteio e a recusa MUST usá-la. Para fonte que publica a data e a hora, a regra não produz
-  limite previsto (FR-2657).
+  que a fonte vai situá-la. Uma regra só MUST calcular esse limite, e a conferência de publicação e
+  de Retificação e a tela do sorteio MUST usá-la. A recusa não usa o limite previsto: ela compara o
+  limite que a fonte de fato devolveu (FR-2664), e desta feature lê só a granularidade (FR-2663). Para
+  fonte que publica a data e a hora, a regra não produz limite previsto (FR-2657).
 - **FR-2651**: Uma extração declarada é **inviável** quando o limite previsto não é posterior ao
   instante mais cedo em que a relação pode ser congelada. Na publicação e na Retificação, esse
-  instante é o fim do período de inscrições da versão conferida. Na tela do sorteio, é o momento em
-  que se congela.
+  instante é o fim do período de inscrições da versão conferida. Na tela do sorteio, para recorte
+  ainda não congelado, é o mais tarde entre o instante atual e o fim do período de inscrições da
+  versão vigente: enquanto as inscrições correm, o congelamento não pode acontecer antes do fim. Para
+  relação já congelada, é o `publicada_em` dela.
 
 #### Na publicação e na Retificação
 
@@ -319,17 +326,20 @@ com inscrições encerradas (FR-346 da `028`).
 - **FR-2653**: O achado MUST nomear o marco (ou dizer "método comum a este Edital"), a fonte, o dia
   da extração declarada e o fim das inscrições, com instantes por extenso no fuso institucional. MUST
   dizer o que mudar: uma extração de dia posterior ao fim das inscrições, ou um fim de inscrições
-  anterior ao dia da extração. Para fonte que publica só a data, MUST dizer que ela não publica o
-  horário e que a data vale a partir de 00h00.
+  anterior ao dia da extração. MUST dizer que a fonte não publica o horário e que a data vale a partir
+  de 00h00: todo método conferido é de fonte que publica só a data (FR-2657).
 - **FR-2654**: O achado MUST aparecer onde a revisão da composição já mostra os achados de
   publicação, apontando para a etapa em que o método é declarado. Esta feature MUST NOT criar tela
   nova.
-- **FR-2655**: O achado MUST NOT aparecer quando não há período de inscrições designado, quando o
-  período não declara término, quando o período está cancelado ou quando o método já tem achado de
-  forma, de fonte ou de instante.
+- **FR-2655**: O achado MUST NOT aparecer quando não há período de inscrições designado, quando mais
+  de um Evento está marcado como período de inscrições (o achado de ambiguidade é quem responde),
+  quando o período não declara término, quando o período está cancelado ou quando o método já tem
+  achado de forma, de fonte ou de instante.
 - **FR-2656**: Na Retificação, o achado MUST ser advertência e nunca impeditivo. A Retificação é a
   saída do Edital que já está condenado. MUST NOT aparecer para um marco que já tenha sorteio
-  constituído em todos os recortes.
+  constituído em todos os recortes. Para o método comum do Edital, MUST aparecer enquanto houver ao
+  menos um marco governado por ele sem sorteio constituído em todos os recortes, e MUST NOT aparecer
+  quando todos os marcos que ele governa já estiverem assim.
 - **FR-2657**: A conferência de publicação e de Retificação, o aviso antes do congelamento
   (FR-2659) e o diagnóstico da relação congelada (FR-2660, FR-2661) MUST valer só para método cuja
   fonte publica só a data. Para fonte que publica a data e a hora, nenhum deles aparece (D-006).
@@ -339,15 +349,18 @@ com inscrições encerradas (FR-346 da `028`).
 - **FR-2658**: Ao montar a tela do sorteio, a viabilidade de um recorte ainda não congelado MUST ser
   calculada a partir do método que a relação comprometeria se fosse congelada agora, que é o da
   versão vigente.
-- **FR-2659**: Quando a extração declarada for inviável para um congelamento feito agora (FR-2651), a
-  tela MUST mostrar, antes do botão "Publicar e congelar a relação", um aviso com o diagnóstico e a
-  saída: retificar o método para uma extração de dia posterior ao do congelamento, e só então
-  congelar. O botão MUST continuar disponível, e o congelamento MUST NOT ser recusado por esta regra
+- **FR-2659**: Quando a extração declarada for inviável para o congelamento mais cedo possível na tela
+  (FR-2651), a tela MUST mostrar um aviso com o diagnóstico e a saída: retificar o método para uma
+  extração de dia posterior ao do congelamento, e só então congelar. O aviso aparece uma vez por
+  marco, porque o método é do marco, antes dos botões "Publicar e congelar a relação" dos recortes
+  ainda não congelados. Enquanto as inscrições correm, ele aparece junto do aviso de inscrições em
+  curso. O botão MUST continuar disponível, e o congelamento MUST NOT ser recusado por esta regra
   (D-005). O aviso MUST NOT aparecer para a ocorrência substituta, que não tem instante declarado.
 - **FR-2660**: Para uma relação já congelada cuja extração declarada é inviável (limite previsto não
   posterior ao congelamento), a tela MUST mostrar, antes de "Realizar o sorteio", que esta relação
   não sorteia com aquela extração. MUST mostrar também a saída em três passos: retificar o método,
-  publicar relação nova sucedendo a atual, observar a ocorrência nova.
+  publicar relação nova sucedendo a atual, observar a ocorrência nova. Como na FR-2659, o diagnóstico
+  MUST NOT aparecer para a ocorrência substituta.
 - **FR-2661**: Quando o método já foi retificado e a relação congelada ainda cita a versão anterior,
   a tela MUST dizer que falta o passo de suceder a relação. A relação congelada não lê o método
   vigente.
@@ -389,7 +402,8 @@ com inscrições encerradas (FR-346 da `028`).
 - **Limite previsto da ocorrência**: derivado de `occurrenceAt` e da granularidade (FR-2650). Não se
   grava: é calculado sempre que alguém pergunta.
 - **Congelamento mais cedo possível**: o fim do período de inscrições da versão conferida, na
-  publicação e na Retificação, ou o momento do congelamento, na tela do sorteio.
+  publicação e na Retificação. Na tela do sorteio, o mais tarde entre agora e esse fim, para recorte
+  ainda não congelado, ou o `publicada_em` da relação já congelada (FR-2651).
 
 ## Success Criteria *(mandatory)*
 
@@ -403,8 +417,11 @@ com inscrições encerradas (FR-346 da `028`).
   zero achados.
 - **SC-955**: O Edital 72/2026 reproduzido como foi publicado tem a publicação impedida. Com a
   extração movida para 29/10, publica.
-- **SC-956**: Na tela do sorteio, o aviso antes do congelamento aparece em 100% dos casos em que
-  congelar naquele momento seria seguido de recusa por precedência, e em nenhum outro.
+- **SC-956**: Na tela do sorteio, para a ocorrência declarada de fonte que publica só a data, e
+  supondo que a fonte publica o dia declarado, o aviso aparece em 100% dos casos em que o congelamento
+  mais cedo possível (FR-2651) seria seguido de recusa por precedência, e em nenhum outro. Ficam fora,
+  por decisão, a ocorrência substituta (FR-2659) e a fonte com horário (D-006). A recusa continua
+  valendo para elas.
 - **SC-957**: O conjunto de sorteios constituídos pela suíte é o mesmo antes e depois da feature.
   Nenhuma recusa nova de sorteio é introduzida (FR-2664), e nenhuma fixture nem a `seed_demo` precisa
   mudar de data.

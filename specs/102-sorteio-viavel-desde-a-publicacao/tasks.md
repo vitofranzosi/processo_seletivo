@@ -113,7 +113,9 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
   - fonte com horário (`Fonte de demonstração`) e extração em 2020, sem achado (D-006);
   - no ato de Retificação, o código `draw_occurrence_not_after_registration_on_retification` como
     `WARNING`, com a última frase da seção 2;
-  - marco listado em `marcos_sorteados`, sem achado na Retificação.
+  - marco listado em `marcos_sorteados`, sem achado na Retificação;
+  - método comum que governa dois marcos, com um só em `marcos_sorteados`: a advertência continua.
+    Com os dois, ela some (FR-2656).
 - [ ] T009 [P] [US1] Escrever `backend/tests/integration/editais/test_edital_72.py`: o cronograma e o
   método do achado (inscrições até 28/10/2026 às 9h; Loteria Federal, concurso 6113, extração em
   28/10/2026 às 20h05) pelo caminho real de publicação (`publicacoes/application/publish_edital.py`),
@@ -139,6 +141,8 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
   - recuo quando a fonte não está no vocabulário ou o `occurrenceAt` não se lê, porque esses têm
     achado próprio;
   - dois códigos, um por ato (R-004);
+  - o método comum é excluído na Retificação só quando todos os marcos que ele governa estão em
+    `marcos_sorteados` (R-005);
   - registrar a conferência em `validate_for_publication`, que ganha o argumento
     `marcos_sorteados: frozenset = frozenset()`, documentado como `topologia` (só a Retificação o
     passa). T008 verde.
@@ -177,7 +181,10 @@ o aviso aparece antes de "Publicar e congelar a relação", e o botão continua 
   [quickstart](quickstart.md). `timezone.now` é substituído por `mock.patch`, como em
   `tests/interface/test_convocacao_em_fluxo.py`. Casos:
   - aviso com os trechos da seção 3, antes do botão, e o botão presente (D-005);
+  - **com as inscrições ainda correndo** e terminando no dia da extração: o aviso aparece junto do
+    aviso de inscrições em curso, embora a hora atual, sozinha, fosse viável (FR-2651);
   - sem aviso com a extração amanhã, e sem aviso com a `Fonte de demonstração` atual;
+  - sem aviso quando a ocorrência da vez é a substituta (FR-2659);
   - o link para a Retificação só para quem tem `retificacao:elaborar`;
   - relação congelada inviável, com o diagnóstico da seção 4 antes de "Realizar o sorteio";
   - método retificado depois do congelamento, com a variante "o método já foi retificado" (FR-2661);
@@ -188,8 +195,9 @@ o aviso aparece antes de "Publicar e congelar a relação", e o botão continua 
 
 - [ ] T016 [US2] Em `backend/processo_seletivo/sorteios/application/previa.py::recortes_do_marco`:
   - acrescentar ao estado do marco `congelar_agora_inviavel`: `None`, ou fonte e dia da extração,
-    quando a fonte do método vigente publica só a data e `viabilidade` diz inviável contra `at` ou
-    `timezone.now()`;
+    quando a ocorrência da vez é a declarada (não a substituta), a fonte do método vigente publica só
+    a data e `viabilidade` diz inviável contra o mais tarde entre `at or timezone.now()` e o fim de
+    `periodo_de_inscricoes(versao.content, ...)` (FR-2651, R-006);
   - acrescentar a cada recorte congelado `diagnostico_da_relacao`: `None`, ou fonte, dia, data do
     congelamento e `metodo_retificado`. O cálculo usa o método da versão que a relação cita
     (`metodo_declarado(relacao.versao.content, ...)`) e o compara com `relacao.publicada_em`.
@@ -202,7 +210,9 @@ o aviso aparece antes de "Publicar e congelar a relação", e o botão continua 
   `congelar_agora_inviavel` ao contexto. O diagnóstico de cada recorte já viaja em `recortes`.
 - [ ] T018 [US2] Em `backend/processo_seletivo/interface/templates/interface/sorteio.html`:
   - o aviso da seção 3, uma vez por marco, logo depois do aviso de inscrições em curso (o método é
-    do marco, e vale para todos os recortes), com `class="aviso" role="status"`. O link de Retificação
+    do marco, e vale para todos os recortes), com `class="aviso" role="status"`. Ele **não** fica
+    dentro do `{% if pode_emitir and ... not inscricoes_em_curso %}` do formulário: precisa aparecer
+    também enquanto as inscrições correm. O link de Retificação
     usa o mesmo padrão `pode_retificar` que a tela já usa para o método indefinido;
   - no recorte congelado, antes do formulário "Realizar o sorteio", o diagnóstico da seção 4 com
     `class="erro"`, e a variante quando `metodo_retificado`.
@@ -253,23 +263,28 @@ com os dois acréscimos da seção 5.
   painel, num banco próprio (`DB_NAME=ps_demo_102`) sem `seed_demo`. O código de acesso do portal sai
   no terminal do `runserver`. Registrar em `specs/102-sorteio-viavel-desde-a-publicacao/verificacao.md`
   o que se viu em cada passo, com o horário, e qualquer divergência do esperado.
+- [ ] T023 [US3] Escrever `specs/102-sorteio-viavel-desde-a-publicacao/roteiro-de-compreensao.md`
+  para a SC-958, no formato da `098`. Mostra-se a quem conduz o certame só a recusa da seção 5 e,
+  numa segunda rodada, só o diagnóstico da seção 4. Depois pergunta-se, sem ajuda, o que fazer e em
+  que ordem. Acerto é dizer retificar e depois suceder. A aplicação com as pessoas é do usuário; a
+  tarefa entrega o roteiro e a folha de registro.
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T023 [P] Escrever `specs/102-sorteio-viavel-desde-a-publicacao/rastreabilidade.md`: uma linha
+- [ ] T024 [P] Escrever `specs/102-sorteio-viavel-desde-a-publicacao/rastreabilidade.md`: uma linha
   para **todo** identificador em negrito da spec, FR-2647 a FR-2668 e SC-954 a SC-959, com tarefa e
-  teste. A SC-958 é humana e fica com o roteiro, e a SC-959 com a `verificacao.md`. Rodar
+  teste. A SC-958 é humana e fica com o roteiro do T023, e a SC-959 com a `verificacao.md`. Rodar
   `uv run pytest tests/test_citacoes_de_requisito.py`.
-- [ ] T024 [P] Atualizar a linha da `102` na tabela de incrementos do `README.md` para o estado
+- [ ] T025 [P] Atualizar a linha da `102` na tabela de incrementos do `README.md` para o estado
   implementado, e o parágrafo da fonte de demonstração em `CLAUDE.md`, se a fonte nova pedir aviso
   para quem chega. Só se pedir: a regra do `CLAUDE.md` é registrar o que não se descobre lendo o
   código.
-- [ ] T025 Rodar `cd backend && make lint check test-pg` (4 workers, `DB_NAME` próprio) e registrar o
+- [ ] T026 Rodar `cd backend && make lint check test-pg` (4 workers, `DB_NAME` próprio) e registrar o
   total em `tasks.md`, comparando com a última medição do `CLAUDE.md`. Uma falha do teste de tempo da
   ocupação se confere isolada antes de qualquer conclusão (ver *Um teste de tempo oscila sob carga*).
-- [ ] T026 Preparar o PR: `git merge origin/main`, conferir se a lacuna 2 já chegou (conflito no fim
+- [ ] T027 Preparar o PR: `git merge origin/main`, conferir se a lacuna 2 já chegou (conflito no fim
   da mensagem de `occurrence_precedes_freeze`, R-007) e se o PR #335 (o achado citado no `Input` da
   spec) já foi mergeado. O link para o achado só resolve depois dele. **O merge é do usuário.**
 
@@ -286,7 +301,7 @@ com os dois acréscimos da seção 5.
   depende de T011 e T012; T014 depende de T011.
 - **US2 (Fase 4)**: depende da Fase 2. T016 depende de T015; T017 e T018 dependem de T016.
 - **US3 (Fase 5)**: depende da Fase 2 (T006).
-- **US4 (Fase 6)**: T021 depende da Fase 2. T022 depende da US1, da US2 e da US3.
+- **US4 (Fase 6)**: T021 depende da Fase 2. T022 depende da US1, da US2 e da US3. T023 (roteiro da US3) depende de T018 e T020, e mora nesta fase porque usa as telas prontas.
 - **Polish (Fase 7)**: depende de todas as histórias.
 
 ### User Story Dependencies
@@ -301,7 +316,7 @@ com os dois acréscimos da seção 5.
 - Fase 2: T002 e T004 juntas (testes em arquivos distintos); depois T003 junto de T005/T006.
 - Depois da Fase 2: T008, T009, T010, T015 e T019 juntas, por serem só testes. Depois T011/T012 (US1),
   T016 (US2) e T020 (US3) em paralelo.
-- Fase 7: T023 e T024 juntas.
+- Fase 7: T024 e T025 juntas.
 
 ## Parallel Example: depois da Fase 2
 
