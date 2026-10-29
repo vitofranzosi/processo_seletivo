@@ -93,8 +93,14 @@ por três horas. Quem lê *"a fonte a situa a partir de 03:00"* conclui que a fo
 horário, o que não é verdade, e passa a investigar o lado errado. É a mesma classe do
 [teste com data em UTC](achado-teste-com-data-em-utc.md): instante formatado fora do fuso da tela.
 
-Esta lacuna não pede decisão de produto. Pede só a escolha de quando corrigir, e se vale varrer as
-outras mensagens de `DomainError` que interpolam `datetime` com f-string.
+Esta lacuna não pedia decisão de produto. Nenhuma outra mensagem do backend interpola um `datetime`
+com f-string sem `localtime`: a busca por `:%d/%m/%Y` acha só `avaliacoes/domain/conjunto.py`, que já
+converte, e `excluir_registros_do_piloto`, que formata datas.
+
+**Corrigida em 29/10/2026**, a pedido do usuário, no mesmo PR deste registro: os dois instantes da
+recusa passam por `timezone.localtime`.
+`tests/integration/sorteios/test_ocorrencia_declarada.py::test_a_recusa_por_precedencia_diz_os_instantes_no_fuso_da_tela`
+falhava antes da correção, com o horário em UTC, e passa depois dela.
 
 ## Observação do ensaio, não do sistema
 
