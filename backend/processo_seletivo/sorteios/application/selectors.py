@@ -106,4 +106,60 @@ def _nomes_dos_recortes(conteudo):
     return nomear
 
 
-__all__ = ["relacao_publica", "relacao_vigente", "sorteios_do_edital"]
+def marcos_sorteados_em_todos_os_recortes(edital, conteudo):
+    """Os marcos por sorteio que **não têm mais sorteio a fazer**, por identidade (102, FR-2656).
+
+    Um marco entra quando já tem ao menos um sorteio e todo recorte dele está sorteado ou não tem
+    universo a comprometer — recorte sem inscrição elegível nunca congela, e esperá-lo seria esperar
+    para sempre. É a pergunta que a Retificação faz para não advertir sobre a extração de um método
+    que já não governa ato nenhum.
+
+    **Os recortes são os da tela do sorteio**, lidos de `recortes_do_marco`, e não uma segunda
+    derivação: a do sorteio dá lista própria à Modalidade declarada como ampla, e uma conta feita
+    aqui com outra derivação diria "sorteado" de um marco que a tela mostra com um recorte pendente.
+    O custo é uma leitura por marco por sorteio, e só a confirmação de uma Retificação paga por ela.
+    """
+    from processo_seletivo.editais.domain import marcos
+    from processo_seletivo.shared.api.problems import DomainError
+    from processo_seletivo.sorteios.application.previa import recortes_do_marco
+    from processo_seletivo.sorteios.models import Sorteio
+
+    com_sorteio = {
+        (str(perfil_id), str(marco_id))
+        for perfil_id, marco_id in Sorteio.objects.filter(
+            edital=edital, sucessores__isnull=True
+        ).values_list("perfil_id", "marco_id")
+    }
+    sorteados = set()
+    for perfil in conteudo.get("profiles") or []:
+        if not isinstance(perfil, dict):
+            continue
+        for marco in perfil.get("classificationMilestones") or []:
+            if not isinstance(marco, dict) or not marco.get("id"):
+                continue
+            chave = (str(perfil.get("id")), str(marco["id"]))
+            if chave not in com_sorteio:
+                continue
+            metodo = marcos.metodo_que_governa(conteudo, perfil_id=chave[0], marco_id=chave[1])
+            if not marcos.ordena_por_sorteio(
+                marco.get("orderProduction") or "", metodo_declarado=bool(metodo)
+            ):
+                continue
+            try:
+                estado = recortes_do_marco(edital=edital, perfil_id=chave[0], marco_id=chave[1])
+            except DomainError:
+                continue
+            if all(
+                recorte["sorteio"] is not None or not recorte["projetados"]
+                for recorte in estado["recortes"]
+            ):
+                sorteados.add(chave[1])
+    return frozenset(sorteados)
+
+
+__all__ = [
+    "marcos_sorteados_em_todos_os_recortes",
+    "relacao_publica",
+    "relacao_vigente",
+    "sorteios_do_edital",
+]

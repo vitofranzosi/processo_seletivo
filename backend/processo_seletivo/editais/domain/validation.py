@@ -1511,6 +1511,7 @@ def validate_for_publication(
     ato: str = ATO_DE_PUBLICACAO,
     agora: datetime | None = None,
     topologia: list | None = None,
+    marcos_sorteados: frozenset = frozenset(),
 ) -> list[ValidationFinding]:
     """Os achados do conteúdo, classificados pelo ato que está sendo conferido.
 
@@ -1528,6 +1529,10 @@ def validate_for_publication(
     **`topologia` é a das seções do Edital já publicado** (`054`, FR-988), e só a Retificação a
     passa. Omitida, a topologia é conferida contra o catálogo vigente, que é o certo para o que
     ainda não foi publicado.
+
+    **`marcos_sorteados` são os marcos já sorteados em todos os recortes** (`102`, FR-2656), e
+    também só a Retificação o passa: o método desses marcos não governa mais ato nenhum, e advertir
+    sobre a extração deles a cada Retificação seria ruído. Vazio, o erro cai para o lado que acusa.
     """
     agora = agora or datetime.now(ZONA)
     findings = []
@@ -1583,6 +1588,9 @@ def validate_for_publication(
     findings.extend(_etapa_sem_resultado(snapshot, ato=ato))
     findings.extend(_marco_sem_regra_de_corte(snapshot, ato=ato))
     findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
+    findings.extend(
+        _extracao_inviavel(snapshot, ato=ato, agora=agora, marcos_sorteados=marcos_sorteados)
+    )
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
@@ -2352,6 +2360,146 @@ def _metodo_do_sorteio_publicavel(snapshot: dict, *, ato: str) -> list[Validatio
                     ),
                 )
             )
+    return findings
+
+
+EXTRACAO_INVIAVEL = "draw_occurrence_not_after_registration"
+# **Outro código na Retificação, e não a mesma advertência com outra severidade** (`102`, R-004).
+# `advertencias_do_ato` subtrai da lista da Retificação todo código que impediria a publicação: com
+# um código só, a advertência sumiria justamente onde a FR-2656 a quer. É a armadilha que
+# `_etapa_sem_resultado` já registra.
+EXTRACAO_INVIAVEL_NA_RETIFICACAO = "draw_occurrence_not_after_registration_on_retification"
+
+
+def _extracao_inviavel(
+    snapshot: dict, *, ato: str, agora: datetime, marcos_sorteados: frozenset
+) -> list[ValidationFinding]:
+    """A extração declarada que o sorteio sempre recusará (`102`, FR-2652–FR-2657).
+
+    **O Edital 72/2026.** Inscrições até 28/10 às 9h; Loteria Federal, extração declarada para 28/10
+    às 20h05. A Caixa publica só a data, a data vale a partir de 00h00, e a relação só se congela
+    depois do fim das inscrições — nenhum congelamento possível vinha antes da extração. O sistema
+    sabia as três coisas na publicação, e a recusa só apareceu no dia do sorteio, com o certame em
+    curso e sem saída barata.
+
+    **O fim vem de `periodo_de_inscricoes`**, a leitura que o congelamento obedece, e não de uma
+    leitura própria do `endAt`: se as duas divergissem, a publicação recusaria um cronograma que o
+    congelamento aceita. Com dois Eventos marcados o achado recua, como em
+    `_periodo_de_inscricoes_encerrado`, e o período cancelado ou sem término não tem fim a comparar.
+
+    **Método com outro defeito não recebe este achado.** Fonte fora do vocabulário, instante
+    ilegível ou campo faltando já têm achado próprio, e empilhar dois relatos esconde o que resolve.
+    A conferência repete a validação do método só para saber se deve se calar.
+
+    **Impeditivo na publicação, advertência na Retificação** (D-005, D-003). A Retificação é a saída
+    do Edital que já está condenado; recusá-la tiraria dele também a saída. E o método comum é
+    acusado uma vez, enquanto algum marco que ele governa ainda tiver sorteio por fazer.
+    """
+    from processo_seletivo.editais.domain.perfis import (
+        _validar_metodo_de_sorteio,
+        validate_common_draw_method,
+    )
+    from processo_seletivo.sorteios.domain import viabilidade
+    from processo_seletivo.sorteios.infrastructure.fontes import publica_so_a_data
+
+    if ato not in (ATO_DE_PUBLICACAO, ATO_DE_RETIFICACAO):
+        return []
+    marcados = sum(
+        1
+        for _, evento in _eventos_bem_formados(snapshot)
+        if evento.get("isRegistrationPeriod") is True
+    )
+    if marcados != 1:
+        return []
+    periodo = periodo_de_inscricoes(snapshot, agora)
+    if periodo.fim is None or periodo.cancelado:
+        return []
+    na_publicacao = ato == ATO_DE_PUBLICACAO
+
+    def bem_formado(metodo, *, etapas=None) -> bool:
+        try:
+            if etapas is None:
+                validate_common_draw_method(metodo, conferir_forma_da_ocorrencia=na_publicacao)
+            else:
+                _validar_metodo_de_sorteio(
+                    metodo, etapas=etapas, conferir_forma_da_ocorrencia=na_publicacao
+                )
+        except ProfileValidationError:
+            return False
+        return True
+
+    def achado(metodo, *, alvo, caminho):
+        if not isinstance(metodo, dict):
+            return None
+        fonte = metodo.get("source")
+        limite = viabilidade.limite_previsto(
+            metodo.get("occurrenceAt"), so_a_data=publica_so_a_data(fonte)
+        )
+        if not viabilidade.inviavel(limite, periodo.fim):
+            return None
+        dia = limite.strftime("%d/%m/%Y")
+        dia_do_fim = periodo.fim.astimezone(ZONA).strftime("%d/%m/%Y")
+        mensagem = (
+            f"{alvo} declara a extração de {fonte} em {dia}, e as inscrições terminam em "
+            f"{_por_extenso(periodo.fim)}. {fonte} publica só a data da extração, sem o horário, e "
+            "a data vale a partir de 00h00: a relação de participantes precisaria ser congelada "
+            f"antes de {dia}, mas ela só pode ser congelada depois do fim das inscrições. Com este "
+            "cronograma, o sorteio será sempre recusado. "
+        )
+        if na_publicacao:
+            mensagem += (
+                f"Declare uma extração de dia posterior a {dia_do_fim}, ou encerre as inscrições "
+                f"antes de {dia}."
+            )
+        else:
+            mensagem += (
+                "Se a relação ainda não foi congelada, esta Retificação pode declarar uma "
+                "extração de dia posterior ao congelamento. Se já foi, a saída é retificar o "
+                "método e depois publicar relação nova, sucedendo a atual."
+            )
+        return ValidationFinding(
+            severity=Severity.BLOCKING_ERROR if na_publicacao else Severity.WARNING,
+            code=EXTRACAO_INVIAVEL if na_publicacao else EXTRACAO_INVIAVEL_NA_RETIFICACAO,
+            message=mensagem,
+            path=caminho,
+        )
+
+    findings = []
+    comum = snapshot.get("drawMethod")
+    governados_pelo_comum = []
+    for perfil in _perfis_bem_formados(snapshot):
+        for marco in _marcos_bem_formados(perfil):
+            identidade = marco.get("id")
+            if not identidade:
+                continue
+            metodo = marcos.metodo_que_governa(
+                snapshot, perfil_id=perfil.get("id"), marco_id=identidade
+            )
+            if not metodo or not marcos.ordena_por_sorteio(
+                marco.get("orderProduction") or "", metodo_declarado=True
+            ):
+                continue
+            if not na_publicacao and str(identidade) in {str(m) for m in marcos_sorteados}:
+                continue
+            if marco.get("drawMethod"):
+                if not bem_formado(marco["drawMethod"], etapas=marco.get("stages") or []):
+                    continue
+                encontrado = achado(
+                    marco["drawMethod"],
+                    alvo=f"O marco {_marco_nomeado(marco)}",
+                    caminho=(
+                        f"/profiles/id={perfil.get('id', '')}"
+                        f"/classificationMilestones/id={identidade}/drawMethod"
+                    ),
+                )
+                if encontrado is not None:
+                    findings.append(encontrado)
+            else:
+                governados_pelo_comum.append(identidade)
+    if governados_pelo_comum and bem_formado(comum):
+        encontrado = achado(comum, alvo="O método comum a este Edital", caminho="/drawMethod")
+        if encontrado is not None:
+            findings.append(encontrado)
     return findings
 
 

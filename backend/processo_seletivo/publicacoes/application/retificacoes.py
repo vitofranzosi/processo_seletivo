@@ -756,9 +756,20 @@ def advertencias_do_ato(retificacao):
         (item.code, item.path)
         for item in blocking_findings(validate_for_publication(content, topologia=topologia))
     }
+    # **Os marcos já sorteados em todos os recortes** (102, FR-2656, D-003): o método deles não
+    # governa mais ato nenhum, e advertir sobre a extração deles a cada Retificação seria ruído que
+    # ensina a não ler a confirmação. Só aqui, e não na recusa do ato: o achado é advertência na
+    # Retificação, e `_assert_well_formed` só olha impeditivos.
+    from processo_seletivo.sorteios.application.selectors import (
+        marcos_sorteados_em_todos_os_recortes,
+    )
+
+    sorteados = marcos_sorteados_em_todos_os_recortes(retificacao.edital, content)
     return [
         item
-        for item in validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
+        for item in validate_for_publication(
+            content, ato=ATO_DE_RETIFICACAO, topologia=topologia, marcos_sorteados=sorteados
+        )
         if (item.code, item.path) not in impeditivos
     ]
 
