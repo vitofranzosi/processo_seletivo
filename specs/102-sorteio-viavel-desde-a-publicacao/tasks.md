@@ -16,6 +16,20 @@ falhar antes de passar.
 porque não tocam os mesmos arquivos. A US3 (recusa) depende só da Fase 2. A US4 (demonstração)
 depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
 
+**29/10/2026, a implementação** (T001 a T027, nesta worktree). `make lint check test-pg` com 4
+workers: **13255 passando, 13 pulados, nenhuma falha**, em 577s. A medição anterior desta mesma
+árvore deu 2 falhas, ambas da `102`: `advertencias_do_ato` passou a ler os marcos sorteados em toda
+confirmação, e o teste unitário da subtração, sem banco, acusou. Agora o seletor só roda quando a
+advertência da extração inviável aparece. **O que mudou em relação ao planejado:**
+
+- **O diagnóstico da relação congelada é bloco próprio, e não ramo da cadeia de botões** (T018):
+  como ramo, ele escondia "Realizar o sorteio", o que a spec não pede.
+- **A demonstração "congelar ontem" virou "sortear amanhã"** (T021): o Edital da suíte só vigora
+  desde hoje, e congelar com o relógio de ontem recusava por falta de versão vigente.
+- **A Retificação lê os marcos sorteados só quando precisa** (T013), pelo motivo acima.
+- **O PR #335 passou a trazer a lacuna 2**, na mesma mensagem que a T020 estende. O conflito fica no
+  fim da recusa: a primeira frase vem do #335, e o acréscimo vem daqui.
+
 **Convenções**: textos e nomes em português; comentário explica por quê; nada de `style=`, `<style>`,
 `<script>` nem `onclick=` em template; `ruff check` **e** `ruff format --check`. A verificação é
 `cd backend && make lint check test-pg`, com `DB_NAME` próprio desta worktree.
@@ -281,10 +295,10 @@ com os dois acréscimos da seção 5.
   implementado, e o parágrafo da fonte de demonstração em `CLAUDE.md`, se a fonte nova pedir aviso
   para quem chega. Só se pedir: a regra do `CLAUDE.md` é registrar o que não se descobre lendo o
   código.
-- [ ] T026 Rodar `cd backend && make lint check test-pg` (4 workers, `DB_NAME` próprio) e registrar o
+- [X] T026 Rodar `cd backend && make lint check test-pg` (4 workers, `DB_NAME` próprio) e registrar o
   total em `tasks.md`, comparando com a última medição do `CLAUDE.md`. Uma falha do teste de tempo da
   ocupação se confere isolada antes de qualquer conclusão (ver *Um teste de tempo oscila sob carga*).
-- [ ] T027 Preparar o PR: `git merge origin/main`, conferir se a lacuna 2 já chegou (conflito no fim
+- [X] T027 Preparar o PR: `git merge origin/main`, conferir se a lacuna 2 já chegou (conflito no fim
   da mensagem de `occurrence_precedes_freeze`, R-007) e se o PR #335 (o achado citado no `Input` da
   spec) já foi mergeado. O link para o achado só resolve depois dele. **O merge é do usuário.**
 
