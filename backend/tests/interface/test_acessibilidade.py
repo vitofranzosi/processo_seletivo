@@ -94,6 +94,7 @@ PARES = [
     ("--texto", "--fundo", "corpo do texto"),
     ("--texto-fraco", "--branco", "texto de apoio"),
     ("--texto-fraco", "--fundo", "texto de apoio sobre a página"),
+    ("--texto-fraco", "--verde-claro", "indicador de períodos no dia destacado da agenda"),
 ]
 
 

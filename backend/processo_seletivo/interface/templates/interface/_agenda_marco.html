@@ -1,0 +1,15 @@
+{% comment %}
+Um marco da agenda (101, FR-2629). A fase é dita sem afirmar execução (D-006): *data passada*, e
+nunca concluído; o cancelado é dito, e não some (D-005). Os dois destinos: o Edital na gestão, e o
+cronograma na página pública, que é onde ele é oficial. Os links repetem o nome em cada item, e o
+número do Edital, só para leitor de tela, é o que os distingue fora do contexto.
+{% endcomment %}
+<li class="marco-da-agenda{% if marco.cancelado %} cancelado{% endif %}">
+  <span class="quando-do-marco"><time datetime="{{ marco.instante|date:'c' }}">{% if marco.hora %}{{ marco.hora }}{% else %}{{ marco.dia|date:"d/m" }}{% endif %}</time>{% if marco.tipo == "abertura" %} <span class="tipo-do-marco">Abre</span>{% elif marco.tipo == "encerramento" %} <span class="tipo-do-marco">Encerra</span>{% endif %}</span>
+  <span class="nome-do-marco">{{ marco.nome }}</span>
+  <span class="origem-do-marco">{{ marco.edital.rotulo }} — {{ marco.edital.processo }}{% if marco.edital.encerrado %} <span class="situacao s-ENCERRADO">Edital encerrado</span>{% endif %}</span>
+  {% if marco.local %}<span class="local-do-marco">Local: {{ marco.local }}</span>{% endif %}
+  {% if marco.intervalo %}<span class="intervalo-do-marco">Período previsto: {{ marco.intervalo }}</span>{% endif %}
+  {% if marco.cancelado %}<span class="marca-de-cancelado">Cancelado</span>{% elif marco.rotulo_da_fase %}<span class="fase-do-marco">{{ marco.rotulo_da_fase }}</span>{% endif %}
+  <span class="links-do-marco"><a href="{% url 'interface:detalhe' marco.edital.id %}">Edital<span class="oculto"> {{ marco.edital.numero }}/{{ marco.edital.ano }}</span></a> <a href="{% url 'portal:selecao' marco.edital.id %}#cronograma-titulo">Cronograma publicado<span class="oculto"> do Edital {{ marco.edital.numero }}/{{ marco.edital.ano }}</span></a></span>
+</li>

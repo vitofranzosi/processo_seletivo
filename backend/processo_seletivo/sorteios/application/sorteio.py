@@ -15,6 +15,8 @@ relação nova e ocorrência nova (FR-052, FR-054): um botão de refazer devolve
 repetição até o resultado agradar, que é a fresta que a feature inteira existe para fechar.
 """
 
+from django.utils import timezone
+
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.models import AtoDeOrdenacao, OrigemDaOrdem, PosicaoNaOrdem
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
@@ -233,16 +235,16 @@ def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia, metodo):
         # televisão e registrá-la em seguida. E o limite inferior é o que a fonte de fato publica —
         # uma data sem horário vale como o início daquele dia, e não como um horário inventado.
         #
-        # **E a recusa diz a saída** (102, FR-2662, FR-2663). Sem ela, quem a lia tentava suceder a
-        # relação, que congela ainda mais tarde diante da mesma extração; e quem lia "a partir de
-        # 00:00" concluía que a fonte informou um horário. A primeira frase é a de antes, intocada:
-        # o fuso dela é a lacuna 2 do achado de 29/10, e se corrige noutro PR.
+        # **Os instantes saem no fuso da tela.** Formatados crus, saíam em UTC: a mensagem dizia
+        # 03:00 e 14:20 sob uma tela que dizia 00:00 e 11:20, e quem lia concluía que a fonte
+        # informara um horário (doc/achado-sorteio-com-extracao-no-dia-do-congelamento.md).
         raise DomainError(
             "occurrence_precedes_freeze",
             "Não é possível afirmar que a ocorrência aconteceu depois do congelamento da relação: "
-            f"a fonte a situa a partir de {ocorrencia.ocorrida_nao_antes_de:%d/%m/%Y %H:%M}, e a "
-            f"relação foi congelada em {relacao.publicada_em:%d/%m/%Y %H:%M}. A semente é "
-            "posterior ao compromisso do universo, e não o contrário."
+            "a fonte a situa a partir de "
+            f"{timezone.localtime(ocorrencia.ocorrida_nao_antes_de):%d/%m/%Y %H:%M}, e a relação "
+            f"foi congelada em {timezone.localtime(relacao.publicada_em):%d/%m/%Y %H:%M}. A "
+            "semente é posterior ao compromisso do universo, e não o contrário."
             + _a_saida_da_precedencia(ocorrencia.fonte),
             409,
         )
