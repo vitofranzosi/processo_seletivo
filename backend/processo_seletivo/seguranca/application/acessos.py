@@ -43,6 +43,9 @@ VINCULO_JA_VIGENTE = "vinculo_ja_vigente"
 VINCULO_JA_REVOGADO = "vinculo_ja_revogado"
 ESCOPO_INVALIDO = "escopo_invalido"
 ADMINISTRACAO_JA_CONCEDIDA = "administracao_ja_concedida"
+# A retirada e a substituição da administração institucional (107, incremento 2, `D-018`).
+SEM_ADMINISTRACAO = "pessoa_sem_administracao_institucional"
+ULTIMA_ADMINISTRACAO = "ultima_administracao_institucional"
 # A recusa da pessoa que não está disponível para receber acesso: desativada, ou um identificador
 # que não é de pessoa institucional nenhuma (107, `D-004`, `D-011`). Uma recusa só para os dois
 # casos, para que o campo oculto adulterado não sirva de sonda de quem existe.
@@ -333,7 +336,7 @@ def pessoa_institucional(identificador):
     return pessoa
 
 
-def buscar_pessoas(ator, termo, *, permissao, escopo):
+def buscar_pessoas(ator, termo, *, permissao, escopo, com_inativas=False):
     """Até dez pessoas com o termo no nome ou no e-mail, e se havia mais (107, `FR-3112`–`FR-3114`).
 
     **A capacidade é conferida antes da consulta**, no escopo em que o ator concede: quem não pode
@@ -344,12 +347,18 @@ def buscar_pessoas(ator, termo, *, permissao, escopo):
     termo = (termo or "").strip()
     if len(termo) < PISO_DA_BUSCA:
         return [], False
+    # `com_inativas` é só da seção de suspensão (107, `D-017`): é ali que se acha quem está
+    # suspenso para reativar. A concessão nunca as vê (`FR-3140`).
+    universo = (
+        get_user_model().objects.filter(username__startswith=PREFIXO_DO_IDENTIFICADOR)
+        if com_inativas
+        else pessoas_institucionais()
+    )
     achadas = list(
-        pessoas_institucionais()
-        .exclude(username=ator.subject)
+        universo.exclude(username=ator.subject)
         .filter(Q(first_name__icontains=termo) | Q(email__icontains=termo))
         .order_by("first_name", "email", "username")
-        .only("username", "first_name", "email")[: TETO_DA_BUSCA + 1]
+        .only("username", "first_name", "email", "is_active")[: TETO_DA_BUSCA + 1]
     )
     return achadas[:TETO_DA_BUSCA], len(achadas) > TETO_DA_BUSCA
 
@@ -428,6 +437,116 @@ def administradores_por_unidade(ator):
     ):
         por_escopo.setdefault(vinculo.escopo, []).append(vinculo)
     return [(unidade, por_escopo.get(unidade.codigo, [])) for unidade in unidades]
+
+
+def _trancar_a_administracao_institucional():
+    # A mesma trava da primeira administração: toda decisão sobre quantas pessoas a têm passa por
+    # ela, e a retirada e a substituição também decidem isso.
+    if connection.vendor == "postgresql":
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT pg_advisory_xact_lock(%s)", [TRAVA_DA_ADMINISTRACAO_INSTITUCIONAL]
+            )
+
+
+def _administracao_vigente_de(pessoa):
+    vinculo = (
+        vigentes()
+        .filter(pessoa=pessoa, escopo=ESCOPO_INSTITUCIONAL, papel=ADMINISTRADOR_INSTITUCIONAL)
+        .first()
+    )
+    if vinculo is None:
+        raise DomainError(
+            SEM_ADMINISTRACAO, "A pessoa não tem administração institucional vigente.", 409
+        )
+    return vinculo
+
+
+def retirar_administracao_institucional(
+    *, pessoa, motivo, sem_administracao=False, now, correlation_id=""
+):
+    """A retirada pela implantação, com motivo e trilha (107, `FR-3147`, decisão P3).
+
+    **Não deixa o sistema sem administração por engano** (`D-018`, salvaguarda proposta pela `107`
+    e implementada com o incremento 2): retirar a última pessoa exige `sem_administracao`, como a
+    segunda concessão exige `adicional`. Sem administração institucional, ninguém concede o
+    administrador de acessos de unidade nenhuma até a implantação conceder de novo.
+    """
+    motivo = _exigir_motivo(motivo)
+    ator = Actor(IMPLANTACAO, ESCOPO_INSTITUCIONAL)
+    with transaction.atomic():
+        _trancar_a_administracao_institucional()
+        get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
+        vinculo = _administracao_vigente_de(pessoa)
+        restantes = (
+            vigentes()
+            .filter(escopo=ESCOPO_INSTITUCIONAL, papel=ADMINISTRADOR_INSTITUCIONAL)
+            .exclude(pk=vinculo.pk)
+            .exists()
+        )
+        if not restantes and not sem_administracao:
+            raise DomainError(
+                ULTIMA_ADMINISTRACAO,
+                "Esta é a última administração institucional vigente. Para retirá-la mesmo assim, "
+                "repita com --sem-administracao; para trocar de pessoa, use a substituição.",
+                409,
+            )
+        RevogacaoDeVinculo.objects.create(
+            vinculo=vinculo, revogado_em=now, revogado_por=IMPLANTACAO, motivo=motivo
+        )
+        _registrar(ator, IMPLANTACAO, "ACESSO_REVOGAR", vinculo, now, correlation_id, motivo)
+    return vinculo
+
+
+def substituir_administracao_institucional(*, de, para, motivo, now, correlation_id=""):
+    """Revoga a de uma pessoa e concede a outra, numa transação só (107, `FR-3148`, decisão P3).
+
+    Não há instante com o anterior ainda ativo nem com uma administração a mais: se a concessão é
+    recusada, a revogação sai com o *rollback*. Os dois eventos levam o mesmo motivo e a mesma
+    correlação, para que a trilha os leia como um ato.
+    """
+    import uuid
+
+    motivo = _exigir_motivo(motivo)
+    correlation_id = correlation_id or f"substituicao-{uuid.uuid4().hex}"
+    ator = Actor(IMPLANTACAO, ESCOPO_INSTITUCIONAL)
+    if de.pk == para.pk:
+        raise DomainError(VINCULO_JA_VIGENTE, "A pessoa nova é a mesma que sai.", 409)
+    with transaction.atomic():
+        _trancar_a_administracao_institucional()
+        # As duas pessoas, em ordem de chave, para que duas substituições cruzadas não se esperem
+        # uma à outra.
+        list(
+            get_user_model()
+            .objects.select_for_update()
+            .filter(pk__in=[de.pk, para.pk])
+            .order_by("pk")
+        )
+        anterior = _administracao_vigente_de(de)
+        if (
+            vigentes()
+            .filter(pessoa=para, escopo=ESCOPO_INSTITUCIONAL, papel=ADMINISTRADOR_INSTITUCIONAL)
+            .exists()
+        ):
+            raise DomainError(
+                VINCULO_JA_VIGENTE, "A pessoa nova já é administradora institucional.", 409
+            )
+        if not get_user_model().objects.filter(pk=para.pk, is_active=True).exists():
+            raise _indisponivel()
+        RevogacaoDeVinculo.objects.create(
+            vinculo=anterior, revogado_em=now, revogado_por=IMPLANTACAO, motivo=motivo
+        )
+        _registrar(ator, IMPLANTACAO, "ACESSO_REVOGAR", anterior, now, correlation_id, motivo)
+        novo = Vinculo.objects.create(
+            pessoa=para,
+            escopo=ESCOPO_INSTITUCIONAL,
+            papel=ADMINISTRADOR_INSTITUCIONAL,
+            concedido_em=now,
+            concedido_por=IMPLANTACAO,
+            motivo=motivo,
+        )
+        _registrar(ator, IMPLANTACAO, "ACESSO_CONCEDER", novo, now, correlation_id, motivo)
+    return anterior, novo
 
 
 def _registrar(ator, permissao, operacao, vinculo, now, correlation_id, motivo):

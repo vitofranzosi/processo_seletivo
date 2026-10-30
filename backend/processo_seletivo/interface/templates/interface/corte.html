@@ -73,7 +73,7 @@ a Retificação recebe a condução em vez do link, e ela sai do mecanismo únic
 {% endif %}
 
 {% if geracao %}
-<p class="imutavel"><strong>Geração vigente com {{ geracao|length }} faixa{{ geracao|length|pluralize:"s" }}</strong>, emitida em {{ geracao.0.emitido_em|date:"d/m/Y H:i" }} por {{ geracao.0.emitido_por }}. Abrir esta tela não a altera.</p>
+<p class="imutavel"><strong>Geração vigente com {{ geracao|length }} faixa{{ geracao|length|pluralize:"s" }}</strong>, emitida em {{ geracao.0.emitido_em|date:"d/m/Y H:i" }} por {% nome_de_pessoa geracao.0.emitido_por %}. Abrir esta tela não a altera.</p>
 {% else %}
 <p class="aviso">Ainda não existe corte emitido neste recorte. O que está abaixo é uma proposta calculada agora, e nada foi gravado.</p>
 {% endif %}
@@ -167,7 +167,7 @@ divergência genérica uma vez.
 {% if geracao %}
 <section aria-labelledby="titulo-geracao">
   <h2 id="titulo-geracao">Faixas desta geração</h2>
-  <ol>{% for faixa in geracao %}<li><a href="{% url 'interface:corte-historico' edital.id faixa.id %}">{{ faixa.emitido_em|date:"d/m/Y H:i" }}</a> — {{ faixa.emitido_por }}: {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante — {{ faixa.motivo }}{% else %}faixa inicial, até a posição {{ faixa.ultima_posicao|default:"nenhuma" }}{% endif %}</li>{% endfor %}</ol>
+  <ol>{% for faixa in geracao %}<li><a href="{% url 'interface:corte-historico' edital.id faixa.id %}">{{ faixa.emitido_em|date:"d/m/Y H:i" }}</a> — {% nome_de_pessoa faixa.emitido_por %}: {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante — {{ faixa.motivo }}{% else %}faixa inicial, até a posição {{ faixa.ultima_posicao|default:"nenhuma" }}{% endif %}</li>{% endfor %}</ol>
 </section>
 {% endif %}
 {% endblock %}

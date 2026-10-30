@@ -36,15 +36,22 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3133 (dois roteiros, sem promessa manual) | T020, T021 | [quickstart](quickstart.md); `doc/homologacao-com-o-seletor-de-demonstracao.md` |
 | FR-3134 (sem tabela, sem migration, seletor igual; só a recusa de pessoa inativa) | T002 | `make check` (`makemigrations --check`); `migrations/test_migrations.py` e `integration/test_database_permissions.py` sem mudança de contagem; `TEL::test_pessoa_desativada_entre_a_busca_e_a_confirmacao_e_recusada` |
 
-## Requisitos do incremento 2 (especificados, não implementados)
+## Requisitos do incremento 2
+
+`SUS` é `seguranca/test_suspensao.py`, `IMP` é `seguranca/test_administracao_por_implantacao.py`,
+`NOM` é `seguranca/test_nome_nas_telas.py`.
 
 | Requisitos | Tarefas | Testes |
 |---|---|---|
-| FR-3135 a FR-3142 (suspensão) | T025–T028 | a escrever em T031 e T032 |
-| FR-3143 a FR-3146 (reativação) | T025, T027, T028 | a escrever em T031 e T032 |
-| FR-3147, FR-3148 (retirar e substituir a administração institucional) | T029 | a escrever em T031 |
-| FR-3149 (registros append-only, migration só cria) | T024 | a escrever em T031; os guardiões de contagem |
-| FR-3150, FR-3151 (o nome nas demais telas) | T030 | a escrever em T031 |
+| FR-3135, FR-3138, FR-3139 (global; motivo, trilha, todas as sessões; sem revogar) | T025, T027 | `SUS::test_a_suspensao_encerra_todas_as_sessoes_sem_revogar_vinculo`, `::test_sem_motivo_nada_e_suspenso`, `::test_a_tela_da_unidade_marca_a_suspensa`; `NAV::test_us6_us7_…` |
+| FR-3136, FR-3137 (quem suspende; a implantação para o institucional) | T025, T028 | `SUS::test_ninguem_se_suspende_nem_suspende_a_administracao_institucional`, `::test_so_o_institucional_suspende`, `::test_a_implantacao_suspende_e_reativa_a_administracao_institucional` |
+| FR-3140, FR-3141 (fora da busca e da concessão; a entrada recusada com a quem pedir) | T026 | `SUS::test_a_suspensa_nao_aparece_na_busca_nem_recebe_vinculo`, `::test_a_suspensa_nao_entra_e_ve_a_quem_pedir_sem_o_motivo` |
+| FR-3142, FR-3145 (as confirmações) | T027 | `SUS::test_a_confirmacao_mostra_o_que_deixa_de_valer_e_nao_grava`, `::test_a_reativacao_devolve_os_vigentes_e_nao_os_revogados`; `NAV::test_us6_us7_…` |
+| FR-3143, FR-3144 (os vigentes voltam; nenhuma sessão volta) | T025 | `SUS::test_a_reativacao_devolve_os_vigentes_e_nao_os_revogados`, `::test_a_sessao_parada_durante_a_suspensao_nao_volta`; `NAV::test_us6_us7_…` |
+| FR-3146 (duplicados, também sob concorrência) | T025 | `SUS::test_suspender_quem_ja_esta_suspenso_e_recusado`, `::test_reativar_quem_nao_esta_suspenso_e_recusado`; `CON::test_duas_suspensoes_simultaneas_gravam_uma`, `::test_duas_reativacoes_simultaneas_gravam_uma` |
+| FR-3147, FR-3148 (retirar e substituir a administração institucional) | T029 | `IMP`, os seis casos |
+| FR-3149 (registros append-only, migration só cria) | T024 | `SUS::test_suspensao_e_reativacao_nao_se_alteram_nem_se_excluem`, `::test_uma_reativacao_por_suspensao`; `integration/test_database_permissions.py` (parametrizado por `TABELAS_APPEND_ONLY`, 46); `migrations/test_migrations.py` (os dois gatilhos novos); `PRV::test_a_runtime_escreve_o_que_a_suspensao_escreve` |
+| FR-3150, FR-3151 (o nome nas demais telas) | T030 | `NOM::test_a_pessoa_institucional_aparece_pelo_nome_numa_consulta_por_pagina`, `::test_a_demonstracao_volta_como_veio_e_sem_consulta`, `::test_nenhum_template_mostra_o_autor_sem_a_tag` |
 
 ## Critérios
 
@@ -56,4 +63,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | SC-1014 (as cinco histórias no navegador, sem ação fora dele) | `NAV`, os cinco casos |
 | SC-1015 (suíte existente sem mudar resultado esperado) | a suíte inteira contra PostgreSQL; os ajustes de teste existentes estão listados na [verificação](verificacao.md) |
 | SC-1016 (demonstração sem consulta a mais) | os orçamentos de consulta das telas existentes (`tests/performance/`), sem mudança; `seguranca/test_entrada_institucional.py::test_o_ator_custa_no_maximo_duas_consultas_por_requisicao` (`106`) para o institucional |
-| SC-1017 a SC-1020 (incremento 2) | a medir quando o incremento 2 for implementado (T031, T032) |
+| SC-1017 (a suspensão encerra todas as sessões, sem revogar) | `SUS::test_a_suspensao_encerra_todas_as_sessoes_sem_revogar_vinculo` (duas sessões); `NAV::test_us6_us7_…` |
+| SC-1018 (nenhuma sessão anterior depois da reativação) | `SUS::test_a_sessao_parada_durante_a_suspensao_nao_volta` |
+| SC-1019 (a substituição nunca grava só metade) | `IMP::test_se_a_concessao_falha_a_revogacao_nao_fica`, `::test_substituir_por_quem_ja_administra_nao_muda_nada` |
+| SC-1020 (nenhuma tela mostra `pessoa-<uuid>` como autor) | `NOM::test_nenhum_template_mostra_o_autor_sem_a_tag` |

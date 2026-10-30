@@ -201,7 +201,7 @@ def lista(request, nivel):
     )
     for grupo in grupos:
         for linha in grupo["vinculos"]:
-            linha["concedido_por"] = autores.get(linha["vinculo"].concedido_por, "")
+            linha["quem_concedeu"] = autores.get(linha["vinculo"].concedido_por, "")
     catalogo = acessos.catalogo()
     return render(
         request,
@@ -248,6 +248,9 @@ def _linha(nivel, vinculo, ator, pode_conceder):
         "email": vinculo.pessoa.email,
         "papel": catalogo.get(vinculo.papel, (vinculo.papel,))[0],
         "revogavel": revogavel,
+        # Suspensa, o vínculo continua vigente e inerte (incremento 2, `FR-3139`). O `is_active` é o
+        # efeito que a suspensão grava, e já veio com a pessoa: nenhuma consulta a mais.
+        "suspensa": not vinculo.pessoa.is_active,
     }
 
 
@@ -436,3 +439,146 @@ def sem_acesso(request):
             "escopos": identidade.escopos_da_pessoa(request),
         },
     )
+
+
+# --- Suspensão e reativação (incremento 2, US6 e US7) ---------------------------------------------
+
+
+@require_http_methods(["GET", "POST"])
+def pessoas(request):
+    """Buscar quem suspender ou reativar, e as pessoas suspensas agora (`D-017`).
+
+    Só do nível institucional: a suspensão é global, e é o administrador institucional quem
+    suspende (decisão P1). A busca inclui as suspensas — é aqui, e só aqui, que elas aparecem.
+    """
+    ator = _ator_do_nivel(request, INSTITUCIONAL, ADMINISTRAR, INSTITUCIONAL.base_ler)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    from processo_seletivo.seguranca.application import suspensao
+    from processo_seletivo.seguranca.models import SuspensaoDePessoa
+
+    buscou = request.method == "POST" and request.POST.get("acao") == "buscar"
+    termo = request.POST.get("termo", "") if buscou else ""
+    achadas, ha_mais = acessos.buscar_pessoas(
+        ator, termo, permissao=ADMINISTRAR, escopo=ESCOPO_INSTITUCIONAL, com_inativas=True
+    )
+    suspensas = suspensao.suspensas(p.pk for p in achadas)
+    abertas = (
+        SuspensaoDePessoa.objects.filter(reativacao__isnull=True)
+        .select_related("pessoa")
+        .order_by("-suspensa_em")
+    )
+    return render(
+        request,
+        "interface/acessos_pessoas.html",
+        {
+            "nivel": INSTITUCIONAL,
+            "termo": termo.strip(),
+            "buscou": buscou,
+            "curto": buscou and len(termo.strip()) < acessos.PISO_DA_BUSCA,
+            "piso": acessos.PISO_DA_BUSCA,
+            "teto": acessos.TETO_DA_BUSCA,
+            "ha_mais": ha_mais,
+            "pessoas": [
+                {
+                    "identificador": p.username,
+                    "nome": acessos.nome_legivel(p),
+                    "email": p.email,
+                    "suspensa": p.pk in suspensas,
+                }
+                for p in achadas
+            ],
+            "suspensas": [
+                {
+                    "identificador": s.pessoa.username,
+                    "nome": acessos.nome_legivel(s.pessoa),
+                    "email": s.pessoa.email,
+                    "desde": s.suspensa_em,
+                }
+                for s in abertas
+            ],
+            "feito": request.GET.get("feito", ""),
+        },
+    )
+
+
+def _pessoa_da_rota(identificador):
+    from django.contrib.auth import get_user_model
+
+    from processo_seletivo.seguranca.autenticacao import PREFIXO_DO_IDENTIFICADOR
+
+    return (
+        get_user_model()
+        .objects.filter(username=identificador, username__startswith=PREFIXO_DO_IDENTIFICADOR)
+        .first()
+    )
+
+
+@require_http_methods(["POST"])
+def suspender(request, identificador):
+    """Conferir e confirmar a suspensão global de uma pessoa (`FR-3136`, `FR-3138`, `FR-3142`)."""
+    return _ato_sobre_a_pessoa(request, identificador, "suspender")
+
+
+@require_http_methods(["POST"])
+def reativar(request, identificador):
+    """Conferir e confirmar a reativação, com o que volta a valer (`FR-3143`, `FR-3145`)."""
+    return _ato_sobre_a_pessoa(request, identificador, "reativar")
+
+
+def _ato_sobre_a_pessoa(request, identificador, ato):
+    ator = _ator_do_nivel(request, INSTITUCIONAL, ADMINISTRAR, INSTITUCIONAL.base_conceder)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    from processo_seletivo.seguranca.application import suspensao
+
+    # A pessoa institucional daquele identificador, ativa ou não; outro texto qualquer é nada.
+    pessoa = _pessoa_da_rota(identificador)
+    if pessoa is None:
+        raise Http404
+    acao = request.POST.get("acao", "")
+    unidades = _unidades()
+    contexto = {
+        "nivel": INSTITUCIONAL,
+        "ato": ato,
+        "pessoa": {
+            "identificador": pessoa.username,
+            "nome": acessos.nome_legivel(pessoa),
+            "email": pessoa.email,
+        },
+        "acessos": [
+            {"unidade": _nome_da_unidade(escopo, unidades), "papeis": papeis}
+            for escopo, papeis in suspensao.acessos_que_voltam(pessoa).items()
+        ],
+        "acao_do_formulario": reverse(
+            "interface:administracao-de-acessos-suspender"
+            if ato == "suspender"
+            else "interface:administracao-de-acessos-reativar",
+            args=[pessoa.username],
+        ),
+        "motivo": request.POST.get("motivo", ""),
+    }
+    praticar, conferir = (
+        (suspensao.suspender, suspensao.conferir_suspensao)
+        if ato == "suspender"
+        else (suspensao.reativar, suspensao.conferir_reativacao)
+    )
+    erro, status, codigo = "", 200, ""
+    try:
+        if acao == "confirmar":
+            praticar(
+                ator,
+                pessoa=pessoa,
+                motivo=request.POST.get("motivo", ""),
+                now=timezone.now(),
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
+            feito = "suspensa" if ato == "suspender" else "reativada"
+            return redirect(
+                f"{reverse('interface:administracao-de-acessos-pessoas')}?feito={feito}"
+            )
+        conferir(ator, pessoa=pessoa)
+    except DomainError as recusa:
+        erro, status, codigo = recusa.detail, recusa.status, recusa.code
+    contexto.update({"erro": erro, "confirmavel": not erro or codigo == acessos.MOTIVO_OBRIGATORIO})
+    return render(request, "interface/acessos_suspensao.html", contexto, status=status)

@@ -72,7 +72,7 @@ que não há membros (`FR-1788`); o estado vazio leva à inclusão, logo abaixo.
       some. Volta assim que houver nome de exibição distinto, que é quando ela desempata.
       {% endcomment %}
       {% if item.membro.display_label and item.membro.display_label != item.membro.identity_subject %}
-      <span class="codigo">{{ item.membro.identity_subject }}</span>{% endif %}
+      <span class="codigo">{% nome_de_pessoa item.membro.identity_subject %}</span>{% endif %}
       <span class="situacao s-{{ item.membro.funcao }}">
         {% if item.membro.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
     </div>

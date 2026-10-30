@@ -149,7 +149,8 @@ foi tomada aqui.
 
 # Incremento 2 — decisões técnicas, sobre as respostas do usuário de 30/10
 
-Nada abaixo está implementado. As decisões de governança são as da spec, §Decisões do usuário.
+Implementadas nesta branch, depois do "sim, implementar" do usuário. As decisões de governança são
+as da spec, §Decisões do usuário.
 
 ## D-015 — A suspensão troca o hash da sessão, e é isso que mata as sessões antigas
 
@@ -196,10 +197,11 @@ Nada abaixo está implementado. As decisões de governança são as da spec, §D
   --de-identificador --para-provedor --para-identificador --motivo` revoga e concede num
   `transaction.atomic()` só, sob a trava global da primeira administração (`pg_advisory_xact_lock`
   da `106`), com os dois eventos na trilha e o mesmo `correlation_id`.
-- **Salvaguarda proposta, não decidida**: a retirada que deixaria **nenhum** administrador
+- **Salvaguarda técnica, revogável pelo usuário**: a retirada que deixaria **nenhum** administrador
   institucional vigente é recusada sem `--sem-administracao`, como a segunda concessão é recusada
-  sem `--adicional`. As respostas de 30/10 não tratam desse caso; a salvaguarda vai ao plano como
-  proposta, e se implementa só com a confirmação do usuário.
+  sem `--adicional`. As respostas de 30/10 não tratam desse caso. Foi implementada com o incremento
+  2, porque não proíbe nada — com a marca, a última sai — e só impede o engano de terminal; o
+  usuário a derruba ou a endurece com uma linha.
 - **Por quê**: é a P3 e a proposta 2. A substituição numa transação é o que a P3 pede
   explicitamente: não há instante com dois administradores a mais nem com o anterior ainda ativo.
 

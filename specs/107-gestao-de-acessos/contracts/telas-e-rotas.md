@@ -47,7 +47,7 @@ redireciona à tela do nível com `?feito=concedido` ou `?feito=revogado`.
 Término: evento `SAIDA` com `detalhe.motivo` em `duracao_maxima` ou `inatividade`; a sessão nova leva
 `interface_sessao_encerrada` com o motivo, que a página de acesso mostra uma vez.
 
-## Incremento 2 — especificado, não implementado
+## Incremento 2
 
 | Método | Rota ou comando | Exige | Faz |
 |---|---|---|---|
@@ -55,7 +55,8 @@ Término: evento `SAIDA` com `detalhe.motivo` em `duracao_maxima` ou `inatividad
 | POST | `administracao-de-acessos/pessoas/<identificador>/reativar` | idem | idem, com a lista do que volta a valer |
 | comando | `suspender_pessoa --provedor --identificador --motivo` | quem implanta | a suspensão sob o ator `implantacao`, a qualquer pessoa |
 | comando | `reativar_pessoa --provedor --identificador --motivo` | idem | a reativação |
-| comando | `retirar_administracao_institucional --provedor --identificador --motivo` | idem | a revogação do vínculo institucional |
+| GET, POST | `administracao-de-acessos/pessoas` | `acesso:administrar` no institucional | a busca (inclusive das suspensas) e as suspensas agora |
+| comando | `retirar_administracao_institucional --provedor --identificador --motivo [--sem-administracao]` | idem | a revogação do vínculo institucional; a última só com a marca |
 | comando | `substituir_administracao_institucional --de-provedor --de-identificador --para-provedor --para-identificador --motivo` | idem | revogação e concessão numa transação |
 
 Trilha: `PESSOA_SUSPENDER` e `PESSOA_REATIVAR`, com a suspensão como agregado e o escopo

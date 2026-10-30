@@ -18,7 +18,7 @@ porque, sendo a autoria de um ato o que impede, ela é conferível.
 
 <h2>A peça</h2>
 <dl class="ficha">
-  <div><dt>Interposto por</dt><dd>{{ proveniencia.interposto_por }}</dd></div>
+  <div><dt>Interposto por</dt><dd>{% nome_de_pessoa proveniencia.interposto_por %}</dd></div>
   <div><dt>Inscrição</dt><dd class="destaque">{{ proveniencia.inscricao.nome }}</dd></div>
   <div><dt>Protocolo da inscrição</dt><dd>{{ proveniencia.inscricao.protocolo }}</dd></div>
   <div><dt>Interposto em</dt><dd>{{ proveniencia.interposto_em|date:"d/m/Y H:i" }}</dd></div>
@@ -187,7 +187,7 @@ Como escrita, e sem resumo. Resumir a razão de quem recorre é decidir por ele 
 {% if proveniencia.admissibilidade %}
 <p class="julgado">
   <strong>{% if proveniencia.admissibilidade.admitido %}Admitido{% else %}Não admitido{% endif %}</strong>
-  · {{ proveniencia.admissibilidade.decidido_por }} · {{ proveniencia.admissibilidade.decidido_em|date:"d/m/Y H:i" }}
+  · {% nome_de_pessoa proveniencia.admissibilidade.decidido_por %} · {{ proveniencia.admissibilidade.decidido_em|date:"d/m/Y H:i" }}
 </p>
 <p class="motivacao">{{ proveniencia.admissibilidade.motivo }}</p>
 {% elif pode_decidir %}
@@ -292,7 +292,7 @@ ler a peça, e separá-las obrigaria a decidir a espécie antes de escrever a mo
 {% if proveniencia.decisao %}
 <h2>Decisão</h2>
 <p class="julgado"><strong>{{ proveniencia.especie_rotulo }}</strong>
-  · {{ proveniencia.decisao.decidido_por }} · {{ proveniencia.decisao.decidido_em|date:"d/m/Y H:i" }}</p>
+  · {% nome_de_pessoa proveniencia.decisao.decidido_por %} · {{ proveniencia.decisao.decidido_em|date:"d/m/Y H:i" }}</p>
 <p class="motivacao">{{ proveniencia.decisao.motivacao|linebreaksbr }}</p>
 {% endif %}
 

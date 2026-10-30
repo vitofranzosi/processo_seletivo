@@ -75,13 +75,40 @@ roteiro de ativação passou a declarar os dois valores. O incremento 2 foi espe
 implementado**. Executado depois das edições: `ruff check`, `ruff format --check`, e os guardiões de
 citação, do README, da configuração de produção e do prazo da sessão (83 passando).
 
+## Incremento 2 — implementado depois do "sim, implementar" do usuário
+
+**O que muda no banco**: a migration `seguranca/0002` cria `SuspensaoDePessoa` e
+`ReativacaoDePessoa`, append-only nas duas camadas; `TABELAS_APPEND_ONLY` passa de 44 a **46**. Dois
+guardiões sobem junto, com o motivo no comentário: `test_homologacao_preservada.py::
+test_as_tabelas_append_only_anteriores_continuam_todas` (as cinco últimas e o total) e
+`TRIGGERS_POR_APP` de `migrations/test_migrations.py` (os dois gatilhos novos). O
+`test_database_permissions.py`, parametrizado pela lista, passa a provar as duas tabelas novas sem
+mudança.
+
+**O nome nas demais telas**: 41 exibições de autor em 24 templates passaram pela tag
+`nome_de_pessoa`; ficaram com o identificador, de propósito, os valores de filtro e de atributo, a
+confirmação da comissão (que mostra o identificador como será gravado), o identificador digitado
+em Impedimentos e o seletor da demonstração. O guardião
+`test_nome_nas_telas.py::test_nenhum_template_mostra_o_autor_sem_a_tag` prende a regra.
+
+| Execução | Resultado |
+|---|---|
+| `make lint check test-pg`, 4 workers, `DB_NAME=ps107` | lint e `check` verdes; **13814 passando, 12 pulados, nenhuma falha**, em 606s |
+| `tests/navegador` com capturas | 6 passando; as confirmações de suspensão e de reativação conferidas a olho |
+| Concorrência da suspensão com a trava da pessoa removida à mão, numa cópia descartável | reprova (`['gravado', 'gravado']`); com a trava, passa |
+| Substituição com falha forçada entre a revogação e a concessão | nenhuma das duas fica (`SC-1019`) |
+
+**A salvaguarda da retirada da última administração institucional** (`D-018`) foi implementada como
+salvaguarda técnica, anunciada ao usuário antes de implementar e revogável por ele: não proíbe nada,
+só pede `--sem-administracao`.
+
 ## O que depende de fora deste repositório
 
 - **A conexão real** com o provedor do Ifes: nada aqui fala com AD, LDAP, OIDC ou SAML. As jornadas
   provam a aplicação, com o adaptador simulado; o adaptador real precisa dos próprios testes contra
   um provedor de homologação (`doc/ativacao-do-sso-institucional.md`, §2).
-- **A implementação do incremento 2**, sobre as decisões de 30/10, e a salvaguarda da retirada do
-  último administrador institucional, que as decisões não cobrem.
+- **A decisão sobre a retirada do último administrador institucional**, que as respostas de 30/10
+  não cobrem; até lá, a salvaguarda técnica (`D-018`).
 - **Abrir a gestão em produção**: não foi feito, nem é desta feature.
 
 ## Observações sem ação

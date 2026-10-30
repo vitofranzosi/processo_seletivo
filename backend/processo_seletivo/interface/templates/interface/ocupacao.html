@@ -238,7 +238,7 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   <h3 id="acrescimos-{{ forloop.counter }}">Vagas acrescidas depois da publicação</h3>
   <ul class="consequencias">
     {% for item in recorte.acrescimos %}
-    <li>{{ item.registro.registrado_em|date:"d/m/Y H:i" }} — {% if item.registro.especie == "ACRESCIMO" %}acréscimo de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Origem: {{ item.registro.origem }}. Fundamento: {{ item.registro.fundamento }}.{% else %}desfazimento de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Motivo: {{ item.registro.fundamento }}.{% endif %}{% if item.registro.referencia %} Referência: {{ item.registro.referencia }}.{% endif %} Registrado por {{ item.registro.registrado_por }}.
+    <li>{{ item.registro.registrado_em|date:"d/m/Y H:i" }} — {% if item.registro.especie == "ACRESCIMO" %}acréscimo de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Origem: {{ item.registro.origem }}. Fundamento: {{ item.registro.fundamento }}.{% else %}desfazimento de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Motivo: {{ item.registro.fundamento }}.{% endif %}{% if item.registro.referencia %} Referência: {{ item.registro.referencia }}.{% endif %} Registrado por {% nome_de_pessoa item.registro.registrado_por %}.
       {% if pode_emitir and item.restante %}
       <form method="post" action="{% url 'interface:desfazer-acrescimo' edital.id marco_id %}" class="acoes">
         {% csrf_token %}

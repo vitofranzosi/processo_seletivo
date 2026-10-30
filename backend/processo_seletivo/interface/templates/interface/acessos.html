@@ -18,7 +18,7 @@ confirmação, com motivo (`FR-3116`).
 {% if feito == "concedido" %}<p class="sucesso" role="status">Acesso concedido. Vale na próxima ação da pessoa.</p>{% endif %}
 {% if feito == "revogado" %}<p class="sucesso" role="status">Acesso revogado. A pessoa o perde na próxima ação.</p>{% endif %}
 
-{% if pode_conceder %}<p><a class="botao" href="{% url nivel.rota_conceder %}">Conceder acesso</a></p>{% endif %}
+{% if pode_conceder %}<p class="acoes-de-acesso"><a class="botao" href="{% url nivel.rota_conceder %}">Conceder acesso</a>{% if nivel.institucional %} <a class="botao secundario" href="{% url 'interface:administracao-de-acessos-pessoas' %}">Suspender ou reativar pessoas</a>{% endif %}</p>{% endif %}
 
 {% for grupo in grupos %}
 <section aria-labelledby="quem-atua-{{ forloop.counter }}" class="quem-atua">
@@ -31,10 +31,10 @@ confirmação, com motivo (`FR-3116`).
       <tbody>
         {% for linha in grupo.vinculos %}
         <tr>
-          <td><strong>{{ linha.pessoa }}</strong>{% if linha.email %}<span class="detalhe-da-pessoa">{{ linha.email }}</span>{% endif %}</td>
+          <td><strong>{{ linha.pessoa }}</strong>{% if linha.suspensa %} <span class="situacao s-CANCELADO">suspensa</span>{% endif %}{% if linha.email %}<span class="detalhe-da-pessoa">{{ linha.email }}</span>{% endif %}</td>
           <td>{{ linha.papel }}</td>
           <td>{{ linha.vinculo.concedido_em|date:"d/m/Y" }}</td>
-          <td>{{ linha.concedido_por }}</td>
+          <td>{{ linha.quem_concedeu }}</td>
           <td>{% if linha.revogavel %}
             <form method="post" action="{% url nivel.rota_revogar linha.vinculo.pk %}">
               {% csrf_token %}

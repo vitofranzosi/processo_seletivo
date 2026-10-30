@@ -264,6 +264,9 @@ QUEM_CARREGA = {
         "acessos.html",
         "acessos_conceder.html",
         "acessos_confirmar.html",
+        # A suspensão e a reativação, do incremento 2.
+        "acessos_pessoas.html",
+        "acessos_suspensao.html",
     },
     # A prévia da classificação (094): o painel só existe na etapa Classificação.
     "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},

@@ -32,3 +32,6 @@
   .historico-de-acessos li,.dados-do-ato{grid-template-columns:minmax(0,1fr)}
   .historico-de-acessos .motivo{grid-column:1}
 }
+
+/* Os dois botões do topo da administração institucional — conceder e suspender — na mesma linha. */
+.acoes-de-acesso{display:flex;flex-wrap:wrap;gap:.5rem 1rem}

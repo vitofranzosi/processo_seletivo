@@ -5,8 +5,8 @@ homologação; o segundo é o único que mostra as telas desta feature, e é do 
 
 ## Roteiro A — homologação manual, com o seletor (nada mudou)
 
-Pré-requisito: `INTERFACE_SELETOR_IDENTIDADE=true`, `make preparar` (**44 de 44** tabelas
-append-only — a `107` não acrescenta nenhuma).
+Pré-requisito: `INTERFACE_SELETOR_IDENTIDADE=true`, `make preparar` (**46 de 46** tabelas
+append-only — o incremento 1 da `107` não acrescentou nenhuma; o incremento 2, as duas da suspensão).
 
 1. `/gestao/identificar` → "Acessar ambiente de demonstração" → escolher a identidade e os papéis.
 2. A barra mostra o identificador escolhido, como antes, e **não** mostra "Acessos da unidade",
@@ -50,6 +50,7 @@ Cada jornada tem três partes, separadas no código
 | US3 — conceder e revogar | o administrador de acessos do Cefor; a Beatriz, que já entrou uma vez | entrar; "Acessos da unidade" → "Conceder acesso" → buscar "beatriz" → Elaborador → "Conferir" → motivo → "Confirmar a concessão"; a Beatriz entra; o administrador revoga com motivo; a Beatriz clica num item da barra | a Beatriz cai na tela sem acesso; o vínculo, a revogação e os dois eventos de trilha; o histórico com os dois motivos |
 | US4 — administração institucional | a administradora institucional, como o comando de implantação a deixaria; a Beatriz | entrar; "Administração de acessos" → "Conceder acesso" → buscar → unidade → "Conferir" → motivo → confirmar; a Beatriz entra | a Beatriz vê "Acessos da unidade"; o vínculo de Administrador de acessos no campus A |
 | US5 — inatividade | uma pessoa com acesso; o relógio do ambiente | entrar; (o relógio avança 31 minutos); clicar em "Agenda" | a página de acesso diz que a sessão terminou por inatividade; a saída na trilha, com o motivo |
+| US6 e US7 — suspender e reativar | a administradora institucional; a Beatriz, Elaboradora no Cefor | a Beatriz entra; a administradora: "Administração de acessos" → "Suspender ou reativar pessoas" → buscar → "Suspender" → motivo → confirmar; a Beatriz clica em "Agenda"; a administradora reativa, conferindo o que volta; a Beatriz entra de novo | a sessão dela caiu na suspensão; volta com Elaborador; nenhum vínculo revogado; a suspensão e a reativação na trilha |
 
 **Como o provedor responde sem o Ifes.** O adaptador é o provedor simulado da `106`, que mora em
 `backend/tests/` e que produção recusa. A ida ao provedor manda o navegador a uma página servida
@@ -57,9 +58,24 @@ pelo próprio teste (`tests/navegador/provedor.py`), que mostra quem o ambiente 
 "Continuar". O botão volta ao retorno da gestão com o `state` da ida e um bilhete que só o provedor
 simulado resolve. O navegador não escolhe quem é, e nada do que ele enviar vira identidade.
 
+## Os comandos de implantação (incremento 2)
+
+Não há tela para eles, de propósito (decisões P1 e P3): suspender e reativar quem tem
+administração institucional, e retirar ou substituir essa administração.
+
+```bash
+uv run python manage.py suspender_pessoa --provedor <nome> --identificador <id> --motivo "…"
+uv run python manage.py reativar_pessoa --provedor <nome> --identificador <id> --motivo "…"
+uv run python manage.py retirar_administracao_institucional --provedor <nome> --identificador <id> --motivo "…"
+uv run python manage.py substituir_administracao_institucional --de-provedor <nome> --de-identificador <id> --para-provedor <nome> --para-identificador <id> --motivo "…"
+```
+
+A retirada da última administração institucional pede `--sem-administracao`. No ambiente de
+testes, os comandos são exercitados por `tests/seguranca/test_suspensao.py` e
+`tests/seguranca/test_administracao_por_implantacao.py`.
+
 ## O que as jornadas não cobrem
 
 - **O provedor real.** Nada aqui fala com AD, LDAP, OIDC ou SAML.
-- **A suspensão, a reativação e a retirada do administrador institucional**: incremento 2, e
-  dependem das decisões P1 a P3 da spec.
-- **O nome nas demais telas** que exibem o `subject` de outra pessoa: incremento 2.
+- **Os comandos de implantação**, que não têm tela: cobertos pelos testes de cliente, e não pelo
+  navegador.

@@ -138,6 +138,10 @@ TRIGGERS_POR_APP = {
         "revogacao_de_vinculo_append_only",
         "pessoa_nao_se_exclui",
         "pessoa_identificador_imutavel",
+        # A suspensão e a reativação da 107: absolutas, como o vínculo — a suspensão se encerra por
+        # reativação, que é linha nova.
+        "suspensao_de_pessoa_append_only",
+        "reativacao_de_pessoa_append_only",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)

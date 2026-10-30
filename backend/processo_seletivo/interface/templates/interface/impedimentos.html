@@ -104,7 +104,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
         <td>{{ linha.avaliacao.parecer|default:"—" }}</td>
         <td>vigente desde {{ linha.avaliacao.versao.valid_from|date:"d/m/Y H:i" }}</td>
         <td>{{ linha.avaliacao.concluida_em|date:"d/m/Y H:i:s" }}</td>
-        <td>{{ linha.ato_rotulo|default:"—" }} por {{ linha.ato.actor_subject|default:"—" }}</td>
+        <td>{{ linha.ato_rotulo|default:"—" }} por {% if linha.ato.actor_subject %}{% nome_de_pessoa linha.ato.actor_subject %}{% else %}—{% endif %}</td>
         <td>{{ linha.ato.reason|default:"—" }}</td>
       </tr>
       {% endfor %}

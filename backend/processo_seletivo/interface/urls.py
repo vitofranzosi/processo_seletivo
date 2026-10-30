@@ -63,6 +63,22 @@ urlpatterns = [
         {"nivel": "institucional"},
         name="administracao-de-acessos-revogar",
     ),
+    # A suspensão e a reativação de pessoa (107, incremento 2): só do nível institucional.
+    path(
+        "administracao-de-acessos/pessoas",
+        acessos.pessoas,
+        name="administracao-de-acessos-pessoas",
+    ),
+    path(
+        "administracao-de-acessos/pessoas/<str:identificador>/suspender",
+        acessos.suspender,
+        name="administracao-de-acessos-suspender",
+    ),
+    path(
+        "administracao-de-acessos/pessoas/<str:identificador>/reativar",
+        acessos.reativar,
+        name="administracao-de-acessos-reativar",
+    ),
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
     path("agenda", views.agenda, name="agenda"),

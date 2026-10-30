@@ -46,7 +46,7 @@ frase diz quantas ficam sem ninguem.
 <h2>Os atos anteriores deste recorte</h2>
 <ul class="consequencias">
   {% for item in previa.acrescimos %}
-  <li>{{ item.registro.registrado_em|date:"d/m/Y H:i" }} — {% if item.registro.especie == "ACRESCIMO" %}acréscimo de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Origem: {{ item.registro.origem }}.{% else %}desfazimento de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Motivo: {{ item.registro.fundamento }}.{% endif %} Registrado por {{ item.registro.registrado_por }}.</li>
+  <li>{{ item.registro.registrado_em|date:"d/m/Y H:i" }} — {% if item.registro.especie == "ACRESCIMO" %}acréscimo de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Origem: {{ item.registro.origem }}.{% else %}desfazimento de {{ item.registro.quantidade|contagem:"vaga,vagas" }}. Motivo: {{ item.registro.fundamento }}.{% endif %} Registrado por {% nome_de_pessoa item.registro.registrado_por %}.</li>
   {% endfor %}
 </ul>
 {% endif %}

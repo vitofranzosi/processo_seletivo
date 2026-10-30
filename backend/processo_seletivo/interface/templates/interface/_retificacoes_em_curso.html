@@ -16,7 +16,7 @@ amplia acesso nenhum.
     {% comment %} "Devolvida" e "reenviada" no lugar de "Em elaboração" e "Em revisão" quando é o caso
        (104, FR-2821, FR-2822): a mesma situação de domínio, dita com o que aconteceu a ela. {% endcomment %}
     <span class="situacao s-{{ item.retificacao.status }}">{{ item.rotulo_situacao|capfirst }}</span>
-    <span class="quem-criou">criada por {{ item.retificacao.created_by }}{% if item.desde %} · aguarda desde {{ item.desde|date:"d/m/Y" }}{% endif %}</span>
+    <span class="quem-criou">criada por {% nome_de_pessoa item.retificacao.created_by %}{% if item.desde %} · aguarda desde {{ item.desde|date:"d/m/Y" }}{% endif %}</span>
     <span class="justificativa">{{ item.retificacao.justification|truncatechars:160 }}</span>
     {% if item.devolvida %}<span class="justificativa">Motivo da devolução: {{ item.retificacao.return_reason|truncatechars:160 }}</span>{% endif %}
     <span class="bastao">

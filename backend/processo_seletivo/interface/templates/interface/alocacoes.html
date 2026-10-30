@@ -175,7 +175,7 @@
             assim que houver nome de exibição distinto, que é quando ele desempata.
             {% endcomment %}
             {% if linha.membro.display_label and linha.membro.display_label != linha.membro.identity_subject %}
-            <span class="codigo">{{ linha.membro.identity_subject }}</span>{% endif %}
+            <span class="codigo">{% nome_de_pessoa linha.membro.identity_subject %}</span>{% endif %}
           </th>
           {% for celula in linha.celulas %}
           {% comment %}

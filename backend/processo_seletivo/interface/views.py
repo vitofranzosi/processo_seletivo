@@ -843,8 +843,27 @@ def retorno_institucional(request):
         identidade.entrar_institucional(request, autenticada, correlation_id=request.correlation_id)
         is None
     ):
+        if _suspensa(autenticada):
+            # A própria pessoa sabe que está suspensa, e a quem pedir — sem o motivo nem quem
+            # suspendeu, que são da trilha (107, `FR-3141`).
+            raise DomainError(
+                "acesso_suspenso",
+                "Seu acesso à gestão está suspenso. Peça a reativação ao administrador "
+                "institucional de acessos.",
+                403,
+            )
         raise _recusa_da_entrada()
     return redirect(ida.get("proximo") or reverse("interface:lista"))
+
+
+def _suspensa(autenticada):
+    from processo_seletivo.seguranca.application.suspensao import suspensao_aberta
+    from processo_seletivo.seguranca.models import IdentidadeExterna
+
+    externa = IdentidadeExterna.objects.filter(
+        provedor=autenticada.provedor, identificador=autenticada.identificador
+    ).first()
+    return externa is not None and suspensao_aberta(externa.pessoa_id) is not None
 
 
 @require_http_methods(["POST"])

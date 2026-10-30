@@ -503,3 +503,40 @@ def campos_na_ordem_do_compor(grupo):
     from processo_seletivo.interface.retificacao import na_ordem_do_compor
 
     return na_ordem_do_compor(grupo)
+
+
+# O mapa de identificador interno → nome, guardado na própria requisição (107, `D-019`).
+_NOMES_DA_REQUISICAO = "_nomes_das_pessoas"
+
+
+@register.simple_tag(takes_context=True)
+def nome_de_pessoa(context, valor):
+    """Quem praticou o ato, pelo nome, e não por `pessoa-<uuid>` (107, `FR-3150`, `FR-3151`).
+
+    **Sem consulta para a demonstração**: o `subject` escolhido no seletor não tem o prefixo
+    institucional, e volta como veio — as telas da demonstração e os testes que leem o identificador
+    nelas não mudam. Para o primeiro identificador institucional da página, uma consulta só traz o
+    nome de todas as pessoas institucionais, e o mapa fica na requisição: são os servidores da
+    unidade, centenas, e é o que mantém a página em uma consulta por mais autores que ela mostre.
+    """
+    from processo_seletivo.seguranca.autenticacao import PREFIXO_DO_IDENTIFICADOR
+
+    texto = "" if valor is None else str(valor)
+    if not texto.startswith(PREFIXO_DO_IDENTIFICADOR):
+        return texto
+    request = context.get("request")
+    nomes = getattr(request, _NOMES_DA_REQUISICAO, None) if request is not None else None
+    if nomes is None:
+        from django.contrib.auth import get_user_model
+
+        from processo_seletivo.seguranca.application.acessos import nome_legivel
+
+        nomes = {
+            pessoa.username: nome_legivel(pessoa)
+            for pessoa in get_user_model()
+            .objects.filter(username__startswith=PREFIXO_DO_IDENTIFICADOR)
+            .only("username", "first_name", "email")
+        }
+        if request is not None:
+            setattr(request, _NOMES_DA_REQUISICAO, nomes)
+    return nomes.get(texto, texto)

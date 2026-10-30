@@ -10,7 +10,7 @@ from django.db import connection
 
 from processo_seletivo.seguranca import acessos as catalogo
 from processo_seletivo.seguranca.application import acessos
-from processo_seletivo.seguranca.models import Vinculo
+from processo_seletivo.seguranca.models import SuspensaoDePessoa, Vinculo
 from processo_seletivo.unidades.models import Unidade
 from tests.integration.test_database_permissions import (  # noqa: F401  (fixture)
     RUNTIME_ROLE,
@@ -42,6 +42,10 @@ def _consultas():
         .filter(papel=catalogo.ADMINISTRADOR_DE_ACESSOS)
         .select_related("pessoa"),
         "unidades": Unidade.objects.order_by("codigo"),
+        # O incremento 2: as suspensões abertas, e a pessoa que a suspensão e a reativação escrevem.
+        "suspensoes abertas": SuspensaoDePessoa.objects.filter(
+            reativacao__isnull=True
+        ).select_related("pessoa"),
     }
 
 
@@ -61,3 +65,17 @@ def test_a_runtime_renova_a_sessao(runtime_connection):  # noqa: F811
                 "SELECT has_table_privilege(%s, 'django_session', %s)", [RUNTIME_ROLE, privilegio]
             )
             assert cursor.fetchone()[0] is True, privilegio
+
+
+def test_a_runtime_escreve_o_que_a_suspensao_escreve(runtime_connection):  # noqa: F811
+    """A suspensão insere o registro e atualiza `is_active` e a senha da pessoa (`D-015`)."""
+    with runtime_connection.cursor() as cursor:
+        for tabela, privilegio in (
+            ("seguranca_suspensaodepessoa", "INSERT"),
+            ("seguranca_reativacaodepessoa", "INSERT"),
+            ("auth_user", "UPDATE"),
+        ):
+            cursor.execute(
+                "SELECT has_table_privilege(%s, %s, %s)", [RUNTIME_ROLE, tabela, privilegio]
+            )
+            assert cursor.fetchone()[0] is True, (tabela, privilegio)

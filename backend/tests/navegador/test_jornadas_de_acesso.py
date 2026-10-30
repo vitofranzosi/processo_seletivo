@@ -186,3 +186,53 @@ def test_us5_a_sessao_termina_por_inatividade_e_a_pagina_diz_por_que(jornada, mo
     expect(pagina.get_by_text("Sua sessão terminou por inatividade")).to_be_visible()
     saida = RegistroAuditoria.objects.get(operation="SAIDA")
     assert saida.detalhe["motivo"] == "inatividade"
+
+
+def test_us6_us7_suspender_encerra_as_sessoes_e_reativar_pede_entrar_de_novo(jornada):
+    # Preparação: a administradora institucional; a Beatriz, Elaboradora no Cefor.
+    rita = pessoa("rita", nome="Rita Reitoria")
+    vincular(
+        rita,
+        catalogo.ESCOPO_INSTITUCIONAL,
+        catalogo.ADMINISTRADOR_INSTITUCIONAL,
+        por="implantacao",
+    )
+    bea = pessoa("bea", **BEATRIZ)
+    vincular(bea, "cefor", "elaborador")
+    administradora, beatriz = jornada.pessoa(), jornada.pessoa()
+
+    # Ações — a Beatriz está trabalhando; a administradora a suspende.
+    jornada.entrar(beatriz, "bea", **BEATRIZ)
+    expect(beatriz.locator(".nome-da-pessoa")).to_contain_text("Elaborador")
+    jornada.entrar(administradora, "rita", nome="Rita Reitoria")
+    administradora.get_by_role("link", name="Administração de acessos").click()
+    administradora.get_by_role("link", name="Suspender ou reativar pessoas").click()
+    administradora.get_by_label("Nome ou e-mail da pessoa").fill("beatriz")
+    administradora.get_by_role("button", name="Buscar").click()
+    administradora.get_by_role("button", name="Suspender Beatriz Prado").click()
+    expect(administradora.get_by_role("heading", name="Confira antes de suspender")).to_be_visible()
+    expect(administradora.get_by_text("Acessos que deixam de valer")).to_be_visible()
+    jornada.capturar(administradora, "confirmar-suspensao")
+    administradora.get_by_label("Motivo").fill("Processo 23.000/2026")
+    administradora.get_by_role("button", name="Confirmar a suspensão").click()
+    expect(administradora.get_by_text("Pessoa suspensa")).to_be_visible()
+    beatriz.get_by_role("link", name="Agenda").click()
+    expect(beatriz.get_by_role("heading", name="Bem-vindo à gestão")).to_be_visible()
+
+    # Ações — reativa; a sessão antiga dela continua morta, e ela entra de novo.
+    administradora.get_by_role("button", name="Reativar Beatriz Prado").click()
+    expect(administradora.locator(".dados-do-ato").last).to_contain_text("Elaborador")
+    jornada.capturar(administradora, "confirmar-reativacao")
+    administradora.get_by_label("Motivo").fill("Fim do processo")
+    administradora.get_by_role("button", name="Confirmar a reativação").click()
+    expect(administradora.get_by_text("Pessoa reativada")).to_be_visible()
+    jornada.entrar(beatriz, "bea", **BEATRIZ)
+
+    # Verificações.
+    expect(beatriz.locator(".nome-da-pessoa")).to_contain_text("Elaborador")
+    assert not RevogacaoDeVinculo.objects.exists()
+    assert list(
+        RegistroAuditoria.objects.filter(operation__startswith="PESSOA_")
+        .order_by("occurred_at")
+        .values_list("operation", flat=True)
+    ) == ["PESSOA_SUSPENDER", "PESSOA_REATIVAR"]

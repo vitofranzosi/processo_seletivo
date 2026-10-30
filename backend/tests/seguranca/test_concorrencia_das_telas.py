@@ -102,3 +102,80 @@ def test_duas_revogacoes_do_mesmo_vinculo_gravam_uma(monkeypatch):
 
     assert resultados == ["gravado", acessos.VINCULO_JA_REVOGADO]
     assert RevogacaoDeVinculo.objects.count() == 1
+
+
+def _institucional():
+    from processo_seletivo.seguranca.acessos import ADMINISTRAR, ESCOPO_INSTITUCIONAL
+
+    atores = []
+    for nome in ("rita", "rosa"):
+        alguem = pessoa(nome)
+        atores.append(Actor(alguem.username, ESCOPO_INSTITUCIONAL, frozenset({ADMINISTRAR})))
+    return atores
+
+
+def _barreira_em_suspensao_aberta(monkeypatch):
+    from processo_seletivo.seguranca.application import suspensao
+
+    barreira = threading.Barrier(2, timeout=2)
+    original = suspensao.suspensao_aberta
+
+    def depois_da_barreira(pessoa_id):
+        try:
+            barreira.wait()
+        except threading.BrokenBarrierError:
+            pass
+        return original(pessoa_id)
+
+    monkeypatch.setattr(suspensao, "suspensao_aberta", depois_da_barreira)
+    return suspensao
+
+
+def _duas(atos):
+    resultados = []
+
+    def executar(ato):
+        try:
+            ato()
+            resultados.append("gravado")
+        except DomainError as recusa:
+            resultados.append(recusa.code)
+        finally:
+            connections.close_all()
+
+    linhas = [threading.Thread(target=executar, args=(ato,)) for ato in atos]
+    for linha in linhas:
+        linha.start()
+    for linha in linhas:
+        linha.join(timeout=30)
+    return sorted(resultados)
+
+
+def test_duas_suspensoes_simultaneas_gravam_uma(monkeypatch):
+    from processo_seletivo.seguranca.models import SuspensaoDePessoa
+
+    primeira, segunda = _institucional()
+    ana = pessoa("ana")
+    suspensao = _barreira_em_suspensao_aberta(monkeypatch)
+
+    def suspender(ator):
+        return lambda: suspensao.suspender(ator, pessoa=ana, motivo="Processo", now=AGORA)
+
+    assert _duas([suspender(primeira), suspender(segunda)]) == ["gravado", suspensao.JA_SUSPENSA]
+    assert SuspensaoDePessoa.objects.count() == 1
+
+
+def test_duas_reativacoes_simultaneas_gravam_uma(monkeypatch):
+    from processo_seletivo.seguranca.application import suspensao as servico
+    from processo_seletivo.seguranca.models import ReativacaoDePessoa
+
+    primeira, segunda = _institucional()
+    ana = pessoa("ana")
+    servico.suspender(primeira, pessoa=ana, motivo="Processo", now=AGORA)
+    suspensao = _barreira_em_suspensao_aberta(monkeypatch)
+
+    def reativar(ator):
+        return lambda: suspensao.reativar(ator, pessoa=ana, motivo="Fim", now=AGORA)
+
+    assert _duas([reativar(primeira), reativar(segunda)]) == ["gravado", suspensao.NAO_SUSPENSA]
+    assert ReativacaoDePessoa.objects.count() == 1

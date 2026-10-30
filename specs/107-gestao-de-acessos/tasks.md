@@ -41,18 +41,18 @@
 - [x] T022 `rastreabilidade.md` e `verificacao.md`
 - [x] T023 `make lint check test-pg`; CI do commit final (ver a verificação)
 
-## Incremento 2 — especificado, não implementado
+## Incremento 2 — implementado
 
-- [ ] T024 Modelos `SuspensaoDePessoa` e `ReativacaoDePessoa`, migration `seguranca/0002`, gatilhos, `TABELAS_APPEND_ONLY` (44 → 46) e guardiões de contagem (D-016)
-- [ ] T025 `suspender` e `reativar` na camada de aplicação, com a trava da pessoa, a troca do hash da sessão e a trilha (D-015, D-016)
-- [ ] T026 A entrada recusa a pessoa suspensa com a frase de acesso suspenso; a busca e a concessão a recusam (FR-3140, FR-3141)
-- [ ] T027 A seção de suspensão e reativação em "Administração de acessos", com as duas confirmações; a marca de suspensa em "Acessos da unidade" (D-017)
-- [ ] T028 Comandos `suspender_pessoa` e `reativar_pessoa` (D-017)
-- [ ] T029 Comandos `retirar_administracao_institucional` e `substituir_administracao_institucional`; a salvaguarda do último só com a confirmação do usuário (D-018)
-- [ ] T030 O filtro `nome_de_pessoa` e os templates que exibem autor (D-019)
-- [ ] T031 [P] Testes de cliente, concorrência e privilégios do incremento 2
-- [ ] T032 [P] A jornada de suspensão e reativação no navegador
-- [ ] T033 Documentação, rastreabilidade e verificação do incremento 2
+- [x] T024 Modelos `SuspensaoDePessoa` e `ReativacaoDePessoa`, migration `seguranca/0002`, gatilhos, `TABELAS_APPEND_ONLY` (44 → 46) e guardiões de contagem (D-016)
+- [x] T025 `suspender` e `reativar` na camada de aplicação, com a trava da pessoa, a troca do hash da sessão e a trilha (D-015, D-016)
+- [x] T026 A entrada recusa a pessoa suspensa com a frase de acesso suspenso; a busca e a concessão a recusam (FR-3140, FR-3141)
+- [x] T027 A seção de suspensão e reativação em "Administração de acessos", com as duas confirmações; a marca de suspensa em "Acessos da unidade" (D-017)
+- [x] T028 Comandos `suspender_pessoa` e `reativar_pessoa` (D-017)
+- [x] T029 Comandos `retirar_administracao_institucional` e `substituir_administracao_institucional`; a salvaguarda do último como salvaguarda técnica revogável (D-018)
+- [x] T030 O filtro `nome_de_pessoa` e os templates que exibem autor (D-019)
+- [x] T031 [P] Testes de cliente, concorrência e privilégios do incremento 2
+- [x] T032 [P] A jornada de suspensão e reativação no navegador
+- [x] T033 Documentação, rastreabilidade e verificação do incremento 2
 
 ## Dependências
 

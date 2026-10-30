@@ -26,7 +26,7 @@ Ela é lida por `make runserver` a partir do `backend/.env`, e pelo `docker comp
 chamado à mão fora do `make` não lê o `.env` — exporte a variável antes.
 
 **Depois de atualizar o código**, rode o `make preparar` (ou `ps-migrar` no servidor). O
-`provisionar_papeis` passa a informar **44 de 44** tabelas append-only; se o primeiro número vier
+`provisionar_papeis` passa a informar **46 de 46** tabelas append-only (44 com a `106`, e as duas da suspensão de pessoa da `107`); se o primeiro número vier
 `0`, a segunda passada não rodou.
 
 ## O que não fazer
@@ -67,7 +67,7 @@ cd backend && uv sync --extra dev --extra navegador && uv run playwright install
 make test-navegador
 ```
 
-Abre um Chromium na tela e percorre as cinco jornadas, com o servidor, as pessoas, os vínculos e a
+Abre um Chromium na tela e percorre as seis jornadas, com o servidor, as pessoas, os vínculos e a
 página do provedor preparados pelos testes. O roteiro está no
 [quickstart da 107](../specs/107-gestao-de-acessos/quickstart.md). Não há como fazer o mesmo à mão
 no ambiente de homologação até o provedor do Ifes de homologação existir.

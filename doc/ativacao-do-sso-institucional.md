@@ -20,10 +20,10 @@ Nenhuma muda o código já entregue; as abertas bloqueiam a ativação.
 | 4 | Quem concede na unidade (decisão 5) | **decidida em 30/10**: o papel próprio, separado do Gestor; acúmulo só por concessão explícita | nada muda: é o catálogo atual |
 | 5 | Tempo de sessão e inatividade (decisão 11) | **decidida em 30/10**: 8 h e 30 min, declarados expressamente em produção; ajustes, documentados | `GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS=480` e `GESTAO_SESSAO_INATIVIDADE_MINUTOS=30` no `app.env` (§5) |
 | 6 | Portão do diretório (decisão 3) | **aberta**: sem portão — toda conta entra e vê "sem acesso" | o adaptador |
-| 7 | Suspensão de pessoa (P1 da `107`) | **decidida em 30/10**: suspensão global e revogação por unidade; o administrador institucional suspende; o institucional, a implantação; motivo, trilha e fim de todas as sessões | incremento 2 da `107`, **especificado, não implementado** |
+| 7 | Suspensão de pessoa (P1 da `107`) | **decidida em 30/10**: suspensão global e revogação por unidade; o administrador institucional suspende; o institucional, a implantação; motivo, trilha e fim de todas as sessões | incremento 2 da `107`: "Administração de acessos" → "Suspender ou reativar pessoas", e os comandos `suspender_pessoa` e `reativar_pessoa` |
 | 8 | O que a reativação devolve (P2 da `107`) | **decidida em 30/10**: os vínculos vigentes voltam, os revogados não; nenhuma sessão anterior volta | idem |
-| 9 | Retirar ou substituir a administração institucional (P3 da `107`) | **decidida em 30/10**: comando de implantação, com motivo e trilha; a substituição numa operação só | idem; **até lá não há caminho nenhum** |
-| 10 | A retirada pode deixar nenhum administrador institucional? | **aberta**: a `107` propõe recusar sem marca explícita | o comando de retirada (`D-018` da `107`) |
+| 9 | Retirar ou substituir a administração institucional (P3 da `107`) | **decidida em 30/10**: comando de implantação, com motivo e trilha; a substituição numa operação só | os comandos `retirar_administracao_institucional` e `substituir_administracao_institucional` (incremento 2 da `107`) |
+| 10 | A retirada pode deixar nenhum administrador institucional? | **aberta**; até a decisão, salvaguarda técnica: a retirada da última pessoa pede `--sem-administracao` | o comando de retirada (`D-018` da `107`) |
 
 A **segregação mais estrita** (quem elabora não homologa) é emenda à FR-021 da `001`, e não faz
 parte da ativação.
@@ -75,15 +75,20 @@ A `107` entregou as cinco que a `106` deixou fora; ver o [quickstart](../specs/1
 ## 4. O que não foi feito, e é preciso antes de abrir
 
 - **Suspensão e reativação** de uma pessoa em todas as unidades, **inclusive do administrador
-  institucional** (decisões 7 e 8). Decididas em 30/10 e especificadas no incremento 2 da `107`
-  (US6, US7), **não implementadas**. O desenho troca o hash da sessão na suspensão, para que
+  institucional** (decisões 7 e 8). Decididas em 30/10 e **implementadas** no incremento 2 da `107`
+  (US6, US7). A suspensão troca o hash da sessão, para que
   nenhuma sessão anterior volte na reativação (`D-015` da `107`): `is_active=False` sozinho não
   basta, porque a sessão parada durante a suspensão voltaria a valer.
 - **Duração da sessão** (decisão 5): o mecanismo entrou com a `107`, e os valores foram decididos —
   480 e 30 minutos, declarados no `app.env` (§5). Produção com provedor não sobe sem eles.
 - **Retirada e substituição da administração institucional** (decisão 9): decididas e
-  especificadas (US8 da `107`), **não implementadas** — até lá o comando só concede, a aplicação
-  recusa o papel nos dois sentidos, e uma conta comprometida só sairia pelo banco.
+  **implementadas** (US8 da `107`), pelos comandos de implantação:
+
+  ```bash
+  ps-manage retirar_administracao_institucional --provedor <nome> --identificador <id> --motivo "Portaria nº …"
+  ps-manage substituir_administracao_institucional --de-provedor <nome> --de-identificador <id> --para-provedor <nome> --para-identificador <id> --motivo "Portaria nº …"
+  ps-manage suspender_pessoa --provedor <nome> --identificador <id> --motivo "…"
+  ```
 - **Comissão apontando para pessoa.** O `identity_subject` da comissão continua texto livre; com o
   identificador opaco, incluir um membro por ele é impraticável. Falta a busca da pessoa.
 - **API.** Continua fechada em produção. A recusa da `SessionAuthentication` deve ser revista quando
@@ -105,7 +110,7 @@ A `107` entregou as cinco que a `106` deixou fora; ver o [quickstart](../specs/1
    Os dois prazos são a decisão de 30/10/2026; mudá-los é decisão nova, e se documenta aqui.
    Produção recusa subir se a classe não se importar, se estiver em `tests.`, se declarar
    `apenas_para_testes`, ou se faltar um dos prazos.
-2. Subir e rodar `ps-migrar` (provisionar, migrar, provisionar: **44 de 44**).
+2. Subir e rodar `ps-migrar` (provisionar, migrar, provisionar: **46 de 46** desde o incremento 2 da `107`).
 3. Conceder os dois administradores institucionais designados pelo ato — o segundo com
    `--adicional`:
 

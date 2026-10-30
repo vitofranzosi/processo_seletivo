@@ -64,7 +64,7 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
       <td>{{ linha.conclusao.parecer|default:"—" }}</td>
       <td>vigente desde {{ linha.conclusao.versao.valid_from|date:"d/m/Y H:i" }}
         <span class="codigo">{{ linha.conclusao.versao.id }}</span></td>
-      <td>{{ linha.conclusao.concluida_em|date:"d/m/Y H:i:s" }} por {{ linha.conclusao.concluida_por }}</td>
+      <td>{{ linha.conclusao.concluida_em|date:"d/m/Y H:i:s" }} por {% nome_de_pessoa linha.conclusao.concluida_por %}</td>
       {% comment %}
       A situação vem por extenso, e não por cor: quem lê em escala de cinza precisa distinguir
       "em vigor" de "preservada e inelegível" (FR-076 da 011, checklist de UX).

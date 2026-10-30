@@ -477,7 +477,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
         <select id="atestado-{{ forloop.counter }}" name="atestado">
           <option value="">Nenhum</option>
           {% for atestado in linha.atestados %}
-          <option value="{{ atestado.id }}">{{ atestado.get_especie_display }} — atestado por {{ atestado.atestado_por }} em {{ atestado.atestado_em|date:"d/m/Y" }}</option>
+          <option value="{{ atestado.id }}">{{ atestado.get_especie_display }} — atestado por {% nome_de_pessoa atestado.atestado_por %} em {{ atestado.atestado_em|date:"d/m/Y" }}</option>
           {% endfor %}
         </select>
       </p>

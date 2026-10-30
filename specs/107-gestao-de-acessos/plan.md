@@ -102,7 +102,7 @@ specs/033-navegacao-por-capacidade/inventario-das-negativas.md   # D-014
 Esta branch não muda o que o #345 entrega, salvo a recusa de pessoa inativa (D-011) e o
 `redirect_uri` do provedor simulado (D-013), que é código de teste.
 
-## Incremento 2 — plano (não implementado)
+## Incremento 2 — plano (implementado)
 
 Sobre as respostas do usuário de 30/10 (spec, §Decisões do usuário) e D-015 a D-019.
 
@@ -125,5 +125,5 @@ e de tabelas append-only sobem junto.
    que não volta, concorrência, privilégios da runtime, a substituição atômica (com falha forçada
    no meio), a jornada no navegador (suspender → a outra sessão cai → reativar → entrar de novo).
 
-**Pergunta antes da fase 3**: a salvaguarda da retirada do último administrador institucional
-(D-018) — implementar ou não.
+**A salvaguarda da retirada do último administrador institucional** (D-018) foi implementada como
+salvaguarda técnica, anunciada ao usuário antes da implementação, e revogável por ele.

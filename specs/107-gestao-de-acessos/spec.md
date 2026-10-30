@@ -7,7 +7,7 @@
 
 **Status**: Incremento 1 implementado nesta branch; merge não autorizado. As decisões que o
 incremento 2 esperava foram tomadas pelo usuário em 30/10/2026 (§Decisões do usuário), e o
-incremento 2 está **especificado, e não implementado** (US6 a US9, FR-3135 em diante).
+incremento 2 foi especificado e **implementado nesta branch** (US6 a US9, FR-3135 em diante).
 
 **Input**: o pedido de 30/10/2026, "entregar uma experiência utilizável de gestão de acessos que se
 possa desenvolver e verificar sem conexão real com a autenticação institucional do Ifes", sobre a
@@ -70,7 +70,7 @@ regressão deles continuam na suíte (`SC-1015`).
 6. **A jornada pelo navegador nos testes**, com servidor, identidades, vínculos e respostas do
    provedor preparados pelo ambiente de testes.
 
-**Incremento 2 — especificado, não implementado** (US6 a US9). As decisões que ele esperava foram
+**Incremento 2 — implementado nesta branch** (US6 a US9). As decisões que ele esperava foram
 tomadas em 30/10:
 
 - suspensão e reativação de pessoa, global, com motivo, trilha e fim de todas as sessões (US6, US7);
@@ -498,7 +498,7 @@ identificador exibe o nome, e o identificador continua nos registros.
 - **FR-3134**: A feature MUST NOT criar tabela nem migration, MUST NOT mudar o seletor de
   demonstração, e MUST NOT alterar as regras de concessão da `106` além de recusar pessoa inativa.
 
-### Functional Requirements — incremento 2 (especificados, não implementados)
+### Functional Requirements — incremento 2
 
 O `FR-3134` vale para o incremento 1. O incremento 2 cria duas tabelas append-only e uma migration
 (`FR-3149`).
@@ -594,8 +594,11 @@ previsível, mas exige mostrar com clareza o que será restabelecido — é a `F
 
 - **A retirada do último administrador institucional.** A P3 manda retirar pelo comando, e a
   proposta 2 fala em duas pessoas; nada diz se a retirada pode deixar **nenhuma**. O plano propõe
-  que o comando recuse deixar zero sem uma marca explícita, como o `--adicional` faz na concessão —
-  **salvaguarda proposta, não decidida** (`D-018` do research).
+  que o comando recuse deixar zero sem uma marca explícita, como o `--adicional` faz na concessão.
+  **Implementada como salvaguarda técnica, e não como decisão do usuário** (`D-018` do research):
+  ela não proíbe nada — a marca `--sem-administracao` retira mesmo a última —, só impede o engano de
+  terminal. Se o usuário decidir que o sistema nunca fica sem administração, a marca sai; se decidir
+  que a salvaguarda é desnecessária, ela sai.
 
 ## Achados registrados (fora de escopo)
 
@@ -629,7 +632,7 @@ previsível, mas exige mostrar com clareza o que será restabelecido — é a `F
   passa contra PostgreSQL sem mudar resultado esperado.
 - **SC-1016**: No modo demonstração, as telas existentes não fazem consulta nenhuma a mais.
 
-Do incremento 2, a medir quando for implementado:
+Do incremento 2:
 
 - **SC-1017**: Em 100% dos casos exercitados, a suspensão encerra todas as sessões abertas da
   pessoa na requisição seguinte de cada uma, sem revogar vínculo nenhum.
