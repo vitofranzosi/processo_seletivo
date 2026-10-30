@@ -4,6 +4,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[2]
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-development-key")
 DEBUG = False
+# A marca de que esta é a configuração de produção, e só `production.py` a liga. Quem grava dado
+# fictício a consulta antes de escrever (`seed_demo`): publicação é ato imutável, e um Edital de
+# demonstração publicado em produção não sai mais de lá. A marca, e não o nome do módulo de
+# settings, porque o nome é escolha de quem implanta e pode variar; a marca vem junto com as
+# demais barreiras de `production.py` (auditoria de administração institucional, 30/10).
+AMBIENTE_DE_PRODUCAO = False
 ALLOWED_HOSTS = [v for v in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",") if v]
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"

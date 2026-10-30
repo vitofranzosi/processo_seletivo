@@ -72,6 +72,10 @@ def test_ambiente_completo_carrega_com_transporte_seguro():
     assert producao.CSRF_COOKIE_SECURE is True
     assert producao.X_FRAME_OPTIONS == "DENY"
     assert producao.REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] == [INSTITUCIONAL]
+    # A marca que `seed_demo` consulta antes de gravar Edital fictício (auditoria de 30/10). Só a
+    # produção a liga; a base a declara desligada, para que desenvolvimento e teste não precisem.
+    assert producao.AMBIENTE_DE_PRODUCAO is True
+    assert importlib.import_module("config.settings.base").AMBIENTE_DE_PRODUCAO is False
 
 
 def test_producao_nasce_sem_a_fonte_de_demonstracao():

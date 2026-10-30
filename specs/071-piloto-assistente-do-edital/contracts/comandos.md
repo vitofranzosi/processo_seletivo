@@ -117,7 +117,11 @@ manage.py excluir_registros_do_piloto --relatorio-final-em AAAA-MM-DD
 ```
 
 Recusa antes de a data mais 90 dias. Depois, apaga as trocas criadas até a data e imprime
-"N trocas excluídas". Nenhuma outra tabela é tocada.
+"N trocas excluídas". Nenhuma outra tabela perde linha.
+
+Acréscimo posterior à 071 (auditoria de administração institucional, 30/10/2026): a exclusão grava
+na trilha um evento `EXCLUIR_REGISTROS_DO_PILOTO` por unidade, sob o ator `implantacao`, com a
+contagem e a data do relatório final. Sem troca a excluir, nada se grava.
 
 ---
 

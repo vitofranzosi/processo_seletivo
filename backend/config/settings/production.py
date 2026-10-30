@@ -59,6 +59,7 @@ ESQUEMAS_NAO_INSTITUCIONAIS = frozenset(
 SEGREDOS_INADMISSIVEIS = frozenset({"", "unsafe-development-key", "change-me"})
 
 DEBUG = False
+AMBIENTE_DE_PRODUCAO = True
 
 
 def _exigir(condicao, variavel, motivo):

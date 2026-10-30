@@ -9,6 +9,7 @@ import contextlib
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
@@ -666,6 +667,14 @@ class Command(BaseCommand):
             self.autoridades[cargo] = str(autoridade.pk)
 
     def handle(self, *args, **opcoes):
+        # Antes de qualquer escrita, inclusive a sincronização das Unidades: o comando publica
+        # Editais fictícios, e publicação não se desfaz — a trilha e as tabelas append-only recusam.
+        # O guia de implantação dizia "NUNCA em produção", e nada o impedia.
+        if settings.AMBIENTE_DE_PRODUCAO:
+            raise CommandError(
+                "seed_demo não roda em produção: ele publica Editais fictícios, e publicação é "
+                "ato imutável."
+            )
         with _relogio_atrasado(opcoes["dias_atras"]):
             self._semear(**opcoes)
 
