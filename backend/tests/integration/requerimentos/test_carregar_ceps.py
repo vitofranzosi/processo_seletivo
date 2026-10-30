@@ -22,9 +22,11 @@ precisa de política de exibição depois, e não vira o campo que alguém acha 
 
 import json
 import zipfile
+from datetime import timedelta
 
 import pytest
 from django.core.management import call_command
+from django.utils import timezone
 
 from processo_seletivo.requerimentos.domain import endereco
 from processo_seletivo.requerimentos.models import CargaDeCep, ReferenciaDeCep
@@ -297,3 +299,30 @@ class TestNaoRecarregarOQueJaEstaLa:
         call_command("carregar_ceps", str(origem))
 
         assert CargaDeCep.objects.get(vigente=True).checksum == esperado
+
+
+def test_a_base_velha_nomeia_as_duas_causas(capsys):
+    """Com `--se-mudou`, o job roda e não carrega nada enquanto o `.zip` for o mesmo.
+
+    A frase dizia só "a atualização mensal não está rodando", e quem recebia o alerta ia conferir o
+    agendador, que estava em dia. A causa mais provável é o arquivo não ter sido trocado.
+    """
+    concluida = timezone.now() - timedelta(days=61)
+    CargaDeCep.objects.create(
+        geracao=1,
+        origem="banco-ceps.zip",
+        checksum="0" * 64,
+        iniciada_em=concluida,
+        concluida_em=concluida,
+        linhas=1,
+        vigente=True,
+    )
+
+    with pytest.raises(SystemExit) as saida:
+        call_command("situacao_dos_ceps")
+
+    assert saida.value.code == 1
+    alerta = capsys.readouterr().err
+    assert "61 dias" in alerta
+    assert ".zip não foi trocado" in alerta
+    assert "job mensal não está rodando" in alerta

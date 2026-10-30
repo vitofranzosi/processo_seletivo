@@ -2428,7 +2428,9 @@ WantedBy=timers.target
 UNIT
 
 # Base de CEP: o job mensal do runbook. O .zip novo é posto no lugar por quem o baixa do storage
-# institucional; o --se-mudou não faz nada quando o arquivo é o mesmo.
+# institucional; o --se-mudou não faz nada quando o arquivo é o mesmo. Quem repõe o arquivo ainda
+# está a definir pela instituição (doc/runbook-base-de-cep.md, §2): sem reposição, o job roda em dia
+# e a base envelhece até o alerta de 60 dias de situacao_dos_ceps.
 sudo tee /etc/systemd/system/ps-ceps.service >/dev/null <<'UNIT'
 [Unit]
 Description=Processo Seletivo — atualização da base de CEP
