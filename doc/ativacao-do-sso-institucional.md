@@ -8,19 +8,22 @@ integrado. Este documento lista o que falta, na ordem em que se resolve, e o que
 
 ## 1. Decisões do usuário
 
-Nenhuma bloqueia o código já entregue; todas bloqueiam a ativação.
+Respondidas pelo usuário em 30/10/2026, exceto o provedor e o portão do diretório — o registro
+completo está na [spec da 107](../specs/107-gestao-de-acessos/spec.md), §Decisões do usuário.
+Nenhuma muda o código já entregue; as abertas bloqueiam a ativação.
 
-| # | Decisão | Proposta da 106 | Onde se aplica |
+| # | Decisão | Situação | Onde se aplica |
 |---|---|---|---|
-| 1 | Provedor e protocolo (decisão 1 do estudo) | OIDC na aplicação, ou SAML/OIDC terminado no proxy | a classe do adaptador |
-| 2 | Qual identificador do provedor localiza a pessoa (decisão 2) | o identificador imutável (`sub`, `objectGUID`) | a classe do adaptador; nenhum dado gravado |
-| 3 | Quem é o administrador institucional de acessos (decisão 4) | quem a portaria indicar | o comando `conceder_administracao_institucional` |
-| 4 | Quem concede na unidade (decisão 5) | papel próprio, separado do Gestor | uma linha em `seguranca/acessos.py` |
-| 5 | Tempo de sessão e inatividade (decisão 11) | 8 h absolutas, 30 min de inatividade | desde a `107`, `GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS` e `GESTAO_SESSAO_INATIVIDADE_MINUTOS`; produção não sobe sem os dois |
-| 7 | Suspensão de pessoa: global, por unidade ou as duas; quem suspende, inclusive o administrador institucional (P1 da `107`) | global, pelo administrador institucional; o institucional, pela implantação | incremento 2 da `107` |
-| 8 | O que a reativação devolve (P2 da `107`) | a entrada; vínculos vigentes voltam a valer, revogados não; nenhuma sessão volta | incremento 2 da `107` |
-| 9 | Retirar ou substituir a administração institucional (P3 da `107`) | pelo comando de implantação, simétrico ao que concede | um comando novo; **hoje não há caminho nenhum** |
-| 6 | Portão do diretório (decisão 3) | sem portão: toda conta entra e vê "sem acesso" | o adaptador |
+| 1 | Provedor e protocolo (decisão 1 do estudo) | **aberta**: OIDC na aplicação, ou SAML/OIDC terminado no proxy | a classe do adaptador |
+| 2 | Qual identificador do provedor localiza a pessoa (decisão 2) | **decidida em 30/10**: o estável do provedor, com o emissor — em OIDC, `iss` + `sub`; nome e e-mail não associam | a classe do adaptador; nenhum dado gravado |
+| 3 | Quem é o administrador institucional de acessos (decisão 4) | **decidida em 30/10**: duas pessoas designadas nominalmente por ato formal, contas individuais, o ato como motivo | o comando `conceder_administracao_institucional`, com `--adicional` para a segunda |
+| 4 | Quem concede na unidade (decisão 5) | **decidida em 30/10**: o papel próprio, separado do Gestor; acúmulo só por concessão explícita | nada muda: é o catálogo atual |
+| 5 | Tempo de sessão e inatividade (decisão 11) | **decidida em 30/10**: 8 h e 30 min, declarados expressamente em produção; ajustes, documentados | `GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS=480` e `GESTAO_SESSAO_INATIVIDADE_MINUTOS=30` no `app.env` (§5) |
+| 6 | Portão do diretório (decisão 3) | **aberta**: sem portão — toda conta entra e vê "sem acesso" | o adaptador |
+| 7 | Suspensão de pessoa (P1 da `107`) | **decidida em 30/10**: suspensão global e revogação por unidade; o administrador institucional suspende; o institucional, a implantação; motivo, trilha e fim de todas as sessões | incremento 2 da `107`, **especificado, não implementado** |
+| 8 | O que a reativação devolve (P2 da `107`) | **decidida em 30/10**: os vínculos vigentes voltam, os revogados não; nenhuma sessão anterior volta | idem |
+| 9 | Retirar ou substituir a administração institucional (P3 da `107`) | **decidida em 30/10**: comando de implantação, com motivo e trilha; a substituição numa operação só | idem; **até lá não há caminho nenhum** |
+| 10 | A retirada pode deixar nenhum administrador institucional? | **aberta**: a `107` propõe recusar sem marca explícita | o comando de retirada (`D-018` da `107`) |
 
 A **segregação mais estrita** (quem elabora não homologa) é emenda à FR-021 da `001`, e não faz
 parte da ativação.
@@ -71,16 +74,16 @@ A `107` entregou as cinco que a `106` deixou fora; ver o [quickstart](../specs/1
 
 ## 4. O que não foi feito, e é preciso antes de abrir
 
-- **Suspensão urgente** de uma pessoa em todas as unidades, **inclusive do administrador
-  institucional**. O mecanismo nativo existe — `is_active=False` derruba a sessão na requisição
-  seguinte —, mas falta o ato com motivo e trilha, e falta dizer quem suspende o administrador
-  institucional, que hoje só o comando de implantação alcança.
-- **Duração da sessão** (decisão 5 da tabela acima): o mecanismo entrou com a `107`; 8 h absolutas e
-  30 min de inatividade continuam proposta, valem só fora de produção, e produção com provedor não
-  sobe sem os dois valores declarados.
-- **Retirada da administração institucional** (decisão 9): não há caminho nenhum hoje — o comando
-  só concede, e a aplicação recusa o papel nos dois sentidos. Uma conta comprometida só sairia pelo
-  banco.
+- **Suspensão e reativação** de uma pessoa em todas as unidades, **inclusive do administrador
+  institucional** (decisões 7 e 8). Decididas em 30/10 e especificadas no incremento 2 da `107`
+  (US6, US7), **não implementadas**. O desenho troca o hash da sessão na suspensão, para que
+  nenhuma sessão anterior volte na reativação (`D-015` da `107`): `is_active=False` sozinho não
+  basta, porque a sessão parada durante a suspensão voltaria a valer.
+- **Duração da sessão** (decisão 5): o mecanismo entrou com a `107`, e os valores foram decididos —
+  480 e 30 minutos, declarados no `app.env` (§5). Produção com provedor não sobe sem eles.
+- **Retirada e substituição da administração institucional** (decisão 9): decididas e
+  especificadas (US8 da `107`), **não implementadas** — até lá o comando só concede, a aplicação
+  recusa o papel nos dois sentidos, e uma conta comprometida só sairia pelo banco.
 - **Comissão apontando para pessoa.** O `identity_subject` da comissão continua texto livre; com o
   identificador opaco, incluir um membro por ele é impraticável. Falta a busca da pessoa.
 - **API.** Continua fechada em produção. A recusa da `SessionAuthentication` deve ser revista quando
@@ -91,10 +94,20 @@ A `107` entregou as cinco que a `106` deixou fora; ver o [quickstart](../specs/1
 
 ## 5. A implantação
 
-1. Configurar o provedor e declarar `GESTAO_PROVEDOR_INSTITUCIONAL` no `app.env`. Produção recusa
-   subir se a classe não se importar, se estiver em `tests.` ou se declarar `apenas_para_testes`.
+1. Configurar o provedor e declarar no `app.env`:
+
+   ```
+   GESTAO_PROVEDOR_INSTITUCIONAL=<o caminho da classe do adaptador>
+   GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS=480
+   GESTAO_SESSAO_INATIVIDADE_MINUTOS=30
+   ```
+
+   Os dois prazos são a decisão de 30/10/2026; mudá-los é decisão nova, e se documenta aqui.
+   Produção recusa subir se a classe não se importar, se estiver em `tests.`, se declarar
+   `apenas_para_testes`, ou se faltar um dos prazos.
 2. Subir e rodar `ps-migrar` (provisionar, migrar, provisionar: **44 de 44**).
-3. Conceder o primeiro administrador institucional:
+3. Conceder os dois administradores institucionais designados pelo ato — o segundo com
+   `--adicional`:
 
    ```bash
    ps-manage conceder_administracao_institucional --provedor <nome> --identificador <id> --motivo "Portaria nº …"

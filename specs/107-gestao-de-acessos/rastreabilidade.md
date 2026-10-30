@@ -36,6 +36,16 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3133 (dois roteiros, sem promessa manual) | T020, T021 | [quickstart](quickstart.md); `doc/homologacao-com-o-seletor-de-demonstracao.md` |
 | FR-3134 (sem tabela, sem migration, seletor igual; só a recusa de pessoa inativa) | T002 | `make check` (`makemigrations --check`); `migrations/test_migrations.py` e `integration/test_database_permissions.py` sem mudança de contagem; `TEL::test_pessoa_desativada_entre_a_busca_e_a_confirmacao_e_recusada` |
 
+## Requisitos do incremento 2 (especificados, não implementados)
+
+| Requisitos | Tarefas | Testes |
+|---|---|---|
+| FR-3135 a FR-3142 (suspensão) | T025–T028 | a escrever em T031 e T032 |
+| FR-3143 a FR-3146 (reativação) | T025, T027, T028 | a escrever em T031 e T032 |
+| FR-3147, FR-3148 (retirar e substituir a administração institucional) | T029 | a escrever em T031 |
+| FR-3149 (registros append-only, migration só cria) | T024 | a escrever em T031; os guardiões de contagem |
+| FR-3150, FR-3151 (o nome nas demais telas) | T030 | a escrever em T031 |
+
 ## Critérios
 
 | Critério | Como se mede |
@@ -46,3 +56,4 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | SC-1014 (as cinco histórias no navegador, sem ação fora dele) | `NAV`, os cinco casos |
 | SC-1015 (suíte existente sem mudar resultado esperado) | a suíte inteira contra PostgreSQL; os ajustes de teste existentes estão listados na [verificação](verificacao.md) |
 | SC-1016 (demonstração sem consulta a mais) | os orçamentos de consulta das telas existentes (`tests/performance/`), sem mudança; `seguranca/test_entrada_institucional.py::test_o_ator_custa_no_maximo_duas_consultas_por_requisicao` (`106`) para o institucional |
+| SC-1017 a SC-1020 (incremento 2) | a medir quando o incremento 2 for implementado (T031, T032) |

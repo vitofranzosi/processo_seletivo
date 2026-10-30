@@ -256,11 +256,11 @@ class Resolucao:
     escopos: list = field(default_factory=list)
 
 
-# Os prazos da sessão institucional (107, `D-009`). Fora de produção, sem declaração, valem os da
-# proposta — 8 horas e 30 minutos, que **não foram aprovados** (spec da 107, P4); produção não sobe
-# sem os dois declarados (`D-010`).
-DURACAO_MAXIMA_PROPOSTA = 8 * 60
-INATIVIDADE_PROPOSTA = 30
+# Os prazos da sessão institucional (107, `D-009`): 8 horas e 30 minutos, decididos pelo usuário em
+# 30/10/2026 (spec da 107, P4). Valem fora de produção sem declaração; produção não sobe sem os dois
+# declarados (`D-010`).
+DURACAO_MAXIMA_PADRAO = 8 * 60
+INATIVIDADE_PADRAO = 30
 
 # Os dois instantes do prazo, em chave própria (107, `D-009`): a identidade da sessão continua com a
 # forma que a 106 fixou, e o prazo sai com ela, porque o término institucional apaga a sessão
@@ -279,8 +279,8 @@ CABECALHO_AUTOMATICA = "Requisicao-Automatica"
 
 
 def _limites():
-    duracao = getattr(settings, "GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS", DURACAO_MAXIMA_PROPOSTA)
-    inatividade = getattr(settings, "GESTAO_SESSAO_INATIVIDADE_MINUTOS", INATIVIDADE_PROPOSTA)
+    duracao = getattr(settings, "GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS", DURACAO_MAXIMA_PADRAO)
+    inatividade = getattr(settings, "GESTAO_SESSAO_INATIVIDADE_MINUTOS", INATIVIDADE_PADRAO)
     return int(duracao) * 60, int(inatividade) * 60
 
 

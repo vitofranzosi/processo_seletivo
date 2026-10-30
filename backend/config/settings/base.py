@@ -190,9 +190,10 @@ GESTAO_PROVEDOR_INSTITUCIONAL = os.getenv("GESTAO_PROVEDOR_INSTITUCIONAL", "").s
 
 
 # Os prazos da sessão institucional da gestão, em minutos (107, `D-009`): a duração máxima, contada
-# da entrada, e o limite de inatividade, contado da última ação na gestão. **Os padrões são a
-# proposta — 8 horas e 30 minutos — e não foram aprovados** (spec da 107, P4): valem fora de
-# produção, e `production.py` exige os dois declarados quando há provedor (`D-010`).
+# da entrada, e o limite de inatividade, contado da última ação na gestão. Os padrões são os que o
+# usuário decidiu em 30/10/2026 — 8 horas e 30 minutos (spec da 107, P4) —, e valem fora de
+# produção; em produção a decisão manda declará-los expressamente, e `production.py` os exige
+# quando há provedor (`D-010`).
 def _minutos(nome, padrao):
     # Vazio é não declarado, e vale o padrão; qualquer outra coisa que não seja inteiro positivo é
     # erro de quem configurou, e não se troca pelo padrão em silêncio.

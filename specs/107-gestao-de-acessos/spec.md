@@ -5,8 +5,9 @@
 
 **Created**: 2026-10-30
 
-**Status**: Incremento 1 implementado nesta branch; merge não autorizado. O incremento 2 está
-proposto, e depende de decisões do usuário (§Decisões pendentes).
+**Status**: Incremento 1 implementado nesta branch; merge não autorizado. As decisões que o
+incremento 2 esperava foram tomadas pelo usuário em 30/10/2026 (§Decisões do usuário), e o
+incremento 2 está **especificado, e não implementado** (US6 a US9, FR-3135 em diante).
 
 **Input**: o pedido de 30/10/2026, "entregar uma experiência utilizável de gestão de acessos que se
 possa desenvolver e verificar sem conexão real com a autenticação institucional do Ifes", sobre a
@@ -46,9 +47,9 @@ testes.
 | Concessão e revogação com as recusas da `106` | **capacidade existente**, sem tela | `seguranca/application/acessos.py` |
 | Leitura dos vínculos vigentes da unidade | **capacidade existente** (`acesso:consultar`), sem tela | idem, `vinculos_vigentes_da_unidade` |
 | Troca da unidade ativa | **capacidade existente**, rota sem botão | `POST /gestao/unidade-ativa` |
-| Quem é o administrador institucional; quem concede na unidade; qual identificador do provedor | **propostas** da `106`, não aprovadas | spec da `106`, §Propostas ao usuário |
-| Tempos de sessão (8 h e 30 min) | **proposta**, não aprovada | `doc/ativacao-do-sso-institucional.md`, §1, decisão 5 |
-| Suspensão de pessoa; retirada do administrador institucional | **inexistentes**; sem decisão | idem, §4 |
+| Quem é o administrador institucional; quem concede na unidade; qual identificador do provedor | **propostas** da `106` no início desta spec; **decididas** pelo usuário em 30/10 (§Decisões do usuário) | spec da `106`, §Propostas ao usuário |
+| Tempos de sessão (8 h e 30 min) | **proposta** no início desta spec; **decididos** em 30/10 (P4) | `doc/ativacao-do-sso-institucional.md`, §1, decisão 5 |
+| Suspensão de pessoa; retirada do administrador institucional | **inexistentes**; decididas em 30/10 (P1 a P3), e especificadas no incremento 2 | idem, §4 |
 
 Os dois achados não reaparecem como requisito aqui: a `107` não reabre a `106`, e os testes de
 regressão deles continuam na suíte (`SC-1015`).
@@ -69,12 +70,13 @@ regressão deles continuam na suíte (`SC-1015`).
 6. **A jornada pelo navegador nos testes**, com servidor, identidades, vínculos e respostas do
    provedor preparados pelo ambiente de testes.
 
-**Incremento 2 — proposto, não implementado.** Depende das decisões pendentes:
+**Incremento 2 — especificado, não implementado** (US6 a US9). As decisões que ele esperava foram
+tomadas em 30/10:
 
-- suspensão e reativação de pessoa, global, com motivo e trilha;
-- retirada e substituição da administração institucional;
+- suspensão e reativação de pessoa, global, com motivo, trilha e fim de todas as sessões (US6, US7);
+- retirada e substituição da administração institucional, pelo comando de implantação (US8);
 - o nome da pessoa nas demais telas que exibem o `subject` (históricos da comissão, da trilha, do
-  Edital).
+  Edital) (US9).
 
 **Fora**: conexão real com AD/LDAP ou outro provedor; escolha do protocolo; credenciais reais;
 abertura da gestão em produção; a API; mudança nas regras de segregação do certame (a emenda à
@@ -108,6 +110,32 @@ Respostas tiradas do pedido e do repositório — nenhuma é decisão institucio
 - Q: Os tempos de sessão? → A: São decisão do usuário. O mecanismo entra agora, com os valores
   lidos da configuração; fora de produção o padrão é a proposta (8 h e 30 min), marcada como
   proposta; produção recusa subir sem os dois declarados (`FR-3124`).
+
+### Session 2026-10-30 (respostas do usuário)
+
+Decisões de governança, do usuário, em resposta ao PR #346. Registradas aqui como foram dadas; o
+detalhe está em §Decisões do usuário.
+
+- Q: P1, a suspensão? → A: **C** — os dois mecanismos: a suspensão global da pessoa e a revogação
+  dos vínculos de uma unidade. O administrador institucional suspende pessoas; a suspensão do
+  administrador institucional é da implantação. Suspender exige motivo, trilha e o fim de todas as
+  sessões existentes.
+- Q: P2, a reativação? → A: **A** — a suspensão interrompe sem desfazer vínculos; ao reativar,
+  voltam a valer os ainda vigentes, e os revogados continuam revogados. A confirmação mostra os
+  acessos que voltarão a valer. Nenhuma sessão anterior volta a funcionar, mesmo que a pessoa não
+  tenha feito requisição durante a suspensão.
+- Q: P3, a administração institucional? → A: **A** — pelo comando de implantação, com motivo e
+  trilha. A substituição concede ao novo responsável e revoga o anterior numa operação só.
+- Q: P4, os tempos? → A: **8 horas** de duração máxima e **30 minutos** de inatividade, declarados
+  expressamente na configuração de produção; ajustes posteriores são documentados.
+- Q: Proposta 1 da `106`, o identificador externo? → A: o identificador estável do provedor,
+  associado ao emissor — em OIDC, `iss` + `sub`. Nome e e-mail não determinam a associação. Os
+  atos continuam com o identificador interno.
+- Q: Proposta 2 da `106`, o administrador institucional? → A: **duas pessoas** nominalmente
+  designadas por ato formal, com contas individuais, e a referência ao ato na concessão.
+- Q: Proposta 3 da `106`, quem concede na unidade? → A: o papel próprio de Administrador de acessos
+  da unidade, separado do Gestor; a mesma pessoa pode acumular os dois por concessões explícitas.
+- A ativação em produção e o merge continuam sujeitos às autorizações próprias.
 
 ---
 
@@ -241,6 +269,94 @@ nas duas contagens.
 
 ---
 
+### User Story 6 — Suspender uma pessoa em todas as unidades (Priority: P1, incremento 2)
+
+A administradora institucional precisa tirar alguém do sistema agora — uma conta comprometida, um
+afastamento. Em "Administração de acessos", busca a pessoa, escolhe "Suspender", confere quais
+acessos param de valer e que todas as sessões dela terminam, informa o motivo e confirma. A pessoa
+perde o acesso em todas as unidades na requisição seguinte, em qualquer navegador; os vínculos dela
+não são revogados.
+
+**Why this priority**: é o caso urgente que a revogação unidade por unidade não atende.
+
+**Independent Test**: com duas sessões abertas da pessoa, a suspensão pela tela as encerra as duas,
+e nenhum vínculo ganha revogação.
+
+**Acceptance Scenarios**:
+
+1. **Given** uma pessoa com vínculos no `cefor` e no `campus-a` e duas sessões abertas, **When** a
+   administradora institucional a suspende com motivo, **Then** as duas sessões terminam na
+   requisição seguinte, a suspensão vai à trilha, e os vínculos continuam sem revogação.
+2. **Given** a pessoa suspensa, **When** ela tenta entrar pelo provedor, **Then** a entrada é recusada
+   com a frase de que o acesso está suspenso e a quem pedir.
+3. **Given** a pessoa suspensa, **When** um administrador de unidade tenta conceder a ela, **Then** é
+   recusado, e a busca não a mostra.
+4. **Given** a administradora institucional, **When** tenta suspender a si mesma ou outra
+   administradora institucional pela tela, **Then** é recusada: isso é da implantação.
+5. **Given** a implantação, **When** suspende uma administradora institucional pelo comando, com
+   motivo, **Then** a suspensão vale como a da tela, e vai à trilha sob o ator de implantação.
+
+---
+
+### User Story 7 — Reativar sem devolver o que não devia (Priority: P1, incremento 2)
+
+A administradora institucional reativa uma pessoa suspensa. A confirmação mostra os acessos que
+voltarão a valer — os vínculos ainda vigentes — e diz que os revogados continuam revogados e que
+nenhuma sessão anterior volta. A pessoa precisa entrar de novo.
+
+**Why this priority**: a suspensão é temporária, e a reativação precisa ser previsível.
+
+**Independent Test**: uma sessão aberta antes da suspensão, sem nenhuma requisição durante ela, não
+vale depois da reativação; uma entrada nova vale, com os vínculos que estavam vigentes.
+
+**Acceptance Scenarios**:
+
+1. **Given** uma pessoa suspensa com Elaborador vigente no `cefor` e Gestor revogado durante a
+   suspensão, **When** é reativada, **Then** volta a ter Elaborador, e não Gestor.
+2. **Given** uma sessão aberta antes da suspensão e não usada durante ela, **When** a pessoa é
+   reativada e o navegador volta a usar a sessão, **Then** ela não vale.
+3. **Given** a confirmação da reativação, **When** a administradora a abre, **Then** vê, por unidade,
+   cada papel que voltará a valer.
+4. **Given** duas reativações simultâneas da mesma suspensão, **When** chegam, **Then** uma vale e a
+   outra é recusada.
+
+---
+
+### User Story 8 — Retirar e substituir a administração institucional (Priority: P2, incremento 2)
+
+Quem implanta retira a administração institucional de uma pessoa, ou a substitui por outra, pelo
+comando, com o ato que o determina como motivo. A substituição concede à nova pessoa e revoga a
+anterior numa operação só.
+
+**Why this priority**: fecha a lacuna da `106` — hoje não há como retirar esse acesso.
+
+**Independent Test**: a substituição grava a concessão e a revogação na mesma transação; se uma
+falha, nenhuma é gravada.
+
+**Acceptance Scenarios**:
+
+1. **Given** uma administradora institucional vigente, **When** a implantação a substitui por outra
+   pessoa com motivo, **Then** a nova tem o papel, a anterior não, e a trilha tem os dois eventos.
+2. **Given** a substituição para quem já é administradora institucional, **When** o comando roda,
+   **Then** é recusada e nada muda.
+3. **Given** a retirada pelo comando, com motivo, **When** roda, **Then** o vínculo ganha revogação e
+   a pessoa perde a administração na requisição seguinte.
+
+---
+
+### User Story 9 — O nome nas demais telas (Priority: P3, incremento 2)
+
+As telas que mostram quem praticou um ato — históricos da comissão, da trilha, do Edital, da
+distribuição — mostram o nome da pessoa institucional, e não `pessoa-<uuid>`. A demonstração
+continua mostrando o identificador escolhido no seletor.
+
+**Why this priority**: a gestão é ilegível no modo institucional sem isso; não bloqueia acesso.
+
+**Independent Test**: com atos praticados por uma pessoa institucional, cada tela que exibia o
+identificador exibe o nome, e o identificador continua nos registros.
+
+---
+
 ### Edge Cases
 
 - **A busca acha mais de dez pessoas**: mostra dez e pede para refinar; não pagina.
@@ -346,8 +462,9 @@ nas duas contagens.
   última requisição da pessoa à gestão que não seja declarada automática. Requisições fora da
   gestão e as declaradas automáticas MUST NOT contar como atividade.
 - **FR-3124**: Os dois limites MUST vir da configuração do ambiente. Fora de produção, sem
-  declaração, valem 8 horas e 30 minutos — a proposta, não aprovada. Produção com provedor
-  institucional MUST recusar subir sem os dois declarados.
+  declaração, valem 8 horas e 30 minutos — a proposta do início desta spec, que o usuário adotou
+  em 30/10 (P4). Produção com provedor institucional MUST recusar subir sem os dois declarados,
+  como a decisão manda.
 - **FR-3125**: O término por prazo MUST encerrar a sessão como a saída (FR-3020 da `106`), ir à
   trilha com o motivo, e a página de acesso MUST dizer por que a sessão terminou.
 - **FR-3126**: Os prazos MUST NOT alcançar a sessão de demonstração nem a identidade do portal do
@@ -381,64 +498,110 @@ nas duas contagens.
 - **FR-3134**: A feature MUST NOT criar tabela nem migration, MUST NOT mudar o seletor de
   demonstração, e MUST NOT alterar as regras de concessão da `106` além de recusar pessoa inativa.
 
+### Functional Requirements — incremento 2 (especificados, não implementados)
+
+O `FR-3134` vale para o incremento 1. O incremento 2 cria duas tabelas append-only e uma migration
+(`FR-3149`).
+
+**Suspensão (P1, decisão C)**
+
+- **FR-3135**: A suspensão MUST ser global: a pessoa suspensa MUST NOT ter ator em escopo nenhum, e
+  MUST NOT entrar pelo provedor, até ser reativada. A revogação por unidade continua existindo ao
+  lado dela, sem mudança.
+- **FR-3136**: Suspender e reativar pela tela MUST exigir `acesso:administrar` no escopo
+  institucional. A tela MUST recusar suspender ou reativar o próprio ator e qualquer pessoa com
+  Administrador institucional vigente.
+- **FR-3137**: A suspensão e a reativação de quem tem Administrador institucional vigente MUST ser
+  feitas só pelo comando de implantação, com motivo, sob o ator de implantação. O comando MUST
+  servir também a qualquer outra pessoa.
+- **FR-3138**: Suspender MUST exigir motivo, MUST ir à trilha na mesma transação, e MUST encerrar
+  **todas** as sessões existentes da pessoa, em qualquer navegador, na requisição seguinte de cada
+  uma.
+- **FR-3139**: A suspensão MUST NOT revogar vínculo nenhum. Os vínculos da pessoa suspensa continuam
+  vigentes e inertes, e a tela de acessos da unidade MUST mostrá-los com a marca de suspensa.
+- **FR-3140**: A pessoa suspensa MUST NOT aparecer na busca e MUST NOT receber vínculo novo.
+- **FR-3141**: A pessoa suspensa que tenta entrar MUST ver que o acesso está suspenso e a quem
+  pedir, sem o motivo nem quem suspendeu.
+- **FR-3142**: A confirmação da suspensão MUST mostrar a pessoa, cada acesso que deixará de valer, e
+  que todas as sessões terminam.
+
+**Reativação (P2, decisão A)**
+
+- **FR-3143**: Reativar MUST exigir motivo, MUST ir à trilha, e MUST devolver só a possibilidade de
+  entrar: voltam a valer os vínculos ainda vigentes, e os revogados — antes ou durante a suspensão —
+  continuam revogados.
+- **FR-3144**: Nenhuma sessão aberta antes da suspensão MUST voltar a valer depois da reativação,
+  mesmo que não tenha feito requisição nenhuma durante a suspensão.
+- **FR-3145**: A confirmação da reativação MUST mostrar, por unidade, cada papel que voltará a
+  valer, e dizer que a pessoa precisa entrar de novo.
+- **FR-3146**: Suspender quem já está suspenso e reativar quem não está MUST ser recusados, também
+  sob concorrência.
+
+**Administração institucional (P3, decisão A; proposta 2 da `106`)**
+
+- **FR-3147**: Um comando de implantação MUST retirar a administração institucional de uma pessoa,
+  com motivo, revogando o vínculo sob o ator de implantação.
+- **FR-3148**: Um comando de implantação MUST substituir a administração institucional de uma
+  pessoa por outra numa transação só: a revogação da anterior e a concessão à nova, as duas na
+  trilha com o mesmo motivo; recusada uma, nenhuma é gravada. A nova MUST NOT já ter o papel, e a
+  anterior MUST tê-lo vigente.
+- **FR-3149**: A suspensão e a reativação MUST ser registros próprios, append-only nas duas camadas
+  (gatilho e privilégio ausente), uma reativação no máximo por suspensão. A migration MUST só criar
+  essas tabelas.
+
+**O nome nas demais telas**
+
+- **FR-3150**: Toda tela da gestão que exibe o `subject` de quem praticou um ato MUST exibir, para
+  pessoa institucional, o nome (ou o e-mail, ou "pessoa sem nome informado"); para identidade de
+  demonstração, o próprio `subject`, como hoje. Os registros continuam com o identificador interno.
+- **FR-3151**: A tradução de identificadores em nomes MUST custar no máximo uma consulta por página,
+  e nenhuma no modo demonstração.
+
 ### Key Entities
 
-Nenhuma nova. As da `106` — Pessoa, Identidade externa, Vínculo, Revogação — e a unidade ativa, que
-mora na sessão. A sessão institucional passa a guardar também o instante da entrada e o da última
-atividade.
+Incremento 1: nenhuma nova. As da `106` — Pessoa, Identidade externa, Vínculo, Revogação — e a
+unidade ativa, que mora na sessão. A sessão institucional passa a guardar também o instante da
+entrada e o da última atividade.
+
+Incremento 2:
+
+- **Suspensão de pessoa**: quem, quando, por quem e por quê. Imutável. Aberta enquanto não houver
+  reativação.
+- **Reativação**: o encerramento de uma suspensão, com quem, quando e por quê. Imutável, uma por
+  suspensão.
 
 ---
 
-## Decisões pendentes (perguntas ao usuário)
+## Decisões do usuário (30/10/2026)
 
-Indispensáveis para o incremento 2 e para a ativação. **Nenhuma bloqueia o incremento 1**, e nenhuma
-foi tomada aqui.
+Respostas do usuário ao PR #346, registradas como foram dadas. **Nenhuma foi tomada por esta
+spec.** O merge e a ativação em produção continuam sujeitos às autorizações próprias.
 
-### P1 — A suspensão de pessoa
+| | Pergunta | Decisão | Onde se aplica |
+|---|---|---|---|
+| P1 | A suspensão | **C**: suspensão global **e** revogação por unidade. O administrador institucional suspende pessoas; a suspensão do administrador institucional é da implantação. Motivo, trilha e fim de todas as sessões | US6; FR-3135 a FR-3142 |
+| P2 | A reativação | **A**: os vínculos não se desfazem; voltam a valer os vigentes, os revogados não. A confirmação mostra o que volta. Nenhuma sessão anterior volta, mesmo sem requisição durante a suspensão | US7; FR-3143 a FR-3146 |
+| P3 | Retirar ou substituir a administração institucional | **A**: comando de implantação, com motivo e trilha; a substituição concede e revoga numa operação só | US8; FR-3147, FR-3148 |
+| P4 | Os tempos de sessão | **8 h** de duração máxima e **30 min** de inatividade, declarados expressamente na configuração de produção; ajustes posteriores, documentados | FR-3124, já implementado: produção não sobe sem a declaração; `doc/ativacao-do-sso-institucional.md`, §5 |
+| Proposta 1 da `106` | O identificador externo | o estável do provedor, com o emissor: em OIDC, `iss` + `sub`. Nome e e-mail não associam | o adaptador real, na ativação; nenhum dado gravado muda |
+| Proposta 2 da `106` | O administrador institucional | **duas pessoas** designadas nominalmente por ato formal, contas individuais, o ato como motivo da concessão | o comando da `106`, com `--adicional` para a segunda; a retirada e a substituição, FR-3147 e FR-3148 |
+| Proposta 3 da `106` | Quem concede na unidade | o papel próprio de Administrador de acessos da unidade, separado do Gestor; acúmulo só por concessões explícitas | nada muda: é o que o catálogo da `106` já faz |
 
-| Opção | Resposta | Consequência |
-|---|---|---|
-| A | Global: a pessoa não entra em unidade nenhuma até ser reativada; quem suspende é o administrador institucional, e quem suspende o administrador institucional é a implantação | um ato só para o caso urgente; o administrador da unidade continua tendo a revogação para a unidade dele |
-| B | Por unidade: é a revogação que já existe | nada a construir; o caso urgente pede revogar unidade por unidade |
-| C | As duas | A, mais a revogação de hoje |
+**A escolha que pede mais cuidado é a P2**: preservar os vínculos torna a suspensão temporária
+previsível, mas exige mostrar com clareza o que será restabelecido — é a `FR-3145`.
 
-**Recomendação**: A (que na prática é C, porque a revogação por unidade já existe).
+### O que as respostas não dizem, e fica em aberto
 
-### P2 — O que a reativação devolve
-
-| Opção | Resposta | Consequência |
-|---|---|---|
-| A | Só a entrada: os vínculos que estavam vigentes voltam a valer; os revogados continuam revogados; nenhuma sessão volta | simples e previsível; quem suspende e quer tirar um papel revoga antes |
-| B | Nada: a reativada entra sem acesso, e cada vínculo se concede de novo | mais seguro, mais trabalhoso; a suspensão vira revogação de tudo |
-
-**Recomendação**: A. Em qualquer opção, nenhuma sessão anterior volta a valer.
-
-### P3 — Retirar ou substituir a administração institucional
-
-| Opção | Resposta | Consequência |
-|---|---|---|
-| A | Pelo comando de implantação, com motivo, simétrico ao que concede | coerente com a concessão; exige quem implanta |
-| B | Um administrador institucional revoga outro, nunca a si | dispensa a implantação; dois administradores podem se revogar mutuamente |
-
-**Recomendação**: A. Hoje **não há caminho nenhum** para retirá-la — é lacuna da `106`, registrada
-em §Achados.
-
-### P4 — Os tempos de sessão
-
-8 horas de duração máxima e 30 minutos de inatividade são a proposta. O mecanismo já os lê da
-configuração; a resposta é o valor que vai ao `app.env` de produção, e produção não sobe sem ela.
-
-### Propostas da `106` que continuam abertas
-
-O identificador do provedor que localiza a pessoa; quem é o administrador institucional e por qual
-ato; quem concede na unidade. As telas desta feature funcionam com qualquer resposta.
-
----
+- **A retirada do último administrador institucional.** A P3 manda retirar pelo comando, e a
+  proposta 2 fala em duas pessoas; nada diz se a retirada pode deixar **nenhuma**. O plano propõe
+  que o comando recuse deixar zero sem uma marca explícita, como o `--adicional` faz na concessão —
+  **salvaguarda proposta, não decidida** (`D-018` do research).
 
 ## Achados registrados (fora de escopo)
 
 - **Não há como retirar a administração institucional** (`_autoridade` recusa o papel nos dois
-  sentidos, e o comando só concede). Impacto: uma conta comprometida só sai pelo banco. Ver P3.
+  sentidos, e o comando só concede). Impacto: uma conta comprometida só sai pelo banco. Decidido em
+  30/10 (P3), e especificado no incremento 2 (US8); continua aberto até ser implementado.
 - **A concessão da `106` não recusa pessoa inativa.** A `107` passa a recusá-la (FR-3134), porque a
   busca não a oferece e a confirmação a reconfere.
 - **Encerrar a sessão institucional encerra também a identidade do portal no mesmo navegador**: o
@@ -465,6 +628,17 @@ ato; quem concede na unidade. As telas desta feature funcionam com qualquer resp
 - **SC-1015**: A suíte existente — inclusive os testes da `106` e os de regressão dos dois achados —
   passa contra PostgreSQL sem mudar resultado esperado.
 - **SC-1016**: No modo demonstração, as telas existentes não fazem consulta nenhuma a mais.
+
+Do incremento 2, a medir quando for implementado:
+
+- **SC-1017**: Em 100% dos casos exercitados, a suspensão encerra todas as sessões abertas da
+  pessoa na requisição seguinte de cada uma, sem revogar vínculo nenhum.
+- **SC-1018**: Em 100% dos casos exercitados, nenhuma sessão anterior à suspensão vale depois da
+  reativação, inclusive a que não fez requisição durante ela.
+- **SC-1019**: Zero estados em que a substituição da administração institucional grava só a
+  concessão ou só a revogação.
+- **SC-1020**: Nenhuma tela da gestão mostra `pessoa-<uuid>` como autor de ato no modo
+  institucional.
 
 ## Assumptions
 

@@ -102,7 +102,8 @@ foi tomada aqui.
 
 - **Decisão**: `production.py`, com `GESTAO_PROVEDOR_INSTITUCIONAL` declarado, recusa subir sem
   `GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS` e `GESTAO_SESSAO_INATIVIDADE_MINUTOS`, inteiros positivos.
-  Fora de produção o padrão é 480 e 30, a proposta.
+  Fora de produção o padrão é 480 e 30 — a proposta, que o usuário adotou em 30/10 (P4), mandando
+  declará-los expressamente em produção, que é o que esta exigência faz.
 - **Por quê**: os valores são decisão do usuário (P4). Exigir a declaração impede que a proposta
   vire valor de produção por omissão.
 
@@ -143,3 +144,71 @@ foi tomada aqui.
 - **Decisão**: `interface/acessos.py` entra em `MODULOS_DE_VIEW`, e cada `raise Http404` dele tem
   linha no inventário. O 404 só responde vínculo de outra unidade, ou inexistente; falta de
   capacidade é a recusa explicada, por `require_authorization_base`.
+
+---
+
+# Incremento 2 — decisões técnicas, sobre as respostas do usuário de 30/10
+
+Nada abaixo está implementado. As decisões de governança são as da spec, §Decisões do usuário.
+
+## D-015 — A suspensão troca o hash da sessão, e é isso que mata as sessões antigas
+
+- **Decisão**: suspender grava a suspensão, marca `is_active` falso e chama `set_unusable_password()`
+  de novo, na mesma transação. A senha inutilizável ganha outro valor aleatório, e com ela o
+  `get_session_auth_hash()` do Django: toda sessão aberta antes carrega o hash antigo, e o
+  `get_user` do framework a apaga na requisição seguinte. Reativar marca `is_active` verdadeiro e
+  **não** restaura o hash.
+- **Por quê**: é o que a P2 exige — nenhuma sessão anterior volta, mesmo a que não fez requisição
+  durante a suspensão. Conferir só `is_active` não basta: a sessão parada durante a suspensão
+  voltaria a valer na reativação. O hash é o mecanismo do próprio Django para "sair de todos os
+  dispositivos", conferido a cada requisição, sem consulta a mais e sem varrer a tabela de sessões
+  (que não tem índice por pessoa).
+- **Alternativas**: apagar as linhas de `django_session` da pessoa (exige decodificar todas);
+  comparar o instante da entrada com o da última suspensão (uma consulta a mais por requisição,
+  contra o teto de duas do `SC-1005` da `106`).
+
+## D-016 — Suspensão e reativação são registros append-only; `is_active` é o efeito
+
+- **Decisão**: `SuspensaoDePessoa(pessoa, suspensa_em, suspensa_por, motivo)` e
+  `ReativacaoDePessoa(suspensao OneToOne, reativada_em, reativada_por, motivo)`, append-only nas duas
+  camadas; `TABELAS_APPEND_ONLY` passa de 44 a **46**, e a migration `seguranca/0002` só as cria.
+  `is_active` é escrito na mesma transação, como efeito, e a fonte da história são os registros.
+  A pessoa é trancada (`select_for_update`), como na concessão: duas suspensões ou duas reativações
+  simultâneas — a segunda vê a primeira; a reativação dupla, o banco recusa pela unicidade.
+- **Por quê**: "quem estava suspenso quando" é pergunta de fiscalização, como "quem tinha o papel".
+  `is_active` sozinho perderia a história no primeiro `UPDATE`.
+
+## D-017 — A tela suspende pessoas; a implantação, também o administrador institucional
+
+- **Decisão**: em "Administração de acessos", uma seção "Suspender ou reativar uma pessoa", com a
+  busca do incremento 1 (que passa a incluir as suspensas, só nesta seção, marcadas como tal) e a
+  confirmação de `FR-3142` e `FR-3145`. A camada de aplicação recusa o próprio ator e quem tem
+  Administrador institucional vigente. Os comandos `suspender_pessoa` e `reativar_pessoa`, por
+  `--provedor` e `--identificador`, com `--motivo`, gravam sob o ator `implantacao` e alcançam
+  qualquer pessoa.
+- **Por quê**: é a P1. O comando é o único ponto que alcança o administrador institucional, como o
+  que o concede.
+
+## D-018 — Retirar e substituir a administração institucional, pela implantação
+
+- **Decisão**: `retirar_administracao_institucional --provedor --identificador --motivo` revoga o
+  vínculo sob o ator `implantacao`. `substituir_administracao_institucional --de-provedor
+  --de-identificador --para-provedor --para-identificador --motivo` revoga e concede num
+  `transaction.atomic()` só, sob a trava global da primeira administração (`pg_advisory_xact_lock`
+  da `106`), com os dois eventos na trilha e o mesmo `correlation_id`.
+- **Salvaguarda proposta, não decidida**: a retirada que deixaria **nenhum** administrador
+  institucional vigente é recusada sem `--sem-administracao`, como a segunda concessão é recusada
+  sem `--adicional`. As respostas de 30/10 não tratam desse caso; a salvaguarda vai ao plano como
+  proposta, e se implementa só com a confirmação do usuário.
+- **Por quê**: é a P3 e a proposta 2. A substituição numa transação é o que a P3 pede
+  explicitamente: não há instante com dois administradores a mais nem com o anterior ainda ativo.
+
+## D-019 — O nome nas demais telas, por um filtro com uma consulta por página
+
+- **Decisão**: um filtro de template, `nome_de_pessoa`, que devolve o `subject` sem consulta quando
+  ele não começa por `pessoa-`, e, quando começa, consulta todos os identificadores institucionais
+  da página de uma vez, na primeira chamada, e guarda o mapa na requisição. Os templates que exibem
+  `subject` de autor passam a usá-lo; a lista vem da varredura de `ator.subject`, `*_por`,
+  `actor_subject` e `identity_subject` nos templates.
+- **Por quê**: `FR-3150` e `FR-3151`. A demonstração não consulta nada, e o orçamento de consultas
+  das telas existentes não muda.

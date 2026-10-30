@@ -1,8 +1,8 @@
 """A sessão institucional tem prazo: duração máxima e inatividade (107, US5).
 
 O relógio é o de `seguranca.relogio`, fixado pelo caso: os limites se verificam no instante exato,
-sem `sleep`. Os valores são os padrões fora de produção — a proposta de 8 horas e 30 minutos, que
-não foi aprovada; o que se prova é a contagem, e não a decisão.
+sem `sleep`. Os valores são os padrões fora de produção — 8 horas e 30 minutos, os que o usuário
+decidiu em 30/10 (P4 da spec).
 """
 
 from datetime import timedelta

@@ -66,12 +66,22 @@ O CI do PR (#346) roda `uv sync` com os três grupos, instala o Chromium e roda 
 workers, e por isso executa também as jornadas do navegador. O resultado do commit final fica no
 próprio PR; a verificação desta sessão não o substitui.
 
+## As decisões de 30/10, depois da entrega
+
+O usuário respondeu P1 a P4 e as três propostas da `106` (spec, §Decisões do usuário). Nenhum código
+de comportamento mudou com elas: o incremento 1 já exigia os prazos declarados em produção, que é o
+que a P4 manda; mudaram os comentários e as mensagens que chamavam 8 h e 30 min de proposta, e o
+roteiro de ativação passou a declarar os dois valores. O incremento 2 foi especificado, e **não
+implementado**. Executado depois das edições: `ruff check`, `ruff format --check`, e os guardiões de
+citação, do README, da configuração de produção e do prazo da sessão (83 passando).
+
 ## O que depende de fora deste repositório
 
 - **A conexão real** com o provedor do Ifes: nada aqui fala com AD, LDAP, OIDC ou SAML. As jornadas
   provam a aplicação, com o adaptador simulado; o adaptador real precisa dos próprios testes contra
   um provedor de homologação (`doc/ativacao-do-sso-institucional.md`, §2).
-- **As decisões P1 a P4** da spec e as três propostas da `106`.
+- **A implementação do incremento 2**, sobre as decisões de 30/10, e a salvaguarda da retirada do
+  último administrador institucional, que as decisões não cobrem.
 - **Abrir a gestão em produção**: não foi feito, nem é desta feature.
 
 ## Observações sem ação

@@ -403,7 +403,8 @@ def provedor_implantavel():
 )
 @pytest.mark.parametrize("valor", [None, "", "0", "-5", "oito horas"])
 def test_com_provedor_producao_exige_os_dois_prazos_da_sessao(provedor_implantavel, prazo, valor):
-    """`FR-3124` da 107: a proposta de 8 h e 30 min não vira valor de produção por omissão."""
+    """`FR-3124` da 107: a decisão de 30/10 manda declarar os prazos em produção, e o padrão da base
+    não vira valor de produção por omissão."""
     with pytest.raises(ImproperlyConfigured) as recusa:
         _carregar(
             GESTAO_PROVEDOR_INSTITUCIONAL=provedor_implantavel,

@@ -101,3 +101,29 @@ specs/033-navegacao-por-capacidade/inventario-das-negativas.md   # D-014
 
 Esta branch não muda o que o #345 entrega, salvo a recusa de pessoa inativa (D-011) e o
 `redirect_uri` do provedor simulado (D-013), que é código de teste.
+
+## Incremento 2 — plano (não implementado)
+
+Sobre as respostas do usuário de 30/10 (spec, §Decisões do usuário) e D-015 a D-019.
+
+**Storage**: migration `seguranca/0002`, com `SuspensaoDePessoa` e `ReativacaoDePessoa`
+append-only; o `M` do `provisionar_papeis` passa de 44 a **46**, e os guardiões de contagem por app
+e de tabelas append-only sobem junto.
+
+**Fases**:
+
+1. Modelos, migration, gatilhos e a entrada em `TABELAS_APPEND_ONLY`.
+2. `seguranca/application/acessos.py`: `suspender`, `reativar`, `conferir_suspensao`,
+   `conferir_reativacao`, `retirar_administracao_institucional`,
+   `substituir_administracao_institucional`; a troca do hash da sessão na suspensão (D-015).
+3. Comandos: `suspender_pessoa`, `reativar_pessoa`, `retirar_administracao_institucional`,
+   `substituir_administracao_institucional`.
+4. Telas: a seção de suspensão em "Administração de acessos", as duas confirmações, a marca de
+   suspensa em "Acessos da unidade", a recusa da entrada com a frase de acesso suspenso.
+5. O filtro `nome_de_pessoa` e a troca nos templates que exibem autor (D-019).
+6. Testes: as sessões encerradas (duas, em clientes diferentes), a sessão parada durante a suspensão
+   que não volta, concorrência, privilégios da runtime, a substituição atômica (com falha forçada
+   no meio), a jornada no navegador (suspender → a outra sessão cai → reativar → entrar de novo).
+
+**Pergunta antes da fase 3**: a salvaguarda da retirada do último administrador institucional
+(D-018) — implementar ou não.
