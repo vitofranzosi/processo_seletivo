@@ -6,10 +6,18 @@ o que uma Retificação provoca depende de vigência, não só de estado.
 
 from dataclasses import dataclass
 
+from django.urls import reverse
+
+from processo_seletivo.interface.acoes import entrega_para
 from processo_seletivo.publicacoes.application.retificacoes import (
     publish_retification,
     transition_retification,
 )
+from processo_seletivo.publicacoes.application.selectors import (
+    homologar_fecharia_a_publicacao,
+    impede_por_segregacao,
+)
+from processo_seletivo.publicacoes.models_retificacao import Retificacao
 
 
 @dataclass(frozen=True)
@@ -147,9 +155,187 @@ def impedimento(retificacao, ator, ato):
     if not ator.can(ato.permissao):
         return {"motivo": "permissao", "permissao": ato.permissao}
     if any(cabivel.chave == ato.chave for cabivel in disponiveis(retificacao, ator)):
-        return None
+        # A segregação depois da situação, como no command: publicar o que não está homologado é
+        # recusado por situação, e só a Retificação homologada chega a perguntar quem a homologou
+        # (103, FR-2725, FR-2727).
+        texto = motivo_previsivel(retificacao, ator, ato)
+        return {"motivo": "segregacao", "texto": texto} if texto else None
     return {
         "motivo": "situacao",
         "exigidas": sorted(ato.situacoes_exigidas),
         "atual": retificacao.status,
     }
+
+
+# ---------------------------------------------------------------------------
+# A jornada da Retificação pela navegação comum (103)
+# ---------------------------------------------------------------------------
+
+#: Quem age depois de cada situação (103, FR-2711, D-003). A forma é a do Edital
+#: (`acoes.PROXIMO_RESPONSAVEL`), e a tabela é outra porque as situações têm outros nomes —
+#: "homologada", e não "homologado". O terceiro termo é o ato **principal** da situação: em revisão
+#: cabem homologar e devolver, e o que anda para frente é homologar; devolver é retrocesso, e
+#: nunca o próximo passo, como no Edital.
+PROXIMO_RESPONSAVEL = {
+    "EM_ELABORACAO": ("quem elabora", "submeter a Retificação para revisão", "submeter"),
+    "EM_REVISAO": ("quem homologa", "homologar ou devolver a Retificação", "homologar"),
+    "HOMOLOGADA": ("quem publica", "publicar a Retificação", "publicar"),
+}
+
+#: As situações em que a Retificação ainda pede um ato. É o que as telas chamam de "em curso", e é
+#: a mesma tabela de cima: uma situação que não tem próximo responsável não está em curso.
+EM_CURSO = frozenset(PROXIMO_RESPONSAVEL)
+
+SEGREGACAO = "Você submeteu e homologou esta Retificação; publicar exige outra pessoa autorizada."
+
+
+@dataclass(frozen=True)
+class Oferta:
+    """Um ato que a tela mostra, e por que ele não pode ser praticado agora — vazio se pode.
+
+    `disponiveis` continua respondendo "permissão e situação", que é a pergunta do servidor sobre
+    papel. A oferta acrescenta o que a tela já sabe que o command recusaria, como
+    `acoes._motivo_previsivel` faz no Edital: o ato aparece desabilitado com o motivo, e não como
+    caminho para uma recusa (FR-2725).
+    """
+
+    ato: AtoRetificacao
+    url: str
+    motivo: str = ""
+
+    @property
+    def disponivel(self):
+        return not self.motivo
+
+
+def participantes(retificacao):
+    """Os nomes que as duas leituras de segregação do Edital recebem, com os campos da Retificação.
+
+    **A regra não é copiada** (D-004). `impede_por_segregacao` e `homologar_fecharia_a_publicacao`
+    só leem `elaborou` e `homologou`; o que a Retificação chama de elaborar, para a segregação, é
+    submeter — `prepared_by` —, que é o mesmo que o command compara. Se a governança decidir que
+    "elaborou" é quem compôs (AUD-RET-05), a troca é aqui e no command, juntas.
+    """
+    return {"elaborou": retificacao.prepared_by, "homologou": retificacao.homologated_by}
+
+
+def motivo_previsivel(retificacao, ator, ato):
+    if ato.chave == "publicar" and impede_por_segregacao(participantes(retificacao), ator):
+        return SEGREGACAO
+    return ""
+
+
+def ofertas(retificacao, ator):
+    return [
+        Oferta(
+            ato,
+            reverse("interface:retificacao-ato", args=[retificacao.id, ato.chave]),
+            motivo_previsivel(retificacao, ator, ato),
+        )
+        for ato in disponiveis(retificacao, ator)
+    ]
+
+
+def fecharia_a_publicacao(retificacao, ator, ato):
+    """Homologar o que a própria pessoa submeteu deixa a publicação para outra (FR-2726)."""
+    return ato.chave == "homologar" and homologar_fecharia_a_publicacao(
+        participantes(retificacao), ator
+    )
+
+
+def pode_editar(retificacao, ator):
+    """A edição do mesmo registro é oferecida? (FR-2715, FR-2721).
+
+    A mesma condição que `edit_retification` impõe — permissão de elaborar e situação de
+    elaboração —, perguntada antes, para que o link não leve a uma recusa.
+    """
+    return retificacao.status == Retificacao.Status.EM_ELABORACAO and ator.can(
+        "retificacao:elaborar"
+    )
+
+
+def proximo_passo(retificacao, ator, ofertadas=None):
+    """Situação e quem age a seguir — derivado, nunca persistido (FR-2711, FR-2712, FR-2732).
+
+    "É você" sai das ofertas, e não do mapa de permissões: quem submeteu e homologou tem
+    `retificacao:publicar` e mesmo assim não é a pessoa que o ato espera. É o caso que
+    `acoes.proximo_passo` já trata no Edital, e pela mesma razão.
+    """
+    responsavel = PROXIMO_RESPONSAVEL.get(retificacao.status)
+    if responsavel is None:
+        return None
+    papel, ato, chave = responsavel
+    ofertadas = ofertas(retificacao, ator) if ofertadas is None else ofertadas
+    principal = next((oferta for oferta in ofertadas if oferta.ato.chave == chave), None)
+    return {
+        "papel": papel,
+        "ato": ato,
+        "chave": chave,
+        "sou_eu": principal is not None and principal.disponivel,
+        "oferta": principal,
+        "observacao": principal.motivo if principal is not None else "",
+    }
+
+
+def resumo(retificacao, ator):
+    """Uma Retificação em curso como a Lista, o Edital e a tela de Retificar a mostram (FR-2702).
+
+    As três telas leem daqui, e por isso a marca da Lista e a seção do Edital não divergem sobre a
+    mesma Retificação e o mesmo ator (FR-2730). Nada aqui consulta o banco: quem chama já trouxe a
+    Retificação na consulta única da tela (FR-2705, FR-2707).
+    """
+    passo = proximo_passo(retificacao, ator)
+    return {
+        "retificacao": retificacao,
+        "url": reverse("interface:retificacao-detalhe", args=[retificacao.id]),
+        "passo": passo,
+        "meu_ato": passo["oferta"].ato.rotulo if passo and passo["sou_eu"] else "",
+        "editar": (
+            reverse("interface:retificacao-editar", args=[retificacao.id])
+            if pode_editar(retificacao, ator)
+            else ""
+        ),
+    }
+
+
+# Só o que as telas usam: a derivação acima lê a situação e dois nomes, e a seção diz quem criou,
+# quando e por quê. Trazer as Alterações seria carregar o ato inteiro para uma linha.
+_CAMPOS_DO_RESUMO = (
+    "id",
+    "edital_id",
+    "status",
+    "justification",
+    "created_by",
+    "created_at",
+    "prepared_by",
+    "homologated_by",
+)
+
+
+def em_curso_por_edital(edital_ids, ator):
+    """As Retificações em curso de vários Editais, numa consulta só (FR-2707, R-002).
+
+    Devolve `{edital_id: [resumo, ...]}`, da mais antiga para a mais recente. Edital sem
+    Retificação em curso não aparece no dicionário.
+    """
+    por_edital = {}
+    for retificacao in (
+        Retificacao.objects.filter(edital_id__in=list(edital_ids), status__in=EM_CURSO)
+        .only(*_CAMPOS_DO_RESUMO)
+        .order_by("created_at", "id")
+    ):
+        por_edital.setdefault(retificacao.edital_id, []).append(resumo(retificacao, ator))
+    return por_edital
+
+
+def em_curso(edital, ator):
+    return em_curso_por_edital([edital.id], ator).get(edital.id, [])
+
+
+def entrega(ato):
+    """A quem o ato passa a Retificação (FR-2728).
+
+    A tabela é a do Edital, chaveada pelo ato — e as chaves são as mesmas: submeter entrega a quem
+    homologa, homologar a quem publica, devolver a quem elabora.
+    """
+    return entrega_para(ato)

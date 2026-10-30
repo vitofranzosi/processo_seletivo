@@ -27,3 +27,7 @@
    olho achar onde chegou numa página de sessenta cartões iguais. */
 #formulario-da-retificacao fieldset.linha{scroll-margin-top:1.5rem}
 #formulario-da-retificacao fieldset.linha:target{outline:2px solid var(--verde);outline-offset:2px}
+/* As remoções que o rascunho já declara, na edição (103, FR-2719): uma caixa por remoção, cada uma
+   numa linha, e o rótulo quebra a 375 px em vez de alargar o cartão. */
+.remocoes-declaradas{border:1px solid var(--borda);border-radius:4px;padding:.5rem .75rem}
+.remocoes-declaradas p{margin:.25rem 0;overflow-wrap:anywhere}

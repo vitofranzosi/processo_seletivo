@@ -3,3 +3,7 @@
    é resposta. */
 .acoes>*+.terminais{padding-left:.5rem;border-left:1px solid var(--borda)}
 .acao.zerada{color:var(--texto-fraco);border-color:var(--borda)}
+/* A marca da Retificação em curso na célula de situação (103, FR-2706, FR-2708): um link de texto
+   embaixo da situação do Edital, um por Retificação. A situação já diz o estado do Edital; a marca
+   diz o que a Retificação dele espera, e de quem. */
+.marca-da-retificacao{display:block;margin-top:.3rem;font-size:.8125rem;overflow-wrap:anywhere}

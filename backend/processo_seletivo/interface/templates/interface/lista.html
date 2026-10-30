@@ -96,7 +96,14 @@ Seletivo" é ação, e fica (DP-1 da 076). Sem ação nenhuma, a faixa não vem 
         mais se faz aqui, e não tinha link. {% endcomment %}
         <th scope="row"><a class="codigo" href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a></th>
         <td><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.title }}</a></td>
-        <td><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></td>
+        <td><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span>
+          {% comment %} A marca da Retificação em curso (103, FR-2706): texto, e não só cor (FR-2708), e um
+          link — o detalhe já é aberto a todo o escopo. Com o ato da pessoa, o rótulo dele; sem, quem
+          ele aguarda. {% endcomment %}
+          {% for item in edital.retificacoes_em_curso %}
+          <a class="marca-da-retificacao" href="{{ item.url }}">Retificação {{ item.retificacao.status|situacao|lower }} · {% if item.meu_ato %}{{ item.meu_ato }}{% else %}aguarda {{ item.passo.papel }}{% endif %}</a>
+          {% endfor %}
+        </td>
         <td>
           {% if edital.acoes %}
           <div class="acoes">

@@ -4,6 +4,10 @@
   {% if impedimento.motivo == "permissao" %}
     <strong>Você não pode praticar este ato.</strong>
     Ele exige a permissão <code>{{ impedimento.permissao }}</code>, que não está entre as suas.
+  {% elif impedimento.motivo == "segregacao" %}
+    {% comment %} A segregação de funções tem frase própria (103, FR-2727): não é falta de permissão —
+       a pessoa tem o papel — nem situação incompatível — a Retificação está pronta para o ato. {% endcomment %}
+    <strong>Segregação de funções.</strong> {{ impedimento.texto }}
   {% else %}
     <strong>Este ato não cabe na situação atual.</strong>
     Ele só é admitido a partir de

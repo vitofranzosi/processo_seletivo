@@ -10,6 +10,20 @@
 {% include "interface/_impedimento.html" %}
 
 {% comment %}
+A passagem de bastão dita **antes** do ato (103, FR-2728), com a frase do Edital (`confirmar.html`):
+quem submete está entregando a Retificação a outra pessoa, e saber a quem é a diferença entre um ato
+e um envio às cegas. E o aviso de que homologar o que se submeteu deixa a publicação para outra
+pessoa (FR-2726) — não impede: em equipe de duas ou três, acumular é o caso comum.
+{% endcomment %}
+{% if entrega and not recusa_certa %}
+<p class="bastao">Depois deste ato, a Retificação fica aguardando <strong>{{ entrega }}</strong>.</p>
+{% endif %}
+{% if fecharia_a_publicacao and not recusa_certa %}
+<p class="aviso" role="status"><strong>Atenção:</strong> você submeteu esta Retificação. Se a
+  homologar, a publicação precisará ser feita por outra pessoa autorizada.</p>
+{% endif %}
+
+{% comment %}
 **O que a conferência do ato sabe, e descartava** (027, FR-336). Ela calcula os achados do conteúdo
 que esta Retificação produziria e ficava só com os impeditivos: o mesmo conteúdo dizia duas coisas
 diferentes conforme chegasse por submissão de rascunho ou por Retificação.
