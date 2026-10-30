@@ -58,4 +58,4 @@ testes de jornada e escala.
 ## Phase 8: Convergence
 
 - [X] T022 Testar o Edital em revisão na faixa ("Homologar o Edital", some depois da homologação) em `backend/tests/interface/test_acoes_disponiveis.py` per FR-2804 (partial)
-- [ ] T023 Registrar em `specs/104-acoes-disponiveis/verificacao.md` o parcial `_item_de_trabalho.html` como parte da faixa per plan: estrutura (unrequested)
+- [X] T023 Registrar em `specs/104-acoes-disponiveis/verificacao.md` o parcial `_item_de_trabalho.html` como parte da faixa per plan: estrutura (unrequested)
