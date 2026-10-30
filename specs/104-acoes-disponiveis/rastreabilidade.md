@@ -9,7 +9,7 @@ Requisito → tarefa → teste. Caminhos de teste relativos a `backend/tests/`. 
 | FR-2801 (derivação de leitura, sem autorizar nem persistir) | T009 | `acoes` (todos os casos leem `trabalho.do_ator` pela Lista); nenhuma migration (FR-2829) |
 | FR-2802 (um objeto, um item, ato principal) | T009 | `acoes::test_e_quem_acumula_papeis_ve_um_item_por_objeto`, `::test_g_varios_procedimentos_ordenados_e_sem_duplicidade` |
 | FR-2803 (sem ato que o domínio recusaria; pendência só no detalhe) | T009, T006 | `acoes::test_e_a_publicacao_que_a_segregacao_recusa_nao_entra`, `::test_d_quem_submeteu_e_homologou_nao_ve_publicar_como_acao`, `::test_d_a_lista_nao_oferece_submeter_que_a_validacao_pode_recusar` |
-| FR-2804 (cobertura: Edital, Retificação, recursos, avaliação) | T009 | `acoes::test_d_…` (Edital), `::test_a_…` (Retificação), `::test_os_recursos_que_aguardam_decisao_sao_um_item_por_edital`, `::test_a_etapa_com_inscricoes_a_avaliar_e_um_item_e_conta_o_que_falta` |
+| FR-2804 (cobertura: Edital, Retificação, recursos, avaliação) | T009, T022 | `acoes::test_d_…` e `::test_o_edital_em_revisao_e_homologar_o_edital_e_some_depois` (Edital), `::test_a_…` (Retificação), `::test_os_recursos_que_aguardam_decisao_sao_um_item_por_edital`, `::test_a_etapa_com_inscricoes_a_avaliar_e_um_item_e_conta_o_que_falta` |
 | FR-2805 (escopo) | T009 | `acoes::test_i_outra_unidade_nao_ve_item_nem_marca` |
 | FR-2806 (consultas não crescem com Editais) | T003, T004, T009 | `escala::test_a_derivacao_nao_cresce_com_o_numero_de_editais` |
 | FR-2807 (faixa antes do inventário, depois dos avisos) | T011 | `acoes::test_a_o_homologador_ve_a_retificacao_na_primeira_tela_e_ela_some_para_todos` (ordem no HTML) |
@@ -51,7 +51,7 @@ Requisito → tarefa → teste. Caminhos de teste relativos a `backend/tests/`. 
 | Trabalho | Na faixa | Derivação | Teste |
 |---|---|---|---|
 | Edital em elaboração | sim, "Continuar a elaboração" | `ator.can("edital:elaborar")` e situação | `acoes::test_d_a_lista_nao_oferece_submeter…` |
-| Edital em revisão | sim, "Homologar o Edital" | `atos.disponiveis` | por construção, mesmo caminho do homologado; `test_listagem_e_detalhe_nao_divergem` |
+| Edital em revisão | sim, "Homologar o Edital" | `atos.disponiveis` | `acoes::test_o_edital_em_revisao_e_homologar_o_edital_e_some_depois` |
 | Edital homologado | sim, "Publicar o Edital", sem segregação | `atos.disponiveis` + `participantes_em_lote` + `impede_por_segregacao` | `acoes::test_d_quem_submeteu_e_homologou_nao_ve_publicar_como_acao` |
 | Retificação em elaboração / devolvida | sim, "Concluir e submeter" / "Corrigir … devolvida" | `atos_retificacao.resumo` | `acoes::test_c_…` |
 | Retificação em revisão / reenviada | sim, "Analisar a Retificação" | idem | `acoes::test_a_…`, `::test_c_…` |

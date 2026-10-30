@@ -444,3 +444,48 @@ def test_a_etapa_com_inscricoes_a_avaliar_e_um_item_e_conta_o_que_falta(
     for inscricao in inscricoes:
         concluir_como(cenario, "joao", inscricao)
     assert not faixa(joao)
+
+
+def test_o_edital_em_revisao_e_homologar_o_edital_e_some_depois(
+    api_client, manager_headers, process_payload
+):
+    """O ramo do Edital submetido (FR-2804), que a convergência achou sem teste próprio."""
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+    )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    elabora = actor_headers("ana.elaboradora", ["edital:elaborar", "edital:submeter"])
+    api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        complete_draft(),
+        format="json",
+        **{**elabora, "HTTP_IF_MATCH": '"1"'},
+    )
+    api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/submissoes",
+        format="json",
+        **{**elabora, "HTTP_IF_MATCH": '"2"'},
+    )
+    bruno = sessao(*BRUNO)
+
+    [objeto] = faixa(bruno).objetos
+    assert (objeto.natureza, objeto.ato, objeto.situacao) == (
+        "edital",
+        "Homologar o Edital",
+        "Edital em revisão",
+    )
+    assert objeto.url == reverse("interface:detalhe", args=[edital.id])
+    assert objeto.desde is not None
+    assert not faixa(sessao(*CARLA)), "publicar ainda não cabe"
+
+    api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/homologacoes",
+        {"reason": "OK"},
+        format="json",
+        **{
+            **actor_headers("bruno.homologador", ["edital:homologar"]),
+            "HTTP_IF_MATCH": '"3"',
+        },
+    )
+    assert not faixa(bruno)
+    assert [o.ato for o in faixa(sessao(*CARLA)).objetos] == ["Publicar o Edital"]
