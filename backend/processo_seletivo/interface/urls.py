@@ -3,6 +3,7 @@ from django.urls import path
 from processo_seletivo.interface import (
     assistente,
     avisos,
+    documentacao,
     duvidas,
     prototipo_do_assistente,
     relatorio,
@@ -25,6 +26,15 @@ urlpatterns = [
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
     path("agenda", views.agenda, name="agenda"),
+    # A Visão do Sistema (105). **Com barra no fim**, ao contrário das vizinhas: o manual pede os
+    # arquivos dele por endereço relativo (`assets/style.css`), e sem a barra o navegador os
+    # procuraria em `/gestao/assets/`.
+    path("documentacao/", documentacao.visao_do_sistema, name="documentacao"),
+    path(
+        "documentacao/<path:arquivo>",
+        documentacao.visao_do_sistema,
+        name="documentacao-arquivo",
+    ),
     # O relatório consolidado da unidade (100): a escolha do conjunto, a camada executiva e o PDF,
     # sob a porta da Visão Geral, de onde ele parte.
     path(

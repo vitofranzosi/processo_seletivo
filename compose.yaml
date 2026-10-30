@@ -80,6 +80,7 @@ services:
       # O ambiente virtual não está aqui dentro — mora em `/opt/venv`, justamente para não ser
       # escondido por esta montagem.
       - ./backend:/app/backend
+      - ./docs/visao-sistema:/app/docs/visao-sistema:ro
       # As especificações, só para leitura: `tests/test_citacoes_de_requisito.py` varre `specs/`
       # para conferir que nenhuma citação `FR-`/`SC-`/`D-` aponta para requisito inexistente. Sem
       # esta montagem a suíte roda incompleta dentro do container, e falha por motivo errado.

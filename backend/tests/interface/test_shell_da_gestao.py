@@ -163,7 +163,7 @@ def test_montar_a_barra_nao_consulta_o_banco(settings, django_assert_num_queries
         contexto = navegacao.contexto_da_navegacao(pedido)
         grupos = [grupo["nome"] for grupo in contexto["navegacao"]["barra"]]
 
-    assert grupos == ["Trabalho", "Unidade"]
+    assert grupos == ["Trabalho", "Unidade", "Ajuda"]
 
 
 def test_a_barra_so_se_monta_quando_lida(monkeypatch):
