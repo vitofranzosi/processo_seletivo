@@ -60,6 +60,8 @@ viajava dentro do `<style>`; o argumento de escopar o estilo vale igual.
   <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></symbol>
   <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
   <symbol id="i-livro" viewBox="0 0 24 24"><path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2zM12 6.5v13"/></symbol>
+  <symbol id="i-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></symbol>
+  <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
   <symbol id="i-sair" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></symbol>
   <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
 </svg>
@@ -84,13 +86,35 @@ viajava dentro do `<style>`; o argumento de escopar o estilo vale igual.
       {% endfor %}
     </nav>
     <div class="pessoa-identificada">
-      <span class="iniciais" aria-hidden="true" title="{{ ator.subject }}">{{ navegacao.iniciais }}</span>
-      <span class="nome-da-pessoa"><strong>{{ ator.subject }}</strong>{% if papeis_do_ator %}<span>{{ papeis_do_ator|join:", " }}</span>{% endif %}</span>
+      {% comment %} O nome, e não o identificador (107, `FR-3103`): na demonstração eles são o mesmo
+         texto, e no institucional o identificador é `pessoa-<uuid>`, que ninguém lê. {% endcomment %}
+      <span class="iniciais" aria-hidden="true" title="{{ nome_do_ator }}">{{ navegacao.iniciais }}</span>
+      <span class="nome-da-pessoa"><strong>{{ nome_do_ator }}</strong>{% if papeis_do_ator %}<span>{{ papeis_do_ator|join:", " }}</span>{% endif %}</span>
       <form method="post" action="{% url 'interface:sair' %}">
         {% csrf_token %}
         <button type="submit" class="acao"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-sair"/></svg><span class="rotulo-da-secao">Sair</span></button>
       </form>
     </div>
+    {% comment %} A unidade ativa da pessoa institucional, e a troca, quando há mais de um escopo
+       (107, `FR-3104`). A demonstração não tem escopos: o bloco não existe para ela. Formulário
+       comum, sem script — a troca é um POST, e a página seguinte já vem com as permissões da
+       escolhida. {% endcomment %}
+    {% if escopos_do_ator %}
+    <div class="unidade-ativa">
+      {% if escopos_do_ator|length > 1 %}
+      <form method="post" action="{% url 'interface:unidade-ativa' %}">
+        {% csrf_token %}
+        <label for="unidade-ativa">Atuando em</label>
+        <select id="unidade-ativa" name="unidade">
+          {% for escopo in escopos_do_ator %}<option value="{{ escopo.codigo }}"{% if escopo.ativo %} selected{% endif %}>{{ escopo.rotulo }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="acao">Trocar</button>
+      </form>
+      {% else %}
+      <p>Atuando em <strong>{% for escopo in escopos_do_ator %}{{ escopo.rotulo }}{% endfor %}</strong></p>
+      {% endif %}
+    </div>
+    {% endif %}
     {% comment %} Escondido até o script ligá-lo: sem script, recolher não teria como ser lembrado,
        e a barra fica expandida (`FR-1729`). Na última linha, presa ao fundo: é o único lugar da
        barra que não se mexe ao recolher. {% endcomment %}

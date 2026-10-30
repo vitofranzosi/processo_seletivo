@@ -758,10 +758,16 @@ def identificar(request):
             )
         return _escolha_de_identidade(request, proximo=proximo, erro=True, status=422)
     ator = identidade.ator_da_sessao(request)
+    nome = identidade.nome_do_ator(request, ator) if ator else ""
     return render(
         request,
         "interface/identificar.html",
-        {"proximo": proximo, "iniciais": demonstracao.iniciais(ator.subject) if ator else ""},
+        {
+            "proximo": proximo,
+            "iniciais": demonstracao.iniciais(nome) if ator else "",
+            # Por que a sessão anterior terminou, dito uma vez (107, `FR-3125`).
+            "sessao_encerrada": request.session.pop(identidade.CHAVE_SESSAO_ENCERRADA, ""),
+        },
     )
 
 

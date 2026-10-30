@@ -1,0 +1,34 @@
+/* As telas de gestão de acessos (107): quem atua, o histórico, a busca e a confirmação. */
+
+/* O e-mail abaixo do nome, como a segunda linha de quem está identificado na barra. */
+.detalhe-da-pessoa{display:block;color:var(--texto-fraco);font-size:.8125rem}
+.quem-atua{margin-bottom:2rem}
+.quem-atua form{margin:0}
+
+/* O histórico em lista, e não em tabela: cada linha é uma frase — quem fez o quê a quem —, e o
+   motivo, que pode ser longo, ocupa a linha de baixo inteira. */
+.historico-de-acessos ol{list-style:none;margin:0;padding:0}
+.historico-de-acessos li{display:grid;grid-template-columns:9rem minmax(0,1fr);gap:.15rem 1rem;
+  padding:.6rem 0;border-bottom:1px solid var(--borda)}
+.historico-de-acessos .quando{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.historico-de-acessos .motivo{grid-column:2;color:var(--texto-fraco);font-size:.875rem;
+  overflow-wrap:anywhere}
+
+.busca-de-pessoa{max-width:38rem;margin-bottom:1.5rem}
+.resultado-da-busca ul{list-style:none;margin:0;padding:0}
+.resultado-da-busca li{padding:.75rem 0;border-bottom:1px solid var(--borda)}
+.resultado-da-busca form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.5rem 1rem;margin:0}
+.resultado-da-busca .campo{margin:0}
+.pessoa-encontrada{flex:1 1 14rem;margin:0}
+.papeis-concediveis{margin:1.5rem 0}
+.papeis-concediveis dt{font-weight:600;margin-top:.6rem}
+.papeis-concediveis dd{margin:0;color:var(--texto-fraco);font-size:.9375rem}
+
+.dados-do-ato{display:grid;grid-template-columns:8rem minmax(0,1fr);gap:.4rem 1rem;margin:0}
+.dados-do-ato dt{font-weight:600}
+.dados-do-ato dd{margin:0;overflow-wrap:anywhere}
+
+@media (max-width:40rem){
+  .historico-de-acessos li,.dados-do-ato{grid-template-columns:minmax(0,1fr)}
+  .historico-de-acessos .motivo{grid-column:1}
+}

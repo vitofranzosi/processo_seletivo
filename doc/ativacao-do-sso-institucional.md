@@ -1,6 +1,8 @@
 # O que falta para ativar o SSO institucional
 
-*Desde a [`106`](../specs/106-identidade-institucional-preparada/spec.md), 30/10/2026.* A
+*Desde a [`106`](../specs/106-identidade-institucional-preparada/spec.md), 30/10/2026; atualizado
+pela [`107`](../specs/107-gestao-de-acessos/spec.md), no mesmo dia, que deu tela à gestão de
+acessos.* A
 arquitetura está pronta para receber a identidade do provedor do Ifes; o provedor real não foi
 integrado. Este documento lista o que falta, na ordem em que se resolve, e o que cada item pede.
 
@@ -14,7 +16,10 @@ Nenhuma bloqueia o código já entregue; todas bloqueiam a ativação.
 | 2 | Qual identificador do provedor localiza a pessoa (decisão 2) | o identificador imutável (`sub`, `objectGUID`) | a classe do adaptador; nenhum dado gravado |
 | 3 | Quem é o administrador institucional de acessos (decisão 4) | quem a portaria indicar | o comando `conceder_administracao_institucional` |
 | 4 | Quem concede na unidade (decisão 5) | papel próprio, separado do Gestor | uma linha em `seguranca/acessos.py` |
-| 5 | Tempo de sessão e inatividade (decisão 11) | 8 h absolutas, 30 min de inatividade | a sessão institucional |
+| 5 | Tempo de sessão e inatividade (decisão 11) | 8 h absolutas, 30 min de inatividade | desde a `107`, `GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS` e `GESTAO_SESSAO_INATIVIDADE_MINUTOS`; produção não sobe sem os dois |
+| 7 | Suspensão de pessoa: global, por unidade ou as duas; quem suspende, inclusive o administrador institucional (P1 da `107`) | global, pelo administrador institucional; o institucional, pela implantação | incremento 2 da `107` |
+| 8 | O que a reativação devolve (P2 da `107`) | a entrada; vínculos vigentes voltam a valer, revogados não; nenhuma sessão volta | incremento 2 da `107` |
+| 9 | Retirar ou substituir a administração institucional (P3 da `107`) | pelo comando de implantação, simétrico ao que concede | um comando novo; **hoje não há caminho nenhum** |
 | 6 | Portão do diretório (decisão 3) | sem portão: toda conta entra e vê "sem acesso" | o adaptador |
 
 A **segregação mais estrita** (quem elabora não homologa) é emenda à FR-021 da `001`, e não faz
@@ -52,15 +57,17 @@ Não são entrega da `106`; são o que o adaptador real precisa cumprir.
 - **No proxy**, o cabeçalho de identidade é apagado da requisição do cliente e só aceito da conexão
   do proxy (abaixo).
 
-## 3. As telas que ficaram fora
+## 3. As telas
 
-| Tela | Por que ficou fora | O que já existe |
-|---|---|---|
-| Exibir o nome no lugar do identificador | o `subject` institucional é `pessoa-<uuid>`, e 18 templates mostram o `subject` cru ("Continuar como pessoa-1b4e…", "por pessoa-1b4e…") | o nome está em `auth_user.first_name`; falta um filtro único |
-| "Sem acesso a nenhuma unidade" | quem entra sem vínculo volta à página de acesso, como quem não entrou | o estado é detectável: sessão institucional sem `Actor` |
-| Seletor de unidade na barra | a troca existe (`POST /gestao/unidade-ativa`) e não tem botão | `identidade.trocar_unidade`, com trilha |
-| Acessos da unidade e administração institucional | conceder e revogar existem só na camada de aplicação | `seguranca/application/acessos.py`, com todas as recusas e a trilha |
-| A recusa que nomeia quem concede | `recusa.html` manda pedir "a quem administra o sistema no Cefor" | o papel existe: Administrador de acessos da unidade |
+A `107` entregou as cinco que a `106` deixou fora; ver o [quickstart](../specs/107-gestao-de-acessos/quickstart.md).
+
+| Tela | Situação |
+|---|---|
+| Exibir o nome no lugar do identificador | **na barra, na página de acesso e nas telas de acesso** (`107`). As demais telas que mostram o `subject` de outra pessoa — históricos da comissão, da trilha, do Edital — continuam com o identificador: incremento 2 da `107` |
+| "Sem acesso a nenhuma unidade" | **feita** (`107`): `/gestao/sem-acesso`, com o nome, a quem pedir e a troca para o escopo em que a pessoa ainda atua |
+| Seletor de unidade na barra | **feito** (`107`) |
+| Acessos da unidade e administração institucional | **feitas** (`107`): consulta, concessão e revogação com busca de pessoas, confirmação, motivo e histórico |
+| A recusa que nomeia quem concede | continua a frase canônica da `033`, "a quem administra o sistema no Cefor"; mudá-la é decisão da `033` |
 
 ## 4. O que não foi feito, e é preciso antes de abrir
 
@@ -68,9 +75,12 @@ Não são entrega da `106`; são o que o adaptador real precisa cumprir.
   institucional**. O mecanismo nativo existe — `is_active=False` derruba a sessão na requisição
   seguinte —, mas falta o ato com motivo e trilha, e falta dizer quem suspende o administrador
   institucional, que hoje só o comando de implantação alcança.
-- **Duração da sessão** (decisão 5 da tabela acima): 8 h absolutas e 30 min de inatividade são
-  proposta, e nada as impõe ainda. Até lá, a sessão institucional dura o que o `SESSION_COOKIE_AGE`
-  do Django disser.
+- **Duração da sessão** (decisão 5 da tabela acima): o mecanismo entrou com a `107`; 8 h absolutas e
+  30 min de inatividade continuam proposta, valem só fora de produção, e produção com provedor não
+  sobe sem os dois valores declarados.
+- **Retirada da administração institucional** (decisão 9): não há caminho nenhum hoje — o comando
+  só concede, e a aplicação recusa o papel nos dois sentidos. Uma conta comprometida só sairia pelo
+  banco.
 - **Comissão apontando para pessoa.** O `identity_subject` da comissão continua texto livre; com o
   identificador opaco, incluir um membro por ele é impraticável. Falta a busca da pessoa.
 - **API.** Continua fechada em produção. A recusa da `SessionAuthentication` deve ser revista quando
@@ -90,9 +100,10 @@ Não são entrega da `106`; são o que o adaptador real precisa cumprir.
    ps-manage conceder_administracao_institucional --provedor <nome> --identificador <id> --motivo "Portaria nº …"
    ```
 
-4. O administrador institucional concede o Administrador de acessos do Cefor; este concede os
-   papéis. Até haver tela, pela camada de aplicação, num `ps-manage shell` — o que é aceitável só
-   para os primeiros acessos, e é registrado na trilha como qualquer concessão.
+4. Cada pessoa entra uma vez com a conta institucional e vê a tela sem acesso — é o que a torna
+   encontrável na busca. O administrador institucional, em "Administração de acessos", concede o
+   Administrador de acessos do Cefor; este, em "Acessos da unidade", concede os papéis. Tudo pela
+   interface, com motivo e trilha (`107`).
 5. O Gestor cadastra as autoridades. Só então a primeira publicação é possível.
 
 **Não há migração de dado.** A gestão nunca abriu em produção, e nenhum ato real foi gravado com

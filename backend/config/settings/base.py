@@ -188,6 +188,27 @@ INTERFACE_SELETOR_IDENTIDADE = os.getenv("INTERFACE_SELETOR_IDENTIDADE", "false"
 # provedor real foi integrado ainda; o simulado mora no código de teste, e `production.py` o recusa.
 GESTAO_PROVEDOR_INSTITUCIONAL = os.getenv("GESTAO_PROVEDOR_INSTITUCIONAL", "").strip()
 
+
+# Os prazos da sessão institucional da gestão, em minutos (107, `D-009`): a duração máxima, contada
+# da entrada, e o limite de inatividade, contado da última ação na gestão. **Os padrões são a
+# proposta — 8 horas e 30 minutos — e não foram aprovados** (spec da 107, P4): valem fora de
+# produção, e `production.py` exige os dois declarados quando há provedor (`D-010`).
+def _minutos(nome, padrao):
+    # Vazio é não declarado, e vale o padrão; qualquer outra coisa que não seja inteiro positivo é
+    # erro de quem configurou, e não se troca pelo padrão em silêncio.
+    valor = os.getenv(nome, "").strip()
+    if not valor:
+        return padrao
+    if not valor.isdigit() or int(valor) <= 0:
+        from django.core.exceptions import ImproperlyConfigured
+
+        raise ImproperlyConfigured(f"{nome}: o prazo da sessão é em minutos inteiros e positivos.")
+    return int(valor)
+
+
+GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS = _minutos("GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS", 480)
+GESTAO_SESSAO_INATIVIDADE_MINUTOS = _minutos("GESTAO_SESSAO_INATIVIDADE_MINUTOS", 30)
+
 # O único *backend* de autenticação: o institucional, que autentica a identidade entregue pelo
 # adaptador e **não aceita usuário e senha** (106, `D-008`). Sem esta linha, o padrão do Django
 # seria o `ModelBackend`, e um `createsuperuser` com senha abriria uma porta que ninguém declarou.

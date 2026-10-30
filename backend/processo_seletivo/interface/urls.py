@@ -1,6 +1,7 @@
 from django.urls import path
 
 from processo_seletivo.interface import (
+    acessos,
     assistente,
     avisos,
     documentacao,
@@ -33,6 +34,35 @@ urlpatterns = [
         name="retorno-institucional",
     ),
     path("unidade-ativa", views.unidade_ativa, name="unidade-ativa"),
+    # A gestão de acessos pela interface (107): quem entrou sem acesso, e os dois níveis de
+    # administração, servidos pelas mesmas views (`D-002`).
+    path("sem-acesso", acessos.sem_acesso, name="sem-acesso"),
+    path("acessos", acessos.lista, {"nivel": "unidade"}, name="acessos"),
+    path("acessos/conceder", acessos.conceder, {"nivel": "unidade"}, name="acessos-conceder"),
+    path(
+        "acessos/vinculos/<uuid:vinculo_id>/revogar",
+        acessos.revogar,
+        {"nivel": "unidade"},
+        name="acessos-revogar",
+    ),
+    path(
+        "administracao-de-acessos",
+        acessos.lista,
+        {"nivel": "institucional"},
+        name="administracao-de-acessos",
+    ),
+    path(
+        "administracao-de-acessos/conceder",
+        acessos.conceder,
+        {"nivel": "institucional"},
+        name="administracao-de-acessos-conceder",
+    ),
+    path(
+        "administracao-de-acessos/vinculos/<uuid:vinculo_id>/revogar",
+        acessos.revogar,
+        {"nivel": "institucional"},
+        name="administracao-de-acessos-revogar",
+    ),
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
     path("agenda", views.agenda, name="agenda"),

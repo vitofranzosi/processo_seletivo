@@ -182,7 +182,10 @@ def test_a_revogacao_vale_na_requisicao_seguinte(client, provedor):
         },
     )
     assert tentativa.status_code == 302
-    assert tentativa["Location"].startswith(reverse("interface:identificar"))
+    # A 107 manda quem perdeu o acesso à tela sem acesso, e não mais à página de acesso, onde ele
+    # entraria de novo e voltaria ao mesmo lugar (`FR-3101` da 107). O que este caso prova não muda:
+    # o ato é recusado, nada é gravado e não há ator.
+    assert tentativa["Location"] == reverse("interface:sem-acesso")
     assert not AutoridadeHabilitada.objects.filter(nome="Beltrana").exists()
     assert ator_do_cliente(client) is None
 

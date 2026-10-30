@@ -1,0 +1,81 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Conceder acesso — {{ nivel.titulo }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/acessos.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url nivel.rota %}">{{ navegacao.secao_atual }}</a> › <span aria-current="page">Conceder</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+Buscar a pessoa e escolher o papel (107, `FR-3108`, `FR-3112` a `FR-3115`).
+
+A busca é `POST`, para que nome e e-mail não fiquem no endereço nem nos registros do servidor. Termo
+curto não lista ninguém, e o resultado para em dez: é o que impede esta tela de virar a listagem dos
+servidores. Cada resultado envia o identificador interno da pessoa em campo oculto — ninguém o
+digita —, e o servidor o reconfere na confirmação. Nada é gravado aqui.
+{% endcomment %}
+<h1>Conceder acesso</h1>
+<p class="sub">{% if nivel.institucional %}Administrador de acessos de uma unidade{% else %}{{ nome_da_unidade }}{% endif %}</p>
+
+<form method="post" class="busca-de-pessoa" role="search">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="buscar">
+  <p class="campo">
+    <label for="termo">Nome ou e-mail da pessoa</label>
+    <input id="termo" name="termo" type="search" value="{{ termo }}" minlength="{{ piso }}" required aria-required="true" aria-describedby="ajuda-termo" autocomplete="off">
+    <span class="ajuda" id="ajuda-termo">Ao menos {{ piso }} letras. Aparecem só pessoas que já
+      entraram com a conta institucional — quem nunca entrou precisa entrar uma vez antes.</span>
+  </p>
+  <button type="submit" class="botao">Buscar</button>
+</form>
+
+{% if buscou %}
+<section aria-labelledby="resultado-titulo" class="resultado-da-busca">
+  <h2 id="resultado-titulo">Resultado</h2>
+  {% if curto %}
+  <p class="aviso" role="status">Digite ao menos {{ piso }} letras do nome ou do e-mail.</p>
+  {% elif not pessoas %}
+  <p class="aviso" role="status">Ninguém encontrado. Confira a grafia, ou peça à pessoa que entre uma
+    vez com a conta institucional.</p>
+  {% else %}
+  {% if ha_mais %}<p class="aviso" role="status">Mais de {{ teto }} pessoas encontradas. Mostrando as
+    {{ teto }} primeiras; refine a busca.</p>{% endif %}
+  <ul>
+    {% for pessoa in pessoas %}
+    <li>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="conferir">
+        <input type="hidden" name="pessoa" value="{{ pessoa.identificador }}">
+        <p class="pessoa-encontrada"><strong>{{ pessoa.nome }}</strong>{% if pessoa.email %}<span class="detalhe-da-pessoa">{{ pessoa.email }}</span>{% endif %}</p>
+        {% if nivel.institucional %}
+        <p class="campo">
+          <label for="unidade-{{ forloop.counter }}">Unidade</label>
+          <select id="unidade-{{ forloop.counter }}" name="unidade" required aria-required="true">
+            {% for unidade in unidades %}<option value="{{ unidade.codigo }}">{{ unidade.nome }}</option>{% endfor %}
+          </select>
+        </p>
+        <input type="hidden" name="papel" value="{{ papeis.0.chave }}">
+        {% else %}
+        <p class="campo">
+          <label for="papel-{{ forloop.counter }}">Papel</label>
+          <select id="papel-{{ forloop.counter }}" name="papel" required aria-required="true">
+            {% for papel in papeis %}<option value="{{ papel.chave }}">{{ papel.nome }}</option>{% endfor %}
+          </select>
+        </p>
+        {% endif %}
+        <button type="submit" class="acao" aria-label="Conferir a concessão a {{ pessoa.nome }}">Conferir</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+
+<details class="papeis-concediveis">
+  <summary>O que cada papel permite</summary>
+  <dl>
+    {% for papel in papeis %}<dt>{{ papel.nome }}</dt><dd>{{ papel.alcance }}</dd>{% endfor %}
+  </dl>
+</details>
+
+<p><a class="acao" href="{% url nivel.rota %}">Voltar sem conceder</a></p>
+{% endblock %}

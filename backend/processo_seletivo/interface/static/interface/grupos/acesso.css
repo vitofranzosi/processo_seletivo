@@ -98,6 +98,15 @@ sozinha. O único elemento visual dela é uma grade de linhas finas que se apaga
   border-radius:var(--raio-p);border:1px solid var(--linha-forte);background:var(--branco);color:var(--tinta);text-decoration:none;
   font-weight:600;font-size:.9375rem}
 .alternativa:hover{background:var(--fundo-p)}
+/* O término da sessão anterior, por prazo (107, FR-3125): antes da escolha, porque explica por que
+   a pessoa está aqui de novo. */
+.sessao-encerrada{margin:-1.25rem 0 1.5rem;padding:.6rem .8rem;border-left:3px solid var(--tinta-3);
+  color:var(--tinta-2);font-size:.9375rem;line-height:1.5}
+/* A tela sem acesso (107, FR-3101): as ações são botões de formulário, e não links, porque trocar de
+   unidade e sair são POST. */
+.sem-acesso form{margin:0}
+.sem-acesso form+form{margin-top:.75rem}
+.sem-acesso button{font:inherit;font-weight:600;cursor:pointer}
 .nota-do-metodo{color:var(--tinta-3);font-size:.8125rem;line-height:1.5;margin:.85rem 0 0}
 .separador{display:flex;align-items:center;gap:.75rem;color:var(--tinta-3);font-size:.75rem;text-transform:uppercase;
   letter-spacing:.08em;margin:2.25rem 0 1rem}

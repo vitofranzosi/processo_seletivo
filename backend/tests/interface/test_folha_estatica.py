@@ -241,6 +241,8 @@ QUEM_CARREGA = {
         "identificar.html",
         "identificar_demonstracao.html",
         "sem_autenticacao.html",
+        # Quem entrou pelo provedor e não tem acesso vigente (107): a moldura da página de acesso.
+        "sem_acesso.html",
     },
     "interface/grupos/assistente.css": {"assistente.html", "duvidas.html"},
     "interface/grupos/aviso.css": {"aviso.html", "aviso_previa.html", "modelo_de_aviso.html"},
@@ -256,6 +258,12 @@ QUEM_CARREGA = {
     "interface/telas/relatorio-consolidado.css": {
         "relatorio_consolidado.html",
         "relatorio_consolidado_escolha.html",
+    },
+    # A gestão de acessos (107): a lista, a busca e a confirmação dividem a folha.
+    "interface/telas/acessos.css": {
+        "acessos.html",
+        "acessos_conceder.html",
+        "acessos_confirmar.html",
     },
     # A prévia da classificação (094): o painel só existe na etapa Classificação.
     "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},

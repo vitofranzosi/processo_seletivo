@@ -14,6 +14,7 @@ import hashlib
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, connection, transaction
+from django.db.models import Q
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.seguranca.acessos import (
@@ -28,6 +29,7 @@ from processo_seletivo.seguranca.acessos import (
     PAPEIS_INSTITUCIONAIS,
 )
 from processo_seletivo.seguranca.application.authorization import require_permission
+from processo_seletivo.seguranca.autenticacao import PREFIXO_DO_IDENTIFICADOR
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.seguranca.models import RevogacaoDeVinculo, Vinculo
 from processo_seletivo.shared.api.problems import DomainError
@@ -41,6 +43,15 @@ VINCULO_JA_VIGENTE = "vinculo_ja_vigente"
 VINCULO_JA_REVOGADO = "vinculo_ja_revogado"
 ESCOPO_INVALIDO = "escopo_invalido"
 ADMINISTRACAO_JA_CONCEDIDA = "administracao_ja_concedida"
+# A recusa da pessoa que não está disponível para receber acesso: desativada, ou um identificador
+# que não é de pessoa institucional nenhuma (107, `D-004`, `D-011`). Uma recusa só para os dois
+# casos, para que o campo oculto adulterado não sirva de sonda de quem existe.
+PESSOA_INDISPONIVEL = "pessoa_indisponivel"
+
+# A busca de pessoas (107, `D-005`). O piso e o teto são o que impede a tela de virar a listagem dos
+# servidores: sem termo não há resultado, e com termo curto também não.
+PISO_DA_BUSCA = 3
+TETO_DA_BUSCA = 10
 
 # O ator da trilha quando quem concede é a implantação — o mesmo sujeito da sincronização das
 # unidades (`unidades/domain/nomes.py`), e pela mesma razão: o comando roda com o acesso de quem
@@ -96,7 +107,15 @@ def unidade_inicial(pessoa_id):
 
     Nenhuma das duas, `None`: a pessoa entrou e não tem onde atuar (`FR-3019`).
     """
-    escopos = escopos_vigentes(pessoa_id)
+    return _unidade_inicial_entre(escopos_vigentes(pessoa_id))
+
+
+def unidade_inicial_de(vigentes_da_pessoa):
+    """A mesma regra, sobre os pares (escopo, papel) já lidos — sem consulta (107, `D-006`)."""
+    return _unidade_inicial_entre(sorted({escopo for escopo, _ in vigentes_da_pessoa}))
+
+
+def _unidade_inicial_entre(escopos):
     unidades = [escopo for escopo in escopos if escopo != ESCOPO_INSTITUCIONAL]
     if unidades:
         return unidades[0]
@@ -174,7 +193,11 @@ def conceder(ator, *, pessoa, escopo, papel, motivo, now, correlation_id=""):
     _exigir_unidade(escopo)
     with transaction.atomic():
         # A pessoa trancada serializa duas concessões do mesmo papel: a segunda vê a primeira.
-        get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
+        travada = get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
+        # Desativada não acumula acesso para quando voltar (107, `D-011`). Conferido sob a trava: a
+        # desativação que chegar antes dela é vista aqui.
+        if travada is None or not travada.is_active:
+            raise _indisponivel()
         if vigentes().filter(pessoa=pessoa, escopo=escopo, papel=papel).exists():
             raise DomainError(VINCULO_JA_VIGENTE, "A pessoa já tem este papel nesta unidade.", 409)
         vinculo = Vinculo.objects.create(
@@ -187,6 +210,29 @@ def conceder(ator, *, pessoa, escopo, papel, motivo, now, correlation_id=""):
         )
         _registrar(ator, permissao, "ACESSO_CONCEDER", vinculo, now, correlation_id, motivo)
     return vinculo
+
+
+def conferir_concessao(ator, *, pessoa, escopo, papel):
+    """As recusas da concessão, sem gravar nada — a primeira etapa da tela (107, `D-003`).
+
+    A confirmação chama `conceder`, que confere tudo de novo sob a trava: o que vale é a segunda
+    conferência, e esta só evita mostrar a confirmação de um ato que já se sabe recusado.
+    """
+    _autoridade(ator, escopo=escopo, papel=papel)
+    _recusar_proprio(ator, pessoa)
+    _exigir_unidade(escopo)
+    if not pessoa.is_active:
+        raise _indisponivel()
+    if vigentes().filter(pessoa=pessoa, escopo=escopo, papel=papel).exists():
+        raise DomainError(VINCULO_JA_VIGENTE, "A pessoa já tem este papel nesta unidade.", 409)
+
+
+def conferir_revogacao(ator, *, vinculo):
+    """As recusas da revogação, sem gravar nada (107, `D-003`)."""
+    _autoridade(ator, escopo=vinculo.escopo, papel=vinculo.papel)
+    _recusar_proprio(ator, vinculo.pessoa)
+    if RevogacaoDeVinculo.objects.filter(vinculo_id=vinculo.pk).exists():
+        raise DomainError(VINCULO_JA_REVOGADO, "Este vínculo já foi revogado.", 409)
 
 
 def revogar(ator, *, vinculo, motivo, now, correlation_id=""):
@@ -258,6 +304,130 @@ def conceder_administracao_institucional(*, pessoa, motivo, adicional, now, corr
         )
         _registrar(ator, IMPLANTACAO, "ACESSO_CONCEDER", vinculo, now, correlation_id, motivo)
     return vinculo
+
+
+def _indisponivel():
+    return DomainError(
+        PESSOA_INDISPONIVEL,
+        "Esta pessoa não está disponível para receber acesso. Busque-a de novo.",
+        409,
+    )
+
+
+def pessoas_institucionais():
+    """As pessoas que entraram pelo provedor e estão ativas — o universo da busca (107, `D-005`).
+
+    O prefixo separa a pessoa institucional de qualquer outro `auth_user` que exista no banco, como
+    um superusuário criado à mão, que não tem vínculo e não entra (`D-008` da `106`).
+    """
+    return get_user_model().objects.filter(
+        is_active=True, username__startswith=PREFIXO_DO_IDENTIFICADOR
+    )
+
+
+def pessoa_institucional(identificador):
+    """A pessoa ativa daquele identificador interno, ou a recusa (107, `D-004`)."""
+    pessoa = pessoas_institucionais().filter(username=identificador or "").first()
+    if pessoa is None:
+        raise _indisponivel()
+    return pessoa
+
+
+def buscar_pessoas(ator, termo, *, permissao, escopo):
+    """Até dez pessoas com o termo no nome ou no e-mail, e se havia mais (107, `FR-3112`–`FR-3114`).
+
+    **A capacidade é conferida antes da consulta**, no escopo em que o ator concede: quem não pode
+    conceder não descobre quem existe. O próprio ator não aparece — a autoconcessão é recusada de
+    qualquer modo, e oferecê-la seria convite ao erro.
+    """
+    require_permission(ator, permissao, institution_scope=escopo)
+    termo = (termo or "").strip()
+    if len(termo) < PISO_DA_BUSCA:
+        return [], False
+    achadas = list(
+        pessoas_institucionais()
+        .exclude(username=ator.subject)
+        .filter(Q(first_name__icontains=termo) | Q(email__icontains=termo))
+        .order_by("first_name", "email", "username")
+        .only("username", "first_name", "email")[: TETO_DA_BUSCA + 1]
+    )
+    return achadas[:TETO_DA_BUSCA], len(achadas) > TETO_DA_BUSCA
+
+
+def vigentes_da_pessoa(pessoa_id):
+    """Os pares (escopo, papel) vigentes da pessoa, numa consulta (107, `D-006`)."""
+    return sorted(set(vigentes().filter(pessoa_id=pessoa_id).values_list("escopo", "papel")))
+
+
+def nome_legivel(pessoa):
+    """Como a pessoa aparece na tela: nome, ou e-mail, nunca o identificador interno (`FR-3103`)."""
+    if pessoa is None:
+        return "pessoa sem nome informado"
+    return pessoa.first_name or pessoa.email or "pessoa sem nome informado"
+
+
+def nomes_dos_autores(identificadores):
+    """Quem concedeu ou revogou, pelo nome, numa consulta só (107, `D-008`)."""
+    identificadores = set(identificadores)
+    nomes = {IMPLANTACAO: "Implantação"}
+    for pessoa in get_user_model().objects.filter(username__in=identificadores):
+        nomes[pessoa.username] = nome_legivel(pessoa)
+    return {
+        identificador: nomes.get(identificador, identificador) for identificador in identificadores
+    }
+
+
+def historico(ator, *, permissao, no_escopo, escopos, papeis=None, limite=200):
+    """As concessões e revogações de um escopo, mais recentes primeiro (107, `FR-3107`).
+
+    Lidas dos próprios vínculos e revogações, e não da trilha: são eles a resposta de quem tinha
+    qual papel quando. A permissão se confere no escopo em que o ator está (`no_escopo`); os
+    `escopos` lidos são a unidade dele, ou as unidades registradas, no nível institucional.
+    """
+    require_permission(ator, permissao, institution_scope=no_escopo)
+    vinculos = Vinculo.objects.filter(escopo__in=list(escopos)).select_related(
+        "pessoa", "revogacao"
+    )
+    if papeis is not None:
+        vinculos = vinculos.filter(papel__in=list(papeis))
+    vinculos = list(vinculos.order_by("-concedido_em")[:limite])
+    eventos = []
+    for vinculo in vinculos:
+        eventos.append(
+            ("concessao", vinculo.concedido_em, vinculo.concedido_por, vinculo.motivo, vinculo)
+        )
+        # O acesso reverso ausente levanta um `DoesNotExist` que também é `AttributeError`, e por
+        # isso o padrão do `getattr` basta.
+        revogacao = getattr(vinculo, "revogacao", None)
+        if revogacao is not None:
+            eventos.append(
+                (
+                    "revogacao",
+                    revogacao.revogado_em,
+                    revogacao.revogado_por,
+                    revogacao.motivo,
+                    vinculo,
+                )
+            )
+    eventos.sort(key=lambda evento: evento[1], reverse=True)
+    return eventos
+
+
+def administradores_por_unidade(ator):
+    """Cada unidade registrada, com os administradores de acessos vigentes (107, `FR-3120`)."""
+    from processo_seletivo.unidades.models import Unidade
+
+    require_permission(ator, ADMINISTRAR, institution_scope=ESCOPO_INSTITUCIONAL)
+    unidades = list(Unidade.objects.order_by("codigo"))
+    por_escopo = {}
+    for vinculo in (
+        vigentes()
+        .filter(papel=ADMINISTRADOR_DE_ACESSOS, escopo__in=[u.codigo for u in unidades])
+        .select_related("pessoa")
+        .order_by("pessoa__first_name", "pessoa__username")
+    ):
+        por_escopo.setdefault(vinculo.escopo, []).append(vinculo)
+    return [(unidade, por_escopo.get(unidade.codigo, [])) for unidade in unidades]
 
 
 def _registrar(ator, permissao, operacao, vinculo, now, correlation_id, motivo):

@@ -8,11 +8,13 @@ produção**. O adaptador não é fronteira de segurança: quem decide autoriza�
 backend, em cada command.
 """
 
+from dataclasses import dataclass, field
 from urllib.parse import urlencode, urlsplit
 
 from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.functional import SimpleLazyObject
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from processo_seletivo.seguranca.domain import Actor
@@ -180,7 +182,7 @@ def ator_da_sessao(request):
     if not dados:
         return None
     if dados.get("origem") == ORIGEM_INSTITUCIONAL:
-        return _resolucao_institucional(request, dados)[0]
+        return _resolucao_institucional(request, dados).ator
     if dados.get("origem", ORIGEM_DEMONSTRACAO) == ORIGEM_DEMONSTRACAO and not seletor_disponivel():
         encerrar(request)
         return None
@@ -188,7 +190,7 @@ def ator_da_sessao(request):
 
 
 def _resolucao_institucional(request, dados):
-    """O ator institucional e os papéis dele, recalculados dos vínculos (106, `D-006`).
+    """O ator institucional, os papéis dele, a pessoa e os escopos, recalculados (106, `D-006`).
 
     **Nada de papel na sessão.** O que a sessão guarda é a unidade ativa; os papéis vêm dos vínculos
     vigentes ali, e por isso a revogação vale na requisição seguinte (`FR-3017`). Sem vínculo
@@ -197,6 +199,10 @@ def _resolucao_institucional(request, dados):
 
     **Sem provedor neste ambiente, a sessão se encerra** (`FR-3028`), pela razão da demonstração sem
     o seletor: a origem que deixou de ser admitida não volta a valer quando a configuração voltar.
+
+    **Os vínculos da pessoa se leem uma vez, todos** (107, `D-006`): deles saem os papéis da unidade
+    ativa e os escopos do seletor da barra, e a resolução continua em duas consultas. **Os prazos
+    vêm antes** (107, `D-009`): a sessão vencida não lê vínculo nenhum.
     """
     guardado = getattr(request, _ATOR_DA_REQUISICAO, None)
     if guardado is not None:
@@ -206,21 +212,183 @@ def _resolucao_institucional(request, dados):
     from processo_seletivo.seguranca.application import acessos
     from processo_seletivo.seguranca.autenticacao import caminho_do_provedor
 
-    resultado = (None, [])
+    resultado = Resolucao()
     if not caminho_do_provedor():
         encerrar(request)
     else:
         pessoa = get_user(request)
         if not pessoa.is_authenticated:
             encerrar(request)
+        elif motivo := _prazo_vencido(request):
+            _encerrar_por_prazo(request, dados, pessoa, motivo)
         else:
+            _renovar_atividade(request)
             unidade = dados.get("unidade")
-            papeis = acessos.papeis_vigentes(pessoa.pk, unidade)
-            if papeis:
+            vigentes = acessos.vigentes_da_pessoa(pessoa.pk)
+            if not unidade and vigentes:
+                # Entrou sem acesso e o recebeu depois: a unidade ativa ainda não existia, e passa a
+                # ser a inicial da regra da 106 (`FR-3019`), sem precisar sair e entrar (107,
+                # `D-007`). Quem **tinha** unidade e perdeu o acesso nela não troca sozinho — a
+                # tela sem acesso oferece a troca, que vai à trilha.
+                unidade = acessos.unidade_inicial_de(vigentes)
+                request.session[CHAVE_SESSAO] = {**dados, "unidade": unidade}
+            papeis = sorted({papel for escopo, papel in vigentes if escopo == unidade})
+            escopos = sorted({escopo for escopo, _ in vigentes})
+            ator = None
+            if unidade and papeis:
                 ator = Actor(pessoa.username, unidade, acessos.permissoes_dos_papeis(papeis))
-                resultado = (ator, papeis)
+            resultado = Resolucao(ator, papeis, pessoa, escopos)
     setattr(request, _ATOR_DA_REQUISICAO, resultado)
     return resultado
+
+
+@dataclass(frozen=True)
+class Resolucao:
+    """O que a sessão institucional resolve numa requisição (106, `D-006`; 107, `D-006`).
+
+    `pessoa` sem `ator` é quem entrou e não tem acesso vigente na unidade ativa: a tela sem acesso
+    é dela (107, `D-007`).
+    """
+
+    ator: Actor | None = None
+    papeis: list = field(default_factory=list)
+    pessoa: object = None
+    escopos: list = field(default_factory=list)
+
+
+# Os prazos da sessão institucional (107, `D-009`). Fora de produção, sem declaração, valem os da
+# proposta — 8 horas e 30 minutos, que **não foram aprovados** (spec da 107, P4); produção não sobe
+# sem os dois declarados (`D-010`).
+DURACAO_MAXIMA_PROPOSTA = 8 * 60
+INATIVIDADE_PROPOSTA = 30
+
+# Os dois instantes do prazo, em chave própria (107, `D-009`): a identidade da sessão continua com a
+# forma que a 106 fixou, e o prazo sai com ela, porque o término institucional apaga a sessão
+# inteira.
+CHAVE_PRAZO = "interface_prazo_institucional"
+
+# A marca do motivo do término, na sessão nova, para a página de acesso dizê-lo (107, `FR-3125`).
+CHAVE_SESSAO_ENCERRADA = "interface_sessao_encerrada"
+DURACAO_MAXIMA = "duracao_maxima"
+INATIVIDADE = "inatividade"
+
+# O cabeçalho com que a interface declara uma requisição que ela fez sozinha (107, `FR-3123`). Ele
+# só **tira** atividade: quem o forjasse encurtaria a própria sessão, e nada mais. Hoje nenhuma
+# requisição da gestão o envia — não há sondagem periódica —, e ele existe para a primeira que vier.
+CABECALHO_AUTOMATICA = "Requisicao-Automatica"
+
+
+def _limites():
+    duracao = getattr(settings, "GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS", DURACAO_MAXIMA_PROPOSTA)
+    inatividade = getattr(settings, "GESTAO_SESSAO_INATIVIDADE_MINUTOS", INATIVIDADE_PROPOSTA)
+    return int(duracao) * 60, int(inatividade) * 60
+
+
+def _agora():
+    from processo_seletivo.seguranca import relogio
+
+    return relogio.agora().timestamp()
+
+
+def _prazo_vencido(request):
+    """O motivo do término, se a sessão passou de um dos limites — ou vazio (107, `D-009`).
+
+    **No instante igual ao limite, já venceu**: a sessão vale enquanto o tempo passado é menor que
+    ele. Sessão sem os instantes é anterior à 107, e não há como saber há quanto tempo está aberta:
+    vence, pela regra de negar por padrão.
+    """
+    prazo = request.session.get(CHAVE_PRAZO) or {}
+    entrada, atividade = prazo.get("entrada_em"), prazo.get("atividade_em")
+    if entrada is None or atividade is None:
+        return DURACAO_MAXIMA
+    duracao, inatividade = _limites()
+    agora = _agora()
+    if agora - entrada >= duracao:
+        return DURACAO_MAXIMA
+    if agora - atividade >= inatividade:
+        return INATIVIDADE
+    return ""
+
+
+def _renovar_atividade(request):
+    """A última atividade passa a ser agora — se a requisição é da gestão, e da pessoa (`FR-3123`).
+
+    O portal está na mesma sessão do navegador, e não é atividade na gestão; a requisição declarada
+    automática também não.
+    """
+    if not request.path.startswith(reverse("interface:lista")):
+        return
+    if request.headers.get(CABECALHO_AUTOMATICA):
+        return
+    request.session[CHAVE_PRAZO] = {**request.session[CHAVE_PRAZO], "atividade_em": _agora()}
+
+
+def _encerrar_por_prazo(request, dados, pessoa, motivo):
+    """O término por prazo: a saída na trilha com o motivo, e a marca para a página de acesso."""
+    from django.utils import timezone
+
+    from processo_seletivo.seguranca.models import IdentidadeExterna
+
+    externa = IdentidadeExterna.objects.filter(pk=dados.get("identidade_externa")).first()
+    if externa is not None:
+        _registrar_sessao(
+            "SAIDA",
+            pessoa.username,
+            dados.get("unidade"),
+            externa,
+            timezone.now(),
+            getattr(request, "correlation_id", ""),
+            motivo=motivo,
+        )
+    encerrar(request)
+    request.session[CHAVE_SESSAO_ENCERRADA] = motivo
+
+
+def resolucao_institucional(request):
+    """A resolução da sessão institucional desta requisição, ou a vazia na demonstração."""
+    dados = request.session.get(CHAVE_SESSAO) or {}
+    if dados.get("origem") != ORIGEM_INSTITUCIONAL:
+        return Resolucao()
+    return _resolucao_institucional(request, dados)
+
+
+def nome_do_ator(request, ator):
+    """Como a pessoa identificada aparece na barra (107, `FR-3103`, `D-008`).
+
+    Na demonstração, o identificador escolhido no seletor, como sempre — sem consulta. No
+    institucional, o nome, ou o e-mail, e nunca `pessoa-<uuid>`.
+    """
+    resolucao = resolucao_institucional(request)
+    if resolucao.pessoa is None:
+        return ator.subject if ator else ""
+    from processo_seletivo.seguranca.application.acessos import nome_legivel
+
+    return nome_legivel(resolucao.pessoa)
+
+
+def rotulo_do_escopo(escopo, unidades=None):
+    """O nome do escopo no seletor: a unidade pelo nome, o institucional pelo que ele é."""
+    from processo_seletivo.seguranca.acessos import ESCOPO_INSTITUCIONAL
+
+    if escopo == ESCOPO_INSTITUCIONAL:
+        return "Administração institucional"
+    unidade = (unidades or {}).get(escopo)
+    return unidade.nome if unidade is not None else escopo
+
+
+def escopos_da_pessoa(request):
+    """Os escopos com acesso vigente, pelo nome, para o seletor e a tela sem acesso (`FR-3104`)."""
+    resolucao = resolucao_institucional(request)
+    if not resolucao.escopos:
+        return []
+    from processo_seletivo.unidades.models import Unidade
+
+    unidades = {u.codigo: u for u in Unidade.objects.filter(codigo__in=resolucao.escopos)}
+    ativo = (request.session.get(CHAVE_SESSAO) or {}).get("unidade")
+    return [
+        {"codigo": escopo, "rotulo": rotulo_do_escopo(escopo, unidades), "ativo": escopo == ativo}
+        for escopo in resolucao.escopos
+    ]
 
 
 def identificar(request, *, subject, papeis, escopo=ESCOPO_PADRAO, origem=ORIGEM_DEMONSTRACAO):
@@ -298,6 +466,10 @@ def entrar_institucional(request, identidade, *, correlation_id=""):
         "unidade": unidade,
         "identidade_externa": str(externa.pk),
     }
+    # Os dois instantes do prazo nascem juntos, na entrada (107, `D-009`); a troca de unidade não
+    # os toca, e a duração máxima conta daqui.
+    instante = _agora()
+    request.session[CHAVE_PRAZO] = {"entrada_em": instante, "atividade_em": instante}
     if hasattr(request, _ATOR_DA_REQUISICAO):
         delattr(request, _ATOR_DA_REQUISICAO)
     _registrar_sessao("ENTRADA", pessoa.username, unidade, externa, timezone.now(), correlation_id)
@@ -326,7 +498,10 @@ def trocar_unidade(request, escopo, *, correlation_id=""):
         raise DomainError(
             "sem_vinculo_no_escopo", "Você não tem acesso vigente nesta unidade.", 403
         )
-    request.session[CHAVE_SESSAO] = {**dados, "unidade": escopo}
+    request.session[CHAVE_SESSAO] = {
+        **(request.session.get(CHAVE_SESSAO) or dados),
+        "unidade": escopo,
+    }
     if hasattr(request, _ATOR_DA_REQUISICAO):
         delattr(request, _ATOR_DA_REQUISICAO)
     externa = IdentidadeExterna.objects.get(pk=dados["identidade_externa"])
@@ -358,7 +533,7 @@ def sair(request, *, correlation_id=""):
     encerrar(request)
 
 
-def _registrar_sessao(operacao, subject, escopo, externa, now, correlation_id):
+def _registrar_sessao(operacao, subject, escopo, externa, now, correlation_id, *, motivo=""):
     """Entrada, troca e saída na trilha (106, `D-010`).
 
     O agregado é a identidade externa usada, porque a trilha exige UUID e o `User` tem chave
@@ -377,7 +552,8 @@ def _registrar_sessao(operacao, subject, escopo, externa, now, correlation_id):
         correlation_id=correlation_id,
         new_state="",
         new_revision=None,
-        detalhe={"provedor": externa.provedor},
+        # O término por prazo diz qual dos dois venceu (107, `FR-3125`); a saída pelo botão, não.
+        detalhe={"provedor": externa.provedor, **({"motivo": motivo} if motivo else {})},
     )
 
 
@@ -409,6 +585,10 @@ def pedir_identificacao(request):
     **Só em GET**: um POST não se repete por redirecionamento, e reenviar o ato depois da
     identificação seria praticar algo que a pessoa não confirmou.
     """
+    # Quem entrou pelo provedor e não tem acesso vigente na unidade ativa não é quem não entrou: a
+    # página de acesso o mandaria entrar de novo, e ele voltaria ao mesmo lugar (107, `D-007`).
+    if resolucao_institucional(request).pessoa is not None:
+        return redirect(reverse("interface:sem-acesso"))
     destino = reverse("interface:identificar")
     if request.method == "GET" and destino_seguro(request, request.get_full_path()):
         destino += "?" + urlencode({"proximo": request.get_full_path()})
@@ -423,12 +603,17 @@ def contexto_identidade(request):
         from processo_seletivo.seguranca.application.acessos import catalogo
 
         todos = catalogo()
-        nomes = [todos[p][0] for p in _resolucao_institucional(request, dados)[1] if p in todos]
+        nomes = [todos[p][0] for p in _resolucao_institucional(request, dados).papeis if p in todos]
     else:
         nomes = [PAPEIS[p][0] for p in dados.get("papeis", []) if p in PAPEIS]
     return {
         "ator": ator,
         "papeis_do_ator": nomes,
+        # O nome no lugar do identificador interno (107, `FR-3103`). Preguiçoso pela razão da barra:
+        # o fragmento que o htmx troca não o lê, e a demonstração não consulta nada para dá-lo.
+        "nome_do_ator": SimpleLazyObject(lambda: nome_do_ator(request, ator)),
+        # Os escopos do seletor de unidade da barra, só no institucional (107, `FR-3104`).
+        "escopos_do_ator": SimpleLazyObject(lambda: escopos_da_pessoa(request)),
         "seletor_identidade": seletor_disponivel(),
         # O portal oferece a porta da gestão só onde há por onde entrar (075, `FR-1699`). É o único
         # dado da gestão que o portal lê, e não diz nada sobre quem está identificado.

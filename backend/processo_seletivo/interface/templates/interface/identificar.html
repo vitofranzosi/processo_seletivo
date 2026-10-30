@@ -6,6 +6,10 @@
   <span class="simbolo" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-marca"/></svg></span>
   <h1>Bem-vindo à gestão</h1>
   <p class="chamada">Acesse seu ambiente de trabalho.</p>
+  {% comment %} Por que a sessão anterior terminou (107, `FR-3125`): sem a frase, quem volta do
+     almoço acha que o sistema caiu. Uma vez só — a marca sai da sessão ao ser lida. {% endcomment %}
+  {% if sessao_encerrada == "inatividade" %}<p class="sessao-encerrada" role="status">Sua sessão terminou por inatividade. Entre de novo para continuar.</p>{% endif %}
+  {% if sessao_encerrada == "duracao_maxima" %}<p class="sessao-encerrada" role="status">Sua sessão atingiu a duração máxima e terminou. Entre de novo para continuar.</p>{% endif %}
 
   {% comment %}
   Já identificado: quem volta à porta pode só continuar, ou trocar de identidade (075, `FR-1697`).
@@ -14,10 +18,10 @@
   {% if ator %}
   <div class="quem-esta">
     <span class="avatar" aria-hidden="true">{{ iniciais }}</span>
-    <div><strong>{{ ator.subject }}</strong>
+    <div><strong>{{ nome_do_ator }}</strong>
       <span>{% if papeis_do_ator %}{{ papeis_do_ator|join:", " }}{% else %}Sem responsabilidade da unidade{% endif %}</span></div>
   </div>
-  <a class="entrar" href="{% if proximo %}{{ proximo }}{% elif ator.permissions %}{% url 'interface:lista' %}{% else %}{% url 'interface:minhas-etapas' %}{% endif %}">Continuar como {{ ator.subject }}<svg class="i seta" aria-hidden="true"><use href="#i-seta"/></svg></a>
+  <a class="entrar" href="{% if proximo %}{{ proximo }}{% elif ator.permissions %}{% url 'interface:lista' %}{% else %}{% url 'interface:minhas-etapas' %}{% endif %}">Continuar como {{ nome_do_ator }}<svg class="i seta" aria-hidden="true"><use href="#i-seta"/></svg></a>
   {% if seletor_identidade %}<a class="alternativa" href="{% url 'interface:identificar-demonstracao' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}">Trocar de identidade</a>{% endif %}
   {% else %}
   {% comment %}

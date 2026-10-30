@@ -182,6 +182,18 @@ desenvolvimento, **ninguém roda por você**: rode-o à mão depois de confirmar
 terminal **do comando**, e não no do `runserver`. A chave `AVISOS_AOS_CANDIDATOS` vem ligada no
 `development` e no `test`, e desligada em produção até a validação de LGPD.
 
+**As jornadas da gestão de acessos (107) rodam num navegador de verdade, e pedem o grupo
+`navegador`.** `uv sync --extra dev --extra navegador` traz o Playwright, e `uv run playwright install
+chromium` o navegador. Sem a biblioteca, `tests/navegador/test_jornadas_de_acesso.py` pula inteiro —
+**um pulado a mais**, como o tokenizer sem o `assistente` —; o CI instala os dois desde a `107`. Os
+casos sobem o `live_server` e uma página de provedor servida pelo próprio teste
+(`tests/navegador/provedor.py`): o adaptador continua o provedor simulado da `106`, e nada disso
+existe fora da suíte. `make test-navegador` os roda com a janela aberta, para assistir. Duas
+armadilhas já pagas: a interceptação do Playwright **não** alcança o destino de um redirecionamento —
+por isso a página é um servidor, e não um `page.route` —; e o ORM chamado com o Playwright ativo
+deixava uma sessão aberta no banco de teste, que travava o `DROP DATABASE` do fim — a fixture do
+navegador fecha as conexões ao sair.
+
 **O piloto do assistente (071) pede três coisas de fora do repositório, e sem elas não chama o
 modelo.** O grupo opcional de dependências (`uv sync --extra dev --extra assistente`), que traz a
 `tokenizers`; o `tokenizer.json` do modelo, baixado para fora do repositório e apontado em

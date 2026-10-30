@@ -13,7 +13,7 @@ export
 endif
 endif
 
-.PHONY: install check lint test test-pg contract preparar provisionar migrate unidades runserver seed ceps ceps-situacao
+.PHONY: install check lint test test-pg test-navegador contract preparar provisionar migrate unidades runserver seed ceps ceps-situacao
 
 install:
 	uv sync --extra dev
@@ -53,6 +53,20 @@ test-pg:
 	TEST_DB_ENGINE=postgresql \
 	DB_RUNTIME_USER='$(POSTGRES_USER)' DB_RUNTIME_PASSWORD='$(POSTGRES_PASSWORD)' \
 	uv run pytest -n $(PYTEST_WORKERS) --dist worksteal
+
+# As jornadas da gestão de acessos num navegador **visível** (107, `FR-3132`): o servidor da suíte, a
+# página do provedor simulado e um Chromium, preparados pelos testes; quem roda assiste aos cliques.
+# Em série, porque uma janela por worker é ilegível. Pede o grupo opcional e o navegador:
+# `uv sync --extra dev --extra navegador` e `uv run playwright install chromium`. Sem
+# `NAVEGADOR_VISIVEL=1` é o mesmo teste que o `test-pg` roda, sem janela. `NAVEGADOR_CAPTURAS=<pasta>`
+# grava uma captura em cada passo marcado.
+NAVEGADOR_VISIVEL ?= 1
+
+test-navegador:
+	TEST_DB_ENGINE=postgresql \
+	DB_RUNTIME_USER='$(POSTGRES_USER)' DB_RUNTIME_PASSWORD='$(POSTGRES_PASSWORD)' \
+	NAVEGADOR_VISIVEL='$(NAVEGADOR_VISIVEL)' \
+	uv run pytest tests/navegador -p no:xdist
 
 contract:
 	uv run pytest -m contract

@@ -40,6 +40,8 @@ MODULOS_DE_VIEW = (
     RAIZ / "processo_seletivo/interface/relatorio.py",
     # A Visão do Sistema (105): 404 só para o arquivo fora da lista do manual.
     RAIZ / "processo_seletivo/interface/documentacao.py",
+    # A gestão de acessos (107): 404 só para o vínculo inexistente ou de outro escopo.
+    RAIZ / "processo_seletivo/interface/acessos.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 
