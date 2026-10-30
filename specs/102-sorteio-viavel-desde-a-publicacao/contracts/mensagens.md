@@ -27,50 +27,89 @@ sentença trocada por:
 > ao congelamento. Se já foi, a saída é retificar o método e depois publicar relação nova, sucedendo
 > a atual.
 
+## Como as seções 3 a 5 são escritas (revisão de 30/10/2026)
+
+São lidas por quem conduz o sorteio, muitas vezes ao vivo. A primeira redação dizia a regra certa em
+vocabulário do sistema ("extração declarada", "relação comprometida", "compromisso do universo") e
+deixava a saída para o fim, com a data por calcular. A revisão, pedida pelo usuário em 30/10, fixa
+quatro regras:
+
+1. **O que fazer vem primeiro**, no título em negrito.
+2. **A data vem pronta**: o primeiro dia de extração que um congelamento aceita, calculado
+   (`viabilidade.primeiro_dia_possivel`). Na tela, a partir do congelamento mais cedo; na recusa e no
+   diagnóstico, supondo a relação nova congelada hoje.
+3. **Os nomes são os dos botões da tela**: "Publicar relação nova, sucedendo a atual", "Observar a
+   ocorrência", "Realizar o sorteio".
+4. **Os passos são uma lista numerada**, e não um parágrafo.
+
 ## 3. Aviso antes de congelar (FR-2659)
 
-Na tela do sorteio, uma vez por marco, antes dos botões "Publicar e congelar a relação" dos
-recortes, com a classe `aviso` e `role="status"`. Enquanto as inscrições correm, ele aparece logo
-depois do aviso de inscrições em curso, e "hoje" vira "depois do fim das inscrições" (FR-2651):
+Na tela do sorteio, uma vez por marco, antes dos botões que congelam: "Publicar e congelar a relação"
+e também "Publicar relação nova, sucedendo a atual", porque a sucessão congela na hora. Classe
+`aviso`, `role="status"`. Não aparece quando todo recorte já tem o diagnóstico da seção 4.
 
-> **Congelar a relação hoje impede o sorteio com a extração declarada.** {fonte} publica só a data da
-> extração ({dia da extração}), e a data vale a partir de 00h00. Uma relação congelada hoje nunca
-> será anterior a ela, e o sorteio será recusado. Antes de congelar, retifique o método para uma
-> extração de dia posterior ao do congelamento. Congelar não se desfaz.
+> **Não congele a relação hoje: o sorteio seria recusado.** A extração do Edital ({referência} de
+> {fonte}) é de {dia}, e essa fonte publica só a data, sem o horário. O sorteio só aceita extração de
+> dia posterior ao congelamento da relação.
+>
+> Antes de congelar, retifique o Edital, trocando a extração por uma a partir de **{primeiro dia}**.
+> [Vale também para publicar relação nova, sucedendo a atual: ela é congelada na hora.] Congelar não
+> se desfaz.
 
-Se quem vê pode retificar, "retifique o método" é um link para a Retificação, como o que a tela já
-oferece para o método indefinido. Se não pode, a frase diz a quem pedir, como a tela já faz.
+Com as inscrições correndo, o título é **"A extração do Edital é cedo demais: o sorteio seria
+recusado."**, a primeira frase acrescenta *"e a relação só pode ser congelada depois do fim das
+inscrições"*, e a segunda começa por *"Antes do fim das inscrições"*. O primeiro dia conta do fim.
+
+Se quem vê pode retificar, "retifique o Edital" é um link para a Retificação. Se não pode, a frase
+é *"peça a quem elabora as Retificações deste Edital que o retifique"*.
 
 ## 4. Diagnóstico da relação congelada (FR-2660, FR-2661)
 
 Antes de "Realizar o sorteio", com a classe `erro`:
 
-> **Esta relação não pode ser sorteada com a extração que o método dela declara.** Ela foi congelada
-> em {publicada_em por extenso}, e {fonte} situa a extração a partir de 00h00 de {dia da extração}. A
-> saída tem três passos, nesta ordem: (1) retificar o método para uma extração de dia posterior ao
-> congelamento da relação nova; (2) publicar relação nova, sucedendo esta; (3) observar a ocorrência
-> nova e realizar o sorteio. Suceder a relação sem retificar não resolve.
+> **Esta relação não pode ser sorteada com a extração do Edital.** Ela foi congelada em {data} às
+> {hora}, e a extração {referência} de {fonte} é de {dia}. Essa fonte publica só a data, sem o
+> horário, e o sorteio só aceita extração de dia posterior ao congelamento.
+>
+> Para sortear, nesta ordem:
+>
+> 1. Retifique o Edital, trocando a extração por uma a partir de **{amanhã}** (se a relação nova for
+>    congelada hoje).
+> 2. Publique a relação nova, sucedendo esta, no formulário logo abaixo.
+> 3. Observe a nova ocorrência e realize o sorteio.
+>
+> Publicar a relação nova sem retificar antes não resolve.
 
-Quando o método vigente já difere do comprometido (FR-2661), a frase começa dizendo o que já foi
-feito:
+Quando o método vigente já difere do comprometido (FR-2661):
 
-> **O método já foi retificado, e esta relação continua comprometida com o anterior.** Uma relação
-> congelada não lê o método vigente. Falta publicar relação nova, sucedendo esta, e então observar a
-> ocorrência nova.
+> **A extração já foi trocada por Retificação, mas esta relação continua presa à extração antiga.**
+> Uma relação congelada não acompanha Retificações.
+>
+> Para sortear, nesta ordem:
+>
+> 1. Publique a relação nova, sucedendo esta, no formulário logo abaixo.
+> 2. Observe a nova ocorrência e realize o sorteio.
 
-## 5. Acréscimo à recusa `occurrence_precedes_freeze` (FR-2662, FR-2663)
+E, se a extração retificada também for cedo demais para uma relação congelada hoje:
 
-A primeira frase da recusa não muda (R-007). Depois dela, nesta ordem:
+> **Atenção:** a extração nova ({referência}, de {dia}) também é cedo demais para uma relação congelada
+> hoje. Retifique de novo, para uma extração a partir de {amanhã}, antes de publicar a relação nova.
 
-- só quando a fonte publica só a data:
+## 5. A recusa `occurrence_precedes_freeze` (FR-2662, FR-2663)
 
-  > {fonte} publica só a data da extração, sem o horário: a data vale a partir de 00h00.
+A frase inteira é desta feature desde a revisão de 30/10; o fuso dos instantes veio do PR #335
+(`timezone.localtime`). A tela a precede de *"Não foi possível realizar o sorteio:"*.
 
-- sempre:
+> A relação foi congelada em {data hora}, e a extração {referência} de {fonte} só pode ser datada a
+> partir de {data} 00:00: essa fonte publica a data da extração, sem o horário. O sorteio só vale com
+> extração posterior ao congelamento: é o que prova que a lista foi fechada sem conhecer o resultado.
+> Para sortear, nesta ordem: (1) retifique o Edital, trocando a extração por uma de dia posterior ao
+> congelamento da relação nova — se ela for congelada hoje, a partir de {amanhã}; (2) publique a
+> relação nova, sucedendo esta; (3) observe a nova ocorrência e realize o sorteio. Publicar a relação
+> nova sem retificar antes não resolve.
 
-  > Suceder a relação sem retificar não resolve: a relação nova seria congelada ainda mais tarde.
-  > A saída é retificar o método para uma extração de dia posterior, publicar relação nova sucedendo
-  > esta, e então observar a ocorrência nova.
+Com fonte que publica a hora, a primeira frase é *"…e a fonte situa a extração {referência} de
+{fonte} a partir de {data hora}, antes disso."*, e o passo 1 não traz data.
 
 ## Onde **não** aparece nada
 

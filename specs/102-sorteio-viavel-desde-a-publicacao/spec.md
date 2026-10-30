@@ -352,9 +352,10 @@ com inscrições encerradas (FR-346 da `028`).
 - **FR-2659**: Quando a extração declarada for inviável para o congelamento mais cedo possível na tela
   (FR-2651), a tela MUST mostrar um aviso com o diagnóstico e a saída: retificar o método para uma
   extração de dia posterior ao do congelamento, e só então congelar. O aviso aparece uma vez por
-  marco, porque o método é do marco, antes dos botões "Publicar e congelar a relação" dos recortes
-  ainda não congelados. Enquanto as inscrições correm, ele aparece junto do aviso de inscrições em
-  curso. O botão MUST continuar disponível, e o congelamento MUST NOT ser recusado por esta regra
+  marco, porque o método é do marco, antes dos botões que congelam: "Publicar e congelar a relação"
+  e também "Publicar relação nova, sucedendo a atual", porque a sucessão congela na hora (revisão
+  de 30/10, pedida pelo usuário). Ele não aparece quando todo recorte já tem o diagnóstico da
+  FR-2660. Enquanto as inscrições correm, ele aparece junto do aviso de inscrições em curso. O botão MUST continuar disponível, e o congelamento MUST NOT ser recusado por esta regra
   (D-005). O aviso MUST NOT aparecer para a ocorrência substituta, que não tem instante declarado.
 - **FR-2660**: Para uma relação já congelada cuja extração declarada é inviável (limite previsto não
   posterior ao congelamento), a tela MUST mostrar, antes de "Realizar o sorteio", que esta relação
@@ -369,6 +370,10 @@ com inscrições encerradas (FR-346 da `028`).
 
 - **FR-2662**: A recusa `occurrence_precedes_freeze` MUST dizer, além do que diz hoje, que suceder a
   relação sem retificar não resolve, e a ordem dos três passos da saída.
+- O aviso, o diagnóstico e a recusa são escritos para quem conduz o sorteio (revisão de 30/10, pedida
+  pelo usuário): o que fazer vem primeiro, a data da primeira extração possível vem calculada, os
+  nomes são os dos botões da tela e os passos são uma lista numerada. As frases estão no
+  [contrato](contracts/mensagens.md).
 - **FR-2663**: Quando a fonte publica só a data, a recusa MUST dizer que a fonte não publica o horário
   e que a data vale a partir de 00h00. Quem lê não deve concluir que a fonte informou um horário.
 - **FR-2664**: A comparação que decide a recusa MUST NOT mudar. Ela continua usando o limite inferior

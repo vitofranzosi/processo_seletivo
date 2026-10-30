@@ -27,10 +27,17 @@ from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
-AVISO = "impede o sorteio com a extração declarada"
-DIAGNOSTICO = "Esta relação não pode ser sorteada com a extração que o método dela declara."
-RETIFICADO = "O método já foi retificado, e esta relação continua comprometida com o anterior."
+AVISO = "o sorteio seria recusado."
+DIAGNOSTICO = "Esta relação não pode ser sorteada com a extração do Edital."
+RETIFICADO = (
+    "A extração já foi trocada por Retificação, mas esta relação continua presa à extração antiga."
+)
 BOTAO = "Publicar e congelar a relação"
+
+
+def _amanha():
+    """A data pronta que o aviso e o diagnóstico dão: o dia seguinte a um congelamento hoje."""
+    return (timezone.localdate(timezone.now(), ZONA) + timedelta(days=1)).strftime("%d/%m/%Y")
 
 
 def _hoje(hora, minuto=0):
@@ -117,8 +124,10 @@ def test_com_a_extracao_hoje_o_aviso_vem_antes_do_botao_e_o_botao_continua(
 
     corpo = _abrir(client, certame)
 
-    assert f"Congelar a relação hoje {AVISO}" in corpo
-    assert "Loteria Federal publica só a data da extração" in corpo
+    assert f"Não congele a relação hoje: {AVISO}" in corpo
+    assert "A extração do Edital (6113 de Loteria Federal)" in corpo
+    assert "essa fonte publica só a data, sem o horário" in corpo
+    assert f"trocando a extração por uma a partir de <strong>{_amanha()}</strong>" in corpo
     assert "Congelar não se desfaz." in corpo
     assert BOTAO in corpo, "o congelamento não é recusado por esta regra (D-005)"
     assert corpo.index(AVISO) < corpo.index(BOTAO)
@@ -138,7 +147,27 @@ def test_com_as_inscricoes_correndo_ate_o_dia_da_extracao_o_aviso_ja_aparece(
     corpo = _abrir(client, certame)
 
     assert "Ainda não é possível publicar a relação." in corpo
-    assert f"Congelar a relação depois do fim das inscrições {AVISO}" in corpo
+    assert f"A extração do Edital é cedo demais: {AVISO}" in corpo
+    assert "Antes do fim das inscrições," in corpo
+    dia_seguinte_ao_fim = (fim.date() + timedelta(days=1)).strftime("%d/%m/%Y")
+    assert f"a partir de <strong>{dia_seguinte_ao_fim}</strong>" in corpo, "a data conta do fim"
+
+
+def test_a_sucessao_de_uma_relacao_que_sorteia_tambem_e_avisada(
+    gestor, api_client, manager_headers, process_payload, seletor_ligado, client
+):
+    """A relação congelada sorteia; sucedê-la hoje, com a extração retificada para hoje, não."""
+    certame = _certame(gestor, api_client, manager_headers, process_payload)
+    encerrar_inscricoes(api_client, certame["edital"], timezone.now() - timedelta(minutes=1))
+    _congelar(certame)
+    _retificar_a_extracao(api_client, certame, _hoje(0, 1), suffix="hoje")
+
+    corpo = _abrir(client, certame)
+
+    assert DIAGNOSTICO not in corpo, "a relação congelada continua sorteando"
+    assert f"Não congele a relação hoje: {AVISO}" in corpo
+    assert "Vale também para publicar relação nova, sucedendo a atual" in corpo
+    assert corpo.index(AVISO) < corpo.index("Publicar relação nova, sucedendo a atual</button>")
 
 
 def test_com_a_extracao_depois_do_fim_nao_ha_aviso(
@@ -196,8 +225,8 @@ def test_o_link_para_a_retificacao_so_aparece_para_quem_retifica(
     sem = _abrir(client, certame)
     com = _abrir(client, certame, ["elaborador"])
 
-    assert "peça a quem elabora Retificações que retifique o método" in sem
-    assert f'<a href="{destino}">retifique o método</a>' in com
+    assert "peça a quem elabora as Retificações deste Edital que o retifique" in sem
+    assert f'<a href="{destino}">retifique o Edital</a>' in com
 
 
 # --- a relação já congelada (FR-2660, FR-2661) ----------------------------------------------
@@ -212,8 +241,18 @@ def test_a_relacao_congelada_no_dia_da_extracao_recebe_o_diagnostico_e_a_saida(
     corpo = _abrir(client, certame)
 
     assert DIAGNOSTICO in corpo
-    assert "(1) retificar o" in corpo and "(2) publicar" in corpo and "(3) observar" in corpo
-    assert "Suceder a relação sem retificar não resolve." in corpo
+    assert "Para sortear, nesta ordem:" in corpo
+    assert f"por uma a partir de <strong>{_amanha()}</strong>" in corpo
+    passos = [
+        "trocando a extração por uma",
+        "<li>Publique a relação nova, sucedendo esta",
+        "<li>Observe a nova ocorrência e realize o sorteio.",
+    ]
+    assert all(passo in corpo for passo in passos)
+    assert [corpo.index(passo) for passo in passos] == sorted(
+        corpo.index(passo) for passo in passos
+    ), "a ordem é a da saída: retificar, suceder, observar"
+    assert "Publicar a relação nova sem retificar antes não resolve." in corpo
     assert AVISO not in corpo, "não há recorte por congelar, e o aviso de antes não se repete"
 
 
@@ -227,7 +266,22 @@ def test_depois_de_retificado_o_metodo_falta_suceder_a_relacao(
     corpo = _abrir(client, certame)
 
     assert RETIFICADO in corpo
-    assert "Falta publicar relação nova, sucedendo esta" in corpo
+    assert "<li>Publique a relação nova, sucedendo esta" in corpo
+    assert "também é cedo demais" not in corpo, "a extração nova, amanhã, serve"
+
+
+def test_se_a_extracao_retificada_tambem_e_cedo_demais_a_tela_avisa_antes_de_suceder(
+    gestor, api_client, manager_headers, process_payload, seletor_ligado, client
+):
+    certame = _encerrado_com_a_extracao_hoje(gestor, api_client, manager_headers, process_payload)
+    _congelar(certame)
+    _retificar_a_extracao(api_client, certame, _hoje(23, 30), suffix="ainda-hoje")
+
+    corpo = _abrir(client, certame)
+
+    assert RETIFICADO in corpo
+    assert "também é cedo demais para uma relação congelada hoje" in corpo
+    assert f"para uma extração a partir de {_amanha()}" in corpo
 
 
 def test_depois_de_sucedida_a_relacao_o_diagnostico_some(

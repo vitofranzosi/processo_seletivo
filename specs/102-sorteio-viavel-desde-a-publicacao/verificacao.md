@@ -54,3 +54,18 @@ A publicação impedida e a pendência na revisão foram verificadas pelos teste
 - **A SC-958** é de pessoas, pelo [roteiro de compreensão](roteiro-de-compreensao.md).
 - **O botão "Realizar o sorteio" continua oferecido** à relação que não sorteará. A spec não pede
   escondê-lo, e a decisão é do usuário.
+
+## Revisão dos textos para quem conduz o sorteio (30/10/2026)
+
+Pedida pelo usuário depois do merge do #335 e do #336, e verificada no mesmo banco, com a `main`
+trazida para a branch. As frases estão na seção "Como as seções 3 a 5 são escritas" do
+[contrato](contracts/mensagens.md).
+
+| Hora | Passo | O que se viu |
+|---|---|---|
+| 08h27 | Tela do sorteio: a relação congelada em 29/10 sorteia, e a extração vigente é de hoje | **"Não congele a relação hoje: o sorteio seria recusado."**, com a extração identificada (6113), a data pronta (**31/10/2026**), o link "retifique o Edital" e *"Vale também para publicar relação nova, sucedendo a atual: ela é congelada na hora."* Antes desta revisão, nesse estado, a tela não avisava nada. |
+| 08h28 | "Publicar relação nova, sucedendo a atual", pela interface | Relação nova congelada às 08h28. O aviso some, e entra o diagnóstico: **"Esta relação não pode ser sorteada com a extração do Edital."**, com "Para sortear, nesta ordem:" em lista numerada, o primeiro passo com link e a data 31/10/2026. |
+| 08h28 | "Realizar o sorteio" | *"Não foi possível realizar o sorteio: A relação foi congelada em 30/10/2026 08:28, e a extração 6113 de Fonte de demonstração (só a data) só pode ser datada a partir de 29/10/2026 00:00 […] se ela for congelada hoje, a partir de 31/10/2026 […]"*. Os instantes saem no fuso da tela (#335). |
+
+A ocorrência 6113 da demonstração foi observada em 29/10 e é reaproveitada, porque a Retificação
+mudou só o instante, e não o número. Num certame real, a Retificação troca o concurso.

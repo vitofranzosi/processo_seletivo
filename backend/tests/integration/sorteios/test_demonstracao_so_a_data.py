@@ -71,7 +71,7 @@ def test_congelar_e_sortear_no_mesmo_dia_e_recusado(
     with pytest.raises(DomainError, match="occurrence_precedes_freeze") as recusa:
         _sortear(certame, relacao)
 
-    assert "publica só a data da extração" in recusa.value.detail
+    assert "essa fonte publica a data da extração, sem o horário" in recusa.value.detail
 
 
 def test_congelar_hoje_e_sortear_amanha_constitui(

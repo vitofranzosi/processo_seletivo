@@ -17,7 +17,7 @@ pergunta resolve e passa o resultado. A recusa no sorteio **não** usa esta regr
 limite que a fonte de fato devolveu (FR-2664); esta é a previsão, feita antes de a fonte falar.
 """
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 from django.utils.dateparse import parse_datetime
 
@@ -68,4 +68,14 @@ def congelamento_mais_cedo(*, agora, fim_das_inscricoes):
     return max(agora, fim_das_inscricoes)
 
 
-__all__ = ["congelamento_mais_cedo", "inviavel", "limite_previsto"]
+def primeiro_dia_possivel(congelamento):
+    """O primeiro dia de extração que um congelamento neste instante aceita, com fonte só de data.
+
+    **A data concreta é o que o operador precisa**, e não a regra. "Uma extração de dia posterior
+    ao congelamento" obrigava quem lia a fazer a conta, ao vivo e diante da recusa; o dia seguinte
+    ao do congelamento, no fuso institucional, é a resposta pronta.
+    """
+    return congelamento.astimezone(ZONA).date() + timedelta(days=1)
+
+
+__all__ = ["congelamento_mais_cedo", "inviavel", "limite_previsto", "primeiro_dia_possivel"]

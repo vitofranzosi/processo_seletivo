@@ -1,9 +1,9 @@
 """A recusa por precedência diz o que fazer, e a comparação não muda (102, FR-2662–FR-2664).
 
 **O que a recusa de 29/10 não dizia.** O operador do Edital 72/2026 leu que a fonte situava a
-extração "a partir de 03:00" — o horário em UTC, que é a lacuna 2 do achado e outro PR — e foi
-investigar um horário que a Caixa nunca publicou. E a saída óbvia, suceder a relação, não resolve:
-congela ainda mais tarde diante da mesma extração. A recusa passa a dizer as duas coisas.
+extração "a partir de 03:00" e foi investigar um horário que a Caixa nunca publicou. E a saída
+óbvia, suceder a relação, não resolve: congela ainda mais tarde diante da mesma extração. A recusa
+passa a dizer o que houve, por que, e o que fazer — nessa ordem, e com a data pronta.
 
 **A garantia fica onde estava.** O teste da borda fixa a comparação: limite igual ao congelamento
 recusa, um microssegundo depois sorteia. Esta feature avisa antes; não afrouxa nada.
@@ -15,6 +15,7 @@ import pytest
 from django.utils import timezone
 
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.sorteios.application.ocorrencia import observar_ocorrencia
 from processo_seletivo.sorteios.application.relacao import publicar_relacao
 from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
@@ -24,9 +25,8 @@ from tests.fixtures.sorteio import METODO, certame_de_sorteio, presidente
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
-PRIMEIRA_FRASE = "Não é possível afirmar que a ocorrência aconteceu depois do congelamento"
-SO_A_DATA = "publica só a data da extração, sem o horário: a data vale a partir de 00h00"
-SAIDA = "Suceder a relação sem retificar não resolve"
+SO_A_DATA = "essa fonte publica a data da extração, sem o horário"
+SAIDA = "Publicar a relação nova sem retificar antes não resolve."
 
 
 class _Fonte:
@@ -92,11 +92,15 @@ def test_com_fonte_que_publica_so_a_data_a_recusa_diz_a_granularidade_e_a_saida(
         _sortear(certame, relacao, metodo, relacao.publicada_em - timedelta(hours=11))
 
     mensagem = str(recusa.value.detail)
-    assert mensagem.startswith(PRIMEIRA_FRASE), "a primeira frase é a de antes"
-    assert f"Loteria Federal {SO_A_DATA}" in mensagem
+    congelada = f"{timezone.localtime(relacao.publicada_em):%d/%m/%Y %H:%M}"
+    amanha = timezone.localdate(timezone.now(), ZONA) + timedelta(days=1)
+    assert mensagem.startswith(f"A relação foi congelada em {congelada}, e a extração 6113")
+    assert SO_A_DATA in mensagem
+    assert f"se ela for congelada hoje, a partir de {amanha:%d/%m/%Y}" in mensagem
     assert SAIDA in mensagem
-    assert "retificar o método para uma extração de dia posterior" in mensagem
-    assert mensagem.index("retificar o método") < mensagem.index("publicar relação nova")
+    passos = ["(1) retifique o Edital", "(2) publique a relação nova", "(3) observe a nova"]
+    assert [mensagem.index(p) for p in passos] == sorted(mensagem.index(p) for p in passos)
+    assert "compromisso do universo" not in mensagem, "o jargão saiu"
 
 
 def test_com_fonte_que_publica_a_hora_a_recusa_diz_so_a_saida(
@@ -110,7 +114,8 @@ def test_com_fonte_que_publica_a_hora_a_recusa_diz_so_a_saida(
         _sortear(certame, relacao, metodo, relacao.publicada_em - timedelta(hours=1))
 
     mensagem = str(recusa.value.detail)
-    assert "00h00" not in mensagem
+    assert SO_A_DATA not in mensagem
+    assert "a fonte situa a extração 6113" in mensagem
     assert SAIDA in mensagem
 
 

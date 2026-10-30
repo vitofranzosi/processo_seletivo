@@ -125,6 +125,10 @@ ponto. Reescrevê-la aqui criaria conflito garantido com aquele PR. Os testes qu
 (`test_constituicao.py`, `test_ocorrencia_declarada.py`, `test_listas_de_concorrencia.py`) leem o
 código ou um trecho da primeira frase, e a frase continua ali.
 
+**Superado em 30/10/2026.** O #335 entrou antes desta feature com o fuso da primeira frase, e a revisão
+dos textos para o operador reescreveu a mensagem inteira: o que houve, por que e o que fazer, com a
+data pronta (seção 5 do [contrato](contracts/mensagens.md)).
+
 ## R-008 — A segunda fonte de demonstração
 
 **Decision**: `FONTE_DE_DEMONSTRACAO` passa de um par a uma tupla de pares: a atual e

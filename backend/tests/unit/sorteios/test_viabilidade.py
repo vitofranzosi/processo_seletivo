@@ -7,7 +7,7 @@ em relação a esse fim, e a regra precisa acertar todas. Falso positivo prende 
 falso negativo é o 72 de novo.
 """
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
@@ -105,3 +105,17 @@ def test_na_tela_o_congelamento_mais_cedo_espera_o_fim_das_inscricoes():
     depois = FIM + timedelta(hours=2)
     assert viabilidade.congelamento_mais_cedo(agora=depois, fim_das_inscricoes=FIM) == depois
     assert viabilidade.congelamento_mais_cedo(agora=agora, fim_das_inscricoes=None) == agora
+
+
+@pytest.mark.parametrize(
+    ("congelamento", "dia"),
+    [
+        (datetime(2026, 10, 28, 9, 0, tzinfo=ZONA), date(2026, 10, 29)),
+        (datetime(2026, 10, 28, 23, 59, tzinfo=ZONA), date(2026, 10, 29)),
+        # 01h em UTC ainda é 28/10 em Vitória: o dia seguinte é 29, e não 30.
+        (datetime(2026, 10, 29, 1, 0, tzinfo=timezone.utc), date(2026, 10, 29)),
+    ],
+)
+def test_a_data_pronta_e_o_dia_seguinte_ao_congelamento_no_fuso_institucional(congelamento, dia):
+    """A revisão de 30/10: o operador recebe a data, e não a regra para calculá-la."""
+    assert viabilidade.primeiro_dia_possivel(congelamento) == dia

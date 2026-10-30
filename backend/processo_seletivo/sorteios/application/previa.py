@@ -18,7 +18,7 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.application.habilitacao import habilitadas_na_etapa
 from processo_seletivo.sorteios.application.selectors import relacao_vigente
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
-from processo_seletivo.sorteios.domain import projecao, substituicao
+from processo_seletivo.sorteios.domain import projecao, substituicao, viabilidade
 
 
 def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
@@ -60,6 +60,21 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas, metodo)
         for lista_id, nome in listas
     ]
+    congelar_agora_inviavel = _congelar_agora_inviavel(
+        versao.content, metodo, proxima_referencia, agora
+    )
+    for recorte in recortes:
+        diagnostico = recorte["diagnostico_da_relacao"]
+        if diagnostico is None:
+            continue
+        # **A data concreta da saída**, supondo a relação nova congelada hoje: é o dia que quem
+        # retifica precisa escolher, e fazer a conta ao vivo era o que a primeira versão pedia.
+        diagnostico["primeiro_dia"] = viabilidade.primeiro_dia_possivel(agora)
+        # **E se a extração já retificada também for cedo demais**, o operador precisa saber antes
+        # de suceder: a relação nova seria condenada do mesmo jeito.
+        diagnostico["nova_cedo_demais"] = (
+            congelar_agora_inviavel if diagnostico["metodo_retificado"] else None
+        )
     return {
         "perfil": perfil,
         "marco": marco,
@@ -89,9 +104,20 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         # **O congelamento que condena o sorteio, dito antes do ato** (102, FR-2659). Congelar é
         # append-only, e quem congelava no dia da extração só descobria na recusa do sorteio, sem
         # caminho de volta. O botão continua (D-005): a relação pode ter data no cronograma.
+        #
+        # **A sucessão também congela.** O aviso valia só para recorte por congelar, e a relação
+        # congelada que sorteia normalmente era sucedida, hoje, sem nada dizer que a nova nasceria
+        # condenada. Fica de fora só o recorte cujo diagnóstico já diz a saída inteira.
         "congelar_agora_inviavel": (
-            _congelar_agora_inviavel(versao.content, metodo, proxima_referencia, agora)
-            if any(not recorte["congelada"] for recorte in recortes)
+            {
+                **congelar_agora_inviavel,
+                "inclui_sucessao": any(
+                    recorte["congelada"] and recorte["diagnostico_da_relacao"] is None
+                    for recorte in recortes
+                ),
+            }
+            if congelar_agora_inviavel
+            and any(recorte["diagnostico_da_relacao"] is None for recorte in recortes)
             else None
         ),
     }
@@ -198,7 +224,6 @@ def _congelar_agora_inviavel(conteudo, metodo, proxima_referencia, agora):
     dela seria inventar o que o Edital não diz.
     """
     from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes
-    from processo_seletivo.sorteios.domain import viabilidade
     from processo_seletivo.sorteios.infrastructure.fontes import publica_so_a_data
 
     if not metodo or proxima_referencia != str(metodo.get("occurrence") or ""):
@@ -212,7 +237,13 @@ def _congelar_agora_inviavel(conteudo, metodo, proxima_referencia, agora):
     mais_cedo = viabilidade.congelamento_mais_cedo(agora=agora, fim_das_inscricoes=fim)
     if not viabilidade.inviavel(limite, mais_cedo):
         return None
-    return {"fonte": fonte, "dia": limite, "inscricoes_correndo": mais_cedo > agora}
+    return {
+        "fonte": fonte,
+        "referencia": proxima_referencia,
+        "dia": limite,
+        "inscricoes_correndo": mais_cedo > agora,
+        "primeiro_dia": viabilidade.primeiro_dia_possivel(mais_cedo),
+    }
 
 
 def _diagnostico_da_relacao(vigente, sorteio, metodo_vigente):
@@ -223,7 +254,6 @@ def _diagnostico_da_relacao(vigente, sorteio, metodo_vigente):
     o muda. Ler o vigente aqui repetiria, na explicação, o engano que a tela já comete com a
     ocorrência da vez — e diria "viável" a uma relação que a constituição vai recusar.
     """
-    from processo_seletivo.sorteios.domain import viabilidade
     from processo_seletivo.sorteios.infrastructure.fontes import publica_so_a_data
     from processo_seletivo.sorteios.models import OcorrenciaDaFonte
 
@@ -248,6 +278,7 @@ def _diagnostico_da_relacao(vigente, sorteio, metodo_vigente):
         return None
     return {
         "fonte": fonte,
+        "referencia": declarada,
         "dia": limite,
         "congelada_em": vigente.publicada_em,
         "metodo_retificado": bool(metodo_vigente)
