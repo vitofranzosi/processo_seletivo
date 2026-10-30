@@ -51,12 +51,13 @@ class Secao:
     alcanca: object
     # O símbolo no sprite do `base.html` (`FR-1731`). Pelo significado: a pasta do Processo, a
     # prancheta do trabalho alocado, o gráfico da visão, o calendário da agenda, o prédio da
-    # unidade, o envelope do aviso.
+    # unidade, o envelope do aviso, o livro do manual.
     icone: str
 
 
 TRABALHO = "Trabalho"
 UNIDADE = "Unidade"
+AJUDA = "Ajuda"
 
 # A ordem é a da barra. "Novo Processo Seletivo" não está aqui: é ação, e não lugar (DP-1).
 SECOES = (
@@ -75,6 +76,9 @@ SECOES = (
     Secao(
         "Modelos de aviso", "interface:modelos-de-aviso", UNIDADE, pode_gerir_modelos, "i-envelope"
     ),
+    # Por último e em grupo próprio: não é lugar de trabalho, e abre o manual fora da moldura da
+    # gestão (105, `D-004`). Toda identidade, pela razão da Agenda (`D-001`).
+    Secao("Documentação do Sistema", "interface:documentacao", AJUDA, _toda_identidade, "i-livro"),
 )
 
 
