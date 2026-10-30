@@ -26,7 +26,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. As tare
 | FR-2716 (a mesma Retificação; identidade, criação, base, trilha) | T016 | `jornada::test_b_duas_devolucoes…` (mesmo `id`, uma Retificação), `::test_c_outra_elaboradora…` (`created_by` preservado) |
 | FR-2717 (o formulário parte do proposto; justificativa e vigência preenchidas) | T016, T017 | `jornada::test_a_edicao_parte_do_que_o_rascunho_ja_declara` |
 | FR-2718 (o ato inteiro contra a base; conferido reproduzido ou nada gravado) | T013, T014, T016 | `fusao::test_a_alteracao_intocada_continua_e_a_nova_entra_depois`, `::test_a_alteracao_tocada_passa_a_ter_o_valor_novo_sem_duplicar`, `::test_a_que_volta_ao_vigente_sai_do_ato`, `::test_o_acrescimo_editado_leva_o_campo_novo_dentro_dele`, `::test_o_acrescimo_removido_sai_sem_virar_remocao`, `::test_a_fusao_que_nao_reproduz_o_conferido_e_recusada`; `jornada::test_desfazer_tudo_e_recusado_sem_gravar`, `::test_so_a_justificativa_muda_e_grava` |
-| FR-2719 (remoções listadas e desfazíveis) | T013, T017 | `fusao::test_a_remocao_desfeita_sai_do_ato`, `::test_desfazer_so_vale_para_remocao` |
+| FR-2719 (remoções listadas e desfazíveis) | T013, T017, T027 | `interface/test_jornada_da_retificacao_convergencia.py::test_a_remocao_declarada_se_desfaz_pela_edicao`; `fusao::test_a_remocao_desfeita_sai_do_ato`, `::test_desfazer_so_vale_para_remocao` |
 | FR-2720 (conferência antes de gravar) | T016, T017 | `jornada::test_a_criar_retomar…` (o auxiliar `editar` exige "O que muda em relação ao rascunho" antes de confirmar) |
 | FR-2721 (só em elaboração 409; sem permissão 403; fora do escopo 404) | T016 | `jornada::test_f_ato_concorrente_sobre_a_edicao_aberta_recusa_a_gravacao`, `::test_g_publicada_sai…` (409), `::test_editar_sem_permissao_e_403_com_a_permissao_nomeada`, `::test_e_outra_unidade_nao_ve_nem_edita` |
 | FR-2722 (a revisão viaja; divergência recusa sem gravar nem interpretar) | T016, T017 | `jornada::test_f_duas_sessoes_editando_a_segunda_e_recusada_sem_gravar`, `::test_f_a_corrida_entre_conferir_e_gravar_e_recusada_pela_revisao` |
@@ -43,7 +43,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. As tare
 | SC-971 (as jornadas por sessões independentes, só pela barra) | T020 | `jornada::test_a_…`, `::test_b_…`, `::test_c_…`, `::test_g_…`, `::test_h_cada_papel_alcanca_a_retificacao_pela_barra` |
 | SC-972 (os quatro `xfail` passam sem a marca, asserções originais) | T009, T012 | `auditoria` (19 casos, nenhum `xfail`) |
 | SC-973 (a tela oferece exatamente o que o servidor aceita) | T003, T010 | `auditoria::test_o_detalhe_oferece_exatamente_o_que_o_servidor_aceita`; `jornada::test_d_…` |
-| SC-974 (consultas iguais com 1 e 5 Retificações) | T020 | `jornada::test_a_lista_e_o_edital_nao_crescem_com_as_retificacoes` |
+| SC-974 (consultas iguais com 1 e 5 Retificações, e com 1 e 3 Editais) | T020, T026 | `jornada::test_a_lista_e_o_edital_nao_crescem_com_as_retificacoes`; `interface/test_jornada_da_retificacao_convergencia.py::test_as_retificacoes_em_curso_de_varios_editais_sao_uma_consulta` |
 | SC-975 (duas devoluções, mesmo identificador, uma Retificação) | T020 | `jornada::test_b_duas_devolucoes_e_o_mesmo_registro_chega_a_publicacao` |
 | SC-976 (nenhuma gravação sobrescreve outra em silêncio) | T020 | `jornada::test_f_duas_sessoes…`, `::test_f_a_corrida…`, `::test_f_ato_concorrente…` |
 | SC-977 (a suíte completa sem regressão) | T024 | [verificacao.md](verificacao.md) |

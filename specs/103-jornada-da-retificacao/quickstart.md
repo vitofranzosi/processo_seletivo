@@ -21,6 +21,9 @@ Esperado: tudo passa, sem `xfail` no arquivo da auditoria.
 
 ## Manual (três identidades, três navegadores ou janelas anônimas)
 
+O servidor é a entrada `retificacao-103` do `.claude/launch.json` (porta 8103, banco `ps_demo_103`,
+preparado com `migrate`, `sincronizar_unidades` e `seed_demo`).
+
 1. **Ana, elaboradora**: Lista → Edital publicado → Retificar → mude as vagas → "Ver o que vai mudar"
    → "Criar Retificação". Volte à Lista: a linha do Edital diz "Retificação em elaboração ·
    Submeter". Abra, "Editar a Retificação", mude outra vez, grave, e submeta. A confirmação diz que a
