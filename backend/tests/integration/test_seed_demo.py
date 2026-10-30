@@ -13,9 +13,9 @@ import pytest
 from django.core.management import CommandError, call_command
 from django.utils import timezone
 
+from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.models import Publicacao
-from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.unidades.models import AutoridadeHabilitada, Unidade
 

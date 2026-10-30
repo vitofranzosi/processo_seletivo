@@ -14,8 +14,8 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from processo_seletivo.duvidas.domain.estruturas_do_piloto import RESPONDIDA_E_CONFERIDA, TELA
 from processo_seletivo.auditoria.models import RegistroAuditoria
+from processo_seletivo.duvidas.domain.estruturas_do_piloto import RESPONDIDA_E_CONFERIDA, TELA
 from processo_seletivo.duvidas.management.commands.excluir_registros_do_piloto import OPERACAO
 from processo_seletivo.duvidas.models import TrocaDoPiloto
 from processo_seletivo.processos.models import Edital
