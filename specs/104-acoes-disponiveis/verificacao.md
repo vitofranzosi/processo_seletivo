@@ -83,3 +83,44 @@ a convergência o registrou aqui (T023).
 Rodada depois da implementação: dois achados, um `partial` (o Edital em revisão sem teste próprio,
 T022) e um `unrequested` (o parcial do item, T023), os dois resolvidos. Os itens de
 `checklists/operacao.md` são de quem revisa e seguem sem marca.
+
+## Revisão de prontidão (30/10/2026, depois da avaliação independente)
+
+### Achados
+
+| Achado da avaliação | Situação | O que foi feito |
+|---|---|---|
+| O ato parece clicável e não é | **confirmado** (só o título era link) | o item inteiro é um link só; nome acessível "ato: objeto"; contexto como descrição (D-011) |
+| "Ações disponíveis" sem dizer o que cobre, sobretudo vazia | **confirmado** | o estado vazio nomeia o que a faixa cobre e o que fica no detalhe (D-012) |
+| "Publicar o Edital" antes da conferência | **confirmado** | "Conferir e publicar o Edital", o verbo da coluna (D-004) |
+| Limite de cinco não validado com muitos itens | **confirmado como lacuna de evidência** | medido com 1, 5, 25 e 100; o limite ficou; a densidade do item mudou (D-014) |
+| "Corrigir" × "submeter" na devolvida | **confirmado** | a passagem de bastão da devolvida diz "corrigir … e submetê-la de novo" (D-013) |
+| Contagens injetadas em `do_edital` | **descartado** | três chamadores: a Lista (passa as contagens), o detalhe e `proximo_passo` (um Edital só cada) |
+| Teste da 103 adaptado | **confirmado em parte** | para quem publica, a asserção tinha perdido a situação na marca; restaurada |
+| Validação com pessoas | **pendente** | roteiro pronto em `quickstart.md`; não executado |
+
+### A faixa com muitos objetos
+
+Banco do estudo (`ps_ux_103`) com Editais em elaboração sintéticos para a elaboradora; ambiente de
+demonstração, com a faixa amarela de aviso (~200 px) acima da faixa, que em produção não existe.
+
+| Objetos | Largura | Faixa fechada | Faixa aberta | Início do inventário | Tela |
+|---|---|---|---|---|---|
+| 1 | 375 | 257 px | — | 876 px | 812 |
+| 5, antes da densidade | 1280 | 540 px | — | 955 px | 860 |
+| 5 | 1280 | 406 px | — | 821 px | 860 |
+| 5, antes da densidade | 375 | 771 px | — | 1389 px | 812 |
+| 5 | 375 | 592 px | — | 1211 px | 812 |
+| 25 | 1280 | 432 px | 1611 px | 848 px | 860 |
+| 100 | 1280 | 432 px | 6036 px | 848 px | 860 |
+| 100 | 375 | 618 px | 8577 px | 1237 px | 812 |
+
+- **Consultas** da Lista inteira para a elaboradora: 6 com 1, 5, 25 e 100 objetos
+  (`test_a_faixa_com_1_5_25_e_100_objetos_mostra_cinco_e_nao_cresce_em_consultas`).
+- **Peso**: com 100 objetos, a faixa tem 52 KB dos 148 KB da página (o resto é o inventário de 102
+  Editais); o servidor respondeu em 29 ms e o DOM ficou pronto em 8 ms, em localhost.
+- **Teclado**: com "Mostrar os outros" fechado, a faixa tem 6 paradas (5 itens e o `summary`),
+  qualquer que seja o total; os itens escondidos não recebem foco.
+- **Leitura**: o limite de cinco segura a faixa fechada em altura constante; aberta, com 100, ela é
+  longa — é o caso em que uma apresentação própria faria sentido, e ele não é plausível para a equipe
+  de duas ou três pessoas do Cefor hoje. Registrado, não implementado.

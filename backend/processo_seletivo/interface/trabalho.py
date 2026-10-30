@@ -113,7 +113,10 @@ def _do_edital(editais, ator):
                 "edital",
                 ("edital", edital.id),
                 _nome(edital),
-                "Publicar o Edital",
+                # "Conferir e publicar", e não "Publicar" (D-004, revisão de 30/10): a
+                # pendência que só a validação do conteúdo revela não foi conferida aqui, e o
+                # rótulo não promete o que a Lista não sabe. É o mesmo verbo da coluna.
+                "Conferir e publicar o Edital",
                 "Edital homologado",
                 edital.title,
                 detalhe,

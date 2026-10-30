@@ -199,7 +199,9 @@ def test_a_criar_retomar_editar_submeter_homologar_e_publicar(edital, vigente):
     praticar(bruno, retificacao, "homologar", motivo="Conferido")
 
     carla = sessao(*CARLA)
-    assert "Publicar a Retificação" in carla.get(reverse("interface:lista")).content.decode()
+    lista = carla.get(reverse("interface:lista")).content.decode()
+    assert "Retificação homologada</a>" in lista
+    assert "Publicar a Retificação" in lista
     praticar(carla, retificacao, "publicar", **SIGNATARIO)
 
     assert retificacao.status == Retificacao.Status.PUBLICADA

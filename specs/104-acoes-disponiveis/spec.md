@@ -261,11 +261,12 @@ Edital e Retificação estão em Processos Seletivos.
   ambiente de demonstração), com a faixa "Ações disponíveis para você" quando houver ao menos um
   objeto de trabalho, antes dos contadores e do inventário.
 - **FR-2808**: Sem objeto de trabalho, a faixa MUST NOT aparecer, nem com contador zero; a Lista
-  MUST dizer, numa linha discreta, que não há ação para a pessoa agora, sem afirmar que não há
-  trabalho institucional.
+  MUST dizer, numa linha discreta, que não há ação **do tipo que a faixa cobre** para a pessoa agora,
+  e o que fica fora dela, sem afirmar que não há trabalho institucional (D-012).
 - **FR-2809**: Cada item MUST dizer a natureza do procedimento, o Edital (e a Retificação, quando
   for o caso), a situação, desde quando espera (quando o modelo registra o instante) e o ato, e MUST
-  levar à página do objeto onde o ato se pratica.
+  levar à página do objeto onde o ato se pratica. O item inteiro MUST ser um link só, com o ato no
+  nome acessível, e nenhum texto dele MUST parecer clicável sem ser (D-011).
 - **FR-2810**: A faixa MUST mostrar o total de objetos e no máximo cinco itens; os demais MUST ficar
   acessíveis na própria faixa, sem página nova.
 - **FR-2811**: Os rótulos MUST NOT sugerir atribuição nominal ("sua tarefa", "atribuído a você");
@@ -395,7 +396,9 @@ Prever a pendência impeditiva custa montar o snapshot e validar o Edital, dezen
 linha. A Lista não faz isso: "Submeter" e "Publicar" do Edital viram "Conferir e submeter" e
 "Conferir e publicar", que levam ao detalhe. Na faixa, o Edital em elaboração conta como "continuar
 a elaboração", que nunca é recusado; o homologado conta como "publicar", e a pendência que só a
-validação descobre aparece na conferência antes da confirmação. É o limite desta feature.
+validação descobre aparece na conferência antes da confirmação. É o limite desta feature, e por
+isso o rótulo do item é "Conferir e publicar o Edital", o mesmo verbo da coluna, e não "Publicar o
+Edital" (revisão de 30/10/2026).
 
 ### D-005 — A segregação do Edital é lida em lote
 
@@ -421,6 +424,35 @@ que as rebaixava a nota.
 ### D-009 — Cinco itens e "Mostrar as outras N"
 
 Um `details` nativo, sem script, sem página nova.
+
+### D-011 — O item inteiro é um link, e um só
+
+Revisão de 30/10/2026. Na primeira versão só o título era link, e o ato, à direita, em verde e em
+negrito, parecia botão e não respondia ao clique. Dois links para o mesmo destino dobrariam as
+paradas do teclado; um só, cobrindo o item, resolve o clique e o teclado. O nome acessível é "ato:
+objeto", e a situação, a espera e o detalhe chegam como descrição.
+
+### D-012 — O estado vazio diz o que a faixa olhou
+
+Revisão de 30/10/2026. "Nenhuma ação disponível para você agora" levaria o publicador com resultado a
+divulgar — que a faixa não cobre — a concluir que não havia nada. A frase passa a nomear o que a faixa
+cobre e o que fica no detalhe de cada Edital. O título "Ações disponíveis para você" fica: com itens,
+a nota de cobertura está logo abaixo deles.
+
+### D-013 — Um verbo para a devolvida
+
+Revisão de 30/10/2026. A faixa e o cartão diziam "Corrigir a Retificação devolvida", e a passagem de
+bastão da `103`, na seção logo abaixo, "submeter a Retificação para revisão". Para a devolvida, a
+passagem de bastão passa a dizer "corrigir a Retificação devolvida e submetê-la de novo": primeiro
+corrigir, depois submeter, nessa ordem. O ato de domínio continua o mesmo (`submeter`).
+
+### D-014 — Cinco itens, mais densos
+
+Revisão de 30/10/2026, com medições em 1, 5, 25 e 100 objetos (`verificacao.md`). Com cinco itens de
+quatro linhas, a faixa empurrava o inventário para baixo da primeira tela até no desktop (início em
+955 px numa tela de 860). O limite de cinco não mudou; mudou a densidade: situação e detalhe numa
+linha só, com reticências, e o texto inteiro no HTML. Com cinco itens, o inventário passou a começar
+em 821 px no desktop. A faixa fechada mede o mesmo com 25 e com 100 objetos.
 
 ### D-010 — As contagens da coluna saem de uma consulta para a página
 

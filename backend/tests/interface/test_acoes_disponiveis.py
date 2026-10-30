@@ -36,7 +36,7 @@ BEATRIZ = ("beatriz.homologadora", ["homologador"])
 CARLA = ("carla.publicadora", ["publicador"])
 GABI = ("gabi.gestora", ["gestor"])
 TODOS = ["elaborador", "homologador", "publicador", "gestor"]
-NADA = "Nenhuma ação disponível para você agora."
+NADA = "Nenhum ato de Edital ou de Retificação, recurso ou avaliação aguarda você agora."
 
 
 @pytest.fixture
@@ -168,6 +168,10 @@ def test_c_a_devolvida_se_reconhece_e_a_reenviada_tambem(edital, vigente):
     assert "Retificação devolvida</a>" in corpo
     pagina = ana.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
     assert ">Devolvida</span>" in pagina
+    # Um verbo só para a devolvida (D-013): o cartão diz "Corrigir", e a seção abaixo também.
+    assert "Corrigir a Retificação devolvida" in pagina
+    assert "corrigir a Retificação devolvida e submetê-la de novo" in pagina
+    assert "submeter a Retificação para revisão" not in pagina
 
     editar(ana, retificacao, "8")
     praticar(ana, retificacao, "submeter")
@@ -235,7 +239,7 @@ def test_d_quem_submeteu_e_homologou_nao_ve_publicar_como_acao(
     carla = sessao(*CARLA)
     [objeto] = faixa(carla).objetos
     assert (objeto.ato, objeto.url) == (
-        "Publicar o Edital",
+        "Conferir e publicar o Edital",
         reverse("interface:detalhe", args=[edital.id]),
     )
     assert objeto.desde is not None
@@ -488,4 +492,23 @@ def test_o_edital_em_revisao_e_homologar_o_edital_e_some_depois(
         },
     )
     assert not faixa(bruno)
-    assert [o.ato for o in faixa(sessao(*CARLA)).objetos] == ["Publicar o Edital"]
+    assert [o.ato for o in faixa(sessao(*CARLA)).objetos] == ["Conferir e publicar o Edital"]
+
+
+def test_cada_item_da_faixa_e_um_link_so_com_o_ato_no_nome(edital, vigente):
+    """D-011: o ato parecia botão e não respondia; agora o item inteiro é um link, e um só."""
+    import re
+
+    retificacao = submetida(edital, vigente)
+    corpo = lista(sessao(*BRUNO)).content.decode()
+    faixa_html = corpo[corpo.index('class="acoes-disponiveis"') : corpo.index("cobertura-da-faixa")]
+    url = reverse("interface:retificacao-detalhe", args=[retificacao.id])
+
+    assert faixa_html.count(f'href="{url}"') == 1
+    assert re.search(
+        rf'<a class="item-de-trabalho" href="{re.escape(url)}"\s+'
+        r'aria-label="Analisar a Retificação: Retificação do Edital \d+/\d+"\s+'
+        r'aria-describedby="contexto-mostrado-1">',
+        faixa_html,
+    )
+    assert 'id="contexto-mostrado-1"' in faixa_html

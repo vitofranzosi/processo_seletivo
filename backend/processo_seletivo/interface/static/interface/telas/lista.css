@@ -18,12 +18,24 @@
   align-items:baseline}
 .total-de-acoes{font-size:.85rem;font-weight:400;color:var(--texto-fraco)}
 .itens-de-trabalho{list-style:none;margin:0;padding:0}
-.item-de-trabalho{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.1rem 1rem;
-  padding:.55rem 0;border-top:1px solid var(--fundo);overflow-wrap:anywhere}
-.item-de-trabalho:first-child{border-top:0}
+/* O item inteiro é um link (D-011): o título à esquerda, o ato à direita com a seta que diz "vá", o
+   contexto embaixo. O sublinhado fica só no ato, para que a linha leia como um destino e não como um
+   parágrafo de link; o fundo ao passar o ponteiro e o contorno do foco cobrem o item todo. */
+.itens-de-trabalho li{border-top:1px solid var(--fundo)}
+.itens-de-trabalho li:first-child{border-top:0}
+.item-de-trabalho{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.05rem 1rem;
+  padding:.4rem .4rem;margin:0 -.4rem;border-radius:4px;color:inherit;text-decoration:none;
+  overflow-wrap:anywhere}
+.item-de-trabalho:hover{background:var(--fundo)}
 .titulo-do-item{font-weight:600}
-.ato-do-item{grid-column:2;grid-row:1;font-weight:600;color:var(--verde);text-align:right}
-.situacao-do-item,.detalhe-do-item{grid-column:1 / -1;font-size:.85rem;color:var(--texto-fraco)}
+.ato-do-item{grid-column:2;grid-row:1;font-weight:600;color:var(--verde);text-align:right;
+  text-decoration:underline;text-underline-offset:.15em}
+.ato-do-item::after{content:" →"}
+.contexto-do-item{grid-column:1 / -1;min-width:0;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;font-size:.85rem;color:var(--texto-fraco)}
+/* A situação em tom de texto, o detalhe em tom fraco: na linha única, a situação é o que se lê. */
+.situacao-do-item{color:var(--texto)}
+.detalhe-do-item{color:var(--texto-fraco)}
 .demais-acoes{margin-top:.3rem}
 .demais-acoes summary{cursor:pointer;color:var(--verde);font-size:.9rem}
 .cobertura-da-faixa{margin:.6rem 0 0;font-size:.8rem;color:var(--texto-fraco)}

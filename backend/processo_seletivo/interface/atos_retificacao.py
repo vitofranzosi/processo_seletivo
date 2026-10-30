@@ -265,6 +265,11 @@ def proximo_passo(retificacao, ator, ofertadas=None):
     if responsavel is None:
         return None
     papel, ato, chave = responsavel
+    if foi_devolvida(retificacao):
+        # Um verbo para a devolvida em toda tela (revisão de 30/10, D-013): a faixa e o cartão
+        # dizem "Corrigir", e a passagem de bastão dizia "submeter" sobre o mesmo momento.
+        # Primeiro se corrige, depois se submete — e a frase diz as duas coisas nessa ordem.
+        ato = "corrigir a Retificação devolvida e submetê-la de novo"
     ofertadas = ofertas(retificacao, ator) if ofertadas is None else ofertadas
     principal = next((oferta for oferta in ofertadas if oferta.ato.chave == chave), None)
     return {

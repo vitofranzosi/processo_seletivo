@@ -9,7 +9,7 @@
 | `natureza` | `edital`, `retificacao`, `recursos`, `avaliacao` |
 | `chave` | `(natureza, id do objeto)`; para recursos, o id do Edital; para avaliação, `(edital, etapa)` |
 | `titulo` | "Retificação do Edital 26/2026", "Edital 76/2027 — <título>", "Recursos do Edital 01/2026", "<Etapa> — Edital 51/2026" |
-| `ato` | rótulo do ato principal: "Analisar a Retificação", "Publicar a Retificação", "Corrigir a Retificação devolvida", "Concluir a Retificação", "Continuar a elaboração", "Homologar o Edital", "Publicar o Edital", "Decidir recursos (n)", "Avaliar (n pendentes)" |
+| `ato` | rótulo do ato principal: "Analisar a Retificação", "Publicar a Retificação", "Corrigir a Retificação devolvida", "Concluir e submeter a Retificação", "Continuar a elaboração", "Homologar o Edital", "Conferir e publicar o Edital" (D-004), "Decidir recursos (n)", "Avaliar (n pendentes)" |
 | `situacao` | rótulo da situação do objeto (não do Edital, quando o objeto é outro) |
 | `detalhe` | justificativa da Retificação; motivo da devolução; título do Edital |
 | `desde` | `Retificacao.submitted_at`/`homologated_at`; `RevisaoEdital.submitted_at`; `Homologacao.homologated_at`; ausente nos demais |

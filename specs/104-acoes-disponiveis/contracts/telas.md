@@ -17,7 +17,13 @@ ausência**, "Novo Processo Seletivo", contadores, inventário.
 - nota de cobertura: "Inclui atos de Edital e de Retificação, recursos e avaliações. Classificação,
   divulgação de resultado e avisos continuam no detalhe de cada Edital."
 
-**Sem objeto**: `p.sem-acoes` "Nenhuma ação disponível para você agora." — sem número.
+**Sem objeto**: `p.sem-acoes` "Nenhum ato de Edital ou de Retificação, recurso ou avaliação aguarda
+você agora. Classificação, divulgação de resultado e avisos aos candidatos ficam no detalhe de cada
+Edital." — sem número (D-012).
+
+**Cada item** é um `a.item-de-trabalho` só, com `aria-label="<ato>: <objeto>"` e `aria-describedby`
+apontando a linha de contexto (situação · desde · detalhe), que é cortada com reticências (D-011,
+D-014).
 
 **Coluna "O que posso fazer"**: as ações do Edital (com "Conferir e submeter"/"Conferir e publicar" no
 lugar dos atos que dependem da validação; "Publicar" desabilitado com motivo quando a segregação o

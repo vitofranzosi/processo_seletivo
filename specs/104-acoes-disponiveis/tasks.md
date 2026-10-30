@@ -59,3 +59,15 @@ testes de jornada e escala.
 
 - [X] T022 Testar o Edital em revisão na faixa ("Homologar o Edital", some depois da homologação) em `backend/tests/interface/test_acoes_disponiveis.py` per FR-2804 (partial)
 - [X] T023 Registrar em `specs/104-acoes-disponiveis/verificacao.md` o parcial `_item_de_trabalho.html` como parte da faixa per plan: estrutura (unrequested)
+
+## Phase 9: Revisão de prontidão (30/10/2026)
+
+Achados da avaliação independente do relatório de revisão, confirmados no código.
+
+- [X] T024 O item inteiro como um link só, com o ato no nome acessível e o contexto como descrição, em `_item_de_trabalho.html` e `telas/lista.css` per FR-2809, D-011
+- [X] T025 Estado vazio que diz o que a faixa cobre, em `_acoes_disponiveis.html` per FR-2808, D-012
+- [X] T026 "Conferir e publicar o Edital" no item do Edital homologado, em `interface/trabalho.py` per D-004
+- [X] T027 Um verbo para a devolvida na passagem de bastão, em `atos_retificacao.proximo_passo` per D-013
+- [X] T028 Restaurar no teste da 103 a asserção da situação na marca para quem publica, em `tests/interface/test_jornada_da_retificacao.py`
+- [X] T029 Faixa com 1, 5, 25 e 100 objetos: teste de consultas em `tests/performance/test_trabalho_em_escala.py` e medição no navegador em 1280 e 375 px; densidade do item per D-014
+- [X] T030 Testes de afordância e de verbo em `tests/interface/test_acoes_disponiveis.py` e `tests/unit/interface/test_atos_da_retificacao.py`

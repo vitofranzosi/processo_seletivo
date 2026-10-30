@@ -87,4 +87,69 @@ def test_a_faixa_em_escala_continua_vazia_para_quem_nao_tem_acao(settings):
     resposta = cliente.get(reverse("interface:lista"))
 
     assert not resposta.context["faixa"]
-    assert "Nenhuma ação disponível para você agora." in resposta.content.decode()
+    assert "Nenhum ato de Edital ou de Retificação, recurso ou avaliação aguarda você agora." in (
+        resposta.content.decode()
+    )
+
+
+# ---------------------------------------------------------------------------------------------
+# Muitos objetos de trabalho ao mesmo tempo (revisão de 30/10/2026)
+# ---------------------------------------------------------------------------------------------
+
+
+def em_elaboracao(quantos, *, primeiro=0):
+    """Editais em elaboração direto no banco: cada um é "Continuar a elaboração" para quem elabora.
+
+    É a forma mais barata de pôr N objetos de trabalho na faixa, e a mais realista para N grande:
+    elaborar é o único ato que todo elaborador do escopo tem em todo Edital em elaboração.
+    """
+    from django.utils import timezone
+
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    agora = timezone.now()
+    processo = ProcessoSeletivo.objects.create(
+        institution_scope="cefor",
+        institutional_code=f"PS-FAIXA-{primeiro}",
+        title="Processo com muitos Editais em elaboração",
+        status=ProcessoSeletivo.Status.ATIVO,
+        created_at=agora,
+        created_by="carga",
+        last_changed_at=agora,
+    )
+    Edital.objects.bulk_create(
+        Edital(
+            processo=processo,
+            institution_scope="cefor",
+            number=f"{indice:03d}",
+            year=2027,
+            title=f"Edital {indice}",
+            status=Edital.Status.EM_ELABORACAO,
+            created_at=agora,
+            created_by="carga",
+            last_edited_by="carga",
+        )
+        for indice in range(primeiro, primeiro + quantos)
+    )
+
+
+def test_a_faixa_com_1_5_25_e_100_objetos_mostra_cinco_e_nao_cresce_em_consultas(settings):
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    cliente = Client()
+    identificar(cliente, "ana.elaboradora", ["elaborador"])
+    medidas, criados = {}, 0
+    for quantos in (1, 5, 25, 100):
+        em_elaboracao(quantos - criados, primeiro=criados)
+        criados = quantos
+        with CaptureQueriesContext(connection) as capturadas:
+            resposta = cliente.get(reverse("interface:lista"))
+        faixa = resposta.context["faixa"]
+        medidas[quantos] = len(capturadas)
+        assert faixa.total == quantos
+        assert len(faixa.mostrados) == min(quantos, trabalho.MOSTRADOS)
+        assert len(faixa.demais) == max(quantos - trabalho.MOSTRADOS, 0)
+        corpo = resposta.content.decode()
+        assert (f"Mostrar os outros {quantos - trabalho.MOSTRADOS}" in corpo) is (quantos > 5)
+
+    # Medido em 30/10/2026: 6 consultas com 1, 5, 25 e 100 objetos na faixa.
+    assert len(set(medidas.values())) == 1, medidas
