@@ -29,7 +29,7 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
 
 ## Phase 1: Setup
 
-- [ ] T001 Preparar a worktree: `uv sync --extra dev` em `backend/`, `backend/.env` a partir de
+- [X] T001 Preparar a worktree: `uv sync --extra dev` em `backend/`, `backend/.env` a partir de
   `backend/.env.example` com `DB_NAME=ps_102`, e `make preparar` (três passos; conferir que o
   `provisionar` informa `41 de 41` e não `0 de 41`). Rodar
   `PYTEST_ADDOPTS="tests/integration/sorteios" make test-pg` e anotar o total de passando como
@@ -42,7 +42,7 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
 **Purpose**: a granularidade declarada por fonte (FR-2647–FR-2649), a segunda fonte de demonstração
 (FR-2665, FR-2666) e a regra pura do limite previsto (FR-2650, FR-2651).
 
-- [ ] T002 [P] Escrever `backend/tests/unit/sorteios/test_viabilidade.py`, só com a regra pura (sem
+- [X] T002 [P] Escrever `backend/tests/unit/sorteios/test_viabilidade.py`, só com a regra pura (sem
   banco). Casos:
   - a matriz da SC-954: para "só a data", a extração no dia anterior ao fim, no mesmo dia antes do
     fim, no mesmo dia depois do fim, às 00h00 do dia seguinte e às 20h05 do dia seguinte. Inviável
@@ -51,13 +51,13 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
   - `occurrenceAt` com deslocamento `-02:00` e `+00:00` que muda o dia no fuso institucional;
   - `occurrenceAt` ilegível ou sem fuso, que dá nenhum limite;
   - a borda: limite igual ao congelamento é inviável, e limite um microssegundo depois é viável.
-- [ ] T003 Criar `backend/processo_seletivo/sorteios/domain/viabilidade.py` com duas funções puras: o
+- [X] T003 Criar `backend/processo_seletivo/sorteios/domain/viabilidade.py` com duas funções puras: o
   limite previsto (recebe o texto de `occurrenceAt` e se a fonte publica só a data, e devolve
   00h00 do dia em `ZONA` ou `None`) e a inviabilidade (limite e instante mais cedo de congelamento;
   `None` em qualquer um dá falso). Usar `shared.tempo.ZONA` e a mesma forma de
   `loteria_federal._nao_antes_de` (`datetime.combine(dia, time.min)`). Docstring com o porquê: a
   regra é uma só para quatro lugares (FR-2650). Sem import de `sorteios.infrastructure`. T002 verde.
-- [ ] T004 [P] Escrever `backend/tests/integration/sorteios/test_granularidade_das_fontes.py`. Casos:
+- [X] T004 [P] Escrever `backend/tests/integration/sorteios/test_granularidade_das_fontes.py`. Casos:
   - para cada nome de `fontes_publicadas()`, a granularidade declarada bate com o `observar` do
     adaptador. Para a Loteria Federal, substituir `request.urlopen` por uma resposta com
     `dataApuracao: "28/10/2026"`: o limite é meia-noite exatamente quando a fonte se declara "só a
@@ -67,7 +67,7 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
   - a função por nome responde `None` para nome fora do vocabulário;
   - em produção (`override_settings(SORTEIO_FONTE_DE_DEMONSTRACAO=False)`) o vocabulário continua
     `{"Loteria Federal"}`, como em `test_fonte_fora_de_producao.py` (FR-2666).
-- [ ] T005 Em `backend/processo_seletivo/sorteios/infrastructure/fontes/loteria_federal.py`:
+- [X] T005 Em `backend/processo_seletivo/sorteios/infrastructure/fontes/loteria_federal.py`:
   - atributo de classe de granularidade em `FonteExterna` (padrão: data e hora), em `LoteriaFederal`
     (só a data) e em `FonteDeTeste` (data e hora, explícito);
   - classe nova `FonteDeTesteSoData(FonteDeTeste)`, com o mesmo material e o limite inferior no
@@ -75,7 +75,7 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
 
   O docstring diz por que ela existe (D-007) e que, por construção, um congelamento feito hoje é
   sempre recusado com ela.
-- [ ] T006 Em `backend/processo_seletivo/sorteios/infrastructure/fontes/__init__.py`:
+- [X] T006 Em `backend/processo_seletivo/sorteios/infrastructure/fontes/__init__.py`:
   - `FONTE_DE_DEMONSTRACAO` vira uma tupla de dois pares, a atual e
     `("Fonte de demonstração (só a data)", ".../loteria_federal.FonteDeTesteSoData")`, e
     `fontes_publicadas` acrescenta as duas sob a mesma chave;
@@ -85,7 +85,7 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
 
   Ajustar `backend/tests/integration/sorteios/test_fonte_fora_de_producao.py` só se ele desmontar o
   par antigo. T004 verde.
-- [ ] T007 Rodar `PYTEST_ADDOPTS="tests/integration/sorteios tests/interface/test_metodo_do_marco.py tests/interface/test_retificar_metodo_de_sorteio.py" make test-pg`.
+- [X] T007 Rodar `PYTEST_ADDOPTS="tests/integration/sorteios tests/interface/test_metodo_do_marco.py tests/interface/test_retificar_metodo_de_sorteio.py" make test-pg`.
   Esperado: nenhuma fixture alterada, e o mesmo total de T001 mais os casos novos (SC-957, D-006).
 
 **Checkpoint**: a regra e as fontes estão prontas. As histórias podem começar.
@@ -101,7 +101,7 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Escrever `backend/tests/unit/editais/test_extracao_inviavel.py` sobre
+- [X] T008 [P] [US1] Escrever `backend/tests/unit/editais/test_extracao_inviavel.py` sobre
   `validate_for_publication`, com snapshots montados à mão. Casos:
   - o código `draw_occurrence_not_after_registration` com `BLOCKING_ERROR` no ato de publicação;
   - os trechos da seção 1 de [mensagens.md](contracts/mensagens.md): nome do marco, fonte, dia da
@@ -116,12 +116,12 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
   - marco listado em `marcos_sorteados`, sem achado na Retificação;
   - método comum que governa dois marcos, com um só em `marcos_sorteados`: a advertência continua.
     Com os dois, ela some (FR-2656).
-- [ ] T009 [P] [US1] Escrever `backend/tests/integration/editais/test_edital_72.py`: o cronograma e o
+- [X] T009 [P] [US1] Escrever `backend/tests/integration/editais/test_edital_72.py`: o cronograma e o
   método do achado (inscrições até 28/10/2026 às 9h; Loteria Federal, concurso 6113, extração em
   28/10/2026 às 20h05) pelo caminho real de publicação (`publicacoes/application/publish_edital.py`),
   com `agora` antes de 28/10. A publicação é recusada com o código novo. Com a extração em 29/10, o
   Edital publica (SC-955). Sem rede: a conferência não chama a fonte.
-- [ ] T010 [P] [US1] Escrever `backend/tests/integration/publicacoes/test_retificacao_extracao_inviavel.py`.
+- [X] T010 [P] [US1] Escrever `backend/tests/integration/publicacoes/test_retificacao_extracao_inviavel.py`.
   Casos:
   - Edital publicado com extração viável; Retificação que prorroga as inscrições até o dia da
     extração. A advertência aparece em `advertencias_do_ato` (não só na lista bruta: R-004), e a
@@ -131,7 +131,7 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Em `backend/processo_seletivo/editais/domain/validation.py`:
+- [X] T011 [US1] Em `backend/processo_seletivo/editais/domain/validation.py`:
   - nova conferência `_extracao_inviavel(snapshot, *, ato, marcos_sorteados)`. Ela percorre o método
     comum e os marcos bem formados por `marcos.metodo_que_governa`, como
     `_metodo_do_sorteio_publicavel`. O fim das inscrições vem de `periodo_de_inscricoes`, com o mesmo
@@ -146,17 +146,17 @@ depende da Fase 2 para a fonte, e da US2 e da US3 para o roteiro.
   - registrar a conferência em `validate_for_publication`, que ganha o argumento
     `marcos_sorteados: frozenset = frozenset()`, documentado como `topologia` (só a Retificação o
     passa). T008 verde.
-- [ ] T012 [US1] Em `backend/processo_seletivo/sorteios/application/selectors.py`: nova função
+- [X] T012 [US1] Em `backend/processo_seletivo/sorteios/application/selectors.py`: nova função
   `marcos_sorteados_em_todos_os_recortes(edital, conteudo)`. Ela deriva os recortes de cada marco por
   sorteio com `editais.domain.recortes.recortes_do_perfil`, a mesma derivação da tela do sorteio, e
   devolve o conjunto de identidades de marco em que todo recorte tem um `Sorteio` sem sucessor. Uma
   consulta para os sorteios do Edital, e não uma por recorte.
-- [ ] T013 [US1] Em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, passar
+- [X] T013 [US1] Em `backend/processo_seletivo/publicacoes/application/retificacoes.py`, passar
   `marcos_sorteados=marcos_sorteados_em_todos_os_recortes(...)` nas três chamadas de
   `validate_for_publication`: a conferência do ato (~l. 692) e as duas de `advertencias_do_ato`
   (~l. 757 e ~l. 761). Com isso, a subtração e a lista mostrada partem do mesmo conjunto. Comentário
   com o porquê (D-003). T010 verde.
-- [ ] T014 [US1] Conferir na revisão da composição que o achado leva à etapa Classificação: escrever
+- [X] T014 [US1] Conferir na revisão da composição que o achado leva à etapa Classificação: escrever
   `backend/tests/interface/test_revisao_extracao_inviavel.py`, que abre a revisão do rascunho do
   Edital 72 e encontra a frase e o link da etapa. Se o caminho `/drawMethod` do método comum não
   tiver etapa mapeada, mapear no mesmo lugar em que `common_draw_method_invalid` é mapeado
@@ -176,7 +176,7 @@ o aviso aparece antes de "Publicar e congelar a relação", e o botão continua 
 
 ### Tests for User Story 2
 
-- [ ] T015 [P] [US2] Escrever `backend/tests/interface/test_sorteio_extracao_inviavel.py`. O Edital é
+- [X] T015 [P] [US2] Escrever `backend/tests/interface/test_sorteio_extracao_inviavel.py`. O Edital é
   levado ao estado pelo caminho real: publicado viável e depois retificado, como no
   [quickstart](quickstart.md). `timezone.now` é substituído por `mock.patch`, como em
   `tests/interface/test_convocacao_em_fluxo.py`. Casos:
@@ -193,7 +193,7 @@ o aviso aparece antes de "Publicar e congelar a relação", e o botão continua 
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Em `backend/processo_seletivo/sorteios/application/previa.py::recortes_do_marco`:
+- [X] T016 [US2] Em `backend/processo_seletivo/sorteios/application/previa.py::recortes_do_marco`:
   - acrescentar ao estado do marco `congelar_agora_inviavel`: `None`, ou fonte e dia da extração,
     quando a ocorrência da vez é a declarada (não a substituta), a fonte do método vigente publica só
     a data e `viabilidade` diz inviável contra o mais tarde entre `at or timezone.now()` e o fim de
@@ -206,9 +206,9 @@ o aviso aparece antes de "Publicar e congelar a relação", e o botão continua 
 
   Conferir que `relacao.versao` já vem com `select_related`, e acrescentar se não vier. Comentário
   com o porquê de não usar o método vigente para a relação congelada.
-- [ ] T017 [US2] Em `backend/processo_seletivo/interface/views.py::sorteio`, passar
+- [X] T017 [US2] Em `backend/processo_seletivo/interface/views.py::sorteio`, passar
   `congelar_agora_inviavel` ao contexto. O diagnóstico de cada recorte já viaja em `recortes`.
-- [ ] T018 [US2] Em `backend/processo_seletivo/interface/templates/interface/sorteio.html`:
+- [X] T018 [US2] Em `backend/processo_seletivo/interface/templates/interface/sorteio.html`:
   - o aviso da seção 3, uma vez por marco, logo depois do aviso de inscrições em curso (o método é
     do marco, e vale para todos os recortes), com `class="aviso" role="status"`. Ele **não** fica
     dentro do `{% if pode_emitir and ... not inscricoes_em_curso %}` do formulário: precisa aparecer
@@ -232,14 +232,14 @@ comparação nem a primeira frase (FR-2662–FR-2664, FR-2668, R-007).
 **Independent Test**: uma relação congelada no dia da extração, com fonte "só a data", recebe a recusa
 com os dois acréscimos da seção 5.
 
-- [ ] T019 [P] [US3] Escrever `backend/tests/integration/sorteios/test_recusa_diz_a_saida.py`, no
+- [X] T019 [P] [US3] Escrever `backend/tests/integration/sorteios/test_recusa_diz_a_saida.py`, no
   padrão de `test_ocorrencia_declarada.py` (fonte falsa injetada em `observar_ocorrencia`). Casos:
   - fonte "só a data", com a recusa contendo a primeira frase de hoje, a frase de 00h00 e a de "suceder
     a relação sem retificar não resolve";
   - fonte com horário, com a recusa sem a frase de 00h00 e com a da saída;
   - **a comparação fixada (FR-2664)**: limite igual a `publicada_em` recusa, e limite um microssegundo
     depois constitui.
-- [ ] T020 [US3] Em `backend/processo_seletivo/sorteios/application/sorteio.py::_recusar_o_que_nao_pode_sortear`,
+- [X] T020 [US3] Em `backend/processo_seletivo/sorteios/application/sorteio.py::_recusar_o_que_nao_pode_sortear`,
   acrescentar à mensagem de `occurrence_precedes_freeze`, **depois** da frase existente e sem alterá-la,
   as duas frases da seção 5. A granularidade vem de `publica_so_a_data(ocorrencia.fonte)`. A condição
   `ocorrida_nao_antes_de <= relacao.publicada_em` não muda. Comentário dizendo que a primeira frase é
@@ -255,15 +255,15 @@ com os dois acréscimos da seção 5.
 
 **Independent Test**: o cenário 2 do [quickstart](quickstart.md), executado no navegador.
 
-- [ ] T021 [P] [US4] Escrever `backend/tests/integration/sorteios/test_demonstracao_so_a_data.py`. Com
+- [X] T021 [P] [US4] Escrever `backend/tests/integration/sorteios/test_demonstracao_so_a_data.py`. Com
   a `Fonte de demonstração (só a data)`, congelar e sortear no mesmo dia dá
   `occurrence_precedes_freeze`. Com o congelamento feito com `timezone.now` substituído por ontem
   (`mock.patch`), o sorteio é constituído. A `seed_demo` roda sem erro e não declara a fonte nova.
-- [ ] T022 [US4] Demonstrar os cenários 1, 2 e 3 do [quickstart](quickstart.md) no navegador do
+- [X] T022 [US4] Demonstrar os cenários 1, 2 e 3 do [quickstart](quickstart.md) no navegador do
   painel, num banco próprio (`DB_NAME=ps_demo_102`) sem `seed_demo`. O código de acesso do portal sai
   no terminal do `runserver`. Registrar em `specs/102-sorteio-viavel-desde-a-publicacao/verificacao.md`
   o que se viu em cada passo, com o horário, e qualquer divergência do esperado.
-- [ ] T023 [US3] Escrever `specs/102-sorteio-viavel-desde-a-publicacao/roteiro-de-compreensao.md`
+- [X] T023 [US3] Escrever `specs/102-sorteio-viavel-desde-a-publicacao/roteiro-de-compreensao.md`
   para a SC-958, no formato da `098`. Mostra-se a quem conduz o certame só a recusa da seção 5 e,
   numa segunda rodada, só o diagnóstico da seção 4. Depois pergunta-se, sem ajuda, o que fazer e em
   que ordem. Acerto é dizer retificar e depois suceder. A aplicação com as pessoas é do usuário; a
@@ -273,11 +273,11 @@ com os dois acréscimos da seção 5.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T024 [P] Escrever `specs/102-sorteio-viavel-desde-a-publicacao/rastreabilidade.md`: uma linha
+- [X] T024 [P] Escrever `specs/102-sorteio-viavel-desde-a-publicacao/rastreabilidade.md`: uma linha
   para **todo** identificador em negrito da spec, FR-2647 a FR-2668 e SC-954 a SC-959, com tarefa e
   teste. A SC-958 é humana e fica com o roteiro do T023, e a SC-959 com a `verificacao.md`. Rodar
   `uv run pytest tests/test_citacoes_de_requisito.py`.
-- [ ] T025 [P] Atualizar a linha da `102` na tabela de incrementos do `README.md` para o estado
+- [X] T025 [P] Atualizar a linha da `102` na tabela de incrementos do `README.md` para o estado
   implementado, e o parágrafo da fonte de demonstração em `CLAUDE.md`, se a fonte nova pedir aviso
   para quem chega. Só se pedir: a regra do `CLAUDE.md` é registrar o que não se descobre lendo o
   código.
