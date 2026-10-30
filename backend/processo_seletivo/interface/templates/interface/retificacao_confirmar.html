@@ -36,11 +36,15 @@ exatamente onde a linha se acrescenta.
 <p class="aviso" role="status"><strong>Aviso:</strong> {{ item.message }}</p>
 {% endfor %}
 {% comment %} As que já valiam no Edital vigente, recolhidas (104, FR-2825): continuam ditas — são
-   verdadeiras —, mas não antes do que este ato muda. {% endcomment %}
+   verdadeiras —, mas não antes do que este ato muda. **Com a mesma severidade**, e não como nota:
+   a FR-1309 da 067 exige que o aviso apareça como aviso na Retificação, e recolher é ordem de
+   leitura, não rebaixamento. {% endcomment %}
 {% if advertencias_anteriores %}
 <details class="avisos-anteriores">
   <summary>Avisos que já valiam no Edital vigente ({{ advertencias_anteriores|length }})</summary>
-  {% for item in advertencias_anteriores %}<p class="ajuda">{{ item.message }}</p>{% endfor %}
+  {% for item in advertencias_anteriores %}
+  <p class="aviso"><strong>Aviso:</strong> {{ item.message }}</p>
+  {% endfor %}
 </details>
 {% endif %}
 

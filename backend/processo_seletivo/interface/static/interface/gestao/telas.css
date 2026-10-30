@@ -850,7 +850,7 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
 .retificacoes-em-curso .bastao{display:block;margin:.4rem 0}
 
 /* Os avisos que já valiam no Edital vigente, recolhidos na confirmação do ato da Retificação (104,
-   FR-2825): ditos, mas depois do que o ato muda, e sem o fundo amarelo dos que ele introduz. */
+   FR-2825): ditos como aviso (FR-1309 da 067), mas depois do que o ato muda. */
 .avisos-anteriores{margin:.75rem 0;padding:.5rem .75rem;border:1px solid var(--borda);border-radius:4px}
 .avisos-anteriores summary{cursor:pointer;font-size:.9rem}
-.avisos-anteriores .ajuda{margin:.4rem 0 0}
+.avisos-anteriores .aviso{margin:.5rem 0 0}

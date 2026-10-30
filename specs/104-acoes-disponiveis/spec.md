@@ -413,7 +413,10 @@ O nome é conhecido da comissão. Muda o estado vazio, que deixa de soar como "n
 ### D-008 — As advertências se separam pelo par código e caminho
 
 As do conteúdo vigente são calculadas com a mesma função, sem as alterações; a diferença é o que a
-Retificação introduz.
+Retificação introduz. As que já valiam ficam recolhidas, **com a mesma severidade de aviso**: a
+FR-1309 da `067` exige que o aviso de prazos de recurso apareça como aviso na Retificação, e recolher
+muda a ordem de leitura, e não a severidade. A suíte completa apontou o conflito na primeira versão,
+que as rebaixava a nota.
 
 ### D-009 — Cinco itens e "Mostrar as outras N"
 
