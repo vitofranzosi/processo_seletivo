@@ -222,6 +222,28 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   <p class="aviso" role="status"><strong>Ainda não é possível publicar a relação.</strong>
     {{ inscricoes_em_curso.detail }}</p>
   {% endif %}
+  {% comment %}
+  **O congelamento que condena o sorteio, dito antes do botão** (102, FR-2659). Uma vez por marco,
+  porque o método é do marco, e fora do bloco do formulário: enquanto as inscrições correm o botão
+  some, e o aviso precisa aparecer assim mesmo — é quando ainda há tempo de retificar. O botão
+  continua disponível (D-005): a relação pode ter data no cronograma, e quem conduz decide sabendo.
+  Escrito para quem conduz o sorteio (revisão de 30/10): o que fazer primeiro, a data pronta, e a
+  sucessão também, porque ela congela na hora.
+  {% endcomment %}
+  {% if congelar_agora_inviavel %}
+  {% with a=congelar_agora_inviavel %}
+  <div class="aviso" role="status">
+    <p>{% if a.inscricoes_correndo %}<strong>A extração do Edital é cedo demais: o sorteio seria recusado.</strong>{% else %}<strong>Não congele a relação hoje: o sorteio seria recusado.</strong>{% endif %}
+      A extração do Edital ({{ a.referencia }} de {{ a.fonte }}) é de {{ a.dia|date:"d/m/Y" }}, e
+      essa fonte publica só a data, sem o horário. O sorteio só aceita extração de dia posterior ao
+      congelamento da relação{% if a.inscricoes_correndo %}, e a relação só pode ser congelada depois do fim das inscrições{% endif %}.</p>
+    <p>{% if a.inscricoes_correndo %}Antes do fim das inscrições{% else %}Antes de congelar{% endif %},
+      {% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">retifique o Edital</a>{% else %}peça a quem elabora as Retificações deste Edital que o retifique{% endif %},
+      trocando a extração por uma a partir de <strong>{{ a.primeiro_dia|date:"d/m/Y" }}</strong>.
+      {% if a.inclui_sucessao %}Vale também para publicar relação nova, sucedendo a atual: ela é congelada na hora. {% endif %}Congelar não se desfaz.</p>
+  </div>
+  {% endwith %}
+  {% endif %}
   {% for recorte in recortes %}
   <article class="recorte">
     <h3>{{ recorte.nome }}</h3>
@@ -290,6 +312,45 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       </table>
     </div>
 
+    {% if recorte.diagnostico_da_relacao %}
+    {% comment %}
+    **A relação que nunca sorteará com a extração dela** (102, FR-2660, FR-2661). O método lido é o
+    da versão que a relação cita, que é o que o sorteio lê, e não o vigente. Bloco próprio, antes
+    dos botões, e não um ramo da cadeia deles: esconder "Realizar o sorteio" não foi decidido.
+    {% endcomment %}
+    {% with d=recorte.diagnostico_da_relacao %}
+    <div class="erro">
+      {% if d.metodo_retificado %}
+      <p><strong>A extração já foi trocada por Retificação, mas esta relação continua presa à extração antiga.</strong>
+        Uma relação congelada não acompanha Retificações.</p>
+      <p>Para sortear, nesta ordem:</p>
+      <ol>
+        <li>Publique a relação nova, sucedendo esta, no formulário logo abaixo.</li>
+        <li>Observe a nova ocorrência e realize o sorteio.</li>
+      </ol>
+      {% if d.nova_cedo_demais %}
+      <p><strong>Atenção:</strong> a extração nova ({{ d.nova_cedo_demais.referencia }}, de {{ d.nova_cedo_demais.dia|date:"d/m/Y" }})
+        também é cedo demais para uma relação congelada hoje. Retifique de novo, para uma extração a
+        partir de {{ d.nova_cedo_demais.primeiro_dia|date:"d/m/Y" }}, antes de publicar a relação nova.</p>
+      {% endif %}
+      {% else %}
+      <p><strong>Esta relação não pode ser sorteada com a extração do Edital.</strong>
+        Ela foi congelada em {{ d.congelada_em|date:"d/m/Y" }} às {{ d.congelada_em|date:"H:i" }}, e a
+        extração {{ d.referencia }} de {{ d.fonte }} é de {{ d.dia|date:"d/m/Y" }}. Essa fonte publica
+        só a data, sem o horário, e o sorteio só aceita extração de dia posterior ao congelamento.</p>
+      <p>Para sortear, nesta ordem:</p>
+      <ol>
+        <li>{% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">Retifique o Edital</a>{% else %}Peça a quem elabora as Retificações deste Edital que o retifique{% endif %},
+          trocando a extração por uma a partir de <strong>{{ d.primeiro_dia|date:"d/m/Y" }}</strong>
+          (se a relação nova for congelada hoje).</li>
+        <li>Publique a relação nova, sucedendo esta, no formulário logo abaixo.</li>
+        <li>Observe a nova ocorrência e realize o sorteio.</li>
+      </ol>
+      <p>Publicar a relação nova sem retificar antes não resolve.</p>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% endif %}
     {% comment %}
     Um botão só, e ele publica. **Não existe**, aqui nem em superfície alguma: incluir participante,
     excluir participante, renumerar, campo de semente, simular, refazer (FR-002, FR-017, FR-030).

@@ -66,7 +66,16 @@ class Observacao:
 
 
 class FonteExterna:
-    """A porta. Um método, e ele não decide nada."""
+    """A porta. Um método, e ele não decide nada.
+
+    **`PUBLICA_SO_A_DATA` é a granularidade da fonte, e mora no adaptador** (102, FR-2647). Quem a
+    conhece é quem devolve o limite inferior — a Loteria Federal devolve a meia-noite porque a Caixa
+    não publica o horário —, e uma declaração longe dele divergiria na primeira mudança. A
+    publicação do Edital a lê para recusar a extração que o sorteio nunca aceitaria; nunca é
+    deduzida do conteúdo do Edital nem da resposta da fonte. O padrão é a fonte que publica a hora.
+    """
+
+    PUBLICA_SO_A_DATA = False
 
     def observar(self, *, fonte: str, referencia: str) -> Observacao:  # pragma: no cover - contrato
         raise NotImplementedError
@@ -90,9 +99,19 @@ FONTES = {
 # suíte sortearem sem rede. **Fora de `FONTES`, e só no vocabulário onde a configuração o liga**
 # (046, `FR-757`): a semente dele é fixa, e um Edital de produção que o declarasse publicaria um
 # sorteio cujo resultado se conhece antes da extração (`RC-72`).
-FONTE_DE_DEMONSTRACAO = (
-    "Fonte de demonstração",
-    "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.FonteDeTeste",
+#
+# **São duas, ligadas pela mesma chave** (102, D-007). A segunda publica só a data, como a Caixa, e
+# é a única maneira de ver sem rede a recusa do Edital 72/2026: congelar e sortear no mesmo dia.
+# Uma segunda chave seria mais uma variável que produção precisa recusar.
+FONTES_DE_DEMONSTRACAO = (
+    (
+        "Fonte de demonstração",
+        "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.FonteDeTeste",
+    ),
+    (
+        "Fonte de demonstração (só a data)",
+        "processo_seletivo.sorteios.infrastructure.fontes.loteria_federal.FonteDeTesteSoData",
+    ),
 )
 
 
@@ -112,8 +131,7 @@ def fontes_publicadas():
 
     vocabulario = dict(FONTES)
     if getattr(settings, "SORTEIO_FONTE_DE_DEMONSTRACAO", False):
-        nome, caminho = FONTE_DE_DEMONSTRACAO
-        vocabulario[nome] = caminho
+        vocabulario.update(FONTES_DE_DEMONSTRACAO)
     return vocabulario
 
 
@@ -137,4 +155,24 @@ def fonte_declarada(nome):
     return import_string(caminho)()
 
 
-__all__ = ["FonteExterna", "Observacao", "fonte_declarada", "fontes_publicadas"]
+def publica_so_a_data(nome):
+    """Se a fonte publicada com este nome publica só a data — `True`, `False` ou `None`.
+
+    `None` para nome fora do vocabulário **deste ambiente**: essa fonte já tem achado próprio
+    (`draw_source_not_supported`, `draw_method_invalid`), e quem pergunta se cala para não empilhar
+    dois relatos sobre uma causa só. A classe é importada e não instanciada: a pergunta é sobre o
+    adaptador, e não uma chamada a ele.
+    """
+    caminho = fontes_publicadas().get(nome)
+    if caminho is None:
+        return None
+    return bool(import_string(caminho).PUBLICA_SO_A_DATA)
+
+
+__all__ = [
+    "FonteExterna",
+    "Observacao",
+    "fonte_declarada",
+    "fontes_publicadas",
+    "publica_so_a_data",
+]

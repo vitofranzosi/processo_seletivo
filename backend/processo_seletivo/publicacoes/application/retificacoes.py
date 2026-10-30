@@ -6,6 +6,7 @@ from django.utils import timezone
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_RETIFICACAO,
+    EXTRACAO_INVIAVEL_NA_RETIFICACAO,
     blocking_findings,
     validate_for_publication,
 )
@@ -756,11 +757,25 @@ def advertencias_do_ato(retificacao):
         (item.code, item.path)
         for item in blocking_findings(validate_for_publication(content, topologia=topologia))
     }
-    return [
-        item
-        for item in validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
-        if (item.code, item.path) not in impeditivos
-    ]
+    achados = validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
+    # **Os marcos já sorteados em todos os recortes** (102, FR-2656, D-003): o método deles não
+    # governa mais ato nenhum, e advertir sobre a extração deles a cada Retificação seria ruído que
+    # ensina a não ler a confirmação. Só aqui, e não na recusa do ato: o achado é advertência na
+    # Retificação, e `_assert_well_formed` só olha impeditivos.
+    #
+    # **E só quando a advertência aparece.** Saber quais marcos estão sorteados lê o banco, recorte
+    # a recorte; perguntá-lo em toda confirmação pagaria essa leitura pela vírgula corrigida.
+    if any(item.code == EXTRACAO_INVIAVEL_NA_RETIFICACAO for item in achados):
+        from processo_seletivo.sorteios.application.selectors import (
+            marcos_sorteados_em_todos_os_recortes,
+        )
+
+        sorteados = marcos_sorteados_em_todos_os_recortes(retificacao.edital, content)
+        if sorteados:
+            achados = validate_for_publication(
+                content, ato=ATO_DE_RETIFICACAO, topologia=topologia, marcos_sorteados=sorteados
+            )
+    return [item for item in achados if (item.code, item.path) not in impeditivos]
 
 
 def _assert_versao_canonica(content, contexto):

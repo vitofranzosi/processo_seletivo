@@ -23,6 +23,9 @@ ENDERECO = "https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/{refer
 
 
 class LoteriaFederal(FonteExterna):
+    # A Caixa publica `dataApuracao` sem horário, e `_nao_antes_de` devolve a meia-noite (102).
+    PUBLICA_SO_A_DATA = True
+
     def observar(self, *, fonte, referencia):
         """O que a fonte publicou — ou **por que** não foi possível saber.
 
@@ -148,6 +151,8 @@ class FonteDeTeste(FonteExterna):
     """
 
     MATERIAL = {"indisponivel": ""}
+    # Devolve o instante corrente, que uma fonte com horário diria de uma extração recém-publicada.
+    PUBLICA_SO_A_DATA = False
 
     def observar(self, *, fonte, referencia):
         material = self.MATERIAL.get(str(referencia), "12345 67890 11223 44556 77889")
@@ -160,3 +165,31 @@ class FonteDeTeste(FonteExterna):
         # extração recém-publicada com horário. Sem isso ele não serviria para semear sorteio, e o
         # teste estaria exercitando um caminho que a produção recusa.
         return Observacao(material_bruto=material, ocorrida_nao_antes_de=timezone.now())
+
+
+class FonteDeTesteSoData(FonteDeTeste):
+    """O falso que publica só a data, como a Caixa (102, FR-2665, D-007).
+
+    **Por que existe.** A `FonteDeTeste` responde "agora", e com ela todo congelamento é anterior à
+    ocorrência, inclusive no mesmo dia: a recusa do Edital 72/2026 nunca aparecia em
+    desenvolvimento. Esta devolve o **início do dia corrente**, que é o que a Loteria Federal
+    devolve para a extração publicada hoje. Por construção, uma relação congelada hoje é sempre
+    recusada com ela, e uma congelada ontem sorteia — o roteiro local mostra os dois sem rede.
+
+    Ela não lê o `occurrenceAt` declarado, e é de propósito: levar o instante declarado ao
+    adaptador mudaria a porta inteira por causa de um falso.
+    """
+
+    PUBLICA_SO_A_DATA = True
+
+    def observar(self, *, fonte, referencia):
+        from datetime import datetime, time
+
+        observacao = super().observar(fonte=fonte, referencia=referencia)
+        if observacao.indisponivel:
+            return observacao
+        hoje = timezone.localdate(timezone.now(), ZONA)
+        return Observacao(
+            material_bruto=observacao.material_bruto,
+            ocorrida_nao_antes_de=datetime.combine(hoje, time.min, tzinfo=ZONA),
+        )

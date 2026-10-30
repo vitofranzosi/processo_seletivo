@@ -238,15 +238,53 @@ def _recusar_o_que_nao_pode_sortear(relacao, ocorrencia, metodo):
         # **Os instantes saem no fuso da tela.** Formatados crus, saíam em UTC: a mensagem dizia
         # 03:00 e 14:20 sob uma tela que dizia 00:00 e 11:20, e quem lia concluía que a fonte
         # informara um horário (doc/achado-sorteio-com-extracao-no-dia-do-congelamento.md).
-        raise DomainError(
-            "occurrence_precedes_freeze",
-            "Não é possível afirmar que a ocorrência aconteceu depois do congelamento da relação: "
-            "a fonte a situa a partir de "
-            f"{timezone.localtime(ocorrencia.ocorrida_nao_antes_de):%d/%m/%Y %H:%M}, e a relação "
-            f"foi congelada em {timezone.localtime(relacao.publicada_em):%d/%m/%Y %H:%M}. A "
-            "semente é posterior ao compromisso do universo, e não o contrário.",
-            409,
+        raise _recusa_por_precedencia(relacao, ocorrencia)
+
+
+def _recusa_por_precedencia(relacao, ocorrencia):
+    """A recusa, escrita para quem está conduzindo o sorteio ao vivo (102, FR-2662, FR-2663).
+
+    **O que aconteceu, por que, e o que fazer — nessa ordem, e com datas.** A primeira versão dizia
+    "não é possível afirmar que a ocorrência aconteceu depois do congelamento" e falava de
+    "compromisso do universo"; a saída vinha na quinta frase, depois de quem lê ao vivo já ter
+    parado. E "uma extração de dia posterior" obrigava a fazer a conta: a data vem pronta.
+
+    **A saída tem dois atos, e a ordem importa** (D-004). A relação congelada lê o método da versão
+    que ela cita, e não o vigente: retificar sem suceder deixa a relação presa à extração antiga, e
+    suceder sem retificar congela ainda mais tarde diante dela.
+    """
+    from processo_seletivo.sorteios.domain import viabilidade
+    from processo_seletivo.sorteios.infrastructure.fontes import publica_so_a_data
+
+    fonte = ocorrencia.fonte
+    congelada = f"{timezone.localtime(relacao.publicada_em):%d/%m/%Y %H:%M}"
+    limite = timezone.localtime(ocorrencia.ocorrida_nao_antes_de)
+    extracao = f"a extração {ocorrencia.referencia} de {fonte}"
+    if publica_so_a_data(fonte):
+        o_que_houve = (
+            f"A relação foi congelada em {congelada}, e {extracao} só pode ser datada a partir de "
+            f"{limite:%d/%m/%Y %H:%M}: essa fonte publica a data da extração, sem o horário."
         )
+        dia = (
+            ", trocando a extração por uma de dia posterior ao congelamento da relação nova — se "
+            "ela for congelada hoje, a partir de "
+            f"{viabilidade.primeiro_dia_possivel(timezone.now()):%d/%m/%Y}"
+        )
+    else:
+        o_que_houve = (
+            f"A relação foi congelada em {congelada}, e a fonte situa {extracao} a partir de "
+            f"{limite:%d/%m/%Y %H:%M}, antes disso."
+        )
+        dia = ", trocando a extração por uma posterior ao congelamento da relação nova"
+    return DomainError(
+        "occurrence_precedes_freeze",
+        f"{o_que_houve} O sorteio só vale com extração posterior ao congelamento: é o que prova "
+        "que a lista foi fechada sem conhecer o resultado. Para sortear, nesta ordem: "
+        f"(1) retifique o Edital{dia}; (2) publique a relação nova, sucedendo esta; (3) observe a "
+        "nova ocorrência e realize o sorteio. Publicar a relação nova sem retificar antes não "
+        "resolve.",
+        409,
+    )
 
 
 def _recusar_ato_ja_existente(edital, relacao, ocorrencia, anterior):
