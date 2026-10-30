@@ -26,6 +26,11 @@ from processo_seletivo.requerimentos.models import CargaDeCep
 
 # **Sessenta dias, e não trinta.** O job é mensal; alertar em trinta faria toda execução atrasada
 # por um dia virar incidente. O dobro do intervalo é o que distingue *"atrasou"* de *"parou"*.
+#
+# **E "parou" tem duas causas, e a mais provável não é o job.** Com `--se-mudou`, o job mensal roda
+# sem carregar nada enquanto o `.zip` no lugar for o mesmo — e a base envelhece com o agendador em
+# dia. A frase dizia só "a atualização mensal não está rodando", e mandava quem lê o alerta conferir
+# o lugar errado (auditoria de administração institucional, 30/10).
 DIAS_ATE_ENVELHECER = 60
 
 
@@ -65,7 +70,9 @@ class Command(BaseCommand):
             situacao["dias"] = idade.days
             if idade > timedelta(days=opcoes["dias"]):
                 situacao["alertas"].append(
-                    f"a base de CEP tem {idade.days} dias: a atualização mensal não está rodando"
+                    f"a base de CEP tem {idade.days} dias: ou o .zip não foi trocado por um mais "
+                    "novo, e o job mensal roda sem ter o que carregar, ou o job mensal não está "
+                    "rodando"
                 )
         if ultima is not None and ultima.falha:
             situacao["alertas"].append(

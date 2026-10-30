@@ -10,14 +10,19 @@ demonstração, que costuma ser alguém conhecendo o projeto pela primeira vez.
 from io import StringIO
 
 import pytest
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.utils import timezone
 
+from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
+from processo_seletivo.unidades.models import AutoridadeHabilitada, Unidade
 
 pytestmark = pytest.mark.integration
+
+# O que a demonstração escreve primeiro — Unidades e autoridades —, e o que ela existe para gravar.
+GRAVADOS = (Unidade, AutoridadeHabilitada, RegistroAuditoria, ProcessoSeletivo, Edital, Publicacao)
 
 
 def _executar(**opcoes):
@@ -363,3 +368,15 @@ def test_o_log_nao_chama_o_quarto_edital_de_primeiro():
 
     assert saida.count("Criando Processo e primeiro Edital…") == 1
     assert "onde o Edital reaproveitado é composto" in saida
+
+
+@pytest.mark.django_db
+def test_em_producao_recusa_antes_de_gravar(settings):
+    """Publicação é imutável: um Edital fictício publicado em produção não sai mais de lá."""
+    settings.AMBIENTE_DE_PRODUCAO = True
+    antes = {modelo: modelo.objects.count() for modelo in GRAVADOS}
+
+    with pytest.raises(CommandError, match="não roda em produção"):
+        _executar(codigo="PS-TESTE-0030", numero="15", ano=2026)
+
+    assert {modelo: modelo.objects.count() for modelo in GRAVADOS} == antes

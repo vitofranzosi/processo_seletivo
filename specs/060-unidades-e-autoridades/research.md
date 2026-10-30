@@ -236,7 +236,8 @@ sendo do domínio (R-005).
 ## R-011 — Criar Processo ou Edital exige Unidade ativa
 
 **Decisão.** `create_process_with_first_edital` e `add_edital` (`processos/application/commands.py`)
-chamam `unidades.application.selectors.unidade_ativa(actor.institution_scope)` antes de criar, e
+chamam `unidades.application.selectors.exigir_unidade(actor.institution_scope, ativa=True)` antes de
+criar — planejado como `unidade_ativa`, e implementado com este nome —, e
 recusam com `422 unidade_nao_registrada` quando ela não existe ou está desativada (FR-1110). Os atos
 seguintes sobre o que já existe não consultam a situação.
 

@@ -58,6 +58,14 @@ Job **externo**, fora do processo web, uma vez por mês:
 make DB_NAME=<banco> CEPS_ZIP=/caminho/para/banco-ceps.zip ceps
 ```
 
+**O job não baixa o arquivo: ele carrega o que estiver no lugar.** Alguém precisa pôr o `.zip`
+novo lá, a partir do storage institucional, e sem essa reposição o job roda todo mês sem carregar
+nada — com `--se-mudou`, o mesmo resumo é "nada a fazer" —, até o alerta de 60 dias disparar.
+
+**Responsável pela reposição: (a definir pela instituição).** Nome do setor ou da função, e não de
+pessoa, e onde ele publica o instantâneo novo e o `sha256` dele. Enquanto o campo estiver assim, o
+alerta de idade não tem a quem ser encaminhado.
+
 O que ele faz, nesta ordem:
 
 1. Confere o `sha256`. Igual ao vigente com `--se-mudou`, **não faz nada** e sai com 0.
@@ -94,7 +102,7 @@ Sai com `0` quando está tudo bem, e com `1` quando alguém precisa olhar. A sa�
 | Alerta | O que aconteceu | O que fazer |
 |---|---|---|
 | *não há base de CEP carregada* | instalação nova, ou banco recriado | rodar a carga inicial (§1) |
-| *a base tem N dias* | o job mensal parou | conferir o agendador; rodar à mão para recuperar |
+| *a base tem N dias* | o `.zip` não foi trocado por um mais novo — o job roda e, com `--se-mudou`, não tem o que carregar —, ou o job mensal parou | primeiro, conferir se o arquivo no lugar é o instantâneo mais recente do storage e, se não for, pedir a reposição ao responsável (§2); depois, o agendador; rodar à mão para recuperar |
 | *a última tentativa de carga falhou* | rede, disco, ou arquivo corrompido | ler a falha registrada; rodar de novo |
 
 A idade que dispara o alerta é **60 dias**, e não 30: o job é mensal, e alertar em 30 faria toda

@@ -126,7 +126,7 @@ backend/processo_seletivo/unidades/                 # app novo — R-001
 ├── application/
 │   ├── autoridades.py           # cadastrar, corrigir, encerrar; autoridade_para_o_ato — R-005
 │   ├── sincronizacao.py         # aplicar o arquivo, com trilha — R-003
-│   └── selectors.py             # unidade_ativa, autoridades_vigentes, da_unidade
+│   └── selectors.py             # exigir_unidade, autoridades_vigentes, autoridades_da_unidade
 ├── management/commands/sincronizar_unidades.py
 └── migrations/0001_initial.py, 0002_nada_se_exclui.py
 
