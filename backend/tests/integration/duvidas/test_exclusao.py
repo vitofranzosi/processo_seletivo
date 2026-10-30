@@ -15,6 +15,8 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from processo_seletivo.duvidas.domain.estruturas_do_piloto import RESPONDIDA_E_CONFERIDA, TELA
+from processo_seletivo.auditoria.models import RegistroAuditoria
+from processo_seletivo.duvidas.management.commands.excluir_registros_do_piloto import OPERACAO
 from processo_seletivo.duvidas.models import TrocaDoPiloto
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.tempo import ZONA
@@ -64,6 +66,7 @@ def test_antes_de_90_dias_recusa_e_nada_sai(edital, hoje):
     with pytest.raises(CommandError, match="90 dias depois"):
         _excluir(hoje - timedelta(days=89))
     assert TrocaDoPiloto.objects.count() == 1
+    assert not RegistroAuditoria.objects.filter(operation=OPERACAO).exists()
 
 
 def test_depois_so_as_trocas_ate_a_data_e_so_a_tabela_do_piloto(edital, hoje):
@@ -81,6 +84,27 @@ def test_depois_so_as_trocas_ate_a_data_e_so_a_tabela_do_piloto(edital, hoje):
     assert Edital.objects.filter(pk=edital.pk).exists()
     exclusoes = [c["sql"] for c in consultas.captured_queries if c["sql"].startswith("DELETE")]
     assert exclusoes and all('"duvidas_trocadopiloto"' in sql for sql in exclusoes)
+
+
+def test_a_exclusao_fica_na_trilha_com_a_contagem_e_o_relatorio(edital, hoje):
+    """A saída do comando some com o terminal; a trilha é o que diz quando e sob qual relatório."""
+    relatorio = hoje - timedelta(days=95)
+    _troca(edital, timezone.now() - timedelta(days=200))
+    _troca(edital, timezone.now() - timedelta(days=150))
+    _troca(edital, timezone.now())  # depois do relatório: fica, e não entra na contagem
+
+    _excluir(relatorio)
+
+    evento = RegistroAuditoria.objects.get(operation=OPERACAO)
+    assert evento.actor_subject == "implantacao"
+    assert evento.institution_scope == edital.institution_scope
+    assert evento.aggregate_type == "Unidade"
+    assert evento.detalhe == {"trocas_excluidas": 2, "relatorio_final_em": relatorio.isoformat()}
+
+
+def test_sem_troca_a_excluir_nada_vai_para_a_trilha(edital, hoje):
+    assert _excluir(hoje - timedelta(days=90)).strip() == "0 trocas excluídas"
+    assert not RegistroAuditoria.objects.filter(operation=OPERACAO).exists()
 
 
 def test_data_invalida_recusa(edital):
