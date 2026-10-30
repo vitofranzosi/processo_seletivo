@@ -39,7 +39,7 @@
 - [x] T020 `quickstart.md`: o roteiro manual da homologação e o roteiro do navegador
 - [x] T021 `doc/ativacao-do-sso-institucional.md` e `doc/homologacao-com-o-seletor-de-demonstracao.md`: o que saiu da lista de pendências; `AGENTS.md`: o grupo `navegador` e os pulados
 - [x] T022 `rastreabilidade.md` e `verificacao.md`
-- [ ] T023 `make lint check test-pg`; CI do commit final
+- [x] T023 `make lint check test-pg`; CI do commit final (ver a verificação)
 
 ## Dependências
 

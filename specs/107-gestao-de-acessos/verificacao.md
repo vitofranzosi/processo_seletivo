@@ -50,11 +50,21 @@ ambiente containerizado.
 
 ## Rodada final
 
-Preenchida depois da última execução, sobre o commit que vai ao PR.
+Sobre `6f9b39c7` — o código deste PR; o commit seguinte só acrescenta este registro.
+
+| Execução | Resultado |
+|---|---|
+| `make lint check test-pg`, 4 workers, `DB_NAME=ps107` | lint e `check` verdes; **13758 passando, 12 pulados, 1 falha**, em 727s |
+| A falha: `tests/performance/test_ocupacao.py::test_a_apuracao_cabe_no_dobro_do_tempo_da_emissao_da_ordem` | é o teste de tempo que o `AGENTS.md` registra como oscilante sob 4 workers (*Um teste de tempo oscila sob carga*). Isolado, **5 de 5 passaram** nesta branch. A `107` não toca a ocupação nem as telas dela |
+
+Na primeira rodada, sobre a árvore anterior ao README, o mesmo teste passou e a falha foi a do
+README. As duas rodadas somam 13758 passando; nenhuma falha se repetiu.
 
 ## CI
 
-Preenchido depois do push.
+O CI do PR (#346) roda `uv sync` com os três grupos, instala o Chromium e roda a suíte com 4
+workers, e por isso executa também as jornadas do navegador. O resultado do commit final fica no
+próprio PR; a verificação desta sessão não o substitui.
 
 ## O que depende de fora deste repositório
 
