@@ -1,0 +1,68 @@
+{% load interface_extras %}
+{% comment %}
+O mês (101, FR-2623 a FR-2627). A célula conta os marcos e leva ao dia; o período não ocupa os dias do
+meio — ele aparece pela abertura e pelo encerramento, e é dito como intervalo na lista abaixo da grade
+(D-002). A contagem é escrita, e por isso o destaque não depende de cor (FR-2625). O número do
+Edital vem antes do nome: o corte com reticências come o fim, e a origem não pode sumir.
+
+Duas dimensões por dia, que não se somam (revisão de 29/10, FR-2669): os marcos, que contam e
+destacam, e os períodos que abrangem o dia — uma contagem derivada dos intervalos, com a forma de uma
+barra, que não cria item por dia e não pesa no destaque.
+{% endcomment %}
+<h2 class="titulo-do-mes">{{ leitura.janela.rotulo|capfirst }}</h2>
+<nav class="navegacao-do-mes" aria-label="Outros meses">
+  <a href="{{ leitura.enderecos.mes_anterior }}" rel="prev">‹ Mês anterior</a>
+  <a href="{{ leitura.enderecos.mes_corrente }}">Mês atual</a>
+  <a href="{{ leitura.enderecos.mes_seguinte }}" rel="next">Mês seguinte ›</a>
+</nav>
+
+{% if leitura.vazia %}
+<p class="nenhuma">Nenhum marco previsto em {{ leitura.janela.rotulo }}{% if leitura.filtros.ativos %} com estes filtros{% endif %}.{% if leitura.proximo %} O próximo é em {{ leitura.proximo.dia|date:"d/m/Y" }}: {{ leitura.proximo.nome }} — {{ leitura.proximo.edital.rotulo }}.{% endif %}</p>
+{% endif %}
+
+<div class="moldura-da-grade">
+<table class="grade-do-mes">
+  <caption>{{ leitura.janela.rotulo|capfirst }} — marcos dos cronogramas publicados. Escolha um dia para ver todos os marcos dele.</caption>
+  <thead>
+    <tr>{% for abreviado, nome in leitura.colunas %}<th scope="col"><abbr title="{{ nome }}">{{ abreviado }}</abbr></th>{% endfor %}</tr>
+  </thead>
+  <tbody>
+    {% for semana in leitura.semanas %}
+    <tr>
+      {% for dia in semana %}
+      {% if dia.data %}
+      <td class="dia-do-mes{% if dia.destaque %} varios{% endif %}{% if dia.hoje %} hoje{% endif %}"{% if dia.hoje %} aria-current="date"{% endif %}>
+        <a class="acesso-ao-dia" href="{{ dia.endereco }}"><span class="numero-do-dia" aria-hidden="true">{{ dia.data.day }}</span><span class="oculto">{{ dia.por_extenso }}{% if dia.hoje %}, hoje{% endif %}{% if not dia.quantidade %}, sem marco{% endif %}</span>{% if dia.quantidade %}<span class="quantidade-do-dia">{{ dia.quantidade }}<span class="palavra-dos-marcos"> {{ dia.quantidade|plural:"marco,marcos" }}</span></span>{% endif %}{% if dia.periodos %}<span class="periodos-do-dia"><span class="barra-do-periodo" aria-hidden="true"></span>{{ dia.periodos }}<span class="palavra-dos-periodos"> {{ dia.periodos|plural:"período,períodos" }}</span><span class="oculto"> {{ dia.periodos|plural:"previsto abrange,previstos abrangem" }} o dia</span></span>{% endif %}</a>
+        {% if dia.nomeados %}
+        <ul class="nomes-do-dia">
+          {% for marco in dia.nomeados %}<li><span class="edital-do-nome">{{ marco.edital.numero }}/{{ marco.edital.ano }}</span> {% if marco.tipo == "abertura" %}Abre · {% elif marco.tipo == "encerramento" %}Encerra · {% endif %}{{ marco.nome }}</li>{% endfor %}
+          {% if dia.mais %}<li class="mais-no-dia">mais {{ dia.mais }}</li>{% endif %}
+        </ul>
+        {% endif %}
+      </td>
+      {% else %}
+      <td class="dia-do-mes fora-do-mes"></td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="legenda-da-grade"><span class="exemplo-de-marcos">2 marcos</span> marcos previstos no dia: Evento pontual, abertura ou encerramento de período.
+  <span class="exemplo-de-periodos"><span class="barra-do-periodo" aria-hidden="true"></span>3 períodos</span> períodos previstos que abrangem o dia, do primeiro ao último, sem contar como marco.</p>
+
+<section class="periodos-do-mes" aria-labelledby="titulo-dos-periodos">
+  <h2 id="titulo-dos-periodos">Períodos previstos em {{ leitura.janela.rotulo }}</h2>
+  {% if leitura.periodos %}
+  <ul class="lista-de-periodos">
+    {% for periodo in leitura.periodos %}
+    <li><span class="nome-do-periodo">{{ periodo.nome }}</span> <span class="intervalo-do-periodo">{{ periodo.intervalo }}</span>
+      <span class="origem-do-marco">{{ periodo.edital.rotulo }} — {{ periodo.edital.processo }}</span>
+      <span class="fase-do-marco">{{ periodo.rotulo_da_fase }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Nenhum período previsto toca este mês.</p>
+  {% endif %}
+</section>

@@ -23,6 +23,8 @@ urlpatterns = [
         name="identificar-demonstracao",
     ),
     path("visao-geral", views.visao_geral, name="visao-geral"),
+    # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
+    path("agenda", views.agenda, name="agenda"),
     # O relatório consolidado da unidade (100): a escolha do conjunto, a camada executiva e o PDF,
     # sob a porta da Visão Geral, de onde ele parte.
     path(

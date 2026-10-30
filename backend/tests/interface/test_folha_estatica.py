@@ -262,6 +262,7 @@ QUEM_CARREGA = {
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
         for tela in (
+            "agenda",
             "alocacoes",
             "assistente",
             "comissao",
