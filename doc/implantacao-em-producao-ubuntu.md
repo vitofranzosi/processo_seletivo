@@ -140,7 +140,7 @@ Tudo nesta seção é **constatado**.
 | Logs | JSON, uma linha por evento, no **stdout**, com `correlationId`. Não há arquivo de log | `config/settings/base.py:281-294`, `shared/observability.py` |
 | Correlação | `X-Correlation-ID` de entrada é aceito (ASCII até 100 caracteres), ecoado na resposta e gravado na auditoria | `shared/api/middleware.py` |
 | Auditoria funcional | `RegistroAuditoria`, append-only em três camadas (modelo, gatilho, privilégio), consultável em `/gestao/.../auditoria` e na API | `processo_seletivo/auditoria/` |
-| Autenticação da gestão | **Seletor de identidade de desenvolvimento**; em produção, 503 | `interface/views.py:606-610`, `interface/identidade.py:6-8` |
+| Autenticação da gestão | **Seletor de identidade de desenvolvimento**; em produção, 503 | `interface/views.py:729-730`, `interface/identidade.py:6-8` |
 | Autenticação do candidato | Sem senha: código de 6 dígitos por e-mail, validade de 10 min, 5 tentativas, 5 pedidos por hora por endereço e 30 por hora por origem | `identidade/domain/codigo.py`, `identidade/application/desafio.py:35-42` |
 | Autenticação da API admin | Adaptador de desenvolvimento, que produção recusa; **não há classe institucional** | `seguranca/api/authentication.py`, `production.py:199-228` |
 | CORS | Não existe, e não é necessário: a mesma origem serve tudo | ausência de `django-cors-headers` |
@@ -154,7 +154,7 @@ Tudo nesta seção é **constatado**.
   à rede institucional ou VPN (§27).
 - **"Criar o primeiro usuário administrativo"** não tem caminho. O `django.contrib.admin` não está
   instalado (`base.py:21-26`), o `createsuperuser` criaria um usuário que nada lê, e os papéis da
-  gestão são um dicionário fixo, escolhido no seletor (`interface/identidade.py:20-100`).
+  gestão são um dicionário fixo, escolhido no seletor (`interface/identidade.py:25-131`).
 
 ---
 
@@ -876,7 +876,7 @@ nomeia a variável.
 | `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5; testar: §10.4 |
 | `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:162-167`) |
 | `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:202-209`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:188-196`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:606-610`) |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:190-198`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:794-797`) |
 | `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:228-257`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
 | `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:266,279-284` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
@@ -1306,8 +1306,10 @@ sudo ps-manage situacao_dos_ceps                                  # sai com 0 qu
 - **Fixtures obrigatórias:** nenhuma.
 - **`seed_demo`: NUNCA em produção.** Ele **publica** Editais de demonstração. Publicação é
   imutável, e as tabelas append-only recusam `DELETE` por gatilho e por privilégio: os Editais
-  falsos ficariam públicos para sempre. E como produção recusa a fonte de sorteio de demonstração,
-  ele pode falhar no meio, depois de já ter publicado.
+  falsos ficariam públicos para sempre. **O comando recusa**, antes de qualquer escrita, quando a
+  configuração carregada é a de produção — a marca `AMBIENTE_DE_PRODUCAO`, que só
+  `config/settings/production.py` liga. A recusa não alcança quem o rodar com outro módulo de
+  settings contra o banco de produção: a regra continua sendo não rodá-lo ali.
 
 ---
 
@@ -1559,7 +1561,7 @@ proxy_set_header Connection "";
 proxy_set_header Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
 # SOBRESCREVE, e não acrescenta: o portal confia no PRIMEIRO item deste cabeçalho para o limite de
-# pedidos por origem (portal/views.py:606-610). Com $proxy_add_x_forwarded_for, um cliente escreveria
+# pedidos por origem (portal/views.py:794-797). Com $proxy_add_x_forwarded_for, um cliente escreveria
 # o primeiro item e contornaria o limite.
 proxy_set_header X-Forwarded-For $remote_addr;
 proxy_set_header X-Real-IP $remote_addr;
@@ -2772,11 +2774,12 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 **B-1 — A gestão não tem autenticação de produção.**
 
 - Evidência:
-  - `interface/views.py:606-610` responde 503 quando o seletor está desligado;
+  - `interface/views.py:729-730` responde 503 quando nenhum método de entrada está disponível — o
+    seletor desligado e nenhum outro configurado;
   - `interface/identidade.py:6-8` diz que o seletor "não é fronteira de segurança";
-  - `production.py:87-91` recusa o seletor;
+  - `config/settings/production.py:93-97` recusa o seletor;
   - não há LDAP, OIDC, SAML, `RemoteUserMiddleware`, `LoginView` nem `AUTHENTICATION_BACKENDS`;
-  - os papéis são o dicionário fixo `PAPEIS` (`interface/identidade.py:20-100`).
+  - os papéis são o dicionário fixo `PAPEIS` (`interface/identidade.py:25-131`).
 - Efeito: ninguém cria, publica ou conduz Edital em produção, e não existe primeiro usuário
   administrativo.
 - Correção: um adaptador institucional que produza o `Actor` de `seguranca/domain.py`, com o papel
@@ -2788,8 +2791,10 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 
 - Evidência:
   - o README, § "Antes de receber dado pessoal real", a lista como precondição;
-  - não há comando de expurgo (os únicos comandos são `provisionar_papeis`, `carregar_ceps`,
-    `situacao_dos_ceps`, `sincronizar_unidades`, `despachar_avisos` e `seed_demo`);
+  - não há comando de expurgo de dado pessoal (os comandos são `provisionar_papeis`, `carregar_ceps`,
+    `situacao_dos_ceps`, `sincronizar_unidades`, `despachar_avisos`, `seed_demo`,
+    `avaliar_assistente`, `verificar_servico_de_inferencia` e `excluir_registros_do_piloto` — e o
+    último só alcança as trocas do piloto do assistente, da `071`, e não o dado do candidato);
   - `DesafioDeAcesso.email_canonico` guarda qualquer endereço digitado (`identidade/models.py`).
 - Efeito: dado pessoal acumulado sem prazo, na produção e nos backups.
 - Correção: decisão institucional e, depois dela, rotina no código.
