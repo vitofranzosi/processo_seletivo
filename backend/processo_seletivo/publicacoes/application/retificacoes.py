@@ -423,9 +423,14 @@ def create_retification(*, actor, edital_id, data, idempotency_key, correlation_
         return retificacao, 201
 
 
-def edit_retification(*, actor, retificacao_id, expected_revision, data):
+def alteracoes_declaradas(retificacao):
+    """As Alterações gravadas, na forma vigente — a leitura que a tela de edição funde (103)."""
+    return _changes_payload(retificacao)
+
+
+def edit_retification(*, actor, retificacao_id, expected_revision, data, correlation_id=""):
     require_permission(actor, "retificacao:elaborar")
-    with command_context():
+    with command_context() as now:
         item = _retificacao(actor, retificacao_id)
         if item.status != Retificacao.Status.EM_ELABORACAO:
             raise DomainError("invalid_state", "Retificação não está em elaboração.", 409)
@@ -452,6 +457,20 @@ def edit_retification(*, actor, retificacao_id, expected_revision, data):
         )
         _replace_changes(item, alteracoes, conteudo)
         item.refresh_from_db()
+        # **A edição entra na trilha** (103, D-006, FR-2723). Mudar o conteúdo normativo de um ato
+        # em preparação é operação sensível (Princípio III), e até a 103 ela não deixava rastro: a
+        # trilha dizia quem criou e quem submeteu, e não quem compôs o que foi submetido. A
+        # operação é a do rascunho do Edital, que a trilha já sabe ler.
+        record_event(
+            actor=actor,
+            permission="retificacao:elaborar",
+            operation="ALTERAR_RASCUNHO",
+            aggregate=item,
+            now=now,
+            correlation_id=correlation_id,
+            previous_state=item.status,
+            previous_revision=expected_revision,
+        )
         return item
 
 

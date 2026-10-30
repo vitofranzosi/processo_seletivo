@@ -129,6 +129,28 @@ permanecem preservados.</p>
 
 </div>
 
+{% comment %}
+**Retificações em curso** (103, FR-2701 a FR-2704). Até a 103, a Retificação só tinha porta depois de
+publicada — o link de "Documentos publicados", abaixo. Em elaboração, em revisão ou homologada, nem
+quem a criou a reencontrava, e a reunião de 29/10 só a alcançou colando o endereço copiado de outra
+sessão (AUD-RET-01). Logo depois de "O que fazer agora", porque é dali que a pessoa vem procurar o
+que lhe cabe.
+
+O estado vazio só no Edital publicado: é o único que se retifica, e "nenhuma em curso" num Edital em
+elaboração seria responder a uma pergunta que ninguém fez.
+{% endcomment %}
+{% if retificacoes_em_curso or edital.status == "PUBLICADO" %}
+<section aria-labelledby="retificacoes-titulo" class="cartao">
+  <h2 id="retificacoes-titulo">Retificações em curso</h2>
+  {% if retificacoes_em_curso %}
+  {% include "interface/_retificacoes_em_curso.html" with em_curso=retificacoes_em_curso %}
+  {% else %}
+  <p class="nenhuma">Nenhuma Retificação em curso.{% if documentos|length > 1 %} As já publicadas
+    estão em "Documentos publicados", abaixo.{% endif %}</p>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if documentos %}
 <section aria-labelledby="documentos-titulo" class="cartao">
   <h2 id="documentos-titulo">Documentos publicados</h2>

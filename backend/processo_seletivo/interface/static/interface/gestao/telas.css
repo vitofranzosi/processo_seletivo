@@ -834,3 +834,17 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
 .passos-da-anulacao{margin:.5rem 0 .75rem;padding-left:1.3rem;font-size:.875rem;
   color:var(--texto-fraco)}
 .passos-da-anulacao li{margin:.2rem 0}
+
+
+/* As Retificações em curso de um Edital (103, FR-2701, FR-2702), no detalhe do Edital e na tela de
+   Retificar. Um item por linha, com a situação ao lado do link e o resto embaixo: a justificativa
+   pode ser longa, e a passagem de bastão é a frase que a pessoa veio ler. Quebra palavra longa para
+   que a 375 px a página não role para o lado (FR-2708). */
+.retificacoes-em-curso{list-style:none;padding:0;margin:0}
+.retificacoes-em-curso li{padding:.6rem 0;border-bottom:1px solid var(--fundo);
+  overflow-wrap:anywhere}
+.retificacoes-em-curso li:last-child{border-bottom:none}
+.retificacoes-em-curso .situacao{margin-left:.4rem}
+.retificacoes-em-curso .quem-criou{display:block;color:var(--texto-fraco);font-size:.8125rem}
+.retificacoes-em-curso .justificativa{display:block;margin:.2rem 0}
+.retificacoes-em-curso .bastao{display:block;margin:.4rem 0}

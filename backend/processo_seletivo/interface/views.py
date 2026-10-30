@@ -195,7 +195,9 @@ from processo_seletivo.publicacoes.application.contexto_do_ato import (
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
+    alteracoes_declaradas,
     conteudo_base,
+    edit_retification,
 )
 from processo_seletivo.publicacoes.application.selectors import (
     effective_version,
@@ -205,6 +207,8 @@ from processo_seletivo.publicacoes.application.selectors import (
 )
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.elevacao import elevar
+from processo_seletivo.publicacoes.domain.fusao import aplicar as aplicar_alteracoes
+from processo_seletivo.publicacoes.domain.fusao import fundir
 from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.publicacoes.infrastructure.pdf import MODO_PREVIA, render_edital_pdf
 from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
@@ -274,6 +278,17 @@ def lista(request):
             ]
             # A ordem da linha: as frequentes primeiro, as terminais à parte (057, FR-1049).
             edital.grupo = acoes.da_linha(edital.acoes)
+
+    # **A entrada de quem homologa e de quem publica** (103, FR-2706, D-002). A Lista é a primeira
+    # tela do dia de todo papel, e era a Retificação que não aparecia nela: quem tinha o próximo ato
+    # só o encontrava pela URL que outra pessoa copiasse. Uma consulta para a página inteira
+    # (FR-2707) — a marca precisa da situação e de dois nomes, e nada mais.
+    em_curso = atos_retificacao.em_curso_por_edital(
+        (edital.id for processo in processos for edital in processo.editais.all()), ator
+    )
+    for processo in processos:
+        for edital in processo.editais.all():
+            edital.retificacoes_em_curso = em_curso.get(edital.id, [])
 
     # A base contextual da 011: sem isto a tela decide só por `ator.permissions` e diz a quem
     # preside uma comissão que sua conta não possui papel algum.
@@ -3779,6 +3794,9 @@ def detalhe(request, edital_id):
             "trilha": _trilha(edital),
             "participantes": participantes,
             "documentos": _documentos_publicados(edital),
+            # As Retificações ainda não publicadas (103, FR-2701). As publicadas estão em
+            # `documentos`, e não se repetem aqui (FR-2703): a seção é do trabalho em curso.
+            "retificacoes_em_curso": atos_retificacao.em_curso(edital, ator),
             "pendencias": pendencias,
             "acoes": conjunto,
             # O mesmo conjunto, repartido pelo peso de cada ação (057, D-002). É de `grupo` que
@@ -4235,12 +4253,45 @@ def retificar(request, edital_id):
     # está, e a leitura pública continua literal (T-002).
     projecao = conteudo_base(base)
 
+    def gravar(todas, calculados):
+        nova, _ = criar_retificacao_com_gestos(
+            gestos=[gesto_na_retificacao.registro(c) for c in calculados],
+            actor=ator,
+            edital_id=edital.id,
+            data={
+                "baseSnapshotId": base.id,
+                "justification": (request.POST.get("justificativa") or "").strip(),
+                "changes": todas,
+                **_vigencia(request.POST),
+            },
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=request.correlation_id,
+        )
+        return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
+
+    return _compor_retificacao(request, ator, edital, base, projecao, dados, gravar)
+
+
+def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, edicao=None):
+    """O formulário de Retificar, para criar ou para editar (103, R-005).
+
+    **Um miolo, duas portas.** A criação parte do conteúdo vigente e grava uma Retificação nova; a
+    edição parte do conteúdo **proposto** de uma Retificação em elaboração e grava nela mesma. Tudo
+    o que fica entre abrir a tela e confirmar — derivar as Alterações, reexibir o digitado,
+    conferir, recusar — é o mesmo, e é por isso que mora aqui uma vez: uma segunda cópia deste
+    formulário divergiria na primeira correção.
+
+    `gravar(todas, calculados)` é o que a confirmação faz, e devolve o redirecionamento. `edicao` é
+    `None` na criação; na edição, o que a tela precisa dizer da Retificação que está sendo editada.
+    """
     erros, resumo = [], []
     # Os gestos de "aplicar a todos" declarados na tela (051, R-011). Lidos **antes** de tudo o que
-    # pode recusar o envio: uma recusa não pode apagar da tela o gesto que a pessoa declarou.
+    # pode recusar o envio: uma recusa não pode apagar da tela o gesto que a pessoa declarou. **Não
+    # na edição** (103, D-008, FR-2724): o gesto é registrado como ato próprio ao criar, e
+    # conciliá-lo com o que o rascunho já declara é outra feature.
     gestos = (
         gesto_na_retificacao.declarados(dados, retificacao_ui.campos_editaveis(projecao))
-        if dados is not None
+        if dados is not None and edicao is None
         else []
     )
     calculados, consequencias, todas, proposto = [], [], [], projecao
@@ -4278,7 +4329,10 @@ def retificar(request, edital_id):
                 todas = alteracoes + [
                     alteracao for calculado in calculados for alteracao in calculado.alteracoes
                 ]
-                if not todas and not calculados:
+                # Na edição, nenhuma diferença é legítimo: a pessoa pode estar só corrigindo a
+                # justificativa ou desfazendo uma remoção. Se o ato inteiro ficar vazio, quem diz é
+                # a gravação, depois da fusão (103, FR-2718).
+                if not todas and not calculados and edicao is None:
                     erros.append(
                         "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
                         "conteúdo para ter efeito."
@@ -4295,26 +4349,13 @@ def retificar(request, edital_id):
                             " marque um Perfil ou desfaça o gesto."
                             for c in vazios
                         )
-                    elif not todas:
+                    elif not todas and edicao is None:
                         erros.append(
                             "Nenhum campo foi alterado. Uma Retificação precisa mudar algum "
                             "conteúdo para ter efeito."
                         )
                     else:
-                        nova, _ = criar_retificacao_com_gestos(
-                            gestos=[gesto_na_retificacao.registro(c) for c in calculados],
-                            actor=ator,
-                            edital_id=edital.id,
-                            data={
-                                "baseSnapshotId": base.id,
-                                "justification": (request.POST.get("justificativa") or "").strip(),
-                                "changes": todas,
-                                **_vigencia(request.POST),
-                            },
-                            idempotency_key=request.POST.get("chave_idempotencia", ""),
-                            correlation_id=request.correlation_id,
-                        )
-                        return redirect(reverse("interface:retificacao-detalhe", args=[nova.id]))
+                        return gravar(todas, calculados)
             except ValueError as exc:
                 erros.append(str(exc))
             except DomainError as exc:
@@ -4340,7 +4381,7 @@ def retificar(request, edital_id):
         retificacao_ui.campos_editaveis(projecao, descricao_do_artefato=_descricao_do_artefato),
         dados,
     )
-    if ator.can("retificacao:elaborar"):
+    if ator.can("retificacao:elaborar") and edicao is None:
         gesto_na_retificacao.anotar_botoes(grupos, projecao)
     blocos = gesto_na_retificacao.blocos(calculados, projecao)
     return render(
@@ -4399,9 +4440,28 @@ def retificar(request, edital_id):
             "alteracoes_dos_gestos": sum(bloco["alteracoes"] for bloco in blocos),
             "alteracoes_digitadas": len(todas) - sum(bloco["alteracoes"] for bloco in blocos),
             "erros": erros,
-            "justificativa": (request.POST.get("justificativa") or "") if dados else "",
-            "vigencia": (request.POST.get("vigencia") or "") if dados else "",
+            "justificativa": (
+                (request.POST.get("justificativa") or "")
+                if dados
+                else (edicao["justificativa"] if edicao else "")
+            ),
+            "vigencia": (
+                (request.POST.get("vigencia") or "")
+                if dados
+                else (edicao["vigencia"] if edicao else "")
+            ),
             "pode_elaborar": ator.can("retificacao:elaborar"),
+            # A edição do mesmo registro (103): a tela diz qual Retificação está editando, carrega a
+            # revisão que mostrou (FR-2722) e as remoções que se podem desfazer (FR-2719).
+            "edicao": edicao,
+            "acao_do_formulario": (
+                reverse("interface:retificacao-editar", args=[edicao["retificacao"].id])
+                if edicao
+                else reverse("interface:retificar", args=[edital.id])
+            ),
+            # As Retificações que já estão em curso, antes de compor outra (103, FR-2709, D-005).
+            # Não impede: só diz o que existe, e oferece continuar a que está em elaboração.
+            "em_curso": [] if edicao else atos_retificacao.em_curso(edital, ator),
             # Nasce no primeiro GET e atravessa o resumo até a confirmação: reenviar o mesmo
             # formulário devolve a Retificação já criada em vez de criar uma segunda.
             "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
@@ -4421,12 +4481,131 @@ def _vigencia(dados):
     return {"effectiveAt": momento}
 
 
+REVISAO_MUDOU = (
+    "Esta Retificação foi alterada depois que você abriu a tela — por outra pessoa, ou por você em "
+    "outra aba. Nada foi gravado. Abra a Retificação de novo para partir da versão atual."
+)
+
+
+@require_http_methods(["GET", "POST"])
+def retificacao_editar(request, retificacao_id):
+    """Edita a mesma Retificação em elaboração (103, US2, FR-2716 a FR-2724).
+
+    **A devolvida volta a ser editável pela tela** (D-001, AUD-RET-04). A devolução prometia "pode
+    ser editada novamente", e só a API cumpria: pela tela, quem corrigia compunha outra Retificação,
+    e a devolvida ficava em elaboração para sempre.
+
+    O formulário é o de Retificar, sobre o conteúdo **proposto** — a base com o que o rascunho já
+    declara —, para que a pessoa veja o que declarou. O que volta dele é a diferença sobre esse
+    proposto; a fusão a junta às Alterações gravadas e confere que o ato inteiro reproduz o que a
+    pessoa conferiu (R-006). Quem grava é `edit_retification`, com a revisão que a tela mostrou.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    # Fora do escopo, "não encontrado" — o mesmo de toda tela de Retificação, e já inventariado na
+    # 033. As outras duas recusas se distinguem pela frase (FR-2727).
+    item = _retificacao_do_ator(ator, retificacao_id)
+    if not ator.can("retificacao:elaborar"):
+        raise DomainError(
+            "forbidden",
+            "Editar uma Retificação exige a permissão retificacao:elaborar, que não está entre as "
+            "suas. Nada foi alterado.",
+            403,
+        )
+    if item.status != Retificacao.Status.EM_ELABORACAO:
+        raise DomainError(
+            "invalid_state",
+            f"Esta Retificação está {interface_extras.situacao(item.status).lower()}, e só a "
+            "Retificação em elaboração se edita. Para corrigi-la, quem homologa precisa devolvê-la "
+            "para elaboração. Nada foi alterado.",
+            409,
+        )
+    dados = request.POST if request.method == "POST" else None
+    # **A revisão antes de ler o formulário** (D-007, R-007). As referências dos campos são posições
+    # no proposto que a tela mostrou; lidas contra outro proposto, apontariam para outro campo. A
+    # corrida entre esta leitura e a gravação é do `compare_and_swap` do comando.
+    if dados is not None and dados.get("revisao") != str(item.revision):
+        raise DomainError("stale_revision", REVISAO_MUDOU, 412)
+
+    base = item.base_snapshot
+    projecao_da_base = conteudo_base(base)
+    existentes = alteracoes_declaradas(item)
+    # O proposto mostrado leva **todas** as remoções, desfeitas ou não: é dele que saem as
+    # referências do formulário, e elas não podem mudar porque a pessoa marcou uma caixa.
+    proposto = aplicar_alteracoes(projecao_da_base, existentes)
+    desfeitas = {
+        int(indice)
+        for indice in (dados.getlist("desfazer-remocao") if dados is not None else [])
+        if str(indice).isdigit()
+    }
+
+    def gravar(todas, calculados):
+        fundidas, _ = fundir(projecao_da_base, existentes, todas, desfeitas=desfeitas)
+        if not fundidas:
+            raise ValueError(
+                "Com esta edição a Retificação não mudaria conteúdo nenhum do Edital. Desfaça "
+                "menos, ou, se ela não é mais necessária, peça a quem gere o Processo que a "
+                "cancele."
+            )
+        try:
+            edit_retification(
+                actor=ator,
+                retificacao_id=item.id,
+                expected_revision=item.revision,
+                data={
+                    "baseSnapshotId": base.id,
+                    "justification": (request.POST.get("justificativa") or "").strip(),
+                    "changes": fundidas,
+                    **_vigencia(request.POST),
+                },
+                correlation_id=request.correlation_id,
+            )
+        except DomainError as exc:
+            if exc.code == "stale_revision":
+                raise DomainError("stale_revision", REVISAO_MUDOU, 412) from exc
+            raise
+        return redirect(f"{reverse('interface:retificacao-detalhe', args=[item.id])}?ato=editar")
+
+    nomes = {
+        grupo["caminho"]: grupo["titulo"]
+        for grupo in retificacao_ui.campos_editaveis(projecao_da_base)
+    }
+    vigencia = (
+        timezone.localtime(item.effective_at, ZONA_INSTITUCIONAL).strftime("%Y-%m-%dT%H:%M")
+        if item.effective_at
+        else ""
+    )
+    edicao = {
+        "retificacao": item,
+        "revisao": item.revision,
+        "justificativa": item.justification,
+        "vigencia": vigencia,
+        "remocoes": [
+            {
+                "indice": indice,
+                "descricao": nomes.get(alteracao["targetPath"], alteracao["targetPath"]),
+                "desfeita": indice in desfeitas,
+            }
+            for indice, alteracao in enumerate(existentes)
+            if alteracao["operation"] == "REMOVE"
+        ],
+    }
+    return _compor_retificacao(
+        request, ator, item.edital, base, proposto, dados, gravar, edicao=edicao
+    )
+
+
 @require_http_methods(["GET"])
 def retificacao_detalhe(request, retificacao_id):
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return identidade.pedir_identificacao(request)
     item = _retificacao_do_ator(ator, retificacao_id)
+    # As quatro perguntas da tela (103, FR-2710): onde está — a trilha do cabeçalho —, em que
+    # situação, quem age a seguir e o que a pessoa pode fazer. As duas últimas saem das mesmas
+    # ofertas, para que a frase e o botão não divirjam (FR-2712, FR-2730).
+    ofertas = atos_retificacao.ofertas(item, ator)
     return render(
         request,
         "interface/retificacao_detalhe.html",
@@ -4434,7 +4613,9 @@ def retificacao_detalhe(request, retificacao_id):
             "retificacao": item,
             "edital": item.edital,
             "alteracoes": _alteracoes_legiveis(item),
-            "atos": list(atos_retificacao.disponiveis(item, ator)),
+            "ofertas": ofertas,
+            "proximo_passo": atos_retificacao.proximo_passo(item, ator, ofertas),
+            "pode_editar": atos_retificacao.pode_editar(item, ator),
             "vigencia": item.effective_at,
             "publicada": item.publication,
         },
@@ -4710,6 +4891,10 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         "alteracoes": _alteracoes_legiveis(item),
         "impedimento": impedimento,
         "recusa_certa": bool(impedimento),
+        # A passagem de bastão dita antes do ato (103, FR-2728), e a segregação que o ato vai
+        # armar para a publicação (FR-2726) — as duas como no Edital, e pelas mesmas funções.
+        "entrega": atos_retificacao.entrega(ato),
+        "fecharia_a_publicacao": atos_retificacao.fecharia_a_publicacao(item, ator, ato),
         "vigencia": item.effective_at,
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         "escolha_da_autoridade": _escolha_da_autoridade(item.edital),

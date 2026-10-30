@@ -184,6 +184,7 @@ class EditRetificationView(APIView):
             retificacao_id=retificacao_id,
             expected_revision=parse_if_match(request.headers.get("If-Match")),
             data=serializer.validated_data,
+            correlation_id=request.correlation_id,
         )
         response = Response(RetificacaoResponseSerializer(item).data)
         response["ETag"] = etag(item.revision)

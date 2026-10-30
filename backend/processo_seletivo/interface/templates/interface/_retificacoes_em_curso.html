@@ -1,0 +1,26 @@
+{% load interface_extras %}
+{% comment %}
+As Retificações em curso de um Edital (103, FR-2701, FR-2702, R-003). O detalhe do Edital e a tela de
+Retificar desenham este mesmo parcial, a partir dos mesmos resumos (`atos_retificacao.resumo`), para
+que as duas telas não divirjam sobre a mesma Retificação.
+
+Cada item responde ao que a reunião de 29/10 não conseguiu ler em tela nenhuma: em que situação a
+Retificação está, quem age a seguir — por papel, nunca por pessoa (FR-2711) — e, quando é a pessoa
+que olha, qual ato é dela. O link leva ao detalhe, que já é aberto a todo ator do escopo: listar não
+amplia acesso nenhum.
+{% endcomment %}
+<ul class="retificacoes-em-curso">
+  {% for item in em_curso %}
+  <li>
+    <a href="{{ item.url }}">Retificação de {{ item.retificacao.created_at|date:"d/m/Y H:i" }}</a>
+    <span class="situacao s-{{ item.retificacao.status }}">{{ item.retificacao.status|situacao }}</span>
+    <span class="quem-criou">criada por {{ item.retificacao.created_by }}</span>
+    <span class="justificativa">{{ item.retificacao.justification|truncatechars:160 }}</span>
+    <span class="bastao">
+      {% if item.meu_ato %}<strong>O próximo ato é seu:</strong> {{ item.passo.ato }}.
+      {% else %}<strong>Aguardando {{ item.passo.papel }}</strong> para {{ item.passo.ato }}.{% if item.passo.observacao %} {{ item.passo.observacao }}{% endif %}{% endif %}
+    </span>
+    {% if com_continuar and item.editar %}<a class="acao" href="{{ item.editar }}">Continuar a elaboração</a>{% endif %}
+  </li>
+  {% endfor %}
+</ul>

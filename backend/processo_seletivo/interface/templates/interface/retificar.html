@@ -1,16 +1,42 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
-{% block titulo %}Retificar Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Retificar</span></nav>{% endblock %}
+{% block titulo %}{% if edicao %}Editar a Retificação do Edital{% else %}Retificar Edital{% endif %} {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} {% if edicao %}<a href="{% url 'interface:retificacao-detalhe' edicao.retificacao.id %}">Retificação</a> › <span aria-current="page">Editar</span>{% else %}<span aria-current="page">Retificar</span>{% endif %}</nav>{% endblock %}
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/retificar.css' %}">{% endblock %}
 {% block conteudo %}
+{% if edicao %}
+<h1>Editar a Retificação do Edital {{ edital.number }}/{{ edital.year }}</h1>
+<p class="sub">A mesma Retificação, criada por {{ edicao.retificacao.created_by }} em
+  {{ edicao.retificacao.created_at|date:"d/m/Y H:i" }}. O que você não tocar continua como está.</p>
+{% else %}
 <h1>Retificar Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">Altere os campos que precisam mudar. O que você não tocar permanece como está.</p>
+{% endif %}
 
 {% comment %} A resposta ao envio logo abaixo do título, antes de "Como funciona" (083, `FR-1856`): é ela que
    a pessoa procura ao voltar do clique, como na Distribuição e nas telas da 080. {% endcomment %}
 {% include "interface/_erros.html" with titulo_da_recusa="Não foi possível prosseguir:" %}
 
-{% if pode_elaborar %}
+{% comment %}
+**As Retificações já em curso, antes de compor outra** (103, FR-2709, D-005). Quem não encontrava o
+próprio rascunho começava outro (AUD-RET-01); agora a tela diz o que existe e oferece continuar a
+que está em elaboração. Não impede compor outra: duas Retificações em curso são legítimas, e a
+publicação já confere conflito de conteúdo entre elas.
+{% endcomment %}
+{% if em_curso %}
+<section class="aviso" aria-labelledby="em-curso-titulo">
+  <h2 id="em-curso-titulo">Este Edital já tem {{ em_curso|length }} Retificação{{ em_curso|length|pluralize:"ões" }} em curso</h2>
+  {% include "interface/_retificacoes_em_curso.html" with com_continuar=pode_elaborar %}
+  <p class="ajuda">Para corrigir uma delas, continue a elaboração dela. Para tratar de outro assunto,
+    componha uma nova abaixo.</p>
+</section>
+{% endif %}
+
+{% if edicao and pode_elaborar %}
+<p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>proposto</em> por esta
+Retificação: o vigente com o que ela já declara. Altere o que precisa mudar; o que já foi declarado e
+você não tocar continua no ato, e o campo que voltar ao valor vigente deixa de ser alterado. Nada
+muda para o público até a Retificação ser publicada.</p>
+{% elif pode_elaborar %}
 <p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>vigente</em> do Edital.
 Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Marcar
 <em>Remover do Edital</em> tira a linha inteira da versão futura — os campos dela passam a não ter
@@ -28,7 +54,7 @@ corrige é o caminho que não termina.
 
 {% if resumo or gestos or consequencias %}
 <section aria-labelledby="resumo-titulo" class="consequencias">
-  <h2 id="resumo-titulo">O que vai mudar{% if gestos %}{% if alteracoes_do_ato %} ({{ alteracoes_do_ato }}){% endif %}{% else %} ({{ resumo|length }}){% endif %}</h2>
+  <h2 id="resumo-titulo">{% if edicao %}O que muda em relação ao rascunho{% else %}O que vai mudar{% endif %}{% if gestos %}{% if alteracoes_do_ato %} ({{ alteracoes_do_ato }}){% endif %}{% else %} ({{ resumo|length }}){% endif %}</h2>
   {% comment %}
   Com gesto, o número do título soma o que foi digitado e o que os gestos aplicam — e a tabela abaixo
   mostra só o digitado. Sem esta frase, "14" sobre uma tabela de duas linhas parece erro de conta.
@@ -117,7 +143,7 @@ um "Ir para" ou de um "Ir ao cartão de origem" termina em âncora — e a tela 
 conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou de pedir para ver.
 {% endcomment %}
 <form method="post" enctype="multipart/form-data" id="formulario-da-retificacao"
-      action="{% url 'interface:retificar' edital.id %}"{% if resumo or gestos %} data-conferido{% endif %}>
+      action="{{ acao_do_formulario }}"{% if resumo or gestos %} data-conferido{% endif %}>
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% comment %}
@@ -125,6 +151,10 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
   linha, uma Publicação no intervalo faria a mesma referência apontar para outro item.
   {% endcomment %}
   <input type="hidden" name="base" value="{{ base.id }}">
+  {% comment %} A revisão que esta tela mostrou (103, FR-2722, D-007): se a Retificação mudar antes da
+     gravação, o servidor recusa sem ler o formulário, porque as referências dos campos falam do
+     proposto de agora, e não do de depois. {% endcomment %}
+  {% if edicao %}<input type="hidden" name="revisao" value="{{ edicao.revisao }}">{% endif %}
   {% comment %}
   Os gestos declarados atravessam as idas e voltas até a confirmação (051, R-011), na ordem em que
   foram declarados; a caixa de cada destino e a impressão moram no bloco do gesto, na conferência.
@@ -288,6 +318,17 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
         <span class="ajuda" id="ajuda-just">Fica registrada no ato e na consulta pública.
           Exigida para criar a Retificação; não para conferir o que vai mudar.</span>
       </p>
+      {% comment %} As remoções que o rascunho já declara (103, FR-2719): a entidade removida não está
+         no proposto, e por isso não há cartão dela acima onde desfazer — o caminho de volta é aqui. {% endcomment %}
+      {% if edicao.remocoes %}
+      <fieldset class="campo largo remocoes-declaradas">
+        <legend>Remoções já declaradas</legend>
+        {% for remocao in edicao.remocoes %}
+        <p><input type="checkbox" id="desfazer-{{ remocao.indice }}" name="desfazer-remocao" value="{{ remocao.indice }}"{% if remocao.desfeita %} checked{% endif %}>
+          <label for="desfazer-{{ remocao.indice }}">Desfazer a remoção de {{ remocao.descricao }}</label></p>
+        {% endfor %}
+      </fieldset>
+      {% endif %}
       <p class="campo">
         <label for="vigencia">Vigência (opcional)</label>
         <input type="datetime-local" id="vigencia" name="vigencia" value="{{ vigencia }}"
@@ -313,10 +354,17 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
     Só com Alteração a criar: o gesto cujos destinos já declaram o valor da origem não produz nenhuma,
     e oferecer "Criar Retificação (0 Alterações)" seria oferecer a recusa.
     {% endcomment %}
+    {% comment %} Na edição, gravar não depende de haver diferença: corrigir só a justificativa, ou só
+       desfazer uma remoção, é edição legítima (103, FR-2718). {% endcomment %}
+    {% if edicao and pode_elaborar %}
+    <button type="submit" name="confirmar" value="1" class="botao">Gravar a Retificação</button>
+    <a href="{% url 'interface:retificacao-detalhe' edicao.retificacao.id %}" class="acao">Voltar sem gravar</a>
+    {% else %}
     {% if pode_elaborar and alteracoes_do_ato %}
     <button type="submit" name="confirmar" value="1" class="botao">Criar Retificação{% if gestos %} ({{ alteracoes_do_ato }} Alterações){% endif %}</button>
     {% endif %}
     <a href="{% url 'interface:detalhe' edital.id %}" class="acao">Voltar</a>
+    {% endif %}
   </p>
 </form>
 {% endif %}

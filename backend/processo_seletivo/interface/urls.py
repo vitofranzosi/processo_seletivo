@@ -169,6 +169,13 @@ urlpatterns = [
         views.retificacao_detalhe,
         name="retificacao-detalhe",
     ),
+    # A edição do mesmo registro (103, FR-2716): a devolvida volta a ser editável pela tela, e não
+    # só pela API.
+    path(
+        "retificacoes/<uuid:retificacao_id>/editar",
+        views.retificacao_editar,
+        name="retificacao-editar",
+    ),
     path(
         "retificacoes/<uuid:retificacao_id>/atos/<slug:acao>",
         views.praticar_ato_retificacao,

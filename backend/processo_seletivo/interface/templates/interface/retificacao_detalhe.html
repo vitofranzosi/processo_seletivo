@@ -7,7 +7,8 @@
 <p class="sub">{{ retificacao.justification }}
   <span class="situacao s-{{ retificacao.status }}">{{ retificacao.status|situacao }}</span></p>
 
-{% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
+{% if request.GET.ato == "editar" %}<p class="sucesso" role="status">Alterações gravadas nesta mesma Retificação.</p>
+{% elif request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
 
 {% comment %} O que fazer antes do que já se sabe, como no detalhe do Processo e no do Edital (078,
    `FR-1765`; 083, `FR-1857`): à esquerda a 1280 px, em cima a 375. E pelo topo, como lá (057,
@@ -15,16 +16,55 @@
 <div class="colunas ao-topo">
   <section aria-labelledby="acoes-titulo" class="cartao">
     <h2 id="acoes-titulo">O que fazer agora</h2>
-    {% comment %} A marca descreve o ato, como no Processo e no Edital (090, `FR-2060`). {% endcomment %}
+    {% comment %}
+    **Quem age a seguir** (103, FR-2711, FR-2712, AUD-RET-02): a passagem de bastão que o Edital tem
+    desde a 007, com a mesma classe e a mesma frase. Depois de submeter, a tela dizia só "Ato
+    registrado", e quem submetia não sabia a quem tinha entregado. Por papel, nunca por pessoa — e
+    nada disto é persistido: é leitura da situação e das ofertas abaixo.
+    {% endcomment %}
+    {% if proximo_passo %}
+    <p class="bastao">
+      {% if proximo_passo.sou_eu %}<strong>O próximo ato é seu:</strong> {{ proximo_passo.ato }}.
+      {% else %}<strong>Aguardando {{ proximo_passo.papel }}</strong> para {{ proximo_passo.ato }}.{% endif %}
+      {% if proximo_passo.observacao %}<span class="ajuda">{{ proximo_passo.observacao }}</span>{% endif %}
+    </p>
+    {% else %}
+    <p class="ajuda">Esta Retificação está encerrada ({{ retificacao.status|situacao|lower }}): não há ato a
+      praticar nem quem aguardar.</p>
+    {% endif %}
+
+    {% comment %} A devolução diz por quê (103, FR-2714): o motivo é o que orienta quem corrige, e até a
+       103 ele só existia na trilha. É o da última devolução; as anteriores estão na auditoria. {% endcomment %}
+    {% if retificacao.status == "EM_ELABORACAO" and retificacao.return_reason %}
+    <p class="aviso"><strong>Devolvida para correção.</strong> Motivo: {{ retificacao.return_reason }}</p>
+    {% endif %}
+
+    {% comment %}
+    A marca descreve o ato, como no Processo e no Edital (090, `FR-2060`). O ato que a segregação vai
+    recusar aparece **desabilitado com o motivo** (103, FR-2725, AUD-RET-03), no desenho de
+    `_acao_do_edital.html`: nem oferecido como caminho para a recusa, nem escondido.
+
+    "Editar a Retificação" vem primeiro, e não é ato: não confirma nem registra, leva à tela que
+    edita o mesmo registro (FR-2715). Só em elaboração, e só a quem elabora.
+    {% endcomment %}
     <ul class="lista-acoes">
-      {% for ato in atos %}
+      {% if pode_editar %}
+      <li><a class="botao" href="{% url 'interface:retificacao-editar' retificacao.id %}">Editar a Retificação</a></li>
+      {% endif %}
+      {% for oferta in ofertas %}
       <li>
-        <a class="botao {% if ato.interrupcao %}perigoso{% elif ato.irreversivel %}{% else %}secundario{% endif %}"
-           href="{% url 'interface:retificacao-ato' retificacao.id ato.chave %}"{% if ato.irreversivel %} aria-describedby="irreversivel-{{ ato.chave }}"{% endif %}>{{ ato.rotulo }}</a>
-        {% if ato.irreversivel %}<span class="marca-irreversivel" id="irreversivel-{{ ato.chave }}">irreversível</span>{% endif %}
+        {% if oferta.disponivel %}
+        <a class="botao {% if oferta.ato.interrupcao %}perigoso{% elif oferta.ato.irreversivel %}{% else %}secundario{% endif %}"
+           href="{{ oferta.url }}"{% if oferta.ato.irreversivel %} aria-describedby="irreversivel-{{ oferta.ato.chave }}"{% endif %}>{{ oferta.ato.rotulo }}</a>
+        {% if oferta.ato.irreversivel %}<span class="marca-irreversivel" id="irreversivel-{{ oferta.ato.chave }}">irreversível</span>{% endif %}
+        {% else %}
+        <span class="botao desabilitado" aria-disabled="true"
+              aria-describedby="motivo-{{ oferta.ato.chave }}">{{ oferta.ato.rotulo }}</span>
+        <span class="motivo" id="motivo-{{ oferta.ato.chave }}">{{ oferta.motivo }}</span>
+        {% endif %}
       </li>
       {% empty %}
-      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+      {% if not pode_editar %}<li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>{% endif %}
       {% endfor %}
     </ul>
   </section>
@@ -49,6 +89,28 @@
     {% if not publicada %}<p class="ajuda">Nada muda para o público antes da Publicação.</p>{% endif %}
   </section>
 </div>
+
+{% comment %} Quem já atuou (103, FR-2713), na forma do cartão do Edital: quem herda a Retificação de
+   outra sessão precisa saber de quem ela vem, e a segregação se lê nestes nomes. {% endcomment %}
+<section aria-labelledby="participantes-titulo" class="cartao">
+  <h2 id="participantes-titulo">Quem atuou</h2>
+  <dl class="participantes">
+    <dt>Criou</dt>
+    <dd>{{ retificacao.created_by }} <span class="quando">{{ retificacao.created_at|date:"d/m/Y H:i" }}</span></dd>
+    <dt>Submeteu</dt>
+    <dd>{% if retificacao.prepared_by %}{{ retificacao.prepared_by }}
+      <span class="quando">{{ retificacao.submitted_at|date:"d/m/Y H:i" }}</span>
+      {% else %}<span class="pendente">ainda não submetida</span>{% endif %}</dd>
+    <dt>Homologou</dt>
+    <dd>{% if retificacao.homologated_by %}{{ retificacao.homologated_by }}
+      <span class="quando">{{ retificacao.homologated_at|date:"d/m/Y H:i" }}</span>
+      {% else %}<span class="pendente">ainda não homologada</span>{% endif %}</dd>
+    <dt>Publicou</dt>
+    <dd>{% if publicada %}{{ publicada.published_by }}
+      <span class="quando">{{ publicada.published_at|date:"d/m/Y H:i" }}</span>
+      {% else %}<span class="pendente">ainda não publicada</span>{% endif %}</dd>
+  </dl>
+</section>
 
 <section aria-labelledby="alteracoes-titulo" class="consequencias">
   <h2 id="alteracoes-titulo">Alterações declaradas ({{ alteracoes|length }})</h2>
