@@ -329,7 +329,7 @@ def test_cabecalho_do_cliente_nao_autentica(client, provedor, cabecalhos):
 
     resposta = client.get(
         reverse("interface:retorno-institucional"),
-        {"estado": estado, "identificador": "ana-7", "provedor": "simulado"},
+        {"state": estado, "identificador": "ana-7", "provedor": "simulado"},
         **cabecalhos,
     )
 
@@ -342,7 +342,7 @@ def test_retorno_sem_a_ida_e_recusado_sem_criar_pessoa(client, provedor):
     bilhete = provedor.emitir("ana-8")
 
     resposta = client.get(
-        reverse("interface:retorno-institucional"), {"estado": "qualquer", "bilhete": bilhete}
+        reverse("interface:retorno-institucional"), {"state": "qualquer", "bilhete": bilhete}
     )
 
     assert resposta.status_code == 403
@@ -354,7 +354,7 @@ def test_retorno_com_estado_divergente_e_recusado(client, provedor):
     bilhete = provedor.emitir("ana-9")
 
     resposta = client.get(
-        reverse("interface:retorno-institucional"), {"estado": "outro", "bilhete": bilhete}
+        reverse("interface:retorno-institucional"), {"state": "outro", "bilhete": bilhete}
     )
 
     assert resposta.status_code == 403
@@ -368,7 +368,7 @@ def test_o_retorno_nao_vale_duas_vezes(client, provedor):
     primeiro = provedor.emitir("ana-10")
     assert (
         client.get(
-            reverse("interface:retorno-institucional"), {"estado": estado, "bilhete": primeiro}
+            reverse("interface:retorno-institucional"), {"state": estado, "bilhete": primeiro}
         ).status_code
         == 302
     )
@@ -376,7 +376,7 @@ def test_o_retorno_nao_vale_duas_vezes(client, provedor):
 
     repetido = client.get(
         reverse("interface:retorno-institucional"),
-        {"estado": estado, "bilhete": provedor.emitir("ana-10")},
+        {"state": estado, "bilhete": provedor.emitir("ana-10")},
     )
 
     assert repetido.status_code == 403
@@ -388,7 +388,7 @@ def test_identidade_de_outro_provedor_e_recusada(client, provedor):
     bilhete = provedor.emitir("ana-11", provedor="outro")
 
     resposta = client.get(
-        reverse("interface:retorno-institucional"), {"estado": estado, "bilhete": bilhete}
+        reverse("interface:retorno-institucional"), {"state": estado, "bilhete": bilhete}
     )
 
     assert resposta.status_code == 403
@@ -403,7 +403,7 @@ def test_a_entrada_troca_a_sessao(client, provedor):
 
     client.get(
         reverse("interface:retorno-institucional"),
-        {"estado": estado, "bilhete": provedor.emitir("ana-12")},
+        {"state": estado, "bilhete": provedor.emitir("ana-12")},
     )
 
     assert antes and client.session.session_key != antes
@@ -415,3 +415,68 @@ def test_o_destino_pedido_e_respeitado(client, provedor):
     resposta = entrar(client, "ana-13", proximo=reverse("interface:autoridades"))
 
     assert resposta["Location"] == reverse("interface:autoridades")
+
+
+# --- O estado na fronteira do protocolo (revisão do #345) ----------------------------------------
+
+
+def test_o_retorno_le_o_state_do_protocolo_e_nao_o_nome_interno(client, provedor):
+    """Um provedor OIDC devolve o estado em `state`; `estado` é só o nome de dentro da gestão.
+
+    O simulado da primeira versão usava `estado` na ida e na volta, e mascarava a recusa: um
+    provedor convencional devolvia o valor certo em `state` e recebia 403 sem chegar ao adaptador.
+    """
+    vincular(pessoa("ana-14"), "cefor", "gestor")
+    ida = client.get(reverse("interface:entrar-institucional"))
+    assert "state=" in ida["Location"]
+    estado = provedor.ultima_ida()["estado"]
+
+    so_o_nome_interno = client.get(
+        reverse("interface:retorno-institucional"),
+        {"estado": estado, "bilhete": provedor.emitir("ana-14")},
+    )
+    assert so_o_nome_interno.status_code == 403
+
+    client.get(reverse("interface:entrar-institucional"))
+    estado = provedor.ultima_ida()["estado"]
+    pelo_protocolo = client.get(
+        reverse("interface:retorno-institucional"),
+        {"state": estado, "bilhete": provedor.emitir("ana-14")},
+    )
+    assert pelo_protocolo.status_code == 302
+    assert ator_do_cliente(client) is not None
+
+
+def test_o_adaptador_pode_dizer_onde_o_estado_volta(client, settings, provedor):
+    """Outro protocolo põe o estado em outro lugar; a comparação com a sessão continua da gestão."""
+    import sys
+    import types
+
+    class ComRelayState(provedor.ProvedorSimulado):
+        def estado_do_retorno(self, request):
+            return request.GET.get("RelayState", "")
+
+    modulo = types.ModuleType("provedor_com_relay_state")
+    modulo.Provedor = ComRelayState
+    sys.modules[modulo.__name__] = modulo
+    try:
+        settings.GESTAO_PROVEDOR_INSTITUCIONAL = "provedor_com_relay_state.Provedor"
+        vincular(pessoa("ana-15"), "cefor", "gestor")
+        client.get(reverse("interface:entrar-institucional"))
+        estado = provedor.ultima_ida()["estado"]
+
+        errado = client.get(
+            reverse("interface:retorno-institucional"),
+            {"RelayState": "outro", "state": estado, "bilhete": provedor.emitir("ana-15")},
+        )
+        assert errado.status_code == 403
+
+        client.get(reverse("interface:entrar-institucional"))
+        estado = provedor.ultima_ida()["estado"]
+        certo = client.get(
+            reverse("interface:retorno-institucional"),
+            {"RelayState": estado, "bilhete": provedor.emitir("ana-15")},
+        )
+        assert certo.status_code == 302
+    finally:
+        del sys.modules[modulo.__name__]

@@ -47,7 +47,8 @@ class ProvedorSimulado:
 
     def iniciar(self, request, *, retorno, estado):
         _IDAS.append({"retorno": retorno, "estado": estado})
-        return redirect(f"https://provedor.invalid/autorizar?{urlencode({'estado': estado})}")
+        # `state`, como um provedor OIDC: é o nome que a volta usa, e o que a gestão lê.
+        return redirect(f"https://provedor.invalid/autorizar?{urlencode({'state': estado})}")
 
     def concluir(self, request, *, estado):
         return _BILHETES.pop(request.GET.get("bilhete", ""), None)

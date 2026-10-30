@@ -25,9 +25,11 @@ parte da ativação.
 Escrever uma classe que cumpra o [contrato](../specs/106-identidade-institucional-preparada/contracts/adaptador-e-configuracao.md):
 `nome`, `iniciar(request, *, retorno, estado)` e `concluir(request, *, estado)`.
 
-- **OIDC na aplicação:** `iniciar` redireciona ao endpoint de autorização com `state=estado` e um
-  `nonce` guardado na sessão; `concluir` troca o código pelo token e valida assinatura (JWKS),
-  `iss`, `aud`, `nonce` e validade. Uma biblioteca cliente vai às dependências — Authlib ou
+- **OIDC na aplicação:** `iniciar` redireciona ao endpoint de autorização com `state=estado`, um
+  `nonce` guardado na sessão e o desafio do **PKCE** (`code_challenge`, S256); `concluir` troca o
+  código pelo token com o `code_verifier` e valida assinatura (JWKS), `iss`, `aud`, `nonce` e
+  validade. A gestão lê o `state` do retorno e o confere contra a sessão antes de chamar `concluir`;
+  o adaptador não precisa refazer essa conferência, e não deve renomear o parâmetro. Uma biblioteca cliente vai às dependências — Authlib ou
   `mozilla-django-oidc` usado só como cliente. **Não** use o *backend* dela: a autorização é a do GPS,
   e o *backend* da biblioteca associa contas pelo e-mail.
 - **SAML/OIDC no proxy:** `concluir` lê o que o proxy injeta, e só do proxy. O nginx precisa apagar o
@@ -36,6 +38,19 @@ Escrever uma classe que cumpra o [contrato](../specs/106-identidade-instituciona
 - O módulo do adaptador **não importa modelos no topo**: `production.py` o importa antes de os apps
   existirem.
 - Testes do adaptador contra um provedor de homologação, e não só o simulado.
+
+### Condições do adaptador, registradas na revisão do #345
+
+Não são entrega da `106`; são o que o adaptador real precisa cumprir.
+
+- **O identificador externo é emissor + `sub`, e não o `sub` sozinho.** O `sub` só é único dentro do
+  emissor (`iss`). O `nome` do adaptador vai a `IdentidadeExterna.provedor`; se um mesmo adaptador
+  puder falar com mais de um emissor, o `identificador` precisa levar o emissor junto — ou cada
+  emissor ser um adaptador com `nome` próprio. Mudar isso depois de gravado é trocar a associação de
+  todas as pessoas.
+- **PKCE e `nonce`**, como acima, mesmo com cliente confidencial.
+- **No proxy**, o cabeçalho de identidade é apagado da requisição do cliente e só aceito da conexão
+  do proxy (abaixo).
 
 ## 3. As telas que ficaram fora
 
@@ -49,8 +64,13 @@ Escrever uma classe que cumpra o [contrato](../specs/106-identidade-instituciona
 
 ## 4. O que não foi feito, e é preciso antes de abrir
 
-- **Suspensão urgente** de uma pessoa em todas as unidades. O mecanismo nativo existe —
-  `is_active=False` derruba a sessão na requisição seguinte —, mas falta o ato com motivo e trilha.
+- **Suspensão urgente** de uma pessoa em todas as unidades, **inclusive do administrador
+  institucional**. O mecanismo nativo existe — `is_active=False` derruba a sessão na requisição
+  seguinte —, mas falta o ato com motivo e trilha, e falta dizer quem suspende o administrador
+  institucional, que hoje só o comando de implantação alcança.
+- **Duração da sessão** (decisão 5 da tabela acima): 8 h absolutas e 30 min de inatividade são
+  proposta, e nada as impõe ainda. Até lá, a sessão institucional dura o que o `SESSION_COOKIE_AGE`
+  do Django disser.
 - **Comissão apontando para pessoa.** O `identity_subject` da comissão continua texto livre; com o
   identificador opaco, incluir um membro por ele é impraticável. Falta a busca da pessoa.
 - **API.** Continua fechada em produção. A recusa da `SessionAuthentication` deve ser revista quando

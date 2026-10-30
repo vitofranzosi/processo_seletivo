@@ -820,14 +820,15 @@ def retorno_institucional(request):
     vale. Nada do pedido vira identidade além do que o adaptador devolve — nenhum cabeçalho é lido
     aqui.
     """
-    from processo_seletivo.seguranca.autenticacao import provedor_configurado
+    from processo_seletivo.seguranca.autenticacao import estado_do_retorno, provedor_configurado
 
     provedor = provedor_configurado()
     if provedor is None:
         return render(request, "interface/sem_autenticacao.html", status=503)
     ida = request.session.pop(identidade.CHAVE_ESTADO_INSTITUCIONAL, None) or {}
     estado = ida.get("estado")
-    if not estado or not secrets.compare_digest(estado, request.GET.get("estado", "")):
+    recebido = estado_do_retorno(provedor, request)
+    if not estado or not secrets.compare_digest(estado, recebido):
         raise _recusa_da_entrada()
     autenticada = provedor.concluir(request, estado=estado)
     if autenticada is None or autenticada.provedor != provedor.nome:

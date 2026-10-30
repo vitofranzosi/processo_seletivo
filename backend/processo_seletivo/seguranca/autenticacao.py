@@ -66,6 +66,26 @@ def provedor_configurado():
     return classe()
 
 
+# O parâmetro em que o protocolo devolve o estado da ida. OIDC e OAuth 2 o chamam `state` (RFC 6749,
+# §4.1.2), e é o que um provedor convencional manda de volta; `estado` é só o nome interno.
+PARAMETRO_DO_ESTADO = "state"
+
+
+def estado_do_retorno(provedor, request):
+    """O estado que o retorno carrega, no lugar em que o protocolo do adaptador o põe.
+
+    **A extração é do adaptador, e a comparação é da gestão.** O padrão é o `state` da consulta, que
+    serve a OIDC. Um adaptador de outro protocolo — o `RelayState` do SAML, que pode chegar no corpo
+    de um POST — declara `estado_do_retorno(request)`; a gestão confere o que ele devolver contra o
+    estado guardado na sessão, antes de chamar `concluir`, e por isso a ligação com a sessão não
+    depende de o adaptador lembrar de conferir.
+    """
+    extrair = getattr(provedor, "estado_do_retorno", None)
+    if extrair is not None:
+        return extrair(request) or ""
+    return request.GET.get(PARAMETRO_DO_ESTADO, "")
+
+
 def novo_identificador():
     return f"{PREFIXO_DO_IDENTIFICADOR}{uuid.uuid4()}"
 

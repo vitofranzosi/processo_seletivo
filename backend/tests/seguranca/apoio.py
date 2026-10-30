@@ -43,7 +43,7 @@ def entrar(client, identificador, *, nome="", email="", proximo=None):
     estado = provedor_simulado.ultima_ida()["estado"]
     bilhete = provedor_simulado.emitir(identificador, nome=nome, email=email)
     return client.get(
-        reverse("interface:retorno-institucional"), {"estado": estado, "bilhete": bilhete}
+        reverse("interface:retorno-institucional"), {"state": estado, "bilhete": bilhete}
     )
 
 

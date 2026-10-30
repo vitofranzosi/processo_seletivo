@@ -43,6 +43,19 @@ def test_a_runtime_tranca_a_pessoa_e_nao_os_registros_append_only(runtime_connec
                 cursor.execute(f"SELECT id FROM {tabela} FOR UPDATE")
 
 
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+def test_a_runtime_obtem_a_trava_da_administracao_institucional(runtime_connection):  # noqa: F811
+    """A trava global da primeira administração não pede privilégio de tabela nenhum."""
+    from processo_seletivo.seguranca.application.acessos import (
+        TRAVA_DA_ADMINISTRACAO_INSTITUCIONAL,
+    )
+
+    with runtime_connection.transaction(), runtime_connection.cursor() as cursor:
+        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [TRAVA_DA_ADMINISTRACAO_INSTITUCIONAL])
+
+
 def test_o_codigo_da_106_so_tranca_a_pessoa():
     """Todo `select_for_update` do app parte de `get_user_model().objects`."""
     travas = []

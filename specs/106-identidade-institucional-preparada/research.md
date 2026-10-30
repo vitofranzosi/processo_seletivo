@@ -51,8 +51,12 @@ comparativo inteiro, no [diagnóstico](../../doc/diagnostico-autenticacao-da-ges
 - **Decisão**: papel operacional (os oito e o `integrante`) se concede com `acesso:gerir` na unidade
   do vínculo; o `administrador-de-acessos`, com `acesso:administrar` no escopo institucional; o
   `administrador-institucional`, só pelo comando `conceder_administracao_institucional`. A comparação
-  com o ator é pelo `username`. A pessoa é trancada (`select_for_update`) na concessão; a revogação
-  tranca o vínculo, e a unicidade da revogação recusa a segunda.
+  com o ator é pelo `username`. A pessoa é trancada (`select_for_update`) na concessão e na
+  revogação, e a unicidade da revogação recusa a segunda. **A primeira administração institucional
+  corre sob uma trava de transação global** (`pg_advisory_xact_lock`): a decisão "já há alguém?"
+  é de todas as pessoas, e trancar só a de destino deixava duas execuções simultâneas gravarem dois
+  administradores sem `adicional` (revisão do #345). Nada tranca linha append-only: a role de
+  runtime não tem `UPDATE` sobre elas, e `FOR UPDATE` o exige.
 - **Por quê**: é a regra do estudo, §C.2, sem tela. O comando de implantação é o único ponto que
   cria poder institucional, e grava sob o ator `implantacao`, como a sincronização das unidades.
 - **Alternativas**: o institucional concedendo outro institucional (elevação sem ato de implantação).
@@ -73,7 +77,11 @@ comparativo inteiro, no [diagnóstico](../../doc/diagnostico-autenticacao-da-ges
 - **Decisão**: `GESTAO_PROVEDOR_INSTITUCIONAL` aponta uma classe com `nome`, `iniciar(request, *,
   retorno, estado)` e `concluir(request, *, estado)`. A gestão cria o estado, guarda-o na sessão,
   confere-o no retorno e o descarta antes de chamar `concluir`. Só o que `concluir` devolve vira
-  identidade; a gestão não lê cabeçalho.
+  identidade; a gestão não lê cabeçalho. **Na fronteira HTTP o estado se chama `state`**, o nome
+  do OIDC; um adaptador de outro protocolo diz onde ele volta por `estado_do_retorno(request)`, e a
+  comparação com a sessão continua da gestão. A primeira versão lia `estado`, e o simulado, que
+  usava o mesmo nome na ida e na volta, mascarava a recusa de todo provedor convencional (revisão
+  do #345).
 - **Por quê**: é o contrato do estudo, §B.1, com a proteção contra *login CSRF* que todo fluxo de
   redirecionamento precisa. Serve a OIDC na aplicação e a SAML no proxy.
 - **Alternativas**: `RemoteUserMiddleware` (confia num cabeçalho; recusado em produção por D-009).

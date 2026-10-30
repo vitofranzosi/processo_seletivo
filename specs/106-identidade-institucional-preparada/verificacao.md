@@ -14,7 +14,7 @@ cd backend && make lint check test-pg
 | `ruff check` | All checks passed |
 | `ruff format --check` | 1666 files already formatted |
 | `manage.py check` | no issues |
-| `test-pg` (4 workers, `worksteal`) | **13645 passed, 13 skipped**, 0 falhas, em 595 s |
+| `test-pg` (4 workers, `worksteal`) | **13645 passed, 13 skipped**, 0 falhas, em 595 s; no segundo commit, **13651 passed, 13 skipped**, em 573 s |
 
 Os 13 pulados são os mesmos que o `CLAUDE.md` descreve para uma suíte sem o grupo `assistente`.
 Nenhum teste novo pula contra PostgreSQL.
@@ -52,6 +52,28 @@ só guardiões que existem para subir com a justificativa:
    pode trancar, e que o código só tranca isso.
 2. **A primeira rodada da suíte reprovou a tabela de incrementos do README**, que não listava a
    `106`. Acrescentada.
+
+## Revisão do #345 (segundo commit)
+
+A revisão de `aa7f30d2` pediu dois ajustes, os dois corrigidos com teste de regressão:
+
+1. **O retorno lia `estado`, e o OIDC devolve `state`.** Um provedor convencional recebia 403 sem
+   chegar ao adaptador; o simulado mascarava, porque usava `estado` na ida e na volta. A gestão
+   passou a ler `state` na fronteira HTTP, e um adaptador de outro protocolo diz onde o estado volta
+   por `estado_do_retorno(request)`. O simulado envia e recebe `state`.
+   `ENT::test_o_retorno_le_o_state_do_protocolo_e_nao_o_nome_interno` e
+   `::test_o_adaptador_pode_dizer_onde_o_estado_volta`.
+2. **A primeira administração institucional não era exclusiva sob concorrência.** Trancar só a pessoa
+   de destino deixava duas execuções para pessoas diferentes gravarem dois administradores sem
+   `--adicional`. A decisão passou a correr sob `pg_advisory_xact_lock` de chave fixa, que não pede
+   privilégio de tabela. `seguranca/test_concorrencia.py` põe uma barreira depois da trava: **com a
+   trava removida, o teste reprova** (`['concedida', 'concedida']`), conferido antes do commit.
+   `seguranca/test_privilegios.py` confere que a role de runtime obtém a trava.
+
+As condições da futura ativação que a revisão listou e o roteiro não tinha — emissor mais `sub` como
+identificador, PKCE, suspensão do administrador institucional, a duração de sessão ainda só proposta
+— entraram em [`doc/ativacao-do-sso-institucional.md`](../../doc/ativacao-do-sso-institucional.md)
+como pendência, sem implementação.
 
 ## Os doze testes do pedido
 

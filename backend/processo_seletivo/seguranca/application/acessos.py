@@ -10,8 +10,10 @@ pelo login: é ela que torna a regra efetiva contra quem troca de sessão ou de 
 404, porque o ator não deve saber o que existe fora do seu escopo (`FR-3010`).
 """
 
+import hashlib
+
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.seguranca.acessos import (
@@ -44,6 +46,14 @@ ADMINISTRACAO_JA_CONCEDIDA = "administracao_ja_concedida"
 # unidades (`unidades/domain/nomes.py`), e pela mesma razão: o comando roda com o acesso de quem
 # implanta, e não há permissão a conferir.
 IMPLANTACAO = "implantacao"
+
+# A trava da decisão "já há administração institucional?" — uma constante só, como a do despacho dos
+# avisos. **Trava de sessão do PostgreSQL, e não `FOR UPDATE`**: a role de runtime não tem `UPDATE`
+# sobre os vínculos append-only, e trancar uma linha deles seria recusado em produção.
+TRAVA_DA_ADMINISTRACAO_INSTITUCIONAL = (
+    int.from_bytes(hashlib.sha256(b"seguranca:administracao-institucional").digest()[:8], "big")
+    >> 1
+)
 
 
 def _papeis_operacionais():
@@ -213,6 +223,16 @@ def conceder_administracao_institucional(*, pessoa, motivo, adicional, now, corr
     motivo = _exigir_motivo(motivo)
     ator = Actor(IMPLANTACAO, ESCOPO_INSTITUCIONAL)
     with transaction.atomic():
+        # **A decisão é global, e a trava também.** Trancar só a pessoa deixava duas execuções para
+        # pessoas diferentes trancarem linhas diferentes, verem as duas que ainda não havia ninguém
+        # e gravarem dois administradores sem `adicional` (revisão do #345). A trava de transação
+        # serializa a consulta e a gravação, e sai sozinha no fim do bloco. Fora do PostgreSQL é
+        # no-op, e é honesto que seja: o SQLite serializa a escrita inteira.
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT pg_advisory_xact_lock(%s)", [TRAVA_DA_ADMINISTRACAO_INSTITUCIONAL]
+                )
         get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
         existentes = vigentes().filter(
             escopo=ESCOPO_INSTITUCIONAL, papel=ADMINISTRADOR_INSTITUCIONAL

@@ -12,6 +12,10 @@ apenas_para_testes: bool = False       # produção recusa a classe que o declar
 iniciar(request, *, retorno: str, estado: str) -> HttpResponse
     # a ida ao provedor; tipicamente um redirecionamento que leva `estado` e volta a `retorno`
 
+estado_do_retorno(request) -> str        # opcional: onde o retorno traz o estado
+    # Sem ele, a gestão lê o `state` da consulta, que é o nome do OIDC e do OAuth 2 (RFC 6749,
+    # §4.1.2). Outro protocolo — o `RelayState` do SAML, por exemplo — o declara.
+
 concluir(request, *, estado: str) -> IdentidadeAutenticada | None
     # o retorno. Valida o que o protocolo exigir (assinatura, emissor, audiência, nonce,
     # validade) e devolve a identidade, ou None. Nunca lança por credencial ruim.
@@ -22,7 +26,9 @@ IdentidadeAutenticada(provedor: str, identificador: str, nome: str, email: str)
 **O que a gestão garante em volta do adaptador:**
 
 - o `estado` é criado pela gestão, guardado na sessão e conferido no retorno **antes** de chamar
-  `concluir`; é descartado na conferência, e por isso não vale duas vezes;
+  `concluir`; é descartado na conferência, e por isso não vale duas vezes. **Na fronteira HTTP ele
+  se chama `state`** — `estado` é só o nome interno —, e o adaptador OIDC o envia e o recebe com
+  esse nome;
 - `IdentidadeAutenticada.provedor` precisa ser o `nome` do adaptador configurado;
 - nada do pedido além do que `concluir` devolve vira identidade.
 
@@ -31,7 +37,7 @@ IdentidadeAutenticada(provedor: str, identificador: str, nome: str, email: str)
 | Rota | Método | Resposta |
 |---|---|---|
 | `/gestao/entrar/institucional` | GET | a de `iniciar`; sem provedor, 503 com a página de entrada não configurada |
-| `/gestao/entrar/institucional/retorno` | GET | 302 ao destino pedido ou à Lista; estado ausente, divergente ou repetido, ou `concluir` vazio: 403 pela recusa do domínio; sem provedor, 503 |
+| `/gestao/entrar/institucional/retorno` | GET | 302 ao destino pedido ou à Lista; `state` ausente, divergente ou repetido, ou `concluir` vazio: 403 pela recusa do domínio; sem provedor, 503 |
 | `/gestao/unidade-ativa` | POST | 302 à Lista; sem vínculo vigente no escopo pedido: 403; sem sessão institucional: 403 |
 
 A página `/gestao/identificar` ganha o botão "Entrar com a conta institucional" **só** quando há
@@ -61,4 +67,6 @@ ps-manage conceder_administracao_institucional --provedor P --identificador X --
 Cria a pessoa e a identidade externa se não existirem, concede `administrador-institucional` no
 escopo `institucional`, grava `ACESSO_CONCEDER` sob o ator `implantacao`. Recusa sem motivo; recusa
 quando já há administrador institucional vigente e `--adicional` não foi dado; recusa quando a
-pessoa já o tem.
+pessoa já o tem. **A consulta e a gravação correm sob uma trava de transação global** do PostgreSQL:
+duas execuções simultâneas para pessoas diferentes não gravam dois administradores sem
+`--adicional` (revisão do #345).
