@@ -124,3 +124,16 @@ demonstração, com a faixa amarela de aviso (~200 px) acima da faixa, que em pr
 - **Leitura**: o limite de cinco segura a faixa fechada em altura constante; aberta, com 100, ela é
   longa — é o caso em que uma apresentação própria faria sentido, e ele não é plausível para a equipe
   de duas ou três pessoas do Cefor hoje. Registrado, não implementado.
+
+### Suíte depois da revisão
+
+`make lint check test-pg`, commit `3b178107`: lint, `check` e `makemigrations --check` limpos;
+**13541 passed, 12 skipped**, 0 falhas, 592s. Os 3 casos a mais em relação a `dfeaa0f1` são os
+testes de afordância, do verbo da devolvida e da faixa com 1, 5, 25 e 100 objetos.
+
+### Depois do merge do #339
+
+Este PR aponta para a branch da `103`. Depois que o #339 entrar na `main`: reapontar o #340 para a
+`main`, sincronizar com ela, e rodar de novo `make lint check test-pg` sobre o resultado, conferindo
+`test_auditoria_passagem_da_retificacao.py`, `test_jornada_da_retificacao.py` e
+`test_acoes_disponiveis.py`, que atravessam as duas specs.
