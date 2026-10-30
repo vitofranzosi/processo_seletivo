@@ -265,6 +265,11 @@ def proximo_passo(retificacao, ator, ofertadas=None):
     if responsavel is None:
         return None
     papel, ato, chave = responsavel
+    if foi_devolvida(retificacao):
+        # Um verbo para a devolvida em toda tela (revisão de 30/10, D-013): a faixa e o cartão
+        # dizem "Corrigir", e a passagem de bastão dizia "submeter" sobre o mesmo momento.
+        # Primeiro se corrige, depois se submete — e a frase diz as duas coisas nessa ordem.
+        ato = "corrigir a Retificação devolvida e submetê-la de novo"
     ofertadas = ofertas(retificacao, ator) if ofertadas is None else ofertadas
     principal = next((oferta for oferta in ofertadas if oferta.ato.chave == chave), None)
     return {
@@ -285,8 +290,15 @@ def resumo(retificacao, ator):
     Retificação na consulta única da tela (FR-2705, FR-2707).
     """
     passo = proximo_passo(retificacao, ator)
-    return {
+    devolvida, reenviada = foi_devolvida(retificacao), foi_reenviada(retificacao)
+    item = {
         "retificacao": retificacao,
+        # A devolvida e a reenviada, ditas a partir do motivo já gravado (104, D-006): nenhuma
+        # situação nova, só a leitura de `return_reason`, que a devolução grava e o reenvio mantém.
+        "devolvida": devolvida,
+        "reenviada": reenviada,
+        "rotulo_situacao": rotulo_da_situacao(retificacao),
+        "desde": desde(retificacao),
         "url": reverse("interface:retificacao-detalhe", args=[retificacao.id]),
         "passo": passo,
         "meu_ato": passo["oferta"].ato.rotulo if passo and passo["sou_eu"] else "",
@@ -296,6 +308,9 @@ def resumo(retificacao, ator):
             else ""
         ),
     }
+    # O rótulo do ato na Lista e na faixa (104): uma função só, lida pelos dois lugares.
+    item["ato_na_lista"] = ato_na_lista(item) if item["meu_ato"] else ""
+    return item
 
 
 # Só o que as telas usam: a derivação acima lê a situação e dois nomes, e a seção diz quem criou,
@@ -309,7 +324,67 @@ _CAMPOS_DO_RESUMO = (
     "created_at",
     "prepared_by",
     "homologated_by",
+    "return_reason",
+    "submitted_at",
+    "homologated_at",
 )
+
+
+def foi_devolvida(retificacao):
+    """Em elaboração **depois** de uma devolução, e não rascunho que nunca saiu (104, FR-2821)."""
+    return retificacao.status == Retificacao.Status.EM_ELABORACAO and bool(
+        retificacao.return_reason
+    )
+
+
+def foi_reenviada(retificacao):
+    """Em revisão de novo, depois de devolvida (104, FR-2822)."""
+    return retificacao.status == Retificacao.Status.EM_REVISAO and bool(retificacao.return_reason)
+
+
+def rotulo_da_situacao(retificacao):
+    """A situação dita por extenso, em minúscula, com a devolução quando houve."""
+    if foi_devolvida(retificacao):
+        return "devolvida"
+    if foi_reenviada(retificacao):
+        return "reenviada, em revisão"
+    return {
+        "EM_ELABORACAO": "em elaboração",
+        "EM_REVISAO": "em revisão",
+        "HOMOLOGADA": "homologada",
+        "PUBLICADA": "publicada",
+        "CANCELADA": "cancelada",
+    }.get(retificacao.status, retificacao.status)
+
+
+def desde(retificacao):
+    """Desde quando a Retificação espera o próximo ato — só quando o modelo grava o instante.
+
+    A devolução não tem instante no registro (só na trilha), e por isso a devolvida não diz desde
+    quando: ler a trilha por item seria uma consulta por Retificação (104, Assumptions).
+    """
+    if retificacao.status == Retificacao.Status.EM_REVISAO:
+        return retificacao.submitted_at
+    if retificacao.status == Retificacao.Status.HOMOLOGADA:
+        return retificacao.homologated_at
+    return None
+
+
+def ato_na_lista(resumo):
+    """O ato da pessoa dito para quem ainda não abriu a Retificação (104, FR-2809, FR-2814).
+
+    É o mesmo ato principal da passagem de bastão, com o verbo de quem vai começar a trabalhar: o
+    homologador "analisa" — e decide entre homologar e devolver na página dela —, quem elabora a
+    devolvida "corrige". A faixa e a coluna da Lista leem daqui, e por isso dizem a mesma coisa.
+    """
+    retificacao = resumo["retificacao"]
+    if resumo["devolvida"]:
+        return "Corrigir a Retificação devolvida"
+    return {
+        "EM_ELABORACAO": "Concluir e submeter a Retificação",
+        "EM_REVISAO": "Analisar a Retificação",
+        "HOMOLOGADA": "Publicar a Retificação",
+    }.get(retificacao.status, "Abrir a Retificação")
 
 
 def em_curso_por_edital(edital_ids, ator):

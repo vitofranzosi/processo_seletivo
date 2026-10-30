@@ -108,7 +108,12 @@ com quem está lendo: presidir não é ter Etapa, e é isso que a frase precisa 
   não atribui trabalho de avaliação. Para organizar o trabalho da sua comissão, use
   <strong>Gerir comissão</strong> e <strong>Alocação por Etapa</strong>, acima.</p>
 {% else %}
-<p class="vazio" role="status">Você não possui Etapas atribuídas no momento.</p>
+{% comment %} Quem homologa ou publica abria esta área, a única da barra com nome de "meu", e lia que
+   não havia nada — com uma Retificação esperando por ele (104, FR-2827). A frase diz agora o que a
+   área cobre e onde está o resto. {% endcomment %}
+<p class="vazio" role="status">Você não possui Etapas atribuídas no momento. Esta área é da avaliação
+  nas comissões; atos de Edital e de Retificação aparecem em
+  <a href="{% url 'interface:lista' %}">Processos Seletivos</a>.</p>
 {% endif %}
 {% if sem_papel_nem_atribuicao %}
 {% comment %} FR-028 da 002: sem papel reconhecido, orientar a quem pedir acesso. Quem entra sem

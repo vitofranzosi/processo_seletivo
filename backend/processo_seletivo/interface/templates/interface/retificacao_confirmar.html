@@ -35,6 +35,41 @@ exatamente onde a linha se acrescenta.
 {% for item in advertencias %}
 <p class="aviso" role="status"><strong>Aviso:</strong> {{ item.message }}</p>
 {% endfor %}
+{% comment %} As que já valiam no Edital vigente, recolhidas (104, FR-2825): continuam ditas — são
+   verdadeiras —, mas não antes do que este ato muda. **Com a mesma severidade**, e não como nota:
+   a FR-1309 da 067 exige que o aviso apareça como aviso na Retificação, e recolher é ordem de
+   leitura, não rebaixamento. {% endcomment %}
+{% if advertencias_anteriores %}
+<details class="avisos-anteriores">
+  <summary>Avisos que já valiam no Edital vigente ({{ advertencias_anteriores|length }})</summary>
+  {% for item in advertencias_anteriores %}
+  <p class="aviso"><strong>Aviso:</strong> {{ item.message }}</p>
+  {% endfor %}
+</details>
+{% endif %}
+
+{% comment %}
+**O que se homologa, na tela da decisão** (104, FR-2824). A tabela só aparecia na confirmação de
+publicar: quem homologava ou devolvia decidia sem ver o objeto, e precisava voltar ao detalhe para
+ler as alterações. É a mesma lista do detalhe (`_alteracoes_legiveis`), e não um diff novo.
+{% endcomment %}
+{% if ato.chave == 'homologar' or ato.chave == 'devolver' %}
+<section aria-labelledby="altera-titulo" class="cartao">
+  <h2 id="altera-titulo">O que esta Retificação altera ({{ alteracoes|length }})</h2>
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th scope="col">Onde</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
+    <tbody>{% for item in alteracoes %}
+      <tr><th scope="row">
+        {% if item.onde %}{{ item.onde }}<span class="detalhe">{{ item.campo }}</span>{% endif %}
+        <code>{{ item.caminho }}</code>
+      </th>
+        <td class="antes">{{ item.antes }}</td><td class="depois">{{ item.depois }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
 
 <section aria-labelledby="consequencias-titulo"
          class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">

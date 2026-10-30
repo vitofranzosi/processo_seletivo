@@ -21,7 +21,11 @@ def ator(subject, *papeis):
 
 def retificacao(status, prepared_by="", homologated_by=""):
     return SimpleNamespace(
-        id=uuid4(), status=status, prepared_by=prepared_by, homologated_by=homologated_by
+        id=uuid4(),
+        status=status,
+        prepared_by=prepared_by,
+        homologated_by=homologated_by,
+        return_reason="",
     )
 
 
@@ -146,3 +150,14 @@ def test_cada_ato_diz_a_quem_entrega(chave, papel):
 def test_publicar_e_cancelar_nao_entregam_a_ninguem():
     assert atos_retificacao.entrega(atos_retificacao.ATOS["publicar"]) == ""
     assert atos_retificacao.entrega(atos_retificacao.ATOS["cancelar"]) == ""
+
+
+def test_a_devolvida_diz_corrigir_e_submeter_de_novo():
+    """D-013 da 104: o mesmo verbo da faixa e do cartão, na passagem de bastão."""
+    item = retificacao("EM_ELABORACAO")
+    item.return_reason = "Falta a linha"
+
+    passo = atos_retificacao.proximo_passo(item, ator("ana", "elaborador"))
+
+    assert passo["ato"] == "corrigir a Retificação devolvida e submetê-la de novo"
+    assert passo["chave"] == "submeter"

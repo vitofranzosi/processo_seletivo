@@ -13,9 +13,12 @@ amplia acesso nenhum.
   {% for item in em_curso %}
   <li>
     <a href="{{ item.url }}">Retificação de {{ item.retificacao.created_at|date:"d/m/Y H:i" }}</a>
-    <span class="situacao s-{{ item.retificacao.status }}">{{ item.retificacao.status|situacao }}</span>
-    <span class="quem-criou">criada por {{ item.retificacao.created_by }}</span>
+    {% comment %} "Devolvida" e "reenviada" no lugar de "Em elaboração" e "Em revisão" quando é o caso
+       (104, FR-2821, FR-2822): a mesma situação de domínio, dita com o que aconteceu a ela. {% endcomment %}
+    <span class="situacao s-{{ item.retificacao.status }}">{{ item.rotulo_situacao|capfirst }}</span>
+    <span class="quem-criou">criada por {{ item.retificacao.created_by }}{% if item.desde %} · aguarda desde {{ item.desde|date:"d/m/Y" }}{% endif %}</span>
     <span class="justificativa">{{ item.retificacao.justification|truncatechars:160 }}</span>
+    {% if item.devolvida %}<span class="justificativa">Motivo da devolução: {{ item.retificacao.return_reason|truncatechars:160 }}</span>{% endif %}
     <span class="bastao">
       {% if item.meu_ato %}<strong>O próximo ato é seu:</strong> {{ item.passo.ato }}.
       {% else %}<strong>Aguardando {{ item.passo.papel }}</strong> para {{ item.passo.ato }}.{% if item.passo.observacao %} {{ item.passo.observacao }}{% endif %}{% endif %}

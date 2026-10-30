@@ -165,6 +165,7 @@ from processo_seletivo.interface import (
     navegacao,
     origens,
     revisao,
+    trabalho,
 )
 from processo_seletivo.interface import agenda as agenda_dos_editais
 from processo_seletivo.interface import aplicacao as aplicacao_ui
@@ -195,6 +196,7 @@ from processo_seletivo.publicacoes.application.contexto_do_ato import (
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
+    advertencias_do_vigente,
     alteracoes_declaradas,
     conteudo_base,
     edit_retification,
@@ -204,6 +206,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     homologar_fecharia_a_publicacao,
     impede_por_segregacao,
     participantes_do_edital,
+    participantes_em_lote,
 )
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.elevacao import elevar
@@ -266,29 +269,49 @@ def lista(request):
         return identidade.pedir_identificacao(request)
 
     processos = list(listar_processos(actor=ator))
-    for processo in processos:
-        for edital in processo.editais.all():
-            # Sem pendências nem segregação: a listagem não as exibe, e prever recusa onde o
-            # motivo não cabe transformaria a linha da tabela numa tela de detalhe. O conjunto é o
-            # mesmo; o que muda é quanto dele a tela mostra.
-            edital.acoes = [
+    editais = [edital for processo in processos for edital in processo.editais.all()]
+    # **Tudo o que a coluna e a faixa precisam, lido para a página inteira** (104, FR-2806,
+    # FR-2818): as contagens de inscrições e recursos, a segregação dos Editais em revisão ou
+    # homologados e as Retificações em curso. Eram duas consultas por Edital publicado; agora são
+    # leituras em lote, e a faixa de ações não acrescenta custo por linha.
+    contagens = acoes.contagens_da_lista(editais, ator)
+    em_fluxo = [
+        e for e in editais if e.status in (Edital.Status.EM_REVISAO, Edital.Status.HOMOLOGADO)
+    ]
+    participantes = participantes_em_lote(em_fluxo) if em_fluxo else {}
+    # **A entrada de quem homologa e de quem publica** (103, FR-2706, D-002): uma consulta para a
+    # página inteira (FR-2707) — a marca precisa da situação e de dois nomes, e nada mais.
+    em_curso = atos_retificacao.em_curso_por_edital((edital.id for edital in editais), ator)
+    for edital in editais:
+        # Sem pendências: a validação do conteúdo custaria dezenas de consultas por linha. Por isso
+        # os atos que dependem dela saem como "Conferir e…", levando ao detalhe, que a calcula
+        # (104, D-004). A segregação, que se lê em lote, entra — e "Publicar" sai desabilitado
+        # com o motivo, como no detalhe (FR-2816).
+        segregacao = edital.id in participantes and impede_por_segregacao(
+            participantes[edital.id], ator
+        )
+        edital.acoes = acoes.para_a_lista(
+            [
                 acao
-                for acao in acoes.do_edital(edital, ator, com_relatorio=False)
+                for acao in acoes.do_edital(
+                    edital,
+                    ator,
+                    segregacao=segregacao,
+                    com_relatorio=False,
+                    contagens=contagens,
+                )
                 if acao.chave != "auditoria"
-            ]
-            # A ordem da linha: as frequentes primeiro, as terminais à parte (057, FR-1049).
-            edital.grupo = acoes.da_linha(edital.acoes)
-
-    # **A entrada de quem homologa e de quem publica** (103, FR-2706, D-002). A Lista é a primeira
-    # tela do dia de todo papel, e era a Retificação que não aparecia nela: quem tinha o próximo ato
-    # só o encontrava pela URL que outra pessoa copiasse. Uma consulta para a página inteira
-    # (FR-2707) — a marca precisa da situação e de dois nomes, e nada mais.
-    em_curso = atos_retificacao.em_curso_por_edital(
-        (edital.id for processo in processos for edital in processo.editais.all()), ator
-    )
-    for processo in processos:
-        for edital in processo.editais.all():
-            edital.retificacoes_em_curso = em_curso.get(edital.id, [])
+            ],
+            edital,
+        )
+        # A ordem da linha: as frequentes primeiro, as terminais à parte (057, FR-1049).
+        edital.grupo = acoes.da_linha(edital.acoes)
+        edital.retificacoes_em_curso = em_curso.get(edital.id, [])
+        # O ato da Retificação na coluna (104, FR-2814): a linha que tem trabalho para a pessoa não
+        # pode dizer "Nenhuma ação disponível" ao lado dele.
+        edital.atos_de_retificacao = [
+            item for item in edital.retificacoes_em_curso if item["meu_ato"]
+        ]
 
     # A base contextual da 011: sem isto a tela decide só por `ator.permissions` e diz a quem
     # preside uma comissão que sua conta não possui papel algum.
@@ -314,6 +337,12 @@ def lista(request):
         request,
         "interface/lista.html",
         {
+            # A faixa "Ações disponíveis para você" (104, FR-2807): os objetos em que a pessoa pode
+            # atuar agora, derivados das mesmas regras dos detalhes, e lidos sobre o que esta view
+            # já carregou.
+            "faixa": trabalho.Faixa(
+                trabalho.do_ator(ator, editais, em_curso=em_curso, contagens=contagens)
+            ),
             "processos": processos,
             "vinculos": list(vinculos.values()),
             "total_editais": sum(contagem.values()),
@@ -3786,6 +3815,7 @@ def detalhe(request, edital_id):
     # é a mesma que `praticar_ato` usa. Nada de `pode_compor`, `pode_visualizar` e `pode_auditar`
     # como bandeiras soltas — eram elas que o `{% empty %}` não enxergava.
     conjunto = acoes.do_edital(edital, ator, pendencias=pendencias, segregacao=segregacao)
+    em_curso = atos_retificacao.em_curso(edital, ator)
     return render(
         request,
         "interface/detalhe.html",
@@ -3796,7 +3826,10 @@ def detalhe(request, edital_id):
             "documentos": _documentos_publicados(edital),
             # As Retificações ainda não publicadas (103, FR-2701). As publicadas estão em
             # `documentos`, e não se repetem aqui (FR-2703): a seção é do trabalho em curso.
-            "retificacoes_em_curso": atos_retificacao.em_curso(edital, ator),
+            "retificacoes_em_curso": em_curso,
+            # Se alguma delas espera esta pessoa (104, FR-2819): o cartão "O que fazer agora" a
+            # nomeia, e deixa de afirmar que não há ato.
+            "retificacao_aguarda_voce": any(item["meu_ato"] for item in em_curso),
             "pendencias": pendencias,
             "acoes": conjunto,
             # O mesmo conjunto, repartido pelo peso de cada ação (057, D-002). É de `grupo` que
@@ -4884,6 +4917,10 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         raise Http404
 
     impedimento = atos_retificacao.impedimento(item, ator, ato)
+    todas = advertencias_do_ato(item)
+    ja_valiam = advertencias_do_vigente(item) if todas else set()
+    advertencias = [a for a in todas if (a.code, a.path) not in ja_valiam]
+    anteriores = [a for a in todas if (a.code, a.path) in ja_valiam]
     contexto = {
         "retificacao": item,
         "edital": item.edital,
@@ -4901,7 +4938,11 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         # O que a conferência do ato sabe e descartava (027, FR-336). A submissão de um rascunho
         # mostra as advertências dele; a Retificação as calculava e jogava fora, de modo que o
         # mesmo conteúdo dizia duas coisas diferentes conforme o caminho por onde chegava.
-        "advertencias": advertencias_do_ato(item),
+        "advertencias": advertencias,
+        # As que o conteúdo vigente já tinha, recolhidas abaixo das que esta Retificação introduz
+        # (104, FR-2825): quem homologa a correção de uma localidade lia, primeiro, avisos sobre
+        # vagas de outra modalidade que nada tinham com o ato.
+        "advertencias_anteriores": anteriores,
     }
     if ato.exige_signatario and not contexto["escolha_da_autoridade"]["opcoes"]:
         contexto["recusa_certa"] = True

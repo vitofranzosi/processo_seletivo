@@ -27,6 +27,10 @@ vez que a pessoa abria a lista de Processos. É orientação, e o que ela carreg
 responsabilidade. Peça acesso a quem administra o sistema no Cefor.</p>
 {% endif %}
 
+{% comment %} O trabalho de quem abre a Lista, antes de qualquer número e do inventário, e depois dos
+   avisos que a tela é obrigada a dar (104, FR-2807). {% endcomment %}
+{% include "interface/_acoes_disponiveis.html" %}
+
 {% comment %}
 A faixa tem só a ação da lista (077, `FR-1740`, `FR-1741`). Visão Geral, Autoridades da unidade e
 Modelos de aviso eram botões aqui até a barra lateral da 076 recebê-los: a primeira tela do dia
@@ -98,15 +102,20 @@ Seletivo" é ação, e fica (DP-1 da 076). Sem ação nenhuma, a faixa não vem 
         <td><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.title }}</a></td>
         <td><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span>
           {% comment %} A marca da Retificação em curso (103, FR-2706): texto, e não só cor (FR-2708), e um
-          link — o detalhe já é aberto a todo o escopo. Com o ato da pessoa, o rótulo dele; sem, quem
-          ele aguarda. {% endcomment %}
+          link — o detalhe já é aberto a todo o escopo. **Só a situação dela**, separada da do Edital
+          (104, FR-2817): o ato da pessoa foi para a coluna ao lado, onde se procura o que fazer; aqui
+          fica quem ele aguarda, quando não é ela. Devolvida e reenviada ditas como tais (FR-2821,
+          FR-2822). {% endcomment %}
           {% for item in edital.retificacoes_em_curso %}
-          <a class="marca-da-retificacao" href="{{ item.url }}">Retificação {{ item.retificacao.status|situacao|lower }} · {% if item.meu_ato %}{{ item.meu_ato }}{% else %}aguarda {{ item.passo.papel }}{% endif %}</a>
+          <a class="marca-da-retificacao" href="{{ item.url }}">Retificação {{ item.rotulo_situacao }}{% if not item.meu_ato and item.passo %} · aguarda {{ item.passo.papel }}{% endif %}</a>
           {% endfor %}
         </td>
         <td>
-          {% if edital.acoes %}
+          {% if edital.acoes or edital.atos_de_retificacao %}
           <div class="acoes">
+            {% comment %} O ato da Retificação primeiro (104, FR-2814): é trabalho esperando a pessoa, e a
+            linha não pode afirmar que não há ação ao lado dele. {% endcomment %}
+            {% for item in edital.atos_de_retificacao %}<a class="acao principal-da-linha" href="{{ item.url }}">{{ item.ato_na_lista }}</a>{% endfor %}
             {% comment %} A mesma advertência que `detalhe.html` já dá: "Cancelar" e "Encerrar" interrompem
             o Edital, e aqui saíam com o desenho de "Retificar". O estilo é o que a própria ação declara.
 

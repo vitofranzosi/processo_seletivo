@@ -1,0 +1,40 @@
+{% load interface_extras %}
+{% comment %}
+"Ações disponíveis para você" (104, FR-2807 a FR-2813). A primeira coisa que a Lista diz a quem tem
+o que fazer — e nada, além de uma linha, a quem não tem.
+
+**O que a pessoa pode fazer, e não o que lhe foi atribuído** (FR-2811). Três homologadores veem o
+mesmo item, e quando um deles homologa o item some para os três: não é tarefa de ninguém em
+particular, é ação de quem tem o papel.
+
+**Uma lista, e não tabela** (FR-2813): a tabela da Lista rola para o lado no celular, e a faixa é o
+que precisa caber na primeira tela. Cada item é um link só, que leva à página onde o ato se pratica,
+e não à confirmação (D-003, D-011).
+
+**Os cinco primeiros, e o resto num `details`** (D-009): sem script e sem página nova.
+{% endcomment %}
+{% if faixa %}
+<section class="acoes-disponiveis" aria-labelledby="acoes-disponiveis-titulo">
+  <h2 id="acoes-disponiveis-titulo">Ações disponíveis para você
+    <span class="total-de-acoes">{{ faixa.total }} procedimento{{ faixa.total|pluralize }}</span></h2>
+  <ul class="itens-de-trabalho">
+    {% for objeto in faixa.mostrados %}{% include "interface/_item_de_trabalho.html" with prefixo="contexto-mostrado" %}{% endfor %}
+  </ul>
+  {% if faixa.demais %}
+  <details class="demais-acoes">
+    <summary>Mostrar os outros {{ faixa.demais|length }}</summary>
+    <ul class="itens-de-trabalho">
+      {% for objeto in faixa.demais %}{% include "interface/_item_de_trabalho.html" with prefixo="contexto-demais" %}{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+  <p class="cobertura-da-faixa">{{ faixa.cobertura }}</p>
+</section>
+{% else %}
+{% comment %} Sem número e sem caixa (FR-2808): "nenhuma ação para você agora" não é "nenhum trabalho
+   no escopo", e um zero destacado leria como o segundo. **E diz o que olhou** (revisão de 30/10,
+   D-012): o publicador com um resultado a divulgar lia "Nenhuma ação disponível" e entendia que não
+   havia nada — a faixa não cobre a divulgação, e a frase precisa dizer isso também quando está vazia. {% endcomment %}
+<p class="sem-acoes">Nenhum ato de Edital ou de Retificação, recurso ou avaliação aguarda você agora.
+  Classificação, divulgação de resultado e avisos aos candidatos ficam no detalhe de cada Edital.</p>
+{% endif %}

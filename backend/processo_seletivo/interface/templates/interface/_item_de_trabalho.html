@@ -1,0 +1,25 @@
+{% comment %}
+Um objeto de trabalho da faixa (104, FR-2809): o que é, o ato, em que situação está e desde quando.
+
+**O item inteiro é um link, e um só** (revisão de 30/10/2026, D-011). Na primeira versão só o título
+era link, e o ato — "Analisar a Retificação", à direita, em verde e em negrito — parecia botão e não
+respondia ao clique. Dois links para o mesmo destino resolveriam o clique e dobrariam as paradas do
+teclado; um só, cobrindo o item, resolve os dois.
+
+O nome acessível começa pelo ato e segue pelo objeto ("Analisar a Retificação: Retificação do Edital
+26/2026"), e contém os dois textos visíveis; a situação, a espera e o detalhe chegam como descrição,
+para não alongar o que o leitor de tela anuncia a cada Tab. `prefixo` separa os ids dos cinco
+primeiros dos que estão em "Mostrar os outros".
+{% endcomment %}
+<li>
+  <a class="item-de-trabalho" href="{{ objeto.url }}"
+     aria-label="{{ objeto.ato }}: {{ objeto.titulo }}"
+     aria-describedby="{{ prefixo }}-{{ forloop.counter }}">
+    <span class="titulo-do-item">{{ objeto.titulo }}</span>
+    <span class="ato-do-item">{{ objeto.ato }}</span>
+    {% comment %} Situação e detalhe numa linha só, cortada com reticências (revisão de 30/10, D-014):
+       com cinco itens em quatro linhas cada, a faixa empurrava o inventário para baixo da primeira tela
+       até no desktop. O texto inteiro continua no HTML — é a descrição do link. {% endcomment %}
+    <span class="contexto-do-item" id="{{ prefixo }}-{{ forloop.counter }}"><span class="situacao-do-item">{{ objeto.situacao }}{% if objeto.desde %} · desde {{ objeto.desde|date:"d/m/Y" }}{% endif %}</span>{% if objeto.detalhe %}<span class="detalhe-do-item"> · {{ objeto.detalhe|truncatechars:140 }}</span>{% endif %}</span>
+  </a>
+</li>
