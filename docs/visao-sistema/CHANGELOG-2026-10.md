@@ -1,3 +1,114 @@
+# Revisão de 30/10/2026 da Visão do Sistema
+
+A documentação descrevia o sistema até a spec 097 (21/10). Desde então entraram na `main` sete specs,
+entre 21 e 30/10, e o PR 335: a prévia do sorteio com semente fictícia (098), o relatório do Edital (099)
+e o consolidado da unidade (100), a Agenda dos Editais (101), a extração do sorteio inviável impedida na
+publicação (102), a Retificação em curso pela navegação comum (103) e as ações disponíveis no topo da
+Lista (104). Algumas frases ficaram falsas: a prévia que *“não simula o sorteio”*, na seção da prévia,
+na pergunta frequente e na maturidade; a Retificação devolvida que *“não se edita pela tela”*, na ficha,
+na lacuna, no catálogo e na lista de evoluções; e a linha de *Auditoria* da maturidade, que ainda dizia
+40 tabelas e 58 gatilhos. Esta revisão descreve tudo isso contra a `main` em `62824816`.
+
+## Como foi conferido
+
+- Três leituras paralelas confrontaram as specs com o código da `main`, e não só com a própria spec:
+  098 e 102 com o PR 335; 099 e 100 com os PRs 332 a 334; e 101, 103 e 104. Onde spec e código
+  divergiam, valeu o código. Os rótulos citados foram conferidos de novo no código antes de entrar no
+  texto, entre eles:
+  - `_marco.html` (*Simular sorteio*), `_previa_do_sorteio.html`, `_semente_ficticia.html` e
+    `RODADAS` em `sorteios/application/simulacao.py`;
+  - `EXTRACAO_INVIAVEL` e `EXTRACAO_INVIAVEL_NA_RETIFICACAO` em `editais/domain/validation.py`, os
+    avisos de `sorteio.html` e a *Fonte de demonstração (só a data)* em `sorteios/infrastructure/fontes/`;
+  - `INDISPONIVEL` em `interface/relatorio.py`, `MINIMO_PARA_DETALHAR` e as três espécies em
+    `interface/relatorio_do_edital.py`, e o critério do conjunto em `relatorio_consolidado_escolha.html`;
+  - a seção *Agenda* em `interface/navegacao.py`;
+  - os itens da faixa em `interface/trabalho.py` e `interface/atos_retificacao.py`,
+    `_acoes_disponiveis.html`, *Retificações em curso* em `detalhe.html` e *Editar a Retificação* em
+    `retificacao_detalhe.html`.
+- Os números de *Maturidade* foram recontados pelo método da própria página. Rodado sobre `e869d7a2`, a
+  base da revisão de 21/10, ele reproduz todos os números publicados naquela data.
+- **Não se rodou a suíte nem se percorreu o produto.** O total da suíte (12 775 passando, 12 pulados)
+  continua o de 21/10, e a página diz agora que ele não inclui os testes das sete specs. Nenhum teste lê
+  `docs/`.
+- A própria página foi aberta no navegador pela entrada `visao-do-sistema` do `.claude/launch.json`
+  (porta 8090). Todas as âncoras internas têm destino, nenhum `id` se repete, e o HTML fecha as tags que
+  abre.
+
+## O que mudou na documentação
+
+- **A prévia do sorteio (098).** Entrou a subseção *A prévia do sorteio, com semente fictícia*
+  (`#previa-do-sorteio`), dentro de *Simular a classificação antes de publicar*. Ela traz:
+  - o botão *Simular sorteio*, a semente fictícia e o que a troca;
+  - a população por lista, a ordem de cada lista e a ocupação;
+  - o resumo de 1.000 rodadas, como hipótese.
+
+  *“O sorteio”* saiu do que a prévia não simula, e a pergunta frequente, a maturidade e o catálogo
+  passaram a dizê-lo.
+- **A extração inviável (102, PR 335).** Entrou a subseção *A extração inviável: impedida na publicação,
+  avisada antes de congelar* (`#sorteio-viavel`), em *O rito, passo a passo*. Ela traz:
+  - o impeditivo de publicação;
+  - a advertência na Retificação;
+  - o aviso da tela do sorteio;
+  - a recusa que diz a saída, no fuso da tela;
+  - a granularidade declarada por fonte.
+
+  *Quando pode ser aplicado?*, o aviso *Congele antes do dia da extração* (que passou a valer também
+  para a relação sucessora), a Receita 1 e as fontes de demonstração apontam para ela.
+- **A Retificação em curso (103).** Entrou *Encontrar e retomar a Retificação em curso*
+  (`#retificacao-em-curso`), em *Retificação*. Ela traz:
+  - as portas da Retificação ainda não publicada;
+  - quem age a seguir;
+  - a edição da devolvida no mesmo registro;
+  - a segregação mostrada antes do clique.
+
+  A lacuna *a Retificação devolvida não se edita pela tela* virou *reapontar a Retificação para a versão
+  vigente*, que continua só pela API. A ficha, o catálogo, *Interface ausente* e o *Não confunda* de
+  *Publicação ≠ Retificação* foram acertados. A confirmação de homologar (104) entrou no passo do rito.
+- **Ações disponíveis, Agenda e relatórios (104, 101, 099, 100).** *Acompanhar e operar em escala*
+  ganhou quatro seções:
+  - *Ações disponíveis para você* (`#acoes-disponiveis`);
+  - *A Agenda dos Editais* (`#agenda`, com a ficha `#c-agenda`);
+  - *O relatório do Edital* (`#relatorio-do-edital`, com a ficha `#c-relatorio-do-edital`);
+  - *O relatório consolidado da unidade* (`#relatorio-consolidado`), com selo *Parcial*, porque não
+    tem autorização de produção.
+
+  A Visão Geral aponta para o consolidado. A barra da gestão, a matriz de permissões (três linhas), *Onde
+  fica cada coisa* (quatro linhas), *Dados pessoais*, os cartões de *Recursos disponíveis* e de
+  *Navegação por perspectiva* passaram a mencioná-los.
+- **Estado do produto:**
+  - 105 pastas de especificação, 461 arquivos Python de aplicação (117,0 mil linhas), 185 templates,
+    944 + 16 arquivos de teste e 128 + 36 rotas; tabelas append-only, gatilhos, migrations, módulos e
+    espécies de sinal não mudaram;
+  - 66 das 105 specs dizem `Draft`, agora também a 100, a 101 e a 102; a 099, a 103 e a 104 dizem que o
+    merge não foi feito ou não foi autorizado;
+  - *Fechados desde 20/09* ganhou três linhas: a Retificação em curso sem porta, a extração no dia do fim
+    das inscrições e a coluna que negava ação ao lado da Retificação;
+  - entrou a subseção *Abertas desde 21/10* (`#abertas-desde-21-10`), com seis itens: as sete validações
+    com pessoas, a lista reservada vazia que não reverte, as decisões deixadas ao usuário, o consolidado
+    sem autorização de produção, o título *“Retificaçãoões”* e as specs que não acompanharam o merge;
+  - a maturidade ganhou duas linhas, *Ações disponíveis e Agenda* e *Relatórios gerenciais*, e a de
+    *Auditoria* passou a dizer 41 tabelas e 59 gatilhos.
+- **Catálogo e glossário.** O catálogo passou de 134 a 141 capacidades, e o glossário de 121 a 126
+  termos: *Ações disponíveis*, *Agenda dos Editais*, *Relatório consolidado*, *Relatório do Edital* e
+  *Semente fictícia*.
+- **Âncoras.** Nenhuma foi removida. As novas são `#previa-do-sorteio`, `#sorteio-viavel`,
+  `#retificacao-em-curso`, `#acoes-disponiveis`, `#agenda`, `#c-agenda`, `#relatorio-do-edital`,
+  `#c-relatorio-do-edital`, `#relatorio-consolidado`, `#abertas-desde-21-10` e as dos cinco termos do
+  glossário.
+- **README.** As linhas da 100 à 104 deixaram de dizer que o merge não foi autorizado; a da 100 mantém
+  que a produção não foi autorizada.
+
+## O que não foi verificado, e o que ficou de fora
+
+- Nada foi percorrido no produto. Os rótulos vêm dos *templates* e do código, e o comportamento, das
+  views e dos testes.
+- As sete specs aparecem como entregues, e não como validadas: todas dizem que a validação com pessoas
+  só fecha com o relato do usuário.
+- Um defeito encontrado nesta revisão foi registrado, e não corrigido: com duas ou mais Retificações em
+  curso, o título da tela Retificar sai *“Retificaçãoões”* (`retificar.html`, linha 27).
+- O manual (`doc/manual/`) não foi tocado: a Revisão 6, de 15/10, cobre até a 072, e uma Revisão 7 é
+  decisão do usuário.
+
 # Revisão de 21/10/2026 da Visão do Sistema
 
 A documentação descrevia o sistema até a spec 092 (19/10). Desde então entraram na `main` cinco specs,
