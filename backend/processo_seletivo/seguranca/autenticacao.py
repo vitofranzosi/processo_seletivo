@@ -100,6 +100,24 @@ def _atualizar(pessoa, identidade):
     return pessoa
 
 
+def pessoa_para_implantacao(identidade, *, now=None):
+    """A pessoa do par provedor e identificador, para um comando de implantação.
+
+    **Quem já existe fica como está**: o comando não é o provedor, e nome e e-mail vazios na linha
+    de comando não são o provedor dizendo que a pessoa não tem nome. `resolver_pessoa` atualiza
+    os dois a cada entrada, e um comando que o chamasse para quem já entrou apagaria o nome dela
+    (revisão do #346). Só quem nunca entrou é criada, com o que o comando informar.
+    """
+    externa = (
+        IdentidadeExterna.objects.select_related("pessoa")
+        .filter(provedor=identidade.provedor, identificador=identidade.identificador)
+        .first()
+    )
+    if externa is not None:
+        return externa.pessoa
+    return resolver_pessoa(identidade, now=now)[0]
+
+
 def resolver_pessoa(identidade, *, now=None):
     """A pessoa desta identidade externa, criada no primeiro acesso (`FR-3005`, `FR-3006`).
 

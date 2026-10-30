@@ -233,7 +233,11 @@ def conceder_administracao_institucional(*, pessoa, motivo, adicional, now, corr
                 cursor.execute(
                     "SELECT pg_advisory_xact_lock(%s)", [TRAVA_DA_ADMINISTRACAO_INSTITUCIONAL]
                 )
-        get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
+        travada = get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
+        # Suspensa ou desativada não recebe poder institucional pela implantação, como não recebe
+        # vínculo pela tela (revisão do #346: só a substituição conferia).
+        if travada is None or not travada.is_active:
+            raise _indisponivel()
         existentes = vigentes().filter(
             escopo=ESCOPO_INSTITUCIONAL, papel=ADMINISTRADOR_INSTITUCIONAL
         )
@@ -258,6 +262,20 @@ def conceder_administracao_institucional(*, pessoa, motivo, adicional, now, corr
         )
         _registrar(ator, IMPLANTACAO, "ACESSO_CONCEDER", vinculo, now, correlation_id, motivo)
     return vinculo
+
+
+# A recusa da pessoa que não está disponível para receber acesso: desativada, ou um identificador
+# que não é de pessoa institucional nenhuma (revisão do #346).
+PESSOA_INDISPONIVEL = "pessoa_indisponivel"
+
+
+def _indisponivel():
+    return DomainError(
+        PESSOA_INDISPONIVEL,
+        "Esta pessoa não está disponível para receber acesso: está suspensa ou desativada, ou o "
+        "identificador não é de pessoa institucional.",
+        409,
+    )
 
 
 def _registrar(ator, permissao, operacao, vinculo, now, correlation_id, motivo):
