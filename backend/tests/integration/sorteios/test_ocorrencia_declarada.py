@@ -142,6 +142,30 @@ def test_uma_extracao_anterior_ao_congelamento_e_recusada_mesmo_lida_depois(cong
         _constituir(certame, relacao, antiga)
 
 
+def test_a_recusa_por_precedencia_diz_os_instantes_no_fuso_da_tela(congelado):
+    """A mensagem dizia 03:00 e 14:20 onde a tela dizia 00:00 e 11:20 — o mesmo instante, em UTC.
+
+    Foi a única explicação que o operador recebeu no teste de 29/10, e ela contradizia a tela logo
+    abaixo: quem lia *"a fonte a situa a partir de 03:00"* concluía que a fonte informara um
+    horário, e ia investigar o lado errado.
+    """
+    certame, relacao = congelado
+    inicio_do_dia = timezone.localtime(relacao.publicada_em).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    do_mesmo_dia = _observar(
+        certame, METODO["occurrence"], Extracao(ocorrida_nao_antes_de=inicio_do_dia)
+    )
+
+    with pytest.raises(DomainError) as recusa:
+        _constituir(certame, relacao, do_mesmo_dia)
+
+    assert recusa.value.code == "occurrence_precedes_freeze"
+    congelada = f"{timezone.localtime(relacao.publicada_em):%d/%m/%Y %H:%M}"
+    assert f"a partir de {inicio_do_dia:%d/%m/%Y} 00:00" in recusa.value.detail
+    assert f"congelada em {congelada}" in recusa.value.detail
+
+
 def test_uma_ocorrencia_sem_data_nao_semeia_sorteio(congelado):
     """Sem saber quando o evento aconteceu, não há como afirmar precedência (FR-016)."""
     certame, relacao = congelado
