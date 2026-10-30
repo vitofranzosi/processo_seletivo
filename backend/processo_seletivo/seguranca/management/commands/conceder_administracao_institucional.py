@@ -13,7 +13,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from processo_seletivo.seguranca.application import acessos
-from processo_seletivo.seguranca.autenticacao import IdentidadeAutenticada, resolver_pessoa
+from processo_seletivo.seguranca.autenticacao import IdentidadeAutenticada, pessoa_para_implantacao
 from processo_seletivo.shared.api.problems import DomainError
 
 
@@ -44,7 +44,7 @@ class Command(BaseCommand):
         try:
             # Junto, para que a recusa não deixe para trás uma pessoa criada sem vínculo.
             with transaction.atomic():
-                pessoa, _ = resolver_pessoa(identidade)
+                pessoa = pessoa_para_implantacao(identidade)
                 if pessoa is None:
                     raise CommandError("provedor e identificador são obrigatórios.")
                 vinculo = acessos.conceder_administracao_institucional(
