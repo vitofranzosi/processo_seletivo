@@ -1,0 +1,8 @@
+{% comment %} Um objeto de trabalho da faixa (104, FR-2809): o que é, em que situação está, desde quando
+   espera, e o ato — nessa ordem de leitura, com o link no título. {% endcomment %}
+<li class="item-de-trabalho">
+  <a class="titulo-do-item" href="{{ objeto.url }}">{{ objeto.titulo }}</a>
+  <span class="ato-do-item">{{ objeto.ato }}</span>
+  <span class="situacao-do-item">{{ objeto.situacao }}{% if objeto.desde %} · desde {{ objeto.desde|date:"d/m/Y" }}{% endif %}</span>
+  {% if objeto.detalhe %}<span class="detalhe-do-item">{{ objeto.detalhe|truncatechars:140 }}</span>{% endif %}
+</li>

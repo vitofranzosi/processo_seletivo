@@ -7,3 +7,31 @@
    embaixo da situação do Edital, um por Retificação. A situação já diz o estado do Edital; a marca
    diz o que a Retificação dele espera, e de quem. */
 .marca-da-retificacao{display:block;margin-top:.3rem;font-size:.8125rem;overflow-wrap:anywhere}
+
+/* "Ações disponíveis para você" (104, FR-2807 a FR-2813). Uma caixa com filete verde à esquerda,
+   para que o trabalho se distinga do inventário sem depender só da cor: tem título, número e verbo.
+   Os itens são linhas de texto, e não cartões nem botões: o título leva ao objeto, o ato diz o que
+   se fará lá. A 375 px tudo empilha, e nada rola para o lado. */
+.acoes-disponiveis{background:var(--branco);border:1px solid var(--borda);border-left:4px solid var(--verde);
+  border-radius:6px;padding:.9rem 1rem;margin:1rem 0}
+.acoes-disponiveis h2{margin:0 0 .5rem;font-size:1.05rem;display:flex;flex-wrap:wrap;gap:.2rem .6rem;
+  align-items:baseline}
+.total-de-acoes{font-size:.85rem;font-weight:400;color:var(--texto-fraco)}
+.itens-de-trabalho{list-style:none;margin:0;padding:0}
+.item-de-trabalho{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.1rem 1rem;
+  padding:.55rem 0;border-top:1px solid var(--fundo);overflow-wrap:anywhere}
+.item-de-trabalho:first-child{border-top:0}
+.titulo-do-item{font-weight:600}
+.ato-do-item{grid-column:2;grid-row:1;font-weight:600;color:var(--verde);text-align:right}
+.situacao-do-item,.detalhe-do-item{grid-column:1 / -1;font-size:.85rem;color:var(--texto-fraco)}
+.demais-acoes{margin-top:.3rem}
+.demais-acoes summary{cursor:pointer;color:var(--verde);font-size:.9rem}
+.cobertura-da-faixa{margin:.6rem 0 0;font-size:.8rem;color:var(--texto-fraco)}
+.sem-acoes{margin:.8rem 0;font-size:.9rem;color:var(--texto-fraco)}
+@media (max-width:40rem){
+  .item-de-trabalho{grid-template-columns:minmax(0,1fr)}
+  .ato-do-item{grid-column:1;grid-row:auto;text-align:left}
+}
+/* O ato da Retificação na coluna da linha (104, FR-2814): o único preenchido da linha, porque é o
+   trabalho que espera a pessoa — Encerrar e Cancelar continuam contornados, e por último. */
+.acao.principal-da-linha{background:var(--verde);border-color:var(--verde);color:var(--branco)}

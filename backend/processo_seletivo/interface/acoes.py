@@ -21,7 +21,7 @@ descobrir.
 
 from dataclasses import dataclass
 
-from django.db.models import Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef
 from django.urls import reverse
 
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
@@ -89,7 +89,7 @@ def pode_retificar(edital, ator) -> bool:
     return edital.status == "PUBLICADO" and ator.can("retificacao:elaborar")
 
 
-def _navegacao(edital, ator, *, com_relatorio=True):
+def _navegacao(edital, ator, *, com_relatorio=True, contagens=None):
     """Ações que levam a outra tela. Não são atos: não confirmam, não registram, não alteram."""
     if ator.can("edital:elaborar") and edital.status == "EM_ELABORACAO":
         yield Acao(
@@ -110,9 +110,15 @@ def _navegacao(edital, ator, *, com_relatorio=True):
     if edital.status in ESTADOS_COM_INSCRICOES and ator.can("inscricao:consultar"):
         # Só as submetidas: o rótulo diz "recebidas", e rascunho aberto não foi recebido por
         # ninguém. Contá-lo faria a página anunciar um volume que a lista não confirma.
-        recebidas = Inscricao.objects.filter(
-            edital=edital, status=Inscricao.Status.SUBMETIDA
-        ).count()
+        #
+        # **Lido da página inteira quando a Lista o traz** (104, FR-2818): eram duas consultas por
+        # Edital publicado, e a faixa de ações tornaria esse custo visível. Sem `contagens`, o
+        # detalhe conta como sempre contou — é um Edital só.
+        recebidas = (
+            contagens["inscricoes"].get(edital.id, 0)
+            if contagens is not None
+            else Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA).count()
+        )
         yield Acao(
             "inscricoes",
             # O total no próprio rótulo (FR-066): "há inscrições e quantas" é a informação que
@@ -130,7 +136,11 @@ def _navegacao(edital, ator, *, com_relatorio=True):
     # recebida, decididas inclusive, e um julgador com a fila vazia lia "Recursos recebidos (7)". A
     # tela para onde a ação leva continua listando todas; o rótulo é o que diz o que espera.
     if edital.status in ESTADOS_COM_INSCRICOES and ator.can(recursos_admitir.PERMISSAO):
-        aguardando = recursos_aguardando_decisao(edital)
+        aguardando = (
+            contagens["recursos"].get(edital.id, 0)
+            if contagens is not None
+            else recursos_aguardando_decisao(edital)
+        )
         yield Acao(
             "recursos",
             f"Recursos aguardando decisão ({aguardando})",
@@ -227,13 +237,13 @@ def _motivo_previsivel(ato, *, pendencias, segregacao):
     return ""
 
 
-def do_edital(edital, ator, *, pendencias=(), segregacao=False, com_relatorio=True):
+def do_edital(edital, ator, *, pendencias=(), segregacao=False, com_relatorio=True, contagens=None):
     """O conjunto completo: o que se pode fazer, e o que não se pode **e por quê**.
 
     `pendencias` e `segregacao` chegam prontas de quem já as calculou para a tela — recalculá-las
     aqui faria a mesma informação vir de dois lugares, que é o defeito que este módulo corrige.
     """
-    conjunto = list(_navegacao(edital, ator, com_relatorio=com_relatorio))
+    conjunto = list(_navegacao(edital, ator, com_relatorio=com_relatorio, contagens=contagens))
     for ato in atos.disponiveis(edital, ator):
         conjunto.append(
             Acao(
@@ -415,19 +425,93 @@ def proximo_passo(edital, ator, *, segregacao=False):
     return {"papel": papel, "ato": ato, "sou_eu": chave in meus, "observacao": ""}
 
 
-def recursos_aguardando_decisao(edital):
-    """Quantas peças do Edital esperam decisão — sem juízo, ou admitidas e sem decisão.
+def _aguardando_decisao():
+    """As peças que esperam decisão — sem juízo, ou admitidas e sem decisão.
 
-    **Uma consulta, e nenhuma peça materializada.** A lista de Processos monta ações para vários
-    Editais, e trazer cada peça para contá-la em Python seria custo por linha numa tela que não
-    mostra peça nenhuma. As duas condições são as mesmas que a situação da peça usa
-    (`recursos/application/selectors.py`, `_situacao`): sem juízo, aguarda admissibilidade;
-    admitida e sem decisão, aguarda julgamento; o resto está decidido.
+    As duas condições são as mesmas que a situação da peça usa (`recursos/application/selectors.py`,
+    `_situacao`): sem juízo, aguarda admissibilidade; admitida e sem decisão, aguarda julgamento; o
+    resto está decidido. Uma definição só para a contagem de um Edital e para a da página inteira.
     """
     juizo = JuizoDeAdmissibilidade.objects.filter(recurso_id=OuterRef("pk"))
     decisao = DecisaoRecurso.objects.filter(recurso_id=OuterRef("pk"))
-    return (
-        Recurso.objects.filter(inscricao__edital=edital)
-        .filter(~Exists(juizo) | (Exists(juizo.filter(admitido=True)) & ~Exists(decisao)))
-        .count()
+    return Recurso.objects.filter(
+        ~Exists(juizo) | (Exists(juizo.filter(admitido=True)) & ~Exists(decisao))
     )
+
+
+def recursos_aguardando_decisao(edital):
+    """Quantas peças do Edital esperam decisão.
+
+    **Uma consulta, e nenhuma peça materializada.** A lista de Processos monta ações para vários
+    Editais, e trazer cada peça para contá-la em Python seria custo por linha numa tela que não
+    mostra peça nenhuma.
+    """
+    return _aguardando_decisao().filter(inscricao__edital=edital).count()
+
+
+def recursos_por_edital(edital_ids):
+    """`{edital_id: quantas peças esperam decisão}`, numa consulta para vários Editais (104)."""
+    return dict(
+        _aguardando_decisao()
+        .filter(inscricao__edital_id__in=list(edital_ids))
+        .values_list("inscricao__edital_id")
+        .annotate(quantas=Count("id"))
+        .values_list("inscricao__edital_id", "quantas")
+    )
+
+
+def contagens_da_lista(editais, ator):
+    """As contagens que a coluna "O que posso fazer" escreve, para a página inteira (104, R-003).
+
+    Só para os Editais que têm inscrição a consultar, e só o que o ator vai ver: quem não consulta
+    inscrições não paga a contagem delas, e quem não julga recursos não paga a dos recursos. Duas
+    consultas, no máximo, qualquer que seja o número de Editais.
+    """
+    ids = [edital.id for edital in editais if edital.status in ESTADOS_COM_INSCRICOES]
+    contagens = {"inscricoes": {}, "recursos": {}}
+    if ids and ator.can("inscricao:consultar"):
+        contagens["inscricoes"] = dict(
+            Inscricao.objects.filter(edital_id__in=ids, status=Inscricao.Status.SUBMETIDA)
+            .values_list("edital_id")
+            .annotate(quantas=Count("id"))
+            .values_list("edital_id", "quantas")
+        )
+    if ids and ator.can(recursos_admitir.PERMISSAO):
+        contagens["recursos"] = recursos_por_edital(ids)
+    return contagens
+
+
+# ---------------------------------------------------------------------------
+# A Lista não oferece como ato o que só a validação do conteúdo decide (104)
+# ---------------------------------------------------------------------------
+
+#: Os atos do Edital cuja recusa previsível depende da validação do conteúdo inteiro (`_pendencias`
+#: monta o snapshot e valida). A Lista não a calcula — seriam dezenas de consultas por linha —, e
+#: por isso não os oferece como ato: leva à conferência no detalhe, onde a previsão é feita
+#: (104, D-004, FR-2815).
+CONFERIDOS_NO_DETALHE = {
+    "submeter": "Conferir e submeter",
+    "publicar": "Conferir e publicar",
+}
+
+
+def para_a_lista(conjunto, edital):
+    """O mesmo conjunto, com os atos que dependem da validação trocados por "Conferir e…".
+
+    **A chave não muda**: a Lista e o detalhe continuam oferecendo as mesmas ações (FR-023 da 002,
+    `test_listagem_e_detalhe_nao_divergem`); muda o destino e o rótulo, que passam a dizer o que o
+    clique faz. A ação já desabilitada — pela segregação, lida em lote — fica como está, com o
+    motivo (FR-2816).
+    """
+    destino = reverse("interface:detalhe", args=[edital.id])
+    return [
+        Acao(
+            acao.chave,
+            CONFERIDOS_NO_DETALHE[acao.chave],
+            destino,
+            estilo=acao.estilo,
+        )
+        if acao.chave in CONFERIDOS_NO_DETALHE and acao.disponivel
+        else acao
+        for acao in conjunto
+    ]

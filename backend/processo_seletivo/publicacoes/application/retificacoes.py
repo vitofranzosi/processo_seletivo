@@ -756,6 +756,27 @@ def advertencias_do_ato(retificacao):
         # Conteúdo que nem se monta é assunto do ato, que recusa e diz por quê. Aqui a resposta é a
         # lista vazia: conselho sobre conteúdo impossível não ajuda ninguém.
         return []
+    return _advertencias_do_conteudo(retificacao, content)
+
+
+def advertencias_do_vigente(retificacao):
+    """Os pares (código, caminho) das advertências que o conteúdo vigente **já** tinha (104, R-009).
+
+    A confirmação mostrava, para quem homologa a correção da localidade de um Perfil, avisos sobre
+    as vagas de outra modalidade e os prazos de recurso — verdadeiros, e anteriores à Retificação.
+    Calculados aqui sobre o mesmo conteúdo em vigor, **sem** as alterações, e com a mesma função, a
+    diferença é exatamente o que o ato introduz. Nada aqui muda o que se adverte; muda o que vem
+    primeiro na tela.
+    """
+    momento = retificacao.effective_at or timezone.now()
+    try:
+        content = _content_in_force(retificacao.edital, momento)
+    except (ValueError, KeyError, TypeError):
+        return set()
+    return {(item.code, item.path) for item in _advertencias_do_conteudo(retificacao, content)}
+
+
+def _advertencias_do_conteudo(retificacao, content):
     # **O ato omitido aqui é deliberado, e não esquecimento.** Esta chamada usa o padrão —
     # publicação — porque o que ela calcula é o conjunto de códigos que *impediriam* o conteúdo, e
     # serve só para subtraí-los da lista logo abaixo. Passar `ATO_DE_RETIFICACAO` aqui mudaria o

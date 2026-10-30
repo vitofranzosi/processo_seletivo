@@ -87,6 +87,17 @@ permanecem preservados.</p>
     interrompem o Edital vêm por último, separadas por um filete e só contornadas — com o marcador
     "irreversível" de sempre.
     {% endcomment %}
+    {% comment %}
+    **A Retificação que espera a pessoa, no cartão que diz o que fazer** (104, FR-2819). O cartão
+    falava só do Edital, e afirmava "Nenhum ato disponível" duas seções acima da Retificação em que
+    a mesma pessoa podia atuar. O texto e o destino são os da faixa da Lista e da seção abaixo — o
+    mesmo resumo da 103 —, e por isso as três não divergem.
+    {% endcomment %}
+    {% for item in retificacoes_em_curso %}{% if item.meu_ato %}
+    <p class="bastao"><strong>Uma Retificação deste Edital aguarda você:</strong>
+      <a href="{{ item.url }}">{{ item.ato_na_lista }}</a> ({{ item.rotulo_situacao }}).</p>
+    {% endif %}{% endfor %}
+
     {% if grupo %}
     {% if grupo.principal or grupo.secundarias %}
     <ul class="lista-acoes em-linha">
@@ -99,9 +110,16 @@ permanecem preservados.</p>
       {% for acao in grupo.terminais %}{% include "interface/_acao_do_edital.html" with peso=acao.estilo %}{% endfor %}
     </ul>
     {% endif %}
-    {% else %}
+    {% elif not retificacao_aguarda_voce %}
+    {% comment %} Sem ato do Edital e sem Retificação para a pessoa: o cartão diz quem age em cada
+       Retificação em curso, e só sem nenhuma volta a frase de sempre (FR-2820). {% endcomment %}
     <ul class="lista-acoes">
+      {% for item in retificacoes_em_curso %}
+      <li class="nenhuma">Nenhum ato do Edital para seus papéis. A Retificação de
+        {{ item.retificacao.created_at|date:"d/m/Y" }} ({{ item.rotulo_situacao }}) aguarda {{ item.passo.papel }}.</li>
+      {% empty %}
       <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
+      {% endfor %}
     </ul>
     {% endif %}
   </section>

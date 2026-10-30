@@ -267,6 +267,40 @@ def participantes_do_edital(edital):
     }
 
 
+def participantes_em_lote(editais):
+    """`participantes_do_edital` para vários Editais, em duas consultas (104, R-004).
+
+    Só o que a segregação e a espera precisam: quem submeteu a revisão mais recente e quando, e
+    quem a homologou e quando. A Lista e a faixa de ações leem isto para a página inteira; ler por
+    Edital seria o custo por linha que a 104 existe para não ter. A regra de "a revisão mais
+    recente" e "a homologação não revogada dela" é a mesma de `participantes_do_edital`.
+    """
+    from processo_seletivo.publicacoes.models import Homologacao, RevisaoEdital
+
+    ids = [edital.id for edital in editais]
+    revisoes = {}
+    for revisao in RevisaoEdital.objects.filter(edital_id__in=ids).order_by(
+        "edital_id", "-submitted_at"
+    ):
+        revisoes.setdefault(revisao.edital_id, revisao)
+    homologacoes = {}
+    for homologacao in Homologacao.objects.filter(
+        revisao__in=[revisao.id for revisao in revisoes.values()], revoked_at__isnull=True
+    ).order_by("revisao_id", "-homologated_at"):
+        homologacoes.setdefault(homologacao.revisao_id, homologacao)
+    resultado = {}
+    for edital_id in ids:
+        revisao = revisoes.get(edital_id)
+        homologacao = homologacoes.get(revisao.id) if revisao else None
+        resultado[edital_id] = {
+            "elaborou": revisao.prepared_by if revisao else "",
+            "elaborou_em": revisao.submitted_at if revisao else None,
+            "homologou": homologacao.homologated_by if homologacao else "",
+            "homologou_em": homologacao.homologated_at if homologacao else None,
+        }
+    return resultado
+
+
 def impede_por_segregacao(participantes, ator):
     """Publicar exige que outra pessoa tenha elaborado ou homologado (FR-021 da 001)."""
     return bool(

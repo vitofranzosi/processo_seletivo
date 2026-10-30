@@ -5,7 +5,7 @@
 {% block conteudo %}
 <h1>Retificação do Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">{{ retificacao.justification }}
-  <span class="situacao s-{{ retificacao.status }}">{{ retificacao.status|situacao }}</span></p>
+  <span class="situacao s-{{ retificacao.status }}">{% if retificacao.status == "EM_ELABORACAO" and retificacao.return_reason %}Devolvida{% elif retificacao.status == "EM_REVISAO" and retificacao.return_reason %}Reenviada, em revisão{% else %}{{ retificacao.status|situacao }}{% endif %}</span></p>
 
 {% if request.GET.ato == "editar" %}<p class="sucesso" role="status">Alterações gravadas nesta mesma Retificação.</p>
 {% elif request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
@@ -37,6 +37,11 @@
        103 ele só existia na trilha. É o da última devolução; as anteriores estão na auditoria. {% endcomment %}
     {% if retificacao.status == "EM_ELABORACAO" and retificacao.return_reason %}
     <p class="aviso"><strong>Devolvida para correção.</strong> Motivo: {{ retificacao.return_reason }}</p>
+    {% elif retificacao.status == "EM_REVISAO" and retificacao.return_reason %}
+    {% comment %} A reenviada diz que já voltou uma vez, e por quê (104, FR-2822): quem homologa de novo
+       confere se a correção atende ao motivo. {% endcomment %}
+    <p class="ajuda"><strong>Reenviada depois de devolvida.</strong> Motivo da última devolução:
+      {{ retificacao.return_reason }}</p>
     {% endif %}
 
     {% comment %}
