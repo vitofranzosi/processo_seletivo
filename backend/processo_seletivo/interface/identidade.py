@@ -149,9 +149,18 @@ DESCRICOES = {
     "participante-piloto-assistente": "Participa do piloto do assistente do Edital.",
 }
 
-# A origem da identidade na sessão (075, `FR-1698`). Hoje só existe uma; o diretório institucional
-# será a segunda, e é ela que continua valendo com o seletor desligado.
+# A origem da identidade na sessão (075, `FR-1698`). A institucional é a segunda (106): é ela que
+# continua valendo com o seletor desligado, e a única que produção admite.
 ORIGEM_DEMONSTRACAO = "demonstracao"
+ORIGEM_INSTITUCIONAL = "institucional"
+
+# O estado de uso único da ida ao provedor (106, `FR-3023`), em chave própria: ele existe antes de
+# haver identidade, e não pode sobreviver nela.
+CHAVE_ESTADO_INSTITUCIONAL = "interface_estado_institucional"
+
+# Onde a resolução institucional guarda o resultado na própria requisição (106, `D-006`). A página
+# lê o ator dezenas de vezes; sem isto, cada leitura seriam duas consultas (`SC-1005`).
+_ATOR_DA_REQUISICAO = "_ator_institucional"
 
 
 def permissoes_de(papeis):
@@ -170,10 +179,48 @@ def ator_da_sessao(request):
     dados = request.session.get(CHAVE_SESSAO)
     if not dados:
         return None
+    if dados.get("origem") == ORIGEM_INSTITUCIONAL:
+        return _resolucao_institucional(request, dados)[0]
     if dados.get("origem", ORIGEM_DEMONSTRACAO) == ORIGEM_DEMONSTRACAO and not seletor_disponivel():
         encerrar(request)
         return None
     return Actor(dados["subject"], dados["escopo"], permissoes_de(dados["papeis"]))
+
+
+def _resolucao_institucional(request, dados):
+    """O ator institucional e os papéis dele, recalculados dos vínculos (106, `D-006`).
+
+    **Nada de papel na sessão.** O que a sessão guarda é a unidade ativa; os papéis vêm dos vínculos
+    vigentes ali, e por isso a revogação vale na requisição seguinte (`FR-3017`). Sem vínculo
+    vigente na unidade ativa não há ator — e a presidência de uma comissão, que se confere pelo
+    `subject` do ator, não alcança quem perdeu o acesso à unidade (`FR-3018`).
+
+    **Sem provedor neste ambiente, a sessão se encerra** (`FR-3028`), pela razão da demonstração sem
+    o seletor: a origem que deixou de ser admitida não volta a valer quando a configuração voltar.
+    """
+    guardado = getattr(request, _ATOR_DA_REQUISICAO, None)
+    if guardado is not None:
+        return guardado
+    from django.contrib.auth import get_user
+
+    from processo_seletivo.seguranca.application import acessos
+    from processo_seletivo.seguranca.autenticacao import caminho_do_provedor
+
+    resultado = (None, [])
+    if not caminho_do_provedor():
+        encerrar(request)
+    else:
+        pessoa = get_user(request)
+        if not pessoa.is_authenticated:
+            encerrar(request)
+        else:
+            unidade = dados.get("unidade")
+            papeis = acessos.papeis_vigentes(pessoa.pk, unidade)
+            if papeis:
+                ator = Actor(pessoa.username, unidade, acessos.permissoes_dos_papeis(papeis))
+                resultado = (ator, papeis)
+    setattr(request, _ATOR_DA_REQUISICAO, resultado)
+    return resultado
 
 
 def identificar(request, *, subject, papeis, escopo=ESCOPO_PADRAO, origem=ORIGEM_DEMONSTRACAO):
@@ -186,21 +233,152 @@ def identificar(request, *, subject, papeis, escopo=ESCOPO_PADRAO, origem=ORIGEM
 
 
 def encerrar(request):
-    request.session.pop(CHAVE_SESSAO, None)
+    dados = request.session.pop(CHAVE_SESSAO, None)
+    if hasattr(request, _ATOR_DA_REQUISICAO):
+        delattr(request, _ATOR_DA_REQUISICAO)
+    if dados and dados.get("origem") == ORIGEM_INSTITUCIONAL:
+        # A sessão inteira, e não só a chave: o `login()` do Django gravou as dele, e sobrariam
+        # apontando para a pessoa (`FR-3020`). A da demonstração continua só tirando a chave, como
+        # sempre tirou.
+        from django.contrib.auth import logout
+
+        logout(request)
 
 
 def seletor_disponivel():
+    """Se o seletor de demonstração existe neste ambiente.
+
+    **Nunca sob a marca de produção** (106, `FR-3003`). `production.py` já recusa subir com a
+    chave ligada; esta conferência fecha o caso de a chave mudar depois do *boot* — um
+    `override_settings`, uma configuração de terceiros —, e nenhum caminho cai para a demonstração.
+    """
+    if getattr(settings, "AMBIENTE_DE_PRODUCAO", False):
+        return False
     return bool(getattr(settings, "INTERFACE_SELETOR_IDENTIDADE", False))
+
+
+def institucional_disponivel():
+    from processo_seletivo.seguranca.autenticacao import caminho_do_provedor
+
+    return bool(caminho_do_provedor())
 
 
 def metodos_disponiveis():
     """Por onde se entra na gestão neste ambiente (075, `FR-1691`).
 
-    A página de acesso desenha o que esta lista disser, e só isso. Quando o diretório
-    institucional chegar, ele entra aqui como outro método, e a página não precisa ser redesenhada.
-    Lista vazia é produção hoje: a página diz que a entrada não está configurada.
+    A página de acesso desenha o que esta lista disser, e só isso. A institucional entra quando há
+    provedor configurado (106, `FR-3025`), e a página não foi redesenhada. Lista vazia é produção
+    sem provedor: a página diz que a entrada não está configurada.
     """
-    return [ORIGEM_DEMONSTRACAO] if seletor_disponivel() else []
+    metodos = [ORIGEM_DEMONSTRACAO] if seletor_disponivel() else []
+    if institucional_disponivel():
+        metodos.append(ORIGEM_INSTITUCIONAL)
+    return metodos
+
+
+def entrar_institucional(request, identidade, *, correlation_id=""):
+    """A pessoa que o provedor autenticou, com a sessão aberta — ou None (106, `FR-3020`).
+
+    O `login()` do Django troca o identificador da sessão e descarta a sessão de outra pessoa que
+    estivesse nela. A unidade ativa é a primeira em que a pessoa atua (`FR-3019`).
+    """
+    from django.contrib.auth import authenticate, login
+    from django.utils import timezone
+
+    from processo_seletivo.seguranca.application import acessos
+
+    pessoa = authenticate(request, identidade_institucional=identidade)
+    if pessoa is None:
+        return None
+    externa = pessoa.identidade_externa_usada
+    login(request, pessoa)
+    unidade = acessos.unidade_inicial(pessoa.pk)
+    request.session[CHAVE_SESSAO] = {
+        "origem": ORIGEM_INSTITUCIONAL,
+        "unidade": unidade,
+        "identidade_externa": str(externa.pk),
+    }
+    if hasattr(request, _ATOR_DA_REQUISICAO):
+        delattr(request, _ATOR_DA_REQUISICAO)
+    _registrar_sessao("ENTRADA", pessoa.username, unidade, externa, timezone.now(), correlation_id)
+    return pessoa
+
+
+def trocar_unidade(request, escopo, *, correlation_id=""):
+    """Passa a atuar em outro escopo em que a pessoa tem vínculo vigente (106, `FR-3019`).
+
+    Não carrega nada de um escopo para o outro: o ator do novo é recalculado dos vínculos dele.
+    """
+    from django.contrib.auth import get_user
+    from django.utils import timezone
+
+    from processo_seletivo.seguranca.application import acessos
+    from processo_seletivo.seguranca.models import IdentidadeExterna
+    from processo_seletivo.shared.api.problems import DomainError
+
+    dados = request.session.get(CHAVE_SESSAO) or {}
+    pessoa = get_user(request) if dados.get("origem") == ORIGEM_INSTITUCIONAL else None
+    if pessoa is None or not pessoa.is_authenticated:
+        raise DomainError(
+            "sem_sessao_institucional", "A troca de unidade é da entrada institucional.", 403
+        )
+    if escopo not in acessos.escopos_vigentes(pessoa.pk):
+        raise DomainError(
+            "sem_vinculo_no_escopo", "Você não tem acesso vigente nesta unidade.", 403
+        )
+    request.session[CHAVE_SESSAO] = {**dados, "unidade": escopo}
+    if hasattr(request, _ATOR_DA_REQUISICAO):
+        delattr(request, _ATOR_DA_REQUISICAO)
+    externa = IdentidadeExterna.objects.get(pk=dados["identidade_externa"])
+    _registrar_sessao(
+        "TROCA_DE_UNIDADE", pessoa.username, escopo, externa, timezone.now(), correlation_id
+    )
+
+
+def sair(request, *, correlation_id=""):
+    """Encerra a identidade da sessão; a institucional, com a saída na trilha (106, `FR-3020`)."""
+    dados = request.session.get(CHAVE_SESSAO) or {}
+    if dados.get("origem") == ORIGEM_INSTITUCIONAL:
+        from django.contrib.auth import get_user
+        from django.utils import timezone
+
+        from processo_seletivo.seguranca.models import IdentidadeExterna
+
+        pessoa = get_user(request)
+        externa = IdentidadeExterna.objects.filter(pk=dados.get("identidade_externa")).first()
+        if pessoa.is_authenticated and externa is not None:
+            _registrar_sessao(
+                "SAIDA",
+                pessoa.username,
+                dados.get("unidade"),
+                externa,
+                timezone.now(),
+                correlation_id,
+            )
+    encerrar(request)
+
+
+def _registrar_sessao(operacao, subject, escopo, externa, now, correlation_id):
+    """Entrada, troca e saída na trilha (106, `D-010`).
+
+    O agregado é a identidade externa usada, porque a trilha exige UUID e o `User` tem chave
+    inteira; e ela diz, além de quem, por qual provedor a pessoa entrou. O escopo nunca é vazio:
+    quem não tem unidade fica no institucional, que uma consulta alcança.
+    """
+    from processo_seletivo.auditoria.application import record_event
+    from processo_seletivo.seguranca.acessos import ESCOPO_INSTITUCIONAL
+
+    record_event(
+        actor=Actor(subject, escopo or ESCOPO_INSTITUCIONAL),
+        permission="sessao:institucional",
+        operation=operacao,
+        aggregate=externa,
+        now=now,
+        correlation_id=correlation_id,
+        new_state="",
+        new_revision=None,
+        detalhe={"provedor": externa.provedor},
+    )
 
 
 def destino_seguro(request, valor):
@@ -241,9 +419,16 @@ def contexto_identidade(request):
     """Disponibiliza a identidade a todos os templates, sem cada view precisar repassá-la."""
     ator = ator_da_sessao(request)
     dados = (request.session.get(CHAVE_SESSAO) or {}) if ator else {}
+    if dados.get("origem") == ORIGEM_INSTITUCIONAL:
+        from processo_seletivo.seguranca.application.acessos import catalogo
+
+        todos = catalogo()
+        nomes = [todos[p][0] for p in _resolucao_institucional(request, dados)[1] if p in todos]
+    else:
+        nomes = [PAPEIS[p][0] for p in dados.get("papeis", []) if p in PAPEIS]
     return {
         "ator": ator,
-        "papeis_do_ator": [PAPEIS[p][0] for p in dados.get("papeis", []) if p in PAPEIS],
+        "papeis_do_ator": nomes,
         "seletor_identidade": seletor_disponivel(),
         # O portal oferece a porta da gestão só onde há por onde entrar (075, `FR-1699`). É o único
         # dado da gestão que o portal lê, e não diz nada sobre quem está identificado.

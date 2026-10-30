@@ -182,6 +182,17 @@ STATICFILES_DIRS = [BASE_DIR / "processo_seletivo" / "shared" / "static"]
 # Nunca deve estar ligado em produção — ver specs/002-frontend-administrativo/plan.md, Decisão 4.
 INTERFACE_SELETOR_IDENTIDADE = os.getenv("INTERFACE_SELETOR_IDENTIDADE", "false").lower() == "true"
 
+# O adaptador da autenticação institucional da gestão (106, contrato do adaptador): o caminho de
+# uma classe que cumpre o contrato de `seguranca/autenticacao.py`. Vazio, a entrada
+# institucional não existe — e em produção, sem ela, a gestão continua respondendo 503. Nenhum
+# provedor real foi integrado ainda; o simulado mora no código de teste, e `production.py` o recusa.
+GESTAO_PROVEDOR_INSTITUCIONAL = os.getenv("GESTAO_PROVEDOR_INSTITUCIONAL", "").strip()
+
+# O único *backend* de autenticação: o institucional, que autentica a identidade entregue pelo
+# adaptador e **não aceita usuário e senha** (106, `D-008`). Sem esta linha, o padrão do Django
+# seria o `ModelBackend`, e um `createsuperuser` com senha abriria uma porta que ninguém declarou.
+AUTHENTICATION_BACKENDS = ["processo_seletivo.seguranca.autenticacao.BackendInstitucional"]
+
 # Identidade do candidato (009): eixo próprio, e enquanto o provedor institucional não existir,
 # um de demonstração. Como o seletor acima, nunca em produção — ver `production.py`.
 PORTAL_IDENTIDADE_DEMO = os.getenv("PORTAL_IDENTIDADE_DEMO", "false").lower() == "true"

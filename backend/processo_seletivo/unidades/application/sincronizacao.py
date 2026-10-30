@@ -17,6 +17,7 @@ import re
 from pathlib import Path
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.seguranca.acessos import ESCOPO_INSTITUCIONAL
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -51,6 +52,10 @@ def validar(declaradas):
     for codigo, entrada in declaradas.items():
         if not isinstance(codigo, str) or not _CODIGO.match(codigo):
             raise _malformada(codigo, "o código", "deve ter só minúsculas, dígitos e hífen")
+        if codigo == ESCOPO_INSTITUCIONAL:
+            # O escopo dos vínculos que não são de unidade (106, `D-011`): uma unidade com este
+            # código receberia o que o administrador institucional concede, sem ninguém conceder.
+            raise _malformada(codigo, "o código", "é reservado ao escopo institucional")
         if not isinstance(entrada, dict):
             raise _malformada(codigo, "a entrada", "deve ser um objeto")
         sobrando = set(entrada) - set(CAMPOS)
