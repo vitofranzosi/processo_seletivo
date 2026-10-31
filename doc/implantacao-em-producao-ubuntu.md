@@ -2262,10 +2262,17 @@ journalctl -u processoseletivo -o cat | grep '<RID>'
 
 - pela interface, em `/gestao/editais/<id>/auditoria` e `/gestao/processos/<id>/auditoria`, com o
   papel Auditor (`auditoria:consultar`);
+- os atos administrativos da unidade — o registro e a alteração dela pela sincronização, as
+  autoridades, os modelos de aviso, os avisos confirmados e interrompidos e os acessos concedidos e
+  revogados —, em `/gestao/trilha-da-unidade` ("Trilha da unidade", na barra), com o mesmo papel
+  (`108`). **Use a página, e não o banco, para esses atos**;
 - pela API, em `GET /api/v1/admin/auditoria?aggregateType=&aggregateId=`.
 
-Enquanto B-1 fechar as duas portas, consulte pelo banco. **Esse acesso direto não é auditado pela
-aplicação**: restrinja-o a quem precisa e registre o motivo fora do sistema.
+Ficam só no banco: as entradas e saídas de sessão, as suspensões de pessoa e a administração
+institucional (o escopo `institucional`), que a trilha da unidade não mostra (`108`, pendências P1 e
+P2). Enquanto a identidade institucional não estiver ativa, a gestão inteira só abre com o seletor
+de demonstração, que produção recusa; até lá, consulte pelo banco. **Esse acesso direto não é
+auditado pela aplicação**: restrinja-o a quem precisa e registre o motivo fora do sistema.
 
 ```bash
 sudo -u postgres psql -d processo_seletivo -c "

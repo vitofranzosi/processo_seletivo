@@ -8,6 +8,7 @@ from processo_seletivo.interface import (
     duvidas,
     prototipo_do_assistente,
     relatorio,
+    trilha_da_unidade,
     views,
 )
 
@@ -79,6 +80,8 @@ urlpatterns = [
         acessos.reativar,
         name="administracao-de-acessos-reativar",
     ),
+    # A trilha da unidade (108): só leitura, sem identificador no endereço — a unidade é a do ator.
+    path("trilha-da-unidade", trilha_da_unidade.trilha_da_unidade, name="trilha-da-unidade"),
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
     path("agenda", views.agenda, name="agenda"),
