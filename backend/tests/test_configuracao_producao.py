@@ -198,6 +198,9 @@ def test_configuracao_insegura_impede_a_inicializacao(alteracoes, variavel):
     [
         # O simulado da suíte: código de teste, recusado pelo pacote antes de ser importado.
         "tests.fixtures.provedor_simulado.ProvedorSimulado",
+        # A subclasse de homologação da 110 (`D-018`), recusada pela mesma razão: o ambiente de
+        # validação roda com as settings de desenvolvimento, e nunca com estas.
+        "tests.homologacao.provedor.ProvedorDeHomologacao",
         # Nome que não se importa falharia só na primeira entrada, com 500.
         "processo_seletivo.seguranca.provedores.Inexistente",
     ],
@@ -223,6 +226,24 @@ def test_provedor_que_se_declara_de_teste_impede_a_inicializacao():
             _carregar(GESTAO_PROVEDOR_INSTITUCIONAL="provedor_copiado.Provedor")
     finally:
         del sys.modules["provedor_copiado"]
+    assert "se declara de teste" in str(recusa.value)
+
+
+def test_o_provedor_de_homologacao_copiado_para_fora_de_tests_ainda_e_recusado():
+    """A segunda recusa vale para a subclasse da 110 pela herança, sem linha nova de proteção."""
+    import sys
+    import types
+
+    from tests.homologacao.provedor import ProvedorDeHomologacao
+
+    modulo = types.ModuleType("homologacao_copiada")
+    modulo.Provedor = ProvedorDeHomologacao
+    sys.modules["homologacao_copiada"] = modulo
+    try:
+        with pytest.raises(ImproperlyConfigured) as recusa:
+            _carregar(GESTAO_PROVEDOR_INSTITUCIONAL="homologacao_copiada.Provedor")
+    finally:
+        del sys.modules["homologacao_copiada"]
     assert "se declara de teste" in str(recusa.value)
 
 

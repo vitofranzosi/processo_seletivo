@@ -38,9 +38,41 @@ válidos para chegar à conferência do escopo.
 gatilhos entraram em `TRIGGERS_POR_APP["processos"]`, o que exercita a reversão. Nenhuma tabela
 append-only nova: o `M` do provisionamento continua 46.
 
-## B — Entrada de homologação
+## B — Entrada de homologação (31/10/2026)
 
-Não iniciado: espera o usuário aceitar a recomendação de ambiente (D-017, D-018).
+**Base**: o incremento A (PR #350), empilhado — a spec só existe nele. Recomendação de ambiente
+aceita pelo usuário em 31/10.
+
+| Verificação | Resultado |
+|---|---|
+| `ruff check` e `ruff format --check` | limpos |
+| `make check` | sem problema; nenhuma migration |
+| `tests/homologacao`, `tests/test_configuracao_producao.py` e `tests/seguranca`, isolados | 231 passando |
+| `make test-pg`, 4 workers, `DB_NAME=ps_110_escopo` | **13917 passando, 14 pulados**, 0 falhas, 829,6 s |
+
+Os 14 pulados são os mesmos do incremento A.
+
+**O que se provou.**
+
+- O provedor é subclasse do simulado da `106`: a declaração de teste e o bilhete de uso único vêm
+  da herança, sem criptografia própria e sem proteção nova (FR-3342).
+- Produção o recusa no *boot* pelo pacote e, copiado para fora de `tests.`, pela declaração; sob a
+  marca de produção, `provedor_configurado` o apaga em execução, e a entrada responde 503 (FR-3342).
+- O caminho do roteiro G funciona de ponta a ponta: a pessoa cadastrada por
+  `conceder_administracao_institucional --provedor homologacao` aparece na página, só ela, e
+  escolhê-la entra no escopo institucional com a permissão do vínculo (FR-3343).
+- O bilhete escolhido não serve de novo, e o retorno sem o estado da ida é recusado, como com
+  qualquer adaptador (FR-3343, FR-3023 da `106`).
+- **Simplificado depois, no mesmo dia**: saiu o descarte dos bilhetes das outras linhas da página.
+  Quem está na página já escolhe qualquer pessoa, e o ambiente é local, sintético e descartável — o
+  descarte não protegia nada. Medido de novo só o que essa mudança alcança:
+  `tests/homologacao`, `tests/test_configuracao_producao.py`, `tests/seguranca` e os três guardiões
+  de documentação, isolados contra PostgreSQL — **1346 passando**. A mudança é só de código de
+  teste; a suíte inteira medida acima não foi repetida.
+- A suíte de segurança da `106` e da `107` passa sem mudança (`tests/seguranca`).
+
+**A VM de homologação não mudou**: nenhuma settings, nenhum roteiro. O ambiente novo está no §10.3
+do guia de produção.
 
 ## C — Fonte oficial e administração
 

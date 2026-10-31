@@ -7,6 +7,10 @@ forma do retorno de um OIDC: o que chega ao GPS é um código que só o provedor
 
 Mora em `tests.`, e `production.py` recusa qualquer provedor desse pacote; e se declara de teste,
 que é a segunda recusa, para o caso de alguém o copiar para fora daqui.
+
+**Tem uma subclasse fora da suíte**: `tests/homologacao/provedor.py`, que leva pessoas às telas da
+gestão antes do SSO, num ambiente de homologação isolado (110, `D-018`). As duas recusas valem para
+ela pela herança e pelo pacote — quem mexer aqui está mexendo também no que aquele ambiente usa.
 """
 
 import secrets
