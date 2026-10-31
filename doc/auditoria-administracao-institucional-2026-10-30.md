@@ -78,6 +78,26 @@ O estudo do item 1 está em
   papéis são um dicionário no código. A marca "Cefor/Ifes" está escrita em dez arquivos. O canal de
   atendimento é uma variável de ambiente única.
 
+  > **Atualização de 31/10/2026**, conferida na `main` em `ca1e53ed`, depois das specs `106` (#345)
+  > e `107` (#346). O texto acima fica como o retrato de 30/10.
+  >
+  > - **Os papéis mudaram em parte.** O catálogo continua em código: os oito do `PAPEIS`
+  >   (`interface/identidade.py`) e, ao lado deles, os papéis de acesso da `106`
+  >   (`seguranca/acessos.py`). Quem tem cada papel, porém, deixou de ser implantação no modo
+  >   institucional. Vem de vínculos pessoa × unidade × papel no banco, concedidos, revogados e
+  >   suspensos pela interface da `107`. Só o primeiro administrador institucional, a retirada
+  >   dele e a substituição seguem pelo comando de implantação.
+  > - **O resto continua igual.** As unidades seguem só no `unidades.json`, só com o `cefor`, e o
+  >   arquivo não mudou desde a `060`. A marca "Cefor/Ifes" continua em dez arquivos fora dos
+  >   testes, e o canal de atendimento continua sendo só `PORTAL_ATENDIMENTO`.
+  > - **O parágrafo seguinte também envelheceu, mas só no código.** Conta de servidor, vínculo,
+  >   revogação e primeiro administrador agora existem. A gestão ainda responde 503 em produção,
+  >   porque o adaptador real do provedor institucional não existe
+  >   (`doc/ativacao-do-sso-institucional.md`).
+  > - **Um comentário ficou para trás.** Acima do `PAPEIS` ainda se lê que, "quando o diretório
+  >   for integrado, cada papel corresponderá a um grupo dele". A `106` decidiu o contrário: o
+  >   diretório só autentica, e os vínculos ficam no GPS. Fica registrado aqui, sem alteração.
+
 **A lacuna dominante não é um módulo administrativo: é a identidade (B-1).** A gestão não tem
 autenticação em produção e responde 503 (`interface/views.py:729-730`). Não existe conta de
 servidor, vínculo de pessoa com unidade, atribuição de papel, revogação, nem "primeiro
