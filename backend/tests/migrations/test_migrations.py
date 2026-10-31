@@ -42,7 +42,13 @@ APPS = (
 # inteiro cobraria triggers de apps que o próprio teste acabou de desmontar.
 TRIGGERS_POR_APP = {
     "auditoria": ("auditoria_append_only",),
-    "processos": ("ato_administrativo_append_only",),
+    # O escopo da 110 (`D-013`) **não é append-only**: Processo e Edital mudam em outras colunas; os
+    # dois gatilhos recusam só a troca da unidade a que pertencem.
+    "processos": (
+        "ato_administrativo_append_only",
+        "processo_escopo_imutavel",
+        "edital_escopo_imutavel",
+    ),
     "publicacoes": (
         "publicacao_append_only",
         "documento_publicado_append_only",
@@ -850,7 +856,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # porque o sorteio é um evento: a mesma extração semeia todas as listas do certame, e sete
         # Perfis declaravam a mesma regra sete vezes. A coluna nasce vazia e a migration não
         # percorre linha publicada (030, FR-429, SC-142).
-        "processos": 4,
+        # **Sobe para 5 com a 110**: a `processos/0005` cria os gatilhos que recusam mudar o escopo
+        # de Processo e de Edital depois de criados. Não acrescenta coluna nem percorre linha: é o
+        # banco recusando mover um certame de unidade, o que nenhum caminho da aplicação faz
+        # (110, FR-3333, `D-013`).
+        "processos": 5,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato

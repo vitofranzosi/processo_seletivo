@@ -176,7 +176,7 @@ backend/
 │   ├── unidades/test_administrar_unidades.py          # NOVO
 │   ├── unidades/test_compatibilidade_do_registro.py   # NOVO
 │   ├── authorization/test_administrar_unidades.py     # NOVO
-│   ├── authorization/test_isolamento_entre_unidades.py # NOVO (D-014)
+│   ├── interface/test_isolamento_entre_unidades.py # NOVO (D-014)
 │   ├── integration/test_escopo_imutavel.py            # NOVO
 │   ├── interface/test_telas_de_unidades.py            # NOVO
 │   ├── navegador/test_jornada_de_unidades.py          # NOVO (D-015)
@@ -223,7 +223,7 @@ Três incrementos, cada um num PR, com a suíte verde (D-019):
 | 8 | Escopo de Processo e Edital imutável no banco | `integration/test_escopo_imutavel.py` |
 | 9 | Desativar impede novos e preserva existentes | `test_administrar_unidades.py::test_desativada_nao_recebe_processo_e_conduz_o_existente` |
 | 10 | Reativar restaura | `test_administrar_unidades.py::test_reativada_volta_a_receber_processo` |
-| 11 | Duas unidades não compartilham autorização, autoridade nem Edital | `authorization/test_isolamento_entre_unidades.py`; `test_administrar_unidades.py::test_unidade_nova_nao_herda_autoridade_nem_acesso` |
+| 11 | Duas unidades não compartilham autorização, autoridade nem Edital | `interface/test_isolamento_entre_unidades.py`; `test_administrar_unidades.py::test_unidade_nova_nao_herda_autoridade_nem_acesso` |
 | 12 | Publicações históricas preservadas | `test_compatibilidade_do_registro.py::test_editar_a_unidade_nao_muda_o_publicado` |
 | 13 | Trilha correta | `test_administrar_unidades.py::test_cada_ato_grava_o_evento_no_escopo_da_unidade`, `test_a_trilha_da_unidade_le_os_atos` |
 | 14 | Modelos iniciais uma vez | `test_administrar_unidades.py::test_os_modelos_iniciais_nascem_uma_vez`; `test_semente.py::test_modelos_iniciais_idempotentes` |

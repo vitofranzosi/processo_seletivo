@@ -22,7 +22,7 @@ movia o Edital agora o cria na outra unidade.
 Isolados, os desta feature:
 
 ```bash
-cd backend && PYTEST_ADDOPTS="tests/unidades tests/seguranca/test_papel_do_registro.py tests/homologacao tests/authorization/test_administrar_unidades.py tests/authorization/test_isolamento_entre_unidades.py tests/integration/test_escopo_imutavel.py tests/interface/test_telas_de_unidades.py" make test-pg PYTEST_WORKERS=0
+cd backend && PYTEST_ADDOPTS="tests/unidades tests/seguranca/test_papel_do_registro.py tests/homologacao tests/authorization/test_administrar_unidades.py tests/interface/test_isolamento_entre_unidades.py tests/integration/test_escopo_imutavel.py tests/interface/test_telas_de_unidades.py" make test-pg PYTEST_WORKERS=0
 ```
 
 ## Roteiro B — a jornada no navegador (SC-1041)

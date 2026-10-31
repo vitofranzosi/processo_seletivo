@@ -5,7 +5,7 @@ nomes se confirmam na T049, depois da implementação. Caminhos relativos a `bac
 `unidades/test_semente.py`, `REG` é `unidades/test_regra_da_unidade.py`, `ADM` é
 `unidades/test_administrar_unidades.py`, `CMP` é `unidades/test_compatibilidade_do_registro.py`,
 `AUT` é `authorization/test_administrar_unidades.py`, `ISO` é
-`authorization/test_isolamento_entre_unidades.py`, `ESC` é `integration/test_escopo_imutavel.py`,
+`interface/test_isolamento_entre_unidades.py`, `ESC` é `integration/test_escopo_imutavel.py`,
 `TEL` é `interface/test_telas_de_unidades.py`, `NAV` é `navegador/test_jornada_de_unidades.py`,
 `PAP` é `seguranca/test_papel_do_registro.py`, `HOM` é `homologacao/test_entrada_de_homologacao.py`.
 
@@ -51,7 +51,7 @@ linhas de FR-3339 a FR-3343, SC-1048 e EC-16 a EC-18 acrescentadas.
 | FR-3333 (escopo de Processo e Edital imutável no banco) | D-013 | T004 | `ESC::test_update_do_escopo_e_recusado`, `::test_save_que_muda_o_escopo_e_recusado`, `::test_sql_direto_e_recusado`, `::test_save_sem_mudanca_e_aceito` |
 | FR-3334 (código e exclusão continuam recusados) | — (gatilhos da `060`) | T007 | `ESC::test_os_gatilhos_da_060_continuam`; regressão `test_o_codigo_da_unidade_nao_muda` |
 | FR-3335 (testes criam na outra unidade) | D-013 | T006 | `integration/agenda/test_fonte.py::test_edital_de_outro_escopo_nao_aparece_nem_pelo_filtro` |
-| FR-3336 (isolamento nas quatro áreas) | D-014 | T008 | `ISO::test_ocupacao_alheia`, `::test_recurso_alheio`, `::test_requerimento_alheio`, `::test_api_administrativa_alheia` |
+| FR-3336 (isolamento nas quatro áreas) | D-014 | T008 | `ISO::test_a_ocupacao_alheia_e_inexistente_e_nao_grava`, `::test_o_recurso_alheio_e_inexistente_e_nao_grava`, `::test_o_requerimento_e_o_documento_alheios_sao_inexistentes`, `::test_a_api_administrativa_nao_alcanca_processo_nem_edital_alheios` (nomes reais, incremento A) |
 | FR-3337 (instalação existente sem ação) | D-001 | T044 | `CMP::test_o_cefor_continua_sem_acao` |
 | FR-3338 (seletor e `seed_demo`) | — | T024, T044 | `CMP::test_seed_demo_continua`; `TEL::test_a_demonstracao_e_recusada_e_nao_ve_o_item`; a suíte do seletor, sem mudança |
 | FR-3339 (nenhuma tela concede papel institucional) | D-002 | T019 | `PAP::test_a_aplicacao_nao_concede_o_papel_do_registro` |

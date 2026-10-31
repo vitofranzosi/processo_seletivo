@@ -30,12 +30,12 @@ provedor simulado, sem código assinado. As outras foram reagrupadas, sem mudar 
 **Objetivo**: o escopo de Processo e de Edital não muda no banco; as quatro áreas sem segunda unidade
 ganham teste. **Teste independente**: os cenários da US6. Nenhuma decisão pendente o bloqueia.
 
-- [ ] T004 [US6] Criar `processo_seletivo/processos/migrations/0005_escopo_imutavel.py` com os gatilhos `processo_escopo_imutavel` e `edital_escopo_imutavel`, no-op fora do PostgreSQL, reversível (D-013)
-- [ ] T005 [US6] `tests/migrations/test_migrations.py`: `processos` de 4 para 5, com o parágrafo de justificativa, e os dois gatilhos em `TRIGGERS_POR_APP["processos"]`, para que a reversibilidade deles seja exercitada
-- [ ] T006 [US6] `tests/integration/agenda/test_fonte.py`: o Edital da Serra criado por um ator de `serra` registrada, e não movido (FR-3335, EC-15)
-- [ ] T007 [P] [US6] `tests/integration/test_escopo_imutavel.py`, transacional, com a role de runtime: `update()`, `save()` e SQL direto recusados nas duas tabelas; `save()` completo sem mudança aceito; os gatilhos da `060` continuam (FR-3333, FR-3334)
-- [ ] T008 [P] [US6] `tests/authorization/test_isolamento_entre_unidades.py`: com `campus-a` registrada e um ator dela, os quatro caminhos da D-014 respondem como inexistente e não gravam; se algum vazar, corrigir neste PR e registrar em `specs/110-cadastro-de-unidades/verificacao.md` (FR-3336)
-- [ ] T009 `cd backend && make lint check test-pg` com `DB_NAME` próprio; o resultado em `specs/110-cadastro-de-unidades/verificacao.md`, seção A; PR do incremento A, sem merge automático
+- [x] T004 [US6] Criar `processo_seletivo/processos/migrations/0005_escopo_imutavel.py` com os gatilhos `processo_escopo_imutavel` e `edital_escopo_imutavel`, no-op fora do PostgreSQL, reversível (D-013)
+- [x] T005 [US6] `tests/migrations/test_migrations.py`: `processos` de 4 para 5, com o parágrafo de justificativa, e os dois gatilhos em `TRIGGERS_POR_APP["processos"]`, para que a reversibilidade deles seja exercitada
+- [x] T006 [US6] `tests/integration/agenda/test_fonte.py`: o Edital da Serra criado por um ator de `serra` registrada, e não movido (FR-3335, EC-15)
+- [x] T007 [P] [US6] `tests/integration/test_escopo_imutavel.py`: `update()`, `save()` e SQL direto recusados nas duas tabelas; `save()` completo sem mudança aceito; os gatilhos da `060` continuam (FR-3333, FR-3334). Com a conexão da suíte, que é superusuária — o gatilho não depende de privilégio, e o que recusa o superusuário recusa a role de runtime
+- [x] T008 [P] [US6] `tests/interface/test_isolamento_entre_unidades.py` — em `tests/interface/`, e não em `tests/authorization/`, porque o dossiê com requerimento é montado por fixtures de lá: com `campus-a` registrada e um ator dela, os quatro caminhos da D-014 respondem como inexistente e não gravam, cada um depois de um controle em que o ator do Cefor alcança o objeto; nenhum vazou (FR-3336)
+- [x] T009 `cd backend && make lint check test-pg` com `DB_NAME` próprio; o resultado em `specs/110-cadastro-de-unidades/verificacao.md`, seção A; PR do incremento A, sem merge automático
 
 ## Fase 2 — Incremento B: entrada de homologação (US7) — PR próprio
 
