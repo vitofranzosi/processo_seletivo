@@ -10,14 +10,15 @@ seus antes de dar a fase por concluída. Os gatilhos e privilégios só se prova
 com casos transacionais.
 
 **Três incrementos, três PRs** (D-019). A e B não dependem de nada e podem correr em paralelo. C é
-um PR só. A revisão da decisão de produto 3 (D-002) foi confirmada pelo usuário em 31/10/2026.
+um PR só. A decisão de produto 3 (D-002) foi fechada pelo usuário em 31/10/2026: o papel institucional existente.
 
-**Revisão final de 31/10/2026.** As 41 tarefas da versão anterior viraram 51: saiu a que
-acrescentava o rótulo do canal à trilha (veio com a integração da `108` e da `109`); entraram o papel
-próprio e a opção `--papel` (T018–T021), o apelido do comando (T023, T025), a entrada de homologação
-(T010–T014), um fechamento por PR (T009, T014) e a validação funcional separada da verificação
-automatizada (T051). Depois da comparação das estratégias de homologação, T010–T013 passaram ao
-provedor simulado, sem código assinado. As outras foram reagrupadas, sem mudar de conteúdo.
+**Revisão final de 31/10/2026.** As 41 tarefas da versão anterior viraram 51 números: saiu a que
+acrescentava o rótulo do canal à trilha (veio com a integração da `108` e da `109`); entraram o
+apelido do comando (T023, T025), a entrada de homologação (T010–T014), um fechamento por PR (T009,
+T014) e a validação funcional separada da verificação automatizada (T051). Depois, **a simplificação
+do mesmo dia** devolveu a permissão ao papel institucional existente: T019 e T020 (a opção `--papel`,
+a recusa e a suspensão estendidas) saíram, e T018 e T021 encolheram a uma permissão, um rótulo e um
+teste. São **49 tarefas ativas**.
 
 ## Fase 0 — Verificação de dependência (antes de cada incremento)
 
@@ -53,18 +54,18 @@ Só código de teste e documentação.
 
 **Objetivo**: o registro passa a ser escrito pela aplicação, e a troca da fonte chega com o mecanismo
 que a substitui. **Teste independente**: a jornada (SC-1041) e a validação funcional (SC-1048).
-Começa depois de o usuário confirmar a revisão da decisão de produto 3 (D-002); se ele mantiver a
-original, T018–T021 se reduzem a pôr a permissão na lista do `administrador-institucional`.
+O deploy, e não a implementação, espera o passo 0 da [migração](migracao.md) — quem já tem o papel
+institucional em cada ambiente (P-5).
 
 ### C.1 — A regra única e o papel
 
 - [ ] T015 [US5] Criar `processo_seletivo/unidades/domain/registro.py` com a validação de uma unidade (código, reservado, campos, cabeçalho, canal), movida de `sincronizacao.validar` sem cópia, e os códigos de recusa por campo (D-005); `tests/seguranca/test_vinculos.py`, que importa `sincronizacao.validar`, passa a importar a regra nova
 - [ ] T016 [US5] Acrescentar a `processo_seletivo/unidades/domain/nomes.py` os códigos `codigo_invalido`, `codigo_reservado`, `codigo_ja_registrado`, `campo_obrigatorio`, `cabecalho_invalido`, `atendimento_invalido`, `nada_mudou`, `unidade_alterada`, `unidade_ja_desativada`, `unidade_ja_ativa`, `motivo_obrigatorio`, e a permissão `ADMINISTRAR = "unidade:administrar"`
 - [ ] T017 [P] [US5] Testes da regra em `tests/unidades/test_regra_da_unidade.py`: cada recusa, aparar espaços (EC-4), caixa e espaço no código recusados sem conversão (EC-1), `institucional` recusado
-- [ ] T018 [US1] `processo_seletivo/seguranca/acessos.py`: o papel `ADMINISTRADOR_DE_UNIDADES = "administrador-de-unidades"` em `PAPEIS_INSTITUCIONAIS`, "Administrador do registro de unidades", com `"unidade:administrar"` por extenso e nada mais; o `administrador-institucional` sem mudança; comentário com a comparação da D-002
-- [ ] T019 [US1] `processo_seletivo/seguranca/application/acessos.py`: `_autoridade` recusa pela tela todo papel de `PAPEIS_INSTITUCIONAIS` com `PAPEL_SO_POR_IMPLANTACAO` (FR-3339); `conceder_administracao_institucional`, a retirada e a substituição recebem `papel`, com padrão `ADMINISTRADOR_INSTITUCIONAL`, conferem que ele é institucional, e aplicam `adicional` e a regra da última administração por papel, sob a mesma trava global; `processo_seletivo/seguranca/application/suspensao.py`: `_e_administracao_institucional`, com o mesmo nome, passa a perguntar por vínculo vigente no escopo institucional com qualquer papel (FR-3340)
-- [ ] T020 [US1] `processo_seletivo/seguranca/management/commands/conceder_administracao_institucional.py`, `retirar_administracao_institucional.py` e `substituir_administracao_institucional.py`: `--papel`, com as escolhas de `PAPEIS_INSTITUCIONAIS` e o padrão de hoje; a mensagem de saída nomeia o papel (FR-3310)
-- [ ] T021 [P] [US1] `tests/seguranca/test_papel_do_registro.py`: conceder, retirar e substituir com `--papel administrador-de-unidades`, com motivo e trilha; segunda pessoa sem `--adicional` recusada, por papel; retirar a última sem a marca recusada; os comandos sem `--papel` fazem o mesmo de antes; o Administrador institucional de acessos não concede o papel pela aplicação (EC-18); só a implantação suspende quem tem o papel do registro; o papel não tem outra permissão (FR-3308); os testes de implantação e de suspensão da `107` passam sem mudança (SC-1047)
+- [ ] T018 [US1] `processo_seletivo/seguranca/acessos.py`: `"unidade:administrar"` por extenso na lista do `administrador-institucional`, e o rótulo passa a "Administrador institucional"; comentário com a decisão da D-002. As mensagens e ajudas que dizem "administração institucional de acessos" passam a "administração institucional": `processo_seletivo/interface/views.py` (recusa ao suspenso), `processo_seletivo/seguranca/application/acessos.py` (recusas da primeira administração e de concessão pela tela) e as ajudas dos três comandos em `processo_seletivo/seguranca/management/commands/`. Nenhum papel, opção de comando ou regra nova
+- [ ] T019 — *retirada em 31/10/2026 com o papel próprio (D-002): `_autoridade` já recusa o papel institucional pela tela, e a suspensão dele já é só pela implantação. O número fica reservado.*
+- [ ] T020 — *retirada em 31/10/2026 com o papel próprio (D-002): os três comandos de implantação não mudam. O número fica reservado.*
+- [ ] T021 [P] [US1] `tests/seguranca/test_papel_institucional_administra_unidades.py`: o `administrador-institucional` tem exatamente `acesso:administrar` e `unidade:administrar`, com o rótulo novo; nenhum outro papel tem `unidade:administrar` (FR-3308); concedido pelo comando de sempre, a pessoa entra e alcança as duas capacidades; a aplicação continua recusando concedê-lo (EC-18, FR-3339); os testes de implantação e de suspensão da `107` passam sem mudança (SC-1047)
 
 ### C.2 — A semente
 
@@ -83,7 +84,7 @@ original, T018–T021 se reduzem a pôr a permissão na lista do `administrador-
 - [ ] T031 [P] [US1] `tests/unidades/test_administrar_unidades.py`: registrar uma unidade; modelos iniciais uma vez, com a pessoa como autora na trilha; evento no escopo da unidade com pessoa, permissão, motivo e `depois`; falha no evento desfaz o ato (FR-3332); dois cadastros do mesmo código gravam um (EC-2); a Reitoria é unidade sem leitura dos campi (EC-13); unidade nova sem autoridade nem acesso herdado; disponível na requisição seguinte para conceder o Administrador de acessos, criar Processo e cadastrar autoridade (FR-3320)
 - [ ] T032 [P] [US2] Em `tests/unidades/test_administrar_unidades.py`: alterar grava antes e depois; código enviado ignorado; nada mudou recusado sem evento; duas alterações concorrentes, a segunda recusada; canal apagado volta ao institucional (EC-12)
 - [ ] T033 [P] [US3] Em `tests/unidades/test_administrar_unidades.py`: desativada não recebe Processo nem vínculo e conduz o existente; desativar a única ativa é permitido (EC-5); autoridade de desativada continua editável (EC-14); reativada volta a receber; transições repetidas recusadas
-- [ ] T034 [P] [US1] `tests/authorization/test_administrar_unidades.py`: a matriz — os oito papéis do `PAPEIS`, o Integrante e o Administrador de acessos da unidade, o **Administrador institucional de acessos sem o papel do registro**, o administrador do registro com escopo de unidade (EC-8), a demonstração — recebem a recusa em cada caso de uso; a permissão não abre Processo, Edital nem acesso, e o administrador do registro não concede acesso (FR-3310); a grafia da permissão no catálogo e em `nomes.py` é a mesma; nenhum outro papel a tem (FR-3308–FR-3311)
+- [ ] T034 [P] [US1] `tests/authorization/test_administrar_unidades.py`: a matriz — os oito papéis do `PAPEIS`, o Integrante e o Administrador de acessos da unidade, o Administrador institucional com escopo de unidade (EC-8), a demonstração — recebem a recusa em cada caso de uso; a permissão não abre Processo, Edital nem acesso de unidade (FR-3310); a grafia da permissão no catálogo e em `nomes.py` é a mesma; nenhum outro papel a tem (FR-3308–FR-3311)
 - [ ] T035 [P] [US1] `test_a_trilha_da_unidade_le_os_atos`, inclusive uma edição só do canal de atendimento, em `tests/unidades/test_administrar_unidades.py`: os quatro atos aparecem na trilha da unidade da `108`, com rótulo, situação, autor pelo nome e antes→depois — conferência, porque o rótulo do canal já está na `main` (D-009)
 
 ### C.4 — As telas e a jornada
@@ -94,15 +95,15 @@ original, T018–T021 se reduzem a pôr a permissão na lista do `administrador-
 - [ ] T039 [P] [US4] Templates `processo_seletivo/interface/templates/interface/unidades.html`, `unidades_ficha.html`, `unidades_formulario.html`, `unidades_conferencia.html`, `unidades_situacao.html`; folha `processo_seletivo/interface/static/interface/telas/unidades.css`; ajuda do canal e do motivo (D-012)
 - [ ] T040 [US4] `processo_seletivo/interface/urls.py` (seis rotas), `processo_seletivo/interface/navegacao.py` ("Unidades" em `SECOES_DE_ACESSO` com `pode_administrar_unidades`), o ícone no sprite de `base.html` se a barra exigir ícone distinto
 - [ ] T041 [US4] Acrescentar `processo_seletivo/interface/unidades.py` a `MODULOS_DE_VIEW` em `tests/test_gramatica_das_portas.py`, e a linha do 404 da ficha em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md`, como objeto inexistente
-- [ ] T042 [P] [US4] `tests/interface/test_telas_de_unidades.py`: lista com ativas e desativadas; ficha com histórico da implantação e da pessoa; 404 de código inexistente; conferência sem gravar; prévia com as linhas do compositor; antes e depois na edição; aviso de código permanente; aviso da moldura nas três situações da FR-3330; sigla no anúncio e aviso de linha longa na prévia; consequências da desativação; recusas no campo com os valores digitados; envio forjado sem permissão recusado (SC-1043); código no corpo da edição ignorado (EC-9); nenhuma tela oferece exclusão (FR-3329); demonstração recusada e sem o item na barra; os dois papéis institucionais separados e juntos — itens da barra e recusas (EC-16, FR-3341); nenhum `style=`/`<style>`/`<script>`. Acrescentar os cinco templates às listas literais das varreduras de vocabulário e de acessibilidade — tela fora da lista escapa da regra sem aviso
-- [ ] T043 [P] [US1] `tests/navegador/test_jornada_de_unidades.py`: a preparação concede os dois papéis institucionais à mesma pessoa pela implantação; dela à criação de Processo em `serra`, sem ação fora do navegador (D-015, SC-1041)
+- [ ] T042 [P] [US4] `tests/interface/test_telas_de_unidades.py`: lista com ativas e desativadas; ficha com histórico da implantação e da pessoa; 404 de código inexistente; conferência sem gravar; prévia com as linhas do compositor; antes e depois na edição; aviso de código permanente; aviso da moldura nas três situações da FR-3330; sigla no anúncio e aviso de linha longa na prévia; consequências da desativação; recusas no campo com os valores digitados; envio forjado sem permissão recusado (SC-1043); código no corpo da edição ignorado (EC-9); nenhuma tela oferece exclusão (FR-3329); demonstração recusada e sem o item na barra; o Administrador institucional vê "Administração de acessos" e "Unidades", e o Administrador de acessos da unidade não vê "Unidades"; nenhum `style=`/`<style>`/`<script>`. Acrescentar os cinco templates às listas literais das varreduras de vocabulário e de acessibilidade — tela fora da lista escapa da regra sem aviso
+- [ ] T043 [P] [US1] `tests/navegador/test_jornada_de_unidades.py`: a preparação concede o Administrador institucional a uma pessoa pela implantação; dela à criação de Processo em `serra`, sem ação fora do navegador (D-015, SC-1041)
 - [ ] T044 [P] `tests/unidades/test_compatibilidade_do_registro.py`: o Cefor continua sem ação; editar a unidade não muda o documento nem o conteúdo de Publicação e de resultado anteriores, byte a byte (SC-1045); `seed_demo` continua (FR-3337, FR-3338)
 
 ### C.5 — Documentação e verificação
 
 - [ ] T045 [P] `AGENTS.md`: o parágrafo do `make preparar` passa a falar da semente e da linha nova, e do apelido
 - [ ] T046 [P] `README.md`: o passo de preparo; a linha da `110` na tabela de incrementos passa a "Implementada"
-- [ ] T047 [P] `doc/implantacao-em-producao-ubuntu.md`: a leitura da saída da semente; o apelido e o critério para retirá-lo; conceder, retirar e substituir o papel do registro com `--papel`; que a tela só existe com a entrada institucional; a jornada de cadastrar unidade passa à tela; a reversão aponta [migracao.md](migracao.md); `doc/ativacao-do-sso-institucional.md`: o passo do `ps-migrar` e a designação do papel do registro (FR-3307)
+- [ ] T047 [P] `doc/implantacao-em-producao-ubuntu.md`: a leitura da saída da semente; o apelido e o critério para retirá-lo; o Administrador institucional passa a administrar também as unidades, e o passo 0 da migração (quem já tem o papel); que a tela só existe com a entrada institucional; a jornada de cadastrar unidade passa à tela; a reversão aponta [migracao.md](migracao.md); `doc/ativacao-do-sso-institucional.md`: o passo do `ps-migrar` e o novo nome do papel (FR-3307)
 - [ ] T048 [P] `doc/revisao-arquitetural-multiunidade-2026-10-30.md`: a nota de 31/10 no topo passa a dizer que a `110` foi implementada, e onde está a verificação
 - [ ] T049 `specs/110-cadastro-de-unidades/rastreabilidade.md`: a coluna de teste de cada linha com o nome real do caso
 - [ ] T050 `cd backend && make lint check test-pg` com `DB_NAME` próprio; `make test-navegador`; roteiros A a F do [quickstart](quickstart.md); resultados e os 15 itens do pedido em `specs/110-cadastro-de-unidades/verificacao.md`, seção C; PR do incremento C, sem merge automático
@@ -127,7 +128,7 @@ T002–T003 ─┬─▶ Fase 1 (A) ──────────────�
 
 - Fase 1: T007 e T008 em paralelo, depois de T004–T006.
 - Fase 2: T012 e T013 em paralelo, depois de T010 e T011.
-- C.1: T017 e T021 em paralelo, depois de T015, T016 e T018–T020.
+- C.1: T017 e T021 em paralelo, depois de T015, T016 e T018.
 - C.2: T025 e T026 em paralelo, depois de T022–T024.
 - C.3: T031 a T035 em paralelo, depois de T027–T030.
 - C.4: T039, T042, T043 e T044 em paralelo, depois de T036–T038.

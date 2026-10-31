@@ -7,10 +7,12 @@ nomes se confirmam na T049, depois da implementação. Caminhos relativos a `bac
 `AUT` é `authorization/test_administrar_unidades.py`, `ISO` é
 `interface/test_isolamento_entre_unidades.py`, `ESC` é `integration/test_escopo_imutavel.py`,
 `TEL` é `interface/test_telas_de_unidades.py`, `NAV` é `navegador/test_jornada_de_unidades.py`,
-`PAP` é `seguranca/test_papel_do_registro.py`, `HOM` é `homologacao/test_entrada_de_homologacao.py`.
+`PAP` é `seguranca/test_papel_institucional_administra_unidades.py`, `HOM` é `homologacao/test_entrada_de_homologacao.py`.
 
 Revista em 31/10/2026 com a revisão final: tarefas renumeradas pelos três incrementos (D-019), e as
-linhas de FR-3339 a FR-3343, SC-1048 e EC-16 a EC-18 acrescentadas.
+linhas de FR-3339 a FR-3343, SC-1048 e EC-16 a EC-18 acrescentadas. Na simplificação do mesmo dia
+(D-002, papel institucional existente), FR-3340, FR-3341, EC-16, T019 e T020 foram retirados; as
+linhas ficam, marcadas, porque os números ficam reservados.
 
 ## Requisitos
 
@@ -23,9 +25,9 @@ linhas de FR-3339 a FR-3343, SC-1048 e EC-16 a EC-18 acrescentadas.
 | FR-3305 (idempotente; modelos iniciais garantidos) | D-004 | T023 | `SEM::test_modelos_iniciais_idempotentes`, `::test_duas_sementes_simultaneas_gravam_uma_vez` |
 | FR-3306 (os três roteiros chamam a semente pelo nome novo; o anterior fica como apelido que avisa) | D-003 | T023, T024 | `SEM::test_os_roteiros_chamam_a_semente`, `::test_o_nome_anterior_roda_a_semente_e_avisa` |
 | FR-3307 (documentação operacional) | D-003 | T045–T047 | `SEM::test_os_roteiros_chamam_a_semente` (o guia); leitura na revisão do PR |
-| FR-3308 (a permissão num papel institucional próprio, e só nele) | D-002 | T016, T018 | `AUT::test_a_grafia_da_permissao_e_a_mesma`, `::test_nenhum_outro_papel_tem_a_permissao`; `PAP::test_o_papel_do_registro_so_tem_a_permissao` |
+| FR-3308 (a permissão no papel institucional existente, e só nele; nada novo de autorização) | D-002 | T016, T018 | `AUT::test_a_grafia_da_permissao_e_a_mesma`, `::test_nenhum_outro_papel_tem_a_permissao`; `PAP::test_o_papel_institucional_tem_as_duas_permissoes_e_o_rotulo_novo` |
 | FR-3309 (conferida na aplicação, escopo institucional) | D-006 | T028–T030 | `AUT::test_cada_caso_de_uso_recusa_sem_a_permissao` |
-| FR-3310 (nenhuma outra capacidade; só a implantação concede, retira e substitui) | D-002 | T018–T020 | `AUT::test_a_permissao_nao_abre_processo_edital_nem_acesso`; `PAP::test_conceder_retirar_e_substituir_com_papel`, `::test_segunda_pessoa_pede_adicional_por_papel`, `::test_sem_papel_os_comandos_fazem_o_de_antes` |
+| FR-3310 (nenhuma outra capacidade; comandos sem mudança; ampliação só com autorização) | D-002 | T018, T021, T047 | `AUT::test_a_permissao_nao_abre_processo_edital_nem_acesso`; `PAP::test_concedido_pelo_comando_de_sempre_alcanca_as_duas_capacidades`; o passo 0 da [migração](migracao.md), conferido no deploy |
 | FR-3311 (nenhuma unidade altera o próprio cadastro) | D-002 | T028–T030 | `AUT::test_papel_de_unidade_e_recusado_inclusive_na_propria`, `::test_institucional_com_escopo_de_unidade_e_recusado` |
 | FR-3312 (só a entrada institucional) | D-011 | T036 | `TEL::test_a_demonstracao_e_recusada_e_nao_ve_o_item`; `AUT::test_a_demonstracao_e_recusada` |
 | FR-3313 (motivo; quem, quando, antes e depois) | D-006, D-008 | T028–T030 | `ADM::test_cada_ato_grava_o_evento_no_escopo_da_unidade`, `::test_sem_motivo_nada_e_gravado` |
@@ -54,9 +56,9 @@ linhas de FR-3339 a FR-3343, SC-1048 e EC-16 a EC-18 acrescentadas.
 | FR-3336 (isolamento nas quatro áreas) | D-014 | T008 | `ISO::test_a_ocupacao_alheia_e_inexistente_e_nao_grava`, `::test_o_recurso_alheio_e_inexistente_e_nao_grava`, `::test_o_requerimento_e_o_documento_alheios_sao_inexistentes`, `::test_a_api_administrativa_nao_alcanca_processo_nem_edital_alheios` (nomes reais, incremento A) |
 | FR-3337 (instalação existente sem ação) | D-001 | T044 | `CMP::test_o_cefor_continua_sem_acao` |
 | FR-3338 (seletor e `seed_demo`) | — | T024, T044 | `CMP::test_seed_demo_continua`; `TEL::test_a_demonstracao_e_recusada_e_nao_ve_o_item`; a suíte do seletor, sem mudança |
-| FR-3339 (nenhuma tela concede papel institucional) | D-002 | T019 | `PAP::test_a_aplicacao_nao_concede_o_papel_do_registro` |
-| FR-3340 (suspensão de papel institucional só pela implantação) | D-002 | T019 | `PAP::test_so_a_implantacao_suspende_o_administrador_do_registro` |
-| FR-3341 (quem só tem o papel do registro: escopo institucional, barra, recusa nos acessos) | D-002 | T040, T042 | `TEL::test_os_dois_papeis_institucionais_separados_e_juntos` |
+| FR-3339 (a tela continua recusando conceder o papel institucional) | D-002 | T021 | `PAP::test_a_aplicacao_continua_recusando_conceder_o_papel` |
+| FR-3340 — *retirada (D-002); a suspensão segue a FR-3136 da `107`* | — | — | — |
+| FR-3341 — *retirada (D-002)* | — | — | — |
 | FR-3342 (provedor de homologação sobre o simulado, só no teste; produção recusa; sem criptografia própria) | D-018 | T010–T012 | `HOM::test_producao_recusa_o_provedor_no_boot`, `::test_producao_recusa_o_provedor_em_execucao` |
 | FR-3343 (só as pessoas do provedor; bilhete de uso único; a gestão confere o estado) | D-018 | T010, T012 | `HOM::test_a_pagina_lista_so_as_pessoas_do_provedor`, `::test_escolher_entra_no_escopo_dos_vinculos`, `::test_o_bilhete_nao_serve_duas_vezes`, `::test_retorno_sem_estado_e_recusado` |
 
@@ -92,9 +94,9 @@ linhas de FR-3339 a FR-3343, SC-1048 e EC-16 a EC-18 acrescentadas.
 | EC-13 (Reitoria é unidade como as outras) | T028 | `ADM::test_reitoria_e_unidade_sem_leitura_dos_campi` |
 | EC-14 (autoridade de desativada continua editável) | T033 | `ADM::test_autoridade_de_desativada_continua_editavel` |
 | EC-15 (teste cria na outra unidade) | T006 | `integration/agenda/test_fonte.py::test_edital_de_outro_escopo_nao_aparece_nem_pelo_filtro` |
-| EC-16 (só um dos dois papéis institucionais) | T034, T042 | `AUT::test_administrador_de_acessos_sem_o_papel_do_registro_e_recusado`; `TEL::test_os_dois_papeis_institucionais_separados_e_juntos` |
+| EC-16 — *retirado (D-002)* | — | — |
 | EC-17 (roteiro com o nome anterior do comando) | T023, T025 | `SEM::test_o_nome_anterior_roda_a_semente_e_avisa` |
-| EC-18 (conceder o papel do registro pela tela) | T019, T021 | `PAP::test_a_aplicacao_nao_concede_o_papel_do_registro` |
+| EC-18 (conceder o papel institucional pela tela) | T021 | `PAP::test_a_aplicacao_continua_recusando_conceder_o_papel` |
 
 ## Os quinze testes do pedido
 

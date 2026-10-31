@@ -60,8 +60,7 @@
   separados; a validação usa um adaptador de homologação só no código de teste, recusado em
   produção por quatro camadas (D-017, D-018, US7, FR-3342, FR-3343, SC-1048). Permissão: papel
   institucional próprio, em vez de ampliar o de acessos — o deploy não muda privilégio de ninguém
-  (D-002, FR-3308, FR-3310, FR-3339 a FR-3341); **revê a decisão de produto 3, confirmada pelo
-  usuário no mesmo dia**. Comando: o nome anterior fica como apelido (D-003, EC-17). Ordem: três PRs, e a troca
+  (D-002, FR-3308, FR-3310, FR-3339 a FR-3341) — *depois recusado pelo usuário, ver abaixo*. Comando: o nome anterior fica como apelido (D-003, EC-17). Ordem: três PRs, e a troca
   da fonte no mesmo PR que as telas (D-019). Integração: o rótulo do canal já veio com a integração
   das duas, e a tarefa que o acrescentaria saiu. Todos os itens continuam passando.
 - **Comparação das estratégias de homologação (31/10)**, pedida pelo usuário antes do PR B: seletor
@@ -69,3 +68,9 @@
   subclasse do simulado da `106`, sem criptografia própria, num ambiente separado da VM de
   homologação, que não muda (D-017, D-018). A validação por pessoas é a T051, critério de aceite
   humano em seção própria, e não teste.
+- **Simplificação (31/10)**, por decisão do usuário: nenhum papel institucional novo sem exigência
+  concreta. A permissão volta ao papel existente, renomeado Administrador institucional; saíram o
+  segundo papel, a opção `--papel` nos três comandos, as regras por papel, a recusa e a suspensão
+  estendidas, FR-3340, FR-3341, EC-16, T019 e T020. O risco de ampliar privilégio em silêncio ficou
+  com o passo 0 da migração (D-002, P-5). No provedor de homologação, saiu o descarte dos bilhetes
+  da mesma página: quem está na página já escolhe qualquer pessoa, e o descarte não protegia nada.

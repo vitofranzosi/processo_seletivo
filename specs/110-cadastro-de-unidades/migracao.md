@@ -20,13 +20,18 @@ A transição propriamente dita é a de **C**:
 
 | # | Passo | Pré-condição | O que garante |
 |---|---|---|---|
-| 0 | a `108` e a `109` na `main` | — | **feito em 31/10/2026** (`cf048007`, `81ce6e94`) |
+| 0 | em cada ambiente instalado, listar os vínculos vigentes de `administrador-institucional` (`Vinculo` do escopo `institucional`, sem revogação) | — | a ampliação do papel chega a quem já o tem só por decisão (D-002) |
+| 0a | **se houver algum**: o usuário autoriza expressamente, pessoa por pessoa, que ela passe a administrar unidades — ou a administração dela é retirada pela implantação antes do deploy | P-5 respondida para aquele ambiente | nenhum privilégio real se amplia em silêncio |
 | 1 | a release de C **não** traz mudança no `unidades.json` | revisão do PR | nada de valor novo chega pelo arquivo na última vez em que ele seria lido |
-| 2 | deploy da release: `ps-migrar` (provisionar, migrar, provisionar, `semear_unidades`) | — | a semente encontra o registro preenchido e não grava. **Nenhum privilégio muda**: o papel do registro nasce sem ninguém |
+| 2 | deploy da release: `ps-migrar` (provisionar, migrar, provisionar, `semear_unidades`) | passos 0 e 0a | a semente encontra o registro preenchido e não grava; o papel institucional passa a ter `unidade:administrar`, e só quem o passo 0a autorizou o tem |
 | 3 | conferir a linha `Unidades: registro com N unidades; a semente não se aplica.` | — | a semente não se aplicou, como devia |
 | 4 | conferir `Modelos de aviso: 0 criados.` | — | nenhuma unidade sem modelos |
-| 5 | conceder o papel do registro pela implantação, a quem o usuário designar, com o ato no motivo | a P-5 respondida | o poder de mudar o registro chega por ato, e não pelo deploy (D-002) |
-| 6 | a partir daqui, toda mudança de unidade é pela tela | a pessoa do passo 5 **consegue entrar**: a entrada institucional precisa de provedor, e na VM de homologação e em produção isso é o SSO (D-017) | uma fonte |
+| 5 | onde ainda não há Administrador institucional, designá-lo pelo comando de sempre, com o ato no motivo | decisão do usuário | o poder chega por ato |
+| 6 | a partir daqui, toda mudança de unidade é pela tela | o Administrador institucional **consegue entrar**: a entrada institucional precisa de provedor, e na VM de homologação e em produção isso é o SSO (D-017) | uma fonte |
+
+**Em 31/10/2026**, nenhum banco local tinha vínculo vigente de `administrador-institucional`, e
+produção nunca foi instalada. A VM de homologação não estava ao alcance da verificação: é o primeiro
+ambiente do passo 0.
 
 Entre os passos 2 e 6, em produção e na VM de homologação, ninguém cadastra unidade — e ninguém
 poderia usá-la, porque a gestão responde 503 sem SSO (D-019). Em desenvolvimento e no compose, a tela
@@ -63,9 +68,8 @@ Três situações, da mais simples para a mais delicada.
 ### R-1 — Antes de qualquer ato pela tela
 
 Voltar à release anterior a C. A sincronização volta a rodar, encontra o banco igual ao arquivo e
-não grava nada. O gatilho de escopo é de A, e fica: a release anterior a C já o conhece. Os vínculos
-do papel do registro, se o passo 5 já tiver ocorrido, ficam no banco sem efeito — a release anterior
-ignora papel que não conhece.
+não grava nada. O gatilho de escopo é de A, e fica: a release anterior a C já o conhece. O papel
+institucional volta a ter só `acesso:administrar`, com os mesmos vínculos.
 
 ### R-2 — Depois de cadastrar ou editar pela tela
 
@@ -110,5 +114,5 @@ Tirar o adaptador da configuração da instância de validação. Não há dado 
 | a semente não aplicou | a saída do `ps-migrar` | `registro com N unidades` |
 | o gatilho existe | `\dS+ processos_edital` no `psql` | `edital_escopo_imutavel` |
 | o registro não mudou | `semear_unidades --exportar` antes e depois, `diff` | idêntico |
-| ninguém ganhou privilégio no deploy | a lista de vínculos vigentes no escopo institucional, antes e depois do passo 2 | idêntica |
-| quem administra unidade é quem o usuário designou | os vínculos `administrador-de-unidades` vigentes, depois do passo 5 | as pessoas designadas, com o ato no motivo |
+| ninguém ganhou papel no deploy | a lista de vínculos vigentes no escopo institucional, antes e depois do passo 2 | idêntica |
+| quem administra unidade é quem o usuário autorizou | os vínculos `administrador-institucional` vigentes, contra a lista do passo 0a | as mesmas pessoas |
