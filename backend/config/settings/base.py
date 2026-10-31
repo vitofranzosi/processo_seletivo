@@ -341,6 +341,11 @@ PORTAL_ATRAS_DE_PROXY = os.getenv("PORTAL_ATRAS_DE_PROXY", "false").lower() == "
 # participação anterior que a pessoa não conseguiu confirmar —, e ambas eram becos sem saída: nem
 # e-mail, nem telefone, nem link. São justamente os dois pontos em que ela já está travada.
 # Vazio em desenvolvimento; em produção a ausência impede subir.
+#
+# **É o canal da instituição, e não o de uma unidade** (109). A unidade pode declarar o seu no
+# `unidades.json` (`atendimento`), e então as comunicações de um Edital dela o usam; este fica como
+# a recaída delas e como o único canal da conta do candidato, que não é de unidade nenhuma. Não é
+# configuração de correio: servidor, remetente e credencial são os `EMAIL_*`, um só para todos.
 PORTAL_ATENDIMENTO = os.getenv("PORTAL_ATENDIMENTO", "").strip()
 
 # Documentos do candidato (009). A raiz é privada: fica fora da árvore estática e nunca é servida

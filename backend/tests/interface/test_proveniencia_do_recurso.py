@@ -181,9 +181,13 @@ def test_a_tela_do_recurso_nao_faz_uma_consulta_por_ato(
     # A oitava só acontece para quem **não** tem `comissao:gerir`, como esta julgadora: com a
     # permissão sistêmica a resposta sai sem consulta nenhuma.
     #
+    # A nona é a sigla da unidade em que a julgadora atua, que a moldura da gestão diz desde a `109`
+    # (D-001 de lá): uma leitura por página, pela chave, e não memória do processo, que envelheceria
+    # depois de um `sincronizar_unidades`.
+    #
     # O número é **constante** — não cresce com a proveniência, e é isso que este orçamento
     # protege.
-    with django_assert_num_queries(8):
+    with django_assert_num_queries(9):
         client.get(caminho)
 
 

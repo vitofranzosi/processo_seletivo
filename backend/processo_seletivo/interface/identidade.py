@@ -23,7 +23,11 @@ CHAVE_SESSAO = "interface_identidade"
 ESCOPO_PADRAO = "cefor"
 
 # Papéis de responsabilidade, conforme FR-026/FR-027. Cada um reúne um conjunto fixo de
-# permissões; quando o diretório for integrado, cada papel corresponderá a um grupo dele.
+# permissões. **Não correspondem a grupos do diretório**, como este comentário dizia até a 109: a
+# 106 decidiu que o diretório institucional só autentica, e que quem tem cada papel, em cada
+# unidade, é vínculo pessoa × unidade × papel mantido no GPS (`seguranca/acessos.py`), concedido e
+# revogado pela interface da 107. Este dicionário é o catálogo, e é também o que o seletor de
+# demonstração oferece.
 PAPEIS = {
     "elaborador": (
         "Elaborador",
@@ -595,6 +599,20 @@ def pedir_identificacao(request):
     return redirect(destino)
 
 
+def identificacao_da_gestao(ator):
+    from processo_seletivo.unidades.application import identificacao
+
+    if ator is None:
+        return identificacao.da_implantacao()
+    return identificacao.da_unidade(ator.institution_scope)
+
+
+def _identificacao_publica():
+    from processo_seletivo.unidades.application import identificacao
+
+    return identificacao.da_implantacao()
+
+
 def contexto_identidade(request):
     """Disponibiliza a identidade a todos os templates, sem cada view precisar repassá-la."""
     ator = ator_da_sessao(request)
@@ -615,6 +633,14 @@ def contexto_identidade(request):
         # Os escopos do seletor de unidade da barra, só no institucional (107, `FR-3104`).
         "escopos_do_ator": SimpleLazyObject(lambda: escopos_da_pessoa(request)),
         "seletor_identidade": seletor_disponivel(),
+        # **Duas identificações, e nunca uma pela outra** (109). A da gestão é a unidade em que o
+        # ator atua — o escopo que a requisição já autorizou, sem consulta a mais além da leitura da
+        # sigla. A pública é a da implantação, e não lê sessão nenhuma: o portal, a página de acesso
+        # e a 404 não podem dizer a unidade de quem por acaso está na gestão no mesmo navegador
+        # (FR-3206). A página de um ato a substitui pela unidade dele (FR-3207). Preguiçosas pela
+        # razão do nome: o fragmento que o htmx troca não desenha moldura.
+        "identificacao_da_gestao": SimpleLazyObject(lambda: identificacao_da_gestao(ator)),
+        "identificacao_publica": SimpleLazyObject(_identificacao_publica),
         # O portal oferece a porta da gestão só onde há por onde entrar (075, `FR-1699`). É o único
         # dado da gestão que o portal lê, e não diz nada sobre quem está identificado.
         "metodos_de_acesso": metodos_disponiveis(),

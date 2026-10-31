@@ -99,15 +99,23 @@ def _variaveis_da_origem(origem, publicacoes_citadas):
     ]
 
 
-def _rodape_visivel(origem):
-    """O rodapé como aparece no editor: fixo, com os marcadores do sistema por extenso."""
+def _rodape_visivel(origem, escopo):
+    """O rodapé como aparece no editor: fixo, com os marcadores do sistema por extenso.
+
+    A assinatura e o canal são os da unidade (109): o do Edital, na prévia, e o da unidade de quem
+    edita, no modelo — o modelo é da unidade, e é a ela que o aviso vai assinar.
+    """
     from processo_seletivo.avisos.domain.mensagem import FRASE_DA_CHAMADA
+    from processo_seletivo.unidades.application import identificacao
+
+    unidade = identificacao.da_unidade(escopo)
 
     return RODAPE.format(
         destino_oficial="[endereço da publicação oficial]",
         edital="[Edital]",
         frase_da_chamada=FRASE_DA_CHAMADA if origem == nomes.CHAMADA else "",
-        atendimento=getattr(settings, "PORTAL_ATENDIMENTO", "") or "a comissão do certame",
+        atendimento=unidade.canal("a comissão do certame"),
+        assinatura=unidade.rotulo,
     )
 
 
@@ -153,7 +161,7 @@ def _contexto_da_previa(request, ator, universo, *, motivo, acao, extra):
         "assunto": assunto,
         "corpo": corpo,
         "variaveis": _variaveis_da_origem(universo.origem, len(universo.publicacoes)),
-        "rodape": _rodape_visivel(universo.origem),
+        "rodape": _rodape_visivel(universo.origem, universo.edital.institution_scope),
         "chave": uuid4().hex,
         "habilitado": envio_habilitado(),
         "reenvio": motivo == nomes.REENVIO_JUSTIFICADO,
@@ -634,7 +642,7 @@ def modelo_de_aviso(request, modelo_id=None):
                 "variaveis": [
                     {"nome": nome, "significado": SIGNIFICADO[nome]} for nome in VARIAVEIS
                 ],
-                "rodape": _rodape_visivel(nomes.RESULTADO),
+                "rodape": _rodape_visivel(nomes.RESULTADO, ator.institution_scope),
             },
             status=erro.status if erro else 200,
         )

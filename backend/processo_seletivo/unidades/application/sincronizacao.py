@@ -26,7 +26,14 @@ from processo_seletivo.unidades.models import Unidade
 
 ARQUIVO = Path(__file__).resolve().parents[1] / "unidades.json"
 
-CAMPOS = ("sigla", "nome", "cabecalho", "local", "ativa")
+OBRIGATORIOS = ("sigla", "nome", "cabecalho", "local", "ativa")
+# **Opcional, e só este** (109, FR-3211). O canal de atendimento é o único campo que uma unidade
+# pode não ter: sem ele, vale o canal da instituição. Torná-lo obrigatório faria o arquivo do Cefor
+# declarar um valor que não está no repositório — o de produção mora no `app.env`.
+OPCIONAIS = ("atendimento",)
+CAMPOS = (*OBRIGATORIOS, *OPCIONAIS)
+
+ATENDIMENTO_MAXIMO = 255
 
 _CODIGO = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
@@ -59,12 +66,13 @@ def validar(declaradas):
         if not isinstance(entrada, dict):
             raise _malformada(codigo, "a entrada", "deve ser um objeto")
         sobrando = set(entrada) - set(CAMPOS)
-        faltando = set(CAMPOS) - set(entrada)
+        faltando = set(OBRIGATORIOS) - set(entrada)
         if sobrando or faltando:
             raise _malformada(
                 codigo,
                 "os campos",
-                f"devem ser exatamente {', '.join(CAMPOS)}",
+                f"devem ser exatamente {', '.join(OBRIGATORIOS)} e, se houver, "
+                f"{', '.join(OPCIONAIS)}",
             )
         for campo in ("sigla", "nome", "local"):
             if not isinstance(entrada[campo], str) or not entrada[campo].strip():
@@ -78,12 +86,29 @@ def validar(declaradas):
             raise _malformada(codigo, "cabecalho", "deve ter uma ou duas linhas preenchidas")
         if not isinstance(entrada["ativa"], bool):
             raise _malformada(codigo, "ativa", "deve ser true ou false")
+        # O canal entra no meio de uma frase da mensagem — "fale com {canal}." —, e por isso uma
+        # linha só. Que forma ele tem (e-mail, telefone, endereço) é política de atendimento, que o
+        # sistema não decide (109, P-2). Declarado vazio é recusado: para não ter canal, omite-se.
+        atendimento = entrada.get("atendimento", "")
+        if "atendimento" in entrada and (
+            not isinstance(atendimento, str)
+            or not atendimento.strip()
+            or "\n" in atendimento
+            or "\r" in atendimento
+            or len(atendimento.strip()) > ATENDIMENTO_MAXIMO
+        ):
+            raise _malformada(
+                codigo,
+                "atendimento",
+                f"deve ser uma linha preenchida de até {ATENDIMENTO_MAXIMO} caracteres, ou ausente",
+            )
         normalizadas[codigo] = {
             "sigla": entrada["sigla"].strip(),
             "nome": entrada["nome"].strip(),
             "cabecalho": [linha.strip() for linha in linhas],
             "local": entrada["local"].strip(),
             "ativa": entrada["ativa"],
+            "atendimento": atendimento.strip(),
         }
     return normalizadas
 

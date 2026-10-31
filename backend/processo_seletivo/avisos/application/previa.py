@@ -10,10 +10,9 @@ mandar para uma lista que o operador não viu.
 submetidos no mesmo pedido; não têm como ficar obsoletos, e são **validados**, não assinados.
 """
 
-from django.conf import settings
-
 from processo_seletivo.avisos.domain import mensagem, nomes, variaveis
 from processo_seletivo.shared.canonical import canonical_sha256
+from processo_seletivo.unidades.application import identificacao
 
 NATUREZA_POR_EXTENSO = {nomes.PRELIMINAR: "preliminar", nomes.DEFINITIVA: "definitivo"}
 
@@ -81,6 +80,10 @@ def congelar(universo, *, assunto, corpo, enderecos):
     variaveis.validar(assunto, origem=universo.origem, publicacoes_citadas=citadas, campo="assunto")
     variaveis.validar(corpo, origem=universo.origem, publicacoes_citadas=citadas, campo="corpo")
     valores_ = valores(universo, enderecos=enderecos)
+    # A unidade do Edital, lida agora e congelada com o texto (109, D-004): o aviso confirmado
+    # guarda a assinatura e o canal do dia, e a mudança do registro depois não o reescreve
+    # (FR-3216).
+    unidade = identificacao.da_unidade(universo.edital.institution_scope)
     return mensagem.congelar(
         assunto=assunto,
         corpo=corpo,
@@ -88,7 +91,8 @@ def congelar(universo, *, assunto, corpo, enderecos):
         origem=universo.origem,
         datas_retificadas=universo.datas_retificadas,
         destino=destino(universo, valores_),
-        atendimento=getattr(settings, "PORTAL_ATENDIMENTO", ""),
+        atendimento=unidade.canal(),
+        assinatura=unidade.rotulo,
     )
 
 

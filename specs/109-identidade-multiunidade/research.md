@@ -58,6 +58,10 @@ separação fica nos nomes: canal é o que o candidato lê; envio é `EMAIL_*`, 
   comunicação de hoje, e não ato. O aviso congela o texto na confirmação (decisão de congelamento da
   `066`), e é esse congelamento que preserva o que já saiu.
 
+*Descartado*: o aviso assinar pela unidade que a Publicação do Edital congelou, como sugeria a linha
+do `RODAPE` em `doc/pendencias-da-060.md`. Renomeada a unidade, o aviso de hoje assinaria com o nome
+que ela já não usa, e o canal — que não se congela no ato — viria de outra fonte que a assinatura.
+
 ## D-005 — A marca preserva o HTML de hoje
 
 A marca do portal, do topo da gestão e da 404 é `Cefor<span>/Ifes</span>`. Com a sigla do registro,
