@@ -31,6 +31,7 @@ from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.papel_de_producao import assumir, como_producao, devolver  # noqa: F401
 from tests.fixtures.recursos_us4 import JULGADORA, assinatura_de, cenario_julgavel, julgador
+from tests.interface.conftest import identificar, seletor_ligado  # noqa: F401
 
 postgresql_only = pytest.mark.skipif(
     connection.vendor != "postgresql", reason="privilégios validados somente em PostgreSQL"
@@ -115,14 +116,11 @@ def test_o_indeferimento_grava_a_decisao(peca, como_producao):  # noqa: F811
 
 def test_a_tela_de_julgamento_conclui_a_correcao_fixada(
     client,
-    settings,
+    seletor_ligado,  # noqa: F811
     peca,
     como_producao,  # noqa: F811
 ):
     """O caminho em que a auditoria viu o `500`: o `POST` da tela, como a julgadora o faz."""
-    from tests.interface.conftest import identificar
-
-    settings.INTERFACE_SELETOR_IDENTIDADE = True
     identificar(client, JULGADORA, ["julgador"])
     etapa = str(peca["cenario"]["etapa"])
 
@@ -272,17 +270,25 @@ def _simultaneos(peca, pedidos):
             propria.close()
 
     processo_id = peca["inscricao"].edital.processo_id
-    with transaction.atomic():
-        ProcessoSeletivo.objects.select_for_update().get(pk=processo_id)
-        threads = [
-            threading.Thread(target=rodar, args=(indice, argumentos))
-            for indice, argumentos in enumerate(pedidos)
-        ]
+    threads = [
+        threading.Thread(target=rodar, args=(indice, argumentos))
+        for indice, argumentos in enumerate(pedidos)
+    ]
+    # **As threads terminam antes do caso, falhe a espera ou não.** Sem o `finally`, uma espera
+    # vencida soltava a trava e saía com as threads ainda dentro de `julgar`: a fixture derrubava a
+    # role debaixo delas (`invalid role OID`) e a conexão que sobrava travava o `DROP DATABASE`.
+    try:
+        with transaction.atomic():
+            ProcessoSeletivo.objects.select_for_update().get(pk=processo_id)
+            for thread in threads:
+                thread.start()
+            _esperando_trava(len(pedidos))
+    finally:
         for thread in threads:
-            thread.start()
-        _esperando_trava(len(pedidos))
-    for thread in threads:
-        thread.join(timeout=30)
+            if thread.ident is not None:  # só as que chegaram a começar
+                thread.join(timeout=30)
+        presas = [thread for thread in threads if thread.is_alive()]
+        assert not presas, "uma thread não terminou: a conexão dela continua aberta"
     return desfechos
 
 

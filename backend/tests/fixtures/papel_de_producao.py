@@ -27,12 +27,9 @@ import pytest
 from django.db import DatabaseError, connection
 
 from tests.integration.test_database_permissions import (
-    MIGRATION_PASSWORD,
-    MIGRATION_ROLE,
-    RUNTIME_PASSWORD,
     RUNTIME_ROLE,
-    _remover_papeis,
-    _skip_unless_superuser,
+    provisionar_papeis_de_conformidade,
+    remover_papeis,
 )
 
 
@@ -81,29 +78,24 @@ def como_producao(db):
     nascem dentro da transação do caso e morrem com o `ROLLBACK` dela — `CREATE ROLE` também é
     transacional —, e desfazê-los à mão só repetiria o problema das FKs pendentes; nos primeiros, a
     saída do contexto devolve a role e o fim da fixture desfaz a política.
-    """
-    _skip_unless_superuser()
-    from processo_seletivo.seguranca.papeis import comandos
 
+    **Provisionar por caso é barato, e foi medido** (31/10/2026): ~0,04 s num caso não
+    transacional e 0,03 s a 0,14 s no teardown de um transacional. Provisionar uma vez por worker
+    exigiria fazê-lo fora da transação do caso, e a `runtime_connection` derruba os mesmos papéis
+    ao fim de cada caso dela — a fixture teria de detectar e refazer, por um ganho de segundos.
+    """
     no_caso = connection.in_atomic_block
-    _remover_papeis()
-    with connection.cursor() as cursor:
-        if no_caso:
-            # A política transfere a propriedade das tabelas, e o PostgreSQL recusa `ALTER TABLE`
-            # sobre tabela com verificação de chave estrangeira pendente — que é o que as fixtures
-            # deixam, porque o Django cria toda FK como `DEFERRABLE INITIALLY DEFERRED`. Verificar
-            # agora esvazia a fila; voltar a adiar devolve o estado inicial, porque não há, neste
-            # esquema, restrição adiável que nasça imediata.
+    if no_caso:
+        # A política transfere a propriedade das tabelas, e o PostgreSQL recusa `ALTER TABLE`
+        # sobre tabela com verificação de chave estrangeira pendente — que é o que as fixtures
+        # deixam, porque o Django cria toda FK como `DEFERRABLE INITIALLY DEFERRED`. Verificar
+        # agora esvazia a fila; voltar a adiar devolve o estado inicial, porque não há, neste
+        # esquema, restrição adiável que nasça imediata.
+        with connection.cursor() as cursor:
             cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
-        for instrucao in comandos(
-            database=connection.settings_dict["NAME"],
-            migration_role=MIGRATION_ROLE,
-            migration_password=MIGRATION_PASSWORD,
-            runtime_role=RUNTIME_ROLE,
-            runtime_password=RUNTIME_PASSWORD,
-        ):
-            cursor.execute(instrucao)
-        if no_caso:
+    provisionar_papeis_de_conformidade()
+    if no_caso:
+        with connection.cursor() as cursor:
             cursor.execute("SET CONSTRAINTS ALL DEFERRED")
 
     @contextlib.contextmanager
@@ -114,6 +106,15 @@ def como_producao(db):
         finally:
             devolver(conexao)
 
-    yield contexto
-    if not no_caso:
-        _remover_papeis()
+    try:
+        yield contexto
+    finally:
+        if not no_caso:
+            # **A role devolvida antes da limpeza, aconteça o que tiver acontecido no caso.** Se
+            # `devolver` falhou no meio, a sessão ainda pode estar sob `SET ROLE`, e o `DROP ROLE`
+            # e o `TRUNCATE` da limpeza rodariam como produção — recusados, e com o papel do
+            # cluster sobrando para derrubar o caso seguinte. `RESET ROLE` é inócuo se já voltou.
+            connection.ensure_connection()
+            with connection.cursor() as cursor:
+                cursor.execute("RESET ROLE")
+            remover_papeis()
