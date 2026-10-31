@@ -40,13 +40,18 @@ primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tab
 — eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, são **46** desde a suspensão de pessoa da `107` — e é por isso que a armadilha é o zero,
 e não o total.
 
-**Depois dos três, o `make preparar` sincroniza as Unidades** declaradas em
-`backend/processo_seletivo/unidades/unidades.json` (060). Sem isso, a criação de Processo recusa com
-`unidade_nao_registrada` e a publicação não tem cabeçalho. A linha que ele imprime,
-`Unidades: C criadas, A alteradas, M sem mudança`, diz se aplicou alguma coisa. As tabelas da `060`
+**Depois dos três, o `make preparar` semeia as Unidades** de
+`backend/processo_seletivo/unidades/unidades.json` — **só num banco vazio** (110). Sem isso, a criação
+de Processo recusa com `unidade_nao_registrada` e a publicação não tem cabeçalho. A linha que ele
+imprime diz o que aconteceu: `Unidades: N semeadas.` num banco novo, e
+`Unidades: registro com N unidades; a semente não se aplica.` em todos os outros. **Editar o arquivo
+depois não tem efeito**: o registro é da aplicação, pela tela "Unidades" do Administrador
+institucional, com motivo e trilha. O comando é `semear_unidades`; `sincronizar_unidades` continua
+como apelido, com um aviso no *stderr*. As tabelas da `060`
 **não** são append-only — nada se exclui nelas por gatilho, mas elas mudam —, e não contam no `M`.
 A suíte não depende do comando: uma fixture `autouse` registra o Cefor em todo caso que toca o banco,
-porque os casos transacionais truncam as tabelas e a linha que uma migration criasse sumiria.
+porque os casos transacionais truncam as tabelas e a linha que uma migration criasse sumiria. O caso
+que precisa do registro vazio — os da semente — leva o marcador `sem_unidade_da_suite`.
 
 **O mesmo comando cria os três modelos iniciais de aviso** de cada unidade (066), e imprime
 `Modelos de aviso: C criados` — três na primeira vez, **zero** daí em diante, para sempre: a unidade

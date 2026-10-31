@@ -37,8 +37,7 @@ from processo_seletivo.interface import trilha_da_unidade as tela
 from processo_seletivo.interface.identidade import PAPEIS
 from processo_seletivo.interface.views import OPERACOES
 from processo_seletivo.seguranca.domain import Actor
-from processo_seletivo.unidades.application import autoridades
-from processo_seletivo.unidades.application.sincronizacao import sincronizar
+from processo_seletivo.unidades.application import autoridades, registro
 from processo_seletivo.unidades.models import Unidade
 from tests.conftest import ator_institucional
 from tests.fixtures.autoridades import CEFOR, registrar_unidade
@@ -50,6 +49,22 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 URL = reverse("interface:trilha-da-unidade")
 GESTORA = ator_institucional("ana.gestora", "autoridade:gerir", "aviso:enviar")
+# Quem administra o registro de Unidades desde a 110: o Administrador institucional, no escopo
+# institucional. A sincronização, que alterava unidade pela implantação, deixou de existir.
+ADMINISTRADORA = Actor("ines.institucional", "institucional", frozenset({"unidade:administrar"}))
+
+
+def _alterar_o_cefor(**mudancas):
+    campos = {**{k: v for k, v in CEFOR.items() if k not in ("codigo", "ativa")}, **mudancas}
+    conferencia = registro.conferir_alteracao(ADMINISTRADORA, codigo="cefor", campos=campos)
+    return registro.alterar(
+        ADMINISTRADORA,
+        codigo="cefor",
+        campos=campos,
+        versao=conferencia["versao"],
+        motivo="Teste da 108",
+        correlation_id="teste-108",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -115,49 +130,36 @@ def test_o_cadastro_e_o_encerramento_da_autoridade_dizem_quem_quando_e_o_que_mud
     assert "<dt>Nome</dt>" not in encerramento
 
 
-def test_a_sincronizacao_aparece_pela_implantacao_com_os_dados_mudados(client):
-    registrar_unidade("campus-a")
-    declaradas = {
-        "cefor": {**{k: v for k, v in CEFOR.items() if k != "codigo"}, "local": "Serra (ES)"},
-        "campus-a": {
-            "sigla": "Campus-a",
-            "nome": "Unidade campus-a",
-            "cabecalho": ["Unidade campus-a"],
-            "local": "Vitória (ES)",
-            "ativa": True,
-        },
-        "campus-b": {
+def test_a_alteracao_pela_aplicacao_aparece_com_quem_fez_e_os_dados_mudados(client):
+    """Desde a 110 a unidade muda pela aplicação, com pessoa e motivo, e não pela implantação."""
+    registro.registrar(
+        ADMINISTRADORA,
+        campos={
+            "codigo": "campus-b",
             "sigla": "CB",
             "nome": "Campus B",
             "cabecalho": ["Campus B"],
             "local": "Vila Velha (ES)",
-            "ativa": True,
         },
-    }
-    sincronizar(declaradas, correlation_id="teste-108")
+        motivo="Teste da 108",
+    )
+    _alterar_o_cefor(local="Serra (ES)")
     _auditor(client)
 
-    itens = _itens(client.get(URL).content.decode())
+    itens = [i for i in _itens(client.get(URL).content.decode()) if "unidade" in i.lower()]
 
     assert len(itens) == 1, "o registro do campus-b é do escopo dele"
     (alteracao,) = itens
     assert "Alteração da unidade" in alteracao
-    assert "por <strong>Implantação</strong>" in alteracao
+    assert "por <strong>ines.institucional</strong>" in alteracao
     assert CEFOR["nome"] in alteracao
     assert "<dt>Local</dt><dd>Vitória (ES) → Serra (ES)</dd>" in alteracao
+    assert "Teste da 108" in alteracao
 
 
 def test_a_alteracao_so_do_canal_de_atendimento_mostra_o_canal(client):
-    """A 109 grava o canal na sincronização; a alteração só dele não pode sair sem dado mudado."""
-    sincronizar(
-        {
-            "cefor": {
-                **{k: v for k, v in CEFOR.items() if k != "codigo"},
-                "atendimento": "atendimento.cefor@ifes.edu.br",
-            }
-        },
-        correlation_id="teste-108-109",
-    )
+    """A 109 criou o canal; a alteração só dele não pode sair sem dado mudado."""
+    _alterar_o_cefor(atendimento="atendimento.cefor@ifes.edu.br")
     _auditor(client)
 
     (alteracao,) = _itens(client.get(URL).content.decode())
@@ -326,9 +328,7 @@ def test_o_custo_da_pagina_nao_cresce_com_as_linhas(client, publicado):
     aviso = Aviso.objects.get(pk=declarado["aviso"])
     garantir_modelos_iniciais(correlation_id="teste-108")
     _cadastrar()
-    sincronizar(
-        {"cefor": {**{k: v for k, v in CEFOR.items() if k != "codigo"}, "local": "Serra (ES)"}}
-    )
+    _alterar_o_cefor(local="Serra (ES)")
     _auditor(client)
     _consultas_da_pagina(client)  # aquece o que a sessão faz uma vez
     poucas = _consultas_da_pagina(client)
@@ -516,7 +516,7 @@ def test_toda_operacao_dos_assuntos_tem_rotulo_e_toda_situacao_tem_traducao():
         assert rotulo != operacao and not re.fullmatch(r"[A-Z_]+", rotulo), operacao
     assert set(tela.ASSUNTOS) == set(auditoria_selectors.ASSUNTOS_DA_UNIDADE)
     from processo_seletivo.avisos.application.modelos import _estado
-    from processo_seletivo.unidades.application.sincronizacao import _situacao
+    from processo_seletivo.unidades.application.semente import _situacao
     from processo_seletivo.unidades.domain.vigencia import ENCERRADA, FUTURA, VIGENTE
 
     gravadas = {
@@ -540,7 +540,8 @@ def test_a_lista_literal_e_a_do_codigo():
 
     raiz = Path(__file__).resolve().parents[2] / "processo_seletivo"
     fontes = {
-        "unidades/application/sincronizacao.py": ("REGISTRAR_UNIDADE", "ALTERAR_UNIDADE"),
+        "unidades/application/semente.py": ("REGISTRAR_UNIDADE",),
+        "unidades/application/registro.py": ("REGISTRAR_UNIDADE", "ALTERAR_UNIDADE"),
         "unidades/application/autoridades.py": (
             "CADASTRAR_AUTORIDADE",
             "CORRIGIR_AUTORIDADE",

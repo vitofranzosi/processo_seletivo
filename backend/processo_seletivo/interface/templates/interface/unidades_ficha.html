@@ -1,0 +1,71 @@
+{% extends "interface/base.html" %}{% load estaticos interface_extras %}
+{% block titulo %}{{ unidade.sigla }} — Unidades{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/unidades.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:unidades' %}">{{ navegacao.secao_atual }}</a> › <span aria-current="page">{{ unidade.sigla }}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A ficha de uma unidade (110, FR-3315): os campos, a prévia do cabeçalho e o histórico.
+
+O histórico é o da trilha, traduzido pela mesma função da trilha da unidade (108, `D-009`): o
+registro pela implantação ou pela pessoa, as alterações com o antes e o depois, a desativação e a
+reativação. Nenhuma tela oferece excluir: nada se exclui.
+{% endcomment %}
+<h1>{{ unidade.nome }}</h1>
+<p class="sub">{{ unidade.sigla }} · <code>{{ unidade.codigo }}</code> · {% if unidade.ativa %}Ativa{% else %}<span class="unidade-desativada">Desativada</span>{% endif %}</p>
+
+{% if feito == "cadastrada" %}<p class="sucesso" role="status">Unidade cadastrada.</p>{% endif %}
+{% if feito == "alterada" %}<p class="sucesso" role="status">Unidade alterada.</p>{% endif %}
+{% if feito == "desativada" %}<p class="sucesso" role="status">Unidade desativada.</p>{% endif %}
+{% if feito == "reativada" %}<p class="sucesso" role="status">Unidade reativada.</p>{% endif %}
+
+<p class="acoes-da-unidade">
+  <a class="botao" href="{% url 'interface:unidade-editar' unidade.codigo %}">Editar</a>
+  {% if unidade.ativa %}
+  <a class="botao secundario" href="{% url 'interface:unidade-desativar' unidade.codigo %}">Desativar</a>
+  {% else %}
+  <a class="botao secundario" href="{% url 'interface:unidade-reativar' unidade.codigo %}">Reativar</a>
+  {% endif %}
+  {% if unidade.ativa %}<a class="acao" href="{% url 'interface:administracao-de-acessos-conceder' %}">Conceder o Administrador de acessos desta unidade</a>{% endif %}
+</p>
+
+<dl class="ficha">
+  <div><dt>Código</dt><dd><code>{{ unidade.codigo }}</code></dd></div>
+  <div><dt>Sigla</dt><dd>{{ unidade.sigla }}</dd></div>
+  <div><dt>Local do ato</dt><dd>{{ unidade.local }}</dd></div>
+  <div><dt>Canal de atendimento</dt><dd>{{ unidade.atendimento|default:"o da instituição" }}</dd></div>
+</dl>
+
+{% include "interface/_previa_do_cabecalho.html" %}
+
+<section aria-labelledby="historico-titulo">
+  <h2 id="historico-titulo">Histórico</h2>
+  {% if historico %}
+  <ol class="auditoria" aria-label="Atos sobre a unidade">
+    {% for registro in historico %}
+    <li>
+      <div class="cabeca">
+        <span class="quando">{{ registro.quando|date:"d/m/Y H:i:s" }}</span>
+        <strong class="operacao">{{ registro.operacao }}</strong>
+      </div>
+      <div class="corpo">
+        <span class="ator">por <strong>{% if registro.por_implantacao %}Implantação{% else %}{% nome_de_pessoa registro.ator %}{% endif %}</strong></span>
+        {% if registro.de and registro.para and registro.de != registro.para %}
+        <span class="transicao">{{ registro.de }} → {{ registro.para }}</span>
+        {% endif %}
+      </div>
+      {% if registro.mudancas %}
+      <dl class="dados-mudados">
+        {% for mudanca in registro.mudancas %}
+        <dt>{{ mudanca.dado }}</dt><dd>{{ mudanca.antes }} → {{ mudanca.depois }}</dd>
+        {% endfor %}
+      </dl>
+      {% endif %}
+      {% if registro.motivo %}<p class="motivo">“{{ registro.motivo }}”</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <div class="vazio"><p>Nenhum ato registrado para esta unidade.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

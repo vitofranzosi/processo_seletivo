@@ -1,5 +1,8 @@
 # Contrato: as telas de `/gestao/administracao-de-unidades`
 
+A lista e o cadastro ficam na raiz da seção; a ficha e os atos sobre uma unidade, sob
+`unidades/<codigo>` — para que nenhum código de unidade colida com `cadastrar`.
+
 ## Quem chega
 
 | Situação | Resposta |
@@ -34,7 +37,7 @@ Métodos fora dos listados: 405.
 | `conferir` | valida; com erro, o formulário com a mensagem no campo; sem erro, a **conferência**: a prévia (D-010), os campos, o aviso de que o código não muda, e — quando o ato muda a identificação das telas sem unidade — o aviso da moldura (FR-3330). Nada é gravado |
 | `confirmar` | chama `registrar`; sucesso → **302** para a ficha, com "Unidade cadastrada." ; recusa → a conferência com a mensagem, **200** |
 
-## Ficha — `GET /gestao/administracao-de-unidades/<codigo>`
+## Ficha — `GET /gestao/administracao-de-unidades/unidades/<codigo>`
 
 - os campos, a situação, a prévia do cabeçalho (as linhas, a sigla no anúncio do ato, o local; o
   aviso de linha que não cabe);
@@ -44,14 +47,14 @@ Métodos fora dos listados: 405.
 - o histórico (D-009), pela leitura `ficha` da aplicação e nunca por consulta da view, mais recente
   primeiro: quando, o ato, quem, a situação, o motivo, o antes → depois.
 
-## Editar — `GET|POST /gestao/administracao-de-unidades/<codigo>/editar`
+## Editar — `GET|POST /gestao/administracao-de-unidades/unidades/<codigo>/editar`
 
 Como cadastrar, sem o campo `codigo`. O código da rota é a unidade; um `codigo` enviado no corpo é
 ignorado (EC-9). A conferência mostra o antes e o depois de cada campo mudado, e carrega `versao`
 (D-007). Sem mudança: a recusa `nada_mudou` no formulário (FR-3322). `confirmar` com `versao`
 diferente da atual: a recusa `unidade_alterada`, sem gravar (FR-3325).
 
-## Desativar e reativar — `GET|POST /gestao/administracao-de-unidades/<codigo>/{desativar|reativar}`
+## Desativar e reativar — `GET|POST /gestao/administracao-de-unidades/unidades/<codigo>/{desativar|reativar}`
 
 | `acao` | Efeito |
 |---|---|

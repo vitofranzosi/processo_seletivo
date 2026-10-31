@@ -19,7 +19,7 @@ from processo_seletivo.shared.api.problems import DomainError
 
 
 class Command(BaseCommand):
-    help = "Substitui a administração institucional de acessos de uma pessoa por outra."
+    help = "Substitui a administração institucional de uma pessoa por outra."
 
     def add_arguments(self, parser):
         argumentos_da_pessoa(parser, "de-")

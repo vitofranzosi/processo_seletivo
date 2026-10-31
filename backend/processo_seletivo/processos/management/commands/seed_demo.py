@@ -30,8 +30,7 @@ from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.unidades.application.autoridades import cadastrar as cadastrar_autoridade
 from processo_seletivo.unidades.application.selectors import autoridades_vigentes
-from processo_seletivo.unidades.application.sincronizacao import ler as ler_unidades
-from processo_seletivo.unidades.application.sincronizacao import sincronizar as sincronizar_unidades
+from processo_seletivo.unidades.application.semente import semear as semear_unidades
 from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
 
 ESCOPO = "cefor"
@@ -644,10 +643,11 @@ class Command(BaseCommand):
     def _unidade_e_autoridades(self):
         """O Cefor registrado e as duas autoridades da demonstração, vigentes há um ano (060).
 
-        O registro de Unidades vem do arquivo, como na implantação; as autoridades, do comando de
-        cadastro, como pela tela — a demonstração percorre o fluxo real, e não grava direto.
+        O registro de Unidades vem da semente, como na implantação — num banco que já tem unidade,
+        ela não grava nada (110); as autoridades, do comando de cadastro, como pela tela — a
+        demonstração percorre o fluxo real, e não grava direto.
         """
-        sincronizar_unidades(ler_unidades())
+        semear_unidades()
         gestor = ator("gabriel.gestor", GERIR_AUTORIDADES)
         hoje = timezone.now().astimezone(ZONA).date()
         vigentes = {

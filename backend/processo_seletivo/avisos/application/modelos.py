@@ -203,18 +203,62 @@ def mudar_situacao(*, actor, modelo_id, ativo, correlation_id="interface-modelos
     return modelo
 
 
-def garantir_modelos_iniciais(*, correlation_id="sincronizar-unidades"):
+def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlation_id, razao):
+    """Os três modelos iniciais de **uma** unidade que nunca os teve, com o autor recebido (110).
+
+    Chamada dentro da transação de quem chama, e com a unidade já travada por ele. A implantação a
+    chama para cada unidade com o ator `implantacao`; o cadastro pela tela, com a pessoa que
+    cadastrou — a trilha diz quem fez, e não que a implantação criou os modelos da unidade que uma
+    pessoa cadastrou (`D-006`). Devolve quantos criou.
+    """
+    from processo_seletivo.auditoria.application import record_event
+
+    if ModeloDeAviso.objects.filter(institution_scope=unidade_codigo, modelo_inicial=True).exists():
+        return 0
+    criados = 0
+    for nome, assunto, corpo in MODELOS_INICIAIS:
+        if ModeloDeAviso.objects.filter(
+            institution_scope=unidade_codigo, nome__iexact=nome
+        ).exists():
+            # Um modelo que a unidade criou com o mesmo nome antes da 066 é dela: não se
+            # sobrescreve, e o inicial correspondente simplesmente não nasce.
+            continue
+        modelo = ModeloDeAviso.objects.create(
+            institution_scope=unidade_codigo,
+            nome=nome,
+            assunto=assunto,
+            corpo=corpo,
+            modelo_inicial=True,
+            criado_por=actor.subject,
+            criado_em=now,
+        )
+        record_event(
+            actor=actor,
+            permission=permission,
+            operation=nomes.OPERACAO_MODELO,
+            aggregate=modelo,
+            now=now,
+            correlation_id=correlation_id,
+            reason=razao,
+            new_state="ATIVO",
+            new_revision=None,
+            detalhe={"depois": _campos(modelo)},
+        )
+        criados += 1
+    return criados
+
+
+def garantir_modelos_iniciais(*, correlation_id="semear-unidades"):
     """Cria os três modelos iniciais em cada unidade que **nunca** teve modelo inicial (`R-012`).
 
     **Só insere.** Não relê, não atualiza e não sobrescreve texto: a unidade que editou ou inativou
     os três continua com os dela, porque a conferência é pela marca `modelo_inicial`, e modelo nunca
-    se exclui. **Idempotente sob concorrência**: as unidades são travadas com `select_for_update`,
-    como `sincronizar` já faz, e a segunda execução espera a primeira; se a trava faltasse, o índice
-    único de nome por escopo recusaria a cópia.
+    se exclui. **Idempotente sob concorrência**: as unidades são travadas com `select_for_update`, e
+    a segunda execução espera a primeira; se a trava faltasse, o índice único de nome por escopo
+    recusaria a cópia.
 
     Devolve quantos modelos criou.
     """
-    from processo_seletivo.auditoria.application import record_event
     from processo_seletivo.seguranca.domain import Actor
     from processo_seletivo.unidades.domain import nomes as nomes_das_unidades
     from processo_seletivo.unidades.models import Unidade
@@ -222,40 +266,14 @@ def garantir_modelos_iniciais(*, correlation_id="sincronizar-unidades"):
     criados = 0
     with transaction.atomic(), command_context() as now:
         for unidade in Unidade.objects.select_for_update().order_by("codigo"):
-            if ModeloDeAviso.objects.filter(
-                institution_scope=unidade.codigo, modelo_inicial=True
-            ).exists():
-                continue
-            ator = Actor(nomes_das_unidades.IMPLANTACAO, unidade.codigo)
-            for nome, assunto, corpo in MODELOS_INICIAIS:
-                if ModeloDeAviso.objects.filter(
-                    institution_scope=unidade.codigo, nome__iexact=nome
-                ).exists():
-                    # Um modelo que a unidade criou com o mesmo nome antes da 066 é dela: não se
-                    # sobrescreve, e o inicial correspondente simplesmente não nasce.
-                    continue
-                modelo = ModeloDeAviso.objects.create(
-                    institution_scope=unidade.codigo,
-                    nome=nome,
-                    assunto=assunto,
-                    corpo=corpo,
-                    modelo_inicial=True,
-                    criado_por=nomes_das_unidades.IMPLANTACAO,
-                    criado_em=now,
-                )
-                record_event(
-                    actor=ator,
-                    permission=nomes_das_unidades.IMPLANTACAO,
-                    operation=nomes.OPERACAO_MODELO,
-                    aggregate=modelo,
-                    now=now,
-                    correlation_id=correlation_id,
-                    reason="Modelo inicial criado na sincronização das unidades (066, D-008).",
-                    new_state="ATIVO",
-                    new_revision=None,
-                    detalhe={"depois": _campos(modelo)},
-                )
-                criados += 1
+            criados += criar_modelos_iniciais(
+                unidade.codigo,
+                actor=Actor(nomes_das_unidades.IMPLANTACAO, unidade.codigo),
+                permission=nomes_das_unidades.IMPLANTACAO,
+                now=now,
+                correlation_id=correlation_id,
+                razao="Modelo inicial criado na implantação das unidades (066, D-008).",
+            )
     return criados
 
 

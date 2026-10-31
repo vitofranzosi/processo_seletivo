@@ -659,7 +659,7 @@ exec setpriv --reuid=processoseletivo --regid=processoseletivo --init-groups -- 
 SCRIPT
 ```
 
-**`ps-migrar`** — provisionar, migrar, provisionar de novo e sincronizar as Unidades, **sem senha de
+**`ps-migrar`** — provisionar, migrar, provisionar de novo e semear as Unidades, **sem senha de
 superusuário em lugar nenhum**. O provisionamento conecta como `postgres`, por *peer*, pelo socket
 local, e usa as settings `base`: o comando só precisa do banco, e as barreiras de `production` não
 têm o que dizer sobre ele. As senhas dos papéis vêm do ambiente, nunca da linha de comando, onde
@@ -667,10 +667,16 @@ apareceriam no `ps`. Sequência ensaiada em 29/09: `0 de 34`, as migrations, e `
 `066` o total é 40.
 
 O quarto passo veio com a `060`, depois do ensaio, e **não foi executado numa VM**: é o
-`sincronizar_unidades` que o `make preparar` e o `entrypoint.sh` do compose já rodam
-(`scripts/docker/entrypoint.sh:51-54`). Sem ele, o banco sobe sem Unidade registrada, a criação de
-Processo recusa com `unidade_nao_registrada`, a publicação sai sem cabeçalho, e a unidade fica sem
-os três modelos iniciais de aviso da `066`, que o mesmo comando cria. Roda com a role de runtime e
+`semear_unidades` que o `make preparar` e o `entrypoint.sh` do compose já rodam
+(`scripts/docker/entrypoint.sh`). **Desde a `110` ele é semente, e não sincronização**: num banco
+vazio registra as unidades do `unidades.json`; num banco que já tem unidade, não lê o arquivo nem
+grava unidade — o registro é da aplicação, pela tela "Unidades" do Administrador institucional. Sem
+ele, um banco novo sobe sem Unidade registrada, a criação de Processo recusa com
+`unidade_nao_registrada`, a publicação sai sem cabeçalho, e a unidade fica sem os três modelos
+iniciais de aviso da `066`, que o mesmo comando garante. **O nome anterior, `sincronizar_unidades`,
+continua aceito como apelido**: um `ps-migrar` instalado antes da `110` não falha — a semente roda,
+e uma linha no *stderr* pede para atualizar o roteiro. O apelido sai quando nenhum *log* de
+implantação tiver mais esse aviso. Roda com a role de runtime e
 depois da segunda passada pela mesma razão do `Makefile`: é dado, e não esquema, e só então a role
 tem privilégio sobre as tabelas que a migration criou. Fica fora do `--so-provisionar`, usado na
 restauração, porque o dump já traz as Unidades.
@@ -711,7 +717,7 @@ if [ -z "${n:-}" ] || [ "$n" != "$m" ]; then
   echo "FALHA: a segunda passada trancou ${n:-?} de ${m:-?} tabelas append-only." >&2; exit 1
 fi
 # Dado, e não esquema: com a role de runtime e depois da segunda passada. Idempotente.
-echo "== unidades";          /usr/local/sbin/ps-manage --release "$RELEASE" sincronizar_unidades
+echo "== unidades";          /usr/local/sbin/ps-manage --release "$RELEASE" semear_unidades
 SCRIPT
 ```
 
@@ -1271,7 +1277,8 @@ sudo ps-migrar "$R"
 ```
 
 Saída esperada. As três primeiras seções são as do ensaio, com o total de hoje; as linhas das
-Unidades são as que o comando imprime (`unidades/management/commands/sincronizar_unidades.py:32-41`),
+Unidades são as que o comando imprime (`unidades/management/commands/semear_unidades.py`), num banco
+novo,
 e não vieram de VM:
 
 ```
@@ -1283,17 +1290,19 @@ As demais ainda não existem neste banco. Aplique as migrations e execute este c
 == provisionar (2/2)
 Papéis provisionados. 40 de 40 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
 == unidades
-Unidades: 1 criadas, 0 alteradas, 0 sem mudança.
+Unidades: 1 semeadas.
 Modelos de aviso: 3 criados.
 ```
 
 O `40` cresce a cada tabela append-only nova. O que importa é o **N igual ao M** na segunda
 passada; o script falha se não for. Os três passos são idempotentes
-(`seguranca/papeis.py:11-16`), e o quarto também: numa atualização ele diz `0 criadas` quando o
-`unidades.json` não mudou, e `Modelos de aviso: 0 criados` para sempre depois da primeira vez — a
-unidade que editou ou inativou os modelos continua com os dela. O `1` é o Cefor, a única unidade
-declarada hoje em `backend/processo_seletivo/unidades/unidades.json`; as demais entram nesse arquivo
-quando o Ifes as fornecer ([`pendencias-da-060.md`](pendencias-da-060.md)).
+(`seguranca/papeis.py:11-16`), e o quarto também: numa atualização ele diz
+`Unidades: registro com N unidades; a semente não se aplica.`, e `Modelos de aviso: 0 criados` para
+sempre depois da primeira vez — a unidade que editou ou inativou os modelos continua com os dela. O
+`1` é o Cefor, a única unidade da semente em `backend/processo_seletivo/unidades/unidades.json`.
+**As demais entram pela aplicação**, e não por esse arquivo: o Administrador institucional as
+cadastra na tela "Unidades", com motivo e trilha (`110`). Editar o arquivo depois da instalação não
+tem efeito nenhum.
 
 **Como verificar:**
 
@@ -2550,12 +2559,12 @@ Leia as notas do PR ou da release. **Variável nova exigida** por `production.py
 
 ### 22.3a Sem migrations — segundos de indisponibilidade
 
-Sem migration o `ps-migrar` não roda, e com ele não rodaria a sincronização das Unidades. Uma
-release pode mudar o `unidades.json` sem mudar o esquema — é assim que uma unidade nova entra —, e
-por isso a sincronização vem aqui à parte. Sem mudança no arquivo, ela não grava nada.
+Sem migration o `ps-migrar` não roda, e com ele não rodaria a semente das Unidades. Numa instalação
+existente ela não grava nada — desde a `110` uma unidade nova entra pela tela, e não pelo arquivo —,
+mas continua aqui para garantir os modelos iniciais de aviso.
 
 ```bash
-sudo ps-manage --release "$R" sincronizar_unidades   # "Unidades: 0 criadas, 0 alteradas, …" se nada mudou
+sudo ps-manage --release "$R" semear_unidades   # "Unidades: registro com N unidades; a semente não se aplica."
 sudo ps-ativar "$R"          # ativada: …; o nginx mostra "indisponível" nos ~2–5 s do restart
 ```
 
@@ -2824,7 +2833,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 - Evidência:
   - o README, § "Antes de receber dado pessoal real", a lista como precondição;
   - não há comando de expurgo de dado pessoal (os comandos são `provisionar_papeis`, `carregar_ceps`,
-    `situacao_dos_ceps`, `sincronizar_unidades`, `despachar_avisos`, `seed_demo`,
+    `situacao_dos_ceps`, `semear_unidades`, `despachar_avisos`, `seed_demo`,
     `avaliar_assistente`, `verificar_servico_de_inferencia` e `excluir_registros_do_piloto` — e o
     último só alcança as trocas do piloto do assistente, da `071`, e não o dado do candidato);
   - `DesafioDeAcesso.email_canonico` guarda qualquer endereço digitado (`identidade/models.py`).
@@ -3023,7 +3032,7 @@ sudo -u postgres createdb --encoding=UTF8 --locale=pt_BR.UTF-8 --template=templa
 sudo -u postgres psql -c 'REVOKE CONNECT ON DATABASE processo_seletivo FROM PUBLIC;'
 # Segredos: app.env + migracao.env (§10.2) → COFRE
 sudo ps-manage --release "$R" check --deploy                 # só W005 e W021
-sudo ps-migrar "$R"                                          # 0 de 40 … 40 de 40 · Unidades: 1 criadas
+sudo ps-migrar "$R"                                          # 0 de 40 … 40 de 40 · Unidades: 1 semeadas
 # Serviço: gunicorn.conf.py + unit (§12)
 sudo systemctl daemon-reload && sudo systemctl enable processoseletivo && sudo ps-ativar "$R"
 # TLS: nginx provisório (§13.2) → certbot (§13.3) → certbot renew --dry-run
@@ -3042,7 +3051,7 @@ R=$(sudo ps-construir <SHA> | tail -1)
 sudo ps-manage --release "$R" check --deploy
 sudo ps-manage --release "$R" --migracao migrate --plan
 # SEM migrations:
-sudo ps-manage --release "$R" sincronizar_unidades
+sudo ps-manage --release "$R" semear_unidades
 sudo ps-ativar "$R"
 # COM migrations:
 sudo touch /etc/nginx/processoseletivo.manutencao
@@ -3103,7 +3112,7 @@ APLICAÇÃO
 [ ] Settings de produção: seletor, identidade demo e sorteio demo ausentes
 [ ] Migrations aplicadas: migrate --check = 0; readiness = ready
 [ ] Provisionamento: "N de N tabelas append-only" na 2ª passada
-[ ] Unidades: "Unidades: … criadas" no ps-migrar; o Cefor em unidades_unidade
+[ ] Unidades: "Unidades: 1 semeadas." no primeiro ps-migrar ("registro com N unidades" nos seguintes); o Cefor em unidades_unidade
 [ ] gunicorn como processoseletivo, em 127.0.0.1:8000; systemd-analyze security revisado
 [ ] Estáticos: /static/interface/htmx.min.js = 200; /static/interface/gestao/base.css e /static/shared/tokens.css = 200, text/css
 [ ] CSP: /gestao/identificar e /selecoes/ com Content-Security-Policy, nenhum -Report-Only (091, 092)

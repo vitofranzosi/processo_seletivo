@@ -38,7 +38,17 @@ PAPEIS_DE_ACESSO = {
 }
 
 PAPEIS_INSTITUCIONAIS = {
-    # Concede e revoga o administrador de acessos de qualquer unidade, e nada mais. Um global com
-    # poder operacional seria o superusuário que o estudo recusou (§B.4, G2).
-    ADMINISTRADOR_INSTITUCIONAL: ("Administrador institucional de acessos", [ADMINISTRAR]),
+    # Concede e revoga o administrador de acessos de qualquer unidade, e administra o registro de
+    # Unidades — e nada mais. Um global com poder operacional seria o superusuário que o estudo
+    # recusou (§B.4, G2): nenhuma das duas permissões conduz Processo, Edital ou resultado.
+    #
+    # **O registro de Unidades veio com a 110, e não num papel próprio** (`D-002`): não há exigência
+    # institucional de separar quem dá acesso de quem cadastra unidade, e um segundo papel pediria
+    # um segundo mecanismo de designação. A ampliação não chega em silêncio a quem já tem o papel —
+    # a migração da 110 manda verificar e autorizar antes do deploy. A permissão vai por extenso,
+    # como as do `PAPEIS`: a fronteira de identidade não importa quem a consome.
+    ADMINISTRADOR_INSTITUCIONAL: (
+        "Administrador institucional",
+        [ADMINISTRAR, "unidade:administrar"],
+    ),
 }

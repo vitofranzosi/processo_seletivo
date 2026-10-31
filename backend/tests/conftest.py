@@ -39,7 +39,9 @@ def unidade_e_autoridades_da_suite(request):
     usa_banco = request.node.get_closest_marker("django_db") or (
         _FIXTURES_DE_BANCO & set(request.fixturenames)
     )
-    if not usa_banco:
+    # A semente da 110 só se aplica a registro vazio, e o caso que a prova não pode receber o Cefor
+    # daqui. Num caso transacional o registro começa vazio: a limpeza do caso anterior o truncou.
+    if not usa_banco or request.node.get_closest_marker("sem_unidade_da_suite"):
         return
     request.getfixturevalue("_django_db_helper")
     from tests.fixtures.autoridades import garantir_o_cefor

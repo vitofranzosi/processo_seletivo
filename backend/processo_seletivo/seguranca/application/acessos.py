@@ -171,7 +171,7 @@ def _autoridade(ator, *, escopo, papel):
     if papel == ADMINISTRADOR_INSTITUCIONAL:
         raise DomainError(
             PAPEL_SO_POR_IMPLANTACAO,
-            "A administração institucional de acessos se concede só pelo comando de implantação, "
+            "A administração institucional se concede só pelo comando de implantação, "
             "com o ato que a designa.",
             403,
         )
@@ -292,12 +292,12 @@ def conceder_administracao_institucional(*, pessoa, motivo, adicional, now, corr
         )
         if existentes.filter(pessoa=pessoa).exists():
             raise DomainError(
-                VINCULO_JA_VIGENTE, "A pessoa já é administradora institucional de acessos.", 409
+                VINCULO_JA_VIGENTE, "A pessoa já é administradora institucional.", 409
             )
         if existentes.exists() and not adicional:
             raise DomainError(
                 ADMINISTRACAO_JA_CONCEDIDA,
-                "Já há administração institucional de acessos vigente. Para conceder a mais uma "
+                "Já há administração institucional vigente. Para conceder a mais uma "
                 "pessoa, repita com --adicional.",
                 409,
             )

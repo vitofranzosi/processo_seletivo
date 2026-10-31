@@ -17,7 +17,9 @@ a Reitoria como unidades, e do que rever antes de expandir. Responde às sete qu
 
 > **Atualização de 31/10/2026.** A recomendação virou a spec
 > [`110`](../specs/110-cadastro-de-unidades/spec.md), com as decisões de produto aprovadas pelo
-> usuário. Diferenças em relação ao que está escrito abaixo, depois da revisão final da spec no
+> usuário, e foi **implementada em três PRs** (verificação em
+> [`verificacao.md`](../specs/110-cadastro-de-unidades/verificacao.md)). Diferenças em relação ao que
+> está escrito abaixo, depois da revisão final da spec no
 > mesmo dia: a semente se aplica **só a registro vazio**, e não a "código ausente" — inserir por
 > código ausente mantinha o arquivo como segundo caminho de criação (decisão um do research da
 > `110`); a permissão vai ao papel institucional existente, renomeado Administrador institucional,

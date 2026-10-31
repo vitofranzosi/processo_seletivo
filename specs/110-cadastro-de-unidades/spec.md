@@ -545,7 +545,10 @@ validação fora de `localhost`.
   exceções nomeadas: os testes da sincronização, substituídos pelos da semente; o teste da agenda
   que movia um Edital de unidade, que passa a criá-lo na outra; e o teste de vínculos que importa a
   validação da sincronização, que passa a importá-la do domínio. Os testes dos comandos de
-  implantação e da suspensão da `107` passam sem mudança.
+  implantação e da suspensão da `107` passam sem mudança. **Exceção encontrada na implementação**:
+  três casos da trilha da `108` e dois da identificação da `109` usavam a sincronização para alterar
+  unidade ou declarar o canal; passam a usar os casos de uso desta feature, e verificam o mesmo — a
+  única diferença é o autor, que deixa de ser a implantação.
 - **SC-1048** *(critério de aceite humano, não teste automatizado)*: Na validação funcional, uma
   pessoa da equipe que não escreveu a feature cadastra, edita, desativa e reativa uma unidade no
   ambiente de homologação funcional, seguindo o roteiro G, sem ajuda; e confirma que a prévia

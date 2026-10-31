@@ -1,4 +1,4 @@
-"""Concede a administração institucional de acessos, pela implantação (106, `FR-3029`).
+"""Concede a administração institucional, pela implantação (106, `FR-3029`; 110, `D-002`).
 
 É o único ponto que cria poder institucional: nenhuma tela o concede, e o próprio administrador
 institucional não concede outro. Roda com o acesso de quem implanta, grava sob o ator `implantacao`
@@ -18,7 +18,10 @@ from processo_seletivo.shared.api.problems import DomainError
 
 
 class Command(BaseCommand):
-    help = "Concede a administração institucional de acessos a uma identidade do provedor."
+    help = (
+        "Concede a administração institucional — acessos das unidades e registro de Unidades — "
+        "a uma identidade do provedor."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument("--provedor", required=True, help="O nome do adaptador institucional.")

@@ -13,9 +13,9 @@ constante. O compositor do PDF tem as suas (`SIGLA_DA_INSTITUICAO` e as linhas d
 duas não se importam uma à outra de propósito (D-007): este módulo entra em toda página, e o
 compositor só no ato. Um teste confere que dizem o mesmo.
 
-**Nenhuma memória entre pedidos** (D-001). O registro muda pelo `sincronizar_unidades`, que roda
-noutro processo; guardar a sigla no servidor a faria envelhecer em silêncio até o reinício. A
-tabela tem uma linha por unidade, e a leitura é pela chave.
+**Nenhuma memória entre pedidos** (D-001). O registro muda pela tela da 110, noutro processo do
+servidor, ou pela semente de um banco vazio; guardar a sigla na memória a faria envelhecer em
+silêncio até o reinício. A tabela tem uma linha por unidade, e a leitura é pela chave.
 """
 
 from dataclasses import dataclass

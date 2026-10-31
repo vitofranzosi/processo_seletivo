@@ -1,0 +1,40 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Unidades{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/unidades.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+O registro de Unidades (110, FR-3314): todas, ativas e desativadas, por sigla.
+
+Do Administrador institucional, e de mais ninguém. Nada aqui grava: cada linha leva à ficha, e é lá
+que se edita, desativa e reativa. Nenhuma unidade se exclui.
+{% endcomment %}
+<h1>Unidades</h1>
+<p class="sub">O registro das unidades que praticam atos no sistema. O que se cadastra aqui sai no
+  cabeçalho dos documentos oficiais seguintes; os já publicados não mudam.</p>
+
+<p class="salvar"><a class="botao" href="{% url 'interface:unidade-cadastrar' %}">Cadastrar unidade</a></p>
+
+{% if unidades %}
+<div class="tabela-rolavel">
+<table class="lista-de-unidades" aria-label="Unidades registradas">
+  <thead>
+    <tr><th scope="col">Sigla</th><th scope="col">Nome</th><th scope="col">Código</th><th scope="col">Local</th><th scope="col">Situação</th></tr>
+  </thead>
+  <tbody>
+    {% for unidade in unidades %}
+    <tr>
+      <th scope="row"><a href="{% url 'interface:unidade' unidade.codigo %}">{{ unidade.sigla }}</a></th>
+      <td>{{ unidade.nome }}</td>
+      <td><code>{{ unidade.codigo }}</code></td>
+      <td>{{ unidade.local }}</td>
+      <td>{% if unidade.ativa %}Ativa{% else %}<span class="unidade-desativada">Desativada</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="vazio"><p>Nenhuma unidade registrada.</p></div>
+{% endif %}
+{% endblock %}

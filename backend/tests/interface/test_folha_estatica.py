@@ -268,6 +268,14 @@ QUEM_CARREGA = {
         "acessos_pessoas.html",
         "acessos_suspensao.html",
     },
+    # O registro de Unidades (110): a lista, a ficha, o formulário, a conferência e a situação.
+    "interface/telas/unidades.css": {
+        "unidades.html",
+        "unidades_ficha.html",
+        "unidades_formulario.html",
+        "unidades_conferencia.html",
+        "unidades_situacao.html",
+    },
     # A prévia da classificação (094): o painel só existe na etapa Classificação.
     "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},
     **{

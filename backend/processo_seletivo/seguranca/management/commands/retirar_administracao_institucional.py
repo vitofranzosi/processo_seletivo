@@ -17,7 +17,7 @@ from processo_seletivo.shared.api.problems import DomainError
 
 
 class Command(BaseCommand):
-    help = "Retira a administração institucional de acessos de uma pessoa."
+    help = "Retira a administração institucional de uma pessoa."
 
     def add_arguments(self, parser):
         argumentos_da_pessoa(parser)

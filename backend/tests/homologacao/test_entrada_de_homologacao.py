@@ -78,7 +78,7 @@ def test_a_pagina_lista_so_as_pessoas_do_provedor(client, configurado, validador
     pagina = _pagina(client)
 
     assert list(_links(pagina)) == ["Validadora Sintética"]
-    assert "Administrador institucional de acessos (institucional)" in pagina
+    assert "Administrador institucional (institucional)" in pagina
     assert "Pessoa do Simulado" not in pagina
     assert "não existe em produção" in pagina
     assert "<script" not in pagina and "style=" not in pagina, "a CSP recusaria"

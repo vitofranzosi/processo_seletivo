@@ -1,0 +1,16 @@
+{% comment %}
+A prévia do cabeçalho (110, FR-3324, `D-010`), pelas mesmas funções que imprimem o documento oficial:
+as linhas do órgão, o anúncio do ato com a sigla como ele a imprime, e o local do fecho. O que o HTML
+não mostra — a linha que no documento quebraria em duas — vem como aviso.
+{% endcomment %}
+<section aria-labelledby="previa-titulo" class="previa-do-cabecalho">
+  <h2 id="previa-titulo">Como o documento oficial imprime</h2>
+  <div class="folha-de-exemplo">
+    <p class="orgao">{% for linha in previa.linhas %}{{ linha }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
+    <p class="anuncio">{{ previa.anuncio }}</p>
+    <p class="fecho">{{ previa.fecho }}</p>
+  </div>
+  {% if previa.longas %}
+  <p class="aviso" role="status">{% if previa.longas|length == 1 %}Uma linha do cabeçalho não cabe{% else %}Linhas do cabeçalho não cabem{% endif %} numa linha do documento, e lá vai quebrar em duas: {% for linha in previa.longas %}“{{ linha }}”{% if not forloop.last %}; {% endif %}{% endfor %}. Considere dividir o nome nas duas linhas.</p>
+  {% endif %}
+</section>

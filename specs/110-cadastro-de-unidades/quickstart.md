@@ -43,8 +43,8 @@ Num banco de desenvolvimento preparado:
 cd backend && make preparar
 ```
 
-1. pelo shell, simular o ato da tela com um ator institucional: alterar o nome do Cefor e cadastrar
-   `serra` (o teste `test_a_semente_nao_desfaz_a_tela` faz isso; aqui é para ver com os olhos);
+1. pela tela "Unidades", no ambiente do roteiro G: alterar o nome do Cefor e cadastrar `serra` (o
+   teste `test_a_semente_nao_desfaz_a_tela` faz o mesmo pelos casos de uso);
 2. `make preparar` de novo, e `docker compose restart app` no ambiente containerizado;
 3. esperado: `Unidades: registro com 2 unidades; a semente não se aplica.`, a subida termina, e
    `semear_unidades --exportar` mostra o nome novo e `serra`.
