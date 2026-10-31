@@ -121,7 +121,9 @@ achados, todos corrigidos, cada um com teste que reprova sem a correção:
 | 5 | O comando de concessão (`106`) concedia a pessoa suspensa ou desativada; a mensagem da recusa falava em tela | menor | recusa sob a trava; mensagem neutra | `test_comando_da_administracao_preserva_a_pessoa.py::test_desativada_nao_recebe_a_administracao` |
 
 Os achados 1 e 5 são da `106`, e foram corrigidos em commit próprio (`256414fd`), separado da
-funcionalidade nova.
+funcionalidade nova. A pedido do usuário, a mesma correção foi levada ao PR #345 (`144b1af0`, com a
+suíte daquele ramo verde: 13655 passando, 13 pulados), e este ramo integra o #345 atualizado
+(`5e72f0fd`), sem mudança de conteúdo.
 
 **Homologação** (31/10, nesta máquina):
 
