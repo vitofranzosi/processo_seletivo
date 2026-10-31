@@ -12,7 +12,7 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.db import connection
 from django.utils import timezone
 
@@ -133,6 +133,18 @@ def test_arquivo_malformado_falha_com_registro_vazio_sem_gravar_nada(tmp_path, e
 
 
 @vazio
+@pytest.mark.parametrize("comando", ["semear_unidades", "sincronizar_unidades"])
+def test_o_comando_transforma_a_recusa_em_erro_de_comando(tmp_path, comando):
+    """EC-11: a semente malformada derruba a subida com a recusa nomeada, e não com um traceback."""
+    arquivo = _arquivo(tmp_path, _declarado(serra={**SERRA, "cabecalho": []}))
+
+    with pytest.raises(CommandError, match="unidade_malformada"):
+        _comando(comando, "--arquivo", arquivo)
+
+    assert not Unidade.objects.exists()
+
+
+@vazio
 def test_duas_sementes_simultaneas_gravam_uma_vez(tmp_path):
     """D-004: a segunda espera a primeira na trava e encontra o registro preenchido."""
     if connection.vendor != "postgresql":
@@ -206,7 +218,7 @@ def test_a_semente_nao_desfaz_a_tela():
         ADMINISTRADORA,
         codigo="cefor",
         campos=campos,
-        versao=conferencia["versao"],
+        versao_conferida=conferencia["versao"],
         motivo="Mudança de nome",
     )
     antes = (_registro(), _eventos_de_unidade())

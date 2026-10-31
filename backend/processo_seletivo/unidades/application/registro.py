@@ -35,7 +35,6 @@ from processo_seletivo.unidades.models import Unidade
 
 BASE = base_de_permissao("administrar o registro de unidades")
 CAMPOS = (*EDITAVEIS, "ativa")
-SIGLA_DA_INSTITUICAO = "Ifes"
 
 
 def exigir_permissao(ator):
@@ -102,14 +101,17 @@ def _gravar_evento(ator, unidade, operacao, *, antes, now, motivo, correlation_i
 
 
 def _rotulo(siglas):
-    return f"{siglas[0]}/{SIGLA_DA_INSTITUICAO}" if len(siglas) == 1 else SIGLA_DA_INSTITUICAO
+    from processo_seletivo.unidades.application.identificacao import da_implantacao_entre
+
+    return da_implantacao_entre(siglas).rotulo
 
 
 def mudanca_da_moldura(*, codigo, ativa_depois, sigla_depois):
     """Como as telas sem unidade passam a se identificar, se o ato muda isso (FR-3330, EC-7).
 
-    A regra é a da `109`: exatamente uma unidade ativa dá a marca dela; nenhuma ou várias, só o
-    Ifes. Devolve `(antes, depois)`, ou `None` quando o ato não muda a moldura.
+    A regra é a da `109`, pela mesma função que a moldura usa — `da_implantacao_entre` —, sobre as
+    unidades ativas de agora e as de depois do ato. Devolve `(antes, depois)`, ou `None` quando o
+    ato não muda a moldura.
     """
     ativas = dict(Unidade.objects.filter(ativa=True).values_list("codigo", "sigla"))
     antes = _rotulo(list(ativas.values()))
@@ -127,6 +129,12 @@ def mudanca_da_moldura(*, codigo, ativa_depois, sigla_depois):
 def listar(ator):
     exigir_permissao(ator)
     return list(Unidade.objects.order_by("sigla", "codigo"))
+
+
+def ler_unidade(ator, *, codigo):
+    """A unidade da rota, sem o histórico: para quem só precisa dela (a edição)."""
+    exigir_permissao(ator)
+    return _unidade(codigo)
 
 
 def ficha(ator, *, codigo):
@@ -261,13 +269,13 @@ def _conferir_versao(unidade, versao_conferida):
         )
 
 
-def alterar(ator, *, codigo, campos, versao, motivo, correlation_id=""):
+def alterar(ator, *, codigo, campos, versao_conferida, motivo, correlation_id=""):
     """Grava os campos mudados e o evento com o antes e o depois (FR-3321 a FR-3325)."""
     conferir_alteracao(ator, codigo=codigo, campos=campos)
     motivo = _motivo(motivo)
     with command_context() as now:
         unidade = _unidade(codigo, travar=True)
-        _conferir_versao(unidade, versao)
+        _conferir_versao(unidade, versao_conferida)
         depois = validar_campos(campos)
         antes = campos_de(unidade)
         if not _mudados(antes, depois):
@@ -306,7 +314,7 @@ def consequencias(ator, *, codigo, ato):
     }
 
 
-def _mudar_situacao(ator, *, codigo, ativa, versao, motivo, correlation_id):
+def _mudar_situacao(ator, *, codigo, ativa, versao_conferida, motivo, correlation_id):
     exigir_permissao(ator)
     motivo = _motivo(motivo)
     with command_context() as now:
@@ -317,7 +325,7 @@ def _mudar_situacao(ator, *, codigo, ativa, versao, motivo, correlation_id):
                 "A unidade já está ativa." if ativa else "A unidade já está desativada.",
                 409,
             )
-        _conferir_versao(unidade, versao)
+        _conferir_versao(unidade, versao_conferida)
         antes = campos_de(unidade)
         unidade.ativa = ativa
         unidade.alterada_em = now
@@ -334,25 +342,25 @@ def _mudar_situacao(ator, *, codigo, ativa, versao, motivo, correlation_id):
     return unidade
 
 
-def desativar(ator, *, codigo, versao, motivo, correlation_id=""):
+def desativar(ator, *, codigo, versao_conferida, motivo, correlation_id=""):
     """A unidade não recebe Processo, Edital nem acesso novos; o que existe continua (FR-3326)."""
     return _mudar_situacao(
         ator,
         codigo=codigo,
         ativa=False,
-        versao=versao,
+        versao_conferida=versao_conferida,
         motivo=motivo,
         correlation_id=correlation_id,
     )
 
 
-def reativar(ator, *, codigo, versao, motivo, correlation_id=""):
+def reativar(ator, *, codigo, versao_conferida, motivo, correlation_id=""):
     """A unidade volta a receber Processo, Edital e acesso (FR-3327)."""
     return _mudar_situacao(
         ator,
         codigo=codigo,
         ativa=True,
-        versao=versao,
+        versao_conferida=versao_conferida,
         motivo=motivo,
         correlation_id=correlation_id,
     )

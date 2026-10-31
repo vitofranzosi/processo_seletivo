@@ -10,6 +10,7 @@ formulário; na semente, quem confere o booleano é o leitor do arquivo.
 """
 
 import re
+import unicodedata
 
 from processo_seletivo.seguranca.acessos import ESCOPO_INSTITUCIONAL
 from processo_seletivo.shared.api.problems import DomainError
@@ -33,7 +34,9 @@ def validar_codigo(codigo):
     Uma conversão silenciosa — tirar o espaço, baixar a caixa — decidiria por quem cadastra um
     valor que nunca mais muda.
     """
-    if not isinstance(codigo, str) or not CODIGO.match(codigo) or len(codigo) > CODIGO_MAXIMO:
+    # `fullmatch`, e não `match`: com `match`, o `$` aceita uma quebra de linha no fim, e "serra\n"
+    # viraria um código permanente com um caractere invisível (revisão de código do #352).
+    if not isinstance(codigo, str) or not CODIGO.fullmatch(codigo) or len(codigo) > CODIGO_MAXIMO:
         raise DomainError(
             nomes.CODIGO_INVALIDO,
             "O código deve ter só letras minúsculas, dígitos e hífen, sem espaço, sem hífen nas "
@@ -54,6 +57,15 @@ def validar_codigo(codigo):
     return codigo
 
 
+def _uma_linha(texto):
+    """Sem quebra de linha nem outro caractere de controle: todo campo da unidade é uma linha.
+
+    O compositor do PDF não divide linhas por `\n` — a sigla vai ao anúncio do ato e as linhas do
+    cabeçalho ao topo do documento oficial, que depois de publicado não se corrige.
+    """
+    return not any(unicodedata.category(caractere) == "Cc" for caractere in texto)
+
+
 def validar_campos(campos):
     """Sigla, nome, cabeçalho, local e canal aparados, ou a primeira recusa (FR-3318).
 
@@ -63,10 +75,11 @@ def validar_campos(campos):
     for campo in ("sigla", "nome", "local"):
         valor = campos.get(campo)
         valor = valor.strip() if isinstance(valor, str) else ""
-        if not valor or len(valor) > LIMITES[campo]:
+        if not valor or len(valor) > LIMITES[campo] or not _uma_linha(valor):
             raise DomainError(
                 nomes.CAMPO_OBRIGATORIO,
-                f"{ROTULOS[campo]} deve ser preenchido, com até {LIMITES[campo]} caracteres.",
+                f"{ROTULOS[campo]} deve ser preenchido numa linha só, com até {LIMITES[campo]} "
+                "caracteres.",
                 422,
                 campo=campo,
             )
@@ -77,6 +90,7 @@ def validar_campos(campos):
         or not 1 <= len(linhas) <= 2
         or not all(isinstance(linha, str) and linha.strip() for linha in linhas)
         or any(len(linha.strip()) > LINHA_DO_CABECALHO_MAXIMA for linha in linhas)
+        or not all(_uma_linha(linha.strip()) for linha in linhas)
     ):
         raise DomainError(
             nomes.CABECALHO_INVALIDO,
@@ -88,13 +102,10 @@ def validar_campos(campos):
     valores["cabecalho"] = [linha.strip() for linha in linhas]
     atendimento = campos.get("atendimento") or ""
     # O canal entra no meio de uma frase da mensagem — "fale com {canal}." —, e por isso uma linha
-    # só. Que forma ele tem é política de atendimento, que o sistema não decide (109, P-2).
-    if (
-        not isinstance(atendimento, str)
-        or "\n" in atendimento
-        or "\r" in atendimento
-        or len(atendimento.strip()) > ATENDIMENTO_MAXIMO
-    ):
+    # só. Que forma ele tem é política de atendimento, que o sistema não decide (109, P-2). Aparado
+    # antes de conferir, como os outros campos: a quebra só nas pontas é espaço, e sai.
+    atendimento = atendimento.strip() if isinstance(atendimento, str) else None
+    if atendimento is None or len(atendimento) > ATENDIMENTO_MAXIMO or not _uma_linha(atendimento):
         raise DomainError(
             nomes.ATENDIMENTO_INVALIDO,
             f"O canal de atendimento deve ser uma linha só, de até {ATENDIMENTO_MAXIMO} "
@@ -102,5 +113,5 @@ def validar_campos(campos):
             422,
             campo="atendimento",
         )
-    valores["atendimento"] = atendimento.strip()
+    valores["atendimento"] = atendimento
     return valores

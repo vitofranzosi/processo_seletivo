@@ -67,7 +67,7 @@ def _alterar(codigo="serra", **mudancas):
         ADMINISTRADORA,
         codigo=codigo,
         campos=campos,
-        versao=conferencia["versao"],
+        versao_conferida=conferencia["versao"],
         motivo="Ofício nº 2/2026",
     )
 
@@ -75,7 +75,7 @@ def _alterar(codigo="serra", **mudancas):
 def _situacao(ato, codigo="serra"):
     versao = registro.consequencias(ADMINISTRADORA, codigo=codigo, ato=ato)["versao"]
     funcao = registro.desativar if ato == "desativar" else registro.reativar
-    return funcao(ADMINISTRADORA, codigo=codigo, versao=versao, motivo=f"Motivo de {ato}")
+    return funcao(ADMINISTRADORA, codigo=codigo, versao_conferida=versao, motivo=f"Motivo de {ato}")
 
 
 def _criar_processo(api_client, codigo, chave):
@@ -304,7 +304,9 @@ def test_o_codigo_enviado_na_alteracao_e_ignorado():
     campos = _editaveis(unidade, nome="Outro nome", codigo="vitoria")
     versao = registro.conferir_alteracao(ADMINISTRADORA, codigo="serra", campos=campos)["versao"]
 
-    registro.alterar(ADMINISTRADORA, codigo="serra", campos=campos, versao=versao, motivo="Teste")
+    registro.alterar(
+        ADMINISTRADORA, codigo="serra", campos=campos, versao_conferida=versao, motivo="Teste"
+    )
 
     assert Unidade.objects.get(pk=unidade.pk).codigo == "serra"
     assert not Unidade.objects.filter(codigo="vitoria").exists()
@@ -328,10 +330,17 @@ def test_duas_alteracoes_concorrentes_a_segunda_e_recusada():
     primeira = _editaveis(unidade, nome="Primeira")
     segunda = _editaveis(unidade, nome="Segunda")
     versao = registro.conferir_alteracao(ADMINISTRADORA, codigo="serra", campos=primeira)["versao"]
-    registro.alterar(ADMINISTRADORA, codigo="serra", campos=primeira, versao=versao, motivo="1")
+    registro.alterar(
+        ADMINISTRADORA, codigo="serra", campos=primeira, versao_conferida=versao, motivo="1"
+    )
 
     recusa = _erro(
-        registro.alterar, ADMINISTRADORA, codigo="serra", campos=segunda, versao=versao, motivo="2"
+        registro.alterar,
+        ADMINISTRADORA,
+        codigo="serra",
+        campos=segunda,
+        versao_conferida=versao,
+        motivo="2",
     )
 
     assert recusa.code == "unidade_alterada"
@@ -431,11 +440,13 @@ def test_transicoes_repetidas_sao_recusadas():
     unidade = _registrar()
     versao = registro.versao(unidade)
 
-    ja_ativa = _erro(registro.reativar, ADMINISTRADORA, codigo="serra", versao=versao, motivo="x")
+    ja_ativa = _erro(
+        registro.reativar, ADMINISTRADORA, codigo="serra", versao_conferida=versao, motivo="x"
+    )
     _situacao("desativar")
     versao = registro.versao(Unidade.objects.get(codigo="serra"))
     ja_desativada = _erro(
-        registro.desativar, ADMINISTRADORA, codigo="serra", versao=versao, motivo="x"
+        registro.desativar, ADMINISTRADORA, codigo="serra", versao_conferida=versao, motivo="x"
     )
 
     assert (ja_ativa.code, ja_desativada.code) == ("unidade_ja_ativa", "unidade_ja_desativada")

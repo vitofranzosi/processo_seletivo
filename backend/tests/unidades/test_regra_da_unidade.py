@@ -26,7 +26,8 @@ def test_codigo_no_formato_passa_como_foi_digitado(codigo):
 
 
 @pytest.mark.parametrize(
-    "codigo", ["Serra", " serra", "serra ", "campus serra", "serra_campus", "-serra", "a--b", ""]
+    "codigo",
+    ["Serra", " serra", "serra ", "campus serra", "serra_campus", "-serra", "a--b", "", "serra\n"],
 )
 def test_caixa_e_espaco_no_codigo_sao_recusados_sem_conversao(codigo):
     """EC-1: o código é permanente, e uma conversão silenciosa decidiria por quem cadastra."""
@@ -76,6 +77,12 @@ def test_espacos_das_pontas_sao_aparados():
         ("cabecalho", ["", "dois"], "cabecalho_invalido"),
         ("cabecalho", "Campus Serra", "cabecalho_invalido"),
         ("atendimento", "linha\noutra", "atendimento_invalido"),
+        ("atendimento", "tab\tno meio", "atendimento_invalido"),
+        # Nenhum campo da unidade é de várias linhas: o compositor não as divide (revisão do #352).
+        ("sigla", "Se\nrra", "campo_obrigatorio"),
+        ("nome", "Campus\rSerra", "campo_obrigatorio"),
+        ("local", "Serra\n(ES)", "campo_obrigatorio"),
+        ("cabecalho", ["Campus\nSerra"], "cabecalho_invalido"),
         ("atendimento", "x" * 256, "atendimento_invalido"),
     ],
 )
@@ -90,4 +97,11 @@ def test_canal_vazio_e_nao_declarado():
     assert (
         validar_campos({k: v for k, v in VALIDOS.items() if k != "atendimento"})["atendimento"]
         == ""
+    )
+
+
+def test_a_quebra_so_nas_pontas_do_canal_e_aparada():
+    """Como os outros campos: o que está nas pontas é espaço, e sai antes de conferir."""
+    assert validar_campos({**VALIDOS, "atendimento": "canal@ifes.edu.br\n"})["atendimento"] == (
+        "canal@ifes.edu.br"
     )

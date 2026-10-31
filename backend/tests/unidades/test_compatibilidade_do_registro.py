@@ -67,7 +67,9 @@ def test_editar_a_unidade_nao_muda_o_publicado(api_client, manager_headers, proc
     }
     versao = registro.conferir_alteracao(ADMINISTRADORA, codigo="cefor", campos=campos)["versao"]
 
-    registro.alterar(ADMINISTRADORA, codigo="cefor", campos=campos, versao=versao, motivo="Teste")
+    registro.alterar(
+        ADMINISTRADORA, codigo="cefor", campos=campos, versao_conferida=versao, motivo="Teste"
+    )
 
     assert _estado(publicacao) == antes
     assert antes["unidade"] == (

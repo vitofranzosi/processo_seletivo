@@ -61,7 +61,7 @@ def _alterar_o_cefor(**mudancas):
         ADMINISTRADORA,
         codigo="cefor",
         campos=campos,
-        versao=conferencia["versao"],
+        versao_conferida=conferencia["versao"],
         motivo="Teste da 108",
         correlation_id="teste-108",
     )

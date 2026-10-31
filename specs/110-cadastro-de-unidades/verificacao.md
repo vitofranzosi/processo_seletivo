@@ -132,6 +132,23 @@ registradas na implantação"; passou a dizer que são cadastradas pelo Administ
 ambiente instalado — continua por fazer na VM de homologação, que esta sessão não alcança. Não
 bloqueia o merge, e sim a ativação do privilégio ali.
 
+### A revisão de código (31/10/2026)
+
+Feita depois do PR, a pedido do usuário, sobre o diff de `main` até o C: 7 achados, todos corrigidos.
+
+| Achado | Correção |
+|---|---|
+| o código aceitava quebra de linha no fim (`match` com `$`) | `fullmatch`; o teste da regra cobre `"serra\n"` |
+| sigla, nome, local e cabeçalho aceitavam caractere de controle; o canal recusava antes de aparar | todo campo é uma linha só, conferido depois de aparar |
+| a previsão da moldura copiava a regra da `109` | a regra saiu de `da_implantacao` para `da_implantacao_entre`, que as duas usam |
+| os rótulos da conferência divergiam dos do histórico | a conferência usa `CAMPOS_LEGIVEIS` da trilha |
+| a edição lia o histórico inteiro; o cadastro conferia duas vezes | `ler_unidade` para a edição; a confirmação confere só em `registrar` |
+| o parâmetro `versao` escondia a função `versao()` | `versao_conferida` |
+| o erro de comando da semente malformada ficou sem teste | `test_o_comando_transforma_a_recusa_em_erro_de_comando`, nos dois nomes do comando |
+
+Depois das correções: lint e `make check` limpos; `make test-pg` com 4 workers, **14200 passando,
+13 pulados, 0 falhas** (648,8 s).
+
 ## Validação funcional (SC-1048, T051) — critério de aceite humano
 
 Não realizada. Depende de B e de C.

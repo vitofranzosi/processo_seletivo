@@ -55,17 +55,22 @@ ATORES = _atores_sem_a_base()
 CASOS = {
     "listar": lambda ator: registro.listar(ator),
     "ficha": lambda ator: registro.ficha(ator, codigo="cefor"),
+    "ler_unidade": lambda ator: registro.ler_unidade(ator, codigo="cefor"),
     "conferir_registro": lambda ator: registro.conferir_registro(ator, campos=SERRA),
     "registrar": lambda ator: registro.registrar(ator, campos=SERRA, motivo="x"),
     "conferir_alteracao": lambda ator: registro.conferir_alteracao(
         ator, codigo="cefor", campos={**EDITAVEIS, "nome": "Outro"}
     ),
     "alterar": lambda ator: registro.alterar(
-        ator, codigo="cefor", campos={**EDITAVEIS, "nome": "Outro"}, versao="", motivo="x"
+        ator, codigo="cefor", campos={**EDITAVEIS, "nome": "Outro"}, versao_conferida="", motivo="x"
     ),
     "consequencias": lambda ator: registro.consequencias(ator, codigo="cefor", ato="desativar"),
-    "desativar": lambda ator: registro.desativar(ator, codigo="cefor", versao="", motivo="x"),
-    "reativar": lambda ator: registro.reativar(ator, codigo="cefor", versao="", motivo="x"),
+    "desativar": lambda ator: registro.desativar(
+        ator, codigo="cefor", versao_conferida="", motivo="x"
+    ),
+    "reativar": lambda ator: registro.reativar(
+        ator, codigo="cefor", versao_conferida="", motivo="x"
+    ),
 }
 
 

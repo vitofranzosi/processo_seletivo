@@ -20,18 +20,11 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.interface import identidade
+from processo_seletivo.interface.trilha_da_unidade import CAMPOS_LEGIVEIS, linhas
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.unidades.application import registro
 from processo_seletivo.unidades.domain import nomes
 from processo_seletivo.unidades.domain.registro import ATENDIMENTO_MAXIMO, LIMITES
-
-ROTULOS = {
-    "sigla": "Sigla",
-    "nome": "Nome",
-    "cabecalho": "Linhas do cabeçalho",
-    "local": "Local do ato",
-    "atendimento": "Canal de atendimento",
-}
 
 
 def _ator(request):
@@ -143,7 +136,7 @@ def _conferencia(
             "valores": valores,
             "mudancas": [
                 {
-                    "rotulo": ROTULOS[campo],
+                    "rotulo": CAMPOS_LEGIVEIS["Unidade"][campo],
                     "antes": _legivel(antes[campo]),
                     "depois": _legivel(valores[campo]),
                 }
@@ -194,8 +187,6 @@ def lista(request):
 @require_http_methods(["GET"])
 def ficha(request, codigo):
     """Os campos, a prévia e o histórico da unidade, mais recente primeiro (FR-3315, `D-009`)."""
-    from processo_seletivo.interface.trilha_da_unidade import linhas
-
     ator = _ator(request)
     if ator is None:
         return identidade.pedir_identificacao(request)
@@ -226,16 +217,17 @@ def cadastrar(request):
         vazio = {campo: "" for campo in ("codigo", "sigla", "nome", "local", "atendimento")}
         return _formulario(request, modo="cadastrar", valores={**vazio, "cabecalho": []})
     campos = _campos_do_formulario(request)
-    try:
-        valores = registro.conferir_registro(ator, campos=campos)
-    except DomainError as recusa:
-        if recusa.status == 403:
-            raise
-        return _formulario(
-            request, modo="cadastrar", valores=campos, erro=recusa, status=recusa.status
-        )
     if acao == "conferir":
+        try:
+            valores = registro.conferir_registro(ator, campos=campos)
+        except DomainError as recusa:
+            if recusa.status == 403:
+                raise
+            return _formulario(
+                request, modo="cadastrar", valores=campos, erro=recusa, status=recusa.status
+            )
         return _conferencia(request, modo="cadastrar", valores=valores)
+    # A confirmação não confere antes: `registrar` confere tudo, e a recusa diz o que voltar a ver.
     try:
         unidade = registro.registrar(
             ator,
@@ -247,6 +239,8 @@ def cadastrar(request):
         if recusa.status == 403:
             raise
         if recusa.code == nomes.MOTIVO_OBRIGATORIO:
+            # Só o motivo faltou: os campos passaram, e a conferência volta com eles.
+            valores = registro.conferir_registro(ator, campos=campos)
             return _conferencia(
                 request, modo="cadastrar", valores=valores, erro=recusa, status=recusa.status
             )
@@ -262,7 +256,7 @@ def editar(request, codigo):
     ator = _ator(request)
     if ator is None:
         return identidade.pedir_identificacao(request)
-    unidade, _versao, _eventos = _unidade_ou_404(registro.ficha, ator, codigo=codigo)
+    unidade = _unidade_ou_404(registro.ler_unidade, ator, codigo=codigo)
     acao = request.POST.get("acao", "") if request.method == "POST" else ""
     if acao not in ("conferir", "confirmar"):
         return _formulario(
@@ -297,7 +291,7 @@ def editar(request, codigo):
             ator,
             codigo=unidade.codigo,
             campos=campos,
-            versao=request.POST.get("versao", ""),
+            versao_conferida=request.POST.get("versao", ""),
             motivo=request.POST.get("motivo", ""),
             correlation_id=_correlacao(request),
         )
@@ -332,7 +326,7 @@ def _situacao(request, codigo, ato):
                 funcao,
                 ator,
                 codigo=codigo,
-                versao=request.POST.get("versao", ""),
+                versao_conferida=request.POST.get("versao", ""),
                 motivo=request.POST.get("motivo", ""),
                 correlation_id=_correlacao(request),
             )

@@ -89,8 +89,18 @@ def da_implantacao():
     contexto. Sem o canal da unidade: essas superfícies são da conta do candidato e da instituição,
     e o atendimento delas é o institucional (FR-3214).
     """
-    ativas = list(Unidade.objects.filter(ativa=True).values_list("sigla", flat=True)[:2])
-    return Identificacao(sigla=ativas[0]) if len(ativas) == 1 else SO_A_INSTITUICAO
+    return da_implantacao_entre(
+        list(Unidade.objects.filter(ativa=True).values_list("sigla", flat=True)[:2])
+    )
+
+
+def da_implantacao_entre(siglas_ativas):
+    """A regra de `da_implantacao`, sobre as siglas dadas — sem ler o registro.
+
+    É por aqui que a confirmação do registro de Unidades (110, FR-3330) prevê como as telas sem
+    unidade ficam depois do ato: a previsão e a moldura usam a mesma regra, e não duas cópias.
+    """
+    return Identificacao(sigla=siglas_ativas[0]) if len(siglas_ativas) == 1 else SO_A_INSTITUICAO
 
 
 def do_ato(sigla_gravada, codigo):
@@ -130,6 +140,7 @@ __all__ = [
     "canal_da_unidade_por_escopo",
     "canal_institucional",
     "da_implantacao",
+    "da_implantacao_entre",
     "da_unidade",
     "do_ato",
 ]

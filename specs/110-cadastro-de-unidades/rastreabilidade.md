@@ -89,7 +89,7 @@ linhas ficam, marcadas, porque os números ficam reservados.
 | EC-8 (institucional com escopo de unidade) | T034 | `AUT::test_cada_caso_de_uso_recusa_sem_a_permissao` |
 | EC-9 (código forjado na edição) | T029 | `ADM::test_o_codigo_enviado_na_alteracao_e_ignorado`; `TEL::test_a_edicao_mostra_antes_e_depois_e_ignora_o_codigo` |
 | EC-10 (demonstração recusada antes de ler) | T036 | `TEL::test_a_demonstracao_e_recusada_e_nao_ve_o_item` |
-| EC-11 (semente malformada só com registro vazio) | T022 | `SEM::test_arquivo_malformado_falha_com_registro_vazio_sem_gravar_nada` |
+| EC-11 (semente malformada só com registro vazio) | T022 | `SEM::test_arquivo_malformado_falha_com_registro_vazio_sem_gravar_nada`, `::test_o_comando_transforma_a_recusa_em_erro_de_comando` |
 | EC-12 (canal apagado volta ao institucional) | T029 | `ADM::test_canal_apagado_volta_ao_institucional` |
 | EC-13 (Reitoria é unidade como as outras) | T028 | `ADM::test_reitoria_e_unidade_como_as_outras_sem_leitura_dos_campi` |
 | EC-14 (autoridade de desativada continua editável) | T033 | `ADM::test_autoridade_de_desativada_continua_editavel` |

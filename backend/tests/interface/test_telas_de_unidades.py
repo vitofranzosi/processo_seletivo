@@ -385,10 +385,12 @@ def test_a_trilha_da_unidade_le_os_atos(client, settings):
     registro.registrar(ines, campos={**campos, "cabecalho": ["Campus Serra"]}, motivo="Portaria 1")
     editaveis = {**campos, "cabecalho": ["Campus Serra"], "atendimento": "serra@ifes.edu.br"}
     versao = registro.conferir_alteracao(ines, codigo="serra", campos=editaveis)["versao"]
-    registro.alterar(ines, codigo="serra", campos=editaveis, versao=versao, motivo="Canal")
+    registro.alterar(
+        ines, codigo="serra", campos=editaveis, versao_conferida=versao, motivo="Canal"
+    )
     for ato, funcao in (("desativar", registro.desativar), ("reativar", registro.reativar)):
         versao = registro.consequencias(ines, codigo="serra", ato=ato)["versao"]
-        funcao(ines, codigo="serra", versao=versao, motivo=ato)
+        funcao(ines, codigo="serra", versao_conferida=versao, motivo=ato)
     settings.INTERFACE_SELETOR_IDENTIDADE = True
     identificar(client, "aud", ["auditor"], escopo="serra")
 
