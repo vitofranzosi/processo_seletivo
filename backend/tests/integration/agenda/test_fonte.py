@@ -13,8 +13,14 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.tempo import ZONA
 from tests.fixtures.agenda import cronograma, em, publicar
+from tests.fixtures.autoridades import registrar_autoridade, registrar_unidade
 from tests.fixtures.edital import actor_headers, identificador
-from tests.fixtures.publicacao import create_retification, publish_retification, retify
+from tests.fixtures.publicacao import (
+    create_retification,
+    levar_a_publicacao,
+    publish_retification,
+    retify,
+)
 from tests.fixtures.selecao import rascunho_de_selecao
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -188,13 +194,45 @@ def test_edital_cancelado_some_e_encerrado_so_mostra_o_que_passou(
     assert all(m.edital.id != str(cancelado.id) for m in marcos_de(adiante))
 
 
+def _publicar_na_serra(api_client, process_payload, seed):
+    """Um Edital publicado **na** Serra, pelos atores dela — e não um do Cefor movido para lá.
+
+    Mover era o que este teste fazia, por `update()` do escopo; desde a `110` o banco recusa
+    (FR-3335, EC-15). Criar na outra unidade é também o caso real: nenhum caminho da aplicação muda
+    o escopo de um Edital.
+    """
+    autoridade = registrar_autoridade(registrar_unidade("serra"), cargo="Diretor-Geral da Serra")
+    criado = api_client.post(
+        "/api/v1/admin/processos",
+        {
+            **process_payload,
+            "institutionalCode": f"PS-AGENDA-SERRA-{seed}",
+            "firstEdital": {**process_payload["firstEdital"], "number": f"{seed}"},
+        },
+        format="json",
+        HTTP_AUTHORIZATION="Bearer gestor-serra|serra|processo:criar,processo:ativar,edital:criar",
+        HTTP_IDEMPOTENCY_KEY=f"agenda-101-serra-{seed:04d}",
+        HTTP_X_CORRELATION_ID="agenda-serra",
+    )
+    assert criado.status_code == 201, criado.content
+    rascunho = rascunho_de_selecao(seed)
+    rascunho["schedule"] = cronograma(seed)
+    return levar_a_publicacao(
+        api_client,
+        Edital.objects.get(processo_id=criado.json()["id"]),
+        draft=rascunho,
+        escopo="serra",
+        signatory={"authorityId": str(autoridade.pk)},
+    )
+
+
 def test_edital_de_outro_escopo_nao_aparece_nem_pelo_filtro(
     api_client, manager_headers, process_payload
 ):
     """`FR-2610`, `SC-949`: ignorado sem distinção — nem recusa, nem página vazia de propósito."""
     do_cefor = publicar(api_client, manager_headers, process_payload, 7)
-    da_serra = publicar(api_client, manager_headers, process_payload, 8)
-    Edital.objects.filter(pk=da_serra.pk).update(institution_scope="serra")
+    da_serra = _publicar_na_serra(api_client, process_payload, 8)
+    assert da_serra.institution_scope == "serra"
 
     leitura = agenda.ler(LEITORA, {**TODOS, "edital": str(da_serra.id)})
     assert leitura.filtros.edital is None, "o identificador alheio é ignorado"
