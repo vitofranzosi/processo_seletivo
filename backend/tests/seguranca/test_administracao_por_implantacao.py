@@ -148,3 +148,27 @@ def test_se_a_concessao_falha_a_revogacao_nao_fica(provedor, monkeypatch):
         )
     assert not RevogacaoDeVinculo.objects.exists()
     assert _institucionais() == {rita.username}
+
+
+def test_a_substituicao_preserva_o_nome_de_quem_ja_entrou(provedor):
+    """Revisão do #346: sem `--para-nome`, a substituição apagava o nome de quem já existia."""
+    _administradora("rita")
+    paula = pessoa("paula", nome="Paula Prado", email="paula@ifes.edu.br")
+
+    call_command(
+        "substituir_administracao_institucional",
+        "--de-provedor",
+        provedor_simulado.NOME,
+        "--de-identificador",
+        "rita",
+        "--para-provedor",
+        provedor_simulado.NOME,
+        "--para-identificador",
+        "paula",
+        "--motivo",
+        "Portaria 63",
+    )
+
+    paula.refresh_from_db()
+    assert (paula.first_name, paula.email) == ("Paula Prado", "paula@ifes.edu.br")
+    assert paula.username in _institucionais()

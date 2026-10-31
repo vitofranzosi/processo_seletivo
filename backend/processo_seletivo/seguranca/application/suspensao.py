@@ -116,6 +116,10 @@ def suspender(ator, *, pessoa, motivo, now, correlation_id="", por_implantacao=F
     with transaction.atomic():
         # A pessoa trancada serializa duas suspensões: a segunda vê a primeira (`FR-3146`).
         get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
+        # **A autoridade de novo, sob a trava** (revisão do #346): a concessão e a substituição da
+        # administração institucional trancam a mesma linha, e uma que chegasse entre a primeira
+        # conferência e a trava deixaria a tela suspender uma administradora institucional.
+        _autoridade(ator, pessoa, por_implantacao=por_implantacao)
         if suspensao_aberta(pessoa.pk) is not None:
             raise DomainError(JA_SUSPENSA, "Esta pessoa já está suspensa.", 409)
         suspensao = SuspensaoDePessoa.objects.create(
@@ -139,6 +143,7 @@ def reativar(ator, *, pessoa, motivo, now, correlation_id="", por_implantacao=Fa
     nao_suspensa = DomainError(NAO_SUSPENSA, "Esta pessoa não está suspensa.", 409)
     with transaction.atomic():
         get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
+        _autoridade(ator, pessoa, por_implantacao=por_implantacao)
         suspensao = suspensao_aberta(pessoa.pk)
         if suspensao is None:
             raise nao_suspensa

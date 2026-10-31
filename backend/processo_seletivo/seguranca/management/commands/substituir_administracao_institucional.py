@@ -2,7 +2,7 @@
 
 A revogação da anterior e a concessão à nova são da mesma transação, e vão à trilha com o mesmo
 motivo e a mesma correlação: não há instante com o anterior ainda ativo, nem com uma administração
-a mais. A pessoa nova é localizada, ou criada, pelo par do provedor, como na concessão da `106`.
+a mais. A pessoa nova é localizada pelo par do provedor, e criada só se nunca entrou.
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -10,7 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from processo_seletivo.seguranca.application import acessos
-from processo_seletivo.seguranca.autenticacao import IdentidadeAutenticada, resolver_pessoa
+from processo_seletivo.seguranca.autenticacao import IdentidadeAutenticada, pessoa_para_implantacao
 from processo_seletivo.seguranca.management.commands._pessoa_do_provedor import (
     argumentos_da_pessoa,
     pessoa_do_provedor,
@@ -39,7 +39,9 @@ class Command(BaseCommand):
         try:
             # Junto, para que a recusa não deixe para trás uma pessoa criada sem vínculo.
             with transaction.atomic():
-                para, _ = resolver_pessoa(identidade)
+                # Quem já entrou fica como está; o vazio de `--para-nome` não apaga o nome dela, e a
+                # linha dela não é escrita antes da trava global (revisão do #346).
+                para = pessoa_para_implantacao(identidade)
                 if para is None:
                     raise CommandError("provedor e identificador da pessoa nova são obrigatórios.")
                 acessos.substituir_administracao_institucional(

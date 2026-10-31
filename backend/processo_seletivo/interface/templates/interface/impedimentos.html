@@ -63,7 +63,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
     <select id="identity_subject" name="identity_subject" required>
       <option value="">Selecione</option>
       {% for linha in carga %}
-      <option value="{{ linha.membro.identity_subject }}">{{ linha.membro.display_label|default:linha.membro.identity_subject }}</option>
+      <option value="{{ linha.membro.identity_subject }}">{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}</option>
       {% endfor %}
     </select>
   </p>
@@ -98,7 +98,7 @@ de quem sabe — e é por isso que esta tela pede a identidade e o motivo, em ve
       {% for linha in inelegiveis %}
       <tr>
         <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
-        <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+        <td>{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}</td>
         {# A conclusão sob a norma que a governou, e não sob a vigente (FR-117). #}
         <td>{% if linha.conclusao_exibivel %}{{ linha.conclusao_exibivel }}{% else %}{{ linha.avaliacao.pontuacao|pontuacao }}{% endif %}</td>
         <td>{{ linha.avaliacao.parecer|default:"—" }}</td>

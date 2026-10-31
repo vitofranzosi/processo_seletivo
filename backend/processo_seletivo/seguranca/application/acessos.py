@@ -472,8 +472,8 @@ def retirar_administracao_institucional(
 ):
     """A retirada pela implantação, com motivo e trilha (107, `FR-3147`, decisão P3).
 
-    **Não deixa o sistema sem administração por engano** (`D-018`, salvaguarda proposta pela `107`
-    e implementada com o incremento 2): retirar a última pessoa exige `sem_administracao`, como a
+    **Não deixa o sistema sem administração por engano** (`D-018`; confirmada pelo usuário, P5 da
+    `107`): retirar a última pessoa exige `sem_administracao`, como a
     segunda concessão exige `adicional`. Sem administração institucional, ninguém concede o
     administrador de acessos de unidade nenhuma até a implantação conceder de novo.
     """

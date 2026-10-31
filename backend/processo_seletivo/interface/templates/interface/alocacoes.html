@@ -47,7 +47,7 @@
   <ul class="atribuicoes">
     {% for alocacao in orfas %}
     <li>
-      {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}
+      {% rotulo_ou_nome alocacao.membro.display_label alocacao.membro.identity_subject %}
       — <span class="codigo">{{ alocacao.etapa_id }}</span>
       · Edital {{ alocacao.edital.number }}/{{ alocacao.edital.year }}
       <form method="post" class="linha-de-acoes">
@@ -56,7 +56,7 @@
         <input type="hidden" name="alocacao_id" value="{{ alocacao.id }}">
         <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-o{{ forloop.counter }}">
         <button type="submit" class="acao perigoso"
-                aria-label="Remover a alocação sem Etapa de {{ alocacao.membro.display_label|default:alocacao.membro.identity_subject }}">
+                aria-label="Remover a alocação sem Etapa de {% rotulo_ou_nome alocacao.membro.display_label alocacao.membro.identity_subject %}">
           Remover</button>
       </form>
     </li>
@@ -166,7 +166,7 @@
         {% for linha in matriz.linhas %}
         <tr>
           <th scope="row">
-            {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+            {% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}
             {% if linha.membro.funcao == "PRESIDENTE" %}
             <span class="situacao s-PRESIDENTE">Presidente</span>{% endif %}
             {% comment %}
@@ -189,7 +189,7 @@
               <input type="checkbox" name="celula" value="{{ celula.chave }}"
                      {% if celula.marcada %}checked{% endif %}
                      {% if not tem_presidente %}disabled{% endif %}
-                     aria-label="{{ linha.membro.display_label|default:linha.membro.identity_subject }} em {{ celula.coluna.nome }}, Edital {{ celula.coluna.edital.number }}/{{ celula.coluna.edital.year }}">
+                     aria-label="{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %} em {{ celula.coluna.nome }}, Edital {{ celula.coluna.edital.number }}/{{ celula.coluna.edital.year }}">
             </label>
           </td>
           {% endfor %}

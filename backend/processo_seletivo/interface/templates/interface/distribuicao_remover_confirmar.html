@@ -21,7 +21,7 @@ o que a via comum **não** alcança. Esta última era a recusa que só se lia de
   <h2 id="alcance">O que será retirado — {{ removiveis|length }} atribuiç{{ removiveis|length|pluralize:"ão,ões" }}</h2>
   <ul>
     {% for atribuicao in removiveis %}
-    <li><strong>{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</strong>
+    <li><strong>{% rotulo_ou_nome atribuicao.membro.display_label atribuicao.membro.identity_subject %}</strong>
       deixa de avaliar a inscrição {{ atribuicao.inscricao.protocolo|default:atribuicao.inscricao.id }}{% if atribuicao.inscricao.nome %} — {{ atribuicao.inscricao.nome }}{% endif %}.</li>
     {% endfor %}
   </ul>
@@ -33,7 +33,7 @@ o que a via comum **não** alcança. Esta última era a recusa que só se lia de
   <h2 id="fora">O que não será retirado — {{ intocaveis|length }} atribuiç{{ intocaveis|length|pluralize:"ão,ões" }}</h2>
   <ul>
     {% for atribuicao in intocaveis %}
-    <li><strong>{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</strong>
+    <li><strong>{% rotulo_ou_nome atribuicao.membro.display_label atribuicao.membro.identity_subject %}</strong>
       — inscrição {{ atribuicao.inscricao.protocolo|default:atribuicao.inscricao.id }}: a avaliação já foi concluída.</li>
     {% endfor %}
   </ul>

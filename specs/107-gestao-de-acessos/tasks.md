@@ -48,7 +48,7 @@
 - [x] T026 A entrada recusa a pessoa suspensa com a frase de acesso suspenso; a busca e a concessão a recusam (FR-3140, FR-3141)
 - [x] T027 A seção de suspensão e reativação em "Administração de acessos", com as duas confirmações; a marca de suspensa em "Acessos da unidade" (D-017)
 - [x] T028 Comandos `suspender_pessoa` e `reativar_pessoa` (D-017)
-- [x] T029 Comandos `retirar_administracao_institucional` e `substituir_administracao_institucional`; a salvaguarda do último como salvaguarda técnica revogável (D-018)
+- [x] T029 Comandos `retirar_administracao_institucional` e `substituir_administracao_institucional`; a salvaguarda do último, confirmada pelo usuário (D-018, P5)
 - [x] T030 O filtro `nome_de_pessoa` e os templates que exibem autor (D-019)
 - [x] T031 [P] Testes de cliente, concorrência e privilégios do incremento 2
 - [x] T032 [P] A jornada de suspensão e reativação no navegador

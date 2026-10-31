@@ -70,3 +70,31 @@ def test_nenhum_template_mostra_o_autor_sem_a_tag():
                 continue
             crus.append(f"{modelo.name}: {achado.group(0)}")
     assert crus == []
+
+
+def test_o_rotulo_do_membro_cai_no_nome_e_nao_no_identificador():
+    """O `display_label|default:identity_subject` das telas da comissão (revisão do #346).
+
+    Sem rótulo, o membro institucional aparecia como `pessoa-<uuid>`: o fallback não passava pela
+    tradução. A varredura cobra a forma nova em todo template.
+    """
+    import re
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parents[2] / "processo_seletivo/interface/templates/interface"
+    cru = re.compile(r"\{\{[^}]*display_label\|default:[^}]*\}\}")
+    achados = [
+        f"{modelo.name}: {achado.group(0)}"
+        for modelo in sorted(raiz.glob("*.html"))
+        for achado in cru.finditer(modelo.read_text())
+    ]
+    assert achados == []
+    ana = pessoa("ana", nome="Ana Souza")
+    modelo = Template("{% load interface_extras %}[{% rotulo_ou_nome rotulo subject %}]")
+    contexto = {"request": RequestFactory().get("/gestao/")}
+    assert modelo.render(Context({**contexto, "rotulo": "", "subject": ana.username})) == (
+        "[Ana Souza]"
+    )
+    assert modelo.render(Context({**contexto, "rotulo": "Ana S.", "subject": ana.username})) == (
+        "[Ana S.]"
+    )

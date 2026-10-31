@@ -126,4 +126,4 @@ e de tabelas append-only sobem junto.
    no meio), a jornada no navegador (suspender → a outra sessão cai → reativar → entrar de novo).
 
 **A salvaguarda da retirada do último administrador institucional** (D-018) foi implementada como
-salvaguarda técnica, anunciada ao usuário antes da implementação, e revogável por ele.
+salvaguarda técnica, anunciada ao usuário antes da implementação, e depois confirmada por ele (P5).

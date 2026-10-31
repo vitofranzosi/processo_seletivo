@@ -509,6 +509,24 @@ def campos_na_ordem_do_compor(grupo):
 _NOMES_DA_REQUISICAO = "_nomes_das_pessoas"
 
 
+@register.filter
+def e_pessoa_institucional(valor):
+    """Se o texto é o identificador interno de uma pessoa institucional (107)."""
+    from processo_seletivo.seguranca.autenticacao import PREFIXO_DO_IDENTIFICADOR
+
+    return str(valor or "").startswith(PREFIXO_DO_IDENTIFICADOR)
+
+
+@register.simple_tag(takes_context=True)
+def rotulo_ou_nome(context, rotulo, subject):
+    """O rótulo de exibição do membro; sem ele, o nome da pessoa, e não `pessoa-<uuid>` (107).
+
+    É o `display_label|default:identity_subject` das telas da comissão, com o fallback passando
+    pela mesma tradução de `nome_de_pessoa` (revisão do #346).
+    """
+    return rotulo or nome_de_pessoa(context, subject)
+
+
 @register.simple_tag(takes_context=True)
 def nome_de_pessoa(context, valor):
     """Quem praticou o ato, pelo nome, e não por `pessoa-<uuid>` (107, `FR-3150`, `FR-3151`).

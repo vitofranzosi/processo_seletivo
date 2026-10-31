@@ -93,22 +93,48 @@ em Impedimentos e o seletor da demonstração. O guardião
 
 | Execução | Resultado |
 |---|---|
-| `make lint check test-pg`, 4 workers, `DB_NAME=ps107` | lint e `check` verdes; **13814 passando, 12 pulados, nenhuma falha**, em 606s |
+| `make lint check test-pg`, 4 workers, `DB_NAME=ps107` | lint e `check` verdes; **13814 passando, 12 pulados, nenhuma falha**, em 606s; depois das correções da revisão, **13821 passando, 12 pulados, nenhuma falha**, em 562s |
 | `tests/navegador` com capturas | 6 passando; as confirmações de suspensão e de reativação conferidas a olho |
 | Concorrência da suspensão com a trava da pessoa removida à mão, numa cópia descartável | reprova (`['gravado', 'gravado']`); com a trava, passa |
 | Substituição com falha forçada entre a revogação e a concessão | nenhuma das duas fica (`SC-1019`) |
 
 **A salvaguarda da retirada da última administração institucional** (`D-018`) foi implementada como
-salvaguarda técnica, anunciada ao usuário antes de implementar e revogável por ele: não proíbe nada,
-só pede `--sem-administracao`.
+salvaguarda técnica e depois **confirmada pelo usuário** (P5): retirar a última pede
+`--sem-administracao`.
+
+## Revisão do incremento 2, homologação e correções (31/10)
+
+**Revisão independente** do `d683dd66`, feita por um agente que não escreveu o código e que só
+leu e rodou testes descartáveis fora da árvore, focada em invalidação de sessão, permissões,
+concorrência e substituição atômica. Confirmou como corretos: a queda de toda sessão pela troca do
+hash, inclusive no pior caso (entrada lida antes da suspensão e `login()` depois); as permissões e o
+404 depois da autorização; a serialização das concorrências; a atomicidade e a correlação da
+substituição; e a tag de nomes (uma consulta, nenhuma na demonstração, saída escapada). Cinco
+achados, todos corrigidos, cada um com teste que reprova sem a correção:
+
+| # | Achado | Severidade | Correção | Teste |
+|---|---|---|---|---|
+| 1 | O comando de concessão (`106`) e o de substituição apagavam nome e e-mail de quem já tinha entrado, quando rodados sem `--nome` | importante | `pessoa_para_implantacao`: quem existe fica como está | `test_comando_da_administracao_preserva_a_pessoa.py`; `test_administracao_por_implantacao.py::test_a_substituicao_preserva_o_nome_de_quem_ja_entrou` |
+| 2 | A tela podia suspender quem virasse administração institucional entre a conferência e a trava | menor | a autoridade é reconferida sob a trava da pessoa, na suspensão e na reativação | `test_suspensao.py::test_a_tela_nao_suspende_quem_virou_administracao_institucional_no_meio` |
+| 3 | Dois comandos de implantação simultâneos podiam se travar (a linha da pessoa antes da trava global) | menor, não reproduzido | o mesmo do 1: o comando não escreve a linha de quem já existe | — (some com a causa) |
+| 4 | Membro de comissão sem rótulo aparecia como `pessoa-<uuid>` (`display_label|default:identity_subject`); o identificador aparecia ao lado do nome | menor | a tag `rotulo_ou_nome` em 20 pontos de 6 templates; o identificador ao lado só para quem não é institucional | `test_nome_nas_telas.py::test_o_rotulo_do_membro_cai_no_nome_e_nao_no_identificador` |
+| 5 | O comando de concessão (`106`) concedia a pessoa suspensa ou desativada; a mensagem da recusa falava em tela | menor | recusa sob a trava; mensagem neutra | `test_comando_da_administracao_preserva_a_pessoa.py::test_desativada_nao_recebe_a_administracao` |
+
+Os achados 1 e 5 são da `106`, e foram corrigidos em commit próprio (`256414fd`), separado da
+funcionalidade nova.
+
+**Homologação** (31/10, nesta máquina):
+
+| Execução | Resultado |
+|---|---|
+| `make test-navegador`, **com a janela aberta** | 6 passando, em 53s, com o Chromium visível |
+| O job `compose` do CI, reproduzido: `docker compose up --build --wait` num projeto isolado | pilha saudável; `46 de 46` tabelas append-only na segunda passada (`0 de 46` na primeira, como deve); `/health`, `/readiness`, `/gestao/`, `/selecoes/` e o coletor de correio respondendo 200; a pilha derrubada com os volumes |
 
 ## O que depende de fora deste repositório
 
 - **A conexão real** com o provedor do Ifes: nada aqui fala com AD, LDAP, OIDC ou SAML. As jornadas
   provam a aplicação, com o adaptador simulado; o adaptador real precisa dos próprios testes contra
   um provedor de homologação (`doc/ativacao-do-sso-institucional.md`, §2).
-- **A decisão sobre a retirada do último administrador institucional**, que as respostas de 30/10
-  não cobrem; até lá, a salvaguarda técnica (`D-018`).
 - **Abrir a gestão em produção**: não foi feito, nem é desta feature.
 
 ## Observações sem ação

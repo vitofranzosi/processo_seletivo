@@ -292,3 +292,32 @@ def test_uma_reativacao_por_suspensao(client, rita, ana):
         ReativacaoDePessoa.objects.create(
             suspensao=aberta, reativada_em=AGORA, reativada_por="x", motivo="x"
         )
+
+
+def test_a_tela_nao_suspende_quem_virou_administracao_institucional_no_meio(
+    client, rita, ana, monkeypatch
+):
+    """A corrida da revisão do #346: a conferência roda antes da trava, e a concessão chega entre
+    as duas. Sem a segunda conferência, sob a trava, a tela suspendia uma administradora
+    institucional (`FR-3136`)."""
+    original = suspensao._e_administracao_institucional
+    chamadas = []
+
+    def concessao_no_meio(pessoa):
+        resposta = original(pessoa)
+        if not chamadas:
+            # A implantação concede entre a primeira conferência e a trava da pessoa.
+            vincular(
+                pessoa,
+                catalogo.ESCOPO_INSTITUCIONAL,
+                catalogo.ADMINISTRADOR_INSTITUCIONAL,
+                por="implantacao",
+            )
+        chamadas.append(resposta)
+        return original(pessoa) if len(chamadas) > 1 else resposta
+
+    monkeypatch.setattr(suspensao, "_e_administracao_institucional", concessao_no_meio)
+
+    assert _suspender(client, ana).status_code == 403
+    assert not SuspensaoDePessoa.objects.exists()
+    assert get_user_model().objects.get(pk=ana.pk).is_active

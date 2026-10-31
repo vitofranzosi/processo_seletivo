@@ -23,7 +23,7 @@ Nenhuma muda o código já entregue; as abertas bloqueiam a ativação.
 | 7 | Suspensão de pessoa (P1 da `107`) | **decidida em 30/10**: suspensão global e revogação por unidade; o administrador institucional suspende; o institucional, a implantação; motivo, trilha e fim de todas as sessões | incremento 2 da `107`: "Administração de acessos" → "Suspender ou reativar pessoas", e os comandos `suspender_pessoa` e `reativar_pessoa` |
 | 8 | O que a reativação devolve (P2 da `107`) | **decidida em 30/10**: os vínculos vigentes voltam, os revogados não; nenhuma sessão anterior volta | idem |
 | 9 | Retirar ou substituir a administração institucional (P3 da `107`) | **decidida em 30/10**: comando de implantação, com motivo e trilha; a substituição numa operação só | os comandos `retirar_administracao_institucional` e `substituir_administracao_institucional` (incremento 2 da `107`) |
-| 10 | A retirada pode deixar nenhum administrador institucional? | **aberta**; até a decisão, salvaguarda técnica: a retirada da última pessoa pede `--sem-administracao` | o comando de retirada (`D-018` da `107`) |
+| 10 | A retirada pode deixar nenhum administrador institucional? | **decidida**: só com a opção explícita `--sem-administracao`; a troca de pessoa, pela substituição | o comando de retirada (`D-018` e P5 da `107`) |
 
 A **segregação mais estrita** (quem elabora não homologa) é emenda à FR-021 da `001`, e não faz
 parte da ativação.

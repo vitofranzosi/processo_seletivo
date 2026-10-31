@@ -194,7 +194,7 @@ FR-422).
     <tbody>
       {% for linha in carga %}
       <tr>
-        <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+        <td>{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}</td>
         <td class="numero">{{ linha.atribuidas }}</td>
         <td class="numero">{{ linha.concluidas }}</td>
       </tr>
@@ -220,7 +220,7 @@ FR-422).
     alocação ou redistribua as inscrições.</p>
   <ul>
     {% for orfa in orfas %}
-    <li>{{ orfa.membro.display_label|default:orfa.membro.identity_subject }} — inscrição {{ orfa.inscricao.protocolo|default:orfa.inscricao.id }}</li>
+    <li>{% rotulo_ou_nome orfa.membro.display_label orfa.membro.identity_subject %} — inscrição {{ orfa.inscricao.protocolo|default:orfa.inscricao.id }}</li>
     {% endfor %}
   </ul>
 </section>
@@ -258,7 +258,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       <tbody>
         {% for linha in proposta.por_pessoa %}
         <tr>
-          <td>{{ linha.membro.display_label|default:linha.membro.identity_subject }}</td>
+          <td>{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}</td>
           <td>{{ linha.antes }}</td>
           <td>+{{ linha.recebe }}</td>
           <td>{{ linha.depois }}</td>
@@ -304,7 +304,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       {% for linha in carga %}
       <label for="rodizio-{{ linha.membro.id }}">
         <input type="checkbox" id="rodizio-{{ linha.membro.id }}" name="membro_id" value="{{ linha.membro.id }}">
-        {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+        {% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}
         <span class="ajuda">{{ linha.atribuidas }} hoje</span>
       </label>
       {% endfor %}
@@ -353,7 +353,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       {% for linha in carga %}
       <label for="membro-{{ linha.membro.id }}">
         <input type="checkbox" id="membro-{{ linha.membro.id }}" name="membro_id" value="{{ linha.membro.id }}">
-        {{ linha.membro.display_label|default:linha.membro.identity_subject }}
+        {% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}
       </label>
       {% endfor %}
     </fieldset>
@@ -409,7 +409,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
           </td>
           <td>
             {% for atribuicao in linha.atribuicoes %}
-            <span class="quem">{{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }}</span>{% if not forloop.last %}, {% endif %}
+            <span class="quem">{% rotulo_ou_nome atribuicao.membro.display_label atribuicao.membro.identity_subject %}</span>{% if not forloop.last %}, {% endif %}
             {% empty %}—
             {% endfor %}
           </td>
@@ -479,7 +479,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
         {% for atribuicao in linha.atribuicoes %}
         <label for="atribuicao-{{ atribuicao.id }}">
           <input type="checkbox" id="atribuicao-{{ atribuicao.id }}" name="atribuicao_id" value="{{ atribuicao.id }}">
-          {{ atribuicao.membro.display_label|default:atribuicao.membro.identity_subject }} — inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}
+          {% rotulo_ou_nome atribuicao.membro.display_label atribuicao.membro.identity_subject %} — inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}
         </label>
         {% endfor %}
       {% endfor %}

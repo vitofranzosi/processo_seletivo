@@ -136,6 +136,9 @@ detalhe está em §Decisões do usuário.
 - Q: Proposta 3 da `106`, quem concede na unidade? → A: o papel próprio de Administrador de acessos
   da unidade, separado do Gestor; a mesma pessoa pode acumular os dois por concessões explícitas.
 - A ativação em produção e o merge continuam sujeitos às autorizações próprias.
+- Q: P5, a retirada do último administrador institucional? (respondida depois do incremento 2) → A:
+  **manter a salvaguarda**: retirar o último exige a opção explícita `--sem-administracao`; a troca
+  de pessoa segue pelo comando de substituição.
 
 ---
 
@@ -590,15 +593,14 @@ spec.** O merge e a ativação em produção continuam sujeitos às autorizaçõ
 **A escolha que pede mais cuidado é a P2**: preservar os vínculos torna a suspensão temporária
 previsível, mas exige mostrar com clareza o que será restabelecido — é a `FR-3145`.
 
-### O que as respostas não dizem, e fica em aberto
+### A retirada do último administrador institucional (P5)
 
-- **A retirada do último administrador institucional.** A P3 manda retirar pelo comando, e a
+- **Decidida pelo usuário depois do incremento 2: manter a salvaguarda.** A P3 manda retirar pelo comando, e a
   proposta 2 fala em duas pessoas; nada diz se a retirada pode deixar **nenhuma**. O plano propõe
   que o comando recuse deixar zero sem uma marca explícita, como o `--adicional` faz na concessão.
-  **Implementada como salvaguarda técnica, e não como decisão do usuário** (`D-018` do research):
-  ela não proíbe nada — a marca `--sem-administracao` retira mesmo a última —, só impede o engano de
-  terminal. Se o usuário decidir que o sistema nunca fica sem administração, a marca sai; se decidir
-  que a salvaguarda é desnecessária, ela sai.
+  Implementada primeiro como salvaguarda técnica (`D-018` do research), e **confirmada pelo usuário**
+  como regra: retirar a última exige a opção explícita `--sem-administracao`, e a troca de pessoa
+  segue pela substituição (`FR-3148`).
 
 ## Achados registrados (fora de escopo)
 
