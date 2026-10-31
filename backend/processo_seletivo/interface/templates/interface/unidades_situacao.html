@@ -1,0 +1,46 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}{% if ato == "desativar" %}Desativar{% else %}Reativar{% endif %} {{ unidade.sigla }} — Unidades{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/unidades.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:unidades' %}">{{ navegacao.secao_atual }}</a> › <a href="{% url 'interface:unidade' unidade.codigo %}">{{ unidade.sigla }}</a> › <span aria-current="page">{% if ato == "desativar" %}Desativar{% else %}Reativar{% endif %}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+Desativar e reativar uma unidade (110, FR-3326 a FR-3328, FR-3330).
+
+As consequências vêm antes do motivo e do botão, calculadas sobre a versão que vai junto com a
+confirmação: se outra pessoa mudar a unidade no meio, a confirmação recusa. Nada se exclui — a
+desativação é o único modo de retirar uma unidade, e a reativação a devolve.
+{% endcomment %}
+<h1>{% if ato == "desativar" %}Desativar {{ unidade.nome }}{% else %}Reativar {{ unidade.nome }}{% endif %}</h1>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro.detail }}</p>{% endif %}
+
+<section aria-labelledby="consequencia-titulo" class="consequencias{% if ato == 'desativar' %} irreversivel{% endif %}">
+  <h2 id="consequencia-titulo">Consequências</h2>
+  <ul>
+    {% if ato == "desativar" %}
+    <li>A unidade deixa de receber Processo Seletivo, Edital e acesso novos.</li>
+    <li>Os Processos e Editais que já existem continuam, e podem ser conduzidos até o fim; os acessos e as autoridades da unidade continuam valendo.</li>
+    <li>{% if processos %}A unidade tem <strong>{{ processos }} Processo{{ processos|pluralize }} Seletivo{{ processos|pluralize }} não encerrado{{ processos|pluralize }}</strong>, que segue{{ processos|pluralize:"m" }} em curso.{% else %}A unidade não tem Processo Seletivo em curso.{% endif %}</li>
+    <li>Nada se exclui: para devolver, reative a unidade.</li>
+    {% else %}
+    <li>A unidade volta a receber Processo Seletivo, Edital e acesso novos.</li>
+    {% endif %}
+    {% if moldura %}<li>O portal, a página de acesso, a página não encontrada e o código de acesso passam a dizer <strong>{{ moldura.1 }}</strong>, e não mais {{ moldura.0 }}.</li>{% endif %}
+  </ul>
+</section>
+
+<form method="post" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="confirmar">
+  <input type="hidden" name="versao" value="{{ versao }}">
+  <p class="campo">
+    <label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-required="true" aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">Por exemplo, o ato que determinou a {% if ato == "desativar" %}desativação{% else %}reativação{% endif %}. Vai à trilha da unidade, com o seu nome e a data.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao{% if ato == 'desativar' %} perigoso{% endif %}">{% if ato == "desativar" %}Confirmar a desativação{% else %}Confirmar a reativação{% endif %}</button>
+    <a class="acao" href="{% url 'interface:unidade' unidade.codigo %}">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}

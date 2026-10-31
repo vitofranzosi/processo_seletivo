@@ -849,7 +849,7 @@ def retorno_institucional(request):
             raise DomainError(
                 "acesso_suspenso",
                 "Seu acesso à gestão está suspenso. Peça a reativação ao administrador "
-                "institucional de acessos.",
+                "institucional.",
                 403,
             )
         raise _recusa_da_entrada()

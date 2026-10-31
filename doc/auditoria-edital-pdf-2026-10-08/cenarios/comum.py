@@ -24,8 +24,7 @@ from processo_seletivo.publicacoes.application.publish_edital import (
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.unidades.application.autoridades import cadastrar as cadastrar_autoridade
-from processo_seletivo.unidades.application.sincronizacao import ler as ler_unidades
-from processo_seletivo.unidades.application.sincronizacao import sincronizar as sincronizar_unidades
+from processo_seletivo.unidades.application.semente import semear as semear_unidades
 from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
 
 SAIDA = Path(
@@ -51,7 +50,7 @@ def uid(prefixo, n):
 
 
 def autoridade(chave, cargo, nome="", ato=""):
-    sincronizar_unidades(ler_unidades())
+    semear_unidades()
     hoje = timezone.now().astimezone(ZONA).date()
     return cadastrar_autoridade(
         actor=ator("gabriel.gestor", GERIR_AUTORIDADES),

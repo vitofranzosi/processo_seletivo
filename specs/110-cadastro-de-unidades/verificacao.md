@@ -74,9 +74,80 @@ Os 14 pulados são os mesmos do incremento A.
 **A VM de homologação não mudou**: nenhuma settings, nenhum roteiro. O ambiente novo está no §10.3
 do guia de produção.
 
-## C — Fonte oficial e administração
+## C — Fonte oficial e administração (31/10/2026)
 
-Não iniciado.
+**Base**: o incremento B (PR #351), empilhado sobre o A (PR #350); a CI dos dois estava verde.
+
+| Verificação | Resultado |
+|---|---|
+| `ruff check` e `ruff format --check` | limpos |
+| `make check` (inclui `makemigrations --check`) | sem problema; **nenhuma migration** nesta parte |
+| `make test-pg`, 4 workers, `DB_NAME=ps_110_escopo` | **14178 passando, 13 pulados, 1 falha**, 640,9 s |
+| a falha, corrigida e rodada de novo (`tests/homologacao`, isolado) | 7 passando |
+| `make test-navegador` (`tests/navegador`, com a jornada nova) | 7 passando |
+
+**A falha** era do teste do provedor de homologação (B), que conferia o rótulo antigo do papel —
+"Administrador institucional de acessos" —, que este incremento renomeia. Corrigida a asserção; a
+suíte inteira não foi repetida depois dessa linha. **Os 13 pulados** são os 12 deliberados do
+`CLAUDE.md` mais o do tokenizer; o do navegador deixou de pular porque o grupo foi instalado para
+rodar a jornada.
+
+**O que se provou**, pelos quinze itens do pedido (mapa no [plan](plan.md)):
+
+1. o Cefor continua sem ação (`test_o_cefor_continua_sem_acao`);
+2. a segunda unidade pela aplicação (`test_registrar_uma_unidade`, a jornada no navegador);
+3. ela permanece no banco sem estar no arquivo (`test_unidade_fora_do_arquivo_e_valores_diferentes_permanecem`);
+4. reinicializar não altera nem remove (`test_a_inicializacao_nao_altera_o_registro`);
+5. nome e canal editados não voltam no deploy (`test_a_semente_nao_desfaz_a_tela`);
+6. sem `unidade:administrar` nada muda — 9 casos de uso × 12 atores, mais o envio forjado pela tela;
+7. o código não muda (`test_o_codigo_enviado_na_alteracao_e_ignorado`, e o gatilho da `060`);
+8. o escopo de Processo e Edital não muda no banco (incremento A);
+9. desativada não recebe Processo nem acesso e conduz o existente;
+10. reativada volta a receber;
+11. duas unidades não compartilham acesso, autoridade nem Edital (este incremento e o isolamento do A);
+12. o publicado não muda, byte a byte, depois de editar a unidade (`test_editar_a_unidade_nao_muda_o_publicado`);
+13. a trilha: cada ato no escopo da unidade, com pessoa, permissão, motivo e antes→depois, lido pela
+    trilha da `108` sem mudança nela;
+14. os modelos iniciais nascem uma vez, com a pessoa como autora;
+15. a homologação com o seletor continua, e ele não alcança as unidades.
+
+**A semente e o apelido**: num banco vazio ela semeia e diz `Unidades: N semeadas.`; num banco com
+unidade, não lê o arquivo — nem um caminho inexistente a derruba — e diz que não se aplica; duas
+sementes simultâneas gravam uma vez; `sincronizar_unidades` faz o mesmo, com o mesmo *stdout* e o
+aviso no *stderr*; o `Makefile`, o `entrypoint.sh` e o guia mandam rodar o nome novo.
+
+**A demonstração reproduzível com duas unidades**, sem mudar código:
+
+- automatizada: `PYTEST_ADDOPTS="tests/navegador/test_jornada_de_unidades.py" NAVEGADOR_VISIVEL=1 make test-navegador`
+  — o Administrador institucional cadastra o Campus Serra, concede o administrador de acessos dele,
+  que concede o Gestor, que cria o primeiro Processo da Serra; `unidades.json` não muda;
+- por pessoas: o roteiro G do [quickstart](quickstart.md), no ambiente de homologação funcional.
+
+**O que a implementação encontrou e a spec não previa**: três casos da trilha da `108` e dois da
+identificação da `109` usavam a sincronização para alterar unidade; passaram aos casos de uso desta
+feature (SC-1047 registra a exceção). E a mensagem da tela de autoridades dizia que as unidades "são
+registradas na implantação"; passou a dizer que são cadastradas pelo Administrador institucional.
+
+**Ativação**: o passo 0 da [migração](migracao.md) — quem já tem o papel institucional em cada
+ambiente instalado — continua por fazer na VM de homologação, que esta sessão não alcança. Não
+bloqueia o merge, e sim a ativação do privilégio ali.
+
+### A revisão de código (31/10/2026)
+
+Feita depois do PR, a pedido do usuário, sobre o diff de `main` até o C: 7 achados, todos corrigidos.
+
+| Achado | Correção |
+|---|---|
+| o código aceitava quebra de linha no fim (`match` com `$`) | `fullmatch`; o teste da regra cobre `"serra\n"` |
+| sigla, nome, local e cabeçalho aceitavam caractere de controle; o canal recusava antes de aparar | todo campo é uma linha só, conferido depois de aparar |
+| a previsão da moldura copiava a regra da `109` | a regra saiu de `da_implantacao` para `da_implantacao_entre`, que as duas usam |
+| os rótulos da conferência divergiam dos do histórico | a conferência usa `CAMPOS_LEGIVEIS` da trilha |
+| a edição lia o histórico inteiro; o cadastro conferia duas vezes | `ler_unidade` para a edição; a confirmação confere só em `registrar` |
+| o parâmetro `versao` escondia a função `versao()` | `versao_conferida` |
+| o erro de comando da semente malformada ficou sem teste | `test_o_comando_transforma_a_recusa_em_erro_de_comando`, nos dois nomes do comando |
+
+Depois das correções: lint e `make check` limpos; `make test-pg` com 4 workers, **14200 passando,
+13 pulados, 0 falhas** (648,8 s).
 
 ## Validação funcional (SC-1048, T051) — critério de aceite humano
 

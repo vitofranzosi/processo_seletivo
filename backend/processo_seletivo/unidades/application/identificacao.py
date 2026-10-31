@@ -13,9 +13,9 @@ constante. O compositor do PDF tem as suas (`SIGLA_DA_INSTITUICAO` e as linhas d
 duas não se importam uma à outra de propósito (D-007): este módulo entra em toda página, e o
 compositor só no ato. Um teste confere que dizem o mesmo.
 
-**Nenhuma memória entre pedidos** (D-001). O registro muda pelo `sincronizar_unidades`, que roda
-noutro processo; guardar a sigla no servidor a faria envelhecer em silêncio até o reinício. A
-tabela tem uma linha por unidade, e a leitura é pela chave.
+**Nenhuma memória entre pedidos** (D-001). O registro muda pela tela da 110, noutro processo do
+servidor, ou pela semente de um banco vazio; guardar a sigla na memória a faria envelhecer em
+silêncio até o reinício. A tabela tem uma linha por unidade, e a leitura é pela chave.
 """
 
 from dataclasses import dataclass
@@ -89,8 +89,18 @@ def da_implantacao():
     contexto. Sem o canal da unidade: essas superfícies são da conta do candidato e da instituição,
     e o atendimento delas é o institucional (FR-3214).
     """
-    ativas = list(Unidade.objects.filter(ativa=True).values_list("sigla", flat=True)[:2])
-    return Identificacao(sigla=ativas[0]) if len(ativas) == 1 else SO_A_INSTITUICAO
+    return da_implantacao_entre(
+        list(Unidade.objects.filter(ativa=True).values_list("sigla", flat=True)[:2])
+    )
+
+
+def da_implantacao_entre(siglas_ativas):
+    """A regra de `da_implantacao`, sobre as siglas dadas — sem ler o registro.
+
+    É por aqui que a confirmação do registro de Unidades (110, FR-3330) prevê como as telas sem
+    unidade ficam depois do ato: a previsão e a moldura usam a mesma regra, e não duas cópias.
+    """
+    return Identificacao(sigla=siglas_ativas[0]) if len(siglas_ativas) == 1 else SO_A_INSTITUICAO
 
 
 def do_ato(sigla_gravada, codigo):
@@ -130,6 +140,7 @@ __all__ = [
     "canal_da_unidade_por_escopo",
     "canal_institucional",
     "da_implantacao",
+    "da_implantacao_entre",
     "da_unidade",
     "do_ato",
 ]

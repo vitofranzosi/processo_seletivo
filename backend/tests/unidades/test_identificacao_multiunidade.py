@@ -32,9 +32,9 @@ from processo_seletivo.interface.avisos import _rodape_visivel
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.publicacoes.models import Publicacao
+from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.unidades.application import identificacao
-from processo_seletivo.unidades.application.sincronizacao import sincronizar
+from processo_seletivo.unidades.application import identificacao, registro, semente
 from processo_seletivo.unidades.models import Unidade
 from tests.fixtures.autoridades import CEFOR, registrar_autoridade, registrar_unidade
 from tests.fixtures.edital import complete_draft
@@ -447,11 +447,16 @@ CAMPUS_DECLARADO = {
 
 @pytest.mark.django_db
 def test_o_canal_entra_pelo_registro_com_trilha_e_o_cefor_nao_muda():
-    """FR-3211, FR-3217, FR-3218: o canal pelo arquivo e pelo comando de sempre."""
-    criadas, alteradas, mantidas = sincronizar(
-        _declarado(**{"campus-a": {**CAMPUS_DECLARADO, "atendimento": f" {CANAL_DO_CAMPUS} "}})
+    """FR-3211, FR-3217, FR-3218: o canal pelo cadastro, com trilha — desde a 110, na aplicação."""
+    administradora = Actor(
+        "ines.institucional", "institucional", frozenset({"unidade:administrar"})
     )
-    assert (criadas, alteradas, mantidas) == (1, 0, 1)
+    campos = {k: v for k, v in CAMPUS_DECLARADO.items() if k != "ativa"}
+    registro.registrar(
+        administradora,
+        campos={**campos, "codigo": "campus-a", "atendimento": f" {CANAL_DO_CAMPUS} "},
+        motivo="Teste da 109",
+    )
     campus = Unidade.objects.get(codigo="campus-a")
     assert campus.atendimento == CANAL_DO_CAMPUS
     evento = RegistroAuditoria.objects.get(operation="REGISTRAR_UNIDADE", aggregate_id=campus.pk)
@@ -462,11 +467,10 @@ def test_o_canal_entra_pelo_registro_com_trilha_e_o_cefor_nao_muda():
 @pytest.mark.django_db
 @pytest.mark.parametrize("canal", ["", "   ", "linha\noutra", 42, "x" * 256], ids=repr)
 def test_canal_declarado_malformado_e_recusado_antes_de_gravar(canal):
-    """FR-3211: para não ter canal, omite-se; o que entra cabe numa linha."""
+    """FR-3211: na semente, para não ter canal, omite-se; o que entra cabe numa linha."""
     with pytest.raises(DomainError) as recusa:
-        sincronizar(_declarado(**{"campus-a": {**CAMPUS_DECLARADO, "atendimento": canal}}))
+        semente.validar(_declarado(**{"campus-a": {**CAMPUS_DECLARADO, "atendimento": canal}}))
     assert recusa.value.code == "unidade_malformada"
-    assert not Unidade.objects.filter(codigo="campus-a").exists()
 
 
 # --- O guardião -----------------------------------------------------------------------------------

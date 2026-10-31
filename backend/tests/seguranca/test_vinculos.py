@@ -313,12 +313,12 @@ def test_o_catalogo_de_acesso_nao_entra_no_seletor():
     assert not set(PAPEIS) & (set(catalogo.PAPEIS_DE_ACESSO) | set(catalogo.PAPEIS_INSTITUCIONAIS))
 
 
-def test_a_sincronizacao_recusa_o_codigo_reservado():
-    from processo_seletivo.unidades.application import sincronizacao
+def test_a_regra_da_unidade_recusa_o_codigo_reservado():
+    """Na semente, no cadastro e na edição: a regra é uma só desde a 110 (`D-005`)."""
+    from processo_seletivo.unidades.domain.registro import validar_codigo
 
-    entrada = {"sigla": "X", "nome": "X", "cabecalho": ["X"], "local": "X", "ativa": True}
     with pytest.raises(DomainError, match="reservado"):
-        sincronizacao.validar({catalogo.ESCOPO_INSTITUCIONAL: entrada})
+        validar_codigo(catalogo.ESCOPO_INSTITUCIONAL)
 
 
 # --- As travas do banco --------------------------------------------------------------------------

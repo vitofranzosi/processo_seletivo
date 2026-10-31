@@ -1,0 +1,67 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Confira — Unidades{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/unidades.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:unidades' %}">{{ navegacao.secao_atual }}</a> › <span aria-current="page">Confira</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A conferência do cadastro e da edição (110, FR-3324, FR-3325, FR-3330).
+
+Nada foi gravado até aqui. A tela mostra a prévia do cabeçalho, os campos — na edição, o antes e o
+depois de cada um que mudou —, e o efeito nas telas sem unidade quando o ato muda a identificação
+delas. A confirmação reconfere tudo no servidor; na edição, contra a versão que esta tela mostrou,
+e recusa se outra pessoa alterou a unidade no meio.
+{% endcomment %}
+<h1>{% if modo == "cadastrar" %}Confira antes de cadastrar{% else %}Confira antes de alterar{% endif %}</h1>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro.detail }}</p>{% endif %}
+
+<section aria-labelledby="dados-titulo" class="consequencias">
+  <h2 id="dados-titulo">{% if modo == "cadastrar" %}A unidade{% else %}O que muda{% endif %}</h2>
+  {% if modo == "cadastrar" %}
+  <dl class="dados-da-unidade">
+    <dt>Código</dt><dd><code>{{ valores.codigo }}</code> — <strong>permanente</strong>: não poderá ser mudado depois.</dd>
+    <dt>Sigla</dt><dd>{{ valores.sigla }}</dd>
+    <dt>Nome</dt><dd>{{ valores.nome }}</dd>
+    <dt>Local do ato</dt><dd>{{ valores.local }}</dd>
+    <dt>Canal de atendimento</dt><dd>{{ valores.atendimento|default:"o da instituição" }}</dd>
+  </dl>
+  {% else %}
+  <dl class="dados-da-unidade">
+    {% for mudanca in mudancas %}
+    <dt>{{ mudanca.rotulo }}</dt><dd><span class="antes">{{ mudanca.antes }}</span> → <span class="depois">{{ mudanca.depois }}</span></dd>
+    {% endfor %}
+  </dl>
+  <p class="ajuda">Os documentos já publicados continuam com os dados do dia em que foram publicados; os próximos atos saem com estes.</p>
+  {% endif %}
+</section>
+
+{% include "interface/_previa_do_cabecalho.html" %}
+
+{% if moldura %}
+<section aria-labelledby="moldura-titulo" class="consequencias">
+  <h2 id="moldura-titulo">As telas sem unidade mudam</h2>
+  <p>O portal, a página de acesso, a página não encontrada e o código de acesso passam a dizer <strong>{{ moldura.1 }}</strong>, e não mais {{ moldura.0 }}. É o que o candidato vê.</p>
+</section>
+{% endif %}
+
+<form method="post" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="confirmar">
+  {% if modo == "cadastrar" %}<input type="hidden" name="codigo" value="{{ valores.codigo }}">{% endif %}
+  <input type="hidden" name="sigla" value="{{ valores.sigla }}">
+  <input type="hidden" name="nome" value="{{ valores.nome }}">
+  {% for linha in valores.cabecalho %}<input type="hidden" name="cabecalho_{{ forloop.counter }}" value="{{ linha }}">{% endfor %}
+  <input type="hidden" name="local" value="{{ valores.local }}">
+  <input type="hidden" name="atendimento" value="{{ valores.atendimento }}">
+  {% if versao %}<input type="hidden" name="versao" value="{{ versao }}">{% endif %}
+  <p class="campo">
+    <label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-required="true" aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">Por exemplo, o número da portaria ou do memorando. Vai à trilha da unidade, com o seu nome e a data. Não escreva dado pessoal de candidato.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao">{% if modo == "cadastrar" %}Confirmar o cadastro{% else %}Confirmar a alteração{% endif %}</button>
+    <a class="acao" href="{% if unidade %}{% url 'interface:unidade' unidade.codigo %}{% else %}{% url 'interface:unidades' %}{% endif %}">Cancelar e voltar</a>
+  </p>
+</form>
+{% endblock %}

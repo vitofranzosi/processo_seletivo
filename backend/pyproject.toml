@@ -66,6 +66,7 @@ markers = [
   "authorization: autorização contextual e anti-IDOR",
   "performance: custo de consulta e escalabilidade",
   "navegador: jornada por navegador real, com servidor (107); pula sem o grupo navegador",
+  "sem_unidade_da_suite: dispensa o Cefor da fixture autouse, para o registro vazio da semente (110)",
 ]
 
 [tool.coverage.run]

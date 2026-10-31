@@ -9,6 +9,7 @@ from processo_seletivo.interface import (
     prototipo_do_assistente,
     relatorio,
     trilha_da_unidade,
+    unidades,
     views,
 )
 
@@ -79,6 +80,26 @@ urlpatterns = [
         "administracao-de-acessos/pessoas/<str:identificador>/reativar",
         acessos.reativar,
         name="administracao-de-acessos-reativar",
+    ),
+    # O registro de Unidades (110), do Administrador institucional. A ficha mora sob `unidades/`, e
+    # não direto sob a raiz da seção, para que nenhum código de unidade colida com `cadastrar`.
+    path("administracao-de-unidades", unidades.lista, name="unidades"),
+    path("administracao-de-unidades/cadastrar", unidades.cadastrar, name="unidade-cadastrar"),
+    path("administracao-de-unidades/unidades/<str:codigo>", unidades.ficha, name="unidade"),
+    path(
+        "administracao-de-unidades/unidades/<str:codigo>/editar",
+        unidades.editar,
+        name="unidade-editar",
+    ),
+    path(
+        "administracao-de-unidades/unidades/<str:codigo>/desativar",
+        unidades.desativar,
+        name="unidade-desativar",
+    ),
+    path(
+        "administracao-de-unidades/unidades/<str:codigo>/reativar",
+        unidades.reativar,
+        name="unidade-reativar",
     ),
     # A trilha da unidade (108): só leitura, sem identificador no endereço — a unidade é a do ator.
     path("trilha-da-unidade", trilha_da_unidade.trilha_da_unidade, name="trilha-da-unidade"),

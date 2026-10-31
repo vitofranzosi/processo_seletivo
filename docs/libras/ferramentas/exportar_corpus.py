@@ -1,7 +1,7 @@
 """Extrai, de um banco com os editais publicados, os PDFs e o conteúdo canônico de cada Publicação.
 
 **Não foi reexecutado na rodada 2**, que não publica nada. Na rodada 1, o banco `ps_libras_corpus` foi
-criado do zero (`createdb` + `migrate` com o superusuário + `sincronizar_unidades`) e povoado com:
+criado do zero (`createdb` + `migrate` com o superusuário + `semear_unidades`) e povoado com:
 
 - `doc/auditoria-edital-pdf-2026-10-08/cenarios/cenario_a2.py` (91/2026 e a sua Retificação);
 - `doc/auditoria-edital-pdf-2026-10-08/cenarios/cenario_b_corrigido.py` (92/2026 e a sua Retificação);

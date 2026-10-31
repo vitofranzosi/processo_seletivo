@@ -110,18 +110,23 @@ A `107` entregou as cinco que a `106` deixou fora; ver o [quickstart](../specs/1
    Os dois prazos são a decisão de 30/10/2026; mudá-los é decisão nova, e se documenta aqui.
    Produção recusa subir se a classe não se importar, se estiver em `tests.`, se declarar
    `apenas_para_testes`, ou se faltar um dos prazos.
-2. Subir e rodar `ps-migrar` (provisionar, migrar, provisionar: **46 de 46** desde o incremento 2 da `107`).
+2. Subir e rodar `ps-migrar` (provisionar, migrar, provisionar: **46 de 46** desde o incremento 2 da
+   `107`; e a semente das Unidades, que num banco existente diz que não se aplica).
 3. Conceder os dois administradores institucionais designados pelo ato — o segundo com
-   `--adicional`:
+   `--adicional`. **Desde a `110` o papel se chama Administrador institucional, e administra também o
+   registro de Unidades**: o ato que designa a pessoa deve dizer as duas responsabilidades. Se já
+   houver alguém com o papel concedido antes da `110`, a ampliação precisa de autorização expressa
+   antes do deploy dela (passo 0 da [migração da 110](../specs/110-cadastro-de-unidades/migracao.md)):
 
    ```bash
    ps-manage conceder_administracao_institucional --provedor <nome> --identificador <id> --motivo "Portaria nº …"
    ```
 
 4. Cada pessoa entra uma vez com a conta institucional e vê a tela sem acesso — é o que a torna
-   encontrável na busca. O administrador institucional, em "Administração de acessos", concede o
-   Administrador de acessos do Cefor; este, em "Acessos da unidade", concede os papéis. Tudo pela
-   interface, com motivo e trilha (`107`).
+   encontrável na busca. O Administrador institucional, em "Administração de acessos", concede o
+   Administrador de acessos do Cefor; este, em "Acessos da unidade", concede os papéis. Uma unidade
+   nova entra pela tela "Unidades", do mesmo Administrador institucional, antes da concessão do
+   administrador de acessos dela. Tudo pela interface, com motivo e trilha (`107`, `110`).
 5. O Gestor cadastra as autoridades. Só então a primeira publicação é possível.
 
 **Não há migração de dado.** A gestão nunca abriu em produção, e nenhum ato real foi gravado com

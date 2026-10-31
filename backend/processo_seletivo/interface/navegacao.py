@@ -59,6 +59,12 @@ def pode_administrar_acessos(ator):
     return ator.can("acesso:administrar")
 
 
+def pode_administrar_unidades(ator):
+    # O registro de Unidades (110): a permissão também só existe no escopo institucional, e por
+    # isso o item aparece ao lado da administração de acessos, do mesmo papel.
+    return ator.can("unidade:administrar")
+
+
 def _toda_identidade(ator):
     # A lista e Minhas Etapas não dependem de papel: a primeira diz a quem não tem papel o que
     # falta, e a segunda é o caminho de quem só tem vínculo (UX-008).
@@ -123,6 +129,13 @@ SECOES_DE_ACESSO = (
         UNIDADE,
         pode_administrar_acessos,
         "i-escudo",
+    ),
+    Secao(
+        "Unidades",
+        "interface:unidades",
+        UNIDADE,
+        pode_administrar_unidades,
+        "i-predio",
     ),
 )
 

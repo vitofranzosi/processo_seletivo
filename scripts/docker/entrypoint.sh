@@ -48,10 +48,11 @@ DB_ROLE=migration python manage.py migrate --noinput
 echo "[entrypoint] provisionando papéis (2/2)"
 provisionar
 
-# O registro de Unidades (060): dado, e não esquema, por isso depois da segunda passada e com a
-# role de runtime. Idempotente — sem mudança em `unidades.json`, não grava nada.
-echo "[entrypoint] sincronizando unidades"
-python manage.py sincronizar_unidades
+# A semente do registro de Unidades (110): dado, e não esquema, por isso depois da segunda passada e
+# com a role de runtime. Só se aplica a banco vazio; num banco com unidade, não grava nada e a subida
+# segue — o registro é da aplicação.
+echo "[entrypoint] semeando unidades"
+python manage.py semear_unidades
 
 echo "[entrypoint] pronto — executando: $*"
 exec "$@"

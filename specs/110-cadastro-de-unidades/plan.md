@@ -215,7 +215,7 @@ Três incrementos, cada um num PR, com a suíte verde (D-019):
 |---|---|---|
 | 1 | O Cefor continua sem alteração | `test_compatibilidade_do_registro.py::test_o_cefor_continua_sem_acao`; a suíte inteira |
 | 2 | Segunda unidade pela aplicação | `test_administrar_unidades.py::test_registrar_uma_unidade`; a jornada |
-| 3 | Permanece no banco sem estar no JSON | `test_semente.py::test_unidade_fora_do_arquivo_permanece` |
+| 3 | Permanece no banco sem estar no JSON | `test_semente.py::test_unidade_fora_do_arquivo_e_valores_diferentes_permanecem` |
 | 4 | Reinicialização não altera nem remove | `test_semente.py::test_a_inicializacao_nao_altera_o_registro`, `test_os_roteiros_chamam_a_semente` |
 | 5 | Nome e atendimento não revertidos pelo deploy | `test_semente.py::test_a_semente_nao_desfaz_a_tela` |
 | 6 | Sem `unidade:administrar` não modifica | `authorization/test_administrar_unidades.py` (matriz de papéis; demonstração; escopo de unidade; envio forjado); `seguranca/test_papel_institucional_administra_unidades.py` (a tela não concede o papel) |
@@ -226,8 +226,8 @@ Três incrementos, cada um num PR, com a suíte verde (D-019):
 | 11 | Duas unidades não compartilham autorização, autoridade nem Edital | `interface/test_isolamento_entre_unidades.py`; `test_administrar_unidades.py::test_unidade_nova_nao_herda_autoridade_nem_acesso` |
 | 12 | Publicações históricas preservadas | `test_compatibilidade_do_registro.py::test_editar_a_unidade_nao_muda_o_publicado` |
 | 13 | Trilha correta | `test_administrar_unidades.py::test_cada_ato_grava_o_evento_no_escopo_da_unidade`, `test_a_trilha_da_unidade_le_os_atos` |
-| 14 | Modelos iniciais uma vez | `test_administrar_unidades.py::test_os_modelos_iniciais_nascem_uma_vez`; `test_semente.py::test_modelos_iniciais_idempotentes` |
-| 15 | Homologação com o seletor | `test_telas_de_unidades.py::test_a_demonstracao_e_recusada_e_nao_ve_o_item`; `test_compatibilidade_do_registro.py::test_seed_demo_continua`. A validação por pessoas, que o seletor não alcança, é a da entrada de homologação: `homologacao/test_entrada_de_homologacao.py` e o roteiro G (SC-1048) |
+| 14 | Modelos iniciais uma vez | `test_administrar_unidades.py::test_os_modelos_iniciais_nascem_uma_vez_com_a_pessoa_como_autora`; `test_semente.py::test_os_modelos_iniciais_sao_garantidos_uma_vez` |
+| 15 | Homologação com o seletor | `test_telas_de_unidades.py::test_a_demonstracao_e_recusada_e_nao_ve_o_item`; `integration/test_seed_demo.py`. A validação por pessoas, que o seletor não alcança, é a da entrada de homologação: `homologacao/test_entrada_de_homologacao.py` e o roteiro G (SC-1048) |
 
 ## Riscos
 

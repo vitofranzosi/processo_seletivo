@@ -99,10 +99,11 @@ provisionar:
 migrate:
 	DB_ROLE=migration uv run python manage.py migrate
 
-# O registro de Unidades declarado em `unidades/unidades.json` (060). Idempotente: sem mudança no
-# arquivo, diz `0 criadas, 0 alteradas` e não grava nada.
+# A semente do registro de Unidades (110): num banco vazio, registra as de `unidades/unidades.json`
+# e diz `Unidades: N semeadas.`; num banco com unidade, não lê o arquivo e diz que a semente não se
+# aplica — o registro é da aplicação.
 unidades:
-	uv run python manage.py sincronizar_unidades
+	uv run python manage.py semear_unidades
 
 # A carga inicial da base de referência de CEP (029). **Não entra no `preparar`**, e a ausência é
 # decisão: `preparar` roda em toda máquina de desenvolvimento e em cada banco de teste, e 379 MB de
