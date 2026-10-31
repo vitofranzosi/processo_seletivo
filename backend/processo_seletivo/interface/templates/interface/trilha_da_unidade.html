@@ -1,0 +1,81 @@
+{% extends "interface/base.html" %}{% load estaticos interface_extras %}
+{% block titulo %}Trilha da unidade{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/trilha-da-unidade.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A trilha administrativa da unidade (108, `FR-3152`, `FR-3160`).
+
+Só leitura: nenhum formulário daqui grava. A lista é a das outras trilhas, `ol.auditoria`, para que
+quem já lê a do Edital leia esta do mesmo jeito; o que muda é "sobre o quê", que aqui é a unidade, a
+autoridade, o modelo, o aviso ou o acesso, e os dados que mudaram, que só a unidade e a autoridade
+mostram (`FR-3163`). Nem o assunto nem o corpo do aviso aparecem (`FR-3164`).
+{% endcomment %}
+<h1>Trilha da unidade</h1>
+<p class="sub">{{ nome_da_unidade }}</p>
+<p class="ajuda">Os atos administrativos da unidade — o registro dela, as autoridades que assinam, os
+  modelos de aviso, os avisos aos candidatos e os acessos concedidos e revogados —, do mais recente
+  para o mais antigo. Os atos dos Processos, dos Editais e das comissões estão na trilha de cada um.
+  Os registros são imutáveis.</p>
+
+<form method="get" class="filtro">
+  <p class="campo">
+    <label for="assunto">Assunto</label>
+    <select id="assunto" name="assunto">
+      <option value="">Todos</option>
+      {% for chave, rotulo in assuntos %}
+      <option value="{{ chave }}" {% if chave == assunto_filtro %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao">Filtrar</button>
+    {% if assunto_filtro %}<a class="acao" href="{% url 'interface:trilha-da-unidade' %}">Limpar</a>{% endif %}
+  </p>
+</form>
+
+{% if registros %}
+<ol class="auditoria" aria-label="Atos registrados">
+  {% for registro in registros %}
+  <li>
+    <div class="cabeca">
+      <span class="quando">{{ registro.quando|date:"d/m/Y H:i:s" }}</span>
+      <strong class="operacao">{{ registro.operacao }}</strong>
+      <span class="agregado">{{ registro.assunto }}</span>
+      {% if registro.pessoa %}<span class="alvo">{% nome_de_pessoa registro.pessoa %}{% if registro.papel %}, como {{ registro.papel }}{% endif %}</span>{% elif registro.sobre %}<span class="alvo">{{ registro.sobre }}</span>{% endif %}
+    </div>
+    <div class="corpo">
+      <span class="ator">por <strong>{% if registro.por_implantacao %}Implantação{% else %}{% nome_de_pessoa registro.ator %}{% endif %}</strong></span>
+      {% if registro.de and registro.para and registro.de != registro.para %}
+      <span class="transicao">{{ registro.de }} → {{ registro.para }}</span>
+      {% elif registro.para %}
+      <span class="transicao">situação: {{ registro.para }}</span>
+      {% endif %}
+    </div>
+    {% if registro.mudancas %}
+    <dl class="dados-mudados">
+      {% for mudanca in registro.mudancas %}
+      <dt>{{ mudanca.dado }}</dt><dd>{{ mudanca.antes }} → {{ mudanca.depois }}</dd>
+      {% endfor %}
+    </dl>
+    {% endif %}
+    {% if registro.motivo %}<p class="motivo">“{{ registro.motivo }}”</p>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+
+{% if proximo_cursor %}
+<p class="navegacao-etapa">
+  <a class="botao secundario" href="{% pagina_seguinte proximo_cursor %}">Ver atos anteriores</a>
+</p>
+{% endif %}
+{% else %}
+<div class="vazio">
+  {% if assunto_filtro %}
+  <p>Nenhum ato corresponde ao filtro.</p>
+  {% else %}
+  <p>Nenhum ato administrativo registrado para esta unidade.</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
