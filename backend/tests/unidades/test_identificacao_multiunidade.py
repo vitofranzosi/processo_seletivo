@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 from django.core import mail
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -361,6 +362,12 @@ def test_8_o_cefor_sozinho_diz_exatamente_o_que_dizia(client, settings):
     assert "Peça acesso a quem administra o sistema no Cefor.</p>" in (
         client.get(reverse("interface:lista")).content.decode()
     )
+    with override_settings(DATA_UPLOAD_MAX_NUMBER_FIELDS=2):
+        grande = client.post(reverse("interface:unidade-ativa"), {f"c{n}": "x" for n in range(5)})
+    assert (
+        "Peça a ampliação do limite de envio a quem administra o sistema no Cefor, dizendo o "
+        "Edital e a tela: até lá, esta tela não consegue gravar."
+    ) in grande.content.decode()
     client.logout()
     vitrine = client.get(reverse("portal:vitrine")).content.decode()
     assert _titulo(vitrine) == "Processos seletivos — Cefor/Ifes"

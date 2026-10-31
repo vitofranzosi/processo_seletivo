@@ -41,9 +41,11 @@ set -a; . ./.env; set +a
 uv run python manage.py sincronizar_unidades --arquivo /tmp/unidades-ensaio.json
 ```
 
-Ele diz `1 criadas, 0 alteradas, 1 sem mudança` — o campus novo e o Cefor intacto.
-Nenhuma linha de código mudou, e o arquivo versionado também não. O banco do ensaio fica com o
-campus, e por isso é descartável.
+Ele diz `Unidades: 1 criadas, 0 alteradas, 1 sem mudança` — o campus novo e o Cefor intacto — e
+`Modelos de aviso: 3 criados`, os do campus (066). Nenhuma linha de código mudou, e o arquivo
+versionado também não. O banco do ensaio fica com o campus: o `sincronizar_unidades` sem
+`--arquivo` passa a recusar com `unidade_retirada`, porque nenhuma unidade sai do registro. É por
+isso que o banco é descartável.
 
 ## 2. A operadora do Cefor: a gestão como sempre
 
