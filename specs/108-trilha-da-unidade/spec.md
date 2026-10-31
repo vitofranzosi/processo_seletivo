@@ -287,7 +287,8 @@ registro da unidade, os modelos iniciais e as autoridades do `seed_demo`.
 - **FR-3154**: A unidade lida MUST ser a unidade ativa do ator. Ela MUST NOT vir do endereço, do
   formulário nem de outro parâmetro, e nenhum parâmetro MUST fazer a página ler outra unidade.
 - **FR-3155**: A barra da gestão MUST oferecer "Trilha da unidade", no grupo da unidade, a quem tem
-  `auditoria:consultar`, e só a essa pessoa, tanto na demonstração quanto no modo institucional.
+  `auditoria:consultar` numa unidade, e só a essa pessoa — no escopo institucional, onde a página
+  recusa (`FR-3154`), o item não aparece —, tanto na demonstração quanto no modo institucional.
 - **FR-3156**: O seletor de demonstração MUST continuar com os mesmos oito papéis, e o Auditor dele
   MUST alcançar a página.
 

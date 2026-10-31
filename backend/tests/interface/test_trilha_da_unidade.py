@@ -10,6 +10,7 @@ Os acessos (US3) estão em `tests/seguranca/test_trilha_da_unidade_acessos.py`, 
 simulado e as pessoas institucionais.
 """
 
+import base64
 import re
 from datetime import date, timedelta
 from types import SimpleNamespace
@@ -402,16 +403,27 @@ def test_o_escopo_vem_do_ator_e_nao_do_pedido():
     assert auditoria_selectors.trilha_da_unidade(actor=institucional) == ([], None)
 
 
-def test_no_escopo_institucional_a_pagina_recusa(client):
+def test_no_escopo_institucional_a_pagina_recusa_e_a_barra_nao_a_oferece(client):
+    """A barra e a página decidem igual: o item que leva a uma recusa não aparece (`FR-3155`)."""
     identificar(client, "fiscal", ["auditor"], escopo="institucional")
 
     assert client.get(URL).status_code == 403
+    assert f'href="{URL}"' not in client.get(reverse("interface:lista")).content.decode()
 
 
-def test_o_cursor_adulterado_e_recusado(client):
+@pytest.mark.parametrize(
+    "conteudo",
+    # O UUID é fixo, e não `uuid4()`: o identificador do caso entra na coleta, e cada worker do
+    # xdist sortearia outro — "Different tests were collected".
+    ["x|y", "2026-10-30T10:00:00+00:00|nao-e-uuid", "ontem|00000000-0000-4000-8000-000000000000"],
+)
+def test_o_cursor_adulterado_e_recusado(client, conteudo):
+    """Bem formado por fora e inválido por dentro também é 400, e não 500 (revisão da 108)."""
     _auditor(client)
 
     assert client.get(URL + "?cursor=nao-e-cursor").status_code == 400
+    cursor = base64.urlsafe_b64encode(conteudo.encode()).decode()
+    assert client.get(URL, {"cursor": cursor}).status_code == 400
 
 
 # ---- US4: o filtro ------------------------------------------------------------------------------

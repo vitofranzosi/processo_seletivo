@@ -133,8 +133,11 @@ def _nome_da_unidade(codigo):
 
 def linhas(registros, *, nome_da_unidade):
     """Cada registro como a tela o lê: quando, o quê, sobre o quê, por quem, situação e motivo."""
+    from processo_seletivo.seguranca.application.acessos import catalogo
+
     editais = _editais_dos_avisos(registros)
-    return [_linha(registro, editais, nome_da_unidade) for registro in registros]
+    papeis = catalogo()
+    return [_linha(registro, editais, papeis, nome_da_unidade) for registro in registros]
 
 
 def _editais_dos_avisos(registros):
@@ -170,7 +173,7 @@ def _editais_dos_avisos(registros):
     }
 
 
-def _linha(registro, editais, nome_da_unidade):
+def _linha(registro, editais, papeis, nome_da_unidade):
     detalhe = registro.detalhe if isinstance(registro.detalhe, dict) else {}
     tipo = registro.aggregate_type
     linha = {
@@ -204,7 +207,8 @@ def _linha(registro, editais, nome_da_unidade):
         linha["sobre"] = editais.get(registro.aggregate_id, "")
     elif tipo == "Vinculo":
         linha["pessoa"] = detalhe.get("pessoa", "")
-        linha["papel"] = _nome_do_papel(detalhe.get("papel", ""))
+        papel = detalhe.get("papel", "")
+        linha["papel"] = papeis.get(papel, (papel,))[0]
     return linha
 
 
@@ -255,9 +259,3 @@ def _exclusao_do_piloto(detalhe):
     relatorio = _valor(detalhe.get("relatorio_final_em"))
     plural = "registro excluído" if quantas == 1 else "registros excluídos"
     return f"{quantas} {plural}; relatório final de {relatorio}."
-
-
-def _nome_do_papel(papel):
-    from processo_seletivo.seguranca.application.acessos import catalogo
-
-    return catalogo().get(papel, (papel,))[0]

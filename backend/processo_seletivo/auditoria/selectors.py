@@ -7,6 +7,8 @@ e a trilha não pode virar a brecha por onde se enxerga o que não se alcança.
 
 import base64
 import binascii
+import uuid
+from datetime import datetime
 
 from django.db.models import Q
 
@@ -37,6 +39,11 @@ def encode_cursor(registro):
 def decode_cursor(cursor):
     try:
         occurred_at, event_id = base64.urlsafe_b64decode(cursor.encode()).decode().split("|", 1)
+        # As duas metades se conferem aqui, e não no filtro: um cursor adulterado mas bem formado
+        # chegava ao `occurred_at__lte` e saía como `ValidationError` do Django — 500, e não a
+        # recusa de cursor (achado da revisão da 108).
+        datetime.fromisoformat(occurred_at)
+        uuid.UUID(event_id)
         return occurred_at, event_id
     except (ValueError, UnicodeDecodeError, binascii.Error) as exc:
         raise DomainError("invalid_cursor", "O cursor informado é inválido.", 400) from exc

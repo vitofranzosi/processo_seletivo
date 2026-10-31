@@ -63,9 +63,34 @@ O roteiro A do [quickstart](quickstart.md) foi executado num banco próprio (`ps
 
 SC-1025: a pergunta da J-8 se respondeu em duas telas a partir da barra.
 
+### Revisão de código (31/10/2026)
+
+Seis achados, todos corrigidos:
+
+- **Cursor bem formado por fora e inválido por dentro dava 500.** `decode_cursor` só conferia o
+  base64 e o separador; uma data ou um `event_id` inválidos chegavam ao filtro e saíam como
+  `ValidationError` do Django. Agora as duas metades se conferem no `decode_cursor`, e a recusa é a
+  de cursor, 400 — o que vale também para a API de consulta, que usa a mesma função.
+  `test_o_cursor_adulterado_e_recusado` passou a cobrir os três formatos.
+- **A barra oferecia a trilha no escopo institucional**, onde a página recusa. O predicado da barra
+  confere agora o escopo, como a view, e o caso do escopo institucional confere a barra também.
+- O catálogo de papéis se montava a cada linha de vínculo; agora uma vez por página.
+- O caso de `TS` chamado "auditor institucional" usava o Administrador institucional, que não tem a
+  permissão: renomeado, com a docstring dizendo de onde vem a recusa.
+- `tasks.md` citava a folha, o arquivo dos casos de acesso e o predicado da barra com nomes errados.
+- Esta seção dizia que a CI não tinha sido conferida.
+
+Depois das correções, `make lint check test-pg` com o mesmo `DB_NAME`: **13863 passando, 12
+pulados e 1 falha, em 1040s**. A falha é a do teste de tempo da ocupação
+(`test_a_apuracao_cabe_no_dobro_do_tempo_da_emissao_da_ordem`), que o `CLAUDE.md` descreve como
+oscilante sob carga; a 108 não toca a ocupação, e o teste passou três de três isolado, em série.
+A primeira tentativa dessa rodada nem chegou a rodar: o parâmetro novo do caso do cursor sorteava um
+`uuid4()`, e os workers coletavam casos diferentes — o UUID agora é fixo.
+
 ## Executado pela CI
 
-A CI roda no PR; o resultado dela está no próprio PR, e não foi conferido antes de abri-lo.
+No PR #348, sobre `c4639ab9`: `test` e `compose` verdes. A revisão acima foi empurrada depois, e o
+resultado da CI sobre ela está no próprio PR.
 
 ## Pendente
 

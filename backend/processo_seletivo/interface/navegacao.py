@@ -40,7 +40,11 @@ def pode_gerir_modelos(ator):
 def pode_ver_trilha_da_unidade(ator):
     # A trilha administrativa da unidade (108, `D-001`): a mesma permissão com que o Auditor lê a
     # trilha de todo Edital. No `SECOES`, e não no `SECOES_DE_ACESSO`: o Auditor do seletor a tem.
-    return ator.can("auditoria:consultar")
+    # Fora do escopo institucional, como a view: lá não há unidade a ler (`D-003`), e o item levaria
+    # a uma recusa.
+    from processo_seletivo.seguranca.acessos import ESCOPO_INSTITUCIONAL
+
+    return ator.can("auditoria:consultar") and ator.institution_scope != ESCOPO_INSTITUCIONAL
 
 
 def pode_ver_acessos(ator):

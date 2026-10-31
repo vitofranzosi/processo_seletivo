@@ -134,8 +134,13 @@ def test_o_filtro_de_acessos_traz_os_dois_escopos(client, fiscal):
     assert "Nenhum ato corresponde ao filtro." in so_unidade
 
 
-def test_o_auditor_institucional_sem_unidade_nao_le(client, provedor):
-    """Quem só tem o escopo institucional não tem unidade a ler (`D-003`)."""
+def test_o_administrador_institucional_sem_unidade_nao_le(client, provedor):
+    """Quem só tem o escopo institucional não tem unidade a ler (`D-003`).
+
+    A recusa aqui vem da falta de `auditoria:consultar`, que nenhum papel institucional concede. A
+    recusa pelo escopo, com o Auditor no institucional, só se monta pelo seletor de demonstração, e
+    está em `tests/interface/test_trilha_da_unidade.py`.
+    """
     alguem = pessoa("adm-inst", nome="Irene Institucional")
     vincular(alguem, catalogo.ESCOPO_INSTITUCIONAL, catalogo.ADMINISTRADOR_INSTITUCIONAL)
     entrar(client, "adm-inst", nome="Irene Institucional")

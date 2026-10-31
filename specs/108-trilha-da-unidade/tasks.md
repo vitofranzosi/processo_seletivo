@@ -52,7 +52,7 @@ interrompido, o Auditor lê os atos sem terminal.
 - [x] T007 [US1] A view `trilha_da_unidade`, a montagem das linhas (sobre o quê, dados mudados, situação, motivo) e o enriquecimento de avisos e interrupções por uma consulta por tipo, em `processo_seletivo/interface/trilha_da_unidade.py` (D-005, D-006)
 - [x] T008 [US1] A rota `trilha-da-unidade` em `processo_seletivo/interface/urls.py`
 - [x] T009 [US1] O template `processo_seletivo/interface/templates/interface/trilha_da_unidade.html`, com o caminho de navegação, a lista `ol.auditoria`, a paginação e o estado vazio (contrato)
-- [x] T010 [P] [US1] A folha `processo_seletivo/interface/static/interface/telas/trilha_da_unidade.css`, com regra para cada classe nova (FR-3170)
+- [x] T010 [P] [US1] A folha `processo_seletivo/interface/static/interface/telas/trilha-da-unidade.css`, com regra para cada classe nova (FR-3170)
 
 **Checkpoint**: o Auditor do seletor lê a trilha da unidade.
 
@@ -80,7 +80,7 @@ institucional, com o nome das pessoas e o papel.
 **Independent Test**: concessão de Elaborador e do Administrador de acessos do `cefor`, lidas pelo
 Auditor do `cefor`; a da `campus-a` não aparece; suspensão e sessão não aparecem.
 
-- [x] T014 [P] [US3] Casos de acesso, com pessoas institucionais e as funções da `106` — concessão e revogação no `cefor`, concessão institucional do Administrador de acessos do `cefor` e da `campus-a`, suspensão, entrada de sessão; nomes sem `pessoa-<uuid>` — em `tests/interface/test_trilha_da_unidade.py` (FR-3158, FR-3161, SC-1024)
+- [x] T014 [P] [US3] Casos de acesso, com pessoas institucionais e as funções da `106` — concessão e revogação no `cefor`, concessão institucional do Administrador de acessos do `cefor` e da `campus-a`, suspensão, entrada de sessão; nomes sem `pessoa-<uuid>` — em `tests/seguranca/test_trilha_da_unidade_acessos.py` (FR-3158, FR-3161, SC-1024)
 - [x] T015 [US3] O "sobre o quê" do vínculo — a pessoa pelo nome e o papel pelo catálogo — em `processo_seletivo/interface/trilha_da_unidade.py` e no template (FR-3162)
 
 ---
@@ -98,7 +98,7 @@ Auditor do `cefor`; a da `campus-a` não aparece; suspensão e sessão não apar
 
 **Goal**: o item na barra para quem tem `auditoria:consultar`, inclusive o Auditor do seletor.
 
-- [x] T018 [US5] O item "Trilha da unidade" em `SECOES`, no grupo da unidade, com `pode_ver_trilha`, em `processo_seletivo/interface/navegacao.py`, e o símbolo `i-trilha` no sprite de `processo_seletivo/interface/templates/interface/base.html` (FR-3155, FR-3156)
+- [x] T018 [US5] O item "Trilha da unidade" em `SECOES`, no grupo da unidade, com `pode_ver_trilha_da_unidade`, em `processo_seletivo/interface/navegacao.py`, e o símbolo `i-trilha` no sprite de `processo_seletivo/interface/templates/interface/base.html` (FR-3155, FR-3156)
 - [x] T019 [US5] O teste do ícone de `tests/interface/test_shell_da_gestao.py` passa a identificar o Gestor **e** o Auditor, para continuar cobrindo todos os itens; o teste "itens = destinos que abrem" cobre o novo sem mudança
 - [x] T020 [US5] O módulo novo em `MODULOS_DE_VIEW` de `tests/test_gramatica_das_portas.py` (D-008)
 
