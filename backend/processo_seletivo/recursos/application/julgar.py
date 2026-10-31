@@ -10,7 +10,7 @@ abre transação
   reserve(chave)
   grava a DecisaoRecurso, imutável
   se CORRECAO_FIXADA:
-      lê e trava o Resultado vigente do par
+      lê o Resultado vigente do par (a trava é a do Processo)
       verifica non reformatio contra ele                    ← FR-070; pior ⇒ indeferimento
       cria EXATAMENTE UM sucessor, citando-o e citando a decisão
   se REAVALIACAO_DETERMINADA:
@@ -198,18 +198,20 @@ def _exigir_admissao(peca):
 
 
 def _protegido(peca, especie, etapa_id, assinatura):
-    """O Resultado vigente do par, travado — e conferido contra o que a tela leu (FR-100).
+    """O Resultado vigente do par, lido **sob a trava do Processo** — e conferido contra a tela.
 
-    `select_for_update` porque entre ler e gravar outra consolidação pode criar sucessor do mesmo
-    par; travá-lo é o que faz a corrida esperar em vez de produzir dois sucessores. A unicidade
-    ainda responde no banco, e é ela a garantia — o bloqueio é o que transforma a corrida numa fila
-    em vez de num erro.
+    **Sem `select_for_update` na linha, e de propósito** (A-01 da auditoria de prontidão de
+    31/10/2026). A trava que esteve aqui pedia `UPDATE` sobre `resultados_resultadoetapa`, que é
+    append-only: a política nega esse privilégio à role de runtime, e toda correção fixada e toda
+    reavaliação determinada terminavam em `permission denied` — `500` na tela de quem julga. A
+    suíte, que roda como superusuário, nunca viu.
 
-    **`of=("self",)` não é enfeite.** O manager de vigência filtra por `sucessor__isnull=True`, o
-    que o ORM traduz em junção externa — e o PostgreSQL recusa `FOR UPDATE` sobre o lado anulável
-    de uma junção externa. Sem o `of`, o comando quebrava com `NotSupportedError` na primeira
-    correção fixada; com ele, o bloqueio recai sobre a linha do Resultado, que é a que se quer
-    travar.
+    E ela não fazia falta. `travar` já tomou `FOR UPDATE` no `ProcessoSeletivo`, e todo caminho que
+    cria Resultado — consolidar, registrar ocorrência, desfechar convocação e este — passa pelo
+    mesmo bloqueio. Quem chega em segundo espera, e a leitura abaixo, que é uma instrução nova em
+    `READ COMMITTED`, já enxerga o sucessor do primeiro: a assinatura não confere e a resposta é
+    `409`. Atrás disso, `uq_resultado_sucessor_unico` responde no banco (`_superar`). Não se
+    contorna o erro concedendo `UPDATE` à tabela: isso desfaria a segunda camada da imutabilidade.
     """
     if especie not in COM_EFEITO:
         return None
@@ -217,11 +219,9 @@ def _protegido(peca, especie, etapa_id, assinatura):
         raise DomainError(
             "appeal_correction_incomplete", "A decisão precisa dizer a que Etapa se refere.", 422
         )
-    vigente = (
-        ResultadoEtapa.vigentes.select_for_update(of=("self",))
-        .filter(inscricao_id=peca.inscricao_id, etapa_id=etapa_id)
-        .first()
-    )
+    vigente = ResultadoEtapa.vigentes.filter(
+        inscricao_id=peca.inscricao_id, etapa_id=etapa_id
+    ).first()
     if vigente is None:
         raise DomainError("appeal_correction_incomplete", SEM_RESULTADO, 422)
     # **A ausência da assinatura é recusa, e não dispensa** (FR-100). Enquanto ela era opcional, um
