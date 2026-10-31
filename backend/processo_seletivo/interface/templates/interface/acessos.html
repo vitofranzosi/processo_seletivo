@@ -1,0 +1,72 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}{{ nivel.titulo }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/acessos.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A gestão de acessos, nos dois níveis (107, `FR-3106`, `FR-3107`, `FR-3120`).
+
+Quem atua, e o histórico, lidos dos vínculos e das revogações — e não da trilha: são eles a resposta
+de quem tinha qual papel quando. Revogar está ao lado de cada vínculo que o ator pode revogar, e o
+servidor recusa os demais de qualquer modo (`FR-3111`). Nada aqui grava: cada ato passa por uma
+confirmação, com motivo (`FR-3116`).
+{% endcomment %}
+<h1>{{ nivel.titulo }}</h1>
+<p class="sub">{% if nivel.institucional %}Os administradores de acessos de cada unidade. Os papéis
+  operacionais são concedidos na própria unidade.{% else %}{{ nome_da_unidade }}{% endif %}</p>
+
+{% if feito == "concedido" %}<p class="sucesso" role="status">Acesso concedido. Vale na próxima ação da pessoa.</p>{% endif %}
+{% if feito == "revogado" %}<p class="sucesso" role="status">Acesso revogado. A pessoa o perde na próxima ação.</p>{% endif %}
+
+{% if pode_conceder %}<p class="acoes-de-acesso"><a class="botao" href="{% url nivel.rota_conceder %}">Conceder acesso</a>{% if nivel.institucional %} <a class="botao secundario" href="{% url 'interface:administracao-de-acessos-pessoas' %}">Suspender ou reativar pessoas</a>{% endif %}</p>{% endif %}
+
+{% for grupo in grupos %}
+<section aria-labelledby="quem-atua-{{ forloop.counter }}" class="quem-atua">
+  <h2 id="quem-atua-{{ forloop.counter }}">{% if nivel.institucional %}{% if grupo.unidade %}{{ grupo.unidade.nome }}{% endif %}{% else %}Quem atua na unidade{% endif %}</h2>
+  {% if grupo.vinculos %}
+  <div class="tabela-rolavel">
+    <table>
+      <thead><tr><th scope="col">Pessoa</th><th scope="col">Papel</th><th scope="col">Desde</th>
+        <th scope="col">Concedido por</th><th scope="col"><span class="oculto">Ações</span></th></tr></thead>
+      <tbody>
+        {% for linha in grupo.vinculos %}
+        <tr>
+          <td><strong>{{ linha.pessoa }}</strong>{% if linha.suspensa %} <span class="situacao s-CANCELADO">suspensa</span>{% endif %}{% if linha.email %}<span class="detalhe-da-pessoa">{{ linha.email }}</span>{% endif %}</td>
+          <td>{{ linha.papel }}</td>
+          <td>{{ linha.vinculo.concedido_em|date:"d/m/Y" }}</td>
+          <td>{{ linha.quem_concedeu }}</td>
+          <td>{% if linha.revogavel %}
+            <form method="post" action="{% url nivel.rota_revogar linha.vinculo.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="acao" value="conferir">
+              <button type="submit" class="acao" aria-label="Revogar {{ linha.papel }} de {{ linha.pessoa }}">Revogar</button>
+            </form>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="ajuda">{% if nivel.institucional %}Nenhum administrador de acessos vigente.{% else %}Ninguém com acesso vigente.{% endif %}</p>
+  {% endif %}
+</section>
+{% endfor %}
+
+<section aria-labelledby="historico-titulo" class="historico-de-acessos">
+  <h2 id="historico-titulo">Histórico</h2>
+  {% if historico %}
+  <ol>
+    {% for evento in historico %}
+    <li>
+      <span class="quando">{{ evento.quando|date:"d/m/Y H:i" }}</span>
+      <span><strong>{{ evento.por }}</strong> {% if evento.tipo == "concessao" %}concedeu{% else %}revogou{% endif %}
+        {{ evento.papel }} a <strong>{{ evento.pessoa }}</strong>{% if nivel.institucional %} em {{ evento.unidade }}{% endif %}.</span>
+      <span class="motivo">Motivo: {{ evento.motivo }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="ajuda">Nenhuma concessão nem revogação ainda.</p>
+  {% endif %}
+</section>
+{% endblock %}

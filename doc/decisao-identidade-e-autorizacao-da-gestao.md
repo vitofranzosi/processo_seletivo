@@ -53,6 +53,18 @@ implementado (§Propostas). Substitui, no que diverge, a proposta de ADR da §G 
    Produção recusa subir com ela, recusa um provedor marcado como de teste, e, **em execução**, o
    seletor se declara indisponível sempre que a marca de produção estiver ligada.
 
+## Respostas do usuário (30/10/2026)
+
+As três propostas abaixo foram respondidas em 30/10, em resposta ao PR #346 — registro completo na
+[spec da 107](../specs/107-gestao-de-acessos/spec.md), §Decisões do usuário:
+
+- **Identificador do provedor**: o estável, com o emissor — em OIDC, `iss` + `sub`. Nome e e-mail
+  não determinam a associação.
+- **Administrador institucional**: duas pessoas designadas nominalmente por ato formal, com contas
+  individuais e a referência ao ato na concessão.
+- **Quem concede na unidade**: o papel próprio de Administrador de acessos da unidade, separado do
+  Gestor; a mesma pessoa acumula os dois só por concessões explícitas.
+
 ## Propostas ao usuário
 
 São governança, e não técnica. O código as acomoda sem reescrita.

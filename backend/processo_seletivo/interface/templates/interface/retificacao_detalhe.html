@@ -101,17 +101,17 @@
   <h2 id="participantes-titulo">Quem atuou</h2>
   <dl class="participantes">
     <dt>Criou</dt>
-    <dd>{{ retificacao.created_by }} <span class="quando">{{ retificacao.created_at|date:"d/m/Y H:i" }}</span></dd>
+    <dd>{% nome_de_pessoa retificacao.created_by %} <span class="quando">{{ retificacao.created_at|date:"d/m/Y H:i" }}</span></dd>
     <dt>Submeteu</dt>
-    <dd>{% if retificacao.prepared_by %}{{ retificacao.prepared_by }}
+    <dd>{% if retificacao.prepared_by %}{% nome_de_pessoa retificacao.prepared_by %}
       <span class="quando">{{ retificacao.submitted_at|date:"d/m/Y H:i" }}</span>
       {% else %}<span class="pendente">ainda não submetida</span>{% endif %}</dd>
     <dt>Homologou</dt>
-    <dd>{% if retificacao.homologated_by %}{{ retificacao.homologated_by }}
+    <dd>{% if retificacao.homologated_by %}{% nome_de_pessoa retificacao.homologated_by %}
       <span class="quando">{{ retificacao.homologated_at|date:"d/m/Y H:i" }}</span>
       {% else %}<span class="pendente">ainda não homologada</span>{% endif %}</dd>
     <dt>Publicou</dt>
-    <dd>{% if publicada %}{{ publicada.published_by }}
+    <dd>{% if publicada %}{% nome_de_pessoa publicada.published_by %}
       <span class="quando">{{ publicada.published_at|date:"d/m/Y H:i" }}</span>
       {% else %}<span class="pendente">ainda não publicada</span>{% endif %}</dd>
   </dl>

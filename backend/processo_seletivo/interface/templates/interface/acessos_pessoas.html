@@ -1,0 +1,86 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Suspender ou reativar — {{ nivel.titulo }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/acessos.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url nivel.rota %}">{{ navegacao.secao_atual }}</a> › <span aria-current="page">Suspender ou reativar</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A suspensão global e a reativação de pessoa (107, incremento 2, US6 e US7; decisões P1 e P2).
+
+Do administrador institucional, e de mais ninguém pela tela. A busca é a da concessão, por `POST`,
+com o mesmo piso e o mesmo teto, e aqui — só aqui — inclui quem está suspenso, para reativar. Nada
+grava nesta tela: cada ato passa pela confirmação, que mostra o que para ou volta a valer.
+{% endcomment %}
+<h1>Suspender ou reativar pessoas</h1>
+<p class="sub">A suspensão vale em todas as unidades e encerra todas as sessões da pessoa, sem
+  revogar os vínculos. Para tirar um papel de uma unidade, revogue-o na própria unidade.</p>
+
+{% if feito == "suspensa" %}<p class="sucesso" role="status">Pessoa suspensa. Todas as sessões dela terminam na próxima ação.</p>{% endif %}
+{% if feito == "reativada" %}<p class="sucesso" role="status">Pessoa reativada. Ela precisa entrar de novo.</p>{% endif %}
+
+<form method="post" class="busca-de-pessoa" role="search">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="buscar">
+  <p class="campo">
+    <label for="termo">Nome ou e-mail da pessoa</label>
+    <input id="termo" name="termo" type="search" value="{{ termo }}" minlength="{{ piso }}" required aria-required="true" aria-describedby="ajuda-termo" autocomplete="off">
+    <span class="ajuda" id="ajuda-termo">Ao menos {{ piso }} letras.</span>
+  </p>
+  <button type="submit" class="botao">Buscar</button>
+</form>
+
+{% if buscou %}
+<section aria-labelledby="resultado-titulo" class="resultado-da-busca">
+  <h2 id="resultado-titulo">Resultado</h2>
+  {% if curto %}
+  <p class="aviso" role="status">Digite ao menos {{ piso }} letras do nome ou do e-mail.</p>
+  {% elif not pessoas %}
+  <p class="aviso" role="status">Ninguém encontrado.</p>
+  {% else %}
+  {% if ha_mais %}<p class="aviso" role="status">Mais de {{ teto }} pessoas encontradas. Mostrando as
+    {{ teto }} primeiras; refine a busca.</p>{% endif %}
+  <ul>
+    {% for pessoa in pessoas %}
+    <li>
+      <form method="post" action="{% if pessoa.suspensa %}{% url 'interface:administracao-de-acessos-reativar' pessoa.identificador %}{% else %}{% url 'interface:administracao-de-acessos-suspender' pessoa.identificador %}{% endif %}">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="conferir">
+        <p class="pessoa-encontrada"><strong>{{ pessoa.nome }}</strong>{% if pessoa.suspensa %} <span class="situacao s-CANCELADO">suspensa</span>{% endif %}{% if pessoa.email %}<span class="detalhe-da-pessoa">{{ pessoa.email }}</span>{% endif %}</p>
+        <button type="submit" class="acao" aria-label="{% if pessoa.suspensa %}Reativar{% else %}Suspender{% endif %} {{ pessoa.nome }}">{% if pessoa.suspensa %}Reativar{% else %}Suspender{% endif %}</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+
+<section aria-labelledby="suspensas-titulo" class="quem-atua">
+  <h2 id="suspensas-titulo">Suspensas agora</h2>
+  {% if suspensas %}
+  <div class="tabela-rolavel">
+    <table>
+      <thead><tr><th scope="col">Pessoa</th><th scope="col">Desde</th><th scope="col"><span class="oculto">Ações</span></th></tr></thead>
+      <tbody>
+        {% for pessoa in suspensas %}
+        <tr>
+          <td><strong>{{ pessoa.nome }}</strong>{% if pessoa.email %}<span class="detalhe-da-pessoa">{{ pessoa.email }}</span>{% endif %}</td>
+          <td>{{ pessoa.desde|date:"d/m/Y H:i" }}</td>
+          <td>
+            <form method="post" action="{% url 'interface:administracao-de-acessos-reativar' pessoa.identificador %}">
+              {% csrf_token %}
+              <input type="hidden" name="acao" value="conferir">
+              <button type="submit" class="acao" aria-label="Reativar {{ pessoa.nome }}">Reativar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="ajuda">Ninguém suspenso.</p>
+  {% endif %}
+</section>
+
+<p><a class="acao" href="{% url nivel.rota %}">Voltar</a></p>
+{% endblock %}

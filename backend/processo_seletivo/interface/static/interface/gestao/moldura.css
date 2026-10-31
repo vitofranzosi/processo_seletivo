@@ -78,6 +78,14 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
 .pessoa-identificada .acao{position:relative;display:grid;place-items:center;width:2rem;height:2rem;
   padding:0;border-color:var(--borda);color:var(--texto-fraco)}
 .pessoa-identificada .acao:hover{color:var(--vermelho);border-color:var(--vermelho)}
+/* A unidade ativa da pessoa institucional, e a troca (107, FR-3104). Abaixo de quem está
+   identificado, porque é dela que se fala: em nome de qual unidade ela age agora. */
+.unidade-ativa{padding:0 1rem .85rem 1.125rem;font-size:.8125rem;color:var(--texto-fraco)}
+.unidade-ativa p{margin:0}
+.unidade-ativa form{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:0}
+.unidade-ativa label{display:block;flex-basis:100%;margin:0}
+.unidade-ativa select{flex:1;min-width:0;font-size:.8125rem}
+.unidade-ativa .acao{font-size:.8125rem}
 /* Um `span` só para três papéis: o nome visível do item, o nome acessível dele, e a dica
    quando a barra recolhe. O "Sair" é ícone desde sempre, e a dica é tudo o que se vê dele por
    escrito na tela larga. */
@@ -124,6 +132,7 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
   .shell[data-barra=recolhida]{grid-template-columns:4.25rem minmax(0,1fr);
     background:linear-gradient(to right,var(--branco) calc(4.25rem - 1px),var(--borda) 0 4.25rem,transparent 0)}
   .shell[data-barra=recolhida] .barra-lateral{overflow:visible}
+  .shell[data-barra=recolhida] .unidade-ativa{display:none}
   .shell[data-barra=recolhida] .nome-do-produto,.shell[data-barra=recolhida] .nome-da-pessoa{
     position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
   .shell[data-barra=recolhida] .grupo-de-secoes{height:1px;margin:1.6rem 1rem .97rem;overflow:hidden;

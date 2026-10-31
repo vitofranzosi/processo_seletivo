@@ -35,6 +35,13 @@ dev = [
 assistente = [
   "tokenizers>=0.23,<0.24",
 ]
+# A jornada da gestão de acessos por navegador real (107, `D-012`), e só ela: os testes de
+# `tests/navegador/` sobem o servidor da suíte e dirigem um Chromium. Grupo opcional pela razão do
+# `assistente`: produção não o instala, e sem ele os testes pulam. O navegador em si vem de
+# `playwright install chromium`, que o CI roda.
+navegador = [
+  "playwright>=1.55,<2",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["processo_seletivo"]
@@ -58,6 +65,7 @@ markers = [
   "integration: integração com persistência",
   "authorization: autorização contextual e anti-IDOR",
   "performance: custo de consulta e escalabilidade",
+  "navegador: jornada por navegador real, com servidor (107); pula sem o grupo navegador",
 ]
 
 [tool.coverage.run]

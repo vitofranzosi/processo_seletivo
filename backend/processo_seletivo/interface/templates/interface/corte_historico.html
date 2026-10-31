@@ -37,7 +37,7 @@ Nenhum termo novo: são os do domínio, e o que muda é onde eles se explicam (F
   identificadores, e não números. Numa fileira, cada um ficava entre dois rótulos, como na faixa.
   {% endcomment %}
   <dl class="participantes">
-    <dt>Emitido por</dt><dd>{{ corte.emitido_por }}</dd>
+    <dt>Emitido por</dt><dd>{% nome_de_pessoa corte.emitido_por %}</dd>
     <dt>Emitido em</dt><dd>{{ corte.emitido_em|date:"d/m/Y H:i" }}</dd>
     <dt>Edital</dt><dd>{{ nomes.edital }}</dd>
     <dt>Processo</dt><dd>{{ nomes.processo }}</dd>

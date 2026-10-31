@@ -42,6 +42,14 @@ ADAPTADOR_PROVISORIO = (
 INSTITUCIONAL = "rest_framework.authentication.RemoteUserAuthentication"
 
 
+# Os prazos da sessão institucional que produção exige com provedor (107, `FR-3124`). Os valores
+# são quaisquer: o que se prova aqui é a exigência, e não a decisão, que é do usuário.
+PRAZOS_DECLARADOS = {
+    "GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS": "480",
+    "GESTAO_SESSAO_INATIVIDADE_MINUTOS": "30",
+}
+
+
 def _carregar(**alteracoes):
     """Recarrega a configuração de produção sob o ambiente informado.
 
@@ -240,9 +248,11 @@ def test_seletor_ao_lado_do_provedor_continua_recusado():
     modulo.Provedor = Real
     sys.modules["provedor_real"] = modulo
     try:
+        # Os prazos da sessão entram com a 107 (`FR-3124`): sem eles, a carga sem o seletor seria
+        # recusada por eles, e o caso deixaria de provar o que prova — que é o seletor a recusa.
         assert (
             _carregar(
-                GESTAO_PROVEDOR_INSTITUCIONAL="provedor_real.Provedor"
+                GESTAO_PROVEDOR_INSTITUCIONAL="provedor_real.Provedor", **PRAZOS_DECLARADOS
             ).GESTAO_PROVEDOR_INSTITUCIONAL
             == "provedor_real.Provedor"
         )
@@ -250,6 +260,7 @@ def test_seletor_ao_lado_do_provedor_continua_recusado():
             _carregar(
                 GESTAO_PROVEDOR_INSTITUCIONAL="provedor_real.Provedor",
                 INTERFACE_SELETOR_IDENTIDADE="true",
+                **PRAZOS_DECLARADOS,
             )
     finally:
         del sys.modules["provedor_real"]
@@ -369,3 +380,54 @@ def test_o_piloto_em_producao_aceita_o_servico_local():
     """071: o piloto ligado com o Ollama e o tempo-limite padrão sobe (`FR-1503`)."""
     configuracao = _carregar(ASSISTENTE_PILOTO="true", ASSISTENTE_SERVICO="ollama")
     assert configuracao.ASSISTENTE_PILOTO is True
+
+
+@pytest.fixture
+def provedor_implantavel():
+    """Um adaptador que produção aceitaria: fora de `tests.`, sem se declarar de teste."""
+    import sys
+    import types
+
+    class Real:
+        nome = "real"
+
+    modulo = types.ModuleType("provedor_implantavel")
+    modulo.Provedor = Real
+    sys.modules["provedor_implantavel"] = modulo
+    yield "provedor_implantavel.Provedor"
+    del sys.modules["provedor_implantavel"]
+
+
+@pytest.mark.parametrize(
+    "prazo", ["GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS", "GESTAO_SESSAO_INATIVIDADE_MINUTOS"]
+)
+@pytest.mark.parametrize("valor", [None, "", "0", "-5", "oito horas"])
+def test_com_provedor_producao_exige_os_dois_prazos_da_sessao(provedor_implantavel, prazo, valor):
+    """`FR-3124` da 107: a decisão de 30/10 manda declarar os prazos em produção, e o padrão da base
+    não vira valor de produção por omissão."""
+    with pytest.raises(ImproperlyConfigured) as recusa:
+        _carregar(
+            GESTAO_PROVEDOR_INSTITUCIONAL=provedor_implantavel,
+            **{**PRAZOS_DECLARADOS, prazo: valor},
+        )
+    assert prazo in str(recusa.value)
+
+
+def test_com_provedor_e_prazos_declarados_producao_sobe(provedor_implantavel):
+    producao = _carregar(
+        GESTAO_PROVEDOR_INSTITUCIONAL=provedor_implantavel,
+        GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS="240",
+        GESTAO_SESSAO_INATIVIDADE_MINUTOS="15",
+    )
+    assert (
+        producao.GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS,
+        producao.GESTAO_SESSAO_INATIVIDADE_MINUTOS,
+    ) == (
+        240,
+        15,
+    )
+
+
+def test_sem_provedor_producao_nao_pede_os_prazos():
+    """Sem entrada institucional, a gestão continua no 503, e não há sessão a limitar."""
+    assert _carregar().GESTAO_PROVEDOR_INSTITUCIONAL == ""

@@ -1,0 +1,38 @@
+{% extends "interface/base_de_acesso.html" %}{% load estaticos %}
+{% block titulo %}Sem acesso vigente{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/acesso.css' %}">{% endblock %}
+{% block acesso %}
+{% comment %}
+Quem entrou pelo provedor e não tem acesso vigente na unidade ativa (107, `FR-3101`, `FR-3102`).
+
+Antes, a pessoa voltava à página de acesso como quem não entrou, entrava de novo e voltava ao mesmo
+lugar. Aqui ela vê que entrou, com o próprio nome — é o que o administrador vai procurar na busca —,
+e a quem pedir. Se ainda atua em outro escopo, troca para ele. Nada além: nem papéis, nem quem
+concedeu, nem as unidades em que não atua.
+{% endcomment %}
+<div class="cartao-de-acesso sem-acesso">
+  <h1>Sem acesso vigente</h1>
+  <div class="quem-esta">
+    <div><strong>{{ pessoa.nome }}</strong>{% if pessoa.email %}<span>{{ pessoa.email }}</span>{% endif %}</div>
+  </div>
+  {% if escopos %}
+  <p class="chamada">Você não tem acesso vigente na unidade em que estava atuando. Continue em uma
+    das unidades em que ainda atua:</p>
+  {% for escopo in escopos %}
+  <form method="post" action="{% url 'interface:unidade-ativa' %}">
+    {% csrf_token %}
+    <input type="hidden" name="unidade" value="{{ escopo.codigo }}">
+    <button type="submit" class="entrar">Atuar em {{ escopo.rotulo }}</button>
+  </form>
+  {% endfor %}
+  {% else %}
+  <p class="chamada">Você entrou com a conta institucional, mas não tem acesso vigente em nenhuma
+    unidade. Peça acesso ao administrador de acessos da sua unidade, informando o nome e o e-mail
+    acima — é por eles que ele encontra você.</p>
+  {% endif %}
+  <form method="post" action="{% url 'interface:sair' %}">
+    {% csrf_token %}
+    <button type="submit" class="alternativa">Sair</button>
+  </form>
+</div>
+{% endblock %}

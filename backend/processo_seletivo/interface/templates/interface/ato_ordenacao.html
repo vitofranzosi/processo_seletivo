@@ -3,7 +3,7 @@
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{{ url_da_classificacao }}">Classificação</a> › <span aria-current="page">Ato {{ ato.id }}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Ato de classificação</h1>
-<p class="sub">{{ nomes.edital }}{% if nomes.perfil %} — {{ nomes.perfil }}{% endif %}{% if nomes.marco %} — {{ nomes.marco }}{% endif %}. Emitido por {{ ato.emitido_por }} em {{ ato.emitido_em|date:"d/m/Y H:i" }}.</p>
+<p class="sub">{{ nomes.edital }}{% if nomes.perfil %} — {{ nomes.perfil }}{% endif %}{% if nomes.marco %} — {{ nomes.marco }}{% endif %}. Emitido por {% nome_de_pessoa ato.emitido_por %} em {{ ato.emitido_em|date:"d/m/Y H:i" }}.</p>
 <p class="imutavel">Este snapshot é imutável. A consulta abaixo lê o que foi registrado; não recalcula o passado.</p>
 
 {% comment %}
@@ -13,7 +13,7 @@ do que está congelado abaixo muda — o ato continua íntegro na data em que fo
 é que já não é ele que produz efeito.
 {% endcomment %}
 {% if sucessor %}
-<p class="aviso"><strong>Este ato foi sucedido</strong> em {{ sucessor.emitido_em|date:"d/m/Y H:i" }} por {{ sucessor.emitido_por }}: {{ sucessor.motivo_da_sucessao }} Os valores abaixo continuam sendo os que este ato congelou. <a href="{% url 'interface:ato-de-ordenacao' edital.id ato.marco_id sucessor.id %}">Consultar o ato que o sucedeu</a>.</p>
+<p class="aviso"><strong>Este ato foi sucedido</strong> em {{ sucessor.emitido_em|date:"d/m/Y H:i" }} por {% nome_de_pessoa sucessor.emitido_por %}: {{ sucessor.motivo_da_sucessao }} Os valores abaixo continuam sendo os que este ato congelou. <a href="{% url 'interface:ato-de-ordenacao' edital.id ato.marco_id sucessor.id %}">Consultar o ato que o sucedeu</a>.</p>
 {% endif %}
 
 {% comment %}

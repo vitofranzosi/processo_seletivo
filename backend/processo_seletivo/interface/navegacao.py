@@ -37,6 +37,18 @@ def pode_gerir_modelos(ator):
     return ator.can("aviso:enviar")
 
 
+def pode_ver_acessos(ator):
+    # A gestão de acessos da unidade (107), pela capacidade e não pelo papel (`D-001`): quem concede
+    # na unidade é proposta da `106`, e a barra não deve ter opinião sobre ela.
+    return ator.can("acesso:consultar")
+
+
+def pode_administrar_acessos(ator):
+    # O nível institucional (107): a capacidade só existe com o escopo institucional ativo, e por
+    # isso o item aparece depois da troca no seletor da barra.
+    return ator.can("acesso:administrar")
+
+
 def _toda_identidade(ator):
     # A lista e Minhas Etapas não dependem de papel: a primeira diz a quem não tem papel o que
     # falta, e a segunda é o caminho de quem só tem vínculo (UX-008).
@@ -82,6 +94,28 @@ SECOES = (
 )
 
 
+# A gestão de acessos (107), em lista própria, e não no `SECOES`: as capacidades dela só existem no
+# modo institucional — o seletor de demonstração desenha só os oito papéis do `PAPEIS` (`FR-3001` da
+# 106) —, e o `SECOES` é a barra que a demonstração percorre inteira. Entra no grupo da unidade,
+# antes da ajuda, porque é dela que se fala: quem atua aqui.
+SECOES_DE_ACESSO = (
+    Secao("Acessos da unidade", "interface:acessos", UNIDADE, pode_ver_acessos, "i-chave"),
+    Secao(
+        "Administração de acessos",
+        "interface:administracao-de-acessos",
+        UNIDADE,
+        pode_administrar_acessos,
+        "i-escudo",
+    ),
+)
+
+
+def _secoes_da_barra():
+    antes_da_ajuda = [secao for secao in SECOES if secao.grupo != AJUDA]
+    ajuda = [secao for secao in SECOES if secao.grupo == AJUDA]
+    return (*antes_da_ajuda, *SECOES_DE_ACESSO, *ajuda)
+
+
 # As telas cuja matriz não cabe ao lado da barra a 1.280 px (DP-4). Nelas a barra fica recolhida
 # em qualquer largura, como no celular: a Alocação por Etapa, com nove Etapas, tem ~1.213 px de
 # matriz, e a 057 exige que ela caiba sem rolagem interna e com o cabeçalho preso à janela
@@ -96,7 +130,7 @@ def secao_do_caminho(caminho, enderecos=None):
     outra seção é de Processos Seletivos — o Processo, o Edital, a composição, o recurso.
     """
     enderecos = enderecos or _enderecos()
-    candidatas = [s for s in SECOES if caminho.startswith(enderecos[s.rota])]
+    candidatas = [s for s in _secoes_da_barra() if caminho.startswith(enderecos[s.rota])]
     return max(candidatas, key=lambda s: len(enderecos[s.rota]), default=None)
 
 
@@ -115,19 +149,19 @@ def declarar_secao(request, rota):
 def _secao_da_tela(request, enderecos):
     rota = getattr(request, "secao_da_gestao", None)
     if rota is not None:
-        return next(secao for secao in SECOES if secao.rota == rota)
+        return next(secao for secao in _secoes_da_barra() if secao.rota == rota)
     return secao_do_caminho(request.path, enderecos)
 
 
 def _enderecos():
     # Uma vez por pedido, e não guardado no módulo: o prefixo do endereço é do pedido.
-    return {secao.rota: reverse(secao.rota) for secao in SECOES}
+    return {secao.rota: reverse(secao.rota) for secao in _secoes_da_barra()}
 
 
 def grupos_da_barra(ator, caminho, atual, enderecos):
     """Os grupos com os itens que o ator alcança. Grupo sem item não vem (`FR-1714`)."""
     grupos = {}
-    for secao in SECOES:
+    for secao in _secoes_da_barra():
         if not secao.alcanca(ator):
             continue
         endereco = enderecos[secao.rota]
@@ -162,7 +196,8 @@ def _navegacao(request):
     return {
         "barra": grupos_da_barra(ator, request.path, atual, enderecos),
         "no_topo": getattr(request.resolver_match, "view_name", None) in TELAS_LARGAS,
-        "iniciais": iniciais(ator.subject),
+        # Do nome, e não do identificador (107, `FR-3103`): `pessoa-1b4e…` dava "P1".
+        "iniciais": iniciais(identidade.nome_do_ator(request, ator)),
         "secao_atual": atual.rotulo if atual else "",
     }
 

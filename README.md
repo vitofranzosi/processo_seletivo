@@ -307,6 +307,14 @@ sem `DB_USER` ela tenta conectar como a role de runtime, que não pode criar ban
 com `DB_RUNTIME_USER` fora do ambiente: quando ele está definido, as settings o preferem a `DB_USER`
 (`config/settings/base.py`), e é ele que precisa apontar para o superusuário — é o que o `make` faz:
 
+**As jornadas da gestão de acessos rodam num navegador de verdade** (107): os testes de
+`backend/tests/navegador/` sobem o servidor da suíte e dirigem um Chromium pelo Playwright, do grupo
+opcional `navegador` — sem ele, pulam. Para assistir a elas, com o navegador na tela:
+
+```bash
+cd backend && uv sync --extra dev --extra navegador && uv run playwright install chromium && make test-navegador
+```
+
 ```bash
 cd backend && TEST_DB_ENGINE=postgresql DB_NAME=processo_seletivo_test DB_USER=postgres DB_PASSWORD=postgres DB_HOST=localhost DB_PORT=5432 uv run pytest
 ```
@@ -517,6 +525,7 @@ Incrementos, na ordem em que foram especificados:
 | [`104`](specs/104-acoes-disponiveis/spec.md) | **Implementada sobre a `103`; o roteiro com três pessoas (SC-990) espera o usuário.** A Lista de Processos Seletivos passa a abrir com "Ações disponíveis para você": um item por objeto em que a pessoa pode atuar agora — Edital, Retificação, recursos e avaliação de comissão —, derivado das mesmas regras dos detalhes, sem fila nem estado novo. A coluna "O que posso fazer" deixa de negar ação ao lado da Retificação, troca "Submeter" e "Publicar" do Edital por "Conferir e…" (a pendência só a validação revela) e mostra a segregação; o detalhe do Edital nomeia a Retificação que espera a pessoa; devolvida e reenviada se reconhecem; a confirmação de homologar mostra o que muda e recolhe os avisos que já valiam; Minhas Etapas diz o que cobre. A Lista passou de duas consultas por Edital publicado a um número constante. Diagnóstico em <https://claude.ai/artifact/GqXFAReaxgwMuZLApgUf3z> |
 | [`105`](specs/105-documentacao-na-gestao/spec.md) | **Implementada.** A Visão do Sistema dentro da gestão, pedida na PR #329: o grupo "Ajuda" da barra leva toda identidade a `/gestao/documentacao/`, que serve o manual de `docs/visao-sistema/` sob a política de conteúdo, por lista literal de arquivos — o resto é 404 —, e o manual ganha no pé da barra dele o "Voltar" à gestão. A suíte passa a cobrar do manual que todo arquivo que ele pede esteja na lista e que nada nele seja embutido. |
 | [`106`](specs/106-identidade-institucional-preparada/spec.md) | **Implementada; o SSO real não foi integrado, e três propostas de governança esperam o usuário.** A gestão fica pronta para a autenticação institucional sem tocar no seletor de demonstração, que continua igual em desenvolvimento e homologação. O Django Auth guarda a pessoa, com um identificador interno `pessoa-<uuid>` que o banco não deixa mudar; o GPS autoriza por vínculos pessoa × unidade × papel append-only, e o `Actor` é recalculado a cada requisição a partir da unidade ativa — revogação vale na seguinte, e a presidência de comissão não alcança quem perdeu o acesso. Um adaptador de contrato fixo entrega a identidade; nos testes, um provedor simulado sem rede. Produção recusa o seletor também em execução, recusa provedor de teste e, sem provedor, mantém a gestão em 503. Diagnóstico e ADR em `doc/`. |
+| [`107`](specs/107-gestao-de-acessos/spec.md) | **Implementada em dois incrementos, sobre a `106` (PR empilhado); o segundo — suspensão, reativação, retirada e substituição do administrador institucional, e o nome nas demais telas — segue as decisões do usuário de 30/10.** A gestão de acessos ganha tela: quem entra pelo provedor sem acesso vê o próprio nome e a quem pedir; a barra mostra o nome, e não o identificador, e troca a unidade ativa; "Acessos da unidade" e "Administração de acessos" consultam, concedem e revogam com busca de pessoas, confirmação, motivo e histórico; a sessão institucional ganha duração máxima e inatividade, com valores que produção exige declarados. As jornadas se provam num navegador de verdade, com o servidor, as identidades e a página do provedor preparados pelos testes (`make test-navegador`). O seletor de demonstração não muda, e não alcança as telas de acesso. |
 
 A [Constituição](.specify/memory/constitution.md) prevalece sobre todos.
 

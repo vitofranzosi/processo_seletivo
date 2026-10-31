@@ -758,10 +758,16 @@ def identificar(request):
             )
         return _escolha_de_identidade(request, proximo=proximo, erro=True, status=422)
     ator = identidade.ator_da_sessao(request)
+    nome = identidade.nome_do_ator(request, ator) if ator else ""
     return render(
         request,
         "interface/identificar.html",
-        {"proximo": proximo, "iniciais": demonstracao.iniciais(ator.subject) if ator else ""},
+        {
+            "proximo": proximo,
+            "iniciais": demonstracao.iniciais(nome) if ator else "",
+            # Por que a sessão anterior terminou, dito uma vez (107, `FR-3125`).
+            "sessao_encerrada": request.session.pop(identidade.CHAVE_SESSAO_ENCERRADA, ""),
+        },
     )
 
 
@@ -837,8 +843,27 @@ def retorno_institucional(request):
         identidade.entrar_institucional(request, autenticada, correlation_id=request.correlation_id)
         is None
     ):
+        if _suspensa(autenticada):
+            # A própria pessoa sabe que está suspensa, e a quem pedir — sem o motivo nem quem
+            # suspendeu, que são da trilha (107, `FR-3141`).
+            raise DomainError(
+                "acesso_suspenso",
+                "Seu acesso à gestão está suspenso. Peça a reativação ao administrador "
+                "institucional de acessos.",
+                403,
+            )
         raise _recusa_da_entrada()
     return redirect(ida.get("proximo") or reverse("interface:lista"))
+
+
+def _suspensa(autenticada):
+    from processo_seletivo.seguranca.application.suspensao import suspensao_aberta
+    from processo_seletivo.seguranca.models import IdentidadeExterna
+
+    externa = IdentidadeExterna.objects.filter(
+        provedor=autenticada.provedor, identificador=autenticada.identificador
+    ).first()
+    return externa is not None and suspensao_aberta(externa.pessoa_id) is not None
 
 
 @require_http_methods(["POST"])

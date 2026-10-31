@@ -1,0 +1,70 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Confirmar — {{ nivel.titulo }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/acessos.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url nivel.rota %}">{{ navegacao.secao_atual }}</a> › <a href="{% url 'interface:administracao-de-acessos-pessoas' %}">Suspender ou reativar</a> › <span aria-current="page">Confirmar</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A confirmação da suspensão e da reativação (107, incremento 2, `FR-3142`, `FR-3145`).
+
+O que a decisão P2 manda deixar claro é o que volta: a lista abaixo são os vínculos vigentes da
+pessoa, lidos agora — os que param na suspensão, e os mesmos que voltam na reativação. Os revogados
+não estão nela, porque não voltam. Nenhuma sessão anterior volta, em caso nenhum.
+{% endcomment %}
+<h1>{% if ato == "suspender" %}Confira antes de suspender{% else %}Confira antes de reativar{% endif %}</h1>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+<section aria-labelledby="dados-titulo" class="consequencias">
+  <h2 id="dados-titulo">Pessoa</h2>
+  <dl class="dados-do-ato">
+    <dt>Pessoa</dt><dd><strong>{{ pessoa.nome }}</strong>{% if pessoa.email %} <span class="detalhe-da-pessoa">{{ pessoa.email }}</span>{% endif %}</dd>
+    <dt>Alcance</dt><dd>Todas as unidades</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="acessos-titulo" class="consequencias">
+  <h2 id="acessos-titulo">{% if ato == "suspender" %}Acessos que deixam de valer{% else %}Acessos que voltam a valer{% endif %}</h2>
+  {% if acessos %}
+  <dl class="dados-do-ato">
+    {% for item in acessos %}<dt>{{ item.unidade }}</dt><dd>{{ item.papeis|join:", " }}</dd>{% endfor %}
+  </dl>
+  {% else %}
+  <p class="ajuda">Nenhum vínculo vigente.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="consequencia-titulo" class="consequencias{% if ato == 'suspender' %} irreversivel{% endif %}">
+  <h2 id="consequencia-titulo">Consequência</h2>
+  <ul>
+    {% if ato == "suspender" %}
+    <li>{{ pessoa.nome }} deixa de agir em todas as unidades na próxima ação, e não consegue entrar até ser reativada.</li>
+    <li>Todas as sessões abertas dela terminam, em qualquer computador. Nenhuma delas volta, nem depois da reativação.</li>
+    <li>Os vínculos não são revogados: ficam parados, e voltam a valer na reativação. Para tirar um papel de vez, revogue-o na unidade.</li>
+    {% else %}
+    <li>{{ pessoa.nome }} volta a poder entrar, com os acessos listados acima.</li>
+    <li>Os vínculos revogados, antes ou durante a suspensão, continuam revogados.</li>
+    <li>Nenhuma sessão anterior volta a funcionar: a pessoa precisa entrar de novo.</li>
+    {% endif %}
+    <li>O ato vai à trilha com o seu nome, a data e o motivo, e não se apaga.</li>
+  </ul>
+</section>
+
+{% if confirmavel %}
+<form method="post" action="{{ acao_do_formulario }}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="confirmar">
+  <p class="campo">
+    <label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-required="true" aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">Por exemplo, o número do processo ou do memorando. Vai à
+      trilha, com o seu nome e a data.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao{% if ato == 'suspender' %} perigoso{% endif %}">{% if ato == "suspender" %}Confirmar a suspensão{% else %}Confirmar a reativação{% endif %}</button>
+    <a href="{% url 'interface:administracao-de-acessos-pessoas' %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% else %}
+<p class="salvar"><a href="{% url 'interface:administracao-de-acessos-pessoas' %}" class="acao">Voltar</a></p>
+{% endif %}
+{% endblock %}

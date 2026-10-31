@@ -93,3 +93,42 @@ class RevogacaoDeVinculo(_SoInclui):
 
     def __str__(self):
         return f"revogação de {self.vinculo_id}"
+
+
+class SuspensaoDePessoa(_SoInclui):
+    """A suspensão global de uma pessoa, com quem, quando e por quê (107, `D-016`, `FR-3149`).
+
+    **Não revoga vínculo nenhum** (`FR-3139`): a pessoa suspensa não tem ator em escopo nenhum, e os
+    vínculos dela ficam vigentes e inertes até a reativação. Aberta enquanto não houver
+    `ReativacaoDePessoa`. O `is_active` da pessoa é o efeito, escrito na mesma transação; a história
+    de quem estava suspenso quando é esta tabela.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    pessoa = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="suspensoes"
+    )
+    suspensa_em = models.DateTimeField()
+    suspensa_por = models.CharField(max_length=255)
+    motivo = models.TextField()
+
+    class Meta:
+        indexes = [models.Index(fields=["pessoa", "suspensa_em"], name="suspensao_pessoa_quando")]
+
+    def __str__(self):
+        return f"suspensão de {self.pessoa_id}"
+
+
+class ReativacaoDePessoa(_SoInclui):
+    """O fim de uma suspensão. Uma por suspensão: a segunda o banco recusa (`FR-3146`)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    suspensao = models.OneToOneField(
+        SuspensaoDePessoa, on_delete=models.PROTECT, related_name="reativacao"
+    )
+    reativada_em = models.DateTimeField()
+    reativada_por = models.CharField(max_length=255)
+    motivo = models.TextField()
+
+    def __str__(self):
+        return f"reativação de {self.suspensao_id}"

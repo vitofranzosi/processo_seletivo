@@ -4,7 +4,7 @@
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a> › <span aria-current="page">Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }} às {{ aviso.solicitado_em|date:"H:i" }}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Aviso de {{ aviso.solicitado_em|date:"d/m/Y" }} às {{ aviso.solicitado_em|date:"H:i" }}</h1>
-<p class="sub">{{ processo.title }} · Edital {{ edital.number }}/{{ edital.year }} · confirmado por {{ aviso.solicitado_por }}</p>
+<p class="sub">{{ processo.title }} · Edital {{ edital.number }}/{{ edital.year }} · confirmado por {% nome_de_pessoa aviso.solicitado_por %}</p>
 
 {% if confirmado is not None %}<p class="sucesso" role="status" tabindex="-1" autofocus>Aviso confirmado para {{ confirmado }} pessoa{{ confirmado|pluralize }}. O envio começa no próximo minuto, aos poucos.</p>{% endif %}
 {% if modelo_salvo %}<p class="sucesso" role="status">O texto foi salvo como o modelo “{{ modelo_salvo }}”.</p>{% endif %}
@@ -33,7 +33,7 @@
   <ul class="contagens-do-aviso">
     {% for item in contagens %}<li><strong>{{ item.quantos }}</strong> — {{ item.rotulo }}</li>{% endfor %}
   </ul>
-  {% if interrompido %}<p class="aviso">Este aviso foi interrompido por {{ aviso.interrupcao.interrompido_por }} em {{ aviso.interrupcao.interrompido_em|date:"d/m/Y" }} às {{ aviso.interrupcao.interrompido_em|date:"H:i" }}. Motivo: {{ aviso.interrupcao.motivo }}</p>{% endif %}
+  {% if interrompido %}<p class="aviso">Este aviso foi interrompido por {% nome_de_pessoa aviso.interrupcao.interrompido_por %} em {{ aviso.interrupcao.interrompido_em|date:"d/m/Y" }} às {{ aviso.interrupcao.interrompido_em|date:"H:i" }}. Motivo: {{ aviso.interrupcao.motivo }}</p>{% endif %}
   {% comment %} Interromper é o ato que protege, e não depende da chave: desligada, ele é o único freio do que sairia ao religá-la dentro da janela (FR-1282). {% endcomment %}
   {% if pode_agir %}
   <p class="acoes">

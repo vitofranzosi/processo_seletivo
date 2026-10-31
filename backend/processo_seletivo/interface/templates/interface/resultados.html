@@ -115,7 +115,7 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
               {% for linha in historico %}
               <li>{{ linha.consequencia }}{% if linha.pontuacao is not None %} · {{ linha.pontuacao }}{% endif %}
                 — {{ linha.motivo }}
-                <span class="ajuda">{{ linha.consolidado_por }} em
+                <span class="ajuda">{% nome_de_pessoa linha.consolidado_por %} em
                   {{ linha.consolidado_em|date:"d/m/Y H:i" }}{% if linha.recurso %}, por decisão no
                   recurso {{ linha.recurso }}{% endif %}{% if linha.vigente %} — <strong>vigente</strong>{% endif %}</span>
               </li>
@@ -129,9 +129,9 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
         Sem Avaliação não há quem avaliou, e a célula diz isso — quem responde pelo desfecho está
         na coluna ao lado, que é a presidência que o constatou (D-1).
         {% endcomment %}
-        <td>{% if resultado.avaliacao_id %}{{ resultado.avaliacao.concluida_por }}<br>
+        <td>{% if resultado.avaliacao_id %}{% nome_de_pessoa resultado.avaliacao.concluida_por %}<br>
           <span class="ajuda">em {{ resultado.avaliacao.concluida_em|date:"d/m/Y H:i" }}</span>{% else %}<span class="ajuda">ninguém: não houve avaliação</span>{% endif %}</td>
-        <td>{{ resultado.consolidado_por }}<br>
+        <td>{% nome_de_pessoa resultado.consolidado_por %}<br>
           <span class="ajuda">em {{ resultado.consolidado_em|date:"d/m/Y H:i" }}</span></td>
         {% comment %}
         A norma é campo do Resultado desde D-1, e não caminho até a Avaliação: no ramo por

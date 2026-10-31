@@ -142,6 +142,11 @@ TABELAS_APPEND_ONLY = (
     "seguranca_identidadeexterna",
     "seguranca_vinculo",
     "seguranca_revogacaodevinculo",
+    # A suspensão e a reativação de pessoa (107, incremento 2). "Quem estava suspenso quando" é a
+    # pergunta da fiscalização, como "quem tinha o papel": reescrever uma suspensão mudaria, sem
+    # rastro, se um ato praticado naquele dia podia ter sido praticado.
+    "seguranca_suspensaodepessoa",
+    "seguranca_reativacaodepessoa",
 )
 
 

@@ -269,6 +269,17 @@ if GESTAO_PROVEDOR_INSTITUCIONAL:
         "o provedor declarado se declara de teste, e não autentica contra o provedor "
         "institucional.",
     )
+    # Os prazos da sessão são decisão do usuário, e não padrão do código (107, `D-010`): a de 30/10
+    # é 480 e 30 minutos **declarados expressamente** em produção (P4), e por isso, com provedor,
+    # produção não sobe sem os dois — o padrão da base não vira valor de produção por omissão.
+    for _prazo in ("GESTAO_SESSAO_DURACAO_MAXIMA_MINUTOS", "GESTAO_SESSAO_INATIVIDADE_MINUTOS"):
+        _valor = os.getenv(_prazo, "").strip()
+        _exigir(
+            _valor.isdigit() and int(_valor) > 0,
+            _prazo,
+            "com a entrada institucional, o prazo da sessão precisa ser declarado, em minutos "
+            "inteiros e positivos (a decisão de 30/10/2026 é 480 e 30).",
+        )
 
 # O *backend* de autenticação é só o institucional (`D-008`). A base já o declara assim; a guarda é
 # para quem acrescentar o `ModelBackend` — usuário e senha nesta aplicação — ou o

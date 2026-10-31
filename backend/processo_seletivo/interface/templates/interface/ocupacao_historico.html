@@ -28,7 +28,7 @@ que ela apurou, e quem audita precisa ver as duas.
 
   <dl class="meta">
     <dt>Emitida em</dt><dd>{{ passo.apuracao.emitida_em|date:"d/m/Y H:i" }}</dd>
-    <dt>Por</dt><dd>{{ passo.apuracao.emitida_por }}</dd>
+    <dt>Por</dt><dd>{% nome_de_pessoa passo.apuracao.emitida_por %}</dd>
   </dl>
   <ul class="resumo" aria-label="Vagas, por esta apuração">
     <li><strong>{{ passo.publicadas }}</strong>Publicadas</li>

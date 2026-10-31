@@ -64,7 +64,7 @@ publicar que conclua o ato"*, e não inventa uma segunda (`FR-486`).
 esta dizia só a quem pedir. Dizer o destinatário sem dizer o pedido entrega meio endereço — quem lê
 sabe a quem se dirigir e não sabe pedir o quê.
 {% endcomment %}
-<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {{ ato_vigente.emitido_por }}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.{% if not pode_divulgar %} Divulgá-lo não é ato seu: peça a alguém com a permissão de publicar resultado que o divulgue.{% endif %}</p>
+<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {% nome_de_pessoa ato_vigente.emitido_por %}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.{% if not pode_divulgar %} Divulgá-lo não é ato seu: peça a alguém com a permissão de publicar resultado que o divulgue.{% endif %}</p>
 {% else %}
 {% comment %}
 Três ausências diferentes, e elas pedem providências diferentes (034, FR-492a, FR-498, FR-504).
@@ -297,7 +297,7 @@ marco" mentiria sobre a raiz de uma cota emitida depois da ampla.
 {% endcomment %}
 <section aria-labelledby="titulo-historico">
   <h2 id="titulo-historico">Histórico de atos{% if recorte_atual %} — {{ recorte_atual.rotulo }}{% endif %}</h2>
-  <ol>{% for ato in historico %}<li><a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato.id %}">{{ ato.emitido_em|date:"d/m/Y H:i" }} — {{ ato.emitido_por }}</a>{% if ato.ato_anterior_id %}: sucede o ato de {{ ato.ato_anterior.emitido_em|date:"d/m/Y H:i" }} — {{ ato.motivo_da_sucessao }}{% else %}: primeiro ato deste recorte{% endif %}</li>{% endfor %}</ol>
+  <ol>{% for ato in historico %}<li><a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato.id %}">{{ ato.emitido_em|date:"d/m/Y H:i" }} — {% nome_de_pessoa ato.emitido_por %}</a>{% if ato.ato_anterior_id %}: sucede o ato de {{ ato.ato_anterior.emitido_em|date:"d/m/Y H:i" }} — {{ ato.motivo_da_sucessao }}{% else %}: primeiro ato deste recorte{% endif %}</li>{% endfor %}</ol>
 </section>
 {% endif %}
 {% endblock %}

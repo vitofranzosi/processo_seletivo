@@ -26,7 +26,7 @@ Ela é lida por `make runserver` a partir do `backend/.env`, e pelo `docker comp
 chamado à mão fora do `make` não lê o `.env` — exporte a variável antes.
 
 **Depois de atualizar o código**, rode o `make preparar` (ou `ps-migrar` no servidor). O
-`provisionar_papeis` passa a informar **44 de 44** tabelas append-only; se o primeiro número vier
+`provisionar_papeis` passa a informar **46 de 46** tabelas append-only (44 com a `106`, e as duas da suspensão de pessoa da `107`); se o primeiro número vier
 `0`, a segunda passada não rodou.
 
 ## O que não fazer
@@ -50,6 +50,27 @@ teste —, as duas entradas convivem na mesma página. Elas não se misturam:
 
 O seletor deixa qualquer pessoa declarar qualquer identidade, inclusive o identificador de uma
 pessoa institucional. É a natureza da demonstração, e é por isso que ela nunca existe em produção.
+
+## As telas de acesso não estão na homologação manual
+
+*Desde a [`107`](../specs/107-gestao-de-acessos/spec.md).* "Acessos da unidade", "Administração de
+acessos", a tela sem acesso, o seletor de unidade da barra e o prazo da sessão são do **modo
+institucional**. O seletor continua com os oito papéis de sempre, e nenhum deles tem as capacidades
+de acesso: quem entra pelo seletor não vê essas telas, e quem monta o endereço à mão recebe a
+recusa. É deliberado — o seletor não muda (`FR-3001` da `106`), e não existe provedor de mentira em
+execução.
+
+Para ver essas jornadas, há **um** caminho, e ele é do ambiente de testes:
+
+```bash
+cd backend && uv sync --extra dev --extra navegador && uv run playwright install chromium
+make test-navegador
+```
+
+Abre um Chromium na tela e percorre as seis jornadas, com o servidor, as pessoas, os vínculos e a
+página do provedor preparados pelos testes. O roteiro está no
+[quickstart da 107](../specs/107-gestao-de-acessos/quickstart.md). Não há como fazer o mesmo à mão
+no ambiente de homologação até o provedor do Ifes de homologação existir.
 
 ## Verificação
 

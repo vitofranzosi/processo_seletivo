@@ -37,7 +37,7 @@ ficou anos sem efeito nenhum.
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
 migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
-— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, são **44** desde a identidade institucional da `106` — e é por isso que a armadilha é o zero,
+— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, são **46** desde a suspensão de pessoa da `107` — e é por isso que a armadilha é o zero,
 e não o total.
 
 **Depois dos três, o `make preparar` sincroniza as Unidades** declaradas em
@@ -181,6 +181,18 @@ envia é `manage.py despachar_avisos`, que em produção roda num timer a cada m
 desenvolvimento, **ninguém roda por você**: rode-o à mão depois de confirmar, e a mensagem sai no
 terminal **do comando**, e não no do `runserver`. A chave `AVISOS_AOS_CANDIDATOS` vem ligada no
 `development` e no `test`, e desligada em produção até a validação de LGPD.
+
+**As jornadas da gestão de acessos (107) rodam num navegador de verdade, e pedem o grupo
+`navegador`.** `uv sync --extra dev --extra navegador` traz o Playwright, e `uv run playwright install
+chromium` o navegador. Sem a biblioteca, `tests/navegador/test_jornadas_de_acesso.py` pula inteiro —
+**um pulado a mais**, como o tokenizer sem o `assistente` —; o CI instala os dois desde a `107`. Os
+casos sobem o `live_server` e uma página de provedor servida pelo próprio teste
+(`tests/navegador/provedor.py`): o adaptador continua o provedor simulado da `106`, e nada disso
+existe fora da suíte. `make test-navegador` os roda com a janela aberta, para assistir. Duas
+armadilhas já pagas: a interceptação do Playwright **não** alcança o destino de um redirecionamento —
+por isso a página é um servidor, e não um `page.route` —; e o ORM chamado com o Playwright ativo
+deixava uma sessão aberta no banco de teste, que travava o `DROP DATABASE` do fim — a fixture do
+navegador fecha as conexões ao sair.
 
 **O piloto do assistente (071) pede três coisas de fora do repositório, e sem elas não chama o
 modelo.** O grupo opcional de dependências (`uv sync --extra dev --extra assistente`), que traz a

@@ -1,0 +1,55 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Confirmar — {{ nivel.titulo }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/acessos.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url nivel.rota %}">{{ navegacao.secao_atual }}</a> › <span aria-current="page">Confirmar</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A confirmação de uma concessão ou de uma revogação (107, `FR-3116` a `FR-3118`).
+
+Pessoa, unidade, papel, alcance e consequência, antes de gravar. O motivo é exigido aqui, no ato, e
+vai à trilha. O envio reconfere tudo no servidor: o que a tela mostra é o que o servidor leu, e não
+o que o formulário anterior dizia. A recusa volta a esta mesma tela, com a frase do domínio.
+{% endcomment %}
+<h1>{% if ato == "conceder" %}Confira antes de conceder{% else %}Confira antes de revogar{% endif %}</h1>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+
+<section aria-labelledby="dados-titulo" class="consequencias">
+  <h2 id="dados-titulo">{% if ato == "conceder" %}O que será concedido{% else %}O que será revogado{% endif %}</h2>
+  <dl class="dados-do-ato">
+    <dt>Pessoa</dt><dd><strong>{{ pessoa.nome }}</strong>{% if pessoa.email %} <span class="detalhe-da-pessoa">{{ pessoa.email }}</span>{% endif %}</dd>
+    <dt>Unidade</dt><dd>{{ unidade }}</dd>
+    <dt>Papel</dt><dd>{{ papel.nome }}</dd>
+    <dt>Alcance</dt><dd>{{ papel.alcance }}</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="consequencia-titulo" class="consequencias{% if ato == 'revogar' %} irreversivel{% endif %}">
+  <h2 id="consequencia-titulo">Consequência</h2>
+  <ul>{% for frase in consequencias %}<li>{{ frase }}</li>{% endfor %}</ul>
+</section>
+
+{% if confirmavel %}
+<form method="post" action="{{ acao_do_formulario }}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="confirmar">
+  {% if ato == "conceder" %}
+  <input type="hidden" name="pessoa" value="{{ pessoa.identificador }}">
+  <input type="hidden" name="papel" value="{{ papel.chave }}">
+  {% if nivel.institucional %}<input type="hidden" name="unidade" value="{{ escopo }}">{% endif %}
+  {% endif %}
+  <p class="campo">
+    <label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-required="true" aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">Por exemplo, o número da portaria ou do memorando. Vai à
+      trilha, com o seu nome e a data.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao{% if ato == 'revogar' %} perigoso{% endif %}">{% if ato == "conceder" %}Confirmar a concessão{% else %}Confirmar a revogação{% endif %}</button>
+    <a href="{% url nivel.rota %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% else %}
+<p class="salvar"><a href="{% url nivel.rota %}" class="acao">Voltar</a></p>
+{% endif %}
+{% endblock %}

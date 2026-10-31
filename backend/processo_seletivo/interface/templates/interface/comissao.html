@@ -65,14 +65,17 @@ que não há membros (`FR-1788`); o estado vazio leva à inclusão, logo abaixo.
   {% for item in membros %}
   <li>
     <div class="cabeca">
-      <strong class="pessoa">{{ item.membro.display_label|default:item.membro.identity_subject }}</strong>
+      <strong class="pessoa">{% rotulo_ou_nome item.membro.display_label item.membro.identity_subject %}</strong>
       {% comment %}
       Sem diretório institucional, o identificador **é** o que dá acesso — e por isso ele aparece.
       Mas quando ele repete o nome ao lado ("ana ana"), a etiqueta gasta a atenção sem informar, e
       some. Volta assim que houver nome de exibição distinto, que é quando ela desempata.
       {% endcomment %}
-      {% if item.membro.display_label and item.membro.display_label != item.membro.identity_subject %}
-      <span class="codigo">{{ item.membro.identity_subject }}</span>{% endif %}
+      {% comment %} O identificador ao lado do rótulo, para distinguir dois rótulos iguais — o da
+         demonstração e o que se digitou. O da pessoa institucional (`pessoa-<uuid>`) não ajuda
+         ninguém a distinguir, e o rótulo já é o nome dela (107, revisão do #346). {% endcomment %}
+      {% if item.membro.display_label and item.membro.display_label != item.membro.identity_subject and not item.membro.identity_subject|e_pessoa_institucional %}
+      <span class="codigo">{% nome_de_pessoa item.membro.identity_subject %}</span>{% endif %}
       <span class="situacao s-{{ item.membro.funcao }}">
         {% if item.membro.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
     </div>
@@ -93,7 +96,7 @@ que não há membros (`FR-1788`); o estado vazio leva à inclusão, logo abaixo.
        `details` é o mesmo recurso nativo que o Processo e o portal já usam — abre pelo teclado e
        o resumo nomeia a pessoa, para quem navega sem ver a lista. {% endcomment %}
     <details class="gerir-membro">
-      <summary>Gerir {{ item.membro.display_label|default:item.membro.identity_subject }}</summary>
+      <summary>Gerir {% rotulo_ou_nome item.membro.display_label item.membro.identity_subject %}</summary>
 
       <form method="post" class="linha-de-acoes">
         {% csrf_token %}
@@ -109,7 +112,7 @@ que não há membros (`FR-1788`); o estado vazio leva à inclusão, logo abaixo.
           <option value="PRESIDENTE" {% if item.membro.funcao == "PRESIDENTE" %}selected{% endif %}>Presidente</option>
         </select>
         <button type="submit" class="acao"
-                aria-label="Alterar a função de {{ item.membro.display_label|default:item.membro.identity_subject }}">
+                aria-label="Alterar a função de {% rotulo_ou_nome item.membro.display_label item.membro.identity_subject %}">
           Alterar função</button>
       </form>
 
@@ -120,7 +123,7 @@ que não há membros (`FR-1788`); o estado vazio leva à inclusão, logo abaixo.
         <input type="hidden" name="acao" value="remover">
         {# UX-003: o nome acessível diz de onde a pessoa sai — da comissão inteira, e não de uma Etapa. #}
         <button type="submit" class="acao perigoso"
-                aria-label="Remover {{ item.membro.display_label|default:item.membro.identity_subject }} da comissão">
+                aria-label="Remover {% rotulo_ou_nome item.membro.display_label item.membro.identity_subject %} da comissão">
           Remover da comissão</button>
       </form>
     </details>

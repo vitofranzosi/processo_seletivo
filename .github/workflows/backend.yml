@@ -63,7 +63,11 @@ jobs:
       # O grupo `assistente` (071) traz a `tokenizers`: sem ela, o teste da contagem real de tokens
       # pula, e o controle que impede o corte silencioso do contexto fica sem verificação contínua.
       # O teste monta um tokenizer mínimo, e não baixa nada.
-      - run: uv sync --extra dev --extra assistente --locked
+      # O grupo `navegador` (107) traz o Playwright, e o passo seguinte, o Chromium: sem eles, as
+      # jornadas da gestão de acessos pulam, e a prova pelo navegador fica só na máquina de quem a
+      # rodou. `--with-deps` instala as bibliotecas do sistema que o Chromium pede no Ubuntu.
+      - run: uv sync --extra dev --extra assistente --extra navegador --locked
+      - run: uv run playwright install --with-deps chromium
       - run: uv run ruff check .
       # O `check` não olha formatação: sem este passo a divergência cresce sem sinal —
       # foi assim que a árvore chegou a 101 arquivos fora de formato antes de alguém rodar

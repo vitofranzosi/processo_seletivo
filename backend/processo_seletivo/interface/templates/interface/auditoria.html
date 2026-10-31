@@ -35,7 +35,7 @@ que foi concluído vive no registro do domínio, e é consultável em página pr
       <option value="">Todos</option>
       {% for membro in avaliadores_da_etapa %}
       <option value="{{ membro.identity_subject }}" {% if membro.identity_subject == avaliador_filtro %}selected{% endif %}>
-        {% if membro.display_label %}{{ membro.display_label }} — {% endif %}{{ membro.identity_subject }}</option>
+        {% if membro.display_label %}{{ membro.display_label }} — {% endif %}{% nome_de_pessoa membro.identity_subject %}</option>
       {% endfor %}
     </select>
   </p>
@@ -83,7 +83,7 @@ que foi concluído vive no registro do domínio, e é consultável em página pr
       <option value="">Todas</option>
       {% for pessoa in pessoas_da_trilha %}
       <option value="{{ pessoa.subject }}" {% if pessoa.subject == pessoa_filtro %}selected{% endif %}>
-        {% if pessoa.rotulo %}{{ pessoa.rotulo }} — {% endif %}{{ pessoa.subject }}</option>
+        {% if pessoa.rotulo %}{{ pessoa.rotulo }} — {% endif %}{% nome_de_pessoa pessoa.subject %}</option>
       {% endfor %}
     </select>
   </p>
@@ -115,7 +115,7 @@ que foi concluído vive no registro do domínio, e é consultável em página pr
       {% if registro.sobre %}<span class="alvo">{{ registro.sobre }}</span>{% endif %}
     </div>
     <div class="corpo">
-      <span class="ator">por <strong>{{ registro.ator }}</strong></span>
+      <span class="ator">por <strong>{% nome_de_pessoa registro.ator %}</strong></span>
       {% if registro.permissao %}
       <span class="base">autorizado por <strong>{{ registro.permissao|base_de_autorizacao }}</strong></span>
       {% endif %}

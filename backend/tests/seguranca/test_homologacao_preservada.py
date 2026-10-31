@@ -141,6 +141,9 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
     from processo_seletivo.seguranca.papeis import TABELAS_APPEND_ONLY
 
     novas = ("seguranca_identidadeexterna", "seguranca_vinculo", "seguranca_revogacaodevinculo")
-    assert TABELAS_APPEND_ONLY[-3:] == novas
-    assert len(TABELAS_APPEND_ONLY) == 44
-    assert len(set(TABELAS_APPEND_ONLY)) == 44
+    # A 107 acrescentou duas depois das da 106 — a suspensão e a reativação —, e a contagem sobe
+    # junto, que é o que este guardião existe para cobrar (`SC-1001`).
+    da_107 = ("seguranca_suspensaodepessoa", "seguranca_reativacaodepessoa")
+    assert TABELAS_APPEND_ONLY[-5:] == novas + da_107
+    assert len(TABELAS_APPEND_ONLY) == 46
+    assert len(set(TABELAS_APPEND_ONLY)) == 46

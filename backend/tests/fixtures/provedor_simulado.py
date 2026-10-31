@@ -19,6 +19,11 @@ from processo_seletivo.seguranca.autenticacao import IdentidadeAutenticada
 CAMINHO = "tests.fixtures.provedor_simulado.ProvedorSimulado"
 NOME = "simulado"
 
+# Onde o navegador é mandado para autenticar. Nos testes de cliente ninguém segue o endereço; os de
+# navegador (107) o trocam pelo da página de autorização que eles mesmos servem, e que também mora
+# no código de teste (`tests/navegador/provedor.py`). `.invalid` não resolve em rede nenhuma.
+ENDERECO_DE_AUTORIZACAO = "https://provedor.invalid/autorizar"
+
 # Os bilhetes emitidos e ainda não usados, e o estado da última ida. Do processo, e não da sessão:
 # o provedor é outra parte, e não lê a sessão do GPS.
 _BILHETES = {}
@@ -47,8 +52,10 @@ class ProvedorSimulado:
 
     def iniciar(self, request, *, retorno, estado):
         _IDAS.append({"retorno": retorno, "estado": estado})
-        # `state`, como um provedor OIDC: é o nome que a volta usa, e o que a gestão lê.
-        return redirect(f"https://provedor.invalid/autorizar?{urlencode({'state': estado})}")
+        # `state` e `redirect_uri`, como um provedor OIDC: o estado é o nome que a volta usa, e o
+        # que a gestão lê; o retorno é para onde a página de autorização do navegador (107) manda.
+        consulta = urlencode({"state": estado, "redirect_uri": retorno})
+        return redirect(f"{ENDERECO_DE_AUTORIZACAO}?{consulta}")
 
     def concluir(self, request, *, estado):
         return _BILHETES.pop(request.GET.get("bilhete", ""), None)
