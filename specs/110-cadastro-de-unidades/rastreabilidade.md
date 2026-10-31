@@ -57,8 +57,8 @@ linhas de FR-3339 a FR-3343, SC-1048 e EC-16 a EC-18 acrescentadas.
 | FR-3339 (nenhuma tela concede papel institucional) | D-002 | T019 | `PAP::test_a_aplicacao_nao_concede_o_papel_do_registro` |
 | FR-3340 (suspensão de papel institucional só pela implantação) | D-002 | T019 | `PAP::test_so_a_implantacao_suspende_o_administrador_do_registro` |
 | FR-3341 (quem só tem o papel do registro: escopo institucional, barra, recusa nos acessos) | D-002 | T040, T042 | `TEL::test_os_dois_papeis_institucionais_separados_e_juntos` |
-| FR-3342 (provedor de homologação sobre o simulado, só no teste; produção recusa; sem criptografia própria) | D-018 | T010–T012 | `HOM::test_producao_recusa_o_provedor_no_boot`, `::test_producao_recusa_o_provedor_em_execucao` |
-| FR-3343 (só as pessoas do provedor; bilhete de uso único; a gestão confere o estado) | D-018 | T010, T012 | `HOM::test_a_pagina_lista_so_as_pessoas_do_provedor`, `::test_escolher_entra_no_escopo_dos_vinculos`, `::test_o_bilhete_nao_serve_duas_vezes`, `::test_retorno_sem_estado_e_recusado` |
+| FR-3342 (provedor de homologação sobre o simulado, só no teste; produção recusa; sem criptografia própria) | D-018 | T010–T012 | `test_configuracao_producao.py::test_provedor_institucional_nao_implantavel_impede_a_inicializacao[tests.homologacao.provedor.ProvedorDeHomologacao]`, `::test_o_provedor_de_homologacao_copiado_para_fora_de_tests_ainda_e_recusado`; `HOM::test_o_provedor_e_o_simulado_e_se_declara_de_teste`, `::test_sob_a_marca_de_producao_o_provedor_nao_existe` (nomes reais, incremento B) |
+| FR-3343 (só as pessoas do provedor; bilhete de uso único; a gestão confere o estado) | D-018 | T010, T012 | `HOM::test_a_pagina_lista_so_as_pessoas_do_provedor`, `::test_escolher_entra_no_escopo_dos_vinculos`, `::test_sem_pessoa_cadastrada_a_pagina_diz_como_cadastrar`, `::test_o_bilhete_nao_serve_duas_vezes_nem_o_da_outra_linha`, `::test_retorno_sem_o_estado_da_ida_e_recusado` (nomes reais, incremento B) |
 
 ## Critérios de sucesso
 

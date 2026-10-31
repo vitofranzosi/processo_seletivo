@@ -104,9 +104,11 @@ continua em 503 até o SSO.
    ```
 
    e, para conceder acesso à unidade nova durante o roteiro, o mesmo com o papel padrão, a outra
-   identidade sintética ou à mesma.
+   identidade sintética ou à mesma (`--adicional` a partir da segunda pessoa com o mesmo papel).
+   **Antes do incremento C** a opção `--papel` não existe: o ambiente serve à validação das telas
+   da `107` com o papel padrão, e o roteiro das unidades espera C.
 3. A pessoa abre `/gestao/`, escolhe a entrada institucional, escolhe a si mesma na página do
-   provedor, e segue o roteiro sem ajuda: cadastrar `serra` conferindo a prévia; editar o nome e o
+   provedor — que lista só as pessoas cadastradas com `--provedor homologacao` —, e segue o roteiro sem ajuda: cadastrar `serra` conferindo a prévia; editar o nome e o
    canal; desativar, lendo as consequências; reativar; abrir a ficha e ler o histórico.
 4. Gerar um documento de `serra` (um Edital publicado pelo helper dos testes) e comparar o cabeçalho
    com a prévia.

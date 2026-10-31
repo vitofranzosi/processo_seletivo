@@ -991,6 +991,31 @@ homologação com a **mesma `DJANGO_SECRET_KEY`** de produção validaria compro
 não reuse. Um piloto com a gestão operável antes do B-1 exigiria settings de desenvolvimento
 expostas numa rede, e essa é uma decisão de governança, fora do escopo deste documento.
 
+#### Homologação funcional antes do SSO — outro ambiente, e não esta VM
+
+Para que pessoas da equipe validem as telas da gestão antes do B-1, há um **quarto ambiente**, ao
+lado dos três da tabela, e **não** no lugar da homologação: a VM de homologação continua com as
+settings de produção e em 503, porque o valor dela é ensaiar esta receita. A decisão e a comparação
+com o seletor estão na D-017 e na D-018 da spec `110`; o roteiro é o G do quickstart dela.
+
+| Item | Homologação funcional |
+|---|---|
+| Onde | a máquina de quem conduz a sessão, ou um *host* próprio; **nunca** a VM de homologação |
+| Como sobe | o `compose.yaml` do repositório (imagem de desenvolvimento, `runserver`, um processo só) |
+| Settings | `config.settings.development`, sem mudança |
+| Identidade | no `backend/.env` do ambiente: `INTERFACE_SELETOR_IDENTIDADE=false` e `GESTAO_PROVEDOR_INSTITUCIONAL=tests.homologacao.provedor.ProvedorDeHomologacao` |
+| Quem entra | as pessoas que a implantação cadastrar com `--provedor homologacao`, pelos comandos de administração institucional; a página do provedor lista só elas |
+| Banco | novo, só com dado sintético; nunca cópia de produção |
+| Segredos | `DJANGO_SECRET_KEY` gerada para ele, diferente da de produção e da desta VM |
+| Perímetro | só `localhost`, até o usuário decidir a exposição (P-6 da spec `110`). Aprovada a rede: rede fechada (VPN ou *firewall* restrito a quem valida) **e** um *proxy* com autenticação básica, uma credencial por pessoa |
+| *Proxy* | **não** termina TLS: as settings de desenvolvimento não confiam no `X-Forwarded-Proto`, e a conferência de origem do CSRF recusaria todo POST; o transporte cifrado é o da VPN. Preserva o `Host`, e `DJANGO_ALLOWED_HOSTS` traz o nome usado |
+| Vida | sobe para a sessão de validação; o banco se descarta depois |
+
+**O provedor não é autenticação.** Dentro do perímetro, quem chega à página escolhe como qual
+pessoa cadastrada entrar. A barreira é o perímetro e o dado sintético. Em produção ele não existe:
+`production.py` recusa subir com adaptador do pacote `tests.` e com adaptador que se declara de
+teste, e a gestão o recusa em execução sob a marca de produção.
+
 ### 10.4 Configurar, verificar e testar o correio e o Ollama
 
 O caminho inteiro, do `app.env` ao correio e ao Ollama comprovados, só com o que a release já
