@@ -74,6 +74,9 @@ CAMPOS_LEGIVEIS = {
         "nome": "Nome",
         "cabecalho": "Cabeçalho",
         "local": "Local",
+        # Desde a 109 a sincronização grava também o canal, e sem ele aqui a alteração só do canal
+        # aparecia na trilha sem nenhum dado mudado. É o canal que o candidato vê: público.
+        "atendimento": "Canal de atendimento",
         "ativa": "Situação",
     },
     "AutoridadeHabilitada": {
