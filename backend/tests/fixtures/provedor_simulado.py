@@ -41,11 +41,6 @@ def emitir(identificador, *, nome="", email="", provedor=NOME):
     return bilhete
 
 
-def descartar(bilhete):
-    """Retira um bilhete emitido e não usado: a homologação descarta os da mesma página."""
-    _BILHETES.pop(bilhete, None)
-
-
 def ultima_ida():
     return _IDAS[-1]
 

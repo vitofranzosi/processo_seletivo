@@ -20,8 +20,8 @@ a Reitoria como unidades, e do que rever antes de expandir. Responde às sete qu
 > usuário. Diferenças em relação ao que está escrito abaixo, depois da revisão final da spec no
 > mesmo dia: a semente se aplica **só a registro vazio**, e não a "código ausente" — inserir por
 > código ausente mantinha o arquivo como segundo caminho de criação (decisão um do research da
-> `110`); a permissão vai a um **papel institucional próprio**, concedido só pela implantação, e
-> não ao de acessos (decisão dois); o nome anterior do comando fica como apelido (decisão três); a
+> `110`); a permissão vai ao papel institucional existente, renomeado Administrador institucional,
+> com verificação de quem já o tem antes do deploy (decisão dois); o nome anterior do comando fica como apelido (decisão três); a
 > validação por pessoas antes do SSO usa um adaptador de homologação só no código de teste
 > (decisões dezessete e dezoito); e a entrega é em três PRs, com a troca da fonte junto das telas
 > (decisão dezenove).

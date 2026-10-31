@@ -61,8 +61,14 @@ Os 14 pulados são os mesmos do incremento A.
 - O caminho do roteiro G funciona de ponta a ponta: a pessoa cadastrada por
   `conceder_administracao_institucional --provedor homologacao` aparece na página, só ela, e
   escolhê-la entra no escopo institucional com a permissão do vínculo (FR-3343).
-- O bilhete escolhido não serve de novo, e os outros da mesma página são descartados; o retorno
-  sem o estado da ida é recusado, como com qualquer adaptador (FR-3343, FR-3023 da `106`).
+- O bilhete escolhido não serve de novo, e o retorno sem o estado da ida é recusado, como com
+  qualquer adaptador (FR-3343, FR-3023 da `106`).
+- **Simplificado depois, no mesmo dia**: saiu o descarte dos bilhetes das outras linhas da página.
+  Quem está na página já escolhe qualquer pessoa, e o ambiente é local, sintético e descartável — o
+  descarte não protegia nada. Medido de novo só o que essa mudança alcança:
+  `tests/homologacao`, `tests/test_configuracao_producao.py`, `tests/seguranca` e os três guardiões
+  de documentação, isolados contra PostgreSQL — **1346 passando**. A mudança é só de código de
+  teste; a suíte inteira medida acima não foi repetida.
 - A suíte de segurança da `106` e da `107` passa sem mudança (`tests/seguranca`).
 
 **A VM de homologação não mudou**: nenhuma settings, nenhum roteiro. O ambiente novo está no §10.3

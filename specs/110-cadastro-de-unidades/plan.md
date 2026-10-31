@@ -6,16 +6,16 @@
 [estratégia de migração e reversão](migracao.md) e a
 [revisão arquitetural de 30/10](../../doc/revisao-arquitetural-multiunidade-2026-10-30.md).
 **Aprovação**: o pedido de 31/10/2026 autoriza especificar e planejar; a revisão final do mesmo dia
-reviu D-002, D-003 e D-017 e acrescentou D-018 e D-019. Nenhum dos dois autoriza implementar nem
-fazer merge.
+reviu D-002, D-003 e D-017 e acrescentou D-018 e D-019; a simplificação do mesmo dia devolveu a
+D-002 ao papel institucional existente. A implementação segue por incremento, sem merge automático.
 
 ## Summary
 
 O registro de Unidades passa a ser escrito pela aplicação, e não mais pelo arquivo. Quatro casos de
 uso no `unidades` — registrar, alterar, desativar, reativar —, com conferência que não grava,
 validação única no domínio (D-005), trava e versão conferida (D-007), e evento no escopo da unidade
-com os nomes que a trilha da `108` já lê (D-008). Uma permissão nova, num papel institucional
-próprio concedido só pela implantação (D-002). Cinco telas num módulo próprio da `interface`
+com os nomes que a trilha da `108` já lê (D-008). Uma permissão nova no papel institucional que já
+existe, renomeado Administrador institucional (D-002). Cinco telas num módulo próprio da `interface`
 (D-011), com prévia pelas linhas do compositor (D-010) e histórico pela tradução da `108` (D-009). O
 comando de sincronização vira semente, que só se aplica a registro vazio, com o nome anterior como
 apelido (D-001, D-003, D-004). Um par de gatilhos torna imutável o escopo de Processo e de Edital
@@ -39,7 +39,7 @@ Feita em 31/10/2026 antes de especificar, sobre a `main` em `77f35fd3` com os do
 | #348 (`108`) | **integrado** em `cf048007`, com as correções da revisão de código (`c76dca30`) | `linhas(registros, *, nome_da_unidade)` sem mudança de assinatura; a trilha deixou de ser oferecida no escopo institucional — a ficha desta feature continua com a leitura própria (D-009) |
 | #349 (`109`) | **integrado** em `81ce6e94`, depois de integrar a `108` | `Unidade.atendimento`, a validação em `sincronizacao.validar` e `identificacao.py` como descritos abaixo |
 | integração das duas | `25460040` | o rótulo do canal em `CAMPOS_LEGIVEIS["Unidade"]` **já existe**: a tarefa que o acrescentaria saiu, e ficou a conferência |
-| comandos de implantação da `107` | `conceder_`, `retirar_` e `substituir_administracao_institucional`, todos com o papel fixo no código de aplicação | recebem `--papel` (D-002) |
+| comandos de implantação da `107` | `conceder_`, `retirar_` e `substituir_administracao_institucional`, com o papel fixo | **não mudam** (D-002) |
 | `processos/migrations` | última é a `0004`; nenhuma branch aberta cria `0005` em 31/10 | o incremento A cria a `0005` |
 
 **Contratos de que esta feature depende**, conferidos na `main` em `81ce6e94`:
@@ -69,15 +69,15 @@ a primeira tarefa dele reconfere os contratos acima; se um deles mudou, a spec v
 `navegador`, já instalado pela `107`), só para teste.
 
 **Storage**: PostgreSQL. **Uma migration**, `processos/0005`, com os dois gatilhos (D-013), no
-incremento A. Nenhuma em `unidades` nem em `seguranca`: o papel novo é catálogo, e `Vinculo.papel` é
+incremento A. Nenhuma em `unidades` nem em `seguranca`: a permissão é catálogo, e `Vinculo.papel` é
 texto. Nenhuma tabela append-only nova: o `M` do `provisionar_papeis` continua **46**.
 
 **Testing**: pytest contra PostgreSQL; os gatilhos e a recusa de privilégio só se observam em casos
 transacionais com a role de runtime, como os da `060`. Jornada em `tests/navegador/`.
 
 **Target Platform**: `/gestao/administracao-de-unidades` e as quatro rotas filhas; o comando
-`semear_unidades` e o apelido `sincronizar_unidades`; a opção `--papel` dos três comandos de
-implantação; o adaptador de homologação, só fora de produção.
+`semear_unidades` e o apelido `sincronizar_unidades`; o adaptador de homologação, só fora de
+produção.
 
 **Performance Goals**: as telas leem uma unidade por chave e a lista inteira (dezenas de linhas);
 o histórico é uma consulta mais a tradução da `108`, que tem custo constante por tipo. As telas que
@@ -108,9 +108,10 @@ de vocabulário e a de acessibilidade valem para as telas novas.
 `060`) e uma opção de exportação no comando, que só serve à reversão (D-016).
 
 **Reavaliação depois do desenho**: o desenho não acrescentou entidade, serviço nem dependência. Um
-ponto mereceu segunda leitura, e mudou na revisão final: a versão anterior ampliava o papel
-institucional de acessos, o que tocava o princípio III por ampliar privilégio no deploy, sem ato. O
-papel próprio da D-002 cumpre o menor privilégio sem estrutura de autorização nova. O que falta —
+ponto mereceu segunda leitura, e mudou duas vezes: ampliar o papel institucional toca o princípio
+III quando amplia privilégio real no deploy, sem ato. Um papel próprio foi proposto e recusado por
+falta de exigência institucional; o que resolve o risco é o passo 0 da migração, que identifica quem
+tem o papel e exige autorização expressa antes do deploy (D-002). O que falta —
 quem audita o institucional — é a P-4, de governança, e não violação. O adaptador de homologação
 (D-018) também mereceu leitura pelo princípio III: é uma subclasse do provedor simulado, não muda
 o contrato da `106`, não traz criptografia própria, e produção o recusa pelas duas barreiras que já
@@ -142,10 +143,9 @@ specs/110-cadastro-de-unidades/
 backend/
 ├── Makefile                                           # alvo `unidades` → semear_unidades
 ├── processo_seletivo/
-│   ├── seguranca/acessos.py                           # o papel `administrador-de-unidades` (D-002)
-│   ├── seguranca/application/acessos.py               # papel institucional recebido; recusa pela tela de todo papel institucional
-│   ├── seguranca/application/suspensao.py             # suspensão só pela implantação para todo papel institucional
-│   ├── seguranca/management/commands/{conceder,retirar,substituir}_administracao_institucional.py  # `--papel`
+│   ├── seguranca/acessos.py                           # `unidade:administrar` e o rótulo novo do papel (D-002)
+│   ├── seguranca/application/acessos.py               # o nome novo nas recusas
+│   ├── seguranca/management/commands/*_administracao_institucional.py  # o nome novo nas ajudas
 │   ├── unidades/
 │   │   ├── domain/registro.py                         # NOVO: a regra de validação (D-005)
 │   │   ├── domain/nomes.py                            # permissão, recusas novas
@@ -170,7 +170,7 @@ backend/
 ├── tests/
 │   ├── homologacao/provedor.py                        # NOVO: subclasse do provedor simulado (D-018)
 │   ├── homologacao/test_entrada_de_homologacao.py     # NOVO: as recusas de produção e a entrada
-│   ├── seguranca/test_papel_do_registro.py            # NOVO: `--papel`, a recusa da tela, a suspensão
+│   ├── seguranca/test_papel_institucional_administra_unidades.py  # NOVO: as duas permissões e o rótulo
 │   ├── unidades/test_semente.py                       # substitui test_sincronizacao.py
 │   ├── unidades/test_regra_da_unidade.py              # NOVO
 │   ├── unidades/test_administrar_unidades.py          # NOVO
@@ -218,7 +218,7 @@ Três incrementos, cada um num PR, com a suíte verde (D-019):
 | 3 | Permanece no banco sem estar no JSON | `test_semente.py::test_unidade_fora_do_arquivo_permanece` |
 | 4 | Reinicialização não altera nem remove | `test_semente.py::test_a_inicializacao_nao_altera_o_registro`, `test_os_roteiros_chamam_a_semente` |
 | 5 | Nome e atendimento não revertidos pelo deploy | `test_semente.py::test_a_semente_nao_desfaz_a_tela` |
-| 6 | Sem `unidade:administrar` não modifica | `authorization/test_administrar_unidades.py` (matriz de papéis, inclusive o Administrador institucional de acessos sem o papel do registro; demonstração; escopo de unidade; envio forjado); `seguranca/test_papel_do_registro.py` (a tela não concede o papel) |
+| 6 | Sem `unidade:administrar` não modifica | `authorization/test_administrar_unidades.py` (matriz de papéis; demonstração; escopo de unidade; envio forjado); `seguranca/test_papel_institucional_administra_unidades.py` (a tela não concede o papel) |
 | 7 | Código imutável | `test_administrar_unidades.py::test_o_codigo_enviado_na_alteracao_e_ignorado`; regressão `test_o_codigo_da_unidade_nao_muda` da `060` |
 | 8 | Escopo de Processo e Edital imutável no banco | `integration/test_escopo_imutavel.py` |
 | 9 | Desativar impede novos e preserva existentes | `test_administrar_unidades.py::test_desativada_nao_recebe_processo_e_conduz_o_existente` |
@@ -243,9 +243,8 @@ Três incrementos, cada um num PR, com a suíte verde (D-019):
 | Ambiente de homologação funcional exposto | quem passa pelo perímetro escolhe como quem entrar | só `localhost` até a P-6; depois, rede fechada e autenticação básica no *proxy* (D-018); nunca a VM de homologação; só dado sintético |
 | *Proxy* HTTPS diante das settings de desenvolvimento | a conferência de origem do CSRF recusa todo POST | o *proxy* não termina TLS; o transporte cifrado é a VPN (D-018) |
 | A troca da fonte entrar sem o mecanismo novo | ambiente que usa unidade sem como cadastrá-la | a troca e as telas no mesmo PR (D-019) |
-| Ninguém receber o papel do registro | a tela existe e recusa todos | é o estado seguro; a designação é a P-5 |
-| Concessão do papel do registro pela tela, por engano de código | o poder de mudar o registro sai do ato de implantação | `_autoridade` recusa todo papel institucional; teste dedicado (FR-3339) |
-| Reverter para uma release que não conhece o papel do registro | vínculos com papel desconhecido | `permissoes_dos_papeis` ignora papel desconhecido: não dá permissão nenhuma; ver a [migração](migracao.md) |
+| A ampliação do papel chegar a quem já o tem, sem ato | quem foi designado só para acessos passa a mudar cabeçalhos | passo 0 da [migração](migracao.md): sem vínculo vigente, nada a fazer; com algum, autorização expressa antes do deploy (D-002, P-5) |
+| A tela passar a conceder o papel institucional | o poder sai do ato de implantação | a regra da `106` não muda; teste de regressão (FR-3339) |
 | Testes de banco em paralelo | a semente trava por *advisory lock*, que é por banco; os papéis de conformidade são do cluster | cada worker tem o seu banco; T026 não roda `provisionar_papeis` nem `migrate` dentro do caso |
 | A troca da moldura com a segunda unidade ativa surpreender o candidato | mensagens e telas passam a dizer "Ifes" | aviso na confirmação (FR-3330); a decisão é a P-1 |
 

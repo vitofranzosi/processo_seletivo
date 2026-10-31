@@ -49,8 +49,8 @@ mudado depois de criado, por uma alteração direta, sem que nada recuse.
 **Entra:**
 
 - o banco como fonte oficial, e o arquivo como semente que só se aplica a um registro vazio;
-- a permissão `unidade:administrar`, num papel institucional próprio — o Administrador do registro
-  de unidades —, concedido só pela implantação, como o de acessos;
+- a permissão `unidade:administrar`, no papel institucional que já existe, que passa a se chamar
+  Administrador institucional;
 - consultar, cadastrar, editar, desativar e reativar unidade pela gestão, com prévia do cabeçalho,
   motivo, confirmação e histórico;
 - a proteção, no banco, do escopo de Processo e de Edital;
@@ -74,21 +74,23 @@ Aprovadas pelo usuário no pedido, e tomadas aqui como premissa:
 
 1. O PostgreSQL é a fonte oficial do cadastro de unidades.
 2. O `unidades.json` fica só como semente de instalação, sem autoridade sobre registro existente.
-3. Quem administra é ~~o Administrador institucional de acessos~~ **um papel institucional
-   próprio, o Administrador do registro de unidades** (revista em 31/10, abaixo), pela permissão nova
-   `unidade:administrar`.
+3. Quem administra é o Administrador institucional — o papel da `106` e da `107`, renomeado —, pela
+   permissão nova `unidade:administrar`.
 4. Nenhuma unidade altera o próprio cadastro nesta versão.
 5. Cadastro, alteração, desativação e reativação exigem motivo e trilha.
 6. A Reitoria pode ser cadastrada como unidade emissora. Supervisão transversal fica fora.
 7. Unidade não se exclui, e código não muda.
 8. As publicações históricas continuam imutáveis.
 
-**A decisão 3 foi revista** na revisão final de 31/10, a pedido de reavaliá-la por menor
-privilégio: pôr a permissão no papel de acessos ampliaria em silêncio, no deploy, o poder de quem foi
-nomeado só para conceder acessos. A comparação está na D-002 do [research](research.md). **O usuário
-confirmou a revisão no mesmo dia**, com duas regras que esta spec já cumpre: nenhum administrador
-existente recebe o privilégio novo automaticamente, e `sincronizar_unidades` fica, por ora, como
-apelido compatível.
+**A decisão 3 passou por duas revisões em 31/10, e voltou ao papel existente.** Um papel próprio
+para o registro foi proposto por menor privilégio e recusado pelo usuário: não há exigência
+institucional que peça a separação, e ela custaria um segundo papel e um segundo mecanismo de
+designação. O que ficou da revisão é a regra de que **nenhum privilégio real se amplia em
+silêncio**: antes do deploy, a migração verifica quem já tem o papel e pede autorização expressa se
+houver alguém (D-002). E `sincronizar_unidades` fica, por ora, como apelido compatível.
+
+**Regra fixada pelo usuário para o GPS**: toda abstração, papel, tabela ou mecanismo novo precisa
+resolver um problema concreto, e não uma possibilidade futura.
 
 ---
 
@@ -108,11 +110,10 @@ Os contratos foram reconferidos na `main` em `81ce6e94` (§Verificação de depe
 
 ### User Story 1 — Cadastrar uma unidade pela aplicação (Priority: P1)
 
-O Administrador do registro de unidades recebe da Reitoria o pedido de incorporar o Campus Serra.
-Ele abre "Unidades", escolhe "Cadastrar unidade", informa código, sigla, nome, as linhas do
-cabeçalho, o local, o canal de atendimento e o motivo, confere a prévia do cabeçalho como o
-documento oficial o imprimirá e confirma. Na requisição seguinte, o Administrador institucional de
-acessos — a mesma pessoa, se acumular os dois papéis — concede o Administrador de acessos da nova
+O Administrador institucional recebe da Reitoria o pedido de incorporar o Campus Serra. Ele abre
+"Unidades", escolhe "Cadastrar unidade", informa código, sigla, nome, as linhas do cabeçalho, o
+local, o canal de atendimento e o motivo, confere a prévia do cabeçalho como o documento oficial o
+imprimirá e confirma. Na requisição seguinte, ele concede o Administrador de acessos da nova
 unidade, e a unidade passa a operar — sem commit, PR ou deploy.
 
 **Why this priority**: é o critério de sucesso do pedido.
@@ -122,14 +123,14 @@ Administrador de acessos; criar um Processo como gestor dela; conferir que o arq
 
 **Acceptance Scenarios**:
 
-1. **Given** o Administrador do registro, com escopo ativo institucional, **When** ele preenche o
+1. **Given** o Administrador institucional, com escopo ativo institucional, **When** ele preenche o
    formulário e pede a conferência, **Then** vê a prévia do cabeçalho, o local, os campos e o aviso
    de que o código não poderá mudar, e nada foi gravado.
 2. **Given** a conferência sem erro, **When** ele confirma, **Then** a unidade existe ativa, os três
    modelos iniciais de aviso existem nela, e a trilha da unidade tem um registro com ele, o motivo e
    os valores.
-3. **Given** a unidade recém-cadastrada, **When** o Administrador institucional de acessos abre a
-   concessão de Administrador de acessos, **Then** ela está entre as unidades oferecidas.
+3. **Given** a unidade recém-cadastrada, **When** ele abre a concessão de Administrador de acessos,
+   **Then** ela está entre as unidades oferecidas.
 4. **Given** o código `institucional`, um código com maiúscula ou espaço, ou um código já
    registrado, **When** ele confere, **Then** recebe a recusa no campo, e nada é gravado.
 
@@ -162,7 +163,7 @@ conferir os campos e a ausência de evento novo.
 
 ### User Story 3 — Desativar e reativar (Priority: P1)
 
-Um campus deixa de ofertar seleções pelo GPS. O administrador do registro o desativa, com motivo,
+Um campus deixa de ofertar seleções pelo GPS. O Administrador institucional o desativa, com motivo,
 lendo antes as consequências. O certame em curso ali termina normalmente. Um ano depois, o campus
 volta, e ele o reativa.
 
@@ -189,7 +190,7 @@ conceder acesso nela (recusados); conduzir o Edital em curso (aceito); reativar;
 
 ### User Story 4 — Consultar o registro e o histórico (Priority: P2)
 
-O administrador do registro vê todas as unidades, ativas e desativadas, e abre a ficha de uma
+O Administrador institucional vê todas as unidades, ativas e desativadas, e abre a ficha de uma
 para ver os dados, a prévia do cabeçalho e o histórico administrativo — inclusive o que a
 implantação gravou antes desta feature.
 
@@ -271,7 +272,7 @@ aceite humano (SC-1048), e não teste automatizado.
 **Acceptance Scenarios**:
 
 1. **Given** o ambiente de homologação funcional e uma pessoa cadastrada pela implantação com o
-   papel de administrador do registro, **When** quem valida a escolhe na página do provedor, **Then**
+   papel de Administrador institucional, **When** quem valida a escolhe na página do provedor, **Then**
    chega à gestão no escopo institucional e vê "Unidades".
 2. **Given** um retorno do provedor repetido, ou sem o estado da ida, **When** ele chega à gestão,
    **Then** a entrada é recusada e nenhuma pessoa é criada, como com qualquer adaptador.
@@ -300,7 +301,7 @@ Cada caso aqui é requisito, e tem linha própria na [matriz](rastreabilidade.md
   ativa ("Cefor/Ifes" → "Ifes"), desativar até sobrar uma ou nenhuma, e mudar a sigla da única ativa
   mudam o que o portal, a página de acesso, a 404 e o código de acesso dizem (regra provisória da
   `109`). A confirmação diz isso, porque é efeito visível ao candidato.
-- **EC-8 — Administrador do registro com escopo ativo numa unidade.** As telas recusam como sem
+- **EC-8 — Administrador institucional com escopo ativo numa unidade.** As telas recusam como sem
   permissão: a capacidade é do escopo institucional, como na administração de acessos.
 - **EC-9 — Envio forjado com código numa edição.** O código enviado é ignorado; a unidade é a da
   rota. Se o envio tentar outro código por campo extra, nada muda nele.
@@ -317,15 +318,14 @@ Cada caso aqui é requisito, e tem linha própria na [matriz](rastreabilidade.md
   `060` decidiu: o certame em curso precisa de quem assine.
 - **EC-15 — Teste que precisa de Edital de outra unidade.** Cria-o com um ator da outra unidade; não
   move um existente (é o que o gatilho passa a recusar).
-- **EC-16 — Só um dos dois papéis institucionais.** O Administrador institucional de acessos sem o
-  papel do registro não vê "Unidades" e recebe a recusa explicada nas telas desta feature; o
-  administrador do registro sem o de acessos vê só "Unidades", e a administração de acessos o recusa.
-  Com os dois, vê os dois itens.
+- **EC-16** — *retirado em 31/10/2026, com o papel próprio que o motivava (D-002). O número fica
+  reservado.*
 - **EC-17 — Roteiro instalado com o nome anterior do comando.** O `ps-migrar` ou o `entrypoint.sh`
   de uma cópia antiga chama `sincronizar_unidades`: a semente roda, a subida termina, e o aviso do
   nome anterior fica no *log*.
-- **EC-18 — Tentativa de conceder o papel do registro pela tela.** Recusada como papel que só a
-  implantação concede, mesmo para o Administrador institucional de acessos, e nada é gravado.
+- **EC-18 — Tentativa de conceder o papel institucional pela tela.** Recusada como papel que só a
+  implantação concede, como a `106` já faz, e nada é gravado: a permissão nova não abre esse
+  caminho.
 
 ---
 
@@ -355,23 +355,22 @@ Cada caso aqui é requisito, e tem linha própria na [matriz](rastreabilidade.md
   que o guia ensina a ler, que é o nome anterior.
 - **FR-3307**: A documentação operacional MUST descrever a semente, a linha que ela imprime, que
   editar o arquivo depois da instalação não tem efeito, o apelido e o critério para retirá-lo, e como
-  conceder, retirar e substituir o papel do registro pela implantação.
+  que a administração de unidades é do Administrador institucional, designado pela implantação.
 
 **Permissão e governança**
 
-- **FR-3308**: A permissão `unidade:administrar` MUST pertencer a um papel institucional próprio, o
-  Administrador do registro de unidades, e só a ele. MUST NOT pertencer ao Administrador institucional
-  de acessos, a papel de unidade, nem a papel do seletor de demonstração; e o papel novo MUST NOT ter
-  outra permissão.
+- **FR-3308**: A permissão `unidade:administrar` MUST pertencer ao papel institucional que já existe,
+  o `administrador-institucional`, e só a ele, que passa a se chamar "Administrador institucional".
+  MUST NOT pertencer a papel de unidade, nem a papel do seletor de demonstração. Nenhum papel,
+  modelo, tabela, tela de designação ou mecanismo de concessão novo MUST ser criado.
 - **FR-3309**: Todo ato e toda leitura do registro por esta feature MUST exigir
   `unidade:administrar` com o escopo ativo institucional, conferidos na camada de aplicação; a tela
   é a segunda barreira, e não a primeira.
 - **FR-3310**: `unidade:administrar` MUST NOT conferir nenhuma outra capacidade — Processo, Edital,
-  Publicação, autoridades, modelos de aviso, acessos de unidade ou institucionais. O papel MUST ser
-  concedido, retirado e substituído só pelos comandos de implantação que já fazem isso com o papel
-  institucional de acessos (FR-3029 da `106`, FR-3147 e FR-3148 da `107`), com o motivo, e com as
-  mesmas regras por papel: segunda pessoa só com marca explícita, retirada da última só com marca
-  explícita. Sem indicar o papel, os comandos MUST continuar fazendo exatamente o que fazem hoje.
+  Publicação, autoridades, modelos de aviso, acessos de unidade. O papel continua concedido,
+  retirado e substituído só pelos comandos de implantação que já existem (FR-3029 da `106`, FR-3147
+  e FR-3148 da `107`), sem mudança neles. Antes do deploy, todo vínculo vigente desse papel MUST ser
+  identificado, e a ampliação MUST NOT chegar a quem o tem sem autorização expressa do usuário.
 - **FR-3311**: Ator com escopo ativo de unidade, com qualquer papel, MUST receber a recusa em todo
   ato sobre o registro, inclusive sobre a própria unidade.
 - **FR-3312**: Só a entrada institucional MUST alcançar as telas desta feature; a sessão de
@@ -472,12 +471,12 @@ Cada caso aqui é requisito, e tem linha própria na [matriz](rastreabilidade.md
 
 **Papel institucional**
 
-- **FR-3339**: Nenhuma tela MUST conceder ou revogar papel institucional — o de acessos nem o do
-  registro —; a tentativa MUST ser recusada como papel que só a implantação concede, sem gravar.
-- **FR-3340**: Suspender e reativar quem tem papel institucional vigente, qualquer que seja, MUST ser
-  só pela implantação, como já é para o de acessos (FR-3136 da `107`).
-- **FR-3341**: Quem tem só o papel do registro MUST entrar no escopo institucional, MUST ver na barra
-  só o que pode, e MUST receber a recusa explicada na administração de acessos.
+- **FR-3339**: A tela MUST continuar recusando conceder ou revogar o papel institucional, como a
+  `106` decidiu: a permissão nova não abre esse caminho.
+- **FR-3340** — *retirada em 31/10/2026 com o papel próprio (D-002); a suspensão do Administrador
+  institucional continua só pela implantação, pela FR-3136 da `107`, sem mudança. O número fica
+  reservado.*
+- **FR-3341** — *retirada em 31/10/2026 com o papel próprio (D-002). O número fica reservado.*
 
 **Validação antes do SSO**
 
@@ -496,8 +495,8 @@ Cada caso aqui é requisito, e tem linha própria na [matriz](rastreabilidade.md
   (`109`) e situação, editáveis por esta feature. Nada novo no modelo.
 - **Evento da trilha** (existe): o ato, no escopo da unidade, com a pessoa, a permissão, o motivo e o
   antes e o depois.
-- **Papel institucional** (o catálogo existe, `106`): ganha um segundo papel, o Administrador do
-  registro de unidades, com a permissão `unidade:administrar`. O de acessos não muda.
+- **Papel institucional** (existe, `106`): o `administrador-institucional` ganha a permissão
+  `unidade:administrar` e passa a se chamar Administrador institucional.
 - **Provedor de homologação** (novo, só no código de teste): subclasse do provedor simulado da
   `106`, com uma página que oferece as pessoas cadastradas pela implantação; só fora de produção.
 - **Ambiente de homologação funcional** (configuração, não código): separado da VM de homologação,
@@ -509,8 +508,9 @@ Cada caso aqui é requisito, e tem linha própria na [matriz](rastreabilidade.md
 ## Pendências de produto
 
 Ficam identificadas, e **não** se resolvem por suposição aqui. Nenhuma bloqueia a implementação.
-P-1 a P-4 precisam de resposta antes da entrada efetiva da segunda unidade ativa; P-5, antes de a
-tela entrar em operação; P-6, antes de uma sessão de validação fora de `localhost`.
+P-1 a P-4 precisam de resposta antes da entrada efetiva da segunda unidade ativa; P-5, antes do
+deploy do incremento C num ambiente em que alguém já tenha o papel; P-6, antes de uma sessão de
+validação fora de `localhost`.
 
 | # | Origem | Pergunta | Comportamento enquanto não respondida |
 |---|---|---|---|
@@ -518,7 +518,7 @@ tela entrar em operação; P-6, antes de uma sessão de validação fora de `loc
 | **P-2** | P-2 da `109` | Qual é a política de atendimento — o Cefor declara canal no registro, que forma ele tem, quem atende a conta do candidato? | o canal é opcional, e a recaída é o institucional |
 | **P-3** | P-7 da `109` | A área do candidato numa inscrição, o resultado e o sorteio trocam a moldura pela unidade do Edital? | a moldura da implantação |
 | **P-4** | P1 da `108` | Quem audita o nível institucional? | os atos desta feature ficam no escopo da unidade, e o auditor de cada unidade os lê; o ator institucional não tem quem o leia como conjunto |
-| **P-5** | esta feature (D-002) | Quem recebe o papel Administrador do registro de unidades, e por qual ato? | ninguém o tem: a tela existe e recusa; o deploy não muda o privilégio de ninguém |
+| **P-5** | esta feature (D-002) | Num ambiente em que já haja Administrador institucional designado, essas pessoas devem passar a administrar também as unidades? | o deploy do incremento C não se faz ali sem a resposta; em 31/10 nenhum banco local tinha o papel, produção não estava instalada e a VM de homologação estava por conferir |
 | **P-6** | esta feature (D-017, D-018) | O ambiente de homologação funcional, com settings de desenvolvimento, pode ser acessível além da máquina de quem conduz — numa rede fechada, com o perímetro da D-018? É a decisão que o §10.3 do guia de produção nomeia | só `localhost` |
 
 ---
@@ -559,8 +559,9 @@ tela entrar em operação; P-6, antes de uma sessão de validação fora de `loc
 
 - A `109` e a `108` entram na `main` antes da implementação, com os contratos descritos em
   §Dependências.
-- A equipe inicial é de duas a três pessoas, e a mesma pessoa pode receber os dois papéis
-  institucionais — por dois atos de implantação, cada um com o seu motivo (D-002).
+- A equipe inicial é de duas a três pessoas, e não há exigência institucional de separar quem
+  administra acessos de quem administra unidades: as duas responsabilidades são do Administrador
+  institucional (D-002).
 - Os dados de unidade são institucionais e públicos — aparecem em todo documento oficial. O canal
   de atendimento deve ser um canal institucional, e não o contato pessoal de um servidor; a tela o
   diz na ajuda do campo (avaliação de LGPD no [research](research.md), D-012).

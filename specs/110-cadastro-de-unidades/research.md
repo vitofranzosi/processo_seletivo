@@ -34,78 +34,70 @@ preparo de um banco novo continua idêntico ao de hoje.
 - *Apagar o arquivo*: o primeiro preparo de desenvolvimento, de teste e de homologação pediria um
   passo manual a mais, e o `seed_demo` perderia o Cefor. A semente custa um arquivo de seis linhas.
 
-## D-002 — `unidade:administrar` num papel institucional próprio, concedido só pela implantação
+## D-002 — `unidade:administrar` no papel institucional que já existe, renomeado Administrador institucional
 
-*Revista em 31/10/2026, na revisão final antes da implementação. A versão anterior punha a permissão
-no `administrador-institucional`; a comparação abaixo é o motivo da troca, e ela revê a decisão de
-produto 3 da spec. **Confirmada pelo usuário em 31/10/2026**, com a regra de que nenhum
-administrador existente recebe o privilégio novo automaticamente.*
+*Decidida pelo usuário em 31/10/2026, depois de duas versões: a primeira ampliava o papel; a
+segunda criava um papel próprio, o "Administrador do registro de unidades". A segunda foi recusada
+por não haver exigência institucional que pedisse a separação.* A regra que o usuário fixou vale
+daqui em diante: **toda abstração, papel, tabela ou mecanismo novo precisa resolver um problema
+concreto, e não uma possibilidade futura.**
 
-**Decisão.** Um papel novo em `PAPEIS_INSTITUCIONAIS` (`seguranca/acessos.py`):
-`administrador-de-unidades`, "Administrador do registro de unidades", com uma permissão só,
-`unidade:administrar`. O `administrador-institucional` fica **exatamente** como está, com
-`acesso:administrar` e nada mais. Como a `autoridade:gerir` da `060`, a permissão é declarada em
-`unidades/domain/nomes.py` e escrita por extenso no catálogo, e um teste confere que as duas grafias
-são a mesma.
+**Decisão.** A permissão nova entra na lista do `administrador-institucional`, em
+`PAPEIS_INSTITUCIONAIS` (`seguranca/acessos.py`), ao lado de `acesso:administrar`. O papel passa a se
+chamar **"Administrador institucional"**. A chave `administrador-institucional`, os vínculos, os três
+comandos de implantação, as regras da `106` e da `107` e a trilha ficam como estão. Como a
+`autoridade:gerir` da `060`, a permissão é declarada em `unidades/domain/nomes.py` e escrita por
+extenso no catálogo, e um teste confere que as duas grafias são a mesma.
 
-**A comparação.**
+**Dois níveis, e não três.**
 
-| Critério | Ampliar o papel de acessos (versão anterior) | Papel próprio (esta) |
-|---|---|---|
-| Menor privilégio | quem foi nomeado para conceder acessos passa a mudar o cabeçalho de todo documento futuro | cada pessoa recebe só o poder do ato que a designou |
-| O que o deploy faz com os privilégios | **amplia em silêncio**: o poder novo chega a quem já tem o papel, sem ato novo | **nada**: ninguém ganha poder no deploy; o papel nasce vazio |
-| Governança | o ato que nomeou o administrador de acessos passa a dizer menos do que ele faz; o rótulo mente (era a P-5) | a designação é ato próprio, com o motivo — o número do ato que designa a pessoa —, como a do administrador de acessos (FR-3029 da `106`) |
-| Rastreabilidade | a trilha não distingue o poder de conceder acessos do de mudar o registro | o vínculo, com o motivo, diz quem pode mudar o registro e desde quando; a concessão e a retirada vão à trilha |
-| O limite que o catálogo escreve | contraria o comentário do `administrador-institucional`: *"concede e revoga o administrador de acessos de qualquer unidade, e nada mais"* | preserva o comentário |
-| Custo | uma linha | uma entrada no catálogo, a opção `--papel` nos três comandos de implantação que já existem, e a recusa da tela estendida ao papel novo |
-| Equipe de duas a três pessoas | os papéis se acumulam de qualquer jeito | se acumulam também, por dois atos: a mesma pessoa pode receber os dois |
+| Nível | Papel | Permissões | Concedido por |
+|---|---|---|---|
+| institucional | Administrador institucional | `acesso:administrar`, `unidade:administrar` | só a implantação (FR-3029 da `106`) |
+| unidade | Administrador de acessos da unidade | `acesso:gerir`, `acesso:consultar` | o Administrador institucional (`107`) |
 
-**Não é estrutura de autorização paralela.** O papel é uma entrada do catálogo que já existe; a
-concessão é um `Vinculo` como os outros; o `Actor` o lê pelo mesmo `permissoes_dos_papeis`; a recusa
-é a de `require_authorization_base`; a trilha é a de sempre. Nada de modelo, tabela, *middleware*,
-decorador ou conferência nova.
+O administrador de acessos da unidade continua separado: ele tem justificativa operacional — a
+gestão de usuários se descentraliza quando outros campi entram. Dois papéis não são duas pessoas;
+quem recebe cada um é designação institucional.
 
-**Como se concede.** Só pela implantação, como o `administrador-institucional`, e pelos mesmos
-comandos, com uma opção a mais:
+**Por que não o papel próprio.** O menor privilégio continua certo como princípio, mas a separação
+só se paga quando há exigência de que as duas responsabilidades fiquem com pessoas diferentes. Não
+há: são cerca de 26 unidades, cujo cadastro muda em anos, numa equipe de duas ou três pessoas. O
+papel próprio custava um segundo papel no catálogo, a opção `--papel` nos três comandos, as regras de
+segunda pessoa e de última administração por papel, a recusa pela tela estendida, a suspensão
+estendida e a tela mostrando um papel ou o outro — tudo para uma separação que ninguém pediu. Se um
+dia for pedida, separar é mover a permissão para um papel novo, sem tocar no resto desta feature.
 
-- `conceder_administracao_institucional`, `retirar_administracao_institucional` e
-  `substituir_administracao_institucional` ganham `--papel`, que aceita os papéis de
-  `PAPEIS_INSTITUCIONAIS` e tem como padrão o `administrador-institucional` — toda chamada escrita
-  hoje continua fazendo o mesmo;
-- as regras dos três valem **por papel**: a segunda pessoa com o mesmo papel pede `--adicional`; a
-  retirada da última pede `--sem-administracao`; a trava global de transação é a mesma;
-- os casos de uso em `seguranca/application/acessos.py` recebem o papel, conferem que ele é
-  institucional, e o `_autoridade` passa a recusar pela tela **qualquer** papel institucional, e não
-  só o de acessos (`PAPEL_SO_POR_IMPLANTACAO`). O administrador de acessos não concede o papel novo:
-  senão o poder de mudar o registro sairia do ato de implantação.
+**O que a permissão não dá.** Nenhuma outra capacidade (FR-3310): nem Processo, Edital, Publicação,
+autoridades, modelos de aviso, nem acesso de unidade. O risco novo é de disponibilidade e de
+integridade editorial — uma conta comprometida poderia renomear ou desativar uma unidade —, e não de
+acesso a dado; os dois ficam na trilha da unidade e se desfazem pela própria tela. Continua faltando
+quem leia os atos institucionais como conjunto (P-4).
 
-**Suspensão.** Hoje, quem tem o `administrador-institucional` só se suspende e reativa pela
-implantação (FR-3136 da `107`). A regra passa a valer para quem tem **qualquer** papel
-institucional: senão o administrador de acessos poderia, pela tela, tirar do ar o administrador do
-registro. A função `_e_administracao_institucional` de `seguranca/application/suspensao.py` mantém o
-nome, que um teste da `107` substitui por *monkeypatch*, e passa a perguntar por vínculo vigente no
-escopo institucional, com qualquer papel.
+**A ampliação não pode ser silenciosa.** Quem já tiver o papel ganharia o poder novo no deploy, sem
+ato novo. Por isso a [migração](migracao.md) começa por uma verificação, em cada ambiente instalado:
 
-**A entrada de quem só tem o papel novo.** O escopo dele é o institucional, como o do administrador
-de acessos (FR-3019 da `106`): o seletor da barra o rotula "Administração institucional", a barra
-mostra só "Unidades", que é o que ele pode, e as telas da `107` recusam com a recusa explicada
-(`_ator_do_nivel`), porque ele não tem `acesso:administrar`. Nada disso pede código novo além do
-item da barra.
+- **sem nenhum vínculo vigente** de `administrador-institucional`, a ampliação não alcança ninguém,
+  e o papel consolidado se adota como está;
+- **com algum**, o deploy não se faz antes de o usuário autorizar expressamente, pessoa por pessoa,
+  a ampliação — com o ato que a designa, que é o motivo de uma nova concessão, se for o caso — ou
+  retirar a administração dela pela implantação.
 
-**O que continua valendo da avaliação anterior.** `unidade:administrar` não dá nenhuma outra
-permissão (FR-3310). O risco que ela traz é de disponibilidade e de integridade editorial, e não de
-acesso a dado: uma conta comprometida poderia renomear ou desativar uma unidade. As duas coisas
-ficam na trilha da unidade e se desfazem pela própria tela. Continua faltando quem leia os atos
-institucionais como conjunto (P-4).
+Em 31/10/2026 nenhum banco local tinha vínculo vigente desse papel, e produção nunca foi instalada.
+A VM de homologação não estava ao alcance desta verificação, e é o primeiro ambiente a conferir.
+
+**O rótulo muda em um lugar de código** — a entrada do catálogo —, mais as mensagens e ajudas que
+dizem "administração institucional de acessos": a recusa ao suspenso (`interface/views.py`), as
+recusas da primeira administração (`seguranca/application/acessos.py`) e as ajudas dos três
+comandos. Nenhum teste existente confere o rótulo. A trilha guarda a chave, e não o rótulo: os atos
+antigos passam a ser lidos com o nome novo, que é o do mesmo papel. As specs `106`, `107` e `108`
+ficam como estão — registram o nome do dia em que foram escritas.
 
 **Descartado.**
-- *Ampliar o `administrador-institucional`*: a versão anterior; ver a tabela.
-- *Papel novo concedido pelo administrador de acessos, pela tela da `107`*: menos atrito, mas o
-  poder de mudar o cabeçalho dos documentos sairia de uma pessoa, e não de um ato de implantação; e
-  o administrador de acessos poderia conceder o papel a um cúmplice, que é o que a `107` recusou ao
-  não deixar o administrador de acessos da unidade conceder papel de acesso.
-- *Um comando de implantação próprio, `conceder_administracao_de_unidades`*: duplicaria a trava, a
-  pessoa pelo provedor, o `--adicional` e a substituição. A opção `--papel` reaproveita tudo.
+- *Papel institucional próprio* (a segunda versão): ver acima.
+- *Ampliar sem verificar quem tem o papel* (a primeira versão, sem o passo 0): ampliaria privilégio
+  real em silêncio.
+- *Manter o rótulo antigo*: diria menos do que o papel faz.
 - *O gestor da unidade edita os campos dela*: recusado pela decisão de produto 4.
 
 ## D-003 — O comando passa a `semear_unidades`, e `sincronizar_unidades` continua como apelido
@@ -266,12 +258,12 @@ acrescentar; o teste da trilha dos atos (T035) confere uma edição só do canal
 
 **A trilha da `108` não abre no escopo institucional** (a revisão de código dela, `c76dca30`, tirou o
 item da barra nesse escopo, e a página já recusava). A ficha é, portanto, o único lugar em que o
-administrador do registro lê o histórico de uma unidade — e é por isso que ela tem a leitura própria.
+Administrador institucional lê o histórico de uma unidade — e é por isso que ela tem a leitura própria.
 
 **Por quê não o *selector* da `108`.** Ele toma a unidade do ator, e o ator aqui é institucional. A
 consulta própria é uma linha; o que não se duplica é a tradução, que é onde mora a regra.
 
-**Descartado.** *Esperar a P-4 e mostrar o histórico só na trilha*: o administrador do registro
+**Descartado.** *Esperar a P-4 e mostrar o histórico só na trilha*: o Administrador institucional
 não tem `auditoria:consultar` em unidade nenhuma, e a FR-3315 pede o histórico na ficha.
 
 ## D-010 — A prévia é texto, pelas linhas que o compositor usa
@@ -368,8 +360,7 @@ FR-3336 pede — e o achado é registrado no `verificacao.md`.
 ## D-015 — A jornada pelo navegador
 
 **Decisão.** Um caso em `tests/navegador/`, no molde da `107`. A preparação concede, pela
-implantação, o Administrador do registro de unidades e o Administrador institucional de acessos à
-mesma pessoa — a equipe pequena acumula os dois (D-002). Ela entra pelo provedor simulado, cadastra
+implantação, o Administrador institucional a uma pessoa. Ela entra pelo provedor simulado, cadastra
 `serra`, confere a prévia, confirma, concede o Administrador de acessos de `serra` a outra pessoa,
 que entra e concede o Gestor a uma terceira, que cria um Processo. Entre a preparação e as
 verificações, nenhuma ação fora do navegador (SC-1041).
@@ -513,7 +504,7 @@ cadastrou. *Pôr o adaptador em `processo_seletivo/`*: perderia a recusa pelo pa
 |---|---|---|---|
 | **A — Integridade do escopo** | os gatilhos de escopo imutável (D-013), o ajuste do teste da agenda e os testes de isolamento (D-014) | nada | só recusa o que nenhum caminho da aplicação faz |
 | **B — Entrada de homologação** | o provedor de homologação (D-018), os testes das recusas de produção, o roteiro G e o ambiente no guia | nada | não: só código de teste e documentação |
-| **C — Fonte oficial e administração** | a regra única, o papel novo e os comandos, a semente com o apelido, os casos de uso, as telas, a jornada, a documentação | B, para a validação funcional | **sim**: a fonte passa ao banco, e o mecanismo novo chega no mesmo PR |
+| **C — Fonte oficial e administração** | a regra única, a permissão no papel institucional, a semente com o apelido, os casos de uso, as telas, a jornada, a documentação | B, para a validação funcional | **sim**: a fonte passa ao banco, e o mecanismo novo chega no mesmo PR |
 
 A e B se fazem em qualquer ordem, e em paralelo. **C é um PR só**: dentro dele o trabalho segue
 passos com a suíte verde em cada um, mas a troca da sincronização pela semente não entra na `main`
@@ -549,10 +540,9 @@ pendente nenhuma. Se algum teste de isolamento revelar vazamento, a correção e
 
 ## Perguntas ao usuário
 
-A decisão de produto 3 revista (D-002) foi confirmada em 31/10/2026. Continuam com o usuário, e
-nenhuma bloqueia a implementação:
+A decisão de produto 3 voltou ao papel existente, por decisão do usuário em 31/10/2026 (D-002).
+Continuam com o usuário, e nenhuma bloqueia a implementação:
 
-- **Quem recebe o papel novo, e por qual ato** (P-5 da spec): bloqueia a entrada da tela em
-  operação, e não o código.
-- **A exposição do ambiente de homologação funcional além de `localhost`** (P-6 da spec), com o
-  perímetro da D-018: bloqueia a validação com pessoas fora da máquina de quem conduz.
+- **A ampliação do papel onde já houver Administrador institucional** (P-5 da spec): bloqueia o
+  deploy do incremento C naquele ambiente, e não o código.
+- **A exposição do ambiente de homologação funcional além de `localhost`** (P-6 da spec).

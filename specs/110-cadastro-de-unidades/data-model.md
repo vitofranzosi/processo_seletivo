@@ -76,18 +76,14 @@ Ver D-008 do [research](research.md). Resumo do que esta feature grava:
 ## Catálogo de permissões (`seguranca/acessos.py`, existe)
 
 ```text
-PAPEIS_INSTITUCIONAIS
-    "administrador-institucional"  "Administrador institucional de acessos"  [acesso:administrar]   (sem mudança)
-    "administrador-de-unidades"    "Administrador do registro de unidades"   [unidade:administrar]  (novo, D-002)
+PAPEIS_INSTITUCIONAIS["administrador-institucional"]
+    antes:  "Administrador institucional de acessos"  [acesso:administrar]
+    depois: "Administrador institucional"              [acesso:administrar, unidade:administrar]
 ```
 
-Nenhum papel de unidade, nenhum papel do `PAPEIS` (seletor) recebe a permissão. **Nenhuma migration**:
-o papel é catálogo, e `Vinculo.papel` é texto sem restrição no banco. O vínculo do papel novo é um
-`Vinculo` como os outros, no escopo `institucional`, concedido só pela implantação, com o motivo e
-o evento `ACESSO_CONCEDER` da `106`; a retirada é a `RevogacaoDeVinculo` de sempre.
-
-**Na reversão** para uma release que não conhece o papel, os vínculos dele continuam no banco
-(append-only) e não dão permissão nenhuma: `permissoes_dos_papeis` ignora papel desconhecido.
+Nenhum papel novo. Nenhum papel de unidade, nenhum papel do `PAPEIS` (seletor) recebe a permissão.
+**Nenhuma migration**: a chave do papel não muda, e os vínculos, a concessão e a trilha são os da
+`106` e da `107`. Na reversão, o papel volta a ter só `acesso:administrar`.
 
 ## Gatilhos novos (`processos`, D-013)
 

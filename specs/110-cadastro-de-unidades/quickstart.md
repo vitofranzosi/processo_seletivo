@@ -31,7 +31,7 @@ cd backend && PYTEST_ADDOPTS="tests/unidades tests/seguranca/test_papel_do_regis
 cd backend && PYTEST_ADDOPTS="tests/navegador/test_jornada_de_unidades.py" make test-navegador
 ```
 
-Esperado: com a janela aberta, a pessoa com os dois papéis institucionais cadastra `serra`, confere a prévia,
+Esperado: com a janela aberta, o Administrador institucional cadastra `serra`, confere a prévia,
 concede o Administrador de acessos dela; a segunda pessoa concede o Gestor; a terceira cria um
 Processo em `serra`. Nenhum arquivo do repositório muda (`git status` limpo ao fim).
 
@@ -96,17 +96,19 @@ continua em 503 até o SSO.
    docker compose up --build
    ```
 
-2. Cadastrar pela implantação as pessoas da validação, cada uma com o papel que o roteiro pede e o
-   motivo da sessão:
+2. Designar pela implantação o Administrador institucional da validação, com o motivo da sessão:
 
    ```bash
-   docker compose exec app python manage.py conceder_administracao_institucional --papel administrador-de-unidades --provedor homologacao --identificador validadora --nome "Validadora" --motivo "Validação funcional da 110"
+   docker compose exec app python manage.py conceder_administracao_institucional --provedor homologacao --identificador validadora --nome "Validadora" --motivo "Validação funcional da 110"
    ```
 
-   e, para conceder acesso à unidade nova durante o roteiro, o mesmo com o papel padrão, a outra
-   identidade sintética ou à mesma (`--adicional` a partir da segunda pessoa com o mesmo papel).
-   **Antes do incremento C** a opção `--papel` não existe: o ambiente serve à validação das telas
-   da `107` com o papel padrão, e o roteiro das unidades espera C.
+   As outras pessoas sintéticas — o administrador de acessos da unidade nova, o gestor — se criam
+   **sem papel**, pela mesma função que a entrada institucional usa, e recebem acesso depois, pela
+   tela da `107`:
+
+   ```bash
+   docker compose exec app python manage.py shell -c "from processo_seletivo.seguranca.autenticacao import IdentidadeAutenticada, resolver_pessoa; resolver_pessoa(IdentidadeAutenticada('homologacao', 'gestora', 'Gestora Sintética', ''))"
+   ```
 3. A pessoa abre `/gestao/`, escolhe a entrada institucional, escolhe a si mesma na página do
    provedor — que lista só as pessoas cadastradas com `--provedor homologacao` —, e segue o roteiro sem ajuda: cadastrar `serra` conferindo a prévia; editar o nome e o
    canal; desativar, lendo as consequências; reativar; abrir a ficha e ler o histórico.

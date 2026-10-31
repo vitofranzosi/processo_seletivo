@@ -30,10 +30,6 @@ from tests.fixtures import provedor_simulado
 CAMINHO = "tests.homologacao.provedor.ProvedorDeHomologacao"
 NOME = "homologacao"
 
-# Os bilhetes de cada página, por bilhete. Escolher uma pessoa descarta os das outras: um bilhete
-# que sobrasse valeria para quem copiasse o endereço de outra linha da mesma página.
-_DA_MESMA_PAGINA = {}
-
 
 def _pessoas():
     """As pessoas deste provedor, pelo nome, com os papéis vigentes em palavras.
@@ -87,29 +83,16 @@ def _pagina(linhas):
 class ProvedorDeHomologacao(provedor_simulado.ProvedorSimulado):
     nome = NOME
 
+    # Os bilhetes das linhas não escolhidas ficam na memória até o processo cair. Descartá-los não
+    # protegeria nada — quem está na página já escolhe qualquer pessoa — e o ambiente é local,
+    # sintético e descartável (`D-018`).
     def iniciar(self, request, *, retorno, estado):
-        linhas, bilhetes = [], []
+        linhas = []
         for externa, nome_legivel, papeis in _pessoas():
             pessoa = externa.pessoa
             bilhete = provedor_simulado.emitir(
                 externa.identificador, nome=pessoa.first_name, email=pessoa.email, provedor=NOME
             )
-            bilhetes.append(bilhete)
             volta = f"{retorno}?{urlencode({'state': estado, 'bilhete': bilhete})}"
             linhas.append((volta, nome_legivel, "; ".join(papeis) or "sem papel vigente"))
-        for bilhete in bilhetes:
-            _DA_MESMA_PAGINA[bilhete] = bilhetes
         return HttpResponse(_pagina(linhas))
-
-    def concluir(self, request, *, estado):
-        escolhido = request.GET.get("bilhete", "")
-        for bilhete in _DA_MESMA_PAGINA.pop(escolhido, ()):
-            _DA_MESMA_PAGINA.pop(bilhete, None)
-            if bilhete != escolhido:
-                provedor_simulado.descartar(bilhete)
-        return super().concluir(request, estado=estado)
-
-
-def limpar():
-    _DA_MESMA_PAGINA.clear()
-    provedor_simulado.limpar()

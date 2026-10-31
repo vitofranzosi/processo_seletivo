@@ -27,11 +27,11 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 @pytest.fixture
 def configurado(settings):
     """O provedor de homologação como o ambiente de validação o configura: seletor desligado."""
-    homologacao.limpar()
+    provedor_simulado.limpar()
     settings.GESTAO_PROVEDOR_INSTITUCIONAL = homologacao.CAMINHO
     settings.INTERFACE_SELETOR_IDENTIDADE = False
     yield
-    homologacao.limpar()
+    provedor_simulado.limpar()
 
 
 @pytest.fixture
@@ -104,35 +104,21 @@ def test_escolher_entra_no_escopo_dos_vinculos(client, configurado, validadora):
     assert ator.subject == validadora.pessoa.username
 
 
-def test_o_bilhete_nao_serve_duas_vezes_nem_o_da_outra_linha(client, configurado, validadora):
-    """O bilhete escolhido sai no retorno; os outros da mesma página são descartados."""
-    call_command(
-        "conceder_administracao_institucional",
-        "--provedor",
-        homologacao.NOME,
-        "--identificador",
-        "segunda",
-        "--nome",
-        "Segunda Sintética",
-        "--motivo",
-        "Validação funcional da 110",
-        "--adicional",
-    )
-    links = _links(_pagina(client))
-    assert client.get(links["Validadora Sintética"]).status_code == 302
+def test_o_bilhete_escolhido_nao_serve_duas_vezes(client, configurado, validadora):
+    """O bilhete sai do provedor no retorno, como no simulado: numa ida nova, ele não vale."""
+    volta = _links(_pagina(client))["Validadora Sintética"]
+    assert client.get(volta).status_code == 302
     client.post(reverse("interface:sair"))
 
-    # Numa ida nova, com o estado novo, os bilhetes da página anterior não valem mais.
     _pagina(client)
     estado = client.session[CHAVE_ESTADO_INSTITUCIONAL]["estado"]
-    for usado in links.values():
-        bilhete = re.search(r"bilhete=([^&]+)", usado).group(1)
-        resposta = client.get(
-            reverse("interface:retorno-institucional"), {"state": estado, "bilhete": bilhete}
-        )
-        assert resposta.status_code == 403, usado
-        _pagina(client)
-        estado = client.session[CHAVE_ESTADO_INSTITUCIONAL]["estado"]
+    bilhete = re.search(r"bilhete=([^&]+)", volta).group(1)
+    resposta = client.get(
+        reverse("interface:retorno-institucional"), {"state": estado, "bilhete": bilhete}
+    )
+
+    assert resposta.status_code == 403
+    assert ator_do_cliente(client) is None
 
 
 def test_retorno_sem_o_estado_da_ida_e_recusado(client, configurado, validadora):

@@ -46,22 +46,12 @@ a reversão ([migracao.md](../migracao.md)); nenhum roteiro de implantação o c
 com o mesmo código e imprime o mesmo no *stdout*; no *stderr*, uma linha a mais:
 `sincronizar_unidades é o nome anterior de semear_unidades; atualize o roteiro que o chamou.`
 
-## Os comandos de implantação dos papéis institucionais (D-002)
+## O papel institucional (D-002)
 
-`conceder_administracao_institucional`, `retirar_administracao_institucional` e
-`substituir_administracao_institucional` ganham `--papel`:
-
-| Valor | Papel | Permissões |
-|---|---|---|
-| `administrador-institucional` (padrão) | Administrador institucional de acessos | `acesso:administrar` |
-| `administrador-de-unidades` | Administrador do registro de unidades | `unidade:administrar` |
-
-Outro valor: recusa do `argparse`, antes de qualquer gravação. As demais opções e recusas não mudam,
-e valem por papel — `--adicional` para a segunda pessoa com o mesmo papel, `--sem-administracao`
-para retirar a última. A saída nomeia o papel. Sem `--papel`, a saída e o efeito são os de hoje.
-
-Pela aplicação (tela da `107` ou chamada direta a `conceder`), qualquer papel institucional recebe
-`PAPEL_SO_POR_IMPLANTACAO` (403), sem gravar (FR-3339).
+Os comandos de implantação — `conceder_`, `retirar_` e `substituir_administracao_institucional` —
+**não mudam**. O papel que eles concedem passa a ter `unidade:administrar` ao lado de
+`acesso:administrar`, e a se chamar "Administrador institucional". Pela aplicação, o papel continua
+recebendo `PAPEL_SO_POR_IMPLANTACAO` (403), sem gravar (FR-3339).
 
 ## O provedor de homologação (D-018) — só no código de teste
 

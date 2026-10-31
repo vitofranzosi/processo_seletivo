@@ -5,7 +5,7 @@
 | Situação | Resposta |
 |---|---|
 | sem identidade | o pedido de identificação de sempre |
-| sem `unidade:administrar` no escopo ativo, ou com escopo ativo que não é o institucional — inclusive o Administrador institucional de acessos sem o papel do registro (EC-16) e toda sessão de demonstração, que nunca tem a permissão | **403**, a recusa explicada da `033`, nomeando a base "administrar o registro de unidades" (FR-3309, FR-3311, EC-8) |
+| sem `unidade:administrar` no escopo ativo, ou com escopo ativo que não é o institucional — inclusive toda sessão de demonstração, que nunca tem a permissão | **403**, a recusa explicada da `033`, nomeando a base "administrar o registro de unidades" (FR-3309, FR-3311, EC-8) |
 | sessão de demonstração que um dia tenha a permissão | **403**, recusa `so_entrada_institucional` (FR-3312, EC-10) |
 | autorizado, código inexistente em rota com `<codigo>` | **404** (FR-3315) |
 | autorizado | a tela |
@@ -40,8 +40,7 @@ Métodos fora dos listados: 405.
   aviso de linha que não cabe);
 - "Editar", e "Desativar" ou "Reativar", conforme a situação;
 - "Conceder o Administrador de acessos desta unidade", que leva à concessão da `107` (a unidade
-  pré-escolhida, se a tela da `107` aceitar; senão, a tela dela) — só para quem também tem
-  `acesso:administrar`, porque a concessão é do outro papel (D-002);
+  pré-escolhida, se a tela da `107` aceitar; senão, a tela dela);
 - o histórico (D-009), pela leitura `ficha` da aplicação e nunca por consulta da view, mais recente
   primeiro: quando, o ato, quem, a situação, o motivo, o antes → depois.
 
