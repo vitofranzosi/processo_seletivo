@@ -183,6 +183,79 @@ def test_configuracao_insegura_impede_a_inicializacao(alteracoes, variavel):
     assert variavel in str(recusa.value)
 
 
+# A entrada institucional da gestão (106, `FR-3026`, `FR-3027`). Sem provedor, produção sobe e a
+# gestão fica bloqueada; com um provedor que não é implantável, não sobe.
+@pytest.mark.parametrize(
+    "provedor",
+    [
+        # O simulado da suíte: código de teste, recusado pelo pacote antes de ser importado.
+        "tests.fixtures.provedor_simulado.ProvedorSimulado",
+        # Nome que não se importa falharia só na primeira entrada, com 500.
+        "processo_seletivo.seguranca.provedores.Inexistente",
+    ],
+)
+def test_provedor_institucional_nao_implantavel_impede_a_inicializacao(provedor):
+    with pytest.raises(ImproperlyConfigured) as recusa:
+        _carregar(GESTAO_PROVEDOR_INSTITUCIONAL=provedor)
+    assert "GESTAO_PROVEDOR_INSTITUCIONAL" in str(recusa.value)
+
+
+def test_provedor_que_se_declara_de_teste_impede_a_inicializacao():
+    """A segunda recusa: copiado para fora de `tests.`, o simulado ainda se declara de teste."""
+    import sys
+    import types
+
+    from tests.fixtures.provedor_simulado import ProvedorSimulado
+
+    modulo = types.ModuleType("provedor_copiado")
+    modulo.Provedor = ProvedorSimulado
+    sys.modules["provedor_copiado"] = modulo
+    try:
+        with pytest.raises(ImproperlyConfigured) as recusa:
+            _carregar(GESTAO_PROVEDOR_INSTITUCIONAL="provedor_copiado.Provedor")
+    finally:
+        del sys.modules["provedor_copiado"]
+    assert "se declara de teste" in str(recusa.value)
+
+
+def test_producao_sem_provedor_sobe_com_o_backend_institucional_e_sem_seletor():
+    """Sem provedor, a gestão fica no 503; nada de senha nem de demonstração (`FR-3027`)."""
+    producao = _carregar()
+    assert producao.GESTAO_PROVEDOR_INSTITUCIONAL == ""
+    assert producao.INTERFACE_SELETOR_IDENTIDADE is False
+    assert producao.AUTHENTICATION_BACKENDS == [
+        "processo_seletivo.seguranca.autenticacao.BackendInstitucional"
+    ]
+
+
+def test_seletor_ao_lado_do_provedor_continua_recusado():
+    """Ter a entrada institucional não legitima o seletor: produção continua recusando-o."""
+    import sys
+    import types
+
+    class Real:
+        nome = "real"
+
+    modulo = types.ModuleType("provedor_real")
+    modulo.Provedor = Real
+    sys.modules["provedor_real"] = modulo
+    try:
+        assert (
+            _carregar(
+                GESTAO_PROVEDOR_INSTITUCIONAL="provedor_real.Provedor"
+            ).GESTAO_PROVEDOR_INSTITUCIONAL
+            == "provedor_real.Provedor"
+        )
+        with pytest.raises(ImproperlyConfigured) as recusa:
+            _carregar(
+                GESTAO_PROVEDOR_INSTITUCIONAL="provedor_real.Provedor",
+                INTERFACE_SELETOR_IDENTIDADE="true",
+            )
+    finally:
+        del sys.modules["provedor_real"]
+    assert "INTERFACE_SELETOR_IDENTIDADE" in str(recusa.value)
+
+
 def test_o_adaptador_provisorio_nao_e_admitido_nem_acompanhado():
     """Declarar a autenticação institucional ao lado do adaptador não vale: ele continua aceito."""
     with pytest.raises(ImproperlyConfigured):

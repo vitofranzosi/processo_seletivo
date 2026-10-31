@@ -18,18 +18,29 @@
       <span>{% if papeis_do_ator %}{{ papeis_do_ator|join:", " }}{% else %}Sem responsabilidade da unidade{% endif %}</span></div>
   </div>
   <a class="entrar" href="{% if proximo %}{{ proximo }}{% elif ator.permissions %}{% url 'interface:lista' %}{% else %}{% url 'interface:minhas-etapas' %}{% endif %}">Continuar como {{ ator.subject }}<svg class="i seta" aria-hidden="true"><use href="#i-seta"/></svg></a>
-  <a class="alternativa" href="{% url 'interface:identificar-demonstracao' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}">Trocar de identidade</a>
+  {% if seletor_identidade %}<a class="alternativa" href="{% url 'interface:identificar-demonstracao' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}">Trocar de identidade</a>{% endif %}
   {% else %}
   {% comment %}
-  O lugar do método de entrada. Hoje ele é a demonstração; quando a autenticação institucional for
-  integrada, ela entra como outro método da mesma lista (`identidade.metodos_disponiveis`) — e o
-  resto da página não muda.
+  O lugar dos métodos de entrada, na ordem de `identidade.metodos_disponiveis`. A institucional
+  aparece só com provedor configurado (106, `FR-3025`); sem ele, a página é a de antes, letra por
+  letra, e a nota continua dizendo que a autenticação institucional não foi integrada.
   {% endcomment %}
+  {% if "institucional" in metodos_de_acesso %}
+  <a class="entrar" href="{% url 'interface:entrar-institucional' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}">
+    <svg class="i" aria-hidden="true"><use href="#i-usuarios"/></svg>Entrar com a conta institucional
+    <svg class="i seta" aria-hidden="true"><use href="#i-seta"/></svg></a>
+  {% endif %}
+  {% if seletor_identidade %}
+  {% if "institucional" in metodos_de_acesso %}
+  <a class="alternativa" href="{% url 'interface:identificar-demonstracao' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}">Acessar ambiente de demonstração</a>
+  {% else %}
   <a class="entrar" href="{% url 'interface:identificar-demonstracao' %}{% if proximo %}?proximo={{ proximo|urlencode }}{% endif %}" aria-describedby="nota-do-metodo">
     <svg class="i" aria-hidden="true"><use href="#i-frasco"/></svg>Acessar ambiente de demonstração
     <svg class="i seta" aria-hidden="true"><use href="#i-seta"/></svg></a>
   <p class="nota-do-metodo" id="nota-do-metodo">A autenticação institucional ainda não foi integrada.
     Neste ambiente, a entrada é por identidades de demonstração, que não existem em produção.</p>
+  {% endif %}
+  {% endif %}
   {% endif %}
 
   <div class="separador">Candidatos</div>

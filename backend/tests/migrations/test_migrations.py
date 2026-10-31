@@ -33,6 +33,9 @@ APPS = (
     "unidades",
     # Os avisos da 066: seis tabelas append-only e o modelo de aviso, que muda e não se exclui.
     "avisos",
+    # A identidade institucional da 106: três tabelas append-only e dois gatilhos sobre a
+    # `auth_user`, que é do Django: a pessoa muda, e o identificador dela não; e ela não se exclui.
+    "seguranca",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -125,6 +128,16 @@ TRIGGERS_POR_APP = {
         "resultado_da_tentativa_append_only",
         "interrupcao_do_aviso_append_only",
         "modelo_de_aviso_nao_se_exclui",
+    ),
+    # A identidade institucional da 106. As três primeiras são **absolutas**: vínculo se encerra por
+    # revogação, que é linha nova. As duas da `auth_user` recusam só a troca do identificador e a
+    # exclusão: nome, e-mail, situação e a última entrada mudam legitimamente.
+    "seguranca": (
+        "identidade_externa_append_only",
+        "vinculo_append_only",
+        "revogacao_de_vinculo_append_only",
+        "pessoa_nao_se_exclui",
+        "pessoa_identificador_imutavel",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)

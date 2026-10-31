@@ -731,6 +731,10 @@ def identificar(request):
     proximo = identidade.destino_seguro(
         request, request.POST.get("proximo") or request.GET.get("proximo")
     )
+    # O envio é o do seletor, e só vale onde ele existe: com só a entrada institucional, a página
+    # abre e o envio da demonstração não (106, `FR-3002`).
+    if request.method == "POST" and not identidade.seletor_disponivel():
+        return render(request, "interface/sem_autenticacao.html", status=503)
     if request.method == "POST":
         # Só papéis que existem: a lista de caixas é a do mapa, e o que vier fora dele é envio
         # montado à mão, que não tem por que chegar à sessão.
@@ -764,7 +768,7 @@ def identificar(request):
 @require_http_methods(["GET"])
 def identificar_demonstracao(request):
     """A escolha de identidades, em etapa própria da página de acesso (075, `FR-1692`)."""
-    if not identidade.metodos_disponiveis():
+    if not identidade.seletor_disponivel():
         return render(request, "interface/sem_autenticacao.html", status=503)
     return _escolha_de_identidade(
         request, proximo=identidade.destino_seguro(request, request.GET.get("proximo"))
@@ -774,8 +778,76 @@ def identificar_demonstracao(request):
 @require_http_methods(["POST"])
 def sair(request):
     """Sai e volta à página de acesso (075, `FR-1697`)."""
-    identidade.encerrar(request)
+    identidade.sair(request, correlation_id=request.correlation_id)
     return redirect(reverse("interface:identificar"))
+
+
+def _recusa_da_entrada():
+    return DomainError(
+        "entrada_institucional_recusada",
+        "A entrada institucional não se concluiu. Volte à página de acesso e entre de novo.",
+        403,
+    )
+
+
+@require_http_methods(["GET"])
+def entrar_institucional(request):
+    """A ida ao provedor institucional (106, `D-007`).
+
+    **O estado nasce aqui, e não no provedor.** Guardado na sessão e conferido no retorno, ele é o
+    que impede alguém de entregar a outra pessoa um retorno pronto — a sessão dela entraria como a
+    dele (*login CSRF*).
+    """
+    from processo_seletivo.seguranca.autenticacao import provedor_configurado
+
+    provedor = provedor_configurado()
+    if provedor is None:
+        return render(request, "interface/sem_autenticacao.html", status=503)
+    estado = secrets.token_urlsafe(32)
+    request.session[identidade.CHAVE_ESTADO_INSTITUCIONAL] = {
+        "estado": estado,
+        "proximo": identidade.destino_seguro(request, request.GET.get("proximo")),
+    }
+    retorno = request.build_absolute_uri(reverse("interface:retorno-institucional"))
+    return provedor.iniciar(request, retorno=retorno, estado=estado)
+
+
+@require_http_methods(["GET"])
+def retorno_institucional(request):
+    """O retorno do provedor: a identidade que ele afirma, ou a recusa (106, `FR-3022`, `FR-3023`).
+
+    O estado sai da sessão **antes** de qualquer conferência, e por isso um retorno repetido não
+    vale. Nada do pedido vira identidade além do que o adaptador devolve — nenhum cabeçalho é lido
+    aqui.
+    """
+    from processo_seletivo.seguranca.autenticacao import estado_do_retorno, provedor_configurado
+
+    provedor = provedor_configurado()
+    if provedor is None:
+        return render(request, "interface/sem_autenticacao.html", status=503)
+    ida = request.session.pop(identidade.CHAVE_ESTADO_INSTITUCIONAL, None) or {}
+    estado = ida.get("estado")
+    recebido = estado_do_retorno(provedor, request)
+    if not estado or not secrets.compare_digest(estado, recebido):
+        raise _recusa_da_entrada()
+    autenticada = provedor.concluir(request, estado=estado)
+    if autenticada is None or autenticada.provedor != provedor.nome:
+        raise _recusa_da_entrada()
+    if (
+        identidade.entrar_institucional(request, autenticada, correlation_id=request.correlation_id)
+        is None
+    ):
+        raise _recusa_da_entrada()
+    return redirect(ida.get("proximo") or reverse("interface:lista"))
+
+
+@require_http_methods(["POST"])
+def unidade_ativa(request):
+    """Troca a unidade em que a pessoa atua (106, `FR-3019`)."""
+    identidade.trocar_unidade(
+        request, request.POST.get("unidade", ""), correlation_id=request.correlation_id
+    )
+    return redirect(reverse("interface:lista"))
 
 
 SEVERIDADE = {"BLOCKING_ERROR": "erro", "WARNING": "aviso", "INFO": "informacao"}

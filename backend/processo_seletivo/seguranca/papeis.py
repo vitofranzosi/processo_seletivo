@@ -135,6 +135,13 @@ TABELAS_APPEND_ONLY = (
     "avisos_tentativadeenvio",
     "avisos_resultadodatentativa",
     "avisos_interrupcaodoaviso",
+    # As três da identidade institucional (106): a associação com o provedor, o vínculo e a
+    # revogação. Append-only pela razão das demais, e com um agravante próprio: é aqui que se
+    # responde quem tinha qual papel em qual unidade numa data. Reescrever um vínculo mudaria, sem
+    # rastro, quem estava autorizado a praticar um ato que já está publicado.
+    "seguranca_identidadeexterna",
+    "seguranca_vinculo",
+    "seguranca_revogacaodevinculo",
 )
 
 

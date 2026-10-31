@@ -23,6 +23,16 @@ urlpatterns = [
         views.identificar_demonstracao,
         name="identificar-demonstracao",
     ),
+    # A entrada institucional (106): a ida ao provedor, o retorno dele e a troca da unidade ativa.
+    # Nenhuma tem template — respondem redirecionamento, a página de entrada não configurada ou a
+    # recusa do domínio (`D-012`).
+    path("entrar/institucional", views.entrar_institucional, name="entrar-institucional"),
+    path(
+        "entrar/institucional/retorno",
+        views.retorno_institucional,
+        name="retorno-institucional",
+    ),
+    path("unidade-ativa", views.unidade_ativa, name="unidade-ativa"),
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
     path("agenda", views.agenda, name="agenda"),

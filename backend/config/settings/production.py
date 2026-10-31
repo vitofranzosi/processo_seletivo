@@ -236,6 +236,45 @@ _exigir(
     "público depende dos requisitos da implantação.",
 )
 
+# A entrada institucional da gestão (106, `D-009`). **Sem provedor, a gestão continua bloqueada**:
+# a página de acesso responde 503 e não oferece nada, e nenhum caminho cai para a demonstração
+# (`FR-3027`). Com provedor, três recusas, cada uma nomeando a variável (`FR-3026`):
+#
+# - o código de teste não é implantável: o provedor simulado mora em `tests.` e responde a quem a
+#   suíte mandar, sem rede e sem provedor nenhum por trás;
+# - a classe que se declara de teste (`apenas_para_testes`) também não, more onde morar;
+# - nome que não se importa falharia só na primeira entrada, com 500.
+#
+# O alcance é o mesmo que este módulo declara para a API: recusa o que sabe ser inseguro, e **não
+# prova** que a classe declarada fale com o provedor do Ifes. O adaptador não deve importar modelos
+# no topo do módulo, porque é importado aqui, antes de os apps existirem.
+GESTAO_PROVEDOR_INSTITUCIONAL = os.getenv("GESTAO_PROVEDOR_INSTITUCIONAL", "").strip()
+if GESTAO_PROVEDOR_INSTITUCIONAL:
+    _exigir(
+        not GESTAO_PROVEDOR_INSTITUCIONAL.startswith("tests."),
+        "GESTAO_PROVEDOR_INSTITUCIONAL",
+        "o provedor declarado é do código de teste: ele autentica quem a suíte mandar, sem "
+        "provedor nenhum por trás, e não pode existir em produção.",
+    )
+    try:
+        _provedor = import_string(GESTAO_PROVEDOR_INSTITUCIONAL)
+    except ImportError as _erro:
+        raise ImproperlyConfigured(
+            f"GESTAO_PROVEDOR_INSTITUCIONAL: {GESTAO_PROVEDOR_INSTITUCIONAL} não pôde ser "
+            f"importado ({_erro})."
+        ) from _erro
+    _exigir(
+        not getattr(_provedor, "apenas_para_testes", False),
+        "GESTAO_PROVEDOR_INSTITUCIONAL",
+        "o provedor declarado se declara de teste, e não autentica contra o provedor "
+        "institucional.",
+    )
+
+# O *backend* de autenticação é só o institucional (`D-008`). A base já o declara assim; a guarda é
+# para quem acrescentar o `ModelBackend` — usuário e senha nesta aplicação — ou o
+# `RemoteUserBackend`, que confia num cabeçalho que o cliente pode enviar.
+AUTHENTICATION_BACKENDS = ["processo_seletivo.seguranca.autenticacao.BackendInstitucional"]
+
 # A autenticação institucional é incremento próprio; até lá, produção não sobe.
 API_AUTHENTICATION_CLASSES = [
     v.strip() for v in os.getenv("API_AUTHENTICATION_CLASSES", "").split(",") if v.strip()
