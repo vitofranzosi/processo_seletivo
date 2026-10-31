@@ -22,6 +22,7 @@ from processo_seletivo.avisos.application import previa
 from processo_seletivo.avisos.application.destinatarios import Universo
 from processo_seletivo.avisos.domain import nomes as nomes_do_aviso
 from processo_seletivo.convocacao.application.comunicar import _enviar
+from processo_seletivo.duvidas.application.consultar import contexto as contexto_da_duvida
 from processo_seletivo.identidade.application.mensagem import (
     avisar_mudanca_de_credencial,
     enviar_codigo,
@@ -139,6 +140,16 @@ def test_o_canal_e_o_da_unidade_depois_o_institucional_depois_o_padrao(settings)
     )
 
 
+@pytest.mark.django_db
+def test_o_ato_diz_a_sigla_que_gravou_e_sem_ela_recai_no_registro():
+    """D-004, FR-3207: a sigla do ato vence o registro; publicação anterior à 060 recai nele."""
+    _campus()
+    assert identificacao.do_ato("Campus Antigo", "campus-a").rotulo == "Campus Antigo/Ifes"
+    assert identificacao.do_ato("", "campus-a").rotulo == "Campus A/Ifes"
+    assert identificacao.do_ato("", "cefor").rotulo == "Cefor/Ifes"
+    assert identificacao.do_ato("", "nao-registrada").rotulo == "Ifes"
+
+
 def test_a_sigla_do_ifes_e_a_mesma_do_compositor():
     """D-007: as duas constantes ficam separadas, e dizem o mesmo."""
     assert identificacao.SIGLA_DA_INSTITUICAO == pdf.SIGLA_DA_INSTITUICAO
@@ -222,6 +233,17 @@ def test_2_3_5_6_o_edital_o_pdf_e_o_portal_dizem_a_unidade_do_ato(
     assert _titulo(vitrine).endswith("— Ifes")
     assert '<a href="/selecoes/">Ifes · <span class="nome-por-extenso">' in vitrine
 
+    # 2 e 4: o assistente de dúvidas encaminha ao canal da unidade do Edital, e o Cefor, sem canal
+    # no registro, ao institucional (FR-3213). Pela leitura real, com a subconsulta anotada.
+    settings.PORTAL_ATENDIMENTO = CANAL_INSTITUCIONAL
+    agora = timezone.now()
+    assert contexto_da_duvida(edital_id=do_campus.id, instante=agora).canal_institucional == (
+        CANAL_DO_CAMPUS
+    )
+    assert contexto_da_duvida(edital_id=do_cefor.id, instante=agora).canal_institucional == (
+        CANAL_INSTITUCIONAL
+    )
+
     # 6: o campus muda de sigla e de canal no registro; o ato não muda.
     documento_antes = bytes(publicacao.documento.bytes)
     Unidade.objects.filter(codigo="campus-a").update(sigla="Campus Alfa", atendimento="outro@x.br")
@@ -257,7 +279,7 @@ def test_4_o_aviso_assina_e_aponta_o_atendimento_da_unidade_do_edital(settings):
     assert CANAL_DO_CAMPUS not in corpo_do_cefor
 
     # O editor mostra o mesmo rodapé que vai sair.
-    visivel = _rodape_visivel(nomes_do_aviso.RESULTADO, "campus-a")
+    visivel = _rodape_visivel(nomes_do_aviso.RESULTADO, identificacao.da_unidade("campus-a"))
     assert "Campus A/Ifes — Seleções" in visivel and CANAL_DO_CAMPUS in visivel
 
     # Congelado: a mudança do registro depois não o alcança.

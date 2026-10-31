@@ -73,8 +73,12 @@ def destino(universo, valores_):
     )
 
 
-def congelar(universo, *, assunto, corpo, enderecos):
-    """O texto final do aviso: validado, resolvido, com a linha de retificação e o rodapé."""
+def congelar(universo, *, assunto, corpo, enderecos, unidade=None):
+    """O texto final do aviso: validado, resolvido, com a linha de retificação e o rodapé.
+
+    `unidade` é a identificação do Edital já lida por quem chama — a prévia a lê uma vez para o
+    texto e para o rodapé que o editor mostra. Sem ela, é lida aqui.
+    """
     assunto, corpo = mensagem.validar_texto(assunto=assunto, corpo=corpo)
     citadas = len(universo.publicacoes)
     variaveis.validar(assunto, origem=universo.origem, publicacoes_citadas=citadas, campo="assunto")
@@ -83,7 +87,8 @@ def congelar(universo, *, assunto, corpo, enderecos):
     # A unidade do Edital, lida agora e congelada com o texto (109, D-004): o aviso confirmado
     # guarda a assinatura e o canal do dia, e a mudança do registro depois não o reescreve
     # (FR-3216).
-    unidade = identificacao.da_unidade(universo.edital.institution_scope)
+    if unidade is None:
+        unidade = identificacao.da_unidade(universo.edital.institution_scope)
     return mensagem.congelar(
         assunto=assunto,
         corpo=corpo,
@@ -96,7 +101,9 @@ def congelar(universo, *, assunto, corpo, enderecos):
     )
 
 
-def compor(universo, *, assunto, corpo, enderecos, exemplo=0, motivo=nomes.PRIMEIRO_AVISO):
+def compor(
+    universo, *, assunto, corpo, enderecos, exemplo=0, motivo=nomes.PRIMEIRO_AVISO, unidade=None
+):
     """A prévia inteira, sem gravar nada.
 
     Devolve as contagens, as linhas, a mensagem como sai para uma pessoa real da lista (`exemplo`
@@ -119,7 +126,7 @@ def compor(universo, *, assunto, corpo, enderecos, exemplo=0, motivo=nomes.PRIME
         return previa
     try:
         assunto_final, corpo_final = congelar(
-            universo, assunto=assunto, corpo=corpo, enderecos=enderecos
+            universo, assunto=assunto, corpo=corpo, enderecos=enderecos, unidade=unidade
         )
     except DomainError as erro:
         previa["erro"] = erro

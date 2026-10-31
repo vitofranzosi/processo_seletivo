@@ -116,7 +116,7 @@ Esta feature não toca nenhum dos seis: o canal entra pelo mesmo arquivo e pelo 
 
 | # | Pergunta | Resposta provisória, implementada | Quando importa |
 |---|---|---|---|
-| **P-1** | Com mais de uma unidade ativa, o que o portal, a página de acesso, a 404 e o código de acesso dizem? | "Ifes" sozinho (D-002) | antes do segundo campus entrar no registro |
+| **P-1** | Com mais de uma unidade ativa, o que o portal, a página de acesso, a 404 e o código de acesso dizem? E uma unidade **desativada** que ainda tem Edital na vitrine conta? (Hoje não conta: com o Cefor como única ativa, a moldura diz "Cefor/Ifes" também sobre o cartão do campus desativado — achado da revisão de 31/10.) | "Ifes" sozinho com duas ativas; a desativada não conta (D-002) | antes do segundo campus entrar no registro |
 | **P-2** | Qual é a política de atendimento: o Cefor passa a declarar o canal no registro? Uma forma só (e-mail) ou várias? Quem atende a conta do candidato, que não é de unidade? | o Cefor fica no `PORTAL_ATENDIMENTO`; o registro aceita qualquer texto de uma linha | antes do segundo campus |
 | **P-3** | A aba `Import_ModeloCefor` da exportação para o Registro Acadêmico vale para os outros campi? | fica como está (contrato externo) | quando outro campus exportar matrícula |
 | **P-4** | O nome do serviço no endpoint operacional, "Processo Seletivo e Editais — Cefor/IFES", deve passar a ser do Ifes? | fica (identificação técnica, lida por monitoramento) | sem prazo |

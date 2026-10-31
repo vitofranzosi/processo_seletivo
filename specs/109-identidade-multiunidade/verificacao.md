@@ -88,6 +88,26 @@ A sincronização pelo `--arquivo` disse `1 criadas, 0 alteradas, 1 sem mudança
 modelos de aviso do campus; o `unidades.json` versionado não mudou. Depois disso, o mesmo banco
 recusa o arquivo versionado com `unidade_retirada` — anotado no quickstart.
 
+## A revisão de código de 31/10
+
+Sete achados sobre o diff do #349; cinco corrigidos na mesma branch:
+
+- a prévia do aviso lia a unidade do Edital duas vezes (texto e rodapé do editor), além da moldura:
+  agora lê uma, e a passa aos dois;
+- o assistente de dúvidas e o `do_ato` ganharam teste — a subconsulta do canal com Editais
+  publicados de verdade nas duas unidades, e a recaída do ato sem sigla gravada;
+- o assistente de dúvidas deixou de montar uma `Identificacao` só para calcular a recaída;
+- o comentário de `recusa.html` voltou a citar a frase inteira.
+
+Depois das correções, `make lint check test-pg` deu **13849 passando, 14 pulados**, sem falha (o caso a mais é o do `do_ato`).
+
+Dois ficaram, com o motivo: o `do_ato` não carrega o canal da unidade (carregá-lo voltaria a ler o
+registro, e nenhuma chamada usa o canal dele; a docstring manda a `da_unidade`), e a unidade
+desativada que ainda tem Edital na vitrine não conta para a moldura — é o comportamento que a spec
+declara nos casos-limite, e a pergunta foi acrescentada à P-1. A tela da convocação do candidato
+continua sem teste próprio do canal da unidade: montar uma convocação pede o certame inteiro, e o
+canal dela sai da mesma `da_unidade(...).canal()` que os cenários 4 cobrem.
+
 ## O que não foi executado
 
 - **Conferência visual no navegador.** As molduras foram lidas como HTML; nenhuma folha mudou, e o

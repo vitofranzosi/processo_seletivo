@@ -265,9 +265,7 @@ def contexto(*, edital_id, instante, versao_anterior=None) -> Contexto:
         desfecho=_desfecho(edital, instante),
         # O da unidade do Edital, e o da instituição na falta (109, FR-3213). O do próprio Edital
         # continua primeiro: é o domínio que o acha no texto, e este é só o que vem depois dele.
-        canal_institucional=identificacao.Identificacao(
-            atendimento=edital.canal_da_unidade or ""
-        ).canal(),
+        canal_institucional=edital.canal_da_unidade or identificacao.canal_institucional(),
         pagina_publica=reverse("portal:selecao", args=[edital.id]),
         anexos_publicos={
             str(anexo.get("artifactId")): reverse("public-anexo", args=[anexo.get("artifactId")])
