@@ -38,6 +38,7 @@ from processo_seletivo.avisos.models import ModeloDeAviso
 from processo_seletivo.interface import acoes, identidade
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada
+from processo_seletivo.unidades.application import identificacao
 
 
 def _identificador(valor):
@@ -99,15 +100,20 @@ def _variaveis_da_origem(origem, publicacoes_citadas):
     ]
 
 
-def _rodape_visivel(origem):
-    """O rodapé como aparece no editor: fixo, com os marcadores do sistema por extenso."""
+def _rodape_visivel(origem, unidade):
+    """O rodapé como aparece no editor: fixo, com os marcadores do sistema por extenso.
+
+    A assinatura e o canal são os da `unidade` (109): a do Edital, na prévia, e a de quem edita, no
+    modelo — o modelo é da unidade, e é por ela que o aviso vai assinar.
+    """
     from processo_seletivo.avisos.domain.mensagem import FRASE_DA_CHAMADA
 
     return RODAPE.format(
         destino_oficial="[endereço da publicação oficial]",
         edital="[Edital]",
         frase_da_chamada=FRASE_DA_CHAMADA if origem == nomes.CHAMADA else "",
-        atendimento=getattr(settings, "PORTAL_ATENDIMENTO", "") or "a comissão do certame",
+        atendimento=unidade.canal("a comissão do certame"),
+        assinatura=unidade.rotulo,
     )
 
 
@@ -134,6 +140,9 @@ def _contexto_da_previa(request, ator, universo, *, motivo, acao, extra):
     except ValueError:
         exemplo = 0
     enderecos = _enderecos(request, universo.edital, universo.publicacoes)
+    # Uma leitura da unidade do Edital para a prévia inteira: o texto que se congela e o rodapé
+    # que o editor mostra dizem a mesma assinatura e o mesmo canal (109).
+    unidade = identificacao.da_unidade(universo.edital.institution_scope)
     composta = previa.compor(
         universo,
         assunto=assunto,
@@ -141,6 +150,7 @@ def _contexto_da_previa(request, ator, universo, *, motivo, acao, extra):
         enderecos=enderecos,
         exemplo=exemplo,
         motivo=motivo,
+        unidade=unidade,
     )
     return {
         "processo": universo.edital.processo,
@@ -153,7 +163,7 @@ def _contexto_da_previa(request, ator, universo, *, motivo, acao, extra):
         "assunto": assunto,
         "corpo": corpo,
         "variaveis": _variaveis_da_origem(universo.origem, len(universo.publicacoes)),
-        "rodape": _rodape_visivel(universo.origem),
+        "rodape": _rodape_visivel(universo.origem, unidade),
         "chave": uuid4().hex,
         "habilitado": envio_habilitado(),
         "reenvio": motivo == nomes.REENVIO_JUSTIFICADO,
@@ -634,7 +644,9 @@ def modelo_de_aviso(request, modelo_id=None):
                 "variaveis": [
                     {"nome": nome, "significado": SIGNIFICADO[nome]} for nome in VARIAVEIS
                 ],
-                "rodape": _rodape_visivel(nomes.RESULTADO),
+                "rodape": _rodape_visivel(
+                    nomes.RESULTADO, identificacao.da_unidade(ator.institution_scope)
+                ),
             },
             status=erro.status if erro else 200,
         )

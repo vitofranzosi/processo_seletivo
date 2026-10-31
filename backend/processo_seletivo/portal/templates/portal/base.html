@@ -8,7 +8,7 @@
    política de segurança de conteúdo recusaria os dois. Esta configuração os desliga sem script
    embutido: o htmx a lê do `<meta>` ao iniciar (091, D-009). {% endcomment %}
 <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
-<title>{% block titulo %}Seleções abertas{% endblock %} — Cefor/Ifes</title>
+<title>{% block titulo %}Seleções abertas{% endblock %} — {{ identificacao_publica.rotulo }}</title>
 <link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 {% comment %} A folha do portal está em `portal/static/portal/portal.css` desde a 092: fora do documento,
    ela fica no cache, e a política de segurança de conteúdo pode recusar estilo embutido no portal.
@@ -18,7 +18,7 @@
 <body>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
-  <span class="marca"><a href="{% url 'portal:vitrine' %}">Cefor<span>/Ifes</span> · <span class="nome-por-extenso">Gestão de Processos Seletivos</span><span class="sigla" aria-hidden="true">GPS</span></a></span>
+  <span class="marca"><a href="{% url 'portal:vitrine' %}">{% include "_marca_da_unidade.html" with identificacao=identificacao_publica %} · <span class="nome-por-extenso">Gestão de Processos Seletivos</span><span class="sigla" aria-hidden="true">GPS</span></a></span>
   <nav class="acessos" aria-label="Acessos">
   {% comment %}
   A identidade aqui é a **do candidato**, de chave de sessão própria — nunca o `ator` da interface

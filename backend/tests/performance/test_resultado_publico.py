@@ -85,6 +85,10 @@ def test_a_pagina_custa_um_numero_pequeno_e_declarado_de_consultas(
     **A quinta é a versão que o ato citou** (RC-121, decisão do usuário de 28/09). A janela de ato
     já divulgado segue a versão citada, salvo o que a vigente concede, e a regra precisa das duas.
     É a mesma tabela de norma pública, lida pelo ato, e continua sendo uma consulta só por página.
+
+    **A sexta é a identificação da implantação na moldura** (109, D-002). O portal diz "Cefor/Ifes"
+    quando o Cefor é a única unidade ativa, e "Ifes" com várias: é uma leitura do registro de
+    Unidades por página, e não cresce com as posições.
     """
     publicacao = _publicar_com(
         gestor, api_client, manager_headers, process_payload, quantas=3, seed=72, codigo="0772"
@@ -92,10 +96,11 @@ def test_a_pagina_custa_um_numero_pequeno_e_declarado_de_consultas(
 
     quantidade = _consultas_da_pagina(client, publicacao)
 
-    assert quantidade <= 5, (
+    assert quantidade <= 6, (
         f"a página custou {quantidade} consultas: são a publicação, a cadeia das sucessoras, a "
         "versão vigente (047, D-008) e a versão que o ato citou (RC-121), que dão o prazo de "
-        "recurso; uma sexta leitura precisa ser justificada"
+        "recurso, e a identificação da implantação na moldura (109); uma sétima leitura precisa "
+        "ser justificada"
     )
 
 

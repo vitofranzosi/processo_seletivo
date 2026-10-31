@@ -31,6 +31,8 @@ def _congelar(origem=nomes.RESULTADO, datas=(), destino="https://x/selecoes/1/")
         datas_retificadas=datas,
         destino=destino,
         atendimento="selecao@exemplo.test",
+        # A unidade do Edital chega resolvida, como o canal (109, D-006).
+        assinatura="Cefor/Ifes",
     )
 
 

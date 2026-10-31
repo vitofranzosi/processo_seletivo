@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import json
 
-from django.conf import settings
 from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
@@ -46,6 +45,7 @@ from processo_seletivo.publicacoes.models_retificacao import (
     VersaoConsolidada,
 )
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.unidades.application import identificacao
 
 #: O que a resposta lê das versões futuras. `canonical_content` são os mesmos dados em bytes. A
 #: vigente vem inteira de `effective_version`, que é a leitura de todas as telas.
@@ -169,7 +169,11 @@ def contexto(*, edital_id, instante, versao_anterior=None) -> Contexto:
 
     Levanta `SemVersaoVigente` quando não havia publicação vigente no instante.
     """
-    edital = Edital.objects.select_related("processo").get(pk=edital_id)
+    edital = (
+        Edital.objects.select_related("processo")
+        .annotate(canal_da_unidade=identificacao.canal_da_unidade_por_escopo())
+        .get(pk=edital_id)
+    )
     try:
         versao = effective_version(edital_id=edital_id, at=instante)
     except DomainError as erro:
@@ -259,7 +263,9 @@ def contexto(*, edital_id, instante, versao_anterior=None) -> Contexto:
             for linha in futuras_linhas
         ),
         desfecho=_desfecho(edital, instante),
-        canal_institucional=getattr(settings, "PORTAL_ATENDIMENTO", "") or "",
+        # O da unidade do Edital, e o da instituição na falta (109, FR-3213). O do próprio Edital
+        # continua primeiro: é o domínio que o acha no texto, e este é só o que vem depois dele.
+        canal_institucional=edital.canal_da_unidade or identificacao.canal_institucional(),
         pagina_publica=reverse("portal:selecao", args=[edital.id]),
         anexos_publicos={
             str(anexo.get("artifactId")): reverse("public-anexo", args=[anexo.get("artifactId")])

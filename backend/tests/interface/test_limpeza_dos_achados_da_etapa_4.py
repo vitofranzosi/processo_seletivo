@@ -272,13 +272,16 @@ def test_nenhum_link_da_trilha_recusa_quem_a_le(client, cenario, rota, leitor):
 
 #: Consultas de cada tela, para quem preside e para quem só audita, medidas em 18/10/2026 sobre a
 #: `main` em `21e36bd4`, antes desta feature. A trilha nova não pode custar nenhuma (`FR-2064`).
+#: **Mais uma em cada desde a `109`**: a sigla da unidade na moldura da gestão, uma leitura por
+#: página, que nada tem com a trilha.
+_MOLDURA = 1
 CONSULTAS_ANTES = {
-    ("interface:resultados-da-etapa", "presidencia"): 7,
-    ("interface:resultados-da-etapa", "auditoria"): 7,
-    ("interface:trilha-da-avaliacao", "presidencia"): 13,
-    ("interface:trilha-da-avaliacao", "auditoria"): 13,
-    ("interface:conclusoes-preservadas", "presidencia"): 7,
-    ("interface:conclusoes-preservadas", "auditoria"): 7,
+    ("interface:resultados-da-etapa", "presidencia"): 7 + _MOLDURA,
+    ("interface:resultados-da-etapa", "auditoria"): 7 + _MOLDURA,
+    ("interface:trilha-da-avaliacao", "presidencia"): 13 + _MOLDURA,
+    ("interface:trilha-da-avaliacao", "auditoria"): 13 + _MOLDURA,
+    ("interface:conclusoes-preservadas", "presidencia"): 7 + _MOLDURA,
+    ("interface:conclusoes-preservadas", "auditoria"): 7 + _MOLDURA,
 }
 
 
@@ -488,7 +491,11 @@ def test_a_porta_nao_muda_o_aviso(client, divulgado):
 
 #: Consultas da prévia pelos Avisos, medidas em 18/10/2026 sobre a `main` em `21e36bd4`, antes desta
 #: feature — quando `de=marco` ainda não significava nada, e as duas portas custavam o mesmo.
-CONSULTAS_DA_PREVIA_ANTES = {"publicador": 10, "publicador+auditor": 10}
+#: Desde a `109`, mais duas: a moldura, e a unidade do Edital, que assina o rodapé e dá o canal.
+_UNIDADE_DO_EDITAL = 1
+CONSULTAS_DA_PREVIA_ANTES = {
+    papeis: 10 + _MOLDURA + _UNIDADE_DO_EDITAL for papeis in ("publicador", "publicador+auditor")
+}
 
 
 @pytest.mark.parametrize(

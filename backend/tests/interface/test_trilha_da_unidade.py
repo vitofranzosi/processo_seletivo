@@ -147,6 +147,26 @@ def test_a_sincronizacao_aparece_pela_implantacao_com_os_dados_mudados(client):
     assert "<dt>Local</dt><dd>Vitória (ES) → Serra (ES)</dd>" in alteracao
 
 
+def test_a_alteracao_so_do_canal_de_atendimento_mostra_o_canal(client):
+    """A 109 grava o canal na sincronização; a alteração só dele não pode sair sem dado mudado."""
+    sincronizar(
+        {
+            "cefor": {
+                **{k: v for k, v in CEFOR.items() if k != "codigo"},
+                "atendimento": "atendimento.cefor@ifes.edu.br",
+            }
+        },
+        correlation_id="teste-108-109",
+    )
+    _auditor(client)
+
+    (alteracao,) = _itens(client.get(URL).content.decode())
+
+    assert "Alteração da unidade" in alteracao
+    assert "<dt>Canal de atendimento</dt><dd>— → atendimento.cefor@ifes.edu.br</dd>" in alteracao
+    assert "<dt>Local</dt>" not in alteracao
+
+
 def test_os_modelos_aparecem_pelo_nome_e_sem_o_texto(client):
     garantir_modelos_iniciais(correlation_id="teste-108")
     modelo = criar(

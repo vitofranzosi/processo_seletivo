@@ -19,6 +19,10 @@ from processo_seletivo.avisos.domain.variaveis import escapar, resolver, resolve
 # **O rodapé é do sistema, e não da seleção** (`FR-1257`). É ele que impede o aviso de ser lido como
 # o ato: aponta a publicação oficial, diz que ela é a referência e que o aviso não a substitui.
 #
+# **A assinatura é a da unidade do Edital** (109, FR-3209): "Cefor/Ifes" para o Cefor, como sempre
+# foi, e a sigla do registro para outra unidade. Quem a resolve é a aplicação, que sabe o Edital;
+# este módulo a recebe pronta, como recebe o canal (D-006).
+#
 # **Um parágrafo por linha, sem quebra no meio da frase**: quem quebra a linha é o leitor de e-mail,
 # na largura da tela de quem lê. A quebra fixa em 80 colunas deixava palavra sozinha na linha
 # seguinte em toda tela mais estreita que isso — a do celular, que é onde o aviso é lido.
@@ -28,7 +32,7 @@ RODAPE = (
     "conforme o {edital}. Este aviso não substitui a publicação.\n"
     "{frase_da_chamada}Em caso de dúvida, fale com {atendimento}.\n"
     "\n"
-    "Cefor/Ifes — Seleções\n"
+    "{assinatura} — Seleções\n"
     "Esta mensagem é automática; não responda."
 )
 
@@ -85,7 +89,9 @@ def destino_oficial(*, link_da_publicacao="", referencia_da_publicacao="", pagin
     return link_da_publicacao or referencia_da_publicacao or pagina
 
 
-def congelar(*, assunto, corpo, valores, origem, datas_retificadas=(), destino, atendimento):
+def congelar(
+    *, assunto, corpo, valores, origem, datas_retificadas=(), destino, atendimento, assinatura
+):
     """O texto que o aviso guarda: tudo resolvido, menos o nome de quem recebe.
 
     `valores` é o dicionário das variáveis que valem para todos; `datas_retificadas`, os instantes
@@ -102,6 +108,7 @@ def congelar(*, assunto, corpo, valores, origem, datas_retificadas=(), destino, 
             edital=escapar(valores.get("edital", "")),
             frase_da_chamada=FRASE_DA_CHAMADA if origem == nomes.CHAMADA else "",
             atendimento=escapar(atendimento or ATENDIMENTO_PADRAO),
+            assinatura=escapar(assinatura),
         )
     )
     return assunto_final, "\n\n".join(partes)

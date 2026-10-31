@@ -29,14 +29,18 @@ from django.conf import settings
 from django.core.mail import send_mail
 
 from processo_seletivo.identidade.models import VALIDADE_EM_MINUTOS, DesafioDeAcesso
+from processo_seletivo.unidades.application import identificacao
 
 logger = logging.getLogger("processo_seletivo.identidade")
 
-ASSUNTO = "Seu código de acesso — Seleções Cefor/Ifes"
-ASSUNTO_VINCULO = "Confirme este e-mail — Seleções Cefor/Ifes"
+ASSUNTO = "Seu código de acesso — Seleções {instituicao}"
+ASSUNTO_VINCULO = "Confirme este e-mail — Seleções {instituicao}"
 
+# **A identificação da implantação, e não a de uma unidade** (109, FR-3210): a conta do candidato
+# não é de unidade nenhuma, e o código serve para entrar em qualquer seleção. Com o Cefor sozinho no
+# registro, é "Cefor/Ifes", como sempre foi; com mais de uma unidade ativa, "Ifes" (P-1).
 RODAPE = """
-Cefor/Ifes — Seleções
+{instituicao} — Seleções
 Esta mensagem é automática; não responda.
 """
 
@@ -57,7 +61,7 @@ Se não foi você que pediu este código, ignore esta mensagem: ninguém entra s
 # pessoa, que então entra por ele.
 CORPO_VINCULO = (
     """Alguém pediu para usar este e-mail como forma de entrar numa conta das Seleções
-Cefor/Ifes. Se foi você, o código é:
+{instituicao}. Se foi você, o código é:
 
     {codigo}
 
@@ -69,10 +73,10 @@ por este endereço. Ignorar esta mensagem é suficiente — nada acontece sem o 
     + RODAPE
 )
 
-ASSUNTO_DA_MUDANCA = "Mudança no acesso à sua conta — Seleções Cefor/Ifes"
+ASSUNTO_DA_MUDANCA = "Mudança no acesso à sua conta — Seleções {instituicao}"
 
 CORPO_DA_MUDANCA = (
-    """O endereço abaixo foi {acao} como forma de entrar na sua conta das Seleções Cefor/Ifes:
+    """O endereço abaixo foi {acao} como forma de entrar na sua conta das Seleções {instituicao}:
 
     {endereco}
 
@@ -95,10 +99,11 @@ def enviar_codigo(*, para: str, codigo: str, finalidade: str = "") -> None:
         return
     vinculo = finalidade == DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL
     try:
+        instituicao = identificacao.da_implantacao().rotulo
         send_mail(
-            subject=ASSUNTO_VINCULO if vinculo else ASSUNTO,
+            subject=(ASSUNTO_VINCULO if vinculo else ASSUNTO).format(instituicao=instituicao),
             message=(CORPO_VINCULO if vinculo else CORPO).format(
-                codigo=codigo, validade=VALIDADE_EM_MINUTOS
+                codigo=codigo, validade=VALIDADE_EM_MINUTOS, instituicao=instituicao
             ),
             from_email=settings.DEFAULT_FROM_EMAIL or None,
             recipient_list=[para],
@@ -122,12 +127,14 @@ def avisar_mudanca_de_credencial(*, para: str, endereco: str, acao: str, atendim
     if not para:
         return
     try:
+        instituicao = identificacao.da_implantacao().rotulo
         send_mail(
-            subject=ASSUNTO_DA_MUDANCA,
+            subject=ASSUNTO_DA_MUDANCA.format(instituicao=instituicao),
             message=CORPO_DA_MUDANCA.format(
                 acao=acao,
                 endereco=endereco,
                 atendimento=atendimento or "o atendimento institucional",
+                instituicao=instituicao,
             ),
             from_email=settings.DEFAULT_FROM_EMAIL or None,
             recipient_list=[para],

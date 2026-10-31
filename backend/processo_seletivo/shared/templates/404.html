@@ -17,12 +17,12 @@ canais e a resposta é a mesma: o endereço não abre para você, e daqui você 
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Página não encontrada — Cefor/Ifes</title>
+<title>Página não encontrada — {{ identificacao_publica.rotulo }}</title>
 <link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 <link rel="stylesheet" href="{% estatico 'shared/erro.css' %}">
 </head>
 <body>
-<header class="topo"><span class="marca">Cefor<span>/Ifes</span> · Processos Seletivos</span></header>
+<header class="topo"><span class="marca">{% include "_marca_da_unidade.html" with identificacao=identificacao_publica %} · Processos Seletivos</span></header>
 <main>
   <h1>Página não encontrada</h1>
   <p>O endereço não corresponde a nada que você possa acessar. Ele pode ter deixado de existir, ou

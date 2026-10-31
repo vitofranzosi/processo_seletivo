@@ -36,6 +36,8 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 
+from processo_seletivo.unidades.application import identificacao
+
 logger = logging.getLogger("processo_seletivo.inscricoes")
 
 ASSUNTO = "Inscrição recebida — {protocolo}"
@@ -60,7 +62,7 @@ Para rever a inscrição e baixar o comprovante, acesse
 {endereco}
 e entre com este e-mail — enviamos um código de acesso a cada entrada, e não há senha.
 
-Cefor/Ifes — Seleções
+{assinatura} — Seleções
 Esta mensagem é automática; não responda.
 """
 
@@ -92,6 +94,9 @@ def enviar_comprovante(*, para: str, dados: dict) -> None:
                 quando=dados["quando"],
                 documentos=documentos,
                 endereco=dados["endereco"],
+                # A unidade do ato, que o portal resolve como o comprovante em papel (109). Sem
+                # ela, a da implantação — e nunca um Cefor escrito aqui.
+                assinatura=dados.get("assinatura") or identificacao.da_implantacao().rotulo,
             ),
             from_email=settings.DEFAULT_FROM_EMAIL or None,
             recipient_list=[para],

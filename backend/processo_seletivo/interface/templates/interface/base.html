@@ -8,7 +8,7 @@
    política de segurança de conteúdo recusaria os dois. Esta configuração os desliga sem script
    embutido: o htmx a lê do `<meta>` ao iniciar (091, D-009). {% endcomment %}
 <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
-<title>{% block titulo %}Gestão de Processos Seletivos{% endblock %} — Cefor/Ifes</title>
+<title>{% block titulo %}Gestão de Processos Seletivos{% endblock %} — {{ identificacao_da_gestao.rotulo }}</title>
 {% comment %}
 A folha comum saiu deste modelo para `interface/gestao.css`, e os tokens para `shared/tokens.css` (089):
 dentro do HTML, 53 KB de regras viajavam em toda resposta da gestão, sem cache, e impediam uma política
@@ -70,7 +70,7 @@ viajava dentro do `<style>`; o argumento de escopar o estilo vale igual.
   <div class="marca-da-barra">
     {% comment %} A marca leva à lista de Processos. Sem isso a Visão Geral era um beco: nenhum link
        dela devolve à lista, e o único caminho de volta era o botão do navegador. {% endcomment %}
-    <a class="marca" href="{% url 'interface:lista' %}"><span class="sigla-do-produto" aria-hidden="true">GPS</span><span class="nome-do-produto">Gestão de Processos Seletivos<span>Cefor/Ifes</span></span></a>
+    <a class="marca" href="{% url 'interface:lista' %}"><span class="sigla-do-produto" aria-hidden="true">GPS</span><span class="nome-do-produto">Gestão de Processos Seletivos<span>{{ identificacao_da_gestao.rotulo }}</span></span></a>
   </div>
   <button type="button" class="abrir-secoes" popovertarget="secoes-da-gestao">Seções</button>
   <div class="secoes-da-gestao" id="secoes-da-gestao" popover>
@@ -136,7 +136,7 @@ viajava dentro do `<style>`; o argumento de escopar o estilo vale igual.
 </header>
 {% else %}
 <header class="topo">
-  <a class="marca" href="{% url 'interface:lista' %}">Cefor<span>/Ifes</span> · Gestão de Processos Seletivos</a>
+  <a class="marca" href="{% url 'interface:lista' %}">{% include "_marca_da_unidade.html" with identificacao=identificacao_da_gestao %} · Gestão de Processos Seletivos</a>
 </header>
 {% endif %}
 <!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco, que fica no

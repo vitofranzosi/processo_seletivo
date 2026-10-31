@@ -30,6 +30,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMAS_DE_CONVOCACAO,
 )
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.unidades.application import identificacao
 
 logger = logging.getLogger("processo_seletivo.convocacao")
 
@@ -53,7 +54,7 @@ O que fazer: acesse a sua área e siga as instruções da convocação em
 
 Em caso de dúvida, fale com {atendimento}.
 
-Cefor/Ifes — Seleções
+{assinatura} — Seleções
 Esta mensagem é automática; não responda.
 """
 
@@ -312,13 +313,17 @@ def _enviar(convocacao, *, destinatario, endereco_do_portal):
     """
     if not destinatario:
         return "sem endereço de destino para esta Inscrição"
+    # A unidade do Edital assina e diz por onde falar (109, FR-3209, FR-3212). Uma leitura por
+    # envio, e o envio é de uma pessoa: a convocação por mensagem individual não sai em lote.
+    unidade = identificacao.da_unidade(convocacao.edital.institution_scope)
     return enviar_mensagem_de_convocacao(
         para=destinatario,
         dados={
             "edital": f"Edital {convocacao.edital.number}/{convocacao.edital.year}",
             "vencimento": convocacao.vencimento,
             "endereco": endereco_do_portal,
-            "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", "") or "a comissão do certame",
+            "atendimento": unidade.canal("a comissão do certame"),
+            "assinatura": unidade.rotulo,
         },
     )
 
@@ -347,6 +352,9 @@ def enviar_mensagem_de_convocacao(*, para, dados):
         ),
         endereco=dados["endereco"] or "a área do candidato, no endereço do certame",
         atendimento=dados["atendimento"],
+        # Chega resolvida, como o canal: quem envia sabe o Edital (109). Exigida, e sem recaída —
+        # uma recaída aqui seria um Cefor escrito de novo, ou uma consulta que a função não faz.
+        assinatura=dados["assinatura"],
     )
     try:
         # **O retorno é contado**, e não descartado: `send_mail` devolve quantas mensagens entraram
