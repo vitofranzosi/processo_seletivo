@@ -42,6 +42,9 @@ MODULOS_DE_VIEW = (
     RAIZ / "processo_seletivo/interface/documentacao.py",
     # A gestão de acessos (107): 404 só para o vínculo inexistente ou de outro escopo.
     RAIZ / "processo_seletivo/interface/acessos.py",
+    # A trilha da unidade (108): nenhum 404 — a página não recebe identificador, e a falta de
+    # permissão é a recusa explicada. Entra para que um 404 futuro não escape do inventário.
+    RAIZ / "processo_seletivo/interface/trilha_da_unidade.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

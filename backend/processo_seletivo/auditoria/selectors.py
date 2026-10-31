@@ -71,6 +71,15 @@ def consultar(
         registros = registros.filter(aggregate_filter)
     if operation:
         registros = registros.filter(operation=operation)
+    return _paginar(registros, cursor=cursor, limit=limit)
+
+
+def _paginar(registros, *, cursor, limit):
+    """A página seguinte ao cursor, do mais recente para o mais antigo, e o cursor da próxima.
+
+    Saiu de `consultar` com a trilha da unidade (108, `D-007`): as duas leem o mesmo registro na
+    mesma ordem, e a tela usa o mesmo `pagina_seguinte` para as duas.
+    """
     if cursor:
         occurred_at, event_id = decode_cursor(cursor)
         # O cursor aponta para o último item já entregue, na mesma ordem decrescente.
@@ -81,6 +90,52 @@ def consultar(
     tem_mais = len(pagina) > limit
     pagina = pagina[:limit]
     return pagina, (encode_cursor(pagina[-1]) if pagina and tem_mais else None)
+
+
+# Os assuntos da trilha da unidade e os tipos de agregado de cada um (108, `D-005`). O tipo é o nome
+# da classe, que é o que `record_event` grava; o mapa mora aqui, e não na tela, porque é ele que
+# decide o que a consulta alcança — e o escopo de uma consulta se decide num lugar só.
+ASSUNTOS_DA_UNIDADE = {
+    "unidade": ("Unidade",),
+    "autoridades": ("AutoridadeHabilitada",),
+    "modelos": ("ModeloDeAviso",),
+    "avisos": ("Aviso", "InterrupcaoDoAviso"),
+    "acessos": ("Vinculo",),
+}
+
+
+def trilha_da_unidade(*, actor, assunto=None, cursor=None, limit=LIMITE_PADRAO):
+    """Os atos administrativos da unidade do ator, do mais recente para o mais antigo (108).
+
+    É a trilha que até a `108` só se lia pelo `psql`: a unidade, as autoridades, os modelos de
+    aviso, os avisos e os acessos. **A unidade é a do ator, e só ela** (`FR-3154`).
+
+    **E uma exceção de escopo, só uma** (`D-002`). O escopo do evento é o do ator, e não o do
+    objeto: a concessão do Administrador de acessos do `cefor` pelo administrador institucional fica
+    no escopo institucional, e só o detalhe diz que o vínculo é do `cefor`. Sem ela, a concessão que
+    mais importa a quem fiscaliza a unidade ficaria de fora. A condição é estreita de propósito —
+    vínculo, e com o escopo do vínculo igual à unidade —: suspensão, administração institucional e
+    sessão sem unidade continuam fora (`D-003`, `D-004`). É por isso que esta consulta não é um
+    parâmetro a mais de `consultar`: um escopo extra ali estaria à disposição de qualquer chamador.
+
+    `assunto` fora do mapa vale como todos (`D-009`). Quem está no escopo institucional não tem
+    unidade a ler, e recebe nada (`D-003`); a tela já o recusa antes.
+    """
+    from processo_seletivo.seguranca.acessos import ESCOPO_INSTITUCIONAL
+
+    unidade = actor.institution_scope
+    if not unidade or unidade == ESCOPO_INSTITUCIONAL:
+        return [], None
+    escolhidos = [assunto] if assunto in ASSUNTOS_DA_UNIDADE else list(ASSUNTOS_DA_UNIDADE)
+    tipos = [tipo for chave in escolhidos for tipo in ASSUNTOS_DA_UNIDADE[chave]]
+    alcance = Q(institution_scope=unidade, aggregate_type__in=tipos)
+    if "acessos" in escolhidos:
+        alcance |= Q(
+            institution_scope=ESCOPO_INSTITUCIONAL,
+            aggregate_type="Vinculo",
+            detalhe__escopo=unidade,
+        )
+    return _paginar(RegistroAuditoria.objects.filter(alcance), cursor=cursor, limit=limit)
 
 
 def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):

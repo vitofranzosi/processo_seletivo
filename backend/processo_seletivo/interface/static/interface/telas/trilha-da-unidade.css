@@ -1,0 +1,11 @@
+/* A trilha da unidade (108). A lista é a `.auditoria` da folha comum; aqui só o que ela não tem. */
+
+/* O objeto do ato ao lado do assunto, como o "sobre" da trilha da comissão. */
+.auditoria .alvo{font-size:.875rem;overflow-wrap:anywhere}
+
+/* Os dados que mudaram na unidade ou na autoridade: um por linha, o nome à esquerda e o antes →
+   depois à direita, na linha inteira do registro, como o motivo. */
+.dados-mudados{flex-basis:100%;display:grid;grid-template-columns:minmax(7rem,max-content) minmax(0,1fr);
+  gap:.1rem 1rem;margin:.15rem 0 0;font-size:.875rem}
+.dados-mudados dt{color:var(--texto-fraco)}
+.dados-mudados dd{margin:0;overflow-wrap:anywhere}

@@ -290,6 +290,8 @@ QUEM_CARREGA = {
             "relatorio-do-edital",
             "retificar",
             "sorteio",
+            # A trilha da unidade (108).
+            "trilha-da-unidade",
             "visao-geral",
         )
     },
