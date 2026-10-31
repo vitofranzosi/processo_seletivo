@@ -34,6 +34,11 @@ class Unidade(models.Model):
     cabecalho = models.JSONField(default=list)
     # O local do ato no fecho do documento publicado — *"Vitória (ES)"* (FR-1113).
     local = models.CharField(max_length=120)
+    # O canal de atendimento ao candidato **desta unidade** (109, FR-3211): o que as mensagens e as
+    # telas de um Edital dela mandam procurar. Vazio é "não declarado", e então vale o
+    # `PORTAL_ATENDIMENTO`, que é o canal da instituição — e não o do Cefor. Não é configuração de
+    # correio: servidor, remetente e credencial continuam um só para a implantação (FR-3215).
+    atendimento = models.CharField(max_length=255, blank=True, default="")
     ativa = models.BooleanField(default=True)
     registrada_em = models.DateTimeField()
     alterada_em = models.DateTimeField(null=True, blank=True)

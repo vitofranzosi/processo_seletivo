@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block titulo %}Acesso à gestão{% endblock %} — Gestão de Processos Seletivos · Cefor/Ifes</title>
+<title>{% block titulo %}Acesso à gestão{% endblock %} — Gestão de Processos Seletivos · {{ identificacao_publica.rotulo }}</title>
 <link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/acesso.css' %}">{% endblock %}
 </head>
@@ -38,7 +38,7 @@ Os ícones vêm de um sprite inline: traço único, `currentColor`, sem bibliote
   <aside class="produto" aria-label="Sobre o sistema">
     <a class="instituicao" href="{% url 'portal:vitrine' %}">
       <span class="simbolo"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-marca"/></svg></span>
-      <span>Cefor · Ifes<small>Instituto Federal do Espírito Santo</small></span>
+      <span>{% if identificacao_publica.sigla %}{{ identificacao_publica.sigla }} · {% endif %}{{ identificacao_publica.instituicao }}<small>{{ identificacao_publica.nome_da_instituicao }}</small></span>
     </a>
     <div class="tese">
       <p class="sobretitulo">GPS · Gestão de Processos Seletivos</p>
@@ -67,7 +67,7 @@ Os ícones vêm de um sprite inline: traço único, `currentColor`, sem bibliote
       {% block acesso %}{% endblock %}
     </div>
     <footer class="pe-do-acesso">
-      <span>Cefor/Ifes · Gestão de Processos Seletivos</span>
+      <span>{{ identificacao_publica.rotulo }} · Gestão de Processos Seletivos</span>
       <span>Acesso restrito à equipe da unidade</span>
     </footer>
   </main>

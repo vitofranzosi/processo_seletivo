@@ -115,6 +115,7 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.arquivos import tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
 from processo_seletivo.sorteios.application.selectors import sorteios_do_edital
+from processo_seletivo.unidades.application import identificacao
 
 # O limite da coluna, aplicado antes de a gravação chegar ao banco.
 LIMITE_DO_TELEFONE = 30
@@ -632,6 +633,12 @@ def selecao(request, edital_id, *, assistente=True):
     # **O assistente na página, só no desenvolvimento local** (074, `FR-1680`).
     contexto["painel_do_assistente"] = (
         assistente_do_edital.painel(request, versao.edital, agora) if assistente else ""
+    )
+    # **A moldura é a da unidade do ato** (109, FR-3207), e não a da implantação nem a de quem
+    # estiver na gestão no mesmo navegador: a página é a do Edital. A da Publicação que originou a
+    # versão vigente, porque a página do ato não se reescreve quando a unidade muda de nome.
+    contexto["identificacao_publica"] = identificacao.do_ato(
+        versao.source_publication.unidade_sigla, versao.edital.institution_scope
     )
     resposta = render(request, "portal/selecao.html", contexto)
     # A página é pública, mas deixa de ser genérica quando quem lê já começou uma inscrição: o
@@ -2292,7 +2299,9 @@ def convocacao(request, inscricao_id):
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
             "novas_chamadas": situacao_da_inscricao.NOVAS_CHAMADAS,
             "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
-            "atendimento": getattr(settings, "PORTAL_ATENDIMENTO", ""),
+            # O canal da unidade do Edital, e o institucional na falta (109, FR-3212): é a
+            # convocação deste certame, e não a conta da pessoa.
+            "atendimento": identificacao.da_unidade(registro.edital.institution_scope).canal(),
         },
     )
 
@@ -2554,6 +2563,10 @@ def _confirmar_por_email(request, registro):
             "modalidade": campos["Concorrência"],
             "quando": campos["Enviada em"],
             "documentos": dados["documentos"],
+            # A unidade que o ato gravou, a mesma do comprovante em papel (109, FR-3209, D-004).
+            "assinatura": identificacao.do_ato(
+                dados["unidade"]["sigla"], registro.edital.institution_scope
+            ).rotulo,
         },
     )
 

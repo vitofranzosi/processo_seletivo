@@ -5269,6 +5269,16 @@ OPERACOES = {
     "CADASTRAR_AUTORIDADE": "Cadastro de autoridade",
     "CORRIGIR_AUTORIDADE": "Correção de autoridade",
     "ENCERRAR_AUTORIDADE": "Encerramento de autoridade",
+    # Os demais atos administrativos da unidade, que só a trilha da unidade mostra (108, `FR-3165`):
+    # a exclusão dos registros do piloto (071), os avisos aos candidatos (066) e os acessos (106).
+    # O modelo de aviso tem uma operação só para os quatro atos, e a trilha da unidade a nomeia pela
+    # situação; esta entrada é a de quem a encontrar fora dela.
+    "EXCLUIR_REGISTROS_DO_PILOTO": "Exclusão dos registros do piloto do assistente",
+    "AVISO_MODELO": "Alteração de modelo de aviso",
+    "AVISO_CONFIRMAR": "Confirmação de aviso aos candidatos",
+    "AVISO_INTERROMPER": "Interrupção de aviso aos candidatos",
+    "ACESSO_CONCEDER": "Concessão de acesso",
+    "ACESSO_REVOGAR": "Revogação de acesso",
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",

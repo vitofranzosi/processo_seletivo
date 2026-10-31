@@ -146,13 +146,20 @@ class EnvioAcimaDoLimiteMiddleware:
                     "recarregar a página. Nas etapas da composição, o rascunho guardado neste "
                     "navegador também o preserva por um dia, mas só poderá ser restaurado depois "
                     "que o limite for ampliado. Peça a ampliação do limite de envio a quem "
-                    "administra o sistema no Cefor, dizendo o Edital e a tela: até lá, esta tela "
-                    "não consegue gravar."
+                    f"administra o sistema no {_unidade_de_quem_enviou(request)}, dizendo o "
+                    "Edital e a tela: até lá, esta tela não consegue gravar."
                 ),
                 "reabrir": _tela_de_origem(request),
             },
             status=413,
         )
+
+
+def _unidade_de_quem_enviou(request):
+    """A unidade em que o ator atua, como a moldura da gestão a diz (109, FR-3205)."""
+    from processo_seletivo.interface import identidade
+
+    return identidade.identificacao_da_gestao(identidade.ator_da_sessao(request)).nome_curto
 
 
 def falha_de_csrf(request, reason=""):

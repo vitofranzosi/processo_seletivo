@@ -28,6 +28,16 @@ estar.
 | `editais/domain/validation.py:3012-3013` | o aviso de seção universal vazia diz que *"todos os Editais do Cefor a têm"* | Vem da `054`, e a `060` não o alcançou, porque não é documento oficial. A afirmação é sobre a amostra de Editais do Cefor; com a segunda unidade, ou ela vale para a unidade do Edital, ou a frase perde a unidade |
 | `PORTAL_ATENDIMENTO` (`config/settings/base.py`), lido no portal, na convocação, nos avisos e no assistente | um canal de atendimento só, para a instituição inteira | É configuração da implantação, da `010`. Com a segunda unidade, cada uma tende a ter o seu, e ele precisa vir da Unidade. A forma — um campo no `unidades.json`, que já tem diff revisado, trilha e congelamento na publicação, ou a edição pela gestão depois do B-1 — é escolha do produto, em entrega própria. O aviso já confirmado guarda o canal do dia da confirmação |
 
+> **Atualização de 31/10/2026, pela [`109`](../specs/109-identidade-multiunidade/spec.md)**, sem
+> merge na data. A tabela acima fica como estava. Com a `109`: a marca do título e do topo, a
+> entrada da gestão, as frases "a quem pedir acesso", a assinatura dos e-mails e do aviso e o canal
+> de atendimento passam a vir do registro de Unidades — o canal como campo **opcional** do
+> `unidades.json`, com o `PORTAL_ATENDIMENTO` como canal institucional e recaída. O aviso assina pela
+> unidade **do registro no dia da confirmação**, e não pela que a Publicação congelou, como a linha
+> do `RODAPE` sugeria (decisão 004 da `109`). Ficam como estavam, de propósito: a API
+> (`operacional.py`, `problems.py`), o seletor de demonstração e o aviso de seção universal vazia.
+> Com o Cefor sozinho, todas as superfícies saem idênticas às de antes.
+
 ## O que a implantação precisa, fora do código
 
 1. **Cadastrar as autoridades do Cefor** (FR-1124). O catálogo em código saiu, e com ele as três
@@ -42,8 +52,8 @@ estar.
    ([spec, *Assumptions*](../specs/060-unidades-e-autoridades/spec.md#assumptions)).
 3. **Registrar as demais unidades** quando o Ifes as fornecer: uma entrada em
    `backend/processo_seletivo/unidades/unidades.json` por unidade — sigla, nome, as linhas do
-   cabeçalho e o local —, revisada em diff, aplicada por `make preparar` ou
-   `manage.py sincronizar_unidades`.
+   cabeçalho e o local, e, se houver, o canal de atendimento (`109`) —, revisada em diff, aplicada
+   por `make preparar` ou `manage.py sincronizar_unidades`.
 
 ## A pergunta que continua com o Cefor
 

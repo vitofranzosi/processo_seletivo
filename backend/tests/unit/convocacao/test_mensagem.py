@@ -49,6 +49,8 @@ def enviar(caixa, **overrides):
         "vencimento": VENCIMENTO,
         "endereco": "https://selecoes.exemplo.test/portal/minhas-inscricoes",
         "atendimento": "selecao@exemplo.test",
+        # A unidade do Edital, que quem envia resolve (109): a função a recebe pronta.
+        "assinatura": "Cefor/Ifes",
     }
     dados.update(overrides)
     detalhe = enviar_mensagem_de_convocacao(para="candidata@exemplo.test", dados=dados)
@@ -128,6 +130,7 @@ class TestAFalhaNaoInterrompe:
                 "vencimento": VENCIMENTO,
                 "endereco": "https://selecoes.exemplo.test/portal",
                 "atendimento": "selecao@exemplo.test",
+                "assinatura": "Cefor/Ifes",
             },
         )
 
@@ -204,6 +207,7 @@ def test_o_retorno_zero_do_correio_e_falha(settings):
             "vencimento": VENCIMENTO,
             "endereco": "https://selecoes.exemplo.test/portal",
             "atendimento": "selecao@exemplo.test",
+            "assinatura": "Cefor/Ifes",
         },
     )
 

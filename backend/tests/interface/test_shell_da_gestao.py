@@ -361,7 +361,9 @@ def barra_e_script(corpo):
 def test_cada_item_tem_icone_decorativo_e_nome_acessivel(client, seletor_ligado):
     """`FR-1726`, `FR-1731`: o ícone é decorativo, o nome é o texto do item — que vira a dica
     quando a barra recolhe —, e cada seção tem o seu ícone."""
-    identificar(client, "gustavo.gestor", ["gestor"])
+    # O Auditor junto desde a 108: a trilha da unidade é o primeiro item do `SECOES` que o Gestor
+    # não alcança, e sem ele o teste deixaria de olhar o ícone dela.
+    identificar(client, "gustavo.gestor", ["gestor", "auditor"])
     corpo = client.get(reverse("interface:lista")).content.decode()
     moldura = barra(corpo)
 

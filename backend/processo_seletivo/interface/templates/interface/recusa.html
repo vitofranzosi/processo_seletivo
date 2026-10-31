@@ -5,7 +5,8 @@
 <p class="erro" role="alert">{{ detalhe }}</p>
 {% comment %}
 **O objeto do pedido antes do destinatário** (037, `FR-543a`), que é a forma que `lista.html` já
-pratica em *"Peça acesso a quem administra o sistema no Cefor"*. Esta dizia só a quem, e quem
+pratica em *"Peça acesso a quem administra o sistema no Cefor"* — desde a 109, com a unidade em que
+o ator atua no lugar do Cefor. Esta dizia só a quem, e quem
 administra o sistema não é permissão nem papel do modelo — não sai do mecanismo, e inventar-lhe uma
 oração de ato ("que o conceda") criaria uma terceira maneira de pedir o que as outras duas telas já
 pedem de duas.
@@ -20,7 +21,7 @@ anti-falsificação (093, `erros.falha_de_csrf`) faz o mesmo: o que se pede é e
 <p class="ajuda">{{ ajuda }}</p>
 {% else %}
 <p class="ajuda">Se você acredita que deveria ter acesso, peça acesso a quem administra o sistema no
-  Cefor. Nenhuma alteração foi feita.</p>
+  {{ identificacao_da_gestao.nome_curto }}. Nenhuma alteração foi feita.</p>
 {% endif %}
 <p>{% if reabrir %}<a class="botao secundario" href="{{ reabrir }}">Reabrir a tela como está gravada</a>
   {% endif %}<a class="botao secundario" href="{% url 'interface:lista' %}">Voltar aos Processos Seletivos</a></p>

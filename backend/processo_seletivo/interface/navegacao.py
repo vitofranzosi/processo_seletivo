@@ -37,6 +37,16 @@ def pode_gerir_modelos(ator):
     return ator.can("aviso:enviar")
 
 
+def pode_ver_trilha_da_unidade(ator):
+    # A trilha administrativa da unidade (108, `D-001`): a mesma permissão com que o Auditor lê a
+    # trilha de todo Edital. No `SECOES`, e não no `SECOES_DE_ACESSO`: o Auditor do seletor a tem.
+    # Fora do escopo institucional, como a view: lá não há unidade a ler (`D-003`), e o item levaria
+    # a uma recusa.
+    from processo_seletivo.seguranca.acessos import ESCOPO_INSTITUCIONAL
+
+    return ator.can("auditoria:consultar") and ator.institution_scope != ESCOPO_INSTITUCIONAL
+
+
 def pode_ver_acessos(ator):
     # A gestão de acessos da unidade (107), pela capacidade e não pelo papel (`D-001`): quem concede
     # na unidade é proposta da `106`, e a barra não deve ter opinião sobre ela.
@@ -63,7 +73,7 @@ class Secao:
     alcanca: object
     # O símbolo no sprite do `base.html` (`FR-1731`). Pelo significado: a pasta do Processo, a
     # prancheta do trabalho alocado, o gráfico da visão, o calendário da agenda, o prédio da
-    # unidade, o envelope do aviso, o livro do manual.
+    # unidade, o envelope do aviso, a lista com relógio da trilha, o livro do manual.
     icone: str
 
 
@@ -87,6 +97,13 @@ SECOES = (
     ),
     Secao(
         "Modelos de aviso", "interface:modelos-de-aviso", UNIDADE, pode_gerir_modelos, "i-envelope"
+    ),
+    Secao(
+        "Trilha da unidade",
+        "interface:trilha-da-unidade",
+        UNIDADE,
+        pode_ver_trilha_da_unidade,
+        "i-trilha",
     ),
     # Por último e em grupo próprio: não é lugar de trabalho, e abre o manual fora da moldura da
     # gestão (105, `D-004`). Toda identidade, pela razão da Agenda (`D-001`).
