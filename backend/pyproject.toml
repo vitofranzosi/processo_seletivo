@@ -67,6 +67,7 @@ markers = [
   "performance: custo de consulta e escalabilidade",
   "navegador: jornada por navegador real, com servidor (107); pula sem o grupo navegador",
   "sem_unidade_da_suite: dispensa o Cefor da fixture autouse, para o registro vazio da semente (110)",
+  "trava_deliberada: o caso trava tabela append-only de propósito, e o vigia do conftest o dispensa (A-01)",
 ]
 
 [tool.coverage.run]

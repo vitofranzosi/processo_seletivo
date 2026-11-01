@@ -41,6 +41,7 @@ def _travar_um_resultado():
         cursor.execute("SELECT id FROM resultados_resultadoetapa FOR UPDATE")
 
 
+@pytest.mark.trava_deliberada
 def test_a_fixture_nega_o_que_a_producao_nega(como_producao):  # noqa: F811
     """A fixture prova alguma coisa: sob ela, a trava do A-01 é recusada, e fora dela, não."""
     from django.db.utils import ProgrammingError
@@ -59,6 +60,7 @@ def test_a_fixture_nega_o_que_a_producao_nega(como_producao):  # noqa: F811
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.trava_deliberada
 def test_a_fixture_nega_tambem_nos_casos_transacionais(como_producao):  # noqa: F811
     from django.db.utils import ProgrammingError
 
