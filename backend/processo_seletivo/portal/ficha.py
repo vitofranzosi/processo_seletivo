@@ -33,23 +33,22 @@ from django.urls import reverse
 from processo_seletivo.duvidas.application.consultar import contexto
 from processo_seletivo.duvidas.domain.estruturas import RETIFICACAO
 from processo_seletivo.duvidas.domain.origem import origens
+from processo_seletivo.editais.domain.quadro import vagas_do_conteudo
 from processo_seletivo.inscricoes.domain.periodo import (
     ENCERRADO,
     NAO_DESIGNADO,
     evento_designado,
     periodo_de_inscricoes,
 )
-from processo_seletivo.interface.visao_geral import vagas_do_conteudo
 from processo_seletivo.portal import leitura
 from processo_seletivo.processos.application.selectors import desfechos
-from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import (
-    effective_version,
     prorrogacao,
     retificacoes_a_vigorar,
     retificacoes_publicadas,
     versoes_original_e_vigente,
 )
+from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.unidades.application.identificacao import do_ato
 
@@ -273,11 +272,14 @@ def _modo(periodo, desfecho):
             f"Edital {rotulo}{quando}. Não há material para um Edital que não recebe inscrições.",
         )
     if desfecho is not None:
-        # P-8: Processo encerrado com Edital publicado. A página informa; divulgar é outra coisa.
+        # P-8: Processo encerrado ou cancelado com Edital publicado. A página informa; divulgar é
+        # outra coisa. O verbo é o do ato registrado: "encerrado" para um cancelamento afirmaria
+        # outro ato.
+        verbo = "cancelado" if desfecho.operacao == "CANCELADO" else "encerrado"
         quando = f" em {_data(desfecho.em)}" if desfecho.em else ""
         return (
             SEM_MATERIAL,
-            f"O Processo foi encerrado{quando}. Até decisão (P-8), não há material.",
+            f"O Processo foi {verbo}{quando}. Até decisão (P-8), não há material.",
         )
     if periodo.estado == ENCERRADO:
         if periodo.cancelado:
@@ -285,6 +287,13 @@ def _modo(periodo, desfecho):
         return SEM_MATERIAL, f"Inscrições encerradas em {_data(periodo.fim)}. Não há material."
     if periodo.estado == NAO_DESIGNADO:
         return NEUTRO, "O Edital não recebe inscrições pelo GPS; o material não fala de inscrição."
+    if periodo.inicio is None and periodo.fim is None:
+        # Designado e sem nenhuma data: não há prazo a dizer, e qualquer frase de período sairia
+        # vazia ("até , às"). O material fala só do Edital, como no modo neutro.
+        return (
+            NEUTRO,
+            "O período de inscrições não tem datas declaradas; o material não fala de prazo.",
+        )
     return COM_PERIODO, ""
 
 
@@ -294,9 +303,8 @@ def _rotulo_do_ato(ato, numeracao):
     return "Publicação original"
 
 
-def _origens(edital, agora, conteudo, numeracao):
+def _origens(ctx, conteudo, numeracao):
     """A origem de período e vagas pela regra da `070` (`FR-3408`), e nunca pelo caminho exato."""
-    ctx = contexto(edital_id=edital.id, instante=agora)
     linhas = []
 
     def origem(campo, valor, caminho):
@@ -323,9 +331,17 @@ def _origens(edital, agora, conteudo, numeracao):
 
 
 def ler(edital, *, agora, base_url):
-    """A ficha do Edital no instante `agora`. `base_url` nulo é host local, e não dá endereço."""
-    edital = Edital.objects.select_related("processo").get(pk=edital.pk)
-    versao = effective_version(edital_id=edital.id, at=agora)
+    """A ficha do Edital no instante `agora`. `base_url` nulo é host local, e não dá endereço.
+
+    **Uma leitura da versão, e não duas.** O `contexto()` da `070` já resolve a versão vigente e os
+    atos para a proveniência; a ficha busca a versão pelo identificador que ele devolve, com a
+    publicação de origem junto, em vez de chamar `effective_version` de novo. O Edital vem de quem
+    chama, que já o leu na porta.
+    """
+    ctx = contexto(edital_id=edital.id, instante=agora)
+    versao = VersaoConsolidada.objects.select_related(
+        "source_publication", "source_publication__retificacao"
+    ).get(pk=ctx.versao.id)
     conteudo = versao.content
     publicacao = versao.source_publication
     desfecho = desfechos([edital])[edital.id]
@@ -437,7 +453,7 @@ def ler(edital, *, agora, base_url):
         retificacao_a_vigorar_texto=instante_por_extenso(a_vigorar),
         campos=campos,
         impressao=impressao_dos_campos(campos),
-        origens=_origens(edital, agora, conteudo, numeracao),
+        origens=_origens(ctx, conteudo, numeracao),
         termos_em_valor_oficial=termos,
     )
 
@@ -485,7 +501,6 @@ class Mudanca:
 @dataclass(frozen=True)
 class Desatualizacao:
     exportado_em: str
-    impressao: str
     mudancas: tuple[Mudanca, ...] = ()
     comparavel: bool = True
 
@@ -558,9 +573,7 @@ def desatualizacoes(exportacoes, ficha, limite=5):
         else:
             resultado.append(
                 Desatualizacao(
-                    registro.get("exportado_em", ""),
-                    impressao,
-                    diferencas(campos or {}, ficha.campos),
+                    registro.get("exportado_em", ""), diferencas(campos or {}, ficha.campos)
                 )
             )
     return resultado[:limite], max(len(resultado) - limite, 0)

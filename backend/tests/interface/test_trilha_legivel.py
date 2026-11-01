@@ -27,19 +27,39 @@ def _constantes(arvore):
     }
 
 
+def _modulo(arquivo):
+    return ".".join(("processo_seletivo", *arquivo.relative_to(RAIZ).with_suffix("").parts))
+
+
+def _apelidos(arvore):
+    """`{nome local: módulo}` dos imports do arquivo, para resolver `modulo.CONSTANTE`."""
+    apelidos = {}
+    for no in ast.walk(arvore):
+        if isinstance(no, ast.ImportFrom) and no.module:
+            for nome in no.names:
+                apelidos[nome.asname or nome.name] = f"{no.module}.{nome.name}"
+        elif isinstance(no, ast.Import):
+            for nome in no.names:
+                apelidos[nome.asname or nome.name] = nome.name
+    return apelidos
+
+
 def operacoes_registradas():
     """Toda operação passada a `record_event`: pelos commands e pelas views da gestão.
 
-    Até a 111 a varredura lia só `application/*.py` e só o literal: as operações que as views da
-    gestão passam por constante — a emissão do relatório (`099`), a exportação do kit (`111`) —
-    escapavam, e chegariam cruas à trilha. Agora lê também `interface/*.py` e resolve a constante
-    do módulo.
+    Até a 111 a varredura lia só `application/*.py` e só o literal, e as operações que as views da
+    gestão passam por constante escapavam — a emissão do relatório (`099`) chegava crua à trilha.
+    Agora lê também `interface/*.py` e resolve a constante, do próprio módulo ou de outro, pelo
+    import (`relatorio_do_edital.OPERACAO_DA_EMISSAO`).
     """
-    encontradas = set()
     arquivos = [*RAIZ.rglob("application/*.py"), *(RAIZ / "interface").glob("*.py")]
+    arvores = {arquivo: ast.parse(arquivo.read_text()) for arquivo in RAIZ.rglob("*.py")}
+    constantes = {_modulo(arquivo): _constantes(arvore) for arquivo, arvore in arvores.items()}
+    encontradas = set()
     for arquivo in arquivos:
-        arvore = ast.parse(arquivo.read_text())
-        constantes = _constantes(arvore)
+        arvore = arvores[arquivo]
+        locais = constantes[_modulo(arquivo)]
+        apelidos = _apelidos(arvore)
         for no in ast.walk(arvore):
             if not isinstance(no, ast.Call):
                 continue
@@ -49,10 +69,15 @@ def operacoes_registradas():
             for argumento in no.keywords:
                 if argumento.arg != "operation":
                     continue
-                if isinstance(argumento.value, ast.Constant):
-                    encontradas.add(argumento.value.value)
-                elif isinstance(argumento.value, ast.Name) and argumento.value.id in constantes:
-                    encontradas.add(constantes[argumento.value.id])
+                valor = argumento.value
+                if isinstance(valor, ast.Constant):
+                    encontradas.add(valor.value)
+                elif isinstance(valor, ast.Name) and valor.id in locais:
+                    encontradas.add(locais[valor.id])
+                elif isinstance(valor, ast.Attribute) and isinstance(valor.value, ast.Name):
+                    modulo = apelidos.get(valor.value.id, "")
+                    if valor.attr in constantes.get(modulo, {}):
+                        encontradas.add(constantes[modulo][valor.attr])
     return encontradas
 
 

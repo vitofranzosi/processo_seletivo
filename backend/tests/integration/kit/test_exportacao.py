@@ -156,3 +156,15 @@ def test_impressao_de_versao_anterior(api_client, comunicacao):
         [{"versao_da_impressao": 0, "impressao": "outra", "exportado_em": "x"}], ficha
     )
     assert [item.comparavel for item in sem_campos] == [False]
+
+
+def test_a_tela_le_uma_exportacao_por_impressao(api_client, comunicacao):
+    """Três exportações da mesma impressão: a leitura devolve uma, a mais recente."""
+    from processo_seletivo.interface.kit_de_divulgacao import exportacoes
+
+    edital = kit.publicar(api_client, ate=1, chave="exp-uma-por-impressao")
+    for formato in ("md", "txt", "md"):
+        _exportar(comunicacao, edital, formato)
+    lidas = exportacoes(edital)
+    assert len(lidas) == 1
+    assert lidas[0]["formato"] == "md"

@@ -175,3 +175,9 @@ def test_markdown_e_texto_trazem_conferencia_e_notas():
     texto = kit_textos.em_texto(ficha, textos, notas)
     assert "## Informações oficiais" in markdown and "## Legenda para rede social" in markdown
     assert texto.startswith("INFORMAÇÕES OFICIAIS")
+
+
+def test_chamada_sem_inicio_mantem_brasilia_maiusculo():
+    ficha = _ficha(inicio=None, inicio_data="", inicio_hora="", periodo_curto="até 21/11/2026")
+    chamada = kit_textos.compor(ficha)["chamada_para_o_site"]
+    assert chamada.endswith("inscrições até 21/11/2026, às 23h59 (horário de Brasília).")

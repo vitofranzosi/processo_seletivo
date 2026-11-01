@@ -28,7 +28,7 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
   {% endif %}
 </div>
 {% endfor %}
-{% if mais_desatualizadas %}<p class="nota">E mais {{ mais_desatualizadas }} exportação{{ mais_desatualizadas|pluralize:"ões" }} anterior{{ mais_desatualizadas|pluralize:"es" }} desatualizada{{ mais_desatualizadas|pluralize }}.</p>{% endif %}
+{% if mais_desatualizadas %}<p class="nota">E mais {{ mais_desatualizadas }} exportaç{{ mais_desatualizadas|pluralize:"ão,ões" }} anterior{{ mais_desatualizadas|pluralize:"es" }} desatualizada{{ mais_desatualizadas|pluralize }}.</p>{% endif %}
 
 {% if not ficha.tem_material %}
 <section class="secao-do-kit" aria-labelledby="titulo-sem-material">

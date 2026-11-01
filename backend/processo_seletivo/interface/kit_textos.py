@@ -177,8 +177,11 @@ def compor(ficha):
 
     if ficha.modo == COM_PERIODO and ficha.inicio_data and ficha.fim_data:
         prazo = f"inscrições de {ficha.inicio_data} a {ficha.fim_data}"
+    elif ficha.modo == COM_PERIODO and ficha.inicio_data:
+        prazo = f"inscrições a partir de {ficha.inicio_data}"
     elif ficha.modo == COM_PERIODO:
-        prazo = frase_do_periodo(ficha).rstrip(".").lower()
+        # Escrita aqui, e não rebaixada da frase do período: `.lower()` levava "Brasília" junto.
+        prazo = f"inscrições até {ficha.fim_data}, às {ficha.fim_hora} (horário de Brasília)"
     else:
         prazo = "Edital publicado; consulte as condições"
     chamada = f"{ficha.identificacao} — {titulo(ficha)}: {prazo}."

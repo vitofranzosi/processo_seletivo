@@ -68,6 +68,8 @@ def test_sem_periodo_designado_e_neutro(api_client):
 
 def test_cancelado_dentro_do_periodo_nao_tem_material(api_client):
     edital = editais_do_piloto.cancelado(api_client)
+    # A ficha lê o estado do Edital que recebe, e não o relê: a porta da view o traz fresco.
+    edital.refresh_from_db()
     lida = _ler(edital)
     assert lida.modo == fichas.SEM_MATERIAL
     assert "cancelado" in lida.motivo

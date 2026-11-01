@@ -30,7 +30,6 @@ from django.views.decorators.http import require_http_methods
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.interface import identidade, kit_textos
-from processo_seletivo.interface.relatorio import _host_local
 from processo_seletivo.portal import ficha as fichas
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import (
@@ -38,7 +37,7 @@ from processo_seletivo.seguranca.application.authorization import (
     require_authorization_base,
 )
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.shared.http import marcar_como_privada
+from processo_seletivo.shared.http import host_local, marcar_como_privada
 
 PERMISSAO = "material:gerar"
 OPERACAO = "EXPORTAR_MATERIAL"
@@ -82,23 +81,41 @@ def _edital_do_kit(request, edital_id):
 
 def _base_url(request):
     """O endereço público da requisição, ou nenhum em host local (`FR-3447`, `D-020`)."""
-    if _host_local(request):
+    if host_local(request):
         return None
     return request.build_absolute_uri("/").rstrip("/")
 
 
 def exportacoes(edital):
-    """As exportações registradas do Edital, da mais recente à mais antiga (`D-005`)."""
-    registros = (
-        RegistroAuditoria.objects.filter(
-            aggregate_type="Edital", aggregate_id=edital.pk, operation=OPERACAO
-        )
-        .order_by("-occurred_at")
-        .values_list("occurred_at", "detalhe")
+    """A exportação mais recente de cada impressão registrada, da mais nova à mais antiga (`D-005`).
+
+    **O leve primeiro.** A faixa compara por impressão (`FR-3439`), e de cada impressão só a mais
+    recente conta. Ler o `detalhe` inteiro de todos os eventos — com os campos de todos os Perfis —
+    custaria cada vez mais a cada exportação; lê-se o instante e a impressão de todos, e o `detalhe`
+    completo só de um evento por impressão, que são tantas quantas as versões do material.
+    """
+    base = RegistroAuditoria.objects.filter(
+        aggregate_type="Edital", aggregate_id=edital.pk, operation=OPERACAO
     )
+    escolhidos, vistas = [], set()
+    for identificador, impressao in base.order_by("-occurred_at").values_list(
+        "pk", "detalhe__impressao"
+    ):
+        if impressao not in vistas:
+            vistas.add(impressao)
+            escolhidos.append(identificador)
+    detalhes = {
+        identificador: (quando, detalhe)
+        for identificador, quando, detalhe in base.filter(pk__in=escolhidos).values_list(
+            "pk", "occurred_at", "detalhe"
+        )
+    }
     return [
-        {**(detalhe or {}), "exportado_em": fichas.instante_por_extenso(quando)}
-        for quando, detalhe in registros
+        {
+            **(detalhes[i][1] or {}),
+            "exportado_em": fichas.instante_por_extenso(detalhes[i][0]),
+        }
+        for i in escolhidos
     ]
 
 
