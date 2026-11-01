@@ -147,7 +147,6 @@ def certame_sorteado_com_quadro(
     """
     from processo_seletivo.classificacao.models import AtoDeOrdenacao
     from processo_seletivo.comissoes.domain.funcoes import Funcao
-    from processo_seletivo.inscricoes.models import Inscricao
     from processo_seletivo.sorteios.application.ocorrencia import observar_ocorrencia
     from processo_seletivo.sorteios.application.relacao import publicar_relacao
     from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
@@ -165,7 +164,6 @@ def certame_sorteado_com_quadro(
         draft=rascunho_sorteado_com_quadro(**quadro),
     )
     constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo=prefixo)
-    inscricoes = inscrever(edital, quantos, primeiro=701)
     # **Os dois primeiros declaram cota, e é isso que a concorrência concomitante exercita**: eles
     # figuram na lista de ampla concorrência **e** na reserva deles, com numeração própria em cada
     # (021, FR-004; 28/2026, itens 4.3.1 e 8.7).
@@ -173,11 +171,9 @@ def certame_sorteado_com_quadro(
     # `cotistas_ppi` existe porque a suplência da `019` precisa de **mais de um** na mesma lista
     # reservada: com um só, a vaga que vaga não tem para quem ir, e o cenário não alcança o que a
     # `SC-086` mede. O padrão continua sendo um, e nenhum teste da `016` muda.
-    for inscricao in inscricoes[:cotistas_ppi]:
-        Inscricao.objects.filter(pk=inscricao.pk).update(modality_id=LISTA_PPI)
-    Inscricao.objects.filter(pk=inscricoes[cotistas_ppi].pk).update(modality_id=LISTA_PCD)
-    for inscricao in inscricoes:
-        inscricao.refresh_from_db()
+    declaradas = dict.fromkeys(range(cotistas_ppi), LISTA_PPI)
+    declaradas[cotistas_ppi] = LISTA_PCD
+    inscricoes = inscrever(edital, quantos, primeiro=701, modalidades=declaradas)
 
     relacoes = {
         lista: publicar_relacao(

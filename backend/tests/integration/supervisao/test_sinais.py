@@ -462,12 +462,16 @@ def test_o_ato_de_uma_lista_de_reserva_tambem_e_alcancado(certame_sorteado, pres
 def certame_computado(gestor, api_client, manager_headers, process_payload):
     """O 7/1/2 da `034`, com a sexta inscrita — a que ficou sem avaliação — também em PPI."""
     from tests.fixtures.ocupacao import MODALIDADE_PPI
-    from tests.fixtures.recortes import declarar, montar_cenario_7_1_2
+    from tests.fixtures.recortes import montar_cenario_7_1_2
 
     edital, pontuada, inscricoes = montar_cenario_7_1_2(
-        gestor, api_client, manager_headers, process_payload, prefixo="supervisao-034"
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="supervisao-034",
+        modalidades={5: MODALIDADE_PPI},
     )
-    declarar(inscricoes[5], MODALIDADE_PPI)
     return edital, pontuada, inscricoes
 
 

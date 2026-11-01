@@ -37,7 +37,6 @@ from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.recortes import (
     MODALIDADE_PCD,
     MODALIDADE_PPI,
-    declarar,
     emitir_recorte,
     rascunho_7_1_2,
     regra_do_quadro,
@@ -81,9 +80,8 @@ def montar(gestor, api_client, manager_headers, process_payload):
             prefixo=prefixo,
             pontuacoes=notas,
             draft_factory=_rascunho(especie),
+            modalidades=AUTODECLARACOES,
         )
-        for indice, modalidade in AUTODECLARACOES.items():
-            declarar(inscricoes[indice], modalidade)
         for lista in RECORTES[1:]:
             emitir_recorte(edital, gestor, lista_id=lista, chave=f"{prefixo}-ordem-{lista}")
         return edital, pontuada, inscricoes

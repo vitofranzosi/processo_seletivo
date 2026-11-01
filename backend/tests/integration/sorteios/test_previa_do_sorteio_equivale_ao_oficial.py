@@ -45,7 +45,6 @@ from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.recortes import (
     MODALIDADE_PCD,
     MODALIDADE_PPI,
-    declarar,
     rascunho_7_1_2,
     regra_do_quadro,
 )
@@ -104,9 +103,7 @@ def montar(gestor, api_client, manager_headers, process_payload, monkeypatch):
             api_client, manager_headers, process_payload, draft=_rascunho(especie, corte)
         )
         constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo=prefixo)
-        inscricoes = inscrever(edital, INSCRITOS, primeiro=981)
-        for indice, modalidade in autodeclaracoes.items():
-            declarar(inscricoes[indice], modalidade)
+        inscricoes = inscrever(edital, INSCRITOS, primeiro=981, modalidades=autodeclaracoes)
         return edital, inscricoes
 
     return _montar

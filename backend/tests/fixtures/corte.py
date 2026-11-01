@@ -87,6 +87,7 @@ def montar_cenario_do_corte(
     draft_factory=None,
     publicar=None,
     emitir_a_ordem=True,
+    modalidades=None,
 ):
     """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois.
 
@@ -96,6 +97,8 @@ def montar_cenario_do_corte(
     `pontuacoes` permite ao chamador arranjar a ordem: o empate que atravessa a fronteira só existe
     se duas pontuações forem iguais, e um cenário de pontuações fixas não o alcança. Um inscrito a
     mais que as pontuações fica sem avaliação, como no cenário base.
+
+    `modalidades` vai para `inscrever`: a autodeclaração é gravada no envio (A-03).
     """
     # `draft_factory` permite a outra feature montar o rascunho com o que **ela** precisa
     # publicar, sem duplicar as cinco etapas deste cenário. A `016` usa isso para acrescentar o
@@ -124,7 +127,7 @@ def montar_cenario_do_corte(
         "membros": membros,
         "etapa": pontuada["id"],
     }
-    inscricoes = inscrever(edital, len(pontuacoes) + 1, primeiro=601)
+    inscricoes = inscrever(edital, len(pontuacoes) + 1, primeiro=601, modalidades=modalidades)
     avaliados = inscricoes[: len(pontuacoes)]
     distribuir_para(contexto, gestor, ["joao"], avaliados, chave=f"{prefixo}-lote")
     for indice, pontuacao in enumerate(pontuacoes):

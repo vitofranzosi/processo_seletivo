@@ -132,8 +132,8 @@ def test_grafia_de_modalidade_desconhecida_recusa_a_geracao_inteira(
     onde o comentário da planilha prevê `PPI`. Duas letras, o mesmo instituto jurídico, e nenhuma
     das pontas sabe da outra.
     """
-    from processo_seletivo.inscricoes.models import Inscricao
-
+    # A Modalidade entra pela fixture, no envio: o que se exercita aqui é a **saída**, e o caminho
+    # de escolha tem os testes dele na `009`.
     edital, convocadas = montar_cenario_da_exportacao(
         gestor,
         api_client,
@@ -142,10 +142,8 @@ def test_grafia_de_modalidade_desconhecida_recusa_a_geracao_inteira(
         prefixo="031-grafia",
         quantos=1,
         publicar=publicar_com_grafia_divergente,
+        modalidades={0: MODALIDADE_DIVERGENTE},
     )
-    # A escolha da Modalidade entra por gravação direta: o que se exercita aqui é a **saída**, e o
-    # caminho de escolha tem os testes dele na `009`.
-    Inscricao.objects.filter(pk=convocadas[0].pk).update(modality_id=MODALIDADE_DIVERGENTE)
     with pytest.raises(DomainError) as recusa:
         gerar_a_primeira(quem_exporta, edital)
     assert recusa.value.code == nomes.MODALIDADE_DESCONHECIDA

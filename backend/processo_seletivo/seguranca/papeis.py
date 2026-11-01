@@ -22,7 +22,16 @@ conformidade a verificam. Uma cópia nos testes verificaria a si mesma.
 # Tabelas cujo conteúdo é histórico normativo ou trilha de auditoria: nascem e não mudam mais.
 # `Retificacao` e `AlteracaoNormativa` ficam de fora de propósito — mudam legitimamente enquanto o
 # ato está em curso, e a imutabilidade delas é condicional ao estado final, o que só a trigger
-# consegue expressar.
+# consegue expressar. Pela mesma razão ficam de fora a Inscrição enviada e os documentos dela, a
+# Avaliação concluída e a Homologação (A-03): têm gatilho condicional e nenhuma restrição de
+# privilégio, porque o rascunho, a reabertura e a revogação são escritas legítimas.
+#
+# `identidade_candidateidentity` e `identidade_candidateemail` não têm nem uma camada nem outra, e
+# é decisão, não esquecimento: a retomada da `010` apaga a identidade vazia, e trocar ou remover
+# credencial é operação do candidato (FR-018, FR-019 da 010). Credencial é como se entra, não o que
+# se enviou — o endereço do ato é `Inscricao.email`, coberto pelo gatilho da Inscrição. Proteção
+# adicional ali espera a política de retenção (B-2) e a correção institucional de CPF
+# (`doc/parecer-a03-imutabilidade-2026-11-01.md`).
 TABELAS_APPEND_ONLY = (
     "auditoria_registroauditoria",
     # A conclusão preservada da `012`: o que uma pessoa havia concluído antes de cada reabertura.

@@ -21,6 +21,7 @@ from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
 from processo_seletivo.inscricoes.infrastructure import comprovante_pdf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from tests.fixtures.candidato import MARIA, MODALIDADE_AC, identificar, pdf
+from tests.fixtures.comissao import sem_imutabilidade_da_enviada
 from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -45,12 +46,16 @@ def enviada(inscricao_de_maria):
         declaracoes={"veracidade": True, "ciencia": True},
         idempotency_key="envio-hora",
     )
-    Inscricao.objects.filter(pk=registro.pk).update(submitted_at=PERTO_DA_MEIA_NOITE)
-    # Os arquivos foram entregues minutos antes do envio, e no mesmo dia: é o par que a tela
-    # mostra lado a lado, e era ali que a divergência aparecia sem sair da página.
-    DocumentoSubmetido.objects.filter(inscricao=registro).update(
-        uploaded_at=PERTO_DA_MEIA_NOITE - timedelta(minutes=5)
-    )
+    # **Desvio deliberado**: o envio às 23h58 de um dia fixo não se alcança pelo comando sem parar o
+    # relógio do período de inscrições junto, e a inscrição enviada não muda depois (A-03). O que se
+    # exercita é a **exibição** do instante gravado.
+    with sem_imutabilidade_da_enviada():
+        Inscricao.objects.filter(pk=registro.pk).update(submitted_at=PERTO_DA_MEIA_NOITE)
+        # Os arquivos foram entregues minutos antes do envio, e no mesmo dia: é o par que a tela
+        # mostra lado a lado, e era ali que a divergência aparecia sem sair da página.
+        DocumentoSubmetido.objects.filter(inscricao=registro).update(
+            uploaded_at=PERTO_DA_MEIA_NOITE - timedelta(minutes=5)
+        )
     registro.refresh_from_db()
     return registro
 

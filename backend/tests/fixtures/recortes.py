@@ -115,6 +115,7 @@ def montar_cenario_7_1_2(
     pontuacoes=("95.0000", "90.0000", "85.0000", "80.0000", "75.0000"),
     autodeclarar=True,
     emitir_a_ordem=True,
+    modalidades=None,
     **quadro,
 ):
     """Edital publicado 7/1/2, ordem da **ampla** emitida, e as autodeclarações gravadas.
@@ -126,12 +127,21 @@ def montar_cenario_7_1_2(
     quinta em PPI, e as demais sem autodeclaração alguma. Ela é deliberadamente **entremeada** — se
     os autodeclarados fossem os últimos, uma implementação que ordenasse o recorte reservado pelo
     universo inteiro produziria a mesma lista, e o teste passaria sem provar nada.
+
+    **As autodeclarações entram no envio**, e não depois dele: a inscrição enviada é imutável no
+    banco desde o A-03. `modalidades` acrescenta outras, por posição, para o cenário que precisa
+    de mais alguém numa lista. Gravá-las antes de emitir a ordem da ampla não muda a ordem — a ampla
+    é o universo inteiro, e `test_ordem_sem_reserva_nao_muda` é quem prova.
     """
 
     def monta(cut=None):
         return rascunho_7_1_2(cut=cut, **quadro)
 
-    edital, pontuada, inscricoes = montar_cenario_do_corte(
+    declaradas = {}
+    if autodeclarar and not quadro.get("sem_reserva"):
+        declaradas = {1: MODALIDADE_PCD, 2: MODALIDADE_PPI, 4: MODALIDADE_PPI}
+    declaradas.update(modalidades or {})
+    return montar_cenario_do_corte(
         gestor,
         api_client,
         manager_headers,
@@ -140,21 +150,8 @@ def montar_cenario_7_1_2(
         pontuacoes=pontuacoes,
         draft_factory=monta,
         emitir_a_ordem=emitir_a_ordem,
+        modalidades=declaradas,
     )
-    if autodeclarar and not quadro.get("sem_reserva"):
-        declarar(inscricoes[1], MODALIDADE_PCD)
-        declarar(inscricoes[2], MODALIDADE_PPI)
-        declarar(inscricoes[4], MODALIDADE_PPI)
-    return edital, pontuada, inscricoes
-
-
-def declarar(inscricao, modalidade_id):
-    """A autodeclaração, gravada pelo queryset como todo campo de Inscrição submetida."""
-    from processo_seletivo.inscricoes.models import Inscricao
-
-    Inscricao.objects.filter(pk=inscricao.pk).update(modality_id=modalidade_id)
-    inscricao.refresh_from_db()
-    return inscricao
 
 
 def emitir_recorte(edital, gestor, *, lista_id=None, chave, motivo="", decisoes=()):

@@ -102,6 +102,8 @@ def montar_cenario_da_exportacao(
     # O padrão **declara o requerimento**: sem isso a exportação recusa o certame inteiro, e com
     # razão.
     publicar=None,
+    # Repassado pela mesma razão: a Modalidade entra no envio da inscrição (A-03).
+    modalidades=None,
 ):
     """Edital publicado, `quantos` convocados e o requerimento enviado de cada um.
 
@@ -120,6 +122,7 @@ def montar_cenario_da_exportacao(
         geral=3,
         cut=regra(surplusCount=1),
         publicar=publicar or publicar_coletando_requerimento,
+        modalidades=modalidades,
     )
     convocadas = list(inscricoes[:quantos])
     variacoes = list(declaracoes) + [{}] * (quantos - len(declaracoes))

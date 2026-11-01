@@ -65,12 +65,22 @@ def _copia(item, **campos):
 
 @SOMENTE_POSTGRES
 def test_nao_se_grava_lista_de_rascunho(selecao, candidatos_registrados):
+    from django.utils import timezone
+
     enviada = _enviada(selecao)
     item = ItemDaListaExigida.objects.filter(inscricao=enviada).first()
-    Inscricao.objects.filter(pk=enviada.pk).update(status=Inscricao.Status.RASCUNHO)
+    # Um rascunho ao lado, e não a enviada devolvida a rascunho: ela não muda mais (A-03).
+    rascunho = Inscricao.objects.create(
+        created_at=timezone.now(),
+        identity_subject="cand:outro-rascunho",
+        edital_id=enviada.edital_id,
+        profile_id=enviada.profile_id,
+    )
+    copia = _copia(item)
+    copia.inscricao_id = rascunho.pk
 
     with pytest.raises(DatabaseError, match="not submitted"), transaction.atomic():
-        _copia(item).save()
+        copia.save()
 
 
 @SOMENTE_POSTGRES

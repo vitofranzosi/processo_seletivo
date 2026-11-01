@@ -136,8 +136,15 @@ def test_avaliador_sem_alocacao_derruba_o_lote(
 
 def test_inscricao_em_rascunho_derruba_o_lote(gestor, edital_a, etapa_a1, banca, inscricoes):
     """Só inscrição **submetida** é atribuível (FR-012)."""
-    rascunho = inscrever(edital_a, 1, primeiro=99)[0]
-    Inscricao.objects.filter(pk=rascunho.pk).update(status=Inscricao.Status.RASCUNHO)
+    from django.utils import timezone
+
+    # Nasce rascunho, e não volta a ser: a inscrição enviada não muda (A-03).
+    rascunho = Inscricao.objects.create(
+        created_at=timezone.now(),
+        identity_subject="cpf:candidato-0099",
+        edital=edital_a,
+        profile_id=inscricoes[0].profile_id,
+    )
 
     with pytest.raises(DomainError) as recusa:
         lote(gestor, edital_a, etapa_a1, [banca["joao"]], [*inscricoes, rascunho])

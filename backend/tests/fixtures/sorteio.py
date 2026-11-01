@@ -174,15 +174,9 @@ def certame_com_cotas(gestor, api_client, manager_headers, process_payload, *, q
             ]
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo="cotas-021")
-    inscricoes = inscrever(edital, quantos, primeiro=701)
     # Os dois primeiros declaram cota: eles figuram na ampla concorrência **e** na reserva deles,
     # com numeração própria em cada (FR-004).
-    from processo_seletivo.inscricoes.models import Inscricao
-
-    Inscricao.objects.filter(pk=inscricoes[0].pk).update(modality_id=LISTA_PPI)
-    Inscricao.objects.filter(pk=inscricoes[1].pk).update(modality_id=LISTA_PCD)
-    for inscricao in inscricoes:
-        inscricao.refresh_from_db()
+    inscricoes = inscrever(edital, quantos, primeiro=701, modalidades={0: LISTA_PPI, 1: LISTA_PCD})
     return {
         "edital": edital,
         "processo": edital.processo,

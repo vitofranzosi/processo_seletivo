@@ -31,8 +31,9 @@ def montar_cenario_da_convocacao(
     prefixo="convocacao-019",
     forma=FORMA_POR_MENSAGEM_INDIVIDUAL,
     indeferidas=(),
-    # Repassado até `montar_cenario_do_corte` — ver a razão escrita em `tests/fixtures/ocupacao.py`.
+    # Repassados até `montar_cenario_do_corte`; a razão está em `tests/fixtures/ocupacao.py`.
     publicar=None,
+    modalidades=None,
     **quadro,
 ):
     """Edital publicado com quadro, ordem, corte, Resultados **e apuração vigente**.
@@ -53,6 +54,7 @@ def montar_cenario_da_convocacao(
         prefixo=prefixo,
         forma=forma,
         publicar=publicar,
+        modalidades=modalidades,
         **quadro,
     )
     # **Sem a Etapa governada consolidada não há ocupação nenhuma**, e o cenário da `016` para
