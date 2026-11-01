@@ -1,0 +1,27 @@
+/* O kit de divulgação (111): conferência, textos e exportação numa tela só. As regras moram aqui, e
+   só esta tela as carrega (091). Superfícies, bordas e cores são os tokens do GPS. */
+
+.kit-de-divulgacao{container-type:inline-size}
+.cabecalho-do-kit .nota{max-width:var(--leitura);margin-top:.35rem}
+
+/* As faixas dizem em texto o que aconteceu; a cor só acompanha (FR-3443). */
+.faixa-do-kit{margin:1rem 0 0;max-width:var(--leitura)}
+.mudancas-do-kit{margin:.35rem 0 0;padding-left:1.25rem}
+
+.secao-do-kit{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;margin:1.25rem 0 0}
+.secao-do-kit h2{margin-top:0}
+.subtitulo-do-kit{font-size:1rem;margin:1rem 0 .25rem}
+.conferencia-do-kit,.notas-do-kit{margin:.5rem 0 0;padding-left:1.25rem;max-width:var(--leitura)}
+.conferencia-do-kit li,.notas-do-kit li{margin:.2rem 0}
+
+.situacao-da-copia{min-height:1.25rem;margin:0 0 .5rem;color:var(--verde-texto)}
+.texto-do-kit{border:1px solid var(--borda);border-radius:6px;margin:.75rem 0 0}
+.cabecalho-do-texto{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+  gap:.5rem;padding:.5rem .75rem;background:var(--fundo);border-bottom:1px solid var(--borda)}
+.cabecalho-do-texto h3{margin:0;font-size:1rem}
+/* O texto é o que se copia: quebra como foi composto, e nunca alarga a página a 375 px. */
+.corpo-do-texto{margin:0;padding:.75rem;white-space:pre-wrap;overflow-wrap:anywhere;
+  font-family:inherit;font-size:.95rem}
+
+.exportacoes-do-kit{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}

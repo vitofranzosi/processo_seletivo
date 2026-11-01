@@ -1,0 +1,103 @@
+{
+  "modo": "com-periodo",
+  "motivo": "",
+  "edital_id": "adf31cc5-c32b-4608-920b-4b1dd278369f",
+  "numero": "91",
+  "ano": "2026",
+  "identificacao": "Edital nº 91/2026",
+  "titulo": "Edital nº 91/2026 – Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+  "titulo_sem_numero": "Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+  "titulo_do_processo": "Processo Seletivo de Alunos — Pós-graduação EaD 2027/1 (DEMONSTRAÇÃO)",
+  "unidade_sigla": "Cefor",
+  "unidade_nome": "Centro de Referência em Formação e em Educação a Distância",
+  "referencia": "2026-11-05T09:00:00-03:00",
+  "referencia_texto": "05/11/2026, 09h00",
+  "situacao_chave": "aberto",
+  "situacao_rotulo": "Aberta",
+  "periodo_estado": "aberto",
+  "inicio": "2026-11-04T09:00:00-03:00",
+  "fim": "2026-11-21T23:59:00-03:00",
+  "inicio_data": "04/11/2026",
+  "inicio_hora": "09h00",
+  "fim_data": "21/11/2026",
+  "fim_hora": "23h59",
+  "periodo_curto": "04/11 a 21/11/2026",
+  "prorrogado": false,
+  "fim_original_data": "",
+  "ofertas": [
+    {
+      "perfil_id": "1b8b03eb-3518-54af-bcf4-4a59017eab1f",
+      "nome": "Especialização em Informática na Educação",
+      "localidade": "Polo Bom Jesus do Norte",
+      "vagas_imediatas": 40,
+      "cadastro_reserva": false,
+      "quantidade": "40 vagas",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/adf31cc5-c32b-4608-920b-4b1dd278369f/#vaga-1b8b03eb-3518-54af-bcf4-4a59017eab1f"
+    },
+    {
+      "perfil_id": "5697656f-4e68-5b16-a154-ab5d2861c32b",
+      "nome": "Especialização em Informática na Educação",
+      "localidade": "",
+      "vagas_imediatas": 40,
+      "cadastro_reserva": false,
+      "quantidade": "40 vagas",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/adf31cc5-c32b-4608-920b-4b1dd278369f/#vaga-5697656f-4e68-5b16-a154-ab5d2861c32b"
+    }
+  ],
+  "nomes_iguais": true,
+  "total_de_vagas": 80,
+  "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/adf31cc5-c32b-4608-920b-4b1dd278369f/",
+  "caminho_curto": "gps.exemplo.ifes.edu.br/selecoes",
+  "versao_id": "d81c97b9-7877-427f-a721-5ead460a3048",
+  "versao_hash": "36ddb407796f4784ad0023f66aeb1d029b71a0870fb02698d0b41dce6b3f6f40",
+  "versao_desde": "2026-10-31T11:26:41.066042-03:00",
+  "versao_desde_texto": "31/10/2026, 11h26",
+  "versao_ato": "Publicação original de 31/10/2026",
+  "retificacao_a_vigorar": null,
+  "retificacao_a_vigorar_texto": "",
+  "impressao": "e5aa7305dd594b04883ffda098b7f0ce7839a1adebbaff63ea49bd4d1c38f32d",
+  "origens": [
+    {
+      "campo": "Número e ano",
+      "valor": "91/2026",
+      "caminho": "/number, /year",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Título",
+      "valor": "Edital nº 91/2026 – Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+      "caminho": "/title",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Início das inscrições",
+      "valor": "2026-11-04T09:00:00-03:00",
+      "caminho": "/schedule/id=6e8aef13-1ff1-5b7f-b49a-7e4ba64606d7/startAt",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Término das inscrições",
+      "valor": "2026-11-21T23:59:00-03:00",
+      "caminho": "/schedule/id=6e8aef13-1ff1-5b7f-b49a-7e4ba64606d7/endAt",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Especialização em Informática na Educação — Polo Bom Jesus do Norte",
+      "valor": "40",
+      "caminho": "/profiles/id=1b8b03eb-3518-54af-bcf4-4a59017eab1f/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Especialização em Informática na Educação — sem localidade",
+      "valor": "40",
+      "caminho": "/profiles/id=5697656f-4e68-5b16-a154-ab5d2861c32b/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Unidade",
+      "valor": "Cefor",
+      "caminho": "Publicacao.unidade_sigla (congelada no ato)",
+      "ato": "Publicação original de 31/10/2026"
+    }
+  ]
+}

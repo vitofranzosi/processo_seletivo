@@ -1,0 +1,33 @@
+{
+  "edital": "Edital nº 92/2026",
+  "edital_id": "e7ff498e-dd43-41d6-a935-91de7ed8532c",
+  "gerado_em": "2026-10-31T11:26:40.152834-03:00",
+  "instante_de_referencia": "2026-11-06T09:00:00-03:00",
+  "versao": {
+    "id": "1d776a49-5963-4bfc-be8c-bfc0d25e278d",
+    "content_hash": "1dfe8a4ac049d76e7ef10da2d9ab165ed7774f17aaab88e5f7cbed4845121ee2",
+    "vigente_desde": "2026-10-31T11:26:39.662020-03:00",
+    "ato": "Publicação original de 31/10/2026"
+  },
+  "impressao_da_ficha": "8cc98a9fcc9809b1991476dc7324f5fccabbcf6df5c88cbdc416f20a7df2389b",
+  "proximos_marcos_conhecidos": [
+    {
+      "marco": "Término do período de inscrições",
+      "em": "2026-11-19T23:59:00-03:00"
+    }
+  ],
+  "aviso": "Uma Retificação publicada depois desta geração pode mudar os dados. A publicação oficial prevalece.",
+  "peca": {
+    "template": "feed-4x5 · poc-1",
+    "rasterizador": "resvg-py 0.5.0",
+    "fontes": {
+      "EditalSans-Regular.ttf": "62b13299f160417649de8979ee1b72f5c276af2db2c3e9933d5e9054b4aa71e4",
+      "EditalSans-Bold.ttf": "465a6122bcd959c9a9a4f392cc67ecec886d28397019e4ef9d6cff6fd832508c"
+    },
+    "svg_sha256": "85e41735955e2ea34126e3ba74f7cb418ae35d12f6887235a754b5623f433908",
+    "png_sha256": "fe4ccb1940bdcadf78d3fe950d810e79a1fd99a29de59799495159f57daee645",
+    "omissoes": [
+      "Título do Edital não coube (208 caracteres): a peça usa o título do Processo. Manchete curta é a D-3."
+    ]
+  }
+}

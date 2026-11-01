@@ -1,0 +1,12 @@
+{
+  "cenario": "um-perfil",
+  "descricao": "91/2026 reduzido a um Perfil.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 44.4,
+  "png_deterministico": true,
+  "omissoes": [],
+  "zip_sha256": "ff69cb717f7f176e",
+  "impressao": "4b71d0e8"
+}

@@ -48,6 +48,9 @@ MODULOS_DE_VIEW = (
     # O registro de Unidades (110): 404 só para o código que não é de unidade registrada; a falta
     # de permissão é a recusa explicada, por `require_authorization_base`.
     RAIZ / "processo_seletivo/interface/unidades.py",
+    # O kit de divulgação (111): 404 só para o Edital inexistente ou de outra unidade, e para o
+    # formato que não existe; a falta de permissão é a recusa explicada.
+    RAIZ / "processo_seletivo/interface/kit_de_divulgacao.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

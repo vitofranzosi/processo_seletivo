@@ -1,0 +1,68 @@
+# Kit de divulgação — Edital nº 91/2026
+
+## Para quem divulga
+
+- Material anterior (ref. f2f197a0) desatualizado. Mudou: término das inscrições (21/11/2026 → 26/11/2026); oferta Especialização em Informática na Educação — Polo Bom Jesus do Norte (40 vagas → 45 vagas)
+- Gerado sobre a versão vigente desde 31/10/2026, 11h26 (Retificação nº 1 de 31/10/2026).
+- Situação conferida em 05/11/2026, 09h00: Aberta.
+- O período publicado termina em 26/11/2026, às 23h59. Depois disso, não republique este material.
+- Uma Retificação publicada depois desta geração pode mudar os dados: o GPS avisa na tela do kit quando a ficha mudar.
+
+## Resumo institucional
+
+```text
+O Cefor/Ifes publicou o Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Inscrições de 04/11/2026 a 26/11/2026, até as 23h59 (horário de Brasília). Prazo prorrogado por Retificação: o término passou de 21/11/2026 para 26/11/2026. Especialização em Informática na Educação, em 4 localidades. São 165 vagas no total. Condições, documentos exigidos e cronograma completo na página oficial: https://gps.exemplo.ifes.edu.br/selecoes/dccdeecb-d04b-441d-816f-a5cb010d4d5a/
+```
+
+## Legenda para rede social
+
+```text
+Edital nº 91/2026 — Cefor/Ifes
+Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)
+
+Inscrições de 04/11/2026 a 26/11/2026, até as 23h59 (horário de Brasília).
+Prazo prorrogado por Retificação: o término passou de 21/11/2026 para 26/11/2026.
+
+Especialização em Informática na Educação, em 4 localidades. São 165 vagas no total.
+• Polo Bom Jesus do Norte: 45 vagas
+• Polo Iúna: 40 vagas
+• Polo São Mateus: 40 vagas
+• Polo Vargem Alta: 40 vagas
+
+Condições, documentos exigidos e cronograma completo na página oficial. Acesse gps.exemplo.ifes.edu.br/selecoes e busque por 91/2026.
+
+As informações repetem o Edital nº 91/2026, conforme a versão vigente desde 31/10/2026, 11h26. Em caso de divergência, vale o Edital.
+```
+
+## Chamada curta para o site
+
+```text
+Edital nº 91/2026 — Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO): inscrições de 04/11/2026 a 26/11/2026.
+```
+
+## Texto para mensagens
+
+```text
+O Cefor/Ifes publicou o Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Inscrições de 04/11/2026 a 26/11/2026, até as 23h59 (horário de Brasília). Prazo prorrogado por Retificação: o término passou de 21/11/2026 para 26/11/2026. Especialização em Informática na Educação, em 4 localidades. São 165 vagas no total. Condições, documentos exigidos e cronograma completo na página oficial: https://gps.exemplo.ifes.edu.br/selecoes/dccdeecb-d04b-441d-816f-a5cb010d4d5a/
+```
+
+## Link oficial
+
+```text
+https://gps.exemplo.ifes.edu.br/selecoes/dccdeecb-d04b-441d-816f-a5cb010d4d5a/
+```
+
+## Link de cada opção
+
+```text
+Polo Bom Jesus do Norte: https://gps.exemplo.ifes.edu.br/selecoes/dccdeecb-d04b-441d-816f-a5cb010d4d5a/#vaga-1b8b03eb-3518-54af-bcf4-4a59017eab1f
+Polo Iúna: https://gps.exemplo.ifes.edu.br/selecoes/dccdeecb-d04b-441d-816f-a5cb010d4d5a/#vaga-5697656f-4e68-5b16-a154-ab5d2861c32b
+Polo São Mateus: https://gps.exemplo.ifes.edu.br/selecoes/dccdeecb-d04b-441d-816f-a5cb010d4d5a/#vaga-3c7aa7b3-34b6-52f8-aa39-5a6550a29687
+Polo Vargem Alta: https://gps.exemplo.ifes.edu.br/selecoes/dccdeecb-d04b-441d-816f-a5cb010d4d5a/#vaga-8741d1c6-4e02-5582-8d07-04e7de4bbb79
+```
+
+## Ressalva
+
+```text
+As informações repetem o Edital nº 91/2026, conforme a versão vigente desde 31/10/2026, 11h26. Em caso de divergência, vale o Edital.
+```

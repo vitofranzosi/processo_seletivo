@@ -17,7 +17,7 @@ nada.
 """
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 
 PARA_CIMA = "PARA_CIMA"
@@ -162,4 +162,58 @@ def cadastro_sem_vaga_imediata(perfil) -> bool:
         and not isinstance(linha.get("immediateVacancies"), bool)
         and linha["immediateVacancies"] > 0
         for linha in (linhas if isinstance(linhas, list) else [])
+    )
+
+
+# O quadro do conteúdo vigente: morava na Visão Geral (040, 041); desceu para cá quando a ficha de
+# divulgação do portal (111) passou a lê-lo, porque o portal não importa a gestão.
+
+
+@dataclass(frozen=True)
+class QuadroDoEdital:
+    """O que o conteúdo vigente diz sobre vagas, por Perfil e no total."""
+
+    total: int = 0
+    quantidades: dict = field(default_factory=dict)
+    com_vaga: frozenset = frozenset()
+    todos: frozenset = frozenset()
+    tem_reserva: bool = False
+
+
+def vagas_do_conteudo(conteudo):
+    """`QuadroDoEdital` do conteúdo vigente (`FR-587`).
+
+    **Do publicado, e nunca das linhas de elaboração.** A Retificação não reescreve o relacional:
+    `PerfilVaga.immediate_vacancies` é o rascunho, e o que o Edital **publicou** está aqui. Ler o
+    outro seria mais barato e estaria errado depois da primeira Retificação.
+
+    **`com_vaga` é o que torna a razão honesta** (041, `FR-612`): inscrição em Perfil que não
+    publica vaga imediata não disputa vaga nenhuma, e somá-la ao numerador produz número
+    aritmeticamente correto e institucionalmente falso.
+
+    **`todos` existe desde a 041, e a ausência dele era um buraco** (`FR-613a`, `R-003`): sem o
+    conjunto completo, *"Perfil sem vaga imediata"* e *"Perfil que a Retificação removeu"* caíam no
+    mesmo ramo. A Inscrição guarda a identidade **publicada** do Perfil, que sobrevive à remoção —
+    e é por isso que a diferença precisa ser reconhecível.
+    """
+    quantidades, com_vaga, todos, reserva = {}, [], [], False
+    for perfil in (conteudo or {}).get("profiles") or []:
+        if not isinstance(perfil, dict):
+            continue
+        identidade = str(perfil.get("id"))
+        quantidade = perfil.get("immediateVacancies")
+        if isinstance(quantidade, bool) or not isinstance(quantidade, int) or quantidade < 0:
+            quantidade = 0
+        quantidades[identidade] = quantidade
+        todos.append(identidade)
+        if quantidade > 0:
+            com_vaga.append(identidade)
+        if (perfil.get("reserveType") or "NONE") != "NONE":
+            reserva = True
+    return QuadroDoEdital(
+        total=sum(quantidades.values()),
+        quantidades=quantidades,
+        com_vaga=frozenset(com_vaga),
+        todos=frozenset(todos),
+        tem_reserva=reserva,
     )

@@ -1,0 +1,21 @@
+{
+  "edital": "Edital nº 91/2026",
+  "edital_id": "854f1c0d-9f6d-4dc1-b5cd-9891bd3d00aa",
+  "gerado_em": "2026-10-31T11:26:41.895101-03:00",
+  "instante_de_referencia": "2026-10-31T11:26:41.884600-03:00",
+  "versao": {
+    "id": "bdb09ddd-09aa-4632-876e-ec8d48cb6c2f",
+    "content_hash": "5fb7bbfe852d62a5655fdcec7abc7976f84789114669c9c141ecbd04ad7739c3",
+    "vigente_desde": "2026-10-31T11:26:41.770438-03:00",
+    "ato": "Retificação nº 1 de 31/10/2026"
+  },
+  "impressao_da_ficha": "69ae05068f555bcf97f4f022862238e13e4d58378ae0a6e4898ef1e71e2bf257",
+  "proximos_marcos_conhecidos": [
+    {
+      "marco": "Término do período de inscrições",
+      "em": "2026-11-26T14:25:41.560305-03:00"
+    }
+  ],
+  "aviso": "Uma Retificação publicada depois desta geração pode mudar os dados. A publicação oficial prevalece.",
+  "peca": null
+}

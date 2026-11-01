@@ -1,0 +1,31 @@
+{
+  "edital": "Edital nº 91/2026",
+  "edital_id": "dccdeecb-d04b-441d-816f-a5cb010d4d5a",
+  "gerado_em": "2026-10-31T11:26:38.647454-03:00",
+  "instante_de_referencia": "2026-11-05T09:00:00-03:00",
+  "versao": {
+    "id": "efc50b24-404a-4d36-8dfc-f5977694ad10",
+    "content_hash": "a46bceab8cd4030994ffb76d18f466f3e4327cf025d3295adee295266fffbf5e",
+    "vigente_desde": "2026-10-31T11:26:38.257531-03:00",
+    "ato": "Publicação original de 31/10/2026"
+  },
+  "impressao_da_ficha": "f2f197a002af9b26b994c2883040014af539c2a46d089ba6dfef4a4be22e6d09",
+  "proximos_marcos_conhecidos": [
+    {
+      "marco": "Término do período de inscrições",
+      "em": "2026-11-21T23:59:00-03:00"
+    }
+  ],
+  "aviso": "Uma Retificação publicada depois desta geração pode mudar os dados. A publicação oficial prevalece.",
+  "peca": {
+    "template": "feed-4x5 · poc-1",
+    "rasterizador": "resvg-py 0.5.0",
+    "fontes": {
+      "EditalSans-Regular.ttf": "62b13299f160417649de8979ee1b72f5c276af2db2c3e9933d5e9054b4aa71e4",
+      "EditalSans-Bold.ttf": "465a6122bcd959c9a9a4f392cc67ecec886d28397019e4ef9d6cff6fd832508c"
+    },
+    "svg_sha256": "ec58b0a231bf16d74099dad22bc4b25be7ea934d97266f596e6733b4e94ecae0",
+    "png_sha256": "f4b823a52a042d2da2a3393305e8a25aaecbedcb157062e9d74368681e2e8a58",
+    "omissoes": []
+  }
+}

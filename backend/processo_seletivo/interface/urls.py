@@ -6,6 +6,7 @@ from processo_seletivo.interface import (
     avisos,
     documentacao,
     duvidas,
+    kit_de_divulgacao,
     prototipo_do_assistente,
     relatorio,
     trilha_da_unidade,
@@ -229,6 +230,18 @@ urlpatterns = [
         "editais/<uuid:edital_id>/relatorio/pdf",
         relatorio.emitir,
         name="relatorio-do-edital-pdf",
+    ),
+    # O kit de divulgação (111): a tela que lê e o envio que exporta. Exportar é `POST` porque fica
+    # registrado na trilha (FR-3435, FR-3436).
+    path(
+        "editais/<uuid:edital_id>/kit-de-divulgacao/",
+        kit_de_divulgacao.kit,
+        name="kit-de-divulgacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/kit-de-divulgacao/exportar/<str:formato>",
+        kit_de_divulgacao.exportar,
+        name="kit-de-divulgacao-exportar",
     ),
     # A exportação de matrículas (031). Pende do **Edital**, e não do marco: o que se exporta é o
     # conjunto de pessoas que vai se matricular naquele certame, e a população — convocados de um

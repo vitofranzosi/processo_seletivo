@@ -40,7 +40,7 @@ from processo_seletivo.seguranca.application.authorization import (
     require_authorization_base,
 )
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.shared.http import marcar_como_privada
+from processo_seletivo.shared.http import host_local, marcar_como_privada
 from processo_seletivo.unidades.application.selectors import exigir_unidade
 from processo_seletivo.unidades.models import Unidade
 
@@ -62,7 +62,7 @@ class _Enderecos:
     def __init__(self, request, edital, *, so_publicos=False):
         self.request = request
         self.edital = edital
-        self.vazios = so_publicos and _host_local(request)
+        self.vazios = so_publicos and host_local(request)
 
     def selecao(self):
         if self.vazios:
@@ -210,15 +210,6 @@ def _ator_da_visao(request):
     return ator
 
 
-#: Hosts que só existem na máquina de quem emite: o endereço deles não vale para quem recebe o PDF.
-HOSTS_LOCAIS = frozenset({"localhost", "127.0.0.1", "::1", "[::1]", "testserver"})
-
-
-def _host_local(request):
-    host = request.get_host().rsplit(":", 1)[0] if "]" not in request.get_host() else "[::1]"
-    return host in HOSTS_LOCAIS or host.endswith(".localhost")
-
-
 def _enderecos_das_selecoes(request, conjunto):
     """Os endereços públicos, ou nenhum, quando a emissão é local (revisão visual de 24/10/2026).
 
@@ -226,7 +217,7 @@ def _enderecos_das_selecoes(request, conjunto):
     demonstração ele é `localhost`, e um link para ele no PDF parece endereço e não abre na mesa de
     quem o recebe: o documento diz que os endereços não estão disponíveis, em vez de imprimi-los.
     """
-    if _host_local(request):
+    if host_local(request):
         return {}
     return {
         edital.pk: request.build_absolute_uri(reverse("portal:selecao", args=[edital.pk]))
@@ -353,7 +344,7 @@ def emitir_relatorio_consolidado(request):
             emissao = relatorio_consolidado_mod.proxima_emissao(unidade)
             lido = relatorio_consolidado_mod.montar(conjunto, agora=agora, unidade=unidade)
             lido.enderecos = _enderecos_das_selecoes(request, conjunto)
-            lido.enderecos_locais = _host_local(request)
+            lido.enderecos_locais = host_local(request)
             documento = relatorio_consolidado_pdf.compor(lido, emissao=emissao)
             resumo = hashlib.sha256(documento).hexdigest()
             record_event(

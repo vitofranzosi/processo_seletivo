@@ -1,0 +1,343 @@
+{
+  "modo": "com-periodo",
+  "motivo": "",
+  "edital_id": "e7ff498e-dd43-41d6-a935-91de7ed8532c",
+  "numero": "92",
+  "ano": "2026",
+  "identificacao": "Edital nº 92/2026",
+  "titulo": "Edital nº 92/2026 – Seleção de cadastro de reserva de tutores presenciais e a distância para atuarem nos cursos técnicos e de pós-graduação do Programa Universidade Aberta do Brasil (UAB) ofertados pelo Cefor/Ifes (DEMONSTRAÇÃO)",
+  "titulo_sem_numero": "Seleção de cadastro de reserva de tutores presenciais e a distância para atuarem nos cursos técnicos e de pós-graduação do Programa Universidade Aberta do Brasil (UAB) ofertados pelo Cefor/Ifes (DEMONSTRAÇÃO)",
+  "titulo_do_processo": "Seleção de Tutores UAB — Cadastro de Reserva 2026 (DEMONSTRAÇÃO)",
+  "unidade_sigla": "Cefor",
+  "unidade_nome": "Centro de Referência em Formação e em Educação a Distância",
+  "referencia": "2026-11-06T09:00:00-03:00",
+  "referencia_texto": "06/11/2026, 09h00",
+  "situacao_chave": "aberto",
+  "situacao_rotulo": "Aberta",
+  "periodo_estado": "aberto",
+  "inicio": "2026-11-05T09:00:00-03:00",
+  "fim": "2026-11-19T23:59:00-03:00",
+  "inicio_data": "05/11/2026",
+  "inicio_hora": "09h00",
+  "fim_data": "19/11/2026",
+  "fim_hora": "23h59",
+  "periodo_curto": "05/11 a 19/11/2026",
+  "prorrogado": false,
+  "fim_original_data": "",
+  "ofertas": [
+    {
+      "perfil_id": "cca4b6e8-e16d-54e9-a744-a7156d0bf4a1",
+      "nome": "Tutor a distância do Curso Técnico em Administração na modalidade a distância, vinculado à Rede e-Tec Brasil e ao Programa Universidade Aberta do Brasil",
+      "localidade": "Cefor — atuação remota",
+      "vagas_imediatas": 6,
+      "cadastro_reserva": true,
+      "quantidade": "6 vagas e cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-cca4b6e8-e16d-54e9-a744-a7156d0bf4a1"
+    },
+    {
+      "perfil_id": "bb146bec-a097-59c4-838d-b9bc6f3ebdf2",
+      "nome": "Tutor a distância da Pós-graduação em Informática na Educação",
+      "localidade": "Cefor — atuação remota",
+      "vagas_imediatas": 4,
+      "cadastro_reserva": true,
+      "quantidade": "4 vagas e cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-bb146bec-a097-59c4-838d-b9bc6f3ebdf2"
+    },
+    {
+      "perfil_id": "7b116b0f-26dc-5734-ba31-d45775b5692f",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Afonso Cláudio — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-7b116b0f-26dc-5734-ba31-d45775b5692f"
+    },
+    {
+      "perfil_id": "d362b570-a475-5416-8c0b-0d7fda3f2b61",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Alegre — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-d362b570-a475-5416-8c0b-0d7fda3f2b61"
+    },
+    {
+      "perfil_id": "25762cf9-a738-5ced-931c-9ab233933ef5",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Aracruz — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-25762cf9-a738-5ced-931c-9ab233933ef5"
+    },
+    {
+      "perfil_id": "4caf28b3-f928-5147-b08f-b14227ae25ef",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Baixo Guandu — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-4caf28b3-f928-5147-b08f-b14227ae25ef"
+    },
+    {
+      "perfil_id": "b5d72636-ebcb-554e-8644-706f690a68da",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Bom Jesus do Norte — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-b5d72636-ebcb-554e-8644-706f690a68da"
+    },
+    {
+      "perfil_id": "c1596fc9-2a57-5a10-b8da-ab1e6a975027",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Cachoeiro de Itapemirim — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-c1596fc9-2a57-5a10-b8da-ab1e6a975027"
+    },
+    {
+      "perfil_id": "6b96d77a-036f-5829-998d-8ba455acc886",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Domingos Martins — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-6b96d77a-036f-5829-998d-8ba455acc886"
+    },
+    {
+      "perfil_id": "0846acf6-589e-58e8-86b5-c916870b70fb",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Ecoporanga — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-0846acf6-589e-58e8-86b5-c916870b70fb"
+    },
+    {
+      "perfil_id": "cedd3ad8-00fd-5b73-9a19-a3fe82718f2d",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Itapemirim — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-cedd3ad8-00fd-5b73-9a19-a3fe82718f2d"
+    },
+    {
+      "perfil_id": "e3073890-7d9b-5795-917b-07e721b4d88d",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Iúna — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-e3073890-7d9b-5795-917b-07e721b4d88d"
+    },
+    {
+      "perfil_id": "cf29fa14-695c-5dca-9a7a-e03ed68e1081",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Linhares — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-cf29fa14-695c-5dca-9a7a-e03ed68e1081"
+    },
+    {
+      "perfil_id": "f4deef79-78ee-52f4-9a98-87e54d8b6c9d",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Mantenópolis — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-f4deef79-78ee-52f4-9a98-87e54d8b6c9d"
+    },
+    {
+      "perfil_id": "55bf59a3-1e10-581c-b1e9-5a383d2a0e5b",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Montanha — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-55bf59a3-1e10-581c-b1e9-5a383d2a0e5b"
+    },
+    {
+      "perfil_id": "8c23c3b8-8f79-5a8d-88cf-edfa1f13e02e",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Nova Venécia — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-8c23c3b8-8f79-5a8d-88cf-edfa1f13e02e"
+    },
+    {
+      "perfil_id": "c454df76-5bd3-5866-a5d2-40efba7a8b30",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Pinheiros — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-c454df76-5bd3-5866-a5d2-40efba7a8b30"
+    },
+    {
+      "perfil_id": "cacd65c9-758e-5136-aff8-461753f5b350",
+      "nome": "Tutor presencial",
+      "localidade": "Polo UAB de Santa Leopoldina — endereço fictício de demonstração, s/n, Centro",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/#vaga-cacd65c9-758e-5136-aff8-461753f5b350"
+    }
+  ],
+  "nomes_iguais": false,
+  "total_de_vagas": null,
+  "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/e7ff498e-dd43-41d6-a935-91de7ed8532c/",
+  "caminho_curto": "gps.exemplo.ifes.edu.br/selecoes",
+  "versao_id": "1d776a49-5963-4bfc-be8c-bfc0d25e278d",
+  "versao_hash": "1dfe8a4ac049d76e7ef10da2d9ab165ed7774f17aaab88e5f7cbed4845121ee2",
+  "versao_desde": "2026-10-31T11:26:39.662020-03:00",
+  "versao_desde_texto": "31/10/2026, 11h26",
+  "versao_ato": "Publicação original de 31/10/2026",
+  "retificacao_a_vigorar": null,
+  "retificacao_a_vigorar_texto": "",
+  "impressao": "8cc98a9fcc9809b1991476dc7324f5fccabbcf6df5c88cbdc416f20a7df2389b",
+  "origens": [
+    {
+      "campo": "Número e ano",
+      "valor": "92/2026",
+      "caminho": "/number, /year",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Título",
+      "valor": "Edital nº 92/2026 – Seleção de cadastro de reserva de tutores presenciais e a distância para atuarem nos cursos técnicos e de pós-graduação do Programa Universidade Aberta do Brasil (UAB) ofertados pelo Cefor/Ifes (DEMONSTRAÇÃO)",
+      "caminho": "/title",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Início das inscrições",
+      "valor": "2026-11-05T09:00:00-03:00",
+      "caminho": "/schedule/id=5c211ae4-8f53-5b1f-b491-5bb9a4315e21/startAt",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Término das inscrições",
+      "valor": "2026-11-19T23:59:00-03:00",
+      "caminho": "/schedule/id=5c211ae4-8f53-5b1f-b491-5bb9a4315e21/endAt",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor a distância do Curso Técnico em Administração na modalidade a distância, vinculado à Rede e-Tec Brasil e ao Programa Universidade Aberta do Brasil — Cefor — atuação remota",
+      "valor": "6",
+      "caminho": "/profiles/id=cca4b6e8-e16d-54e9-a744-a7156d0bf4a1/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor a distância da Pós-graduação em Informática na Educação — Cefor — atuação remota",
+      "valor": "4",
+      "caminho": "/profiles/id=bb146bec-a097-59c4-838d-b9bc6f3ebdf2/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Afonso Cláudio — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=7b116b0f-26dc-5734-ba31-d45775b5692f/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Alegre — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=d362b570-a475-5416-8c0b-0d7fda3f2b61/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Aracruz — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=25762cf9-a738-5ced-931c-9ab233933ef5/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Baixo Guandu — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=4caf28b3-f928-5147-b08f-b14227ae25ef/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Bom Jesus do Norte — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=b5d72636-ebcb-554e-8644-706f690a68da/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Cachoeiro de Itapemirim — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=c1596fc9-2a57-5a10-b8da-ab1e6a975027/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Domingos Martins — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=6b96d77a-036f-5829-998d-8ba455acc886/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Ecoporanga — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=0846acf6-589e-58e8-86b5-c916870b70fb/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Itapemirim — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=cedd3ad8-00fd-5b73-9a19-a3fe82718f2d/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Iúna — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=e3073890-7d9b-5795-917b-07e721b4d88d/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Linhares — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=cf29fa14-695c-5dca-9a7a-e03ed68e1081/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Mantenópolis — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=f4deef79-78ee-52f4-9a98-87e54d8b6c9d/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Montanha — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=55bf59a3-1e10-581c-b1e9-5a383d2a0e5b/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Nova Venécia — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=8c23c3b8-8f79-5a8d-88cf-edfa1f13e02e/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Pinheiros — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=c454df76-5bd3-5866-a5d2-40efba7a8b30/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Tutor presencial — Polo UAB de Santa Leopoldina — endereço fictício de demonstração, s/n, Centro",
+      "valor": "0",
+      "caminho": "/profiles/id=cacd65c9-758e-5136-aff8-461753f5b350/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Unidade",
+      "valor": "Cefor",
+      "caminho": "Publicacao.unidade_sigla (congelada no ato)",
+      "ato": "Publicação original de 31/10/2026"
+    }
+  ]
+}

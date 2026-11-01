@@ -58,8 +58,12 @@ from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.portal.situacao import DESFECHOS
 from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.application.selectors import (
+    prorrogacao,
+    retificacoes_publicadas,
+    versoes_original_e_vigente,
+)
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
-from processo_seletivo.publicacoes.models_retificacao import Retificacao, VersaoConsolidada
 from processo_seletivo.recursos.application import selectors as recursos
 from processo_seletivo.recursos.models import DecisaoRecurso, Recurso
 from processo_seletivo.resultados.models import ResultadoEtapa
@@ -337,15 +341,6 @@ def _minuscula(texto):
 # --- A montagem -----------------------------------------------------------------------------
 
 
-def _versoes(edital, agora):
-    versoes = list(
-        VersaoConsolidada.objects.filter(edital=edital, valid_from__lte=agora).order_by(
-            "valid_from", "materialized_at"
-        )
-    )
-    return (versoes[0].content, versoes[-1].content) if versoes else (None, None)
-
-
 def _evento_das_inscricoes(conteudo):
     for evento in (conteudo or {}).get("schedule") or []:
         if evento.get("isRegistrationPeriod"):
@@ -517,7 +512,7 @@ def fatos_do_edital(edital, *, agora):
     **`agora` é o instante da leitura, e não uma data de retrato** (FR-2521). Ele decide o que é
     prazo em curso, período aberto e versão vigente; os fatos são os gravados até a leitura.
     """
-    original, vigente = _versoes(edital, agora)
+    original, vigente = versoes_original_e_vigente(edital, agora)
     vigente = vigente or {}
     perfis_publicados = [p for p in vigente.get("profiles") or [] if isinstance(p, dict)]
     etapas = [e for e in vigente.get("stages") or [] if isinstance(e, dict)]
@@ -538,11 +533,9 @@ def fatos_do_edital(edital, *, agora):
     cadastros = enviadas.values("identity_subject").distinct().count()
     instantes = list(enviadas.order_by("submitted_at").values_list("submitted_at", flat=True))
     periodo = periodo_de_inscricoes(vigente, agora)
-    evento_original = _evento_das_inscricoes(original)
     evento_vigente = _evento_das_inscricoes(vigente)
-    termino_original = _quando((evento_original or {}).get("endAt"))
-    termino_vigente = _quando((evento_vigente or {}).get("endAt"))
-    prorrogado = bool(termino_original and termino_vigente and termino_vigente > termino_original)
+    lida = prorrogacao(original, vigente)
+    termino_original, prorrogado = lida.termino_original, lida.prorrogado
     no_periodo_acrescentado = (
         sum(1 for instante in instantes if instante > termino_original) if prorrogado else 0
     )
@@ -580,7 +573,7 @@ def fatos_do_edital(edital, *, agora):
 
     recursos_por_perfil, recursos_total = _recursos(edital)
     convocacoes_por_perfil, pendencias_de_convocacao, prazos_em_curso = _convocacoes(edital, agora)
-    retificacoes_lidas = _retificacoes_publicadas(edital, agora)
+    retificacoes_lidas = retificacoes_publicadas(edital, agora)
 
     pendencias_de_resultado = []
     nao_publicas = []
@@ -1253,20 +1246,6 @@ def _situacao_das_vagas(vagas, habilitadas, convocacoes, motivo_da_omissao, perf
         for rotulo, n in convocacoes.outros:
             partes.append(f"{n} {_minuscula(rotulo)}")
     return "; ".join(partes)
-
-
-def _retificacoes_publicadas(edital, agora):
-    """As Retificações publicadas até `agora`, em ordem — lidas uma vez, nos fatos (100)."""
-    return list(
-        Retificacao.objects.filter(
-            edital=edital,
-            status=Retificacao.Status.PUBLICADA,
-            publication__published_at__lte=agora,
-        )
-        .select_related("base_snapshot", "publication")
-        .prefetch_related("alteracoes")
-        .order_by("publication__published_at")
-    )
 
 
 def _retificacoes(publicadas):

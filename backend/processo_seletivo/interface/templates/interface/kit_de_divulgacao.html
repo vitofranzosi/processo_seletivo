@@ -1,0 +1,81 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Kit de divulgação — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Kit de divulgação</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/kit-de-divulgacao.css' %}">{% endblock %}
+{% block conteudo %}
+{% comment %}
+O kit de divulgação (111). Tudo o que aparece aqui sai da ficha (`portal/ficha.py`) e das formas
+fechadas de `kit_textos.py`: a tela não escreve frase, não formata data e não decide o que o material
+pode dizer. A conferência vem antes dos textos porque é ela que a pessoa precisa olhar antes de usar.
+{% endcomment %}
+<div class="kit-de-divulgacao">
+<header class="cabecalho-do-kit">
+  <h1>Kit de divulgação</h1>
+  <p class="nota">{{ ficha.identificacao }} — {{ ficha.titulo_sem_numero|default:ficha.titulo }} · {{ ficha.unidade_sigla }}</p>
+  <p class="nota">Material informativo, com os dados do Edital publicado. Não é ato oficial e não substitui o Edital.</p>
+</header>
+
+{% if exportado_sem_material %}
+<p class="aviso faixa-do-kit"><strong>O material exportado deve sair de circulação.</strong> {{ ficha.motivo }} A última exportação foi em {{ ultima_exportacao }}.</p>
+{% endif %}
+{% for item in desatualizadas %}
+<div class="aviso faixa-do-kit">
+  {% if item.comparavel %}
+  <p><strong>Material exportado em {{ item.exportado_em }} desatualizado.</strong> O que mudou:</p>
+  <ul class="mudancas-do-kit">{% for mudanca in item.mudancas %}<li>{{ mudanca.campo }}: {{ mudanca.de }} → {{ mudanca.para }}</li>{% endfor %}</ul>
+  {% else %}
+  <p><strong>Material exportado em {{ item.exportado_em }} por uma versão anterior do kit:</strong> confira antes de reaproveitá-lo.</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% if mais_desatualizadas %}<p class="nota">E mais {{ mais_desatualizadas }} exportaç{{ mais_desatualizadas|pluralize:"ão,ões" }} anterior{{ mais_desatualizadas|pluralize:"es" }} desatualizada{{ mais_desatualizadas|pluralize }}.</p>{% endif %}
+
+{% if not ficha.tem_material %}
+<section class="secao-do-kit" aria-labelledby="titulo-sem-material">
+  <h2 id="titulo-sem-material">Sem material de divulgação</h2>
+  <p>{{ ficha.motivo }}</p>
+</section>
+{% else %}
+{% if ficha.retificacao_a_vigorar %}<p class="aviso faixa-do-kit"><strong>Há Retificação publicada que passa a valer em {{ ficha.retificacao_a_vigorar_texto }}.</strong> Este material descreve o Edital antes dela; gere de novo a partir dessa data.</p>{% endif %}
+{% if ficha.modo == "neutro" %}<p class="aviso faixa-do-kit">{{ ficha.motivo }}</p>{% endif %}
+{% if not ficha.endereco %}<p class="aviso faixa-do-kit">O endereço público não é conhecido neste acesso: os textos saem sem link absoluto.</p>{% endif %}
+
+<section class="secao-do-kit" aria-labelledby="titulo-conferencia">
+  <h2 id="titulo-conferencia">1. Confira as informações oficiais</h2>
+  <p class="nota">Situação em {{ ficha.referencia_texto }}: {{ ficha.situacao_rotulo|default:"sem marca" }}. Versão usada: {{ ficha.versao_ato }}, vigente desde {{ ficha.versao_desde_texto }}.</p>
+  <ul class="conferencia-do-kit">{% for linha in conferencia %}<li>{{ linha }}</li>{% endfor %}</ul>
+  <h3 class="subtitulo-do-kit">Para quem divulga</h3>
+  <ul class="notas-do-kit">{% for nota in notas %}<li>{{ nota }}</li>{% endfor %}</ul>
+</section>
+
+<section class="secao-do-kit" aria-labelledby="titulo-textos">
+  <h2 id="titulo-textos">2. Textos para divulgação</h2>
+  <p class="situacao-da-copia" role="status" aria-live="polite" data-situacao-da-copia></p>
+  {% for chave, nome, texto in textos %}
+  <article class="texto-do-kit">
+    <header class="cabecalho-do-texto">
+      <h3 id="nome-{{ chave }}">{{ nome }}</h3>
+      <button type="button" class="acao" data-copiar="texto-{{ chave }}" aria-describedby="nome-{{ chave }}">Copiar</button>
+    </header>
+    <pre class="corpo-do-texto" id="texto-{{ chave }}">{{ texto }}</pre>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="secao-do-kit" aria-labelledby="titulo-exportar">
+  <h2 id="titulo-exportar">3. Exportar</h2>
+  <p class="nota">A exportação fica registrada na trilha do Edital, com a versão usada; é por ela que o kit avisa quando o material deixar de corresponder ao Edital.</p>
+  <div class="exportacoes-do-kit">
+    {% for formato in formatos %}
+    <form method="post" action="{% url 'interface:kit-de-divulgacao-exportar' edital.id formato %}">
+      {% csrf_token %}
+      <input type="hidden" name="impressao" value="{{ ficha.impressao }}">
+      <button type="submit" class="botao secundario">Baixar textos (.{{ formato }})</button>
+    </form>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+</div>
+<script src="{% estatico 'interface/kit-de-divulgacao.js' %}" defer></script>
+{% endblock %}
