@@ -94,15 +94,24 @@ _exigir_admissao(peca)
 ### Teste que a prende
 
 Sob `como_producao`, chamar `julgar` duas vezes com `CORRECAO_FIXADA`, mesmo conteúdo e mesma
-chave: a segunda chamada devolve a mesma `DecisaoRecurso`, o mesmo sucessor, e nenhum evento novo na
-trilha. Em seguida, outra julgadora (ou a mesma, com outra chave) tenta julgar outro recurso do
-mesmo par e continua recebendo `403 appeal_judge_barred` (a FR-039 intacta).
+chave. A segunda chamada:
+
+- devolve a mesma `DecisaoRecurso`;
+- não cria segundo sucessor: o Resultado protegido continua com exatamente um;
+- não grava evento novo na trilha.
+
+Em seguida, a mesma julgadora, com outra chave, tenta julgar outro recurso do mesmo par e continua
+recebendo `403 appeal_judge_barred`: ela consolidou o vigente, e a FR-039 fica intacta.
+
+**O critério é o contrato que já existe, e não um maior.** A repetição devolve `(decisao, None)`:
+recupera a decisão, e não o sucessor. É o que a repetição já faz hoje nas outras espécies, e o que a
+FR-097 pede — o desfecho original, que é a decisão. A tela só usa a decisão. Devolver também o
+sucessor seria ampliar o contrato, e nada no requisito o exige.
 
 **Conferido num experimento descartável** (31/10/2026, sobre `224bd47c`, não commitado): com o
 bloco movido, os dois cenários acima passaram sob a role de produção, e também
 `tests/integration/recursos/` e `tests/authorization/test_julgamento_de_recurso.py` inteiros (157
-casos). Detalhe do retorno: a repetição devolve `(decisao, None)`, sem o sucessor, como já acontece
-hoje na repetição das outras espécies. A tela só usa a decisão.
+casos).
 
 ### Onde mais a ordem é a mesma
 
