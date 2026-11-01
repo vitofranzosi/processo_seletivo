@@ -10188,6 +10188,12 @@ def _pontuacao_digitada(bruto):
     return texto.replace(",", ".") if texto else None
 
 
+JULGAMENTO_JA_REGISTRADO = (
+    "Já existe um julgamento registrado com outros dados. Atualize a página para consultar a "
+    "decisão."
+)
+
+
 @require_http_methods(["POST"])
 def julgar_recurso(request, recurso_id):
     """A decisão de mérito, nas quatro espécies.
@@ -10223,6 +10229,12 @@ def julgar_recurso(request, recurso_id):
     except DomainError as recusa:
         if recusa.status == 403 and recusa.code == "forbidden":
             raise
+        if recusa.code == "idempotency_conflict":
+            # **Só a frase, e só nesta tela.** A chave é fixa por peça, e o conflito aqui quer dizer
+            # que já há julgamento desta pessoa com outros dados — o reenvio de um formulário
+            # alterado depois do sucesso. A frase do domínio fala de chave, que quem julga não vê;
+            # o código e o `409` continuam os do domínio, que outros comandos compartilham.
+            recusa = DomainError(recusa.code, JULGAMENTO_JA_REGISTRADO, recusa.status)
         return _recurso_com_recusa(request, ator, peca, recusa)
     return redirect(reverse("interface:recurso", args=[peca.id]))
 

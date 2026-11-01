@@ -546,6 +546,19 @@ Três pontos que a primeira redação deixou inconsistentes ou resolvidos por me
 
 ---
 
+### Sessão 2026-11-01
+
+Uma questão de ordem que a correção da repetição do julgamento levantou
+(`doc/achado-repeticao-da-correcao-fixada.md`). Decidida pelo usuário nesta sessão.
+
+- Q: A FR-043 manda reavaliar autorização e impedimento depois do bloqueio, e a FR-097 manda a
+  repetição devolver o desfecho original. Na correção fixada o próprio ato torna a julgadora
+  impedida, e a repetição respondia `403`. Qual vem primeiro? → A: **A recuperação da repetição
+  vem antes da reavaliação do impedimento, e depois da permissão e do escopo.** Recuperar um ato
+  já praticado não é autorizar um ato novo: a reserva é de quem o praticou, e essa pessoa já passou
+  pelo impedimento ao praticá-lo. Para ato novo nada muda — a FR-043 vale inteira. O esclarecimento
+  fica na FR-097 e não cria regra geral: o invólucro `comando_de_comissao` mantém a ordem dele.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Ver o próprio Resultado da Etapa (Priority: P1)
@@ -1149,6 +1162,10 @@ acaso.
 - **FR-096**: Todo ato desta feature MUST usar o invólucro transacional existente, com autorização
   reavaliada depois do bloqueio e reserva de chave de idempotência.
 - **FR-097**: Repetir a mesma chave MUST devolver o desfecho original, sem criar linha nem evento.
+  A recuperação MAY acontecer depois da permissão e do escopo e **antes** da reavaliação do
+  impedimento e das demais condições do ato novo (FR-043): devolver o que já foi praticado não é
+  praticar ato novo, e o próprio ato pode mudar o que o impedimento lê. Todo ato novo continua
+  sujeito, integralmente, à FR-043 (esclarecido em 2026-11-01, ver Clarifications).
 - **FR-098**: Mesma chave com conteúdo diferente MUST produzir conflito.
 - **FR-099**: A corrida entre dois sucessores do mesmo Resultado MUST ser resolvida por constraint
   no banco, e não por leitura prévia.
