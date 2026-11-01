@@ -351,6 +351,7 @@ def exportar():
 
         # A interface de hoje, para comparar no mesmo recorte: a lista do mês e os Próximos
         # marcos, com 7 Editais e com 23. A grade não entra — o estudo não a altera.
+        grades = {}
         agora = datetime.fromisoformat(REFERENCIAS[0])
         base = versoes_vigentes(edital_ids=[reais[0].pk], at=agora)[reais[0].pk].content
         extras = sinteticos(base)
@@ -371,6 +372,9 @@ def exportar():
             ),
         ):
             trecho = agenda_atual(reais, lista, agora, parametros)
+            if "mes" in parametros:
+                # A grade sem a lista de períodos: é o que a página completa com C mostra acima.
+                grades["23" if lista else "7"] = trecho.split('<section class="periodos-do-mes"')[0]
             (PROTOTIPO / nome).write_text(
                 pagina_atual(
                     titulo,
@@ -381,6 +385,9 @@ def exportar():
                 encoding="utf-8",
             )
 
+    (PROTOTIPO / "grade.js").write_text(
+        "window.GRADE = " + json.dumps(grades, ensure_ascii=False) + ";\n", encoding="utf-8"
+    )
     # dados.js, e não JSON: a POC abre com dois cliques, sem servidor, porque não há fetch.
     (PROTOTIPO / "dados.js").write_text(
         "window.DADOS = " + json.dumps(saida, ensure_ascii=False, indent=1) + ";\n",

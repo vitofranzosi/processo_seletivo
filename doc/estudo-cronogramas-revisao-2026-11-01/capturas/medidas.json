@@ -4,121 +4,153 @@
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "desktop",
-   "alturaPagina": 2151,
-   "alturaPainel": 1620,
+   "alturaPagina": 2935,
+   "alturaPainel": 2316,
    "rolagemLateral": false,
    "focaveis": 23,
-   "pxPorDia": 36.6
+   "alturaDaAgenda": null,
+   "pxPorDia": 33.4
   },
   {
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "notebook",
-   "alturaPagina": 2213,
-   "alturaPainel": 1620,
+   "alturaPagina": 3333,
+   "alturaPainel": 2714,
    "rolagemLateral": false,
    "focaveis": 23,
+   "alturaDaAgenda": null,
    "pxPorDia": 22.7
   },
   {
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "tablet",
-   "alturaPagina": 2276,
-   "alturaPainel": 1620,
+   "alturaPagina": 3643,
+   "alturaPainel": 2900,
    "rolagemLateral": false,
    "focaveis": 23,
+   "alturaDaAgenda": null,
    "pxPorDia": 16.9
   },
   {
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "celular",
-   "alturaPagina": 3383,
-   "alturaPainel": 2655,
+   "alturaPagina": 4615,
+   "alturaPainel": 3814,
    "rolagemLateral": false,
    "focaveis": 23,
+   "alturaDaAgenda": null,
    "pxPorDia": 10.6
   },
   {
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "desktop",
-   "alturaPagina": 5429,
-   "alturaPainel": 4898,
+   "alturaPagina": 5839,
+   "alturaPainel": 5220,
    "rolagemLateral": false,
    "focaveis": 91,
-   "pxPorDia": 36.6
+   "alturaDaAgenda": null,
+   "pxPorDia": 33.4
   },
   {
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "notebook",
-   "alturaPagina": 5491,
-   "alturaPainel": 4898,
+   "alturaPagina": 6542,
+   "alturaPainel": 5922,
    "rolagemLateral": false,
    "focaveis": 91,
+   "alturaDaAgenda": null,
    "pxPorDia": 22.7
   },
   {
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "tablet",
-   "alturaPagina": 5596,
-   "alturaPainel": 4940,
+   "alturaPagina": 7411,
+   "alturaPainel": 6668,
    "rolagemLateral": false,
    "focaveis": 91,
+   "alturaDaAgenda": null,
    "pxPorDia": 16.9
   },
   {
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "celular",
-   "alturaPagina": 8714,
-   "alturaPainel": 7985,
+   "alturaPagina": 9346,
+   "alturaPainel": 8546,
    "rolagemLateral": false,
    "focaveis": 91,
+   "alturaDaAgenda": null,
    "pxPorDia": 10.6
   },
   {
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "desktop",
-   "alturaPagina": 3489,
+   "alturaPagina": 3575,
    "alturaPainel": 2978,
    "rolagemLateral": false,
    "focaveis": 68,
+   "alturaDaAgenda": null,
    "pxPorDia": null
   },
   {
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "notebook",
-   "alturaPagina": 4316,
+   "alturaPagina": 4339,
    "alturaPainel": 3742,
    "rolagemLateral": false,
    "focaveis": 68,
+   "alturaDaAgenda": null,
    "pxPorDia": null
   },
   {
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "tablet",
-   "alturaPagina": 5662,
+   "alturaPagina": 5746,
    "alturaPainel": 5044,
    "rolagemLateral": false,
    "focaveis": 68,
+   "alturaDaAgenda": null,
    "pxPorDia": null
   },
   {
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "celular",
-   "alturaPagina": 9033,
+   "alturaPagina": 9098,
    "alturaPainel": 8362,
    "rolagemLateral": false,
    "focaveis": 68,
+   "alturaDaAgenda": null,
    "pxPorDia": null
+  },
+  {
+   "tela": "agenda-completa-com-c",
+   "largura": "desktop",
+   "alturaPagina": 4134,
+   "alturaPainel": 2349,
+   "rolagemLateral": false,
+   "focaveis": 23,
+   "alturaDaAgenda": 3583,
+   "pxPorDia": 33.4
+  },
+  {
+   "tela": "agenda-completa-com-c",
+   "largura": "celular",
+   "alturaPagina": 5854,
+   "alturaPainel": 4182,
+   "rolagemLateral": false,
+   "focaveis": 23,
+   "alturaDaAgenda": 5309,
+   "pxPorDia": 10.6
   },
   {
    "tela": "atual-mes",
@@ -127,6 +159,7 @@
    "alturaPainel": 1552,
    "rolagemLateral": false,
    "focaveis": 33,
+   "alturaDaAgenda": 1414,
    "pxPorDia": null
   },
   {
@@ -136,6 +169,7 @@
    "alturaPainel": 1885,
    "rolagemLateral": false,
    "focaveis": 33,
+   "alturaDaAgenda": 1660,
    "pxPorDia": null
   },
   {
@@ -145,6 +179,7 @@
    "alturaPainel": 2732,
    "rolagemLateral": false,
    "focaveis": 33,
+   "alturaDaAgenda": 2594,
    "pxPorDia": null
   },
   {
@@ -154,6 +189,7 @@
    "alturaPainel": 4700,
    "rolagemLateral": false,
    "focaveis": 33,
+   "alturaDaAgenda": 4475,
    "pxPorDia": null
   },
   {
@@ -163,6 +199,7 @@
    "alturaPainel": 1630,
    "rolagemLateral": false,
    "focaveis": 14,
+   "alturaDaAgenda": null,
    "pxPorDia": null
   },
   {
@@ -172,6 +209,7 @@
    "alturaPainel": 2165,
    "rolagemLateral": false,
    "focaveis": 14,
+   "alturaDaAgenda": null,
    "pxPorDia": null
   },
   {
@@ -181,6 +219,7 @@
    "alturaPainel": 3701,
    "rolagemLateral": false,
    "focaveis": 44,
+   "alturaDaAgenda": null,
    "pxPorDia": null
   },
   {
@@ -190,6 +229,7 @@
    "alturaPainel": 5131,
    "rolagemLateral": false,
    "focaveis": 44,
+   "alturaDaAgenda": null,
    "pxPorDia": null
   }
  ],
@@ -281,6 +321,13 @@
   {
    "tela": "c-inscricoes-em-curso",
    "largura": "desktop",
+   "marcos": 18,
+   "barras": 16,
+   "erros": []
+  },
+  {
+   "tela": "c-inscricoes-so-eventos",
+   "largura": "desktop",
    "marcos": 0,
    "barras": 8,
    "erros": []
@@ -293,8 +340,22 @@
    "erros": []
   },
   {
+   "tela": "c-aberto",
+   "largura": "desktop",
+   "marcos": 13,
+   "barras": 12,
+   "erros": []
+  },
+  {
    "tela": "ficha",
-   "focoAoFechar": "Período de inscrições"
+   "focoAoFechar": "Período de inscrições24/10 às 9h a 06/11 às 18h · em curso hoje, pelo cronogramacomeçou em 24/10"
+  },
+  {
+   "tela": "c-aberto",
+   "largura": "celular",
+   "marcos": 13,
+   "barras": 12,
+   "erros": []
   }
  ],
  "avisosDoConsole": []

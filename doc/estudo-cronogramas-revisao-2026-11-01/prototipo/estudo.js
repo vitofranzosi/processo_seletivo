@@ -15,6 +15,9 @@ const cenario = ["denso", "demo", "sucessao", "retificacao"].includes(P.get("cen
 const referencia = P.get("referencia") === "2026-11-05" ? "2026-11-05" : "2026-11-01";
 const mes = /^20\d\d-(0[1-9]|1[0-2])$/.test(P.get("mes") || "") ? P.get("mes") : "2026-11";
 const ordem = P.get("ordem") === "numero" ? "numero" : "proximo";
+// O filtro seleciona Editais e mostra todas as etapas deles, ou mostra só os eventos que o
+// atendem. As duas leituras servem a tarefas diferentes, e a tela diz qual está valendo.
+const alcance = P.get("alcance") === "eventos" ? "eventos" : "editais";
 const [ano, numMes] = mes.split("-").map(Number);
 const diasNoMes = new Date(Date.UTC(ano, numMes, 0)).getUTCDate();
 const inicioMes = `${mes}-01`, fimMes = `${mes}-${String(diasNoMes).padStart(2, "0")}`;
@@ -22,6 +25,8 @@ const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julh
 
 const formatoDia = new Intl.DateTimeFormat("sv-SE", {timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"});
 const formatoInstante = new Intl.DateTimeFormat("pt-BR", {timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"});
+const formatoHora = new Intl.DateTimeFormat("pt-BR", {timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit"});
+const hora = (iso) => { const [h, m] = formatoHora.format(new Date(iso)).split(":"); return m === "00" ? `${+h}h` : `${+h}h${m}`; };
 const dia = (iso) => iso ? formatoDia.format(new Date(iso)) : null;
 const curta = (d) => d.slice(8) + "/" + d.slice(5, 7);
 const entre = (a, b) => Math.round((Date.parse(b + "T00:00Z") - Date.parse(a + "T00:00Z")) / 864e5);
@@ -64,6 +69,8 @@ function datas(item) {
   if (item.tipo === "pontual") return curta(item.diaInicio);
   return curta(item.diaInicio) + " a " + (item.diaFim ? curta(item.diaFim) : "sem término declarado");
 }
+// A régua é diária, mas o prazo que alguém cumpre tem hora: ela vai no texto.
+const quando = (iso) => `${curta(dia(iso))} às ${hora(iso)}`;
 const fase = (item) => item.cancelado ? "cancelado" : item.faseRotulo;
 const rotuloEdital = (e) => `Edital ${e.numero}/${e.ano}`;
 
@@ -72,21 +79,21 @@ const rotuloEdital = (e) => `Edital ${e.numero}/${e.ano}`;
 function situacao(edital) {
   const ativos = edital.todos.filter((i) => !i.cancelado);
   const correndo = ativos.filter((i) => i.fase === "em_curso" && i.tipo === "periodo")
-    .sort((a, b) => (dia(a.fim) || "9") .localeCompare(dia(b.fim) || "9"));
+    .sort((a, b) => (a.fim || "9").localeCompare(b.fim || "9"));
   const proximo = ativos.filter((i) => i.fase === "por_vir").sort((a, b) => a.inicio.localeCompare(b.inicio))[0];
-  const partes = [];
+  const linhas = [];
   let chave = "9999";
   if (correndo.length) {
     const c = correndo[0];
-    partes.push(`Em curso: ${c.nome}${c.fim ? ", até " + curta(dia(c.fim)) : ", sem término declarado"}`);
+    linhas.push(`Em curso: ${c.nome} — ${c.fim ? "encerra " + quando(c.fim) : "sem término definido"}`);
     if (c.fim) chave = dia(c.fim);
   }
   if (proximo) {
-    partes.push(`Próximo: ${proximo.nome}, ${curta(dia(proximo.inicio))}`);
+    linhas.push(`Próximo: ${proximo.nome} — ${proximo.tipo === "periodo" ? "começa " : ""}${quando(proximo.inicio)}`);
     if (dia(proximo.inicio) < chave) chave = dia(proximo.inicio);
   }
-  if (!partes.length) partes.push("Nenhuma data futura no cronograma");
-  return {texto: partes, chave};
+  if (!linhas.length) linhas.push("Nenhuma data futura no cronograma");
+  return {linhas, chave};
 }
 
 function abrirDetalhes(edital, item) {
@@ -137,17 +144,23 @@ function trilha(itens, {rotulos}) {
     let f = faixas.findIndex((fim) => fim < p.de);
     if (f < 0) { f = faixas.length; faixas.push(0); }
     faixas[f] = p.ate;
-    const barra = el("span", {class: `barra ${p.fase}${p.vemDeAntes ? " vem-de-antes" : ""}${p.segueDepois ? " segue-depois" : ""}`, "data-faixa": f, "data-de": p.de, "data-ate": p.ate}, rotulos ? el("span", {class: "rotulo-barra", texto: p.nome}) : null);
+    const barra = el("span", {class: `barra ${p.fase}${p.vemDeAntes ? " vem-de-antes" : ""}${!p.diaFim ? " sem-termino" : p.segueDepois ? " segue-depois" : ""}`, "data-faixa": f, "data-de": p.de, "data-ate": p.ate}, rotulos ? el("span", {class: "rotulo-barra", texto: p.nome}) : null);
     barra.dataset.left = pos(p.de); barra.dataset.width = larg(p.ate - p.de + 1);
     t.append(barra);
   }
-  const pontuais = itens.filter((i) => i.tipo === "pontual");
+  // Pontuais no mesmo dia, ou em dias vizinhos, vão a faixas distintas: dois losangos
+  // sobrepostos pareciam um evento só (T07, sorteio e resultado em 01/11).
+  const pontuais = itens.filter((i) => i.tipo === "pontual").sort((a, b) => a.de - b.de);
+  const faixasDosPontuais = [];
   for (const m of pontuais) {
-    const marco = el("span", {class: `marco ${m.cancelado ? "anulado" : m.fase}`, "data-faixa": faixas.length, "data-dia": m.de});
+    let f = faixasDosPontuais.findIndex((ultimo) => ultimo < m.de - 1);
+    if (f < 0) { f = faixasDosPontuais.length; faixasDosPontuais.push(0); }
+    faixasDosPontuais[f] = m.de;
+    const marco = el("span", {class: `marco ${m.cancelado ? "anulado" : m.fase}`, "data-faixa": faixas.length + f, "data-dia": m.de});
     marco.dataset.left = ((m.de - 0.5) / diasNoMes * 100).toFixed(3) + "%";
     t.append(marco);
   }
-  t.dataset.faixas = faixas.length + (pontuais.length ? 1 : 0);
+  t.dataset.faixas = faixas.length + faixasDosPontuais.length;
   const refMes = referencia.slice(0, 7) === mes;
   if (refMes) {
     const linha = el("span", {class: "linha-referencia"});
@@ -167,29 +180,48 @@ function aplicarPosicoes(raiz) {
   for (const t of raiz.querySelectorAll(".regua,.trilha")) t.style.setProperty("--dias", diasNoMes);
 }
 
+// Uma linha por evento: o nome inteiro, com quebra, e as datas com hora ao lado da régua.
+// É a linha de A, e é o que C mostra ao abrir um Edital.
+function continuidade(i) {
+  if (i.tipo !== "periodo") return "";
+  const partes = [];
+  if (i.vemDeAntes) partes.push(`começou em ${curta(i.diaInicio)}`);
+  if (!i.diaFim) partes.push("sem término definido");
+  else if (i.diaFim > fimMes) partes.push(`continua até ${curta(i.diaFim)}`);
+  return partes.join(" · ");
+}
+function linhaEvento(e, i) {
+  const datasComHora = i.tipo === "pontual" ? quando(i.inicio) : `${quando(i.inicio)} a ${i.fim ? quando(i.fim) : "—"}`;
+  const resto = continuidade(i);
+  return botaoEvento(e, i, [
+    el("span", {class: "coluna-identidade"}, [
+      el("span", {class: "nome", texto: i.nome}),
+      el("span", {class: "situacao", texto: `${datasComHora} · ${fase(i)}`}),
+      resto ? el("span", {class: "continuidade", texto: resto}) : null,
+    ]),
+    trilha([i], {rotulos: false}),
+  ], "linha-evento");
+}
+
 // --- C: uma linha por Edital. O desenho é a visão geral; a sequência textual abre embaixo.
 function visaoC(editais) {
   const lista = el("div", {class: "faixas"});
-  lista.append(el("div", {class: "cabecalho-faixas"}, [el("span", {class: "coluna-identidade", texto: "Edital e situação na referência"}), regua()]));
+  lista.append(el("div", {class: "cabecalho-faixas"}, [el("span", {class: "coluna-identidade", texto: `Edital · situação em ${curta(referencia)}`}), regua()]));
   for (const e of editais) {
     const s = situacao(e);
     const det = el("details", {class: "linha-edital"});
+    const rotuloAbrir = () => det.open ? "Ocultar os eventos" : e.itens.length === 1 ? "Ver o evento do mês" : `Ver os ${e.itens.length} eventos do mês`;
+    const abrir = el("span", {class: "abrir", texto: rotuloAbrir()});
+    det.addEventListener("toggle", () => { abrir.textContent = rotuloAbrir(); });
     const ident = el("span", {class: "coluna-identidade"}, [
       el("strong", {texto: rotuloEdital(e)}),
-      el("span", {class: "processo", texto: e.processo}),
-      el("span", {class: "situacao", texto: s.texto.join(" · ")}),
+      el("span", {class: "nome-do-processo", texto: e.processo}),
+      ...s.linhas.map((t) => el("span", {class: "situacao-edital", texto: t})),
+      abrir,
     ]);
     det.append(el("summary", {}, [ident, trilha(e.itens, {rotulos: true})]));
     if (e.aviso) det.append(el("p", {class: "aviso-edital", texto: e.aviso}));
-    const ol = el("ol", {class: "sequencia"});
-    for (const i of e.itens) {
-      ol.append(el("li", {class: i.cancelado ? "anulado" : i.fase}, [
-        el("span", {class: "data", texto: datas(i)}),
-        botaoEvento(e, i, el("span", {texto: i.nome}), "nome-evento"),
-        el("span", {class: "fase", texto: fase(i)}),
-      ]));
-    }
-    det.append(ol);
+    det.append(el("div", {class: "etapas"}, e.itens.map((i) => linhaEvento(e, i))));
     lista.append(det);
   }
   return lista;
@@ -201,14 +233,9 @@ function visaoA(editais) {
   lista.append(el("div", {class: "cabecalho-faixas"}, [el("span", {class: "coluna-identidade", texto: "Edital / evento"}), regua()]));
   for (const e of editais) {
     const grupo = el("details", {class: "grupo-gantt", open: true});
-    grupo.append(el("summary", {}, [el("span", {class: "coluna-identidade"}, [el("strong", {texto: rotuloEdital(e)}), el("span", {class: "processo", texto: e.processo})]), trilha(e.itens, {rotulos: false})]));
+    grupo.append(el("summary", {}, [el("span", {class: "coluna-identidade"}, [el("strong", {texto: rotuloEdital(e)}), el("span", {class: "nome-do-processo", texto: e.processo})]), trilha(e.itens, {rotulos: false})]));
     if (e.aviso) grupo.append(el("p", {class: "aviso-edital", texto: e.aviso}));
-    for (const i of e.itens) {
-      grupo.append(botaoEvento(e, i, [
-        el("span", {class: "coluna-identidade"}, [el("span", {class: "nome", texto: i.nome}), el("span", {class: "situacao", texto: `${datas(i)} · ${fase(i)}`})]),
-        trilha([i], {rotulos: false}),
-      ], "linha-evento"));
-    }
+    for (const i of e.itens) grupo.append(linhaEvento(e, i));
     lista.append(grupo);
   }
   return lista;
@@ -236,7 +263,7 @@ function visaoB(editais) {
     });
     lista.append(el("article", {class: "cartao"}, [
       el("h3", {}, [el("span", {class: "sobretitulo", texto: rotuloEdital(e)}), el("span", {texto: e.processo})]),
-      ...s.texto.map((t) => el("p", {class: "situacao", texto: t})),
+      ...s.linhas.map((t) => el("p", {class: "situacao", texto: t})),
       e.aviso ? el("p", {class: "aviso-edital", texto: e.aviso}) : null,
       ol,
     ]));
@@ -250,7 +277,7 @@ function iniciar() {
   if (cenario === "sucessao") editais = editais.filter((e) => e.numero === "T03");
   if (cenario === "retificacao") editais = editais.filter((e) => e.numero === "106");
 
-  for (const id of ["especie", "fase", "ordem"]) if (P.has(id)) $(id).value = P.get(id);
+  for (const id of ["especie", "fase", "ordem", "alcance"]) if (P.has(id)) $(id).value = P.get(id);
   $("cenario").value = cenario; $("referencia").value = referencia; $("visao").value = visao; $("mes").value = mes;
   $("filtros").open = window.innerWidth > 640;
   $("recorte").textContent = "· " + $("cenario").selectedOptions[0].textContent + (P.get("especie") || P.get("fase") ? " · com filtros" : "");
@@ -258,7 +285,7 @@ function iniciar() {
     $("link-" + v).href = endereco({visao: v});
     if (v === visao) $("link-" + v).setAttribute("aria-current", "page");
   }
-  $("limpar").href = endereco({especie: null, fase: null, ordem: null});
+  $("limpar").href = endereco({especie: null, fase: null, ordem: null, alcance: null});
   $("anterior").href = endereco({mes: new Date(Date.UTC(ano, numMes - 2, 1)).toISOString().slice(0, 7)});
   $("seguinte").href = endereco({mes: new Date(Date.UTC(ano, numMes, 1)).toISOString().slice(0, 7)});
   $("hoje").href = endereco({mes: referencia.slice(0, 7)});
@@ -269,30 +296,57 @@ function iniciar() {
     a: "A · Gantt, uma linha por evento",
     b: "B · Timeline em cartões",
   }[visao];
-  $("legenda").textContent = visao === "b"
-    ? "Cartões em ordem de início. Sem escala comum entre cartões: a mesma altura não é a mesma data."
-    : "Barra cheia: em curso, pelo cronograma · Barra tracejada: ainda não começou · Barra clara: data passada · ◆ marco pontual (vazado: ainda não começou) · × cancelado · Linha vertical: dia da referência · ‹ › o período continua em outro mês.";
+  legenda();
 
-  // Fase e espécie filtram eventos; o Edital fica se lhe sobrar algum evento no mês.
   const especie = $("especie").value, faseFiltro = $("fase").value;
-  const visiveis = editais.map((e) => ({
-    ...e,
-    todos: e.itens,
-    itens: e.itens.map(noMes).filter((i) => i && (!especie || i.especie === especie) && (!faseFiltro || (!i.cancelado && i.fase === faseFiltro))),
-  })).filter((e) => e.itens.length);
+  const filtrando = Boolean(especie || faseFiltro);
+  const atende = (i) => (!especie || i.especie === especie) && (!faseFiltro || (!i.cancelado && i.fase === faseFiltro));
+  const visiveis = editais.map((e) => {
+    const doMes = e.itens.map(noMes).filter(Boolean);
+    return {...e, todos: e.itens, atende: doMes.some(atende), itens: alcance === "eventos" ? doMes.filter(atende) : doMes};
+  }).filter((e) => e.atende && e.itens.length);
   if (ordem === "proximo") visiveis.sort((a, b) => situacao(a).chave.localeCompare(situacao(b).chave) || a.numero.localeCompare(b.numero, "pt", {numeric: true}));
 
   const eventos = visiveis.flatMap((e) => e.itens);
-  $("resultado").textContent = `${contar(visiveis.length, "Edital", "Editais")} e ${contar(eventos.length, "evento", "eventos")} tocam ${MESES[numMes - 1]}.`;
+  const nomeMes = MESES[numMes - 1];
+  $("periodo-exibido").textContent = `Período exibido: ${nomeMes} de ${ano}. Situação calculada em ${curta(referencia)}/2026, 12h — não muda ao trocar de mês.`;
+  $("resultado").textContent = `${contar(visiveis.length, "Edital", "Editais")} · ${contar(eventos.length, "evento", "eventos")} em ${nomeMes}` + (filtrando
+    ? (alcance === "editais" ? " · o filtro escolhe os Editais; todos os eventos deles aparecem." : " · só os eventos que atendem ao filtro aparecem.")
+    : ".");
   if (cenario === "retificacao") {
     const h = fonte.historico106;
     $("aviso").hidden = false;
     $("aviso").textContent = `Retificação do banco demonstrativo: a Prova objetiva passa de ${curta(dia(h[0].prova))} para ${curta(dia(h[1].prova))}, vigente a partir de ${formatoInstante.format(new Date(h[1].vigoraEm))}. Troque a referência para ver a outra versão.`;
+  }
+  // Na página completa, a grade real do produto vem antes de C, no lugar em que ela está hoje.
+  if ($("grade") && window.GRADE) {
+    const chave = cenario === "demo" ? "7" : "23";
+    const igual = mes === "2026-11" && referencia === "2026-11-01" && ["demo", "denso"].includes(cenario);
+    if (igual) $("grade").innerHTML = window.GRADE[chave];
+    else $("grade").replaceChildren(el("p", {class: "nota", texto: "A grade real foi renderizada só para novembro, em 01/11, com 7 ou 23 Editais."}));
+    $("titulo-mes").textContent = "Cronogramas dos Editais em " + MESES[numMes - 1];
   }
   const painel = $("painel");
   painel.replaceChildren(visiveis.length
     ? {a: visaoA, b: visaoB, c: visaoC}[visao](visiveis)
     : el("p", {class: "vazio", texto: "Nenhum evento toca este mês com estes filtros."}));
   aplicarPosicoes(painel);
+}
+function amostra(classe) { return el("span", {class: "amostra " + classe, "aria-hidden": "true"}); }
+function legenda() {
+  if (visao === "b") {
+    $("legenda").replaceChildren(el("p", {texto: "Cartões em ordem de início. Sem escala comum entre cartões: a mesma altura não é a mesma data."}));
+    return;
+  }
+  const itens = [
+    [amostra("amostra-periodo"), "período"],
+    [amostra("amostra-marco"), "evento pontual"],
+    [amostra("amostra-hoje"), `dia da situação (${curta(referencia)})`],
+    [el("span", {class: "amostra-texto", "aria-hidden": "true", texto: "‹ ›"}), "continua em outro mês"],
+  ];
+  $("legenda").replaceChildren(
+    el("ul", {}, itens.map(([a, t]) => el("li", {}, [a, el("span", {texto: t})]))),
+    el("p", {class: "legenda-secundaria", texto: "O preenchimento acompanha a fase, que também vem escrita: cheio, em curso; tracejado, ainda não começou; cinza, data passada."}),
+  );
 }
 iniciar();

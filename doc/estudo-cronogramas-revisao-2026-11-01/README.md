@@ -6,6 +6,7 @@ atual. Nada da aplicação foi alterado.
 - [Relatório: diagnóstico, medições, comparação e recomendação](relatorio.md).
 - [POCs](prototipo/index.html): **C** faixa por Edital, **A** Gantt por evento, **B** cartões, e a
   agenda atual (Mês e Próximos) renderizada pelos templates de produção.
+- [Agenda completa com C](prototipo/agenda-completa.html): a grade real e C no lugar da lista.
 - [Capturas](capturas/) e [medidas](capturas/medidas.json).
 
 ## Abrir
@@ -31,5 +32,6 @@ só em memória. O capturador abre as páginas num Chromium sem janela, grava as
 `medidas.json`, e termina com erro se algum marco ou barra cair fora da coluna do seu dia ou se o
 console registrar erro.
 
+`grade.js` traz a grade real de novembro para a página completa.
 `tokens.css`, `base-atual.css` e `agenda-atual.css` são cópias das folhas do produto, gravadas pelo
 exportador para que as páginas atuais renderizem sem o Django.

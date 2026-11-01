@@ -28,7 +28,16 @@ a{color:var(--verde-texto)}
 
 .barra-mes{display:flex;justify-content:space-between;align-items:end;gap:1rem;flex-wrap:wrap}
 .barra-mes nav a{display:inline-block;padding:.3rem .6rem;border:1px solid var(--borda);border-radius:6px;background:var(--branco);text-decoration:none}
-.legenda{font-size:.82rem;color:var(--texto-fraco);margin:.5rem 0}
+.periodo-exibido{margin:.4rem 0 .2rem;font-size:.88rem}
+.legenda{font-size:.82rem;color:var(--texto-fraco);margin:.4rem 0}
+.legenda ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem}
+.legenda li{display:flex;align-items:center;gap:.35rem;color:var(--texto)}
+.legenda p{margin:.2rem 0 0}
+.amostra{display:inline-block;flex:none}
+.amostra-periodo{width:26px;height:10px;border-radius:2px;background:var(--verde)}
+.amostra-marco{width:9px;height:9px;margin:0 3px;transform:rotate(45deg);background:var(--verde-escuro)}
+.amostra-hoje{width:0;height:14px;border-left:2px dotted var(--verde-escuro);margin:0 4px}
+.amostra-texto{font-weight:700;color:var(--verde-escuro)}
 .resultado{font-weight:600;margin:.25rem 0 .5rem}
 .vazio{padding:1rem;background:var(--branco);border:1px solid var(--borda)}
 
@@ -42,10 +51,8 @@ a{color:var(--verde-texto)}
 .faixas summary::-webkit-details-marker{display:none}
 .faixas summary:hover{background:var(--fundo)}
 .coluna-identidade{display:flex;flex-direction:column;min-width:0}
-.coluna-identidade strong::before{content:"▸ ";color:var(--texto-fraco)}
-details[open]>summary .coluna-identidade strong::before{content:"▾ "}
-.processo,.situacao{font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.processo{color:var(--texto-fraco)}
+.nome-do-processo,.situacao{font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nome-do-processo{color:var(--texto-fraco)}
 .coluna-identidade strong{font-size:.92rem}
 .nome{font-weight:600;font-size:.9rem}
 
@@ -63,6 +70,7 @@ details[open]>summary .coluna-identidade strong::before{content:"▾ "}
 .barra.vem-de-antes{border-top-left-radius:0;border-bottom-left-radius:0}
 .barra.segue-depois{border-top-right-radius:0;border-bottom-right-radius:0}
 .barra.vem-de-antes::before{content:"‹";padding-left:2px;font-weight:700}
+.barra.sem-termino{border-top-right-radius:0;border-bottom-right-radius:0;-webkit-mask-image:linear-gradient(to right,#000 85%,transparent);mask-image:linear-gradient(to right,#000 85%,transparent)}
 .barra.segue-depois::after{content:"›";position:absolute;right:2px;font-weight:700}
 .rotulo-barra{font-size:.7rem;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 .3rem;min-width:0}
 .marco{position:absolute;top:calc(6px + var(--faixa,0) * 20px);width:11px;height:11px;margin-left:-5.5px;transform:rotate(45deg);background:var(--verde-escuro)}
@@ -80,6 +88,14 @@ details[open]>summary .coluna-identidade strong::before{content:"▾ "}
 li.em_curso .fase{color:var(--verde-texto);font-weight:700}
 li.anulado .nome-evento{text-decoration:line-through}
 .nome-evento{font:inherit;text-align:left;background:none;border:0;padding:0;color:var(--verde-texto);text-decoration:underline;cursor:pointer}
+
+.situacao-edital{font-size:.8rem}
+.abrir{font-size:.8rem;color:var(--verde-texto);text-decoration:underline;margin-top:.1rem}
+.continuidade{font-size:.78rem;color:var(--amarelo);font-weight:600}
+.etapas{border-top:1px solid var(--borda);background:var(--fundo)}
+/* Sem recuo: a trilha de cada evento precisa ficar sob a mesma régua do cabeçalho. */
+.etapas .linha-evento .nome::before{content:"↳ ";color:var(--texto-fraco)}
+.linha-evento .situacao{white-space:normal}
 
 /* A */
 .linha-evento{width:100%;font:inherit;text-align:left;background:none;border:0;border-top:1px dashed var(--borda);cursor:pointer;color:inherit}
@@ -104,6 +120,9 @@ dialog dl{display:grid;grid-template-columns:auto 1fr;gap:.25rem .75rem}
 dialog dt{font-weight:600}dialog dd{margin:0}
 .fechar{float:right}
 .nota{font-size:.8rem;color:var(--texto-fraco)}
+
+/* Largo: a coluna de identidade cresce para que cada linha de situação caiba numa linha. */
+@media (min-width:80rem){.faixas{--coluna:23rem}}
 
 /* Estreito: a identidade sobe e a régua ocupa a largura inteira — mesma estrutura, sem rolagem. */
 @media (max-width:48rem){

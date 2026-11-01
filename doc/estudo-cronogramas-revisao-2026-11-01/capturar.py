@@ -30,6 +30,11 @@ MEDIR = """() => {
     alturaPainel: Math.round(painel.getBoundingClientRect().height),
     rolagemLateral: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     focaveis: focaveis.length,
+    // Do título do calendário ao fim: a Agenda como o usuário a percorre, grade incluída.
+    alturaDaAgenda: (() => { const t = document.querySelector('.titulo-do-mes');
+      if (!t) return null;
+      const topo = t.getBoundingClientRect().top + scrollY;
+      return Math.round(document.documentElement.scrollHeight - topo); })(),
     pxPorDia: (() => { const r = document.querySelector('.regua');
       return r ? +(r.getBoundingClientRect().width / r.children.length).toFixed(1) : null; })(),
   };
@@ -43,13 +48,15 @@ CONFERIR = """() => {
   const erros = [];
   let marcos = 0, barras = 0;
   for (const m of document.querySelectorAll('.trilha .marco')) {
-    const r = m.getBoundingClientRect(); if (!r.width) continue;
+    if (!m.checkVisibility()) continue;
+    const r = m.getBoundingClientRect();
     const c = celulas[+m.dataset.dia - 1], centro = r.left + r.width / 2;
     marcos++;
     if (centro < c.left || centro > c.right) erros.push(['marco', m.dataset.dia, centro]);
   }
   for (const b of document.querySelectorAll('.trilha .barra')) {
-    const r = b.getBoundingClientRect(); if (!r.width) continue;
+    if (!b.checkVisibility()) continue;
+    const r = b.getBoundingClientRect();
     const i = celulas[+b.dataset.de - 1], f = celulas[+b.dataset.ate - 1];
     barras++;
     const fora = Math.abs(r.left - i.left) > 1.5 || Math.abs(r.right - f.right) > 1.5;
@@ -61,6 +68,7 @@ CONFERIR = """() => {
 
 RETIFICADO = "visao=c&cenario=retificacao&referencia=2026-11-05"
 INSCRICOES_EM_CURSO = "visao=c&cenario=denso&especie=inscricoes&fase=em_curso"
+SO_EVENTOS = INSCRICOES_EM_CURSO + "&alcance=eventos"
 
 
 def no_painel(pagina):
@@ -106,6 +114,14 @@ def main():
                     )
                 pg.close()
 
+        # Calendário + lista (hoje) contra calendário + C: a mesma página, com e sem a troca.
+        for largura in ("desktop", "celular"):
+            pg = abrir("agenda-completa.html?visao=c", largura)
+            medida = pg.evaluate(MEDIR)
+            medidas.append({"tela": "agenda-completa-com-c", "largura": largura, **medida})
+            pg.screenshot(path=SAIDA / f"agenda-completa-{largura}.jpg", quality=80, full_page=True)
+            pg.close()
+
         for nome in ("atual-mes", "atual-mes-denso", "atual-proximos", "atual-proximos-denso"):
             for largura in ("desktop", "celular"):
                 pg = abrir(f"{nome}.html", largura)
@@ -119,6 +135,7 @@ def main():
             ("c-retificacao-antes", "index.html?visao=c&cenario=retificacao", "desktop"),
             ("c-retificacao-depois", "index.html?" + RETIFICADO, "desktop"),
             ("c-inscricoes-em-curso", "index.html?" + INSCRICOES_EM_CURSO, "desktop"),
+            ("c-inscricoes-so-eventos", "index.html?" + SO_EVENTOS, "desktop"),
             ("a-dezembro", "index.html?visao=a&cenario=denso&mes=2026-12", "desktop"),
         ]
         for nome, caminho, largura in casos:
@@ -137,8 +154,9 @@ def main():
             alvo.scroll_into_view_if_needed()
             pg.evaluate("window.scrollBy(0, -60)")
             pg.screenshot(path=SAIDA / f"c-aberto-{largura}.jpg", quality=80)
+            conferencias.append({"tela": "c-aberto", "largura": largura, **pg.evaluate(CONFERIR)})
             if largura == "desktop":
-                pg.locator("details[open] .nome-evento").first.focus()
+                pg.locator("details[open] .linha-evento").first.focus()
                 pg.keyboard.press("Enter")
                 pg.wait_for_timeout(100)
                 pg.screenshot(path=SAIDA / "c-ficha-teclado.jpg", quality=80)
