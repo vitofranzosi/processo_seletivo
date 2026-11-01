@@ -4,10 +4,13 @@
 require_permission(recurso:julgar)                          ← fora da transação
 ────────────────────────────────────────────────────────────
 abre transação
-  select_for_update no ProcessoSeletivo   ← serializa com emitir, publicar, consolidar
-  reserve(chave); repetição devolve a decisão gravada       ← FR-097, antes do impedimento
-  reavalia autorização e as cinco perguntas do impedimento  ← FR-043
-  revalida a assinatura do que foi lido                     ← FR-100
+  travar: select_for_update no ProcessoSeletivo, no escopo do ator
+                                          ← serializa com emitir, publicar, consolidar
+  reserve(chave); se já há resultado, devolve a decisão     ← FR-097: repetição não é ato novo
+  só para ato novo:
+    as cinco perguntas do impedimento, pelo par alcançado   ← FR-039, FR-043
+    a admissão da peça                                      ← FR-036
+    revalida a assinatura do que foi lido                   ← FR-100
   grava a DecisaoRecurso, imutável
   se CORRECAO_FIXADA:
       lê o Resultado vigente do par (a trava é a do Processo)

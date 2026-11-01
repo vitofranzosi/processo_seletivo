@@ -268,6 +268,36 @@ def test_o_reenvio_da_tela_depois_do_sucesso_nao_mostra_impedimento(
     assert _sucessores(peca).count() == 1
 
 
+def test_o_reenvio_alterado_da_tela_explica_o_conflito_sem_falar_de_chave(
+    client,
+    seletor_ligado,  # noqa: F811
+    peca,
+    como_producao,  # noqa: F811
+):
+    """O domínio continua respondendo `409 idempotency_conflict`; só a frase é da tela."""
+    from processo_seletivo.interface.views import JULGAMENTO_JA_REGISTRADO
+
+    identificar(client, JULGADORA, ["julgador"])
+    etapa = str(peca["cenario"]["etapa"])
+    formulario = {
+        "especie": "CORRECAO_FIXADA",
+        "motivacao": "Conferido o acervo, o documento consta e não foi pontuado.",
+        "etapa": f"{etapa}|{peca['superado'].id}",
+        f"pontuacao-{etapa}": "82,0000",
+    }
+    destino = reverse("interface:recurso-julgar", args=[peca["recurso"].id])
+
+    with como_producao():
+        assert client.post(destino, formulario).status_code == 302
+        alterado = client.post(destino, {**formulario, f"pontuacao-{etapa}": "85,0000"})
+
+    pagina = alterado.content.decode()
+    assert alterado.status_code == 409
+    assert JULGAMENTO_JA_REGISTRADO in pagina
+    assert "A chave foi usada com outro conteúdo." not in pagina
+    assert _sucessores(peca).count() == 1
+
+
 def test_o_resultado_lido_obsoleto_recusa_com_409(peca, como_producao):  # noqa: F811
     with como_producao(), pytest.raises(DomainError) as recusa:
         julgar(**_argumentos(peca, assinatura_do_resultado="outro-identificador"))
