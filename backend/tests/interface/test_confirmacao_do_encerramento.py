@@ -180,11 +180,10 @@ def test_toda_providencia_do_relatorio_depois_do_ato_foi_dita_antes(peca):
     conferidas = [p for p in depois if p.tipo in encerramento.DA_099]
     assert conferidas, "o cenário precisa de ao menos uma providência para a prova não ser vazia"
     for pendencia in conferidas:
-        if True:
-            texto = texto_da_pendencia(pendencia)
-            if pendencia.tipo.startswith("CONVOCACAO"):
-                texto = texto.split(" ", 1)[1].split(",")[0]
-            assert texto[1:] in corpo, texto
+        texto = texto_da_pendencia(pendencia)
+        if pendencia.tipo.startswith("CONVOCACAO"):
+            texto = texto.split(" ", 1)[1].split(",")[0]
+        assert texto[1:] in corpo, texto
 
 
 # ---------------------------------------------------------------------------------------------
@@ -207,3 +206,12 @@ def test_cancelar_lista_o_que_sera_atingido_e_deixa_confirmar(
     assert "cancele o Edital" not in atingidos and "Publique-a" not in atingidos
     assert "Antes de encerrar" not in corpo
     assert "Confirmar: Cancelar" in corpo
+
+
+def test_quem_nao_pode_encerrar_nao_ve_as_contagens(peca):
+    """A tela já diz que o ato não é dele; as situações do Edital não são mostradas."""
+    corpo = tela(sessao("julia.julgadora", ["julgador"]), peca["cenario"]["edital"])
+
+    assert "Você não pode praticar este ato." in corpo
+    assert "recurso aguarda decisão" not in corpo
+    assert "Continuam depois do encerramento" not in corpo

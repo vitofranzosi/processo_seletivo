@@ -4165,9 +4165,9 @@ def praticar_ato(request, edital_id, acao):
     # recusaria, e oferecer o botão só adiaria a recusa para depois do clique.
     if ato.exige_signatario and not contexto["escolha_da_autoridade"]["opcoes"]:
         contexto["recusa_certa"] = True
-    _situacoes_do_desfecho(contexto, edital, ator, ato)
 
     if request.method == "GET":
+        _situacoes_do_desfecho(contexto, edital, ator, ato)
         return render(request, "interface/confirmar.html", contexto)
 
     try:
@@ -4183,7 +4183,15 @@ def praticar_ato(request, edital_id, acao):
 
 
 def _situacoes_do_desfecho(contexto, edital, ator, ato):
-    """O que encerrar e cancelar dizem antes do ato (113). O impedimento esconde o confirmar."""
+    """O que encerrar e cancelar dizem antes do ato (113). O impedimento esconde o confirmar.
+
+    **Só a quem pode praticar o ato, e só quando a tela vai ser mostrada.** Quem não tem a
+    permissão já lê "Você não pode praticar este ato", e as contagens do Edital não são dele; e o
+    POST aceito redireciona — a conferência que vale é a do comando, sob as travas.
+    """
+    if contexto.get("impedimento"):
+        contexto["desfecho"] = encerramento.Confirmacao()
+        return
     confirmacao = encerramento.da_confirmacao(edital, ator, acao=ato.chave, agora=timezone.now())
     contexto["desfecho"] = confirmacao
     if confirmacao.impedimentos:

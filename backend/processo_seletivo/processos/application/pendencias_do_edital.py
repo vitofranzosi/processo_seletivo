@@ -355,9 +355,10 @@ def frase(situacao, ato="encerrar"):
             "Publique-a ou devolva-a"
         )
     if tipo == RETIFICACAO_EM_CURSO:
-        estado = (
-            "em revisão" if situacao.situacao_da_retificacao == "EM_REVISAO" else "em elaboração"
-        )
+        from processo_seletivo.publicacoes.models_retificacao import Retificacao
+
+        em_revisao = situacao.situacao_da_retificacao == Retificacao.Status.EM_REVISAO
+        estado = "em revisão" if em_revisao else "em elaboração"
         return f"A Retificação de {_dia(situacao.criada_em)}, {estado}, não poderá mais prosseguir"
     if tipo == RASCUNHOS_NAO_ENVIAVEIS:
         return (

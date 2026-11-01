@@ -73,3 +73,17 @@ def test_com_o_edital_publicado_o_proximo_passo_continua(api_client, edital):
         .content.decode()
     )
     assert "Não pode mais prosseguir" not in secao(corpo)
+
+
+def test_a_marca_da_lista_tambem_diz_que_esta_parada(api_client, edital):
+    from tests.integration.processos.test_encerramento_seguro import encerrar
+
+    levar_a(criar(api_client, edital), Retificacao.Status.EM_REVISAO)
+    encerrar(edital)
+
+    corpo = sessao("bruno.homologador", ["homologador"]).get(reverse("interface:lista"))
+    texto = corpo.content.decode()
+    inicio = texto.index('class="marca-da-retificacao"')
+    marca = texto[inicio : texto.index("</a>", inicio)]
+    assert "não pode mais prosseguir" in marca
+    assert "aguarda" not in marca

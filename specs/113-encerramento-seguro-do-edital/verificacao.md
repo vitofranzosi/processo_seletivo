@@ -76,3 +76,25 @@ aspas (« » nas frases da `113`, “ ” nas da `099`); ficaram as da `099`. O 
 
 Depois das correções das frases do cancelamento e das aspas: `make lint check test-pg`, 4 workers —
 **14 508 passando, 15 pulados, nenhuma falha**, em 544 s, saída 0.
+
+## Revisão de código antes do PR (01/11/2026)
+
+Seis achados; cinco corrigidos:
+
+- a confirmação calculava e mostrava as situações do Edital a quem não tem a permissão do ato
+  (a tela já dizia "Você não pode praticar este ato") — agora não calcula nem mostra
+  (`test_quem_nao_pode_encerrar_nao_ve_as_contagens`);
+- no POST aceito ela era calculada antes do ato e descartada no redirect — agora só no GET e na
+  recusa;
+- a marca da Retificação na Lista de Processos não dizia que ela está parada — agora diz "não pode
+  mais prosseguir" (`test_a_marca_da_lista_tambem_diz_que_esta_parada`);
+- um `if True:` esquecido no teste da SC-1069 e um literal `"EM_REVISAO"` no lugar do enum.
+
+**Pulado, e registrado:** os atos da Retificação travam Retificação, Edital e Processo num único
+`FOR UPDATE` sem `OF`, cuja ordem segue o plano da consulta; o encerramento trava Processo e depois
+Edital. Se a Retificação pegar o Edital antes do Processo no instante em que o encerramento segura o
+Processo, o PostgreSQL aborta uma das duas com *deadlock* — a janela é a de uma linha só, e os dois
+testes de concorrência do A-09 passam. Fechá-la pede que `_retificacao` trave o Processo
+explicitamente antes, o que é mudar o código do A-09; fica para decisão.
+
+Suíte inteira depois das correções: **14 510 passando, 15 pulados, nenhuma falha**, em 560 s.
