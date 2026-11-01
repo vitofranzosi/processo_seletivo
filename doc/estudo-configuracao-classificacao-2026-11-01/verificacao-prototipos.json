@@ -1,0 +1,126 @@
+{
+  "capturas": [
+    {
+      "captura": "mapa-01-normal",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-02-incompleta",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-03-marca-retirada",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-04-circular",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-05-exemplo",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-06-revisao-pronta",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-07-tempo-inviavel",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-08-tempo-pronto",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-09-outro-perfil",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "mapa-10-mobile",
+      "url": "http://127.0.0.1:8768/prototipos/mapa.html",
+      "titulo": "Mapa de relações • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-01-normal",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-02-incompleta",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-03-marca-retirada",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-04-circular",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-05-exemplo",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-06-revisao-pronta",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-07-tempo-inviavel",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-08-tempo-pronto",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-09-outro-perfil",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    },
+    {
+      "captura": "caderno-10-mobile",
+      "url": "http://127.0.0.1:8768/prototipos/caderno.html",
+      "titulo": "Caderno de compromissos • Estudo GPS",
+      "overflow": false
+    }
+  ],
+  "erros_javascript": [],
+  "conclusao": "Percursos, correções, foco e ausência de overflow móvel conferidos. Não é auditoria WCAG completa."
+}

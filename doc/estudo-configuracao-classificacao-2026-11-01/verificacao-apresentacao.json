@@ -1,0 +1,14 @@
+[
+  {
+    "vista": "apresentacao desktop",
+    "overflow": false
+  },
+  {
+    "vista": "apresentacao mobile",
+    "overflow": false
+  },
+  {
+    "vista": "arquivo local",
+    "javascript": true
+  }
+]

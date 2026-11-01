@@ -1,0 +1,22 @@
+{
+  "edital": "7f3d4272-5092-44b0-87b0-557052579ee1",
+  "perfil": "381d2ed4-437e-462e-8b21-4994b5da7811",
+  "etapas": [
+    {
+      "id": "1989c259-dfa3-4658-adb6-5399d987cdfe",
+      "nome": "Prova objetiva"
+    },
+    {
+      "id": "f330bc40-69ba-4a30-85ee-af42a5f4bd86",
+      "nome": "Análise de títulos"
+    },
+    {
+      "id": "47aa827f-e00a-400e-a514-193d0a6db19f",
+      "nome": "Análise documental"
+    },
+    {
+      "id": "6f7375b6-8edc-41ce-b27b-f36e80f5feca",
+      "nome": "Prova didática"
+    }
+  ]
+}

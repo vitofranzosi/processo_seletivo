@@ -1,0 +1,27 @@
+{
+  "opcoes": [
+    {
+      "name": "relacao_id",
+      "opcoes": [
+        [
+          "d1bc0692-8065-4f46-b7b8-fa0be519f028",
+          "Publicada em 01/11/2026 20:27 — 7 participantes"
+        ]
+      ]
+    },
+    {
+      "name": "ocorrencia_id",
+      "opcoes": [
+        [
+          "1e9d9002-0a0d-4067-a7fc-00effd06d42e",
+          "Fonte de demonstração (só a data) — 9001, observada em 01/11/2026 20:27"
+        ],
+        [
+          "65def566-9086-45ee-8f5e-ccc26c6f2e7d",
+          "Fonte de demonstração — 9002, observada em 01/11/2026 20:33"
+        ]
+      ]
+    }
+  ],
+  "texto": "Sorteio — Sorteio público\n\nTécnico em Informática (EaD) — o universo é comprometido antes de a semente existir.\n\nTermos desta tela\n\nNão foi possível anular este sorteio: Esta relação foi sucedida: o universo comprometido já não é este. O sorteio nasce da relação vigente.\n\nMétodo declarado no Edital\nAlgoritmo\nIFES-SORTEIO-SHA256-v1\nFonte da semente\nFonte de demonstração\nOcorrência\n9002\nDerivação\nConcurso 5926: a extração de sábado imediatamente anterior à data publicada do sorteio.\nNormalização\nOs cinco números sorteados, na ordem dos prêmios, separados por espaço.\nSe a ocorrência faltar\nNão havendo extração na data prevista, vale a extração seguinte da mesma fonte.\nResumo do método\n1b08e12ab9a72ab0ae96a213622f32b17bdd694e1c113cbea7c566cc75474e54\n\nEste método é conteúdo publicado do Edital. Alterá-lo é uma Retificação, e não uma decisão desta tela: quem elabora Retificações é quem pode alterá-lo.\n\nOcorrência da fonte\nFonte e ocorrência\nFonte de demonstração — 9002\nMaterial bruto observado\n12345 67890 11223 44556 77889\nAconteceu não antes de\n01/11/2026 20:33 — é o que a fonte publica, e o limite inferior é o que se compara com o congelamento\nObservada em\n01/11/2026 20:33:45 por paulo.presidente\nRecortes deste marco\nTodos os inscritos do recorte de vaga (sem lista de concorrência)\n\nNenhum corte emitido neste recorte. Abrir o corte\n\nRelação congelada em 01/11/2026 20:33 por paulo.presidente, com 7 participantes. Resumo a778ed174d7615f58f9d2cbe409db1d7b9503309c37bac4457cd11b0e425a530. Ver no canal público\n\nRelação congelada — os 7 participantes publicados, com o número de cada um.\nNÚMERO\tCANDIDATO\tPROTOCOLO\n1\tAmanda Lisboa\tINS-2026-D35FC1C901\n2\tBruno Tavares\tINS-2026-D35FC1C902\n3\tCamila Duarte\tINS-2026-D35FC1C903\n4\tDiego Prado\tINS-2026-D35FC1C904\n5\tElaine Vasques\tINS-2026-D35FC1C905\n6\tFábio Nunes\tINS-2026-D35FC1C906\n7\tGisele Amaro\tINS-2026-D35FC1C907\n\nSorteio realizado em 01/11/2026 20:18:05 por paulo.presidente. Semente 12345 67890 11223 44556 77889, manifesto cda0775b6d9cb47f170f63ebfead97072c653d37a05482ca501eab6739ed7052. Verificar no canal público\n\nAnular este sorteio\n\nMotivo da sucessão *\nA relação publicada é o compromisso do universo. Substituí-la sem razão escrita apagaria o compromisso sem que ninguém respondesse por isso.\n\nPublicar relação nova, sucedendo a atual\nAmpla concorrência (AC)\n\nNenhum corte emitido neste recorte. Abrir o corte\n\nNenhuma inscrição submetida declarou esta lista de concorrência. Não há universo a comprometer aqui — e não há o que sortear enquanto não houver.\n\nParticipantes projetados do recorte Ampla concorrência (AC)\nNÚMERO\tCANDIDATO\tPROTOCOLO\nPessoas pretas, pardas e indígenas (PPP)\n\nNenhum corte emitido neste recorte. Abrir o corte\n\nNenhuma inscrição submetida declarou esta lista de concorrência. Não há universo a comprometer aqui — e não há o que sortear enquanto não houver.\n\nParticipantes projetados do recorte Pessoas pretas, pardas e indígenas (PPP)\nNÚMERO\tCANDIDATO\tPROTOCOLO"
+}

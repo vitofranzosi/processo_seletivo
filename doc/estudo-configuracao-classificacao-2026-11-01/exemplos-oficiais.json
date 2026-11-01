@@ -1,0 +1,32 @@
+[
+  {
+    "peso_titulos": 1,
+    "ordem": [
+      {
+        "nome": "Ana sintética",
+        "pontuacao": "8.17",
+        "posicao": 1
+      },
+      {
+        "nome": "Bruno sintético",
+        "pontuacao": "8.17",
+        "posicao": 2
+      }
+    ]
+  },
+  {
+    "peso_titulos": 2,
+    "ordem": [
+      {
+        "nome": "Bruno sintético",
+        "pontuacao": "8.29",
+        "posicao": 1
+      },
+      {
+        "nome": "Ana sintética",
+        "pontuacao": "7.86",
+        "posicao": 2
+      }
+    ]
+  }
+]

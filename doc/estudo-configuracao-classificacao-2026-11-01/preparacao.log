@@ -1,0 +1,166 @@
+Papéis provisionados. 0 de 46 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
+As demais ainda não existem neste banco. Aplique as migrations e execute este comando outra vez — é a segunda passada que tranca as tabelas criadas por elas.
+Operations to perform:
+  Apply all migrations: auditoria, auth, avaliacoes, avisos, classificacao, comissoes, contenttypes, convocacao, divulgacao, duvidas, editais, identidade, inscricoes, matriculas, ocupacao, processos, publicacoes, recursos, requerimentos, resultados, seguranca, sessions, sorteios, unidades
+Running migrations:
+  Applying auditoria.0001_initial... OK
+  Applying auditoria.0002_desfecho_do_lote... OK
+  Applying auditoria.0003_registroauditoria_detalhe... OK
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying processos.0001_initial... OK
+  Applying publicacoes.0001_initial... OK
+  Applying publicacoes.0002_retificacoes... OK
+  Applying publicacoes.0003_documento_publicado_hash_nao_unico... OK
+  Applying publicacoes.0004_devolucao_retificacao... OK
+  Applying publicacoes.0005_ancoras_de_alteracao... OK
+  Applying publicacoes.0006_backfill_precondicoes... OK
+  Applying publicacoes.0007_imutabilidade_do_historico... OK
+  Applying publicacoes.0008_remover_ancoras... OK
+  Applying inscricoes.0001_inscricao... OK
+  Applying inscricoes.0002_documento_submetido... OK
+  Applying comissoes.0001_initial... OK
+  Applying avaliacoes.0001_initial... OK
+  Applying avaliacoes.0002_conclusao_por_forma... OK
+  Applying avaliacoes.0003_sentido_restrito_aos_dois_valores... OK
+  Applying avaliacoes.0004_imutabilidade_da_concluida... OK
+  Applying processos.0002_teto_de_inscricoes... OK
+  Applying processos.0003_requerimento_de_matricula... OK
+  Applying processos.0004_metodo_de_sorteio_comum... OK
+  Applying identidade.0001_identidade... OK
+  Applying identidade.0002_reconciliacao... OK
+  Applying inscricoes.0003_cpf_na_submetida... OK
+  Applying inscricoes.0004_valor_de_fato... OK
+  Applying inscricoes.0005_item_da_lista_exigida... OK
+  Applying inscricoes.0006_valor_de_fato_append_only... OK
+  Applying resultados.0001_initial... OK
+  Applying resultados.0002_resultado_por_forma... OK
+  Applying resultados.0003_sentido_restrito_aos_dois_valores... OK
+  Applying resultados.0004_resultado_por_ocorrencia... OK
+  Applying classificacao.0001_initial... OK
+  Applying classificacao.0002_ato_coerente... OK
+  Applying classificacao.0003_ato_coerente_com_marco... OK
+  Applying divulgacao.0001_initial... OK
+  Applying recursos.0001_initial... OK
+  Applying classificacao.0004_citacao... OK
+  Applying divulgacao.0002_declaracao... OK
+  Applying classificacao.0005_origem_e_lista... OK
+  Applying divulgacao.0003_lista_de_concorrencia... OK
+  Applying divulgacao.0004_unidade_e_ato_de_nomeacao... OK
+  Applying resultados.0005_superacao... OK
+  Applying resultados.0006_regularizacao... OK
+  Applying classificacao.0006_corte... OK
+  Applying ocupacao.0001_initial... OK
+  Applying ocupacao.0002_liberacao_nao_e_movimento... OK
+  Applying ocupacao.0003_porta_de_efeitos... OK
+  Applying convocacao.0001_initial... OK
+  Applying convocacao.0002_chamadas_sucessivas... OK
+  Applying convocacao.0003_sucessao_do_desfecho... OK
+  Applying convocacao.0004_referencia_da_publicacao... OK
+  Applying avisos.0001_initial... OK
+  Applying duvidas.0001_initial... OK
+  Applying duvidas.0002_estado_da_sugestao... OK
+  Applying editais.0001_perfis... OK
+  Applying editais.0002_cronograma... OK
+  Applying editais.0003_etapas... OK
+  Applying editais.0004_secoes... OK
+  Applying editais.0005_perfil_institucional... OK
+  Applying editais.0006_documentos_exigidos... OK
+  Applying editais.0007_etapa_declara_avaliacoes_e_maxima... OK
+  Applying editais.0008_forma_da_conclusao... OK
+  Applying editais.0009_fato_declarado... OK
+  Applying editais.0010_marco_classificatorio... OK
+  Applying editais.0011_janela_recursal... OK
+  Applying editais.0012_anexo_do_edital... OK
+  Applying editais.0013_congelamento_do_artefato... OK
+  Applying editais.0014_metodo_de_sorteio... OK
+  Applying editais.0015_local_do_evento... OK
+  Applying editais.0016_quadro_de_vagas... OK
+  Applying editais.0017_regra_de_corte... OK
+  Applying editais.0018_ampla_concorrencia_declarada... OK
+  Applying editais.0019_perfilvaga_especie_de_reversao... OK
+  Applying editais.0020_forma_de_convocacao... OK
+  Applying editais.0021_forma_da_ordem... OK
+  Applying editais.0022_documento_modalidade_codigo... OK
+  Applying editais.0023_rotulos_da_forma_de_convocacao... OK
+  Applying identidade.0003_retomar... OK
+  Applying identidade.0004_alvo_sobrevive... OK
+  Applying inscricoes.0007_imutabilidade_da_enviada... OK
+  Applying matriculas.0001_geracao... OK
+  Applying publicacoes.0009_ato_de_nomeacao_do_signatario... OK
+  Applying publicacoes.0010_unidade_do_ato... OK
+  Applying publicacoes.0011_redacao_do_documento... OK
+  Applying ocupacao.0004_vaga_acrescida... OK
+  Applying processos.0005_escopo_imutavel... OK
+  Applying publicacoes.0012_imutabilidade_da_homologacao... OK
+  Applying recursos.0002_ato_de_instrucao... OK
+  Applying requerimentos.0001_inicial... OK
+  Applying requerimentos.0002_imutabilidade_do_enviado... OK
+  Applying requerimentos.0003_rascunho_nasce_vazio... OK
+  Applying requerimentos.0004_carga_por_geracao... OK
+  Applying requerimentos.0005_campos_eleitorais_e_nacionalidade... OK
+  Applying seguranca.0001_initial... OK
+  Applying seguranca.0002_suspensao_de_pessoa... OK
+  Applying sessions.0001_initial... OK
+  Applying sorteios.0001_initial... OK
+  Applying sorteios.0002_imutabilidade... OK
+  Applying sorteios.0003_instante_da_ocorrencia... OK
+  Applying unidades.0001_initial... OK
+  Applying unidades.0002_nada_se_exclui... OK
+  Applying unidades.0003_atendimento_da_unidade... OK
+Papéis provisionados. 46 de 46 tabelas append-only estão sem UPDATE nem DELETE para o runtime.
+Unidades: 1 semeadas.
+Modelos de aviso: 3 criados.
+Criando Processo e primeiro Edital…
+Elaborando Perfis, Cronograma, Etapas e contrato de inscrição…
+Publicando os Anexos que o Edital fornece…
+Declarando os fatos exigidos do candidato e o teto de inscrições…
+Submetendo, homologando e publicando…
+Criando o segundo Edital, já com as inscrições encerradas…
+Submetendo, homologando e publicando…
+Constituindo a comissão e alocando a banca…
+Recebendo inscrições e avaliando…
+Emitindo a ordem classificatória da ampla concorrência…
+Divulgando o resultado…
+Habilitando na Etapa governada, para que haja quem ocupe vaga…
+Emitindo a faixa de corte e apurando a ocupação…
+Convocando a primeira colocada…
+Declarando o Requerimento de Matrícula de quem foi convocada…
+Criando o terceiro Edital, que ordena por sorteio…
+Submetendo, homologando e publicando…
+Congelando a relação, observando a ocorrência e sorteando…
+Publicando Retificação a…
+Publicando Retificação b…
+Criando o quarto Edital, reaproveitado e com o cronograma vencido…
+Criando o Processo de 2027, onde o Edital reaproveitado é composto…
+  Edital 76/2027 permanece EM ELABORAÇÃO: o Cronograma copiado já venceu, e a publicação é recusada enquanto o período de inscrições estiver encerrado.
+
+Demonstração criada.
+  Processo  UX-CLASS-20261101  683270ba-5efd-4415-95f4-3244fd248c56
+  Edital    01/2026  3a819f7d-0290-4463-b4a2-2248b399b020
+  Versões consolidadas: 3
+  Reaproveitado  76/2027  7f3d4272-5092-44b0-87b0-557052579ee1  (em elaboração — a publicação é recusada)
+  Abra a composição dele, com o seletor de identidade ligado, em
+    http://localhost:8000/gestao/editais/7f3d4272-5092-44b0-87b0-557052579ee1/compor/cronograma
+Abra no navegador (consulta pública, sem autenticação):
+  versão vigente   http://localhost:8000/api/v1/public/editais/3a819f7d-0290-4463-b4a2-2248b399b020/versao-vigente
+  histórico        http://localhost:8000/api/v1/public/editais/3a819f7d-0290-4463-b4a2-2248b399b020/historico
+  retificação      http://localhost:8000/api/v1/public/retificacoes/25580581-f673-4cd0-8ac9-5b6723e3c502
+  resultado        http://localhost:8000/selecoes/resultados/500497ae-8fba-4027-9aed-5afbb3c36532/
+  relação do sorteio http://localhost:8000/selecoes/sorteio/relacoes/f8641186-0508-4aa6-a09e-f54373d22d27/
+  verificar o sorteio http://localhost:8000/selecoes/sorteio/3869cb5b-655f-4a2b-afd6-2e061541680b/verificar
+  manifesto do sorteio http://localhost:8000/selecoes/sorteio/3869cb5b-655f-4a2b-afd6-2e061541680b/manifesto.json
+  documento        http://localhost:8000/selecoes/resultados/500497ae-8fba-4027-9aed-5afbb3c36532/documento.pdf
+  saúde            http://localhost:8000/health
