@@ -51,7 +51,8 @@ ROTULOS_DAS_OPERACOES = {
 #: A emissão do próprio relatório e o ato de desfecho não são "registro depois do desfecho"; o
 #: acesso à instrução de um recurso é leitura registrada, e não ato.
 OPERACOES_QUE_NAO_CONTAM = frozenset(
-    {"EMITIR_RELATORIO", "ENCERRAR", "CANCELAR", instruir.OPERACAO_DE_ACESSO}
+    # A exportação do kit (111) é divulgação, e não registro do certame.
+    {"EMITIR_RELATORIO", "EXPORTAR_MATERIAL", "ENCERRAR", "CANCELAR", instruir.OPERACAO_DE_ACESSO}
 )
 
 

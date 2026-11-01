@@ -1,0 +1,121 @@
+{
+  "modo": "neutro",
+  "motivo": "O Edital não recebe inscrições pelo GPS; o material não fala de inscrição.",
+  "edital_id": "21a39d2c-20f6-431e-86f0-77727a446301",
+  "numero": "91",
+  "ano": "2026",
+  "identificacao": "Edital nº 91/2026",
+  "titulo": "Edital nº 91/2026 – Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+  "titulo_sem_numero": "Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+  "titulo_do_processo": "Processo Seletivo de Alunos — Pós-graduação EaD 2027/1 (DEMONSTRAÇÃO)",
+  "unidade_sigla": "Cefor",
+  "unidade_nome": "Centro de Referência em Formação e em Educação a Distância",
+  "referencia": "2026-10-31T11:26:41.445491-03:00",
+  "referencia_texto": "31/10/2026, 11h26",
+  "situacao_chave": "nao-designado",
+  "situacao_rotulo": "Consulta",
+  "periodo_estado": "nao-designado",
+  "inicio": null,
+  "fim": null,
+  "inicio_data": "",
+  "inicio_hora": "",
+  "fim_data": "",
+  "fim_hora": "",
+  "periodo_curto": "",
+  "prorrogado": false,
+  "fim_original_data": "",
+  "ofertas": [
+    {
+      "perfil_id": "1b8b03eb-3518-54af-bcf4-4a59017eab1f",
+      "nome": "Especialização em Informática na Educação",
+      "localidade": "Polo Bom Jesus do Norte",
+      "vagas_imediatas": 40,
+      "cadastro_reserva": false,
+      "quantidade": "40 vagas",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/21a39d2c-20f6-431e-86f0-77727a446301/#vaga-1b8b03eb-3518-54af-bcf4-4a59017eab1f"
+    },
+    {
+      "perfil_id": "5697656f-4e68-5b16-a154-ab5d2861c32b",
+      "nome": "Especialização em Informática na Educação",
+      "localidade": "Polo Iúna",
+      "vagas_imediatas": 40,
+      "cadastro_reserva": false,
+      "quantidade": "40 vagas",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/21a39d2c-20f6-431e-86f0-77727a446301/#vaga-5697656f-4e68-5b16-a154-ab5d2861c32b"
+    },
+    {
+      "perfil_id": "3c7aa7b3-34b6-52f8-aa39-5a6550a29687",
+      "nome": "Especialização em Informática na Educação",
+      "localidade": "Polo São Mateus",
+      "vagas_imediatas": 40,
+      "cadastro_reserva": false,
+      "quantidade": "40 vagas",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/21a39d2c-20f6-431e-86f0-77727a446301/#vaga-3c7aa7b3-34b6-52f8-aa39-5a6550a29687"
+    },
+    {
+      "perfil_id": "8741d1c6-4e02-5582-8d07-04e7de4bbb79",
+      "nome": "Especialização em Informática na Educação",
+      "localidade": "Polo Vargem Alta",
+      "vagas_imediatas": 40,
+      "cadastro_reserva": false,
+      "quantidade": "40 vagas",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/21a39d2c-20f6-431e-86f0-77727a446301/#vaga-8741d1c6-4e02-5582-8d07-04e7de4bbb79"
+    }
+  ],
+  "nomes_iguais": true,
+  "total_de_vagas": 160,
+  "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/21a39d2c-20f6-431e-86f0-77727a446301/",
+  "caminho_curto": "gps.exemplo.ifes.edu.br/selecoes",
+  "versao_id": "0d5a40ef-5589-43a8-97df-f7b14d47a28d",
+  "versao_hash": "f20ce3ba0d14f3aba8c1522782d726dd7c8bf59ebc3119d540ae3c771f3aabe3",
+  "versao_desde": "2026-10-31T11:26:41.335074-03:00",
+  "versao_desde_texto": "31/10/2026, 11h26",
+  "versao_ato": "Publicação original de 31/10/2026",
+  "retificacao_a_vigorar": null,
+  "retificacao_a_vigorar_texto": "",
+  "impressao": "83eb373321eb1ec8d9c632a5f2fbc250e4fdde2a8c33c78ca29432e1c7c141c1",
+  "origens": [
+    {
+      "campo": "Número e ano",
+      "valor": "91/2026",
+      "caminho": "/number, /year",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Título",
+      "valor": "Edital nº 91/2026 – Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+      "caminho": "/title",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Especialização em Informática na Educação — Polo Bom Jesus do Norte",
+      "valor": "40",
+      "caminho": "/profiles/id=1b8b03eb-3518-54af-bcf4-4a59017eab1f/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Especialização em Informática na Educação — Polo Iúna",
+      "valor": "40",
+      "caminho": "/profiles/id=5697656f-4e68-5b16-a154-ab5d2861c32b/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Especialização em Informática na Educação — Polo São Mateus",
+      "valor": "40",
+      "caminho": "/profiles/id=3c7aa7b3-34b6-52f8-aa39-5a6550a29687/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Especialização em Informática na Educação — Polo Vargem Alta",
+      "valor": "40",
+      "caminho": "/profiles/id=8741d1c6-4e02-5582-8d07-04e7de4bbb79/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Unidade",
+      "valor": "Cefor",
+      "caminho": "Publicacao.unidade_sigla (congelada no ato)",
+      "ato": "Publicação original de 31/10/2026"
+    }
+  ]
+}

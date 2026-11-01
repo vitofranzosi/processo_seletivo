@@ -1,0 +1,88 @@
+{
+  "modo": "com-periodo",
+  "motivo": "",
+  "edital_id": "c1b2712c-0f7a-496c-95d5-b41bbb220625",
+  "numero": "91",
+  "ano": "2026",
+  "identificacao": "Edital nº 91/2026",
+  "titulo": "Edital nº 91/2026 – Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+  "titulo_sem_numero": "Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+  "titulo_do_processo": "Processo Seletivo de Alunos — Pós-graduação EaD 2027/1 (DEMONSTRAÇÃO)",
+  "unidade_sigla": "Cefor",
+  "unidade_nome": "Centro de Referência em Formação e em Educação a Distância",
+  "referencia": "2026-11-05T09:00:00-03:00",
+  "referencia_texto": "05/11/2026, 09h00",
+  "situacao_chave": "aberto",
+  "situacao_rotulo": "Aberta",
+  "periodo_estado": "aberto",
+  "inicio": "2026-11-04T09:00:00-03:00",
+  "fim": "2026-11-21T23:59:00-03:00",
+  "inicio_data": "04/11/2026",
+  "inicio_hora": "09h00",
+  "fim_data": "21/11/2026",
+  "fim_hora": "23h59",
+  "periodo_curto": "04/11 a 21/11/2026",
+  "prorrogado": false,
+  "fim_original_data": "",
+  "ofertas": [
+    {
+      "perfil_id": "1b8b03eb-3518-54af-bcf4-4a59017eab1f",
+      "nome": "Especialização em Informática na Educação",
+      "localidade": "Polo Bom Jesus do Norte",
+      "vagas_imediatas": 40,
+      "cadastro_reserva": false,
+      "quantidade": "40 vagas",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/c1b2712c-0f7a-496c-95d5-b41bbb220625/#vaga-1b8b03eb-3518-54af-bcf4-4a59017eab1f"
+    }
+  ],
+  "nomes_iguais": false,
+  "total_de_vagas": 40,
+  "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/c1b2712c-0f7a-496c-95d5-b41bbb220625/",
+  "caminho_curto": "gps.exemplo.ifes.edu.br/selecoes",
+  "versao_id": "d8553877-e7c4-4ab3-969d-7bf5cfae0d85",
+  "versao_hash": "c4f0721379a9a600bad0c53099e9372209cbeaa6b6d02dd1a2327179e74e2d15",
+  "versao_desde": "2026-10-31T11:26:40.838190-03:00",
+  "versao_desde_texto": "31/10/2026, 11h26",
+  "versao_ato": "Publicação original de 31/10/2026",
+  "retificacao_a_vigorar": null,
+  "retificacao_a_vigorar_texto": "",
+  "impressao": "4b71d0e88582a085b7e4ba07a441e171fca724a40a1008f5e3b4d42838960c38",
+  "origens": [
+    {
+      "campo": "Número e ano",
+      "valor": "91/2026",
+      "caminho": "/number, /year",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Título",
+      "valor": "Edital nº 91/2026 – Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO)",
+      "caminho": "/title",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Início das inscrições",
+      "valor": "2026-11-04T09:00:00-03:00",
+      "caminho": "/schedule/id=6e8aef13-1ff1-5b7f-b49a-7e4ba64606d7/startAt",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Término das inscrições",
+      "valor": "2026-11-21T23:59:00-03:00",
+      "caminho": "/schedule/id=6e8aef13-1ff1-5b7f-b49a-7e4ba64606d7/endAt",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Especialização em Informática na Educação — Polo Bom Jesus do Norte",
+      "valor": "40",
+      "caminho": "/profiles/id=1b8b03eb-3518-54af-bcf4-4a59017eab1f/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Unidade",
+      "valor": "Cefor",
+      "caminho": "Publicacao.unidade_sigla (congelada no ato)",
+      "ato": "Publicação original de 31/10/2026"
+    }
+  ]
+}

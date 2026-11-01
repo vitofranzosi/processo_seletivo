@@ -14,7 +14,7 @@ sob a trava e gravam o ato e a trilha na mesma transação. A unidade do nível 
 do formulário (`FR-3109`).
 
 **Só a sessão institucional chega aqui** (`FR-3127`). A demonstração não tem as capacidades de
-acesso — o seletor desenha só os oito papéis do `PAPEIS` —, e a conferência de origem é a segunda
+acesso — o seletor desenha só os papéis do `PAPEIS` —, e a conferência de origem é a segunda
 barreira, para o dia em que alguém as acrescentar ao mapa.
 """
 

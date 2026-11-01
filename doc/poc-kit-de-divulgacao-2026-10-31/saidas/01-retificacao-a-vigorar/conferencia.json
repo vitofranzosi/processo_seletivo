@@ -1,0 +1,12 @@
+{
+  "cenario": "01-retificacao-a-vigorar",
+  "descricao": "01/2026 com a prorrogação publicada, mas ainda não vigente.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 44.0,
+  "png_deterministico": true,
+  "omissoes": [],
+  "zip_sha256": "f36f72769f837ece",
+  "impressao": "2e66bcb2"
+}

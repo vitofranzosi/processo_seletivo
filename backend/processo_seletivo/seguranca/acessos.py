@@ -19,7 +19,7 @@ GERIR = "acesso:gerir"
 CONSULTAR = "acesso:consultar"
 ADMINISTRAR = "acesso:administrar"
 
-# Concedidos pelo administrador de acessos da unidade, ao lado dos oito do `PAPEIS`.
+# Concedidos pelo administrador de acessos da unidade, ao lado dos nove do `PAPEIS`.
 INTEGRANTE = "integrante"
 # Concedido pelo administrador institucional, numa unidade.
 ADMINISTRADOR_DE_ACESSOS = "administrador-de-acessos"

@@ -291,6 +291,8 @@ QUEM_CARREGA = {
             "compor-revisao",
             "duvidas",
             "inscricao-detalhe",
+            # O kit de divulgação (111).
+            "kit-de-divulgacao",
             "lista",
             "marco",
             "minhas-etapas",

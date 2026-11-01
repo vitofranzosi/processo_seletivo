@@ -1,0 +1,35 @@
+{
+  "edital": "Edital nº 01/2026",
+  "edital_id": "7529c824-8aea-44b3-9c57-f5ebe4cc337c",
+  "gerado_em": "2026-10-31T11:26:39.251001-03:00",
+  "instante_de_referencia": "2026-11-02T10:43:15.379635-03:00",
+  "versao": {
+    "id": "f45030ac-2e94-463d-9e7a-31fcc2cffc65",
+    "content_hash": "7fe1cc6c178d763b8200870afe94cd232b0cfa43e18bcec4e6e4c2c108673a17",
+    "vigente_desde": "2026-10-31T11:26:39.030146-03:00",
+    "ato": "Retificação nº 1 de 31/10/2026"
+  },
+  "impressao_da_ficha": "2e66bcb2ccfdd2ee5c39a107401c8f7445eec8efda42871920fdc2d054b29458",
+  "proximos_marcos_conhecidos": [
+    {
+      "marco": "Retificação publicada passa a valer",
+      "em": "2026-11-17T09:43:15.379635-03:00"
+    },
+    {
+      "marco": "Término do período de inscrições",
+      "em": "2026-11-22T09:43:15.379635-03:00"
+    }
+  ],
+  "aviso": "Uma Retificação publicada depois desta geração pode mudar os dados. A publicação oficial prevalece.",
+  "peca": {
+    "template": "feed-4x5 · poc-1",
+    "rasterizador": "resvg-py 0.5.0",
+    "fontes": {
+      "EditalSans-Regular.ttf": "62b13299f160417649de8979ee1b72f5c276af2db2c3e9933d5e9054b4aa71e4",
+      "EditalSans-Bold.ttf": "465a6122bcd959c9a9a4f392cc67ecec886d28397019e4ef9d6cff6fd832508c"
+    },
+    "svg_sha256": "bef1e0c5a529638465dfaee2fa7f91885c68a539f475412c9b0050696f6de44c",
+    "png_sha256": "97ec12e7ecc50fddfeb879d8f76d5a7dc03ec6ccc882bc80e97d3146ad2b21d1",
+    "omissoes": []
+  }
+}

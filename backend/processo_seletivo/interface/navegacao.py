@@ -118,7 +118,7 @@ SECOES = (
 
 
 # A gestão de acessos (107), em lista própria, e não no `SECOES`: as capacidades dela só existem no
-# modo institucional — o seletor de demonstração desenha só os oito papéis do `PAPEIS` (`FR-3001` da
+# modo institucional — o seletor de demonstração desenha só os papéis do `PAPEIS` (`FR-3001` da
 # 106) —, e o `SECOES` é a barra que a demonstração percorre inteira. Entra no grupo da unidade,
 # antes da ajuda, porque é dela que se fala: quem atua aqui.
 SECOES_DE_ACESSO = (

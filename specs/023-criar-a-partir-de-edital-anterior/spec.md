@@ -173,6 +173,15 @@ consequências, as três desejadas:
   que nenhuma tela desenha"*. Se um Edital de origem os trouxer, a prévia do destino mostra a
   ausência, e fechar a lacuna é da feature que der tela a eles, não desta.
 
+  > **Emendado pelo A-10 da auditoria de prontidão (01/11/2026):** a premissa caiu para o teto. A etapa Inscrição passou
+  a desenhá-lo, e desenha também o Requerimento de Matrícula da `029` (FR-368) — o momento e o texto
+  da declaração. Pela própria régua desta decisão, os dois passaram a ser copiados, e da mesma fonte
+  que o resto: a versão vigente da origem. O Requerimento viaja como **uma** configuração, momento e
+  texto juntos, e a ausência viaja como ausência — sem teto é sem limite, sem Requerimento é que o
+  Edital não o exige. A lista do que não é copiado fica com os dois objetos do Perfil. O custo de
+  não copiar já era conhecido: o Edital reaproveitado de um certame que pedia o Requerimento na
+  convocação publicava sem pedi-lo, e o momento não se corrige por Retificação.
+
 **E uma terceira consequência, que é de execução e não de tela: o `status` do Evento reinicia.**
 `EventoCronograma.status` é preservado pela gravação e não é editável no Cronograma, e ele descreve
 o que **aconteceu** — `EM_ANDAMENTO`, `CONCLUIDO`, `CANCELADO`. Carregá-lo faria a oferta nova
@@ -372,6 +381,10 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
   oferecer iniciá-lo a partir de um Edital anterior.
 - **FR-002**: A oferta NÃO DEVE aparecer quando o rascunho já tiver qualquer conteúdo, e a operação
   DEVE ser recusada nesse caso, com mensagem que diz o motivo e sem alterar nada (D-002).
+
+  > **Emendado pelo A-10 da auditoria de prontidão (01/11/2026):** teto e Requerimento de Matrícula declarados contam
+  como conteúdo, ainda que nenhuma coleção esteja preenchida: a cópia os traz, e trocá-los sem
+  perguntar seria a sobrescrita silenciosa que esta recusa existe para impedir.
 - **FR-003**: A operação DEVE exigir `edital:elaborar` e NÃO DEVE introduzir permissão nova (D-001).
 - **FR-004**: A escolha da origem DEVE listar apenas Editais do escopo institucional do ator em
   situação publicada ou encerrada, identificados por número, ano, título e Processo, e DEVE permitir
@@ -387,6 +400,9 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
 - **FR-002a**: Com o rascunho **não vazio**, a escolha de uma origem DEVE ser oferecida como
   **substituição**: o sistema DEVE enumerar o que será descartado — Perfis, Eventos, Etapas,
   Documentos Exigidos, Seções redigidas e Anexos — e só substituir depois de confirmado (`D-009`).
+
+  > **Emendado pelo A-10 da auditoria de prontidão (01/11/2026):** a enumeração inclui o teto e o Requerimento de
+  Matrícula (o momento) que o destino declara. A confirmação é a mesma; não há segundo fluxo.
   Sem confirmação, a recusa de `FR-002` permanece.
 - **FR-002b**: A substituição DEVE remover os Anexos do destino e os arquivos deles antes de criar
   os novos, e NÃO DEVE tocar em nenhuma das origens.
@@ -396,15 +412,24 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
   desenham: Perfis de Vaga com modalidades de concorrência, regras normativas, fatos declarados,
   marcos classificatórios e critérios de desempate; Eventos do Cronograma, inclusive a designação do
   período de inscrições; Etapas de Avaliação; Documentos Exigidos; Seções textuais; e Anexos
-  (D-004). O que o conteúdo publicado carrega como **texto** por ser forma canônica — os três
+  (D-004). Copia também, da etapa Inscrição, o teto de inscrições por candidato e o Requerimento de
+  Matrícula — momento e texto da declaração, como configuração única —, e a ausência de cada um
+  como ausência. O que o conteúdo publicado carrega como **texto** por ser forma canônica — os três
   instantes (início e término de Evento, vigência da regra normativa) e os três decimais da Etapa
   (peso, nota mínima, pontuação máxima) — DEVE voltar a ser instante e decimal na cópia. Não é
   polimento: a validação da gravação compara e inspeciona esses valores, e sobre texto ela **estoura**
   em vez de recusar.
 - **FR-007**: A identificação do Edital — número, ano, título e descrição — NÃO DEVE ser copiada.
+
+  > **Emendado pelo A-10 da auditoria de prontidão (01/11/2026):** preservada, e nomeada também na tela: o Processo de
+  destino é igualmente do destino. O teto e o Requerimento **não** são identificação — são
+  configuração da oferta, e por isso FR-006 os copia.
 - **FR-008**: Campo normativo que nenhuma etapa de composição **desenha** NÃO DEVE ser copiado, ainda
   que a gravação o preserve: `maxInscricoesPorCandidato`, `classificationInformation` e
   `callInformation` (D-004).
+
+  > **Emendado pelo A-10 da auditoria de prontidão (01/11/2026):** `maxInscricoesPorCandidato` sai da lista, porque a
+  etapa Inscrição passou a desenhá-lo; restam `classificationInformation` e `callInformation`.
 - **FR-008a**: Todo Evento do Cronograma copiado DEVE nascer com situação `PLANEJADO`,
   independentemente da situação que tinha na origem (D-004).
 - **FR-009**: Cada objeto criado no destino DEVE receber identidade própria; nenhuma identidade
@@ -426,6 +451,10 @@ saber que está diante de conteúdo herdado, não redigido para esta oferta.
   resultado, classificação, recurso, sorteio, semente, divulgação ou notificação.
 - **FR-014**: Enquanto o Edital criado por esta operação estiver em elaboração, a composição DEVE
   exibir aviso permanente que nomeia a origem e pede a atualização das informações da nova oferta.
+
+  > **Emendado pelo A-10 da auditoria de prontidão (01/11/2026):** o aviso nomeia, entre o que revisar antes da
+  publicação, datas e prazos, vagas, o teto e o Requerimento de Matrícula (momento e texto), leva à
+  etapa Inscrição e à Revisão, e NÃO DEVE apresentar o que veio da origem como conferido.
 - **FR-014a**: **Na entrada desta operação**, a trilha de auditoria DEVE identificar a origem em
   forma legível — o Edital pelo número e ano, e a versão — em vez do identificador que o registro
   guarda. A versão DEVE ser nomeada de modo a **distinguir duas versões do mesmo Edital**: publicar

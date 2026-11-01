@@ -13,6 +13,17 @@ se aquela resposta tem dado pessoal — e a resposta fica escrita.
 
 from functools import wraps
 
+#: Hosts que só existem na máquina de quem acessa: um endereço montado sobre eles não vale para quem
+#: recebe o documento ou a peça. Morava no relatório do Edital (099); o kit de divulgação (111) o lê
+#: também, e a regra é da implantação, e não de uma feature.
+HOSTS_LOCAIS = frozenset({"localhost", "127.0.0.1", "::1", "[::1]", "testserver"})
+
+
+def host_local(request):
+    host = request.get_host().rsplit(":", 1)[0] if "]" not in request.get_host() else "[::1]"
+    return host in HOSTS_LOCAIS or host.endswith(".localhost")
+
+
 SEM_ARMAZENAMENTO = "no-store, no-cache, must-revalidate, private"
 
 
