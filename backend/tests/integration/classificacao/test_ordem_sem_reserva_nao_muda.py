@@ -88,7 +88,9 @@ def test_declarar_cota_nao_move_ninguem_na_ampla(
     O cenário nasce sem autodeclaração alguma; as três entram depois, e a ordem da ampla tem de
     sair **idêntica** — mesmas pessoas, mesmas posições, mesma proveniência.
     """
-    from tests.fixtures.recortes import MODALIDADE_PCD, MODALIDADE_PPI, declarar
+    from processo_seletivo.inscricoes.models import Inscricao
+    from tests.fixtures.comissao import sem_imutabilidade_da_enviada
+    from tests.fixtures.recortes import MODALIDADE_PCD, MODALIDADE_PPI
 
     edital, _, inscricoes = montar_cenario_7_1_2(
         gestor,
@@ -101,9 +103,12 @@ def test_declarar_cota_nao_move_ninguem_na_ampla(
     )
     antes = retrato(calcular_ordem(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO))
 
-    declarar(inscricoes[1], MODALIDADE_PCD)
-    declarar(inscricoes[2], MODALIDADE_PPI)
-    declarar(inscricoes[4], MODALIDADE_PPI)
+    # **Desvio deliberado**: a comparação exige as **mesmas** linhas antes e depois, e a inscrição
+    # enviada não muda (A-03). Dois cenários dariam inscrições diferentes, e o retrato compara por
+    # identidade de inscrição — é o que impede uma troca de pessoas de passar.
+    with sem_imutabilidade_da_enviada():
+        for indice, modalidade in ((1, MODALIDADE_PCD), (2, MODALIDADE_PPI), (4, MODALIDADE_PPI)):
+            Inscricao.objects.filter(pk=inscricoes[indice].pk).update(modality_id=modalidade)
     depois = retrato(calcular_ordem(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO))
 
     assert depois == antes

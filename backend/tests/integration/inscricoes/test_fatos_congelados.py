@@ -101,7 +101,12 @@ def test_editar_o_perfil_depois_nao_muda_valor_congelado(
     enviada = enviar(pronta(selecao), {NASCIMENTO: "1990-05-20"})
     antes = ValorDeFato.objects.get(inscricao=enviada).valor_data
 
-    Inscricao.objects.filter(pk=enviada.pk).update(nome="Maria Editada")
+    # O perfil é a identidade, e é por ela que a pessoa o edita (010, FR-008). A inscrição enviada
+    # já não muda — o banco recusa desde o A-03 —, e por isso a edição não passa mais por ela.
+    from processo_seletivo.identidade.application.credenciais import gravar_nucleo
+    from processo_seletivo.identidade.models import CandidateIdentity
+
+    gravar_nucleo(CandidateIdentity.objects.get(subject=MARIA.subject), nome="Maria Editada")
 
     assert ValorDeFato.objects.get(inscricao=enviada).valor_data == antes
 

@@ -5,6 +5,8 @@ precisavam delas. A 011 precisa de duas no mesmo Edital, para que "alocado em A1
 seja demonstrável, e de um segundo Processo para que "Etapa de outro Processo" também seja.
 """
 
+import contextlib
+
 from tests.fixtures.edital import PROFILE_ID, complete_draft, identificador
 from tests.fixtures.publicacao import publish_original
 
@@ -166,7 +168,7 @@ def alocar_em(gestor, processo, membro, edital, etapa_id, *, chave=None):
     return alocacao
 
 
-def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None):
+def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None, modalidades=None):
     """Inscrições **submetidas** — o único estado atribuível (FR-012).
 
     O protocolo é o que a tela mostra e o que a trilha guarda, então ele nasce aqui em vez de
@@ -187,6 +189,11 @@ def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None):
     escopo alheio — precisa de `seed` próprio, e a inscrição tem de nascer no Perfil **daquele**
     Edital. Sem isto ela nasce num Perfil que o Edital não declara, e a classificação não a
     encontra: o universo sai vazio e nada acusa.
+
+    `modalidades` é a autodeclaração, **gravada no envio, e não depois dele**: uma Modalidade só
+    para todas, ou `{posição: Modalidade}` para algumas. Antes do A-03 os cenários declaravam pelo
+    queryset sobre a inscrição já enviada, e o gatilho `inscricao_enviada_imutavel` recusa isso —
+    como recusaria em produção. É o que o produto faz: a Modalidade é escolhida no rascunho.
     """
     from django.utils import timezone
 
@@ -196,7 +203,11 @@ def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None):
     versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     agora = timezone.now()
     criadas = []
-    for numero in range(primeiro, primeiro + quantos):
+    if modalidades is None or isinstance(modalidades, dict):
+        por_posicao = modalidades or {}
+    else:
+        por_posicao = dict.fromkeys(range(quantos), modalidades)
+    for posicao, numero in enumerate(range(primeiro, primeiro + quantos)):
         # **Nasce rascunho, e é promovida depois.** Documento de inscrição enviada não é alterado
         # nem criado — a guarda da 009 vale no agregado —, e a transição real acontece por
         # `compare_and_swap`, que atualiza pelo queryset. A fixture faz o mesmo percurso.
@@ -218,10 +229,52 @@ def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None):
             submitted_at=agora,
             versao_aceita=versao,
             declaracoes_aceitas_em=agora,
+            modality_id=por_posicao.get(posicao),
         )
         inscricao.refresh_from_db()
         criadas.append(inscricao)
     return criadas
+
+
+@contextlib.contextmanager
+def sem_imutabilidade_da_enviada():
+    """Desliga, pelo tempo do bloco, os dois gatilhos da `inscricoes/0007` (A-03). **Desvio.**
+
+    Existe para os poucos casos que precisam de um estado que o produto não produz — um envio às
+    23h58 de outro dia, uma autodeclaração que muda sobre as **mesmas** linhas para comparar a ordem
+    antes e depois. Não é para montar cenário: a Modalidade vai em `inscrever(modalidades=…)`, que
+    é o percurso do produto. Quem usar isto diz no próprio caso por que não há outro caminho.
+
+    `ALTER TABLE` só na transação do caso, e religado no `finally`: um gatilho que ficasse desligado
+    contaminaria os casos seguintes do mesmo worker sem acusar nada. Fora do PostgreSQL não há
+    gatilho, e o bloco só roda.
+    """
+    from django.db import connection
+
+    if connection.vendor != "postgresql":
+        yield
+        return
+    gatilhos = (
+        ("inscricoes_inscricao", "inscricao_enviada_imutavel"),
+        ("inscricoes_documentosubmetido", "documento_da_enviada_imutavel"),
+    )
+    with connection.cursor() as cursor:
+        # O PostgreSQL recusa `ALTER TABLE` com verificação de chave estrangeira pendente, que é o
+        # que as fixtures deixam — o Django cria toda FK adiada. A razão de `como_producao`.
+        cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        for tabela, gatilho in gatilhos:
+            cursor.execute(f"ALTER TABLE {tabela} DISABLE TRIGGER {gatilho}")
+        cursor.execute("SET CONSTRAINTS ALL DEFERRED")
+    try:
+        yield
+    finally:
+        # Transação abortada desfaz o `DISABLE` junto com o resto, e não aceita mais comando.
+        if not connection.needs_rollback:
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+                for tabela, gatilho in gatilhos:
+                    cursor.execute(f"ALTER TABLE {tabela} ENABLE TRIGGER {gatilho}")
+                cursor.execute("SET CONSTRAINTS ALL DEFERRED")
 
 
 def anexar(inscricao, requirement_id, *, corpo=b"conteudo do documento"):

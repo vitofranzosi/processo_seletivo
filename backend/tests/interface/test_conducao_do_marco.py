@@ -36,7 +36,6 @@ from tests.fixtures.corte import MARCO
 from tests.fixtures.recortes import (
     MODALIDADE_PCD,
     MODALIDADE_PPI,
-    declarar,
     emitir_recorte,
     montar_cenario_7_1_2,
 )
@@ -74,8 +73,8 @@ def com_pcd_vazio(gestor, api_client, manager_headers, process_payload, seletor_
         prefixo="marco-049-vazio",
         emitir_a_ordem=False,
         autodeclarar=False,
+        modalidades={2: MODALIDADE_PPI},
     )
-    declarar(inscricoes[2], MODALIDADE_PPI)
     return edital, inscricoes
 
 

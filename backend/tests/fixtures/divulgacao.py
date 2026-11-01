@@ -17,7 +17,6 @@ from processo_seletivo.classificacao.application.emissao import (
 )
 from processo_seletivo.classificacao.models import AtoDeOrdenacao
 from processo_seletivo.comissoes.domain.funcoes import Funcao
-from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from tests.conftest import ator_institucional
 from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
@@ -248,14 +247,10 @@ def pontuar(
         primeiro=primeiro,
         perfil=cenario["perfil"],
         documentos=documentos,
+        # A modalidade é escolhida na inscrição, e o cenário a declara para todas: é o que dá à
+        # projeção um rótulo institucional a resolver em vez de uma coluna vazia.
+        modalidades=cenario["modalidade"],
     )
-    # A modalidade é escolhida na inscrição, e o cenário a declara para todas: é o que dá à
-    # projeção um rótulo institucional a resolver em vez de uma coluna vazia.
-    Inscricao.objects.filter(pk__in=[item.pk for item in inscricoes]).update(
-        modality_id=cenario["modalidade"]
-    )
-    for item in inscricoes:
-        item.refresh_from_db()
     com_nota = [
         inscricao
         for inscricao, nota in zip(inscricoes, pontuacoes, strict=True)

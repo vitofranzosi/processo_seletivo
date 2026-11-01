@@ -15,6 +15,7 @@ from processo_seletivo.divulgacao.models import SituacaoDivulgada
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.avisos import avisar_resultado
+from tests.fixtures.comissao import sem_imutabilidade_da_enviada
 from tests.fixtures.divulgacao import montar_ato_publicavel, publicar_o_ato
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
@@ -68,7 +69,11 @@ def test_o_corpo_nao_diz_a_situacao_de_ninguem(publicado):
 
 def test_sem_endereco_fica_registrado_e_fora_do_envio(publicado):
     sem = publicado["inscricoes"][0]
-    Inscricao.objects.filter(pk=sem.pk).update(email="")
+    # **Desvio deliberado**: o cenário inteiro nasce de `inscrever`, que grava um endereço em cada
+    # inscrição, e a enviada não muda depois (A-03). O que se exercita é o aviso diante de uma
+    # enviada sem endereço, e não o caminho que a produziu.
+    with sem_imutabilidade_da_enviada():
+        Inscricao.objects.filter(pk=sem.pk).update(email="")
 
     declarado = avisar_resultado(publicado["edital"], _marco(publicado))
 

@@ -77,6 +77,8 @@ def montar_cenario_da_ocupacao(
     # precisa entrar antes de o snapshot congelar. Sem o repasse, `publicar` cairia em `**quadro` e
     # chegaria a `rascunho_com_quadro` como argumento que ele não conhece.
     publicar=None,
+    # Repassado pela mesma razão: a autodeclaração entra no envio, e não depois dele (A-03).
+    modalidades=None,
     **quadro,
 ):
     """Edital publicado com quadro, ordem emitida e corte emitido.
@@ -102,6 +104,7 @@ def montar_cenario_da_ocupacao(
         prefixo=prefixo,
         draft_factory=monta,
         publicar=publicar,
+        modalidades=modalidades,
     )
     emitir_corte_do_cenario(edital, gestor, chave=f"{prefixo}-corte")
     return edital, pontuada, inscricoes

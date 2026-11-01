@@ -50,7 +50,9 @@ def edital_em_escala(api_client, manager_headers, process_payload):
     return edital
 
 
-def _acrescentar_inscricoes(edital, *, quantidade, inicio):
+def _acrescentar_inscricoes(edital, *, quantidade, inicio, autodeclarar_metade=False):
+    # A metade autodeclarada (os números ímpares) nasce declarada: a inscrição enviada não muda
+    # depois (A-03), e é o envio que grava a Modalidade.
     versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
     agora = timezone.now()
     Inscricao.objects.bulk_create(
@@ -65,6 +67,7 @@ def _acrescentar_inscricoes(edital, *, quantidade, inicio):
                 cpf="111.444.777-35",
                 cpf_normalizado="11144477735",
                 email=f"escala{numero}@example.test",
+                modality_id=MODALIDADE_EM_ESCALA if autodeclarar_metade and numero % 2 else None,
                 versao_aceita=versao,
                 declaracoes_aceitas_em=agora,
                 submitted_at=agora,
@@ -169,23 +172,18 @@ def edital_em_escala_com_cota(api_client, manager_headers, process_payload):
     ]
     perfil["immediateVacancies"] = 2
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
-    _acrescentar_inscricoes(edital, quantidade=SEMENTE, inicio=1)
+    _acrescentar_inscricoes(edital, quantidade=SEMENTE, inicio=1, autodeclarar_metade=True)
     return edital
-
-
-def _autodeclarar_metade(edital):
-    ids = list(
-        Inscricao.objects.filter(edital=edital).order_by("protocolo").values_list("id", flat=True)
-    )
-    Inscricao.objects.filter(id__in=ids[::2]).update(modality_id=MODALIDADE_EM_ESCALA)
 
 
 def test_o_recorte_reservado_custa_as_mesmas_consultas_que_a_ampla(edital_em_escala_com_cota):
     """O filtro do recorte entra na consulta, e não numa leitura a mais por pessoa."""
     _acrescentar_inscricoes(
-        edital_em_escala_com_cota, quantidade=ESCALA - SEMENTE, inicio=SEMENTE + 1
+        edital_em_escala_com_cota,
+        quantidade=ESCALA - SEMENTE,
+        inicio=SEMENTE + 1,
+        autodeclarar_metade=True,
     )
-    _autodeclarar_metade(edital_em_escala_com_cota)
 
     with CaptureQueriesContext(connection) as da_ampla:
         calcular_ordem(edital=edital_em_escala_com_cota, perfil_id=PROFILE_ID, marco_id=MARCO)
@@ -207,7 +205,6 @@ def test_o_recorte_reservado_custa_as_mesmas_consultas_que_a_ampla(edital_em_esc
 
 def test_o_numero_de_consultas_do_recorte_nao_cresce_com_o_universo(edital_em_escala_com_cota):
     """A mesma garantia da ampla, agora por recorte: custo do conjunto, e não do participante."""
-    _autodeclarar_metade(edital_em_escala_com_cota)
     with CaptureQueriesContext(connection) as pequeno:
         calcular_ordem(
             edital=edital_em_escala_com_cota,
@@ -216,9 +213,11 @@ def test_o_numero_de_consultas_do_recorte_nao_cresce_com_o_universo(edital_em_es
             lista_id=MODALIDADE_EM_ESCALA,
         )
     _acrescentar_inscricoes(
-        edital_em_escala_com_cota, quantidade=ESCALA - SEMENTE, inicio=SEMENTE + 1
+        edital_em_escala_com_cota,
+        quantidade=ESCALA - SEMENTE,
+        inicio=SEMENTE + 1,
+        autodeclarar_metade=True,
     )
-    _autodeclarar_metade(edital_em_escala_com_cota)
     with CaptureQueriesContext(connection) as grande:
         calcular_ordem(
             edital=edital_em_escala_com_cota,

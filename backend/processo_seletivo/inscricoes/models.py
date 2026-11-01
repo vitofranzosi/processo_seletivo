@@ -122,10 +122,12 @@ class Inscricao(models.Model):
         pelo queryset — e é justamente por isso que esta guarda pode ser total sem impedir o
         próprio envio.
 
-        **O que ela não é**: garantia de banco. `Inscricao` muda legitimamente enquanto está em
-        rascunho, então ela não entra nas tabelas append-only da `003` — pela mesma razão que
-        `Retificacao` ficou de fora: imutabilidade condicional ao estado não cabe em privilégio de
-        tabela.
+        **A garantia de banco é outra camada**: o gatilho `inscricao_enviada_imutavel`
+        (`inscricoes/0007`, A-03), que recusa mesmo quem não passa por aqui — um
+        `QuerySet.update()`, um comando de manutenção, um `psql`. `Inscricao` muda legitimamente
+        enquanto está em rascunho, então ela não entra nas tabelas append-only da `003` — pela
+        mesma razão que `Retificacao` ficou de fora: imutabilidade condicional ao estado não cabe em
+        privilégio de tabela. Esta guarda continua porque recusa cedo, com mensagem legível.
         """
         if not self._state.adding:
             anterior = Inscricao.objects.filter(pk=self.pk).values("status").first()

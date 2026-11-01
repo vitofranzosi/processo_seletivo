@@ -58,12 +58,15 @@ TRIGGERS_POR_APP = {
         "retificacao_final_imutavel",
         "alteracao_normativa_final_imutavel",
         "revisao_edital_append_only",
+        # A-03: a Homologação admite só a revogação, uma vez.
+        "homologacao_imutavel",
     ),
     # A conclusão preservada da 012 e o Resultado da 013. A última não é append-only: é a
     # conferência que impede o Resultado de afirmar o que a Avaliação fonte não afirmou — e, desde
     # D-1, também que o Resultado por Ocorrência afirme fonte nenhuma e cite norma de outro Edital.
     # O nome não mudou com o terceiro ramo: a função foi recriada, e a trigger é a mesma.
-    "avaliacoes": ("conclusao_avaliacao_append_only",),
+    # A-03: a Avaliação concluída só sai de `CONCLUIDA` pela forma exata da reabertura.
+    "avaliacoes": ("conclusao_avaliacao_append_only", "avaliacao_concluida_imutavel"),
     "resultados": ("resultado_etapa_append_only", "resultado_etapa_coerente"),
     "classificacao": (
         "ato_de_ordenacao_append_only",
@@ -112,6 +115,9 @@ TRIGGERS_POR_APP = {
         "item_da_lista_exigida_append_only",
         "item_da_lista_exigida_coerente",
         "valor_de_fato_append_only",
+        # A-03: condicionais ao envio — o rascunho e os documentos dele continuam mudando.
+        "inscricao_enviada_imutavel",
+        "documento_da_enviada_imutavel",
     ),
     # O registro da 060. **Não são append-only** — desativar a unidade e encerrar a autoridade são
     # `UPDATE` —, e por isso as tabelas ficam fora de `TABELAS_APPEND_ONLY`: os gatilhos recusam a
@@ -263,6 +269,41 @@ def test_upgrade_from_the_previous_version_applies_only_the_new_migrations():
 
     executor.loader.build_graph()
     assert ("publicacoes", ultima) in executor.loader.applied_migrations
+
+
+#: As migrations do A-03 e os gatilhos que cada uma instala.
+MIGRATIONS_DO_A03 = {
+    ("inscricoes", "0007_imutabilidade_da_enviada"): (
+        "inscricao_enviada_imutavel",
+        "documento_da_enviada_imutavel",
+    ),
+    ("avaliacoes", "0004_imutabilidade_da_concluida"): ("avaliacao_concluida_imutavel",),
+    ("publicacoes", "0012_imutabilidade_da_homologacao"): ("homologacao_imutavel",),
+}
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.integration
+@postgresql_only
+@pytest.mark.parametrize("migration", list(MIGRATIONS_DO_A03), ids=lambda chave: chave[0])
+def test_as_migrations_do_a03_se_desfazem_e_se_refazem(migration):
+    """Rollback de deploy: voltar uma migration tira os gatilhos dela, e avançar os devolve.
+
+    Só gatilho: nenhuma das três percorre linha, e é por isso que a ida e a volta são simétricas.
+    """
+    app, nome = migration
+    gatilhos = set(MIGRATIONS_DO_A03[migration])
+    executor = MigrationExecutor(connection)
+    executor.loader.build_graph()
+    anterior = executor.loader.graph.node_map[migration].parents
+    (antes,) = [pai.key for pai in anterior if pai.key[0] == app]
+
+    executor.migrate([antes])
+    assert not gatilhos & _installed_triggers()
+
+    executor.loader.build_graph()
+    executor.migrate([migration])
+    assert gatilhos <= _installed_triggers()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -663,7 +704,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # ato publicou (FR-1397). Não é tocar o que se lê: é outra feature, registrando no ato o que
         # ele passa a afirmar. `ADD COLUMN` com padrão 1, sem reescrever linha nem disparar o
         # gatilho append-only — e as anteriores leem 1, que é a redação que publicaram.
-        "publicacoes": 11,
+        # **Sobe para 12 com o A-03**: a `publicacoes/0012` dá à `Homologacao` o gatilho que recusa
+        # reescrever autoria e motivo e admite só a revogação, uma vez. Não cria coluna nem percorre
+        # linha (`doc/parecer-a03-imutabilidade-2026-11-01.md`).
+        "publicacoes": 12,
         # **Sobe para 2 com a 018**: a `divulgacao/0002` acrescenta os três campos da declaração
         # expressa de encerramento do prazo e a constraint que os mantém inteiros (FR-085).
         #
@@ -777,7 +821,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
 
     raiz = _pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
     esperadas = {
-        "avaliacoes": 3,
+        # **Sobe para 4 com o A-03**: a `avaliacoes/0004` leva ao banco a imutabilidade da Avaliação
+        # concluída, admitindo só a forma exata da reabertura da presidência. Só gatilho: não cria
+        # coluna nem percorre linha (`doc/parecer-a03-imutabilidade-2026-11-01.md`).
+        "avaliacoes": 4,
         # **Sobe para 5 com a 021**: a `classificacao/0005` dá ao ato de ordenação a origem e a
         # lista de concorrência — o ato passa a poder nascer de um sorteio, e não só de nota.
         # **Sobe para 6 com a 014**, e a justificativa é própria: a `classificacao/0006` cria o
@@ -845,7 +892,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # gatilho append-only que ela nunca teve. Não cria coluna nem percorre linha: fecha a camada
         # que faltava a uma tabela que já estava em `TABELAS_APPEND_ONLY`
         # (`doc/achado-valor-de-fato-sem-gatilho.md`, decidido em 25/09 para depois da 044).
-        "inscricoes": 6,
+        # **Sobe para 7 com o A-03**: a `inscricoes/0007` leva ao banco a imutabilidade da Inscrição
+        # enviada e dos documentos dela, que até ali só `save()` recusava. Só gatilhos, condicionais
+        # ao estado — o rascunho continua mudando (`doc/parecer-a03-imutabilidade-2026-11-01.md`).
+        "inscricoes": 7,
         # **Sobe para 3 com a 029**, e a justificativa é própria: a `processos/0003` dá ao Edital a
         # declaração do Requerimento de Matrícula — se o certame o exige, em que momento, e com que
         # texto de veracidade. Não é a 022 tocando o que lê: é outra feature, dizendo o que o
@@ -877,7 +927,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # ato publicou (FR-1397). Não é tocar o que se lê: é outra feature, registrando no ato o que
         # ele passa a afirmar. `ADD COLUMN` com padrão 1, sem reescrever linha nem disparar o
         # gatilho append-only — e as anteriores leem 1, que é a redação que publicaram.
-        "publicacoes": 11,
+        # **Sobe para 12 com o A-03**: a `publicacoes/0012` dá à `Homologacao` o gatilho que recusa
+        # reescrever autoria e motivo e admite só a revogação, uma vez. Não cria coluna nem percorre
+        # linha (`doc/parecer-a03-imutabilidade-2026-11-01.md`).
+        "publicacoes": 12,
         # **Sobe para 2 com a 036**: a `recursos/0002` cria o `AtoDeInstrucao` — o ato pelo qual a
         # autoridade anexa a **um** recurso o parecer atacado e o documento citado, para que quem
         # julga decida com o que se contesta à vista. Não é a 022 tocando o que lê: é outra feature,

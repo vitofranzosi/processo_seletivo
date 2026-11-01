@@ -84,7 +84,16 @@ def rascunho(*, com_regra=True, alvo=2):
     return base, pontuada
 
 
-def montar(gestor, api_client, manager_headers, process_payload, *, com_regra=True, prefixo="p"):
+def montar(
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    com_regra=True,
+    prefixo="p",
+    modalidades=None,
+):
     """Quatro inscritos, três pontuados e a ordem emitida — sem o corte ainda."""
     draft, pontuada = rascunho(com_regra=com_regra)
     # Sem regra, o Perfil é o do acervo (046, `FR-752`): a não regressão da `FR-214` é sobre o
@@ -104,7 +113,7 @@ def montar(gestor, api_client, manager_headers, process_payload, *, com_regra=Tr
         "membros": membros,
         "etapa": pontuada["id"],
     }
-    inscricoes = inscrever(edital, 4, primeiro=801)
+    inscricoes = inscrever(edital, 4, primeiro=801, modalidades=modalidades)
     distribuir_para(contexto, gestor, ["joao"], inscricoes[:3], chave=f"prog-014-{prefixo}-lote")
     for indice, pontuacao in enumerate(["90.0000", "80.0000", "70.0000"]):
         concluir_como(contexto, "joao", inscricoes[indice], pontuacao=pontuacao)
@@ -264,12 +273,15 @@ def test_o_corte_de_uma_lista_nao_desperta_o_gate_para_as_outras(
     from processo_seletivo.classificacao.models import Corte, ItemDoCorte
     from processo_seletivo.publicacoes.application.selectors import effective_version
 
-    edital, inscricoes = montar(
-        gestor, api_client, manager_headers, process_payload, prefixo="por-lista"
-    )
     ppi, pcd = uuid4(), uuid4()
-    Inscricao.objects.filter(pk=inscricoes[0].id).update(modality_id=ppi)
-    Inscricao.objects.filter(pk=inscricoes[1].id).update(modality_id=pcd)
+    edital, inscricoes = montar(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="por-lista",
+        modalidades={0: ppi, 1: pcd},
+    )
     ato = ato_vigente(edital=edital, marco_id=MARCO)
     da_ppi = Corte.objects.create(
         edital=edital,
