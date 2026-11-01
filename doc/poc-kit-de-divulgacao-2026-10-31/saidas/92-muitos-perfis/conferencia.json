@@ -1,0 +1,14 @@
+{
+  "cenario": "92-muitos-perfis",
+  "descricao": "92/2026: 18 opções, só cadastro reserva em 16 delas.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 43.4,
+  "png_deterministico": true,
+  "omissoes": [
+    "Título do Edital não coube (208 caracteres): a peça usa o título do Processo. Manchete curta é a D-3."
+  ],
+  "zip_sha256": "1a371609cd81ba76",
+  "impressao": "8cc98a9f"
+}

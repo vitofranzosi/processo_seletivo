@@ -1,0 +1,24 @@
+{
+  "cenario": "91-prorrogado-por-retificacao",
+  "descricao": "91/2026 depois da Retificação nº 1: prazo prorrogado e 45 vagas num polo.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "desatualizacao": [
+    {
+      "campo": "término das inscrições",
+      "de": "21/11/2026",
+      "para": "26/11/2026"
+    },
+    {
+      "campo": "oferta Especialização em Informática na Educação — Polo Bom Jesus do Norte",
+      "de": "40 vagas",
+      "para": "45 vagas"
+    }
+  ],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 48.9,
+  "png_deterministico": true,
+  "omissoes": [],
+  "zip_sha256": "ff332fd2811160c3",
+  "impressao": "65f7106c"
+}

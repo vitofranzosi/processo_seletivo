@@ -1,0 +1,15 @@
+{
+  "cenario": "92-retificacao-que-nao-muda-o-material",
+  "descricao": "92/2026 depois de Retificação que só muda uma seção textual.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "desatualizacao": [],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 42.0,
+  "png_deterministico": true,
+  "omissoes": [
+    "Título do Edital não coube (208 caracteres): a peça usa o título do Processo. Manchete curta é a D-3."
+  ],
+  "zip_sha256": "f37f7e37d2a0bcfd",
+  "impressao": "8cc98a9f"
+}

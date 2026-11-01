@@ -1,0 +1,12 @@
+{
+  "cenario": "91-inscricoes-em-andamento",
+  "descricao": "91/2026 no segundo dia do período.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 48.1,
+  "png_deterministico": true,
+  "omissoes": [],
+  "zip_sha256": "1331259e086f2e01",
+  "impressao": "f2f197a0"
+}

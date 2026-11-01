@@ -1,0 +1,26 @@
+{
+  "edital": "Edital nº 91/2026",
+  "edital_id": "21a39d2c-20f6-431e-86f0-77727a446301",
+  "gerado_em": "2026-10-31T11:26:41.552606-03:00",
+  "instante_de_referencia": "2026-10-31T11:26:41.445491-03:00",
+  "versao": {
+    "id": "0d5a40ef-5589-43a8-97df-f7b14d47a28d",
+    "content_hash": "f20ce3ba0d14f3aba8c1522782d726dd7c8bf59ebc3119d540ae3c771f3aabe3",
+    "vigente_desde": "2026-10-31T11:26:41.335074-03:00",
+    "ato": "Publicação original de 31/10/2026"
+  },
+  "impressao_da_ficha": "83eb373321eb1ec8d9c632a5f2fbc250e4fdde2a8c33c78ca29432e1c7c141c1",
+  "proximos_marcos_conhecidos": [],
+  "aviso": "Uma Retificação publicada depois desta geração pode mudar os dados. A publicação oficial prevalece.",
+  "peca": {
+    "template": "feed-4x5 · poc-1",
+    "rasterizador": "resvg-py 0.5.0",
+    "fontes": {
+      "EditalSans-Regular.ttf": "62b13299f160417649de8979ee1b72f5c276af2db2c3e9933d5e9054b4aa71e4",
+      "EditalSans-Bold.ttf": "465a6122bcd959c9a9a4f392cc67ecec886d28397019e4ef9d6cff6fd832508c"
+    },
+    "svg_sha256": "65e1f787f68af2dda0498641ff7b7617b0947e38dc1681410c076225ffb5e587",
+    "png_sha256": "d667ef66f0814f37228cb855d5d320cc8d4ff4e0d24bb84d21f73112b7dfc949",
+    "omissoes": []
+  }
+}

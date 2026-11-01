@@ -1,0 +1,12 @@
+{
+  "cenario": "sem-periodo-designado",
+  "descricao": "91/2026 sem período de inscrições designado.",
+  "modo": "neutro",
+  "problemas": [],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 47.0,
+  "png_deterministico": true,
+  "omissoes": [],
+  "zip_sha256": "0b993521f3e774d1",
+  "impressao": "83eb3733"
+}
