@@ -182,6 +182,20 @@ def _navegacao(edital, ator, *, com_relatorio=True, contagens=None):
             reverse("interface:relatorio-do-edital", args=[edital.id]),
             motivo="" if edital.status in ESTADOS_COM_RELATORIO else INDISPONIVEL,
         )
+    # O kit de divulgação (111, FR-3401). Pela capacidade e pelo estado, e só: a ação não lê a
+    # ficha, para que o detalhe não pague a leitura do conteúdo vigente. Desfecho e período
+    # encerrado a deixam disponível, porque a tela é que diz que o material exportado deixou de
+    # valer (FR-3445). Só no detalhe, como o relatório.
+    if com_relatorio and ator.can("material:gerar"):
+        from processo_seletivo.interface.kit_de_divulgacao import ESTADOS_COM_KIT
+        from processo_seletivo.interface.kit_de_divulgacao import INDISPONIVEL as SEM_KIT
+
+        yield Acao(
+            "kit",
+            "Kit de divulgação",
+            reverse("interface:kit-de-divulgacao", args=[edital.id]),
+            motivo="" if edital.status in ESTADOS_COM_KIT else SEM_KIT,
+        )
     if ator.can("auditoria:consultar"):
         yield Acao(
             "auditoria",

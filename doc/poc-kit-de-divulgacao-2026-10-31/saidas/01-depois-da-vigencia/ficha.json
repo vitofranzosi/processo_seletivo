@@ -1,0 +1,103 @@
+{
+  "modo": "com-periodo",
+  "motivo": "",
+  "edital_id": "7529c824-8aea-44b3-9c57-f5ebe4cc337c",
+  "numero": "01",
+  "ano": "2026",
+  "identificacao": "Edital nº 01/2026",
+  "titulo": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+  "titulo_sem_numero": "Professor Substituto e Técnico-Administrativo",
+  "titulo_do_processo": "Processo Seletivo Simplificado 2026",
+  "unidade_sigla": "Cefor",
+  "unidade_nome": "Centro de Referência em Formação e em Educação a Distância",
+  "referencia": "2026-11-17T10:43:15.379635-03:00",
+  "referencia_texto": "17/11/2026, 10h43",
+  "situacao_chave": "aberto",
+  "situacao_rotulo": "Aberta",
+  "periodo_estado": "aberto",
+  "inicio": "2026-11-02T09:43:15.379635-03:00",
+  "fim": "2026-12-02T09:43:15.379635-03:00",
+  "inicio_data": "02/11/2026",
+  "inicio_hora": "09h43",
+  "fim_data": "02/12/2026",
+  "fim_hora": "09h43",
+  "periodo_curto": "02/11 a 02/12/2026",
+  "prorrogado": true,
+  "fim_original_data": "22/11/2026",
+  "ofertas": [
+    {
+      "perfil_id": "00000000-0000-0000-0001-0000000000b1",
+      "nome": "Professor de Informática",
+      "localidade": "Campus Serra",
+      "vagas_imediatas": 3,
+      "cadastro_reserva": true,
+      "quantidade": "3 vagas e cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/7529c824-8aea-44b3-9c57-f5ebe4cc337c/#vaga-00000000-0000-0000-0001-0000000000b1"
+    },
+    {
+      "perfil_id": "00000000-0000-0000-0001-0000000000b2",
+      "nome": "Técnico de Laboratório",
+      "localidade": "Campus Vitória",
+      "vagas_imediatas": 0,
+      "cadastro_reserva": true,
+      "quantidade": "cadastro reserva",
+      "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/7529c824-8aea-44b3-9c57-f5ebe4cc337c/#vaga-00000000-0000-0000-0001-0000000000b2"
+    }
+  ],
+  "nomes_iguais": false,
+  "total_de_vagas": null,
+  "endereco": "https://gps.exemplo.ifes.edu.br/selecoes/7529c824-8aea-44b3-9c57-f5ebe4cc337c/",
+  "caminho_curto": "gps.exemplo.ifes.edu.br/selecoes",
+  "versao_id": "d24f7cd5-cc21-448a-b49a-fe05423dac18",
+  "versao_hash": "62ed0b6d136d7ec48c81c18a66bbd53e7d21dfc3f1fdc27513d2131e7d6e3dfb",
+  "versao_desde": "2026-11-17T09:43:15.379635-03:00",
+  "versao_desde_texto": "17/11/2026, 09h43",
+  "versao_ato": "Retificação nº 2 de 31/10/2026",
+  "retificacao_a_vigorar": null,
+  "retificacao_a_vigorar_texto": "",
+  "impressao": "e5ef7e419111beaeed29d7f1b43a3a8fbe15b89078a30abade7dd05120c70048",
+  "origens": [
+    {
+      "campo": "Número e ano",
+      "valor": "01/2026",
+      "caminho": "/number, /year",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Título",
+      "valor": "Edital 01/2026 — Professor Substituto e Técnico-Administrativo",
+      "caminho": "/title",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Início das inscrições",
+      "valor": "2026-11-02T09:43:15.379635-03:00",
+      "caminho": "/schedule/id=00000000-0000-0000-0001-0000000000c1/startAt",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Término das inscrições",
+      "valor": "2026-12-02T09:43:15.379635-03:00",
+      "caminho": "/schedule/id=00000000-0000-0000-0001-0000000000c1/endAt",
+      "ato": "Retificação nº 2 de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Professor de Informática — Campus Serra",
+      "valor": "3",
+      "caminho": "/profiles/id=00000000-0000-0000-0001-0000000000b1/immediateVacancies",
+      "ato": "Retificação nº 1 de 31/10/2026"
+    },
+    {
+      "campo": "Vagas — Técnico de Laboratório — Campus Vitória",
+      "valor": "0",
+      "caminho": "/profiles/id=00000000-0000-0000-0001-0000000000b2/immediateVacancies",
+      "ato": "Publicação original de 31/10/2026"
+    },
+    {
+      "campo": "Unidade",
+      "valor": "Cefor",
+      "caminho": "Publicacao.unidade_sigla (congelada no ato)",
+      "ato": "Retificação nº 2 de 31/10/2026"
+    }
+  ]
+}

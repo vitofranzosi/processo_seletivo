@@ -5171,6 +5171,12 @@ MOMENTOS_DO_REQUERIMENTO = (
 
 OPERACOES = {
     "CRIAR": "Criação",
+    # A exportação do kit de divulgação (111, FR-3436): não é ato do certame, e o rótulo o diz.
+    "EXPORTAR_MATERIAL": "Exportação do kit de divulgação",
+    # As emissões dos relatórios gerenciais (099, 100). Chegavam cruas à trilha: a view as passa por
+    # constante de outro módulo, e o guardião só via o literal até a 111.
+    "EMITIR_RELATORIO": "Emissão do relatório do Edital",
+    "EMITIR_RELATORIO_CONSOLIDADO": "Emissão do relatório consolidado da unidade",
     "ALTERAR_RASCUNHO": "Alteração do rascunho",
     # O gesto que materializa uma declaração em vários Perfis (051, FR-921). A frase da trilha diz
     # a unidade, a origem e quantos Perfis ela alcançou.

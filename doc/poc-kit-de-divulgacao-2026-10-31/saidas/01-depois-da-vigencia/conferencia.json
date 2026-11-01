@@ -1,0 +1,19 @@
+{
+  "cenario": "01-depois-da-vigencia",
+  "descricao": "01/2026 depois de a prorrogação passar a valer.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "desatualizacao": [
+    {
+      "campo": "término das inscrições",
+      "de": "22/11/2026",
+      "para": "02/12/2026"
+    }
+  ],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 44.1,
+  "png_deterministico": true,
+  "omissoes": [],
+  "zip_sha256": "70802226e003b385",
+  "impressao": "e5ef7e41"
+}

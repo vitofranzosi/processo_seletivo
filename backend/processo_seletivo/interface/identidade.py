@@ -134,6 +134,13 @@ PAPEIS = {
         "Participante do piloto do assistente",
         ["assistente:piloto"],
     ),
+    # O kit de divulgação do Edital (111, `D-012`, `FR-3403`). Papel **próprio e restrito**: quem
+    # divulga não pratica ato, e a capacidade não abre ato nenhum nem leitura além do kit. Nenhum
+    # papel existente a ganha. **Não se atribui a ninguém antes da spec da P-2** (`112`): hoje
+    # qualquer pessoa da unidade lê rascunho e Retificação em curso pelo detalhe do Edital, e quem é
+    # só da comunicação saberia de um ato antes de publicado. A grafia é conferida por
+    # `tests/authorization/test_papel_da_comunicacao.py`.
+    "comunicacao": ("Comunicação", ["material:gerar"]),
 }
 
 
@@ -153,6 +160,7 @@ DESCRICOES = {
     "auditor": "Consulta a trilha de auditoria dos atos praticados.",
     "exportador": "Exporta o arquivo de matrículas dos convocados.",
     "participante-piloto-assistente": "Participa do piloto do assistente do Edital.",
+    "comunicacao": "Gera os textos e a peça de divulgação dos Editais publicados.",
 }
 
 # A origem da identidade na sessão (075, `FR-1698`). A institucional é a segunda (106): é ela que

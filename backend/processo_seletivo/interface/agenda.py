@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from uuid import UUID
 
-from django.db.models import Min
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import urlencode
@@ -37,8 +36,10 @@ from processo_seletivo.editais.domain.fase_do_evento import (
     instantes_do_evento,
 )
 from processo_seletivo.processos.models import Edital
-from processo_seletivo.publicacoes.application.selectors import versoes_vigentes
-from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from processo_seletivo.publicacoes.application.selectors import (
+    retificacoes_a_vigorar,
+    versoes_vigentes,
+)
 from processo_seletivo.shared.tempo import ZONA
 
 MES, PROXIMOS = "mes", "proximos"
@@ -696,24 +697,6 @@ def editais_da_agenda(ator):
             institution_scope=ator.institution_scope, status__in=SITUACOES_NA_AGENDA
         ).select_related("processo")
     )
-
-
-def retificacoes_a_vigorar(edital_ids, agora):
-    """`{edital_id: vigora_em}` — a primeira versão de vigência futura de cada Edital (`D-008`).
-
-    Uma consulta agregada, sem materializar conteúdo: a agenda anuncia a Retificação e não a
-    aplica, então não precisa saber o que ela muda.
-    """
-    if not edital_ids:
-        return {}
-    return {
-        linha["edital_id"]: linha["vigora_em"]
-        for linha in VersaoConsolidada.objects.filter(
-            edital_id__in=edital_ids, valid_from__gt=agora
-        )
-        .values("edital_id")
-        .annotate(vigora_em=Min("valid_from"))
-    }
 
 
 def ler(ator, parametros, *, agora=None):

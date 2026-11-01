@@ -20,6 +20,9 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.db.models import Count, Q
 from django.utils import timezone
 
+# O quadro do conteúdo vigente mora no domínio desde a 111; a Visão Geral o reexporta para os
+# chamadores de sempre (relatório do Edital, testes da 041).
+from processo_seletivo.editais.domain.quadro import QuadroDoEdital, vagas_do_conteudo  # noqa: F401
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
     ENCERRADO,
@@ -198,17 +201,6 @@ class Reserva:
             # tela não inventa o número nem finge que é ilimitada: diz que há reserva e para aí.
             return cls(RESERVA_LIMITADA, limite) if valido else cls(RESERVA_ILIMITADA)
         return cls(SEM_RESERVA)
-
-
-@dataclass(frozen=True)
-class QuadroDoEdital:
-    """O que o conteúdo vigente diz sobre vagas, por Perfil e no total."""
-
-    total: int = 0
-    quantidades: dict = field(default_factory=dict)
-    com_vaga: frozenset = frozenset()
-    todos: frozenset = frozenset()
-    tem_reserva: bool = False
 
 
 @dataclass(frozen=True)
@@ -437,45 +429,6 @@ def _editais_do_recorte(actor, recorte):
 # ---------------------------------------------------------------------------
 # 4. O que o conteúdo publicado diz sobre vagas
 # ---------------------------------------------------------------------------
-
-
-def vagas_do_conteudo(conteudo):
-    """`QuadroDoEdital` do conteúdo vigente (`FR-587`).
-
-    **Do publicado, e nunca das linhas de elaboração.** A Retificação não reescreve o relacional:
-    `PerfilVaga.immediate_vacancies` é o rascunho, e o que o Edital **publicou** está aqui. Ler o
-    outro seria mais barato e estaria errado depois da primeira Retificação.
-
-    **`com_vaga` é o que torna a razão honesta** (041, `FR-612`): inscrição em Perfil que não
-    publica vaga imediata não disputa vaga nenhuma, e somá-la ao numerador produz número
-    aritmeticamente correto e institucionalmente falso.
-
-    **`todos` existe desde a 041, e a ausência dele era um buraco** (`FR-613a`, `R-003`): sem o
-    conjunto completo, *"Perfil sem vaga imediata"* e *"Perfil que a Retificação removeu"* caíam no
-    mesmo ramo. A Inscrição guarda a identidade **publicada** do Perfil, que sobrevive à remoção —
-    e é por isso que a diferença precisa ser reconhecível.
-    """
-    quantidades, com_vaga, todos, reserva = {}, [], [], False
-    for perfil in (conteudo or {}).get("profiles") or []:
-        if not isinstance(perfil, dict):
-            continue
-        identidade = str(perfil.get("id"))
-        quantidade = perfil.get("immediateVacancies")
-        if isinstance(quantidade, bool) or not isinstance(quantidade, int) or quantidade < 0:
-            quantidade = 0
-        quantidades[identidade] = quantidade
-        todos.append(identidade)
-        if quantidade > 0:
-            com_vaga.append(identidade)
-        if (perfil.get("reserveType") or "NONE") != "NONE":
-            reserva = True
-    return QuadroDoEdital(
-        total=sum(quantidades.values()),
-        quantidades=quantidades,
-        com_vaga=frozenset(com_vaga),
-        todos=frozenset(todos),
-        tem_reserva=reserva,
-    )
 
 
 def situacao_do_periodo(conteudo, agora):

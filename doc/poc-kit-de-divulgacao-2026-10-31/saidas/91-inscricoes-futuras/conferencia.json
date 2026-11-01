@@ -1,0 +1,12 @@
+{
+  "cenario": "91-inscricoes-futuras",
+  "descricao": "91/2026 publicado; inscrições ainda não começaram.",
+  "modo": "com-periodo",
+  "problemas": [],
+  "svg_deterministico": true,
+  "ms_rasterizacao": 59.6,
+  "png_deterministico": true,
+  "omissoes": [],
+  "zip_sha256": "b2f59dfa923454f0",
+  "impressao": "f2f197a0"
+}
