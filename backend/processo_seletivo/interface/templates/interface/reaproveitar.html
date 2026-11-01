@@ -20,13 +20,18 @@ divisão preenche a largura e devolve ao segundo parágrafo o título que ele se
       inclusive as retificações já publicadas: perfis de vaga, modalidades de concorrência,
       requisitos, documentos exigidos, etapas de avaliação, critérios de classificação, a estrutura
       do cronograma, o conteúdo das seções e os anexos.</p>
+    <p class="ajuda">Da etapa Inscrição: o <strong>teto de inscrições por candidato</strong> e o
+      <strong>Requerimento de Matrícula</strong> — o momento em que é pedido e o texto da
+      declaração. O que a origem não declara também não vem declarado: sem teto é sem limite, e sem
+      Requerimento é que este Edital não o exige.</p>
   </section>
   <section aria-labelledby="nao-vem-titulo" class="cartao">
     <h2 id="nao-vem-titulo">O que não vem</h2>
     <p class="ajuda">Nada do certame anterior: nem candidatos, nem inscrições, nem documentos
       enviados, nem avaliações, nem resultados, nem recursos.</p>
-    <p class="ajuda">Número, ano e título continuam sendo os que você já informou. <strong>Datas,
-      vagas e prazos são da oferta anterior</strong> até que alguém os atualize para esta.</p>
+    <p class="ajuda">Número, ano, título, descrição e Processo Seletivo continuam sendo os deste
+      Edital. <strong>Datas, prazos, vagas, teto e Requerimento são da oferta anterior</strong> até
+      que alguém os revise para esta — copiar não é conferir.</p>
   </section>
 </div>
 
@@ -37,7 +42,7 @@ outra vez na confirmação — a lista é o requisito, e uma advertência sem n�
 {% endcomment %}
 <div class="aviso" role="alert">
   <p><strong>Este Edital já tem conteúdo composto.</strong> Escolher uma origem aqui
-    <strong>substitui</strong> o que está nele: {% if descarte.perfis %}{{ descarte.perfis }} perfi{{ descarte.perfis|pluralize:"l,s" }}, {% endif %}{% if descarte.eventos %}{{ descarte.eventos }} evento{{ descarte.eventos|pluralize }}, {% endif %}{% if descarte.etapas %}{{ descarte.etapas }} etapa{{ descarte.etapas|pluralize }}, {% endif %}{% if descarte.documentos %}{{ descarte.documentos }} documento{{ descarte.documentos|pluralize }} exigido{{ descarte.documentos|pluralize }}, {% endif %}{% if descarte.secoes %}{{ descarte.secoes }} seç{{ descarte.secoes|pluralize:"ão,ões" }} redigida{{ descarte.secoes|pluralize }}, {% endif %}{% if descarte.anexos %}{{ descarte.anexos }} anexo{{ descarte.anexos|pluralize }}, {% endif %}entre outros. Você confirma antes de qualquer coisa ser trocada.</p>
+    <strong>substitui</strong> o que está nele: {% if descarte.perfis %}{{ descarte.perfis }} perfi{{ descarte.perfis|pluralize:"l,s" }}, {% endif %}{% if descarte.eventos %}{{ descarte.eventos }} evento{{ descarte.eventos|pluralize }}, {% endif %}{% if descarte.etapas %}{{ descarte.etapas }} etapa{{ descarte.etapas|pluralize }}, {% endif %}{% if descarte.documentos %}{{ descarte.documentos }} documento{{ descarte.documentos|pluralize }} exigido{{ descarte.documentos|pluralize }}, {% endif %}{% if descarte.secoes %}{{ descarte.secoes }} seç{{ descarte.secoes|pluralize:"ão,ões" }} redigida{{ descarte.secoes|pluralize }}, {% endif %}{% if descarte.anexos %}{{ descarte.anexos }} anexo{{ descarte.anexos|pluralize }}, {% endif %}{% if descarte.teto %}o teto de {{ descarte.teto }} inscriç{{ descarte.teto|pluralize:"ão,ões" }} por candidato, {% endif %}{% if descarte.requerimento %}o Requerimento de Matrícula {{ descarte.requerimento|momento_do_requerimento }}, {% endif %}entre outros. Você confirma antes de qualquer coisa ser trocada.</p>
 </div>
 {% endif %}
 
@@ -129,7 +134,9 @@ outra vez na confirmação — a lista é o requisito, e uma advertência sem n�
                 {{ origem.resumo.etapas }} etapa{{ origem.resumo.etapas|pluralize }} ·
                 {{ origem.resumo.eventos }} evento{{ origem.resumo.eventos|pluralize }} ·
                 {{ origem.resumo.documentos }} documento{{ origem.resumo.documentos|pluralize }} ·
-                {{ origem.resumo.anexos }} anexo{{ origem.resumo.anexos|pluralize }}</td>
+                {{ origem.resumo.anexos }} anexo{{ origem.resumo.anexos|pluralize }}{% with inscricao=origem.resumo.inscricao %}{% if inscricao.max_inscricoes_por_candidato %} ·
+                teto de {{ inscricao.max_inscricoes_por_candidato }} inscriç{{ inscricao.max_inscricoes_por_candidato|pluralize:"ão,ões" }}{% endif %}{% if inscricao.requerimento_momento %} ·
+                Requerimento de Matrícula {{ inscricao.requerimento_momento|momento_do_requerimento }}{% endif %}{% endwith %}</td>
             </tr>
             {% endfor %}
           </tbody>

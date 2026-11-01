@@ -79,8 +79,9 @@ acompanha.
 
 ## Cenário 6 — O que não tem tela não veio (`FR-008`)
 
-Use origem com `maxInscricoesPorCandidato`, `classificationInformation` ou `callInformation`
-preenchidos — hoje só a API os escreve.
+Use origem com `classificationInformation` ou `callInformation` preenchidos — hoje só a API os
+escreve. O teto e o Requerimento de Matrícula **vêm**, desde a emenda do A-10 (01/11/2026): a etapa
+Inscrição os desenha, e o destino os mostra lá para revisão.
 
 **Esperado**: o destino não os tem, e a prévia mostra a ausência. Nenhum deles chega ao documento do
 novo Edital.

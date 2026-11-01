@@ -30,16 +30,14 @@ from processo_seletivo.shared.concurrency import compare_and_swap
 OPERACAO = "ALTERAR_REQUERIMENTO"
 
 
-def atualizar_requerimento_de_matricula(
-    *, actor, edital_id, expected_revision, momento, declaracao, correlation_id=""
-):
-    """Grava o momento e o texto. **Sem chave de idempotência**, como a identificação.
+def requerimento_declarado(momento, declaracao):
+    """O par `(momento, declaração)` como as colunas o guardam, ou a recusa.
 
-    A ausência é deliberada e pela mesma razão: isto edita rascunho, e não pratica ato
-    irreversível. Repetir a mesma alteração escreve o mesmo valor, e quem a protege de gravação
-    concorrente é o `compare_and_swap` de sempre.
+    Separado do comando porque o reaproveitamento (023, emenda do A-10) grava o mesmo par vindo do
+    conteúdo publicado da origem, dentro da transação dele: chamar o comando inteiro ali seria uma
+    segunda revisão e um segundo evento para **uma** operação, e repetir a regra seria a segunda
+    porta para a mesma invariante.
     """
-    require_permission(actor, "edital:elaborar")
     momento = (momento or "").strip()
     if momento and momento not in nomes.MOMENTOS:
         raise DomainError(
@@ -51,6 +49,20 @@ def atualizar_requerimento_de_matricula(
     declaracao = (declaracao or "").strip()
     if not momento:
         declaracao = ""
+    return momento, declaracao
+
+
+def atualizar_requerimento_de_matricula(
+    *, actor, edital_id, expected_revision, momento, declaracao, correlation_id=""
+):
+    """Grava o momento e o texto. **Sem chave de idempotência**, como a identificação.
+
+    A ausência é deliberada e pela mesma razão: isto edita rascunho, e não pratica ato
+    irreversível. Repetir a mesma alteração escreve o mesmo valor, e quem a protege de gravação
+    concorrente é o `compare_and_swap` de sempre.
+    """
+    require_permission(actor, "edital:elaborar")
+    momento, declaracao = requerimento_declarado(momento, declaracao)
     with command_context() as now:
         try:
             edital = (

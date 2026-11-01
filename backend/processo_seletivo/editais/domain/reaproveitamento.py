@@ -326,3 +326,24 @@ def payload_do_conteudo(conteudo):
         # cobra (023, FR-010a).
         "drawMethod": conteudo.get("drawMethod") or {},
     }
+
+
+def configuracao_da_inscricao(conteudo):
+    """O teto e o Requerimento de Matrícula da origem, nos nomes das colunas do `Edital`.
+
+    **Fora de `payload_do_conteudo`** porque não viajam pelo rascunho: os dois são campos de raiz,
+    que `replace_draft` não carrega e por isso preserva (015, FR-063; 029, `FR-368`). Até o A-10 da
+    auditoria de 31/10 eles não eram copiados — a `023` os excluía por não terem tela, e a etapa
+    Inscrição passou a desenhá-los depois —, e o Edital reaproveitado de um certame que pedia o
+    Requerimento na convocação publicava sem exigi-lo: a convocada recebia 404.
+
+    **A ausência viaja como ausência.** `null` no teto é sem limite, e `null` no Requerimento é que
+    o Edital não o exige — copiar uma e outra é o que impede o destino de inventar exigência que a
+    origem não fazia. Só converte; validar é da aplicação, com as regras dos comandos de cada campo.
+    """
+    requerimento = conteudo.get("matriculationRequest") or {}
+    return {
+        "max_inscricoes_por_candidato": conteudo.get("maxInscricoesPorCandidato"),
+        "requerimento_momento": requerimento.get("moment") or "",
+        "requerimento_declaracao": requerimento.get("declarationText") or "",
+    }

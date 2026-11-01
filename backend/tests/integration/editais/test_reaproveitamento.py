@@ -664,8 +664,11 @@ def test_o_calendario_nao_vem_cumprido(destino, origem, elaborador):
 
 
 def test_o_que_nao_tem_tela_nao_vem(destino, origem, elaborador):
-    """Os três campos normativos que nenhuma etapa do assistente desenha (FR-008)."""
-    Edital.objects.filter(pk=origem.pk).update(max_inscricoes_por_candidato=1)
+    """Os dois objetos normativos do Perfil que nenhuma etapa do assistente desenha (FR-008).
+
+    O teto saiu desta lista quando a etapa Inscrição passou a desenhá-lo, e viaja desde o A-10 —
+    `test_reaproveitamento_da_inscricao.py` o prende.
+    """
     assert origem.perfis.get().classification_information == {"texto": "sem tela"}
 
     copiado = copiar(destino, origem, elaborador)
@@ -673,7 +676,6 @@ def test_o_que_nao_tem_tela_nao_vem(destino, origem, elaborador):
     perfil = copiado.perfis.get()
     assert perfil.classification_information == {}
     assert perfil.call_information == {}
-    assert copiado.max_inscricoes_por_candidato is None
 
 
 # ---------------------------------------------------------------------------
@@ -1067,6 +1069,14 @@ def test_o_ano_so_entra_na_busca_quando_o_termo_e_um_ano():
     assert not compara_ano(_procura_por("Multimídia"))
 
 
+# A etapa Inscrição de uma origem que não declara teto nem Requerimento (A-10).
+SEM_INSCRICAO_DECLARADA = {
+    "max_inscricoes_por_candidato": None,
+    "requerimento_momento": "",
+    "requerimento_declaracao": "",
+}
+
+
 def test_o_resumo_conta_o_conteudo_que_vigora_e_nao_as_tabelas(origem, elaborador, api_client):
     """A coluna promete o que a cópia entrega, e é por isso que ela não conta nas tabelas.
 
@@ -1077,7 +1087,14 @@ def test_o_resumo_conta_o_conteudo_que_vigora_e_nao_as_tabelas(origem, elaborado
     from tests.fixtures.publicacao import retify
 
     antes = com_resumo_da_origem([origem])[0].resumo
-    assert antes == {"perfis": 1, "eventos": 2, "etapas": 1, "documentos": 2, "anexos": 1}
+    assert antes == {
+        "perfis": 1,
+        "eventos": 2,
+        "etapas": 1,
+        "documentos": 2,
+        "anexos": 1,
+        "inscricao": SEM_INSCRICAO_DECLARADA,
+    }
 
     retify(
         api_client,
@@ -1123,6 +1140,7 @@ def test_o_resumo_de_uma_origem_sem_versao_nao_derruba_a_lista(destino, elaborad
         "etapas": 0,
         "documentos": 0,
         "anexos": 0,
+        "inscricao": SEM_INSCRICAO_DECLARADA,
     }
     assert resumido.publicado_em is None
 
@@ -1143,6 +1161,8 @@ def test_o_que_sera_descartado_conta_o_rascunho_do_destino(destino, origem, elab
         "documentos": 0,
         "secoes": 0,
         "anexos": 0,
+        "teto": None,
+        "requerimento": "",
     }
 
     copiado = copiar(destino, origem, elaborador)

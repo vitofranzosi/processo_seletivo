@@ -13,6 +13,7 @@ import pytest
 
 from processo_seletivo.editais.domain.reaproveitamento import (
     ReferenciaNaoMapeada,
+    configuracao_da_inscricao,
     converter_valores,
     mapa_de_identidades,
     payload_do_conteudo,
@@ -331,9 +332,33 @@ def test_os_campos_sem_tela_nao_viajam():
 def test_a_identificacao_do_edital_nao_viaja():
     payload = payload_do_conteudo(conteudo_publicado())
 
-    assert not {"number", "year", "title", "description", "maxInscricoesPorCandidato"} & set(
-        payload
-    )
+    assert not {"number", "year", "title", "description"} & set(payload)
+
+
+def test_o_teto_e_o_requerimento_viajam_fora_do_rascunho():
+    """Campos de raiz, que `replace_draft` não carrega: saem pelo conversor próprio (A-10)."""
+    conteudo = {
+        **conteudo_publicado(),
+        "matriculationRequest": {"moment": "AT_CALL", "declarationText": "Declaro."},
+    }
+
+    assert "maxInscricoesPorCandidato" not in payload_do_conteudo(conteudo)
+    assert configuracao_da_inscricao(conteudo) == {
+        "max_inscricoes_por_candidato": 1,
+        "requerimento_momento": "AT_CALL",
+        "requerimento_declaracao": "Declaro.",
+    }
+
+
+def test_a_ausencia_do_teto_e_do_requerimento_viaja_como_ausencia():
+    conteudo = {**conteudo_publicado(), "maxInscricoesPorCandidato": None}
+    conteudo["matriculationRequest"] = None
+
+    assert configuracao_da_inscricao(conteudo) == {
+        "max_inscricoes_por_candidato": None,
+        "requerimento_momento": "",
+        "requerimento_declaracao": "",
+    }
 
 
 def test_o_evento_copiado_nasce_planejado_e_preserva_a_designacao_do_periodo():

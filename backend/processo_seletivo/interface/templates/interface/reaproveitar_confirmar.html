@@ -20,9 +20,15 @@ mesma decisão que o portal já tomou para a mudança de modalidade (009, FR-031
     {% if descarte.documentos %}<li>{{ descarte.documentos }} Documento{{ descarte.documentos|pluralize }} Exigido{{ descarte.documentos|pluralize }}</li>{% endif %}
     {% if descarte.secoes %}<li>{{ descarte.secoes }} seç{{ descarte.secoes|pluralize:"ão,ões" }} de conteúdo redigid{{ descarte.secoes|pluralize:"a,as" }}</li>{% endif %}
     {% if descarte.anexos %}<li><strong>{{ descarte.anexos }} Anexo{{ descarte.anexos|pluralize }}</strong>, e os arquivos deles — que não estão publicados e não têm cópia</li>{% endif %}
+    {% comment %}
+    O teto e o Requerimento entram na lista desde que a cópia os traz (A-10): um destino que só os
+    declarou também tem o que perder, e é aqui que a troca precisa dizê-lo.
+    {% endcomment %}
+    {% if descarte.teto %}<li>O teto de {{ descarte.teto }} inscriç{{ descarte.teto|pluralize:"ão,ões" }} por candidato</li>{% endif %}
+    {% if descarte.requerimento %}<li>O Requerimento de Matrícula {{ descarte.requerimento|momento_do_requerimento }} e o texto da declaração</li>{% endif %}
   </ul>
-  <p>Número, ano, título e descrição do Edital <strong>não</strong> mudam, e nada do certame é
-    tocado: este Edital nunca foi publicado.</p>
+  <p>Número, ano, título, descrição e Processo Seletivo do Edital <strong>não</strong> mudam, e nada
+    do certame é tocado: este Edital nunca foi publicado.</p>
 </div>
 
 <section aria-labelledby="nova-origem-titulo" class="cartao">
@@ -33,7 +39,8 @@ mesma decisão que o portal já tomou para a mudança de modalidade (009, FR-031
     {{ origem.resumo.etapas }} etapa{{ origem.resumo.etapas|pluralize }},
     {{ origem.resumo.eventos }} evento{{ origem.resumo.eventos|pluralize }},
     {{ origem.resumo.documentos }} documento{{ origem.resumo.documentos|pluralize }} e
-    {{ origem.resumo.anexos }} anexo{{ origem.resumo.anexos|pluralize }}.</p>
+    {{ origem.resumo.anexos }} anexo{{ origem.resumo.anexos|pluralize }}{% with inscricao=origem.resumo.inscricao %}{% if inscricao.max_inscricoes_por_candidato or inscricao.requerimento_momento %};
+    {% if inscricao.max_inscricoes_por_candidato %}teto de {{ inscricao.max_inscricoes_por_candidato }} inscriç{{ inscricao.max_inscricoes_por_candidato|pluralize:"ão,ões" }} por candidato{% if inscricao.requerimento_momento %} e {% endif %}{% endif %}{% if inscricao.requerimento_momento %}Requerimento de Matrícula {{ inscricao.requerimento_momento|momento_do_requerimento }}{% endif %}{% else %}; sem teto de inscrições e sem Requerimento de Matrícula{% endif %}{% endwith %}.</p>
   <p><a class="acao" href="{% url 'portal:selecao' origem.id %}" target="_blank" rel="noopener">Ver o
     Edital <span class="oculto">{{ origem.number }}/{{ origem.year }} em nova aba</span></a></p>
 </section>

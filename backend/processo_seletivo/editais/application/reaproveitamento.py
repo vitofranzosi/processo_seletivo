@@ -28,12 +28,15 @@ from django.db.models import Q
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.application.draft import replace_draft
+from processo_seletivo.editais.application.requerimento import requerimento_declarado
 from processo_seletivo.editais.domain.reaproveitamento import (
+    configuracao_da_inscricao,
     converter_valores,
     mapa_de_identidades,
     payload_do_conteudo,
     remapear,
 )
+from processo_seletivo.editais.domain.teto import teto_declarado
 from processo_seletivo.editais.models.anexos import AnexoEdital, ArtefatoAnexo
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
@@ -66,15 +69,21 @@ AREA = "Reaproveitamento de Edital anterior"
 
 
 def rascunho_vazio(edital) -> bool:
-    """Nenhuma das seis coleções da elaboração tem linha.
+    """Nenhuma das seis coleções da elaboração tem linha, e a etapa Inscrição não declarou nada.
 
     A pergunta existe porque `replace_draft` substitui o rascunho inteiro: o que não é reenviado é
     apagado. Oferecer a cópia sobre um Edital já composto destruiria trabalho em silêncio, e nenhum
     diálogo de confirmação compra isso de volta (D-002).
+
+    **O teto e o Requerimento contam** desde que a cópia passou a trazê-los (A-10): olhando só as
+    coleções, um destino em que alguém declarou o Requerimento e nada mais seria "vazio", e a cópia
+    trocaria a declaração dele pela da origem sem perguntar.
     """
     cronograma = getattr(edital, "cronograma", None)
     return not any(
         (
+            edital.max_inscricoes_por_candidato is not None,
+            bool(edital.requerimento_momento),
             edital.perfis.exists(),
             edital.etapas.exists(),
             edital.documentos_exigidos.exists(),
@@ -158,6 +167,10 @@ def com_resumo_da_origem(editais, *, at=None):
             "etapas": len(conteudo.get("stages") or []),
             "documentos": len(conteudo.get("documentRequirements") or []),
             "anexos": len(conteudo.get("attachments") or []),
+            # O que a etapa Inscrição declarou, pelo mesmo conversor da cópia (A-10): a lista diz
+            # o teto e o momento do Requerimento quando a origem os tem, e cala quando não tem —
+            # é o que a cópia vai entregar.
+            "inscricao": configuracao_da_inscricao(conteudo),
         }
         edital.publicado_em = primeira_publicacao.get(edital.pk)
     return editais
@@ -194,6 +207,10 @@ def o_que_sera_descartado(edital):
         "documentos": edital.documentos_exigidos.count(),
         "secoes": edital.secoes.count(),
         "anexos": edital.anexos.count(),
+        # Não são contagem, e por isso vão com o valor: "o teto de 2" diz o que se perde, e "1
+        # teto" não diria nada. `None` e `""` são a ausência — e a ausência não se descarta.
+        "teto": edital.max_inscricoes_por_candidato,
+        "requerimento": edital.requerimento_momento,
     }
 
 
@@ -271,6 +288,9 @@ def reaproveitar_edital(
 ):
     """Copia a configuração vigente da origem para o rascunho vazio do destino.
 
+    A configuração inclui o teto de inscrições e o Requerimento de Matrícula da etapa Inscrição
+    (A-10); número, ano, título, descrição e Processo continuam os do destino (FR-007).
+
     Devolve o Edital de destino. Uma transação do começo ao fim: ou o destino recebe tudo, ou nada —
     anexo criado sem o requisito que o usa é conteúdo órfão, e requisito sem o anexo é referência
     pendurada que só a publicação denuncia (FR-017).
@@ -328,6 +348,22 @@ def reaproveitar_edital(
         # afirmar um instante anterior à versão que ele diz ter copiado.
         versao = effective_version(edital_id=origem.pk, at=now)
         conteudo = elevar(versao.content)
+        # **O teto e o Requerimento, pelas regras dos comandos deles** (A-10). Pelas regras, e não
+        # pelos comandos: cada um abriria transação, faria `compare_and_swap` e gravaria evento —
+        # três revisões e três registros para uma operação, como `_copiar_anexos` já recusou. A
+        # conferência é a mesma, e um valor que a origem publicou sob regra mais frouxa recusa a
+        # cópia inteira em vez de chegar ao rascunho.
+        inscricao = configuracao_da_inscricao(conteudo)
+        momento, declaracao = requerimento_declarado(
+            inscricao["requerimento_momento"], inscricao["requerimento_declaracao"]
+        )
+        # **Sem tocar na revisão**: quem a avança é o `compare_and_swap` de `replace_draft`, logo
+        # abaixo, sob a mesma trava e na mesma transação. Uma revisão para a operação inteira.
+        Edital.objects.filter(pk=edital.pk).update(
+            max_inscricoes_por_candidato=teto_declarado(inscricao["max_inscricoes_por_candidato"]),
+            requerimento_momento=momento,
+            requerimento_declaracao=declaracao,
+        )
         mapa = mapa_de_identidades(conteudo)
         _copiar_anexos(edital, conteudo, mapa, actor=actor, now=now)
         payload = payload_do_conteudo(converter_valores(remapear(conteudo, mapa)))
