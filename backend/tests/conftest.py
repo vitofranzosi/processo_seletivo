@@ -55,8 +55,9 @@ def sem_trava_em_append_only(request):
 
     A suíte roda como superusuário, que trava o que quiser; produção recusa. O vigia lê o SQL que o
     caso de fato executa e o recusa antes do banco — as razões e o que ele não vê estão em
-    `tests/guardiao_de_travas.py`. Só a conexão desta *thread*: as de outras *threads* e as do
-    `live_server` ficam de fora. `trava_deliberada` dispensa o caso que trava de propósito.
+    `tests/guardiao_de_travas.py`. Vale para a conexão do caso e para as que outras *threads*
+    abrirem durante ele; a do `live_server`, aberta antes, fica de fora. `trava_deliberada`
+    dispensa o caso que trava de propósito.
     """
     usa_banco = request.node.get_closest_marker("django_db") or (
         _FIXTURES_DE_BANCO & set(request.fixturenames)

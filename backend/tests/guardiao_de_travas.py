@@ -72,11 +72,18 @@ class TravaEmAppendOnly(AssertionError):
 
 @contextlib.contextmanager
 def vigiando(conexao):
-    """Recusa, nesta conexão, toda trava que alcance tabela append-only. Devolve as acusadas.
+    """Recusa toda trava que alcance tabela append-only, e devolve as acusadas.
+
+    Vale para `conexao` **e para toda conexão aberta enquanto o contexto durar**, em qualquer
+    *thread*: os casos de corrida abrem uma por *thread*, e é nelas que o comando examinado roda.
+    Elas são alcançadas pelo sinal `connection_created` e soltas na saída, para que uma conexão que
+    sobreviva ao caso (a do `live_server`, que é uma *thread* longa) não leve o vigia adiante.
 
     Levanta no ponto da instrução, para que o rastro aponte o código que trava, **e** guarda a
     acusação: código que engula a exceção não apaga o achado, que o fim do caso ainda cobra.
     """
+    from django.db.backends.signals import connection_created
+
     acusadas = []
 
     def vigia(execute, sql, params, many, context):
@@ -91,5 +98,22 @@ def vigiando(conexao):
                 )
         return execute(sql, params, many, context)
 
-    with conexao.execute_wrapper(vigia):
+    vigiadas = []
+
+    def vigiar(conexao_nova):
+        if vigia not in conexao_nova.execute_wrappers:
+            conexao_nova.execute_wrappers.append(vigia)
+            vigiadas.append(conexao_nova)
+
+    def ao_conectar(sender, connection, **kwargs):
+        vigiar(connection)
+
+    vigiar(conexao)
+    connection_created.connect(ao_conectar, weak=False)
+    try:
         yield acusadas
+    finally:
+        connection_created.disconnect(ao_conectar)
+        for vigiada in vigiadas:
+            if vigia in vigiada.execute_wrappers:
+                vigiada.execute_wrappers.remove(vigia)

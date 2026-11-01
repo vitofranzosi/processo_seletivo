@@ -204,3 +204,38 @@ def test_o_vigia_recusa_a_trava_antes_do_banco_e_guarda_a_acusacao():
 
     # A exceção engolida não apaga o achado: é a lista que o fim do caso cobra no conftest.
     assert [tabelas for tabelas, _ in acusadas] == [["resultados_resultadoetapa"]]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.trava_deliberada
+@postgresql_only
+def test_o_vigia_alcanca_a_conexao_que_outra_thread_abre_durante_o_caso():
+    """Os casos de corrida rodam o comando em *threads*, cada uma com a sua conexão."""
+    import threading
+
+    from django.db import connection as da_thread
+
+    from processo_seletivo.processos.models import ProcessoSeletivo
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    desfechos = []
+
+    def travar():
+        try:
+            with transaction.atomic():
+                list(ProcessoSeletivo.objects.select_for_update())
+            try:
+                with transaction.atomic():
+                    list(ResultadoEtapa.vigentes.select_for_update(of=("self",)))
+            except TravaEmAppendOnly as recusa:
+                desfechos.append(recusa)
+        finally:
+            da_thread.close()
+
+    with vigiando(connection) as acusadas:
+        thread = threading.Thread(target=travar)
+        thread.start()
+        thread.join(timeout=30)
+
+    assert len(desfechos) == 1, "a trava legítima passou, e a do A-01 foi recusada na thread"
+    assert [tabelas for tabelas, _ in acusadas] == [["resultados_resultadoetapa"]]
