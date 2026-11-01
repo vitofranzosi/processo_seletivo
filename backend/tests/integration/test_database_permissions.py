@@ -59,7 +59,7 @@ def _skip_unless_superuser():
         pytest.skip("criar a role de conformidade exige superusuário")
 
 
-def _remover_papeis():
+def remover_papeis():
     with connection.cursor() as cursor:
         for papel in (RUNTIME_ROLE, MIGRATION_ROLE):
             cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", [papel])
@@ -71,21 +71,31 @@ def _remover_papeis():
                 cursor.execute(f'DROP ROLE "{papel}"')
 
 
-@pytest.fixture
-def runtime_connection():
-    """Role sem UPDATE/DELETE, como a role de runtime descrita em .env.example."""
+def provisionar_papeis_de_conformidade():
+    """Os papéis de conformidade, pela política real, depois de remover o que tiver sobrado.
+
+    É o único lugar que monta os argumentos de `comandos()`: esta fixture e `como_producao`
+    (`tests/fixtures/papel_de_producao.py`) chamam daqui, para que as duas nunca confiram
+    políticas diferentes sem que ninguém perceba.
+    """
     _skip_unless_superuser()
-    database = connection.settings_dict["NAME"]
-    _remover_papeis()
+    remover_papeis()
     with connection.cursor() as cursor:
         for instrucao in comandos(
-            database=database,
+            database=connection.settings_dict["NAME"],
             migration_role=MIGRATION_ROLE,
             migration_password=MIGRATION_PASSWORD,
             runtime_role=RUNTIME_ROLE,
             runtime_password=RUNTIME_PASSWORD,
         ):
             cursor.execute(instrucao)
+
+
+@pytest.fixture
+def runtime_connection():
+    """Role sem UPDATE/DELETE, como a role de runtime descrita em .env.example."""
+    provisionar_papeis_de_conformidade()
+    database = connection.settings_dict["NAME"]
 
     runtime = psycopg.connect(
         dbname=database,
@@ -99,7 +109,7 @@ def runtime_connection():
         yield runtime
     finally:
         runtime.close()
-        _remover_papeis()
+        remover_papeis()
 
 
 @pytest.mark.django_db(transaction=True)
