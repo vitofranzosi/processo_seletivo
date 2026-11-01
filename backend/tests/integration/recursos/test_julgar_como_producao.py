@@ -146,13 +146,7 @@ def test_a_tela_de_julgamento_conclui_a_correcao_fixada(
 
 
 def test_repetir_o_comando_devolve_a_mesma_decisao(peca, como_producao):  # noqa: F811
-    """A segunda chamada com a mesma chave é resposta guardada, e não segundo ato.
-
-    **Na reavaliação determinada, e não na correção fixada.** Repetir a correção fixada esbarra
-    antes da idempotência: o sucessor que ela criou foi consolidado pela julgadora, e o impedimento
-    reavaliado na repetição a recusa com `403 appeal_judge_barred` — igual como superusuário, e por
-    isso fora da classe deste arquivo. Está registrado na descrição do PR do A-01, como achado.
-    """
+    """A segunda chamada com a mesma chave é resposta guardada, e não segundo ato."""
     argumentos = _argumentos(
         peca,
         especie=DecisaoRecurso.Especie.REAVALIACAO_DETERMINADA,
@@ -165,6 +159,113 @@ def test_repetir_o_comando_devolve_a_mesma_decisao(peca, como_producao):  # noqa
 
     assert repetida.pk == primeira.pk
     assert DecisaoRecurso.objects.count() == 1
+
+
+# ---------------------------------------------------------------------------
+# A repetição da correção fixada (doc/achado-repeticao-da-correcao-fixada.md)
+#
+# O sucessor que a correção cria é consolidado pela própria julgadora. Enquanto o impedimento era
+# perguntado antes da reserva, a repetição a acusava de ter consolidado o Resultado que a decisão
+# alcança, e respondia `403`. A reserva passou para antes do impedimento; os casos abaixo prendem
+# o que isso pode e o que não pode mudar.
+# ---------------------------------------------------------------------------
+
+
+def _eventos():
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    return RegistroAuditoria.objects.count()
+
+
+def test_repetir_a_correcao_fixada_recupera_a_decisao_sem_novo_ato(peca, como_producao):  # noqa: F811
+    """FR-097: o desfecho original, sem linha nem evento novos — e não `403`."""
+    with como_producao():
+        primeira, sucessor = julgar(**_argumentos(peca))
+        eventos = _eventos()
+        repetida, _ = julgar(**_argumentos(peca))
+
+    assert repetida.pk == primeira.pk
+    assert DecisaoRecurso.objects.count() == 1
+    assert list(_sucessores(peca)) == [sucessor]
+    assert _eventos() == eventos
+
+
+def test_a_mesma_chave_com_outro_conteudo_continua_em_conflito(peca, como_producao):  # noqa: F811
+    """FR-098 — e a resposta não depende de a pessoa estar impedida agora."""
+    with como_producao():
+        julgar(**_argumentos(peca))
+        with pytest.raises(DomainError) as recusa:
+            julgar(**_argumentos(peca, pontuacao=Decimal("85.0000")))
+
+    assert (recusa.value.code, recusa.value.status) == ("idempotency_conflict", 409)
+    assert _sucessores(peca).count() == 1
+
+
+def test_outra_pessoa_com_a_mesma_chave_nao_recupera_a_decisao(peca, como_producao):  # noqa: F811
+    """A reserva é de quem praticou o ato: a mesma chave, em outra pessoa, é pedido novo."""
+    with como_producao():
+        julgar(**_argumentos(peca))
+        with pytest.raises(DomainError) as recusa:
+            julgar(**_argumentos(peca, actor=julgador("outra.julgadora")))
+
+    assert recusa.value.status == 409
+    assert recusa.value.code in {"stale_stage_result", "appeal_already_judged"}
+    assert DecisaoRecurso.objects.count() == 1
+    assert _sucessores(peca).count() == 1
+
+
+@pytest.mark.parametrize("alvo", ["o mesmo recurso", "outro recurso do mesmo par"])
+def test_quem_consolidou_pela_correcao_continua_impedida_de_ato_novo(
+    peca,
+    como_producao,  # noqa: F811
+    alvo,
+):
+    """FR-039 intacta: só a repetição passou a ser respondida antes do impedimento."""
+    recurso = peca["recurso"] if alvo == "o mesmo recurso" else None
+    if recurso is None:
+        recurso = _outro_recurso_sobre_o_mesmo_resultado(peca)
+    with como_producao():
+        _, sucessor = julgar(**_argumentos(peca))
+        with pytest.raises(DomainError) as recusa:
+            julgar(
+                **_argumentos(
+                    peca,
+                    recurso_id=recurso.id,
+                    assinatura_do_resultado=str(sucessor.id),
+                    pontuacao=Decimal("88.0000"),
+                    idempotency_key="ato-novo-de-quem-consolidou",
+                )
+            )
+
+    assert (recusa.value.code, recusa.value.status) == ("appeal_judge_barred", 403)
+    assert DecisaoRecurso.objects.count() == 1
+
+
+def test_o_reenvio_da_tela_depois_do_sucesso_nao_mostra_impedimento(
+    client,
+    seletor_ligado,  # noqa: F811
+    peca,
+    como_producao,  # noqa: F811
+):
+    """O caminho em que o defeito aparecia: a chave da tela é fixa por peça."""
+    identificar(client, JULGADORA, ["julgador"])
+    etapa = str(peca["cenario"]["etapa"])
+    formulario = {
+        "especie": "CORRECAO_FIXADA",
+        "motivacao": "Conferido o acervo, o documento consta e não foi pontuado.",
+        "etapa": f"{etapa}|{peca['superado'].id}",
+        f"pontuacao-{etapa}": "82,0000",
+    }
+    destino = reverse("interface:recurso-julgar", args=[peca["recurso"].id])
+
+    with como_producao():
+        primeira = client.post(destino, formulario)
+        reenvio = client.post(destino, formulario)
+
+    assert (primeira.status_code, reenvio.status_code) == (302, 302), reenvio.content[:400]
+    assert reenvio["Location"] == primeira["Location"]
+    assert DecisaoRecurso.objects.count() == 1
+    assert _sucessores(peca).count() == 1
 
 
 def test_o_resultado_lido_obsoleto_recusa_com_409(peca, como_producao):  # noqa: F811

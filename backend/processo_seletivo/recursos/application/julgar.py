@@ -5,9 +5,9 @@ require_permission(recurso:julgar)                          ← fora da transaç
 ────────────────────────────────────────────────────────────
 abre transação
   select_for_update no ProcessoSeletivo   ← serializa com emitir, publicar, consolidar
+  reserve(chave); repetição devolve a decisão gravada       ← FR-097, antes do impedimento
   reavalia autorização e as cinco perguntas do impedimento  ← FR-043
   revalida a assinatura do que foi lido                     ← FR-100
-  reserve(chave)
   grava a DecisaoRecurso, imutável
   se CORRECAO_FIXADA:
       lê o Resultado vigente do par (a trava é a do Processo)
@@ -96,12 +96,14 @@ def julgar(
 
     with command_context() as agora:
         peca = travar(actor, recurso_id)
-        # **O impedimento é reavaliado pelo par que a decisão alcança**, e não só pelo objeto
-        # atacado (FR-039, FR-043). Um recurso contra a publicação que corrige a Etapa 2 é julgado
-        # sobre o Resultado da Etapa 2 — e quem o avaliou ou consolidou não pode julgá-lo.
-        exigir_elegibilidade(actor, peca, etapa_id=etapa_id)
-        _exigir_admissao(peca)
-
+        # **A repetição é respondida antes do impedimento** (FR-097; ver
+        # `doc/achado-repeticao-da-correcao-fixada.md`). A correção fixada cria um sucessor que a
+        # própria julgadora consolida, e o impedimento, perguntado de novo, a acusava de ter
+        # consolidado o Resultado que a decisão alcança: o reenvio do formulário depois de um
+        # julgamento que deu certo respondia `403`. A reserva é por pessoa, escopo e peça, e só
+        # tem resultado se quem pede já passou pelo impedimento ao praticar o ato — devolvê-lo
+        # não pratica ato novo. A permissão e o escopo continuam conferidos acima, e a reserva
+        # nasce dentro da transação: se o ato novo for recusado adiante, ela some junto.
         reserva = reserve(
             actor=actor,
             operation=f"{OPERACAO}:{peca.pk}",
@@ -116,6 +118,12 @@ def julgar(
         )
         if reserva.result_id:
             return DecisaoRecurso.objects.get(pk=reserva.result_id), None
+
+        # **O impedimento é reavaliado pelo par que a decisão alcança**, e não só pelo objeto
+        # atacado (FR-039, FR-043). Um recurso contra a publicação que corrige a Etapa 2 é julgado
+        # sobre o Resultado da Etapa 2 — e quem o avaliou ou consolidou não pode julgá-lo.
+        exigir_elegibilidade(actor, peca, etapa_id=etapa_id)
+        _exigir_admissao(peca)
 
         # **A norma da decisão é a vigente no instante do julgamento, e não a da interposição**
         # (FR-045, FR-059). Havendo Retificação entre as duas, gravar `peca.versao` faria a decisão

@@ -3,7 +3,9 @@
 **Data:** 2026-10-31
 **Origem:** os testes do julgamento sob a role de produção, no PR #354 (A-01 e A-02 da auditoria
 de prontidão de 31/10/2026).
-**Natureza:** achado registrado, não corrigido. A correção é decisão de escopo, e não do PR do A-01.
+**Natureza:** achado registrado em 31/10/2026, sem correção, no PR #355; **corrigido em 01/11/2026**
+pela correção mínima proposta abaixo, sem mudança de contrato (ver *Correção aplicada*, no fim).
+O texto abaixo é o registro da descoberta e fica como estava.
 
 ## O que acontece
 
@@ -118,3 +120,26 @@ casos).
 `admitir` também chama `exigir_elegibilidade` antes de `reserve`. Ali a repetição não se quebra,
 porque admitir não muda o Resultado vigente nem a publicação atacada. A mesma inversão a deixaria
 coerente com o julgamento, mas não é necessária para corrigir este defeito.
+
+## Correção aplicada (01/11/2026)
+
+A correção mínima proposta acima, sem acréscimos. Em `recursos/application/julgar.py::julgar`, o
+bloco `reserve(...)` / `if reserva.result_id: return ...` passou para logo depois de
+`travar(...)`, antes de `exigir_elegibilidade` e `_exigir_admissao`. Não mudaram: o impedimento,
+a admissão, a chave da tela, o retorno da repetição (`(decisao, None)`) e nenhum privilégio. Não há
+migration.
+
+Os casos estão em `tests/integration/recursos/test_julgar_como_producao.py`, todos sob a role de
+produção (`como_producao`):
+
+| Caso | Sem a correção | Com a correção |
+|---|---|---|
+| Repetir a correção fixada recupera a decisão, sem decisão, sucessor ou evento novos | falha (`403`) | passa |
+| A mesma chave com outro conteúdo responde `409 idempotency_conflict` | falha (`403`) | passa |
+| O reenvio da tela depois do sucesso redireciona como o primeiro `POST` | falha (a recusa por impedimento, em vez do redirecionamento) | passa |
+| Outra julgadora com a mesma chave não recupera a decisão (`409`) | passa | passa |
+| Quem consolidou pela correção continua impedida de ato novo, no mesmo recurso e em outro do par (`403`) | passa | passa |
+
+As duas últimas linhas passam nos dois códigos de propósito: são a segregação de funções, que a
+correção não podia mudar.
+
