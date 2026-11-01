@@ -10,7 +10,10 @@ from processo_seletivo.editais.domain.validation import (
     blocking_findings,
     validate_for_publication,
 )
-from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
+from processo_seletivo.processos.domain.finalizacao import (
+    ensure_edital_accepts_changes,
+    ensure_processo_accepts_changes,
+)
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.contexto_do_ato import contexto_do_ato
 from processo_seletivo.publicacoes.application.publish_edital import congelar_artefatos
@@ -72,6 +75,14 @@ def _retificacao(actor, retificacao_id):
     except Retificacao.DoesNotExist as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
     ensure_processo_accepts_changes(item.edital.processo)
+    # **O Edital também, e aqui** (A-09, auditoria de prontidão de 31/10). Só o Processo era
+    # conferido, e uma Retificação homologada antes do encerramento se publicava depois dele: o
+    # Edital em estado final ganhava versão normativa nova (103, *Edge Cases*). Conferir aqui, e
+    # não em cada ato, é o que põe a conferência sob a trava: o `FOR UPDATE` acima não leva `OF`, e
+    # no PostgreSQL tranca também a linha do Edital que o `select_related` junta — a mesma que o
+    # encerramento tranca. Se ele confirmou antes, a linha relida já diz o estado final; se vem
+    # depois, espera este ato terminar.
+    ensure_edital_accepts_changes(item.edital)
     return item
 
 
