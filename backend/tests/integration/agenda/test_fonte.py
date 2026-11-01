@@ -8,13 +8,14 @@ teste que montasse a versão à mão provaria a projeção, e não a fonte (`FR-
 import pytest
 
 from processo_seletivo.interface import agenda
-from processo_seletivo.processos.application.finalizacao import cancel_edital, close_edital
+from processo_seletivo.processos.application.finalizacao import cancel_edital
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.tempo import ZONA
 from tests.fixtures.agenda import cronograma, em, publicar
 from tests.fixtures.autoridades import registrar_autoridade, registrar_unidade
 from tests.fixtures.edital import actor_headers, identificador
+from tests.fixtures.encerramento import encerrar_antes_da_113
 from tests.fixtures.publicacao import (
     create_retification,
     levar_a_publicacao,
@@ -167,7 +168,8 @@ def test_edital_cancelado_some_e_encerrado_so_mostra_o_que_passou(
     encerrado = publicar(api_client, manager_headers, process_payload, 6)
     for finalizar, edital, chave in (
         (cancel_edital, cancelado, "cancelar-agenda"),
-        (close_edital, encerrado, "encerrar-agenda"),
+        # Antes da `113`: o Edital desta Agenda tem período por vir, que hoje impede encerrar.
+        (encerrar_antes_da_113, encerrado, "encerrar-agenda"),
     ):
         finalizar(
             actor=GESTORA,

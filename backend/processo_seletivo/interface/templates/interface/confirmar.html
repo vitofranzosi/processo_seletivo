@@ -49,6 +49,32 @@ a apuração vai alcançar — e os dois em números, para não ter de abrir out
 <p class="aviso" role="status"><strong>Aviso:</strong> {{ item.mensagem }}</p>
 {% endif %}{% endfor %}
 
+{% comment %}
+**O que encerrar e cancelar dizem antes do ato** (113, FR-3537 a FR-3541). Os impedimentos vêm antes
+das consequências e escondem o confirmar — a mesma regra que o comando aplica; as advertências vêm à
+parte, como o que continua (ou o que é atingido). Cada item diz o caminho que o resolve, ou a quem
+pedir: o caminho só é oferecido a quem a tela de destino aceita.
+{% endcomment %}
+{% if desfecho.impedimentos %}
+<div class="erro" role="alert">
+  <p><strong>Antes de encerrar, resolva {{ desfecho.impedimentos|length }} pendência{{ desfecho.impedimentos|length|pluralize:"s" }}.</strong></p>
+  <ul>{% for item in desfecho.impedimentos %}
+    <li>{{ item.mensagem }}{% if item.url %} <a href="{{ item.url }}">{{ item.rotulo }}</a>{% elif item.a_quem_pedir %} {{ item.a_quem_pedir }}{% endif %}</li>
+  {% endfor %}</ul>
+</div>
+{% endif %}
+{% if desfecho.advertencias %}
+<div class="aviso" role="status">
+  <p><strong>{{ desfecho.titulo_das_advertencias }}</strong></p>
+  <ul>{% for item in desfecho.advertencias %}
+    <li>{{ item.mensagem }}{% if item.url %} <a href="{{ item.url }}">{{ item.rotulo }}</a>{% endif %}</li>
+  {% endfor %}</ul>
+</div>
+{% endif %}
+{% if desfecho.nada_impede %}
+<p class="aviso" role="status">Nenhuma pendência registrada no GPS impede o encerramento.</p>
+{% endif %}
+
 <section aria-labelledby="consequencias-titulo"
          class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
   <h2 id="consequencias-titulo">

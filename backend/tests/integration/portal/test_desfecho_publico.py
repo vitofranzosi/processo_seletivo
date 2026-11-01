@@ -17,13 +17,13 @@ from django.utils import timezone
 from processo_seletivo.processos.application.finalizacao import (
     cancel_edital,
     cancel_process,
-    close_edital,
     close_process,
 )
 from processo_seletivo.processos.domain import finalizacao as finalizacao_do_processo
 from processo_seletivo.processos.models import AtoAdministrativo, Edital, ProcessoSeletivo
 from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
+from tests.fixtures.encerramento import encerrar_antes_da_113
 from tests.fixtures.selecao import identificador, publicar_selecao, rascunho_de_selecao
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -82,7 +82,9 @@ def cancelar(edital):
 
 def encerrar(edital):
     edital.refresh_from_db()
-    close_edital(
+    # Encerrado como antes da `113`: o estado lido aqui é um que a regra nova impede de
+    # nascer, e que continua existindo nos Editais encerrados antes dela.
+    encerrar_antes_da_113(
         actor=GESTORA,
         edital_id=edital.id,
         expected_revision=edital.revision,

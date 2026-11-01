@@ -38,23 +38,36 @@ Ordem dos blocos em `confirmar.html`:
 |---|---|
 | `PERIODO_EM_CURSO` | "O período de inscrições vai até DD/MM/AAAA às HH:MM. Encerrar antes disso não é conclusão regular: altere o período por Retificação ou cancele o Edital." |
 | `PERIODO_POR_ABRIR` | "O período de inscrições ainda não começou (abre em DD/MM/AAAA às HH:MM). Para desistir do Edital, cancele-o." |
-| `PRAZO_RECURSAL_EM_CURSO` | "O prazo de recurso contra «marco» vai até DD/MM/AAAA às HH:MM." |
+| `PRAZO_RECURSAL_EM_CURSO` | "O prazo de recurso contra “marco” vai até DD/MM/AAAA às HH:MM." |
 | `RECURSO_AGUARDANDO` | "N recurso(s) aguarda(m) decisão." |
-| `REAVALIACAO_PENDENTE` | "Reavaliação determinada em recurso ainda não concluída em «marco»." |
-| `PROVIDENCIA_PENDENTE` | "Providência determinada em recurso ainda não cumprida em «marco»." |
+| `REAVALIACAO_PENDENTE` | "Reavaliação determinada em recurso ainda não concluída em “marco”." |
+| `PROVIDENCIA_PENDENTE` | "Providência determinada em recurso ainda não cumprida em “marco”." |
 | `RETIFICACAO_HOMOLOGADA` | "A Retificação de DD/MM/AAAA foi homologada e não publicada. Publique-a ou devolva-a." |
-| `CONVOCACAO_AGUARDANDO` | "N convocação(ões) aguarda(m) resposta, até DD/MM. O desfecho continua podendo ser registrado." |
-| `CONVOCACAO_VENCIDA` | "N convocação(ões) com prazo encerrado sem registro de desfecho." |
+| `CONVOCACAO_AGUARDANDO` | a frase da `099`, somada no Edital ("1 convocação aguardando resposta, até DD/MM/AAAA.") |
+| `CONVOCACAO_VENCIDA` | a frase da `099`, somada no Edital |
 | `RESULTADO_NAO_DIVULGADO` | a frase da `099` (`texto_da_pendencia`) |
 | `DEFINITIVO_NAO_PUBLICADO` | idem |
 | `APURACAO_DESATUALIZADA` | idem |
 | `RETIFICACAO_EM_CURSO` | "A Retificação de DD/MM/AAAA, em elaboração (ou em revisão), não poderá mais prosseguir." |
-| `PRAZO_RECURSAL_NAO_DECLARADO` | "O Edital não declarou prazo de recurso contra «marco»: recursos continuam podendo ser interpostos depois do encerramento." |
+| `PRAZO_RECURSAL_NAO_DECLARADO` | "O Edital não declarou prazo de recurso contra “marco”: recursos continuam podendo ser interpostos depois do encerramento." |
 | `PERIODO_SEM_TERMINO` | "O Edital não declarou o término das inscrições: o encerramento põe fim ao recebimento." |
 | `RASCUNHOS_NAO_ENVIAVEIS` | "N inscrição(ões) em preenchimento não poderá(ão) ser enviada(s)." |
 
-Nenhuma frase cita pessoa (FR-3540). As advertências da `099` usam a frase dela, sem o nome do Perfil
-quando o Perfil for omitido pela regra de privacidade da `099`.
+### Frases no cancelamento
+
+No cancelamento a frase diz o efeito, e não o que fazer antes — "cancele o Edital" na tela de
+cancelar mandaria fazer o próprio ato —, e os itens não levam caminho:
+
+| Tipo | Frase |
+|---|---|
+| `PERIODO_EM_CURSO` | "O período de inscrições iria até DD/MM/AAAA às HH:MM: o cancelamento põe fim ao recebimento agora." |
+| `PERIODO_POR_ABRIR` | "O período de inscrições abriria em DD/MM/AAAA às HH:MM, e não abrirá." |
+| `RETIFICACAO_HOMOLOGADA` | "A Retificação de DD/MM/AAAA foi homologada e não poderá ser publicada." |
+| os demais | a mesma frase do encerramento |
+
+Nenhuma frase cita pessoa (FR-3540). As aspas são as da `099` (“ ”), que divide a mesma tela. As
+advertências da `099` usam a frase dela, somadas no Edital e sem nome de Perfil nenhum: o nome do
+marco é público, e o Perfil pequeno não aparece.
 
 ### Consequências de `encerrar` (substituem as atuais)
 

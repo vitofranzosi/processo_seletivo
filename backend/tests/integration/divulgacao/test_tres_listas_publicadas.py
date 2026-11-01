@@ -169,7 +169,7 @@ def test_suceder_a_publicacao_de_uma_lista_nao_toca_as_outras(sorteadas):
 def test_o_prazo_recursal_da_definitiva_e_o_da_propria_lista(sorteadas):
     """**O eixo perdia-se no último degrau** (021, D-015, FR-068).
 
-    `_impedimento_da_definitiva` não encaminhava `lista_id`, e `_janela_aberta` procurava a
+    `_impedimento_da_definitiva` não encaminhava `lista_id`, e `janela_aberta_ate` procurava a
     publicação da **ampla concorrência**. Havendo só uma preliminar de PPI, a consulta devolvia
     `None`, a janela não existia, e a definitiva da PPI era liberada na hora — antes de qualquer
     prazo recursal correr.
@@ -196,21 +196,21 @@ def test_o_prazo_recursal_da_definitiva_e_o_da_propria_lista(sorteadas):
 def test_a_janela_de_uma_lista_nao_e_lida_da_outra(sorteadas):
     """Sem a ampla publicada, a definitiva da PPI continua impedida pela janela dela mesma."""
     from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
-    from processo_seletivo.divulgacao.domain.publicabilidade import _janela_aberta
+    from processo_seletivo.divulgacao.domain.publicabilidade import janela_aberta_ate
 
     certame, sorteios = sorteadas
     ppi = sorteios[LISTA_PPI]
     _publicar(certame, ppi, chave="janela-ppi")
 
     marco = {"appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"}}
-    da_ppi = _janela_aberta(
+    da_ppi = janela_aberta_ate(
         edital=certame["edital"],
         marco_id=ppi.marco_id,
         marco=marco,
         at=None,
         lista_id=ppi.lista_id,
     )
-    da_ampla = _janela_aberta(
+    da_ampla = janela_aberta_ate(
         edital=certame["edital"], marco_id=ppi.marco_id, marco=marco, at=None, lista_id=None
     )
 

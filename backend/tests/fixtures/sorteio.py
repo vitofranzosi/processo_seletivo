@@ -70,7 +70,7 @@ def marco_com_metodo(rascunho, *, perfil_id, etapa_id, metodo=None, marco_id=MAR
                 # **A janela recursal declarada**, como o `seed_demo` já a declara: um marco de
                 # sorteio admite recurso, e é o prazo dele que a definitiva precisa esperar. Sem
                 # ela, o cenário do prazo por lista não se coloca — e foi o que escondeu, por um
-                # tempo, o eixo perdido em `_janela_aberta` (018, FR-030; 021, FR-068).
+                # tempo, o eixo perdido em `janela_aberta_ate` (018, FR-030; 021, FR-068).
                 "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
                 "drawMethod": METODO if metodo is None else metodo,
                 # Corta sem governar Etapa (046, `FR-752`): um Perfil em que nenhum marco corta

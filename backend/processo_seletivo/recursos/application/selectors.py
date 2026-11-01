@@ -18,6 +18,8 @@ apareceria é justamente aqui, por conveniência de uma tela de listagem.
 — o resultado foi corrigido" entende; quem lê `CORRECAO_FIXADA`, não (FR-048, SC-021).
 """
 
+from django.db.models import Exists, OuterRef
+
 from processo_seletivo.recursos.models import DecisaoRecurso, JuizoDeAdmissibilidade, Recurso
 from processo_seletivo.shared.canonical import canonical_sha256
 
@@ -793,3 +795,19 @@ def janela_da_publicacao_divulgada(publicacao, *, conteudo=None, vigente=None):
         declaracao_do_marco(vigente, publicacao.marco_id),
     )
     return janela_da_publicacao(publicacao, declaracao)
+
+
+def aguardando_decisao():
+    """As peças que esperam decisão — sem juízo, ou admitidas e sem decisão.
+
+    As duas condições são as mesmas que a situação da peça usa (`_situacao`, neste módulo): sem
+    juízo, aguarda admissibilidade; admitida e sem decisão, aguarda julgamento; o resto está
+    decidido. Uma definição só para a contagem de um Edital, para a da página inteira e para o
+    impedimento de encerrar (113, FR-3531). Morava em `interface/acoes.py`, e o encerramento, que é
+    comando, não alcança a interface.
+    """
+    juizo = JuizoDeAdmissibilidade.objects.filter(recurso_id=OuterRef("pk"))
+    decisao = DecisaoRecurso.objects.filter(recurso_id=OuterRef("pk"))
+    return Recurso.objects.filter(
+        ~Exists(juizo) | (Exists(juizo.filter(admitido=True)) & ~Exists(decisao))
+    )

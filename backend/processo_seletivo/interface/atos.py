@@ -124,9 +124,12 @@ ATOS = {
         irreversivel=True,
         exige_motivo=True,
         rotulo_motivo="Motivo do encerramento",
+        # **A consequência não afirma o que o ato não confere** (113, FR-3542). A primeira frase
+        # dizia "registrando a conclusão regular de suas etapas", e o ato não conferia etapa
+        # nenhuma; desde a `113` ele confere o que impede, e o que continua aparece acima delas.
         consequencias=[
-            "O Edital passa a Encerrado, registrando a conclusão regular de suas etapas.",
-            "Nenhuma Retificação poderá ser publicada depois disso.",
+            "O Edital passa a Encerrado e deixa de receber inscrição e Retificação.",
+            "O que aparece acima como continuando segue possível, e consta do Relatório do Edital.",
             "Publicações, documentos e histórico permanecem disponíveis na consulta pública.",
         ],
     ),
