@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Briefing: cronogramas dos Editais</title>
+<style>
+@page{size:A4;margin:16mm 15mm 16mm 15mm}
+*{box-sizing:border-box}
+body{font:10pt/1.45 -apple-system,"Helvetica Neue",Arial,sans-serif;color:#1c1c1c;margin:0}
+h1{font-size:19pt;margin:0 0 2mm;color:#0b5a2a}
+h2{font-size:13pt;margin:7mm 0 2mm;color:#0b5a2a;border-bottom:1px solid #d4d4d4;padding-bottom:1mm;break-after:avoid}
+h3{font-size:10.5pt;margin:4mm 0 1mm;break-after:avoid}
+p{margin:0 0 2.2mm}
+ul,ol{margin:0 0 2.5mm;padding-left:5mm}
+li{margin-bottom:1mm}
+code{font:8.6pt Menlo,monospace;background:#f1f1f1;padding:0 1mm;border-radius:2px}
+.meta{color:#555;font-size:9pt;margin-bottom:4mm}
+.caixa{border-left:3.5px solid #15803d;background:#e7f5ec;padding:3mm 4mm;margin:3mm 0;break-inside:avoid}
+.alerta{border-left:3.5px solid #8a5300;background:#fdf5e5;padding:3mm 4mm;margin:3mm 0;break-inside:avoid}
+table{border-collapse:collapse;width:100%;margin:2mm 0 3mm;font-size:8.8pt;break-inside:avoid}
+th,td{border:1px solid #d4d4d4;padding:1.2mm 1.8mm;text-align:left;vertical-align:top}
+th{background:#f3f3f3}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+figure{margin:3mm 0;break-inside:avoid}
+figure img{width:100%;border:1px solid #d4d4d4}
+figcaption{font-size:8.5pt;color:#555;margin-top:1mm}
+.lado{display:flex;gap:4mm;align-items:flex-start}
+.lado figure{flex:1}
+.lado img.estreita{max-height:105mm;width:auto;max-width:100%}
+figure img.alta{max-height:120mm;object-fit:cover;object-position:top}
+.quebra{break-before:page}
+</style>
+</head>
+<body>
+
+<h1>Cronogramas dos Editais — briefing para a próxima sessão</h1>
+<p class="meta">GPS · Cefor/Ifes · 01/11/2026 · revisão do estudo de visualização dos cronogramas<br>
+Branch <code>claude/estudo-visualizacao-cronogramas-1950cd</code>, commit <code>aa21375c</code> (sem push) ·
+pasta <code>doc/estudo-cronogramas-revisao-2026-11-01/</code></p>
+
+<div class="caixa"><strong>Em uma frase.</strong> No lugar da lista "Períodos previstos em ‹mês›", abaixo do calendário da
+Agenda, propomos <strong>uma faixa por Edital</strong> (alternativa <strong>C</strong>): uma linha por Edital numa régua
+diária comum, com a situação de hoje em texto e a sequência completa ao abrir. A mesma estrutura serve no
+desktop e no celular. A visão <strong>Próximos marcos</strong> continua como está. O Gantt por evento (A) e a timeline
+em cartões (B) ficam descartados como telas próprias.</div>
+
+<h2>1. Contexto</h2>
+<p>A <strong>Agenda dos Editais</strong> (spec 101, mergeada em 30/10, #336) mostra os cronogramas publicados e vigentes
+dos Editais da unidade. A página tem três camadas:</p>
+<ul>
+<li><strong>Grade do mês</strong>: os marcos (evento pontual, abertura e encerramento de período), com quantidade e
+destaque por dia, e um indicador separado de quantos períodos abrangem cada dia (FR-2669).</li>
+<li><strong>Lista "Períodos previstos em ‹mês›"</strong>: uma linha de texto por intervalo que toca o mês.</li>
+<li><strong>Próximos marcos</strong>: aba com os períodos em curso, ordenados pelo término e com "encerra em N dias", e os
+marcos dia a dia dos próximos 7 ou 30 dias. A <code>D-003</code> a definiu como a forma natural no celular.</li>
+</ul>
+<p>Código: <code>backend/processo_seletivo/interface/agenda.py</code> (<code>ler</code>, <code>marcos_do_conteudo</code>,
+<code>periodos_do_conteudo</code>, dataclasses <code>Marco</code> e <code>Periodo</code>), templates
+<code>interface/agenda.html</code>, <code>_agenda_mes.html</code> e <code>_agenda_proximos.html</code>, e a folha
+<code>interface/telas/agenda.css</code>. A leitura usa a versão consolidada vigente no instante (<code>versoes_vigentes</code>),
+avisa as Retificações a vigorar e calcula fase e espécie no backend.</p>
+
+<h3>Decisões vigentes que limitam a solução</h3>
+<ul>
+<li><strong>D-002 (spec 101):</strong> marco é ponto, período é intervalo. O período não vira um evento em cada dia.
+A revisão de 29/10 recusou barras atravessando as semanas <em>na grade</em> e registrou que "a linha do tempo
+horizontal ficou para outra etapa". Esta proposta é justamente essa etapa e precisa de spec própria.</li>
+<li><strong>D-003:</strong> o Mês é a visão inicial; Próximos marcos é a forma do celular.</li>
+<li><strong>CSP</strong> (091/092): a gestão recusa <code>style=""</code>, <code>&lt;style&gt;</code> e <code>&lt;script&gt;</code> inline.</li>
+<li><strong>Sem estado novo:</strong> "em curso, pelo cronograma", "ainda não começou" e "data passada" são os rótulos
+da 101. Data passada não prova realização. Não há atraso, conclusão nem percentual.</li>
+</ul>
+
+<h2>2. O problema que se quer resolver</h2>
+<p>A lista de períodos é correta, mas obriga a ler e comparar datas linha por linha. Um período de três dias e
+um de três meses têm o mesmo peso visual. A lista não agrupa por Edital nem mostra a sequência de cada um, já
+que os eventos pontuais ficam só na grade. E não deixa ver o que acontece ao mesmo tempo. O pedido original
+listava sete perguntas que a tela deveria responder sem leitura extensa:</p>
+<ol>
+<li>Quais Editais estão com inscrições abertas?</li>
+<li>Quais etapas ocorrem simultaneamente?</li>
+<li>Qual Edital está próximo de encerrar inscrições?</li>
+<li>Como se distribuem as etapas de um Edital ao longo do mês?</li>
+<li>O que começa na próxima semana?</li>
+<li>Quais períodos atravessam meses?</li>
+<li>Onde há concentração temporal de atividades?</li>
+</ol>
+<p><strong>Achado central:</strong> três dessas perguntas (1, 3 e 5) já têm boa resposta em Próximos marcos, e a 7 já é
+respondida pela grade. A lacuna real são as perguntas <strong>2 e 4</strong>, simultaneidade e distribuição, e é a lista
+de períodos que deveria cobri-las. Por isso a proposta substitui a lista e não a página.</p>
+
+<h3>Volume: a comparação entre Editais importa?</h3>
+<p>A numeração dos Editais do Cefor é sequencial no ano. Existe o 173/2025. Em 2026, o 14 é de 05/02, o 28 de
+07/04, o 69 de 03/07, o 78 de 05/08 e o 89 de 24/09, o que dá cerca de dez por mês. Nas amostras, os
+cronogramas duram de três semanas (chamada com sorteio) a dois meses e meio (seleção de pessoal). Isso
+resulta em algo entre <strong>10 e 25 Editais vivos ao mesmo tempo</strong>. É uma estimativa grosseira: nem todo número é
+processo seletivo. Precisa ser confirmada com a coordenação.</p>
+
+<h2 class="quebra">3. Avaliação do primeiro estudo</h2>
+<p>O primeiro estudo, do mesmo dia, está em <code>doc/estudo-visualizacao-cronogramas-2026-11-01/</code>, <strong>sem rastreamento
+git no checkout principal</strong>, fora de qualquer branch. Ele comparou A (Gantt) e B (timeline) e recomendou "A para
+comparar no desktop, B para o celular". A investigação do código foi correta e o exportador lia o banco sem
+gravar nada. Mas seis problemas mudavam a conclusão:</p>
+<table>
+<tr><th>#</th><th>Problema</th><th>Consequência</th></tr>
+<tr><td>1</td><td><strong>A desenhava o marco pontual no dia seguinte</strong> sempre que o evento era depois do meio-dia. O código usava <code>primeiro*24+12</code> com <code>primeiro</code> fracionário, somando a hora à meia coluna.</td><td>Derruba a "clareza temporal", o principal argumento a favor de A. O defeito é visível nas próprias capturas: o 20/11 aparece entre as colunas 20 e 21.</td></tr>
+<tr><td>2</td><td>Densidade testada com <strong>12 cronogramas sintéticos idênticos</strong>.</td><td>Doze barras iguais empilhadas não testam a leitura de processos em fases diferentes.</td></tr>
+<tr><td>3</td><td><strong>D-003 ignorada</strong>: B foi recomendada para o celular sem ser comparada com Próximos marcos.</td><td>A proposta disputava o lugar de uma visão já decidida e já melhor nas perguntas de prazo.</td></tr>
+<tr><td>4</td><td>Recomendação contraditória: recusava duas apresentações por dispositivo e propunha três (A, mais a lista textual, mais B como modo opcional).</td><td>O custo de manutenção ficava maior do que o da opção que o próprio estudo recusou.</td></tr>
+<tr><td>5</td><td>A terceira alternativa foi descartada sem ser construída.</td><td>A tela mais legível do estudo era a A recolhida (uma linha por Edital), que aponta justamente para essa alternativa.</td></tr>
+<tr><td>6</td><td>A suíte completa (20 min) rodou para uma mudança só em <code>doc/</code>. No fim, foram cancelados <code>DROP DATABASE</code> num cluster compartilhado e a execução terminou com código 2.</td><td>Custo e risco sem prova nenhuma sobre o estudo.</td></tr>
+</table>
+<p>Defeitos menores: a A tinha largura fixa de 960 px, deixando só 51 px de régua no celular. B tinha uma faixa
+horizontal de largura fixa que parecia proporcional à duração e não era. E a A expandida desenhava cada barra
+duas vezes.</p>
+
+<h2>4. O estudo refeito</h2>
+<h3>Dados</h3>
+<ul>
+<li><strong>7 Editais do banco <code>ps_demo_101</code></strong> (101 a 107), a demonstração da Agenda, incluindo a Retificação
+real do 106: a prova passa de 21/11 para 23/11, com vigência em 04/11.</li>
+<li><strong>16 casos de teste T01 a T16</strong>, só em memória e nunca gravados. Têm a <em>forma</em> de cronogramas públicos
+do Cefor, com as datas deslocadas para setembro a dezembro: seleção de pessoal (89/2026, sete eventos), chamada
+com sorteio (69 e 78/2026), curso com inscrição longa (28/2026), inscrição de um dia (72/2026) e um cadastro sem
+término declarado. Um deles tem descrição de 120 caracteres.</li>
+<li>Os casos passam pelas mesmas <code>marcos_do_conteudo</code> e <code>periodos_do_conteudo</code> do produto. As telas atuais
+foram renderizadas pelo próprio <code>agenda.ler</code> e pelos templates de produção com os mesmos 23 Editais,
+de modo que a comparação é contra a interface real.</li>
+</ul>
+<h3>Motor comum de régua</h3>
+<p>A régua é por <strong>dia</strong>, não por hora, com colunas em porcentagem. Um período vai da coluna do primeiro dia à do
+último, inclusive, usando a mesma pertinência de <code>Periodo.abrange</code> que dá o número da grade. Um pontual fica no
+centro da coluna do seu dia. Isso elimina a classe de defeito do item 1 e faz a régua caber em qualquer largura.</p>
+
+<h3>As três alternativas</h3>
+<ul>
+<li><strong>C — Faixa por Edital (nova).</strong> Uma linha por Edital. À esquerda, número, processo e a situação na
+referência ("Em curso: Período de inscrições, até 06/11 · Próximo: Análise documental, 08/11"). À direita, todos
+os eventos do mês: barras com o nome dentro, empilhadas quando se sobrepõem, e losangos para os pontuais. Ao
+abrir a linha, a sequência completa em texto, com datas, fase e detalhe. A ordem padrão segue o próximo marco.</li>
+<li><strong>A — Gantt por evento.</strong> Uma linha por evento, agrupadas por Edital, com o defeito corrigido e a mesma régua
+responsiva.</li>
+<li><strong>B — Timeline em cartões.</strong> Um cartão por Edital, sem a faixa enganosa, com duração e distância até o evento
+seguinte em texto.</li>
+</ul>
+
+<figure><img src="capturas/c-desktop.jpg"><figcaption>C no desktop: 23 Editais em novembro, ordenados pelo próximo marco. A linha pontilhada é o dia de referência (01/11).</figcaption></figure>
+
+<figure><img src="capturas/c-inscricoes-em-curso.jpg"><figcaption>C com o filtro "inscrições + em curso": oito Editais ordenados por quem encerra primeiro. Responde às perguntas 1 e 3 de relance.</figcaption></figure>
+
+<div class="lado">
+<figure><img class="estreita" src="capturas/c-celular.jpg"><figcaption>C no celular (375 px): mesma estrutura, a régua usa a largura toda e não há rolagem lateral.</figcaption></figure>
+<figure><img class="estreita" src="capturas/c-aberto-celular.jpg"><figcaption>C aberto: a sequência em texto, que também é a alternativa acessível ao desenho.</figcaption></figure>
+</div>
+
+<div class="lado">
+<figure><img src="capturas/a-desktop.jpg"><figcaption>A no desktop: uma linha por evento, 3 a 4 Editais por tela.</figcaption></figure>
+<figure><img src="capturas/b-desktop.jpg"><figcaption>B no desktop: cartões sem escala comum entre si.</figcaption></figure>
+</div>
+
+<h2>5. Medições</h2>
+<p>Novembro, 23 Editais, 68 eventos, referência 01/11 às 12h, num Chromium sem janela. Altura é a do painel, em
+px. Focos é o número de paradas do Tab até o fim da lista. Nenhuma tela rola de lado em nenhuma largura.</p>
+<table>
+<tr><th>Tela</th><th>Desktop 1440</th><th>Notebook 1024</th><th>Tablet 768</th><th>Celular 375</th><th>Focos</th></tr>
+<tr><td><strong>C faixa por Edital</strong></td><td class="n"><strong>1.620</strong></td><td class="n">1.620</td><td class="n">1.620</td><td class="n"><strong>2.655</strong></td><td class="n"><strong>23</strong></td></tr>
+<tr><td>A Gantt por evento</td><td class="n">4.898</td><td class="n">4.898</td><td class="n">4.940</td><td class="n">7.985</td><td class="n">91</td></tr>
+<tr><td>B cartões</td><td class="n">2.978</td><td class="n">3.742</td><td class="n">5.044</td><td class="n">8.362</td><td class="n">68</td></tr>
+<tr><td>Atual · Mês (grade + lista)</td><td class="n">2.732</td><td>—</td><td>—</td><td class="n">4.700</td><td class="n">33</td></tr>
+<tr><td>Atual · Próximos 7 dias</td><td class="n">3.701</td><td>—</td><td>—</td><td class="n">5.131</td><td class="n">44</td></tr>
+</table>
+<p><strong>A correção do defeito foi verificada, não só aplicada:</strong> o script <code>capturar.py</code> confere cada losango e cada barra
+contra a célula da régua do mesmo dia, em C e A, nas quatro larguras e em outubro, novembro e dezembro. Foram 15
+conferências, nenhuma fora da coluna, e o console ficou sem erros.</p>
+
+<h2>6. As sete perguntas, por alternativa</h2>
+<table>
+<tr><th>Pergunta</th><th>Melhor resposta hoje</th><th>C</th><th>A</th><th>B</th></tr>
+<tr><td>1. Inscrições abertas</td><td><strong>Próximos</strong> (bloco em curso)</td><td>Filtro: 8 linhas ordenadas</td><td>Igual, com mais linhas</td><td>Ler cartões</td></tr>
+<tr><td>2. Simultaneidade</td><td>Nenhuma</td><td><strong>Alinhamento na régua</strong></td><td>Idem, em 4.900 px</td><td>Não responde</td></tr>
+<tr><td>3. Próximo de encerrar</td><td><strong>Próximos</strong> ("encerra em N dias")</td><td>Ordem + "até dd/mm"</td><td>Varrer</td><td>Ler</td></tr>
+<tr><td>4. Distribuição num Edital</td><td>Partida entre lista e grade</td><td><strong>Uma linha</strong></td><td>Bloco de 3 a 7 linhas</td><td>Lista sem escala</td></tr>
+<tr><td>5. Começa na próxima semana</td><td><strong>Próximos 7 dias</strong></td><td>Colunas 2 a 8</td><td>Idem</td><td>Ler</td></tr>
+<tr><td>6. Atravessa meses</td><td>Lista (datas)</td><td>‹ › na borda</td><td>Idem</td><td>Texto</td></tr>
+<tr><td>7. Concentração</td><td><strong>Grade</strong></td><td>Colunas visíveis num quadro</td><td>Não cabe num quadro</td><td>Não responde</td></tr>
+</table>
+
+<h2>7. Recomendação</h2>
+<div class="caixa">
+<p><strong>Adotar C no lugar da lista de períodos do mês. Manter Próximos marcos e a grade. Descartar A e B como telas próprias.
+Não trocar a apresentação por dispositivo.</strong></p>
+<ul>
+<li><strong>Por que não A:</strong> tudo o que A mostra, C mostra na linha ou ao abrir. A custa três vezes a altura e quatro
+vezes os focos, e a comparação entre Editais deixa de caber numa tela.</li>
+<li><strong>Por que não B:</strong> no celular, disputa o papel que a D-003 deu a Próximos e responde pior às perguntas de prazo.
+No desktop, a sequência que B oferece é a mesma que C mostra ao abrir a linha.</li>
+<li><strong>Por que não combinar por dispositivo:</strong> C reflui sozinha. A primeira A só precisava de B no celular porque
+fixava a largura em pixels.</li>
+</ul>
+</div>
+<h3>Limitações conhecidas de C</h3>
+<ul>
+<li>No celular a régua tem 10,6 px por dia. Serve à visão geral, mas o nome de um evento curto some dentro da barra
+(a linha de texto e a sequência aberta o dizem).</li>
+<li>Dois pontuais em dias vizinhos se tocam.</li>
+<li>A situação é sempre a da referência, mesmo navegando para outro mês. O cabeçalho da coluna precisa dizer isso.</li>
+<li>O desenho fica fora da árvore de acessibilidade. O leitor de tela lê a situação de cada Edital, mas é preciso
+abrir a linha para ouvir os eventos.</li>
+</ul>
+
+<h2>8. Para quem for especificar e implementar</h2>
+<ul>
+<li><strong>Spec própria.</strong> A 101 adiou a linha do tempo horizontal para "outra etapa"; esta é essa etapa. A decisão de
+substituir a lista é do usuário. O estudo só a recomenda.</li>
+<li><strong>Sem JavaScript para posicionar.</strong> A POC posiciona pelo CSSOM, o que a CSP permite, mas o produto deve usar uma
+trilha em <code>display:grid</code> com classes <code>grid-column: início / span dias</code>: 31 classes de início e 31 de
+extensão na folha da agenda, renderizadas no servidor e funcionando sem JS. Lembrete: toda classe citada no
+template exige regra na folha (<code>test_acessibilidade</code>).</li>
+<li><strong>Pertinência única.</strong> As barras devem sair de <code>Periodo.abrange</code>, para que o comprimento da barra e o número da
+grade não possam divergir (mesma lógica do SC-959).</li>
+<li><strong>Faixas.</strong> Períodos que se sobrepõem no mesmo Edital vão a faixas distintas. É uma função pura no backend,
+testável.</li>
+<li><strong>Orçamento de consultas</strong> (FR-2646): C não acrescenta consulta, porque usa os <code>Periodo</code> e <code>Marco</code> que
+<code>ler</code> já produz.</li>
+<li><strong>Contraste não textual</strong> (WCAG 1.4.11): a barra de data passada precisa de borda. O cinza claro sozinho dava
+1,4:1; na POC foi corrigido com <code>#767676</code>.</li>
+<li><strong>Escopo do MVP:</strong> faixa por Edital, régua com fim de semana e dia de referência, barras e pontuais por dia,
+‹ › para continuidade, barra aberta para o período sem término, situação em texto, ordem pelo próximo marco,
+sequência ao abrir com os links que a lista já tem, e os filtros existentes (Edital e espécie).</li>
+<li><strong>Adiar:</strong> filtro por fase, ordem alternativa, rótulo dos pontuais na régua, escala semanal.
+<strong>Descartar:</strong> A e B como telas, troca por dispositivo, agrupamento de semelhantes, arrastar, editar, dependências e
+percentual.</li>
+</ul>
+
+<h2>9. O que não foi feito</h2>
+<div class="alerta">Não houve sessão com usuários, ensaio com leitor de tela, nem ampliação real a 200% e 400%. O volume de
+Editais simultâneos foi estimado pela numeração, não medido. A suíte não foi rodada: a mudança é só em
+<code>doc/</code>, que a suíte não lê. O ruff passou nos dois scripts e a sintaxe do JS foi verificada. O estudo antigo,
+sem commit, ficou intocado no checkout principal.</div>
+<p><strong>Próximo passo sugerido, antes da spec:</strong> aplicar as sete perguntas como tarefas com duas ou três pessoas que
+acompanham Editais, comparando a página atual com a página atual com C no lugar da lista, no desktop e no
+celular.</p>
+
+<h2>10. Arquivos</h2>
+<table>
+<tr><th>Arquivo</th><th>O que é</th></tr>
+<tr><td><code>relatorio.md</code></td><td>O relatório completo deste estudo.</td></tr>
+<tr><td><code>prototipo/index.html</code></td><td>As POCs. Abrem com dois cliques, sem servidor: <code>?visao=c|a|b</code>, <code>cenario</code>, <code>mes</code>, <code>referencia</code>, <code>especie</code>, <code>fase</code>, <code>ordem</code>.</td></tr>
+<tr><td><code>prototipo/atual-*.html</code></td><td>A Agenda atual (Mês e Próximos, com 7 e 23 Editais), renderizada pelos templates de produção.</td></tr>
+<tr><td><code>exportar_dados.py</code></td><td>Lê o <code>ps_demo_101</code> em <code>READ ONLY</code>, gera os casos de teste e grava <code>dados.js</code> e as páginas atuais.</td></tr>
+<tr><td><code>capturar.py</code></td><td>Capturas e medições por Playwright. Termina com erro se um marco ou barra sair da coluna ou se o console registrar erro.</td></tr>
+<tr><td><code>capturas/</code></td><td>36 capturas e o <code>medidas.json</code>.</td></tr>
+</table>
+</body>
+</html>
