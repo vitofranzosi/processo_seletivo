@@ -1,0 +1,301 @@
+{
+ "medidas": [
+  {
+   "tela": "c",
+   "cenario": "23 Editais",
+   "largura": "desktop",
+   "alturaPagina": 2151,
+   "alturaPainel": 1620,
+   "rolagemLateral": false,
+   "focaveis": 23,
+   "pxPorDia": 36.6
+  },
+  {
+   "tela": "c",
+   "cenario": "23 Editais",
+   "largura": "notebook",
+   "alturaPagina": 2213,
+   "alturaPainel": 1620,
+   "rolagemLateral": false,
+   "focaveis": 23,
+   "pxPorDia": 22.7
+  },
+  {
+   "tela": "c",
+   "cenario": "23 Editais",
+   "largura": "tablet",
+   "alturaPagina": 2276,
+   "alturaPainel": 1620,
+   "rolagemLateral": false,
+   "focaveis": 23,
+   "pxPorDia": 16.9
+  },
+  {
+   "tela": "c",
+   "cenario": "23 Editais",
+   "largura": "celular",
+   "alturaPagina": 3383,
+   "alturaPainel": 2655,
+   "rolagemLateral": false,
+   "focaveis": 23,
+   "pxPorDia": 10.6
+  },
+  {
+   "tela": "a",
+   "cenario": "23 Editais",
+   "largura": "desktop",
+   "alturaPagina": 5429,
+   "alturaPainel": 4898,
+   "rolagemLateral": false,
+   "focaveis": 91,
+   "pxPorDia": 36.6
+  },
+  {
+   "tela": "a",
+   "cenario": "23 Editais",
+   "largura": "notebook",
+   "alturaPagina": 5491,
+   "alturaPainel": 4898,
+   "rolagemLateral": false,
+   "focaveis": 91,
+   "pxPorDia": 22.7
+  },
+  {
+   "tela": "a",
+   "cenario": "23 Editais",
+   "largura": "tablet",
+   "alturaPagina": 5596,
+   "alturaPainel": 4940,
+   "rolagemLateral": false,
+   "focaveis": 91,
+   "pxPorDia": 16.9
+  },
+  {
+   "tela": "a",
+   "cenario": "23 Editais",
+   "largura": "celular",
+   "alturaPagina": 8714,
+   "alturaPainel": 7985,
+   "rolagemLateral": false,
+   "focaveis": 91,
+   "pxPorDia": 10.6
+  },
+  {
+   "tela": "b",
+   "cenario": "23 Editais",
+   "largura": "desktop",
+   "alturaPagina": 3489,
+   "alturaPainel": 2978,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "pxPorDia": null
+  },
+  {
+   "tela": "b",
+   "cenario": "23 Editais",
+   "largura": "notebook",
+   "alturaPagina": 4316,
+   "alturaPainel": 3742,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "pxPorDia": null
+  },
+  {
+   "tela": "b",
+   "cenario": "23 Editais",
+   "largura": "tablet",
+   "alturaPagina": 5662,
+   "alturaPainel": 5044,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "pxPorDia": null
+  },
+  {
+   "tela": "b",
+   "cenario": "23 Editais",
+   "largura": "celular",
+   "alturaPagina": 9033,
+   "alturaPainel": 8362,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-mes",
+   "largura": "desktop",
+   "alturaPagina": 1552,
+   "alturaPainel": 1552,
+   "rolagemLateral": false,
+   "focaveis": 33,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-mes",
+   "largura": "celular",
+   "alturaPagina": 1885,
+   "alturaPainel": 1885,
+   "rolagemLateral": false,
+   "focaveis": 33,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-mes-denso",
+   "largura": "desktop",
+   "alturaPagina": 2732,
+   "alturaPainel": 2732,
+   "rolagemLateral": false,
+   "focaveis": 33,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-mes-denso",
+   "largura": "celular",
+   "alturaPagina": 4700,
+   "alturaPainel": 4700,
+   "rolagemLateral": false,
+   "focaveis": 33,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-proximos",
+   "largura": "desktop",
+   "alturaPagina": 1630,
+   "alturaPainel": 1630,
+   "rolagemLateral": false,
+   "focaveis": 14,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-proximos",
+   "largura": "celular",
+   "alturaPagina": 2165,
+   "alturaPainel": 2165,
+   "rolagemLateral": false,
+   "focaveis": 14,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-proximos-denso",
+   "largura": "desktop",
+   "alturaPagina": 3701,
+   "alturaPainel": 3701,
+   "rolagemLateral": false,
+   "focaveis": 44,
+   "pxPorDia": null
+  },
+  {
+   "tela": "atual-proximos-denso",
+   "largura": "celular",
+   "alturaPagina": 5131,
+   "alturaPainel": 5131,
+   "rolagemLateral": false,
+   "focaveis": 44,
+   "pxPorDia": null
+  }
+ ],
+ "conferencias": [
+  {
+   "tela": "c",
+   "largura": "desktop",
+   "marcos": 34,
+   "barras": 34,
+   "erros": []
+  },
+  {
+   "tela": "c",
+   "largura": "notebook",
+   "marcos": 34,
+   "barras": 34,
+   "erros": []
+  },
+  {
+   "tela": "c",
+   "largura": "tablet",
+   "marcos": 34,
+   "barras": 34,
+   "erros": []
+  },
+  {
+   "tela": "c",
+   "largura": "celular",
+   "marcos": 34,
+   "barras": 34,
+   "erros": []
+  },
+  {
+   "tela": "a",
+   "largura": "desktop",
+   "marcos": 68,
+   "barras": 68,
+   "erros": []
+  },
+  {
+   "tela": "a",
+   "largura": "notebook",
+   "marcos": 68,
+   "barras": 68,
+   "erros": []
+  },
+  {
+   "tela": "a",
+   "largura": "tablet",
+   "marcos": 68,
+   "barras": 68,
+   "erros": []
+  },
+  {
+   "tela": "a",
+   "largura": "celular",
+   "marcos": 68,
+   "barras": 68,
+   "erros": []
+  },
+  {
+   "tela": "c-dezembro",
+   "largura": "desktop",
+   "marcos": 22,
+   "barras": 18,
+   "erros": []
+  },
+  {
+   "tela": "c-outubro",
+   "largura": "desktop",
+   "marcos": 4,
+   "barras": 16,
+   "erros": []
+  },
+  {
+   "tela": "c-retificacao-antes",
+   "largura": "desktop",
+   "marcos": 1,
+   "barras": 1,
+   "erros": []
+  },
+  {
+   "tela": "c-retificacao-depois",
+   "largura": "desktop",
+   "marcos": 1,
+   "barras": 1,
+   "erros": []
+  },
+  {
+   "tela": "c-inscricoes-em-curso",
+   "largura": "desktop",
+   "marcos": 0,
+   "barras": 8,
+   "erros": []
+  },
+  {
+   "tela": "a-dezembro",
+   "largura": "desktop",
+   "marcos": 44,
+   "barras": 36,
+   "erros": []
+  },
+  {
+   "tela": "ficha",
+   "focoAoFechar": "Período de inscrições"
+  }
+ ],
+ "avisosDoConsole": []
+}
