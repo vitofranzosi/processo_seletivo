@@ -7,6 +7,8 @@ from django import template
 from django.http import QueryDict
 from django.utils import timezone
 
+from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
+
 register = template.Library()
 
 # Edital e Processo usam a forma masculina; Retificação, a feminina. Sem as duas, a trilha
@@ -28,6 +30,19 @@ SITUACOES = {
 @register.filter
 def situacao(valor):
     return SITUACOES.get(valor, valor)
+
+
+# Em minúscula e no meio da frase: as telas do reaproveitamento dizem "Requerimento de Matrícula na
+# convocação", e o rótulo do seletor da etapa Inscrição começa frase.
+MOMENTOS_DO_REQUERIMENTO = {
+    nomes_do_requerimento.NA_INSCRICAO: "na inscrição",
+    nomes_do_requerimento.NA_CONVOCACAO: "na convocação",
+}
+
+
+@register.filter
+def momento_do_requerimento(valor):
+    return MOMENTOS_DO_REQUERIMENTO.get(valor, valor)
 
 
 @register.simple_tag

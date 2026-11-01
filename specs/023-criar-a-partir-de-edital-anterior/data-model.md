@@ -44,7 +44,8 @@ Nada mais é lido, e nada mais é escrito. Em particular: a origem não recebe e
 | `sections[]` | só as textuais | **todas** as textuais, e não só as editadas: o conteúdo publicado traz o padrão do catálogo quando não há linha (`T-006`). Identidade **recalculada** pelo destino, não remapeada |
 | `attachments[]` | sim | Anexo e Artefato novos; bytes copiados; `congelado_em` nulo (`T-003`) |
 | `number`, `year`, `title`, `description` | **não** | identificação é entrada da criação (`FR-007`) |
-| `maxInscricoesPorCandidato` | **não** | nenhuma etapa do assistente o desenha (`FR-008`) |
+| `maxInscricoesPorCandidato` | sim, fora do rascunho | coluna de raiz; `null` é sem limite. Era excluído por falta de tela, e a etapa Inscrição o desenha (`FR-006`, emenda do A-10) |
+| `matriculationRequest` | sim, fora do rascunho | `moment` e `declarationText` juntos, nas colunas de raiz; `null` é *não exige* (`FR-006`, emenda do A-10) |
 | `processoCode`, `processoTitle` | **não** | são do Processo de destino, que já existe |
 | `schemaVersion` | **não** | do conteúdo publicado; o rascunho não o carrega |
 
