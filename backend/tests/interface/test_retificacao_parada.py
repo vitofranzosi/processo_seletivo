@@ -14,7 +14,9 @@ from tests.integration.publicacoes.test_retificacao_de_edital_encerrado import l
 from tests.interface.test_auditoria_passagem_da_retificacao import sessao
 from tests.unit.processos.test_pendencias_do_edital import criar
 
-pytestmark = [pytest.mark.django_db(transaction=True)]
+# O seletor de identidade é o que abre `/gestao/` nos testes: sem ele a tela responde 503. Ligado
+# aqui, e não no ambiente, porque o CI não tem o `.env` que o liga na máquina de desenvolvimento.
+pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.usefixtures("seletor_ligado")]
 
 
 @pytest.fixture
