@@ -2,8 +2,10 @@
 
 import base64
 import binascii
+from dataclasses import dataclass
+from datetime import datetime
 
-from django.db.models import Q
+from django.db.models import Min, Q
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -397,4 +399,94 @@ def selecao_publica(*, edital_id, at=None):
         VersaoConsolidada.objects.select_related("edital", "edital__processo")
         .filter(pk=versao.pk)
         .first()
+    )
+
+
+# ---------------------------------------------------------------------------
+# Leituras que a gestão e o kit de divulgação compartilham (111, D-002)
+#
+# Moravam na agenda (`101`) e no relatório do Edital (`099`), em `interface/`. Desceram para cá,
+# **sem mudar o corpo**, quando a ficha de divulgação do portal passou a precisar delas: o portal
+# não importa a gestão, e uma terceira cópia seria a segunda interpretação que a 111 recusa.
+# ---------------------------------------------------------------------------
+
+
+def retificacoes_a_vigorar(edital_ids, agora):
+    """`{edital_id: vigora_em}` — a primeira versão de vigência futura de cada Edital (`101`).
+
+    Uma consulta agregada, sem materializar conteúdo: quem anuncia a Retificação não a aplica, então
+    não precisa saber o que ela muda.
+    """
+    if not edital_ids:
+        return {}
+    return {
+        linha["edital_id"]: linha["vigora_em"]
+        for linha in VersaoConsolidada.objects.filter(
+            edital_id__in=edital_ids, valid_from__gt=agora
+        )
+        .values("edital_id")
+        .annotate(vigora_em=Min("valid_from"))
+    }
+
+
+def versoes_original_e_vigente(edital, agora):
+    """`(conteúdo original, conteúdo vigente)` no instante, ou `(None, None)` sem versão."""
+    versoes = list(
+        VersaoConsolidada.objects.filter(edital=edital, valid_from__lte=agora).order_by(
+            "valid_from", "materialized_at"
+        )
+    )
+    return (versoes[0].content, versoes[-1].content) if versoes else (None, None)
+
+
+def retificacoes_publicadas(edital, agora):
+    """As Retificações publicadas até `agora`, na ordem de publicação: a numeração (`099`)."""
+    return list(
+        Retificacao.objects.filter(
+            edital=edital,
+            status=Retificacao.Status.PUBLICADA,
+            publication__published_at__lte=agora,
+        )
+        .select_related("base_snapshot", "publication")
+        .prefetch_related("alteracoes")
+        .order_by("publication__published_at")
+    )
+
+
+@dataclass(frozen=True)
+class Prorrogacao:
+    prorrogado: bool
+    termino_original: datetime | None
+    termino_vigente: datetime | None
+
+
+def _evento_das_inscricoes(conteudo):
+    for evento in (conteudo or {}).get("schedule") or []:
+        if evento.get("isRegistrationPeriod"):
+            return evento
+    return None
+
+
+def _quando(valor):
+    if not valor:
+        return None
+    if isinstance(valor, datetime):
+        return valor
+    return datetime.fromisoformat(str(valor))
+
+
+def prorrogacao(original, vigente):
+    """O término das inscrições foi adiado entre o conteúdo original e o vigente?
+
+    **Instantes, e não datas**: adiar o término no mesmo dia, mais tarde, é prorrogação. Quem diz
+    a prorrogação por extenso decide se a hora precisa aparecer (111, FR-3417).
+    """
+    termino_original = _quando((_evento_das_inscricoes(original) or {}).get("endAt"))
+    termino_vigente = _quando((_evento_das_inscricoes(vigente) or {}).get("endAt"))
+    return Prorrogacao(
+        prorrogado=bool(
+            termino_original and termino_vigente and termino_vigente > termino_original
+        ),
+        termino_original=termino_original,
+        termino_vigente=termino_vigente,
     )
