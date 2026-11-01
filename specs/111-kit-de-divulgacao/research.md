@@ -33,8 +33,12 @@ republicado pelo fluxo real.
      linha de `fatos_do_edital`) para `publicacoes/application/selectors.py`, como
      `versoes_original_e_vigente` e `prorrogacao(original, vigente)`. O relatório passa a usá-las, e a
      cópia em linha desaparece;
-  3. `origens` e `acrescimos` saem de `duvidas/domain/origem.py` para `publicacoes/domain/origem.py`,
-     com a `070` importando de lá.
+  3. ~~`origens` e `acrescimos` saem de `duvidas/domain/origem.py` para `publicacoes/domain/origem.py`~~
+     — **não movidas, na implementação de 01/11**. A regra de origem é metade do trabalho; a outra
+     metade é montar os atos e os registros na ordem certa, e isso mora em funções privadas de
+     `duvidas/application/consultar.py`. O `contexto()` da `070` já devolve tudo pronto, e o portal
+     já o importa (`portal/assistente.py`). A ficha usa `contexto()` + `origens()` como estão: menos
+     código movido e nenhuma segunda montagem.
 
   A ficha usa ainda `periodo_de_inscricoes`, `desfechos`, `leitura.situacao_publica`,
   `leitura.quantidade_da_oferta`, `TIPOS_COM_RESERVA`, `vagas_do_conteudo` (`interface/visao_geral.py`,

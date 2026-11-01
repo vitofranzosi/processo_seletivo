@@ -139,8 +139,8 @@ def test_envio_sem_nome_volta_com_a_recusa_junto_do_campo(client, seletor_ligado
     assert _sessao(client) is None
 
 
-def test_a_busca_so_aparece_acima_de_oito_entradas(client, seletor_ligado, comissao_de_a):
-    """Oito papéis e duas pessoas de comissão: dez entradas, e a busca vem escondida."""
+def test_a_busca_so_aparece_acima_do_limiar(client, seletor_ligado, comissao_de_a):
+    """Nove papéis e duas pessoas de comissão: onze entradas, e a busca vem escondida."""
     corpo = client.get(ESCOLHA).content.decode()
 
     assert 'id="busca-de-identidade" hidden' in corpo

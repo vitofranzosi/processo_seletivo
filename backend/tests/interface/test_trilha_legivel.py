@@ -16,11 +16,30 @@ from tests.fixtures.publicacao import publish_retification
 RAIZ = pathlib.Path(__file__).resolve().parents[2] / "processo_seletivo"
 
 
+def _constantes(arvore):
+    """`NOME = "TEXTO"` no nível do módulo: as operações que a gestão passa por constante."""
+    return {
+        alvo.id: no.value.value
+        for no in arvore.body
+        if isinstance(no, ast.Assign) and isinstance(no.value, ast.Constant)
+        for alvo in no.targets
+        if isinstance(alvo, ast.Name) and isinstance(no.value.value, str)
+    }
+
+
 def operacoes_registradas():
-    """Todo literal `operation="..."` passado a record_event pelos commands."""
+    """Toda operação passada a `record_event`: pelos commands e pelas views da gestão.
+
+    Até a 111 a varredura lia só `application/*.py` e só o literal: as operações que as views da
+    gestão passam por constante — a emissão do relatório (`099`), a exportação do kit (`111`) —
+    escapavam, e chegariam cruas à trilha. Agora lê também `interface/*.py` e resolve a constante
+    do módulo.
+    """
     encontradas = set()
-    for arquivo in RAIZ.rglob("application/*.py"):
+    arquivos = [*RAIZ.rglob("application/*.py"), *(RAIZ / "interface").glob("*.py")]
+    for arquivo in arquivos:
         arvore = ast.parse(arquivo.read_text())
+        constantes = _constantes(arvore)
         for no in ast.walk(arvore):
             if not isinstance(no, ast.Call):
                 continue
@@ -28,8 +47,12 @@ def operacoes_registradas():
             if alvo != "record_event":
                 continue
             for argumento in no.keywords:
-                if argumento.arg == "operation" and isinstance(argumento.value, ast.Constant):
+                if argumento.arg != "operation":
+                    continue
+                if isinstance(argumento.value, ast.Constant):
                     encontradas.add(argumento.value.value)
+                elif isinstance(argumento.value, ast.Name) and argumento.value.id in constantes:
+                    encontradas.add(constantes[argumento.value.id])
     return encontradas
 
 

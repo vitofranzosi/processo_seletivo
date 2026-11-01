@@ -34,17 +34,17 @@ Cada incremento é um PR, revisto e mergeado antes do seguinte. **O merge é do 
 
 ## Phase 1: Setup
 
-- [ ] T001 Criar os pacotes `tests/integration/kit/__init__.py` e `tests/unit/kit/__init__.py`, e conferir que `.specify/feature.json` aponta para `specs/111-kit-de-divulgacao`
+- [x] T001 Criar os pacotes `tests/integration/kit/__init__.py` e `tests/unit/kit/__init__.py`, e conferir que `.specify/feature.json` aponta para `specs/111-kit-de-divulgacao`
 
 ---
 
 ## Phase 2: Foundational (bloqueia as histórias)
 
-- [ ] T002 Mover, **sem mudar o corpo**, as três leituras da D-002, cada uma com os seus chamadores no mesmo commit:
+- [x] T002 Mover, **sem mudar o corpo**, as três leituras da D-002, cada uma com os seus chamadores no mesmo commit:
   - `retificacoes_a_vigorar` de `processo_seletivo/interface/agenda.py` para `processo_seletivo/publicacoes/application/selectors.py`;
   - `_versoes` e a regra de prorrogação em linha de `fatos_do_edital` (`processo_seletivo/interface/relatorio_do_edital.py`) para `selectors.py`, como `versoes_original_e_vigente` e `prorrogacao(original, vigente)`. A regra é a de hoje, **literal**: término vigente posterior ao original, comparados como instantes;
   - `_retificacoes_publicadas` (a numeração por `published_at`) para `selectors.py`;
-  - `origens`/`acrescimos` de `processo_seletivo/duvidas/domain/origem.py` para `processo_seletivo/publicacoes/domain/origem.py`, com a `070` importando de lá.
+  - ~~`origens`/`acrescimos` para `publicacoes/domain/origem.py`~~ — não movidas: a ficha usa o `contexto()` da `070`, que o portal já importa (D-002, revisto na implementação).
 
   **Esta tarefa só move.** As suítes da agenda (`101`), do relatório (`099`) e da fonte de consulta
   (`070`) ficam verdes sem alteração de teste. É a prova de que nada mudou (FR-3405).
@@ -55,14 +55,14 @@ Cada incremento é um PR, revisto e mergeado antes do seguinte. **O merge é do 
   hora, no mesmo dia, que já conta como prorrogação**. A revisão atribuiu à regra um erro que era do
   texto da POC, que comparava só as datas. A regra não muda; quem passa a escrever a hora quando a
   data coincide é o texto do kit, na T007/T008 (FR-3417, EC-25).
-- [ ] T003 [P] Escrever a fixture dos cenários de referência em `tests/fixtures/kit.py`, a partir de `doc/poc-kit-de-divulgacao-2026-10-31/test_poc_kit.py`:
+- [x] T003 [P] Escrever a fixture dos cenários de referência em `tests/fixtures/kit.py`, a partir de `doc/poc-kit-de-divulgacao-2026-10-31/test_poc_kit.py`:
   - `publicar_do_corpus` com deslocamento em dias inteiros;
   - as variações pelo `mudar`: um Perfil, localidade ausente, sem período, caractere sem grafia, prorrogação só de hora, Perfil substituído inteiro;
   - o cancelado do piloto;
   - o período encerrado por `encerrar_inscricoes`;
   - o mesmo número em duas unidades, com a segunda unidade da `110`;
   - um caso por Edital, porque o 91/2026 repetido colide.
-- [ ] T004 [P] Acrescentar a capacidade `material:gerar` e o papel `comunicacao` em `processo_seletivo/interface/identidade.py` (`PAPEIS`, `DESCRICOES`), sem concedê-la a nenhum papel existente.
+- [x] T004 [P] Acrescentar a capacidade `material:gerar` e o papel `comunicacao` em `processo_seletivo/interface/identidade.py` (`PAPEIS`, `DESCRICOES`), sem concedê-la a nenhum papel existente.
   - Atualizar `tests/seguranca/test_vinculos.py` (`len(PAPEIS)`), o ícone em `processo_seletivo/interface/demonstracao.py`, os comentários de "oito papéis" em `navegacao.py` e `acessos.py`, e decidir o `LIMIAR_DA_BUSCA` (9 ou a busca aparece), com o teste de `tests/interface/test_entrada_da_gestao.py`.
   - Teste novo em `tests/authorization/test_papel_da_comunicacao.py`: o papel carrega só a capacidade, e nenhum outro papel a tem (FR-3403, D-012).
 
@@ -77,7 +77,7 @@ Cada incremento é um PR, revisto e mergeado antes do seguinte. **O merge é do 
 **Independent Test**: 91/2026 prorrogado; a tela mostra o término vigente, a proveniência da
 Retificação, as quatro localidades e uma legenda sem "abertas".
 
-- [ ] T005 [P] [US1] **Teste primeiro**: a ficha, em `tests/integration/kit/test_ficha.py`:
+- [x] T005 [P] [US1] **Teste primeiro**: a ficha, em `tests/integration/kit/test_ficha.py`:
   - equivalência com o cartão da vitrine **e** com o contexto da página da seleção, no mesmo instante, em todos os cenários (FR-3407);
   - modo por cenário, inclusive a P-8 (FR-3410);
   - proveniência pela regra da `070`, com Perfil substituído inteiro, Evento substituído inteiro e Perfil acrescentado (FR-3408);
@@ -87,8 +87,8 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
   - vagas saneadas e reserva por `TIPOS_COM_RESERVA` (FR-3406);
   - termos da lista em valor oficial, apontados e não alterados (EC-26);
   - e os EC-2 a EC-7, EC-11 a EC-13 e EC-19.
-- [ ] T006 [US1] Implementar a ficha em `processo_seletivo/portal/ficha.py` (`Ficha`, `Oferta`, `Origem`, `ler`, `diferencas`), só sobre as leituras da T002 e as da tabela "O que existe" (FR-3404, FR-3406 a FR-3411, FR-3448; D-002 a D-004, D-018). Nenhuma importação de `interface/` além de `vagas_do_conteudo`
-- [ ] T007 [P] [US1] **Teste primeiro**: os textos, em `tests/unit/kit/test_textos.py`:
+- [x] T006 [US1] Implementar a ficha em `processo_seletivo/portal/ficha.py` (`Ficha`, `Oferta`, `Origem`, `ler`, `diferencas`), só sobre as leituras da T002 e as da tabela "O que existe" (FR-3404, FR-3406 a FR-3411, FR-3448; D-002 a D-004, D-018). Nenhuma importação de `interface/` além de `vagas_do_conteudo`
+- [x] T007 [P] [US1] **Teste primeiro**: os textos, em `tests/unit/kit/test_textos.py`:
   - formas por modo (FR-3412, FR-3413);
   - datas absolutas com "horário de Brasília" (FR-3415);
   - neutro sem "inscri" nas frases (FR-3416);
@@ -100,30 +100,30 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
   - total sempre como "N vagas em K opções" (FR-3425);
   - teto de quatro na legenda (FR-3425, EC-23);
   - e os EC-5, EC-6 e EC-12.
-- [ ] T008 [US1] Implementar `processo_seletivo/interface/kit_textos.py`: formas fechadas nomeadas, Markdown e texto simples (FR-3412 a FR-3421)
-- [ ] T009 [P] [US1] **Teste primeiro**: a varredura de vocabulário em `tests/test_vocabulario_do_kit.py`, sobre o material gerado em todos os cenários. Ela reprova frase fixa, composição e manchete; valor literal só é apontado. Usa a lista da FR-3414 e a `PROIBIDAS` do portal (FR-3414, FR-3416; D-017)
-- [ ] T010 [P] [US5] **Teste primeiro**: autorização em `tests/authorization/test_kit_de_divulgacao.py`:
+- [x] T008 [US1] Implementar `processo_seletivo/interface/kit_textos.py`: formas fechadas nomeadas, Markdown e texto simples (FR-3412 a FR-3421)
+- [x] T009 [P] [US1] **Teste primeiro**: a varredura de vocabulário em `tests/test_vocabulario_do_kit.py`, sobre o material gerado em todos os cenários. Ela reprova frase fixa, composição e manchete; valor literal só é apontado. Usa a lista da FR-3414 e a `PROIBIDAS` do portal (FR-3414, FR-3416; D-017)
+- [x] T010 [P] [US5] **Teste primeiro**: autorização em `tests/authorization/test_kit_de_divulgacao.py`:
   - sem a capacidade, recusa explicada;
   - outra unidade, 404;
   - inexistente, 404;
   - não publicado, 409 (EC-1);
   - a capacidade não abre ato nenhum, testado por ato;
   - a tela não mostra nada de Retificação em elaboração (FR-3402 a FR-3405).
-- [ ] T011 [US1] Tela GET em `processo_seletivo/interface/kit_de_divulgacao.py`:
+- [x] T011 [US1] Tela GET em `processo_seletivo/interface/kit_de_divulgacao.py`:
   - porta na ordem do contrato (FR-3402);
   - a rota em `processo_seletivo/interface/urls.py`;
   - a ação em `processo_seletivo/interface/acoes.py`, decidida só pelo estado, só no detalhe (FR-3401);
   - o host local tratado pela `_host_local` (FR-3447, EC-28);
   - as linhas no `specs/033-navegacao-por-capacidade/inventario-das-negativas.md`;
   - o módulo em `MODULOS_DE_VIEW` de `tests/test_gramatica_das_portas.py`.
-- [ ] T012 [US1] Template `processo_seletivo/interface/templates/interface/kit_de_divulgacao.html`, com a folha `processo_seletivo/interface/static/interface/telas/kit-de-divulgacao.css` e o script `processo_seletivo/interface/static/interface/kit-de-divulgacao.js`:
+- [x] T012 [US1] Template `processo_seletivo/interface/templates/interface/kit_de_divulgacao.html`, com a folha `processo_seletivo/interface/static/interface/telas/kit-de-divulgacao.css` e o script `processo_seletivo/interface/static/interface/kit-de-divulgacao.js`:
   - conferência com proveniência e os termos apontados;
   - textos com "Copiar";
   - as faixas da FR-3443;
   - a impressão conferida no formulário (FR-3446);
   - cópia por teclado com `aria-live` (FR-3420, FR-3444; D-015);
   - teste do script em `tests/javascript/kit-de-divulgacao.test.js`.
-- [ ] T013 [P] [US1] Testes da tela em `tests/interface/test_kit_de_divulgacao.py`:
+- [x] T013 [P] [US1] Testes da tela em `tests/interface/test_kit_de_divulgacao.py`:
   - ação visível só com a capacidade, e indisponível com motivo antes da publicação (FR-3401);
   - os três modos na tela (FR-3443);
   - resposta privada;
@@ -137,7 +137,7 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
 
 ## Phase 4: User Story 3 — Exportação e desatualização (P1)
 
-- [ ] T014 [P] [US3] **Teste primeiro**: a exportação, em `tests/integration/kit/test_exportacao.py`:
+- [x] T014 [P] [US3] **Teste primeiro**: a exportação, em `tests/integration/kit/test_exportacao.py`:
   - md e txt registram `EXPORTAR_MATERIAL` com o `detalhe` do data-model, `previous_state` igual ao atual e o rótulo legível (FR-3435, FR-3436);
   - abrir e copiar não registram;
   - o kit não grava nada além do evento (FR-3405);
@@ -150,7 +150,7 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
   - impressão de versão anterior (FR-3448);
   - Edital mudado entre a tela e a exportação gera 409 (FR-3446, EC-27);
   - sem exportação anterior, sem faixa (EC-20).
-- [ ] T015 [US3] Exportação md/txt em `processo_seletivo/interface/kit_de_divulgacao.py`:
+- [x] T015 [US3] Exportação md/txt em `processo_seletivo/interface/kit_de_divulgacao.py`:
   - POST, anexo, `nosniff`;
   - conferência da impressão;
   - `record_event`;
@@ -159,7 +159,9 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
   - o rótulo em `OPERACOES` (`processo_seletivo/interface/views.py`) e a operação em `OPERACOES_QUE_NAO_CONTAM` (`processo_seletivo/interface/relatorio_trilha.py`).
 
   Cobre FR-3435, FR-3436, FR-3439 a FR-3442 e FR-3445 a FR-3448.
-- [ ] T016 [P] [US3] Estender `tests/test_trilha_legivel.py` para varrer também `processo_seletivo/interface/*.py` (D-005)
+- [x] T016 [P] [US3] Estender `tests/test_trilha_legivel.py` para varrer também `processo_seletivo/interface/*.py` (D-005)
+
+**Feito em 01/11/2026** (commit do incremento A): suíte completa contra PostgreSQL com 14392 passando e 15 pulados antes do ajuste do README; recorte do kit e dos guardiões tocados, 1682 passando; verificação pelo navegador como Comunicação no 91/2026 do corpus (conferência, cópia anunciada, faixa de desatualização, 375 px sem rolagem horizontal, console sem erro). **Ficaram fora do A, registrados**: na T003, os cenários de caractere sem grafia e de mesmo número em duas unidades (são da peça e da legenda com sigla, que já tem teste unitário); na T005, os casos de Perfil ou Evento substituído inteiro e de Perfil acrescentado, porque a ficha usa `origens()` e `contexto()` da `070` sem mudança, e a regra é testada lá (`tests/unit/duvidas/test_origem.py`, `test_casos_da_revisao.py`); e o EC-4 (P-8), que não se constrói mais pela interface desde a decisão de 28/09 sobre o RC-118 — o ramo do código existe e espera a resposta da P-8.
 
 **Checkpoint A**: `make lint check test-pg` verde. Demonstração do [quickstart](quickstart.md) §A pela interface. PR do incremento A.
 

@@ -62,7 +62,7 @@ apareceram olhando as imagens. Por isso esta spec exige teste geométrico **e** 
 | Versão vigente no instante | `publicacoes/application/selectors.py` (`effective_version`) | Usada como está |
 | Retificação de vigência futura | `interface/agenda.py` (`retificacoes_a_vigorar`) | **Movida** para `publicacoes/application/selectors.py` (D-002) |
 | Original × vigente e a prorrogação | `interface/relatorio_do_edital.py` (`_versoes`, e a regra em linha de `fatos_do_edital`) | **Extraída** como `prorrogacao(original, vigente)` em `publicacoes/application/selectors.py`, usada pelo relatório e pela ficha (D-002) |
-| Origem de cada valor | `duvidas/domain/origem.py` (`origens`, `acrescimos`) | **Movida** para `publicacoes/domain/origem.py`, e a `070` passa a importar de lá (D-002) |
+| Origem de cada valor | `duvidas/domain/origem.py` (`origens`, `acrescimos`) e `duvidas/application/consultar.py` (`contexto`) | Usadas como estão: o `contexto()` monta atos e registros pela regra da `070`, e o portal já o importa (D-002) |
 | Numeração das Retificações publicadas | `interface/relatorio_do_edital.py` (`_retificacoes_publicadas`) | Uma só, compartilhada (FR-3406) |
 | Período de inscrições, inclusive o cancelado | `inscricoes/domain/periodo.py` (`periodo_de_inscricoes`) | Usada como está |
 | Desfecho do Edital e do Processo | `processos/application/selectors.py` (`desfechos`) | Usada como está |
@@ -379,8 +379,8 @@ Cada caso aqui é requisito, e tem linha própria na [matriz](rastreabilidade.md
   o cartão da vitrine **e** com o contexto da página da seleção. Um teste MUST comparar os três.
 - **FR-3408**: A conferência MUST indicar, para o início e o término do período e para as vagas de
   cada Perfil, o ato ou os atos que deram o valor ("publicação original" ou "Retificação nº N"). A
-  regra é a da `070` (`origens`, `acrescimos`), que cobre Perfil ou Evento substituído inteiro e
-  Perfil acrescentado. A leitura de `ProvenienciaConteudo` pelo caminho exato MUST NOT ser usada.
+  regra é a da `070` (`origens` sobre o `contexto()`, que já aplica `acrescimos`), e cobre Perfil
+  ou Evento substituído inteiro e Perfil acrescentado. A leitura de `ProvenienciaConteudo` pelo caminho exato MUST NOT ser usada.
 - **FR-3409**: A ficha MUST NOT inferir curso, campus, polo, modalidade ou tipo de seleção. Nome e
   localidade são literais. "Em N localidades" só se escreve quando toda opção declara localidade.
 - **FR-3410**: O modo do material MUST ser derivado assim:

@@ -30,7 +30,7 @@ já existe, uma chave de ambiente e uma capacidade.
 | `termos_em_valor_oficial` | lista | varredura da FR-3414 sobre os valores literais | Apontados na conferência (EC-26) |
 | `versao_id`, `versao_hash`, `versao_desde`, `versao_ato` | texto | `VersaoConsolidada` vigente; ato pela numeração única das Retificações publicadas, por `published_at` | — |
 | `retificacao_a_vigorar` | instante \| nulo | `retificacoes_a_vigorar` | **Só o instante**; o conteúdo futuro nunca é lido (FR-3404) |
-| `origens[]` | lista de `Origem` | `publicacoes/domain/origem.py` (`origens`, `acrescimos`, ex-`070`) | Campo, valor, caminho 004, **atos** (FR-3408); nunca o caminho exato da `ProvenienciaConteudo` |
+| `origens[]` | lista de `Origem` | `origens` sobre o `contexto()` da `070` (`duvidas/`), que já aplica `acrescimos` | Campo, valor, caminho 004, **atos** (FR-3408); nunca o caminho exato da `ProvenienciaConteudo` |
 | `impressao`, `versao_da_impressao` | SHA-256, inteiro | campos afirmados | FR-3411, FR-3448 (D-018) |
 
 **`Oferta`**: `perfil_id`, `nome`, `localidade`, `vagas_imediatas` (saneadas como em

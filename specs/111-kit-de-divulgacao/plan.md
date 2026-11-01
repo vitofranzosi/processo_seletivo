@@ -80,9 +80,7 @@ backend/processo_seletivo/
 ├── publicacoes/
 │   ├── application/selectors.py       # + retificacoes_a_vigorar, versoes_original_e_vigente,
 │   │                                  #   prorrogacao, numeração das Retificações (movidas, D-002)
-│   ├── domain/origem.py               # NOVO — origens/acrescimos, movidos de duvidas/ (D-002)
 │   └── infrastructure/pdf.py          # apelido público de _quebrar (D-009)
-├── duvidas/domain/origem.py           # passa a importar de publicacoes/domain/origem.py
 ├── interface/agenda.py                # importa retificacoes_a_vigorar de publicacoes
 ├── interface/relatorio_do_edital.py   # usa as leituras movidas; a regra em linha desaparece
 ├── portal/
