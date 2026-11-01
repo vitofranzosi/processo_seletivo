@@ -282,3 +282,17 @@ janela que a trava fecha.
 **Um detalhe que a matriz não previa.** `Inscricao.objects.filter(…).delete()` sobre a enviada já
 parava antes do banco, no `PROTECT` de `ItemDaListaExigida.inscricao`; a exclusão é exercitada por
 SQL cru, onde só o gatilho a recusa.
+
+**Revisão final (01/11/2026).** Duas condições conferidas a pedido da revisão do PR, e as duas
+endurecidas:
+
+- *Revisão na reabertura.* `compare_and_swap` (`shared/concurrency.py`) grava sempre
+  `revision = revision + 1`, e é por ele que `reabrir` escreve. O gatilho passou de
+  `NEW.revision > OLD.revision` para `NEW.revision = OLD.revision + 1`; uma reabertura que não
+  avança ou que salta a revisão é recusada (`test_reabertura_com_outra_revisao_e_recusada`).
+- *Motivo da revogação.* O contrato exige (`MotivoRequest`, `required: [reason]`, `minLength: 1`,
+  em `specs/001…/contracts/openapi.yaml`) e a tela também (`exige_motivo=True`), mas o comando
+  `revoke_homologation` não conferia — ao contrário do vizinho `devolver_edital`, que recusa com
+  `reason_required`. O comando passou a recusar do mesmo jeito, e o gatilho a exigir
+  `btrim(revocation_reason) <> ''`. Nenhuma regra nova: as três camadas passaram a dizer o que o
+  contrato já dizia.

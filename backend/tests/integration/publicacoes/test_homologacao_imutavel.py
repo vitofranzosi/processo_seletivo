@@ -101,6 +101,36 @@ def test_a_revogacao_nao_leva_a_autoria_junto(homologado, como_producao):  # noq
         )
 
 
+@pytest.mark.parametrize("motivo", ["", "   "], ids=["vazio", "espacos"])
+def test_a_revogacao_sem_motivo_e_recusada_no_banco(homologado, como_producao, motivo):  # noqa: F811
+    from django.utils import timezone
+
+    with como_producao(), pytest.raises(DatabaseError, match=IMUTAVEL), transaction.atomic():
+        Homologacao.objects.filter(revisao__edital=homologado).update(
+            revoked_at=timezone.now(), revoked_by="homologador", revocation_reason=motivo
+        )
+
+
+def test_o_comando_recusa_revogar_sem_motivo(homologado):
+    """O contrato e a tela já exigiam o motivo; agora o comando também, com recusa legível."""
+    from processo_seletivo.publicacoes.application.publish_edital import revoke_homologation
+    from processo_seletivo.shared.api.problems import DomainError
+    from tests.conftest import ator_institucional
+
+    with pytest.raises(DomainError) as recusa:
+        revoke_homologation(
+            actor=ator_institucional("homologador", *HOMOLOGADOR),
+            edital_id=homologado.id,
+            expected_revision=4,
+            reason="   ",
+            idempotency_key="revogar-sem-motivo-a03",
+            correlation_id="teste",
+        )
+
+    assert recusa.value.code == "reason_required"
+    assert Homologacao.objects.get(revisao__edital=homologado).revoked_at is None
+
+
 def test_a_revogacao_nao_se_repete_nem_se_reescreve(api_client, homologado, como_producao):  # noqa: F811
     from django.utils import timezone
 

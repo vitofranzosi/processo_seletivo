@@ -125,6 +125,21 @@ def test_reabertura_que_leva_conteudo_junto_e_recusada(concluida, como_producao,
         )
 
 
+@pytest.mark.parametrize("salto", [0, 2], ids=["sem-avancar", "dois"])
+def test_reabertura_com_outra_revisao_e_recusada(concluida, como_producao, salto):  # noqa: F811
+    """`compare_and_swap` avança a revisão em **uma** unidade, e a reabertura no banco também."""
+    from django.db.models import F
+
+    with como_producao(), pytest.raises(DatabaseError, match=CONCLUIDA), transaction.atomic():
+        Avaliacao.objects.filter(pk=concluida.pk).update(
+            estado=Avaliacao.Estado.RASCUNHO,
+            concluida_em=None,
+            concluida_por="",
+            versao=None,
+            revision=F("revision") + salto,
+        )
+
+
 def test_a_concluida_nao_se_exclui(concluida, como_producao):  # noqa: F811
     with como_producao(), pytest.raises(DatabaseError, match=CONCLUIDA), transaction.atomic():
         with connection.cursor() as cursor:

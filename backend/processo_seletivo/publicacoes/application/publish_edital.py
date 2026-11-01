@@ -649,6 +649,10 @@ def revoke_homologation(
         edital = _locked_edital(actor, edital_id)
         if edital.status != Edital.Status.HOMOLOGADO:
             raise DomainError("invalid_state", "Edital não está homologado.", 409)
+        # O contrato (`MotivoRequest`) e a tela (`exige_motivo`) já exigiam; o comando não
+        # conferia, e o gatilho da `publicacoes/0012` recusaria com erro de banco (A-03).
+        if not (reason or "").strip():
+            raise DomainError("reason_required", "A revogação exige motivo.", 422)
         homologacao = Homologacao.objects.filter(
             revisao__edital=edital, revoked_at__isnull=True
         ).latest("homologated_at")

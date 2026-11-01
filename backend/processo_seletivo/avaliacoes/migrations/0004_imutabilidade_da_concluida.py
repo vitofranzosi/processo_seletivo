@@ -7,9 +7,10 @@ recusasse.
 
 **Uma transição sai legitimamente de `CONCLUIDA`: a reabertura da presidência**
 (`avaliacao.reabrir`). Ela tem forma exata, e o gatilho exige essa forma campo a campo: estado volta
-a `RASCUNHO`; `concluida_em`, `concluida_por` e `versao` são zerados; a revisão avança; **todo o
-resto fica igual**. Admitir "qualquer `UPDATE` que leve a `RASCUNHO`" deixaria passar
-`SET estado = 'RASCUNHO', pontuacao = 99` como se fosse reabertura. Nota, sentido e parecer ficam,
+a `RASCUNHO`; `concluida_em`, `concluida_por` e `versao` são zerados; a revisão avança **uma**
+unidade, como `compare_and_swap` faz; **todo o resto fica igual**. Admitir "qualquer `UPDATE` que
+leve a `RASCUNHO`" deixaria passar `SET estado = 'RASCUNHO', pontuacao = 99` como se fosse
+reabertura. Nota, sentido e parecer ficam,
 porque são o ponto de partida do rascunho reaberto; o que governou a conclusão anterior está na
 `ConclusaoAvaliacao`, que é append-only nas duas camadas.
 
@@ -40,7 +41,7 @@ BEGIN
        AND NEW.concluida_em IS NULL
        AND NEW.concluida_por = ''
        AND NEW.versao_id IS NULL
-       AND NEW.revision > OLD.revision
+       AND NEW.revision = OLD.revision + 1
        AND NEW.id = OLD.id
        AND NEW.atribuicao_id = OLD.atribuicao_id
        AND NEW.identity_subject = OLD.identity_subject

@@ -7,8 +7,10 @@ publicação podia ser reescrita sem que nada recusasse.
 **Não é append-only**, e por isso fica fora de `TABELAS_APPEND_ONLY`: a revogação
 (`publish_edital.revoke_homologation`) grava `revoked_at`, `revoked_by` e `revocation_reason` na
 própria linha. É a única escrita depois do `INSERT`, e o gatilho admite só ela — com a homologação
-ainda vigente, preenchendo o instante e o autor, e sem tocar o que foi homologado, por quem, quando
-e por quê. Revogar de novo, reescrever a revogação ou apagar a linha são recusados.
+ainda vigente, preenchendo instante, autor e motivo, e sem tocar o que foi homologado, por quem,
+quando e por quê. O motivo é obrigatório no contrato (`MotivoRequest`, `minLength: 1`), na tela
+(`exige_motivo`) e no comando; o gatilho diz o mesmo a quem não passa por nenhum deles. Revogar de
+novo, reescrever a revogação ou apagar a linha são recusados.
 
 O modelo **não** ganha `save`/`delete` que recusem: o guardião de
 `test_imutabilidade_do_historico` exige que todo modelo que se declara append-only esteja em
@@ -24,6 +26,7 @@ BEGIN
        AND OLD.revoked_at IS NULL
        AND NEW.revoked_at IS NOT NULL
        AND NEW.revoked_by <> ''
+       AND btrim(NEW.revocation_reason) <> ''
        AND NEW.id = OLD.id
        AND NEW.revisao_id = OLD.revisao_id
        AND NEW.homologated_by = OLD.homologated_by
