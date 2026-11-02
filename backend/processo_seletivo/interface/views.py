@@ -160,6 +160,7 @@ from processo_seletivo.interface import (
     atos_retificacao,
     conducao_do_marco,
     demonstracao,
+    encerramento,
     forms,
     identidade,
     navegacao,
@@ -4166,14 +4167,35 @@ def praticar_ato(request, edital_id, acao):
         contexto["recusa_certa"] = True
 
     if request.method == "GET":
+        _situacoes_do_desfecho(contexto, edital, ator, ato)
         return render(request, "interface/confirmar.html", contexto)
 
     try:
         _executar(ato, request, ator, edital)
     except DomainError as exc:
         contexto["erro"] = exc.detail
+        # **A lista de agora, e não a da abertura da tela** (113, FR-3543): o que impediu pode ter
+        # nascido depois do GET, e a tela que reexibe a recusa precisa mostrá-lo.
+        edital.refresh_from_db()
+        _situacoes_do_desfecho(contexto, edital, ator, ato)
         return render(request, "interface/confirmar.html", contexto, status=exc.status)
     return redirect(f"{reverse('interface:detalhe', args=[edital.id])}?ato={ato.chave}")
+
+
+def _situacoes_do_desfecho(contexto, edital, ator, ato):
+    """O que encerrar e cancelar dizem antes do ato (113). O impedimento esconde o confirmar.
+
+    **Só a quem pode praticar o ato, e só quando a tela vai ser mostrada.** Quem não tem a
+    permissão já lê "Você não pode praticar este ato", e as contagens do Edital não são dele; e o
+    POST aceito redireciona — a conferência que vale é a do comando, sob as travas.
+    """
+    if contexto.get("impedimento"):
+        contexto["desfecho"] = encerramento.Confirmacao()
+        return
+    confirmacao = encerramento.da_confirmacao(edital, ator, acao=ato.chave, agora=timezone.now())
+    contexto["desfecho"] = confirmacao
+    if confirmacao.impedimentos:
+        contexto["recusa_certa"] = True
 
 
 def _resumo_pendente(ator):

@@ -349,7 +349,7 @@ def aferir(
             marco=estado.get("marco"),
             ato=ato,
             at=at,
-            # **O eixo da lista atravessa até aqui** (021, D-015). Sem ele, `_janela_aberta`
+            # **O eixo da lista atravessa até aqui** (021, D-015). Sem ele, `janela_aberta_ate`
             # procurava a publicação da ampla concorrência: havendo só uma preliminar de PPI, a
             # consulta devolvia `None`, a janela não existia, e a definitiva da PPI era liberada
             # imediatamente — antes de qualquer prazo recursal.
@@ -453,7 +453,9 @@ def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None, lista_i
         ato=ato,
     ):
         return (PROVIDENCIA_PENDENTE, MENSAGENS[PROVIDENCIA_PENDENTE])
-    fecha = _janela_aberta(edital=edital, marco_id=marco_id, marco=marco, at=at, lista_id=lista_id)
+    fecha = janela_aberta_ate(
+        edital=edital, marco_id=marco_id, marco=marco, at=at, lista_id=lista_id
+    )
     if fecha is not None:
         # **A mensagem diz o instante**, e não só que há prazo: quem lê precisa saber quando voltar,
         # e "aguarde" sem data manda a pessoa tentar de novo às cegas.
@@ -467,8 +469,11 @@ def _quando(momento):
     return momento.astimezone(ZONA).strftime("%d/%m/%Y às %Hh%M")
 
 
-def _janela_aberta(*, edital, marco_id, marco, at, lista_id=None):
+def janela_aberta_ate(*, edital, marco_id, marco, at, lista_id=None):
     """O instante em que o prazo declarado fecha, se ele ainda corre — senão `None` (FR-082).
+
+    **Pública desde a `113`**: é também a regra do impedimento de encerrar com prazo recursal em
+    curso (FR-3530). Uma conta só para "a definitiva espera o prazo" e "o encerramento espera".
 
     **Onde há janela declarada, o sistema verifica** — e é justamente por isso que a declaração
     expressa é recusada ali: pedir que a pessoa afirme o que a máquina sabe reintroduziria, com mais

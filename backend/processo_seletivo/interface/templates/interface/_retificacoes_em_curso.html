@@ -20,7 +20,9 @@ amplia acesso nenhum.
     <span class="justificativa">{{ item.retificacao.justification|truncatechars:160 }}</span>
     {% if item.devolvida %}<span class="justificativa">Motivo da devolução: {{ item.retificacao.return_reason|truncatechars:160 }}</span>{% endif %}
     <span class="bastao">
-      {% if item.meu_ato %}<strong>O próximo ato é seu:</strong> {{ item.passo.ato }}.
+      {% comment %} A Retificação de Edital encerrado ou cancelado não tem próximo passo (113, FR-3544). {% endcomment %}
+      {% if item.parada %}<strong>Não pode mais prosseguir:</strong> o Edital foi {{ item.parada }}.
+      {% elif item.meu_ato %}<strong>O próximo ato é seu:</strong> {{ item.passo.ato }}.
       {% else %}<strong>Aguardando {{ item.passo.papel }}</strong> para {{ item.passo.ato }}.{% if item.passo.observacao %} {{ item.passo.observacao }}{% endif %}{% endif %}
     </span>
     {% if com_continuar and item.editar %}<a class="acao" href="{{ item.editar }}">Continuar a elaboração</a>{% endif %}
