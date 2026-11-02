@@ -96,7 +96,7 @@ def main():
             pg.wait_for_timeout(150)
             return pg
 
-        for visao in "cab":
+        for visao in "cnab":
             for largura in LARGURAS:
                 pg = abrir(f"index.html?visao={visao}&cenario=denso", largura)
                 medida = pg.evaluate(MEDIR)
@@ -115,12 +115,15 @@ def main():
                 pg.close()
 
         # Calendário + lista (hoje) contra calendário + C: a mesma página, com e sem a troca.
-        for largura in ("desktop", "celular"):
-            pg = abrir("agenda-completa.html?visao=c", largura)
-            medida = pg.evaluate(MEDIR)
-            medidas.append({"tela": "agenda-completa-com-c", "largura": largura, **medida})
-            pg.screenshot(path=SAIDA / f"agenda-completa-{largura}.jpg", quality=80, full_page=True)
-            pg.close()
+        for variante, sufixo in (("c", ""), ("n", "-com-nomes")):
+            for largura in ("desktop", "celular"):
+                pg = abrir(f"agenda-completa.html?visao={variante}", largura)
+                medida = pg.evaluate(MEDIR)
+                tela = f"agenda-completa-com-{variante}"
+                medidas.append({"tela": tela, "largura": largura, **medida})
+                inteira = SAIDA / f"agenda-completa{sufixo}-{largura}.jpg"
+                pg.screenshot(path=inteira, quality=80, full_page=True)
+                pg.close()
 
         for nome in ("atual-mes", "atual-mes-denso", "atual-proximos", "atual-proximos-denso"):
             for largura in ("desktop", "celular"):
@@ -137,6 +140,10 @@ def main():
             ("c-inscricoes-em-curso", "index.html?" + INSCRICOES_EM_CURSO, "desktop"),
             ("c-inscricoes-so-eventos", "index.html?" + SO_EVENTOS, "desktop"),
             ("a-dezembro", "index.html?visao=a&cenario=denso&mes=2026-12", "desktop"),
+            ("n-dezembro", "index.html?visao=n&cenario=denso&mes=2026-12", "desktop"),
+            ("n-074-desktop", "index.html?visao=n&cenario=demo074", "desktop"),
+            ("n-074-celular", "index.html?visao=n&cenario=demo074", "celular"),
+            ("c-074-desktop", "index.html?visao=c&cenario=demo074", "desktop"),
         ]
         for nome, caminho, largura in casos:
             pg = abrir(caminho, largura)

@@ -121,6 +121,18 @@ dialog dt{font-weight:600}dialog dd{margin:0}
 .fechar{float:right}
 .nota{font-size:.8rem;color:var(--texto-fraco)}
 
+/* C+: identidade à esquerda, trilha com nomes à direita; no estreito, uma linha por evento. */
+.linha-n{display:grid;grid-template-columns:var(--coluna) 1fr;gap:.75rem;padding:.5rem .75rem;border-top:1px solid var(--borda);align-items:start}
+.linha-n .linhas-n{display:none}
+.trilha-n{position:relative;min-height:28px}
+.trilha-n .barra,.trilha-n .marco{position:absolute}
+.rotulo-n{position:absolute;font:inherit;font-size:.72rem;line-height:1.2;text-align:left;background:none;border:0;padding:0;color:var(--texto);cursor:pointer}
+.rotulo-n:hover{text-decoration:underline}
+.rotulo-n.dentro{height:16px;line-height:16px;overflow:hidden;white-space:nowrap}
+.rotulo-n.dentro{color:var(--verde-escuro)}
+.peca .barra.em_curso+.rotulo-n.dentro{color:var(--branco)}
+.mesmo-cronograma{font-size:.78rem;color:var(--amarelo);font-weight:600}
+
 /* Largo: a coluna de identidade cresce para que cada linha de situação caiba numa linha. */
 @media (min-width:80rem){.faixas{--coluna:23rem}}
 
@@ -129,10 +141,16 @@ dialog dt{font-weight:600}dialog dd{margin:0}
   .faixas{--coluna:12rem}
 }
 @media (max-width:40rem){
+  /* Sem o recuo do contêiner: as linhas por evento já trazem o seu, igual ao do cabeçalho. */
+  .linha-n{grid-template-columns:1fr;padding:.5rem 0 0}
+  .linha-n>.coluna-identidade{padding:0 .75rem}
+  .linha-n .trilha-n{display:none}
+  .linha-n .linhas-n{display:block;border-top:1px solid var(--borda)}
   .cabecalho-faixas,.faixas summary,.linha-evento{grid-template-columns:1fr;gap:.3rem}
   .cabecalho-faixas>.coluna-identidade{display:none}
   .dia-regua:not(.marcado):not(.referencia){color:transparent}
-  .dia-regua.fim-de-semana{background:none}
+  /* O dia da situação pode cair num fim de semana: o fundo dele não some. */
+  .dia-regua.fim-de-semana:not(.referencia){background:none}
   .sequencia{padding-left:.75rem}
   .sequencia li{grid-template-columns:1fr;gap:0}
 }

@@ -115,6 +115,10 @@ CASOS = [
     ("curso", "2026-11-02"),
     ("curso", "2026-11-17"),
     ("relampago", "2026-11-11"),
+    # Dois clones do T08: três Editais com o mesmo cronograma, como 901, 902 e 903 nos prints.
+    # É o caso que a faixa com nomes agrupa numa linha só.
+    ("sorteio", "2026-10-27"),
+    ("sorteio", "2026-10-27"),
     ("aberto", "2026-10-20"),
 ]
 
@@ -284,6 +288,54 @@ def pagina_atual(titulo, nota, trecho):
     )
 
 
+# Os seis Editais que aparecem nos prints da agenda (01, 91, 901, 902, 903 e 92), lidos de um
+# banco local de demonstração que os tem publicados. São os mesmos Editais e os mesmos nomes de
+# evento, mas **não** as mesmas datas: a semente as gera a partir do dia em que roda, e nenhum
+# banco local reproduz as do print. Servem pelo formato — o 92 tem dezessete eventos com nomes
+# longos, e 901 a 903 têm cronogramas idênticos — e trazem os horários que a transcrição não tem.
+# 22/11 é a referência do estudo D–G; 01/11, a dos prints.
+PRINTS = ("01", "91", "901", "902", "903", "92")
+REFERENCIAS_DOS_PRINTS = ("2026-11-01T12:00:00-03:00", "2026-11-22T12:00:00-03:00")
+
+
+def exportar_prints():
+    saida = {"referencias": {}, "zona": str(ZONA)}
+    with transaction.atomic(), connection.cursor() as cursor:
+        cursor.execute("SET TRANSACTION READ ONLY")
+        editais = list(
+            Edital.objects.filter(
+                institution_scope="cefor", year=2026, number__in=PRINTS
+            ).select_related("processo")
+        )
+        if len(editais) != len(PRINTS):
+            raise SystemExit("O banco não tem os seis Editais publicados.")
+        for referencia in REFERENCIAS_DOS_PRINTS:
+            agora = datetime.fromisoformat(referencia)
+            versoes = versoes_vigentes(edital_ids=[e.pk for e in editais], at=agora)
+            saida["referencias"][referencia[:10]] = dict(
+                instante=referencia,
+                demonstrativos=[
+                    projetar(
+                        agenda.EditalDaAgenda.de(edital),
+                        versoes[edital.pk].content,
+                        agora,
+                        "Banco de demonstração ps_074_local: Editais e nomes dos prints, "
+                        "com outras datas",
+                        "",
+                        versoes[edital.pk].valid_from.isoformat(),
+                    )
+                    for edital in sorted(editais, key=lambda e: int(e.number))
+                ],
+                sinteticos=[],
+                historico106=[],
+            )
+    (PROTOTIPO / "dados-prints.js").write_text(
+        "window.DADOS_PRINTS = " + json.dumps(saida, ensure_ascii=False, indent=1) + ";\n",
+        encoding="utf-8",
+    )
+    print(f"Exportados os {len(PRINTS)} Editais do ps_074_local, em duas referências.")
+
+
 def exportar():
     if connection.settings_dict["NAME"] != "ps_demo_101":
         raise SystemExit("Use exclusivamente DB_NAME=ps_demo_101, banco fictício da agenda.")
@@ -406,4 +458,4 @@ def exportar():
 
 
 if __name__ == "__main__":
-    exportar()
+    exportar_prints() if connection.settings_dict["NAME"] == "ps_074_local" else exportar()

@@ -34,17 +34,18 @@ figure img.alta{max-height:120mm;object-fit:cover;object-position:top}
 <body>
 
 <h1>Cronogramas dos Editais — briefing para a próxima sessão</h1>
-<p class="meta"><strong>Versão 2</strong> — incorpora o parecer externo sobre a alternativa C (seção 5).</p>
+<p class="meta"><strong>Versão 3</strong> — incorpora o parecer externo sobre C (seção 5) e a variante C+, com os nomes visíveis, em resposta ao estudo D–G (seção 6).</p>
 <p class="meta">GPS · Cefor/Ifes · 01/11/2026 · revisão do estudo de visualização dos cronogramas<br>
 Branch <code>claude/estudo-visualizacao-cronogramas-1950cd</code> (sem push) ·
 pasta <code>doc/estudo-cronogramas-revisao-2026-11-01/</code></p>
 
 <div class="caixa"><strong>Em uma frase.</strong> No lugar da lista "Períodos previstos em ‹mês›", abaixo do calendário da
-Agenda, propomos <strong>uma faixa por Edital</strong> (alternativa <strong>C</strong>, revisada). <strong>Fechada</strong>, é uma linha por
-Edital numa régua diária comum, com a situação de hoje em texto e com hora. <strong>Aberta</strong>, mostra uma linha por evento
-daquele Edital, alinhada à mesma régua. A mesma estrutura serve no desktop e no celular. C revisada ocupa mais
-altura que a lista atual; se o ganho de compreensão compensa, só tarefas com usuários dirão. A visão <strong>Próximos marcos</strong> continua como está. O Gantt por evento (A) e a timeline
-em cartões (B) ficam descartados como telas próprias.</div>
+Agenda, propomos <strong>uma faixa por Edital</strong> numa régua diária comum, em duas variantes ainda em teste:
+<strong>C revisada</strong>, com a situação em texto e os eventos ao abrir, e <strong>C+</strong>, com o nome de cada evento escrito
+uma vez, sem abrir nada, e cronogramas idênticos numa linha só. A próxima rodada deveria comparar
+<strong>Atual × C+ × G</strong> (o mapa semanal do estudo D–G) com usuários. A visão <strong>Próximos marcos</strong> continua como
+está; A e B ficam descartados como telas próprias. As duas variantes são mais altas que a lista atual; C+ no
+celular custa mais que o dobro.</div>
 
 <h2>1. Contexto</h2>
 <p>A <strong>Agenda dos Editais</strong> (spec 101, mergeada em 30/10, #336) mostra os cronogramas publicados e vigentes
@@ -121,12 +122,12 @@ duas vezes.</p>
 <ul>
 <li><strong>7 Editais do banco <code>ps_demo_101</code></strong> (101 a 107), a demonstração da Agenda, incluindo a Retificação
 real do 106: a prova passa de 21/11 para 23/11, com vigência em 04/11.</li>
-<li><strong>16 casos de teste T01 a T16</strong>, só em memória e nunca gravados. Têm a <em>forma</em> de cronogramas públicos
+<li><strong>18 casos de teste T01 a T18</strong>, só em memória e nunca gravados; T17 e T18 repetem o cronograma do T08. Têm a <em>forma</em> de cronogramas públicos
 do Cefor, com as datas deslocadas para setembro a dezembro: seleção de pessoal (89/2026, sete eventos), chamada
 com sorteio (69 e 78/2026), curso com inscrição longa (28/2026), inscrição de um dia (72/2026) e um cadastro sem
 término declarado. Um deles tem descrição de 120 caracteres.</li>
 <li>Os casos passam pelas mesmas <code>marcos_do_conteudo</code> e <code>periodos_do_conteudo</code> do produto. As telas atuais
-foram renderizadas pelo próprio <code>agenda.ler</code> e pelos templates de produção com os mesmos 23 Editais,
+foram renderizadas pelo próprio <code>agenda.ler</code> e pelos templates de produção com os mesmos 25 Editais,
 de modo que a comparação é contra a interface real.</li>
 </ul>
 <h3>Motor comum de régua</h3>
@@ -147,7 +148,7 @@ responsiva.</li>
 seguinte em texto.</li>
 </ul>
 
-<figure><img src="capturas/c-desktop.jpg"><figcaption>C no desktop: 23 Editais em novembro, ordenados pelo próximo marco. A linha pontilhada é o dia de referência (01/11).</figcaption></figure>
+<figure><img src="capturas/c-desktop.jpg"><figcaption>C no desktop: 25 Editais em novembro, ordenados pelo próximo marco. A linha pontilhada é o dia de referência (01/11).</figcaption></figure>
 
 <figure><img src="capturas/c-aberto-desktop.jpg"><figcaption>C com o Edital 102 aberto: cada evento numa linha, com nome inteiro, datas e hora, sob a mesma régua.</figcaption></figure>
 
@@ -181,31 +182,69 @@ campo novo (persistência) ou abreviação automática (o sistema reescrevendo o
 
 <figure><img src="capturas/c-inscricoes-so-eventos.jpg"><figcaption>Filtro "inscrições + em curso" com alcance "só os eventos filtrados": oito Editais ordenados por quem encerra primeiro. Com o alcance padrão, as demais etapas desses Editais continuam visíveis.</figcaption></figure>
 
-<h2>6. Medições</h2>
-<p>Novembro, 23 Editais, 68 eventos, situação em 01/11 às 12h, num Chromium sem janela. Nenhuma tela rola de lado.</p>
+<h2>6. Terceira rodada: nomes visíveis (C+) e o estudo D–G</h2>
+<p>Um terceiro estudo (<code>doc/estudo-organizacao-agenda-2026-11-01/</code>, sem commit no checkout principal) propôs um mapa
+semanal por Edital com o nome dos eventos em cada célula (D; e G, com o calendário recolhido) e recomendou testar G contra C
+revisada. A avaliação desse estudo apontou:</p>
+<ul>
+<li><strong>O mapa compra os nomes com repetição.</strong> Nas capturas dele, os Editais 01, 91 e 901 a 903 repetem o mesmo cartão em
+quatro semanas, e o término fica num texto pequeno. É o mecanismo que a D-002 recusou, por semana em vez de por dia, e a tela
+precisa de um aviso permanente de que "mesma coluna não é simultaneidade".</li>
+<li><strong>O concorrente estava em desvantagem:</strong> G foi comparado com a C que corta os nomes das barras.</li>
+<li><strong>Os dados não testam densidade nem o produto:</strong> 10 Editais e 19 eventos; quatro dos seis Editais dos prints são clones;
+sem horário, a tarefa de prazo tem um gabarito que o produto, com instantes, não daria.</li>
+<li><strong>A consulta do dia já existe</strong> (FR-2628). E é essa consulta estendida à semana; F, Próximos marcos com um destaque.
+São melhorias de telas existentes, a decidir à parte.</li>
+</ul>
+<p><strong>C+</strong> escreve o nome de cada evento uma vez, inteiro, sobre a mesma régua diária: dentro da barra quando cabe; senão,
+acima dela, começando no início da barra ou terminando no fim quando passaria do mês; rótulos que colidem descem de faixa.
+<strong>Cronogramas idênticos viram uma linha</strong> ("Editais 901, 902 e 903/2026 · 3 Editais com o mesmo cronograma"), cada um
+com seu detalhe — decisão do usuário em 01/11, depois de ver o esboço. No celular, onde a régua tem 10 px por dia, cada
+evento vira uma linha.</p>
+<figure><img src="capturas/n-074-desktop.jpg"><figcaption>C+ com os seis Editais dos prints (banco ps_074_local: mesmos Editais e nomes, outras datas), situação em 22/11. O 92 ocupa cinco faixas; 901, 902 e 903 estão numa linha só.</figcaption></figure>
+<p><strong>Os Editais dos prints, com horário.</strong> O cenário <code>demo074</code> lê, somente leitura, o banco <code>ps_074_local</code>,
+que tem publicados os seis Editais dos prints com os mesmos nomes de evento. <strong>As datas não são as do print:</strong> as sementes
+as geram a partir do dia em que rodam, e nenhum banco local conferido reproduz as do print. Servem pelo formato e pelos
+instantes, que a transcrição do estudo D–G não tem.</p>
+<table>
+<tr><th>25 Editais, novembro</th><th>Agenda inteira, desktop</th><th>Agenda inteira, celular</th><th>Focos</th></tr>
+<tr><td>Atual: calendário + lista</td><td class="n">2.780</td><td class="n">4.929</td><td class="n">33</td></tr>
+<tr><td>Calendário + C revisada</td><td class="n">3.828 (+38%)</td><td class="n">5.779 (+17%)</td><td class="n">25 + abertos</td></tr>
+<tr><td><strong>Calendário + C+</strong></td><td class="n"><strong>3.744 (+35%)</strong></td><td class="n"><strong>11.654 (+136%)</strong></td><td class="n">68</td></tr>
+</table>
+<p>No desktop, C+ mostra todos os nomes na mesma altura que C revisada. <strong>No celular, custa mais que o dobro da Agenda
+atual</strong>: é o preço de A e B no celular, e é onde C revisada, que recolhe, leva vantagem. A conferência geométrica pegou um
+defeito novo de C+ no celular (recuo somado que deslocava as linhas da régua), já corrigido: 26 conferências, nenhuma fora.</p>
+<p><strong>Direção para o teste, ainda aberta:</strong> Atual × C+ × G, nos mesmos dados com instantes reais e com um cenário denso;
+C revisada como referência de recolhimento, sobretudo no celular; E e F em decisão separada.</p>
+
+<h2>7. Medições</h2>
+<p>Novembro, 25 Editais, 80 eventos, situação em 01/11 às 12h, num Chromium sem janela. Nenhuma tela rola de lado.</p>
 <h3>A comparação que decide: a Agenda inteira, do título do calendário ao fim</h3>
 <table>
 <tr><th>Página</th><th>Desktop 1440</th><th>Celular 375</th></tr>
-<tr><td>Atual: calendário + lista de períodos</td><td class="n">2.594 px</td><td class="n">4.475 px</td></tr>
-<tr><td><strong>Calendário + C revisada</strong></td><td class="n"><strong>3.583 px (+38%)</strong></td><td class="n"><strong>5.309 px (+19%)</strong></td></tr>
+<tr><td>Atual: calendário + lista de períodos</td><td class="n">2.780 px</td><td class="n">4.929 px</td></tr>
+<tr><td><strong>Calendário + C revisada</strong></td><td class="n"><strong>3.828 px (+38%)</strong></td><td class="n"><strong>5.779 px (+17%)</strong></td></tr>
+<tr><td>Calendário + C+ (nomes visíveis, seção 6)</td><td class="n">3.744 px (+35%)</td><td class="n">11.654 px (+136%)</td></tr>
 </table>
 <div class="alerta"><strong>C revisada é mais alta que a lista que substitui.</strong> É o preço da legibilidade pedida: situação em duas
-linhas, com hora, e o controle de abertura. A primeira C media 1.620 px de painel; a revisada, 2.316 px. A lista atual é curta
+linhas, com hora, e o controle de abertura. A primeira C media 1.620 px de painel com 23 Editais; a revisada, 2.531 px com os 25 de agora. A lista atual é curta
 porque não diz a sequência nem a simultaneidade. Se a troca compensa, só tarefas com usuários dirão.</div>
 <h3>Painéis isolados, para comparar as alternativas</h3>
 <table>
 <tr><th>Painel</th><th>Desktop</th><th>Notebook</th><th>Tablet</th><th>Celular</th><th>Focos (fechado)</th></tr>
-<tr><td><strong>C revisada</strong></td><td class="n">2.316</td><td class="n">2.714</td><td class="n">2.900</td><td class="n">3.814</td><td class="n">23</td></tr>
-<tr><td>A Gantt por evento</td><td class="n">5.220</td><td class="n">5.922</td><td class="n">6.668</td><td class="n">8.546</td><td class="n">91</td></tr>
-<tr><td>B cartões</td><td class="n">2.978</td><td class="n">3.742</td><td class="n">5.044</td><td class="n">8.362</td><td class="n">68</td></tr>
+<tr><td><strong>C revisada</strong></td><td class="n">2.531</td><td class="n">2.967</td><td class="n">3.189</td><td class="n">4.252</td><td class="n">25</td></tr>
+<tr><td>C+ nomes visíveis</td><td class="n">2.312</td><td class="n">2.599</td><td class="n">2.898</td><td class="n">8.636</td><td class="n">68</td></tr>
+<tr><td>A Gantt por evento</td><td class="n">6.091</td><td class="n">6.830</td><td class="n">7.761</td><td class="n">9.899</td><td class="n">105</td></tr>
+<tr><td>B cartões</td><td class="n">3.370</td><td class="n">4.184</td><td class="n">5.679</td><td class="n">9.631</td><td class="n">80</td></tr>
 </table>
 <p>Os 23 focos de C são de linhas fechadas; abrir um Edital acrescenta os eventos dele. Menos focos não é, sozinho, menos trabalho.</p>
 <p><strong>Geometria verificada:</strong> <code>capturar.py</code> confere cada losango e cada barra visível contra a célula da régua do mesmo dia — C
-fechada, C aberta, A, quatro larguras, três meses: 18 conferências, nenhuma fora da coluna, console limpo. Na revisão, a conferência
+fechada, C aberta, A, quatro larguras, três meses, e C+: 26 conferências, nenhuma fora da coluna, console limpo. Na revisão, a conferência
 <strong>pegou um defeito</strong>: o recuo das linhas abertas deslocava a trilha em relação à régua do cabeçalho. Corrigido. Isso prova
 correção geométrica, não facilidade de leitura.</p>
 
-<h2>7. As sete perguntas, por alternativa</h2>
+<h2>8. As sete perguntas, por alternativa</h2>
 <table>
 <tr><th>Pergunta</th><th>Melhor resposta hoje</th><th>C</th><th>A</th><th>B</th></tr>
 <tr><td>1. Inscrições abertas</td><td><strong>Próximos</strong> (bloco em curso)</td><td>"Em curso: …" em cada linha; ou filtro de fase</td><td>Igual, com mais linhas</td><td>Ler cartões</td></tr>
@@ -217,13 +256,14 @@ correção geométrica, não facilidade de leitura.</p>
 <tr><td>7. Concentração</td><td><strong>Grade</strong></td><td>Colunas visíveis num quadro</td><td>Não cabe num quadro</td><td>Não responde</td></tr>
 </table>
 
-<h2>8. Recomendação</h2>
+<h2>9. Recomendação</h2>
 <div class="caixa">
-<p><strong>Adotar C no lugar da lista de períodos do mês. Manter Próximos marcos e a grade. Descartar A e B como telas próprias.
-Não trocar a apresentação por dispositivo.</strong></p>
+<p><strong>Uma faixa por Edital no lugar da lista de períodos do mês, em C revisada ou C+, a escolher com usuários contra a
+Agenda atual e contra G. Manter Próximos marcos e a grade. Descartar A e B como telas próprias. Não trocar a apresentação
+por dispositivo.</strong></p>
 <ul>
 <li><strong>Por que não A como painel:</strong> A identifica todos os eventos sem clique, e essa vantagem é real. Mas afasta os
-Editais entre si (3 a 4 por tela, contra cerca de 8 em C) e custa 2,3 vezes a altura de C. A qualidade de A ficou no
+Editais entre si (3 a 4 por tela, contra cerca de 8 em C) e custa 2,4 vezes a altura de C. A qualidade de A ficou no
 detalhe: é a linha que C mostra ao abrir um Edital.</li>
 <li><strong>Por que não B:</strong> no celular, disputa o papel que a D-003 deu a Próximos e responde pior às perguntas de prazo.
 No desktop, a sequência que B oferece é a mesma que C mostra ao abrir a linha.</li>
@@ -240,7 +280,7 @@ fixava a largura em pixels.</li>
 evento com datas; não houve ensaio real com leitor de tela.</li>
 </ul>
 
-<h2>9. Para quem for especificar e implementar</h2>
+<h2>10. Para quem for especificar e implementar</h2>
 <ul>
 <li><strong>Spec própria.</strong> A 101 adiou a linha do tempo horizontal para "outra etapa"; esta é essa etapa. A decisão de
 substituir a lista é do usuário. O estudo só a recomenda.</li>
@@ -270,7 +310,7 @@ Edital, espécie e <strong>fase</strong>, com o alcance explícito.</li>
 arrastar, editar, dependências e percentual.</li>
 </ul>
 
-<h2>10. O que não foi feito</h2>
+<h2>11. O que não foi feito</h2>
 <div class="alerta">Não houve sessão com usuários, ensaio com leitor de tela, nem ampliação real a 200% e 400%. O volume de
 Editais simultâneos foi estimado pela numeração, não medido. A suíte não foi rodada: a mudança é só em
 <code>doc/</code>, que a suíte não lê. O ruff passou nos dois scripts e a sintaxe do JS foi verificada. O estudo antigo,
@@ -281,16 +321,17 @@ primeiro; comparar quatro Editais com inscrições simultâneas; localizar o rec
 avança para o mês seguinte; distinguir "continua" de "sem término". Registrar acertos, tempo, aberturas e consultas à
 legenda.</p>
 
-<h2>11. Arquivos</h2>
+<h2>12. Arquivos</h2>
 <table>
 <tr><th>Arquivo</th><th>O que é</th></tr>
 <tr><td><code>relatorio.md</code></td><td>O relatório completo deste estudo.</td></tr>
 <tr><td><code>prototipo/index.html</code></td><td>As POCs. Abrem com dois cliques, sem servidor: <code>?visao=c|a|b</code>, <code>cenario</code>, <code>mes</code>, <code>referencia</code>, <code>especie</code>, <code>fase</code>, <code>ordem</code>.</td></tr>
-<tr><td><code>prototipo/agenda-completa.html</code></td><td>A grade real do produto e C no lugar da lista.</td></tr>
-<tr><td><code>prototipo/atual-*.html</code></td><td>A Agenda atual (Mês e Próximos, com 7 e 23 Editais), renderizada pelos templates de produção.</td></tr>
+<tr><td><code>prototipo/agenda-completa.html</code></td><td>A grade real do produto e C no lugar da lista (<code>?visao=n</code> para C+).</td></tr>
+<tr><td><code>prototipo/dados-prints.js</code></td><td>Os seis Editais dos prints, lidos do <code>ps_074_local</code> (outras datas).</td></tr>
+<tr><td><code>prototipo/atual-*.html</code></td><td>A Agenda atual (Mês e Próximos, com 7 e 25 Editais), renderizada pelos templates de produção.</td></tr>
 <tr><td><code>exportar_dados.py</code></td><td>Lê o <code>ps_demo_101</code> em <code>READ ONLY</code>, gera os casos de teste e grava <code>dados.js</code> e as páginas atuais.</td></tr>
 <tr><td><code>capturar.py</code></td><td>Capturas e medições por Playwright. Termina com erro se um marco ou barra sair da coluna ou se o console registrar erro.</td></tr>
-<tr><td><code>capturas/</code></td><td>38 capturas e o <code>medidas.json</code>.</td></tr>
+<tr><td><code>capturas/</code></td><td>50 capturas e o <code>medidas.json</code>.</td></tr>
 </table>
 </body>
 </html>

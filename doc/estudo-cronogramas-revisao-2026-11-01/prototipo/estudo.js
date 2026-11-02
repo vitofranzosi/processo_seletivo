@@ -10,9 +10,11 @@ inclusive — a mesma pertinência de `Periodo.abrange`, que dá o número da gr
 "use strict";
 const $ = (id) => document.getElementById(id);
 const P = new URLSearchParams(location.search);
-const visao = ["a", "b", "c"].includes(P.get("visao")) ? P.get("visao") : "c";
-const cenario = ["denso", "demo", "sucessao", "retificacao"].includes(P.get("cenario")) ? P.get("cenario") : "denso";
-const referencia = P.get("referencia") === "2026-11-05" ? "2026-11-05" : "2026-11-01";
+const visao = ["a", "b", "c", "n"].includes(P.get("visao")) ? P.get("visao") : "c";
+const cenario = ["denso", "demo", "demo074", "sucessao", "retificacao"].includes(P.get("cenario")) ? P.get("cenario") : "denso";
+// O cenário do ps_074_local tem as referências do estudo D–G (22/11) e dos prints (01/11).
+const REFERENCIAS = cenario === "demo074" ? ["2026-11-22", "2026-11-01"] : ["2026-11-01", "2026-11-05"];
+const referencia = REFERENCIAS.includes(P.get("referencia")) ? P.get("referencia") : REFERENCIAS[0];
 const mes = /^20\d\d-(0[1-9]|1[0-2])$/.test(P.get("mes") || "") ? P.get("mes") : "2026-11";
 const ordem = P.get("ordem") === "numero" ? "numero" : "proximo";
 // O filtro seleciona Editais e mostra todas as etapas deles, ou mostra só os eventos que o
@@ -227,6 +229,124 @@ function visaoC(editais) {
   return lista;
 }
 
+// --- C+: a faixa por Edital com o nome de cada evento escrito uma vez, inteiro.
+// Responde ao parecer do estudo D–G: o mapa semanal tinha nomes visíveis, mas pagava com repetição
+// e com a falsa simultaneidade da coluna. Aqui o nome aparece sem abrir nada, e a régua continua
+// diária. O nome vai dentro da barra quando cabe; senão, acima dela, começando no início da barra,
+// ou terminando no fim quando passaria do mês. Rótulos que colidem descem para outra faixa.
+
+// Editais com cronograma idêntico viram uma linha só, com todos os números: três barras iguais
+// empilhadas não dizem nada que uma não diga. É regra de apresentação; os Editais continuam
+// separados em tudo o mais, e cada um tem o seu detalhe.
+function agrupar(editais) {
+  const grupos = new Map();
+  for (const e of editais) {
+    const assinatura = e.todos.map((i) => [i.nome, i.inicio, i.fim, i.tipo, i.especie, i.fase, i.cancelado].join("|")).join(";") + "#" + e.itens.length;
+    if (!grupos.has(assinatura)) grupos.set(assinatura, {base: e, membros: []});
+    grupos.get(assinatura).membros.push(e);
+  }
+  return [...grupos.values()];
+}
+function rotuloDoGrupo(g) {
+  if (g.membros.length === 1) return rotuloEdital(g.base);
+  const nums = g.membros.map((e) => e.numero);
+  return `Editais ${nums.slice(0, -1).join(", ")} e ${nums.at(-1)}/${g.base.ano}`;
+}
+function visaoN(editais) {
+  const lista = el("div", {class: "faixas com-nomes"});
+  lista.append(el("div", {class: "cabecalho-faixas"}, [el("span", {class: "coluna-identidade", texto: `Edital · situação em ${curta(referencia)}`}), regua()]));
+  for (const g of agrupar(editais)) {
+    const e = g.base, s = situacao(e);
+    const processos = [...new Set(g.membros.map((m) => m.processo))];
+    const ident = el("div", {class: "coluna-identidade"}, [
+      el("strong", {texto: rotuloDoGrupo(g)}),
+      g.membros.length > 1 ? el("span", {class: "mesmo-cronograma", texto: `${g.membros.length} Editais com o mesmo cronograma`}) : null,
+      el("span", {class: "nome-do-processo", texto: processos.join(" · ")}),
+      ...s.linhas.map((t) => el("span", {class: "situacao-edital", texto: t})),
+    ]);
+    const t = el("div", {class: "trilha trilha-n"});
+    for (const i of e.itens) {
+      const datasComHora = i.tipo === "pontual" ? quando(i.inicio) : `${quando(i.inicio)} a ${i.fim ? quando(i.fim) : "—"}`;
+      const peca = el("div", {class: "peca", "data-de": i.de, "data-ate": i.ate, "data-tipo": i.tipo});
+      const marca = i.tipo === "pontual"
+        ? el("span", {class: `marco ${i.cancelado ? "anulado" : i.fase}`, "data-dia": i.de, "aria-hidden": "true"})
+        : el("span", {class: `barra ${i.fase}${i.vemDeAntes ? " vem-de-antes" : ""}${!i.diaFim ? " sem-termino" : i.segueDepois ? " segue-depois" : ""}`, "data-de": i.de, "data-ate": i.ate, "aria-hidden": "true"});
+      const resto = continuidade(i);
+      const rot = botaoEvento(e, i, el("span", {texto: i.nome + (resto && i.tipo === "periodo" && (i.segueDepois || !i.diaFim) ? ` · ${resto}` : "")}), "rotulo-n");
+      rot.setAttribute("aria-label", `${i.nome}; ${datasComHora}; ${fase(i)}${resto ? "; " + resto : ""}`);
+      peca.append(marca, rot);
+      t.append(peca);
+    }
+    if (referencia.slice(0, 7) === mes) {
+      const linha = el("span", {class: "linha-referencia", "aria-hidden": "true"});
+      linha.dataset.left = ((+referencia.slice(8) - 0.5) / diasNoMes * 100).toFixed(3) + "%";
+      t.append(linha);
+    }
+    if (e.aviso) ident.append(el("span", {class: "aviso-edital", texto: e.aviso}));
+    // No celular a régua tem 10 px por dia: os nomes não cabem nela, e cada evento vira uma linha.
+    const linhas = el("div", {class: "linhas-n"}, e.itens.map((i) => linhaEvento(e, i)));
+    lista.append(el("div", {class: "linha-n"}, [ident, t, linhas]));
+  }
+  return lista;
+}
+// A disposição depende da largura real da trilha e da largura real de cada nome: só se calcula
+// depois de desenhar, e de novo quando a janela muda.
+const VAO = 6, BARRA = 16, ENTRE_FAIXAS = 6;
+function disporTrilha(t) {
+  const W = t.clientWidth;
+  if (!W) return;
+  const dia = W / diasNoMes;
+  const pecas = [...t.querySelectorAll(".peca")].map((peca) => {
+    const de = +peca.dataset.de, ate = +peca.dataset.ate, pontual = peca.dataset.tipo === "pontual";
+    const rot = peca.querySelector(".rotulo-n");
+    rot.classList.remove("dentro");
+    rot.style.whiteSpace = "nowrap"; rot.style.width = "auto";
+    const natural = rot.offsetWidth;
+    const x0 = pontual ? (de - 0.5) * dia - 6 : (de - 1) * dia;
+    const x1 = pontual ? (de - 0.5) * dia + 6 : ate * dia;
+    // A seta de continuidade ocupa a ponta da barra: o nome começa depois dela.
+    const barra = peca.firstChild;
+    const antes = barra.classList.contains("vem-de-antes") ? 12 : 4;
+    const depois = barra.classList.contains("segue-depois") ? 12 : 4;
+    if (!pontual && natural + antes + depois <= x1 - x0) {
+      rot.classList.add("dentro");
+      return {peca, rot, x0, x1, acima: 0, lx: x0 + antes};
+    }
+    const largura = Math.min(natural, W * 0.6);
+    if (largura < natural) { rot.style.whiteSpace = "normal"; rot.style.width = largura + "px"; }
+    const lx = x0 + largura <= W ? x0 : Math.max(0, x1 - largura);
+    return {peca, rot, x0: Math.min(x0, lx), x1: Math.max(x1, lx + largura), acima: rot.offsetHeight + 1, lx};
+  }).sort((a, b) => a.x0 - b.x0);
+  const faixas = [];
+  for (const p of pecas) {
+    let f = faixas.findIndex((faixa) => faixa.fim + VAO <= p.x0);
+    if (f < 0) { f = faixas.length; faixas.push({fim: 0, pecas: []}); }
+    faixas[f].fim = p.x1; faixas[f].pecas.push(p);
+  }
+  let topo = 0;
+  for (const faixa of faixas) {
+    const acima = Math.max(0, ...faixa.pecas.map((p) => p.acima));
+    for (const p of faixa.pecas) {
+      const marca = p.peca.firstChild;
+      const yBarra = topo + acima;
+      if (marca.classList.contains("barra")) {
+        marca.style.left = ((+p.peca.dataset.de - 1) / diasNoMes * 100) + "%";
+        marca.style.width = ((+p.peca.dataset.ate - +p.peca.dataset.de + 1) / diasNoMes * 100) + "%";
+        marca.style.top = yBarra + "px";
+      } else {
+        marca.style.left = ((+p.peca.dataset.de - 0.5) / diasNoMes * 100) + "%";
+        marca.style.top = (yBarra + 3) + "px";
+      }
+      p.rot.style.left = p.lx + "px";
+      p.rot.style.top = (p.acima ? yBarra - p.acima : yBarra) + "px";
+    }
+    topo += acima + BARRA + ENTRE_FAIXAS;
+  }
+  t.style.height = Math.max(28, topo) + "px";
+}
+function disporTudo() { for (const t of document.querySelectorAll(".trilha-n")) disporTrilha(t); }
+addEventListener("resize", () => requestAnimationFrame(disporTudo));
+
 // --- A: uma linha por evento, agrupadas por Edital.
 function visaoA(editais) {
   const lista = el("div", {class: "faixas gantt"});
@@ -272,16 +392,17 @@ function visaoB(editais) {
 }
 
 function iniciar() {
-  const fonte = window.DADOS.referencias[referencia];
-  let editais = [...fonte.demonstrativos, ...(cenario === "demo" ? [] : fonte.sinteticos)];
+  const fonte = (cenario === "demo074" ? window.DADOS_PRINTS : window.DADOS).referencias[referencia];
+  let editais = [...fonte.demonstrativos, ...(["demo", "demo074"].includes(cenario) ? [] : fonte.sinteticos)];
   if (cenario === "sucessao") editais = editais.filter((e) => e.numero === "T03");
   if (cenario === "retificacao") editais = editais.filter((e) => e.numero === "106");
 
   for (const id of ["especie", "fase", "ordem", "alcance"]) if (P.has(id)) $(id).value = P.get(id);
+  $("referencia").replaceChildren(...REFERENCIAS.map((r) => el("option", {value: r, texto: `${curta(r)}/2026, 12h` + (r === "2026-11-05" ? " (após a Retificação do 106)" : "")})));
   $("cenario").value = cenario; $("referencia").value = referencia; $("visao").value = visao; $("mes").value = mes;
   $("filtros").open = window.innerWidth > 640;
   $("recorte").textContent = "· " + $("cenario").selectedOptions[0].textContent + (P.get("especie") || P.get("fase") ? " · com filtros" : "");
-  for (const v of ["a", "b", "c"]) {
+  for (const v of ["a", "b", "c", "n"]) {
     $("link-" + v).href = endereco({visao: v});
     if (v === visao) $("link-" + v).setAttribute("aria-current", "page");
   }
@@ -290,9 +411,12 @@ function iniciar() {
   $("seguinte").href = endereco({mes: new Date(Date.UTC(ano, numMes, 1)).toISOString().slice(0, 7)});
   $("hoje").href = endereco({mes: referencia.slice(0, 7)});
   $("titulo-mes").textContent = MESES[numMes - 1][0].toUpperCase() + MESES[numMes - 1].slice(1) + " de " + ano;
-  $("proveniencia").textContent = `Versão publicada vigente em ${curta(referencia)}/2026 às 12h. Editais 101 a 107: banco de demonstração ps_demo_101. T01 a T16: casos de teste, só em memória, com o formato de cronogramas públicos do Cefor e datas deslocadas.`;
+  $("proveniencia").textContent = `Versão publicada vigente em ${curta(referencia)}/2026 às 12h. ` + (cenario === "demo074"
+    ? "Editais 01, 91, 901, 902, 903 e 92 do banco de demonstração ps_074_local: os mesmos Editais e nomes de evento dos prints da agenda, com outras datas — a semente as gera a partir do dia em que roda."
+    : "Editais 101 a 107: banco de demonstração ps_demo_101. T01 a T18: casos de teste, só em memória, com o formato de cronogramas públicos do Cefor e datas deslocadas; T17 e T18 repetem o cronograma do T08.");
   $("nome-alternativa").textContent = {
     c: "C · Uma faixa por Edital, sequência ao abrir",
+    n: "C+ · Uma faixa por Edital, com o nome de cada evento",
     a: "A · Gantt, uma linha por evento",
     b: "B · Timeline em cartões",
   }[visao];
@@ -328,9 +452,10 @@ function iniciar() {
   }
   const painel = $("painel");
   painel.replaceChildren(visiveis.length
-    ? {a: visaoA, b: visaoB, c: visaoC}[visao](visiveis)
+    ? {a: visaoA, b: visaoB, c: visaoC, n: visaoN}[visao](visiveis)
     : el("p", {class: "vazio", texto: "Nenhum evento toca este mês com estes filtros."}));
   aplicarPosicoes(painel);
+  disporTudo();
 }
 function amostra(classe) { return el("span", {class: "amostra " + classe, "aria-hidden": "true"}); }
 function legenda() {

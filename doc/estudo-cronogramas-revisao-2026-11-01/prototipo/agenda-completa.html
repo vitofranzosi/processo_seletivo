@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="estudo.css">
   <script src="grade.js" defer></script>
   <script src="dados.js" defer></script>
+  <script src="dados-prints.js" defer></script>
   <script src="estudo.js" defer></script>
 </head>
 <body>
@@ -24,6 +25,7 @@
     <nav class="alternativas" aria-label="Alternativas do estudo">
       <a id="link-c" href="?visao=c"><strong>C</strong> Faixa por Edital</a>
       <a id="link-a" href="?visao=a"><strong>A</strong> Gantt por evento</a>
+      <a id="link-n" href="?visao=n"><strong>C+</strong> Faixa com nomes</a>
       <a id="link-b" href="?visao=b"><strong>B</strong> Timeline em cartões</a>
       <a href="atual-mes.html">Atual · Mês</a>
       <a href="atual-proximos.html">Atual · Próximos</a>
@@ -37,6 +39,7 @@
         <select name="cenario" id="cenario">
           <option value="denso">23 Editais (7 do banco demo + 16 de teste)</option>
           <option value="demo">7 Editais do banco demo</option>
+          <option value="demo074">6 Editais dos prints (ps_074_local, outras datas)</option>
           <option value="sucessao">Um Edital com etapas sucessivas (T03)</option>
           <option value="retificacao">Edital retificado (106)</option>
         </select></label>

@@ -27,7 +27,7 @@ DB_NAME=ps_demo_101 DB_USER="$USER" DB_RUNTIME_USER="$USER" DB_RUNTIME_PASSWORD=
 .venv/bin/python ../doc/estudo-cronogramas-revisao-2026-11-01/capturar.py
 ```
 
-O exportador só aceita o `ps_demo_101` e lê em transação `READ ONLY`; os 16 casos de teste existem
+O exportador só aceita o `ps_demo_101` e lê em transação `READ ONLY`; os 18 casos de teste existem
 só em memória. O capturador abre as páginas num Chromium sem janela, grava as capturas e o
 `medidas.json`, e termina com erro se algum marco ou barra cair fora da coluna do seu dia ou se o
 console registrar erro.

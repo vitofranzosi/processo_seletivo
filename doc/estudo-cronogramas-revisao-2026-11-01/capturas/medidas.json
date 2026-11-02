@@ -4,10 +4,10 @@
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "desktop",
-   "alturaPagina": 2935,
-   "alturaPainel": 2316,
+   "alturaPagina": 3150,
+   "alturaPainel": 2531,
    "rolagemLateral": false,
-   "focaveis": 23,
+   "focaveis": 25,
    "alturaDaAgenda": null,
    "pxPorDia": 33.4
   },
@@ -15,10 +15,10 @@
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "notebook",
-   "alturaPagina": 3333,
-   "alturaPainel": 2714,
+   "alturaPagina": 3629,
+   "alturaPainel": 2967,
    "rolagemLateral": false,
-   "focaveis": 23,
+   "focaveis": 25,
    "alturaDaAgenda": null,
    "pxPorDia": 22.7
   },
@@ -26,10 +26,10 @@
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "tablet",
-   "alturaPagina": 3643,
-   "alturaPainel": 2900,
+   "alturaPagina": 3932,
+   "alturaPainel": 3189,
    "rolagemLateral": false,
-   "focaveis": 23,
+   "focaveis": 25,
    "alturaDaAgenda": null,
    "pxPorDia": 16.9
   },
@@ -37,10 +37,54 @@
    "tela": "c",
    "cenario": "23 Editais",
    "largura": "celular",
-   "alturaPagina": 4615,
-   "alturaPainel": 3814,
+   "alturaPagina": 5118,
+   "alturaPainel": 4252,
    "rolagemLateral": false,
-   "focaveis": 23,
+   "focaveis": 25,
+   "alturaDaAgenda": null,
+   "pxPorDia": 10.6
+  },
+  {
+   "tela": "n",
+   "cenario": "23 Editais",
+   "largura": "desktop",
+   "alturaPagina": 2931,
+   "alturaPainel": 2312,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "alturaDaAgenda": null,
+   "pxPorDia": 33.4
+  },
+  {
+   "tela": "n",
+   "cenario": "23 Editais",
+   "largura": "notebook",
+   "alturaPagina": 3261,
+   "alturaPainel": 2599,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "alturaDaAgenda": null,
+   "pxPorDia": 22.7
+  },
+  {
+   "tela": "n",
+   "cenario": "23 Editais",
+   "largura": "tablet",
+   "alturaPagina": 3642,
+   "alturaPainel": 2898,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "alturaDaAgenda": null,
+   "pxPorDia": 16.9
+  },
+  {
+   "tela": "n",
+   "cenario": "23 Editais",
+   "largura": "celular",
+   "alturaPagina": 9518,
+   "alturaPainel": 8636,
+   "rolagemLateral": false,
+   "focaveis": 68,
    "alturaDaAgenda": null,
    "pxPorDia": 10.6
   },
@@ -48,10 +92,10 @@
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "desktop",
-   "alturaPagina": 5839,
-   "alturaPainel": 5220,
+   "alturaPagina": 6710,
+   "alturaPainel": 6091,
    "rolagemLateral": false,
-   "focaveis": 91,
+   "focaveis": 105,
    "alturaDaAgenda": null,
    "pxPorDia": 33.4
   },
@@ -59,10 +103,10 @@
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "notebook",
-   "alturaPagina": 6542,
-   "alturaPainel": 5922,
+   "alturaPagina": 7492,
+   "alturaPainel": 6830,
    "rolagemLateral": false,
-   "focaveis": 91,
+   "focaveis": 105,
    "alturaDaAgenda": null,
    "pxPorDia": 22.7
   },
@@ -70,10 +114,10 @@
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "tablet",
-   "alturaPagina": 7411,
-   "alturaPainel": 6668,
+   "alturaPagina": 8504,
+   "alturaPainel": 7761,
    "rolagemLateral": false,
-   "focaveis": 91,
+   "focaveis": 105,
    "alturaDaAgenda": null,
    "pxPorDia": 16.9
   },
@@ -81,10 +125,10 @@
    "tela": "a",
    "cenario": "23 Editais",
    "largura": "celular",
-   "alturaPagina": 9346,
-   "alturaPainel": 8546,
+   "alturaPagina": 10765,
+   "alturaPainel": 9899,
    "rolagemLateral": false,
-   "focaveis": 91,
+   "focaveis": 105,
    "alturaDaAgenda": null,
    "pxPorDia": 10.6
   },
@@ -92,10 +136,10 @@
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "desktop",
-   "alturaPagina": 3575,
-   "alturaPainel": 2978,
+   "alturaPagina": 3967,
+   "alturaPainel": 3370,
    "rolagemLateral": false,
-   "focaveis": 68,
+   "focaveis": 80,
    "alturaDaAgenda": null,
    "pxPorDia": null
   },
@@ -103,10 +147,10 @@
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "notebook",
-   "alturaPagina": 4339,
-   "alturaPainel": 3742,
+   "alturaPagina": 4824,
+   "alturaPainel": 4184,
    "rolagemLateral": false,
-   "focaveis": 68,
+   "focaveis": 80,
    "alturaDaAgenda": null,
    "pxPorDia": null
   },
@@ -114,10 +158,10 @@
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "tablet",
-   "alturaPagina": 5746,
-   "alturaPainel": 5044,
+   "alturaPagina": 6381,
+   "alturaPainel": 5679,
    "rolagemLateral": false,
-   "focaveis": 68,
+   "focaveis": 80,
    "alturaDaAgenda": null,
    "pxPorDia": null
   },
@@ -125,31 +169,51 @@
    "tela": "b",
    "cenario": "23 Editais",
    "largura": "celular",
-   "alturaPagina": 9098,
-   "alturaPainel": 8362,
+   "alturaPagina": 10431,
+   "alturaPainel": 9631,
    "rolagemLateral": false,
-   "focaveis": 68,
+   "focaveis": 80,
    "alturaDaAgenda": null,
    "pxPorDia": null
   },
   {
    "tela": "agenda-completa-com-c",
    "largura": "desktop",
-   "alturaPagina": 4134,
-   "alturaPainel": 2349,
+   "alturaPagina": 4379,
+   "alturaPainel": 2579,
    "rolagemLateral": false,
-   "focaveis": 23,
-   "alturaDaAgenda": 3583,
+   "focaveis": 25,
+   "alturaDaAgenda": 3828,
    "pxPorDia": 33.4
   },
   {
    "tela": "agenda-completa-com-c",
    "largura": "celular",
-   "alturaPagina": 5854,
-   "alturaPainel": 4182,
+   "alturaPagina": 6389,
+   "alturaPainel": 4652,
    "rolagemLateral": false,
-   "focaveis": 23,
-   "alturaDaAgenda": 5309,
+   "focaveis": 25,
+   "alturaDaAgenda": 5779,
+   "pxPorDia": 10.6
+  },
+  {
+   "tela": "agenda-completa-com-n",
+   "largura": "desktop",
+   "alturaPagina": 4295,
+   "alturaPainel": 2495,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "alturaDaAgenda": 3744,
+   "pxPorDia": 33.4
+  },
+  {
+   "tela": "agenda-completa-com-n",
+   "largura": "celular",
+   "alturaPagina": 12264,
+   "alturaPainel": 10510,
+   "rolagemLateral": false,
+   "focaveis": 68,
+   "alturaDaAgenda": 11654,
    "pxPorDia": 10.6
   },
   {
@@ -175,21 +239,21 @@
   {
    "tela": "atual-mes-denso",
    "largura": "desktop",
-   "alturaPagina": 2732,
-   "alturaPainel": 2732,
+   "alturaPagina": 2918,
+   "alturaPainel": 2918,
    "rolagemLateral": false,
    "focaveis": 33,
-   "alturaDaAgenda": 2594,
+   "alturaDaAgenda": 2780,
    "pxPorDia": null
   },
   {
    "tela": "atual-mes-denso",
    "largura": "celular",
-   "alturaPagina": 4700,
-   "alturaPainel": 4700,
+   "alturaPagina": 5154,
+   "alturaPainel": 5154,
    "rolagemLateral": false,
    "focaveis": 33,
-   "alturaDaAgenda": 4475,
+   "alturaDaAgenda": 4929,
    "pxPorDia": null
   },
   {
@@ -215,8 +279,8 @@
   {
    "tela": "atual-proximos-denso",
    "largura": "desktop",
-   "alturaPagina": 3701,
-   "alturaPainel": 3701,
+   "alturaPagina": 3786,
+   "alturaPainel": 3786,
    "rolagemLateral": false,
    "focaveis": 44,
    "alturaDaAgenda": null,
@@ -225,8 +289,8 @@
   {
    "tela": "atual-proximos-denso",
    "largura": "celular",
-   "alturaPagina": 5131,
-   "alturaPainel": 5131,
+   "alturaPagina": 5367,
+   "alturaPainel": 5367,
    "rolagemLateral": false,
    "focaveis": 44,
    "alturaDaAgenda": null,
@@ -237,26 +301,54 @@
   {
    "tela": "c",
    "largura": "desktop",
+   "marcos": 42,
+   "barras": 38,
+   "erros": []
+  },
+  {
+   "tela": "c",
+   "largura": "notebook",
+   "marcos": 42,
+   "barras": 38,
+   "erros": []
+  },
+  {
+   "tela": "c",
+   "largura": "tablet",
+   "marcos": 42,
+   "barras": 38,
+   "erros": []
+  },
+  {
+   "tela": "c",
+   "largura": "celular",
+   "marcos": 42,
+   "barras": 38,
+   "erros": []
+  },
+  {
+   "tela": "n",
+   "largura": "desktop",
    "marcos": 34,
    "barras": 34,
    "erros": []
   },
   {
-   "tela": "c",
+   "tela": "n",
    "largura": "notebook",
    "marcos": 34,
    "barras": 34,
    "erros": []
   },
   {
-   "tela": "c",
+   "tela": "n",
    "largura": "tablet",
    "marcos": 34,
    "barras": 34,
    "erros": []
   },
   {
-   "tela": "c",
+   "tela": "n",
    "largura": "celular",
    "marcos": 34,
    "barras": 34,
@@ -265,29 +357,29 @@
   {
    "tela": "a",
    "largura": "desktop",
-   "marcos": 68,
-   "barras": 68,
+   "marcos": 84,
+   "barras": 76,
    "erros": []
   },
   {
    "tela": "a",
    "largura": "notebook",
-   "marcos": 68,
-   "barras": 68,
+   "marcos": 84,
+   "barras": 76,
    "erros": []
   },
   {
    "tela": "a",
    "largura": "tablet",
-   "marcos": 68,
-   "barras": 68,
+   "marcos": 84,
+   "barras": 76,
    "erros": []
   },
   {
    "tela": "a",
    "largura": "celular",
-   "marcos": 68,
-   "barras": 68,
+   "marcos": 84,
+   "barras": 76,
    "erros": []
   },
   {
@@ -301,7 +393,7 @@
    "tela": "c-outubro",
    "largura": "desktop",
    "marcos": 4,
-   "barras": 16,
+   "barras": 18,
    "erros": []
   },
   {
@@ -321,15 +413,15 @@
   {
    "tela": "c-inscricoes-em-curso",
    "largura": "desktop",
-   "marcos": 18,
-   "barras": 16,
+   "marcos": 26,
+   "barras": 20,
    "erros": []
   },
   {
    "tela": "c-inscricoes-so-eventos",
    "largura": "desktop",
    "marcos": 0,
-   "barras": 8,
+   "barras": 10,
    "erros": []
   },
   {
@@ -337,6 +429,34 @@
    "largura": "desktop",
    "marcos": 44,
    "barras": 36,
+   "erros": []
+  },
+  {
+   "tela": "n-dezembro",
+   "largura": "desktop",
+   "marcos": 22,
+   "barras": 18,
+   "erros": []
+  },
+  {
+   "tela": "n-074-desktop",
+   "largura": "desktop",
+   "marcos": 12,
+   "barras": 10,
+   "erros": []
+  },
+  {
+   "tela": "n-074-celular",
+   "largura": "celular",
+   "marcos": 12,
+   "barras": 10,
+   "erros": []
+  },
+  {
+   "tela": "c-074-desktop",
+   "largura": "desktop",
+   "marcos": 20,
+   "barras": 14,
    "erros": []
   },
   {
