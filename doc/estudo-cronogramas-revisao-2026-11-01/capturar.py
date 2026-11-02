@@ -96,14 +96,14 @@ def main():
             pg.wait_for_timeout(150)
             return pg
 
-        for visao in "cnab":
+        for visao in "cnlab":
             for largura in LARGURAS:
                 pg = abrir(f"index.html?visao={visao}&cenario=denso", largura)
                 medida = pg.evaluate(MEDIR)
                 medidas.append(
                     {"tela": visao, "cenario": "23 Editais", "largura": largura, **medida}
                 )
-                if visao != "b":
+                if visao not in "bl":
                     conferencia = pg.evaluate(CONFERIR)
                     conferencias.append({"tela": visao, "largura": largura, **conferencia})
                 no_painel(pg)
@@ -115,7 +115,7 @@ def main():
                 pg.close()
 
         # Calendário + lista (hoje) contra calendário + C: a mesma página, com e sem a troca.
-        for variante, sufixo in (("c", ""), ("n", "-com-nomes")):
+        for variante, sufixo in (("c", ""), ("n", "-com-nomes"), ("l", "-lista")):
             for largura in ("desktop", "celular"):
                 pg = abrir(f"agenda-completa.html?visao={variante}", largura)
                 medida = pg.evaluate(MEDIR)
@@ -144,6 +144,8 @@ def main():
             ("n-074-desktop", "index.html?visao=n&cenario=demo074", "desktop"),
             ("n-074-celular", "index.html?visao=n&cenario=demo074", "celular"),
             ("c-074-desktop", "index.html?visao=c&cenario=demo074", "desktop"),
+            ("l-074-desktop", "index.html?visao=l&cenario=demo074", "desktop"),
+            ("l-074-celular", "index.html?visao=l&cenario=demo074", "celular"),
         ]
         for nome, caminho, largura in casos:
             pg = abrir(caminho, largura)

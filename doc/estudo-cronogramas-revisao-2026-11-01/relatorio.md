@@ -4,14 +4,14 @@
 alterado. A conclusão é heurística: apoia-se no código, em medições automatizadas e em capturas,
 não em sessões com usuários.
 
-> **Recomendação, ainda aberta.** Substituir a lista "Períodos previstos em ‹mês›", abaixo da
-> grade, por **uma faixa por Edital** numa régua diária comum. Duas variantes seguem em teste:
-> **C revisada**, que mostra a situação em texto e abre os eventos sob a régua, e **C+**, que
-> escreve o nome de cada evento uma vez, sem abrir nada, e agrupa cronogramas idênticos numa
-> linha. A próxima rodada deveria comparar **Atual × C+ × G** (o mapa semanal do estudo D–G), com
-> usuários. **Manter "Próximos marcos"**, que já responde melhor às perguntas de prazo e que a
-> `D-003` fez a forma do celular. **Descartar A e B** como telas próprias. As duas variantes de C
-> são mais altas que a lista atual; C+ no celular custa mais que o dobro.
+> **Recomendação, ainda aberta.** O ganho que as propostas oferecem sobre a Agenda atual é
+> estreito e não está demonstrado: mostrar o que acontece ao mesmo tempo em Editais diferentes e a
+> distribuição das etapas de um Edital. Três candidatos seguem para o teste no lugar da lista
+> "Períodos previstos em ‹mês›": **L**, a lista atual reorganizada por Edital, sem régua; **C+**, a
+> faixa por Edital com o nome de cada evento; e **C revisada**, que recolhe. A primeira comparação
+> com usuários deveria ser **Atual × L × C+** — a régua compensa o que custa? — e só depois C+ × G.
+> **Manter "Próximos marcos"** (`D-003`). **Descartar A e B** como telas próprias. Todas as
+> alternativas ficam mais altas que a lista atual; L, a mais alta no desktop.
 
 ## Por que este estudo foi refeito
 
@@ -165,6 +165,7 @@ Os painéis isolados, para comparar as alternativas entre si:
 |---|---:|---:|---:|---:|---:|---|
 | **C** revisada | 2.531 | 2.967 | 3.189 | 4.252 | 25 | 33,4 → 10,6 |
 | C+ nomes visíveis | 2.312 | 2.599 | 2.898 | 8.636 | 68 | 33,4 → 10,6 |
+| L lista melhorada | 4.959 | 4.959 | 5.068 | 8.072 | 68 | — |
 | A Gantt por evento | 6.091 | 6.830 | 7.761 | 9.899 | 105 | 33,4 → 10,6 |
 | B cartões | 3.370 | 4.184 | 5.679 | 9.631 | 80 | — |
 
@@ -246,6 +247,51 @@ separa os Editais, e é o certo.
 instantes reais e com um cenário denso. C revisada fica como referência de recolhimento,
 sobretudo no celular. E e F, em decisão separada, como melhorias da consulta do dia e de
 Próximos marcos.
+
+## Quarta rodada: a lista melhorada (L), o concorrente sem régua
+
+Nenhum dos estudos tinha construído o concorrente mais barato das faixas: **a lista atual,
+melhorada, sem régua**. L é isso. Um bloco por Edital, com a situação em texto e hora; os
+eventos do mês em ordem de início, **períodos e pontuais juntos**; datas com hora; nome inteiro;
+fase escrita; "começou em", "continua até" e "sem término definido" escritos; cronogramas
+idênticos numa linha só, como em C+. Nada para aprender: é a lista de hoje, reorganizada.
+L responde ao que o parecer apontava no print — "Período de inscrições" repetido, as etapas do 92
+espalhadas entre outros Editais, a continuidade para dezembro sem destaque — **e não mostra
+simultaneidade**, que é exatamente o que o teste precisa separar.
+
+[Desktop, 25 Editais](capturas/l-desktop.jpg) · [celular](capturas/l-celular.jpg) ·
+[Editais dos prints, 22/11](capturas/l-074-desktop.jpg) · [os mesmos, no celular](capturas/l-074-celular.jpg) ·
+[Agenda completa com L](capturas/agenda-completa-lista-desktop.jpg).
+
+| 25 Editais, novembro | Agenda inteira, desktop | Agenda inteira, celular | Focos |
+|---|---:|---:|---:|
+| Atual: calendário + lista | 2.780 | 4.929 | 33 |
+| Calendário + C revisada | 3.828 (+38%) | 5.779 (+17%) | 25 + abertos |
+| Calendário + C+ | 3.744 (+35%) | 11.654 (+136%) | 68 |
+| Calendário + L | 6.187 (+123%) | 9.170 (+86%) | 68 |
+
+**Resultado que contraria a hipótese de que L seria a opção enxuta.** No desktop, L é a mais
+alta de todas — 2,1× o painel de C+ (4.959 contra 2.312 px). A régua é o que compacta: numa
+faixa, oito eventos de um Edital cabem em duas ou três linhas; numa lista, são oito linhas. A
+altura de L vem de mostrar os pontuais, que a lista atual não mostra (80 eventos contra cerca de
+45 períodos), e de um cabeçalho por Edital. Recolher os eventos com data passada a encurtaria;
+não foi construído, para não esconder parte da sequência sem teste. No celular, L fica entre C
+revisada e C+.
+
+**O que isso diz sobre a pergunta "houve melhoria?".** As capturas sugerem que L é a mais fácil
+de ler para **um** Edital — a sequência do 92, com horas e fases, sai linha a linha — e a mais
+difícil para **comparar** Editais, porque a simultaneidade continua em datas para cruzar de
+cabeça. C+ é o oposto. A troca entre as duas é a pergunta central que sobrou, e só tarefas
+respondem.
+
+**Direção para o teste, ainda aberta, em duas comparações em vez de uma de quatro:**
+
+1. **Atual × L × C+**, nos mesmos dados com instantes reais e com o cenário denso. Pergunta: a
+   régua compensa o que custa? Se L empatar com C+ nas tarefas de comparação, L vence — é a
+   mudança menor. Se C+ ganhar só em simultaneidade, pesar a frequência real dessa tarefa.
+2. Se C+ ganhar, **C+ × G**: régua diária com nomes contra mapa semanal com nomes.
+
+C revisada fica como referência de recolhimento no celular. E e F, em decisão separada.
 
 ## As perguntas do critério de sucesso
 

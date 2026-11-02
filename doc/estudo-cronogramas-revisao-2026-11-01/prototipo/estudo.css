@@ -133,6 +133,19 @@ dialog dt{font-weight:600}dialog dd{margin:0}
 .peca .barra.em_curso+.rotulo-n.dentro{color:var(--branco)}
 .mesmo-cronograma{font-size:.78rem;color:var(--amarelo);font-weight:600}
 
+/* L: a lista atual, agrupada por Edital. */
+.lista-melhorada{display:flex;flex-direction:column;gap:.6rem}
+.edital-l{background:var(--branco);border:1px solid var(--borda);border-radius:8px;padding:.6rem .9rem}
+.edital-l h3{margin:0;font-size:1rem}
+.edital-l h3 .nome-do-processo{display:block;font-weight:400;white-space:normal}
+.edital-l p{margin:.1rem 0}
+.eventos-l{list-style:none;margin:.4rem 0 0;padding:0}
+.eventos-l li{display:grid;grid-template-columns:12rem minmax(0,1fr) 13rem;gap:.75rem;padding:.3rem 0;border-top:1px dashed var(--borda);align-items:baseline}
+.eventos-l .data-l{font-variant-numeric:tabular-nums;font-size:.85rem}
+.eventos-l .evento-l{display:flex;flex-direction:column}
+.eventos-l li.passada .nome-evento,.eventos-l li.passada .data-l{color:var(--texto-fraco)}
+.eventos-l li.em_curso .data-l{font-weight:700}
+
 /* Largo: a coluna de identidade cresce para que cada linha de situação caiba numa linha. */
 @media (min-width:80rem){.faixas{--coluna:23rem}}
 
@@ -141,6 +154,7 @@ dialog dt{font-weight:600}dialog dd{margin:0}
   .faixas{--coluna:12rem}
 }
 @media (max-width:40rem){
+  .eventos-l li{grid-template-columns:1fr;gap:0}
   /* Sem o recuo do contêiner: as linhas por evento já trazem o seu, igual ao do cabeçalho. */
   .linha-n{grid-template-columns:1fr;padding:.5rem 0 0}
   .linha-n>.coluna-identidade{padding:0 .75rem}

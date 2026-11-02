@@ -10,7 +10,7 @@ inclusive — a mesma pertinência de `Periodo.abrange`, que dá o número da gr
 "use strict";
 const $ = (id) => document.getElementById(id);
 const P = new URLSearchParams(location.search);
-const visao = ["a", "b", "c", "n"].includes(P.get("visao")) ? P.get("visao") : "c";
+const visao = ["a", "b", "c", "n", "l"].includes(P.get("visao")) ? P.get("visao") : "c";
 const cenario = ["denso", "demo", "demo074", "sucessao", "retificacao"].includes(P.get("cenario")) ? P.get("cenario") : "denso";
 // O cenário do ps_074_local tem as referências do estudo D–G (22/11) e dos prints (01/11).
 const REFERENCIAS = cenario === "demo074" ? ["2026-11-22", "2026-11-01"] : ["2026-11-01", "2026-11-05"];
@@ -347,6 +347,40 @@ function disporTrilha(t) {
 function disporTudo() { for (const t of document.querySelectorAll(".trilha-n")) disporTrilha(t); }
 addEventListener("resize", () => requestAnimationFrame(disporTudo));
 
+// --- L: a lista atual, melhorada, sem régua. É o concorrente barato das faixas: agrupa por
+// Edital (o print espalhava as etapas do 92 entre os outros), junta pontuais e períodos na mesma
+// sequência, escreve hora, término e continuidade, e não pede para aprender nada. Não mostra
+// simultaneidade — é exatamente o que o teste precisa separar.
+const quandoCurto = (iso) => `${curta(dia(iso))} ${hora(iso)}`;
+function visaoL(editais) {
+  const lista = el("div", {class: "lista-melhorada"});
+  for (const g of agrupar(editais)) {
+    const e = g.base, s = situacao(e);
+    const processos = [...new Set(g.membros.map((m) => m.processo))];
+    const ol = el("ol", {class: "eventos-l"});
+    for (const i of e.itens) {
+      const datasL = i.tipo === "pontual" ? quandoCurto(i.inicio) : `${quandoCurto(i.inicio)} – ${i.fim ? quandoCurto(i.fim) : "sem término"}`;
+      const resto = continuidade(i);
+      ol.append(el("li", {class: `${i.tipo} ${i.cancelado ? "anulado" : i.fase}`}, [
+        el("span", {class: "data-l", texto: datasL}),
+        el("span", {class: "evento-l"}, [
+          botaoEvento(e, i, el("span", {texto: i.nome}), "nome-evento"),
+          resto ? el("span", {class: "continuidade", texto: resto}) : null,
+        ]),
+        el("span", {class: "fase", texto: i.tipo === "pontual" && !i.cancelado ? `pontual · ${fase(i)}` : fase(i)}),
+      ]));
+    }
+    lista.append(el("section", {class: "edital-l", "aria-label": rotuloDoGrupo(g)}, [
+      el("h3", {}, [el("span", {texto: rotuloDoGrupo(g)}), el("span", {class: "nome-do-processo", texto: processos.join(" · ")})]),
+      g.membros.length > 1 ? el("p", {class: "mesmo-cronograma", texto: `${g.membros.length} Editais com o mesmo cronograma`}) : null,
+      ...s.linhas.map((t) => el("p", {class: "situacao-edital", texto: t})),
+      e.aviso ? el("p", {class: "aviso-edital", texto: e.aviso}) : null,
+      ol,
+    ]));
+  }
+  return lista;
+}
+
 // --- A: uma linha por evento, agrupadas por Edital.
 function visaoA(editais) {
   const lista = el("div", {class: "faixas gantt"});
@@ -402,7 +436,7 @@ function iniciar() {
   $("cenario").value = cenario; $("referencia").value = referencia; $("visao").value = visao; $("mes").value = mes;
   $("filtros").open = window.innerWidth > 640;
   $("recorte").textContent = "· " + $("cenario").selectedOptions[0].textContent + (P.get("especie") || P.get("fase") ? " · com filtros" : "");
-  for (const v of ["a", "b", "c", "n"]) {
+  for (const v of ["a", "b", "c", "n", "l"]) {
     $("link-" + v).href = endereco({visao: v});
     if (v === visao) $("link-" + v).setAttribute("aria-current", "page");
   }
@@ -417,6 +451,7 @@ function iniciar() {
   $("nome-alternativa").textContent = {
     c: "C · Uma faixa por Edital, sequência ao abrir",
     n: "C+ · Uma faixa por Edital, com o nome de cada evento",
+    l: "L · A lista atual, agrupada por Edital, sem régua",
     a: "A · Gantt, uma linha por evento",
     b: "B · Timeline em cartões",
   }[visao];
@@ -452,13 +487,17 @@ function iniciar() {
   }
   const painel = $("painel");
   painel.replaceChildren(visiveis.length
-    ? {a: visaoA, b: visaoB, c: visaoC, n: visaoN}[visao](visiveis)
+    ? {a: visaoA, b: visaoB, c: visaoC, n: visaoN, l: visaoL}[visao](visiveis)
     : el("p", {class: "vazio", texto: "Nenhum evento toca este mês com estes filtros."}));
   aplicarPosicoes(painel);
   disporTudo();
 }
 function amostra(classe) { return el("span", {class: "amostra " + classe, "aria-hidden": "true"}); }
 function legenda() {
+  if (visao === "l") {
+    $("legenda").replaceChildren(el("p", {texto: "Um bloco por Edital, eventos em ordem de início, com hora. A fase vem escrita em cada linha. Sem régua: datas em texto."}));
+    return;
+  }
   if (visao === "b") {
     $("legenda").replaceChildren(el("p", {texto: "Cartões em ordem de início. Sem escala comum entre cartões: a mesma altura não é a mesma data."}));
     return;

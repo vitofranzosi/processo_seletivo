@@ -4,9 +4,11 @@ Três POCs de leitura para a lista de períodos da Agenda dos Editais, comparada
 atual. Nada da aplicação foi alterado.
 
 - [Relatório: diagnóstico, medições, comparação e recomendação](relatorio.md).
-- [POCs](prototipo/index.html): **C** faixa por Edital, **A** Gantt por evento, **B** cartões, e a
+- [POCs](prototipo/index.html): **C** faixa por Edital, **C+** faixa com os nomes, **L** lista
+  melhorada, **A** Gantt por evento, **B** cartões, e a
   agenda atual (Mês e Próximos) renderizada pelos templates de produção.
-- [Agenda completa com C](prototipo/agenda-completa.html): a grade real e C no lugar da lista.
+- [Agenda completa](prototipo/agenda-completa.html): a grade real e, no lugar da lista, C
+  (`?visao=c`), C+ com os nomes (`?visao=n`) ou a lista melhorada (`?visao=l`).
 - [Capturas](capturas/) e [medidas](capturas/medidas.json).
 
 ## Abrir
