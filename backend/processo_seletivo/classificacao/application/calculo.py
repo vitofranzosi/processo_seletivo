@@ -8,7 +8,7 @@ traria uma cópia do JSON inteiro do Edital por Resultado sem alterar a contagem
 from collections import defaultdict
 
 from processo_seletivo.classificacao.domain import universo_classificavel
-from processo_seletivo.classificacao.domain.desempate import ordenar
+from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le, ordenar
 from processo_seletivo.editais.domain.recortes import normalizar_recorte
 from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -50,6 +50,10 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     etapas = {str(item["id"]): item for item in conteudo.get("stages") or []}
     enumeradas = [str(item) for item in marco.get("stages") or []]
     etapa_do_marco = _ultima_etapa(enumeradas, etapas)
+    # **As Etapas que um critério compara sem que o marco as enumere** (114, FR-3546). Entram só
+    # na leitura dos Resultados — e daí na nota que o desempate compara e no universo que o ato
+    # grava —, nunca na progressão acima nem no que decide quem tem posição (`preparar`, FR-3548).
+    lidas = etapas_que_a_ordem_le(marco)
 
     # A progressão é aplicada no próprio queryset: nenhuma lista integral é lida uma segunda vez
     # só para ser devolvida em ``id__in``. O conjunto inclui quem foi eliminado na Etapa do marco
@@ -91,11 +95,15 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     #    ao recurso — que é o defeito pelo qual a alternativa 3 da decisão C foi descartada.
     #
     # É o segundo que torna o filtro indispensável, e é ele que o teste de regressão prende.
+    #
+    # **As Etapas do desempate vêm na mesma consulta** (114): uma consulta a mais por critério
+    # estouraria o orçamento verificado por teste, e a nota que decide a ordem precisa estar no
+    # universo pelo mesmo motivo do item 2 — sem ela, o recurso que a corrige não obsoleta nada.
     resultados = list(
         ResultadoEtapa.vigentes.filter(
             edital=edital,
             inscricao_id__in=inscricoes_ids,
-            etapa_id__in=enumeradas,
+            etapa_id__in=lidas,
         )
         .order_by("inscricao_id", "etapa_id", "consolidado_em", "id")
         .values(

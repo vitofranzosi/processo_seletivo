@@ -6,6 +6,7 @@ from decimal import Decimal
 from processo_seletivo.classificacao.domain.combinacao import SEM_PONTUACAO, combinar
 from processo_seletivo.classificacao.domain.desempate import ordenar
 from processo_seletivo.classificacao.domain.universo import por_identidade
+from processo_seletivo.classificacao.domain.universo_classificavel import que_decidem_posicao
 from processo_seletivo.classificacao.models import PosicaoNaOrdem
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
@@ -67,10 +68,14 @@ def reproduzir_ato(ato):
             "pontuacoes": pontuacoes,
             "fatos": fatos,
         }
+        # **A consequência só das Etapas enumeradas** (114, FR-3552). Desde a `114` o universo
+        # também cita os Resultados da Etapa que um critério compara sem o marco enumerá-la; a nota
+        # deles entra em `pontuacoes`, mas a eliminação registrada ali não tirou ninguém da ordem
+        # emitida — e não pode tirar na reprodução. Para o ato anterior à `114`, nada muda.
         eliminacao = next(
             (
                 item
-                for item in da_inscricao
+                for item in que_decidem_posicao(marco, da_inscricao)
                 if item["consequencia"] == ResultadoEtapa.Consequencia.ELIMINADA
             ),
             None,

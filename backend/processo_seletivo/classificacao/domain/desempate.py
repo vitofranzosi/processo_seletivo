@@ -32,6 +32,44 @@ MENOR_VALOR_DE_FATO = "MENOR_VALOR_DE_FATO"
 MAIOR_PRIMEIRO = {MAIOR_PONTUACAO_NA_ETAPA, MAIOR_VALOR_DE_FATO}
 
 
+def etapas_do_desempate(marco):
+    """As Etapas que um critério do marco compara **sem que o marco as enumere** (114, FR-3546).
+
+    "Em caso de empate, a maior nota na Entrevista", num marco que só soma a Prova, é norma legítima
+    — e até a `114` o cálculo lia só as Etapas enumeradas, de modo que o critério nunca separava
+    ninguém (achado A11). Estas Etapas contribuem **só com a nota, e só para o desempate**: a
+    consequência registrada nelas não decide quem tem posição (FR-3548).
+
+    É uma resposta só para o cálculo, a prévia e a reprodução. A conferência da proveniência no
+    banco (`classificacao/0007`) faz a mesma pergunta em SQL, e o teste da trigger prende as duas.
+    """
+    enumeradas = {str(item) for item in marco.get("stages") or []}
+    saida = []
+    for criterio in sorted(marco.get("tiebreakers") or [], key=lambda c: c.get("order") or 0):
+        if criterio.get("type") != MAIOR_PONTUACAO_NA_ETAPA:
+            continue
+        etapa = (criterio.get("parameters") or {}).get("stageId")
+        if etapa and str(etapa) not in enumeradas and str(etapa) not in saida:
+            saida.append(str(etapa))
+    return saida
+
+
+def etapas_que_a_ordem_le(marco):
+    """As Etapas cujos Resultados decidem a ordem do marco: as enumeradas e as do desempate (114).
+
+    É a **dependência efetiva** da ordem, e por isso a resposta de todas as perguntas "esta nota
+    alcança esta ordem?": o que o cálculo lê, o que o filtro da Supervisão vigia e a que Etapa um
+    recurso precisa estar ligado para ser pertinente ao marco (114, D-005). Não é "todas as Etapas
+    do Edital": uma Etapa que nenhum critério compara não muda posição nenhuma, e um recurso contra
+    ela impedir a definitiva desta ordem seria parar o certame por disputa alheia.
+
+    Ler a Etapa não lhe dá as outras funções: somar na nota final continua sendo só das enumeradas
+    (`combinacao`), e decidir quem tem posição também
+    (`universo_classificavel.que_decidem_posicao`).
+    """
+    return [str(item) for item in marco.get("stages") or []] + etapas_do_desempate(marco)
+
+
 def _valor_do_criterio(criterio, participante):
     """O valor que este critério consome deste participante, ou `None` quando não existe."""
     parametros = criterio.get("parameters") or {}

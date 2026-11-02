@@ -53,6 +53,20 @@ def _ultima_enumerada(marco, etapas):
     return max(enumeradas, key=lambda e: e.get("order") or 0) if enumeradas else None
 
 
+def etapas_do_desempate_com_nota(marco, etapas_publicadas):
+    """As Etapas que o marco só usa para desempatar e que produzem nota (114).
+
+    É a pergunta que decide se o caso "Desempate pela nota de outra Etapa" se oferece: a Etapa
+    decisória não tem nota, e um critério que a cite não separa ninguém em caso nenhum.
+    """
+    etapas = {str(e["id"]): e for e in etapas_publicadas}
+    return [
+        etapas[e]
+        for e in desempate.etapas_do_desempate(marco)
+        if e in etapas and etapas[e].get("forma") != cenarios.DECISORIA
+    ]
+
+
 def _faltas(marco, etapas, regra, vagas):
     faltas = []
     enumeradas = [etapas[e] for e in marco.get("stages") or [] if e in etapas]
@@ -140,7 +154,9 @@ def simular(
 
     enumeradas = [etapas[e] for e in marco.get("stages") or [] if e in etapas]
     etapa_do_marco = _ultima_enumerada(marco, etapas)
+    do_desempate = etapas_do_desempate_com_nota(marco, etapas_publicadas)
     caso_de_reserva = caso in cenarios.CASOS_DE_RESERVA and bool(reservadas)
+    caso_do_desempate = caso in cenarios.CASOS_DO_DESEMPATE and bool(do_desempate)
     if modo == CASO_LIMITE and caso_de_reserva:
         candidatos, _ = cenarios.caso_limite(
             "sem_empate",
@@ -162,6 +178,22 @@ def simular(
             faixas=dict(zip((r["lista_id"] for r in reservadas), faixas_reservadas, strict=True)),
         )
         ancoras, plantados = fronteiras, [onde] if onde else []
+    elif modo == CASO_LIMITE and caso_do_desempate:
+        # Sobre a classificação sem empate, para que o par plantado seja o único empate da tabela
+        # e a Etapa do desempate, a única coisa que o separa (114, FR-3558).
+        candidatos, _ = cenarios.caso_limite(
+            "sem_empate",
+            etapas_enumeradas=enumeradas,
+            etapa_do_marco=etapa_do_marco,
+            fatos=fatos,
+            alvo=alvo,
+            suplentes=suplentes,
+            vagas=vagas,
+            corta=bool(regra),
+        )
+        candidatos, onde = cenarios.caso_do_desempate(candidatos, do_desempate, alvo=alvo)
+        ancoras, plantados = fronteiras, [onde] if onde else []
+        candidatos, _ = _com_modalidades(candidatos, reservadas, ancoras)
     elif modo == CASO_LIMITE and caso in cenarios.CASOS:
         candidatos, onde = cenarios.caso_limite(
             caso,
@@ -195,6 +227,9 @@ def simular(
         plantados = plantados + plantados_da_reserva
         onde = None
 
+    # **A nota na Etapa do desempate vem depois de toda a montagem** (114, FR-3555): derivada das
+    # notas que o candidato terminou com, ela acompanha os empates que os casos plantaram.
+    candidatos = cenarios.com_notas_do_desempate(candidatos, do_desempate)
     try:
         classificaveis, sem_posicao = preparar(marco, etapas, cenarios.inscritos(candidatos))
     except RegraIncompleta as erro:
@@ -677,6 +712,7 @@ __all__ = [
     "comparar",
     "consequencias",
     "corte_da_ordem",
+    "etapas_do_desempate_com_nota",
     "entrada_da_rodada",
     "estado",
     "impedido",

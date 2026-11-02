@@ -141,3 +141,29 @@ def test_datas_e_inteiros_distintos_por_candidato():
     datas = [c["fatos"]["f1"] for c in candidatos]
     assert len(set(datas)) == len(datas)
     assert all(isinstance(d, datetime.date) for d in datas)
+
+
+ENTREVISTA = {"id": "e4", "name": "Entrevista", "order": 4, "forma": "PONTUADA"}
+
+
+def test_a_nota_do_desempate_acompanha_os_empates_plantados():
+    """114, D-006 — iguais nas enumeradas, iguais na Etapa do desempate; a falta se propaga."""
+    candidatos, _ = estavel()
+    com_nota = cenarios.com_notas_do_desempate(candidatos, [ENTREVISTA])
+
+    assert com_nota[9]["notas"]["e4"] == com_nota[10]["notas"]["e4"] is not None
+    assert com_nota[2]["notas"]["e4"] == com_nota[3]["notas"]["e4"] == com_nota[4]["notas"]["e4"]
+    assert com_nota[0]["notas"]["e4"] != com_nota[1]["notas"]["e4"]
+    sem_nota = com_nota[-2]
+    assert sem_nota["notas"]["e2"] is None and sem_nota["notas"]["e4"] is None
+    # As notas enumeradas não mudam, e a lista de entrada não é tocada.
+    assert all(
+        {k: v for k, v in c["notas"].items() if k != "e4"} == o["notas"]
+        for c, o in zip(com_nota, candidatos, strict=True)
+    )
+    assert "e4" not in candidatos[0]["notas"]
+
+
+def test_etapa_decisoria_do_desempate_nao_recebe_nota():
+    candidatos, _ = estavel()
+    assert cenarios.com_notas_do_desempate(candidatos, [DOCUMENTOS]) == candidatos

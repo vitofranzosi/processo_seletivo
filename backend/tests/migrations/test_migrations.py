@@ -620,7 +620,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # `Corte` e o `ItemDoCorte` — a faixa da ordem que progride para a Etapa governada, com as
         # duas travas append-only que a 015 estabeleceu para o ato. Não é a 017 tocando o que
         # lê: é outra feature, dizendo quem prossegue no certame (014, FR-192, FR-223).
-        "classificacao": 6,
+        # **Sobe para 7 com a 114**: a `classificacao/0007` só troca a função da trigger de
+        # proveniência, para aceitar a Etapa que um critério do marco compara sem enumerá-la. Não
+        # cria coluna nem percorre linha (114, FR-3551).
+        "classificacao": 7,
         # **Sobe para 5 com a 018**, e a justificativa é a que este teste existe para exigir: a
         # `resultados/0005` dá sucessão ao `ResultadoEtapa` — o único elo da cadeia que não a
         # tinha —, para que um recurso deferido possa superar um Resultado sem alterá-lo. Não é
@@ -831,7 +834,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # `Corte` e o `ItemDoCorte` — a faixa da ordem que progride para a Etapa governada, com as
         # duas travas append-only que a 015 estabeleceu para o ato. Não é a 022 tocando o que
         # lê: é outra feature, dizendo quem prossegue no certame (014, FR-192, FR-223).
-        "classificacao": 6,
+        # **Sobe para 7 com a 114**: a `classificacao/0007` só troca a função da trigger de
+        # proveniência, para aceitar a Etapa que um critério do marco compara sem enumerá-la. Não
+        # cria coluna nem percorre linha (114, FR-3551).
+        "classificacao": 7,
         "comissoes": 1,
         # **Sobe para 3 com a 021**: a `divulgacao/0003` publica por lista de concorrência.
         # **Sobe para 4 com a 060**: a `divulgacao/0004` acrescenta à `PublicacaoResultado` o ato de

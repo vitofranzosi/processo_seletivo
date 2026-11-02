@@ -412,6 +412,88 @@ def caso_de_reserva(
     return candidatos, onde
 
 
+#: O caso que só se oferece quando o marco desempata pela nota de uma Etapa que não soma (114,
+#: FR-3558). Fica fora de `CASOS` pelo mesmo motivo dos de reserva: num marco sem esse critério ele
+#: plantaria um empate que nada separa, e mostraria o contrário do que o rótulo promete.
+CASOS_DO_DESEMPATE = {
+    "desempate_por_outra_etapa": (
+        "Desempate pela nota de outra Etapa",
+        "Dois candidatos com as mesmas notas nas Etapas que compõem a nota final — a mesma nota "
+        "final — e os mesmos fatos, na última posição do alvo. Só a nota da Etapa que desempata, "
+        "e que não soma, os separa.",
+    ),
+}
+
+#: Quanto a nota de desempate do segundo do par passa a do primeiro. Três pontos, e não um: com
+#: duas casas e arredondamento, um ponto poderia sumir na escala de alguma Etapa.
+_VANTAGEM_NO_DESEMPATE = Decimal(3)
+
+
+def caso_do_desempate(candidatos, etapas_do_desempate, *, alvo):
+    """O par que só a Etapa do desempate separa, na fronteira do alvo. `(candidatos, onde)`.
+
+    O par é igual em tudo o que compõe a nota final **e nos fatos**: assim, qualquer que seja a
+    ordem dos critérios publicada, os que vêm antes não o separam, e quem separa é a Etapa que não
+    soma. O segundo do par recebe a nota maior nela, para que a ordem saia invertida em relação à
+    das linhas — e a inversão não possa vir de desempate oculto por posição.
+
+    A nota final dos dois **continua a mesma**, e é isso que o caso existe para mostrar: a Etapa do
+    desempate muda a posição sem mudar a nota (FR-3547). Sem Etapa com nota a desempatar, o caso não
+    planta nada — quem o oferece é quem sabe se o marco tem uma (`previa`).
+    """
+    com_nota = [e for e in etapas_do_desempate if e.get("forma") != DECISORIA]
+    if not com_nota or len(candidatos) < 2:
+        return candidatos, None
+    ultima = max(min(alvo or 5, len(candidatos) - 1), 1)
+    _igualar(candidatos, ultima, ultima - 1)
+    notas = list(candidatos[ultima]["notas"].values())
+    base = min(notas) if notas and all(n is not None for n in notas) else Decimal(80)
+    for etapa in com_nota:
+        candidatos[ultima - 1]["notas"][etapa["id"]] = base
+        candidatos[ultima]["notas"][etapa["id"]] = base + _VANTAGEM_NO_DESEMPATE
+    nomes = ", ".join(etapa.get("name") or "a Etapa do desempate" for etapa in com_nota)
+    return candidatos, (
+        f"o par fica na {ultima}ª posição, a última do alvo, com a mesma nota final; só a nota "
+        f"em {nomes} os separa"
+    )
+
+
+def com_notas_do_desempate(candidatos, etapas_do_desempate):
+    """Cada candidato com nota também nas Etapas que um critério compara sem o marco enumerá-las.
+
+    Sem esta nota, a prévia de um marco que desempata pela Entrevista mostraria o critério nunca
+    separando ninguém — que era o defeito do caminho oficial até a `114` (FR-3555).
+
+    **A nota é a menor das notas fictícias que o candidato já tem** (114, D-006). Candidatos
+    iguais nas Etapas enumeradas ficam iguais nesta, e por isso o trio que só os fatos separam e o
+    par igual em tudo continuam significando o que os casos nomeiam. A menor, e não a soma, para
+    caber na escala de qualquer Etapa que admita as notas enumeradas. Quem não tem nota em alguma
+    Etapa enumerada não a tem aqui, e Etapa decisória não produz nota nenhuma — como no caminho
+    oficial.
+
+    **Só preenche o que falta**: o candidato que um caso já plantou com nota nesta Etapa — o par de
+    `caso_do_desempate` — a mantém, e a derivação vale para todos os outros.
+    """
+    com_nota = [e for e in etapas_do_desempate if e.get("forma") != DECISORIA]
+    if not com_nota:
+        return candidatos
+    saida = []
+    for candidato in candidatos:
+        enumeradas = [
+            nota
+            for etapa_id, nota in candidato["notas"].items()
+            if etapa_id not in {etapa["id"] for etapa in com_nota}
+        ]
+        nota = None if not enumeradas or any(n is None for n in enumeradas) else min(enumeradas)
+        saida.append(
+            {
+                **candidato,
+                "notas": {**{etapa["id"]: nota for etapa in com_nota}, **candidato["notas"]},
+            }
+        )
+    return saida
+
+
 def inscritos(candidatos):
     """Os candidatos na forma de `universo_classificavel.preparar` — a do caminho oficial."""
 
@@ -465,6 +547,9 @@ def inscritos(candidatos):
 
 __all__ = [
     "CASOS",
+    "CASOS_DO_DESEMPATE",
+    "caso_do_desempate",
+    "com_notas_do_desempate",
     "CASOS_DE_RESERVA",
     "atribuir_modalidades",
     "caso_de_reserva",

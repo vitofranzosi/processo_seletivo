@@ -20,6 +20,7 @@ apareceria é justamente aqui, por conveniência de uma tela de listagem.
 
 from django.db.models import Exists, OuterRef
 
+from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le
 from processo_seletivo.recursos.models import DecisaoRecurso, JuizoDeAdmissibilidade, Recurso
 from processo_seletivo.shared.canonical import canonical_sha256
 
@@ -372,7 +373,15 @@ def reavaliacao_pendente_do_par(inscricao_id, etapa_id):
 
 
 def _etapas_do_marco(marco):
-    return {str(item) for item in (marco or {}).get("stages") or []}
+    """As Etapas cuja nota decide a ordem do marco — as enumeradas **e as do desempate** (114).
+
+    Até a `114` eram só as enumeradas, e o recurso contra a nota da Entrevista que desempata uma
+    ordem pela Prova não alcançava aquela ordem: a definitiva saía com a nota em disputa dentro
+    dela, a reavaliação determinada não a segurava, e a providência a jusante não tinha marco a
+    cumprir.
+    A resposta é a do cálculo, e vem de lá — uma lista daqui divergiria em silêncio (114, D-005).
+    """
+    return set(etapas_que_a_ordem_le(marco or {}))
 
 
 def recursos_pertinentes(*, edital, marco_id, marco, publicacoes_do_marco):
@@ -380,8 +389,11 @@ def recursos_pertinentes(*, edital, marco_id, marco, publicacoes_do_marco):
 
     ```text
     recurso contra a PublicacaoResultado daquele marco
-    recurso contra ResultadoEtapa de Etapa que o marco enumera
+    recurso contra ResultadoEtapa de Etapa que a ordem do marco lê
     ```
+
+    "Que a ordem lê" é a enumerada e a que um critério de desempate compara (114, D-005): a nota da
+    Entrevista que desempata uma ordem pela Prova também é um número que entra nela.
 
     **Sem a segunda metade, o recurso individual seria a porta por onde uma definitiva nasceria com
     um Resultado em disputa dentro dela.** É a metade fácil de esquecer, porque a primeira parece a
