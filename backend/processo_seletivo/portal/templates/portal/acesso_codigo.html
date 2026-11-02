@@ -7,6 +7,16 @@
 {% include "portal/_vaga_do_destino.html" %}
 {% comment %} A mesma frase para quem existe e para quem não existe — e o endereço fica à vista para a pessoa
    conferir se digitou certo, sem que ela precise voltar (UX-007). {% endcomment %}
+{% if recusado_pelo_teto %}
+{% comment %}
+O pedido recusado por um teto diz que é limite, de quê, e por quanto tempo (FR-031c). Dizia "Enviado
+para" e "pode pedir outro código agora" a quem a rede do polo tinha esgotado por uma hora — e nenhum
+código saíra. "E-mail informado", e não "Enviado para": é verdade com e sem código anterior.
+{% endcomment %}
+{% if teto %}<p class="sub aviso-do-envio">{{ teto }}</p>
+{% else %}<p class="sub aviso-do-envio">Não enviamos código no último pedido, porque o limite de pedidos tinha sido atingido. Veja abaixo quando é possível pedir de novo.</p>{% endif %}
+<p class="sub">E-mail informado: <strong>{{ email }}</strong>. <a href="{% url 'portal:acesso' %}">Usar outro e-mail</a></p>
+{% else %}
 <p class="sub">{{ aviso }}</p>
 <p class="sub">Enviado para <strong>{{ email }}</strong>. <a href="{% url 'portal:acesso' %}">Usar outro e-mail</a></p>
 {% comment %}
@@ -15,6 +25,7 @@ dentro da janela de espera recarregava a página idêntica, sem enviar e sem avi
 parecia ter funcionado: a pessoa passava a esperar um e-mail que nunca saiu.
 {% endcomment %}
 {% if noticia %}<p class="sub aviso-do-envio">{{ noticia }}</p>{% endif %}
+{% endif %}
 
 <form method="post" action="{% url 'portal:acesso-codigo' %}" novalidate>
   {% csrf_token %}
@@ -51,7 +62,9 @@ desiste (auditoria de 02/09, E2E-020), e o lugar mais comum dele é a caixa de s
   {% endcomment %}
   <button type="submit" class="secundario" aria-describedby="espera-do-reenvio">Reenviar código</button>
   <span class="sub" id="espera-do-reenvio" role="status" data-modelo="Você poderá pedir outro código daqui a {n} segundos.">
-    {% if espera %}Você poderá pedir outro código daqui a {{ espera }} segundos.
+    {% if teto %}Ainda não é possível pedir outro código — veja acima por quê e quando.
+    {% elif proximo_pedido %}{{ proximo_pedido }}
+    {% elif espera %}Você poderá pedir outro código daqui a {{ espera }} segundos.
     {% else %}Não recebeu? Pode pedir outro código agora.{% endif %}
   </span>
 </form>

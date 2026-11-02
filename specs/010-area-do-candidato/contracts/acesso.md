@@ -24,7 +24,7 @@ Formulário com um campo de e-mail.
 |---|---|
 | Endereço com forma aceitável | `302` para `/acesso/codigo`, sempre — exista ou não identidade (`FR-020`) |
 | Endereço malformado | `200`, o formulário com a recusa, sem consumir limite |
-| Limite por endereço ou por origem esgotado | `302` para `/acesso/codigo`, com a **mesma** mensagem e a **mesma** janela de espera que o caminho feliz (`FR-021`) |
+| Limite por endereço ou por origem esgotado | `302` para `/acesso/codigo`, que diz qual teto, o tempo efetivo até o próximo pedido e o que resolve — o mesmo texto exista ou não identidade (`FR-021`, `FR-031c`) |
 | Falha no envio | `302` para `/acesso/codigo`, mensagem idêntica; a falha é registrada no servidor (`FR-083`) |
 
 **Efeitos**: cria um `DesafioDeAcesso` de finalidade `entrar` e invalida os anteriores ainda
@@ -36,9 +36,10 @@ ele responde por escrito na tela seguinte — "ainda não enviamos outro código
 quem está sem JavaScript, porque a página não se atualiza sozinha. A contagem ao lado dele é
 recalculada a cada renderização e é o **único** número da espera na tela (`UX-006`).
 
-**Nunca**: nos **três** casos que poderiam revelar a existência do endereço — existe, não existe,
-limite esgotado — e também na falha de envio, a resposta, o código de estado, o texto e a janela de
-reenvio são idênticos.
+**Nunca**: nos casos que poderiam revelar a existência do endereço — existe, não existe — e também
+na falha de envio, a resposta, o código de estado, o texto e a janela de reenvio são idênticos. O
+limite esgotado responde igual para quem existe e para quem não existe, mas não igual ao caminho
+feliz: desde a `FR-031c` ele diz que é limite (A-12 da auditoria de prontidão, 01/11/2026).
 
 O endereço malformado é caso distinto e responde `200` com a recusa do formulário. Ele não revela
 nada: a recusa fala da forma do que foi digitado, e é anterior a qualquer consulta.

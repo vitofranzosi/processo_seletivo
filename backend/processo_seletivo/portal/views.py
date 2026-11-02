@@ -51,7 +51,7 @@ from processo_seletivo.identidade.application.mensagem import (
 )
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
 from processo_seletivo.identidade.domain.enderecos import canonizar, endereco_aceitavel
-from processo_seletivo.identidade.models import DesafioDeAcesso
+from processo_seletivo.identidade.models import VALIDADE_EM_MINUTOS, DesafioDeAcesso
 from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida
 from processo_seletivo.inscricoes.application.mensagem import enviar_comprovante
 from processo_seletivo.inscricoes.application.rascunho import (
@@ -754,13 +754,19 @@ CHAVE_DA_VOLTA = "portal_volta_a_vaga"
 # O que dizer sobre o último pedido de código — inclusive "nada foi enviado". Sobrevive ao
 # redirecionamento porque a tela que precisa da notícia é a seguinte, e é lida uma vez só.
 CHAVE_DO_ENVIO = "portal_acesso_envio"
+# Se o último pedido **desta sessão** esbarrou num teto (FR-031c). Não se lê do teto vigente: a
+# pessoa cujo pedido completou os trinta da sala recebeu o código, e o teto que passou a valer
+# depois dela é do pedido seguinte, não do dela. Não é consumida na leitura, ao contrário da
+# notícia: quem recarrega a tela continua sem código, e continua precisando saber por quê.
+CHAVE_DO_TETO = "portal_acesso_teto"
 # O que dizer na tela seguinte sobre o ato que acabou de acontecer. Um par de chaves para todo o
 # portal, e não uma por tela: quatro atos mudavam a página em silêncio, e silêncio depois de uma
 # ação é indistinguível de falha.
 CHAVE_DO_AVISO = "portal_aviso"
 CHAVE_DA_RECUSA = "portal_recusa"
-# A mesma frase nos quatro casos que poderiam revelar existência: endereço com identidade, sem
-# identidade, limite esgotado e falha de envio (FR-020, FR-021, FR-083).
+# A mesma frase nos casos que poderiam revelar existência: endereço com identidade, sem identidade e
+# falha de envio (FR-020, FR-021, FR-083). O limite esgotado tem frase própria desde a FR-031c — a
+# mesma para quem existe e para quem não existe, porque nenhum contador depende disso.
 AVISO_NEUTRO = "Se este endereço puder ser utilizado, enviaremos um código de acesso."
 
 
@@ -830,7 +836,7 @@ def acesso(request):
     # Reenviar é pedir de novo o mesmo endereço estando já na tela do código. A distinção não muda
     # nada do que acontece — muda o que a tela diz depois, e é justamente isso que faltava.
     reenvio = request.session.get(CHAVE_DO_ENDERECO, "") == informado
-    _, codigo = desafio_de_acesso.solicitar(
+    recibo, codigo = desafio_de_acesso.solicitar(
         email_canonico=canonico,
         finalidade=DesafioDeAcesso.Finalidade.ENTRAR,
         origem=_origem(request),
@@ -838,11 +844,16 @@ def acesso(request):
     enviar_codigo(para=informado, codigo=codigo, finalidade=DesafioDeAcesso.Finalidade.ENTRAR)
     request.session[CHAVE_DO_ENDERECO] = informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ENTRAR
-    request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=reenvio)
+    _guardar_o_pedido(request, recibo, reenvio=reenvio)
     return redirect(reverse("portal:acesso-codigo"))
 
 
-def _noticia_do_envio(*, enviado: bool, reenvio: bool) -> str:
+def _guardar_o_pedido(request, recibo, *, reenvio: bool) -> None:
+    request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(recibo, reenvio=reenvio)
+    request.session[CHAVE_DO_TETO] = bool(recibo.bloqueio and recibo.bloqueio.e_teto)
+
+
+def _noticia_do_envio(recibo, *, reenvio: bool) -> str:
     """O que dizer sobre o pedido que acabou de acontecer — inclusive quando nada aconteceu.
 
     O botão de reenviar estava sempre clicável e, dentro da janela de espera, não enviava nada e
@@ -853,8 +864,13 @@ def _noticia_do_envio(*, enviado: bool, reenvio: bool) -> str:
     Nenhuma das frases depende de existir identidade: o que decide é a contagem de pedidos daquele
     endereço e daquela origem, que avança igual para quem existe e para quem não existe (FR-021).
     """
-    if enviado:
+    if recibo.bloqueio is None:
         return "Enviamos um código novo. Use o mais recente." if reenvio else ""
+    if recibo.bloqueio.e_teto:
+        # Quem esbarrou num teto lê a explicação da tela, guiada por `CHAVE_DO_TETO` — e não esta
+        # frase, que atribuía a recusa a "um pedido anterior" que para quem chegou agora nunca
+        # existiu.
+        return ""
     # Sem número aqui de propósito: a contagem ao lado do botão é recalculada a cada renderização
     # e corre em tempo real. Repetir o valor apurado no instante do POST punha dois números
     # diferentes para a mesma espera na mesma tela.
@@ -871,14 +887,23 @@ def acesso_codigo(request):
         return redirect(reverse("portal:acesso"))
     canonico = canonizar(informado)
     finalidade = request.session.get(CHAVE_DA_FINALIDADE, DesafioDeAcesso.Finalidade.ENTRAR)
+    # Recalculado a cada renderização: guardada na sessão, a espera envelhecia junto com a página e
+    # anunciava sessenta segundos depois de dois minutos parada ali (UX-006).
+    bloqueio = desafio_de_acesso.bloqueio_atual(
+        email_canonico=canonico, finalidade=finalidade, origem=_origem(request)
+    )
+    teto = bloqueio if bloqueio and bloqueio.e_teto else None
+    recusado = request.session.get(CHAVE_DO_TETO, False)
     contexto = {
         "email": informado,
         "erro": "",
-        # Recalculada a cada renderização: guardada na sessão, a espera envelhecia junto com a
-        # página e anunciava sessenta segundos depois de dois minutos parada ali (UX-006).
-        "espera": desafio_de_acesso.espera_de_reenvio(
-            email_canonico=canonico, finalidade=finalidade
-        ),
+        # A contagem em segundos é só a da espera de reenvio. O teto se mede em minutos e não corre
+        # na tela: um contador de quarenta minutos com o botão desabilitado convida a ficar parado
+        # olhando, quando o que resolve é outra conexão.
+        "espera": bloqueio.segundos if bloqueio and teto is None else 0,
+        "recusado_pelo_teto": recusado,
+        "teto": _explicar_o_teto(teto) if teto and recusado else "",
+        "proximo_pedido": _proximo_pedido(teto) if teto else "",
         "aviso": AVISO_NEUTRO,
         "noticia": request.session.pop(CHAVE_DO_ENVIO, ""),
         "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
@@ -903,6 +928,52 @@ def acesso_codigo(request):
     if finalidade == DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL:
         return _concluir_adicao(request, desafio)
     return _decidir_a_quem_pertence(request, desafio, informado)
+
+
+def _em_minutos(segundos: int) -> str:
+    minutos = max(1, -(-segundos // 60))
+    return "cerca de 1 minuto" if minutos == 1 else f"cerca de {minutos} minutos"
+
+
+def _proximo_pedido(bloqueio) -> str:
+    """Para quem recebeu o código, mas cujo próximo pedido já esbarra num teto."""
+    alcance = (
+        "por esta conexão"
+        if bloqueio.motivo == desafio_de_acesso.TETO_DA_ORIGEM
+        else "para este e-mail"
+    )
+    return f"Outro pedido {alcance} só será possível daqui a {_em_minutos(bloqueio.segundos)}."
+
+
+def _explicar_o_teto(bloqueio) -> str:
+    """O que aconteceu, por quanto tempo, e o que resolve — sem nada sobre quem existe (FR-031c).
+
+    O teto da origem é o que pegava a sala de um polo: do trigésimo primeiro pedido da hora em
+    diante, cada pessoa lia "o pedido anterior foi há pouco" — ela nunca tinha pedido — e "pode
+    pedir outro código agora", com o bloqueio valendo por até uma hora. Repetia, e concluía que o
+    e-mail não chegava. A frase agora diz que é a **rede**, e não o e-mail, e aponta a saída que
+    funciona: outra conexão. O tempo é o do registro que vai sair da janela, e não uma constante.
+
+    Nenhuma das frases distingue endereço: a da origem é a mesma para qualquer e-mail pedido por
+    ela, e a do endereço depende só da contagem dele, que avança igual exista ou não identidade.
+    """
+    quando = _em_minutos(bloqueio.segundos)
+    atendimento = identificacao.canal_institucional()
+    prazo = f" Se o prazo estiver terminando, fale com {atendimento}." if atendimento else ""
+    if bloqueio.motivo == desafio_de_acesso.TETO_DA_ORIGEM:
+        return (
+            "Não é possível enviar código agora. A rede de onde você está acessando atingiu o "
+            "limite de pedidos de código por hora — isso acontece quando muitas pessoas usam a "
+            "mesma conexão, como num laboratório, polo ou telecentro, e não tem relação com o seu "
+            "e-mail. Use outra conexão, como os dados móveis do celular, ou peça de novo daqui a "
+            f"{quando}. Um código recebido nos últimos {VALIDADE_EM_MINUTOS} minutos continua "
+            f"valendo.{prazo}"
+        )
+    return (
+        "Não é possível enviar outro código para este e-mail agora: ele atingiu o limite de "
+        "pedidos de código por hora. Use o código mais recente que chegou, se ele tiver menos de "
+        f"{VALIDADE_EM_MINUTOS} minutos, ou peça de novo daqui a {quando}.{prazo}"
+    )
 
 
 def _recusa_do_codigo(email_canonico: str, finalidade: str) -> str:
@@ -973,6 +1044,7 @@ def _entrar(request, identidade):
         CHAVE_DA_FINALIDADE,
         CHAVE_DO_DESTINO,
         CHAVE_DO_ENVIO,
+        CHAVE_DO_TETO,
     ):
         request.session.pop(chave, None)
     identidade_do_candidato.abrir_sessao(request, identidade)
@@ -1220,7 +1292,7 @@ def acesso_retomar(request):
     if request.method != "POST":
         return redirect(reverse("portal:inscricoes"))
 
-    _, codigo = desafio_de_acesso.solicitar(
+    recibo, codigo = desafio_de_acesso.solicitar(
         email_canonico=credencial.email_canonico,
         finalidade=DesafioDeAcesso.Finalidade.RETOMAR,
         origem=_origem(request),
@@ -1232,7 +1304,7 @@ def acesso_retomar(request):
     )
     request.session[CHAVE_DO_ENDERECO] = credencial.email_como_informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.RETOMAR
-    request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=False)
+    _guardar_o_pedido(request, recibo, reenvio=False)
     return redirect(reverse("portal:acesso-codigo"))
 
 
@@ -1420,7 +1492,7 @@ def conta_adicionar(request):
         _avisar(request, "Este endereço já é seu.")
         return redirect(reverse("portal:conta"))
 
-    _, codigo = desafio_de_acesso.solicitar(
+    recibo, codigo = desafio_de_acesso.solicitar(
         email_canonico=canonico,
         finalidade=DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL,
         origem=_origem(request),
@@ -1432,7 +1504,7 @@ def conta_adicionar(request):
     )
     request.session[CHAVE_DO_ENDERECO] = informado
     request.session[CHAVE_DA_FINALIDADE] = DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL
-    request.session[CHAVE_DO_ENVIO] = _noticia_do_envio(enviado=bool(codigo), reenvio=False)
+    _guardar_o_pedido(request, recibo, reenvio=False)
     return redirect(reverse("portal:acesso-codigo"))
 
 
@@ -1465,7 +1537,7 @@ def _concluir_adicao(request, desafio):
                 acao="adicionado",
                 atendimento=getattr(settings, "PORTAL_ATENDIMENTO", ""),
             )
-    for chave in (CHAVE_DO_ENDERECO, CHAVE_DA_FINALIDADE, CHAVE_DO_ENVIO):
+    for chave in (CHAVE_DO_ENDERECO, CHAVE_DA_FINALIDADE, CHAVE_DO_ENVIO, CHAVE_DO_TETO):
         request.session.pop(chave, None)
     return redirect(reverse("portal:conta"))
 

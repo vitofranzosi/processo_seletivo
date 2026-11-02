@@ -17,6 +17,8 @@ spec estaria prometendo proteção que a implantação não tem.
 """
 
 import hashlib
+import logging
+import math
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -31,6 +33,8 @@ from processo_seletivo.identidade.models import (
     DesafioDeAcesso,
 )
 
+logger = logging.getLogger("processo_seletivo.identidade")
+
 # A janela e os tetos são constantes da aplicação, e não configuração de usuário (FR-030).
 JANELA = timedelta(hours=1)
 ESPERA_ENTRE_ENVIOS = timedelta(seconds=60)
@@ -39,7 +43,36 @@ LIMITE_POR_ENDERECO = 5
 # telecentro compartilham origem, e um teto apertado ali recusaria gente legítima em bloco. Não
 # existe teto **global** por razão parecida, e mais forte: converteria abuso distribuído em
 # indisponibilidade para todos os candidatos, no dia em que ela mais custa.
+#
+# **Trinta continua, e o que mudou foi a resposta a quem passa dele** (FR-031c). Um polo com
+# quarenta pessoas na mesma hora recusa dez — e o defeito era que essas dez liam "pode pedir outro
+# código agora", com o bloqueio valendo ainda por até uma hora. Subir o número só mudaria o tamanho
+# da sala que esbarra nele; dizer o que aconteceu, por quanto tempo, e que outra conexão resolve é o
+# que tira o candidato do beco. O número é constante pela FR-030, e torná-lo ajustável é decisão
+# registrada, não tomada aqui.
 LIMITE_POR_ORIGEM = 30
+
+# Por que o pedido não gerou código. Nenhum dos três depende de existir identidade: os contadores
+# são por endereço, por finalidade e por origem (FR-021), e dizê-los não revela quem existe.
+EM_ESPERA = "espera_de_reenvio"
+TETO_DO_ENDERECO = "limite_por_endereco"
+TETO_DA_ORIGEM = "limite_por_origem"
+
+
+@dataclass(frozen=True)
+class Bloqueio:
+    """O que impede outro envio agora, e em quantos segundos deixa de impedir.
+
+    Os segundos saem do registro que vai sair da janela, e não de uma constante: o teto da origem
+    era anunciado como "sessenta segundos" enquanto valia por até uma hora (FR-031c).
+    """
+
+    motivo: str
+    segundos: int
+
+    @property
+    def e_teto(self) -> bool:
+        return self.motivo != EM_ESPERA
 
 
 @dataclass(frozen=True)
@@ -48,9 +81,11 @@ class Recibo:
 
     `proxima_tentativa_em` existe para a UX-006: reenviar precisa informar quando a próxima
     tentativa é possível. O valor não depende de existir identidade, porque o contador não depende.
+    `bloqueio` é `None` quando o código foi gerado.
     """
 
     proxima_tentativa_em: int
+    bloqueio: Bloqueio | None = None
 
 
 def _resumir_origem(origem: str) -> str:
@@ -87,31 +122,87 @@ def _espera_restante(email_canonico: str, finalidade: str, agora) -> int:
     return max(0, int(restante))
 
 
-def espera_de_reenvio(*, email_canonico: str, finalidade: str) -> int:
-    """Quantos segundos ainda faltam para outro envio ser possível — agora, e não quando a página
-    foi montada.
+def _liberacao_do_teto(filtro: Q, limite: int, agora) -> int:
+    """Segundos até a janela de uma hora deixar de estar cheia; zero se ela não está.
+
+    A janela desliza: o teto se abre quando sai dela o pedido que a mantém cheia — o
+    `excedente`-ésimo mais antigo, que é o mais antigo de todos quando a contagem está exatamente
+    no teto. Lido assim, e não como "uma hora a partir de agora", o tempo anunciado é o efetivo: a
+    sala cujos pedidos se espalharam pela hora espera minutos, e não a hora inteira. Pedidos
+    simultâneos podem passar o teto em alguns (ver `test_limite_concorrente`), e o índice cobre
+    isso — com dois a mais, são três os que precisam sair.
+    """
+    momentos = list(
+        DesafioDeAcesso.objects.filter(filtro, criado_em__gte=agora - JANELA)
+        .order_by("criado_em")
+        .values_list("criado_em", flat=True)
+    )
+    excedente = len(momentos) - limite
+    if excedente < 0:
+        return 0
+    # Arredondado para cima e nunca zero: no instante exato da liberação o pedido ainda conta
+    # (`criado_em__gte`), e anunciar "agora" ali seria anunciar uma recusa.
+    return max(1, math.ceil((momentos[excedente] + JANELA - agora).total_seconds()))
+
+
+def _bloqueio(email_canonico: str, finalidade: str, origem_hash: str, agora) -> Bloqueio | None:
+    """O impedimento que vale — o mais longo, quando há mais de um.
+
+    O mais longo, porque é o que a pessoa vai de fato esperar: anunciar a espera de um minuto com o
+    teto do endereço valendo por quarenta é a mesma mentira que este achado corrige. No empate, o
+    teto do endereço vem antes do da origem, porque trocar de rede não o resolve.
+    """
+    vigentes = [
+        bloqueio
+        for bloqueio in (
+            Bloqueio(
+                TETO_DO_ENDERECO,
+                _liberacao_do_teto(Q(email_canonico=email_canonico), LIMITE_POR_ENDERECO, agora),
+            ),
+            Bloqueio(
+                TETO_DA_ORIGEM,
+                _liberacao_do_teto(Q(origem_hash=origem_hash), LIMITE_POR_ORIGEM, agora)
+                if origem_hash
+                else 0,
+            ),
+            Bloqueio(EM_ESPERA, _espera_restante(email_canonico, finalidade, agora)),
+        )
+        if bloqueio.segundos > 0
+    ]
+    return max(vigentes, key=lambda bloqueio: bloqueio.segundos) if vigentes else None
+
+
+def bloqueio_atual(*, email_canonico: str, finalidade: str, origem: str = "") -> Bloqueio | None:
+    """O que impede outro envio agora, e não quando a página foi montada.
 
     A tela guardava o valor devolvido pelo recibo e o repetia a cada renderização, então ele
     envelhecia: depois de dois minutos parados na página, ela ainda anunciava sessenta segundos de
     espera. Recalcular na leitura é o que permite ao botão dizer a verdade e ao contador chegar a
-    zero (UX-006).
+    zero (UX-006). Até a FR-031c lia-se só a espera — e a tela de quem esbarrava num teto dizia
+    "pode pedir outro código agora".
     """
-    return _espera_restante(email_canonico, finalidade, timezone.now())
+    return _bloqueio(email_canonico, finalidade, _resumir_origem(origem), timezone.now())
 
 
-def _excedeu_limites(email_canonico: str, origem_hash: str, agora) -> bool:
-    desde = agora - JANELA
-    por_endereco = DesafioDeAcesso.objects.filter(
-        email_canonico=email_canonico, criado_em__gte=desde
-    ).count()
-    if por_endereco >= LIMITE_POR_ENDERECO:
-        return True
-    if not origem_hash:
-        return False
-    por_origem = DesafioDeAcesso.objects.filter(
-        origem_hash=origem_hash, criado_em__gte=desde
-    ).count()
-    return por_origem >= LIMITE_POR_ORIGEM
+def _registrar_recusa(bloqueio: Bloqueio, finalidade: str, origem_hash: str) -> None:
+    """Uma linha estruturada por pedido recusado, para que a recusa deixe rastro.
+
+    Sem ela, a sala inteira de um polo recusada no último dia era indistinguível de correio caído.
+    O `code` separa os três motivos entre si e da falha de envio, que `mensagem.py` registra com o
+    seu. Não leva endereço nem código; da origem leva o começo do mesmo resumo que a tabela já
+    guarda — o bastante para contar quantas redes bateram no teto, ou conferir a de um polo
+    conhecido, e nada que a tabela não tenha. A espera não é alarme, e por isso é só informação.
+    """
+    logger.log(
+        logging.INFO if bloqueio.motivo == EM_ESPERA else logging.WARNING,
+        "codigo_de_acesso_nao_enviado",
+        extra={
+            "code": bloqueio.motivo,
+            "operation": f"identidade.solicitar_codigo.{finalidade.lower()}",
+            "origin": origem_hash[:12],
+            "retryAfter": bloqueio.segundos,
+        },
+    )
 
 
 def solicitar(*, email_canonico: str, finalidade: str, origem: str = "") -> tuple[Recibo, str]:
@@ -120,14 +211,17 @@ def solicitar(*, email_canonico: str, finalidade: str, origem: str = "") -> tupl
     Devolver o código em vez de enviá-lo daqui mantém este módulo sem saber o que é uma mensagem, e
     permite ao teste ler o que a pessoa receberia. Quem envia é `mensagem.py`.
 
-    Quando o limite está esgotado, **o recibo continua o mesmo** e nenhum código é gerado: quem
-    olha de fora não distingue os dois casos.
+    Quando um limite está esgotado, nenhum código é gerado, e o recibo diz qual limite e por quanto
+    tempo (FR-031c). Ele dizia "o mesmo que o caminho feliz", com a espera de sessenta segundos — e
+    esconder o teto não protegia nada, porque nenhum contador depende de existir identidade: só
+    mandava a pessoa clicar de novo num botão que continuaria recusando por uma hora.
     """
     agora = timezone.now()
     origem_hash = _resumir_origem(origem)
-    espera = _espera_restante(email_canonico, finalidade, agora)
-    if espera > 0 or _excedeu_limites(email_canonico, origem_hash, agora):
-        return Recibo(proxima_tentativa_em=espera or int(ESPERA_ENTRE_ENVIOS.total_seconds())), ""
+    bloqueio = _bloqueio(email_canonico, finalidade, origem_hash, agora)
+    if bloqueio is not None:
+        _registrar_recusa(bloqueio, finalidade, origem_hash)
+        return Recibo(proxima_tentativa_em=bloqueio.segundos, bloqueio=bloqueio), ""
 
     codigo = codigo_de_acesso.gerar()
     with transaction.atomic():

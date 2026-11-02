@@ -39,6 +39,7 @@ Caminhos são relativos a `backend/`.
 | FR-029 a FR-031 tetos e recusa indistinguível | `identidade/application/desafio.py` | `tests/integration/identidade/test_limites.py`, `tests/integration/identidade/test_teto_concorrente.py` |
 | FR-031a recusa nomeia a causa, sem revelar quem existe | `identidade/application/desafio.py`, `portal/views.py` | `tests/integration/identidade/test_recusa_do_codigo.py`, `tests/contract/portal/test_acesso.py` |
 | FR-031b reenvio recusado responde por escrito | `portal/views.py`, `portal/templates/portal/acesso_codigo.html` | `tests/integration/identidade/test_reenvio.py` |
+| FR-031c teto diz qual, por quanto tempo e o que resolve; recusa deixa registro | `identidade/application/desafio.py`, `identidade/application/mensagem.py`, `portal/views.py`, `portal/templates/portal/acesso_codigo.html` | `tests/integration/identidade/test_limite_por_origem.py`, `tests/integration/identidade/test_limite_concorrente.py`, `tests/integration/identidade/test_equivalencia.py` |
 | FR-018a, FR-018b remoção pergunta antes; adição e remoção avisam a principal | `portal/views.py`, `identidade/application/mensagem.py` | `tests/integration/identidade/test_mudanca_de_credencial.py` |
 | FR-082a a mensagem do código corresponde à finalidade | `identidade/application/mensagem.py` | `tests/integration/identidade/test_mudanca_de_credencial.py` |
 | FR-030 origem não escolhida por quem é contado | `portal/views.py` | `tests/integration/identidade/test_origem_da_solicitacao.py` |

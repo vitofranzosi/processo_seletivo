@@ -581,6 +581,45 @@ CPF. Cada um sozinho é pequeno; juntos formam a impressão de um sistema que n�
 que o htmx devolve, e a confirmação seria consumida por um envio de arquivo feito logo depois — some
 sem nunca ter sido lida. As telas que recebem confirmação são quatro, e nelas a leitura é explícita.
 
+## D-034 — O teto se diz, com o tempo efetivo e a saída
+
+**Decisão** (A-12 da auditoria de prontidão, 01/11/2026): `solicitar` devolve, no recibo, qual
+impedimento valeu — espera de reenvio, teto do endereço ou teto da origem — e os segundos até ele
+deixar de valer, contados do pedido que sai da janela. A tela do código explica o teto a quem teve o
+pedido recusado por ele, em minutos e sem contagem regressiva, com a saída que funciona; cada recusa
+grava uma linha `codigo_de_acesso_nao_enviado` com `code` próprio, a operação, o começo do resumo da
+origem e o tempo (`FR-031c`).
+
+**Racional**: reproduzido com quarenta clientes de uma origem só: trinta códigos, dez recusas, e
+cada recusa lia "o pedido anterior foi há pouco" e "pode pedir outro código agora", sem registro
+técnico. A regra que produzia isso era a leitura da `FR-021` como "o teto responde como o caminho
+feliz" — e esconder o teto não protegia nada: nenhum contador depende de existir identidade, e quem
+varre endereços percebe o teto do mesmo jeito, pelos códigos que param de chegar à caixa dele.
+
+**O tempo vem do registro, e não de uma constante.** A janela desliza: com a contagem no teto, ela se
+abre quando sai o pedido mais antigo. A sala cujos pedidos se espalharam pela hora espera minutos, e
+anunciar "uma hora" seria o mesmo erro do outro lado. Com mais de um teto, vale o mais longo; no
+empate, o do endereço, porque trocar de rede não o resolve.
+
+**A tela separa "o seu pedido foi recusado" de "o próximo será".** A pessoa cujo pedido completou os
+trinta recebeu o código; o teto que passou a valer depois dela é do pedido seguinte. Uma marca na
+sessão diz qual dos dois é o caso — ler só o teto vigente dizia "não é possível enviar" a quem
+acabara de receber.
+
+**Alternativas rejeitadas**: *subir o teto* — muda o tamanho da sala que esbarra nele e deixa a
+mentira para a seguinte; *teto ajustável por variável no dia de pico* — contraria a `FR-030`
+("constantes da aplicação"), e a necessidade não está demonstrada depois que a recusa diz o que
+resolve; fica registrada como decisão do produto; *CAPTCHA, Redis, fila* — infraestrutura nova sem
+necessidade demonstrada; *travar a contagem* (`pg_advisory_xact_lock` por origem) — o teto é
+conferido antes de gravar, e pedidos simultâneos na borda passam juntos; medido, oito de oito e 32
+de 32 passaram com a contagem em 29. O excesso é limitado pelos pedidos que o servidor atende ao
+mesmo tempo, e não pelo atacante, existia antes deste achado e não é o que ele corrige; os testes
+de `test_limite_concorrente.py` guardam que ele não estraga a resposta.
+
+**Risco residual**: o teto da origem continua recusando o excedente de uma sala grande na mesma
+hora — agora com a saída escrita. A frase do teto da origem diz a quem varre que foi contido; isso
+ele já sabia. O resumo da origem no registro é o mesmo, sem sal, que a tabela já guarda.
+
 ## D-033 — A falha do envio aparece
 
 **Decisão**: `htmx:responseError` e `htmx:sendError` escrevem uma frase junto do documento
