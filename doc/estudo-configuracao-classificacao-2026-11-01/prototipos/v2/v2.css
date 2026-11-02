@@ -135,6 +135,11 @@ table.decisao thead th { background: var(--fundo); font-size: 12px; text-transfo
 .arco { fill: none; stroke: var(--arco); stroke-width: 1.5; }
 .arco.corte { stroke: var(--portao); stroke-dasharray: 4 3; opacity: 0.55; }
 .arco.ativo { stroke: var(--marco-borda); stroke-width: 2.5; opacity: 1; }
+.arco.apagado { opacity: 0.28; }
+.arco.ponto { fill: var(--arco); stroke: none; }
+.arco.ponto.ativo { fill: var(--marco-borda); }
+.arco.ponta { stroke-linejoin: round; }
+.arco { stroke-linejoin: round; stroke-linecap: round; }
 .arco.corte.ativo { stroke: var(--portao); }
 .trilho { list-style: none; margin: 0; padding: 0 64px 0 72px; position: relative; }
 .trilho li { position: relative; }

@@ -216,32 +216,63 @@
     const r0 = moldura.getBoundingClientRect();
     svg.setAttribute("width", r0.width);
     svg.setAttribute("height", r0.height);
-    let html = "";
-    ordemDaJornada(m, p).forEach(function (mc, k) {
+    // Faixas aninhadas como parênteses: a ordem de menor alcance fica mais perto dos cartões, e as
+    // de alcance maior passam por fora — assim as verticais não se atravessam. Cada ordem sai do
+    // cartão da Etapa numa altura própria, para que duas ordens que usam a mesma Etapa não se
+    // fundam numa linha só.
+    const marcos = ordemDaJornada(m, p).filter(function (mc) { return mc.entradas.length; });
+    const alcance = function (mc) {
+      const idx = mc.entradas.map(function (id) { return G.indice(m, id); });
+      return Math.max.apply(null, idx) - Math.min.apply(null, idx);
+    };
+    const faixas = marcos.slice().sort(function (a, b) { return alcance(a) - alcance(b) || G.posicao(m, a) - G.posicao(m, b); });
+    const n = faixas.length;
+    const gap = Math.min(14, 54 / Math.max(n, 1));
+    const realce = S.realce || (S.sel && S.sel.tipo === "marco" ? S.sel.id : null);
+    const etapaSel = S.sel && S.sel.tipo === "etapa" ? S.sel.id : null;
+    const ativo = function (mc) {
+      return realce ? mc.id === realce : etapaSel ? mc.entradas.indexOf(etapaSel) >= 0 : false;
+    };
+    const algumAtivo = marcos.some(ativo);
+    let fundo = "";
+    let frente = "";
+    faixas.forEach(function (mc, rank) {
       const el = moldura.querySelector('[data-marco="' + mc.id + '"] .cartao-marco');
       if (!el) return;
       const rm = el.getBoundingClientRect();
-      const ym = rm.top - r0.top + rm.height / 2;
-      const x = 14 + k * 9;
-      const sel = S.sel && S.sel.tipo === "marco" && S.sel.id === mc.id;
+      const ym = rm.top - r0.top + Math.min(24, rm.height / 2);
+      const xm = rm.left - r0.left;
+      const cls = "arco" + (ativo(mc) ? " ativo" : algumAtivo ? " apagado" : "");
+      let d = "";
+      let pontos = "";
+      let topo = ym;
+      let xLane = null;
       mc.entradas.forEach(function (id) {
         const ee = moldura.querySelector('[data-etapa="' + id + '"] .cartao-etapa');
         if (!ee) return;
         const re = ee.getBoundingClientRect();
-        const ye = re.top - r0.top + re.height / 2;
         const xe = re.left - r0.left;
-        const xm = rm.left - r0.left;
-        html += '<path class="arco' + (sel ? " ativo" : "") + '" d="M' + xe + " " + ye + " H" + x + " V" + ym + " H" + xm + '"/>';
+        if (xLane === null) xLane = xe - 12 - rank * gap;
+        const ye = re.top - r0.top + re.height / 2 + (rank - (n - 1) / 2) * 7;
+        topo = Math.min(topo, ye);
+        d += "M" + xe + " " + ye + " H" + xLane + " ";
+        pontos += '<circle class="' + cls + ' ponto" cx="' + xe + '" cy="' + ye + '" r="2.6"/>';
       });
+      if (xLane === null) return;
+      d += "M" + xLane + " " + topo + " V" + ym + " H" + (xm - 1);
+      const traco = '<path class="' + cls + '" d="' + d + '"/>' + pontos +
+        '<path class="' + cls + ' ponta" d="M' + (xm - 7) + " " + (ym - 4) + " L" + (xm - 1) + " " + ym + " L" + (xm - 7) + " " + (ym + 4) + '"/>';
       const pt = moldura.querySelector('[data-portao="' + mc.id + '"]');
+      let corte = "";
       if (pt) {
         const rp = pt.getBoundingClientRect();
         const yp = rp.top - r0.top + rp.height / 2;
-        const xd = r0.width - 14 - k * 9;
-        html += '<path class="arco corte' + (sel ? " ativo" : "") + '" d="M' + (rm.right - r0.left) + " " + ym + " H" + xd + " V" + yp + " H" + (rp.right - r0.left) + '"/>';
+        const xd = r0.width - 14 - rank * gap;
+        corte = '<path class="' + cls + ' corte" d="M' + (rm.right - r0.left) + " " + ym + " H" + xd + " V" + yp + " H" + (rp.right - r0.left) + '"/>';
       }
+      if (ativo(mc)) frente += traco + corte; else fundo += traco + corte;
     });
-    svg.innerHTML = html;
+    svg.innerHTML = fundo + frente;
   }
 
   // ------------------------------------------------------------------ inspetor
@@ -790,6 +821,17 @@
   // Texto e número atualizam ao sair do campo: re-desenhar a cada tecla moveria o cursor.
   document.addEventListener("change", aoMudar);
   window.addEventListener("resize", function () { requestAnimationFrame(desenharArcos); });
+
+  // Passar o ponteiro ou o foco por uma ordem acende as linhas dela, sem redesenhar a página.
+  function realcar(ev) {
+    const c = ev.target.closest && ev.target.closest(".cartao-marco");
+    const id = c ? c.dataset.id : null;
+    if (id === S.realce) return;
+    S.realce = id;
+    desenharArcos();
+  }
+  document.addEventListener("mouseover", realcar);
+  document.addEventListener("focusin", realcar);
 
   if (q.get("mover")) {
     const [id, dir] = q.get("mover").split(":");
