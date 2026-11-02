@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 01/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, com a Marca do Instituto Federal do Espírito Santo, Centro de Referência em Formação e em Educação a Distância. Processo seletivo, Edital nº 01/2026: Professor Substituto e Técnico-Administrativo. Inscrições de 11/10 a 31/10/2026, até as 09h43 (horário de Brasília). Oferta: Professor de Informática — Campus Serra: 2 vagas e cadastro reserva. Técnico de Laboratório — Campus Vitória: cadastro reserva. Condições, documentos e cronograma: gps.exemplo.ifes.edu.br/selecoes, busque por 01/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<rect x="0" y="0" width="1080" height="210" fill="#0b5a2a"/>
+<image x="60" y="47" width="340" height="136" data-campo="marca" href="data:image/png;base64,MARCA"/>
+<text x="80" y="321" font-family="Edital Sans" font-size="28" font-weight="700" fill="#146c37" data-campo="fixo">PROCESSO SELETIVO</text>
+<text x="80" y="365" font-family="Edital Sans" font-size="32" font-weight="400" fill="#555555" data-campo="identificacao">Edital nº 01/2026</text>
+<text x="80" y="430" font-family="Edital Sans" font-size="52" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">Professor Substituto e</text>
+<text x="80" y="491" font-family="Edital Sans" font-size="52" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">Técnico-Administrativo</text>
+<rect x="80" y="523" width="920" height="236" rx="28" fill="#0b5a2a"/>
+<text x="120" y="585" font-family="Edital Sans" font-size="30" font-weight="700" fill="#ffffff" data-campo="fixo">INSCRIÇÕES</text>
+<text x="120" y="685" font-family="Edital Sans" font-size="88" font-weight="700" fill="#ffffff" data-campo="periodo_curto">11/10 a 31/10/2026</text>
+<text x="120" y="735" font-family="Edital Sans" font-size="30" font-weight="400" fill="#e7f5ec" data-campo="hora">até as 09h43 (horário de Brasília)</text>
+<text x="80" y="823" font-family="Edital Sans" font-size="26" font-weight="700" fill="#146c37" data-campo="fixo">OFERTA</text>
+<text x="80" y="871" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Professor de Informática — Campus Serra</text>
+<text x="1000" y="911" font-family="Edital Sans" font-size="30" font-weight="700" fill="#1c1c1c" text-anchor="end" data-campo="oferta_quantidade:PERFIL">2 vagas e cadastro reserva</text>
+<line x1="80" y1="931" x2="1000" y2="931" stroke="#d4d4d4" stroke-width="2"/>
+<text x="80" y="967" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Técnico de Laboratório — Campus Vitória</text>
+<text x="1000" y="967" font-family="Edital Sans" font-size="30" font-weight="700" fill="#1c1c1c" text-anchor="end" data-campo="oferta_quantidade:PERFIL">cadastro reserva</text>
+<line x1="80" y1="987" x2="1000" y2="987" stroke="#d4d4d4" stroke-width="2"/>
+<line x1="80" y1="1100" x2="1000" y2="1100" stroke="#d4d4d4" stroke-width="2"/>
+<text x="80" y="1142" font-family="Edital Sans" font-size="26" font-weight="400" fill="#555555" data-campo="fixo">Condições, documentos e cronograma:</text>
+<text x="80" y="1186" font-family="Edital Sans" font-size="34" font-weight="700" fill="#146c37" data-campo="caminho_curto">gps.exemplo.ifes.edu.br/selecoes</text>
+<text x="80" y="1224" font-family="Edital Sans" font-size="28" font-weight="700" fill="#146c37" data-campo="busca">busque por 01/2026 – Cefor</text>
+<text x="80" y="1262" font-family="Edital Sans" font-size="24" font-weight="400" fill="#555555" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+</svg>

@@ -39,7 +39,7 @@ Demonstração ponta a ponta pela interface (Princípio VI). Caminhos relativos 
 
 1. A mesma tela mostra a prévia 1080 × 1350, com o texto alternativo ao lado.
 2. **Exportar PNG** e **Exportar SVG**: as duas peças são a mesma composição. O SVG embute a fonte e
-   não abre script nenhum (`default-src 'none'; style-src 'unsafe-inline'; font-src data:`).
+   não abre script nenhum (`default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:`).
 3. 92/2026: a peça conta 18 opções e usa o título do Processo, e a tela diz que o título do Edital não
    coube.
 

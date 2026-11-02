@@ -37,12 +37,14 @@ WORKDIR /app/backend
 # Duas camadas, e nesta ordem, para que trocar uma linha de código não reinstale o mundo:
 # o manifesto e o lock mudam raramente, o código muda a cada commit. `--no-install-project`
 # resolve só as dependências, porque o projeto ainda não foi copiado.
+# O grupo `peca` (111) é o rasterizador da peça do kit de divulgação, ligada em desenvolvimento:
+# sem ele, a tela do kit diz que a peça não tem PNG neste ambiente.
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --extra dev --locked --no-install-project
+RUN uv sync --extra dev --extra peca --locked --no-install-project
 
 COPY backend/ ./
 COPY docs/visao-sistema/ /app/docs/visao-sistema/
-RUN uv sync --extra dev --locked
+RUN uv sync --extra dev --extra peca --locked
 
 COPY scripts/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

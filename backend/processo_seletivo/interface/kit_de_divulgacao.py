@@ -17,11 +17,19 @@ registram (P-5).
 **A impressão conferida viaja da tela à exportação** (`FR-3446`, `D-019`). São duas requisições, e
 na passagem de uma vigência a pessoa conferiria um Edital e baixaria outro.
 
+**A peça é a mesma composição na prévia e na exportação** (`D-014`). A prévia é um `<img>` que
+pede o PNG por GET, com a impressão conferida, e não registra; a exportação é o POST que registra.
+O SVG sai só como anexo, com uma política própria que admite só a fonte e a marca embutidas
+(`D-021`): a do projeto só se aplica a `text/html`. Com a chave desligada, em host local, sem
+material ou com a peça recusada, a prévia e a exportação da peça respondem 404 — o motivo é dito na
+tela (contrato).
+
 **Nada aqui toca a publicação** (`FR-3405`): a única escrita é o evento da trilha.
 """
 
 import hashlib
 
+from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -29,7 +37,7 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
-from processo_seletivo.interface import identidade, kit_textos
+from processo_seletivo.interface import identidade, kit_pacote, kit_peca, kit_textos
 from processo_seletivo.portal import ficha as fichas
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import (
@@ -54,11 +62,29 @@ MUDOU = (
     "antes de exportar."
 )
 
-#: Os formatos do incremento A (`D-001`). A peça e o pacote entram nos incrementos B e C.
-FORMATOS = {
+PECA_EM_VALIDACAO = (
+    "A peça visual está em validação pela comunicação e não está disponível neste ambiente. Os "
+    "textos continuam disponíveis."
+)
+SEM_RASTERIZADOR = (
+    "O rasterizador da peça não está instalado neste ambiente: a peça sai só em SVG. Os textos "
+    "continuam disponíveis."
+)
+MANCHETE_INVALIDA = "A manchete escolhida não está entre as oferecidas. Abra o kit de novo."
+
+#: Os formatos do incremento B (`D-001`). O pacote entra no incremento C.
+TEXTOS = {
     "md": ("text/markdown; charset=utf-8", "md"),
     "txt": ("text/plain; charset=utf-8", "txt"),
 }
+PECAS = {
+    "png": ("image/png", "png"),
+    "svg": ("image/svg+xml", "svg"),
+}
+FORMATOS = {**TEXTOS, **PECAS}
+#: A política do anexo SVG (FR-3442, `D-014`, `D-021`): nada de fora, nenhum script; só o estilo
+#: que declara a fonte, a fonte em `data:` e a marca em `data:`.
+POLITICA_DO_SVG = "default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:"
 
 
 def _edital_do_kit(request, edital_id):
@@ -84,6 +110,52 @@ def _base_url(request):
     if host_local(request):
         return None
     return request.build_absolute_uri("/").rstrip("/")
+
+
+def _indice_da_manchete(dados):
+    """O índice pedido, ou `None`. Texto que não é índice tem a recusa do índice fora da lista."""
+    bruto = dados.get("manchete", "")
+    if bruto == "":
+        return None
+    try:
+        return int(bruto)
+    except ValueError:
+        raise DomainError("kit_manchete_invalida", MANCHETE_INVALIDA, 422) from None
+
+
+def _motivo_sem_peca(request):
+    """Por que a peça não existe neste acesso, antes de compor: chave desligada ou host local."""
+    if not settings.KIT_DE_DIVULGACAO_PECA:
+        return PECA_EM_VALIDACAO
+    if host_local(request):
+        return kit_peca.HOST_LOCAL
+    return ""
+
+
+def _compor(ficha, indice):
+    """A peça, ou `DomainError` 422 para manchete fora da lista."""
+    try:
+        return kit_peca.compor(ficha, manchete=indice)
+    except kit_peca.MancheteInvalida:
+        raise DomainError("kit_manchete_invalida", MANCHETE_INVALIDA, 422) from None
+
+
+def _secao_da_peca(request, ficha, indice):
+    """O que a tela mostra da peça: a peça, as manchetes oferecidas e o motivo quando não há."""
+    motivo = _motivo_sem_peca(request)
+    if motivo or not ficha.tem_material:
+        return {"peca": None, "motivo": motivo, "manchetes": ()}
+    try:
+        peca = _compor(ficha, indice)
+    except kit_peca.PecaRecusada as recusa:
+        return {"peca": None, "motivo": recusa.motivo, "manchetes": ()}
+    return {
+        "peca": peca,
+        "motivo": "" if kit_pacote.disponivel() else SEM_RASTERIZADOR,
+        "png": kit_pacote.disponivel(),
+        "manchetes": kit_peca.manchetes(ficha),
+        "manchete": indice,
+    }
 
 
 def exportacoes(edital):
@@ -132,6 +204,7 @@ def kit(request, edital_id):
     if ator is None:
         return identidade.pedir_identificacao(request)
     ficha = fichas.ler(edital, agora=timezone.now(), base_url=_base_url(request))
+    indice = _indice_da_manchete(request.GET)
     textos, notas = _material(ficha)
     anteriores = exportacoes(edital)
     desatualizadas, mais = fichas.desatualizacoes(anteriores, ficha)
@@ -155,10 +228,42 @@ def kit(request, edital_id):
                 # O desfecho depois de uma exportação: o material não deve mais circular (FR-3445).
                 "exportado_sem_material": (not ficha.tem_material) and bool(anteriores),
                 "ultima_exportacao": anteriores[0]["exportado_em"] if anteriores else "",
-                "formatos": list(FORMATOS),
+                "formatos": list(TEXTOS),
+                "formatos_da_peca": list(PECAS),
+                "secao_da_peca": _secao_da_peca(request, ficha, indice),
             },
         )
     )
+
+
+@require_http_methods(["GET"])
+def previa(request, edital_id):
+    """O PNG da peça para a tela, com a impressão conferida, sem registro (`D-014`, FR-3446)."""
+    ator, edital = _edital_do_kit(request, edital_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    if _motivo_sem_peca(request) or not kit_pacote.disponivel():
+        raise Http404
+    indice = _indice_da_manchete(request.GET)
+    ficha = fichas.ler(edital, agora=timezone.now(), base_url=_base_url(request))
+    if not ficha.tem_material:
+        raise Http404
+    if request.GET.get("impressao", "") != ficha.impressao:
+        raise DomainError("kit_desatualizado", MUDOU, 409)
+    try:
+        peca = _compor(ficha, indice)
+    except kit_peca.PecaRecusada:
+        raise Http404 from None
+    resposta = HttpResponse(kit_pacote.rasterizar(kit_peca.svg(peca, ficha)), "image/png")
+    resposta["Content-Disposition"] = "inline"
+    resposta["X-Content-Type-Options"] = "nosniff"
+    return marcar_como_privada(resposta)
+
+
+def _arquivo_da_peca(ficha, peca, formato):
+    if formato == "svg":
+        return kit_peca.svg(peca, ficha, fonte_embutida=True).encode()
+    return kit_pacote.rasterizar(kit_peca.svg(peca, ficha))
 
 
 @require_http_methods(["POST"])
@@ -169,18 +274,30 @@ def exportar(request, edital_id, formato):
     ator, edital = _edital_do_kit(request, edital_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
+    e_peca = formato in PECAS
+    if e_peca and (_motivo_sem_peca(request) or (formato == "png" and not kit_pacote.disponivel())):
+        raise Http404
     agora = timezone.now()
     ficha = fichas.ler(edital, agora=agora, base_url=_base_url(request))
     if not ficha.tem_material:
         raise DomainError("kit_sem_material", ficha.motivo, 409)
     if request.POST.get("impressao", "") != ficha.impressao:
         raise DomainError("kit_desatualizado", MUDOU, 409)
-    textos, notas = _material(ficha)
-    if formato == "md":
-        conteudo = kit_textos.em_markdown(ficha, textos, notas)
+    peca = None
+    if e_peca:
+        indice = _indice_da_manchete(request.POST)
+        try:
+            peca = _compor(ficha, indice)
+        except kit_peca.PecaRecusada as recusa:
+            raise DomainError("kit_peca_recusada", recusa.motivo, 409) from None
+        dados = _arquivo_da_peca(ficha, peca, formato)
     else:
-        conteudo = kit_textos.em_texto(ficha, textos, notas)
-    dados = conteudo.encode()
+        textos, notas = _material(ficha)
+        if formato == "md":
+            conteudo = kit_textos.em_markdown(ficha, textos, notas)
+        else:
+            conteudo = kit_textos.em_texto(ficha, textos, notas)
+        dados = conteudo.encode()
     record_event(
         actor=ator,
         permission=PERMISSAO,
@@ -200,11 +317,11 @@ def exportar(request, edital_id, formato):
                 "vigente_desde": ficha.versao_desde,
                 "ato": ficha.versao_ato,
             },
-            "template": None,
+            "template": kit_peca.TEMPLATE if peca else None,
             "impressao": ficha.impressao,
             "versao_da_impressao": ficha.versao_da_impressao,
             "campos": ficha.campos,
-            "manchete": None,
+            "manchete": peca.manchete if peca else None,
             "sha256": hashlib.sha256(dados).hexdigest(),
         },
     )
@@ -214,4 +331,6 @@ def exportar(request, edital_id, formato):
         f'attachment; filename="kit-{ficha.numero}-{ficha.ano}.{extensao}"'
     )
     resposta["X-Content-Type-Options"] = "nosniff"
+    if formato == "svg":
+        resposta["Content-Security-Policy"] = POLITICA_DO_SVG
     return marcar_como_privada(resposta)

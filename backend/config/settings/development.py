@@ -9,3 +9,7 @@ SORTEIO_FONTE_DE_DEMONSTRACAO = True
 # Os avisos da 066 ligados em desenvolvimento, como o sorteio de demonstração: a demonstração pela
 # interface (Princípio VI) precisa deles, e o correio daqui não entrega a ninguém.
 AVISOS_AOS_CANDIDATOS = True
+
+# A peça do kit de divulgação (111) ligada, como os avisos: a revisão da comunicação (SC-1054) é
+# feita olhando a peça, e é aqui que ela existe antes da aprovação.
+KIT_DE_DIVULGACAO_PECA = True

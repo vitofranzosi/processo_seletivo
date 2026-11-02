@@ -169,10 +169,11 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
 
 ## Phase 5: User Story 2 — A peça (P1)
 
-- [ ] T017 [P] [US2] Chave `KIT_DE_DIVULGACAO_PECA` em `config/settings/base.py` (desligada), `development.py` e `test.py` (ligada). Produção não a recusa. Teste em `tests/test_settings_do_kit.py` (FR-3432, EC-21; D-010)
-- [ ] T018 [P] [US2] Pasta `processo_seletivo/interface/kit_ativos/` com o marcador declarado ("marcador — não é ativo oficial") e um `ORIGEM.md` que diz a pendência P-3 (FR-3432)
-- [ ] T019 [P] [US2] Apelido público de `_quebrar` em `processo_seletivo/publicacoes/infrastructure/pdf.py`, sem renomear. As fixtures de contrato do PDF continuam verdes (D-009)
-- [ ] T020 [P] [US2] **Teste primeiro**: a geometria e a composição, em `tests/unit/kit/test_peca.py`:
+- [x] T017 [P] [US2] Chave `KIT_DE_DIVULGACAO_PECA` em `config/settings/base.py` (desligada), `development.py` e `test.py` (ligada). Produção não a recusa. Teste em `tests/test_settings_do_kit.py` (FR-3432, EC-21; D-010)
+- [x] T018 [P] [US2] Pasta `processo_seletivo/interface/kit_ativos/` com o marcador declarado ("marcador — não é ativo oficial") e um `ORIGEM.md` que diz a pendência P-3 (FR-3432)
+  - **Feito com a marca oficial, e não com o marcador** (01/11): a P-3 se resolveu quanto à origem — a página de download de marcas do Ifes publica a do Cefor e a do Ifes, com o manual de 2015. Entraram as versões brancas, reduzidas a 720 px, com procedência e resumos no `ORIGEM.md`. A aprovação do template com a marca (SC-1054) continua da comunicação, e a chave continua desligada em produção.
+- [x] T019 [P] [US2] Apelido público de `_quebrar` em `processo_seletivo/publicacoes/infrastructure/pdf.py`, sem renomear. As fixtures de contrato do PDF continuam verdes (D-009)
+- [x] T020 [P] [US2] **Teste primeiro**: a geometria e a composição, em `tests/unit/kit/test_peca.py`:
   - **geometria**: nenhuma caixa fora da área útil, nenhuma sobreposição, nenhuma palavra partida, corpo mínimo de 24 px, margem de 80 px; nos cenários e nos sintéticos da D-016 (FR-3428, FR-3429);
   - **coerência**: peça ⊂ ficha e peça ⊂ textos (FR-3423);
   - **título**: ordem dos títulos e nenhum truncamento (FR-3426, EC-13, EC-14);
@@ -182,13 +183,13 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
   - **endereço longo** (FR-3431, EC-16);
   - **texto alternativo** (FR-3433);
   - **espaço livre**: corpo desce 35% da folga (FR-3434).
-- [ ] T021 [P] [US2] **Teste primeiro**: a manchete, em `tests/unit/kit/test_manchete.py`. A lista fechada é oferecida só quando nenhum título cabe, filtrada pela FR-3414; índice inválido gera 422 (FR-3427; D-013)
-- [ ] T022 [P] [US2] **Teste primeiro**: o SVG exportado, em `tests/unit/kit/test_svg.py`. Fonte embutida, política do anexo e `nosniff`; aberto num navegador com a política, desenha com a Edital Sans (FR-3422, FR-3442; D-021)
-- [ ] T023 [US2] Implementar `processo_seletivo/interface/kit_peca.py`:
+- [x] T021 [P] [US2] **Teste primeiro**: a manchete, em `tests/unit/kit/test_manchete.py`. A lista fechada é oferecida só quando nenhum título cabe, filtrada pela FR-3414; índice inválido gera 422 (FR-3427; D-013)
+- [x] T022 [P] [US2] **Teste primeiro**: o SVG exportado, em `tests/unit/kit/test_svg.py`. Fonte embutida, política do anexo e `nosniff`; aberto num navegador com a política, desenha com a Edital Sans (FR-3422, FR-3442; D-021)
+- [x] T023 [US2] Implementar `processo_seletivo/interface/kit_peca.py`:
   - modelo de caixas com `data-campo` (D-008);
   - serialização SVG com escape por nó e texto normalizado (D-009), com a fonte embutida (D-021);
   - as regras de título, manchete, período, oferta, rodapé, legibilidade, recusa, espaço livre e texto alternativo (FR-3422 a FR-3431, FR-3433, FR-3434).
-- [ ] T024 [US2] Verificação do motor (D-007), registrada em `specs/111-kit-de-divulgacao/verificacao-do-motor.md`:
+- [x] T024 [US2] Verificação do motor (D-007), registrada em `specs/111-kit-de-divulgacao/verificacao-do-motor.md`:
   - licença do `resvg-py` e das transitivas;
   - wheel e execução na imagem Linux de implantação;
   - fontes e caracteres dos cenários;
@@ -197,15 +198,17 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
   - lote de 20.
 
   **Aprovado pelo usuário (P-4)**, fixar a versão em `pyproject.toml` e `uv.lock`. Reprovado, seguir a alternativa da D-007.
-- [ ] T025 [US2] Prévia e exportação da peça em `processo_seletivo/interface/kit_de_divulgacao.py`:
+
+  **Estado em 01/11**: verificação aprovada nos sete itens, registrada. A P-4 continua do usuário: até ela, o `resvg-py==0.5.0` fica no grupo opcional `peca` (travado no `uv.lock`), que o CI e a imagem de desenvolvimento instalam e a produção não.
+- [x] T025 [US2] Prévia e exportação da peça em `processo_seletivo/interface/kit_de_divulgacao.py`:
   - GET `previa.png` com a impressão conferida, sem registro (D-014, FR-3446);
   - POST `exportar/png` e `exportar/svg` com os cabeçalhos do contrato (FR-3442);
   - o rasterizador em `processo_seletivo/interface/kit_pacote.py`;
   - testes em `tests/interface/test_kit_de_divulgacao.py`: cabeçalhos, chave desligada, recusa, host local.
-- [ ] T026 [P] [US2] SVG de referência dos cenários em `tests/fixtures/kit_referencias/*.svg`, com um teste de igualdade em `tests/integration/kit/test_referencias.py`. Mudar o template muda o arquivo, e o diff é revisado (D-016)
-- [ ] T027 [US2] Estender a varredura da T009 aos textos de cada nó da peça e às manchetes (FR-3414, FR-3416)
+- [x] T026 [P] [US2] SVG de referência dos cenários em `tests/fixtures/kit_referencias/*.svg`, com um teste de igualdade em `tests/integration/kit/test_referencias.py`. Mudar o template muda o arquivo, e o diff é revisado (D-016)
+- [x] T027 [US2] Estender a varredura da T009 aos textos de cada nó da peça e às manchetes (FR-3414, FR-3416)
 
-**Checkpoint B**: `make test-pg` verde; a peça ligada em desenvolvimento, com o marcador. PR do incremento B.
+**Checkpoint B**: `make test-pg` verde; a peça ligada em desenvolvimento, com a marca oficial. PR do incremento B.
 
 ---
 

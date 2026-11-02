@@ -43,6 +43,15 @@ navegador = [
   "playwright>=1.55,<2",
 ]
 
+# A peça visual do kit de divulgação (111, `D-007`), e só ela: o PNG sai do resvg, com as fontes do
+# Edital passadas por arquivo. Grupo opcional **até a P-4**, que é do usuário: a verificação está em
+# `specs/111-kit-de-divulgacao/verificacao-do-motor.md`, e a versão é exata porque o PNG precisa
+# sair com os mesmos bytes (FR-3438). Sem ele, a peça não tem PNG e a tela diz por quê; o SVG e os
+# textos continuam. Aprovada, a linha desce para `dependencies`.
+peca = [
+  "resvg-py==0.5.0",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["processo_seletivo"]
 
