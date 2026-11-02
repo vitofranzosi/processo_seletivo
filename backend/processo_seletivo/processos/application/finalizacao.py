@@ -37,6 +37,35 @@ def _lock_edital(actor, edital_id):
         raise _not_found() from exc
 
 
+def _lock_edital_sob_o_processo(actor, edital_id):
+    """Trava o Processo e, depois, o Edital — a ordem de `close_process` (113, R-004).
+
+    **Por que o Processo.** Os atos que criam ou resolvem o que impede encerrar — interpor, admitir
+    e julgar recurso, publicar resultado, convocar — se serializam na linha do Processo; os da
+    Retificação travam Retificação, Edital e Processo juntos; o envio de inscrição espera pelo
+    Edital. Travando os dois, a conferência dos impedimentos vê tudo o que confirmou antes, e o
+    que vier depois espera o encerramento terminar (FR-3543). Nenhuma trava nova.
+
+    O `processo_id` é lido sem trava porque a trava do Processo precisa dele. Nenhum caminho da
+    aplicação troca o Processo de um Edital, mas nenhum gatilho o prende; por isso ele é relido
+    sob a trava, e a divergência é recusada em vez de conferida contra o Processo errado.
+    """
+    processo_id = (
+        Edital.objects.filter(pk=edital_id, institution_scope=actor.institution_scope)
+        .values_list("processo_id", flat=True)
+        .first()
+    )
+    if processo_id is None:
+        raise _not_found()
+    ProcessoSeletivo.objects.select_for_update().filter(pk=processo_id).first()
+    edital = _lock_edital(actor, edital_id)
+    if edital.processo_id != processo_id:
+        raise DomainError(
+            "invalid_state", "O Edital mudou de Processo durante o ato. Tente de novo.", 409
+        )
+    return edital
+
+
 def _register(
     *,
     actor,
@@ -202,7 +231,7 @@ def _finalize_edital(
 ):
     require_permission(actor, permission)
     with command_context() as now:
-        edital = _lock_edital(actor, edital_id)
+        edital = _lock_edital_sob_o_processo(actor, edital_id)
         idem = reserve(
             actor=actor,
             operation=f"{permission}:{edital_id}",
@@ -212,7 +241,7 @@ def _finalize_edital(
         if idem.result_id:
             return Edital.objects.get(pk=idem.result_id), idem.response_status
         finalizacao.ensure_processo_accepts_changes(edital.processo)
-        check(edital)
+        check(edital, now)
         previous = _Previous(edital)
         compare_and_swap(
             Edital.objects,
@@ -248,8 +277,25 @@ def close_edital(*, actor, edital_id, expected_revision, reason, idempotency_key
         permission="edital:encerrar",
         operation="ENCERRAR",
         target_status=Edital.Status.ENCERRADO,
-        check=finalizacao.ensure_edital_can_be_closed,
+        check=_conferir_o_encerramento,
     )
+
+
+def _conferir_o_encerramento(edital, agora):
+    """O estado primeiro; os impedimentos só de Edital publicado, sob as travas (113, FR-3528).
+
+    Conferir o estado antes evita ler o conteúdo vigente de um Edital que nem poderia ser
+    encerrado — e que, antes da publicação, nem tem conteúdo vigente.
+    """
+    from processo_seletivo.processos.application import pendencias_do_edital
+
+    impedimentos = ()
+    if edital.status in finalizacao.EDITAL_ENCERRAVEL:
+        impedimentos = [
+            pendencias_do_edital.frase(situacao)
+            for situacao in pendencias_do_edital.impedimentos(edital, agora=agora)
+        ]
+    finalizacao.ensure_edital_can_be_closed(edital, impedimentos)
 
 
 def cancel_edital(*, actor, edital_id, expected_revision, reason, idempotency_key, correlation_id):
@@ -263,5 +309,5 @@ def cancel_edital(*, actor, edital_id, expected_revision, reason, idempotency_ke
         permission="edital:cancelar",
         operation="CANCELAR",
         target_status=Edital.Status.CANCELADO,
-        check=finalizacao.ensure_edital_can_be_cancelled,
+        check=lambda edital, _agora: finalizacao.ensure_edital_can_be_cancelled(edital),
     )

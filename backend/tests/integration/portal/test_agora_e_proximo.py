@@ -12,9 +12,9 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from processo_seletivo.processos.application.finalizacao import close_edital
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.domain import Actor
+from tests.fixtures.encerramento import encerrar_antes_da_113
 from tests.fixtures.publicacao import encerrar_inscricoes, retify
 from tests.fixtures.selecao import identificador, publicar_selecao, rascunho_de_selecao
 
@@ -202,7 +202,9 @@ def test_edital_com_desfecho_nao_tem_bloco(client, api_client, manager_headers, 
         [periodo(agora), evento(PROVA, "Prova escrita", agora + timedelta(days=10), ordem=1)],
     )
     edital = Edital.objects.get(pk=edital.id)
-    close_edital(
+    # Encerrado como antes da `113`: o estado lido aqui é um que a regra nova impede de
+    # nascer, e que continua existindo nos Editais encerrados antes dela.
+    encerrar_antes_da_113(
         actor=Actor("gestora.agora", "cefor", frozenset({"edital:encerrar"})),
         edital_id=edital.id,
         expected_revision=edital.revision,

@@ -107,7 +107,7 @@ Seletivo" é ação, e fica (DP-1 da 076). Sem ação nenhuma, a faixa não vem 
           fica quem ele aguarda, quando não é ela. Devolvida e reenviada ditas como tais (FR-2821,
           FR-2822). {% endcomment %}
           {% for item in edital.retificacoes_em_curso %}
-          <a class="marca-da-retificacao" href="{{ item.url }}">Retificação {{ item.rotulo_situacao }}{% if not item.meu_ato and item.passo %} · aguarda {{ item.passo.papel }}{% endif %}</a>
+          <a class="marca-da-retificacao" href="{{ item.url }}">Retificação {{ item.rotulo_situacao }}{% if item.parada %} · não pode mais prosseguir{% elif not item.meu_ato and item.passo %} · aguarda {{ item.passo.papel }}{% endif %}</a>
           {% endfor %}
         </td>
         <td>

@@ -21,7 +21,7 @@ descobrir.
 
 from dataclasses import dataclass
 
-from django.db.models import Count, Exists, OuterRef
+from django.db.models import Count
 from django.urls import reverse
 
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
@@ -29,7 +29,7 @@ from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import atos
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.recursos.application import admitir as recursos_admitir
-from processo_seletivo.recursos.models import DecisaoRecurso, JuizoDeAdmissibilidade, Recurso
+from processo_seletivo.recursos.application.selectors import aguardando_decisao
 from processo_seletivo.shared.api.problems import DomainError
 
 # Os nomes são os que `base.html` já define: `.botao` sozinho é a ação primária, e as duas
@@ -439,20 +439,6 @@ def proximo_passo(edital, ator, *, segregacao=False):
     return {"papel": papel, "ato": ato, "sou_eu": chave in meus, "observacao": ""}
 
 
-def _aguardando_decisao():
-    """As peças que esperam decisão — sem juízo, ou admitidas e sem decisão.
-
-    As duas condições são as mesmas que a situação da peça usa (`recursos/application/selectors.py`,
-    `_situacao`): sem juízo, aguarda admissibilidade; admitida e sem decisão, aguarda julgamento; o
-    resto está decidido. Uma definição só para a contagem de um Edital e para a da página inteira.
-    """
-    juizo = JuizoDeAdmissibilidade.objects.filter(recurso_id=OuterRef("pk"))
-    decisao = DecisaoRecurso.objects.filter(recurso_id=OuterRef("pk"))
-    return Recurso.objects.filter(
-        ~Exists(juizo) | (Exists(juizo.filter(admitido=True)) & ~Exists(decisao))
-    )
-
-
 def recursos_aguardando_decisao(edital):
     """Quantas peças do Edital esperam decisão.
 
@@ -460,13 +446,13 @@ def recursos_aguardando_decisao(edital):
     Editais, e trazer cada peça para contá-la em Python seria custo por linha numa tela que não
     mostra peça nenhuma.
     """
-    return _aguardando_decisao().filter(inscricao__edital=edital).count()
+    return aguardando_decisao().filter(inscricao__edital=edital).count()
 
 
 def recursos_por_edital(edital_ids):
     """`{edital_id: quantas peças esperam decisão}`, numa consulta para vários Editais (104)."""
     return dict(
-        _aguardando_decisao()
+        aguardando_decisao()
         .filter(inscricao__edital_id__in=list(edital_ids))
         .values_list("inscricao__edital_id")
         .annotate(quantas=Count("id"))

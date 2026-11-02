@@ -72,12 +72,25 @@ def ensure_processo_can_be_cancelled(processo, pendentes):
         )
 
 
-def ensure_edital_can_be_closed(edital):
-    """FR-006: Encerrado representa a conclusão regular, depois da Publicação."""
+def ensure_edital_can_be_closed(edital, impedimentos=()):
+    """FR-006: Encerrado representa a conclusão regular, depois da Publicação.
+
+    **E a conclusão precisa ter acontecido** (113, FR-3528). Até a `113` só o estado era
+    conferido, e o Edital se encerrava com recurso sem decisão, prazo recursal correndo ou
+    Retificação homologada presa (A-11). `impedimentos` são as frases do que impede, prontas — a
+    regra que as encontra é de aplicação (`pendencias_do_edital`), e o domínio só recusa. A recusa
+    é a mesma forma da do Processo com Editais pendentes: conflito, com a lista no texto.
+    """
     if edital.status in EDITAL_FINAL:
         raise _reject("Edital em estado final não admite nova transição.")
     if edital.status not in EDITAL_ENCERRAVEL:
         raise _reject("Somente Edital publicado pode ser encerrado.")
+    if impedimentos:
+        raise DomainError(
+            "pendencias_impeditivas",
+            "Antes de encerrar, resolva: " + "; ".join(impedimentos) + ".",
+            409,
+        )
 
 
 def ensure_edital_can_be_cancelled(edital):

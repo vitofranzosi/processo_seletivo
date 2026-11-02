@@ -117,7 +117,8 @@ def test_confirmacao_diz_o_que_o_ato_provoca_antes_de_praticar(
     corpo = client.get(reverse("interface:ato", args=[publicado.id, "encerrar"])).content.decode()
 
     assert "Este ato não pode ser desfeito" in corpo
-    assert "conclusão regular" in corpo
+    # A consequência deixou de afirmar "conclusão regular" (113, FR-3542): o ato não confere etapa.
+    assert "deixa de receber inscrição e Retificação" in corpo
     assert "permanecem disponíveis na consulta pública" in corpo
     assert "Confirmar: Encerrar" in corpo
 

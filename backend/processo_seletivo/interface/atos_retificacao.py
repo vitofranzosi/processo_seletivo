@@ -6,6 +6,7 @@ o que uma Retificação provoca depende de vigência, não só de estado.
 
 from dataclasses import dataclass
 
+from django.db.models import F
 from django.urls import reverse
 
 from processo_seletivo.interface.acoes import entrega_para
@@ -282,6 +283,10 @@ def proximo_passo(retificacao, ator, ofertadas=None):
     }
 
 
+#: O que a seção diz da Retificação parada, pela situação do Edital (113, FR-3544).
+PARADA_POR_DESFECHO = {"ENCERRADO": "encerrado", "CANCELADO": "cancelado"}
+
+
 def resumo(retificacao, ator):
     """Uma Retificação em curso como a Lista, o Edital e a tela de Retificar a mostram (FR-2702).
 
@@ -289,10 +294,15 @@ def resumo(retificacao, ator):
     mesma Retificação e o mesmo ator (FR-2730). Nada aqui consulta o banco: quem chama já trouxe a
     Retificação na consulta única da tela (FR-2705, FR-2707).
     """
-    passo = proximo_passo(retificacao, ator)
+    # **A Retificação de Edital em estado final está parada** (113, FR-3544). Desde o A-09 nenhum
+    # ato dela é aceito — nem cancelar —, e a seção anunciava um próximo responsável que nada podia
+    # fazer. A situação do Edital vem anotada na consulta da tela, e não de uma consulta por item.
+    parada = PARADA_POR_DESFECHO.get(getattr(retificacao, "situacao_do_edital", None), "")
+    passo = None if parada else proximo_passo(retificacao, ator)
     devolvida, reenviada = foi_devolvida(retificacao), foi_reenviada(retificacao)
     item = {
         "retificacao": retificacao,
+        "parada": parada,
         # A devolvida e a reenviada, ditas a partir do motivo já gravado (104, D-006): nenhuma
         # situação nova, só a leitura de `return_reason`, que a devolução grava e o reenvio mantém.
         "devolvida": devolvida,
@@ -304,7 +314,7 @@ def resumo(retificacao, ator):
         "meu_ato": passo["oferta"].ato.rotulo if passo and passo["sou_eu"] else "",
         "editar": (
             reverse("interface:retificacao-editar", args=[retificacao.id])
-            if pode_editar(retificacao, ator)
+            if not parada and pode_editar(retificacao, ator)
             else ""
         ),
     }
@@ -397,6 +407,7 @@ def em_curso_por_edital(edital_ids, ator):
     for retificacao in (
         Retificacao.objects.filter(edital_id__in=list(edital_ids), status__in=EM_CURSO)
         .only(*_CAMPOS_DO_RESUMO)
+        .annotate(situacao_do_edital=F("edital__status"))
         .order_by("created_at", "id")
     ):
         por_edital.setdefault(retificacao.edital_id, []).append(resumo(retificacao, ator))

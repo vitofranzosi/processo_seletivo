@@ -159,3 +159,31 @@ def test_cancelling_a_process_with_open_editais_conflicts(
     corpo = response.json()
     assert corpo["code"] == "editais_pendentes"
     assert f"{edital.number}/{edital.year}" in corpo["detail"]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.contract
+def test_closing_with_an_impediment_is_a_conflict_listing_it(
+    gestor, api_client, manager_headers, process_payload
+):
+    """113, FR-3528: 409 `pendencias_impeditivas`, a lista no `detail`, e nada muda."""
+    from tests.fixtures.recursos_us4 import cenario_julgavel
+
+    peca = cenario_julgavel(
+        gestor, api_client, manager_headers, process_payload, seed=145, codigo="1145"
+    )
+    edital = peca["cenario"]["edital"]
+    edital.refresh_from_db()
+
+    response = act(
+        api_client, f"/api/v1/admin/editais/{edital.id}/encerramentos", revision=edital.revision
+    )
+
+    assert response.status_code == 409
+    body = response.json()
+    assert body["code"] == "pendencias_impeditivas"
+    assert body["detail"] == "Antes de encerrar, resolva: 1 recurso aguarda decisão."
+    antes = edital.revision
+    edital.refresh_from_db()
+    assert (edital.status, edital.revision) == (Edital.Status.PUBLICADO, antes)
+    assert not AtoAdministrativo.objects.filter(aggregate_id=edital.id).exists()

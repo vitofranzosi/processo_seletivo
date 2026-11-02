@@ -56,6 +56,17 @@ from processo_seletivo.ocupacao.application.selectors import recortes_do_marco
 from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.portal.situacao import DESFECHOS
+from processo_seletivo.processos.application.pendencias_do_edital import (
+    APURACAO_DESATUALIZADA,
+    CONVOCACAO_AGUARDANDO,
+    CONVOCACAO_VENCIDA,
+    DEFINITIVO_NAO_PUBLICADO,
+    PROVIDENCIA_PENDENTE,
+    REAVALIACAO_PENDENTE,
+    RECURSO_AGUARDANDO,
+    RESULTADO_NAO_DIVULGADO,
+    recurso_pendente_do_marco,
+)
 from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import (
@@ -64,7 +75,6 @@ from processo_seletivo.publicacoes.application.selectors import (
     versoes_original_e_vigente,
 )
 from processo_seletivo.publicacoes.models import DocumentoPublicado, Publicacao
-from processo_seletivo.recursos.application import selectors as recursos
 from processo_seletivo.recursos.models import DecisaoRecurso, Recurso
 from processo_seletivo.resultados.models import ResultadoEtapa
 
@@ -422,14 +432,9 @@ def _regra_da_etapa(etapa):
 # produz o tipo, e a frase sai de uma função que só o redige. O relatório do Edital continua o mesmo
 # documento; o consolidado da unidade lê os tipos.
 
-RESULTADO_NAO_DIVULGADO = "RESULTADO_NAO_DIVULGADO"
-DEFINITIVO_NAO_PUBLICADO = "DEFINITIVO_NAO_PUBLICADO"
-REAVALIACAO_PENDENTE = "REAVALIACAO_PENDENTE"
-PROVIDENCIA_PENDENTE = "PROVIDENCIA_PENDENTE"
-APURACAO_DESATUALIZADA = "APURACAO_DESATUALIZADA"
-CONVOCACAO_AGUARDANDO = "CONVOCACAO_AGUARDANDO"
-CONVOCACAO_VENCIDA = "CONVOCACAO_VENCIDA"
-RECURSO_AGUARDANDO = "RECURSO_AGUARDANDO"
+# **Os tipos moram em `processos/application/pendencias_do_edital.py` desde a `113`**: o
+# encerramento pergunta pelos mesmos fatos, e duas definições divergiriam (D-004 da `113`).
+# Importados aqui, eles continuam alcançáveis por quem já os lia deste módulo.
 
 #: O que é público por ato: que um resultado previsto ainda não saiu está na página da seleção. O
 #: resto é fato não público, e obedece à privacidade (FR-2550).
@@ -1070,21 +1075,15 @@ def _recursos(edital):
 
 
 def _pendencias_de_recurso(edital, marco, perfil_id):
-    """Reavaliação e providência pendentes do marco — as perguntas da publicabilidade (R-006)."""
-    marco_id = str(marco["id"])
-    publicacoes = list(
-        PublicacaoResultado.objects.filter(edital=edital, marco_id=marco_id).values_list(
-            "id", flat=True
-        )
-    )
+    """Reavaliação e providência pendentes do marco — as perguntas da publicabilidade (R-006).
+
+    A pergunta é de `pendencias_do_edital` desde a `113`; aqui ela só vira o tipo do relatório.
+    """
+    reavaliacao, providencia = recurso_pendente_do_marco(edital=edital, marco=marco)
     pendencias = []
-    if not publicacoes:
-        return pendencias
-    if recursos.reavaliacoes_pendentes_do_marco(edital=edital, marco=marco):
+    if reavaliacao:
         pendencias.append(Pendencia(REAVALIACAO_PENDENTE, perfil_id))
-    if recursos.providencias_pendentes_do_marco(
-        edital=edital, marco_id=marco_id, marco=marco, publicacoes_do_marco=publicacoes
-    ):
+    if providencia:
         pendencias.append(Pendencia(PROVIDENCIA_PENDENTE, perfil_id))
     return pendencias
 

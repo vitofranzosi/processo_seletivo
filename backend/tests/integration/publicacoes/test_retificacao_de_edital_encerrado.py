@@ -38,6 +38,7 @@ from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.fixtures.edital import actor_headers
+from tests.fixtures.encerramento import encerrar_antes_da_113
 from tests.fixtures.papel_de_producao import como_producao  # noqa: F401
 from tests.fixtures.publicacao import publish_original
 from tests.interface.test_auditoria_passagem_da_retificacao import sessao
@@ -112,7 +113,10 @@ def publicar(retificacao, chave="publicar-chave-a09-0001"):
 
 def finalizar(edital, desfecho):
     edital.refresh_from_db()
-    comando = close_edital if desfecho == Edital.Status.ENCERRADO else cancel_edital
+    # Encerrar com Retificação homologada é recusado desde a `113` (FR-3533). O que este arquivo
+    # prova — a guarda do A-09 — continua valendo para os Editais encerrados antes dela, e é esse
+    # estado que se monta aqui (`tests/fixtures/encerramento.py`).
+    comando = encerrar_antes_da_113 if desfecho == Edital.Status.ENCERRADO else cancel_edital
     comando(
         actor=GESTOR,
         edital_id=edital.id,

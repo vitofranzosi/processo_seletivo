@@ -116,7 +116,7 @@ permanecem preservados.</p>
     <ul class="lista-acoes">
       {% for item in retificacoes_em_curso %}
       <li class="nenhuma">Nenhum ato do Edital para seus papéis. A Retificação de
-        {{ item.retificacao.created_at|date:"d/m/Y" }} ({{ item.rotulo_situacao }}) aguarda {{ item.passo.papel }}.</li>
+        {{ item.retificacao.created_at|date:"d/m/Y" }} ({{ item.rotulo_situacao }}) {% if item.parada %}não pode mais prosseguir: o Edital foi {{ item.parada }}{% else %}aguarda {{ item.passo.papel }}{% endif %}.</li>
       {% empty %}
       <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
       {% endfor %}

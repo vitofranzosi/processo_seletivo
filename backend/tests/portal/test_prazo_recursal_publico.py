@@ -13,11 +13,11 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from processo_seletivo.processos.application.finalizacao import close_edital
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.recursos.application.interpor import objetos_recorriveis
 from processo_seletivo.seguranca.domain import Actor
 from tests.fixtures.divulgacao import emitir, montar_marco, pontuar, publicar_o_ato
+from tests.fixtures.encerramento import encerrar_antes_da_113
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -170,7 +170,9 @@ def test_edital_encerrado_com_prazo_em_curso_continua_dizendo_o_prazo(
     cenario = montar(gestor, api_client, manager_headers, process_payload, seed=77)
     preliminar = publicar_o_ato(cenario, chave="publicar-047-77")
     edital = Edital.objects.get(pk=cenario["edital"].id)
-    close_edital(
+    # Encerrado como antes da `113`: o estado lido aqui é um que a regra nova impede de
+    # nascer, e que continua existindo nos Editais encerrados antes dela.
+    encerrar_antes_da_113(
         actor=Actor("gestora.prazo", "cefor", frozenset({"edital:encerrar"})),
         edital_id=edital.id,
         expected_revision=edital.revision,

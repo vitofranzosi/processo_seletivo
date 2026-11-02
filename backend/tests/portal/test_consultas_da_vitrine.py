@@ -13,9 +13,9 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
-from processo_seletivo.processos.application.finalizacao import close_edital
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.domain import Actor
+from tests.fixtures.encerramento import encerrar_antes_da_113
 from tests.fixtures.selecao import identificador, publicar_selecao, rascunho_de_selecao
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -46,7 +46,9 @@ def publicar_e_encerrar(api_client, manager_headers, process_payload, seed):
     cabecalhos = {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"vitrine-047-{seed:04d}"}
     publicado = publicar_selecao(api_client, cabecalhos, carga, rascunho=rascunho)
     edital = Edital.objects.get(pk=publicado.id)
-    close_edital(
+    # Encerrado como antes da `113`: o estado lido aqui é um que a regra nova impede de
+    # nascer, e que continua existindo nos Editais encerrados antes dela.
+    encerrar_antes_da_113(
         actor=GESTORA,
         edital_id=edital.id,
         expected_revision=edital.revision,
