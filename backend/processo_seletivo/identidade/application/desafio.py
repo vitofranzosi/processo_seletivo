@@ -84,8 +84,15 @@ class Recibo:
     `bloqueio` é `None` quando o código foi gerado.
     """
 
-    proxima_tentativa_em: int
     bloqueio: Bloqueio | None = None
+
+    @property
+    def proxima_tentativa_em(self) -> int:
+        # Derivado, e não guardado ao lado do bloqueio: dois campos para o mesmo tempo podiam
+        # discordar, e cada tela leria um.
+        if self.bloqueio is None:
+            return int(ESPERA_ENTRE_ENVIOS.total_seconds())
+        return self.bloqueio.segundos
 
 
 def _resumir_origem(origem: str) -> str:
@@ -221,7 +228,7 @@ def solicitar(*, email_canonico: str, finalidade: str, origem: str = "") -> tupl
     bloqueio = _bloqueio(email_canonico, finalidade, origem_hash, agora)
     if bloqueio is not None:
         _registrar_recusa(bloqueio, finalidade, origem_hash)
-        return Recibo(proxima_tentativa_em=bloqueio.segundos, bloqueio=bloqueio), ""
+        return Recibo(bloqueio=bloqueio), ""
 
     codigo = codigo_de_acesso.gerar()
     with transaction.atomic():
@@ -248,7 +255,7 @@ def solicitar(*, email_canonico: str, finalidade: str, origem: str = "") -> tupl
             expira_em=agora + timedelta(minutes=VALIDADE_EM_MINUTOS),
             criado_em=agora,
         )
-    return Recibo(proxima_tentativa_em=int(ESPERA_ENTRE_ENVIOS.total_seconds())), codigo
+    return Recibo(), codigo
 
 
 def validar(*, email_canonico: str, finalidade: str, codigo: str) -> DesafioDeAcesso | None:

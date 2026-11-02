@@ -75,9 +75,9 @@ def test_na_borda_do_teto_cada_um_recebe_codigo_ou_a_explicacao():
     for recibo in recusados:
         assert recibo.bloqueio.motivo == servico.TETO_DA_ORIGEM
         assert recibo.proxima_tentativa_em > 60, "nunca a espera fictícia de um minuto"
-    # O excesso existe e é limitado pelo que chegou junto — registrado aqui para que crescer
-    # apareça.
-    assert DesafioDeAcesso.objects.count() <= servico.LIMITE_POR_ORIGEM - 2 + SIMULTANEAS
+    # O excesso existe, e por isso a contagem não se compara ao teto. O que se prende é que cada
+    # código entregue tem o seu desafio gravado — e só ele: nenhum recusado deixa linha.
+    assert DesafioDeAcesso.objects.count() == servico.LIMITE_POR_ORIGEM - 2 + len(enviados)
 
 
 def test_depois_da_rajada_o_tempo_conta_os_pedidos_que_passaram():

@@ -882,7 +882,7 @@ nomeia a variável.
 | `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5; testar: §10.4 |
 | `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:162-167`) |
 | `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:202-209`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:190-198`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:794-797`) |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:190-198`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:808-811`) |
 | `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:228-257`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
 | `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:266,279-284` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
@@ -1595,7 +1595,7 @@ proxy_set_header Connection "";
 proxy_set_header Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
 # SOBRESCREVE, e não acrescenta: o portal confia no PRIMEIRO item deste cabeçalho para o limite de
-# pedidos por origem (portal/views.py:794-797). Com $proxy_add_x_forwarded_for, um cliente escreveria
+# pedidos por origem (portal/views.py:808-811). Com $proxy_add_x_forwarded_for, um cliente escreveria
 # o primeiro item e contornaria o limite.
 proxy_set_header X-Forwarded-For $remote_addr;
 proxy_set_header X-Real-IP $remote_addr;

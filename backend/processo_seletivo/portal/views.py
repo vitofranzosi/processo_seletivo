@@ -956,10 +956,11 @@ def _explicar_o_teto(bloqueio) -> str:
 
     Nenhuma das frases distingue endereço: a da origem é a mesma para qualquer e-mail pedido por
     ela, e a do endereço depende só da contagem dele, que avança igual exista ou não identidade.
+
+    O atendimento não entra aqui: o template o acrescenta pelo `_atendimento.html`, que é quem
+    decide, para todo o portal, como o canal aparece e o que dizer quando ele falta.
     """
     quando = _em_minutos(bloqueio.segundos)
-    atendimento = identificacao.canal_institucional()
-    prazo = f" Se o prazo estiver terminando, fale com {atendimento}." if atendimento else ""
     if bloqueio.motivo == desafio_de_acesso.TETO_DA_ORIGEM:
         return (
             "Não é possível enviar código agora. A rede de onde você está acessando atingiu o "
@@ -967,12 +968,12 @@ def _explicar_o_teto(bloqueio) -> str:
             "mesma conexão, como num laboratório, polo ou telecentro, e não tem relação com o seu "
             "e-mail. Use outra conexão, como os dados móveis do celular, ou peça de novo daqui a "
             f"{quando}. Um código recebido nos últimos {VALIDADE_EM_MINUTOS} minutos continua "
-            f"valendo.{prazo}"
+            "valendo."
         )
     return (
         "Não é possível enviar outro código para este e-mail agora: ele atingiu o limite de "
         "pedidos de código por hora. Use o código mais recente que chegou, se ele tiver menos de "
-        f"{VALIDADE_EM_MINUTOS} minutos, ou peça de novo daqui a {quando}.{prazo}"
+        f"{VALIDADE_EM_MINUTOS} minutos, ou peça de novo daqui a {quando}."
     )
 
 

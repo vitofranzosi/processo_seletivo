@@ -618,7 +618,13 @@ de `test_limite_concorrente.py` guardam que ele não estraga a resposta.
 
 **Risco residual**: o teto da origem continua recusando o excedente de uma sala grande na mesma
 hora — agora com a saída escrita. A frase do teto da origem diz a quem varre que foi contido; isso
-ele já sabia. O resumo da origem no registro é o mesmo, sem sal, que a tabela já guarda.
+ele já sabia. O resumo da origem no registro é o mesmo, sem sal, que a tabela já guarda. **Dizer o
+teto do endereço revela atividade de terceiros sobre ele**: quem pede duas vezes um endereço e já lê
+o teto sabe que outros três pedidos foram feitos na última hora, e os minutos anunciados datam o mais
+antigo. Antes, só a espera de um minuto era visível. Não revela se a identidade existe — os pedidos
+contam igual para endereço sem conta —, e os pedidos do próprio atacante chegam à caixa vigiada;
+esconder o teto do endereço de novo devolveria a quem o atinge de boa-fé a frase que este achado
+corrige. Fica como custo aceito, registrado.
 
 ## D-033 — A falha do envio aparece
 

@@ -13,7 +13,7 @@ O pedido recusado por um teto diz que é limite, de quê, e por quanto tempo (FR
 para" e "pode pedir outro código agora" a quem a rede do polo tinha esgotado por uma hora — e nenhum
 código saíra. "E-mail informado", e não "Enviado para": é verdade com e sem código anterior.
 {% endcomment %}
-{% if teto %}<p class="sub aviso-do-envio">{{ teto }}</p>
+{% if teto %}<p class="sub aviso-do-envio">{{ teto }} Se o prazo estiver terminando, fale com {% include "portal/_atendimento.html" %}.</p>
 {% else %}<p class="sub aviso-do-envio">Não enviamos código no último pedido, porque o limite de pedidos tinha sido atingido. Veja abaixo quando é possível pedir de novo.</p>{% endif %}
 <p class="sub">E-mail informado: <strong>{{ email }}</strong>. <a href="{% url 'portal:acesso' %}">Usar outro e-mail</a></p>
 {% else %}
