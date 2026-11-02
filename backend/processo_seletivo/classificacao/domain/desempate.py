@@ -54,6 +54,22 @@ def etapas_do_desempate(marco):
     return saida
 
 
+def etapas_que_a_ordem_le(marco):
+    """As Etapas cujos Resultados decidem a ordem do marco: as enumeradas e as do desempate (114).
+
+    É a **dependência efetiva** da ordem, e por isso a resposta de todas as perguntas "esta nota
+    alcança esta ordem?": o que o cálculo lê, o que o filtro da Supervisão vigia e a que Etapa um
+    recurso precisa estar ligado para ser pertinente ao marco (114, D-005). Não é "todas as Etapas
+    do Edital": uma Etapa que nenhum critério compara não muda posição nenhuma, e um recurso contra
+    ela impedir a definitiva desta ordem seria parar o certame por disputa alheia.
+
+    Ler a Etapa não lhe dá as outras funções: somar na nota final continua sendo só das enumeradas
+    (`combinacao`), e decidir quem tem posição também
+    (`universo_classificavel.que_decidem_posicao`).
+    """
+    return [str(item) for item in marco.get("stages") or []] + etapas_do_desempate(marco)
+
+
 def _valor_do_criterio(criterio, participante):
     """O valor que este critério consome deste participante, ou `None` quando não existe."""
     parametros = criterio.get("parameters") or {}

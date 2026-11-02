@@ -28,38 +28,35 @@ from processo_seletivo.classificacao.application.emissao import (
 )
 from processo_seletivo.classificacao.application.reproducao import divergencias_da_reproducao
 from processo_seletivo.classificacao.application.selectors import estado_do_marco
-from processo_seletivo.classificacao.models import AtoDeOrdenacao, PosicaoNaOrdem
-from processo_seletivo.comissoes.models import MembroComissao
-from processo_seletivo.interface.supervisao import candidato_a_obsoleto
+from processo_seletivo.classificacao.models import AtoDeOrdenacao, CitacaoDeDecisao, PosicaoNaOrdem
+from processo_seletivo.divulgacao.domain.publicabilidade import (
+    PROVIDENCIA_PENDENTE,
+    REAVALIACAO_PENDENTE,
+    RECURSO_PENDENTE,
+    aferir,
+)
+from processo_seletivo.interface.conducao_do_marco import _ordem_obsoleta
+from processo_seletivo.interface.supervisao import atos_obsoletos, candidato_a_obsoleto
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
-from processo_seletivo.resultados.application.consolidacao import consolidar
+from processo_seletivo.recursos.application.selectors import decisoes_a_citar
+from processo_seletivo.recursos.models import DecisaoRecurso
 from processo_seletivo.resultados.models import ResultadoEtapa
-from tests.fixtures.comissao import alocar_em
-from tests.fixtures.corte import ENTREVISTA, MARCO, montar_cenario_do_corte, rascunho, regra
+from tests.fixtures.corte import CRITERIO_DA_ENTREVISTA as CRITERIO
+from tests.fixtures.corte import (
+    ENTREVISTA,
+    MARCO,
+    entrevistar,
+    montar_cenario_do_corte,
+    rascunho,
+    rascunho_com_desempate,
+    regra,
+)
 from tests.fixtures.corte import emitir as emitir_corte
 from tests.fixtures.edital import PROFILE_ID
-from tests.fixtures.mesa import concluir_como, distribuir_para
-from tests.fixtures.recursos import deferir_corrigindo
+from tests.fixtures.recursos import admitir, decidir, deferir_corrigindo, interpor
 
 pytestmark = pytest.mark.django_db(transaction=True)
-
-CRITERIO = "00000000-0000-4000-8000-000000001101"
-
-
-def rascunho_com_desempate_pela_entrevista(cut=None):
-    """O marco enumera só a Etapa pontuada, e desempata pela nota da Entrevista."""
-    base, pontuada = rascunho(cut=cut)
-    base["profiles"][0]["classificationMilestones"][0]["tiebreakers"] = [
-        {
-            "id": CRITERIO,
-            "order": 1,
-            "type": "MAIOR_PONTUACAO_NA_ETAPA",
-            "parameters": {"stageId": ENTREVISTA},
-            "whenMissing": "ULTIMO_NO_CRITERIO",
-        }
-    ]
-    return base, pontuada
 
 
 @pytest.fixture
@@ -69,9 +66,12 @@ def montar(gestor, api_client, manager_headers, process_payload):
     Sem Etapa governada: a Entrevista recebe todos os habilitados, e o cenário não depende de emitir
     o corte para que os empatados cheguem a ela. A Entrevista do rascunho do 14/2026 é eliminatória
     com mínima 60 — uma nota abaixo dela é como o produto elimina.
+
+    `desempate=False` monta o mesmo Edital sem o critério: é o controle de que a Entrevista só
+    alcança a ordem porque um critério a compara.
     """
 
-    def _montar(prefixo, pontuacoes, entrevista):
+    def _montar(prefixo, pontuacoes, entrevista, *, desempate=True):
         edital, _pontuada, inscricoes = montar_cenario_do_corte(
             gestor,
             api_client,
@@ -80,37 +80,22 @@ def montar(gestor, api_client, manager_headers, process_payload):
             cut=regra(governedStage="NONE"),
             prefixo=prefixo,
             pontuacoes=pontuacoes,
-            draft_factory=rascunho_com_desempate_pela_entrevista,
+            draft_factory=rascunho_com_desempate if desempate else rascunho,
             emitir_a_ordem=False,
         )
-        avaliados = [inscricoes[indice] for indice in sorted(entrevista)]
-        if avaliados:
-            joao = MembroComissao.objects.get(processo=edital.processo, identity_subject="joao")
-            alocar_em(gestor, edital.processo, joao, edital, ENTREVISTA)
-            contexto = {
-                "edital": edital,
-                "processo": edital.processo,
-                "membros": {"joao": joao},
-                "etapa": ENTREVISTA,
-            }
-            distribuir_para(contexto, gestor, ["joao"], avaliados, chave=f"{prefixo}-entrevista")
-            for indice in sorted(entrevista):
-                concluir_como(contexto, "joao", inscricoes[indice], pontuacao=entrevista[indice])
-            consolidar(
-                actor=gestor,
-                processo_id=edital.processo_id,
-                edital_id=edital.id,
-                etapa_id=ENTREVISTA,
-                inscricao_ids=[item.id for item in avaliados],
-                idempotency_key=f"{prefixo}-consolidar-entrevista",
-                correlation_id="teste-114",
+        if entrevista:
+            entrevistar(
+                edital,
+                gestor,
+                [(inscricoes[indice], nota) for indice, nota in sorted(entrevista.items())],
+                chave=f"{prefixo}-entrevista",
             )
         return edital, inscricoes
 
     return _montar
 
 
-def _emitir(edital, gestor, chave, *, motivo=""):
+def _emitir(edital, gestor, chave, *, motivo="", decisoes=()):
     return emitir_ordem(
         actor=gestor,
         processo_id=edital.processo_id,
@@ -126,6 +111,7 @@ def _emitir(edital, gestor, chave, *, motivo=""):
             ).first(),
         ),
         motivo=motivo,
+        decisoes=decisoes,
     )
 
 
@@ -137,12 +123,55 @@ def _posicoes(proposta):
     return {str(item["inscricao_id"]): item for item in proposta["posicoes"]}
 
 
-def _sinalizado_pela_supervisao(edital):
-    """O filtro barato que a Supervisão e a condução do marco aplicam antes de recalcular."""
+def _marco_vigente(edital):
     versao = effective_version(edital_id=edital.id)
     perfil = next(p for p in versao.content["profiles"] if str(p["id"]) == str(PROFILE_ID))
-    marco = next(m for m in perfil["classificationMilestones"] if str(m["id"]) == MARCO)
+    return next(m for m in perfil["classificationMilestones"] if str(m["id"]) == MARCO), versao
+
+
+def _sinalizado_pela_supervisao(edital):
+    """O filtro barato que a Supervisão e a condução do marco aplicam antes de recalcular."""
+    marco, versao = _marco_vigente(edital)
     return candidato_a_obsoleto(edital, _ato_vigente(edital), marco, versao)
+
+
+def _obsoleta_nas_tres_telas(edital):
+    """`(tela da classificação, condução do marco, Supervisão)` — as três precisam concordar.
+
+    A tela da classificação recalcula sempre (`estado_do_marco`); as outras duas só recalculam o
+    que o filtro barato admite. Uma Etapa fora do filtro faria as duas dizerem "feito" de uma ordem
+    que a primeira dá por obsoleta.
+    """
+    marco, versao = _marco_vigente(edital)
+    ato = _ato_vigente(edital)
+    sinais = list(atos_obsoletos(edital, marco, MARCO, None, "", ato, versao, lambda *_, **__: ""))
+    return (
+        estado_do_marco(edital=edital, marco_id=MARCO)["obsoleto"],
+        _ordem_obsoleta(edital, marco, None, ato, versao),
+        bool(sinais),
+    )
+
+
+def _versao(edital):
+    return VersaoConsolidada.objects.filter(edital=edital).latest("valid_from")
+
+
+def _recurso_contra_a_entrevista(edital, inscricao, protocolo):
+    """A peça admitida contra o Resultado da Entrevista, ainda sem decisão."""
+    peca = interpor(
+        inscricao=inscricao,
+        versao=_versao(edital),
+        resultado=_entrevista(edital, inscricao),
+        protocolo=protocolo,
+    )
+    admitir(peca)
+    return peca
+
+
+def _definitiva(edital, ato=None):
+    return aferir(
+        edital=edital, marco_id=MARCO, ato=ato or _ato_vigente(edital), natureza="DEFINITIVA"
+    )
 
 
 def _entrevista(edital, inscricao):
@@ -250,25 +279,9 @@ def test_a_nota_que_chega_depois_obsoleta_a_ordem(montar, gestor):
     _emitir(edital, gestor, "a11-chega-emitir")
     assert not estado_do_marco(edital=edital, marco_id=MARCO)["obsoleto"]
 
-    joao = MembroComissao.objects.get(processo=edital.processo, identity_subject="joao")
-    alocar_em(gestor, edital.processo, joao, edital, ENTREVISTA)
-    contexto = {
-        "edital": edital,
-        "processo": edital.processo,
-        "membros": {"joao": joao},
-        "etapa": ENTREVISTA,
-    }
-    distribuir_para(contexto, gestor, ["joao"], inscricoes[:1], chave="a11-chega-entrevista")
-    concluir_como(contexto, "joao", inscricoes[0], pontuacao="70.0000")
-    consolidar(
-        actor=gestor,
-        processo_id=edital.processo_id,
-        edital_id=edital.id,
-        etapa_id=ENTREVISTA,
-        inscricao_ids=[inscricoes[0].id],
-        idempotency_key="a11-chega-consolidar-entrevista",
-        correlation_id="teste-114",
-    )
+    assert _obsoleta_nas_tres_telas(edital) == (False, False, False)
+
+    entrevistar(edital, gestor, [(inscricoes[0], "70.0000")], chave="a11-chega-entrevista")
 
     estado = estado_do_marco(edital=edital, marco_id=MARCO)
     assert estado["obsoleto"]
@@ -276,6 +289,7 @@ def test_a_nota_que_chega_depois_obsoleta_a_ordem(montar, gestor):
     # A Supervisão e a condução do marco só recalculam quem o filtro barato admite: sem a Etapa do
     # desempate nele, as duas diriam "feito" desta ordem obsoleta.
     assert _sinalizado_pela_supervisao(edital)
+    assert _obsoleta_nas_tres_telas(edital) == (True, True, True)
 
 
 def test_recurso_deferido_na_entrevista_obsoleta_a_ordem_e_a_sucessora_inverte(montar, gestor):
@@ -300,6 +314,7 @@ def test_recurso_deferido_na_entrevista_obsoleta_a_ordem_e_a_sucessora_inverte(m
     alterados = [item for item in estado["divergencias"] if item["tipo"] == "resultados_alterados"]
     assert alterados, estado["divergencias"]
     assert _sinalizado_pela_supervisao(edital)
+    assert _obsoleta_nas_tres_telas(edital) == (True, True, True)
 
     _emitir(edital, gestor, "a11-recurso-sucessora", motivo="Nota da Entrevista corrigida.")
     sucessora = _ato_vigente(edital)
@@ -309,7 +324,7 @@ def test_recurso_deferido_na_entrevista_obsoleta_a_ordem_e_a_sucessora_inverte(m
     }
     assert posicoes[str(primeiro.id)] == 1
     assert posicoes[str(segundo.id)] == 2
-    assert not estado_do_marco(edital=edital, marco_id=MARCO)["obsoleto"]
+    assert _obsoleta_nas_tres_telas(edital) == (False, False, False)
     # Cada ato se reproduz do que gravou: o original, com a nota antiga, continua íntegro.
     assert divergencias_da_reproducao(original) == []
     assert divergencias_da_reproducao(sucessora) == []
@@ -339,3 +354,108 @@ def test_recurso_deferido_na_entrevista_obsoleta_o_corte_que_leu_a_ordem(montar,
     estado = estado_do_corte(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
     assert estado["obsoleto"]
     assert "participante_reingressou" in {item["tipo"] for item in estado["causas"]}
+
+
+# --- Os recursos sobre a nota que desempata (114, D-005; FR-3559 a FR-3561) ---------------------
+#
+# A nota da Entrevista entra na ordem do marco que só soma a Prova. Um recurso contra ela é uma
+# disputa **dentro** daquela ordem, e a definitiva não pode sair enquanto ela corre — como já não
+# saía com recurso contra a nota da Prova. O controle é o mesmo Edital sem o critério: ali a
+# Entrevista não decide nada desta ordem, e a disputa sobre ela não a segura.
+
+
+def test_recurso_pendente_contra_a_nota_do_desempate_impede_a_definitiva(montar, gestor):
+    """FR-3559 — e só a definitiva: o preliminar é o caminho normal enquanto a disputa corre."""
+    edital, inscricoes = montar(
+        "a11-rec", ("80.0000", "80.0000", "70.0000"), {0: "70.0000", 1: "90.0000"}
+    )
+    _emitir(edital, gestor, "a11-rec-emitir")
+    assert _definitiva(edital).publicavel, "o cenário precisa nascer publicável"
+
+    _recurso_contra_a_entrevista(edital, inscricoes[0], "REC-2026-A11R001")
+
+    assert _definitiva(edital).codigo == RECURSO_PENDENTE
+    assert aferir(
+        edital=edital, marco_id=MARCO, ato=_ato_vigente(edital), natureza="PRELIMINAR"
+    ).publicavel
+
+
+def test_reavaliacao_determinada_na_entrevista_impede_a_definitiva(montar, gestor):
+    """FR-3559 — a nota que desempata vai mudar, e a ordem com ela."""
+    edital, inscricoes = montar(
+        "a11-reav", ("80.0000", "80.0000", "70.0000"), {0: "70.0000", 1: "90.0000"}
+    )
+    _emitir(edital, gestor, "a11-reav-emitir")
+    peca = _recurso_contra_a_entrevista(edital, inscricoes[0], "REC-2026-A11R002")
+
+    decidir(
+        peca,
+        especie=DecisaoRecurso.Especie.REAVALIACAO_DETERMINADA,
+        protegido=_entrevista(edital, inscricoes[0]),
+    )
+
+    assert _definitiva(edital).codigo == REAVALIACAO_PENDENTE
+
+
+def test_providencia_sobre_a_nota_do_desempate_se_cumpre_pela_ordem_que_a_cita(montar, gestor):
+    """FR-3560 — pertinente ao marco, oferecida na emissão, aceita no banco e cumprida pela citação.
+
+    Sem a ampliação da `citacao_coerente`, o ato sucessor que a cita seria recusado no banco, e a
+    definitiva deste marco ficaria impedida para sempre por uma providência que nenhum ato dele
+    consegue cumprir.
+    """
+    edital, inscricoes = montar(
+        "a11-prov", ("80.0000", "80.0000", "70.0000"), {0: "70.0000", 1: "90.0000"}
+    )
+    _emitir(edital, gestor, "a11-prov-emitir")
+    peca = _recurso_contra_a_entrevista(edital, inscricoes[0], "REC-2026-A11R003")
+    decisao = decidir(peca, especie=DecisaoRecurso.Especie.PROVIDENCIA_A_JUSANTE)
+
+    marco, _versao_vigente = _marco_vigente(edital)
+    oferecidas = decisoes_a_citar(
+        edital=edital, marco_id=MARCO, marco=marco, publicacoes_do_marco=[]
+    )
+    assert [item.pk for item in oferecidas] == [decisao.pk]
+    assert _definitiva(edital).codigo == PROVIDENCIA_PENDENTE
+
+    _emitir(
+        edital,
+        gestor,
+        "a11-prov-sucessora",
+        motivo="Providência determinada no recurso contra a nota da Entrevista.",
+        decisoes=[decisao.pk],
+    )
+    citante = _ato_vigente(edital)
+
+    assert CitacaoDeDecisao.objects.filter(ato=citante, decisao=decisao).exists()
+    assert _definitiva(edital, ato=citante).publicavel
+
+
+def test_a_disputa_sobre_etapa_que_a_ordem_nao_le_nao_a_segura(montar, gestor):
+    """O controle: sem o critério, a Entrevista não está nesta ordem (FR-3561).
+
+    "Que a ordem lê" é a dependência efetiva, e não "todas as Etapas do Edital": uma disputa sobre
+    nota que não muda posição nenhuma não pode parar a definitiva, e a citação da providência que
+    ela gerar continua recusada no banco para este marco.
+    """
+    from django.db.utils import ProgrammingError
+
+    edital, inscricoes = montar(
+        "a11-ctrl",
+        ("80.0000", "80.0000", "70.0000"),
+        {0: "70.0000", 1: "90.0000"},
+        desempate=False,
+    )
+    _emitir(edital, gestor, "a11-ctrl-emitir")
+    peca = _recurso_contra_a_entrevista(edital, inscricoes[0], "REC-2026-A11R004")
+
+    assert _definitiva(edital).publicavel
+
+    decisao = decidir(peca, especie=DecisaoRecurso.Especie.PROVIDENCIA_A_JUSANTE)
+    marco, _versao_vigente = _marco_vigente(edital)
+    oferecidas = decisoes_a_citar(
+        edital=edital, marco_id=MARCO, marco=marco, publicacoes_do_marco=[]
+    )
+    assert oferecidas == []
+    with pytest.raises(ProgrammingError, match="pertinent to another milestone"):
+        CitacaoDeDecisao.objects.create(ato=_ato_vigente(edital), decisao=decisao)

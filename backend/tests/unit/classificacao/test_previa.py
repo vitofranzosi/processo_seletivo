@@ -257,3 +257,94 @@ def test_uma_faixa_de_quinhentos_calcula_em_menos_de_um_segundo(caso):
     r = simular(marco(alvo=400, suplentes=100), modo="caso" if caso else "estavel", caso=caso)
     assert time.perf_counter() - inicio < 1.0
     assert r["total"] >= 500
+
+
+# --- O caso que só a Etapa do desempate separa (114, FR-3558) ---------------------------------
+
+POR_ENTREVISTA = {
+    "id": "c-e4",
+    "type": "MAIOR_PONTUACAO_NA_ETAPA",
+    "parameters": {"stageId": "e4"},
+    "whenMissing": "ULTIMO_NO_CRITERIO",
+}
+
+
+def com_entrevista_por_ultimo():
+    """Os critérios do Edital, e a Entrevista — que o marco não soma — como o último deles."""
+    return [*CRITERIOS, {**POR_ENTREVISTA, "order": len(CRITERIOS) + 1}]
+
+
+def test_o_par_tem_a_mesma_nota_final_e_so_a_outra_etapa_o_separa():
+    """A nota final dos dois é a mesma; a posição muda, e quem a muda é a Entrevista.
+
+    A Entrevista vem **por último** de propósito: os critérios anteriores — a nota da Escrita, que
+    soma, e os dois fatos — são oferecidos ao par antes dela, e nenhum o separa. Com a Entrevista
+    primeiro o caso passaria igual, e não provaria que o par é igual em todo o resto.
+    """
+    r = simular(marco(criterios=com_entrevista_por_ultimo()), modo="caso", caso=CASO_DO_DESEMPATE)
+
+    assert r["modo"] == "caso" and r["caso"] == CASO_DO_DESEMPATE
+    por_id = {item["inscricao_id"]: item for item in r["ordem"]}
+    primeiro, segundo = por_id["F009"], por_id["F010"]
+    assert primeiro["pontuacao"] == segundo["pontuacao"]
+    assert primeiro["pontuacoes"]["e1"] == segundo["pontuacoes"]["e1"]
+    assert primeiro["fatos"] == segundo["fatos"]
+    assert segundo["pontuacoes"]["e4"] > primeiro["pontuacoes"]["e4"]
+    # O da linha de baixo passa à frente: a inversão não pode vir da ordem das linhas.
+    assert (segundo["posicao"], primeiro["posicao"]) == (10, 11)
+    assert not segundo["empate_residual"] and not primeiro["empate_residual"]
+    assert segundo["separado_por"]["id"] == "c-e4"
+    # E é o único empate da tabela: nenhum outro par divide pontuação.
+    pontuacoes = [item["pontuacao"] for item in r["ordem"]]
+    assert len(pontuacoes) - len(set(pontuacoes)) == 1
+    # A fronteira é a do alvo: o critério decide quem fica na última posição dele.
+    assert r["onde"].startswith("o par fica na 10ª posição, a última do alvo")
+
+
+def test_a_explicacao_mostra_a_nota_final_igual_e_a_entrevista_separando():
+    """A tela do empate: "Pontuação combinada" com dois valores iguais, e a Entrevista separando."""
+    from processo_seletivo.interface import previa_da_classificacao as tela
+
+    r = simular(marco(criterios=com_entrevista_por_ultimo()), modo="caso", caso=CASO_DO_DESEMPATE)
+    r.update(escala=2, fatos=FATOS, fatos_por_id={f["id"]: f["label"] for f in FATOS})
+
+    (bloco,) = tela.empates(r)
+    base, *criterios = bloco["linhas"]
+    assert bloco["forte"] == "Separados:"
+    assert base["criterio"] == "Pontuação combinada"
+    assert len(set(base["valores"])) == 1
+    entrevista = criterios[-1]
+    assert "Entrevista" in entrevista["criterio"]
+    assert len(set(entrevista["valores"])) == 2
+    assert all(len(set(linha["valores"])) == 1 for linha in criterios[:-1])
+
+
+def test_o_caso_so_existe_no_marco_que_desempata_por_outra_etapa():
+    """Sem o critério, o par plantado não teria o que o separasse — e o caso não se oferece."""
+    from processo_seletivo.interface import previa_da_classificacao as tela
+
+    sem = marco()
+    com = marco(criterios=com_entrevista_por_ultimo())
+
+    assert previa.etapas_do_desempate_com_nota(sem, ETAPAS) == []
+    assert [e["id"] for e in previa.etapas_do_desempate_com_nota(com, ETAPAS)] == ["e4"]
+    # Pedido assim mesmo, ele cai na população estável, como o caso de reserva sem reservada.
+    assert simular(sem, modo="caso", caso=CASO_DO_DESEMPATE)["modo"] == "estavel"
+    oferecidos = {
+        valor for valor, _ in tela.candidatos(None, "estavel", com_desempate=True)["casos"]
+    }
+    assert f"caso:{CASO_DO_DESEMPATE}" in oferecidos
+    assert f"caso:{CASO_DO_DESEMPATE}" not in {
+        valor for valor, _ in tela.candidatos(None, "estavel")["casos"]
+    }
+
+
+def test_etapa_decisoria_nao_oferece_o_caso():
+    """A decisória não produz nota: um critério que a cite não separa ninguém em caso nenhum."""
+    decisoria = {**POR_ENTREVISTA, "order": 4, "parameters": {"stageId": "e3"}}
+    m = marco(criterios=[*CRITERIOS, decisoria])
+
+    assert previa.etapas_do_desempate_com_nota(m, ETAPAS) == []
+
+
+CASO_DO_DESEMPATE = "desempate_por_outra_etapa"

@@ -38,8 +38,8 @@
 
 - **Decision**: `reproducao.reproduzir_ato` procura a eliminação só entre os Resultados citados de Etapas
   enumeradas pelo marco da versão histórica. As pontuações continuam vindo de todos os citados.
-- **Rationale**: atos antigos só citam Etapas enumeradas, e para eles nada muda (FR-3552). Atos novos
-  citam a Etapa do desempate, e uma eliminação ali não pode reaparecer na reprodução.
+- **Rationale**: o ato cita a Etapa do desempate, e uma eliminação ali não pode reaparecer na
+  reprodução (FR-3552). A regra é a do preparo, numa função só (`que_decidem_posicao`).
 - **Alternatives considered**: reescrever a reprodução sobre `preparar` — maior e fora do que a spec
   pede; o motivo gravado (`snapshot.motivo`) é lido de outro lugar, e a troca mudaria a reprodução de
   todo ato do acervo.
@@ -71,5 +71,45 @@
   sentido dos casos-limite; a soma — sai da escala (acima); nenhuma nota — a prévia mostraria um
   critério que nunca lê nada, o próprio defeito do A11 visto pela prévia.
 - **Consequência registrada**: como os empatados de propósito são iguais também na Etapa do desempate,
-  nenhum caso da prévia mostra esse critério separando alguém. É por isso que a equivalência da FR-3556
-  compara também a nota que o desempate leu de cada classificável.
+  nenhum caso da prévia mostrava esse critério separando alguém. É por isso que a equivalência da
+  FR-3556 compara também a nota que o desempate leu de cada classificável — e por isso a revisão de
+  02/11 acrescentou o caso da R-007.
+
+## R-007 — O caso demonstrativo da prévia (revisão de 02/11)
+
+- **Decision**: `cenarios_da_previa.caso_do_desempate` planta, sobre a classificação sem empate, um par
+  igual nas notas enumeradas **e nos fatos**, na última posição do alvo, e dá ao segundo do par três
+  pontos a mais na Etapa do desempate. `com_notas_do_desempate` passa a preencher só o que falta, para
+  não desfazer o par. O caso fica em `CASOS_DO_DESEMPATE` e só é oferecido quando o marco desempata por
+  Etapa com nota que não enumera (`previa.etapas_do_desempate_com_nota`).
+- **Rationale**: igual nos fatos, o par não é separado por nenhum critério anterior, qualquer que seja a
+  ordem publicada; a vantagem no segundo inverte a ordem das linhas, e a inversão não pode vir de
+  desempate oculto por posição. Sobre a classificação sem empate, é o único empate da tabela.
+- **Alternatives considered**: mudar a D-006 para dar notas diferentes aos empatados dos casos que já
+  existem — descartada: eles deixariam de significar o que nomeiam (FR-3558); oferecer o caso sempre —
+  descartada: num marco sem o critério, o par plantado ficaria empatado e o caso diria o contrário do
+  rótulo.
+
+## R-008 — A pertinência dos recursos (revisão de 02/11)
+
+- **Decision**: `desempate.etapas_que_a_ordem_le(marco)` — enumeradas mais as do desempate — é a
+  resposta única de "esta nota alcança esta ordem?". O cálculo, o filtro da Supervisão e a pertinência
+  dos recursos (`recursos.selectors._etapas_do_marco`) a chamam; a `0007` estende também a
+  `check_decision_citation_coherence` da `0004`, com o mesmo `CASE` sobre `tiebreakers`.
+- **Rationale**: as três pendências da definitiva — recurso, reavaliação, providência — já eram
+  perguntas sobre "as Etapas do marco"; trocar a resposta num lugar só as fecha juntas. Sem a mudança na
+  trigger da citação, a providência pertinente nunca se cumpriria: o ato que a cita seria recusado.
+- **Alternatives considered**: todas as Etapas do Edital — descartada pelo usuário ("dependência
+  efetiva, e não indiscriminadamente"); abrir também a visibilidade e a janela recursal da nota —
+  decisão sobre acesso e prazo, deixada ao usuário (D-005).
+
+## R-009 — O corte que governa a Etapa do desempate (revisão de 02/11)
+
+- **Decision**: nenhuma regra nova. O percurso foi demonstrado em teste para o empate dentro da faixa e
+  para os dois desfechos do empate na fronteira, e o conflito ficou registrado na D-007.
+- **Rationale**: a obsolescência da ordem (FR-3550), a da faixa por ordem sucedida e o bloqueio de
+  trabalho novo na Etapa governada já existiam e compõem o percurso; o que falta é uma decisão de
+  domínio sobre o excedente, e inventá-la seria criar norma.
+- **Alternatives considered**: congelar a faixa da primeira geração quando o corte governa a Etapa do
+  desempate, ou recusar a geração sucessora que estreite a faixa — as duas são respostas possíveis à
+  D-007, e nenhuma foi decidida.

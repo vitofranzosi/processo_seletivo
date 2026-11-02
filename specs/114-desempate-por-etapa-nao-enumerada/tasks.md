@@ -70,7 +70,7 @@
 
 - [x] T017 Conferir que as tabelas absolutas da `094` passam sem edição (FR-3557, SC-1077).
 - [x] T018 Escrever `specs/114-desempate-por-etapa-nao-enumerada/rastreabilidade.md`.
-- [ ] T019 `cd backend && make lint check test-pg` com `DB_NAME` próprio.
+- [x] T019 `cd backend && make lint check test-pg` com `DB_NAME` próprio.
 
 ## Phase 8: Achados da revisão de código (02/11)
 
@@ -82,6 +82,30 @@
 - [x] T022 A regra "a consequência só das enumeradas" num lugar só,
   `universo_classificavel.que_decidem_posicao`, chamada pelo preparo e pela reprodução.
 - [x] T023 A `0007` aceita `tiebreakers` que não seja lista sem levantar erro na emissão.
+
+## Phase 9: Revisão do PR (02/11)
+
+- [x] T024 `etapas_que_a_ordem_le(marco)` em `processo_seletivo/classificacao/domain/desempate.py`, chamada
+  por `calculo.py` e por `interface/supervisao.candidato_a_obsoleto` (R-008).
+- [x] T025 [US5] `recursos/application/selectors._etapas_do_marco` passa a ser a dependência efetiva:
+  recurso pendente, reavaliação pendente e providência a jusante sobre a nota que desempata (FR-3559 a
+  FR-3561).
+- [x] T026 [US5] A `0007` substitui também `check_decision_citation_coherence`, e a reversão restaura o
+  texto da `0004` (FR-3560).
+- [x] T027 [US5] Testes em `tests/integration/classificacao/test_desempate_por_etapa_nao_enumerada.py`:
+  recurso pendente, reavaliação, providência citada e cumprida, e o controle sem o critério. Conferido
+  em 02/11 que os três primeiros falham com a pertinência antiga, e o da providência sem a trigger nova.
+- [x] T028 [US3] Os testes de obsolescência conferem as três telas juntas: tela da classificação,
+  condução do marco e Supervisão (`_obsoleta_nas_tres_telas`).
+- [x] T029 [US6] O caso `desempate_por_outra_etapa` em `cenarios_da_previa.py` e `previa.py`, oferecido
+  só no marco que desempata por Etapa com nota que não enumera (`interface/previa_da_classificacao.py`)
+  (FR-3558, R-007).
+- [x] T030 [P] [US6] Testes em `tests/unit/classificacao/test_previa.py` e o caso novo em
+  `tests/integration/classificacao/test_previa_equivale_ao_oficial.py` (SC-1079).
+- [x] T031 [US7] `tests/integration/classificacao/test_desempate_pela_etapa_que_o_corte_governa.py`: o
+  percurso inteiro e os três cenários da D-007 (FR-3562, SC-1080).
+- [x] T032 Spec, pesquisa, plano, rastreabilidade e quickstart revistos; D-003, D-005 e D-006 revistas,
+  D-007 nova.
 
 ## Dependencies
 

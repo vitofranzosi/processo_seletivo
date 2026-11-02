@@ -757,10 +757,26 @@ def _notas_da_entrevista(posicoes, indice):
     )
 
 
+def _candidatos_com_entrevista(caso, marco, etapas, fatos):
+    """Os candidatos que `simular` gera para o caso, com a nota da Entrevista — na mesma ordem.
+
+    O caso da `114` é plantado sobre a classificação sem empate, e o par recebe a nota dele antes
+    de a derivação (114, D-006) preencher a dos outros; os demais casos só recebem a derivação.
+    """
+    entrevista = [e for e in etapas if str(e["id"]) == ENTREVISTA]
+    if caso == "desempate_por_outra_etapa":
+        candidatos, _ = cenarios.caso_do_desempate(
+            _populacao("sem_empate", marco, etapas, fatos), entrevista, alvo=ALVO
+        )
+    else:
+        candidatos = _populacao(caso, marco, etapas, fatos)
+    return cenarios.com_notas_do_desempate(candidatos, entrevista)
+
+
 @pytest.mark.parametrize(
     ("numero", "caso"),
-    [(20, "criterios_sucessivos"), (21, "valor_ausente")],
-    ids=["criterios_sucessivos", "valor_ausente"],
+    [(20, "criterios_sucessivos"), (21, "valor_ausente"), (22, "desempate_por_outra_etapa")],
+    ids=["criterios_sucessivos", "valor_ausente", "desempate_por_outra_etapa"],
 )
 def test_a_previa_e_o_oficial_concordam_desempatando_por_etapa_nao_enumerada(
     gestor, api_client, manager_headers, process_payload, numero, caso
@@ -779,10 +795,7 @@ def test_a_previa_e_o_oficial_concordam_desempatando_por_etapa_nao_enumerada(
         etapa_do_desempate=ENTREVISTA,
     )
     marco, etapas, fatos = _marco_publicado(cenario)
-    candidatos = cenarios.com_notas_do_desempate(
-        _populacao(caso, marco, etapas, fatos),
-        [e for e in etapas if str(e["id"]) == ENTREVISTA],
-    )
+    candidatos = _candidatos_com_entrevista(caso, marco, etapas, fatos)
     primeiro = 9500 + 50 * numero
     inscricoes = _gravar(cenario, gestor, candidatos, primeiro=primeiro)
     _avaliar_na_entrevista(cenario, gestor, inscricoes, candidatos, f"114-{numero}")
@@ -805,3 +818,12 @@ def test_a_previa_e_o_oficial_concordam_desempatando_por_etapa_nao_enumerada(
         item["pontuacao"] == item["pontuacoes"][str(cenario["etapa"])].quantize(Decimal("0.01"))
         for item in proposta["posicoes"]
     )
+    if caso == "desempate_por_outra_etapa":
+        # O caso demonstra o que nomeia, e do lado oficial: o par da última posição do alvo tem a
+        # mesma nota final, e a Entrevista — que não soma — põe o da linha de baixo à frente.
+        posicao = {str(item["inscricao_id"]): item for item in proposta["posicoes"]}
+        primeiro, segundo = (posicao[str(inscricoes[i].id)] for i in (ALVO - 1, ALVO))
+        assert primeiro["pontuacao"] == segundo["pontuacao"]
+        assert (segundo["posicao"], primeiro["posicao"]) == (ALVO, ALVO + 1)
+        assert segundo["separado_por"]["id"] == POR_ENTREVISTA
+        assert not any(empate for _, _, empate, _ in oficial["ordem"])

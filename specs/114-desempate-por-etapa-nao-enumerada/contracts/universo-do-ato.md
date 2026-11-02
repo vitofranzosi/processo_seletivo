@@ -25,3 +25,11 @@ Cada item de `stageResults` MUST:
 
 Qualquer outro `stageId` é recusado com `ordering act cites stage results that do not belong to its
 milestone` — a mesma mensagem de antes.
+
+## Conferência no `INSERT` da citação de decisão (trigger `citacao_coerente`)
+
+Para decisão sobre recurso contra `ResultadoEtapa`, a Etapa alcançada MUST estar em `marco.stages`
+**ou** em `marco.tiebreakers[type = MAIOR_PONTUACAO_NA_ETAPA].parameters.stageId` do marco do ato, lido
+da versão citada por ele (FR-3560). Qualquer outra é recusada com `ordering act cites a decision
+pertinent to another milestone` — a mesma mensagem de antes. O ramo do recurso contra a publicação não
+muda.

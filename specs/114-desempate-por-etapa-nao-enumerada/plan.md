@@ -43,7 +43,7 @@ citadas; o orçamento de consultas verificado por teste não muda
 | Princípio | Como se cumpre |
 |---|---|
 | I. Linguagem ubíqua | "Etapa do desempate" é termo da spec, usado igual em código e testes. |
-| II. Integridade normativa | A regra continua sendo a publicada: o critério já citava a Etapa; o cálculo passa a obedecê-lo. Atos emitidos não são reescritos; ficam obsoletos e se sucedem com motivo (D-003). |
+| II. Integridade normativa | A regra continua sendo a publicada: o critério já citava a Etapa; o cálculo passa a obedecê-lo. Atos emitidos não são reescritos; ficam obsoletos e se sucedem com motivo (FR-3550). |
 | III. Auditoria | O universo gravado passa a citar tudo o que decidiu a ordem; a proveniência do desempate grava a nota comparada. |
 | IV. Regras no backend | A regra mora em `universo_classificavel.preparar`, a função pura que o oficial e a prévia chamam; a conferência da proveniência continua no banco. |
 | V. Rastreabilidade e testes | Cada FR tem teste; o do A11 perde o `xfail`; a migration nova não reescreve a `0003`. |
@@ -96,6 +96,22 @@ validação continuam como estão (fora de escopo pela spec).
 - [contracts/universo-do-ato.md](contracts/universo-do-ato.md) — o formato do universo, que não muda, e a
   regra nova da conferência.
 - [quickstart.md](quickstart.md) — os testes e o percurso pela tela do marco.
+
+## Revisão de 02/11
+
+O usuário pediu a revisão do PR preservando a capacidade genérica. O que entrou:
+
+- `desempate.etapas_que_a_ordem_le` — a dependência efetiva da ordem, chamada pelo cálculo, pela
+  Supervisão e pela pertinência dos recursos (`recursos/application/selectors.py`);
+- a `0007` substitui também a função da `citacao_coerente` (`0004`), e a reversão restaura as duas;
+- o caso "Desempate pela nota de outra Etapa" na prévia (`cenarios_da_previa`, `previa`,
+  `interface/previa_da_classificacao.py`);
+- testes: recursos e controle no arquivo da `114`; as três telas concordando sobre a obsolescência; o
+  percurso do corte em `test_desempate_pela_etapa_que_o_corte_governa.py`; o caso novo na equivalência
+  e em `tests/unit/classificacao/test_previa.py`.
+
+Pesquisa em R-007 a R-009. Nenhum tratamento para atos anteriores: o sistema não está em produção
+(D-003).
 
 ## Re-check pós-desenho
 

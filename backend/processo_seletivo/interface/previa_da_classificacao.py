@@ -1252,9 +1252,13 @@ def decorar_fronteira(linhas, p, em_vista):
 # --- O painel inteiro ---------------------------------------------------------------------------
 
 
-def candidatos(p, escolha, *, com_reservas=False):
+def candidatos(p, escolha, *, com_reservas=False, com_desempate=False):
     opcoes = [("estavel", "População estável — testar a regra")]
     casos = [(f"caso:{k}", v[0]) for k, v in cenarios.CASOS.items()]
+    if com_desempate:
+        # Só no marco que desempata por Etapa que não soma (114): em outro, o par plantado não
+        # teria nada que o separasse, e o caso mostraria o contrário do que o rótulo diz.
+        casos += [(f"caso:{k}", v[0]) for k, v in cenarios.CASOS_DO_DESEMPATE.items()]
     reservas = (
         [(f"caso:{k}", v[0]) for k, v in cenarios.CASOS_DE_RESERVA.items()] if com_reservas else []
     )
@@ -1262,7 +1266,7 @@ def candidatos(p, escolha, *, com_reservas=False):
     if p is None:
         return bloco
     if p["modo"] == C.CASO_LIMITE:
-        descricao = (cenarios.CASOS.get(p["caso"]) or cenarios.CASOS_DE_RESERVA[p["caso"]])[1]
+        descricao = _todos_os_casos()[p["caso"]][1]
         onde = p["onde"] or ""
         if p["caso"] == "alvo_fixo_reservada" and (p["regra"] or {}).get("targetKind") != "FIXED":
             # O caso diz quando a configuração o desfaz, e por quê (FR-2332).
@@ -1285,9 +1289,13 @@ def candidatos(p, escolha, *, com_reservas=False):
     return bloco
 
 
+def _todos_os_casos():
+    return {**cenarios.CASOS, **cenarios.CASOS_DE_RESERVA, **cenarios.CASOS_DO_DESEMPATE}
+
+
 def escolha_de_candidatos(dados):
     escolha = (dados.get("candidatos") or "estavel").strip()
-    casos = {**cenarios.CASOS, **cenarios.CASOS_DE_RESERVA}
+    casos = _todos_os_casos()
     if escolha.startswith("caso:") and escolha[5:] in casos:
         return escolha, C.CASO_LIMITE, escolha[5:]
     return "estavel", C.ESTAVEL, ""
@@ -1308,6 +1316,7 @@ def contexto(
     """Tudo o que `_previa_da_classificacao.html` desenha, ou o que falta para desenhar."""
     marco = next(m for m in marcos if m["sub"] == sub)
     escolha, modo, caso = escolha_de_candidatos(dados)
+    com_desempate = bool(calculo.etapas_do_desempate_com_nota(marco, etapas))
     vista = "detalhe" if dados.get("vista") == "detalhe" else "processo"
 
     def url_do_marco(outro):
@@ -1352,7 +1361,12 @@ def contexto(
         return {
             **base,
             "faltas": erro.faltas,
-            "candidatos": candidatos(None, escolha, com_reservas=len(recortes or []) > 1),
+            "candidatos": candidatos(
+                None,
+                escolha,
+                com_reservas=len(recortes or []) > 1,
+                com_desempate=com_desempate,
+            ),
             "anterior": dados.get("anterior") or "",
             "anuncio": f"Prévia não calculada: falta declarar {len(erro.faltas)}.",
         }
@@ -1372,7 +1386,9 @@ def contexto(
         anuncio += " " + " ".join(f"{linha['rotulo']}: {linha['texto']}" for linha in resumo[1:])
     contexto_ = {
         **base,
-        "candidatos": candidatos(p, escolha, com_reservas=bool(p["recortes"])),
+        "candidatos": candidatos(
+            p, escolha, com_reservas=bool(p["recortes"]), com_desempate=com_desempate
+        ),
         "ocupacao_dos_recortes": ocupacao_dos_recortes(p),
         "anterior": atual,
         "anuncio": anuncio,

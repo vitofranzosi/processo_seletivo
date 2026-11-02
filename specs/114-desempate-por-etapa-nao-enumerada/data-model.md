@@ -9,11 +9,14 @@ Nenhuma entidade, tabela ou coluna nova.
 | `AtoDeOrdenacao.universo.stageResults` | Resultados vigentes das Etapas enumeradas | os mesmos, mais os das Etapas do desempate (FR-3549) |
 | `PosicaoNaOrdem.desempate[].value` do critério por Etapa não enumerada | sempre nulo | a nota comparada (FR-3554) |
 | Função `check_ordering_act_provenance` | aceita `stageId` enumerado pelo marco | aceita enumerado **ou** citado por critério `MAIOR_PONTUACAO_NA_ETAPA` do marco (FR-3551) |
+| Função `check_decision_citation_coherence` | providência sobre Resultado só é citável por marco que enumera a Etapa | também por marco cujo critério a compara (FR-3560) |
+| Pertinência de recurso ao marco (`recursos_pertinentes`, reavaliações, providências) | Etapas enumeradas | Etapas que a ordem lê (FR-3559 a FR-3561) |
 
 ## Regras
 
 - **Etapa do desempate** = `stageId` de critério `MAIOR_PONTUACAO_NA_ETAPA` do marco, fora de
-  `marco.stages`.
+  `marco.stages`. Qualquer Etapa publicada do Edital pode sê-lo; nada depende do nome ou da ordem dela.
+- **Etapas que a ordem lê** = `marco.stages` + Etapas do desempate. É a dependência efetiva da ordem.
 - Resultado de Etapa do desempate contribui com `pontuacao` para `pontuacoes[etapa]`; **não** contribui
   com `consequencia` nem `motivo` (FR-3547, FR-3548).
 - Participante sem Resultado vigente na Etapa do desempate: `pontuacoes[etapa]` ausente; vale o

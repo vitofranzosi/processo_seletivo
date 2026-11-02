@@ -23,7 +23,7 @@ from processo_seletivo.classificacao.application.selectors import (
     ato_vigente,
     estado_do_marco,
 )
-from processo_seletivo.classificacao.domain.desempate import etapas_do_desempate
+from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
@@ -865,7 +865,7 @@ def candidato_a_obsoleto(edital, ato, marco, versao_vigente):
     # no universo; olhar só as enumeradas deixaria sem candidato a nota corrigida por recurso, ou a
     # que chegou depois da emissão — e a tela diria "feito" de uma ordem que `comparar` dá por
     # obsoleta.
-    etapas = [str(item) for item in marco.get("stages") or []] + etapas_do_desempate(marco)
+    etapas = etapas_que_a_ordem_le(marco)
     if not etapas:
         return False
     return ResultadoEtapa.vigentes.filter(

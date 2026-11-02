@@ -178,3 +178,56 @@ def emitir(edital, gestor, *, chave="corte-014-emitir", motivo="", geracao=()):
         confirmacao_do_calculo=confirmacao(edital, geracao=geracao),
         motivo=motivo,
     )
+
+
+#: O critério da `114`: a maior nota na Entrevista, que o marco do cenário não enumera.
+CRITERIO_DA_ENTREVISTA = "00000000-0000-4000-8000-000000001101"
+
+
+def rascunho_com_desempate(cut=None, *, quando_falta="ULTIMO_NO_CRITERIO"):
+    """O marco soma só a Etapa pontuada e desempata pela nota da Entrevista (114).
+
+    A Entrevista é também a Etapa que o corte do cenário governa, salvo quando `cut` declara outra
+    coisa: é o caso em que a Etapa do desempate depende do corte da própria ordem.
+    """
+    base, pontuada = rascunho(cut=cut)
+    base["profiles"][0]["classificationMilestones"][0]["tiebreakers"] = [
+        {
+            "id": CRITERIO_DA_ENTREVISTA,
+            "order": 1,
+            "type": "MAIOR_PONTUACAO_NA_ETAPA",
+            "parameters": {"stageId": ENTREVISTA},
+            "whenMissing": quando_falta,
+        }
+    ]
+    return base, pontuada
+
+
+def entrevistar(edital, gestor, notas, *, chave):
+    """Avalia e consolida a Entrevista: `notas` é `[(inscricao, "90.0000"), ...]`.
+
+    O avaliador é o `joao` que o cenário constituiu; alocá-lo de novo é idempotente pela chave.
+    """
+    from processo_seletivo.comissoes.models import MembroComissao
+
+    joao = MembroComissao.objects.get(processo=edital.processo, identity_subject="joao")
+    alocar_em(gestor, edital.processo, joao, edital, ENTREVISTA)
+    contexto = {
+        "edital": edital,
+        "processo": edital.processo,
+        "membros": {"joao": joao},
+        "etapa": ENTREVISTA,
+    }
+    avaliados = [inscricao for inscricao, _ in notas]
+    distribuir_para(contexto, gestor, ["joao"], avaliados, chave=f"{chave}-lote")
+    for inscricao, nota in notas:
+        concluir_como(contexto, "joao", inscricao, pontuacao=nota)
+    consolidar(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        etapa_id=ENTREVISTA,
+        inscricao_ids=[item.id for item in avaliados],
+        idempotency_key=f"{chave}-consolidar",
+        correlation_id="teste-114",
+    )

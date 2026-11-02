@@ -24,10 +24,17 @@ Esperado: todos passam, e nenhum é `xfail`.
 | a reprodução do ato emitido não diverge | FR-3552 |
 | a proveniência grava a nota da Entrevista | FR-3554 |
 | a trigger recusa Resultado de Etapa não citada | FR-3551 |
+| recurso pendente e reavaliação na Entrevista impedem a definitiva | FR-3559, SC-1078 |
+| a providência sobre a Entrevista é oferecida, citada e cumprida | FR-3560 |
+| sem o critério, a disputa sobre a Entrevista não segura a ordem | FR-3561 |
+
+O percurso do corte que governa a Entrevista (FR-3562, D-007) está em
+`tests/integration/classificacao/test_desempate_pela_etapa_que_o_corte_governa.py`, e o caso da prévia
+(FR-3558) em `tests/unit/classificacao/test_previa.py`.
 
 A equivalência da prévia (FR-3555, FR-3556, SC-1076) está em
-`tests/integration/classificacao/test_previa_equivale_ao_oficial.py`, no caso
-`desempate-por-etapa-nao-enumerada`.
+`tests/integration/classificacao/test_previa_equivale_ao_oficial.py`, em
+`test_a_previa_e_o_oficial_concordam_desempatando_por_etapa_nao_enumerada`.
 
 ## A suíte inteira
 
@@ -44,3 +51,6 @@ cd backend && DB_NAME=ps_114 make lint check test-pg
    dois primeiros).
 3. Abra o marco na área de gestão: a ordem calculada põe o de 90 em 1º, o de 70 em 2º, e diz que a
    Entrevista os separou. Antes desta feature, os dois apareciam empatados em 1º.
+4. Abra a prévia do marco e escolha o caso "Desempate pela nota de outra Etapa": dois candidatos com a
+   mesma nota final, na última posição do alvo, separados pela Entrevista. A explicação do empate
+   mostra a pontuação combinada igual e a Entrevista separando.

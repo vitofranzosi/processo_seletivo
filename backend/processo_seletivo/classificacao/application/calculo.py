@@ -8,7 +8,7 @@ traria uma cópia do JSON inteiro do Edital por Resultado sem alterar a contagem
 from collections import defaultdict
 
 from processo_seletivo.classificacao.domain import universo_classificavel
-from processo_seletivo.classificacao.domain.desempate import etapas_do_desempate, ordenar
+from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le, ordenar
 from processo_seletivo.editais.domain.recortes import normalizar_recorte
 from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -53,7 +53,7 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # **As Etapas que um critério compara sem que o marco as enumere** (114, FR-3546). Entram só
     # na leitura dos Resultados — e daí na nota que o desempate compara e no universo que o ato
     # grava —, nunca na progressão acima nem no que decide quem tem posição (`preparar`, FR-3548).
-    lidas = enumeradas + etapas_do_desempate(marco)
+    lidas = etapas_que_a_ordem_le(marco)
 
     # A progressão é aplicada no próprio queryset: nenhuma lista integral é lida uma segunda vez
     # só para ser devolvida em ``id__in``. O conjunto inclui quem foi eliminado na Etapa do marco
