@@ -202,9 +202,19 @@ percurso. O cálculo oficial só lê os Resultados das Etapas que a ordem usa:
 
 Um critério "maior nota em Entrevista", numa ordem que não usa a Entrevista, encontra o valor
 vazio para todos. Com "fica por último", não separa ninguém; com "não se aplica", sai de todos os
-grupos. O seletor oferece essa Etapa, e não foi encontrada validação que acuse o caso. **Conferido
-por leitura do código, não por execução.** É defeito a confirmar com um teste, não decisão de
-governança.
+grupos. O seletor oferece essa Etapa, e não foi encontrada validação que acuse o caso.
+
+**Confirmado por teste** contra PostgreSQL:
+[test_desempate_por_etapa_nao_enumerada.py](../../backend/tests/integration/classificacao/test_desempate_por_etapa_nao_enumerada.py).
+O teste publica, avalia e consolida a Etapa pontuada (80, 80, 70) e a Entrevista (70 e 90 para os
+dois empatados). Mesmo com os dois Resultados vigentes, a ordem oficial põe ambos em 1º, com
+`empate_residual` verdadeiro, `separado_por` nulo e `pontuacoes` só da Etapa pontuada.
+
+O teste afirma o que o edital diz e está marcado `xfail(strict=True)`, como os da auditoria da
+Retificação. Quando a correção vier, ele passa a falhar e a marca sai. A correção tem dois
+caminhos, e escolher entre eles é do usuário:
+- ler no universo a nota da Etapa citada pelo critério;
+- recusar o critério na validação.
 
 ## O que se confirma da rodada 1, e o que se corrige
 
