@@ -48,8 +48,8 @@ LIMITE_POR_ENDERECO = 5
 # quarenta pessoas na mesma hora recusa dez — e o defeito era que essas dez liam "pode pedir outro
 # código agora", com o bloqueio valendo ainda por até uma hora. Subir o número só mudaria o tamanho
 # da sala que esbarra nele; dizer o que aconteceu, por quanto tempo, e que outra conexão resolve é o
-# que tira o candidato do beco. O número é constante pela FR-030, e torná-lo ajustável é decisão
-# registrada, não tomada aqui.
+# que tira o candidato do beco. O número é constante pela FR-030, e o produto decidiu mantê-lo e
+# orientar os polos a escalonar as salas (01/11/2026, D-034 da 010).
 LIMITE_POR_ORIGEM = 30
 
 # Por que o pedido não gerou código. Nenhum dos três depende de existir identidade: os contadores

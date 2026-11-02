@@ -609,12 +609,17 @@ acabara de receber.
 **Alternativas rejeitadas**: *subir o teto* — muda o tamanho da sala que esbarra nele e deixa a
 mentira para a seguinte; *teto ajustável por variável no dia de pico* — contraria a `FR-030`
 ("constantes da aplicação"), e a necessidade não está demonstrada depois que a recusa diz o que
-resolve; fica registrada como decisão do produto; *CAPTCHA, Redis, fila* — infraestrutura nova sem
+resolve; *lista de redes conhecidas (polos, campus) com teto maior* — mais direcionada, mas
+ninguém mantém essa lista hoje, e a rede de um polo muda sem aviso; *CAPTCHA, Redis, fila* — infraestrutura nova sem
 necessidade demonstrada; *travar a contagem* (`pg_advisory_xact_lock` por origem) — o teto é
 conferido antes de gravar, e pedidos simultâneos na borda passam juntos; medido, oito de oito e 32
 de 32 passaram com a contagem em 29. O excesso é limitado pelos pedidos que o servidor atende ao
 mesmo tempo, e não pelo atacante, existia antes deste achado e não é o que ele corrige; os testes
 de `test_limite_concorrente.py` guardam que ele não estraga a resposta.
+
+**Decisão do produto, 01/11/2026**: manter o teto da origem em trinta e orientar os polos — a
+sessão presencial escalonada para caber no teto, e a conexão móvel como alternativa. Nenhuma das
+alternativas acima entra. A orientação operacional está no guia de implantação (§20.3).
 
 **Risco residual**: o teto da origem continua recusando o excedente de uma sala grande na mesma
 hora — agora com a saída escrita. A frase do teto da origem diz a quem varre que foi contido; isso

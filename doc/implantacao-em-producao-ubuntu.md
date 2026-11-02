@@ -2300,6 +2300,21 @@ grep 'rid=<RID>' /var/log/nginx/processoseletivo.access.log
 journalctl -u processoseletivo -o cat | grep '<RID>'
 ```
 
+**Inscrição presencial em polo, laboratório ou telecentro.** O portal aceita até **30 pedidos de
+código de acesso por hora por rede** (`LIMITE_POR_ORIGEM`), e todos os computadores de um polo
+costumam sair pela internet com o mesmo endereço. O limite fica em 30 por decisão do produto
+(01/11/2026, D-034 da `010`); a orientação aos polos é:
+
+- **Escalonar a sala**: até ~25 pessoas por hora pedindo código, deixando folga para reenvios. A
+  janela é deslizante — cada pedido deixa de contar uma hora depois de feito.
+- **Pedir o código uma vez** e usar o mais recente; ele vale 10 minutos. Depois de entrar, a
+  inscrição não pede código de novo.
+- **Ter outra conexão à mão**: os dados móveis do celular resolvem na hora. É o que a tela diz a
+  quem passa do limite, junto com o tempo real de espera e o atendimento.
+- **No dia**, quem acompanha confere pelo `origin` acima se a rede do polo bateu no teto. Todas as
+  recusas vindo de uma origem só, e de polos diferentes, é sinal de proxy mal declarado
+  (`PORTAL_ATRAS_DE_PROXY`): aí o teto vale para a instituição inteira.
+
 **Quem fez o quê, quando.** A trilha é a fonte:
 
 - pela interface, em `/gestao/editais/<id>/auditoria` e `/gestao/processos/<id>/auditoria`, com o

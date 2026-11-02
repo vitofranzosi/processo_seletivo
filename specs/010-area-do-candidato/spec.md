@@ -383,8 +383,9 @@ remover o antigo e corrigir o nome.
   > **Emendado pelo A-12 da auditoria de prontidão (01/11/2026):** os valores continuam — cinco por
   > endereço e trinta por origem, por hora. Uma sala de polo maior que o teto continua recusando o
   > excedente; o que mudou é a resposta a ele (`FR-031c`). Tornar o teto da origem ajustável por
-  > implantação, para o dia de pico, contraria a frase acima e fica como decisão registrada, não
-  > tomada (D-034).
+  > implantação, para o dia de pico, contraria a frase acima. **Decidido pelo produto em 01/11/2026:
+  > o teto da origem fica em trinta, e os polos são orientados** — escalonar a sala e ter outra
+  > conexão à mão (D-034).
 - **FR-030a**: A implantação DEVE **declarar** se há proxy à frente da aplicação, e a inicialização
   em produção DEVE ser recusada enquanto isso não for declarado. Não existe padrão seguro: confiar
   no cabeçalho de proxy sem proxy torna o limite por origem contornável com um valor forjado a cada
