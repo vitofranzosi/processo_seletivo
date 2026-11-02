@@ -104,7 +104,7 @@ classificação daquela medição, e não mudança de código.
 
 O CI não vê nada disso, porque só roda contra PostgreSQL.
 
-Contra PostgreSQL a suíte fecha em **12775 passando e 12 pulados** (medido em 2026-10-21, sobre a árvore da `main` em `e869d7a2`, com o grupo `assistente` instalado e 4 workers, em 498s; a medição anterior, de 18/10 em `2abd18db`, dava 12268 e 11 — a diferença é a dos testes da `093` à `097`, e o pulado a mais é o da `097`, descrito abaixo). Aquela rodada teve ainda **uma falha, que não é defeito**: o teste de tempo da ocupação, que oscila com 4 workers e passa isolado — ver *Um teste de tempo oscila sob carga*, adiante. Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são doze pulados. **A `097` acrescentou um** — a conferência da vaga acrescida entrou na varredura de vocabulário e não usa «geração» —, e na worktree dela, sem o grupo, a suíte fechou em 12677 passando e 13 pulados (21/10, 4 workers, 437s). Os
+Contra PostgreSQL a suíte fecha em **14638 passando e 14 pulados, sem falha** (medido em 2026-11-02, sobre a `main` em `4dbc5872`, com o grupo `assistente` instalado e **sem** o `navegador`, 4 workers, em 569s). Os 14 são os doze descritos abaixo para quem tem o grupo `assistente` — 10 do vocabulário, a recusa por vendor e o E2E da Caixa —, mais os **dois** arquivos de jornada no navegador — `tests/navegador/test_jornadas_de_acesso.py` (107) e `test_jornada_de_unidades.py` (110) —, que pulam sem o grupo `navegador`; com os dois grupos, como no CI, são 12. A medição anterior, de 21/10 em `e869d7a2`, dava 12775 e 12, e teve **uma falha, que não é defeito**: o teste de tempo da ocupação, que oscila com 4 workers e passa isolado — ver *Um teste de tempo oscila sob carga*, adiante. Sem o grupo há um pulado a mais, o da `071`: a contagem real de tokens, que pula sem a biblioteca `tokenizers` — ela é do grupo opcional `assistente`, e não de desenvolvimento; com o grupo instalado, ela roda, e o CI o instala desde 14/10 (`uv sync --extra dev --extra assistente`), de modo que lá são doze pulados. **A `097` acrescentou um** — a conferência da vaga acrescida entrou na varredura de vocabulário e não usa «geração» —, e na worktree dela, sem o grupo, a suíte fechou em 12677 passando e 13 pulados (21/10, 4 workers, 437s). Os
 treze — doze com o grupo — são deliberados, e se repartem em quatro: **10** são pares *termo × template* que
 `test_vocabulario_da_composicao.py` pula quando a tela não usa aquele termo em texto visível; **1**
 é a recusa por vendor, que só aparece fora do PostgreSQL; **1** é o E2E contra o serviço real da
@@ -141,7 +141,7 @@ razão de 0,88 a 1,49 com a `097` e de 0,64 a 1,06 sem ela, longe do 2,0. Uma ro
 sinal; uma distribuição que se desloca é.
 
 **A preparação do banco não tem nada com o tempo.** Criar o banco de teste e aplicar as 80
-migrations — hoje são 95 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
+migrations — hoje são 102 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
 `--reuse-db` sobre um caso só. O custo está nos casos transacionais: **3108 dos 11 468 coletados,
 27%, e 79% do tempo em série** (medido em 2026-10-17). Eles não podem terminar em `ROLLBACK`, e o
 Django limpa depois de cada um truncando as tabelas e refazendo o `post_migrate` — só essa limpeza
@@ -189,8 +189,9 @@ terminal **do comando**, e não no do `runserver`. A chave `AVISOS_AOS_CANDIDATO
 
 **As jornadas da gestão de acessos (107) rodam num navegador de verdade, e pedem o grupo
 `navegador`.** `uv sync --extra dev --extra navegador` traz o Playwright, e `uv run playwright install
-chromium` o navegador. Sem a biblioteca, `tests/navegador/test_jornadas_de_acesso.py` pula inteiro —
-**um pulado a mais**, como o tokenizer sem o `assistente` —; o CI instala os dois desde a `107`. Os
+chromium` o navegador. Sem a biblioteca, `tests/navegador/test_jornadas_de_acesso.py` e, desde a `110`,
+`test_jornada_de_unidades.py` pulam inteiros — **dois pulados a mais**, como o tokenizer sem o
+`assistente` —; o CI instala os dois desde a `107`. Os
 casos sobem o `live_server` e uma página de provedor servida pelo próprio teste
 (`tests/navegador/provedor.py`): o adaptador continua o provedor simulado da `106`, e nada disso
 existe fora da suíte. `make test-navegador` os roda com a janela aberta, para assistir. Duas
