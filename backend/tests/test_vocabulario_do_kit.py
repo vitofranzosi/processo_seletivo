@@ -14,7 +14,7 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from processo_seletivo.interface import kit_textos
+from processo_seletivo.interface import kit_peca, kit_textos
 from processo_seletivo.portal import ficha as fichas
 from tests.fixtures import kit
 from tests.portal.test_acompanhamento_pela_situacao import PROIBIDAS
@@ -31,10 +31,26 @@ def _sem_literais(texto, ficha):
     return texto
 
 
+def _texto_da_peca(ficha):
+    """Os nós da peça, um campo por linha, e o texto alternativo (T027, FR-3414, FR-3416).
+
+    As linhas de um mesmo campo voltam a ser uma frase: o título quebrado em três nós é o literal
+    inteiro de novo, e `_sem_literais` o reconhece.
+    """
+    try:
+        peca = kit_peca.compor(ficha)
+    except kit_peca.PecaRecusada:
+        return ""
+    por_campo = {}
+    for texto in peca.textos:
+        por_campo.setdefault(texto.campo, []).append(texto.conteudo)
+    return "\n".join([*(" ".join(partes) for partes in por_campo.values()), peca.alternativo])
+
+
 def _material(ficha):
     textos = kit_textos.compor(ficha)
     notas = kit_textos.notas_para_quem_divulga(ficha)
-    return "\n".join([*textos.values(), *notas])
+    return "\n".join([*textos.values(), *notas, _texto_da_peca(ficha)])
 
 
 def _proibicoes(texto):
@@ -59,14 +75,16 @@ def test_o_material_nao_diz_o_que_a_ficha_nao_comprova(api_client, nome, ate, mu
     edital = kit.publicar(api_client, nome, ate=ate, mudar=mudar, chave=f"vocab-{nome}-{dias}")
     ficha = fichas.ler(edital, agora=timezone.now() + timedelta(days=dias), base_url=kit.BASE)
     assert ficha.modo == fichas.COM_PERIODO
+    assert _texto_da_peca(ficha)
     assert _proibicoes(_sem_literais(_material(ficha), ficha)) == []
 
 
 def test_modo_neutro_sem_inscricao(api_client):
     edital = kit.publicar(api_client, chave="vocab-neutro", mudar=kit.sem_periodo)
     ficha = fichas.ler(edital, agora=timezone.now(), base_url=kit.BASE)
-    textos = "\n".join(kit_textos.compor(ficha).values())
+    textos = "\n".join([*kit_textos.compor(ficha).values(), _texto_da_peca(ficha)])
     assert ficha.modo == fichas.NEUTRO
+    assert _texto_da_peca(ficha)
     assert not re.search(r"inscri", _sem_literais(textos, ficha), re.IGNORECASE)
 
 
@@ -85,5 +103,11 @@ def test_as_frases_fixas_nao_tem_termo_proibido():
         kit_textos.CHAMADA_A_PAGINA,
         kit_textos.BUSCA,
         *kit_textos.TITULOS.values(),
+        *kit_peca.FIXOS.values(),
+        kit_peca.HORARIO,
+        kit_peca.HOST_LOCAL,
+        kit_peca.SEM_TITULO,
+        kit_peca.ESCOLHA_A_MANCHETE,
+        *(marca.descricao for marca in kit_peca.MARCAS.values()),
     ]
     assert _proibicoes("\n".join(fixas)) == []

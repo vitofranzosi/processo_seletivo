@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 91/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, com a Marca do Instituto Federal do Espírito Santo, Centro de Referência em Formação e em Educação a Distância. Processo seletivo, Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Edital publicado. Consulte as condições na página oficial. Oferta: Especialização em Informática na Educação, 160 vagas em 4 opções. Polo Bom Jesus do Norte: 40 vagas. Polo Iúna: 40 vagas. Polo São Mateus: 40 vagas. Polo Vargem Alta: 40 vagas. Condições, documentos e cronograma: gps.exemplo.ifes.edu.br/selecoes, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<rect x="0" y="0" width="1080" height="210" fill="#0b5a2a"/>
+<image x="60" y="47" width="340" height="136" data-campo="marca" href="data:image/png;base64,MARCA"/>
+<text x="80" y="279" font-family="Edital Sans" font-size="28" font-weight="700" fill="#146c37" data-campo="fixo">PROCESSO SELETIVO</text>
+<text x="80" y="323" font-family="Edital Sans" font-size="32" font-weight="400" fill="#555555" data-campo="identificacao">Edital nº 91/2026</text>
+<text x="80" y="381" font-family="Edital Sans" font-size="46" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">Curso de Pós-graduação Lato Sensu em</text>
+<text x="80" y="435" font-family="Edital Sans" font-size="46" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">Informática na Educação na modalidade</text>
+<text x="80" y="489" font-family="Edital Sans" font-size="46" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">EaD (DEMONSTRAÇÃO)</text>
+<rect x="80" y="521" width="920" height="200" rx="28" fill="#0b5a2a"/>
+<text x="120" y="617" font-family="Edital Sans" font-size="60" font-weight="700" fill="#ffffff" data-campo="fixo">EDITAL PUBLICADO</text>
+<text x="120" y="671" font-family="Edital Sans" font-size="30" font-weight="400" fill="#e7f5ec" data-campo="fixo">Consulte as condições na página oficial</text>
+<text x="80" y="785" font-family="Edital Sans" font-size="26" font-weight="700" fill="#146c37" data-campo="fixo">OFERTA</text>
+<text x="1000" y="785" font-family="Edital Sans" font-size="26" font-weight="700" fill="#146c37" text-anchor="end" data-campo="total_de_vagas">160 vagas em 4 opções</text>
+<text x="80" y="829" font-family="Edital Sans" font-size="32" font-weight="700" fill="#1c1c1c" data-campo="oferta_nome">Especialização em Informática na Educação</text>
+<text x="80" y="877" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Polo Bom Jesus do Norte</text>
+<text x="1000" y="877" font-family="Edital Sans" font-size="30" font-weight="700" fill="#1c1c1c" text-anchor="end" data-campo="oferta_quantidade:PERFIL">40 vagas</text>
+<line x1="80" y1="897" x2="1000" y2="897" stroke="#d4d4d4" stroke-width="2"/>
+<text x="80" y="933" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Polo Iúna</text>
+<text x="1000" y="933" font-family="Edital Sans" font-size="30" font-weight="700" fill="#1c1c1c" text-anchor="end" data-campo="oferta_quantidade:PERFIL">40 vagas</text>
+<line x1="80" y1="953" x2="1000" y2="953" stroke="#d4d4d4" stroke-width="2"/>
+<text x="80" y="989" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Polo São Mateus</text>
+<text x="1000" y="989" font-family="Edital Sans" font-size="30" font-weight="700" fill="#1c1c1c" text-anchor="end" data-campo="oferta_quantidade:PERFIL">40 vagas</text>
+<line x1="80" y1="1009" x2="1000" y2="1009" stroke="#d4d4d4" stroke-width="2"/>
+<text x="80" y="1045" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Polo Vargem Alta</text>
+<text x="1000" y="1045" font-family="Edital Sans" font-size="30" font-weight="700" fill="#1c1c1c" text-anchor="end" data-campo="oferta_quantidade:PERFIL">40 vagas</text>
+<line x1="80" y1="1065" x2="1000" y2="1065" stroke="#d4d4d4" stroke-width="2"/>
+<line x1="80" y1="1100" x2="1000" y2="1100" stroke="#d4d4d4" stroke-width="2"/>
+<text x="80" y="1142" font-family="Edital Sans" font-size="26" font-weight="400" fill="#555555" data-campo="fixo">Condições, documentos e cronograma:</text>
+<text x="80" y="1186" font-family="Edital Sans" font-size="34" font-weight="700" fill="#146c37" data-campo="caminho_curto">gps.exemplo.ifes.edu.br/selecoes</text>
+<text x="80" y="1224" font-family="Edital Sans" font-size="28" font-weight="700" fill="#146c37" data-campo="busca">busque por 91/2026 – Cefor</text>
+<text x="80" y="1262" font-family="Edital Sans" font-size="24" font-weight="400" fill="#555555" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+</svg>

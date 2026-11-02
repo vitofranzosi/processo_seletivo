@@ -25,3 +25,13 @@
   font-family:inherit;font-size:.95rem}
 
 .exportacoes-do-kit{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+
+/* A prévia é o PNG da exportação, servido pela própria origem (D-014): metade do tamanho, e nunca
+   mais larga que a coluna a 375 px. */
+.previa-da-peca{display:block;width:100%;max-width:540px;height:auto;margin:.75rem 0 0;
+  border:1px solid var(--borda);border-radius:6px}
+/* A manchete é escolha numa lista fechada (D-013). O fieldset não cresce até o conteúdo mínimo. */
+.manchetes-do-kit{margin:.75rem 0 0}
+.manchetes-do-kit fieldset{min-width:0;margin:0 0 .5rem;border:1px solid var(--borda);
+  border-radius:6px;padding:.5rem .75rem}
+.opcao-de-manchete{display:block;margin:.25rem 0}

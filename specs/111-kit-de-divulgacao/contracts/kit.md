@@ -14,7 +14,7 @@ passam da porta: a tela diz o motivo (EC-2, EC-3, FR-3445).
 | Método | Caminho | Resposta | Registra |
 |---|---|---|---|
 | GET | `/gestao/editais/<uuid>/kit-de-divulgacao/` | 200 HTML, a tela (FR-3443). No modo "sem material": 200 com o motivo e a faixa da FR-3445, sem textos nem peça | Não |
-| GET | `/gestao/editais/<uuid>/kit-de-divulgacao/previa.png?impressao=<sha>[&manchete=<n>]` | 200 `image/png`, `inline`. 409 se a impressão mudou (FR-3446). 404 com a peça desligada, recusada, em host local ou sem material | Não |
+| GET | `/gestao/editais/<uuid>/kit-de-divulgacao/previa.png?impressao=<sha>[&manchete=<n>]` | 200 `image/png`, `inline`. 409 se a impressão mudou (FR-3446). 422 com manchete fora da lista. 404 com a peça desligada, recusada, em host local, sem material ou sem o rasterizador instalado | Não |
 | POST | `/gestao/editais/<uuid>/kit-de-divulgacao/exportar/<formato>` (campos `impressao`, `manchete`) | 200, anexo (`Content-Disposition: attachment; filename="kit-NN-AAAA.<ext>"`) | Sim (FR-3436) |
 
 **Formatos de exportação:**
@@ -22,7 +22,7 @@ passam da porta: a tela diz o motivo (EC-2, EC-3, FR-3445).
 | Formato | Tipo | Conteúdo |
 |---|---|---|
 | `png` | `image/png` | A peça |
-| `svg` | `image/svg+xml` | A peça com a fonte embutida (D-021), sob `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; font-src data:` |
+| `svg` | `image/svg+xml` | A peça com a fonte embutida (D-021), sob `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:`. O `img-src data:` é o da marca oficial, que vai embutida em PNG: o pacote do Ifes não traz a marca em SVG, só em PNG e EPS |
 | `md` | `text/markdown; charset=utf-8` | Conferência, textos, notas |
 | `txt` | `text/plain; charset=utf-8` | O mesmo, sem marcação |
 | `zip` | `application/zip` | `kit.md`, `kit.txt`, `peca-feed-1080x1350.png`, `peca-feed-1080x1350.svg`, `texto-alternativo.txt`, `ficha.json`, `manifesto.json`. Sem peça (EC-21, recusa, host local), as três da peça não entram, e o manifesto diz por quê |

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 91/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, com a Marca do Instituto Federal do Espírito Santo, Centro de Referência em Formação e em Educação a Distância. Processo seletivo, Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Inscrições de 13/10 a 30/10/2026, até as 23h59 (horário de Brasília). Oferta: Especialização em Informática na Educação — Polo Bom Jesus do Norte: 40 vagas. Condições, documentos e cronograma: gps.exemplo.ifes.edu.br/selecoes, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<rect x="0" y="0" width="1080" height="210" fill="#0b5a2a"/>
+<image x="60" y="47" width="340" height="136" data-campo="marca" href="data:image/png;base64,MARCA"/>
+<text x="80" y="305" font-family="Edital Sans" font-size="28" font-weight="700" fill="#146c37" data-campo="fixo">PROCESSO SELETIVO</text>
+<text x="80" y="349" font-family="Edital Sans" font-size="32" font-weight="400" fill="#555555" data-campo="identificacao">Edital nº 91/2026</text>
+<text x="80" y="414" font-family="Edital Sans" font-size="52" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">Curso de Pós-graduação Lato Sensu</text>
+<text x="80" y="475" font-family="Edital Sans" font-size="52" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">em Informática na Educação na</text>
+<text x="80" y="536" font-family="Edital Sans" font-size="52" font-weight="700" fill="#1c1c1c" data-campo="titulo_sem_numero">modalidade EaD (DEMONSTRAÇÃO)</text>
+<rect x="80" y="568" width="920" height="236" rx="28" fill="#0b5a2a"/>
+<text x="120" y="630" font-family="Edital Sans" font-size="30" font-weight="700" fill="#ffffff" data-campo="fixo">INSCRIÇÕES</text>
+<text x="120" y="730" font-family="Edital Sans" font-size="88" font-weight="700" fill="#ffffff" data-campo="periodo_curto">13/10 a 30/10/2026</text>
+<text x="120" y="780" font-family="Edital Sans" font-size="30" font-weight="400" fill="#e7f5ec" data-campo="hora">até as 23h59 (horário de Brasília)</text>
+<text x="80" y="868" font-family="Edital Sans" font-size="26" font-weight="700" fill="#146c37" data-campo="fixo">OFERTA</text>
+<text x="80" y="916" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Especialização em Informática na Educação — Polo Bom Jesus do</text>
+<text x="80" y="956" font-family="Edital Sans" font-size="30" font-weight="400" fill="#1c1c1c" data-campo="oferta_rotulo:PERFIL">Norte</text>
+<text x="1000" y="996" font-family="Edital Sans" font-size="30" font-weight="700" fill="#1c1c1c" text-anchor="end" data-campo="oferta_quantidade:PERFIL">40 vagas</text>
+<line x1="80" y1="1016" x2="1000" y2="1016" stroke="#d4d4d4" stroke-width="2"/>
+<line x1="80" y1="1100" x2="1000" y2="1100" stroke="#d4d4d4" stroke-width="2"/>
+<text x="80" y="1142" font-family="Edital Sans" font-size="26" font-weight="400" fill="#555555" data-campo="fixo">Condições, documentos e cronograma:</text>
+<text x="80" y="1186" font-family="Edital Sans" font-size="34" font-weight="700" fill="#146c37" data-campo="caminho_curto">gps.exemplo.ifes.edu.br/selecoes</text>
+<text x="80" y="1224" font-family="Edital Sans" font-size="28" font-weight="700" fill="#146c37" data-campo="busca">busque por 91/2026 – Cefor</text>
+<text x="80" y="1262" font-family="Edital Sans" font-size="24" font-weight="400" fill="#555555" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+</svg>

@@ -28,19 +28,19 @@ T036 a confere contra o implementado. Caminhos relativos a `backend/`.
 | FR-3419 (ressalva) | rodapé fixo dos avisos (`avisos/domain/mensagem.py`) | T008 | `test_textos.py::test_ressalva_em_todo_texto_publicavel` |
 | FR-3420 (copiar; exportar md e txt) | — | T012, T015 | `tests/javascript/kit-de-divulgacao.test.js`; `test_exportacao.py::test_md_e_txt_registram` |
 | FR-3421 (notas sem promessa) | — | T008 | `test_textos.py::test_notas_sem_validade_prometida` |
-| FR-3422 (um template, PNG e SVG com a fonte) | `fonte.py` (Edital Sans, OFL) | T022, T023, T025 | `tests/unit/kit/test_peca.py::test_svg_e_png_da_mesma_composicao`; `tests/unit/kit/test_svg.py::test_fonte_embutida` |
-| FR-3423 (peça ⊂ ficha ⊂ textos) | — (POC, `kit/coerencia.py`) | T020, T023 | `test_peca.py::test_peca_contida_na_ficha`, `::test_peca_contida_nos_textos` |
-| FR-3424 (período em destaque; selo; neutro) | — | T023 | `test_peca.py::test_destaque_por_modo` |
-| FR-3425 (teto de quatro; contagem; "N vagas em K opções") | `leitura.os_primeiros`; exceção declarada à FR-1607 da `072` | T008, T023 | `test_peca.py::test_oferta_por_quantidade_de_opcoes`; `test_textos.py::test_total_sempre_com_o_numero_de_opcoes` |
-| FR-3426 (ordem dos títulos; sem truncamento) | — | T023 | `test_peca.py::test_ordem_dos_titulos`, `::test_titulo_nunca_truncado` |
+| FR-3422 (um template, PNG e SVG com a fonte) | `fonte.py` (Edital Sans, OFL) | T022, T023, T025 | `tests/unit/kit/test_svg.py::test_fonte_embutida_so_na_exportacao`, `::test_o_rasterizador_ignora_a_fonte_embutida`, `::test_png_1080_por_1350_e_os_mesmos_bytes` |
+| FR-3423 (peça ⊂ ficha ⊂ textos) | — (POC, `kit/coerencia.py`) | T020, T023 | `test_peca.py::test_a_peca_so_diz_o_que_a_ficha_diz`, `::test_conferencia_acusa_o_numero_que_os_textos_nao_dizem` |
+| FR-3424 (período em destaque; selo; neutro) | — | T023 | `test_peca.py::test_periodo_em_datas_absolutas_no_destaque`, `::test_selo_de_prorrogacao_so_comprovada`, `::test_neutro_nao_fala_de_inscricao` |
+| FR-3425 (teto de quatro; contagem; "N vagas em K opções") | `leitura.os_primeiros`; exceção declarada à FR-1607 da `072` | T008, T023 | `test_peca.py::test_ate_quatro_opcoes_listadas_com_a_quantidade`, `::test_total_sempre_com_o_numero_de_opcoes`, `::test_acima_do_teto_a_peca_conta`; `test_textos.py::test_total_sempre_com_o_numero_de_opcoes` |
+| FR-3426 (ordem dos títulos; sem truncamento) | — | T023 | `test_peca.py::test_titulo_do_edital_sem_o_numero`, `::test_titulo_longo_cede_ao_do_processo_sem_truncar`, `::test_titulo_desce_de_corpo_antes_de_ceder`, `::test_sem_titulo_que_caiba_a_peca_diz_a_omissao` |
 | FR-3427 (manchete em lista fechada) | varredura da FR-3414 | T021, T023 | `tests/unit/kit/test_manchete.py` |
-| FR-3428 (24 px, AA, margem de 80 px) | contraste AA de `tests/interface/test_acessibilidade.py` | T020, T023 | `test_peca.py::test_legibilidade_minima` |
-| FR-3429 (sem colisão nem palavra partida; recusa) | `diagramacao.py` (recusa fora da área útil) | T020, T023 | `test_peca.py::test_nenhuma_caixa_fora_nem_sobreposta`, `::test_palavra_partida_nao_cabe` |
+| FR-3428 (24 px, AA, margem de 80 px) | contraste AA de `tests/interface/test_acessibilidade.py` | T020, T023 | `tests/unit/kit/geometria.py` (corpo, contraste, margem), em `test_peca.py::test_geometria_dos_casos_no_limite` e `test_referencias.py` |
+| FR-3429 (sem colisão nem palavra partida; recusa) | `diagramacao.py` (recusa fora da área útil) | T020, T023 | `test_peca.py::test_geometria_dos_casos_no_limite`, `::test_composicao_que_nao_cabe_e_recusada_com_o_motivo`; `tests/integration/kit/test_referencias.py` |
 | FR-3430 (caractere sem grafia; texto medido = desenhado) | `publicacoes/domain/grafia.py` | T023 | `test_peca.py::test_caractere_sem_grafia_recusa_nomeando`, `::test_texto_desenhado_e_o_normalizado` |
-| FR-3431 (rodapé medido, selo) | — | T023 | `test_peca.py::test_rodape_medido_e_selo` |
-| FR-3432 (marca oficial; chave de ambiente) | `AVISOS_AOS_CANDIDATOS` (`066`) | T017, T018, T033 | `tests/test_settings_do_kit.py`; `test_kit_de_divulgacao.py::test_peca_desligada_mantem_os_textos` |
-| FR-3433 (texto alternativo) | — | T023 | `test_peca.py::test_texto_alternativo_em_frases_do_que_aparece` |
-| FR-3434 (espaço livre: 35% da folga) | — | T023 | `test_peca.py::test_espaco_livre_distribuido` |
+| FR-3431 (rodapé medido, selo) | — | T023 | `test_peca.py::test_endereco_de_60_caracteres_inteiro_numa_linha`, `::test_endereco_longo_demais_e_recusado` |
+| FR-3432 (marca oficial; chave de ambiente) | `AVISOS_AOS_CANDIDATOS` (`066`) | T017, T018, T033 | `tests/test_settings_do_kit.py`; `test_peca.py::test_marca_oficial_da_unidade_ou_do_ifes_com_a_sigla`, `::test_os_arquivos_da_marca_sao_os_registrados`; `test_kit_de_divulgacao.py::test_chave_desligada_a_peca_some_e_os_textos_ficam` |
+| FR-3433 (texto alternativo) | — | T023 | `test_peca.py::test_texto_alternativo_em_frases_na_ordem_da_peca`, `::test_texto_alternativo_conta_o_que_a_peca_conta` |
+| FR-3434 (espaço livre: 35% da folga) | — | T023 | `test_peca.py::test_espaco_livre_desce_35_por_cento_da_folga` |
 | FR-3435 (formatos; o que registra) | `interface/relatorio.py` (`emitir`, POST) | T015, T025, T029 | `test_exportacao.py::test_abrir_e_copiar_nao_registram`, `::test_cada_formato_registra` |
 | FR-3436 (evento com detalhe; não é transição; rótulo) | `record_event`; `OPERACOES`; `OPERACOES_QUE_NAO_CONTAM` | T015, T016 | `test_exportacao.py::test_detalhe_do_evento`, `::test_o_evento_nao_e_transicao`; `tests/test_trilha_legivel.py` |
 | FR-3437 (manifesto com três instantes) | — | T029 | `tests/integration/kit/test_pacote.py::test_manifesto_sem_validade` |
@@ -48,12 +48,12 @@ T036 a confere contra o implementado. Caminhos relativos a `backend/`.
 | FR-3439 (desatualização por impressão, todas as exportações) | `APLICAR_A_TODOS` (leitura do `detalhe`) | T015 | `test_exportacao.py::test_prorrogacao_gera_a_faixa`, `::test_exportacao_antiga_continua_listada`, `::test_retificacao_de_secao_nao_gera_faixa` |
 | FR-3440 (Retificação a vigorar) | `retificacoes_a_vigorar` (`101`, movida) | T015 | `test_exportacao.py::test_retificacao_a_vigorar_antes_e_depois` |
 | FR-3441 (nada guardado; sem aprovação por peça) | — | T029 | `test_pacote.py::test_nenhum_arquivo_guardado` |
-| FR-3442 (cabeçalhos; política do SVG) | `shared/http.marcar_como_privada` | T015, T022, T025 | `test_kit_de_divulgacao.py::test_cabecalhos_de_cada_formato`; `test_svg.py::test_politica_do_anexo` |
+| FR-3442 (cabeçalhos; política do SVG) | `shared/http.marcar_como_privada` | T015, T022, T025 | `test_kit_de_divulgacao.py::test_exportar_svg_com_a_politica_propria`, `::test_exportar_png_registra_com_o_template`, `::test_previa_png_privada_e_sem_registro` |
 | FR-3443 (tela única) | moldura da `076` | T012 | `test_kit_de_divulgacao.py::test_tela_por_modo` |
 | FR-3444 (CSP, acessibilidade, 375 px, teclado) | `test_politica_de_conteudo.py`, `test_acessibilidade.py`, `test_folha_estatica.py` | T012, T013, T031 | os três guardiões; a verificação pelo navegador (T031) |
 | FR-3445 (desfecho depois da exportação) | `desfechos` | T015 | `test_exportacao.py::test_desfecho_depois_da_exportacao` |
-| FR-3446 (impressão conferida; 409) | — (D-019) | T012, T015, T025 | `test_exportacao.py::test_edital_mudado_entre_tela_e_exportacao` |
-| FR-3447 (host local sem link nem peça) | `HOSTS_LOCAIS`, `_host_local` (`interface/relatorio.py`) | T011, T025 | `test_kit_de_divulgacao.py::test_host_local_sem_link_nem_peca` |
+| FR-3446 (impressão conferida; 409) | — (D-019) | T012, T015, T025 | `test_exportacao.py::test_edital_mudado_entre_tela_e_exportacao`; `test_kit_de_divulgacao.py::test_previa_com_impressao_antiga_e_recusada` |
+| FR-3447 (host local sem link nem peça) | `HOSTS_LOCAIS`, `_host_local` (`interface/relatorio.py`) | T011, T025 | `test_kit_de_divulgacao.py::test_host_local_sem_link_absoluto`, `::test_host_local_sem_peca` |
 | FR-3448 (impressão versionada) | — (D-018) | T006, T015 | `test_ficha.py::test_impressao_versionada`; `test_exportacao.py::test_impressao_de_versao_anterior` |
 
 ## Casos-limite
@@ -97,7 +97,7 @@ T036 a confere contra o implementado. Caminhos relativos a `backend/`.
 | SC-1052 (nada não comprovado; neutro) | T009, T020, T027 | `test_vocabulario_do_kit.py`; `test_peca.py::test_peca_contida_na_ficha` |
 | SC-1053 (desatualização exata; desfecho; futuro não aplicado) | T014, T015 | `test_exportacao.py` |
 | SC-1054 (template aprovado com a marca) | T030, T033, T034 | **humana**, sobre a galeria |
-| SC-1055 (geometria) | T020, T023 | `test_peca.py::test_nenhuma_caixa_fora_nem_sobreposta` |
+| SC-1055 (geometria) | T020, T023 | `test_peca.py::test_geometria_dos_casos_no_limite`; `test_referencias.py` |
 | SC-1056 (determinismo) | T024, T026, T029 | `test_pacote.py`; `test_referencias.py`; `verificacao-do-motor.md` |
 | SC-1057 (2 s num lote de 20) | T024, T032 | `verificacao-do-motor.md` |
 | SC-1058 (Edital real sem correção) | T035 | **humana**, com a comunicação |

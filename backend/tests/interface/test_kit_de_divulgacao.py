@@ -88,3 +88,171 @@ def test_nenhum_estilo_nem_script_embutido(api_client, client, seletor_ligado):
     assert ' style="' not in corpo and "<style" not in corpo
     assert "onclick=" not in corpo
     assert "interface/kit-de-divulgacao.js" in corpo
+
+
+# ---- A peça (111, incremento B: FR-3422, FR-3432, FR-3442, FR-3446, FR-3447, D-014, D-021) -----
+
+
+def _impressao(edital):
+    from django.utils import timezone
+
+    from processo_seletivo.portal import ficha as fichas
+
+    return fichas.ler(edital, agora=timezone.now(), base_url=None).impressao
+
+
+def _previa(client, edital, host, **params):
+    params.setdefault("impressao", _impressao(edital))
+    url = reverse("interface:kit-de-divulgacao-previa", args=[edital.id])
+    return client.get(url, params, HTTP_HOST=host)
+
+
+def _exportar_peca(client, edital, formato, host, **dados):
+    dados.setdefault("impressao", _impressao(edital))
+    url = reverse("interface:kit-de-divulgacao-exportar", args=[edital.id, formato])
+    return client.post(url, dados, HTTP_HOST=host)
+
+
+def _eventos(edital):
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    return RegistroAuditoria.objects.filter(aggregate_id=edital.id, operation="EXPORTAR_MATERIAL")
+
+
+@pytest.fixture
+def comunicacao(client, seletor_ligado):
+    identificar(client, "cora.comunicacao", ["comunicacao"])
+    return client
+
+
+sem_rasterizador = pytest.mark.skipif(
+    not __import__("processo_seletivo.interface.kit_pacote", fromlist=["x"]).disponivel(),
+    reason="o `resvg-py` não está instalado neste ambiente",
+)
+
+
+@sem_rasterizador
+def test_a_tela_mostra_a_previa_e_o_texto_alternativo(api_client, comunicacao, host_publico):
+    edital = kit.publicar(api_client, ate=1, chave="peca-tela")
+    corpo = comunicacao.get(_url(edital), HTTP_HOST=host_publico).content.decode()
+    previa = reverse("interface:kit-de-divulgacao-previa", args=[edital.id])
+    assert f'src="{previa}?impressao={_impressao(edital)}"' in corpo
+    assert "Texto alternativo da peça" in corpo
+    assert "Peça de divulgação do Cefor/Ifes" in corpo
+    for formato in ("png", "svg"):
+        assert reverse("interface:kit-de-divulgacao-exportar", args=[edital.id, formato]) in corpo
+
+
+@sem_rasterizador
+def test_previa_png_privada_e_sem_registro(api_client, comunicacao, host_publico):
+    edital = kit.publicar(api_client, ate=1, chave="peca-previa")
+    resposta = _previa(comunicacao, edital, host_publico)
+    assert resposta.status_code == 200
+    assert resposta["Content-Type"] == "image/png"
+    assert resposta["Content-Disposition"] == "inline"
+    assert resposta["X-Content-Type-Options"] == "nosniff"
+    assert "no-store" in resposta["Cache-Control"]
+    assert resposta.content[:8] == b"\x89PNG\r\n\x1a\n"
+    assert not _eventos(edital).exists()
+
+
+def test_previa_com_impressao_antiga_e_recusada(api_client, comunicacao, host_publico):
+    edital = kit.publicar(api_client, ate=1, chave="peca-mudou")
+    conferida = _impressao(edital)
+    kit.retificar(api_client, edital, "91", 2, chave="peca-mudou")
+    resposta = _previa(comunicacao, edital, host_publico, impressao=conferida)
+    assert resposta.status_code == 409
+    assert "O Edital mudou desde que você abriu o kit" in resposta.content.decode()
+
+
+@pytest.mark.parametrize("manchete", ["0", "x"])
+def test_manchete_fora_da_lista_e_422(api_client, comunicacao, host_publico, manchete):
+    edital = kit.publicar(api_client, ate=1, chave=f"peca-manchete-{manchete}")
+    # O 91/2026 tem título que cabe: nenhuma manchete é oferecida, e qualquer índice é inválido.
+    assert _previa(comunicacao, edital, host_publico, manchete=manchete).status_code == 422
+    resposta = _exportar_peca(comunicacao, edital, "svg", host_publico, manchete=manchete)
+    assert resposta.status_code == 422
+    assert not _eventos(edital).exists()
+
+
+@sem_rasterizador
+def test_exportar_png_registra_com_o_template(api_client, comunicacao, host_publico):
+    from processo_seletivo.interface import kit_peca
+
+    edital = kit.publicar(api_client, ate=1, chave="peca-png")
+    resposta = _exportar_peca(comunicacao, edital, "png", host_publico)
+    assert resposta.status_code == 200
+    assert resposta["Content-Type"] == "image/png"
+    assert resposta["Content-Disposition"] == 'attachment; filename="kit-91-2026.png"'
+    assert resposta["X-Content-Type-Options"] == "nosniff"
+    (evento,) = _eventos(edital)
+    assert evento.detalhe["formato"] == "png"
+    assert evento.detalhe["template"] == kit_peca.TEMPLATE
+    assert evento.detalhe["manchete"] is None
+
+
+def test_exportar_svg_com_a_politica_propria(api_client, comunicacao, host_publico):
+    import hashlib
+
+    edital = kit.publicar(api_client, ate=1, chave="peca-svg")
+    resposta = _exportar_peca(comunicacao, edital, "svg", host_publico)
+    assert resposta.status_code == 200
+    assert resposta["Content-Type"] == "image/svg+xml"
+    assert resposta["Content-Disposition"] == 'attachment; filename="kit-91-2026.svg"'
+    assert resposta["X-Content-Type-Options"] == "nosniff"
+    assert resposta["Content-Security-Policy"] == (
+        "default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:"
+    )
+    corpo = resposta.content.decode()
+    assert "@font-face" in corpo and 'data-campo="periodo_curto"' in corpo
+    (evento,) = _eventos(edital)
+    assert evento.detalhe["sha256"] == hashlib.sha256(resposta.content).hexdigest()
+
+
+def test_host_local_sem_peca(api_client, comunicacao):
+    from processo_seletivo.interface import kit_peca
+
+    edital = kit.publicar(api_client, ate=1, chave="peca-local")
+    corpo = comunicacao.get(_url(edital)).content.decode()  # testserver é host local
+    assert kit_peca.HOST_LOCAL in corpo
+    assert _previa(comunicacao, edital, "testserver").status_code == 404
+    assert _exportar_peca(comunicacao, edital, "svg", "testserver").status_code == 404
+    assert not _eventos(edital).exists()
+
+
+def test_chave_desligada_a_peca_some_e_os_textos_ficam(
+    api_client, comunicacao, host_publico, settings
+):
+    from processo_seletivo.interface.kit_de_divulgacao import PECA_EM_VALIDACAO
+
+    settings.KIT_DE_DIVULGACAO_PECA = False
+    edital = kit.publicar(api_client, ate=1, chave="peca-desligada")
+    corpo = comunicacao.get(_url(edital), HTTP_HOST=host_publico).content.decode()
+    assert PECA_EM_VALIDACAO in corpo
+    assert "Legenda para rede social" in corpo
+    assert "previa.png" not in corpo
+    assert _previa(comunicacao, edital, host_publico).status_code == 404
+    for formato in ("png", "svg"):
+        assert _exportar_peca(comunicacao, edital, formato, host_publico).status_code == 404
+    url = reverse("interface:kit-de-divulgacao-exportar", args=[edital.id, "md"])
+    md = comunicacao.post(url, {"impressao": _impressao(edital)}, HTTP_HOST=host_publico)
+    assert md.status_code == 200
+
+
+def test_peca_recusada_diz_o_motivo_e_exportar_e_409(
+    api_client, comunicacao, host_publico, monkeypatch
+):
+    from processo_seletivo.interface import kit_peca
+
+    def recusar(ficha, *, manchete=None):
+        raise kit_peca.PecaRecusada("A peça não desenha o caractere «≥» (U+2265).")
+
+    monkeypatch.setattr(kit_peca, "compor", recusar)
+    edital = kit.publicar(api_client, ate=1, chave="peca-recusada")
+    corpo = comunicacao.get(_url(edital), HTTP_HOST=host_publico).content.decode()
+    assert "U+2265" in corpo
+    assert "Legenda para rede social" in corpo
+    resposta = _exportar_peca(comunicacao, edital, "svg", host_publico)
+    assert resposta.status_code == 409
+    assert "U+2265" in resposta.content.decode()
+    assert _previa(comunicacao, edital, host_publico).status_code == 404

@@ -527,6 +527,12 @@ def _quebrar(
     return linhas or [""]
 
 
+# O apelido público da quebra, para a peça do kit de divulgação (111, `D-009`): a peça mede e quebra
+# com a mesma regra do Edital, e uma segunda regra divergiria na primeira palavra longa. Apelido, e
+# não renome: o compositor do ato não muda nenhum byte, e as fixtures de contrato do PDF o provam.
+quebrar = _quebrar
+
+
 def _paragrafos(texto) -> list[str]:
     """Os parágrafos que a pessoa escreveu.
 

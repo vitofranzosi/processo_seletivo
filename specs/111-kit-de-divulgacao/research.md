@@ -285,7 +285,7 @@ verificação: as URLs do detalhe e da prévia continuariam abertas por acesso d
   - A prévia é um `<img>` que pede por GET o PNG ao endpoint do kit, com a impressão conferida na
     query (FR-3446), sem registrar. A CSP aceita porque é `'self'`.
   - O SVG sai só na exportação, como anexo, com `X-Content-Type-Options: nosniff` e uma política
-    própria, `default-src 'none'; style-src 'unsafe-inline'; font-src data:`, que admite só a fonte
+    própria, `default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:`, que admite só a fonte
     embutida (D-021). A política do projeto só se aplica a `text/html`.
 - **Rationale**: SVG embutido no HTML seria desenhado pelo navegador com outra fonte, e a prévia
   divergiria do PNG. Servido como imagem, ele é o mesmo arquivo da exportação.
