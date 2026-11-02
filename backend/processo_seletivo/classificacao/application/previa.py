@@ -195,6 +195,12 @@ def simular(
         plantados = plantados + plantados_da_reserva
         onde = None
 
+    # **A nota na Etapa do desempate vem depois de toda a montagem** (114, FR-3555): derivada das
+    # notas que o candidato terminou com, ela acompanha os empates que os casos plantaram.
+    candidatos = cenarios.com_notas_do_desempate(
+        candidatos,
+        [etapas[e] for e in desempate.etapas_do_desempate(marco) if e in etapas],
+    )
     try:
         classificaveis, sem_posicao = preparar(marco, etapas, cenarios.inscritos(candidatos))
     except RegraIncompleta as erro:

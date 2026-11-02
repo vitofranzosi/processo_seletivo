@@ -263,3 +263,89 @@ def test_o_recorte_compara_pelo_texto_do_identificador():
     classificaveis, _ = preparar(MARCO, ETAPAS, entrada, recorte=UUID(cota))
 
     assert nomes(classificaveis) == ["ana"]
+
+
+# --- A Etapa do desempate (114) -------------------------------------------------------------------
+#
+# Um marco que soma a escrita e os títulos e desempata pela Entrevista, que ele não enumera. O
+# cálculo oficial entrega os Resultados da Entrevista junto dos enumerados; daqui sai a nota para o
+# desempate, e nada mais.
+
+ENTREVISTA = "00000000-0000-0000-0000-0000000009e4"
+ETAPAS_COM_ENTREVISTA = {
+    **ETAPAS,
+    ENTREVISTA: {"id": ENTREVISTA, "name": "Entrevista", "order": 4, "weight": "1.0000"},
+}
+MARCO_QUE_DESEMPATA_PELA_ENTREVISTA = {
+    **MARCO,
+    "tiebreakers": [
+        {
+            "id": "criterio-entrevista",
+            "order": 1,
+            "type": "MAIOR_PONTUACAO_NA_ETAPA",
+            "parameters": {"stageId": ENTREVISTA},
+            "whenMissing": "ULTIMO_NO_CRITERIO",
+        }
+    ],
+}
+
+
+def test_a_nota_da_etapa_do_desempate_chega_ao_desempate_e_nao_a_nota_final():
+    """FR-3546, FR-3547."""
+    (classificavel,), _ = preparar(
+        MARCO_QUE_DESEMPATA_PELA_ENTREVISTA,
+        ETAPAS_COM_ENTREVISTA,
+        [
+            inscrito(
+                "ana",
+                resultado(ESCRITA, "8"),
+                resultado(TITULOS, "5"),
+                resultado(ENTREVISTA, "9"),
+            )
+        ],
+    )
+
+    assert classificavel["pontuacoes"][ENTREVISTA] == Decimal("9")
+    assert classificavel["pontuacao"] == Decimal("21.00")
+
+
+def test_eliminacao_na_etapa_do_desempate_nao_tira_da_ordem():
+    """FR-3548 — e a eliminação numa enumerada continua tirando, no mesmo marco."""
+    classificaveis, sem_posicao = preparar(
+        MARCO_QUE_DESEMPATA_PELA_ENTREVISTA,
+        ETAPAS_COM_ENTREVISTA,
+        [
+            inscrito(
+                "ana",
+                resultado(ESCRITA, "8"),
+                resultado(TITULOS, "5"),
+                resultado(ENTREVISTA, "3", consequencia=ELIMINADA, motivo="Abaixo da mínima."),
+            ),
+            inscrito(
+                "bia",
+                resultado(ESCRITA, "8"),
+                resultado(TITULOS, "2", consequencia=ELIMINADA, motivo="Abaixo da mínima."),
+            ),
+        ],
+    )
+
+    assert nomes(classificaveis) == ["ana"]
+    assert classificaveis[0]["consequencia"] == HABILITADA
+    assert classificaveis[0]["motivo"] == ""
+    assert nomes(sem_posicao) == ["bia"]
+
+
+def test_sem_nota_na_etapa_do_desempate_o_motivo_de_ausencia_nao_a_cita():
+    """FR-3547 — faltar a Entrevista não tira posição nem entra no motivo de ausência."""
+    classificaveis, sem_posicao = preparar(
+        MARCO_QUE_DESEMPATA_PELA_ENTREVISTA,
+        ETAPAS_COM_ENTREVISTA,
+        [
+            inscrito("ana", resultado(ESCRITA, "8"), resultado(TITULOS, "5")),
+            inscrito("bia", resultado(TITULOS, "5")),
+        ],
+    )
+
+    assert nomes(classificaveis) == ["ana"]
+    assert ENTREVISTA not in classificaveis[0]["pontuacoes"]
+    assert sem_posicao[0]["motivo"] == "Sem pontuação nas Etapas enumeradas: Prova escrita."

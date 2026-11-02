@@ -26,11 +26,18 @@ def preparar(marco, etapas, inscritos, *, recorte=None):
     """`(classificaveis, sem_posicao)` — o laço que `calcular_ordem` fazia, fora dele.
 
     `inscritos` traz, de cada um, `inscricao_id`, `protocolo`, `nome`, `identity_subject`,
-    `modalidade_id`, `fatos` e `resultados` — os Resultados vigentes das Etapas enumeradas, cada um
-    com `id`, `etapa_id`, `pontuacao`, `consequencia` e `motivo`. **A ordem dos inscritos é a do
+    `modalidade_id`, `fatos` e `resultados` — os Resultados vigentes das Etapas enumeradas e das
+    Etapas do desempate (`desempate.etapas_do_desempate`), cada um com `id`, `etapa_id`,
+    `pontuacao`, `consequencia` e `motivo`. **A ordem dos inscritos é a do
     chamador, e a dos Resultados também**: as pontuações são indexadas por Etapa, e quando dois
     Resultados da mesma Etapa chegam, vale o último. O caminho oficial os ordena por
     `consolidado_em`, de modo que o último é o sucessor vigente.
+
+    **De toda Etapa lida vem a nota; só da enumerada vem a consequência** (114, FR-3548). A Etapa do
+    desempate entra em `pontuacoes`, que é onde o critério procura, e não entra na combinação, que
+    só lê as enumeradas. Mas a eliminação registrada nela **não** tira ninguém daqui: o edital que
+    desempata pela Entrevista não diz que quem foi eliminado na Entrevista sai desta ordem, e ler a
+    consequência de todos os Resultados mudaria quem é classificado sem que ninguém o decidisse.
 
     `RegraIncompleta` sobe sem captura, como sempre subiu: regra que não basta para calcular é
     defeito da publicação, e não um sem posição a mais.
@@ -54,7 +61,7 @@ def preparar(marco, etapas, inscritos, *, recorte=None):
             "fatos": inscrito["fatos"],
             "resultados": [str(resultado["id"]) for resultado in resultados],
         }
-        eliminacao = _eliminacao_mais_recente(resultados, etapas)
+        eliminacao = _eliminacao_mais_recente(que_decidem_posicao(marco, resultados), etapas)
         if eliminacao is not None:
             sem_posicao.append(
                 {
@@ -94,6 +101,18 @@ def preparar(marco, etapas, inscritos, *, recorte=None):
     return classificaveis, sem_posicao
 
 
+def que_decidem_posicao(marco, resultados):
+    """Os Resultados cuja consequência conta para a posição: os das Etapas que o marco enumera.
+
+    **A regra mora aqui, e a reprodução do ato a chama** (114, FR-3548, FR-3552). Os Resultados da
+    Etapa do desempate chegam junto, para a nota; a eliminação registrada neles não tira ninguém da
+    ordem. Escrita duas vezes, a reprodução de um ato íntegro divergiria dele no dia em que só uma
+    das cópias mudasse.
+    """
+    enumeradas = {str(item) for item in marco.get("stages") or []}
+    return [item for item in resultados if str(item["etapa_id"]) in enumeradas]
+
+
 def _eliminacao_mais_recente(resultados, etapas):
     eliminadas = [item for item in resultados if item["consequencia"] == ELIMINADA]
     if not eliminadas:
@@ -115,4 +134,4 @@ def _motivo_da_pontuacao_ausente(enumeradas, pontuacoes, etapas):
     return "Sem pontuação nas Etapas enumeradas: " + ", ".join(faltantes) + "."
 
 
-__all__ = ["ELIMINADA", "HABILITADA", "preparar"]
+__all__ = ["ELIMINADA", "HABILITADA", "preparar", "que_decidem_posicao"]

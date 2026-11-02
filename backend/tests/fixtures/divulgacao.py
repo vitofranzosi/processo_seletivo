@@ -69,8 +69,13 @@ def rascunho_com_marco(
     regra_da_etapa=None,
     janela_recursal=None,
     regra_de_corte=None,
+    etapa_do_desempate=None,
 ):
     """O rascunho da 015: duas Etapas, a segunda enumerada por um marco classificatório.
+
+    `etapa_do_desempate` entrou com a `114`: o identificador de uma terceira Etapa, a Entrevista,
+    classificatória e **não** enumerada pelo marco — a que um critério compara sem que ela entre na
+    nota final. Sem ele, o rascunho é o de sempre.
 
     `janela_recursal` entrou com a `036`, e é declarada **no rascunho** de propósito: a alternativa
     que a `018` usa — reescrever o conteúdo publicado com o gatilho desligado — existe para
@@ -78,9 +83,15 @@ def rascunho_com_marco(
     publicar é o caminho normal, e ele não desliga garantia nenhuma.
     """
     rascunho = rascunho_com_etapas(seed, avaliacoes=1, maxima="100.0000", minima="60.0000")
-    primeira, segunda = rascunho["stages"]
+    primeira, segunda = rascunho["stages"][:2]
     segunda["weight"] = "1.0000"
     primeira["weight"] = "1.0000"
+    if etapa_do_desempate is not None:
+        # Copiada da segunda **antes** da regra da Etapa do marco: a Entrevista não elimina, para
+        # que a nota dela só desempate.
+        rascunho["stages"].append(
+            {**segunda, "id": etapa_do_desempate, "name": "Entrevista", "order": 3}
+        )
     # A regra da Etapa do marco, quando o teste precisa de uma: nota mínima e caráter eliminatório
     # são o que separa "habilitada" de "eliminada", e sem elas o cenário só produz habilitação —
     # o que tornaria vazio qualquer teste sobre a consequência derivada.
@@ -153,6 +164,7 @@ def montar_marco(
     regra_da_etapa=None,
     janela_recursal=None,
     regra_de_corte=None,
+    etapa_do_desempate=None,
 ):
     """Edital publicado, comissão constituída e banca alocada nas duas Etapas.
 
@@ -166,6 +178,7 @@ def montar_marco(
         regra_da_etapa=regra_da_etapa,
         janela_recursal=janela_recursal,
         regra_de_corte=regra_de_corte,
+        etapa_do_desempate=etapa_do_desempate,
     )
     if fatos is not None:
         rascunho["profiles"][0]["declaredFacts"] = fatos
@@ -192,7 +205,7 @@ def montar_marco(
     )
     primeira = identificador(410, seed)
     segunda = identificador(411, seed)
-    for etapa in (primeira, segunda):
+    for etapa in (primeira, segunda, *([etapa_do_desempate] if etapa_do_desempate else [])):
         alocar_em(
             gestor,
             edital.processo,

@@ -396,3 +396,92 @@ def test_a_conferencia_da_proveniencia_roda_uma_vez_por_ato(cenario):
         )
 
     assert len(consultas) == 1, "o ato nasce numa consulta; a conferência é da trigger"
+
+
+# --- A Etapa que um critério do marco compara (114, FR-3551) -------------------------------------
+#
+# Desde a `114` o universo também cita os Resultados da Etapa que um critério "maior pontuação
+# numa Etapa" compara sem o marco enumerá-la. A conferência abre para ela **e só para ela**: os dois
+# casos abaixo são um par, e um sem o outro não prova nada — aceitar a Entrevista citada passaria
+# também com a trigger desligada, e recusar a documental passaria com a trigger da `0003` intacta.
+
+ENTREVISTA_DO_DESEMPATE = "00000000-0000-4000-8000-000000011401"
+
+
+@pytest.fixture
+def cenario_com_desempate(api_client, manager_headers, process_payload):
+    rascunho = rascunho_com_etapas(avaliacoes=1, maxima="100.0000", minima="60.0000")
+    documental, enumerada = rascunho["stages"][0], rascunho["stages"][1]
+    enumerada["weight"] = "1.0000"
+    rascunho["stages"].append(
+        {
+            **{chave: valor for chave, valor in enumerada.items() if chave != "id"},
+            "id": ENTREVISTA_DO_DESEMPATE,
+            "name": "Entrevista",
+            "order": 3,
+        }
+    )
+    marco = uuid.uuid4()
+    rascunho["profiles"][0]["classificationMilestones"] = [
+        {
+            "cutRule": corte_que_nao_governa(),
+            "id": str(marco),
+            "code": "FINAL",
+            "name": "Classificação final",
+            "stages": [enumerada["id"]],
+            "orderProduction": "POR_PONTUACAO",
+            "operation": "SOMA_PONDERADA",
+            "normalization": "NENHUMA",
+            "rounding": {"scale": 2, "mode": "MEIO_PARA_CIMA"},
+            "tiebreakers": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "order": 1,
+                    "type": "MAIOR_PONTUACAO_NA_ETAPA",
+                    "parameters": {"stageId": ENTREVISTA_DO_DESEMPATE},
+                    "whenMissing": "ULTIMO_NO_CRITERIO",
+                }
+            ],
+        }
+    ]
+    edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
+    inscricao = inscrever(edital)[0]
+    versao = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at")
+    return edital, inscricao, versao, marco, documental["id"]
+
+
+def _ato_citando(cenario, etapa_id):
+    edital, inscricao, versao, marco, _ = cenario
+    resultado = _resultado_por_ocorrencia(
+        edital=edital, inscricao=inscricao, versao=versao, etapa_id=etapa_id
+    )
+    # Pelo modelo, e não por SQL cru: a trigger roda no `INSERT` de qualquer modo, e o caso que
+    # aceita precisa das colunas que o modelo preenche por padrão.
+    AtoDeOrdenacao.objects.create(
+        edital=edital,
+        perfil_id=inscricao.profile_id,
+        marco_id=marco,
+        versao=versao,
+        universo=universo_de(
+            edital, inscricao.profile_id, marco, versao, [_resultado_citado(resultado)]
+        ),
+        emitido_por="maria",
+        emitido_em=timezone.now(),
+    )
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_aceita_resultado_da_etapa_que_o_criterio_compara(cenario_com_desempate):
+    _ato_citando(cenario_com_desempate, ENTREVISTA_DO_DESEMPATE)
+
+    assert AtoDeOrdenacao.objects.filter(marco_id=cenario_com_desempate[3]).count() == 1
+
+
+@SOMENTE_POSTGRES
+def test_a_trigger_continua_recusando_etapa_que_nem_se_enumera_nem_se_compara(
+    cenario_com_desempate,
+):
+    documental = cenario_com_desempate[4]
+
+    with pytest.raises(DatabaseError, match="milestone"), transaction.atomic():
+        _ato_citando(cenario_com_desempate, documental)

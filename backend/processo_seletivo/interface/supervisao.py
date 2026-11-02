@@ -23,6 +23,7 @@ from processo_seletivo.classificacao.application.selectors import (
     ato_vigente,
     estado_do_marco,
 )
+from processo_seletivo.classificacao.domain.desempate import etapas_do_desempate
 from processo_seletivo.comissoes.application import selectors as comissao_selectors
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
@@ -859,7 +860,12 @@ def candidato_a_obsoleto(edital, ato, marco, versao_vigente):
         return True
     if versao_vigente is None or ato.versao_id != versao_vigente.id:
         return True
-    etapas = [str(item) for item in marco.get("stages") or []]
+    # **As Etapas que o universo do ato cita, e não só as enumeradas** (114, FR-3550). Desde a
+    # `114` a nota da Etapa que um critério compara sem o marco enumerá-la decide a ordem e entra
+    # no universo; olhar só as enumeradas deixaria sem candidato a nota corrigida por recurso, ou a
+    # que chegou depois da emissão — e a tela diria "feito" de uma ordem que `comparar` dá por
+    # obsoleta.
+    etapas = [str(item) for item in marco.get("stages") or []] + etapas_do_desempate(marco)
     if not etapas:
         return False
     return ResultadoEtapa.vigentes.filter(

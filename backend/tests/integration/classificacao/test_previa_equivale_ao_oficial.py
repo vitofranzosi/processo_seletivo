@@ -35,10 +35,12 @@ from processo_seletivo.inscricoes.models import ValorDeFato
 from processo_seletivo.interface.previa_da_classificacao import apurar_vagas
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.divulgacao import emitir, montar_marco, pontuar
 from tests.fixtures.edital import PROFILE_ID
+from tests.fixtures.mesa import concluir_como, distribuir_para
 from tests.fixtures.recortes import MODALIDADE_PCD, MODALIDADE_PPI, montar_cenario_7_1_2
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
@@ -697,3 +699,109 @@ def test_a_equivalencia_acusa_o_caminho_oficial_alterado(
     monkeypatch.setattr(atributo, desvio)
 
     assert _lado_oficial(cenario, gestor, inscricoes) != da_previa
+
+
+# --- A Etapa do desempate (114, FR-3555, FR-3556) ------------------------------------------------
+#
+# O marco soma só a Etapa enumerada e desempata, primeiro, pela nota da Entrevista, que ele não
+# enumera; os dois critérios por fato vêm depois. A prévia dá a cada candidato fictício uma nota na
+# Entrevista derivada das enumeradas (D-006), e o lado oficial a **grava** pelo caminho normal —
+# avaliação e consolidação da Entrevista — para os que a prévia classifica.
+#
+# Os empatados de propósito são iguais também na Entrevista, e por isso o critério dela não separa
+# nenhum deles: os casos continuam significando o que nomeiam. É por isso que a comparação, aqui,
+# inclui **a nota que o desempate leu** de cada classificável. Sem ela, a equivalência passaria
+# com o caminho oficial cego à Entrevista — o próprio defeito do A11 —, porque "ninguém tem a nota"
+# e "todos têm a mesma" não separam ninguém do mesmo jeito.
+
+ENTREVISTA = "00000000-0000-4000-8000-0000000114e1"
+POR_ENTREVISTA = "00000000-0000-4000-8000-0000000114b1"
+CRITERIOS_COM_ENTREVISTA = [
+    {
+        "id": POR_ENTREVISTA,
+        "order": 1,
+        "type": "MAIOR_PONTUACAO_NA_ETAPA",
+        "parameters": {"stageId": ENTREVISTA},
+        "whenMissing": "ULTIMO_NO_CRITERIO",
+    },
+    *({**criterio, "order": criterio["order"] + 1} for criterio in CRITERIOS),
+]
+
+
+def _avaliar_na_entrevista(cenario, gestor, inscricoes, candidatos, chave):
+    """A nota da prévia na Entrevista, para quem a prévia classifica — o resto não a usa."""
+    avaliados = [
+        (inscricao, candidato["notas"][ENTREVISTA])
+        for inscricao, candidato in zip(inscricoes, candidatos, strict=True)
+        if not candidato["eliminado_em"] and candidato["notas"].get(ENTREVISTA) is not None
+    ]
+    anterior, cenario["etapa"] = cenario["etapa"], ENTREVISTA
+    distribuir_para(cenario, gestor, ["joao"], [i for i, _ in avaliados], chave=f"{chave}-lote")
+    for inscricao, nota in avaliados:
+        concluir_como(cenario, "joao", inscricao, pontuacao=f"{nota:.4f}")
+    consolidar(
+        actor=gestor,
+        processo_id=cenario["edital"].processo_id,
+        edital_id=cenario["edital"].id,
+        etapa_id=ENTREVISTA,
+        inscricao_ids=[i.id for i, _ in avaliados],
+        idempotency_key=f"{chave}-consolidar",
+        correlation_id="teste-114",
+    )
+    cenario["etapa"] = anterior
+
+
+def _notas_da_entrevista(posicoes, indice):
+    return sorted(
+        (indice(item["inscricao_id"]), item["pontuacoes"][ENTREVISTA]) for item in posicoes
+    )
+
+
+@pytest.mark.parametrize(
+    ("numero", "caso"),
+    [(20, "criterios_sucessivos"), (21, "valor_ausente")],
+    ids=["criterios_sucessivos", "valor_ausente"],
+)
+def test_a_previa_e_o_oficial_concordam_desempatando_por_etapa_nao_enumerada(
+    gestor, api_client, manager_headers, process_payload, numero, caso
+):
+    cenario = montar_marco(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        seed=SEED + 10 + numero,
+        codigo=f"09{50 + numero}",
+        criterios=CRITERIOS_COM_ENTREVISTA,
+        fatos=FATOS,
+        regra_da_etapa={"minimumScore": "60.0000", "eliminatory": True},
+        regra_de_corte=_regra(2, "ADMITS_SURPLUS"),
+        etapa_do_desempate=ENTREVISTA,
+    )
+    marco, etapas, fatos = _marco_publicado(cenario)
+    candidatos = cenarios.com_notas_do_desempate(
+        _populacao(caso, marco, etapas, fatos),
+        [e for e in etapas if str(e["id"]) == ENTREVISTA],
+    )
+    primeiro = 9500 + 50 * numero
+    inscricoes = _gravar(cenario, gestor, candidatos, primeiro=primeiro)
+    _avaliar_na_entrevista(cenario, gestor, inscricoes, candidatos, f"114-{numero}")
+    indice_oficial = {str(i.id): n for n, i in enumerate(inscricoes)}
+
+    proposta = _calcular(cenario)
+    da_previa_bruta = previa.simular(
+        marco, etapas, fatos, vagas=VAGAS, modo="caso", caso=caso, apurar_vagas=apurar_vagas
+    )
+    oficial = _lado_oficial(cenario, gestor, inscricoes)
+    da_previa = _lado_da_previa(caso, marco, etapas, fatos)
+
+    assert da_previa == oficial
+    assert _notas_da_entrevista(
+        proposta["posicoes"], lambda ident: indice_oficial[str(ident)]
+    ) == _notas_da_entrevista(da_previa_bruta["ordem"], lambda ident: int(ident[1:]))
+    # A Entrevista é lida pelos dois lados, e não é a nota final de ninguém.
+    assert all(ENTREVISTA in item["pontuacoes"] for item in proposta["posicoes"])
+    assert all(
+        item["pontuacao"] == item["pontuacoes"][str(cenario["etapa"])].quantize(Decimal("0.01"))
+        for item in proposta["posicoes"]
+    )

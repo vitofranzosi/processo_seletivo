@@ -12,7 +12,11 @@ from decimal import Decimal
 
 import pytest
 
-from processo_seletivo.classificacao.domain.desempate import ordenar, particiona_o_grupo
+from processo_seletivo.classificacao.domain.desempate import (
+    etapas_do_desempate,
+    ordenar,
+    particiona_o_grupo,
+)
 
 ETAPA = "00000000-0000-0000-0000-0000000000e1"
 FATO = "00000000-0000-0000-0000-0000000000f1"
@@ -239,3 +243,28 @@ def test_o_grupo_empatado_e_marcado_por_inteiro():
 
     assert [item["empate_residual"] for item in resultado] == [False, True, True]
     assert [item["posicao"] for item in resultado] == [1, 2, 2]
+
+
+def test_etapas_do_desempate_sao_as_comparadas_e_nao_enumeradas():
+    """114, R-002 — sem repetir, na ordem dos critérios, e sem fato nem Etapa enumerada."""
+
+    def por_etapa(ordem, etapa):
+        return {
+            "order": ordem,
+            "type": "MAIOR_PONTUACAO_NA_ETAPA",
+            "parameters": {"stageId": etapa},
+        }
+
+    marco = {
+        "stages": ["prova"],
+        "tiebreakers": [
+            por_etapa(3, "titulos"),
+            por_etapa(1, "entrevista"),
+            por_etapa(2, "prova"),
+            {"order": 4, "type": "MAIOR_VALOR_DE_FATO", "parameters": {"factId": "idade"}},
+            por_etapa(5, "entrevista"),
+        ],
+    }
+
+    assert etapas_do_desempate(marco) == ["entrevista", "titulos"]
+    assert etapas_do_desempate({"stages": ["prova"]}) == []

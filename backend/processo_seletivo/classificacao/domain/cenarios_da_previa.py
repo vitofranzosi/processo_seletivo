@@ -412,6 +412,35 @@ def caso_de_reserva(
     return candidatos, onde
 
 
+def com_notas_do_desempate(candidatos, etapas_do_desempate):
+    """Cada candidato com nota também nas Etapas que um critério compara sem o marco enumerá-las.
+
+    Sem esta nota, a prévia de um marco que desempata pela Entrevista mostraria o critério nunca
+    separando ninguém — que era o defeito do caminho oficial até a `114` (FR-3555).
+
+    **A nota é a menor das notas fictícias que o candidato já tem** (114, D-006). Candidatos
+    iguais nas Etapas enumeradas ficam iguais nesta, e por isso o trio que só os fatos separam e o
+    par igual em tudo continuam significando o que os casos nomeiam. A menor, e não a soma, para
+    caber na escala de qualquer Etapa que admita as notas enumeradas. Quem não tem nota em alguma
+    Etapa enumerada não a tem aqui, e Etapa decisória não produz nota nenhuma — como no caminho
+    oficial.
+    """
+    com_nota = [e for e in etapas_do_desempate if e.get("forma") != DECISORIA]
+    if not com_nota:
+        return candidatos
+    saida = []
+    for candidato in candidatos:
+        notas = list(candidato["notas"].values())
+        nota = None if not notas or any(n is None for n in notas) else min(notas)
+        saida.append(
+            {
+                **candidato,
+                "notas": {**candidato["notas"], **{etapa["id"]: nota for etapa in com_nota}},
+            }
+        )
+    return saida
+
+
 def inscritos(candidatos):
     """Os candidatos na forma de `universo_classificavel.preparar` — a do caminho oficial."""
 
@@ -465,6 +494,7 @@ def inscritos(candidatos):
 
 __all__ = [
     "CASOS",
+    "com_notas_do_desempate",
     "CASOS_DE_RESERVA",
     "atribuir_modalidades",
     "caso_de_reserva",
