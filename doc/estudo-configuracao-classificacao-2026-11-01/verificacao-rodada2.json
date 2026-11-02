@@ -1,0 +1,77 @@
+{
+  "erros_de_javascript": [],
+  "teclado": {
+    "foco_apos_enter": "t-insp",
+    "foco_apos_tab": "etapa:obj:nome"
+  },
+  "largura_da_pagina_em_390": {
+    "trilho": 390,
+    "texto": 390
+  },
+  "capturas": [
+    {
+      "captura": "v2-01-trilho-como-no-diario",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=diario&modo=trilho&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-02-final-idade-invertida",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=diario&sel=marco%3Afinal&modo=trilho&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-03-final-idade-corrigida",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=diario&sel=marco%3Afinal&modo=trilho&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-04-reordenar-previa-do-efeito",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=pronto&sel=etapa%3Adid&mover=did%3Aup&modo=trilho&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-05-do-zero",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-06-do-zero-nova-ordem-sem-resposta",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvyiyu6m-1"
+    },
+    {
+      "captura": "v2-07-do-zero-incompleta-empate-e-faixa",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvyiyu6m-1"
+    },
+    {
+      "captura": "v2-08-do-zero-corte-pronto-sem-final",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvyiyu6m-1"
+    },
+    {
+      "captura": "v2-09-marca-manual-retirada",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=pronto&marca=manual&sel=etapa%3Atit&modo=trilho&perfil=docinfo"
+    },
+    {
+      "captura": "v2-10-etapa-eliminatoria-sem-minima",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=pronto&sel=etapa%3Adid&modo=trilho&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-11-destino-circular",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=circular&sel=marco%3Apostit&modo=trilho&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-12-tec-lab-etapas-compartilhadas",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=pronto&perfil=teclab&modo=trilho&marca=derivada"
+    },
+    {
+      "captura": "v2-13-texto-do-edital-como-no-diario",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=diario&modo=texto&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-14-pronto-por-hipotese",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=pronto&modo=trilho&sel=marco%3Afinal&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-15-movel-trilho",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=diario&modo=trilho&sel=marco%3Afinal&perfil=docinfo&marca=derivada"
+    },
+    {
+      "captura": "v2-15-movel-texto",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=diario&modo=texto&sel=marco%3Afinal&perfil=docinfo&marca=derivada"
+    }
+  ]
+}

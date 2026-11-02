@@ -1,5 +1,7 @@
 # Comparação, tarefas e recomendação
 
+> **Substituída na rodada 2.** A recomendação abaixo (A+D com conferência de E) deu lugar ao trilho editável com o texto do documento ao lado. Ver [sintese.md](sintese.md). As tarefas e o gabarito continuam valendo para o teste com operadores.
+
 ## Método e confiança
 
 Avaliação heurística e walkthrough cognitivo pelo pesquisador, com evidências de navegação e código. Nenhum operador participou. As previsões abaixo indicam potencial de compreensão, não resultados de teste. As notas de confiança referem-se ao suporte das conclusões, não a uma escala quantitativa de desempenho.

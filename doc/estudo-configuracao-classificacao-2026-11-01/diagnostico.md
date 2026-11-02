@@ -1,5 +1,7 @@
 # Diagnóstico técnico e cognitivo
 
+> **Revisto na rodada 2.** O ciclo "salvar, receber erro" foi raro na construção feita do zero. O problema dominante é a configuração que contraria o edital ser aceita sem aviso. Ver [diario-de-construcao.md](diario-de-construcao.md).
+
 ## Conclusão investigativa
 
 O problema não é simplesmente excesso de combos. A unidade de edição atual alterna entre a **Etapa, compartilhada pelo Edital**, e o **marco, próprio do Perfil**. O operador precisa recompor mentalmente os usos da etapa, a produção da ordem, o corte e a participação posterior. A marca classificatória tem um nome curto para um efeito relacional que só fica claro na outra tela.
