@@ -110,8 +110,17 @@ def enviar_codigo(*, para: str, codigo: str, finalidade: str = "") -> None:
             fail_silently=False,
         )
     except Exception:
-        # Sem o endereço e sem o código: o registro técnico diz que falhou, e nada além disso.
-        logger.exception("Falha ao enviar código de acesso.")
+        # Sem o endereço e sem o código: o registro técnico diz que falhou, e nada além disso. O
+        # `code` é o que separa a falha do correio das recusas por limite, que `desafio.py` registra
+        # com os seus — antes, as duas eram silêncio igual do lado do candidato e só esta deixava
+        # rastro.
+        logger.exception(
+            "Falha ao enviar código de acesso.",
+            extra={
+                "code": "envio_de_codigo_falhou",
+                "operation": f"identidade.solicitar_codigo.{(finalidade or 'entrar').lower()}",
+            },
+        )
 
 
 def avisar_mudanca_de_credencial(*, para: str, endereco: str, acao: str, atendimento: str) -> None:

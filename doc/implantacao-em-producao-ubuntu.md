@@ -2247,7 +2247,7 @@ A duração medida é o **RTO real**. Registre-a no checklist de go-live.
 
 | Log | Onde | Rotação e retenção |
 |---|---|---|
-| Aplicação: JSON com `level`, `logger`, `message`, `correlationId`, `code`, `status`, `actor` | `journalctl -u processoseletivo` | journald (§20.2) |
+| Aplicação: JSON com `level`, `logger`, `message`, `correlationId`, `code`, `status`, `actor` — e `operation`, `origin`, `retryAfter` nas recusas de código de acesso | `journalctl -u processoseletivo` | journald (§20.2) |
 | Timers: backup, verificação, limpeza, CEP | `journalctl -u ps-backup -u ps-verificar -u ps-limpeza -u ps-ceps` | journald |
 | Proxy (acesso, com `rid=`) | `/var/log/nginx/processoseletivo.access.log` | `/etc/logrotate.d/nginx` (padrão: diário, 14) |
 | Proxy (erro) | `/var/log/nginx/processoseletivo.error.log` | idem |
@@ -2287,6 +2287,14 @@ journalctl -u processoseletivo --since today -o cat | grep operacao_recusada
 journalctl -u processoseletivo --since today | grep -E 'WORKER TIMEOUT|Worker .* was sent'
 # Falhas de envio de e-mail
 journalctl -u processoseletivo --since today -o cat | grep -i 'Falha ao enviar'
+# Códigos de acesso não enviados, por motivo (010, FR-031c): limite_por_origem, limite_por_endereco,
+# espera_de_reenvio — e envio_de_codigo_falhou, que é o correio
+journalctl -u processoseletivo --since today -o cat \
+  | grep -E 'codigo_de_acesso_nao_enviado|envio_de_codigo_falhou' \
+  | grep -oE '"code": "[a-z_]+"' | sort | uniq -c
+# A rede de um polo bateu no teto? `origin` é o começo do sha256 do IP público dela
+printf '%s' '<IP_DO_POLO>' | sha256sum | cut -c1-12
+journalctl -u processoseletivo --since today -o cat | grep limite_por_origem | grep '<12_PRIMEIROS>'
 # Tudo o que aconteceu num pedido, do proxy à auditoria, pelo rid
 grep 'rid=<RID>' /var/log/nginx/processoseletivo.access.log
 journalctl -u processoseletivo -o cat | grep '<RID>'

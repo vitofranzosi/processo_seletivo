@@ -358,6 +358,11 @@ remover o antigo e corrigir o nome.
   associada ao endereço.
 - **FR-021**: A equivalência DEVE incluir a janela de reenvio, a contagem de limite e o texto de
   espera. Um contador que só avança para endereços existentes anula a FR-020.
+
+  > **Emendado pelo A-12 da auditoria de prontidão (01/11/2026):** a equivalência é entre quem existe
+  > e quem não existe — e não entre o limite esgotado e o caminho feliz. Era lida assim, e mandava a
+  > quem esbarrava num teto a frase do envio e "pode pedir outro código agora". Os contadores não
+  > dependem de identidade, e dizer que um teto foi atingido não revela ninguém (`FR-031c`, D-034).
 - **FR-022**: O código DEVE ser numérico e curto, adequado à digitação manual, com seis dígitos.
 - **FR-023**: O código DEVE ser gerado por fonte criptograficamente segura, com distribuição uniforme
   sobre todo o intervalo.
@@ -374,6 +379,12 @@ remover o antigo e corrigir o nome.
   constantes da aplicação, não configuração de usuário. NÃO DEVE existir teto global de envio: um
   teto global converte abuso distribuído em indisponibilidade para todos os candidatos, no dia em que
   ela mais custa.
+
+  > **Emendado pelo A-12 da auditoria de prontidão (01/11/2026):** os valores continuam — cinco por
+  > endereço e trinta por origem, por hora. Uma sala de polo maior que o teto continua recusando o
+  > excedente; o que mudou é a resposta a ele (`FR-031c`). Tornar o teto da origem ajustável por
+  > implantação, para o dia de pico, contraria a frase acima e fica como decisão registrada, não
+  > tomada (D-034).
 - **FR-030a**: A implantação DEVE **declarar** se há proxy à frente da aplicação, e a inicialização
   em produção DEVE ser recusada enquanto isso não for declarado. Não existe padrão seguro: confiar
   no cabeçalho de proxy sem proxy torna o limite por origem contornável com um valor forjado a cada
@@ -391,6 +402,18 @@ remover o antigo e corrigir o nome.
 - **FR-031b**: Solicitação de código recusada pela janela de espera DEVE ser respondida por escrito,
   dizendo que nada foi enviado. Recarregar a tela sem mensagem é indistinguível de sucesso, e faz a
   pessoa esperar por um e-mail que não existe.
+- **FR-031c**: Solicitação de código recusada por um teto — do endereço ou da origem — DEVE ser
+  respondida dizendo qual teto foi atingido, quanto tempo falta de fato até a próxima solicitação
+  possível, contado do pedido que sai da janela, e o que resolve: outra conexão ou o atendimento, no
+  teto da origem; o código mais recente, no do endereço. Enquanto o teto vale, a tela NÃO PODE
+  anunciar a espera de reenvio nem "pode pedir agora". A resposta continua idêntica exista ou não
+  identidade, e cada recusa — por teto ou por espera — DEVE deixar registro técnico estruturado,
+  distinguível da falha de envio, sem endereço nem código (D-034).
+
+  > **Acrescentado pelo A-12 da auditoria de prontidão (01/11/2026):** quarenta candidatos atrás do
+  > NAT de um polo, na mesma hora: trinta recebiam código; os outros dez liam "o pedido anterior foi
+  > há pouco" — nenhum tinha pedido — e "pode pedir outro código agora", com o bloqueio valendo por
+  > uma hora. Nenhuma linha de registro: a sala recusada era indistinguível de correio caído.
 - **FR-032**: Desafios e contadores DEVEM ser guardados de forma compartilhada entre os processos que
   atendem a aplicação, de modo que os limites valham de fato.
 - **FR-033**: Desafios expirados NÃO SÃO dado permanente de domínio, e o sistema DEVE permitir sua
