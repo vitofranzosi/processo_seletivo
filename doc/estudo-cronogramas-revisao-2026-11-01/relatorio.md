@@ -4,14 +4,13 @@
 alterado. A conclusão é heurística: apoia-se no código, em medições automatizadas e em capturas,
 não em sessões com usuários.
 
-> **Recomendação, ainda aberta.** O ganho que as propostas oferecem sobre a Agenda atual é
-> estreito e não está demonstrado: mostrar o que acontece ao mesmo tempo em Editais diferentes e a
-> distribuição das etapas de um Edital. Três candidatos seguem para o teste no lugar da lista
-> "Períodos previstos em ‹mês›": **L**, a lista atual reorganizada por Edital, sem régua; **C+**, a
-> faixa por Edital com o nome de cada evento; e **C revisada**, que recolhe. A primeira comparação
-> com usuários deveria ser **Atual × L × C+** — a régua compensa o que custa? — e só depois C+ × G.
-> **Manter "Próximos marcos"** (`D-003`). **Descartar A e B** como telas próprias. Todas as
-> alternativas ficam mais altas que a lista atual; L, a mais alta no desktop.
+> **Composição proposta, ainda não testada.** No **Mês**, a lista "Períodos previstos em ‹mês›"
+> dá lugar a **L**, a mesma lista reorganizada por Edital, com pontuais, horas e continuidade
+> escritas. A comparação entre Editais vai para uma **terceira aba da Agenda, com C+** — a faixa
+> por Edital com o nome de cada evento —, entregue depois de L e só se o uso pedir. **Próximos
+> marcos** fica como está (`D-003`). A e B, descartados como telas; C revisada e G, referências.
+> O ganho sobre a Agenda atual é estreito — simultaneidade e distribuição — e não está
+> demonstrado. Primeiro teste: **Atual × L**; a aba de C+, avaliada à parte.
 
 ## Por que este estudo foi refeito
 
@@ -293,6 +292,38 @@ respondem.
 
 C revisada fica como referência de recolhimento no celular. E e F, em decisão separada.
 
+## Composição proposta: L no Mês, C+ como aba à parte
+
+Proposta do usuário em 01/11/2026, avaliada nesta sessão: **L sob o calendário, no lugar da
+lista de períodos, e C+ numa visão própria**. É coerente com o que as rodadas encontraram — L
+venceu na leitura de um Edital, C+ na comparação entre Editais —, e separar por tarefa, com a
+pessoa escolhendo, é diferente da troca automática por dispositivo recusada antes, em que a mesma
+informação mudava de forma sem ser pedida. Quatro condições:
+
+1. **C+ como terceira aba da Agenda, e não como item novo no menu da gestão.** A Agenda já tem
+   "Mês" e "Próximos marcos" (`D-003`). Uma aba "Linha do tempo" herda os mesmos filtros, a mesma
+   navegação de mês e o mesmo escopo da unidade. Um item próprio no menu seria uma segunda porta
+   para os mesmos dados, menos descobrível e com filtros que podem divergir.
+2. **L primeiro; C+ depois, condicionada.** L é a mudança menor e não pede aprendizado. C+ traz o
+   código mais delicado do estudo — a disposição dos rótulos, recalculada pela largura. Com equipe
+   de duas ou três pessoas e o volume de Editais simultâneos ainda estimado, C+ só entra se o teste
+   ou o uso mostrarem que comparar Editais é tarefa frequente. Sem essa condição, vira a visão a
+   mais que serve para não escolher, contra o que o estudo D–G alertou.
+3. **O custo de L sob o calendário continua.** A Agenda cresce +123% no desktop, e os pontuais
+   aparecem duas vezes, na grade e na lista. O alívio mais simples, sem esconder nada do mês:
+   recolher, em cada Edital, os eventos com data passada, dizendo quantos ("4 eventos
+   anteriores"). Não foi construído nem medido.
+4. **Duas specs, em sequência.** L muda o conteúdo da lista da 101 — passa a ter pontuais e a
+   agrupar cronogramas idênticos, regra de apresentação nova — e cabe numa spec curta. C+ é a
+   linha do tempo horizontal que a 101 deixou "para outra etapa", e sua spec espera a evidência.
+
+**Teste que decorre dessa composição**, mais simples que os anteriores: **Atual × L**, para
+validar a primeira entrega, com as tarefas de leitura e de prazo; e a **aba de C+ avaliada à
+parte**, só com quem acompanha vários Editais, nas tarefas de simultaneidade e distribuição. G e
+C revisada ficam como referências, não como candidatos à primeira entrega.
+
+Não é resultado: nenhuma das quatro condições foi testada com usuários.
+
 ## As perguntas do critério de sucesso
 
 Avaliação pela leitura das capturas, não por tempo de tarefa medido.
@@ -364,7 +395,7 @@ celular porque fixava a largura em pixels.
 
 ## MVP proposto, a decidir
 
-Escrito para C revisada. Se o teste escolher C+, mudam três itens: o nome de cada evento na
+Escrito antes da composição L + aba C+, para C revisada; vale como lista de itens da futura aba. Se a aba for de C+, mudam três itens: o nome de cada evento na
 régua em vez do controle de abertura, o agrupamento de cronogramas idênticos, e, no celular, a
 lista de eventos por Edital sempre aberta.
 
