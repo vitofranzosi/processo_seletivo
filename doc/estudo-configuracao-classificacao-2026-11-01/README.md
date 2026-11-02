@@ -9,10 +9,10 @@ diagnóstico e a recomendação.
 | Leia | O quê |
 |---|---|
 | [sintese.md](sintese.md) | Uma página: o problema medido, a aposta, os três passos, a confiança |
-| [diario-de-construcao.md](diario-de-construcao.md) | O percurso passo a passo, com 10 achados e as referências de código ([registro bruto](diario-registro-bruto.txt), [capturas](capturas/diario/)) |
+| [diario-de-construcao.md](diario-de-construcao.md) | O percurso passo a passo, com 11 achados e as referências de código ([registro bruto](diario-registro-bruto.txt), [capturas](capturas/diario/)) |
 | [prototipos/v2/](prototipos/v2/index.html) | Trilho editável e texto do edital editável, sobre o mesmo modelo; cenários de estudo no rodapé |
 | [decisoes-para-o-usuario.md](decisoes-para-o-usuario.md) | D-1 a D-7: o que muda o que o GPS grava ou publica, e por isso não se decide aqui |
-| [verificacao-rodada2.json](verificacao-rodada2.json) | Sem erro de JavaScript; teclado; largura em 390 px; [16 capturas](capturas/rodada2/) por [script](scripts/capturar_rodada2.py) |
+| [verificacao-rodada2.json](verificacao-rodada2.json) | Sem erro de JavaScript; teclado; largura em 390 px; [17 capturas](capturas/rodada2/) por [script](scripts/capturar_rodada2.py) |
 
 Servir a pasta: `python3 -m http.server 8769 --bind 127.0.0.1 --directory doc/estudo-configuracao-classificacao-2026-11-01`
 e abrir <http://127.0.0.1:8769/prototipos/v2/index.html>. Os arquivos também abrem direto do disco.

@@ -190,6 +190,22 @@ ordem, para as vagas deste Edital que não forem preenchidas pelos primeiros cla
 que não ocupa vagas, a frase parece descrever outro ato. É questão de norma, que fica para o
 usuário decidir, e não se propõe aqui.
 
+### A11 — Desempate pela nota de uma Etapa que a ordem não usa
+
+Achado ao conferir se as linhas do protótipo representam a configuração, e não durante o
+percurso. O cálculo oficial só lê os Resultados das Etapas que a ordem usa:
+- [calculo.py](../../backend/processo_seletivo/classificacao/application/calculo.py) filtra
+  `etapa_id__in=enumeradas`;
+- [universo_classificavel.py](../../backend/processo_seletivo/classificacao/domain/universo_classificavel.py)
+  monta as pontuações só desses Resultados;
+- o desempate as lê dali ([desempate.py](../../backend/processo_seletivo/classificacao/domain/desempate.py)).
+
+Um critério "maior nota em Entrevista", numa ordem que não usa a Entrevista, encontra o valor
+vazio para todos. Com "fica por último", não separa ninguém; com "não se aplica", sai de todos os
+grupos. O seletor oferece essa Etapa, e não foi encontrada validação que acuse o caso. **Conferido
+por leitura do código, não por execução.** É defeito a confirmar com um teste, não decisão de
+governança.
+
 ## O que se confirma da rodada 1, e o que se corrige
 
 - **Confirma-se** a separação entre Etapa (Edital) e marco (Perfil) como fonte de idas e vindas, e

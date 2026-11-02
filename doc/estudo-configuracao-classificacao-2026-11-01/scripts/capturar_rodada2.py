@@ -100,6 +100,10 @@ with sync_playwright() as p:
     esperar(page)
     capturar(page, "v2-12-tec-lab-etapas-compartilhadas")
 
+    page.goto(BASE + "?cenario=desempateFora&perfil=docmat&sel=marco:matfinal")
+    esperar(page)
+    capturar(page, "v2-16-porta-e-desempate-fora-da-ordem")
+
     page.goto(BASE + "?cenario=diario&modo=texto")
     esperar(page)
     capturar(page, "v2-13-texto-do-edital-como-no-diario")

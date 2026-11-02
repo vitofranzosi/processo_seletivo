@@ -82,5 +82,7 @@ Pedem correção, e cabem numa spec curta própria:
 - **A2** — a recomposição do cartão apaga o que foi digitado durante a ida e volta (`_marco.html`).
 - **A3** — a mensagem "marco FINAL" não nomeia o Perfil nem leva ao campo.
 - **A9** — o caso fictício da prévia mostra notas acima da máxima declarada (a conferir).
+- **A11** — o desempate pela nota de uma Etapa que a ordem não usa fica sem valor para todos;
+  confirmar com um teste e, se for o caso, recusar na validação ou incluir a nota no universo.
 - **A10** — a frase dos suplentes num corte intermediário (`pdf.py:1963`) é questão de norma, e é
   a única deste grupo que precisa de decisão.

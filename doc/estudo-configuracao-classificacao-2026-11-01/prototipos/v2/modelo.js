@@ -110,6 +110,13 @@
         m.perfis[0].marcos = [];
       },
     },
+    desempateFora: {
+      rotulo: "Porta e desempate fora da ordem",
+      aplicar: function (m) {
+        m.perfis[1].marcos[1].entradas = ["obj", "tit", "doc", "did"];
+        m.perfis[1].marcos[1].criterios.push({ tipo: "pontuacao", alvo: "ent", ausente: "ultimo" });
+      },
+    },
     circular: {
       rotulo: "Destino circular",
       aplicar: function (m) {
@@ -216,7 +223,7 @@
     }
     const c = mc.corte;
     if (c.tipo === "fixo" && c.alvo) {
-      const quem = "os " + c.alvo + " primeiros classificados" + (c.suplentes ? ", mais " + c.suplentes + " suplentes" : "");
+      const quem = "os " + c.alvo + " primeiros classificados de cada lista de concorrência" + (c.suplentes ? ", mais " + c.suplentes + " suplentes" : "");
       if (c.destino && c.destino !== "nenhuma") fr.corte.push("Passam para a Etapa " + aspas(G.etapa(m, c.destino).nome) + " " + quem + ".");
       else fr.corte.push("São classificados " + quem + ".");
     } else if (c.tipo === "quadro") {
@@ -336,6 +343,11 @@
           const okAlvo = cr.tipo === "pontuacao" ? !!G.etapa(m, cr.alvo) : !!p.fatos.find(function (f) { return f.id === cr.alvo; });
           if (!okAlvo) add("incompleta", p, alvo, rot + ": o " + (i + 1) + "º critério de desempate não diz o que compara.", "criterio:" + i);
           if (!cr.ausente) add("incompleta", p, alvo, rot + ": o " + (i + 1) + "º critério não diz o que fazer quando o valor falta.", "criterio:" + i);
+          // calculo.py lê só os Resultados das Etapas enumeradas (`etapa_id__in=enumeradas`), e
+          // universo_classificavel.py monta as pontuações deles: a nota de outra Etapa chega vazia.
+          if (cr.tipo === "pontuacao" && okAlvo && mc.entradas.indexOf(cr.alvo) < 0)
+            add("execucao", p, alvo, rot + ": o " + (i + 1) + "º critério compara a nota de " + aspas(G.etapa(m, cr.alvo).nome) +
+              ", que esta ordem não usa. O cálculo só lê as notas das Etapas usadas: o valor faltará para todos, e o critério não separa ninguém.", "criterio:" + i);
         });
       });
       // ---- leituras: não são regras do GPS, são o que a estrutura diz

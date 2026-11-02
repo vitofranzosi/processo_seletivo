@@ -54,7 +54,7 @@
     naoRespondida: "sem resposta",
     incompleta: "incompleta",
     invalida: "inválida",
-    execucao: "impedirá a execução",
+    execucao: "falha na execução",
     leitura: "leitura",
   };
 
@@ -74,10 +74,18 @@
     if (c.tipo === "nao") return "não corta — a etapa seguinte recebe todos";
     if (c.destino === "") return "segue para… <em>qual Etapa?</em>";
     if (!c.destino) return "o que acontece depois? <em>sem resposta</em>";
-    const quantos = c.tipo === "quadro" ? "as " + p.vagas + " vagas do quadro" : c.tipo === "fixo" ? (c.alvo || "?") + (c.suplentes ? " + " + c.suplentes + " suplentes" : "") : "quantos?";
+    const quantos = c.tipo === "quadro" ? (p.vagas === 1 ? "a vaga do quadro" : "as " + p.vagas + " vagas do quadro") : c.tipo === "fixo" ? (c.alvo || "?") + (c.suplentes ? " + " + c.suplentes + " suplentes" : "") : "quantos?";
     const emp = c.empate === "todos" ? " + empatados" : "";
     if (c.destino === "nenhuma") return "classificação final · " + quantos + emp;
     return quantos + emp + " seguem para " + esc(G.etapa(m, c.destino).nome);
+  }
+
+  function desempateFora(mc) {
+    const fora = [];
+    mc.criterios.forEach(function (cr) {
+      if (cr.tipo === "pontuacao" && cr.alvo && mc.entradas.indexOf(cr.alvo) < 0 && fora.indexOf(cr.alvo) < 0) fora.push(cr.alvo);
+    });
+    return fora;
   }
 
   function regraCurta(e) {
@@ -103,9 +111,9 @@
     const perfis = S.m.perfis
       .map(function (p) {
         const c = contagem(diag.filter(function (d) { return d.perfil === p.id; }));
-        const marca = c.invalida ? "invalida" : c.incompleta ? "incompleta" : c.naoRespondida ? "naoRespondida" : "ok";
+        const marca = c.invalida ? "invalida" : c.incompleta ? "incompleta" : c.naoRespondida ? "naoRespondida" : c.execucao ? "execucao" : "ok";
         const semFinal = p.marcos.length && !G.relacoes(S.m, p).temFinal;
-        const txt = c.invalida ? c.invalida + " inválida" + (c.invalida > 1 ? "s" : "") : c.incompleta ? c.incompleta + " incompleta" + (c.incompleta > 1 ? "s" : "") : c.naoRespondida ? "perguntas abertas" : semFinal ? "sem pendência · sem ordem final" : "sem pendência";
+        const txt = c.invalida ? c.invalida + " inválida" + (c.invalida > 1 ? "s" : "") : c.incompleta ? c.incompleta + " incompleta" + (c.incompleta > 1 ? "s" : "") : c.naoRespondida ? "perguntas abertas" : semFinal ? "sem pendência · sem ordem final" : c.execucao ? "sem pendência · " + c.execucao + " falha na execução" : "sem pendência";
         return '<button type="button" class="aba-perfil" data-acao="perfil" data-id="' + p.id + '" data-k="perfil:' + p.id + '" aria-pressed="' + (p.id === S.perfil) + '">' +
           '<span class="codigo">' + esc(p.codigo) + "</span><span class=\"estado estado-" + marca + '">' + txt + "</span></button>";
       })
@@ -121,7 +129,7 @@
       '<div class="eixos"><p><span class="eixo">Configuração</span> ' +
       geral.naoRespondida + " sem resposta · " + geral.incompleta + " incompleta" + (geral.incompleta === 1 ? "" : "s") + " · " + geral.invalida + " inválida" + (geral.invalida === 1 ? "" : "s") + "</p>" +
       '<p><span class="eixo">Publicação</span> ' + (impede ? "impedida por " + impede + " ponto" + (impede > 1 ? "s" : "") : "nada nesta parte a impede") + "</p>" +
-      '<p><span class="eixo">Execução</span> depende de resultados e atos — ' + (geral.execucao ? geral.execucao + " regra" + (geral.execucao > 1 ? "s" : "") + " impedirá" + (geral.execucao > 1 ? "ão" : "") + " a consolidação" : "não se verifica aqui") + "</p></div>"
+      '<p><span class="eixo">Execução</span> depende de resultados e atos — ' + (geral.execucao ? geral.execucao + (geral.execucao > 1 ? " regras não funcionarão" : " regra não funcionará") + " como o texto diz" : "não se verifica aqui") + "</p></div>"
     );
   }
 
@@ -141,14 +149,19 @@
     const posFinal = Math.max.apply(null, [-1].concat(p.marcos.filter(function (mc) { return mc.corte.destino === "nenhuma"; }).map(function (mc) { return G.posicao(m, mc); })));
     const itens = [];
     m.etapas.forEach(function (e, i) {
+      itens.push(
+        '<li class="passagem"><span aria-hidden="true">▾</span> ' +
+          (i === 0 ? "Entram os inscritos" : "Entram os habilitados em “" + esc(m.etapas[i - 1].nome) + "”" + (m.etapas.slice(0, i - 1).some(function (x) { return x.eliminatoria; }) ? " e não eliminados antes" : "")) +
+          (p.marcos.some(function (mc) { return mc.corte.tipo !== "nao" && mc.corte.destino === e.id; }) ? "; entre eles, só os da faixa abaixo" : "") + "</li>"
+      );
       p.marcos.forEach(function (mc) {
         if (mc.corte.destino !== e.id || mc.corte.tipo === "nao") return;
         const pos = G.posicao(m, mc);
         const puladas = m.etapas.slice(pos + 1, i).map(function (x) { return x.nome; });
-        const quantos = mc.corte.tipo === "quadro" ? p.vagas + " (vagas)" : (mc.corte.alvo || "?") + (mc.corte.suplentes ? " + " + mc.corte.suplentes + " suplentes" : "");
+        const quantos = mc.corte.tipo === "quadro" ? "tantos quantas as vagas da lista (" + p.vagas + " na ampla)" : (mc.corte.alvo || "?") + (mc.corte.suplentes ? " + " + mc.corte.suplentes + " suplentes" : "") + " por lista";
         itens.push(
-          '<li class="portao' + (puladas.length ? " salta" : "") + '" data-portao="' + mc.id + '"><span class="seta" aria-hidden="true">▼</span> Só entram ' + quantos +
-            (mc.corte.empate === "todos" ? " + empatados" : "") + " de <strong>" + esc(mc.codigo) + "</strong>" +
+          '<li class="portao' + (puladas.length ? " salta" : "") + '" data-portao="' + mc.id + '"><span class="seta" aria-hidden="true">▼</span> Depois de emitido o corte de <strong>' + esc(mc.codigo) + "</strong>, só entram " + quantos +
+            (mc.corte.empate === "todos" ? " + empatados" : "") +
             (puladas.length ? ' <span class="aviso-salto">vem de antes de ' + esc(puladas.join(", ")) + ", que não é cortada</span>" : "") + "</li>"
         );
       });
@@ -184,6 +197,7 @@
             '<button type="button" class="cartao-marco estado-' + pior + '" data-acao="sel" data-tipo="marco" data-id="' + mc.id + '" data-k="sel:marco:' + mc.id + '">' +
             '<span class="rotulo">Ordem ' + esc(mc.codigo) + " · " + esc(mc.nome) + "</span>" +
             '<span class="usa">usa ' + (entradas.length ? entradas.join(" · ") : "<em>nenhuma etapa</em>") + "</span>" +
+            (desempateFora(mc).length ? '<span class="usa">desempata pela nota de ' + desempateFora(mc).map(function (id) { return esc(G.etapa(m, id).nome); }).join(", ") + "</span>" : "") +
             '<span class="sai">' + resumoDoCorte(m, p, mc) + "</span>" +
             (pior !== "ok" ? '<span class="selo selo-' + pior + '">' + nivelRotulo[pior] + "</span>" : "") + "</button></li>"
         );
@@ -199,7 +213,9 @@
     return (
       '<section class="area-trilho" aria-labelledby="t-trilho">' + prevista +
       '<h2 id="t-trilho" class="sr">Trilho do Perfil ' + esc(p.codigo) + "</h2>" +
-      '<p class="legenda"><span class="lg lg-etapa"></span> Etapa do edital (vale para todos os Perfis) <span class="lg lg-marco"></span> Ordem deste Perfil, depois da última Etapa que usa <span class="lg lg-portao"></span> Corte: decide quem entra na Etapa</p>' +
+      '<p class="legenda"><span class="lg lg-etapa"></span> Etapa do edital (vale para todos os Perfis) <span class="lg lg-marco"></span> Ordem deste Perfil, posta depois da última Etapa que usa <span class="lg lg-portao"></span> Corte: decide quem entra, por lista</p>' +
+      '<p class="legenda" aria-hidden="true"><svg width="34" height="10"><path class="arco" d="M2 5H26"/><path class="arco ponta" d="M22 1L27 5L22 9"/></svg> nota que entra na conta <svg width="34" height="10"><path class="arco porta" d="M2 5H27"/><path class="arco porta" d="M28 1V9"/></svg> porta: só filtra, não soma <svg width="34" height="10"><path class="arco desempate" d="M2 5H28"/></svg> nota usada só no desempate</p>' +
+      '<p class="legenda">Ninguém eliminado numa Etapa chega às seguintes, haja corte ou não; e quem não for habilitado na Etapa anterior também não, depois que ela tiver resultado. As posições das ordens são leitura: o GPS não as grava.</p>' +
       '<div class="trilho-moldura"><svg class="arcos" aria-hidden="true"></svg><ol class="trilho" aria-label="Etapas e ordens de ' + esc(p.codigo) + ', na ordem do certame">' +
       itens.join("") +
       '<li class="fim' + (G.relacoes(m, p).temFinal ? "" : " sem-final") + '"><span>Resultado de ' + esc(p.codigo) + ": " + p.vagas + " vaga" + (p.vagas > 1 ? "s" : "") + ". " +
@@ -222,7 +238,7 @@
     // fundam numa linha só.
     const marcos = ordemDaJornada(m, p).filter(function (mc) { return mc.entradas.length; });
     const alcance = function (mc) {
-      const idx = mc.entradas.map(function (id) { return G.indice(m, id); });
+      const idx = mc.entradas.concat(desempateFora(mc)).map(function (id) { return G.indice(m, id); });
       return Math.max.apply(null, idx) - Math.min.apply(null, idx);
     };
     const faixas = marcos.slice().sort(function (a, b) { return alcance(a) - alcance(b) || G.posicao(m, a) - G.posicao(m, b); });
@@ -243,24 +259,35 @@
       const ym = rm.top - r0.top + Math.min(24, rm.height / 2);
       const xm = rm.left - r0.left;
       const cls = "arco" + (ativo(mc) ? " ativo" : algumAtivo ? " apagado" : "");
-      let d = "";
-      let pontos = "";
+      let traco = "";
       let topo = ym;
+      let base = ym;
       let xLane = null;
-      mc.entradas.forEach(function (id) {
-        const ee = moldura.querySelector('[data-etapa="' + id + '"] .cartao-etapa');
+      // Cada ligação tem o seu tipo: nota que entra na conta, porta que só filtra, nota só de
+      // desempate. As três descem pela mesma faixa até a ordem.
+      const ligacoes = mc.entradas.map(function (id) { return { id: id, tipo: G.ePorta(m, id) ? "porta" : "nota" }; })
+        .concat(desempateFora(mc).map(function (id) { return { id: id, tipo: "desempate" }; }));
+      ligacoes.forEach(function (lg) {
+        const ee = moldura.querySelector('[data-etapa="' + lg.id + '"] .cartao-etapa');
         if (!ee) return;
         const re = ee.getBoundingClientRect();
         const xe = re.left - r0.left;
         if (xLane === null) xLane = xe - 12 - rank * gap;
         const ye = re.top - r0.top + re.height / 2 + (rank - (n - 1) / 2) * 7;
         topo = Math.min(topo, ye);
-        d += "M" + xe + " " + ye + " H" + xLane + " ";
-        pontos += '<circle class="' + cls + ' ponto" cx="' + xe + '" cy="' + ye + '" r="2.6"/>';
+        base = Math.max(base, ye);
+        if (lg.tipo === "porta") {
+          traco += '<path class="' + cls + ' porta" d="M' + xe + " " + ye + " H" + xLane + '"/>' +
+            '<path class="' + cls + ' porta" d="M' + (xe - 6) + " " + (ye - 5) + " V" + (ye + 5) + '"/>';
+        } else if (lg.tipo === "desempate") {
+          traco += '<path class="' + cls + ' desempate" d="M' + xe + " " + ye + " H" + xLane + '"/>';
+        } else {
+          traco += '<path class="' + cls + '" d="M' + xe + " " + ye + " H" + xLane + '"/>' +
+            '<circle class="' + cls + ' ponto" cx="' + xe + '" cy="' + ye + '" r="2.6"/>';
+        }
       });
       if (xLane === null) return;
-      d += "M" + xLane + " " + topo + " V" + ym + " H" + (xm - 1);
-      const traco = '<path class="' + cls + '" d="' + d + '"/>' + pontos +
+      traco += '<path class="' + cls + '" d="M' + xLane + " " + topo + " V" + base + " M" + xLane + " " + ym + " H" + (xm - 1) + '"/>' +
         '<path class="' + cls + ' ponta" d="M' + (xm - 7) + " " + (ym - 4) + " L" + (xm - 1) + " " + ym + " L" + (xm - 7) + " " + (ym + 4) + '"/>';
       const pt = moldura.querySelector('[data-portao="' + mc.id + '"]');
       let corte = "";

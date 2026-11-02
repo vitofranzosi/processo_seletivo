@@ -82,6 +82,7 @@ input.medio { width: 10em; }
 .estado-incompleta { color: var(--incompleta); }
 .estado-naoRespondida { color: var(--sem-resposta); }
 .estado-ok { color: var(--acento); }
+.estado-execucao { color: var(--execucao); }
 .eixos { display: flex; gap: 24px; flex-wrap: wrap; margin: 12px 0 16px; padding: 10px 14px; background: var(--papel); border: 1px solid var(--linha); border-radius: 8px; font-size: 13px; }
 .eixos p { margin: 0; }
 .eixo { font-weight: 700; margin-right: 4px; }
@@ -136,6 +137,10 @@ table.decisao thead th { background: var(--fundo); font-size: 12px; text-transfo
 .arco.corte { stroke: var(--portao); stroke-dasharray: 4 3; opacity: 0.55; }
 .arco.ativo { stroke: var(--marco-borda); stroke-width: 2.5; opacity: 1; }
 .arco.apagado { opacity: 0.28; }
+.arco.porta { stroke-dasharray: 5 3; }
+.arco.desempate { stroke-dasharray: 1.5 3; stroke-width: 1.5; }
+.legenda svg { vertical-align: middle; overflow: visible; }
+.legenda svg .arco { stroke: var(--marco-borda); }
 .arco.ponto { fill: var(--arco); stroke: none; }
 .arco.ponto.ativo { fill: var(--marco-borda); }
 .arco.ponta { stroke-linejoin: round; }
@@ -170,6 +175,7 @@ table.decisao thead th { background: var(--fundo); font-size: 12px; text-transfo
 .portao.salta { border-width: 2px; }
 .aviso-salto { display: block; color: var(--portao); font-weight: 600; }
 .junta { margin: 0 0 0 40px; }
+.passagem { margin: 6px 0 0; font-size: 12px; color: var(--suave); }
 .mais { border: 0; background: none; color: var(--suave); font-size: 13px; padding: 2px 0; }
 .mais:hover, .mais:focus-visible { color: var(--acento); text-decoration: underline; }
 .fim { margin: 12px 0 0; padding: 10px 12px; border-top: 2px solid var(--tinta); font-weight: 600; }

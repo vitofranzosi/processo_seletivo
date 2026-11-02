@@ -44,8 +44,26 @@ Nenhuma validação pode recusá-las, porque não são inválidas. O operador n�
 - Três estados, sem semáforo único: **sem resposta** (neutro), **incompleta / inválida** (impede
   a publicação) e **leitura** (é o que a estrutura faz; confira).
 
-Ver em [prototipos/v2/](prototipos/v2/index.html). As 16 capturas estão em
-[capturas/rodada2/](capturas/rodada2/).
+**O que as linhas do trilho representam, e o que não.**
+
+São campos gravados pelo GPS:
+- a linha cheia com seta, que é a nota que entra na conta (`stages`, Etapa com nota);
+- a tracejada com barra, que é a porta (`stages`, Etapa decisória: só filtra);
+- a pontilhada, que é a nota usada só no desempate (critério `MAIOR_PONTUACAO_NA_ETAPA`);
+- a tracejada até o portão, que é a Etapa governada pelo corte (`governedStageId`).
+
+O portão diz que o corte vale **por lista de concorrência** (`corte.py`, `_alvo`) e só **depois
+de emitido**. Entre as Etapas, uma linha de passagem escreve a progressão (`prontidao.py`):
+- entra quem foi habilitado na Etapa anterior, quando ela já tem resultado;
+- não entra quem foi eliminado antes.
+
+**É leitura, e não dado:** a posição de cada ordem (depois da última Etapa que usa, como
+`jornada.py`) e a vertical, que é a ordem de progressão e não o calendário. Ficam fora do
+desenho: os recortes um a um, o sorteio e a habilitação prévia do método.
+
+Ver em [prototipos/v2/](prototipos/v2/index.html). As 17 capturas estão em
+[capturas/rodada2/](capturas/rodada2/), incluindo a porta e o desempate fora da ordem
+(v2-16).
 
 ## Em três passos
 

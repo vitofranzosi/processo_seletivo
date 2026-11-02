@@ -31,15 +31,15 @@
     },
     {
       "captura": "v2-06-do-zero-nova-ordem-sem-resposta",
-      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvylcb94-1"
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvyll6n0-1"
     },
     {
       "captura": "v2-07-do-zero-incompleta-empate-e-faixa",
-      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvylcb94-1"
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvyll6n0-1"
     },
     {
       "captura": "v2-08-do-zero-corte-pronto-sem-final",
-      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvylcb94-1"
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=zero&modo=trilho&perfil=docinfo&marca=derivada&sel=marco%3Am-mvyll6n0-1"
     },
     {
       "captura": "v2-09-marca-manual-retirada",
@@ -56,6 +56,10 @@
     {
       "captura": "v2-12-tec-lab-etapas-compartilhadas",
       "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=pronto&perfil=teclab&modo=trilho&marca=derivada"
+    },
+    {
+      "captura": "v2-16-porta-e-desempate-fora-da-ordem",
+      "url": "http://127.0.0.1:8769/prototipos/v2/index.html?cenario=desempateFora&perfil=docmat&sel=marco%3Amatfinal&modo=trilho&marca=derivada"
     },
     {
       "captura": "v2-13-texto-do-edital-como-no-diario",
