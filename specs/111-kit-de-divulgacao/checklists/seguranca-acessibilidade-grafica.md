@@ -21,7 +21,7 @@ implementação**: estes itens são conferidos sobre o código.
 ## Segurança da entrega
 
 - [ ] CHK007 Todo texto entra no SVG como nó escapado, já normalizado pela grafia. O único atributo vindo de dado é `data-campo`, com valor de lista fechada (D-008, D-009)
-- [ ] CHK008 O SVG exportado leva `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; font-src data:` e `X-Content-Type-Options: nosniff`. A fonte embutida é a única coisa que a política admite (FR-3422, FR-3442; D-014, D-021)
+- [ ] CHK008 O SVG exportado leva `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:` e `X-Content-Type-Options: nosniff`. A fonte embutida é a única coisa que a política admite (FR-3422, FR-3442; D-014, D-021)
 - [ ] CHK009 O rasterizador não resolve recurso externo: nenhum `resources_dir`, nenhum `href` fora de `data:` gerado pelo sistema, fontes só por arquivo (D-007)
 - [ ] CHK010 Respostas privadas (`no-store`) em tela, prévia e exportações (FR-3442)
 - [ ] CHK011 A manchete chega como **índice** da lista fechada que a tela ofereceu. O backend recalcula a lista e recusa índice fora dela, ou manchete quando um título oficial cabe (422). Não existe caminho de texto livre (FR-3427; D-013)

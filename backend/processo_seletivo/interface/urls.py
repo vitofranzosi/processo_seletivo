@@ -238,6 +238,12 @@ urlpatterns = [
         kit_de_divulgacao.kit,
         name="kit-de-divulgacao",
     ),
+    # A prévia da peça (111, `D-014`): o PNG que a tela mostra, por GET e sem registro.
+    path(
+        "editais/<uuid:edital_id>/kit-de-divulgacao/previa.png",
+        kit_de_divulgacao.previa,
+        name="kit-de-divulgacao-previa",
+    ),
     path(
         "editais/<uuid:edital_id>/kit-de-divulgacao/exportar/<str:formato>",
         kit_de_divulgacao.exportar,

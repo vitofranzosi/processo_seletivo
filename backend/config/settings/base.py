@@ -249,6 +249,12 @@ EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
 # (`D-009`). Desligada, ninguém confirma aviso e o despacho não tenta nada; o histórico e os modelos
 # continuam (`FR-1282`).
 AVISOS_AOS_CANDIDATOS = os.getenv("AVISOS_AOS_CANDIDATOS", "false").lower() == "true"
+# A peça visual do kit de divulgação (111, `D-010`). **Desligada por padrão**, e é produção quem
+# herda o padrão: a marca entrou versionada, mas o template com ela espera a aprovação da
+# comunicação (SC-1054). Desligada, a tela diz que a peça está em
+# validação, e os textos continuam inteiros (`FR-3432`, EC-21). Produção não recusa subir sem ela:
+# ligar é decisão de produto, e não defeito de configuração.
+KIT_DE_DIVULGACAO_PECA = os.getenv("KIT_DE_DIVULGACAO_PECA", "false").lower() == "true"
 # O ritmo é o do timer: no máximo este número por execução, uma execução por minuto (`R-005`).
 # Valor inicial, e não compromisso: o limite real é o da conta de envio da instituição.
 AVISOS_LIMITE_POR_MINUTO = int(os.getenv("AVISOS_LIMITE_POR_MINUTO", "60"))

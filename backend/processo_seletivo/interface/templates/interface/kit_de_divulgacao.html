@@ -62,8 +62,40 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
   {% endfor %}
 </section>
 
+{% with secao=secao_da_peca %}
+<section class="secao-do-kit" aria-labelledby="titulo-peca">
+  <h2 id="titulo-peca">3. A peça para o feed</h2>
+  {% if secao.peca %}
+  {% if secao.peca.omissao %}<p class="aviso faixa-do-kit">{{ secao.peca.omissao }}</p>{% endif %}
+  {% if secao.manchetes %}
+  <form method="get" class="manchetes-do-kit">
+    <fieldset>
+      <legend>Manchete da peça, no lugar do título</legend>
+      {% for manchete in secao.manchetes %}
+      <label class="opcao-de-manchete"><input type="radio" name="manchete" value="{{ forloop.counter0 }}"{% if secao.manchete == forloop.counter0 %} checked{% endif %}> {{ manchete }}</label>
+      {% endfor %}
+    </fieldset>
+    <button type="submit" class="botao secundario">Usar a manchete</button>
+  </form>
+  {% endif %}
+  {% if secao.motivo %}<p class="aviso faixa-do-kit">{{ secao.motivo }}</p>{% endif %}
+  {% if secao.png %}
+  <img class="previa-da-peca" src="{% url 'interface:kit-de-divulgacao-previa' edital.id %}?impressao={{ ficha.impressao }}{% if secao.manchete is not None %}&amp;manchete={{ secao.manchete }}{% endif %}" width="540" height="675" alt="{{ secao.peca.alternativo }}">
+  {% endif %}
+  <article class="texto-do-kit">
+    <header class="cabecalho-do-texto">
+      <h3 id="nome-texto-alternativo">Texto alternativo da peça</h3>
+      <button type="button" class="acao" data-copiar="texto-alternativo" aria-describedby="nome-texto-alternativo">Copiar</button>
+    </header>
+    <pre class="corpo-do-texto" id="texto-alternativo">{{ secao.peca.alternativo }}</pre>
+  </article>
+  {% else %}
+  <p class="aviso faixa-do-kit">{{ secao.motivo }}</p>
+  {% endif %}
+</section>
+
 <section class="secao-do-kit" aria-labelledby="titulo-exportar">
-  <h2 id="titulo-exportar">3. Exportar</h2>
+  <h2 id="titulo-exportar">4. Exportar</h2>
   <p class="nota">A exportação fica registrada na trilha do Edital, com a versão usada; é por ela que o kit avisa quando o material deixar de corresponder ao Edital.</p>
   <div class="exportacoes-do-kit">
     {% for formato in formatos %}
@@ -73,8 +105,19 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
       <button type="submit" class="botao secundario">Baixar textos (.{{ formato }})</button>
     </form>
     {% endfor %}
+    {% if secao.peca %}
+    {% for formato in formatos_da_peca %}{% if formato == "svg" or secao.png %}
+    <form method="post" action="{% url 'interface:kit-de-divulgacao-exportar' edital.id formato %}">
+      {% csrf_token %}
+      <input type="hidden" name="impressao" value="{{ ficha.impressao }}">
+      {% if secao.manchete is not None %}<input type="hidden" name="manchete" value="{{ secao.manchete }}">{% endif %}
+      <button type="submit" class="botao secundario">Baixar peça (.{{ formato }})</button>
+    </form>
+    {% endif %}{% endfor %}
+    {% endif %}
   </div>
 </section>
+{% endwith %}
 {% endif %}
 </div>
 <script src="{% estatico 'interface/kit-de-divulgacao.js' %}" defer></script>

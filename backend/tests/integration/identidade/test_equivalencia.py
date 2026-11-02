@@ -79,12 +79,32 @@ def test_a_janela_de_espera_e_a_mesma(client, identidade_conhecida):
     assert ler(client, CONHECIDO) == ler(client, DESCONHECIDO).replace(DESCONHECIDO, CONHECIDO)
 
 
-def test_o_limite_esgotado_responde_como_o_caminho_feliz(client):
-    for _ in range(servico.LIMITE_POR_ENDERECO + 2):
-        resposta = pedir(client, DESCONHECIDO)
-        assert resposta.status_code == 302
-    corpo = client.get(reverse("portal:acesso-codigo")).content.decode()
-    assert "Se este endereço puder ser utilizado" in corpo
+def test_o_limite_esgotado_responde_igual_exista_ou_nao(client, identidade_conhecida):
+    """O teto se diz desde a FR-031c — e se diz igual para os dois lados.
+
+    Este teste afirmava que o limite esgotado respondia "como o caminho feliz". Não chegava a
+    esgotá-lo — os pedidos seguidos paravam na espera de um minuto —, e a regra que ele guardava
+    mandava a quem esbarrava no teto a frase do envio e "pode pedir outro código agora". Esconder o
+    teto não protegia nada: o que precisa ser idêntico é a resposta para quem existe e para quem
+    não existe, e é isso que se confere aqui. O teto da origem está em `test_limite_por_origem`.
+    """
+    agora = servico.timezone.now()
+    for endereco in (CONHECIDO, DESCONHECIDO):
+        for indice in range(servico.LIMITE_POR_ENDERECO):
+            servico.solicitar(
+                email_canonico=endereco, finalidade=ENTRAR, origem=f"192.0.2.{indice}"
+            )
+            DesafioDeAcesso.objects.filter(email_canonico=endereco).update(
+                criado_em=agora - servico.timedelta(seconds=120)
+            )
+
+    com = ler(client, CONHECIDO)
+    client.session.flush()
+    sem = ler(client, DESCONHECIDO)
+
+    assert "atingiu o limite de pedidos" in com
+    assert pedir(client, CONHECIDO).status_code == pedir(client, DESCONHECIDO).status_code == 302
+    assert com.replace(CONHECIDO, "X") == sem.replace(DESCONHECIDO, "X")
 
 
 def test_a_falha_de_envio_nao_aparece(client, settings, monkeypatch):

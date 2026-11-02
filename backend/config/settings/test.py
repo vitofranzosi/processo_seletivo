@@ -23,3 +23,7 @@ ASSISTENTE_SERVICO = ""
 # e quem liga a chave lá para subir o servidor ligaria o painel em toda página de seleção da suíte.
 # Os casos da `074` a ligam por `settings`.
 ASSISTENTE_NA_PAGINA_DO_EDITAL = False
+
+# A peça do kit (111) ligada, e fixada aqui pela razão do painel acima: o `.env` não decide a suíte.
+# Os casos da chave desligada a desligam por `settings` (EC-21).
+KIT_DE_DIVULGACAO_PECA = True
