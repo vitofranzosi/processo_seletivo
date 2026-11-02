@@ -77,7 +77,7 @@ def test_mesma_ficha_mesmo_svg():
 # ---- PNG (D-007) ----------------------------------------------------------------------------
 
 sem_rasterizador = pytest.mark.skipif(
-    not kit_pacote.disponivel(), reason="o grupo opcional `peca` (resvg-py) não está instalado"
+    not kit_pacote.disponivel(), reason="o `resvg-py` não está instalado neste ambiente"
 )
 
 

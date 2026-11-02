@@ -199,7 +199,7 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
 
   **Aprovado pelo usuário (P-4)**, fixar a versão em `pyproject.toml` e `uv.lock`. Reprovado, seguir a alternativa da D-007.
 
-  **Estado em 01/11**: verificação aprovada nos sete itens, registrada. A P-4 continua do usuário: até ela, o `resvg-py==0.5.0` fica no grupo opcional `peca` (travado no `uv.lock`), que o CI e a imagem de desenvolvimento instalam e a produção não.
+  **Estado em 01/11**: verificação aprovada nos sete itens, registrada, e **P-4 aprovada pelo usuário** no mesmo dia: `resvg-py==0.5.0` em `dependencies`, travado no `uv.lock`.
 - [x] T025 [US2] Prévia e exportação da peça em `processo_seletivo/interface/kit_de_divulgacao.py`:
   - GET `previa.png` com a impressão conferida, sem registro (D-014, FR-3446);
   - POST `exportar/png` e `exportar/svg` com os cabeçalhos do contrato (FR-3442);

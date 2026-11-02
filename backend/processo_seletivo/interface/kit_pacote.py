@@ -1,8 +1,9 @@
 """O PNG da peça: a única camada que pede algo de fora do projeto (111, D-007).
 
-**O rasterizador é o `resvg-py`, num grupo opcional até a P-4.** Sem ele instalado, `disponivel()` é
-falso e a tela diz que a peça não tem PNG neste ambiente; o SVG e os textos continuam. A verificação
-que o sustenta está em `specs/111-kit-de-divulgacao/verificacao-do-motor.md`.
+**O rasterizador é o `resvg-py`**, dependência de execução desde a P-4 (aprovada em 01/11), com a
+verificação em `specs/111-kit-de-divulgacao/verificacao-do-motor.md`. `disponivel()` sobra como
+defesa: num ambiente montado sem ele, a tela diz que a peça não tem PNG, e o SVG e os textos
+continuam.
 
 **As fontes são as do Edital, e só elas.** `skip_system_fonts=True` impede que o resvg
 complete um glifo com a fonte da máquina — uma no Mac da equipe, outra no servidor —, e o PNG

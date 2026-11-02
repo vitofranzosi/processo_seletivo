@@ -5,10 +5,11 @@
 **Resultado**: aprovado nos sete itens da D-007. O item 2 vale com uma ressalva: a execução no Linux é
 a do CI, porque não há imagem de produção versionada nem Docker na máquina da verificação.
 
-**A decisão de adotá-lo é do usuário (P-4).** Até lá, a dependência fica num grupo opcional,
-`peca`, no `pyproject.toml`, com a versão exata travada no `uv.lock`. A produção não instala o grupo,
-e a chave `KIT_DE_DIVULGACAO_PECA` fica desligada lá. Para aprovar, a linha desce para
-`dependencies`; para reprovar, a alternativa da D-007 é o CairoSVG.
+**Aprovado pelo usuário em 01/11 (P-4).** O `resvg-py==0.5.0` é dependência de execução, em
+`dependencies` do `pyproject.toml`, travada no `uv.lock`. A alternativa da D-007, o CairoSVG, foi
+posta ao lado e preterida: pede a `libcairo2` no sistema e acha a fonte pelo nome, nas fontes
+instaladas, e a peça perderia a garantia de sair com a Edital Sans. A peça continua desligada em
+produção pela chave `KIT_DE_DIVULGACAO_PECA` até a aprovação do template (SC-1054).
 
 ## 1. Licença
 
@@ -35,9 +36,9 @@ e a chave `KIT_DE_DIVULGACAO_PECA` fica desligada lá. Para aprovar, a linha des
 - **Wheels**: o PyPI publica `cp310-abi3` para `manylinux_2_17` e `musllinux_1_2`, em `x86_64` e
   `aarch64` (além de armv7l, ppc64le, s390x e i686). A ABI estável cobre o Python 3.13 do projeto.
 - **Imagem**: a de desenvolvimento (`python:3.13-slim-bookworm`, glibc 2.36) cabe no
-  `manylinux_2_17`, e passa a instalar o grupo `peca`. Nenhuma biblioteca de sistema é pedida — o
+  `manylinux_2_17`, e o instala com as demais dependências. Nenhuma biblioteca de sistema é pedida — o
   resvg não usa cairo, freetype nem fontconfig.
-- **Execução**: o CI (`ubuntu-latest`) passa a instalar o grupo `peca` e roda
+- **Execução**: o CI (`ubuntu-latest`) o instala com as demais dependências e roda
   `tests/unit/kit/test_svg.py`, que gera o PNG duas vezes e exige os mesmos bytes. **A imagem de
   produção não é versionada**, e a verificação nela fica para quem a monta, com o mesmo teste.
 
@@ -83,6 +84,6 @@ pedem fila nem cache.
 
 ## 7. Versão fixada
 
-`resvg-py==0.5.0` no grupo `peca` do `backend/pyproject.toml`, travada no `backend/uv.lock`. Igual,
+`resvg-py==0.5.0` em `dependencies` do `backend/pyproject.toml`, travada no `backend/uv.lock`. Igual,
 e não intervalo: outra versão do resvg pode mudar o antisserrilhado, e o PNG deixaria de ser o mesmo
 entre duas implantações.

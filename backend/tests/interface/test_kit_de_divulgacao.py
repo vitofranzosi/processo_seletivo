@@ -127,7 +127,7 @@ def comunicacao(client, seletor_ligado):
 
 sem_rasterizador = pytest.mark.skipif(
     not __import__("processo_seletivo.interface.kit_pacote", fromlist=["x"]).disponivel(),
-    reason="o grupo opcional `peca` (resvg-py) não está instalado",
+    reason="o `resvg-py` não está instalado neste ambiente",
 )
 
 

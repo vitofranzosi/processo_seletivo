@@ -607,16 +607,16 @@ São os 11 da POC e cinco a mais. Viram casos automatizados (SC-1053) e a galeri
 
 ## Pendências de produto
 
-Nenhuma bloqueia o **início** da implementação. A P-3 e a P-4 bloqueiam a **liberação da peça** em
-produção. A P-1, a P-2 e a P-7 bloqueiam a **atribuição do papel a qualquer pessoa**. A P-2 é
+Nenhuma bloqueia o **início** da implementação. A P-3 e a P-4 bloqueavam a **liberação da peça** em
+produção; desde 01/11, o que a bloqueia é só a aprovação do template (SC-1054). A P-1, a P-2 e a P-7 bloqueiam a **atribuição do papel a qualquer pessoa**. A P-2 é
 resolvida por spec própria, e não aqui (decisão do usuário de 01/11).
 
 | # | Pergunta | Comportamento enquanto não respondida |
 |---|---|---|
 | **P-1** | O papel restrito chama-se "Comunicação"? A capacidade também vai para algum papel existente (o `gestor`, o `publicador`)? | Papel próprio, e nenhum papel existente a recebe (FR-3403) |
 | **P-2** | **Achado desta spec, ampliado pela revisão.** Qualquer pessoa da unidade, sem capacidade nenhuma, enxerga hoje pela gestão: <ul><li>"Processos Seletivos" e "Agenda" (`navegacao.py`);</li><li>a lista e o detalhe de todo Edital (`views.py`, `lista` e `detalhe`);</li><li>no detalhe, as Retificações **em curso** (`atos_retificacao.em_curso_por_edital`), as pendências e os participantes;</li><li>a prévia do rascunho (`_edital_com_previa`). Os anexos do rascunho, ao contrário, exigem `LEITURA_DO_RASCUNHO`.</li></ul>Uma pessoa só da comunicação saberia de prorrogação, cancelamento ou Retificação antes de publicados. **Encaminhada pelo usuário em 01/11 a spec própria**, separada desta: quem pode ler conteúdo não publicado, com a verificação no backend. Uma entrada própria para a Comunicação melhora a jornada, mas **sozinha não fecha** o acesso direto às outras URLs. | Nenhuma atribuição do papel até a spec da P-2 estar mergeada. O desenvolvimento do incremento A segue. A tela do kit lê só o publicado (FR-3404) |
-| **P-3** | Quem fornece os ativos oficiais e o manual? É a marca do Ifes, a da unidade ou as duas? O manual exige fonte própria? | Peça desligada em produção (D-010); marcador declarado em desenvolvimento |
-| **P-4** | O `resvg-py` é aprovado depois da verificação da D-007 (licença, Linux, fontes, segurança, reprodutibilidade, lote)? | A peça não entra em produção; se reprovado, a D-007 diz a alternativa |
+| **P-3** | Quem fornece os ativos oficiais e o manual? É a marca do Ifes, a da unidade ou as duas? O manual exige fonte própria? | **Origem respondida em 01/11**: a página de download de marcas do Ifes, indicada pelo usuário, com o manual de 2015; entram a do Cefor e a do Ifes (`kit_ativos/ORIGEM.md`). O template com a marca segue sem aprovação (SC-1054), e a peça, desligada em produção (D-010) |
+| **P-4** | O `resvg-py` é aprovado depois da verificação da D-007 (licença, Linux, fontes, segurança, reprodutibilidade, lote)? | **Respondida em 01/11: aprovado** pelo usuário, depois de `verificacao-do-motor.md`; preterido o CairoSVG |
 | **P-5** | "Copiar" também registra, para que a desatualização alcance quem só copiou? | Não registra: só as exportações registram |
 | **P-6** | Quem liga a peça em produção depois da aprovação do template? | A operação, pela chave de ambiente, como a dos avisos (`066`) |
 | **P-7** | A pessoa da comunicação precisa ver o kit de Editais de **mais de uma** unidade? | Um vínculo por unidade, pela `107`, como os demais papéis |

@@ -341,6 +341,7 @@ dependencies = [
     { name = "djangorestframework" },
     { name = "openpyxl" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "resvg-py" },
 ]
 
 [package.optional-dependencies]
@@ -359,9 +360,6 @@ dev = [
 navegador = [
     { name = "playwright" },
 ]
-peca = [
-    { name = "resvg-py" },
-]
 
 [package.metadata]
 requires-dist = [
@@ -376,11 +374,11 @@ requires-dist = [
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.11,<5" },
     { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.8,<4" },
     { name = "pyyaml", marker = "extra == 'dev'", specifier = ">=6,<7" },
-    { name = "resvg-py", marker = "extra == 'peca'", specifier = "==0.5.0" },
+    { name = "resvg-py", specifier = "==0.5.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.14.14,<0.15" },
     { name = "tokenizers", marker = "extra == 'assistente'", specifier = ">=0.23,<0.24" },
 ]
-provides-extras = ["dev", "assistente", "navegador", "peca"]
+provides-extras = ["dev", "assistente", "navegador"]
 
 [[package]]
 name = "psycopg"
