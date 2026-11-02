@@ -71,7 +71,17 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        for campo in ("correlationId", "code", "status", "operation", "actor"):
+        # `origin` e `retryAfter` vieram com o limite por origem (010, FR-031c): sem eles, a recusa
+        # de uma sala inteira não dizia de que rede nem por quanto tempo.
+        for campo in (
+            "correlationId",
+            "code",
+            "status",
+            "operation",
+            "actor",
+            "origin",
+            "retryAfter",
+        ):
             valor = getattr(record, campo, None)
             if valor is not None:
                 payload[campo] = valor

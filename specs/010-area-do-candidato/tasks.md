@@ -84,6 +84,8 @@ servidor, colá-lo inteiro e chegar a uma área pessoal vazia, sem que CPF seja 
 
 - [X] T019 [P] [US1] Teste de contrato de `GET|POST /acesso` e `GET|POST /acesso/codigo`, conforme `contracts/acesso.md`, em `backend/tests/contract/portal/test_acesso.py`
 - [X] T020 [P] [US1] Teste de que a resposta, o código de estado, o texto e a janela de reenvio são idênticos nos quatro casos que poderiam revelar existência — endereço com identidade, sem identidade, limite esgotado e **falha de envio** — em `backend/tests/integration/identidade/test_equivalencia.py`
+  > **Emendado pelo A-12 da auditoria de prontidão (01/11/2026):** o limite esgotado responde igual
+  > exista ou não identidade, e não mais igual ao caminho feliz (`FR-031c`, T118).
 - [X] T021 [P] [US1] Teste de que duas requisições simultâneas com o mesmo código produzem **um** consumo em `backend/tests/integration/identidade/test_consumo_atomico.py`
 - [X] T022 [P] [US1] Teste do ciclo do desafio — expiração por instante absoluto, uso único, novo código invalidando anteriores, teto de cinco tentativas — em `backend/tests/integration/identidade/test_desafio.py`
 - [X] T022a [P] [US1] Teste de finalidade cruzada: um código pedido para **entrar** não confirma adição de credencial, e um pedido para **adicionar** não autentica — em `backend/tests/integration/identidade/test_finalidade.py`
@@ -343,6 +345,17 @@ trabalho pendente.
 - [X] T117 Transformar a varredura de citações em teste — nenhum identificador citado sem requisito que o defina, nenhuma decisão citada fora do `research.md` da própria feature, e nenhuma linha perdida na matriz — em `backend/tests/test_citacoes_de_requisito.py`
 
 **Checkpoint**: a jornada roda de ponta a ponta, e cada ato do candidato responde por escrito.
+
+### Emenda do A-12 — o teto por origem (01/11/2026)
+
+- [X] T118 Dizer qual teto recusou o pedido, o tempo efetivo e a saída, e registrar cada recusa —
+  `backend/processo_seletivo/identidade/application/desafio.py`,
+  `backend/processo_seletivo/identidade/application/mensagem.py`,
+  `backend/processo_seletivo/shared/observability.py`, `backend/processo_seletivo/portal/views.py` e
+  `backend/processo_seletivo/portal/templates/portal/acesso_codigo.html` (**FR-031c**, D-034); testes
+  em `backend/tests/integration/identidade/test_limite_por_origem.py`,
+  `backend/tests/integration/identidade/test_limite_concorrente.py` e
+  `backend/tests/integration/identidade/test_equivalencia.py`
 
 ---
 

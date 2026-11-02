@@ -882,7 +882,7 @@ nomeia a variável.
 | `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5; testar: §10.4 |
 | `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:162-167`) |
 | `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:202-209`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:190-198`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:794-797`) |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:190-198`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:808-811`) |
 | `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:228-257`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
 | `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:266,279-284` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
@@ -1595,7 +1595,7 @@ proxy_set_header Connection "";
 proxy_set_header Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
 # SOBRESCREVE, e não acrescenta: o portal confia no PRIMEIRO item deste cabeçalho para o limite de
-# pedidos por origem (portal/views.py:794-797). Com $proxy_add_x_forwarded_for, um cliente escreveria
+# pedidos por origem (portal/views.py:808-811). Com $proxy_add_x_forwarded_for, um cliente escreveria
 # o primeiro item e contornaria o limite.
 proxy_set_header X-Forwarded-For $remote_addr;
 proxy_set_header X-Real-IP $remote_addr;
@@ -2247,7 +2247,7 @@ A duração medida é o **RTO real**. Registre-a no checklist de go-live.
 
 | Log | Onde | Rotação e retenção |
 |---|---|---|
-| Aplicação: JSON com `level`, `logger`, `message`, `correlationId`, `code`, `status`, `actor` | `journalctl -u processoseletivo` | journald (§20.2) |
+| Aplicação: JSON com `level`, `logger`, `message`, `correlationId`, `code`, `status`, `actor` — e `operation`, `origin`, `retryAfter` nas recusas de código de acesso | `journalctl -u processoseletivo` | journald (§20.2) |
 | Timers: backup, verificação, limpeza, CEP | `journalctl -u ps-backup -u ps-verificar -u ps-limpeza -u ps-ceps` | journald |
 | Proxy (acesso, com `rid=`) | `/var/log/nginx/processoseletivo.access.log` | `/etc/logrotate.d/nginx` (padrão: diário, 14) |
 | Proxy (erro) | `/var/log/nginx/processoseletivo.error.log` | idem |
@@ -2287,10 +2287,33 @@ journalctl -u processoseletivo --since today -o cat | grep operacao_recusada
 journalctl -u processoseletivo --since today | grep -E 'WORKER TIMEOUT|Worker .* was sent'
 # Falhas de envio de e-mail
 journalctl -u processoseletivo --since today -o cat | grep -i 'Falha ao enviar'
+# Códigos de acesso não enviados, por motivo (010, FR-031c): limite_por_origem, limite_por_endereco,
+# espera_de_reenvio — e envio_de_codigo_falhou, que é o correio
+journalctl -u processoseletivo --since today -o cat \
+  | grep -E 'codigo_de_acesso_nao_enviado|envio_de_codigo_falhou' \
+  | grep -oE '"code": "[a-z_]+"' | sort | uniq -c
+# A rede de um polo bateu no teto? `origin` é o começo do sha256 do IP público dela
+printf '%s' '<IP_DO_POLO>' | sha256sum | cut -c1-12
+journalctl -u processoseletivo --since today -o cat | grep limite_por_origem | grep '<12_PRIMEIROS>'
 # Tudo o que aconteceu num pedido, do proxy à auditoria, pelo rid
 grep 'rid=<RID>' /var/log/nginx/processoseletivo.access.log
 journalctl -u processoseletivo -o cat | grep '<RID>'
 ```
+
+**Inscrição presencial em polo, laboratório ou telecentro.** O portal aceita até **30 pedidos de
+código de acesso por hora por rede** (`LIMITE_POR_ORIGEM`), e todos os computadores de um polo
+costumam sair pela internet com o mesmo endereço. O limite fica em 30 por decisão do produto
+(01/11/2026, D-034 da `010`); a orientação aos polos é:
+
+- **Escalonar a sala**: até ~25 pessoas por hora pedindo código, deixando folga para reenvios. A
+  janela é deslizante — cada pedido deixa de contar uma hora depois de feito.
+- **Pedir o código uma vez** e usar o mais recente; ele vale 10 minutos. Depois de entrar, a
+  inscrição não pede código de novo.
+- **Ter outra conexão à mão**: os dados móveis do celular resolvem na hora. É o que a tela diz a
+  quem passa do limite, junto com o tempo real de espera e o atendimento.
+- **No dia**, quem acompanha confere pelo `origin` acima se a rede do polo bateu no teto. Todas as
+  recusas vindo de uma origem só, e de polos diferentes, é sinal de proxy mal declarado
+  (`PORTAL_ATRAS_DE_PROXY`): aí o teto vale para a instituição inteira.
 
 **Quem fez o quê, quando.** A trilha é a fonte:
 
