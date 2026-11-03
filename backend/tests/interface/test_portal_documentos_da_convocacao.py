@@ -270,3 +270,23 @@ def test_o_bolsista_baixa_o_modelo_anexo_e_nada_diz_bolsa_concedida(
     assert "Requerimento de Matrícula" not in corpo
     assert not any(termo in corpo.lower() for termo in TERMOS_DE_VINCULO)
     assert item(convocacao, FICHA).situacao == "OBRIGATORIO"
+
+
+def test_a_pendencia_sobre_o_que_nao_chegou_mostra_o_motivo(aluno, gestor, client):
+    """Revisão do #369: antes, o item dizia só "Falta enviar", e o motivo sumia."""
+    pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+    conferir(gestor, convocacao, CERTIDAO, "PENDENTE", chave="pp0", motivo="Envie a de casamento.")
+    entrar_como(client, pessoa)
+
+    corpo = tela(client, pessoa)
+
+    assert "Pendente: Envie a de casamento." in corpo
+
+
+def test_a_pagina_publica_avisa_o_que_a_convocacao_pedira(aluno, client):
+    edital, _, _ = aluno
+
+    corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
+
+    assert "Se for convocado, a convocação pedirá também:" in corpo
+    assert "Certidão de nascimento ou casamento" in corpo

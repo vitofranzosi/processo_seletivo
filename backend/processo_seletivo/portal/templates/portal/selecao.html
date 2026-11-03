@@ -279,6 +279,12 @@ documentos, que é a ordem das perguntas de quem decide.
               {% for documento in grupo.documentos %}<li>{{ documento }}</li>{% endfor %}
             </ul>
             {% endfor %}
+            {% if perfil.documentos_anunciados.na_convocacao %}
+            <p class="meta">Se for convocado, a convocação pedirá também:</p>
+            <ul>
+              {% for documento in perfil.documentos_anunciados.na_convocacao %}<li>{{ documento }}</li>{% endfor %}
+            </ul>
+            {% endif %}
             <p class="meta">Cada um em PDF, até {% limite_de_arquivo %}.</p>
           </details>
           {% endif %}

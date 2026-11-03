@@ -607,6 +607,8 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   - chamada desfechada ou sucedida MUST receber recusa que o diga;
   - vencimento decorrido MUST receber recusa que diz o prazo e que a comissão decide, sem prometer
     reabertura;
+  - item já conferido como conforme ou não se aplica, e Processo em estado final, MUST receber recusa
+    que o diga (revisão do PR de implementação, 03/11/2026: a regra é do comando, e não só da tela);
   - arquivo inválido MUST receber as mesmas recusas da inscrição.
 - **FR-3583**: A inscrição enviada MUST continuar imutável. A apresentação na convocação MUST NOT
   alterar, acrescentar nem substituir documento da inscrição, nem a lista exigida dela. O Requerimento

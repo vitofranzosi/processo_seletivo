@@ -606,3 +606,83 @@ def test_o_documento_da_inscricao_aproveitado_nao_sai_com_a_referencia(certifica
         DocumentoSubmetido.objects.get(pk=referencia.documento_da_inscricao_id).delete()
     with pytest.raises(TypeError):
         referencia.delete()
+
+
+# --- a revisão do #369 --------------------------------------------------------------------------
+
+
+def test_pendencia_sobre_o_que_nao_chegou_e_pendencia(aluno, gestor):
+    """O motivo de uma pendência registrada antes de qualquer envio é o que a pessoa precisa ler."""
+    _, convocacao = convocar_primeira(aluno, gestor)
+
+    conferir(
+        gestor, convocacao, CERTIDAO, "PENDENTE", chave="sem-envio", motivo="Envie a de casamento."
+    )
+
+    assert lido(convocacao, CERTIDAO).estado == nomes.ITEM_PENDENTE
+    assert servico.leitura_da_chamada(convocacao).estado == nomes.DOCUMENTOS_COM_PENDENCIA
+
+
+def test_sem_versao_indicada_a_conferencia_julga_a_vigente(aluno, gestor):
+    pessoa, convocacao = convocar_primeira(aluno, gestor)
+    feita = apresentar(pessoa, convocacao, CERTIDAO).apresentacao
+
+    conferencia = servico.conferir(
+        actor=gestor,
+        item_id=item(convocacao, CERTIDAO).id,
+        apresentacao_id=None,
+        resultado="PENDENTE",
+        motivo="Ilegível.",
+        idempotency_key="sem-versao",
+        correlation_id="teste-115",
+    )
+
+    assert conferencia.apresentacao_id == feita.id
+    assert lido(convocacao, CERTIDAO).estado == nomes.ITEM_PENDENTE
+
+
+def test_o_documento_ja_conferido_nao_recebe_outro_arquivo(aluno, gestor):
+    pessoa, convocacao = convocar_primeira(aluno, gestor)
+    apresentar(pessoa, convocacao, CERTIDAO, corpo=b"v1")
+    conferir(gestor, convocacao, CERTIDAO, "CONFORME", chave="ja-conforme")
+
+    with pytest.raises(DomainError) as recusa:
+        apresentar(pessoa, convocacao, CERTIDAO, corpo=b"v2")
+
+    assert recusa.value.code == nomes.DOCUMENTO_JA_CONFERIDO
+    assert item(convocacao, CERTIDAO).apresentacoes.count() == 1
+    assert lido(convocacao, CERTIDAO).estado == nomes.ITEM_CONFORME
+
+
+def test_processo_em_estado_final_nao_recebe_documento(aluno, gestor):
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    edital, _, _ = aluno
+    pessoa, convocacao = convocar_primeira(aluno, gestor)
+    ProcessoSeletivo.objects.filter(pk=edital.processo_id).update(
+        status=ProcessoSeletivo.Status.ENCERRADO
+    )
+
+    with pytest.raises(DomainError):
+        apresentar(pessoa, convocacao, CERTIDAO)
+    assert not item(convocacao, CERTIDAO).apresentacoes.exists()
+
+
+def test_as_raizes_de_varias_convocacoes_saem_sem_subir_elo_a_elo(aluno, gestor):
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    edital, _, _ = aluno
+    pessoa, convocacao = convocar_primeira(aluno, gestor)
+    sucessora = _corrigir(
+        edital, gestor, pessoa, chave="raizes", motivo="Corrigir o fundamento.", vencimento=None
+    )
+    from processo_seletivo.convocacao.models import Convocacao
+
+    sucessora = Convocacao.objects.get(pk=sucessora.pk)
+    with CaptureQueriesContext(connection) as consultas:
+        raizes = servico.raizes_das([sucessora, convocacao])
+
+    assert raizes[sucessora.id].id == convocacao.id
+    assert raizes[convocacao.id].id == convocacao.id
+    assert len(consultas) == 1

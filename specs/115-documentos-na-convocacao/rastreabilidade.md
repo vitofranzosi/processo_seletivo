@@ -22,10 +22,10 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3563 (momento; ausência é a inscrição) | T008, T010, T012 | `md::test_a_ausencia_do_momento_e_a_inscricao`; `integration/publicacoes/test_elevacao_de_versao.py` (degrau 18); `pdf::test_sem_documento_na_convocacao_o_pdf_e_o_de_antes` |
 | FR-3564 (momento publicado, não retificável) | T008, T012 | `contract/test_mutabilidade.py` (fixture `rascunho_completo` com o campo); `interface/test_retificar_exclusoes.py`; `contract/test_forma_publicada.py` |
 | FR-3565 (mesmos atributos e validações) | T009, T010 | `md::test_a_aplicabilidade_da_convocacao_ve_so_o_documento_da_convocacao`; `interface/test_campos_vem_do_contrato.py` (84 retificáveis) |
-| FR-3566 (aproveitamento e recusas) | T010, T012 | `md::test_o_aproveitamento_incoerente_e_recusado` (cinco casos), `::test_o_aproveitamento_valido_nao_tem_problema` |
+| FR-3566 (aproveitamento e recusas) | T010, T012 | `mx::test_a_linha_nova_de_documento_oferece_o_aproveitamento`; `md::test_o_aproveitamento_incoerente_e_recusado` (cinco casos), `::test_o_aproveitamento_valido_nao_tem_problema` |
 | FR-3567 (obrigatoriedades independentes) | T010 | `md::test_o_aproveitamento_valido_nao_tem_problema` |
 | FR-3568 (inscrição só com os da inscrição) | T010, T011 | `md::test_a_aplicabilidade_padrao_nao_ve_o_documento_da_convocacao`; `fi` inteiro |
-| FR-3569 (seção do PDF) | T013 | `pdf` inteiro — ver *Divergências* em `verificacao.md` |
+| FR-3569 (seção do PDF) | T013 | `pt::test_a_pagina_publica_avisa_o_que_a_convocacao_pedira`; `unit/duvidas/test_casos_da_revisao.py::test_a_p05_menciona_o_que_so_a_convocacao_pede`; `pdf` inteiro — ver *Divergências* em `verificacao.md` |
 | FR-3570 (Retificação não oferece momento nem aproveitamento) | T012 | `interface/test_retificar_exclusoes.py`; `interface/test_campos_vem_do_contrato.py` |
 | FR-3571 (a classificação não lê documento da convocação) | T011 | `md::test_a_aplicabilidade_padrao_nao_ve_o_documento_da_convocacao`; `fi::test_a_inscricao_e_enviada_sem_o_documento_da_convocacao` |
 | FR-3572 (lista gravada na raiz, no ato) | T020 | `dc::test_a_raiz_da_chamada_grava_um_item_por_documento_da_convocacao` |
@@ -38,10 +38,10 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3579 (versões append-only, `PROTECT`) | T019, T021 | `dc::test_o_titular_apresenta_e_cada_envio_e_uma_versao`, `::test_o_documento_da_inscricao_aproveitado_nao_sai_com_a_referencia` |
 | FR-3580 (arquivo novo sucede a referência) | T021 | `dc::test_o_arquivo_novo_sucede_a_referencia` |
 | FR-3581 (envio duplicado) | T021 | `dc::test_o_mesmo_arquivo_de_novo_nao_cria_versao`, `::test_duas_apresentacoes_com_o_mesmo_numero_sao_recusadas_pelo_banco` |
-| FR-3582 (recusas sem gravar) | T021, T022 | `dc::test_o_arquivo_invalido_e_recusado_com_as_recusas_da_inscricao`, `::test_o_arquivo_acima_do_limite_e_recusado`, `::test_outro_candidato_recebe_a_recusa_de_inexistente`, `::test_depois_do_vencimento_a_apresentacao_e_recusada_e_nada_e_gravado`; `pt::test_o_arquivo_invalido_volta_com_a_recusa_da_inscricao` |
+| FR-3582 (recusas sem gravar) | T021, T022 | `dc::test_o_documento_ja_conferido_nao_recebe_outro_arquivo`, `::test_processo_em_estado_final_nao_recebe_documento`, `dc::test_o_arquivo_invalido_e_recusado_com_as_recusas_da_inscricao`, `::test_o_arquivo_acima_do_limite_e_recusado`, `::test_outro_candidato_recebe_a_recusa_de_inexistente`, `::test_depois_do_vencimento_a_apresentacao_e_recusada_e_nada_e_gravado`; `pt::test_o_arquivo_invalido_volta_com_a_recusa_da_inscricao` |
 | FR-3583 (inscrição imutável; requerimento independente) | T021 | `dc::test_a_apresentacao_nao_toca_a_inscricao_enviada`; `integration/requerimentos/test_convivencia_com_o_anexo.py` (inalterado) |
 | FR-3584 (portal mostra o resultado, não quem conferiu) | T022 | `pt::test_a_convocada_envia_pelo_portal_e_le_o_resultado` |
-| FR-3585 (os três resultados) | T031 | `dc::test_pendente_exige_motivo_e_o_motivo_volta_ao_estado`, `::test_nao_se_aplica_sem_apresentacao_com_motivo`, `::test_conforme_exige_ter_aberto_a_versao_vigente` |
+| FR-3585 (os três resultados) | T031 | `dc::test_pendencia_sobre_o_que_nao_chegou_e_pendencia`, `::test_sem_versao_indicada_a_conferencia_julga_a_vigente`; `pt::test_a_pendencia_sobre_o_que_nao_chegou_mostra_o_motivo`; `dc::test_pendente_exige_motivo_e_o_motivo_volta_ao_estado`, `::test_nao_se_aplica_sem_apresentacao_com_motivo`, `::test_conforme_exige_ter_aberto_a_versao_vigente` |
 | FR-3586 (append-only; substituição com motivo) | T031 | `dc::test_mudar_a_conferencia_da_mesma_versao_exige_motivo`, `::test_a_conferencia_e_append_only` |
 | FR-3587 (versão superada) | T031 | `dc::test_conferencia_sobre_versao_superada_e_recusada` |
 | FR-3588 (conferência depois do vencimento) | T031 | `dc::test_a_conferencia_continua_depois_do_vencimento` |
@@ -53,7 +53,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3594 (fundamento pré-redigido) | T034 | `dc::test_o_fundamento_do_indeferimento_vem_das_pendencias`; `mx::test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos` |
 | FR-3595 (predicado único) | T029, T033 | `al` inteiro; `mx` inteiro |
 | FR-3596 (o alocado não desfecha) | T029 | `al::test_o_membro_alocado_confere_e_nao_desfecha`; `mx::test_o_membro_alocado_confere_e_nao_desfecha`; `nv::test_bolsista_devolve_a_ficha_o_alocado_confere_e_a_presidencia_aceita` |
-| FR-3597 (alocação registrada e revogável) | T029, T030 | `al::test_a_revogacao_e_a_saida_da_comissao_tiram_o_alcance_na_hora`, `::test_o_membro_alocado_nao_aloca`; `nv::test_bolsista_devolve_a_ficha_o_alocado_confere_e_a_presidencia_aceita` |
+| FR-3597 (alocação registrada e revogável) | T029, T030 | `al::test_a_alocacao_a_perfil_que_o_edital_nao_tem_e_recusada`; `al::test_a_revogacao_e_a_saida_da_comissao_tiram_o_alcance_na_hora`, `::test_o_membro_alocado_nao_aloca`; `nv::test_bolsista_devolve_a_ficha_o_alocado_confere_e_a_presidencia_aceita` |
 | FR-3598 (auditor e consulta de inscrição não abrem) | T033 | `mx::test_quem_nao_confere_nao_abre_o_arquivo` |
 | FR-3599 (404 fora do alcance, 403 sem base) | T033, T035 | `mx::test_o_membro_alocado_a_outro_perfil_recebe_inexistente`, `::test_de_outra_unidade_tudo_e_inexistente`, `::test_quem_nao_confere_nao_abre_o_arquivo`; `test_gramatica_das_portas.py` (inventário da `033`) |
 | FR-3600 (só o titular, no portal) | T022 | `pt::test_outro_candidato_nao_alcanca_nem_a_lista_nem_o_arquivo`; `dc::test_outro_candidato_recebe_a_recusa_de_inexistente` |
@@ -63,7 +63,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3604 (consulta ao dossiê, A-07) | T040 | `mx::test_abrir_o_dossie_da_inscricao_deixa_rastro` |
 | FR-3605 (hash reconferido na entrega) | T033 | `mx::test_o_gestor_e_a_presidencia_abrem_conferem_e_conduzem` (entrega verificada); a divergência usa o mesmo `INTEGRIDADE` da `009` |
 | FR-3606 (sem lote; baixar individual registrado) | T033 | `mx::test_a_abertura_fica_na_trilha_sem_o_nome_do_arquivo`; nenhuma rota de lote em `interface/urls.py` |
-| FR-3607 (resumo e ordem na condução) | T034 | `mx::test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos`; `nv::test_aluno_envia_corrige_a_pendencia_e_fica_apto` |
+| FR-3607 (resumo e ordem na condução) | T034 | `dc::test_as_raizes_de_varias_convocacoes_saem_sem_subir_elo_a_elo`; `mx::test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos`; `nv::test_aluno_envia_corrige_a_pendencia_e_fica_apto` |
 | FR-3608 (página dos documentos) | T033 | `mx` inteiro; `nv` (a marca "aberto por você") |
 | FR-3609 (sem lote) | T033 | a página não tem ação coletiva; `interface/test_telas_de_resultado_e_atos.py` (botões presos) |
 | FR-3610 ("apto para formalização"; termos proibidos) | T034, T041 | `vc` inteiro; `nv::test_bolsista_devolve_a_ficha_o_alocado_confere_e_a_presidencia_aceita` |

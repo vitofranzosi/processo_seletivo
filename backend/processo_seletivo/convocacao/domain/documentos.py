@@ -34,6 +34,10 @@ def estado_do_item(apresentacoes, conferencias):
         if apresentacao is None or conferencia.apresentacao_id in (None, apresentacao.id):
             return nomes.ITEM_NAO_SE_APLICA
     if apresentacao is None:
+        # A pendência registrada sobre o que nem chegou é pendência, e o motivo dela é o que a
+        # pessoa precisa ler (FR-3585): dizer só "a apresentar" o esconderia.
+        if conferencia is not None and conferencia.resultado == nomes.PENDENTE:
+            return nomes.ITEM_PENDENTE
         return nomes.ITEM_A_APRESENTAR
     if conferencia is None:
         return nomes.ITEM_RECEBIDO
@@ -52,24 +56,14 @@ def estado_do_item(apresentacoes, conferencias):
 ATENDIDOS = (nomes.ITEM_CONFORME, nomes.ITEM_NAO_SE_APLICA)
 
 
-def pendencias_para_incluir(itens):
-    """Os itens obrigatórios que impedem o aceite e a regularização (FR-3592).
-
-    `itens` são pares `(item, estado)`. Devolve os itens, na ordem recebida.
-    """
-    return [
-        item for item, estado in itens if item.situacao == OBRIGATORIO and estado not in ATENDIDOS
-    ]
+def impede_incluir(situacao, estado):
+    """O item obrigatório ainda não atendido impede o aceite e a regularização (FR-3592)."""
+    return situacao == OBRIGATORIO and estado not in ATENDIDOS
 
 
-def facultativos_sem_conferencia(itens):
-    """Os facultativos apresentados e ainda não vistos: advertem, e não impedem (FR-3592)."""
-    return [
-        item
-        for item, estado in itens
-        if item.situacao == FACULTATIVO
-        and estado in (nomes.ITEM_RECEBIDO, nomes.ITEM_COMPLEMENTADO)
-    ]
+def adverte_sem_impedir(situacao, estado):
+    """O facultativo apresentado e ainda não visto adverte, e não impede (FR-3592)."""
+    return situacao == FACULTATIVO and estado in (nomes.ITEM_RECEBIDO, nomes.ITEM_COMPLEMENTADO)
 
 
 def estado_da_convocacao(itens, *, decidida):

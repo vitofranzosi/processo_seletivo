@@ -3062,6 +3062,9 @@ def fragmento_documento(request, edital_id):
             "alcance": forms.alcance_da_aplicabilidade(edital),
             "transversais": forms.modalidades_em_todos_os_perfis(edital),
             "anexos_do_edital": forms.anexos_do_edital(edital),
+            # Os documentos já gravados, que o seletor do aproveitamento oferece (115): sem eles, a
+            # linha nova só oferecia "não aproveita" até a etapa ser gravada e recarregada.
+            "documentos": forms.documentos_do_edital(edital),
         },
     )
 
@@ -5866,7 +5869,12 @@ def _registrar_divergencia(ator, documento, request):
             correlation_id=getattr(request, "correlation_id", ""),
             reason=mesa_app.motivo_da_abertura(documento.requirement_id),
         )
-    raise DomainError(
+    raise _documento_nao_integro()
+
+
+def _documento_nao_integro():
+    """A recusa da entrega cujo arquivo não confere com o que se recebeu — da gestão (009, 115)."""
+    return DomainError(
         "document_integrity_failed",
         "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
         "apresentado como íntegro; registre a ocorrência e solicite novo envio ao candidato.",
@@ -8289,9 +8297,7 @@ def _documentos_por_linha(linhas, *, ordem=""):
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
 
-    raizes = {}
-    for linha in linhas:
-        raizes[linha["convocacao"].id] = documentos_app.raiz_da_chamada(linha["convocacao"])
+    raizes = documentos_app.raizes_das(linha["convocacao"] for linha in linhas)
     decididas = {
         raizes[linha["convocacao"].id].id for linha in linhas if linha["desfecho"] is not None
     }
@@ -8683,12 +8689,7 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
                 new_revision=None,
             )
     if calculado != apresentacao.content_hash:
-        raise DomainError(
-            "document_integrity_failed",
-            "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
-            "apresentado como íntegro; registre a ocorrência e solicite novo envio ao candidato.",
-            409,
-        )
+        raise _documento_nao_integro()
     return entregar(fonte, anexo=baixar, verificado=copia)
 
 

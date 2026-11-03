@@ -18,8 +18,6 @@ from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
-OUTRO_PERFIL = "00000000-0000-4000-8000-0000000115fe"
-
 
 @pytest.fixture
 def chamada(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos, settings):
@@ -113,7 +111,9 @@ def test_o_membro_alocado_confere_e_nao_desfecha(chamada, client, gestor):
 
 
 def test_o_membro_alocado_a_outro_perfil_recebe_inexistente(chamada, client, gestor):
-    _alocar(chamada, gestor, perfil=OUTRO_PERFIL)
+    from tests.integration.comissoes.test_alocacao_a_conferencia import _alocar_a_outro_perfil
+
+    _alocar_a_outro_perfil(chamada["edital"], "joao")
     identificar(client, "joao", [])
 
     assert _respostas(client, chamada) == {
@@ -190,3 +190,15 @@ def test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos(chamada, client):
     assert "1 para conferir" in corpo
     assert chamada["pagina"] in corpo
     assert "Indeferir pelas pendências de documento" in corpo
+
+
+def test_a_linha_nova_de_documento_oferece_o_aproveitamento(chamada, client):
+    """Revisão do #369: o fragmento da linha nova não trazia os documentos já gravados."""
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(
+        reverse("interface:fragmento-documento", args=[chamada["edital"].id])
+    ).content.decode()
+
+    assert "Atendido pelo documento da inscrição" in corpo
+    assert ">Documento de identificação</option>" in corpo

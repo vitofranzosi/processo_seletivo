@@ -40,6 +40,30 @@ def aluno(db, gestor, api_client, manager_headers, process_payload, raiz_de_arqu
     )
 
 
+def _alocar_a_outro_perfil(edital, membro_subject):
+    """A alocação restrita a um Perfil B, criada como preparação.
+
+    O cenário da `019` tem um Perfil só, e o comando recusa — desde a revisão do #369 — o Perfil
+    que o Edital não tem. A linha aqui é a que a alocação a um Perfil B real de um Edital com dois
+    Perfis gravaria; o que se prova é o predicado, e não o comando.
+    """
+    from django.utils import timezone
+
+    from processo_seletivo.comissoes.models import AlocacaoAConferencia, MembroComissao
+
+    membro = MembroComissao.objects.get(
+        processo=edital.processo, identity_subject=membro_subject, ativo=True
+    )
+    return AlocacaoAConferencia.objects.create(
+        membro=membro,
+        edital=edital,
+        perfil_id=OUTRO_PERFIL,
+        criado_em=timezone.now(),
+        criado_por="preparacao",
+        unidade_de_atuacao="cefor",
+    )
+
+
 MARIA = ator_institucional("maria")
 JOAO = ator_institucional("joao")
 
@@ -96,7 +120,7 @@ def test_o_membro_alocado_confere_e_nao_desfecha(aluno, gestor):
 
 def test_a_alocacao_restrita_a_outro_perfil_nao_alcanca(aluno, gestor):
     edital, _, _ = aluno
-    _alocar(edital, gestor, "joao", perfil=OUTRO_PERFIL)
+    _alocar_a_outro_perfil(edital, "joao")
     pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
     apresentar(pessoa, convocacao, CERTIDAO)
 
@@ -144,4 +168,13 @@ def test_o_membro_alocado_nao_aloca(aluno, gestor):
 
     with pytest.raises(DomainError) as recusa:
         _alocar(edital, JOAO, "maria", chave="joao-aloca")
+    assert recusa.value.status == 404
+
+
+def test_a_alocacao_a_perfil_que_o_edital_nao_tem_e_recusada(aluno, gestor):
+    """Revisão do #369: um Perfil inexistente produziria alocação ativa que não alcança ninguém."""
+    edital, _, _ = aluno
+
+    with pytest.raises(DomainError) as recusa:
+        _alocar(edital, gestor, "joao", perfil=OUTRO_PERFIL, chave="perfil-de-nada")
     assert recusa.value.status == 404

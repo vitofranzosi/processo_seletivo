@@ -88,6 +88,27 @@ formulário de conferência aberto em todo item. Foram corrigidos antes destas c
 `fieldset.opcoes` da gestão, com o formulário recolhido onde não há versão a conferir. No portal, o
 envio de outro arquivo passou a nascer aberto no item pendente.
 
+## O que a revisão de código corrigiu (03/11/2026)
+
+O *code review* do PR #369 encontrou dez pontos, e os dez foram corrigidos, cada um com teste:
+
+1. **A pendência sobre o que nem chegou** aparecia como "a apresentar", e o motivo sumia do portal.
+   Passa a ser *pendente*, e a convocação, *com pendência*.
+2. **A conferência sem versão indicada**, sobre item com arquivo, gravava-se sem apresentação, e o
+   estado lia *complementado*. Passa a julgar a vigente.
+3. **O envio depois do "conforme"** era recusado só pela tela; o comando aceitava e desfazia a
+   prontidão. O comando recusa (`documento_ja_conferido`).
+4. **A linha nova de documento**, acrescentada pelo botão, nascia sem as opções de aproveitamento.
+5. **O assistente (P-05) e a página pública** calavam os documentos da convocação; os dois os dizem
+   agora, à parte dos da inscrição.
+6. **A alocação a Perfil que o Edital não tem** era aceita; passa a ser recusada, e a comissão sem
+   presidente também, como na alocação à Etapa.
+7. **Com o Processo em estado final**, o candidato enviava e ninguém podia conferir; o envio é
+   recusado e o formulário some.
+8. **A condução subia a cadeia de sucessão elo a elo** por linha; as raízes saem numa consulta.
+9. **A recusa de integridade da gestão** estava escrita duas vezes; ficou numa função.
+10. **A leitura das pendências** filtrava por `id()` sobre pares; passou a um predicado direto.
+
 ## O que esta verificação não cobre
 
 - **A validação por pessoas** — uma chamada real conduzida por quem confere, com o tempo de análise

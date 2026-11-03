@@ -58,6 +58,29 @@ def raiz_da_chamada(convocacao):
     return atual
 
 
+def raizes_das(convocacoes):
+    """`{id da convocação: raiz}` para várias, sem subir a cadeia elo a elo pelo banco.
+
+    A condução lê dezenas de linhas, e `raiz_da_chamada` por linha custaria uma consulta por elo
+    corrigido. Aqui: nenhuma quando todas são raiz, e uma só quando há sucessora.
+    """
+    convocacoes = list(convocacoes)
+    if all(c.convocacao_anterior_id is None for c in convocacoes):
+        return {c.id: c for c in convocacoes}
+    todas = {
+        c.id: c
+        for c in Convocacao.objects.filter(inscricao_id__in={c.inscricao_id for c in convocacoes})
+    }
+    todas.update({c.id: c for c in convocacoes})
+
+    def subir(atual):
+        while atual.convocacao_anterior_id is not None:
+            atual = todas[atual.convocacao_anterior_id]
+        return atual
+
+    return {c.id: subir(c) for c in convocacoes}
+
+
 def vigente_da_chamada(raiz):
     """A convocação que ninguém sucedeu, nesta chamada: é dela o vencimento e o desfecho."""
     atual = raiz
@@ -276,18 +299,18 @@ class LeituraDocumental:
         return [lido for lido in self.itens if lido.item.situacao != dominio.NAO_SE_APLICA]
 
     @property
-    def pares(self):
-        return [(lido.item, lido.estado) for lido in self.pedidos]
-
-    @property
     def pendencias_para_incluir(self):
-        bloqueados = set(id(i) for i in dominio.pendencias_para_incluir(self.pares))
-        return [lido for lido in self.pedidos if id(lido.item) in bloqueados]
+        return [
+            lido for lido in self.pedidos if dominio.impede_incluir(lido.item.situacao, lido.estado)
+        ]
 
     @property
     def facultativos_sem_conferencia(self):
-        avisados = set(id(i) for i in dominio.facultativos_sem_conferencia(self.pares))
-        return [lido for lido in self.pedidos if id(lido.item) in avisados]
+        return [
+            lido
+            for lido in self.pedidos
+            if dominio.adverte_sem_impedir(lido.item.situacao, lido.estado)
+        ]
 
     def contar(self, estado):
         return sum(1 for lido in self.pedidos if lido.estado == estado)
@@ -410,6 +433,7 @@ def apresentar(*, identidade, inscricao_id, item_id, arquivo, nome_original, cor
     from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
     from processo_seletivo.inscricoes.models import Inscricao
     from processo_seletivo.inscricoes.storage import ArmazenamentoPrivado
+    from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
     from processo_seletivo.shared.application.commands import command_context
     from processo_seletivo.shared.arquivos import aceitar, resumo
 
@@ -426,6 +450,21 @@ def apresentar(*, identidade, inscricao_id, item_id, arquivo, nome_original, cor
         item = item_da_chamada(item_id, inscricao_id=inscricao.id)
         if item is None or item.situacao == ItemDaListaDaConvocacao.Situacao.NAO_SE_APLICA:
             raise nao_encontrado()
+        # **O mesmo estado do Processo que a conferência e o desfecho exigem**: receber o que
+        # ninguém mais pode conferir diria "a comissão vai conferir" de algo que não será.
+        ensure_processo_accepts_changes(inscricao.edital.processo)
+        julgado = dominio.estado_do_item(
+            list(item.apresentacoes.order_by("numero")),
+            list(item.conferencias.order_by("conferido_em", "id")),
+        )
+        if julgado in dominio.ATENDIDOS:
+            # A regra é do comando, e não só da tela (Princípio IV): um formulário velho reenviado
+            # desfaria em silêncio a conferência que deixou a convocação pronta para decidir.
+            raise DomainError(
+                nomes.DOCUMENTO_JA_CONFERIDO,
+                "Este documento já foi conferido pela comissão, e não recebe outro arquivo.",
+                409,
+            )
         vigente = vigente_da_chamada(item.chamada)
         if not em_aberto(vigente):
             raise DomainError(
@@ -577,7 +616,10 @@ def conferir(
             )
         apresentacoes = list(item.apresentacoes.order_by("numero"))
         atual = apresentacoes[-1] if apresentacoes else None
-        julgada = None
+        # **Sem versão indicada, a julgada é a vigente**: uma pendência sem apresentação, sobre um
+        # item que tem arquivo, faria o estado derivado ler "complementado" sem que nada tivesse
+        # chegado depois dela.
+        julgada = atual
         if apresentacao_id:
             julgada = next((a for a in apresentacoes if str(a.id) == str(apresentacao_id)), None)
             if julgada is None:

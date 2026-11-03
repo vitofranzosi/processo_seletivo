@@ -528,6 +528,23 @@ def alocar_a_conferencia(
             raise nao_encontrado()
         if ctx.repetido:
             return AlocacaoAConferencia.objects.get(pk=ctx.reserva.result_id), 201
+        # **O Perfil é do conteúdo vigente**, como a Etapa da alocação à Etapa: um Perfil que o
+        # Edital não tem produziria alocação ativa que não alcança convocação nenhuma.
+        if perfil is not None:
+            from processo_seletivo.publicacoes.application.selectors import effective_version
+
+            perfis = {
+                str(p.get("id")) for p in effective_version(edital_id=edital.id).content["profiles"]
+            }
+            if str(perfil) not in perfis:
+                raise nao_encontrado()
+        if not funcoes.tem_presidente(ctx.processo):
+            raise DomainError(
+                "comissao_sem_presidente",
+                "Esta comissão ainda não tem presidente. "
+                "Designe a presidência antes de distribuir trabalho.",
+                409,
+            )
         try:
             alocacao = AlocacaoAConferencia.objects.create(
                 membro=membro,

@@ -38,6 +38,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 )
 from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.editais.domain.documentos import (
+    NA_CONVOCACAO,
     OBRIGATORIO,
     aplicaveis,
     modelo_do_requisito,
@@ -274,9 +275,19 @@ def _documentos_anunciados(conteudo, perfil):
         if com_ela:
             por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
     nomes_de_sempre_em_ordem = [item.get("name", "") for item in sempre]
+    # **E o que só a convocação pede** (115): quem lê antes de se inscrever precisa saber que, se
+    # for convocado, vai apresentar mais estes — como o Edital diz em "Documentos exigidos na
+    # convocação". Ditos à parte, porque não contam para a inscrição.
+    na_convocacao = [
+        item.get("name", "")
+        for item in aplicaveis(
+            conteudo, profile_id=perfil_id, modality_id=None, momento=NA_CONVOCACAO
+        )
+    ]
     return {
         "sempre": nomes_de_sempre_em_ordem,
         "por_modalidade": por_modalidade,
+        "na_convocacao": na_convocacao,
         # **Quantos são**, para o resumo dizer isso antes de a pessoa abrir. Um triângulo com
         # “Documentos que serão pedidos” parece enfeite; “2 documentos que serão pedidos” é
         # informação — e é o que decide se dá para se inscrever agora ou se é preciso preparar.
@@ -2422,11 +2433,16 @@ def _documentos_da_convocacao_para_a_tela(chamada, agora):
     leitura = documentos_da_convocacao.leitura_da_chamada(raiz, decidida=not aberta)
     if not leitura.pedidos:
         return {"documentos_da_convocacao": None}
+    from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
+
     decorrido = aberta and documentos_da_convocacao.prazo_decorrido(vigente, agora=agora)
+    # Com o Processo em estado final ninguém confere nem desfecha, e o envio é recusado do mesmo
+    # modo: oferecer o formulário seria convidar a um ato que não existe mais.
+    processo_aberto = raiz.edital.processo.status not in PROCESSO_FINAL
     return {
         "documentos_da_convocacao": leitura,
         "documentos_vencimento": vigente.vencimento,
-        "pode_apresentar": aberta and not decorrido,
+        "pode_apresentar": aberta and not decorrido and processo_aberto,
         "frase_do_prazo": (
             documentos_da_convocacao.frase_do_prazo_decorrido(vigente) if decorrido else ""
         ),
