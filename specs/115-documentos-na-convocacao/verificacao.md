@@ -118,13 +118,26 @@ O *code review* do PR #369 encontrou dez pontos, e os dez foram corrigidos, cada
 9. **A recusa de integridade da gestão** estava escrita duas vezes; ficou numa função.
 10. **A leitura das pendências** filtrava por `id()` sobre pares; passou a um predicado direto.
 
+## A condução com documentos em escala (03/11/2026)
+
+`performance/test_conducao_com_documentos.py` abre a tela da condução pela rota, como a comissão,
+com 5 e depois com 45 convocações que pedem os documentos do aluno. O cenário tem o que a leitura
+percorre: a lista gravada pelo serviço em cada chamada; um terço com certidão conforme e histórico
+pendente; um terço com a certidão à espera de conferência; um terço sem nada enviado; e uma chamada
+em cada cinco corrigida por sucessora.
+
+| Convocações com documentos | Consultas (ordem padrão) | Consultas (ordem `documentos`) |
+|---|---|---|
+| 5 | 94 | 94 |
+| 45 | 94 | 94 |
+
+A curva é plana: o custo é do recorte, e não da linha. **O teste reprova a regressão que a correção
+8 da revisão tirou**: com a cadeia subida elo a elo por linha (`raiz_da_chamada` em cada uma), a
+mesma medição vai de 94 a 102 e falha, conferido trocando a linha à mão e desfazendo em seguida.
+
 ## O que esta verificação não cobre
 
 - **A validação por pessoas** — uma chamada real conduzida por quem confere, com o tempo de análise
   medido — não está aqui: é o que a auditoria (Anexo II) já apontava como a melhor medida do valor.
 - **Uso em produção com dado real** continua bloqueado pela QI-3 (quais documentos são exigíveis),
   pela QI-4 (guarda e destinação) e pelo MAT-08 (varredura de PDF), como a spec registra.
-- **O orçamento de consultas da condução com documentos em escala** não tem teste próprio: o teste
-  de desempenho da condução (`performance/test_convocacao.py`) continua verde, e a leitura dos
-  documentos é agregada (três consultas para o recorte inteiro, `leituras_por_chamada`), mas a
-  medição com dezenas de convocações **com** documentos não foi feita.

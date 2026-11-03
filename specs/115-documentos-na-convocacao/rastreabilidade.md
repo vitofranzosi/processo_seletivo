@@ -63,7 +63,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3604 (consulta ao dossiê, A-07) | T040 | `mx::test_abrir_o_dossie_da_inscricao_deixa_rastro` |
 | FR-3605 (hash reconferido na entrega) | T033 | `mx::test_o_gestor_e_a_presidencia_abrem_conferem_e_conduzem` (entrega verificada); a divergência usa o mesmo `INTEGRIDADE` da `009` |
 | FR-3606 (sem lote; baixar individual registrado) | T033 | `mx::test_a_abertura_fica_na_trilha_sem_o_nome_do_arquivo`; nenhuma rota de lote em `interface/urls.py` |
-| FR-3607 (resumo e ordem na condução) | T034 | `dc::test_as_raizes_de_varias_convocacoes_saem_sem_subir_elo_a_elo`; `mx::test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos`; `nv::test_aluno_envia_corrige_a_pendencia_e_fica_apto` |
+| FR-3607 (resumo e ordem na condução) | T034 | `dc::test_as_raizes_de_varias_convocacoes_saem_sem_subir_elo_a_elo`; `mx::test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos`; `nv::test_aluno_envia_corrige_a_pendencia_e_fica_apto`; `performance/test_conducao_com_documentos.py::test_a_conducao_nao_consulta_por_convocacao_com_documentos` |
 | FR-3608 (página dos documentos) | T033 | `mx` inteiro; `nv` (a marca "aberto por você") |
 | FR-3609 (sem lote) | T033 | a página não tem ação coletiva; `interface/test_telas_de_resultado_e_atos.py` (botões presos) |
 | FR-3610 ("apto para formalização"; termos proibidos) | T034, T041 | `vc` inteiro; `nv::test_bolsista_devolve_a_ficha_o_alocado_confere_e_a_presidencia_aceita` |
