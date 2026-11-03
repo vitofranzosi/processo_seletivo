@@ -3,9 +3,9 @@
 **Branch**: `claude/nice-zhukovsky-0b4397` | **Date**: 2026-11-03 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `specs/115-documentos-na-convocacao/spec.md`
 
-> **Revisto em 03/11/2026 com as decisões do usuário sobre o PR #368** (Status da spec). A
-> implementação começa em sessão própria depois do merge. O texto da D-019 (FR-374 e FR-408 da `029`)
-> é o único ainda por aprovar, e só a fase do prazo único depende dele.
+> **Revisto em 03/11/2026 com as decisões do usuário sobre o PR #368** (Status da spec), em duas
+> rodadas. A implementação começa em sessão própria depois do merge. Nenhuma decisão fica pendente
+> para começar.
 
 ## Summary
 
@@ -26,8 +26,8 @@ Ainda neste plano:
   convocação;
 - a chamada nova da mesma inscrição aproveita por referência o que a anterior recebeu, sem transportar
   a conferência (FR-3619 a FR-3621);
-- na chamada com item documental e Requerimento *na convocação*, os dois fecham juntos no vencimento,
-  pela mesma leitura do prazo da `019` (FR-3622, D-019).
+- o Requerimento de Matrícula passa a respeitar o prazo da chamada, haja ou não documento nela, pela
+  mesma leitura do prazo da `019` (FR-3622; FR-374 e FR-408 da `029`, revistas na D-019).
 
 São três tabelas append-only novas (46 → 49 no provisionamento), uma tabela de alocação e dois campos
 no Documento Exigido. Não há desfecho novo, estado gravado nem mensagem nova.
@@ -117,8 +117,9 @@ duvidas/domain/cobertura.py         # o assistente passa a conhecer o momento (s
 inscricoes/application/
 ├── lista_exigida.py, submissao.py, rascunho.py   # usam da_inscricao(); nada mais muda
 requerimentos/
-├── domain/disponibilidade.py       # apurar() recebe, injetado, se o prazo único decorreu (FR-3622)
-└── application/preencher.py        # recusa envio e sucessor na exceção; frase única com os documentos
+├── domain/disponibilidade.py       # apurar() recebe, injetado, se o prazo da chamada decorreu (FR-3622)
+├── application/preencher.py        # recusa preenchimento, envio e sucessor depois do vencimento; frase única
+└── application/selectors.py        # a docstring que diz "o vencimento não fecha nada" é reescrita
 convocacao/
 ├── models.py                       # ItemDaListaDaConvocacao, ApresentacaoDeDocumento, ConferenciaDeDocumento
 ├── domain/documentos.py            # estado derivado do item e da convocação (puro); guarda do aceite
@@ -250,14 +251,14 @@ O formulário de desfecho:
 - mostra a recusa do aceite antes do clique, como `recusa_certa` faz na `113`, sem deixar de recusar
   no command.
 
-**R-013 — Prazo único da chamada (FR-3622).** A aplicação calcula `prazo_unico_decorrido`: a chamada
-tem item obrigatório ou facultativo, **e** `convocacao.domain.prazo.decorrido(...)` da convocação
-vigente é verdadeiro. O valor é injetado em `requerimentos.domain.disponibilidade.apurar()`, que
-continua puro e passa a devolver *disponível só para leitura* nesse caso.
+**R-013 — Um prazo só por chamada (FR-3622).** A aplicação calcula `prazo_decorrido` com
+`convocacao.domain.prazo.decorrido(...)` da chamada em aberto, a mesma função que admite o não
+atendimento. O valor é injetado em `requerimentos.domain.disponibilidade.apurar()`, que continua puro
+e passa a devolver *disponível só para leitura* quando ele é verdadeiro. Vale nos dois momentos: no
+*na convocação*, para preenchimento e envio; nos dois, para o sucessor.
 
-`preencher.py` recusa o envio e o sucessor com o código da recusa de prazo dos documentos, e o portal
-mostra uma frase só. Na chamada sem item documental, `prazo_unico_decorrido` é sempre falso, e a
-política é a de hoje: a FR-374 da `029` é testada como está.
+`preencher.py` recusa com o código da recusa de prazo dos documentos, e o portal mostra uma frase
+só. Nenhum campo novo, nenhum predicado sobre a lista: a regra não lê se há documento na chamada.
 
 A seta de dependência não muda: `requerimentos` já lê `convocacao` pelo seletor da chamada em aberto.
 
@@ -269,7 +270,7 @@ A seta de dependência não muda: `requerimentos` já lê `convocacao` pelo sele
 | Contrato | natureza dos campos novos; forma publicada e elevação; seção do PDF | `tests/contract/test_mutabilidade.py` (inalterado, fixture estendida), `tests/unit/publicacoes/test_elevacao.py`, `tests/integration/publicacoes/test_secao_da_convocacao.py` |
 | Integração (transacional) | lista gravada na raiz e herdada pela sucessora; aproveitamento sem cópia; apresentação com versões; duplicado e concorrência; conferência e recusas; guarda do aceite; nada automático no vencimento | `tests/integration/convocacao/test_lista_da_convocacao.py`, `test_aproveitamento.py`, `test_apresentacao.py`, `test_conferencia.py`, `test_guarda_do_aceite.py`, `test_concorrencia_da_apresentacao.py` |
 | Integração | aproveitamento entre chamadas: referência à origem, sem cópia, sem conferência transportada, pendente não aproveitado, abertura por chamada (US8) | `tests/integration/convocacao/test_aproveitamento_entre_chamadas.py` |
-| Integração | prazo único: com e sem item documental, antes e depois do vencimento, prazo não iniciado, sem vencimento, correção reabrindo os dois (US4, FR-3622) | `tests/unit/requerimentos/test_disponibilidade.py` (estendido), `tests/integration/requerimentos/test_prazo_unico_com_documentos.py` |
+| Integração | prazo da chamada no Requerimento: antes e depois do vencimento, prazo não iniciado, sem vencimento, com e sem documento na chamada, nos dois momentos do requerimento, correção reabrindo tudo, convocação para regularizar (US4, FR-3622) | `tests/unit/requerimentos/test_disponibilidade.py` (estendido), `tests/integration/requerimentos/test_prazo_da_chamada.py` |
 | Banco | gatilhos append-only e de coerência; privilégio ausente (`como_producao`); contagem 49; `PROTECT` | `tests/integration/test_database_permissions.py` (parametrizado), `tests/seguranca/test_homologacao_preservada.py` (46 → 49) |
 | Autorização | a matriz de permissões, linha a linha, contra as quatro rotas da gestão e as duas do portal; inventário de negativas da `033` | `tests/interface/test_permissoes_dos_documentos_da_convocacao.py`, `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` |
 | Trilha | um registro por ato, com ator e unidade, sem nome nem motivo; A-07 | `tests/integration/auditoria/test_trilha_dos_documentos_da_convocacao.py`, `tests/interface/test_consulta_ao_dossie.py` |
@@ -296,7 +297,7 @@ Os negativos do pedido têm caso próprio:
 | Abrir PDF malicioso | estação do conferente comprometida | D-016; bloqueia produção, e não a implementação |
 | Guardar para sempre | o GPS vira acervo por inércia | QI-4; bloqueia produção |
 | Membro alocado vendo linha de outro Perfil na condução | vazamento de dado de convocado | filtro na consulta da condução, e não na tela; teste da matriz |
-| A exceção da FR-374 aplicada à chamada sem documento | Requerimento fechado onde a `029` o mantém aberto | `prazo_unico_decorrido` falso sem item documental; os testes atuais da `029` continuam sem edição |
+| Teste antigo que presumia o requerimento aberto depois do vencimento | suíte vermelha | nenhum encontrado em 03/11 (os testes de vencimento do portal tratam da convocação); a T053 confere de novo antes de implementar |
 | Referência entre chamadas virando corrente | rastreabilidade difícil e entrega futura em vários passos | a origem é sempre o arquivo; gatilho de coerência recusa referência a referência |
 
 ## Fases
@@ -306,7 +307,7 @@ Os negativos do pedido têm caso próprio:
 2. **Lista e apresentação**: tabelas, gatilhos, gravação na raiz, portal.
 3. **Conferência e desfecho**: predicado, alocação, conferência, guarda, condução e página filha.
 4. **Trilha e A-07**.
-5. **Aproveitamento entre chamadas e prazo único** (o prazo único depois da aprovação da D-019).
+5. **Aproveitamento entre chamadas e prazo da chamada no Requerimento.**
 6. **Navegador, rastreabilidade e verificação completa** (`make lint check test-pg`).
 
 ## Complexity Tracking

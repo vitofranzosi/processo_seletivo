@@ -117,7 +117,8 @@ chamada fechada são do serviço (R-005), sob trava.
 
 ## Requerimento de Matrícula (`requerimentos`, existe, sem mudança de forma)
 
-Nenhum campo novo. `apurar()` recebe `prazo_unico_decorrido`, injetado pela aplicação (FR-3622).
+Nenhum campo novo. `apurar()` recebe `prazo_decorrido`, injetado pela aplicação a partir da função de
+prazo da `019` (FR-3622).
 Nenhuma linha se apaga e o rascunho se preserva.
 
 ## Contagens

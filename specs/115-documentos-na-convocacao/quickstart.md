@@ -54,15 +54,16 @@ shell (Constituição, VI). Os Editais são **moldes**, com dados fictícios. Os
 3. Na gestão, os aproveitados estão *recebido, aguardando conferência*. O "conforme" sem abrir o
    arquivo é recusado.
 
-## Cenário 5 — Prazo único com o Requerimento (US4)
+## Cenário 5 — Um prazo só para a chamada (US4)
 
 1. Edital com Requerimento *na convocação* e documentos na convocação. Convocar com vencimento
    próximo e enviar a comunicação.
 2. Depois do vencimento, tentar enviar um documento e o requerimento: as duas recusas têm a mesma
-   frase.
+   frase, e o requerimento continua legível.
 3. Corrigir a convocação com vencimento novo: os dois reabrem.
-4. Repetir num Edital sem documento na convocação: o requerimento continua aceito depois do
-   vencimento, como hoje.
+4. Repetir num Edital sem documento na convocação: o requerimento também é recusado depois do
+   vencimento, com a mesma frase.
+5. Convocar sem enviar a comunicação: o requerimento continua aberto, porque o prazo não corre.
 
 ## Negativos
 

@@ -119,11 +119,11 @@ referência.
 
 ---
 
-## Phase 7: User Story 8 + 4 — aproveitamento entre chamadas e prazo único (P2)
+## Phase 7: User Story 8 + 4 — aproveitamento entre chamadas e prazo da chamada no Requerimento (P2)
 
-- [ ] T052 Depois da aprovação do texto da D-019: aplicar a revisão da FR-374 e da FR-408 em `specs/029-requerimento-de-matricula/spec.md`, com a marca "revisada pela `115`" e as redações anteriores preservadas; rodar `tests/test_citacoes_de_requisito.py`
-- [ ] T053 [P] [US4] `tests/unit/requerimentos/test_disponibilidade.py` (estendido) e `tests/integration/requerimentos/test_prazo_unico_com_documentos.py`: com e sem item documental, antes e depois do vencimento, prazo não iniciado, sem vencimento, sucessor recusado na exceção, correção reabrindo os dois; os testes atuais da `029` sem edição (FR-3622, SC-1093)
-- [ ] T054 [US4] `requerimentos/domain/disponibilidade.py`, `requerimentos/application/preencher.py`, `portal/views.py`, `portal/situacao.py`: `prazo_unico_decorrido` injetado e frase única (R-013)
+- [X] T052 Revisão da FR-374, da FR-408, da frase da FR-411 e do caso-limite do prazo aplicada em `specs/029-requerimento-de-matricula/spec.md`, com a marca "revisada pela `115`" e as redações anteriores preservadas (D-019, segunda rodada, 03/11/2026); `tests/test_citacoes_de_requisito.py` verde
+- [ ] T053 [P] [US4] `tests/unit/requerimentos/test_disponibilidade.py` (estendido) e `tests/integration/requerimentos/test_prazo_da_chamada.py`: antes e depois do vencimento, prazo não iniciado, sem vencimento, com e sem documento na chamada, sucessor recusado nos dois momentos, correção reabrindo tudo, convocação para regularizar abrindo de novo. Antes de escrever, procurar de novo teste que presuma o requerimento aberto depois do vencimento, e listar o que mudar (FR-3622, SC-1093; FR-374 e FR-408 da `029`)
+- [ ] T054 [US4] `requerimentos/domain/disponibilidade.py`, `requerimentos/application/preencher.py`, `requerimentos/application/selectors.py` (docstring), `portal/views.py`, `portal/situacao.py`: `prazo_decorrido` injetado e frase única (R-013)
 - [ ] T055 [P] [US8] `tests/integration/convocacao/test_aproveitamento_entre_chamadas.py`: origem sem cópia e sem corrente; pendente não aproveitado; requisito novo; conferência não transportada; abertura por chamada; indicação de exigência retificada (FR-3619 a FR-3621, FR-3611, SC-1092)
 - [ ] T056 [US8] `convocacao/application/lista.py` (precedência do R-003), gatilho de coerência da `apresentacao_de_origem`, página de documentos e portal (FR-3612, FR-3621)
 
@@ -151,8 +151,7 @@ referência.
 - A Phase 2 bloqueia as seguintes: a lista lê o momento.
 - A Phase 3 bloqueia a 4: a conferência lê a apresentação.
 - As Phases 5 e 6 dependem da 4 e são independentes entre si.
-- A Phase 7 depende da 4. A T052 depende da aprovação do texto da D-019, e a T053 e a T054 dependem
-  da T052.
+- A Phase 7 depende da 4.
 - A Phase 8 vem por último.
 
 ### Parallel

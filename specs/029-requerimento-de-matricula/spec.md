@@ -477,8 +477,11 @@ alheio ao ator de cada passo.**
 ### Edge Cases
 
 - **Convocação sucedida por outra** — o gatilho lê a vigente, e a sucedida não abre nada.
-- **Prazo da convocação vencido, sem desfecho** — o requerimento continua em aberto: quem decide a
-  consequência do prazo é a convocação, e duas contagens do mesmo prazo divergiriam.
+- **Prazo da convocação vencido, sem desfecho** *(revisto pela `115` em 2026-11-03)* — o
+  preenchimento, o envio e o sucessor se encerram, pela mesma leitura do prazo que admite o não
+  atendimento; a leitura e o rascunho permanecem, e nenhum desfecho nasce disso (`FR-374`). *Redação
+  anterior: "o requerimento continua em aberto: quem decide a consequência do prazo é a convocação, e
+  duas contagens do mesmo prazo divergiriam."*
 - **Desfecho registrado com requerimento em rascunho** — o rascunho permanece, legível e não
   enviável; ele não vira lixo nem some.
 - **Duas chamadas da mesma pessoa em recortes diferentes** — o requerimento é da Inscrição, e a
@@ -523,10 +526,27 @@ alheio ao ator de cada passo.**
   aquela Inscrição, convocação vigente **sem desfecho registrado** — qualquer que seja a espécie:
   vaga inicial, suplência ou regularização. Convocação vigente **com** desfecho MUST NOT abrir nem
   manter aberto o preenchimento.
-- **FR-374**: **Do prazo, e só dele.** O vencimento do prazo da convocação MUST NOT, por si,
-  encerrar o preenchimento, fechar a leitura nem apagar o que houver: quem decide a consequência do
-  prazo é a convocação, e duas contagens do mesmo prazo divergiriam. Chamada vencida **sem** desfecho
-  continua em aberto; o que a encerra é o desfecho, cujo efeito a FR-411 descreve.
+- **FR-374** *(revisada pela `115` em 2026-11-03 — a redação anterior está ao fim desta alínea)*:
+  **Do prazo, e só dele.** Decorrido o vencimento da convocação, pela mesma leitura que admite o não
+  atendimento (`019`), o preenchimento e o envio MUST encerrar. O vencimento MUST NOT, por si, fechar
+  a leitura, apagar o rascunho nem produzir desfecho: a consequência do prazo continua sendo decidida
+  pela convocação. Antes de o prazo começar a correr, e na convocação sem vencimento, nada se
+  encerra. A correção da convocação com vencimento novo reabre o preenchimento.
+
+  > **Redação anterior, preservada porque a regra foi revista, e não substituída em silêncio:**
+  > **Do prazo, e só dele.** O vencimento do prazo da convocação MUST NOT, por si, encerrar o
+  > preenchimento, fechar a leitura nem apagar o que houver: quem decide a consequência do prazo é a
+  > convocação, e duas contagens do mesmo prazo divergiriam. Chamada vencida **sem** desfecho continua
+  > em aberto; o que a encerra é o desfecho, cujo efeito a FR-411 descreve.
+  >
+  > **Por que mudou.** A `115` passou a pedir documentos na convocação até o vencimento, e o candidato
+  > receberia, na mesma tela, duas respostas sobre o mesmo prazo. As três razões da redação anterior
+  > se preservam: fechar a escrita não é desfecho; a contagem é a da `019`, e não uma segunda; e a
+  > leitura e o rascunho permanecem. O que ficava aberto não tinha Edital que o pedisse: o 77/2026
+  > (8.3 e 11.10), o 46/2026, o 72/2026 e o 89/2026 tratam o prazo da convocação como prazo. Os casos
+  > legítimos de escrita tardia continuam cobertos pelo prazo que não corre sem comunicação, pela
+  > convocação sem vencimento, pela correção formal da convocação e pela convocação para regularizar
+  > (a decisão da `115` sobre o prazo do Requerimento).
 - **FR-375**: Havendo convocação sucedida por outra, o gatilho MUST ser lido da vigente.
 - **FR-376**: MUST existir no máximo uma **raiz** de requerimento por Inscrição, e no máximo um
   sucessor por requerimento — as duas por restrição de banco. Vigente é o requerimento que ninguém
@@ -534,7 +554,9 @@ alheio ao ator de cada passo.**
 - **FR-411**: **Do desfecho, e só dele.** Registrado o desfecho — qualquer das sete espécies —, o
   preenchimento MUST encerrar; o requerimento MUST permanecer legível no estado em que estava; e um
   rascunho não enviado MUST NOT ser apagado nem convertido em enviado. É a FR-374 vista do outro
-  lado: lá o prazo não encerra nada, aqui o desfecho encerra a escrita e preserva a leitura.
+  lado: lá o prazo encerra a escrita sem decidir nada, aqui o desfecho encerra a escrita e decide.
+  *(A última frase foi revista pela `115` em 2026-11-03; antes dizia: "lá o prazo não encerra nada,
+  aqui o desfecho encerra a escrita e preserva a leitura".)*
 
 ### 10.3 O candidato informa uma vez
 
@@ -620,8 +642,11 @@ alheio ao ator de cada passo.**
   aqui é condicional, e a própria política de privilégios do projeto registra que imutabilidade
   condicional ao estado não cabe em privilégio de tabela e *"só a trigger consegue expressar"*. A
   guarda na aplicação permanece como primeira camada, nunca como a única.
-- **FR-408**: Um requerimento sucessor MUST ser admitido somente quando existir chamada em aberto
-  para aquela Inscrição, e MUST citar a convocação que o autorizou. Fora disso, MUST ser recusado.
+- **FR-408** *(revisada pela `115` em 2026-11-03)*: Um requerimento sucessor MUST ser admitido
+  somente quando existir chamada em aberto para aquela Inscrição **com o vencimento não decorrido**
+  (`FR-374`), e MUST citar a convocação que o autorizou. Fora disso, MUST ser recusado. *Redação
+  anterior: "Um requerimento sucessor MUST ser admitido somente quando existir chamada em aberto para
+  aquela Inscrição, e MUST citar a convocação que o autorizou. Fora disso, MUST ser recusado."*
 - **FR-409**: O sucessor MUST nascer copiando o conteúdo do antecessor, e o antecessor MUST
   permanecer íntegro e legível. A sucessão MUST NOT apagar, sobrescrever ou ocultar o que foi
   declarado antes.
