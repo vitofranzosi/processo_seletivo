@@ -155,6 +155,9 @@ BOTOES = {
         ("botao", "Convocar"),
         ("botao", "Convocar para regularizar"),
         ("botao", "Registrar desfecho"),
+        # O indeferimento com o fundamento pré-redigido a partir das pendências de documento (115,
+        # FR-3594). Mesmo desenho do "Registrar desfecho": é o mesmo ato, por outro caminho.
+        ("botao", "Registrar indeferimento"),
         ("botao", "Registrar atestado"),
         ("acao", "Emitir a comunicação de novo"),
         ("botao", "Emitir a comunicação"),
@@ -191,8 +194,9 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
         )
     )
 
-    # Eram 20 `botao`; os dois da vaga acrescida (097) abrem conferência, e não praticam ato.
-    assert desenhos == {"botao": 22, "botao perigoso": 2, "acao": 2}
+    # Eram 20 `botao`; os dois da vaga acrescida (097) abrem conferência, e não praticam ato. O 23º
+    # é o indeferimento pelas pendências de documento (115): o mesmo desenho do desfecho, que ele é.
+    assert desenhos == {"botao": 23, "botao perigoso": 2, "acao": 2}
 
 
 # ---- pela página renderizada -------------------------------------------------------------------

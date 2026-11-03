@@ -364,6 +364,19 @@ def leitura_da_chamada(convocacao, *, decidida=False):
     return leituras_por_chamada([raiz], decididas=decididas)[raiz.id]
 
 
+def fonte_do_arquivo(apresentacao):
+    """Quem guarda o arquivo desta apresentação: ela mesma, o documento da inscrição ou a origem.
+
+    Um passo só, porque a referência nunca aponta outra referência (FR-3619). Os três têm `arquivo`,
+    `nome_original` e `content_hash`, que é o que a entrega e a reconferência leem.
+    """
+    if apresentacao.arquivo:
+        return apresentacao
+    if apresentacao.documento_da_inscricao_id is not None:
+        return apresentacao.documento_da_inscricao
+    return apresentacao.apresentacao_de_origem
+
+
 def item_da_chamada(item_id, *, inscricao_id=None):
     filtros = {"pk": item_id}
     if inscricao_id is not None:

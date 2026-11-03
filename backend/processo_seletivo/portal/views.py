@@ -2368,7 +2368,11 @@ def convocacao(request, inscricao_id):
         {
             "inscricao": registro,
             "selecao": _selecao(versao),
+            **_mensagens(request),
             **_convocacao_para_a_tela(chamada, agora),
+            # Os documentos pedidos nesta chamada (115, FR-3577): lidos da lista gravada no ato de
+            # convocar, e não da regra de hoje. Mostrá-los não registra outra leitura (FR-3613).
+            **_documentos_da_convocacao_para_a_tela(chamada, agora),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
             "novas_chamadas": situacao_da_inscricao.NOVAS_CHAMADAS,
             "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
@@ -2401,6 +2405,93 @@ def _convocacao_para_a_tela(chamada, agora):
         "enviada_em": envio_de(chamada),
         "estado": estado_de(chamada, agora=agora),
     }
+
+
+def _documentos_da_convocacao_para_a_tela(chamada, agora):
+    """A lista da chamada, o estado de cada item e se ainda se apresenta (115, FR-3577, FR-3612).
+
+    Sem convocação, ou sem documento pedido, a chave fica vazia e a tela é a de antes (FR-3574).
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
+
+    if chamada is None:
+        return {"documentos_da_convocacao": None}
+    raiz = documentos_da_convocacao.raiz_da_chamada(chamada)
+    vigente = documentos_da_convocacao.vigente_da_chamada(raiz)
+    aberta = documentos_da_convocacao.em_aberto(vigente)
+    leitura = documentos_da_convocacao.leitura_da_chamada(raiz, decidida=not aberta)
+    if not leitura.pedidos:
+        return {"documentos_da_convocacao": None}
+    decorrido = aberta and documentos_da_convocacao.prazo_decorrido(vigente, agora=agora)
+    return {
+        "documentos_da_convocacao": leitura,
+        "documentos_vencimento": vigente.vencimento,
+        "pode_apresentar": aberta and not decorrido,
+        "frase_do_prazo": (
+            documentos_da_convocacao.frase_do_prazo_decorrido(vigente) if decorrido else ""
+        ),
+    }
+
+
+@require_http_methods(["POST"])
+def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
+    """O titular apresenta um arquivo para um item da lista da convocação (115, FR-3578).
+
+    **Volta à tela da convocação**, com o resultado dito lá: a recusa sobre o arquivo e a de prazo
+    são as mesmas da inscrição e do requerimento, e ficam onde a pessoa está.
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
+
+    registro, identidade, _ = _inscricao_do_titular(request, inscricao_id)
+    arquivo = request.FILES.get("arquivo")
+    destino = reverse("portal:convocacao", args=[registro.id]) + f"#item-{item_id}"
+    if arquivo is None:
+        _recusar(request, "Escolha um arquivo PDF antes de enviar.")
+        return redirect(destino)
+    try:
+        feita = documentos_da_convocacao.apresentar(
+            identidade=identidade,
+            inscricao_id=registro.id,
+            item_id=item_id,
+            arquivo=arquivo,
+            nome_original=arquivo.name,
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise
+        _recusar(request, recusa.detail)
+        return redirect(destino)
+    _avisar(
+        request,
+        "Este arquivo já tinha sido recebido."
+        if feita.ja_recebido
+        else "Documento recebido. A comissão vai conferir.",
+    )
+    return redirect(destino)
+
+
+@require_http_methods(["GET"])
+def documento_da_convocacao_do_candidato(request, inscricao_id, apresentacao_id):
+    """O titular vê o que apresentou na convocação — mediado, como o documento da inscrição."""
+    from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
+    from processo_seletivo.convocacao.models import ApresentacaoDeDocumento
+    from processo_seletivo.portal.arquivos import entregar
+
+    registro, _, _ = _inscricao_do_titular(request, inscricao_id)
+    apresentacao = (
+        ApresentacaoDeDocumento.objects.select_related(
+            "documento_da_inscricao", "apresentacao_de_origem"
+        )
+        .filter(pk=apresentacao_id, item__inscricao=registro)
+        .first()
+    )
+    if apresentacao is None:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    return entregar(
+        documentos_da_convocacao.fonte_do_arquivo(apresentacao),
+        anexo=bool(request.GET.get("baixar")),
+    )
 
 
 # O chamado que cada estado de leitura da `029` produz (059, `D-007`). "Ainda indisponível" e "não

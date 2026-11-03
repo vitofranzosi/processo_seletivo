@@ -11,6 +11,7 @@ import logging
 import re
 import secrets
 from collections import Counter
+from datetime import timedelta
 from uuid import UUID, uuid4
 
 from django.conf import settings
@@ -5268,6 +5269,15 @@ OPERACOES = {
     # A leitura do candidato (`FR-288b`). Entra na mesma trilha porque a pergunta que ela responde
     # — *"a pessoa teve como saber?"* — é feita por quem responde por todo o resto do certame.
     "CONVOCACAO_LER": "Convocação lida pela pessoa convocada",
+    # Os documentos da convocação (115, FR-3603, FR-3604): quem apresentou, quem conferiu, quem foi
+    # alocado à conferência, e quem abriu — o documento, a página dos documentos e o dossiê.
+    "CONVOCACAO_APRESENTAR": "Documento apresentado na convocação",
+    "CONVOCACAO_CONFERIR": "Documento da convocação conferido",
+    "CONVOCACAO_ALOCAR_CONFERENCIA": "Membro alocado à conferência dos documentos",
+    "CONVOCACAO_REVOGAR_ALOCACAO": "Alocação à conferência dos documentos revogada",
+    "CONSULTAR_DOCUMENTO_DA_CONVOCACAO": "Consulta a documento apresentado na convocação",
+    "CONSULTAR_DOCUMENTOS_DA_CONVOCACAO": "Consulta aos documentos de uma convocação",
+    "CONSULTAR_DOSSIE": "Consulta ao dossiê da inscrição",
     # O envio do Requerimento de Matrícula (029). Mesma trilha, pela razão de sempre: quem responde
     # *"o que esta pessoa declarou, e sob qual declaração?"* lê a mesma tela de quem investiga uma
     # publicação. **As duas frases dizem o ato, e não o nome da função** (`FR-296`).
@@ -5324,6 +5334,9 @@ AGREGADOS = {
     "DesfechoDaConvocacao": "Desfecho de convocação",
     "ComunicacaoEmitida": "Comunicação de convocação",
     "AtestadoDeFatoExterno": "Atestado de fato externo",
+    "ApresentacaoDeDocumento": "Documento apresentado na convocação",
+    "ConferenciaDeDocumento": "Conferência de documento da convocação",
+    "AlocacaoAConferencia": "Alocação à conferência dos documentos",
     "AtoDeInstrucao": "Ato de instrução do recurso",
     "Recurso": "Recurso",
 }
@@ -5759,7 +5772,34 @@ def inscricao_recebida(request, inscricao_id):
     if ator is None:
         return identidade.pedir_identificacao(request)
     contexto = inscricao_para_consulta(actor=ator, inscricao_id=inscricao_id)
+    _registrar_consulta_ao_dossie(ator, inscricao_id, request)
     return marcar_como_privada(render(request, "interface/inscricao_detalhe.html", contexto))
+
+
+def _registrar_consulta_ao_dossie(ator, inscricao_id, request):
+    """Quem abriu o dossiê de quem, e quando — o A-07 da auditoria de 31/10 (115, FR-3604).
+
+    Depois da consulta, e não antes: só registra quem a regra deixou entrar, e a recusa fica com o
+    registro de recusa que já existe. Grava o ato, e nada do dossiê: nem dado pessoal, nem o que a
+    página mostrou.
+    """
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    inscricao = Inscricao.objects.filter(pk=inscricao_id).first()
+    if inscricao is None:
+        return
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=CONSULTAR,
+            operation="CONSULTAR_DOSSIE",
+            aggregate=inscricao,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"Dossiê da inscrição {inscricao.id}.",
+            new_state="",
+            new_revision=None,
+        )
 
 
 @require_http_methods(["GET"])
@@ -6093,6 +6133,25 @@ def alocacoes(request, processo_id):
                     idempotency_key=chave,
                     correlation_id=getattr(request, "correlation_id", ""),
                 )
+            elif acao == "alocar_conferencia":
+                # A conferência dos documentos da convocação (115, FR-3597, D-010).
+                alocacao_app.alocar_a_conferencia(
+                    actor=ator,
+                    processo_id=processo.id,
+                    membro_id=request.POST.get("membro_id") or "",
+                    edital_id=request.POST.get("edital_id") or "",
+                    perfil_id=request.POST.get("perfil_id") or None,
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
+            elif acao == "revogar_conferencia":
+                alocacao_app.revogar_alocacao_a_conferencia(
+                    actor=ator,
+                    processo_id=processo.id,
+                    alocacao_id=request.POST.get("alocacao_id") or "",
+                    idempotency_key=chave,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
             return redirect(f"{reverse('interface:alocacoes', args=[processo.id])}?feito={acao}")
         except DomainError as recusa:
             if recusa.status == 404:
@@ -6114,10 +6173,46 @@ def alocacoes(request, processo_id):
             "orfas": comissao_selectors.orfas(processo),
             "resumo": comissao_selectors.resumo_da_organizacao(organizacao, membros_ativos),
             "tem_presidente": comissao_selectors.tem_presidente(processo),
+            "conferencia": _conferencia_dos_documentos(processo),
             "erro": erro,
             "chave_idempotencia": uuid4().hex,
         },
     )
+
+
+def _conferencia_dos_documentos(processo):
+    """Quem confere os documentos da convocação, por Edital, e os Perfis que se podem escolher.
+
+    Só Editais publicados, porque o Perfil é lido do conteúdo vigente; e só os que pedem algum
+    documento na convocação — oferecer a alocação a um Edital que não pede nada seria trabalho sem
+    objeto (115, FR-3597).
+    """
+    from processo_seletivo.comissoes.models import AlocacaoAConferencia
+    from processo_seletivo.editais.domain.documentos import NA_CONVOCACAO, do_momento
+
+    editais = []
+    for edital in processo.editais.order_by("year", "number"):
+        try:
+            conteudo = effective_version(edital_id=edital.id).content
+        except DomainError:
+            continue
+        if not do_momento(conteudo.get("documentRequirements"), NA_CONVOCACAO):
+            continue
+        perfis = {str(p.get("id")): p.get("name") or p.get("code") for p in conteudo["profiles"]}
+        alocacoes = [
+            {"alocacao": alocacao, "perfil": perfis.get(str(alocacao.perfil_id or ""), "")}
+            for alocacao in AlocacaoAConferencia.objects.filter(edital=edital, ativo=True)
+            .select_related("membro")
+            .order_by("criado_em")
+        ]
+        editais.append(
+            {
+                "edital": edital,
+                "perfis": [{"id": k, "nome": v} for k, v in perfis.items()],
+                "alocacoes": alocacoes,
+            }
+        )
+    return editais
 
 
 def _etapa_para_distribuir(request, edital_id, etapa_id):
@@ -7129,7 +7224,7 @@ def _pode_ver_a_classificacao(ator, edital):
     return pode_gerir_comissao(ator, edital.processo) is not None or ator.can("auditoria:consultar")
 
 
-def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
+def _edital_para_classificar(request, edital_id, *, somente_gestao=False, admite_conferencia=False):
     """A porta do marco: presidência ou auditoria lê; só a base de gestão emite.
 
     **O 404 fica com o escopo e com o que não existe**; falta de base é recusa explicada, como em
@@ -7153,8 +7248,19 @@ def _edital_para_classificar(request, edital_id, *, somente_gestao=False):
         raise Http404
     pode_emitir = pode_gerir_comissao(ator, edital.processo) is not None
     bases = BASES_DA_GESTAO_DA_COMISSAO if somente_gestao else BASES_DA_GESTAO_OU_AUDITORIA
+    # **A conferência lê a condução** (115, FR-3595): o membro alocado entra na leitura, e o Perfil
+    # que a alocação cobre é conferido por quem chama, depois de resolver o marco.
+    confere = False
+    if admite_conferencia and not somente_gestao:
+        from processo_seletivo.comissoes.domain.autorizacao import (
+            BASE_DA_ALOCACAO_A_CONFERENCIA,
+            perfis_da_conferencia,
+        )
+
+        confere = perfis_da_conferencia(ator, edital) != set()
+        bases = (*bases, BASE_DA_ALOCACAO_A_CONFERENCIA)
     require_authorization_base(
-        pode_emitir or (not somente_gestao and ator.can("auditoria:consultar")),
+        pode_emitir or (not somente_gestao and ator.can("auditoria:consultar")) or confere,
         bases=bases,
     )
     return ator, edital, pode_emitir
@@ -8154,6 +8260,55 @@ def _conferencia_da_ocupacao(
     )
 
 
+def _exigir_alcance_da_conferencia(ator, edital, perfil_id, pode_emitir):
+    """Quem só confere precisa alcançar **este** Perfil; quem emite ou audita passa como antes."""
+    from processo_seletivo.comissoes.domain.autorizacao import pode_conferir_documentos
+
+    if pode_emitir or ator.can("auditoria:consultar"):
+        return
+    if pode_conferir_documentos(ator, edital, perfil_id) is None:
+        raise Http404
+
+
+def _documentos_por_linha(linhas, *, ordem=""):
+    """O estado documental e as contagens de cada linha da condução (115, FR-3607, FR-3610).
+
+    **Uma leitura para o recorte**, em três consultas, e não uma por linha. A ordem `documentos`
+    põe primeiro o que pede trabalho: vencimento mais próximo, depois o estado.
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+    from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
+
+    raizes = {}
+    for linha in linhas:
+        raizes[linha["convocacao"].id] = documentos_app.raiz_da_chamada(linha["convocacao"])
+    decididas = {
+        raizes[linha["convocacao"].id].id for linha in linhas if linha["desfecho"] is not None
+    }
+    leituras = documentos_app.leituras_por_chamada(set(raizes.values()), decididas=decididas)
+    for linha in linhas:
+        leitura = leituras.get(raizes[linha["convocacao"].id].id)
+        linha["documentos"] = leitura if leitura is not None and leitura.pedidos else None
+        linha["rotulo_documental"] = (
+            ROTULO_DOCUMENTAL.get(leitura.estado, "") if linha["documentos"] else ""
+        )
+        # **"Apto para formalização"**, e nunca matriculado, vinculado ou encaminhado (D-005).
+        linha["apto"] = (
+            linha["desfecho"] is not None
+            and linha["desfecho"].especie in nomes_da_convocacao.DESFECHOS_QUE_INCLUEM
+        )
+    if ordem == "documentos":
+        longe = timezone.now() + timedelta(days=36500)
+
+        def chave(linha):
+            estado = linha["documentos"].estado if linha["documentos"] else "SEM_EXIGENCIA"
+            if linha["desfecho"] is not None:
+                estado = "DECIDIDA"
+            return (linha["convocacao"].vencimento or longe, ORDEM_DOCUMENTAL.index(estado))
+
+        linhas.sort(key=chave)
+
+
 def convocacao(request, edital_id, marco_id):
     """A tela do recorte: quem foi chamado, o que respondeu, e quantas vagas ainda faltam (019).
 
@@ -8168,10 +8323,15 @@ def convocacao(request, edital_id, marco_id):
     from processo_seletivo.convocacao.application import fluxo
     from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
 
-    ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
+    ator, edital, pode_emitir = _edital_para_classificar(
+        request, edital_id, admite_conferencia=True
+    )
     if ator is None:
         return identidade.pedir_identificacao(request)
     perfil_id = _perfil_do_marco(edital, marco_id)
+    # **O membro alocado à conferência lê a condução**, e só do Perfil que a alocação cobre (115,
+    # FR-3595): a recusa de inexistente para o Perfil de fora, como na página dos documentos.
+    _exigir_alcance_da_conferencia(ator, edital, perfil_id, pode_emitir)
     # A mesma porta da ordenação e do corte (034, FR-499, FR-503): recorte que o Perfil não tem é
     # 404, e não a tela vazia de um recorte que "ainda não começou"; e a Modalidade apontada como
     # ampla é a ampla, e não um recorte à parte, sem apuração, onde convocar é recusado.
@@ -8180,6 +8340,8 @@ def convocacao(request, edital_id, marco_id):
     leitura = leitura_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=agora
     )
+    # Os documentos de cada linha, numa leitura só para o recorte inteiro (115, FR-3607).
+    _documentos_por_linha(leitura["linhas"], ordem=request.GET.get("ordem") or "")
     # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra
     # e o que cada gesto alcançaria são a mesma fotografia do recorte (`FR-888`).
     recorte = {
@@ -8311,6 +8473,248 @@ def convocacao_historico(request, edital_id, marco_id):
             },
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Os documentos da convocação (115).
+#
+# Três portas, e uma regra de autorização só: o predicado da conferência (FR-3595). Quem desfecha
+# confere; o membro alocado à conferência confere e não desfecha; e ninguém mais abre o arquivo —
+# nem o auditor, nem quem só consulta inscrições, nem o membro só alocado a uma Etapa (FR-3598).
+# ---------------------------------------------------------------------------
+
+#: O estado documental de uma linha da condução, dito para quem conduz (FR-3591, FR-3607).
+ROTULO_DOCUMENTAL = {
+    "SEM_EXIGENCIA": "Sem documento pedido",
+    "AGUARDANDO_DOCUMENTACAO": "Aguardando documentação",
+    "PARA_CONFERIR": "Documentos para conferir",
+    "COM_PENDENCIA": "Documentos com pendência",
+    "PRONTA_PARA_DECIDIR": "Pronta para decidir",
+    "DECIDIDA": "Decidida",
+}
+
+#: A ordem da fila de conferência: o que pede trabalho primeiro (FR-3607).
+ORDEM_DOCUMENTAL = (
+    "PARA_CONFERIR",
+    "COM_PENDENCIA",
+    "AGUARDANDO_DOCUMENTACAO",
+    "PRONTA_PARA_DECIDIR",
+    "SEM_EXIGENCIA",
+    "DECIDIDA",
+)
+
+ROTULO_DO_ITEM = {
+    "A_APRESENTAR": "A apresentar",
+    "RECEBIDO": "Recebido, aguardando conferência",
+    "PENDENTE": "Pendente",
+    "COMPLEMENTADO": "Complementado, aguardando conferência",
+    "CONFORME": "Conforme",
+    "NAO_SE_APLICA": "Não se aplica",
+}
+
+
+def _convocacao_para_conferir(request, edital_id, convocacao_id):
+    """A porta dos documentos da convocação: o predicado único (115, FR-3595, FR-3599).
+
+    **404 para o que está fora do alcance**: escopo alheio, Edital ou convocação inexistente, e a
+    convocação de Perfil que a alocação não cobre. **Recusa de autorização para quem está no escopo
+    e não tem base nenhuma**, como a condução já responde (033, `FR-478`).
+    """
+    from processo_seletivo.comissoes.domain.autorizacao import (
+        BASES_DA_CONFERENCIA,
+        perfis_da_conferencia,
+        pode_conferir_documentos,
+    )
+    from processo_seletivo.convocacao.models import Convocacao
+
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return None, None, None, None
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=ator.institution_scope)
+        .select_related("processo")
+        .first()
+    )
+    if edital is None:
+        raise Http404
+    convocacao = (
+        Convocacao.objects.filter(pk=convocacao_id, edital=edital)
+        .select_related("inscricao")
+        .first()
+    )
+    if convocacao is None:
+        raise Http404
+    base = pode_conferir_documentos(ator, edital, convocacao.perfil_id)
+    if base is None:
+        if perfis_da_conferencia(ator, edital):
+            raise Http404
+        require_authorization_base(False, bases=BASES_DA_CONFERENCIA)
+    return ator, edital, convocacao, base
+
+
+@require_http_methods(["GET"])
+def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
+    """Os documentos de uma convocação, item a item, com a conferência (115, FR-3608).
+
+    **Filha da condução**, e não painel novo: chega-se a ela pela linha da convocação. Abrir a
+    página deixa rastro (FR-3604), e abrir cada arquivo também — é a abertura que o "conforme"
+    exige (FR-3611).
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+    from processo_seletivo.convocacao.application.selectors import desfecho_de, identidades_de
+
+    ator, edital, convocacao, base = _convocacao_para_conferir(request, edital_id, convocacao_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    raiz = documentos_app.raiz_da_chamada(convocacao)
+    vigente = documentos_app.vigente_da_chamada(raiz)
+    desfecho = desfecho_de(vigente)
+    leitura = documentos_app.leitura_da_chamada(raiz, decidida=desfecho is not None)
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=base.permissao,
+            operation=documentos_app.CONSULTAR_DOCUMENTOS,
+            aggregate=raiz,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"Documentos da chamada {raiz.id}.",
+            new_state="",
+            new_revision=None,
+        )
+    apresentacoes = [a.id for lido in leitura.itens for a in lido.apresentacoes]
+    abertas_por_voce = set(
+        RegistroAuditoria.objects.filter(
+            operation=documentos_app.CONSULTAR_APRESENTACAO,
+            actor_subject=ator.subject,
+            aggregate_id__in=apresentacoes,
+        ).values_list("aggregate_id", flat=True)
+    )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/convocacao_documentos.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": request.GET.get("lista") or "",
+                "convocacao": vigente,
+                "raiz": raiz,
+                "desfecho": desfecho,
+                "inscricao": identidades_de({convocacao.inscricao_id})[convocacao.inscricao_id],
+                "leitura": leitura,
+                "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
+                "rotulo_do_item": ROTULO_DO_ITEM,
+                "abertas_por_voce": abertas_por_voce,
+                "pode_conferir": desfecho is None,
+                "chave_idempotencia": uuid4().hex,
+                "erro": request.session.pop("erro_da_conferencia", None),
+                "aviso": request.session.pop("aviso_da_conferencia", None),
+            },
+        )
+    )
+
+
+@require_http_methods(["GET"])
+def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresentacao_id):
+    """O arquivo apresentado na convocação, conferido **antes** de sair um byte (FR-3605, FR-3606).
+
+    A mesma entrega do documento da inscrição: cópia verificada, `inline` para ver, `?baixar=1` como
+    ação secundária individual. Não há lote. A abertura fica na trilha, sob a apresentação — é ela
+    que o "conforme" lê (FR-3611).
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+    from processo_seletivo.convocacao.models import ApresentacaoDeDocumento
+
+    ator, edital, convocacao, base = _convocacao_para_conferir(request, edital_id, convocacao_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    raiz = documentos_app.raiz_da_chamada(convocacao)
+    apresentacao = (
+        ApresentacaoDeDocumento.objects.select_related(
+            "item", "documento_da_inscricao", "apresentacao_de_origem"
+        )
+        .filter(pk=apresentacao_id, item__chamada=raiz)
+        .first()
+    )
+    if apresentacao is None:
+        raise Http404
+    fonte = documentos_app.fonte_do_arquivo(apresentacao)
+    copia, calculado = copia_verificada(fonte)
+    baixar = bool(request.GET.get("baixar"))
+    with command_context() as agora:
+        if calculado != apresentacao.content_hash:
+            copia.close()
+            record_event(
+                actor=ator,
+                permission=base.permissao,
+                operation="INTEGRIDADE",
+                aggregate=apresentacao,
+                now=agora,
+                correlation_id=getattr(request, "correlation_id", ""),
+                reason=f"requisito {apresentacao.item.requisito_id}",
+                new_state="",
+                new_revision=None,
+            )
+        else:
+            record_event(
+                actor=ator,
+                permission=base.permissao,
+                operation=documentos_app.CONSULTAR_APRESENTACAO,
+                aggregate=apresentacao,
+                now=agora,
+                correlation_id=getattr(request, "correlation_id", ""),
+                # O requisito, e nunca o nome do arquivo (FR-3603). O download fica dito.
+                reason=(
+                    f"requisito {apresentacao.item.requisito_id}" + (", baixado" if baixar else "")
+                ),
+                new_state="",
+                new_revision=None,
+            )
+    if calculado != apresentacao.content_hash:
+        raise DomainError(
+            "document_integrity_failed",
+            "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
+            "apresentado como íntegro; registre a ocorrência e solicite novo envio ao candidato.",
+            409,
+        )
+    return entregar(fonte, anexo=baixar, verificado=copia)
+
+
+@require_http_methods(["POST"])
+def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id):
+    """Registra a conferência de um item e volta à página dos documentos (FR-3585)."""
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+
+    ator, edital, convocacao, _ = _convocacao_para_conferir(request, edital_id, convocacao_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    destino = (
+        reverse("interface:documentos-da-convocacao", args=[edital.id, marco_id, convocacao.id])
+        + (f"?lista={request.POST.get('lista')}" if request.POST.get("lista") else "")
+        + f"#item-{item_id}"
+    )
+    raiz = documentos_app.raiz_da_chamada(convocacao)
+    if not raiz.itens_da_lista.filter(pk=item_id).exists():
+        raise Http404
+    try:
+        documentos_app.conferir(
+            actor=ator,
+            item_id=item_id,
+            apresentacao_id=request.POST.get("apresentacao") or None,
+            resultado=request.POST.get("resultado") or "",
+            motivo=request.POST.get("motivo") or "",
+            motivo_da_substituicao=request.POST.get("motivo_da_substituicao") or "",
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=f"interface-conferencia-{convocacao.id}",
+        )
+        request.session["aviso_da_conferencia"] = "Conferência registrada."
+    except DomainError as erro:
+        if erro.status == 404:
+            raise Http404 from erro
+        request.session["erro_da_conferencia"] = erro.detail
+    return redirect(destino)
 
 
 @require_http_methods(["POST"])

@@ -1,0 +1,10 @@
+/* Os documentos de uma convocação (115, FR-3608): um cartão por item, com as versões em lista e as
+   conferências recolhidas. A marca "aberto por você" é palavra, e não só cor — é ela que diz se o
+   "conforme" vai ser aceito (FR-3611). */
+.documento-da-convocacao h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;font-size:1.05rem}
+.versoes{margin:.5rem 0;padding-left:1.25rem}
+.versoes li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;margin:.25rem 0;
+  overflow-wrap:anywhere}
+.acao.secundaria{border-color:var(--borda);color:var(--texto-fraco)}
+.aberto-por-voce{font-size:.8125rem;color:var(--verde-texto);font-weight:600}
+.conferencias{margin:.25rem 0;padding-left:1.25rem;overflow-wrap:anywhere}

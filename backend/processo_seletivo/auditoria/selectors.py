@@ -191,9 +191,12 @@ def _atos_da_conducao(edital):
     atos do recurso — admitir e julgar — são auditados sob o juízo e sob a decisão, e **continuam
     fora**: trazê-los mudaria o que esta tela mostra por uma razão que não é desta feature.
     """
+    from processo_seletivo.comissoes.models import AlocacaoAConferencia
     from processo_seletivo.convocacao.models import (
+        ApresentacaoDeDocumento,
         AtestadoDeFatoExterno,
         ComunicacaoEmitida,
+        ConferenciaDeDocumento,
         Convocacao,
         DesfechoDaConvocacao,
     )
@@ -223,6 +226,16 @@ def _atos_da_conducao(edital):
         *AtestadoDeFatoExterno.objects.filter(inscricao__edital=edital).values_list(
             "id", flat=True
         ),
+        # Os documentos da convocação (115, FR-3603): a apresentação e a consulta a ela, sob a
+        # apresentação; a conferência; e a alocação de quem confere. A consulta à página fica sob a
+        # chamada, que já está acima.
+        *ApresentacaoDeDocumento.objects.filter(item__chamada__edital=edital).values_list(
+            "id", flat=True
+        ),
+        *ConferenciaDeDocumento.objects.filter(item__chamada__edital=edital).values_list(
+            "id", flat=True
+        ),
+        *AlocacaoAConferencia.objects.filter(edital=edital).values_list("id", flat=True),
     ]
 
 
