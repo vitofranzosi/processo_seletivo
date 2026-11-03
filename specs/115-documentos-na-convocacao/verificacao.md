@@ -10,12 +10,21 @@ Medida em 03/11/2026, na worktree `nice-zhukovsky-0b4397`, contra PostgreSQL, co
 | Linha de base (T002) | `83cd5863` (`main`) | 14677 | 12 | 0 | 608 s |
 | Depois da implementação (T050) | `0062d311` | 14810 | 12 | 3 | 686 s |
 | Os 3 isolados, duas vezes (`tests/navegador`, 2 workers) | `0062d311` | 12 de 12 | — | 0 | 17 s |
+| Depois da revisão de código | `fd23362c` | 14821 | 12 | 2 | 641 s |
 
 **As 3 falhas da rodada completa não são do diff.** As três caíram no mesmo worker (`gw2`), as três
 com `TargetClosedError` — o Chromium fechou no meio do caso —, e uma delas é a jornada de unidades
 da `110`, que esta feature não toca. Na rodada completa anterior (`b80an6xlo`, sobre o commit
 `75d7737a`) as mesmas jornadas tinham passado. Rodada isolada, duas vezes: os 12 testes de
 navegador passam. A soma é **14813 passando e 12 pulados**, +136 casos sobre a linha de base.
+
+**Na rodada depois da revisão de código, as 2 falhas foram:**
+- o teste de tempo da ocupação (`performance/test_ocupacao.py`, o "dobro"), que o `AGENTS.md` registra
+  como instável com 4 workers; isolado, passou três vezes de três;
+- um teste da Fase 2 que afirmava que o anúncio público **não** continha a certidão da convocação.
+  A correção 5 da revisão passou a anunciá-la, à parte, e o teste agora confere exatamente isso.
+
+A soma dessa rodada é **14823 passando e 12 pulados**.
 
 **Os pulados são os mesmos 12, um a um** (comparados por arquivo e motivo, sem número de linha): os
 10 do vocabulário da composição, a recusa por vendor e o E2E da Caixa. Nenhum teste novo pula.

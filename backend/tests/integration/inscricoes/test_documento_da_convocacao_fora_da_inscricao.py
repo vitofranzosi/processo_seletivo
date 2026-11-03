@@ -117,6 +117,8 @@ def test_a_pagina_publica_nao_anuncia_o_documento_da_convocacao_como_da_inscrica
     perfil = next(p for p in conteudo["profiles"] if p["id"] == PERFIL_DOCENTE)
     anunciados = _documentos_anunciados(conteudo, perfil)
 
-    nomes = str(anunciados)
-    assert "Certidão de nascimento ou casamento" not in nomes
-    assert "Documento de identificação" in nomes
+    # Não é pedido na inscrição, e é anunciado à parte, como o que a convocação pedirá (115, e a
+    # revisão do #369).
+    assert "Certidão de nascimento ou casamento" not in anunciados["sempre"]
+    assert "Documento de identificação" in anunciados["sempre"]
+    assert anunciados["na_convocacao"] == ["Certidão de nascimento ou casamento"]
