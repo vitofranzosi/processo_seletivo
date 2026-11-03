@@ -18,7 +18,11 @@ pytestmark = [pytest.mark.django_db, pytest.mark.performance]
 
 # 118 desde a homologação de 24/10/2026: as publicações de resultado saem numa consulta só, que a
 # linha do tempo e o cronograma do anexo leem juntos (eram duas, uma por natureza).
-ORCAMENTO = 118
+#
+# 119 desde a `115`: a trilha do Edital passou a reunir os documentos da convocação — apresentações,
+# conferências e alocações à conferência —, numa consulta só (uma união), que não cresce com as
+# inscrições nem com os documentos.
+ORCAMENTO = 119
 
 
 @pytest.mark.parametrize("escala", [1, 10])

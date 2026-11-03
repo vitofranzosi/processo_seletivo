@@ -20,7 +20,7 @@ migration ou tela foi alterado. Cada grupo de decisões tem uma situação:
   revistas no arquivo dela.
 - **Demais (D-008, D-009, D-014 a D-017):** propostas de desenho que a revisão não contestou.
 
-O merge deste PR é a aprovação da spec.
+Aprovada com o merge do PR #368 (03/11/2026). **Implementada** na branch `claude/115-documentos-na-convocacao`; a verificação está em [verificacao.md](verificacao.md) e a matriz em [rastreabilidade.md](rastreabilidade.md).
 
 **Input**: a [auditoria de matrícula e dossiê documental](../../doc/auditoria-matricula-e-dossie-documental-2026-11-03.md)
 e o [complemento](../../doc/auditoria-matricula-e-dossie-documental-2026-11-03-complemento.md), de

@@ -6189,9 +6189,19 @@ def _conferencia_dos_documentos(processo):
     """
     from processo_seletivo.comissoes.models import AlocacaoAConferencia
     from processo_seletivo.editais.domain.documentos import NA_CONVOCACAO, do_momento
+    from processo_seletivo.editais.models.documentos import DocumentoExigido
 
+    # **Uma consulta decide se a seção existe** (o orçamento da tela é de número constante): o
+    # Processo cujo Edital não pede documento na convocação — a maioria — não paga mais nada.
+    com_documento = set(
+        DocumentoExigido.objects.filter(
+            edital__processo=processo, momento=NA_CONVOCACAO
+        ).values_list("edital_id", flat=True)
+    )
+    if not com_documento:
+        return []
     editais = []
-    for edital in processo.editais.order_by("year", "number"):
+    for edital in processo.editais.filter(pk__in=com_documento).order_by("year", "number"):
         try:
             conteudo = effective_version(edital_id=edital.id).content
         except DomainError:

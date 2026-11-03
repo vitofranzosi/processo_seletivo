@@ -573,3 +573,36 @@ def test_a_correcao_com_vencimento_novo_reabre_a_apresentacao(aluno, gestor):
         feita = apresentar(pessoa, convocacao, CERTIDAO)
 
     assert feita.apresentacao.item.chamada_id == convocacao.id
+
+
+# --- os limites ---------------------------------------------------------------------------------
+
+
+def test_edital_encerrado_com_convocacao_em_aberto_continua_recebendo_e_conferindo(aluno, gestor):
+    """FR-3616: a feature não muda o encerramento da `113`; a chamada em aberto segue como o
+    desfecho segue."""
+    from processo_seletivo.processos.models import Edital
+
+    edital, _, _ = aluno
+    pessoa, convocacao = convocar_primeira(aluno, gestor)
+    Edital.objects.filter(pk=edital.pk).update(status=Edital.Status.ENCERRADO)
+
+    apresentar(pessoa, convocacao, CERTIDAO)
+    conferencia = conferir(gestor, convocacao, CERTIDAO, "CONFORME", chave="encerrado")
+
+    assert conferencia.resultado == "CONFORME"
+
+
+def test_o_documento_da_inscricao_aproveitado_nao_sai_com_a_referencia(certificado_enviado, gestor):
+    """FR-3579 e FR-3615: a referência protege o que aponta, e nada se exclui."""
+    from django.db.models import ProtectedError
+
+    pessoa, convocacao = convocar_primeira(certificado_enviado, gestor)
+    referencia = lido(convocacao, CERTIFICADO_NA_CONVOCACAO).vigente
+
+    from processo_seletivo.inscricoes.models import DocumentoSubmetido
+
+    with pytest.raises((ProtectedError, TypeError)):
+        DocumentoSubmetido.objects.get(pk=referencia.documento_da_inscricao_id).delete()
+    with pytest.raises(TypeError):
+        referencia.delete()

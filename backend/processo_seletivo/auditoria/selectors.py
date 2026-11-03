@@ -228,14 +228,16 @@ def _atos_da_conducao(edital):
         ),
         # Os documentos da convocação (115, FR-3603): a apresentação e a consulta a ela, sob a
         # apresentação; a conferência; e a alocação de quem confere. A consulta à página fica sob a
-        # chamada, que já está acima.
-        *ApresentacaoDeDocumento.objects.filter(item__chamada__edital=edital).values_list(
-            "id", flat=True
+        # chamada, que já está acima. **Uma consulta para os três**, e não três: o relatório do
+        # Edital lê esta mesma lista, e o orçamento dele é de número constante.
+        *ApresentacaoDeDocumento.objects.filter(item__chamada__edital=edital)
+        .values_list("id", flat=True)
+        .union(
+            ConferenciaDeDocumento.objects.filter(item__chamada__edital=edital).values_list(
+                "id", flat=True
+            ),
+            AlocacaoAConferencia.objects.filter(edital=edital).values_list("id", flat=True),
         ),
-        *ConferenciaDeDocumento.objects.filter(item__chamada__edital=edital).values_list(
-            "id", flat=True
-        ),
-        *AlocacaoAConferencia.objects.filter(edital=edital).values_list("id", flat=True),
     ]
 
 
