@@ -1,0 +1,58 @@
+[
+  {
+    "arquivo": "baseline-pytest-final.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "baseline-pytest.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "checks.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "javascript-host.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "lint-alterados.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "rastreabilidade-final.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "rechecagem-com-fixtures.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "rechecagem-extra.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "regressao-selecionada-final.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "regressoes-antes.log",
+    "tokens_sinteticos_ocultados": 3
+  },
+  {
+    "arquivo": "regressoes-depois-final.log",
+    "tokens_sinteticos_ocultados": 2
+  },
+  {
+    "arquivo": "regressoes-depois.log",
+    "tokens_sinteticos_ocultados": 2
+  },
+  {
+    "arquivo": "servidor.log",
+    "tokens_sinteticos_ocultados": 0
+  },
+  {
+    "arquivo": "suite-completa.log",
+    "tokens_sinteticos_ocultados": 2
+  }
+]

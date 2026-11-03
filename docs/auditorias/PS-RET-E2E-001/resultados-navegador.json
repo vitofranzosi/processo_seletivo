@@ -1,0 +1,34 @@
+[
+  {
+    "eid": "807c8b81-5fd4-457d-93ff-2c70f1aefcb4",
+    "rid": "1adc5ceb-390c-4205-b3e3-0268a544acc6",
+    "url": "/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/",
+    "end": "2026-11-12T22:37",
+    "draw": "2026-11-14T14:23",
+    "kind": "imediata"
+  },
+  {
+    "eid": "f3ffc59e-8561-4ba2-9356-244ac1d04136",
+    "rid": "0650d4c1-b17c-4281-aa1a-3ea351fb7f7f",
+    "url": "/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/",
+    "end": "2026-11-12T22:37",
+    "draw": "2026-11-14T14:23",
+    "kind": "futura"
+  },
+  {
+    "eid": "3a695f24-156b-4efa-b79f-65f369d63a20",
+    "rid": "8a6a7588-a6d8-4244-8510-c93eb2c676ea",
+    "url": "/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/",
+    "end": "2026-11-12T22:37",
+    "draw": "2026-11-14T14:23",
+    "kind": "vencida"
+  },
+  {
+    "eid": "eab064b8-ee7e-42b5-9343-915bfe3036c5",
+    "rid": "61116042-fc5f-4a6b-9a09-38f075c9956f",
+    "url": "/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/",
+    "end": "2026-11-12T22:37",
+    "draw": "2026-11-14T14:23",
+    "kind": "devolvida"
+  }
+]

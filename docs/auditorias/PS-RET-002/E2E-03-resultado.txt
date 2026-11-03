@@ -1,0 +1,42 @@
+Pular para o conteúdo
+GPS
+Gestão de Processos Seletivos
+Cefor/Ifes
+Seções
+GPS › Processos Seletivos › PS-RET-002-3 › Edital AUD-3/2026 › Retificação › Publicar Retificação
+Trocar identidade
+Publicar Retificação
+
+E2E-03 — prazo e sorteio
+
+Não foi possível concluir: O conteúdo que passaria a vigorar em 2026-10-28T14:34:47.637630+00:00 possui erros impeditivos: O Evento 'Inscrições' possui término anterior ao início. Informe um término igual ou posterior ao início.
+
+Aviso: O Edital não possui descrição.
+
+Este ato não pode ser desfeito
+A Retificação torna-se pública e imutável.
+O conteúdo vigente do Edital passa a incluir estas alterações a partir da vigência declarada — imediatamente, se nenhuma data futura foi informada.
+A Publicação original e as versões anteriores continuam preservadas e consultáveis.
+Correções posteriores exigem nova Retificação.
+
+Sem data declarada: vigora imediatamente.
+
+Conteúdo que passará a vigorar
+ONDE	ANTES	DEPOIS
+Evento do cronograma “Inscrições”
+Término
+/schedule/id=00000000-0000-0000-0000-000000008432/endAt
+	07/11/2026 11:30	06/11/2026 12:00
+Evento do cronograma “Sorteio programado sintético”
+Início
+/schedule/id=cd2600ac-6b42-402c-9c53-d5494b8c426a/startAt
+	09/11/2026 11:30	14/11/2026 14:23
+Autoridade Signatária
+
+Quem responde institucionalmente por esta Retificação *
+— escolha a autoridade —
+Autoridade sintética — Diretora de testes · PS-RET-002
+Fica registrada na Publicação da Retificação.
+
+Confirmar: Publicar Retificação
+Cancelar e voltar

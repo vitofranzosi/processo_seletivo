@@ -1,0 +1,313 @@
+Pular para o conteúdo
+GPS
+Gestão de Processos Seletivos
+Cefor/Ifes
+Seções
+GPS › Processos Seletivos › PS-RET-002-3 › Edital AUD-3/2026 › Retificar
+Trocar identidade
+Retificar Edital AUD-3/2026
+
+Altere os campos que precisam mudar. O que você não tocar permanece como está.
+
+Como funciona. Abaixo está o conteúdo vigente do Edital. Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Marcar Remover do Edital tira a linha inteira da versão futura — os campos dela passam a não ter efeito. Nada muda para o público até a Retificação ser publicada.
+
+O que vai mudar (2)
+ONDE	CAMPO	VIGENTE HOJE	PASSARÁ A SER
+Evento 1 — INSCRICAO	Término	07/11/2026 11:30	06/11/2026 12:00
+Evento 2 — SORTEIO	Início	09/11/2026 11:30	14/11/2026 14:23
+IR PARA
+Identificação
+1
+Perfis de Vaga
+3
+Cronograma
+2
+Anexos
+0
+Seções do texto
+17
+Justificativa
+Encontrar
+Só o que eu alterei
+Identificação
+Edital
+
+Título do Edital
+
+Descrição
+
+Teto de inscrições por candidato
+
+Declaração do Requerimento de Matrícula
+
+O que não se corrige por Retificação nesta seção
+Perfis de Vaga
+PERFIL P1 — Perfil
+
+Denominação
+
+Localidade
+
+Descrição
+
+Carga horária
+
+Remuneração
+
+Atribuições
+
+Requisitos de participação
+Um requisito por linha. A lista inteira é substituída.
+
+Vagas imediatas
+
+Limite do Cadastro Reserva
+
+Modalidade que é a ampla concorrência
+Nenhuma — a ampla concorrência é só a linha geral do quadro
+
+Forma de comunicar a convocação
+Nenhuma — este Edital não declarou como convoca
+Por publicação
+Por mensagem individual à pessoa convocada
+
+Gatilho da reversão de vaga reservada
+Nenhum — este Edital não reverte vaga reservada
+Só quando a lista reservada esgota
+A quantidade que ficou sem preencher
+
+Remover do Edital
+
+LINHA DO QUADRO DE VAGAS Ampla concorrência — P1
+
+Vagas imediatas
+
+Lista de concorrência
+Ampla concorrência
+
+Remover do Edital
+
+MARCO M1 — P1
+
+Denominação do marco
+
+Como as pontuações se combinam
+Não declarada — a publicação será impedida
+Soma ponderada
+Média ponderada
+
+Normalização antes de combinar
+Não declarada — a publicação será impedida
+Nenhuma
+Pela soma dos pesos
+
+Quantos progridem
+
+Suplentes alcançados na mesma faixa
+
+Empate na última posição
+Não declarado — a publicação será impedida
+Todos os empatados progridem
+A faixa para no alvo
+
+Como a ordem é produzida
+Não declarada — lida como o Edital sempre a leu
+Pela pontuação combinada das Etapas
+Por sorteio
+
+Casas decimais da pontuação
+
+Como arredondar
+Não declarado — a ordem é sorteada, e não há nota a arredondar
+Meio para cima
+Meio para par
+Truncar
+
+Prazo de recurso, em dias corridos
+Em branco — este marco continua sem prever recurso.
+
+Algoritmo do sorteio
+Não declarado — o sorteio não terá como ser feito
+IFES-SORTEIO-SHA256-v1
+
+Fonte pública da semente
+Não declarada — a semente não terá origem
+Fonte de demonstração
+Loteria Federal
+
+Ocorrência que fixará a semente
+
+Quando a ocorrência acontece
+
+Como a ocorrência decorre da data programada
+
+Regra de normalização
+Não declarada — a semente não se produz
+DIGITOS_EM_SEQUENCIA
+TEXTO_LITERAL
+
+Normalização, como se publica
+
+Regra de substituição
+Não declarada — a publicação será impedida
+OCORRENCIA_SEGUINTE_DA_MESMA_FONTE
+
+Substituição, como se publica
+
+Etapa que habilita ao sorteio
+Nenhuma — todos participam do sorteio
+
+Remover do Edital
+
+O que não se corrige por Retificação nesta seção
+
+Acrescentar Perfil
+Um Perfil acrescentado passa a integrar o Edital quando a Retificação for publicada. As Modalidades dele entram na Retificação seguinte.
+
+Acrescentar Modalidade de Concorrência
+A Modalidade passa a valer para as inscrições feitas depois de a Retificação ser publicada; as já enviadas continuam com a Modalidade que declararam.
+
+Acrescentar linha do quadro de vagas
+A linha diz quantas vagas cabem numa lista de concorrência do Perfil. A opção "Ampla concorrência" é a linha geral, e o Perfil tem no máximo uma.
+
+Acrescentar critério de desempate
+O critério entra no marco escolhido quando a Retificação for publicada, na ordem de aplicação informada. Para trocar um critério, remova o antigo e acrescente o novo no mesmo ato.
+
+Cronograma
+EVENTO 1 — INSCRICAO
+
+Descrição
+
+Início
+
+Término
+
+Local
+
+É o período de inscrições
+Sim
+Não
+
+Remover do Edital
+
+EVENTO 2 — SORTEIO
+
+Descrição
+
+Início
+
+Término
+
+Local
+
+É o período de inscrições
+Sim
+Não
+
+Remover do Edital
+
+O que não se corrige por Retificação nesta seção
+
+Acrescentar Evento
+Um Evento acrescentado entra no Cronograma quando a Retificação for publicada, continuando a ordem dos que já estão acima.
+
+Seções do texto
+SEÇÃO Apresentação
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Disposições preliminares
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Informações gerais
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Público-alvo
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Requisitos gerais
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO 3 — Como se inscrever?
+
+Texto da seção
+Hoje: sai no documento como a seção 3.
+
+SEÇÃO Atendimento à pessoa com deficiência
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO 4 — Como será a seleção?
+
+Texto da seção
+Hoje: sai no documento como a seção 4.
+
+SEÇÃO Verificação da autodeclaração
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Como recorrer?
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO 5 — Como será a convocação?
+
+Texto da seção
+Hoje: sai no documento como a seção 5.
+
+SEÇÃO Como será a matrícula?
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Acesso ao curso
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Homologação da matrícula
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Certificado
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Prazo de validade
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+SEÇÃO Disposições finais
+
+Texto da seção
+Hoje: vazia, e não sai no documento.
+
+O que não se corrige por Retificação nesta seção
+Sobre esta Retificação
+O ato
+
+Justificativa *
+Fica registrada no ato e na consulta pública. Exigida para criar a Retificação; não para conferir o que vai mudar.
+
+Vigência (opcional)
+Vazio significa vigorar na Publicação. Data futura significa que o conteúdo atual continua valendo até lá.
+
+Ver o que vai mudar
+Criar Retificação
+Voltar
+Nada alterado desde a conferência

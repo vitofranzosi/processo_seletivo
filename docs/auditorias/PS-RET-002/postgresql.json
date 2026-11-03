@@ -1,0 +1,3422 @@
+{
+  "retificacoes": {
+    "sql": "SELECT id,edital_id,status,revision,base_snapshot_id,publication_id,justification,effective_at,created_by,created_at,prepared_by,submitted_at,homologated_by,homologated_at,homologation_reason FROM publicacoes_retificacao ORDER BY created_at",
+    "rows": [
+      {
+        "id": "81929709-4363-483f-b149-be8e28126e1c",
+        "edital_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "status": "PUBLICADA",
+        "revision": 4,
+        "base_snapshot_id": "db9b547c-6d07-4a6e-86fc-d55a84aa2592",
+        "publication_id": "7ed90f77-24e0-47c8-8989-653c007c7f9d",
+        "justification": "E2E-01 — prazo e sorteio",
+        "effective_at": null,
+        "created_by": "elaborador.sintetico.002",
+        "created_at": "2026-10-28 14:32:04.153143+00:00",
+        "prepared_by": "elaborador.sintetico.002",
+        "submitted_at": "2026-10-28 14:32:05.625099+00:00",
+        "homologated_by": "homologador.sintetico.002",
+        "homologated_at": "2026-10-28 14:32:09.891518+00:00",
+        "homologation_reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "id": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "status": "PUBLICADA",
+        "revision": 4,
+        "base_snapshot_id": "8fbc80aa-38df-4efa-be31-9d194de89dde",
+        "publication_id": "c61e646d-52db-45a8-8dc6-4bbfbc9cc892",
+        "justification": "E2E-05 — prazo e sorteio",
+        "effective_at": "2026-10-30 15:00:00+00:00",
+        "created_by": "elaborador.sintetico.002",
+        "created_at": "2026-10-28 14:32:22.076677+00:00",
+        "prepared_by": "elaborador.sintetico.002",
+        "submitted_at": "2026-10-28 14:32:23.540596+00:00",
+        "homologated_by": "homologador.sintetico.002",
+        "homologated_at": "2026-10-28 14:32:27.748361+00:00",
+        "homologation_reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "id": "d1f214bb-89af-4f63-830b-6f055fc06767",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "status": "PUBLICADA",
+        "revision": 4,
+        "base_snapshot_id": "8fbc80aa-38df-4efa-be31-9d194de89dde",
+        "publication_id": "f21572cc-5985-4f99-ad12-2df14c12a588",
+        "justification": "E2E-02 — prazo e sorteio",
+        "effective_at": null,
+        "created_by": "elaborador.sintetico.002",
+        "created_at": "2026-10-28 14:32:39.538485+00:00",
+        "prepared_by": "elaborador.sintetico.002",
+        "submitted_at": "2026-10-28 14:32:40.989072+00:00",
+        "homologated_by": "homologador.sintetico.002",
+        "homologated_at": "2026-10-28 14:32:45.231896+00:00",
+        "homologation_reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "id": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+        "edital_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "status": "HOMOLOGADA",
+        "revision": 3,
+        "base_snapshot_id": "0314aec6-95f9-4c60-913d-3eb3d24e9ceb",
+        "publication_id": null,
+        "justification": "E2E-03 — prazo e sorteio",
+        "effective_at": null,
+        "created_by": "elaborador.sintetico.002",
+        "created_at": "2026-10-28 14:34:37.403436+00:00",
+        "prepared_by": "elaborador.sintetico.002",
+        "submitted_at": "2026-10-28 14:34:38.842181+00:00",
+        "homologated_by": "homologador.sintetico.002",
+        "homologated_at": "2026-10-28 14:34:43.125575+00:00",
+        "homologation_reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "id": "bfdb6307-5074-4e98-8270-cef78cd3bae6",
+        "edital_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "status": "PUBLICADA",
+        "revision": 4,
+        "base_snapshot_id": "0314aec6-95f9-4c60-913d-3eb3d24e9ceb",
+        "publication_id": "8a36a21c-fb38-478c-a449-28323961e635",
+        "justification": "Concorrente válido que move apenas o início",
+        "effective_at": null,
+        "created_by": "criadora.concorrente",
+        "created_at": "2026-10-28 14:34:44.583599+00:00",
+        "prepared_by": "criadora.concorrente",
+        "submitted_at": "2026-10-28 14:34:44.644615+00:00",
+        "homologated_by": "homologadora.concorrente",
+        "homologated_at": "2026-10-28 14:34:44.678140+00:00",
+        "homologation_reason": "Fundamento concorrente válido"
+      },
+      {
+        "id": "fda1fb33-36cc-477d-be27-a4bd121dd7ce",
+        "edital_id": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+        "status": "EM_ELABORACAO",
+        "revision": 2,
+        "base_snapshot_id": "4eee7d81-4570-49b5-9236-c31ce2037b19",
+        "publication_id": null,
+        "justification": "Teste de autorização",
+        "effective_at": null,
+        "created_by": "elaborador.sintetico.002",
+        "created_at": "2026-10-28 14:34:55.090921+00:00",
+        "prepared_by": "",
+        "submitted_at": null,
+        "homologated_by": "",
+        "homologated_at": null,
+        "homologation_reason": ""
+      }
+    ]
+  },
+  "alteracoes": {
+    "sql": "SELECT retificacao_id,target_path,new_value,expected_previous_hash FROM publicacoes_alteracaonormativa ORDER BY retificacao_id,\"order\"",
+    "rows": [
+      {
+        "retificacao_id": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+        "target_path": "/schedule/id=00000000-0000-0000-0000-000000008422/endAt",
+        "new_value": "\"2026-11-13T01:37:00+00:00\"",
+        "expected_previous_hash": "cccf8c0ee41b45cea02c0c9adbdb7648a63b487a575063ea113fed50e355450b"
+      },
+      {
+        "retificacao_id": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+        "target_path": "/schedule/id=63231bc7-b5d0-41dc-a049-9ebae46958c2/startAt",
+        "new_value": "\"2026-11-14T17:23:00+00:00\"",
+        "expected_previous_hash": "5f64a20f1ed6b8b97afce29c058bd23ddca50651e5b71dc80c24fd629a4059be"
+      },
+      {
+        "retificacao_id": "81929709-4363-483f-b149-be8e28126e1c",
+        "target_path": "/schedule/id=00000000-0000-0000-0000-000000008412/endAt",
+        "new_value": "\"2026-11-13T01:37:00+00:00\"",
+        "expected_previous_hash": "cccf8c0ee41b45cea02c0c9adbdb7648a63b487a575063ea113fed50e355450b"
+      },
+      {
+        "retificacao_id": "81929709-4363-483f-b149-be8e28126e1c",
+        "target_path": "/schedule/id=9fe046c3-0631-4e2f-9f6d-53ef80fe7f75/startAt",
+        "new_value": "\"2026-11-14T17:23:00+00:00\"",
+        "expected_previous_hash": "5f64a20f1ed6b8b97afce29c058bd23ddca50651e5b71dc80c24fd629a4059be"
+      },
+      {
+        "retificacao_id": "bfdb6307-5074-4e98-8270-cef78cd3bae6",
+        "target_path": "/schedule/id=00000000-0000-0000-0000-000000008432/startAt",
+        "new_value": "\"2026-11-06T23:00:00-03:00\"",
+        "expected_previous_hash": "c0a738b63bdf6e4aee4f3abb0889527936aff815655d518b76660ea31ac879d4"
+      },
+      {
+        "retificacao_id": "d1f214bb-89af-4f63-830b-6f055fc06767",
+        "target_path": "/schedule/id=00000000-0000-0000-0000-000000008422/endAt",
+        "new_value": "\"2026-11-12T00:17:00+00:00\"",
+        "expected_previous_hash": "cccf8c0ee41b45cea02c0c9adbdb7648a63b487a575063ea113fed50e355450b"
+      },
+      {
+        "retificacao_id": "d1f214bb-89af-4f63-830b-6f055fc06767",
+        "target_path": "/schedule/id=63231bc7-b5d0-41dc-a049-9ebae46958c2/startAt",
+        "new_value": "\"2026-11-13T18:29:00+00:00\"",
+        "expected_previous_hash": "5f64a20f1ed6b8b97afce29c058bd23ddca50651e5b71dc80c24fd629a4059be"
+      },
+      {
+        "retificacao_id": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+        "target_path": "/schedule/id=00000000-0000-0000-0000-000000008432/endAt",
+        "new_value": "\"2026-11-06T15:00:00+00:00\"",
+        "expected_previous_hash": "cccf8c0ee41b45cea02c0c9adbdb7648a63b487a575063ea113fed50e355450b"
+      },
+      {
+        "retificacao_id": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+        "target_path": "/schedule/id=cd2600ac-6b42-402c-9c53-d5494b8c426a/startAt",
+        "new_value": "\"2026-11-14T17:23:00+00:00\"",
+        "expected_previous_hash": "5f64a20f1ed6b8b97afce29c058bd23ddca50651e5b71dc80c24fd629a4059be"
+      },
+      {
+        "retificacao_id": "fda1fb33-36cc-477d-be27-a4bd121dd7ce",
+        "target_path": "/schedule/id=00000000-0000-0000-0000-000000008442/endAt",
+        "new_value": "\"2026-11-13T01:37:00+00:00\"",
+        "expected_previous_hash": "cccf8c0ee41b45cea02c0c9adbdb7648a63b487a575063ea113fed50e355450b"
+      }
+    ]
+  },
+  "publicacoes": {
+    "sql": "SELECT id,edital_id,publication_order,published_at,effective_at,published_by,content_hash,canonical_content FROM publicacoes_publicacao ORDER BY edital_id,publication_order",
+    "rows": [
+      {
+        "id": "8b7ee922-b875-4904-9a24-741457e105b3",
+        "edital_id": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+        "publication_order": 1,
+        "published_at": "2026-10-28 14:30:51.017919+00:00",
+        "effective_at": "2026-10-28 14:30:51.017919+00:00",
+        "published_by": "publicador.original",
+        "content_hash": "a1b8cb60d60c322207de86f8afb9c605be72dda31321e86f78071482f6350eb5",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"4d26624b-7e5d-4e3d-af34-f7a6b74ad910\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-4\",\"processoCode\":\"PS-RET-002-4\",\"processoId\":\"08ccae1c-6134-4bdb-b753-4bd7988ba452\",\"processoTitle\":\"Auditoria sintética 4\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"97723e75-6bd4-5f07-b602-de773795ed08\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008441\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"199cd372-2845-549f-b8ac-d5af21bd05fb\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-07T14:30:49.796985+00:00\",\"id\":\"00000000-0000-0000-0000-000000008442\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-10-27T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"c3a3bc6e-af3c-4d06-a2b4-c4f17b0996a2\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-09T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"af93e86e-ed78-5f6c-b2e8-e8a5944d7423\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"5be9a528-3dda-514e-a92a-3cbd5aeb86fb\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"9e2ecd8d-46b4-5864-a64b-a2bfb0cafe80\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"e701131f-2e51-5344-8e6e-93c2c3bf998b\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"befa6f24-2274-5ebd-b4b9-321c765bb836\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"f1fab49a-9a10-5ff4-b574-4bd65ebc1a92\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"3a42f91c-6c62-5aff-845b-f9a151ad9305\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"b79d8f76-c2ee-5603-9216-05fe54e41402\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"0af3c377-bbb7-50d9-9c9a-322165eb7a11\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"4098d016-ef19-558f-bfc0-bca33cef8943\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"64af099d-9440-50da-ae24-4b771b247d08\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"f0f61901-9127-522e-b892-4d1adb76aa49\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"4947c03d-7fd8-5973-8c28-f6c07d4a03dd\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"0ef8684f-62ac-5668-85b4-3bad5e00b519\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"3d27f0bc-bfe0-533e-bfb1-5e858f52ab4a\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b79a25f8-cf7e-534b-8114-f70e234d7f51\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"2a02f4e5-0400-56bc-8174-c71f95355d73\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"d3f8aba3-01b3-5d68-a8ca-98928b3feb0c\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"03f9f813-9c6e-5559-8995-3d8c7d65c026\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"5cdf3776-b7bb-5e8b-8217-a0edf7ea6e78\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"af13bf1e-93f4-5187-8052-bafbd3d400ff\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"c9a4bd9a-e91b-51dd-807c-008e391c9c33\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 4\",\"year\":2026}"
+      },
+      {
+        "id": "c6cd3f50-5de0-43d4-b626-9d3a2bb40aa7",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "publication_order": 1,
+        "published_at": "2026-10-28 14:30:50.493055+00:00",
+        "effective_at": "2026-10-28 14:30:50.493055+00:00",
+        "published_by": "publicador.original",
+        "content_hash": "50a4d7d8e5a513b9c19ba738e5380c42404b2b6292e29c95e1113769e7e80904",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"50cfb054-6d5a-41e5-90d6-43fb1f60ff07\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-2\",\"processoCode\":\"PS-RET-002-2\",\"processoId\":\"ea5a17c7-8f1d-4e1f-9879-4b768b40040c\",\"processoTitle\":\"Auditoria sintética 2\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"3f60a6f7-10bf-5a51-b438-17de03e13f59\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008421\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"3597da5a-d5d0-5935-a213-0df81e1ba018\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-07T14:30:49.796985+00:00\",\"id\":\"00000000-0000-0000-0000-000000008422\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-10-27T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"63231bc7-b5d0-41dc-a049-9ebae46958c2\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-09T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"3c522fa9-f159-5f08-af78-9e0817dbab26\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b9bfa888-b5f1-5571-a76e-79fd4cf34188\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"6dd34273-057e-5dd2-bca0-c55c7432a196\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"d06914b9-0bcf-561f-8579-4df471ee2d14\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"bbce07a0-a43a-5206-bfb0-d5ae52dc9e08\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"e2546c19-4085-5233-bf7e-8c5c093821ca\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"4f030d5f-e624-580a-b667-9aefcdefb86e\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"2dea54d8-464d-59ba-ad4e-1b621755622c\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"456fbefc-dd5d-5c7a-8a38-ec18b74892ce\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"b297ca03-3f91-5053-8e73-d6c87b155919\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"3c6e14bc-ebc7-5a7e-a822-b66f3edcb934\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"ea936c9a-4f1f-5398-8afa-45ad746168f7\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"fc017963-a2d0-53d0-9520-5378175304b0\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c6ddcea3-6251-5246-9ee8-247f5eed5cba\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b505b983-2966-5e88-a268-bf4813ef2e54\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"cace381f-a19a-5e49-a831-790716e54af2\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"19960012-53c0-51ea-84ac-c9b3140479fb\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c31d452a-0bf5-5899-90d7-83a05679cc28\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"3bffe136-b6e9-55a1-af1a-4e5aa78295ca\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"098bd2f7-dbb7-527f-ac77-9b3cccd59cab\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"84e569af-c0b1-58b8-9a87-a8382c10e39e\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"408fa684-14fb-5aff-8c4e-65b643b9f76c\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 2\",\"year\":2026}"
+      },
+      {
+        "id": "c61e646d-52db-45a8-8dc6-4bbfbc9cc892",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "publication_order": 2,
+        "published_at": "2026-10-28 14:32:32.004072+00:00",
+        "effective_at": "2026-10-30 15:00:00+00:00",
+        "published_by": "publicador.sintetico.002",
+        "content_hash": "b7699abda628be37d45789ecacf624c355eebb0e62b969ad66ac7251844404f4",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"50cfb054-6d5a-41e5-90d6-43fb1f60ff07\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-2\",\"processoCode\":\"PS-RET-002-2\",\"processoId\":\"ea5a17c7-8f1d-4e1f-9879-4b768b40040c\",\"processoTitle\":\"Auditoria sintética 2\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"3f60a6f7-10bf-5a51-b438-17de03e13f59\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008421\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"3597da5a-d5d0-5935-a213-0df81e1ba018\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-13T01:37:00+00:00\",\"id\":\"00000000-0000-0000-0000-000000008422\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-10-27T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"63231bc7-b5d0-41dc-a049-9ebae46958c2\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-14T17:23:00+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"3c522fa9-f159-5f08-af78-9e0817dbab26\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b9bfa888-b5f1-5571-a76e-79fd4cf34188\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"6dd34273-057e-5dd2-bca0-c55c7432a196\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"d06914b9-0bcf-561f-8579-4df471ee2d14\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"bbce07a0-a43a-5206-bfb0-d5ae52dc9e08\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"e2546c19-4085-5233-bf7e-8c5c093821ca\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"4f030d5f-e624-580a-b667-9aefcdefb86e\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"2dea54d8-464d-59ba-ad4e-1b621755622c\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"456fbefc-dd5d-5c7a-8a38-ec18b74892ce\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"b297ca03-3f91-5053-8e73-d6c87b155919\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"3c6e14bc-ebc7-5a7e-a822-b66f3edcb934\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"ea936c9a-4f1f-5398-8afa-45ad746168f7\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"fc017963-a2d0-53d0-9520-5378175304b0\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c6ddcea3-6251-5246-9ee8-247f5eed5cba\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b505b983-2966-5e88-a268-bf4813ef2e54\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"cace381f-a19a-5e49-a831-790716e54af2\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"19960012-53c0-51ea-84ac-c9b3140479fb\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c31d452a-0bf5-5899-90d7-83a05679cc28\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"3bffe136-b6e9-55a1-af1a-4e5aa78295ca\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"098bd2f7-dbb7-527f-ac77-9b3cccd59cab\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"84e569af-c0b1-58b8-9a87-a8382c10e39e\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"408fa684-14fb-5aff-8c4e-65b643b9f76c\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 2\",\"year\":2026}"
+      },
+      {
+        "id": "f21572cc-5985-4f99-ad12-2df14c12a588",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "publication_order": 3,
+        "published_at": "2026-10-28 14:32:49.475502+00:00",
+        "effective_at": "2026-10-28 14:32:49.475502+00:00",
+        "published_by": "publicador.sintetico.002",
+        "content_hash": "3af628a02b1fb93aaad481ffec70f6207aa182524dfea30b70823e0d90d6501d",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"50cfb054-6d5a-41e5-90d6-43fb1f60ff07\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-2\",\"processoCode\":\"PS-RET-002-2\",\"processoId\":\"ea5a17c7-8f1d-4e1f-9879-4b768b40040c\",\"processoTitle\":\"Auditoria sintética 2\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"3f60a6f7-10bf-5a51-b438-17de03e13f59\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008421\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"3597da5a-d5d0-5935-a213-0df81e1ba018\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-12T00:17:00+00:00\",\"id\":\"00000000-0000-0000-0000-000000008422\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-10-27T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"63231bc7-b5d0-41dc-a049-9ebae46958c2\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-13T18:29:00+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"3c522fa9-f159-5f08-af78-9e0817dbab26\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b9bfa888-b5f1-5571-a76e-79fd4cf34188\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"6dd34273-057e-5dd2-bca0-c55c7432a196\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"d06914b9-0bcf-561f-8579-4df471ee2d14\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"bbce07a0-a43a-5206-bfb0-d5ae52dc9e08\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"e2546c19-4085-5233-bf7e-8c5c093821ca\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"4f030d5f-e624-580a-b667-9aefcdefb86e\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"2dea54d8-464d-59ba-ad4e-1b621755622c\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"456fbefc-dd5d-5c7a-8a38-ec18b74892ce\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"b297ca03-3f91-5053-8e73-d6c87b155919\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"3c6e14bc-ebc7-5a7e-a822-b66f3edcb934\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"ea936c9a-4f1f-5398-8afa-45ad746168f7\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"fc017963-a2d0-53d0-9520-5378175304b0\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c6ddcea3-6251-5246-9ee8-247f5eed5cba\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b505b983-2966-5e88-a268-bf4813ef2e54\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"cace381f-a19a-5e49-a831-790716e54af2\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"19960012-53c0-51ea-84ac-c9b3140479fb\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c31d452a-0bf5-5899-90d7-83a05679cc28\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"3bffe136-b6e9-55a1-af1a-4e5aa78295ca\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"098bd2f7-dbb7-527f-ac77-9b3cccd59cab\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"84e569af-c0b1-58b8-9a87-a8382c10e39e\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"408fa684-14fb-5aff-8c4e-65b643b9f76c\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 2\",\"year\":2026}"
+      },
+      {
+        "id": "a3feda46-ab9c-464e-8e35-7ce28d377536",
+        "edital_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "publication_order": 1,
+        "published_at": "2026-10-28 14:30:50.773355+00:00",
+        "effective_at": "2026-10-28 14:30:50.773355+00:00",
+        "published_by": "publicador.original",
+        "content_hash": "303f0179eb33972183111e719085e69943bf49dd4e1dd5a2c66fff4393bc7f60",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"b18e131f-9926-491c-8991-c32487ed7a11\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-3\",\"processoCode\":\"PS-RET-002-3\",\"processoId\":\"a89a7e93-77cf-4ccc-befc-9f90f39af10e\",\"processoTitle\":\"Auditoria sintética 3\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"9eb0f03e-803e-5fed-b804-525e82d0c8ad\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008431\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"383f2dfb-5246-5380-8245-5be9c6355ebc\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-07T14:30:49.796985+00:00\",\"id\":\"00000000-0000-0000-0000-000000008432\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-10-27T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"cd2600ac-6b42-402c-9c53-d5494b8c426a\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-09T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"75fac5c3-8a58-5ffb-9702-2e4b668ee6d8\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"a108e55a-896c-5ed5-a923-c1e56fb2824c\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"2e823c49-bd56-5925-bfe3-7f586f235e94\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"f11348b5-c312-50e9-8727-67954f617cb5\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"59aa6757-c827-5936-be04-e1a9ad27d95f\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"845e8914-e944-551f-9ba5-cabb70f5bc06\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"e8fa8eb2-b68e-59b0-9258-71da034cee1e\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"597001f6-a0a9-51ca-a502-b0f5cb961379\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"9580e841-9911-5fa3-809b-3aac038ba55a\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"b8cb513e-6bd1-547f-8423-2d572dcd7c4e\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"3eb6a93c-dc2e-5e7b-8314-961bcc30d914\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"62e2f16d-255a-576f-8f86-ec5edc17cf74\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"dbcf72ec-3c7f-5e17-8384-943ed7cf71b2\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"00ebbbda-84ce-5fd1-86ea-5798da8bf437\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"78a10a27-8176-55a0-8e41-c044cd73b4f8\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"fc868770-837a-5c01-b055-65a9d2edf5e7\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"8361a946-cb8b-5afc-af14-c6856416eceb\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"e1982ff1-a427-5803-b79d-b084e128bd15\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"852e107b-1c6a-55d0-93a7-0a0ab4b90793\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"5a06a03b-3162-5899-9ffd-220e1082549a\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"47d67f57-7ddd-5ad1-bddf-337d1de01bef\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"f1d5f908-ad59-55f9-b8e8-afb54ee92cd6\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 3\",\"year\":2026}"
+      },
+      {
+        "id": "8a36a21c-fb38-478c-a449-28323961e635",
+        "edital_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "publication_order": 2,
+        "published_at": "2026-10-28 14:34:44.703510+00:00",
+        "effective_at": "2026-10-28 14:34:44.703510+00:00",
+        "published_by": "publicadora.concorrente",
+        "content_hash": "c505a47eb5ed7905e9a57573faa8f68dbe99eae8fa451293eae368c98977314c",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"b18e131f-9926-491c-8991-c32487ed7a11\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-3\",\"processoCode\":\"PS-RET-002-3\",\"processoId\":\"a89a7e93-77cf-4ccc-befc-9f90f39af10e\",\"processoTitle\":\"Auditoria sintética 3\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"9eb0f03e-803e-5fed-b804-525e82d0c8ad\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008431\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"383f2dfb-5246-5380-8245-5be9c6355ebc\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-07T14:30:49.796985+00:00\",\"id\":\"00000000-0000-0000-0000-000000008432\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-11-06T23:00:00-03:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"cd2600ac-6b42-402c-9c53-d5494b8c426a\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-09T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"75fac5c3-8a58-5ffb-9702-2e4b668ee6d8\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"a108e55a-896c-5ed5-a923-c1e56fb2824c\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"2e823c49-bd56-5925-bfe3-7f586f235e94\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"f11348b5-c312-50e9-8727-67954f617cb5\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"59aa6757-c827-5936-be04-e1a9ad27d95f\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"845e8914-e944-551f-9ba5-cabb70f5bc06\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"e8fa8eb2-b68e-59b0-9258-71da034cee1e\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"597001f6-a0a9-51ca-a502-b0f5cb961379\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"9580e841-9911-5fa3-809b-3aac038ba55a\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"b8cb513e-6bd1-547f-8423-2d572dcd7c4e\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"3eb6a93c-dc2e-5e7b-8314-961bcc30d914\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"62e2f16d-255a-576f-8f86-ec5edc17cf74\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"dbcf72ec-3c7f-5e17-8384-943ed7cf71b2\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"00ebbbda-84ce-5fd1-86ea-5798da8bf437\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"78a10a27-8176-55a0-8e41-c044cd73b4f8\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"fc868770-837a-5c01-b055-65a9d2edf5e7\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"8361a946-cb8b-5afc-af14-c6856416eceb\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"e1982ff1-a427-5803-b79d-b084e128bd15\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"852e107b-1c6a-55d0-93a7-0a0ab4b90793\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"5a06a03b-3162-5899-9ffd-220e1082549a\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"47d67f57-7ddd-5ad1-bddf-337d1de01bef\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"f1d5f908-ad59-55f9-b8e8-afb54ee92cd6\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 3\",\"year\":2026}"
+      },
+      {
+        "id": "874642bd-c24c-498d-8ca9-b3121c6dd172",
+        "edital_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "publication_order": 1,
+        "published_at": "2026-10-28 14:30:50.159669+00:00",
+        "effective_at": "2026-10-28 14:30:50.159669+00:00",
+        "published_by": "publicador.original",
+        "content_hash": "e8c59d0193db7b347266410fc61b6c439fca4e4a9bb10e327321991354e1d580",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-1\",\"processoCode\":\"PS-RET-002-1\",\"processoId\":\"2a54349b-d2df-4e06-95f1-a0be91e4e982\",\"processoTitle\":\"Auditoria sintética 1\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"5e615383-f419-5d71-b1c4-c7e5de8e5396\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008411\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"2407feb9-7a29-557f-a8c0-f66117f0770a\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-07T14:30:49.796985+00:00\",\"id\":\"00000000-0000-0000-0000-000000008412\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-10-27T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"9fe046c3-0631-4e2f-9f6d-53ef80fe7f75\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-09T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"9997d05a-4d87-587e-a91c-311efaaabb6f\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c4f153c0-326a-58e5-b96c-bf9d4c64d80a\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"87b39628-ccc2-5f54-8001-5630b89149a4\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"a45ef14b-9422-5fee-8163-c89665b98bf3\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"e790ba4f-7fa0-50bb-90d6-912821f9c145\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"0aa6e9b7-f469-5d9b-b886-666e0c1e2dc3\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"415b3a39-a8a4-50c9-9b1d-56ff272256ae\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"ce776365-f3a9-529e-b094-6084460eda11\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"81f52edf-e15b-5f6b-9f39-613ea496914c\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"c06fd404-f5f8-5cef-8c90-a57eca475a87\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"68a8e7f3-2cd9-553a-928c-b38d2909ef6f\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"2e3ea3f4-935c-544c-ad66-db3bba1f28f0\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"cef759f1-cc7a-529a-bd30-d59f52f552cd\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"d5d18836-6a50-594b-b4e9-ebec1d8a4e19\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"474d6f1b-6943-5e4e-97e9-67910d52db7b\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"40fc55d3-5699-5e89-850b-34a5d32cb59b\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"fdf163d5-def6-513e-ac61-0bf96083e723\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b4572090-2c7a-5f7a-860a-0ed1ec7f95aa\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"002220c0-7195-505a-b8ec-803c552cd410\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"e573c021-360a-5642-af3f-910008574069\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"11f5de2c-46a3-5a3a-a52f-098f5913fa83\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"7cbbf235-2ff8-5ae1-b482-f91756e14e61\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 1\",\"year\":2026}"
+      },
+      {
+        "id": "7ed90f77-24e0-47c8-8989-653c007c7f9d",
+        "edital_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "publication_order": 2,
+        "published_at": "2026-10-28 14:32:14.167377+00:00",
+        "effective_at": "2026-10-28 14:32:14.167377+00:00",
+        "published_by": "publicador.sintetico.002",
+        "content_hash": "cac297427930438ac9d9abc025d749ced0d14aea6acc92e5e8e4fc9c5c2e10b9",
+        "canonical_content": "{\"attachments\":[],\"description\":\"\",\"documentRequirements\":[],\"editalId\":\"bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb\",\"matriculationRequest\":null,\"maxInscricoesPorCandidato\":null,\"number\":\"AUD-1\",\"processoCode\":\"PS-RET-002-1\",\"processoId\":\"2a54349b-d2df-4e06-95f1-a0be91e4e982\",\"processoTitle\":\"Auditoria sintética 1\",\"profiles\":[{\"callForm\":\"PUBLICATION\",\"callInformation\":{},\"classificationInformation\":{},\"classificationMilestones\":[{\"appealWindow\":null,\"code\":\"M1\",\"cutRule\":{\"continuation\":\"NONE\",\"governedStage\":\"NONE\",\"surplusCount\":0,\"targetCount\":1,\"targetKind\":\"FIXED\",\"tieOutcome\":\"STRICT\"},\"drawMethod\":{\"algorithm\":\"IFES-SORTEIO-SHA256-v1\",\"derivation\":\"a extração de sábado imediatamente anterior à data publicada\",\"normalization\":{\"rule\":\"DIGITOS_EM_SEQUENCIA\",\"text\":\"os cinco números sorteados, na ordem dos prêmios\"},\"occurrence\":\"5900\",\"occurrenceAt\":\"2020-01-01T20:00:00-03:00\",\"source\":\"Fonte de demonstração\",\"substitutionRule\":{\"rule\":\"OCORRENCIA_SEGUINTE_DA_MESMA_FONTE\",\"text\":\"não havendo extração na data, vale a extração seguinte da mesma fonte\"}},\"id\":\"5e615383-f419-5d71-b1c4-c7e5de8e5396\",\"name\":\"Sorteio público\",\"normalization\":\"NENHUMA\",\"operation\":\"SOMA_PONDERADA\",\"orderProduction\":\"POR_SORTEIO\",\"rounding\":{\"mode\":\"MEIO_PARA_CIMA\",\"scale\":2},\"stages\":[],\"tiebreakers\":[]}],\"code\":\"P1\",\"compensation\":\"\",\"competitionModalities\":[],\"declaredFacts\":[],\"description\":\"\",\"duties\":\"\",\"generalCompetitionModalityId\":null,\"id\":\"00000000-0000-0000-0000-000000008411\",\"immediateVacancies\":1,\"locality\":\"\",\"name\":\"Perfil\",\"requirements\":[],\"reserveLimit\":null,\"reserveType\":\"NONE\",\"vacancyReversion\":null,\"vacancyTable\":[{\"id\":\"2407feb9-7a29-557f-a8c0-f66117f0770a\",\"immediateVacancies\":1,\"modalityId\":null}],\"workload\":\"\"}],\"schedule\":[{\"description\":\"Inscrições\",\"endAt\":\"2026-11-13T01:37:00+00:00\",\"id\":\"00000000-0000-0000-0000-000000008412\",\"isRegistrationPeriod\":true,\"location\":\"\",\"order\":1,\"startAt\":\"2026-10-27T14:30:49.796985+00:00\",\"status\":\"PLANEJADO\",\"type\":\"INSCRICAO\"},{\"description\":\"Sorteio programado sintético\",\"endAt\":null,\"id\":\"9fe046c3-0631-4e2f-9f6d-53ef80fe7f75\",\"isRegistrationPeriod\":false,\"location\":\"\",\"order\":2,\"startAt\":\"2026-11-14T17:23:00+00:00\",\"status\":\"PLANEJADO\",\"type\":\"SORTEIO\"}],\"schemaVersion\":17,\"sections\":[{\"content\":\"\",\"id\":\"9997d05a-4d87-587e-a91c-311efaaabb6f\",\"key\":\"apresentacao\",\"order\":1,\"title\":\"Apresentação\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"c4f153c0-326a-58e5-b96c-bf9d4c64d80a\",\"key\":\"disposicoes-preliminares\",\"order\":2,\"title\":\"Disposições preliminares\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"87b39628-ccc2-5f54-8001-5630b89149a4\",\"key\":\"informacoes-gerais\",\"order\":3,\"title\":\"Informações gerais\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"a45ef14b-9422-5fee-8163-c89665b98bf3\",\"key\":\"publico-alvo\",\"order\":4,\"title\":\"Público-alvo\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"e790ba4f-7fa0-50bb-90d6-912821f9c145\",\"key\":\"requisitos-gerais\",\"order\":5,\"title\":\"Requisitos gerais\",\"type\":\"TEXT\"},{\"id\":\"0aa6e9b7-f469-5d9b-b886-666e0c1e2dc3\",\"key\":\"perfis\",\"order\":6,\"source\":\"profiles\",\"title\":\"Quantas vagas há, e onde?\",\"type\":\"GENERATED\"},{\"id\":\"415b3a39-a8a4-50c9-9b1d-56ff272256ae\",\"key\":\"cronograma\",\"order\":7,\"source\":\"schedule\",\"title\":\"Cronograma\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"ce776365-f3a9-529e-b094-6084460eda11\",\"key\":\"inscricao\",\"order\":8,\"title\":\"Como se inscrever?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"81f52edf-e15b-5f6b-9f39-613ea496914c\",\"key\":\"atendimento-pcd\",\"order\":9,\"title\":\"Atendimento à pessoa com deficiência\",\"type\":\"TEXT\"},{\"id\":\"c06fd404-f5f8-5cef-8c90-a57eca475a87\",\"key\":\"documentos-exigidos\",\"order\":10,\"source\":\"documentRequirements\",\"title\":\"Quais documentos enviar?\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"68a8e7f3-2cd9-553a-928c-b38d2909ef6f\",\"key\":\"classificacao\",\"order\":11,\"title\":\"Como será a seleção?\",\"type\":\"TEXT\"},{\"id\":\"2e3ea3f4-935c-544c-ad66-db3bba1f28f0\",\"key\":\"etapas\",\"order\":12,\"source\":\"stages\",\"title\":\"Etapas de avaliação\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"cef759f1-cc7a-529a-bd30-d59f52f552cd\",\"key\":\"verificacao-autodeclaracao\",\"order\":13,\"title\":\"Verificação da autodeclaração\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"d5d18836-6a50-594b-b4e9-ebec1d8a4e19\",\"key\":\"recursos\",\"order\":14,\"title\":\"Como recorrer?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"474d6f1b-6943-5e4e-97e9-67910d52db7b\",\"key\":\"convocacao\",\"order\":15,\"title\":\"Como será a convocação?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"40fc55d3-5699-5e89-850b-34a5d32cb59b\",\"key\":\"matricula\",\"order\":16,\"title\":\"Como será a matrícula?\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"fdf163d5-def6-513e-ac61-0bf96083e723\",\"key\":\"acesso-ao-curso\",\"order\":17,\"title\":\"Acesso ao curso\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"b4572090-2c7a-5f7a-860a-0ed1ec7f95aa\",\"key\":\"homologacao-matricula\",\"order\":18,\"title\":\"Homologação da matrícula\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"002220c0-7195-505a-b8ec-803c552cd410\",\"key\":\"certificado\",\"order\":19,\"title\":\"Certificado\",\"type\":\"TEXT\"},{\"content\":\"\",\"id\":\"e573c021-360a-5642-af3f-910008574069\",\"key\":\"prazo-de-validade\",\"order\":20,\"title\":\"Prazo de validade\",\"type\":\"TEXT\"},{\"id\":\"11f5de2c-46a3-5a3a-a52f-098f5913fa83\",\"key\":\"anexos\",\"order\":21,\"source\":\"attachments\",\"title\":\"Anexos\",\"type\":\"GENERATED\"},{\"content\":\"\",\"id\":\"7cbbf235-2ff8-5ae1-b482-f91756e14e61\",\"key\":\"disposicoes-finais\",\"order\":22,\"title\":\"Disposições finais\",\"type\":\"TEXT\"}],\"stages\":[],\"title\":\"Edital sintético 1\",\"year\":2026}"
+      }
+    ]
+  },
+  "versoes": {
+    "sql": "SELECT id,edital_id,valid_from,materialized_at,source_publication_id,content,content_hash,applied_publications FROM publicacoes_versaoconsolidada ORDER BY edital_id,valid_from,materialized_at",
+    "rows": [
+      {
+        "id": "4eee7d81-4570-49b5-9236-c31ce2037b19",
+        "edital_id": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+        "valid_from": "2026-10-28 14:30:51.017919+00:00",
+        "materialized_at": "2026-10-28 14:30:51.017919+00:00",
+        "source_publication_id": "8b7ee922-b875-4904-9a24-741457e105b3",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 4",
+          "number": "AUD-4",
+          "stages": [],
+          "editalId": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008441",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "199cd372-2845-549f-b8ac-d5af21bd05fb",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "97723e75-6bd4-5f07-b602-de773795ed08",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008442",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-07T14:30:49.796985+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "c3a3bc6e-af3c-4d06-a2b4-c4f17b0996a2",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-09T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "af93e86e-ed78-5f6c-b2e8-e8a5944d7423",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "5be9a528-3dda-514e-a92a-3cbd5aeb86fb",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "9e2ecd8d-46b4-5864-a64b-a2bfb0cafe80",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "e701131f-2e51-5344-8e6e-93c2c3bf998b",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "befa6f24-2274-5ebd-b4b9-321c765bb836",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "f1fab49a-9a10-5ff4-b574-4bd65ebc1a92",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "3a42f91c-6c62-5aff-845b-f9a151ad9305",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "b79d8f76-c2ee-5603-9216-05fe54e41402",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "0af3c377-bbb7-50d9-9c9a-322165eb7a11",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "4098d016-ef19-558f-bfc0-bca33cef8943",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "64af099d-9440-50da-ae24-4b771b247d08",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "f0f61901-9127-522e-b892-4d1adb76aa49",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "4947c03d-7fd8-5973-8c28-f6c07d4a03dd",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "0ef8684f-62ac-5668-85b4-3bad5e00b519",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "3d27f0bc-bfe0-533e-bfb1-5e858f52ab4a",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "b79a25f8-cf7e-534b-8114-f70e234d7f51",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "2a02f4e5-0400-56bc-8174-c71f95355d73",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "d3f8aba3-01b3-5d68-a8ca-98928b3feb0c",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "03f9f813-9c6e-5559-8995-3d8c7d65c026",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "5cdf3776-b7bb-5e8b-8217-a0edf7ea6e78",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "af13bf1e-93f4-5187-8052-bafbd3d400ff",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "c9a4bd9a-e91b-51dd-807c-008e391c9c33",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "08ccae1c-6134-4bdb-b753-4bd7988ba452",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-4",
+          "processoTitle": "Auditoria sintética 4",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "a1b8cb60d60c322207de86f8afb9c605be72dda31321e86f78071482f6350eb5",
+        "applied_publications": [
+          "8b7ee922-b875-4904-9a24-741457e105b3"
+        ]
+      },
+      {
+        "id": "8fbc80aa-38df-4efa-be31-9d194de89dde",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "valid_from": "2026-10-28 14:30:50.493055+00:00",
+        "materialized_at": "2026-10-28 14:30:50.493055+00:00",
+        "source_publication_id": "c6cd3f50-5de0-43d4-b626-9d3a2bb40aa7",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 2",
+          "number": "AUD-2",
+          "stages": [],
+          "editalId": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008421",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "3597da5a-d5d0-5935-a213-0df81e1ba018",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "3f60a6f7-10bf-5a51-b438-17de03e13f59",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008422",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-07T14:30:49.796985+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "63231bc7-b5d0-41dc-a049-9ebae46958c2",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-09T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "3c522fa9-f159-5f08-af78-9e0817dbab26",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "b9bfa888-b5f1-5571-a76e-79fd4cf34188",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "6dd34273-057e-5dd2-bca0-c55c7432a196",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "d06914b9-0bcf-561f-8579-4df471ee2d14",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "bbce07a0-a43a-5206-bfb0-d5ae52dc9e08",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "e2546c19-4085-5233-bf7e-8c5c093821ca",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "4f030d5f-e624-580a-b667-9aefcdefb86e",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "2dea54d8-464d-59ba-ad4e-1b621755622c",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "456fbefc-dd5d-5c7a-8a38-ec18b74892ce",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "b297ca03-3f91-5053-8e73-d6c87b155919",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "3c6e14bc-ebc7-5a7e-a822-b66f3edcb934",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "ea936c9a-4f1f-5398-8afa-45ad746168f7",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "fc017963-a2d0-53d0-9520-5378175304b0",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "c6ddcea3-6251-5246-9ee8-247f5eed5cba",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "b505b983-2966-5e88-a268-bf4813ef2e54",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "cace381f-a19a-5e49-a831-790716e54af2",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "19960012-53c0-51ea-84ac-c9b3140479fb",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "c31d452a-0bf5-5899-90d7-83a05679cc28",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "3bffe136-b6e9-55a1-af1a-4e5aa78295ca",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "098bd2f7-dbb7-527f-ac77-9b3cccd59cab",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "84e569af-c0b1-58b8-9a87-a8382c10e39e",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "408fa684-14fb-5aff-8c4e-65b643b9f76c",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "ea5a17c7-8f1d-4e1f-9879-4b768b40040c",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-2",
+          "processoTitle": "Auditoria sintética 2",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "50a4d7d8e5a513b9c19ba738e5380c42404b2b6292e29c95e1113769e7e80904",
+        "applied_publications": [
+          "c6cd3f50-5de0-43d4-b626-9d3a2bb40aa7"
+        ]
+      },
+      {
+        "id": "4a99e49f-a51e-455c-af40-bc817266e1f8",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "valid_from": "2026-10-28 14:32:49.475502+00:00",
+        "materialized_at": "2026-10-28 14:32:49.475502+00:00",
+        "source_publication_id": "f21572cc-5985-4f99-ad12-2df14c12a588",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 2",
+          "number": "AUD-2",
+          "stages": [],
+          "editalId": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008421",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "3597da5a-d5d0-5935-a213-0df81e1ba018",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "3f60a6f7-10bf-5a51-b438-17de03e13f59",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008422",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-12T00:17:00+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "63231bc7-b5d0-41dc-a049-9ebae46958c2",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-13T18:29:00+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "3c522fa9-f159-5f08-af78-9e0817dbab26",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "b9bfa888-b5f1-5571-a76e-79fd4cf34188",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "6dd34273-057e-5dd2-bca0-c55c7432a196",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "d06914b9-0bcf-561f-8579-4df471ee2d14",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "bbce07a0-a43a-5206-bfb0-d5ae52dc9e08",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "e2546c19-4085-5233-bf7e-8c5c093821ca",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "4f030d5f-e624-580a-b667-9aefcdefb86e",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "2dea54d8-464d-59ba-ad4e-1b621755622c",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "456fbefc-dd5d-5c7a-8a38-ec18b74892ce",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "b297ca03-3f91-5053-8e73-d6c87b155919",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "3c6e14bc-ebc7-5a7e-a822-b66f3edcb934",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "ea936c9a-4f1f-5398-8afa-45ad746168f7",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "fc017963-a2d0-53d0-9520-5378175304b0",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "c6ddcea3-6251-5246-9ee8-247f5eed5cba",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "b505b983-2966-5e88-a268-bf4813ef2e54",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "cace381f-a19a-5e49-a831-790716e54af2",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "19960012-53c0-51ea-84ac-c9b3140479fb",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "c31d452a-0bf5-5899-90d7-83a05679cc28",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "3bffe136-b6e9-55a1-af1a-4e5aa78295ca",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "098bd2f7-dbb7-527f-ac77-9b3cccd59cab",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "84e569af-c0b1-58b8-9a87-a8382c10e39e",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "408fa684-14fb-5aff-8c4e-65b643b9f76c",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "ea5a17c7-8f1d-4e1f-9879-4b768b40040c",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-2",
+          "processoTitle": "Auditoria sintética 2",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "3af628a02b1fb93aaad481ffec70f6207aa182524dfea30b70823e0d90d6501d",
+        "applied_publications": [
+          "f21572cc-5985-4f99-ad12-2df14c12a588"
+        ]
+      },
+      {
+        "id": "c3adff96-5651-4103-8830-30899ccedef5",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "valid_from": "2026-10-30 15:00:00+00:00",
+        "materialized_at": "2026-10-28 14:32:32.004072+00:00",
+        "source_publication_id": "c61e646d-52db-45a8-8dc6-4bbfbc9cc892",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 2",
+          "number": "AUD-2",
+          "stages": [],
+          "editalId": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008421",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "3597da5a-d5d0-5935-a213-0df81e1ba018",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "3f60a6f7-10bf-5a51-b438-17de03e13f59",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008422",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-13T01:37:00+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "63231bc7-b5d0-41dc-a049-9ebae46958c2",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-14T17:23:00+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "3c522fa9-f159-5f08-af78-9e0817dbab26",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "b9bfa888-b5f1-5571-a76e-79fd4cf34188",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "6dd34273-057e-5dd2-bca0-c55c7432a196",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "d06914b9-0bcf-561f-8579-4df471ee2d14",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "bbce07a0-a43a-5206-bfb0-d5ae52dc9e08",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "e2546c19-4085-5233-bf7e-8c5c093821ca",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "4f030d5f-e624-580a-b667-9aefcdefb86e",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "2dea54d8-464d-59ba-ad4e-1b621755622c",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "456fbefc-dd5d-5c7a-8a38-ec18b74892ce",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "b297ca03-3f91-5053-8e73-d6c87b155919",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "3c6e14bc-ebc7-5a7e-a822-b66f3edcb934",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "ea936c9a-4f1f-5398-8afa-45ad746168f7",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "fc017963-a2d0-53d0-9520-5378175304b0",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "c6ddcea3-6251-5246-9ee8-247f5eed5cba",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "b505b983-2966-5e88-a268-bf4813ef2e54",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "cace381f-a19a-5e49-a831-790716e54af2",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "19960012-53c0-51ea-84ac-c9b3140479fb",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "c31d452a-0bf5-5899-90d7-83a05679cc28",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "3bffe136-b6e9-55a1-af1a-4e5aa78295ca",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "098bd2f7-dbb7-527f-ac77-9b3cccd59cab",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "84e569af-c0b1-58b8-9a87-a8382c10e39e",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "408fa684-14fb-5aff-8c4e-65b643b9f76c",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "ea5a17c7-8f1d-4e1f-9879-4b768b40040c",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-2",
+          "processoTitle": "Auditoria sintética 2",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "b7699abda628be37d45789ecacf624c355eebb0e62b969ad66ac7251844404f4",
+        "applied_publications": [
+          "c61e646d-52db-45a8-8dc6-4bbfbc9cc892"
+        ]
+      },
+      {
+        "id": "7ad83a67-e395-42cc-811c-8655cbffb901",
+        "edital_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "valid_from": "2026-10-30 15:00:00+00:00",
+        "materialized_at": "2026-10-28 14:32:49.475502+00:00",
+        "source_publication_id": "f21572cc-5985-4f99-ad12-2df14c12a588",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 2",
+          "number": "AUD-2",
+          "stages": [],
+          "editalId": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008421",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "3597da5a-d5d0-5935-a213-0df81e1ba018",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "3f60a6f7-10bf-5a51-b438-17de03e13f59",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008422",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-13T01:37:00+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "63231bc7-b5d0-41dc-a049-9ebae46958c2",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-14T17:23:00+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "3c522fa9-f159-5f08-af78-9e0817dbab26",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "b9bfa888-b5f1-5571-a76e-79fd4cf34188",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "6dd34273-057e-5dd2-bca0-c55c7432a196",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "d06914b9-0bcf-561f-8579-4df471ee2d14",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "bbce07a0-a43a-5206-bfb0-d5ae52dc9e08",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "e2546c19-4085-5233-bf7e-8c5c093821ca",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "4f030d5f-e624-580a-b667-9aefcdefb86e",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "2dea54d8-464d-59ba-ad4e-1b621755622c",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "456fbefc-dd5d-5c7a-8a38-ec18b74892ce",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "b297ca03-3f91-5053-8e73-d6c87b155919",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "3c6e14bc-ebc7-5a7e-a822-b66f3edcb934",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "ea936c9a-4f1f-5398-8afa-45ad746168f7",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "fc017963-a2d0-53d0-9520-5378175304b0",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "c6ddcea3-6251-5246-9ee8-247f5eed5cba",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "b505b983-2966-5e88-a268-bf4813ef2e54",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "cace381f-a19a-5e49-a831-790716e54af2",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "19960012-53c0-51ea-84ac-c9b3140479fb",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "c31d452a-0bf5-5899-90d7-83a05679cc28",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "3bffe136-b6e9-55a1-af1a-4e5aa78295ca",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "098bd2f7-dbb7-527f-ac77-9b3cccd59cab",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "84e569af-c0b1-58b8-9a87-a8382c10e39e",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "408fa684-14fb-5aff-8c4e-65b643b9f76c",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "ea5a17c7-8f1d-4e1f-9879-4b768b40040c",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-2",
+          "processoTitle": "Auditoria sintética 2",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "b7699abda628be37d45789ecacf624c355eebb0e62b969ad66ac7251844404f4",
+        "applied_publications": [
+          "c61e646d-52db-45a8-8dc6-4bbfbc9cc892",
+          "f21572cc-5985-4f99-ad12-2df14c12a588"
+        ]
+      },
+      {
+        "id": "0314aec6-95f9-4c60-913d-3eb3d24e9ceb",
+        "edital_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "valid_from": "2026-10-28 14:30:50.773355+00:00",
+        "materialized_at": "2026-10-28 14:30:50.773355+00:00",
+        "source_publication_id": "a3feda46-ab9c-464e-8e35-7ce28d377536",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 3",
+          "number": "AUD-3",
+          "stages": [],
+          "editalId": "b18e131f-9926-491c-8991-c32487ed7a11",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008431",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "383f2dfb-5246-5380-8245-5be9c6355ebc",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "9eb0f03e-803e-5fed-b804-525e82d0c8ad",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008432",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-07T14:30:49.796985+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "cd2600ac-6b42-402c-9c53-d5494b8c426a",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-09T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "75fac5c3-8a58-5ffb-9702-2e4b668ee6d8",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "a108e55a-896c-5ed5-a923-c1e56fb2824c",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "2e823c49-bd56-5925-bfe3-7f586f235e94",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "f11348b5-c312-50e9-8727-67954f617cb5",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "59aa6757-c827-5936-be04-e1a9ad27d95f",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "845e8914-e944-551f-9ba5-cabb70f5bc06",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "e8fa8eb2-b68e-59b0-9258-71da034cee1e",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "597001f6-a0a9-51ca-a502-b0f5cb961379",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "9580e841-9911-5fa3-809b-3aac038ba55a",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "b8cb513e-6bd1-547f-8423-2d572dcd7c4e",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "3eb6a93c-dc2e-5e7b-8314-961bcc30d914",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "62e2f16d-255a-576f-8f86-ec5edc17cf74",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "dbcf72ec-3c7f-5e17-8384-943ed7cf71b2",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "00ebbbda-84ce-5fd1-86ea-5798da8bf437",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "78a10a27-8176-55a0-8e41-c044cd73b4f8",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "fc868770-837a-5c01-b055-65a9d2edf5e7",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "8361a946-cb8b-5afc-af14-c6856416eceb",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "e1982ff1-a427-5803-b79d-b084e128bd15",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "852e107b-1c6a-55d0-93a7-0a0ab4b90793",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "5a06a03b-3162-5899-9ffd-220e1082549a",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "47d67f57-7ddd-5ad1-bddf-337d1de01bef",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "f1d5f908-ad59-55f9-b8e8-afb54ee92cd6",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "a89a7e93-77cf-4ccc-befc-9f90f39af10e",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-3",
+          "processoTitle": "Auditoria sintética 3",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "303f0179eb33972183111e719085e69943bf49dd4e1dd5a2c66fff4393bc7f60",
+        "applied_publications": [
+          "a3feda46-ab9c-464e-8e35-7ce28d377536"
+        ]
+      },
+      {
+        "id": "38e31463-8963-4aad-8536-65f60f136b29",
+        "edital_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "valid_from": "2026-10-28 14:34:44.703510+00:00",
+        "materialized_at": "2026-10-28 14:34:44.703510+00:00",
+        "source_publication_id": "8a36a21c-fb38-478c-a449-28323961e635",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 3",
+          "number": "AUD-3",
+          "stages": [],
+          "editalId": "b18e131f-9926-491c-8991-c32487ed7a11",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008431",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "383f2dfb-5246-5380-8245-5be9c6355ebc",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "9eb0f03e-803e-5fed-b804-525e82d0c8ad",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008432",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-07T14:30:49.796985+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-06T23:00:00-03:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "cd2600ac-6b42-402c-9c53-d5494b8c426a",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-09T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "75fac5c3-8a58-5ffb-9702-2e4b668ee6d8",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "a108e55a-896c-5ed5-a923-c1e56fb2824c",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "2e823c49-bd56-5925-bfe3-7f586f235e94",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "f11348b5-c312-50e9-8727-67954f617cb5",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "59aa6757-c827-5936-be04-e1a9ad27d95f",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "845e8914-e944-551f-9ba5-cabb70f5bc06",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "e8fa8eb2-b68e-59b0-9258-71da034cee1e",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "597001f6-a0a9-51ca-a502-b0f5cb961379",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "9580e841-9911-5fa3-809b-3aac038ba55a",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "b8cb513e-6bd1-547f-8423-2d572dcd7c4e",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "3eb6a93c-dc2e-5e7b-8314-961bcc30d914",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "62e2f16d-255a-576f-8f86-ec5edc17cf74",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "dbcf72ec-3c7f-5e17-8384-943ed7cf71b2",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "00ebbbda-84ce-5fd1-86ea-5798da8bf437",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "78a10a27-8176-55a0-8e41-c044cd73b4f8",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "fc868770-837a-5c01-b055-65a9d2edf5e7",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "8361a946-cb8b-5afc-af14-c6856416eceb",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "e1982ff1-a427-5803-b79d-b084e128bd15",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "852e107b-1c6a-55d0-93a7-0a0ab4b90793",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "5a06a03b-3162-5899-9ffd-220e1082549a",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "47d67f57-7ddd-5ad1-bddf-337d1de01bef",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "f1d5f908-ad59-55f9-b8e8-afb54ee92cd6",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "a89a7e93-77cf-4ccc-befc-9f90f39af10e",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-3",
+          "processoTitle": "Auditoria sintética 3",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "c505a47eb5ed7905e9a57573faa8f68dbe99eae8fa451293eae368c98977314c",
+        "applied_publications": [
+          "8a36a21c-fb38-478c-a449-28323961e635"
+        ]
+      },
+      {
+        "id": "db9b547c-6d07-4a6e-86fc-d55a84aa2592",
+        "edital_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "valid_from": "2026-10-28 14:30:50.159669+00:00",
+        "materialized_at": "2026-10-28 14:30:50.159669+00:00",
+        "source_publication_id": "874642bd-c24c-498d-8ca9-b3121c6dd172",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 1",
+          "number": "AUD-1",
+          "stages": [],
+          "editalId": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008411",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "2407feb9-7a29-557f-a8c0-f66117f0770a",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "5e615383-f419-5d71-b1c4-c7e5de8e5396",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008412",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-07T14:30:49.796985+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "9fe046c3-0631-4e2f-9f6d-53ef80fe7f75",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-09T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "9997d05a-4d87-587e-a91c-311efaaabb6f",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "c4f153c0-326a-58e5-b96c-bf9d4c64d80a",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "87b39628-ccc2-5f54-8001-5630b89149a4",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "a45ef14b-9422-5fee-8163-c89665b98bf3",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "e790ba4f-7fa0-50bb-90d6-912821f9c145",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "0aa6e9b7-f469-5d9b-b886-666e0c1e2dc3",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "415b3a39-a8a4-50c9-9b1d-56ff272256ae",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "ce776365-f3a9-529e-b094-6084460eda11",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "81f52edf-e15b-5f6b-9f39-613ea496914c",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "c06fd404-f5f8-5cef-8c90-a57eca475a87",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "68a8e7f3-2cd9-553a-928c-b38d2909ef6f",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "2e3ea3f4-935c-544c-ad66-db3bba1f28f0",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "cef759f1-cc7a-529a-bd30-d59f52f552cd",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "d5d18836-6a50-594b-b4e9-ebec1d8a4e19",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "474d6f1b-6943-5e4e-97e9-67910d52db7b",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "40fc55d3-5699-5e89-850b-34a5d32cb59b",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "fdf163d5-def6-513e-ac61-0bf96083e723",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "b4572090-2c7a-5f7a-860a-0ed1ec7f95aa",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "002220c0-7195-505a-b8ec-803c552cd410",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "e573c021-360a-5642-af3f-910008574069",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "11f5de2c-46a3-5a3a-a52f-098f5913fa83",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "7cbbf235-2ff8-5ae1-b482-f91756e14e61",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "2a54349b-d2df-4e06-95f1-a0be91e4e982",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-1",
+          "processoTitle": "Auditoria sintética 1",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "e8c59d0193db7b347266410fc61b6c439fca4e4a9bb10e327321991354e1d580",
+        "applied_publications": [
+          "874642bd-c24c-498d-8ca9-b3121c6dd172"
+        ]
+      },
+      {
+        "id": "f386a42a-d4a6-459b-854e-b7eb52ade551",
+        "edital_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "valid_from": "2026-10-28 14:32:14.167377+00:00",
+        "materialized_at": "2026-10-28 14:32:14.167377+00:00",
+        "source_publication_id": "7ed90f77-24e0-47c8-8989-653c007c7f9d",
+        "content": {
+          "year": 2026,
+          "title": "Edital sintético 1",
+          "number": "AUD-1",
+          "stages": [],
+          "editalId": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+          "profiles": [
+            {
+              "id": "00000000-0000-0000-0000-000000008411",
+              "code": "P1",
+              "name": "Perfil",
+              "duties": "",
+              "callForm": "PUBLICATION",
+              "locality": "",
+              "workload": "",
+              "description": "",
+              "reserveType": "NONE",
+              "compensation": "",
+              "requirements": [],
+              "reserveLimit": null,
+              "vacancyTable": [
+                {
+                  "id": "2407feb9-7a29-557f-a8c0-f66117f0770a",
+                  "modalityId": null,
+                  "immediateVacancies": 1
+                }
+              ],
+              "declaredFacts": [],
+              "callInformation": {},
+              "vacancyReversion": null,
+              "immediateVacancies": 1,
+              "competitionModalities": [],
+              "classificationMilestones": [
+                {
+                  "id": "5e615383-f419-5d71-b1c4-c7e5de8e5396",
+                  "code": "M1",
+                  "name": "Sorteio público",
+                  "stages": [],
+                  "cutRule": {
+                    "targetKind": "FIXED",
+                    "tieOutcome": "STRICT",
+                    "targetCount": 1,
+                    "continuation": "NONE",
+                    "surplusCount": 0,
+                    "governedStage": "NONE"
+                  },
+                  "rounding": {
+                    "mode": "MEIO_PARA_CIMA",
+                    "scale": 2
+                  },
+                  "operation": "SOMA_PONDERADA",
+                  "drawMethod": {
+                    "source": "Fonte de demonstração",
+                    "algorithm": "IFES-SORTEIO-SHA256-v1",
+                    "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                    "occurrence": "5900",
+                    "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                    "normalization": {
+                      "rule": "DIGITOS_EM_SEQUENCIA",
+                      "text": "os cinco números sorteados, na ordem dos prêmios"
+                    },
+                    "substitutionRule": {
+                      "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                      "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                    }
+                  },
+                  "tiebreakers": [],
+                  "appealWindow": null,
+                  "normalization": "NENHUMA",
+                  "orderProduction": "POR_SORTEIO"
+                }
+              ],
+              "classificationInformation": {},
+              "generalCompetitionModalityId": null
+            }
+          ],
+          "schedule": [
+            {
+              "id": "00000000-0000-0000-0000-000000008412",
+              "type": "INSCRICAO",
+              "endAt": "2026-11-13T01:37:00+00:00",
+              "order": 1,
+              "status": "PLANEJADO",
+              "startAt": "2026-10-27T14:30:49.796985+00:00",
+              "location": "",
+              "description": "Inscrições",
+              "isRegistrationPeriod": true
+            },
+            {
+              "id": "9fe046c3-0631-4e2f-9f6d-53ef80fe7f75",
+              "type": "SORTEIO",
+              "endAt": null,
+              "order": 2,
+              "status": "PLANEJADO",
+              "startAt": "2026-11-14T17:23:00+00:00",
+              "location": "",
+              "description": "Sorteio programado sintético",
+              "isRegistrationPeriod": false
+            }
+          ],
+          "sections": [
+            {
+              "id": "9997d05a-4d87-587e-a91c-311efaaabb6f",
+              "key": "apresentacao",
+              "type": "TEXT",
+              "order": 1,
+              "title": "Apresentação",
+              "content": ""
+            },
+            {
+              "id": "c4f153c0-326a-58e5-b96c-bf9d4c64d80a",
+              "key": "disposicoes-preliminares",
+              "type": "TEXT",
+              "order": 2,
+              "title": "Disposições preliminares",
+              "content": ""
+            },
+            {
+              "id": "87b39628-ccc2-5f54-8001-5630b89149a4",
+              "key": "informacoes-gerais",
+              "type": "TEXT",
+              "order": 3,
+              "title": "Informações gerais",
+              "content": ""
+            },
+            {
+              "id": "a45ef14b-9422-5fee-8163-c89665b98bf3",
+              "key": "publico-alvo",
+              "type": "TEXT",
+              "order": 4,
+              "title": "Público-alvo",
+              "content": ""
+            },
+            {
+              "id": "e790ba4f-7fa0-50bb-90d6-912821f9c145",
+              "key": "requisitos-gerais",
+              "type": "TEXT",
+              "order": 5,
+              "title": "Requisitos gerais",
+              "content": ""
+            },
+            {
+              "id": "0aa6e9b7-f469-5d9b-b886-666e0c1e2dc3",
+              "key": "perfis",
+              "type": "GENERATED",
+              "order": 6,
+              "title": "Quantas vagas há, e onde?",
+              "source": "profiles"
+            },
+            {
+              "id": "415b3a39-a8a4-50c9-9b1d-56ff272256ae",
+              "key": "cronograma",
+              "type": "GENERATED",
+              "order": 7,
+              "title": "Cronograma",
+              "source": "schedule"
+            },
+            {
+              "id": "ce776365-f3a9-529e-b094-6084460eda11",
+              "key": "inscricao",
+              "type": "TEXT",
+              "order": 8,
+              "title": "Como se inscrever?",
+              "content": ""
+            },
+            {
+              "id": "81f52edf-e15b-5f6b-9f39-613ea496914c",
+              "key": "atendimento-pcd",
+              "type": "TEXT",
+              "order": 9,
+              "title": "Atendimento à pessoa com deficiência",
+              "content": ""
+            },
+            {
+              "id": "c06fd404-f5f8-5cef-8c90-a57eca475a87",
+              "key": "documentos-exigidos",
+              "type": "GENERATED",
+              "order": 10,
+              "title": "Quais documentos enviar?",
+              "source": "documentRequirements"
+            },
+            {
+              "id": "68a8e7f3-2cd9-553a-928c-b38d2909ef6f",
+              "key": "classificacao",
+              "type": "TEXT",
+              "order": 11,
+              "title": "Como será a seleção?",
+              "content": ""
+            },
+            {
+              "id": "2e3ea3f4-935c-544c-ad66-db3bba1f28f0",
+              "key": "etapas",
+              "type": "GENERATED",
+              "order": 12,
+              "title": "Etapas de avaliação",
+              "source": "stages"
+            },
+            {
+              "id": "cef759f1-cc7a-529a-bd30-d59f52f552cd",
+              "key": "verificacao-autodeclaracao",
+              "type": "TEXT",
+              "order": 13,
+              "title": "Verificação da autodeclaração",
+              "content": ""
+            },
+            {
+              "id": "d5d18836-6a50-594b-b4e9-ebec1d8a4e19",
+              "key": "recursos",
+              "type": "TEXT",
+              "order": 14,
+              "title": "Como recorrer?",
+              "content": ""
+            },
+            {
+              "id": "474d6f1b-6943-5e4e-97e9-67910d52db7b",
+              "key": "convocacao",
+              "type": "TEXT",
+              "order": 15,
+              "title": "Como será a convocação?",
+              "content": ""
+            },
+            {
+              "id": "40fc55d3-5699-5e89-850b-34a5d32cb59b",
+              "key": "matricula",
+              "type": "TEXT",
+              "order": 16,
+              "title": "Como será a matrícula?",
+              "content": ""
+            },
+            {
+              "id": "fdf163d5-def6-513e-ac61-0bf96083e723",
+              "key": "acesso-ao-curso",
+              "type": "TEXT",
+              "order": 17,
+              "title": "Acesso ao curso",
+              "content": ""
+            },
+            {
+              "id": "b4572090-2c7a-5f7a-860a-0ed1ec7f95aa",
+              "key": "homologacao-matricula",
+              "type": "TEXT",
+              "order": 18,
+              "title": "Homologação da matrícula",
+              "content": ""
+            },
+            {
+              "id": "002220c0-7195-505a-b8ec-803c552cd410",
+              "key": "certificado",
+              "type": "TEXT",
+              "order": 19,
+              "title": "Certificado",
+              "content": ""
+            },
+            {
+              "id": "e573c021-360a-5642-af3f-910008574069",
+              "key": "prazo-de-validade",
+              "type": "TEXT",
+              "order": 20,
+              "title": "Prazo de validade",
+              "content": ""
+            },
+            {
+              "id": "11f5de2c-46a3-5a3a-a52f-098f5913fa83",
+              "key": "anexos",
+              "type": "GENERATED",
+              "order": 21,
+              "title": "Anexos",
+              "source": "attachments"
+            },
+            {
+              "id": "7cbbf235-2ff8-5ae1-b482-f91756e14e61",
+              "key": "disposicoes-finais",
+              "type": "TEXT",
+              "order": 22,
+              "title": "Disposições finais",
+              "content": ""
+            }
+          ],
+          "processoId": "2a54349b-d2df-4e06-95f1-a0be91e4e982",
+          "attachments": [],
+          "description": "",
+          "processoCode": "PS-RET-002-1",
+          "processoTitle": "Auditoria sintética 1",
+          "schemaVersion": 17,
+          "documentRequirements": [],
+          "matriculationRequest": null,
+          "maxInscricoesPorCandidato": null
+        },
+        "content_hash": "cac297427930438ac9d9abc025d749ced0d14aea6acc92e5e8e4fc9c5c2e10b9",
+        "applied_publications": [
+          "7ed90f77-24e0-47c8-8989-653c007c7f9d"
+        ]
+      }
+    ]
+  },
+  "auditoria": {
+    "sql": "SELECT aggregate_id,actor_subject,operation,occurred_at,previous_state,new_state,reason FROM auditoria_registroauditoria ORDER BY occurred_at",
+    "rows": [
+      {
+        "aggregate_id": "3eebb6aa-9b2d-45e4-8196-e3c58adc6ab3",
+        "actor_subject": "implantacao",
+        "operation": "REGISTRAR_UNIDADE",
+        "occurred_at": "2026-10-28 14:30:25.818775+00:00",
+        "previous_state": "",
+        "new_state": "ATIVA",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "90aee8b9-29c1-44a0-95f8-a3ad9ddac8ab",
+        "actor_subject": "implantacao",
+        "operation": "AVISO_MODELO",
+        "occurred_at": "2026-10-28 14:30:25.906867+00:00",
+        "previous_state": "",
+        "new_state": "ATIVO",
+        "reason": "Modelo inicial criado na sincronização das unidades (066, D-008)."
+      },
+      {
+        "aggregate_id": "1796d1ef-16f5-41fb-a29c-3e3e1106858e",
+        "actor_subject": "implantacao",
+        "operation": "AVISO_MODELO",
+        "occurred_at": "2026-10-28 14:30:25.906867+00:00",
+        "previous_state": "",
+        "new_state": "ATIVO",
+        "reason": "Modelo inicial criado na sincronização das unidades (066, D-008)."
+      },
+      {
+        "aggregate_id": "e93c8f99-62c4-4534-8e3a-842f53b6bfd0",
+        "actor_subject": "implantacao",
+        "operation": "AVISO_MODELO",
+        "occurred_at": "2026-10-28 14:30:25.906867+00:00",
+        "previous_state": "",
+        "new_state": "ATIVO",
+        "reason": "Modelo inicial criado na sincronização das unidades (066, D-008)."
+      },
+      {
+        "aggregate_id": "ac7ee815-dba8-4ba6-b61b-f0c0d0c3608f",
+        "actor_subject": "gestor.sintetico",
+        "operation": "CADASTRAR_AUTORIDADE",
+        "occurred_at": "2026-10-28 14:30:25.917124+00:00",
+        "previous_state": "",
+        "new_state": "VIGENTE",
+        "reason": "Autoridade sintética — Diretora de testes · PS-RET-002"
+      },
+      {
+        "aggregate_id": "2a54349b-d2df-4e06-95f1-a0be91e4e982",
+        "actor_subject": "gestor.sintetico",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:30:49.829872+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "actor_subject": "gestor.sintetico",
+        "operation": "ALTERAR_RASCUNHO",
+        "occurred_at": "2026-10-28 14:30:49.959188+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "actor_subject": "elaborador.original",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:30:50.012079+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "actor_subject": "homologador.original",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:30:50.132574+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADO",
+        "reason": "Conferência sintética"
+      },
+      {
+        "aggregate_id": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+        "actor_subject": "publicador.original",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:30:50.159669+00:00",
+        "previous_state": "HOMOLOGADO",
+        "new_state": "PUBLICADO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "2a54349b-d2df-4e06-95f1-a0be91e4e982",
+        "actor_subject": "publicador.original",
+        "operation": "ATIVAR",
+        "occurred_at": "2026-10-28 14:30:50.159669+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "ATIVO",
+        "reason": "Ativação derivada da publicação do primeiro Edital do Processo."
+      },
+      {
+        "aggregate_id": "ea5a17c7-8f1d-4e1f-9879-4b768b40040c",
+        "actor_subject": "gestor.sintetico",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:30:50.322524+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "actor_subject": "gestor.sintetico",
+        "operation": "ALTERAR_RASCUNHO",
+        "occurred_at": "2026-10-28 14:30:50.357515+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "actor_subject": "elaborador.original",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:30:50.392698+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "actor_subject": "homologador.original",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:30:50.458123+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADO",
+        "reason": "Conferência sintética"
+      },
+      {
+        "aggregate_id": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+        "actor_subject": "publicador.original",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:30:50.493055+00:00",
+        "previous_state": "HOMOLOGADO",
+        "new_state": "PUBLICADO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "ea5a17c7-8f1d-4e1f-9879-4b768b40040c",
+        "actor_subject": "publicador.original",
+        "operation": "ATIVAR",
+        "occurred_at": "2026-10-28 14:30:50.493055+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "ATIVO",
+        "reason": "Ativação derivada da publicação do primeiro Edital do Processo."
+      },
+      {
+        "aggregate_id": "a89a7e93-77cf-4ccc-befc-9f90f39af10e",
+        "actor_subject": "gestor.sintetico",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:30:50.595209+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "actor_subject": "gestor.sintetico",
+        "operation": "ALTERAR_RASCUNHO",
+        "occurred_at": "2026-10-28 14:30:50.620011+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "actor_subject": "elaborador.original",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:30:50.670948+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "actor_subject": "homologador.original",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:30:50.734579+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADO",
+        "reason": "Conferência sintética"
+      },
+      {
+        "aggregate_id": "b18e131f-9926-491c-8991-c32487ed7a11",
+        "actor_subject": "publicador.original",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:30:50.773355+00:00",
+        "previous_state": "HOMOLOGADO",
+        "new_state": "PUBLICADO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "a89a7e93-77cf-4ccc-befc-9f90f39af10e",
+        "actor_subject": "publicador.original",
+        "operation": "ATIVAR",
+        "occurred_at": "2026-10-28 14:30:50.773355+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "ATIVO",
+        "reason": "Ativação derivada da publicação do primeiro Edital do Processo."
+      },
+      {
+        "aggregate_id": "08ccae1c-6134-4bdb-b753-4bd7988ba452",
+        "actor_subject": "gestor.sintetico",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:30:50.876511+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+        "actor_subject": "gestor.sintetico",
+        "operation": "ALTERAR_RASCUNHO",
+        "occurred_at": "2026-10-28 14:30:50.899798+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+        "actor_subject": "elaborador.original",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:30:50.936522+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+        "actor_subject": "homologador.original",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:30:50.990609+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADO",
+        "reason": "Conferência sintética"
+      },
+      {
+        "aggregate_id": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+        "actor_subject": "publicador.original",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:30:51.017919+00:00",
+        "previous_state": "HOMOLOGADO",
+        "new_state": "PUBLICADO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "08ccae1c-6134-4bdb-b753-4bd7988ba452",
+        "actor_subject": "publicador.original",
+        "operation": "ATIVAR",
+        "occurred_at": "2026-10-28 14:30:51.017919+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "ATIVO",
+        "reason": "Ativação derivada da publicação do primeiro Edital do Processo."
+      },
+      {
+        "aggregate_id": "81929709-4363-483f-b149-be8e28126e1c",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:32:04.153143+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "81929709-4363-483f-b149-be8e28126e1c",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:32:05.625099+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "81929709-4363-483f-b149-be8e28126e1c",
+        "actor_subject": "homologador.sintetico.002",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:32:09.891518+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADA",
+        "reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "aggregate_id": "81929709-4363-483f-b149-be8e28126e1c",
+        "actor_subject": "publicador.sintetico.002",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:32:14.167377+00:00",
+        "previous_state": "HOMOLOGADA",
+        "new_state": "PUBLICADA",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:32:22.076677+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:32:23.540596+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+        "actor_subject": "homologador.sintetico.002",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:32:27.748361+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADA",
+        "reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "aggregate_id": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+        "actor_subject": "publicador.sintetico.002",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:32:32.004072+00:00",
+        "previous_state": "HOMOLOGADA",
+        "new_state": "PUBLICADA",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "d1f214bb-89af-4f63-830b-6f055fc06767",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:32:39.538485+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "d1f214bb-89af-4f63-830b-6f055fc06767",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:32:40.989072+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "d1f214bb-89af-4f63-830b-6f055fc06767",
+        "actor_subject": "homologador.sintetico.002",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:32:45.231896+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADA",
+        "reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "aggregate_id": "d1f214bb-89af-4f63-830b-6f055fc06767",
+        "actor_subject": "publicador.sintetico.002",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:32:49.475502+00:00",
+        "previous_state": "HOMOLOGADA",
+        "new_state": "PUBLICADA",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:34:37.403436+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:34:38.842181+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+        "actor_subject": "homologador.sintetico.002",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:34:43.125575+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADA",
+        "reason": "Fundamento sintético PS-RET-002"
+      },
+      {
+        "aggregate_id": "bfdb6307-5074-4e98-8270-cef78cd3bae6",
+        "actor_subject": "criadora.concorrente",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:34:44.583599+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "bfdb6307-5074-4e98-8270-cef78cd3bae6",
+        "actor_subject": "criadora.concorrente",
+        "operation": "SUBMETER",
+        "occurred_at": "2026-10-28 14:34:44.644615+00:00",
+        "previous_state": "EM_ELABORACAO",
+        "new_state": "EM_REVISAO",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "bfdb6307-5074-4e98-8270-cef78cd3bae6",
+        "actor_subject": "homologadora.concorrente",
+        "operation": "HOMOLOGAR",
+        "occurred_at": "2026-10-28 14:34:44.678140+00:00",
+        "previous_state": "EM_REVISAO",
+        "new_state": "HOMOLOGADA",
+        "reason": "Fundamento concorrente válido"
+      },
+      {
+        "aggregate_id": "bfdb6307-5074-4e98-8270-cef78cd3bae6",
+        "actor_subject": "publicadora.concorrente",
+        "operation": "PUBLICAR",
+        "occurred_at": "2026-10-28 14:34:44.703510+00:00",
+        "previous_state": "HOMOLOGADA",
+        "new_state": "PUBLICADA",
+        "reason": ""
+      },
+      {
+        "aggregate_id": "fda1fb33-36cc-477d-be27-a4bd121dd7ce",
+        "actor_subject": "elaborador.sintetico.002",
+        "operation": "CRIAR",
+        "occurred_at": "2026-10-28 14:34:55.090921+00:00",
+        "previous_state": "",
+        "new_state": "EM_ELABORACAO",
+        "reason": ""
+      }
+    ]
+  },
+  "privilegios": {
+    "sql": "SELECT tablename,has_table_privilege('auditoria_002_runtime',quote_ident(schemaname)||'.'||quote_ident(tablename),'UPDATE') AS atualiza,has_table_privilege('auditoria_002_runtime',quote_ident(schemaname)||'.'||quote_ident(tablename),'DELETE') AS exclui FROM pg_tables WHERE schemaname='public' AND tablename IN ('publicacoes_publicacao','publicacoes_versaoconsolidada','auditoria_registroauditoria')",
+    "rows": [
+      {
+        "tablename": "auditoria_registroauditoria",
+        "atualiza": false,
+        "exclui": false
+      },
+      {
+        "tablename": "publicacoes_publicacao",
+        "atualiza": false,
+        "exclui": false
+      },
+      {
+        "tablename": "publicacoes_versaoconsolidada",
+        "atualiza": false,
+        "exclui": false
+      }
+    ]
+  }
+}

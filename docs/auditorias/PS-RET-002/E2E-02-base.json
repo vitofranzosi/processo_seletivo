@@ -1,0 +1,30 @@
+{
+  "base": "8fbc80aa-38df-4efa-be31-9d194de89dde",
+  "campos": [
+    {
+      "name": "campo:g4c14",
+      "value": "2020-01-01T20:00",
+      "label": "Quando a ocorrência acontece"
+    },
+    {
+      "name": "campo:g5c2",
+      "value": "2026-10-27T11:30",
+      "label": "Início"
+    },
+    {
+      "name": "campo:g5c3",
+      "value": "2026-11-07T11:30",
+      "label": "Término"
+    },
+    {
+      "name": "campo:g6c2",
+      "value": "2026-11-09T11:30",
+      "label": "Início"
+    },
+    {
+      "name": "campo:g6c3",
+      "value": "",
+      "label": "Término"
+    }
+  ]
+}

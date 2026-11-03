@@ -1,0 +1,301 @@
+{
+  "autoridade": "ac7ee815-dba8-4ba6-b61b-f0c0d0c3608f",
+  "cenarios": [
+    {
+      "edital": "bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb",
+      "processo": "2a54349b-d2df-4e06-95f1-a0be91e4e982",
+      "draft": {
+        "profiles": [
+          {
+            "id": "00000000-0000-0000-0000-000000008411",
+            "code": "P1",
+            "name": "Perfil",
+            "immediateVacancies": 1,
+            "reserveType": "NONE",
+            "competitionModalities": [],
+            "classificationMilestones": [
+              {
+                "id": "5e615383-f419-5d71-b1c4-c7e5de8e5396",
+                "code": "M1",
+                "name": "Sorteio público",
+                "orderProduction": "POR_SORTEIO",
+                "stages": [],
+                "operation": "SOMA_PONDERADA",
+                "normalization": "NENHUMA",
+                "rounding": {
+                  "scale": 2,
+                  "mode": "MEIO_PARA_CIMA"
+                },
+                "tiebreakers": [],
+                "drawMethod": {
+                  "algorithm": "IFES-SORTEIO-SHA256-v1",
+                  "source": "Fonte de demonstração",
+                  "occurrence": "5900",
+                  "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                  "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                  "normalization": {
+                    "rule": "DIGITOS_EM_SEQUENCIA",
+                    "text": "os cinco números sorteados, na ordem dos prêmios"
+                  },
+                  "substitutionRule": {
+                    "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                    "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                  }
+                },
+                "cutRule": {
+                  "targetKind": "FIXED",
+                  "targetCount": 1,
+                  "surplusCount": 0,
+                  "tieOutcome": "STRICT",
+                  "governedStage": "NONE",
+                  "continuation": "NONE"
+                }
+              }
+            ],
+            "callForm": "PUBLICATION"
+          }
+        ],
+        "schedule": [
+          {
+            "id": "00000000-0000-0000-0000-000000008412",
+            "type": "INSCRICAO",
+            "description": "Inscrições",
+            "startAt": "2026-10-27T14:30:49.796985+00:00",
+            "order": 1,
+            "endAt": "2026-11-07T14:30:49.796985+00:00",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "9fe046c3-0631-4e2f-9f6d-53ef80fe7f75",
+            "type": "SORTEIO",
+            "description": "Sorteio programado sintético",
+            "startAt": "2026-11-09T14:30:49.796985+00:00",
+            "order": 2
+          }
+        ]
+      }
+    },
+    {
+      "edital": "50cfb054-6d5a-41e5-90d6-43fb1f60ff07",
+      "processo": "ea5a17c7-8f1d-4e1f-9879-4b768b40040c",
+      "draft": {
+        "profiles": [
+          {
+            "id": "00000000-0000-0000-0000-000000008421",
+            "code": "P1",
+            "name": "Perfil",
+            "immediateVacancies": 1,
+            "reserveType": "NONE",
+            "competitionModalities": [],
+            "classificationMilestones": [
+              {
+                "id": "3f60a6f7-10bf-5a51-b438-17de03e13f59",
+                "code": "M1",
+                "name": "Sorteio público",
+                "orderProduction": "POR_SORTEIO",
+                "stages": [],
+                "operation": "SOMA_PONDERADA",
+                "normalization": "NENHUMA",
+                "rounding": {
+                  "scale": 2,
+                  "mode": "MEIO_PARA_CIMA"
+                },
+                "tiebreakers": [],
+                "drawMethod": {
+                  "algorithm": "IFES-SORTEIO-SHA256-v1",
+                  "source": "Fonte de demonstração",
+                  "occurrence": "5900",
+                  "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                  "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                  "normalization": {
+                    "rule": "DIGITOS_EM_SEQUENCIA",
+                    "text": "os cinco números sorteados, na ordem dos prêmios"
+                  },
+                  "substitutionRule": {
+                    "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                    "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                  }
+                },
+                "cutRule": {
+                  "targetKind": "FIXED",
+                  "targetCount": 1,
+                  "surplusCount": 0,
+                  "tieOutcome": "STRICT",
+                  "governedStage": "NONE",
+                  "continuation": "NONE"
+                }
+              }
+            ],
+            "callForm": "PUBLICATION"
+          }
+        ],
+        "schedule": [
+          {
+            "id": "00000000-0000-0000-0000-000000008422",
+            "type": "INSCRICAO",
+            "description": "Inscrições",
+            "startAt": "2026-10-27T14:30:49.796985+00:00",
+            "order": 1,
+            "endAt": "2026-11-07T14:30:49.796985+00:00",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "63231bc7-b5d0-41dc-a049-9ebae46958c2",
+            "type": "SORTEIO",
+            "description": "Sorteio programado sintético",
+            "startAt": "2026-11-09T14:30:49.796985+00:00",
+            "order": 2
+          }
+        ]
+      }
+    },
+    {
+      "edital": "b18e131f-9926-491c-8991-c32487ed7a11",
+      "processo": "a89a7e93-77cf-4ccc-befc-9f90f39af10e",
+      "draft": {
+        "profiles": [
+          {
+            "id": "00000000-0000-0000-0000-000000008431",
+            "code": "P1",
+            "name": "Perfil",
+            "immediateVacancies": 1,
+            "reserveType": "NONE",
+            "competitionModalities": [],
+            "classificationMilestones": [
+              {
+                "id": "9eb0f03e-803e-5fed-b804-525e82d0c8ad",
+                "code": "M1",
+                "name": "Sorteio público",
+                "orderProduction": "POR_SORTEIO",
+                "stages": [],
+                "operation": "SOMA_PONDERADA",
+                "normalization": "NENHUMA",
+                "rounding": {
+                  "scale": 2,
+                  "mode": "MEIO_PARA_CIMA"
+                },
+                "tiebreakers": [],
+                "drawMethod": {
+                  "algorithm": "IFES-SORTEIO-SHA256-v1",
+                  "source": "Fonte de demonstração",
+                  "occurrence": "5900",
+                  "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                  "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                  "normalization": {
+                    "rule": "DIGITOS_EM_SEQUENCIA",
+                    "text": "os cinco números sorteados, na ordem dos prêmios"
+                  },
+                  "substitutionRule": {
+                    "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                    "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                  }
+                },
+                "cutRule": {
+                  "targetKind": "FIXED",
+                  "targetCount": 1,
+                  "surplusCount": 0,
+                  "tieOutcome": "STRICT",
+                  "governedStage": "NONE",
+                  "continuation": "NONE"
+                }
+              }
+            ],
+            "callForm": "PUBLICATION"
+          }
+        ],
+        "schedule": [
+          {
+            "id": "00000000-0000-0000-0000-000000008432",
+            "type": "INSCRICAO",
+            "description": "Inscrições",
+            "startAt": "2026-10-27T14:30:49.796985+00:00",
+            "order": 1,
+            "endAt": "2026-11-07T14:30:49.796985+00:00",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "cd2600ac-6b42-402c-9c53-d5494b8c426a",
+            "type": "SORTEIO",
+            "description": "Sorteio programado sintético",
+            "startAt": "2026-11-09T14:30:49.796985+00:00",
+            "order": 2
+          }
+        ]
+      }
+    },
+    {
+      "edital": "4d26624b-7e5d-4e3d-af34-f7a6b74ad910",
+      "processo": "08ccae1c-6134-4bdb-b753-4bd7988ba452",
+      "draft": {
+        "profiles": [
+          {
+            "id": "00000000-0000-0000-0000-000000008441",
+            "code": "P1",
+            "name": "Perfil",
+            "immediateVacancies": 1,
+            "reserveType": "NONE",
+            "competitionModalities": [],
+            "classificationMilestones": [
+              {
+                "id": "97723e75-6bd4-5f07-b602-de773795ed08",
+                "code": "M1",
+                "name": "Sorteio público",
+                "orderProduction": "POR_SORTEIO",
+                "stages": [],
+                "operation": "SOMA_PONDERADA",
+                "normalization": "NENHUMA",
+                "rounding": {
+                  "scale": 2,
+                  "mode": "MEIO_PARA_CIMA"
+                },
+                "tiebreakers": [],
+                "drawMethod": {
+                  "algorithm": "IFES-SORTEIO-SHA256-v1",
+                  "source": "Fonte de demonstração",
+                  "occurrence": "5900",
+                  "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                  "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                  "normalization": {
+                    "rule": "DIGITOS_EM_SEQUENCIA",
+                    "text": "os cinco números sorteados, na ordem dos prêmios"
+                  },
+                  "substitutionRule": {
+                    "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                    "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                  }
+                },
+                "cutRule": {
+                  "targetKind": "FIXED",
+                  "targetCount": 1,
+                  "surplusCount": 0,
+                  "tieOutcome": "STRICT",
+                  "governedStage": "NONE",
+                  "continuation": "NONE"
+                }
+              }
+            ],
+            "callForm": "PUBLICATION"
+          }
+        ],
+        "schedule": [
+          {
+            "id": "00000000-0000-0000-0000-000000008442",
+            "type": "INSCRICAO",
+            "description": "Inscrições",
+            "startAt": "2026-10-27T14:30:49.796985+00:00",
+            "order": 1,
+            "endAt": "2026-11-07T14:30:49.796985+00:00",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "c3a3bc6e-af3c-4d06-a2b4-c4f17b0996a2",
+            "type": "SORTEIO",
+            "description": "Sorteio programado sintético",
+            "startAt": "2026-11-09T14:30:49.796985+00:00",
+            "order": 2
+          }
+        ]
+      }
+    }
+  ]
+}

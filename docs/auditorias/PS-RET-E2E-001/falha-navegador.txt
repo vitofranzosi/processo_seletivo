@@ -1,0 +1,45 @@
+Pular para o conteúdo
+GPS
+Gestão de Processos Seletivos
+Cefor/Ifes
+Seções
+GPS › Processos Seletivos
+Trocar identidade
+Processos Seletivos
+
+Processos e Editais do escopo cefor.
+
+Ambiente de demonstração. A identidade acima foi escolhida manualmente e não vem do diretório institucional. Esta interface não pode ser usada em produção antes da autenticação real.
+
+4
+Publicado
+4
+Editais no total
+Auditoria sintética 4
+PS-RET-E2E-001-4
+Ativo
+1 Edital neste Processo
+EDITAL	TÍTULO	SITUAÇÃO	O QUE POSSO FAZER
+AUD-4/2026	Edital sintético 4	Publicado	
+Retificar
+Auditoria sintética 3
+PS-RET-E2E-001-3
+Ativo
+1 Edital neste Processo
+EDITAL	TÍTULO	SITUAÇÃO	O QUE POSSO FAZER
+AUD-3/2026	Edital sintético 3	Publicado	
+Retificar
+Auditoria sintética 2
+PS-RET-E2E-001-2
+Ativo
+1 Edital neste Processo
+EDITAL	TÍTULO	SITUAÇÃO	O QUE POSSO FAZER
+AUD-2/2026	Edital sintético 2	Publicado	
+Retificar
+Auditoria sintética 1
+PS-RET-E2E-001-1
+Ativo
+1 Edital neste Processo
+EDITAL	TÍTULO	SITUAÇÃO	O QUE POSSO FAZER
+AUD-1/2026	Edital sintético 1	Publicado	
+Retificar

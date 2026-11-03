@@ -1,0 +1,32 @@
+[
+  {
+    "name": "campo:g4c14",
+    "value": "2020-01-01T20:00",
+    "label": "Quando a ocorrência acontece",
+    "context": "Perfis de Vaga\nPERFIL P1 — Perfil\n\nDenominação\n\nLocalidade\n\nDescrição\n\nCarga horária\n\nRemuneração\n\nAtribuições\n\nRequisitos de participação\nUm requisito por linha. A lista inteira é substituída.\n\nVagas imediatas\n\nLimite do Cadastro Reserva\n\nModalidade"
+  },
+  {
+    "name": "campo:g5c2",
+    "value": "2026-10-27T09:46",
+    "label": "Início",
+    "context": "Cronograma\nEVENTO 1 — INSCRICAO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nEVENTO 2 — SORTEIO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nO que não se corrig"
+  },
+  {
+    "name": "campo:g5c3",
+    "value": "2026-11-07T09:46",
+    "label": "Término",
+    "context": "Cronograma\nEVENTO 1 — INSCRICAO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nEVENTO 2 — SORTEIO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nO que não se corrig"
+  },
+  {
+    "name": "campo:g6c2",
+    "value": "2026-11-09T09:46",
+    "label": "Início",
+    "context": "Cronograma\nEVENTO 1 — INSCRICAO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nEVENTO 2 — SORTEIO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nO que não se corrig"
+  },
+  {
+    "name": "campo:g6c3",
+    "value": "",
+    "label": "Término",
+    "context": "Cronograma\nEVENTO 1 — INSCRICAO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nEVENTO 2 — SORTEIO\n\nDescrição\n\nInício\n\nTérmino\n\nLocal\n\nÉ o período de inscrições\nSim\nNão\n\nRemover do Edital\n\nO que não se corrig"
+  }
+]

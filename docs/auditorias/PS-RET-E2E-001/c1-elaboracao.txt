@@ -1,0 +1,29 @@
+Pular para o conteúdo
+GPS
+Gestão de Processos Seletivos
+Cefor/Ifes
+Seções
+GPS › Processos Seletivos › PS-RET-E2E-001-1 › Edital AUD-1/2026 › Retificação
+Trocar identidade
+Retificação do Edital AUD-1/2026
+
+PS-RET-E2E-001 cenário 1: prazo e sorteio Em elaboração
+
+O que fazer agora
+Submeter para revisão
+Vigência
+
+Sem data declarada: passará a vigorar no momento da Publicação.
+
+Nada muda para o público antes da Publicação.
+
+Alterações declaradas (2)
+ONDE	OPERAÇÃO	ANTES	DEPOIS
+Evento do cronograma “Inscrições”
+Término
+/schedule/id=00000000-0000-0000-0000-000000008412/endAt
+	REPLACE	07/11/2026 09:45	12/11/2026 22:37
+Evento do cronograma “Sorteio programado sintético”
+Início
+/schedule/id=1c5be898-e95e-4973-8be0-731b0ec317b9/startAt
+	REPLACE	09/11/2026 09:45	14/11/2026 14:23

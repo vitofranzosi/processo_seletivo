@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
+<title>Retificar Edital AUD-3/2026 — Cefor/Ifes</title>
+
+<link rel="stylesheet" href="/static/shared/tokens.css?v=239e9b1475d4">
+<link rel="stylesheet" href="/static/interface/gestao/base.css?v=1d03949b554d">
+<link rel="stylesheet" href="/static/interface/gestao/moldura.css?v=8aa74776a4fa">
+<link rel="stylesheet" href="/static/interface/gestao/impressao.css?v=e428d2f85646">
+<link rel="stylesheet" href="/static/interface/gestao/componentes.css?v=f112eb7400e5">
+<link rel="stylesheet" href="/static/interface/gestao/formularios.css?v=402951a07652">
+<link rel="stylesheet" href="/static/interface/gestao/tabelas.css?v=4b337bfff617">
+<link rel="stylesheet" href="/static/interface/gestao/telas.css?v=cabbb3409908">
+
+<link rel="stylesheet" href="/static/interface/telas/retificar.css?v=b31a4563c0ba">
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="shell">
+
+<script src="/static/interface/shell.js"></script>
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-prancheta" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 12.5l2 2 4-4"/></symbol>
+  <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3 20h18M7 16v-5M12 16V6M17 16v-8"/></symbol>
+  <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></symbol>
+  <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-sair" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></symbol>
+  <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+</svg>
+<div class="barra-lateral">
+  <div class="marca-da-barra">
+    
+    <a class="marca" href="/gestao/"><span class="sigla-do-produto" aria-hidden="true">GPS</span><span class="nome-do-produto">Gestão de Processos Seletivos<span>Cefor/Ifes</span></span></a>
+  </div>
+  <button type="button" class="abrir-secoes" popovertarget="secoes-da-gestao">Seções</button>
+  <div class="secoes-da-gestao" id="secoes-da-gestao" popover>
+    <button type="button" class="fechar-secoes" popovertarget="secoes-da-gestao" popovertargetaction="hide">Fechar</button>
+    
+    <nav aria-label="Seções da gestão">
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-1">Trabalho</p>
+      <ul aria-labelledby="grupo-de-secoes-1">
+        <li><a href="/gestao/" aria-current="true"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-pasta"/></svg><span class="rotulo-da-secao">Processos Seletivos</span></a></li>
+        <li><a href="/gestao/minhas-etapas"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-prancheta"/></svg><span class="rotulo-da-secao">Minhas Etapas</span></a></li>
+        
+      </ul>
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-2">Ajuda</p>
+      <ul aria-labelledby="grupo-de-secoes-2">
+        <li><a href="/gestao/documentacao/"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-prancheta"/></svg><span class="rotulo-da-secao">Documentação do Sistema</span></a></li>
+        
+      </ul>
+      
+    </nav>
+    <div class="pessoa-identificada">
+      <span class="iniciais" aria-hidden="true" title="elaborador.sintetico">ES</span>
+      <span class="nome-da-pessoa"><strong>elaborador.sintetico</strong><span>Elaborador</span></span>
+      <form method="post" action="/gestao/sair">
+        <input type="hidden" name="csrfmiddlewaretoken" value="cFTx9i5DHQgmATXCfQio3nXqLda5s6N4SdtpyivtAp7HJxnuXbDtG1GOgEeq3wAr">
+        <button type="submit" class="acao"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-sair"/></svg><span class="rotulo-da-secao">Sair</span></button>
+      </form>
+    </div>
+    
+    <button type="button" class="alternar-barra" data-alternar-barra hidden><svg class="icone-da-secao" aria-hidden="true"><use href="#i-painel"/></svg><span class="rotulo-da-secao" data-rotulo>Recolher a barra lateral</span></button>
+  </div>
+</div>
+<div class="area-de-trabalho">
+<header class="cabecalho-de-contexto">
+  
+  
+  <nav aria-label="Trilha de navegação" class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › <a href="/gestao/">Processos Seletivos</a> › <a href="/gestao/processos/6feeb87c-31e9-47b0-b9fe-c5e0f2f34b17/">PS-RET-E2E-001-3</a> › <a href="/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/">Edital AUD-3/2026</a> › <span aria-current="page">Retificar</span></nav>
+  <a href="/gestao/identificar">Trocar identidade</a>
+</header>
+
+<!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco, que fica no
+     BODY — e a próxima tabulação volta ao cabeçalho, que é exatamente o que o link
+     existe para pular (WCAG 2.4.1). Verificador automatizado não pega: ele só
+     confere que o link e o alvo existem. -->
+<main id="conteudo" tabindex="-1">
+
+<h1>Retificar Edital AUD-3/2026</h1>
+<p class="sub">Altere os campos que precisam mudar. O que você não tocar permanece como está.</p>
+
+
+
+
+
+
+
+<p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>vigente</em> do Edital.
+Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Marcar
+<em>Remover do Edital</em> tira a linha inteira da versão futura — os campos dela passam a não ter
+efeito. Nada muda para o público até a Retificação ser publicada.</p>
+
+
+
+<section aria-labelledby="resumo-titulo" class="consequencias">
+  <h2 id="resumo-titulo">O que vai mudar (2)</h2>
+  
+  
+  
+  <div class="rolagem">
+  <table>
+    <thead><tr>
+      <th scope="col">Onde</th><th scope="col">Campo</th>
+      <th scope="col">Vigente hoje</th><th scope="col">Passará a ser</th>
+    </tr></thead>
+    <tbody>
+      
+      <tr>
+        <th scope="row">Evento 1 — INSCRICAO</th>
+        <td>Término</td>
+        <td class="antes">07/11/2026 09:46</td>
+        <td class="depois">12/11/2026 22:37</td>
+      </tr>
+      
+      <tr>
+        <th scope="row">Evento 2 — SORTEIO</th>
+        <td>Início</td>
+        <td class="antes">09/11/2026 09:46</td>
+        <td class="depois">14/11/2026 14:23</td>
+      </tr>
+      
+    </tbody>
+  </table>
+  </div>
+  
+  
+  
+  
+</section>
+
+
+
+
+<nav class="indice" aria-label="Seções do Edital">
+  
+  <span class="indice-rotulo" aria-hidden="true">Ir para</span>
+  <ul>
+    
+    <li><a href="#s-identificacao">Identificação <span class="conta">1</span></a></li>
+    
+    <li><a href="#s-perfis">Perfis de Vaga <span class="conta">3</span></a></li>
+    
+    <li><a href="#s-cronograma">Cronograma <span class="conta">2</span></a></li>
+    
+    <li><a href="#s-anexos">Anexos <span class="conta">0</span></a></li>
+    
+    <li><a href="#s-secoes">Seções do texto <span class="conta">17</span></a></li>
+    
+    <li><a href="#sobre-a-retificacao">Justificativa</a></li>
+  </ul>
+</nav>
+
+
+<form method="post" enctype="multipart/form-data" id="formulario-da-retificacao"
+      action="/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/retificar" data-conferido>
+  <input type="hidden" name="csrfmiddlewaretoken" value="cFTx9i5DHQgmATXCfQio3nXqLda5s6N4SdtpyivtAp7HJxnuXbDtG1GOgEeq3wAr">
+  <input type="hidden" name="chave_idempotencia" value="ui-3f41b2aed07d4c4ab7dac17957a401fc">
+  
+  <input type="hidden" name="base" value="75708be8-2655-4ae3-b507-d814a0b4c539">
+  
+  
+
+  
+  <section class="secao-da-retificacao" id="s-identificacao" aria-labelledby="t-identificacao">
+    <h2 id="t-identificacao">Identificação</h2>
+    
+    
+    
+    
+<fieldset class="linha" data-linha data-nome="Edital" id="cartao-g1">
+  <legend data-rotulo="Edital">
+    
+    <span class="nome">Edital</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g1c1">Título do Edital</label>
+      
+      
+      <textarea id="c-g1c1"
+                name="campo:g1c1" rows="2"
+                >Edital sintético 3</textarea>
+      
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g1c2">Descrição</label>
+      
+      
+      <textarea id="c-g1c2"
+                name="campo:g1c2" rows="2"
+                ></textarea>
+      
+      
+    </p>
+    
+    <p class="campo curto">
+      <label for="c-g1c3">Teto de inscrições por candidato</label>
+      
+      <input id="c-g1c3"
+             name="campo:g1c3"
+             type="number"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g1c4">Declaração do Requerimento de Matrícula</label>
+      
+      
+      <textarea id="c-g1c4"
+                name="campo:g1c4" rows="4"
+                ></textarea>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+
+    
+    
+    <details class="exclusoes">
+      <summary>O que não se corrige por Retificação nesta seção</summary>
+      
+      <h3>Edital</h3>
+      <dl>
+        
+        <dt>Número do Edital</dt>
+        <dd>O número do Edital é como o certame é citado em todo lugar — outros atos, ofícios, o Diário. Trocá-lo por Retificação faria dois documentos nomearem coisas diferentes com o mesmo nome.</dd>
+        
+        <dt>Ano</dt>
+        <dd>Mesma razão do número: ano e número identificam o certame perante terceiros, e a identificação não se corrige sem desfazer as citações que já existem.</dd>
+        
+        <dt>Momento do Requerimento de Matrícula</dt>
+        <dd>O momento da coleta define o que foi exigido de quem já se inscreveu. Mudá-lo depois da publicação ou invalida inscrição submetida — quem enviou sem requerimento porque o Edital o pedia na convocação passaria a estar incompleto — ou cobra dado de quem já cumpriu o que o Edital pedia. Não é correção de redação: é outra exigência.</dd>
+        
+      </dl>
+      
+    </details>
+    
+
+    
+    
+  </section>
+  
+  <section class="secao-da-retificacao" id="s-perfis" aria-labelledby="t-perfis">
+    <h2 id="t-perfis">Perfis de Vaga</h2>
+    
+    
+    
+    
+<fieldset class="linha" data-linha data-nome="Perfil P1 — Perfil" id="cartao-g2">
+  <legend data-rotulo="Perfil P1 — Perfil">
+    <span class="categoria">Perfil</span>
+    <span class="nome">P1 — Perfil</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo">
+      <label for="c-g2c3">Denominação</label>
+      
+      <input id="c-g2c3"
+             name="campo:g2c3"
+             type="text"
+             
+             
+             value="Perfil">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g2c5">Localidade</label>
+      
+      <input id="c-g2c5"
+             name="campo:g2c5"
+             type="text"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g2c4">Descrição</label>
+      
+      
+      <textarea id="c-g2c4"
+                name="campo:g2c4" rows="2"
+                ></textarea>
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g2c7">Carga horária</label>
+      
+      <input id="c-g2c7"
+             name="campo:g2c7"
+             type="text"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g2c8">Remuneração</label>
+      
+      <input id="c-g2c8"
+             name="campo:g2c8"
+             type="text"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g2c6">Atribuições</label>
+      
+      
+      <textarea id="c-g2c6"
+                name="campo:g2c6" rows="5"
+                ></textarea>
+      
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g2c1">Requisitos de participação</label>
+      
+      
+      <textarea id="c-g2c1" name="campo:g2c1" rows="4"
+                aria-describedby="ajuda-g2c1"></textarea>
+      <span class="ajuda" id="ajuda-g2c1">Um requisito por linha. A lista inteira é substituída.</span>
+      
+    </p>
+    
+    <p class="campo curto">
+      <label for="c-g2c9">Vagas imediatas</label>
+      
+      <input id="c-g2c9"
+             name="campo:g2c9"
+             type="number"
+             
+             
+             value="1">
+      
+      
+      
+    </p>
+    
+    <p class="campo curto">
+      <label for="c-g2c10">Limite do Cadastro Reserva</label>
+      
+      <input id="c-g2c10"
+             name="campo:g2c10"
+             type="number"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g2c2">Modalidade que é a ampla concorrência</label>
+      
+      
+      <select id="c-g2c2" name="campo:g2c2">
+        <option value="" selected>Nenhuma — a ampla concorrência é só a linha geral do quadro</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g2c11">Forma de comunicar a convocação</label>
+      
+      
+      <select id="c-g2c11" name="campo:g2c11">
+        <option value="" >Nenhuma — este Edital não declarou como convoca</option>
+        
+        <option value="PUBLICATION" selected>Por publicação</option>
+        
+        <option value="INDIVIDUAL_MESSAGE" >Por mensagem individual à pessoa convocada</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g2c12">Gatilho da reversão de vaga reservada</label>
+      
+      
+      <select id="c-g2c12" name="campo:g2c12">
+        <option value="" selected>Nenhum — este Edital não reverte vaga reservada</option>
+        
+        <option value="ON_EXHAUSTION" >Só quando a lista reservada esgota</option>
+        
+        <option value="ON_BALANCE" >A quantidade que ficou sem preencher</option>
+        
+      </select>
+      
+    </p>
+    
+  </div>
+  
+  
+  
+  
+  <p class="remover-linha">
+    <input type="checkbox" id="rm-g2" name="remover:g2"
+           value="1" >
+    <label for="rm-g2">Remover do Edital</label>
+  </p>
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha aninhada" data-linha data-nome="Linha do quadro Ampla concorrência — P1" id="cartao-g3">
+  <legend data-rotulo="Linha do quadro Ampla concorrência — P1">
+    <span class="categoria">Linha do quadro de vagas</span>
+    <span class="nome">Ampla concorrência — P1</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo curto">
+      <label for="c-g3c1">Vagas imediatas</label>
+      
+      <input id="c-g3c1"
+             name="campo:g3c1"
+             type="number"
+             
+             
+             value="1">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g3c2">Lista de concorrência</label>
+      
+      
+      <select id="c-g3c2" name="campo:g3c2">
+        <option value="" selected>Ampla concorrência</option>
+        
+      </select>
+      
+    </p>
+    
+  </div>
+  
+  
+  
+  
+  <p class="remover-linha">
+    <input type="checkbox" id="rm-g3" name="remover:g3"
+           value="1" >
+    <label for="rm-g3">Remover do Edital</label>
+  </p>
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha aninhada" data-linha data-nome="Marco M1 — P1" id="cartao-g4">
+  <legend data-rotulo="Marco M1 — P1">
+    <span class="categoria">Marco</span>
+    <span class="nome">M1 — P1</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo">
+      <label for="c-g4c1">Denominação do marco</label>
+      
+      <input id="c-g4c1"
+             name="campo:g4c1"
+             type="text"
+             
+             
+             value="Sorteio público">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c2">Como as pontuações se combinam</label>
+      
+      
+      <select id="c-g4c2" name="campo:g4c2">
+        <option value="" >Não declarada — a publicação será impedida</option>
+        
+        <option value="SOMA_PONDERADA" selected>Soma ponderada</option>
+        
+        <option value="MEDIA_PONDERADA" >Média ponderada</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c3">Normalização antes de combinar</label>
+      
+      
+      <select id="c-g4c3" name="campo:g4c3">
+        <option value="" >Não declarada — a publicação será impedida</option>
+        
+        <option value="NENHUMA" selected>Nenhuma</option>
+        
+        <option value="PELA_SOMA_DOS_PESOS" >Pela soma dos pesos</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo curto">
+      <label for="c-g4c4">Quantos progridem</label>
+      
+      <input id="c-g4c4"
+             name="campo:g4c4"
+             type="number"
+             
+             
+             value="1">
+      
+      
+      
+    </p>
+    
+    <p class="campo curto">
+      <label for="c-g4c5">Suplentes alcançados na mesma faixa</label>
+      
+      <input id="c-g4c5"
+             name="campo:g4c5"
+             type="number"
+             
+             
+             value="0">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c6">Empate na última posição</label>
+      
+      
+      <select id="c-g4c6" name="campo:g4c6">
+        <option value="" >Não declarado — a publicação será impedida</option>
+        
+        <option value="ADMITS_SURPLUS" >Todos os empatados progridem</option>
+        
+        <option value="STRICT" selected>A faixa para no alvo</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c7">Como a ordem é produzida</label>
+      
+      
+      <select id="c-g4c7" name="campo:g4c7">
+        <option value="" >Não declarada — lida como o Edital sempre a leu</option>
+        
+        <option value="POR_PONTUACAO" >Pela pontuação combinada das Etapas</option>
+        
+        <option value="POR_SORTEIO" selected>Por sorteio</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo curto">
+      <label for="c-g4c8">Casas decimais da pontuação</label>
+      
+      <input id="c-g4c8"
+             name="campo:g4c8"
+             type="number"
+             
+             
+             value="2">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c9">Como arredondar</label>
+      
+      
+      <select id="c-g4c9" name="campo:g4c9">
+        <option value="" >Não declarado — a ordem é sorteada, e não há nota a arredondar</option>
+        
+        <option value="MEIO_PARA_CIMA" selected>Meio para cima</option>
+        
+        <option value="MEIO_PARA_PAR" >Meio para par</option>
+        
+        <option value="TRUNCAR" >Truncar</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo curto">
+      <label for="c-g4c10">Prazo de recurso, em dias corridos</label>
+      
+      <input id="c-g4c10"
+             name="campo:g4c10"
+             type="number"
+             
+             aria-describedby="vazio-g4c10"
+             value="">
+      
+      
+      <span class="ajuda" id="vazio-g4c10">Em branco — este marco continua sem prever recurso.</span>
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c11">Algoritmo do sorteio</label>
+      
+      
+      <select id="c-g4c11" name="campo:g4c11">
+        <option value="" >Não declarado — o sorteio não terá como ser feito</option>
+        
+        <option value="IFES-SORTEIO-SHA256-v1" selected>IFES-SORTEIO-SHA256-v1</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c12">Fonte pública da semente</label>
+      
+      
+      <select id="c-g4c12" name="campo:g4c12">
+        <option value="" >Não declarada — a semente não terá origem</option>
+        
+        <option value="Fonte de demonstração" selected>Fonte de demonstração</option>
+        
+        <option value="Loteria Federal" >Loteria Federal</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c13">Ocorrência que fixará a semente</label>
+      
+      <input id="c-g4c13"
+             name="campo:g4c13"
+             type="text"
+             
+             
+             value="5900">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c14">Quando a ocorrência acontece</label>
+      
+      <input id="c-g4c14"
+             name="campo:g4c14"
+             type="datetime-local"
+             
+             
+             value="2020-01-01T20:00">
+      
+      
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g4c15">Como a ocorrência decorre da data programada</label>
+      
+      
+      <textarea id="c-g4c15"
+                name="campo:g4c15" rows="5"
+                >a extração de sábado imediatamente anterior à data publicada</textarea>
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c16">Regra de normalização</label>
+      
+      
+      <select id="c-g4c16" name="campo:g4c16">
+        <option value="" >Não declarada — a semente não se produz</option>
+        
+        <option value="DIGITOS_EM_SEQUENCIA" selected>DIGITOS_EM_SEQUENCIA</option>
+        
+        <option value="TEXTO_LITERAL" >TEXTO_LITERAL</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g4c17">Normalização, como se publica</label>
+      
+      
+      <textarea id="c-g4c17"
+                name="campo:g4c17" rows="5"
+                >os cinco números sorteados, na ordem dos prêmios</textarea>
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c18">Regra de substituição</label>
+      
+      
+      <select id="c-g4c18" name="campo:g4c18">
+        <option value="" >Não declarada — a publicação será impedida</option>
+        
+        <option value="OCORRENCIA_SEGUINTE_DA_MESMA_FONTE" selected>OCORRENCIA_SEGUINTE_DA_MESMA_FONTE</option>
+        
+      </select>
+      
+    </p>
+    
+    <p class="campo largo">
+      <label for="c-g4c19">Substituição, como se publica</label>
+      
+      
+      <textarea id="c-g4c19"
+                name="campo:g4c19" rows="5"
+                >não havendo extração na data, vale a extração seguinte da mesma fonte</textarea>
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g4c20">Etapa que habilita ao sorteio</label>
+      
+      
+      <select id="c-g4c20" name="campo:g4c20">
+        <option value="" selected>Nenhuma — todos participam do sorteio</option>
+        
+      </select>
+      
+    </p>
+    
+  </div>
+  
+  
+  
+  
+  <p class="remover-linha">
+    <input type="checkbox" id="rm-g4" name="remover:g4"
+           value="1" >
+    <label for="rm-g4">Remover do Edital</label>
+  </p>
+  
+</fieldset>
+
+    
+
+    
+    
+    <details class="exclusoes">
+      <summary>O que não se corrige por Retificação nesta seção</summary>
+      
+      <h3>Perfil</h3>
+      <dl>
+        
+        <dt>Espécie do Cadastro Reserva</dt>
+        <dd>A espécie do cadastro reserva define o que o Edital ofereceu: nenhum, limitado ou ilimitado. Quem se inscreveu decidiu concorrer sabendo se havia reserva e de que tipo; trocá-la depois não corrige um erro de redação, oferece outra coisa. O limite dentro da espécie é parâmetro, e esse se corrige.</dd>
+        
+        <dt>Informações sobre a classificação</dt>
+        <dd>O domínio não reconhece forma nem semântica para este objeto; portanto, não consegue determinar o que seria uma correção administrativa válida. Atribuir-lhe significado normativo exige decisão e especificação próprias, não uma Retificação. Nenhum canal do sistema exibe este conteúdo hoje, e isso é evidência do problema e não a justificativa: não é por faltar tela que ele não se corrige — é por não haver o que se corrija.</dd>
+        
+        <dt>Informações sobre a convocação</dt>
+        <dd>Mesma razão: o domínio não reconhece forma nem semântica para este objeto, e por isso não consegue determinar o que seria uma correção válida. O contraponto reforça a decisão: a forma de comunicar a convocação, ao lado, se corrige e é exibida — ela tem forma declarada, valor de lista fechada e destino observável, e é isso que falta aqui.</dd>
+        
+      </dl>
+      
+      <h3>Marco</h3>
+      <dl>
+        
+        <dt>Etapas que o marco mede</dt>
+        <dd>Quais Etapas o marco mede é o que o marco é, e não um parâmetro dele. Um marco que passa a medir outras Etapas não é o mesmo marco corrigido: é outro marco, sob o mesmo nome e o mesmo código, com as pontuações já registradas valendo para uma pergunta que ninguém fez. O caminho para mudar o que se mede é declarar marco novo.</dd>
+        
+        <dt>Espécie do alvo do corte</dt>
+        <dd>A espécie do alvo diz se o corte tem número fixo ou derivado do quadro: são duas regras diferentes, e não dois valores da mesma. A quantidade dentro da espécie fixa é parâmetro, e essa se corrige.</dd>
+        
+        <dt>Etapa que o corte alimenta</dt>
+        <dd>É o campo que decide quem progride no certame. Corrigi-lo depois de o corte ter sido aplicado moveria, em silêncio, quem continua — sem que ninguém fosse reavaliado.</dd>
+        
+        <dt>Continuação além da faixa</dt>
+        <dd>Mesma razão da Etapa governada, do outro lado: admitir ou não continuação além da faixa decide quem segue no certame, e mudá-la depois do corte reescreveria o resultado de um ato já praticado.</dd>
+        
+      </dl>
+      
+    </details>
+    
+
+    
+    
+    <div id="novos-perfis">
+      
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="/gestao/fragmentos/retificacao/perfil"
+              hx-target="#novos-perfis" hx-swap="beforeend">Acrescentar Perfil</button>
+      <span class="ajuda">Um Perfil acrescentado passa a integrar o Edital quando a Retificação
+        for publicada. As Modalidades dele entram na Retificação seguinte.</span>
+    </p>
+    
+    <div id="novas-modalidades">
+      
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="/gestao/fragmentos/retificacao/3a695f24-156b-4efa-b79f-65f369d63a20/modalidade"
+              hx-target="#novas-modalidades"
+              hx-swap="beforeend">Acrescentar Modalidade de Concorrência</button>
+      <span class="ajuda">A Modalidade passa a valer para as inscrições feitas depois de a
+        Retificação ser publicada; as já enviadas continuam com a Modalidade que declararam.</span>
+    </p>
+    
+    <div id="novas-linhas-do-quadro">
+      
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="/gestao/fragmentos/retificacao/3a695f24-156b-4efa-b79f-65f369d63a20/linha-do-quadro"
+              hx-target="#novas-linhas-do-quadro" hx-swap="beforeend">Acrescentar linha do quadro
+        de vagas</button>
+      <span class="ajuda">A linha diz quantas vagas cabem numa lista de concorrência do Perfil. A
+        opção "Ampla concorrência" é a linha geral, e o Perfil tem no máximo uma.</span>
+    </p>
+    
+    <div id="novos-criterios">
+      
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="/gestao/fragmentos/retificacao/3a695f24-156b-4efa-b79f-65f369d63a20/criterio"
+              hx-target="#novos-criterios"
+              hx-swap="beforeend">Acrescentar critério de desempate</button>
+      <span class="ajuda">O critério entra no marco escolhido quando a Retificação for publicada,
+        na ordem de aplicação informada. Para trocar um critério, remova o antigo e acrescente o
+        novo no mesmo ato.</span>
+    </p>
+    
+  </section>
+  
+  <section class="secao-da-retificacao" id="s-cronograma" aria-labelledby="t-cronograma">
+    <h2 id="t-cronograma">Cronograma</h2>
+    
+    
+    
+    
+<fieldset class="linha" data-linha data-nome="Evento 1 — INSCRICAO" id="cartao-g5">
+  <legend data-rotulo="Evento 1 — INSCRICAO">
+    <span class="categoria">Evento</span>
+    <span class="nome">1 — INSCRICAO</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo">
+      <label for="c-g5c1">Descrição</label>
+      
+      <input id="c-g5c1"
+             name="campo:g5c1"
+             type="text"
+             
+             
+             value="Inscrições">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g5c2">Início</label>
+      
+      <input id="c-g5c2"
+             name="campo:g5c2"
+             type="datetime-local"
+             
+             
+             value="2026-10-27T09:46">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g5c3">Término</label>
+      
+      <input id="c-g5c3"
+             name="campo:g5c3"
+             type="datetime-local"
+             
+             
+             value="2026-11-12T22:37">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g5c4">Local</label>
+      
+      <input id="c-g5c4"
+             name="campo:g5c4"
+             type="text"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g5c5">É o período de inscrições</label>
+      
+      <select id="c-g5c5" name="campo:g5c5">
+        <option value="1" selected>Sim</option>
+        <option value="0" >Não</option>
+      </select>
+      
+    </p>
+    
+  </div>
+  
+  
+  
+  
+  <p class="remover-linha">
+    <input type="checkbox" id="rm-g5" name="remover:g5"
+           value="1" >
+    <label for="rm-g5">Remover do Edital</label>
+  </p>
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Evento 2 — SORTEIO" id="cartao-g6">
+  <legend data-rotulo="Evento 2 — SORTEIO">
+    <span class="categoria">Evento</span>
+    <span class="nome">2 — SORTEIO</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo">
+      <label for="c-g6c1">Descrição</label>
+      
+      <input id="c-g6c1"
+             name="campo:g6c1"
+             type="text"
+             
+             
+             value="Sorteio programado sintético">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g6c2">Início</label>
+      
+      <input id="c-g6c2"
+             name="campo:g6c2"
+             type="datetime-local"
+             
+             
+             value="2026-11-14T14:23">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g6c3">Término</label>
+      
+      <input id="c-g6c3"
+             name="campo:g6c3"
+             type="datetime-local"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g6c4">Local</label>
+      
+      <input id="c-g6c4"
+             name="campo:g6c4"
+             type="text"
+             
+             
+             value="">
+      
+      
+      
+    </p>
+    
+    <p class="campo">
+      <label for="c-g6c5">É o período de inscrições</label>
+      
+      <select id="c-g6c5" name="campo:g6c5">
+        <option value="1" >Sim</option>
+        <option value="0" selected>Não</option>
+      </select>
+      
+    </p>
+    
+  </div>
+  
+  
+  
+  
+  <p class="remover-linha">
+    <input type="checkbox" id="rm-g6" name="remover:g6"
+           value="1" >
+    <label for="rm-g6">Remover do Edital</label>
+  </p>
+  
+</fieldset>
+
+    
+
+    
+    
+    <details class="exclusoes">
+      <summary>O que não se corrige por Retificação nesta seção</summary>
+      
+      <h3>Evento</h3>
+      <dl>
+        
+        <dt>Espécie do Evento</dt>
+        <dd>A espécie do Evento é o que liga o Cronograma às regras que dependem dele — o período de inscrições, a Etapa vinculada. Trocá-la depois de publicado muda a que o Evento serve, e não o que ele diz.</dd>
+        
+      </dl>
+      
+    </details>
+    
+
+    
+    
+    <div id="novos-eventos">
+      
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="/gestao/fragmentos/retificacao/evento"
+              hx-target="#novos-eventos" hx-swap="beforeend">Acrescentar Evento</button>
+      <span class="ajuda">Um Evento acrescentado entra no Cronograma quando a Retificação for
+        publicada, continuando a ordem dos que já estão acima.</span>
+    </p>
+    
+  </section>
+  
+  <section class="secao-da-retificacao" id="s-anexos" aria-labelledby="t-anexos">
+    <h2 id="t-anexos">Anexos</h2>
+    
+    
+    <p class="nenhuma">Este Edital ainda não publica nada aqui — o botão abaixo cria o primeiro.</p>
+    
+    
+
+    
+    
+
+    
+    
+    <div id="novos-anexos">
+      
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="/gestao/fragmentos/retificacao/anexo"
+              hx-target="#novos-anexos" hx-swap="beforeend">Acrescentar Anexo</button>
+      <span class="ajuda">O rótulo é o nome inteiro com que o Edital cita o Anexo, e o sistema
+        não numera nada.</span>
+    </p>
+    
+  </section>
+  
+  <section class="secao-da-retificacao" id="s-secoes" aria-labelledby="t-secoes">
+    <h2 id="t-secoes">Seções do texto</h2>
+    
+    
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Apresentação" id="cartao-g7">
+  <legend data-rotulo="Seção Apresentação">
+    <span class="categoria">Seção</span>
+    <span class="nome">Apresentação</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g7c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g7c1"
+                name="campo:g7c1" rows="5"
+                aria-describedby="atual-g7c1"></textarea>
+      
+      <span class="ajuda" id="atual-g7c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Disposições preliminares" id="cartao-g8">
+  <legend data-rotulo="Seção Disposições preliminares">
+    <span class="categoria">Seção</span>
+    <span class="nome">Disposições preliminares</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g8c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g8c1"
+                name="campo:g8c1" rows="5"
+                aria-describedby="atual-g8c1"></textarea>
+      
+      <span class="ajuda" id="atual-g8c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Informações gerais" id="cartao-g9">
+  <legend data-rotulo="Seção Informações gerais">
+    <span class="categoria">Seção</span>
+    <span class="nome">Informações gerais</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g9c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g9c1"
+                name="campo:g9c1" rows="5"
+                aria-describedby="atual-g9c1"></textarea>
+      
+      <span class="ajuda" id="atual-g9c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Público-alvo" id="cartao-g10">
+  <legend data-rotulo="Seção Público-alvo">
+    <span class="categoria">Seção</span>
+    <span class="nome">Público-alvo</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g10c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g10c1"
+                name="campo:g10c1" rows="5"
+                aria-describedby="atual-g10c1"></textarea>
+      
+      <span class="ajuda" id="atual-g10c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Requisitos gerais" id="cartao-g11">
+  <legend data-rotulo="Seção Requisitos gerais">
+    <span class="categoria">Seção</span>
+    <span class="nome">Requisitos gerais</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g11c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g11c1"
+                name="campo:g11c1" rows="5"
+                aria-describedby="atual-g11c1"></textarea>
+      
+      <span class="ajuda" id="atual-g11c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção 3 — Como se inscrever?" id="cartao-g12">
+  <legend data-rotulo="Seção 3 — Como se inscrever?">
+    <span class="categoria">Seção</span>
+    <span class="nome">3 — Como se inscrever?</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g12c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g12c1"
+                name="campo:g12c1" rows="5"
+                aria-describedby="atual-g12c1"></textarea>
+      
+      <span class="ajuda" id="atual-g12c1">Hoje: sai no documento como a seção 3.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Atendimento à pessoa com deficiência" id="cartao-g13">
+  <legend data-rotulo="Seção Atendimento à pessoa com deficiência">
+    <span class="categoria">Seção</span>
+    <span class="nome">Atendimento à pessoa com deficiência</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g13c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g13c1"
+                name="campo:g13c1" rows="5"
+                aria-describedby="atual-g13c1"></textarea>
+      
+      <span class="ajuda" id="atual-g13c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção 4 — Como será a seleção?" id="cartao-g14">
+  <legend data-rotulo="Seção 4 — Como será a seleção?">
+    <span class="categoria">Seção</span>
+    <span class="nome">4 — Como será a seleção?</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g14c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g14c1"
+                name="campo:g14c1" rows="5"
+                aria-describedby="atual-g14c1"></textarea>
+      
+      <span class="ajuda" id="atual-g14c1">Hoje: sai no documento como a seção 4.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Verificação da autodeclaração" id="cartao-g15">
+  <legend data-rotulo="Seção Verificação da autodeclaração">
+    <span class="categoria">Seção</span>
+    <span class="nome">Verificação da autodeclaração</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g15c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g15c1"
+                name="campo:g15c1" rows="5"
+                aria-describedby="atual-g15c1"></textarea>
+      
+      <span class="ajuda" id="atual-g15c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Como recorrer?" id="cartao-g16">
+  <legend data-rotulo="Seção Como recorrer?">
+    <span class="categoria">Seção</span>
+    <span class="nome">Como recorrer?</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g16c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g16c1"
+                name="campo:g16c1" rows="5"
+                aria-describedby="atual-g16c1"></textarea>
+      
+      <span class="ajuda" id="atual-g16c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção 5 — Como será a convocação?" id="cartao-g17">
+  <legend data-rotulo="Seção 5 — Como será a convocação?">
+    <span class="categoria">Seção</span>
+    <span class="nome">5 — Como será a convocação?</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g17c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g17c1"
+                name="campo:g17c1" rows="5"
+                aria-describedby="atual-g17c1"></textarea>
+      
+      <span class="ajuda" id="atual-g17c1">Hoje: sai no documento como a seção 5.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Como será a matrícula?" id="cartao-g18">
+  <legend data-rotulo="Seção Como será a matrícula?">
+    <span class="categoria">Seção</span>
+    <span class="nome">Como será a matrícula?</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g18c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g18c1"
+                name="campo:g18c1" rows="5"
+                aria-describedby="atual-g18c1"></textarea>
+      
+      <span class="ajuda" id="atual-g18c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Acesso ao curso" id="cartao-g19">
+  <legend data-rotulo="Seção Acesso ao curso">
+    <span class="categoria">Seção</span>
+    <span class="nome">Acesso ao curso</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g19c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g19c1"
+                name="campo:g19c1" rows="5"
+                aria-describedby="atual-g19c1"></textarea>
+      
+      <span class="ajuda" id="atual-g19c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Homologação da matrícula" id="cartao-g20">
+  <legend data-rotulo="Seção Homologação da matrícula">
+    <span class="categoria">Seção</span>
+    <span class="nome">Homologação da matrícula</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g20c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g20c1"
+                name="campo:g20c1" rows="5"
+                aria-describedby="atual-g20c1"></textarea>
+      
+      <span class="ajuda" id="atual-g20c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Certificado" id="cartao-g21">
+  <legend data-rotulo="Seção Certificado">
+    <span class="categoria">Seção</span>
+    <span class="nome">Certificado</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g21c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g21c1"
+                name="campo:g21c1" rows="5"
+                aria-describedby="atual-g21c1"></textarea>
+      
+      <span class="ajuda" id="atual-g21c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Prazo de validade" id="cartao-g22">
+  <legend data-rotulo="Seção Prazo de validade">
+    <span class="categoria">Seção</span>
+    <span class="nome">Prazo de validade</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g22c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g22c1"
+                name="campo:g22c1" rows="5"
+                aria-describedby="atual-g22c1"></textarea>
+      
+      <span class="ajuda" id="atual-g22c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+    
+<fieldset class="linha" data-linha data-nome="Seção Disposições finais" id="cartao-g23">
+  <legend data-rotulo="Seção Disposições finais">
+    <span class="categoria">Seção</span>
+    <span class="nome">Disposições finais</span>
+  </legend>
+  <div class="campos">
+    
+    
+    
+    <p class="campo largo">
+      <label for="c-g23c1">Texto da seção</label>
+      
+      
+      <textarea id="c-g23c1"
+                name="campo:g23c1" rows="5"
+                aria-describedby="atual-g23c1"></textarea>
+      
+      <span class="ajuda" id="atual-g23c1">Hoje: vazia, e não sai no documento.</span>
+      
+      
+    </p>
+    
+  </div>
+  
+  
+  
+</fieldset>
+
+    
+
+    
+    
+    <details class="exclusoes">
+      <summary>O que não se corrige por Retificação nesta seção</summary>
+      
+      <h3>Seção</h3>
+      <dl>
+        
+        <dt>Título da seção</dt>
+        <dd>As seções do Edital vêm do catálogo institucional, e não são escolha deste Edital: título, ordem e espécie são os do catálogo com que ele foi publicado, e é isso que torna um Edital legível por quem já leu outro. O que este Edital escreve é o conteúdo, e esse se corrige — inclusive o de uma seção que foi publicada vazia.</dd>
+        
+        <dt>Ordem da seção</dt>
+        <dd>Mesma razão: é a ordem do catálogo institucional, e não deste Edital.</dd>
+        
+        <dt>Espécie da seção</dt>
+        <dd>Mesma razão: é a espécie declarada pelo catálogo institucional.</dd>
+        
+      </dl>
+      
+    </details>
+    
+
+    
+    
+  </section>
+  
+
+  <section class="secao-da-retificacao" id="sobre-a-retificacao" aria-labelledby="t-sobre">
+    <h2 id="t-sobre">Sobre esta Retificação</h2>
+    <fieldset class="linha">
+      <legend><span class="nome">O ato</span></legend>
+      <p class="campo largo">
+        <label for="justificativa">Justificativa <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <textarea id="justificativa" name="justificativa" rows="3" required
+                  aria-describedby="ajuda-just" aria-required="true">PS-RET-E2E-001 cenário 3: prazo e sorteio</textarea>
+        <span class="ajuda" id="ajuda-just">Fica registrada no ato e na consulta pública.
+          Exigida para criar a Retificação; não para conferir o que vai mudar.</span>
+      </p>
+      <p class="campo">
+        <label for="vigencia">Vigência (opcional)</label>
+        <input type="datetime-local" id="vigencia" name="vigencia" value="2026-01-01T12:00"
+               aria-describedby="ajuda-vig">
+        <span class="ajuda" id="ajuda-vig">Vazio significa vigorar na Publicação. Data futura
+          significa que o conteúdo atual continua valendo até lá.</span>
+      </p>
+    </fieldset>
+  </section>
+
+  
+  <p class="navegacao-etapa barra-de-acoes">
+    <button type="submit" class="botao secundario" formnovalidate>Ver o que vai mudar</button>
+    
+    
+    <button type="submit" name="confirmar" value="1" class="botao">Criar Retificação</button>
+    
+    <a href="/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/" class="acao">Voltar</a>
+  </p>
+</form>
+
+<script src="/static/interface/htmx.min.js" defer></script>
+<script src="/static/interface/remocao.js" defer></script>
+<script src="/static/interface/retificacao.js" defer></script>
+
+</main>
+
+</div>
+</div>
+
+</body>
+</html>

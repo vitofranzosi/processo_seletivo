@@ -1,0 +1,193 @@
+[
+  {
+    "nome": "E2E-01-estado",
+    "aprovado": true,
+    "detalhe": {
+      "estado": "PUBLICADA",
+      "retificacao": "81929709-4363-483f-b149-be8e28126e1c",
+      "publication_id": "7ed90f77-24e0-47c8-8989-653c007c7f9d"
+    }
+  },
+  {
+    "nome": "E2E-05-estado",
+    "aprovado": true,
+    "detalhe": {
+      "estado": "PUBLICADA",
+      "retificacao": "4ea28c19-cf95-4c1c-86dd-cef17ca1b4a0",
+      "publication_id": "c61e646d-52db-45a8-8dc6-4bbfbc9cc892"
+    }
+  },
+  {
+    "nome": "E2E-02-estado",
+    "aprovado": true,
+    "detalhe": {
+      "estado": "PUBLICADA",
+      "retificacao": "d1f214bb-89af-4f63-830b-6f055fc06767",
+      "publication_id": "f21572cc-5985-4f99-ad12-2df14c12a588"
+    }
+  },
+  {
+    "nome": "E2E-03-estado",
+    "aprovado": true,
+    "detalhe": {
+      "estado": "HOMOLOGADA",
+      "retificacao": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+      "publication_id": null
+    }
+  },
+  {
+    "nome": "E2E-03-sem-publicacao-parcial",
+    "aprovado": true,
+    "detalhe": "d276b994-0bf8-4673-9dfe-22ae538fd971"
+  },
+  {
+    "nome": "E2E-04-estado",
+    "aprovado": true,
+    "detalhe": {
+      "estado": "EM_ELABORACAO",
+      "retificacao": "fda1fb33-36cc-477d-be27-a4bd121dd7ce",
+      "publication_id": null
+    }
+  },
+  {
+    "nome": "E2E-06-estado",
+    "aprovado": true,
+    "detalhe": {
+      "estado": "HOMOLOGADA",
+      "retificacao": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+      "publication_id": null
+    }
+  },
+  {
+    "nome": "E2E-06-sem-publicacao-parcial",
+    "aprovado": true,
+    "detalhe": "d276b994-0bf8-4673-9dfe-22ae538fd971"
+  },
+  {
+    "nome": "hash-8b7ee922-b875-4904-9a24-741457e105b3",
+    "aprovado": true,
+    "detalhe": "a1b8cb60d60c322207de86f8afb9c605be72dda31321e86f78071482f6350eb5"
+  },
+  {
+    "nome": "hash-c6cd3f50-5de0-43d4-b626-9d3a2bb40aa7",
+    "aprovado": true,
+    "detalhe": "50a4d7d8e5a513b9c19ba738e5380c42404b2b6292e29c95e1113769e7e80904"
+  },
+  {
+    "nome": "hash-c61e646d-52db-45a8-8dc6-4bbfbc9cc892",
+    "aprovado": true,
+    "detalhe": "b7699abda628be37d45789ecacf624c355eebb0e62b969ad66ac7251844404f4"
+  },
+  {
+    "nome": "hash-f21572cc-5985-4f99-ad12-2df14c12a588",
+    "aprovado": true,
+    "detalhe": "3af628a02b1fb93aaad481ffec70f6207aa182524dfea30b70823e0d90d6501d"
+  },
+  {
+    "nome": "hash-a3feda46-ab9c-464e-8e35-7ce28d377536",
+    "aprovado": true,
+    "detalhe": "303f0179eb33972183111e719085e69943bf49dd4e1dd5a2c66fff4393bc7f60"
+  },
+  {
+    "nome": "hash-8a36a21c-fb38-478c-a449-28323961e635",
+    "aprovado": true,
+    "detalhe": "c505a47eb5ed7905e9a57573faa8f68dbe99eae8fa451293eae368c98977314c"
+  },
+  {
+    "nome": "hash-874642bd-c24c-498d-8ca9-b3121c6dd172",
+    "aprovado": true,
+    "detalhe": "e8c59d0193db7b347266410fc61b6c439fca4e4a9bb10e327321991354e1d580"
+  },
+  {
+    "nome": "hash-7ed90f77-24e0-47c8-8989-653c007c7f9d",
+    "aprovado": true,
+    "detalhe": "cac297427930438ac9d9abc025d749ced0d14aea6acc92e5e8e4fc9c5c2e10b9"
+  },
+  {
+    "nome": "historico-futuro-preservado",
+    "aprovado": true,
+    "detalhe": [
+      {
+        "id": "c3adff96-5651-4103-8830-30899ccedef5",
+        "source": "c61e646d-52db-45a8-8dc6-4bbfbc9cc892",
+        "hash": "b7699abda628be37d45789ecacf624c355eebb0e62b969ad66ac7251844404f4"
+      },
+      {
+        "id": "7ad83a67-e395-42cc-811c-8655cbffb901",
+        "source": "f21572cc-5985-4f99-ad12-2df14c12a588",
+        "hash": "b7699abda628be37d45789ecacf624c355eebb0e62b969ad66ac7251844404f4"
+      }
+    ]
+  },
+  {
+    "nome": "E2E-01-semente-preservada",
+    "aprovado": true,
+    "detalhe": "Marco e método da ocorrência inalterados"
+  },
+  {
+    "nome": "E2E-05-semente-preservada",
+    "aprovado": true,
+    "detalhe": "Marco e método da ocorrência inalterados"
+  },
+  {
+    "nome": "E2E-02-semente-preservada",
+    "aprovado": true,
+    "detalhe": "Marco e método da ocorrência inalterados"
+  },
+  {
+    "nome": "E2E-03-semente-preservada",
+    "aprovado": true,
+    "detalhe": "Marco e método da ocorrência inalterados"
+  },
+  {
+    "nome": "E2E-04-semente-preservada",
+    "aprovado": true,
+    "detalhe": "Marco e método da ocorrência inalterados"
+  },
+  {
+    "nome": "E2E-06-semente-preservada",
+    "aprovado": true,
+    "detalhe": "Marco e método da ocorrência inalterados"
+  },
+  {
+    "nome": "runtime-append-only",
+    "aprovado": true,
+    "detalhe": [
+      {
+        "tablename": "auditoria_registroauditoria",
+        "atualiza": false,
+        "exclui": false
+      },
+      {
+        "tablename": "publicacoes_publicacao",
+        "atualiza": false,
+        "exclui": false
+      },
+      {
+        "tablename": "publicacoes_versaoconsolidada",
+        "atualiza": false,
+        "exclui": false
+      }
+    ]
+  },
+  {
+    "nome": "original-preservado-874642bd-c24c-498d-8ca9-b3121c6dd172",
+    "aprovado": true,
+    "detalhe": "e8c59d0193db7b347266410fc61b6c439fca4e4a9bb10e327321991354e1d580"
+  },
+  {
+    "nome": "original-preservado-c6cd3f50-5de0-43d4-b626-9d3a2bb40aa7",
+    "aprovado": true,
+    "detalhe": "50a4d7d8e5a513b9c19ba738e5380c42404b2b6292e29c95e1113769e7e80904"
+  },
+  {
+    "nome": "original-preservado-a3feda46-ab9c-464e-8e35-7ce28d377536",
+    "aprovado": true,
+    "detalhe": "303f0179eb33972183111e719085e69943bf49dd4e1dd5a2c66fff4393bc7f60"
+  },
+  {
+    "nome": "original-preservado-8b7ee922-b875-4904-9a24-741457e105b3",
+    "aprovado": true,
+    "detalhe": "a1b8cb60d60c322207de86f8afb9c605be72dda31321e86f78071482f6350eb5"
+  }
+]

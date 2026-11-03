@@ -1,0 +1,474 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/processos",
+    "request": {
+      "institutionalCode": "PS-RET-002-1",
+      "title": "Auditoria sintética 1",
+      "firstEdital": {
+        "number": "AUD-1",
+        "year": 2026,
+        "title": "Edital sintético 1"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"2a54349b-d2df-4e06-95f1-a0be91e4e982\",\"institutionalCode\":\"PS-RET-002-1\",\"status\":\"EM_ELABORACAO\",\"revision\":1}"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/editais/bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb/rascunho",
+    "request": {
+      "profiles": [
+        {
+          "id": "00000000-0000-0000-0000-000000008411",
+          "code": "P1",
+          "name": "Perfil",
+          "immediateVacancies": 1,
+          "reserveType": "NONE",
+          "competitionModalities": [],
+          "classificationMilestones": [
+            {
+              "id": "5e615383-f419-5d71-b1c4-c7e5de8e5396",
+              "code": "M1",
+              "name": "Sorteio público",
+              "orderProduction": "POR_SORTEIO",
+              "stages": [],
+              "operation": "SOMA_PONDERADA",
+              "normalization": "NENHUMA",
+              "rounding": {
+                "scale": 2,
+                "mode": "MEIO_PARA_CIMA"
+              },
+              "tiebreakers": [],
+              "drawMethod": {
+                "algorithm": "IFES-SORTEIO-SHA256-v1",
+                "source": "Fonte de demonstração",
+                "occurrence": "5900",
+                "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                "normalization": {
+                  "rule": "DIGITOS_EM_SEQUENCIA",
+                  "text": "os cinco números sorteados, na ordem dos prêmios"
+                },
+                "substitutionRule": {
+                  "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                  "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                }
+              },
+              "cutRule": {
+                "targetKind": "FIXED",
+                "targetCount": 1,
+                "surplusCount": 0,
+                "tieOutcome": "STRICT",
+                "governedStage": "NONE",
+                "continuation": "NONE"
+              }
+            }
+          ],
+          "callForm": "PUBLICATION"
+        }
+      ],
+      "schedule": [
+        {
+          "id": "00000000-0000-0000-0000-000000008412",
+          "type": "INSCRICAO",
+          "description": "Inscrições",
+          "startAt": "2026-10-27T14:30:49.796985+00:00",
+          "order": 1,
+          "endAt": "2026-11-07T14:30:49.796985+00:00",
+          "isRegistrationPeriod": true
+        },
+        {
+          "id": "9fe046c3-0631-4e2f-9f6d-53ef80fe7f75",
+          "type": "SORTEIO",
+          "description": "Sorteio programado sintético",
+          "startAt": "2026-11-09T14:30:49.796985+00:00",
+          "order": 2
+        }
+      ]
+    },
+    "status": 200,
+    "response": "{\"id\":\"bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb\",\"processoId\":\"2a54349b-d2df-4e06-95f1-a0be91e4e982\",\"status\":\"EM_ELABORACAO\",\"revision\":2}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb/submissoes",
+    "request": {},
+    "status": 200,
+    "response": "{\"id\":\"bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb\",\"processoId\":\"2a54349b-d2df-4e06-95f1-a0be91e4e982\",\"status\":\"EM_REVISAO\",\"revision\":3,\"validationFindings\":[{\"severity\":\"WARNING\",\"code\":\"description_missing\",\"message\":\"O Edital não possui descrição.\",\"path\":\"description\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Apresentação» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=9997d05a-4d87-587e-a91c-311efaaabb6f/content\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Disposições finais» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=7cbbf235-2ff8-5ae1-b482-f91756e14e61/content\"}]}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb/homologacoes",
+    "request": {
+      "reason": "Conferência sintética"
+    },
+    "status": 200,
+    "response": "{\"id\":\"bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb\",\"processoId\":\"2a54349b-d2df-4e06-95f1-a0be91e4e982\",\"status\":\"HOMOLOGADO\",\"revision\":4}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb/publicacoes",
+    "request": {
+      "signatory": {
+        "authorityId": "ac7ee815-dba8-4ba6-b61b-f0c0d0c3608f"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"874642bd-c24c-498d-8ca9-b3121c6dd172\",\"editalId\":\"bfb4a7bd-1356-4b7b-8eb1-1db3f4cd94eb\",\"publicationOrder\":1,\"publishedAt\":\"2026-10-28T11:30:50.159669-03:00\",\"effectiveAt\":\"2026-10-28T11:30:50.159669-03:00\",\"contentHash\":\"e8c59d0193db7b347266410fc61b6c439fca4e4a9bb10e327321991354e1d580\",\"documentHash\":\"766c608773454c8357a2d0b17ee477dd7db7272be33a6214cbbd2dc4b50527ba\"}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/processos",
+    "request": {
+      "institutionalCode": "PS-RET-002-2",
+      "title": "Auditoria sintética 2",
+      "firstEdital": {
+        "number": "AUD-2",
+        "year": 2026,
+        "title": "Edital sintético 2"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"ea5a17c7-8f1d-4e1f-9879-4b768b40040c\",\"institutionalCode\":\"PS-RET-002-2\",\"status\":\"EM_ELABORACAO\",\"revision\":1}"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/editais/50cfb054-6d5a-41e5-90d6-43fb1f60ff07/rascunho",
+    "request": {
+      "profiles": [
+        {
+          "id": "00000000-0000-0000-0000-000000008421",
+          "code": "P1",
+          "name": "Perfil",
+          "immediateVacancies": 1,
+          "reserveType": "NONE",
+          "competitionModalities": [],
+          "classificationMilestones": [
+            {
+              "id": "3f60a6f7-10bf-5a51-b438-17de03e13f59",
+              "code": "M1",
+              "name": "Sorteio público",
+              "orderProduction": "POR_SORTEIO",
+              "stages": [],
+              "operation": "SOMA_PONDERADA",
+              "normalization": "NENHUMA",
+              "rounding": {
+                "scale": 2,
+                "mode": "MEIO_PARA_CIMA"
+              },
+              "tiebreakers": [],
+              "drawMethod": {
+                "algorithm": "IFES-SORTEIO-SHA256-v1",
+                "source": "Fonte de demonstração",
+                "occurrence": "5900",
+                "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                "normalization": {
+                  "rule": "DIGITOS_EM_SEQUENCIA",
+                  "text": "os cinco números sorteados, na ordem dos prêmios"
+                },
+                "substitutionRule": {
+                  "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                  "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                }
+              },
+              "cutRule": {
+                "targetKind": "FIXED",
+                "targetCount": 1,
+                "surplusCount": 0,
+                "tieOutcome": "STRICT",
+                "governedStage": "NONE",
+                "continuation": "NONE"
+              }
+            }
+          ],
+          "callForm": "PUBLICATION"
+        }
+      ],
+      "schedule": [
+        {
+          "id": "00000000-0000-0000-0000-000000008422",
+          "type": "INSCRICAO",
+          "description": "Inscrições",
+          "startAt": "2026-10-27T14:30:49.796985+00:00",
+          "order": 1,
+          "endAt": "2026-11-07T14:30:49.796985+00:00",
+          "isRegistrationPeriod": true
+        },
+        {
+          "id": "63231bc7-b5d0-41dc-a049-9ebae46958c2",
+          "type": "SORTEIO",
+          "description": "Sorteio programado sintético",
+          "startAt": "2026-11-09T14:30:49.796985+00:00",
+          "order": 2
+        }
+      ]
+    },
+    "status": 200,
+    "response": "{\"id\":\"50cfb054-6d5a-41e5-90d6-43fb1f60ff07\",\"processoId\":\"ea5a17c7-8f1d-4e1f-9879-4b768b40040c\",\"status\":\"EM_ELABORACAO\",\"revision\":2}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/50cfb054-6d5a-41e5-90d6-43fb1f60ff07/submissoes",
+    "request": {},
+    "status": 200,
+    "response": "{\"id\":\"50cfb054-6d5a-41e5-90d6-43fb1f60ff07\",\"processoId\":\"ea5a17c7-8f1d-4e1f-9879-4b768b40040c\",\"status\":\"EM_REVISAO\",\"revision\":3,\"validationFindings\":[{\"severity\":\"WARNING\",\"code\":\"description_missing\",\"message\":\"O Edital não possui descrição.\",\"path\":\"description\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Apresentação» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=3c522fa9-f159-5f08-af78-9e0817dbab26/content\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Disposições finais» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=408fa684-14fb-5aff-8c4e-65b643b9f76c/content\"}]}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/50cfb054-6d5a-41e5-90d6-43fb1f60ff07/homologacoes",
+    "request": {
+      "reason": "Conferência sintética"
+    },
+    "status": 200,
+    "response": "{\"id\":\"50cfb054-6d5a-41e5-90d6-43fb1f60ff07\",\"processoId\":\"ea5a17c7-8f1d-4e1f-9879-4b768b40040c\",\"status\":\"HOMOLOGADO\",\"revision\":4}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/50cfb054-6d5a-41e5-90d6-43fb1f60ff07/publicacoes",
+    "request": {
+      "signatory": {
+        "authorityId": "ac7ee815-dba8-4ba6-b61b-f0c0d0c3608f"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"c6cd3f50-5de0-43d4-b626-9d3a2bb40aa7\",\"editalId\":\"50cfb054-6d5a-41e5-90d6-43fb1f60ff07\",\"publicationOrder\":1,\"publishedAt\":\"2026-10-28T11:30:50.493055-03:00\",\"effectiveAt\":\"2026-10-28T11:30:50.493055-03:00\",\"contentHash\":\"50a4d7d8e5a513b9c19ba738e5380c42404b2b6292e29c95e1113769e7e80904\",\"documentHash\":\"6b442f39df6213c7dbf6f5ba6ea1671ea0922a73332f2a42d99d124b2af37e8f\"}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/processos",
+    "request": {
+      "institutionalCode": "PS-RET-002-3",
+      "title": "Auditoria sintética 3",
+      "firstEdital": {
+        "number": "AUD-3",
+        "year": 2026,
+        "title": "Edital sintético 3"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"a89a7e93-77cf-4ccc-befc-9f90f39af10e\",\"institutionalCode\":\"PS-RET-002-3\",\"status\":\"EM_ELABORACAO\",\"revision\":1}"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/editais/b18e131f-9926-491c-8991-c32487ed7a11/rascunho",
+    "request": {
+      "profiles": [
+        {
+          "id": "00000000-0000-0000-0000-000000008431",
+          "code": "P1",
+          "name": "Perfil",
+          "immediateVacancies": 1,
+          "reserveType": "NONE",
+          "competitionModalities": [],
+          "classificationMilestones": [
+            {
+              "id": "9eb0f03e-803e-5fed-b804-525e82d0c8ad",
+              "code": "M1",
+              "name": "Sorteio público",
+              "orderProduction": "POR_SORTEIO",
+              "stages": [],
+              "operation": "SOMA_PONDERADA",
+              "normalization": "NENHUMA",
+              "rounding": {
+                "scale": 2,
+                "mode": "MEIO_PARA_CIMA"
+              },
+              "tiebreakers": [],
+              "drawMethod": {
+                "algorithm": "IFES-SORTEIO-SHA256-v1",
+                "source": "Fonte de demonstração",
+                "occurrence": "5900",
+                "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                "normalization": {
+                  "rule": "DIGITOS_EM_SEQUENCIA",
+                  "text": "os cinco números sorteados, na ordem dos prêmios"
+                },
+                "substitutionRule": {
+                  "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                  "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                }
+              },
+              "cutRule": {
+                "targetKind": "FIXED",
+                "targetCount": 1,
+                "surplusCount": 0,
+                "tieOutcome": "STRICT",
+                "governedStage": "NONE",
+                "continuation": "NONE"
+              }
+            }
+          ],
+          "callForm": "PUBLICATION"
+        }
+      ],
+      "schedule": [
+        {
+          "id": "00000000-0000-0000-0000-000000008432",
+          "type": "INSCRICAO",
+          "description": "Inscrições",
+          "startAt": "2026-10-27T14:30:49.796985+00:00",
+          "order": 1,
+          "endAt": "2026-11-07T14:30:49.796985+00:00",
+          "isRegistrationPeriod": true
+        },
+        {
+          "id": "cd2600ac-6b42-402c-9c53-d5494b8c426a",
+          "type": "SORTEIO",
+          "description": "Sorteio programado sintético",
+          "startAt": "2026-11-09T14:30:49.796985+00:00",
+          "order": 2
+        }
+      ]
+    },
+    "status": 200,
+    "response": "{\"id\":\"b18e131f-9926-491c-8991-c32487ed7a11\",\"processoId\":\"a89a7e93-77cf-4ccc-befc-9f90f39af10e\",\"status\":\"EM_ELABORACAO\",\"revision\":2}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/b18e131f-9926-491c-8991-c32487ed7a11/submissoes",
+    "request": {},
+    "status": 200,
+    "response": "{\"id\":\"b18e131f-9926-491c-8991-c32487ed7a11\",\"processoId\":\"a89a7e93-77cf-4ccc-befc-9f90f39af10e\",\"status\":\"EM_REVISAO\",\"revision\":3,\"validationFindings\":[{\"severity\":\"WARNING\",\"code\":\"description_missing\",\"message\":\"O Edital não possui descrição.\",\"path\":\"description\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Apresentação» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=75fac5c3-8a58-5ffb-9702-2e4b668ee6d8/content\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Disposições finais» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=f1d5f908-ad59-55f9-b8e8-afb54ee92cd6/content\"}]}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/b18e131f-9926-491c-8991-c32487ed7a11/homologacoes",
+    "request": {
+      "reason": "Conferência sintética"
+    },
+    "status": 200,
+    "response": "{\"id\":\"b18e131f-9926-491c-8991-c32487ed7a11\",\"processoId\":\"a89a7e93-77cf-4ccc-befc-9f90f39af10e\",\"status\":\"HOMOLOGADO\",\"revision\":4}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/b18e131f-9926-491c-8991-c32487ed7a11/publicacoes",
+    "request": {
+      "signatory": {
+        "authorityId": "ac7ee815-dba8-4ba6-b61b-f0c0d0c3608f"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"a3feda46-ab9c-464e-8e35-7ce28d377536\",\"editalId\":\"b18e131f-9926-491c-8991-c32487ed7a11\",\"publicationOrder\":1,\"publishedAt\":\"2026-10-28T11:30:50.773355-03:00\",\"effectiveAt\":\"2026-10-28T11:30:50.773355-03:00\",\"contentHash\":\"303f0179eb33972183111e719085e69943bf49dd4e1dd5a2c66fff4393bc7f60\",\"documentHash\":\"a3bb2b5bf7fe190f257e16d87e33f04a3ee2c4637d46879251113c2252ec5d4e\"}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/processos",
+    "request": {
+      "institutionalCode": "PS-RET-002-4",
+      "title": "Auditoria sintética 4",
+      "firstEdital": {
+        "number": "AUD-4",
+        "year": 2026,
+        "title": "Edital sintético 4"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"08ccae1c-6134-4bdb-b753-4bd7988ba452\",\"institutionalCode\":\"PS-RET-002-4\",\"status\":\"EM_ELABORACAO\",\"revision\":1}"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/editais/4d26624b-7e5d-4e3d-af34-f7a6b74ad910/rascunho",
+    "request": {
+      "profiles": [
+        {
+          "id": "00000000-0000-0000-0000-000000008441",
+          "code": "P1",
+          "name": "Perfil",
+          "immediateVacancies": 1,
+          "reserveType": "NONE",
+          "competitionModalities": [],
+          "classificationMilestones": [
+            {
+              "id": "97723e75-6bd4-5f07-b602-de773795ed08",
+              "code": "M1",
+              "name": "Sorteio público",
+              "orderProduction": "POR_SORTEIO",
+              "stages": [],
+              "operation": "SOMA_PONDERADA",
+              "normalization": "NENHUMA",
+              "rounding": {
+                "scale": 2,
+                "mode": "MEIO_PARA_CIMA"
+              },
+              "tiebreakers": [],
+              "drawMethod": {
+                "algorithm": "IFES-SORTEIO-SHA256-v1",
+                "source": "Fonte de demonstração",
+                "occurrence": "5900",
+                "occurrenceAt": "2020-01-01T20:00:00-03:00",
+                "derivation": "a extração de sábado imediatamente anterior à data publicada",
+                "normalization": {
+                  "rule": "DIGITOS_EM_SEQUENCIA",
+                  "text": "os cinco números sorteados, na ordem dos prêmios"
+                },
+                "substitutionRule": {
+                  "rule": "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE",
+                  "text": "não havendo extração na data, vale a extração seguinte da mesma fonte"
+                }
+              },
+              "cutRule": {
+                "targetKind": "FIXED",
+                "targetCount": 1,
+                "surplusCount": 0,
+                "tieOutcome": "STRICT",
+                "governedStage": "NONE",
+                "continuation": "NONE"
+              }
+            }
+          ],
+          "callForm": "PUBLICATION"
+        }
+      ],
+      "schedule": [
+        {
+          "id": "00000000-0000-0000-0000-000000008442",
+          "type": "INSCRICAO",
+          "description": "Inscrições",
+          "startAt": "2026-10-27T14:30:49.796985+00:00",
+          "order": 1,
+          "endAt": "2026-11-07T14:30:49.796985+00:00",
+          "isRegistrationPeriod": true
+        },
+        {
+          "id": "c3a3bc6e-af3c-4d06-a2b4-c4f17b0996a2",
+          "type": "SORTEIO",
+          "description": "Sorteio programado sintético",
+          "startAt": "2026-11-09T14:30:49.796985+00:00",
+          "order": 2
+        }
+      ]
+    },
+    "status": 200,
+    "response": "{\"id\":\"4d26624b-7e5d-4e3d-af34-f7a6b74ad910\",\"processoId\":\"08ccae1c-6134-4bdb-b753-4bd7988ba452\",\"status\":\"EM_ELABORACAO\",\"revision\":2}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/4d26624b-7e5d-4e3d-af34-f7a6b74ad910/submissoes",
+    "request": {},
+    "status": 200,
+    "response": "{\"id\":\"4d26624b-7e5d-4e3d-af34-f7a6b74ad910\",\"processoId\":\"08ccae1c-6134-4bdb-b753-4bd7988ba452\",\"status\":\"EM_REVISAO\",\"revision\":3,\"validationFindings\":[{\"severity\":\"WARNING\",\"code\":\"description_missing\",\"message\":\"O Edital não possui descrição.\",\"path\":\"description\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Apresentação» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=af93e86e-ed78-5f6c-b2e8-e8a5944d7423/content\"},{\"severity\":\"WARNING\",\"code\":\"section_universal_empty\",\"message\":\"A seção «Disposições finais» está vazia e não sairá no documento, e todos os Editais do Cefor a têm. Se este Edital a tem, transcreva-a na etapa Conteúdo.\",\"path\":\"/sections/id=c9a4bd9a-e91b-51dd-807c-008e391c9c33/content\"}]}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/4d26624b-7e5d-4e3d-af34-f7a6b74ad910/homologacoes",
+    "request": {
+      "reason": "Conferência sintética"
+    },
+    "status": 200,
+    "response": "{\"id\":\"4d26624b-7e5d-4e3d-af34-f7a6b74ad910\",\"processoId\":\"08ccae1c-6134-4bdb-b753-4bd7988ba452\",\"status\":\"HOMOLOGADO\",\"revision\":4}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/editais/4d26624b-7e5d-4e3d-af34-f7a6b74ad910/publicacoes",
+    "request": {
+      "signatory": {
+        "authorityId": "ac7ee815-dba8-4ba6-b61b-f0c0d0c3608f"
+      }
+    },
+    "status": 201,
+    "response": "{\"id\":\"8b7ee922-b875-4904-9a24-741457e105b3\",\"editalId\":\"4d26624b-7e5d-4e3d-af34-f7a6b74ad910\",\"publicationOrder\":1,\"publishedAt\":\"2026-10-28T11:30:51.017919-03:00\",\"effectiveAt\":\"2026-10-28T11:30:51.017919-03:00\",\"contentHash\":\"a1b8cb60d60c322207de86f8afb9c605be72dda31321e86f78071482f6350eb5\",\"documentHash\":\"68f9cb48cee650ed87317c87fd83bb3355ae888c2bc7bd50480eea13a17a107c\"}"
+  }
+]

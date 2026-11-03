@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambiente de demonstração — Gestão de Processos Seletivos · Cefor/Ifes</title>
+<link rel="stylesheet" href="/static/shared/tokens.css?v=239e9b1475d4">
+<link rel="stylesheet" href="/static/interface/grupos/acesso.css?v=bdbc26686f26">
+</head>
+<body>
+
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-seta" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-voltar" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-frasco" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.2 8.7A2 2 0 0 0 6.5 21h11a2 2 0 0 0 1.7-3.3L14 9V3"/><path d="M7.5 15h9"/></symbol>
+  <symbol id="i-usuarios" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M21 20c0-2.6-1.6-4.8-4-5.6"/></symbol>
+  <symbol id="i-camadas" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-documento" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-prancheta" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 12.5l2 2 4-4"/></symbol>
+  <symbol id="i-inscricao" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-balanca" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3.5 3.5 0 0 0 6 0zM19 7l-3 7a3.5 3.5 0 0 0 6 0z"/></symbol>
+  <symbol id="i-lista" viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/></symbol>
+  <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-externo" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-marca" viewBox="0 0 24 24"><path d="M5 7h14M5 12h10M5 17h6"/></symbol>
+</svg>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<div class="acesso">
+  <aside class="produto" aria-label="Sobre o sistema">
+    <a class="instituicao" href="/selecoes/">
+      <span class="simbolo"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-marca"/></svg></span>
+      <span>Cefor · Ifes<small>Instituto Federal do Espírito Santo</small></span>
+    </a>
+    <div class="tese">
+      <p class="sobretitulo">GPS · Gestão de Processos Seletivos</p>
+      <p class="manchete">Do edital ao resultado, a seleção inteira num só lugar.</p>
+      <p class="apresentacao">Uma plataforma para organizar editais, inscrições, avaliações,
+        resultados e todas as etapas de uma seleção.</p>
+      
+      <ol class="ciclo" aria-label="Etapas que o sistema conduz">
+        <li><span class="marco-do-ciclo"><svg class="i" aria-hidden="true"><use href="#i-documento"/></svg></span>Edital</li>
+        <li><span class="marco-do-ciclo"><svg class="i" aria-hidden="true"><use href="#i-inscricao"/></svg></span>Inscrições</li>
+        <li><span class="marco-do-ciclo"><svg class="i" aria-hidden="true"><use href="#i-prancheta"/></svg></span>Avaliação</li>
+        <li><span class="marco-do-ciclo"><svg class="i" aria-hidden="true"><use href="#i-balanca"/></svg></span>Recursos</li>
+        <li><span class="marco-do-ciclo"><svg class="i" aria-hidden="true"><use href="#i-lista"/></svg></span>Resultado</li>
+      </ol>
+    </div>
+    <p class="unidade">Centro de Referência em Formação e em Educação a Distância</p>
+  </aside>
+
+  <!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco (WCAG 2.4.1). -->
+  <main class="lado-do-acesso" id="conteudo" tabindex="-1">
+    <div class="topo-do-acesso">
+      <span class="selo-ambiente">Ambiente de demonstração</span>
+      <a href="/selecoes/">Portal público <svg class="i" aria-hidden="true"><use href="#i-externo"/></svg></a>
+    </div>
+    <div class="centro-do-acesso">
+      
+<div class="cartao-de-acesso largo">
+  <a class="voltar" href="/gestao/identificar"><svg class="i" aria-hidden="true"><use href="#i-voltar"/></svg>Voltar</a>
+  <h1>Ambiente de demonstração</h1>
+  <p class="chamada">Escolha com quem entrar. A identidade fica registrada na auditoria de cada ato
+    que você praticar.</p>
+
+  
+  
+
+  
+  
+
+  <section class="grupo-de-identidades" aria-labelledby="grupo-unidade" data-grupo-de-identidades>
+    <h2 id="grupo-unidade">Responsabilidades da unidade <span class="conta">8</span></h2>
+    <p>Cada entrada concede uma responsabilidade administrativa, com o nome de quem a exerceu neste
+      ambiente.</p>
+    <ul class="identidades-da-demonstracao">
+      
+      <li data-busca="Elaborador Redige Editais e Retificações e os envia para homologação. elaborador.sintetico">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="elaborador">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="elaborador.sintetico">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-inscricao"/></svg></span>
+            <span><span class="nome">Elaborador</span>
+              <span class="descricao">Redige Editais e Retificações e os envia para homologação.</span>
+              <span class="como">como elaborador.sintetico</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+      <li data-busca="Homologador Confere e homologa Editais e Retificações antes da publicação. homologador.sintetico">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="homologador">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="homologador.sintetico">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-escudo"/></svg></span>
+            <span><span class="nome">Homologador</span>
+              <span class="descricao">Confere e homologa Editais e Retificações antes da publicação.</span>
+              <span class="como">como homologador.sintetico</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+      <li data-busca="Publicador Publica Editais, Retificações e resultados, e avisa os candidatos. publicador.original">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="publicador">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="publicador.original">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-documento"/></svg></span>
+            <span><span class="nome">Publicador</span>
+              <span class="descricao">Publica Editais, Retificações e resultados, e avisa os candidatos.</span>
+              <span class="como">como publicador.original</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+      <li data-busca="Gestor Conduz os Processos da unidade: abre e encerra, constitui comissões, consulta inscrições e mantém as autoridades. gestor.sintetico">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="gestor">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="gestor.sintetico">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-camadas"/></svg></span>
+            <span><span class="nome">Gestor</span>
+              <span class="descricao">Conduz os Processos da unidade: abre e encerra, constitui comissões, consulta inscrições e mantém as autoridades.</span>
+              <span class="como">como gestor.sintetico</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+      <li data-busca="Julgador de recursos Julga os recursos interpostos pelos candidatos. demo.julgador">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="julgador">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="demo.julgador">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-balanca"/></svg></span>
+            <span><span class="nome">Julgador de recursos</span>
+              <span class="descricao">Julga os recursos interpostos pelos candidatos.</span>
+              <span class="como">como demo.julgador</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+      <li data-busca="Auditor Consulta a trilha de auditoria dos atos praticados. demo.auditor">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="auditor">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="demo.auditor">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-busca"/></svg></span>
+            <span><span class="nome">Auditor</span>
+              <span class="descricao">Consulta a trilha de auditoria dos atos praticados.</span>
+              <span class="como">como demo.auditor</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+      <li data-busca="Exportador de matrículas Exporta o arquivo de matrículas dos convocados. demo.exportador">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="exportador">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="demo.exportador">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-lista"/></svg></span>
+            <span><span class="nome">Exportador de matrículas</span>
+              <span class="descricao">Exporta o arquivo de matrículas dos convocados.</span>
+              <span class="como">como demo.exportador</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+      <li data-busca="Participante do piloto do assistente Participa do piloto do assistente do Edital. demo.participante-piloto-assistente">
+        <form method="post" action="/gestao/identificar">
+          <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+          
+          <input type="hidden" name="papeis" value="participante-piloto-assistente">
+          <button type="submit" class="identidade-da-demonstracao" name="identidade_sugerida" value="demo.participante-piloto-assistente">
+            <span class="avatar de-papel" aria-hidden="true"><svg class="i"><use href="#i-frasco"/></svg></span>
+            <span><span class="nome">Participante do piloto do assistente</span>
+              <span class="descricao">Participa do piloto do assistente do Edital.</span>
+              <span class="como">como demo.participante-piloto-assistente</span></span>
+            <span class="acessar">Acessar<svg class="i" aria-hidden="true"><use href="#i-seta"/></svg></span>
+          </button>
+        </form>
+      </li>
+      
+    </ul>
+  </section>
+
+  
+  <details class="avancado">
+    <summary><svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg>Opções avançadas de demonstração</summary>
+    <p class="explicacao-avancada">Entre com outro nome e escolha as responsabilidades. Presidência e
+      avaliação não estão aqui: vêm do vínculo com a comissão.</p>
+    <form method="post" action="/gestao/identificar">
+      <input type="hidden" name="csrfmiddlewaretoken" value="vp3xpGHWR1XSPqHOs4pJTYk0iaqtOegRbXDpOG7MKAOdY47GapKOwC3oNBuOpE3e">
+      
+      
+      <label class="rotulo" for="subject">Nome na auditoria</label>
+      <input type="text" id="subject" name="subject" autocomplete="off" spellcheck="false"
+             placeholder="nome.sobrenome">
+      <fieldset>
+        <legend>Responsabilidades</legend>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="elaborador">
+          <strong>Elaborador</strong>
+          <span>Redige Editais e Retificações e os envia para homologação.</span>
+        </label>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="homologador">
+          <strong>Homologador</strong>
+          <span>Confere e homologa Editais e Retificações antes da publicação.</span>
+        </label>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="publicador">
+          <strong>Publicador</strong>
+          <span>Publica Editais, Retificações e resultados, e avisa os candidatos.</span>
+        </label>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="gestor">
+          <strong>Gestor</strong>
+          <span>Conduz os Processos da unidade: abre e encerra, constitui comissões, consulta inscrições e mantém as autoridades.</span>
+        </label>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="julgador">
+          <strong>Julgador de recursos</strong>
+          <span>Julga os recursos interpostos pelos candidatos.</span>
+        </label>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="auditor">
+          <strong>Auditor</strong>
+          <span>Consulta a trilha de auditoria dos atos praticados.</span>
+        </label>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="exportador">
+          <strong>Exportador de matrículas</strong>
+          <span>Exporta o arquivo de matrículas dos convocados.</span>
+        </label>
+        
+        <label class="opcao-de-papel">
+          <input type="checkbox" name="papeis" value="participante-piloto-assistente">
+          <strong>Participante do piloto do assistente</strong>
+          <span>Participa do piloto do assistente do Edital.</span>
+        </label>
+        
+      </fieldset>
+      <button type="submit" class="enviar-combinacao">Entrar com esta combinação</button>
+    </form>
+  </details>
+</div>
+
+    </div>
+    <footer class="pe-do-acesso">
+      <span>Cefor/Ifes · Gestão de Processos Seletivos</span>
+      <span>Acesso restrito à equipe da unidade</span>
+    </footer>
+  </main>
+</div>
+
+</body>
+</html>

@@ -16,10 +16,9 @@ O domínio não pode ler o contrato em execução — ele vive em `specs/`, é a
 distribuído com o pacote —, e a declaração conferida é o mesmo arranjo que a `004` usa para as
 coleções com chave: o que é declarado e conferido falha alto quando diverge.
 
-**A linha entre aplicar e inventar.** O que o contrato escreve, aplica-se — faixa de valor e
-enumeração inclusive. O que ele não escreve, não se escreve aqui: coerência entre campos, como
-`reserveLimit` condicionado ao tipo de reserva ou `endAt` posterior a `startAt`, é decisão normativa
-que ninguém tomou.
+**A linha entre aplicar e inventar.** Faixas, enumerações e coerências entre campos precisam de
+regra normativa explícita. A ordem entre início e término concretiza a FR-017 da 001 e a correção
+autorizada na 101; igualdade e Eventos pontuais continuam permitidos (FR-2611).
 """
 
 import math
@@ -1585,6 +1584,7 @@ def validate_for_publication(
     findings.extend(_metodo_do_sorteio_publicavel(snapshot, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
+    findings.extend(_intervalos_dos_eventos(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
     findings.extend(_ano_dos_eventos(snapshot, ato=ato))
     findings.extend(_declaracao_do_requerimento(snapshot, ato=ato))
@@ -2486,6 +2486,26 @@ def _nome_do_evento(evento: dict) -> str:
         if isinstance(valor, str) and valor.strip():
             return valor.strip()
     return "sem descrição"
+
+
+def _intervalos_dos_eventos(snapshot: dict) -> list[ValidationFinding]:
+    # Texto ISO pode trocar de dia sem trocar de instante. Comparar datas conscientes preserva
+    # o fuso declarado e não inventa duração positiva para um sorteio pontual (101, FR-2611).
+    findings = []
+    for posicao, evento in _eventos_bem_formados(snapshot):
+        inicio = _instante(evento.get("startAt"))
+        termino = _instante(evento.get("endAt"))
+        if inicio is not None and termino is not None and termino < inicio:
+            findings.append(
+                ValidationFinding(
+                    Severity.BLOCKING_ERROR,
+                    "schedule_end_before_start",
+                    f"O Evento '{_nome_do_evento(evento)}' possui término anterior ao início. "
+                    "Informe um término igual ou posterior ao início.",
+                    f"{_caminho_da_entidade('schedule', evento, posicao)}/endAt",
+                )
+            )
+    return findings
 
 
 def _por_extenso(instante: datetime) -> str:

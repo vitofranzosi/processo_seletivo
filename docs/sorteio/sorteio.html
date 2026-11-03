@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Como funciona o sorteio no edital</title>
+<style>
+@page { size: A4; margin: 18mm 19mm 19mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 11pt/1.48 Arial, sans-serif; color: #233347; }
+section { break-after: page; }
+section:last-child { break-after: auto; }
+section:nth-of-type(n+10) { font-size: 10pt; line-height: 1.38; }
+section:nth-of-type(n+10) table { font-size: 9pt; }
+section:nth-of-type(n+10) th, section:nth-of-type(n+10) td { padding: 2mm; }
+h1 { font-size: 30pt; line-height: 1.12; color: #123c45; margin: 18mm 0 9mm; }
+h2 { font-size: 21pt; line-height: 1.2; color: #123c45; margin: 4mm 0 6mm; }
+h3 { font-size: 13pt; color: #123c45; margin: 5mm 0 2mm; }
+p { margin: 0 0 3.5mm; }
+li { margin: 0 0 2.5mm; }
+ul, ol { padding-left: 6mm; margin: 2mm 0 5mm; }
+.etiqueta { text-transform: uppercase; letter-spacing: 1.5px; font-size: 9pt; color: #54737a; }
+.caixa { background: #edf5f5; border-left: 4px solid #238080; padding: 4mm; margin: 5mm 0; }
+.pequeno { font-size: 9pt; color: #526274; }
+table { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 10pt; }
+th, td { text-align: left; padding: 2.5mm; border-bottom: 1px solid #ccd8df; }
+th { background: #edf5f5; }
+code { font-family: Consolas, monospace; font-size: 9pt; overflow-wrap: anywhere; }
+.fluxo { font-size: 14pt; line-height: 1.7; font-weight: bold; color: #123c45; }
+</style>
+<section>
+<p class="etiqueta">Cefor / Ifes · Guia de leitura · 27 de outubro de 2026</p>
+<h1>Como funciona<br>o sorteio no edital</h1>
+<p style="font-size:15pt">Passo a passo para candidatos, familiares e demais pessoas interessadas.</p>
+<div class="caixa"><strong>A ideia principal</strong><br>O sistema usa uma lista de participantes definida previamente e números de uma fonte pública prevista no edital para calcular a ordem dos candidatos. Quem opera o sistema não informa quem ficará em primeiro lugar.</div>
+<p>Este guia explica o funcionamento implementado no Sistema de Processos Seletivos e Editais do Cefor/Ifes. Como nenhum edital específico foi indicado, os exemplos são fictícios. As quantidades de vagas, as cotas, os prazos e os documentos de cada seleção devem ser consultados no edital correspondente e em suas retificações.</p>
+<p>O sorteio organiza uma fila. Estar nessa fila ou aparecer entre os primeiros colocados não comprova, por si só, que todos os documentos foram aprovados ou que a matrícula está garantida.</p>
+<h3>O caminho que vamos percorrer</h3>
+<p class="fluxo">Regras publicadas → inscrições encerradas → relação de participantes publicada → números da fonte pública → cálculo da ordem → publicação da classificação → etapas seguintes.</p>
+<h3>Como usar este guia</h3>
+<p>As páginas 2 a 6 explicam a preparação e a execução. As páginas 7 e 8 mostram como conferir o resultado e o que fazer diante de problemas. A página 9 reúne dúvidas e fontes. As páginas 10 a 14 detalham os campos da composição, a API da Caixa e o cálculo técnico.</p>
+<p class="pequeno">Documento explicativo. Não constitui edital, resultado oficial, convocação ou alteração de regra. Base: código e documentação locais, revisão 42871b42.</p>
+</section>
+<section>
+<p class="etiqueta">Passo 1 · Antes das inscrições e do sorteio</p>
+<h2>As regras precisam ser conhecidas antes</h2>
+<p>O edital informa como a seleção será conduzida. Quando uma parte da classificação ocorre por sorteio, o método precisa estar declarado. Essa declaração impede que o modo de calcular seja escolhido depois de conhecidos os números que influenciarão o resultado.</p>
+<h3>O que compõe o método</h3>
+<ul>
+<li><strong>Algoritmo:</strong> a receita de cálculo. O método implementado tratado aqui chama-se <code>IFES-SORTEIO-SHA256-v1</code>.</li>
+<li><strong>Fonte:</strong> o serviço ou acontecimento público de onde vêm os números. O sistema tem um adaptador para a Loteria Federal.</li>
+<li><strong>Ocorrência:</strong> qual concurso ou acontecimento específico será usado, com sua referência e previsão temporal. Dizer apenas “Loteria Federal” não identifica qual extração vale.</li>
+<li><strong>Normalização:</strong> a regra que transforma o material recebido da fonte no texto usado pelo cálculo.</li>
+<li><strong>Substituição:</strong> o que fazer se a ocorrência prevista estiver indisponível. A comissão segue a regra publicada; não escolhe livremente outra ocorrência.</li>
+<li><strong>Participação:</strong> se existe uma etapa anterior de habilitação que precisa ser superada para entrar no sorteio.</li>
+</ul>
+<h3>Três palavras úteis</h3>
+<p><strong>Perfil de Vaga</strong> é o conjunto específico de vagas em disputa, por exemplo, determinado curso em determinado polo. Pessoas de perfis diferentes não formam automaticamente uma fila única.</p>
+<p><strong>Lista de concorrência</strong> é a ampla concorrência ou uma modalidade reservada prevista no edital. Cada lista pode ter sua própria ordem.</p>
+<p><strong>Marco de classificação</strong> é um ponto previsto na seleção em que se produz uma ordem e se aplica a consequência correspondente, como definir quem avança.</p>
+<div class="caixa"><strong>Para o candidato:</strong> localize seu perfil, sua modalidade, o cronograma e o método do sorteio. Consulte também as retificações publicadas. Alterar conteúdo normativo publicado exige um ato formal; o texto anterior permanece no histórico.</div>
+</section>
+<section>
+<p class="etiqueta">Passo 2 · Definição dos participantes</p>
+<h2>Quem entra e como recebe um número</h2>
+<p>Depois de encerrado o período de inscrições, a comissão pode publicar a relação de participantes do sorteio. O sistema impede essa publicação enquanto as inscrições ainda estão em curso.</p>
+<p>A relação é formada a partir das inscrições <strong>submetidas</strong> do perfil correspondente. Preencher um rascunho sem concluir o envio não equivale a submeter uma inscrição.</p>
+<p>Se o método do edital exigir habilitação anterior, entram apenas as inscrições com resultado vigente favorável naquela etapa. Sem essa exigência, a relação não pressupõe que a análise documental já aconteceu.</p>
+<h3>Ampla concorrência e reserva de vagas</h3>
+<p>Na relação geral do perfil entram as inscrições abrangidas pelo critério, incluindo as de pessoas que declararam modalidade reservada. Na relação de uma modalidade reservada entram as inscrições que declararam aquela modalidade, respeitada eventual habilitação anterior.</p>
+<div class="caixa"><strong>Exemplo fictício:</strong> um perfil tem 10 inscritos, dos quais 3 declararam uma modalidade reservada. A relação geral tem 10 participantes; a relação daquela modalidade tem 3. Os 3 também integram a relação geral. As posições em uma lista não precisam coincidir com as posições na outra.</div>
+<h3>A numeração vem antes da ordem sorteada</h3>
+<p>Em cada relação, o sistema organiza os protocolos em ordem crescente e atribui números públicos de 1 até o total de participantes. Essa numeração segue uma regra automática; não é escolhida manualmente pela comissão.</p>
+<table><tr><th>Protocolo fictício</th><th>Participante</th><th>Número público</th></tr><tr><td>2026-0001</td><td>Ana</td><td>1</td></tr><tr><td>2026-0002</td><td>Bruno</td><td>2</td></tr><tr><td>2026-0003</td><td>Carla</td><td>3</td></tr></table>
+<p>Esses números identificam os participantes no cálculo. <strong>Receber o número 1 não significa ficar em primeiro no sorteio.</strong> Uma pessoa pode receber números públicos diferentes nas relações de que participa.</p>
+<p class="pequeno">A relação pública apresenta número, nome e protocolo, com o critério de participação. Ela não precisa divulgar CPF, documentos enviados ou outros dados privados para permitir a conferência.</p>
+</section>
+<section>
+<p class="etiqueta">Passos 3 e 4 · Compromisso e fonte pública</p>
+<h2>A lista é fixada antes dos números</h2>
+<p>Publicar a relação também a <strong>congela</strong>. Congelar significa preservar aquele conjunto de participantes e sua numeração como registro histórico. Não existe uma relação publicada que continue livremente editável.</p>
+<p>O sistema registra ainda qual versão do método governa aquela relação. Assim, tanto a lista quanto a receita ficam comprometidas antes da ocorrência usada como fonte do sorteio.</p>
+<h3>O que é o resumo de integridade</h3>
+<p>A relação recebe um código de 64 caracteres, chamado resumo ou <em>hash</em>. Pense nele como uma impressão digital digital do conteúdo público e de suas referências. Ele ajuda a detectar se o conteúdo conferido difere do que foi comprometido.</p>
+<p>Esse código não escolhe sozinho os vencedores nem prova que uma inscrição foi analisada corretamente. Sua função é amarrar o cálculo à relação publicada.</p>
+<h3>Por que a ordem dos acontecimentos importa</h3>
+<p>Se fosse possível escolher os participantes depois de conhecer os números da fonte, seria possível testar mudanças e observar seus efeitos. A proteção depende de fixar a relação antes e usar uma ocorrência posterior.</p>
+<div class="caixa"><strong>Cuidado de calendário:</strong> quando a fonte da Loteria Federal informa apenas a data da extração, o sistema considera o início daquele dia como o instante mais cedo possível. Para comprovar a antecedência, a relação precisa ter sido congelada antes desse dia. Não basta publicá-la algumas horas antes de um horário presumido da extração.</div>
+<h3>O sistema consulta a ocorrência declarada</h3>
+<p>Quem tem autorização aciona a observação da fonte. O sistema busca os números e registra o material recebido, a referência e os dados temporais disponíveis. <strong>Consultar a fonte ainda não realiza o sorteio.</strong> É a preparação da entrada que será usada no passo seguinte.</p>
+<p>Na integração da Loteria Federal, são usados os cinco números dos bilhetes premiados, na ordem do primeiro ao quinto prêmio. Valores monetários dos prêmios não substituem esses números.</p>
+</section>
+<section>
+<p class="etiqueta">Passo 5 · Como o cálculo produz a ordem</p>
+<h2>Dos números públicos à fila de candidatos</h2>
+<h3>1. O material da fonte vira a semente</h3>
+<p><strong>Semente</strong> é o nome dado à entrada obtida da fonte pública para alimentar o cálculo. Ela não é digitada livremente por quem realiza o sorteio; deriva da ocorrência e da regra já declaradas.</p>
+<p>Na regra <code>DIGITOS_EM_SEQUENCIA</code>, o sistema extrai os grupos de dígitos na ordem em que aparecem e os separa por um espaço. Os zeros iniciais dos grupos são preservados.</p>
+<div class="caixa"><strong>Exemplo inteiramente fictício:</strong><br>Bilhetes: 012345 · 067890 · 011223 · 044556 · 077889<br>Semente: <code>012345 067890 011223 044556 077889</code><br>Os espaços separam os cinco grupos. Eles não são juntados em um único número.</div>
+<h3>2. Cada participante recebe uma chave calculada</h3>
+<p>O sistema combina a semente, o número público da pessoa, o resumo da relação e a identidade do perfil/lista. Acrescenta também um identificador fixo da versão do procedimento.</p>
+<p>Essa combinação passa pela função <strong>SHA-256</strong>, que transforma a entrada em um código de tamanho fixo. Esse código é a chave do participante. Não é nota, avaliação de mérito ou pontuação de documentos.</p>
+<h3>3. As chaves são colocadas em ordem crescente</h3>
+<p>O sistema compara as chaves completas e as ordena da menor para a maior. A pessoa com a menor chave recebe a posição 1; a seguinte, a posição 2; e assim por diante, até todas receberem posição.</p>
+<p>Se duas chaves fossem exatamente iguais, a regra prevê primeiro o menor número público. Essa é uma regra de desempate do cálculo, sem decisão subjetiva da comissão.</p>
+<div class="caixa"><strong>O que torna o resultado conferível:</strong> com as mesmas entradas e a mesma receita, o resultado é sempre o mesmo. A incerteza vem da ocorrência pública futura. Depois que ela acontece, repetir a conferência reproduz a ordem; não gera uma nova chance.</div>
+</section>
+<section>
+<p class="etiqueta">Passos 6 e 7 · Resultado e consequências</p>
+<h2>Uma posição não é a matrícula</h2>
+<p>Ao realizar o sorteio, o sistema grava o ato, as posições de todos os participantes, a semente e as referências necessárias à verificação. O registro é feito em conjunto: não deve existir um ato concluído com apenas uma parte da ordem.</p>
+<h3>Exemplo de fila — apenas ilustrativo</h3>
+<p>Suponha que um perfil tenha cinco participantes e duas vagas. Imagine que o cálculo produza a ordem abaixo. Ela é uma ilustração de leitura, não o resultado calculado a partir dos bilhetes da página anterior.</p>
+<table><tr><th>Posição sorteada</th><th>Pessoa fictícia</th><th>Número público original</th></tr><tr><td>1ª</td><td>Carla</td><td>3</td></tr><tr><td>2ª</td><td>Ana</td><td>1</td></tr><tr><td>3ª</td><td>Elisa</td><td>5</td></tr><tr><td>4ª</td><td>Bruno</td><td>2</td></tr><tr><td>5ª</td><td>Daniel</td><td>4</td></tr></table>
+<p>Todos receberam posição, inclusive quem está além das duas vagas. A ordem completa permite aplicar as regras posteriores, como suplência e novas chamadas, quando cabíveis.</p>
+<h3>O que acontece depois</h3>
+<ol>
+<li><strong>Publicar a classificação:</strong> realizar o sorteio e publicar a classificação são atos distintos. A tela de realização informa que ainda falta publicar a classificação.</li>
+<li><strong>Aplicar o corte previsto:</strong> o edital define a faixa de posições que avança, podendo envolver vagas e suplentes. Essa faixa não precisa ser igual ao número de vagas.</li>
+<li><strong>Apurar a ocupação:</strong> o sistema aplica as regras das vagas e das listas. Quando uma pessoa ocupa pela ampla concorrência, essa ocupação é considerada para que ela não seja contada novamente como ocupante de vaga reservada na mesma apuração.</li>
+<li><strong>Conduzir as demais etapas:</strong> análise documental, recursos, convocação e matrícula seguem a sequência e os prazos do edital.</li>
+</ol>
+<p><strong>Nas cotas:</strong> cada lista é calculada separadamente. Estar bem colocado na ampla não exige estar na mesma posição na reservada. Vagas não ocupadas e eventual reversão dependem das regras e dos atos aplicáveis; não se deve presumir uma transferência automática.</p>
+</section>
+<section>
+<p class="etiqueta">Passo 8 · Conferência pelo público</p>
+<h2>Como acompanhar e verificar</h2>
+<h3>Conferência que qualquer candidato pode fazer</h3>
+<ol>
+<li><strong>Abra a página pública da seleção.</strong> Confirme o edital, o perfil e a lista. Pessoas com nomes semelhantes podem estar em seleções diferentes.</li>
+<li><strong>Confira a relação publicada.</strong> Procure seu nome e protocolo. Observe seu número público e o critério usado para formar aquela relação.</li>
+<li><strong>Confira a ocorrência.</strong> Veja qual concurso foi declarado e qual foi efetivamente usado. Se houve substituição, consulte o registro e o motivo.</li>
+<li><strong>Consulte a ordem e a classificação publicada.</strong> Veja a posição na lista correta e o que a publicação determina para aquela posição.</li>
+<li><strong>Abra “Verificar este sorteio”.</strong> A página mostra se a relação, o método, a semente, a ordem e o manifesto conferem, além de informar se o sorteio foi sucedido por outro.</li>
+<li><strong>Acompanhe as próximas publicações.</strong> Verificar o cálculo não substitui ler convocação, documentos exigidos, prazos de recurso e matrícula.</li>
+</ol>
+<h3>O que é o manifesto</h3>
+<p>É um arquivo de dados, no formato JSON, com as entradas e os resultados necessários para conferir o sorteio: referências da relação, método, semente, números públicos, chaves e posições. A página oferece seu download e o acesso à relação publicada.</p>
+<p>Quem tem apoio técnico pode baixar também o verificador independente em JavaScript e executar a conferência fora do sistema. A instrução da página inclui o resumo publicado do manifesto: esse valor permite comparar o arquivo recebido com o compromisso divulgado pela instituição.</p>
+<div class="caixa"><strong>Conferir o arquivo consigo mesmo é insuficiente.</strong> Para vincular a conferência ao que foi divulgado, é necessário comparar também o resumo publicado. Para refazer o resumo da relação, é preciso usar a relação pública e suas referências, além do manifesto.</div>
+<p>Uma verificação bem-sucedida mostra que o cálculo reproduz os registros comprometidos. Ela não decide, sozinha, se alguém deveria ter sido incluído, se uma autodeclaração é válida ou se um documento atende ao edital. Essas questões seguem os procedimentos da seleção.</p>
+</section>
+<section>
+<p class="etiqueta">Situações especiais · Imprevistos e correções</p>
+<h2>O que acontece se houver um problema</h2>
+<h3>A fonte pública não responde</h3>
+<p>Falha de conexão ou tempo esgotado não prova que a extração deixou de existir. Nesse caso, o sistema recusa a observação sem registrar uma ausência definitiva. O próximo passo é tentar consultar a mesma ocorrência novamente.</p>
+<h3>A ocorrência ainda não chegou</h3>
+<p>Antes do instante previsto, a falta de números pode significar apenas que eles ainda serão publicados. O sistema impede que essa ausência antecipada seja usada para descartar definitivamente a ocorrência.</p>
+<h3>A fonte respondeu, mas não há extração utilizável</h3>
+<p>A indisponibilidade precisa ficar registrada com evidência. A substituição segue a regra já publicada, dentro de seus limites. Se as possibilidades previstas se esgotarem, o sistema não inventa uma nova semente; é necessário tratar o impedimento pela via normativa pertinente.</p>
+<h3>Há erro na relação ou no sorteio</h3>
+<p>Uma relação publicada não é corrigida apagando ou editando suas linhas. A correção exige os atos cabíveis e uma relação sucessora, com motivo, mantendo a anterior consultável.</p>
+<p>Para suceder um sorteio anulado, o sistema exige uma nova relação e uma nova ocorrência, com encadeamento ao ato anterior e justificativa. O sorteio anterior permanece no histórico e pode continuar sendo verificado como registro do que aconteceu. A página informa que ele já não é o vigente.</p>
+<h3>Alguém clica duas vezes ou quer “sortear de novo”</h3>
+<p>O sistema protege o ato contra duplicidade. Reproduzir o cálculo para conferência é permitido; emitir sucessivos sorteios oficiais até obter um resultado desejado não é o funcionamento previsto.</p>
+<div class="caixa"><strong>Se você identificar uma divergência:</strong> anote o edital, o perfil, a lista, seu protocolo e a publicação envolvida. Guarde a referência ou o arquivo consultado e use o canal indicado pela seleção. Se houver prazo de recurso, respeite-o; este guia não cria nem amplia prazos.</div>
+<p class="pequeno">Uma simulação na composição usa participantes e semente fictícios, não produz atos oficiais e não antecipa o resultado real. O botão de gerar outra rodada nessa prévia não equivale a refazer um sorteio do certame.</p>
+</section>
+<section>
+<p class="etiqueta">Consulta rápida · Dúvidas e referências</p>
+<h2>Perguntas frequentes</h2>
+<p><strong>Quem se inscreve primeiro tem prioridade no sorteio?</strong><br>A ordem dos protocolos serve para atribuir números públicos. A classificação resulta das chaves calculadas; o menor protocolo não recebe automaticamente a primeira posição.</p>
+<p><strong>Preciso comprar um bilhete da loteria?</strong><br>Não. Os números públicos da extração são uma entrada de cálculo. A participação na seleção vem da inscrição e das condições do edital.</p>
+<p><strong>A comissão escolhe os números ou a minha posição?</strong><br>No fluxo oficial, a fonte e a ocorrência são previamente declaradas, a semente é derivada e a posição é calculada. A comissão autorizada pratica os atos, mas não informa manualmente a ordem.</p>
+<p><strong>Há sorteio se houver menos inscritos do que vagas?</strong><br>Na implementação consultada, um marco por sorteio produz ordem mesmo com menos participantes que vagas, inclusive com apenas um. Uma relação vazia é recusada. Se o texto de um edital condicionar o sorteio ao excesso de inscritos, essa diferença precisa ser tratada pela instituição; não se deve presumir que o sistema dispensará o ato.</p>
+<p><strong>Quem aparece na relação já está com documentos aprovados?</strong><br>Somente quando a participação depende de uma etapa anterior favorável. Em seleções com análise posterior, participar do sorteio não comprova aprovação documental.</p>
+<p><strong>Posso aparecer em duas listas?</strong><br>Sim. Uma inscrição de modalidade reservada também participa da relação geral, observados os critérios. Cada lista tem seu próprio cálculo e sua própria posição.</p>
+<h3>Fontes consultadas no repositório</h3>
+<p class="pequeno">Consulta em 27/10/2026, revisão 42871b42. Foram usados o contrato do algoritmo da especificação 021; as especificações 035 (sorteio executável) e 098 (prévia); e os módulos de relação, ocorrência, sorteio, projeção, normalização e verificação de <code>backend/processo_seletivo/sorteios/</code>.</p>
+<p class="pequeno">Também foram conferidos o adaptador <code>infrastructure/fontes/loteria_federal.py</code>, as telas <code>interface/templates/interface/sorteio.html</code> e <code>portal/templates/portal/verificacao_de_sorteio.html</code>, e o registro <code>doc/achado-sorteio-condicionado-no-texto-e-incondicional-no-sistema.md</code>.</p>
+<div class="caixa"><strong>O que guardar:</strong> seu protocolo, a identificação da seleção, a relação de participantes, a classificação e as convocações publicadas. Esses registros permitem acompanhar sua situação sem confundir posição sorteada com direito já confirmado à matrícula.</div>
+</section>
+<section>
+<p class="etiqueta">Complemento técnico · 1 de 5</p>
+<h2>Onde os dados são declarados</h2>
+<p>Os dados são inseridos <strong>durante a composição do rascunho do edital, no passo Classificação</strong>, antes da revisão e dos atos de aprovação e publicação. Quem elabora declara o método; quem conduz o sorteio posteriormente utiliza o método publicado.</p>
+<ol>
+<li>Acesse a composição do edital e entre no passo <strong>Classificação</strong>.</li>
+<li>Abra o bloco <strong>“Método do sorteio comum a este Edital”</strong>, localizado antes dos cartões de perfis. Preencha o método que deve valer para os marcos por sorteio que não possuam método próprio.</li>
+<li>No marco do perfil correspondente, escolha <strong>“Por sorteio”</strong> no campo <strong>“Como a ordem deste marco é produzida”</strong>.</li>
+<li>Se o marco utilizar o método comum, deixe os campos do seu método próprio em branco. Se precisar de método distinto, abra <strong>“Método do sorteio”</strong> dentro do marco e declare o método próprio completo. Não trate esse bloco como uma troca isolada de apenas um campo.</li>
+<li>Grave a composição e confira o conteúdo na revisão, incluindo fonte, concurso, instante, regras e textos publicados. O método passa a integrar o conteúdo normativo do edital.</li>
+</ol>
+<div class="caixa"><strong>Quando a consulta é feita?</strong> A composição registra qual ocorrência será usada no futuro. Ela não recupera, nesse momento, a semente oficial. Na condução do certame, após a publicação da relação e quando a ocorrência estiver disponível, o botão <strong>“Observar a ocorrência … na fonte”</strong> realiza a consulta. Depois, o ato de realizar o sorteio usa o material já registrado.</div>
+<h3>O que não é preenchido no edital</h3>
+<p>Não há campo para digitar a URL da Caixa, senha da API, token de acesso, números vencedores ou semente oficial. O endereço é definido pelo adaptador no código. A implementação atual faz uma requisição pública sem enviar credenciais de autenticação.</p>
+<p>A infraestrutura precisa permitir acesso HTTPS ao domínio da Caixa, com resolução de nomes e certificados válidos. Tempo limite e número de tentativas são configurações de operação do servidor, não cláusulas do formulário do edital.</p>
+<p class="pequeno">Referências da interface: compor_classificacao.html e _marco.html, em backend/processo_seletivo/interface/templates/interface/.</p>
+</section>
+<section>
+<p class="etiqueta">Complemento técnico · 2 de 5</p>
+<h2>Campos e valores a preencher</h2>
+<p>Os rótulos abaixo são os da interface. Os nomes entre parênteses identificam as propriedades do objeto técnico <code>drawMethod</code>. Os exemplos ensinam o formato; não indicam concurso ou data a adotar em uma seleção real.</p>
+<table>
+<tr><th>Campo da interface</th><th>Conteúdo e função</th></tr>
+<tr><td>Algoritmo e versão<br><code>algorithm</code></td><td>Selecionar <code>IFES-SORTEIO-SHA256-v1</code>. Define a receita de cálculo.</td></tr>
+<tr><td>Fonte pública externa da semente<br><code>source</code></td><td>Selecionar <strong>Loteria Federal</strong>. Esse nome seleciona o adaptador real da Caixa.</td></tr>
+<tr><td>Ocorrência que fixará a semente<br><code>occurrence</code></td><td>Informar somente o número do concurso, por exemplo <code>5900</code>. É o valor colocado no caminho da URL.</td></tr>
+<tr><td>Quando a ocorrência acontece<br><code>occurrenceAt</code></td><td>Instante com fuso, por exemplo <code>2026-11-20T20:00:00-03:00</code>. Pode ser obtido de um Evento do Cronograma quando a tela oferece essa opção. O exemplo não confirma calendário real.</td></tr>
+<tr><td>Como a ocorrência decorre da data programada<br><code>derivation</code></td><td>Explicar em português a relação entre o concurso escolhido e o cronograma. É texto normativo explicativo; o motor não interpreta essa frase para descobrir o concurso.</td></tr>
+<tr><td>Regra de normalização<br><code>normalization.rule</code></td><td>Para o fluxo descrito: <code>DIGITOS_EM_SEQUENCIA</code> — “Os dígitos do material, na ordem em que aparecem”.</td></tr>
+<tr><td>Como a regra de normalização será publicada<br><code>normalization.text</code></td><td>Explicar que os cinco números são usados na ordem dos prêmios, preservando os grupos de dígitos e separando-os por um espaço.</td></tr>
+<tr><td>Regra de substituição<br><code>substitutionRule.rule</code></td><td><code>OCORRENCIA_SEGUINTE_DA_MESMA_FONTE</code> — “A ocorrência seguinte da mesma fonte”.</td></tr>
+<tr><td>Como a regra de substituição será publicada<br><code>substitutionRule.text</code></td><td>Descrever a passagem ao concurso seguinte se a ocorrência for registrada como indisponível. A implementação limita a cadeia a cinco substitutas após a original.</td></tr>
+</table>
+<p class="pequeno"><strong>Atenção à referência:</strong> a ajuda do formulário admite “Concurso 5900” porque a substituição consegue incrementar seu número final. Contudo, o adaptador real insere a referência inteira na URL, sem extrair esse número. Para esta integração, use apenas os algarismos. Aceitar o formato no formulário não comprova que a Caixa reconhecerá a referência.</p>
+</section>
+<section>
+<p class="etiqueta">Complemento técnico · 3 de 5</p>
+<h2>URL, requisição e resposta da Caixa</h2>
+<h3>Endereço consultado pelo sistema</h3>
+<p><code>https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/{referencia}</code></p>
+<p>O marcador <code>{referencia}</code> é substituído pelo valor declarado em <code>occurrence</code>, ou pela substituta determinada pela regra. Para a referência ilustrativa 5900:</p>
+<p><a href="https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/5900"><code>https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/5900</code></a></p>
+<p>A chamada é <strong>HTTP GET, sobre HTTPS</strong>, sem corpo de requisição e sem chave de API ou cabeçalho de autenticação acrescentado pelo adaptador. O número do concurso é um parâmetro do caminho, não uma busca por data. O sistema não consulta simplesmente “o último resultado”.</p>
+<h3>Endereço para consulta por uma pessoa</h3>
+<p><a href="https://loterias.caixa.gov.br/Paginas/Federal.aspx"><code>https://loterias.caixa.gov.br/Paginas/Federal.aspx</code></a></p>
+<p>No portal da Caixa, a seção de resultados oferece busca por concurso. Essa página é a interface de consulta humana; a aplicação usa o endereço JSON acima.</p>
+<h3>Quais campos da resposta são utilizados</h3>
+<p>O adaptador decodifica a resposta JSON e lê <code>listaDezenas</code>, com os números dos bilhetes na ordem dos prêmios. Usa também <code>dataApuracao</code> ou, na ausência dela, <code>data</code>, para estabelecer a referência temporal da ocorrência.</p>
+<p>Exemplo de fragmento <strong>fictício</strong> da resposta esperada:</p>
+<div class="caixa"><code>{"listaDezenas":["012345","067890","011223","044556","077889"],"dataApuracao":"20/11/2026"}</code></div>
+<p>Os grupos são unidos por espaços para formar o material bruto. A regra publicada o transforma na semente. O adaptador preserva a grafia recebida; não acrescenta zeros para completar um tamanho de bilhete. A data não é incluída na semente pelo método descrito.</p>
+<p class="pequeno">A página pública foi consultada em 27/10/2026. A URL da API foi confirmada no código do projeto; a ferramenta de consulta web não conseguiu abrir o exemplo JSON nesta elaboração. Isso não comprova indisponibilidade do serviço nem valida sua resposta ao vivo. O formato acima descreve o que o adaptador espera ler.</p>
+</section>
+<section>
+<p class="etiqueta">Complemento técnico · 4 de 5</p>
+<h2>O percurso técnico da execução</h2>
+<ol>
+<li><strong>Autorização:</strong> o backend verifica o vínculo e a permissão do ator sobre o Processo. A autorização também é conferida dentro do comando transacional que grava o registro.</li>
+<li><strong>Escolha da referência:</strong> a tela lê o método publicado e deriva a próxima ocorrência admissível. O formulário de observação não permite escolher livremente fonte ou concurso.</li>
+<li><strong>Leitura HTTP:</strong> o adaptador LoteriaFederal consulta a URL e interpreta o JSON. A chamada de rede ocorre fora da transação de escrita, evitando manter uma transação aberta enquanto aguarda a Caixa.</li>
+<li><strong>Registro da ocorrência:</strong> são preservados fonte, referência, material bruto, limite temporal informado pela fonte, instante de observação e autoria. Observar outra vez uma ocorrência já registrada devolve o mesmo registro.</li>
+<li><strong>Constituição do sorteio:</strong> outro comando lê a relação congelada, a ocorrência registrada e a versão de método comprometida. Nesse passo não há nova chamada à Caixa.</li>
+<li><strong>Validações:</strong> o sistema confere método, fonte, referência admissível, antecedência do congelamento e ausência de duplicidade. Então normaliza o material, calcula as chaves e ordena.</li>
+<li><strong>Gravação atômica:</strong> o ato, as posições e o registro do sorteio são constituídos na mesma transação. Ficam registrados semente, autoria, instante e resumo do manifesto, com trilha de auditoria.</li>
+</ol>
+<h3>Parâmetros operacionais do servidor</h3>
+<p><code>SORTEIO_FONTE_TIMEOUT_SEGUNDOS</code> tem valor padrão <strong>10</strong>; <code>SORTEIO_FONTE_TENTATIVAS</code>, padrão <strong>3</strong>. Esses valores vêm das configurações de ambiente. Não são preenchidos pelo elaborador e não mudam a fonte normativa do edital.</p>
+<p>Falha de acesso gera recusa sem registrar indisponibilidade definitiva. Uma resposta da fonte sem material utilizável pode gerar registro de indisponibilidade com evidência, respeitada a guarda temporal antes da ocorrência. Só esse fato registrado permite avançar na cadeia de substituição.</p>
+<div class="caixa"><strong>Dois tempos diferentes:</strong> “quando consultamos a Caixa” não equivale a “quando a extração aconteceu”. Para provar que a lista já estava fixada, o sistema compara o congelamento com o limite temporal da extração, não apenas com a hora da consulta.</div>
+</section>
+<section>
+<p class="etiqueta">Complemento técnico · 5 de 5</p>
+<h2>Como reproduzir matematicamente a ordem</h2>
+<p>Para cada número público, a versão <code>IFES-SORTEIO-SHA256-v1</code> monta um objeto com exatamente cinco propriedades:</p>
+<table><tr><th>Propriedade</th><th>Valor</th></tr>
+<tr><td><code>domain</code></td><td>Literal <code>processo-seletivo/sorteio/v1</code>.</td></tr>
+<tr><td><code>drawScopeId</code></td><td>Identificador do perfil; para lista específica, <code>perfilId:listaId</code>.</td></tr>
+<tr><td><code>publicNumber</code></td><td>Número inteiro do participante na relação.</td></tr>
+<tr><td><code>relationHash</code></td><td>Resumo SHA-256 da projeção pública canônica da relação, incluindo referências, critério, método e participantes.</td></tr>
+<tr><td><code>seed</code></td><td>Semente obtida pela normalização do material da ocorrência.</td></tr></table>
+<p>O objeto é convertido em JSON com chaves ordenadas alfabeticamente, sem espaços entre elementos, sem escapar caracteres não ASCII. O texto é normalizado em Unicode NFC e codificado em UTF-8. Calcula-se <code>SHA256(bytes_canônicos)</code>, representado por 64 caracteres hexadecimais minúsculos.</p>
+<p>Os participantes são ordenados pelo par <code>(chave_completa, número_público)</code>, em ordem crescente. As posições são atribuídas de 1 a N. Não há seleção de índices por resto de divisão, sorteio sucessivo de nomes ou truncamento pelo total de vagas.</p>
+<h3>Exemplo conferível do próprio repositório</h3>
+<p>O vetor de teste <code>tres-participantes.json</code> usa <code>drawScopeId = 9f1c2d3e-perfil</code>, semente <code>0 4 8 1 5</code> e resumo da relação:</p>
+<p><code>bc5c4f69423e93bda3144528b5133911a2ddae49155bc233e2d05662cfc67410</code></p>
+<table><tr><th>Número público</th><th>Início da chave calculada*</th><th>Posição</th></tr><tr><td>1</td><td><code>0b5ac684fb3c…</code></td><td>1ª</td></tr><tr><td>2</td><td><code>9c4c64f89a7a…</code></td><td>3ª</td></tr><tr><td>3</td><td><code>0bf6bff40979…</code></td><td>2ª</td></tr></table>
+<p class="pequeno">* Chaves abreviadas somente para leitura. A comparação real usa todos os 64 caracteres. Esse vetor é uma entrada técnica de teste; sua semente não representa uma extração real da Caixa. Ordem esperada: 1, 3, 2.</p>
+<p class="pequeno">Referências adicionais: sorteios/domain/chave.py, normalizacao.py, substituicao.py; sorteios/application/ocorrencia.py e sorteio.py; sorteios/infrastructure/fontes/loteria_federal.py; config/settings/base.py; specs/021-sorteio-publico-auditavel/contracts/algoritmo-sorteio.md; backend/tests/contract/fixtures/sorteio/tres-participantes.json. URLs externas consultadas ou identificadas na página 12.</p>
+</section>
+</html>

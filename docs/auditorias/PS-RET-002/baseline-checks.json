@@ -1,0 +1,29 @@
+[
+  {
+    "arquivo": "backend/processo_seletivo/processos/models.py",
+    "igual_ao_HEAD": true,
+    "hash_HEAD": "986221cc756951b2bf25176472e0c3925b13479eaa18e00dc0c60645c2552295",
+    "lint_HEAD_exit": 1,
+    "lint_HEAD": "E501 Line too long (102 > 100)\n  --> backend\\processo_seletivo\\processos\\models.py:30:101\n   |\n28 |             ),\n29 |             # O par sustenta a FK composta do Edital: escopo não pode divergir do Processo.\n30 |             models.UniqueConstraint(fields=[\"id\", \"institution_scope\"], name=\"uq_processo_id_escopo\"),\n   |                                                                                                     ^^\n31 |             models.CheckConstraint(\n32 |                 condition=models.Q(status__in=[\"EM_ELABORACAO\", \"ATIVO\", \"ENCERRADO\", \"CANCELADO\"]),\n   |\n\nFound 1 error.\n",
+    "format_HEAD_exit": 1,
+    "format_HEAD": ""
+  },
+  {
+    "arquivo": "backend/processo_seletivo/comissoes/models.py",
+    "igual_ao_HEAD": true,
+    "hash_HEAD": "febd1f8fb6190c0b58ccfefc4f08428920a88a7b1b138d40ccf4595820522a4b",
+    "lint_HEAD_exit": 0,
+    "lint_HEAD": "All checks passed!\n",
+    "format_HEAD_exit": 1,
+    "format_HEAD": ""
+  },
+  {
+    "arquivo": "backend/processo_seletivo/editais/models/perfis.py",
+    "igual_ao_HEAD": true,
+    "hash_HEAD": "8672c9d53799b17daca18ab4f04e36f2222beac8af14ed259f978f4f41901d2b",
+    "lint_HEAD_exit": 0,
+    "lint_HEAD": "All checks passed!\n",
+    "format_HEAD_exit": 1,
+    "format_HEAD": ""
+  }
+]

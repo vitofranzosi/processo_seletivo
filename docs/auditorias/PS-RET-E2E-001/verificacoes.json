@@ -1,0 +1,2781 @@
+{
+  "checks": [
+    {
+      "name": "c1-api-alterou",
+      "passed": true,
+      "detail": {
+        "before": [
+          {
+            "id": "00000000-0000-0000-0000-000000008412",
+            "type": "INSCRICAO",
+            "endAt": "2026-11-07T12:45:38.120272+00:00",
+            "order": 1,
+            "status": "PLANEJADO",
+            "startAt": "2026-10-27T12:45:38.120272+00:00",
+            "location": "",
+            "description": "InscriÃ§Ãµes",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "1c5be898-e95e-4973-8be0-731b0ec317b9",
+            "type": "SORTEIO",
+            "endAt": null,
+            "order": 2,
+            "status": "PLANEJADO",
+            "startAt": "2026-11-09T12:45:38.120272+00:00",
+            "location": "",
+            "description": "Sorteio programado sintÃ©tico",
+            "isRegistrationPeriod": false
+          }
+        ],
+        "after": [
+          {
+            "id": "00000000-0000-0000-0000-000000008412",
+            "type": "INSCRICAO",
+            "endAt": "2026-11-13T01:37:00+00:00",
+            "order": 1,
+            "status": "PLANEJADO",
+            "startAt": "2026-10-27T12:45:38.120272+00:00",
+            "location": "",
+            "description": "InscriÃ§Ãµes",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "1c5be898-e95e-4973-8be0-731b0ec317b9",
+            "type": "SORTEIO",
+            "endAt": null,
+            "order": 2,
+            "status": "PLANEJADO",
+            "startAt": "2026-11-14T17:23:00+00:00",
+            "location": "",
+            "description": "Sorteio programado sintÃ©tico",
+            "isRegistrationPeriod": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "c2-api-alterou",
+      "passed": true,
+      "detail": {
+        "before": [
+          {
+            "id": "00000000-0000-0000-0000-000000008422",
+            "type": "INSCRICAO",
+            "endAt": "2026-11-07T12:46:08.179939+00:00",
+            "order": 1,
+            "status": "PLANEJADO",
+            "startAt": "2026-10-27T12:46:08.179939+00:00",
+            "location": "",
+            "description": "InscriÃ§Ãµes",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "7daf188f-80d9-4821-8b98-eb9446742307",
+            "type": "SORTEIO",
+            "endAt": null,
+            "order": 2,
+            "status": "PLANEJADO",
+            "startAt": "2026-11-09T12:46:08.179939+00:00",
+            "location": "",
+            "description": "Sorteio programado sintÃ©tico",
+            "isRegistrationPeriod": false
+          }
+        ],
+        "after": [
+          {
+            "id": "00000000-0000-0000-0000-000000008422",
+            "type": "INSCRICAO",
+            "endAt": "2026-11-07T12:46:08.179939+00:00",
+            "order": 1,
+            "status": "PLANEJADO",
+            "startAt": "2026-10-27T12:46:08.179939+00:00",
+            "location": "",
+            "description": "InscriÃ§Ãµes",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "7daf188f-80d9-4821-8b98-eb9446742307",
+            "type": "SORTEIO",
+            "endAt": null,
+            "order": 2,
+            "status": "PLANEJADO",
+            "startAt": "2026-11-09T12:46:08.179939+00:00",
+            "location": "",
+            "description": "Sorteio programado sintÃ©tico",
+            "isRegistrationPeriod": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "c3-api-alterou",
+      "passed": true,
+      "detail": {
+        "before": [
+          {
+            "id": "00000000-0000-0000-0000-000000008432",
+            "type": "INSCRICAO",
+            "endAt": "2026-11-07T12:46:08.179939+00:00",
+            "order": 1,
+            "status": "PLANEJADO",
+            "startAt": "2026-10-27T12:46:08.179939+00:00",
+            "location": "",
+            "description": "InscriÃ§Ãµes",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "1be6c974-56bf-4a15-9d96-100c2e895c5e",
+            "type": "SORTEIO",
+            "endAt": null,
+            "order": 2,
+            "status": "PLANEJADO",
+            "startAt": "2026-11-09T12:46:08.179939+00:00",
+            "location": "",
+            "description": "Sorteio programado sintÃ©tico",
+            "isRegistrationPeriod": false
+          }
+        ],
+        "after": [
+          {
+            "id": "00000000-0000-0000-0000-000000008432",
+            "type": "INSCRICAO",
+            "endAt": "2026-11-07T12:46:08.179939+00:00",
+            "order": 1,
+            "status": "PLANEJADO",
+            "startAt": "2026-10-27T12:46:08.179939+00:00",
+            "location": "",
+            "description": "InscriÃ§Ãµes",
+            "isRegistrationPeriod": true
+          },
+          {
+            "id": "1be6c974-56bf-4a15-9d96-100c2e895c5e",
+            "type": "SORTEIO",
+            "endAt": null,
+            "order": 2,
+            "status": "PLANEJADO",
+            "startAt": "2026-11-09T12:46:08.179939+00:00",
+            "location": "",
+            "description": "Sorteio programado sintÃ©tico",
+            "isRegistrationPeriod": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "original-preservado-807c8b81-5fd4-457d-93ff-2c70f1aefcb4",
+      "passed": true,
+      "detail": "ae76658e1ce834d259a7b79e1ca9c9897a9e5c13ca14debdec22bf1196034ec7"
+    },
+    {
+      "name": "original-preservado-f3ffc59e-8561-4ba2-9356-244ac1d04136",
+      "passed": true,
+      "detail": "05882f0870d2c33950c7faa109d7e9b0c604f1982d0e750ddf349e0649346618"
+    },
+    {
+      "name": "original-preservado-3a695f24-156b-4efa-b79f-65f369d63a20",
+      "passed": true,
+      "detail": "08c01ebbd72680b78795b714345ea6de95ad100ffe171309da0e557a571048e1"
+    },
+    {
+      "name": "original-preservado-eab064b8-ee7e-42b5-9343-915bfe3036c5",
+      "passed": true,
+      "detail": "46de9df6d560a92778f4902886137f68fed3be403a967c5bab68ea74871526bf"
+    },
+    {
+      "name": "sem-duplicacao",
+      "passed": true,
+      "detail": {
+        "publicacoes": 7,
+        "esperadas": 7
+      }
+    },
+    {
+      "name": "append-only-runtime",
+      "passed": true,
+      "detail": [
+        {
+          "tablename": "auditoria_registroauditoria",
+          "atualiza": false,
+          "exclui": false
+        },
+        {
+          "tablename": "publicacoes_publicacao",
+          "atualiza": false,
+          "exclui": false
+        },
+        {
+          "tablename": "publicacoes_versaoconsolidada",
+          "atualiza": false,
+          "exclui": false
+        }
+      ]
+    },
+    {
+      "name": "base-futura-comprovada",
+      "passed": true,
+      "detail": {
+        "base": {
+          "base": "c3986324-4cb3-4099-ab2d-5f232f30e2a3",
+          "dates": [
+            {
+              "name": "campo:g4c14",
+              "value": "2020-01-01T20:00"
+            },
+            {
+              "name": "campo:g5c2",
+              "value": "2026-10-27T09:46"
+            },
+            {
+              "name": "campo:g5c3",
+              "value": "2026-11-12T22:37"
+            },
+            {
+              "name": "campo:g6c2",
+              "value": "2026-11-14T14:23"
+            },
+            {
+              "name": "campo:g6c3",
+              "value": ""
+            },
+            {
+              "name": "vigencia",
+              "value": ""
+            }
+          ]
+        },
+        "valid_from": "2026-10-30 15:00:00+00:00"
+      }
+    },
+    {
+      "name": "portal-sem-autorizacao-ou-cookie-1",
+      "passed": true,
+      "detail": {
+        "requestHeaders": {
+          "Host": "127.0.0.1:8017",
+          "User-agent": "Python-urllib/3.13"
+        },
+        "status": 200,
+        "sha256": "7e9cd05041ffaca1cecc0bda3088a476c1d88e811fa0612e61c395cc3add505e"
+      }
+    },
+    {
+      "name": "portal-sem-autorizacao-ou-cookie-2",
+      "passed": true,
+      "detail": {
+        "requestHeaders": {
+          "Host": "127.0.0.1:8017",
+          "User-agent": "Python-urllib/3.13"
+        },
+        "status": 200,
+        "sha256": "5df80a741442445cdd3eb9082dad1f6565143e8dcbc487f240f08490b7ccf609"
+      }
+    },
+    {
+      "name": "portal-sem-autorizacao-ou-cookie-3",
+      "passed": true,
+      "detail": {
+        "requestHeaders": {
+          "Host": "127.0.0.1:8017",
+          "User-agent": "Python-urllib/3.13"
+        },
+        "status": 200,
+        "sha256": "3f8113a8586d5be4543124ad6db86229e358243b13120dedb77038ecb21d0d8f"
+      }
+    },
+    {
+      "name": "portal-sem-autorizacao-ou-cookie-4",
+      "passed": true,
+      "detail": {
+        "requestHeaders": {
+          "Host": "127.0.0.1:8017",
+          "User-agent": "Python-urllib/3.13"
+        },
+        "status": 200,
+        "sha256": "075e5c0ef76887ee0c4bd9a09b95b9b2d726ee6b2c5f249000837bee8fe88d93"
+      }
+    }
+  ],
+  "formRequests": [
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=3LYV8AKWN6L9rgqJb4LCssSCYQ1p0h8mJjyNxAaMGFCuAUQBTp6H56B0th5KBHVJ&subject=elaborador.sintetico&papeis=elaborador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\nIOgBu9BFc1UHpeB29d6YC2ahNdR7lUbxomQtT91v5AL2yS1URyr3fGTFiEVsWkYU\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-6447f9e23a1049f18cb0525b2265cd00\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\n8c9e808f-5d5a-4fa0-bdb9-f1fdcae6811b\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 1\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:45\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 1: prazo e sorteio\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n\r\n------WebKitFormBoundary75wKCjpKhSBY3lJp--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\nUfGdPZVhNAoVbf75dC8Sg15Tno7JUkU3ANg5eZl7G9fgkTxXVXtXTFOhSPb4vKHq\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-6447f9e23a1049f18cb0525b2265cd00\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\n8c9e808f-5d5a-4fa0-bdb9-f1fdcae6811b\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 1\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:45\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 1: prazo e sorteio\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN\r\nContent-Disposition: form-data; name=\"confirmar\"\r\n\r\n1\r\n------WebKitFormBoundarydCwZVAKVhCDB6wlN--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/atos/submeter",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=zlcNsQ2AqjV7gaxJPvwshFaQFihZQqgqfTMFRQsqjSMspOXBxQRxUjTeaJlkrQ3N&chave_idempotencia=ui-8604bd5a51964f0785913fc1156b10c4"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=HmJz5YvoTRtir63CzvKUjuhexrKNrEYynUjruYVeMqkDAKtuhQ5ZW80C2SO824LV&subject=homologador.sintetico&papeis=homologador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/atos/homologar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=2DORuizuJiddomxEgO233b5LeaIGZKVuIboJTiZkCR4yx0XwY9n8GPO9JBM1AaIR&chave_idempotencia=ui-64474ba529ca44f4bd5a3fe77cd1639c&motivo=Fundamento+sint%C3%A9tico+PS-RET-E2E-001"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=wRZbNRmxWiJPCgWL03rbFziGkYekSh4Fcpz3cRMnPRAaLUmDIoMgid14PpiFtHR2&subject=publicador.sintetico&papeis=publicador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/atos/publicar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=SU4YzxH0I5hUa7axfQYZZbR0BT7cAO0KysEQYx7QBE8fjLApXbj4CPAo6kbxbeN7&chave_idempotencia=ui-b1728c5cd81d4080b4ad4c8c876d1880&signatario=a3a6aeb0-03f3-4a31-b1fe-b8e4550964e7"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=jJWl6mBopnYMsxAMIDqRAohsmOPrKL0vZhwdvm1eiWP7Bb0EqYLWd20QRfTMlbNS&subject=elaborador.sintetico&papeis=elaborador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/f3ffc59e-8561-4ba2-9356-244ac1d04136/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\nYGRK4iqMBgwyUxxM3GgW3V3OMYZm3JTEEerCtiQCuPnT3bXEL1B1GzMchp3HE9G1\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-6654270817f84163a0ad2229cbd5b0a1\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\nb3fe64ab-61a8-4ef5-a568-67ef5161b738\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 2\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:46\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 2: prazo e sorteio\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n2026-10-30T12:00\r\n------WebKitFormBoundarydzNBDBqQ9VTqJVFe--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/f3ffc59e-8561-4ba2-9356-244ac1d04136/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\nTanhzwnOlY08tmdlUJkscvK5Evub2mjczIX9YwNEexRtC0DdC4FxP9tt9WywDM6z\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-6654270817f84163a0ad2229cbd5b0a1\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\nb3fe64ab-61a8-4ef5-a568-67ef5161b738\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 2\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:46\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 2: prazo e sorteio\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n2026-10-30T12:00\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb\r\nContent-Disposition: form-data; name=\"confirmar\"\r\n\r\n1\r\n------WebKitFormBoundaryG4bH0ayID2AC00Bb--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/atos/submeter",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=2tRWeAEuLaW2CtryPjaE3Cqoq6uTYxalI1rODA4kEJNnL7RqxEvJGg9MVxyezXXI&chave_idempotencia=ui-9ea22038956749fd8eed62aaec0d0db3"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=UU0EFurZT6ExRWo9ezViLJhFaJ9xTuXeAsAw4uRPMFvS0AO1WUgnon03FadSuUKB&subject=homologador.sintetico&papeis=homologador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/atos/homologar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=euzJ9Mxg793isToJb0MVXDcs7DP8jefYU29ByMX60IUDBxOBTl70AhVQC4TtUE2l&chave_idempotencia=ui-01155387497a447282c491a35071185d&motivo=Fundamento+sint%C3%A9tico+PS-RET-E2E-001"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=r7zSZ13Ry9Br2xTF4vfetrqoHKDiPx517F9Ko1tHrIsMbbjxMQAj659McbHDqXSo&subject=publicador.sintetico&papeis=publicador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/atos/publicar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=PaCtCRURujwxuLz5pN9TBydVwO0LgvuMvIcl1RkHnSnSDpZX78uYecWj1f46RVh9&chave_idempotencia=ui-9a531b0aebed4e1d9c90db29810a35ab&signatario=a3a6aeb0-03f3-4a31-b1fe-b8e4550964e7"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=1qoT2PGblonU9JRuRoHO8Nvw3m250EobHYYLrP61eXefinhmzJ2TLreUyN6qB4by&subject=elaborador.sintetico&papeis=elaborador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\njMtVErz7wFiIpfQF5fb0HMSseidtQCUtZk3N3rZXpe93yTgxNAw5kqBQJJhOr2HQ\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-3f41b2aed07d4c4ab7dac17957a401fc\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\n75708be8-2655-4ae3-b507-d814a0b4c539\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 3\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:46\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 3: prazo e sorteio\r\n------WebKitFormBoundarynF1QsmLIDWidygNV\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n2026-01-01T12:00\r\n------WebKitFormBoundarynF1QsmLIDWidygNV--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\ncFTx9i5DHQgmATXCfQio3nXqLda5s6N4SdtpyivtAp7HJxnuXbDtG1GOgEeq3wAr\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-3f41b2aed07d4c4ab7dac17957a401fc\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\n75708be8-2655-4ae3-b507-d814a0b4c539\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 3\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:46\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 3: prazo e sorteio\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n2026-01-01T12:00\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB\r\nContent-Disposition: form-data; name=\"confirmar\"\r\n\r\n1\r\n------WebKitFormBoundaryw6ksPVffrQdYypeB--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/atos/submeter",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=8LJ9u3B9l6RIO1uHoe9ii5YBeWKUnk9OOjj1T31ZeFI3XFUz6zunVJHZJnOfYKWb&chave_idempotencia=ui-b0f8b4c8564a40cf9025ae5a3d3a6538"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=P8jWPrclf8h01ko5qXKBGm9BV2NDhLkRvGTOerCb8H8laYOX8i5Gj0SZqtRYSb7e&subject=homologador.sintetico&papeis=homologador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/atos/homologar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=RatmeTDuOpd9IWGmwalVz4deKNNPjAkTxI3eDT3kHY4uRA6eevG0cIWCfeRaU07g&chave_idempotencia=ui-56a910ba683b4c648c2a5bd01fecb571&motivo=Fundamento+sint%C3%A9tico+PS-RET-E2E-001"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=auPrqe7CBvckf9xCf3nkT1v1folfizpDQ2pjPexsu43FoNXuXoIpwFepKPpATZc0&subject=publicador.sintetico&papeis=publicador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/atos/publicar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=mKuk88ulQXYYASQDyEN7livAgpKTQyKW2i4cx8UbJwPjJwgvgZ8cYWeYLQOerYxj&chave_idempotencia=ui-6d99f4131b7e4dac8bcb69083f15def5&signatario=a3a6aeb0-03f3-4a31-b1fe-b8e4550964e7"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=LvSXjn0VYb7OapEjm2rreMPSsj6HInSnr3sPInqLRKY9j34b4nMwRqygXKa2jNFK&subject=elaborador.sintetico&papeis=elaborador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/eab064b8-ee7e-42b5-9343-915bfe3036c5/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\nxiygKEEKQsFfK1lyL9xaEJVdH2pt1aPMdQ889E4AJ1wATFLqtuSfhnEBcttOCAC9\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-87ab564815334a9c967abbf1ebdfb022\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\n76e873e9-62df-4fb4-b4f0-c1d7843f721c\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 4\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:46\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 4: prazo e sorteio\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n\r\n------WebKitFormBoundaryqgmTN1IIONVjkcd2--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/eab064b8-ee7e-42b5-9343-915bfe3036c5/retificar",
+      "method": "POST",
+      "postData": "------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"csrfmiddlewaretoken\"\r\n\r\naG7gT0SdkISIiz5hnLI1HvMunGPqOiOrQeH8i0i3dhJ3rdv95636k9vSS7TLpIBO\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"chave_idempotencia\"\r\n\r\nui-87ab564815334a9c967abbf1ebdfb022\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"base\"\r\n\r\n76e873e9-62df-4fb4-b4f0-c1d7843f721c\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g1c1\"\r\n\r\nEdital sintético 4\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g1c2\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g1c3\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g1c4\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c3\"\r\n\r\nPerfil\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c5\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c4\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c7\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c8\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c6\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c9\"\r\n\r\n1\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c10\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c2\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c11\"\r\n\r\nPUBLICATION\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g2c12\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g3c1\"\r\n\r\n1\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g3c2\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c1\"\r\n\r\nSorteio público\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c2\"\r\n\r\nSOMA_PONDERADA\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c3\"\r\n\r\nNENHUMA\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c4\"\r\n\r\n1\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c5\"\r\n\r\n0\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c6\"\r\n\r\nSTRICT\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c7\"\r\n\r\nPOR_SORTEIO\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c8\"\r\n\r\n2\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c9\"\r\n\r\nMEIO_PARA_CIMA\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c10\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c11\"\r\n\r\nIFES-SORTEIO-SHA256-v1\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c12\"\r\n\r\nFonte de demonstração\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c13\"\r\n\r\n5900\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c14\"\r\n\r\n2020-01-01T20:00\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c15\"\r\n\r\na extração de sábado imediatamente anterior à data publicada\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c16\"\r\n\r\nDIGITOS_EM_SEQUENCIA\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c17\"\r\n\r\nos cinco números sorteados, na ordem dos prêmios\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c18\"\r\n\r\nOCORRENCIA_SEGUINTE_DA_MESMA_FONTE\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c19\"\r\n\r\nnão havendo extração na data, vale a extração seguinte da mesma fonte\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g4c20\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g5c1\"\r\n\r\nInscrições\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g5c2\"\r\n\r\n2026-10-27T09:46\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g5c3\"\r\n\r\n2026-11-12T22:37\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g5c4\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g5c5\"\r\n\r\n1\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g6c1\"\r\n\r\nSorteio programado sintético\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g6c2\"\r\n\r\n2026-11-14T14:23\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g6c3\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g6c4\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g6c5\"\r\n\r\n0\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g7c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g8c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g9c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g10c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g11c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g12c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g13c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g14c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g15c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g16c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g17c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g18c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g19c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g20c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g21c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g22c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"campo:g23c1\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"justificativa\"\r\n\r\nPS-RET-E2E-001 cenário 4: prazo e sorteio\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"vigencia\"\r\n\r\n\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV\r\nContent-Disposition: form-data; name=\"confirmar\"\r\n\r\n1\r\n------WebKitFormBoundarys8oZy8AZ2SBZdrIV--\r\n"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/atos/submeter",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=6RRANovAvB0gSYrFiICBZKoO4jtIe6p0MprscoVqoaRB1CRx03XGCo7czKx3Pwcn&chave_idempotencia=ui-2bfa6016df8c41268a2e670306242b2b"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=2gTSVSQvz3lpi0DIY5i7kS2Xwjs9PO0kIOtKkSglsCcKrE3AGqDcXwLl1KwuqeNH&subject=homologador.sintetico&papeis=homologador"
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/atos/devolver",
+      "method": "POST",
+      "postData": "csrfmiddlewaretoken=c8qmc474CBDI1k9nDq35l0A0Te8Q6OnSSG0eB4xUvau3aYzflLoaYEjooFcbHeaf&chave_idempotencia=ui-989131171b2e4349928e2dffd821f40b&motivo=Devolu%C3%A7%C3%A3o+sint%C3%A9tica+para+testar+edi%C3%A7%C3%A3o"
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/processos/f9cdef15-d739-40ef-a74f-95a932173b90/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/atos/submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/?ato=submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/atos/homologar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/?ato=homologar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/atos/publicar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/1adc5ceb-390c-4205-b3e3-0268a544acc6/?ato=publicar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/selecoes/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/processos/04f0d1d7-9f3b-48e2-94da-f28caf46a5b8/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/f3ffc59e-8561-4ba2-9356-244ac1d04136/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/f3ffc59e-8561-4ba2-9356-244ac1d04136/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/f3ffc59e-8561-4ba2-9356-244ac1d04136/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/atos/submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/?ato=submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/atos/homologar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/?ato=homologar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/atos/publicar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/0650d4c1-b17c-4281-aa1a-3ea351fb7f7f/?ato=publicar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/selecoes/f3ffc59e-8561-4ba2-9356-244ac1d04136/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/processos/6feeb87c-31e9-47b0-b9fe-c5e0f2f34b17/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/3a695f24-156b-4efa-b79f-65f369d63a20/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/atos/submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/?ato=submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/atos/homologar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/?ato=homologar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/atos/publicar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/8a6a7588-a6d8-4244-8510-c93eb2c676ea/atos/publicar",
+      "status": 422
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/selecoes/3a695f24-156b-4efa-b79f-65f369d63a20/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/processos/76932822-37c4-43db-b216-dda09b7ab0a5/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/eab064b8-ee7e-42b5-9343-915bfe3036c5/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/eab064b8-ee7e-42b5-9343-915bfe3036c5/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/editais/eab064b8-ee7e-42b5-9343-915bfe3036c5/retificar",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/atos/submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/?ato=submeter",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/identificar/demonstracao",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/atos/devolver",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/gestao/retificacoes/61116042-fc5f-4a6b-9a09-38f075c9956f/?ato=devolver",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/base.css?v=1d03949b554d",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/moldura.css?v=8aa74776a4fa",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/impressao.css?v=e428d2f85646",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/componentes.css?v=f112eb7400e5",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/formularios.css?v=402951a07652",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/tabelas.css?v=4b337bfff617",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8017/static/interface/gestao/telas.css?v=cabbb3409908",
+      "status": 200
+    }
+  ]
+}

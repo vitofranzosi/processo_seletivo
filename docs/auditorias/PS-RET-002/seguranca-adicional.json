@@ -1,0 +1,100 @@
+[
+  {
+    "nome": "publicar-fora-do-escopo",
+    "path": "/api/v1/admin/retificacoes/d276b994-0bf8-4673-9dfe-22ae538fd971/publicacoes",
+    "status": 404,
+    "expected": 404,
+    "response": {
+      "type": "https://processo-seletivo.cefor/errors/not_found",
+      "title": "Operação rejeitada",
+      "status": 404,
+      "code": "not_found",
+      "detail": "Recurso não encontrado.",
+      "correlationId": "1c084f7f-b9d0-489f-9fab-b053265a5906"
+    }
+  },
+  {
+    "nome": "publicar-rascunho",
+    "path": "/api/v1/admin/retificacoes/fda1fb33-36cc-477d-be27-a4bd121dd7ce/publicacoes",
+    "status": 409,
+    "expected": 409,
+    "response": {
+      "type": "https://processo-seletivo.cefor/errors/invalid_state",
+      "title": "Operação rejeitada",
+      "status": 409,
+      "code": "invalid_state",
+      "detail": "Retificação não está homologada.",
+      "correlationId": "78fa87f0-9d7c-40cf-b9f7-089f8b0bd214"
+    }
+  },
+  {
+    "nome": "auditoria-sem-permissao",
+    "path": "/api/v1/admin/auditoria",
+    "status": 403,
+    "expected": 403,
+    "response": {
+      "type": "https://processo-seletivo.cefor/errors/forbidden",
+      "title": "Operação rejeitada",
+      "status": 403,
+      "code": "forbidden",
+      "detail": "A operação não é permitida.",
+      "correlationId": "3a9be381-8afa-4d04-8c06-f8f97aaf3bf7"
+    }
+  },
+  {
+    "nome": "auditoria-autorizada",
+    "path": "/api/v1/admin/auditoria?aggregateId=d276b994-0bf8-4673-9dfe-22ae538fd971",
+    "status": 200,
+    "expected": 200,
+    "response": {
+      "items": [
+        {
+          "eventId": "a4e2ee77-85ce-4b92-9d0a-b323d7884220",
+          "occurredAt": "2026-10-28T11:34:43.125575-03:00",
+          "actorSubject": "homologador.sintetico.002",
+          "permission": "retificacao:homologar",
+          "operation": "HOMOLOGAR",
+          "aggregateType": "Retificacao",
+          "aggregateId": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+          "previousState": "EM_REVISAO",
+          "newState": "HOMOLOGADA",
+          "previousRevision": 2,
+          "newRevision": 3,
+          "reason": "Fundamento sintético PS-RET-002",
+          "correlationId": "202f46c5-952a-4535-8718-d6ab70a1a277"
+        },
+        {
+          "eventId": "26cbc90c-8927-404d-aaed-ee1b194f2676",
+          "occurredAt": "2026-10-28T11:34:38.842181-03:00",
+          "actorSubject": "elaborador.sintetico.002",
+          "permission": "retificacao:submeter",
+          "operation": "SUBMETER",
+          "aggregateType": "Retificacao",
+          "aggregateId": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+          "previousState": "EM_ELABORACAO",
+          "newState": "EM_REVISAO",
+          "previousRevision": 1,
+          "newRevision": 2,
+          "reason": "",
+          "correlationId": "01748569-30c5-4765-8450-dd18735f5892"
+        },
+        {
+          "eventId": "259ec65d-3f1a-4a71-9d4d-8080122e7fd5",
+          "occurredAt": "2026-10-28T11:34:37.403436-03:00",
+          "actorSubject": "elaborador.sintetico.002",
+          "permission": "retificacao:elaborar",
+          "operation": "CRIAR",
+          "aggregateType": "Retificacao",
+          "aggregateId": "d276b994-0bf8-4673-9dfe-22ae538fd971",
+          "previousState": "",
+          "newState": "EM_ELABORACAO",
+          "previousRevision": null,
+          "newRevision": 1,
+          "reason": "",
+          "correlationId": "7c7867db-657d-4b42-9dcc-6b068d0f2b45"
+        }
+      ],
+      "nextCursor": null
+    }
+  }
+]

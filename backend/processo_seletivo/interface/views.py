@@ -4143,8 +4143,10 @@ def _executar(ato, request, ator, edital):
 
 
 def _versao_vigente(edital):
+    # Uma consolidação futura já existe no acervo, mas ainda não é o conteúdo que a pessoa
+    # corrige agora. O POST conserva esta base; não a troca se outro ato publicar (101, FR-2609).
     return (
-        VersaoConsolidada.objects.filter(edital=edital)
+        VersaoConsolidada.objects.filter(edital=edital, valid_from__lte=timezone.now())
         .order_by("-valid_from", "-materialized_at")
         .first()
     )

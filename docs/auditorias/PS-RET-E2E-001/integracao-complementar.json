@@ -1,0 +1,182 @@
+[
+  {
+    "name": "sem-alteracao-efetiva",
+    "method": "POST",
+    "path": "/api/v1/admin/editais/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/retificacoes",
+    "request": {
+      "baseSnapshotId": "29573e1a-9074-4e63-8b1b-8ce1c1f82f49",
+      "justification": "sem-alteracao-efetiva",
+      "changes": [
+        {
+          "targetPath": "/schedule/id=00000000-0000-0000-0000-000000008412/endAt",
+          "operation": "REPLACE",
+          "newValue": "2026-11-13T01:37:00+00:00",
+          "expectedPreviousHash": "79cac9fba8dcfa306f87d946e8bcbc91ad646dfaf8db398add3bb16f1ee6243a"
+        }
+      ]
+    },
+    "subject": "teste.http",
+    "permissions": "retificacao:elaborar",
+    "scope": "cefor",
+    "ifMatch": null,
+    "key": "007459c4-00d2-452f-8e4b-4285e168bad7",
+    "status": 422,
+    "expected": 422,
+    "response": "{\"type\":\"https://processo-seletivo.cefor/errors/no_effective_change\",\"title\":\"Operação rejeitada\",\"status\":422,\"code\":\"no_effective_change\",\"detail\":\"A Retificação não altera o conteúdo normativo do Edital.\",\"correlationId\":\"3f9442d1-90cd-4635-b1c4-c5be627ff0f9\"}",
+    "passed": true
+  },
+  {
+    "name": "cronograma-invertido",
+    "method": "POST",
+    "path": "/api/v1/admin/editais/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/retificacoes",
+    "request": {
+      "baseSnapshotId": "29573e1a-9074-4e63-8b1b-8ce1c1f82f49",
+      "justification": "cronograma-invertido",
+      "changes": [
+        {
+          "targetPath": "/schedule/id=00000000-0000-0000-0000-000000008412/endAt",
+          "operation": "REPLACE",
+          "newValue": "2020-01-01T12:00:00-03:00",
+          "expectedPreviousHash": "79cac9fba8dcfa306f87d946e8bcbc91ad646dfaf8db398add3bb16f1ee6243a"
+        }
+      ]
+    },
+    "subject": "teste.http",
+    "permissions": "retificacao:elaborar",
+    "scope": "cefor",
+    "ifMatch": null,
+    "key": "5e9028f6-01ed-4f03-afc3-332768bbd9eb",
+    "status": 201,
+    "expected": 422,
+    "response": "{\"id\":\"29c2f641-5080-40b9-9c7c-2cb835f128f3\",\"editalId\":\"807c8b81-5fd4-457d-93ff-2c70f1aefcb4\",\"status\":\"EM_ELABORACAO\",\"effectiveAt\":null,\"revision\":1}",
+    "passed": false
+  },
+  {
+    "name": "submissoes",
+    "method": "POST",
+    "path": "/api/v1/admin/retificacoes/29c2f641-5080-40b9-9c7c-2cb835f128f3/submissoes",
+    "request": {
+      "reason": "Teste de cronograma"
+    },
+    "subject": "submetente.extra",
+    "permissions": "retificacao:submeter",
+    "scope": "cefor",
+    "ifMatch": 1,
+    "key": "dccc1a2f-65ef-4d11-909c-90d518aa7cdd",
+    "status": 200,
+    "expected": 200,
+    "response": "{\"id\":\"29c2f641-5080-40b9-9c7c-2cb835f128f3\",\"editalId\":\"807c8b81-5fd4-457d-93ff-2c70f1aefcb4\",\"status\":\"EM_REVISAO\",\"effectiveAt\":null,\"revision\":2}",
+    "passed": true
+  },
+  {
+    "name": "homologacoes",
+    "method": "POST",
+    "path": "/api/v1/admin/retificacoes/29c2f641-5080-40b9-9c7c-2cb835f128f3/homologacoes",
+    "request": {
+      "reason": "Teste de cronograma"
+    },
+    "subject": "homologador.extra",
+    "permissions": "retificacao:homologar",
+    "scope": "cefor",
+    "ifMatch": 2,
+    "key": "954ba3d9-0014-4461-9ae2-3f7b5b97bba6",
+    "status": 200,
+    "expected": 200,
+    "response": "{\"id\":\"29c2f641-5080-40b9-9c7c-2cb835f128f3\",\"editalId\":\"807c8b81-5fd4-457d-93ff-2c70f1aefcb4\",\"status\":\"HOMOLOGADA\",\"effectiveAt\":null,\"revision\":3}",
+    "passed": true
+  },
+  {
+    "name": "publicar-cronograma-invertido",
+    "method": "POST",
+    "path": "/api/v1/admin/retificacoes/29c2f641-5080-40b9-9c7c-2cb835f128f3/publicacoes",
+    "request": {
+      "signatory": {
+        "authorityId": "a3a6aeb0-03f3-4a31-b1fe-b8e4550964e7"
+      }
+    },
+    "subject": "publicador.extra",
+    "permissions": "retificacao:publicar",
+    "scope": "cefor",
+    "ifMatch": 3,
+    "key": "91466893-40b2-4a2d-a0f2-7753110a47b0",
+    "status": 201,
+    "expected": 422,
+    "response": "{\"id\":\"31b0fb9d-3018-453b-a196-46d3dfe6b2c1\",\"editalId\":\"807c8b81-5fd4-457d-93ff-2c70f1aefcb4\",\"publicationOrder\":3,\"publishedAt\":\"2026-10-28T09:51:04.433345-03:00\",\"effectiveAt\":\"2026-10-28T09:51:04.433345-03:00\",\"contentHash\":\"9a7ebc115b7aabb9f9fea524cde5db8f452c0d63302322324d8848f31d41c2e2\",\"documentHash\":\"0495920f8aeda26f661ccb680c5a05a3361ec712bc12f6c66eaffa062261f63b\"}",
+    "passed": false
+  },
+  {
+    "name": "portal-anonimo-0",
+    "method": "GET",
+    "path": "/selecoes/807c8b81-5fd4-457d-93ff-2c70f1aefcb4/",
+    "request": null,
+    "subject": "teste.http",
+    "permissions": "",
+    "scope": "cefor",
+    "ifMatch": null,
+    "key": "ef106dbb-8266-483e-8589-7ec03f394e05",
+    "status": 200,
+    "expected": 200,
+    "response": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n<meta name=\"htmx-config\" content='{\"includeIndicatorStyles\":false,\"allowEval\":false}'>\n<title>Edital sintético 1 — Cefor/Ifes</title>\n<link rel=\"stylesheet\" href=\"/static/shared/tokens.css?v=239e9b1475d4\">\n\n<link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=aebad9257769\">\n</head>\n<body>\n<a class=\"pular\" href=\"#conteudo\">Pular para o conteúdo</a>\n<header class=\"topo\">\n  <span class=\"marca\"><a href=\"/selecoes/\">Cefor<span>/Ifes</span> · <span class=\"nome-por-extenso\">Gestão de Processos Seletivos</span><span class=\"sigla\" aria-hidden=\"true\">GPS</span></a></span>\n  <nav class=\"acessos\" aria-label=\"Acessos\">\n  \n  \n  \n  \n  \n  <span class=\"quem-esta\">\n    <a class=\"no-topo\" href=\"/selecoes/acesso\">Minhas inscrições</a>\n  </span>\n  \n  \n  \n  <a class=\"porta-da-gestao\" href=\"/gestao/\">Área de gestão</a>\n  </nav>\n</header>\n<main id=\"conteudo\" tabindex=\"-1\">\n\n\n\n<p class=\"voltar\"><a href=\"/selecoes/\">← Todas as seleções</a></p>\n\n\n<header class=\"cabecalho-da-selecao\">\n  \n  <p class=\"marca-situacao encerrado\">Encerrada</p>\n  \n  \n  <h1>Edital sintético 1</h1>\n  <p class=\"sub\">Auditoria sintética 1 (PS-RET-E2E-001-1) · Edital AUD-1/2026 · Unidade: CEFOR</p>\n\n  \n\n\n<p class=\"situacao encerrado\">Inscrições encerradas em 01/01/2020.</p>\n\n\n\n\n\n  \n\n<nav class=\"oferta-da-selecao\" aria-labelledby=\"oferta-titulo\">\n  <p class=\"rotulo-da-oferta\" id=\"oferta-titulo\">O que esta seleção oferece</p>\n  <ul>\n    \n    <li><a href=\"#vaga-00000000-0000-0000-0000-000000008411\">Perfil</a> — 1 vaga</li>\n    \n    \n  </ul>\n  <a class=\"ir-para-as-vagas\" href=\"#vagas-titulo\">Ver vagas</a>\n</nav>\n\n\n\n  \n  \n  <div class=\"agora-e-proximo\">\n    \n    \n    \n    <p><span class=\"rotulo-do-momento\">Próximo, em 14/11/2026:</span> Sorteio programado sintético</p>\n    \n  </div>\n  \n\n  \n\n  <p class=\"acoes-da-selecao\">\n    <a class=\"documento secundaria\" href=\"/api/v1/public/publicacoes/31b0fb9d-3018-453b-a196-46d3dfe6b2c1/documento\">Ler o Edital completo (PDF)</a>\n  </p>\n\n  \n  \n  <p class=\"vigencia-do-conteudo\">Este Edital foi retificado. O que você lê nesta página é o\n    <strong>conteúdo vigente</strong> desde 28/10/2026 —\n    <a href=\"#documentos-titulo\">veja o que mudou</a>.</p>\n  \n</header>\n\n\n\n\n\n<div class=\"corpo-da-selecao\">\n  <section class=\"vagas-da-selecao\" aria-labelledby=\"vagas-titulo\">\n    \n    <h2 id=\"vagas-titulo\">Vagas</h2>\n    \n    \n    \n    \n    <ul class=\"perfis\">\n      \n      \n      \n      <li class=\"perfil\" id=\"vaga-00000000-0000-0000-0000-000000008411\">\n        <h3>Perfil</h3>\n        \n        \n\n        <div class=\"corpo-vaga\">\n          \n\n          \n\n          \n          \n\n          <p class=\"dados-vaga\">\n            \n            \n          </p>\n\n          \n          \n        </div>\n\n        <div class=\"lateral-vaga\">\n          \n          \n          <p class=\"vagas-numero\"><strong>1</strong>\n            <span>vaga imediata</span>\n            </p>\n          \n\n          \n        </div>\n      </li>\n      \n    </ul>\n  </section>\n\n  \n  \n  \n\n  \n  <aside class=\"cronograma-da-selecao\" aria-labelledby=\"cronograma-titulo\">\n    <h2 id=\"cronograma-titulo\">Cronograma</h2>\n    <ul class=\"linha-do-tempo processo\">\n      \n\n\n<li class=\"marco concluido\">\n  <span class=\"rotulo\">\n    ✓ Inscrições\n    \n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    27/10/2026\n    – 01/01/2020\n  </span>\n  \n  \n</li>\n\n\n<li class=\"marco futuro\">\n  <span class=\"rotulo\">\n    Sorteio programado sintético\n    \n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    14/11/2026\n    \n  </span>\n  \n  \n</li>\n\n\n    </ul>\n  </aside>\n  \n\n  \n  \n  <section class=\"documentos-da-selecao\" aria-labelledby=\"documentos-titulo\">\n    <h2 id=\"documentos-titulo\">Edital e documentos</h2>\n    \n<ul class=\"documentos-do-edital\">\n  \n  <li class=\"documento-publicado retificacao\">\n    <a href=\"/api/v1/public/publicacoes/31b0fb9d-3018-453b-a196-46d3dfe6b2c1/documento\">\n      Retificação\n      <span class=\"quando\">28/10/2026</span>\n    </a>\n    \n    \n\n    \n    <details class=\"o-que-mudou\">\n      <summary>O que mudou (1)</summary>\n      <p class=\"justificativa\">cronograma-invertido</p>\n      \n      <ul class=\"alteracoes\">\n        \n        <li><span class=\"operacao alterado\">alterado</span>\n          <span class=\"onde\">Evento do cronograma “Inscrições”</span> — Término</li>\n        \n      </ul>\n      \n    </details>\n    \n  </li>\n  \n  <li class=\"documento-publicado retificacao\">\n    <a href=\"/api/v1/public/publicacoes/c238f66d-4de3-4b8d-a359-2f210a3c7ef3/documento\">\n      Retificação\n      <span class=\"quando\">28/10/2026</span>\n    </a>\n    \n    \n\n    \n    <details class=\"o-que-mudou\">\n      <summary>O que mudou (2)</summary>\n      <p class=\"justificativa\">PS-RET-E2E-001 cenário 1: prazo e sorteio</p>\n      \n      <ul class=\"alteracoes\">\n        \n        <li><span class=\"operacao alterado\">alterado</span>\n          <span class=\"onde\">Evento do cronograma “Inscrições”</span> — Término</li>\n        \n        <li><span class=\"operacao alterado\">alterado</span>\n          <span class=\"onde\">Evento do cronograma “Sorteio programado sintético”</span> — Início</li>\n        \n      </ul>\n      \n    </details>\n    \n  </li>\n  \n  <li class=\"documento-publicado abertura\">\n    <a href=\"/api/v1/public/publicacoes/8775a530-0baa-4c27-b9f2-14720d5f33d2/documento\">\n      Edital de abertura\n      <span class=\"quando\">28/10/2026</span>\n    </a>\n    \n    \n\n    \n  </li>\n  \n\n  \n  \n</ul>\n\n  </section>\n  \n</div>\n\n\n</main>\n</body>\n</html>\n",
+    "passed": true
+  },
+  {
+    "name": "portal-anonimo-1",
+    "method": "GET",
+    "path": "/selecoes/f3ffc59e-8561-4ba2-9356-244ac1d04136/",
+    "request": null,
+    "subject": "teste.http",
+    "permissions": "",
+    "scope": "cefor",
+    "ifMatch": null,
+    "key": "8dfe5e76-64d8-4dda-9ac6-7e8615c2f38f",
+    "status": 200,
+    "expected": 200,
+    "response": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n<meta name=\"htmx-config\" content='{\"includeIndicatorStyles\":false,\"allowEval\":false}'>\n<title>Edital sintético 2 — Cefor/Ifes</title>\n<link rel=\"stylesheet\" href=\"/static/shared/tokens.css?v=239e9b1475d4\">\n\n<link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=aebad9257769\">\n</head>\n<body>\n<a class=\"pular\" href=\"#conteudo\">Pular para o conteúdo</a>\n<header class=\"topo\">\n  <span class=\"marca\"><a href=\"/selecoes/\">Cefor<span>/Ifes</span> · <span class=\"nome-por-extenso\">Gestão de Processos Seletivos</span><span class=\"sigla\" aria-hidden=\"true\">GPS</span></a></span>\n  <nav class=\"acessos\" aria-label=\"Acessos\">\n  \n  \n  \n  \n  \n  <span class=\"quem-esta\">\n    <a class=\"no-topo\" href=\"/selecoes/acesso\">Minhas inscrições</a>\n  </span>\n  \n  \n  \n  <a class=\"porta-da-gestao\" href=\"/gestao/\">Área de gestão</a>\n  </nav>\n</header>\n<main id=\"conteudo\" tabindex=\"-1\">\n\n\n\n<p class=\"voltar\"><a href=\"/selecoes/\">← Todas as seleções</a></p>\n\n\n<header class=\"cabecalho-da-selecao\">\n  \n  <p class=\"marca-situacao aberto\">Aberta</p>\n  \n  \n  <h1>Edital sintético 2</h1>\n  <p class=\"sub\">Auditoria sintética 2 (PS-RET-E2E-001-2) · Edital AUD-2/2026 · Unidade: CEFOR</p>\n\n  \n\n\n<p class=\"situacao aberto\">\n  Inscrições abertas desde 27/10/2026,\n  até 07/11/2026 às 09h46.\n  \n  <span class=\"prazo\">\n    Faltam 9 dias.\n  </span>\n  \n</p>\n\n\n\n\n\n  \n\n<nav class=\"oferta-da-selecao\" aria-labelledby=\"oferta-titulo\">\n  <p class=\"rotulo-da-oferta\" id=\"oferta-titulo\">O que esta seleção oferece</p>\n  <ul>\n    \n    <li><a href=\"#vaga-00000000-0000-0000-0000-000000008421\">Perfil</a> — 1 vaga</li>\n    \n    \n  </ul>\n  <a class=\"ir-para-as-vagas\" href=\"#vagas-titulo\">Ver vagas e inscrever-se</a>\n</nav>\n\n\n\n  \n  \n  <div class=\"agora-e-proximo\">\n    \n    \n    \n    <p><span class=\"rotulo-do-momento\">Próximo, em 09/11/2026:</span> Sorteio programado sintético</p>\n    \n  </div>\n  \n\n  \n\n  <p class=\"acoes-da-selecao\">\n    <a class=\"documento secundaria\" href=\"/api/v1/public/publicacoes/e3bc573f-f8d1-45cc-a957-167b288f5697/documento\">Ler o Edital completo (PDF)</a>\n  </p>\n\n  \n  \n  <p class=\"vigencia-do-conteudo\">Este Edital foi retificado. O que você lê nesta página é o\n    <strong>conteúdo vigente</strong> desde 28/10/2026 —\n    <a href=\"#documentos-titulo\">veja o que mudou</a>.</p>\n  \n</header>\n\n\n\n\n\n<div class=\"corpo-da-selecao\">\n  <section class=\"vagas-da-selecao\" aria-labelledby=\"vagas-titulo\">\n    \n    <h2 id=\"vagas-titulo\">Vagas</h2>\n    \n    \n    \n    \n    <ul class=\"perfis\">\n      \n      \n      \n      <li class=\"perfil\" id=\"vaga-00000000-0000-0000-0000-000000008421\">\n        <h3>Perfil</h3>\n        \n        \n\n        <div class=\"corpo-vaga\">\n          \n\n          \n\n          \n          \n\n          <p class=\"dados-vaga\">\n            \n            \n          </p>\n\n          \n          \n        </div>\n\n        <div class=\"lateral-vaga\">\n          \n          \n          <p class=\"vagas-numero\"><strong>1</strong>\n            <span>vaga imediata</span>\n            </p>\n          \n\n          \n          <form class=\"convite\" method=\"post\" action=\"/selecoes/f3ffc59e-8561-4ba2-9356-244ac1d04136/vagas/00000000-0000-0000-0000-000000008421/inscrever\">\n            <input type=\"hidden\" name=\"csrfmiddlewaretoken\" value=\"aEAlkaOo99i0m6TE9HqrXyHggKd6ZCEdGnDkqFOp58URRVz6fihzri9UQ8nLAepA\">\n            <button type=\"submit\" class=\"principal\">Inscrever-se nesta vaga</button>\n          </form>\n          \n          \n          <p class=\"antes-de-entrar\">Inscrever-se exige identificação por e-mail.</p>\n          \n          \n        </div>\n      </li>\n      \n    </ul>\n  </section>\n\n  \n  \n  \n\n  \n  <aside class=\"cronograma-da-selecao\" aria-labelledby=\"cronograma-titulo\">\n    <h2 id=\"cronograma-titulo\">Cronograma</h2>\n    <ul class=\"linha-do-tempo processo\">\n      \n\n\n<li class=\"marco em_curso\" aria-current=\"step\">\n  <span class=\"rotulo\">\n    Inscrições\n    <span class=\"agora\">Acontecendo agora</span>\n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    27/10/2026\n    – 07/11/2026\n  </span>\n  \n  \n</li>\n\n\n<li class=\"marco futuro\">\n  <span class=\"rotulo\">\n    Sorteio programado sintético\n    \n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    09/11/2026\n    \n  </span>\n  \n  \n</li>\n\n\n    </ul>\n  </aside>\n  \n\n  \n  \n  <section class=\"documentos-da-selecao\" aria-labelledby=\"documentos-titulo\">\n    <h2 id=\"documentos-titulo\">Edital e documentos</h2>\n    \n<ul class=\"documentos-do-edital\">\n  \n  <li class=\"documento-publicado retificacao\">\n    <a href=\"/api/v1/public/publicacoes/46f49ea9-ad27-43e8-ad04-21421e1ed095/documento\">\n      Retificação\n      <span class=\"quando\">28/10/2026</span>\n    </a>\n    \n    \n    <span class=\"vigencia\">vigente desde 30/10/2026</span>\n    \n\n    \n    <details class=\"o-que-mudou\">\n      <summary>O que mudou (2)</summary>\n      <p class=\"justificativa\">PS-RET-E2E-001 cenário 2: prazo e sorteio</p>\n      \n      <ul class=\"alteracoes\">\n        \n        <li><span class=\"operacao alterado\">alterado</span>\n          <span class=\"onde\">Evento do cronograma “Inscrições”</span> — Término</li>\n        \n        <li><span class=\"operacao alterado\">alterado</span>\n          <span class=\"onde\">Evento do cronograma “Sorteio programado sintético”</span> — Início</li>\n        \n      </ul>\n      \n    </details>\n    \n  </li>\n  \n  <li class=\"documento-publicado abertura\">\n    <a href=\"/api/v1/public/publicacoes/e3bc573f-f8d1-45cc-a957-167b288f5697/documento\">\n      Edital de abertura\n      <span class=\"quando\">28/10/2026</span>\n    </a>\n    \n    \n\n    \n  </li>\n  \n\n  \n  \n</ul>\n\n  </section>\n  \n</div>\n\n\n</main>\n</body>\n</html>\n",
+    "passed": true
+  },
+  {
+    "name": "portal-anonimo-2",
+    "method": "GET",
+    "path": "/selecoes/3a695f24-156b-4efa-b79f-65f369d63a20/",
+    "request": null,
+    "subject": "teste.http",
+    "permissions": "",
+    "scope": "cefor",
+    "ifMatch": null,
+    "key": "445de3ba-f151-47c3-b399-b6a296d23d04",
+    "status": 200,
+    "expected": 200,
+    "response": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n<meta name=\"htmx-config\" content='{\"includeIndicatorStyles\":false,\"allowEval\":false}'>\n<title>Edital sintético 3 — Cefor/Ifes</title>\n<link rel=\"stylesheet\" href=\"/static/shared/tokens.css?v=239e9b1475d4\">\n\n<link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=aebad9257769\">\n</head>\n<body>\n<a class=\"pular\" href=\"#conteudo\">Pular para o conteúdo</a>\n<header class=\"topo\">\n  <span class=\"marca\"><a href=\"/selecoes/\">Cefor<span>/Ifes</span> · <span class=\"nome-por-extenso\">Gestão de Processos Seletivos</span><span class=\"sigla\" aria-hidden=\"true\">GPS</span></a></span>\n  <nav class=\"acessos\" aria-label=\"Acessos\">\n  \n  \n  \n  \n  \n  <span class=\"quem-esta\">\n    <a class=\"no-topo\" href=\"/selecoes/acesso\">Minhas inscrições</a>\n  </span>\n  \n  \n  \n  <a class=\"porta-da-gestao\" href=\"/gestao/\">Área de gestão</a>\n  </nav>\n</header>\n<main id=\"conteudo\" tabindex=\"-1\">\n\n\n\n<p class=\"voltar\"><a href=\"/selecoes/\">← Todas as seleções</a></p>\n\n\n<header class=\"cabecalho-da-selecao\">\n  \n  <p class=\"marca-situacao aberto\">Aberta</p>\n  \n  \n  <h1>Edital sintético 3</h1>\n  <p class=\"sub\">Auditoria sintética 3 (PS-RET-E2E-001-3) · Edital AUD-3/2026 · Unidade: CEFOR</p>\n\n  \n\n\n<p class=\"situacao aberto\">\n  Inscrições abertas desde 27/10/2026,\n  até 07/11/2026 às 09h46.\n  \n  <span class=\"prazo\">\n    Faltam 9 dias.\n  </span>\n  \n</p>\n\n\n\n\n\n  \n\n<nav class=\"oferta-da-selecao\" aria-labelledby=\"oferta-titulo\">\n  <p class=\"rotulo-da-oferta\" id=\"oferta-titulo\">O que esta seleção oferece</p>\n  <ul>\n    \n    <li><a href=\"#vaga-00000000-0000-0000-0000-000000008431\">Perfil</a> — 1 vaga</li>\n    \n    \n  </ul>\n  <a class=\"ir-para-as-vagas\" href=\"#vagas-titulo\">Ver vagas e inscrever-se</a>\n</nav>\n\n\n\n  \n  \n  <div class=\"agora-e-proximo\">\n    \n    \n    \n    <p><span class=\"rotulo-do-momento\">Próximo, em 09/11/2026:</span> Sorteio programado sintético</p>\n    \n  </div>\n  \n\n  \n\n  <p class=\"acoes-da-selecao\">\n    <a class=\"documento secundaria\" href=\"/api/v1/public/publicacoes/14160652-ea0f-416a-9752-42ec14bdd9fe/documento\">Ler o Edital completo (PDF)</a>\n  </p>\n\n  \n  \n</header>\n\n\n\n\n\n<div class=\"corpo-da-selecao\">\n  <section class=\"vagas-da-selecao\" aria-labelledby=\"vagas-titulo\">\n    \n    <h2 id=\"vagas-titulo\">Vagas</h2>\n    \n    \n    \n    \n    <ul class=\"perfis\">\n      \n      \n      \n      <li class=\"perfil\" id=\"vaga-00000000-0000-0000-0000-000000008431\">\n        <h3>Perfil</h3>\n        \n        \n\n        <div class=\"corpo-vaga\">\n          \n\n          \n\n          \n          \n\n          <p class=\"dados-vaga\">\n            \n            \n          </p>\n\n          \n          \n        </div>\n\n        <div class=\"lateral-vaga\">\n          \n          \n          <p class=\"vagas-numero\"><strong>1</strong>\n            <span>vaga imediata</span>\n            </p>\n          \n\n          \n          <form class=\"convite\" method=\"post\" action=\"/selecoes/3a695f24-156b-4efa-b79f-65f369d63a20/vagas/00000000-0000-0000-0000-000000008431/inscrever\">\n            <input type=\"hidden\" name=\"csrfmiddlewaretoken\" value=\"3g7Wj8RLj8o4l6RXqYMXWSMT6lzo39GDQUw6TRvwLjQKEVTDUCAFceNPqlhObPKC\">\n            <button type=\"submit\" class=\"principal\">Inscrever-se nesta vaga</button>\n          </form>\n          \n          \n          <p class=\"antes-de-entrar\">Inscrever-se exige identificação por e-mail.</p>\n          \n          \n        </div>\n      </li>\n      \n    </ul>\n  </section>\n\n  \n  \n  \n\n  \n  <aside class=\"cronograma-da-selecao\" aria-labelledby=\"cronograma-titulo\">\n    <h2 id=\"cronograma-titulo\">Cronograma</h2>\n    <ul class=\"linha-do-tempo processo\">\n      \n\n\n<li class=\"marco em_curso\" aria-current=\"step\">\n  <span class=\"rotulo\">\n    Inscrições\n    <span class=\"agora\">Acontecendo agora</span>\n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    27/10/2026\n    – 07/11/2026\n  </span>\n  \n  \n</li>\n\n\n<li class=\"marco futuro\">\n  <span class=\"rotulo\">\n    Sorteio programado sintético\n    \n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    09/11/2026\n    \n  </span>\n  \n  \n</li>\n\n\n    </ul>\n  </aside>\n  \n\n  \n  \n</div>\n\n\n</main>\n</body>\n</html>\n",
+    "passed": true
+  },
+  {
+    "name": "portal-anonimo-3",
+    "method": "GET",
+    "path": "/selecoes/eab064b8-ee7e-42b5-9343-915bfe3036c5/",
+    "request": null,
+    "subject": "teste.http",
+    "permissions": "",
+    "scope": "cefor",
+    "ifMatch": null,
+    "key": "07709828-d3d2-42a2-8047-6f1d9a85223e",
+    "status": 200,
+    "expected": 200,
+    "response": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n<meta name=\"htmx-config\" content='{\"includeIndicatorStyles\":false,\"allowEval\":false}'>\n<title>Edital sintético 4 — Cefor/Ifes</title>\n<link rel=\"stylesheet\" href=\"/static/shared/tokens.css?v=239e9b1475d4\">\n\n<link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=aebad9257769\">\n</head>\n<body>\n<a class=\"pular\" href=\"#conteudo\">Pular para o conteúdo</a>\n<header class=\"topo\">\n  <span class=\"marca\"><a href=\"/selecoes/\">Cefor<span>/Ifes</span> · <span class=\"nome-por-extenso\">Gestão de Processos Seletivos</span><span class=\"sigla\" aria-hidden=\"true\">GPS</span></a></span>\n  <nav class=\"acessos\" aria-label=\"Acessos\">\n  \n  \n  \n  \n  \n  <span class=\"quem-esta\">\n    <a class=\"no-topo\" href=\"/selecoes/acesso\">Minhas inscrições</a>\n  </span>\n  \n  \n  \n  <a class=\"porta-da-gestao\" href=\"/gestao/\">Área de gestão</a>\n  </nav>\n</header>\n<main id=\"conteudo\" tabindex=\"-1\">\n\n\n\n<p class=\"voltar\"><a href=\"/selecoes/\">← Todas as seleções</a></p>\n\n\n<header class=\"cabecalho-da-selecao\">\n  \n  <p class=\"marca-situacao aberto\">Aberta</p>\n  \n  \n  <h1>Edital sintético 4</h1>\n  <p class=\"sub\">Auditoria sintética 4 (PS-RET-E2E-001-4) · Edital AUD-4/2026 · Unidade: CEFOR</p>\n\n  \n\n\n<p class=\"situacao aberto\">\n  Inscrições abertas desde 27/10/2026,\n  até 12/11/2026 às 22h37.\n  \n  <span class=\"prazo\">\n    Faltam 15 dias.\n  </span>\n  \n</p>\n\n\n\n\n\n  \n\n<nav class=\"oferta-da-selecao\" aria-labelledby=\"oferta-titulo\">\n  <p class=\"rotulo-da-oferta\" id=\"oferta-titulo\">O que esta seleção oferece</p>\n  <ul>\n    \n    <li><a href=\"#vaga-00000000-0000-0000-0000-000000008441\">Perfil</a> — 1 vaga</li>\n    \n    \n  </ul>\n  <a class=\"ir-para-as-vagas\" href=\"#vagas-titulo\">Ver vagas e inscrever-se</a>\n</nav>\n\n\n\n  \n  \n  <div class=\"agora-e-proximo\">\n    \n    \n    \n    <p><span class=\"rotulo-do-momento\">Próximo, em 14/11/2026:</span> Sorteio programado sintético</p>\n    \n  </div>\n  \n\n  \n\n  <p class=\"acoes-da-selecao\">\n    <a class=\"documento secundaria\" href=\"/api/v1/public/publicacoes/8b495700-900a-49d1-86f7-46e668b5318f/documento\">Ler o Edital completo (PDF)</a>\n  </p>\n\n  \n  \n  <p class=\"vigencia-do-conteudo\">Este Edital foi retificado. O que você lê nesta página é o\n    <strong>conteúdo vigente</strong> desde 28/10/2026 —\n    <a href=\"#documentos-titulo\">veja o que mudou</a>.</p>\n  \n</header>\n\n\n\n\n\n<div class=\"corpo-da-selecao\">\n  <section class=\"vagas-da-selecao\" aria-labelledby=\"vagas-titulo\">\n    \n    <h2 id=\"vagas-titulo\">Vagas</h2>\n    \n    \n    \n    \n    <ul class=\"perfis\">\n      \n      \n      \n      <li class=\"perfil\" id=\"vaga-00000000-0000-0000-0000-000000008441\">\n        <h3>Perfil</h3>\n        \n        \n\n        <div class=\"corpo-vaga\">\n          \n\n          \n\n          \n          \n\n          <p class=\"dados-vaga\">\n            \n            \n          </p>\n\n          \n          \n        </div>\n\n        <div class=\"lateral-vaga\">\n          \n          \n          <p class=\"vagas-numero\"><strong>1</strong>\n            <span>vaga imediata</span>\n            </p>\n          \n\n          \n          <form class=\"convite\" method=\"post\" action=\"/selecoes/eab064b8-ee7e-42b5-9343-915bfe3036c5/vagas/00000000-0000-0000-0000-000000008441/inscrever\">\n            <input type=\"hidden\" name=\"csrfmiddlewaretoken\" value=\"jfn3S9Px1CqtWqK5eOwsktUaFzAVhxfrS7iuU3kzwb5steAHy9UrDaJi6I3MXvKN\">\n            <button type=\"submit\" class=\"principal\">Inscrever-se nesta vaga</button>\n          </form>\n          \n          \n          <p class=\"antes-de-entrar\">Inscrever-se exige identificação por e-mail.</p>\n          \n          \n        </div>\n      </li>\n      \n    </ul>\n  </section>\n\n  \n  \n  \n\n  \n  <aside class=\"cronograma-da-selecao\" aria-labelledby=\"cronograma-titulo\">\n    <h2 id=\"cronograma-titulo\">Cronograma</h2>\n    <ul class=\"linha-do-tempo processo\">\n      \n\n\n<li class=\"marco em_curso\" aria-current=\"step\">\n  <span class=\"rotulo\">\n    Inscrições\n    <span class=\"agora\">Acontecendo agora</span>\n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    27/10/2026\n    – 12/11/2026\n  </span>\n  \n  \n</li>\n\n\n<li class=\"marco futuro\">\n  <span class=\"rotulo\">\n    Sorteio programado sintético\n    \n  </span>\n  \n  \n  \n  <span class=\"quando\">\n    14/11/2026\n    \n  </span>\n  \n  \n</li>\n\n\n    </ul>\n  </aside>\n  \n\n  \n  \n  <section class=\"documentos-da-selecao\" aria-labelledby=\"documentos-titulo\">\n    <h2 id=\"documentos-titulo\">Edital e documentos</h2>\n    \n<ul class=\"documentos-do-edital\">\n  \n  <li class=\"documento-publicado retificacao\">\n    <a href=\"/api/v1/public/publicacoes/8b495700-900a-49d1-86f7-46e668b5318f/documento\">\n      Retificação\n      <span class=\"quando\">28/10/2026</span>\n    </a>\n    \n    \n\n    \n    <details class=\"o-que-mudou\">\n      <summary>O que mudou (2)</summary>\n      <p class=\"justificativa\">Edição pela API após devolução</p>\n      \n      <ul class=\"alteracoes\">\n        \n        <li><span class=\"operacao alterado\">alterado</span>\n          <span class=\"onde\">Evento do cronograma “Inscrições”</span> — Término</li>\n        \n        <li><span class=\"operacao alterado\">alterado</span>\n          <span class=\"onde\">Evento do cronograma “Sorteio programado sintético”</span> — Início</li>\n        \n      </ul>\n      \n    </details>\n    \n  </li>\n  \n  <li class=\"documento-publicado abertura\">\n    <a href=\"/api/v1/public/publicacoes/c8bd3e9b-9565-4aab-ac93-c9d58a0d72bc/documento\">\n      Edital de abertura\n      <span class=\"quando\">28/10/2026</span>\n    </a>\n    \n    \n\n    \n  </li>\n  \n\n  \n  \n</ul>\n\n  </section>\n  \n</div>\n\n\n</main>\n</body>\n</html>\n",
+    "passed": true
+  },
+  {
+    "name": "retificacao-inexistente-publica",
+    "method": "GET",
+    "path": "/api/v1/public/retificacoes/00000000-0000-0000-0000-000000000099",
+    "request": null,
+    "subject": "teste.http",
+    "permissions": "",
+    "scope": "cefor",
+    "ifMatch": null,
+    "key": "bb67b847-9c8a-4f9f-96b1-fb2699c103e7",
+    "status": 404,
+    "expected": 404,
+    "response": "{\"type\":\"https://processo-seletivo.cefor/errors/not_found\",\"title\":\"Operação rejeitada\",\"status\":404,\"code\":\"not_found\",\"detail\":\"Recurso não encontrado.\",\"correlationId\":\"1b349166-5d53-42b7-ac85-1bcd87d02cb7\"}",
+    "passed": true
+  }
+]

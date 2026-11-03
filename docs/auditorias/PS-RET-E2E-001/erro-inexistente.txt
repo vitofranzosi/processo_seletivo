@@ -1,0 +1,53 @@
+Page not found (404)
+Request Method:	GET
+Request URL:	http://127.0.0.1:8017/gestao/retificacoes/00000000-0000-0000-0000-000000000099/
+Raised by:	processo_seletivo.interface.views.retificacao_detalhe
+
+Using the URLconf defined in config.urls, Django tried these URL patterns, in this order:
+
+[name='index']
+gestao/ documentacao/ [name='documentacao']
+gestao/ documentacao/<path:arquivo> [name='documentacao-arquivo']
+gestao/ [name='lista']
+gestao/ identificar [name='identificar']
+gestao/ sair [name='sair']
+gestao/ identificar/demonstracao [name='identificar-demonstracao']
+gestao/ visao-geral [name='visao-geral']
+gestao/ visao-geral/relatorio [name='relatorio-consolidado']
+gestao/ visao-geral/relatorio/conjunto [name='relatorio-consolidado-ver']
+gestao/ visao-geral/relatorio/pdf [name='relatorio-consolidado-pdf']
+gestao/ autoridades [name='autoridades']
+gestao/ processos/criar [name='processo-criar']
+gestao/ processos/<uuid:processo_id>/ [name='processo-detalhe']
+gestao/ processos/<uuid:processo_id>/editais/criar [name='edital-criar']
+gestao/ processos/<uuid:processo_id>/atos/<slug:acao> [name='processo-ato']
+gestao/ processos/<uuid:processo_id>/supervisao [name='supervisao']
+gestao/ editais/<uuid:edital_id>/ [name='detalhe']
+gestao/ editais/<uuid:edital_id>/duvidas/ [name='duvidas']
+gestao/ editais/<uuid:edital_id>/assistente/ [name='assistente']
+gestao/ editais/<uuid:edital_id>/assistente/nova/ [name='assistente-nova']
+gestao/ editais/<uuid:edital_id>/assistente/prototipo/ [name='assistente-prototipo']
+gestao/ editais/<uuid:edital_id>/assistente/prototipo/perguntar [name='assistente-prototipo-perguntar']
+gestao/ editais/<uuid:edital_id>/assistente/prototipo/sugestao [name='assistente-prototipo-sugestao']
+gestao/ editais/<uuid:edital_id>/assistente/prototipo/nova [name='assistente-prototipo-nova']
+gestao/ editais/<uuid:edital_id>/compor [name='compor']
+gestao/ editais/<uuid:edital_id>/compor/<slug:etapa> [name='compor-etapa']
+gestao/ editais/<uuid:edital_id>/reaproveitar [name='reaproveitar']
+gestao/ editais/<uuid:edital_id>/previa [name='previa']
+gestao/ editais/<uuid:edital_id>/previa/documento [name='previa-documento']
+gestao/ editais/<uuid:edital_id>/atos/<slug:acao> [name='ato']
+gestao/ editais/<uuid:edital_id>/retificar [name='retificar']
+gestao/ editais/<uuid:edital_id>/anexos [name='anexos']
+gestao/ editais/<uuid:edital_id>/anexos/<uuid:anexo_id>/arquivo [name='anexo-arquivo']
+gestao/ editais/<uuid:edital_id>/auditoria [name='auditoria']
+gestao/ editais/<uuid:edital_id>/relatorio [name='relatorio-do-edital']
+gestao/ editais/<uuid:edital_id>/relatorio/pdf [name='relatorio-do-edital-pdf']
+gestao/ editais/<uuid:edital_id>/matriculas [name='exportar-matriculas']
+gestao/ editais/<uuid:edital_id>/inscricoes [name='inscricoes']
+gestao/ inscricoes/<uuid:inscricao_id>/ [name='inscricao-recebida']
+gestao/ inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id> [name='documento-da-inscricao']
+gestao/ retificacoes/<uuid:retificacao_id>/ [name='retificacao-detalhe']
+
+The current path, gestao/retificacoes/00000000-0000-0000-0000-000000000099/, matched the last one.
+
+You’re seeing this error because you have DEBUG = True in your Django settings file. Change that to False, and Django will display a standard 404 page.

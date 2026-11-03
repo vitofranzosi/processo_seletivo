@@ -1,0 +1,8 @@
+[
+  "tests/integration/test_foundation.py",
+  "tests/interface/test_sorteio_com_a_fonte_de_producao.py",
+  "tests/test_javascript.py",
+  "tests/test_sem_dado_pessoal_da_amostra.py",
+  "tests/unit/classificacao/test_desempate.py",
+  "tests/unit/classificacao/test_numeracao_e_ausencia.py"
+]

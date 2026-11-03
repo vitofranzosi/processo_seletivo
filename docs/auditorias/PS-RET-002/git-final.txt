@@ -1,0 +1,9 @@
+﻿ M README.md
+ M backend/processo_seletivo/editais/domain/validation.py
+ M backend/processo_seletivo/interface/views.py
+?? backend/tests/integration/publicacoes/test_intervalo_retificado.py
+?? backend/tests/interface/test_base_temporal_da_retificacao.py
+?? backend/tests/unit/editais/test_intervalo_do_evento.py
+?? docs/auditorias/
+?? docs/sorteio/
+?? specs/101-publicacao-segura-de-retificacoes/
