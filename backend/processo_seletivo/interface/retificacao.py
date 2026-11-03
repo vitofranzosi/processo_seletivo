@@ -1692,6 +1692,11 @@ ROTULO_DO_EXCLUIDO = {
     ("sections", "order"): "Ordem da seção",
     ("sections", "type"): "Espécie da seção",
     ("documentRequirements", "key"): "Identificação do documento",
+    ("documentRequirements", "moment"): "Quando o documento é pedido",
+    (
+        "documentRequirements",
+        "reusesRequirementId",
+    ): "Documento da inscrição que atende o da convocação",
 }
 
 

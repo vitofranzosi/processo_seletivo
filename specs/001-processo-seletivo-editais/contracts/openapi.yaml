@@ -994,6 +994,8 @@ components:
           modalityId,
           attachmentId,
           modalityCode,
+          moment,
+          reusesRequirementId,
         ]
       properties:
         id: { $ref: '#/components/schemas/Id' }
@@ -1014,6 +1016,12 @@ components:
         # código. Versões publicadas antes da versão canônica 17 não trazem o campo no literal, como
         # as anteriores à 9 não trazem `attachmentId`; ausente e `null` dizem o mesmo.
         modalityCode: { type: [string, 'null'] }
+        # Quando o documento é pedido (115): na inscrição ou na convocação, no vocabulário do
+        # Requerimento de Matrícula. Versões anteriores à canônica 18 não trazem o campo, e a
+        # ausência é a inscrição.
+        moment: { type: string, enum: [AT_ENROLLMENT, AT_CALL] }
+        # O documento da inscrição que atende este, da convocação, ou `null` (115).
+        reusesRequirementId: { type: [string, 'null'], format: uuid }
     AnexoPublicado:
       type: object
       description: >-

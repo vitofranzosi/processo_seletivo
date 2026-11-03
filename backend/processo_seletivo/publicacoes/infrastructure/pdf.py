@@ -4222,8 +4222,52 @@ def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
 
     A ordem dos grupos é a do conteúdo publicado, e dentro de cada um, a ordem declarada. Nada é
     reordenado aqui: a ordem é decisão de quem elaborou, e o documento a reproduz.
+
+    **Os da convocação vêm depois, sob título próprio e neutro** (115, FR-3569). Neutro porque o
+    mesmo título serve à matrícula e à vinculação do bolsista: para que o documento serve, o Edital
+    diz na instrução. E só quando há algum — o Edital sem documento na convocação sai como saía.
     """
     requisitos = snapshot.get("documentRequirements") or []
+    if not requisitos:
+        return
+    da_inscricao = [r for r in requisitos if r.get("moment") != "AT_CALL"]
+    da_convocacao = [r for r in requisitos if r.get("moment") == "AT_CALL"]
+    _grupos_de_documentos(composicao, snapshot, da_inscricao)
+    if not da_convocacao:
+        return
+    with composicao.bloco():
+        composicao.escrever(
+            TITULO_DOS_DOCUMENTOS_NA_CONVOCACAO,
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO,
+            antes=ANTES_DE_BLOCO,
+            junto=True,
+        )
+        composicao.escrever(
+            "Estes documentos são pedidos só a quem for convocado, e são apresentados na área do "
+            "candidato dentro do prazo da convocação.",
+            tamanho=CORPO_TEXTO,
+            antes=ANTES_DE_LINHA,
+        )
+    _grupos_de_documentos(composicao, snapshot, da_convocacao, nomes_por_id=_nomes(requisitos))
+
+
+TITULO_DOS_DOCUMENTOS_NA_CONVOCACAO = "Documentos exigidos na convocação"
+
+
+def _nomes(requisitos):
+    return {str(r.get("id")): r.get("name", "") for r in requisitos if r.get("id")}
+
+
+def frase_do_aproveitamento(documento, nomes_por_id):
+    """Quem já enviou o documento aproveitado na inscrição não o envia de novo (115, FR-3569)."""
+    aproveitado = nomes_por_id.get(str(documento.get("reusesRequirementId") or ""))
+    if not aproveitado:
+        return ""
+    return f"Quem enviou {aproveitado} na inscrição não precisa enviá-lo de novo."
+
+
+def _grupos_de_documentos(composicao, snapshot, requisitos, *, nomes_por_id=None):
     if not requisitos:
         return
     perfis, modalidades = _nomes_do_alcance(snapshot)
@@ -4255,7 +4299,11 @@ def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
             if composicao.redacao != REDACAO_1:
                 # D5, em alíneas com o recuo pendente (ED-16).
                 for indice, documento in enumerate(documentos):
-                    _item(composicao, _alinea(indice), texto_do_documento(documento), recuo=18.0)
+                    texto = texto_do_documento(documento)
+                    aproveitamento = frase_do_aproveitamento(documento, nomes_por_id or {})
+                    if aproveitamento:
+                        texto += f". {aproveitamento}"
+                    _item(composicao, _alinea(indice), texto, recuo=18.0)
                 continue
             for indice, documento in enumerate(documentos):
                 texto = f"{_alinea(indice)} {documento.get('name', '')}"
@@ -4263,6 +4311,9 @@ def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
                     texto += f" — {documento['instructions']}"
                 if not documento.get("required", True):
                     texto += " (facultativo)"
+                aproveitamento = frase_do_aproveitamento(documento, nomes_por_id or {})
+                if aproveitamento:
+                    texto += f". {aproveitamento}"
                 composicao.escrever(texto, tamanho=CORPO_TEXTO, recuo=18.0, antes=ANTES_DE_LINHA)
 
 

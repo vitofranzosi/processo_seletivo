@@ -690,7 +690,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # certame"). Não é tocar o que se lê: é a cópia da frase do documento que a tela mostra, e
         # que muda junto dela para não haver duas redações da mesma forma (069, R-004, FR-1364).
         # `AlterField` de `choices` não emite SQL, e os valores gravados não mudam.
-        "editais": 23,
+        #
+        # **Sobe para 24 com a 115**: a `editais/0024` acrescenta o momento e o aproveitamento ao
+        # Documento Exigido — quando ele é pedido, na inscrição ou na convocação. É elaboração pela
+        # razão das anteriores, e a coluna nasce com a inscrição, que é o que todo documento
+        # anterior significava; a migration não percorre linha publicada (115, FR-3563).
+        "editais": 24,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -889,7 +894,12 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # certame"). Não é tocar o que se lê: é a cópia da frase do documento que a tela mostra, e
         # que muda junto dela para não haver duas redações da mesma forma (069, R-004, FR-1364).
         # `AlterField` de `choices` não emite SQL, e os valores gravados não mudam.
-        "editais": 23,
+        #
+        # **Sobe para 24 com a 115**: a `editais/0024` acrescenta o momento e o aproveitamento ao
+        # Documento Exigido — quando ele é pedido, na inscrição ou na convocação. É elaboração pela
+        # razão das anteriores, e a coluna nasce com a inscrição, que é o que todo documento
+        # anterior significava; a migration não percorre linha publicada (115, FR-3563).
+        "editais": 24,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se

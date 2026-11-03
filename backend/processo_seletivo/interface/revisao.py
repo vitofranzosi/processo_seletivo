@@ -418,11 +418,30 @@ def _alcance(documento, snapshot):
     )
 
 
+def _nome_do_aproveitado(documento, snapshot):
+    """O nome do documento da inscrição que atende este, da convocação, ou vazio (115, FR-3566)."""
+    alvo = documento.get("reusesRequirementId")
+    if not alvo:
+        return ""
+    for outro in snapshot.get("documentRequirements") or []:
+        if str(outro.get("id")) == str(alvo):
+            return outro.get("name", "")
+    return ""
+
+
 def _documento(documento, snapshot):
     linhas = [
         Rotulada("Exigência", "obrigatória" if documento.get("required", True) else "facultativa"),
         Rotulada("Aplica-se a", _alcance(documento, snapshot)),
+        # Quando é pedido (115): quem homologa precisa ver que o documento saiu da inscrição.
+        Rotulada(
+            "Pedido",
+            "na convocação" if documento.get("moment") == "AT_CALL" else "na inscrição",
+        ),
     ]
+    aproveitado = _nome_do_aproveitado(documento, snapshot)
+    if aproveitado:
+        linhas.append(Rotulada("Atendido por", f"{aproveitado}, se enviado na inscrição"))
     if documento.get("instructions"):
         linhas.append(Rotulada("Instruções", documento["instructions"]))
     return {
@@ -923,6 +942,8 @@ _LIDOS_POR_COLECAO = {
         "modalityId",
         "attachmentId",
         "modalityCode",
+        "moment",
+        "reusesRequirementId",
     ),
 }
 LIDOS = frozenset(
