@@ -46,15 +46,20 @@ provisionamento. O modelo também recusa `save` de linha existente e `delete`.
 | `numero` | PositiveInteger | 1, 2, 3… por item; unique `(item, numero)` |
 | `arquivo` | `FileField(ArmazenamentoPrivado)`, blank | `convocacoes/<chamada_id>/<uuid4>.pdf` |
 | `nome_original`, `tamanho`, `content_hash` | como em `DocumentoSubmetido` | o hash é sempre preenchido, inclusive na referência (cópia do hash do envio) |
-| `documento_da_inscricao` | FK `inscricoes.DocumentoSubmetido`, null, `PROTECT` | a referência (FR-3576); nunca CASCADE (MAT-16) |
+| `documento_da_inscricao` | FK `inscricoes.DocumentoSubmetido`, null, `PROTECT` | a referência à inscrição (FR-3576, e FR-3619 quando a origem era da inscrição); nunca CASCADE (MAT-16) |
+| `apresentacao_de_origem` | FK self, null, `PROTECT` | a referência a chamada anterior (FR-3619): sempre uma apresentação **com arquivo** |
 | `apresentado_por` | `CharField(255)` | subject do titular, ou `"convocacao:<id>"` para a referência criada pelo ato |
 | `unidade_de_atuacao` | `CharField(100)` | R-008 |
 | `apresentado_em` | DateTime | |
 
-- Check `ck_apresentacao_arquivo_ou_referencia`: exatamente um entre `arquivo` não vazio e
-  `documento_da_inscricao`.
-- Gatilho de coerência no INSERT: a referência pertence à mesma inscrição do item, e o requisito dela
-  é o `aproveita_requisito_id` do item.
+- Check `ck_apresentacao_arquivo_ou_referencia`: exatamente um entre `arquivo` não vazio,
+  `documento_da_inscricao` e `apresentacao_de_origem`.
+- Gatilho de coerência no INSERT:
+  - `documento_da_inscricao`: é da mesma inscrição do item, e o requisito dele é o
+    `aproveita_requisito_id` do item, ou o mesmo requisito vindo de chamada anterior;
+  - `apresentacao_de_origem`: tem arquivo (nunca referência a referência), é de item da mesma
+    inscrição, do mesmo `requisito_id` e de outra chamada raiz anterior;
+  - `content_hash` é o da origem.
 - **Vigente** = maior `numero` do item. Nenhuma coluna de vigência.
 
 ## Conferência (`convocacao.ConferenciaDeDocumento`, novo, append-only)
@@ -106,7 +111,14 @@ chamada fechada são do serviço (R-005), sob trava.
 - `estado_do_item(item, apresentacoes, conferencias)` devolve um valor da FR-3590;
 - `estado_da_convocacao(itens…, desfecho)` devolve um valor da FR-3591, na precedência escrita lá;
 - `pendencias_para_incluir(itens…)` devolve os obrigatórios que impedem aceite e regularização
-  (FR-3592).
+  (FR-3592);
+- `origem_aproveitavel(item_anterior, apresentacoes, conferencias)` devolve o arquivo de origem, ou
+  `None` se o item anterior é *pendente* ou não tem apresentação (FR-3619).
+
+## Requerimento de Matrícula (`requerimentos`, existe, sem mudança de forma)
+
+Nenhum campo novo. `apurar()` recebe `prazo_unico_decorrido`, injetado pela aplicação (FR-3622).
+Nenhuma linha se apaga e o rascunho se preserva.
 
 ## Contagens
 

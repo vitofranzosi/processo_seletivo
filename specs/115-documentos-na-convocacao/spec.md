@@ -4,11 +4,21 @@
 
 **Created**: 2026-11-03
 
-**Status**: Draft, **aguardando a revisão do usuário antes de qualquer código**. Esta sessão produziu
-só a especificação e os artefatos de planejamento: nenhum código, migration ou tela foi alterado. As
-decisões de produto D-001 a D-007 do pedido são do usuário (03/11/2026) e não se reabrem aqui. Estão
-registradas como as decisões de produto desta spec (§ Decisões, D-001 a D-007). As decisões de
-desenho (D-008 em diante) são propostas desta spec e **pedem aprovação** (§ Pendências do usuário).
+**Status**: Draft, **revista em 03/11/2026 sobre o PR, com as decisões do usuário**. Nenhum código,
+migration ou tela foi alterado. Cada grupo de decisões tem uma situação:
+
+- **Do usuário, do pedido original:** D-001 a D-007.
+- **Aprovadas pelo usuário na revisão do PR:**
+  - a capacidade opcional por documento, em qualquer tipo de Edital (QI-2′);
+  - a D-010 (quem confere e quem desfecha);
+  - a D-012 (abertura antes do "conforme");
+  - a D-018 (revisão da FR-402 da `029`), já aplicada no arquivo da `029`.
+- **Ajustadas a pedido dele:** a D-011 (prazo alinhado ao do Requerimento) e a D-013 (aproveitamento
+  entre chamadas).
+- **Demais (D-008, D-009, D-014 a D-017):** propostas de desenho que a revisão não contestou.
+
+O que ainda pede aprovação explícita é o texto da revisão da FR-374 da `029` (D-019). O merge deste
+PR é a aprovação da spec.
 
 **Input**: a [auditoria de matrícula e dossiê documental](../../doc/auditoria-matricula-e-dossie-documental-2026-11-03.md)
 e o [complemento](../../doc/auditoria-matricula-e-dossie-documental-2026-11-03-complemento.md), de
@@ -134,6 +144,23 @@ Decisões do usuário trazidas no pedido, que não se reabrem:
 - Q: Vencimento ou pendência produzem efeito? → A: Nada é automático. Não há indeferimento, perda de
   vaga nem nova convocação sem gesto humano (D-007).
 
+### Session 2026-11-03 (revisão do PR #368)
+
+- Q: Em quais tipos de Edital o documento pode ir para a convocação (QI-2′)? → A: Em qualquer um,
+  como recurso opcional por documento, independentemente da natureza do processo.
+- Q: A revisão da FR-402 da `029`? → A: Aprovada no texto da D-018, e aplicada.
+- Q: Quem confere e quem desfecha (D-010)? → A: Aprovada: presidência e quem tem a autorização atual
+  de gerir a comissão conferem e desfecham; o membro alocado só confere; as restrições por Perfil se
+  preservam.
+- Q: Exigir a abertura antes do "conforme" (D-012)? → A: Aprovada, vinculada ao documento, à versão e
+  a quem confere. Abrir uma versão anterior não autoriza conferir a atual.
+- Q: O prazo do documento e o do Requerimento podem divergir (D-011)? → A: Não, quando os dois estão
+  submetidos à mesma chamada. Alinhar, preservar a conferência depois do vencimento, sem prazo novo e
+  sem indeferimento automático. Se a `029` mudar, registrar a revisão e os testes (D-019).
+- Q: Uma chamada nova da mesma inscrição exige reenvio (D-013)? → A: Não por padrão. Lista própria e
+  histórico próprio, mas aproveitamento por referência do que o GPS já tem na mesma inscrição, sem
+  transportar a conferência.
+
 ## User Scenarios & Testing *(mandatory)*
 
 Os três primeiros cenários são os **cenários demonstráveis** da Constituição, VI. Todos são de
@@ -249,7 +276,12 @@ conforme; não atendimento, indeferimento com fundamento ou reclassificação, s
 Se a comissão quiser dar mais prazo, corrige a convocação por sucessão, com motivo e novo
 vencimento. É o mecanismo que já existe. A lista e as versões apresentadas continuam com a chamada.
 
-**Why this priority**: é onde o risco de automatismo e de prazo inventado mora (D-007).
+Na chamada que também abre o Requerimento de Matrícula, o prazo é um só para os dois. Depois do
+vencimento, nem documento nem requerimento se escrevem. Os dois continuam legíveis, e a correção da
+convocação reabre os dois juntos (FR-3622).
+
+**Why this priority**: é onde o risco de automatismo e de prazo inventado mora (D-007), e onde o
+candidato não pode receber duas respostas diferentes sobre o mesmo prazo.
 
 **Independent Test**: marcar pendência, deixar o vencimento passar, tentar enviar pelo portal,
 conferir e desfechar. Repetir com a correção da convocação por sucessão antes do vencimento.
@@ -265,6 +297,12 @@ conferir e desfechar. Repetir com a correção da convocação por sucessão ant
    continua obrigatório.
 4. **Given** a convocação corrigida por sucessão com vencimento novo, **When** a convocada abre a tela,
    **Then** vê o mesmo item pendente, com o prazo novo, e pode complementar.
+5. **Given** uma chamada com documentos e com o Requerimento na convocação, e o vencimento decorrido,
+   **When** a convocada tenta enviar ou atualizar o requerimento, **Then** o envio é recusado com a
+   mesma frase dos documentos. O requerimento continua legível, e o rascunho não se perde.
+6. **Given** uma chamada **sem** documento na convocação e com o Requerimento, e o vencimento
+   decorrido, **When** a convocada envia o requerimento, **Then** ele é aceito, como hoje (FR-374 da
+   `029`).
 
 ---
 
@@ -347,6 +385,40 @@ conferir que o PDF é o de antes.
 
 ---
 
+### User Story 8 — A chamada nova aproveita o que a chamada anterior já recebeu (Priority: P2)
+
+O candidato reclassificado é convocado de novo, ou é convocado para regularizar. A chamada nova grava
+a sua própria lista. Cada item que a chamada anterior da mesma inscrição já tinha recebido, e cuja
+conferência vigente lá não era *pendente*, nasce **aproveitado por referência**, sem arquivo novo. O
+estado é *recebido, aguardando conferência*: a conferência anterior não vem junto.
+
+A comissão abre o arquivo e confere de novo. Se o documento venceu ou não serve mais, marca
+*pendente*, e o candidato envia outro.
+
+**Why this priority**: não pedir de novo prova que o GPS já tem (Lei 14.129, art. 3º, XIII), sem
+transferir deferimento sem análise.
+
+**Independent Test**: convocar, apresentar, conferir e desfechar com reclassificação. Convocar de
+novo a mesma inscrição e conferir:
+- que os itens aproveitados apontam o mesmo arquivo, com o mesmo hash, e nenhum arquivo novo existe;
+- que nenhum está *conforme*;
+- que o "conforme" exige abrir o arquivo de novo nesta chamada.
+
+**Acceptance Scenarios**:
+
+1. **Given** um item *conforme* na chamada anterior, **When** a chamada nova é registrada, **Then** o
+   item nasce aproveitado por referência, *recebido, aguardando conferência*.
+2. **Given** um item *pendente* na chamada anterior, **When** a chamada nova é registrada, **Then** o
+   item nasce *a apresentar*.
+3. **Given** um item aproveitado, **When** a comissão tenta o "conforme" sem abrir o arquivo nesta
+   chamada, **Then** é recusada, mesmo que a mesma pessoa o tenha aberto na anterior.
+4. **Given** um item aproveitado cuja exigência foi retificada entre as chamadas, **When** a comissão
+   abre a página, **Then** vê a indicação de que a exigência mudou desde a apresentação.
+5. **Given** um item aproveitado, **When** o candidato envia outro arquivo, **Then** ele vira a
+   apresentação vigente, e a referência fica como anterior.
+
+---
+
 ### Edge Cases
 
 Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como requisito.
@@ -358,13 +430,19 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 - **Convocação corrigida por sucessão** (vencimento, fundamento). Usa a lista e as apresentações da
   chamada que corrige (FR-3573, D-009).
 - **Nova chamada da mesma inscrição** (reclassificado reconvocado, convocação para regularizar). Grava
-  lista nova; os documentos da chamada anterior não são herdados. Só o aproveitamento declarado, da
-  inscrição, se aplica (FR-3573, D-013).
+  lista nova. O que a chamada anterior recebeu e não estava *pendente* é aproveitado por referência,
+  sem conferência (FR-3619 a FR-3621, D-013).
+- **Item aproveitado entre chamadas, que na anterior era ele mesmo uma referência.** A referência nova
+  aponta o arquivo de origem, e nunca outra referência (FR-3619).
+- **Item que não existia na chamada anterior** (documento novo por Retificação). Nasce *a
+  apresentar*, ou pelo aproveitamento da inscrição, se declarado (FR-3619).
+- **Requerimento e documentos na mesma chamada, depois do vencimento.** Os dois se fecham; sem
+  documento na chamada, só o requerimento fica aberto, como hoje (FR-3622).
 - **Retificação depois da convocação.** Não altera a lista congelada; vale para as chamadas seguintes
   (FR-3573).
 - **Envio duplicado.** Mesma requisição repetida, mesmo arquivo de novo ou duplo clique (FR-3581).
 - **Arquivo inválido.** Foto, extensão trocada, vazio, acima do limite (FR-3582).
-- **Envio depois do vencimento** (FR-3582, D-011).
+- **Envio depois do vencimento** (FR-3582, FR-3622, D-011).
 - **Envio antes do envio da comunicação** (prazo não iniciado). É aceito (FR-3578, D-011).
 - **Convocação sem vencimento** (Edital sem prazo publicado e vencimento não informado). O envio é
   aceito enquanto a chamada estiver em aberto (FR-3578).
@@ -449,8 +527,9 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   - a convocação que corrige outra por sucessão MUST usar a lista, as apresentações e as conferências
     da chamada que corrige, e MUST NOT gravar outra;
   - a Retificação posterior MUST NOT alterar a lista gravada;
-  - cada chamada nova da mesma inscrição MUST gravar a sua lista pela versão então vigente, sem herdar
-    apresentações da chamada anterior (D-009, D-013).
+  - cada chamada nova da mesma inscrição MUST gravar a sua lista pela versão então vigente. Ela tem
+    histórico próprio de apresentações e conferências, e o que já foi recebido se aproveita por
+    referência pela FR-3619 (D-009, D-013).
 - **FR-3574**: Sem documento da convocação aplicável, a lista MUST ficar sem itens obrigatórios ou
   facultativos. A tela do portal, a condução e o desfecho MUST se comportar exatamente como antes
   desta feature, sem elemento novo visível.
@@ -463,7 +542,24 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   - a referência é a primeira apresentação do item, de autoria do ato da convocação.
   
   Sem o documento na inscrição, o item nasce a apresentar. Nada se aproveita entre inscrições nem
-  entre Editais.
+  entre Editais. Entre chamadas da mesma inscrição, vale a FR-3619, que tem precedência sobre esta.
+- **FR-3619**: Ao gravar a lista de uma chamada nova, o sistema MUST aproveitar **por referência**,
+  para cada item obrigatório ou facultativo, a apresentação vigente do mesmo requisito na chamada
+  anterior mais recente da mesma inscrição, quando houver uma e a conferência vigente dela lá não for
+  *pendente*. A referência:
+  - aponta o arquivo de origem: o documento da inscrição, ou a apresentação que guarda o arquivo.
+    Nunca aponta outra referência, e nunca copia o arquivo;
+  - leva o hash da origem, e é de autoria do ato da convocação.
+  
+  Item pendente na anterior, ou sem apresentação, ou requisito que não existia, segue a FR-3576.
+- **FR-3620**: A conferência da chamada anterior MUST NOT ser transportada. O item aproveitado nasce
+  *recebido, aguardando conferência*. A chamada nova só fica *pronta para decidir* depois de conferida
+  nela mesma (FR-3592).
+- **FR-3621**: A página de documentos da convocação MUST mostrar, no item aproveitado entre chamadas:
+  - a chamada e o instante da apresentação de origem;
+  - a conferência que ela teve lá, só como leitura;
+  - a indicação de que a exigência mudou, quando a versão do item difere da versão em que a origem
+    foi apresentada.
 
 #### C. A apresentação pelo portal
 
@@ -476,8 +572,9 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   Os itens que não se aplicam MUST NOT ser mostrados.
 - **FR-3578**: O titular MUST poder apresentar um arquivo por item enquanto a chamada estiver **em
   aberto** (convocação vigente sem desfecho) e o vencimento **não tiver decorrido**. Isso inclui a
-  convocação cujo prazo ainda não começou a correr e a convocação sem vencimento (D-011). O arquivo
-  MUST passar por:
+  convocação cujo prazo ainda não começou a correr e a convocação sem vencimento (D-011). "Decorrido"
+  MUST ser lido pela mesma regra que a `019` usa para admitir o não atendimento, e nunca por contagem
+  própria. O arquivo MUST passar por:
   - a mesma validação da inscrição: PDF por assinatura e extensão, limite de tamanho e recusa que
     orienta quem mandou foto;
   - o mesmo armazenamento privado e sem URL;
@@ -486,8 +583,8 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 - **FR-3579**: Cada envio MUST ser uma **apresentação** nova, append-only, numerada no item. A vigente
   é a mais recente. As anteriores continuam legíveis por quem pode conferir. Nada é sobrescrito, nada
   é removível pelo candidato, e o vínculo da apresentação MUST impedir a exclusão do que ela aponta.
-- **FR-3580**: O titular MUST poder apresentar arquivo novo para item atendido por referência. A
-  referência fica como apresentação anterior.
+- **FR-3580**: O titular MUST poder apresentar arquivo novo para item atendido por referência, da
+  inscrição ou de chamada anterior. A referência fica como apresentação anterior.
 - **FR-3581**: Envio duplicado MUST NOT produzir apresentação duplicada:
   - a mesma requisição repetida (idempotência) devolve o resultado da primeira;
   - arquivo com o mesmo hash da apresentação vigente do item não cria versão, e responde que o arquivo
@@ -572,6 +669,19 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   obrigatório e é de quem registra.
 - **FR-3618**: Dar mais prazo MUST ser feito pela correção da convocação por sucessão, com motivo e
   vencimento novo, que já existe. MUST NOT existir prazo de complementação próprio do item (D-011).
+- **FR-3622**: Na chamada em que o Edital declara o Requerimento de Matrícula *na convocação* **e** a
+  lista da convocação tem ao menos um item obrigatório ou facultativo, o requerimento MUST seguir o
+  mesmo prazo dos documentos:
+  - decorrido o vencimento (a mesma leitura da FR-3578), o preenchimento, o envio e o sucessor do
+    requerimento MUST ser recusados, com a mesma frase dos documentos;
+  - o requerimento MUST continuar legível, e o rascunho MUST NOT ser apagado nem convertido em
+    enviado;
+  - a correção da convocação por sucessão, com vencimento novo, MUST reabrir os dois juntos;
+  - antes de o prazo começar a correr, e na convocação sem vencimento, os dois continuam abertos.
+  
+  Na chamada **sem** item documental, o requerimento MUST continuar regido pela FR-374 da `029`, sem
+  mudança. A regra depende da revisão da FR-374 e da FR-408 da `029` proposta na D-019. A conferência
+  continua depois do vencimento (FR-3588), e nenhum desfecho nasce do decurso (FR-3593).
 
 #### F. Autorização
 
@@ -641,8 +751,10 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 - **FR-3610**: A linha cujo desfecho vigente inclui na ocupação MUST mostrar *"Apto para
   formalização"*. As telas desta feature MUST NOT dizer *encaminhado*, *matriculado*, *matrícula
   efetivada*, *bolsa concedida*, *vinculado* nem *contratado*.
-- **FR-3611**: A conferência *conforme* MUST ser recusada se o próprio conferente não abriu a
-  apresentação vigente daquele item, inclusive a apresentação por referência (D-012).
+- **FR-3611**: A conferência *conforme* MUST ser recusada se o próprio conferente não abriu, **nesta
+  chamada**, a apresentação vigente daquele item, inclusive a apresentação por referência (D-012). A
+  abertura vale só para a apresentação aberta e para quem a abriu. Ela MUST NOT autorizar o "conforme"
+  de outra apresentação do mesmo item, nem o da referência ao mesmo arquivo em outra chamada.
 
 #### I. O portal
 
@@ -653,6 +765,7 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   - *"Pendente: ‹motivo›. Envie outro arquivo até ‹vencimento›"*;
   - *"Conforme"*;
   - *"Atendido pelo documento enviado na inscrição em DD/MM"*;
+  - *"Aproveitado da chamada anterior, enviado em DD/MM. A comissão vai conferir de novo"*;
   - e, depois do vencimento, *"O prazo terminou em ‹vencimento›. A comissão vai decidir."*
   
   Nenhum texto diz matrícula, bolsa ou contratação.
@@ -703,8 +816,9 @@ leitura das linhas que a alocação cobre. A regra das recusas é a da FR-3599: 
 - **Item da lista da convocação** (novo, append-only): para uma chamada, um requisito com a situação
   (obrigatório, facultativo, não se aplica), o recorte e a versão que o fundamentou.
 - **Apresentação** (nova, append-only): uma versão numerada do item. É **arquivo** (nome físico,
-  tamanho, hash, instante) **ou referência** a um documento da inscrição, nunca os dois. Tem ator e
-  unidade de atuação.
+  tamanho, hash, instante) **ou referência**, nunca os dois. A referência aponta um documento da
+  inscrição ou a apresentação, de chamada anterior da mesma inscrição, que guarda o arquivo. Tem ator
+  e unidade de atuação.
 - **Conferência** (nova, append-only): o juízo sobre um item (conforme, pendente, não se aplica), com
   a apresentação julgada e o hash dela, motivo, autor, unidade de atuação, instante e, quando
   substitui outra, motivo da substituição.
@@ -742,6 +856,11 @@ leitura das linhas que a alocação cobre. A regra das recusas é a da FR-3599: 
   (gatilho e privilégio ausente). O provisionamento passa a proteger 49 tabelas.
 - **SC-1091**: Abrir um documento e registrar a conferência dele, a partir da página de documentos da
   convocação, cabe em três interações, sem sair da página.
+- **SC-1092**: Na chamada nova da mesma inscrição (US8), zero arquivos novos são gravados para os
+  itens aproveitados, e zero itens nascem *conformes*.
+- **SC-1093**: Numa chamada com documentos e Requerimento, depois do vencimento, as duas recusas têm
+  a mesma frase em 100% dos casos verificados. Numa chamada sem documento, o comportamento do
+  Requerimento é idêntico ao de antes desta feature.
 
 ## Assumptions
 
@@ -792,6 +911,7 @@ própria em `tasks.md`).
 | **Exclusões da `009`** ("versões posteriores ao envio"; "substituição de documento pelo candidato após o envio") | Valem para a inscrição, e continuam valendo: esta spec não substitui documento da inscrição. As versões são da convocação | **Sem mudança**; nomeado para que a leitura da exclusão não se estenda à convocação |
 | **FR-084 da `010`** | Avisar pendência por e-mail seria a quinta situação | **Sem mudança**; a pendência é estado visível no portal (FR-3614) |
 | **FR-395 e FR-400 da `029`** | Nenhum: o requerimento não depende do documento, e a leitura do requerimento continua no dossiê | **Sem mudança** |
+| **FR-374 e FR-408 da `029`** | O requerimento continua aberto depois do vencimento, e o documento fecha: duas respostas sobre o mesmo prazo | **Revisão de texto proposta (D-019)**: exceção só na chamada com item documental, pela mesma leitura do prazo da `019` (FR-3622). FR-373 e FR-411 sem mudança |
 | **FR-714, FR-715, FR-718 e FR-723 da `044`** | A lista da inscrição passa a excluir os documentos da convocação | Compatível: a regra de aplicabilidade é a mesma, filtrada pelo momento (FR-3568) |
 | **FR-297, FR-299 e FR-304 da `026`** | Dois campos novos precisam de natureza; não retificável exige razão normativa | Momento e aproveitamento não retificáveis, com razão (D-014). A conta de campos retificáveis não muda |
 | **FR-273, FR-274 e FR-277 da `019`** | O aceite passa a ter guarda nova | Compatível: guarda é recusa, não desfecho; nenhum desfecho novo nem automático (FR-3592, FR-3593) |
@@ -807,6 +927,7 @@ própria em `tasks.md`).
 | **Constituição, VI** (cenário demonstrável) | — | US1, US2 e US3 |
 | **Gatilho da `inscricoes/0007`** (recusa documento em inscrição enviada) | Nenhum: a apresentação é outra tabela, e a referência não insere documento da inscrição | Sem mudança no gatilho |
 | **MAT-16** (`DocumentoSubmetido` com `CASCADE` para a inscrição) | Se copiado, o documento da convocação seria apagável com a inscrição | As tabelas novas apontam com proteção contra exclusão (FR-3579) |
+| **Entrega documental controlada** (segunda spec provável, §10.4 do complemento) | Nenhum agora; o risco era esta spec fechar o caminho dela | Ela vai ler, sem nada novo: os aptos (desfecho que inclui), a apresentação vigente de cada item *conforme*, com requisito, hash, chamada, Edital e Perfil, e o arquivo em um passo (a referência nunca aponta outra referência, FR-3619). Nenhum arquivo duplicado, nada guardado em pacote |
 
 ## Decisões
 
@@ -871,7 +992,8 @@ herda por construção, e não por cópia.
 
 ### D-010 — Quem confere: a base atual do desfecho, mais a alocação à conferência
 
-*Proposta de desenho, sobre a D-002.* Hoje só há duas bases na comissão:
+**Aprovada pelo usuário na revisão do PR (03/11/2026)**, com a restrição por Perfil preservada. O
+alocado confere e não desfecha. Hoje só há duas bases na comissão:
 
 - a de gestão (presidência e `comissao:gerir`), que conduz e desfecha;
 - a alocação à Etapa, que dá à Mesa e a nada mais.
@@ -891,36 +1013,72 @@ A alocação:
 - admite restrição por Perfil, a mesma peça que o multiunidade vai usar (§7 do complemento);
 - é da comissão, e não papel na unidade. Atende à §10.2 ("quem confere é a comissão do Processo").
 
-A permissão para o alocado também desfechar fica como pendência (QI-1′ residual).
+O alocado **não** desfecha: é a decisão do usuário, e fecha a QI-1′ no que é do GPS.
 
-### D-011 — Apresentação até o vencimento; conferência depois dele; prazo novo é correção da convocação
+### D-011 — Um prazo só para a chamada: documentos e Requerimento fecham juntos, e a conferência continua
 
-*Proposta de desenho.* O vencimento da convocação é o prazo que o Edital dá para a entrega (72/2026,
-item 8; 89/2026, 11.2). Aceitar envio depois dele daria ao candidato mais prazo do que o Edital deu.
-Antes de a comunicação ser enviada, o prazo não corre (`prazo.py`), mas o envio antecipado não
-prejudica ninguém, e é aceito. A conferência continua depois do vencimento, porque o que chegou no
-prazo precisa ser julgado. Prazo novo é ato: a correção da convocação por sucessão, com motivo, já
-existe (FR-3618).
+**Ajustada a pedido do usuário (03/11/2026).** A primeira versão fechava o documento no vencimento e
+deixava o Requerimento aberto, pela FR-374 da `029`. Na mesma tela da convocação, o candidato
+receberia duas respostas sobre o mesmo prazo.
 
-**Diferença deliberada com o Requerimento.** Pela `029`, o Requerimento `AT_CALL` continua disponível
-enquanto a chamada estiver em aberto, mesmo depois do vencimento. Esta spec não muda isso, e registra
-a assimetria como pendência de alinhamento.
+**O que a FR-374 protegia, e por que o alinhamento não o contraria.** O argumento da `029` é que
+*"duas contagens do mesmo prazo divergiriam"*. Em setembro, a convocação tinha uma leitura só do
+prazo: a que admite o não atendimento (`convocacao/domain/prazo.py`, `decorrido`), que só conta
+depois do envio da comunicação. O alinhamento usa **essa** leitura, para documentos e Requerimento.
+Não há segunda contagem.
+
+**O alcance é o da chamada que submete os dois ao mesmo prazo**, isto é, a que tem Requerimento *na
+convocação* e ao menos um item documental. Na chamada sem documento, o Requerimento continua aberto
+depois do vencimento, como hoje. É o limite do pedido ("Editais sem documento na convocação mantêm o
+comportamento atual"). Estender a regra a todo Requerimento *na convocação* é decisão própria, e fica
+registrada (§ Pendências).
+
+**O que continua:**
+- a conferência depois do vencimento, porque a comissão julga o que chegou no prazo (FR-3588);
+- a exceção fundamentada, pela correção da convocação por sucessão com vencimento novo, que reabre os
+  dois (FR-3618, FR-3622);
+- nenhum prazo novo e nenhum desfecho pelo decurso (FR-3593).
+
+**Alternativa descartada: aceitar documentos depois do vencimento**, como o Requerimento, e deixar a
+tempestividade à comissão. Seria o alinhamento sem revisar a `029`. Mas o sistema daria recibo de
+entrega a quem o Edital diz que perde a vaga (*"será desclassificado"*, 89/2026, 11.2; *"será
+reclassificado"*, 72/2026, item 8). A disputa do "o sistema aceitou" cairia sobre a comissão.
 
 ### D-012 — "Conforme" exige ter aberto o arquivo
 
-*Proposta de desenho.* A auditoria (§L) aponta a avaliação em massa sem conferência como o risco a
+**Aprovada pelo usuário na revisão do PR (03/11/2026)**, vinculada ao documento, à versão e a quem
+confere. A abertura de uma versão anterior, ou de outra chamada, não autoriza o "conforme" da atual
+(FR-3611).
+
+A auditoria (§L) aponta a avaliação em massa sem conferência como o risco a
 evitar. O padrão da Mesa ("1 de 2 abertos por você") já existe. Exigir a abertura pela própria pessoa,
 registrada na trilha, faz o "conforme" significar juízo sobre o arquivo. Pendente e não se aplica não
 exigem abertura: o documento pode nem ter sido apresentado.
 
-### D-013 — Nenhuma lista retroativa; chamada nova não herda apresentações
+### D-013 — Nenhuma lista retroativa; a chamada nova aproveita por referência, e confere de novo
 
-*Proposta de desenho.* O sistema não está em produção (a mesma razão da decisão sobre atos anteriores
-da `114`). Sobre a chamada nova da mesma inscrição (reclassificado reconvocado, convocação para
-regularizar): herdar apresentações juntaria atos de chamadas distintas, com conferências feitas sob
-outra lista. Pedir de novo, porém, pode contrariar a vedação de exigir prova já feita (Lei 14.129,
-art. 3º, XIII). Por isso fica **pendência do usuário**. O comportamento proposto até lá é o mais
-estreito: lista nova, sem herança.
+**A primeira parte é proposta de desenho; a segunda foi ajustada a pedido do usuário (03/11/2026).**
+
+**Sem lista retroativa.** O sistema não está em produção, que é a mesma razão da decisão sobre atos
+anteriores da `114` (FR-3575).
+
+**Entre chamadas da mesma inscrição**, a primeira versão pedia tudo de novo, o que contraria a vedação
+de exigir prova de fato já comprovado (Lei 14.129, art. 3º, XIII). A versão ajustada separa três
+coisas que a primeira juntava:
+
+| O quê | Entre chamadas | Por quê |
+|---|---|---|
+| A lista | própria de cada chamada (FR-3573) | a exigência é a da versão vigente na chamada nova |
+| O arquivo | aproveitado por referência, sem cópia (FR-3619) | identidade e integridade: o hash é o da origem |
+| A conferência | **não** se transporta (FR-3620) | a decisão é de cada chamada; o documento pode ter vencido, ou a exigência mudado |
+
+O item *pendente* na anterior não se aproveita: aproveitá-lo seria pedir à comissão que julgasse de
+novo o que ela já disse que não serve. A referência aponta sempre o arquivo de origem, e nunca outra
+referência. Assim a rastreabilidade não vira corrente, e a futura entrega encontra o arquivo num passo.
+
+**Alternativa descartada: oferecer o aproveitamento como escolha do candidato** ("usar o documento da
+chamada anterior"). Daria mais um gesto a quem já apresentou. O aproveitamento automático é
+favorável, não decide nada, e o candidato continua podendo enviar outro (FR-3580).
 
 ### D-014 — Momento e aproveitamento não são retificáveis
 
@@ -958,10 +1116,11 @@ alocação, ela vai na linha (FR-3602). No desfecho, a trilha já grava o escopo
 (`RegistroAuditoria.institution_scope`). Acrescentar coluna à tabela append-only do desfecho seria
 mudança de forma de um ato da `019` sem regra que a consuma agora.
 
-### D-018 — Texto proposto para a revisão da FR-402 da `029`
+### D-018 — Revisão da FR-402 da `029`
 
-*Proposta para aprovação do usuário.* Redação sugerida, a ser aplicada na `029` com a marca "revisada
-pela `115`" e a redação anterior preservada, como na revisão da FR-084:
+**Aprovada pelo usuário na revisão do PR (03/11/2026), e aplicada** em
+`specs/029-requerimento-de-matricula/spec.md`, com a marca "revisada pela `115`" e a redação anterior
+preservada, como na revisão da FR-084. O texto:
 
 > **FR-402** (revisada pela `115`): Esta feature MUST NOT pedir reenvio de documento que a Inscrição
 > já recebeu, e MUST NOT criar um segundo acervo de documentos. Documento específico de matrícula
@@ -972,38 +1131,64 @@ pela `115`" e a redação anterior preservada, como na revisão da FR-084:
 O teste que prende a FR-402 (`test_convivencia_com_o_anexo.py`) continua válido como está: ele
 proíbe arquivo no Requerimento, e não no Edital.
 
+### D-019 — Texto proposto para a revisão da FR-374 e da FR-408 da `029`
+
+**Proposta, pedida pelo usuário na D-011 ajustada, e não aplicada.** O único texto desta spec que ainda
+pede aprovação explícita. Redação sugerida, para aplicar na `029` com a marca "revisada pela `115`" e
+a redação anterior preservada:
+
+> **FR-374** (revisada pela `115`): **Do prazo, e só dele.** O vencimento do prazo da convocação MUST
+> NOT, por si, encerrar o preenchimento, fechar a leitura nem apagar o que houver: quem decide a
+> consequência do prazo é a convocação, e duas contagens do mesmo prazo divergiriam. Chamada vencida
+> **sem** desfecho continua em aberto; o que a encerra é o desfecho, cujo efeito a FR-411 descreve.
+> **Exceção, da `115`:** na chamada cuja lista da convocação tem item documental, o requerimento e os
+> documentos têm um prazo só. Decorrido o vencimento, pela mesma leitura que admite o não atendimento,
+> o preenchimento, o envio e o sucessor se encerram; a leitura e o rascunho se preservam; e a
+> correção da convocação com vencimento novo os reabre (FR-3622).
+>
+> **FR-408** (revisada pela `115`): Um requerimento sucessor MUST ser admitido somente quando existir
+> chamada em aberto para aquela Inscrição, **e, na chamada da exceção da FR-374, com o vencimento não
+> decorrido**, e MUST citar a convocação que o autorizou. Fora disso, MUST ser recusado.
+
+**Testes que a revisão pede** (tarefas T052 a T054):
+- a política de disponibilidade (`requerimentos/domain/disponibilidade.py`) com e sem item documental,
+  antes e depois do vencimento, com prazo não iniciado e sem vencimento;
+- o envio e o sucessor recusados na exceção, e aceitos sem ela;
+- a frase única no portal;
+- a correção da convocação reabrindo os dois.
+
+O teste da FR-402 (`test_convivencia_com_o_anexo.py`) não muda.
+
 ## Pendências do usuário
 
-Separadas entre o que bloqueia a implementação e o que bloqueia só o uso em produção.
+Revistas em 03/11/2026, depois das decisões do usuário sobre o PR.
 
-**Antes de implementar (aprovação desta spec):**
+**Para aprovar a spec (o merge deste PR):**
 
-1. **QI-2′**: em quais tipos de Edital os documentos só necessários à formalização passam para a
-   convocação. A spec é opcional por documento e não depende da resposta para ser construída, mas a
-   resposta decide os Editais-piloto e o padrão da elaboração.
-2. **Revisão da FR-402 da `029`** no texto da D-018.
-3. **D-010**: a alocação à conferência como forma da competência, e a QI-1′ residual: o alocado pode
-   também desfechar? A proposta é *não*.
-4. **D-011**: a assimetria entre o Requerimento, aberto depois do vencimento, e o documento, fechado.
-5. **D-012**: exigir abertura para o "conforme".
-6. **D-013**: a chamada nova herda ou não as apresentações conformes da anterior.
+1. **D-019**: o texto da revisão da FR-374 e da FR-408 da `029`. Pode ser aprovado com o merge, ou
+   destacado num PR próprio, se o usuário preferir.
+
+**Resolvidas na revisão do PR:** a QI-2′ (opcional por documento, em qualquer Edital), a FR-402
+(D-018, aplicada), a D-010, a D-011 (ajustada), a D-012 e a D-013 (ajustada).
 
 **Registradas, sem bloquear a implementação:**
 
-7. **MAT-18**: o rótulo *"Cancelamento de matrícula por inércia"*, oferecido a qualquer Edital. Esta
+2. **Estender o prazo único (D-011) a todo Requerimento *na convocação***, inclusive na chamada sem
+   documento. Hoje fica como a FR-374 da `029` manda.
+3. **MAT-18**: o rótulo *"Cancelamento de matrícula por inércia"*, oferecido a qualquer Edital. Esta
    spec não o muda. A decisão (rótulo neutro ou restrição a Editais com Requerimento de Matrícula) é
    do usuário.
-8. **MAT-09**: escopo entre unidades. Os Perfis do 89 e do 90/2026 são do Campus de Alegre. Esta spec
+4. **MAT-09**: escopo entre unidades. Os Perfis do 89 e do 90/2026 são do Campus de Alegre. Esta spec
    grava a unidade de atuação e passa a autorização por um predicado só, sem mudar a doutrina de
    *escopo alheio = recusa de inexistente*.
-9. **D-015**: o auditor abre ou não o arquivo da convocação.
-10. **Entrega documental controlada** (segunda spec provável), que depende de revisar a FR-069 da
-    `009`.
-11. **QI-6**: recurso contra o indeferimento.
-12. **QI-7**: aviso de pendência por e-mail, que revisaria a FR-084 da `010`.
+5. **D-015**: o auditor abre ou não o arquivo da convocação.
+6. **Entrega documental controlada** (segunda spec provável), que depende de revisar a FR-069 da
+   `009`.
+7. **QI-6**: recurso contra o indeferimento.
+8. **QI-7**: aviso de pendência por e-mail, que revisaria a FR-084 da `010`.
 
 **Antes do uso em produção com dado real (não da spec):**
 
-13. **QI-3**: quais documentos são exigíveis (Procuradoria).
-14. **QI-4**: guarda e destinação do que o certame conserva.
-15. **MAT-08**: varredura de PDF (TI), D-016.
+9. **QI-3**: quais documentos são exigíveis (Procuradoria).
+10. **QI-4**: guarda e destinação do que o certame conserva.
+11. **MAT-08**: varredura de PDF (TI), D-016.

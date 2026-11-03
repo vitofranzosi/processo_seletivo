@@ -45,6 +45,25 @@ shell (Constituição, VI). Os Editais são **moldes**, com dados fictícios. Os
    DD/MM"*. No de B, *"Falta enviar"*.
 4. Na gestão, abrir o item de A: é o arquivo da inscrição, com a data do envio original.
 
+## Cenário 4 — Chamada nova da mesma inscrição (US8)
+
+1. No cenário 1, registrar a reclassificação da convocada, depois de dois documentos *conformes* e um
+   *pendente*.
+2. Convocar de novo a mesma inscrição. No portal, os dois itens dizem *"Aproveitado da chamada
+   anterior, enviado em DD/MM. A comissão vai conferir de novo"*, e o pendente diz *"Falta enviar"*.
+3. Na gestão, os aproveitados estão *recebido, aguardando conferência*. O "conforme" sem abrir o
+   arquivo é recusado.
+
+## Cenário 5 — Prazo único com o Requerimento (US4)
+
+1. Edital com Requerimento *na convocação* e documentos na convocação. Convocar com vencimento
+   próximo e enviar a comunicação.
+2. Depois do vencimento, tentar enviar um documento e o requerimento: as duas recusas têm a mesma
+   frase.
+3. Corrigir a convocação com vencimento novo: os dois reabrem.
+4. Repetir num Edital sem documento na convocação: o requerimento continua aceito depois do
+   vencimento, como hoje.
+
 ## Negativos
 
 | Caso | Como provocar | Esperado |

@@ -643,9 +643,22 @@ alheio ao ator de cada passo.**
 
 ### 10.8 Documentos e contrato de saída
 
-- **FR-402**: Esta feature MUST NOT pedir reenvio de documento que a Inscrição já recebeu, e MUST
-  NOT criar um segundo acervo de documentos: documento específico de matrícula continua sendo
-  Documento Exigido do Edital.
+- **FR-402** *(revisada pela `115` em 2026-11-03 — a redação anterior está ao fim desta alínea)*:
+  Esta feature MUST NOT pedir reenvio de documento que a Inscrição já recebeu, e MUST NOT criar um
+  segundo acervo de documentos. Documento específico de matrícula continua sendo Documento Exigido
+  do Edital: do mesmo catálogo, exigível **na inscrição ou na convocação** (`115`). O apresentado na
+  convocação vai ao mesmo armazenamento, ligado à chamada, e o já enviado na inscrição é aproveitado
+  **por referência**, sem cópia.
+
+  > **Redação anterior, preservada porque a regra foi revista, e não substituída em silêncio:**
+  > Esta feature MUST NOT pedir reenvio de documento que a Inscrição já recebeu, e MUST NOT criar um
+  > segundo acervo de documentos: documento específico de matrícula continua sendo Documento Exigido
+  > do Edital.
+  >
+  > **Por que mudou.** Lida ao pé da letra e somada à coleta só no rascunho da inscrição, ela impedia
+  > pedir o documento de matrícula na convocação, e os Editais o pediam a todos os inscritos. O
+  > catálogo continua um só; o que muda é o momento (auditoria de matrícula e dossiê documental de
+  > 03/11/2026, MAT-01).
 - **FR-403**: A feature MUST manter, como artefato versionado, o mapa *campo de saída → origem* de
   cada coluna do formato usado pelo Registro Acadêmico, e MUST declarar como questão aberta —
   jamais inventar — todo campo sem fonte identificada.

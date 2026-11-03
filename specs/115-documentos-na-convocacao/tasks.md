@@ -14,14 +14,14 @@ próprio da worktree.
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: pode rodar em paralelo (arquivos diferentes, sem dependência pendente)
-- **[Story]**: US1–US7 da spec
+- **[Story]**: US1–US8 da spec
 
 ---
 
 ## Phase 0: Portão
 
-- [ ] T000 Revisão do usuário: aprovar ou ajustar as D-008 a D-018 e as pendências 1 a 6 da spec. Ajustar spec, plano e tarefas ao que for decidido
-- [ ] T001 Se a D-018 for aprovada, aplicar a revisão da FR-402 em `specs/029-requerimento-de-matricula/spec.md`, com a marca "revisada pela `115`" e a redação anterior preservada; rodar `tests/test_citacoes_de_requisito.py`
+- [X] T000 Revisão do usuário (03/11/2026, no PR #368): aprovadas a QI-2′, a D-010, a D-012 e a D-018; ajustadas a D-011 e a D-013. Spec, plano e tarefas revistos. O merge do PR aprova a spec
+- [X] T001 Revisão da FR-402 aplicada em `specs/029-requerimento-de-matricula/spec.md`, com a marca "revisada pela `115`" e a redação anterior preservada; `tests/test_citacoes_de_requisito.py` verde
 
 ## Phase 1: Setup
 
@@ -119,7 +119,17 @@ referência.
 
 ---
 
-## Phase 7: Polish & Cross-Cutting
+## Phase 7: User Story 8 + 4 — aproveitamento entre chamadas e prazo único (P2)
+
+- [ ] T052 Depois da aprovação do texto da D-019: aplicar a revisão da FR-374 e da FR-408 em `specs/029-requerimento-de-matricula/spec.md`, com a marca "revisada pela `115`" e as redações anteriores preservadas; rodar `tests/test_citacoes_de_requisito.py`
+- [ ] T053 [P] [US4] `tests/unit/requerimentos/test_disponibilidade.py` (estendido) e `tests/integration/requerimentos/test_prazo_unico_com_documentos.py`: com e sem item documental, antes e depois do vencimento, prazo não iniciado, sem vencimento, sucessor recusado na exceção, correção reabrindo os dois; os testes atuais da `029` sem edição (FR-3622, SC-1093)
+- [ ] T054 [US4] `requerimentos/domain/disponibilidade.py`, `requerimentos/application/preencher.py`, `portal/views.py`, `portal/situacao.py`: `prazo_unico_decorrido` injetado e frase única (R-013)
+- [ ] T055 [P] [US8] `tests/integration/convocacao/test_aproveitamento_entre_chamadas.py`: origem sem cópia e sem corrente; pendente não aproveitado; requisito novo; conferência não transportada; abertura por chamada; indicação de exigência retificada (FR-3619 a FR-3621, FR-3611, SC-1092)
+- [ ] T056 [US8] `convocacao/application/lista.py` (precedência do R-003), gatilho de coerência da `apresentacao_de_origem`, página de documentos e portal (FR-3612, FR-3621)
+
+---
+
+## Phase 8: Polish & Cross-Cutting
 
 - [ ] T041 [P] Vocabulário: incluir os templates novos nas varreduras literais, e uma varredura dos termos da FR-3610 e da FR-3589 (`tests/interface/test_vocabulario_dos_documentos_da_convocacao.py`)
 - [ ] T042 [P] CSP e folha: classes com regra; nenhum inline (`test_politica_de_conteudo`, `test_acessibilidade`, `test_estaticos`)
@@ -127,7 +137,7 @@ referência.
 - [ ] T044 [P] Regressão: `test_convivencia_com_o_anexo.py`, `test_situacoes_de_mensagem.py` e `test_dependencia_da_convocacao.py` inalterados e verdes (FR-3583, FR-3614, FR-3617)
 - [ ] T045 [P] Encerramento: convocação em aberto de Edital encerrado aceita apresentação e conferência (FR-3616)
 - [ ] T046 [P] Nada se exclui: tentativas de `delete` no modelo, no banco e no privilégio (FR-3615)
-- [ ] T047 Navegador: `tests/navegador/test_jornada_dos_documentos_da_convocacao.py`, com as três jornadas a 375 px e desktop, sem violação de CSP (SC-1081, SC-1089, SC-1091)
+- [ ] T047 Navegador: `tests/navegador/test_jornada_dos_documentos_da_convocacao.py`, com as três jornadas obrigatórias e a da chamada nova, a 375 px e desktop, sem violação de CSP (SC-1081, SC-1089, SC-1091)
 - [ ] T048 README: atualizar a linha da `115` na tabela de incrementos para "Implementada"
 - [ ] T049 `specs/115-documentos-na-convocacao/rastreabilidade.md`: todo FR, SC e caso-limite → tarefa → teste
 - [ ] T050 Verificação completa: `make lint check test-pg` com os dois grupos opcionais; anotar em `verificacao.md` os totais e a diferença de pulados por arquivo e motivo, em relação à T002
@@ -141,7 +151,9 @@ referência.
 - A Phase 2 bloqueia as seguintes: a lista lê o momento.
 - A Phase 3 bloqueia a 4: a conferência lê a apresentação.
 - As Phases 5 e 6 dependem da 4 e são independentes entre si.
-- A Phase 7 vem por último.
+- A Phase 7 depende da 4. A T052 depende da aprovação do texto da D-019, e a T053 e a T054 dependem
+  da T052.
+- A Phase 8 vem por último.
 
 ### Parallel
 
@@ -154,4 +166,4 @@ Dentro de cada fase, os testes [P] são de arquivos distintos. As implementaçõ
    sem a Phase 3 o documento movido não é recebido em lugar nenhum. Por isso a Phase 2 **não vai à
    `main` sozinha** sem a 3.
 2. **MVP de uso** = Phases 2 a 4: os três cenários.
-3. Depois: 5, 6 e 7.
+3. Depois: 5, 6, 7 e 8.

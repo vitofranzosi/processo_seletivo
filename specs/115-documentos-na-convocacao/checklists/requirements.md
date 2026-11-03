@@ -42,3 +42,6 @@
 - **SC-1089 e SC-1090 citam navegador e tabelas.** São verificações exigidas pelo pedido (estratégia
   de testes com navegador) e pela Constituição, I (append-only em duas camadas). Mantidos como estão.
 - **Casos-limite** apontam, cada um, o requisito que os rege, para entrarem na rastreabilidade.
+- **Revalidado em 03/11/2026, depois da revisão do PR #368.** Entraram a US8, as FR-3619 a FR-3622, as
+  SC-1092 e SC-1093 e as decisões D-011, D-013 e D-019 reescritas ou novas. Os itens continuam
+  marcados. A única aprovação explícita que falta é o texto da D-019.
