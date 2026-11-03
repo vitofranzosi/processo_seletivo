@@ -216,3 +216,40 @@ CONVOCACAO_DESFECHADA = "convocacao_desfechada"
 # o desfecho está gravado, e o que se diz é por que o número novo continua sendo ato da ocupação.
 OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"
 MOVERIA_VAGA = "moveria_vaga"
+
+# --- Documentos e conferência na convocação (115) -----------------------------------------------
+# **Os resultados da conferência são três, e nenhum é estado da convocação** (115, D-004). O estado
+# do item e o da convocação são derivados das apresentações e das conferências, e a única
+# consequência da conferência é a guarda dos desfechos que incluem (FR-3592).
+CONFORME = "CONFORME"
+PENDENTE = "PENDENTE"
+NAO_SE_APLICA_NA_CONFERENCIA = "NAO_SE_APLICA"
+RESULTADOS_DA_CONFERENCIA = (CONFORME, PENDENTE, NAO_SE_APLICA_NA_CONFERENCIA)
+
+# O estado do item, derivado (FR-3590).
+ITEM_A_APRESENTAR = "A_APRESENTAR"
+ITEM_RECEBIDO = "RECEBIDO"
+ITEM_PENDENTE = "PENDENTE"
+ITEM_COMPLEMENTADO = "COMPLEMENTADO"
+ITEM_CONFORME = "CONFORME"
+ITEM_NAO_SE_APLICA = "NAO_SE_APLICA"
+
+# O estado documental da convocação, derivado (FR-3591), na ordem da precedência.
+DOCUMENTOS_DECIDIDA = "DECIDIDA"
+DOCUMENTOS_SEM_EXIGENCIA = "SEM_EXIGENCIA"
+DOCUMENTOS_PARA_CONFERIR = "PARA_CONFERIR"
+DOCUMENTOS_COM_PENDENCIA = "COM_PENDENCIA"
+DOCUMENTOS_AGUARDANDO = "AGUARDANDO_DOCUMENTACAO"
+DOCUMENTOS_PRONTA = "PRONTA_PARA_DECIDIR"
+
+# Recusas.
+DOCUMENTOS_NAO_CONFERIDOS = "documentos_nao_conferidos"
+PRAZO_DA_CONVOCACAO_DECORRIDO = "prazo_da_convocacao_decorrido"
+CHAMADA_FECHADA = "chamada_fechada"
+VERSAO_SUPERADA = "versao_superada"
+CONFORME_SEM_ABERTURA = "conforme_sem_abertura"
+CONFORME_SEM_APRESENTACAO = "conforme_sem_apresentacao"
+MOTIVO_DA_CONFERENCIA_OBRIGATORIO = "motivo_da_conferencia_obrigatorio"
+MOTIVO_DA_SUBSTITUICAO_OBRIGATORIO = "motivo_da_substituicao_obrigatorio"
+RESULTADO_DA_CONFERENCIA_INVALIDO = "resultado_da_conferencia_invalido"
+DOCUMENTO_JA_RECEBIDO = "documento_ja_recebido"

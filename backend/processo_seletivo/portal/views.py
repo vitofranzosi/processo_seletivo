@@ -2422,7 +2422,11 @@ def _requerimento_da_convocacao(registro, chamada, conteudo):
     """
     if chamada is None:
         return ""
-    estado = preencher_requerimento.apurar(registro, conteudo).estado_de_leitura
+    apurado = preencher_requerimento.apurar(registro, conteudo)
+    estado = apurado.estado_de_leitura
+    if apurado.prazo_decorrido and estado != requerimento_nomes.ESTADO_ENVIADO:
+        # O prazo da chamada terminou (115, FR-3622): um botão "preencher" levaria a uma recusa.
+        return ""
     return CHAMADO_DO_REQUERIMENTO.get(estado, "")
 
 
@@ -3259,7 +3263,9 @@ def _tela_do_requerimento(
     # **Conferir e atualizar só aparece quando as duas coisas coexistem** (`FR-410`): requerimento
     # enviado **e** chamada em aberto. É também a mitigação do dado envelhecido de quem declarou na
     # inscrição meses antes (`R-2`) — sem regra nova, pelo caminho que a correção já usa.
-    pode_atualizar = enviado and apurado.chamada is not None and not atualizando
+    pode_atualizar = (
+        enviado and apurado.chamada is not None and not apurado.prazo_decorrido and not atualizando
+    )
     # **Conferindo**: os campos do enviado, editáveis, e ainda **sem linha nova** — ela nasce em
     # `atualizar`, e só se alguma coisa mudar.
     conferindo = bool(atualizando and enviado)

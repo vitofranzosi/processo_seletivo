@@ -843,7 +843,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # proveniência, para aceitar a Etapa que um critério do marco compara sem enumerá-la. Não
         # cria coluna nem percorre linha (114, FR-3551).
         "classificacao": 7,
-        "comissoes": 1,
+        # **Sobe para 2 com a 115**: a `comissoes/0002` cria a alocação à conferência dos documentos
+        # da convocação — quem da comissão confere, por Edital e Perfil, no molde da alocação à
+        # Etapa. Não é a 022 tocando o que lê: é outra feature, dizendo quem confere (115, D-010).
+        "comissoes": 2,
         # **Sobe para 3 com a 021**: a `divulgacao/0003` publica por lista de concorrência.
         # **Sobe para 4 com a 060**: a `divulgacao/0004` acrescenta à `PublicacaoResultado` o ato de
         # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
