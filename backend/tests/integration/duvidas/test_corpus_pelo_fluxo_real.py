@@ -38,7 +38,13 @@ def _comparavel(valor):
 def test_o_conteudo_vigente_republicado_e_o_do_corpus(api_client, nome):
     edital, deslocamento = publicar_do_corpus(api_client, nome)
     final = publicacoes_do(nome)
-    esperado = deslocar(conteudo(nome, final), deslocamento)
+    # **O corpus foi publicado na versão canônica 17**, e o fluxo de hoje publica na vigente. A
+    # diferença é o degrau declarado — na `115`, o momento do Documento Exigido —, e não o que o
+    # Edital diz: por isso o esperado é o corpus **elevado**, pela mesma conversão que a Retificação
+    # usa, e não o corpus reescrito.
+    from processo_seletivo.publicacoes.domain.elevacao import elevar
+
+    esperado = elevar(deslocar(conteudo(nome, final), deslocamento))
     # A última versão do corpus pode ter vigência futura (01/2026, v3): lê-se no instante dela.
     ultima = VersaoConsolidada.objects.filter(edital=edital).order_by("-valid_from").first()
     vigente = effective_version(edital_id=edital.id, at=ultima.valid_from)

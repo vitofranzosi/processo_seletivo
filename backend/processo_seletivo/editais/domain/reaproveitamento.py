@@ -225,6 +225,12 @@ def remapear(conteudo, mapa):
                 "attachmentId": trocar(
                     documento.get("attachmentId"), "documentRequirements[].attachmentId"
                 ),
+                # O aproveitamento aponta outro documento do mesmo Edital (115): no Edital novo, é
+                # o id novo daquele documento, ou o vínculo apontaria o Edital de origem.
+                "reusesRequirementId": trocar(
+                    documento.get("reusesRequirementId"),
+                    "documentRequirements[].reusesRequirementId",
+                ),
             }
             for documento in conteudo.get("documentRequirements") or []
         ],

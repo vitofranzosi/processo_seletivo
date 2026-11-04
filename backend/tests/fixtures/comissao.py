@@ -221,7 +221,10 @@ def inscrever(edital, quantos=1, *, primeiro=1, documentos=(), perfil=None, moda
             cpf_normalizado="11144477735",
             email=f"candidata{numero}@exemplo.br",
         )
-        for requirement_id in documentos:
+        # `documentos` vale para todas, ou `{posição: [requisitos]}` para algumas (115): o
+        # aproveitamento precisa de quem enviou e de quem não enviou o mesmo documento.
+        enviados = documentos.get(posicao, ()) if isinstance(documentos, dict) else documentos
+        for requirement_id in enviados:
             anexar(inscricao, requirement_id)
         Inscricao.objects.filter(pk=inscricao.pk).update(
             status=Inscricao.Status.SUBMETIDA,

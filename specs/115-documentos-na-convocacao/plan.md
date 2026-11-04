@@ -294,8 +294,8 @@ Os negativos do pedido têm caso próprio:
 | A guarda do aceite contornada pela sucessão de desfecho | aceite sem conferência | a guarda vale para todo desfecho que inclui, raiz ou sucessor |
 | O filtro por momento esquecido num leitor da inscrição | inscrição bloqueada por documento da convocação | `da_inscricao()` é o único caminho, e um teste por leitor: envio, rascunho, lista, Mesa, portal, assistente |
 | Contagem append-only, PDF ou forma publicada mudando testes antigos | suíte vermelha por contagem | contagens nomeadas nas tarefas; PDFs existentes comparados normalizados |
-| Abrir PDF malicioso | estação do conferente comprometida | D-016; bloqueia produção, e não a implementação |
-| Guardar para sempre | o GPS vira acervo por inércia | QI-4; bloqueia produção |
+| Abrir PDF malicioso | estação do conferente comprometida | D-016; adiada, sem bloquear a produção (decisão do usuário em 04/11/2026) |
+| Guardar para sempre | o GPS vira acervo por inércia | QI-4; adiada, sem bloquear a produção (decisão do usuário em 04/11/2026) |
 | Membro alocado vendo linha de outro Perfil na condução | vazamento de dado de convocado | filtro na consulta da condução, e não na tela; teste da matriz |
 | Teste antigo que presumia o requerimento aberto depois do vencimento | suíte vermelha | nenhum encontrado em 03/11 (os testes de vencimento do portal tratam da convocação); a T053 confere de novo antes de implementar |
 | Referência entre chamadas virando corrente | rastreabilidade difícil e entrega futura em vários passos | a origem é sempre o arquivo; gatilho de coerência recusa referência a referência |

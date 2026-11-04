@@ -16,7 +16,9 @@ LINHA_PPI = "00000000-0000-4000-8000-000000000472"
 MODALIDADE_PPI = "00000000-0000-4000-8000-000000000473"
 
 
-def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None, forma=None, reserva=None):
+def rascunho_com_quadro(
+    *, geral=3, ppi=None, reversao=None, cut=None, forma=None, reserva=None, documentos=None
+):
     """O rascunho do corte com quadro de vagas publicado.
 
     `geral` é a linha da ampla concorrência — a de `modalityId` nulo, que é onde a quantidade da
@@ -61,6 +63,10 @@ def rascunho_com_quadro(*, geral=3, ppi=None, reversao=None, cut=None, forma=Non
     # declarou"** — o acervo anterior à `019`, que só se publica no instante do acervo.
     if forma is not None:
         perfil["callForm"] = forma or None
+    # Os Documentos Exigidos que o Edital publica (115): os da convocação só existem se o rascunho
+    # os declarar antes de o snapshot congelar, como a declaração do Requerimento.
+    if documentos is not None:
+        base["documentRequirements"] = documentos
     return base, pontuada
 
 
@@ -79,6 +85,8 @@ def montar_cenario_da_ocupacao(
     publicar=None,
     # Repassado pela mesma razão: a autodeclaração entra no envio, e não depois dele (A-03).
     modalidades=None,
+    # E os documentos que cada inscrição já enviou (115): entram antes do envio, como no produto.
+    documentos_da_inscricao=None,
     **quadro,
 ):
     """Edital publicado com quadro, ordem emitida e corte emitido.
@@ -105,6 +113,7 @@ def montar_cenario_da_ocupacao(
         draft_factory=monta,
         publicar=publicar,
         modalidades=modalidades,
+        documentos_da_inscricao=documentos_da_inscricao,
     )
     emitir_corte_do_cenario(edital, gestor, chave=f"{prefixo}-corte")
     return edital, pontuada, inscricoes

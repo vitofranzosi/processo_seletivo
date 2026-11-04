@@ -38,6 +38,7 @@ from processo_seletivo.editais.domain.calendario import (
 )
 from processo_seletivo.editais.domain.documentos import (
     perfis_que_o_documento_publicado_alcanca,
+    problemas_do_momento,
     rotulo_da_modalidade,
 )
 from processo_seletivo.editais.domain.perfis import (
@@ -215,6 +216,10 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
     # O recorte transversal (044): o **código** da Modalidade, em todos os Perfis que a têm. Texto,
     # e não identidade — é o código que as Modalidades de Perfis diferentes têm em comum.
     Campo("modalityCode", str, admite_nulo=True),
+    # Quando é pedido (115, FR-3563), no vocabulário do Requerimento de Matrícula.
+    Campo("moment", str, valores=("AT_ENROLLMENT", "AT_CALL")),
+    # O documento da inscrição que atende este, da convocação (115, FR-3566).
+    Campo("reusesRequirementId", str, admite_nulo=True, formato="uuid"),
 )
 
 # A forma canônica do decimal de `weight` e `minimumScore`, os dois `decimal(7,4)`: no máximo três
@@ -1599,6 +1604,7 @@ def validate_for_publication(
     findings.extend(_periodo_de_inscricoes_encerrado(snapshot, ato=ato, agora=agora))
     findings.extend(_periodo_de_inscricoes_cancelado(snapshot, ato=ato, agora=agora))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
+    findings.extend(_momento_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
     findings.extend(_secao_universal_vazia(snapshot, ato=ato))
@@ -3015,6 +3021,26 @@ def _secao_universal_vazia(snapshot: dict, *, ato: str) -> list[ValidationFindin
             )
         )
     return findings
+
+
+def _momento_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding]:
+    """Aproveitamento que aponta o que não é da inscrição deste Edital (115, FR-3566).
+
+    A gravação do rascunho já recusa, mas a Retificação alcança o documento aproveitado sem passar
+    pela tela: remover o documento da inscrição deixaria o da convocação aproveitando nada.
+    """
+    requisitos = snapshot.get("documentRequirements")
+    if not isinstance(requisitos, list):
+        return []
+    posicao = {str(r.get("id")): i for i, r in enumerate(requisitos) if isinstance(r, dict)}
+    return [
+        _impeditivo(
+            "document_requirement_moment_incoherent",
+            mensagem,
+            f"/documentRequirements/{posicao.get(identidade, 0)}/{campo}",
+        )
+        for identidade, campo, mensagem in problemas_do_momento(requisitos)
+    ]
 
 
 def _coerencia_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding]:

@@ -216,4 +216,59 @@
   {% else %}<strong>Nenhum Edital declara Etapas de Avaliação.</strong>
   Não há trabalho a distribuir.{% endif %}</p>
 {% endif %}
+
+{% comment %}
+Quem confere os documentos da convocação (115, FR-3597, D-010). A presidência confere por si; a
+alocação dá a conferência a um membro ativo, de todo o Edital ou de um Perfil, e **não** dá o
+desfecho. Só aparecem os Editais que pedem algum documento na convocação.
+{% endcomment %}
+{% if conferencia %}
+<section aria-labelledby="conferencia-titulo">
+  <h2 id="conferencia-titulo">Conferência dos documentos da convocação</h2>
+  <p class="nota">Quem for alocado aqui abre e confere os documentos que os convocados apresentam. Registrar o desfecho continua sendo da presidência.</p>
+  {% for bloco in conferencia %}
+  <article class="recorte" aria-labelledby="conferencia-edital-{{ forloop.counter }}">
+    <h3 id="conferencia-edital-{{ forloop.counter }}">Edital {{ bloco.edital.number }}/{{ bloco.edital.year }}</h3>
+    {% if bloco.alocacoes %}
+    <ul>
+      {% for linha in bloco.alocacoes %}
+      <li>{% rotulo_ou_nome linha.alocacao.membro.display_label linha.alocacao.membro.identity_subject %} — {% if linha.perfil %}Perfil {{ linha.perfil }}{% else %}todos os Perfis{% endif %}
+        <form method="post" class="confirmar">
+          {% csrf_token %}
+          <input type="hidden" name="acao" value="revogar_conferencia">
+          <input type="hidden" name="alocacao_id" value="{{ linha.alocacao.id }}">
+          <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-revogar-{{ forloop.counter }}">
+          <button type="submit" class="acao perigoso">Revogar</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="nenhuma">Ninguém alocado além da presidência.</p>
+    {% endif %}
+    <form method="post" class="confirmar">
+      {% csrf_token %}
+      <input type="hidden" name="acao" value="alocar_conferencia">
+      <input type="hidden" name="edital_id" value="{{ bloco.edital.id }}">
+      <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-conferencia-{{ forloop.counter }}">
+      <p class="campo">
+        <label for="conferencia-membro-{{ forloop.counter }}">Membro</label>
+        <select id="conferencia-membro-{{ forloop.counter }}" name="membro_id" required>
+          <option value="">Escolha um membro</option>
+          {% for membro in membros %}<option value="{{ membro.id }}">{% rotulo_ou_nome membro.display_label membro.identity_subject %}</option>{% endfor %}
+        </select>
+      </p>
+      <p class="campo">
+        <label for="conferencia-perfil-{{ forloop.counter }}">Perfil</label>
+        <select id="conferencia-perfil-{{ forloop.counter }}" name="perfil_id">
+          <option value="">Todos os Perfis</option>
+          {% for perfil in bloco.perfis %}<option value="{{ perfil.id }}">{{ perfil.nome }}</option>{% endfor %}
+        </select>
+      </p>
+      <p class="acoes"><button type="submit" class="botao">Alocar à conferência</button></p>
+    </form>
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
 {% endblock %}

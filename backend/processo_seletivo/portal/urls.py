@@ -40,6 +40,18 @@ urlpatterns = [
     # A convocação da pessoa (019, US6). Pende da **Inscrição**, como o acompanhamento e o
     # comprovante: é dela que a titularidade é conferida, e é ela que o candidato reconhece.
     path("inscricoes/<uuid:inscricao_id>/convocacao", views.convocacao, name="convocacao"),
+    # Os documentos da convocação (115): apresentar e ver o que apresentou. Pendem da Inscrição,
+    # como a convocação, porque é dela que a titularidade é conferida.
+    path(
+        "inscricoes/<uuid:inscricao_id>/convocacao/documentos/<uuid:item_id>",
+        views.apresentar_documento_da_convocacao,
+        name="apresentar-documento-da-convocacao",
+    ),
+    path(
+        "inscricoes/<uuid:inscricao_id>/convocacao/apresentacoes/<uuid:apresentacao_id>",
+        views.documento_da_convocacao_do_candidato,
+        name="documento-da-convocacao",
+    ),
     path("inscricoes/<uuid:inscricao_id>/recorrer", views.recorrer, name="recorrer"),
     path("recursos/<uuid:recurso_id>", views.recurso, name="recurso"),
     # O Requerimento de Matrícula (029). Pende da **Inscrição**, como o acompanhamento, o

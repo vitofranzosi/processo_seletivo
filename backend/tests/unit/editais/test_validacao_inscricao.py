@@ -148,7 +148,7 @@ def test_a_identidade_do_documento_e_a_declarada():
 
     identidades = [documento["id"] for documento in conteudo["documentRequirements"]]
 
-    assert identidades == [DOCUMENTO["A"], DOCUMENTO["B"]]
+    assert identidades == [DOCUMENTO["A"], DOCUMENTO["B"], DOCUMENTO["C"]]
 
 
 # ---------------------------------------------------------------------------
