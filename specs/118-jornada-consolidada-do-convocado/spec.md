@@ -14,6 +14,8 @@ decisões têm três origens:
   spec.
 - **Do usuário, no encerramento da spec (04/11/2026):** D-019, a exceção informativa do Requerimento
   não enviado sem documento.
+- **Do usuário, depois do merge (04/11/2026):** D-020, o Processo em estado final fecha o
+  Requerimento *na convocação*.
 - **Revisões de requisitos de outras specs** (`063`, `115`, `059`, `029`): estão escritas por
   extenso em *Revisões de requisitos anteriores*. Elas se aplicam aos arquivos daquelas specs na
   **primeira tarefa da implementação** (T001), com a redação anterior preservada, como a `117` fez
@@ -162,6 +164,9 @@ Uma revisão do PR apontou cinco contradições e dois excessos do plano. O usu�
 - Q: O Requerimento preenchível com o Processo encerrado se resolve aqui? → A: Não. É encaminhamento
   separado, de alta prioridade, sem mudar a regra durante a `118`
   (`doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`).
+- Q: (depois do merge) O Requerimento *na convocação* deixa de aceitar escrita com o Processo
+  encerrado ou cancelado? → A: Sim, preservando a leitura (D-020). A `029` foi revista; a `118` foi
+  ajustada na FR-3725, na FR-3730, na FR-3732, na FR-3741, na FR-3748 e na FR-3754.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -368,8 +373,13 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
 - **Processo em estado final com chamada em aberto (M).** A escrita de documentos está fechada pelo
   Processo, e não pelo prazo: o topo diz *"O envio pelo portal está encerrado"*, sem dizer que o prazo
   venceu e sem prometer conferência; os itens com a comissão dizem que não foram conferidos antes do
-  encerramento (FR-3741, FR-3746). O Requerimento segue a política da `029`, que não fecha com o
-  Processo (FR-3725; divergência registrada em *Registrado, sem desenvolver*).
+  encerramento (FR-3741, FR-3746). O Requerimento *na convocação* não enviado aparece como não
+  enviado, sem link (FR-3725, linha 3a; D-020).
+- **Processo em estado final, sem documento na chamada, Requerimento não enviado (M0).** A linha
+  informativa da FR-3732, sem o chamado *"Preencher"* (D-020).
+- **Processo em estado final e Requerimento enviado.** Continua *enviado*, legível, com o link de
+  conferir (FR-3725, linha 2; FR-3731). *Conferir e atualizar* segue a política da `029`: fechado
+  para o *na convocação* pela FR-408 revista; para o *na inscrição*, decisão pendente.
 - **Processo em estado final e vencimento decorrido, juntos.** Vale o Processo (FR-3721).
 - **Pendência registrada depois do vencimento.** Aparece como *"Precisava de correção"*, sem convite a
   enviar (FR-3746).
@@ -453,16 +463,19 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   | 1 | o Edital não declara Requerimento | *não pedido* | não |
   | 2 | enviado, na inscrição ou na convocação | *enviado* | não |
   | 3 | declarado (em qualquer momento), não enviado, com desfecho vigente | *não enviado* | não |
+  | 3a | declarado *na convocação*, não enviado, com a chamada *encerrada pelo Processo* | *não enviado, envio encerrado* | não |
   | 4 | declarado, não enviado, com o prazo da chamada decorrido pela política (`prazo_decorrido`) | *não enviado até o prazo* | não |
-  | 5 | a política o diz disponível ou em preenchimento, sem prazo decorrido | *a preencher* | **sim** |
+  | 5 | a política o diz disponível ou em preenchimento, sem prazo decorrido, e a chamada não está *encerrada pelo Processo* | *a preencher* | **sim** |
   | 6 | os demais casos | *sem chamado* | não |
 
-  As linhas 3 e 4 leem o desfecho e o prazo **da política do Requerimento**, e não o momento da
-  chamada da FR-3722: com o Processo em estado final e o prazo decorrido juntos, os documentos caem
-  em *encerrada pelo Processo*, e o Requerimento, na linha 4, porque é o prazo que o fecha. A linha 5
-  não depende do momento: com o Processo em estado final e o prazo correndo, a política ainda admite
-  o preenchimento, e a projeção o mostra (FR-3741). A linha 6 é a proteção contra um chamado que o
-  comando recusaria (FR-1098 da `059`). A política de escrita da `029` não muda.
+  As linhas 3 e 4 leem o desfecho e o prazo **da política do Requerimento**. A linha 3a lê a causa do
+  fechamento da FR-3721 e aplica a FR-373 da `029`, revista em 04/11/2026 por decisão do usuário
+  (D-020): com o Processo encerrado ou cancelado, o Requerimento *na convocação* não aceita mais
+  escrita. Ela vem antes da linha 4, como nos documentos: com o Processo em estado final e o prazo
+  decorrido juntos, vale o Processo (D-015). A linha 3a não alcança o Requerimento *na inscrição*,
+  cuja regra não muda. A linha 6 é a proteção contra um chamado que o comando recusaria (FR-1098 da
+  `059`). Esta spec não implementa a revisão da `029`, que é PR próprio: até ele, o comando ainda
+  aceita a escrita que a tela já não oferece.
 - **FR-3726**: A ordem do que o candidato precisa fazer MUST ser: primeiro o que tem pendência
   registrada — *a corrigir* e *a enviar* com motivo —, depois *a enviar*, depois o Requerimento *a
   preencher*; dentro de cada grupo, a ordem do Edital. A precedência da
@@ -496,8 +509,8 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   O link principal MUST levar à tela da convocação em todas as linhas, **mesmo com o Requerimento
   enviado ou a preencher**. Nenhum rótulo de link que só navega MUST começar por "Enviar" (D-004).
   O prazo, o aviso de prazo não iniciado e a consequência continuam vindo da FR-1176 e da FR-1177 da
-  `063`, revistas. Na linha 2, o Requerimento *a preencher*, se a política ainda o admitir, aparece
-  como linha secundária com o link dele (FR-3731), porque o comando não o recusa.
+  `063`, revistas. Na linha 2, o Requerimento *na convocação* não enviado entra no que ficou sem
+  envio, sem link (FR-3725, linha 3a).
 - **FR-3731**: Com documento pedido na chamada e o Requerimento *enviado*, aberta ou não a chamada, o
   bloco *"O que fazer"* MUST mostrar a linha secundária *"✓ Requerimento de Matrícula enviado."*, com o
   link *"Conferir o Requerimento de Matrícula enviado"* (FR-1097 da `059`), abaixo da ação principal e
@@ -519,10 +532,15 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   - com o prazo da chamada decorrido pela política (FR-3725, linha 4) e sem desfecho: *"Requerimento
     de Matrícula: não enviado até o prazo. Não é mais possível enviá-lo pelo portal."*;
   - com desfecho vigente (FR-3725, linha 3): *"Requerimento de Matrícula: não enviado."*, como
-    histórico.
+    histórico;
+  - com o Processo em estado final (FR-3725, linha 3a; D-020): *"Requerimento de Matrícula: não
+    enviado. O envio pelo portal está encerrado."*, e o chamado *"Preencher"* não aparece.
   
   A linha MUST NOT ter link nem botão de preenchimento, e MUST NOT aparecer enquanto a política
-  admitir o preenchimento: com a chamada aberta, B e B2 ficam exatamente como hoje. Ela sai da mesma
+  admitir o preenchimento e a chamada não estiver encerrada pelo Processo: com a chamada aberta, B e
+  B2 ficam exatamente como hoje. No Processo em estado final, sem o chamado, a ação principal é a de
+  hoje para quem não tem Requerimento a preencher (*"Siga as instruções do Edital para esta
+  convocação."*). Ela sai da mesma
   `Disponibilidade` que o chamado ao Requerimento já lê (momento, situação, prazo decorrido) e do
   desfecho que a tela já lê, **sem consulta nova**, e não muda disponibilidade, prazo, desfecho nem
   autorização.
@@ -581,10 +599,11 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
     foi ‹encerrado / cancelado›, e não é mais possível enviar documentos pelo portal. Se você enviou
     algo que não aparece aqui, fale com o atendimento: ‹canal›."* e o resumo *"Até o encerramento do
     Processo, ficou assim"*. Esta frase MUST NOT dizer que um prazo venceu, nem que a comissão vai
-    conferir ou decidir. Se a política ainda admitir o Requerimento (FR-3725, linha 5), o bloco 3
-    MUST continuar só com o cartão dele, sob *"O que ainda pode ser feito"*, e o bloco 1 MUST trazer o
-    link *"Preencher o Requerimento de Matrícula"*: o comando o aceita, e escondê-lo seria a omissão da
-    F3 ao contrário.
+    conferir ou decidir. O Requerimento *na convocação* não enviado entra no resumo como *"Requerimento
+    de Matrícula: não enviado. O envio pelo portal está encerrado."*, sem link (FR-3725, linha 3a;
+    D-020). Nenhum bloco oferece o preenchimento. A frase de abertura passa a *"…e não é mais
+    possível enviar documentos nem o Requerimento de Matrícula pelo portal"* quando a chamada pede os
+    dois.
 - **FR-3742**: Com desfecho vigente, a página MUST ser **só histórico**:
   - o bloco 1 se chama *"Resultado registrado"*, com o rótulo da FR-3750, o fundamento e a data;
   - os blocos 3 e 4 dão lugar a um só, *"O que você enviou nesta convocação"*, na ordem do Edital,
@@ -647,10 +666,9 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   comissão."* Nas telas, o núcleo MUST ser seguido, quando couber, de *"Não é mais possível enviar
   ‹documentos / o Requerimento de Matrícula / documentos nem o Requerimento de Matrícula› pelo
   portal."* e de *"Se você enviou algo que não aparece aqui, fale com o atendimento: ‹canal›."* O
-  núcleo MUST ser usado **só** com o vencimento decorrido, e diz a causa de cada fonte: para os
-  documentos, nunca com a escrita fechada pelo Processo (FR-3741); para o Requerimento, sempre que a
-  política dele marcar o prazo decorrido, mesmo com o Processo em estado final, porque é o prazo que
-  o fecha (FR-3725, linha 4). Nunca sem vencimento registrado. Nenhuma frase MUST afirmar perda (FR-274 da `019`).
+  núcleo MUST ser usado **só** com o vencimento decorrido e sem o Processo em estado final, para os
+  documentos e para o Requerimento (FR-3725, linhas 3a e 4; D-015, D-020). Nunca sem vencimento
+  registrado. Nenhuma frase MUST afirmar perda (FR-274 da `019`).
 - **FR-3749**: Com a comunicação ainda não enviada, as telas MUST dizer *"O prazo ainda não começou a
   correr: ele conta a partir do envio da comunicação."*, seguido de *"Você já pode enviar."* **só**
   quando a escrita estiver aberta e houver tarefa ou opcional a enviar. Esta regra **prevalece** sobre
@@ -690,6 +708,12 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   Não é mais possível enviá-lo pelo portal."* e *"Voltar à convocação"*. O rascunho, se houver,
   continua como a FR-411 da `029` o deixa. *"Ainda não é a hora"* continua só para quem não tem
   convocação (cenário N, com e sem rascunho).
+
+  E, com o Requerimento *na convocação* não enviado e a chamada *encerrada pelo Processo* (FR-3725,
+  linha 3a), a página MUST dizer *"O envio pelo portal está encerrado"*, com *"Este Processo Seletivo
+  foi ‹encerrado / cancelado›, e não é mais possível enviar o Requerimento de Matrícula pelo portal."*
+  e *"Voltar à convocação"*, sem formulário, e o GET MUST NOT criar rascunho. O rascunho que houver
+  continua legível (FR-373 da `029`, revista; D-020).
 - **FR-3755**: Enviado o Requerimento numa chamada que pede documento, o aviso do envio MUST ser
   *"Requerimento de Matrícula enviado. Veja na convocação se ainda falta algum documento."*, com
   *"Voltar à convocação"* na mesma página. Sem documento, o aviso continua o de hoje.
@@ -763,9 +787,10 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   em K2, nenhuma data aparece como
   prazo. Em todos, nenhuma requisição de leitura grava linha nova além da leitura da convocação na
   trilha, e a inscrição alheia recebe a mesma recusa de inexistente.
-- **SC-1128**: Nos cenários G0 e N0 — chamada sem documento, Requerimento pedido na convocação e não
+- **SC-1128**: Nos cenários G0, N0 e M0 — chamada sem documento, Requerimento pedido na convocação e não
   enviado, com e sem rascunho —, o acompanhamento e a convocação mostram a linha informativa da
-  FR-3732, sem nenhum link ou botão de preenchimento, com a ação principal de hoje; o número de
+  FR-3732, sem nenhum link ou botão de preenchimento, com a ação principal de hoje (em M0, a de quem
+  não tem Requerimento a preencher); o número de
   consultas das duas telas é o mesmo de antes; e nenhuma linha é gravada.
 
 ## Assumptions
@@ -952,7 +977,7 @@ volta à convocação (FR-3752 da `118`).
 | **FR-3577 e FR-3612 da `115`** | Ordem e textos literais | **Revistas** (acima) |
 | **User Story 2 da `115`, cenário 2** | Cita frase que não existe | **Revista**: a frase passa a existir (FR-3750) |
 | **FR-3574 da `115`** ("exatamente como antes" sem documento) | O formato do prazo, a frase do vencido e o rótulo do desfecho mudam em toda tela | **Compatível, nomeado**: a FR-3574 protege contra elementos da `115` aparecendo sem documento; a estrutura sem documento continua a de hoje, e a unificação de texto é desta spec (FR-3743) |
-| **FR-3582 da `115`** e a política da `029` | Com o Processo em estado final, o envio e a conferência de documento recusam, mas a política do Requerimento não fecha: só o prazo e o desfecho a fecham | **Sem mudança de regra** (FR-3756); a projeção não confunde as causas (FR-3721, FR-3741), e o Requerimento segue a política dele (FR-3725). A divergência fica registrada para decisão |
+| **FR-3582 da `115`** e **FR-373 e FR-408 da `029`** | Com o Processo em estado final, o envio e a conferência de documento recusavam, e a política do Requerimento não fechava | **Decidido pelo usuário em 04/11/2026** (D-020): a FR-373 e a FR-408 da `029` foram revistas para fechar o Requerimento *na convocação*; a implementação é PR próprio. Esta spec não oferece a escrita (FR-3725, linha 3a) e não muda o comando (FR-3756) |
 | **FR-1096 e FR-1097 da `059`**, sem documento | O enviado como ação principal | **Mantido como hoje** (FR-3732, D-017): sem documento, não há outra obrigação no portal que ele esconda |
 | **FR-3591 da `115`** | A precedência serve à gestão | **Sem mudança**; o candidato tem ordem própria (FR-3726, FR-3758) |
 | **FR-3622 da `115`** | A mesma frase nos documentos e no Requerimento | **Preservada**: o núcleo único vale para as duas recusas (FR-3748) |
@@ -1104,6 +1129,16 @@ O usuário decidiu uma exceção **estritamente informativa**: uma linha, sem li
 já não admite o preenchimento, com a ação principal de hoje e sem consulta nova (FR-3732, FR-3743). B
 e B2 não mudam.
 
+### D-020 — O Processo em estado final fecha o Requerimento na convocação
+
+**Decisão do usuário (04/11/2026), sobre o encaminhamento do Processo encerrado.** Com o Processo
+encerrado ou cancelado, o GPS já recusava documento, conferência e desfecho, e o Requerimento *na
+convocação* seguia aberto — escrita que nenhum ato poderia considerar (FR-035 da `001`). Ele passa a
+fechar também, com a leitura e o rascunho preservados (FR-373 e FR-408 da `029`, revistas). Nesta
+spec, a projeção o mostra como não enviado, sem ação, antes da linha do prazo (FR-3725, linha 3a), e
+nenhuma tela oferece o preenchimento. O Requerimento *na inscrição* não muda. A implementação da
+recusa é PR próprio; a `118` não muda comando (FR-3756).
+
 ## Registrado, sem desenvolver
 
 ### QI-7 — aviso de pendência: recomendação para decisão institucional
@@ -1140,15 +1175,13 @@ comissão não dá mais prazo. Afeta a FR-3618 e a FR-3622 da `115`, a FR-272 da
 [`doc/achado-correcao-da-convocacao-pela-gestao-2026-11-04.md`](../../doc/achado-correcao-da-convocacao-pela-gestao-2026-11-04.md).
 **Não é escopo desta spec** (D-002), e a priorização é do usuário.
 
-### O Processo em estado final fecha os documentos, e não o Requerimento
+### O Requerimento com o Processo em estado final — decidido, implementação à parte
 
-Verificado em 04/11/2026: o envio e a conferência de documento da convocação recusam com o Processo
-encerrado ou cancelado (`convocacao/application/documentos.py`, `ensure_processo_accepts_changes`),
-mas a política do Requerimento (`requerimentos/domain/disponibilidade.py`) só fecha pelo prazo e pelo
-desfecho. Com o Processo encerrado e a chamada em aberto, o Requerimento continua preenchível. Esta
-spec não muda regra (FR-3756): mostra cada um pela sua fonte (FR-3725, FR-3730). Por decisão do
-usuário (04/11/2026), é **encaminhamento separado, de alta prioridade**, com investigação e proposta
-em `doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`.
+O usuário decidiu em 04/11/2026 (D-020) que o Requerimento *na convocação* deixa de aceitar escrita
+com o Processo encerrado ou cancelado, e a FR-373 e a FR-408 da `029` foram revistas. A implementação
+no comando e na política é **PR próprio**, pelo encaminhamento
+`doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`, que também registra a decisão
+ainda pendente sobre o sucessor do Requerimento *na inscrição*.
 
 ### Outros, fora desta spec
 
