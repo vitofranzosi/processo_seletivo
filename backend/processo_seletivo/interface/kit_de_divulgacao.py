@@ -72,7 +72,6 @@ SEM_RASTERIZADOR = (
 )
 MANCHETE_INVALIDA = "A manchete escolhida não está entre as oferecidas. Abra o kit de novo."
 
-#: Os formatos do incremento B (`D-001`). O pacote entra no incremento C.
 TEXTOS = {
     "md": ("text/markdown; charset=utf-8", "md"),
     "txt": ("text/plain; charset=utf-8", "txt"),
@@ -81,7 +80,9 @@ PECAS = {
     "png": ("image/png", "png"),
     "svg": ("image/svg+xml", "svg"),
 }
-FORMATOS = {**TEXTOS, **PECAS}
+#: O pacote (incremento C): sai também sem a peça, e diz por quê (EC-21).
+PACOTE = {"zip": ("application/zip", "zip")}
+FORMATOS = {**TEXTOS, **PECAS, **PACOTE}
 #: A política do anexo SVG (FR-3442, `D-014`, `D-021`): nada de fora, nenhum script; só o estilo
 #: que declara a fonte, a fonte em `data:` e a marca em `data:`.
 POLITICA_DO_SVG = "default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:"
@@ -230,6 +231,7 @@ def kit(request, edital_id):
                 "ultima_exportacao": anteriores[0]["exportado_em"] if anteriores else "",
                 "formatos": list(TEXTOS),
                 "formatos_da_peca": list(PECAS),
+                "formato_do_pacote": next(iter(PACOTE)),
                 "secao_da_peca": _secao_da_peca(request, ficha, indice),
             },
         )
@@ -266,6 +268,39 @@ def _arquivo_da_peca(ficha, peca, formato):
     return kit_pacote.rasterizar(kit_peca.svg(peca, ficha))
 
 
+def pacote(ficha, *, manchete, motivo_sem_peca):
+    """O ZIP do material, a peça que entrou e o motivo de ela faltar (`FR-3435`, EC-21).
+
+    **A recusa da peça não recusa o pacote** (contrato): a composição que não cabe sai do ZIP com o
+    motivo nomeado no manifesto, e os textos seguem. Manchete fora da lista continua 422 — é pedido
+    inválido, e não peça que não cabe.
+    """
+    peca, motivo = None, motivo_sem_peca
+    if not motivo:
+        try:
+            peca = _compor(ficha, manchete)
+        except kit_peca.PecaRecusada as recusa:
+            motivo = recusa.motivo
+    png = svg = None
+    if peca is not None:
+        svg = kit_peca.svg(peca, ficha, fonte_embutida=True).encode()
+        if kit_pacote.disponivel():
+            png = kit_pacote.rasterizar(kit_peca.svg(peca, ficha))
+        else:
+            motivo = SEM_RASTERIZADOR
+    textos, notas = _material(ficha)
+    dados = kit_pacote.montar(
+        ficha,
+        markdown=kit_textos.em_markdown(ficha, textos, notas),
+        texto=kit_textos.em_texto(ficha, textos, notas),
+        peca=peca,
+        svg=svg,
+        png=png,
+        motivo_sem_peca=motivo,
+    )
+    return dados, peca, motivo
+
+
 @require_http_methods(["POST"])
 def exportar(request, edital_id, formato):
     """O material num arquivo, registrado na trilha do Edital (`FR-3435`, `FR-3436`)."""
@@ -283,8 +318,15 @@ def exportar(request, edital_id, formato):
         raise DomainError("kit_sem_material", ficha.motivo, 409)
     if request.POST.get("impressao", "") != ficha.impressao:
         raise DomainError("kit_desatualizado", MUDOU, 409)
-    peca = None
-    if e_peca:
+    peca, sem_peca = None, None
+    if formato in PACOTE:
+        dados, peca, motivo = pacote(
+            ficha,
+            manchete=_indice_da_manchete(request.POST),
+            motivo_sem_peca=_motivo_sem_peca(request),
+        )
+        sem_peca = motivo or None
+    elif e_peca:
         indice = _indice_da_manchete(request.POST)
         try:
             peca = _compor(ficha, indice)
@@ -323,6 +365,7 @@ def exportar(request, edital_id, formato):
             "campos": ficha.campos,
             "manchete": peca.manchete if peca else None,
             "sha256": hashlib.sha256(dados).hexdigest(),
+            **({"sem_peca": sem_peca} if formato in PACOTE else {}),
         },
     )
     tipo, extensao = FORMATOS[formato]

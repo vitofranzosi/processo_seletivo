@@ -49,8 +49,12 @@ Demonstração ponta a ponta pela interface (Princípio VI). Caminhos relativos 
 2. Gere a galeria de revisão:
 
    ```bash
-   uv run python scripts/galeria_do_kit.py --saida /tmp/galeria-kit
+   TEST_DB_ENGINE=postgresql DB_USER=$USER DB_RUNTIME_USER=$USER DB_NAME=ps_galeria LC_ALL=C \
+       uv run python scripts/galeria_do_kit.py --saida /tmp/galeria-kit
    ```
+
+   O roteiro cria e destrói o próprio banco (`test_ps_galeria`), e recusa pasta de saída que não
+   esteja vazia.
 
    Ela traz um PNG por cenário de referência e o ZIP de cada um, e é o que vai para a comunicação
    (SC-1054).

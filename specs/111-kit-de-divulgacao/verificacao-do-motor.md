@@ -87,3 +87,31 @@ pedem fila nem cache.
 `resvg-py==0.5.0` em `dependencies` do `backend/pyproject.toml`, travada no `backend/uv.lock`. Igual,
 e não intervalo: outra versão do resvg pode mudar o antisserrilhado, e o PNG deixaria de ser o mesmo
 entre duas implantações.
+
+## 8. A tela com prévia e o ZIP, num lote de 20 (T032, SC-1057)
+
+**Data**: 04/11/2026, com o incremento C. **Onde**: o Mac do item 5, `runserver` em desenvolvimento
+(`DEBUG` ligado, um processo), PostgreSQL local, banco com o corpus da `070` publicado por
+`scripts/publicar_corpus_do_piloto.py`. **Não é o ambiente de implantação**: a imagem de produção
+continua sem versão (item 2), e a SC-1057 só se fecha quando a medição se repetir lá, com o mesmo
+roteiro.
+
+**Roteiro**: 20 rodadas seguidas, como Comunicação, no 91/2026 com a Retificação nº 1 (quatro polos),
+pelo host público `kit.127.0.0.1.nip.io` — em `localhost` não há peça (FR-3447). Cada rodada abre a
+tela, pede a prévia com a impressão lida dela e exporta o ZIP com o mesmo formulário, por `curl`,
+medindo o `time_total` de cada resposta.
+
+| Resposta | Mediana | Máximo | Status |
+|---|---|---|---|
+| Tela do kit | 20 ms | 32 ms (a primeira) | 200 nas 20 |
+| Prévia PNG | 83 ms | 110 ms | 200 nas 20 |
+| ZIP completo (sete arquivos, 328 KB) | 91 ms | 104 ms | 200 nas 20 |
+
+A tela com a prévia, somadas, fica abaixo de 150 ms em toda rodada, e o ZIP, abaixo de 110 ms — uma
+ordem de grandeza abaixo dos 2 s.
+
+**Determinismo no lote**: os 20 ZIPs têm resumos diferentes, como a FR-3438 prevê — o manifesto, a
+ficha e as notas dizem o instante da geração. Dentro deles, a peça é uma só: o PNG, o SVG e o texto
+alternativo têm o mesmo resumo nos 20. Duas montagens no **mesmo** instante de referência dão o
+mesmo ZIP, byte a byte (`tests/integration/kit/test_pacote.py`, e a galeria confere de novo em cada
+cenário).
