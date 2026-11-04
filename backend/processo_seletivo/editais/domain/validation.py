@@ -1512,6 +1512,7 @@ def validate_for_publication(
     agora: datetime | None = None,
     topologia: list | None = None,
     marcos_sorteados: frozenset = frozenset(),
+    situacoes: list | None = None,
 ) -> list[ValidationFinding]:
     """Os achados do conteúdo, classificados pelo ato que está sendo conferido.
 
@@ -1533,6 +1534,13 @@ def validate_for_publication(
     **`marcos_sorteados` são os marcos já sorteados em todos os recortes** (`102`, FR-2656), e
     também só a Retificação o passa: o método desses marcos não governa mais ato nenhum, e advertir
     sobre a extração deles a cada Retificação seria ruído. Vazio, o erro cai para o lado que acusa.
+
+    **`situacoes` são as referências já conferidas na fonte** (`116`, FR-3634), e só os comandos as
+    passam: a consulta é de rede e acontece antes da transação, como `marcos_sorteados` é lido antes
+    de chegar aqui. **`None` quer dizer que a conferência não rodou**, e então não há achado desta
+    feature — é o caso da revisão e da tela de confirmar, que não podem consultar (FR-3644). É a
+    escolha oposta à do `ato` padrão, e por isso cada um dos quatro comandos tem teste que conta as
+    chamadas à fonte: é o guardião contra esquecer o argumento.
     """
     agora = agora or datetime.now(ZONA)
     findings = []
@@ -1591,6 +1599,7 @@ def validate_for_publication(
     findings.extend(
         _extracao_inviavel(snapshot, ato=ato, agora=agora, marcos_sorteados=marcos_sorteados)
     )
+    findings.extend(_situacao_da_referencia(situacoes, ato=ato))
     findings.extend(_coerencia_dos_requisitos(snapshot))
     findings.extend(_periodo_de_inscricoes(snapshot))
     findings.extend(_eventos_vencidos(snapshot, ato=ato, agora=agora))
@@ -2500,6 +2509,61 @@ def _extracao_inviavel(
         encontrado = achado(comum, alvo="O método comum a este Edital", caminho="/drawMethod")
         if encontrado is not None:
             findings.append(encontrado)
+    return findings
+
+
+CONCURSO_JA_REALIZADO = "draw_occurrence_already_drawn"
+CONCURSO_NAO_VERIFICADO = "draw_occurrence_not_checked"
+CONCURSO_AINDA_NAO_REALIZADO = "draw_occurrence_not_drawn_yet"
+CONCURSO_FORA_DA_FORMA = "draw_occurrence_malformed"
+
+
+def _situacao_da_referencia(situacoes, *, ato: str) -> list[ValidationFinding]:
+    """O concurso declarado já foi realizado? A resposta da fonte, por método (`116`, FR-3634).
+
+    **O caso é o concurso 5000, de 2015, declarado para dezembro de 2026.** Ele atravessava a
+    composição, a publicação e o congelamento, e só era recusado na constituição do sorteio, com o
+    certame em curso e a saída custando uma Retificação e uma relação nova.
+
+    **A situação vem pronta** (`sorteios/application/conferencia.py`): quais referências conferir —
+    os métodos que governam marco com sorteio a fazer, e na Retificação só as introduzidas — é
+    pergunta do orquestrador, e a consulta é de rede, fora da transação. Aqui ela vira achado:
+    realizado impede, inconclusivo adverte, e ainda não realizado é `INFO`, que não impede e não
+    adverte, porque nada de errado foi encontrado (D-003). O caminho é o do método, como na `102`,
+    para a revisão levar ao campo.
+
+    **A forma inválida na publicação não é repetida aqui**: a conferência de forma do método já a
+    acusa (`perfis._validar_forma_da_ocorrencia`, FR-3624). Na Retificação a forma do método não é
+    reconferida (a FR-514 da `035`), e então é a situação que impede a referência introduzida.
+
+    A mensagem é a mesma na submissão, na publicação e na Retificação (`contracts/mensagens.md`).
+    """
+    if situacoes is None:
+        return []
+    from processo_seletivo.sorteios.domain import conferencia
+
+    ato_da_conferencia = (
+        conferencia.RETIFICACAO if ato == ATO_DE_RETIFICACAO else conferencia.PUBLICACAO
+    )
+    findings = []
+    for item in situacoes:
+        estado = item.situacao.estado
+        if estado == conferencia.REFERENCIA_INVALIDA and ato == ATO_DE_PUBLICACAO:
+            continue
+        severidade, codigo = {
+            conferencia.REALIZADO: (Severity.BLOCKING_ERROR, CONCURSO_JA_REALIZADO),
+            conferencia.INCONCLUSIVO: (Severity.WARNING, CONCURSO_NAO_VERIFICADO),
+            conferencia.AINDA_NAO_REALIZADO: (Severity.INFO, CONCURSO_AINDA_NAO_REALIZADO),
+            conferencia.REFERENCIA_INVALIDA: (Severity.BLOCKING_ERROR, CONCURSO_FORA_DA_FORMA),
+        }[estado]
+        findings.append(
+            ValidationFinding(
+                severity=severidade,
+                code=codigo,
+                message=f"{item.referencia.alvo}: {item.mensagem(ato_da_conferencia)}",
+                path=item.referencia.caminho,
+            )
+        )
     return findings
 
 

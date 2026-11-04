@@ -149,6 +149,12 @@ INSTALLED_APPS = [
 # do marco, alterável só por Retificação (021, FR-076, D-013).
 SORTEIO_FONTE_TIMEOUT_SEGUNDOS = float(os.environ.get("SORTEIO_FONTE_TIMEOUT_SEGUNDOS", "10"))
 SORTEIO_FONTE_TENTATIVAS = int(os.environ.get("SORTEIO_FONTE_TENTATIVAS", "3"))
+# **A conferência antes dos atos tem tempo próprio, e uma tentativa só** (116, FR-3631,
+# SC-1097). Ela acrescenta espera a um clique de publicar, e duas chamadas de 5 segundos cabem nos
+# 15 do teto; as três tentativas de 10 segundos da observação, que é o dia do sorteio, não caberiam.
+SORTEIO_CONFERENCIA_TIMEOUT_SEGUNDOS = float(
+    os.environ.get("SORTEIO_CONFERENCIA_TIMEOUT_SEGUNDOS", "5")
+)
 
 TEMPLATES = [
     {

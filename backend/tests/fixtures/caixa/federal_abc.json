@@ -1,0 +1,8 @@
+{
+ "status": 400,
+ "capturada_em": "2026-11-03",
+ "corpo": {
+  "Message": "The request is invalid.",
+  "MessageDetail": "The parameters dictionary contains a null entry for parameter 'numero' of non-nullable type 'System.Int32' for method 'System.Threading.Tasks.Task`1[System.Net.Http.HttpResponseMessage] BuscarConcurso(Int32)' in 'siwpc.shp.loterias.web.Controllers.Modalidades.FederalController'. An optional parameter must be a reference type, a nullable type, or be declared as an optional parameter."
+ }
+}
