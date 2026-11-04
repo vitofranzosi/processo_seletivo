@@ -209,3 +209,53 @@ def test_trocar_um_byte_de_ativo_muda_o_resumo(familia, monkeypatch):
 
     monkeypatch.setattr(kit_familias, "_resumo_de_arquivo", trocado)
     assert kit_familias.resumo(template) != antes
+
+
+VERIFICACAO = Path(__file__).resolve().parents[4] / (
+    "specs/119-templates-de-divulgacao/verificacao.md"
+)
+_APROVADO = re.compile(
+    r"^\| (\S+/\S+ · \d+) \| (\d+) \| `([0-9a-f]{12})` \| ([^|]+) \| ([^|]+) \|$"
+)
+
+
+def test_cada_versao_aprovada_tem_o_resumo_do_codigo():
+    """O registro de aprovação nomeia o resumo que o código fixa (FR-3834, SC-1140)."""
+    aprovados = [
+        casou.groups()
+        for linha in VERIFICACAO.read_text(encoding="utf-8").splitlines()
+        if (casou := _APROVADO.match(linha))
+    ]
+    assert aprovados, "nenhuma aprovação lida do verificacao.md"
+    por_identificador = {t.identificador: t for t in TEMPLATES}
+    for identificador, versao, curto, quem, data in aprovados:
+        template = por_identificador[identificador]
+        assert int(versao) == template.versao
+        modulo = _modulo(kit_familias.familia(template.familia))
+        resumo = modulo.RESUMOS[(template.formato.chave, template.versao)][1]
+        assert curto == resumo[: kit_familias.RESUMO_CURTO], identificador
+        assert quem.strip() and re.fullmatch(r"\d{2}/\d{2}/\d{4}", data.strip())
+
+
+_LINHA_DE_ORIGEM = re.compile(
+    r"^\| `([^`]+)` \| [^|]+ \| ([^|]+) \| ([^|]+) \| `([0-9a-f]{64})` \|$"
+)
+
+
+@pytest.mark.parametrize(
+    "familia", [f for f in FAMILIAS if f.chave != institucional.CHAVE], ids=_id
+)
+def test_todo_arquivo_da_familia_consta_do_origem_dela(familia):
+    """Origem, licença, aprovação e resumo de cada ativo e imagem (FR-3826, SC-1138)."""
+    origem = familia.pasta_dos_ativos / "ORIGEM.md"
+    registrados = {
+        casou.group(1): casou.group(4)
+        for linha in origem.read_text(encoding="utf-8").splitlines()
+        if (casou := _LINHA_DE_ORIGEM.match(linha))
+    }
+    usados = {ativo.arquivo: ativo.sha256 for ativo in familia.ativos.values()}
+    for imagem in familia.imagens:
+        usados.update(dict(imagem.arquivos.values()))
+    assert registrados == usados
+    na_pasta = {p.name for p in familia.pasta_dos_ativos.iterdir() if p.name != "ORIGEM.md"}
+    assert na_pasta == set(usados), "arquivo na pasta da família fora do registro, ou o inverso"

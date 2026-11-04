@@ -489,6 +489,19 @@ dela dependem.
 | **P-6** | A faixa "Informação complementar" dos templates FIC, para Edital retificado sem mudança no material, entra? | Não entra: obrigaria toda Retificação a desatualizar o material, contra a regra da `111` de que Retificação que não muda o material não acende faixa |
 | **P-7** | Os perfis de rede do rodapé (@ifescefor, Ifes Cefor) continuam iguais em todas as famílias? | Iguais, como nos arquivos; o rodapé é ativo fixo da família |
 
+### Respostas do responsável pelo produto (04/11/2026)
+
+| # | Resposta | Como a implementação a lê |
+|---|---|---|
+| **P-1** | "Não se preocupe com licença. Adote o mais próximo do template possível." | O banco de cada família são as imagens dos próprios arquivos da comunicação, reduzidas uma vez; o `ORIGEM.md` da família registra a origem e a licença como "não verificada, adotada pelo responsável pelo produto". Na Pós Lato Sensu, a imagem é o fundo inteiro do slide, com a foto, o padrão e o rodapé |
+| **P-2** | "Não sei. Escolha a mais próxima possível; se puder, use a mesma fonte." | A Helvetica Neue não é livre e não se embute. Para Libras, TMD e Internos, a substituta é escolhida na família, a mais próxima entre as livres, e registrada no `ORIGEM.md` das fontes |
+| **P-3** | "Adote o tamanho padrão de banner na web" (com um exemplo de 1500 × 850) | O banner continua em 1500 × 850, e deixa de esperar resposta |
+| **P-4** | "Apenas adote o template." | A adoção do responsável pelo produto é o registro de aprovação da FR-3834, em [verificacao.md](verificacao.md), com o identificador, a versão e o resumo de cada template; a galeria continua como prova visual, e a liberação em produção continua da operação, pela configuração |
+
+Duas dessas leituras afrouxam o texto da spec, e ficam ditas aqui: a licença da FR-3826 passa a
+admitir "não verificada" por decisão registrada, e a aprovação da SC-1135 passa a admitir a adoção
+sem a galeria.
+
 ---
 
 ## Success Criteria *(mandatory)*
