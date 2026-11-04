@@ -1,12 +1,12 @@
 # Implementation Plan: Entrega documental controlada ao setor da formalização
 
-**Branch**: `claude/gps-entrega-documental-627460` | **Date**: 2026-11-04 (consolidado) | **Spec**: [spec.md](spec.md)
+**Branch**: `claude/gps-entrega-documental-627460` | **Date**: 2026-11-04 (ajustado depois da revisão independente) | **Spec**: [spec.md](spec.md)
 
 **Input**: [spec.md](spec.md), [diagnostico.md](diagnostico.md) e [data-model.md](data-model.md).
 
-> **Desenho aprovado pelo usuário em 04/11.** A implementação começa só depois do merge do PR #369,
-> que traz a implementação da `115`. A primeira tarefa aplica a revisão aprovada da FR-069 da `009` e
-> da FR-3606 da `115` (T002).
+> **Desenho aprovado pelo usuário em 04/11.** A `115` está na `main` desde 04/11 (PR #369, merge
+> `f563b5a3`), e a implementação pode começar. A primeira tarefa aplica a revisão aprovada da FR-069
+> da `009` e da FR-3606 da `115` (T002).
 
 ## Summary
 
@@ -18,15 +18,16 @@ chamada mais recente), com os documentos que a condução **definiu**, de qualqu
 - exportar um ZIP, por pessoa, por seleção ou por recorte.
 
 Para mais de uma pessoa, uma **verificação** lê e confere tudo e mostra o resultado (*completo* ou
-*parcial*, com os excluídos e o motivo). O **download** remonta e só serve se nada mudou. Nada se
-guarda. O Documento Exigido e o conteúdo publicado não mudam. O molde é a `031`, e as fontes são a
+*parcial*, com os excluídos e o motivo) e devolve um **comprovante assinado pelo servidor**. O
+**download** exige o comprovante, revalida as autorizações, relê tudo e só serve se o resultado inteiro
+for o mesmo. Nada se guarda. O Documento Exigido e o conteúdo publicado não mudam. O molde é a `031`, e as fontes são a
 `019`, a `009` e a `115`.
 
 ## Technical Context
 
 **Language/Version**: Python 3.13, Django (o do repositório)
 **Primary Dependencies**: nenhuma nova. `zipfile`, `tempfile`, `hashlib`, `csv` e `unicodedata`, da
-biblioteca padrão
+biblioteca padrão; `django.core.signing`, do framework
 **Storage**: PostgreSQL; a raiz privada existente, só leitura
 **Testing**: pytest contra PostgreSQL (`make test-pg`); Playwright no grupo `navegador`
 **Target Platform**: o monólito atrás de nginx e gunicorn síncrono (5 workers, 120 s), sem
@@ -67,7 +68,8 @@ backend/processo_seletivo/
 │   ├── application/definir.py            # definição e histórico (condução)
 │   ├── application/designar.py           # designar / revogar (gestão de acessos)
 │   ├── application/conjunto.py           # aptos e conjunto (seletor único, em lote)
-│   ├── application/exportar.py           # verificação, assinatura, montagem, registro
+│   ├── application/exportar.py           # verificação, montagem, registro
+│   ├── application/comprovante.py        # emitir / conferir (django.core.signing), resumo canônico
 │   └── infrastructure/pacote.py          # ZIP_STORED em TemporaryFile; manifesto (FR-3713)
 ├── interface/identidade.py               # papel em PAPEIS/DESCRICOES
 ├── interface/views_formalizacao.py       # módulo novo, em MODULOS_DE_VIEW
@@ -108,51 +110,72 @@ escreve neles. As views ficam em módulo próprio.
 
 1. raiz da chamada → chamada mais recente → vigente → desfecho que inclui;
 2. definição vigente;
-3. **convocação**: itens definidos → conferência vigente *conforme* → `fonte_do_arquivo` [#369];
+3. **convocação**: itens definidos → conferência vigente *conforme* → `fonte_do_arquivo`
+   (`convocacao/application/documentos.py:420`, na `main` desde a `115`);
 4. **inscrição**: `DocumentoSubmetido` definidos;
 5. deduplicação (FR-3659);
 6. situação e última exportação.
 
-### 4. Verificação e download (FR-3682 a FR-3698, FR-3714)
+### 4. Verificação e download (FR-3682 a FR-3698, FR-3689a, FR-3689b, FR-3714)
 
 ```text
-POST verificar (seleção | recorte), >1 pessoa
+compor_e_ler(alcance)            # usado pelos dois passos, uma leitura por arquivo
   ├─ pode_acessar por pessoa; qualquer 404 → recusa inteira
   ├─ Σ tamanhos gravados > limite → "Exportação recusada", antes de ler
+  └─ por pessoa do alcance, por arquivo: abre → sha256 em blocos
+        FileNotFoundError/OSError → INDISPONIVEL (evento em transação própria)
+        hash ≠ esperado         → INTEGRIDADE (evento existente, transação própria)
+     → Resultado(incluídas[itens, hashes], excluídas[item, motivo], definição, designação)
+     resumo = canonical_sha256(Resultado)                 # FR-3689b
+
+POST verificar (seleção | recorte), >1 pessoa
   └─ with transaction.atomic():
         pg_try_advisory_xact_lock(CLASSE, resumo(servidor)) ou "já está em andamento"
-        por pessoa, por arquivo: abre → sha256 em blocos (sem copiar)
-           FileNotFoundError/OSError → INDISPONIVEL (evento em transação própria)
-           hash ≠ esperado         → INTEGRIDADE (evento existente, transação própria)
-        assinatura = sha256 canônico(pessoas incluídas, itens, hashes, versão da definição)
-     evento "Verificação de exportação" (resultado, contagens)
-  → tela: RESULTADO primeiro; excluídos e motivos; botão "Baixar pacote [parcial] (N pessoas)"
-          com a assinatura num campo oculto (POST)
+        r = compor_e_ler(alcance)                          # só lê, não copia
+     comprovante = signing.dumps({v, sujeito, unidade, edital, designação, alcance, recorte,
+                                  pessoas pedidas, definição, resultado, resumo, emitido_em},
+                                 salt="formalizacao.verificacao", compress=True)
+     evento "Verificação de exportação"
+  → tela: RESULTADO primeiro; excluídos e motivos;
+          botão "Baixar pacote [parcial] (N pessoas)" com o comprovante no corpo do POST
 
-POST baixar (assinatura)  — e "Exportar esta pessoa", sem assinatura
-  ├─ pode_acessar; limite (como acima)
+POST baixar (comprovante)
+  ├─ signing.loads(comprovante, salt=…, max_age=15 min)
+  │     BadSignature → "verificação inválida"; SignatureExpired → "verificação expirada"
+  │     sujeito/unidade ≠ ator → "verificação inválida"        (nenhum arquivo lido)
+  ├─ pode_acessar revalidado para cada pessoa pedida (403/404 da matriz)
   └─ with transaction.atomic():
-        trava (como acima)
-        recompõe o conjunto; ≠ assinatura → "verificação defasada" (nada servido)
-        TemporaryFile()                          # sem nome; O_TMPFILE no Linux
-        por pessoa incluída: cada fonte → SpooledTemporaryFile + sha256 numa leitura
-           qualquer falha ou hash ≠ → aborta: "verificação defasada"
-             (na pessoa única: página com o motivo)
-           pessoa completa → entradas no ZIP (nome pela FR-3712, date_time do envio)
-        manifesto.csv (FR-3713) com as incluídas e as não incluídas da verificação
+        trava
+        TemporaryFile()                                   # sem nome; O_TMPFILE no Linux
+        r' = compor_e_ler(alcance)  — e, na mesma leitura, cada arquivo de pessoa incluída
+             vai para SpooledTemporaryFile, e a pessoa completa entra no ZIP
+        resumo(r') ≠ comprovante.resumo, ou definição/designação ≠ → "verificação defasada"
+             (rollback; nada servido; ZIP descartado)
+        manifesto.csv (FR-3713) com as incluídas e as excluídas de r'
         sha256 do pacote
-        ExportacaoDeFormalizacao(resultado COMPLETO | PARCIAL) + evento
+        ExportacaoDeFormalizacao(resultado) + evento
      # commit: a trava sai aqui. A transferência começa depois, sem trava
-  → FileResponse(temporário, attachment, no-store, nome sem dado pessoal, "-parcial" se for)
-  except Exception → rollback (sem registro); fecha temporários; evento "Exportação interrompida"
-                     em transação própria; página "A exportação não foi concluída…"
+  → FileResponse(temporário, attachment, no-store, "-parcial" se for)
+
+POST exportar esta pessoa  — sem comprovante: compor_e_ler + montagem na mesma transação;
+     qualquer falha → página com o motivo, sem ZIP e sem registro
+except Exception → rollback; fecha temporários; "Exportação interrompida" em transação própria
 ```
+
+**Uma leitura por arquivo em cada passo.** No download, `compor_e_ler` e a montagem são a mesma
+passagem: cada arquivo é lido uma vez, conferido e, se a pessoa estiver incluída, copiado. Os arquivos
+das excluídas são lidos só para conferir que continuam excluídas pelo mesmo motivo. Só depois de
+comparar o resumo é que o pacote, já montado, é servido ou descartado.
+
+**O comprovante não leva o conteúdo.** Ele leva o resumo. O servidor nunca toma como dado o que o
+cliente manda: ele recompõe e compara.
 
 **Ciclo de vida, em cada caso**:
 
 | Caso | Registro | Trava | Temporário | O operador vê |
 |---|---|---|---|---|
 | Sucesso | gravado | sai no commit | fechado pelo `FileResponse` ao fim ou na desconexão | o ZIP |
+| Comprovante inválido, fabricado, expirado ou de outro ator | não | não chega a ser tomada | não chega a existir | página com *verificar de novo*; nenhum arquivo lido |
 | Verificação defasada | não | sai no rollback | fechado | página com *verificar de novo* |
 | Exceção | não | sai no rollback | fechado no `finally` | página *não concluída* |
 | Worker morto na montagem | não (transação não comitada) | sai com a conexão | some com o processo, porque não tem nome | erro do proxy |
@@ -204,8 +227,8 @@ existentes e as novas respondem 409 *"Arquivo indisponível"*, com evento.
 
 | Arquivo | Mudança | Quando |
 |---|---|---|
-| `specs/009-…/spec.md`, `specs/115-…/spec.md` | FR-069 e FR-3606 revistas, com a nota da D-016 | **T002**, depois do merge do #369 |
-| `CLAUDE.md`/`AGENTS.md` | `M` das append-only de 46 para 50 | T005 |
+| `specs/009-…/spec.md`, `specs/115-…/spec.md` | FR-069 e FR-3606 revistas, com a nota da D-016. É a única mudança nessas specs, além da FR-3695 no código (FR-3705) | **T002** |
+| `CLAUDE.md`/`AGENTS.md` | `M` das append-only de 49, desde a `115`, para 53 | T005 |
 | `README.md` | a linha da `117` | T037 |
 | `specs/033-…/inventario-das-negativas.md` | os 404 novos | T021 |
 | `doc/implantacao-em-producao-ubuntu.md` | o limite e o roteiro de validação da §5.4 do diagnóstico | T036 |
@@ -216,7 +239,8 @@ existentes e as novas respondem 409 *"Arquivo indisponível"*, com evento.
 |---|---|
 | Transferência cortada pelo tempo-limite | o registro só diz *disponibilizado*; o ZIP truncado é inválido; validação na VM; reduzir o limite |
 | Disco do sistema | temporário sem nome; pior caso documentado; validação na VM |
-| Leitura dupla (verificação e download) | dentro do limite; cada passo cabe no tempo-limite (SC-1111) |
+| Leitura dupla (verificação e download) e transferência | dentro do limite; o CI mede verificação e montagem em separado (SC-1111); a VM mede as duas e a transferência (homologação, item 5) |
+| Comprovante fabricado ou reaproveitado | assinatura do servidor, validade de 15 min, vínculo ao ator; autorização revalidada; reuso só gera outra exportação registrada |
 | Definição generosa demais | vazia por padrão, avisos, motivo, histórico ao auditor |
 | Nome hostil no ZIP ou no CSV | FR-3712, FR-3713, SC-1114 |
 | O setor guarda em pasta aberta | fora do GPS |

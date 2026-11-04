@@ -2,8 +2,9 @@
 
 **Data**: 2026-11-04, revisto no mesmo dia. **Base**: `main` em `83cd5863`, mais a implementação da
 `115` no PR vitofranzosi/processo_seletivo#369 (branch `claude/115-documentos-na-convocacao`, em
-`a8e1f68b` em 04/11, conferido na consolidação), **aberto e sem merge**. Os caminhos são relativos a `backend/processo_seletivo/`. Quando o
-código citado só existe no PR #369, a referência diz **[#369]**.
+`a8e1f68b`), **mergeado na `main` em 04/11** (merge `f563b5a3`). Os caminhos são relativos a
+`backend/processo_seletivo/`. As referências **[#369]** foram escritas antes do merge e hoje estão na
+`main`; as linhas foram reconferidas depois dele (`fonte_do_arquivo` passou a `:420`).
 
 Este documento não repete a auditoria de matrícula e dossiê nem o complemento dela, de 03/11. Ele
 parte da §10.4 do complemento, que já registrou esta lacuna, e responde só ao que a spec `117`
@@ -28,12 +29,11 @@ precisa decidir.
 | Fato | Evidência |
 |---|---|
 | A spec da `115` está na `main` | PR #368 mergeado; `specs/115-documentos-na-convocacao/spec.md` |
-| A implementação da `115` **não** está na `main` | PR #369 aberto, conferido em 04/11; a `main` não tem `ItemDaListaDaConvocacao`, `ApresentacaoDeDocumento` nem `ConferenciaDeDocumento` |
+| A implementação da `115` está na `main` | PR #369 mergeado em 04/11 (`f563b5a3`), com CI verde. Na redação inicial deste diagnóstico ela ainda não estava |
 | Na `main`, documento só existe na inscrição | `inscricoes/models.py:329-384` (`DocumentoSubmetido`) |
 | A spec `116` (Loteria Federal), também aberta, reserva até o requisito três mil seiscentos e cinquenta e dois e o critério mil e cem | PR #370 |
 
-**Consequência:** a `117` depende do merge do PR #369. A sessão de implementação começa conferindo
-esse merge.
+**Consequência:** a dependência da `117` está resolvida desde o merge do #369.
 
 ## 2. Respostas às dez perguntas
 
@@ -52,7 +52,7 @@ esse merge.
   É a FR-053a da `009`, estendida à convocação pela FR-3605 da `115`.
 - **Aproveitamento por referência, sem cópia** [#369]: a apresentação é arquivo **ou** referência, e a
   referência nunca aponta outra referência (FR-3619 da `115`). `fonte_do_arquivo` ([#369]
-  `convocacao/application/documentos.py:390`) devolve o arquivo em um passo.
+  `convocacao/application/documentos.py:420`) devolve o arquivo em um passo.
 
 ### 2.2 Como identificar os aptos para formalização
 

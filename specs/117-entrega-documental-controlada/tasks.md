@@ -3,8 +3,8 @@
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md),
 [quickstart.md](quickstart.md)
 
-**Pré-condição**: o PR #369 (implementação da `115`) está na `main` com CI verde. O desenho foi
-aprovado em 04/11. Sem a `115` na `main`, nenhuma tarefa começa.
+**Pré-condição cumprida em 04/11**: a `115` está na `main` (PR #369, merge `f563b5a3`), e o desenho foi
+aprovado. A implementação pode começar.
 
 **Testes**: incluídos, contra PostgreSQL.
 
@@ -12,14 +12,14 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 
 ## Fase 1: Preparação
 
-- [ ] T001 Confirmar a `main` com o PR #369 e CI verde; rodar `manage.py migrate --check`
+- [ ] T001 Confirmar a `main` com a `115` e CI verde; rodar `manage.py migrate --check`
 - [ ] T002 Aplicar a revisão **aprovada** da FR-069 em `specs/009-inscricao-simples-documentos/spec.md` e da FR-3606 em `specs/115-documentos-na-convocacao/spec.md`, com o texto da D-016 e a nota *"revista pela `117` em ‹data›, por decisão do usuário de 04/11/2026"*; rodar `tests/test_citacoes_de_requisito.py`
 - [ ] T003 Criar o app `backend/processo_seletivo/formalizacao/`, registrá-lo em `INSTALLED_APPS` e atualizar o guardião de contagem de migrations por app
 
 ## Fase 2: Fundação
 
 - [ ] T004 Modelos das quatro tabelas em `formalizacao/models.py`, com as constraints do data-model (motivo não vazio; resultado `COMPLETO`/`PARCIAL`; hash não vazio; autodesignação)
-- [ ] T005 Migration `0001_inicial` com gatilhos append-only; as quatro tabelas em `TABELAS_APPEND_ONLY`; `M` de 46 para 50 em `CLAUDE.md` e `AGENTS.md`
+- [ ] T005 Migration `0001_inicial` com gatilhos append-only; as quatro tabelas em `TABELAS_APPEND_ONLY`; `M` de 49 para 53 em `CLAUDE.md` e `AGENTS.md`
 - [ ] T006 [P] `formalizacao/domain/nomes.py`: capacidade `formalizacao:acessar`, códigos de recusa, situações, resultados, operações da trilha com rótulos e classe da trava
 - [ ] T007 [P] Papel `formalizacao` em `PAPEIS` e `DESCRICOES` (`interface/identidade.py`) e teste de grafia (FR-3661)
 - [ ] T008 `ArquivoIndisponivel` em `portal/arquivos.py`; 409 e evento `ARQUIVO_INDISPONIVEL` nas views de documento da inscrição, da mesa e da convocação (FR-3695)
@@ -57,9 +57,11 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 ## Fase 6: US4 — Verificação e exportação (P1)
 
 - [ ] T024 [US4] `formalizacao/infrastructure/pacote.py`: `ZIP_STORED` em `TemporaryFile`, entradas a partir da T010, hash numa leitura, `manifesto.csv` com BOM e neutralização (FR-3686 a FR-3688, FR-3690, FR-3713)
+- [ ] T024a [US4] `formalizacao/application/comprovante.py`: `emitir` e `conferir` com `django.core.signing` (sal próprio, `max_age` de 15 min, vínculo ao ator e à unidade) e o resumo canônico do conteúdo verificado, com incluídas, excluídas e motivos (FR-3689a, FR-3689b)
 - [ ] T025 [US4] `formalizacao/application/exportar.py`:
-  - `verificar`: limite antes de ler, trava de transação, leitura com hash, resultado, assinatura, evento;
-  - `montar`: trava, recomposição, *verificação defasada*, atomicidade por pessoa, manifesto com incluídas e não incluídas, registro antes da resposta;
+  - `compor_e_ler`: uma leitura por arquivo, com incluídas e excluídas;
+  - `verificar`: limite antes de ler, trava de transação, resultado, comprovante, evento;
+  - `montar`: comprovante conferido antes de ler, autorizações revalidadas, trava, releitura de todas as pessoas (inclusive excluídas) na mesma passagem da montagem, resumo comparado, *verificação defasada*, atomicidade por pessoa, manifesto com incluídas e não incluídas, registro antes da resposta;
   - exceção → rollback, fechamento do temporário e *exportação interrompida* em transação própria.
   
   Cobre as FR-3682 a FR-3698 e a FR-3714.
@@ -70,12 +72,20 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
   - manifesto com excluídos;
   - SHA-256 (SC-1107);
   - determinismo (SC-1108);
-  - verificação defasada por desfecho, por definição e por arquivo trocado (SC-1113);
+  - verificação defasada por desfecho, por designação (revogada e concedida de novo), por definição, por arquivo trocado, por excluído restaurado e por motivo trocado (FR-3689b, SC-1113);
   - recorte;
   - POST forjado;
   - pessoa única completa e com falha;
   - nenhuma pré-seleção.
 - [ ] T028 [P] [US4] `tests/integration/formalizacao/test_ciclo_de_vida.py`: nenhum arquivo remanescente e trava livre depois de sucesso, recusa, exceção injetada e cliente desconectado; a conexão fechada libera a trava; o registro está ausente quando a montagem não comita (SC-1106, FR-3692, FR-3714)
+- [ ] T029a [P] [US4] `tests/integration/formalizacao/test_comprovante.py`, em que todos recusam **sem ler arquivo**:
+  - adulterado (um byte trocado);
+  - fabricado (resumo SHA-256 simples sem assinatura; assinado com outro sal);
+  - expirado (tempo congelado além de 15 min);
+  - emitido para outro servidor ou outra unidade;
+  - apresentado depois da revogação do papel (403) e da designação (404).
+  
+  O reuso dentro da validade gera uma segunda exportação registrada (FR-3689a, SC-1113).
 - [ ] T029 [P] [US4] `tests/integration/formalizacao/test_concorrencia.py`: a segunda verificação ou montagem do mesmo servidor é recusada; a de outro servidor não (FR-3692)
 
 ## Fase 7: US5 — Falhas (P1)
@@ -92,7 +102,7 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 ## Fase 8: Acabamento
 
 - [ ] T032 Fixture `montar_cenario_da_formalizacao` em `tests/fixtures/formalizacao.py`, com injeção de exceção na montagem
-- [ ] T033 [P] `tests/performance/test_exportacao_de_formalizacao.py`: consultas constantes com 5 e 45 pessoas; verificação e montagem do Cenário A em menos de 30 s cada, no CI (SC-1111)
+- [ ] T033 [P] `tests/performance/test_exportacao_de_formalizacao.py`: consultas constantes com 5 e 45 pessoas; verificação e montagem do Cenário A **medidas e relatadas em separado**, menos de 30 s cada, no CI. Sem medir transferência, que é da VM (SC-1111)
 - [ ] T034 [P] `tests/navegador/test_jornada_da_formalizacao.py`: Cenários A, E e F (verificação parcial antes do download)
 - [ ] T035 Rótulos das operações em `trilha_do_edital` e na trilha da unidade (FR-3699, FR-3702)
 - [ ] T036 Em `doc/implantacao-em-producao-ubuntu.md`: o limite configurável e o roteiro de validação de capacidade da §5.4 do diagnóstico, para a TI. Sem presumir buffering do nginx
@@ -102,7 +112,7 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 
 ## Fora da implementação (homologação)
 
-- [ ] H01 Validação de capacidade na VM, pela TI (homologação, item 5); ajustar o limite de produção ao que a medição sustentar
+- [ ] H01 Validação de capacidade na VM, pela TI (homologação, item 5): verificação, montagem e transferência medidas em separado; ajustar o limite de produção ao que a medição sustentar
 - [ ] H02 Exportação real por um servidor do setor (homologação, item 4)
 - [ ] H03 Aviso de privacidade do Edital, pela área de proteção de dados
 

@@ -2,7 +2,8 @@
 
 **Feature Branch**: `claude/gps-entrega-documental-627460`, sobre a `main` em `83cd5863`
 
-**Created**: 2026-11-04 · **Revista**: 2026-11-04 (revisão final) · **Consolidada**: 2026-11-04
+**Created**: 2026-11-04 · **Revista**: 2026-11-04 (revisão final) · **Consolidada**: 2026-11-04 ·
+**Ajustada**: 2026-11-04, depois da revisão independente
 
 **Status**: **Aprovada quanto ao desenho pelo usuário em 04/11/2026**, com os ajustes da
 consolidação. Nenhum código, migration ou tela foi alterado. Situação das decisões:
@@ -23,12 +24,21 @@ consolidação. Nenhum código, migration ou tela foi alterado. Situação das d
   - **D-019**: o limite inicial ficou separado da capacidade da VM, e a trava e o tempo-limite
     ganharam ciclo de vida explícito;
   - **D-023**: novo, sobre a segurança dos nomes, dos caminhos e do manifesto.
+- **Ajustadas depois da revisão independente (04/11):**
+  - a FR-3705, que contradizia a FR-3706 e a T002;
+  - a verificação passa a ter **comprovante assinado pelo servidor** (D-024, FR-3689a);
+  - a **correspondência integral** entre a verificação e o pacote, inclusive as pessoas excluídas e os
+    motivos (FR-3689, FR-3689b);
+  - a medição separada de verificação, montagem e transferência (SC-1111).
+  
+  Nenhum número novo foi aberto: o PR #372, da implementação da `116`, já usa os números seguintes aos
+  desta spec.
 
 **A revisão da FR-069 da `009` e da FR-3606 da `115` está aprovada, e não aplicada.** Ela se aplica
-aos dois arquivos na T002, primeira tarefa da implementação, depois do merge do PR #369 (D-016).
+aos dois arquivos na T002, primeira tarefa da implementação (D-016).
 
-**Depende de**: a implementação da `115`, no PR vitofranzosi/processo_seletivo#369, **aberto** em
-04/11, com cabeça em `a8e1f68b`. A implementação da `117` não começa antes de a `115` estar na `main`.
+**Depende de**: a implementação da `115`, **mergeada na `main` em 04/11/2026** (PR
+vitofranzosi/processo_seletivo#369, merge `f563b5a3`). A dependência está resolvida.
 
 **Input**: os pedidos do usuário de 04/11/2026 (o inicial, a revisão final e a consolidação); a §10.4
 do [complemento da auditoria de matrícula e dossiê](../../doc/auditoria-matricula-e-dossie-documental-2026-11-03-complemento.md);
@@ -39,7 +49,10 @@ e o [diagnóstico desta feature](diagnostico.md).
 > o requisito funcional três mil seiscentos e cinquenta e dois e o critério mil e cem, os dois da
 > `116`, no PR #370 sem merge. **Nenhum `UX-` é aberto aqui.** As decisões reiniciam em `D-001`. Os
 > requisitos acrescentados na consolidação vêm depois do último já publicado no PR, para não
-> renumerar o que já foi revisto.
+> renumerar o que já foi revisto. **Os ajustes da revisão independente não abrem número**: usam sufixo
+> de letra (FR-3689a, FR-3689b), como a FR-053a da `009`. Em 04/11, a implementação da `116` (PR #372)
+> passou a usar o requisito três mil setecentos e quinze em diante e o critério mil cento e quinze em
+> diante, logo depois desta faixa.
 >
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-069 da `009`"). Uma decisão de outra feature, pelo assunto e pela feature. Os achados
@@ -129,6 +142,20 @@ passagem ao setor que formaliza.** Hoje:
   VM, na homologação, e a primeira resposta a uma medição ruim é reduzir o limite (D-019).
 - Q: A trava segura a transferência? → A: Não. Ela vive na transação da verificação ou da geração e
   sai no commit, no rollback ou no fechamento da conexão (FR-3692).
+
+### Session 2026-11-04 (revisão independente)
+
+- Q: Um resumo SHA-256 dos dados prova que a verificação foi feita pelo servidor? → A: Não. Quem
+  reconstruir os valores fabrica o resumo. A verificação devolve um **comprovante assinado pelo
+  servidor** (`django.core.signing`, HMAC com a chave do sistema), válido por 15 minutos e vinculado ao
+  ator, à unidade, ao Edital, à designação, ao alcance, à versão da definição, ao resultado e ao
+  resumo do conteúdo verificado. Não há tabela (D-024, FR-3689a).
+- Q: O que precisa coincidir entre a verificação e o download? → A: Tudo o que a verificação mostrou:
+  as pessoas incluídas com os documentos e hashes, as **excluídas com o motivo codificado**, a
+  definição, a designação e o resultado. O download relê também os arquivos das excluídas (FR-3689b).
+- Q: O comprovante pode ser usado duas vezes? → A: Sim, dentro da validade e pelo mesmo ator, e cada
+  uso gera um registro. Uso único exigiria guardar o comprovante, o que a decisão de não criar tabela
+  descarta. Repetir equivale a clicar de novo.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -254,17 +281,26 @@ disco.
 2. **Given** a verificação *parcial*, **When** Rui baixa, **Then** o ZIP contém exatamente as pessoas
    verificadas como incluídas. O nome do arquivo termina em `-parcial.zip`, e o manifesto traz o
    resultado no cabeçalho e uma linha por documento das pessoas não incluídas, com o motivo.
-3. **Given** a verificação, **When** um desfecho ou um arquivo muda antes do download, **Then** o
-   download é recusado como verificação defasada, sem servir nada, e a tela oferece verificar de novo.
-4. **Given** uma verificação sem nenhuma pessoa incluível, **When** termina, **Then** a tela explica, e
+3. **Given** a verificação, **When** muda antes do download qualquer um destes, **Then** o download é
+   recusado como verificação defasada, sem servir nada, e a tela oferece verificar de novo:
+   - o desfecho de uma pessoa;
+   - a designação do operador;
+   - a versão da definição;
+   - um arquivo ou hash;
+   - a população excluída ou o motivo de uma exclusão.
+   
+   A revogação do papel ou da designação dá a recusa de autorização da matriz.
+4. **Given** um comprovante adulterado, fabricado sem a chave do servidor, expirado ou emitido para
+   outro servidor, **When** apresentado ao download, **Then** é recusado sem ler nenhum arquivo.
+5. **Given** uma verificação sem nenhuma pessoa incluível, **When** termina, **Then** a tela explica, e
    não há botão de baixar.
-5. **Given** uma pessoa só, **When** Rui pede **Exportar esta pessoa**, **Then**:
+6. **Given** uma pessoa só, **When** Rui pede **Exportar esta pessoa**, **Then**:
    - com tudo íntegro, o ZIP sai num clique;
    - com falha, a resposta é uma página com o motivo, e não um ZIP.
-6. **Given** o recorte *Perfil A*, **When** exportado, **Then** só os aptos do Perfil A entram.
-7. **Given** um POST com id de pessoa fora do alcance, **When** enviado, **Then** a operação inteira é
+7. **Given** o recorte *Perfil A*, **When** exportado, **Then** só os aptos do Perfil A entram.
+8. **Given** um POST com id de pessoa fora do alcance, **When** enviado, **Then** a operação inteira é
    recusada como inexistente.
-8. **Given** uma verificação ou geração de Rui em andamento, **When** Rui pede outra, **Then** a segunda
+9. **Given** uma verificação ou geração de Rui em andamento, **When** Rui pede outra, **Then** a segunda
    é recusada com *"Uma exportação sua já está em andamento"*.
 
 ---
@@ -321,6 +357,12 @@ injetar uma exceção na geração e simular o tempo-limite.
   determinístico (FR-3712).
 - **Nome de pessoa começando com `=`, `+`, `-` ou `@`.** É neutralizado no manifesto (FR-3713).
 - **Duas abas do mesmo operador.** A segunda operação é recusada (FR-3692).
+- **A pessoa excluída por arquivo ausente tem o arquivo restaurado entre a verificação e o download.**
+  O resultado mudou, e é verificação defasada (FR-3689b).
+- **Designação revogada e concedida de novo entre os dois passos.** A designação é outra, e é
+  verificação defasada (FR-3689b).
+- **Chave do sistema trocada entre os dois passos.** O comprovante deixa de valer, e o operador
+  verifica de novo (FR-3689a).
 
 ## Requirements *(mandatory)*
 
@@ -484,11 +526,50 @@ injetar uma exceção na geração e simular o tempo-limite.
   pelo processo. Ele MUST deixar de existir ao fim da resposta, na desconexão do cliente, na exceção ou
   na morte do processo. MUST NOT existir URL, cópia, cache ou link para ele depois. É servido como
   `attachment`, sem cache.
-- **FR-3689**: O download de mais de uma pessoa MUST recompor o conjunto e compará-lo com a
-  **assinatura da verificação**: as pessoas incluídas, os itens e os hashes esperados. Durante a
-  montagem, todo arquivo de pessoa incluída MUST conferir. Qualquer diferença, de desfecho, de
-  definição, de arquivo ou de hash, MUST recusar o download como **verificação defasada**, sem servir
-  nada, e oferecer verificar de novo. **O ZIP servido é sempre exatamente o verificado.**
+- **FR-3689**: O download de mais de uma pessoa MUST exigir o **comprovante da verificação**
+  (FR-3689a) e MUST recompor a verificação inteira antes de servir (FR-3689b). Qualquer diferença MUST
+  recusar o download como **verificação defasada**, sem servir nada e sem registro de exportação, e
+  oferecer verificar de novo. **O ZIP servido é sempre exatamente o verificado.** O pacote não é
+  guardado entre os dois passos (D-004).
+- **FR-3689a**: O comprovante MUST ser **assinado pelo servidor**, com o mecanismo de assinatura do
+  framework (HMAC com a chave do sistema e sal próprio da feature), e não um resumo simples.
+  
+  **O que ele vincula**:
+  - versão do formato;
+  - sujeito do ator e unidade ativa;
+  - Edital e designação usada;
+  - alcance, recorte e pessoas pedidas;
+  - versão da definição;
+  - resultado (*completo* ou *parcial*, N de M);
+  - **resumo canônico do conteúdo verificado** (FR-3689b);
+  - instante da emissão.
+  
+  **Validade: 15 minutos**, o tempo de ler o resultado e decidir. Ele não leva nome, CPF nem nome de
+  arquivo, e vai no corpo do POST, nunca na URL.
+  
+  **No download, antes de ler qualquer arquivo**, MUST ser recusado:
+  - o comprovante de assinatura inválida (adulterado ou fabricado), como *verificação inválida*;
+  - o expirado, como *verificação expirada*;
+  - o emitido para outro ator ou outra unidade, como *verificação inválida*.
+  
+  As autorizações MUST ser revalidadas por inteiro, pelo predicado da FR-3664, para cada pessoa. O
+  comprovante prova que a verificação aconteceu, e não autoriza nada. Dentro da validade, ele pode ser
+  usado mais de uma vez pelo mesmo ator, e cada uso é uma exportação registrada. Não há tabela de
+  comprovantes.
+- **FR-3689b**: O **resumo do conteúdo verificado** MUST cobrir o resultado inteiro:
+  - as **pessoas incluídas**, com inscrição, convocação e chamada, e, por documento, a origem, o
+    identificador e o hash esperado;
+  - as **pessoas excluídas**, com inscrição, o documento causador e o **motivo codificado**
+    (`INDISPONIVEL` ou `INTEGRIDADE`);
+  - a versão da definição e a designação.
+  
+  No download, o servidor MUST reler os arquivos de **todas** as pessoas do alcance, inclusive das
+  excluídas, recalcular o mesmo resumo e compará-lo. É defasada qualquer mudança:
+  - no desfecho;
+  - na designação, inclusive revogada e concedida de novo;
+  - na versão da definição;
+  - num arquivo ou hash;
+  - na população excluída ou no motivo de uma exclusão.
 - **FR-3690**: Cada arquivo MUST ter o hash conferido **na mesma leitura** que o copia, na verificação e
   na montagem.
 - **FR-3691**: A verificação e a montagem MUST ser recusadas **antes de ler qualquer arquivo** quando a
@@ -600,11 +681,16 @@ injetar uma exceção na geração e simular o tempo-limite.
 #### I. Limites e compatibilidade
 
 - **FR-3704**: Esta feature MUST NOT criar cópia persistente de arquivo nem repositório (D-004).
-- **FR-3705**: Esta feature MUST NOT mudar a `115` ou a `009`, salvo o tratamento de arquivo
-  indisponível (FR-3695).
+- **FR-3705**: Esta feature MUST NOT mudar o comportamento nem os requisitos da `115` ou da `009`,
+  com **duas exceções, e só elas**:
+  - **revisão normativa**: a FR-069 da `009` e a FR-3606 da `115` recebem o texto aprovado da D-016,
+    na T002 (FR-3706);
+  - **correção funcional**: o tratamento de arquivo indisponível nas views existentes (FR-3695).
+  
+  Qualquer outra mudança nessas features é escopo novo, e não desta spec.
 - **FR-3706**: A exceção à FR-069 da `009` e à FR-3606 da `115` MUST valer só para a exportação desta
-  feature, nas condições das FR-3653, FR-3664, FR-3669 a FR-3674, FR-3682 a FR-3700 e FR-3712 a
-  FR-3714. A revisão dos textos, **aprovada em 04/11**, é a da D-016 e se aplica na T002.
+  feature, nas condições das FR-3653, FR-3664, FR-3669 a FR-3674, FR-3682 a FR-3700, FR-3689a,
+  FR-3689b e FR-3712 a FR-3714. A revisão dos textos, **aprovada em 04/11**, é a da D-016 e se aplica na T002.
 - **FR-3707**: MUST NOT existir confirmação de recebimento, encaminhamento ativo, integração externa,
   aviso por e-mail ao setor nem geração assíncrona.
 - **FR-3708**: Nenhuma coluna, índice ou unicidade nova MUST presumir que a unidade do ator é a do
@@ -672,14 +758,17 @@ predicado.
   idênticas byte a byte.
 - **SC-1109**: No Cenário B, o setor visualiza e baixa sem exportar, e a trilha distingue os dois atos.
 - **SC-1110**: Revogada a designação ou o papel, ou suspensa a pessoa, a requisição seguinte é recusada.
-- **SC-1111**: **No CI**, a verificação e a montagem do Cenário A (200 arquivos de 1,5 MB) terminam
-  cada uma em menos de 30 s, e o número de consultas não cresce com o número de pessoas. Este
-  critério mede o código, e **não** a VM, que tem critério próprio (*Critérios para homologação*,
+- **SC-1111**: **No CI**, a verificação e a montagem do Cenário A (200 arquivos de 1,5 MB) são
+  **medidas e relatadas separadamente**. Cada uma termina em menos de 30 s, e o número de consultas não
+  cresce com o número de pessoas. A **transferência não é medida no CI**, porque não há rede real. Este
+  critério mede o código, e **não** a VM, que mede os três tempos (*Critérios para homologação*,
   item 5).
 - **SC-1112**: Nenhuma tela desta feature diz *obtido*, *encaminhado*, *recebido*, *entregue*,
   *matriculado*, *bolsa concedida*, *vinculado* ou *contratado*.
 - **SC-1113**: Em nenhum caso o operador recebe um ZIP cujo conteúdo difira do que a verificação lhe
-  mostrou. Arquivo ou desfecho alterado entre os dois passos dá *verificação defasada* (FR-3689).
+  mostrou. Cada uma das cinco mudanças da FR-3689b entre os dois passos dá *verificação defasada*.
+  Comprovante adulterado, fabricado, expirado, de outro ator ou apresentado depois da revogação é
+  recusado sem ler arquivo (FR-3689a).
 - **SC-1114**: Com nomes de pessoa e chaves de requisito hostis, como `../x`, `CON`, `=1+1`, controle,
   300 caracteres e duas chaves iguais depois da normalização:
   - nenhuma entrada do ZIP sai da pasta da pessoa;
@@ -818,10 +907,13 @@ mecanismo, e por isso não têm palavra.
 
 ### D-016 — Revisão da FR-069 da `009` e da FR-3606 da `115`
 
-**Aprovada pelo usuário em 04/11. Aplica-se na T002**, e não neste PR, por dois motivos:
+**Aprovada pelo usuário em 04/11. Aplica-se na T002**, a primeira tarefa da implementação, e não
+neste PR:
 
-- o PR #369, ainda aberto, edita o arquivo da `115`, e aplicar agora criaria conflito;
-- a regra não deve anunciar uma exceção antes de existir o código que a cumpre.
+- a regra não deve anunciar uma exceção antes de existir o código que a cumpre;
+- este PR atualiza só os artefatos da `117`, por pedido do usuário.
+
+O motivo inicial, o conflito com o #369 ainda aberto, deixou de existir com o merge dele.
 
 **FR-069 da `009`, redação aprovada:**
 
@@ -861,8 +953,9 @@ abrir o arquivo, se descobrir.
 
 - **A verificação** lê e confere todos os arquivos, sem montar pacote e sem guardar nada, e mostra o
   resultado na tela. Isso inclui as pessoas excluídas e o motivo.
-- **O download** remonta, reconfere e só serve se o resultado for o mesmo (FR-3689). Assim o operador
-  sabe o que vai receber antes de receber, e o ZIP é sempre exatamente o que ele viu.
+- **O download** apresenta o comprovante assinado da verificação (D-024), remonta, reconfere e só
+  serve se o resultado inteiro for o mesmo, inclusive as exclusões (FR-3689 a FR-3689b). Assim o
+  operador sabe o que vai receber antes de receber, e o ZIP é sempre exatamente o que ele viu.
 
 O resultado se repete no nome do arquivo (`-parcial`), no cabeçalho e nas linhas do manifesto e no
 histórico.
@@ -922,6 +1015,36 @@ isso:
 O nome e o protocolo da pessoa ficam na pasta e no manifesto, **aprovados pelo usuário**, e o CPF e o
 contato não.
 
+### D-024 — Comprovante da verificação assinado pelo servidor
+
+*Ajuste da revisão independente (04/11).*
+
+**O problema.** O plano devolvia um SHA-256 dos dados da verificação num campo oculto. Isso prova
+consistência, e não origem: quem reconstruísse os valores fabricaria o resumo e pularia a verificação.
+
+**A decisão: `django.core.signing`**, com HMAC sobre a chave do sistema e sal próprio da feature.
+
+**Por que ele:**
+- já está no framework;
+- não exige tabela nem serviço;
+- dá validade com `max_age`.
+
+**O conteúdo e a validade** (15 minutos) estão na FR-3689a. O comprovante carrega o **resumo**, e não o
+conteúdo verificado: o servidor recompõe tudo no download e compara (FR-3689b). Assim o campo é
+pequeno, e nada que o cliente mande é tomado como dado.
+
+**O comprovante prova que a verificação aconteceu, e não autoriza.** As autorizações são revalidadas no
+download.
+
+**Rejeitados:**
+- **resumo simples**: fabricável;
+- **tabela de verificações**: daria uso único, mas é mais uma tabela append-only e mais um estado,
+  quando repetir um download válido equivale a clicar de novo;
+- **guardar o pacote entre os passos**: contraria a D-004.
+
+**Efeito colateral aceito.** Trocar a chave do sistema invalida os comprovantes em aberto. O operador
+verifica de novo.
+
 ## MVP e o que fica para depois
 
 **MVP**: as US1 a US5, com o tratamento de arquivo indisponível nas views existentes. O primeiro corte
@@ -946,11 +1069,13 @@ demonstrável é US1 a US3, que atende o Cenário B. O Cenário A exige a US4.
 | Integração | acesso: papel, designação, autodesignação, presidência recusada, revogações, suspensão, append-only | FR-3661 a FR-3668 |
 | Integração | verificação e download: resultado, parcial, defasada, pessoa única, recorte, POST forjado, limite | FR-3682 a FR-3691, FR-3694, FR-3697, SC-1105, SC-1113 |
 | Integração | trava: segunda operação recusada; liberada no commit, no rollback e na conexão fechada | FR-3692 |
+| Integração | comprovante: adulterado, fabricado (resumo sem assinatura, outro sal), expirado, de outro ator ou unidade, depois da revogação do papel e da designação, reusado dentro da validade | FR-3689a, SC-1113 |
+| Integração | correspondência: desfecho, designação, definição, arquivo ou hash, excluído restaurado, motivo trocado | FR-3689b, SC-1113 |
 | Integração | falhas: ausente, divergente, exceção injetada, temporário removido, registro intacto | FR-3688, FR-3695, FR-3696, FR-3698, FR-3714, SC-1106 |
 | Regressão | arquivo ausente nas views de inscrição, mesa e convocação | FR-3695 |
 | Interface | matriz inteira por URL e POST; 375 px; vocabulário; CSP | SC-1104, SC-1112 |
 | Banco | `TABELAS_APPEND_ONLY` + 4 | FR-3655, FR-3662, FR-3700 |
-| Desempenho | consultas constantes; Cenário A em menos de 30 s por passo, no CI | SC-1111 |
+| Desempenho | consultas constantes; verificação e montagem do Cenário A medidas e relatadas separadamente, menos de 30 s cada, no CI; transferência só na VM | SC-1111 |
 | Navegador | Cenários A, E e F | — |
 
 Contra PostgreSQL (`make test-pg`). **O tempo-limite e a transferência na VM não são testes de CI**:
@@ -958,15 +1083,15 @@ são o item 5 da homologação.
 
 ## Critérios para homologação
 
-1. A `115` está na `main`, e a FR-069 da `009` e a FR-3606 da `115` foram revistas na T002.
+1. A FR-069 da `009` e a FR-3606 da `115` foram revistas na T002. A `115` está na `main` desde 04/11.
 2. `make lint check test-pg` verde, com o grupo `navegador`.
 3. Demonstração dos seis cenários do quickstart, com capturas a 1280 px e a 375 px.
 4. Um servidor do Registro Acadêmico ou da Coordenação UAB exporta num Edital de homologação e confirma
    que pastas e manifesto servem ao setor. Critério **humano**.
 5. **Validação de capacidade na VM** (§5.4 do diagnóstico), pela TI. Ela mede, com um pacote no limite
    configurado:
-   - a verificação e a montagem;
-   - a transferência a um operador da rede do setor;
+   - a verificação, a montagem e a transferência, **cada uma em separado**, esta a um operador da rede
+     do setor;
    - o uso do `/tmp` e do disco do nginx com duas exportações simultâneas;
    - o tempo-limite forçado.
    
@@ -974,7 +1099,7 @@ são o item 5 da homologação.
 
 ## Pendências do usuário
 
-**Bloqueia a implementação:** o merge do PR #369.
+**Bloqueia a implementação:** nada. O PR #369 foi mergeado em 04/11.
 
 **Bloqueia o uso em produção, e não a implementação:**
 

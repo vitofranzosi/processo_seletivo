@@ -117,7 +117,7 @@ Não há outra situação por pessoa (FR-3701).
 | `FORMALIZACAO_DOWNLOAD` | Download individual disponibilizado | idem | `requisito ‹id›` |
 | `FORMALIZACAO_VERIFICAR` | Verificação de exportação | Edital | alcance, resultado e contagens |
 | `FORMALIZACAO_EXPORTAR` | Pacote gerado e disponibilizado para download | Edital | id da exportação e resultado |
-| `FORMALIZACAO_RECUSAR` | Exportação recusada | Edital | `verificacao_defasada`, `limite` ou `pessoa_incompleta` |
+| `FORMALIZACAO_RECUSAR` | Exportação recusada | Edital | `verificacao_defasada`, `verificacao_invalida`, `verificacao_expirada`, `limite` ou `pessoa_incompleta` |
 | `FORMALIZACAO_INTERROMPER` | Exportação interrompida | Edital | a classe do erro, sem mensagem |
 | `ARQUIVO_INDISPONIVEL` | Arquivo indisponível | Apresentação ou Documento | `requisito ‹id›` |
 | `INTEGRIDADE` | (existente) | idem | `requisito ‹id›` |
@@ -134,3 +134,32 @@ Não há *obtido*, *encaminhado*, *recebido* nem *entregue*.
 - é tomada no início da transação da verificação ou da montagem;
 - é liberada no commit, no rollback ou no fechamento da conexão;
 - não cobre a transferência (FR-3692).
+
+## Comprovante da verificação (não é tabela)
+
+É o valor de `django.core.signing.dumps(payload, salt="processo_seletivo.formalizacao.verificacao",
+compress=True)`, devolvido na tela da verificação e reapresentado no corpo do POST do download
+(FR-3689a). Não é gravado em lugar nenhum.
+
+| Campo do `payload` | Conteúdo |
+|---|---|
+| `v` | versão do formato (1) |
+| `sujeito`, `unidade` | o ator e a unidade ativa |
+| `edital`, `designacao` | ids |
+| `alcance`, `perfil`, `pessoas` | o pedido: alcance, recorte e ids de inscrição ordenados |
+| `definicao` | id da versão da definição |
+| `resultado`, `incluidas`, `total` | `COMPLETO` ou `PARCIAL`, N de M |
+| `resumo` | `canonical_sha256` do conteúdo verificado (abaixo) |
+| `emitido_em` | instante. A validade de 15 minutos é conferida por `max_age` |
+
+**O conteúdo verificado**, que entra no resumo e não no comprovante (FR-3689b):
+
+```text
+{ definicao, designacao,
+  incluidas: [ {inscricao, convocacao, chamada,
+                documentos: [ {origem, id, sha256_esperado} ] } ],     # ordem fixa
+  excluidas: [ {inscricao, documento: {origem, id}, motivo: INDISPONIVEL | INTEGRIDADE} ] }
+```
+
+**Sem dado pessoal**: só identificadores opacos, códigos e hashes. O comprovante é assinado, e não
+cifrado. Seus campos são legíveis a quem o tem, e por isso nada nele pode ser sensível.

@@ -57,5 +57,23 @@
 
 - [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
-- [x] **Pronta para merge do PR documental**
-- [ ] **Pronta para implementar**: não, até o PR #369 estar na `main`
+
+## Ajustes da revisão independente (04/11)
+
+- [x] FR-3705 × FR-3706 × T002: a FR-3705 nomeia as duas exceções, a revisão normativa da D-016 e a
+      correção funcional da FR-3695
+- [x] Comprovante assinado pelo servidor (`django.core.signing`), com 15 min, ator, unidade, Edital,
+      designação, alcance, definição, resultado e resumo; autorizações revalidadas no download; sem
+      tabela (D-024, FR-3689a)
+- [x] Correspondência integral, com incluídas, excluídas e motivos, e releitura das excluídas no
+      download; cinco mudanças testadas (FR-3689b, SC-1113, T027)
+- [x] Testes do comprovante: adulterado, fabricado, expirado, outro ator, depois da revogação (T029a)
+- [x] Verificação, montagem e transferência medidas em separado; o CI mede as duas primeiras, e a VM,
+      as três (SC-1111, T033, H01)
+- [x] Nenhum número novo: sufixos FR-3689a e FR-3689b. O PR #372 (116) usa os números seguintes
+- [x] Branch sincronizada com a `main` depois do merge do #369; conflito só no README
+
+## Prontidão
+
+- [x] **Pronta para merge do PR documental**, com CI verde
+- [x] **Pronta para implementar**: a `115` está na `main`

@@ -91,6 +91,10 @@ Repita por URL direta e por POST forjado, copiados da sessão de Rui:
 | Gil | designar a si mesmo | recusa de autodesignação |
 | Gil | a página da formalização | 403 |
 | Duda | qualquer URL | 404 |
+| Rui | download com o comprovante de uma verificação feita por Bia | *verificação inválida*, nada lido |
+| Rui | download com o comprovante alterado num byte, ou com um SHA-256 montado à mão | *verificação inválida* |
+| Rui | download 16 minutos depois da verificação | *verificação expirada* |
+| Rui | verifica; Gil revoga a designação; Rui baixa | 404, nada servido |
 | Caio | exportar | 403 |
 
 ## Cenário F — Falha operacional
@@ -105,8 +109,9 @@ Num Edital de 5 aptos:
    *Baixar pacote parcial (3 pessoas)*.
 4. Rui baixa `…-parcial.zip`, com 3 pastas. O manifesto traz *3 de 5* no cabeçalho e as linhas das 2
    excluídas, com o motivo. O histórico repete. A trilha tem `INTEGRIDADE`.
-5. **Verificação defasada**: verifique de novo, corrija o arquivo apagado pelo shell e clique em
-   baixar. O download é recusado, nada é servido, e a tela oferece verificar de novo.
+5. **Verificação defasada**: verifique de novo, **restaure o arquivo apagado** (a pessoa excluída
+   deixaria de sê-lo) e clique em baixar. O download é recusado, nada é servido, e a tela oferece
+   verificar de novo. Repita trocando a definição, e corrigindo o desfecho de uma pessoa incluída.
 6. **Pessoa única com falha**: *Exportar esta pessoa* numa das 2 devolve uma página com o motivo, e
    não um ZIP. Não há registro de exportação.
 7. **Limite**: configurado em 1 MB, a verificação é recusada antes de ler, mostrando o tamanho por
