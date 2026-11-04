@@ -33,12 +33,12 @@ fixtures.
 
 ## Phase 1: Setup
 
-- [ ] T001 Preparar a worktree:
+- [X] T001 Preparar a worktree:
   - `uv sync --extra dev` em `backend/`;
   - `backend/.env` a partir do `.env.example`, com `DB_NAME=ps_116`;
   - `make preparar`, conferindo que o `provisionar` informa `46 de 46` e não `0 de 46`;
   - `make test-pg` inteiro, anotando passando e pulados como linha de base da SC-1099.
-- [ ] T002 Inventário (plan, §8). Para cada um dos 18 arquivos de `backend/tests/` que declaram
+- [X] T002 Inventário (plan, §8). Para cada um dos 18 arquivos de `backend/tests/` que declaram
   `"source": "Loteria Federal"`, anotar em `verificacao.md` se o arquivo:
   - passa por `validate_for_publication`, `submit_edital`, `publish_edital`, `publish_retification`
     ou `publicar_relacao`;
@@ -54,10 +54,10 @@ fixtures.
 **Purpose**: as situações (FR-3627 a FR-3631), a consulta fora da transação (FR-3632), a
 demonstração por tabela (FR-3650) e a suíte sem rede (FR-3651).
 
-- [ ] T003 [P] Copiar `doc/estudo-extracao-da-loteria-federal-2026-11-03/respostas/` para
+- [X] T003 [P] Copiar `doc/estudo-extracao-da-loteria-federal-2026-11-03/respostas/` para
   `backend/tests/fixtures/caixa/`, e anotar no `README` da pasta a data da captura e o recorte feito
   (sem lotéricas, rateio e `stackTrace`).
-- [ ] T004 [P] Em `backend/tests/conftest.py`, um *autouse* que:
+- [X] T004 [P] Em `backend/tests/conftest.py`, um *autouse* que:
   - substitui `LoteriaFederal.consultar_ultimo` e `consultar_data` por uma Caixa configurável, com
     padrão "último 6114, de 01/11/2026; nenhuma referência ≤ 6114 citada pela suíte é tratada como
     realizada" (plan, §8: sete casos declaram `6113`);
@@ -65,7 +65,7 @@ demonstração por tabela (FR-3650) e a suíte sem rede (FR-3651).
     `SORTEIO_E2E_FONTE_REAL` não estiver ligada.
 
   Escrever `backend/tests/test_suite_sem_caixa.py`, que prova a recusa (SC-1099).
-- [ ] T005 [P] Escrever `backend/tests/unit/sorteios/test_conferencia.py`, sem banco, a matriz da POC
+- [X] T005 [P] Escrever `backend/tests/unit/sorteios/test_conferencia.py`, sem banco, a matriz da POC
   adaptada:
   - **situação**: realizado (5000, 1, 6113, 6114), ainda não realizado (6115 anunciado, 6118, 6200,
     9999, 99999), realizado sem data, e referência inválida (`6106-9`, `Concurso 6115`, `6115/2026`,
@@ -77,9 +77,9 @@ demonstração por tabela (FR-3650) e a suíte sem rede (FR-3651).
     institucional (FR-3642);
   - **registro**: `test_o_registro_responde_as_seis_perguntas_e_nada_da_resposta_crua` (FR-3647,
     FR-3648).
-- [ ] T006 Criar `backend/processo_seletivo/sorteios/domain/conferencia.py`, pura (plan, §2), com
+- [X] T006 Criar `backend/processo_seletivo/sorteios/domain/conferencia.py`, pura (plan, §2), com
   docstring que diga o que a fonte afirma e o que não afirma. T005 verde.
-- [ ] T007 [P] Escrever `backend/tests/integration/sorteios/test_consulta_da_fonte.py`, com
+- [X] T007 [P] Escrever `backend/tests/integration/sorteios/test_consulta_da_fonte.py`, com
   `urlopen` substituído pelas fixtures da T003:
   - o último concurso válido, e a validação de *payload*: sem bilhetes, data em outro formato,
     `numero` como texto, HTML e 503 → `None`;
@@ -90,17 +90,17 @@ demonstração por tabela (FR-3650) e a suíte sem rede (FR-3651).
   - as fontes de demonstração respondem pela tabela (5000 realizado, 9998 inconclusivo, o resto
     ainda não realizado) e não abrem conexão;
   - em produção, as fontes de demonstração continuam fora do vocabulário.
-- [ ] T008 Implementar na porta (`fontes/__init__.py`) e em `fontes/loteria_federal.py` (plan, §1):
+- [X] T008 Implementar na porta (`fontes/__init__.py`) e em `fontes/loteria_federal.py` (plan, §1):
   `FORMA_DA_REFERENCIA`, `SABE_CONFERIR`, `consultar_ultimo()`, `consultar_data(n)`, a tabela das
   demonstrações e `forma_da_referencia(nome)`. Acrescentar `SORTEIO_CONFERENCIA_TIMEOUT_SEGUNDOS` em
   `config/settings/base.py`, com padrão 5. T007 verde.
-- [ ] T009 [P] Escrever `backend/tests/integration/sorteios/test_conferir_referencias.py`:
+- [X] T009 [P] Escrever `backend/tests/integration/sorteios/test_conferir_referencias.py`:
   - uma consulta principal por fonte, qualquer que seja o número de referências (FR-3631);
   - uma consulta por referência realizada distinta, e nenhuma para ainda não realizada;
   - fonte que não sabe conferir não é consultada e não aparece no resultado;
   - `referencias_a_conferir`: o método comum uma vez, o marco sem sorteio a fazer fora, e com `base`
     só as introduzidas (FR-3633, D-006).
-- [ ] T010 Criar `backend/processo_seletivo/sorteios/application/conferencia.py` (plan, §3). T009
+- [X] T010 Criar `backend/processo_seletivo/sorteios/application/conferencia.py` (plan, §3). T009
   verde.
 
 **Checkpoint**: a conferência existe, testada, e ninguém a chama. A suíte inteira continua com o
@@ -115,15 +115,15 @@ total de T001.
 **Independent Test**: o 5000 é recusado na submissão e na publicação, pela tela e pela API. O 6116
 passa com a informação (SC-1094).
 
-- [ ] T011 [P] [US1] Escrever `backend/tests/unit/editais/test_concurso_realizado.py`, sobre
+- [X] T011 [P] [US1] Escrever `backend/tests/unit/editais/test_concurso_realizado.py`, sobre
   `validate_for_publication(..., situacoes=...)`:
   - realizado: impeditivo `draw_occurrence_already_drawn`, um por método, com o `path` do método;
   - inconclusivo: advertência; ainda não realizado: `INFO`;
   - `situacoes=None`: nenhum achado desta feature;
   - a `102` intacta: data inviável continua impeditiva, com qualquer situação (FR-3638).
-- [ ] T012 [US1] Em `editais/domain/validation.py`, o parâmetro `situacoes` e os achados (plan, §4),
+- [X] T012 [US1] Em `editais/domain/validation.py`, o parâmetro `situacoes` e os achados (plan, §4),
   ao lado de `_extracao_inviavel`. T011 verde.
-- [ ] T013 [P] [US1] Escrever `backend/tests/integration/publicacoes/test_publicacao_confere_a_referencia.py`.
+- [X] T013 [P] [US1] Escrever `backend/tests/integration/publicacoes/test_publicacao_confere_a_referencia.py`.
   Cenários:
   - **A**: 5000 com data futura, recusado na submissão;
   - o mesmo, homologado sob "ainda não realizado" e recusado na publicação depois que a Caixa
@@ -134,11 +134,11 @@ passa com a informação (SC-1094).
     só no 6113;
   - `test_cada_comando_consulta_a_fonte`: guardião contra o `situacoes=None` esquecido;
   - repetição idempotente: sem nova consulta.
-- [ ] T014 [US1] Em `publicacoes/application/publish_edital.py`, `submit_edital` e `publish_edital`
+- [X] T014 [US1] Em `publicacoes/application/publish_edital.py`, `submit_edital` e `publish_edital`
   conferem antes de `command_context()` e passam `situacoes`. Dentro, a referência do conteúdo travado
   sem situação vira inconclusiva (FR-3632). O registro vai em `record_event(..., detalhe=...)`, e o
   log estruturado registra a recusa (FR-3649). T013 verde.
-- [ ] T015 [US1] Mostrar a informação e a advertência depois do ato, no detalhe do Edital (`?ato=`),
+- [X] T015 [US1] Mostrar a informação e a advertência depois do ato, no detalhe do Edital (`?ato=`),
   lidas do `detalhe` do último registro do ato (FR-3646). Teste:
   `backend/tests/interface/test_desfecho_da_conferencia.py`, com classes novas com regra na folha da
   gestão.
@@ -151,7 +151,7 @@ passa com a informação (SC-1094).
 
 **Goal**: FR-3636, FR-3637, a mensagem de congelamento da FR-3639.
 
-- [ ] T016 [P] [US2] Escrever `backend/tests/integration/sorteios/test_congelamento_confere_a_referencia.py`.
+- [X] T016 [P] [US2] Escrever `backend/tests/integration/sorteios/test_congelamento_confere_a_referencia.py`.
   Cenários:
   - **C**: publicado sob "ainda não realizado", realizado no congelamento: recusa, sem relação
     gravada, com a mensagem de congelamento;
@@ -162,9 +162,9 @@ passa com a informação (SC-1094).
   - **H**: depois de congelada, a Caixa gravada muda de resposta. `metodo_hash`, relação e
     ocorrência observada não mudam, e o sorteio decide pela precedência, como antes;
   - repetição idempotente: sem nova consulta.
-- [ ] T017 [US2] Em `sorteios/application/relacao.py`, a conferência antes de `comando_de_comissao`,
+- [X] T017 [US2] Em `sorteios/application/relacao.py`, a conferência antes de `comando_de_comissao`,
   a recusa, `advertencias` no dicionário devolvido e o `detalhe` do registro (plan, §4). T016 verde.
-- [ ] T018 [US2] Em `interface/templates/interface/sorteio.html`, mostrar `advertencias` do
+- [X] T018 [US2] Em `interface/templates/interface/sorteio.html`, mostrar `advertencias` do
   desfecho guardado por `_desfecho_do_sorteio`. Teste em
   `backend/tests/interface/test_desfecho_da_conferencia.py`.
 
@@ -174,7 +174,7 @@ passa com a informação (SC-1094).
 
 **Goal**: FR-3641, SC-1096, SC-1097.
 
-- [ ] T019 [US3] Escrever `backend/tests/integration/test_caixa_fora_do_ar.py`, parametrizado pelas
+- [X] T019 [US3] Escrever `backend/tests/integration/test_caixa_fora_do_ar.py`, parametrizado pelas
   oito falhas da POC (tempo esgotado, `URLError`, 500, 503, HTML, sem bilhetes, data noutro formato,
   `numero` como texto) × os quatro atos. Em cada caso:
   - o ato conclui;
@@ -184,14 +184,14 @@ passa com a informação (SC-1094).
 
   Mais um caso: a data inviável da `102` continua impedindo com a Caixa fora do ar. Mais
   `test_a_espera_com_a_fonte_que_dorme_nao_passa_de_quinze_segundos`.
-- [ ] T020 [US3] Ajustes que a T019 apontar. O esperado é nenhum, se as Fases 2 a 4 seguiram o
+- [X] T020 [US3] Ajustes que a T019 apontar. O esperado é nenhum, se as Fases 2 a 4 seguiram o
   plano.
 
 ---
 
 ## Phase 6: User Story 4 — A Retificação confere só o que muda (Priority: P2)
 
-- [ ] T021 [P] [US4] Escrever `backend/tests/integration/publicacoes/test_retificacao_confere_a_referencia.py`.
+- [X] T021 [P] [US4] Escrever `backend/tests/integration/publicacoes/test_retificacao_confere_a_referencia.py`.
   Cenários:
   - troca para realizado: recusa;
   - **E**: só o cronograma muda num Edital com o 5000 consolidado: publicada, **zero** consultas
@@ -200,7 +200,7 @@ passa com a informação (SC-1094).
   - fonte trocada de demonstração para Loteria Federal: conferida;
   - troca para forma inválida: impeditivo;
   - inconclusivo: advertência.
-- [ ] T022 [US4] Em `publicacoes/application/retificacoes.py`, `publish_retification` com
+- [X] T022 [US4] Em `publicacoes/application/retificacoes.py`, `publish_retification` com
   `referencias_a_conferir(..., base=..., marcos_sorteados=...)` e `_assert_well_formed` recebendo as
   situações. T021 verde.
 
@@ -208,15 +208,15 @@ passa com a informação (SC-1094).
 
 ## Phase 7: User Story 5 — A forma errada é recusada na gravação (Priority: P2)
 
-- [ ] T023 [P] [US5] Escrever `backend/tests/unit/editais/test_forma_da_referencia.py` e
+- [X] T023 [P] [US5] Escrever `backend/tests/unit/editais/test_forma_da_referencia.py` e
   `backend/tests/integration/editais/test_normalizacao_da_referencia.py`:
   - as grafias da FR-3623 recusadas com a frase da FR-3626, pela tela e por `PUT /draft`;
   - `006114` gravado `6114`;
   - a fonte de demonstração aceita `Concurso 5900`;
   - a Retificação de acervo não reconfere a forma (a FR-514 da `035`).
-- [ ] T024 [US5] Forma por fonte em `perfis._validar_forma_da_ocorrencia`, e a normalização em
+- [X] T024 [US5] Forma por fonte em `perfis._validar_forma_da_ocorrencia`, e a normalização em
   `editais/application/draft.py::replace_draft` (plan, §5). T023 verde.
-- [ ] T025 [US5] Rótulo e ajuda do campo em `_marco.html` e `compor_classificacao.html` (FR-3643),
+- [X] T025 [US5] Rótulo e ajuda do campo em `_marco.html` e `compor_classificacao.html` (FR-3643),
   com teste de presença do texto em `backend/tests/interface/test_metodo_do_marco.py`. Conferir a
   varredura de vocabulário da composição.
 
@@ -224,29 +224,29 @@ passa com a informação (SC-1094).
 
 ## Phase 8: User Story 6 — Conferir antes de agir (Priority: P3)
 
-- [ ] T026 [P] [US6] Escrever `backend/tests/interface/test_conferencia_sob_demanda.py`:
+- [X] T026 [P] [US6] Escrever `backend/tests/interface/test_conferencia_sob_demanda.py`:
   - o botão na composição (marco e comum) e na tela do sorteio antes de congelar;
   - a resposta com a mensagem de cada situação;
   - permissão negada por padrão;
   - nada gravado;
   - **renderizar as três telas não consulta a fonte** (FR-3644, SC-1097).
-- [ ] T027 [US6] A rota `POST`, a view e o fragmento htmx (plan, §6), com recusa 200 e
+- [X] T027 [US6] A rota `POST`, a view e o fragmento htmx (plan, §6), com recusa 200 e
   `HX-Retarget` e as classes com regra na folha. T026 verde.
 
 ---
 
 ## Phase 9: Polish
 
-- [ ] T028 `backend/tests/interface/test_sorteio_com_a_fonte_de_producao.py`: substituir a
+- [X] T028 `backend/tests/interface/test_sorteio_com_a_fonte_de_producao.py`: substituir a
   conferência só enquanto `recuar_o_relogio` estiver ativo (plan, §8). Rodar uma vez com
   `SORTEIO_E2E_FONTE_REAL=1` e anotar o resultado em `verificacao.md` (FR-3651).
-- [ ] T029 Aplicar o inventário da T002: ajustar só as expectativas listadas lá, cada uma com o
+- [X] T029 Aplicar o inventário da T002: ajustar só as expectativas listadas lá, cada uma com o
   porquê no commit.
-- [ ] T030 `cd backend && make lint check test-pg`. Comparar com a linha de base da T001 por lista,
+- [X] T030 `cd backend && make lint check test-pg`. Comparar com a linha de base da T001 por lista,
   e não por total. Registrar em `verificacao.md`.
-- [ ] T031 Atualizar [rastreabilidade.md](rastreabilidade.md) com os nomes finais dos testes, e
+- [X] T031 Atualizar [rastreabilidade.md](rastreabilidade.md) com os nomes finais dos testes, e
   rodar `tests/test_citacoes_de_requisito.py`.
-- [ ] T032 Roteiro local do plano (fonte de demonstração: 5000, 9998, 6200) no navegador, com
+- [X] T032 Roteiro local do plano (fonte de demonstração: 5000, 9998, 6200) no navegador, com
   captura das três mensagens em `verificacao.md`.
 
 ## Dependencies
