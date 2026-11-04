@@ -1,8 +1,13 @@
 # Rastreabilidade: Kit de Divulgação do Edital
 
 Cada requisito leva à regra existente que ele reaproveita, à tarefa que o implementa e ao teste que o
-verifica. **A matriz é de planejamento**: os testes são os que as [tarefas](tasks.md) criam, e a
-T036 a confere contra o implementado. Caminhos relativos a `backend/`.
+verifica. Caminhos relativos a `backend/`.
+
+**Conferida contra o implementado em 04/11/2026 (T036)**, com o incremento C. A matriz nasceu de
+planejamento, e 38 citações traziam o nome que o teste teria, e não o que recebeu: foram trocadas
+pelos nomes reais, e cada `arquivo::teste` citado existe. Três linhas ficam **sem caso do kit**, e
+o dizem: o EC-4 (espera a P-8), o EC-17 (Publicação sem sigla não se constrói pelo fluxo) e o EC-19
+(vaga acrescida, coberta só pela estrutura da leitura). O EC-18 ganhou o caso que faltava.
 
 ## Requisitos funcionais
 
@@ -13,12 +18,12 @@ T036 a confere contra o implementado. Caminhos relativos a `backend/`.
 | FR-3403 (capacidade própria, papel restrito, nada além) | `PAPEIS`/`DESCRICOES` (`interface/identidade.py`); precedentes `exportador` e piloto | T004, T010 | `tests/authorization/test_papel_da_comunicacao.py`; `test_kit_de_divulgacao.py::test_a_capacidade_nao_abre_ato_nenhum`; `tests/seguranca/test_vinculos.py` |
 | FR-3404 (só vigente; nada de elaboração ou futuro) | `effective_version`; `retificacoes_a_vigorar` (movida) | T002, T006, T010 | `tests/integration/kit/test_ficha.py::test_versao_futura_nunca_e_aplicada`; `test_kit_de_divulgacao.py::test_retificacao_em_elaboracao_nao_aparece` |
 | FR-3405 (sem acoplamento com a publicação) | as leituras movidas, sem mudança (D-002) | T002, T015 | suítes da `070`, `099` e `101` inalteradas; `tests/integration/kit/test_exportacao.py::test_o_kit_nao_grava_nada_alem_do_evento` |
-| FR-3406 (conteúdo da ficha) | `periodo_de_inscricoes`, `desfechos`, `situacao_publica`, `quantidade_da_oferta`, `TIPOS_COM_RESERVA`, `vagas_do_conteudo`, `do_ato`, numeração das Retificações | T002, T006 | `test_ficha.py::test_campos_da_ficha_por_cenario`, `::test_vagas_saneadas_e_reserva_pela_regra_do_portal` |
+| FR-3406 (conteúdo da ficha) | `periodo_de_inscricoes`, `desfechos`, `situacao_publica`, `quantidade_da_oferta`, `TIPOS_COM_RESERVA`, `vagas_do_conteudo`, `do_ato`, numeração das Retificações | T002, T006 | `test_ficha.py::test_a_ficha_diz_o_que_a_vitrine_e_a_pagina_dizem`, `::test_total_so_com_vaga_em_todas`, `::test_cadastro_reserva_sem_vaga_nao_soma` |
 | FR-3407 (equivalência com a vitrine e a página) | `portal/views._selecao_da_vitrine`, `portal/views._selecao` | T005 | `test_ficha.py::test_a_ficha_diz_o_que_a_vitrine_e_a_pagina_dizem` |
-| FR-3408 (proveniência pela regra da `070`) | `origens`, `acrescimos` (movidos para `publicacoes/domain/origem.py`) | T002, T006 | `test_ficha.py::test_o_termino_prorrogado_vem_da_retificacao`, `::test_perfil_substituido_inteiro`, `::test_evento_substituido_inteiro`, `::test_perfil_acrescentado` |
-| FR-3409 (sem inferência de curso/campus) | FR-1365 da `069`; FR-1609 da `072` | T006, T008 | `test_ficha.py::test_nome_e_localidade_literais`; `tests/unit/kit/test_textos.py::test_localidades_so_com_localidade_em_todas` |
-| FR-3410 (modo) | FR-761 da `047`; FR-149 da `024` | T006 | `test_ficha.py::test_modo_por_cenario` |
-| FR-3411 (impressão por campo, com identidade, sem host nem ordem) | — (D-004, D-018) | T006 | `test_ficha.py::test_impressao_igual_para_dados_iguais`, `::test_impressao_nao_inclui_instante_versao_host_nem_ordem` |
+| FR-3408 (proveniência pela regra da `070`) | `origens`, `acrescimos` (movidos para `publicacoes/domain/origem.py`) | T002, T006 | `test_ficha.py::test_o_termino_prorrogado_vem_da_retificacao`. Perfil ou Evento substituído inteiro e Perfil acrescentado: a ficha usa `contexto()` e `origens()` da `070` sem mudança, e a regra é testada lá, em `tests/unit/duvidas/test_origem.py` e `tests/unit/duvidas/test_casos_da_revisao.py` |
+| FR-3409 (sem inferência de curso/campus) | FR-1365 da `069`; FR-1609 da `072` | T006, T008 | `test_ficha.py::test_nome_e_localidade_literais_e_titulo_sem_numero`, `::test_localidade_ausente_fica_vazia`; `tests/unit/kit/test_textos.py::test_localidades_so_com_localidade_em_todas` |
+| FR-3410 (modo) | FR-761 da `047`; FR-149 da `024` | T006 | `test_ficha.py::test_inscricoes_futuras_e_em_andamento_tem_o_mesmo_material`, `::test_sem_periodo_designado_e_neutro`, `::test_cancelado_dentro_do_periodo_nao_tem_material`, `::test_periodo_encerrado_nao_tem_material`; `tests/unit/kit/test_modo.py` |
+| FR-3411 (impressão por campo, com identidade, sem host nem ordem) | — (D-004, D-018) | T006 | `test_ficha.py::test_impressao_nao_inclui_instante_versao_host_nem_ordem`, `::test_perfil_retirado_acrescentado_renomeado_e_reordenado` |
 | FR-3412 e FR-3413 (textos, formas fechadas) | `avisos/domain/variaveis.py` (precedente de lista fechada) | T008 | `test_textos.py::test_formas_por_modo` |
 | FR-3414 (vocabulário nas frases; valor literal apontado) | `PROIBIDAS` (`tests/portal/test_acompanhamento_pela_situacao.py`); FR-1366 da `069` | T009, T027 | `tests/test_vocabulario_do_kit.py`; `test_ficha.py::test_termo_em_valor_oficial_e_apontado` |
 | FR-3415 (datas absolutas no fuso) | `shared/tempo.ZONA`; o formato de `_periodo.html` | T006, T008 | `test_textos.py::test_prazo_em_data_e_hora_absolutas` |
@@ -26,7 +31,7 @@ T036 a confere contra o implementado. Caminhos relativos a `backend/`.
 | FR-3417 (prorrogação comprovada, com hora se preciso) | `prorrogacao` (extraída da `099` sem mudança) | T002, T008 | `tests/unit/publicacoes/test_prorrogacao.py` (regressão da regra); `test_textos.py::test_prorrogacao_com_as_duas_pontas`, `::test_prorrogacao_so_de_hora` |
 | FR-3418 (legenda com busca e sigla; mensagem com link) | busca por número da vitrine (`portal/leitura.py`) | T008 | `test_textos.py::test_legenda_sem_link_com_busca_e_sigla` |
 | FR-3419 (ressalva) | rodapé fixo dos avisos (`avisos/domain/mensagem.py`) | T008 | `test_textos.py::test_ressalva_em_todo_texto_publicavel` |
-| FR-3420 (copiar; exportar md e txt) | — | T012, T015 | `tests/javascript/kit-de-divulgacao.test.js`; `test_exportacao.py::test_md_e_txt_registram` |
+| FR-3420 (copiar; exportar md e txt) | — | T012, T015 | `tests/javascript/kit-de-divulgacao.test.js`; `test_exportacao.py::test_md_e_txt_registram_e_abrir_nao` |
 | FR-3421 (notas sem promessa) | — | T008 | `test_textos.py::test_notas_sem_validade_prometida` |
 | FR-3422 (um template, PNG e SVG com a fonte) | `fonte.py` (Edital Sans, OFL) | T022, T023, T025 | `tests/unit/kit/test_svg.py::test_fonte_embutida_so_na_exportacao`, `::test_o_rasterizador_ignora_a_fonte_embutida`, `::test_png_1080_por_1350_e_os_mesmos_bytes` |
 | FR-3423 (peça ⊂ ficha ⊂ textos) | — (POC, `kit/coerencia.py`) | T020, T023 | `test_peca.py::test_a_peca_so_diz_o_que_a_ficha_diz`, `::test_conferencia_acusa_o_numero_que_os_textos_nao_dizem` |
@@ -41,20 +46,20 @@ T036 a confere contra o implementado. Caminhos relativos a `backend/`.
 | FR-3432 (marca oficial; chave de ambiente) | `AVISOS_AOS_CANDIDATOS` (`066`) | T017, T018, T033 | `tests/test_settings_do_kit.py`; `test_peca.py::test_marca_oficial_da_unidade_ou_do_ifes_com_a_sigla`, `::test_os_arquivos_da_marca_sao_os_registrados`; `test_kit_de_divulgacao.py::test_chave_desligada_a_peca_some_e_os_textos_ficam` |
 | FR-3433 (texto alternativo) | — | T023 | `test_peca.py::test_texto_alternativo_em_frases_na_ordem_da_peca`, `::test_texto_alternativo_conta_o_que_a_peca_conta` |
 | FR-3434 (espaço livre: 35% da folga) | — | T023 | `test_peca.py::test_espaco_livre_desce_35_por_cento_da_folga` |
-| FR-3435 (formatos; o que registra) | `interface/relatorio.py` (`emitir`, POST) | T015, T025, T029 | `test_exportacao.py::test_abrir_e_copiar_nao_registram`, `::test_cada_formato_registra` |
-| FR-3436 (evento com detalhe; não é transição; rótulo) | `record_event`; `OPERACOES`; `OPERACOES_QUE_NAO_CONTAM` | T015, T016 | `test_exportacao.py::test_detalhe_do_evento`, `::test_o_evento_nao_e_transicao`; `tests/test_trilha_legivel.py` |
-| FR-3437 (manifesto com três instantes) | — | T029 | `tests/integration/kit/test_pacote.py::test_manifesto_sem_validade` |
-| FR-3438 (determinismo em dois níveis) | — | T026, T029 | `test_pacote.py::test_mesma_peca_e_textos_em_instantes_diferentes`, `::test_mesmo_zip_no_mesmo_instante`; `tests/integration/kit/test_referencias.py` |
-| FR-3439 (desatualização por impressão, todas as exportações) | `APLICAR_A_TODOS` (leitura do `detalhe`) | T015 | `test_exportacao.py::test_prorrogacao_gera_a_faixa`, `::test_exportacao_antiga_continua_listada`, `::test_retificacao_de_secao_nao_gera_faixa` |
-| FR-3440 (Retificação a vigorar) | `retificacoes_a_vigorar` (`101`, movida) | T015 | `test_exportacao.py::test_retificacao_a_vigorar_antes_e_depois` |
-| FR-3441 (nada guardado; sem aprovação por peça) | — | T029 | `test_pacote.py::test_nenhum_arquivo_guardado` |
-| FR-3442 (cabeçalhos; política do SVG) | `shared/http.marcar_como_privada` | T015, T022, T025 | `test_kit_de_divulgacao.py::test_exportar_svg_com_a_politica_propria`, `::test_exportar_png_registra_com_o_template`, `::test_previa_png_privada_e_sem_registro` |
-| FR-3443 (tela única) | moldura da `076` | T012 | `test_kit_de_divulgacao.py::test_tela_por_modo` |
-| FR-3444 (CSP, acessibilidade, 375 px, teclado) | `test_politica_de_conteudo.py`, `test_acessibilidade.py`, `test_folha_estatica.py` | T012, T013, T031 | os três guardiões; a verificação pelo navegador (T031) |
+| FR-3435 (formatos; o que registra) | `interface/relatorio.py` (`emitir`, POST) | T015, T025, T029 | `test_exportacao.py::test_md_e_txt_registram_e_abrir_nao`; `test_kit_de_divulgacao.py::test_exportar_png_registra_com_o_template`, `::test_previa_png_privada_e_sem_registro`; `tests/integration/kit/test_pacote.py::test_exportar_zip_registra_com_o_resumo_dos_bytes` |
+| FR-3436 (evento com detalhe; não é transição; rótulo) | `record_event`; `OPERACOES`; `OPERACOES_QUE_NAO_CONTAM` | T015, T016 | `test_exportacao.py::test_detalhe_do_evento_e_nao_e_transicao`; `tests/interface/test_trilha_legivel.py` |
+| FR-3437 (manifesto com três instantes) | — | T029 | `tests/integration/kit/test_pacote.py::test_manifesto_com_os_tres_instantes_e_sem_validade`, `::test_periodo_futuro_tem_o_termino_entre_os_proximos_marcos`, `::test_manifesto_resume_cada_arquivo` |
+| FR-3438 (determinismo em dois níveis) | — | T026, T029 | `test_pacote.py::test_peca_e_textos_publicaveis_iguais_em_dois_instantes`, `::test_mesmo_zip_no_mesmo_instante_de_referencia`; `tests/integration/kit/test_referencias.py` |
+| FR-3439 (desatualização por impressão, todas as exportações) | `APLICAR_A_TODOS` (leitura do `detalhe`) | T015 | `test_exportacao.py::test_prorrogacao_gera_a_faixa_e_a_exportacao_antiga_continua_listada`, `::test_retificacao_de_secao_nao_gera_faixa`, `::test_a_tela_le_uma_exportacao_por_impressao` |
+| FR-3440 (Retificação a vigorar) | `retificacoes_a_vigorar` (`101`, movida) | T015 | `test_exportacao.py::test_retificacao_a_vigorar_e_anunciada`; `test_pacote.py::test_manifesto_com_os_tres_instantes_e_sem_validade` |
+| FR-3441 (nada guardado; sem aprovação por peça) | — | T029 | `test_pacote.py::test_nenhum_arquivo_e_guardado`; `test_exportacao.py::test_o_kit_nao_grava_nada_alem_do_evento` |
+| FR-3442 (cabeçalhos; política do SVG) | `shared/http.marcar_como_privada` | T015, T022, T025 | `test_kit_de_divulgacao.py::test_exportar_svg_com_a_politica_propria`, `::test_exportar_png_registra_com_o_template`, `::test_previa_png_privada_e_sem_registro`; `test_pacote.py::test_exportar_zip_registra_com_o_resumo_dos_bytes` |
+| FR-3443 (tela única) | moldura da `076` | T012 | `test_kit_de_divulgacao.py::test_tela_com_periodo`, `::test_tela_neutra_e_sem_material` |
+| FR-3444 (CSP, acessibilidade, 375 px, teclado) | `test_politica_de_conteudo.py`, `test_acessibilidade.py`, `test_folha_estatica.py` | T012, T013, T031 | os três guardiões; a verificação pelo navegador (T031), registrada no PR do incremento C |
 | FR-3445 (desfecho depois da exportação) | `desfechos` | T015 | `test_exportacao.py::test_desfecho_depois_da_exportacao` |
 | FR-3446 (impressão conferida; 409) | — (D-019) | T012, T015, T025 | `test_exportacao.py::test_edital_mudado_entre_tela_e_exportacao`; `test_kit_de_divulgacao.py::test_previa_com_impressao_antiga_e_recusada` |
 | FR-3447 (host local sem link nem peça) | `HOSTS_LOCAIS`, `_host_local` (`interface/relatorio.py`) | T011, T025 | `test_kit_de_divulgacao.py::test_host_local_sem_link_absoluto`, `::test_host_local_sem_peca` |
-| FR-3448 (impressão versionada) | — (D-018) | T006, T015 | `test_ficha.py::test_impressao_versionada`; `test_exportacao.py::test_impressao_de_versao_anterior` |
+| FR-3448 (impressão versionada) | — (D-018) | T006, T015 | `test_exportacao.py::test_impressao_de_versao_anterior` |
 
 ## Casos-limite
 
@@ -63,41 +68,41 @@ T036 a confere contra o implementado. Caminhos relativos a `backend/`.
 | EC-1 (não publicado) | T010, T011 | `test_kit_de_divulgacao.py::test_antes_da_publicacao_a_acao_e_indisponivel_com_motivo`; `tests/authorization/test_kit_de_divulgacao.py::test_nao_publicado_409` |
 | EC-2 (desfecho, mesmo dentro do período) | T006, T015 | `test_ficha.py::test_modo_por_cenario[cancelado]`; `test_exportacao.py::test_desfecho_depois_da_exportacao` |
 | EC-3 (período encerrado ou cancelado) | T006 | `test_ficha.py::test_modo_por_cenario[encerrado]` |
-| EC-4 (Processo encerrado, Edital publicado; P-8) | T006 | `test_ficha.py::test_processo_encerrado_sem_material_enquanto_p8` |
+| EC-4 (Processo encerrado, Edital publicado; P-8) | T006 | **sem caso**: não se constrói mais pela interface desde a decisão de 28/09 sobre o RC-118; o ramo do código existe e espera a P-8 |
 | EC-5 (sem período designado) | T006, T008 | `test_vocabulario_do_kit.py::test_modo_neutro_sem_inscricao` |
 | EC-6 (sem término) | T006, T008 | `test_textos.py::test_periodo_sem_termino` |
 | EC-7 (atravessa o ano) | T006 | `test_ficha.py::test_periodo_curto_repete_o_ano_so_se_muda` |
-| EC-8 (Retificação a vigorar) | T006, T015 | `test_ficha.py::test_versao_futura_nunca_e_aplicada`; `test_exportacao.py::test_retificacao_a_vigorar_antes_e_depois` |
+| EC-8 (Retificação a vigorar) | T006, T015 | `test_ficha.py::test_versao_futura_nunca_e_aplicada`; `test_exportacao.py::test_retificacao_a_vigorar_e_anunciada` |
 | EC-9 (Retificação que não toca o material) | T015 | `test_exportacao.py::test_retificacao_de_secao_nao_gera_faixa` |
-| EC-10 (Perfil retirado, acrescentado, renomeado, reordenado) | T015 | `test_exportacao.py::test_perfil_retirado_acrescentado_renomeado_e_reordenado` |
+| EC-10 (Perfil retirado, acrescentado, renomeado, reordenado) | T015 | `test_ficha.py::test_perfil_retirado_acrescentado_renomeado_e_reordenado` |
 | EC-11 (só cadastro reserva entre Perfis com vaga) | T006, T023 | `test_ficha.py::test_total_so_com_vaga_em_todas` |
-| EC-12 (opções indistintas) | T008, T023 | `test_textos.py::test_opcoes_indistintas_contam`; `test_peca.py::test_oferta_por_quantidade_de_opcoes` |
-| EC-13 (título que repete o número) | T006 | `test_ficha.py::test_titulo_sem_numero` |
-| EC-14 (nenhum título cabe) | T021, T023 | `test_peca.py::test_ordem_dos_titulos`; `test_manchete.py` |
+| EC-12 (opções indistintas) | T008, T023 | `test_textos.py::test_opcoes_indistintas_contam`; `test_peca.py::test_rotulos_indistintos_contam` |
+| EC-13 (título que repete o número) | T006 | `test_ficha.py::test_nome_e_localidade_literais_e_titulo_sem_numero`; `test_peca.py::test_titulo_do_edital_sem_o_numero` |
+| EC-14 (nenhum título cabe) | T021, T023 | `test_peca.py::test_titulo_longo_cede_ao_do_processo_sem_truncar`, `::test_sem_titulo_que_caiba_a_peca_diz_a_omissao`; `tests/unit/kit/test_manchete.py` |
 | EC-15 (caractere sem grafia) | T023 | `test_peca.py::test_caractere_sem_grafia_recusa_nomeando` |
-| EC-16 (endereço longo) | T023 | `test_peca.py::test_rodape_medido_e_selo` (sintético); `::test_palavra_partida_nao_cabe` |
-| EC-17 (esquema antigo; Publicação sem sigla) | T006 | `test_ficha.py::test_conteudo_de_esquema_antigo`, `::test_publicacao_sem_sigla_gravada` |
-| EC-18 (unidade renomeada) | T006 | `test_ficha.py::test_unidade_congelada` |
-| EC-19 (vagas acrescidas não entram) | T006 | `test_ficha.py::test_vaga_acrescida_nao_entra` |
+| EC-16 (endereço longo) | T023 | `test_peca.py::test_endereco_de_60_caracteres_inteiro_numa_linha`, `::test_endereco_longo_demais_e_recusado` |
+| EC-17 (esquema antigo; Publicação sem sigla) | T006 | `tests/unidades/test_identificacao_multiunidade.py::test_o_ato_diz_a_sigla_que_gravou_e_sem_ela_recai_no_registro` — a ficha usa `do_ato` sem mudança. **Sem caso do kit**: a Publicação é append-only, e uma sem sigla gravada não se constrói pelo fluxo |
+| EC-18 (unidade renomeada) | T006 | `test_ficha.py::test_unidade_renomeada_depois_da_publicacao_fica_a_do_ato` |
+| EC-19 (vagas acrescidas não entram) | T006 | **sem caso próprio** (lacuna registrada na T036): a ficha lê as vagas só da versão consolidada, por `vagas_do_conteudo`, e o acréscimo da `097` não entra nela; a rede é `test_ficha.py::test_a_ficha_diz_o_que_a_vitrine_e_a_pagina_dizem` |
 | EC-20 (sem exportação anterior) | T015 | `test_exportacao.py::test_sem_exportacao_sem_faixa` |
-| EC-21 (peça desligada) | T017, T028 | `test_kit_de_divulgacao.py::test_peca_desligada_mantem_os_textos`; `test_pacote.py::test_zip_sem_peca` |
+| EC-21 (peça desligada) | T017, T028 | `test_kit_de_divulgacao.py::test_chave_desligada_a_peca_some_e_os_textos_ficam`; `test_pacote.py::test_sem_peca_o_zip_sai_sem_os_tres_arquivos_e_diz_por_que`, `::test_exportar_zip_com_a_chave_desligada`, `::test_peca_recusada_o_zip_sai_sem_ela_com_o_motivo` |
 | EC-22 (sem script) | T012, T013 | `test_kit_de_divulgacao.py::test_exportacoes_por_formulario`; `kit-de-divulgacao.test.js` |
 | EC-23 (60 ou mais Perfis) | T008, T023 | `test_textos.py::test_legenda_conta_acima_de_quatro`; `test_peca.py` (sintético de 66) |
 | EC-24 (mesmo número em outra unidade) | T003, T008 | `test_textos.py::test_legenda_sem_link_com_busca_e_sigla`; o cenário de duas unidades da fixture |
 | EC-25 (prorrogação só de hora) | T002, T008 | `tests/unit/publicacoes/test_prorrogacao.py::test_adiamento_so_da_hora_ja_e_prorrogacao`; `test_textos.py::test_prorrogacao_so_de_hora` |
 | EC-26 (termo da lista em valor oficial) | T006, T009 | `test_ficha.py::test_termo_em_valor_oficial_e_apontado`; `test_vocabulario_do_kit.py::test_valor_literal_nao_reprova` |
 | EC-27 (Edital mudou entre abrir e exportar) | T015 | `test_exportacao.py::test_edital_mudado_entre_tela_e_exportacao` |
-| EC-28 (host local) | T011, T025 | `test_kit_de_divulgacao.py::test_host_local_sem_link_nem_peca` |
+| EC-28 (host local) | T011, T025 | `test_kit_de_divulgacao.py::test_host_local_sem_link_absoluto`, `::test_host_local_sem_peca`; `test_pacote.py::test_exportar_zip_em_host_local_sai_sem_peca_e_sem_link` |
 
 ## Critérios de sucesso
 
 | Critério | Tarefas | Verificação |
 |---|---|---|
 | SC-1051 (três minutos, sem o PDF) | T035 | **humana**, com a comunicação |
-| SC-1052 (nada não comprovado; neutro) | T009, T020, T027 | `test_vocabulario_do_kit.py`; `test_peca.py::test_peca_contida_na_ficha` |
+| SC-1052 (nada não comprovado; neutro) | T009, T020, T027 | `test_vocabulario_do_kit.py`; `test_peca.py::test_a_peca_so_diz_o_que_a_ficha_diz` |
 | SC-1053 (desatualização exata; desfecho; futuro não aplicado) | T014, T015 | `test_exportacao.py` |
-| SC-1054 (template aprovado com a marca) | T030, T033, T034 | **humana**, sobre a galeria |
+| SC-1054 (template aprovado com a marca) | T030, T033, T034 | **humana**, sobre a galeria de `scripts/galeria_do_kit.py` |
 | SC-1055 (geometria) | T020, T023 | `test_peca.py::test_geometria_dos_casos_no_limite`; `test_referencias.py` |
 | SC-1056 (determinismo) | T024, T026, T029 | `test_pacote.py`; `test_referencias.py`; `verificacao-do-motor.md` |
-| SC-1057 (2 s num lote de 20) | T024, T032 | `verificacao-do-motor.md` |
+| SC-1057 (2 s num lote de 20) | T024, T032 | `verificacao-do-motor.md`, §8 (local; no ambiente de implantação, pendente) |
 | SC-1058 (Edital real sem correção) | T035 | **humana**, com a comunicação |
