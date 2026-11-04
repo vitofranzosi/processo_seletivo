@@ -245,6 +245,7 @@ def test_a_definicao_e_append_only_por_gatilho(cenario, gestor):
         connection.cursor() as cursor,
     ):
         cursor.execute(
-            "UPDATE formalizacao_definicaodosdocumentosdaformalizacao SET motivo = 'x' WHERE id = %s",
+            "UPDATE formalizacao_definicaodosdocumentosdaformalizacao "
+            "SET motivo = 'x' WHERE id = %s",
             [definicao.id],
         )
