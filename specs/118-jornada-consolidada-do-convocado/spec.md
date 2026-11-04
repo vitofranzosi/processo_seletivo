@@ -10,7 +10,10 @@ decisões têm três origens:
 - **Do usuário, em 04/11/2026, sobre o diagnóstico do PR vitofranzosi/processo_seletivo#375:**
   D-001 a D-006. Não se reabrem.
 - **Propostas de desenho desta spec:** D-007 a D-014, e D-015 a D-018, que vieram da revisão do PR
-  em 04/11/2026. A revisão do PR as aprova ou ajusta.
+  em 04/11/2026. **Arquitetura e escopo aprovados pelo usuário em 04/11/2026**, no encerramento da
+  spec.
+- **Do usuário, no encerramento da spec (04/11/2026):** D-019, a exceção informativa do Requerimento
+  não enviado sem documento.
 - **Revisões de requisitos de outras specs** (`063`, `115`, `059`, `029`): estão escritas por
   extenso em *Revisões de requisitos anteriores*. Elas se aplicam aos arquivos daquelas specs na
   **primeira tarefa da implementação** (T001), com a redação anterior preservada, como a `117` fez
@@ -149,6 +152,16 @@ Uma revisão do PR apontou cinco contradições e dois excessos do plano. O usu�
 - Q: Sem documento e com o Requerimento enviado, qual é a ação? → A: A de hoje (D-017; FR-3732).
 - Q: A FR-3756 proíbe mudar as views? → A: Não. Proíbe escrita, rota, comando e regra novos; as
   views passam a ler a projeção, com titularidade, recusas e resposta privada iguais (FR-3756).
+
+### Session 2026-11-04 (encerramento da spec)
+
+- Q: Num Edital só com Requerimento, o não enviado depois do prazo ou do desfecho aparece no
+  acompanhamento e na convocação? → A: Sim, como linha estritamente informativa, sem ação, sem
+  consulta nova, e só quando a política já não admite o preenchimento; B e B2 continuam como hoje
+  (D-019).
+- Q: O Requerimento preenchível com o Processo encerrado se resolve aqui? → A: Não. É encaminhamento
+  separado, de alta prioridade, sem mudar a regra durante a `118`
+  (`doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -328,9 +341,12 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   (N).** A política o diz "ainda indisponível", mas a projeção o mostra como *não enviado*, e não
   como *não pedido* (FR-3725, linha 3; FR-3742). A página do Requerimento diz que ele não foi enviado,
   e não *"Ainda não é a hora"* (FR-3754).
-- **O mesmo, sem documento na chamada.** A página do Requerimento é a da FR-3754, haja ou não
-  documento. O acompanhamento e a convocação ficam como hoje (FR-3732, FR-3743), e não dizem que o
-  Requerimento não foi enviado: é a lacuna residual registrada em *Registrado, sem desenvolver*.
+- **O mesmo, sem documento na chamada (N0).** A página do Requerimento é a da FR-3754, haja ou não
+  documento. O acompanhamento e a convocação mantêm a ação de hoje e acrescentam só a linha
+  informativa *"Requerimento de Matrícula: não enviado."*, sem link (FR-3732, FR-3743, D-019).
+- **Requerimento pedido na convocação, não enviado, prazo decorrido, sem documento (G0).** A ação
+  continua a de hoje, com a linha *"Requerimento de Matrícula: não enviado até o prazo. Não é mais
+  possível enviá-lo pelo portal."*, sem link, com e sem rascunho (FR-3732, FR-3743, D-019).
 - **Requerimento com rascunho e prazo decorrido.** *Não enviado até o prazo*; o rascunho continua
   legível, como a `029` já garante (FR-3725, linha 4).
 - **Só facultativos sem envio, com a chamada aberta (L).** Não há tarefa: a frase de conclusão vale,
@@ -496,6 +512,20 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   
   Mudam só os textos comuns a todas as telas: o formato do prazo, a frase do vencido, o rótulo do
   desfecho e a frase do aceite (FR-3747 a FR-3750).
+
+  **Exceção estritamente informativa** (D-019). Com o Requerimento declarado *na convocação* e não
+  enviado, rascunho incluído, o bloco *"O que fazer"* MUST acrescentar, abaixo da ação principal, que
+  continua a de hoje:
+  - com o prazo da chamada decorrido pela política (FR-3725, linha 4) e sem desfecho: *"Requerimento
+    de Matrícula: não enviado até o prazo. Não é mais possível enviá-lo pelo portal."*;
+  - com desfecho vigente (FR-3725, linha 3): *"Requerimento de Matrícula: não enviado."*, como
+    histórico.
+  
+  A linha MUST NOT ter link nem botão de preenchimento, e MUST NOT aparecer enquanto a política
+  admitir o preenchimento: com a chamada aberta, B e B2 ficam exatamente como hoje. Ela sai da mesma
+  `Disponibilidade` que o chamado ao Requerimento já lê (momento, situação, prazo decorrido) e do
+  desfecho que a tela já lê, **sem consulta nova**, e não muda disponibilidade, prazo, desfecho nem
+  autorização.
 - **FR-3733**: Com a chamada *encerrada*, por qualquer das duas causas, o acompanhamento MUST mostrar
   o que ficou sem envio — documentos obrigatórios e, encerrada pelo prazo, o Requerimento *não enviado
   até o prazo* — e MUST NOT oferecer link, botão ou frase que convide a enviar documento. O
@@ -566,7 +596,9 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
 - **FR-3743**: Sem documento pedido na chamada, a tela da convocação MUST manter a estrutura de hoje
   (FR-3574 da `115`): os dados, *"O que fazer"* e o chamado ao Requerimento. Mudam só o formato do
   prazo, a frase do vencido, o rótulo do desfecho — *"Resultado registrado: ‹rótulo da FR-3750›"*, no
-  lugar de *"Situação registrada: ‹espécie›"* — e a frase do aceite (FR-3747 a FR-3750).
+  lugar de *"Situação registrada: ‹espécie›"* — e a frase do aceite (FR-3747 a FR-3750). A exceção
+  informativa da FR-3732 vale também aqui, com as mesmas frases, no lugar onde hoje fica o chamado ao
+  Requerimento, e com as mesmas condições.
 - **FR-3744**: O cartão com pendência registrada — *a corrigir*, ou *a enviar* com motivo (cenário J)
   — MUST ter destaque visual de aviso (borda e fundo) **e** o selo em texto *"Precisa de correção"*.
   O cartão com a comissão MUST ter o selo *"Aguardando conferência"*; o conferido, *"Conferido"*; o
@@ -715,7 +747,7 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   telas e a ação principal do acompanhamento são as de hoje — inclusive *"Seu Requerimento de
   Matrícula foi enviado."* em B2 —, e os testes da `059` e da `063` sobre esses casos passam editando
   só as expectativas de texto comum nomeadas no plano (formato do prazo, frase do vencido, rótulo do
-  desfecho, frase do aceite).
+  desfecho, frase do aceite). Nenhum deles mostra a linha informativa da FR-3732.
 - **SC-1124**: Para cada cenário A–K, a verificação registra, citando o texto literal da tela, a
   resposta às quatro perguntas: *preciso enviar mais alguma coisa?*, *o que está com a comissão?*,
   *qual é o prazo?* e *o que acontece depois?*. Nenhuma fica sem resposta, e nenhuma resposta
@@ -731,6 +763,10 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   em K2, nenhuma data aparece como
   prazo. Em todos, nenhuma requisição de leitura grava linha nova além da leitura da convocação na
   trilha, e a inscrição alheia recebe a mesma recusa de inexistente.
+- **SC-1128**: Nos cenários G0 e N0 — chamada sem documento, Requerimento pedido na convocação e não
+  enviado, com e sem rascunho —, o acompanhamento e a convocação mostram a linha informativa da
+  FR-3732, sem nenhum link ou botão de preenchimento, com a ação principal de hoje; o número de
+  consultas das duas telas é o mesmo de antes; e nenhuma linha é gravada.
 
 ## Assumptions
 
@@ -1059,6 +1095,15 @@ quem já fez o que o portal pede.
 mais faltava. O bloco 3 passa a existir também só com opcionais, com outro título, e o facultativo
 ganha classificação própria em cada estado, fora de toda contagem (FR-3722, FR-3735, FR-3738).
 
+### D-019 — Sem documento, o Requerimento não enviado é dito, sem ação
+
+**Decisão do usuário (04/11/2026), no encerramento da spec.** A primeira redação mantinha o caminho
+sem documento intacto e deixava registrada a omissão: num Edital só com Requerimento, depois do prazo
+ou do desfecho, nenhuma tela além da do Requerimento dizia que ele não foi enviado — a F3 do relatório.
+O usuário decidiu uma exceção **estritamente informativa**: uma linha, sem link, só quando a política
+já não admite o preenchimento, com a ação principal de hoje e sem consulta nova (FR-3732, FR-3743). B
+e B2 não mudam.
+
 ## Registrado, sem desenvolver
 
 ### QI-7 — aviso de pendência: recomendação para decisão institucional
@@ -1101,16 +1146,9 @@ Verificado em 04/11/2026: o envio e a conferência de documento da convocação 
 encerrado ou cancelado (`convocacao/application/documentos.py`, `ensure_processo_accepts_changes`),
 mas a política do Requerimento (`requerimentos/domain/disponibilidade.py`) só fecha pelo prazo e pelo
 desfecho. Com o Processo encerrado e a chamada em aberto, o Requerimento continua preenchível. Esta
-spec não muda regra (FR-3756): mostra cada um pela sua fonte (FR-3725, FR-3730). Se as duas fontes
-devem fechar juntas é decisão do usuário, e pede revisão da `029` ou da `113`.
-
-### O Requerimento não enviado, numa chamada sem documento
-
-Com a chamada sem documento, a FR-3732 e a FR-3743 mantêm o acompanhamento e a convocação como hoje,
-a pedido do usuário. Por isso, depois do vencimento ou do desfecho, essas duas telas não dizem que o
-Requerimento pedido não foi enviado — a mesma omissão da F3, num Edital só com Requerimento. A página
-do Requerimento passa a dizê-lo (FR-3754). Acrescentar a linha às duas telas mudaria o caminho sem
-documento, e fica para decisão.
+spec não muda regra (FR-3756): mostra cada um pela sua fonte (FR-3725, FR-3730). Por decisão do
+usuário (04/11/2026), é **encaminhamento separado, de alta prioridade**, com investigação e proposta
+em `doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`.
 
 ### Outros, fora desta spec
 

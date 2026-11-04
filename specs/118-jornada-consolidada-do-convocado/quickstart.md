@@ -41,6 +41,8 @@ com a comissão? Qual é o prazo? O que acontece depois?*
 | M | Processo encerrado, chamada em aberto, prazo correndo | *"O envio pelo portal está encerrado"*, sem prazo vencido e sem promessa de conferência | o mesmo título; itens recebidos *"não foi conferido antes do encerramento do Processo"*; sem formulário de documento; o Requerimento a preencher continua no bloco 3, porque a política o admite |
 | N | indeferido, com documento, Requerimento pedido e nunca enviado | rótulo e fundamento | *"Requerimento de Matrícula: não enviado."*; abrir o Requerimento: *"Requerimento de Matrícula não enviado"*, e não *"Ainda não é a hora"* |
 | K2 | prazo não iniciado, com pendente, tarefa e opcional | a frase do prazo não iniciado | nenhum cartão nem opcional com *"até ‹data›"* |
+| G0 | sem documento, Requerimento pedido e não enviado, prazo vencido | a ação de hoje + *"Requerimento de Matrícula: não enviado até o prazo. Não é mais possível enviá-lo pelo portal."*, sem link | a mesma linha, sem link |
+| N0 | sem documento, Requerimento pedido e não enviado, desfecho | a ação de hoje + *"Requerimento de Matrícula: não enviado."* | a mesma linha; abrir o Requerimento: *"não enviado"* |
 
 ## Pelo teclado e pelo leitor de tela
 

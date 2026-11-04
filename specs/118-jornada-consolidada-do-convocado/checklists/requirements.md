@@ -72,6 +72,14 @@
       FR-3726, FR-3730, FR-3736, FR-3741, FR-3748, FR-3754, D-007 e o plano; a lacuna do Requerimento
       não enviado sem documento, registrada
 
+## Encerramento da spec (04/11/2026)
+
+- [x] Arquitetura e escopo aprovados pelo usuário
+- [x] Exceção informativa do Requerimento não enviado sem documento (D-019; FR-3732, FR-3743,
+      SC-1123, SC-1128; cenários G0 e N0), sem consulta nova e sem mudar B e B2
+- [x] Processo encerrado × Requerimento preenchível: encaminhamento separado, de alta prioridade, em
+      `doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`
+
 ## Notes
 
 - **Detalhe de implementação na spec, de propósito.** A spec cita funções (`estado_de`,

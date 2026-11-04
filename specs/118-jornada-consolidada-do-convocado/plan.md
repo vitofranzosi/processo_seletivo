@@ -145,7 +145,11 @@ cada uma com o item, a categoria e a âncora), `com_a_comissao`, `conferidos`, `
 `_acao_da_convocacao` recebe `obrigacoes`. Com `obrigacoes` presente, a tabela da FR-3730 decide
 `principal`, `link` e `link_rotulo`; o Requerimento enviado vira o campo novo `secundaria` da `Acao`
 (com texto e link). Sem `obrigacoes` — a chamada sem documento —, o caminho de hoje fica **intacto**,
-inclusive `REQUERIMENTO_ENVIADO` como ação principal (FR-3732, D-017); mudam só os textos comuns. As frases novas são
+inclusive `REQUERIMENTO_ENVIADO` como ação principal (FR-3732, D-017); mudam só os textos comuns.
+A única adição sem documento é a linha informativa da FR-3732 (D-019): um campo `informativo` da
+`Acao`, preenchido a partir da mesma `Disponibilidade` que `_requerimento_da_convocacao` já obtém
+(hoje ela devolve `""` com prazo decorrido; passa a devolver também a marca do não enviado) e do
+desfecho já lido. Nenhuma consulta nova; o teste de custo da `063` prova. As frases novas são
 constantes do módulo, onde a varredura e o SC-453 da `063` as leem.
 
 A view `acompanhamento` só chama `leitura_da_chamada` quando há convocação vigente (FR-3734), como
@@ -202,7 +206,7 @@ dos comandos (documento e Requerimento) continuam a usá-la, e as telas compõem
 | FR-3756: **sem escrita** | contagem de linhas de todas as tabelas antes e depois de um GET de cada tela em cada cenário: só a leitura da convocação na trilha muda; o GET da FR-3754 não cria rascunho | `interface/test_portal_jornada_consolidada.py` |
 | FR-3756: **autorização e privacidade** | inscrição alheia e inexistente com a mesma recusa nas três telas; a página do Requerimento continua com resposta privada; nenhum dado pessoal novo em URL | os testes de titularidade da `059` e da `029` sem edição; um caso novo por tela em `interface/test_portal_jornada_consolidada.py` |
 | FR-3756 a FR-3759: **sem mudança de regra** | `migrate --check` sem nada a criar; rotas iguais; telas da gestão e "Minhas inscrições" sem mudança; FR-3614 | `test_dependencia_da_convocacao.py`, testes da `059` e da `115` sem edição de expectativa nesses pontos |
-| SC-1117 a SC-1121, SC-1123, SC-1127 | os cenários, a 375 px e em desktop | navegador e capturas |
+| SC-1117 a SC-1121, SC-1123, SC-1127, SC-1128 | os cenários, a 375 px e em desktop | navegador e capturas |
 | SC-1124 | as quatro perguntas por cenário, com o texto literal | `verificacao.md` |
 
 ### Os cenários
@@ -231,6 +235,8 @@ que a revisão do PR pediu:
 | **M** | Processo encerrado, chamada em aberto, prazo correndo, um item recebido, Requerimento a preencher | "O envio pelo portal está encerrado"; nenhuma menção a prazo vencido; nenhuma promessa de conferência; sem formulário de documento; o Requerimento continua alcançável no bloco 3, porque a política o admite (D-015, FR-3741) |
 | **N** | indeferido, com documento, Requerimento pedido na convocação e nunca enviado (com e sem rascunho) | "Requerimento de Matrícula: não enviado." na convocação; a página dele diz "não enviado", nunca "Ainda não é a hora"; nunca "não pedido" (D-016, FR-3754) |
 | **K2** | prazo não iniciado, com um pendente, uma tarefa e um opcional | nenhum cartão, opcional ou frase de conclusão com data; "Você já pode enviar" (FR-3749) |
+| **G0** | sem documento, Requerimento pedido na convocação e não enviado (com e sem rascunho), prazo decorrido | ação de hoje + "Requerimento de Matrícula: não enviado até o prazo. Não é mais possível enviá-lo pelo portal.", sem link; mesmas consultas; nada gravado (D-019, SC-1128) |
+| **N0** | sem documento, Requerimento pedido e não enviado, desfecho registrado | ação de hoje + "Requerimento de Matrícula: não enviado.", sem link; a página dele diz "não enviado" (D-019, FR-3754, SC-1128) |
 
 Mais dois de controle: **Edital sem documento e sem Requerimento** (SC-1123) e **inscrição sem
 convocação** (SC-1125). As capturas, a 375 × 812 e a 1280 × 900, vão para
@@ -287,6 +293,7 @@ sozinho"*.
 | Sem documento e com o Requerimento enviado: ação indefinida | A de hoje, inclusive o enviado como ação principal (D-017; FR-3732) | cenário B2; os testes da `063` sobre B e B2 sem edição, salvo texto comum |
 | FR-3756 proibia mudar as views que as tarefas mudam | Proíbe escrita, rota, comando e regra; as views leem a projeção, com titularidade, recusas e resposta privada iguais (FR-3756) | contagem de linhas antes e depois dos GET; recusa indistinguível nas três telas |
 | Revisão independente (04/11): Processo e prazo juntos; `pode_apresentar` sem o desfecho; `estado_de` descrito errado; Requerimento em M; página do Requerimento em N; N e G sem documento; termo "opcional sem conferência"; Requerimento *na inscrição*; motivo em J; D-007 | FR-3725 lê desfecho e prazo da política; `pode_apresentar` mantém o desfecho; FR-3721 corrigida; FR-3741 diz onde fica o Requerimento; FR-3754 cobre o desfecho sem envio; N e G com documento, e a lacuna sem documento registrada; "opcional a enviar"; linhas 3 e 4 para qualquer momento; o motivo no bloco 1 e a pendência primeiro | cenário M com Requerimento; N na página do Requerimento; Processo e prazo juntos no unitário; desfecho com Processo aberto sem formulário |
+| Encerramento (04/11): sem documento, o Requerimento não enviado depois do prazo ou do desfecho não aparecia fora da página dele | Exceção informativa, sem link, só com a política fechada; ação principal de hoje (D-019; FR-3732, FR-3743) | cenários G0 e N0; B e B2 sem a linha; contagem de consultas igual |
 | Busca genérica por "textos antigos" incluía textos que continuam | Lista explícita do que sai e do que fica (acima) | a busca da T032 sobre a lista |
 
 ## Riscos

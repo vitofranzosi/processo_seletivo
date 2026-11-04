@@ -61,6 +61,7 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 - [ ] T011 [P] [US1] `tests/unit/portal/test_situacao_da_inscricao.py`: a tabela da FR-3730 linha a linha, inclusive a linha 2 (Processo); o enviado como linha secundária com documento; **sem documento, B e B2 exatamente como hoje**, com `REQUERIMENTO_ENVIADO` como ação principal em B2 (FR-3730, FR-3731, FR-3732)
 - [ ] T012 [P] [US1] `tests/portal/test_acompanhamento_pela_situacao.py`: C1, C2, B e B2 renderizados; o link principal com documento leva à convocação; nenhum rótulo de link começa por "Enviar"; contagem de consultas com 0, 1 e 6 itens e sem convocação (FR-3730, FR-3732, FR-3734, SC-1117, SC-1123, SC-1125)
+- [ ] T012a [P] [US4] `tests/unit/portal/test_situacao_da_inscricao.py` e `tests/portal/test_acompanhamento_pela_situacao.py`: G0 e N0, com e sem rascunho — a ação principal de hoje, a linha informativa sem link, nenhum link de preenchimento; B e B2 sem a linha; contagem de consultas igual à de antes; `tests/interface/test_portal_jornada_consolidada.py`: o mesmo na tela da convocação, e nenhuma linha gravada (FR-3732, FR-3743, D-019, SC-1128)
 
 ### Implementation
 
@@ -124,9 +125,9 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ## Phase 7: Navegador, capturas e verificação
 
-- [ ] T029 [P] `tests/navegador/test_jornada_consolidada_do_convocado.py` (novo): os cenários A–K e B2, L, M, N, K2 a 375 px e em desktop; Tab linear e foco visível; nomes acessíveis únicos; sem rolagem horizontal; sem violação de CSP no console; o bloco 1 dentro da primeira tela em A, C1, C2, F e J; ajustar `tests/navegador/test_jornada_dos_documentos_da_convocacao.py` (SC-1119, SC-1121, SC-1122, SC-1127)
+- [ ] T029 [P] `tests/navegador/test_jornada_consolidada_do_convocado.py` (novo): os cenários A–K e B2, L, M, N, K2, G0, N0 a 375 px e em desktop; Tab linear e foco visível; nomes acessíveis únicos; sem rolagem horizontal; sem violação de CSP no console; o bloco 1 dentro da primeira tela em A, C1, C2, F e J; ajustar `tests/navegador/test_jornada_dos_documentos_da_convocacao.py` (SC-1119, SC-1121, SC-1122, SC-1127)
 - [ ] T030 `specs/118-jornada-consolidada-do-convocado/rastreabilidade.md`: uma linha por FR e SC desta spec, com o teste que a prova (`tests/test_citacoes_de_requisito.py` cobra)
-- [ ] T031 Capturas "depois" dos cenários A–K, B2, L, M, N, K2 e dos dois de controle, com o mesmo nome do relatório, em `capturas/`
+- [ ] T031 Capturas "depois" dos cenários A–K, B2, L, M, N, K2, G0, N0 e dos dois de controle, com o mesmo nome do relatório, em `capturas/`
 - [ ] T032 `verificacao.md`: para cada cenário, as quatro perguntas respondidas com o texto literal da tela (SC-1124); a busca, nos testes, pelos **textos que saem** da lista do plano — vazia, salvo onde o teste prova a ausência —, e a confirmação de que os que **ficam** continuam presos; cada expectativa alterada justificada por cenário, com a garantia anterior ainda provada; totais da suíte contra a linha de base
 - [ ] T033 `make lint check test-pg` (os dois passos do `lint`); linha do README da `118` atualizada; o `CLAUDE.md` não muda (nenhuma tabela append-only nova)
 
