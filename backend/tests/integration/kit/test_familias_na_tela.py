@@ -17,7 +17,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
-from processo_seletivo.interface import kit_escolha, kit_familias, kit_pacote
+from processo_seletivo.interface import kit_escolha, kit_familias, kit_pacote, kit_peca
 from processo_seletivo.interface.kit_familias import institucional, pos_lato_sensu
 from processo_seletivo.portal import ficha as fichas
 from tests.fixtures import kit
@@ -410,8 +410,6 @@ def test_familia_que_saiu_da_lista_volta_a_institucional_e_diz_por_que(
 @sem_rasterizador
 def test_zip_da_familia_com_recusa_e_versao_divergente(comunicacao, edital, settings, monkeypatch):
     """FR-3829: cada motivo de não inclusão no manifesto, e os outros formatos seguem."""
-    from processo_seletivo.interface import kit_peca
-
     settings.KIT_DE_DIVULGACAO_TEMPLATES = tuple(
         (f, formato, versao, "0" * 12 if (f, formato) == (LATO, "banner") else curto)
         for f, formato, versao, curto in settings.KIT_DE_DIVULGACAO_TEMPLATES
@@ -445,3 +443,13 @@ def test_zip_da_familia_sem_rasterizador_leva_o_svg(comunicacao, edital, monkeyp
     pecas = json.loads(conteudo["manifesto.json"])["pecas"]
     assert {p["motivo"] for p in pecas} == {"sem_rasterizador"}
     assert all(p["incluida"] for p in pecas)
+
+
+def test_a_tela_diz_em_que_formatos_as_opcoes_sairam_resumidas(comunicacao, api_client):
+    """FR-3836: os quatro polos do 91 saem resumidos no post e no story, e a tela o diz uma vez."""
+    quatro = kit.publicar(api_client, chave="familias-quatro-polos")
+    resposta = _tela(comunicacao, quatro, familia=LATO, familia_da_tela=LATO)
+    secao = resposta.context["secoes_da_familia"]
+    assert kit_peca.RESUMO_EM.format(formatos="post, story") in secao["avisos"]
+    textos = dict((chave, texto) for chave, _, texto in resposta.context["textos"])
+    assert textos["legenda"].count("480 horas") == 4  # as opções completas nos textos

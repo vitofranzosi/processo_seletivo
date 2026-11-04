@@ -9,7 +9,7 @@ cada linha desta tabela tem o resumo que o código fixa em `RESUMOS`; a liberaç
 | Template | Versão | Resumo curto | Quem aprovou | Data |
 |---|---|---|---|---|
 | pos-lato-sensu/post · 1 | 1 | `bfcb25490b8e` | responsável pelo produto, por adoção (P-4) | 04/11/2026 |
-| pos-lato-sensu/story · 1 | 1 | `91137d4ddd46` | responsável pelo produto, por adoção (P-4) | 04/11/2026 |
+| pos-lato-sensu/story · 2 | 2 | `8a16aef0abbd` | responsável pelo produto, pela decisão do resumo (FR-3836) | 04/11/2026 |
 | pos-lato-sensu/banner · 1 | 1 | `1badbdf0cb93` | responsável pelo produto, por adoção (P-4) | 04/11/2026 |
 
 **Por adoção, e não sobre a galeria.** A resposta à P-4, em 04/11/2026, foi "apenas adote o
@@ -20,28 +20,31 @@ pelo produto, e a adoção dele é o registro. A galeria continua gerada por
 **A liberação em produção** continua da operação, pela configuração:
 
 ```text
-KIT_DE_DIVULGACAO_TEMPLATES=pos-lato-sensu/post@1#bfcb25490b8e,pos-lato-sensu/story@1#91137d4ddd46,pos-lato-sensu/banner@1#1badbdf0cb93
+KIT_DE_DIVULGACAO_TEMPLATES=pos-lato-sensu/post@1#bfcb25490b8e,pos-lato-sensu/story@2#8a16aef0abbd,pos-lato-sensu/banner@1#1badbdf0cb93
 ```
 
-## Decisão pendente: a contagem quando o painel não tem altura (FR-3425 da `111`, FR-3817)
+## O resumo por falta de espaço (FR-3836)
 
-A FR-3425 só prevê a contagem ("N vagas em K opções") **acima de quatro opções** ou com rótulos
-indistintos, e a FR-3824 manda recusar o formato que não cabe. Os templates da Pós Lato Sensu, porém,
-passam à contagem quando as opções listadas não têm altura no painel — a foto ocupa a metade de
-baixo. Medido em 04/11/2026: post e story listam **duas** opções de nome curto; com três ou mais, ou
-com duas de nome longo, saem com o total; o banner não tem bloco de ofertas (EC-6). E então a carga
-horária não aparece, porque nenhuma linha aparece.
+**Decidido em 04/11/2026** pelo responsável pelo produto, depois da revisão do incremento 2: a FR-3425
+da `111` só previa o resumo acima de quatro opções, e os templates da Pós Lato Sensu — cuja foto ocupa
+a metade de baixo — passavam ao total sem dizer. A FR-3836 formaliza a exceção, e a ordem é lista,
+lista no corpo mínimo da oferta, recusa pela carga horária (EC-3), resumo.
 
-A revisão de 04/11 estreitou a recaída: ela **não** vale para uma opção só ("1 opções"), nem quando
-é a carga horária que não cabe na linha — aí o formato é recusado nomeando-a (EC-3). Na galeria, o
-cenário 19 mostra os dois desfechos: o post recusa, e o story, onde a linha cabe e o painel não,
-sai com "80 vagas em 2 opções".
+**A versão 2 do story.** Listar no corpo mínimo antes de resumir mudou uma peça de referência: o
+story do 91 sem localidade, de dois polos, que a versão 1 resumia, passou a listá-los. A versão
+subiu, e não foi regravada na 1 (EC-22). A versão 1 nunca foi liberada fora do desenvolvimento.
+Post e banner não mudaram de peça nem de resumo.
 
-**Para o responsável pelo produto decidir**, sem mudança enquanto não decidir:
+Medido depois da mudança, em 04/11/2026, com opções de 20 vagas e carga "360h"; "curto" é um nome
+de 8 caracteres, e "longo", de 41 ("Especialização em Informática na Educação"):
 
-- **manter a contagem por altura**, e a spec é emendada para admiti-la nesses templates; ou
-- **recusar o formato**, como a FR-3425 diz hoje — e o Edital de dois polos ou mais fica sem post e
-  sem story da Pós, só com o banner e a Institucional.
+| Formato | 1 opção | 2 curtas | 2 longas | 3 curtas | 3 longas | 4 |
+|---|---|---|---|---|---|---|
+| post | lista | lista | resumo | resumo | resumo | resumo |
+| story | lista | lista | resumo | lista | resumo | resumo |
+
+O banner não tem bloco de ofertas (EC-6). O caso real do 91 sem localidade, de dois polos com nomes
+distintos, lista no story e resume no post.
 
 ## Cenários de referência 18 a 25 na Pós Lato Sensu (FR-3831)
 

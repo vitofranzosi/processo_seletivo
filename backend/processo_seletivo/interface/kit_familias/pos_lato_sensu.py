@@ -192,9 +192,11 @@ RESUMOS = {
         "10e136b683d699424e3f5967f2837f556d86893a8592e25211cbee3f7d7f0a6c",
         "bfcb25490b8e4861ae2fef63aae010561049edb2a6da8531513545b72282dc54",
     ),
-    ("story", 1): (
-        "734e12efd608408a388bf2550445434027f9ad4b78323cce4bbf15493b96e078",
-        "91137d4ddd46553bf321266f44652547ae8bc00fe2d89fd34fe2432f788923d9",
+    # A 2 lista as opções no corpo mínimo antes de resumir (FR-3836): o story de dois polos, que
+    # na 1 saía com o total, passou a listá-los. Post e banner não mudaram de peça.
+    ("story", 2): (
+        "f4e16a2cf434cd62b03b3be9f76ccbf84c9ec6959d1f931fdf3225b4f26ab297",
+        "8a16aef0abbdd69d76215765ba54d785cd46e69496e0f541902eba7287101e4d",
     ),
     ("banner", 1): (
         "57cbd239100d5068f5602682e3f78259931fd6f0c2faedf7d6238ce4da2a04f3",
@@ -249,7 +251,7 @@ POST = Template(
 STORY = Template(
     familia=CHAVE,
     formato=kit_formatos.STORY,
-    versao=1,
+    versao=2,
     composicao="caixas",
     forma_do_periodo="ate",
     caixas=(
@@ -286,7 +288,7 @@ STORY = Template(
     },
     area_da_imagem=(510, 670, 1080, 1356),
     pasta_das_referencias="pos-lato-sensu/story",
-    resumo_das_referencias=RESUMOS[("story", 1)][0],
+    resumo_das_referencias=RESUMOS[("story", 2)][0],
 )
 
 BANNER = Template(

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" role="img" aria-labelledby="titulo descricao">
 <title id="titulo">Edital nº 91/2026 — material de divulgação</title>
-<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade Pós Lato Sensu, com foto de uma estudante sorridente, de fone de ouvido, escrevendo diante do notebook. Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Inscrições até 30/10/2026, às 23h59 (horário de Brasília). Início em 13/10/2026. 80 vagas em 2 opções. Acesse o link na bio, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade Pós Lato Sensu, com foto de uma estudante sorridente, de fone de ouvido, escrevendo diante do notebook. Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Inscrições até 30/10/2026, às 23h59 (horário de Brasília). Início em 13/10/2026. 80 vagas em 2 opções. Polo Bom Jesus do Norte — 480 horas: 40 vagas. Especialização em Informática na Educação — 480 horas: 40 vagas. Acesse o link na bio, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
 <image x="0" y="0" width="1080" height="1920" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
 <text x="318" y="308" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">Curso de Pós-graduação</text>
 <text x="318" y="381" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">Lato Sensu em</text>
@@ -8,12 +8,14 @@
 <text x="318" y="529" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">na modalidade EaD</text>
 <text x="318" y="603" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">(DEMONSTRAÇÃO)</text>
 <text x="119" y="911" font-family="Poppins" font-size="39" font-weight="400" fill="#ffffff" data-campo="identificacao">Edital nº 91/2026</text>
-<rect x="100" y="1043" width="680" height="537" rx="32" fill="#f3b514"/>
-<text x="132" y="1125" font-family="Poppins" font-size="47" font-weight="700" fill="#450460" data-campo="periodo_curto">Inscrições até 30/10/2026</text>
-<text x="132" y="1184" font-family="Poppins" font-size="32" font-weight="400" fill="#450460" data-campo="hora">às 23h59 (horário de Brasília)</text>
-<text x="132" y="1237" font-family="Poppins" font-size="32" font-weight="400" fill="#450460" data-campo="inicio">Início em 13/10/2026</text>
-<text x="132" y="1291" font-family="Poppins" font-size="32" font-weight="700" fill="#450460" data-campo="total_de_vagas">80 vagas em 2 opções</text>
-<text x="132" y="1340" font-family="Poppins" font-size="28" font-weight="400" fill="#450460" data-campo="fixo">Confira todas na página oficial</text>
+<rect x="100" y="973" width="680" height="607" rx="32" fill="#f3b514"/>
+<text x="132" y="1054" font-family="Poppins" font-size="47" font-weight="700" fill="#450460" data-campo="periodo_curto">Inscrições até 30/10/2026</text>
+<text x="132" y="1113" font-family="Poppins" font-size="32" font-weight="400" fill="#450460" data-campo="hora">às 23h59 (horário de Brasília)</text>
+<text x="132" y="1167" font-family="Poppins" font-size="32" font-weight="400" fill="#450460" data-campo="inicio">Início em 13/10/2026</text>
+<text x="132" y="1220" font-family="Poppins" font-size="32" font-weight="700" fill="#450460" data-campo="total_de_vagas">80 vagas em 2 opções</text>
+<text x="132" y="1265" font-family="Poppins" font-size="24" font-weight="400" fill="#450460" data-campo="oferta:1b8b03eb-3518-54af-bcf4-4a59017eab1f">Polo Bom Jesus do Norte — 480 horas: 40 vagas</text>
+<text x="132" y="1307" font-family="Poppins" font-size="24" font-weight="400" fill="#450460" data-campo="oferta:5697656f-4e68-5b16-a154-ab5d2861c32b">Especialização em Informática na Educação — 480</text>
+<text x="132" y="1341" font-family="Poppins" font-size="24" font-weight="400" fill="#450460" data-campo="oferta:5697656f-4e68-5b16-a154-ab5d2861c32b">horas: 40 vagas</text>
 <text x="132" y="1388" font-family="Poppins" font-size="28" font-weight="700" fill="#450460" data-campo="busca">busque por 91/2026 – Cefor</text>
 <text x="132" y="1431" font-family="Poppins" font-size="24" font-weight="400" fill="#450460" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
 <image x="171" y="1456" width="592" height="168" preserveAspectRatio="none" data-campo="balao" href="data:image/png;base64,MARCA"/>

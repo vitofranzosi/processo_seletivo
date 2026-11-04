@@ -137,6 +137,7 @@ SC-1132, SC-1134).
 - [x] T041 [US1] Gravar as referências em `backend/tests/fixtures/kit_referencias/pos-lato-sensu/{post,story,banner}/` e o caso que as compara em `backend/tests/integration/kit/test_referencias.py`
 - [x] T042 [P] [US1] Em `backend/tests/integration/kit/test_pacote.py`: ZIP da Pós Lato Sensu com post e story liberados e banner não → arquivos `peca-post.*` e `peca-story.*` na ordem fixa, `versao_do_manifesto` 2, `pecas` com três entradas (banner `nao_liberado`), resumos dos arquivos conferidos, os campos singulares da `111` nulos, e o mesmo `pecas` no evento; composição recusada num formato → entrada com `recusa` e o texto, e os outros incluídos; sem rasterizador → entradas incluídas com `sem_rasterizador` e sem PNG; ZIP da Institucional com os nomes, a estrutura do manifesto e o SVG/PNG da `111`, e a ficha e a impressão v2 (FR-3828, FR-3829, D-015)
 - [x] T043 [US1] Em `backend/processo_seletivo/interface/kit_pacote.py` e `kit_de_divulgacao.py`: o ZIP de família com os arquivos por formato na ordem fixa (a tupla de nomes do `zipar` ganha os de cada formato), o manifesto versão 2 com `familia`, `imagem`, `pecas`, `fontes` e `ativos`, a lista `pecas` no evento e os campos singulares nulos; o ZIP da Institucional mantém nomes, estrutura e peça (FR-3828, FR-3829, D-015)
+- [x] T057 [US1] Em `kit_peca.py`: a ordem da FR-3836 no painel — lista, lista com as ofertas no corpo mínimo, recusa pela carga horária (EC-3), resumo — e o aviso por formato na tela; casos em `test_peca_das_familias.py` e `test_familias_na_tela.py`, referência do story regravada na versão 2 (FR-3836, FR-3833)
 - [ ] T044 [US1] Medir no ambiente de implantação a tela com três prévias e o ZIP num lote de 20, e o PNG idêntico em duas gerações, e registrar em `specs/119-templates-de-divulgacao/verificacao.md` (SC-1137, SC-1134)
 
 **Checkpoint**: PR do incremento 2 (fases 3 a 6). US1–US3 verificáveis de ponta a ponta.
@@ -230,6 +231,7 @@ T036 sem material e host local T042 ZIP multiformato
 | FR-3833 | T035, T039, T040 |
 | FR-3834 | T045, T046 |
 | FR-3835 | T027, T039, T026 |
+| FR-3836 | T057 |
 | FR-3832 | T054 |
 | SC-1131 | T031 |
 | SC-1132 | T030 |

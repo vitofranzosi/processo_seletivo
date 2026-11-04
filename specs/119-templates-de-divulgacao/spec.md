@@ -357,7 +357,8 @@ curto e a busca, as linhas de oferta sem carga horária —, e por isso as suas 
 - **FR-3817**: As ofertas MUST seguir o teto e a regra do total da FR-3425 da `111`, e cada linha
   listada traz a carga horária declarada depois do nome ("Nome — carga horária"). Um template pode
   declarar que não tem bloco de ofertas; então nenhuma quantidade nem carga horária aparece nele
-  (EC-6).
+  (EC-6) A exceção para a lista que não cabe no espaço do template é a
+  FR-3836.
 - **FR-3818**: O título MUST ser resolvido por formato, pela ordem da FR-3426 da `111`. A manchete da
   FR-3427 da `111` é oferecida quando nenhum título oficial cabe em algum formato liberado da família,
   e é usada só nos formatos em que nenhum oficial cabe (EC-18). A tela MUST dizer em quais formatos o
@@ -445,6 +446,19 @@ curto e a busca, as linhas de oferta sem carga horária —, e por isso as suas 
   Institucional: a versão 1 dela fica congelada por teste (o resumo fixado não muda), e qualquer
   versão nova dela só é liberada pela configuração nova, como as demais; a chave da `111` não a
   alcança.
+- **FR-3836**: Nos templates da família Pós Lato Sensu, quando até quatro opções com rótulos
+  distintos não cabem listadas no bloco de ofertas do formato, o formato MUST sair **resumido** —
+  exceção à FR-3425 da `111`, que só prevê o resumo acima de quatro opções —, nesta ordem:
+  1. a lista, cada caixa no maior corpo que a deixa caber;
+  2. a lista com as linhas de oferta no **corpo mínimo** declarado da caixa de oferta;
+  3. se o que não cabe é a carga horária na linha, a **recusa** do formato nomeando-a (EC-3), e não
+     o resumo;
+  4. o resumo, pela regra do total da FR-3425 (o total quando toda opção tem vaga imediata, a
+     contagem quando não tem) e o convite à página; nunca para uma opção só.
+
+  A decisão é por formato: um formato pode listar e outro resumir. Os textos MUST continuar com as
+  opções completas, com a carga horária. A tela MUST dizer em quais formatos as opções saíram
+  resumidas. Outra família só ganha a exceção por emenda desta FR.
 
 ### Key Entities
 
@@ -497,6 +511,12 @@ dela dependem.
 | **P-2** | "Não sei. Escolha a mais próxima possível; se puder, use a mesma fonte." | A Helvetica Neue não é livre e não se embute. Para Libras, TMD e Internos, a substituta é escolhida na família, a mais próxima entre as livres, e registrada no `ORIGEM.md` das fontes |
 | **P-3** | "Adote o tamanho padrão de banner na web" (com um exemplo de 1500 × 850) | O banner continua em 1500 × 850, e deixa de esperar resposta |
 | **P-4** | "Apenas adote o template." | A adoção do responsável pelo produto é o registro de aprovação da FR-3834, em [verificacao.md](verificacao.md), com o identificador, a versão e o resumo de cada template; a galeria continua como prova visual, e a liberação em produção continua da operação, pela configuração |
+
+**Resumo por falta de espaço (04/11/2026).** Depois da revisão do incremento 2, o responsável pelo
+produto aprovou o resumo das opções quando a lista não cabe nos templates da Pós Lato Sensu, "por
+formato, depois de tentar a lista no tamanho mínimo legível", mantendo o convite à página, a regra
+do total, a recusa por carga horária longa e as opções completas nos textos, e dizendo na tela quais
+formatos resumiram. É a FR-3836.
 
 Duas dessas leituras afrouxam o texto da spec, e ficam ditas aqui: a licença da FR-3826 passa a
 admitir "não verificada" por decisão registrada, e a aprovação da SC-1135 passa a admitir a adoção

@@ -178,7 +178,7 @@ def test_carga_horaria_vazia_numa_oferta_e_curta_noutra(template):
     """Cenário 19 (EC-2): sai só onde é declarada, e nada é completado.
 
     Onde o painel não tem altura para as duas opções, a peça passa ao total — e então nenhuma
-    linha, nem carga, aparece (decisão pendente sobre a FR-3425, em `verificacao.md`).
+    linha, nem carga, aparece (FR-3836).
     """
     peca = _compor(_com_carga("", "180h"), template)
     linhas = [_campo(peca, f"oferta:{i}") for i in ("1", "2")]
@@ -223,3 +223,62 @@ def test_caractere_sem_glifo_so_na_fonte_de_titulo(template, negrito_sem_u_agudo
         # «ú» no nome da oferta, que é corpo (Poppins Regular), não é recusa.
         ofertas = (dataclasses.replace(UMA[0], nome="Especialização em Gestão Pública"),)
         _compor(_ficha(ofertas=ofertas, nomes_iguais=False, total_de_vagas=40), template)
+
+
+# ---- FR-3836: o resumo por falta de espaço ----------------------------------------------------
+
+
+def _opcoes(quantas, nome="Docência"):
+    ofertas = tuple(
+        dataclasses.replace(_oferta(str(i), nome, f"Polo {i}", 20), carga_horaria="360h")
+        for i in range(1, quantas + 1)
+    )
+    return _ficha(ofertas=ofertas, nomes_iguais=False, total_de_vagas=20 * quantas)
+
+
+def _listou(peca):
+    return any(t.campo.startswith("oferta:") for t in peca.textos)
+
+
+STORY = next(t for t in TEMPLATES if t.formato.chave == "story")
+POST = next(t for t in TEMPLATES if t.formato.chave == "post")
+
+
+def test_a_lista_no_corpo_minimo_vem_antes_do_resumo():
+    """Passo 2: três opções curtas cabem no story só com as ofertas no corpo mínimo."""
+    peca = _compor(_opcoes(3), STORY)
+    assert _listou(peca) and not peca.avisos
+    minimo = STORY.caixa("oferta").corpos[-1]
+    assert {t.tamanho for t in peca.textos if t.campo.startswith("oferta:")} == {minimo}
+
+
+@pytest.mark.parametrize("template", [POST, STORY], ids=_id)
+def test_o_resumo_traz_o_total_o_convite_e_o_aviso_do_formato(template):
+    """Passo 4: o total e o convite à página, e o aviso que a tela junta por formato."""
+    peca = _compor(_opcoes(4), template)
+    assert not _listou(peca)
+    assert _campo(peca, "total_de_vagas") == "80 vagas em 4 opções"
+    assert _campo(peca, "fixo").endswith("Confira todas na página oficial")
+    assert peca.avisos == (kit_peca.RESUMO_EM.format(formatos=template.formato.chave),)
+    # Os textos continuam com as opções completas, com a carga horária.
+    from processo_seletivo.interface import kit_textos
+
+    legenda = kit_textos.compor(_opcoes(4))["legenda"]
+    assert all(f"Docência — Polo {i} — 360h" in legenda for i in range(1, 5))
+
+
+def test_sem_vaga_imediata_o_resumo_e_a_contagem():
+    """A regra do total da FR-3425 vale no resumo: sem vaga imediata em toda opção, a contagem."""
+    ofertas = tuple(
+        dataclasses.replace(_oferta(str(i), "Docência", f"Polo {i}", 0), carga_horaria="360h")
+        for i in range(1, 5)
+    )
+    peca = _compor(_ficha(ofertas=ofertas, nomes_iguais=False, total_de_vagas=None), POST)
+    assert _campo(peca, "contagem") == "4 opções" and not _campo(peca, "total_de_vagas")
+
+
+def test_familia_fora_da_fr_3836_recusa_em_vez_de_resumir(monkeypatch):
+    """A exceção é da Pós Lato Sensu; outra família recusa o formato, como a FR-3425 diz."""
+    monkeypatch.setattr(kit_peca, "RESUMO_POR_ESPACO", frozenset())
+    with pytest.raises(kit_peca.PecaRecusada):
+        kit_peca.compor_template(_opcoes(4), POST, kit_peca.Escolha(imagem="fone"))

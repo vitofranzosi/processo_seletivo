@@ -812,6 +812,11 @@ def _base(elemento):
 ENTRELINHA = 1.42
 SEM_TITULO_EM = "O título oficial não coube em: {formatos}."
 SEM_CONTATO_EM = "O contato não coube em: {formatos}."
+#: FR-3836: o formato que passou ao resumo diz na tela; as ofertas completas seguem nos textos.
+RESUMO_EM = (
+    "As opções não couberam listadas em: {formatos}. Esses formatos trazem o total e o convite à "
+    "página; as opções completas estão nos textos."
+)
 
 
 class _NaoCabe(PecaRecusada):
@@ -926,6 +931,10 @@ def _itens_do_painel(c, ficha, frases, resumir=False):
     return itens
 
 
+#: As famílias em que a FR-3836 admite o resumo por falta de espaço. Fica no motor, e não na
+#: declaração do template, para que a lista não mude o resumo dos templates já aprovados; outra
+#: família só entra por emenda da FR-3836, e então aqui.
+RESUMO_POR_ESPACO = frozenset({"pos-lato-sensu"})
 CARGA_NAO_CABE = "A carga horária não cabe no {formato} no corpo mínimo: {cargas}."
 
 
@@ -952,29 +961,39 @@ def _carga_que_nao_cabe(c, ficha):
 
 
 def _painel(c, ficha, frases):
-    """O painel com as opções listadas; se não couber, com a contagem (FR-3425 da `111`).
+    """O painel com as opções listadas, ou o resumo; `True` quando resumiu (FR-3836).
 
-    **A contagem não esconde a carga horária** (EC-3). Se a linha de uma oferta não cabe no mínimo
-    por causa da carga horária, o formato é recusado nomeando-a: passar à contagem a apagaria da
-    peça sem dizer. A contagem fica para o painel que não tem altura para as opções, e nunca para
-    uma opção só, que viraria "1 opções". **Essa recaída por altura é decisão pendente**: a
-    FR-3425 só prevê a contagem acima de quatro opções (`verificacao.md`).
+    Pela ordem da FR-3836, que formaliza a exceção à FR-3425 da `111` para os templates de caixas:
+
+    1. as opções listadas, cada caixa no maior corpo que a deixa caber;
+    2. as opções listadas no **corpo mínimo** da caixa de oferta — a lista legível vem antes do
+       resumo;
+    3. se a carga horária é o que não cabe na linha, a recusa nomeando-a (EC-3): o resumo a
+       apagaria da peça sem dizer;
+    4. o resumo — o total, ou a contagem, e o convite à página —, nunca para uma opção só, que
+       viraria "1 opções".
     """
     try:
         _painel_com(c, ficha, frases, resumir=False)
+        return False
     except _NaoCabe:
         if not (c.template.tem_ofertas and kit_textos.lista_as_opcoes(ficha)):
             raise
+    try:
+        _painel_com(c, ficha, frases, resumir=False, oferta_no_minimo=True)
+        return False
+    except _NaoCabe:
         culpadas = _carga_que_nao_cabe(c, ficha)
         if culpadas:
             texto = "; ".join(f"«{carga}»" for carga in culpadas)
             raise _NaoCabe(CARGA_NAO_CABE.format(formato=c.formato.chave, cargas=texto)) from None
-        if len(ficha.ofertas) < 2:
+        if len(ficha.ofertas) < 2 or c.template.familia not in RESUMO_POR_ESPACO:
             raise
-        _painel_com(c, ficha, frases, resumir=True)
+    _painel_com(c, ficha, frases, resumir=True)
+    return True
 
 
-def _painel_com(c, ficha, frases, *, resumir):
+def _painel_com(c, ficha, frases, *, resumir, oferta_no_minimo=False):
     """O retângulo de cor lisa preso pela base, com os itens empilhados de cima (D-004)."""
     painel = c.template.dimensoes["painel"]
     x, largura_ = painel["x"], painel["largura"]
@@ -983,6 +1002,8 @@ def _painel_com(c, ficha, frases, *, resumir):
     medidos = []
     for nome, texto, campo in _itens_do_painel(c, ficha, frases, resumir):
         caixa = c.template.caixa(nome)
+        if oferta_no_minimo and nome == "oferta":
+            caixa = replace(caixa, corpos=caixa.corpos[-1:])
         medida = _linhas_na_caixa(texto, caixa, c.fonte(nome), util)
         if medida is None:
             raise _NaoCabe(
@@ -1063,7 +1084,8 @@ def _compor_em_caixas(ficha, template, escolha):
         "identificacao",
         recusa="O número do Edital não cabe no {formato}: {texto!r}.",
     )
-    _painel(c, ficha, frases)
+    if _painel(c, ficha, frases):
+        avisos.append(RESUMO_EM.format(formatos=template.formato.chave))
     _balao(c)
     for nome, texto, campo in (
         ("busca", busca_na_peca(ficha), "busca"),

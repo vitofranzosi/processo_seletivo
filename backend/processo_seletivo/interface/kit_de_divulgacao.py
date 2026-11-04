@@ -217,7 +217,7 @@ def _secoes_da_familia(request, ficha, escolhida):
     )
     liberados = kit_familias.liberados()
     lista = () if motivo else kit_escolha.manchetes(ficha, escolhida, liberados)
-    formatos, sem_titulo, sem_contato = [], [], []
+    formatos, sem_titulo, sem_contato, resumidos = [], [], [], []
     for template in kit_escolha.templates_da_familia(escolhida.familia):
         formato = template.formato
         item = {
@@ -239,12 +239,16 @@ def _secoes_da_familia(request, ficha, escolhida):
                     sem_titulo.append(item["nome"].lower())
                 if kit_peca.SEM_CONTATO_EM.split(":")[0] in " ".join(peca.avisos):
                     sem_contato.append(item["nome"].lower())
+                if kit_peca.RESUMO_EM.split(":")[0] in " ".join(peca.avisos):
+                    resumidos.append(item["nome"].lower())
         formatos.append(item)
     avisos = []
     if sem_titulo:
         avisos.append(kit_peca.SEM_TITULO_EM.format(formatos=", ".join(sem_titulo)))
     if sem_contato:
         avisos.append(kit_peca.SEM_CONTATO_EM.format(formatos=", ".join(sem_contato)))
+    if resumidos:
+        avisos.append(kit_peca.RESUMO_EM.format(formatos=", ".join(resumidos)))
     return {
         "formatos": formatos,
         "manchetes": lista,
