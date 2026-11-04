@@ -8,13 +8,13 @@
 | | Commit | Passando | Pulados | Falhas | Tempo |
 |---|---|---|---|---|---|
 | Antes | `38ea4ff9` (`main`) | 15451 | 12 | 0 | 808 s |
-| Depois | esta branch | 15751 | 12 | 0 | 716 s |
+| Depois | esta branch, com a D-021 | 15755 | 12 | 0 | 757 s |
 
 As duas com `make test-pg` (4 workers, `worksteal`), os grupos `assistente` e `navegador`
 instalados e banco próprio (`ps_118_base`, `ps_118_impl`). A linha de base rodou numa worktree
 separada no commit da `main`, para que nada editado aqui a falseasse. Os doze pulados são os doze
 do `CLAUDE.md`: dez do vocabulário da composição, a recusa por vendor e o E2E da Caixa — conferidos
-lista a lista (`-rs`, agrupados por arquivo e motivo), e iguais nas duas rodadas. Os 300 casos a
+lista a lista (`-rs`, agrupados por arquivo e motivo), e iguais nas duas rodadas. Os 304 casos a
 mais são os desta feature: a projeção, a ação da situação, a jornada nas telas e no navegador.
 
 `make lint` (os dois passos) e `make check` verdes; `makemigrations --check`: *"No changes
