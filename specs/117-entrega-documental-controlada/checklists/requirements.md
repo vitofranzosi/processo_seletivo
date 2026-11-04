@@ -1,61 +1,61 @@
 # Specification Quality Checklist: Entrega documental controlada
 
 **Purpose**: Validate specification completeness and quality before approval
-**Created**: 2026-11-04 · **Revised**: 2026-11-04 (revisão final do usuário)
+**Created**: 2026-11-04 · **Revised**: 2026-11-04 (revisão final) · **Consolidated**: 2026-11-04
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
 
-- [x] Focused on user value and business needs: o setor exporta o necessário com esforço razoável
+- [x] Focused on user value and business needs
 - [x] All mandatory sections completed
-- [ ] No implementation details. **Parcial, e deliberado:** o ZIP, o `manifesto.csv` e o limite em MB
+- [ ] No implementation details. **Parcial, e deliberado:** o ZIP, o `manifesto.csv`, o limite e a trava
       estão na spec porque são o contrato com o setor e com a TI
 
 ## Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain. As escolhas abertas estão em *Pendências do usuário*,
-      com proposta
-- [x] Requirements are testable: cada FR tem teste na Estratégia de testes ou em `tasks.md`
-- [x] Success criteria are measurable (SC-1101 a SC-1112)
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable: cada FR tem linha na Estratégia de testes e tarefa em `tasks.md`
+- [x] Success criteria are measurable (SC-1101 a SC-1114)
 - [x] All acceptance scenarios are defined (US1 a US5; os Cenários A a F no quickstart)
 - [x] Edge cases are identified
-- [x] Scope is clearly bounded (*O que fica fora*; *MVP e o que fica para depois*)
-- [x] Dependencies and assumptions identified (PR #369; a infraestrutura da §5 do diagnóstico)
+- [x] Scope is clearly bounded
+- [x] Dependencies and assumptions identified (PR #369; a VM não ensaiada, §5 do diagnóstico)
 
-## Revisão final pedida pelo usuário
+## Decisões aprovadas pelo usuário em 04/11
 
-- [x] **Documentos**:
-  - os quatro cenários (A a D) foram avaliados contra os dois modelos (§4.2 do diagnóstico);
-  - a obrigação do candidato ficou separada do encaminhamento interno (D-009 a D-012);
-  - não há taxonomia nem motor de regras.
-- [x] **Permissões**:
-  - as quatro opções foram comparadas (D-013);
-  - quem concede é a gestão de acessos, não a presidência;
-  - servidor fora da comissão pode ser designado;
-  - o modelo de vínculo da `107` não muda.
-- [x] **Exportação**:
-  - os alcances são pessoa, seleção e recorte;
-  - não há pacote do Edital;
-  - não há mistura de alcances;
-  - a prévia mostra pessoas, documentos, ausentes e alcance (FR-3682 a FR-3684).
-- [x] **Rastreabilidade**:
-  - os eventos afirmam só o que o GPS fez;
-  - não há *obtido*, *encaminhado* nem *recebido*;
-  - não há estados derivados (D-015, D-017).
-- [x] **Falhas**:
-  - o comportamento atual foi conferido no código (500 sem evento);
-  - atomicidade por pessoa, com resultado completo, parcial ou sem pacote;
-  - concorrência e limpeza de temporários;
-  - limite justificado pela infraestrutura (§5 do diagnóstico, D-019).
-- [x] **UX**:
-  - uma página, um seletor de Perfil, nenhum painel;
-  - uma confirmação para uma pessoa, prévia para mais de uma.
-- [x] **FR-069 da `009` e FR-3606 da `115`**: exceção proposta e justificada, não aplicada, com a
-      proteção geral preservada (D-016)
-- [x] **Faixa de identificadores** medida em todas as worktrees e branches remotas
+- [x] D-009 a D-012: definição interna, versionada, por Edital, sem Documento Exigido, PDF ou Retificação
+- [x] D-013: papel e designação pela gestão de acessos
+- [x] D-016: exceção à FR-069 da `009` e à FR-3606 da `115`, registrada com o texto aprovado e aplicada
+      na T002
+- [x] D-019: 400 MB como limite inicial configurável, a validar na VM
+- [x] D-020, D-021; nome e protocolo no pacote, sem CPF nem contato
+
+## Ajustes da consolidação
+
+- [x] **Download síncrono × resultado** (D-018):
+  - a verificação mostra *completo* ou *parcial*, os excluídos e o motivo **antes** do download;
+  - o ZIP é sempre exatamente o verificado (FR-3684, FR-3689, SC-1105, SC-1113);
+  - nada assíncrono.
+- [x] **Limite** (D-019, FR-3691, SC-1111):
+  - o limite inicial ficou separado da capacidade da VM (homologação, item 5; §5.4 do diagnóstico);
+  - nada se presume do nginx.
+- [x] **Limite excedido, tempo-limite, concorrência, exceção e temporários**: tabela de ciclo de vida no
+      plano; FR-3688, FR-3692, FR-3698, FR-3714; SC-1106.
+- [x] **Trava**: de transação, por servidor, cobrindo verificação e montagem e não a transferência,
+      liberada no commit, no rollback ou na conexão fechada (FR-3692).
+- [x] **Definição**: vazia por padrão, motivo obrigatório por constraint, histórico visível à condução
+      e ao auditor (FR-3653, FR-3655, FR-3711), avisos de reserva e de inscrição (FR-3658). O risco
+      residual está registrado na LGPD. Não há catálogo nem classificador.
+- [x] **Pacote**:
+  - nomes só do sistema, normalizados, com um nível e colisões com sufixo (FR-3712);
+  - manifesto neutralizado contra fórmula (FR-3713);
+  - atomicidade por pessoa (FR-3694).
+- [x] **Consistência**: as decisões, os FR, a matriz (com a coluna do histórico da definição), as US,
+      os SC, a Estratégia de testes e as tarefas foram conferidos entre si.
 
 ## Feature Readiness
 
 - [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
-- [ ] **Pronta para implementar**: não. Depende das pendências bloqueantes 1 a 4
+- [x] **Pronta para merge do PR documental**
+- [ ] **Pronta para implementar**: não, até o PR #369 estar na `main`

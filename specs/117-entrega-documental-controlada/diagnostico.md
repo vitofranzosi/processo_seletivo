@@ -2,7 +2,7 @@
 
 **Data**: 2026-11-04, revisto no mesmo dia. **Base**: `main` em `83cd5863`, mais a implementação da
 `115` no PR vitofranzosi/processo_seletivo#369 (branch `claude/115-documentos-na-convocacao`, em
-`bdf0a425`), **aberto e sem merge**. Os caminhos são relativos a `backend/processo_seletivo/`. Quando o
+`a8e1f68b` em 04/11, conferido na consolidação), **aberto e sem merge**. Os caminhos são relativos a `backend/processo_seletivo/`. Quando o
 código citado só existe no PR #369, a referência diz **[#369]**.
 
 Este documento não repete a auditoria de matrícula e dossiê nem o complemento dela, de 03/11. Ele
@@ -16,6 +16,10 @@ precisa decidir.
 > - um pacote "do Edital".
 >
 > As §4.2, §4.3 e §4.4 registram o que mudou e por quê. A §5 dá a base do limite de tamanho.
+>
+> **Consolidação de 04/11.** As decisões D-009 a D-013, D-016, D-019 a D-021 foram aprovadas pelo
+> usuário. A §5 foi reescrita: a versão anterior presumia que o buffer do nginx liberaria o worker,
+> e isso não foi verificado.
 
 ---
 
@@ -167,7 +171,7 @@ Cenário A: 40 aptos com 5 documentos de formalização cada.
 | PR #369, pelo predicado da `115` | só alocando o servidor à conferência (ganha conferir) ou dando-lhe o papel Gestor (ganha a unidade) | ≈ 680: 40 páginas, 200 aberturas, 200 downloads, 200 renomeações, 40 pastas |
 | Página restrita (B) | sim | ≈ 240: 200 downloads com nome do sistema e 40 pastas |
 | Exportação por pessoa (C) | sim | ≈ 41 |
-| Exportação do recorte (C) | sim | 3: selecionar, conferir a prévia, confirmar |
+| Exportação do recorte (C) | sim | 4: selecionar, verificar, ler o resultado, baixar |
 
 ## 3. Alternativas
 
@@ -179,7 +183,7 @@ padrão e download individual registrado com nome do sistema. **Resolve a separa
 Basta para processos pequenos (bolsista). No Cenário A, sobram 200 downloads.
 
 **C — Exportação controlada.** ZIP com manifesto, por pessoa, por seleção ou por recorte autorizado.
-Tem prévia e confirmação, temporário sem nome e registro com hash. **Resolve o esforço.** O risco é a
+Tem verificação com o resultado antes do download, temporário sem nome e registro com hash. **Resolve o esforço.** O risco é a
 concentração num arquivo, mitigada pelo alcance, pelo limite e pelo registro. Depende de revisar a
 FR-069 da `009` e a FR-3606 da `115`.
 
@@ -291,8 +295,7 @@ A primeira versão dizia *"documentação obtida"* e derivava quatro situações
 |---|---|---|
 | Documento visualizado | evento, quando o arquivo é servido `inline` | *"Visualizado"* |
 | Download individual | evento, quando o arquivo é servido como `attachment` | *"Download disponibilizado"*. O GPS não sabe se terminou |
-| Pacote gerado | registro da exportação, com hash, depois de montado | *"Pacote gerado"* |
-| Pacote disponibilizado para download | o mesmo registro: na geração síncrona, gerar e disponibilizar são o mesmo ato, na mesma resposta | *"Gerado e disponibilizado para download"* |
+| Pacote gerado e disponibilizado para download | registro da exportação, com hash e resultado, gravado depois de montado e antes de a resposta começar. Na geração síncrona, gerar e disponibilizar são o mesmo ato | *"Pacote gerado e disponibilizado para download"*. O GPS não sabe se a transferência terminou |
 | Encaminhamento efetivamente realizado | **não há** mecanismo; nada é registrado | nunca |
 | Recebimento institucional confirmado | **não há** mecanismo; nada é registrado | nunca |
 
@@ -301,36 +304,57 @@ A primeira versão dizia *"documentação obtida"* e derivava quatro situações
 ou "deixou de estar apta". O aviso de quem deixou de estar apto depois de exportado fica para depois
 (§6 da spec).
 
-## 5. Base do limite de tamanho
+## 5. Base do limite de tamanho e o que falta verificar
 
-O limite não é escolha de conveniência. Os números vêm da implantação recomendada
-([`doc/implantacao-em-producao-ubuntu.md`](../../doc/implantacao-em-producao-ubuntu.md)), que ainda não
-foi ensaiada em VM:
+**O limite inicial é uma coisa, e a capacidade da VM é outra.** O primeiro é um valor configurável
+para começar. A segunda só se mede na VM real, que ainda não existe: a
+[implantação recomendada](../../doc/implantacao-em-producao-ubuntu.md) não ensaiou nginx, systemd nem
+certbot (§0 dela).
 
-| Fato | Valor | Fonte |
-|---|---|---|
-| Workers | 5 síncronos (2 × vCPU + 1) | §12.1 |
-| Tempo-limite do worker | 120 s; nginx `proxy_read_timeout` 130 s | §12.1, §14 |
-| `/tmp` | `PrivateTmp=yes`, no **disco do sistema, de 40 GB**, compartilhado com SO, releases e logs | §4, §12.2 |
-| Buffer do nginx para respostas | padrão `proxy_max_temp_file_size` = 1024 MB. Acima disso, o worker fica preso até o cliente terminar | nginx, padrão |
-| Documento | teto de 10 MiB; média estimada de 1,5 MB | `base.py:365`; §4 |
+### 5.1 O que se sabe
 
-**Uso esperado.** No Cenário A, 40 × 5 × 1,5 MB = **300 MB**. No pior caso plausível, 40 × 5 × 10 MiB
-= 2 GB.
+| Fato | Valor | Fonte | Verificado? |
+|---|---|---|---|
+| Workers | 5 síncronos (2 × vCPU + 1) | §12.1 da implantação | recomendação |
+| Tempo-limite do worker | 120 s; nginx `proxy_read_timeout` 130 s | §12.1, §14 | recomendação |
+| `/tmp` | `PrivateTmp=yes`, no disco do sistema, de 40 GB, compartilhado | §4, §12.2 | recomendação |
+| Buffering de resposta no nginx | **não configurado** na implantação; o comportamento com resposta grande **não foi ensaiado** | §14 | **não** |
+| Documento | teto de 10 MiB; média estimada de 1,5 MB | `base.py:365`; §4 | o teto, sim; a média, premissa |
+| Transação por requisição | **não há** `ATOMIC_REQUESTS` nas settings | `config/settings/` | sim |
 
-**O limite.**
+### 5.2 O pior caso que o desenho assume
 
-- **Cabe no buffer do nginx**, para que o worker se libere logo e a transferência lenta não segure 1
-  de 5 workers. Isso exige ≤ 1 GB.
-- **Não ameaça o disco do sistema.** Cada exportação ocupa até 2 × L, o temporário mais o buffer do
-  nginx. Com no máximo 5 em paralelo, são 10 × L. Com L = 400 MB, o pior caso é 4 GB num disco de
-  40 GB.
-- **Cobre o Cenário A com margem** (300 MB, ~33% de folga).
-- **O tempo não é o gargalo**: ler, conferir e escrever 400 MB sem compressão leva segundos em disco
-  local.
+O desenho **não** presume buffering do nginx nem liberação antecipada do worker:
 
-**Proposta: 400 MB, configurável.** Acima dele, a exportação é recusada antes de ler, e a prévia
-mostra o tamanho por pessoa para dividir a seleção. **A TI confirma** o valor na VM real.
+- **O worker fica ocupado durante toda a transferência.** No gunicorn síncrono, o tempo-limite vale
+  para a requisição inteira, e o worker não sinaliza vida ao árbitro enquanto escreve a resposta. Uma
+  transferência que passe de 120 s é cortada: o worker é morto, e o cliente recebe um ZIP truncado ou
+  um 502.
+- **Um ZIP truncado é inválido**: o diretório central fica no fim do arquivo, e os descompactadores o
+  recusam. O operador percebe e repete. O registro, gravado antes da transferência, continua dizendo só
+  *"gerado e disponibilizado"*, o que é verdade.
+- **Disco**: cada geração ocupa até L no `/tmp` privado, sem nome. Com 5 workers, são 5 × L. Se o nginx
+  bufferizar (não verificado), pode somar outros L por resposta no disco dele.
 
-**Concorrência.** Uma exportação em geração por servidor de cada vez, com trava consultiva no banco.
-Isso evita o duplo clique e limita o pior caso aos 5 workers.
+### 5.3 O limite inicial
+
+- **Uso esperado.** No Cenário A, 40 × 5 × 1,5 MB = **300 MB**.
+- **Transferência.** 400 MB em menos de 100 s, deixando folga para a geração, exige ~32 Mbps
+  efetivos entre o servidor e o operador. É plausível na rede institucional, **mas não está
+  verificado**.
+- **Disco.** O pior caso, 5 × 400 MB, mais 5 × 400 MB se o nginx bufferizar, é 4 GB num disco de
+  sistema de 40 GB.
+
+**Proposta aprovada:** 400 MB, configurável (D-019). Acima dele, recusa antes de ler.
+
+### 5.4 O que a validação na VM mede (critério de homologação, não de implementação)
+
+1. O tempo de verificação e de geração de um pacote no limite.
+2. O tempo de transferência desse pacote a um operador da rede do setor, com o worker observado.
+3. O uso do `/tmp` privado e do disco do nginx durante 2 exportações simultâneas.
+4. O comportamento com o tempo-limite forçado: ZIP truncado, registro intacto, temporário liberado e
+   trava liberada.
+
+**Se a medição não couber**, a primeira medida é **reduzir o limite**, porque a seleção menor resolve.
+A segunda é ajustar o proxy, e é decisão da TI. **Geração assíncrona não entra automaticamente**: só
+por decisão do usuário, se as duas não bastarem.

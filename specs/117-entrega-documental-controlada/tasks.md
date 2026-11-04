@@ -3,8 +3,8 @@
 **Input**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md),
 [quickstart.md](quickstart.md)
 
-**Pré-condição**: as quatro pendências bloqueantes da spec estão resolvidas, e o PR #369 está na
-`main`. Sem isso, nenhuma tarefa começa.
+**Pré-condição**: o PR #369 (implementação da `115`) está na `main` com CI verde. O desenho foi
+aprovado em 04/11. Sem a `115` na `main`, nenhuma tarefa começa.
 
 **Testes**: incluídos, contra PostgreSQL.
 
@@ -12,86 +12,102 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 
 ## Fase 1: Preparação
 
-- [ ] T001 Confirmar a `main` com o PR #369 e CI verde; `manage.py migrate --check`
-- [ ] T002 Aplicar a revisão aprovada da FR-069 em `specs/009-inscricao-simples-documentos/spec.md` e da FR-3606 em `specs/115-documentos-na-convocacao/spec.md`, com a nota de data e decisão (D-016)
+- [ ] T001 Confirmar a `main` com o PR #369 e CI verde; rodar `manage.py migrate --check`
+- [ ] T002 Aplicar a revisão **aprovada** da FR-069 em `specs/009-inscricao-simples-documentos/spec.md` e da FR-3606 em `specs/115-documentos-na-convocacao/spec.md`, com o texto da D-016 e a nota *"revista pela `117` em ‹data›, por decisão do usuário de 04/11/2026"*; rodar `tests/test_citacoes_de_requisito.py`
 - [ ] T003 Criar o app `backend/processo_seletivo/formalizacao/`, registrá-lo em `INSTALLED_APPS` e atualizar o guardião de contagem de migrations por app
 
 ## Fase 2: Fundação
 
-- [ ] T004 Modelos das quatro tabelas em `formalizacao/models.py`, com as constraints do data-model
-- [ ] T005 Migration `0001_inicial` com gatilhos append-only; as quatro tabelas em `TABELAS_APPEND_ONLY` (`seguranca/papeis.py`); `M` de 46 para 50 em `CLAUDE.md` e `AGENTS.md`
-- [ ] T006 [P] `formalizacao/domain/nomes.py`: capacidade `formalizacao:acessar`, códigos de recusa, situações, resultados e operações da trilha com rótulos
+- [ ] T004 Modelos das quatro tabelas em `formalizacao/models.py`, com as constraints do data-model (motivo não vazio; resultado `COMPLETO`/`PARCIAL`; hash não vazio; autodesignação)
+- [ ] T005 Migration `0001_inicial` com gatilhos append-only; as quatro tabelas em `TABELAS_APPEND_ONLY`; `M` de 46 para 50 em `CLAUDE.md` e `AGENTS.md`
+- [ ] T006 [P] `formalizacao/domain/nomes.py`: capacidade `formalizacao:acessar`, códigos de recusa, situações, resultados, operações da trilha com rótulos e classe da trava
 - [ ] T007 [P] Papel `formalizacao` em `PAPEIS` e `DESCRICOES` (`interface/identidade.py`) e teste de grafia (FR-3661)
-- [ ] T008 `ArquivoIndisponivel` em `portal/arquivos.py`; recusa 409 e evento `ARQUIVO_INDISPONIVEL` nas views de documento da inscrição, da mesa e da convocação (FR-3695)
+- [ ] T008 `ArquivoIndisponivel` em `portal/arquivos.py`; 409 e evento `ARQUIVO_INDISPONIVEL` nas views de documento da inscrição, da mesa e da convocação (FR-3695)
 - [ ] T009 [P] Regressão da T008 em `tests/interface/test_arquivo_indisponivel.py`: nenhuma das três views responde 500
+- [ ] T010 [P] `formalizacao/domain/caminhos.py` e testes em `tests/unit/formalizacao/test_caminhos.py`, com nomes hostis: `../x`, `CON`, controle, 300 caracteres, colisões depois da normalização, vazio (FR-3712, SC-1114)
 
 ## Fase 3: US1 — Definição dos documentos (P1)
 
-- [ ] T010 [US1] `formalizacao/application/definir.py`: base de gerir comissão, requisitos das versões publicadas, motivo, versão nova, evento (FR-3653 a FR-3656)
-- [ ] T011 [US1] Tela *Documentos para a formalização* na condução, com o aviso de recorte por modalidade (FR-3658)
-- [ ] T012 [P] [US1] Testes em `tests/integration/formalizacao/test_definicao.py`: vazia por padrão, versões, quem pode, aviso, snapshot, hash e PDF intactos (FR-3657, FR-3660)
+- [ ] T011 [US1] `formalizacao/application/definir.py`: base de gerir comissão, requisitos das versões publicadas, motivo obrigatório, versão nova, histórico com diferença, evento (FR-3653 a FR-3656, FR-3711)
+- [ ] T012 [US1] Tela *Documentos para a formalização* na condução: lista sem marcação, avisos de recorte por modalidade e de momento da inscrição, histórico (FR-3658, FR-3711)
+- [ ] T013 [P] [US1] `tests/integration/formalizacao/test_definicao.py`: vazia por padrão, motivo recusado se vazio, versões, avisos, histórico visível à condução e ao auditor e recusado ao setor, snapshot, hash e PDF intactos (FR-3657, FR-3660)
 
 ## Fase 4: US2 — Acesso (P1)
 
-- [ ] T013 [US2] `formalizacao/domain/autorizacao.py`: `pode_acessar` → `ok`, `404` ou `403(papel)` (FR-3664, FR-3666)
-- [ ] T014 [US2] `formalizacao/application/designar.py`: `acesso:gerir`, papel vigente, sem autodesignação, Perfis, `select_for_update`, trilha da unidade e do Edital (FR-3662, FR-3663, FR-3668)
-- [ ] T015 [US2] Seção *Editais da formalização* na pessoa, em `interface/acessos.py`, e leitura das designações na condução (FR-3668)
-- [ ] T016 [P] [US2] Testes em `tests/integration/formalizacao/test_acesso.py`: sem papel, autodesignação, presidência recusada, revogação, papel revogado corta todas, suspensão, Perfis, concorrência, append-only por gatilho (FR-3667)
+- [ ] T014 [US2] `formalizacao/domain/autorizacao.py`: `pode_acessar` → `ok`, `404` ou `403(papel)` (FR-3664, FR-3666)
+- [ ] T015 [US2] `formalizacao/application/designar.py`: `acesso:gerir`, papel vigente, sem autodesignação, Perfis, `select_for_update`, trilha da unidade e do Edital (FR-3662, FR-3663, FR-3668)
+- [ ] T016 [US2] Seção *Editais da formalização* em `interface/acessos.py`; leitura das designações na condução (FR-3668)
+- [ ] T017 [P] [US2] `tests/integration/formalizacao/test_acesso.py`: sem papel, autodesignação, presidência recusada, revogação, papel revogado corta todas, suspensão, Perfis, concorrência, append-only por gatilho (FR-3667)
 
 ## Fase 5: US3 — Página e consulta (P1)
 
-- [ ] T017 [US3] `formalizacao/application/conjunto.py`: seletor único em lote, convocação e inscrição, deduplicação, situações e última exportação (FR-3669 a FR-3674)
-- [ ] T018 [P] [US3] Testes do seletor em `tests/unit/formalizacao/test_conjunto.py`:
-  - aceite, regularização, desfecho sucedido, convocação sucedida, duas chamadas;
+- [ ] T018 [US3] `formalizacao/application/conjunto.py`: seletor único em lote, convocação e inscrição, deduplicação, situações e última exportação (FR-3669 a FR-3674)
+- [ ] T019 [P] [US3] `tests/unit/formalizacao/test_conjunto.py`:
+  - aceite, regularização;
+  - desfecho e convocação sucedidos;
+  - duas chamadas;
   - não se aplica, não apresentado, não conferido;
-  - documento da inscrição, aproveitamento, versão da definição.
-- [ ] T019 [US3] `interface/views_formalizacao.py`: lista de Editais, página, visualizar e baixar com nome derivado e eventos; módulo em `MODULOS_DE_VIEW` (FR-3675 a FR-3678)
-- [ ] T020 [US3] Templates, `interface/telas/formalizacao.css`, `Secao` na barra e seletor de Perfil (FR-3681)
+  - inscrição e aproveitamento;
+  - versão da definição.
+- [ ] T020 [US3] `interface/views_formalizacao.py`: lista de Editais, página, visualizar e baixar com nome normalizado e eventos; módulo em `MODULOS_DE_VIEW`; templates, `interface/telas/formalizacao.css`, `Secao` na barra e seletor de Perfil (FR-3675 a FR-3681)
 - [ ] T021 [US3] Linhas novas em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md`
-- [ ] T022 [P] [US3] `tests/interface/test_permissoes_da_formalizacao.py`: a matriz inteira, por URL e POST (SC-1104)
+- [ ] T022 [P] [US3] `tests/interface/test_permissoes_da_formalizacao.py`: a matriz inteira, por URL e POST, inclusive o histórico da definição (SC-1104)
 - [ ] T023 [P] [US3] `tests/interface/test_vocabulario_da_formalizacao.py`: termos vedados e 375 px (FR-3680, SC-1112)
 
-## Fase 6: US4 — Exportação (P1)
+## Fase 6: US4 — Verificação e exportação (P1)
 
-- [ ] T024 [US4] `formalizacao/infrastructure/pacote.py`: `ZIP_STORED` em `TemporaryFile`, entradas determinísticas, hash numa leitura, pasta normalizada (FR-3686, FR-3688, FR-3690)
-- [ ] T025 [US4] `formalizacao/application/exportar.py`: alcances, recusa inteira por id fora do alcance, prévia com existência e tamanhos, assinatura, limite, trava consultiva, atomicidade por pessoa, manifesto, resultado, registro e evento (FR-3682 a FR-3698)
-- [ ] T026 [US4] Views e templates da prévia, da confirmação, da exportação por pessoa e do resultado; histórico (FR-3679); configuração `EXPORTACAO_DE_FORMALIZACAO_LIMITE_MB`
+- [ ] T024 [US4] `formalizacao/infrastructure/pacote.py`: `ZIP_STORED` em `TemporaryFile`, entradas a partir da T010, hash numa leitura, `manifesto.csv` com BOM e neutralização (FR-3686 a FR-3688, FR-3690, FR-3713)
+- [ ] T025 [US4] `formalizacao/application/exportar.py`:
+  - `verificar`: limite antes de ler, trava de transação, leitura com hash, resultado, assinatura, evento;
+  - `montar`: trava, recomposição, *verificação defasada*, atomicidade por pessoa, manifesto com incluídas e não incluídas, registro antes da resposta;
+  - exceção → rollback, fechamento do temporário e *exportação interrompida* em transação própria.
+  
+  Cobre as FR-3682 a FR-3698 e a FR-3714.
+- [ ] T026 [US4] Views e templates: a tela da verificação, com o resultado no topo, os excluídos com o motivo e o botão com N pessoas e *parcial*; o download; a exportação por pessoa, com a página de falha; o histórico (FR-3679); a configuração `EXPORTACAO_DE_FORMALIZACAO_LIMITE_MB`
 - [ ] T027 [P] [US4] `tests/integration/formalizacao/test_exportacao.py`:
-  - estrutura e manifesto;
+  - completo e parcial;
+  - nome `-parcial`;
+  - manifesto com excluídos;
   - SHA-256 (SC-1107);
   - determinismo (SC-1108);
-  - prévia defasada;
-  - recorte e seleção forjada;
-  - pessoa;
+  - verificação defasada por desfecho, por definição e por arquivo trocado (SC-1113);
+  - recorte;
+  - POST forjado;
+  - pessoa única completa e com falha;
   - nenhuma pré-seleção.
-- [ ] T028 [P] [US4] `tests/integration/formalizacao/test_temporarios.py`: nada remanescente, com sucesso, recusa e exceção injetada (SC-1106)
-- [ ] T029 [P] [US4] `tests/integration/formalizacao/test_concorrencia.py`: segunda exportação do mesmo servidor recusada (FR-3692)
+- [ ] T028 [P] [US4] `tests/integration/formalizacao/test_ciclo_de_vida.py`: nenhum arquivo remanescente e trava livre depois de sucesso, recusa, exceção injetada e cliente desconectado; a conexão fechada libera a trava; o registro está ausente quando a montagem não comita (SC-1106, FR-3692, FR-3714)
+- [ ] T029 [P] [US4] `tests/integration/formalizacao/test_concorrencia.py`: a segunda verificação ou montagem do mesmo servidor é recusada; a de outro servidor não (FR-3692)
 
 ## Fase 7: US5 — Falhas (P1)
 
 - [ ] T030 [US5] `tests/integration/formalizacao/test_falhas.py`:
-  - ausente;
-  - divergente;
-  - todos falhando, com resultado sem pacote;
+  - ausente e divergente na verificação e na montagem;
+  - todos falhando: sem botão e sem registro;
   - limite antes de ler;
-  - resultado na tela.
+  - página de exceção.
   
-  Cobre a SC-1105 e as FR-3691, FR-3694 a FR-3698.
+  Cobre a SC-1105 e as FR-3691, FR-3694 a FR-3698 e FR-3714.
 - [ ] T031 [P] [US5] Logs capturados nas falhas sem nome, CPF ou nome de arquivo (FR-3703)
 
 ## Fase 8: Acabamento
 
-- [ ] T032 Fixture `montar_cenario_da_formalizacao` em `tests/fixtures/formalizacao.py`, sobre as da `115`
-- [ ] T033 [P] `tests/performance/test_exportacao_de_formalizacao.py`: consultas constantes com 5 e 45 pessoas; Cenário A em menos de 30 s (SC-1111)
-- [ ] T034 [P] `tests/navegador/test_jornada_da_formalizacao.py`: Cenários A e E
+- [ ] T032 Fixture `montar_cenario_da_formalizacao` em `tests/fixtures/formalizacao.py`, com injeção de exceção na montagem
+- [ ] T033 [P] `tests/performance/test_exportacao_de_formalizacao.py`: consultas constantes com 5 e 45 pessoas; verificação e montagem do Cenário A em menos de 30 s cada, no CI (SC-1111)
+- [ ] T034 [P] `tests/navegador/test_jornada_da_formalizacao.py`: Cenários A, E e F (verificação parcial antes do download)
 - [ ] T035 Rótulos das operações em `trilha_do_edital` e na trilha da unidade (FR-3699, FR-3702)
-- [ ] T036 Nota do limite e do buffer do nginx em `doc/implantacao-em-producao-ubuntu.md`
-- [ ] T037 `rastreabilidade.md` (FR-3653 a FR-3710, SC-1101 a SC-1112) e `verificacao.md`; README
+- [ ] T036 Em `doc/implantacao-em-producao-ubuntu.md`: o limite configurável e o roteiro de validação de capacidade da §5.4 do diagnóstico, para a TI. Sem presumir buffering do nginx
+- [ ] T037 `rastreabilidade.md` (FR-3653 a FR-3714, SC-1101 a SC-1114) e `verificacao.md`; README
 - [ ] T038 `cd backend && make lint check test-pg`, com o grupo `navegador`
 - [ ] T039 Demonstração do quickstart com capturas a 1280 px e a 375 px
+
+## Fora da implementação (homologação)
+
+- [ ] H01 Validação de capacidade na VM, pela TI (homologação, item 5); ajustar o limite de produção ao que a medição sustentar
+- [ ] H02 Exportação real por um servidor do setor (homologação, item 4)
+- [ ] H03 Aviso de privacidade do Edital, pela área de proteção de dados
 
 ## Dependências
 
 - **Fase 1 → Fase 2 → US1 e US2**, que podem andar em paralelo.
-- **US3** depende de US1 e US2. **US4** depende de US3. **US5** depende de US4.
-- **Primeiro corte demonstrável**: Fases 1 a 5, que atendem o Cenário B. O Cenário A exige a US4.
+- **US3** depende de US1 e US2. **US4** depende de US3 e da T010. **US5** depende de US4.
+- **Primeiro corte demonstrável**: Fases 1 a 5 (Cenário B). O Cenário A exige a US4.
