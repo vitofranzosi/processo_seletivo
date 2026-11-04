@@ -244,6 +244,59 @@ def test_verificacao_sem_pessoa_incluivel_nao_tem_botao(pronto, client):
     assert not ExportacaoDeFormalizacao.objects.exists()
 
 
+def _apta_sem_titulos(cenario, gestor):
+    from tests.fixtures.formalizacao import (
+        CERTIFICADO_DO_CURSO,
+        convocar_direto,
+        inscrever,
+        tornar_apta,
+    )
+
+    inscricao = inscrever(cenario.edital, 900, documentos=(IDENTIDADE, CERTIFICADO_DO_CURSO))
+    tornar_apta(
+        cenario.edital, gestor, inscricao, convocar_direto(cenario.edital, inscricao), numero=900
+    )
+    return inscricao
+
+
+def test_quem_nao_tem_documento_a_exportar_nao_entra_na_exportacao(pronto, client, gestor):
+    """Revisão do PR #373: a apta sem documento definido aplicável não é "incluída" num pacote."""
+    from tests.fixtures.formalizacao import TITULOS
+
+    sem_titulos = _apta_sem_titulos(pronto, gestor)
+    definir_documentos(pronto.edital, gestor, requisitos=[TITULOS], motivo="Só os títulos")
+    apagar(documentos_de(pronto.edital, pronto.inscricoes_aptas[0])[0])
+
+    resposta, comprovante = _verificado(client, pronto)
+    corpo = resposta.content.decode()
+    assert "Pacote parcial: 4 de 5 pessoas incluídas" in corpo
+    assert sem_titulos.protocolo not in corpo
+
+    download = baixar(client, pronto.edital, comprovante)
+    assert download.status_code == 200
+    abrir_zip(download)
+    registro = ExportacaoDeFormalizacao.objects.get()
+    assert str(sem_titulos.id) not in {p["inscricao"] for p in registro.pessoas}
+    assert registro.quantidade_de_arquivos == 4
+
+
+def test_so_quem_nao_tem_documento_sobra_e_nao_ha_o_que_baixar(pronto, client, gestor):
+    """O caso que derrubava o download: as demais excluídas, e só a sem documento "incluída"."""
+    from tests.fixtures.formalizacao import TITULOS
+
+    _apta_sem_titulos(pronto, gestor)
+    definir_documentos(pronto.edital, gestor, requisitos=[TITULOS], motivo="Só os títulos")
+    for inscricao in pronto.inscricoes_aptas:
+        apagar(documentos_de(pronto.edital, inscricao)[0])
+
+    resposta, comprovante = _verificado(client, pronto)
+    corpo = resposta.content.decode()
+    assert "Pacote parcial: 0 de 5 pessoas incluídas" in corpo
+    assert "Baixar pacote" not in corpo
+    assert comprovante is None
+    assert not RegistroAuditoria.objects.filter(operation=nomes.INTERROMPER).exists()
+
+
 # --- A verificação defasada: as cinco mudanças da FR-3689b ---------------------------------------
 
 

@@ -261,7 +261,14 @@ def _aplicabilidade_na_inscricao(inscricoes):
     return resultado
 
 
-def ultimas_exportacoes(edital, *, autores=True):
+def exportacoes_do_edital(edital):
+    """Os registros de exportação do Edital, do mais recente ao mais antigo, numa consulta."""
+    return list(
+        ExportacaoDeFormalizacao.objects.filter(edital=edital).order_by("-exportado_em", "-id")
+    )
+
+
+def ultimas_exportacoes(edital, *, autores=True, exportacoes=None):
     """`{inscricao_id: {"em", "por"}}`: a exportação mais recente que incluiu cada pessoa.
 
     É o único dado por pessoa que a feature mostra (FR-3701, D-017): um fato, lido do histórico, e
@@ -270,9 +277,7 @@ def ultimas_exportacoes(edital, *, autores=True):
     from processo_seletivo.seguranca.application.acessos import nomes_dos_autores
 
     ultimas = {}
-    for exportacao in ExportacaoDeFormalizacao.objects.filter(edital=edital).order_by(
-        "-exportado_em", "-id"
-    ):
+    for exportacao in exportacoes if exportacoes is not None else exportacoes_do_edital(edital):
         for pessoa in exportacao.incluidas:
             ultimas.setdefault(
                 pessoa["inscricao"],
@@ -285,7 +290,9 @@ def ultimas_exportacoes(edital, *, autores=True):
     return ultimas
 
 
-def aptos(edital, *, definicao, perfis=None, inscricoes=None, com_exportacoes=True):
+def aptos(
+    edital, *, definicao, perfis=None, inscricoes=None, com_exportacoes=True, exportacoes=None
+):
     """As pessoas aptas do Edital no alcance, com o conjunto de cada uma, na ordem do pacote.
 
     `perfis` vazio ou `None` é todos os Perfis; `inscricoes`, quando dado, restringe a leitura a
@@ -340,7 +347,7 @@ def aptos(edital, *, definicao, perfis=None, inscricoes=None, com_exportacoes=Tr
                     documento
                 )
             aplica = _aplicabilidade_na_inscricao(list(registros.values()))
-    ultimas = ultimas_exportacoes(edital) if com_exportacoes else {}
+    ultimas = ultimas_exportacoes(edital, exportacoes=exportacoes) if com_exportacoes else {}
     pessoas = []
     for inscricao_id, (raiz, vigente, desfecho) in candidatos.items():
         registro = registros[inscricao_id]

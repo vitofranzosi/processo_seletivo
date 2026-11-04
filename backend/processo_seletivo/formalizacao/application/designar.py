@@ -68,8 +68,23 @@ def pessoas_com_o_papel(actor):
     )
 
 
+#: Os estados em que um Edital recebe designação: publicado, e encerrado, que não fecha a página
+#: nem a exportação (FR-3710). Antes de publicado não há Perfil nem documento a alcançar.
+ESTADOS_DESIGNAVEIS = frozenset({Edital.Status.PUBLICADO, Edital.Status.ENCERRADO})
+
+
 def conferir(actor, *, edital, pessoa, perfis):
-    """As recusas da designação, sem gravar nada. `designar` confere tudo de novo, sob a trava."""
+    """As recusas da designação, sem gravar nada. `designar` confere tudo de novo, sob a trava.
+
+    O estado do Edital é regra do comando, e não só da tela que oferece os Editais: um caminho que
+    chegasse aqui direto designaria para um rascunho, sem Perfil publicado a conferir.
+    """
+    if edital.status not in ESTADOS_DESIGNAVEIS:
+        raise DomainError(
+            nomes.EDITAL_SEM_PUBLICACAO,
+            "Só um Edital publicado ou encerrado recebe designação para a formalização.",
+            409,
+        )
     if pessoa.username == actor.subject:
         raise DomainError(
             nomes.AUTODESIGNACAO,

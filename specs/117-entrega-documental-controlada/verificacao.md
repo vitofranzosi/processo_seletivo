@@ -23,8 +23,8 @@ O que a feature acrescentou:
 | `unit/formalizacao/test_conjunto.py` | 13 (seletor: desfechos, sucessões, chamada mais recente, situações, aproveitamento) |
 | `unit/formalizacao/test_grafia_da_trilha.py` | 3 |
 | `integration/formalizacao/test_definicao.py` | 19 |
-| `integration/formalizacao/test_acesso.py` | 24 |
-| `integration/formalizacao/test_exportacao.py` | 18 |
+| `integration/formalizacao/test_acesso.py` | 25 |
+| `integration/formalizacao/test_exportacao.py` | 20 |
 | `integration/formalizacao/test_comprovante.py` | 10 |
 | `integration/formalizacao/test_falhas.py` | 7 |
 | `integration/formalizacao/test_ciclo_de_vida.py` | 8 (transacionais) |
@@ -112,6 +112,46 @@ Duas formas, as duas a 1280 px e a 375 px:
   e o console não teve erro. Capturas em `capturas/demonstracao-*.jpg`.
 
 O download pelo painel não foi feito: o ZIP é baixado e aberto pela jornada automatizada.
+
+
+## O que a revisão de código corrigiu (04/11/2026)
+
+A revisão do PR #373 levantou oito achados; os oito foram tratados no mesmo PR.
+
+1. **A pessoa sem documento a exportar era contada como incluída.** Se os documentos definidos não
+   se aplicavam a ela, ou ela não tinha enviado o facultativo, ela entrava no "N de M" e no registro
+   — e, quando as demais eram excluídas por falha, a verificação oferecia um pacote com zero
+   arquivos, cujo registro o banco recusa (`ck_exportacao_formalizacao_com_arquivo`): o download
+   virava *exportação interrompida*. Agora a população da exportação é só de quem tem documento a
+   exportar; a pessoa continua na página. Testes:
+   `ex::test_quem_nao_tem_documento_a_exportar_nao_entra_na_exportacao`,
+   `::test_so_quem_nao_tem_documento_sobra_e_nao_ha_o_que_baixar`.
+2. **A população era lida antes da trava e da transação**, na verificação, no download e na pessoa
+   única. Agora `_compor` roda dentro da transação, depois da trava — a definição, os desfechos e
+   as conferências lidos são os do momento em que os arquivos se leem —, e o limite continua
+   conferido antes do primeiro arquivo. **O que sobra é o do nível de isolamento**: sob *read
+   committed*, um desfecho gravado no segundo em que a montagem lê os arquivos não é visto por ela,
+   e o pacote corresponde ao estado do início da leitura. Fechar isso pediria trancar os desfechos
+   do Edital durante a montagem, o que bloquearia a comissão; não foi feito.
+3. **O conteúdo publicado era lido de quatro a seis vezes por requisição.** Agora `_conteudos`
+   guarda a leitura na instância do Edital, e a lista do setor lê as versões de todos os Editais
+   numa consulta (`guardar_conteudos`).
+4. **A lista lia as versões uma vez por designação** — mesma correção.
+5. **Os registros de exportação eram lidos duas vezes por página** (última exportação e histórico).
+   Agora uma leitura serve às duas (`exportacoes_do_edital`).
+6. **A designação aceitava Edital em qualquer estado no serviço.** Agora `conferir` recusa o que não
+   é publicado nem encerrado (`ESTADOS_DESIGNAVEIS`), e a tela usa o mesmo conjunto. Teste:
+   `ac::test_edital_sem_publicacao_nao_recebe_designacao`.
+7. **O evento do documento e o tamanho legível estavam duplicados.** A view usa
+   `exportar.registrar_evento` e `conjunto.tamanho_legivel`; o alias privado `_megabytes` saiu.
+8. **O teste da suspensão aceitava qualquer resposta diferente de 200.** Agora exige o que a
+   suspensão produz: a sessão encerrada e o redirecionamento à identificação.
+
+Depois das correções, `make lint check test-pg` deu **15411 passed, 12 skipped e 1 falha** — a de
+`performance/test_ocupacao.py::test_a_apuracao_cabe_no_dobro_do_tempo_da_emissao_da_ordem`, o
+teste de tempo que o `AGENTS.md` descreve como oscilante com 4 workers. A feature não toca a
+ocupação; isolado, ele passou quatro de quatro, e na rodada anterior a suíte inteira o tinha passado.
+
 
 ## Achados registrados, sem escopo aqui
 

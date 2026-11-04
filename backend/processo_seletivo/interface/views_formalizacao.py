@@ -15,12 +15,12 @@ URL, e as URLs levam só identificadores opacos (FR-3703).
 Baixar é secundária e individual, com o nome `‹protocolo›-‹requisito›.pdf`, nunca o nome enviado.
 """
 
+from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
-from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.comissoes.domain.autorizacao import (
     BASES_DA_GESTAO_DA_COMISSAO,
     pode_gerir_comissao,
@@ -32,7 +32,6 @@ from processo_seletivo.formalizacao.domain.autorizacao import (
     exigir_o_papel,
     pode_acessar,
 )
-from processo_seletivo.formalizacao.models import ExportacaoDeFormalizacao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import identidade
 from processo_seletivo.portal.arquivos import ArquivoIndisponivel, copia_verificada
@@ -42,7 +41,6 @@ from processo_seletivo.seguranca.application.authorization import (
     require_authorization_base,
 )
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.http import marcar_como_privada
 
 BASE_DA_AUDITORIA = base_de_permissao("consultar a trilha de auditoria")
@@ -78,6 +76,8 @@ def lista(request):
         .select_related("edital")
         .order_by("-edital__year", "edital__number")
     )
+    # As versões de todos os Editais numa consulta só, e não uma por linha.
+    definir.guardar_conteudos([designacao.edital for designacao in designacoes])
     linhas = []
     for designacao in designacoes:
         perfis = {p.id: p.nome for p in definir.perfis_do_edital(designacao.edital)}
@@ -97,7 +97,7 @@ def _perfis_no_alcance(acesso):
     return [perfil for perfil in todos if acesso.cobre(perfil.id)]
 
 
-def _historico_de_exportacoes(edital, *, perfis=None):
+def _historico_de_exportacoes(edital, *, perfis=None, exportacoes=None):
     """As exportações do Edital, com as pessoas pelo protocolo e nome (FR-3679).
 
     `perfis`, quando dado, restringe ao alcance de quem lê: só as exportações cujas pessoas estão
@@ -105,9 +105,8 @@ def _historico_de_exportacoes(edital, *, perfis=None):
     """
     from processo_seletivo.seguranca.application.acessos import nomes_dos_autores
 
-    exportacoes = list(
-        ExportacaoDeFormalizacao.objects.filter(edital=edital).order_by("-exportado_em", "-id")
-    )
+    if exportacoes is None:
+        exportacoes = conjunto.exportacoes_do_edital(edital)
     ids = {pessoa["inscricao"] for e in exportacoes for pessoa in e.pessoas}
     inscricoes = {
         str(i.id): i
@@ -152,7 +151,7 @@ def _historico_de_exportacoes(edital, *, perfis=None):
                 ),
                 "incluidas": [legivel(p) for p in exportacao.incluidas],
                 "nao_incluidas": [legivel(p) for p in exportacao.nao_incluidas],
-                "tamanho": exportar._megabytes(exportacao.tamanho),
+                "tamanho": conjunto.tamanho_legivel(exportacao.tamanho),
             }
         )
     return linhas
@@ -192,7 +191,11 @@ def edital(request, edital_id):
         raise Http404
     perfis = [perfil] if perfil else (list(acesso.designacao.perfis) or None)
     definicao = definir.vigente(acesso.edital)
-    pessoas = conjunto.aptos(acesso.edital, definicao=definicao, perfis=perfis)
+    # Uma leitura dos registros de exportação, para a "última exportação" e para o histórico.
+    exportacoes = conjunto.exportacoes_do_edital(acesso.edital)
+    pessoas = conjunto.aptos(
+        acesso.edital, definicao=definicao, perfis=perfis, exportacoes=exportacoes
+    )
     com_documento = any(pessoa.incluiveis for pessoa in pessoas)
     return marcar_como_privada(
         render(
@@ -208,6 +211,7 @@ def edital(request, edital_id):
                 "perfil": perfil,
                 "historico": _historico_de_exportacoes(
                     acesso.edital,
+                    exportacoes=exportacoes,
                     perfis=(
                         {str(p) for p in acesso.designacao.perfis}
                         if acesso.designacao.perfis
@@ -226,17 +230,13 @@ def edital(request, edital_id):
 
 
 def _evento_do_documento(ator, operacao, documento, request):
-    with command_context() as agora:
-        record_event(
-            actor=ator,
-            permission=nomes.CAPACIDADE,
-            operation=operacao,
-            aggregate=documento.objeto,
-            now=agora,
-            correlation_id=_correlacao(request, "documento"),
+    with transaction.atomic():
+        exportar.registrar_evento(
+            ator,
+            operacao,
+            documento.objeto,
             reason=f"requisito {documento.requisito_id}",
-            new_state="",
-            new_revision=None,
+            correlation_id=_correlacao(request, "documento"),
         )
 
 
@@ -301,7 +301,7 @@ def _recusa(request, edital_id, erro, *, status=None):
         "detalhe": erro.detail,
         "codigo": erro.code,
         "limite": getattr(erro, "pessoas", None),
-        "limite_total": exportar._megabytes(getattr(erro, "total", 0)),
+        "limite_total": conjunto.tamanho_legivel(getattr(erro, "total", 0)),
     }
     if isinstance(erro, exportar.PessoaIncompleta):
         contexto["titulo"] = "O pacote desta pessoa não foi gerado"

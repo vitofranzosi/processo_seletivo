@@ -60,8 +60,9 @@ class LimiteExcedido(DomainError):
     def __init__(self, pessoas, total, limite):
         super().__init__(
             nomes.LIMITE_EXCEDIDO,
-            f"A seleção soma {_megabytes(total)}, acima do limite de {_megabytes(limite)} de uma "
-            "exportação. Divida a seleção: o tamanho de cada pessoa está abaixo.",
+            f"A seleção soma {tamanho_legivel(total)}, acima do limite de "
+            f"{tamanho_legivel(limite)} de uma exportação. Divida a seleção: o tamanho de cada "
+            "pessoa está abaixo.",
             409,
         )
         self.pessoas = pessoas
@@ -92,10 +93,6 @@ class ExportacaoInterrompida(DomainError):
 
     def __init__(self):
         super().__init__("formalizacao_exportacao_interrompida", nomes.INTERROMPIDA, 500)
-
-
-def _megabytes(tamanho):
-    return tamanho_legivel(tamanho)
 
 
 def limite_em_bytes():
@@ -164,7 +161,7 @@ class Verificacao:
 
     @property
     def tamanho_legivel(self):
-        return _megabytes(self.tamanho)
+        return tamanho_legivel(self.tamanho)
 
     def conteudo(self):
         """O conteúdo verificado, que entra no resumo e nunca no comprovante (FR-3689b)."""
@@ -287,7 +284,12 @@ def _trancar(actor):
         raise DomainError(nomes.EXPORTACAO_EM_ANDAMENTO, nomes.EM_ANDAMENTO, 409)
 
 
-def _evento(actor, operacao, aggregate, *, reason, correlation_id, detalhe=None):
+def registrar_evento(actor, operacao, aggregate, *, reason, correlation_id, detalhe=None):
+    """Um evento da formalização na trilha, sob a capacidade do papel e sem estado de ciclo de vida.
+
+    Uma porta só para todo evento da feature — a página, a verificação, o pacote e as falhas —, para
+    que a forma do registro não divirja entre quem serve um arquivo e quem monta o pacote.
+    """
     record_event(
         actor=actor,
         permission=nomes.CAPACIDADE,
@@ -306,7 +308,7 @@ def _registrar_falhas(actor, falhas, correlation_id):
     """Os eventos de arquivo, cada um em transação própria, sem nome de arquivo (FR-3695)."""
     for operacao, documento in falhas:
         with transaction.atomic():
-            _evento(
+            registrar_evento(
                 actor,
                 operacao,
                 documento.objeto,
@@ -317,7 +319,7 @@ def _registrar_falhas(actor, falhas, correlation_id):
 
 def _registrar_recusa(actor, edital, motivo, correlation_id):
     with transaction.atomic():
-        _evento(actor, nomes.RECUSAR, edital, reason=motivo, correlation_id=correlation_id)
+        registrar_evento(actor, nomes.RECUSAR, edital, reason=motivo, correlation_id=correlation_id)
 
 
 def _registrar_interrupcao(actor, edital, erro, correlation_id):
@@ -326,7 +328,7 @@ def _registrar_interrupcao(actor, edital, erro, correlation_id):
         extra={"edital": str(edital.id), "erro": type(erro).__name__},
     )
     with transaction.atomic():
-        _evento(
+        registrar_evento(
             actor,
             nomes.INTERROMPER,
             edital,
@@ -371,6 +373,19 @@ def _populacao(acesso, definicao, alcance, perfil_id, pedidas, *, estrito):
     )
     if inscricoes is not None and set(inscricoes) - {p.inscricao_id for p in pessoas}:
         raise falta()
+    # **Quem não tem documento a exportar não entra na exportação.** A pessoa apta cujos documentos
+    # definidos não se aplicam a ela, ou que não enviou o facultativo, continua na página; na
+    # exportação, contá-la como "incluída" afirmaria um pacote com algo dela, e um pacote só dessas
+    # pessoas teria zero arquivos — o que o registro recusa
+    # (`ck_exportacao_formalizacao_com_arquivo`).
+    return [pessoa for pessoa in pessoas if pessoa.incluiveis]
+
+
+def _compor(acesso, definicao, alcance, perfil_id, pedidas, *, estrito):
+    """A população da exportação, conferida antes de qualquer leitura: documentos e limite."""
+    pessoas = _populacao(acesso, definicao, alcance, perfil_id, pedidas, estrito=estrito)
+    _exigir_documentos(pessoas)
+    _exigir_limite(pessoas)
     return pessoas
 
 
@@ -420,19 +435,19 @@ def verificar(actor, *, edital_id, alcance, perfil_id="", pessoas=(), correlatio
         )
     perfil_id = _uuids([perfil_id])[0] if perfil_id else ""
     acesso = pode_acessar(actor, edital_id)
-    definicao = _definicao(acesso.edital)
-    populacao = _populacao(acesso, definicao, alcance, perfil_id, pedidas, estrito=True)
-    _exigir_documentos(populacao)
+    falhas = []
     try:
-        _exigir_limite(populacao)
+        # **A população se lê dentro da transação, depois da trava**, e não antes: a definição, os
+        # desfechos e as conferências que se leem são os do mesmo momento em que os arquivos se
+        # leem, e o limite continua conferido antes do primeiro arquivo.
+        with transaction.atomic():
+            _trancar(actor)
+            definicao = _definicao(acesso.edital)
+            populacao = _compor(acesso, definicao, alcance, perfil_id, pedidas, estrito=True)
+            leituras = _ler(populacao, None, falhas)
     except LimiteExcedido:
         _registrar_recusa(actor, acesso.edital, nomes.RECUSA_LIMITE, correlation_id)
         raise
-    falhas = []
-    try:
-        with transaction.atomic():
-            _trancar(actor)
-            leituras = _ler(populacao, None, falhas)
     except DomainError:
         _registrar_falhas(actor, falhas, correlation_id)
         raise
@@ -451,7 +466,7 @@ def verificar(actor, *, edital_id, alcance, perfil_id="", pessoas=(), correlatio
         pessoas=leituras,
     )
     with transaction.atomic():
-        _evento(
+        registrar_evento(
             actor,
             nomes.VERIFICAR,
             acesso.edital,
@@ -490,18 +505,19 @@ class Gerado:
 
 def _montar(
     actor,
+    compor,
     verificar_antes,
     *,
     acesso,
-    definicao,
     alcance,
     perfil_id,
     pedidas,
-    pessoas,
     correlation_id,
 ):
-    """A transação da montagem: trava, lê e copia, confere, manifesta e registra (FR-3698).
+    """A transação da montagem: trava, compõe, lê e copia, confere, manifesta e registra (FR-3698).
 
+    `compor()` devolve `(definição, pessoas)`, lidos **sob a trava e na transação** em que os
+    arquivos se leem, e levanta as recusas que vêm antes de ler — limite, defasada, inexistente.
     `verificar_antes(verificacao)` levanta a recusa quando o lido não é o esperado — o resumo
     diferente no download, a pessoa incompleta na exportação de uma pessoa só. Qualquer recusa ou
     exceção desfaz a transação, descarta o temporário e solta a trava; nada é servido.
@@ -511,6 +527,7 @@ def _montar(
     try:
         with transaction.atomic():
             _trancar(actor)
+            definicao, pessoas = compor()
             pacote = Pacote()
             leituras = _ler(pessoas, pacote, falhas)
             verificacao = Verificacao(
@@ -556,7 +573,7 @@ def _montar(
                 unidade_de_atuacao=actor.institution_scope,
                 exportado_em=agora,
             )
-            _evento(
+            registrar_evento(
                 actor,
                 nomes.EXPORTAR,
                 acesso.edital,
@@ -617,28 +634,28 @@ def baixar(actor, *, edital_id, token, correlation_id=""):
         )
         _registrar_recusa(actor, acesso.edital, motivo, correlation_id)
         raise
-    try:
+
+    def compor():
         if str(acesso.designacao.id) != payload["designacao"]:
             raise VerificacaoDefasada()
         definicao = vigente(acesso.edital)
         if definicao is None or str(definicao.id) != payload["definicao"]:
             raise VerificacaoDefasada()
-        pessoas = _populacao(
-            acesso,
-            definicao,
-            payload["alcance"],
-            payload["perfil"],
-            list(payload["pessoas"]),
-            estrito=False,
-        )
-    except VerificacaoDefasada:
-        _registrar_recusa(actor, acesso.edital, nomes.RECUSA_DEFASADA, correlation_id)
-        raise
-    try:
-        _exigir_limite(pessoas)
-    except LimiteExcedido:
-        _registrar_recusa(actor, acesso.edital, nomes.RECUSA_LIMITE, correlation_id)
-        raise
+        try:
+            pessoas = _compor(
+                acesso,
+                definicao,
+                payload["alcance"],
+                payload["perfil"],
+                list(payload["pessoas"]),
+                estrito=False,
+            )
+        except DomainError as recusa:
+            # Sem documento a exportar agora, quando havia na verificação: mudou, é defasada.
+            if recusa.code == nomes.SEM_DOCUMENTO:
+                raise VerificacaoDefasada() from None
+            raise
+        return definicao, pessoas
 
     def conferir_o_resumo(verificacao):
         if (
@@ -651,17 +668,19 @@ def baixar(actor, *, edital_id, token, correlation_id=""):
     try:
         return _montar(
             actor,
+            compor,
             conferir_o_resumo,
             acesso=acesso,
-            definicao=definicao,
             alcance=payload["alcance"],
             perfil_id=payload["perfil"],
             pedidas=list(payload["pessoas"]),
-            pessoas=pessoas,
             correlation_id=correlation_id,
         )
     except VerificacaoDefasada:
         _registrar_recusa(actor, acesso.edital, nomes.RECUSA_DEFASADA, correlation_id)
+        raise
+    except LimiteExcedido:
+        _registrar_recusa(actor, acesso.edital, nomes.RECUSA_LIMITE, correlation_id)
         raise
 
 
@@ -669,14 +688,10 @@ def exportar_pessoa(actor, *, edital_id, inscricao_id, correlation_id=""):
     """A exportação de uma pessoa só, num clique (FR-3685)."""
     pedidas = _uuids([inscricao_id])
     acesso = pode_acessar(actor, edital_id)
-    definicao = _definicao(acesso.edital)
-    pessoas = _populacao(acesso, definicao, nomes.PESSOA, "", pedidas, estrito=True)
-    _exigir_documentos(pessoas)
-    try:
-        _exigir_limite(pessoas)
-    except LimiteExcedido:
-        _registrar_recusa(actor, acesso.edital, nomes.RECUSA_LIMITE, correlation_id)
-        raise
+
+    def compor():
+        definicao = _definicao(acesso.edital)
+        return definicao, _compor(acesso, definicao, nomes.PESSOA, "", pedidas, estrito=True)
 
     def exigir_inteira(verificacao):
         if verificacao.excluidas:
@@ -685,17 +700,19 @@ def exportar_pessoa(actor, *, edital_id, inscricao_id, correlation_id=""):
     try:
         return _montar(
             actor,
+            compor,
             exigir_inteira,
             acesso=acesso,
-            definicao=definicao,
             alcance=nomes.PESSOA,
             perfil_id="",
             pedidas=pedidas,
-            pessoas=pessoas,
             correlation_id=correlation_id,
         )
     except PessoaIncompleta:
         _registrar_recusa(actor, acesso.edital, nomes.RECUSA_PESSOA_INCOMPLETA, correlation_id)
+        raise
+    except LimiteExcedido:
+        _registrar_recusa(actor, acesso.edital, nomes.RECUSA_LIMITE, correlation_id)
         raise
 
 

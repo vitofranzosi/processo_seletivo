@@ -594,12 +594,12 @@ def _editais_designaveis(ator):
 
     Encerrado continua designável: o encerramento não fecha a página nem a exportação.
     """
+    from processo_seletivo.formalizacao.application.designar import ESTADOS_DESIGNAVEIS
     from processo_seletivo.processos.models import Edital
 
     return list(
         Edital.objects.filter(
-            institution_scope=ator.institution_scope,
-            status__in=[Edital.Status.PUBLICADO, Edital.Status.ENCERRADO],
+            institution_scope=ator.institution_scope, status__in=list(ESTADOS_DESIGNAVEIS)
         ).order_by("-year", "number")
     )
 

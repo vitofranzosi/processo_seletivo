@@ -87,14 +87,45 @@ class Versao:
     retirados: list = field(default_factory=list)
 
 
+#: Onde a leitura das versões publicadas fica guardada, na própria instância do Edital.
+_CONTEUDOS = "_formalizacao_conteudos_publicados"
+
+
 def _conteudos(edital):
+    """O conteúdo de todas as versões publicadas, lido **uma vez por instância do Edital**.
+
+    É o maior campo do sistema, e a página, a verificação e o manifesto precisam dele para os
+    requisitos e os Perfis: sem guardar, a mesma requisição o lia de quatro a seis vezes. A
+    instância vive o tempo de uma requisição; as versões são append-only, e a que chegasse no meio
+    dela entra na seguinte.
+    """
     from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
-    return list(
-        VersaoConsolidada.objects.filter(edital=edital)
+    guardado = getattr(edital, _CONTEUDOS, None)
+    if guardado is None:
+        guardado = list(
+            VersaoConsolidada.objects.filter(edital=edital)
+            .order_by("valid_from", "materialized_at")
+            .values_list("content", flat=True)
+        )
+        setattr(edital, _CONTEUDOS, guardado)
+    return guardado
+
+
+def guardar_conteudos(editais):
+    """As versões de vários Editais numa consulta só, guardadas em cada um: a lista do setor."""
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    editais = [edital for edital in editais if getattr(edital, _CONTEUDOS, None) is None]
+    por_edital = {edital.id: [] for edital in editais}
+    for edital_id, conteudo in (
+        VersaoConsolidada.objects.filter(edital__in=editais)
         .order_by("valid_from", "materialized_at")
-        .values_list("content", flat=True)
-    )
+        .values_list("edital_id", "content")
+    ):
+        por_edital[edital_id].append(conteudo)
+    for edital in editais:
+        setattr(edital, _CONTEUDOS, por_edital[edital.id])
 
 
 def requisitos_do_edital(edital):

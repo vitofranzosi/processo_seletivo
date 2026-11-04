@@ -156,9 +156,11 @@ def test_a_suspensao_corta_o_acesso(cenario, client, provedor, com_papel):
         now=timezone.now(),
     )
 
+    # A suspensão encerra as sessões da pessoa (107, `FR-3137`): a próxima requisição não tem ator e
+    # volta à identificação — e não a uma recusa qualquer, que esconderia outro defeito.
     resposta = client.get(_pagina(cenario.edital))
-    assert resposta.status_code in (302, 403, 404)
-    assert resposta.status_code != 200
+    assert resposta.status_code == 302
+    assert resposta["Location"].startswith(reverse("interface:identificar"))
 
 
 # --- A designação pela gestão de acessos --------------------------------------------------------
@@ -280,6 +282,24 @@ def test_revogar_e_designar_de_novo_muda_os_perfis(cenario, com_papel):
     )
     assert segunda.perfis == [str(PROFILE_ID)]
     assert RegistroAuditoria.objects.filter(operation=nomes.REVOGAR).count() == 1
+
+
+def test_edital_sem_publicacao_nao_recebe_designacao(cenario, com_papel):
+    """O estado do Edital é regra do comando, e não só da tela (revisão do PR #373)."""
+    from processo_seletivo.processos.models import Edital
+
+    Edital.objects.filter(pk=cenario.edital.pk).update(status=Edital.Status.CANCELADO)
+    with pytest.raises(DomainError) as recusa:
+        designar.designar(
+            GIL,
+            edital_id=cenario.edital.id,
+            pessoa=com_papel,
+            perfis=[],
+            motivo="x",
+            now=timezone.now(),
+        )
+    assert recusa.value.code == nomes.EDITAL_SEM_PUBLICACAO
+    assert not DesignacaoParaFormalizacao.objects.exists()
 
 
 def test_a_pessoa_suspensa_nao_recebe_designacao(cenario, com_papel):
