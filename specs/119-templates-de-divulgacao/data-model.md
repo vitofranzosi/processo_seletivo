@@ -40,7 +40,8 @@ evento de exportação que a `111` já grava (D-008); a ficha continua leitura s
 |---|---|
 | `identificador` | `<familia>/<formato> · <versao>`; a Institucional mantém `feed-1080x1350 · 1` (D-002) |
 | `versao` | inteiro |
-| `resumo` | SHA-256 da declaração canônica com os resumos dos ativos, imagens e fontes usados; fixado no módulo por versão e recalculado pela suíte (FR-3833, D-014) |
+| `resumo` | SHA-256 da declaração canônica, dos resumos dos ativos, imagens e fontes usados, e do resumo das referências SVG do template; fixado no módulo por versão, recalculado pela suíte e nomeado na liberação (FR-3833, D-014) |
+| `resumo_das_referencias` | SHA-256 dos SVG de referência do template, fixado no módulo e conferido pela suíte |
 | `caixas` | lista ordenada de `Caixa` |
 | `forma_do_periodo` | `ate` ou `de-a` (FR-3815) |
 | `tem_ofertas` | booleano (FR-3817, EC-6) |
@@ -77,7 +78,8 @@ Acréscimos à `Ficha` da `111`:
 | `Oferta.carga_horaria` | `workload` do Perfil no conteúdo vigente, aparado; `""` = não declarada |
 | `contato` | `Unidade.atendimento` da unidade do ato, aparado; `""` = não declarado |
 | `impressao` | versão 2: os campos da versão 1, mais `carga_horaria` em cada oferta e `contato` |
-| `impressao_v1` | a impressão versão 1 dos mesmos dados (D-009) |
+| `campos_v1` | os campos da versão 1 dos mesmos dados, sem carga horária nem contato |
+| `impressao_v1` | a impressão versão 1 dos mesmos dados (D-009); a diferença de uma exportação v1 se calcula entre os `campos` gravados e os `campos_v1` |
 
 ## Evento de exportação (FR-3828)
 
@@ -91,8 +93,13 @@ nome e sentido. O `detalhe` é acrescido conforme o tipo de arquivo:
 | `zip` da Institucional | o da `111`, sem mudança |
 | `zip` de família da comunicação | `familia`, `familia_versao`, `variante`, `imagem`, `imagem_sha256` e `pecas`: lista com uma entrada por formato da família (ver o manifesto) |
 
-O `template` singular da `111` continua significando a Institucional; para o ZIP de família ele vem
-nulo, e quem lê usa `pecas`.
+Os campos singulares da `111` — `template`, `manchete` e `sem_peca` no evento, e `peca` no manifesto —
+continuam significando a Institucional; no ZIP de família vêm nulos, e quem lê usa `pecas`.
+
+**Ordem dos arquivos no ZIP de família**: `kit.md`, `kit.txt`; para `post`, `story` e `banner`, nesta
+ordem, `peca-<formato>.png`, `peca-<formato>.svg`, `peca-<formato>-alternativo.txt`; `ficha.json`;
+`manifesto.json`. O ZIP da Institucional mantém os nomes e a ordem da `111`; a ficha e a impressão
+nele passam a ser as da versão 2.
 
 ## Manifesto do ZIP de família (FR-3829, D-015)
 
@@ -114,7 +121,7 @@ Cada entrada de `pecas`:
 | `formato_da_peca` | `post`, `story` ou `banner` |
 | `template`, `template_versao`, `template_resumo` | os do código |
 | `incluida` | booleano |
-| `motivo` | nulo se incluída; senão `nao_liberado`, `versao_divergente`, `recusa` (com o texto), `sem_rasterizador` (só o PNG falta) |
+| `motivo` | nulo se incluída por inteiro; `sem_rasterizador` com `incluida: true` quando só o PNG falta; senão, com `incluida: false`, `nao_liberado`, `versao_divergente` (versão ou resumo), `recusa` (com o texto) |
 | `manchete` | a usada naquele formato, ou nula |
 | `arquivos` | `[{nome, sha256}]` dos arquivos daquele formato no ZIP |
 

@@ -109,7 +109,9 @@ depois).
 ## D-009 — Impressão versão 2, com a versão 1 calculada da ficha atual
 
 **Decisão**: a ficha calcula as duas impressões. Exportação registrada na versão 1 é comparada com a
-versão 1 da ficha atual; na versão 2, com a versão 2. A faixa da diferença usa os `campos` gravados.
+versão 1 da ficha atual; na versão 2, com a versão 2. A faixa da diferença de uma exportação v1 compara os `campos` gravados com os `campos_v1` da ficha
+atual, e não com os da v2: assim ela não lista carga horária nem contato que aquele material não
+afirmou, nem deixa de listar a mudança real de um campo antigo.
 
 **Por quê**: a regra da `111` para versão anterior — "material de versão anterior do kit: confira" —
 acenderia em toda exportação já feita, no dia da implantação, sem mudança nenhuma. Calcular a v1 da
@@ -119,16 +121,19 @@ ficha atual é exato, porque a v2 só acrescenta campos.
 
 ## D-010 — Uma configuração nova lista os templates liberados, com a versão
 
-**Decisão**: `KIT_DE_DIVULGACAO_TEMPLATES`, lista de `familia/formato@versao`, vazia em produção, e
-em desenvolvimento e teste preenchida a partir do registro (todos, na versão do código). Entrada
+**Decisão**: `KIT_DE_DIVULGACAO_TEMPLATES`, lista de `familia/formato@versao#<resumo curto>`, vazia
+em produção, e em desenvolvimento e teste preenchida a partir do registro (todos, com a versão e o
+resumo do código). Entrada
 malformada ou desconhecida recusa a subida das settings. A `KIT_DE_DIVULGACAO_PECA` continua valendo
-para a Institucional, sem mudança.
+para a Institucional na versão 1, cujo resumo fica congelado por teste; versão nova dela passa pela
+configuração nova.
 
 **Por quê**: a chave booleana da `111` não distingue templates, e mudá-la de tipo quebraria a
 implantação que a lê. A liberação é da operação (P-4), como na `111`.
 
 **Descartado**: liberar por família inteira (o banner espera a P-3 mesmo com o post aprovado);
-liberar sem versão (uma troca de foto herdaria a aprovação anterior em silêncio).
+liberar sem versão (uma troca de foto herdaria a aprovação anterior em silêncio); liberar só pela
+versão (quem regravasse o resumo na mesma versão herdaria a aprovação — achado da revisão de 04/11).
 
 ## D-011 — Contraste e sobreposição contra caixas de cor lisa
 
@@ -158,12 +163,17 @@ frases fixas, com a lista da FR-3414 da `111` e os termos da FR-3814.
 
 ## D-014 — Resumo do template fixado por versão
 
-**Decisão**: o resumo de um template é o SHA-256 da sua declaração em JSON canônico (caixas, frases,
-paleta, recortes, posições) concatenada aos resumos, em ordem, dos ativos, imagens do banco e fontes
-que ele usa. O módulo da família guarda `RESUMOS = {(formato, versao): "<sha>"}`. Um teste recalcula
-e compara: alterar qualquer insumo sem subir a versão, ou subir a versão sem gravar o resumo,
-reprova. A galeria imprime o identificador, a versão e os doze primeiros caracteres do resumo em
-cada peça, e a aprovação registrada em `verificacao.md` cita os três (FR-3833, FR-3834).
+**Decisão**: o resumo de um template é o SHA-256 da sua declaração em JSON canônico (caixas,
+frases, paleta, recortes, posições), dos resumos, em ordem, dos ativos, imagens do banco e fontes que
+ele usa, e do resumo das suas referências SVG. O módulo da família guarda, por `(formato, versao)`, o
+resumo das referências e o do template. A suíte recalcula os dois e confere que toda versão aprovada
+em `verificacao.md` tem o mesmo resumo. A liberação nomeia versão **e** resumo curto (D-010). A
+galeria imprime o identificador, a versão e o resumo curto em cada peça (FR-3833, FR-3834).
+
+Daí, três defesas independentes: esquecer de atualizar o resumo reprova a suíte; regravá-lo na mesma
+versão o desencontra do registro de aprovação (a suíte reprova) e da configuração (o template fica
+indisponível); mudar o motor muda as referências, e com elas o resumo. A Institucional versão 1 tem o
+resumo congelado por teste.
 
 **Por quê**: a liberação nomeia uma versão (D-010), e a versão só significa alguma coisa se nomear um
 conteúdo único. O resumo fixado transforma "esqueci de subir a versão" em falha de suíte, e não em
@@ -181,9 +191,14 @@ implantação).
 arquivos (data-model). O evento da exportação leva a mesma lista. Os arquivos levam o formato no
 nome. O ZIP da Institucional não muda.
 
+**Ordem e campos singulares**: a ordem dos arquivos é fixa (data-model) e entra na tupla de nomes que
+o `zipar` da `111` já usa, porque o determinismo depende dela. Os campos singulares da `111` vêm
+nulos no ZIP de família. Formato com SVG sem PNG é incluído com `sem_rasterizador`.
+
 **Por quê**: com vários formatos, "a peça foi incluída?" deixa de ter resposta única; a auditoria
-precisa reconstruir que post e que story saíram, em que versão, e por que o banner não saiu. Manter o
-ZIP da Institucional intacto preserva as exportações e os testes da `111`.
+precisa reconstruir que post e que story saíram, em que versão, e por que o banner não saiu. O ZIP da
+Institucional mantém nomes, estrutura e peça da `111`; a ficha e a impressão nele passam à versão 2,
+e isso é a única diferença esperada.
 
 **Descartado**: um ZIP por formato (três envios e três registros para o que a comunicação baixa de
 uma vez); campos singulares repetidos com sufixo (ilegível e sem lugar para o motivo por formato).

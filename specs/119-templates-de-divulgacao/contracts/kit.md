@@ -40,16 +40,19 @@ como hoje. Impressão divergente: 409.
 `zip`: para família da comunicação, leva a peça de cada formato liberado e na versão liberada, com os
 nomes `peca-<formato>.{png,svg}` e `peca-<formato>-alternativo.txt`; o manifesto e o evento trazem uma
 entrada por formato da família, incluído ou não (FR-3828, FR-3829; forma no data-model). Para a
-Institucional, o ZIP é o da `111`, sem mudança.
+Institucional, o ZIP mantém os nomes, a estrutura do manifesto e a peça da `111`; a ficha e a
+impressão passam a ser as da versão 2.
 
 ## Configuração de liberação
 
-`KIT_DE_DIVULGACAO_TEMPLATES`: lista separada por vírgula de `familia/formato@versao`, por exemplo
-`pos-lato-sensu/post@1,pos-lato-sensu/story@1`. Entrada sem `@versao`, de família ou formato
-desconhecido, é recusada na subida das settings, como as outras chaves do kit. Template cuja versão no
-código não é a nomeada fica indisponível (FR-3808, FR-3835). Vazia por padrão; em produção, só a
+`KIT_DE_DIVULGACAO_TEMPLATES`: lista separada por vírgula de `familia/formato@versao#<resumo curto>`,
+por exemplo `pos-lato-sensu/post@1#3f9a0c2b71de,pos-lato-sensu/story@1#a01b7c55e940`. O resumo
+curto são os doze primeiros caracteres do resumo do template (FR-3833). Entrada sem `@versao` ou sem `#resumo`, de família ou formato
+desconhecido, é recusada na subida das settings, como as outras chaves do kit. Template cuja versão ou resumo no
+código não são os nomeados fica indisponível (FR-3808, FR-3835). Vazia por padrão; em produção, só a
 operação a preenche, depois do registro da aprovação (FR-3834). `KIT_DE_DIVULGACAO_PECA` continua
-regendo a Institucional.
+regendo a Institucional **na versão 1**, com o resumo congelado; versão nova dela só pela
+configuração nova.
 
 **Inventário de negativas da `033`.** O guardião `backend/tests/test_gramatica_das_portas.py`
 varre `kit_de_divulgacao.py`. Os `Http404` novos da **prévia** — escolha fora da lista, template não

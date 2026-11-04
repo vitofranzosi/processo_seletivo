@@ -240,11 +240,16 @@ Cada caso aqui é requisito, e tem tarefa própria em [tasks.md](tasks.md).
   em …" ou um Perfil "Curso gratuito de …" entram literais na peça e nos textos; a conferência os
   aponta. A vedação da FR-3814 é das frases fixas e da composição, e não do que o Edital publicou
   (FR-3414 da `111`, SC-1131).
-- **EC-22 — Ativo, fonte, frase ou caixa alterados sem subir a versão do template.** A suíte reprova,
-  porque o resumo recalculado difere do fixado para aquela versão (FR-3833).
-- **EC-23 — Versão do template no código diferente da liberada no ambiente.** O template fica
-  indisponível com o motivo "versão nova em aprovação", e o ZIP o lista como não incluído
+- **EC-22 — Ativo, fonte, frase, caixa ou motor alterados sem subir a versão do template.** Se o
+  resumo fixado não for atualizado, a suíte reprova; se for regravado na mesma versão, o resumo deixa
+  de coincidir com o da configuração e com o do registro de aprovação, e o template fica indisponível
+  e a suíte reprova (FR-3833, FR-3834).
+- **EC-23 — Versão ou resumo do template no código diferentes dos liberados no ambiente.** O template
+  fica indisponível com o motivo "versão nova em aprovação", e o ZIP o lista como não incluído
   (FR-3808, FR-3835).
+- **EC-24 — Tela aberta antes da implantação da impressão versão 2.** A exportação enviada com a
+  impressão antiga é recusada como "o Edital mudou desde que você abriu o kit" (FR-3446 da `111`); a
+  tela reaberta mostra o novo.
 
 ---
 
@@ -288,11 +293,12 @@ Cada caso aqui é requisito, e tem tarefa própria em [tasks.md](tasks.md).
 - **FR-3807**: O banco de imagens de uma família MUST ser uma lista curta (três a seis) de imagens
   licenciadas e escolhidas pela comunicação, cada uma com uma descrição aprovada para o texto
   alternativo. MUST NOT haver envio de imagem pela tela. Família sem banco não pede imagem (EC-20).
-- **FR-3808**: A liberação MUST ser por template **e por versão**, no ambiente: uma configuração
-  nomeia cada template liberado com a versão aprovada (FR-3833), e em produção nenhum vem liberado.
-  Template não liberado, ou cuja versão no código difere da liberada, aparece indisponível, com o
-  motivo, e não é gerado nem exportado (EC-7, EC-23); o kit textual e os outros templates continuam.
-  A Institucional segue a configuração de liberação de hoje, que continua valendo sem mudança.
+- **FR-3808**: A liberação MUST ser por template, **por versão e por resumo**, no ambiente: uma
+  configuração nomeia cada template liberado como `familia/formato@versao#<resumo curto>` (FR-3833),
+  e em produção nenhum vem liberado. Template não liberado, ou cuja versão ou resumo no código
+  diferem dos liberados, aparece indisponível, com o motivo, e não é gerado nem exportado (EC-7,
+  EC-23); o kit textual e os outros templates continuam. A chave da peça da `111` continua valendo,
+  sem mudança, só para a Institucional na versão 1 (FR-3835).
 
 #### Ficha
 
@@ -305,14 +311,18 @@ Cada caso aqui é requisito, e tem tarefa própria em [tasks.md](tasks.md).
   esse campo do registro da unidade, e nada mais fora do publicado.
 - **FR-3811**: A impressão MUST passar à versão 2, que acrescenta a carga horária de cada oferta e o
   contato. Para exportação registrada na versão 1, a comparação MUST recalcular a impressão versão 1
-  a partir da ficha atual. Daí:
+  a partir da ficha atual, e a **diferença** que a faixa mostra MUST ser calculada entre os `campos`
+  gravados e os campos versão 1 da ficha atual — nunca com os campos versão 2, para que a faixa não
+  liste carga horária nem contato que aquele material não afirmou. Daí:
   - a mudança de versão, sozinha, MUST NOT acender faixa (EC-14);
   - a mudança de um campo da versão 1 (título, unidade, período, ofertas, caminho) depois de uma
     exportação versão 1 MUST continuar acendendo, com o valor anterior lido dos `campos` gravados;
   - a mudança só da carga horária ou do contato depois de uma exportação versão 1 MUST NOT acender,
     porque aquele material não os afirmava;
   - a mudança do contato ou da carga horária depois de uma exportação versão 2 MUST acender, com o
-    valor anterior e o atual (EC-15).
+    valor anterior e o atual (EC-15);
+  - a faixa MUST listar só as mudanças efetivas: num caso misto (título e contato alterados depois de
+    uma exportação versão 1), ela traz o título e não traz o contato.
 - **FR-3812**: A conferência MUST mostrar a carga horária de cada oferta com o ato que a deu, pela
   regra da proveniência da `111` (FR-3408 da `111`), e o contato com a origem "cadastro da unidade",
   que não é ato.
@@ -395,8 +405,13 @@ curto e a busca, as linhas de oferta sem carga horária —, e por isso as suas 
   formato da família com: o formato; o template, a versão e o resumo; se foi incluído; os arquivos com
   o resumo de cada um; e, quando não incluído, o motivo — não liberado, versão divergente, recusa da
   composição com o motivo dela, ou falta do rasterizador. As fontes e os ativos listados são os dos
-  templates incluídos, com o resumo. Para a Institucional, o ZIP, os nomes e o manifesto MUST
-  continuar os da `111`.
+  templates incluídos, com o resumo. Formato com SVG e sem PNG (falta o rasterizador) é incluído, com
+  o motivo `sem_rasterizador`. Os campos singulares da `111` — `peca` no manifesto, `template`,
+  `manchete` e `sem_peca` no evento — vêm nulos no ZIP de família, e quem lê usa a lista por formato.
+  A ordem dos arquivos no ZIP é fixa: os textos, depois post, story e banner, cada um em PNG, SVG e
+  alternativo, depois a ficha e o manifesto (FR-3438 da `111`). Para a Institucional, o ZIP MUST
+  manter os nomes de arquivo, a estrutura do manifesto e a peça (SVG e PNG) da `111`; a ficha e a
+  impressão nele passam a ser as da versão 2.
 - **FR-3830**: A tela do kit MUST:
   - oferecer a escolha de família, variante e imagem num formulário que funciona sem script;
   - mostrar a prévia de cada formato liberado, com o texto alternativo e, se recusado, o motivo;
@@ -411,18 +426,25 @@ curto e a busca, as linhas de oferta sem carga horária —, e por isso as suas 
 #### Versão aprovada de cada template
 
 - **FR-3833**: Cada template MUST ter um **resumo**: o SHA-256 da sua declaração canônica (caixas,
-  frases, paleta, recortes) com os resumos de todo ativo, imagem do banco e fonte que ele usa. O
-  módulo da família MUST fixar, para cada versão de template, o resumo correspondente, e um teste
-  MUST recalculá-lo: mudar fonte, imagem, ativo, frase ou caixa sem subir a versão reprova a suíte
-  (EC-22). Assim, uma versão nomeia um único conteúdo, e a aprovação de uma versão não se estende a
-  outra.
+  frases, paleta, recortes), dos resumos de todo ativo, imagem do banco e fonte que ele usa, e do
+  resumo das suas peças de referência (os SVG dos cenários de referência daquele template). O módulo
+  da família MUST fixar, para cada versão, o resumo das referências e o resumo do template, e um
+  teste MUST recalcular os dois. Assim, mudar fonte, imagem, ativo, frase, caixa **ou o motor** —
+  que muda as referências — muda o resumo do template; quem o regravar na mesma versão muda o resumo
+  que a configuração nomeia, e o template deixa de estar liberado (EC-22). A aprovação de um
+  conteúdo não se estende a outro.
 - **FR-3834**: A galeria MUST mostrar, em cada peça, o identificador do template, a versão e o resumo
-  curto. A aprovação da comunicação (SC-1135) MUST ser registrada no arquivo de verificação da spec
-  com esses três dados e a data, e a liberação no ambiente MUST nomear a versão aprovada (FR-3808). A
-  liberação é procedimento de implantação documentado, sem tabela nem fluxo novo.
-- **FR-3835**: Uma versão nova de template MUST nascer não liberada: a configuração que nomeia a
-  versão anterior não a alcança, e o template fica indisponível no ambiente até nova aprovação e
-  nova liberação (EC-23).
+  curto (doze caracteres). A aprovação da comunicação (SC-1135) MUST ser registrada no arquivo de
+  verificação da spec com esses três dados, quem aprovou e a data, e a liberação no ambiente MUST
+  nomear exatamente a versão e o resumo registrados (FR-3808). Um teste MUST conferir que cada
+  `RESUMOS` de versão aprovada coincide com o registrado no arquivo de verificação. A liberação é
+  procedimento de implantação documentado, sem tabela nem fluxo novo.
+- **FR-3835**: Uma versão nova, ou um resumo novo, de template MUST nascer não liberado: a
+  configuração que nomeia a versão e o resumo anteriores não o alcança, e o template fica
+  indisponível no ambiente até nova aprovação e nova liberação (EC-23). Vale também para a
+  Institucional: a versão 1 dela fica congelada por teste (o resumo fixado não muda), e qualquer
+  versão nova dela só é liberada pela configuração nova, como as demais; a chave da `111` não a
+  alcança.
 
 ### Key Entities
 
@@ -497,8 +519,9 @@ dela dependem.
   não mudou acende faixa de desatualização, e 100% das mudanças em campos da versão 1 posteriores a
   uma exportação versão 1 continuam acendendo, com o valor anterior e o atual. Verificação
   automática, com os casos da FR-3811.
-- **SC-1140**: 100% dos templates registrados têm o resumo da versão conferido pela suíte, e nenhum
-  template cuja versão no código difere da liberada é gerado no ambiente.
+- **SC-1140**: 100% dos templates registrados têm o resumo da versão conferido pela suíte e, quando
+  aprovados, igual ao do registro de aprovação; nenhum template cuja versão ou resumo no código
+  diferem dos liberados é gerado no ambiente.
 
 ---
 

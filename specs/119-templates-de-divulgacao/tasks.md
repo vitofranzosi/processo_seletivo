@@ -27,7 +27,7 @@ raiz do repositório; `kit/` abrevia `backend/processo_seletivo/interface/`.
 
 - [ ] T001 Criar o pacote `backend/processo_seletivo/interface/kit_familias/__init__.py` com o registro vazio e o módulo `backend/processo_seletivo/interface/kit_formatos.py` com os três formatos da FR-3801 (data-model §Formato; D-007 para o banner)
 - [ ] T002 [P] Criar `backend/processo_seletivo/interface/kit_ativos/fontes/ORIGEM.md` com o formato do registro de fonte (arquivo, família tipográfica, licença OFL, origem, resumo SHA-256), seguindo o `kit_ativos/ORIGEM.md` da `111` (FR-3823, FR-3826)
-- [ ] T003 [P] Acrescentar `KIT_DE_DIVULGACAO_TEMPLATES` em `backend/config/settings/base.py` (lista `familia/formato@versao` lida do ambiente, vazia por padrão, recusando entrada malformada), `development.py` e `test.py` (todos os do registro, na versão do código), e os casos correspondentes em `backend/tests/test_settings_do_kit.py`; a `KIT_DE_DIVULGACAO_PECA` e os casos dela não mudam (D-010, FR-3808, contracts/kit.md)
+- [ ] T003 [P] Acrescentar `KIT_DE_DIVULGACAO_TEMPLATES` em `backend/config/settings/base.py` (lista `familia/formato@versao#<resumo curto>` lida do ambiente, vazia por padrão, recusando entrada malformada), `development.py` e `test.py` (todos os do registro, com a versão e o resumo do código), e os casos correspondentes em `backend/tests/test_settings_do_kit.py`; a `KIT_DE_DIVULGACAO_PECA` e os casos dela não mudam (D-010, FR-3808, contracts/kit.md)
 
 ---
 
@@ -71,13 +71,13 @@ alarme falso (FR-3809–FR-3813, SC-1139).
 ### Testes
 
 - [ ] T014 [P] [US2] Em `backend/tests/integration/kit/test_ficha.py`: carga horária literal, aparada, vazia em parte das ofertas (EC-2); contato do cadastro da unidade do ato, vazio sem substituto (FR-3809, FR-3810)
-- [ ] T015 [P] [US2] Em `backend/tests/integration/kit/test_exportacao.py`, os quatro casos da FR-3811, cada um com um evento versão 1 gravado como a `111` o grava hoje (sem `carga_horaria` nem `contato` nos `campos`): (a) só a atualização do sistema → nenhuma faixa (EC-14); (b) término, vagas de um Perfil, título e Perfil retirado alterados por Retificação depois da exportação v1 → faixa com o valor anterior lido dos `campos` v1 e o atual; (c) só carga horária ou contato alterados depois da exportação v1 → nenhuma faixa; (d) atendimento alterado depois de exportação v2 → "contato: antes → agora" (EC-15) (SC-1139)
+- [ ] T015 [P] [US2] Em `backend/tests/integration/kit/test_exportacao.py`, os casos da FR-3811, cada um com um evento versão 1 gravado como a `111` o grava hoje (sem `carga_horaria` nem `contato` nos `campos`), e cada faixa conferida pela **lista exata** de mudanças: (a) só a atualização do sistema → nenhuma faixa (EC-14); (b) término, vagas de um Perfil, título e Perfil retirado alterados por Retificação depois da exportação v1 → faixa só com esses campos, valor anterior dos `campos` v1 e o atual; (c) só carga horária ou contato alterados depois da exportação v1 → nenhuma faixa; (d) caso misto, título e contato alterados depois da exportação v1 → faixa com o título e sem o contato; (e) atendimento alterado depois de exportação v2 → "contato: antes → agora" (EC-15); (f) carga horária de um Perfil alterada depois de exportação v2 → faixa com a carga horária; (g) exportação enviada com a impressão v1 depois da implantação → 409 "o Edital mudou" (EC-24) (SC-1139)
 - [ ] T016 [P] [US2] Em `backend/tests/unit/kit/test_textos.py`: legenda e texto para mensagens com carga horária e contato quando declarados, e a conferência peça ⊂ textos cobrindo os dois (FR-3813)
 - [ ] T017 [P] [US2] Em `backend/tests/interface/test_kit_de_divulgacao.py`: a conferência mostra a carga horária com o ato e o contato com a origem "cadastro da unidade" (FR-3812)
 
 ### Implementação
 
-- [ ] T018 [US2] Em `backend/processo_seletivo/portal/ficha.py`: `Oferta.carga_horaria`, `Ficha.contato`, `_campos` versão 2, `impressao_v1`, `VERSAO_DA_IMPRESSAO = 2`, e a comparação por versão em `desatualizacoes` (D-009)
+- [ ] T018 [US2] Em `backend/processo_seletivo/portal/ficha.py`: `Oferta.carga_horaria`, `Ficha.contato`, `_campos` versão 2, `campos_v1` e `impressao_v1`, `VERSAO_DA_IMPRESSAO = 2`, e a comparação por versão em `desatualizacoes`, com `diferencas` de exportação v1 calculada contra os `campos_v1` (D-009, FR-3811)
 - [ ] T019 [US2] Em `backend/processo_seletivo/portal/ficha.py`: a origem da carga horária pela regra da proveniência, e a do contato como "cadastro da unidade" (FR-3812)
 - [ ] T020 [US2] Em `backend/processo_seletivo/interface/kit_textos.py` e `kit_peca.py` (`fora_dos_textos`): carga horária e contato nos textos e na conferência automática (FR-3813)
 - [ ] T021 [US2] Na tela `backend/processo_seletivo/interface/templates/interface/kit_de_divulgacao.html`: as linhas da conferência e os rótulos legíveis dos campos novos na faixa de desatualização
@@ -103,7 +103,7 @@ pré-escolhidos pela última exportação e registrados (FR-3805–FR-3808, FR-3
 
 - [ ] T025 [US3] Em `backend/processo_seletivo/interface/kit_de_divulgacao.py`: ler e validar a escolha (`familia`, `variante`, `imagem`, `formato_da_peca`, `manchete`) contra as listas do instante; pré-escolha pelo evento mais recente; recusa 400 com a frase do contrato (D-008, D-012, contracts/kit.md)
 - [ ] T026 [US3] No mesmo arquivo: `previa` e `exportar` por `formato_da_peca`; o `detalhe` acrescido (FR-3828); motivo "em aprovação pela comunicação" para template não liberado e "versão nova em aprovação" para versão divergente da liberada (FR-3808, FR-3835)
-- [ ] T027 [P] [US3] Em `backend/tests/authorization/test_kit_de_divulgacao.py` e `backend/tests/test_settings_do_kit.py`: template com versão no código diferente da liberada → indisponível na tela, 404 na prévia, 409 na exportação, sem registro (EC-23, FR-3835, SC-1140)
+- [ ] T027 [P] [US3] Em `backend/tests/authorization/test_kit_de_divulgacao.py` e `backend/tests/test_settings_do_kit.py`: template com versão ou resumo no código diferentes dos liberados → indisponível na tela, 404 na prévia, 409 na exportação, sem registro; a `KIT_DE_DIVULGACAO_PECA` libera só a Institucional na versão 1 com o resumo congelado, e uma versão 2 dela fica indisponível até constar da configuração nova (EC-23, FR-3835, SC-1140)
 - [ ] T028 [US3] Na tela `kit_de_divulgacao.html` e na folha da tela: o formulário de escolha (rádios nativos, imagem com a descrição aprovada), uma prévia por formato com o alternativo e os botões, e as faixas "o título oficial não coube em" e "o contato não coube em" (FR-3818, FR-3820, FR-3830); estilo só por arquivo (CSP), leitura a 375 px
 - [ ] T029 [US3] Conferir `backend/tests/test_gramatica_das_portas.py`, que varre `kit_de_divulgacao.py`: todo `Http404` novo da prévia (escolha fora da lista, template não liberado) ganha linha no inventário da `033`; o 400 da exportação vai por `DomainError`, como as recusas da `111` (contracts/kit.md)
 
@@ -125,18 +125,18 @@ SC-1132, SC-1134).
 - [ ] T032 [P] [US1] Em `backend/tests/unit/kit/test_peca.py`: período nas formas fechadas, com ano, hora e início (FR-3815, EC-10, EC-16, EC-17); número em todo formato (FR-3816); "Nome — carga horária" (FR-3817); título resolvido por formato e manchete só onde nenhum oficial cabe (FR-3818, EC-18); chamada à ação e busca por formato (FR-3819); contato omitido com aviso (FR-3820, EC-4); selo da versão em todo formato (FR-3821)
 - [ ] T033 [P] [US1] Em `backend/tests/unit/kit/test_svg.py`: determinismo por template, variante, imagem e manchete (FR-3827, SC-1134); contraste AA pelas cores declaradas de cada caixa (FR-3822); alternativo por formato com a descrição da imagem (FR-3825)
 - [ ] T034 [P] [US1] Em `backend/tests/unit/kit/test_ativos_do_kit.py`: todo ativo usado por família consta do `ORIGEM.md` dela, com licença e resumo conferido, e nenhuma imagem passa de 400 kB (FR-3826, SC-1138)
-- [ ] T035 [P] [US1] Em `backend/tests/unit/kit/test_resumo_do_template.py`: para todo template registrado, o resumo recalculado da declaração, ativos, imagens e fontes é igual ao fixado para a versão; um caso que troca um byte de ativo, uma frase ou uma caixa numa cópia em memória e confirma que o resumo muda (FR-3833, EC-22, SC-1140)
+- [ ] T035 [P] [US1] Em `backend/tests/unit/kit/test_resumo_do_template.py`: para todo template registrado, o resumo das referências recalculado dos SVG em `kit_referencias/` e o resumo do template recalculado da declaração, ativos, imagens, fontes e referências são iguais aos fixados para a versão; a Institucional versão 1 tem o resumo congelado; cada versão aprovada em `verificacao.md` tem o mesmo resumo que `RESUMOS`; um caso troca um byte de ativo, uma frase, uma caixa ou uma referência numa cópia em memória e confirma que o resumo muda (FR-3833, FR-3834, FR-3835, EC-22, SC-1140)
 - [ ] T036 [P] [US1] Em `backend/tests/integration/kit/test_ficha.py` ou `test_exportacao.py`: modo sem material e host local não geram formato nenhum de família nenhuma (EC-11, EC-12)
 
 ### Implementação
 
 - [ ] T037 [US1] Versionar os subconjuntos da Poppins em `backend/processo_seletivo/interface/kit_ativos/fontes/` com o registro no `ORIGEM.md` (FR-3823)
 - [ ] T038 [US1] Versionar os ativos da família em `backend/processo_seletivo/interface/kit_ativos/pos-lato-sensu/` — padrão em chevron, balão, barras decorativas, rodapé — com `ORIGEM.md`; as imagens do banco só depois da P-1, reduzidas como na D-006 (FR-3807, FR-3826)
-- [ ] T039 [US1] Em `backend/processo_seletivo/interface/kit_familias/__init__.py`: o cálculo do resumo do template em JSON canônico com os resumos dos insumos, e a leitura de `RESUMOS` de cada família (D-014, FR-3833); `liberados()` compara a versão do código com a configurada (FR-3808, FR-3835)
+- [ ] T039 [US1] Em `backend/processo_seletivo/interface/kit_familias/__init__.py`: o cálculo do resumo do template em JSON canônico com os resumos dos insumos e o resumo das referências fixado no módulo, e a leitura de `RESUMOS` de cada família (D-014, FR-3833); `liberados()` compara versão e resumo do código com os configurados, e trata a chave da `111` como liberação só da Institucional versão 1 (FR-3808, FR-3835)
 - [ ] T040 [US1] Declarar `backend/processo_seletivo/interface/kit_familias/pos_lato_sensu.py`: paleta, fontes, frases, unidade Cefor, banco, os três templates a partir dos arquivos `Editais Pós Lato Sensu - {Posts,Story,Site}` e os `RESUMOS` de cada versão (FR-3802, FR-3803, FR-3814, FR-3833)
 - [ ] T041 [US1] Gravar as referências em `backend/tests/fixtures/kit_referencias/pos-lato-sensu/{post,story,banner}/` e o caso que as compara em `backend/tests/integration/kit/test_referencias.py`
-- [ ] T042 [P] [US1] Em `backend/tests/integration/kit/test_pacote.py`: ZIP da Pós Lato Sensu com post e story liberados e banner não → arquivos `peca-post.*` e `peca-story.*`, `versao_do_manifesto` 2, `pecas` com três entradas (banner `nao_liberado`), resumos dos arquivos conferidos, e o mesmo `pecas` no evento; composição recusada num formato → entrada com `recusa` e o texto, e os outros incluídos; ZIP da Institucional idêntico ao da `111` (FR-3828, FR-3829, D-015)
-- [ ] T043 [US1] Em `backend/processo_seletivo/interface/kit_pacote.py` e `kit_de_divulgacao.py`: o ZIP de família com os arquivos por formato, o manifesto versão 2 com `familia`, `imagem`, `pecas`, `fontes` e `ativos`, e a lista `pecas` no evento; o ZIP da Institucional não muda (FR-3828, FR-3829, D-015)
+- [ ] T042 [P] [US1] Em `backend/tests/integration/kit/test_pacote.py`: ZIP da Pós Lato Sensu com post e story liberados e banner não → arquivos `peca-post.*` e `peca-story.*` na ordem fixa, `versao_do_manifesto` 2, `pecas` com três entradas (banner `nao_liberado`), resumos dos arquivos conferidos, os campos singulares da `111` nulos, e o mesmo `pecas` no evento; composição recusada num formato → entrada com `recusa` e o texto, e os outros incluídos; sem rasterizador → entradas incluídas com `sem_rasterizador` e sem PNG; ZIP da Institucional com os nomes, a estrutura do manifesto e o SVG/PNG da `111`, e a ficha e a impressão v2 (FR-3828, FR-3829, D-015)
+- [ ] T043 [US1] Em `backend/processo_seletivo/interface/kit_pacote.py` e `kit_de_divulgacao.py`: o ZIP de família com os arquivos por formato na ordem fixa (a tupla de nomes do `zipar` ganha os de cada formato), o manifesto versão 2 com `familia`, `imagem`, `pecas`, `fontes` e `ativos`, a lista `pecas` no evento e os campos singulares nulos; o ZIP da Institucional mantém nomes, estrutura e peça (FR-3828, FR-3829, D-015)
 - [ ] T044 [US1] Medir no ambiente de implantação a tela com três prévias e o ZIP num lote de 20, e registrar em `specs/119-templates-de-divulgacao/verificacao.md` (SC-1137)
 
 **Checkpoint**: PR do incremento 2 (fases 3 a 6). US1–US3 verificáveis de ponta a ponta.
@@ -151,7 +151,7 @@ SC-1132, SC-1134).
 recusa e motivo.
 
 - [ ] T045 [US5] Em `backend/scripts/galeria_do_kit.py`: `--familia` e `--formato`; para cada template liberável, todos os cenários de referência (os 16 da `111` e os 17–25 desta spec) e os casos no limite, com a recusa e o motivo, e o identificador, a versão e o resumo curto do template em cada peça (FR-3831, FR-3834)
-- [ ] T046 [US5] Publicar a galeria da Pós Lato Sensu para a comunicação e registrar a aprovação de cada template em `specs/119-templates-de-divulgacao/verificacao.md` — identificador, versão, resumo, quem aprovou e a data —, ou os ajustes pedidos; a liberação no ambiente nomeia só a versão registrada (FR-3834, SC-1135; validação humana)
+- [ ] T046 [US5] Publicar a galeria da Pós Lato Sensu para a comunicação e registrar a aprovação de cada template em `specs/119-templates-de-divulgacao/verificacao.md` — identificador, versão, resumo curto, quem aprovou e a data —, ou os ajustes pedidos; a liberação no ambiente nomeia exatamente essa versão e esse resumo (FR-3834, SC-1135; validação humana)
 
 ---
 
@@ -254,6 +254,7 @@ T036 sem material e host local T042 ZIP multiformato
 | EC-21 | T031 |
 | EC-22 | T035 |
 | EC-23 | T027 |
+| EC-24 | T015 |
 
 ## Implementation Strategy
 

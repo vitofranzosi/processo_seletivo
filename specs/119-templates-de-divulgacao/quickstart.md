@@ -43,9 +43,10 @@ não couber, e o identificador, a versão e o resumo curto do template em cada p
 aprovação (SC-1135): registre-a em `verificacao.md` com os três dados e a data (FR-3834).
 
 6. Libere só a versão aprovada no ambiente, por exemplo
-   `KIT_DE_DIVULGACAO_TEMPLATES=pos-lato-sensu/post@1,pos-lato-sensu/story@1`, e confirme que o
-   banner aparece indisponível. Suba a versão de um template numa cópia descartável: ele passa a
-   "versão nova em aprovação" até a configuração nomeá-la (FR-3835).
+   `KIT_DE_DIVULGACAO_TEMPLATES=pos-lato-sensu/post@1#<resumo>,pos-lato-sensu/story@1#<resumo>`, com
+   os resumos registrados na aprovação, e confirme que o banner aparece indisponível. Numa cópia
+   descartável, troque uma imagem e regrave o resumo na mesma versão: o template passa a "versão nova
+   em aprovação", e a suíte reprova contra o registro (FR-3835, EC-22).
 7. Baixe o ZIP e abra o `manifesto.json`: uma entrada por formato em `pecas`, com template, versão,
    resumo e arquivos, e o banner com o motivo `nao_liberado`.
 
