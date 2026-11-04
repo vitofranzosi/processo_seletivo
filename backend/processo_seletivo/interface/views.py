@@ -8578,6 +8578,7 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.application.selectors import desfecho_de, identidades_de
+    from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 
     ator, edital, convocacao, base = _convocacao_para_conferir(request, edital_id, convocacao_id)
     if ator is None:
@@ -8623,7 +8624,9 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
                 "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
                 "rotulo_do_item": ROTULO_DO_ITEM,
                 "abertas_por_voce": abertas_por_voce,
-                "pode_conferir": desfecho is None,
+                # E com o Processo aberto: o comando recusa conferir em estado final, e o
+                # formulário seria convite a um ato que não existe mais (revisão do #369).
+                "pode_conferir": desfecho is None and edital.processo.status not in PROCESSO_FINAL,
                 "chave_idempotencia": uuid4().hex,
                 "erro": request.session.pop("erro_da_conferencia", None),
                 "aviso": request.session.pop("aviso_da_conferencia", None),

@@ -133,7 +133,7 @@ referência.
 
 - [X] T041 [P] Vocabulário: incluir os templates novos nas varreduras literais, e uma varredura dos termos da FR-3610 e da FR-3589 (`tests/interface/test_vocabulario_dos_documentos_da_convocacao.py`)
 - [X] T042 [P] CSP e folha: classes com regra; nenhum inline (`test_politica_de_conteudo`, `test_acessibilidade`, `test_estaticos`)
-- [X] T043 [P] Orçamento de consultas da condução com e sem documentos (plan, *Performance Goals*) — o teste de desempenho existente da condução (`performance/test_convocacao.py`) continua verde com a leitura agregada; os tetos da alocação (22) e do relatório (119) subiram uma consulta constante, com a razão escrita; e `performance/test_conducao_com_documentos.py` prende a curva plana da condução **com** documentos (94 consultas com 5 e com 45 convocações)
+- [X] T043 [P] Orçamento de consultas da condução com e sem documentos (plan, *Performance Goals*) — o teste de desempenho existente da condução (`performance/test_convocacao.py`) continua verde com a leitura agregada; os tetos da alocação (22) e do relatório (119) subiram uma consulta constante, com a razão escrita; e `performance/test_conducao_com_documentos.py` prende a curva plana da condução **com** documentos (95 consultas com 5 e com 45 convocações)
 - [X] T044 [P] Regressão: `test_convivencia_com_o_anexo.py`, `test_situacoes_de_mensagem.py` e `test_dependencia_da_convocacao.py` inalterados e verdes (FR-3583, FR-3614, FR-3617)
 - [X] T045 [P] Encerramento: convocação em aberto de Edital encerrado aceita apresentação e conferência (FR-3616)
 - [X] T046 [P] Nada se exclui: tentativas de `delete` no modelo, no banco e no privilégio (FR-3615)

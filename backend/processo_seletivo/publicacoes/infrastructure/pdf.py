@@ -4267,6 +4267,18 @@ def frase_do_aproveitamento(documento, nomes_por_id):
     return f"Quem enviou {aproveitado} na inscrição não precisa enviá-lo de novo."
 
 
+def com_o_aproveitamento(texto, documento, nomes_por_id):
+    """O texto do documento seguido da frase do aproveitamento, com um ponto só entre os dois.
+
+    A instrução costuma terminar em ponto ("em arquivo único."), e juntar ". " a ela imprimia ".."
+    no ato oficial.
+    """
+    aproveitamento = frase_do_aproveitamento(documento, nomes_por_id or {})
+    if not aproveitamento:
+        return texto
+    return f"{texto.rstrip().rstrip('.')}. {aproveitamento}"
+
+
 def _grupos_de_documentos(composicao, snapshot, requisitos, *, nomes_por_id=None):
     if not requisitos:
         return
@@ -4299,10 +4311,9 @@ def _grupos_de_documentos(composicao, snapshot, requisitos, *, nomes_por_id=None
             if composicao.redacao != REDACAO_1:
                 # D5, em alíneas com o recuo pendente (ED-16).
                 for indice, documento in enumerate(documentos):
-                    texto = texto_do_documento(documento)
-                    aproveitamento = frase_do_aproveitamento(documento, nomes_por_id or {})
-                    if aproveitamento:
-                        texto += f". {aproveitamento}"
+                    texto = com_o_aproveitamento(
+                        texto_do_documento(documento), documento, nomes_por_id
+                    )
                     _item(composicao, _alinea(indice), texto, recuo=18.0)
                 continue
             for indice, documento in enumerate(documentos):
@@ -4311,9 +4322,7 @@ def _grupos_de_documentos(composicao, snapshot, requisitos, *, nomes_por_id=None
                     texto += f" — {documento['instructions']}"
                 if not documento.get("required", True):
                     texto += " (facultativo)"
-                aproveitamento = frase_do_aproveitamento(documento, nomes_por_id or {})
-                if aproveitamento:
-                    texto += f". {aproveitamento}"
+                texto = com_o_aproveitamento(texto, documento, nomes_por_id)
                 composicao.escrever(texto, tamanho=CORPO_TEXTO, recuo=18.0, antes=ANTES_DE_LINHA)
 
 

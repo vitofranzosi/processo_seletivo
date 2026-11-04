@@ -11,6 +11,7 @@ Medida em 03/11/2026, na worktree `nice-zhukovsky-0b4397`, contra PostgreSQL, co
 | Depois da implementação (T050) | `0062d311` | 14810 | 12 | 3 | 686 s |
 | Os 3 isolados, duas vezes (`tests/navegador`, 2 workers) | `0062d311` | 12 de 12 | — | 0 | 17 s |
 | Depois da revisão de código | `fd23362c` | 14821 | 12 | 2 | 641 s |
+| Depois da segunda revisão de código | sobre `bdf0a425` | 14834 | 12 | 0 | 908 s |
 
 **As 3 falhas da rodada completa não são do diff.** As três caíram no mesmo worker (`gw2`), as três
 com `TargetClosedError` — o Chromium fechou no meio do caso —, e uma delas é a jornada de unidades
@@ -127,12 +128,30 @@ em cada cinco corrigida por sucessora.
 
 | Convocações com documentos | Consultas (ordem padrão) | Consultas (ordem `documentos`) |
 |---|---|---|
-| 5 | 94 | 94 |
-| 45 | 94 | 94 |
+| 5 | 95 | 95 |
+| 45 | 95 | 95 |
 
 A curva é plana: o custo é do recorte, e não da linha. **O teste reprova a regressão que a correção
 8 da revisão tirou**: com a cadeia subida elo a elo por linha (`raiz_da_chamada` em cada uma), a
-mesma medição vai de 94 a 102 e falha, conferido trocando a linha à mão e desfazendo em seguida.
+mesma medição ia de 94 a 102 e falhava, conferido trocando a linha à mão e desfazendo em seguida.
+Eram 94 até a segunda revisão; a versão do Edital passou a ser lida numa consulta própria, uma vez,
+em vez de vir junto de cada item, e a tela ficou em 95, constante.
+
+## O que a segunda revisão de código corrigiu (04/11/2026)
+
+Sete pontos, cada um com teste que falhava antes da correção:
+
+1. **O arquivo da inscrição julgado pendente voltava na chamada nova.** A anterior pendente não se
+   aproveita (D-013), mas o item caía no documento da inscrição pela FR-3576 e trazia de volta o
+   mesmo arquivo. Agora não volta; sem pendência, o aproveitamento segue igual.
+2. **Ponto duplo no PDF.** A frase do aproveitamento depois de uma instrução terminada em ponto
+   saía "em arquivo único.. Quem enviou". Saía assim nos dois catálogos de seções.
+3. **A página pública calava o documento da convocação de uma modalidade**, como a comprovação de
+   renda das cotas. Agora ele é anunciado por modalidade, como os da inscrição.
+4. **A página dos documentos oferecia conferir com o Processo encerrado**, que o comando recusa.
+5. **A leitura trazia o conteúdo inteiro do Edital em cada item**; agora o traz uma vez por versão.
+6. **Uma consulta por conferência** para dizer a versão julgada na página dos documentos.
+7. **O campo "por que mudar a conferência"** aparecia em item sem arquivo nenhum.
 
 ## O que esta verificação não cobre
 

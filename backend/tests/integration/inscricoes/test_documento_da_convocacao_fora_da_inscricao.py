@@ -29,6 +29,7 @@ from tests.fixtures.selecao import (
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 DOCUMENTO_NA_CONVOCACAO = identificador(415, 0)
+RENDA_NA_CONVOCACAO = identificador(416, 0)
 
 
 @pytest.fixture
@@ -122,3 +123,37 @@ def test_a_pagina_publica_nao_anuncia_o_documento_da_convocacao_como_da_inscrica
     assert "Certidão de nascimento ou casamento" not in anunciados["sempre"]
     assert "Documento de identificação" in anunciados["sempre"]
     assert anunciados["na_convocacao"] == ["Certidão de nascimento ou casamento"]
+
+
+def test_a_pagina_publica_anuncia_o_documento_da_convocacao_de_uma_modalidade(
+    raiz_de_arquivos, api_client, manager_headers, process_payload
+):
+    """O que a convocação pede só a quem concorre numa modalidade também é anunciado (revisão do
+    #369): é o caso da comprovação de renda, pedida na matrícula de quem concorre nas cotas."""
+    from processo_seletivo.publicacoes.application import selectors
+
+    rascunho = rascunho_aberto_com_documentos(timezone.now() - timedelta(seconds=1))
+    rascunho["documentRequirements"].append(
+        {
+            "id": RENDA_NA_CONVOCACAO,
+            "key": "renda",
+            "name": "Comprovante de renda",
+            "required": True,
+            "order": 5,
+            "moment": "AT_CALL",
+            "profileId": PERFIL_DOCENTE,
+            "modalityId": MODALIDADE_AC,
+        }
+    )
+    edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
+    conteudo = selectors.selecao_publica(edital_id=edital.id).content
+    perfil = next(p for p in conteudo["profiles"] if p["id"] == PERFIL_DOCENTE)
+    modalidade = next(m for m in perfil["competitionModalities"] if m["id"] == MODALIDADE_AC)
+
+    anunciados = _documentos_anunciados(conteudo, perfil)
+
+    assert anunciados["na_convocacao"] == []
+    assert anunciados["na_convocacao_por_modalidade"] == [
+        {"modalidade": modalidade["name"], "documentos": ["Comprovante de renda"]}
+    ]
+    assert all("Comprovante de renda" not in g["documentos"] for g in anunciados["por_modalidade"])

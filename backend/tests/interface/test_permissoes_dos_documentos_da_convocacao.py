@@ -202,3 +202,37 @@ def test_a_linha_nova_de_documento_oferece_o_aproveitamento(chamada, client):
 
     assert "Atendido pelo documento da inscrição" in corpo
     assert ">Documento de identificação</option>" in corpo
+
+
+def test_com_o_processo_em_estado_final_a_pagina_nao_oferece_conferir(chamada, client):
+    """Revisão do #369: o comando recusa conferir com o Processo encerrado, e a página oferecia o
+    formulário assim mesmo — o mesmo convite a um ato que não existe que o portal já deixou de
+    fazer."""
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    identificar(client, "carlos", ["gestor"])
+    assert "Registrar conferência" in client.get(chamada["pagina"]).content.decode()
+
+    ProcessoSeletivo.objects.filter(pk=chamada["edital"].processo_id).update(
+        status=ProcessoSeletivo.Status.ENCERRADO
+    )
+    corpo = client.get(chamada["pagina"]).content.decode()
+
+    assert "Registrar conferência" not in corpo
+    assert "Abrir" in corpo, "o arquivo continua acessível para leitura"
+
+
+def test_a_pendencia_sem_arquivo_nao_pede_motivo_de_revisao(chamada, client, gestor):
+    """Revisão do #369: sem arquivo, a conferência e a versão vigente eram ambas nulas, e a página
+    pedia "por que mudar a conferência desta versão" de uma versão que não existe — pedido que o
+    comando nem cobra."""
+    from tests.fixtures.documentos_da_convocacao import HISTORICO, conferir
+
+    conferir(
+        gestor, chamada["convocacao"], HISTORICO, "PENDENTE", chave="sem-arquivo", motivo="Falta."
+    )
+    identificar(client, "carlos", ["gestor"])
+
+    corpo = client.get(chamada["pagina"]).content.decode()
+
+    assert "Por que mudar a conferência desta versão" not in corpo

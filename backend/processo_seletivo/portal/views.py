@@ -39,6 +39,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.editais.domain.documentos import (
     NA_CONVOCACAO,
+    NA_INSCRICAO,
     OBRIGATORIO,
     aplicaveis,
     modelo_do_requisito,
@@ -248,6 +249,28 @@ def _oferta(vagas, tipo_de_reserva, limite_da_reserva):
     return {"titulo": "Cadastro reserva", "detalhe": detalhe}
 
 
+def _anunciados_do_momento(conteudo, perfil, *, momento):
+    """O que vale para todos no Perfil, e o que cada modalidade acrescenta, num momento só."""
+    perfil_id = str(perfil.get("id"))
+    sempre = aplicaveis(conteudo, profile_id=perfil_id, modality_id=None, momento=momento)
+    nomes_de_sempre = {str(item.get("id")) for item in sempre}
+    por_modalidade = []
+    for modalidade in perfil.get("competitionModalities") or []:
+        com_ela = [
+            item.get("name", "")
+            for item in aplicaveis(
+                conteudo,
+                profile_id=perfil_id,
+                modality_id=str(modalidade.get("id")),
+                momento=momento,
+            )
+            if str(item.get("id")) not in nomes_de_sempre
+        ]
+        if com_ela:
+            por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
+    return [item.get("name", "") for item in sempre], por_modalidade
+
+
 def _documentos_anunciados(conteudo, perfil):
     """O que será pedido, dito **antes** da identificação (L7 da auditoria de percurso).
 
@@ -260,39 +283,24 @@ def _documentos_anunciados(conteudo, perfil):
     naquele Perfil, e o que cada modalidade acrescenta. É a mesma função de aplicabilidade que
     decide o que a inscrição pede — três leituras da mesma regra, e não três interpretações.
     """
-    perfil_id = str(perfil.get("id"))
-    sempre = aplicaveis(conteudo, profile_id=perfil_id, modality_id=None)
-    nomes_de_sempre = {str(item.get("id")) for item in sempre}
-    por_modalidade = []
-    for modalidade in perfil.get("competitionModalities") or []:
-        com_ela = [
-            item.get("name", "")
-            for item in aplicaveis(
-                conteudo, profile_id=perfil_id, modality_id=str(modalidade.get("id"))
-            )
-            if str(item.get("id")) not in nomes_de_sempre
-        ]
-        if com_ela:
-            por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
-    nomes_de_sempre_em_ordem = [item.get("name", "") for item in sempre]
+    sempre, por_modalidade = _anunciados_do_momento(conteudo, perfil, momento=NA_INSCRICAO)
     # **E o que só a convocação pede** (115): quem lê antes de se inscrever precisa saber que, se
     # for convocado, vai apresentar mais estes — como o Edital diz em "Documentos exigidos na
-    # convocação". Ditos à parte, porque não contam para a inscrição.
-    na_convocacao = [
-        item.get("name", "")
-        for item in aplicaveis(
-            conteudo, profile_id=perfil_id, modality_id=None, momento=NA_CONVOCACAO
-        )
-    ]
+    # convocação". Ditos à parte, porque não contam para a inscrição. **Com a mesma divisão por
+    # modalidade**: a comprovação de renda das cotas é pedida na matrícula, e só a quem concorre
+    # nelas — lida só sem modalidade, ela sumia do anúncio (revisão do #369).
+    na_convocacao, na_convocacao_por_modalidade = _anunciados_do_momento(
+        conteudo, perfil, momento=NA_CONVOCACAO
+    )
     return {
-        "sempre": nomes_de_sempre_em_ordem,
+        "sempre": sempre,
         "por_modalidade": por_modalidade,
         "na_convocacao": na_convocacao,
+        "na_convocacao_por_modalidade": na_convocacao_por_modalidade,
         # **Quantos são**, para o resumo dizer isso antes de a pessoa abrir. Um triângulo com
         # “Documentos que serão pedidos” parece enfeite; “2 documentos que serão pedidos” é
         # informação — e é o que decide se dá para se inscrever agora ou se é preciso preparar.
-        "total": len(nomes_de_sempre_em_ordem)
-        + sum(len(grupo["documentos"]) for grupo in por_modalidade),
+        "total": len(sempre) + sum(len(grupo["documentos"]) for grupo in por_modalidade),
     }
 
 

@@ -185,12 +185,18 @@ def _aproveitar(itens, raiz):
     for item in itens:
         if item.situacao == ItemDaListaDaConvocacao.Situacao.NAO_SE_APLICA:
             continue
-        origem = _origem_aproveitavel(do_anterior.get(str(item.requisito_id)))
+        item_anterior = do_anterior.get(str(item.requisito_id))
+        origem = _origem_aproveitavel(item_anterior)
         documento = None
         if origem is None and item.aproveita_requisito_id is not None:
             documento = DocumentoSubmetido.objects.filter(
                 inscricao_id=item.inscricao_id, requirement_id=item.aproveita_requisito_id
             ).first()
+            # **O arquivo da inscrição que a chamada anterior julgou pendente não volta pela porta
+            # da FR-3576**: a anterior não se aproveita por estar pendente (D-013), e cair no
+            # documento da inscrição traria de volta exatamente o mesmo arquivo.
+            if documento is not None and documento.content_hash in _hashes_pendentes(item_anterior):
+                documento = None
         if isinstance(origem, DocumentoSubmetido):
             documento, origem = origem, None
         if origem is None and documento is None:
@@ -210,6 +216,22 @@ def _aproveitar(itens, raiz):
         )
 
 
+def _hashes_pendentes(item_anterior):
+    """Os arquivos que a conferência vigente da chamada anterior declarou pendentes."""
+    if item_anterior is None:
+        return set()
+    apresentacoes = sorted(item_anterior.apresentacoes.all(), key=lambda a: a.numero)
+    if not apresentacoes:
+        return set()
+    apresentada = apresentacoes[-1]
+    da_apresentada = [
+        c for c in item_anterior.conferencias.all() if c.apresentacao_id == apresentada.id
+    ]
+    if da_apresentada and dominio.vigente(da_apresentada).resultado == nomes.PENDENTE:
+        return {apresentada.content_hash}
+    return set()
+
+
 def _origem_aproveitavel(item_anterior):
     """O arquivo de origem do que a chamada anterior recebeu, ou `None` (FR-3619).
 
@@ -217,17 +239,12 @@ def _origem_aproveitavel(item_anterior):
     que a rastreabilidade não vire corrente. Não aproveita o que lá estava *pendente*: seria pedir à
     comissão que julgasse de novo o que ela já disse que não serve (D-013).
     """
-    if item_anterior is None:
+    if item_anterior is None or _hashes_pendentes(item_anterior):
         return None
     apresentacoes = sorted(item_anterior.apresentacoes.all(), key=lambda a: a.numero)
     if not apresentacoes:
         return None
     apresentada = apresentacoes[-1]
-    da_apresentada = [
-        c for c in item_anterior.conferencias.all() if c.apresentacao_id == apresentada.id
-    ]
-    if da_apresentada and dominio.vigente(da_apresentada).resultado == nomes.PENDENTE:
-        return None
     if apresentada.arquivo:
         return apresentada
     if apresentada.documento_da_inscricao_id is not None:
@@ -336,17 +353,21 @@ class LeituraDocumental:
 
 
 def leituras_por_chamada(raizes, *, decididas=frozenset()):
-    """A leitura de várias chamadas em três consultas — a condução não consulta por linha.
+    """A leitura de várias chamadas em consultas de número fixo — a condução não consulta por linha.
 
     `decididas` são os ids das raízes cuja convocação vigente tem desfecho.
+
+    **A versão por `prefetch`, e não por junção**: as dezenas de chamadas de um recorte citam a
+    mesma versão, e a junção trazia o conteúdo inteiro do Edital — o maior campo do sistema — uma
+    vez por item (revisão do #369). O `prefetch` o traz uma vez por versão.
     """
     raizes = list(raizes)
     if not raizes:
         return {}
     itens = list(
         ItemDaListaDaConvocacao.objects.filter(chamada__in=raizes)
-        .select_related("versao")
         .prefetch_related(
+            "versao",
             "apresentacoes__documento_da_inscricao",
             "apresentacoes__apresentacao_de_origem__item",
             "conferencias",
@@ -354,13 +375,22 @@ def leituras_por_chamada(raizes, *, decididas=frozenset()):
         .order_by("gravada_em", "id")
     )
     por_chamada = {raiz.id: [] for raiz in raizes}
+    requisitos_da_versao = {}
     for item in itens:
-        requisitos = {
-            str(r.get("id")): r for r in (item.versao.content.get("documentRequirements") or [])
-        }
+        if item.versao_id not in requisitos_da_versao:
+            requisitos_da_versao[item.versao_id] = {
+                str(r.get("id")): r for r in (item.versao.content.get("documentRequirements") or [])
+            }
+        requisitos = requisitos_da_versao[item.versao_id]
         requisito = requisitos.get(str(item.requisito_id)) or {"id": str(item.requisito_id)}
         apresentacoes = sorted(item.apresentacoes.all(), key=lambda a: a.numero)
         conferencias = sorted(item.conferencias.all(), key=lambda c: (c.conferido_em, str(c.id)))
+        # A versão julgada de cada conferência já está nas apresentações lidas: a página dos
+        # documentos diz "versão N" em cada uma, e sem isto pagava uma consulta por conferência.
+        por_id = {apresentacao.id: apresentacao for apresentacao in apresentacoes}
+        for conferencia in conferencias:
+            if conferencia.apresentacao_id in por_id:
+                conferencia.apresentacao = por_id[conferencia.apresentacao_id]
         por_chamada[item.chamada_id].append(
             ItemLido(
                 item=item,

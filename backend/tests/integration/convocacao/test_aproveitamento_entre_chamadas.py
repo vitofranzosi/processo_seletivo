@@ -17,7 +17,10 @@ from tests.fixtures.convocacao import apurar, convocar
 from tests.fixtures.corte import MARCO, regra
 from tests.fixtures.documentos_da_convocacao import (
     CERTIDAO,
+    CERTIFICADO,
+    CERTIFICADO_NA_CONVOCACAO,
     HISTORICO,
+    IDENTIDADE,
     RESIDENCIA,
     apresentar,
     arquivos_no_armazenamento,
@@ -40,6 +43,22 @@ def aluno_do_69(db, gestor, api_client, manager_headers, process_payload, raiz_d
         process_payload,
         documentos=cenarios.documentos_do_aluno(),
         prefixo="aluno-69-115",
+        geral=2,
+        cut=regra(surplusCount=1),
+    )
+
+
+@pytest.fixture
+def certificado_do_69(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """O percurso do 69/2026 com o certificado do 89/2026: aproveitado da inscrição."""
+    return cenarios.montar(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        documentos=cenarios.documentos_do_certificado(),
+        documentos_da_inscricao=(IDENTIDADE, CERTIFICADO),
+        prefixo="certificado-69-115",
         geral=2,
         cut=regra(surplusCount=1),
     )
@@ -144,3 +163,46 @@ def test_a_referencia_aponta_a_origem_e_nunca_outra_referencia(aluno_do_69, gest
     item_da_segunda = segunda.itens_da_lista.get(requisito_id=CERTIDAO)
     assert _origem_aproveitavel(item_da_segunda) == referencia.apresentacao_de_origem
     assert referencia.apresentacao_de_origem.arquivo, "a origem guarda o arquivo"
+
+
+def test_o_arquivo_da_inscricao_julgado_pendente_nao_volta_na_chamada_nova(
+    certificado_do_69, gestor
+):
+    """D-013: o que a anterior julgou pendente não se aproveita — nem pela porta da FR-3576.
+
+    Na primeira chamada o certificado nasce atendido pelo da inscrição, e a comissão o julga
+    pendente. Na chamada nova, cair no documento da inscrição traria de volta o mesmo arquivo que
+    ela já disse que não serve.
+    """
+
+    def na_primeira(pessoa, primeira):
+        assert lido(primeira, CERTIFICADO_NA_CONVOCACAO).aproveitada["de"] == "inscricao"
+        conferir(
+            gestor,
+            primeira,
+            CERTIFICADO_NA_CONVOCACAO,
+            "PENDENTE",
+            chave="cp-c1",
+            motivo="Certificado ilegível.",
+        )
+
+    _, _, segunda = _chamada_nova_da_reclassificada(certificado_do_69, gestor, na_primeira)
+
+    certificado = lido(segunda, CERTIFICADO_NA_CONVOCACAO)
+    assert certificado.vigente is None
+    assert certificado.estado == nomes.ITEM_A_APRESENTAR
+
+
+def test_o_arquivo_da_inscricao_nao_julgado_pendente_continua_aproveitado(
+    certificado_do_69, gestor
+):
+    """A outra metade: sem pendência na anterior, a chamada nova aproveita como sempre."""
+
+    def na_primeira(pessoa, primeira):
+        conferir(gestor, primeira, CERTIFICADO_NA_CONVOCACAO, "CONFORME", chave="cc-c1")
+
+    _, _, segunda = _chamada_nova_da_reclassificada(certificado_do_69, gestor, na_primeira)
+
+    certificado = lido(segunda, CERTIFICADO_NA_CONVOCACAO)
+    assert certificado.aproveitada["de"] == "inscricao"
+    assert certificado.estado == nomes.ITEM_RECEBIDO, "a conferência de lá não vem junto"

@@ -106,3 +106,23 @@ def test_sem_documento_na_convocacao_o_pdf_e_o_de_antes():
 
     assert sem_campo == com_campo
     assert "Documentos exigidos na convocação" not in sem_campo
+
+
+@pytest.mark.parametrize("catalogo_", [catalogo.CATALOGO_DA_054, catalogo.CATALOGO_DA_069])
+def test_a_frase_do_aproveitamento_nao_dobra_o_ponto_da_instrucao(catalogo_):
+    """A instrução que termina em ponto — a maioria — não ganha um segundo antes da frase."""
+    com_instrucao = [
+        DA_CONVOCACAO[0],
+        {**DA_CONVOCACAO[1], "instructions": "Frente e verso, em arquivo único."},
+    ]
+    texto = texto_de(
+        documento(
+            snapshot(
+                documentRequirements=DA_INSCRICAO + com_instrucao,
+                sections=secoes(catalogo_=catalogo_),
+            )
+        )
+    )
+
+    assert "arquivo único. Quem enviou Certificado do curso de formação" in " ".join(texto.split())
+    assert ".." not in texto

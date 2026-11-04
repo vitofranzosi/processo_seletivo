@@ -89,7 +89,7 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
       <label for="motivo-{{ forloop.counter }}">Motivo <span class="opcional">(obrigatório em pendente e não se aplica; a pessoa convocada o lê)</span></label>
       <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="2"></textarea>
     </p>
-    {% if lido.conferencia and lido.conferencia.apresentacao_id == lido.vigente.id %}
+    {% if lido.vigente and lido.conferencia and lido.conferencia.apresentacao_id == lido.vigente.id %}
     <p class="campo">
       <label for="revisao-{{ forloop.counter }}">Por que mudar a conferência desta versão</label>
       <textarea id="revisao-{{ forloop.counter }}" name="motivo_da_substituicao" rows="2"></textarea>

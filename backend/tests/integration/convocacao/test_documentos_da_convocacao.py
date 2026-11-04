@@ -686,3 +686,32 @@ def test_as_raizes_de_varias_convocacoes_saem_sem_subir_elo_a_elo(aluno, gestor)
     assert raizes[sucessora.id].id == convocacao.id
     assert raizes[convocacao.id].id == convocacao.id
     assert len(consultas) == 1
+
+
+def test_a_leitura_le_a_versao_uma_vez_e_nao_consulta_ao_mostrar_a_conferencia(aluno, gestor):
+    """Revisão do #369: a junção trazia o conteúdo inteiro do Edital em cada linha de item, e a
+    página dos documentos perguntava ao banco a versão julgada de cada conferência."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    pessoa, convocacao = convocar_primeira(aluno, gestor)
+    for requisito in (CERTIDAO, HISTORICO):
+        apresentar(pessoa, convocacao, requisito, corpo=str(requisito).encode())
+        conferir(
+            gestor, convocacao, requisito, "PENDENTE", chave=f"v-{requisito}", motivo="Ilegível."
+        )
+
+    with CaptureQueriesContext(connection) as consultas:
+        leitura = servico.leitura_da_chamada(convocacao)
+    import re
+
+    # A coluna `content`, e não `content_hash`: a versão é lida numa consulta própria, uma vez, e
+    # não repetida em cada linha de item.
+    versoes = [q["sql"] for q in consultas if re.search(r'\."content"[ ,]', q["sql"])]
+    assert len(versoes) == 1, versoes
+    assert 'FROM "convocacao_itemdalistadaconvocacao"' not in versoes[0]
+
+    with CaptureQueriesContext(connection) as depois:
+        numeros = [c.apresentacao.numero for lido in leitura.itens for c in lido.conferencias]
+    assert numeros == [1, 1]
+    assert len(depois) == 0
