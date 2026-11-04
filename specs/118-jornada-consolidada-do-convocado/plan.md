@@ -305,7 +305,7 @@ sozinho"*.
 - **Guardião das classes da folha.** Classe nova no template sem regra na folha reprova
   `test_acessibilidade`.
 - **O teste de tempo da ocupação oscila sob carga** (`CLAUDE.md`). Não é desta feature.
-- **O PR #374 e o PR #375 não estão mergeados.** Os dois são documentos; a implementação não depende
-  do merge, só do roteiro, que pode ser lido da branch.
+- **O roteiro de captura está na `main`** desde o merge do #375 (04/11/2026); o #374 foi encerrado
+  como superado. Nenhum dos dois é código.
 - **O PR #373 (`117`) mexe na gestão.** No portal, toca só `portal/arquivos.py`, que esta feature
   não muda; conferir conflito na hora do merge.

@@ -22,9 +22,9 @@ decisões têm três origens:
 **Input**: a revisão de UX da jornada do convocado,
 [`doc/revisao-ux-jornada-do-convocado-2026-11-04/README.md`](../../doc/revisao-ux-jornada-do-convocado-2026-11-04/README.md),
 com as capturas, as maquetes e o roteiro de captura dos cenários A–K. Ela está no PR #375 (branch
-`claude/hopeful-feistel-13dbd9`), **ainda não mergeado** em 04/11/2026; o link acima só resolve
-depois do merge dele. Foi lida integralmente daquela branch, em `9cedcc6b`. Ela partiu do achado do
-PR #374 (`doc/achado-jornada-do-candidato-na-convocacao.md`), também aberto.
+`claude/hopeful-feistel-13dbd9`), lida integralmente em `9cedcc6b` e **mergeada em 04/11/2026**
+(`b512e70a`). Ela partiu do achado do PR #374 (`doc/achado-jornada-do-candidato-na-convocacao.md`),
+encerrado no mesmo dia como superado por ela; a branch dele fica como referência.
 
 O relatório é **evidência**, e não implementação obrigatória: as maquetes mostram uma forma possível,
 e o que esta spec exige é o que está nos requisitos.
@@ -772,8 +772,8 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
 
 - A `115` está na `main` (#368, #369), e a leitura documental, as views do portal e a política do
   Requerimento são as de `fb0e1ddc`.
-- O PR #375 é a evidência; o roteiro de captura dele (`roteiro-de-captura.py`) serve à validação
-  depois do merge dele. Sem o merge, a implementação lê o roteiro daquela branch.
+- O PR #375, mergeado em 04/11/2026, é a evidência; o roteiro de captura dele
+  (`doc/revisao-ux-jornada-do-convocado-2026-11-04/roteiro-de-captura.py`) serve à validação.
 - O volume é o da `115`: dezenas de convocados por chamada e poucos documentos por pessoa.
 - Ninguém de fora do projeto leu estas telas. A validação desta spec é a leitura de quem implementa
   e os testes; o teste com candidatos reais (X5) continua recomendado e fora daqui.

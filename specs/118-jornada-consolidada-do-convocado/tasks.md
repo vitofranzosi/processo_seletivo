@@ -27,7 +27,7 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 - [ ] T002 Linha de base: `make test-pg` com os grupos `assistente` e `navegador`; anotar totais e pulados em `specs/118-jornada-consolidada-do-convocado/verificacao.md` (novo)
 - [ ] T003 [P] Acrescentar às listas literais das varreduras os arquivos que esta feature cria ou passa a usar: `tests/test_vocabulario_dos_documentos_da_convocacao.py` (`DA_115`), `tests/test_vocabulario_da_convocacao.py`, `tests/test_vocabulario_do_requerimento.py` e a varredura da `063` em `tests/portal/test_acompanhamento_pela_situacao.py` (FR-3751)
-- [ ] T004 [P] Capturas "antes" dos cenários A–K pelo roteiro do PR #375, nas duas larguras, em `specs/118-jornada-consolidada-do-convocado/capturas/` (só se o PR #375 não estiver na `main`; senão, referenciar as dele)
+- [ ] T004 [P] Capturas "antes" dos cenários A–K pelo roteiro do PR #375, nas duas larguras, em `specs/118-jornada-consolidada-do-convocado/capturas/` (as do #375, já na `main`, servem de "antes" para A–K; capturar só os cenários de controle B2, L, M, N, K2, G0 e N0)
 
 ---
 
