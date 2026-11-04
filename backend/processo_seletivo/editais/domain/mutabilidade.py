@@ -497,6 +497,20 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     # exigida gravada no envio, e não o congelamento deste campo. E o valor que ele aponta — o
     # código da Modalidade — já é estrutural, de modo que o recorte não se desfaz por renomeação.
     ("documentRequirements", "modalityCode"): retificavel(),
+    # O momento e o aproveitamento (115, D-014). Os dois dizem **quando e de quem** a exigência se
+    # cumpre, e mudá-los depois de publicado mudaria a regra a que o candidato se submeteu ao se
+    # inscrever: mover um documento para a convocação dispensaria, depois do fato, quem já o enviou,
+    # e trazê-lo para a inscrição o cobraria de quem já se inscreveu. É a razão que a `029` deu para
+    # o momento do Requerimento.
+    ("documentRequirements", "moment"): nao_retificavel(
+        "Muda quando a exigência se cumpre: o candidato se inscreveu sob a regra publicada, e "
+        "mover o documento entre a inscrição e a convocação é outra exigência, e não correção dela."
+    ),
+    ("documentRequirements", "reusesRequirementId"): nao_retificavel(
+        "Muda de quem o documento é pedido na convocação: quem enviou o documento aproveitado na "
+        "inscrição contou com não precisar enviá-lo de novo, e retirar ou acrescentar esse vínculo "
+        "depois de publicado é outra exigência."
+    ),
 }
 
 

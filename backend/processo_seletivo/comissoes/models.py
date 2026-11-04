@@ -104,3 +104,50 @@ class AlocacaoEtapa(models.Model):
 
     def __str__(self):
         return f"{self.membro.identity_subject} — {self.etapa_id}"
+
+
+class AlocacaoAConferencia(models.Model):
+    """Quem da comissão confere os documentos da convocação deste Edital (115, FR-3597, D-010).
+
+    **No molde da alocação à Etapa**, e pela mesma razão: competência dentro da comissão, e não
+    papel na unidade. A presidência confere e desfecha por si; o membro alocado **só confere**
+    (D-010), e alocar não lhe dá desfecho nem Mesa. `perfil_id` nulo é todos os Perfis; com valor,
+    a alocação alcança só as convocações daquele Perfil — a peça que o multiunidade vai usar (§7
+    do complemento).
+
+    **Remover é inativar**, como lá: a trilha aponta esta linha pelo `id`.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    membro = models.ForeignKey(
+        MembroComissao, on_delete=models.PROTECT, related_name="alocacoes_a_conferencia"
+    )
+    edital = models.ForeignKey(
+        Edital, on_delete=models.PROTECT, related_name="alocacoes_a_conferencia"
+    )
+    perfil_id = models.UUIDField(null=True, blank=True)
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField()
+    criado_por = models.CharField(max_length=255)
+    inativado_em = models.DateTimeField(null=True, blank=True)
+    inativado_por = models.CharField(max_length=255, blank=True)
+    # A unidade em que a alocação foi praticada (115, FR-3602): a do ator, e não a do Edital.
+    unidade_de_atuacao = models.CharField(max_length=100)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["membro", "edital", "perfil_id"],
+                condition=Q(ativo=True),
+                nulls_distinct=False,
+                name="uq_alocacao_a_conferencia_ativa",
+            ),
+            models.CheckConstraint(
+                condition=Q(ativo=True, inativado_em__isnull=True)
+                | Q(ativo=False, inativado_em__isnull=False),
+                name="ck_alocacao_a_conferencia_inativacao_completa",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.membro.identity_subject} — conferência em {self.edital_id}"

@@ -7,8 +7,15 @@ dentro da transação, para decidir se grava (D-006, D-016).
 
 from dataclasses import dataclass
 
+from django.db.models import Q
+
 from processo_seletivo.comissoes.domain.etapas import etapa_vigente, etapas_vigentes
-from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
+from processo_seletivo.comissoes.models import (
+    AlocacaoAConferencia,
+    AlocacaoEtapa,
+    Funcao,
+    MembroComissao,
+)
 from processo_seletivo.seguranca.application.authorization import (
     Base as BaseDaRecusa,
 )
@@ -21,6 +28,9 @@ from processo_seletivo.shared.api.problems import DomainError
 # existe só para a trilha dizer qual base autorizou o ato (FR-016, D-011, D-014).
 PERMISSAO_SISTEMICA = "comissao:gerir"
 BASE_PRESIDENCIA = "comissao:presidir"
+# **O nome da base que a alocação à conferência dá, e só isso** (115, D-010): não é capacidade do
+# catálogo, nenhum papel a concede, e ela existe para a trilha dizer por que o ato foi admitido.
+BASE_CONFERENCIA = "comissao:conferir_documentos"
 
 # --- As mesmas duas bases, ditas como recusa (033, `FR-486`) ------------------------------------
 #
@@ -41,6 +51,12 @@ BASE_DA_PRESIDENCIA_DO_PROCESSO = BaseDaRecusa(
     "a presidência deste Processo", "a quem preside este Processo"
 )
 BASES_DA_GESTAO_DA_COMISSAO = (BASE_DE_GESTAO_DA_COMISSAO, BASE_DA_PRESIDENCIA_DO_PROCESSO)
+# A terceira base, só da conferência dos documentos da convocação (115, FR-3595).
+BASE_DA_ALOCACAO_A_CONFERENCIA = BaseDaRecusa(
+    "a conferência dos documentos da convocação deste Edital",
+    "a quem a presidência alocou à conferência",
+)
+BASES_DA_CONFERENCIA = (*BASES_DA_GESTAO_DA_COMISSAO, BASE_DA_ALOCACAO_A_CONFERENCIA)
 
 
 @dataclass(frozen=True)
@@ -79,6 +95,58 @@ def pode_gerir_comissao(ator, processo):
     if membro is not None and membro.funcao == Funcao.PRESIDENTE:
         return Base(BASE_PRESIDENCIA)
     return None
+
+
+def pode_conferir_documentos(ator, edital, perfil_id):
+    """**O predicado único** da conferência dos documentos da convocação (115, FR-3595, D-010).
+
+    Toda leitura de documento da convocação, toda entrega de arquivo e todo registro de conferência
+    na gestão passam por aqui. Três bases, cada uma suficiente sozinha: as duas que já desfecham —
+    a permissão sistêmica e a presidência —, e a alocação à conferência, que alcança o Perfil da
+    convocação quando não é restrita ou quando é restrita a ele.
+
+    **Muda a regra, e não o dado**, quando o multiunidade chegar (§7 do complemento): é aqui que
+    "designado no Perfil, com a unidade ofertante dele" entrará, e nenhuma tela precisará saber.
+    """
+    if ator is None or edital is None:
+        return None
+    processo = edital.processo
+    base = pode_gerir_comissao(ator, processo)
+    if base is not None:
+        return base
+    membro = membro_ativo(ator, processo)
+    if membro is None:
+        return None
+    alocada = (
+        AlocacaoAConferencia.objects.filter(membro=membro, edital=edital, ativo=True)
+        .filter(Q(perfil_id__isnull=True) | Q(perfil_id=perfil_id))
+        .exists()
+    )
+    return Base(BASE_CONFERENCIA) if alocada else None
+
+
+def perfis_da_conferencia(ator, edital):
+    """Os Perfis que este ator confere neste Edital: `None` é todos, conjunto vazio é nenhum.
+
+    A mesma regra do predicado, respondida para a lista inteira da condução numa leitura só — chamar
+    o predicado por linha faria dele o gargalo da tela.
+    """
+    if ator is None or edital is None:
+        return set()
+    processo = edital.processo
+    if pode_gerir_comissao(ator, processo) is not None:
+        return None
+    membro = membro_ativo(ator, processo)
+    if membro is None:
+        return set()
+    perfis = set(
+        AlocacaoAConferencia.objects.filter(membro=membro, edital=edital, ativo=True).values_list(
+            "perfil_id", flat=True
+        )
+    )
+    if None in perfis:
+        return None
+    return {str(perfil) for perfil in perfis}
 
 
 def pode_atuar_na_etapa(ator, edital, etapa_id):

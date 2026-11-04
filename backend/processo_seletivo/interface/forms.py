@@ -1657,6 +1657,10 @@ def ler_inscricao(dados):
                 # A tela ainda não oferece o campo; a chave viaja vazia para que `_preservando`
                 # tenha onde encaixar o que já estava gravado (020, FR-020).
                 "attachmentId": _texto(dados, f"{base}-attachmentId") or None,
+                # Quando é pedido, e o documento da inscrição que o atende (115). Vazio é a
+                # inscrição e "não aproveita", como em todo documento anterior.
+                "moment": _texto(dados, f"{base}-moment") or "AT_ENROLLMENT",
+                "reusesRequirementId": _texto(dados, f"{base}-reusesRequirementId") or None,
             }
         )
     return {
@@ -1702,6 +1706,8 @@ def documentos_do_edital(edital):
             "modalityId": "" if documento.modalidade_id is None else str(documento.modalidade_id),
             "modalityCode": documento.modalidade_codigo,
             "attachmentId": "" if documento.anexo_id is None else str(documento.anexo_id),
+            "moment": documento.momento,
+            "reusesRequirementId": "" if documento.aproveita is None else str(documento.aproveita),
         }
         for documento in edital.documentos_exigidos.order_by("order")
     ]
@@ -1735,6 +1741,11 @@ def documentos_persistidos(edital):
             # linhas são recriadas a cada gravação (044).
             "modalityCode": documento.modalidade_codigo or None,
             "attachmentId": None if documento.anexo_id is None else str(documento.anexo_id),
+            # E o momento e o aproveitamento, pela mesma razão (115).
+            "moment": documento.momento,
+            "reusesRequirementId": None
+            if documento.aproveita is None
+            else str(documento.aproveita),
         }
         for documento in edital.documentos_exigidos.order_by("order")
     ]

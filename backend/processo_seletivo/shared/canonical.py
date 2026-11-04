@@ -149,7 +149,11 @@ from uuid import UUID
 # "não recorta por código", e é verdade sobre todo documento publicado antes: a capacidade não
 # existia. Conversão sem invenção, no molde do degrau 9 — aditiva, dentro de uma coleção que já
 # existe, com a ausência de significado declarado.
-SCHEMA_VERSION = 17
+#
+# **O degrau 18 é o momento do Documento Exigido** (115, FR-3563): `moment` e `reusesRequirementId`.
+# Todo documento publicado antes era da inscrição e não aproveitava outro — a convocação não pedia
+# documento. Conversão sem invenção, no molde do degrau 17.
+SCHEMA_VERSION = 18
 
 
 def _default(value):

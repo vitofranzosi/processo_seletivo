@@ -218,6 +218,11 @@ def convocar(
             criado_em=ctx.now,
         )
         convocacao.save()
+        # **A lista da chamada nasce com ela, no mesmo ato** (115, FR-3572): a raiz grava, e a
+        # sucessora que corrige vencimento ou fundamento herda pela raiz (D-009).
+        from processo_seletivo.convocacao.application.documentos import gravar_lista_da_chamada
+
+        gravar_lista_da_chamada(convocacao, versao=versao)
         return _concluir(
             ctx,
             convocacao,

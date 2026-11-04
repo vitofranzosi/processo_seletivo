@@ -156,6 +156,13 @@ TABELAS_APPEND_ONLY = (
     # rastro, se um ato praticado naquele dia podia ter sido praticado.
     "seguranca_suspensaodepessoa",
     "seguranca_reativacaodepessoa",
+    # As três dos documentos da convocação (115): o que a chamada pediu, o que se apresentou, e o
+    # juízo de quem conferiu. Append-only pela razão das demais, e com um agravante próprio: é este
+    # registro que responde por que a pessoa foi aceita ou indeferida. Reescrever uma conferência
+    # mudaria, sem rastro, o fundamento de um desfecho que já excluiu ou incluiu alguém da vaga.
+    "convocacao_itemdalistadaconvocacao",
+    "convocacao_apresentacaodedocumento",
+    "convocacao_conferenciadedocumento",
 )
 
 

@@ -289,6 +289,8 @@ QUEM_CARREGA = {
             "compor-conteudo",
             "compor-cronograma",
             "compor-revisao",
+            # Os documentos de uma convocação (115).
+            "convocacao-documentos",
             "duvidas",
             "inscricao-detalhe",
             # O kit de divulgação (111).

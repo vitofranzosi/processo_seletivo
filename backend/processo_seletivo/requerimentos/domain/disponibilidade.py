@@ -46,6 +46,10 @@ class Disponibilidade:
     # O estado do requerimento vigente, ou `""` quando não há linha. **Injetado**, como a chamada:
     # o domínio não consulta o banco, e quem chama já leu a linha para gravá-la.
     status_do_requerimento: str = ""
+    # **O prazo da chamada decorreu** (115, FR-3622; FR-374 da `029`, revista). Não é um sexto
+    # estado de leitura — a FR-405 fixa cinco —, e sim a marca que fecha a escrita: o preenchimento,
+    # o envio e o sucessor se recusam, e a leitura e o rascunho ficam. Injetado, como a chamada.
+    prazo_decorrido: bool = False
 
     @property
     def enviado(self) -> bool:
@@ -92,7 +96,9 @@ def exigido_na_inscricao(conteudo) -> bool:
     return momento_declarado(conteudo) == nomes.NA_INSCRICAO
 
 
-def apurar(conteudo, *, chamada_em_aberto=None, requerimento=None) -> Disponibilidade:
+def apurar(
+    conteudo, *, chamada_em_aberto=None, requerimento=None, prazo_decorrido=False
+) -> Disponibilidade:
     """A política inteira: **se é exigível, se está disponível e se já foi enviado**.
 
     As duas leituras de banco são **injetadas** por quem chama — a aplicação as obtém, e o domínio
@@ -121,6 +127,7 @@ def apurar(conteudo, *, chamada_em_aberto=None, requerimento=None) -> Disponibil
             disponivel=True,
             chamada=chamada_em_aberto,
             status_do_requerimento=status,
+            prazo_decorrido=bool(prazo_decorrido and chamada_em_aberto is not None),
         )
     return Disponibilidade(
         exigido=True,
@@ -128,4 +135,5 @@ def apurar(conteudo, *, chamada_em_aberto=None, requerimento=None) -> Disponibil
         disponivel=chamada_em_aberto is not None,
         chamada=chamada_em_aberto,
         status_do_requerimento=status,
+        prazo_decorrido=bool(prazo_decorrido and chamada_em_aberto is not None),
     )

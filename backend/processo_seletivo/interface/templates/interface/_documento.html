@@ -88,6 +88,38 @@
     </p>
   </div>
   {% comment %}
+  Quando o documento é pedido, e o da inscrição que o atende (115, FR-3563, FR-3566). O segundo só
+  oferece documentos pedidos na inscrição, e o servidor recusa de novo o que a tela não impediu.
+  {% endcomment %}
+  <div class="campos">
+    <p class="campo">
+      <label for="documento-{{ indice }}-moment">Quando é pedido</label>
+      {% recusa_de recusas "documento" indice "moment" as recusado_momento %}
+      <select id="documento-{{ indice }}-moment" name="documento-{{ indice }}-moment"
+              aria-describedby="ajuda-momento-{{ indice }}"
+              {% if recusado_momento %}aria-invalid="true"{% endif %}>
+        <option value="AT_ENROLLMENT" {% if documento.moment != "AT_CALL" %}selected{% endif %}>Na inscrição</option>
+        <option value="AT_CALL" {% if documento.moment == "AT_CALL" %}selected{% endif %}>Na convocação</option>
+      </select>
+      {% if recusado_momento %}<span class="recusa" role="alert">{{ recusado_momento }}</span>{% endif %}
+      <span class="oculto" id="ajuda-momento-{{ indice }}">Na convocação, o documento é pedido só a quem for convocado, e não na inscrição.</span>
+    </p>
+    <p class="campo">
+      <label for="documento-{{ indice }}-reusesRequirementId">Atendido pelo documento da inscrição</label>
+      {% recusa_de recusas "documento" indice "reusesRequirementId" as recusado_aproveita %}
+      <select id="documento-{{ indice }}-reusesRequirementId" name="documento-{{ indice }}-reusesRequirementId"
+              aria-describedby="ajuda-aproveita-{{ indice }}"
+              {% if recusado_aproveita %}aria-invalid="true"{% endif %}>
+        <option value="">Não aproveita</option>
+        {% for outro in documentos %}{% if outro.id != documento.id and outro.moment != "AT_CALL" %}
+        <option value="{{ outro.id }}" {% if documento.reusesRequirementId == outro.id %}selected{% endif %}>{{ outro.name }}</option>
+        {% endif %}{% endfor %}
+      </select>
+      {% if recusado_aproveita %}<span class="recusa" role="alert">{{ recusado_aproveita }}</span>{% endif %}
+      <span class="oculto" id="ajuda-aproveita-{{ indice }}">Só para documento pedido na convocação: quem já o enviou na inscrição não envia de novo.</span>
+    </p>
+  </div>
+  {% comment %}
   O Modelo não cabe numa linha de três: o rótulo de anexo mais longo da amostra pede 459 px, e a
   terça parte da faixa dá 426 — cortaria justamente o texto pelo qual se escolhe o anexo. Ele fica
   numa linha de dois, e quem preenche o resto dela é a marcação de obrigatório, que não tem largura
@@ -110,7 +142,7 @@
     <input type="checkbox" id="documento-{{ indice }}-required" name="documento-{{ indice }}-required"
            {% if documento.required|default_if_none:True %}checked{% endif %}>
     <label for="documento-{{ indice }}-required">Obrigatório
-      <span class="perms">Sem ele, a inscrição não pode ser enviada.</span></label>
+      <span class="perms">Na inscrição, sem ele a inscrição não pode ser enviada; na convocação, sem ele conferido a vaga não pode ser aceita.</span></label>
     </p>
   </div>
 </fieldset>

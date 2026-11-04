@@ -558,6 +558,8 @@ details.como-converter li{margin-bottom:.4rem}
   margin:.5rem 0 0;padding:.5rem .65rem;border-radius:4px;background:var(--sucesso-fundo);
   overflow-wrap:anywhere}
 .requisito .arquivo .quando{color:var(--texto-fraco);font-size:.875rem}
+/* A situação do documento pedido na convocação (115, FR-3612): palavra, e não só a marca. */
+.requisito .situacao-do-documento{margin:.35rem 0 0;font-size:.9375rem;overflow-wrap:anywhere}
 
 /* O campo de arquivo do navegador é o elemento mais feio de qualquer formulário: texto do sistema
    operacional, altura própria, e "Nenhum arquivo selecionado" em cinza no meio da página. Aqui o

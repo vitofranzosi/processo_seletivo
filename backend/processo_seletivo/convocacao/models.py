@@ -24,6 +24,7 @@ from django.db.models import Q
 
 from processo_seletivo.convocacao.domain import nomes
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.inscricoes.storage import ArmazenamentoPrivado
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models import VersaoConsolidada
 
@@ -423,3 +424,218 @@ class ComunicacaoEmitida(models.Model):
 
     def delete(self, *args, **kwargs):
         raise TypeError("ComunicacaoEmitida é append-only")
+
+
+# -------------------------------------------------------------------------------------------------
+# Documentos e conferência na convocação (115)
+# -------------------------------------------------------------------------------------------------
+
+
+def caminho_da_apresentacao(instancia, nome_enviado):
+    """O nome físico do arquivo apresentado na convocação, que **não** é o nome enviado.
+
+    O mesmo desenho do documento da inscrição (`inscricoes/storage.py`): o nome do candidato não
+    toca o disco, e o componente aleatório impede adivinhar o caminho. A pasta é a da **chamada**,
+    porque é a ela que a lista pertence (D-009).
+    """
+    return f"convocacoes/{instancia.item.chamada_id}/{uuid.uuid4().hex}.pdf"
+
+
+class _AppendOnly(models.Model):
+    """`save` só de linha nova e `delete` recusado — a primeira das três camadas (D-006)."""
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError(f"{type(self).__name__} é append-only")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError(f"{type(self).__name__} é append-only")
+
+
+class ItemDaListaDaConvocacao(_AppendOnly):
+    """O que a chamada pediu a esta inscrição, documento a documento (115, FR-3572).
+
+    **Pertence à chamada, e não à convocação corrigida** (D-009): a sucessora que corrige vencimento
+    ou fundamento usa estes itens, e não grava outros. O molde é o `ItemDaListaExigida` da `044`:
+    não guarda nome nem instrução, que se leem da versão que o fundamentou.
+    """
+
+    class Situacao(models.TextChoices):
+        OBRIGATORIO = "OBRIGATORIO"
+        FACULTATIVO = "FACULTATIVO"
+        NAO_SE_APLICA = "NAO_SE_APLICA"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    chamada = models.ForeignKey(Convocacao, on_delete=models.PROTECT, related_name="itens_da_lista")
+    inscricao = models.ForeignKey(
+        Inscricao, on_delete=models.PROTECT, related_name="itens_da_lista_da_convocacao"
+    )
+    versao = models.ForeignKey(VersaoConsolidada, on_delete=models.PROTECT, related_name="+")
+    requisito_id = models.UUIDField()
+    chave = models.CharField(max_length=100)
+    situacao = models.CharField(max_length=16, choices=Situacao.choices)
+    forma_do_recorte = models.CharField(max_length=40)
+    perfil_id = models.UUIDField(null=True, blank=True)
+    modalidade_id = models.UUIDField(null=True, blank=True)
+    modalidade_codigo = models.CharField(max_length=100, blank=True, default="")
+    # O documento da inscrição que o Edital declarou aproveitado, como estava publicado (FR-3576).
+    aproveita_requisito_id = models.UUIDField(null=True, blank=True)
+    gravada_em = models.DateTimeField()
+
+    class Meta:
+        ordering = ["gravada_em", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["chamada", "requisito_id"], name="uq_item_da_convocacao_por_requisito"
+            ),
+            models.CheckConstraint(
+                condition=Q(situacao__in=["OBRIGATORIO", "FACULTATIVO", "NAO_SE_APLICA"]),
+                name="ck_item_da_convocacao_situacao",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.chave} — {self.situacao} na chamada {self.chamada_id}"
+
+
+class ApresentacaoDeDocumento(_AppendOnly):
+    """Uma versão do que se apresentou para um item: arquivo **ou** referência (FR-3579, FR-3576).
+
+    **A referência nunca aponta outra referência** (FR-3619): ou o documento da inscrição, ou a
+    apresentação de chamada anterior que guarda o arquivo. Assim a rastreabilidade não vira
+    corrente, e quem um dia entregar o documento encontra o arquivo num passo.
+
+    **`PROTECT`, e não `CASCADE`** (MAT-16): o documento da inscrição que esta linha cita não sai
+    com a inscrição.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    item = models.ForeignKey(
+        ItemDaListaDaConvocacao, on_delete=models.PROTECT, related_name="apresentacoes"
+    )
+    numero = models.PositiveIntegerField()
+    arquivo = models.FileField(
+        storage=ArmazenamentoPrivado(),
+        upload_to=caminho_da_apresentacao,
+        max_length=255,
+        blank=True,
+    )
+    nome_original = models.CharField(max_length=255, blank=True)
+    tamanho = models.PositiveBigIntegerField(default=0)
+    content_hash = models.CharField(max_length=64)
+    documento_da_inscricao = models.ForeignKey(
+        "inscricoes.DocumentoSubmetido",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="apresentacoes_que_o_aproveitam",
+    )
+    apresentacao_de_origem = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="aproveitamentos",
+    )
+    apresentado_por = models.CharField(max_length=255)
+    unidade_de_atuacao = models.CharField(max_length=100)
+    apresentado_em = models.DateTimeField()
+
+    class Meta:
+        ordering = ["item", "numero"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["item", "numero"], name="uq_apresentacao_por_item_e_numero"
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (
+                        ~Q(arquivo="")
+                        & Q(documento_da_inscricao__isnull=True)
+                        & Q(apresentacao_de_origem__isnull=True)
+                    )
+                    | (
+                        Q(arquivo="")
+                        & Q(documento_da_inscricao__isnull=False)
+                        & Q(apresentacao_de_origem__isnull=True)
+                    )
+                    | (
+                        Q(arquivo="")
+                        & Q(documento_da_inscricao__isnull=True)
+                        & Q(apresentacao_de_origem__isnull=False)
+                    )
+                ),
+                name="ck_apresentacao_arquivo_ou_referencia",
+            ),
+            models.CheckConstraint(condition=~Q(content_hash=""), name="ck_apresentacao_com_hash"),
+        ]
+
+    def __str__(self):
+        return f"apresentação {self.numero} do item {self.item_id}"
+
+    @property
+    def e_referencia(self):
+        return not self.arquivo
+
+
+class ConferenciaDeDocumento(_AppendOnly):
+    """O juízo de quem confere sobre um item (115, FR-3585). A mais recente do item prevalece.
+
+    **O hash conferido é cópia**, e é deliberada: o registro da conferência continua provando o que
+    foi julgado mesmo depois de o arquivo sair do GPS (§6 do complemento da auditoria).
+    """
+
+    class Resultado(models.TextChoices):
+        CONFORME = "CONFORME", "Conforme"
+        PENDENTE = "PENDENTE", "Pendente"
+        NAO_SE_APLICA = "NAO_SE_APLICA", "Não se aplica"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    item = models.ForeignKey(
+        ItemDaListaDaConvocacao, on_delete=models.PROTECT, related_name="conferencias"
+    )
+    apresentacao = models.ForeignKey(
+        ApresentacaoDeDocumento,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="conferencias",
+    )
+    hash_conferido = models.CharField(max_length=64, blank=True)
+    resultado = models.CharField(max_length=16, choices=Resultado.choices)
+    motivo = models.TextField(blank=True)
+    conferencia_anterior = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+    motivo_da_substituicao = models.TextField(blank=True)
+    conferido_por = models.CharField(max_length=255)
+    unidade_de_atuacao = models.CharField(max_length=100)
+    conferido_em = models.DateTimeField()
+
+    class Meta:
+        ordering = ["conferido_em", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(resultado__in=["CONFORME", "PENDENTE", "NAO_SE_APLICA"]),
+                name="ck_conferencia_resultado",
+            ),
+            models.CheckConstraint(
+                condition=Q(resultado="CONFORME") | ~Q(motivo=""),
+                name="ck_conferencia_motivo",
+            ),
+            models.CheckConstraint(
+                condition=~Q(resultado="CONFORME") | Q(apresentacao__isnull=False),
+                name="ck_conferencia_conforme_com_apresentacao",
+            ),
+            models.CheckConstraint(
+                condition=Q(apresentacao__isnull=True) | ~Q(hash_conferido=""),
+                name="ck_conferencia_hash",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.resultado} — item {self.item_id}"
