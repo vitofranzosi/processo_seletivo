@@ -57,11 +57,10 @@ download. Uma pessoa só é um clique: com tudo íntegro, o ZIP; com falha, uma 
       <ul class="documentos-da-formalizacao">
         {% for documento in pessoa.documentos %}
         <li>
-          <span class="nome-do-documento">{{ documento.nome }} <span class="nenhuma">({{ documento.momento }})</span></span>
+          <span class="nome-do-documento">{{ documento.nome }} <span class="nenhuma">({{ documento.momento }})</span>{% if documento.sem_conferencia %}<span class="nota">{{ nomes.SEM_CONFERENCIA_NA_CONVOCACAO }}</span>{% endif %}</span>
           {% if documento.incluivel %}
           <a class="acao" href="{% url 'interface:formalizacao-documento' edital.id pessoa.inscricao_id documento.origem documento.objeto_id %}" target="_blank" rel="noopener">Visualizar</a>
           <a class="acao secundaria" href="{% url 'interface:formalizacao-documento' edital.id pessoa.inscricao_id documento.origem documento.objeto_id %}?baixar=1">Baixar</a>
-          {% if documento.sem_conferencia %}<span class="nota">{{ nomes.SEM_CONFERENCIA_NA_CONVOCACAO }}</span>{% endif %}
           {% else %}
           <span class="situacao-do-documento">{{ documento.rotulo }}</span>
           {% endif %}

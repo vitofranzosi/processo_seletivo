@@ -18,6 +18,7 @@
 .documentos-da-formalizacao li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;
   margin:.3rem 0;overflow-wrap:anywhere}
 .nome-do-documento{flex:1 1 12rem}
+.nome-do-documento .nota{display:block;margin:0}
 .situacao-do-documento{color:var(--texto-fraco);font-size:.875rem}
 .acao.secundaria{border-color:var(--borda);color:var(--texto-fraco)}
 
