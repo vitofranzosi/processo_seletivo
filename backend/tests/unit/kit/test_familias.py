@@ -54,9 +54,14 @@ def test_todo_ativo_e_imagem_citados_existem_com_o_resumo_registrado(familia):
         assert caminho.is_file(), f"{familia.chave}: falta o ativo {nome} ({ativo.arquivo})"
         assert hashlib.sha256(caminho.read_bytes()).hexdigest() == ativo.sha256, nome
     for imagem in familia.imagens:
-        caminho = familia.pasta_dos_ativos / imagem.arquivo
-        assert caminho.is_file(), f"{familia.chave}: falta a imagem {imagem.chave}"
-        assert hashlib.sha256(caminho.read_bytes()).hexdigest() == imagem.sha256
+        assert set(imagem.arquivos) == set(familia.templates), imagem.chave
+        for formato, (arquivo, resumo) in imagem.arquivos.items():
+            caminho = familia.pasta_dos_ativos / arquivo
+            assert caminho.is_file(), f"{familia.chave}: falta {arquivo}"
+            assert hashlib.sha256(caminho.read_bytes()).hexdigest() == resumo, arquivo
+            # Reduzida ao tamanho de uso, no máximo 400 kB (FR-3826, SC-1138).
+            assert caminho.stat().st_size <= 400 * 1024, arquivo
+            assert formato in familia.templates
         assert imagem.descricao and imagem.licenca and imagem.origem
 
 
@@ -113,7 +118,8 @@ def test_registrar_recusa_familia_repetida_e_template_fora_do_lugar():
 def resumo_das_referencias(template):
     """O SHA-256 da lista `nome resumo` dos SVG de referência do template, em ordem de nome."""
     pasta = REFERENCIAS / template.pasta_das_referencias
-    arquivos = sorted(pasta.glob("*.svg"))
+    # As peças e as recusas: a referência de um cenário que o template recusa é o motivo.
+    arquivos = sorted([*pasta.glob("*.svg"), *pasta.glob("*.recusa")])
     assert arquivos, f"{template.identificador}: nenhuma referência em {pasta}"
     linhas = "".join(
         f"{arquivo.name} {hashlib.sha256(arquivo.read_bytes()).hexdigest()}\n"

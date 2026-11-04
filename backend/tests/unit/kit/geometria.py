@@ -6,8 +6,8 @@ quantidade dentro do rótulo; é isso que esta função pega. Os cenários de re
 e os sintéticos no limite (unitários) passam pela mesma função.
 """
 
-from processo_seletivo.interface import kit_peca
-from processo_seletivo.interface.kit_peca import Imagem, Linha, Retangulo, Texto
+from processo_seletivo.interface import kit_familias, kit_peca
+from processo_seletivo.interface.kit_peca import Figura, Imagem, Linha, Retangulo, Texto
 
 AREA_UTIL = (
     kit_peca.MARGEM,
@@ -49,25 +49,56 @@ def contraste(cor, fundo):
     return (claro + 0.05) / (escuro + 0.05)
 
 
+def _fundo_da_pagina(template):
+    """A cor sobre a qual o texto fica fora de todo bloco: o branco da Institucional, ou o tom do
+    fundo da imagem que a família declara (D-011)."""
+    nome = template.dimensoes.get("fundo")
+    return kit_familias.familia(template.familia).cor(nome) if nome else kit_peca.BRANCO
+
+
 def problemas(peca):
-    """Tudo o que a FR-3428 e a FR-3429 proíbem, por extenso. Vazio é peça bem composta."""
+    """Tudo o que a FR-3428, a FR-3429 e a FR-3822/FR-3824 proíbem, por extenso, no template da
+    peça. Vazio é peça bem composta."""
     achados = []
+    template = peca.template
+    formato = template.formato
+    area_util = formato.area_util
+    fundo_da_pagina = _fundo_da_pagina(template)
     textos = [e for e in peca.elementos if isinstance(e, Texto)]
     blocos = [e for e in peca.elementos if isinstance(e, Retangulo)]
     linhas = [e for e in peca.elementos if isinstance(e, Linha)]
     marcas = [e for e in peca.elementos if isinstance(e, Imagem)]
+    opacas = [e for e in peca.elementos if isinstance(e, Figura) and e.opaca]
+    obstaculos = dict(template.dimensoes.get("obstaculos", {}))
+    if template.area_da_imagem:
+        obstaculos["imagem"] = template.area_da_imagem
 
     for texto in textos:
         nome = f"{texto.campo} {texto.conteudo!r}"
-        if texto.tamanho < kit_peca.CORPO_MINIMO:
+        if texto.tamanho < formato.corpo_minimo:
             achados.append(f"{nome}: corpo {texto.tamanho} px, abaixo do mínimo")
-        if not _dentro(texto.caixa, AREA_UTIL):
+        if not _dentro(texto.caixa, area_util):
             achados.append(f"{nome}: fora da área útil, em {tuple(round(v) for v in texto.caixa)}")
+        for zona in formato.zonas_reservadas:
+            if _cruzam(texto.caixa, zona):
+                achados.append(f"{nome}: invade a zona reservada {zona}")
         if contraste(texto.cor, texto.fundo) < 4.5:
             achados.append(
                 f"{nome}: contraste {contraste(texto.cor, texto.fundo):.2f} abaixo do AA"
             )
-        if texto.fundo != kit_peca.BRANCO:
+        dentro_de_bloco = any(_dentro(texto.caixa, b.caixa) for b in [*blocos, *opacas])
+        if not dentro_de_bloco:
+            for chave, area in obstaculos.items():
+                if _cruzam(texto.caixa, area):
+                    achados.append(f"{nome}: sobre {chave}, em {area}")
+        for figura in opacas:
+            if _cruzam(texto.caixa, figura.caixa) and not _dentro(texto.caixa, figura.caixa):
+                achados.append(f"{nome}: cortado pelo {figura.campo}")
+        if texto.fundo != fundo_da_pagina and any(
+            _dentro(texto.caixa, f.caixa) and texto.fundo == kit_peca.BRANCO for f in opacas
+        ):
+            continue
+        if texto.fundo != fundo_da_pagina:
             # O bloco que o contém: o retângulo da cor do fundo sob a origem do texto, e o último
             # desenhado, que é o de cima.
             sob = [

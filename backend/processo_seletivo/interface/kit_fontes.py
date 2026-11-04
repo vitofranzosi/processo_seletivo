@@ -65,11 +65,38 @@ def _edital_sans(chave, recurso, peso):
     return FonteDoKit(chave, "Edital Sans", peso, fonte.PASTA / arquivo, fonte.SHA256[arquivo])
 
 
+def _do_kit(chave, familia, peso, arquivo, sha256):
+    return FonteDoKit(chave, familia, peso, PASTA / arquivo, sha256)
+
+
 FONTES = {
     item.chave: item
     for item in (
         _edital_sans("edital-sans-regular", fonte.REGULAR, 400),
         _edital_sans("edital-sans-negrito", fonte.NEGRITO, 700),
+        # A Pós Lato Sensu (119, incremento 2): subconjuntos WinAnsi da Poppins, OFL sem nome
+        # reservado, gerados por `scripts/gerar_subconjunto_do_kit.py`.
+        _do_kit(
+            "poppins-regular",
+            "Poppins",
+            400,
+            "Poppins-Regular.ttf",
+            "1a28e1d7124696a93c1e5894aff6dc0ca74c72c71777ed8fb8c747c2a657a3aa",
+        ),
+        _do_kit(
+            "poppins-seminegrito",
+            "Poppins",
+            600,
+            "Poppins-SemiBold.ttf",
+            "fefe0b3d545ead98fb66a28b5f23fc9b570d5eeb025c11fe3ae0252531892a7e",
+        ),
+        _do_kit(
+            "poppins-negrito",
+            "Poppins",
+            700,
+            "Poppins-Bold.ttf",
+            "7422528506b3264a11d167a0de0e757a322ded7c08f4fca6df4a7d43d02951f5",
+        ),
     )
 }
 
