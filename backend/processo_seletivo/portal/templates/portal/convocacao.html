@@ -3,6 +3,7 @@
 {% block conteudo %}
 <h1>Convocação</h1>
 <p class="sub">{{ selecao.processo_titulo }}</p>
+{% include "portal/_mensagens.html" %}
 
 {% comment %}
 **Duas ausencias, e elas nao sao a mesma coisa** (FR-294). "Nao ha convocacao" diz que o certame
@@ -57,6 +58,8 @@ frase neutra é a mesma do acompanhamento, e vem da mesma constante (063, FR-118
   <p>Siga as instruções do Edital para esta convocação{% if convocacao.vencimento %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
   {% endif %}
 </section>
+{% comment %}Os documentos que a chamada pede, quando pede algum (115). Sem eles, a tela e a de antes.{% endcomment %}
+{% if documentos_da_convocacao %}{% include "portal/_documentos_da_convocacao.html" %}{% endif %}
 {% comment %}O caminho ao requerimento, quando a politica da 029 diz que ele cabe (059, D-007).{% endcomment %}
 {% include "portal/_chamado_do_requerimento.html" %}
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>

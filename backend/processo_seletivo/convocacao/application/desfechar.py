@@ -136,6 +136,7 @@ def registrar(
     _recusar_desfecho_incompativel(convocacao, especie=especie)
     _recusar_nao_atendimento_prematuro(convocacao, especie=especie, agora=ctx.now)
     _recusar_inercia_sem_ocupacao(convocacao, especie=especie, agora=ctx.now)
+    _recusar_inclusao_sem_documentos(convocacao, especie=especie)
     atestado = _atestado(especie, atestado_id, convocacao)
     # **O identificador do desfecho nasce antes dele**, e a ordem é a mesma que a `016` usa para
     # o movimento de vaga: o Resultado sucessor precisa citar o desfecho que o produziu, e o
@@ -179,6 +180,34 @@ def registrar(
     )
     desfecho.save()
     return desfecho
+
+
+def _recusar_inclusao_sem_documentos(convocacao, *, especie):
+    """Aceite e regularização só com os obrigatórios conferidos (115, FR-3592).
+
+    **Vale para o desfecho raiz e para o sucessor**: a guarda é sobre incluir alguém na ocupação, e
+    um aceite que sucede outro desfecho inclui do mesmo jeito. Os outros cinco desfechos não leem o
+    estado documental (FR-3593) — e nenhum desfecho nasce dele.
+
+    A leitura é feita sob a trava do Processo, que o desfecho já detém, e com a linha da inscrição
+    travada, para que um envio do candidato não atravesse a decisão.
+    """
+    if especie not in nomes.DESFECHOS_QUE_INCLUEM:
+        return
+    from processo_seletivo.convocacao.application.documentos import leitura_da_chamada
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    Inscricao.objects.select_for_update().filter(pk=convocacao.inscricao_id).first()
+    pendentes = leitura_da_chamada(convocacao).pendencias_para_incluir
+    if not pendentes:
+        return
+    nomes_dos_itens = ", ".join(lido.nome for lido in pendentes)
+    raise DomainError(
+        nomes.DOCUMENTOS_NAO_CONFERIDOS,
+        "Para registrar este desfecho, todo documento obrigatório da convocação precisa estar "
+        f"conferido como conforme ou como não se aplica. Falta: {nomes_dos_itens}.",
+        409,
+    )
 
 
 def apuracao_seguinte(ctx, convocacao, *, actor, quantos, correlation_id):

@@ -483,3 +483,133 @@ def _par(chave):
     except ValueError as exc:
         raise nao_encontrado() from exc
     return identificador(edital_bruto), identificador(etapa_bruto)
+
+
+# ---------------------------------------------------------------------------
+# A alocação à conferência dos documentos da convocação (115, FR-3597, D-010)
+# ---------------------------------------------------------------------------
+
+
+def alocar_a_conferencia(
+    *, actor, processo_id, membro_id, edital_id, perfil_id=None, idempotency_key, correlation_id
+):
+    """Aloca um membro ativo à conferência dos documentos da convocação deste Edital.
+
+    **Pela mesma porta da alocação à Etapa** — quem gere a comissão —, e com o mesmo desenho: só
+    membro ativo, só Edital do Processo, e a alocação repetida recusada. `perfil_id` nulo alcança
+    todos os Perfis; com valor, só as convocações daquele Perfil (D-010).
+    """
+    from processo_seletivo.comissoes.models import AlocacaoAConferencia
+
+    perfil = identificador(perfil_id) if perfil_id else None
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation="comissao:alocar-conferencia",
+        payload={"membro": str(membro_id), "edital": str(edital_id), "perfil": str(perfil or "")},
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        membro = MembroComissao.objects.filter(
+            pk=identificador(membro_id), processo=ctx.processo, ativo=True
+        ).first()
+        if membro is None:
+            raise DomainError(
+                "pessoa_nao_e_membro_ativo",
+                "Só membros ativos da comissão podem ser alocados.",
+                422,
+                campo="membro_id",
+            )
+        edital = Edital.objects.filter(
+            pk=identificador(edital_id),
+            processo=ctx.processo,
+            institution_scope=ctx.processo.institution_scope,
+        ).first()
+        if edital is None:
+            raise nao_encontrado()
+        if ctx.repetido:
+            return AlocacaoAConferencia.objects.get(pk=ctx.reserva.result_id), 201
+        # **O Perfil é do conteúdo vigente**, como a Etapa da alocação à Etapa: um Perfil que o
+        # Edital não tem produziria alocação ativa que não alcança convocação nenhuma.
+        if perfil is not None:
+            from processo_seletivo.publicacoes.application.selectors import effective_version
+
+            perfis = {
+                str(p.get("id")) for p in effective_version(edital_id=edital.id).content["profiles"]
+            }
+            if str(perfil) not in perfis:
+                raise nao_encontrado()
+        if not funcoes.tem_presidente(ctx.processo):
+            raise DomainError(
+                "comissao_sem_presidente",
+                "Esta comissão ainda não tem presidente. "
+                "Designe a presidência antes de distribuir trabalho.",
+                409,
+            )
+        try:
+            alocacao = AlocacaoAConferencia.objects.create(
+                membro=membro,
+                edital=edital,
+                perfil_id=perfil,
+                criado_em=ctx.now,
+                criado_por=actor.subject,
+                unidade_de_atuacao=actor.institution_scope,
+            )
+        except IntegrityError as exc:
+            raise DomainError(
+                "alocacao_ja_existe",
+                "Esta pessoa já está alocada a esta conferência.",
+                409,
+                campo="membro_id",
+            ) from exc
+        auditar(
+            ctx=ctx,
+            actor=actor,
+            operation="CONVOCACAO_ALOCAR_CONFERENCIA",
+            aggregate=alocacao,
+            reason=(
+                f"{membro.identity_subject} — conferência dos documentos da convocação do Edital "
+                f"{edital.number}/{edital.year}"
+                + (f", Perfil {perfil}" if perfil else ", todos os Perfis")
+            ),
+            correlation_id=correlation_id,
+            idempotency_key=idempotency_key,
+        )
+        return ctx.concluir(alocacao, 201)
+
+
+def revogar_alocacao_a_conferencia(
+    *, actor, processo_id, alocacao_id, idempotency_key, correlation_id
+):
+    """Desfaz a alocação por inativação — a linha fica, e a trilha continua apontando para ela."""
+    from processo_seletivo.comissoes.models import AlocacaoAConferencia
+
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation="comissao:revogar-conferencia",
+        payload={"alocacao": str(alocacao_id)},
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        alocacao = (
+            AlocacaoAConferencia.objects.select_related("membro", "edital")
+            .filter(pk=identificador(alocacao_id), membro__processo=ctx.processo)
+            .first()
+        )
+        if alocacao is None:
+            raise nao_encontrado()
+        if ctx.repetido or not alocacao.ativo:
+            return alocacao, 200
+        AlocacaoAConferencia.objects.filter(pk=alocacao.pk).update(
+            ativo=False, inativado_em=ctx.now, inativado_por=actor.subject
+        )
+        alocacao.refresh_from_db()
+        auditar(
+            ctx=ctx,
+            actor=actor,
+            operation="CONVOCACAO_REVOGAR_ALOCACAO",
+            aggregate=alocacao,
+            reason=f"{alocacao.membro.identity_subject} — conferência revogada",
+            correlation_id=correlation_id,
+            idempotency_key=idempotency_key,
+        )
+        return ctx.concluir(alocacao, 200)

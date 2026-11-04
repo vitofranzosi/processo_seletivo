@@ -593,6 +593,25 @@ urlpatterns = [
         views.comunicar_view,
         name="comunicar-convocacao",
     ),
+    # Os documentos da convocação (115): a página filha da linha, a entrega do arquivo e a
+    # conferência de um item. Pendem de **uma** convocação, como o desfecho e a comunicação.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos",
+        views.documentos_da_convocacao,
+        name="documentos-da-convocacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos/"
+        "<uuid:apresentacao_id>",
+        views.documento_da_convocacao,
+        name="documento-da-convocacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos/"
+        "itens/<uuid:item_id>/conferencia",
+        views.conferir_documento_view,
+        name="conferir-documento",
+    ),
     # O atestado de fato externo (019, US5). Pende da **Inscrição**, e não do marco: o fato é sobre
     # a pessoa — ela não acessou o ambiente, não apareceu na primeira semana —, e não sobre o
     # recorte. É por isso que ele existe antes e fora do desfecho que o cita.

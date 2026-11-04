@@ -146,6 +146,10 @@ CAMPOS = {
         "profileId": "Exigido apenas do Perfil",
         "modalityId": "Exigido apenas da modalidade",
         "modalityCode": "Modalidade em todos os Perfis",
+        # Não retificáveis (115, D-014), mas o resumo nomeia todo campo que existe: a diferença
+        # entre versões pode vir da publicação original comparada à primeira Retificação.
+        "moment": "Quando é pedido",
+        "reusesRequirementId": "Atendido pelo documento da inscrição",
     },
     "competitionModalities": {
         "code": "Código",

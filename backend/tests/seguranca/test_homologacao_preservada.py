@@ -144,6 +144,12 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
     # A 107 acrescentou duas depois das da 106 — a suspensão e a reativação —, e a contagem sobe
     # junto, que é o que este guardião existe para cobrar (`SC-1001`).
     da_107 = ("seguranca_suspensaodepessoa", "seguranca_reativacaodepessoa")
-    assert TABELAS_APPEND_ONLY[-5:] == novas + da_107
-    assert len(TABELAS_APPEND_ONLY) == 46
-    assert len(set(TABELAS_APPEND_ONLY)) == 46
+    # E a 115, as três dos documentos da convocação, depois das da 107.
+    da_115 = (
+        "convocacao_itemdalistadaconvocacao",
+        "convocacao_apresentacaodedocumento",
+        "convocacao_conferenciadedocumento",
+    )
+    assert TABELAS_APPEND_ONLY[-8:] == novas + da_107 + da_115
+    assert len(TABELAS_APPEND_ONLY) == 49
+    assert len(set(TABELAS_APPEND_ONLY)) == 49

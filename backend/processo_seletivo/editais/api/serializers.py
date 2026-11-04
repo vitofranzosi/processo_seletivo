@@ -297,6 +297,13 @@ class DocumentRequirementSerializer(serializers.Serializer):
     modalityCode = serializers.CharField(
         required=False, allow_null=True, allow_blank=False, max_length=100
     )
+    # Quando é pedido (115, FR-3563): ausente é a inscrição, como em todo documento anterior.
+    moment = serializers.ChoiceField(
+        choices=("AT_ENROLLMENT", "AT_CALL"), required=False, default="AT_ENROLLMENT"
+    )
+    # O documento da inscrição que atende este, da convocação (115, FR-3566). Ausente e nulo
+    # significam "não aproveita".
+    reusesRequirementId = serializers.UUIDField(required=False, allow_null=True)
 
 
 class EditalDraftSerializer(serializers.Serializer):

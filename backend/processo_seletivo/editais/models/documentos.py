@@ -63,6 +63,19 @@ class DocumentoExigido(models.Model):
     # mesma convenção de `instructions`: uma segunda forma de ausência para texto faria o rascunho
     # admitir duas. No conteúdo publicado a ausência é `null`, como no degrau 17.
     modalidade_codigo = models.CharField(max_length=100, blank=True, default="")
+    # **Quando** o documento é pedido: na inscrição ou na convocação (115, FR-3563). O vocabulário é
+    # o do Requerimento de Matrícula, e a inscrição é o padrão porque é o que todo documento
+    # anterior a esta feature significava.
+    momento = models.CharField(
+        max_length=20,
+        choices=[("AT_ENROLLMENT", "Na inscrição"), ("AT_CALL", "Na convocação")],
+        default="AT_ENROLLMENT",
+    )
+    # O documento da inscrição que atende este, da convocação, se enviado (115, FR-3566). **UUID, e
+    # não chave estrangeira**: as linhas do rascunho são apagadas e recriadas a cada gravação, e uma
+    # FK entre duas delas se perderia na recriação. A coerência é conferida na publicação, como a do
+    # Perfil que o recorte aponta.
+    aproveita = models.UUIDField(null=True, blank=True)
 
     class Meta:
         ordering = ["order", "id"]
@@ -75,6 +88,11 @@ class DocumentoExigido(models.Model):
                 condition=models.Q(modalidade_codigo="")
                 | models.Q(perfil__isnull=True, modalidade__isnull=True),
                 name="ck_documento_recorte_exclusivo",
+            ),
+            # Só o documento da convocação aproveita outro; a recusa com mensagem é do domínio.
+            models.CheckConstraint(
+                condition=models.Q(aproveita__isnull=True) | models.Q(momento="AT_CALL"),
+                name="ck_documento_aproveita_so_na_convocacao",
             ),
         ]
 

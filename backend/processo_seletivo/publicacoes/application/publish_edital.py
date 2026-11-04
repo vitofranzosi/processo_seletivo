@@ -406,6 +406,11 @@ def _document_requirements(edital: Edital) -> list[dict]:
             "attachmentId": None if documento.anexo_id is None else str(documento.anexo_id),
             # O recorte transversal, ou `null` para "não recorta por código" (044, FR-700).
             "modalityCode": documento.modalidade_codigo or None,
+            # Quando é pedido, e o documento da inscrição que o atende (115, FR-3563, FR-3566).
+            "moment": documento.momento,
+            "reusesRequirementId": None
+            if documento.aproveita is None
+            else str(documento.aproveita),
         }
         for documento in edital.documentos_exigidos.all()
     ]

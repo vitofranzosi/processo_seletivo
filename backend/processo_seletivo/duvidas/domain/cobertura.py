@@ -21,7 +21,7 @@ decide o que a resposta mostra sem ser mostrado; e `EXCLUIDO`, com o motivo.
 from __future__ import annotations
 
 #: A versão do conteúdo publicado que esta tabela classifica (`shared/canonical.py`).
-VERSAO_DO_ESQUEMA = 17
+VERSAO_DO_ESQUEMA = 18
 
 LOCALIZACAO = "LOCALIZACAO"
 #: O campo decide **o que** a resposta mostra, sem ser mostrado: a aplicabilidade do documento, o
@@ -163,6 +163,10 @@ COBERTURA = {
     "/documentRequirements/*/modalityId": REGRA,
     "/documentRequirements/*/modalityCode": REGRA,
     "/documentRequirements/*/attachmentId": ("P-05",),
+    # Quando é pedido, e o documento da inscrição que o atende (115). São regra de quem apresenta o
+    # quê, como o recorte.
+    "/documentRequirements/*/moment": REGRA,
+    "/documentRequirements/*/reusesRequirementId": REGRA,
     # ---- Etapas
     "/stages/*/id": IDENTIDADE,
     "/stages/*/name": ("P-07",),

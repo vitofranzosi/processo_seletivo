@@ -46,6 +46,7 @@ ETAPA = {
 DOCUMENTO = {
     "A": "00000000-0000-0000-0000-000000000581",
     "B": "00000000-0000-0000-0000-000000000582",
+    "C": "00000000-0000-0000-0000-000000000583",
 }
 # As identidades que o Edital máximo acrescenta (026, T001).
 MARCO = "00000000-0000-0000-0000-000000000591"
@@ -478,6 +479,17 @@ def rascunho_completo():
             "required": True,
             "order": 2,
             "profileId": PERFIL["A"],
+        },
+        # O da convocação, que aproveita o da inscrição (115): o momento e o aproveitamento só são
+        # alcançados pela travessia do contrato se o Edital máximo os publicar com valor.
+        {
+            "id": DOCUMENTO["C"],
+            "key": "identificacao-na-convocacao",
+            "name": "Documento de identificação atualizado",
+            "required": True,
+            "order": 3,
+            "moment": "AT_CALL",
+            "reusesRequirementId": DOCUMENTO["A"],
         },
     ]
     # O Evento ganha local: `location` é emitido no conteúdo publicado e, até a `026`, não era

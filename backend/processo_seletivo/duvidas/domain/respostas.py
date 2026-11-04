@@ -43,7 +43,12 @@ from processo_seletivo.duvidas.domain.estruturas import (
     ValorFuturo,
 )
 from processo_seletivo.duvidas.domain.origem import origens
-from processo_seletivo.editais.domain.documentos import NAO_SE_APLICA, OBRIGATORIO, aplicabilidade
+from processo_seletivo.editais.domain.documentos import (
+    NA_CONVOCACAO,
+    NAO_SE_APLICA,
+    OBRIGATORIO,
+    aplicabilidade,
+)
 from processo_seletivo.editais.domain.fase_do_evento import marcos_pendentes
 from processo_seletivo.inscricoes.domain.periodo import evento_designado, periodo_de_inscricoes
 from processo_seletivo.publicacoes.domain.changes import ABSENT
@@ -381,6 +386,25 @@ def _p05(contexto, parametros, pergunta, canal):
     else:
         rascunho.explicacao = (
             f"Nenhum documento exigido se aplica ao Perfil {perfil.get('code')}{lista}."
+        )
+    # **O que só a convocação pede** (115): a pergunta é sobre a inscrição, e os documentos dela são
+    # os de cima; mas calar os da convocação faria a pessoa descobri-los só quando chamada, e o
+    # Edital os publica numa seção própria.
+    na_convocacao = [
+        veredito.requisito.get("name", "")
+        for veredito in aplicabilidade(
+            conteudo,
+            profile_id=str(perfil.get("id")),
+            modality_id=str(modalidade.get("id")) if modalidade else None,
+            momento=NA_CONVOCACAO,
+        )
+        if veredito.situacao != NAO_SE_APLICA
+    ]
+    if na_convocacao:
+        rascunho.explicacao += (
+            " Se você for convocado, a convocação pedirá também: "
+            + ", ".join(na_convocacao)
+            + ". Esses não são enviados na inscrição."
         )
     if divergentes:
         rascunho.tipo = DEPENDE_DA_LEITURA

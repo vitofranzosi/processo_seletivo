@@ -109,4 +109,9 @@ class TestVigenciaNaoEColuna:
             "ComunicacaoEmitida",
             "Convocacao",
             "DesfechoDaConvocacao",
+            # Os documentos da convocação (115): o que a chamada pediu, o que se apresentou e o
+            # juízo de quem conferiu — append-only como os quatro de cima, e nenhum deles é vaga.
+            "ItemDaListaDaConvocacao",
+            "ApresentacaoDeDocumento",
+            "ConferenciaDeDocumento",
         }

@@ -418,3 +418,39 @@ def test_remissao_a_anexo_fora_do_nucleo_nao_muda_o_tipo():
     )
     assert any("Anexo I" in r.conteudo for r in documentos.referencias)
     assert "não está completa" not in documentos.explicacao.conteudo
+
+
+# ---- P-05: os documentos que só a convocação pede (115) ---------------------------------------
+
+
+def test_a_p05_menciona_o_que_so_a_convocacao_pede():
+    """Revisão do #369: calar os documentos da convocação fazia a pessoa descobri-los só quando
+    chamada, e o Edital os publica numa seção própria."""
+    contexto = contexto_do_corpus("91", ANTES_DA_VIGENCIA_FUTURA)
+    conteudo = copy.deepcopy(contexto.conteudo)
+    conteudo["documentRequirements"].append(
+        {
+            "id": "00000000-0000-0000-0000-0000000115d9",
+            "key": "certidao-na-convocacao",
+            "name": "Certidão de nascimento ou casamento",
+            "instructions": "",
+            "required": True,
+            "order": 99,
+            "profileId": None,
+            "modalityId": None,
+            "attachmentId": None,
+            "modalityCode": None,
+            "moment": "AT_CALL",
+            "reusesRequirementId": None,
+        }
+    )
+
+    resposta = responder(
+        replace(contexto, conteudo=conteudo, futuras=()),
+        "P-05",
+        perfil="INF-BJN",
+        modalidade="nenhuma",
+    )
+
+    assert "Certidão de nascimento ou casamento" in resposta.explicacao.conteudo
+    assert "Se você for convocado" in resposta.explicacao.conteudo

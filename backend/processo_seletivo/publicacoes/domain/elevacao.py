@@ -120,6 +120,9 @@ DEGRAUS_DE_DOCUMENTO = {
     # pelo código da Modalidade", e é o que todo requisito publicado antes afirma: recortava por
     # Perfil, por Modalidade de um Perfil, ou por nada.
     17: {"modalityCode": None},
+    # **O degrau 18 é o momento** (115, FR-3563). Todo documento publicado antes era pedido na
+    # inscrição — a convocação não sabia pedir nada —, e nenhum aproveitava outro.
+    18: {"moment": "AT_ENROLLMENT", "reusesRequirementId": None},
 }
 
 COLECAO_DE_DOCUMENTOS = "documentRequirements"

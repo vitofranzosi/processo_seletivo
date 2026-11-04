@@ -17,6 +17,24 @@ from processo_seletivo.editais.domain.perfis import RecusaDeCampo
 
 SEM_RESTRICAO = None
 
+# **Quando** o documento é pedido (115, FR-3563). O vocabulário é o do Requerimento de Matrícula
+# (`matriculationRequest.moment`), de propósito: são as mesmas duas ocasiões do mesmo certame, e uma
+# segunda grafia para elas faria o Edital dizer "na convocação" de dois jeitos. A ausência é a
+# inscrição, porque é o que todo Documento Exigido publicado antes desta feature significava.
+NA_INSCRICAO = "AT_ENROLLMENT"
+NA_CONVOCACAO = "AT_CALL"
+MOMENTOS = (NA_INSCRICAO, NA_CONVOCACAO)
+
+
+def momento_de(requisito: dict) -> str:
+    """O momento declarado, com a ausência lida como inscrição (FR-3563)."""
+    return requisito.get("moment") or NA_INSCRICAO
+
+
+def do_momento(requisitos, momento: str) -> list[dict]:
+    """Os requisitos de um momento, e só eles — o filtro que toda leitura da inscrição atravessa."""
+    return [requisito for requisito in requisitos or [] if momento_de(requisito) == momento]
+
 
 class DocumentRequirementValidationError(RecusaDeCampo):
     pass
@@ -64,6 +82,68 @@ def validate_document_requirements(requirements: list[dict], *, profiles: list[d
     for requirement in requirements:
         validate_document_requirement(requirement)
         _validate_aplicabilidade(requirement, por_perfil)
+    for identidade, campo, mensagem in problemas_do_momento(requirements):
+        raise DocumentRequirementValidationError(mensagem, campo=campo, identidade=identidade)
+
+
+def problemas_do_momento(requisitos: list[dict]) -> list[tuple[str, str, str]]:
+    """O momento ou o aproveitamento incoerentes, como `(id, campo, mensagem)` (FR-3566).
+
+    Uma regra, duas leituras: a gravação do rascunho recusa a primeira, e a conferência da
+    publicação lista todas — a Retificação alcança o documento aproveitado sem passar pela tela.
+    **O aproveitamento só existe da convocação para a inscrição**, e nunca em cadeia: é o que deixa
+    a referência apontar um arquivo de origem num passo só (FR-3619).
+    """
+    por_id = {str(r.get("id")): r for r in requisitos if isinstance(r, dict) and r.get("id")}
+    problemas = []
+    for requisito in requisitos:
+        if not isinstance(requisito, dict):
+            continue
+        identidade = str(requisito.get("id", ""))
+        nome = requisito.get("name", "")
+        momento = momento_de(requisito)
+        if momento not in MOMENTOS:
+            problemas.append(
+                (
+                    identidade,
+                    "moment",
+                    f"O Documento Exigido '{nome}' é pedido na inscrição ou na convocação, e nada "
+                    "mais.",
+                )
+            )
+            continue
+        aproveita = requisito.get("reusesRequirementId") or SEM_RESTRICAO
+        if aproveita is SEM_RESTRICAO:
+            continue
+        if momento != NA_CONVOCACAO:
+            problemas.append(
+                (
+                    identidade,
+                    "reusesRequirementId",
+                    f"O Documento Exigido '{nome}' é pedido na inscrição, e só o documento pedido "
+                    "na convocação aproveita outro.",
+                )
+            )
+            continue
+        alvo = por_id.get(str(aproveita))
+        if alvo is None or str(aproveita) == identidade:
+            problemas.append(
+                (
+                    identidade,
+                    "reusesRequirementId",
+                    f"O Documento Exigido '{nome}' aproveita um documento que não é deste Edital.",
+                )
+            )
+        elif momento_de(alvo) != NA_INSCRICAO:
+            problemas.append(
+                (
+                    identidade,
+                    "reusesRequirementId",
+                    f"O Documento Exigido '{nome}' só pode aproveitar um documento pedido na "
+                    "inscrição.",
+                )
+            )
+    return problemas
 
 
 def _validate_aplicabilidade(requirement: dict, por_perfil: dict) -> None:
@@ -219,7 +299,13 @@ def recorte_de(requisito: dict) -> Recorte:
     return Recorte(TODOS)
 
 
-def aplicabilidade(conteudo: dict, *, profile_id: str, modality_id: str | None) -> list[Veredito]:
+def aplicabilidade(
+    conteudo: dict,
+    *,
+    profile_id: str,
+    modality_id: str | None,
+    momento: str = NA_INSCRICAO,
+) -> list[Veredito]:
     """O veredito de **cada** Documento Exigido para uma inscrição, na ordem declarada (FR-705).
 
     É a regra única. O cartão público, o rascunho, o bloqueio do envio, a gravação da lista e a
@@ -230,13 +316,18 @@ def aplicabilidade(conteudo: dict, *, profile_id: str, modality_id: str | None) 
     O recorte por código se resolve **no Perfil da inscrição**: o documento vale quando a Modalidade
     que ela escolheu, lida ali, tem aquele código (FR-701). O PcD do C1 e o PcD do C2 são objetos
     distintos; o que eles têm em comum é o código, e é só isso que o recorte afirma.
+
+    **Só os documentos do momento pedido** (115, FR-3568). O padrão é a inscrição, e é ele que faz
+    toda leitura que já existia — cartão, rascunho, envio, lista, Mesa — continuar pedindo só o que
+    a inscrição pede, sem que nenhuma delas precise saber que a convocação também pede documento.
     """
     perfis = _perfis(conteudo)
     perfil_da_inscricao = perfis.get(str(profile_id))
     modalidade_escolhida = _modalidade_do_perfil(perfil_da_inscricao, modality_id)
     vereditos = []
     for requisito in sorted(
-        conteudo.get("documentRequirements") or [], key=lambda item: item.get("order", 0)
+        do_momento(conteudo.get("documentRequirements"), momento),
+        key=lambda item: item.get("order", 0),
     ):
         recorte = recorte_de(requisito)
         aplica = _se_aplica(recorte, profile_id, modality_id, modalidade_escolhida)
@@ -257,7 +348,9 @@ def aplicabilidade(conteudo: dict, *, profile_id: str, modality_id: str | None) 
     return vereditos
 
 
-def aplicaveis(conteudo: dict, *, profile_id: str, modality_id: str | None) -> list[dict]:
+def aplicaveis(
+    conteudo: dict, *, profile_id: str, modality_id: str | None, momento: str = NA_INSCRICAO
+) -> list[dict]:
     """Os requisitos que valem para uma inscrição, e nada além — o filtro sobre `aplicabilidade`.
 
     Função pura sobre o conteúdo publicado: é ela que decide o que pedir ao candidato, e é aqui que
@@ -267,7 +360,9 @@ def aplicaveis(conteudo: dict, *, profile_id: str, modality_id: str | None) -> l
     """
     return [
         veredito.requisito
-        for veredito in aplicabilidade(conteudo, profile_id=profile_id, modality_id=modality_id)
+        for veredito in aplicabilidade(
+            conteudo, profile_id=profile_id, modality_id=modality_id, momento=momento
+        )
         if veredito.situacao != NAO_SE_APLICA
     ]
 
