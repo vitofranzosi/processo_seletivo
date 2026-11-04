@@ -11,6 +11,7 @@ O que se prova, na ordem da jornada:
   FR-3594, SC-1086).
 """
 
+import re
 from datetime import timedelta
 from unittest import mock
 
@@ -343,7 +344,39 @@ def test_depois_do_vencimento_a_apresentacao_e_recusada_e_nada_e_gravado(aluno, 
             apresentar(pessoa, convocacao, CERTIDAO)
 
     assert recusa.value.code == nomes.PRAZO_DA_CONVOCACAO_DECORRIDO
-    assert "A comissão vai decidir" in recusa.value.detail
+    # O núcleo único do vencido (FR-3748 da `118`), o mesmo da recusa do Requerimento.
+    assert recusa.value.detail == servico.frase_do_prazo_decorrido(convocacao)
+    assert recusa.value.detail.endswith(
+        "O fim do prazo não decide nada sozinho: quem registra o resultado é a comissão."
+    )
+    assert re.match(r"O prazo terminou em \d\d/\d\d/\d{4}, às \d\dh\d\d\.", recusa.value.detail)
+    assert not item(convocacao, CERTIDAO).apresentacoes.exists()
+
+
+def test_com_o_processo_encerrado_a_recusa_nao_diz_que_o_prazo_venceu(aluno, gestor):
+    """M: com o Processo em estado final, a recusa é a do Processo, e não o núcleo do vencido.
+
+    Mesmo com o vencimento decorrido junto, vale o Processo (D-015 da `118`): a frase do vencido
+    diria que a comissão ainda registra o resultado, e com o Processo encerrado ninguém registra.
+    """
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    edital, _, _ = aluno
+    pessoa, convocacao = convocar_primeira(
+        aluno, gestor, vencimento=timezone.now() + timedelta(minutes=1)
+    )
+    comunicar(edital, gestor, convocacao)
+    ProcessoSeletivo.objects.filter(editais__id=edital.id).update(
+        status=ProcessoSeletivo.Status.ENCERRADO
+    )
+
+    for agora in (timezone.now(), timezone.now() + timedelta(days=2)):
+        with mock.patch("django.utils.timezone.now", return_value=agora):
+            with pytest.raises(DomainError) as recusa:
+                apresentar(pessoa, convocacao, CERTIDAO)
+        assert recusa.value.code != nomes.PRAZO_DA_CONVOCACAO_DECORRIDO
+        assert "prazo terminou" not in recusa.value.detail.lower()
+        assert "não decide nada sozinho" not in recusa.value.detail
     assert not item(convocacao, CERTIDAO).apresentacoes.exists()
 
 

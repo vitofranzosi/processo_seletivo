@@ -717,12 +717,26 @@ alheio ao ator de cada passo.**
 
 ### 10.9 Área do Candidato
 
-- **FR-405**: A Área do Candidato MUST apresentar o requerimento em cinco estados: *não aplicável*,
+- **FR-405** *(acrescida pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  A Área do Candidato MUST apresentar o requerimento em cinco estados: *não aplicável*,
   *ainda indisponível*, *disponível*, *em preenchimento* e *enviado* — e MUST distinguir *"este
   certame não pede requerimento"* de *"ainda não chegou a sua vez"*, pela mesma razão que a tela de
   convocação distingue as duas ausências dela.
-- **FR-406**: Enviado, o requerimento MUST continuar legível pelo candidato, mostrando exatamente o
+
+  **Acréscimo da `118`.** A explicação do estado *enviado* MUST depender da convocação, pela FR-3752 da `118`: quem
+  já foi convocado não lê "se você for convocado". Com o prazo da chamada decorrido e nenhum
+  requerimento vigente, a tela MUST mostrar "O prazo terminou", e não a recusa genérica
+  (FR-3754 da `118`).
+
+  > **Redação anterior à `118`:** a mesma, sem este acréscimo.
+- **FR-406** *(acrescida pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  Enviado, o requerimento MUST continuar legível pelo candidato, mostrando exatamente o
   que o sistema recebeu, sem redigitação e sem reenvio.
+
+  **Acréscimo da `118`.** Com convocação vigente, a tela do enviado MUST oferecer o caminho de volta à convocação
+  (FR-3752 da `118`).
+
+  > **Redação anterior à `118`:** a mesma, sem este acréscimo.
 
 ## 11. Modelo de domínio
 

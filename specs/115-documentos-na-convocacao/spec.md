@@ -229,8 +229,16 @@ agência.
 1. **Given** um Documento na convocação com modelo anexo, **When** o convocado abre a tela da
    convocação, **Then** pode baixar o modelo publicado ali mesmo.
 2. **Given** a Ficha apresentada e conferida *conforme*, **When** o aceite é registrado, **Then** a
-   gestão mostra *"Apto para formalização"* e o portal mantém a frase atual de que nenhum ato do GPS
-   confirma matrícula ou contratação.
+   gestão mostra *"Apto para formalização"*, e o portal mostra *"Vaga aceita"* e a frase de que o
+   registro não é matrícula, bolsa nem contrato (FR-3750 da `118`). *(Revisado pela `118` em
+   2026-11-04.)*
+
+   > **Redação anterior à `118`, preservada:** "… **Then** a gestão mostra *"Apto para
+   > formalização"* e o portal mantém a frase atual de que nenhum ato do GPS confirma matrícula ou
+   > contratação."
+   >
+   > *Por que mudou:* a "frase atual" não existia em tela nenhuma do portal; estava só num
+   > comentário de `portal/situacao.py` (F8).
 3. **Given** um Edital de bolsista **sem** Requerimento de Matrícula, **When** o convocado abre a
    tela, **Then** ela mostra só os documentos, e nada de requerimento.
 
@@ -573,13 +581,28 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 
 #### C. A apresentação pelo portal
 
-- **FR-3577**: O titular da inscrição MUST ver a lista na tela da convocação da `059`, para a
-  convocação vigente. Cada item mostra:
+- **FR-3577** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  O titular da inscrição MUST ver a lista na tela da convocação da `059`, para a convocação
+  vigente, organizada pelos blocos da FR-3735 da `118`: o que fazer agora, prazo, o que falta, o que
+  já apresentou e os dados da convocação. Cada item mostra:
+
   - nome, instrução e obrigatoriedade;
   - o modelo anexo, para baixar, quando houver;
-  - o vencimento e o estado (FR-3590).
-  
-  Os itens que não se aplicam MUST NOT ser mostrados.
+  - o estado (FR-3590), com os textos da FR-3746 da `118`.
+
+  Os itens que não se aplicam MUST NOT ser mostrados. O vencimento é o prazo único da FR-3747 da
+  `118`, dito uma vez no bloco *Prazo*.
+
+  > **Redação anterior à `118`, preservada:**
+  > O titular da inscrição MUST ver a lista na tela da convocação da `059`, para a
+  > convocação vigente. Cada item mostra:
+  > - nome, instrução e obrigatoriedade;
+  > - o modelo anexo, para baixar, quando houver;
+  > - o vencimento e o estado (FR-3590).
+  >
+  > Os itens que não se aplicam MUST NOT ser mostrados.
+  >
+  > *Por que mudou:* a 375 px, a lista começava no fim da primeira tela, e o Requerimento ficava na terceira (ponto 3 do achado do PR #374).
 - **FR-3578**: O titular MUST poder apresentar um arquivo por item enquanto a chamada estiver **em
   aberto** (convocação vigente sem desfecho) e o vencimento **não tiver decorrido**. Isso inclui a
   convocação cujo prazo ainda não começou a correr e a convocação sem vencimento (D-011). "Decorrido"
@@ -778,17 +801,26 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 
 #### I. O portal
 
-- **FR-3612**: Os textos do portal MUST seguir a linguagem simples da `069` e caber em 375 px sem rolagem
-  horizontal:
-  - *"Falta enviar"*;
-  - *"Recebido em DD/MM, às HH:MM, aguardando conferência"*;
-  - *"Pendente: ‹motivo›. Envie outro arquivo até ‹vencimento›"*;
-  - *"Conforme"*;
-  - *"Atendido pelo documento enviado na inscrição em DD/MM"*;
-  - *"Aproveitado da chamada anterior, enviado em DD/MM. A comissão vai conferir de novo"*;
-  - e, depois do vencimento, *"O prazo terminou em ‹vencimento›. A comissão vai decidir."*
-  
-  Nenhum texto diz matrícula, bolsa ou contratação.
+- **FR-3612** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  Os textos do portal MUST seguir a linguagem simples da `069`, caber em 375 px sem rolagem
+  horizontal e ser os da FR-3746 da `118`, por item e por momento da chamada. Depois do vencimento, o
+  núcleo da frase é o da FR-3748 da `118`. Nenhum texto diz matrícula, bolsa ou contratação como
+  fato.
+
+  > **Redação anterior à `118`, preservada:**
+  > Os textos do portal MUST seguir a linguagem simples da `069` e caber em 375 px sem rolagem
+  > horizontal:
+  > - *"Falta enviar"*;
+  > - *"Recebido em DD/MM, às HH:MM, aguardando conferência"*;
+  > - *"Pendente: ‹motivo›. Envie outro arquivo até ‹vencimento›"*;
+  > - *"Conforme"*;
+  > - *"Atendido pelo documento enviado na inscrição em DD/MM"*;
+  > - *"Aproveitado da chamada anterior, enviado em DD/MM. A comissão vai conferir de novo"*;
+  > - e, depois do vencimento, *"O prazo terminou em ‹vencimento›. A comissão vai decidir."*
+  >
+  > Nenhum texto diz matrícula, bolsa ou contratação.
+  >
+  > *Por que mudou:* "Atendido" aparecia antes da conferência; "Envie outro arquivo", sem um primeiro; e a lista seguia pedindo depois do desfecho (F2, F6 e o ponto 4 do achado). "Nenhum texto diz matrícula" ganhou "como fato": a frase do aceite (FR-3750 da `118`) cita a matrícula para dizer que o registro **não** é ela.
 - **FR-3613**: Mostrar a lista e os estados MUST NOT mover prazo nem registrar leitura além da que a
   tela da convocação já registra (FR-1103 da `059`).
 - **FR-3614**: Apresentação, conferência e pendência MUST NOT disparar mensagem. A FR-084 da `010`

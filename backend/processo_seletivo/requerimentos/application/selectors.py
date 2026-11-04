@@ -78,11 +78,42 @@ _FRASES = {
 _ENCERRADO_OU_CANCELADO = {"ENCERRADO": "encerrado", "CANCELADO": "cancelado"}
 
 
-def leitura(apurado) -> LeituraDoRequerimento:
-    """A `Disponibilidade` do domínio, dita em palavras de tela."""
+# **Quem já foi convocado não lê "se você for convocado"** (FR-3752 da `118`; FR-405 da `029`,
+# acrescida). A frase do enviado depende de a atualização ser admitida agora.
+ENVIADO_COM_ATUALIZACAO = (
+    "Enviado não é alterado. Se algo mudou, a atualização cria uma nova versão, e esta continua "
+    "registrada."
+)
+ENVIADO_SEM_ATUALIZACAO = "Enviado não é alterado."
+# **"Ainda não é a hora" é falso para quem foi convocado** (FR-3754 da `118`): a convocação com
+# resultado registrado e o Requerimento pedido nela e nunca enviado.
+NAO_ENVIADO_COM_RESULTADO = (
+    "Requerimento de Matrícula não enviado",
+    "Esta convocação já tem resultado registrado, e o Requerimento não foi enviado. Não é mais "
+    "possível enviá-lo pelo portal.",
+)
+NAO_SE_ENVIA_MAIS = "Não é mais possível enviar o Requerimento de Matrícula pelo portal."
+
+
+def leitura(apurado, *, convocado=False, desfechada=False) -> LeituraDoRequerimento:
+    """A `Disponibilidade` do domínio, dita em palavras de tela.
+
+    `convocado` diz se a Inscrição tem convocação vigente, aberta ou concluída; `desfechada`, se ela
+    tem resultado registrado. Os dois só mudam **as frases** (FR-3752, FR-3754 da `118`): a
+    disponibilidade continua sendo a da política, e quem chama sem eles lê o que se lia antes.
+    """
     estado = apurado.estado_de_leitura
     titulo, explicacao = _FRASES[estado]
     escrevivel = estado in (nomes.DISPONIVEL, nomes.EM_PREENCHIMENTO)
+    if estado == nomes.ESTADO_ENVIADO and convocado:
+        atualizavel = (
+            apurado.chamada is not None
+            and not apurado.prazo_decorrido
+            and not getattr(apurado, "fechado_pelo_processo", False)
+        )
+        explicacao = ENVIADO_COM_ATUALIZACAO if atualizavel else ENVIADO_SEM_ATUALIZACAO
+    elif estado == nomes.AINDA_INDISPONIVEL and desfechada:
+        titulo, explicacao = NAO_ENVIADO_COM_RESULTADO
     if escrevivel and getattr(apurado, "fechado_pelo_processo", False):
         # **Antes do prazo, e sem dizer que ele venceu** (FR-373 da `029`, revista; D-015 e D-020
         # da `118`): com o Processo encerrado ninguém decide mais nada, e *"a comissão vai
@@ -99,7 +130,8 @@ def leitura(apurado) -> LeituraDoRequerimento:
         from processo_seletivo.convocacao.application.documentos import frase_do_prazo_decorrido
 
         titulo = "O prazo terminou"
-        explicacao = frase_do_prazo_decorrido(apurado.chamada)
+        # O núcleo das recusas (FR-3748 da `118`), e o que não se envia mais.
+        explicacao = f"{frase_do_prazo_decorrido(apurado.chamada)} {NAO_SE_ENVIA_MAIS}"
         escrevivel = False
     return LeituraDoRequerimento(
         estado=estado,

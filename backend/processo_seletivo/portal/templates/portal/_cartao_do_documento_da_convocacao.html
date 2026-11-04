@@ -1,0 +1,57 @@
+{% load arquivos_do_candidato %}
+{% comment %}
+Um documento pedido na convocacao, num cartao (118, FR-3744, FR-3745; 115, FR-3577).
+
+**O texto vem pronto da projecao** (`portal/obrigacoes.py`), e o template nao escreve frase de
+estado: a celula da FR-3746 depende do item e do momento da chamada, e regra em `{% if %}` nao se
+testa caso a caso.
+
+**O estado em palavra, nunca so em cor** (FR-3744). O selo diz "Precisa de correcao", "Aguardando
+conferencia", "Conferido" ou "Opcional"; o destaque do cartao pendente so acompanha a palavra. O
+marcador redondo da 115 saiu: lembrava um botao de opcao, e nao e controle nenhum.
+
+**Os botoes dizem o nome do documento** a quem usa leitor de tela (FR-3745): com quatro "Enviar"
+iguais na mesma pagina, a lista de formularios nao distinguia um do outro. E a descricao do campo
+aponta a situacao do item e o limite do arquivo.
+
+O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584 da 115).
+{% endcomment %}
+<li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1">
+  <h3>{{ item.nome }}</h3>
+  {% if item.selos %}<p class="selos">{% for selo in item.selos %}<span class="selo selo-{{ selo.tipo }}">{{ selo }}</span>{% endfor %}</p>{% endif %}
+  {% if item.lido.instrucao and not obrigacoes.decidida %}<p class="instrucao">{{ item.lido.instrucao }}</p>{% endif %}
+  {% if item.lido.modelo and not obrigacoes.decidida %}
+  <p class="instrucao"><a class="documento secundaria" href="{% url 'public-anexo' item.lido.modelo.artefato_id %}">Baixar o modelo: {{ item.lido.modelo.rotulo }}</a></p>
+  {% endif %}
+
+  <p class="situacao-do-documento" id="situacao-{{ item.id }}">{{ item.texto }}</p>
+
+  {% if item.lido.vigente %}
+  <p class="arquivo">
+    <a href="{% url 'portal:documento-da-convocacao' inscricao.id item.lido.vigente.id %}" target="_blank" rel="noopener">Ver o arquivo recebido<span class="oculto">: {{ item.nome }}</span></a>
+  </p>
+  {% endif %}
+
+  {% if item.pode_enviar %}
+  {% if item.envio_recolhido %}<details class="envio-de-novo" {% if item.com_motivo %}open{% endif %}><summary>Enviar outro arquivo<span class="oculto">: {{ item.nome }}</span></summary>{% endif %}
+  <div class="envio">
+    <form method="post" enctype="multipart/form-data"
+          action="{% url 'portal:apresentar-documento-da-convocacao' inscricao.id item.id %}" data-envio>
+      {% csrf_token %}
+      <div class="escolher">
+        <input type="file" id="arquivo-{{ item.id }}" name="arquivo" accept="application/pdf"
+               aria-describedby="situacao-{{ item.id }} ajuda-envio-{{ item.id }}" data-arquivo>
+        <label class="botao-arquivo" for="arquivo-{{ item.id }}">Escolher arquivo PDF<span class="oculto"> para {{ item.nome }}</span></label>
+        <span class="nome-do-arquivo" data-nome-do-arquivo>Nenhum arquivo escolhido</span>
+        <button type="submit" class="acao">Enviar<span class="oculto">: {{ item.nome }}</span></button>
+      </div>
+      <span class="ajuda limite" id="ajuda-envio-{{ item.id }}">Somente PDF, até {% limite_de_arquivo %}.</span>
+      <p class="progresso" hidden>
+        <progress max="100" value="0" aria-label="Progresso do envio"></progress>
+        <span class="ajuda">Enviando… não feche esta página.</span>
+      </p>
+    </form>
+  </div>
+  {% if item.envio_recolhido %}</details>{% endif %}
+  {% endif %}
+</li>

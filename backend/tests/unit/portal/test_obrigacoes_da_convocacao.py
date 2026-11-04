@@ -1,0 +1,659 @@
+"""As obrigações da convocação, derivadas, sem consulta (118, FR-3721 a FR-3729, FR-3746, SC-1126).
+
+Os itens são os `ItemLido` de verdade, da `115`, sobre apresentações e conferências de mentira: o
+que se testa é a projeção, e ela só lê os atributos que a leitura documental já entrega. A política
+do Requerimento é a `Disponibilidade` de verdade, da `029`, montada com o que `apurar` devolveria.
+"""
+
+import itertools
+import re
+from datetime import datetime, timedelta
+from types import SimpleNamespace
+from zoneinfo import ZoneInfo
+
+import pytest
+
+from processo_seletivo.convocacao.application.documentos import ItemLido, LeituraDocumental
+from processo_seletivo.convocacao.domain import nomes
+from processo_seletivo.portal import obrigacoes as o
+from processo_seletivo.requerimentos.domain import nomes as req_nomes
+from processo_seletivo.requerimentos.domain.disponibilidade import Disponibilidade
+
+FUSO = ZoneInfo("America/Sao_Paulo")
+VENCIMENTO = datetime(2026, 11, 9, 13, 27, tzinfo=FUSO)
+RECEBIDO_EM = datetime(2026, 11, 4, 9, 5, tzinfo=FUSO)
+NA_INSCRICAO_EM = datetime(2026, 3, 2, 10, 0, tzinfo=FUSO)
+MOTIVO = "Falta a página 2."
+
+MOMENTOS = {
+    o.ABERTA: {"causa": None, "desfecho": None},
+    o.ENCERRADA_PELO_PRAZO: {"causa": o.PRAZO, "desfecho": None},
+    o.ENCERRADA_PELO_PROCESSO: {"causa": o.PROCESSO, "desfecho": None},
+    o.DECIDIDA: {"causa": None, "desfecho": SimpleNamespace(especie=nomes.INDEFERIMENTO)},
+}
+
+_ids = itertools.count(1)
+
+
+def _apresentacao(origem="portal"):
+    id_ = next(_ids)
+    if origem == "portal":
+        return SimpleNamespace(id=id_, arquivo="x.pdf", apresentado_em=RECEBIDO_EM)
+    if origem == "inscricao":
+        return SimpleNamespace(
+            id=id_,
+            arquivo="",
+            documento_da_inscricao_id=1,
+            documento_da_inscricao=SimpleNamespace(uploaded_at=NA_INSCRICAO_EM),
+            apresentado_em=RECEBIDO_EM,
+        )
+    origem_anterior = SimpleNamespace(
+        apresentado_em=NA_INSCRICAO_EM, item=SimpleNamespace(versao_id=1)
+    )
+    return SimpleNamespace(
+        id=id_,
+        arquivo="",
+        documento_da_inscricao_id=None,
+        apresentacao_de_origem=origem_anterior,
+        apresentado_em=RECEBIDO_EM,
+    )
+
+
+def lido(estado, *, obrigatorio=True, origem="portal", apresentado=None, nome=None, ordem=0):
+    """Um `ItemLido` no estado pedido, com o que a leitura da `115` teria lido."""
+    if apresentado is None:
+        apresentado = estado not in (nomes.ITEM_A_APRESENTAR,)
+    apresentacoes = [_apresentacao(origem)] if apresentado else []
+    conferencias = []
+    if estado == nomes.ITEM_PENDENTE:
+        conferencias = [SimpleNamespace(resultado=nomes.PENDENTE, motivo=MOTIVO)]
+    elif estado == nomes.ITEM_COMPLEMENTADO:
+        conferencias = [SimpleNamespace(resultado=nomes.PENDENTE, motivo=MOTIVO)]
+    elif estado == nomes.ITEM_CONFORME:
+        conferencias = [SimpleNamespace(resultado=nomes.CONFORME, motivo="")]
+    elif estado == nomes.ITEM_NAO_SE_APLICA:
+        conferencias = [SimpleNamespace(resultado="NAO_SE_APLICA", motivo="Concluiu no Ifes.")]
+    item = SimpleNamespace(
+        id=next(_ids),
+        chave="doc",
+        situacao="OBRIGATORIO" if obrigatorio else "FACULTATIVO",
+        versao_id=1,
+    )
+    return ItemLido(
+        item=item,
+        requisito={"name": nome or f"Documento {item.id}", "order": ordem},
+        estado=estado,
+        apresentacoes=apresentacoes,
+        conferencias=conferencias,
+    )
+
+
+def disp(momento=req_nomes.NA_CONVOCACAO, *, status="", disponivel=True, prazo=False, final=""):
+    if momento is None:
+        return Disponibilidade(exigido=False, momento="", disponivel=False)
+    return Disponibilidade(
+        exigido=True,
+        momento=momento,
+        disponivel=disponivel,
+        chamada=object() if disponivel else None,
+        status_do_requerimento=status,
+        prazo_decorrido=prazo,
+        estado_final_do_processo=final,
+    )
+
+
+def projetar(
+    itens,
+    momento=o.ABERTA,
+    *,
+    requerimento=None,
+    estado=nomes.CONVOCADO_PRAZO_EM_CURSO,
+    vencimento=VENCIMENTO,
+    final="ENCERRADO",
+):
+    return o.obrigacoes_da_convocacao(
+        leitura=LeituraDocumental(itens=list(itens)),
+        requerimento=requerimento,
+        estado_do_prazo=estado,
+        causa_do_fechamento=MOMENTOS[momento]["causa"],
+        desfecho=MOMENTOS[momento]["desfecho"],
+        vencimento=vencimento,
+        estado_final_do_processo=final,
+        canal="atendimento@ifes.edu.br",
+    )
+
+
+# --- SC-1126: cada combinação em exatamente uma categoria ---------------------------------------
+
+# (estado, origem, apresentado) → categoria (obrigatório, facultativo). É a tabela da FR-3722.
+CASOS = {
+    "a_apresentar": ((nomes.ITEM_A_APRESENTAR, "portal", False), (o.A_ENVIAR, o.OPCIONAL)),
+    "pendente_com_envio": ((nomes.ITEM_PENDENTE, "portal", True), (o.A_CORRIGIR, o.OPCIONAL)),
+    "pendente_sem_envio": ((nomes.ITEM_PENDENTE, "portal", False), (o.A_ENVIAR, o.OPCIONAL)),
+    "recebido_portal": (
+        (nomes.ITEM_RECEBIDO, "portal", True),
+        (o.COM_A_COMISSAO, o.COM_A_COMISSAO),
+    ),
+    "recebido_inscricao": (
+        (nomes.ITEM_RECEBIDO, "inscricao", True),
+        (o.COM_A_COMISSAO, o.COM_A_COMISSAO),
+    ),
+    "recebido_chamada": (
+        (nomes.ITEM_RECEBIDO, "chamada", True),
+        (o.COM_A_COMISSAO, o.COM_A_COMISSAO),
+    ),
+    "complementado": (
+        (nomes.ITEM_COMPLEMENTADO, "portal", True),
+        (o.COM_A_COMISSAO, o.COM_A_COMISSAO),
+    ),
+    "conforme": ((nomes.ITEM_CONFORME, "portal", True), (o.CONFERIDO, o.CONFERIDO)),
+    "conforme_inscricao": ((nomes.ITEM_CONFORME, "inscricao", True), (o.CONFERIDO, o.CONFERIDO)),
+    "nao_se_aplica": ((nomes.ITEM_NAO_SE_APLICA, "portal", False), (o.CONFERIDO, o.CONFERIDO)),
+}
+
+
+@pytest.mark.parametrize("momento", list(MOMENTOS))
+@pytest.mark.parametrize("obrigatorio", [True, False], ids=["obrigatorio", "facultativo"])
+@pytest.mark.parametrize("caso", list(CASOS))
+def test_cada_item_cai_em_exatamente_uma_categoria(caso, obrigatorio, momento):
+    (estado, origem, apresentado), esperadas = CASOS[caso]
+    item = lido(estado, obrigatorio=obrigatorio, origem=origem, apresentado=apresentado)
+    projetada = projetar([item], momento)
+    (resultado,) = projetada.itens
+
+    assert resultado.categoria == esperadas[0 if obrigatorio else 1]
+    # Exatamente uma: o item aparece em um, e um só, dos grupos que as telas desenham.
+    grupos = [
+        projetada.tarefas_de_documento,
+        projetada.opcionais_a_enviar,
+        tuple(i for i in projetada.itens if i.categoria == o.COM_A_COMISSAO),
+        tuple(i for i in projetada.itens if i.categoria == o.CONFERIDO),
+    ]
+    assert sum(resultado in grupo for grupo in grupos) == 1
+    # O convite a enviar existe só com a chamada aberta, e nunca no conferido (FR-3722).
+    if momento != o.ABERTA or resultado.categoria == o.CONFERIDO:
+        assert not resultado.pode_enviar
+    if momento != o.ABERTA:
+        assert projetada.tarefas == ()
+
+
+@pytest.mark.parametrize("momento", list(MOMENTOS))
+def test_a_categoria_nao_muda_com_o_momento(momento):
+    aberta = projetar([lido(nomes.ITEM_PENDENTE)], o.ABERTA).itens[0].categoria
+    assert projetar([lido(nomes.ITEM_PENDENTE)], momento).itens[0].categoria == aberta
+
+
+# --- O momento (FR-3722) e a causa (FR-3721, D-015) ---------------------------------------------
+
+
+def test_processo_e_prazo_juntos_vale_o_processo():
+    """Com as duas causas, a view entrega `PROCESSO`; aqui se prova o que isso produz."""
+    req = disp(prazo=True, final="ENCERRADO")
+    projetada = projetar(
+        [lido(nomes.ITEM_A_APRESENTAR)], o.ENCERRADA_PELO_PROCESSO, requerimento=req
+    )
+
+    assert projetada.momento == o.ENCERRADA_PELO_PROCESSO
+    assert projetada.requerimento == o.REQ_NAO_ENVIADO_ENCERRADO
+    assert "prazo terminou" not in " ".join(projetada.frase_do_fechamento).lower()
+
+
+def test_o_desfecho_com_o_processo_aberto_nao_reabre_a_escrita():
+    projetada = projetar([lido(nomes.ITEM_A_APRESENTAR), lido(nomes.ITEM_RECEBIDO)], o.DECIDIDA)
+
+    assert projetada.momento == o.DECIDIDA
+    assert not any(item.pode_enviar for item in projetada.itens)
+    assert projetada.frase_de_estado == o.NADA_POR_ENQUANTO
+
+
+def test_sem_item_pedido_nao_ha_projecao():
+    assert projetar([]) is None
+
+
+# --- O Requerimento: as sete linhas da FR-3725 --------------------------------------------------
+
+DESFECHO = SimpleNamespace(especie=nomes.INDEFERIMENTO)
+LINHAS = [
+    ("1", disp(None), None, None, o.REQ_NAO_PEDIDO),
+    ("2_na_convocacao", disp(status=req_nomes.ENVIADO), None, None, o.REQ_ENVIADO),
+    (
+        "2_na_inscricao",
+        disp(req_nomes.NA_INSCRICAO, status=req_nomes.ENVIADO),
+        None,
+        None,
+        o.REQ_ENVIADO,
+    ),
+    (
+        "2_com_desfecho",
+        disp(status=req_nomes.ENVIADO, disponivel=False),
+        DESFECHO,
+        None,
+        o.REQ_ENVIADO,
+    ),
+    ("3_sem_rascunho", disp(disponivel=False), DESFECHO, None, o.REQ_NAO_ENVIADO),
+    (
+        "3_com_rascunho",
+        disp(status=req_nomes.RASCUNHO, disponivel=False),
+        DESFECHO,
+        None,
+        o.REQ_NAO_ENVIADO,
+    ),
+    ("3a", disp(final="ENCERRADO"), None, o.PROCESSO, o.REQ_NAO_ENVIADO_ENCERRADO),
+    (
+        "3a_com_o_prazo",
+        disp(final="CANCELADO", prazo=True),
+        None,
+        o.PROCESSO,
+        o.REQ_NAO_ENVIADO_ENCERRADO,
+    ),
+    ("4_sem_rascunho", disp(prazo=True), None, o.PRAZO, o.REQ_NAO_ENVIADO_ATE_O_PRAZO),
+    (
+        "4_com_rascunho",
+        disp(status=req_nomes.RASCUNHO, prazo=True),
+        None,
+        o.PRAZO,
+        o.REQ_NAO_ENVIADO_ATE_O_PRAZO,
+    ),
+    ("5_disponivel", disp(), None, None, o.REQ_A_PREENCHER),
+    ("5_em_preenchimento", disp(status=req_nomes.RASCUNHO), None, None, o.REQ_A_PREENCHER),
+    ("6", disp(disponivel=False), None, None, o.REQ_SEM_CHAMADO),
+]
+
+
+@pytest.mark.parametrize(
+    ("disponibilidade", "desfecho", "causa", "esperado"),
+    [linha[1:] for linha in LINHAS],
+    ids=[linha[0] for linha in LINHAS],
+)
+def test_as_sete_linhas_do_requerimento(disponibilidade, desfecho, causa, esperado):
+    assert o.estado_do_requerimento(disponibilidade, desfecho=desfecho, causa=causa) == esperado
+
+
+def test_o_pedido_e_nao_enviado_nunca_vira_nao_pedido_depois_do_desfecho():
+    """D-016: depois do desfecho a política diz "ainda indisponível" — e isso não apaga o pedido."""
+    for status in ("", req_nomes.RASCUNHO):
+        politica = disp(status=status, disponivel=False)
+        assert politica.estado_de_leitura == req_nomes.AINDA_INDISPONIVEL
+        assert o.estado_do_requerimento(politica, desfecho=DESFECHO) == o.REQ_NAO_ENVIADO
+
+
+def test_o_processo_nao_alcanca_o_requerimento_na_inscricao():
+    politica = disp(req_nomes.NA_INSCRICAO, prazo=True)
+    assert o.estado_do_requerimento(politica, desfecho=None, causa=o.PROCESSO) == (
+        o.REQ_NAO_ENVIADO_ATE_O_PRAZO
+    )
+
+
+@pytest.mark.parametrize("momento", list(MOMENTOS))
+@pytest.mark.parametrize("linha", LINHAS, ids=[linha[0] for linha in LINHAS])
+def test_o_requerimento_so_e_tarefa_com_a_chamada_aberta(linha, momento):
+    _, politica, _, _, _ = linha
+    projetada = projetar([lido(nomes.ITEM_RECEBIDO)], momento, requerimento=politica)
+    tarefa = any(t.requerimento for t in projetada.tarefas)
+    assert tarefa == (momento == o.ABERTA and projetada.requerimento == o.REQ_A_PREENCHER)
+    assert projetada.totais["requerimento"] == tarefa
+
+
+# --- A ordem e os totais (FR-3726, FR-3727, FR-3723) --------------------------------------------
+
+
+def test_a_ordem_e_pendencia_depois_o_que_falta_depois_o_requerimento():
+    falta = lido(nomes.ITEM_A_APRESENTAR, nome="Certidão", ordem=1)
+    corrigir = lido(nomes.ITEM_PENDENTE, nome="Histórico", ordem=2)
+    falta_com_motivo = lido(nomes.ITEM_PENDENTE, apresentado=False, nome="Residência", ordem=3)
+    com_a_comissao = lido(nomes.ITEM_RECEBIDO, nome="Identidade", ordem=4)
+
+    projetada = projetar([falta, corrigir, falta_com_motivo, com_a_comissao], requerimento=disp())
+
+    assert [t.texto for t in projetada.tarefas] == [
+        "Histórico",
+        "Residência",
+        "Certidão",
+        "Requerimento de Matrícula",
+    ]
+    assert [t.motivo for t in projetada.tarefas[:2]] == [MOTIVO, MOTIVO]
+    assert projetada.primeira_ancora == f"item-{corrigir.item.id}"
+    assert projetada.rotulo_do_botao == "Ver e corrigir os documentos pendentes"
+    assert projetada.frase_de_estado == (
+        "Você ainda precisa corrigir 1 documento, enviar 2 documentos e preencher o "
+        "Requerimento de Matrícula."
+    )
+
+
+def test_o_facultativo_fica_fora_dos_totais_e_da_frase():
+    projetada = projetar(
+        [
+            lido(nomes.ITEM_RECEBIDO),
+            lido(nomes.ITEM_A_APRESENTAR, obrigatorio=False),
+            lido(nomes.ITEM_PENDENTE, obrigatorio=False),
+            lido(nomes.ITEM_RECEBIDO, obrigatorio=False),
+        ]
+    )
+
+    assert projetada.totais == {
+        "a_corrigir": 0,
+        "a_enviar": 0,
+        "com_a_comissao": 1,
+        "conferidos": 0,
+        "requerimento": False,
+    }
+    assert projetada.tarefas == ()
+    assert projetada.frase_de_estado == o.NADA_POR_ENQUANTO
+    assert projetada.frase_de_conclusao == o.FRASE_DE_CONCLUSAO
+    # O opcional continua alcançável para envio sem tarefa nenhuma (FR-3723, D-018).
+    assert len(projetada.opcionais_a_enviar) == 2
+    assert all(item.pode_enviar for item in projetada.opcionais_a_enviar)
+    assert projetada.tem_bloco_que_falta
+
+
+def test_so_o_requerimento_a_preencher_nao_tem_botao_de_documento():
+    projetada = projetar([lido(nomes.ITEM_RECEBIDO)], requerimento=disp())
+    assert projetada.frase_de_estado == "Você ainda precisa preencher o Requerimento de Matrícula."
+    assert projetada.rotulo_do_botao == ""
+    assert projetada.frase_de_conclusao == ""
+
+
+def test_so_o_que_falta_enviar_leva_ao_botao_dos_que_faltam():
+    projetada = projetar([lido(nomes.ITEM_PENDENTE, apresentado=False)])
+    assert projetada.frase_de_estado == "Você ainda precisa enviar 1 documento."
+    assert projetada.rotulo_do_botao == "Ver os documentos que faltam"
+
+
+# --- Os textos literais (FR-3746) ---------------------------------------------------------------
+
+# (caso, obrigatório) → as quatro colunas: aberta, prazo, Processo, decidida.
+TEXTOS = {
+    ("a_apresentar", True): (
+        "Falta enviar.",
+        "Não enviado até o prazo.",
+        "Não enviado.",
+        "Não enviado.",
+    ),
+    ("pendente_com_envio", True): (
+        "Precisa de correção: Falta a página 2. Envie um novo arquivo até 09/11/2026, às 13h27.",
+        "Precisava de correção: Falta a página 2. Nenhum novo arquivo foi enviado até o prazo.",
+        "Precisava de correção: Falta a página 2.",
+        "Precisava de correção: Falta a página 2.",
+    ),
+    ("pendente_sem_envio", True): (
+        "Precisa de correção: Falta a página 2. Envie o arquivo até 09/11/2026, às 13h27.",
+        "Precisava de correção: Falta a página 2. Nenhum arquivo foi enviado até o prazo.",
+        "Precisava de correção: Falta a página 2.",
+        "Precisava de correção: Falta a página 2.",
+    ),
+    ("recebido_portal", True): (
+        "Recebido em 04/11/2026, às 09h05. A comissão vai conferir; você não precisa fazer nada "
+        "agora.",
+        "Recebido em 04/11/2026, às 09h05. A comissão vai conferir.",
+        "Recebido em 04/11/2026, às 09h05; não foi conferido antes do encerramento do Processo.",
+        "Enviado em 04/11/2026; não foi conferido antes do resultado.",
+    ),
+    ("recebido_inscricao", True): (
+        "Você já enviou este documento na inscrição, em 02/03/2026. Não precisa enviar de novo. "
+        "A comissão vai conferir.",
+        "Enviado na inscrição, em 02/03/2026. A comissão vai conferir.",
+        "Enviado na inscrição, em 02/03/2026; não foi conferido antes do encerramento do Processo.",
+        "Enviado na inscrição, em 02/03/2026; não foi conferido antes do resultado.",
+    ),
+    ("recebido_chamada", True): (
+        "Aproveitado da chamada anterior, enviado em 02/03/2026. Não precisa enviar de novo. A "
+        "comissão vai conferir de novo.",
+        "Aproveitado da chamada anterior, enviado em 02/03/2026. A comissão vai conferir de novo.",
+        "Aproveitado da chamada anterior, enviado em 02/03/2026; não foi conferido antes do "
+        "encerramento do Processo.",
+        "Aproveitado da chamada anterior, enviado em 02/03/2026; não foi conferido antes do "
+        "resultado.",
+    ),
+    ("complementado", True): (
+        "Novo arquivo recebido em 04/11/2026, às 09h05, depois da correção pedida. A comissão vai "
+        "conferir.",
+        "Novo arquivo recebido em 04/11/2026, às 09h05, depois da correção pedida. A comissão vai "
+        "conferir.",
+        "Novo arquivo recebido em 04/11/2026; não foi conferido antes do encerramento do Processo.",
+        "Novo arquivo enviado em 04/11/2026; não foi conferido antes do resultado.",
+    ),
+    ("conforme", True): ("Conferido: de acordo com o Edital.",) * 4,
+    ("conforme_inscricao", True): (
+        "Conferido: de acordo com o Edital. É o arquivo enviado na inscrição, em 02/03/2026.",
+    )
+    * 4,
+    ("nao_se_aplica", True): ("Não se aplica: Concluiu no Ifes.",) * 4,
+    ("a_apresentar", False): (
+        "Opcional: envie se quiser.",
+        "Opcional, não enviado.",
+        "Opcional, não enviado.",
+        "Opcional, não enviado.",
+    ),
+    ("pendente_com_envio", False): (
+        "Opcional. A comissão apontou: Falta a página 2. Se quiser, envie um novo arquivo até "
+        "09/11/2026, às 13h27.",
+        "Opcional. A comissão apontou: Falta a página 2.",
+        "Opcional. A comissão apontou: Falta a página 2.",
+        "Opcional. A comissão apontou: Falta a página 2.",
+    ),
+    ("pendente_sem_envio", False): (
+        "Opcional. A comissão apontou: Falta a página 2. Se quiser, envie o arquivo até "
+        "09/11/2026, às 13h27.",
+        "Opcional. A comissão apontou: Falta a página 2.",
+        "Opcional. A comissão apontou: Falta a página 2.",
+        "Opcional. A comissão apontou: Falta a página 2.",
+    ),
+}
+
+
+@pytest.mark.parametrize(("caso", "obrigatorio"), list(TEXTOS), ids=lambda v: str(v))
+def test_o_texto_de_cada_celula(caso, obrigatorio):
+    (estado, origem, apresentado), _ = CASOS[caso]
+    for coluna, momento in enumerate(MOMENTOS):
+        item = lido(estado, obrigatorio=obrigatorio, origem=origem, apresentado=apresentado)
+        (projetado,) = projetar([item], momento).itens
+        assert projetado.texto == TEXTOS[(caso, obrigatorio)][coluna], momento
+
+
+def test_o_facultativo_recebido_usa_a_linha_do_estado_com_o_selo():
+    (item,) = projetar([lido(nomes.ITEM_RECEBIDO, obrigatorio=False)]).itens
+    assert item.texto.startswith("Recebido em 04/11/2026")
+    assert item.selos == (o.SELO_AGUARDANDO, o.SELO_OPCIONAL)
+
+
+@pytest.mark.parametrize(
+    ("estado", "vencimento"),
+    [(nomes.CONVOCADO_PRAZO_NAO_INICIADO, VENCIMENTO), (nomes.CONVOCADO_PRAZO_EM_CURSO, None)],
+    ids=["prazo_nao_iniciado", "sem_vencimento"],
+)
+def test_sem_prazo_correndo_nenhuma_frase_diz_ate(estado, vencimento):
+    """K2 e a convocação sem vencimento: a regra prevalece sobre toda menção ao prazo (FR-3749)."""
+    so_opcional = projetar(
+        [lido(nomes.ITEM_PENDENTE, obrigatorio=False)], estado=estado, vencimento=vencimento
+    )
+    com_tarefa = projetar(
+        [
+            lido(nomes.ITEM_PENDENTE),
+            lido(nomes.ITEM_PENDENTE, apresentado=False),
+            lido(nomes.ITEM_A_APRESENTAR, obrigatorio=False),
+        ],
+        estado=estado,
+        vencimento=vencimento,
+    )
+    for projetada in (so_opcional, com_tarefa):
+        frases = [item.texto for item in projetada.itens] + [
+            projetada.frase_de_estado,
+            projetada.frase_de_conclusao,
+            projetada.frase_do_opcional,
+        ]
+        assert not [f for f in frases if " até " in f], frases
+        assert projetada.prazo == ""
+    if estado == nomes.CONVOCADO_PRAZO_NAO_INICIADO:
+        assert com_tarefa.frase_do_prazo == (o.PRAZO_NAO_INICIADO, o.JA_PODE_ENVIAR)
+        assert (
+            so_opcional.frase_do_opcional
+            == "Se quiser, você ainda pode enviar o documento opcional."
+        )
+    else:
+        assert com_tarefa.frase_do_prazo == (o.SEM_PRAZO_REGISTRADO,)
+
+
+def test_prazo_nao_iniciado_sem_nada_a_enviar_nao_diz_que_ja_pode_enviar():
+    projetada = projetar([lido(nomes.ITEM_RECEBIDO)], estado=nomes.CONVOCADO_PRAZO_NAO_INICIADO)
+    assert projetada.frase_do_prazo == (o.PRAZO_NAO_INICIADO,)
+
+
+def test_a_frase_de_conclusao_com_e_sem_opcional():
+    sem = projetar([lido(nomes.ITEM_RECEBIDO)])
+    com = projetar([lido(nomes.ITEM_RECEBIDO), lido(nomes.ITEM_A_APRESENTAR, obrigatorio=False)])
+
+    assert (sem.frase_de_estado, sem.frase_de_conclusao, sem.frase_do_opcional) == (
+        "Nada por enquanto.",
+        "Você não tem mais documentos para enviar agora. A comissão ainda vai concluir a análise.",
+        "",
+    )
+    assert com.frase_do_opcional == (
+        "Se quiser, você ainda pode enviar o documento opcional até 09/11/2026, às 13h27."
+    )
+
+
+def test_com_tarefa_nao_ha_frase_de_conclusao():
+    projetada = projetar([lido(nomes.ITEM_RECEBIDO), lido(nomes.ITEM_A_APRESENTAR)])
+    assert projetada.frase_de_conclusao == ""
+
+
+# --- O fechamento (FR-3741, FR-3748) ------------------------------------------------------------
+
+
+def test_o_vencido_usa_o_nucleo_e_inclui_o_requerimento_no_resumo():
+    projetada = projetar(
+        [
+            lido(nomes.ITEM_PENDENTE, nome="Histórico"),
+            lido(nomes.ITEM_A_APRESENTAR, nome="Certidão"),
+        ],
+        o.ENCERRADA_PELO_PRAZO,
+        requerimento=disp(prazo=True),
+    )
+
+    assert projetada.titulo_do_fechamento == "O prazo terminou"
+    assert projetada.frase_do_fechamento == (
+        "O prazo terminou em 09/11/2026, às 13h27. O fim do prazo não decide nada sozinho: quem "
+        "registra o resultado é a comissão.",
+        "Não é mais possível enviar documentos nem o Requerimento de Matrícula pelo portal.",
+        "Se você enviou algo que não aparece aqui, fale com o atendimento: "
+        "atendimento@ifes.edu.br.",
+    )
+    assert projetada.titulo_do_resumo == "Até o prazo, ficou assim"
+    assert o.REQUERIMENTO_NAO_ENVIADO_ATE_O_PRAZO in projetada.resumo
+    assert (
+        "Até o prazo, ficaram sem envio: Histórico (correção pedida), Certidão e Requerimento"
+        in (projetada.frase_de_estado)
+    )
+
+
+@pytest.mark.parametrize(
+    ("status", "participio"), [("ENCERRADO", "encerrado"), ("CANCELADO", "cancelado")]
+)
+def test_o_processo_nao_diz_prazo_vencido_nem_promete_conferencia(status, participio):
+    """M: a escrita fechada pelo Processo, com o prazo ainda correndo (D-015, D-020)."""
+    projetada = projetar(
+        [lido(nomes.ITEM_RECEBIDO), lido(nomes.ITEM_A_APRESENTAR)],
+        o.ENCERRADA_PELO_PROCESSO,
+        requerimento=disp(final=status),
+        final=status,
+    )
+    tudo = " ".join(
+        (projetada.frase_de_estado, *projetada.frase_do_fechamento, *projetada.resumo)
+        + tuple(item.texto for item in projetada.itens)
+        + tuple(selo for item in projetada.itens for selo in item.selos)
+    ).lower()
+
+    assert projetada.titulo_do_fechamento == "O envio pelo portal está encerrado"
+    assert projetada.frase_do_fechamento[0] == (
+        f"Este Processo Seletivo foi {participio}, e não é mais possível enviar documentos nem o "
+        "Requerimento de Matrícula pelo portal."
+    )
+    assert o.REQUERIMENTO_NAO_ENVIADO_ENCERRADO in projetada.resumo
+    for proibida in ("prazo terminou", "vai conferir", "aguardando", "vai decidir", "venceu"):
+        assert proibida not in tudo
+
+
+def test_decidida_sem_aguardando_nem_convite():
+    projetada = projetar(
+        [lido(nomes.ITEM_RECEBIDO), lido(nomes.ITEM_A_APRESENTAR), lido(nomes.ITEM_PENDENTE)],
+        o.DECIDIDA,
+        requerimento=disp(disponivel=False),
+    )
+    tudo = " ".join(
+        tuple(item.texto for item in projetada.itens)
+        + tuple(selo for item in projetada.itens for selo in item.selos)
+    ).lower()
+
+    for proibida in ("aguardando conferência", "falta enviar", "envie", "precisa de correção"):
+        assert proibida not in tudo
+    assert projetada.linha_do_requerimento == "Requerimento de Matrícula: não enviado."
+
+
+# --- A linguagem (FR-3751, SC-1118) -------------------------------------------------------------
+
+PROIBIDOS = (
+    r"apto para formaliza",
+    r"encaminhad",
+    r"matriculad",
+    r"matr[íi]cula efetivada",
+    r"bolsa concedida",
+    r"vinculad",
+    r"contratad",
+    r"autêntic",
+    r"\baprovad",
+    r"\batendid",
+    r"\baceit[oa]\b",
+    r"enviou tudo",
+    r"tudo certo",
+    r"\bconcluíd",
+)
+
+
+@pytest.mark.parametrize("momento", list(MOMENTOS))
+def test_nenhuma_frase_afirma_o_que_ninguem_decidiu(momento):
+    itens = [
+        lido(estado, obrigatorio=obrigatorio, origem=origem, apresentado=apresentado)
+        for (estado, origem, apresentado), _ in CASOS.values()
+        for obrigatorio in (True, False)
+    ]
+    for requerimento in (disp(), disp(status=req_nomes.ENVIADO), disp(prazo=True), disp(final="X")):
+        projetada = projetar(itens, momento, requerimento=requerimento)
+        frases = [
+            projetada.frase_de_estado,
+            projetada.frase_de_conclusao,
+            projetada.frase_do_opcional,
+            *projetada.frase_do_prazo,
+            *projetada.frase_do_fechamento,
+            *projetada.resumo,
+            projetada.linha_do_requerimento,
+            *(item.texto for item in projetada.itens),
+            *(selo for item in projetada.itens for selo in item.selos),
+        ]
+        lidas = " ".join(frases).lower()
+        assert [p for p in PROIBIDOS if re.search(p, lidas)] == [], momento
+
+
+def test_a_frase_do_aceite_diz_o_que_o_registro_nao_e():
+    assert o.ACEITE.startswith("Este registro não é matrícula, bolsa nem contrato")
+
+
+def test_o_formato_do_prazo_e_um_so():
+    assert o.ate(VENCIMENTO) == "até 09/11/2026, às 13h27"
+    assert o.ate(VENCIMENTO + timedelta(hours=10, minutes=33)) == "até 10/11/2026, às 00h00"
+    assert o.ate(None) == ""
+
+
+# --- Sem relógio e sem banco (FR-3721, FR-3734) -------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_a_projecao_nao_consulta_o_banco(django_assert_num_queries):
+    itens = [
+        lido(estado, obrigatorio=obrigatorio, origem=origem, apresentado=apresentado)
+        for (estado, origem, apresentado), _ in CASOS.values()
+        for obrigatorio in (True, False)
+    ]
+    with django_assert_num_queries(0):
+        for momento in MOMENTOS:
+            projetar(itens, momento, requerimento=disp())
+        o.linha_informativa_do_requerimento(disp(prazo=True), desfecho=None)
