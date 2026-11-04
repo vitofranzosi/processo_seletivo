@@ -50,7 +50,10 @@ from processo_seletivo.publicacoes.application.selectors import (
 )
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.shared.tempo import ZONA
-from processo_seletivo.unidades.application.identificacao import do_ato
+from processo_seletivo.unidades.application.identificacao import da_unidade, do_ato
+
+#: A origem do contato na conferência: não é ato do certame, é o registro da unidade (FR-3812).
+ORIGEM_DO_CONTATO = "cadastro da unidade"
 
 COM_PERIODO = "com-periodo"
 NEUTRO = "neutro"  # sem período designado: o Edital não recebe inscrição pelo GPS
@@ -58,7 +61,8 @@ SEM_MATERIAL = "sem-material"
 
 #: A versão da impressão (`FR-3448`, `D-018`). Muda quando os campos ou a serialização mudam, e a
 #: exportação gravada com outra versão é comparada recalculando a impressão a partir dos campos.
-VERSAO_DA_IMPRESSAO = 1
+#: A versão 2 (119, `D-009`, FR-3811) acrescenta a carga horária de cada oferta e o contato.
+VERSAO_DA_IMPRESSAO = 2
 
 # "Edital nº 91/2026 – Curso…": o número já sai à parte na peça, e repeti-lo no título é o mesmo
 # dado duas vezes (`numero_no_titulo`, `portal/views.py`). Só sai o prefixo deste número.
@@ -135,6 +139,9 @@ class Oferta:
     cadastro_reserva: bool
     quantidade: str  # `quantidade_da_oferta`: "40 vagas", "cadastro reserva"…
     ancora: str  # "#vaga-<id>", a âncora da página da seleção
+    #: Literal do campo publicado do Perfil, aparado; vazia é "não declarada" (119, FR-3809). Nunca
+    #: inferida nem convertida: "360h" e "360 horas" ficam como o Edital as escreveu.
+    carga_horaria: str = ""
 
 
 @dataclass(frozen=True)
@@ -193,6 +200,13 @@ class Ficha:
     versao_da_impressao: int = VERSAO_DA_IMPRESSAO
     origens: tuple[Origem, ...] = ()
     termos_em_valor_oficial: tuple[str, ...] = ()
+    #: O canal de atendimento da unidade do ato, como registrado no instante da leitura (119,
+    #: FR-3810). Vazio é "não declarado", e o canal da instituição não o substitui.
+    contato: str = ""
+    #: Os campos e a impressão da versão 1, dos mesmos dados (`D-009`): a exportação gravada na
+    #: versão 1 é comparada com eles, e não com os da versão 2, que ela não afirmava.
+    campos_v1: dict | None = None
+    impressao_v1: str = ""
 
     def como_dict(self):
         return asdict(self)
@@ -206,6 +220,22 @@ def impressao_dos_campos(campos):
     """SHA-256 da serialização canônica dos campos que o material afirma (`FR-3411`)."""
     canonico = json.dumps(campos, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonico.encode()).hexdigest()
+
+
+def _campos_v2(campos_v1, ofertas, contato):
+    """Os campos da versão 2: os da versão 1, a carga horária em cada oferta e o contato (FR-3811).
+
+    Só acrescenta, e por isso a versão 1 se calcula exata a partir da ficha de hoje (`D-009`).
+    """
+    cargas = {o.perfil_id: o.carga_horaria for o in ofertas}
+    return {
+        **campos_v1,
+        "ofertas": [
+            {**oferta, "carga_horaria": cargas.get(oferta["perfil_id"], "")}
+            for oferta in campos_v1["ofertas"]
+        ],
+        "contato": contato,
+    }
 
 
 def _campos(numero, ano, titulo, titulo_do_processo, unidade, periodo, ofertas, caminho):
@@ -257,6 +287,7 @@ def _ofertas(conteudo, quadro):
                 cadastro_reserva=perfil.get("reserveType") in leitura.TIPOS_COM_RESERVA,
                 quantidade=leitura.quantidade_da_oferta(vagas, perfil.get("reserveType")),
                 ancora=f"#vaga-{identidade}",
+                carga_horaria=str(perfil.get("workload") or "").strip(),
             )
         )
     return tuple(resultado)
@@ -327,6 +358,10 @@ def _origens(ctx, conteudo, numeracao):
             str(perfil.get("immediateVacancies")),
             f"/profiles/id={perfil.get('id')}/immediateVacancies",
         )
+        carga = str(perfil.get("workload") or "").strip()
+        if carga:
+            # A carga horária pela mesma regra das vagas (119, FR-3812): o ato que a deu.
+            origem(f"Carga horária — {rotulo}", carga, f"/profiles/id={perfil.get('id')}/workload")
     return tuple(linhas)
 
 
@@ -403,7 +438,13 @@ def ler(edital, *, agora, base_url):
     )
     a_vigorar = retificacoes_a_vigorar([edital.id], agora).get(edital.id)
 
-    campos = _campos(numero, ano, titulo, titulo_do_processo, unidade, periodo, ofertas, caminho)
+    campos_v1 = _campos(numero, ano, titulo, titulo_do_processo, unidade, periodo, ofertas, caminho)
+    # A unidade do ato pelo código que a publicação gravou; o canal é o registrado hoje, que é o que
+    # o candidato encontra ao escrever (FR-3810). Sem recaída no canal da instituição.
+    contato = (
+        da_unidade(publicacao.unidade_codigo or edital.institution_scope).atendimento or ""
+    ).strip()
+    campos = _campos_v2(campos_v1, ofertas, contato)
     literais = [
         titulo,
         titulo_do_processo,
@@ -453,8 +494,15 @@ def ler(edital, *, agora, base_url):
         retificacao_a_vigorar_texto=instante_por_extenso(a_vigorar),
         campos=campos,
         impressao=impressao_dos_campos(campos),
-        origens=_origens(ctx, conteudo, numeracao),
+        origens=_origens(ctx, conteudo, numeracao)
+        + (
+            # O contato não é ato: a origem é o cadastro da unidade (FR-3812).
+            (Origem("Contato", contato, "", (ORIGEM_DO_CONTATO,)),) if contato else ()
+        ),
         termos_em_valor_oficial=termos,
+        contato=contato,
+        campos_v1=campos_v1,
+        impressao_v1=impressao_dos_campos(campos_v1),
     )
 
 
@@ -469,6 +517,7 @@ ROTULOS_DOS_CAMPOS = {
     "inicio": "início das inscrições",
     "fim": "término das inscrições",
     "caminho": "endereço da página",
+    "contato": "contato",
 }
 
 
@@ -510,6 +559,8 @@ def diferencas(antigos, novos):
     mudancas = [
         Mudanca(rotulo, _legivel(campo, antigos.get(campo)), _legivel(campo, novos.get(campo)))
         for campo, rotulo in ROTULOS_DOS_CAMPOS.items()
+        # O contato só se compara quando os dois lados o têm: a versão 1 não o afirmava (FR-3811).
+        if campo != "contato" or (campo in antigos and campo in novos)
         if antigos.get(campo) != novos.get(campo)
     ]
     if antigos.get("cancelado") != novos.get("cancelado") and novos.get("cancelado"):
@@ -538,6 +589,16 @@ def diferencas(antigos, novos):
             mudancas.append(
                 Mudanca(f"opção {rotulo}", _oferta_legivel(antes), _oferta_legivel(oferta))
             )
+        # Só quando os dois lados a têm: campos da versão 1 não afirmavam carga horária (FR-3811).
+        if "carga_horaria" in antes and "carga_horaria" in oferta:
+            if antes["carga_horaria"] != oferta["carga_horaria"]:
+                mudancas.append(
+                    Mudanca(
+                        f"carga horária — {rotulo}",
+                        antes["carga_horaria"] or "—",
+                        oferta["carga_horaria"] or "—",
+                    )
+                )
     for antes in anteriores.values():
         rotulo = " — ".join(filter(None, (antes["nome"], antes["localidade"])))
         mudancas.append(Mudanca(f"opção {rotulo}", _oferta_legivel(antes), "retirada"))
@@ -551,18 +612,34 @@ def desatualizacoes(exportacoes, ficha, limite=5):
     `exportado_em`. De cada impressão diferente fica a exportação mais recente. Exportação gravada
     com outra versão da impressão é comparada recalculando a impressão dos campos dela; sem campos,
     não é comparável e é dita assim (`FR-3448`).
+
+    **A versão 1 é comparada com a versão 1 da ficha de hoje** (119, `D-009`, FR-3811): a impressão
+    e a diferença saem dos `campos_v1`, e não dos da versão 2. Assim a mudança de versão sozinha não
+    acende faixa, e a carga horária e o contato, que aquele material não afirmava, não entram nela.
     """
     vistas, resultado = set(), []
     for registro in exportacoes:
         campos = registro.get("campos")
         versao = registro.get("versao_da_impressao")
+        atuais, atual = ficha.campos, ficha.impressao
         if versao == VERSAO_DA_IMPRESSAO:
             impressao = registro.get("impressao")
-        elif isinstance(campos, dict) and set(campos) >= set(ficha.campos):
-            impressao = impressao_dos_campos({k: campos[k] for k in ficha.campos})
+        elif versao == 1 and ficha.campos_v1 is not None:
+            atuais, atual = ficha.campos_v1, ficha.impressao_v1
+            impressao = registro.get("impressao")
+        elif isinstance(campos, dict) and ficha.campos_v1 is not None:
+            # Outra versão gravada: recalcula pelos campos dela, com os da versão que eles têm —
+            # a 2, se trazem o contato; a 1, se não.
+            if "contato" not in campos:
+                atuais, atual = ficha.campos_v1, ficha.impressao_v1
+            impressao = (
+                impressao_dos_campos({k: campos[k] for k in atuais})
+                if set(campos) >= set(atuais)
+                else None
+            )
         else:
             impressao = None
-        if impressao == ficha.impressao:
+        if impressao == atual:
             continue
         chave = impressao or f"incomparavel:{registro.get('impressao')}"
         if chave in vistas:
@@ -572,8 +649,6 @@ def desatualizacoes(exportacoes, ficha, limite=5):
             resultado.append(Desatualizacao(registro.get("exportado_em", ""), "", comparavel=False))
         else:
             resultado.append(
-                Desatualizacao(
-                    registro.get("exportado_em", ""), diferencas(campos or {}, ficha.campos)
-                )
+                Desatualizacao(registro.get("exportado_em", ""), diferencas(campos or {}, atuais))
             )
     return resultado[:limite], max(len(resultado) - limite, 0)
