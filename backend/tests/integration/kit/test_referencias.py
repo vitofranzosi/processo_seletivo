@@ -74,7 +74,11 @@ def no_calendario_do_corpus(ficha):
 
 def normalizar(svg):
     svg = re.sub(r"ref\. [0-9a-f]{8}", "ref. IMPRESSAO", svg)
+    # No story o selo quebra em duas linhas, e a referência pode abrir a segunda.
+    svg = re.sub(r'(data-campo="selo">(?:ref\. )?)[0-9a-f]{8}<', r"\1IMPRESSAO<", svg)
     svg = re.sub(r"data:image/png;base64,[A-Za-z0-9+/=]+", "data:image/png;base64,MARCA", svg)
+    # A imagem do banco e o balão: o resumo deles é conferido em `test_familias.py`.
+    svg = re.sub(r"data:image/jpeg;base64,[A-Za-z0-9+/=]+", "data:image/jpeg;base64,IMAGEM", svg)
     # Os campos da oferta levam a identidade do Perfil, sorteada a cada publicação.
     svg = re.sub(r"(oferta_(?:rotulo|quantidade)):[0-9a-f-]{36}", r"\1:PERFIL", svg)
     return svg.replace("><", ">\n<") + "\n"
@@ -101,3 +105,49 @@ def test_a_peca_do_cenario_e_a_referencia(api_client, nome):
         pytest.fail(f"Referência regerada: {arquivo.name}. Confira o diff e rode de novo.")
     assert arquivo.exists(), f"Falta a referência {arquivo.name}: KIT_REGERAR_REFERENCIAS=1"
     assert obtido == arquivo.read_text(encoding="utf-8")
+
+
+# ---- Os templates das famílias da comunicação (119, FR-3831, T041) -------------------------
+
+#: Os cenários da `111` e o 17 da `119`, em todo template de família da comunicação.
+CENARIOS_DAS_FAMILIAS = {**CENARIOS, "17-lato-uma-oferta": ("91", 1, kit.lato_uma_oferta)}
+TEMPLATES_DAS_FAMILIAS = [
+    template for template in kit_familias.templates() if template.familia != "institucional"
+]
+
+
+def _comparar(arquivo, obtido):
+    if os.environ.get("KIT_REGERAR_REFERENCIAS") == "1":
+        arquivo.parent.mkdir(parents=True, exist_ok=True)
+        for velho in arquivo.parent.glob(f"{arquivo.stem}.*"):
+            velho.unlink()
+        arquivo.write_text(obtido, encoding="utf-8")
+        return f"Referência regerada: {arquivo.relative_to(PASTA)}."
+    assert arquivo.exists(), f"Falta a referência {arquivo.relative_to(PASTA)}"
+    assert obtido == arquivo.read_text(encoding="utf-8"), arquivo.name
+    return ""
+
+
+@pytest.mark.parametrize("nome", CENARIOS_DAS_FAMILIAS)
+def test_a_peca_de_cada_template_das_familias_e_a_referencia(api_client, nome):
+    """A peça, ou a recusa com o motivo, de cada template no cenário (SC-1132, SC-1134).
+
+    A imagem é a primeira do banco: a peça muda de fundo com a escolha, e de mais nada.
+    """
+    corpus, ate, mudar = CENARIOS_DAS_FAMILIAS[nome]
+    edital = kit.publicar(api_client, corpus, ate=ate, mudar=mudar, chave=f"familias-{nome}")
+    ficha = no_calendario_do_corpus(fichas.ler(edital, agora=timezone.now(), base_url=kit.BASE))
+    regeradas = []
+    for template in TEMPLATES_DAS_FAMILIAS:
+        familia = kit_familias.familia(template.familia)
+        escolha = kit_peca.Escolha(imagem=familia.imagens[0].chave if familia.imagens else None)
+        pasta = PASTA / template.pasta_das_referencias
+        try:
+            peca = kit_peca.compor_template(ficha, template, escolha)
+        except kit_peca.PecaRecusada as recusa:
+            regeradas.append(_comparar(pasta / f"{nome}.recusa", recusa.motivo + "\n"))
+            continue
+        assert geometria.problemas(peca) == [], template.identificador
+        regeradas.append(_comparar(pasta / f"{nome}.svg", normalizar(kit_peca.svg(peca, ficha))))
+    if any(regeradas):
+        pytest.fail(" ".join(filter(None, regeradas)) + " Confira o diff e rode de novo.")

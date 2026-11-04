@@ -185,6 +185,23 @@ def _painel(periodo, linha, menor):
     )
 
 
+#: `(formato, versão)` → `(resumo das referências, resumo do template)`, fixados por versão e
+#: conferidos pela suíte (FR-3833, `D-014`).
+RESUMOS = {
+    ("post", 1): (
+        "10e136b683d699424e3f5967f2837f556d86893a8592e25211cbee3f7d7f0a6c",
+        "bfcb25490b8e4861ae2fef63aae010561049edb2a6da8531513545b72282dc54",
+    ),
+    ("story", 1): (
+        "734e12efd608408a388bf2550445434027f9ad4b78323cce4bbf15493b96e078",
+        "91137d4ddd46553bf321266f44652547ae8bc00fe2d89fd34fe2432f788923d9",
+    ),
+    ("banner", 1): (
+        "57cbd239100d5068f5602682e3f78259931fd6f0c2faedf7d6238ce4da2a04f3",
+        "1badbdf0cb9309eea6119c21d5c4b8511ded17db677fb8ecc33049130607c001",
+    ),
+}
+
 POST = Template(
     familia=CHAVE,
     formato=kit_formatos.POST,
@@ -226,7 +243,7 @@ POST = Template(
     },
     area_da_imagem=(510, 454, 1080, 1145),
     pasta_das_referencias="pos-lato-sensu/post",
-    resumo_das_referencias="PREENCHER",
+    resumo_das_referencias=RESUMOS[("post", 1)][0],
 )
 
 STORY = Template(
@@ -237,20 +254,23 @@ STORY = Template(
     forma_do_periodo="ate",
     caixas=(
         _titulo((318, 253, 682, 380), (66, 60, 56, 52, 48, 44, 40, 36, 32)),
-        _no_fundo("numero", "corpo", (39, 36, 32, 28, 24), (119, 930, 380, 55)),
+        _no_fundo("numero", "corpo", (39, 36, 32, 28, 24), (119, 870, 380, 55)),
         *_painel((47, 44, 40, 36, 32, 28), (32, 30, 28, 26, 24), (28, 26, 24)),
         _chamada((221, 1520, 476, 80), (39, 36, 32, 28)),
         _no_painel("busca", "destaque", (28, 26, 24)),
-        _no_painel("selo_da_versao", "corpo", (24,), 2),
+        _no_painel("selo_da_versao", "corpo", (24,)),
     ),
     dimensoes={
         "painel": {
-            "x": 119,
-            "largura": 644,
+            # Mais largo que o do slide (119 a 763): o selo da versão tem de caber numa linha com
+            # qualquer referência — "a" é o dígito hexadecimal mais largo da Poppins, e oito dele
+            # medem 592 px a 24 px; quebrar ou não conforme a impressão mudaria a peça de altura.
+            "x": 100,
+            "largura": 680,
             "base": 1580,
             "recuo": 32,
             "recuo_em_baixo": 140,
-            "topo_minimo": 1000,
+            "topo_minimo": 945,
             "espaco": 8,
             "raio": 32,
             "cor": "amarelo",
@@ -266,7 +286,7 @@ STORY = Template(
     },
     area_da_imagem=(510, 670, 1080, 1356),
     pasta_das_referencias="pos-lato-sensu/story",
-    resumo_das_referencias="PREENCHER",
+    resumo_das_referencias=RESUMOS[("story", 1)][0],
 )
 
 BANNER = Template(
@@ -310,16 +330,8 @@ BANNER = Template(
     },
     area_da_imagem=(948, 98, 1500, 716),
     pasta_das_referencias="pos-lato-sensu/banner",
-    resumo_das_referencias="PREENCHER",
+    resumo_das_referencias=RESUMOS[("banner", 1)][0],
 )
-
-#: `(formato, versão)` → `(resumo das referências, resumo do template)`, fixados por versão e
-#: conferidos pela suíte (FR-3833, `D-014`).
-RESUMOS = {
-    ("post", 1): ("PREENCHER", "PREENCHER"),
-    ("story", 1): ("PREENCHER", "PREENCHER"),
-    ("banner", 1): ("PREENCHER", "PREENCHER"),
-}
 
 FAMILIA = Familia(
     chave=CHAVE,

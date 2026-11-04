@@ -174,3 +174,38 @@ def test_versao_ou_resumo_divergente_do_nomeado_fica_indisponivel(settings, monk
     assert institucional.POST not in kit_familias.liberados()
     settings.KIT_DE_DIVULGACAO_TEMPLATES = (("institucional", "post", 2, curto),)
     assert institucional.POST not in kit_familias.liberados()
+
+
+def _modulo(familia):
+    import importlib
+
+    return importlib.import_module(
+        f"processo_seletivo.interface.kit_familias.{familia.chave.replace('-', '_')}"
+    )
+
+
+@pytest.mark.parametrize("template", TEMPLATES, ids=_id)
+def test_o_resumo_de_cada_versao_e_o_fixado_no_modulo(template):
+    """Esquecer de atualizar o resumo, ou regravá-lo, reprova aqui (FR-3833, EC-22, SC-1140)."""
+    modulo = _modulo(kit_familias.familia(template.familia))
+    if template.familia == institucional.CHAVE:
+        assert kit_familias.resumo(template) == institucional.RESUMO_CONGELADO_V1
+        return
+    referencias, resumo = modulo.RESUMOS[(template.formato.chave, template.versao)]
+    assert template.resumo_das_referencias == referencias
+    assert kit_familias.resumo(template) == resumo
+
+
+@pytest.mark.parametrize("familia", FAMILIAS, ids=_id)
+def test_trocar_um_byte_de_ativo_muda_o_resumo(familia, monkeypatch):
+    """Uma cópia em memória com um byte trocado: o resumo do template muda (EC-22)."""
+    template = next(iter(familia.templates.values()))
+    antes = kit_familias.resumo(template)
+    original = kit_familias._resumo_de_arquivo
+
+    def trocado(caminho):
+        resumo = original(caminho)
+        return ("0" if resumo[0] != "0" else "1") + resumo[1:]
+
+    monkeypatch.setattr(kit_familias, "_resumo_de_arquivo", trocado)
+    assert kit_familias.resumo(template) != antes
