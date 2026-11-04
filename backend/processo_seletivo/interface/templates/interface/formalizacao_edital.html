@@ -1,0 +1,98 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Documentos para formalização — {{ edital }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/formalizacao.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:formalizacao' %}">Formalização</a> › <span aria-current="page">{{ edital }}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A página do setor que formaliza (117, FR-3676 a FR-3681).
+
+Os aptos do alcance, por Perfil e por nome, com os documentos que a condução definiu. Não mostra
+CPF, contato, modalidade, nota nem classificação. Visualizar é a ação primária; baixar é
+secundária e individual. A lista começa sem marcação, e a seleção vai por POST.
+
+Para mais de uma pessoa, a exportação começa por uma verificação, que mostra o resultado antes do
+download. Uma pessoa só é um clique: com tudo íntegro, o ZIP; com falha, uma página com o motivo.
+{% endcomment %}
+<h1>Documentos para formalização</h1>
+<p class="sub">{{ edital }} — {{ edital.title }}</p>
+
+{% if not definicao %}
+<p class="aviso" role="status">A condução ainda não definiu os documentos que vão ao setor. As pessoas
+  aptas aparecem abaixo, sem documento, e não há exportação.</p>
+{% elif not com_documento %}
+<p class="aviso" role="status">Nenhum dos documentos definidos pela condução se aplica a estas pessoas,
+  e por isso não há exportação.</p>
+{% endif %}
+
+{% if perfis_no_alcance %}
+<form method="get" action="{% url 'interface:formalizacao-edital' edital.id %}" class="recorte-da-formalizacao">
+  <p class="campo"><label for="perfil-do-recorte">Perfil</label>
+    <select id="perfil-do-recorte" name="perfil">
+      <option value="">Todos os Perfis</option>
+      {% for item in perfis_no_alcance %}<option value="{{ item.id }}"{% if item.id == perfil %} selected{% endif %}>{{ item.nome }}</option>{% endfor %}
+    </select></p>
+  <p class="acoes"><button type="submit" class="botao secundario">Mostrar</button></p>
+</form>
+{% endif %}
+
+{% if not total %}
+<p class="nenhuma">Nenhuma pessoa apta para formalização neste alcance.</p>
+{% else %}
+<form method="post" action="{% url 'interface:formalizacao-verificar' edital.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="perfil" value="{{ perfil }}">
+  {% for grupo in grupos %}
+  <section class="perfil-da-formalizacao" aria-labelledby="perfil-{{ forloop.counter }}">
+    <h2 id="perfil-{{ forloop.counter }}">{{ grupo.nome }} <span class="nenhuma">({{ grupo.pessoas|length }})</span></h2>
+    {% for pessoa in grupo.pessoas %}
+    <article class="recorte pessoa-da-formalizacao" aria-labelledby="pessoa-{{ pessoa.inscricao_id }}">
+      <h3 id="pessoa-{{ pessoa.inscricao_id }}">
+        {% if pessoa.incluiveis %}<input type="checkbox" id="marcar-{{ pessoa.inscricao_id }}" name="pessoa" value="{{ pessoa.inscricao_id }}">
+        <label for="marcar-{{ pessoa.inscricao_id }}">{{ pessoa.protocolo }} — {{ pessoa.nome }}</label>
+        {% else %}{{ pessoa.protocolo }} — {{ pessoa.nome }}{% endif %}
+      </h3>
+      <p class="nota">Chamada {{ pessoa.chamada }} · {{ pessoa.desfecho.get_especie_display }} em {{ pessoa.desfecho.registrado_em|date:"d/m/Y" }} ·
+        {% if pessoa.ultima_exportacao %}Última exportação: {{ pessoa.ultima_exportacao.em|date:"d/m" }}, por {{ pessoa.ultima_exportacao.por }}{% else %}Ainda não exportada{% endif %}</p>
+      {% if pessoa.documentos %}
+      <ul class="documentos-da-formalizacao">
+        {% for documento in pessoa.documentos %}
+        <li>
+          <span class="nome-do-documento">{{ documento.nome }} <span class="nenhuma">({{ documento.momento }})</span></span>
+          {% if documento.incluivel %}
+          <a class="acao" href="{% url 'interface:formalizacao-documento' edital.id pessoa.inscricao_id documento.origem documento.objeto_id %}" target="_blank" rel="noopener">Visualizar</a>
+          <a class="acao secundaria" href="{% url 'interface:formalizacao-documento' edital.id pessoa.inscricao_id documento.origem documento.objeto_id %}?baixar=1">Baixar</a>
+          {% if documento.sem_conferencia %}<span class="nota">{{ nomes.SEM_CONFERENCIA_NA_CONVOCACAO }}</span>{% endif %}
+          {% else %}
+          <span class="situacao-do-documento">{{ documento.rotulo }}</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% elif definicao %}
+      <p class="nenhuma">Nenhum documento definido se aplica a esta pessoa.</p>
+      {% endif %}
+      {% if pessoa.incluiveis %}
+      <p class="acoes"><button type="submit" class="botao secundario" formaction="{% url 'interface:formalizacao-exportar-pessoa' edital.id pessoa.inscricao_id %}">Exportar esta pessoa</button></p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  {% if com_documento %}
+  <div class="exportar-da-formalizacao">
+    <p class="nota">A exportação começa por uma verificação: ela lê e confere cada arquivo e mostra o
+      resultado antes de qualquer download.</p>
+    <p class="acoes">
+      <button type="submit" class="botao" name="alcance" value="todos">Verificar e exportar todos os aptos ({{ total }})</button>
+      <button type="submit" class="botao secundario" name="alcance" value="selecao">Verificar e exportar as marcadas</button>
+    </p>
+  </div>
+  {% endif %}
+</form>
+{% endif %}
+
+<section class="historico-da-formalizacao" aria-labelledby="historico-de-exportacoes">
+  <h2 id="historico-de-exportacoes">Histórico de exportações</h2>
+  {% include "interface/_formalizacao_historico.html" with linhas=historico %}
+</section>
+{% endblock %}
