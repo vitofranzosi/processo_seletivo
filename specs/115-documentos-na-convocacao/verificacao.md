@@ -141,4 +141,4 @@ mesma medição vai de 94 a 102 e falha, conferido trocando a linha à mão e de
 - **Uso em produção com dado real.** Em 04/11/2026 o usuário decidiu a QI-3 (não há lista
   institucional: cada Edital declara os seus documentos) e adiou a QI-4 (guarda e destinação; o GPS
   não é GED) e o MAT-08 (varredura de PDF). As duas adiadas continuam na lista de pendências da
-  spec.
+  spec, e **nenhuma das três bloqueia mais a produção**.

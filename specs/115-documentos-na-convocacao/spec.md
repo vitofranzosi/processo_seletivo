@@ -795,7 +795,8 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 
 - **FR-3615**: Apresentações, referências, conferências e alocações MUST NOT ser excluídas. O arquivo
   apresentado MUST NOT ser removido nesta feature. MUST NOT existir rotina de retenção, descarte ou
-  destinação; isso é pendência da QI-4, que bloqueia o uso em produção com dado real.
+  destinação; isso é pendência da QI-4, adiada e que **não** bloqueia o uso em produção (decisão do usuário em 04/11/2026; a
+  redação anterior dizia que bloqueava).
 - **FR-3616**: Esta feature MUST NOT mudar o encerramento da `113`. Em Edital encerrado com convocação
   em aberto, a apresentação e a conferência seguem a chamada em aberto, como o desfecho segue hoje.
 - **FR-3617**: MUST NOT existir formulário estruturado de vinculação, requerimento genérico, coleta de
@@ -913,7 +914,8 @@ Avaliação exigida pelo princípio III da Constituição.
 - **Download.** A visualização é o padrão, o download é individual e registrado, e não há lote
   (FR-3606).
 - **Retenção.** Nada é excluído nesta feature, e guardar indefinidamente também é decisão. Por isso a
-  QI-4 bloqueia o uso em produção com dado real (FR-3615).
+  QI-4 fica registrada. Ela bloqueava o uso em produção com dado real até a decisão do usuário em 04/11/2026, que a adiou e
+  tirou o bloqueio (FR-3615).
 
 ## Compatibilidade e conflitos com regras anteriores
 
@@ -1125,7 +1127,8 @@ convocados como rotina. Esta spec mantém as defesas atuais:
 - nome físico imprevisível.
 
 A decisão entre varredura no envio e visualização rasterizada no servidor é **da TI**, e, como a
-QI-4, bloqueia o uso em produção com dado real, mas não a implementação.
+QI-4, bloqueava o uso em produção com dado real, mas não a implementação. Pela decisão do usuário
+em 04/11/2026, foi adiada e **não bloqueia mais** a produção.
 
 ### D-017 — A unidade de atuação nas linhas novas; o desfecho pela trilha que já existe
 
@@ -1255,7 +1258,8 @@ Revistas em 03/11/2026, depois das decisões do usuário sobre o PR.
 6. **QI-6**: recurso contra o indeferimento.
 7. **QI-7**: aviso de pendência por e-mail, que revisaria a FR-084 da `010`.
 
-**Antes do uso em produção com dado real (não da spec):**
+**Antes do uso em produção com dado real (não da spec).** Pela decisão do usuário em 04/11/2026, nenhuma das três bloqueia
+mais a produção: a QI-3 foi decidida, e a QI-4 e o MAT-08 foram adiados.
 
 8. **QI-3**: quais documentos são exigíveis (Procuradoria). *Decidida pelo usuário em 04/11/2026:*
    não haverá lista institucional. Os documentos variam conforme o Edital, e cada Edital declara os
