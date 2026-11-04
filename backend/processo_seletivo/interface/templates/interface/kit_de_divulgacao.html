@@ -97,6 +97,9 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
 <section class="secao-do-kit" aria-labelledby="titulo-pecas">
   <h2 id="titulo-pecas">4. As peças — {{ escolha.familia.nome }}</h2>
   {% for aviso in secao.avisos %}<p class="aviso faixa-do-kit">{{ aviso }}</p>{% endfor %}
+  {% if secao.motivo %}
+  <p class="aviso faixa-do-kit">{{ secao.motivo }}</p>
+  {% else %}
   {% if secao.sem_rasterizador %}<p class="aviso faixa-do-kit">{{ secao.sem_rasterizador }}</p>{% endif %}
   {% if secao.manchetes %}
   <form method="get" class="manchetes-do-kit">
@@ -147,6 +150,7 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
   </article>
   {% endfor %}
   </div>
+  {% endif %}
 </section>
 {% endwith %}{% endif %}
 

@@ -225,6 +225,8 @@ def _secoes_da_familia(request, ficha, escolhida):
         "png": kit_pacote.disponivel(),
         "sem_rasterizador": "" if kit_pacote.disponivel() else SEM_RASTERIZADOR,
         "avisos": avisos,
+        # O motivo comum a todos os formatos (host local, sem material): dito uma vez só.
+        "motivo": motivo,
     }
 
 
