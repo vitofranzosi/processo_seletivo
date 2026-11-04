@@ -207,6 +207,8 @@ class Ficha:
     #: versão 1 é comparada com eles, e não com os da versão 2, que ela não afirmava.
     campos_v1: dict | None = None
     impressao_v1: str = ""
+    #: O código da unidade do ato, para a lista de famílias do kit (119, FR-3805).
+    unidade_codigo: str = ""
 
     def como_dict(self):
         return asdict(self)
@@ -441,9 +443,8 @@ def ler(edital, *, agora, base_url):
     campos_v1 = _campos(numero, ano, titulo, titulo_do_processo, unidade, periodo, ofertas, caminho)
     # A unidade do ato pelo código que a publicação gravou; o canal é o registrado hoje, que é o que
     # o candidato encontra ao escrever (FR-3810). Sem recaída no canal da instituição.
-    contato = (
-        da_unidade(publicacao.unidade_codigo or edital.institution_scope).atendimento or ""
-    ).strip()
+    unidade_codigo = publicacao.unidade_codigo or edital.institution_scope or ""
+    contato = (da_unidade(unidade_codigo).atendimento or "").strip()
     campos = _campos_v2(campos_v1, ofertas, contato)
     literais = [
         titulo,
@@ -503,6 +504,7 @@ def ler(edital, *, agora, base_url):
         contato=contato,
         campos_v1=campos_v1,
         impressao_v1=impressao_dos_campos(campos_v1),
+        unidade_codigo=unidade_codigo,
     )
 
 

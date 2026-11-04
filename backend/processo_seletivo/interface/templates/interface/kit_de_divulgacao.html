@@ -62,9 +62,98 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
   {% endfor %}
 </section>
 
+<section class="secao-do-kit" aria-labelledby="titulo-escolha">
+  <h2 id="titulo-escolha">3. A identidade da peça</h2>
+  {% if aviso_da_escolha %}<p class="aviso faixa-do-kit">{{ aviso_da_escolha }}</p>{% endif %}
+  <form method="get" class="escolha-do-kit">
+    <fieldset>
+      <legend>Família</legend>
+      {% for familia in familias %}
+      <label class="opcao-da-escolha"><input type="radio" name="familia" value="{{ familia.chave }}"{% if familia.chave == escolha.familia.chave %} checked{% endif %}> {{ familia.nome }}</label>
+      {% endfor %}
+    </fieldset>
+    {% if escolha.familia.variantes %}
+    <fieldset>
+      <legend>Variante</legend>
+      {% for variante in escolha.familia.variantes %}
+      <label class="opcao-da-escolha"><input type="radio" name="variante" value="{{ variante.chave }}"{% if variante.chave == escolha.variante %} checked{% endif %}> {{ variante.nome }}</label>
+      {% endfor %}
+    </fieldset>
+    {% endif %}
+    {% if escolha.familia.imagens %}
+    <fieldset>
+      <legend>Imagem</legend>
+      {% for imagem in escolha.familia.imagens %}
+      <label class="opcao-da-escolha"><input type="radio" name="imagem" value="{{ imagem.chave }}"{% if imagem.chave == escolha.imagem %} checked{% endif %}> {{ imagem.descricao|capfirst }}</label>
+      {% endfor %}
+    </fieldset>
+    {% endif %}
+    <button type="submit" class="botao secundario">Usar esta escolha</button>
+  </form>
+  <p class="nota">A lista traz só o que a comunicação aprovou para a unidade do Edital. A imagem vale para todos os formatos; trocar de família ou de imagem não desatualiza o material já exportado.</p>
+</section>
+
+{% if secoes_da_familia %}{% with secao=secoes_da_familia %}
+<section class="secao-do-kit" aria-labelledby="titulo-pecas">
+  <h2 id="titulo-pecas">4. As peças — {{ escolha.familia.nome }}</h2>
+  {% for aviso in secao.avisos %}<p class="aviso faixa-do-kit">{{ aviso }}</p>{% endfor %}
+  {% if secao.sem_rasterizador %}<p class="aviso faixa-do-kit">{{ secao.sem_rasterizador }}</p>{% endif %}
+  {% if secao.manchetes %}
+  <form method="get" class="manchetes-do-kit">
+    <input type="hidden" name="familia" value="{{ escolha.familia.chave }}">
+    {% if escolha.variante %}<input type="hidden" name="variante" value="{{ escolha.variante }}">{% endif %}
+    {% if escolha.imagem %}<input type="hidden" name="imagem" value="{{ escolha.imagem }}">{% endif %}
+    <fieldset>
+      <legend>Manchete, nos formatos em que nenhum título oficial cabe</legend>
+      {% for manchete in secao.manchetes %}
+      <label class="opcao-de-manchete"><input type="radio" name="manchete" value="{{ forloop.counter0 }}"{% if secao.manchete == forloop.counter0 %} checked{% endif %}> {{ manchete }}</label>
+      {% endfor %}
+    </fieldset>
+    <button type="submit" class="botao secundario">Usar a manchete</button>
+  </form>
+  {% endif %}
+  <div class="formatos-do-kit">
+  {% for item in secao.formatos %}
+  <article class="formato-do-kit" aria-labelledby="formato-{{ item.formato }}">
+    <h3 id="formato-{{ item.formato }}">{{ item.nome }}</h3>
+    {% if item.peca %}
+    {% if secao.png %}
+    <img class="previa-da-peca" src="{% url 'interface:kit-de-divulgacao-previa' edital.id %}?impressao={{ ficha.impressao }}&amp;familia={{ escolha.familia.chave }}&amp;formato_da_peca={{ item.formato }}{% if escolha.variante %}&amp;variante={{ escolha.variante }}{% endif %}{% if escolha.imagem %}&amp;imagem={{ escolha.imagem }}{% endif %}{% if secao.manchete is not None %}&amp;manchete={{ secao.manchete }}{% endif %}" width="{{ item.largura }}" height="{{ item.altura }}" alt="{{ item.peca.alternativo }}">
+    {% endif %}
+    <article class="texto-do-kit">
+      <header class="cabecalho-do-texto">
+        <h4 id="nome-alternativo-{{ item.formato }}">Texto alternativo</h4>
+        <button type="button" class="acao" data-copiar="alternativo-{{ item.formato }}" aria-describedby="nome-alternativo-{{ item.formato }}">Copiar</button>
+      </header>
+      <pre class="corpo-do-texto" id="alternativo-{{ item.formato }}">{{ item.peca.alternativo }}</pre>
+    </article>
+    <div class="exportacoes-do-kit">
+      {% for formato in formatos_da_peca %}{% if formato == "svg" or secao.png %}
+      <form method="post" action="{% url 'interface:kit-de-divulgacao-exportar' edital.id formato %}">
+        {% csrf_token %}
+        <input type="hidden" name="impressao" value="{{ ficha.impressao }}">
+        <input type="hidden" name="familia" value="{{ escolha.familia.chave }}">
+        <input type="hidden" name="formato_da_peca" value="{{ item.formato }}">
+        {% if escolha.variante %}<input type="hidden" name="variante" value="{{ escolha.variante }}">{% endif %}
+        {% if escolha.imagem %}<input type="hidden" name="imagem" value="{{ escolha.imagem }}">{% endif %}
+        {% if secao.manchete is not None %}<input type="hidden" name="manchete" value="{{ secao.manchete }}">{% endif %}
+        <button type="submit" class="botao secundario">Baixar {{ item.nome|lower }} (.{{ formato }})</button>
+      </form>
+      {% endif %}{% endfor %}
+    </div>
+    {% else %}
+    <p class="aviso faixa-do-kit">{{ item.motivo }}</p>
+    {% endif %}
+  </article>
+  {% endfor %}
+  </div>
+</section>
+{% endwith %}{% endif %}
+
 {% with secao=secao_da_peca %}
+{% if secao %}
 <section class="secao-do-kit" aria-labelledby="titulo-peca">
-  <h2 id="titulo-peca">3. A peça para o feed</h2>
+  <h2 id="titulo-peca">4. A peça para o feed</h2>
   {% if secao.peca %}
   {% if secao.peca.omissao %}<p class="aviso faixa-do-kit">{{ secao.peca.omissao }}</p>{% endif %}
   {% if secao.manchetes %}
@@ -93,9 +182,10 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
   <p class="aviso faixa-do-kit">{{ secao.motivo }}</p>
   {% endif %}
 </section>
+{% endif %}
 
 <section class="secao-do-kit" aria-labelledby="titulo-exportar">
-  <h2 id="titulo-exportar">4. Exportar</h2>
+  <h2 id="titulo-exportar">5. Exportar</h2>
   <p class="nota">A exportação fica registrada na trilha do Edital, com a versão usada; é por ela que o kit avisa quando o material deixar de corresponder ao Edital.</p>
   <div class="exportacoes-do-kit">
     {% for formato in formatos %}
@@ -119,10 +209,20 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
       {% csrf_token %}
       <input type="hidden" name="impressao" value="{{ ficha.impressao }}">
       {% if secao.manchete is not None %}<input type="hidden" name="manchete" value="{{ secao.manchete }}">{% endif %}
+      {% if secoes_da_familia %}
+      <input type="hidden" name="familia" value="{{ escolha.familia.chave }}">
+      {% if escolha.variante %}<input type="hidden" name="variante" value="{{ escolha.variante }}">{% endif %}
+      {% if escolha.imagem %}<input type="hidden" name="imagem" value="{{ escolha.imagem }}">{% endif %}
+      {% if secoes_da_familia.manchete is not None %}<input type="hidden" name="manchete" value="{{ secoes_da_familia.manchete }}">{% endif %}
+      {% endif %}
       <button type="submit" class="botao secundario">Baixar o pacote (.zip)</button>
     </form>
   </div>
+  {% if secoes_da_familia %}
+  <p class="nota">O pacote reúne os textos, a peça de cada formato liberado da família, com o texto alternativo, a ficha e um manifesto que diz de onde o material veio, quando foi gerado e por que um formato não entrou.</p>
+  {% else %}
   <p class="nota">O pacote reúne os textos, a peça, o texto alternativo, a ficha e um manifesto que diz de onde o material veio e quando foi gerado.{% if not secao.peca %} Sem a peça neste acesso, ele sai só com os textos, e o manifesto diz por quê.{% endif %}</p>
+  {% endif %}
 </section>
 {% endwith %}
 {% endif %}

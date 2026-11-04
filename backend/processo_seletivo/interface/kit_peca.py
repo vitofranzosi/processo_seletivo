@@ -376,6 +376,11 @@ def manchetes(ficha, template=INSTITUCIONAL):
     """
     if _algum_oficial_cabe(ficha, template) or not ficha.ofertas:
         return ()
+    return tuple(c for c in _candidatas(ficha) if medidas_do_titulo(c, template))
+
+
+def _candidatas(ficha):
+    """As manchetes que a ficha dá, sem repetir e sem termo da FR-3414, antes de medir."""
     ofertas = ficha.ofertas
     nomes = [oferta.nome for oferta in ofertas if oferta.nome]
     candidatas = []
@@ -389,9 +394,8 @@ def manchetes(ficha, template=INSTITUCIONAL):
     for candidata in candidatas:
         if candidata in vistas or fichas.termos_proibidos(candidata):
             continue
-        if medidas_do_titulo(candidata, template):
-            vistas.append(candidata)
-    return tuple(vistas)
+        vistas.append(candidata)
+    return vistas
 
 
 def escolher_manchete(ficha, indice, template=INSTITUCIONAL):
@@ -1085,6 +1089,31 @@ def _alternativo_em_caixas(ficha, familia, imagem, elementos):
 
 
 COMPOSITORES["caixas"] = _compor_em_caixas
+
+
+def manchetes_dos_templates(ficha, templates):
+    """A lista fechada da FR-3427 para vários formatos (FR-3818).
+
+    Oferecida quando nenhum título oficial cabe em algum dos templates; fica com as candidatas que
+    cabem como título em ao menos um deles, e cada formato a usa só se nenhum oficial couber nele.
+    """
+    sem_titulo = [t for t in templates if not titulo_oficial_cabe(ficha, t)]
+    if not sem_titulo or not ficha.ofertas:
+        return ()
+    return tuple(
+        candidata
+        for candidata in _candidatas(ficha)
+        if any(_cabe_como_titulo(candidata, template) for template in sem_titulo)
+    )
+
+
+def _cabe_como_titulo(texto, template):
+    if template.composicao != "caixas":
+        return bool(medidas_do_titulo(texto, template))
+    caixa = template.caixa("titulo")
+    fonte = kit_familias.familia(template.familia).fonte(caixa.fonte)
+    _, _, largura_, altura = caixa.retangulo
+    return _linhas_na_caixa(texto, caixa, fonte, largura_, altura) is not None
 
 
 # ---- A conferência de coerência (FR-3423) ------------------------------------------------------

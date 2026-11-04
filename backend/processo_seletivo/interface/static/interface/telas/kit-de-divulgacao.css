@@ -35,3 +35,14 @@
 .manchetes-do-kit fieldset{min-width:0;margin:0 0 .5rem;border:1px solid var(--borda);
   border-radius:6px;padding:.5rem .75rem}
 .opcao-de-manchete{display:block;margin:.25rem 0}
+
+/* A escolha da identidade (119, FR-3830): rádios nativos, sem script, em listas fechadas. */
+.escolha-do-kit fieldset{min-width:0;margin:.75rem 0 .5rem;border:1px solid var(--borda);
+  border-radius:6px;padding:.5rem .75rem}
+.opcao-da-escolha{display:block;margin:.25rem 0;max-width:var(--leitura)}
+/* Um formato por coluna quando cabe; empilhados a 375 px, sem rolagem lateral. */
+.formatos-do-kit{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));
+  gap:1rem;margin-top:.75rem}
+.formato-do-kit{min-width:0}
+.formato-do-kit h3{margin:0 0 .25rem;font-size:1.05rem}
+.formato-do-kit h4{margin:0;font-size:.95rem}
