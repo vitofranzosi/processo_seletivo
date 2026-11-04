@@ -7,6 +7,7 @@ diz `conclusiva: false`, e nada da resposta crua chega a lugar nenhum.
 """
 
 import copy
+import re
 from datetime import datetime, time, timedelta
 from urllib import error
 
@@ -51,7 +52,17 @@ FALHAS = {
     "numero como texto": (_ultimo_com(numero="6114"), None),
 }
 # Pedaços da resposta crua que não podem aparecer em mensagem nem registro (FR-3641, FR-3648).
-CRUS = ("html", "Service Unavailable", "An error has occurred", "URLError", "TimeoutError", "503")
+CRUS = ("html", "Service Unavailable", "An error has occurred", "URLError", "TimeoutError")
+# O código HTTP cru se procura como número inteiro, e não como substring: o registro leva o
+# `consultadaEm` com microssegundos, e "…00.255037…" contém "503". Como substring, o teste caía
+# uma vez a cada tantas execuções — no CI da #372 e na integração de 04/11 —, sempre no horário e
+# nunca num vazamento. Nenhum grupo de dígitos do isoformat tem três algarismos, de modo que a
+# fronteira de palavra não perde o código solto ("HTTP 503", "503 Service Unavailable").
+CODIGOS_CRUS = ("503",)
+
+
+def _tem_codigo_cru(texto, codigo):
+    return re.search(rf"\b{codigo}\b", texto) is not None
 
 
 def _motivo(nome):
@@ -66,6 +77,23 @@ def _sem_resposta_crua(*textos):
     for texto in textos:
         for cru in CRUS:
             assert cru not in texto, (cru, texto)
+        for codigo in CODIGOS_CRUS:
+            assert not _tem_codigo_cru(texto, codigo), (codigo, texto)
+
+
+@pytest.mark.parametrize(
+    "texto, vazou",
+    [
+        ("'consultadaEm': '2026-11-04T14:55:00.255037-03:00'", False),
+        ("'consultadaEm': '2026-11-04T10:20:54.250324-03:00'", False),
+        ("'consultadaEm': '2026-11-04T10:20:54.503000-03:00'", False),
+        ("a Caixa respondeu HTTP 503", True),
+        ("503 Service Unavailable", True),
+        ("{'status': 503}", True),
+    ],
+)
+def test_o_codigo_cru_nao_se_confunde_com_o_horario_da_consulta(texto, vazou):
+    assert _tem_codigo_cru(texto, "503") is vazou
 
 
 def _metodo(ocorrencia="6116", ocorre_em=None):
