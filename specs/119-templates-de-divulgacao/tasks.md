@@ -172,7 +172,7 @@ própria, com as referências das famílias anteriores intactas.
 ## Phase 8: Polish & Cross-Cutting
 
 - [ ] T053 [P] Atualizar a linha da `119` no `README.md` a cada incremento mergeado, e o `CLAUDE.md` se a suíte ganhar pulados ou a liberação ganhar armadilha
-- [ ] T054 [P] Confirmar com `git diff` que nenhum arquivo do fluxo de publicação, de Retificação ou de `publicacoes/infrastructure/fonte.py` mudou, e que não há migration (FR-3832)
+- [x] T054 [P] Confirmar com `git diff` que nenhum arquivo do fluxo de publicação, de Retificação ou de `publicacoes/infrastructure/fonte.py` mudou, e que não há migration (FR-3832)
 - [ ] T055 Rodar `cd backend && make lint check test-pg` antes de cada PR
 - [ ] T056 Validação humana do SC-1136 com uma pessoa da comunicação, registrada em `verificacao.md`
 
