@@ -281,7 +281,8 @@ def resumo(template_):
 # ---- A liberação (FR-3808, FR-3835, D-010) -----------------------------------------------------
 
 
-def _institucional_v1(template_):
+def institucional_v1(template_):
+    """A Institucional na versão 1 com o resumo congelado: a única que a chave da `111` rege."""
     from processo_seletivo.interface.kit_familias import institucional
 
     return (
@@ -307,7 +308,7 @@ def liberados():
     }
     saida = []
     for candidato in templates():
-        if _institucional_v1(candidato):
+        if institucional_v1(candidato):
             if settings.KIT_DE_DIVULGACAO_PECA:
                 saida.append(candidato)
             continue

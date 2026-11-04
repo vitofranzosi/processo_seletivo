@@ -29,7 +29,6 @@ tela (contrato).
 
 import hashlib
 
-from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -138,11 +137,38 @@ def _motivo_sem_peca(request, *, da_institucional=True):
     A chave da `111` é da Institucional; as famílias da comunicação têm a liberação por template
     (119, FR-3808), conferida na composição.
     """
-    if da_institucional and not settings.KIT_DE_DIVULGACAO_PECA:
-        return PECA_EM_VALIDACAO
+    if da_institucional:
+        motivo = _motivo_da_institucional()
+        if motivo:
+            return motivo
     if host_local(request):
         return kit_peca.HOST_LOCAL
     return ""
+
+
+def _motivo_da_institucional():
+    """A Institucional também passa pela liberação (FR-3835): `liberados()` decide.
+
+    A versão 1 com o resumo congelado continua da chave da `111`; qualquer outra versão, ou outro
+    resumo, só sai pela configuração nova, que a nomeia — a chave da `111` não a alcança.
+    """
+    if institucional.POST in kit_familias.liberados():
+        return ""
+    if kit_familias.institucional_v1(institucional.POST):
+        return PECA_EM_VALIDACAO
+    return kit_escolha.VERSAO_EM_APROVACAO
+
+
+#: O que só uma família da comunicação pede. A Institucional não tem banco, variante nem outro
+#: formato; um envio que os traz não saiu da tela e é recusado sem gerar (EC-9).
+CAMPOS_SO_DAS_FAMILIAS = ("variante", "imagem")
+
+
+def _conferir_institucional(dados):
+    if any((dados.get(campo) or "").strip() for campo in CAMPOS_SO_DAS_FAMILIAS):
+        raise kit_escolha.EscolhaInvalida
+    if (dados.get("formato_da_peca") or "").strip() not in ("", institucional.POST.formato.chave):
+        raise kit_escolha.EscolhaInvalida
 
 
 def _compor(ficha, indice):
@@ -169,6 +195,7 @@ def _peca_pedida(ficha, edital, dados, indice):
     contra as listas e o template do `formato_da_peca` (`D-012`).
     """
     if not _da_familia(dados):
+        _conferir_institucional(dados)
         peca = _compor(ficha, indice)
         return peca, kit_escolha.Escolhida(institucional.FAMILIA, None, None, indice)
     escolhida = kit_escolha.ler(dados, ficha, edital, indice_da_manchete=indice)
@@ -294,9 +321,16 @@ def kit(request, edital_id):
     if ator is None:
         return identidade.pedir_identificacao(request)
     ficha = fichas.ler(edital, agora=timezone.now(), base_url=_base_url(request))
-    indice = _indice_da_manchete(request.GET)
+    dados = request.GET
+    tela = (dados.get("familia_da_tela") or "").strip()
+    if tela and tela != (dados.get("familia") or "").strip():
+        # A pessoa trocou de família no formulário: a imagem, a variante e a manchete marcadas
+        # eram da família anterior, e não um pedido para a nova. A nova abre com as primeiras da
+        # lista dela; sem isto, sair da Pós para a Institucional era "escolha indisponível".
+        dados = {"familia": dados.get("familia", "")}
+    indice = _indice_da_manchete(dados)
     try:
-        escolhida = kit_escolha.ler(request.GET, ficha, edital, indice_da_manchete=indice)
+        escolhida = kit_escolha.ler(dados, ficha, edital, indice_da_manchete=indice)
         aviso_da_escolha = escolhida.aviso
     except kit_escolha.EscolhaInvalida:
         # A tela abre com a pré-escolha e diz por quê; nada é gerado com a escolha pedida (EC-9).
@@ -492,6 +526,15 @@ def exportar(request, edital_id, formato):
         except kit_escolha.EscolhaInvalida as invalida:
             raise DomainError("kit_escolha_invalida", invalida.motivo, 400) from None
     elif formato in PACOTE:
+        try:
+            _conferir_institucional(request.POST)
+        except kit_escolha.EscolhaInvalida as invalida:
+            raise DomainError("kit_escolha_invalida", invalida.motivo, 400) from None
+        # A família também no ZIP da Institucional (FR-3828): é por ela que a tela reabre na
+        # escolha mais recente, e não na última exportação que a registrou.
+        da_familia = kit_escolha.detalhe_da_familia(
+            kit_escolha.Escolhida(institucional.FAMILIA, None, None, None)
+        )
         dados, peca, motivo = pacote(
             ficha,
             manchete=_indice_da_manchete(request.POST),

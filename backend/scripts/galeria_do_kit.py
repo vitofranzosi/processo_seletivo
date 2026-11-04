@@ -190,6 +190,12 @@ def c_lato(cliente):
     return [Leitura("18-91-lato-uma-oferta", titulo, _ler(edital))]
 
 
+def c_carga(cliente):
+    edital = kit.publicar(cliente, chave="galeria-carga", mudar=kit.carga_vazia_e_longa)
+    titulo = "19. Carga horária vazia num Perfil e longa noutro (119, EC-2, EC-3)"
+    return [Leitura("19-91-carga-vazia-e-longa", titulo, _ler(edital))]
+
+
 CENARIOS = (
     c91,
     c91_prorrogado,
@@ -202,6 +208,7 @@ CENARIOS = (
     c_so_hora,
     c_termo,
     c_lato,
+    c_carga,
 )
 
 

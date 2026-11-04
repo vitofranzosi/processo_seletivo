@@ -97,6 +97,21 @@ class PecaRecusada(Exception):
         self.motivo = motivo
 
 
+ESCOLHA_INDISPONIVEL = "A escolha não está disponível; abra o kit de novo."
+
+
+class EscolhaInvalida(PecaRecusada):
+    """Família, variante, imagem, formato ou manchete fora das listas fechadas (EC-9).
+
+    Uma classe só, e filha de `PecaRecusada`: a prévia, que só sabe responder "não encontrado",
+    trata a escolha forjada como a peça que não existe neste acesso, e quem chamar `compor_template`
+    com imagem fora do banco recebe a recusa, e não um 500.
+    """
+
+    def __init__(self, motivo=ESCOLHA_INDISPONIVEL):
+        super().__init__(motivo)
+
+
 class MancheteInvalida(ValueError):
     """Índice de manchete fora da lista, ou manchete pedida quando um título oficial cabe."""
 
@@ -911,12 +926,50 @@ def _itens_do_painel(c, ficha, frases, resumir=False):
     return itens
 
 
+CARGA_NAO_CABE = "A carga horária não cabe no {formato} no corpo mínimo: {cargas}."
+
+
+def _carga_que_nao_cabe(c, ficha):
+    """As cargas horárias cuja linha não cabe na caixa da oferta, e que sem elas caberia (EC-3)."""
+    caixa = c.template.caixa("oferta")
+    util = c.template.dimensoes["painel"]["largura"] - 2 * c.template.dimensoes["painel"]["recuo"]
+    sem = replace(ficha, ofertas=tuple(replace(o, carga_horaria="") for o in ficha.ofertas))
+    culpadas = []
+    for oferta, com_carga, sem_carga in zip(
+        ficha.ofertas,
+        kit_textos.linhas_da_oferta(ficha),
+        kit_textos.linhas_da_oferta(sem),
+        strict=True,
+    ):
+        if not oferta.carga_horaria or oferta.carga_horaria in culpadas:
+            continue
+        fonte = c.fonte("oferta")
+        if _linhas_na_caixa(com_carga, caixa, fonte, util) is None and (
+            _linhas_na_caixa(sem_carga, caixa, fonte, util) is not None
+        ):
+            culpadas.append(oferta.carga_horaria)
+    return culpadas
+
+
 def _painel(c, ficha, frases):
-    """O painel com as opções listadas; se não couber, com a contagem (FR-3425 da `111`)."""
+    """O painel com as opções listadas; se não couber, com a contagem (FR-3425 da `111`).
+
+    **A contagem não esconde a carga horária** (EC-3). Se a linha de uma oferta não cabe no mínimo
+    por causa da carga horária, o formato é recusado nomeando-a: passar à contagem a apagaria da
+    peça sem dizer. A contagem fica para o painel que não tem altura para as opções, e nunca para
+    uma opção só, que viraria "1 opções". **Essa recaída por altura é decisão pendente**: a
+    FR-3425 só prevê a contagem acima de quatro opções (`verificacao.md`).
+    """
     try:
         _painel_com(c, ficha, frases, resumir=False)
     except _NaoCabe:
         if not (c.template.tem_ofertas and kit_textos.lista_as_opcoes(ficha)):
+            raise
+        culpadas = _carga_que_nao_cabe(c, ficha)
+        if culpadas:
+            texto = "; ".join(f"«{carga}»" for carga in culpadas)
+            raise _NaoCabe(CARGA_NAO_CABE.format(formato=c.formato.chave, cargas=texto)) from None
+        if len(ficha.ofertas) < 2:
             raise
         _painel_com(c, ficha, frases, resumir=True)
 
@@ -987,10 +1040,6 @@ def _imagem_escolhida(familia, escolha):
         if imagem.chave == escolha.imagem:
             return imagem
     raise EscolhaInvalida("A imagem escolhida não está no banco da família.")
-
-
-class EscolhaInvalida(ValueError):
-    """Família, variante, imagem ou formato fora das listas fechadas (EC-9)."""
 
 
 def _compor_em_caixas(ficha, template, escolha):

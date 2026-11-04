@@ -19,7 +19,7 @@ from processo_seletivo.interface import kit_familias, kit_peca
 from processo_seletivo.interface.kit_familias import institucional
 from processo_seletivo.interface.kit_formatos import FORMATOS
 
-ESCOLHA_INDISPONIVEL = "A escolha não está disponível; abra o kit de novo."
+ESCOLHA_INDISPONIVEL = kit_peca.ESCOLHA_INDISPONIVEL
 EM_APROVACAO = "Em aprovação pela comunicação."
 VERSAO_EM_APROVACAO = "Versão nova em aprovação pela comunicação."
 IMAGEM_RETIRADA = (
@@ -27,6 +27,10 @@ IMAGEM_RETIRADA = (
     "escolhida."
 )
 MANCHETE_INVALIDA = "A manchete escolhida não está entre as oferecidas. Abra o kit de novo."
+FAMILIA_RETIRADA = (
+    "A família da última exportação não está mais disponível neste ambiente; a Institucional foi "
+    "escolhida."
+)
 VARIANTE_RETIRADA = (
     "A variante da última exportação não está mais na família; a primeira da lista foi escolhida."
 )
@@ -34,11 +38,8 @@ VARIANTE_RETIRADA = (
 EXPORTACOES_DE_PECA = ("png", "svg", "zip")
 
 
-class EscolhaInvalida(kit_peca.PecaRecusada):
-    """Família, variante, imagem, formato ou manchete fora das listas fechadas (EC-9)."""
-
-    def __init__(self, motivo=ESCOLHA_INDISPONIVEL):
-        super().__init__(motivo)
+#: A mesma classe da composição: uma escolha forjada é uma recusa só, venha de onde vier.
+EscolhaInvalida = kit_peca.EscolhaInvalida
 
 
 class NaoLiberado(kit_peca.PecaRecusada):
@@ -106,6 +107,7 @@ def ler(dados, ficha, edital, *, indice_da_manchete=None):
     """A escolha do formulário, ou a pré-escolha; `EscolhaInvalida` fora das listas (FR-3806)."""
     familias = {familia.chave: familia for familia in familias_oferecidas(ficha)}
     pedida = (dados.get("familia") or "").strip()
+    aviso_da_familia = ""
     if pedida:
         if pedida not in familias:
             raise EscolhaInvalida
@@ -115,6 +117,8 @@ def ler(dados, ficha, edital, *, indice_da_manchete=None):
         familia = familias.get(origem.get("familia"), familias[institucional.CHAVE])
         explicita = False
         if familia.chave != origem.get("familia"):
+            # A família anterior saiu da lista: troca-se com o motivo dito, como a imagem (EC-8).
+            aviso_da_familia = FAMILIA_RETIRADA if origem.get("familia") else ""
             origem = {}
     variante, aviso_da_variante = _da_lista(
         origem.get("variante"),
@@ -133,7 +137,7 @@ def ler(dados, ficha, edital, *, indice_da_manchete=None):
         variante,
         imagem,
         indice_da_manchete,
-        " ".join(filter(None, (aviso_da_variante, aviso_da_imagem))),
+        " ".join(filter(None, (aviso_da_familia, aviso_da_variante, aviso_da_imagem))),
     )
 
 
@@ -182,14 +186,22 @@ def compor(ficha, escolhida, formato, liberados, lista_de_manchetes):
     )
 
 
+def detalhe_da_familia(escolhida):
+    """Família, versão, variante e imagem: o que toda exportação de peça registra (FR-3828)."""
+    return {
+        "familia": escolhida.familia.chave,
+        "familia_versao": escolhida.familia.versao,
+        "variante": escolhida.variante,
+        "imagem": escolhida.imagem,
+    }
+
+
 def detalhe(escolhida, peca):
     """O que a exportação de PNG ou SVG acrescenta ao evento (FR-3828, data-model §Evento)."""
     template = peca.template
     imagem = peca.imagem
     return {
-        "familia": escolhida.familia.chave,
-        "familia_versao": escolhida.familia.versao,
-        "variante": escolhida.variante,
+        **detalhe_da_familia(escolhida),
         "imagem": imagem.chave if imagem else None,
         "imagem_sha256": imagem.sha256(template.formato.chave) if imagem else None,
         "formato_da_peca": template.formato.chave,

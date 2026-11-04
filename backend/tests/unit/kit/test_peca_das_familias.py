@@ -134,3 +134,92 @@ def test_mesma_escolha_mesmo_svg_e_a_imagem_muda_so_o_fundo(template):
 def test_imagem_fora_do_banco_e_recusada(template):
     with pytest.raises(kit_peca.EscolhaInvalida):
         kit_peca.compor_template(_uma(), template, kit_peca.Escolha(imagem="praia"))
+
+
+# ---- EC-3: a carga horária longa recusa nomeando-a, e nunca some -----------------------------
+
+LONGA = (
+    "360 horas, das quais 60 presenciais e 300 a distância, com encontros quinzenais aos sábados "
+    "no polo de apoio presencial e atividades síncronas pelo ambiente virtual de aprendizagem"
+)
+
+
+def _com_carga(*cargas):
+    ofertas = tuple(
+        dataclasses.replace(
+            _oferta(str(i), f"Especialização em Docência {i}", "", 20), carga_horaria=carga
+        )
+        for i, carga in enumerate(cargas, start=1)
+    )
+    return _ficha(ofertas=ofertas, nomes_iguais=False, total_de_vagas=20 * len(cargas))
+
+
+@pytest.mark.parametrize("quantas", [1, 2])
+@pytest.mark.parametrize("template", TEMPLATES, ids=_id)
+def test_carga_horaria_longa_recusa_o_formato_nomeando_a(template, quantas):
+    """EC-3: se a carga não cabe no mínimo, o formato é recusado com ela no motivo.
+
+    A regressão que isto prende: com duas ofertas, a peça passava à contagem ("40 vagas em 2
+    opções") e a carga horária sumia sem recusa nem aviso; com uma, o motivo era "1 opções".
+    """
+    ficha = _com_carga(*[LONGA] * quantas)
+    if not template.tem_ofertas:
+        _compor(ficha, template)  # EC-6: o banner não lista ofertas, e a carga não o alcança
+        return
+    with pytest.raises(kit_peca.PecaRecusada) as recusa:
+        _compor(ficha, template)
+    assert "carga horária" in recusa.value.motivo
+    assert LONGA[:40] in recusa.value.motivo
+    assert template.formato.chave in recusa.value.motivo
+
+
+@pytest.mark.parametrize("template", [t for t in TEMPLATES if t.tem_ofertas], ids=_id)
+def test_carga_horaria_vazia_numa_oferta_e_curta_noutra(template):
+    """Cenário 19 (EC-2): sai só onde é declarada, e nada é completado.
+
+    Onde o painel não tem altura para as duas opções, a peça passa ao total — e então nenhuma
+    linha, nem carga, aparece (decisão pendente sobre a FR-3425, em `verificacao.md`).
+    """
+    peca = _compor(_com_carga("", "180h"), template)
+    linhas = [_campo(peca, f"oferta:{i}") for i in ("1", "2")]
+    if any(linhas):
+        assert linhas == [
+            "Especialização em Docência 1: 20 vagas",
+            "Especialização em Docência 2 — 180h: 20 vagas",
+        ]
+    else:
+        assert _campo(peca, "total_de_vagas") == "40 vagas em 2 opções"
+        assert "180h" not in " ".join(t.conteudo for t in peca.textos)
+
+
+# ---- EC-13: caractere sem glifo numa das fontes da família ---------------------------------
+
+
+@pytest.fixture
+def negrito_sem_u_agudo(monkeypatch):
+    """A Poppins Bold, numa cópia sem «ú»; a Regular continua inteira."""
+    from processo_seletivo.interface import kit_fontes
+
+    original = kit_fontes.medidas
+
+    def medidas(chave):
+        lidas = original(chave)
+        if chave != "poppins-negrito":
+            return lidas
+        larguras = {c: v for c, v in lidas.larguras.items() if c != "ú"}
+        return kit_fontes.Medidas(lidas.dados, larguras, lidas.ascendente, lidas.descendente)
+
+    monkeypatch.setattr(kit_fontes, "medidas", medidas)
+
+
+@pytest.mark.parametrize("template", TEMPLATES, ids=_id)
+def test_caractere_sem_glifo_so_na_fonte_de_titulo(template, negrito_sem_u_agudo):
+    """Cenário 25: recusa nomeando caractere e fonte; o mesmo caractere no corpo continua."""
+    no_titulo = _uma(titulo_sem_numero="Curso de Gestão Pública", titulo_do_processo="Gestão")
+    with pytest.raises(kit_peca.PecaRecusada) as recusa:
+        _compor(no_titulo, template)
+    assert "Poppins" in recusa.value.motivo and "«ú»" in recusa.value.motivo
+    if template.tem_ofertas:
+        # «ú» no nome da oferta, que é corpo (Poppins Regular), não é recusa.
+        ofertas = (dataclasses.replace(UMA[0], nome="Especialização em Gestão Pública"),)
+        _compor(_ficha(ofertas=ofertas, nomes_iguais=False, total_de_vagas=40), template)

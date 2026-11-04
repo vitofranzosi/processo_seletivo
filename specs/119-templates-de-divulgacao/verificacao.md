@@ -23,6 +23,37 @@ pelo produto, e a adoção dele é o registro. A galeria continua gerada por
 KIT_DE_DIVULGACAO_TEMPLATES=pos-lato-sensu/post@1#bfcb25490b8e,pos-lato-sensu/story@1#91137d4ddd46,pos-lato-sensu/banner@1#1badbdf0cb93
 ```
 
+## Decisão pendente: a contagem quando o painel não tem altura (FR-3425 da `111`, FR-3817)
+
+A FR-3425 só prevê a contagem ("N vagas em K opções") **acima de quatro opções** ou com rótulos
+indistintos, e a FR-3824 manda recusar o formato que não cabe. Os templates da Pós Lato Sensu, porém,
+passam à contagem quando as opções listadas não têm altura no painel — a foto ocupa a metade de
+baixo. Medido em 04/11/2026: post e story listam **duas** opções de nome curto; com três ou mais, ou
+com duas de nome longo, saem com o total; o banner não tem bloco de ofertas (EC-6). E então a carga
+horária não aparece, porque nenhuma linha aparece.
+
+A revisão de 04/11 estreitou a recaída: ela **não** vale para uma opção só ("1 opções"), nem quando
+é a carga horária que não cabe na linha — aí o formato é recusado nomeando-a (EC-3). Na galeria, o
+cenário 19 mostra os dois desfechos: o post recusa, e o story, onde a linha cabe e o painel não,
+sai com "80 vagas em 2 opções".
+
+**Para o responsável pelo produto decidir**, sem mudança enquanto não decidir:
+
+- **manter a contagem por altura**, e a spec é emendada para admiti-la nesses templates; ou
+- **recusar o formato**, como a FR-3425 diz hoje — e o Edital de dois polos ou mais fica sem post e
+  sem story da Pós, só com o banner e a Institucional.
+
+## Cenários de referência 18 a 25 na Pós Lato Sensu (FR-3831)
+
+| Cenário | Onde está coberto |
+|---|---|
+| 18. FIC com três Perfis de carga declarada | Da família FIC (incremento 3a); na Pós, o caso de várias ofertas é o 91 de quatro polos |
+| 19. Carga vazia num Perfil e longa noutro | Galeria (`c_carga`) e `test_peca_das_familias.py` |
+| 20–22. Atendimento declarado, ausente e de 255 caracteres | Nenhum template da Pós tem caixa de contato (FR-3820): a peça não muda; o contato é dos textos, em `test_textos_com_carga_e_contato.py` |
+| 23. Internos nas duas variantes | Da família Internos (incremento 3) |
+| 24. Edital de unidade sem família | `test_familias_na_tela.py::test_unidade_sem_familia_so_tem_a_institucional` |
+| 25. Caractere sem grafia só na fonte de título | `test_peca_das_familias.py::test_caractere_sem_glifo_so_na_fonte_de_titulo`; na galeria não cabe, porque as três Poppins têm o mesmo repertório |
+
 ## Validações que dependem do ambiente de implantação
 
 Nenhuma delas se faz na máquina de desenvolvimento, e nenhuma está feita. **Em host local a peça não

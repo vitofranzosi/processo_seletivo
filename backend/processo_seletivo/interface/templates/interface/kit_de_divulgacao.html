@@ -66,6 +66,7 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
   <h2 id="titulo-escolha">3. A identidade da peça</h2>
   {% if aviso_da_escolha %}<p class="aviso faixa-do-kit">{{ aviso_da_escolha }}</p>{% endif %}
   <form method="get" class="escolha-do-kit">
+    <input type="hidden" name="familia_da_tela" value="{{ escolha.familia.chave }}">
     <fieldset>
       <legend>Família</legend>
       {% for familia in familias %}

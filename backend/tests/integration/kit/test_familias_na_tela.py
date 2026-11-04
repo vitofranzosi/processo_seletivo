@@ -315,3 +315,133 @@ def test_zip_da_familia_com_escolha_forjada_e_400(comunicacao, edital):
     resposta = _exportar(comunicacao, edital, "zip", familia=LATO, imagem="praia")
     assert resposta.status_code == 400
     assert not _eventos(edital).exists()
+
+
+# ---- A revisão do incremento 2 --------------------------------------------------------------
+
+
+def test_trocar_de_familia_no_formulario_nao_leva_a_imagem_da_anterior(comunicacao, edital):
+    """FR-3806: sair da Pós para a Institucional pelo formulário, mesmo depois de exportar a Pós.
+
+    O formulário leva a imagem marcada da família que está na tela; sem o `familia_da_tela`, a
+    Institucional recebia uma imagem e a tela dizia "escolha indisponível", presa na Pós.
+    """
+    _exportar(comunicacao, edital, "svg", familia=LATO, imagem="grupo", formato_da_peca="post")
+    resposta = _tela(
+        comunicacao, edital, familia="institucional", familia_da_tela=LATO, imagem="grupo"
+    )
+    assert resposta.context["escolha"].familia.chave == "institucional"
+    assert not resposta.context["aviso_da_escolha"]
+    volta = _tela(comunicacao, edital, familia=LATO, familia_da_tela="institucional")
+    assert (volta.context["escolha"].familia.chave, volta.context["escolha"].imagem) == (
+        LATO,
+        "fone",
+    )
+    # Na mesma família, a imagem fora da lista continua recusada (EC-9).
+    forjada = _tela(comunicacao, edital, familia=LATO, familia_da_tela=LATO, imagem="praia")
+    assert forjada.context["aviso_da_escolha"] == kit_escolha.ESCOLHA_INDISPONIVEL
+
+
+def test_envio_forjado_com_a_institucional_e_recusado_sem_registro(comunicacao, edital):
+    """EC-9: a Institucional não tem banco, variante nem outro formato."""
+    for formato, errado in (
+        ("svg", {"familia": "institucional", "formato_da_peca": "story"}),
+        ("svg", {"imagem": "praia"}),
+        ("png", {"familia": "institucional", "variante": "servidores"}),
+        ("zip", {"familia": "institucional", "imagem": "fone"}),
+    ):
+        if formato == "png" and not kit_pacote.disponivel():
+            continue
+        resposta = _exportar(comunicacao, edital, formato, **errado)
+        assert resposta.status_code == 400, (formato, errado)
+    assert not _eventos(edital).exists()
+    if kit_pacote.disponivel():
+        assert _previa(comunicacao, edital, formato_da_peca="banner").status_code == 404
+
+
+def test_institucional_fora_da_versao_congelada_so_sai_liberada(
+    comunicacao, edital, monkeypatch, settings
+):
+    """FR-3835, EC-23: outro resumo da Institucional não sai pela chave da `111`."""
+    monkeypatch.setattr(institucional, "RESUMO_CONGELADO_V1", "0" * 64)
+    assert settings.KIT_DE_DIVULGACAO_PECA
+    settings.KIT_DE_DIVULGACAO_TEMPLATES = tuple(
+        e for e in settings.KIT_DE_DIVULGACAO_TEMPLATES if e[0] != "institucional"
+    )
+    resposta = _tela(comunicacao, edital, familia="institucional")
+    assert resposta.context["secao_da_peca"]["motivo"] == kit_escolha.VERSAO_EM_APROVACAO
+    assert _exportar(comunicacao, edital, "svg").status_code == 404
+    zip_ = _exportar(comunicacao, edital, "zip")
+    assert zip_.status_code == 200
+    assert _eventos(edital).get().detalhe["sem_peca"] == kit_escolha.VERSAO_EM_APROVACAO
+    curto = kit_familias.resumo(institucional.POST)[: kit_familias.RESUMO_CURTO]
+    settings.KIT_DE_DIVULGACAO_TEMPLATES = (
+        *settings.KIT_DE_DIVULGACAO_TEMPLATES,
+        ("institucional", "post", 1, curto),
+    )
+    assert _exportar(comunicacao, edital, "svg").status_code == 200
+
+
+def test_zip_da_institucional_registra_a_familia_e_vira_a_pre_escolha(comunicacao, edital):
+    """FR-3828: o ZIP da Institucional também registra a família, e a tela reabre nela."""
+    _exportar(comunicacao, edital, "svg", familia=LATO, imagem="grupo", formato_da_peca="post")
+    assert _exportar(comunicacao, edital, "zip").status_code == 200
+    detalhe = _eventos(edital).last().detalhe
+    assert {k: detalhe[k] for k in ("familia", "familia_versao", "variante", "imagem")} == {
+        "familia": "institucional",
+        "familia_versao": institucional.FAMILIA.versao,
+        "variante": None,
+        "imagem": None,
+    }
+    assert _tela(comunicacao, edital).context["escolha"].familia.chave == "institucional"
+
+
+def test_familia_que_saiu_da_lista_volta_a_institucional_e_diz_por_que(
+    comunicacao, edital, settings
+):
+    """FR-3806, EC-8: a família anterior trocada tem o motivo dito, como a imagem."""
+    _exportar(comunicacao, edital, "svg", familia=LATO, imagem="grupo", formato_da_peca="post")
+    _sem(settings, "post", "story", "banner")
+    resposta = _tela(comunicacao, edital)
+    assert resposta.context["escolha"].familia.chave == "institucional"
+    assert resposta.context["aviso_da_escolha"] == kit_escolha.FAMILIA_RETIRADA
+
+
+@sem_rasterizador
+def test_zip_da_familia_com_recusa_e_versao_divergente(comunicacao, edital, settings, monkeypatch):
+    """FR-3829: cada motivo de não inclusão no manifesto, e os outros formatos seguem."""
+    from processo_seletivo.interface import kit_peca
+
+    settings.KIT_DE_DIVULGACAO_TEMPLATES = tuple(
+        (f, formato, versao, "0" * 12 if (f, formato) == (LATO, "banner") else curto)
+        for f, formato, versao, curto in settings.KIT_DE_DIVULGACAO_TEMPLATES
+    )
+    original = kit_escolha.compor
+
+    def recusa_o_story(ficha, escolhida, formato, *args):
+        if formato == "story":
+            raise kit_peca.PecaRecusada("O título não cabe no story.")
+        return original(ficha, escolhida, formato, *args)
+
+    monkeypatch.setattr(kit_escolha, "compor", recusa_o_story)
+    resposta = _exportar(comunicacao, edital, "zip", familia=LATO, imagem="fone")
+    assert resposta.status_code == 200
+    pecas = json.loads(_abrir(resposta.content)[1]["manifesto.json"])["pecas"]
+    assert [(p["formato_da_peca"], p["incluida"], p["motivo"]) for p in pecas] == [
+        ("post", True, None),
+        ("story", False, "recusa"),
+        ("banner", False, "versao_divergente"),
+    ]
+    assert pecas[1]["recusa"] == "O título não cabe no story."
+
+
+def test_zip_da_familia_sem_rasterizador_leva_o_svg(comunicacao, edital, monkeypatch):
+    """FR-3829: sem o rasterizador, o formato entra com o SVG e o motivo `sem_rasterizador`."""
+    monkeypatch.setattr(kit_pacote, "disponivel", lambda: False)
+    resposta = _exportar(comunicacao, edital, "zip", familia=LATO, imagem="fone")
+    assert resposta.status_code == 200
+    nomes, conteudo = _abrir(resposta.content)
+    assert "peca-post.svg" in nomes and "peca-post.png" not in nomes
+    pecas = json.loads(conteudo["manifesto.json"])["pecas"]
+    assert {p["motivo"] for p in pecas} == {"sem_rasterizador"}
+    assert all(p["incluida"] for p in pecas)

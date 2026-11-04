@@ -128,6 +128,17 @@ def termo_no_titulo(conteudo):
     conteudo["title"] = "Edital nº 91/2026 – Curso de Formação no Polo São Marcos (DEMONSTRAÇÃO)"
 
 
+def carga_vazia_e_longa(conteudo):
+    """Cenário 19 da `119`: dois Perfis, um sem carga horária e outro com carga longa."""
+    conteudo["profiles"] = conteudo["profiles"][:2]
+    conteudo["profiles"][0]["workload"] = ""
+    conteudo["profiles"][1]["workload"] = (
+        "360 horas, das quais 60 presenciais e 300 a distância, com encontros quinzenais aos "
+        "sábados no polo de apoio presencial"
+    )
+    _podar_referencias(conteudo)
+
+
 def lato_uma_oferta(conteudo):
     """Cenário 17 da `119`: pós lato sensu de uma oferta, com título de 120 caracteres."""
     conteudo["profiles"] = conteudo["profiles"][:1]
