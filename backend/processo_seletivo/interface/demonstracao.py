@@ -30,6 +30,7 @@ ICONES = {
     "exportador": "lista",
     "participante-piloto-assistente": "frasco",
     "comunicacao": "megafone",
+    "formalizacao": "pacote",
 }
 
 # Sujeitos da trilha que não são pessoas da equipe: o candidato tem eixo próprio, e a implantação é
@@ -38,8 +39,9 @@ _FORA_DA_EQUIPE = ("cand:", "implantacao")
 
 # A partir de quantas entradas a busca aparece (`FR-1695`). Abaixo disso, ela é um campo a mais
 # entre a pessoa e uma lista que cabe inteira na tela. Eram 8, os papéis de então; o nono, o da
-# comunicação (111), sobe o limiar junto, para que a lista só de papéis continue sem busca.
-LIMIAR_DA_BUSCA = 9
+# comunicação (111), sobe o limiar junto, para que a lista só de papéis continue sem busca; e o
+# décimo, o da formalização (117), também.
+LIMIAR_DA_BUSCA = 10
 
 
 def iniciais(subject):

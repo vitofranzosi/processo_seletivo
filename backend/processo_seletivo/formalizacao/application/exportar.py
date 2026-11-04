@@ -46,7 +46,6 @@ from processo_seletivo.formalizacao.domain.autorizacao import inexistente, pode_
 from processo_seletivo.formalizacao.infrastructure.pacote import Pacote, manifesto
 from processo_seletivo.formalizacao.models import ExportacaoDeFormalizacao
 from processo_seletivo.portal.arquivos import LIMITE_EM_MEMORIA
-from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.arquivos import BLOCO
 
@@ -603,12 +602,12 @@ def _pessoa_do_registro(leitura):
 
 def baixar(actor, *, edital_id, token, correlation_id=""):
     """O download do pacote verificado: comprovante, autorizações, releitura, resumo (FR-3689)."""
-    edital = Edital.objects.filter(pk=edital_id, institution_scope=actor.institution_scope).first()
-    if edital is None:
-        raise inexistente()
+    # A matriz primeiro: sem o papel é 403, fora do alcance é 404, e o comprovante de quem já não
+    # alcança o Edital não chega a ser lido. Os dois antes de qualquer arquivo.
+    acesso = pode_acessar(actor, edital_id)
     try:
         payload = comprovante.conferir(actor, token)
-        if payload.get("edital") != str(edital.id):
+        if payload.get("edital") != str(acesso.edital.id):
             raise comprovante.invalida()
     except DomainError as recusa:
         motivo = (
@@ -616,9 +615,8 @@ def baixar(actor, *, edital_id, token, correlation_id=""):
             if recusa.code == nomes.VERIFICACAO_EXPIRADA
             else nomes.RECUSA_INVALIDA
         )
-        _registrar_recusa(actor, edital, motivo, correlation_id)
+        _registrar_recusa(actor, acesso.edital, motivo, correlation_id)
         raise
-    acesso = pode_acessar(actor, edital_id)
     try:
         if str(acesso.designacao.id) != payload["designacao"]:
             raise VerificacaoDefasada()

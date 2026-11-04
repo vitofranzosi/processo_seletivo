@@ -267,6 +267,17 @@ QUEM_CARREGA = {
         # A suspensão e a reativação, do incremento 2.
         "acessos_pessoas.html",
         "acessos_suspensao.html",
+        # Os Editais da formalização (117), ao lado dos vínculos da unidade.
+        "acessos_formalizacao.html",
+    },
+    # A entrega documental à formalização (117): a lista, a página do Edital, a verificação, as
+    # recusas da exportação e a definição na condução dividem a folha.
+    "interface/telas/formalizacao.css": {
+        "formalizacao_lista.html",
+        "formalizacao_edital.html",
+        "formalizacao_verificacao.html",
+        "formalizacao_recusa.html",
+        "formalizacao_definicao.html",
     },
     # O registro de Unidades (110): a lista, a ficha, o formulário, a conferência e a situação.
     "interface/telas/unidades.css": {

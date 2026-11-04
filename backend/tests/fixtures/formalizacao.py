@@ -181,13 +181,15 @@ def montar_cenario_da_formalizacao(
     tamanho=None,
     nomes=None,
     documentos=None,
+    da_inscricao=DA_INSCRICAO,
     prefixo="formalizacao-117",
 ):
     """O Edital com documentos dos dois momentos e `aptas` pessoas com aceite e tudo conferido.
 
     `indeferidas` e `sem_resposta` acrescentam convocações que **não** dão aptidão; `tamanho`, em
     bytes, faz cada arquivo ter aquele tamanho (o Cenário A usa 1,5 MB); `nomes`, os nomes das
-    pessoas aptas, na ordem — é por eles que entram os nomes hostis.
+    pessoas aptas, na ordem — é por eles que entram os nomes hostis; `da_inscricao`, os documentos
+    da inscrição que cada uma enviou.
     """
     edital, _, _ = cenarios.montar(
         gestor,
@@ -202,7 +204,7 @@ def montar_cenario_da_formalizacao(
     for posicao in range(aptas):
         numero += 1
         nome = nomes[posicao] if nomes and posicao < len(nomes) else None
-        inscricao = inscrever(edital, numero, nome=nome, tamanho=tamanho)
+        inscricao = inscrever(edital, numero, nome=nome, tamanho=tamanho, documentos=da_inscricao)
         convocacao = convocar_direto(edital, inscricao)
         tornar_apta(edital, gestor, inscricao, convocacao, numero=numero, tamanho=tamanho)
         cenario.aptas.append((inscricao, convocacao))

@@ -102,7 +102,7 @@ SECOES = (
     Secao("Agenda", "interface:agenda", TRABALHO, _toda_identidade, "i-calendario"),
     # O setor que formaliza (117): no grupo do trabalho, porque é onde ele trabalha. Pelo papel,
     # que o seletor de demonstração oferece como os demais do `PAPEIS`.
-    Secao("Formalização", "interface:formalizacao", TRABALHO, pode_ver_formalizacao, "i-prancheta"),
+    Secao("Formalização", "interface:formalizacao", TRABALHO, pode_ver_formalizacao, "i-pacote"),
     Secao(
         "Autoridades da unidade",
         "interface:autoridades",

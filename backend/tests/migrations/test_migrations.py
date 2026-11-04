@@ -36,6 +36,9 @@ APPS = (
     # A identidade institucional da 106: três tabelas append-only e dois gatilhos sobre a
     # `auth_user`, que é do Django: a pessoa muda, e o identificador dela não; e ela não se exclui.
     "seguranca",
+    # A entrega documental à formalização da 117: quatro tabelas append-only e a coerência da
+    # exportação contra a designação e a definição do mesmo Edital.
+    "formalizacao",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
