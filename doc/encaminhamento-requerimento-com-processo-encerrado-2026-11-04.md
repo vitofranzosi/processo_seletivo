@@ -4,8 +4,11 @@ Registrado em 04/11/2026, a pedido do usuário, no encerramento da spec `118`. *
 frente separada.** Nada aqui muda regra durante a `118` (FR-3756 da `118`). Leitura estática sobre a
 `main` em `fb0e1ddc`; nenhum cenário foi executado.
 
-> **Decidir é do usuário.** Este documento investiga, separa os casos e propõe uma correção curta,
-> com testes e a decisão necessária.
+> **Decidido pelo usuário em 04/11/2026: sim.** O Requerimento *na convocação* deixa de aceitar
+> preenchimento, envio e atualização com o Processo encerrado ou cancelado, e a leitura do que foi
+> enviado continua. A FR-373 e a FR-408 da `029` foram revistas, e a `118` foi ajustada (D-020 dela).
+> **Falta a implementação**, em PR próprio, pela proposta abaixo. Fica pendente uma decisão menor: o
+> sucessor do Requerimento *na inscrição* (caso 3).
 
 ## O que acontece hoje
 
@@ -49,10 +52,10 @@ disponíveis as consultas históricas autorizadas"*).
 | Spec | Regra | Impacto |
 |---|---|---|
 | `001` | FR-035 | É a regra que o Requerimento descumpre; não muda |
-| `029` | FR-373 (disponível com convocação vigente sem desfecho), FR-374 (prazo), FR-408 (sucessor), FR-411 (desfecho) | **Acréscimo**: o Processo em estado final também encerra o preenchimento, o envio e o sucessor, sem fechar a leitura nem apagar o rascunho — o molde da FR-374 revista pela `115` |
+| `029` | FR-373 (disponível com convocação vigente sem desfecho), FR-408 (sucessor) | **Revistas em 04/11/2026**, com as redações anteriores preservadas: o Processo em estado final encerra o preenchimento, o envio e o sucessor do Requerimento *na convocação*, sem fechar a leitura nem apagar o rascunho. A FR-374 e a FR-411 não mudam |
 | `113` | FR-3534 | Nenhum: trata do Edital, e a convocação em aberto continua só advertência |
 | `115` | FR-3582, FR-3616, FR-3622 | Nenhum para os documentos. A FR-3622 (um só prazo para tudo o que a chamada autoriza a escrever) ganha coerência: documentos e Requerimento passam a fechar juntos também pelo Processo |
-| `118` | FR-3725, FR-3741 | A linha 5 da FR-3725 deixa de alcançar o Processo em estado final, e a FR-3741 deixa de precisar do bloco *"O que ainda pode ser feito"*. Se a correção vier antes da implementação da `118`, ajustar as duas; se vier depois, revisar com teste |
+| `118` | FR-3725, FR-3730, FR-3732, FR-3741, FR-3748, FR-3754 | **Ajustada em 04/11/2026**: a linha 3a da FR-3725 mostra o Requerimento *na convocação* como não enviado, sem ação, com o Processo em estado final, antes da linha do prazo; nenhuma tela oferece o preenchimento (cenários M e M0). A `118` não muda o comando |
 
 ## Proposta de correção (curta)
 
@@ -77,11 +80,17 @@ disponíveis as consultas históricas autorizadas"*).
 - O teste de custo do Requerimento (`tests/integration/requerimentos/test_orcamento_de_consulta.py`)
   não cresce: o estado do Processo vem da inscrição que a view já lê.
 
-## A decisão necessária
+## A decisão
 
-**O Requerimento *na convocação* deve fechar com o Processo em estado final, como os documentos e o
-desfecho?** A recomendação é **sim**, pela FR-035 da `001`: a escrita não tem destino. A alternativa
-— mantê-lo aberto — pede justificar para que serve um Requerimento que nenhum ato considerará.
+**Tomada pelo usuário em 04/11/2026: sim.** O Requerimento *na convocação* fecha com o Processo em
+estado final, como os documentos e o desfecho, pela FR-035 da `001`. A revisão ficou na FR-373 e na
+FR-408 da `029` (e não na FR-374 ou na FR-411, como esta proposta sugeria antes): a FR-373 é a regra
+de disponibilidade pela convocação, e já fechava o preenchimento pelo desfecho.
 
-Decidido o sim, a correção é uma revisão curta da `029` (acréscimo à FR-374 ou à FR-411), com a
-implementação acima. É independente da `118`, que não muda regra.
+**Ordem com a `118`.** As duas são independentes. A `118` não oferece a escrita (linha 3a da FR-3725);
+esta correção faz o comando recusá-la. Até ela, um POST montado à mão ainda seria aceito — o mesmo
+estado de hoje, sem tela que o convide.
+
+**Pendente, menor:** o sucessor do Requerimento *na inscrição*, que depende de chamada em aberto
+(FR-408), deve fechar também com o Processo em estado final? A recomendação é sim, pelo mesmo
+motivo; a revisão desta vez o deixou de fora porque a decisão alcançou só o *na convocação*.

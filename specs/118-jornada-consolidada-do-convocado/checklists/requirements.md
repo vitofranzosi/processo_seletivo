@@ -80,6 +80,12 @@
 - [x] Processo encerrado × Requerimento preenchível: encaminhamento separado, de alta prioridade, em
       `doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`
 
+## Depois do merge (04/11/2026)
+
+- [x] D-020: o Processo em estado final fecha o Requerimento *na convocação*; a `029` revista
+      (FR-373, FR-408); a `118` ajustada (FR-3725 linha 3a, FR-3730, FR-3732, FR-3741, FR-3748,
+      FR-3754; cenários M e M0; SC-1128)
+
 ## Notes
 
 - **Detalhe de implementação na spec, de propósito.** A spec cita funções (`estado_de`,

@@ -522,10 +522,29 @@ alheio ao ator de cada passo.**
 
 - **FR-372**: Declarado *na inscrição*, o requerimento MUST ficar disponível a partir da abertura do
   rascunho da inscrição, e a submissão da inscrição MUST exigi-lo enviado.
-- **FR-373**: Declarado *na convocação*, o requerimento MUST ficar disponível quando existir, para
+- **FR-373** *(revisada em 2026-11-04, por decisão do usuário — a redação anterior está ao fim desta
+  alínea)*: Declarado *na convocação*, o requerimento MUST ficar disponível quando existir, para
   aquela Inscrição, convocação vigente **sem desfecho registrado** — qualquer que seja a espécie:
-  vaga inicial, suplência ou regularização. Convocação vigente **com** desfecho MUST NOT abrir nem
-  manter aberto o preenchimento.
+  vaga inicial, suplência ou regularização — **e o Processo Seletivo não estiver em estado final**
+  (encerrado ou cancelado). Convocação vigente **com** desfecho, ou Processo em estado final, MUST NOT
+  abrir nem manter aberto o preenchimento e o envio. Como no prazo (FR-374), o Processo em estado
+  final MUST NOT fechar a leitura, apagar o rascunho nem converter o rascunho em enviado; e a recusa
+  MUST ser a mesma que o Processo em estado final já dá aos documentos e ao desfecho da convocação.
+
+  > **Redação anterior, preservada porque a regra foi revista, e não substituída em silêncio:**
+  > Declarado *na convocação*, o requerimento MUST ficar disponível quando existir, para aquela
+  > Inscrição, convocação vigente **sem desfecho registrado** — qualquer que seja a espécie: vaga
+  > inicial, suplência ou regularização. Convocação vigente **com** desfecho MUST NOT abrir nem manter
+  > aberto o preenchimento.
+  >
+  > **Por que mudou.** Com o Processo encerrado ou cancelado, o GPS já recusa o envio e a conferência
+  > de documento da convocação e o registro do desfecho (FR-035 da `001`: *"Encerramento e
+  > cancelamento DEVEM impedir novas transições incompatíveis, mantendo disponíveis as consultas
+  > históricas autorizadas"*). O requerimento seguia aberto, e o que se enviasse não teria ato que o
+  > considerasse. Investigação e casos em
+  > `doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md`. **O Edital encerrado
+  > (`113`) com o Processo ativo não é este caso**: a convocação em aberto continua, como os documentos
+  > dela (FR-3616 da `115`). A implementação é PR próprio; até ela, o código ainda aceita a escrita.
 - **FR-374** *(revisada pela `115` em 2026-11-03 — a redação anterior está ao fim desta alínea)*:
   **Do prazo, e só dele.** Decorrido o vencimento da convocação, pela mesma leitura que admite o não
   atendimento (`019`), o preenchimento e o envio MUST encerrar. O vencimento MUST NOT, por si, fechar
@@ -642,9 +661,15 @@ alheio ao ator de cada passo.**
   aqui é condicional, e a própria política de privilégios do projeto registra que imutabilidade
   condicional ao estado não cabe em privilégio de tabela e *"só a trigger consegue expressar"*. A
   guarda na aplicação permanece como primeira camada, nunca como a única.
-- **FR-408** *(revisada pela `115` em 2026-11-03)*: Um requerimento sucessor MUST ser admitido
+- **FR-408** *(revisada pela `115` em 2026-11-03, e acrescida em 2026-11-04 por decisão do usuário)*:
+  Um requerimento sucessor MUST ser admitido
   somente quando existir chamada em aberto para aquela Inscrição **com o vencimento não decorrido**
-  (`FR-374`), e MUST citar a convocação que o autorizou. Fora disso, MUST ser recusado. *Redação
+  (`FR-374`), e MUST citar a convocação que o autorizou. Fora disso, MUST ser recusado. **Declarado
+  *na convocação*, o sucessor MUST ser recusado também com o Processo em estado final (FR-373).**
+  Declarado *na inscrição*, esta regra não muda: se o Processo em estado final deve fechar também o
+  sucessor dele é decisão pendente, registrada no encaminhamento citado na FR-373. *Acréscimo de
+  2026-11-04: a frase sobre o Processo em estado final e a seguinte; antes, o texto terminava em
+  "Fora disso, MUST ser recusado."* *Redação
   anterior: "Um requerimento sucessor MUST ser admitido somente quando existir chamada em aberto para
   aquela Inscrição, e MUST citar a convocação que o autorizou. Fora disso, MUST ser recusado."*
 - **FR-409**: O sucessor MUST nascer copiando o conteúdo do antecessor, e o antecessor MUST
