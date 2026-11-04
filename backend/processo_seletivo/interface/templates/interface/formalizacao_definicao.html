@@ -1,0 +1,89 @@
+{% extends "interface/base.html" %}{% load estaticos interface_extras %}
+{% block titulo %}Documentos para a formalização — {{ edital }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/formalizacao.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Documentos para a formalização</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A definição dos documentos para a formalização (117, US1, FR-3653 a FR-3660, FR-3711).
+
+A condução marca, entre os documentos que o Edital pediu em qualquer momento, os que vão ao setor
+que formaliza. Começa sem marcação; grava com motivo; cada gravação é uma versão. Não muda o Edital
+publicado, o PDF nem a obrigação do candidato, e não pede Retificação.
+
+Os dois avisos saem do que o Edital já diz: o recorte por modalidade e o momento da inscrição. Eles
+não impedem a gravação. O auditor lê a tela e o histórico; o setor não a alcança.
+{% endcomment %}
+<h1>Documentos para a formalização</h1>
+<p class="sub">{{ edital }} — {{ edital.title }}</p>
+<p>Marque os documentos que o setor responsável pela formalização precisa receber. Só eles ficam
+  disponíveis ao setor, e só das pessoas aptas para formalização. A definição não muda o Edital
+  publicado nem o que o candidato precisa apresentar.</p>
+
+{% if aviso %}<p class="sucesso" role="status">{{ aviso }}</p>{% endif %}
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+
+{% if not requisitos %}
+<p class="nenhuma">Este Edital ainda não tem documento exigido publicado.</p>
+{% elif pode_gravar %}
+<form method="post" action="{% url 'interface:formalizacao-definicao' edital.id %}" class="definicao-da-formalizacao">
+  {% csrf_token %}
+  <fieldset class="opcoes">
+    <legend>Documentos do Edital</legend>
+    {% for requisito in requisitos %}
+    <div class="requisito-da-definicao">
+      <p class="opcao"><input type="checkbox" id="requisito-{{ forloop.counter }}" name="requisito" value="{{ requisito.id }}"{% if requisito.id in marcados %} checked{% endif %}>
+        <label for="requisito-{{ forloop.counter }}">{{ requisito.nome }} <span class="nenhuma">(pedido na {{ requisito.momento }})</span></label></p>
+      {% for texto in requisito.avisos %}<p class="nota aviso-da-definicao">{{ texto }}</p>{% endfor %}
+    </div>
+    {% endfor %}
+  </fieldset>
+  <p class="campo"><label for="motivo-da-definicao">Motivo <span class="opcional">(obrigatório; fica no histórico, que o auditor lê)</span></label>
+    <textarea id="motivo-da-definicao" name="motivo" rows="2">{{ motivo }}</textarea></p>
+  <p class="acoes"><button type="submit" class="botao">Gravar a definição</button></p>
+</form>
+{% else %}
+<section aria-labelledby="definicao-vigente">
+  <h2 id="definicao-vigente">Definição vigente</h2>
+  <ul>
+    {% for requisito in requisitos %}{% if requisito.id in marcados %}<li>{{ requisito.nome }} <span class="nenhuma">(pedido na {{ requisito.momento }})</span></li>{% endif %}{% empty %}{% endfor %}
+  </ul>
+  {% if not marcados %}<p class="nenhuma">Nenhum documento vai ao setor.</p>{% endif %}
+</section>
+{% endif %}
+
+<section aria-labelledby="quem-acessa" class="historico-da-formalizacao">
+  <h2 id="quem-acessa">Quem acessa os documentos</h2>
+  <p class="nota">As designações são concedidas pela gestão de acessos da unidade. Aqui elas são só para leitura.</p>
+  {% if designacoes %}
+  <ul>
+    {% for linha in designacoes %}<li><strong>{{ linha.pessoa }}</strong> — {% if linha.perfis %}{{ linha.perfis|join:", " }}{% else %}todos os Perfis{% endif %}, desde {{ linha.designacao.designado_em|date:"d/m/Y" }}, por {{ linha.por }}</li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="nenhuma">Ninguém está designado para este Edital.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="historico-da-definicao" class="historico-da-formalizacao">
+  <h2 id="historico-da-definicao">Histórico da definição</h2>
+  {% if historico %}
+  <ol class="versoes-da-definicao">
+    {% for versao in historico %}
+    <li>
+      <p><strong>Versão {{ versao.numero }}</strong> — {{ versao.definicao.definido_em|date:"d/m/Y H:i" }}, por {% nome_de_pessoa versao.definicao.definido_por %} ({{ versao.definicao.unidade_de_atuacao }})</p>
+      <p class="nota">Motivo: {{ versao.definicao.motivo }}</p>
+      {% if versao.acrescentados %}<p>Acrescentados: {{ versao.acrescentados|join:", " }}</p>{% endif %}
+      {% if versao.retirados %}<p>Retirados: {{ versao.retirados|join:", " }}</p>{% endif %}
+      {% if not versao.acrescentados and not versao.retirados %}<p class="nenhuma">Sem mudança de documentos.</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="nenhuma">A definição ainda não foi gravada. Até lá, nenhum documento vai ao setor.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="exportacoes-do-edital" class="historico-da-formalizacao">
+  <h2 id="exportacoes-do-edital">Histórico de exportações</h2>
+  {% include "interface/_formalizacao_historico.html" with linhas=exportacoes %}
+</section>
+{% endblock %}

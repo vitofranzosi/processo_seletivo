@@ -746,7 +746,10 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   entrega da inscrição faz hoje.
 - **FR-3606**: A visualização no navegador, sem cache, MUST ser o padrão. Baixar MUST existir só como
   ação secundária individual e registrada. MUST NOT existir download em lote, pacote, ZIP, planilha ou
-  exportação de documentos da convocação: a FR-069 da `009` não muda.
+  exportação de documentos da convocação **na condução e na página de documentos da convocação**. *A
+  única exceção é a exportação da formalização da `117`, pela exceção da FR-069 da `009`.*
+
+  > Revista pela `117` em 04/11/2026, por decisão do usuário de 04/11/2026 (a decisão da `117` sobre a exceção ao lote).
 
 #### H. A condução na gestão
 

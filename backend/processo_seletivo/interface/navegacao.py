@@ -65,6 +65,12 @@ def pode_administrar_unidades(ator):
     return ator.can("unidade:administrar")
 
 
+def pode_ver_formalizacao(ator):
+    # A página do setor que formaliza (117, `FR-3675`): pela capacidade do papel, sem consulta. A
+    # designação se confere na página, e sem ela a lista diz que não há Edital.
+    return ator.can("formalizacao:acessar")
+
+
 def _toda_identidade(ator):
     # A lista e Minhas Etapas não dependem de papel: a primeira diz a quem não tem papel o que
     # falta, e a segunda é o caminho de quem só tem vínculo (UX-008).
@@ -94,6 +100,9 @@ SECOES = (
     Secao("Visão Geral", "interface:visao-geral", TRABALHO, pode_ver_visao, "i-grafico"),
     # Toda identidade, como a lista: a agenda só mostra cronograma publicado (101, `D-004`).
     Secao("Agenda", "interface:agenda", TRABALHO, _toda_identidade, "i-calendario"),
+    # O setor que formaliza (117): no grupo do trabalho, porque é onde ele trabalha. Pelo papel,
+    # que o seletor de demonstração oferece como os demais do `PAPEIS`.
+    Secao("Formalização", "interface:formalizacao", TRABALHO, pode_ver_formalizacao, "i-pacote"),
     Secao(
         "Autoridades da unidade",
         "interface:autoridades",

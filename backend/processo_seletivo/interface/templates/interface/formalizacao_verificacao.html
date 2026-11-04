@@ -1,0 +1,64 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Verificação da exportação — {{ edital }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/formalizacao.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:formalizacao' %}">Formalização</a> › <a href="{% url 'interface:formalizacao-edital' edital.id %}">{{ edital }}</a> › <span aria-current="page">Verificação</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A verificação (117, FR-3684, D-018): o resultado primeiro, depois as pessoas não incluídas com o
+motivo, o alcance, os documentos de cada pessoa e o total. Nada foi gravado além da trilha. O botão
+diz quantas pessoas entram e se o pacote é parcial; sem pessoa incluível, não há botão. O comprovante
+vai no corpo do envio, e vale por 15 minutos.
+{% endcomment %}
+<h1>Verificação da exportação</h1>
+<p class="sub">{{ edital }} — {{ edital.title }}</p>
+
+<p class="resultado-da-verificacao{% if verificacao.parcial %} parcial{% endif %}" role="status"><strong>{{ frase }}</strong>{% if verificacao.incluidas %} · {{ verificacao.documentos }} documentos · {{ verificacao.tamanho_legivel }}{% endif %}</p>
+
+{% if verificacao.excluidas %}
+<section aria-labelledby="nao-incluidas" class="nao-incluidas">
+  <h2 id="nao-incluidas">Não incluídas ({{ verificacao.excluidas|length }})</h2>
+  <ul>
+    {% for leitura in verificacao.excluidas %}
+    <li><strong>{{ leitura.pessoa.protocolo }} {{ leitura.pessoa.nome }}</strong> — {{ leitura.causador.nome }}: {% for chave, rotulo in nomes.ROTULO_DA_SITUACAO.items %}{% if chave == leitura.motivo %}{{ rotulo }}{% endif %}{% endfor %}</li>
+    {% endfor %}
+  </ul>
+  <p class="nota">A pessoa com um documento indisponível ou diferente do conferido fica inteira fora do
+    pacote. A ocorrência ficou registrada; avise a presidência.</p>
+</section>
+{% endif %}
+
+<p><strong>Alcance:</strong> {{ alcance }}{% if perfil_do_recorte %} do Perfil {{ perfil_do_recorte }}{% endif %} · {{ verificacao.pessoas|length }} pessoas verificadas.</p>
+
+{% if verificacao.incluidas %}
+<form method="post" action="{% url 'interface:formalizacao-baixar' edital.id %}" class="baixar-pacote">
+  {% csrf_token %}
+  <input type="hidden" name="comprovante" value="{{ comprovante }}">
+  <p class="acoes"><button type="submit" class="botao">{% if verificacao.parcial %}Baixar pacote parcial ({{ verificacao.incluidas|length }} pessoas){% else %}Baixar pacote ({{ verificacao.incluidas|length }} pessoas){% endif %}</button></p>
+  <p class="nota">O pacote é montado de novo a partir dos arquivos, e só é servido se tudo continuar como
+    acima. Esta verificação vale por 15 minutos.</p>
+</form>
+
+<section aria-labelledby="incluidas">
+  <h2 id="incluidas">Incluídas ({{ verificacao.incluidas|length }})</h2>
+  <div class="tabela-rolavel">
+    <table>
+      <thead><tr><th scope="col">Pessoa</th><th scope="col">Documentos</th><th scope="col">Tamanho</th></tr></thead>
+      <tbody>
+        {% for leitura in verificacao.incluidas %}
+        <tr>
+          <td>{{ leitura.pessoa.protocolo }} {{ leitura.pessoa.nome }}<span class="nota-da-celula">{{ leitura.pessoa.perfil_nome }}</span></td>
+          <td>{% for documento in leitura.pessoa.incluiveis %}{{ documento.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+          <td>{{ leitura.pessoa.tamanho_legivel }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% else %}
+<p class="aviso" role="status">Nenhuma pessoa pode entrar no pacote: todas têm documento indisponível ou
+  diferente do conferido. Nada foi baixado nem registrado.</p>
+{% endif %}
+
+<p><a href="{% url 'interface:formalizacao-edital' edital.id %}">Voltar à lista</a></p>
+{% endblock %}

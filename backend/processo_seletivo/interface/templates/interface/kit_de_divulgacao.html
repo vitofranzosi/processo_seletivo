@@ -115,7 +115,14 @@ pode dizer. A conferência vem antes dos textos porque é ela que a pessoa preci
     </form>
     {% endif %}{% endfor %}
     {% endif %}
+    <form method="post" action="{% url 'interface:kit-de-divulgacao-exportar' edital.id formato_do_pacote %}">
+      {% csrf_token %}
+      <input type="hidden" name="impressao" value="{{ ficha.impressao }}">
+      {% if secao.manchete is not None %}<input type="hidden" name="manchete" value="{{ secao.manchete }}">{% endif %}
+      <button type="submit" class="botao secundario">Baixar o pacote (.zip)</button>
+    </form>
   </div>
+  <p class="nota">O pacote reúne os textos, a peça, o texto alternativo, a ficha e um manifesto que diz de onde o material veio e quando foi gerado.{% if not secao.peca %} Sem a peça neste acesso, ele sai só com os textos, e o manifesto diz por quê.{% endif %}</p>
 </section>
 {% endwith %}
 {% endif %}

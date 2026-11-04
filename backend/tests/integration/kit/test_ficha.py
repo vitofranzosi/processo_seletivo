@@ -158,6 +158,15 @@ def test_nome_e_localidade_literais_e_titulo_sem_numero(api_client):
     assert lida.unidade_sigla == "Cefor"
 
 
+def test_unidade_renomeada_depois_da_publicacao_fica_a_do_ato(api_client):
+    """EC-18: a assinatura é a sigla congelada no ato da versão vigente, e não a do registro."""
+    from processo_seletivo.unidades.models import Unidade
+
+    edital = kit.publicar(api_client, ate=1, chave="kit-unidade-renomeada")
+    Unidade.objects.filter(codigo=edital.institution_scope).update(sigla="Cefor Renomeado")
+    assert _ler(edital).unidade_sigla == "Cefor"
+
+
 def test_localidade_ausente_fica_vazia(api_client):
     lida = _ler(kit.publicar(api_client, chave="kit-sem-local", mudar=kit.sem_localidade))
     assert [o.localidade for o in lida.ofertas] == ["Polo Bom Jesus do Norte", ""]

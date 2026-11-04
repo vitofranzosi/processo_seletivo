@@ -308,7 +308,8 @@ def test_a_consulta_dos_vinculos_exige_a_permissao(admin_cefor):
 def test_o_catalogo_de_acesso_nao_entra_no_seletor():
     from processo_seletivo.interface.identidade import DESCRICOES, PAPEIS
 
-    assert len(PAPEIS) == 9
+    # Dez desde a 117, com o papel Formalização.
+    assert len(PAPEIS) == 10
     assert set(PAPEIS) == set(DESCRICOES)
     assert not set(PAPEIS) & (set(catalogo.PAPEIS_DE_ACESSO) | set(catalogo.PAPEIS_INSTITUCIONAIS))
 

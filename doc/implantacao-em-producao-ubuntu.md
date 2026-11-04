@@ -1848,6 +1848,64 @@ curl -s -o /dev/null -w '%{http_code}\n' https://<DOMINIO>/var/lib/processoselet
 curl -s -o /dev/null -w '%{http_code}\n' https://<DOMINIO>/selecoes/inscricoes/<uuid>/documentos/<uuid>/arquivo   # 302 (login) ou 404
 ```
 
+### 15.4 A exportação de documentos à formalização: limite e validação de capacidade
+
+A `117` deixa o setor que formaliza (Registro Acadêmico, Coordenação UAB) exportar um ZIP com os
+documentos definidos dos aptos. O pacote é montado **na requisição**, num temporário sem nome no
+`/tmp` privado do serviço (`PrivateTmp=yes`, §12.2), e nunca é guardado: some ao fim da resposta, na
+desconexão do cliente, numa exceção ou na morte do worker.
+
+**O limite é configurável, e 400 MB é o valor inicial — não a capacidade da VM.** Acima dele a
+exportação é recusada antes de ler qualquer arquivo, mostrando o tamanho por pessoa para dividir a
+seleção:
+
+```bash
+# /etc/processoseletivo/app.env
+EXPORTACAO_DE_FORMALIZACAO_LIMITE_MB=400
+```
+
+**O que o desenho presume, e o que não presume.** Presume o pior caso: o worker síncrono fica ocupado
+durante toda a transferência, e o `--timeout 120` do gunicorn (§12.1) vale para a requisição inteira.
+**Não presume buffering do nginx** nem liberação antecipada do worker: a configuração do §14 não liga
+nem desliga `proxy_buffering` para esta rota, e o comportamento com resposta grande não foi ensaiado.
+Uma transferência que passe do tempo-limite é cortada; o ZIP truncado é inválido por construção, e o
+registro da exportação, gravado antes da transferência, continua dizendo só *"gerado e
+disponibilizado para download"*.
+
+**Roteiro de validação (homologação, item 5 da spec da `117`)**, com um pacote **no limite
+configurado**, a partir de um operador na rede do setor:
+
+1. **Verificação e montagem, medidas em separado.** Na página *Formalização* do Edital de
+   homologação, *Verificar e exportar todos os aptos* mede a verificação; *Baixar pacote* mede a
+   montagem até o primeiro byte. Anote os dois tempos (o CI mede os mesmos dois passos com 200
+   arquivos de 1,5 MB: `tests/performance/test_exportacao_de_formalizacao.py`).
+2. **Transferência**, medida no operador, do primeiro ao último byte:
+
+   ```bash
+   curl -s -o /dev/null -w 'primeiro byte %{time_starttransfer}s · total %{time_total}s · %{size_download} bytes\n' \
+     -X POST -b 'sessionid=<sessão do operador>' -H 'X-CSRFToken: <token>' \
+     --data-urlencode 'comprovante=<valor do formulário da verificação>' \
+     https://<DOMINIO>/gestao/formalizacao/editais/<uuid>/baixar
+   ```
+
+   Verificação, montagem e transferência somadas precisam caber nos 120 s do worker, com folga.
+3. **Disco**, com duas exportações simultâneas de operadores diferentes:
+
+   ```bash
+   sudo du -sh /tmp/systemd-private-*-processoseletivo.service-*/tmp   # o temporário não tem nome: o
+   sudo lsof -p "$(pgrep -d, -f 'gunicorn.*processoseletivo')" | grep deleted   # aparece como (deleted)
+   sudo du -sh /var/lib/nginx/proxy 2>/dev/null   # o que o nginx bufferizou, se bufferizou
+   ```
+
+4. **Tempo-limite forçado**: com `--timeout` reduzido numa cópia de teste do serviço, corte uma
+   transferência e confira que o ZIP recebido é inválido, que o registro da exportação existe e diz
+   só *disponibilizado*, que nada sobrou no `/tmp` privado e que uma nova exportação do mesmo
+   operador não é recusada como *"em andamento"* (a trava é de transação e sai com a conexão).
+
+**Se a medição não couber**, a primeira resposta é **reduzir o limite**: a seleção menor resolve. A
+segunda é ajustar o proxy, e é decisão da TI. Geração assíncrona não entra por esta via — só por
+decisão nova do usuário (D-019 da `117`).
+
 ---
 
 ## 16. E-mail
@@ -2800,6 +2858,7 @@ Para cada caso: o que verificar, onde está o log, os comandos, e o que **não**
 | CSRF | §17.2, item 4; `Origin` forjado → 403 (ensaiado) | — |
 | CORS | `curl -sI -H 'Origin: https://evil.example' https://<DOMINIO>/api/v1/public/editais/…` | nenhum `Access-Control-Allow-Origin` |
 | Documentos privados | §15.3 | sem URL; `www-data` não lê |
+| Exportação à formalização | §15.4 | limite medido na VM; verificação, montagem e transferência em separado |
 | `/metrics` e `/readiness` | §14 | 403 de fora |
 | Dependências | numa estação ou no CI: `cd backend && uv export --locked --no-dev --format requirements-txt > /tmp/req.txt && uvx pip-audit -r /tmp/req.txt` | nenhuma vulnerabilidade sem tratamento |
 | Pacotes do SO | `apt list --upgradable`; `pro security-status` | sem atualização de segurança pendente há mais de uma semana |

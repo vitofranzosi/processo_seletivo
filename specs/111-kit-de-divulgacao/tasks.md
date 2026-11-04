@@ -214,14 +214,16 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
 
 ## Phase 6: User Story 4 — O pacote (P2)
 
-- [ ] T028 [P] [US4] **Teste primeiro**: o pacote, em `tests/integration/kit/test_pacote.py`:
+- [x] T028 [P] [US4] **Teste primeiro**: o pacote, em `tests/integration/kit/test_pacote.py`:
   - a mesma peça e os mesmos textos publicáveis em dois instantes diferentes;
   - o mesmo ZIP no mesmo instante de referência (FR-3438);
   - manifesto com os três instantes e sem "validade" (FR-3437);
   - ZIP sem peça quando a chave está desligada, a peça foi recusada ou o host é local (EC-21);
   - nenhum arquivo guardado (FR-3441).
-- [ ] T029 [US4] Manifesto e ZIP em `processo_seletivo/interface/kit_pacote.py` (data fixa, ordem fixa), e a exportação `zip` na view (FR-3435, FR-3437, FR-3438)
-- [ ] T030 [P] [US4] Roteiro da galeria em `backend/scripts/galeria_do_kit.py` (como `scripts/publicar_corpus_do_piloto.py`): publica os cenários de referência num banco descartável e grava a galeria e o ZIP de cada um, para a revisão da comunicação (SC-1054; D-016)
+- [x] T029 [US4] Manifesto e ZIP em `processo_seletivo/interface/kit_pacote.py` (data fixa, ordem fixa), e a exportação `zip` na view (FR-3435, FR-3437, FR-3438)
+- [x] T030 [P] [US4] Roteiro da galeria em `backend/scripts/galeria_do_kit.py` (como `scripts/publicar_corpus_do_piloto.py`): publica os cenários de referência num banco descartável e grava a galeria e o ZIP de cada um, para a revisão da comunicação (SC-1054; D-016)
+
+**Feito em 04/11/2026** (incremento C): o pacote em `kit_pacote.py` (`montar`, `manifesto`, `zipar`) e a exportação `zip` na view, com o botão na tela; a galeria em `scripts/galeria_do_kit.py`, com 15 leituras de 10 publicações — 14 dos 16 cenários da spec e o EC-26; ficam fora o Perfil substituído inteiro (muda a proveniência, e não a peça) e o mesmo número em duas unidades (muda a busca da legenda), ditos no cabeçalho do roteiro. O ZIP sem peça diz o motivo no manifesto: chave desligada, host local, peça recusada; sem o rasterizador, sai com o SVG e o motivo, sem o PNG.
 
 **Checkpoint C**: `make test-pg` verde. PR do incremento C.
 
@@ -229,12 +231,15 @@ Retificação, as quatro localidades e uma legenda sem "abertas".
 
 ## Phase 7: Polish e validação
 
-- [ ] T031 Verificação pelo navegador: tela a 1280 e a 375 px, texto a 200%, teclado e leitor de tela na cópia e nas faixas, com capturas anexadas ao PR (FR-3444)
-- [ ] T032 Medir a tela com prévia e o ZIP num lote de 20 no ambiente de implantação, e registrar em `verificacao-do-motor.md` (SC-1057)
+- [x] T031 Verificação pelo navegador: tela a 1280 e a 375 px, texto a 200%, teclado e leitor de tela na cópia e nas faixas, com capturas anexadas ao PR (FR-3444)
+  - **Feito em 04/11**, como Comunicação no 91/2026 do corpus, em `localhost` (sem peça, FR-3447): a seção de exportação com o pacote a 1280 e a 375 px e no equivalente a 200% (640 px), sem rolagem horizontal; o botão do pacote alcançado por Tab, com o contorno de foco; nenhum erro novo no console. **Leitor de tela não foi exercitado**: os controles são `<button>` com o nome no texto, e o guardião de acessibilidade os cobre. A peça, que o painel não mostra fora de `localhost`, foi conferida pela galeria e pelo lote da T032.
+- [x] T032 Medir a tela com prévia e o ZIP num lote de 20 no ambiente de implantação, e registrar em `verificacao-do-motor.md` (SC-1057)
+  - **Medido localmente em 04/11** (§8): tudo abaixo de 150 ms. O ambiente de implantação não tem imagem versionada; a SC-1057 fecha quando a medição se repetir lá, com o mesmo roteiro.
 - [ ] T033 **Do usuário e da comunicação**: fornecer os ativos oficiais e o manual (P-3). Em seguida, aplicá-los em `processo_seletivo/interface/kit_ativos/` com o `ORIGEM.md`, e atualizar os SVG de referência e a galeria
 - [ ] T034 **Da comunicação**: aprovar o template sobre a galeria com a marca aplicada (SC-1054). Depois, a operação liga a chave em produção (P-6)
 - [ ] T035 **Da comunicação**: conferir um Edital real montado pela interface (SC-1051, SC-1058)
-- [ ] T036 Conferir a [matriz](rastreabilidade.md) contra o implementado; `make lint check test-pg`
+- [x] T036 Conferir a [matriz](rastreabilidade.md) contra o implementado; `make lint check test-pg`
+  - **Feito em 04/11**: 38 citações de teste trocadas pelos nomes reais; EC-18 ganhou caso; EC-4, EC-17 e EC-19 ficam sem caso do kit, e a matriz o diz.
 
 ---
 
