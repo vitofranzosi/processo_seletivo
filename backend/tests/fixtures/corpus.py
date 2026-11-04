@@ -33,6 +33,7 @@ from processo_seletivo.editais.domain import secoes, validation
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.seguranca.domain import Actor
+from processo_seletivo.sorteios.infrastructure import fontes
 from tests.fixtures.anexos import criar_anexo
 from tests.fixtures.edital import actor_headers
 from tests.fixtures.publicacao import create_retification, levar_a_publicacao, publish_retification
@@ -215,10 +216,18 @@ def publicar_do_corpus(
     # (065). O catálogo se troca só na publicação original, como em
     # `tests/integration/publicacoes/test_retificacao_de_edital_antigo.py`: a Retificação confere a
     # topologia pelo Edital publicado, e não pelo catálogo.
+    #
+    # **E antes da `116`**, pela mesma razão: o 91/2026 declara a Loteria Federal com a ocorrência
+    # `Concurso 6010`, que é o acervo como ele é, e que a forma da `116` recusa na gravação
+    # (FR-3623). O corpus é republicado como foi publicado — sem a forma e sem a conferência do
+    # concurso, que não existiam —, e não reescrito: há caso que compara o republicado com ele. As
+    # Retificações também são do acervo, e por isso ficam dentro.
     with pytest.MonkeyPatch.context() as antes_da_069:
         if not catalogo_vigente:
             antes_da_069.setattr(secoes, "CATALOGO", secoes.CATALOGO_DA_054)
             antes_da_069.setattr(validation, "CATALOGO", secoes.CATALOGO_DA_054)
+        antes_da_069.setattr(fontes, "forma_da_referencia", lambda nome: None)
+        antes_da_069.setattr(fontes, "sabe_conferir", lambda nome: False)
         edital = levar_a_publicacao(
             api_client,
             edital,
@@ -227,9 +236,9 @@ def publicar_do_corpus(
             chave=f"{chave}-publicacao",
         )
 
-    ultima = publicacoes_do(nome) if ate is None else ate
-    for numero in range(2, ultima + 1):
-        retificar_do_corpus(api_client, edital, nome, numero, deslocamento, chave=chave)
+        ultima = publicacoes_do(nome) if ate is None else ate
+        for numero in range(2, ultima + 1):
+            retificar_do_corpus(api_client, edital, nome, numero, deslocamento, chave=chave)
     return Edital.objects.get(pk=edital.pk), deslocamento
 
 
