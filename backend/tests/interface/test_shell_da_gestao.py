@@ -362,8 +362,9 @@ def test_cada_item_tem_icone_decorativo_e_nome_acessivel(client, seletor_ligado)
     """`FR-1726`, `FR-1731`: o ícone é decorativo, o nome é o texto do item — que vira a dica
     quando a barra recolhe —, e cada seção tem o seu ícone."""
     # O Auditor junto desde a 108: a trilha da unidade é o primeiro item do `SECOES` que o Gestor
-    # não alcança, e sem ele o teste deixaria de olhar o ícone dela.
-    identificar(client, "gustavo.gestor", ["gestor", "auditor"])
+    # não alcança, e sem ele o teste deixaria de olhar o ícone dela. E a Formalização desde a 117,
+    # que só aparece a quem tem o papel.
+    identificar(client, "gustavo.gestor", ["gestor", "auditor", "formalizacao"])
     corpo = client.get(reverse("interface:lista")).content.decode()
     moldura = barra(corpo)
 

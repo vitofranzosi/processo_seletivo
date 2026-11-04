@@ -141,6 +141,14 @@ PAPEIS = {
     # só da comunicação saberia de um ato antes de publicado. A grafia é conferida por
     # `tests/authorization/test_papel_da_comunicacao.py`.
     "comunicacao": ("Comunicação", ["material:gerar"]),
+    # O setor que formaliza o vínculo dos aptos — o Registro Acadêmico, a Coordenação UAB (117,
+    # `FR-3661`, `D-013`). Papel **próprio**, com uma capacidade só, e nenhum papel existente a
+    # ganha: quem conduz a seleção não exporta por conduzir, e quem exporta não confere nem desfecha
+    # (`D-002`). **Sem designação no Edital, o papel não dá nada**: a capacidade abre a barra e a
+    # lista, e cada documento exige a designação, que a gestão de acessos concede. Revogar o papel
+    # corta todas as designações de uma vez. A grafia é conferida por
+    # `tests/authorization/test_papel_da_formalizacao.py`.
+    "formalizacao": ("Formalização", ["formalizacao:acessar"]),
 }
 
 
@@ -161,6 +169,10 @@ DESCRICOES = {
     "exportador": "Exporta o arquivo de matrículas dos convocados.",
     "participante-piloto-assistente": "Participa do piloto do assistente do Edital.",
     "comunicacao": "Gera os textos e a peça de divulgação dos Editais publicados.",
+    "formalizacao": (
+        "Consulta e exporta os documentos dos aptos para formalização nos Editais em que foi "
+        "designado."
+    ),
 }
 
 # A origem da identidade na sessão (075, `FR-1698`). A institucional é a segunda (106): é ela que

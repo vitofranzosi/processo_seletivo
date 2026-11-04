@@ -163,6 +163,15 @@ TABELAS_APPEND_ONLY = (
     "convocacao_itemdalistadaconvocacao",
     "convocacao_apresentacaodedocumento",
     "convocacao_conferenciadedocumento",
+    # As quatro da entrega documental à formalização (117): a definição dos documentos, a designação
+    # do setor, a revogação dela e o registro de cada pacote gerado. Append-only pela razão das
+    # demais, e com um agravante próprio: o pacote **não é guardado** (D-004), e o registro é a
+    # única prova de quem levou quais documentos, de quais pessoas, sob qual definição e com qual
+    # hash. Reescrever uma designação mudaria, sem rastro, quem estava autorizado a exportar.
+    "formalizacao_definicaodosdocumentosdaformalizacao",
+    "formalizacao_designacaoparaformalizacao",
+    "formalizacao_revogacaodadesignacao",
+    "formalizacao_exportacaodeformalizacao",
 )
 
 

@@ -1,0 +1,24 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Formalização{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/formalizacao.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">Formalização</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A lista dos Editais do setor que formaliza (117, FR-3675): só os que têm designação vigente de
+quem abre. A designação é concedida na gestão de acessos, e não aqui.
+{% endcomment %}
+<h1>Documentos para formalização</h1>
+<p class="sub">Os Editais em que você foi designado. Em cada um, os documentos das pessoas aptas para
+  formalização que a condução definiu.</p>
+{% if linhas %}
+<ul class="editais-da-formalizacao">
+  {% for linha in linhas %}
+  <li><a href="{% url 'interface:formalizacao-edital' linha.edital.id %}"><strong>{{ linha.edital }}</strong> — {{ linha.edital.title }}</a>
+    <span class="nota">{% if linha.perfis %}Perfis: {{ linha.perfis|join:", " }}{% else %}Todos os Perfis{% endif %}</span></li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="nenhuma">Você ainda não foi designado para nenhum Edital. Peça a designação a quem administra
+  os acessos da unidade.</p>
+{% endif %}
+{% endblock %}

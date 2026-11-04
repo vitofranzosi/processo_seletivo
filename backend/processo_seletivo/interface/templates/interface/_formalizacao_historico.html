@@ -1,0 +1,20 @@
+{% comment %}
+O histórico de exportações à formalização (117, FR-3679): instante, autor, alcance, resultado, as
+pessoas incluídas e as não incluídas com o motivo, os arquivos, o tamanho e o hash do pacote. Lido
+do registro, que só existe para pacote gerado: verificação sem download não aparece aqui.
+{% endcomment %}
+{% if linhas %}
+<ol class="exportacoes-da-formalizacao">
+  {% for linha in linhas %}
+  <li>
+    <p><strong>{{ linha.exportacao.exportado_em|date:"d/m/Y H:i" }}</strong> — {{ linha.autor }} ({{ linha.exportacao.unidade_de_atuacao }}) · {{ linha.alcance }}</p>
+    <p>{{ linha.resultado }} · {{ linha.exportacao.quantidade_de_arquivos }} arquivos · {{ linha.tamanho }}</p>
+    <p class="nota">Pessoas incluídas: {% for pessoa in linha.incluidas %}{{ pessoa.protocolo }} {{ pessoa.nome }}{% if not forloop.last %}; {% endif %}{% empty %}nenhuma{% endfor %}</p>
+    {% if linha.nao_incluidas %}<p class="nota">Não incluídas: {% for pessoa in linha.nao_incluidas %}{{ pessoa.protocolo }} {{ pessoa.nome }} — {{ pessoa.motivo }}{% if not forloop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+    <p class="hash-do-pacote">SHA-256 do pacote: <code>{{ linha.exportacao.hash_do_pacote }}</code></p>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="nenhuma">Nenhum pacote foi gerado neste Edital.</p>
+{% endif %}

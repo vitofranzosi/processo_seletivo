@@ -582,3 +582,139 @@ def _ato_sobre_a_pessoa(request, identificador, ato):
         erro, status, codigo = recusa.detail, recusa.status, recusa.code
     contexto.update({"erro": erro, "confirmavel": not erro or codigo == acessos.MOTIVO_OBRIGATORIO})
     return render(request, "interface/acessos_suspensao.html", contexto, status=status)
+
+
+# ---------------------------------------------------------------------------
+# Os Editais da formalização (117, US2)
+# ---------------------------------------------------------------------------
+
+
+def _editais_designaveis(ator):
+    """Os Editais publicados da unidade: só eles têm Perfis e documentos a alcançar (FR-3710).
+
+    Encerrado continua designável: o encerramento não fecha a página nem a exportação.
+    """
+    from processo_seletivo.formalizacao.application.designar import ESTADOS_DESIGNAVEIS
+    from processo_seletivo.processos.models import Edital
+
+    return list(
+        Edital.objects.filter(
+            institution_scope=ator.institution_scope, status__in=list(ESTADOS_DESIGNAVEIS)
+        ).order_by("-year", "number")
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def formalizacao(request):
+    """Quem do setor alcança os documentos de cada Edital, e a designação nova (FR-3662, FR-3663).
+
+    A mesma capacidade que concede o papel, `acesso:gerir`, e a mesma regra de nunca a si mesmo. O
+    Edital escolhido vem pela URL só para desenhar os Perfis dele; a gravação confere tudo de novo.
+    """
+    from processo_seletivo.formalizacao.application import designar
+    from processo_seletivo.formalizacao.application.definir import perfis_do_edital
+    from processo_seletivo.formalizacao.domain import nomes
+    from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
+
+    ator = _ator_do_nivel(request, UNIDADE, GERIR, UNIDADE.base_conceder)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    editais = _editais_designaveis(ator)
+    por_id = {str(e.id): e for e in editais}
+    escolhido = por_id.get(request.POST.get("edital") or request.GET.get("edital") or "")
+    erro, status = "", 200
+    if request.method == "POST":
+        try:
+            if escolhido is None:
+                raise DomainError("not_found", "Recurso não encontrado.", 404)
+            designar.designar(
+                ator,
+                edital_id=escolhido.id,
+                pessoa=acessos.pessoa_institucional(request.POST.get("pessoa", "")),
+                perfis=request.POST.getlist("perfil"),
+                motivo=request.POST.get("motivo", ""),
+                now=timezone.now(),
+                correlation_id=getattr(request, "correlation_id", ""),
+            )
+            return redirect(f"{reverse('interface:acessos-formalizacao')}?feito=designado")
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise
+            erro, status = recusa.detail, recusa.status
+    vigentes = list(
+        designacoes_vigentes()
+        .filter(edital__institution_scope=ator.institution_scope)
+        .select_related("edital")
+        .order_by("edital__year", "edital__number", "designado_em")
+    )
+    autores = acessos.nomes_dos_autores(
+        {d.pessoa for d in vigentes} | {d.designado_por for d in vigentes}
+    )
+    perfis_por_edital = {}
+    for designacao in vigentes:
+        if designacao.edital_id not in perfis_por_edital:
+            perfis_por_edital[designacao.edital_id] = {
+                p.id: p.nome for p in perfis_do_edital(designacao.edital)
+            }
+    return render(
+        request,
+        "interface/acessos_formalizacao.html",
+        {
+            "nivel": UNIDADE,
+            "nome_da_unidade": _nome_da_unidade(ator.institution_scope),
+            "papel": nomes.NOME_DO_PAPEL,
+            "editais": editais,
+            "escolhido": escolhido,
+            "perfis": perfis_do_edital(escolhido) if escolhido else [],
+            "pessoas": [
+                {
+                    "identificador": v.pessoa.username,
+                    "nome": acessos.nome_legivel(v.pessoa),
+                    "email": v.pessoa.email,
+                }
+                for v in designar.pessoas_com_o_papel(ator)
+            ],
+            "vigentes": [
+                {
+                    "designacao": d,
+                    "pessoa": autores.get(d.pessoa, d.pessoa),
+                    "por": autores.get(d.designado_por, d.designado_por),
+                    "perfis": [
+                        perfis_por_edital[d.edital_id].get(str(p), "Perfil") for p in d.perfis
+                    ],
+                    "revogavel": d.pessoa != ator.subject,
+                }
+                for d in vigentes
+            ],
+            "erro": erro or request.session.pop("erro_da_designacao", ""),
+            "selecionados": set(request.POST.getlist("perfil")),
+            "pessoa_escolhida": request.POST.get("pessoa", ""),
+            "motivo": request.POST.get("motivo", ""),
+            "feito": request.GET.get("feito", ""),
+        },
+        status=status,
+    )
+
+
+@require_http_methods(["POST"])
+def revogar_designacao(request, designacao_id):
+    """A revogação de uma designação, com motivo (FR-3662). A de outra unidade é inexistente."""
+    from processo_seletivo.formalizacao.application import designar
+
+    ator = _ator_do_nivel(request, UNIDADE, GERIR, UNIDADE.base_conceder)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    try:
+        designar.revogar(
+            ator,
+            designacao_id=designacao_id,
+            motivo=request.POST.get("motivo", ""),
+            now=timezone.now(),
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        request.session["erro_da_designacao"] = recusa.detail
+        return redirect(reverse("interface:acessos-formalizacao"))
+    return redirect(f"{reverse('interface:acessos-formalizacao')}?feito=revogado")

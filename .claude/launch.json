@@ -455,6 +455,13 @@
       "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_103 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8103"],
       "port": 8103,
       "url": "http://localhost:8103"
+    },
+    {
+      "name": "formalizacao-117",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps117demo DB_USER=$USER DB_RUNTIME_USER=$USER ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps117demo-arquivos INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8017"],
+      "port": 8017,
+      "url": "http://localhost:8017"
     }
   ]
 }

@@ -196,6 +196,22 @@ def _navegacao(edital, ator, *, com_relatorio=True, contagens=None):
             reverse("interface:kit-de-divulgacao", args=[edital.id]),
             motivo="" if edital.status in ESTADOS_COM_KIT else SEM_KIT,
         )
+    # A definição dos documentos para a formalização (117, US1). Para quem conduz — presidência ou
+    # `comissao:gerir` — e para o auditor, que lê o histórico. Só depois de publicado: antes disso
+    # não há documento exigido a definir. Só no detalhe, como o relatório.
+    if (
+        com_relatorio
+        and edital.status in ESTADOS_COM_INSCRICOES
+        and (
+            ator.can("auditoria:consultar")
+            or pode_gerir_comissao(ator, edital.processo) is not None
+        )
+    ):
+        yield Acao(
+            "formalizacao",
+            "Documentos para a formalização",
+            reverse("interface:formalizacao-definicao", args=[edital.id]),
+        )
     if ator.can("auditoria:consultar"):
         yield Acao(
             "auditoria",
