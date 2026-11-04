@@ -33,9 +33,9 @@ from processo_seletivo.editais.domain import secoes, validation
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.seguranca.domain import Actor
-from processo_seletivo.sorteios.infrastructure import fontes
 from tests.fixtures.anexos import criar_anexo
 from tests.fixtures.edital import actor_headers
+from tests.fixtures.legado import antes_da_116
 from tests.fixtures.publicacao import create_retification, levar_a_publicacao, publish_retification
 
 PASTA = Path(__file__).resolve().parent / "corpus_070"
@@ -222,12 +222,10 @@ def publicar_do_corpus(
     # (FR-3623). O corpus é republicado como foi publicado — sem a forma e sem a conferência do
     # concurso, que não existiam —, e não reescrito: há caso que compara o republicado com ele. As
     # Retificações também são do acervo, e por isso ficam dentro.
-    with pytest.MonkeyPatch.context() as antes_da_069:
+    with pytest.MonkeyPatch.context() as antes_da_069, antes_da_116():
         if not catalogo_vigente:
             antes_da_069.setattr(secoes, "CATALOGO", secoes.CATALOGO_DA_054)
             antes_da_069.setattr(validation, "CATALOGO", secoes.CATALOGO_DA_054)
-        antes_da_069.setattr(fontes, "forma_da_referencia", lambda nome: None)
-        antes_da_069.setattr(fontes, "sabe_conferir", lambda nome: False)
         edital = levar_a_publicacao(
             api_client,
             edital,

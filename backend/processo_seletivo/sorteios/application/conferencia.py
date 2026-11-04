@@ -155,6 +155,10 @@ def referencias_a_conferir(conteudo, *, base=None, marcos_sorteados=frozenset())
     for referencia in atuais.values():
         if fontes.sabe_conferir(referencia.fonte) is not True:
             continue
+        # O método que espera a extração não tem o que perguntar à Caixa; o impeditivo dele é do
+        # próprio método (FR-3717).
+        if not referencia.referencia:
+            continue
         por_caminho.setdefault(referencia.caminho, referencia)
     return list(por_caminho.values())
 

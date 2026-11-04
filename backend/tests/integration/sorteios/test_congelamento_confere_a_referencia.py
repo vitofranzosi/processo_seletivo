@@ -16,6 +16,7 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.application.relacao import PUBLICAR, publicar_relacao
 from processo_seletivo.sorteios.domain import conferencia as dominio
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte, RelacaoDeHabilitados
+from tests.fixtures.legado import antes_da_116
 from tests.fixtures.sorteio import METODO, certame_de_sorteio, presidente
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
@@ -121,14 +122,11 @@ def test_com_a_declarada_indisponivel_a_conferencia_se_cala(certame, caixa):
 
 
 def test_forma_do_acervo_congela_com_advertencia(
-    gestor, api_client, manager_headers, process_payload, caixa, monkeypatch
+    gestor, api_client, manager_headers, process_payload, caixa
 ):
     """`Concurso 6100` foi publicado antes desta feature: adverte, e não recusa (D-005)."""
-    from processo_seletivo.sorteios.infrastructure import fontes
-
-    # O acervo: publicado quando a forma da Loteria Federal ainda não era conferida.
-    with monkeypatch.context() as antes_da_116:
-        antes_da_116.setattr(fontes, "forma_da_referencia", lambda nome: None)
+    # O acervo: publicado quando a forma da Loteria Federal ainda não era conferida (FR-3720).
+    with antes_da_116():
         acervo = certame_de_sorteio(
             gestor, api_client, manager_headers, process_payload, metodo=_metodo("Concurso 6100")
         )

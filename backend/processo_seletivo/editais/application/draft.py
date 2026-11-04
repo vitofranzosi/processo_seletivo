@@ -239,7 +239,8 @@ def replace_draft(
         ) from exc
     if draw_method:
         try:
-            validate_common_draw_method(draw_method)
+            # O rascunho admite o método comum que espera a extração (116, FR-3716).
+            validate_common_draw_method(draw_method, exigir_a_extracao=False)
         except ProfileValidationError as exc:
             raise DomainError(
                 "invalid_draw_method", str(exc), 422, campo=exc.campo, identidade=exc.identidade

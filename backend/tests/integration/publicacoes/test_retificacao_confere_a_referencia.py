@@ -20,6 +20,7 @@ from processo_seletivo.sorteios.application.sorteio import constituir_sorteio
 from processo_seletivo.sorteios.domain import conferencia as dominio
 from processo_seletivo.sorteios.infrastructure.fontes import Observacao
 from tests.fixtures.edital import DRAW_METHOD, complete_draft
+from tests.fixtures.legado import antes_da_116
 from tests.fixtures.publicacao import (
     create_retification,
     publish_original,
@@ -87,14 +88,11 @@ def test_troca_para_realizado_e_recusada(api_client, manager_headers, process_pa
 
 
 def test_so_o_cronograma_muda_e_nada_e_consultado(
-    api_client, manager_headers, process_payload, caixa, monkeypatch
+    api_client, manager_headers, process_payload, caixa
 ):
     """Cenário E: o 5000 consolidado, e a Retificação que só prorroga não é bloqueada por ele."""
-    from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import LoteriaFederal
-
-    # O acervo: publicado quando a Caixa ainda não acusava o 5000 — aqui, sem conferência.
-    with monkeypatch.context() as antes_da_116:
-        antes_da_116.setattr(LoteriaFederal, "SABE_CONFERIR", False)
+    # O acervo: publicado antes da conferência, quando nada acusava o 5000 (FR-3720).
+    with antes_da_116():
         edital = _publicado(api_client, manager_headers, process_payload, "5000")
     caixa.usar_gravacao().zerar()
     evento = _versao(edital).content["schedule"][0]
@@ -165,12 +163,9 @@ def test_inconclusivo_adverte_e_publica_com_o_registro(
     assert registro["decisao"] == "PROSSEGUIU_COM_ADVERTENCIA"
 
 
-def test_acervo_nao_e_reconferido(api_client, manager_headers, process_payload, caixa, monkeypatch):
+def test_acervo_nao_e_reconferido(api_client, manager_headers, process_payload, caixa):
     """`Concurso 6100` publicado antes da `116`: a Retificação de outra coisa não o reconfere."""
-    from processo_seletivo.sorteios.infrastructure import fontes
-
-    with monkeypatch.context() as antes_da_116:
-        antes_da_116.setattr(fontes, "forma_da_referencia", lambda nome: None)
+    with antes_da_116():
         edital = _publicado(api_client, manager_headers, process_payload, "Concurso 6100")
     caixa.zerar()
     retificacao = create_retification(

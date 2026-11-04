@@ -5168,6 +5168,10 @@ def _origem_reaproveitada(edital):
     # 140/2025, 10.900 caracteres com a função e o curso de outro certame estavam prontos para sair
     # no PDF de quem confiasse nele. Contadas as que têm texto, porque a vazia não traz nada.
     secoes_de_texto = edital.secoes.exclude(content="").count()
+    # **A extração do sorteio não vem, e o aviso diz até ela ser declarada** (116, FR-3718). É o que
+    # falta, e não o que aconteceu: conta os métodos do rascunho de agora que esperam a extração, e
+    # some quando o último a recebe — a submissão os recusa enquanto isso (FR-3717).
+    metodos_sem_a_extracao = _metodos_sem_a_extracao(edital)
     versao = _versao_por_identificador(registro.reason)
     if versao is None:
         # A versão não é apagável — é append-only —, mas um motivo que não resolve não pode derrubar
@@ -5177,9 +5181,11 @@ def _origem_reaproveitada(edital):
             "versao": None,
             "quando": registro.occurred_at,
             "secoes_de_texto": secoes_de_texto,
+            "metodos_sem_a_extracao": metodos_sem_a_extracao,
         }
     return {
         "secoes_de_texto": secoes_de_texto,
+        "metodos_sem_a_extracao": metodos_sem_a_extracao,
         "edital": versao.edital,
         "versao": versao,
         # A mesma frase da trilha, pela mesma razão: sem as duas datas, duas versões distintas se
@@ -5188,6 +5194,22 @@ def _origem_reaproveitada(edital):
         "quando": registro.occurred_at,
         "ator": registro.actor_subject,
     }
+
+
+def _metodos_sem_a_extracao(edital):
+    """Quantos métodos do sorteio do rascunho esperam a extração: o comum e os dos marcos."""
+    from processo_seletivo.editais.domain.perfis import espera_a_extracao
+    from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+
+    proprios = MarcoClassificatorio.objects.filter(perfil__edital=edital).exclude(
+        metodo_de_sorteio={}
+    )
+    comum = [edital.metodo_de_sorteio_comum] if edital.metodo_de_sorteio_comum else []
+    return sum(
+        1
+        for metodo in [*comum, *(marco.metodo_de_sorteio for marco in proprios)]
+        if espera_a_extracao(metodo)
+    )
 
 
 def _motivo_legivel(registro):
