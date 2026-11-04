@@ -8,6 +8,8 @@ que a `111` gravaria —, como `test_impressao_de_versao_anterior` faz com a ver
 Cada caso confere a faixa pela **lista exata** de mudanças (SC-1139), e não pela presença de uma.
 """
 
+import copy
+import uuid
 from datetime import timedelta
 
 import pytest
@@ -204,3 +206,52 @@ def test_g_exportacao_com_a_impressao_v1_e_recusada(api_client, client, seletor_
     )
     assert resposta.status_code == 409
     assert "mudou" in resposta.content.decode()
+
+
+# ---- FR-3812: a origem da carga horária, ato a ato ------------------------------------------
+
+
+def _acrescentar_perfil(api_client, edital, carga, sufixo):
+    """Um Perfil novo por `ADD /profiles/-`, cópia do primeiro com outro id, nome e carga."""
+    novo = copy.deepcopy(_perfil(edital))
+    novo["id"] = str(uuid.uuid4())
+    novo["name"] = f"{novo['name']} acrescido"
+    novo["workload"] = carga
+    retify(
+        api_client,
+        edital,
+        [{"targetPath": "/profiles/-", "operation": "ADD", "newValue": novo}],
+        suffix=sufixo,
+    )
+    return novo
+
+
+def _atos(ficha, campo, perfil):
+    rotulo = " — ".join(filter(None, (perfil["name"], perfil.get("locality"))))
+    return next(o for o in ficha.origens if o.campo == f"{campo} — {rotulo}")
+
+
+def test_carga_horaria_cita_o_ato_que_a_introduziu(api_client):
+    """Original, Perfil acrescentado e carga retificada depois: cada valor com o seu ato.
+
+    Guarda a revisão do incremento 2, que suspeitou de "Publicação original" na carga de Perfil
+    acrescentado. A suspeita veio do Polo Bom Jesus do corpus 91, cujas **vagas** a Retificação
+    nº 1 acresceu: o Perfil e a carga dele são da original, e a origem estava certa. O acréscimo
+    de Perfil passa por `origem.acrescimos`, da `070`, e este caso o prende.
+    """
+    edital = kit.publicar(api_client, ate=1, chave="v2-acrescido")
+    original = _perfil(edital)
+    novo = _acrescentar_perfil(api_client, edital, "420h", "acr")
+
+    ficha = _ler(edital)
+    assert _atos(ficha, "Carga horária", original).atos == ("Publicação original",)
+    carga = _atos(ficha, "Carga horária", novo)
+    assert (carga.valor, carga.atos) == ("420h", ("Retificação nº 1",))
+    assert _atos(ficha, "Vagas", novo).atos == ("Retificação nº 1",)
+
+    _retificar(api_client, edital, [(f"/profiles/id={novo['id']}/workload", "400h")], "car")
+    ficha = _ler(edital)
+    carga = _atos(ficha, "Carga horária", novo)
+    assert (carga.valor, carga.atos) == ("400h", ("Retificação nº 2",))
+    assert _atos(ficha, "Vagas", novo).atos == ("Retificação nº 1",)
+    assert _atos(ficha, "Carga horária", original).atos == ("Publicação original",)

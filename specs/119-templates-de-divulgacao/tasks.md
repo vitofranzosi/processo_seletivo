@@ -137,7 +137,7 @@ SC-1132, SC-1134).
 - [x] T041 [US1] Gravar as referências em `backend/tests/fixtures/kit_referencias/pos-lato-sensu/{post,story,banner}/` e o caso que as compara em `backend/tests/integration/kit/test_referencias.py`
 - [x] T042 [P] [US1] Em `backend/tests/integration/kit/test_pacote.py`: ZIP da Pós Lato Sensu com post e story liberados e banner não → arquivos `peca-post.*` e `peca-story.*` na ordem fixa, `versao_do_manifesto` 2, `pecas` com três entradas (banner `nao_liberado`), resumos dos arquivos conferidos, os campos singulares da `111` nulos, e o mesmo `pecas` no evento; composição recusada num formato → entrada com `recusa` e o texto, e os outros incluídos; sem rasterizador → entradas incluídas com `sem_rasterizador` e sem PNG; ZIP da Institucional com os nomes, a estrutura do manifesto e o SVG/PNG da `111`, e a ficha e a impressão v2 (FR-3828, FR-3829, D-015)
 - [x] T043 [US1] Em `backend/processo_seletivo/interface/kit_pacote.py` e `kit_de_divulgacao.py`: o ZIP de família com os arquivos por formato na ordem fixa (a tupla de nomes do `zipar` ganha os de cada formato), o manifesto versão 2 com `familia`, `imagem`, `pecas`, `fontes` e `ativos`, a lista `pecas` no evento e os campos singulares nulos; o ZIP da Institucional mantém nomes, estrutura e peça (FR-3828, FR-3829, D-015)
-- [ ] T044 [US1] Medir no ambiente de implantação a tela com três prévias e o ZIP num lote de 20, e registrar em `specs/119-templates-de-divulgacao/verificacao.md` (SC-1137)
+- [ ] T044 [US1] Medir no ambiente de implantação a tela com três prévias e o ZIP num lote de 20, e o PNG idêntico em duas gerações, e registrar em `specs/119-templates-de-divulgacao/verificacao.md` (SC-1137, SC-1134)
 
 **Checkpoint**: PR do incremento 2 (fases 3 a 6). US1–US3 verificáveis de ponta a ponta.
 
@@ -174,7 +174,7 @@ própria, com as referências das famílias anteriores intactas.
 - [ ] T053 [P] Atualizar a linha da `119` no `README.md` a cada incremento mergeado, e o `CLAUDE.md` se a suíte ganhar pulados ou a liberação ganhar armadilha
 - [x] T054 [P] Confirmar com `git diff` que nenhum arquivo do fluxo de publicação, de Retificação ou de `publicacoes/infrastructure/fonte.py` mudou, e que não há migration (FR-3832)
 - [ ] T055 Rodar `cd backend && make lint check test-pg` antes de cada PR
-- [ ] T056 Validação humana do SC-1136 com uma pessoa da comunicação, registrada em `verificacao.md`
+- [ ] T056 Validação humana do SC-1136 com uma pessoa da comunicação, registrada em `verificacao.md`, incluindo prévias e downloads pelo navegador com o endereço público (§Validações que dependem do ambiente de implantação)
 
 ---
 
