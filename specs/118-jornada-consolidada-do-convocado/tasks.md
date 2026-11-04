@@ -38,7 +38,7 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ### Tests
 
-- [ ] T005 [P] `tests/unit/portal/test_obrigacoes_da_convocacao.py`: tabela de combinações estado do item × obrigatório/facultativo × os quatro momentos (aberta, encerrada pelo prazo, encerrada pelo Processo, decidida) × as seis linhas do Requerimento da FR-3725; cada combinação em exatamente uma categoria; Processo e prazo juntos dão *encerrada pelo Processo*; o Requerimento pedido na convocação e não enviado nunca vira *não pedido* depois do desfecho, com ou sem rascunho; a ordem *a corrigir → a enviar → Requerimento*; facultativo fora dos totais; nenhuma frase com "atendido", "enviou tudo", "aprovado" (FR-3721 a FR-3729, SC-1126)
+- [ ] T005 [P] `tests/unit/portal/test_obrigacoes_da_convocacao.py`: tabela de combinações estado do item × obrigatório/facultativo × os quatro momentos (aberta, encerrada pelo prazo, encerrada pelo Processo, decidida) × as seis linhas do Requerimento da FR-3725; cada combinação em exatamente uma categoria; Processo e prazo juntos dão *encerrada pelo Processo* para os documentos e *não enviado até o prazo* para o Requerimento; desfecho com o Processo aberto não reabre a escrita; o Requerimento pedido na convocação e não enviado nunca vira *não pedido* depois do desfecho, com ou sem rascunho; a ordem *pendência registrada (a corrigir, a enviar com motivo) → a enviar → Requerimento*; facultativo fora dos totais; nenhuma frase com "atendido", "enviou tudo", "aprovado" (FR-3721 a FR-3729, SC-1126)
 - [ ] T006 [P] No mesmo arquivo, o texto literal de cada célula da FR-3746, nas quatro colunas, e o da frase de conclusão, com e sem opcional; com o prazo não iniciado e sem vencimento, nenhuma frase com "até" (FR-3728, FR-3746, FR-3749)
 - [ ] T007 [P] Prova de zero consultas na projeção, no molde do teste de custo da situação da `063` (FR-3721)
 
@@ -46,7 +46,7 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 - [ ] T008 Criar `processo_seletivo/portal/obrigacoes.py`: `Obrigacoes`, as categorias, `obrigacoes_da_convocacao()` e as constantes de texto (FR-3721 a FR-3729, FR-3746, FR-3749)
 - [ ] T009 `convocacao/application/documentos.py`: `frase_do_prazo_decorrido` devolve o núcleo da FR-3748, com hora em `HHhMM`; as recusas de documento e de Requerimento continuam chamando-a (FR-3748)
-- [ ] T010 `portal/views.py`: entregar à projeção as três leituras do Requerimento da `Disponibilidade` que `apurar` já devolve, e a causa do fechamento no lugar do booleano `pode_apresentar` (`pode_apresentar` passa a ser `causa is None`); o chamado de hoje continua derivado da mesma `Disponibilidade` (FR-3721, FR-3725, FR-1098 da `059`)
+- [ ] T010 `portal/views.py`: entregar à projeção as três leituras do Requerimento da `Disponibilidade` que `apurar` já devolve, e a causa do fechamento junto do booleano `pode_apresentar`, que continua sendo `aberta and causa is None` (o desfecho fecha antes de qualquer causa); o chamado de hoje continua derivado da mesma `Disponibilidade` (FR-3721, FR-3725, FR-1098 da `059`)
 
 **Checkpoint**: a projeção existe e está provada; nenhuma tela mudou.
 
@@ -101,8 +101,8 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ### Tests
 
-- [ ] T023 [P] [US4] `tests/interface/test_portal_jornada_consolidada.py`: G com "O prazo terminou", o resumo e o Requerimento não enviado, sem formulário; M com "O envio pelo portal está encerrado", sem "prazo terminou", sem "vai conferir", sem formulário de documento; N com "Requerimento de Matrícula: não enviado."; I1 e I2 com zero formulários e zero "Envie até", "Falta enviar", "aguardando conferência"; "Vaga aceita" e a frase do aceite nas duas telas (FR-3725, FR-3741, FR-3742, FR-3750, SC-1120, SC-1127)
-- [ ] T024 [P] [US4] `tests/interface/test_portal_requerimento.py`: G sem requerimento vigente responde "O prazo terminou" sem 409, sem linha nova; o enviado com "Voltar à convocação" e a explicação por momento; o aviso do envio com documento (FR-3752, FR-3754, FR-3755)
+- [ ] T023 [P] [US4] `tests/interface/test_portal_jornada_consolidada.py`: G com "O prazo terminou", o resumo e o Requerimento não enviado, sem formulário; M com "O envio pelo portal está encerrado", sem "prazo terminou", sem "vai conferir", sem formulário de documento e com o Requerimento a preencher no bloco 3; N com "Requerimento de Matrícula: não enviado."; I1 e I2 com zero formulários e zero "Envie até", "Falta enviar", "aguardando conferência"; "Vaga aceita" e a frase do aceite nas duas telas (FR-3725, FR-3741, FR-3742, FR-3750, SC-1120, SC-1127)
+- [ ] T024 [P] [US4] `tests/interface/test_portal_requerimento.py`: G sem requerimento vigente responde "O prazo terminou" sem 409, sem linha nova; N, com e sem rascunho e com e sem documento, responde "Requerimento de Matrícula não enviado", nunca "Ainda não é a hora"; quem não tem convocação continua com "Ainda não é a hora"; o enviado com "Voltar à convocação" e a explicação por momento; o aviso do envio com documento (FR-3752, FR-3754, FR-3755)
 - [ ] T025 [P] [US4] `tests/integration/requerimentos/test_prazo_da_chamada.py`, `tests/integration/convocacao/test_documentos_da_convocacao.py`: o mesmo núcleo nas duas recusas por prazo; a recusa do documento com o Processo encerrado não usa o núcleo (FR-3748)
 - [ ] T025a [P] `tests/interface/test_portal_jornada_consolidada.py`: garantias do novo caminho de leitura — contagem de linhas de todas as tabelas antes e depois de um GET de cada tela em cada cenário (só a leitura da convocação na trilha muda; o GET de G no Requerimento não cria rascunho); inscrição alheia e inexistente com a mesma recusa nas três telas; a página do Requerimento continua com resposta privada (FR-3756, SC-1127)
 

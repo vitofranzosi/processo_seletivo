@@ -68,6 +68,9 @@
       teste (T025a)
 - [x] Lista explícita dos textos que saem e dos que ficam (plano)
 - [x] Cenários de controle B2, L, M, N e K2 (SC-1127)
+- [x] Revisão independente das precedências (04/11): dez achados aplicados — FR-3721, FR-3725,
+      FR-3726, FR-3730, FR-3736, FR-3741, FR-3748, FR-3754, D-007 e o plano; a lacuna do Requerimento
+      não enviado sem documento, registrada
 
 ## Notes
 

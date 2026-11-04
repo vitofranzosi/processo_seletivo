@@ -125,8 +125,10 @@ obrigacoes_da_convocacao(
 - `causa_do_fechamento`: `None`, `PROCESSO` ou `PRAZO`, das mesmas três condições que
   `_documentos_da_convocacao_para_a_tela` já calcula para `pode_apresentar` (`em_aberto`,
   `prazo_decorrido`, Processo fora de `PROCESSO_FINAL`), com o Processo antes do prazo (D-015).
-  **Não há segunda conta**: a view passa a devolver a causa no lugar do booleano, e `pode_apresentar`
-  vira `causa_do_fechamento is None`.
+  **Não há segunda conta**: a view passa a devolver a causa junto do booleano. `pode_apresentar`
+  continua sendo `aberta and causa_do_fechamento is None` — o desfecho fecha a escrita antes de
+  qualquer causa, e a causa só existe com a chamada em aberto (revisão independente, achado 2). Na
+  projeção, isso é `momento == ABERTA`.
 - `desfecho`: o vigente.
 - Devolve `None` quando a leitura não tem item pedido: a tela é a de antes (FR-3743).
 
@@ -188,7 +190,7 @@ dos comandos (documento e Requerimento) continuam a usá-la, e as telas compõem
 
 | Requisito | Prova | Onde |
 |---|---|---|
-| FR-3721 a FR-3729, SC-1126 | tabela de combinações item × situação × os quatro momentos × as seis linhas do Requerimento; causa do fechamento com Processo e prazo juntos; zero consultas | `unit/portal/test_obrigacoes_da_convocacao.py` |
+| FR-3721 a FR-3729, SC-1126 | tabela de combinações item × situação × os quatro momentos × as seis linhas do Requerimento; Processo e prazo juntos (documentos *encerrada pelo Processo*, Requerimento *não enviado até o prazo*); desfecho com Processo aberto sem formulário; zero consultas | `unit/portal/test_obrigacoes_da_convocacao.py` |
 | FR-3730 a FR-3733 | a ação por cenário, inclusive B2 e M | `unit/portal/test_situacao_da_inscricao.py`, `portal/test_acompanhamento_pela_situacao.py` |
 | FR-3734, SC-1125 | contagem de consultas com 0, 1 e 6 itens; sem convocação, igual à de antes | `portal/test_acompanhamento_pela_situacao.py` (molde do teste de custo da `063`) |
 | FR-3735 a FR-3743 | ordem dos títulos, presença e ausência de blocos e formulários por cenário, inclusive L e M | `interface/test_portal_jornada_consolidada.py` |
@@ -226,8 +228,8 @@ que a revisão do PR pediu:
 | K | prazo não iniciado | sem data como prazo; "Você já pode enviar" |
 | **B2** | Requerimento sem documentos, já enviado | **sem regressão**: "Seu Requerimento de Matrícula foi enviado." continua a ação principal (D-017) |
 | **L** | só um facultativo sem envio, nenhuma tarefa | bloco *Documentos opcionais* com o envio; frase de conclusão; nenhuma contagem (D-018) |
-| **M** | Processo encerrado, chamada em aberto, prazo correndo, um item recebido | "O envio pelo portal está encerrado"; nenhuma menção a prazo vencido; nenhuma promessa de conferência; sem formulário de documento; o Requerimento conforme a política (D-015) |
-| **N** | indeferido, Requerimento pedido na convocação e nunca enviado (com e sem rascunho) | "Requerimento de Matrícula: não enviado."; nunca "não pedido" (D-016) |
+| **M** | Processo encerrado, chamada em aberto, prazo correndo, um item recebido, Requerimento a preencher | "O envio pelo portal está encerrado"; nenhuma menção a prazo vencido; nenhuma promessa de conferência; sem formulário de documento; o Requerimento continua alcançável no bloco 3, porque a política o admite (D-015, FR-3741) |
+| **N** | indeferido, com documento, Requerimento pedido na convocação e nunca enviado (com e sem rascunho) | "Requerimento de Matrícula: não enviado." na convocação; a página dele diz "não enviado", nunca "Ainda não é a hora"; nunca "não pedido" (D-016, FR-3754) |
 | **K2** | prazo não iniciado, com um pendente, uma tarefa e um opcional | nenhum cartão, opcional ou frase de conclusão com data; "Você já pode enviar" (FR-3749) |
 
 Mais dois de controle: **Edital sem documento e sem Requerimento** (SC-1123) e **inscrição sem
@@ -284,6 +286,7 @@ sozinho"*.
 | Data como prazo nos cartões e no opcional antes da comunicação | O prazo não iniciado prevalece sobre toda menção; "Você já pode enviar" só com escrita aberta (FR-3746, FR-3749, FR-3728) | cenário K2 |
 | Sem documento e com o Requerimento enviado: ação indefinida | A de hoje, inclusive o enviado como ação principal (D-017; FR-3732) | cenário B2; os testes da `063` sobre B e B2 sem edição, salvo texto comum |
 | FR-3756 proibia mudar as views que as tarefas mudam | Proíbe escrita, rota, comando e regra; as views leem a projeção, com titularidade, recusas e resposta privada iguais (FR-3756) | contagem de linhas antes e depois dos GET; recusa indistinguível nas três telas |
+| Revisão independente (04/11): Processo e prazo juntos; `pode_apresentar` sem o desfecho; `estado_de` descrito errado; Requerimento em M; página do Requerimento em N; N e G sem documento; termo "opcional sem conferência"; Requerimento *na inscrição*; motivo em J; D-007 | FR-3725 lê desfecho e prazo da política; `pode_apresentar` mantém o desfecho; FR-3721 corrigida; FR-3741 diz onde fica o Requerimento; FR-3754 cobre o desfecho sem envio; N e G com documento, e a lacuna sem documento registrada; "opcional a enviar"; linhas 3 e 4 para qualquer momento; o motivo no bloco 1 e a pendência primeiro | cenário M com Requerimento; N na página do Requerimento; Processo e prazo juntos no unitário; desfecho com Processo aberto sem formulário |
 | Busca genérica por "textos antigos" incluía textos que continuam | Lista explícita do que sai e do que fica (acima) | a busca da T032 sobre a lista |
 
 ## Riscos
