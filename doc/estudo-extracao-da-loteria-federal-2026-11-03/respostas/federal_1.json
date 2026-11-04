@@ -1,0 +1,21 @@
+{
+ "status": 200,
+ "capturada_em": "2026-11-03",
+ "corpo": {
+  "numero": 1,
+  "dataApuracao": "15/09/1962",
+  "listaDezenas": [
+   "005349",
+   "038031",
+   "026492",
+   "025151",
+   "001416"
+  ],
+  "numeroConcursoAnterior": 0,
+  "numeroConcursoProximo": 2,
+  "dataProximoConcurso": "",
+  "ultimoConcurso": true,
+  "indicadorConcursoEspecial": 1,
+  "tipoJogo": "LOTERIA_FEDERAL"
+ }
+}
