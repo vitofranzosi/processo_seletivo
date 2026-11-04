@@ -73,6 +73,9 @@ def test_fora_da_forma_e_referencia_invalida_sem_consulta(referencia):
 def test_zeros_a_esquerda_sao_o_mesmo_concurso():
     assert c.numero_do_concurso("006114") == 6114
     assert c.normalizar("006114") == "6114"
+    # Os zeros não contam nos seis algarismos; o número em si, sim.
+    assert c.normalizar("0006116") == "6116"
+    assert c.numero_do_concurso("0001234567") is None
     # Nada além dos zeros: o dígito verificador e o texto nunca viram outro número em silêncio.
     assert c.normalizar("6106-9") == "6106-9"
     assert c.normalizar(" 6114") == " 6114"

@@ -13,6 +13,7 @@ método (D-016) —, nem juízo sobre o que fazer quando a ocorrência falta. A 
 declarado, e quem decide o que fazer com ela é a regra publicada.
 """
 
+import time
 from dataclasses import dataclass
 
 from django.utils.module_loading import import_string
@@ -65,6 +66,10 @@ class Observacao:
     evidencia: str = ""
 
 
+# O teto da SC-1097: a espera que a conferência pode acrescentar a um ato, somadas as chamadas.
+ESPERA_MAXIMA_DA_CONFERENCIA = 15.0
+
+
 class FonteExterna:
     """A porta. Um método, e ele não decide nada.
 
@@ -104,16 +109,26 @@ class FonteExterna:
         referência fora da forma não gera chamada nenhuma, e sem referência válida a principal
         também não acontece.
         """
+        from django.conf import settings
+
         from processo_seletivo.sorteios.domain import conferencia
 
         numeros = {
             referencia: conferencia.numero_do_concurso(referencia) for referencia in referencias
         }
+        inicio = time.monotonic()
         consulta = self.consultar_ultimo() if any(numeros.values()) else None
         ultimo = consulta.ultimo if consulta is not None else None
         datas = {}
         if ultimo is not None:
+            # **A espera tem teto, e não só cada chamada** (SC-1097). Com quatro concursos
+            # realizados e a Caixa lenta, quatro datas de 5 segundos passariam dos 15; e a data só
+            # enfeita a mensagem — a recusa vale sem ela (FR-3629). A data que não cabe no teto
+            # não é pedida.
+            limite = float(getattr(settings, "SORTEIO_CONFERENCIA_TIMEOUT_SEGUNDOS", 5))
             for numero in sorted({n for n in numeros.values() if n and n <= ultimo.numero}):
+                if time.monotonic() - inicio + limite > ESPERA_MAXIMA_DA_CONFERENCIA:
+                    break
                 datas[numero] = self.consultar_data(numero)
         return {
             referencia: conferencia.situacao(

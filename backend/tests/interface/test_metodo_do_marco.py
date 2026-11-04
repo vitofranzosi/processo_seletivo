@@ -673,3 +673,21 @@ def test_a_opcao_herdada_nao_e_disabled_porque_disabled_nao_e_submetido(client, 
         assert "disabled" not in escolha.group(1), (
             "opção `disabled` não é submetida pelo navegador: seria a perda da FR-511"
         )
+
+
+def test_o_campo_pede_so_o_numero(client, com_etapas):
+    """`FR-3643` da `116` — continua campo de texto, e a ajuda pede só o número na Loteria Federal.
+
+    O rótulo é o de `CAMPOS_DO_METODO`, o mesmo do documento publicado (035, FR-507, Princípio I);
+    o que muda é a ajuda e o exemplo. Nenhuma lista de concursos é oferecida.
+    """
+    corpo = _com_marco_de_sorteio(client, com_etapas)
+
+    for nome in (f"marco-{PERFIL}-0-draw-occurrence", "edital-draw-occurrence"):
+        assert re.search(rf'<input type="text" id="[^"]*"\s+name="{nome}"', corpo), nome
+        assert not re.search(rf'<select[^>]*name="{nome}"', corpo), "nenhuma lista de concursos"
+    for ajuda_id in (f"ajuda-ocorrencia-{PERFIL}-0", "ajuda-ocorrencia-comum"):
+        ajuda = " ".join(corpo.split(f'id="{ajuda_id}"', 1)[1].split("</span>", 1)[0].split())
+        assert "só o" in ajuda and "número do concurso, como 6115" in ajuda, ajuda_id
+        assert "sem dígito verificador, texto ou ano" in ajuda, ajuda_id
+    assert 'placeholder="6115"' in corpo

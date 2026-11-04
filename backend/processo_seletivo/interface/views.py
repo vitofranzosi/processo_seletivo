@@ -3956,8 +3956,47 @@ def detalhe(request, edital_id):
             ),
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
             "marcos_classificatorios": _marcos_publicados(edital, ator),
+            "conferencia_do_ato": _conferencia_do_ato(
+                edital, OPERACAO_DO_ATO_COM_CONFERENCIA.get(request.GET.get("ato", ""))
+            ),
         },
     )
+
+
+# Os atos do Edital em que a conferência do concurso roda (116, FR-3634), pela chave do `?ato=`.
+OPERACAO_DO_ATO_COM_CONFERENCIA = {"submeter": "SUBMETER", "publicar": "PUBLICAR"}
+
+
+def _conferencia_do_ato(agregado, operacao):
+    """O que a conferência do concurso disse no ato que acabou de acontecer (116, FR-3646).
+
+    **Lida do registro de auditoria do ato**, e não de sessão nem de consulta nova: a advertência e
+    a informação são as do instante em que a Caixa foi consultada, e o registro é o lugar onde elas
+    ficaram (FR-3647). Só o que prosseguiu chega aqui — a recusa não gravou registro, e aparece na
+    confirmação, como as demais.
+    """
+    from processo_seletivo.sorteios.domain import conferencia as dominio
+
+    if not operacao:
+        return []
+    registro = (
+        RegistroAuditoria.objects.filter(
+            aggregate_type=agregado.__class__.__name__,
+            aggregate_id=agregado.pk,
+            operation=operacao,
+        )
+        .order_by("-occurred_at")
+        .first()
+    )
+    entradas = ((registro.detalhe or {}) if registro else {}).get("conferenciaDaReferencia") or []
+    classes = {"PROSSEGUIU_COM_ADVERTENCIA": "aviso", "PROSSEGUIU": "nota"}
+    itens = []
+    for entrada in entradas:
+        classe = classes.get(entrada.get("decisao"))
+        if classe is None:
+            continue
+        itens.append({"classe": classe, "texto": dominio.mensagem_do_registro(entrada)})
+    return itens
 
 
 def _destinos_do_marco(edital, marco, *, pode_classificar, atos_vigentes):
@@ -4770,6 +4809,9 @@ def retificacao_detalhe(request, retificacao_id):
             "pode_editar": atos_retificacao.pode_editar(item, ator),
             "vigencia": item.effective_at,
             "publicada": item.publication,
+            "conferencia_do_ato": _conferencia_do_ato(
+                item, "PUBLICAR" if request.GET.get("ato") == "publicar" else None
+            ),
         },
     )
 
@@ -10337,6 +10379,12 @@ def sorteio(request, edital_id, marco_id):
                 # **E o congelamento que condena o sorteio** (102, FR-2659): congelar não se
                 # desfaz, e quem congelava no dia da extração só sabia na recusa do sorteio.
                 "congelar_agora_inviavel": estado["congelar_agora_inviavel"],
+                # **Conferir na Caixa antes de congelar** (116, FR-3645): oferecido quando a
+                # referência da vez é a declarada, numa fonte que sabe conferir. A tela não consulta
+                # sozinha (FR-3644); o botão pede.
+                "pode_conferir_a_referencia": _pode_conferir_a_referencia(
+                    estado["metodo"], estado["proxima_referencia"]
+                ),
                 # **Com o estado do corte de cada um** (014, UX-029). Esta é a tela que já reúne
                 # os recortes do marco; sem o corte aqui, enxergar o estado das três listas exigia
                 # uma visita por lista — e num certame com cotas é justamente onde o esforço se
@@ -10384,6 +10432,112 @@ def sorteio(request, edital_id, marco_id):
 # participantes"* — no minuto mais visto do certame, com a transmissão aberta. A recusa tinha o
 # mesmo vício, e prefixava *"Não foi possível publicar"* uma falha da fonte externa.
 RELACAO, OCORRENCIA, SORTEIO, ANULACAO = "relacao", "ocorrencia", "sorteio", "anulacao"
+
+
+def _pode_conferir_a_referencia(metodo, proxima_referencia):
+    from processo_seletivo.sorteios.infrastructure import fontes
+
+    if not metodo or proxima_referencia != str(metodo.get("occurrence") or ""):
+        return False
+    return fontes.sabe_conferir(metodo.get("source")) is True
+
+
+# O prefixo dos campos do método na composição: o do marco, `marco-<índice>-<sub>-draw`, ou o do
+# comum, `edital-draw`. Outro formato não é campo de formulário nenhum, e é refletido numa resposta.
+PREFIXO_DO_METODO = re.compile(r"(?:marco-[\w-]+-\d+|edital)-draw")
+
+
+@require_http_methods(["GET"])
+def fragmento_conferir_referencia(request):
+    """Conferir na Caixa, sob demanda, o concurso que a tela mostra (116, FR-3645, D-007).
+
+    **Não grava nada, e não é ato**: é a mesma pergunta que a submissão, a publicação e o
+    congelamento fazem, feita quando alguém pede, para ver **antes** do ato irreversível (Princípio
+    IV). Nenhuma renderização chama isto; só o clique (FR-3644).
+
+    **Dois lugares, duas portas, e as duas são as da tela de origem** (negar por padrão):
+
+    - na composição, `prefixo` diz quais campos ler — o método como está na tela, ainda não gravado
+      — e a porta é a de compor (`_edital_do_fragmento` e `pode_compor`), como na duplicação;
+    - na tela do sorteio, `marco` diz qual método **publicado** ler, e a porta é a da tela
+      (`_edital_para_classificar`). Nada vem do formulário: o método do sorteio não se digita.
+
+    **GET, como todos os fragmentos da composição** (R-004 da `043`), e a recusa de entrada volta
+    como 404 sem consultar.
+    """
+    from processo_seletivo.sorteios.application import conferencia
+    from processo_seletivo.sorteios.domain import conferencia as dominio
+    from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
+    from processo_seletivo.sorteios.infrastructure import fontes
+
+    try:
+        UUID(str(request.GET.get("edital") or ""))
+    except ValueError as exc:
+        raise Http404 from exc
+    marco_id = request.GET.get("marco")
+    if marco_id:
+        try:
+            UUID(str(marco_id))
+        except ValueError as exc:
+            raise Http404 from exc
+        ator, edital, _ = _edital_para_classificar(request, request.GET["edital"])
+        if ator is None:
+            return HttpResponse(status=403)
+        try:
+            versao = effective_version(edital_id=edital.id)
+        except DomainError as exc:
+            raise Http404 from exc
+        metodo = (
+            dominio_do_metodo.metodo_declarado(
+                versao.content, perfil_id=_perfil_do_marco(edital, marco_id), marco_id=marco_id
+            )
+            or {}
+        )
+        fonte = str(metodo.get("source") or "")
+        referencia = str(metodo.get("occurrence") or "")
+        ocorre_em = str(metodo.get("occurrenceAt") or "")
+        ato = dominio.CONGELAMENTO
+    else:
+        prefixo = request.GET.get("prefixo") or ""
+        if not PREFIXO_DO_METODO.fullmatch(prefixo):
+            raise Http404
+        edital, ator = _edital_do_fragmento(request, com_ator=True)
+        if edital is None:
+            raise Http404
+        if not pode_compor(edital, ator):
+            return HttpResponse(status=403)
+        fonte = (request.GET.get(f"{prefixo}-source") or "").strip()
+        # Os zeros à esquerda saem como a gravação os tira (FR-3623); nada mais se transforma.
+        referencia = dominio.normalizar(request.GET.get(f"{prefixo}-occurrence") or "")
+        ocorre_em = (request.GET.get(f"{prefixo}-occurrenceAt") or "").strip()
+        ato = dominio.SUBMISSAO
+
+    if fontes.sabe_conferir(fonte) is not True:
+        contexto = {
+            "classe": "informa",
+            "texto": (
+                f"A fonte {fonte} não é conferida antes dos atos: não há o que perguntar a ela."
+                if fonte
+                else "Declare a fonte da semente para conferir o concurso."
+            ),
+        }
+    else:
+        alvo = conferencia.Referencia(
+            fonte=fonte, referencia=referencia, caminho="", alvo="", ocorre_em=ocorre_em
+        )
+        agora = timezone.now()
+        (item,) = conferencia.conferidas(
+            [alvo], conferencia.conferir([alvo], agora=agora), agora=agora
+        )
+        contexto = {
+            "classe": {
+                dominio.IMPEDE: "impede",
+                dominio.ADVERTE: "adverte",
+                dominio.INFORMA: "informa",
+            }[item.decisao(ato)],
+            "texto": item.mensagem(ato),
+        }
+    return render(request, "interface/_conferencia_sob_demanda.html", contexto)
 
 
 def _desfecho_do_sorteio(request, tipo, declarado):

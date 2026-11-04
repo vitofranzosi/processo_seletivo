@@ -588,7 +588,9 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=(), conferir_forma_da_ocorrenci
     _validar_regra_publicada(metodo["normalization"]["rule"])
     _validar_substituicao_publicada(metodo["substitutionRule"]["rule"])
     if conferir_forma_da_ocorrencia:
-        _validar_forma_da_ocorrencia(metodo["occurrence"], metodo["substitutionRule"]["rule"])
+        _validar_forma_da_ocorrencia(
+            metodo["occurrence"], metodo["substitutionRule"]["rule"], fonte=metodo["source"]
+        )
     _validar_etapa_de_habilitacao(metodo.get("qualifyingStageId"), etapas)
 
 
@@ -743,7 +745,7 @@ def _validar_substituicao_publicada(regra) -> None:
         )
 
 
-def _validar_forma_da_ocorrencia(ocorrencia, regra) -> None:
+def _validar_forma_da_ocorrencia(ocorrencia, regra, *, fonte=None) -> None:
     """A ocorrência declarada tem de ter a forma que a regra de substituição consome (035, FR-512).
 
     **É a sexta guarda, e ela chegou cinco depois das outras.** O algoritmo, a fonte, o instante e
@@ -760,8 +762,17 @@ def _validar_forma_da_ocorrencia(ocorrencia, regra) -> None:
     importá-la — e as duas cópias divergiriam na primeira mudança, com a divergência aparecendo como
     a composição aceitando o que o sorteio recusa.
     """
+    from processo_seletivo.sorteios.domain import conferencia
     from processo_seletivo.sorteios.domain.substituicao import derivavel
+    from processo_seletivo.sorteios.infrastructure import fontes
 
+    # **A forma que a fonte aceita vem antes da que a regra deriva** (116, FR-3623, D-001). A
+    # Loteria Federal só aceita algarismos: `Concurso 6115` a regra deriva, e a Caixa recusa com
+    # HTTP 400 no dia do sorteio. A forma é da fonte (FR-3625): a de demonstração continua aceitando
+    # o que aceitava, e a fonte que não declara forma também. A recusa diz o valor e a correção.
+    forma = fontes.forma_da_referencia(fonte) if fonte else None
+    if forma is not None and conferencia.numero_do_concurso(ocorrencia) is None:
+        raise ProfileValidationError(conferencia.mensagem_da_forma(ocorrencia))
     if not derivavel(ocorrencia, regra=regra):
         raise ProfileValidationError(
             f"Ocorrência que a regra de substituição declarada não sabe derivar: {ocorrencia!r}. "

@@ -76,6 +76,10 @@ def _dia_declarado(ocorre_em):
     return lido.astimezone(ZONA).date()
 
 
+def _iso(dia):
+    return dia.isoformat() if dia else None
+
+
 def _governados(conteudo, marcos_sorteados):
     """Marco com sorteio a fazer → a referência do método que o governa.
 
@@ -214,7 +218,13 @@ def detalhe(itens, ato):
         "conferenciaDaReferencia": [
             {
                 **dominio.registro(item.situacao, item.decisao(ato)),
+                # Além das seis perguntas, o que a tela precisa para repetir a mensagem do ato a
+                # partir do registro, sem consultar de novo (FR-3646): de que método se fala, em
+                # que ato e com que data declarada.
+                "ato": ato,
                 "caminho": item.referencia.caminho,
+                "alvo": item.referencia.alvo,
+                "declaradaEm": _iso(_dia_declarado(item.referencia.ocorre_em)),
             }
             for item in itens
         ]

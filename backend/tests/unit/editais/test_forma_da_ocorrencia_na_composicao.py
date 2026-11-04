@@ -28,7 +28,11 @@ ETAPA = "aaaaaaaa-0000-4000-8000-000000000353"
 
 METODO = {
     "algorithm": "IFES-SORTEIO-SHA256-v1",
-    "source": "Loteria Federal",
+    # **A fonte de demonstração, e não a Loteria Federal, desde a `116`** (FR-3623, FR-3625). Na
+    # Loteria Federal a forma da fonte — só algarismos — responde antes da guarda da derivação, e
+    # `Concurso 5900` passou a ser recusado lá com outra frase. O que este arquivo prende é a guarda
+    # da `035`, e ela continua valendo, inteira, para a fonte que aceita texto.
+    "source": "Fonte de demonstração",
     "occurrence": "5900",
     "occurrenceAt": "2026-11-20T20:00:00-03:00",
     "derivation": "a extração de sábado imediatamente anterior à data publicada",

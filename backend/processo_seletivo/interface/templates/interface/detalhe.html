@@ -10,6 +10,7 @@
 {% if request.GET.ato %}
 <p class="sucesso" role="status">Ato registrado: {{ request.GET.ato|rotulo_do_ato }}.</p>
 {% endif %}
+{% include "interface/_conferencia_do_ato.html" %}
 
 <ol class="etapas" aria-label="Situação do Edital no fluxo">
   {% for etapa in trilha %}

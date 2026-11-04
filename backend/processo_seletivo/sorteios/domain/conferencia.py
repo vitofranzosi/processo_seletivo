@@ -63,8 +63,9 @@ MOTIVOS = (SEM_RESPOSTA_A_TEMPO, SEM_CONEXAO, SEM_O_ULTIMO, COM_ERRO)
 
 # **Um a seis algarismos, e nada mais** (FR-3623). É a forma que a API aceita: `6106-9`, a grafia do
 # próprio comunicado da Caixa, recebe HTTP 400, e o defeito só apareceria no dia do sorteio. Seis
-# algarismos cobrem o 999999; o concurso de hoje tem quatro.
-FORMA_DO_CONCURSO = re.compile(r"^\d{1,6}$")
+# algarismos cobrem o 999999; o concurso de hoje tem quatro. **Os zeros à esquerda não contam** nos
+# seis: `0006116` é o 6116, e a Caixa o devolve.
+FORMA_DO_CONCURSO = re.compile(r"^0*\d{1,6}$")
 
 _DECISAO_REGISTRADA = {
     IMPEDE: "RECUSOU",
@@ -313,6 +314,40 @@ def registro(situacao: Situacao, decisao_do_ato: str) -> dict:
     }
 
 
+def situacao_do_registro(entrada: dict) -> Situacao:
+    """A situação de volta, a partir do `registro` gravado no detalhe do ato."""
+
+    def dia(valor):
+        return date.fromisoformat(valor) if valor else None
+
+    return Situacao(
+        entrada.get("situacao") or INCONCLUSIVO,
+        entrada.get("fonte") or "",
+        entrada.get("referencia") or "",
+        datetime.fromisoformat(entrada["consultadaEm"]),
+        ultimo=entrada.get("ultimo"),
+        ultimo_em=dia(entrada.get("ultimoEm")),
+        realizada_em=dia(entrada.get("realizadaEm")),
+        motivo=entrada.get("motivo") or "",
+    )
+
+
+def mensagem_do_registro(entrada: dict) -> str:
+    """A mensagem que o ato deu, repetida do registro, e não de consulta nova (FR-3646).
+
+    O próximo anunciado não fica registrado — não é uma das seis perguntas —, e por isso a
+    mensagem repetida não o menciona. O resto é a mesma frase.
+    """
+    declarada = entrada.get("declaradaEm")
+    texto = mensagem(
+        situacao_do_registro(entrada),
+        entrada.get("ato") or PUBLICACAO,
+        declarada_em=date.fromisoformat(declarada) if declarada else None,
+    )
+    alvo = entrada.get("alvo")
+    return f"{alvo}: {texto}" if alvo else texto
+
+
 __all__ = [
     "ADVERTE",
     "AINDA_NAO_REALIZADO",
@@ -334,8 +369,10 @@ __all__ = [
     "inconclusiva",
     "mensagem",
     "mensagem_da_forma",
+    "mensagem_do_registro",
     "normalizar",
     "numero_do_concurso",
     "registro",
     "situacao",
+    "situacao_do_registro",
 ]

@@ -54,6 +54,9 @@ visto do certame, com a transmissão aberta — e a faixa de recusa tinha o mesm
 <p class="sucesso" role="status" tabindex="-1">Relação publicada e congelada, com
   {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }}. O resumo é
   <code>{{ resultado.resumo }}</code>.</p>
+{% for advertencia in resultado.advertencias %}
+<p class="aviso" role="status">{{ advertencia }}</p>
+{% endfor %}
 {% elif resultado.tipo == "ocorrencia" %}
 {% comment %}
 **A indisponibilidade não é sucesso**, e anunciá-la em verde diria à mesa que o passo foi cumprido
@@ -99,6 +102,14 @@ regra este certame vai sortear.
     <dt>Se a ocorrência faltar</dt><dd>{{ metodo.substitutionRule.text }}</dd>
     <dt>Resumo do método</dt><dd><code>{{ metodo_hash }}</code></dd>
   </dl>
+  {% if pode_conferir_a_referencia %}
+  {% comment %} Antes de congelar, sob demanda (116, FR-3645): a tela não consulta a Caixa sozinha, e a
+  mensagem é a que o congelamento daria. {% endcomment %}
+  <p class="meta"><button type="button" class="acao"
+          hx-get="{% url 'interface:fragmento-conferir-referencia' %}?edital={{ edital.id }}&amp;marco={{ marco.id }}"
+          hx-target="#conferencia-sorteio" hx-swap="innerHTML">Conferir na Caixa</button>
+    <span id="conferencia-sorteio" class="conferencia-sob-demanda" aria-live="polite"></span></p>
+  {% endif %}
   {% comment %}
   A frase mandava retificar e não dizia por onde — e até a `026` não havia por onde: a Retificação
   não oferecia um único dos dez campos do método. Era a contradição mais visível do produto, e a

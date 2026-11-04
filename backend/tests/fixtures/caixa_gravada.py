@@ -13,11 +13,13 @@ chamadas — a carga é requisito (FR-3631). E `urlopen` para `caixa.gov.br` é 
 que restaurar o adaptador real sem dizer o que ele vai responder: um caso esquecido iria à rede.
 """
 
+import io
 import json
 import os
 import pathlib
 import urllib.request
 from datetime import date
+from urllib import error
 from urllib.parse import urlsplit
 
 import pytest
@@ -83,6 +85,12 @@ class CaixaDaSuite:
         self.motivo = motivo
         return self
 
+    def zerar(self):
+        """Os contadores a partir daqui: a montagem do cenário também publica, e consulta."""
+        self.chamadas_ao_ultimo = 0
+        self.chamadas_por_numero = []
+        return self
+
     @property
     def chamadas(self):
         return self.chamadas_ao_ultimo + len(self.chamadas_por_numero)
@@ -135,3 +143,38 @@ def _vigiado(original):
         return original(url, *args, **kwargs)
 
     return urlopen
+
+
+class _Corpo(io.BytesIO):
+    def __init__(self, bruto, status=200):
+        super().__init__(bruto)
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+        return False
+
+
+class Servidor:
+    """Serve as respostas gravadas por endereço, e anota cada pedido com o tempo limite."""
+
+    def __init__(self, **por_pedido):
+        self.respostas = por_pedido
+        self.pedidos = []
+
+    def __call__(self, url, timeout=None):
+        self.pedidos.append((url, timeout))
+        chave = url.rsplit("/", 1)[-1]
+        resposta = self.respostas.get(chave, "6115")
+        if isinstance(resposta, BaseException):
+            raise resposta
+        if isinstance(resposta, str):
+            resposta = gravada(resposta)
+        corpo = resposta["corpo"]
+        bruto = corpo if isinstance(corpo, bytes) else json.dumps(corpo).encode()
+        if resposta["status"] != 200:
+            raise error.HTTPError(url, resposta["status"], "erro", {}, io.BytesIO(bruto))
+        return _Corpo(bruto)

@@ -63,6 +63,8 @@ from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import finish as finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
 from processo_seletivo.shared.tempo import ZONA
+from processo_seletivo.sorteios.application import conferencia
+from processo_seletivo.sorteios.domain import conferencia as dominio_da_conferencia
 
 
 def _retificacao(actor, retificacao_id):
@@ -703,7 +705,7 @@ def _assert_effective_change(edital, retificacao, effective_at, publication_orde
         raise _no_effective_change()
 
 
-def _assert_well_formed(content, contexto, topologia):
+def _assert_well_formed(content, contexto, topologia, situacoes=None):
     """As invariantes da Publicação valem também para o que a Retificação faz vigorar (FR-006).
 
     `publish_edital` recusa Edital sem título, sem Perfil ou sem Cronograma, e desde a `005` recusa
@@ -719,8 +721,12 @@ def _assert_well_formed(content, contexto, topologia):
     # capacidade existir. Recusar aqui prenderia até a Retificação que corrige uma data.
     # `topologia` é a do conteúdo original do Edital (054, FR-988), lida uma vez por quem chama:
     # na publicação, o mesmo Edital é conferido uma vez por fronteira de vigência.
+    # `situacoes` são as referências que **esta** Retificação introduz, já conferidas na fonte
+    # (116, FR-3635): só a publicação da Retificação as passa, e as que ela não muda não estão lá.
     errors = blocking_findings(
-        validate_for_publication(content, ato=ATO_DE_RETIFICACAO, topologia=topologia)
+        validate_for_publication(
+            content, ato=ATO_DE_RETIFICACAO, topologia=topologia, situacoes=situacoes
+        )
     )
     if errors:
         raise DomainError(
@@ -849,14 +855,17 @@ def _assert_versao_canonica(content, contexto):
         )
 
 
-def _assert_structurally_publishable(content, boundary, topologia):
+def _assert_structurally_publishable(content, boundary, topologia, situacoes=None):
     _assert_versao_canonica(content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}")
     _assert_well_formed(
-        content, f"O conteúdo que passaria a vigorar em {boundary.isoformat()}", topologia
+        content,
+        f"O conteúdo que passaria a vigorar em {boundary.isoformat()}",
+        topologia,
+        situacoes=situacoes,
     )
 
 
-def _materialize_affected_versions(retificacao, publication, now):
+def _materialize_affected_versions(retificacao, publication, now, situacoes=None):
     original = _original_version(retificacao.edital)
     published = _published_retifications(retificacao.edital)
     boundaries = sorted(
@@ -873,7 +882,7 @@ def _materialize_affected_versions(retificacao, publication, now):
         applicable = [item for item in published if item.publication.effective_at <= boundary]
         acts = _acts(applicable)
         content, provenance = _consolidate(conteudo_base(original), acts)
-        _assert_structurally_publishable(content, boundary, topologia)
+        _assert_structurally_publishable(content, boundary, topologia, situacoes=situacoes)
         version = VersaoConsolidada.objects.create(
             edital=retificacao.edital,
             valid_from=boundary,
@@ -923,10 +932,66 @@ def _consolidacao(edital, base, now, effective_at):
     )
 
 
+def _referencias_introduzidas(edital, base, content):
+    """As referências que a Retificação introduz ou substitui, em marco por sortear (FR-3633).
+
+    **Os marcos sorteados só são lidos se houver o que conferir**: a leitura é recorte a recorte, e
+    a Retificação que não toca a referência — a imensa maioria — não paga por ela (SC-1100).
+    """
+    from processo_seletivo.sorteios.application.selectors import (
+        marcos_sorteados_em_todos_os_recortes,
+    )
+
+    if not conferencia.referencias_a_conferir(content, base=base):
+        return []
+    return conferencia.referencias_a_conferir(
+        content,
+        base=base,
+        marcos_sorteados=marcos_sorteados_em_todos_os_recortes(edital, content),
+    )
+
+
+def _consultar_antes_da_retificacao(actor, retificacao_id, *, idempotency_key):
+    """A conferência do concurso introduzido, sem trava e antes de `command_context()` (FR-3632).
+
+    A leitura daqui só diz **o que** consultar; o que vale é o conteúdo que a transação monta sob
+    trava. Retificação alheia, fora de Homologada, ato já concluído ou alteração que nem se aplica
+    não consultam nada: a transação vai recusar ou repetir.
+    """
+    if conferencia.ja_concluido(
+        actor=actor, operation=f"retificacao:publicar:{retificacao_id}", key=idempotency_key
+    ):
+        return {}
+    item = (
+        Retificacao.objects.select_related("edital", "base_snapshot")
+        .filter(
+            pk=retificacao_id,
+            edital__institution_scope=actor.institution_scope,
+            status=Retificacao.Status.HOMOLOGADA,
+        )
+        .first()
+    )
+    if item is None:
+        return {}
+    try:
+        base = conteudo_base(item.base_snapshot)
+        content, _ = apply_changes(base, _changes_payload(item), publication_id="pending")
+    except (ValueError, KeyError, TypeError, DomainError):
+        return {}
+    referencias = _referencias_introduzidas(item.edital, base, content)
+    return conferencia.conferir(referencias) if referencias else {}
+
+
 def publish_retification(
     *, actor, retificacao_id, expected_revision, autoridade_id, idempotency_key, correlation_id
 ):
     require_permission(actor, "retificacao:publicar")
+    # **Só a referência que esta Retificação introduz é conferida** (116, FR-3635, D-006): a que
+    # corrige uma data de um Edital cujo concurso consolidado já foi realizado não é bloqueada por
+    # ele, e não consulta a Caixa. O congelamento é que pega o concurso antigo (FR-3636).
+    situacoes = _consultar_antes_da_retificacao(
+        actor, retificacao_id, idempotency_key=idempotency_key
+    )
     with command_context() as now:
         idem = reserve(
             actor=actor,
@@ -962,6 +1027,9 @@ def publish_retification(
         content, _ = apply_changes(base_publicacao, changes, publication_id="pending")
         _recusar_troca_pelo_objeto_inteiro(base_publicacao, content)
         _recusar_o_que_o_ato_acrescenta(edital, base_publicacao, content)
+        conferidas = conferencia.conferidas(
+            _referencias_introduzidas(edital, base_publicacao, content), situacoes, agora=now
+        )
         canonical = canonical_bytes(content)
         # O documento consolidado usa a mesma composição, e a autoridade e a unidade da própria
         # Publicação da Retificação, conferidas no dia dela (`008`, FR-043; `060`, FR-1130).
@@ -1016,8 +1084,26 @@ def publish_retification(
             previous_state=Retificacao.Status.HOMOLOGADA,
             previous_revision=expected_revision,
             idempotency_key=idempotency_key,
+            detalhe=conferencia.detalhe(conferidas, dominio_da_conferencia.RETIFICACAO),
         )
-        _materialize_affected_versions(item, publication, now)
+        try:
+            _materialize_affected_versions(item, publication, now, situacoes=conferidas)
+        except DomainError:
+            # O ato recusado não grava trilha: o registro acima some com a transação, e o log
+            # estruturado guarda a conferência (FR-3649).
+            conferencia.registrar_no_log(
+                conferidas,
+                dominio_da_conferencia.RETIFICACAO,
+                correlation_id=correlation_id,
+                desfecho="RECUSADO",
+            )
+            raise
+        conferencia.registrar_no_log(
+            conferidas,
+            dominio_da_conferencia.RETIFICACAO,
+            correlation_id=correlation_id,
+            desfecho="CONCLUIDO",
+        )
         Edital.objects.filter(pk=edital.pk).update(
             next_publication_order=F("next_publication_order") + 1
         )

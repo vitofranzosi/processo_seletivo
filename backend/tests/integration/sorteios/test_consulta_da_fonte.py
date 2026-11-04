@@ -6,8 +6,6 @@ se testa. A observação (`observar`) é outra porta e não muda (FR-3638): o ú
 """
 
 import copy
-import io
-import json
 from datetime import UTC, date, datetime
 from urllib import error
 
@@ -22,44 +20,9 @@ from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import (
     FonteDeTesteSoData,
     LoteriaFederal,
 )
-from tests.fixtures.caixa_gravada import gravada
+from tests.fixtures.caixa_gravada import Servidor, gravada
 
 AGORA = datetime(2026, 11, 3, 22, 3, tzinfo=UTC)
-
-
-class _Corpo(io.BytesIO):
-    def __init__(self, bruto, status=200):
-        super().__init__(bruto)
-        self.status = status
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_):
-        self.close()
-        return False
-
-
-class Servidor:
-    """Serve as respostas gravadas por endereço, e anota cada pedido com o tempo limite."""
-
-    def __init__(self, **por_pedido):
-        self.respostas = por_pedido
-        self.pedidos = []
-
-    def __call__(self, url, timeout=None):
-        self.pedidos.append((url, timeout))
-        chave = url.rsplit("/", 1)[-1]
-        resposta = self.respostas.get(chave, "6115")
-        if isinstance(resposta, BaseException):
-            raise resposta
-        if isinstance(resposta, str):
-            resposta = gravada(resposta)
-        corpo = resposta["corpo"]
-        bruto = corpo if isinstance(corpo, bytes) else json.dumps(corpo).encode()
-        if resposta["status"] != 200:
-            raise error.HTTPError(url, resposta["status"], "erro", {}, io.BytesIO(bruto))
-        return _Corpo(bruto)
 
 
 def _ultimo_com(**campos):

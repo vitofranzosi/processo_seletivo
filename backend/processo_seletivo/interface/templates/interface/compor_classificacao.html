@@ -143,17 +143,23 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
       <p class="campo">
         <label for="edital-draw-occurrence">Ocorrência que fixará a semente</label>
         <input type="text" id="edital-draw-occurrence" name="edital-draw-occurrence"
-               value="{{ metodo_comum.drawOccurrence }}" placeholder="5900"
+               value="{{ metodo_comum.drawOccurrence }}" placeholder="6115"
                aria-describedby="ajuda-ocorrencia-comum">
         {% comment %}
         A mesma ajuda do método do marco, palavra por palavra — e é isso que a `FR-509` pede: uma
         segunda redação para a mesma coisa seria a segunda maneira de ensinar que ela proíbe.
         {% endcomment %}
-        <span class="oculto" id="ajuda-ocorrencia-comum">Só a referência, terminando no número —
-          como 5900, ou Concurso 5900. É do número final que a regra de substituição deriva a
-          ocorrência seguinte quando a fonte não publica; sem ele, não há substituta e prosseguir
-          exige Retificação. A fonte já está declarada no campo acima: repeti-la depois do número
-          põe o número no meio, e ali a regra não o encontra.</span>
+        <span class="oculto" id="ajuda-ocorrencia-comum">Na Loteria Federal, só o número do
+          concurso, como 6115 — sem dígito verificador, texto ou ano. Na fonte de demonstração vale
+          também a referência terminando no número, como Concurso 5900. É do número final que a
+          regra de substituição deriva a ocorrência seguinte quando a fonte não publica; sem ele, não
+          há substituta e prosseguir exige Retificação. A fonte já está declarada no campo acima:
+          repeti-la depois do número põe o número no meio, e ali a regra não o encontra.</span>
+        <button type="button" class="acao"
+                hx-get="{% url 'interface:fragmento-conferir-referencia' %}?edital={{ edital.id }}&amp;prefixo=edital-draw"
+                hx-include="#edital-draw-source, #edital-draw-occurrence, #edital-draw-occurrenceAt"
+                hx-target="#conferencia-edital-draw" hx-swap="innerHTML">Conferir na Caixa</button>
+        <span id="conferencia-edital-draw" class="conferencia-sob-demanda" aria-live="polite"></span>
       </p>
       <p class="campo">
         <label for="edital-draw-occurrenceAt">Quando a ocorrência acontece</label>

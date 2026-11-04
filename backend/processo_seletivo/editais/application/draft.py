@@ -160,6 +160,37 @@ def _validar_secoes(sections):
         )
 
 
+def _sem_zeros_no_concurso(metodo):
+    """`006114` gravado como `6114`, e nada além disso, na fonte que tem forma (116, D-001).
+
+    `OcorrenciaDaFonte` é única por `(fonte, referência)` em texto: as duas grafias gravariam duas
+    linhas para a mesma extração. O que não tem a forma volta como veio, para a recusa de
+    `perfis._validar_forma_da_ocorrencia` dizer o valor que a pessoa escreveu.
+    """
+    from processo_seletivo.sorteios.domain import conferencia
+    from processo_seletivo.sorteios.infrastructure import fontes
+
+    if not isinstance(metodo, dict) or "occurrence" not in metodo:
+        return metodo
+    if fontes.forma_da_referencia(metodo.get("source")) is None:
+        return metodo
+    return {**metodo, "occurrence": conferencia.normalizar(metodo["occurrence"])}
+
+
+def _sem_zeros_no_concurso_dos_marcos(perfil):
+    if not isinstance(perfil, dict) or not isinstance(perfil.get("classificationMilestones"), list):
+        return perfil
+    return {
+        **perfil,
+        "classificationMilestones": [
+            {**marco, "drawMethod": _sem_zeros_no_concurso(marco["drawMethod"])}
+            if isinstance(marco, dict) and isinstance(marco.get("drawMethod"), dict)
+            else marco
+            for marco in perfil["classificationMilestones"]
+        ],
+    }
+
+
 def replace_draft(
     *,
     actor,
@@ -194,6 +225,10 @@ def replace_draft(
         derivar_linha_geral(payload) if isinstance(payload, dict) else payload
         for payload in profiles
     ]
+    # **Os zeros à esquerda saem aqui, pela mesma razão da linha geral** (116, FR-3623): é o ponto
+    # por onde passam a tela e o `PUT /draft`, e antes de validar.
+    profiles = [_sem_zeros_no_concurso_dos_marcos(payload) for payload in profiles]
+    draw_method = _sem_zeros_no_concurso(draw_method)
     try:
         validate_profiles(profiles)
     except ProfileValidationError as exc:

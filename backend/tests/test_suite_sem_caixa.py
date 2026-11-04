@@ -14,7 +14,7 @@ import pytest
 from processo_seletivo.sorteios.domain import conferencia as dominio
 from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import LoteriaFederal
 
-pytestmark = pytest.mark.skipif(
+com_a_fonte_real = pytest.mark.skipif(
     bool(os.environ.get("SORTEIO_E2E_FONTE_REAL")),
     reason="Com o E2E da fonte real ligado, a conexão com a Caixa é permitida de propósito.",
 )
@@ -22,6 +22,7 @@ pytestmark = pytest.mark.skipif(
 AGORA = datetime(2026, 11, 3, 22, 3, tzinfo=UTC)
 
 
+@com_a_fonte_real
 def test_a_conexao_com_a_caixa_e_recusada():
     with pytest.raises(pytest.fail.Exception, match="FR-3651"):
         urllib.request.urlopen(
@@ -29,6 +30,7 @@ def test_a_conexao_com_a_caixa_e_recusada():
         )
 
 
+@com_a_fonte_real
 def test_o_adaptador_real_tambem_nao_chega_a_caixa(caixa):
     """Restaurar o adaptador sem dizer o que ele ouve não abre a porta: a recusa vem do vigia."""
     caixa.pela_rede()
