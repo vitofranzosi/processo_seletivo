@@ -14,7 +14,7 @@ from types import SimpleNamespace
 import pytest
 
 from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
-from processo_seletivo.portal import situacao
+from processo_seletivo.portal import obrigacoes, situacao
 from processo_seletivo.recursos.application.selectors import (
     AGUARDANDO_JULGAMENTO,
     DECIDIDO,
@@ -271,7 +271,8 @@ class TestConsequenciaDoConvocado:
         assert resultado.codigo == situacao.CONVOCADO
         acao = resultado.o_que_fazer
         assert "terminou em 23/09/2026" in acao.aviso_de_prazo
-        assert "ainda não foi registrado" in acao.aviso_de_prazo
+        # O núcleo único do vencido (FR-3748 da `118`): quem registra o resultado é a comissão.
+        assert obrigacoes.NUCLEO_DO_PRAZO in acao.aviso_de_prazo
         assert acao.consequencia == ""
         assert "perd" not in acao.aviso_de_prazo
 
@@ -448,3 +449,231 @@ class TestOQueAFuncaoNaoSabe:
         ampla_m1 = cartao(codigo="M1")
         ordenados = situacao.ordenar_cartoes([ampla_m2, ppi_m1, ampla_m1], PERFIL)
         assert ordenados == [ampla_m1, ppi_m1, ampla_m2]
+
+
+# --- 118: a ação com documento na chamada vem das obrigações (FR-3730 a FR-3732) ----------------
+
+
+class TestAcaoComDocumento:
+    """A tabela da FR-3730 da `118`, linha a linha, sobre a projeção de verdade."""
+
+    @staticmethod
+    def projetar(itens, momento=None, **kwargs):
+        from tests.unit.portal import test_obrigacoes_da_convocacao as projecao
+
+        return projecao.projetar(itens, momento or obrigacoes.ABERTA, **kwargs)
+
+    @staticmethod
+    def lido(*args, **kwargs):
+        from tests.unit.portal.test_obrigacoes_da_convocacao import lido
+
+        return lido(*args, **kwargs)
+
+    @staticmethod
+    def disp(*args, **kwargs):
+        from tests.unit.portal.test_obrigacoes_da_convocacao import disp
+
+        return disp(*args, **kwargs)
+
+    def acao(self, projetada, *, desfecho_=None, estado=EM_CURSO, requerimento=""):
+        return calcular(
+            convocacao=convocacao(),
+            desfecho=desfecho_,
+            estado=estado,
+            requerimento=requerimento,
+            obrigacoes=projetada,
+        ).o_que_fazer
+
+    def test_linha_1_decidida_leva_ao_que_foi_enviado(self):
+        from processo_seletivo.requerimentos.domain import nomes as req
+
+        projetada = self.projetar(
+            [self.lido(convocacao_nomes.ITEM_CONFORME)],
+            obrigacoes.DECIDIDA,
+            requerimento=self.disp(status=req.ENVIADO, disponivel=False),
+        )
+        acao = self.acao(
+            projetada, desfecho_=desfecho(convocacao_nomes.ACEITE), requerimento="conferir"
+        )
+        assert acao.principal == situacao.NADA_POR_ENQUANTO
+        assert acao.link_rotulo == situacao.VER_O_QUE_ENVIOU
+        assert acao.link.endswith("/convocacao")
+        assert acao.secundaria == obrigacoes.REQUERIMENTO_ENVIADO
+        assert acao.aceite == obrigacoes.ACEITE
+
+    def test_linha_2_processo_sem_prazo_vencido_nem_conferencia(self):
+        projetada = self.projetar(
+            [self.lido(convocacao_nomes.ITEM_A_APRESENTAR)],
+            obrigacoes.ENCERRADA_PELO_PROCESSO,
+            requerimento=self.disp(final="ENCERRADO"),
+        )
+        acao = self.acao(projetada)
+        assert acao.principal.startswith("Este Processo Seletivo foi encerrado")
+        assert "Até o encerramento do Processo, ficaram sem envio:" in acao.principal
+        assert "Requerimento de Matrícula" in acao.principal.split("sem envio:")[1]
+        assert acao.link_rotulo == situacao.VER_COMO_FICOU
+        assert (acao.prazo, acao.consequencia, acao.aviso_de_prazo) == (None, "", "")
+        assert "prazo terminou" not in acao.principal and "conferir" not in acao.principal
+
+    def test_linha_3_prazo_usa_o_nucleo(self):
+        projetada = self.projetar(
+            [self.lido(convocacao_nomes.ITEM_A_APRESENTAR)],
+            obrigacoes.ENCERRADA_PELO_PRAZO,
+            requerimento=self.disp(prazo=True),
+        )
+        acao = self.acao(projetada, estado=convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO)
+        assert obrigacoes.NUCLEO_DO_PRAZO in acao.principal
+        assert "Até o prazo, ficaram sem envio:" in acao.principal
+        assert acao.link_rotulo == situacao.VER_COMO_FICOU
+        assert acao.consequencia == ""
+
+    @pytest.mark.parametrize(
+        ("estados", "rotulo"),
+        [
+            ((convocacao_nomes.ITEM_PENDENTE,), situacao.VER_E_CORRIGIR),
+            ((convocacao_nomes.ITEM_A_APRESENTAR,), situacao.VER_O_QUE_FALTA),
+        ],
+    )
+    def test_linha_4_com_tarefa(self, estados, rotulo):
+        projetada = self.projetar([self.lido(e) for e in estados], requerimento=self.disp())
+        acao = self.acao(projetada, requerimento="preencher")
+        assert acao.principal.startswith("Você ainda precisa ")
+        assert acao.principal.endswith("e preencher o Requerimento de Matrícula.")
+        assert acao.link_rotulo == rotulo
+        assert acao.link.endswith("/convocacao"), "mesmo com o Requerimento a preencher (D-008)"
+        assert acao.prazo == INSTANTE
+        assert acao.consequencia == situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO
+
+    def test_linha_5_sem_tarefa_a_frase_de_conclusao(self):
+        from processo_seletivo.requerimentos.domain import nomes as req
+
+        projetada = self.projetar(
+            [self.lido(convocacao_nomes.ITEM_RECEBIDO)],
+            requerimento=self.disp(status=req.ENVIADO),
+        )
+        acao = self.acao(projetada, requerimento="conferir")
+        assert acao.principal == situacao.NADA_POR_ENQUANTO
+        assert acao.conclusao == obrigacoes.FRASE_DE_CONCLUSAO
+        assert acao.link_rotulo == situacao.VER_A_CONVOCACAO
+        assert acao.secundaria == obrigacoes.REQUERIMENTO_ENVIADO, "C2 e H: nunca no lugar dela"
+
+    def test_c2_o_enviado_nunca_e_a_acao_principal(self):
+        from processo_seletivo.requerimentos.domain import nomes as req
+
+        projetada = self.projetar(
+            [self.lido(convocacao_nomes.ITEM_A_APRESENTAR)] * 4,
+            requerimento=self.disp(status=req.ENVIADO),
+        )
+        acao = self.acao(projetada, requerimento="conferir")
+        assert acao.principal == "Você ainda precisa enviar 4 documentos."
+        assert acao.principal != situacao.REQUERIMENTO_ENVIADO
+        assert acao.secundaria_rotulo == situacao.CONFERIR_O_ENVIADO
+
+    def test_prazo_nao_iniciado_diz_que_ja_pode_enviar_sem_data(self):
+        projetada = self.projetar(
+            [self.lido(convocacao_nomes.ITEM_A_APRESENTAR)],
+            estado=convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO,
+        )
+        acao = self.acao(projetada, estado=convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO)
+        assert acao.aviso_de_prazo == f"{obrigacoes.PRAZO_NAO_INICIADO} {obrigacoes.JA_PODE_ENVIAR}"
+        assert acao.prazo is None
+
+    def test_nenhum_rotulo_de_link_que_navega_comeca_por_enviar(self):
+        rotulos = [
+            situacao.VER_O_QUE_ENVIOU,
+            situacao.VER_COMO_FICOU,
+            situacao.VER_E_CORRIGIR,
+            situacao.VER_O_QUE_FALTA,
+            situacao.VER_A_CONVOCACAO,
+        ]
+        assert not [r for r in rotulos if r.lower().startswith("enviar")], "D-004"
+
+
+class TestSemDocumentoComoHoje:
+    """FR-3732, D-017 e D-019: sem documento, a ação de hoje, e a linha informativa só fechada."""
+
+    @staticmethod
+    def disp(*args, **kwargs):
+        from tests.unit.portal.test_obrigacoes_da_convocacao import disp
+
+        return disp(*args, **kwargs)
+
+    def test_b_e_b2_sem_linha_informativa(self):
+        from processo_seletivo.requerimentos.domain import nomes as req
+
+        b = calcular(
+            convocacao=convocacao(),
+            estado=EM_CURSO,
+            requerimento="preencher",
+            politica_do_requerimento=self.disp(),
+        ).o_que_fazer
+        b2 = calcular(
+            convocacao=convocacao(),
+            estado=EM_CURSO,
+            requerimento="conferir",
+            politica_do_requerimento=self.disp(status=req.ENVIADO),
+        ).o_que_fazer
+        assert (b.principal, b.informativo) == (situacao.PREENCHER_REQUERIMENTO, "")
+        assert (b2.principal, b2.informativo, b2.secundaria) == (
+            situacao.REQUERIMENTO_ENVIADO,
+            "",
+            "",
+        )
+
+    @pytest.mark.parametrize("status", ["", "RASCUNHO"], ids=["sem-rascunho", "com-rascunho"])
+    def test_g0_nao_enviado_ate_o_prazo(self, status):
+        acao = calcular(
+            convocacao=convocacao(),
+            estado=convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO,
+            requerimento="",
+            politica_do_requerimento=self.disp(status=status, prazo=True),
+        ).o_que_fazer
+        assert acao.principal == situacao.SIGA_AS_INSTRUCOES
+        assert acao.informativo == obrigacoes.REQUERIMENTO_NAO_ENVIADO_ATE_O_PRAZO
+        assert "/requerimento" not in acao.link
+
+    @pytest.mark.parametrize("status", ["", "RASCUNHO"], ids=["sem-rascunho", "com-rascunho"])
+    def test_n0_nao_enviado_depois_do_resultado(self, status):
+        acao = calcular(
+            convocacao=convocacao(),
+            desfecho=desfecho(convocacao_nomes.INDEFERIMENTO),
+            requerimento="",
+            politica_do_requerimento=self.disp(status=status, disponivel=False),
+        ).o_que_fazer
+        assert acao.principal == situacao.NADA_POR_ENQUANTO
+        assert acao.link == ""
+        assert acao.informativo == obrigacoes.REQUERIMENTO_NAO_ENVIADO
+        assert acao.aceite == ""
+
+    def test_m0_processo_encerrado_sem_o_chamado(self):
+        acao = calcular(
+            convocacao=convocacao(),
+            estado=EM_CURSO,
+            requerimento="",
+            politica_do_requerimento=self.disp(final="CANCELADO"),
+        ).o_que_fazer
+        assert acao.principal == situacao.SIGA_AS_INSTRUCOES, "sem o chamado Preencher (D-020)"
+        assert acao.informativo == obrigacoes.REQUERIMENTO_NAO_ENVIADO_ENCERRADO
+
+    def test_m0_vencido_nao_usa_o_nucleo(self):
+        acao = calcular(
+            convocacao=convocacao(),
+            estado=convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO,
+            requerimento="",
+            politica_do_requerimento=self.disp(final="ENCERRADO", prazo=True),
+        ).o_que_fazer
+        assert acao.aviso_de_prazo == "", "com o Processo em estado final ninguém registra (D-015)"
+        assert acao.informativo == obrigacoes.REQUERIMENTO_NAO_ENVIADO_ENCERRADO
+
+    @pytest.mark.parametrize(
+        ("especie", "frase"),
+        [
+            (convocacao_nomes.ACEITE, obrigacoes.ACEITE),
+            (convocacao_nomes.REGULARIZACAO, obrigacoes.ACEITE),
+            (convocacao_nomes.INDEFERIMENTO, ""),
+            (convocacao_nomes.NAO_ATENDIMENTO, ""),
+        ],
+    )
+    def test_a_frase_do_aceite_so_nos_desfechos_que_incluem(self, especie, frase):
+        acao = calcular(convocacao=convocacao(), desfecho=desfecho(especie)).o_que_fazer
+        assert acao.aceite == frase

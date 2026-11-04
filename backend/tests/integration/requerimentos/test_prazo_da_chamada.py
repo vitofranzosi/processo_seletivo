@@ -77,9 +77,14 @@ def test_depois_do_vencimento_o_requerimento_nao_se_abre_nem_se_envia(certame, g
 
     assert apurado.prazo_decorrido
     assert not lido.pode_escrever
-    assert "A comissão vai decidir" in lido.explicacao
+    # **O mesmo núcleo na tela e na recusa** (FR-3748 da `118`), e o mesmo dos documentos: o prazo
+    # é um só por chamada (FR-3622 da `115`). A tela acrescenta o que não se envia mais.
+    nucleo = "O fim do prazo não decide nada sozinho: quem registra o resultado é a comissão."
+    assert lido.explicacao.startswith(recusa.value.detail)
     assert recusa.value.code == nomes_da_convocacao.PRAZO_DA_CONVOCACAO_DECORRIDO
-    assert "A comissão vai decidir" in recusa.value.detail
+    assert recusa.value.detail.startswith("O prazo terminou em ")
+    assert recusa.value.detail.endswith(nucleo)
+    assert "A comissão vai decidir" not in lido.explicacao + recusa.value.detail
 
 
 def test_o_rascunho_feito_no_prazo_continua_legivel_e_nao_se_envia(certame, gestor):

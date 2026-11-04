@@ -1,0 +1,15 @@
+{% comment %}
+O Requerimento de Matricula entre as obrigacoes da convocacao (118, FR-3725, FR-3739, FR-3742).
+
+**Enviado, com o caminho para conferi-lo** — com a chamada aberta ou nao (FR-1097 da 059). **Pedido
+e nao enviado, dito como nao enviado**, e sem link: depois do prazo, do encerramento do Processo ou
+do resultado, a politica ja nao admite o preenchimento, e um botao que so levaria a recusa e pior
+do que nenhum. Nunca "nao pedido" quando foi pedido (D-016).
+
+O Requerimento a preencher nao aparece aqui: ele e tarefa, e mora no bloco "O que fazer agora".
+{% endcomment %}
+{% if obrigacoes.requerimento_enviado %}
+<p class="requerimento-nas-obrigacoes"><span aria-hidden="true">✓</span> Requerimento de Matrícula enviado. <a href="{% url 'portal:requerimento' inscricao.id %}">Conferir o Requerimento de Matrícula enviado</a></p>
+{% elif obrigacoes.linha_do_requerimento %}
+<p class="requerimento-nas-obrigacoes">{{ obrigacoes.linha_do_requerimento }}</p>
+{% endif %}

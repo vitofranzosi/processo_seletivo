@@ -557,15 +557,29 @@ def _limite():
     return settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES
 
 
+#: **Nega a consequência automática, e não a prevê** (FR-3748 da `118`; FR-1177 da `063`).
+#: *"A comissão vai decidir"* prometia uma decisão que o fim do prazo não produz, e dizia ao
+#: convocado que ele não tinha mais nada a fazer; o núcleo diz quem registra o resultado e que o
+#: fim do prazo, sozinho, não decide nada.
+NUCLEO_DO_PRAZO_DECORRIDO = (
+    "O fim do prazo não decide nada sozinho: quem registra o resultado é a comissão."
+)
+
+
 def frase_do_prazo_decorrido(vigente):
-    """A frase única do prazo vencido, para documentos e requerimento (FR-3612, FR-3622)."""
+    """O núcleo único do prazo vencido, para documentos e requerimento (FR-3622; FR-3748 da `118`).
+
+    **As recusas dizem só o núcleo**, e as telas o completam com o que não se envia mais e com o
+    canal de atendimento. A hora é `HHhMM`, o formato único do prazo em toda tela do candidato.
+    Sem vencimento o prazo não decorre (`019`), e a recaída existe só para a frase ter sujeito.
+    """
     quando = vigente.vencimento
     if quando is None:
-        return "O prazo desta convocação terminou. A comissão vai decidir."
+        return f"O prazo desta convocação terminou. {NUCLEO_DO_PRAZO_DECORRIDO}"
     from django.utils import timezone
 
     local = timezone.localtime(quando)
-    return f"O prazo terminou em {local:%d/%m/%Y}, às {local:%H:%M}. A comissão vai decidir."
+    return f"O prazo terminou em {local:%d/%m/%Y}, às {local:%Hh%M}. {NUCLEO_DO_PRAZO_DECORRIDO}"
 
 
 # ---------------------------------------------------------------------------

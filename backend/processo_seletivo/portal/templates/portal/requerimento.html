@@ -50,7 +50,7 @@ mesma frase nos dois casos faria quem ainda tem chance ler que nao tem.
 <section aria-labelledby="ainda-nao">
   <h2 id="ainda-nao">{{ titulo_do_estado }}</h2>
   <p class="aviso" role="status">{{ explicacao_do_estado }}</p>
-  {% if fechado_pelo_processo %}
+  {% if convocacao_vigente %}
   <p><a href="{% url 'portal:convocacao' inscricao.id %}">Voltar à convocação</a></p>
   {% else %}
   <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
@@ -105,6 +105,8 @@ enviada ja cumpre: o que a pessoa mandou nao some da vista dela.
     telefone, estado civil —, atualize agora. O que você enviou antes continua registrado.</p>
   <p><a href="?atualizando=1">Conferir e atualizar</a></p>
   {% endif %}
+  {% comment %}O caminho de volta, com convocação vigente (118, FR-3752; FR-406 da 029).{% endcomment %}
+  {% if convocacao_vigente %}<p><a href="{% url 'portal:convocacao' inscricao.id %}">Voltar à convocação</a></p>{% endif %}
 </section>
 
 {% else %}
@@ -136,6 +138,8 @@ rolagem inteira de volta.
     requerimento anterior continua registrado, e nada é criado se você não mudar nada.</p>
   {% else %}
   <h2>{{ titulo_do_estado }}</h2>
+  {% comment %}O prazo, no formato único, ou a frase do prazo que não começou (118, FR-3753).{% endcomment %}
+  {% if prazo_do_requerimento %}<p class="prazo-da-convocacao">{{ prazo_do_requerimento }}</p>{% endif %}
   {% endif %}
   {% for grupo in grupos %}
   <fieldset class="grupo-de-campos">

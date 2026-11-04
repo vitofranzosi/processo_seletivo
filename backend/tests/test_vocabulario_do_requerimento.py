@@ -48,6 +48,11 @@ DA_029 = [
     # de Matrícula — é ali que a pessoa mais quer ler "deferido", e onde a frase mais escorrega.
     RAIZ / "portal/situacao.py",
     PORTAL / "acompanhamento.html",
+    # A `118`: o Requerimento entra nas obrigações da convocação — enviado, a preencher ou não
+    # enviado —, e é ali que "não enviado" poderia escorregar para um juízo.
+    RAIZ / "portal/obrigacoes.py",
+    PORTAL / "_obrigacoes_da_convocacao.html",
+    PORTAL / "_requerimento_nas_obrigacoes.html",
 ]
 
 # **A exceção é literal, por arquivo e com o motivo** (Clarifications da `063`). O rótulo nomeia o

@@ -30,6 +30,7 @@ from django.urls import reverse
 from django.utils import formats, timezone
 
 from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+from processo_seletivo.portal import obrigacoes as obrigacoes_da_convocacao
 from processo_seletivo.portal.leitura import _chave_da_lista
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_DE_CONVOCACAO_POR_EXTENSO,
@@ -88,9 +89,17 @@ PRELIMINAR_PODE_MUDAR = "Este resultado é preliminar e pode mudar no resultado 
 SIGA_AS_INSTRUCOES = "Siga as instruções do Edital para esta convocação."
 PREENCHER_REQUERIMENTO = "Preencher o Requerimento de Matrícula."
 REQUERIMENTO_ENVIADO = "Seu Requerimento de Matrícula foi enviado."
-PRAZO_NAO_INICIADO = (
-    "A comunicação desta convocação ainda não foi enviada. O seu prazo ainda não começou a correr."
-)
+# **Uma frase só para o prazo que não começou** (118, FR-3749), a mesma nas duas telas.
+PRAZO_NAO_INICIADO = obrigacoes_da_convocacao.PRAZO_NAO_INICIADO
+
+# Os rótulos dos links que só navegam (118, FR-3730). **Nenhum começa por "Enviar"** (D-004): o
+# clique leva à convocação, e não envia nada; o rótulo diz o que se vê ao chegar.
+VER_O_QUE_ENVIOU = "Ver o que você enviou nesta convocação"
+VER_COMO_FICOU = "Ver como ficou a convocação"
+VER_E_CORRIGIR = "Ver e corrigir os documentos pendentes"
+VER_O_QUE_FALTA = "Ver o que falta na convocação"
+VER_A_CONVOCACAO = "Ver a convocação"
+CONFERIR_O_ENVIADO = "Conferir o Requerimento de Matrícula enviado"
 
 
 @dataclass(frozen=True)
@@ -115,6 +124,18 @@ class Acao:
     canal: str = ""
     reserva: str = ""
     recurso: tuple = ()
+    # **Abaixo da ação principal, e nunca no lugar dela** (118, FR-3731): o Requerimento enviado,
+    # com documento na chamada.
+    secundaria: str = ""
+    secundaria_link: str = ""
+    secundaria_rotulo: str = ""
+    # A frase de conclusão e a do opcional, depois de "Nada por enquanto." (FR-3728).
+    conclusao: str = ""
+    opcional: str = ""
+    # A linha estritamente informativa do Requerimento não enviado, sem link (FR-3732, D-019).
+    informativo: str = ""
+    # O que o registro do resultado não é (FR-3750).
+    aceite: str = ""
 
 
 @dataclass(frozen=True)
@@ -158,6 +179,8 @@ def situacao_da_inscricao(
     requerimento,
     recorriveis,
     recursos,
+    politica_do_requerimento=None,
+    obrigacoes=None,
 ):
     """A situação, pela primeira regra da precedência que se aplica (D-002).
 
@@ -175,6 +198,10 @@ def situacao_da_inscricao(
     **Não recebe relógio.** O que depende do instante — o prazo da convocação ter começado ou
     terminado — chega já derivado em `estado`, pela mesma função que a tela da convocação usa
     (`estado_de`, da `019`): duas contas do mesmo prazo discordariam na fronteira.
+
+    **As obrigações da convocação chegam prontas** (118): a projeção de `portal/obrigacoes.py`,
+    quando a chamada pede documento, e a `Disponibilidade` do Requerimento, de onde sai a linha
+    informativa da chamada sem documento. As duas são puras, e a view já as leu.
     """
     recurso = _recurso(recorriveis, cartoes)
     em_analise = _recursos_em_analise(recursos)
@@ -190,14 +217,22 @@ def situacao_da_inscricao(
                 _linha_da_convocacao(convocacao, perfil, cartoes),
                 *em_analise,
             ),
-            acao=_acao_do_desfecho(inscricao, requerimento, recurso),
+            acao=_acao_do_desfecho(
+                inscricao, requerimento, recurso, desfecho, politica_do_requerimento, obrigacoes
+            ),
         )
 
     if convocacao is not None:
         return _situacao(
             CONVOCADO,
             porque=(_linha_da_convocacao(convocacao, perfil, cartoes), *em_analise),
-            acao=_acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso),
+            acao=(
+                _acao_das_obrigacoes(inscricao, convocacao, obrigacoes, recurso)
+                if obrigacoes is not None
+                else _acao_da_convocacao(
+                    inscricao, convocacao, estado, requerimento, recurso, politica_do_requerimento
+                )
+            ),
         )
 
     eliminacoes = [etapa for etapa in resultados_das_etapas if not etapa["habilitada"]]
@@ -319,25 +354,116 @@ def _situacao(codigo, rotulo=None, *, porque, acao):
     )
 
 
-def _acao_do_desfecho(inscricao, requerimento, recurso):
+def frase_do_aceite(desfecho):
+    """*"Este registro não é matrícula, bolsa nem contrato…"*, no aceite e na regularização.
+
+    **Os dois desfechos que incluem na ocupação, em toda convocação** (FR-3750, D-013 da `118`): o
+    aceite sem documento é o mesmo ato. É a frase que a User Story 2 da `115` prometia e que não
+    existia em tela nenhuma.
+    """
+    if desfecho is not None and desfecho.especie in convocacao_nomes.DESFECHOS_QUE_INCLUEM:
+        return obrigacoes_da_convocacao.ACEITE
+    return ""
+
+
+def _acao_do_desfecho(inscricao, requerimento, recurso, desfecho, politica, obrigacoes):
     """Nada a fazer — e o que a pessoa mandou continua a um clique.
 
     **Enviado é estado terminal de leitura** (`FR-406` da `029`): desfechada a chamada, o
     Requerimento enviado continua consultável, como a `059` já mostrava. Os outros estados do
     requerimento não aparecem, porque a política já não oferece o preenchimento (`FR-1098`).
+
+    **Com documento, o link leva à convocação** (118, FR-3730, linha 1), onde está o que a pessoa
+    enviou; o Requerimento enviado desce para a linha secundária. Sem documento, como antes, mais a
+    linha informativa do Requerimento pedido e não enviado (D-019).
     """
+    conferir = reverse("portal:requerimento", args=[inscricao.id])
+    aceite = frase_do_aceite(desfecho)
+    if obrigacoes is not None:
+        return Acao(
+            NADA_POR_ENQUANTO,
+            link=reverse("portal:convocacao", args=[inscricao.id]),
+            link_rotulo=VER_O_QUE_ENVIOU,
+            recurso=recurso,
+            aceite=aceite,
+            **_secundaria(obrigacoes, conferir),
+        )
     if requerimento == "conferir":
         return Acao(
             NADA_POR_ENQUANTO,
-            link=reverse("portal:requerimento", args=[inscricao.id]),
-            link_rotulo="Conferir o Requerimento de Matrícula enviado",
+            link=conferir,
+            link_rotulo=CONFERIR_O_ENVIADO,
             recurso=recurso,
+            aceite=aceite,
         )
-    return Acao(NADA_POR_ENQUANTO, recurso=recurso)
+    return Acao(
+        NADA_POR_ENQUANTO,
+        recurso=recurso,
+        aceite=aceite,
+        informativo=obrigacoes_da_convocacao.linha_informativa_do_requerimento(
+            politica, desfecho=desfecho
+        ),
+    )
 
 
-def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso):
-    """Ação, prazo e consequência da convocação aberta (FR-1175 a FR-1177).
+def _secundaria(obrigacoes, conferir):
+    """O Requerimento enviado como linha secundária, com documento na chamada (FR-3731)."""
+    if not obrigacoes.requerimento_enviado:
+        return {}
+    return {
+        "secundaria": obrigacoes_da_convocacao.REQUERIMENTO_ENVIADO,
+        "secundaria_link": conferir,
+        "secundaria_rotulo": CONFERIR_O_ENVIADO,
+    }
+
+
+def _acao_das_obrigacoes(inscricao, convocacao, obrigacoes, recurso):
+    """A ação da chamada que pede documento: a tabela da FR-3730 da `118`.
+
+    **O link principal leva sempre à convocação**, mesmo com o Requerimento enviado ou a preencher
+    (D-008): é lá que estão todas as obrigações, e o Requerimento enviado como ação principal era o
+    que escondia os documentos sem envio (F1).
+
+    O prazo e a consequência continuam os da `063` (FR-1176, FR-1177), mas só com a chamada aberta:
+    encerrada, a frase do fechamento já diz o que houve, e prazo ou consequência ali convidariam a
+    um ato que não existe mais.
+    """
+    destino = reverse("portal:convocacao", args=[inscricao.id])
+    secundaria = _secundaria(obrigacoes, reverse("portal:requerimento", args=[inscricao.id]))
+    if obrigacoes.encerrada:
+        return Acao(
+            obrigacoes.frase_de_estado,
+            link=destino,
+            link_rotulo=VER_COMO_FICOU,
+            recurso=recurso,
+            **secundaria,
+        )
+    prazo, aviso, consequencia = None, "", ""
+    if obrigacoes.prazo_nao_iniciado:
+        aviso = " ".join(obrigacoes.frase_do_prazo)
+    elif convocacao.vencimento is not None:
+        prazo = convocacao.vencimento
+        consequencia = NAO_ATENDIMENTO_PODE_SER_REGISTRADO
+    if obrigacoes.tarefas:
+        rotulo = VER_E_CORRIGIR if obrigacoes.totais["a_corrigir"] else VER_O_QUE_FALTA
+    else:
+        rotulo = VER_A_CONVOCACAO
+    return Acao(
+        obrigacoes.frase_de_estado,
+        link=destino,
+        link_rotulo=rotulo,
+        prazo=prazo,
+        aviso_de_prazo=aviso,
+        consequencia=consequencia,
+        recurso=recurso,
+        conclusao=obrigacoes.frase_de_conclusao,
+        opcional=obrigacoes.frase_do_opcional,
+        **secundaria,
+    )
+
+
+def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso, politica=None):
+    """Ação, prazo e consequência da convocação aberta sem documento (FR-1175 a FR-1177).
 
     A ação vem do Edital pela política da `029`: o Requerimento só é chamado quando ela diz que
     cabe. Sem ele, a instrução neutra — e a tela não diz matrícula nem contratação.
@@ -347,6 +473,10 @@ def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso):
     prazo" seria falar de um prazo que não existe. Com o vencimento decorrido, a tela diz a data e
     que o resultado ainda não foi registrado — e a situação continua "Convocado", porque nenhum
     relógio tem competência para desfechar (FR-274).
+
+    **Exatamente a de hoje** (118, FR-3732, D-017): mudam só o formato do prazo e a frase do
+    vencido, que são comuns a todas as telas, e entra a linha informativa do Requerimento pedido e
+    não enviado, quando a política já não admite o preenchimento (D-019).
     """
     if requerimento == "preencher":
         principal, link, link_rotulo = (
@@ -358,7 +488,7 @@ def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso):
         principal, link, link_rotulo = (
             REQUERIMENTO_ENVIADO,
             reverse("portal:requerimento", args=[inscricao.id]),
-            "Conferir o Requerimento de Matrícula enviado",
+            CONFERIR_O_ENVIADO,
         )
     else:
         principal, link, link_rotulo = (
@@ -371,11 +501,15 @@ def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso):
     if estado == convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO:
         aviso = PRAZO_NAO_INICIADO
     elif estado == convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO:
-        aviso = (
-            f"O prazo desta convocação terminou em {_data_e_hora(convocacao.vencimento)}. "
-            "O resultado da convocação ainda não foi registrado. "
-            "Se você atendeu e não consta, fale com o atendimento."
-        )
+        # O núcleo único do vencido (FR-3748), **e nunca com o Processo em estado final**, em que
+        # ninguém registra resultado (D-015): ali a linha informativa já diz que o envio encerrou.
+        if not (politica is not None and politica.fechado_pelo_processo):
+            aviso = " ".join(
+                (
+                    obrigacoes_da_convocacao.frase_do_prazo_decorrido(convocacao.vencimento),
+                    obrigacoes_da_convocacao.frase_do_atendimento(""),
+                )
+            )
     elif convocacao.vencimento is not None:
         prazo = convocacao.vencimento
         consequencia = NAO_ATENDIMENTO_PODE_SER_REGISTRADO
@@ -388,6 +522,9 @@ def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso):
         aviso_de_prazo=aviso,
         consequencia=consequencia,
         recurso=recurso,
+        informativo=obrigacoes_da_convocacao.linha_informativa_do_requerimento(
+            politica, desfecho=None
+        ),
     )
 
 
