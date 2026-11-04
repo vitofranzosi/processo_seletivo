@@ -50,10 +50,20 @@ class Disponibilidade:
     # estado de leitura — a FR-405 fixa cinco —, e sim a marca que fecha a escrita: o preenchimento,
     # o envio e o sucessor se recusam, e a leitura e o rascunho ficam. Injetado, como a chamada.
     prazo_decorrido: bool = False
+    # **O Processo Seletivo está em estado final** — o status dele, `ENCERRADO` ou `CANCELADO`, ou
+    # `""` (FR-373 e FR-408 da `029`, revistas em 04/11/2026). No molde de `prazo_decorrido`: fecha
+    # o preenchimento, o envio e o sucessor, e **não** é estado de leitura — a leitura e o rascunho
+    # ficam. Só o Requerimento *na convocação* a recebe; o *na inscrição* não muda (decisão
+    # pendente). O status, e não um booleano, porque a tela diz *encerrado* ou *cancelado*.
+    estado_final_do_processo: str = ""
 
     @property
     def enviado(self) -> bool:
         return self.status_do_requerimento == nomes.ENVIADO
+
+    @property
+    def fechado_pelo_processo(self) -> bool:
+        return bool(self.estado_final_do_processo)
 
     @property
     def estado_de_leitura(self):
@@ -97,7 +107,12 @@ def exigido_na_inscricao(conteudo) -> bool:
 
 
 def apurar(
-    conteudo, *, chamada_em_aberto=None, requerimento=None, prazo_decorrido=False
+    conteudo,
+    *,
+    chamada_em_aberto=None,
+    requerimento=None,
+    prazo_decorrido=False,
+    estado_final_do_processo="",
 ) -> Disponibilidade:
     """A política inteira: **se é exigível, se está disponível e se já foi enviado**.
 
@@ -107,6 +122,11 @@ def apurar(
 
     **Chamada em aberto, e não vigente**: uma convocação com desfecho continua vigente, e a própria
     feature de convocação registra o beco que confundir as duas produziu.
+
+    `estado_final_do_processo` é o status do Processo quando ele está encerrado ou cancelado, e
+    `""` nos demais — o domínio não sabe quais status são finais, quem chama sabe. Ele só pesa no
+    momento *na convocação* e com chamada em aberto: sem chamada já não há o que escrever, e o
+    *na inscrição* não mudou.
     """
     status = getattr(requerimento, "status", "") or ""
     momento = momento_declarado(conteudo)
@@ -136,4 +156,7 @@ def apurar(
         chamada=chamada_em_aberto,
         status_do_requerimento=status,
         prazo_decorrido=bool(prazo_decorrido and chamada_em_aberto is not None),
+        estado_final_do_processo=(
+            estado_final_do_processo or "" if chamada_em_aberto is not None else ""
+        ),
     )

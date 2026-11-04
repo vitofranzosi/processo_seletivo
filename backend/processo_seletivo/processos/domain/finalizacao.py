@@ -100,12 +100,23 @@ def ensure_edital_can_be_cancelled(edital):
         raise _reject("Este Edital não pode ser cancelado.")
 
 
+def recusa_do_processo_em_estado_final():
+    """A recusa que o Processo encerrado ou cancelado dá a quem tenta escrever num Edital dele.
+
+    **Uma frase só, e não uma por app.** O Requerimento de Matrícula *na convocação* passou a
+    recusar com ela em 04/11/2026 (FR-373 e FR-408 da `029`, revistas), e não pode chegar ao
+    Processo pelo `ensure_processo_accepts_changes`: o estado que ele confere é o lido sob a trava
+    do próprio comando, e não o de um objeto carregado antes dela.
+    """
+    return _reject(
+        "O Processo Seletivo está em estado final e não admite alteração de seus Editais."
+    )
+
+
 def ensure_processo_accepts_changes(processo):
     """FR-035: Processo encerrado ou cancelado não recebe novas alterações em seus Editais."""
     if processo.status in PROCESSO_FINAL:
-        raise _reject(
-            "O Processo Seletivo está em estado final e não admite alteração de seus Editais."
-        )
+        raise recusa_do_processo_em_estado_final()
 
 
 def ensure_edital_accepts_changes(edital):

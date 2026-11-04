@@ -74,12 +74,27 @@ _FRASES = {
 }
 
 
+# O particípio que a frase do Processo em estado final usa, pelo status dele (FR-3741 da `118`).
+_ENCERRADO_OU_CANCELADO = {"ENCERRADO": "encerrado", "CANCELADO": "cancelado"}
+
+
 def leitura(apurado) -> LeituraDoRequerimento:
     """A `Disponibilidade` do domínio, dita em palavras de tela."""
     estado = apurado.estado_de_leitura
     titulo, explicacao = _FRASES[estado]
     escrevivel = estado in (nomes.DISPONIVEL, nomes.EM_PREENCHIMENTO)
-    if escrevivel and getattr(apurado, "prazo_decorrido", False):
+    if escrevivel and getattr(apurado, "fechado_pelo_processo", False):
+        # **Antes do prazo, e sem dizer que ele venceu** (FR-373 da `029`, revista; D-015 e D-020
+        # da `118`): com o Processo encerrado ninguém decide mais nada, e *"a comissão vai
+        # decidir"* prometeria um ato que não existe.
+        titulo = "O envio pelo portal está encerrado"
+        participio = _ENCERRADO_OU_CANCELADO[apurado.estado_final_do_processo]
+        explicacao = (
+            f"Este Processo Seletivo foi {participio}, e não é mais possível enviar o "
+            "Requerimento de Matrícula pelo portal."
+        )
+        escrevivel = False
+    elif escrevivel and getattr(apurado, "prazo_decorrido", False):
         # A mesma frase dos documentos da convocação (115, FR-3612, FR-3622): o prazo é um só.
         from processo_seletivo.convocacao.application.documentos import frase_do_prazo_decorrido
 

@@ -50,7 +50,11 @@ mesma frase nos dois casos faria quem ainda tem chance ler que nao tem.
 <section aria-labelledby="ainda-nao">
   <h2 id="ainda-nao">{{ titulo_do_estado }}</h2>
   <p class="aviso" role="status">{{ explicacao_do_estado }}</p>
+  {% if fechado_pelo_processo %}
+  <p><a href="{% url 'portal:convocacao' inscricao.id %}">Voltar à convocação</a></p>
+  {% else %}
   <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+  {% endif %}
 </section>
 
 {% elif enviado and not conferindo %}

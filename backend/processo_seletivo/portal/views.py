@@ -2539,8 +2539,10 @@ def _requerimento_da_convocacao(registro, chamada, conteudo):
         return ""
     apurado = preencher_requerimento.apurar(registro, conteudo)
     estado = apurado.estado_de_leitura
-    if apurado.prazo_decorrido and estado != requerimento_nomes.ESTADO_ENVIADO:
-        # O prazo da chamada terminou (115, FR-3622): um botão "preencher" levaria a uma recusa.
+    fechado = apurado.prazo_decorrido or apurado.fechado_pelo_processo
+    if fechado and estado != requerimento_nomes.ESTADO_ENVIADO:
+        # O prazo da chamada terminou (115, FR-3622), ou o Processo está em estado final (FR-373 da
+        # `029`, revista): um botão "preencher" levaria a uma recusa.
         return ""
     return CHAMADO_DO_REQUERIMENTO.get(estado, "")
 
@@ -3297,9 +3299,12 @@ def requerimento(request, inscricao_id):
         return _tela_do_requerimento(
             request, registro, identidade, versao, apurado, vigente, atualizando=True
         )
-    if apurado.disponivel and vigente is None:
+    if apurado.disponivel and vigente is None and not apurado.fechado_pelo_processo:
         # Abrir no `GET` é o que faz a cópia-para-a-frente acontecer antes de a pessoa ver a tela:
         # ela encontra o que já sabemos preenchido, em vez de vinte campos vazios (`FR-377`).
+        #
+        # **Com o Processo em estado final, o `GET` não abre** (FR-3754 da `118`): o comando
+        # recusaria, e a página diz que o envio está encerrado em vez de mostrar a recusa crua.
         vigente = preencher_requerimento.abrir_rascunho(
             inscricao=registro, correlation_id=correlacao
         )
@@ -3379,7 +3384,11 @@ def _tela_do_requerimento(
     # enviado **e** chamada em aberto. É também a mitigação do dado envelhecido de quem declarou na
     # inscrição meses antes (`R-2`) — sem regra nova, pelo caminho que a correção já usa.
     pode_atualizar = (
-        enviado and apurado.chamada is not None and not apurado.prazo_decorrido and not atualizando
+        enviado
+        and apurado.chamada is not None
+        and not apurado.prazo_decorrido
+        and not apurado.fechado_pelo_processo
+        and not atualizando
     )
     # **Conferindo**: os campos do enviado, editáveis, e ainda **sem linha nova** — ela nasce em
     # `atualizar`, e só se alguma coisa mudar.
@@ -3406,6 +3415,9 @@ def _tela_do_requerimento(
             "titulo_do_estado": lido.titulo,
             "explicacao_do_estado": lido.explicacao,
             "pode_escrever": lido.pode_escrever,
+            # Fechado pelo Processo, a volta é à convocação, de onde a pessoa veio (FR-3754 da
+            # `118`); nos demais estados sem escrita, ao acompanhamento, como antes.
+            "fechado_pelo_processo": apurado.fechado_pelo_processo,
             "enviado": enviado,
             "ja_sabemos": _o_que_o_sistema_ja_sabe(registro, identidade, conteudo),
             "grupos": _grupos_para_a_tela(
