@@ -45,6 +45,11 @@ from django.db import connection
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.convocacao.application.selectors import chamada_em_aberto
 from processo_seletivo.inscricoes.application.rascunho import ator_do_candidato
+from processo_seletivo.processos.domain.finalizacao import (
+    PROCESSO_FINAL,
+    recusa_do_processo_em_estado_final,
+)
+from processo_seletivo.processos.models import ProcessoSeletivo
 from processo_seletivo.requerimentos.application.exigencia import (
     versao_vigente,
     vigente_de,
@@ -101,28 +106,39 @@ CAMPOS_DA_TELA = tuple(campo for campo in CAMPOS_DECLARADOS if campo not in DERI
 
 
 def _travar(inscricao):
-    """A linha que este ato precisa que não mude debaixo dele.
+    """A linha que este ato precisa que não mude debaixo dele — e o status dela, lido sob a trava.
 
-    Fora do PostgreSQL é no-op, e é honesto que seja: o SQLite serializa a escrita inteira, e as
-    corridas que estas travas impedem não existem lá.
+    **O status volta porque é a trava que o torna verdadeiro** (FR-373 da `029`, revista). Encerrar
+    ou cancelar o Processo grava esta mesma linha, e o `FOR SHARE` a impede de mudar até o commit:
+    o status lido aqui é o que vale para o ato inteiro. Lido antes, de um objeto carregado pela
+    view, um encerramento entre a leitura e o commit deixaria passar o envio que ele fecha.
+
+    Fora do PostgreSQL não há trava, e é honesto que não haja: o SQLite serializa a escrita
+    inteira, e as corridas que ela impede não existem lá. O status é lido do mesmo jeito.
     """
     if connection.vendor != "postgresql":
-        return
+        return (
+            ProcessoSeletivo.objects.filter(editais__id=inscricao.edital_id)
+            .values_list("status", flat=True)
+            .first()
+        )
     with connection.cursor() as cursor:
         # **Uma linha só.** Pedir também o Edital deadlockaria contra uma das duas ordens de
         # travamento que já convivem neste repositório — a razão inteira está no topo do módulo.
         cursor.execute(
-            "SELECT p.id FROM processos_processoseletivo p "
+            "SELECT p.status FROM processos_processoseletivo p "
             "JOIN processos_edital e ON e.processo_id = p.id WHERE e.id = %s FOR SHARE",
             [str(inscricao.edital_id)],
         )
+        linha = cursor.fetchone()
+    return linha[0] if linha else None
 
 
 def _conteudo(inscricao):
     return versao_vigente(inscricao)
 
 
-def apurar(inscricao, conteudo=None):
+def apurar(inscricao, conteudo=None, *, status_do_processo=None):
     """A política, com a chamada em aberto e o requerimento injetados — nunca lidos pelo domínio.
 
     **A chamada é consultada em dois casos, e o segundo faltava.** Para *abrir* no momento na
@@ -136,6 +152,10 @@ def apurar(inscricao, conteudo=None):
 
     Fora desses dois casos a consulta não é paga: ler a fila de chamada para descartá-la seria
     custo em toda tela de preenchimento, que é a mais visitada.
+
+    **O status do Processo, só onde ele fecha alguma coisa** (FR-373 e FR-408 da `029`, revistas):
+    no momento *na convocação*, com chamada em aberto. Os comandos o passam lido sob a trava
+    (`_travar`); as telas não o passam, e ele sai da Inscrição que elas já leram.
     """
     if conteudo is None:
         conteudo = _conteudo(inscricao).content
@@ -149,7 +169,27 @@ def apurar(inscricao, conteudo=None):
         chamada_em_aberto=chamada,
         requerimento=vigente,
         prazo_decorrido=_prazo_da_chamada_decorrido(chamada),
+        estado_final_do_processo=_estado_final_do_processo(
+            inscricao, momento, chamada, status_do_processo
+        ),
     )
+
+
+def _estado_final_do_processo(inscricao, momento, chamada, status_do_processo):
+    """O status do Processo quando ele é final e fecha o Requerimento; `""` nos demais casos.
+
+    **Só *na convocação***: a decisão de 04/11/2026 alcançou esse momento, e o sucessor do
+    Requerimento *na inscrição* ficou pendente. Fechá-lo aqui seria tomar a decisão que o usuário
+    deixou em aberto.
+
+    **E só com chamada**: sem ela, a política já não admite escrita, e ler o Processo seria
+    consulta paga para nada.
+    """
+    if momento != nomes.NA_CONVOCACAO or chamada is None:
+        return ""
+    if status_do_processo is None:
+        status_do_processo = inscricao.edital.processo.status
+    return status_do_processo if status_do_processo in PROCESSO_FINAL else ""
 
 
 def _prazo_da_chamada_decorrido(chamada):
@@ -168,6 +208,21 @@ def _prazo_da_chamada_decorrido(chamada):
     return prazo_decorrido(chamada, agora=timezone.now())
 
 
+def _recusar_escrita_fechada(apurado):
+    """O Processo em estado final e o prazo decorrido — **nesta ordem**.
+
+    Com os dois juntos vale o Processo, como nos documentos da convocação (D-015 e D-020 da `118`):
+    dizer a quem não pode mais enviar que *"a comissão vai decidir"* prometeria um ato que o
+    Processo encerrado já não admite.
+
+    **A recusa do Processo é a mesma dos documentos e do desfecho** (FR-373 da `029`, revista):
+    `recusa_do_processo_em_estado_final`, e não uma frase própria desta app.
+    """
+    if apurado.fechado_pelo_processo:
+        raise recusa_do_processo_em_estado_final()
+    _recusar_prazo_decorrido(apurado)
+
+
 def _recusar_prazo_decorrido(apurado):
     if not apurado.prazo_decorrido:
         return
@@ -181,8 +236,8 @@ def _recusar_prazo_decorrido(apurado):
     )
 
 
-def _exigir_disponibilidade(inscricao, conteudo):
-    apurado = apurar(inscricao, conteudo)
+def _exigir_disponibilidade(inscricao, conteudo, status_do_processo):
+    apurado = apurar(inscricao, conteudo, status_do_processo=status_do_processo)
     if not apurado.exigido:
         raise DomainError(
             nomes.NAO_EXIGIDO, "Este certame não pede Requerimento de Matrícula.", 404
@@ -193,7 +248,7 @@ def _exigir_disponibilidade(inscricao, conteudo):
             "O Requerimento de Matrícula ficará disponível quando você for convocado.",
             409,
         )
-    _recusar_prazo_decorrido(apurado)
+    _recusar_escrita_fechada(apurado)
     return apurado
 
 
@@ -264,11 +319,13 @@ def abrir_rascunho(*, inscricao, correlation_id=""):
     """
     conteudo = _conteudo(inscricao).content
     with command_context() as agora:
-        _travar(inscricao)
+        status_do_processo = _travar(inscricao)
         existente = vigente_de(inscricao)
         if existente is not None:
+            # **O rascunho que já existe é devolvido mesmo com a escrita fechada**: devolvê-lo não
+            # grava nada, e o rascunho continua legível (FR-373 e FR-374 da `029`).
             return existente
-        apurado = _exigir_disponibilidade(inscricao, conteudo)
+        apurado = _exigir_disponibilidade(inscricao, conteudo, status_do_processo)
         return RequerimentoDeMatricula.objects.create(
             inscricao=inscricao,
             status=nomes.RASCUNHO,
@@ -285,8 +342,8 @@ def gravar(*, inscricao, dados, expected_revision, correlation_id=""):
     """Grava o rascunho. Enviado não passa por aqui — a guarda do modelo e o gatilho o barram."""
     conteudo = _conteudo(inscricao).content
     with command_context():
-        _travar(inscricao)
-        _exigir_disponibilidade(inscricao, conteudo)
+        status_do_processo = _travar(inscricao)
+        _exigir_disponibilidade(inscricao, conteudo, status_do_processo)
         requerimento = _rascunho_para_escrita(inscricao, expected_revision)
         # **Saneado antes de encostar no modelo** (`declaracao.sanear`). O Django **não** valida
         # `choices` em `save()`: atribuir o `POST` cru gravava `sexo="X"` e `uf="ZZ"` sem que nada
@@ -427,12 +484,12 @@ def enviar(
     """
     versao = _conteudo(inscricao)
     with command_context() as agora:
-        _travar(inscricao)
+        status_do_processo = _travar(inscricao)
         # Relido **sob a trava**: entre a leitura de fora e este ponto, uma Retificação pode ter
         # publicado. Daqui em diante ela não pode mais.
         versao = _conteudo(inscricao)
         conteudo = versao.content
-        _exigir_disponibilidade(inscricao, conteudo)
+        _exigir_disponibilidade(inscricao, conteudo, status_do_processo)
         if str(versao.id) != str(versao_exibida_id):
             raise DomainError(
                 nomes.EDITAL_ATUALIZADO,
@@ -538,7 +595,7 @@ def _registrar(*, identidade, inscricao, requerimento, agora, correlation_id):
     )
 
 
-def autorizacao_para_atualizar(inscricao, conteudo=None):
+def autorizacao_para_atualizar(inscricao, conteudo=None, *, status_do_processo=None):
     """O requerimento enviado e a chamada que autoriza corrigi-lo — **sem gravar nada**.
 
     **Esta função não cria linha, e a ausência é o conserto de um defeito.** A redação anterior
@@ -549,6 +606,8 @@ def autorizacao_para_atualizar(inscricao, conteudo=None):
     manda o enviado continuar legível, e a `FR-410`, que proíbe sucessor sem mudança.
 
     Quem decide se há sucessor é `atualizar`, e só depois de comparar.
+
+    `status_do_processo` é o que `atualizar` leu sob a trava; a tela, que só pergunta, não o passa.
     """
     if conteudo is None:
         conteudo = _conteudo(inscricao).content
@@ -557,7 +616,7 @@ def autorizacao_para_atualizar(inscricao, conteudo=None):
         raise DomainError(
             nomes.INDISPONIVEL, "Não há requerimento para corrigir nesta inscrição.", 409
         )
-    apurado = apurar(inscricao, conteudo)
+    apurado = apurar(inscricao, conteudo, status_do_processo=status_do_processo)
     if not apurado.exigido:
         raise DomainError(
             nomes.NAO_EXIGIDO, "Este certame não pede Requerimento de Matrícula.", 404
@@ -576,8 +635,9 @@ def autorizacao_para_atualizar(inscricao, conteudo=None):
             "aguardando a sua resposta.",
             409,
         )
-    # O sucessor respeita o prazo da chamada que o autoriza (FR-408 da `029`, revista pela `115`).
-    _recusar_prazo_decorrido(apurado)
+    # O sucessor respeita o prazo da chamada que o autoriza (FR-408 da `029`, revista pela `115`)
+    # e, *na convocação*, o Processo em estado final (FR-408, acrescida em 04/11/2026).
+    _recusar_escrita_fechada(apurado)
     return vigente, apurado.chamada
 
 
@@ -600,8 +660,10 @@ def atualizar(*, inscricao, dados, correlation_id=""):
     """
     conteudo = _conteudo(inscricao).content
     with command_context() as agora:
-        _travar(inscricao)
-        anterior, chamada = autorizacao_para_atualizar(inscricao, conteudo)
+        status_do_processo = _travar(inscricao)
+        anterior, chamada = autorizacao_para_atualizar(
+            inscricao, conteudo, status_do_processo=status_do_processo
+        )
         if chamada is None:
             # Há rascunho em curso: gravar nele é o caminho, e não abrir outro.
             return gravar(
