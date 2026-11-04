@@ -62,9 +62,8 @@ mais estreito, e fica aqui para a revisão:
   topologia de seções de todo Edital composto daqui em diante, que a Retificação confere contra a
   do Edital publicado, e a seção existiria vazia na maioria deles. Do jeito feito, o título só
   aparece quando há documento na convocação, o Edital sem eles sai byte a byte como saía
-  (`unit/publicacoes/test_secao_da_convocacao.py`), e o título é neutro. **Se a revisão preferir a
-  entrada no catálogo, é mudança localizada** em `editais/domain/secoes.py` e
-  `publicacoes/infrastructure/pdf.py`.
+  (`unit/publicacoes/test_secao_da_convocacao.py`), e o título é neutro. **Aceita pelo usuário em
+  04/11/2026**: fica como subseção.
 
 ## A demonstração no navegador (T047, T051)
 
@@ -139,5 +138,7 @@ mesma medição vai de 94 a 102 e falha, conferido trocando a linha à mão e de
 
 - **A validação por pessoas** — uma chamada real conduzida por quem confere, com o tempo de análise
   medido — não está aqui: é o que a auditoria (Anexo II) já apontava como a melhor medida do valor.
-- **Uso em produção com dado real** continua bloqueado pela QI-3 (quais documentos são exigíveis),
-  pela QI-4 (guarda e destinação) e pelo MAT-08 (varredura de PDF), como a spec registra.
+- **Uso em produção com dado real.** Em 04/11/2026 o usuário decidiu a QI-3 (não há lista
+  institucional: cada Edital declara os seus documentos) e adiou a QI-4 (guarda e destinação; o GPS
+  não é GED) e o MAT-08 (varredura de PDF). As duas adiadas continuam na lista de pendências da
+  spec.

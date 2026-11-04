@@ -1257,6 +1257,12 @@ Revistas em 03/11/2026, depois das decisões do usuário sobre o PR.
 
 **Antes do uso em produção com dado real (não da spec):**
 
-8. **QI-3**: quais documentos são exigíveis (Procuradoria).
-9. **QI-4**: guarda e destinação do que o certame conserva.
-10. **MAT-08**: varredura de PDF (TI), D-016.
+8. **QI-3**: quais documentos são exigíveis (Procuradoria). *Decidida pelo usuário em 04/11/2026:*
+   não haverá lista institucional. Os documentos variam conforme o Edital, e cada Edital declara os
+   seus — que é o que esta spec já faz, pelo momento do Documento Exigido.
+9. **QI-4**: guarda e destinação do que o certame conserva. *Adiada pelo usuário em 04/11/2026*, sem
+   prazo. Fica registrado o princípio: o GPS não é um GED; ele dá à equipe responsável acesso aos
+   documentos e o download de cada um, e a guarda é de quem os recebe.
+10. **MAT-08**: varredura de PDF (TI), D-016. *Adiada pelo usuário em 04/11/2026*, para retomar
+    depois. Ela não depende da QI-3: o risco é do arquivo enviado, qualquer que seja o documento, e
+    já existe nos documentos da inscrição.
