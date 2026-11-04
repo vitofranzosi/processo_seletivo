@@ -483,7 +483,14 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
                 )
         try:
             _validar_janela_recursal(marco.get("appealWindow"))
-            _validar_metodo_de_sorteio(marco.get("drawMethod"), etapas=marco.get("stages") or [])
+            # **Só a gravação do rascunho chama esta função, e ela admite o método que espera a
+            # extração** (116, FR-3716). A publicação e a Retificação chamam
+            # `_validar_metodo_de_sorteio` direto, e lá a extração continua exigida (FR-3717).
+            _validar_metodo_de_sorteio(
+                marco.get("drawMethod"),
+                etapas=marco.get("stages") or [],
+                exigir_a_extracao=False,
+            )
             _validar_regra_de_corte(marco.get("cutRule"))
         except ProfileValidationError as exc:
             # Os três blocos não sabem de que marco são; quem os chama sabe.
@@ -492,7 +499,9 @@ def validate_classification_milestones(milestones: list[dict]) -> None:
             raise
 
 
-def validate_common_draw_method(metodo, *, conferir_forma_da_ocorrencia=True) -> None:
+def validate_common_draw_method(
+    metodo, *, conferir_forma_da_ocorrencia=True, exigir_a_extracao=True
+) -> None:
     """O método comum do Edital vale inteiro, ou não é declarado (030, FR-429).
 
     **A mesma regra do método do marco**, e a mesma função: um método comum pela metade prometeria
@@ -508,6 +517,7 @@ def validate_common_draw_method(metodo, *, conferir_forma_da_ocorrencia=True) ->
         metodo or None,
         etapas=(),
         conferir_forma_da_ocorrencia=conferir_forma_da_ocorrencia,
+        exigir_a_extracao=exigir_a_extracao,
     )
 
 
@@ -539,7 +549,26 @@ CAMPOS_DO_METODO = (
 )
 
 
-def _validar_metodo_de_sorteio(metodo, *, etapas=(), conferir_forma_da_ocorrencia=True) -> None:
+#: Os dois campos que dizem **qual** extração semeia: o concurso e quando ele acontece. São o que
+#: aconteceu num certame, e não regra: o reaproveitamento não os copia (116, FR-3715, D-009).
+CAMPOS_DA_EXTRACAO = ("occurrence", "occurrenceAt")
+
+METODO_SEM_A_EXTRACAO = (
+    "O método do sorteio ainda não declara a extração que fixará a semente: o concurso "
+    "(`occurrence`) e quando ele acontece (`occurrenceAt`). Um Edital reaproveitado não traz a "
+    "extração do Edital de origem — declare a deste certame na etapa Classificação, conferindo o "
+    "número e a data no calendário oficial."
+)
+
+
+def espera_a_extracao(metodo) -> bool:
+    """O método declara a regra, e nenhum dos dois campos da extração (116, FR-3716)."""
+    return isinstance(metodo, dict) and not any(metodo.get(campo) for campo in CAMPOS_DA_EXTRACAO)
+
+
+def _validar_metodo_de_sorteio(
+    metodo, *, etapas=(), conferir_forma_da_ocorrencia=True, exigir_a_extracao=True
+) -> None:
     """O método declarado vale inteiro, ou não é declarado (021, FR-013, FR-015).
 
     **A ausência é válida e significa alguma coisa**: marco que não sorteia não declara método, e a
@@ -562,6 +591,12 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=(), conferir_forma_da_ocorrenci
 
     **O padrão é ligado**, pela mesma razão que o padrão de `ato` em `validate_for_publication`:
     esquecer de passá-lo erra pelo lado que **recusa**, e não pelo que deixa passar.
+
+    **`exigir_a_extracao` é a admissão do rascunho que espera a extração** (116, FR-3716, D-009), e
+    também é ligada por padrão. Desligada, o método sem **os dois** campos da extração passa — é a
+    forma do método que o reaproveitamento produz, e a que quem compõe grava antes de saber o
+    concurso. Sem um só, é método pela metade, e a recusa é a de sempre. Ligada, a ausência dos dois
+    tem frase própria, que diz o que declarar e onde, na ordem dos campos.
     """
     if metodo is None:
         return
@@ -569,7 +604,12 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=(), conferir_forma_da_ocorrenci
         raise ProfileValidationError(
             "O método do sorteio deve ser declarado como um objeto, ou não ser declarado."
         )
+    aguarda_a_extracao = espera_a_extracao(metodo)
     for campo, o_que_e, _ in CAMPOS_DO_METODO:
+        if aguarda_a_extracao and campo in CAMPOS_DA_EXTRACAO:
+            if exigir_a_extracao:
+                raise ProfileValidationError(METODO_SEM_A_EXTRACAO)
+            continue
         if not metodo.get(campo):
             raise ProfileValidationError(
                 f"O método do sorteio não declara {o_que_e} (`{campo}`). Um método declarado pela "
@@ -584,11 +624,14 @@ def _validar_metodo_de_sorteio(metodo, *, etapas=(), conferir_forma_da_ocorrenci
             )
     _validar_algoritmo_publicado(metodo["algorithm"])
     _validar_fonte_publicada(metodo["source"])
-    _validar_instante_da_ocorrencia(metodo["occurrenceAt"])
+    if not aguarda_a_extracao:
+        _validar_instante_da_ocorrencia(metodo["occurrenceAt"])
     _validar_regra_publicada(metodo["normalization"]["rule"])
     _validar_substituicao_publicada(metodo["substitutionRule"]["rule"])
-    if conferir_forma_da_ocorrencia:
-        _validar_forma_da_ocorrencia(metodo["occurrence"], metodo["substitutionRule"]["rule"])
+    if conferir_forma_da_ocorrencia and not aguarda_a_extracao:
+        _validar_forma_da_ocorrencia(
+            metodo["occurrence"], metodo["substitutionRule"]["rule"], fonte=metodo["source"]
+        )
     _validar_etapa_de_habilitacao(metodo.get("qualifyingStageId"), etapas)
 
 
@@ -743,7 +786,7 @@ def _validar_substituicao_publicada(regra) -> None:
         )
 
 
-def _validar_forma_da_ocorrencia(ocorrencia, regra) -> None:
+def _validar_forma_da_ocorrencia(ocorrencia, regra, *, fonte=None) -> None:
     """A ocorrência declarada tem de ter a forma que a regra de substituição consome (035, FR-512).
 
     **É a sexta guarda, e ela chegou cinco depois das outras.** O algoritmo, a fonte, o instante e
@@ -760,8 +803,17 @@ def _validar_forma_da_ocorrencia(ocorrencia, regra) -> None:
     importá-la — e as duas cópias divergiriam na primeira mudança, com a divergência aparecendo como
     a composição aceitando o que o sorteio recusa.
     """
+    from processo_seletivo.sorteios.domain import conferencia
     from processo_seletivo.sorteios.domain.substituicao import derivavel
+    from processo_seletivo.sorteios.infrastructure import fontes
 
+    # **A forma que a fonte aceita vem antes da que a regra deriva** (116, FR-3623, D-001). A
+    # Loteria Federal só aceita algarismos: `Concurso 6115` a regra deriva, e a Caixa recusa com
+    # HTTP 400 no dia do sorteio. A forma é da fonte (FR-3625): a de demonstração continua aceitando
+    # o que aceitava, e a fonte que não declara forma também. A recusa diz o valor e a correção.
+    forma = fontes.forma_da_referencia(fonte) if fonte else None
+    if forma is not None and conferencia.numero_do_concurso(ocorrencia) is None:
+        raise ProfileValidationError(conferencia.mensagem_da_forma(ocorrencia))
     if not derivavel(ocorrencia, regra=regra):
         raise ProfileValidationError(
             f"Ocorrência que a regra de substituição declarada não sabe derivar: {ocorrencia!r}. "

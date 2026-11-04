@@ -11,20 +11,64 @@ interpreta ausência como erro. Devolve o que a fonte publicou, ou diz que não 
 """
 
 import json
+from datetime import date, datetime
 from urllib import error, request
 
 from django.conf import settings
 from django.utils import timezone
 
 from processo_seletivo.shared.tempo import ZONA
+from processo_seletivo.sorteios.domain import conferencia
 from processo_seletivo.sorteios.infrastructure.fontes import FonteExterna, Observacao
 
-ENDERECO = "https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/{referencia}"
+ENDERECO_DO_ULTIMO = "https://servicebus2.caixa.gov.br/portaldeloterias/api/federal"
+ENDERECO = ENDERECO_DO_ULTIMO + "/{referencia}"
 
 
 class LoteriaFederal(FonteExterna):
     # A Caixa publica `dataApuracao` sem horário, e `_nao_antes_de` devolve a meia-noite (102).
     PUBLICA_SO_A_DATA = True
+    # Só algarismos: a API recusa com HTTP 400 até a grafia `6106-9` do comunicado dela (116).
+    FORMA_DA_REFERENCIA = conferencia.FORMA_DO_CONCURSO
+    SABE_CONFERIR = True
+
+    def consultar_ultimo(self):
+        """O último concurso realizado — a única coisa que a Caixa permite afirmar (116, FR-3628).
+
+        **Só vale a resposta inteira**: número inteiro, data no formato da Caixa e os cinco
+        bilhetes. Faltando um deles não há último, e a conferência é inconclusiva — nunca "ainda
+        não realizado". **Uma tentativa**, com o tempo limite da conferência, e não as três da
+        observação: a conferência acrescenta espera a um clique de publicar, e a pior soma das duas
+        chamadas precisa caber nos 15 segundos da SC-1097. Quem quiser saber de novo, clica de novo.
+        """
+        corpo, motivo = _uma_chamada(ENDERECO_DO_ULTIMO)
+        if corpo is None:
+            return conferencia.ConsultaDoUltimo(None, motivo)
+        extracao = _extracao(corpo)
+        if extracao is None:
+            return conferencia.ConsultaDoUltimo(None, conferencia.SEM_O_ULTIMO)
+        numero, dia = extracao
+        proximo = corpo.get("numeroConcursoProximo")
+        return conferencia.ConsultaDoUltimo(
+            conferencia.UltimoConcurso(
+                numero=numero,
+                em=dia,
+                proximo=proximo if _inteiro(proximo) else None,
+            )
+        )
+
+    def consultar_data(self, numero):
+        """O dia em que o concurso foi realizado, ou `None` — **nunca** um estado (FR-3629).
+
+        Só é chamada para concurso já sabido realizado. A resposta de erro, qualquer que seja o
+        código, quer dizer só "sem data": o 500 que a Caixa devolve ao concurso futuro é o mesmo de
+        um erro do serviço, e decidir por ele seria adivinhar.
+        """
+        corpo, _ = _uma_chamada(ENDERECO.format(referencia=numero))
+        extracao = _extracao(corpo) if corpo is not None else None
+        if extracao is None or extracao[0] != numero:
+            return None
+        return extracao[1]
 
     def observar(self, *, fonte, referencia):
         """O que a fonte publicou — ou **por que** não foi possível saber.
@@ -80,6 +124,60 @@ class LoteriaFederal(FonteExterna):
                 f"{tentativas} tentativa(s). Última falha: {acesso}"
             ),
         )
+
+
+def _uma_chamada(endereco):
+    """`(corpo, "")` de uma resposta JSON, ou `(None, motivo)` — numa tentativa, sem levantar.
+
+    **O motivo é dito nas palavras de quem opera, e só ele sai daqui** (FR-3641, FR-3648): código
+    HTTP, nome de exceção e corpo da resposta não chegam à mensagem nem ao registro. O `HTTPError`
+    vem antes do `URLError` porque é subclasse dele, e é a Caixa que respondeu, e não a rede que
+    caiu.
+    """
+    limite = float(getattr(settings, "SORTEIO_CONFERENCIA_TIMEOUT_SEGUNDOS", 5))
+    try:
+        with request.urlopen(endereco, timeout=limite) as resposta:
+            bruto = resposta.read()
+    except error.HTTPError as falha:
+        falha.close()
+        return None, conferencia.COM_ERRO
+    except error.URLError as falha:
+        if isinstance(falha.reason, TimeoutError):
+            return None, conferencia.SEM_RESPOSTA_A_TEMPO
+        return None, conferencia.SEM_CONEXAO
+    except TimeoutError:
+        return None, conferencia.SEM_RESPOSTA_A_TEMPO
+    except OSError:
+        return None, conferencia.SEM_CONEXAO
+    try:
+        corpo = json.loads(bruto.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return None, conferencia.SEM_O_ULTIMO
+    if not isinstance(corpo, dict):
+        return None, conferencia.SEM_O_ULTIMO
+    return corpo, ""
+
+
+def _inteiro(valor):
+    return isinstance(valor, int) and not isinstance(valor, bool)
+
+
+def _extracao(corpo):
+    """`(numero, dia)` de uma resposta que traz a extração **inteira**, ou `None` (FR-3628).
+
+    Inteira quer dizer número inteiro, data `dd/mm/aaaa` e os cinco bilhetes. A resposta sem os
+    bilhetes não prova realização, pela mesma razão que `_bilhetes_premiados` recusa sucedâneo, e um
+    `numero` que chega como texto é resposta de outra forma, e não o concurso.
+    """
+    numero = corpo.get("numero")
+    try:
+        dia = datetime.strptime(str(corpo.get("dataApuracao") or ""), "%d/%m/%Y").date()
+    except ValueError:
+        return None
+    bilhetes = [item for item in corpo.get("listaDezenas") or [] if str(item).strip()]
+    if not _inteiro(numero) or len(bilhetes) != 5:
+        return None
+    return numero, dia
 
 
 def _bilhetes_premiados(corpo):
@@ -153,6 +251,47 @@ class FonteDeTeste(FonteExterna):
     MATERIAL = {"indisponivel": ""}
     # Devolve o instante corrente, que uma fonte com horário diria de uma extração recém-publicada.
     PUBLICA_SO_A_DATA = False
+
+    # **A conferência por tabela, sem rede** (116, FR-3650): é o que deixa ver as três mensagens em
+    # desenvolvimento. A forma continua a de hoje (`None`, FR-3625), e por isso o último é o próprio
+    # 5000, e não o 6114 da Caixa: a suíte declara `5900`, `5901` e `6113` com esta fonte, e com o
+    # 6114 a tabela diria "ainda não realizado, −1 concurso adiante" do 6113. Com o 5000 a tabela é
+    # coerente com a regra — menor ou igual ao último é realizado —, e só o 9998 foge dela, de
+    # propósito, para reproduzir a advertência.
+    SABE_CONFERIR = True
+    ULTIMO = conferencia.UltimoConcurso(numero=5000, em=date(2015, 8, 26), proximo=5001)
+    REALIZADAS = {5000: date(2015, 8, 26)}
+    INCONCLUSIVA = "9998"
+
+    def conferir_referencias(self, referencias, *, fonte, agora):
+        import re
+
+        situacoes = {}
+        for referencia in referencias:
+            if str(referencia) == self.INCONCLUSIVA:
+                situacoes[referencia] = conferencia.inconclusiva(
+                    fonte=fonte,
+                    referencia=referencia,
+                    consultada_em=agora,
+                    motivo=conferencia.SEM_RESPOSTA_A_TEMPO,
+                )
+                continue
+            # A forma é livre aqui: "Concurso 5900" é o 5900, pelo número final que a regra de
+            # substituição também lê.
+            final = re.search(r"(\d+)$", str(referencia))
+            numero = int(final.group(1)) if final else None
+            realizada = numero is not None and numero <= self.ULTIMO.numero
+            situacoes[referencia] = conferencia.Situacao(
+                conferencia.REALIZADO if realizada else conferencia.AINDA_NAO_REALIZADO,
+                fonte,
+                str(referencia),
+                agora,
+                ultimo=self.ULTIMO.numero,
+                ultimo_em=self.ULTIMO.em,
+                realizada_em=self.REALIZADAS.get(numero) if realizada else None,
+                proximo=self.ULTIMO.proximo,
+            )
+        return situacoes
 
     def observar(self, *, fonte, referencia):
         material = self.MATERIAL.get(str(referencia), "12345 67890 11223 44556 77889")

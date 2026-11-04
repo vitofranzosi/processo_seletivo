@@ -288,15 +288,53 @@ def converter_valores(conteudo):
     }
 
 
+def sem_a_extracao(metodo):
+    """O método do sorteio sem o concurso e sem o instante dele (116, FR-3715, D-009).
+
+    **É o mesmo critério do `status` do Evento** (`FR-008a`): o concurso e o instante são o que
+    aconteceu — ou ia acontecer — no certame anterior, e um certame novo não sorteia com a extração
+    de outro. O resto do método é regra, e vem: algoritmo, fonte, derivação, normalização, regra de
+    substituição e a Etapa de habilitação, que `remapear` já trocou pela do destino.
+
+    **Para toda fonte e toda grafia.** O `6010` válido não vem, para não chegar em silêncio a um
+    certame novo; o `Concurso 6010` do acervo não vem, e por isso não impede a cópia. O rascunho
+    grava o método assim (`perfis._validar_metodo_de_sorteio`, `exigir_a_extracao`), e a submissão
+    o recusa até a extração ser declarada.
+    """
+    from processo_seletivo.editais.domain.perfis import CAMPOS_DA_EXTRACAO
+
+    if not isinstance(metodo, dict) or not metodo:
+        return metodo
+    return {chave: valor for chave, valor in metodo.items() if chave not in CAMPOS_DA_EXTRACAO}
+
+
+def _perfil_sem_a_extracao(perfil):
+    marcos = perfil.get("classificationMilestones")
+    if not isinstance(marcos, list):
+        return perfil
+    return {
+        **perfil,
+        "classificationMilestones": [
+            {**marco, "drawMethod": sem_a_extracao(marco["drawMethod"])}
+            if isinstance(marco, dict) and marco.get("drawMethod")
+            else marco
+            for marco in marcos
+        ],
+    }
+
+
 def payload_do_conteudo(conteudo):
     """As cinco coleções que `replace_draft` aceita, já sem o que não se copia.
 
     O que sai daqui: os campos sem tela (`FR-008`), a identificação do Edital — que é entrada da
-    criação, e não conteúdo a copiar (`FR-007`) —, as Seções geradas, e o `status` do Evento, que
-    descreve o que **aconteceu** e por isso reinicia (`FR-008a`).
+    criação, e não conteúdo a copiar (`FR-007`) —, as Seções geradas, o `status` do Evento, que
+    descreve o que **aconteceu** e por isso reinicia (`FR-008a`), e, pela mesma razão, a extração
+    de cada método do sorteio (116, FR-3715).
     """
     perfis = [
-        {chave: valor for chave, valor in perfil.items() if chave not in CAMPOS_SEM_TELA}
+        _perfil_sem_a_extracao(
+            {chave: valor for chave, valor in perfil.items() if chave not in CAMPOS_SEM_TELA}
+        )
         for perfil in conteudo.get("profiles") or []
     ]
     return {
@@ -330,7 +368,9 @@ def payload_do_conteudo(conteudo):
         # sorteio nascer sem método comum, e os sete marcos que o referenciavam passariam a
         # referenciar nada — defeito silencioso, porque a gravação não confere o que a publicação
         # cobra (023, FR-010a).
-        "drawMethod": conteudo.get("drawMethod") or {},
+        #
+        # **E sem a extração** (116, FR-3715): o concurso e o instante dela não vêm.
+        "drawMethod": sem_a_extracao(conteudo.get("drawMethod")) or {},
     }
 
 

@@ -296,6 +296,35 @@ def sem_as_regras_da_046():
         yield
 
 
+@contextmanager
+def antes_da_116():
+    """O instante do acervo anterior à `116`: sem a forma e sem a conferência do concurso (FR-3720).
+
+    **Só para reconstituir o acervo.** Um Edital publicado antes da `116` pode declarar a Loteria
+    Federal com `Concurso 6010` — é o caso do 91/2026 do corpus —, e republicá-lo na suíte pelo
+    caminho real exige a gravação e a publicação **daquele** dia, quando a forma não era conferida e
+    a Caixa não era consultada. Fora daqui, o acervo não se fabrica.
+
+    **Nunca para o Edital novo.** O reaproveitamento cria um Edital de hoje, com as regras de hoje:
+    o teste dele reconstitui a origem aqui dentro, e reaproveita do lado de fora (FR-3720). Desligar
+    a forma na cópia é exatamente o que a revisão de 04/11/2026 proibiu, porque traria o concurso
+    antigo junto (D-009).
+
+    O `patch` é das duas perguntas à porta da fonte, e só delas, e só enquanto o bloco dura.
+    """
+    with (
+        mock.patch(
+            "processo_seletivo.sorteios.infrastructure.fontes.forma_da_referencia",
+            return_value=None,
+        ),
+        mock.patch(
+            "processo_seletivo.sorteios.infrastructure.fontes.sabe_conferir",
+            return_value=False,
+        ),
+    ):
+        yield
+
+
 def publicar_como_acervo(api_client, manager_headers, process_payload, **kwargs):
     """`publish_original`, dentro do instante do acervo (`sem_as_regras_da_046`)."""
     from tests.fixtures.publicacao import publish_original

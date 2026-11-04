@@ -9,6 +9,7 @@
 
 {% if request.GET.ato == "editar" %}<p class="sucesso" role="status">Alterações gravadas nesta mesma Retificação.</p>
 {% elif request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
+{% include "interface/_conferencia_do_ato.html" %}
 
 {% comment %} O que fazer antes do que já se sabe, como no detalhe do Processo e no do Edital (078,
    `FR-1765`; 083, `FR-1857`): à esquerda a 1280 px, em cima a 375. E pelo topo, como lá (057,

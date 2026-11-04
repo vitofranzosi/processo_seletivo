@@ -77,6 +77,24 @@ def sem_trava_em_append_only(request):
         )
 
 
+@pytest.fixture(autouse=True)
+def caixa():
+    """A Loteria Federal que a conferência ouve, em todo caso (116, FR-3651, SC-1099).
+
+    *Autouse*, e por isso também o nome que os casos pedem para dizer outra situação —
+    `caixa.usar_gravacao()`, `caixa.fora_do_ar()` — e contar as chamadas. O padrão responde "ainda
+    não realizado" a toda referência, e a razão está em `tests/fixtures/caixa_gravada.py`. Um
+    `MonkeyPatch` próprio, e não o do caso: um `monkeypatch.undo()` no meio dele, como o E2E da
+    fonte real faz, não pode devolver a suíte à rede.
+    """
+    from tests.fixtures.caixa_gravada import CaixaDaSuite
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        caixa = CaixaDaSuite(monkeypatch).instalar()
+        yield caixa
+        caixa.desinstalar()
+
+
 @pytest.fixture
 def api_client():
     return APIClient()

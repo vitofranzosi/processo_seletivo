@@ -29,6 +29,8 @@ from processo_seletivo.shared.canonical import SCHEMA_VERSION, canonical_bytes, 
 from processo_seletivo.shared.concurrency import compare_and_swap
 from processo_seletivo.shared.idempotency import finish as _finish_idempotency
 from processo_seletivo.shared.idempotency import reserve
+from processo_seletivo.sorteios.application import conferencia
+from processo_seletivo.sorteios.domain import conferencia as dominio_da_conferencia
 
 
 def _decimal_canonico(valor):
@@ -480,8 +482,36 @@ def _locked_edital(actor, edital_id):
     return edital
 
 
+def _consultar_antes_do_ato(actor, edital_id, *, estado, operation, idempotency_key):
+    """A conferência do concurso declarado, **antes** de `command_context()` (116, FR-3632).
+
+    A consulta é de rede, e dentro da transação seria a trava do Edital segurada enquanto a Caixa
+    demora. A leitura daqui é sem trava, e por isso só serve para saber **o que consultar**: o que
+    vale é o conteúdo que a transação relê sob trava, e a referência dele que não estiver aqui é
+    inconclusiva (`conferencia.conferidas`). Edital alheio, em outro estado ou ato já concluído com
+    esta chave não consultam nada: a transação vai recusar ou repetir, e a consulta seria carga
+    sobre a Caixa sem efeito nenhum.
+    """
+    if conferencia.ja_concluido(actor=actor, operation=operation, key=idempotency_key):
+        return {}
+    edital = Edital.objects.filter(
+        pk=edital_id, institution_scope=actor.institution_scope, status=estado
+    ).first()
+    if edital is None:
+        return {}
+    referencias = conferencia.referencias_a_conferir(edital_snapshot(edital))
+    return conferencia.conferir(referencias) if referencias else {}
+
+
 def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, correlation_id):
     require_permission(actor, "edital:submeter")
+    situacoes = _consultar_antes_do_ato(
+        actor,
+        edital_id,
+        estado=Edital.Status.EM_ELABORACAO,
+        operation=f"edital:submeter:{edital_id}",
+        idempotency_key=idempotency_key,
+    )
     with command_context() as now:
         idem = reserve(
             actor=actor,
@@ -498,9 +528,21 @@ def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, corre
         # O `now` desta transação, e não um relógio lido de novo (`028`, FR-341). É o que faz o
         # achado de cronograma vencido e o registro da revisão falarem do mesmo instante, como o
         # Princípio II exige de operações relacionadas.
-        findings = validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO, agora=now)
+        conferidas = conferencia.conferidas(
+            conferencia.referencias_a_conferir(snapshot), situacoes, agora=now
+        )
+        findings = validate_for_publication(
+            snapshot, ato=ATO_DE_PUBLICACAO, agora=now, situacoes=conferidas
+        )
         errors = blocking_findings(findings)
         if errors:
+            # O ato recusado não grava trilha; o log estruturado guarda a conferência (FR-3649).
+            conferencia.registrar_no_log(
+                conferidas,
+                dominio_da_conferencia.SUBMISSAO,
+                correlation_id=correlation_id,
+                desfecho="RECUSADO",
+            )
             raise DomainError("blocking_findings", "; ".join(item.message for item in errors), 422)
         canonical = canonical_bytes(snapshot)
         RevisaoEdital.objects.create(
@@ -531,6 +573,13 @@ def submit_edital(*, actor, edital_id, expected_revision, idempotency_key, corre
             previous_state=Edital.Status.EM_ELABORACAO,
             previous_revision=expected_revision,
             idempotency_key=idempotency_key,
+            detalhe=conferencia.detalhe(conferidas, dominio_da_conferencia.SUBMISSAO),
+        )
+        conferencia.registrar_no_log(
+            conferidas,
+            dominio_da_conferencia.SUBMISSAO,
+            correlation_id=correlation_id,
+            desfecho="CONCLUIDO",
         )
         _finish_idempotency(idem, edital, 200)
         return edital, findings, 200
@@ -695,6 +744,15 @@ def publish_edital(
     # O identificador, e não o dicionário de antes: nome, cargo e ato de nomeação saem do registro
     # de autoridades, e não de quem publica (060, FR-1125).
     payload = {"autoridade": str(autoridade_id or ""), "reason": reason}
+    # **Confere de novo**, porque é outro ato, em outro instante: o concurso que estava por realizar
+    # na submissão pode ter sido realizado antes da publicação (116, FR-3634).
+    situacoes = _consultar_antes_do_ato(
+        actor,
+        edital_id,
+        estado=Edital.Status.HOMOLOGADO,
+        operation=f"edital:publicar:{edital_id}",
+        idempotency_key=idempotency_key,
+    )
     with command_context() as now:
         idem = reserve(
             actor=actor,
@@ -726,7 +784,12 @@ def publish_edital(
         # atos distintos, em instantes distintos, e um período de inscrições que estava aberto na
         # submissão pode ter encerrado aqui (`028`, FR-358). É por isso que a segunda conferência
         # não é redundante com a primeira.
-        findings = validate_for_publication(current_snapshot, ato=ATO_DE_PUBLICACAO, agora=now)
+        conferidas = conferencia.conferidas(
+            conferencia.referencias_a_conferir(current_snapshot), situacoes, agora=now
+        )
+        findings = validate_for_publication(
+            current_snapshot, ato=ATO_DE_PUBLICACAO, agora=now, situacoes=conferidas
+        )
         # **A mensagem do achado vem junto, como já vem na submissão.** Dizer apenas "o Edital
         # possui erros impeditivos" devolve a quem publica a informação de que algo está errado e
         # nenhuma de qual — e há achado cuja mensagem é a única coisa acionável que existe: o
@@ -735,6 +798,12 @@ def publish_edital(
         # e pode nunca ter aberto a Revisão.
         impeditivos = blocking_findings(findings)
         if impeditivos:
+            conferencia.registrar_no_log(
+                conferidas,
+                dominio_da_conferencia.PUBLICACAO,
+                correlation_id=correlation_id,
+                desfecho="RECUSADO",
+            )
             raise DomainError(
                 "blocking_findings", "; ".join(item.message for item in impeditivos), 422
             )
@@ -804,6 +873,13 @@ def publish_edital(
             previous_state=Edital.Status.HOMOLOGADO,
             previous_revision=expected_revision,
             idempotency_key=idempotency_key,
+            detalhe=conferencia.detalhe(conferidas, dominio_da_conferencia.PUBLICACAO),
+        )
+        conferencia.registrar_no_log(
+            conferidas,
+            dominio_da_conferencia.PUBLICACAO,
+            correlation_id=correlation_id,
+            desfecho="CONCLUIDO",
         )
         _ativar_o_processo_na_primeira_publicacao(
             edital.processo, actor=actor, now=now, correlation_id=correlation_id

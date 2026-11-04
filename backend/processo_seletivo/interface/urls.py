@@ -316,6 +316,12 @@ urlpatterns = [
         views.fragmento_perfil_duplicado,
         name="fragmento-perfil-duplicado",
     ),
+    # Conferir o concurso na Caixa, sob demanda: na composição e na tela do sorteio (116).
+    path(
+        "fragmentos/conferir-referencia",
+        views.fragmento_conferir_referencia,
+        name="fragmento-conferir-referencia",
+    ),
     path(
         "fragmentos/perfil/<str:indice>/quadro",
         views.fragmento_quadro,

@@ -13,6 +13,7 @@ método (D-016) —, nem juízo sobre o que fazer quando a ocorrência falta. A 
 declarado, e quem decide o que fazer com ela é a regra publicada.
 """
 
+import time
 from dataclasses import dataclass
 
 from django.utils.module_loading import import_string
@@ -65,6 +66,10 @@ class Observacao:
     evidencia: str = ""
 
 
+# O teto da SC-1097: a espera que a conferência pode acrescentar a um ato, somadas as chamadas.
+ESPERA_MAXIMA_DA_CONFERENCIA = 15.0
+
+
 class FonteExterna:
     """A porta. Um método, e ele não decide nada.
 
@@ -77,8 +82,64 @@ class FonteExterna:
 
     PUBLICA_SO_A_DATA = False
 
+    # **A forma e a conferência da referência também são da fonte, e o padrão é "não se aplica"**
+    # (116, D-008). Fonte que não as declara aceita a ocorrência de forma livre e não é consultada
+    # antes dos atos: nenhuma fonte é obrigada a implementar o que não sabe, e a falta de
+    # conferência não vira advertência em todo Edital dela. A forma é uma expressão compilada.
+    FORMA_DA_REFERENCIA = None
+    SABE_CONFERIR = False
+
     def observar(self, *, fonte: str, referencia: str) -> Observacao:  # pragma: no cover - contrato
         raise NotImplementedError
+
+    def consultar_ultimo(self):  # pragma: no cover - contrato
+        """O último concurso realizado, em `ConsultaDoUltimo`. Uma tentativa, nunca levanta."""
+        raise NotImplementedError
+
+    def consultar_data(self, numero):  # pragma: no cover - contrato
+        """O dia em que o concurso foi realizado, ou `None`. Uma tentativa, nunca levanta."""
+        raise NotImplementedError
+
+    def conferir_referencias(self, referencias, *, fonte, agora):
+        """`referência → Situacao`, com no máximo uma consulta principal (116, FR-3631).
+
+        **A situação sai do último concurso, e a data só do realizado.** A consulta pelo número de
+        um concurso futuro devolve o mesmo 500 de um erro do serviço; por isso ela nunca decide, e
+        só acontece para referência já sabida realizada, uma vez por número distinto (FR-3629). A
+        referência fora da forma não gera chamada nenhuma, e sem referência válida a principal
+        também não acontece.
+        """
+        from django.conf import settings
+
+        from processo_seletivo.sorteios.domain import conferencia
+
+        numeros = {
+            referencia: conferencia.numero_do_concurso(referencia) for referencia in referencias
+        }
+        inicio = time.monotonic()
+        consulta = self.consultar_ultimo() if any(numeros.values()) else None
+        ultimo = consulta.ultimo if consulta is not None else None
+        datas = {}
+        if ultimo is not None:
+            # **A espera tem teto, e não só cada chamada** (SC-1097). Com quatro concursos
+            # realizados e a Caixa lenta, quatro datas de 5 segundos passariam dos 15; e a data só
+            # enfeita a mensagem — a recusa vale sem ela (FR-3629). A data que não cabe no teto
+            # não é pedida.
+            limite = float(getattr(settings, "SORTEIO_CONFERENCIA_TIMEOUT_SEGUNDOS", 5))
+            for numero in sorted({n for n in numeros.values() if n and n <= ultimo.numero}):
+                if time.monotonic() - inicio + limite > ESPERA_MAXIMA_DA_CONFERENCIA:
+                    break
+                datas[numero] = self.consultar_data(numero)
+        return {
+            referencia: conferencia.situacao(
+                fonte=fonte,
+                referencia=referencia,
+                consulta=consulta,
+                consultada_em=agora,
+                data_da_referencia=datas.get(numero),
+            )
+            for referencia, numero in numeros.items()
+        }
 
 
 # **O vocabulário de fontes, fechado e ligado ao adaptador que cada uma executa** (FR-076).
@@ -169,10 +230,37 @@ def publica_so_a_data(nome):
     return bool(import_string(caminho).PUBLICA_SO_A_DATA)
 
 
+def _classe(nome):
+    caminho = fontes_publicadas().get(nome)
+    return import_string(caminho) if caminho is not None else None
+
+
+def forma_da_referencia(nome):
+    """A forma que a fonte exige da referência, ou `None` — livre, ou fonte fora do vocabulário.
+
+    Lida da classe, como `publica_so_a_data`, sem instanciar o adaptador (116, FR-3625).
+    """
+    classe = _classe(nome)
+    return getattr(classe, "FORMA_DA_REFERENCIA", None) if classe is not None else None
+
+
+def sabe_conferir(nome):
+    """Se a fonte responde à conferência da referência — `True`, `False` ou `None` (116, D-008).
+
+    `None` para nome fora do vocabulário deste ambiente, pela mesma razão de `publica_so_a_data`.
+    """
+    classe = _classe(nome)
+    if classe is None:
+        return None
+    return bool(getattr(classe, "SABE_CONFERIR", False))
+
+
 __all__ = [
     "FonteExterna",
     "Observacao",
     "fonte_declarada",
     "fontes_publicadas",
+    "forma_da_referencia",
     "publica_so_a_data",
+    "sabe_conferir",
 ]

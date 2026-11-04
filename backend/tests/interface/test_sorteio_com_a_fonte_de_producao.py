@@ -117,7 +117,7 @@ def _campos_do_formulario(corpo, acao):
 
 
 def test_o_percurso_inteiro_da_presidencia_contra_a_fonte_real(
-    gestor, api_client, manager_headers, process_payload, seletor_ligado, client, monkeypatch
+    gestor, api_client, manager_headers, process_payload, seletor_ligado, client, monkeypatch, caixa
 ):
     ocorre_em = parse_datetime(OCORRE_EM)
     assert ocorre_em is not None and ocorre_em <= datetime.now(ocorre_em.tzinfo), (
@@ -128,6 +128,10 @@ def test_o_percurso_inteiro_da_presidencia_contra_a_fonte_real(
     #    inscrições submetidas e universo congelado, tudo nos dias que antecedem o sorteio.
     congelamento = ocorre_em - timedelta(days=5)
     recuar_o_relogio(monkeypatch, congelamento)
+    # **A conferência do concurso (116) é a da suíte enquanto o relógio está recuado**, e não a da
+    # Caixa: a Caixa de hoje sabe que o 6098 já foi realizado, e recusaria a publicação e o
+    # congelamento que este percurso finge fazer cinco dias antes da extração. É o vigia `caixa`,
+    # que responde "ainda não realizado"; a observação, mais abaixo, continua real.
     certame = certame_de_sorteio(
         gestor, api_client, manager_headers, process_payload, metodo=METODO_REAL
     )
@@ -143,6 +147,11 @@ def test_o_percurso_inteiro_da_presidencia_contra_a_fonte_real(
     )
     assert resposta.status_code == 302
     monkeypatch.undo()
+    # **A sessão nasceu no passado, e expirou nele.** Ela foi aberta com o relógio recuado, e a
+    # validade padrão de duas semanas venceu antes de hoje: sem identificar de novo, a tela devolve
+    # a identificação, e o percurso quebrava aqui desde meados de setembro de 2026, sozinho, quando
+    # o 6098 ficou mais velho que a sessão (achado da `116`, anterior a ela).
+    identificar(client, "maria", [])
 
     # 2. Observar a ocorrência. **Aqui há rede**, e o formulário não diz qual extração buscar: a
     # referência vem do método publicado, e a tela apenas a nomeia.
@@ -214,3 +223,19 @@ def test_o_percurso_inteiro_da_presidencia_contra_a_fonte_real(
     ]
     assert esperada == publicada
     assert conferidas == {p["publicNumber"]: p["key"] for p in manifesto["participants"]}
+
+    # 6. **A conferência do concurso contra a Caixa de verdade** (116, FR-3651). Com o relógio de
+    # volta ao presente, o mesmo 6098 é realizado, com a data publicada. É a asserção que mede o
+    # contrato da consulta de uma tentativa — a do último concurso e a da data —, que a suíte só vê
+    # sobre as respostas gravadas.
+    from processo_seletivo.sorteios.application import conferencia
+    from processo_seletivo.sorteios.domain import conferencia as dominio_da_conferencia
+
+    caixa.pela_rede()
+    referencia = conferencia.Referencia(
+        fonte="Loteria Federal", referencia=CONCURSO, caminho="", alvo="", ocorre_em=OCORRE_EM
+    )
+    situacao = conferencia.conferir([referencia])[referencia.chave]
+    assert situacao.estado == dominio_da_conferencia.REALIZADO, situacao
+    assert situacao.realizada_em == ocorre_em.date(), situacao
+    assert situacao.ultimo >= int(CONCURSO)

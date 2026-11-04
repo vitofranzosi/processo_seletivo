@@ -96,6 +96,18 @@ vigência não distingue duas linhas diferentes.
   {% endcomment %}
   {% if editavel %} <a href="{% url 'interface:reaproveitar' edital.id %}">Partir de outro
   Edital</a>.{% endif %}</p>
+{% comment %}
+A extração do sorteio é o que aconteceu no certame anterior, e não veio (116, FR-3715, FR-3718). O
+pedido fica à vista em toda etapa enquanto houver método sem ela, e some quando o último a recebe:
+sem ela o Edital não é submetido, e a recusa só na submissão ensinaria a ignorar a composição.
+{% endcomment %}
+{% with n=origem_reaproveitada.metodos_sem_a_extracao %}{% if n %}
+<p class="aviso" role="status"><strong>A extração do sorteio não veio do Edital de origem.</strong>
+  Declare, na etapa <a href="{% url 'interface:compor-etapa' edital.id 'classificacao' %}">Classificação</a>,
+  o concurso e quando ele acontece — {% if n == 1 %}1 método do sorteio espera{% else %}{{ n }} métodos do sorteio esperam{% endif %}
+  a extração deste certame —, conferindo o número e a data no calendário oficial, e revise a
+  derivação, que veio junto. Sem a extração, o Edital não é submetido.</p>
+{% endif %}{% endwith %}
 {% endif %}
 
 {% include "interface/_erros.html" with preserva_o_digitado=True %}

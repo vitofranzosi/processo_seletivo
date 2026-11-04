@@ -24,7 +24,9 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
+from processo_seletivo.sorteios.application import conferencia
 from processo_seletivo.sorteios.application.habilitacao import habilitadas_na_etapa, nome_da_etapa
+from processo_seletivo.sorteios.domain import conferencia as dominio_da_conferencia
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
 from processo_seletivo.sorteios.domain import projecao
 from processo_seletivo.sorteios.models import ParticipanteHabilitado, RelacaoDeHabilitados
@@ -46,6 +48,11 @@ def publicar_relacao(
     motivo="",
 ):
     """Projeta, numera, cita o método e publica. Havendo vigente, sucede — nunca edita."""
+    # **A conferência do concurso antes da transação** (116, FR-3636): ela é de rede, e a trava do
+    # Processo não pode esperar a Caixa. Dentro, só vale para o método da versão relida.
+    situacoes = _consultar_antes_de_congelar(
+        actor, edital_id, perfil_id, marco_id, idempotency_key=idempotency_key
+    )
     payload = {
         "edital": str(edital_id),
         "perfil": str(perfil_id),
@@ -79,6 +86,10 @@ def publicar_relacao(
         )
         if recusa is not None:
             raise recusa
+        conferidas = conferencia.conferidas(
+            _referencias_do_congelamento(metodo, perfil_id, marco_id), situacoes, agora=ctx.now
+        )
+        _recusar_concurso_realizado(conferidas, correlation_id=correlation_id)
         vigente = _vigente(edital, perfil_id, marco_id, lista_id)
         texto_do_motivo = (motivo or "").strip()
         if vigente is not None and not texto_do_motivo:
@@ -155,6 +166,10 @@ def publicar_relacao(
                 or f"Relação de habilitados publicada com {len(participantes)} participantes."
             ),
             idempotency_key=idempotency_key,
+            detalhe=conferencia.detalhe(conferidas, CONGELAMENTO),
+        )
+        conferencia.registrar_no_log(
+            conferidas, CONGELAMENTO, correlation_id=correlation_id, desfecho="CONCLUIDO"
         )
         declarado = {
             "relacao": str(relacao.id),
@@ -163,8 +178,101 @@ def publicar_relacao(
             "metodoHash": metodo_hash,
             "algoritmo": metodo.get("algorithm", ""),
         }
+        # **A advertência vai junto do desfecho** (FR-3636, FR-3637): a Caixa fora do ar e a forma
+        # do acervo não impedem o congelamento, e quem congelou precisa saber, na mesma tela, o que
+        # não pôde ser verificado. A chave só existe quando há o que dizer, para que o desfecho de
+        # sempre continue o de sempre.
+        advertencias = [
+            item.mensagem(CONGELAMENTO)
+            for item in conferidas
+            if item.decisao(CONGELAMENTO) == dominio_da_conferencia.ADVERTE
+        ]
+        if advertencias:
+            declarado["advertencias"] = advertencias
         ctx.concluir_sem_resultado(201, declarado)
         return declarado
+
+
+CONGELAMENTO = dominio_da_conferencia.CONGELAMENTO
+
+
+def _referencias_do_congelamento(metodo, perfil_id, marco_id):
+    """A referência declarada no método que a relação vai citar — ou nenhuma (FR-3636).
+
+    **Com a declarada registrada como indisponível, a conferência se cala**, como a `102` faz para
+    a substituta (`previa._congelar_agora_inviavel`): a da vez é a que a regra de substituição pôs
+    no lugar, e ela não tem instante publicado. A fonte que não sabe conferir também se cala
+    (D-008).
+    """
+    from processo_seletivo.sorteios.infrastructure import fontes
+    from processo_seletivo.sorteios.models import OcorrenciaDaFonte
+
+    if not isinstance(metodo, dict):
+        return []
+    fonte = str(metodo.get("source") or "")
+    referencia = str(metodo.get("occurrence") or "")
+    if fontes.sabe_conferir(fonte) is not True:
+        return []
+    if OcorrenciaDaFonte.objects.filter(
+        fonte=fonte, referencia=referencia, indisponivel=True
+    ).exists():
+        return []
+    return [
+        conferencia.Referencia(
+            fonte=fonte,
+            referencia=referencia,
+            caminho=f"/profiles/id={perfil_id}/classificationMilestones/id={marco_id}/drawMethod",
+            alvo="O método do marco",
+            ocorre_em=str(metodo.get("occurrenceAt") or ""),
+        )
+    ]
+
+
+def _consultar_antes_de_congelar(actor, edital_id, perfil_id, marco_id, *, idempotency_key):
+    """A consulta à fonte, sem trava e fora da transação (FR-3632).
+
+    A leitura daqui só diz **o que** consultar. O que vale é o método da versão que a transação
+    relê, e a referência dele sem consulta é inconclusiva. Repetição de ato concluído, Edital
+    alheio ou sem versão vigente não consultam nada: a transação vai repetir ou recusar.
+    """
+    from django.utils import timezone
+
+    if conferencia.ja_concluido(actor=actor, operation=ATO, key=idempotency_key):
+        return {}
+    edital = Edital.objects.filter(
+        pk=identificador(edital_id), institution_scope=actor.institution_scope
+    ).first()
+    if edital is None:
+        return {}
+    try:
+        versao = effective_version(edital_id=edital.id, at=timezone.now())
+    except DomainError:
+        return {}
+    if versao is None:
+        return {}
+    metodo = dominio_do_metodo.metodo_declarado(
+        versao.content, perfil_id=perfil_id, marco_id=marco_id
+    )
+    referencias = _referencias_do_congelamento(metodo, perfil_id, marco_id)
+    return conferencia.conferir(referencias) if referencias else {}
+
+
+def _recusar_concurso_realizado(conferidas, *, correlation_id):
+    """Congelar sob concurso já realizado condenaria o sorteio, e não se desfaz (D-005).
+
+    **409, e não 422**: o pedido é bem formado, e o que o impede é o estado do mundo — a extração
+    já aconteceu. A saída é retificar o método antes de congelar, e a mensagem diz isso.
+    """
+    for item in conferidas:
+        if item.decisao(CONGELAMENTO) == dominio_da_conferencia.IMPEDE:
+            conferencia.registrar_no_log(
+                conferidas, CONGELAMENTO, correlation_id=correlation_id, desfecho="RECUSADO"
+            )
+            raise DomainError(
+                "draw_occurrence_already_drawn",
+                item.mensagem(CONGELAMENTO),
+                409,
+            )
 
 
 def _projetar(edital, versao, perfil_id, marco_id, lista_id):

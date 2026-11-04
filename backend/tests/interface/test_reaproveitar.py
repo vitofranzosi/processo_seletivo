@@ -561,3 +561,43 @@ def test_a_lista_leva_ao_edital_publicado_para_ler_antes_de_escolher(client, des
 
     assert url("portal:selecao", args=[origem.id]) in corpo
     assert "Ver o Edital" in corpo
+
+
+# ---------------------------------------------------------------------------
+# 116, FR-3718 — a extração do sorteio não vem, e a tela diz isso
+# ---------------------------------------------------------------------------
+
+
+def test_o_que_nao_vem_inclui_a_extracao_do_sorteio(client, destino):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+
+    pagina = client.get(reverse("interface:reaproveitar", args=[destino.id])).content.decode()
+
+    nao_vem = " ".join(pagina.split('id="nao-vem-titulo"', 1)[1].split("</section>", 1)[0].split())
+    assert "o concurso e a data da extração do sorteio" in nao_vem
+
+
+def test_a_composicao_pede_a_extracao_ate_ela_ser_declarada(client, destino, origem):
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    escolher(client, destino, origem)
+
+    for etapa in ("identificacao", "classificacao", "revisao"):
+        corpo = " ".join(client.get(composicao(destino, etapa)).content.decode().split())
+        assert "A extração do sorteio não veio do Edital de origem" in corpo, etapa
+        assert "1 método do sorteio" in corpo, etapa
+        assert f'href="{composicao(destino, "classificacao")}"' in corpo, etapa
+
+    # Declarada a extração, o pedido some: ele diz o que falta, e não o que aconteceu.
+    from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+
+    marco = MarcoClassificatorio.objects.get(perfil__edital=destino)
+    MarcoClassificatorio.objects.filter(pk=marco.pk).update(
+        metodo_de_sorteio={
+            **marco.metodo_de_sorteio,
+            "occurrence": "6116",
+            "occurrenceAt": "2026-12-06T19:00:00-03:00",
+        }
+    )
+    corpo = client.get(composicao(destino, "identificacao")).content.decode()
+    assert "A extração do sorteio não veio" not in corpo
+    assert "iniciado a partir do Edital" in corpo

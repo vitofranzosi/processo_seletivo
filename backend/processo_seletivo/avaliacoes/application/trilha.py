@@ -36,6 +36,7 @@ def auditar(
     reason="",
     idempotency_key="",
     com_ato_administrativo=False,
+    detalhe=None,
 ):
     """Grava a trilha do ato, e o ato em si quando ele exige motivo.
 
@@ -65,4 +66,5 @@ def auditar(
         new_state="",
         new_revision=None,
         idempotency_key=idempotency_key,
+        detalhe=detalhe,
     )

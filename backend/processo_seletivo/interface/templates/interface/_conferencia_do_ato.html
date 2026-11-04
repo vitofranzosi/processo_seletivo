@@ -1,0 +1,11 @@
+{% comment %}
+O que a conferência do concurso disse no ato que acabou de acontecer (116, FR-3646). Lido do
+`detalhe` do registro de auditoria do ato, e não de sessão nem de consulta nova: é o que ficou
+registrado, no instante em que a Caixa foi consultada. A recusa não chega aqui — o ato recusado não
+aconteceu, e ela aparece na confirmação, como as demais.
+{% endcomment %}{% if conferencia_do_ato %}
+<ul class="conferencia-do-ato" aria-label="Conferência do concurso na Caixa">
+  {% for item in conferencia_do_ato %}<li class="{{ item.classe }}">{{ item.texto }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
