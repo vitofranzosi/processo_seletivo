@@ -155,6 +155,16 @@ TRIGGERS_POR_APP = {
         "suspensao_de_pessoa_append_only",
         "reativacao_de_pessoa_append_only",
     ),
+    # A entrega documental à formalização (117). As quatro de imutabilidade são **absolutas**: a
+    # versão nova da definição é linha nova, e a designação se encerra por revogação. A quinta
+    # confere que a exportação cita a designação e a definição do mesmo Edital.
+    "formalizacao": (
+        "definicao_formalizacao_append_only",
+        "designacao_formalizacao_append_only",
+        "revogacao_formalizacao_append_only",
+        "exportacao_formalizacao_append_only",
+        "exportacao_formalizacao_coerente",
+    ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
 

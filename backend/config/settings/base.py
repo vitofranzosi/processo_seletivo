@@ -139,6 +139,12 @@ INSTALLED_APPS = [
     # consulta pública de `publicacoes`, nem `assistente`, que na gestão é o de composição
     # (`R-001`).
     "processo_seletivo.duvidas",
+    # A entrega documental ao setor que formaliza (117): a definição dos documentos por Edital, a
+    # designação do setor e o registro de cada pacote exportado. App próprio porque o ato é outro —
+    # nem conferir, nem desfechar, nem exportar planilha de matrícula. **Lê** `convocacao`,
+    # `inscricoes` e `editais`, e nenhum deles passa a conhecê-lo; o arquivo que ele entrega
+    # continua único, onde a inscrição e a convocação o guardaram (117, D-004).
+    "processo_seletivo.formalizacao",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são
@@ -376,6 +382,11 @@ ARQUIVOS_CANDIDATOS_LIMITE_BYTES = int(
 # o candidato digitaliza documento em papel, e o formulário que a instituição publica nasce
 # digital. Aqui os bytes moram em coluna binária, então o limite protege o banco.
 EDITAL_ANEXOS_LIMITE_BYTES = int(os.getenv("EDITAL_ANEXOS_LIMITE_BYTES", str(5 * 1024 * 1024)))
+# O teto de uma exportação de documentos à formalização, em megabytes (117, FR-3691, D-019). **É o
+# limite inicial, e não a capacidade da VM**: 400 MB cobrem o maior cenário medido (~300 MB), e a
+# capacidade real só se mede na homologação. Se a medição não couber, a primeira resposta é baixar
+# este número; acima dele a exportação é recusada antes de ler arquivo algum.
+EXPORTACAO_DE_FORMALIZACAO_LIMITE_MB = int(os.getenv("EXPORTACAO_DE_FORMALIZACAO_LIMITE_MB", "400"))
 
 # **Campos por envio** (`doc/achado-etapa-perfis-recusa-acima-de-mil-campos.md`, DP-21). O padrão do
 # Django é mil, e a composição grava a coleção inteira num POST só (`replace_draft`): o 27º Perfil

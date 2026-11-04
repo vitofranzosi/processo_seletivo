@@ -12,19 +12,19 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 
 ## Fase 1: Preparação
 
-- [ ] T001 Confirmar a `main` com a `115` e CI verde; rodar `manage.py migrate --check`
-- [ ] T002 Aplicar a revisão **aprovada** da FR-069 em `specs/009-inscricao-simples-documentos/spec.md` e da FR-3606 em `specs/115-documentos-na-convocacao/spec.md`, com o texto da D-016 e a nota *"revista pela `117` em ‹data›, por decisão do usuário de 04/11/2026"*; rodar `tests/test_citacoes_de_requisito.py`
-- [ ] T003 Criar o app `backend/processo_seletivo/formalizacao/`, registrá-lo em `INSTALLED_APPS` e atualizar o guardião de contagem de migrations por app
+- [X] T001 Confirmar a `main` com a `115` e CI verde; rodar `manage.py migrate --check`
+- [X] T002 Aplicar a revisão **aprovada** da FR-069 em `specs/009-inscricao-simples-documentos/spec.md` e da FR-3606 em `specs/115-documentos-na-convocacao/spec.md`, com o texto da D-016 e a nota *"revista pela `117` em ‹data›, por decisão do usuário de 04/11/2026"*; rodar `tests/test_citacoes_de_requisito.py`
+- [X] T003 Criar o app `backend/processo_seletivo/formalizacao/`, registrá-lo em `INSTALLED_APPS` e atualizar o guardião de contagem de migrations por app
 
 ## Fase 2: Fundação
 
-- [ ] T004 Modelos das quatro tabelas em `formalizacao/models.py`, com as constraints do data-model (motivo não vazio; resultado `COMPLETO`/`PARCIAL`; hash não vazio; autodesignação)
-- [ ] T005 Migration `0001_inicial` com gatilhos append-only; as quatro tabelas em `TABELAS_APPEND_ONLY`; `M` de 49 para 53 em `CLAUDE.md` e `AGENTS.md`
-- [ ] T006 [P] `formalizacao/domain/nomes.py`: capacidade `formalizacao:acessar`, códigos de recusa, situações, resultados, operações da trilha com rótulos e classe da trava
-- [ ] T007 [P] Papel `formalizacao` em `PAPEIS` e `DESCRICOES` (`interface/identidade.py`) e teste de grafia (FR-3661)
-- [ ] T008 `ArquivoIndisponivel` em `portal/arquivos.py`; 409 e evento `ARQUIVO_INDISPONIVEL` nas views de documento da inscrição, da mesa e da convocação (FR-3695)
-- [ ] T009 [P] Regressão da T008 em `tests/interface/test_arquivo_indisponivel.py`: nenhuma das três views responde 500
-- [ ] T010 [P] `formalizacao/domain/caminhos.py` e testes em `tests/unit/formalizacao/test_caminhos.py`, com nomes hostis: `../x`, `CON`, controle, 300 caracteres, colisões depois da normalização, vazio (FR-3712, SC-1114)
+- [X] T004 Modelos das quatro tabelas em `formalizacao/models.py`, com as constraints do data-model (motivo não vazio; resultado `COMPLETO`/`PARCIAL`; hash não vazio; autodesignação)
+- [X] T005 Migration `0001_inicial` com gatilhos append-only; as quatro tabelas em `TABELAS_APPEND_ONLY`; `M` de 49 para 53 em `CLAUDE.md` e `AGENTS.md`
+- [X] T006 [P] `formalizacao/domain/nomes.py`: capacidade `formalizacao:acessar`, códigos de recusa, situações, resultados, operações da trilha com rótulos e classe da trava
+- [X] T007 [P] Papel `formalizacao` em `PAPEIS` e `DESCRICOES` (`interface/identidade.py`) e teste de grafia (FR-3661)
+- [X] T008 `ArquivoIndisponivel` em `portal/arquivos.py`; 409 e evento `ARQUIVO_INDISPONIVEL` nas views de documento da inscrição, da mesa e da convocação (FR-3695)
+- [X] T009 [P] Regressão da T008 em `tests/interface/test_arquivo_indisponivel.py`: nenhuma das três views responde 500
+- [X] T010 [P] `formalizacao/domain/caminhos.py` e testes em `tests/unit/formalizacao/test_caminhos.py`, com nomes hostis: `../x`, `CON`, controle, 300 caracteres, colisões depois da normalização, vazio (FR-3712, SC-1114)
 
 ## Fase 3: US1 — Definição dos documentos (P1)
 
