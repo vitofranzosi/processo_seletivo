@@ -1,0 +1,21 @@
+{
+ "status": 200,
+ "capturada_em": "2026-11-03",
+ "corpo": {
+  "numero": 5000,
+  "dataApuracao": "26/08/2015",
+  "listaDezenas": [
+   "072729",
+   "067611",
+   "060074",
+   "092742",
+   "021683"
+  ],
+  "numeroConcursoAnterior": 4999,
+  "numeroConcursoProximo": 5001,
+  "dataProximoConcurso": "",
+  "ultimoConcurso": true,
+  "indicadorConcursoEspecial": 1,
+  "tipoJogo": "LOTERIA_FEDERAL"
+ }
+}

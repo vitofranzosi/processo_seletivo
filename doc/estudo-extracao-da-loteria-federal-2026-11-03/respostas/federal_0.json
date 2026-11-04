@@ -1,0 +1,9 @@
+{
+ "status": 500,
+ "capturada_em": "2026-11-03",
+ "corpo": {
+  "exceptionMessage": "{\"Version\":{\"Major\":1,\"Minor\":1,\"Build\":-1,\"Revision\":-1,\"MajorRevision\":-1,\"MinorRevision\":-1},\"Content\":{\"Headers\":[{\"Key\":\"Content-Length\",\"Value\":[\"155\"]},{\"Key\":\"Content-Type\",\"Value\":[\"application/json; charset=utf-8\"]}]},\"StatusCode\":404,\"ReasonPhrase\":\"\",\"Headers\":[{\"Key\":\"Date\",\"Value\":[\"Tue, 03 Nov 2026 21:55:16 GMT\"]},{\"Key\":\"Server\",\"Value\":[\"API\",\"Gateway\"]},{\"Key\":\"X-Powered-By\",\"Value\":[\"Undertow/1\"]}],\"RequestMessage\":{\"Version\":{\"Major\":1,\"Minor\":1,\"Build\":-1,\"Revision\":-1,\"MajorRevision\":-1,\"MinorRevision\":-1},\"Content\":null,\"Method\":{\"Method\":\"GET\"},\"RequestUri\":\"\",\"Headers\":[{\"Key\":\"\",\"Value\":[\"\"]}],\"Properties\":{}},\"IsSuccessStatusCode\":false}",
+  "innerMessage": "",
+  "message": "Ocorreu um erro inesperado."
+ }
+}

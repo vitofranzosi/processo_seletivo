@@ -1,0 +1,21 @@
+{
+ "status": 200,
+ "capturada_em": "2026-11-03",
+ "corpo": {
+  "numero": 6106,
+  "dataApuracao": "03/10/2026",
+  "listaDezenas": [
+   "017469",
+   "081210",
+   "007767",
+   "041317",
+   "079412"
+  ],
+  "numeroConcursoAnterior": 6105,
+  "numeroConcursoProximo": 6107,
+  "dataProximoConcurso": "07/10/2026",
+  "ultimoConcurso": true,
+  "indicadorConcursoEspecial": 1,
+  "tipoJogo": "LOTERIA_FEDERAL"
+ }
+}
