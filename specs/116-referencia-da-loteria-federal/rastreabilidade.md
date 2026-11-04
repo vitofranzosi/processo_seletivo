@@ -40,10 +40,10 @@ os **finais**, conferidos na T031 (04/11/2026). O que a implementação mediu es
 | FR-3651 (suíte sem a Caixa; E2E opt-in continua) | T004, T028 | `test_suite_sem_caixa.py::test_a_conexao_com_a_caixa_e_recusada`, `::test_o_adaptador_real_tambem_nao_chega_a_caixa`, `::test_o_padrao_responde_ainda_nao_realizado_ao_que_a_suite_declara`; `interface/test_sorteio_com_a_fonte_de_producao.py` com `SORTEIO_E2E_FONTE_REAL=1`, passo 6 (registro em `verificacao.md`) |
 | FR-3652 (nada publicado é alterado; sem migration) | — | por construção: nenhuma migration, e a regra só roda nos quatro atos e na conferência sob demanda. A suíte com o inventário da T002 é a prova (SC-1099) |
 | FR-3715 (o reaproveitamento copia o método sem a extração) | T035, T036 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
-| FR-3716 (a gravação aceita o método sem os dois campos, e só ele) | T034, T036 | `unit/editais/test_metodo_sem_a_extracao.py` |
+| FR-3716 (a gravação aceita o método sem os dois campos, e só ele) | T034, T036 | `unit/editais/test_metodo_sem_a_extracao.py::test_a_gravacao_admite_o_metodo_sem_a_extracao`, `::test_um_sem_o_outro_continua_pela_metade`, `::test_o_resto_do_metodo_continua_exigido_na_gravacao` |
 | FR-3717 (os atos recusam o método sem a extração, dizendo o que declarar) | T034, T035, T036 | `unit/editais/test_metodo_sem_a_extracao.py`; `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
-| FR-3718 (a composição e a escolha da origem dizem que a extração não vem) | T037 | `interface/test_reaproveitar.py` |
-| FR-3719 (a origem intacta e retificável) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
+| FR-3718 (a composição e a escolha da origem dizem que a extração não vem) | T037 | `interface/test_reaproveitar.py::test_o_que_nao_vem_inclui_a_extracao_do_sorteio`, `::test_a_composicao_pede_a_extracao_ate_ela_ser_declarada` |
+| FR-3719 (a origem intacta e retificável) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py::test_a_origem_continua_consultavel_e_retificavel` |
 | FR-3720 (um mecanismo só para reconstituir o acervo; o reaproveitamento pelo comando real) | T033, T035 | `fixtures/legado.py::antes_da_116`; `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
 | SC-1094 (zero falso negativo, zero falso positivo, nos quatro atos, tela e API) | T013, T016, T021 | `test_publicacao_confere_a_referencia.py`, `test_congelamento_confere_a_referencia.py`, `test_retificacao_confere_a_referencia.py` |
 | SC-1095 (nenhum "validado/confirmado/conferido" no ainda não realizado) | T005 | `test_conferencia.py::test_ainda_nao_realizado_nunca_diz_validado_confirmado_ou_conferido` |
@@ -53,7 +53,7 @@ os **finais**, conferidos na T031 (04/11/2026). O que a implementação mediu es
 | SC-1099 (suíte sem conexão; expectativas só nas inventariadas) | T002, T004, T029, T030 | `test_suite_sem_caixa.py`; `verificacao.md` (comparação por lista com a T001) |
 | SC-1100 (Retificação que não toca a referência: zero consultas) | T021 | `test_retificacao_confere_a_referencia.py::test_so_o_cronograma_muda_e_nada_e_consultado` |
 | SC-1115 (reaproveitar sempre conclui, e nenhum método traz a extração da origem) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
-| SC-1116 (sem a extração não submete nem publica; com ela, publica) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
+| SC-1116 (sem a extração não submete nem publica; com ela, publica) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py::test_sem_a_extracao_edita_mas_nao_submete_nem_publica`, `::test_com_a_extracao_futura_declarada_o_edital_publica` |
 
 ## Casos-limite
 

@@ -256,13 +256,13 @@ passa com a informação (SC-1094).
 **Goal**: FR-3715 a FR-3720, SC-1115, SC-1116, D-009. A revisão está em
 [revisao-do-reaproveitamento.md](revisao-do-reaproveitamento.md).
 
-- [ ] T033 [US7] Em `backend/tests/fixtures/legado.py`, `antes_da_116()`: o único contexto que
+- [X] T033 [US7] Em `backend/tests/fixtures/legado.py`, `antes_da_116()`: o único contexto que
   desliga a forma e a conferência, para reconstituir acervo. `tests/fixtures/corpus.py` e os testes
   de acervo da `116` passam a usá-lo (FR-3720).
-- [ ] T034 [P] [US7] Escrever `backend/tests/unit/editais/test_metodo_sem_a_extracao.py`: a gravação
+- [X] T034 [P] [US7] Escrever `backend/tests/unit/editais/test_metodo_sem_a_extracao.py`: a gravação
   aceita o método sem os dois campos, recusa o que tem só um, e a publicação e a Retificação recusam
   os dois com a mensagem da FR-3717 (FR-3716, FR-3717).
-- [ ] T035 [P] [US7] Escrever `backend/tests/integration/editais/test_reaproveitamento_sem_a_extracao.py`,
+- [X] T035 [P] [US7] Escrever `backend/tests/integration/editais/test_reaproveitamento_sem_a_extracao.py`,
   pelo comando real `reaproveitar_edital`, sem o mecanismo da T033 no destino:
   - origem do corpus com `Concurso 6010`; origem com `6010`; método comum; métodos próprios; sem
     sorteio (SC-1115);
@@ -271,12 +271,12 @@ passa com a informação (SC-1094).
   - submeter sem a extração: recusa com a indicação; validar a publicação: impeditivo;
   - declarar extração futura, submeter, homologar e publicar (SC-1116);
   - a origem intacta e retificável (FR-3719).
-- [ ] T036 [US7] `payload_do_conteudo` sem a extração; `exigir_a_extracao` em
+- [X] T036 [US7] `payload_do_conteudo` sem a extração; `exigir_a_extracao` em
   `_validar_metodo_de_sorteio`; a mensagem própria; `referencias_a_conferir` sem método sem
   referência. T034 e T035 verdes.
-- [ ] T037 [US7] A indicação na composição depois do reaproveitamento e o item em "O que não vem"
+- [X] T037 [US7] A indicação na composição depois do reaproveitamento e o item em "O que não vem"
   (FR-3718). Teste em `backend/tests/interface/test_reaproveitar.py`.
-- [ ] T038 [US7] `make lint check test-pg` inteiro, comparado com a T030 por lista, e
+- [X] T038 [US7] `make lint check test-pg` inteiro, comparado com a T030 por lista, e
   [verificacao.md](verificacao.md) atualizado.
 
 ## Dependencies

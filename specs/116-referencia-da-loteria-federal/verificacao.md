@@ -125,11 +125,44 @@ do navegador ficou sem mensagem nenhuma — nenhuma violação de CSP.
 O motivo da referência travada sem consulta correspondente (FR-3632) é "não foi possível falar com a
 Caixa", um dos quatro do contrato: é verdade sobre ela, que não foi consultada.
 
+## Emenda de 04/11/2026 — o reaproveitamento (T033–T038)
+
+A revisão bloqueante, com diagnóstico, alternativas e critério de liberação, está em
+[revisao-do-reaproveitamento.md](revisao-do-reaproveitamento.md). Aqui fica o que foi medido.
+
+**Os testes novos, vistos falhando antes do código.** Sobre o código da T030, antes da T036:
+`test_metodo_sem_a_extracao.py` e `test_reaproveitamento_sem_a_extracao.py` deram **17 falhas e 4
+passando**. As falhas eram exatamente os dois defeitos do diagnóstico — o `Concurso 6010` do 91/2026
+recusava a cópia inteira (`invalid_draw_method`), e o `6010` válido chegava ao destino em silêncio. Os
+quatro que passavam eram regras que a emenda preserva, e continuaram passando. Os dois
+casos da tela (`test_reaproveitar.py`, T037) falharam antes do template.
+
+**O mecanismo do acervo (T033).** `tests/fixtures/legado.py::antes_da_116()` é o único lugar que
+desliga a forma e a conferência. Usam-no o corpus (`tests/fixtures/corpus.py`) e três casos de acervo
+da 116 — o congelamento e duas Retificações. Nenhum teste de reaproveitamento o usa para o destino:
+o arquivo da US7 só o cita na docstring, e a origem histórica chega pela fixture do corpus (conferido
+por `grep` em 04/11/2026).
+
+**A suíte (T038).** `cd backend && make lint check test-pg`, sobre o commit da emenda:
+
+- `ruff check` e `ruff format --check` limpos; `manage.py check` e `makemigrations --check` sem
+  mudança;
+- `make test-pg`: **14964 passando, 12 pulados, nenhuma falha**, em 652 s, sobre `fc154aa9`. Os 12
+  pulados são os mesmos da linha de base (`diff` vazio). Os 25 casos a mais que na T030 são os dos
+  dois arquivos novos e os dois casos novos de `test_reaproveitar.py`; nenhum caso existente mudou de
+  expectativa nesta emenda;
+- o E2E com `SORTEIO_E2E_FONTE_REAL=1` continua passando (04/11/2026, 10h38).
+
+**O achado 2 abaixo, sobre o reaproveitamento do acervo, foi resolvido pela emenda** (FR-3715): a
+cópia do 91/2026 conclui, sem a extração.
+
 ## Achados para o usuário (não são escopo desta implementação)
 
-1. **A spec diz "5885 concursos adiante" para o 9999** (*Edge Cases*), e a conta com o último 6114 dá
+1. **Corrigido na emenda.** A spec dizia "5885 concursos adiante" para o 9999 (*Edge Cases*), e a conta com o último 6114 dá
    **3885**. O teste usa 3885.
-2. **Reaproveitar um Edital do acervo com a ocorrência fora da forma passa a ser recusado.** O
+2. **Resolvido pela emenda de 04/11/2026** (FR-3715): a cópia não traz a extração, e por isso a
+   grafia da origem não impede mais o reaproveitamento. O registro original fica abaixo.
+   **Reaproveitar um Edital do acervo com a ocorrência fora da forma passava a ser recusado.** O
    reaproveitamento (A-10) grava o rascunho por `replace_draft`, e a forma da Loteria Federal é
    conferida ali (FR-3624). O 91/2026 do corpus é um caso real: `Concurso 6010`. É o padrão que o
    reaproveitamento já adota ("um valor que a origem publicou sob regra mais frouxa recusa a cópia
