@@ -25,6 +25,9 @@ from tests.fixtures import documentos_da_convocacao as cenarios
 from tests.fixtures import jornada_do_convocado as jornada
 from tests.fixtures.documentos_da_convocacao import (
     CERTIDAO,
+    CERTIFICADO_DO_MEDIO,
+    HISTORICO,
+    RESIDENCIA,
 )
 from tests.interface.test_portal_documentos_da_convocacao import entrar_como
 
@@ -720,3 +723,64 @@ def test_a_linha_informativa_nao_acrescenta_consulta(fx, client):
             main(client.get(reverse("portal:acompanhamento", args=[cenario.pessoa.id])))
         )
     assert antes == depois, (antes, depois)
+
+
+@pytest.mark.parametrize("letra", ["G0", "N0", "M0"])
+def test_sem_documento_a_unica_consulta_nova_e_a_lista_da_chamada(fx, client, letra):
+    """SC-1128 revista, D-021: no acompanhamento, a lista da chamada é lida uma vez, e só ela.
+
+    A medida contra a linha de base está em `verificacao.md` (o acompanhamento paga uma a mais; a
+    convocação, nenhuma). Aqui se prende a forma: a consulta nova é a da lista, uma só, e nada da
+    leitura documental além dela — nem apresentações, nem conferências, nem o Processo — roda numa
+    chamada sem documento. A convocação já lia a lista antes da `118`, e continua lendo uma vez.
+    """
+    cenario = jornada.montar(letra, fx)
+    with cenario.relogio():
+        for tela in ("acompanhamento", "convocacao"):
+            lidas = [
+                q["sql"].lower() for q in _consultas(client, cenario.pessoa, tela).captured_queries
+            ]
+            da_lista = [q for q in lidas if 'from "convocacao_itemdalistadaconvocacao"' in q]
+            assert len(da_lista) == 1, (tela, da_lista)
+            for tabela in ("apresentacaodedocumento", "conferenciadedocumento"):
+                assert not [q for q in lidas if f'from "convocacao_{tabela}"' in q], (tela, tabela)
+
+
+def test_a_retificacao_que_tira_o_documento_nao_apaga_o_que_a_chamada_pediu(fx, client):
+    """D-021: a leitura é da lista gravada na chamada, e não do conteúdo vigente do Edital.
+
+    A convocação de A pede quatro documentos. Uma Retificação publicada depois os retira do Edital;
+    a chamada continua pedindo os quatro, nas duas telas, com o nome que tinham quando foi feita.
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+    from tests.fixtures.publicacao import create_retification, publish_retification
+
+    cenario = jornada.montar("A", fx)
+    retirados = (CERTIDAO, HISTORICO, CERTIFICADO_DO_MEDIO, RESIDENCIA)
+    publish_retification(
+        fx.api_client,
+        create_retification(
+            fx.api_client,
+            cenario.edital,
+            [
+                {"targetPath": f"/documentRequirements/id={req}", "operation": "REMOVE"}
+                for req in retirados
+            ],
+            suffix="j118-retira",
+        ),
+        suffix="j118-retira",
+    )
+    vigente = VersaoConsolidada.objects.filter(edital=cenario.edital).latest("materialized_at")
+    restantes = {str(d.get("id")) for d in vigente.content.get("documentRequirements") or []}
+    assert not restantes & {str(r) for r in retirados}, "a Retificação tirou os documentos"
+
+    fazer = texto(o_que_fazer(main(abrir(client, cenario, "acompanhamento"))))
+    assert fazer.startswith("Você ainda precisa enviar 4 documentos.")
+    pagina = main(abrir(client, cenario, "convocacao"))
+    assert [r for _, r in links(bloco(pagina, "O que fazer agora"))][:4] == [
+        "Certidão de nascimento ou casamento",
+        "Histórico escolar do ensino médio",
+        "Certificado de conclusão do ensino médio",
+        "Comprovante de residência",
+    ]
+    assert formularios(bloco(pagina, "O que falta")) == 4

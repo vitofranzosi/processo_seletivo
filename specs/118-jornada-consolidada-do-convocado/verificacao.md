@@ -286,14 +286,27 @@ E com documento, a mesma chamada com um e com seis itens custa o mesmo nas duas 
 consulta: G0 antes do prazo, sem a linha, e depois, com ela, custa o mesmo
 (`test_a_linha_informativa_nao_acrescenta_consulta`).
 
-**Divergência registrada, para decisão.** A SC-1128 pede que, em G0, N0 e M0, *"o número de
-consultas das duas telas é o mesmo de antes"*. A convocação cumpre (uma a menos), mas o
-acompanhamento com convocação paga **uma** consulta a mais em toda chamada sem documento — a da lista
-da chamada, que é como a tela sabe que não há documento. É o custo que a FR-3734 admite (*"com
-convocação, um número fixo"*), e o mesmo em B, B2 e no Edital sem nada. A primeira versão pagava
-duas; a segunda saiu ao usar a convocação vigente que o seletor da `019` já lê, em vez de reler a
-cadeia. Zerar a que sobra pediria saber dos documentos pelo conteúdo do Edital, e uma Retificação que
-tirasse o documento depois da convocação esconderia itens gravados na chamada.
+**A SC-1128, revista pela D-021.** A primeira redação pedia que, em G0, N0 e M0, *"o número de
+consultas das duas telas é o mesmo de antes"*, e esta implementação não a cumpria: o acompanhamento
+com convocação paga **uma** consulta a mais em toda chamada sem documento — a da lista gravada na
+chamada, que é como a tela sabe que não há documento. A convocação, por sua vez, não aumenta a sua
+contagem (fica uma abaixo, o que é "não aumentar", e não "o mesmo número"). O usuário aceitou a
+consulta (D-021), e a SC-1128 passou a dizer: no acompanhamento, no máximo uma a mais; na convocação,
+nenhuma a mais; sem convocação, a mesma; com convocação, independente da quantidade de documentos.
+As medidas acima a cumprem. A primeira versão desta implementação pagava duas; a segunda saiu ao usar
+a convocação vigente que o seletor da `019` já lê, em vez de reler a cadeia.
+
+O que prende a forma, na suíte: em G0, N0 e M0 a lista da chamada é lida **uma** vez em cada tela, e
+nenhuma outra leitura documental — apresentações, conferências — roda numa chamada sem documento
+(`test_sem_documento_a_unica_consulta_nova_e_a_lista_da_chamada`).
+
+**Por que a lista, e não o conteúdo do Edital.** Decidir pelo conteúdo vigente economizaria a
+consulta, mas uma Retificação publicada depois da convocação, que tirasse o documento do Edital,
+esconderia itens que a chamada pediu. A regressão está provada: a convocação de A pede quatro
+documentos, uma Retificação publicada em seguida os retira do Edital, e as duas telas continuam com
+*"Você ainda precisa enviar 4 documentos."*, os quatro nomes e os quatro formulários
+(`test_a_retificacao_que_tira_o_documento_nao_apaga_o_que_a_chamada_pediu`). Não se demonstrou que a
+leitura da lista seja a única alternativa possível; é a troca que o usuário aceitou.
 
 ## Decisões de implementação que a spec não fixava
 
