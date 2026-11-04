@@ -1,0 +1,24 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/formalizacao.css' %}">{% endblock %}
+{% block conteudo %}
+{% comment %}
+As recusas da exportação à formalização (117): verificação defasada, inválida ou expirada, limite,
+pessoa única com falha, outra exportação em andamento e a exceção inesperada. Em todas, nada foi
+servido e nenhum pacote foi registrado; a página oferece verificar de novo (FR-3689, FR-3714).
+{% endcomment %}
+<h1>{{ titulo }}</h1>
+<p class="erro" role="alert">{{ detalhe }}</p>
+{% if limite %}
+<div class="tabela-rolavel">
+  <table>
+    <caption>Tamanho de cada pessoa, para dividir a seleção ({{ limite_total }} no total)</caption>
+    <thead><tr><th scope="col">Pessoa</th><th scope="col">Tamanho</th></tr></thead>
+    <tbody>
+      {% for pessoa in limite %}<tr><td>{{ pessoa.protocolo }} {{ pessoa.nome }}</td><td>{{ pessoa.tamanho_legivel }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+<p><a class="botao" href="{% url 'interface:formalizacao-edital' edital_id %}">Verificar de novo</a></p>
+{% endblock %}

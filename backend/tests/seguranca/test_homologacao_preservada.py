@@ -150,6 +150,13 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
         "convocacao_apresentacaodedocumento",
         "convocacao_conferenciadedocumento",
     )
-    assert TABELAS_APPEND_ONLY[-8:] == novas + da_107 + da_115
-    assert len(TABELAS_APPEND_ONLY) == 49
-    assert len(set(TABELAS_APPEND_ONLY)) == 49
+    # E a 117, as quatro da entrega documental à formalização, depois das da 115.
+    da_117 = (
+        "formalizacao_definicaodosdocumentosdaformalizacao",
+        "formalizacao_designacaoparaformalizacao",
+        "formalizacao_revogacaodadesignacao",
+        "formalizacao_exportacaodeformalizacao",
+    )
+    assert TABELAS_APPEND_ONLY[-12:] == novas + da_107 + da_115 + da_117
+    assert len(TABELAS_APPEND_ONLY) == 53
+    assert len(set(TABELAS_APPEND_ONLY)) == 53

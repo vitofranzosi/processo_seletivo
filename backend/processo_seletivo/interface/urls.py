@@ -12,6 +12,7 @@ from processo_seletivo.interface import (
     trilha_da_unidade,
     unidades,
     views,
+    views_formalizacao,
 )
 
 app_name = "interface"
@@ -40,6 +41,43 @@ urlpatterns = [
     # A gestão de acessos pela interface (107): quem entrou sem acesso, e os dois níveis de
     # administração, servidos pelas mesmas views (`D-002`).
     path("sem-acesso", acessos.sem_acesso, name="sem-acesso"),
+    # A designação para a formalização (117, US2), ao lado dos vínculos da unidade: a mesma
+    # capacidade, `acesso:gerir`, concede o papel e designa o Edital (D-013).
+    path("acessos/formalizacao", acessos.formalizacao, name="acessos-formalizacao"),
+    path(
+        "acessos/formalizacao/<uuid:designacao_id>/revogar",
+        acessos.revogar_designacao,
+        name="acessos-formalizacao-revogar",
+    ),
+    # A página do setor que formaliza (117, US3 e US4). Seção própria da barra, e não filha do
+    # Edital: o setor não alcança o resto do Edital, e o endereço não deve sugerir que alcança.
+    path("formalizacao/", views_formalizacao.lista, name="formalizacao"),
+    path(
+        "formalizacao/editais/<uuid:edital_id>",
+        views_formalizacao.edital,
+        name="formalizacao-edital",
+    ),
+    path(
+        "formalizacao/editais/<uuid:edital_id>/pessoas/<uuid:inscricao_id>/documentos/"
+        "<str:origem>/<uuid:objeto_id>",
+        views_formalizacao.documento,
+        name="formalizacao-documento",
+    ),
+    path(
+        "formalizacao/editais/<uuid:edital_id>/verificar",
+        views_formalizacao.verificar,
+        name="formalizacao-verificar",
+    ),
+    path(
+        "formalizacao/editais/<uuid:edital_id>/baixar",
+        views_formalizacao.baixar,
+        name="formalizacao-baixar",
+    ),
+    path(
+        "formalizacao/editais/<uuid:edital_id>/pessoas/<uuid:inscricao_id>/exportar",
+        views_formalizacao.exportar_pessoa,
+        name="formalizacao-exportar-pessoa",
+    ),
     path("acessos", acessos.lista, {"nivel": "unidade"}, name="acessos"),
     path("acessos/conceder", acessos.conceder, {"nivel": "unidade"}, name="acessos-conceder"),
     path(
@@ -248,6 +286,13 @@ urlpatterns = [
         "editais/<uuid:edital_id>/kit-de-divulgacao/exportar/<str:formato>",
         kit_de_divulgacao.exportar,
         name="kit-de-divulgacao-exportar",
+    ),
+    # A definição dos documentos para a formalização (117, US1): na condução, pela presidência ou
+    # por `comissao:gerir`; o auditor lê.
+    path(
+        "editais/<uuid:edital_id>/formalizacao",
+        views_formalizacao.definicao,
+        name="formalizacao-definicao",
     ),
     # A exportação de matrículas (031). Pende do **Edital**, e não do marco: o que se exporta é o
     # conjunto de pessoas que vai se matricular naquele certame, e a população — convocados de um

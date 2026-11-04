@@ -51,6 +51,11 @@ MODULOS_DE_VIEW = (
     # O kit de divulgação (111): 404 só para o Edital inexistente ou de outra unidade, e para o
     # formato que não existe; a falta de permissão é a recusa explicada.
     RAIZ / "processo_seletivo/interface/kit_de_divulgacao.py",
+    # A entrega documental à formalização (117): 404 para o Edital de outra unidade, o Perfil fora
+    # do alcance, a pessoa que não está apta e o documento que não é do conjunto dela. A porta do
+    # setor é o predicado único `pode_acessar`, que responde 404 pela recusa do domínio, e 403 sem o
+    # papel; a da definição, `_edital_da_definicao`.
+    RAIZ / "processo_seletivo/interface/views_formalizacao.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

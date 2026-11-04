@@ -1,0 +1,46 @@
+/* A entrega documental à formalização (117): a página do setor, a verificação, as recusas e a
+   definição na condução. Cabe em 375 px sem rolagem horizontal (FR-3680): nada tem largura fixa, os
+   nomes e os hashes quebram onde precisarem, e as ações descem para a linha de baixo. */
+.editais-da-formalizacao{list-style:none;margin:0;padding:0}
+.editais-da-formalizacao li{padding:.75rem 0;border-bottom:1px solid var(--borda);
+  overflow-wrap:anywhere}
+.editais-da-formalizacao .nota{display:block}
+
+.recorte-da-formalizacao{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.5rem 1rem;
+  margin-bottom:1rem}
+.recorte-da-formalizacao .campo,.recorte-da-formalizacao .acoes{margin:0}
+
+.perfil-da-formalizacao{margin-bottom:1.5rem}
+.pessoa-da-formalizacao h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
+  font-size:1rem;margin:0 0 .25rem;overflow-wrap:anywhere}
+.pessoa-da-formalizacao .acoes{margin:.5rem 0 0}
+.documentos-da-formalizacao{margin:.5rem 0;padding-left:1.25rem}
+.documentos-da-formalizacao li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;
+  margin:.3rem 0;overflow-wrap:anywhere}
+.nome-do-documento{flex:1 1 12rem}
+.nome-do-documento .nota{display:block;margin:0}
+.situacao-do-documento{color:var(--texto-fraco);font-size:.875rem}
+.acao.secundaria{border-color:var(--borda);color:var(--texto-fraco)}
+
+.exportar-da-formalizacao{border-top:1px solid var(--borda);padding-top:1rem;margin-top:1rem}
+.exportar-da-formalizacao .acoes{display:flex;flex-wrap:wrap;gap:.5rem 1rem}
+
+/* O resultado da verificação vem primeiro e em destaque, e o parcial se distingue por palavra — a
+   frase diz "parcial" — e não só pela cor (D-018). */
+.resultado-da-verificacao{font-size:1.125rem;padding:.75rem 1rem;border-left:.25rem solid
+  var(--verde-texto);background:var(--cinza-fundo)}
+.resultado-da-verificacao.parcial{border-left-color:var(--amarelo);background:var(--amarelo-fundo)}
+.nao-incluidas ul{padding-left:1.25rem;overflow-wrap:anywhere}
+.baixar-pacote{margin:1rem 0}
+.nota-da-celula{display:block;color:var(--texto-fraco);font-size:.8125rem}
+
+.historico-da-formalizacao{margin-top:2rem}
+.exportacoes-da-formalizacao,.versoes-da-definicao{list-style:none;margin:0;padding:0}
+.exportacoes-da-formalizacao li,.versoes-da-definicao li{padding:.6rem 0;
+  border-bottom:1px solid var(--borda);overflow-wrap:anywhere}
+.exportacoes-da-formalizacao p,.versoes-da-definicao p{margin:.15rem 0}
+.hash-do-pacote code{overflow-wrap:anywhere;word-break:break-all;font-size:.8125rem}
+
+.definicao-da-formalizacao{max-width:44rem}
+.requisito-da-definicao{margin:.4rem 0}
+.aviso-da-definicao{margin:.1rem 0 .4rem 1.75rem}

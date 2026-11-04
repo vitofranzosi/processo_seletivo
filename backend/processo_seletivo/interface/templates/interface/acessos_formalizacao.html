@@ -1,0 +1,93 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Editais da formalização{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/acessos.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:acessos' %}">{{ navegacao.secao_atual }}</a> › <span aria-current="page">Editais da formalização</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A designação para a formalização (117, US2, FR-3662 a FR-3668).
+
+O papel abre a seção; a designação diz o Edital e, se for o caso, os Perfis. Sem designação, o
+papel não dá nada. Quem designa é quem concede o papel, e ninguém designa a si mesmo. Mudar os
+Perfis é revogar e designar de novo.
+{% endcomment %}
+<h1>Editais da formalização</h1>
+<p class="sub">{{ nome_da_unidade }}</p>
+<p>Quem tem o papel {{ papel }} só alcança os documentos dos Editais em que estiver designado, e só
+  das pessoas aptas para formalização. Sem Perfil marcado, a designação vale para todos os Perfis do
+  Edital.</p>
+
+{% if feito == "designado" %}<p class="sucesso" role="status">Designação gravada. Vale na próxima ação da pessoa.</p>{% endif %}
+{% if feito == "revogado" %}<p class="sucesso" role="status">Designação revogada. A pessoa perde o acesso na próxima ação.</p>{% endif %}
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+
+<section aria-labelledby="designacoes-vigentes" class="quem-atua">
+  <h2 id="designacoes-vigentes">Designações vigentes</h2>
+  {% if vigentes %}
+  <div class="tabela-rolavel">
+    <table>
+      <thead><tr><th scope="col">Pessoa</th><th scope="col">Edital</th><th scope="col">Perfis</th>
+        <th scope="col">Designada por</th><th scope="col"><span class="oculto">Ações</span></th></tr></thead>
+      <tbody>
+        {% for linha in vigentes %}
+        <tr>
+          <td><strong>{{ linha.pessoa }}</strong><span class="detalhe-da-pessoa">desde {{ linha.designacao.designado_em|date:"d/m/Y" }}</span></td>
+          <td>{{ linha.designacao.edital }}</td>
+          <td>{% if linha.perfis %}{{ linha.perfis|join:", " }}{% else %}todos{% endif %}</td>
+          <td>{{ linha.por }}<span class="detalhe-da-pessoa">{{ linha.designacao.motivo }}</span></td>
+          <td>{% if linha.revogavel %}
+            <form method="post" action="{% url 'interface:acessos-formalizacao-revogar' linha.designacao.pk %}">
+              {% csrf_token %}
+              <p class="campo"><label for="motivo-revogar-{{ forloop.counter }}">Motivo da revogação</label>
+                <input type="text" id="motivo-revogar-{{ forloop.counter }}" name="motivo" required></p>
+              <button type="submit" class="botao secundario">Revogar</button>
+            </form>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="nenhuma">Ninguém está designado para um Edital desta unidade.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="designar" class="busca-de-pessoa">
+  <h2 id="designar">Designar</h2>
+  {% if not editais %}
+  <p class="nenhuma">Esta unidade não tem Edital publicado.</p>
+  {% elif not pessoas %}
+  <p class="nenhuma">Ninguém nesta unidade tem o papel {{ papel }}. Conceda o papel em
+    <a href="{% url 'interface:acessos-conceder' %}">Conceder acesso</a> e volte aqui.</p>
+  {% else %}
+  <form method="get" action="{% url 'interface:acessos-formalizacao' %}">
+    <p class="campo"><label for="edital-escolhido">Edital</label>
+      <select id="edital-escolhido" name="edital">
+        {% for edital in editais %}<option value="{{ edital.id }}"{% if escolhido.id == edital.id %} selected{% endif %}>{{ edital }} — {{ edital.title }}</option>{% endfor %}
+      </select></p>
+    <p class="acoes"><button type="submit" class="botao secundario">Escolher este Edital</button></p>
+  </form>
+  {% if escolhido %}
+  <form method="post" action="{% url 'interface:acessos-formalizacao' %}">
+    {% csrf_token %}
+    <input type="hidden" name="edital" value="{{ escolhido.id }}">
+    <p class="campo"><label for="pessoa-designada">Pessoa com o papel {{ papel }}</label>
+      <select id="pessoa-designada" name="pessoa" required>
+        {% for pessoa in pessoas %}<option value="{{ pessoa.identificador }}"{% if pessoa.identificador == pessoa_escolhida %} selected{% endif %}>{{ pessoa.nome }}{% if pessoa.email %} — {{ pessoa.email }}{% endif %}</option>{% endfor %}
+      </select></p>
+    {% if perfis|length > 1 %}
+    <fieldset class="opcoes">
+      <legend>Perfis do {{ escolhido }} <span class="opcional">(nenhum marcado: todos)</span></legend>
+      {% for perfil in perfis %}
+      <p class="opcao"><input type="checkbox" id="perfil-{{ forloop.counter }}" name="perfil" value="{{ perfil.id }}"{% if perfil.id in selecionados %} checked{% endif %}>
+        <label for="perfil-{{ forloop.counter }}">{{ perfil.nome }}</label></p>
+      {% endfor %}
+    </fieldset>
+    {% endif %}
+    <p class="campo"><label for="motivo-designar">Motivo <span class="opcional">(por exemplo, o memorando que pediu o acesso)</span></label>
+      <textarea id="motivo-designar" name="motivo" rows="2" required>{{ motivo }}</textarea></p>
+    <p class="acoes"><button type="submit" class="botao">Designar para o {{ escolhido }}</button></p>
+  </form>
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

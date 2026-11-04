@@ -597,7 +597,14 @@ comprovante; repetir com um rascunho e reencontrar `Continuar inscrição`.
   aceita e os documentos **sob o requisito que cada um atende**, com o nome original do arquivo.
 - **FR-069**: Cada documento DEVE poder ser aberto pela interface, exibido no navegador quando o
   formato permitir; baixar DEVE existir apenas como ação secundária individual. NÃO DEVE existir
-  download em lote, exportação, planilha nem painel.
+  download em lote, exportação, planilha nem painel. ***Exceção única (`117`):*** *a exportação, pelo
+  setor responsável pela formalização, com papel próprio e designação no Edital concedidos pela gestão
+  de acessos, dos documentos que a condução definiu como necessários à formalização, só de quem está
+  apto para formalização e dentro do alcance da designação, com verificação prévia, manifesto, limite,
+  registro append-only e sem guarda do pacote. A exceção não alcança a consulta de inscrições, a
+  seleção nem exportação de todos os inscritos.*
+
+  > Revista pela `117` em 04/11/2026, por decisão do usuário de 04/11/2026 (a decisão da `117` sobre a exceção ao lote).
 - **FR-070**: A tela administrativa NÃO DEVE apresentar deferimento, indeferimento, nota, parecer,
   checklist de banca, homologação de inscrição nem classificação.
 

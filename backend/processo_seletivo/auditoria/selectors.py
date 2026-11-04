@@ -16,6 +16,15 @@ from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.shared.api.problems import DomainError
 
 LIMITE_PADRAO = 20
+
+#: Os eventos da formalização que podem ter um documento da inscrição por agregado (117). Escritos
+#: aqui, e não importados, porque `auditoria` é lida por todo mundo e não deve carregar outro app.
+OPERACOES_DO_DOCUMENTO_NA_FORMALIZACAO = (
+    "FORMALIZACAO_VISUALIZAR",
+    "FORMALIZACAO_DOWNLOAD",
+    "ARQUIVO_INDISPONIVEL",
+    "INTEGRIDADE",
+)
 LIMITE_MAXIMO = 100
 
 
@@ -107,7 +116,9 @@ ASSUNTOS_DA_UNIDADE = {
     "autoridades": ("AutoridadeHabilitada",),
     "modelos": ("ModeloDeAviso",),
     "avisos": ("Aviso", "InterrupcaoDoAviso"),
-    "acessos": ("Vinculo",),
+    # A designação para a formalização (117, FR-3668) é acesso também: concedida e revogada pela
+    # mesma capacidade que concede o papel, e é aqui que quem fiscaliza a unidade a procura.
+    "acessos": ("Vinculo", "DesignacaoParaFormalizacao"),
 }
 
 
@@ -200,6 +211,8 @@ def _atos_da_conducao(edital):
         Convocacao,
         DesfechoDaConvocacao,
     )
+    from processo_seletivo.formalizacao.models import DesignacaoParaFormalizacao
+    from processo_seletivo.inscricoes.models import DocumentoSubmetido
     from processo_seletivo.ocupacao.models import AcrescimoDeVagas, ApuracaoDeOcupacao
     from processo_seletivo.recursos.models import AtoDeInstrucao, Recurso
 
@@ -237,6 +250,19 @@ def _atos_da_conducao(edital):
                 "id", flat=True
             ),
             AlocacaoAConferencia.objects.filter(edital=edital).values_list("id", flat=True),
+            # A entrega documental à formalização (117, FR-3699): a designação, sob ela mesma, e o
+            # documento da inscrição que o setor abriu ou baixou — só os que têm evento da
+            # formalização, para que a lista não cresça com todos os documentos do certame. Os da
+            # convocação já estão acima, sob a apresentação; os do Edital (definição, verificação,
+            # pacote e recusa), sob o próprio Edital.
+            DesignacaoParaFormalizacao.objects.filter(edital=edital).values_list("id", flat=True),
+            DocumentoSubmetido.objects.filter(
+                inscricao__edital=edital,
+                id__in=RegistroAuditoria.objects.filter(
+                    aggregate_type="DocumentoSubmetido",
+                    operation__in=OPERACOES_DO_DOCUMENTO_NA_FORMALIZACAO,
+                ).values("aggregate_id"),
+            ).values_list("id", flat=True),
         ),
     ]
 

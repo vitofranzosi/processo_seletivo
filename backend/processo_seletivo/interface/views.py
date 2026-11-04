@@ -148,6 +148,7 @@ from processo_seletivo.editais.domain.validation import (
 )
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+from processo_seletivo.formalizacao.domain.nomes import ROTULOS_DA_TRILHA as ROTULOS_DA_FORMALIZACAO
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
     consulta_de_inscricoes,
@@ -178,7 +179,7 @@ from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
 from processo_seletivo.interface.conducao import CONDUCAO_DA_RETIFICACAO
 from processo_seletivo.interface.templatetags import interface_extras
-from processo_seletivo.portal.arquivos import copia_verificada, entregar
+from processo_seletivo.portal.arquivos import ArquivoIndisponivel, copia_verificada, entregar
 from processo_seletivo.processos.application.commands import (
     add_edital,
     create_process_with_first_edital,
@@ -5294,6 +5295,9 @@ OPERACOES = {
     "ANEXAR": "Envio de documento",
     "REMOVER": "Remoção de documento",
     "INTEGRIDADE": "Falha de integridade de documento",
+    # O arquivo que o registro aponta e não existe (117, FR-3695): nas views da inscrição, da mesa
+    # e da convocação, e na página da formalização.
+    "ARQUIVO_INDISPONIVEL": "Arquivo indisponível",
     "CONSULTAR_DOCUMENTO": "Consulta a documento do candidato",
     # A organização do trabalho (011). Mesma trilha, pela mesma razão: quem investiga quem
     # perdeu acesso a uma Etapa lê a mesma tela de quem investiga uma publicação.
@@ -5384,6 +5388,11 @@ OPERACOES = {
     "AVISO_INTERROMPER": "Interrupção de aviso aos candidatos",
     "ACESSO_CONCEDER": "Concessão de acesso",
     "ACESSO_REVOGAR": "Revogação de acesso",
+    # A entrega documental à formalização (117, FR-3699): a definição, a designação, a consulta e o
+    # download de cada documento, a verificação, o pacote e as recusas. Os rótulos moram no
+    # vocabulário da feature, e dizem só o que o GPS fez — nenhum diz obtido, encaminhado ou
+    # recebido.
+    **ROTULOS_DA_FORMALIZACAO,
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",
@@ -5891,7 +5900,13 @@ def documento_da_inscricao(request, inscricao_id, requirement_id):
     # arquivo e depois reabri-lo pelo caminho deixaria uma janela entre as duas leituras — e uma
     # verificação que aprova um conteúdo e serve outro é pior do que verificação nenhuma, porque
     # produz a afirmação de integridade que ninguém checou.
-    copia, calculado = copia_verificada(documento)
+    try:
+        copia, calculado = copia_verificada(documento)
+    except ArquivoIndisponivel:
+        # O registro antes da recusa, e sem o nome do arquivo (117, FR-3695): é o que distingue o
+        # arquivo que sumiu de um erro que ninguém viu.
+        _registrar_na_trilha(ator, documento, request, "ARQUIVO_INDISPONIVEL")
+        raise
     if calculado != documento.content_hash:
         copia.close()
         _registrar_divergencia(ator, documento, request)
@@ -5923,17 +5938,21 @@ def _registrar_consulta(ator, documento, request):
 
 
 def _registrar_divergencia(ator, documento, request):
+    _registrar_na_trilha(ator, documento, request, "INTEGRIDADE")
+    raise _documento_nao_integro()
+
+
+def _registrar_na_trilha(ator, documento, request, operacao):
     with command_context() as agora:
         record_event(
             actor=ator,
             permission=CONSULTAR,
-            operation="INTEGRIDADE",
+            operation=operacao,
             aggregate=documento.inscricao,
             now=agora,
             correlation_id=getattr(request, "correlation_id", ""),
             reason=mesa_app.motivo_da_abertura(documento.requirement_id),
         )
-    raise _documento_nao_integro()
 
 
 def _documento_nao_integro():
@@ -7132,7 +7151,11 @@ def documento_da_mesa(request, edital_id, etapa_id, inscricao_id, requirement_id
     # Uma passagem só: a cópia é conferida e é **ela** que vai para a resposta. Verificar um
     # conteúdo e servir outro é pior do que não verificar, porque produz a afirmação de
     # integridade que ninguém checou (FR-029).
-    copia, calculado = copia_verificada(documento)
+    try:
+        copia, calculado = copia_verificada(documento)
+    except ArquivoIndisponivel:
+        _registrar_na_mesa(ator, atribuicao, documento, request, "ARQUIVO_INDISPONIVEL")
+        raise
     if calculado != documento.content_hash:
         copia.close()
         _registrar_na_mesa(ator, atribuicao, documento, request, INTEGRIDADE)
@@ -8724,7 +8747,23 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
     if apresentacao is None:
         raise Http404
     fonte = documentos_app.fonte_do_arquivo(apresentacao)
-    copia, calculado = copia_verificada(fonte)
+    try:
+        copia, calculado = copia_verificada(fonte)
+    except ArquivoIndisponivel:
+        # Antes da `117` esta linha era o 500 sem evento (§2.9 do diagnóstico, FR-3695).
+        with command_context() as agora:
+            record_event(
+                actor=ator,
+                permission=base.permissao,
+                operation="ARQUIVO_INDISPONIVEL",
+                aggregate=apresentacao,
+                now=agora,
+                correlation_id=getattr(request, "correlation_id", ""),
+                reason=f"requisito {apresentacao.item.requisito_id}",
+                new_state="",
+                new_revision=None,
+            )
+        raise
     baixar = bool(request.GET.get("baixar"))
     with command_context() as agora:
         if calculado != apresentacao.content_hash:
