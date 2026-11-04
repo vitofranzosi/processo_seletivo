@@ -6,7 +6,7 @@ PostgreSQL, banco de teste próprio por worktree).
 ## Pré-requisitos
 
 - o ambiente da `111` funcionando, com `resvg-py` instalado e a chave da peça ligada;
-- o incremento C da `111` (pacote e galeria) na `main`, para o incremento 2;
+- o incremento C da `111` (pacote e galeria), na `main` desde o #377;
 - `INTERFACE_SELETOR_IDENTIDADE=true` no runserver local, e um ator com o papel de comunicação.
 
 ## Incremento 1 — motor generalizado
@@ -39,7 +39,15 @@ cd backend && uv run python scripts/galeria_do_kit.py --familia pos-lato-sensu
 ```
 
 Esperado: cada formato da família em todos os cenários de referência, com a recusa e o motivo onde
-não couber. É o material da aprovação (SC-1135).
+não couber, e o identificador, a versão e o resumo curto do template em cada peça. É o material da
+aprovação (SC-1135): registre-a em `verificacao.md` com os três dados e a data (FR-3834).
+
+6. Libere só a versão aprovada no ambiente, por exemplo
+   `KIT_DE_DIVULGACAO_TEMPLATES=pos-lato-sensu/post@1,pos-lato-sensu/story@1`, e confirme que o
+   banner aparece indisponível. Suba a versão de um template numa cópia descartável: ele passa a
+   "versão nova em aprovação" até a configuração nomeá-la (FR-3835).
+7. Baixe o ZIP e abra o `manifesto.json`: uma entrada por formato em `pecas`, com template, versão,
+   resumo e arquivos, e o banner com o motivo `nao_liberado`.
 
 ## Incrementos 3a–3f — uma família por PR
 

@@ -4,7 +4,7 @@
 
 **Input**: a [spec](spec.md), as decisões do [research](research.md), o
 [estudo de 04/11](../../doc/estudo-templates-de-divulgacao-2026-11-04.md) e o código do kit da `111`
-na `main` (incrementos A e B) e no PR do incremento C (pacote e galeria).
+na `main` (incrementos A e B, e o C — pacote e galeria —, mergeado no #377).
 
 ## Summary
 
@@ -30,7 +30,7 @@ A entrega segue a ordem do estudo (D-001):
 |---|---|
 | **Language/Version** | Python 3.13 |
 | **Primary Dependencies** | Django 5.2; `resvg-py` (já dependência de execução desde a P-4 da `111`). **Nenhuma nova** |
-| **Storage** | PostgreSQL; **nenhuma tabela nova**. Escolhas e template vão no `detalhe` do evento de exportação já existente (D-008) |
+| **Storage** | PostgreSQL; **nenhuma tabela nova**. Escolhas, templates, versões e resumos vão no `detalhe` do evento de exportação já existente (D-008, D-015); a aprovação, no `verificacao.md` da spec (D-014) |
 | **Testing** | pytest + pytest-django contra PostgreSQL (`make test-pg`); `node --test` para o script da tela |
 | **Target Platform** | Gestão web (moldura da `076`); Linux na implantação |
 | **Project Type** | Monólito Django (`backend/processo_seletivo`) |
@@ -49,7 +49,7 @@ A entrega segue a ordem do estudo (D-001):
 | **V. Simplicidade e testes** | Sem dependência nem tabela; o motor é o da `111`, generalizado por dados. Testes de geometria, de vocabulário, de determinismo, de referência byte a byte e de origem dos ativos |
 | **VI. Jornada completa** | A comunicação escolhe e baixa os três formatos pela tela, sem shell; a galeria é a jornada de aprovação ([quickstart](quickstart.md)) |
 
-**Gates**: nenhuma violação. Pós-desenho: o desenho não acrescentou tabela, dependência nem leitura
+**Gates**: nenhuma violação. A aprovação de cada template fica identificada por versão e resumo (FR-3833–FR-3835), e o ZIP de vários formatos é auditável formato a formato (D-015). Pós-desenho: o desenho não acrescentou tabela, dependência nem leitura
 fora do publicado além da exceção declarada na FR-3810.
 
 ## Project Structure
@@ -60,7 +60,7 @@ fora do publicado além da exceção declarada na FR-3810.
 specs/119-templates-de-divulgacao/
 ├── spec.md
 ├── plan.md               # este arquivo
-├── research.md           # D-001 a D-012
+├── research.md           # D-001 a D-015
 ├── data-model.md         # formato, família, template, escolha, ficha v2, evento
 ├── contracts/kit.md      # o que muda nas rotas e nos formulários do kit
 ├── quickstart.md         # verificação ponta a ponta e galeria
@@ -110,7 +110,7 @@ testes, e para que uma família nova seja um PR legível.
 | # | Entrega | Depende de | Fecha |
 |---|---|---|---|
 | **1** | Formato, família, template e fontes como dados; Institucional; referências da `111` idênticas | `main` | US4, FR-3801–FR-3804, FR-3823, FR-3826, FR-3827, SC-1133 |
-| **2** | Ficha v2; textos; escolha na tela; registro; Pós Lato Sensu post, story e banner; galeria por template | 1; incremento C da `111` mergeado para FR-3829 e FR-3831 | US1–US3, US5, demais FR, SC-1131, SC-1132, SC-1134, SC-1137–SC-1139 |
+| **2** | Ficha v2; textos; escolha na tela; registro; resumo e liberação por versão; Pós Lato Sensu post, story e banner; ZIP multiformato; galeria por template | 1 (o incremento C da `111`, de que dependem a FR-3829 e a FR-3831, já está na `main`) | US1–US3, US5, demais FR, SC-1131, SC-1132, SC-1134, SC-1137–SC-1140 |
 | **3a–3f** | FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos (variantes), TMD — um PR cada | 2; P-1 (imagens); P-2 para Libras, TMD e Internos | Liberação de cada família (SC-1135, humano) |
 
 A liberação em produção é da operação, template a template, depois da aprovação (SC-1135, P-4). O

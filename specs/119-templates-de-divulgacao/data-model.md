@@ -40,6 +40,7 @@ evento de exportação que a `111` já grava (D-008); a ficha continua leitura s
 |---|---|
 | `identificador` | `<familia>/<formato> · <versao>`; a Institucional mantém `feed-1080x1350 · 1` (D-002) |
 | `versao` | inteiro |
+| `resumo` | SHA-256 da declaração canônica com os resumos dos ativos, imagens e fontes usados; fixado no módulo por versão e recalculado pela suíte (FR-3833, D-014) |
 | `caixas` | lista ordenada de `Caixa` |
 | `forma_do_periodo` | `ate` ou `de-a` (FR-3815) |
 | `tem_ofertas` | booleano (FR-3817, EC-6) |
@@ -80,6 +81,43 @@ Acréscimos à `Ficha` da `111`:
 
 ## Evento de exportação (FR-3828)
 
-O evento da `111`, com o `detalhe` acrescido de: `familia`, `familia_versao`, `variante`,
-`formato_da_peca`, `template`, `template_versao`, `imagem`, `imagem_sha256`. A `versao_da_impressao`
-passa a ser `2`. Exportação de texto não leva os campos da peça.
+O evento da `111`, com a `versao_da_impressao` em `2`. Os campos que já existem continuam com o mesmo
+nome e sentido. O `detalhe` é acrescido conforme o tipo de arquivo:
+
+| Exportação | Acréscimo ao `detalhe` |
+|---|---|
+| `md`, `txt` | nada: texto não tem família |
+| `png`, `svg` | `familia`, `familia_versao`, `variante`, `imagem`, `imagem_sha256`, `formato_da_peca`, `template`, `template_versao`, `template_resumo` |
+| `zip` da Institucional | o da `111`, sem mudança |
+| `zip` de família da comunicação | `familia`, `familia_versao`, `variante`, `imagem`, `imagem_sha256` e `pecas`: lista com uma entrada por formato da família (ver o manifesto) |
+
+O `template` singular da `111` continua significando a Institucional; para o ZIP de família ele vem
+nulo, e quem lê usa `pecas`.
+
+## Manifesto do ZIP de família (FR-3829, D-015)
+
+Os campos do manifesto da `111` continuam (`kit`, `edital`, `instantes`, `versao`, `impressao`,
+`rasterizador`, `endereco_publico`, `notas`, `arquivos`), mais:
+
+| Campo | Conteúdo |
+|---|---|
+| `versao_do_manifesto` | `2` (o da `111`, sem o campo, é a versão 1) |
+| `familia` | `{chave, versao, variante}` |
+| `imagem` | `{chave, sha256}` ou nulo |
+| `pecas` | lista ordenada por formato (`post`, `story`, `banner`), uma entrada por formato que a família declara |
+| `fontes`, `ativos` | `{arquivo: sha256}` dos usados pelos templates incluídos |
+
+Cada entrada de `pecas`:
+
+| Campo | Conteúdo |
+|---|---|
+| `formato_da_peca` | `post`, `story` ou `banner` |
+| `template`, `template_versao`, `template_resumo` | os do código |
+| `incluida` | booleano |
+| `motivo` | nulo se incluída; senão `nao_liberado`, `versao_divergente`, `recusa` (com o texto), `sem_rasterizador` (só o PNG falta) |
+| `manchete` | a usada naquele formato, ou nula |
+| `arquivos` | `[{nome, sha256}]` dos arquivos daquele formato no ZIP |
+
+A lista `arquivos` do topo continua cobrindo todo arquivo do ZIP; a de cada entrada só repete os
+daquele formato, para que a recusa de um não se confunda com a de outro. O evento leva a mesma lista
+`pecas`.

@@ -4,8 +4,9 @@
 
 **Created**: 2026-11-04
 
-**Status**: Especificada e planejada em 04/11/2026; `/speckit-analyze` sem achado crítico. **Não
-implementada.** As decisões T-1 a T-9 do estudo foram aceitas pelo
+**Status**: Especificada e planejada em 04/11/2026; revista no mesmo dia — inventário de recusas,
+ZIP com vários formatos, versão aprovada de cada template, exceção dos valores literais e provas da
+impressão v1/v2. `/speckit-analyze` sem achado crítico. **Não implementada.** As decisões T-1 a T-9 do estudo foram aceitas pelo
 usuário em 04/11/2026 e entram aqui como regra. O que depende da comunicação — licença e banco de
 imagens, fonte substituta, tamanho do banner e aprovação de cada template — está nas pendências
 (§Pendências de produto) e bloqueia a **liberação** de cada template, e não o início da
@@ -55,7 +56,7 @@ tamanho, uma fonte e um desenho fixos no código; aqui, **formato × família**,
 | O kit textual | Ganha a carga horária e o contato (FR-3813) |
 | A medida e a quebra pela fonte, a recusa sem truncar, o teste geométrico | Valem por template (FR-3824) |
 | A conferência peça ⊂ textos | Vale por template, estendida à carga horária e ao contato (FR-3813) |
-| Os SVG de referência, a galeria e o pacote do incremento C | A galeria passa a cobrir todo template (FR-3831) |
+| Os SVG de referência, a galeria e o pacote do incremento C (mergeado no #377) | A galeria passa a cobrir todo template e a mostrar a versão aprovável (FR-3831, FR-3834); o ZIP passa a levar vários formatos (FR-3829) |
 | A exportação registrada na trilha, sem guarda de arquivo | Registra também família, formato, template e imagem (FR-3828) |
 | Capacidade, papel, porta, CSP, host local, modo do material | Iguais |
 
@@ -235,6 +236,15 @@ Cada caso aqui é requisito, e tem tarefa própria em [tasks.md](tasks.md).
   lista, e a chamada fixa dela é a única diferença de texto (FR-3806).
 - **EC-20 — Família sem banco de imagens.** Nenhuma imagem é pedida, e a peça sai com os ativos fixos
   da família (FR-3807).
+- **EC-21 — Valor oficial com termo vedado às frases fixas.** Um título "Especialização a distância
+  em …" ou um Perfil "Curso gratuito de …" entram literais na peça e nos textos; a conferência os
+  aponta. A vedação da FR-3814 é das frases fixas e da composição, e não do que o Edital publicou
+  (FR-3414 da `111`, SC-1131).
+- **EC-22 — Ativo, fonte, frase ou caixa alterados sem subir a versão do template.** A suíte reprova,
+  porque o resumo recalculado difere do fixado para aquela versão (FR-3833).
+- **EC-23 — Versão do template no código diferente da liberada no ambiente.** O template fica
+  indisponível com o motivo "versão nova em aprovação", e o ZIP o lista como não incluído
+  (FR-3808, FR-3835).
 
 ---
 
@@ -278,10 +288,11 @@ Cada caso aqui é requisito, e tem tarefa própria em [tasks.md](tasks.md).
 - **FR-3807**: O banco de imagens de uma família MUST ser uma lista curta (três a seis) de imagens
   licenciadas e escolhidas pela comunicação, cada uma com uma descrição aprovada para o texto
   alternativo. MUST NOT haver envio de imagem pela tela. Família sem banco não pede imagem (EC-20).
-- **FR-3808**: A liberação MUST ser por template, no ambiente: uma configuração nomeia os templates
-  liberados, e em produção nenhum vem liberado. Template não liberado aparece indisponível, com o motivo, e não é gerado
-  nem exportado (EC-7); o kit textual e os outros templates continuam. A Institucional segue a regra
-  de liberação de hoje.
+- **FR-3808**: A liberação MUST ser por template **e por versão**, no ambiente: uma configuração
+  nomeia cada template liberado com a versão aprovada (FR-3833), e em produção nenhum vem liberado.
+  Template não liberado, ou cuja versão no código difere da liberada, aparece indisponível, com o
+  motivo, e não é gerado nem exportado (EC-7, EC-23); o kit textual e os outros templates continuam.
+  A Institucional segue a configuração de liberação de hoje, que continua valendo sem mudança.
 
 #### Ficha
 
@@ -294,9 +305,14 @@ Cada caso aqui é requisito, e tem tarefa própria em [tasks.md](tasks.md).
   esse campo do registro da unidade, e nada mais fora do publicado.
 - **FR-3811**: A impressão MUST passar à versão 2, que acrescenta a carga horária de cada oferta e o
   contato. Para exportação registrada na versão 1, a comparação MUST recalcular a impressão versão 1
-  a partir da ficha atual, de modo que a mudança de versão, sozinha, não acenda faixa (EC-14); a
-  mudança do contato ou da carga horária depois de uma exportação versão 2 acende, com o valor
-  anterior e o atual (EC-15).
+  a partir da ficha atual. Daí:
+  - a mudança de versão, sozinha, MUST NOT acender faixa (EC-14);
+  - a mudança de um campo da versão 1 (título, unidade, período, ofertas, caminho) depois de uma
+    exportação versão 1 MUST continuar acendendo, com o valor anterior lido dos `campos` gravados;
+  - a mudança só da carga horária ou do contato depois de uma exportação versão 1 MUST NOT acender,
+    porque aquele material não os afirmava;
+  - a mudança do contato ou da carga horária depois de uma exportação versão 2 MUST acender, com o
+    valor anterior e o atual (EC-15).
 - **FR-3812**: A conferência MUST mostrar a carga horária de cada oferta com o ato que a deu, pela
   regra da proveniência da `111` (FR-3408 da `111`), e o contato com a origem "cadastro da unidade",
   que não é ato.
@@ -367,12 +383,20 @@ curto e a busca, as linhas de oferta sem carga horária —, e por isso as suas 
 #### Exportação, tela e galeria
 
 - **FR-3828**: Cada exportação MUST registrar na trilha, além do que a FR-3436 da `111` pede: a
-  família e a sua versão, a variante, o formato, o template e a sua versão, e a imagem com o resumo.
-  A desatualização continua decidida só pela impressão: trocar de família ou de imagem MUST NOT
-  acender faixa.
-- **FR-3829**: O pacote ZIP do incremento C da `111` MUST levar a peça, em PNG e SVG com o texto
-  alternativo, de cada formato liberado da família escolhida. Formato recusado vai listado no
-  manifesto com o motivo.
+  família e a sua versão, a variante, e a imagem com o resumo. Para PNG e SVG, também o formato, o
+  template, a sua versão e o resumo do template (FR-3833). Para o ZIP, uma entrada **por formato**
+  da família — incluído ou não —, com o template, a versão, o resumo, o nome e o resumo de cada
+  arquivo incluído, ou o motivo de não estar (FR-3829). A desatualização continua decidida só pela
+  impressão: trocar de família ou de imagem MUST NOT acender faixa.
+- **FR-3829**: O pacote ZIP do incremento C da `111` (mergeado no #377) MUST, para uma família da
+  comunicação, levar a peça de cada formato liberado, em PNG, SVG e texto alternativo, com nomes que
+  levam o formato (`peca-<formato>.png`, `peca-<formato>.svg`, `peca-<formato>-alternativo.txt`). O
+  manifesto MUST trazer a família com a versão, a variante, a imagem com o resumo, e uma entrada por
+  formato da família com: o formato; o template, a versão e o resumo; se foi incluído; os arquivos com
+  o resumo de cada um; e, quando não incluído, o motivo — não liberado, versão divergente, recusa da
+  composição com o motivo dela, ou falta do rasterizador. As fontes e os ativos listados são os dos
+  templates incluídos, com o resumo. Para a Institucional, o ZIP, os nomes e o manifesto MUST
+  continuar os da `111`.
 - **FR-3830**: A tela do kit MUST:
   - oferecer a escolha de família, variante e imagem num formulário que funciona sem script;
   - mostrar a prévia de cada formato liberado, com o texto alternativo e, se recusado, o motivo;
@@ -384,13 +408,29 @@ curto e a busca, as linhas de oferta sem carga horária —, e por isso as suas 
 - **FR-3832**: Nada desta spec MUST alterar o fluxo de publicação ou de Retificação, criar tabela ou
   guardar arquivo gerado (FR-3405 e FR-3441 da `111`).
 
+#### Versão aprovada de cada template
+
+- **FR-3833**: Cada template MUST ter um **resumo**: o SHA-256 da sua declaração canônica (caixas,
+  frases, paleta, recortes) com os resumos de todo ativo, imagem do banco e fonte que ele usa. O
+  módulo da família MUST fixar, para cada versão de template, o resumo correspondente, e um teste
+  MUST recalculá-lo: mudar fonte, imagem, ativo, frase ou caixa sem subir a versão reprova a suíte
+  (EC-22). Assim, uma versão nomeia um único conteúdo, e a aprovação de uma versão não se estende a
+  outra.
+- **FR-3834**: A galeria MUST mostrar, em cada peça, o identificador do template, a versão e o resumo
+  curto. A aprovação da comunicação (SC-1135) MUST ser registrada no arquivo de verificação da spec
+  com esses três dados e a data, e a liberação no ambiente MUST nomear a versão aprovada (FR-3808). A
+  liberação é procedimento de implantação documentado, sem tabela nem fluxo novo.
+- **FR-3835**: Uma versão nova de template MUST nascer não liberada: a configuração que nomeia a
+  versão anterior não a alcança, e o template fica indisponível no ambiente até nova aprovação e
+  nova liberação (EC-23).
+
 ### Key Entities
 
 - **Formato**: tamanho, margem, zonas reservadas e corpo mínimo. Código.
 - **Família**: identidade visual de um tipo de certame — paleta, fontes, ativos, banco de imagens,
   variantes, frases fixas, unidades. Código e ativos versionados.
-- **Template**: família × formato, a declaração das caixas, com versão. É o que se libera e o que se
-  aprova.
+- **Template**: família × formato, a declaração das caixas, com versão e resumo (FR-3833). É o que se
+  libera e o que se aprova, sempre numa versão.
 - **Escolha**: família, variante, imagem e manchete de uma exportação. Não é guardada; vai na trilha.
 - **Ficha** (da `111`): ganha carga horária por oferta e contato, e a impressão versão 2.
 
@@ -422,7 +462,7 @@ dela dependem.
 | **P-1** | Quais imagens entram no banco de cada família, e com que licença? (T-4) | Família sem banco aprovado sai sem imagem, só com ativos fixos de licença conhecida; os templates que pedem foto não são liberados |
 | **P-2** | Qual fonte livre substitui a Helvetica Neue? (T-5) | Libras, TMD e Internos não são liberados |
 | **P-3** | Qual é o tamanho exato do banner no site do Cefor? (T-8) | 1500 × 850, a proporção do arquivo; nenhum banner é liberado antes da resposta |
-| **P-4** | Quem aprova cada template, e como a aprovação é registrada? | A comunicação, sobre a galeria; a liberação é da operação pela chave do ambiente, como na `111` |
+| **P-4** | Quem aprova cada template, em nome da comunicação? | A comunicação, sobre a galeria; o registro é o da FR-3834 (identificador, versão, resumo, data), e a liberação da versão aprovada é da operação, pela configuração do ambiente |
 | **P-5** | Alguma família ganha uma frase fixa genérica sobre gratuidade ou modalidade, verdadeira para todo Edital dela? (T-3) | Nenhuma; a FR-3814 a proíbe até a comunicação a aprovar e a spec ser emendada |
 | **P-6** | A faixa "Informação complementar" dos templates FIC, para Edital retificado sem mudança no material, entra? | Não entra: obrigaria toda Retificação a desatualizar o material, contra a regra da `111` de que Retificação que não muda o material não acende faixa |
 | **P-7** | Os perfis de rede do rodapé (@ifescefor, Ifes Cefor) continuam iguais em todas as famílias? | Iguais, como nos arquivos; o rodapé é ativo fixo da família |
@@ -434,8 +474,10 @@ dela dependem.
 ### Measurable Outcomes
 
 - **SC-1131**: Em 100% dos cenários de referência × templates liberáveis, a peça só contém valores da
-  ficha, frases fixas aprovadas da família e manchete da lista; toda data tem ano; nenhuma frase
-  contém termo da FR-3814. Verificação automática.
+  ficha, frases fixas aprovadas da família e manchete da lista; toda data tem ano; nenhuma frase fixa
+  nem composição contém termo da FR-3414 da `111` ou da FR-3814. Valores literais da ficha (título,
+  nome do Perfil, localidade, carga horária) que contêm um desses termos entram como estão, e a
+  conferência os aponta, como na `111` (EC-21). Verificação automática.
 - **SC-1132**: Em 100% dos cenários de referência e dos casos no limite × templates liberáveis, nenhum
   texto sai da área útil, invade zona reservada, se sobrepõe a outro texto ou à imagem, fica abaixo do
   mínimo ou parte palavra; o que não cabe é recusado com o motivo.
@@ -452,7 +494,11 @@ dela dependem.
 - **SC-1138**: 100% dos ativos de família usados têm origem, licença e resumo conferidos; nenhuma
   imagem passa de 400 kB.
 - **SC-1139**: Depois da mudança para a impressão versão 2, nenhuma exportação versão 1 cujo material
-  não mudou acende faixa de desatualização.
+  não mudou acende faixa de desatualização, e 100% das mudanças em campos da versão 1 posteriores a
+  uma exportação versão 1 continuam acendendo, com o valor anterior e o atual. Verificação
+  automática, com os casos da FR-3811.
+- **SC-1140**: 100% dos templates registrados têm o resumo da versão conferido pela suíte, e nenhum
+  template cuja versão no código difere da liberada é gerado no ambiente.
 
 ---
 

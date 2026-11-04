@@ -117,15 +117,18 @@ ficha atual é exato, porque a v2 só acrescenta campos.
 
 **Descartado**: migrar os eventos gravados (a trilha é append-only).
 
-## D-010 — Uma configuração nova lista os templates liberados
+## D-010 — Uma configuração nova lista os templates liberados, com a versão
 
-**Decisão**: `KIT_DE_DIVULGACAO_TEMPLATES`, lista de `familia/formato`, vazia em produção, com todos
-em desenvolvimento e teste. A `KIT_DE_DIVULGACAO_PECA` continua valendo para a Institucional.
+**Decisão**: `KIT_DE_DIVULGACAO_TEMPLATES`, lista de `familia/formato@versao`, vazia em produção, e
+em desenvolvimento e teste preenchida a partir do registro (todos, na versão do código). Entrada
+malformada ou desconhecida recusa a subida das settings. A `KIT_DE_DIVULGACAO_PECA` continua valendo
+para a Institucional, sem mudança.
 
 **Por quê**: a chave booleana da `111` não distingue templates, e mudá-la de tipo quebraria a
 implantação que a lê. A liberação é da operação (P-4), como na `111`.
 
-**Descartado**: liberar por família inteira (o banner espera a P-3 mesmo com o post aprovado).
+**Descartado**: liberar por família inteira (o banner espera a P-3 mesmo com o post aprovado);
+liberar sem versão (uma troca de foto herdaria a aprovação anterior em silêncio).
 
 ## D-011 — Contraste e sobreposição contra caixas de cor lisa
 
@@ -152,3 +155,35 @@ formulário e na consulta da prévia.
 frases fixas, com a lista da FR-3414 da `111` e os termos da FR-3814.
 
 **Por quê**: uma lista literal de frases deixaria família nova escapar da regra em silêncio.
+
+## D-014 — Resumo do template fixado por versão
+
+**Decisão**: o resumo de um template é o SHA-256 da sua declaração em JSON canônico (caixas, frases,
+paleta, recortes, posições) concatenada aos resumos, em ordem, dos ativos, imagens do banco e fontes
+que ele usa. O módulo da família guarda `RESUMOS = {(formato, versao): "<sha>"}`. Um teste recalcula
+e compara: alterar qualquer insumo sem subir a versão, ou subir a versão sem gravar o resumo,
+reprova. A galeria imprime o identificador, a versão e os doze primeiros caracteres do resumo em
+cada peça, e a aprovação registrada em `verificacao.md` cita os três (FR-3833, FR-3834).
+
+**Por quê**: a liberação nomeia uma versão (D-010), e a versão só significa alguma coisa se nomear um
+conteúdo único. O resumo fixado transforma "esqueci de subir a versão" em falha de suíte, e não em
+aprovação herdada em produção. Tudo fica no código e na documentação: nenhuma tabela, nenhum fluxo
+de aprovação no sistema.
+
+**Descartado**: confiar na disciplina de subir a versão (é exatamente o erro que se quer evitar);
+registrar a aprovação no banco (fluxo novo sem necessidade: quem libera é a operação, por
+implantação).
+
+## D-015 — O ZIP de família lista cada formato, incluído ou não
+
+**Decisão**: para família da comunicação, o manifesto ganha `versao_do_manifesto: 2` e a lista
+`pecas`, uma entrada por formato da família, com template, versão, resumo, inclusão, motivo e
+arquivos (data-model). O evento da exportação leva a mesma lista. Os arquivos levam o formato no
+nome. O ZIP da Institucional não muda.
+
+**Por quê**: com vários formatos, "a peça foi incluída?" deixa de ter resposta única; a auditoria
+precisa reconstruir que post e que story saíram, em que versão, e por que o banner não saiu. Manter o
+ZIP da Institucional intacto preserva as exportações e os testes da `111`.
+
+**Descartado**: um ZIP por formato (três envios e três registros para o que a comunicação baixa de
+uma vez); campos singulares repetidos com sufixo (ilegível e sem lugar para o motivo por formato).
