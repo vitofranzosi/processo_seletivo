@@ -65,15 +65,51 @@ no lugar das prévias. Por isso a prévia com imagem, o download do PNG e do SVG
 foram provados pela suíte e pela galeria, **e nunca num navegador**. A adoção registrada acima
 (P-4) aprova o desenho dos templates; ela não comprova a jornada de quem os usa.
 
-| O quê | Requisito | Tarefa | Como | Situação |
+### Roteiro de homologação
+
+**Antes.** O ambiente com o código dos dois PRs, o `resvg-py` instalado, e:
+
+```text
+KIT_DE_DIVULGACAO_PECA=true
+KIT_DE_DIVULGACAO_TEMPLATES=pos-lato-sensu/post@1#bfcb25490b8e,pos-lato-sensu/story@2#8a16aef0abbd,pos-lato-sensu/banner@1#1badbdf0cb93
+```
+
+Dois Editais publicados do Cefor: um de **um** polo e um de **quatro** (o resumo da FR-3836), e uma
+pessoa com o papel de comunicação.
+
+1. **Liberação (FR-3808, SC-1140).** Na tela do kit, a família "Pós Lato Sensu" aparece, e os três
+   formatos sem "em aprovação". Uma entrada com resumo trocado deixa aquele formato com "versão nova
+   em aprovação" — conferir uma vez e restaurar.
+2. **Servidor (SC-1137, SC-1134).** No servidor, `scripts/medir_kit_de_divulgacao.py` com
+   `--edital`, `--base-url` e `--lote 20`, nos dois Editais. Ele não grava nada e imprime a mediana
+   e o máximo da tela e do ZIP, e se o PNG de cada formato saiu idêntico em duas gerações.
+3. **Navegador (SC-1137).** Abrir a tela do kit 20 vezes, com o cache desligado, e anotar o tempo
+   até a última prévia carregar (a aba de rede das ferramentas do navegador). Baixar o ZIP 20 vezes
+   e anotar o tempo de cada um.
+4. **Prévias e downloads (FR-3806, FR-3829, FR-3830).** Em cada Edital: trocar de imagem e conferir
+   que as três prévias mudam só o fundo; baixar PNG e SVG de cada formato e abrir o SVG fora do
+   GPS; baixar o ZIP e conferir que traz `peca-post.*`, `peca-story.*`, `peca-banner.*`, a ficha e
+   o manifesto com a entrada de cada formato. No de quatro polos, a tela diz em quais formatos as
+   opções saíram resumidas, e a legenda lista os quatro com a carga horária (FR-3836). Voltar para a
+   Institucional pelo formulário funciona.
+5. **Trilha (FR-3828).** Cada download aparece na trilha do Edital com família, imagem e template.
+6. **Jornada (SC-1136, T056).** Uma pessoa da comunicação, sem ajuda, obtém post, story e banner de
+   um dos Editais, cronometrada, sem abrir o PDF e sem digitar texto. Anotar o tempo e o que a fez
+   parar.
+
+| O quê | Requisito | Tarefa | Passo | Situação |
 |---|---|---|---|---|
-| Prévias dos três formatos e downloads PNG, SVG e ZIP pelo navegador, num Edital publicado, com o endereço público | FR-3806, FR-3829, FR-3830 | T056 | Abrir o kit de um Edital publicado da Pós Lato Sensu, escolher imagem, baixar cada formato e o ZIP, e conferir que o ZIP traz os três formatos e o manifesto | pendente |
-| Jornada com uma pessoa da comunicação: post, story e banner em menos de três minutos, sem abrir o PDF e sem digitar texto | SC-1136 | T056 | Cronometrar, registrar aqui nome do papel, Edital, tempo e o que travou | pendente |
-| Tela com as três prévias em menos de 2 s e ZIP em menos de 3 s, num lote de 20 | SC-1137 | T044 | 20 gerações seguidas de cada, registrando mediana e máximo | pendente |
-| O PNG da mesma ficha e escolha sai idêntico em duas gerações | SC-1134 | T044 | Comparar o SHA-256 de dois downloads seguidos de cada formato | pendente |
-| A liberação nomeia versão e resumo, e template divergente não é gerado | FR-3808, SC-1140 | — | Conferir `KIT_DE_DIVULGACAO_TEMPLATES` do ambiente contra a tabela acima; a recusa do divergente é coberta pela suíte | pendente |
+| A liberação nomeia versão e resumo, e o divergente não sai | FR-3808, SC-1140 | — | 1 | pendente |
+| Tempo do servidor e PNG idêntico em duas gerações | SC-1134, SC-1137 | T044 | 2 | pendente |
+| Tela com as três prévias em menos de 2 s e ZIP em menos de 3 s, num lote de 20 | SC-1137 | T044 | 3 | pendente |
+| Prévias, downloads PNG, SVG e ZIP, e o aviso do resumo, pelo navegador | FR-3806, FR-3829, FR-3830, FR-3836 | T056 | 4, 5 | pendente |
+| Jornada com uma pessoa da comunicação em menos de três minutos | SC-1136 | T056 | 6 | pendente |
+
+**Referência da máquina de desenvolvimento**, em 04/11/2026, com outra suíte rodando no mesmo
+cluster, num lote de 3 sobre o 91 de quatro polos: tela 0,94 s de mediana, ZIP 1,12 s, PNG idêntico
+nos três formatos. Não substitui a medição no ambiente.
 
 ## Desempenho (SC-1137)
 
-Pendente no ambiente de implantação (T044). Na máquina de desenvolvimento, a galeria da Pós Lato
-Sensu compõe e rasteriza os 48 pares cenário × formato pelo fluxo real.
+Pendente no ambiente de implantação (T044), pelo roteiro acima. Na máquina de desenvolvimento, a galeria da Pós Lato
+Sensu compõe e rasteriza os 51 pares cenário × formato pelo fluxo real.
