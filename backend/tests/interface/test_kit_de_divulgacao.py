@@ -239,6 +239,34 @@ def test_chave_desligada_a_peca_some_e_os_textos_ficam(
     assert md.status_code == 200
 
 
+def test_institucional_fora_da_versao_congelada_so_sai_liberada(
+    api_client, comunicacao, host_publico, settings, monkeypatch
+):
+    """119, FR-3835, EC-23: outro resumo da Institucional não sai pela chave da `111`.
+
+    O resumo congelado trocado simula a versão nova; a chave da `111` continua ligada, e a peça só
+    volta quando a configuração nova nomeia o resumo do código.
+    """
+    from processo_seletivo.interface import kit_familias
+    from processo_seletivo.interface.kit_familias import institucional
+
+    monkeypatch.setattr(institucional, "RESUMO_CONGELADO_V1", "0" * 64)
+    settings.KIT_DE_DIVULGACAO_PECA = True
+    settings.KIT_DE_DIVULGACAO_TEMPLATES = tuple(
+        e for e in settings.KIT_DE_DIVULGACAO_TEMPLATES if e[0] != "institucional"
+    )
+    edital = kit.publicar(api_client, ate=1, chave="peca-versao-nova")
+    corpo = comunicacao.get(_url(edital), HTTP_HOST=host_publico).content.decode()
+    assert kit_familias.VERSAO_EM_APROVACAO in corpo
+    assert _previa(comunicacao, edital, host_publico).status_code == 404
+    assert _exportar_peca(comunicacao, edital, "svg", host_publico).status_code == 404
+    assert not _eventos(edital).exists()
+
+    curto = kit_familias.resumo(institucional.POST)[: kit_familias.RESUMO_CURTO]
+    settings.KIT_DE_DIVULGACAO_TEMPLATES = (("institucional", "post", 1, curto),)
+    assert _exportar_peca(comunicacao, edital, "svg", host_publico).status_code == 200
+
+
 def test_peca_recusada_diz_o_motivo_e_exportar_e_409(
     api_client, comunicacao, host_publico, monkeypatch
 ):

@@ -29,7 +29,6 @@ tela (contrato).
 
 import hashlib
 
-from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -37,7 +36,8 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
-from processo_seletivo.interface import identidade, kit_pacote, kit_peca, kit_textos
+from processo_seletivo.interface import identidade, kit_familias, kit_pacote, kit_peca, kit_textos
+from processo_seletivo.interface.kit_familias import institucional
 from processo_seletivo.portal import ficha as fichas
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import (
@@ -124,10 +124,25 @@ def _indice_da_manchete(dados):
         raise DomainError("kit_manchete_invalida", MANCHETE_INVALIDA, 422) from None
 
 
-def _motivo_sem_peca(request):
-    """Por que a peça não existe neste acesso, antes de compor: chave desligada ou host local."""
-    if not settings.KIT_DE_DIVULGACAO_PECA:
+def _motivo_da_institucional():
+    """A Institucional também passa pela liberação (119, FR-3835): `liberados()` decide.
+
+    A versão 1 com o resumo congelado continua da chave da `111`; qualquer outra versão, ou outro
+    resumo, só sai pela configuração nova, que a nomeia — a chave da `111` não a alcança. Sem isto,
+    a versão 2 da Institucional com o resumo congelado atualizado sairia só pela chave antiga.
+    """
+    if institucional.POST in kit_familias.liberados():
+        return ""
+    if kit_familias.institucional_v1(institucional.POST):
         return PECA_EM_VALIDACAO
+    return kit_familias.VERSAO_EM_APROVACAO
+
+
+def _motivo_sem_peca(request):
+    """Por que a peça não existe neste acesso, antes de compor: não liberada ou host local."""
+    motivo = _motivo_da_institucional()
+    if motivo:
+        return motivo
     if host_local(request):
         return kit_peca.HOST_LOCAL
     return ""
