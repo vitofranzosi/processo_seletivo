@@ -38,6 +38,12 @@ os planejados: a T031 os atualiza com os nomes finais.
 | FR-3650 (demonstração por tabela, sem rede, fora de produção) | T007, T008 | `test_consulta_da_fonte.py::test_a_demonstracao_responde_pela_tabela`, `::test_em_producao_a_demonstracao_nao_existe` |
 | FR-3651 (suíte sem a Caixa; E2E opt-in continua) | T004, T028 | `test_suite_sem_caixa.py`; `interface/test_sorteio_com_a_fonte_de_producao.py` com `SORTEIO_E2E_FONTE_REAL=1` (registro em `verificacao.md`) |
 | FR-3652 (nada publicado é alterado; sem migration) | — | por construção: nenhuma migration, e a regra só roda nos quatro atos e na conferência sob demanda. A suíte com o inventário da T002 é a prova (SC-1099) |
+| FR-3715 (o reaproveitamento copia o método sem a extração) | T035, T036 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
+| FR-3716 (a gravação aceita o método sem os dois campos, e só ele) | T034, T036 | `unit/editais/test_metodo_sem_a_extracao.py` |
+| FR-3717 (os atos recusam o método sem a extração, dizendo o que declarar) | T034, T035, T036 | `unit/editais/test_metodo_sem_a_extracao.py`; `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
+| FR-3718 (a composição e a escolha da origem dizem que a extração não vem) | T037 | `interface/test_reaproveitar.py` |
+| FR-3719 (a origem intacta e retificável) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
+| FR-3720 (um mecanismo só para reconstituir o acervo; o reaproveitamento pelo comando real) | T033, T035 | `fixtures/legado.py::antes_da_116`; `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
 | SC-1094 (zero falso negativo, zero falso positivo, nos quatro atos, tela e API) | T013, T016, T021 | `test_publicacao_confere_a_referencia.py`, `test_congelamento_confere_a_referencia.py`, `test_retificacao_confere_a_referencia.py` |
 | SC-1095 (nenhum "validado/confirmado/conferido" no ainda não realizado) | T005 | `test_conferencia.py::test_ainda_nao_realizado_nunca_diz_validado_confirmado_ou_conferido` |
 | SC-1096 (oito falhas × quatro atos concluem com advertência; regras locais continuam) | T019 | `integration/test_caixa_fora_do_ar.py` |
@@ -45,6 +51,8 @@ os planejados: a T031 os atualiza com os nomes finais.
 | SC-1098 (as seis perguntas pelo registro do ato) | T005, T014 | `test_conferencia.py::test_o_registro_responde_as_seis_perguntas_e_nada_da_resposta_crua`; `test_publicacao_confere_a_referencia.py::test_o_registro_do_ato_traz_a_conferencia` |
 | SC-1099 (suíte sem conexão; expectativas só nas inventariadas) | T002, T004, T029, T030 | `test_suite_sem_caixa.py`; `verificacao.md` (comparação por lista com a T001) |
 | SC-1100 (Retificação que não toca a referência: zero consultas) | T021 | `test_retificacao_confere_a_referencia.py::test_so_o_cronograma_muda_e_nada_e_consultado` |
+| SC-1115 (reaproveitar sempre conclui, e nenhum método traz a extração da origem) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
+| SC-1116 (sem a extração não submete nem publica; com ela, publica) | T035 | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
 
 ## Casos-limite
 
@@ -60,6 +68,9 @@ Nenhuma ferramenta cobra esta seção: cada caso tem linha própria.
 | Principal conclusiva e consulta por número falha | `test_conferir_referencias.py::test_realizado_sem_data_continua_realizado` |
 | A Caixa muda a resposta depois (cenário H) | `test_congelamento_confere_a_referencia.py::test_a_caixa_muda_a_resposta_e_nada_gravado_muda` |
 | Acervo com grafia fora da forma | `test_congelamento_confere_a_referencia.py::test_forma_do_acervo_congela_com_advertencia`; `test_retificacao_confere_a_referencia.py::test_acervo_nao_e_reconferido` |
+| Reaproveitar Edital do acervo com grafia fora da forma | `integration/editais/test_reaproveitamento_sem_a_extracao.py` (origem do corpus) |
+| Reaproveitar Edital sem sorteio | `integration/editais/test_reaproveitamento_sem_a_extracao.py` |
+| Rascunho com só um dos dois campos da extração | `unit/editais/test_metodo_sem_a_extracao.py` |
 | Fonte de demonstração | `test_consulta_da_fonte.py::test_a_demonstracao_responde_pela_tabela` |
 | Repetição idempotente | `test_publicacao_confere_a_referencia.py::test_a_repeticao_nao_consulta_de_novo`; `test_congelamento_confere_a_referencia.py::test_a_repeticao_nao_consulta_de_novo` |
 | Ato recusado por outro impeditivo | `test_publicacao_confere_a_referencia.py::test_a_recusa_vai_ao_log_e_nao_a_trilha` |

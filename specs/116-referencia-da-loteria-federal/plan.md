@@ -293,6 +293,29 @@ Com `SORTEIO_FONTE_DE_DEMONSTRACAO` ligada:
 
 Para a Loteria Federal de verdade sem rede, não há roteiro: é a suíte.
 
+### 9. O reaproveitamento (emenda de 04/11/2026)
+
+A revisão completa — diagnóstico, alternativas, recomendação, testes, riscos e critério de liberação
+— está em [revisao-do-reaproveitamento.md](revisao-do-reaproveitamento.md). O desenho, em resumo
+(D-009):
+
+- `editais/domain/reaproveitamento.py::payload_do_conteudo` tira `occurrence` e `occurrenceAt` do
+  método comum e do método de cada marco, depois de `remapear` e antes de `replace_draft`. O resto
+  do método passa como está; a Etapa de habilitação já vem remapeada;
+- `editais/domain/perfis.py::_validar_metodo_de_sorteio` ganha `exigir_a_extracao`, ligado por
+  padrão. A gravação do rascunho — `validate_classification_milestones`, que só a gravação chama, e
+  `validate_common_draw_method` a partir de `replace_draft` — o desliga. A publicação e a Retificação
+  chamam a função direto e não o desligam;
+- a ausência dos dois campos tem mensagem própria, que diz o que declarar e onde (FR-3717);
+- `sorteios/application/conferencia.py::referencias_a_conferir` deixa de fora o método sem
+  referência: não há o que perguntar à Caixa;
+- a composição mostra, no desfecho do reaproveitamento, quantos métodos esperam a extração, e a
+  escolha da origem a lista entre o que não vem (FR-3718);
+- `tests/fixtures/legado.py::antes_da_116()` é o único lugar da suíte que reconstitui o acervo sem a
+  forma e sem a conferência, e o corpus passa por ele (FR-3720).
+
+Nenhuma migration, estado ou tabela. O conteúdo publicado não muda.
+
 ## Riscos
 
 | Risco | Mitigação |
@@ -303,6 +326,8 @@ Para a Loteria Federal de verdade sem rede, não há roteiro: é a suíte.
 | Latência no clique de publicar | Uma tentativa e 5 s por chamada. Medida no teste com a fonte que dorme |
 | O `INFO` novo muda expectativas de testes | Inventário antes (T003) |
 | Achado novo no meio da revisão de um Edital já submetido | A publicação confere de novo: um concurso que virou realizado entre submeter e publicar é recusado ali, com a saída "devolver para elaboração" |
+| O reaproveitamento traz a derivação em prosa, que pode citar o concurso antigo | É regra, e a `023` copia regra. A mensagem de FR-3718 pede conferir a derivação junto da extração; revisá-la é de quem compõe |
+| Um rascunho sem a extração passa a se gravar também fora do reaproveitamento | É o mesmo método que espera a extração, e a submissão recusa com a mesma indicação (FR-3717). O método pela metade continua recusado |
 | Concurso realizado nos segundos entre consulta e trava | A conferência vale para o instante registrado, e a precedência na constituição continua (FR-3638) |
 
 ## Revisão crítica (03/11/2026)

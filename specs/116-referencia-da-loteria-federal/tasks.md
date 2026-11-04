@@ -249,8 +249,39 @@ passa com a informação (SC-1094).
 - [ ] T032 Roteiro local do plano (fonte de demonstração: 5000, 9998, 6200) no navegador, com
   captura das três mensagens em `verificacao.md`.
 
+---
+
+## Phase 10: User Story 7 — Reaproveitar não traz o concurso (Priority: P1, emenda de 04/11/2026)
+
+**Goal**: FR-3715 a FR-3720, SC-1115, SC-1116, D-009. A revisão está em
+[revisao-do-reaproveitamento.md](revisao-do-reaproveitamento.md).
+
+- [ ] T033 [US7] Em `backend/tests/fixtures/legado.py`, `antes_da_116()`: o único contexto que
+  desliga a forma e a conferência, para reconstituir acervo. `tests/fixtures/corpus.py` e os testes
+  de acervo da `116` passam a usá-lo (FR-3720).
+- [ ] T034 [P] [US7] Escrever `backend/tests/unit/editais/test_metodo_sem_a_extracao.py`: a gravação
+  aceita o método sem os dois campos, recusa o que tem só um, e a publicação e a Retificação recusam
+  os dois com a mensagem da FR-3717 (FR-3716, FR-3717).
+- [ ] T035 [P] [US7] Escrever `backend/tests/integration/editais/test_reaproveitamento_sem_a_extracao.py`,
+  pelo comando real `reaproveitar_edital`, sem o mecanismo da T033 no destino:
+  - origem do corpus com `Concurso 6010`; origem com `6010`; método comum; métodos próprios; sem
+    sorteio (SC-1115);
+  - os campos estruturais iguais e a Etapa de habilitação do destino;
+  - gravar outra etapa antes de declarar a extração;
+  - submeter sem a extração: recusa com a indicação; validar a publicação: impeditivo;
+  - declarar extração futura, submeter, homologar e publicar (SC-1116);
+  - a origem intacta e retificável (FR-3719).
+- [ ] T036 [US7] `payload_do_conteudo` sem a extração; `exigir_a_extracao` em
+  `_validar_metodo_de_sorteio`; a mensagem própria; `referencias_a_conferir` sem método sem
+  referência. T034 e T035 verdes.
+- [ ] T037 [US7] A indicação na composição depois do reaproveitamento e o item em "O que não vem"
+  (FR-3718). Teste em `backend/tests/interface/test_reaproveitar.py`.
+- [ ] T038 [US7] `make lint check test-pg` inteiro, comparado com a T030 por lista, e
+  [verificacao.md](verificacao.md) atualizado.
+
 ## Dependencies
 
 - Fase 1 → Fase 2 → (US1 ∥ US2 ∥ US5) → US3 → US4 (depende de US1) → US6 → Polish.
+- A US7 depende da US5 (a forma na gravação) e vem depois do Polish: é a emenda de 04/11/2026.
 - A T004 vem antes de qualquer teste de integração das histórias: sem o vigia, um caso esquecido
   iria à rede.

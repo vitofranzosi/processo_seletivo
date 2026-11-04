@@ -24,6 +24,12 @@ constituição do sorteio.
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-016 da `021`"). Uma decisão de outra feature é citada pelo assunto e pela feature.
 > As oito decisões do usuário de 03/11/2026 são citadas como "1ª" a "8ª".
+>
+> **A emenda de 04/11/2026** (*Session 2026-11-04*, US7, D-009) abre em **FR-3715** e **SC-1115**, e
+> não no número seguinte ao da abertura: entre uma e outra a `117`, ainda não mergeada, tomou os
+> requisitos de três mil seiscentos e cinquenta e três a três mil setecentos e catorze e os critérios
+> de mil cento e um a mil cento e catorze — medido em `specs/` das worktrees desta máquina e das 80
+> branches remotas mais recentes.
 
 ---
 
@@ -63,7 +69,9 @@ Esta spec usa o fato e não promete o que a fonte não diz.
 - a decisão operacional de cada desfecho da conferência;
 - as mensagens;
 - o registro na trilha existente;
-- uma conferência sob demanda na tela, para ver antes de agir.
+- uma conferência sob demanda na tela, para ver antes de agir;
+- o reaproveitamento de Edital anterior, que copia o método do sorteio **sem** a extração da origem
+  (US7, emenda de 04/11/2026).
 
 **Fica fora** (2ª e 6ª decisões do usuário, e o estudo, seção 8):
 
@@ -108,6 +116,23 @@ As oito decisões do usuário, ao ler o estudo:
 ---
 
 ## User Scenarios & Testing *(mandatory)*
+
+### Session 2026-11-04
+
+A revisão bloqueante do usuário sobre o reaproveitamento, antes do merge (emenda; D-009):
+
+- Q: O que o Edital reaproveitado herda do método do sorteio? → A: A estrutura e as regras
+  reutilizáveis — algoritmo, fonte, derivação, normalização, substituição e a Etapa de habilitação —,
+  e **nunca** a ocorrência concreta usada como semente no certame anterior nem a data dela.
+- Q: E o Edital do acervo com referência fora da forma (`Concurso 6010`)? → A: Continua íntegro,
+  consultável e retificável. Reaproveitá-lo é permitido: a referência dele não vem, e por isso a
+  forma dela não impede a cópia.
+- Q: O que o operador vê? → A: Uma indicação clara de que a nova extração precisa ser configurada; a
+  submissão e a publicação continuam bloqueadas enquanto ela faltar.
+- Q: Por que mecanismo? → A: O menor correto, sem estado paralelo nem exceção genérica; e a exceção
+  da suíte que reconstitui o acervo não serve ao reaproveitamento operacional.
+
+---
 
 ### User Story 1 — Quem elabora não publica um Edital sob concurso já realizado (Priority: P1)
 
@@ -258,9 +283,44 @@ que nenhuma chamada houve.
 
 ---
 
+### User Story 7 — Reaproveitar um Edital anterior não traz o concurso dele (Priority: P1)
+
+Quem elabora parte do Edital 91/2026, cujo método declara a Loteria Federal com `Concurso 6010`. A
+cópia conclui: perfis, etapas, cronograma e o método do sorteio vêm — algoritmo, fonte, derivação,
+normalização, substituição e a Etapa de habilitação, remapeada para a do novo Edital. O concurso e a
+data da extração **não** vêm, e a composição diz isso logo depois da cópia: a extração precisa ser
+declarada na etapa Classificação, conferida no calendário oficial. Enquanto ela faltar, o rascunho
+se grava normalmente, e a submissão é recusada com a mesma indicação.
+
+**Why this priority**: o reaproveitamento é como um certame novo nasce de um anterior. Sem esta
+história, ou a cópia é recusada por uma grafia do acervo, ou herda em silêncio um concurso que já foi
+sorteado — que é o incidente que a feature existe para prevenir.
+
+**Independent Test**: reaproveitar, pelo comando real, um Edital com método comum e outro com método
+próprio nos marcos; ler o rascunho do destino; submeter sem a extração; declarar uma extração futura
+e publicar.
+
+**Acceptance Scenarios**:
+
+1. **Given** a origem com `Concurso 6010` (acervo), **When** reaproveita, **Then** a cópia conclui e
+   nenhum método do destino tem `occurrence` nem `occurrenceAt`.
+2. **Given** a origem com `6010`, na forma válida, **When** reaproveita, **Then** o mesmo: a forma
+   válida não faz o concurso antigo vir.
+3. **Given** a origem com método comum e marcos que o referenciam, **When** reaproveita, **Then** o
+   método comum vem sem a extração, e os marcos continuam sem método próprio.
+4. **Given** o destino reaproveitado, **When** grava outra etapa antes de declarar a extração,
+   **Then** a gravação conclui.
+5. **Given** o destino sem a extração, **When** submete, **Then** a submissão é recusada com a
+   indicação de declarar a extração; **When** declara uma extração futura, **Then** submete,
+   homologa e publica.
+6. **Given** a origem, **When** o destino é composto e publicado, **Then** a origem continua com o
+   conteúdo que publicou, e uma Retificação dela que não toca a referência é publicada.
+
+---
+
 ### Edge Cases
 
-- **Concurso muito distante** (9999 com último 6114): ainda não realizado, com "5885 concursos
+- **Concurso muito distante** (9999 com último 6114): ainda não realizado, com "3885 concursos
   adiante". Não há limite arbitrário nem recusa por distância (3ª decisão).
 - **O mesmo concurso em dois marcos**, ou no método comum e num marco: uma consulta principal por
   ato, e um achado por método que governa marco não sorteado, como na `102`.
@@ -278,6 +338,12 @@ que nenhuma chamada houve.
 - **Edital do acervo com grafia fora da forma** (`Concurso 6100`): não é reconferido. No
   congelamento, a referência que a Caixa não aceita gera advertência, e não recusa, pelo mesmo
   princípio da FR-514 da `035` (D-005).
+- **Reaproveitar Edital do acervo com grafia fora da forma** (`Concurso 6010`): a cópia conclui,
+  porque a referência não vem (FR-3715). A origem não é tocada, e a Retificação dela segue as regras
+  do acervo (FR-3624).
+- **Reaproveitar Edital sem sorteio**: nada muda; não há método a copiar nem extração a declarar.
+- **Rascunho com só um dos dois campos da extração** (o concurso sem a data, ou o contrário): é
+  método pela metade, e a gravação recusa como recusa qualquer outro campo faltando (FR-3716).
 - **Fonte de demonstração**: responde à conferência por tabela, sem rede.
 - **Repetição idempotente de um ato**: devolve o desfecho anterior, sem consultar de novo.
 - **Ato recusado por outro impeditivo**: a conferência pode ter rodado. A recusa não grava trilha,
@@ -427,6 +493,32 @@ que nenhuma chamada houve.
 - **FR-3652**: Nenhum Edital publicado, Retificação publicada, relação congelada ou ocorrência
   observada MUST ser alterado ou reconferido por esta feature. Não há migration.
 
+#### O reaproveitamento (emenda de 04/11/2026)
+
+- **FR-3715**: O reaproveitamento de Edital anterior MUST copiar o método do sorteio — o comum e o
+  de cada marco — **sem** `occurrence` e `occurrenceAt`, e com todos os demais campos: algoritmo,
+  fonte, derivação, normalização, regra de substituição e Etapa de habilitação, esta remapeada para a
+  do destino. Vale para qualquer fonte e qualquer grafia da referência da origem, válida ou não.
+  Edital sem método não ganha método.
+- **FR-3716**: A gravação do rascunho MUST aceitar o método **sem a extração** — `occurrence` e
+  `occurrenceAt` os dois ausentes ou vazios — e só ele. O método que declara um dos dois sem o outro
+  continua pela metade, e a gravação o recusa, como recusa os demais campos faltando (a FR-013 da
+  `021`). A tela e a API gravam igual.
+- **FR-3717**: A submissão, a publicação e a Retificação MUST continuar recusando o método sem a
+  extração, com impeditivo que diga que a extração ainda não foi declarada, o que declarar e onde:
+  o concurso e quando ele acontece, na etapa Classificação, conferidos no calendário oficial. A Caixa
+  não é consultada sobre método sem a extração.
+- **FR-3718**: Depois de reaproveitar Edital com sorteio, a composição MUST dizer, no desfecho do
+  reaproveitamento, que a extração não foi copiada e precisa ser declarada na etapa Classificação. A
+  tela de escolha da origem MUST anunciar, entre o que não vem, o concurso e a data da extração.
+- **FR-3719**: O reaproveitamento MUST NOT alterar o Edital de origem nem o tornar irretificável:
+  ele continua consultável com o conteúdo que publicou, e a Retificação dele segue a FR-3624 e a
+  FR-3635.
+- **FR-3720**: Na suíte, a republicação de Edital do acervo anterior a esta feature MUST passar por
+  um único mecanismo nomeado, que desliga a forma e a conferência só enquanto o acervo é
+  reconstituído. Os testes de reaproveitamento MUST usar o comando real, com a forma e a conferência
+  ligadas no destino, e MUST NOT usar esse mecanismo para criar o Edital novo.
+
 ### Key Entities
 
 - **Situação da referência**: valor transitório, nunca persistido como entidade. Tem a situação
@@ -461,6 +553,12 @@ que nenhuma chamada houve.
   expectativas de testes existentes só mudam nos casos inventariados no plano.
 - **SC-1100**: Nenhuma Retificação que deixa a referência intacta faz consulta ou recebe achado desta
   feature, inclusive a de Edital cujo concurso consolidado já foi realizado.
+- **SC-1115**: Reaproveitar, pelo comando real, Edital com sorteio — inclusive o 91/2026 do corpus,
+  com `Concurso 6010` — conclui em todos os casos, e nenhum método do destino carrega `occurrence`
+  nem `occurrenceAt` da origem. Os demais campos do método chegam iguais, e a Etapa de habilitação
+  aponta para Etapa do destino.
+- **SC-1116**: Nenhum Edital reaproveitado é submetido ou publicado sem a extração declarada; com uma
+  extração futura declarada, o mesmo Edital é submetido, homologado e publicado.
 
 ## Assumptions
 
@@ -546,6 +644,31 @@ não as declara cai no padrão: forma livre e nenhuma conferência. Assim nenhum
 implementar o que não sabe, e a falta de conferência não vira advertência em todo Edital dela. O detalhe estruturado do registro de auditoria já
 existe e já guarda o alcance de atos (a FR-921 da `051`). Usá-lo evita tabela nova e não mistura a
 conferência com o motivo humano do ato.
+
+### D-009 — A cópia não traz a extração; o rascunho a admite ausente, e o ato a exige
+
+A ocorrência concreta e o instante dela são o que **aconteceu** no certame anterior, como o status do
+Evento, e a `023` já decidiu que o que aconteceu não se copia. O resto do método é regra, e é o que
+torna o reaproveitamento útil.
+
+Alternativas descartadas:
+
+- **copiar como está**, que leva o `6010` válido em silêncio e recusa a cópia do `Concurso 6010`;
+- **desligar a forma no reaproveitamento**, como a suíte faz com o acervo: leva o concurso antigo,
+  que é o que a revisão proíbe;
+- **não copiar o método**: obriga a redeclarar algoritmo, fonte, derivação, normalização,
+  substituição e habilitação de cada marco, e perde a estrutura que o reaproveitamento existe para
+  trazer;
+- **valor de marcação** no lugar da referência: dado inventado, que a forma recusaria e que um erro
+  publicaria;
+- **estado ou indicador novo** de método pendente: estrutura paralela para o que a ausência dos dois
+  campos já diz.
+
+A gravação admite a ausência **dos dois** campos, e só deles, porque essa é a forma do método que
+espera a extração; a ausência de um só continua sendo o método pela metade que a `021` recusa. O ato
+— submissão, publicação, Retificação — continua exigindo o método inteiro, e é ele que protege o
+sorteio. Nenhuma garantia de integridade muda: a recusa na constituição, o resumo do método e a
+precedência continuam os mesmos, porque nenhum método sem a extração chega a ser publicado.
 
 ## Pendências do usuário
 
