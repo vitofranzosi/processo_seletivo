@@ -36,6 +36,11 @@ com a comissão? Qual é o prazo? O que acontece depois?*
 | I2 | indeferido | rótulo e fundamento | *"Não enviado."*; *"Enviado em …; não foi conferido antes do resultado."*; nenhum formulário |
 | J | pendência sem envio anterior | *"Você ainda precisa enviar 1 documento."* | *"Precisa de correção: ‹motivo›. Envie o arquivo até…"* |
 | K | prazo não iniciado | a frase do prazo não iniciado, sem data como prazo | *"O prazo ainda não começou a correr… Você já pode enviar."*; a data só em *Sobre esta convocação* |
+| B2 | Requerimento sem documentos, já enviado | *"Seu Requerimento de Matrícula foi enviado."* com *"Conferir…"* (**como hoje**) | estrutura de hoje |
+| L | só um facultativo sem envio | *"Nada por enquanto."* + frase de conclusão + a linha do opcional | bloco *Documentos opcionais*, com o envio; nenhuma contagem |
+| M | Processo encerrado, chamada em aberto | *"O envio pelo portal está encerrado"*, sem prazo vencido e sem promessa de conferência | o mesmo título; itens recebidos *"não foi conferido antes do encerramento do Processo"*; sem formulário de documento |
+| N | indeferido, Requerimento pedido e nunca enviado | rótulo e fundamento | *"Requerimento de Matrícula: não enviado."* |
+| K2 | prazo não iniciado, com pendente, tarefa e opcional | a frase do prazo não iniciado | nenhum cartão nem opcional com *"até ‹data›"* |
 
 ## Pelo teclado e pelo leitor de tela
 

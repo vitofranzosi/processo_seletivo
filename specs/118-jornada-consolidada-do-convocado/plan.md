@@ -109,23 +109,29 @@ continua no módulo de documentos da convocação, porque os comandos de envio a
 
 ```text
 obrigacoes_da_convocacao(
-    *, leitura, requerimento, estado_do_prazo, escrita_aberta, desfecho, vencimento
+    *, leitura, requerimento, estado_do_prazo, causa_do_fechamento, desfecho, vencimento
 ) -> Obrigacoes | None
 ```
 
 - `leitura`: a `LeituraDocumental` da chamada (`convocacao/application/documentos.py`), já lida pela
   view com `leitura_da_chamada` — consultas de número fixo.
-- `requerimento`: um dos cinco estados da FR-3725, traduzido na view a partir de
-  `preencher_requerimento.apurar` (o que `_requerimento_da_convocacao` já consulta), ampliando o
-  vocabulário de `"preencher"`, `"conferir"`, `""` para incluir *não enviado até o prazo* e *não
-  enviado*. O chamado de hoje (FR-1098 da `059`) continua derivado do mesmo valor.
+- `requerimento`: as três leituras da FR-3725, todas da `Disponibilidade` que
+  `preencher_requerimento.apurar` já devolve (o que `_requerimento_da_convocacao` consulta): o
+  `momento` declarado e `exigido` (exigência), `enviado` e `status_do_requerimento` (situação),
+  `disponivel` e `prazo_decorrido` (disponibilidade). A tabela da FR-3725 roda **dentro** da projeção,
+  com a exigência e a situação antes da disponibilidade (D-016). O chamado de hoje (FR-1098 da `059`)
+  continua derivado da mesma `Disponibilidade`.
 - `estado_do_prazo`: o de `estado_de` (019).
-- `escrita_aberta`: o mesmo `pode_apresentar` que `_documentos_da_convocacao_para_a_tela` já calcula
-  (`em_aberto`, `prazo_decorrido`, Processo não final). **Não há segunda conta.**
+- `causa_do_fechamento`: `None`, `PROCESSO` ou `PRAZO`, das mesmas três condições que
+  `_documentos_da_convocacao_para_a_tela` já calcula para `pode_apresentar` (`em_aberto`,
+  `prazo_decorrido`, Processo fora de `PROCESSO_FINAL`), com o Processo antes do prazo (D-015).
+  **Não há segunda conta**: a view passa a devolver a causa no lugar do booleano, e `pode_apresentar`
+  vira `causa_do_fechamento is None`.
 - `desfecho`: o vigente.
 - Devolve `None` quando a leitura não tem item pedido: a tela é a de antes (FR-3743).
 
-`Obrigacoes` é imutável e tem: `momento` (`ABERTA`, `ENCERRADA`, `DECIDIDA`), `tarefas` (em ordem,
+`Obrigacoes` é imutável e tem: `momento` (`ABERTA`, `ENCERRADA_PELO_PRAZO`, `ENCERRADA_PELO_PROCESSO`,
+`DECIDIDA`), `tarefas` (em ordem,
 cada uma com o item, a categoria e a âncora), `com_a_comissao`, `conferidos`, `opcionais`,
 `requerimento`, `totais`, `frase_de_estado` e, por item, `texto` (a célula da FR-3746).
 
@@ -136,7 +142,8 @@ cada uma com o item, a categoria e a âncora), `com_a_comissao`, `conferidos`, `
 
 `_acao_da_convocacao` recebe `obrigacoes`. Com `obrigacoes` presente, a tabela da FR-3730 decide
 `principal`, `link` e `link_rotulo`; o Requerimento enviado vira o campo novo `secundaria` da `Acao`
-(com texto e link). Sem `obrigacoes`, o caminho de hoje fica intacto (FR-3732). As frases novas são
+(com texto e link). Sem `obrigacoes` — a chamada sem documento —, o caminho de hoje fica **intacto**,
+inclusive `REQUERIMENTO_ENVIADO` como ação principal (FR-3732, D-017); mudam só os textos comuns. As frases novas são
 constantes do módulo, onde a varredura e o SC-453 da `063` as leem.
 
 A view `acompanhamento` só chama `leitura_da_chamada` quando há convocação vigente (FR-3734), como
@@ -181,39 +188,47 @@ dos comandos (documento e Requerimento) continuam a usá-la, e as telas compõem
 
 | Requisito | Prova | Onde |
 |---|---|---|
-| FR-3721 a FR-3729, SC-1126 | tabela de combinações item × situação × momento × Requerimento; zero consultas | `unit/portal/test_obrigacoes_da_convocacao.py` |
-| FR-3730 a FR-3733 | a ação por cenário A–K | `unit/portal/test_situacao_da_inscricao.py`, `portal/test_acompanhamento_pela_situacao.py` |
+| FR-3721 a FR-3729, SC-1126 | tabela de combinações item × situação × os quatro momentos × as seis linhas do Requerimento; causa do fechamento com Processo e prazo juntos; zero consultas | `unit/portal/test_obrigacoes_da_convocacao.py` |
+| FR-3730 a FR-3733 | a ação por cenário, inclusive B2 e M | `unit/portal/test_situacao_da_inscricao.py`, `portal/test_acompanhamento_pela_situacao.py` |
 | FR-3734, SC-1125 | contagem de consultas com 0, 1 e 6 itens; sem convocação, igual à de antes | `portal/test_acompanhamento_pela_situacao.py` (molde do teste de custo da `063`) |
-| FR-3735 a FR-3743 | ordem dos títulos, presença e ausência de blocos e formulários por cenário | `interface/test_portal_jornada_consolidada.py` |
+| FR-3735 a FR-3743 | ordem dos títulos, presença e ausência de blocos e formulários por cenário, inclusive L e M | `interface/test_portal_jornada_consolidada.py` |
 | FR-3744, FR-3745, SC-1122 | selo em texto; nomes acessíveis únicos; Tab; foco; 375 px; CSP | `navegador/test_jornada_consolidada_do_convocado.py` |
-| FR-3746 a FR-3750 | o texto literal de cada célula | unitário da projeção e `interface/test_portal_documentos_da_convocacao.py` |
-| FR-3748 (recusas) | a recusa do documento e a do Requerimento com o mesmo núcleo | `integration/requerimentos/test_prazo_da_chamada.py`, `integration/convocacao/test_documentos_da_convocacao.py` |
+| FR-3746 a FR-3750 | o texto literal de cada célula, nas quatro colunas; K2 sem data em nenhum cartão | unitário da projeção e `interface/test_portal_documentos_da_convocacao.py` |
+| FR-3748 (recusas) | a recusa do documento e a do Requerimento com o mesmo núcleo; em M, a recusa do documento **não** usa o núcleo | `integration/requerimentos/test_prazo_da_chamada.py`, `integration/convocacao/test_documentos_da_convocacao.py` |
 | FR-3751 | termos proibidos nos arquivos novos | `test_vocabulario_dos_documentos_da_convocacao.py`, varredura da `063` em `portal/test_acompanhamento_pela_situacao.py` |
 | FR-3752 a FR-3755 | explicação por momento; Voltar à convocação; vencido sem rascunho sem 409 e sem linha nova; aviso | `interface/test_portal_requerimento.py` |
-| FR-3756 a FR-3759 | `migrate --check` sem nada a criar; rotas iguais; telas da gestão e "Minhas inscrições" sem mudança; FR-3614 | `test_dependencia_da_convocacao.py`, testes da `059` e da `115` sem edição de expectativa nesses pontos |
-| SC-1117 a SC-1121, SC-1123 | cenários A–K, a 375 px e em desktop | navegador e capturas |
+| FR-3756: **sem escrita** | contagem de linhas de todas as tabelas antes e depois de um GET de cada tela em cada cenário: só a leitura da convocação na trilha muda; o GET da FR-3754 não cria rascunho | `interface/test_portal_jornada_consolidada.py` |
+| FR-3756: **autorização e privacidade** | inscrição alheia e inexistente com a mesma recusa nas três telas; a página do Requerimento continua com resposta privada; nenhum dado pessoal novo em URL | os testes de titularidade da `059` e da `029` sem edição; um caso novo por tela em `interface/test_portal_jornada_consolidada.py` |
+| FR-3756 a FR-3759: **sem mudança de regra** | `migrate --check` sem nada a criar; rotas iguais; telas da gestão e "Minhas inscrições" sem mudança; FR-3614 | `test_dependencia_da_convocacao.py`, testes da `059` e da `115` sem edição de expectativa nesses pontos |
+| SC-1117 a SC-1121, SC-1123, SC-1127 | os cenários, a 375 px e em desktop | navegador e capturas |
 | SC-1124 | as quatro perguntas por cenário, com o texto literal | `verificacao.md` |
 
 ### Os cenários
 
 Os doze cenários do relatório, montados pelas fixtures da `115` e da `059`, como no roteiro
-`doc/revisao-ux-jornada-do-convocado-2026-11-04/roteiro-de-captura.py` (PR #375):
+`doc/revisao-ux-jornada-do-convocado-2026-11-04/roteiro-de-captura.py` (PR #375), e cinco de controle
+que a revisão do PR pediu:
 
 | | Cenário | O que prova |
 |---|---|---|
 | A | documentos sem Requerimento | ação "Você ainda precisa enviar 4 documentos"; bloco 1 na primeira tela |
-| B | Requerimento sem documentos | **sem regressão**: caminho direto ao Requerimento |
+| B | Requerimento sem documentos, a preencher | **sem regressão**: caminho direto ao Requerimento |
 | C1 | os dois, nada enviado | tarefas com o Requerimento por último; link à convocação |
 | C2 | os dois, só o Requerimento enviado | **sem falsa conclusão**: o enviado é linha secundária |
 | D | aproveitado da inscrição | sem "atendido"; "não precisa enviar de novo"; com a comissão |
 | E | enviados, aguardando | "Nada por enquanto" + frase de conclusão |
 | F | pendente com prazo em curso | "corrigir 1 e enviar 1"; selo; motivo; ordem |
-| G | pendente com prazo vencido | frase única; resumo com o Requerimento não enviado; Requerimento sem 409 |
+| G | pendente com prazo vencido | núcleo do vencido; resumo com o Requerimento não enviado; Requerimento sem 409 |
 | H | tudo conferido, sem desfecho | "Conferido: de acordo com o Edital"; sem "tudo enviado" |
 | I1 | aceite | "Vaga aceita" nas duas telas; frase do aceite; histórico |
 | I2 | indeferido com itens não enviados | histórico sem convite; "não foi conferido antes do resultado" |
 | J | pendência sem envio anterior | "Envie o arquivo" |
 | K | prazo não iniciado | sem data como prazo; "Você já pode enviar" |
+| **B2** | Requerimento sem documentos, já enviado | **sem regressão**: "Seu Requerimento de Matrícula foi enviado." continua a ação principal (D-017) |
+| **L** | só um facultativo sem envio, nenhuma tarefa | bloco *Documentos opcionais* com o envio; frase de conclusão; nenhuma contagem (D-018) |
+| **M** | Processo encerrado, chamada em aberto, prazo correndo, um item recebido | "O envio pelo portal está encerrado"; nenhuma menção a prazo vencido; nenhuma promessa de conferência; sem formulário de documento; o Requerimento conforme a política (D-015) |
+| **N** | indeferido, Requerimento pedido na convocação e nunca enviado (com e sem rascunho) | "Requerimento de Matrícula: não enviado."; nunca "não pedido" (D-016) |
+| **K2** | prazo não iniciado, com um pendente, uma tarefa e um opcional | nenhum cartão, opcional ou frase de conclusão com data; "Você já pode enviar" (FR-3749) |
 
 Mais dois de controle: **Edital sem documento e sem Requerimento** (SC-1123) e **inscrição sem
 convocação** (SC-1125). As capturas, a 375 × 812 e a 1280 × 900, vão para
@@ -222,26 +237,54 @@ antes e depois.
 
 ### Testes que prendem os textos de hoje
 
-Mudam junto, e cada mudança de expectativa é nomeada no PR de implementação (SC-1123). A lista do §8
-do relatório, conferida em `fb0e1ddc` e ampliada:
+Mudam junto, e cada mudança de expectativa é nomeada **por cenário** no PR de implementação
+(SC-1123). Uma expectativa só muda quando o texto que ela prende saiu da spec; a garantia que o teste
+dava — ausência de convite, de vocabulário proibido, de dado de quem conferiu — MUST continuar
+provada, no mesmo teste ou num novo. A lista do §8 do relatório, conferida em `fb0e1ddc` e ampliada:
 
 | Arquivo | O que prende hoje | Muda para |
 |---|---|---|
-| `tests/unit/portal/test_situacao_da_inscricao.py` | `REQUERIMENTO_ENVIADO`, `SIGA_AS_INSTRUCOES`, `PRAZO_NAO_INICIADO`, "terminou em" | a tabela da FR-3730; a frase da FR-3749; o núcleo da FR-3748 |
-| `tests/portal/test_acompanhamento_pela_situacao.py` | `REQUERIMENTO_ENVIADO`, `SIGA_AS_INSTRUCOES`, "Conferir o Requerimento de Matrícula enviado" | o enviado como linha secundária; a ação da projeção |
-| `tests/interface/test_portal_documentos_da_convocacao.py` | "Falta enviar", "Pendente", "Atendido pelo documento", "aguardando conferência", "Envie até", "A comissão vai decidir", "terminou em" | os textos da FR-3746 e o núcleo da FR-3748 |
-| `tests/interface/test_portal_caminho_da_convocacao.py` | "não decide nada sozinho" (2), "Conferir o Requerimento de Matrícula enviado", "terminou em" | o núcleo da FR-3748 (que mantém "não decide nada sozinho"); o enviado como linha secundária |
-| `tests/navegador/test_jornada_dos_documentos_da_convocacao.py` | "Falta enviar", "Pendente", "Atendido pelo documento", "aguardando conferência" (2), "A comissão vai decidir", "terminou em" | os textos da FR-3746 e o núcleo |
+| `tests/unit/portal/test_situacao_da_inscricao.py` | `REQUERIMENTO_ENVIADO`, `SIGA_AS_INSTRUCOES`, `PRAZO_NAO_INICIADO`, "terminou em" | a tabela da FR-3730 com documento; **sem documento, `REQUERIMENTO_ENVIADO` e `SIGA_AS_INSTRUCOES` continuam** (B, B2); a frase da FR-3749; o núcleo da FR-3748 |
+| `tests/portal/test_acompanhamento_pela_situacao.py` | `REQUERIMENTO_ENVIADO`, `SIGA_AS_INSTRUCOES`, "Conferir o Requerimento de Matrícula enviado" | com documento, o enviado como linha secundária; sem documento, como hoje |
+| `tests/interface/test_portal_documentos_da_convocacao.py` | "Falta enviar", "Pendente", "Atendido pelo documento", "aguardando conferência", "Envie até", "A comissão vai decidir", "terminou em" | os textos da FR-3746 e o núcleo da FR-3748; **"Falta enviar" continua** |
+| `tests/interface/test_portal_caminho_da_convocacao.py` | "não decide nada sozinho" (2), "Conferir o Requerimento de Matrícula enviado", "terminou em" | o núcleo da FR-3748 (que mantém "não decide nada sozinho"); o link de conferir continua, em lugar que depende de haver documento |
+| `tests/navegador/test_jornada_dos_documentos_da_convocacao.py` | "Falta enviar", "Pendente", "Atendido pelo documento", "aguardando conferência" (2), "A comissão vai decidir", "terminou em" | os textos da FR-3746 e o núcleo; **"Falta enviar" continua** |
 | `tests/integration/requerimentos/test_prazo_da_chamada.py` | "A comissão vai decidir" (2) | o núcleo da FR-3748 |
 | `tests/integration/convocacao/test_documentos_da_convocacao.py` | "A comissão vai decidir" | o núcleo da FR-3748 |
 | `tests/integration/convocacao/test_reenvio_nao_reinicia_prazo.py` | "Prazo para atender" | o rótulo e o formato da FR-3747 |
-| `tests/interface/test_permissoes_dos_documentos_da_convocacao.py` | "Atendido pelo documento" | o texto do aproveitado da FR-3746 |
+| `tests/interface/test_permissoes_dos_documentos_da_convocacao.py` | "Atendido pelo documento" | o texto do aproveitado da FR-3746; a garantia de permissão não muda |
 | `tests/interface/test_portal_requerimento.py` | a explicação do enviado; a recusa do vencido | FR-3752 e FR-3754 |
 | `tests/test_vocabulario_dos_documentos_da_convocacao.py` | lista literal `DA_115` | acrescenta `portal/obrigacoes.py` e os parciais novos |
 | `tests/test_vocabulario_da_convocacao.py`, `tests/test_vocabulario_do_requerimento.py` | listas literais | acrescentam os arquivos novos que tocam a convocação e o Requerimento |
 
-Depois de ajustar, **a busca pelos textos antigos nos testes deve voltar vazia**, salvo onde o
-teste prova que o texto antigo **não** aparece mais.
+**Os textos que saem**, e só eles, voltam a busca vazia nos testes (salvo onde o teste prova que o
+texto não aparece mais):
+
+- *"Atendido pelo documento enviado na inscrição"*;
+- *"aguardando conferência"* como sufixo do item (o selo *"Aguardando conferência"* entra);
+- *"Pendente: "* como início da linha do item e *"Envie outro arquivo"*;
+- *"Envie até "* como cabeçalho da lista;
+- *"A comissão vai decidir."* e *"O prazo informado nesta convocação já passou"*;
+- *"Prazo para atender"*;
+- *"Situação registrada: "*;
+- *"Se algo mudar e você for convocado"* **só** nos casos com convocação vigente.
+
+Ficam, e não entram na busca: *"Falta enviar."*, *"Não se aplica: "*, *"Conferir o Requerimento de
+Matrícula enviado"*, *"Seu Requerimento de Matrícula foi enviado."* (sem documento), *"Siga as
+instruções do Edital para esta convocação."* (sem documento e sem Requerimento) e *"não decide nada
+sozinho"*.
+
+### Ajustes da revisão do PR (04/11/2026)
+
+| Conflito | Decisão | Teste planejado |
+|---|---|---|
+| Opcionais no bloco que some sem tarefa; facultativo em duas categorias | O bloco 3 existe também só com opcionais; classificação por situação e depois por estado (D-018; FR-3722, FR-3735, FR-3738) | cenário L; tabela de combinações com "exatamente uma categoria" |
+| "O prazo terminou" com o Processo encerrado; promessa de conferência que o sistema recusa | Causa do fechamento derivada; Processo prevalece; texto próprio, sem prazo vencido nem conferência futura (D-015; FR-3721, FR-3741, FR-3746, FR-3748) | cenário M; recusa do documento em M sem o núcleo |
+| "Ainda indisponível" lido como "não pedido" depois do desfecho | Exigência e situação antes da disponibilidade (D-016; FR-3725) | cenário N, com e sem rascunho; as seis linhas da FR-3725 no unitário |
+| Data como prazo nos cartões e no opcional antes da comunicação | O prazo não iniciado prevalece sobre toda menção; "Você já pode enviar" só com escrita aberta (FR-3746, FR-3749, FR-3728) | cenário K2 |
+| Sem documento e com o Requerimento enviado: ação indefinida | A de hoje, inclusive o enviado como ação principal (D-017; FR-3732) | cenário B2; os testes da `063` sobre B e B2 sem edição, salvo texto comum |
+| FR-3756 proibia mudar as views que as tarefas mudam | Proíbe escrita, rota, comando e regra; as views leem a projeção, com titularidade, recusas e resposta privada iguais (FR-3756) | contagem de linhas antes e depois dos GET; recusa indistinguível nas três telas |
+| Busca genérica por "textos antigos" incluía textos que continuam | Lista explícita do que sai e do que fica (acima) | a busca da T032 sobre a lista |
 
 ## Riscos
 

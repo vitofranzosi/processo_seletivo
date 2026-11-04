@@ -101,10 +101,47 @@ tela. **Resultado observado:** impossível pela tela; só por serviço (shell ou
 - A autorização é a de convocar, que já existe; nenhum papel novo.
 - Testes de interface e de navegador do percurso: corrigir, ver o prazo novo no portal e
   complementar a pendência.
-- **Um cuidado:** `convocar_view` não confere a inscrição contra a fila (só `_identidade_ou_404`). A
-  ação nova deve continuar dependendo da guarda do comando, e não da tela. *Hipótese não testada*: um
-  POST montado à mão com uma inscrição em aberto, `motivo` e `vencimento` já criaria a sucessora.
+- **Uma observação, não verificada:** `convocar_view` não confere a inscrição contra a fila (só
+  `_identidade_ou_404`), e o comando exige a autorização de convocar. Pela leitura, um POST montado à
+  mão, por quem já pode convocar, com uma inscrição em aberto, `motivo` e `vencimento`, criaria a
+  sucessora — o que seria o próprio ato que a tela deveria oferecer, praticado por quem tem
+  competência para ele. **Isso não foi executado e não comprova vulnerabilidade.** A falha
+  comprovada é outra: a comissão não tem percurso utilizável pela interface.
 
 É mudança de tela da gestão, fora da `118` (que não muda a gestão), e merece spec curta ou emenda à
 `050`. A mensagem da sucessora (*"A sua convocação foi corrigida: o novo prazo é…"*) é outra decisão,
 sobre a FR-290 da `019`, e tem parente em `doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md`.
+
+## Proposta de escopo e validação (para decisão, sem implementação)
+
+Preparada em 04/11/2026, a pedido da revisão do PR #376. **Fica fora da `118`**, que não muda a
+gestão. Prioridade operacional alta, em frente separada.
+
+**Escopo mínimo**
+
+1. Na tela de condução da convocação, uma ação por cartão de chamada **em aberto e sem desfecho**:
+   *"Corrigir esta convocação"*. Ela não aparece em chamada com desfecho nem em chamada sucedida.
+2. Um formulário com **motivo obrigatório** e **vencimento novo** (data e hora, ou Evento do
+   Cronograma, como já resolve `resolver_vencimento`), com o complemento opcional do fundamento.
+3. **Prévia antes da confirmação** (FR-870 da `050`): a pessoa, a chamada que será sucedida, o
+   vencimento atual e o novo, o fundamento derivado, e se a comunicação sai de novo pelo Perfil.
+4. **Confirmação** que pratica o ato pelo comando que já existe, com a mesma autorização de convocar e
+   a mesma recusa para escopo alheio. Nenhum papel, tabela ou desfecho novo.
+5. **Nada além disso:** sem lote, sem prazo próprio por item (FR-3618 da `115`), sem mudança na fila.
+
+**Validação**
+
+- **Gestão → portal, de ponta a ponta, no navegador:** corrigir uma convocação com pendência e prazo
+  perto do fim; ver no portal o prazo novo; complementar o documento pendente e preencher o
+  Requerimento — os dois reabrem juntos (FR-3622 da `115`).
+- **Histórico preservado:** a convocação sucedida continua legível com o motivo
+  (`convocacao_historico.html`), a lista e as apresentações continuam da chamada (FR-3573 da `115`), e
+  nenhuma conferência se perde.
+- **Recusas:** motivo vazio; vencimento no passado; chamada com desfecho; chamada já sucedida; ator sem
+  autorização de convocar (403); Edital de outra unidade (404); duplo clique (idempotência).
+- **Trilha:** o ato de sucessão registrado com ator, unidade e motivo, como os demais atos da
+  condução.
+- **Mensagem:** no Perfil que convoca por mensagem individual, a sucessora comunica como hoje
+  (terceira situação da FR-084 da `010`). Uma redação própria para a correção é outra decisão (FR-290
+  da `019`).
+

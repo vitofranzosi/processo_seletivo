@@ -57,6 +57,18 @@
 - [x] QI-7 registrada com recomendação, sem desenvolver
 - [x] Correção por sucessão verificada; achado em `doc/`, separado da spec
 
+## Revisão do PR #376 (04/11/2026)
+
+- [x] Opcionais alcançáveis sem tarefa; facultativo em uma categoria só (D-018)
+- [x] Fechamento pelo Processo distinto do vencimento; nada promete conferência (D-015)
+- [x] Requerimento pedido e não enviado preservado depois do desfecho (D-016)
+- [x] Prazo não iniciado prevalece sobre cartões, opcionais e conclusão (FR-3749)
+- [x] Sem documento, a ação de hoje, inclusive o enviado (D-017); spec, plano e SC-1123 alinhados
+- [x] FR-3756 restringe efeito, não arquivo; garantias de escrita, titularidade e privacidade com
+      teste (T025a)
+- [x] Lista explícita dos textos que saem e dos que ficam (plano)
+- [x] Cenários de controle B2, L, M, N e K2 (SC-1127)
+
 ## Notes
 
 - **Detalhe de implementação na spec, de propósito.** A spec cita funções (`estado_de`,

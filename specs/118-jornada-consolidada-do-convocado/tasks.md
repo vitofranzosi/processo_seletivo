@@ -20,7 +20,7 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ## Phase 0: Portão
 
-- [X] T000 Spec, plano, tarefas, quickstart e checklist escritos (04/11/2026), só documentais; `tests/test_citacoes_de_requisito.py` verde. O merge do PR aprova a spec
+- [X] T000 Spec, plano, tarefas, quickstart e checklist escritos (04/11/2026), só documentais, e revistos no mesmo dia com a revisão do PR #376 (D-015 a D-018; cenários B2, L, M, N, K2); `tests/test_citacoes_de_requisito.py` verde. O merge do PR aprova a spec
 - [ ] T001 Aplicar as revisões de *Revisões de requisitos anteriores* da spec nos arquivos `specs/063-acompanhamento-pela-situacao/spec.md` (FR-1175, FR-1176, FR-1177, FR-1178), `specs/115-documentos-na-convocacao/spec.md` (FR-3577, FR-3612, User Story 2 cenário 2), `specs/059-acesso-a-convocacao/spec.md` (FR-1090, FR-1096, FR-1097) e `specs/029-requerimento-de-matricula/spec.md` (FR-405, FR-406), cada uma com a marca *"revisada pela `118` em ‹data›"* e a redação anterior preservada ao fim da alínea, no molde da FR-084 da `010`; `tests/test_citacoes_de_requisito.py` verde
 
 ## Phase 1: Setup
@@ -38,15 +38,15 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ### Tests
 
-- [ ] T005 [P] `tests/unit/portal/test_obrigacoes_da_convocacao.py`: tabela de combinações estado do item × obrigatório/facultativo × aberta/encerrada/decidida × estado do Requerimento; cada combinação em exatamente uma categoria; a ordem *a corrigir → a enviar → Requerimento*; facultativo fora dos totais; nenhuma frase com "atendido", "enviou tudo", "aprovado" (FR-3721 a FR-3729, SC-1126)
-- [ ] T006 [P] No mesmo arquivo, o texto literal de cada célula da FR-3746 e o da frase de conclusão, com e sem opcional, com e sem vencimento (FR-3728, FR-3746)
+- [ ] T005 [P] `tests/unit/portal/test_obrigacoes_da_convocacao.py`: tabela de combinações estado do item × obrigatório/facultativo × os quatro momentos (aberta, encerrada pelo prazo, encerrada pelo Processo, decidida) × as seis linhas do Requerimento da FR-3725; cada combinação em exatamente uma categoria; Processo e prazo juntos dão *encerrada pelo Processo*; o Requerimento pedido na convocação e não enviado nunca vira *não pedido* depois do desfecho, com ou sem rascunho; a ordem *a corrigir → a enviar → Requerimento*; facultativo fora dos totais; nenhuma frase com "atendido", "enviou tudo", "aprovado" (FR-3721 a FR-3729, SC-1126)
+- [ ] T006 [P] No mesmo arquivo, o texto literal de cada célula da FR-3746, nas quatro colunas, e o da frase de conclusão, com e sem opcional; com o prazo não iniciado e sem vencimento, nenhuma frase com "até" (FR-3728, FR-3746, FR-3749)
 - [ ] T007 [P] Prova de zero consultas na projeção, no molde do teste de custo da situação da `063` (FR-3721)
 
 ### Implementation
 
 - [ ] T008 Criar `processo_seletivo/portal/obrigacoes.py`: `Obrigacoes`, as categorias, `obrigacoes_da_convocacao()` e as constantes de texto (FR-3721 a FR-3729, FR-3746, FR-3749)
 - [ ] T009 `convocacao/application/documentos.py`: `frase_do_prazo_decorrido` devolve o núcleo da FR-3748, com hora em `HHhMM`; as recusas de documento e de Requerimento continuam chamando-a (FR-3748)
-- [ ] T010 `portal/views.py`: o estado do Requerimento nos cinco valores da FR-3725, a partir da mesma apuração de `_requerimento_da_convocacao`; o chamado de hoje continua derivado dele (FR-3725, FR-1098 da `059`)
+- [ ] T010 `portal/views.py`: entregar à projeção as três leituras do Requerimento da `Disponibilidade` que `apurar` já devolve, e a causa do fechamento no lugar do booleano `pode_apresentar` (`pode_apresentar` passa a ser `causa is None`); o chamado de hoje continua derivado da mesma `Disponibilidade` (FR-3721, FR-3725, FR-1098 da `059`)
 
 **Checkpoint**: a projeção existe e está provada; nenhuma tela mudou.
 
@@ -59,8 +59,8 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ### Tests
 
-- [ ] T011 [P] [US1] `tests/unit/portal/test_situacao_da_inscricao.py`: a tabela da FR-3730 linha a linha; o enviado como linha secundária; sem documento, o caminho de hoje (FR-3730, FR-3731, FR-3732)
-- [ ] T012 [P] [US1] `tests/portal/test_acompanhamento_pela_situacao.py`: C1, C2 e B renderizados; o link principal com documento leva à convocação; nenhum rótulo de link começa por "Enviar"; contagem de consultas com 0, 1 e 6 itens e sem convocação (FR-3730, FR-3734, SC-1117, SC-1125)
+- [ ] T011 [P] [US1] `tests/unit/portal/test_situacao_da_inscricao.py`: a tabela da FR-3730 linha a linha, inclusive a linha 2 (Processo); o enviado como linha secundária com documento; **sem documento, B e B2 exatamente como hoje**, com `REQUERIMENTO_ENVIADO` como ação principal em B2 (FR-3730, FR-3731, FR-3732)
+- [ ] T012 [P] [US1] `tests/portal/test_acompanhamento_pela_situacao.py`: C1, C2, B e B2 renderizados; o link principal com documento leva à convocação; nenhum rótulo de link começa por "Enviar"; contagem de consultas com 0, 1 e 6 itens e sem convocação (FR-3730, FR-3732, FR-3734, SC-1117, SC-1123, SC-1125)
 
 ### Implementation
 
@@ -79,7 +79,7 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ### Tests
 
-- [ ] T016 [P] [US2] `tests/interface/test_portal_jornada_consolidada.py` (novo): a ordem dos títulos de segundo nível; o bloco 3 ausente sem tarefa; as âncoras do bloco 1 apontam para cartões existentes; o rótulo do botão de navegação; "Envie o arquivo" em J (FR-3735 a FR-3739, FR-3746)
+- [ ] T016 [P] [US2] `tests/interface/test_portal_jornada_consolidada.py` (novo): a ordem dos títulos de segundo nível; o bloco 3 ausente sem tarefa **e** sem opcional; em L, o bloco *Documentos opcionais* com o formulário; as âncoras do bloco 1 apontam para cartões existentes; o rótulo do botão de navegação; "Envie o arquivo" em J; em K2, nenhuma data como prazo (FR-3735 a FR-3739, FR-3746, FR-3749, SC-1127)
 - [ ] T017 [P] [US3] No mesmo arquivo: D, E e H sem "atendido", sem "Conforme" sozinho, sem "enviou tudo"; a frase de conclusão; o aproveitado conferido diz a origem (FR-3724, FR-3728, FR-3746, SC-1118)
 - [ ] T018 [P] [US2] `tests/interface/test_portal_documentos_da_convocacao.py`, `tests/interface/test_permissoes_dos_documentos_da_convocacao.py`: as expectativas de texto da tabela do plano (FR-3746)
 
@@ -101,13 +101,14 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ### Tests
 
-- [ ] T023 [P] [US4] `tests/interface/test_portal_jornada_consolidada.py`: G com "O prazo terminou", o resumo e o Requerimento não enviado, sem formulário; I1 e I2 com zero formulários e zero "Envie até", "Falta enviar", "aguardando conferência"; "Vaga aceita" e a frase do aceite nas duas telas; Processo em estado final (FR-3741, FR-3742, FR-3750, SC-1120)
+- [ ] T023 [P] [US4] `tests/interface/test_portal_jornada_consolidada.py`: G com "O prazo terminou", o resumo e o Requerimento não enviado, sem formulário; M com "O envio pelo portal está encerrado", sem "prazo terminou", sem "vai conferir", sem formulário de documento; N com "Requerimento de Matrícula: não enviado."; I1 e I2 com zero formulários e zero "Envie até", "Falta enviar", "aguardando conferência"; "Vaga aceita" e a frase do aceite nas duas telas (FR-3725, FR-3741, FR-3742, FR-3750, SC-1120, SC-1127)
 - [ ] T024 [P] [US4] `tests/interface/test_portal_requerimento.py`: G sem requerimento vigente responde "O prazo terminou" sem 409, sem linha nova; o enviado com "Voltar à convocação" e a explicação por momento; o aviso do envio com documento (FR-3752, FR-3754, FR-3755)
-- [ ] T025 [P] [US4] `tests/integration/requerimentos/test_prazo_da_chamada.py`, `tests/integration/convocacao/test_documentos_da_convocacao.py`: o mesmo núcleo nas duas recusas (FR-3748)
+- [ ] T025 [P] [US4] `tests/integration/requerimentos/test_prazo_da_chamada.py`, `tests/integration/convocacao/test_documentos_da_convocacao.py`: o mesmo núcleo nas duas recusas por prazo; a recusa do documento com o Processo encerrado não usa o núcleo (FR-3748)
+- [ ] T025a [P] `tests/interface/test_portal_jornada_consolidada.py`: garantias do novo caminho de leitura — contagem de linhas de todas as tabelas antes e depois de um GET de cada tela em cada cenário (só a leitura da convocação na trilha muda; o GET de G no Requerimento não cria rascunho); inscrição alheia e inexistente com a mesma recusa nas três telas; a página do Requerimento continua com resposta privada (FR-3756, SC-1127)
 
 ### Implementation
 
-- [ ] T026 [US4] Templates da convocação e do acompanhamento: os estados *encerrada* e *decidida*; o rótulo de `DESFECHOS` na convocação; a frase do aceite em `portal/situacao.py` (FR-3741, FR-3742, FR-3750)
+- [ ] T026 [US4] Templates da convocação e do acompanhamento: os estados *encerrada pelo prazo*, *encerrada pelo Processo* e *decidida*; o rótulo de `DESFECHOS` na convocação; a frase do aceite em `portal/situacao.py` (FR-3741, FR-3742, FR-3750)
 - [ ] T027 [US4] `requerimentos/application/selectors.py` e `portal/views.py`, `requerimento`: explicação por momento; o vencido sem requerimento vigente antes de `abrir_rascunho`; o aviso do envio; `requerimento.html` com *"Voltar à convocação"* (FR-3752, FR-3754, FR-3755)
 
 ---
@@ -123,10 +124,10 @@ próprio da worktree e os grupos `assistente` e `navegador` instalados.
 
 ## Phase 7: Navegador, capturas e verificação
 
-- [ ] T029 [P] `tests/navegador/test_jornada_consolidada_do_convocado.py` (novo): os cenários A–K a 375 px e em desktop; Tab linear e foco visível; nomes acessíveis únicos; sem rolagem horizontal; sem violação de CSP no console; o bloco 1 dentro da primeira tela em A, C1, C2, F e J; ajustar `tests/navegador/test_jornada_dos_documentos_da_convocacao.py` (SC-1119, SC-1121, SC-1122)
+- [ ] T029 [P] `tests/navegador/test_jornada_consolidada_do_convocado.py` (novo): os cenários A–K e B2, L, M, N, K2 a 375 px e em desktop; Tab linear e foco visível; nomes acessíveis únicos; sem rolagem horizontal; sem violação de CSP no console; o bloco 1 dentro da primeira tela em A, C1, C2, F e J; ajustar `tests/navegador/test_jornada_dos_documentos_da_convocacao.py` (SC-1119, SC-1121, SC-1122, SC-1127)
 - [ ] T030 `specs/118-jornada-consolidada-do-convocado/rastreabilidade.md`: uma linha por FR e SC desta spec, com o teste que a prova (`tests/test_citacoes_de_requisito.py` cobra)
-- [ ] T031 Capturas "depois" dos cenários A–K e dos dois de controle, com o mesmo nome do relatório, em `capturas/`
-- [ ] T032 `verificacao.md`: para cada cenário, as quatro perguntas respondidas com o texto literal da tela (SC-1124); a busca pelos textos antigos nos testes, vazia salvo onde se prova a ausência; totais da suíte contra a linha de base
+- [ ] T031 Capturas "depois" dos cenários A–K, B2, L, M, N, K2 e dos dois de controle, com o mesmo nome do relatório, em `capturas/`
+- [ ] T032 `verificacao.md`: para cada cenário, as quatro perguntas respondidas com o texto literal da tela (SC-1124); a busca, nos testes, pelos **textos que saem** da lista do plano — vazia, salvo onde o teste prova a ausência —, e a confirmação de que os que **ficam** continuam presos; cada expectativa alterada justificada por cenário, com a garantia anterior ainda provada; totais da suíte contra a linha de base
 - [ ] T033 `make lint check test-pg` (os dois passos do `lint`); linha do README da `118` atualizada; o `CLAUDE.md` não muda (nenhuma tabela append-only nova)
 
 ---

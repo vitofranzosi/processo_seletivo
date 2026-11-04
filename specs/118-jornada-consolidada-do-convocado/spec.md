@@ -2,14 +2,15 @@
 
 **Feature Branch**: `claude/sweet-blackwell-dc658d`, sobre a `main` em `fb0e1ddc`
 
-**Created**: 2026-11-04
+**Created**: 2026-11-04 · **Revista**: 2026-11-04, com a revisão do PR #376
 
 **Status**: Draft, **só documental**. Nenhum código, migration, rota ou tela foi alterado. As
 decisões têm três origens:
 
 - **Do usuário, em 04/11/2026, sobre o diagnóstico do PR vitofranzosi/processo_seletivo#375:**
   D-001 a D-006. Não se reabrem.
-- **Propostas de desenho desta spec:** D-007 a D-014. A revisão do PR as aprova ou ajusta.
+- **Propostas de desenho desta spec:** D-007 a D-014, e D-015 a D-018, que vieram da revisão do PR
+  em 04/11/2026. A revisão do PR as aprova ou ajusta.
 - **Revisões de requisitos de outras specs** (`063`, `115`, `059`, `029`): estão escritas por
   extenso em *Revisões de requisitos anteriores*. Elas se aplicam aos arquivos daquelas specs na
   **primeira tarefa da implementação** (T001), com a redação anterior preservada, como a `117` fez
@@ -133,6 +134,22 @@ Decisões do usuário, trazidas no pedido, que não se reabrem:
   GPS não é GED; nada automático; a comissão confere e decide; nenhuma máquina de estados nova
   (D-006).
 
+### Session 2026-11-04 (revisão do PR #376)
+
+Uma revisão do PR apontou cinco contradições e dois excessos do plano. O usuário mandou aplicá-los
+("Sim, aplique"). Cada um tem decisão e teste (tabela *Ajustes da revisão*, no plano):
+
+- Q: Os opcionais somem quando não há tarefa? → A: Não. O bloco 3 existe também só com opcionais, e
+  o facultativo tem classificação própria em cada estado (D-018; FR-3722, FR-3735, FR-3738).
+- Q: O Processo em estado final é "o prazo terminou"? → A: Não. A causa do fechamento é derivada, e
+  cada causa tem o seu texto; com o Processo, nada promete conferência (D-015; FR-3741, FR-3748).
+- Q: "Indisponível agora" é "não pedido"? → A: Não. A exigência e a situação vêm antes da
+  disponibilidade (D-016; FR-3725).
+- Q: O prazo não iniciado vale também nos cartões e no opcional? → A: Sim, e prevalece (FR-3749).
+- Q: Sem documento e com o Requerimento enviado, qual é a ação? → A: A de hoje (D-017; FR-3732).
+- Q: A FR-3756 proíbe mudar as views? → A: Não. Proíbe escrita, rota, comando e regra novos; as
+  views passam a ler a projeção, com titularidade, recusas e resposta privada iguais (FR-3756).
+
 ## User Scenarios & Testing *(mandatory)*
 
 Os cenários são os do relatório, com a mesma letra. Todos são percorridos pelo portal, num navegador
@@ -166,6 +183,9 @@ faltam.
 4. **Given** o Requerimento é a única obrigação e a chamada não pede documento (B), **When** ela abre
    o acompanhamento, **Then** a ação e o link continuam os de hoje: *"Preencher o Requerimento de
    Matrícula."*, direto à tela dele.
+5. **Given** o Requerimento já enviado e a chamada sem documento (B2), **When** ela abre o
+   acompanhamento, **Then** a ação principal continua a de hoje, *"Seu Requerimento de Matrícula foi
+   enviado."*, com o link para conferi-lo.
 
 ---
 
@@ -223,6 +243,9 @@ enviado" antes do desfecho; nenhuma frase diz que a pessoa reenviou o aproveitad
    sozinho: diz *"Conferido: de acordo com o Edital."*
 4. **Given** o item aproveitado e conferido, **When** ela o lê, **Then** o texto diz que é o arquivo
    enviado na inscrição, e não que ela o reenviou.
+5. **Given** só um documento facultativo sem envio, e nenhuma tarefa (L), **When** ela abre a
+   convocação, **Then** o bloco *Documentos opcionais* aparece com o envio, a frase de conclusão vale,
+   e o opcional não entra em contagem nenhuma.
 
 ---
 
@@ -254,6 +277,12 @@ resumo do vencido; o endereço do Requerimento não cai na recusa técnica.
    do resultado"*.
 4. **Given** o aceite registrado (I1), **When** ela abre o acompanhamento e a convocação, **Then** as
    duas dizem *"Vaga aceita"* e a frase de que o registro não é matrícula, bolsa nem contrato.
+5. **Given** o Processo encerrado com a chamada em aberto e o prazo ainda correndo (M), **When** ela
+   abre a convocação, **Then** o topo diz *"O envio pelo portal está encerrado"*, sem dizer que o
+   prazo venceu e sem prometer conferência, e nenhum formulário de documento aparece.
+6. **Given** o indeferimento registrado e o Requerimento pedido na convocação e nunca enviado (N),
+   **When** ela abre a convocação, **Then** a página diz *"Requerimento de Matrícula: não enviado."*,
+   e não o omite.
 
 ---
 
@@ -276,34 +305,52 @@ telas e no Requerimento. O formato é um só; a frase do vencido tem um núcleo 
 2. **Given** a comunicação não enviada (K), **When** ela abre a convocação, **Then** a tela diz que o
    prazo ainda não começou e que ela já pode enviar, e o vencimento registrado só aparece entre os
    dados da convocação, dito como dado do ato.
+3. **Given** a comunicação não enviada, com um item pendente e um opcional (K2), **When** ela lê os
+   cartões, **Then** nenhum deles diz *"até ‹data›"*.
 
 ---
 
 ### Edge Cases
 
-Cada caso aponta o requisito que o rege.
+Cada caso aponta o requisito que o rege. Os casos com letra são cenários da validação (plano).
 
 - **Chamada sem documento e sem Requerimento.** A ação continua *"Siga as instruções do Edital para
   esta convocação."*, e a tela da convocação mantém a estrutura de hoje (FR-3732, FR-3743).
-- **Chamada com Requerimento e sem documento (B).** O caminho direto ao Requerimento continua
-  (FR-3732).
-- **Requerimento coletado na inscrição.** Ele está *enviado* desde a inscrição, e aparece como linha
-  secundária com *conferir e atualizar*, nunca como obrigação da convocação (FR-3725, FR-3731).
-- **Só facultativos sem envio.** Não há pendência: a frase de conclusão vale, com a linha do opcional
-  (FR-3723, FR-3728).
-- **Facultativo pendente.** Mostra o motivo, como opcional, e não entra na contagem do que falta
-  (FR-3723).
+- **Chamada com Requerimento e sem documento, a preencher (B).** O caminho direto ao Requerimento
+  continua (FR-3732).
+- **Chamada com Requerimento e sem documento, já enviado (B2).** A ação principal continua *"Seu
+  Requerimento de Matrícula foi enviado."*, como hoje; a linha secundária da FR-3731 só existe com
+  documento (FR-3732, D-017).
+- **Requerimento coletado na inscrição.** Ele está *enviado* desde a inscrição: com documento na
+  chamada, aparece como linha secundária com *conferir e atualizar*; nunca como obrigação da
+  convocação (FR-3725, FR-3731).
+- **Requerimento pedido na convocação, nunca enviado, depois do desfecho (N).** A política o diz
+  "ainda indisponível", mas a projeção o mostra como *não enviado*, e não como *não pedido*
+  (FR-3725, linha 3; FR-3742).
+- **Requerimento com rascunho e prazo decorrido.** *Não enviado até o prazo*; o rascunho continua
+  legível, como a `029` já garante (FR-3725, linha 4).
+- **Só facultativos sem envio, com a chamada aberta (L).** Não há tarefa: a frase de conclusão vale,
+  com a linha do opcional, e o bloco 3 aparece como *Documentos opcionais*, com o envio (FR-3723,
+  FR-3728, FR-3735, FR-3738).
+- **Facultativo pendente.** Mostra o motivo, como opcional, com o envio enquanto a chamada estiver
+  aberta, e não entra na contagem do que falta (FR-3723, FR-3746).
+- **Facultativo recebido.** Fica com a comissão, com o selo *"Opcional"* (FR-3722, FR-3739).
 - **Obrigatório *não se aplica* por conferência.** Fica entre os conferidos, com o motivo; não é
   tarefa (FR-3722).
 - **Item complementado.** Fica com a comissão, com o texto do novo arquivo (FR-3722, FR-3746).
 - **Item aproveitado da chamada anterior.** Fica com a comissão; nunca dito como reenviado (FR-3724).
 - **Convocação corrigida por sucessão.** A projeção lê a lista da chamada e o prazo da vigente, como a
   `115` (FR-3721).
-- **Convocação sem vencimento.** Não há prazo a mostrar; a escrita continua aberta enquanto a chamada
-  estiver em aberto (FR-3737).
-- **Processo em estado final com chamada em aberto.** A escrita está fechada sem vencimento: o topo
-  diz que o envio pelo portal está encerrado e que a comissão registra o resultado, sem formulário
-  (FR-3741).
+- **Convocação sem vencimento.** Não há prazo a mostrar; *"até ‹prazo›"* sai das frases, e a escrita
+  continua aberta enquanto a chamada estiver em aberto (FR-3737, FR-3746).
+- **Prazo não iniciado com pendência, tarefa e opcional (K2).** Nenhum cartão, opcional ou frase de
+  conclusão mostra a data como prazo (FR-3749).
+- **Processo em estado final com chamada em aberto (M).** A escrita de documentos está fechada pelo
+  Processo, e não pelo prazo: o topo diz *"O envio pelo portal está encerrado"*, sem dizer que o prazo
+  venceu e sem prometer conferência; os itens com a comissão dizem que não foram conferidos antes do
+  encerramento (FR-3741, FR-3746). O Requerimento segue a política da `029`, que não fecha com o
+  Processo (FR-3725; divergência registrada em *Registrado, sem desenvolver*).
+- **Processo em estado final e vencimento decorrido, juntos.** Vale o Processo (FR-3721).
 - **Pendência registrada depois do vencimento.** Aparece como *"Precisava de correção"*, sem convite a
   enviar (FR-3746).
 - **Conferência que chega enquanto a pessoa está na página.** A tela mostra o que leu ao abrir; a
@@ -312,6 +359,7 @@ Cada caso aponta o requisito que o rege.
   Rótulo de `DESFECHOS`, fundamento e data; a frase do aceite não aparece (FR-3750).
 - **Regularização registrada.** Recebe a frase do aceite, porque também inclui na ocupação (FR-3750).
 - **Inscrição sem convocação.** Nenhuma consulta nova e nenhum elemento novo (FR-3734).
+- **Inscrição alheia ou inexistente.** A mesma recusa de hoje, nas três telas (FR-3756).
 
 ## Requirements *(mandatory)*
 
@@ -325,51 +373,71 @@ Cada caso aponta o requisito que o rege.
   - a leitura documental da chamada: os itens pedidos, com a situação (obrigatório ou facultativo)
     e o estado da FR-3590 da `115`, e de onde veio a apresentação vigente (portal, inscrição ou
     chamada anterior);
-  - o estado do Requerimento de Matrícula, pela política da `029` que a tela dele consulta
-    (FR-1099 da `059`);
-  - o estado do prazo, pela leitura da `019` (`estado_de`), e se a escrita está aberta, pela mesma
-    condição que admite o envio (FR-3578 e FR-3582 da `115`);
+  - as três leituras do Requerimento de Matrícula da FR-3725, todas da política da `029` que a tela
+    dele consulta (FR-1099 da `059`);
+  - o estado do prazo, pela leitura da `019` (`estado_de`): não iniciado, em curso, sem vencimento
+    ou decorrido;
+  - a **causa** do fechamento da escrita de documentos, quando ela estiver fechada, pela mesma
+    condição que recusa o envio (FR-3578 e FR-3582 da `115`): *vencimento decorrido* ou *Processo em
+    estado final* (encerrado ou cancelado). Com as duas, vale o Processo, porque com ele ninguém
+    confere nem desfecha;
   - o desfecho vigente, quando houver.
   
-  Ela MUST NOT ler relógio, consultar o banco, gravar nada nem contar o prazo de novo. A lista e o
-  prazo são os da chamada, inclusive na convocação corrigida por sucessão.
-- **FR-3722**: Cada item pedido MUST cair em **uma** categoria, pela tabela abaixo. A coluna vale
-  conforme o momento da chamada: *aberta* (sem desfecho e com a escrita aberta), *encerrada* (sem
-  desfecho e com a escrita fechada, por vencimento ou por Processo em estado final) e *decidida*
-  (com desfecho vigente).
+  Ela MUST NOT ler relógio, consultar o banco, gravar nada nem contar o prazo de novo. A causa é
+  derivada a cada leitura, e não gravada. A lista e o prazo são os da chamada, inclusive na
+  convocação corrigida por sucessão.
+- **FR-3722**: A projeção MUST situar a chamada num **momento**, pela primeira linha que se aplicar:
 
-  | Estado do item (FR-3590 da `115`) | Aberta | Encerrada | Decidida |
-  |---|---|---|---|
-  | obrigatório *a apresentar* | **a enviar** | não enviado | não enviado |
-  | obrigatório *pendente*, com apresentação anterior | **a corrigir** | precisava de correção | precisava de correção |
-  | obrigatório *pendente*, sem apresentação | **a enviar** (com o motivo) | precisava de correção | precisava de correção |
-  | *recebido* (pelo portal) | com a comissão | com a comissão | não conferido antes do resultado |
-  | *recebido* por aproveitamento (inscrição ou chamada anterior) | com a comissão | com a comissão | não conferido antes do resultado |
-  | *complementado* | com a comissão | com a comissão | não conferido antes do resultado |
-  | *conforme* | conferido | conferido | conferido |
-  | *não se aplica* por conferência | conferido | conferido | conferido |
-  | facultativo, em qualquer estado sem conferência *conforme* ou *não se aplica* | opcional | opcional | opcional |
+  | Momento | Quando |
+  |---|---|
+  | *decidida* | há desfecho vigente |
+  | *encerrada pelo Processo* | sem desfecho, com o Processo em estado final |
+  | *encerrada pelo prazo* | sem desfecho, com o vencimento decorrido |
+  | *aberta* | os demais casos, inclusive o prazo não iniciado e a convocação sem vencimento |
 
-  Só as categorias em negrito são tarefas do candidato.
+  E MUST pôr cada item pedido em **exatamente uma** categoria, primeiro pela situação e depois pelo
+  estado:
+
+  | Estado do item (FR-3590 da `115`) | Obrigatório | Facultativo |
+  |---|---|---|
+  | *a apresentar* | **a enviar** | opcional |
+  | *pendente*, com apresentação anterior | **a corrigir** | opcional |
+  | *pendente*, sem apresentação | **a enviar**, com o motivo | opcional |
+  | *recebido*, pelo portal ou por aproveitamento | com a comissão | com a comissão, marcado como opcional |
+  | *complementado* | com a comissão | com a comissão, marcado como opcional |
+  | *conforme* ou *não se aplica* | conferido | conferido |
+
+  A categoria não muda com o momento. O que muda é o texto (FR-3746) e se há convite: **só com a
+  chamada aberta** as categorias em negrito são tarefas e o opcional pode ser enviado.
 - **FR-3723**: O **facultativo** MUST NOT contar como pendência, nem entrar no total do que falta,
   nem impedir a frase de conclusão (FR-3728). A pendência registrada num facultativo MUST mostrar o
-  motivo e dizer que o documento é opcional.
+  motivo e dizer que o documento é opcional. Com a chamada aberta, o opcional sem conferência MUST
+  continuar alcançável para envio, **haja ou não tarefa** (FR-3735, FR-3738).
 - **FR-3724**: O que está **com a comissão** MUST NOT ser apresentado como tarefa do candidato. O
   item aproveitado MUST NOT ser dito como reenviado pela pessoa, nem como atendido, conferido ou
-  aceito antes da conferência *conforme*.
-- **FR-3725**: O Requerimento de Matrícula MUST entrar na projeção num destes estados, todos lidos da
-  política da `029`, sem segunda decisão de disponibilidade:
+  aceito antes da conferência *conforme*. Com a chamada encerrada pelo Processo, nenhuma frase MUST
+  prometer conferência ou resultado futuros.
+- **FR-3725**: O Requerimento de Matrícula MUST entrar na projeção a partir de **três leituras
+  separadas**, todas já existentes na política da `029`:
+  - a **exigência**: o momento declarado pelo Edital (*na inscrição*, *na convocação* ou nenhum);
+  - a **situação**: enviado ou não enviado (com ou sem rascunho);
+  - a **disponibilidade atual**: se a política admite preencher agora.
 
-  | Estado | Quando |
-  |---|---|
-  | *não pedido* | o Edital não declara Requerimento, ou a política o diz ainda indisponível |
-  | *a preencher* | disponível ou em preenchimento, com a escrita aberta |
-  | *enviado* | enviado, na inscrição ou na convocação |
-  | *não enviado até o prazo* | pedido na convocação, não enviado, com a escrita encerrada sem desfecho |
-  | *não enviado* | pedido na convocação, não enviado, com desfecho vigente |
+  O estado na projeção MUST ser o da primeira linha que se aplicar. **A exigência e a situação vêm
+  antes da disponibilidade**: depois do desfecho, a política diz "ainda indisponível" a quem nunca
+  enviou, e isso não pode apagar que ele foi pedido.
 
-  Só *a preencher* é tarefa. *Enviado* MUST NOT ser a ação principal enquanto houver outra tarefa
-  (FR-3730).
+  | # | Quando | Estado | É tarefa? |
+  |---|---|---|---|
+  | 1 | o Edital não declara Requerimento | *não pedido* | não |
+  | 2 | enviado, na inscrição ou na convocação | *enviado* | não |
+  | 3 | declarado *na convocação*, não enviado, chamada *decidida* | *não enviado* | não |
+  | 4 | declarado *na convocação*, não enviado, chamada *encerrada pelo prazo* | *não enviado até o prazo* | não |
+  | 5 | a política o diz disponível ou em preenchimento | *a preencher* | **sim** |
+  | 6 | os demais casos | *sem chamado* | não |
+
+  A linha 6 é a proteção contra um chamado que o comando recusaria (FR-1098 da `059`); nenhum
+  cenário conhecido cai nela com chamada aberta. A política de escrita da `029` não muda.
 - **FR-3726**: A ordem do que o candidato precisa fazer MUST ser: *a corrigir*, depois *a enviar*,
   depois o Requerimento *a preencher*; dentro de cada grupo, a ordem do Edital. A precedência da
   FR-3591 da `115`, que põe *para conferir* antes de *com pendência*, serve a quem confere, e MUST
@@ -378,12 +446,13 @@ Cada caso aponta o requisito que o rege.
   comissão, conferidos — contando só obrigatórios, e se o Requerimento é tarefa.
 - **FR-3728**: Com a chamada *aberta*, documentos pedidos e nenhuma tarefa, a projeção MUST oferecer
   a **frase de conclusão**: *"Você não tem mais documentos para enviar agora. A comissão ainda vai
-  concluir a análise."* Havendo facultativo sem envio, MUST seguir-se *"Se quiser, você ainda pode
-  enviar o documento opcional até ‹prazo›."* (sem prazo: *"…enviar o documento opcional."*). Nenhuma
-  frase MUST dizer que a pessoa enviou tudo, que está tudo certo, aceito, aprovado ou concluído.
+  concluir a análise."* Havendo opcional sem envio, MUST seguir-se *"Se quiser, você ainda pode
+  enviar o documento opcional até ‹prazo›."*; com o prazo não iniciado ou sem vencimento, sem
+  *"até ‹prazo›"* (FR-3749). Nenhuma frase MUST dizer que a pessoa enviou tudo, que está tudo certo,
+  aceito, aprovado ou concluído.
 - **FR-3729**: A projeção MUST NOT produzir decisão. Ela MUST NOT inferir desfecho, perda de vaga,
-  nova chamada, prazo novo nem prazo de complementação; o fim do prazo só fecha a escrita (FR-3593 e
-  FR-3618 da `115`).
+  nova chamada, prazo novo nem prazo de complementação; o fim do prazo e o estado final do Processo
+  só fecham a escrita (FR-3593 e FR-3618 da `115`).
 
 #### B. O acompanhamento
 
@@ -392,26 +461,35 @@ Cada caso aponta o requisito que o rege.
 
   | # | Quando | Ação principal | Link principal |
   |---|---|---|---|
-  | 1 | desfecho vigente | *"Nada por enquanto."* (FR-1178 da `063`) | *"Ver o que você enviou nesta convocação"* → convocação |
-  | 2 | chamada *encerrada* | a frase do vencido (FR-3748), e *"Até o prazo, ficaram sem envio: ‹lista curta›."* quando houver | *"Ver como ficou a convocação"* → convocação |
-  | 3 | há tarefa | *"Você ainda precisa ‹tarefas›."*, com as tarefas na ordem da FR-3726 (por exemplo, *"Você ainda precisa corrigir 1 documento, enviar 2 documentos e preencher o Requerimento de Matrícula."*) | com algo *a corrigir*: *"Ver e corrigir os documentos pendentes"*; sem: *"Ver o que falta na convocação"* → convocação |
-  | 4 | nenhuma tarefa | *"Nada por enquanto."*, seguida da frase de conclusão (FR-3728) | *"Ver a convocação"* → convocação |
+  | 1 | chamada *decidida* | *"Nada por enquanto."* (FR-1178 da `063`) | *"Ver o que você enviou nesta convocação"* → convocação |
+  | 2 | chamada *encerrada pelo Processo* | a frase do Processo (FR-3741) | *"Ver como ficou a convocação"* → convocação |
+  | 3 | chamada *encerrada pelo prazo* | a frase do vencido (FR-3748) e, quando houver, *"Até o prazo, ficaram sem envio: ‹lista curta›."* | *"Ver como ficou a convocação"* → convocação |
+  | 4 | chamada *aberta*, com tarefa | *"Você ainda precisa ‹tarefas›."*, com as tarefas na ordem da FR-3726 (por exemplo, *"Você ainda precisa corrigir 1 documento, enviar 2 documentos e preencher o Requerimento de Matrícula."*) | com algo *a corrigir*: *"Ver e corrigir os documentos pendentes"*; sem: *"Ver o que falta na convocação"* → convocação |
+  | 5 | chamada *aberta*, sem tarefa | *"Nada por enquanto."*, seguida da frase de conclusão (FR-3728) | *"Ver a convocação"* → convocação |
 
   O link principal MUST levar à tela da convocação em todas as linhas, **mesmo com o Requerimento
   enviado ou a preencher**. Nenhum rótulo de link que só navega MUST começar por "Enviar" (D-004).
   O prazo, o aviso de prazo não iniciado e a consequência continuam vindo da FR-1176 e da FR-1177 da
-  `063`, revistas.
-- **FR-3731**: Com o Requerimento *enviado*, aberta ou decidida a chamada, o bloco *"O que fazer"* MUST
-  mostrar a linha secundária *"✓ Requerimento de Matrícula enviado."*, com o link *"Conferir o
-  Requerimento de Matrícula enviado"* (FR-1097 da `059`), abaixo da ação principal e nunca no lugar
-  dela.
-- **FR-3732**: Quando a chamada não pede documento, a ação MUST continuar a de hoje: *"Preencher o
-  Requerimento de Matrícula."* com o link direto a ele; o Requerimento enviado como linha secundária
-  (FR-3731); e, sem Requerimento, *"Siga as instruções do Edital para esta convocação."* com *"Ver
-  convocação"*. A única mudança, sem documento, é a de texto comum às telas (FR-3747 a FR-3750).
-- **FR-3733**: Com a chamada *encerrada*, o acompanhamento MUST mostrar o que ficou sem envio —
-  documentos obrigatórios e o Requerimento *não enviado até o prazo* — e MUST NOT oferecer link,
-  botão ou frase que convide a enviar, preencher ou atualizar.
+  `063`, revistas. Na linha 2, o Requerimento *a preencher*, se a política ainda o admitir, aparece
+  como linha secundária com o link dele (FR-3731), porque o comando não o recusa.
+- **FR-3731**: Com documento pedido na chamada e o Requerimento *enviado*, aberta ou não a chamada, o
+  bloco *"O que fazer"* MUST mostrar a linha secundária *"✓ Requerimento de Matrícula enviado."*, com o
+  link *"Conferir o Requerimento de Matrícula enviado"* (FR-1097 da `059`), abaixo da ação principal e
+  nunca no lugar dela.
+- **FR-3732**: Quando a chamada **não** pede documento, a ação MUST ser **exatamente a de hoje**:
+  - Requerimento a preencher: *"Preencher o Requerimento de Matrícula."*, com o link direto a ele;
+  - Requerimento enviado: *"Seu Requerimento de Matrícula foi enviado."* como ação principal, com
+    *"Conferir o Requerimento de Matrícula enviado"* — não há outra obrigação no portal que ele
+    esconda (D-017);
+  - sem Requerimento: *"Siga as instruções do Edital para esta convocação."*, com *"Ver convocação"*;
+  - com desfecho: *"Nada por enquanto."*, com o link de conferir quando houver Requerimento enviado.
+  
+  Mudam só os textos comuns a todas as telas: o formato do prazo, a frase do vencido, o rótulo do
+  desfecho e a frase do aceite (FR-3747 a FR-3750).
+- **FR-3733**: Com a chamada *encerrada*, por qualquer das duas causas, o acompanhamento MUST mostrar
+  o que ficou sem envio — documentos obrigatórios e, encerrada pelo prazo, o Requerimento *não enviado
+  até o prazo* — e MUST NOT oferecer link, botão ou frase que convide a enviar documento. O
+  Requerimento segue a FR-3725.
 - **FR-3734**: Ler a projeção MUST NOT acrescentar consulta ao acompanhamento de inscrição sem
   convocação vigente. Com convocação, MUST acrescentar um número fixo de consultas, o mesmo com um
   ou com muitos itens (molde da leitura em lote da `115`). A projeção, sozinha, roda sem consulta.
@@ -422,50 +500,63 @@ Cada caso aponta o requisito que o rege.
   ordem, cada um com título de segundo nível:
   1. **O que fazer agora** (FR-3736);
   2. **Prazo** (FR-3737);
-  3. **O que falta** — documentos e Requerimento (FR-3738);
+  3. **O que falta** — documentos e Requerimento; sem tarefa, **Documentos opcionais** (FR-3738);
   4. **O que você já apresentou** — com a comissão e conferidos (FR-3739);
   5. **Sobre esta convocação** — fundamentos e metadados (FR-3740).
 
-  Os blocos 3 e 4 MUST NOT aparecer vazios: sem tarefa, o bloco 3 some, e o bloco 1 diz por quê.
+  Os blocos 3 e 4 MUST NOT aparecer vazios. O bloco 3 aparece, com a chamada aberta, quando houver
+  tarefa **ou** opcional sem conferência; sem nenhum dos dois, ele some, e o bloco 1 diz por quê.
+  O opcional MUST NOT ficar inalcançável por falta de tarefa (FR-3723).
 - **FR-3736**: O bloco **O que fazer agora** MUST trazer:
-  - a frase de estado: a mesma ação principal do acompanhamento (FR-3730, linhas 3 e 4);
+  - a frase de estado: a mesma ação principal do acompanhamento (FR-3730, linhas 4 e 5);
   - a lista das tarefas na ordem da FR-3726, cada uma com âncora para o cartão dela — e, no
     Requerimento, o link *"Preencher o Requerimento de Matrícula"*; no item a corrigir, o motivo;
   - com documento a corrigir ou a enviar, **um** botão de navegação ao primeiro cartão da lista, com
     rótulo que diga o que se vê ao chegar: *"Ver e corrigir os documentos pendentes"* ou *"Ver os
     documentos que faltam"*. MUST NOT começar por "Enviar" (D-004);
-  - a linha *"Com a comissão: N documento(s)."* quando houver, sem verbo de tarefa.
+  - a linha *"Com a comissão: N documento(s)."* quando houver, sem verbo de tarefa;
+  - sem tarefa e com opcional, a linha *"Há documento opcional que você pode enviar, se quiser."*,
+    com âncora para o bloco 3.
 - **FR-3737**: O bloco **Prazo** MUST dizer o prazo único da FR-3747; com o prazo correndo, a frase de
-  consequência da FR-1177 da `063`, na mesma condição; com o prazo não iniciado, a frase da
-  FR-3749; sem vencimento, que esta convocação não tem prazo registrado.
+  consequência da FR-1177 da `063`, na mesma condição; com o prazo não iniciado, só a frase da
+  FR-3749, sem data; sem vencimento, que esta convocação não tem prazo registrado.
 - **FR-3738**: O bloco **O que falta** MUST conter os cartões das tarefas, na ordem da FR-3726, com o
-  envio de arquivo da `115` e o cartão do Requerimento *a preencher*. Os facultativos sem conferência
-  MUST vir no fim do bloco, sob *"Opcional"*, fora de qualquer contagem.
+  envio de arquivo da `115` e o cartão do Requerimento *a preencher*. Os opcionais sem conferência
+  — *a apresentar* ou *pendentes* — MUST vir no fim do bloco, sob o título de terceiro nível
+  *"Opcional"*, com o mesmo envio, fora de qualquer contagem. Sem tarefa, o bloco tem só eles.
 - **FR-3739**: O bloco **O que você já apresentou** MUST conter, na ordem do Edital, os cartões com
-  a comissão, depois os conferidos, e a linha do Requerimento *enviado* (FR-3731). O cartão com a
-  comissão MUST oferecer *"Enviar outro arquivo"* recolhido, como a `115` já oferece, enquanto a
-  escrita estiver aberta.
+  a comissão (o facultativo com o selo *"Opcional"*), depois os conferidos, e a linha do Requerimento
+  *enviado* (FR-3731). O cartão com a comissão MUST oferecer *"Enviar outro arquivo"* recolhido, como
+  a `115` já oferece, enquanto a chamada estiver aberta.
 - **FR-3740**: O bloco **Sobre esta convocação** MUST continuar visível, sem `details`: espécie,
   chamada, comunicação enviada em, vencimento registrado, fundamento e atendimento. É o ato que a
   pessoa tem direito de ler; ele só desce de posição.
-- **FR-3741**: Com a chamada *encerrada* sem desfecho, o bloco 1 MUST se chamar *"O prazo terminou"*
-  — ou, com o Processo em estado final, *"O envio pelo portal está encerrado"* —, com a frase da
-  FR-3748 e o resumo *"Até o prazo, ficou assim"*, que inclui o Requerimento *não enviado até o
-  prazo*. Nenhum formulário de envio MUST aparecer. Os blocos 3 e 4 viram leitura, com os textos
-  da coluna *encerrada* da FR-3746.
+- **FR-3741**: Com a chamada *encerrada*, nenhum formulário de envio de documento MUST aparecer, e os
+  blocos 3 e 4 viram leitura, com os textos da coluna da causa na FR-3746. O bloco 1 MUST depender
+  da causa:
+  - **pelo prazo**: título *"O prazo terminou"*, a frase da FR-3748 e o resumo *"Até o prazo, ficou
+    assim"*, que inclui o Requerimento *não enviado até o prazo*;
+  - **pelo Processo**: título *"O envio pelo portal está encerrado"*, com *"Este Processo Seletivo
+    foi ‹encerrado / cancelado›, e não é mais possível enviar documentos pelo portal. Se você enviou
+    algo que não aparece aqui, fale com o atendimento: ‹canal›."* e o resumo *"Até o encerramento do
+    Processo, ficou assim"*. Esta frase MUST NOT dizer que um prazo venceu, nem que a comissão vai
+    conferir ou decidir.
 - **FR-3742**: Com desfecho vigente, a página MUST ser **só histórico**:
   - o bloco 1 se chama *"Resultado registrado"*, com o rótulo da FR-3750, o fundamento e a data;
   - os blocos 3 e 4 dão lugar a um só, *"O que você enviou nesta convocação"*, na ordem do Edital,
     com os textos da coluna *decidida* da FR-3746;
   - MUST NOT aparecer formulário, *"Envie até…"*, *"Falta enviar"*, *"aguardando conferência"* nem
     convite a corrigir;
-  - o Requerimento enviado continua com o link de conferir (FR-1097 da `059`).
+  - o Requerimento enviado continua com o link de conferir (FR-1097 da `059`); o pedido e não
+    enviado aparece como *"Requerimento de Matrícula: não enviado."* (FR-3725, linha 3).
 - **FR-3743**: Sem documento pedido na chamada, a tela da convocação MUST manter a estrutura de hoje
   (FR-3574 da `115`): os dados, *"O que fazer"* e o chamado ao Requerimento. Mudam só o formato do
-  prazo, a frase do vencido, o rótulo do desfecho e a frase do aceite (FR-3747 a FR-3750).
+  prazo, a frase do vencido, o rótulo do desfecho — *"Resultado registrado: ‹rótulo da FR-3750›"*, no
+  lugar de *"Situação registrada: ‹espécie›"* — e a frase do aceite (FR-3747 a FR-3750).
 - **FR-3744**: O cartão com pendência registrada — *a corrigir*, ou *a enviar* com motivo (cenário J)
-  — MUST ter destaque visual de aviso (borda e fundo) **e** o selo em texto *"Precisa de correção"*. O cartão com a comissão MUST ter o selo *"Aguardando conferência"*;
-  o conferido, *"Conferido"*. O estado MUST NOT ser dito só por cor ou símbolo, e o marcador do
+  — MUST ter destaque visual de aviso (borda e fundo) **e** o selo em texto *"Precisa de correção"*.
+  O cartão com a comissão MUST ter o selo *"Aguardando conferência"*; o conferido, *"Conferido"*; o
+  facultativo, também *"Opcional"*. O estado MUST NOT ser dito só por cor ou símbolo, e o marcador do
   cartão MUST NOT lembrar um botão de opção. O estilo mora na folha do portal, porque a política de
   conteúdo recusa estilo no template.
 - **FR-3745**: Cada cartão MUST ter título de terceiro nível com o nome do documento. O botão de
@@ -477,45 +568,46 @@ Cada caso aponta o requisito que o rege.
 #### D. A linguagem
 
 - **FR-3746**: Os textos de cada item MUST ser estes, em linguagem simples (a da `069`), com o mesmo
-  sentido jurídico da `115`. ‹prazo› é o da FR-3747; ‹data› é DD/MM/AAAA; ‹hora› é HHhMM.
+  sentido jurídico da `115`. ‹data› é DD/MM/AAAA; ‹hora› é HHhMM; *"até ‹prazo›"* é o da FR-3747.
 
-  | Situação do item | Aberta | Encerrada | Decidida |
-  |---|---|---|---|
-  | obrigatório *a apresentar* | *"Falta enviar."* | *"Não enviado até o prazo."* | *"Não enviado."* |
-  | *pendente*, com apresentação anterior | *"Precisa de correção: ‹motivo›. Envie um novo arquivo até ‹prazo›."* | *"Precisava de correção: ‹motivo›. Nenhum novo arquivo foi enviado até o prazo."* | *"Precisava de correção: ‹motivo›."* |
-  | *pendente*, sem apresentação | *"Precisa de correção: ‹motivo›. Envie o arquivo até ‹prazo›."* | idem acima | idem acima |
-  | *recebido* (pelo portal) | *"Recebido em ‹data›, às ‹hora›. A comissão vai conferir; você não precisa fazer nada agora."* | *"Recebido em ‹data›, às ‹hora›. A comissão vai conferir."* | *"Enviado em ‹data›; não foi conferido antes do resultado."* |
-  | aproveitado da inscrição, sem conferência | *"Você já enviou este documento na inscrição, em ‹data›. Não precisa enviar de novo. A comissão vai conferir."* | *"Enviado na inscrição, em ‹data›. A comissão vai conferir."* | *"Enviado na inscrição, em ‹data›; não foi conferido antes do resultado."* |
-  | aproveitado da chamada anterior, sem conferência | *"Aproveitado da chamada anterior, enviado em ‹data›. Não precisa enviar de novo. A comissão vai conferir de novo."* | *"Aproveitado da chamada anterior, enviado em ‹data›. A comissão vai conferir de novo."* | *"Aproveitado da chamada anterior, enviado em ‹data›; não foi conferido antes do resultado."* |
-  | *complementado* | *"Novo arquivo recebido em ‹data›, às ‹hora›, depois da correção pedida. A comissão vai conferir."* | idem, sem mudança | *"Novo arquivo enviado em ‹data›; não foi conferido antes do resultado."* |
-  | *conforme* | *"Conferido: de acordo com o Edital."* | idem | idem |
-  | *conforme*, aproveitado | *"Conferido: de acordo com o Edital. É o arquivo enviado na inscrição, em ‹data›."* (ou *"…na chamada anterior, em ‹data›."*) | idem | idem |
-  | *não se aplica* | *"Não se aplica: ‹motivo›."* | idem | idem |
-  | facultativo sem envio | *"Opcional: envie se quiser."* | *"Opcional, não enviado."* | *"Opcional, não enviado."* |
-  | facultativo *pendente* | *"Opcional. A comissão apontou: ‹motivo›. Se quiser, envie um novo arquivo até ‹prazo›."* | *"Opcional. A comissão apontou: ‹motivo›."* | idem |
+  | Item | Aberta | Encerrada pelo prazo | Encerrada pelo Processo | Decidida |
+  |---|---|---|---|---|
+  | obrigatório *a apresentar* | *"Falta enviar."* | *"Não enviado até o prazo."* | *"Não enviado."* | *"Não enviado."* |
+  | *pendente*, com apresentação anterior | *"Precisa de correção: ‹motivo›. Envie um novo arquivo até ‹prazo›."* | *"Precisava de correção: ‹motivo›. Nenhum novo arquivo foi enviado até o prazo."* | *"Precisava de correção: ‹motivo›."* | *"Precisava de correção: ‹motivo›."* |
+  | *pendente*, sem apresentação | *"Precisa de correção: ‹motivo›. Envie o arquivo até ‹prazo›."* | *"Precisava de correção: ‹motivo›. Nenhum arquivo foi enviado até o prazo."* | *"Precisava de correção: ‹motivo›."* | *"Precisava de correção: ‹motivo›."* |
+  | *recebido* (pelo portal) | *"Recebido em ‹data›, às ‹hora›. A comissão vai conferir; você não precisa fazer nada agora."* | *"Recebido em ‹data›, às ‹hora›. A comissão vai conferir."* | *"Recebido em ‹data›, às ‹hora›; não foi conferido antes do encerramento do Processo."* | *"Enviado em ‹data›; não foi conferido antes do resultado."* |
+  | aproveitado da inscrição, sem conferência | *"Você já enviou este documento na inscrição, em ‹data›. Não precisa enviar de novo. A comissão vai conferir."* | *"Enviado na inscrição, em ‹data›. A comissão vai conferir."* | *"Enviado na inscrição, em ‹data›; não foi conferido antes do encerramento do Processo."* | *"Enviado na inscrição, em ‹data›; não foi conferido antes do resultado."* |
+  | aproveitado da chamada anterior, sem conferência | *"Aproveitado da chamada anterior, enviado em ‹data›. Não precisa enviar de novo. A comissão vai conferir de novo."* | *"Aproveitado da chamada anterior, enviado em ‹data›. A comissão vai conferir de novo."* | *"Aproveitado da chamada anterior, enviado em ‹data›; não foi conferido antes do encerramento do Processo."* | *"Aproveitado da chamada anterior, enviado em ‹data›; não foi conferido antes do resultado."* |
+  | *complementado* | *"Novo arquivo recebido em ‹data›, às ‹hora›, depois da correção pedida. A comissão vai conferir."* | idem à coluna *aberta* | *"Novo arquivo recebido em ‹data›; não foi conferido antes do encerramento do Processo."* | *"Novo arquivo enviado em ‹data›; não foi conferido antes do resultado."* |
+  | *conforme* | *"Conferido: de acordo com o Edital."* | idem | idem | idem |
+  | *conforme*, aproveitado | *"Conferido: de acordo com o Edital. É o arquivo enviado na inscrição, em ‹data›."* (ou *"…na chamada anterior, em ‹data›."*) | idem | idem | idem |
+  | *não se aplica* | *"Não se aplica: ‹motivo›."* | idem | idem | idem |
+  | facultativo *a apresentar* | *"Opcional: envie se quiser."* | *"Opcional, não enviado."* | *"Opcional, não enviado."* | *"Opcional, não enviado."* |
+  | facultativo *pendente* | *"Opcional. A comissão apontou: ‹motivo›. Se quiser, envie um novo arquivo até ‹prazo›."* (sem apresentação: *"…envie o arquivo até ‹prazo›."*) | *"Opcional. A comissão apontou: ‹motivo›."* | idem | idem |
 
-  O facultativo recebido, aproveitado, complementado ou conferido usa a linha do estado dele. Sem
-  vencimento, *"até ‹prazo›"* sai da frase. O motivo é o de quem conferiu, sem o nome de quem
-  conferiu (FR-3584 da `115`). *"Conferido: de acordo com o Edital"* significa conforme ao exigido,
-  nunca autêntico (FR-3589 da `115`).
+  O facultativo recebido, aproveitado, complementado ou conferido usa a linha do estado dele, com o
+  selo *"Opcional"* (FR-3744). **O prazo não iniciado e a convocação sem vencimento prevalecem sobre
+  esta tabela**: neles, *"até ‹prazo›"* sai de toda frase da coluna *aberta* (FR-3749). O motivo é o
+  de quem conferiu, sem o nome de quem conferiu (FR-3584 da `115`). *"Conferido: de acordo com o
+  Edital"* significa conforme ao exigido, nunca autêntico (FR-3589 da `115`).
 - **FR-3747**: O prazo MUST ter **um** formato em todas as telas do candidato sobre a convocação — o
   acompanhamento, a convocação, os cartões e o Requerimento: *"até DD/MM/AAAA, às HHhMM"* (por
   exemplo, *"até 09/11/2026, às 13h27"*). O rótulo é *"Prazo desta convocação"* (FR-1176 da `063`).
   *"Contado do envio da comunicação"* só aparece no bloco *Sobre esta convocação*, junto do
   vencimento registrado.
 - **FR-3748**: A frase do vencido MUST ter um **núcleo** só, usado em todas as telas **e** nas
-  recusas de envio de documento e de Requerimento (FR-3622 da `115`): *"O prazo terminou em
-  DD/MM/AAAA, às HHhMM. O fim do prazo não decide nada sozinho: quem registra o resultado é a
-  comissão."* Sem vencimento registrado, o núcleo é *"O prazo desta convocação terminou. O fim do
-  prazo não decide nada sozinho: quem registra o resultado é a comissão."* Nas telas, o núcleo MUST
-  ser seguido, quando couber, de *"Não é mais possível enviar ‹documentos / o Requerimento de
-  Matrícula / documentos nem o Requerimento de Matrícula› pelo portal."* e de *"Se você enviou algo
-  que não aparece aqui, fale com o atendimento: ‹canal›."* Nenhuma frase MUST afirmar perda (FR-274
-  da `019`).
+  recusas de envio de documento e de Requerimento por prazo (FR-3622 da `115`): *"O prazo terminou
+  em DD/MM/AAAA, às HHhMM. O fim do prazo não decide nada sozinho: quem registra o resultado é a
+  comissão."* Nas telas, o núcleo MUST ser seguido, quando couber, de *"Não é mais possível enviar
+  ‹documentos / o Requerimento de Matrícula / documentos nem o Requerimento de Matrícula› pelo
+  portal."* e de *"Se você enviou algo que não aparece aqui, fale com o atendimento: ‹canal›."* O
+  núcleo MUST ser usado **só** com o vencimento decorrido: nunca com a escrita fechada pelo Processo
+  (FR-3741) e nunca sem vencimento registrado. Nenhuma frase MUST afirmar perda (FR-274 da `019`).
 - **FR-3749**: Com a comunicação ainda não enviada, as telas MUST dizer *"O prazo ainda não começou a
-  correr: ele conta a partir do envio da comunicação."*, seguido, com documento ou Requerimento a
-  fazer, de *"Você já pode enviar."* A data do vencimento MUST NOT aparecer como prazo nesse estado;
-  ela fica só no bloco *Sobre esta convocação*.
+  correr: ele conta a partir do envio da comunicação."*, seguido de *"Você já pode enviar."* **só**
+  quando a escrita estiver aberta e houver tarefa ou opcional a enviar. Esta regra **prevalece** sobre
+  toda menção ao prazo: a data do vencimento MUST NOT aparecer como prazo em nenhum bloco, cartão,
+  opcional ou frase de conclusão; ela fica só no bloco *Sobre esta convocação*.
 - **FR-3750**: O desfecho MUST ter, na tela da convocação e no acompanhamento, o mesmo rótulo: o da
   tabela da FR-1172 da `063` (por exemplo, *"Vaga aceita"*). Com aceite ou regularização, as duas
   telas MUST dizer *"Este registro não é matrícula, bolsa nem contrato: ele registra o resultado desta
@@ -532,25 +624,31 @@ Cada caso aponta o requisito que o rege.
   convocação"*. A explicação do estado MUST depender da convocação:
   - sem convocação vigente: a de hoje (*"Enviado não é alterado. Se algo mudar e você for convocado,
     esta página oferece a atualização."*);
-  - com a chamada aberta e a escrita aberta: *"Enviado não é alterado. Se algo mudou, a atualização
-    cria uma nova versão, e esta continua registrada."*;
-  - com a escrita fechada ou com desfecho: *"Enviado não é alterado."*
-- **FR-3753**: Com o Requerimento declarado *na convocação* e a escrita aberta, a página dele MUST
-  mostrar o prazo da FR-3747, ou a frase da FR-3749.
-- **FR-3754**: Aberto o endereço do Requerimento com a escrita encerrada e **nenhum** requerimento
-  vigente, a página MUST mostrar o estado *"O prazo terminou"*, com a frase da FR-3748 e *"Voltar à
-  convocação"*, e MUST NOT mostrar a recusa genérica. Nenhum rascunho MUST ser criado: a regra de
-  disponibilidade não muda (FR-374 da `029`), só a resposta da leitura.
+  - com a atualização admitida pela política (FR-410 da `029`): *"Enviado não é alterado. Se algo
+    mudou, a atualização cria uma nova versão, e esta continua registrada."*;
+  - com a atualização não admitida (prazo decorrido ou desfecho): *"Enviado não é alterado."*
+- **FR-3753**: Com o Requerimento declarado *na convocação* e o preenchimento admitido pela política,
+  a página dele MUST mostrar o prazo da FR-3747, ou, com o prazo não iniciado, a frase da FR-3749.
+- **FR-3754**: Aberto o endereço do Requerimento com o **prazo da chamada decorrido** e **nenhum**
+  requerimento vigente — o caso em que a política recusa abrir o rascunho —, a página MUST mostrar o
+  estado *"O prazo terminou"*, com a frase da FR-3748 e *"Voltar à convocação"*, e MUST NOT mostrar a
+  recusa genérica. Nenhum rascunho MUST ser criado: a regra de disponibilidade não muda (FR-374 da
+  `029`), só a resposta da leitura.
 - **FR-3755**: Enviado o Requerimento numa chamada que pede documento, o aviso do envio MUST ser
   *"Requerimento de Matrícula enviado. Veja na convocação se ainda falta algum documento."*, com
   *"Voltar à convocação"* na mesma página. Sem documento, o aviso continua o de hoje.
 
 #### F. Limites
 
-- **FR-3756**: Esta feature MUST NOT criar tabela, coluna, migration, rota, endpoint, estado gravado,
-  tela, passo, painel ou envio de mensagem, nem mudar regra de convocação, de conferência, de prazo,
-  de disponibilidade do Requerimento ou de autorização. Nenhum comando muda; a única mudança de view
-  fora do template é a leitura da FR-3754, que não escreve.
+- **FR-3756**: Esta feature MUST NOT criar tabela, coluna, migration, rota, endpoint, comando,
+  estado gravado, tela, passo, painel ou envio de mensagem, nem mudar regra de convocação, de
+  conferência, de prazo, de disponibilidade do Requerimento ou de autorização. As views do
+  acompanhamento, da convocação e do Requerimento **podem** passar a ler e entregar a projeção, a
+  responder a FR-3754 e a fazer a leitura da FR-3755. Nesses caminhos:
+  - nenhuma requisição de leitura MUST gravar nada além do que já grava hoje (a leitura da
+    convocação na trilha, FR-3613 da `115`), e o GET da FR-3754 MUST NOT criar rascunho;
+  - a titularidade, a recusa indistinguível de inexistente (FR-1101 da `059`; FR-399 da `029`) e a
+    resposta privada da página do Requerimento MUST continuar as mesmas.
 - **FR-3757**: A FR-3614 da `115` continua: apresentação, conferência e pendência não disparam
   mensagem, e a FR-084 da `010` continua com quatro situações.
 - **FR-3758**: A gestão MUST NOT mudar: o estado documental da FR-3591, a condução da FR-3607 e o
@@ -561,7 +659,7 @@ Cada caso aponta o requisito que o rege.
 ### Key Entities
 
 - **Obrigações da convocação** (projeção nova, sem persistência): para a chamada vigente de uma
-  inscrição, o momento (*aberta*, *encerrada*, *decidida*), as tarefas em ordem, os itens com a
+  inscrição, o momento (*aberta*, *encerrada pelo prazo*, *encerrada pelo Processo*, *decidida*) e a causa do fechamento, as tarefas em ordem, os itens com a
   comissão, os conferidos, os opcionais, o estado do Requerimento, os totais e as frases. Nasce das
   entradas da FR-3721 e morre com a requisição.
 - **Leitura documental, estado do prazo, desfecho e política do Requerimento** (existem, não mudam):
@@ -589,9 +687,11 @@ Cada caso aponta o requisito que o rege.
   visível, e nenhum nome acessível de botão de envio ou de escolha de arquivo se repete na mesma
   página. Nenhuma tela tem rolagem horizontal, e o console não registra violação da política de
   conteúdo.
-- **SC-1123**: No cenário B e num Edital sem documento e sem Requerimento, a estrutura das três telas
-  é a de hoje, e os testes da `059` e da `063` sobre esses casos passam editando só as expectativas
-  de texto nomeadas no plano (formato do prazo, frase do vencido, rótulo do desfecho).
+- **SC-1123**: Nos cenários B e B2 e num Edital sem documento e sem Requerimento, a estrutura das três
+  telas e a ação principal do acompanhamento são as de hoje — inclusive *"Seu Requerimento de
+  Matrícula foi enviado."* em B2 —, e os testes da `059` e da `063` sobre esses casos passam editando
+  só as expectativas de texto comum nomeadas no plano (formato do prazo, frase do vencido, rótulo do
+  desfecho, frase do aceite).
 - **SC-1124**: Para cada cenário A–K, a verificação registra, citando o texto literal da tela, a
   resposta às quatro perguntas: *preciso enviar mais alguma coisa?*, *o que está com a comissão?*,
   *qual é o prazo?* e *o que acontece depois?*. Nenhuma fica sem resposta, e nenhuma resposta
@@ -599,8 +699,13 @@ Cada caso aponta o requisito que o rege.
 - **SC-1125**: O acompanhamento de inscrição sem convocação tem o mesmo número de consultas de antes;
   com convocação, o número é o mesmo com um e com seis itens pedidos.
 - **SC-1126**: O teste da projeção cobre 100% das combinações de estado do item × situação
-  (obrigatório, facultativo) × momento (aberta, encerrada, decidida) × estado do Requerimento, e
+  (obrigatório, facultativo) × momento (os quatro da FR-3722) × estado do Requerimento, e
   cada combinação cai em exatamente uma categoria.
+- **SC-1127**: Nos cenários de controle L, M, N e K2: em L, o opcional se envia sem nenhuma tarefa
+  pendente; em M, nenhuma tela diz que o prazo venceu nem promete conferência; em N, o Requerimento
+  pedido e não enviado aparece como *não enviado* depois do desfecho; em K2, nenhuma data aparece como
+  prazo. Em todos, nenhuma requisição de leitura grava linha nova além da leitura da convocação na
+  trilha, e a inscrição alheia recebe a mesma recusa de inexistente.
 
 ## Assumptions
 
@@ -633,11 +738,12 @@ recorrível com prazo aberto (com data e hora de encerramento); e, na convocaç�
 
 - com documento pedido na chamada, a tabela da FR-3730 da `118`, que lê as obrigações da convocação
   (documentos e Requerimento de Matrícula) e leva à tela da convocação;
-- sem documento, o Requerimento de Matrícula, quando a política da `029` disser que ele está
-  disponível ou em preenchimento; e, sem Requerimento, "siga as instruções do Edital para esta
-  convocação".
+- sem documento, como antes: o Requerimento de Matrícula, quando a política da `029` disser que ele
+  está disponível, em preenchimento ou enviado; e, sem Requerimento, "siga as instruções do Edital
+  para esta convocação" (FR-3732 da `118`).
 
-O Requerimento enviado é linha secundária, com o caminho para conferi-lo (FR-3731 da `118`).
+Com documento pedido na chamada, o Requerimento enviado é linha secundária, com o caminho para
+conferi-lo (FR-3731 da `118`).
 
 > *Redação anterior:* "A ação DEVE vir do Edital ou do ato: o Requerimento de Matrícula, quando a
 > política da `029` disser que ele está disponível, em preenchimento ou enviado; o recurso, quando
@@ -746,9 +852,10 @@ ação principal leva à tela da convocação (FR-3730 da `118`).
 > de Matrícula' como ação principal, levando à tela do requerimento da inscrição."
 
 **FR-1097, nova redação.** Quando o requerimento foi **enviado**, os mesmos dois lugares MUST oferecer
-o caminho para conferir o que foi enviado — com a convocação aberta ou concluída —, como linha
-secundária, e MUST NOT oferecer o chamado para preencher. O enviado MUST NOT ser a ação principal
-enquanto a convocação pedir outra coisa à pessoa (FR-3730 e FR-3731 da `118`).
+o caminho para conferir o que foi enviado — com a convocação aberta ou concluída —, e MUST NOT
+oferecer o chamado para preencher. Quando a chamada pede documento, esse caminho é linha secundária,
+e o enviado MUST NOT ser a ação principal (FR-3730 e FR-3731 da `118`); sem documento, continua como
+antes (FR-3732 da `118`).
 
 > *Redação anterior:* "Quando o requerimento foi enviado, os mesmos dois lugares MUST oferecer o
 > caminho para conferir o que foi enviado — com a convocação aberta ou concluída —, e MUST NOT
@@ -760,8 +867,8 @@ As frases do Requerimento não são requisito da `029`: moram em `requerimentos/
 e a varredura da SC-132 as lê. A revisão entra como acréscimo à FR-405 e à FR-406.
 
 **FR-405, acréscimo ao fim.** A explicação do estado *enviado* MUST depender da convocação, pela
-FR-3752 da `118`: quem já foi convocado não lê "se você for convocado". Com a escrita encerrada e
-nenhum requerimento vigente, a tela MUST mostrar "O prazo terminou", e não a recusa genérica
+FR-3752 da `118`: quem já foi convocado não lê "se você for convocado". Com o prazo da chamada
+decorrido e nenhum requerimento vigente, a tela MUST mostrar "O prazo terminou", e não a recusa genérica
 (FR-3754 da `118`).
 
 > *Redação anterior:* a mesma, sem este acréscimo.
@@ -784,6 +891,8 @@ volta à convocação (FR-3752 da `118`).
 | **FR-3577 e FR-3612 da `115`** | Ordem e textos literais | **Revistas** (acima) |
 | **User Story 2 da `115`, cenário 2** | Cita frase que não existe | **Revista**: a frase passa a existir (FR-3750) |
 | **FR-3574 da `115`** ("exatamente como antes" sem documento) | O formato do prazo, a frase do vencido e o rótulo do desfecho mudam em toda tela | **Compatível, nomeado**: a FR-3574 protege contra elementos da `115` aparecendo sem documento; a estrutura sem documento continua a de hoje, e a unificação de texto é desta spec (FR-3743) |
+| **FR-3582 da `115`** e a política da `029` | Com o Processo em estado final, o envio e a conferência de documento recusam, mas a política do Requerimento não fecha: só o prazo e o desfecho a fecham | **Sem mudança de regra** (FR-3756); a projeção não confunde as causas (FR-3721, FR-3741), e o Requerimento segue a política dele (FR-3725). A divergência fica registrada para decisão |
+| **FR-1096 e FR-1097 da `059`**, sem documento | O enviado como ação principal | **Mantido como hoje** (FR-3732, D-017): sem documento, não há outra obrigação no portal que ele esconda |
 | **FR-3591 da `115`** | A precedência serve à gestão | **Sem mudança**; o candidato tem ordem própria (FR-3726, FR-3758) |
 | **FR-3622 da `115`** | A mesma frase nos documentos e no Requerimento | **Preservada**: o núcleo único vale para as duas recusas (FR-3748) |
 | **FR-3614 da `115`** e **FR-084 da `010`** | Nenhum | **Sem mudança** (FR-3757); a QI-7 fica registrada |
@@ -867,6 +976,11 @@ descreverem telas que o código ainda não tem. Escrever a nova redação aqui e
 anterior preservada, segue o caminho da `117` para a FR-069 da `009`. Se a revisão do PR preferir,
 aplicam-se neste PR.
 
+**Precedência na transição.** Do merge desta spec até a T001, onde a redação de uma spec revista
+divergir desta, **prevalece a `118`**, e quem implementa lê a redação nova daqui. Os testes de hoje
+continuam valendo até a T001, que os revê junto do código (plano, *Testes que prendem os textos de
+hoje*).
+
 ### D-012 — "Minhas inscrições" fica como está
 
 *Proposta de desenho.* Dizer "2 documentos a enviar" na lista exigiria ler documentos de cada
@@ -884,6 +998,39 @@ dois desfechos que incluem na ocupação, em toda convocação (FR-3750).
 
 *Proposta de desenho.* O termo é da gestão (FR-3610 da `115`). Para o candidato seria jargão, e
 "apto" soaria como promessa de vínculo. A frase do aceite diz o mesmo limite sem nomear o termo.
+
+### D-015 — A causa do fechamento é derivada, e o Processo prevalece
+
+*Proposta de desenho, da revisão do PR (04/11/2026).* A escrita de documentos fecha por duas causas
+que dizem coisas diferentes à pessoa: o vencimento (a comissão ainda confere e decide) e o Processo em
+estado final (ninguém mais confere nem desfecha). Uma frase só para as duas afirmaria um vencimento que
+não houve, ou prometeria uma conferência que o sistema recusa. A causa sai da mesma condição que recusa
+o envio, a cada leitura, sem estado gravado. Com as duas juntas, vale o Processo, porque é a que fecha
+mais (FR-3721, FR-3741).
+
+### D-016 — No Requerimento, a exigência e a situação vêm antes da disponibilidade
+
+*Proposta de desenho, da revisão do PR (04/11/2026).* A política da `029` responde se é possível
+escrever **agora**. Depois do desfecho, ela diz "ainda indisponível" a quem nunca enviou, e ler essa
+resposta como "não pedido" apagaria uma obrigação que existiu. A projeção lê as três coisas que a
+política já expõe — momento declarado, situação e disponibilidade — nessa ordem, sem decidir
+disponibilidade por conta própria (FR-3725).
+
+### D-017 — Sem documento, a ação fica exatamente a de hoje
+
+*Proposta de desenho, da revisão do PR (04/11/2026).* A falsa conclusão de C2 vem de o Requerimento
+esconder documentos. Sem documento na chamada, não há o que esconder no portal, e *"Seu Requerimento
+de Matrícula foi enviado."* é verdadeiro e completo. Mudá-lo seria regressão sem ganho, contra o pedido
+do usuário de deixar o caminho direto como está (FR-3732). *Alternativa recusada*: a linha secundária
+também sem documento, que deixaria a ação principal vazia ou diria "Siga as instruções do Edital" a
+quem já fez o que o portal pede.
+
+### D-018 — O opcional tem lugar próprio, e nunca some
+
+*Proposta de desenho, da revisão do PR (04/11/2026).* A primeira redação punha os opcionais no bloco
+*O que falta* e escondia o bloco sem tarefa — o opcional ficava sem formulário justamente quando nada
+mais faltava. O bloco 3 passa a existir também só com opcionais, com outro título, e o facultativo
+ganha classificação própria em cada estado, fora de toda contagem (FR-3722, FR-3735, FR-3738).
 
 ## Registrado, sem desenvolver
 
@@ -920,6 +1067,15 @@ comissão não dá mais prazo. Afeta a FR-3618 e a FR-3622 da `115`, a FR-272 da
 `050`. Registro, reprodução e requisitos:
 [`doc/achado-correcao-da-convocacao-pela-gestao-2026-11-04.md`](../../doc/achado-correcao-da-convocacao-pela-gestao-2026-11-04.md).
 **Não é escopo desta spec** (D-002), e a priorização é do usuário.
+
+### O Processo em estado final fecha os documentos, e não o Requerimento
+
+Verificado em 04/11/2026: o envio e a conferência de documento da convocação recusam com o Processo
+encerrado ou cancelado (`convocacao/application/documentos.py`, `ensure_processo_accepts_changes`),
+mas a política do Requerimento (`requerimentos/domain/disponibilidade.py`) só fecha pelo prazo e pelo
+desfecho. Com o Processo encerrado e a chamada em aberto, o Requerimento continua preenchível. Esta
+spec não muda regra (FR-3756): mostra cada um pela sua fonte (FR-3725, FR-3730). Se as duas fontes
+devem fechar juntas é decisão do usuário, e pede revisão da `029` ou da `113`.
 
 ### Outros, fora desta spec
 
