@@ -1,4 +1,5 @@
 from .base import *  # noqa: F403
+from .base import liberacao_do_kit
 
 DEBUG = True
 
@@ -13,3 +14,8 @@ AVISOS_AOS_CANDIDATOS = True
 # A peça do kit de divulgação (111) ligada, como os avisos: a revisão da comunicação (SC-1054) é
 # feita olhando a peça, e é aqui que ela existe antes da aprovação.
 KIT_DE_DIVULGACAO_PECA = True
+
+# Todos os templates do registro, com a versão e o resumo do código (119, `D-010`): a suíte confere
+# que esta lista é o registro inteiro, e uma família nova, ou uma versão nova, reprova até entrar
+# aqui.
+KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit("institucional/post@1#d7ab660ea755")

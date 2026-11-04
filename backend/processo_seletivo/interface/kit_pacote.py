@@ -9,9 +9,10 @@ verificação em `specs/111-kit-de-divulgacao/verificacao-do-motor.md`. `disponi
 defesa: num ambiente montado sem ele, a tela diz que a peça não tem PNG, e o SVG e os textos
 continuam.
 
-**As fontes são as do Edital, e só elas.** `skip_system_fonts=True` impede que o resvg
-complete um glifo com a fonte da máquina — uma no Mac da equipe, outra no servidor —, e o PNG
-mudaria de um para o outro. Nenhum recurso externo é resolvido: a marca vai no SVG, em `data:`.
+**As fontes são as da família do template, e só elas** (119, `D-005`). `skip_system_fonts=True`
+impede que o resvg complete um glifo com a fonte da máquina — uma no Mac da equipe, outra no
+servidor —, e o PNG mudaria de um para o outro. Nenhum recurso externo é resolvido: a marca vai no
+SVG, em `data:`. A peça Institucional continua com a Edital Sans, a fonte do Edital.
 """
 
 import hashlib
@@ -22,10 +23,10 @@ import json
 import zipfile
 
 from processo_seletivo.inscricoes.domain import periodo
-from processo_seletivo.interface import kit_peca
-from processo_seletivo.publicacoes.infrastructure import fonte
+from processo_seletivo.interface import kit_familias, kit_fontes, kit_peca
 
-FONTES = tuple(str(fonte.PASTA / arquivo) for arquivo in fonte.ARQUIVOS.values())
+#: As fontes da peça Institucional, a de produção da `111`: o padrão de quem não diz a peça.
+FONTES_DA_INSTITUCIONAL = kit_familias.familia(kit_peca.INSTITUCIONAL.familia).chaves_das_fontes()
 
 
 def disponivel():
@@ -39,13 +40,16 @@ def versao_do_rasterizador():
         return ""
 
 
-def rasterizar(svg):
-    """Os bytes do PNG. O SVG é sempre o que o compositor gerou, nunca entrada de quem pede."""
+def rasterizar(svg, fontes=FONTES_DA_INSTITUCIONAL):
+    """Os bytes do PNG. O SVG é sempre o que o compositor gerou, nunca entrada de quem pede.
+
+    `fontes` são as chaves de `kit_fontes` da família da peça (`kit_peca.fontes_da_peca`): o
+    rasterizador recebe esses arquivos e nenhum outro.
+    """
     import resvg_py
 
-    return bytes(
-        resvg_py.svg_to_bytes(svg_string=svg, font_files=list(FONTES), skip_system_fonts=True)
-    )
+    arquivos = list(kit_fontes.arquivos(fontes))
+    return bytes(resvg_py.svg_to_bytes(svg_string=svg, font_files=arquivos, skip_system_fonts=True))
 
 
 # ---------------------------------------------------------------------------
@@ -114,9 +118,12 @@ def manifesto(ficha, *, arquivos, peca, motivo_sem_peca):
         },
         "versao": {"id": ficha.versao_id, "content_hash": ficha.versao_hash},
         "impressao": {"resumo": ficha.impressao, "versao": ficha.versao_da_impressao},
-        "template": kit_peca.TEMPLATE if peca is not None else None,
+        "template": peca.template.identificador if peca is not None else None,
         "rasterizador": versao_do_rasterizador() or None,
-        "fontes": {arquivo: fonte.SHA256[arquivo] for arquivo in fonte.ARQUIVOS.values()},
+        # As da Institucional mesmo sem peça, como na `111`: o manifesto não muda de forma.
+        "fontes": kit_fontes.resumos(
+            kit_peca.fontes_da_peca(peca) if peca is not None else FONTES_DA_INSTITUCIONAL
+        ),
         "endereco_publico": ficha.endereco,
         "notas": [] if ficha.endereco else [SEM_ENDERECO],
         "peca": {

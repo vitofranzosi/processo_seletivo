@@ -267,6 +267,56 @@ AVISOS_AOS_CANDIDATOS = os.getenv("AVISOS_AOS_CANDIDATOS", "false").lower() == "
 # validação, e os textos continuam inteiros (`FR-3432`, EC-21). Produção não recusa subir sem ela:
 # ligar é decisão de produto, e não defeito de configuração.
 KIT_DE_DIVULGACAO_PECA = os.getenv("KIT_DE_DIVULGACAO_PECA", "false").lower() == "true"
+
+
+# As famílias e os formatos do kit (119, data-model). Repetidos aqui, e não lidos do registro em
+# `kit_familias/`: as settings sobem antes das aplicações, e a suíte confere que o registro não
+# declara família nem formato fora destas listas.
+FAMILIAS_DO_KIT = (
+    "institucional",
+    "pos-lato-sensu",
+    "fic",
+    "libras",
+    "uab",
+    "aperfeicoamento",
+    "internos",
+    "tmd",
+)
+FORMATOS_DO_KIT = ("post", "story", "banner")
+
+
+def liberacao_do_kit(valor):
+    """A liberação de templates do kit: `familia/formato@versao#resumo`, separados por vírgula.
+
+    Devolve `(familia, formato, versao, resumo curto)` de cada entrada. Entrada sem versão ou sem
+    resumo, de família ou formato desconhecido, recusa a subida (contracts/kit.md): liberar sem
+    versão deixaria uma troca de foto herdar a aprovação anterior, e liberar sem resumo deixaria
+    quem regravasse o resumo na mesma versão herdá-la (`D-010`).
+    """
+    import re
+
+    entradas = []
+    for bruta in (valor or "").split(","):
+        entrada = bruta.strip()
+        if not entrada:
+            continue
+        casou = re.fullmatch(r"([a-z-]+)/([a-z]+)@([1-9][0-9]*)#([0-9a-f]{12})", entrada)
+        if casou is None or casou[1] not in FAMILIAS_DO_KIT or casou[2] not in FORMATOS_DO_KIT:
+            from django.core.exceptions import ImproperlyConfigured
+
+            raise ImproperlyConfigured(
+                f"KIT_DE_DIVULGACAO_TEMPLATES: {entrada!r} não é familia/formato@versao#resumo "
+                "de família e formato conhecidos, com os doze primeiros caracteres do resumo."
+            )
+        entradas.append((casou[1], casou[2], int(casou[3]), casou[4]))
+    return tuple(entradas)
+
+
+# Os templates do kit liberados neste ambiente, por versão e resumo curto (119, `D-010`, FR-3808,
+# FR-3835). **Vazia por padrão**, e é produção quem herda: só a operação a preenche, template a
+# template, depois do registro da aprovação da comunicação (FR-3834). A Institucional na versão 1
+# continua com a `KIT_DE_DIVULGACAO_PECA`; uma versão nova dela só por aqui.
+KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit(os.getenv("KIT_DE_DIVULGACAO_TEMPLATES", ""))
 # O ritmo é o do timer: no máximo este número por execução, uma execução por minuto (`R-005`).
 # Valor inicial, e não compromisso: o limite real é o da conta de envio da instituição.
 AVISOS_LIMITE_POR_MINUTO = int(os.getenv("AVISOS_LIMITE_POR_MINUTO", "60"))

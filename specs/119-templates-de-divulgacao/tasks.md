@@ -25,9 +25,9 @@ raiz do repositório; `kit/` abrevia `backend/processo_seletivo/interface/`.
 
 **Purpose**: o lugar das peças novas, sem mudar comportamento.
 
-- [ ] T001 Criar o pacote `backend/processo_seletivo/interface/kit_familias/__init__.py` com o registro vazio e o módulo `backend/processo_seletivo/interface/kit_formatos.py` com os três formatos da FR-3801 (data-model §Formato; D-007 para o banner)
-- [ ] T002 [P] Criar `backend/processo_seletivo/interface/kit_ativos/fontes/ORIGEM.md` com o formato do registro de fonte (arquivo, família tipográfica, licença OFL, origem, resumo SHA-256), seguindo o `kit_ativos/ORIGEM.md` da `111` (FR-3823, FR-3826)
-- [ ] T003 [P] Acrescentar `KIT_DE_DIVULGACAO_TEMPLATES` em `backend/config/settings/base.py` (lista `familia/formato@versao#<resumo curto>` lida do ambiente, vazia por padrão, recusando entrada malformada), `development.py` e `test.py` (todos os do registro, com a versão e o resumo do código), e os casos correspondentes em `backend/tests/test_settings_do_kit.py`; a `KIT_DE_DIVULGACAO_PECA` e os casos dela não mudam (D-010, FR-3808, contracts/kit.md)
+- [x] T001 Criar o pacote `backend/processo_seletivo/interface/kit_familias/__init__.py` com o registro vazio e o módulo `backend/processo_seletivo/interface/kit_formatos.py` com os três formatos da FR-3801 (data-model §Formato; D-007 para o banner)
+- [x] T002 [P] Criar `backend/processo_seletivo/interface/kit_ativos/fontes/ORIGEM.md` com o formato do registro de fonte (arquivo, família tipográfica, licença OFL, origem, resumo SHA-256), seguindo o `kit_ativos/ORIGEM.md` da `111` (FR-3823, FR-3826)
+- [x] T003 [P] Acrescentar `KIT_DE_DIVULGACAO_TEMPLATES` em `backend/config/settings/base.py` (lista `familia/formato@versao#<resumo curto>` lida do ambiente, vazia por padrão, recusando entrada malformada), `development.py` e `test.py` (todos os do registro, com a versão e o resumo do código), e os casos correspondentes em `backend/tests/test_settings_do_kit.py`; a `KIT_DE_DIVULGACAO_PECA` e os casos dela não mudam (D-010, FR-3808, contracts/kit.md)
 
 ---
 
@@ -43,19 +43,19 @@ byte (FR-3801–FR-3804, FR-3823, FR-3827, SC-1133).
 
 ### Testes
 
-- [ ] T004 [P] [US4] Em `backend/tests/unit/kit/test_formatos.py`: tamanho, margem, zonas reservadas, corpo mínimo e chamada à ação de cada formato (FR-3801, FR-3819)
-- [ ] T005 [P] [US4] Em `backend/tests/unit/kit/test_familias.py`: toda família registrada declara os campos do data-model, toda caixa tem corpos ≥ mínimo do formato, só `contato` e `titulo` podem omitir, e todo ativo citado existe (FR-3802, FR-3803)
-- [ ] T006 [P] [US4] Em `backend/tests/unit/kit/test_fontes_do_kit.py`: cada fonte do kit tem resumo igual ao do `ORIGEM.md`, cobre o repertório da `grafia`, e a recusa por caractere sem grafia nomeia caractere e fonte (FR-3823, EC-13)
-- [ ] T007 [US4] Em `backend/tests/integration/kit/test_referencias.py`: o identificador do template da Institucional continua `feed-1080x1350 · 1` e os SVG de referência saem idênticos pelo motor generalizado (FR-3804, SC-1133)
+- [x] T004 [P] [US4] Em `backend/tests/unit/kit/test_formatos.py`: tamanho, margem, zonas reservadas, corpo mínimo e chamada à ação de cada formato (FR-3801, FR-3819)
+- [x] T005 [P] [US4] Em `backend/tests/unit/kit/test_familias.py`: toda família registrada declara os campos do data-model, toda caixa tem corpos ≥ mínimo do formato, só `contato` e `titulo` podem omitir, e todo ativo citado existe (FR-3802, FR-3803)
+- [x] T006 [P] [US4] Em `backend/tests/unit/kit/test_fontes_do_kit.py`: cada fonte do kit tem resumo igual ao do `ORIGEM.md`, cobre o repertório da `grafia`, e a recusa por caractere sem grafia nomeia caractere e fonte (FR-3823, EC-13)
+- [x] T007 [US4] Em `backend/tests/integration/kit/test_referencias.py`: o identificador do template da Institucional continua `feed-1080x1350 · 1` e os SVG de referência saem idênticos pelo motor generalizado (FR-3804, SC-1133)
 
 ### Implementação
 
-- [ ] T008 [US4] Criar `backend/processo_seletivo/interface/kit_fontes.py`: métrica e subconjunto por fonte livre sobre o leitor TrueType de `publicacoes/infrastructure/fonte.py`, sem alterar este; a Edital Sans entra como a primeira fonte do kit (D-005)
-- [ ] T009 [US4] Declarar as classes imutáveis `Familia`, `Variante`, `Imagem`, `Template`, `Caixa` e o registro com `familias_da_unidade(codigo)` e `liberados()` em `backend/processo_seletivo/interface/kit_familias/__init__.py` (data-model; FR-3805, FR-3808)
-- [ ] T010 [US4] Criar `backend/processo_seletivo/interface/kit_familias/institucional.py` reproduzindo as constantes de `kit_peca.py` (cores, faixas, corpos, recaídas, marca, rodapé) como declaração (D-002, FR-3804)
-- [ ] T011 [US4] Refatorar `backend/processo_seletivo/interface/kit_peca.py` para compor a partir de `(ficha, template, escolha)`: medida pela `kit_fontes`, caixas pela declaração, recusa por template, e serialização SVG com fontes, ativos, `clipPath` e imagens da família (D-004, D-006, FR-3803, FR-3824, FR-3827). `compor(ficha, manchete=...)` continua existindo para a Institucional
-- [ ] T012 [US4] Fazer `backend/processo_seletivo/interface/kit_pacote.py` passar ao rasterizador as fontes da família do template, sem fontes do sistema (D-005)
-- [ ] T013 [US4] Rodar a suíte do kit e conferir `git status backend/tests/fixtures/kit_referencias/` limpo; registrar o resultado no PR do incremento 1 (SC-1133)
+- [x] T008 [US4] Criar `backend/processo_seletivo/interface/kit_fontes.py`: métrica e subconjunto por fonte livre sobre o leitor TrueType de `publicacoes/infrastructure/fonte.py`, sem alterar este; a Edital Sans entra como a primeira fonte do kit (D-005)
+- [x] T009 [US4] Declarar as classes imutáveis `Familia`, `Variante`, `Imagem`, `Template`, `Caixa` e o registro com `familias_da_unidade(codigo)` e `liberados()` em `backend/processo_seletivo/interface/kit_familias/__init__.py` (data-model; FR-3805, FR-3808)
+- [x] T010 [US4] Criar `backend/processo_seletivo/interface/kit_familias/institucional.py` reproduzindo as constantes de `kit_peca.py` (cores, faixas, corpos, recaídas, marca, rodapé) como declaração (D-002, FR-3804)
+- [x] T011 [US4] Refatorar `backend/processo_seletivo/interface/kit_peca.py` para compor a partir de `(ficha, template, escolha)`: medida pela `kit_fontes`, caixas pela declaração, recusa por template, e serialização SVG com fontes, ativos, `clipPath` e imagens da família (D-004, D-006, FR-3803, FR-3824, FR-3827). `compor(ficha, manchete=...)` continua existindo para a Institucional
+- [x] T012 [US4] Fazer `backend/processo_seletivo/interface/kit_pacote.py` passar ao rasterizador as fontes da família do template, sem fontes do sistema (D-005)
+- [x] T013 [US4] Rodar a suíte do kit e conferir `git status backend/tests/fixtures/kit_referencias/` limpo; registrar o resultado no PR do incremento 1 (SC-1133)
 
 **Checkpoint**: PR do incremento 1. A peça de produção não mudou.
 
