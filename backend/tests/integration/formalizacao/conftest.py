@@ -26,3 +26,19 @@ def cenario(db, gestor, api_client, manager_headers, process_payload, raiz_de_ar
 def rui():
     """O servidor do Registro Acadêmico, com o papel Formalização na unidade."""
     return Actor(RUI, "cefor", frozenset({"formalizacao:acessar"}))
+
+
+@pytest.fixture
+def provedor(settings):
+    """O provedor simulado configurado, como em `tests/seguranca/conftest.py`."""
+    from tests.fixtures import provedor_simulado
+
+    provedor_simulado.limpar()
+    settings.GESTAO_PROVEDOR_INSTITUCIONAL = provedor_simulado.CAMINHO
+    yield provedor_simulado
+    provedor_simulado.limpar()
+
+
+@pytest.fixture
+def seletor(settings):
+    settings.INTERFACE_SELETOR_IDENTIDADE = True

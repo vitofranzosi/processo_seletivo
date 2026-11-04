@@ -148,6 +148,7 @@ from processo_seletivo.editais.domain.validation import (
 )
 from processo_seletivo.editais.models.anexos import ArtefatoAnexo
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+from processo_seletivo.formalizacao.domain.nomes import ROTULOS_DA_TRILHA as ROTULOS_DA_FORMALIZACAO
 from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
     consulta_de_inscricoes,
@@ -5387,6 +5388,11 @@ OPERACOES = {
     "AVISO_INTERROMPER": "Interrupção de aviso aos candidatos",
     "ACESSO_CONCEDER": "Concessão de acesso",
     "ACESSO_REVOGAR": "Revogação de acesso",
+    # A entrega documental à formalização (117, FR-3699): a definição, a designação, a consulta e o
+    # download de cada documento, a verificação, o pacote e as recusas. Os rótulos moram no
+    # vocabulário da feature, e dizem só o que o GPS fez — nenhum diz obtido, encaminhado ou
+    # recebido.
+    **ROTULOS_DA_FORMALIZACAO,
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",

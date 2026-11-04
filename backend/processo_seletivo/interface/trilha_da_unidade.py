@@ -63,6 +63,8 @@ SITUACOES = {
     "ENCERRADA": "Encerrada",
     "vigente": "Vigente",
     "revogado": "Revogado",
+    # A designação para a formalização (117), no feminino do objeto.
+    "revogada": "Revogada",
 }
 
 # Os dados da unidade e da autoridade que a alteração mostra, com antes e depois (`FR-3163`). São os
@@ -169,11 +171,20 @@ def _editais_dos_avisos(registros):
             "aviso__edital"
         ):
             encontrados[chaves[interrupcao.pk]] = interrupcao.aviso
-    return {
+    rotulos = {
         chave: f"Edital {aviso.edital.number}/{aviso.edital.year}, "
         f"{ORIGENS_DO_AVISO.get(aviso.origem, aviso.origem)}"
         for chave, aviso in encontrados.items()
     }
+    if por_tipo.get("DesignacaoParaFormalizacao"):
+        # O Edital de cada designação para a formalização (117), numa consulta.
+        from processo_seletivo.formalizacao.models import DesignacaoParaFormalizacao
+
+        for designacao in DesignacaoParaFormalizacao.objects.filter(
+            pk__in=por_tipo["DesignacaoParaFormalizacao"]
+        ).select_related("edital"):
+            rotulos[designacao.pk] = f"Edital {designacao.edital.number}/{designacao.edital.year}"
+    return rotulos
 
 
 def _linha(registro, editais, papeis, nome_da_unidade):
@@ -207,6 +218,11 @@ def _linha(registro, editais, papeis, nome_da_unidade):
         # Só o nome: o assunto e o corpo do modelo estão no mesmo `detalhe`, e não saem dele.
         linha["sobre"] = depois.get("nome", "")
     elif tipo in ("Aviso", "InterrupcaoDoAviso"):
+        linha["sobre"] = editais.get(registro.aggregate_id, "")
+    elif tipo == "DesignacaoParaFormalizacao":
+        # A pessoa designada e o Edital, como o vínculo diz a pessoa e o papel (117, FR-3668).
+        linha["pessoa"] = detalhe.get("pessoa", "")
+        linha["papel"] = "Formalização"
         linha["sobre"] = editais.get(registro.aggregate_id, "")
     elif tipo == "Vinculo":
         linha["pessoa"] = detalhe.get("pessoa", "")

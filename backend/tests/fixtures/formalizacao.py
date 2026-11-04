@@ -180,6 +180,7 @@ def montar_cenario_da_formalizacao(
     sem_resposta=0,
     tamanho=None,
     nomes=None,
+    documentos=None,
     prefixo="formalizacao-117",
 ):
     """O Edital com documentos dos dois momentos e `aptas` pessoas com aceite e tudo conferido.
@@ -193,7 +194,7 @@ def montar_cenario_da_formalizacao(
         api_client,
         manager_headers,
         process_payload,
-        documentos=documentos_da_formalizacao(),
+        documentos=documentos or documentos_da_formalizacao(),
         prefixo=prefixo,
     )
     cenario = Cenario(edital=edital)
