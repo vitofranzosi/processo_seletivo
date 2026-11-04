@@ -14,6 +14,10 @@ as datas do corpus, fixas, e o resto da composição é a do fluxo real.
 identidade dos Perfis. A marca é binária, e o resumo dela já é conferido em `test_peca.py`.
 
 O teste geométrico (FR-3429) roda nos mesmos cenários.
+
+**A `119` generalizou o motor sem mudar estes arquivos** (FR-3804, SC-1133): a peça é a família
+Institucional, composta pela declaração, e o identificador continua `feed-1080x1350 · 1`. Um diff
+nesta pasta numa mudança do motor é regressão, e não referência a regerar.
 """
 
 import dataclasses
@@ -25,7 +29,7 @@ import pytest
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from processo_seletivo.interface import kit_peca
+from processo_seletivo.interface import kit_familias, kit_peca
 from processo_seletivo.portal import ficha as fichas
 from tests.fixtures import kit
 from tests.unit.kit import geometria
@@ -82,6 +86,12 @@ def test_a_peca_do_cenario_e_a_referencia(api_client, nome):
     edital = kit.publicar(api_client, corpus, ate=ate, mudar=mudar, chave=f"referencia-{nome}")
     ficha = no_calendario_do_corpus(fichas.ler(edital, agora=timezone.now(), base_url=kit.BASE))
     peca = kit_peca.compor(ficha)
+    # O motor generalizado, pela entrada geral e com o template lido do registro, desenha a mesma
+    # peça que `compor` (119, FR-3804, SC-1133).
+    template = kit_familias.template("institucional", "post")
+    pela_declaracao = kit_peca.compor_template(ficha, template, kit_peca.Escolha())
+    assert pela_declaracao.template.identificador == "feed-1080x1350 · 1" == kit_peca.TEMPLATE
+    assert kit_peca.svg(pela_declaracao, ficha) == kit_peca.svg(peca, ficha)
 
     assert geometria.problemas(peca) == []
     obtido = normalizar(kit_peca.svg(peca, ficha))

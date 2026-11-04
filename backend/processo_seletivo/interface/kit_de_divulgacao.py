@@ -256,7 +256,9 @@ def previa(request, edital_id):
         peca = _compor(ficha, indice)
     except kit_peca.PecaRecusada:
         raise Http404 from None
-    resposta = HttpResponse(kit_pacote.rasterizar(kit_peca.svg(peca, ficha)), "image/png")
+    resposta = HttpResponse(
+        kit_pacote.rasterizar(kit_peca.svg(peca, ficha), kit_peca.fontes_da_peca(peca)), "image/png"
+    )
     resposta["Content-Disposition"] = "inline"
     resposta["X-Content-Type-Options"] = "nosniff"
     return marcar_como_privada(resposta)
@@ -265,7 +267,7 @@ def previa(request, edital_id):
 def _arquivo_da_peca(ficha, peca, formato):
     if formato == "svg":
         return kit_peca.svg(peca, ficha, fonte_embutida=True).encode()
-    return kit_pacote.rasterizar(kit_peca.svg(peca, ficha))
+    return kit_pacote.rasterizar(kit_peca.svg(peca, ficha), kit_peca.fontes_da_peca(peca))
 
 
 def pacote(ficha, *, manchete, motivo_sem_peca):
@@ -285,7 +287,7 @@ def pacote(ficha, *, manchete, motivo_sem_peca):
     if peca is not None:
         svg = kit_peca.svg(peca, ficha, fonte_embutida=True).encode()
         if kit_pacote.disponivel():
-            png = kit_pacote.rasterizar(kit_peca.svg(peca, ficha))
+            png = kit_pacote.rasterizar(kit_peca.svg(peca, ficha), kit_peca.fontes_da_peca(peca))
         else:
             motivo = SEM_RASTERIZADOR
     textos, notas = _material(ficha)

@@ -1,6 +1,7 @@
 import os
 
 from .base import *  # noqa: F403
+from .base import liberacao_do_kit
 
 if os.getenv("TEST_DB_ENGINE") != "postgresql":
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
@@ -27,3 +28,8 @@ ASSISTENTE_NA_PAGINA_DO_EDITAL = False
 # A peça do kit (111) ligada, e fixada aqui pela razão do painel acima: o `.env` não decide a suíte.
 # Os casos da chave desligada a desligam por `settings` (EC-21).
 KIT_DE_DIVULGACAO_PECA = True
+
+# Todos os templates do registro, com a versão e o resumo do código (119, `D-010`): a suíte confere
+# que esta lista é o registro inteiro, e uma família nova, ou uma versão nova, reprova até entrar
+# aqui.
+KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit("institucional/post@1#d7ab660ea755")
