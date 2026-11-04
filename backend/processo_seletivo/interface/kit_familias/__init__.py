@@ -281,6 +281,10 @@ def resumo(template_):
 # ---- A liberação (FR-3808, FR-3835, D-010) -----------------------------------------------------
 
 
+#: O motivo do template cuja versão ou resumo no código não são os liberados (EC-23, FR-3835).
+VERSAO_EM_APROVACAO = "Versão nova em aprovação pela comunicação."
+
+
 def institucional_v1(template_):
     """A Institucional na versão 1 com o resumo congelado: a única que a chave da `111` rege."""
     from processo_seletivo.interface.kit_familias import institucional

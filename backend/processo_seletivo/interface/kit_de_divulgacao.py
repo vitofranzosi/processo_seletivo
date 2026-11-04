@@ -156,7 +156,7 @@ def _motivo_da_institucional():
         return ""
     if kit_familias.institucional_v1(institucional.POST):
         return PECA_EM_VALIDACAO
-    return kit_escolha.VERSAO_EM_APROVACAO
+    return kit_familias.VERSAO_EM_APROVACAO
 
 
 #: O que só uma família da comunicação pede. A Institucional não tem banco, variante nem outro

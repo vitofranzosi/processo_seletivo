@@ -21,7 +21,7 @@ from processo_seletivo.interface.kit_formatos import FORMATOS
 
 ESCOLHA_INDISPONIVEL = kit_peca.ESCOLHA_INDISPONIVEL
 EM_APROVACAO = "Em aprovação pela comunicação."
-VERSAO_EM_APROVACAO = "Versão nova em aprovação pela comunicação."
+VERSAO_EM_APROVACAO = kit_familias.VERSAO_EM_APROVACAO
 IMAGEM_RETIRADA = (
     "A imagem da última exportação não está mais no banco da família; a primeira da lista foi "
     "escolhida."
