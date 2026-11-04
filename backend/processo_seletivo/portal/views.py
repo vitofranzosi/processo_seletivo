@@ -2430,6 +2430,9 @@ def convocacao(request, inscricao_id):
                 politica, desfecho=desfecho
             ),
             "frase_do_vencido": _frase_do_vencido(da_convocacao, politica, atendimento),
+            # **A data é prazo só enquanto ele corre** (118, FR-3747, FR-3749): sem a comunicação,
+            # vencido, com resultado ou com o Processo encerrado, ela é o vencimento registrado.
+            "prazo_correndo": _prazo_correndo(da_convocacao, politica),
             # O rótulo do desfecho é o do acompanhamento (FR-3750), e não a espécie crua.
             "rotulo_do_desfecho": (
                 situacao_da_inscricao.DESFECHOS.get(
@@ -2443,6 +2446,14 @@ def convocacao(request, inscricao_id):
             "consequencia": situacao_da_inscricao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO,
             "atendimento": atendimento,
         },
+    )
+
+
+def _prazo_correndo(da_convocacao, politica):
+    from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+
+    return da_convocacao["estado"] == convocacao_nomes.CONVOCADO_PRAZO_EM_CURSO and not (
+        politica is not None and politica.fechado_pelo_processo
     )
 
 
@@ -2511,13 +2522,17 @@ def _documentos_da_convocacao_para_a_tela(chamada, agora):
     """A lista da chamada, o estado de cada item e se ainda se apresenta (115, FR-3577, FR-3612).
 
     Sem convocação, ou sem documento pedido, a chave fica vazia e a tela é a de antes (FR-3574).
+
+    **`chamada` já é a vigente**, a que `vigentes_por_inscricao` (019) leu com os desfechos e as
+    comunicações: reler a cadeia a partir da raiz custava consultas a toda tela com convocação, e o
+    acompanhamento passou a fazer esta leitura (118, FR-3734).
     """
     from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
 
     if chamada is None:
         return {"documentos_da_convocacao": None}
     raiz = documentos_da_convocacao.raiz_da_chamada(chamada)
-    vigente = documentos_da_convocacao.vigente_da_chamada(raiz)
+    vigente = chamada
     aberta = documentos_da_convocacao.em_aberto(vigente)
     leitura = documentos_da_convocacao.leitura_da_chamada(raiz, decidida=not aberta)
     if not leitura.pedidos:

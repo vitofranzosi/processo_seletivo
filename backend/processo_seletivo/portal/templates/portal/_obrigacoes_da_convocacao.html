@@ -93,14 +93,14 @@ Toda frase de estado vem de `portal/obrigacoes.py`; o template so a coloca no bl
     {% for item in o.ja_apresentados %}{% include "portal/_cartao_do_documento_da_convocacao.html" %}{% endfor %}
   </ul>
   {% endif %}
-  {% include "portal/_requerimento_nas_obrigacoes.html" %}
+  {% include "portal/_requerimento_nas_obrigacoes.html" with so_o_enviado=True %}
 </section>
 {% endif %}
 {% endif %}
 
 <section class="bloco-da-convocacao sobre-esta-convocacao" id="sobre-esta-convocacao" aria-labelledby="bloco-sobre">
   <h2 id="bloco-sobre">Sobre esta convocação</h2>
-  <dl class="meta">
+  <dl class="campos">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
     <dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada</dd>
     {% if enviada_em %}<dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y" }}, às {{ enviada_em|date:"H\hi" }}</dd>{% endif %}

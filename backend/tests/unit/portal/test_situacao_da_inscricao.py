@@ -654,6 +654,7 @@ class TestSemDocumentoComoHoje:
         ).o_que_fazer
         assert acao.principal == situacao.SIGA_AS_INSTRUCOES, "sem o chamado Preencher (D-020)"
         assert acao.informativo == obrigacoes.REQUERIMENTO_NAO_ENVIADO_ENCERRADO
+        assert (acao.prazo, acao.consequencia) == (None, ""), "ninguém registra mais nada (D-015)"
 
     def test_m0_vencido_nao_usa_o_nucleo(self):
         acao = calcular(

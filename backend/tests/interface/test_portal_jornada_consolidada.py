@@ -480,7 +480,10 @@ def test_m_o_processo_encerrado_nao_diz_prazo_vencido_nem_promete_conferencia(fx
     for proibido in ("prazo terminou", "vai conferir", "aguardando conferência", "vai decidir"):
         assert proibido not in lido, proibido
     assert "não foi conferido antes do encerramento do processo" in lido
-    assert obrigacoes.REQUERIMENTO_NAO_ENVIADO_ENCERRADO in texto(pagina)
+    assert texto(pagina).count(obrigacoes.REQUERIMENTO_NAO_ENVIADO_ENCERRADO) == 1
+    assert obrigacoes.REQUERIMENTO_NAO_ENVIADO_ENCERRADO not in texto(
+        bloco(pagina, "O que você já apresentou")
+    ), "o não enviado não é dito como apresentado"
     assert "preencher" not in lido
     assert not [h for h, _ in links(pagina) if "/requerimento" in h]
 
@@ -594,6 +597,11 @@ def test_sem_documento_o_requerimento_nao_enviado_e_dito_sem_acao(fx, client, le
     pagina = main(abrir(client, cenario, "convocacao"))
     assert "O que fazer agora" not in titulos(pagina)
     assert linha in texto(pagina)
+    # A data não é mais prazo: é o vencimento registrado (FR-3747, FR-3749).
+    assert "Prazo desta convocação" not in texto(pagina) and "Vencimento registrado" in texto(
+        pagina
+    )
+    assert "dentro do prazo acima" not in texto(pagina)
     assert "Preencher" not in texto(pagina)
     assert _sem_link_de_preenchimento(pagina, cenario.pessoa)
     assert RegistroAuditoria.objects.count() == escritas_antes + 1, "só a leitura da convocação"

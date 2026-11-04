@@ -510,7 +510,12 @@ def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso, po
                     obrigacoes_da_convocacao.frase_do_atendimento(""),
                 )
             )
-    elif convocacao.vencimento is not None:
+    elif convocacao.vencimento is not None and not (
+        politica is not None and politica.fechado_pelo_processo
+    ):
+        # Com o Processo em estado final, ninguém registra não atendimento (D-015, D-020): o prazo
+        # e a consequência prometeriam um ato que não existe mais, e a linha informativa já diz que
+        # o envio encerrou.
         prazo = convocacao.vencimento
         consequencia = NAO_ATENDIMENTO_PODE_SER_REGISTRADO
 

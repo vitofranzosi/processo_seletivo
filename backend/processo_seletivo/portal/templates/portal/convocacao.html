@@ -52,7 +52,7 @@ preenchimento (D-019, D-020).
     <dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y" }}, às {{ enviada_em|date:"H\hi" }}</dd>
     {% endif %}
     {% if convocacao.vencimento %}
-    {% if estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}
+    {% if not prazo_correndo %}
     <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>
     {% else %}
     <dt>Prazo desta convocação</dt><dd>até {{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>
@@ -72,7 +72,7 @@ preenchimento (D-019, D-020).
   {% if aceite %}<p>{{ aceite }}</p>{% endif %}
   {% else %}
   <h3>O que fazer</h3>
-  <p>Siga as instruções do Edital para esta convocação{% if convocacao.vencimento %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
+  <p>Siga as instruções do Edital para esta convocação{% if prazo_correndo %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
   {% endif %}
 </section>
 {% comment %}O caminho ao requerimento, quando a politica da 029 diz que ele cabe (059, D-007).{% endcomment %}

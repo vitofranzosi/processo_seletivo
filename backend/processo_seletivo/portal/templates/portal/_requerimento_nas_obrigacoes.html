@@ -6,10 +6,13 @@ e nao enviado, dito como nao enviado**, e sem link: depois do prazo, do encerram
 do resultado, a politica ja nao admite o preenchimento, e um botao que so levaria a recusa e pior
 do que nenhum. Nunca "nao pedido" quando foi pedido (D-016).
 
+Em "O que voce ja apresentou" so o enviado aparece (`so_o_enviado`): o nao enviado ja esta no resumo
+do bloco de cima, e ali ele seria dito como apresentado.
+
 O Requerimento a preencher nao aparece aqui: ele e tarefa, e mora no bloco "O que fazer agora".
 {% endcomment %}
 {% if obrigacoes.requerimento_enviado %}
 <p class="requerimento-nas-obrigacoes"><span aria-hidden="true">✓</span> Requerimento de Matrícula enviado. <a href="{% url 'portal:requerimento' inscricao.id %}">Conferir o Requerimento de Matrícula enviado</a></p>
-{% elif obrigacoes.linha_do_requerimento %}
+{% elif obrigacoes.linha_do_requerimento and not so_o_enviado %}
 <p class="requerimento-nas-obrigacoes">{{ obrigacoes.linha_do_requerimento }}</p>
 {% endif %}
