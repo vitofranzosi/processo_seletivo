@@ -458,6 +458,9 @@ def replace_draft(
                     # viaje no payload volta nulo — o vínculo morreria em silêncio, sem erro e sem
                     # que ninguém tocasse na tela de documentos.
                     anexo_id=requirement.get("attachmentId"),
+                    # O momento e o aproveitamento (115), pela mesma razão: viajam em toda gravação.
+                    momento=requirement.get("moment") or "AT_ENROLLMENT",
+                    aproveita=requirement.get("reusesRequirementId"),
                 )
                 for requirement in document_requirements
             ]

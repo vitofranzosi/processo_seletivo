@@ -394,6 +394,8 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
   **Onde agir, antes da lista** (050, segunda rodada). Com 40 chamadas, saber quantas venceram ou
   estão sem comunicação era descer a página inteira lendo pastilhas.
   {% endcomment %}
+  {% comment %}A fila de conferencia (115, FR-3607): vencimento mais proximo, depois o que pede trabalho.{% endcomment %}
+  <p class="nota"><a href="{% url 'interface:convocacao' edital.id marco_id %}?ordem=documentos{% if lista_id %}&amp;lista={{ lista_id }}{% endif %}">Ordenar por vencimento e situação dos documentos</a></p>
   <ul class="resumo" aria-label="Chamadas por situação">
     <li><strong>{{ leitura.porEstado.CONVOCADO_PRAZO_EM_CURSO }}</strong>Prazo em curso</li>
     <li><strong>{{ leitura.porEstado.CONVOCADO_VENCIMENTO_DECORRIDO }}</strong>Vencimento decorrido</li>
@@ -406,7 +408,8 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
       {% if linha.estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}<span class="situacao s-CANCELADO">Sem comunicação enviada</span>
       {% elif linha.estado == "CONVOCADO_PRAZO_EM_CURSO" %}<span class="situacao s-PUBLICADO">Prazo em curso</span>
       {% elif linha.estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}<span class="situacao s-EM_REVISAO">Vencimento decorrido</span>
-      {% else %}<span class="situacao s-ENCERRADO">{{ linha.desfecho.get_especie_display }}</span>{% endif %}</h3>
+      {% else %}<span class="situacao s-ENCERRADO">{{ linha.desfecho.get_especie_display }}</span>{% endif %}
+      {% if linha.apto %}<span class="situacao s-PUBLICADO">Apto para formalização</span>{% endif %}</h3>
     <dl class="dados-da-inscricao">
       <dt>Espécie</dt><dd>{{ linha.convocacao.get_especie_display }}</dd>
       {% if linha.enviadaEm %}<dt>Enviada em</dt><dd>{{ linha.enviadaEm|date:"d/m/Y H:i" }}</dd>{% endif %}
@@ -423,6 +426,14 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     O fundamento da convocação recolhido (050, segunda rodada): é o mesmo parágrafo em todas as
     chamadas de um gesto, e aberto ele era o maior bloco de cada cartão.
     {% endcomment %}
+    {% comment %}
+    Os documentos que a chamada pede, quando pede algum (115, FR-3607). Sem eles, a linha é a de
+    antes. "Apto para formalização" é o que o desfecho que inclui afirma, e nada além (D-005).
+    {% endcomment %}
+    {% if linha.documentos %}
+    <p class="nota"><strong>{{ linha.rotulo_documental }}</strong> — {{ linha.documentos.contagens.conformes }} de {{ linha.documentos.contagens.total }} conferido{{ linha.documentos.contagens.total|pluralize }}{% if linha.documentos.contagens.recebidos %} · {{ linha.documentos.contagens.recebidos }} para conferir{% endif %}{% if linha.documentos.contagens.complementados %} · {{ linha.documentos.contagens.complementados }} complementado{{ linha.documentos.contagens.complementados|pluralize }}{% endif %}{% if linha.documentos.contagens.pendentes %} · {{ linha.documentos.contagens.pendentes }} pendente{{ linha.documentos.contagens.pendentes|pluralize }}{% endif %}{% if linha.documentos.contagens.a_apresentar %} · {{ linha.documentos.contagens.a_apresentar }} a apresentar{% endif %}
+      · <a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id linha.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Documentos da convocação</a></p>
+    {% endif %}
     <details class="como-preencher">
       <summary>Fundamento da convocação</summary>
       <p class="nota">{{ linha.convocacao.fundamento }}</p>
@@ -482,9 +493,33 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
         </select>
       </p>
       {% endif %}
+      {% if linha.documentos.pendencias_para_incluir %}
+      <p class="nota">Aceite e regularização são recusados enquanto faltar conferir: {% for lido in linha.documentos.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+      {% endif %}
       <p class="acoes"><button type="submit" class="botao">Registrar desfecho</button></p>
     </form>
     </details>
+    {% comment %}
+    O indeferimento com o fundamento pre-redigido a partir das pendencias (115, FR-3594): o texto e
+    sugestao, editavel, e continua obrigatorio e de quem o registra. So aparece onde ha pendencia.
+    {% endcomment %}
+    {% if linha.documentos.pendencias_para_incluir %}
+    <details class="como-preencher">
+      <summary>Indeferir pelas pendências de documento</summary>
+    <form method="post" action="{% url 'interface:desfechar' edital.id marco_id linha.convocacao.id %}" class="confirmar">
+      {% csrf_token %}
+      <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+      <input type="hidden" name="chave" value="{{ chave_idempotencia }}-indeferimento-{{ forloop.counter }}">
+      <input type="hidden" name="especie" value="INDEFERIMENTO">
+      <p><strong>Registrar o desfecho é irreversível.</strong> Confira e ajuste o fundamento antes de registrar.</p>
+      <p class="campo">
+        <label for="fundamento-indeferimento-{{ forloop.counter }}">Fundamento do indeferimento</label>
+        <textarea id="fundamento-indeferimento-{{ forloop.counter }}" name="fundamento" rows="3" required>{{ linha.documentos.fundamento_do_indeferimento }}</textarea>
+      </p>
+      <p class="acoes"><button type="submit" class="botao">Registrar indeferimento</button></p>
+    </form>
+    </details>
+    {% endif %}
 
     {% comment %}
     O atestado de fato externo (US5). Ele **nao cancela matricula nenhuma**: e insumo do desfecho de

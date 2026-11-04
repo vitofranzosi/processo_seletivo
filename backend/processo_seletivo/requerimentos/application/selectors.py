@@ -16,9 +16,9 @@ vigência.
 pessoa pararia de acompanhar. A tela de convocação já é obrigada à mesma distinção, pela mesma
 razão.
 
-**O vencimento do prazo não fecha nada aqui** (`FR-374`). Quem decide a consequência do prazo é a
-convocação, que registra o desfecho; contá-lo uma segunda vez neste módulo produziria duas contagens
-do mesmo prazo, e elas divergiriam.
+**O vencimento do prazo fecha a escrita, e não decide nada** (`FR-374`, revista pela `115`). Quem
+decide a consequência do prazo continua sendo a convocação, que registra o desfecho; e o prazo é
+lido pela mesma regra que a convocação usa, injetada pela aplicação — não há segunda contagem.
 """
 
 from dataclasses import dataclass
@@ -79,6 +79,13 @@ def leitura(apurado) -> LeituraDoRequerimento:
     estado = apurado.estado_de_leitura
     titulo, explicacao = _FRASES[estado]
     escrevivel = estado in (nomes.DISPONIVEL, nomes.EM_PREENCHIMENTO)
+    if escrevivel and getattr(apurado, "prazo_decorrido", False):
+        # A mesma frase dos documentos da convocação (115, FR-3612, FR-3622): o prazo é um só.
+        from processo_seletivo.convocacao.application.documentos import frase_do_prazo_decorrido
+
+        titulo = "O prazo terminou"
+        explicacao = frase_do_prazo_decorrido(apurado.chamada)
+        escrevivel = False
     return LeituraDoRequerimento(
         estado=estado,
         titulo=titulo,

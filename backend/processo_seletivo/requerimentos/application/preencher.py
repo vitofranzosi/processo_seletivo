@@ -144,7 +144,41 @@ def apurar(inscricao, conteudo=None):
     ja_enviado = vigente is not None and vigente.status == nomes.ENVIADO
     precisa_da_chamada = momento == nomes.NA_CONVOCACAO or ja_enviado
     chamada = chamada_em_aberto(inscricao) if precisa_da_chamada else None
-    return disponibilidade.apurar(conteudo, chamada_em_aberto=chamada, requerimento=vigente)
+    return disponibilidade.apurar(
+        conteudo,
+        chamada_em_aberto=chamada,
+        requerimento=vigente,
+        prazo_decorrido=_prazo_da_chamada_decorrido(chamada),
+    )
+
+
+def _prazo_da_chamada_decorrido(chamada):
+    """**Um prazo só por chamada**, para documentos e requerimento (115, FR-3622; FR-374 revista).
+
+    A leitura é a mesma que admite o não atendimento (`019`): sem envio da comunicação o prazo não
+    corre, e sem vencimento não há o que decorrer. Não há segunda contagem — que era o que a
+    redação anterior da FR-374 temia.
+    """
+    if chamada is None:
+        return False
+    from django.utils import timezone
+
+    from processo_seletivo.convocacao.application.documentos import prazo_decorrido
+
+    return prazo_decorrido(chamada, agora=timezone.now())
+
+
+def _recusar_prazo_decorrido(apurado):
+    if not apurado.prazo_decorrido:
+        return
+    from processo_seletivo.convocacao.application.documentos import frase_do_prazo_decorrido
+    from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
+
+    raise DomainError(
+        nomes_da_convocacao.PRAZO_DA_CONVOCACAO_DECORRIDO,
+        frase_do_prazo_decorrido(apurado.chamada),
+        409,
+    )
 
 
 def _exigir_disponibilidade(inscricao, conteudo):
@@ -159,6 +193,7 @@ def _exigir_disponibilidade(inscricao, conteudo):
             "O Requerimento de Matrícula ficará disponível quando você for convocado.",
             409,
         )
+    _recusar_prazo_decorrido(apurado)
     return apurado
 
 
@@ -541,6 +576,8 @@ def autorizacao_para_atualizar(inscricao, conteudo=None):
             "aguardando a sua resposta.",
             409,
         )
+    # O sucessor respeita o prazo da chamada que o autoriza (FR-408 da `029`, revista pela `115`).
+    _recusar_prazo_decorrido(apurado)
     return vigente, apurado.chamada
 
 

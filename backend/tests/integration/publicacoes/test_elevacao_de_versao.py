@@ -470,14 +470,18 @@ def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6
 #: degrau 17 escreve `modalityCode: null` em todo Documento Exigido — "não recorta pelo código da
 #: Modalidade" —, que é verdade sobre todo documento publicado antes, porque a capacidade não
 #: existia. A elevação só roda no fluxo de Retificação; o literal publicado não muda (FR-725).
+#:
+#: **E muda com a `115`, também de propósito**: o degrau 18 escreve `moment: "AT_ENROLLMENT"` e
+#: `reusesRequirementId: null` em todo Documento Exigido — "pedido na inscrição, sem aproveitar
+#: outro" —, que é verdade sobre todo documento publicado antes: a convocação não pedia documento.
 CENSO_DOS_DEGRAUS_ANTES_DA_032 = {
-    "SCHEMA_VERSION": 17,
+    "SCHEMA_VERSION": 18,
     "DEGRAUS": (5, 6),
     "DEGRAUS_DE_PERFIL": (7, 12, 13, 14, 15),
     "DEGRAUS_DA_RAIZ": (7, 9, 16),
     "DEGRAUS_DE_MARCO": (8, 10, 13),
     "DEGRAUS_DE_EVENTO": (11,),
-    "DEGRAUS_DE_DOCUMENTO": (9, 17),
+    "DEGRAUS_DE_DOCUMENTO": (9, 17, 18),
 }
 
 

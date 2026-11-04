@@ -690,7 +690,12 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # certame"). Não é tocar o que se lê: é a cópia da frase do documento que a tela mostra, e
         # que muda junto dela para não haver duas redações da mesma forma (069, R-004, FR-1364).
         # `AlterField` de `choices` não emite SQL, e os valores gravados não mudam.
-        "editais": 23,
+        #
+        # **Sobe para 24 com a 115**: a `editais/0024` acrescenta o momento e o aproveitamento ao
+        # Documento Exigido — quando ele é pedido, na inscrição ou na convocação. É elaboração pela
+        # razão das anteriores, e a coluna nasce com a inscrição, que é o que todo documento
+        # anterior significava; a migration não percorre linha publicada (115, FR-3563).
+        "editais": 24,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -838,7 +843,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # proveniência, para aceitar a Etapa que um critério do marco compara sem enumerá-la. Não
         # cria coluna nem percorre linha (114, FR-3551).
         "classificacao": 7,
-        "comissoes": 1,
+        # **Sobe para 2 com a 115**: a `comissoes/0002` cria a alocação à conferência dos documentos
+        # da convocação — quem da comissão confere, por Edital e Perfil, no molde da alocação à
+        # Etapa. Não é a 022 tocando o que lê: é outra feature, dizendo quem confere (115, D-010).
+        "comissoes": 2,
         # **Sobe para 3 com a 021**: a `divulgacao/0003` publica por lista de concorrência.
         # **Sobe para 4 com a 060**: a `divulgacao/0004` acrescenta à `PublicacaoResultado` o ato de
         # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
@@ -889,7 +897,12 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # certame"). Não é tocar o que se lê: é a cópia da frase do documento que a tela mostra, e
         # que muda junto dela para não haver duas redações da mesma forma (069, R-004, FR-1364).
         # `AlterField` de `choices` não emite SQL, e os valores gravados não mudam.
-        "editais": 23,
+        #
+        # **Sobe para 24 com a 115**: a `editais/0024` acrescenta o momento e o aproveitamento ao
+        # Documento Exigido — quando ele é pedido, na inscrição ou na convocação. É elaboração pela
+        # razão das anteriores, e a coluna nasce com a inscrição, que é o que todo documento
+        # anterior significava; a migration não percorre linha publicada (115, FR-3563).
+        "editais": 24,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se

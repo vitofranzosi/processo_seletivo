@@ -68,8 +68,10 @@ def test_a_alocacao_e_lida_em_numero_constante_de_consultas(
     identificar(client, "carlos", ["gestor"])
 
     # Vinte e uma desde a `109`: a sigla da unidade na moldura da gestão, uma por página, que não
-    # cresce com a comissão.
-    with django_assert_max_num_queries(21):
+    # cresce com a comissão. Vinte e duas desde a `115`: a pergunta se algum Edital do Processo pede
+    # documento na convocação, que decide se a seção da conferência existe — uma, e não uma por
+    # Edital.
+    with django_assert_max_num_queries(22):
         resposta = client.get(reverse("interface:alocacoes", args=[processo_a.id]))
 
     assert resposta.status_code == 200

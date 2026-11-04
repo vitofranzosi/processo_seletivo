@@ -1,0 +1,71 @@
+{% load arquivos_do_candidato %}
+{% comment %}
+Os documentos que esta chamada pede (115, FR-3577, FR-3612). As classes sao as do bloco de
+documentos da inscricao, que ja tem regra na folha: a pessoa reconhece o mesmo jeito de enviar.
+
+Nenhuma frase aqui diz para que o documento serve alem do que o Edital escreveu na instrucao: a
+mesma lista serve a quem vai se matricular e a quem vai se vincular a um programa.
+
+A pendencia diz o motivo de quem conferiu, e nao o nome de quem conferiu (FR-3584).
+{% endcomment %}
+<section id="documentos-da-convocacao" class="painel" aria-labelledby="documentos-da-convocacao-titulo">
+  <h2 id="documentos-da-convocacao-titulo">Documentos pedidos nesta convocação</h2>
+  {% if frase_do_prazo %}
+  <p class="aviso" role="status">{{ frase_do_prazo }}</p>
+  {% elif documentos_vencimento %}
+  <p class="ajuda">Envie até {{ documentos_vencimento|date:"d/m/Y" }}, às {{ documentos_vencimento|date:"H:i" }}. Cada arquivo é conferido pela comissão.</p>
+  {% endif %}
+  <ul class="requisitos-lista">
+    {% for lido in documentos_da_convocacao.pedidos %}
+    <li class="requisito {% if lido.estado == 'CONFORME' or lido.estado == 'NAO_SE_APLICA' %}completo{% endif %}" id="item-{{ lido.item.id }}">
+      <p class="nome">
+        <span class="marca" aria-hidden="true">{% if lido.estado == 'CONFORME' or lido.estado == 'NAO_SE_APLICA' %}✓{% else %}○{% endif %}</span>
+        <span>{{ lido.nome }}{% if not lido.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</span>
+      </p>
+      {% if lido.instrucao %}<p class="instrucao">{{ lido.instrucao }}</p>{% endif %}
+      {% if lido.modelo %}
+      <p class="instrucao"><a class="documento secundaria" href="{% url 'public-anexo' lido.modelo.artefato_id %}">Baixar o modelo: {{ lido.modelo.rotulo }}</a></p>
+      {% endif %}
+
+      <p class="situacao-do-documento" role="status">
+        {% if lido.estado == "A_APRESENTAR" %}Falta enviar
+        {% elif lido.estado == "CONFORME" %}Conforme
+        {% elif lido.estado == "NAO_SE_APLICA" %}Não se aplica: {{ lido.conferencia.motivo }}
+        {% elif lido.estado == "PENDENTE" %}Pendente: {{ lido.conferencia.motivo }}{% if pode_apresentar and documentos_vencimento %} Envie outro arquivo até {{ documentos_vencimento|date:"d/m/Y" }}, às {{ documentos_vencimento|date:"H:i" }}.{% elif pode_apresentar %} Envie outro arquivo.{% endif %}
+        {% elif lido.aproveitada.de == "inscricao" %}Atendido pelo documento enviado na inscrição em {{ lido.aproveitada.em|date:"d/m/Y" }}
+        {% elif lido.aproveitada.de == "chamada" %}Aproveitado da chamada anterior, enviado em {{ lido.aproveitada.em|date:"d/m/Y" }}. A comissão vai conferir de novo
+        {% else %}Recebido em {{ lido.vigente.apresentado_em|date:"d/m/Y" }}, às {{ lido.vigente.apresentado_em|date:"H:i" }}, aguardando conferência{% endif %}
+      </p>
+
+      {% if lido.vigente %}
+      <p class="arquivo">
+        <a href="{% url 'portal:documento-da-convocacao' inscricao.id lido.vigente.id %}" target="_blank" rel="noopener">Ver o arquivo recebido</a>
+      </p>
+      {% endif %}
+
+      {% if pode_apresentar and lido.estado != "CONFORME" and lido.estado != "NAO_SE_APLICA" %}
+      {% if lido.vigente %}<details class="envio-de-novo" {% if lido.estado == "PENDENTE" %}open{% endif %}><summary>Enviar outro arquivo</summary>{% endif %}
+      <div class="envio">
+        <form method="post" enctype="multipart/form-data"
+              action="{% url 'portal:apresentar-documento-da-convocacao' inscricao.id lido.item.id %}" data-envio>
+          {% csrf_token %}
+          <div class="escolher">
+            <input type="file" id="arquivo-{{ lido.item.id }}" name="arquivo" accept="application/pdf"
+                   aria-describedby="ajuda-envio-{{ lido.item.id }}" data-arquivo>
+            <label class="botao-arquivo" for="arquivo-{{ lido.item.id }}">Escolher arquivo PDF</label>
+            <span class="nome-do-arquivo" data-nome-do-arquivo>Nenhum arquivo escolhido</span>
+            <button type="submit" class="acao">Enviar</button>
+          </div>
+          <span class="ajuda limite" id="ajuda-envio-{{ lido.item.id }}">Somente PDF, até {% limite_de_arquivo %}.</span>
+          <p class="progresso" hidden>
+            <progress max="100" value="0" aria-label="Progresso do envio"></progress>
+            <span class="ajuda">Enviando… não feche esta página.</span>
+          </p>
+        </form>
+      </div>
+      {% if lido.vigente %}</details>{% endif %}
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>

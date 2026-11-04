@@ -88,6 +88,7 @@ def montar_cenario_do_corte(
     publicar=None,
     emitir_a_ordem=True,
     modalidades=None,
+    documentos_da_inscricao=None,
 ):
     """Quatro inscritos, três pontuados, ordem emitida — e um alvo de dois.
 
@@ -127,7 +128,13 @@ def montar_cenario_do_corte(
         "membros": membros,
         "etapa": pontuada["id"],
     }
-    inscricoes = inscrever(edital, len(pontuacoes) + 1, primeiro=601, modalidades=modalidades)
+    inscricoes = inscrever(
+        edital,
+        len(pontuacoes) + 1,
+        primeiro=601,
+        modalidades=modalidades,
+        documentos=documentos_da_inscricao or (),
+    )
     avaliados = inscricoes[: len(pontuacoes)]
     distribuir_para(contexto, gestor, ["joao"], avaliados, chave=f"{prefixo}-lote")
     for indice, pontuacao in enumerate(pontuacoes):
