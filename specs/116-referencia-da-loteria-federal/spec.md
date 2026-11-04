@@ -532,12 +532,12 @@ Consultar a cada renderização seria carga sobre a Caixa e latência para quem 
 ato confere sempre. A tela confere quando pedem, com o mesmo resultado, e é isso que permite ver
 antes do ato irreversível (Princípio IV).
 
-**A gravação do rascunho também não consulta**, e esta é uma leitura da 2ª decisão, que pede recusar
-"a introdução em nova configuração". O rascunho não é ato: grava-se a etapa Classificação muitas
+**A gravação do rascunho também não consulta.** Era uma leitura da 2ª decisão, que pede recusar
+"a introdução em nova configuração", e o usuário a confirmou em 04/11/2026. O rascunho não é ato: grava-se a etapa Classificação muitas
 vezes, a Caixa fora do ar não pode impedir guardar trabalho, e a gravação recusa o que é local (a
 forma, FR-3623). A introdução de um concurso realizado é recusada no primeiro ato que o compromete,
 a submissão, e pode ser vista antes pela conferência sob demanda. A alternativa — consultar na
-gravação quando a referência muda — fica registrada em *Pendências do usuário*.
+gravação quando a referência muda — foi descartada.
 
 ### D-008 — A conferência é da fonte que sabe responder, e a trilha é a que existe
 
@@ -548,12 +548,6 @@ existe e já guarda o alcance de atos (a FR-921 da `051`). Usá-lo evita tabela 
 conferência com o motivo humano do ato.
 
 ## Pendências do usuário
-
-- **A gravação do rascunho consulta a Caixa?** A spec diz que não (D-007): a recusa por concurso
-  realizado começa na submissão, e a forma é recusada já na gravação. Se a 2ª decisão quis dizer a
-  gravação, a mudança é pequena: consultar na gravação só quando a referência difere da gravada,
-  fora da transação, recusando o realizado e deixando gravar o inconclusivo. Custo: rede em
-  `replace_draft`, que hoje não tem.
 
 - **SC humano.** A compreensão das três mensagens por quem opera (realizado, ainda não realizado,
   inconclusivo) não é medida por teste. Se o usuário quiser um roteiro de leitura com a comissão,
