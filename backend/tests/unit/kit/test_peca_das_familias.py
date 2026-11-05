@@ -198,22 +198,23 @@ def test_carga_horaria_vazia_numa_oferta_e_curta_noutra(template):
 def _titulo_sem_u_agudo(monkeypatch, template):
     """A fonte do título da família, numa cópia sem «ú»; as outras continuam inteiras.
 
-    Lida da família, e não da Poppins: a FIC desenha o título na Archivo Black.
+    Lida da família, e não fixada: na Pós Lato Sensu é a Poppins Bold, na Aperfeiçoamento a Lexend.
     """
     from processo_seletivo.interface import kit_fontes
 
-    chave_do_titulo = kit_familias.familia(template.familia).fonte("titulo")
+    familia = kit_familias.familia(template.familia)
+    chave = familia.fonte(template.caixa("titulo").fonte)
     original = kit_fontes.medidas
 
-    def medidas(chave):
-        lidas = original(chave)
-        if chave != chave_do_titulo:
+    def medidas(pedida):
+        lidas = original(pedida)
+        if pedida != chave:
             return lidas
         larguras = {c: v for c, v in lidas.larguras.items() if c != "ú"}
         return kit_fontes.Medidas(lidas.dados, larguras, lidas.ascendente, lidas.descendente)
 
     monkeypatch.setattr(kit_fontes, "medidas", medidas)
-    return kit_fontes.FONTES[chave_do_titulo].familia
+    return kit_fontes.FONTES[chave].familia
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=_id)
@@ -225,7 +226,7 @@ def test_caractere_sem_glifo_so_na_fonte_de_titulo(template, monkeypatch):
         _compor(no_titulo, template)
     assert nome_da_fonte in recusa.value.motivo and "«ú»" in recusa.value.motivo
     if template.tem_ofertas:
-        # «ú» no nome da oferta, que não é da fonte do título, não é recusa.
+        # «ú» no nome da oferta, que é de outra fonte da família, não é recusa.
         ofertas = (dataclasses.replace(UMA[0], nome="Especialização em Gestão Pública"),)
         _compor(_ficha(ofertas=ofertas, nomes_iguais=False, total_de_vagas=40), template)
 

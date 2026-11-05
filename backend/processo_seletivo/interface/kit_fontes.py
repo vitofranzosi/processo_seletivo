@@ -44,6 +44,9 @@ class FonteDoKit:
     peso: int
     caminho: Path
     sha256: str
+    #: Os caracteres do repertório que a fonte de origem não desenha, conferidos pela suíte. Não se
+    #: desenha glifo pelo projeto: a peça que os pedir é recusada nomeando-os (FR-3823, EC-13).
+    sem_grafia: str = ""
 
     @property
     def arquivo(self):
@@ -65,8 +68,8 @@ def _edital_sans(chave, recurso, peso):
     return FonteDoKit(chave, "Edital Sans", peso, fonte.PASTA / arquivo, fonte.SHA256[arquivo])
 
 
-def _do_kit(chave, familia, peso, arquivo, sha256):
-    return FonteDoKit(chave, familia, peso, PASTA / arquivo, sha256)
+def _do_kit(chave, familia, peso, arquivo, sha256, sem_grafia=""):
+    return FonteDoKit(chave, familia, peso, PASTA / arquivo, sha256, sem_grafia)
 
 
 FONTES = {
@@ -126,6 +129,24 @@ FONTES = {
             700,
             "SpaceMono-Bold.ttf",
             "81c793fc957300ca0521c18f7ebd2ca3f751c373182ceafcfc63cd171c1447d5",
+        ),
+        # A Aperfeiçoamento (119, incremento 3d): instâncias estáticas das variáveis do Google
+        # Fonts, no peso dos arquivos da comunicação, e o mesmo subconjunto WinAnsi.
+        _do_kit(
+            "unbounded-regular",
+            "Unbounded",
+            400,
+            "Unbounded-Regular.ttf",
+            "94c048a78a9b3ff3023dd970d1ca93c5c9918c32acd3c2f1948b2d41bfc3aba2",
+            # O micro (U+00B5) não está na Unbounded de origem, em nenhum peso.
+            sem_grafia="µ",
+        ),
+        _do_kit(
+            "lexend-extranegrito",
+            "Lexend",
+            800,
+            "Lexend-ExtraBold.ttf",
+            "64c5421403046c7f6f61db724c6d897a5369c303a466de5ad84f7a7d2e518268",
         ),
     )
 }
