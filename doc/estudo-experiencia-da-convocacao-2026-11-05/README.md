@@ -2,7 +2,7 @@
 
 **Data**: 05/11/2026 · **Base**: `main` em `337a0d81` · **Natureza**: só estudo. Nada de código,
 spec ou requisito mudou. Onde a proposta esbarra num requisito escrito, a justificativa está aqui, e
-**a decisão é do usuário** (seção 11).
+**a decisão é do usuário**. As decisões estão fechadas desde o parecer de 05/11 (seção 11).
 
 > **De onde vem.** O usuário percorreu a jornada do convocado na `main` e registrou o achado
 > `doc/achado-comunicacao-ao-convocado-2026-11-05.md` (worktree `documentacao-kit-divulgacao`, ainda
@@ -10,6 +10,21 @@ spec ou requisito mudou. Onde a proposta esbarra num requisito escrito, a justif
 > QI-7 da `115`, porque a pendência não gera aviso. Este estudo junta as duas com o pedido de mudança
 > de perspectiva. A convocação tem de ler como **comunicação institucional importante**, com prazo,
 > consequência e uma ação principal, e não como tela de administrar documentos.
+
+> **Versão 2, consolidada depois do parecer do usuário (05/11).** O diagnóstico e a direção estão
+> aprovados, e as decisões D-1 a D-10 estão fechadas (seção 11). As maquetes foram refeitas em seis
+> pontos:
+>
+> - **o dia da semana**: 10/11/2026 é terça-feira e 12/11/2026 é quinta, e a versão 1 dizia segunda
+>   e quarta;
+> - **a primeira tela**, reorganizada pela ordem e não por encolhimento;
+> - **o botão**, que passa a representar todas as obrigações;
+> - **a correção**, dita dentro do cartão do prazo;
+> - **o e-mail da correção**, agora como modelo próprio;
+> - **o retorno depois do envio**, com o foco na confirmação.
+>
+> O que mudou, e por quê, está no registro da seção 11. A comparação entre as versões está na
+> seção 2.
 
 ## Sumário
 
@@ -23,7 +38,7 @@ spec ou requisito mudou. Onde a proposta esbarra num requisito escrito, a justif
 8. [Maquetes e viabilidade técnica](#8-maquetes-e-viabilidade-técnica)
 9. [Plano de teste com pessoas reais](#9-plano-de-teste-com-pessoas-reais)
 10. [Impactos nas specs e MVP](#10-impactos-nas-specs-e-mvp)
-11. [O que decidir](#11-o-que-decidir)
+11. [Decisões e registro](#11-decisões-e-registro)
 12. [Como reproduzir](#12-como-reproduzir)
 
 ### Como as capturas foram feitas
@@ -157,11 +172,32 @@ quatro documentos vê o cartão verde com "Aguardando conferência" e os dados d
 para continuar. O cartão diz "Recebido em…", e por isso não há perda de informação, mas o próximo
 passo some.
 
+**Achado da consolidação: a tela da convocação não carrega script nenhum.** A inscrição carrega
+três (`inscricao.html:119–122`), e a convocação nenhum, conferido no navegador
+(`document.scripts` vazio no cenário F):
+
+- `arquivo.js`: escolhido o PDF, o cartão **continua dizendo "Nenhum arquivo escolhido"**, e o
+  botão "Enviar" não muda de estado. Um texto que contradiz o que a pessoa acabou de fazer é o
+  inverso da confirmação perceptível que o parecer pede.
+- `envio.js`: o envio de até 10 MB numa rede móvel acontece sem a barra de progresso nem o aviso de
+  não fechar a página, que o cartão já traz escondidos.
+- `recusa.js`: uma recusa, como arquivo que não é PDF ou prazo encerrado, aparece no topo com
+  `role="alert"`, mas sem foco. O próprio `recusa.js` explica que `role=alert` não anuncia o que já
+  vem no HTML, e para quem usa leitor de tela o envio simplesmente não acontece.
+
+É a mesma família da T7, e entra no incremento 1 (seção 10). **Não foi corrigido aqui**: o estudo
+não altera código.
+
+**Achado de passagem, do portal inteiro: `body{font-size:16px}`** (`portal.css:17`). Quem aumenta a
+fonte padrão do navegador vê crescer os títulos, que estão em `rem`, mas não o texto corrido. O
+zoom funciona normalmente. Não é da convocação, e fica como registro para decisão própria, fora
+deste estudo.
+
 ---
 
 ## 2. Hierarquia proposta para a página
 
-Na mesma página, sem *wizard* e sem página nova, em **cinco blocos**. Maquetes:
+Na mesma página, sem *wizard*, sem página nova e sem rota nova. As maquetes são:
 
 - [`convocacao.html`](maquetes/convocacao.html): C1, nada enviado;
 - [`convocacao-apos-envio.html`](maquetes/convocacao-apos-envio.html);
@@ -172,93 +208,177 @@ Na mesma página, sem *wizard* e sem página nova, em **cinco blocos**. Maquetes
 |---|---|
 | ![](capturas/maquetes/convocacao-desktop.jpg) | ![](capturas/maquetes/convocacao-375-primeira-tela.jpg) |
 
-1. **O significado.** O contexto (Processo, Edital), o título **"Você foi convocado!"** e uma frase:
-   *"Esta é a etapa de enviar seus documentos e o Requerimento de Matrícula para a comissão
-   conferir. Ela ainda não é a matrícula."* Nunca "aprovado", "vaga garantida", "matriculado" ou
-   "bolsa concedida" sem o ato que os registre (FR-3751 da `118`; UX-155 a UX-158 da `063`).
-2. **O prazo em destaque.** A data por extenso, com o dia da semana; *"Faltam 5 dias."* (ou *"Termina
-   hoje, às 10h23."*); e a frase de consequência **fixa** da FR-1177 da `063`: *"Se você não atender
-   no prazo, a comissão poderá registrar o não atendimento desta convocação."*
-   - Sem desfecho automático e sem acréscimo. A FR-1177 proíbe qualquer outra frase de
-     consequência, e a consequência só vem do Edital quando ele a declarar em forma estruturada
-     (L-4). Uma primeira versão desta maquete acrescentava *"com o que o Edital prevê"*, e foi
-     retirada por isso.
-   - A origem do prazo ("conta a partir do envio da mensagem…") desce para o bloco 5: é verdade que
-     a pessoa precisa saber, mas não na primeira tela.
-3. **O progresso.** Uma frase e três contagens **em palavra e número**: *a enviar*, *aguardando
-   conferência* e *conferidos*, com a ação principal *"Ver os documentos que faltam"*. **Sem barra.**
-   Uma barra de 0 a 100 % lê como "quanto falta para ser aprovado", e 100 % seria a "falsa conclusão"
-   que a FR-3728 da `118` proíbe. A contagem diz onde cada coisa está, e não promete nada.
-4. **Os formulários, logo abaixo.** São os cartões da `118` como estão: selo em palavra, envio com o
-   nome do documento no nome acessível, e o Requerimento como último cartão a fazer, com o botão que
-   leva ao formulário. Depois vem "O que você já enviou".
-5. **Os dados do ato, em segundo plano.** Chamada, comunicação, fundamento e atendimento, menores e
-   sem moldura, depois de tudo. "Espécie: Para vaga inicial" vira *"Chamada: 1ª chamada, para vaga
-   inicial"*.
+### 2.1 A primeira parte: a chamada
+
+A primeira parte diz cinco coisas, nesta ordem, e termina na ação:
+
+1. **O que aconteceu.** O contexto curto, "Curso Técnico em Informática · Edital 72/2026", e o título
+   **"Você foi convocado!"** (D-1). Nunca "aprovado", "vaga garantida", "matriculado" ou "bolsa
+   concedida" sem o ato que os registre (FR-3751 da `118`; UX-155 a UX-158 da `063`).
+2. **Para qual etapa e o que ela pede.** *"Nesta etapa, você envia seus documentos e o Requerimento
+   de Matrícula para a comissão conferir."* A frase descreve **as obrigações da chamada**, e por isso
+   sai da lista gravada no ato e da política do Requerimento, e não do estado. O parecer sugeria *"Para
+   continuar nesta seleção, apresente seus documentos e o Requerimento de Matrícula."* No imperativo,
+   ela continuaria pedindo o Requerimento a quem já o enviou, como no cenário F. Na forma descritiva,
+   vale em todos os estados, e quem diz o que falta é o item 4.
+3. **O prazo exato.** É um cartão baixo, com a data como a maior coisa da tela ("10/11/2026, às
+   10h23") e, abaixo, o dia da semana e a contagem: *"terça-feira · faltam 5 dias"*. As regras da
+   contagem estão em 2.3.
+4. **O resumo do que falta.** *"Você ainda precisa enviar 4 documentos e o Requerimento de
+   Matrícula."*, que é a frase da `118`, sem mudança.
+5. **A ação principal.** **"Ver o que preciso fazer"** leva à **primeira obrigação que exige
+   atenção**: a pendente antes da que falta, e o Requerimento quando ele for a única. As demais
+   continuam logo abaixo.
+   - O rótulo anterior, "Ver os documentos que faltam", fazia o Requerimento parecer opcional.
+   - "Ver minhas tarefas da convocação", a outra opção do parecer, fica longa a 320 px.
+   - O rótulo não começa por "Enviar", porque o link só navega (FR-3730 da `118`).
+
+**Logo depois da ação, ainda perto do prazo**, vêm a frase de consequência fixa da FR-1177 da `063`,
+*"Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação."*, e
+a ressalva *"Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e
+registra o resultado."*
+
+- As duas estão em texto corrido e sem moldura: aparecem, mas não disputam a primeira tela com o
+  prazo.
+- A consequência não ganha acréscimo nenhum. A FR-1177 proíbe outra frase de consequência, e
+  *"o próximo suplente será convocado"* só pode aparecer quando o Edital declarar essa consequência
+  em forma estruturada (L-4).
+
+**Depois da ação vêm o andamento, os formulários e os dados do ato.**
+
+- **O andamento** traz três contagens em palavra e número: *a enviar*, *aguardando conferência* e
+  *conferidos*. **Sem barra**: "100 % enviado" leria como "100 % aprovado", que é a falsa conclusão
+  que a FR-3728 da `118` proíbe.
+- **Os formulários** são os cartões da `118` como estão, com o Requerimento como último cartão a
+  fazer, e depois "O que você já enviou".
+- **Os dados do ato** ficam por último: Processo, chamada (*"1ª chamada, para vaga inicial"*, no
+  lugar de "Espécie: Para vaga inicial"), comunicação e origem do prazo, fundamento e atendimento.
 
 **Por que não *wizard*.** Os documentos são independentes, chegam em dias diferentes, e a pessoa
-volta várias vezes até o prazo, como no cenário F, em que dois são conferidos antes de os outros
-chegarem. Um passo a passo esconderia o que já foi feito, obrigaria a refazer o caminho a cada
-volta, e não tem ordem natural a impor. A vantagem que ele daria, uma coisa de cada vez, a contagem
-e a ação principal já dão sem tirar a visão do todo.
+volta várias vezes até o prazo. No cenário F, dois são conferidos antes de os outros chegarem. Um
+passo a passo esconderia o que já foi feito e obrigaria a refazer o caminho a cada volta. A vantagem
+que ele daria, uma coisa de cada vez, a ação principal já dá, sem tirar a visão do todo.
 
-**A primeira tela a 375 px é apertada.** A SC-1119 da `118` exige a contagem e o primeiro link de
-tarefa dentro dos 812 px. A primeira versão da maquete a reprovava, porque o bloco 3 começava no fim
-da primeira tela. Ela só coube depois de três ajustes:
+### 2.2 Versão 1 e versão 2, a 375 px
 
-- a explicação reduzida a uma frase;
-- a origem do prazo descida para o bloco 5;
-- as três contagens lado a lado, e não empilhadas.
+| | Normal (C1) | Com pendência (F) | Depois do envio | Corrigida |
+|---|---|---|---|---|
+| **Versão 1** | ![](capturas/maquetes-v1/convocacao-375-primeira-tela.jpg) | ![](capturas/maquetes-v1/convocacao-pendencia-375-primeira-tela.jpg) | ![](capturas/maquetes-v1/convocacao-apos-envio-375-primeira-tela.jpg) | ![](capturas/maquetes-v1/convocacao-sucessora-375-primeira-tela.jpg) |
+| **Versão 2** | ![](capturas/maquetes/convocacao-375-primeira-tela.jpg) | ![](capturas/maquetes/convocacao-pendencia-375-primeira-tela.jpg) | ![](capturas/maquetes/convocacao-apos-envio-375-primeira-tela.jpg) | ![](capturas/maquetes/convocacao-sucessora-375-primeira-tela.jpg) |
 
-Medido pelo `getBoundingClientRect` da ação principal, a 375 × 812, no roteiro:
+A versão 1 só fazia a ação caber **encolhendo** a tela a 375 px: título, data, espaçamento e
+contagens diminuíam. Mesmo assim, ela ficava a 1 px do fim na pendência e fora da tela na
+corrigida. A versão 2 tirou todo o encolhimento de `maquetes.css` e usa a tipografia da folha real.
+O que mudou foi **o que vem antes da ação**: as contagens, a origem do prazo e a ressalva longa
+desceram.
 
-| Maquete | Fim da ação principal | Folga |
+Medido por [`roteiro/medir.py`](roteiro/medir.py): é a posição do fim da ação principal, a partir do
+topo da página.
+
+| Maquete | 375 × 812, v1 | 375 × 812, v2 | 320 × 568 | 375, fonte 125 % | 375, fonte 150 % | zoom 200 % (640 × 450) |
+|---|---|---|---|---|---|---|
+| Normal | 784 | **504** | 553 ✓ | 646 ✓ | 901 ✗ | 459 ✗ |
+| Pendência | 811 | **504** | 528 ✓ | 646 ✓ | 901 ✗ | 459 ✗ |
+| Corrigida | 942 ✗ | **555** | 604 ✗ | 710 ✓ | 978 ✗ | 486 ✗ |
+| Depois do envio | — | 560 na tela, a partir da confirmação | — | — | — | — |
+
+Na legenda, ✓ quer dizer dentro da primeira tela, e ✗ fora dela. **Nenhuma** das 24 combinações
+medidas tem rolagem horizontal, e em **todas** a ação vem antes do andamento na ordem do documento.
+
+**O que isso quer dizer, e o critério proposto.** A ação não cabe na primeira tela com fonte a
+150 %, com zoom de 200 %, e na corrigida a 320 × 568. **Isso é esperado, e não é defeito.** Com
+zoom de 200 %, a tela de 450 px de altura não comporta título, prazo e resumo antes de qualquer
+botão, nem deve: encolher para caber é o que o parecer vetou.
+
+Por isso o critério de aceite não pode ser um número de pixels. São três condições:
+
+1. **Ordem.** A ação é o primeiro controle do conteúdo, depois do título, da etapa, do prazo e do
+   resumo, e vem antes do andamento, dos formulários e dos dados.
+2. **Sem rolagem horizontal** a 320 px, com fonte a 150 % e com zoom de 200 % (WCAG 1.4.10, reflow).
+3. **Primeira tela a 375 × 812, com a fonte padrão.** A ação está nela, **com folga de pelo menos
+   uma linha de texto**, e não por 1 px. Hoje a folga é de 308 px no cenário normal e de 257 px na
+   corrigida.
+
+A SC-1119 da `118` se reescreve assim (seção 10).
+
+**A corrigida a 320 px** fica 36 px abaixo da primeira tela, porque o aviso de correção ocupa duas
+linhas. O aviso fica, porque é a informação que mudou.
+
+### 2.3 O prazo: dia da semana, contagem e fuso
+
+A versão 1 errou o dia da semana porque ele foi **digitado à mão** na maquete, ao lado de uma data
+que não o determinava. Na implementação, o dia da semana, a contagem e a data **saem do mesmo
+instante, por uma função só**, no fuso da instalação (`TIME_ZONE = "America/Sao_Paulo"`), e com o
+`LANGUAGE_CODE = "pt-br"` para o nome do dia. Nada é digitado. Nas maquetes, que são texto,
+[`roteiro/conferir_datas.py`](roteiro/conferir_datas.py) confere cada dia da semana contra a data ao
+lado: acusa os dois erros da versão 1 e passa a versão 2, com doze dias conferidos.
+
+As regras da contagem, para a spec:
+
+| Situação, no fuso local | O que a tela diz |
+|---|---|
+| Vencimento em outro dia, 2 ou mais dias corridos depois | *"‹dia da semana› · faltam N dias"*, com N em **dias de calendário** entre hoje e o dia do vencimento, e não em blocos de 24 horas |
+| Vencimento amanhã | *"‹dia da semana› · termina amanhã"* |
+| Vencimento hoje, ainda não passado | *"termina hoje, às 10h23"* |
+| Vencimento passado | nenhuma contagem: é o estado "prazo terminou" (FR-3748 da `118`) |
+| Comunicação não enviada | nenhuma data de prazo: *"O prazo ainda não começou a correr…"* |
+| Sem vencimento registrado | *"O prazo para atender é o que o Edital publica."*, como hoje |
+
+**Os testes, no plano da spec:**
+
+- O dia da semana confere com a data para **todos os dias de um ano**, contra o calendário da
+  biblioteca padrão, e não contra uma tabela escrita à mão.
+- Um vencimento às **23h30 locais** é 02h30 UTC do dia seguinte: o dia da semana, a data e a
+  contagem são os do dia local. Esse é o caso que já deu errado uma vez, no `strftime` sobre UTC
+  que `comunicar.py` corrigiu.
+- A contagem é medida nos dois lados da meia-noite local, a 23h59 e a 00h01, e a uma hora do
+  vencimento.
+- O prazo sai em **um formato só**, no portal e no e-mail: "às 10h23", e nunca "às 10:23" (E6).
+- O fuso é fixado no teste, sem depender da máquina, e há um caso com outro fuso de servidor para
+  provar que a instalação é que manda.
+- A contagem nunca arredonda para cima: com 2 horas restantes, não diz "falta 1 dia".
+
+### 2.4 Os outros estados
+
+Os outros estados têm a mesma estrutura. A partir do item 4, valem as frases que já existem hoje:
+
+| Estado | Título (h1) | Cartão do prazo |
 |---|---|---|
-| C1, nada enviado | 784 px | 28 px |
-| F, com pendência | 811 px | 1 px |
-| Sucessora | **942 px** | **fora da primeira tela** |
-| Depois do envio | 725 px (o link "Próximo") | 87 px |
-
-**A sucessora não cabe.** O aviso *"Esta convocação foi corrigida…"* empurra a ação para a segunda
-tela. A SC-1119 não lista esse cenário, mas a pessoa que recebeu a correção é a que mais precisa
-saber o que fazer. Há duas saídas, e as duas ficam para a implementação:
-
-- encurtar o aviso para uma linha, *"Convocação corrigida: o prazo que vale é o desta página."*,
-  com a data da anterior só no bloco 5;
-- ou pôr o aviso dentro do bloco do prazo, que é exatamente o que ele corrige.
-
-Um título de Processo mais longo empurra todas para baixo, e F já está a 1 px. Na implementação,
-**a SC-1119 se mede de novo**, nos títulos reais. Se não couber, a explicação do bloco 1 encurta
-antes de o prazo perder destaque.
-
-**O título nos demais estados**, com a mesma estrutura e os blocos 3 e 4 trocados pelo que já existe
-hoje:
-
-| Estado | Título (h1) | Bloco 2 |
-|---|---|---|
-| Prazo correndo | Você foi convocado! | prazo e consequência |
+| Prazo correndo | Você foi convocado! | data, dia, contagem |
 | Comunicação não enviada (K) | Você foi convocado! | *"O prazo ainda não começou a correr: ele conta a partir do envio da comunicação."* |
 | Prazo vencido sem desfecho (G) | O prazo desta convocação terminou | o núcleo do vencido da FR-3748 |
-| Desfecho registrado (I1, I2) | Resultado da sua convocação | o rótulo do desfecho e a frase do aceite |
-| Sucessora (`corr`) | Você foi convocado! | prazo novo, com *"Esta convocação foi corrigida. Ela substitui a mensagem enviada em ‹data›. O prazo que vale é o desta página."* acima, e sem o motivo (120, linhas 486–487) |
+| Desfecho registrado (I1, I2) | Resultado da sua convocação | o rótulo do desfecho e a frase do aceite, sem prazo |
+| Corrigida (`corr`) | Você foi convocado! | **"Convocação corrigida: este é o prazo válido."** no próprio cartão, acima da data; a mensagem substituída, com o prazo antigo por extenso, nos dados do ato; o motivo não aparece (120, linhas 486–487) |
 
-**O gênero.** O produto escreve hoje "convocada(o)". O título pedido foi "Você foi convocado!", e é o
-das maquetes. As alternativas são:
+### 2.5 Depois do envio
 
-- "Você foi convocada(o)!", que mantém a convenção do produto;
-- "Chegou a sua convocação!", que é neutra e não depende de dado de gênero, que o sistema não tem.
+O envio volta a **`#confirmacao`**, e não ao cartão (`views.py:2574`). A confirmação é o primeiro
+elemento da chamada e tem `tabindex="-1"`, e por isso **o próprio navegador põe o foco nela** ao
+seguir a âncora, sem script. Ela diz:
 
-A escolha é do usuário (seção 11, D-1).
+- **qual documento** foi recebido e quando;
+- que ele **aguarda a conferência da comissão**;
+- a **próxima tarefa**, como link.
 
-**O depois do envio.** O envio volta a `#progresso`, e não ao cartão. A confirmação mora no bloco 3,
-com `role="status"` e o próximo item como link: *"Recebemos a Certidão de nascimento ou casamento
-em 05/11/2026, às 10h25. A comissão vai conferir. Próximo: Histórico escolar do ensino médio."* A
-contagem já mostra 1 aguardando conferência. É mudança de template e de destino do `redirect`, sem
-regra nova.
+Logo abaixo ficam o prazo, o resumo atualizado ("3 documentos e o Requerimento") e a ação. Medido a
+375 × 812, a confirmação ocupa de 0 a 157 px, a ação termina em 560 px, e o foco está na
+confirmação.
 
-| Depois do envio (375 px) | Com pendência (375 px) | Sucessora (375 px) |
-|---|---|---|
-| ![](capturas/maquetes/convocacao-apos-envio-375-primeira-tela.jpg) | ![](capturas/maquetes/convocacao-pendencia-375-primeira-tela.jpg) | ![](capturas/maquetes/convocacao-sucessora-375-primeira-tela.jpg) |
+**Duas tentativas falharam, e foram medidas.** Voltar a uma âncora da seção inteira punha o foco na
+seção, e o leitor de tela anunciaria o título dela, "Você foi convocado!", e não o envio. Um script
+que movesse o foco perdia para a âncora, que o navegador segue depois dele.
+
+**O que a confirmação não pode dizer:**
+
+| Caso | Frase |
+|---|---|
+| Envio novo | *"Recebemos: ‹documento›, em ‹data›, às ‹hora›. Ela aguarda a conferência da comissão."* Nunca "aceito", "aprovado" ou "conferido" |
+| O mesmo arquivo de novo | *"Este arquivo já tinha sido recebido."*, a frase de hoje, sem próxima tarefa nova |
+| Último item enviado | a frase da FR-3728 da `118`: *"Você não tem mais documentos para enviar agora. A comissão ainda vai concluir a análise."* |
+| Recusa (não é PDF, prazo encerrado) | a recusa fica **no cartão do item**, com o foco nela (`recusa.js`, que a convocação passa a carregar), e não no topo; nenhuma confirmação |
+| Vários envios seguidos | cada envio é um POST, e cada volta mostra só o seu; a contagem do andamento mostra o acumulado |
+
+A tela passa a carregar `arquivo.js`, `envio.js` e `recusa.js` (1.4), sem script novo além deles.
 
 ---
 
@@ -294,11 +414,11 @@ A ressalva já existe no aceite: *"não é matrícula, bolsa nem contrato"*.
 
 1. **A espécie, que já existe** (`VAGA_INICIAL`, `SUPLENCIA`, `PARA_REGULARIZAR`). Ela decide as duas
    últimas linhas da tabela, e **isso já é implementável**: é ato gravado, e não inferência. Hoje ela
-   só aparece crua no bloco 5.
+   só aparece crua nos dados do ato.
 2. **A finalidade da convocação, que não existe**: um campo fechado, declarado no Perfil (*matrícula*,
-   *cadastramento de bolsista*, *apresentação de documentos e termo*), que escolhe a frase do bloco 1
+   *cadastramento de bolsista*, *apresentação de documentos e termo*), que escolhe a frase da etapa
    e a do e-mail. É requisito novo, na `019` ou numa spec própria, e cruza com a L-4 da `063`, a
-   "ação e consequência estruturadas da convocação". Sem ele, a frase do bloco 1 diz *"enviar seus
+   "ação e consequência estruturadas da convocação". Sem ele, a frase da etapa diz *"envia seus
    documentos"*, e a palavra "Matrícula" só aparece quando o Requerimento de Matrícula está pedido,
    o que já é dado (`requirement` da `029`).
 
@@ -306,27 +426,59 @@ A ressalva já existe no aceite: *"não é matrícula, bolsa nem contrato"*.
 
 ## 4. Modelo de e-mail
 
-[`maquetes/email.html`](maquetes/email.html) e [`maquetes/email.txt`](maquetes/email.txt), a
-alternativa completa em texto puro, com as variantes da sucessora e da chamada sem documento.
+São três arquivos:
 
-| 720 px | Celular, 375 px | Modo escuro |
+- [`maquetes/email.html`](maquetes/email.html): a mensagem inicial;
+- [`maquetes/email-correcao.html`](maquetes/email-correcao.html): a da correção, **como modelo
+  próprio**, e não como variante silenciosa;
+- [`maquetes/email.txt`](maquetes/email.txt): a alternativa completa em texto puro das duas, mais a
+  tabela de assunto e frase por obrigação.
+
+| Inicial, 720 px | Inicial, 375 px | Modo escuro | Correção, 375 px |
+|---|---|---|---|
+| ![](capturas/maquetes/email-desktop.jpg) | ![](capturas/maquetes/email-375.jpg) | ![](capturas/maquetes/email-375-escuro.jpg) | ![](capturas/maquetes/email-correcao-375.jpg) |
+
+**A identificação institucional vai por extenso.** O cabeçalho em texto diz *"Ifes — Instituto
+Federal do Espírito Santo"* e, abaixo, *"Cefor · Processos Seletivos"*. Quem não conhece a sigla
+"Cefor" reconhece o Ifes.
+
+Isso **não é autenticação do remetente**. Qualquer um escreve "Ifes" num e-mail. O que prova a
+origem é o SPF, o DKIM e o DMARC (D-8), e o que protege a pessoa é a orientação de segurança e o
+fato de que o link não autentica.
+
+**O assunto e a frase seguem o que a chamada pede de fato.** Os dois são lidos da lista gravada no
+ato de convocar e da política do Requerimento. As variantes completas estão no fim de `email.txt`:
+
+| A chamada pede | Assunto | Frase do corpo |
 |---|---|---|
-| ![](capturas/maquetes/email-desktop.jpg) | ![](capturas/maquetes/email-375.jpg) | ![](capturas/maquetes/email-375-escuro.jpg) |
+| documentos e Requerimento | `Ifes · Convocação no Edital 72/2026: envie seus documentos até 10/11` | *"Esta convocação pede documentos e o Requerimento de Matrícula."* |
+| só documentos | o mesmo | *"Esta convocação pede documentos, que você envia pela sua área do candidato."* |
+| só o Requerimento | `…: preencha o Requerimento até 10/11` | *"Esta convocação pede o Requerimento de Matrícula…"* |
+| nenhum dos dois | `…: prazo até 10/11` | *"Siga as instruções do Edital dentro do prazo…"* |
+| sem vencimento registrado | `Ifes · Convocação no Edital 72/2026` | o prazo é *"o que o Edital publica"* |
+| **correção (120)** | `Ifes · Convocação corrigida no Edital 72/2026: prazo válido até 12/11` | a mesma, conforme o que a sucessora pede |
 
-**Assunto**: `Ifes · Convocação no Edital 72/2026: envie os documentos até 10/11`.
+Os primeiros ~45 caracteres, que são o que a lista do celular mostra, trazem a instituição, a
+palavra "Convocação" e o Edital. O texto de pré-visualização repete a ação e o prazo com o dia da
+semana.
 
-- A instituição, o Edital, a ação e a data estão nos primeiros ~45 caracteres, que é o que a lista do
-  celular mostra.
-- Sem documento na chamada, o assunto vira `Ifes · Convocação no Edital 72/2026: prazo até 10/11`.
-- Na sucessora, vira `Ifes · Convocação corrigida no Edital 72/2026: novo prazo até 12/11`.
-- O texto de pré-visualização repete a ação e o prazo.
+**A correção diz o que substitui, e não por quê.** O título é *"Sua convocação no Edital 72/2026 foi
+corrigida"*. Logo abaixo vem um quadro: *"Esta mensagem substitui a que enviamos em 05/11/2026, às
+10h23. Aquela informava prazo até terça-feira, 10/11/2026. O prazo que vale é o desta mensagem."*
+O cartão do prazo se chama *"Prazo válido para atender"*.
+
+- O prazo antigo aparece por extenso porque é ele que a pessoa tem na outra mensagem: é por ele que
+  ela reconhece qual das duas deixou de valer.
+- O motivo da correção não vai (120, linhas 486–487).
+- A sucessora pode **antecipar** o prazo (FR-3844 da `120`), e por isso o texto diz *"prazo
+  válido"*, e não *"novo prazo"* nem *"prorrogação"*. A FR-3856 proíbe chamar o ato de prorrogação.
 
 **O corpo, de cima para baixo**:
 
 - o título e o Processo;
 - **a frase dos documentos**, que é a X3: *"Esta convocação pede documentos e o Requerimento de
   Matrícula. Você envia tudo pela sua área do candidato."*;
-- o prazo em destaque, *"contado do envio desta mensagem"* (FR-269a);
+- o prazo em destaque, com o dia da semana, *"contado do envio desta mensagem"* (FR-269a);
 - o botão **"Acessar minha convocação"**, com o endereço por extenso abaixo;
 - como entrar, por e-mail e código, "numa mensagem separada";
 - a ressalva *"ainda não é a matrícula"*;
@@ -359,6 +511,27 @@ teste está na seção 10.
 | Texto puro | `email.txt` diz tudo o que o HTML diz, com o endereço completo | nenhum |
 | Tamanho | ~6 kB | longe do corte de 102 kB do Gmail |
 
+**O teste em clientes reais ainda não foi feito, e não cabe neste estudo.** Ele exige mandar
+mensagem de verdade para caixas de teste, a partir do SMTP de homologação. Fica como critério de
+aceite do incremento 1, com uma captura por linha:
+
+| Cliente | Aparelho | Claro | Escuro | Imagens bloqueadas | Leitor de tela |
+|---|---|---|---|---|---|
+| Gmail (web) | desktop | ☐ | ☐ | ☐ | — |
+| Gmail (app), conta Gmail **e** conta de outro provedor | Android e iOS | ☐ | ☐ (inversão forçada) | ☐ | TalkBack / VoiceOver ☐ |
+| Outlook de mesa (Windows) | desktop | ☐ | ☐ | ☐ | NVDA ☐ |
+| Outlook.com e app Outlook | desktop e celular | ☐ | ☐ | ☐ | — |
+| Apple Mail | iOS e macOS | ☐ | ☐ | ☐ | VoiceOver ☐ |
+| Caixa institucional do Ifes (o webmail que os servidores usam) | desktop | ☐ | — | ☐ | — |
+
+Em cada linha se conferem cinco coisas:
+
+- o assunto e a pré-visualização na lista;
+- o botão clicável e o endereço por extenso;
+- o contraste do prazo e do botão (≥ 4,5:1);
+- a ordem de leitura;
+- a mensagem da correção ao lado da inicial, no mesmo cliente.
+
 **SPF, DKIM e DMARC: verificação a fazer, e não premissa.** Nada no repositório os configura, e não
 deve: eles moram no DNS do domínio do remetente e no servidor de correio que envia. Antes de produção:
 
@@ -381,7 +554,7 @@ Nada mais muda:
 - **situações de mensagem**: nenhuma nova; a FR-084 da `010` continua com quatro, e o guardião
   `tests/test_situacoes_de_mensagem.py` não muda;
 - **forma de convocar**: a convocação **por publicação** continua sem e-mail nenhum (D-001 da `066`).
-  O modelo é só da mensagem individual, e a página do portal mostra no bloco 5 *"Publicada em
+  O modelo é só da mensagem individual, e a página do portal mostra, nos dados do ato, *"Publicada em
   ‹referência›"* no lugar de "Mensagem enviada em".
 
 Um acréscimo para decidir (D-7): gravar em `ComunicacaoEmitida` **qual versão do modelo** saiu. Hoje
@@ -420,6 +593,36 @@ identificador nenhum, ao custo de uma rota nova e da regra da escolha.
 | Acesso, com destino | Código, com destino |
 |---|---|
 | ![](capturas/maquetes/acesso-1-email-375.jpg) | ![](capturas/maquetes/acesso-2-codigo-375.jpg) |
+
+#### O que a spec de A precisa garantir
+
+| # | Garantia | Como, sobre o que já existe |
+|---|---|---|
+| S1 | **Sem sessão, o pedido vai para a autenticação sem revelar existência nem titularidade.** | O redirecionamento acontece **antes** de qualquer consulta pelo identificador, e é idêntico, inclusive na resposta e no tempo, para inscrição real, inventada ou de outra pessoa. A tela de acesso não nomeia o Edital (item 3 acima). |
+| S2 | **O destino é validado pelo servidor, sem redirecionamento aberto.** | São quatro camadas: `_destino_seguro` (`views.py:485`), que já recusa outro host e outro esquema; `_rota_do_destino`, que resolve o caminho contra as rotas do portal; uma **lista fechada** das rotas que podem ser destino, a vaga, o Edital e a convocação, porque o que não está nela volta para a lista, como hoje; e só o caminho, sem consulta nem fragmento vindos de fora. |
+| S3 | **A autenticação continua por e-mail e código.** | Nada muda na P-001 nem nas FR-022 a FR-031c da `010`. |
+| S4 | **A titularidade é conferida depois do login, a cada requisição.** | É o `_inscricao_do_titular` de hoje. O destino guardado não carrega autorização: ele é só um caminho, conferido de novo quando é aberto. |
+| S5 | **Recurso alheio ou inexistente recebe recusa indistinguível.** | Com sessão, as duas recebem o mesmo 404 de hoje (FR-1101 da `059`). Sem sessão, as duas recebem o mesmo redirecionamento (S1). |
+| S6 | **Com sessão válida, a convocação abre direto.** | Já é assim. A mudança é só o endereço da mensagem. |
+| S7 | **A convocação corrigida abre a vigente e diz que substituiu.** | O link é da **Inscrição**, e não da convocação, e por isso a primeira mensagem também abre a sucessora (`vigentes_por_inscricao`). A página diz *"Convocação corrigida: este é o prazo válido."* (2.4). |
+| S8 | **Nenhuma escrita por GET.** | O destino só navega. Apresentar documento, abrir rascunho e enviar Requerimento continuam POST com CSRF, e abrir a convocação não move prazo (FR-288b da `019`). |
+
+**O identificador na URL não é credencial nem garantia de anonimato.** O UUID da Inscrição no e-mail
+não autoriza nada (S4), mas também não é segredo. Quem lê a mensagem encaminhada sabe que aquela
+inscrição existe, e o endereço fica no histórico do navegador e no registro do servidor.
+
+- Nenhuma decisão de acesso pode depender de ele ser difícil de adivinhar.
+- Ele não substitui a conferência de titularidade.
+- Ele não vai a lugar nenhum além do link: nem ao assunto, nem ao texto, nem a parâmetro de
+  campanha.
+- Se a instituição preferir que o e-mail não leve identificador nenhum, a variante A′ resolve, com
+  uma rota a mais.
+
+**A duração da sessão e o computador compartilhado ficam para a TI** (D-9). Com 14 dias e sem
+expirar ao fechar o navegador, quem entra num laboratório de polo e não clica em "Sair" deixa a
+área aberta para a pessoa seguinte, com certidão, histórico e comprovante de residência. A
+alternativa A não muda isso, mas também não o agrava: o código continua obrigatório para quem não
+tem sessão.
 
 ### B — identificação facilitada, sem redigitar o e-mail
 
@@ -484,11 +687,11 @@ ao navegador precisa ser testada no app do Gmail e do Outlook antes de qualquer 
 | **Sessão válida** | e-mail → lista ([captura](capturas/hoje/c1-lista-375.jpg)) → "Ver convocação" → convocação | e-mail → convocação |
 | **Sessão expirada** (ou outro aparelho) | link da mensagem → "Entrar", sem destino → código → lista → "Ver convocação"; um link direto daria **404** ([captura](capturas/hoje/sem-sessao-link-direto-404-375.jpg)) | link → "Entre para ver a sua convocação" → código → convocação |
 | **Primeiro acesso** (convocado que nunca entrou pelo e-mail, ou inscrição antiga a reconciliar) | o mesmo da sessão expirada; a reconciliação termina em `_entrar` e cai na lista | o mesmo, com o destino honrado também depois da reconciliação; a mensagem *"Pronto: sua participação anterior está aqui."* aparece na convocação |
-| **Link antigo depois de uma correção** (`corr`) | a lista leva à sucessora, com o prazo novo e **sem dizer** que substitui ([captura](capturas/hoje/corr-convocacao-375.jpg)) | o link da primeira mensagem é o da Inscrição, e abre **a vigente**, com *"Esta convocação foi corrigida… O prazo que vale é o desta página."* |
-| **Documento pendente** (F) | o cartão sobe com "Precisa de correção" e o motivo; a pessoa só sabe se voltar | o mesmo cartão, mais a contagem "a corrigir" no bloco 3; o aviso por e-mail fica para a seção 7 |
-| **Requerimento e documentos juntos** (C1) | o Requerimento é a 5ª tarefa da lista | o Requerimento é o último cartão a fazer, com o próprio botão; a contagem o inclui |
-| **Envio** | âncora no cartão que desceu; confirmação fora da tela (1.4) | volta ao bloco 3, com a confirmação e o próximo item |
-| **Confirmação e acompanhamento** | o acompanhamento diz o que falta ([captura](capturas/hoje/c1-acompanhamento-375.jpg)); não muda | não muda; "Voltar ao acompanhamento" fica no bloco 5 |
+| **Link antigo depois de uma correção** (`corr`) | a lista leva à sucessora, com o prazo novo e **sem dizer** que substitui ([captura](capturas/hoje/corr-convocacao-375.jpg)) | o link da primeira mensagem é o da Inscrição, e abre **a vigente**, com *"Convocação corrigida: este é o prazo válido."* no cartão do prazo; a mensagem da correção tem assunto e título próprios (4) |
+| **Documento pendente** (F) | o cartão sobe com "Precisa de correção" e o motivo; a pessoa só sabe se voltar | o mesmo cartão, e o resumo da chamada diz *"A comissão pediu a correção de 1 documento"*, com a ação levando ao cartão pendente; o aviso por e-mail fica para a seção 7 |
+| **Requerimento e documentos juntos** (C1) | o Requerimento é a 5ª tarefa da lista | a etapa e o resumo nomeiam os dois; "Ver o que preciso fazer" não sugere só documentos; o Requerimento é o último cartão a fazer, com o próprio botão |
+| **Envio** | âncora no cartão que desceu; confirmação fora da tela (1.4) | volta a `#confirmacao`, com o foco nela, o documento recebido, "aguarda a conferência" e a próxima tarefa (2.5) |
+| **Confirmação e acompanhamento** | o acompanhamento diz o que falta ([captura](capturas/hoje/c1-acompanhamento-375.jpg)); não muda | não muda; "Voltar ao acompanhamento" fica nos dados do ato |
 | **Prazo vencido** (G) | "O prazo terminou", com o resumo do que ficou; nenhum formulário | o mesmo conteúdo, com o título "O prazo desta convocação terminou" |
 | **Convocação já decidida** (I1) | "Resultado registrado / Vaga aceita", com a ressalva do aceite | o mesmo, com o título "Resultado da sua convocação" |
 
@@ -537,33 +740,41 @@ Os outros avisos imagináveis ficam **fora**, e o motivo é o seguinte:
 
 | Maquete | O que mostra |
 |---|---|
-| [`convocacao.html`](maquetes/convocacao.html) | os cinco blocos, nada enviado (C1), em desktop e a 375 px |
-| [`convocacao-apos-envio.html`](maquetes/convocacao-apos-envio.html) | a confirmação no bloco 3 e o cartão em "O que você já enviou" |
+| [`convocacao.html`](maquetes/convocacao.html) | a chamada e o resto da página, nada enviado (C1), em desktop, 375 px e 320 px |
+| [`convocacao-apos-envio.html`](maquetes/convocacao-apos-envio.html) | aberta em `#confirmacao`: a confirmação com o foco, e o cartão em "O que você já enviou" |
 | [`convocacao-pendencia.html`](maquetes/convocacao-pendencia.html) | a pendência à frente, com o motivo só no portal (F) |
-| [`convocacao-sucessora.html`](maquetes/convocacao-sucessora.html) | a correção dita, sem o motivo |
+| [`convocacao-sucessora.html`](maquetes/convocacao-sucessora.html) | a correção dita no cartão do prazo, a substituída nos dados do ato, sem o motivo |
 | [`acesso-1-email.html`](maquetes/acesso-1-email.html), [`acesso-2-codigo.html`](maquetes/acesso-2-codigo.html) | o caminho de A, com a frase de destino |
-| [`email.html`](maquetes/email.html), [`email.txt`](maquetes/email.txt) | o e-mail e a alternativa em texto |
+| [`email.html`](maquetes/email.html), [`email-correcao.html`](maquetes/email-correcao.html), [`email.txt`](maquetes/email.txt) | o e-mail inicial, o da correção e a alternativa em texto das duas |
 
-As capturas estão em [`capturas/maquetes/`](capturas/maquetes/). Nenhuma das telas tem rolagem
-horizontal a 375 px, nem erro no console, medido pelo `scrollWidth` no roteiro.
+As capturas estão em [`capturas/maquetes/`](capturas/maquetes/), e as da versão 1, para a
+comparação da seção 2.2, em [`capturas/maquetes-v1/`](capturas/maquetes-v1/). Nenhuma tela tem
+rolagem horizontal em nenhuma das seis condições de `roteiro/medir.py`. Nenhum dia da semana
+diverge da data, conferido por `roteiro/conferir_datas.py`.
 
 **Viabilidade:**
 
 - **Folha real.** As maquetes do portal carregam `shared/tokens.css` e `portal/portal.css` do
   repositório. [`maquetes/maquetes.css`](maquetes/maquetes.css) traz **só** as classes novas:
-  `.significado-da-convocacao`, `.prazo-em-destaque`, `.progresso-das-obrigacoes`,
-  `.contagem-das-obrigacoes`, `.confirmacao-do-envio`, `.dados-do-ato` e `.destino-do-acesso`.
-  Os cartões, os selos, o envio e `.principal` são os de hoje. `.nota-da-maquete` é do estudo.
+  `.chamada-da-convocacao`, `.prazo-da-convocacao`, `.resumo-do-que-falta`, `.depois-da-acao`,
+  `.confirmacao-do-envio`, `.andamento`, `.contagem-das-obrigacoes`, `.dados-do-ato` e
+  `.destino-do-acesso`. Os cartões, os selos, o envio e `.principal` são os de hoje.
+  `.nota-da-maquete` é do estudo.
+- **Nenhuma regra só para o celular.** A versão 1 tinha um `@media` que encolhia a tela a 375 px, e
+  a versão 2 o tirou: a primeira tela cabe pela ordem.
 - **CSP.** Nenhuma maquete do portal usa `style=""`, `<style>` ou `<script>`, que a política da
   `091`/`092` recusaria. O e-mail usa estilo em linha porque não é tela do portal e porque cliente
   de e-mail não carrega folha externa.
 - **Guardiões que vão cobrar.** O de classe sem regra na folha (`test_acessibilidade`) cobra as
   classes novas em `portal.css`. A varredura de vocabulário cobra as frases novas, inclusive contra
-  "aprovado" e similares. A SC-1119 a 375 px tem de ser medida de novo (seção 2).
+  "aprovado" e similares. A SC-1119 se reescreve pelo critério da seção 2.2.
+- **Foco depois do envio sem script.** O envio volta a `#confirmacao`, e o `tabindex="-1"` da
+  confirmação basta. A tela passa a carregar os três scripts estáticos que a inscrição já carrega
+  (1.4), sem script novo.
 - **Dados.** Tudo o que a página proposta mostra **já é lido hoje**:
   - a contagem sai de `obrigacoes.totais`;
   - o "foi corrigida" sai de `convocacao_anterior` e do envio da anterior;
-  - o dia da semana e o "faltam N dias" saem do vencimento, no fuso local;
+  - o dia da semana e o "faltam N dias" saem do vencimento, no fuso local, por uma função só (2.3);
   - "Pede documentos" no e-mail vem da lista gravada no ato de convocar.
 
   Nenhuma migration. A exceção é a finalidade da seção 3, que é campo novo e por isso fica fora do MVP.
@@ -647,43 +858,70 @@ Legenda: **UX** é melhoria que cabe no requisito como está; **Req.** é revis�
 | `063` | Consequência declarada pelo Edital, em forma estruturada (L-4). | Req. |
 | `066` | Nenhum no MVP. A política da seção 7 reusa o despacho e o rodapé. | Req. (QI-7) |
 | `115` | Nenhum no MVP. A QI-7 revê a FR-3614. | Req. (QI-7) |
-| `118` | Os cinco blocos da FR-3735 viram outra ordem: significado, prazo, progresso, formulários, dados. "O que fazer agora" passa a ser o bloco 3. **A SC-1119** se reescreve sobre o novo bloco e se mede de novo. A X3 se resolve; a X5 é a seção 9. | Req. (redação da FR-3735 e da SC-1119) |
+| `118` | Os blocos da FR-3735 mudam de ordem: a chamada (o que aconteceu, a etapa, o prazo, o que falta e a ação), o andamento, os formulários e os dados. **A SC-1119** troca o número de pixels pelas três condições da seção 2.2. A X3 se resolve; a X5 é a seção 9. | Req. (redação da FR-3735 e da SC-1119) |
 | `120` | A frase da sucessora no portal e no e-mail, que a `120` deixou registrada sem desenvolver (linhas 81 e 612–614). O motivo continua fora. | Req. |
 
 ### MVP em dois incrementos
 
-**Incremento 1 — a comunicação, e a navegação direta.** Uma spec, sem migration. Sequência:
+**Incremento 1 — a comunicação, e a navegação direta.** Uma spec curta, sem migration, sem rota nova
+e sem *wizard*, sobre os serviços que já existem. Ela não muda nenhuma regra de prazo, autorização,
+conferência ou desfecho. A sequência é esta:
 
-1. **A página** (`convocacao.html`, `obrigacoes.py`, `portal.css`), com os cinco blocos, o título por
-   estado, a sucessora dita e o envio voltando a `#progresso`.
-   - Aceite: as oito perguntas da seção 9 respondidas pelo texto da primeira tela, nos cenários C1,
-     F, G, I1 e `corr`.
-   - Aceite: a SC-1119 reescrita passa a 375 × 812.
-   - Aceite: nenhum termo da FR-3751.
-   - Aceite: a consequência é só a frase da FR-1177.
-   - Aceite: a sucessora diz *"foi corrigida"* e *"o prazo que vale é o desta página"*, sem o motivo.
-   - Aceite: depois do envio, a confirmação e o próximo item estão na primeira tela.
-2. **O acesso A**: o redirecionamento sem sessão, `_de_volta_a_vaga` e a frase nas duas telas.
-   - Aceite: o titular com a sessão expirada, pelo link direto, chega à convocação depois do código,
-     **sem passar pela lista**, inclusive depois da reconciliação.
-   - Aceite: o redirecionamento sem sessão é idêntico para identificador real e inventado.
-   - Aceite: com sessão de outra pessoa, continua 404.
-   - Aceite: nenhum destino executa ato (POST continua POST).
-3. **O e-mail**: os templates `.html` e `.txt`, o assunto, a frase dos documentos, a variante da
-   sucessora e o link de A.
-   - Aceite: o texto puro contém tudo o que o HTML contém.
-   - Aceite: nenhum CPF, nome de documento, motivo, modalidade, imagem ou recurso externo, com teste
-     que varre o HTML por `src=`, `http` fora do link do portal e o CPF da fixture.
-   - Aceite: a repetição com a mesma chave continua sem enviar.
-   - Aceite: `test_situacoes_de_mensagem` inalterado.
-   - Aceite: a leitura manual em Gmail (web e Android), Outlook de mesa, Outlook.com e Apple Mail,
-     claro e escuro, registrada com captura.
-   - Pré-requisito fora do código: SPF, DKIM e DMARC conferidos (D-8).
-4. **O teste com pessoas**, sobre o incremento 1 em homologação.
+1. **A página** (`convocacao.html`, `obrigacoes.py`, `portal.css`). Entram a chamada da seção 2.1, o
+   título por estado, a correção no cartão do prazo, o envio voltando a `#confirmacao` e os três
+   scripts estáticos da 1.4. Critérios de aceite:
+   - as oito perguntas da seção 9 se respondem pelo texto da chamada, nos cenários C1, F, G, I1 e
+     `corr`;
+   - a ação principal é o primeiro controle depois do resumo, e vem antes do andamento;
+   - a 375 × 812, com a fonte padrão, a ação está na primeira tela com folga de pelo menos uma linha;
+   - não há rolagem horizontal a 320 px, com fonte a 150 % nem com zoom de 200 %;
+   - "Ver o que preciso fazer" leva à primeira obrigação que exige atenção: a pendente, depois a que
+     falta enviar, e o Requerimento quando ele for a única;
+   - nenhum termo da FR-3751;
+   - a consequência é só a frase da FR-1177;
+   - a corrigida diz *"Convocação corrigida: este é o prazo válido."* no cartão do prazo, e mostra a
+     substituída nos dados do ato, sem o motivo;
+   - depois do envio, o foco está na confirmação, que diz o documento, "aguarda a conferência" e a
+     próxima tarefa, e nunca "aceito" ou "conferido";
+   - escolhido o arquivo, o cartão diz o nome dele;
+   - uma recusa recebe o foco no cartão do item.
+2. **O prazo** (2.3). O dia da semana, a data e a contagem saem de uma função só, no fuso da
+   instalação, e os testes são os de 2.3:
+   - um ano inteiro de dias da semana contra a biblioteca padrão;
+   - o vencimento às 23h30 locais;
+   - os dois lados da meia-noite;
+   - a contagem sem arredondar para cima;
+   - "hoje" e "amanhã";
+   - o mesmo formato "às 10h23" no portal e no e-mail.
+3. **O acesso A**, com as garantias S1 a S8 da seção 5. Critérios de aceite:
+   - o titular com a sessão expirada, pelo link direto, chega à convocação depois do código, **sem
+     passar pela lista**, inclusive no primeiro acesso e depois da reconciliação;
+   - sem sessão, o redirecionamento é idêntico para identificador real, inventado e alheio;
+   - com sessão de outra pessoa, a recusa é o 404 de hoje, igual ao de inexistente;
+   - um destino fora da lista fechada, de outro host ou com esquema estranho, volta para a lista;
+   - nenhum destino executa ato.
+4. **O e-mail**. Entram os templates `.html` e `.txt`, a inicial e a da correção, o assunto e a
+   frase conforme as obrigações da chamada (4) e o link de A. Critérios de aceite:
+   - o texto puro contém tudo o que o HTML contém;
+   - não há nome, CPF, nome de documento, motivo, modalidade, imagem nem recurso externo, com um
+     teste que varre o HTML por `src=`, `http` fora do link do portal e o CPF da fixture;
+   - a mensagem da sucessora tem o assunto e o título da correção, e diz a data e o prazo da
+     substituída;
+   - a repetição com a mesma chave continua sem enviar;
+   - `test_situacoes_de_mensagem` não muda;
+   - a matriz de clientes reais da seção 4 está preenchida, com captura.
 
-O incremento 1 pede revisar a FR-290 da `019`, a FR-1104 da `059`, a FR-3735 e a SC-1119 da `118` e
-o ponto da sucessora da `120`. São quatro redações, nenhuma regra nova de domínio, e é o que a X3
-pedia.
+   Pré-requisito fora do código: SPF, DKIM e DMARC conferidos com a TI (D-8).
+5. **O teste com pessoas** (seção 9), sobre o incremento 1 em homologação.
+
+O incremento 1 pede revisar, com o registro da revisão em cada spec:
+
+- a FR-290 da `019`, que é a X3;
+- a FR-1104 da `059`, o endereço e o texto da mensagem;
+- a FR-3735 e a SC-1119 da `118`, a ordem da página e o critério da primeira tela;
+- o ponto da mensagem da sucessora da `120` (linhas 81 e 612–614).
+
+São redações, e nenhuma regra nova de domínio.
 
 **Incremento 2 — só se o teste o justificar.**
 
@@ -697,20 +935,47 @@ quem não volta ao portal, um prazo perdido.
 
 ---
 
-## 11. O que decidir
+## 11. Decisões e registro
 
-| # | Decisão | Opções | Recomendação do estudo |
+### As decisões, fechadas pelo usuário em 05/11/2026
+
+| # | Decisão | Fechada como | Recomendação da versão 1 |
 |---|---|---|---|
-| D-1 | O título da página | "Você foi convocado!" · "Você foi convocada(o)!" · "Chegou a sua convocação!" | a convenção do produto, "convocada(o)", ou a neutra; o masculino genérico destoa do resto do portal |
-| D-2 | O link da mensagem (FR-1104 da `059`) | lista, como hoje · convocação (A) · rota sem identificador (A′) | A |
-| D-3 | O acesso | A · B · C | A agora; C só com evidência do teste |
-| D-4 | A frase dos documentos e a variante da sucessora (X3; FR-290 da `019`; `120`) | sim · não | sim, no incremento 1 |
-| D-5 | O aviso de pendência (QI-7) e, se sim, também na convocação por publicação | não · sim, só na mensagem individual · sim, nas duas | decidir junto com a validação de LGPD |
-| D-6 | O nome da pessoa no e-mail | sem nome · primeiro nome | sem nome, até haver avaliação de LGPD |
-| D-7 | Gravar a versão do modelo da mensagem em `ComunicacaoEmitida` | não · sim | sim, se o incremento 1 tiver variantes |
-| D-8 | SPF, DKIM e DMARC do domínio remetente | conferir com a TI | antes de produção, e independente de tudo o mais |
-| D-9 | A duração da sessão do candidato | 14 dias (padrão, hoje) · menor · expirar ao fechar | decidir com a TI; o estudo não recomenda número |
-| D-10 | A finalidade da convocação como dado declarado (seção 3) | não · sim, campo fechado no Perfil | registrar; não entra no MVP |
+| D-1 | O título da página | **"Você foi convocado!"**, sem afirmar matrícula, contratação, bolsa concedida ou vaga garantida, e com o resto da interface coerente com ele | "convocada(o)" ou a neutra |
+| D-2 | O link da mensagem (FR-1104 da `059`) | **A: a convocação específica** | A |
+| D-3 | O acesso | **A: e-mail e código, com o destino preservado**, inclusive no primeiro acesso e na reconciliação; **link mágico fora do MVP** | A agora; C só com evidência |
+| D-4 | A frase das obrigações e a da correção, no e-mail (X3; FR-290 da `019`; `120`) | **Sim**, sempre condicionada às obrigações que a chamada tem de fato | sim |
+| D-5 | O aviso de pendência (QI-7) | **Fora deste incremento**: prioridade funcional posterior, com decisão institucional e de privacidade própria | decidir com a LGPD |
+| D-6 | O nome da pessoa no e-mail | **Não incluir no MVP**, e também nada de CPF, modalidade, motivo de pendência ou anexo | sem nome |
+| D-7 | A versão do modelo da mensagem | **Manter o versionamento verificável**, e só acrescentar coluna em `ComunicacaoEmitida` se o que já se registra não bastar para a auditoria | sim, se houver variantes |
+| D-8 | SPF, DKIM e DMARC | **Verificação necessária antes do uso real**, com a TI. A aparência institucional não autentica o remetente | antes de produção |
+| D-9 | A duração da sessão | **Rever com a TI**, sem manter os 14 dias só por serem o padrão do Django, junto com o risco do computador compartilhado (seção 5) | decidir com a TI |
+| D-10 | A finalidade da convocação como dado declarado | **Fora do MVP**, sem campo novo agora | registrar |
+
+**Sobre D-7, para a spec.** Hoje a trilha registra a forma, o resultado e o instante, e o texto se
+reconstrói do código mais os dados do ato. Com duas mensagens (inicial e correção) e cinco variantes
+de obrigação, a pergunta da auditoria — *o que exatamente esta pessoa recebeu?* — passa a depender de
+saber qual variante foi escolhida. A spec deve mostrar que a escolha se reconstrói do que já está
+gravado: a lista da chamada, a política do Requerimento, a presença de `convocacao_anterior` e o
+commit do deploy. Só se não se reconstruir, a coluna entra.
+
+### O que mudou da versão 1 para a 2
+
+| # | O que mudou | Por quê | Onde |
+|---|---|---|---|
+| R-1 | **O dia da semana**: 10/11/2026 é terça-feira, e 12/11/2026 é quinta-feira | A versão 1 dizia segunda e quarta, porque o dia foi digitado à mão. Na implementação, ele sai da data (2.3), e nas maquetes, `conferir_datas.py` confere | maquetes; 2.3 |
+| R-2 | **A primeira tela**, reorganizada em chamada → andamento → formulários → dados | Com o encolhimento da v1, a ação ficava a 784, 811 e 942 px; sem encolhimento nenhum, ela fica a 504, 504 e 555 px | 2.1, 2.2 |
+| R-3 | **O critério da primeira tela**: ordem, sem rolagem horizontal, e folga de uma linha a 375 × 812, em vez de um número de pixels | Um botão que cabe por 1 px não é critério. Com fonte a 150 % e zoom de 200 %, ele não cabe, e não deve caber por encolhimento | 2.2; SC-1119 na seção 10 |
+| R-4 | **O botão**: "Ver o que preciso fazer", para a primeira obrigação que exige atenção | "Ver os documentos que faltam" escondia o Requerimento | 2.1 |
+| R-5 | **A frase da etapa**, descritiva, e não no imperativo | No imperativo, ela pediria o Requerimento a quem já o enviou | 2.1 |
+| R-6 | **A correção**, dentro do cartão do prazo, com a substituída nos dados do ato | Ela fica ligada ao que mudou, e ocupa menos altura | 2.4 |
+| R-7 | **O e-mail da correção**, como modelo próprio, com assunto, título, quadro de substituição e "prazo válido" | Duas mensagens oficiais com prazos diferentes, sem dizer qual vale, são confusão real | 4 |
+| R-8 | **A identificação institucional por extenso** e o dia da semana no e-mail | É pedido do parecer; e a identificação não substitui a autenticação do remetente (D-8) | 4 |
+| R-9 | **Depois do envio**: a volta a `#confirmacao`, com o foco nela, sem script | A âncora da seção punha o foco no título, e o script perdia para a âncora; as duas tentativas foram medidas | 2.5 |
+| R-10 | **As garantias de segurança de A** (S1–S8), e o UUID dito como não credencial e não anônimo | São pedido do parecer | 5 |
+| R-11 | **A matriz de teste em clientes reais**, ainda não executada | Ela exige SMTP e caixas reais, e fica como aceite do incremento 1 | 4 |
+| R-12 | **Achado: a convocação não carrega `arquivo.js`, `envio.js` nem `recusa.js`** | Escolhido o PDF, a tela diz "Nenhum arquivo escolhido". Conferido no cenário F | 1.4 |
+| R-13 | **Achado de passagem**: `body{font-size:16px}` no portal | O aumento da fonte padrão do navegador não alcança o texto corrido. É do portal inteiro, fica para decisão própria | 1.4 |
 
 ---
 
@@ -726,8 +991,15 @@ Em [`roteiro/`](roteiro/):
   desta execução, e se trocam pelos que `montar.py` imprimir. O modo `acesso1`/`acesso2` faz o
   acesso de verdade, e o código se lê no terminal do runserver.
 - **`variantes.py`** gera as três variantes a partir de `maquetes/convocacao.html`, para que fiquem
-  idênticas fora do que muda.
-- **`capturar_maquetes.py`** captura as maquetes por `file://`, com a medida de rolagem horizontal; **`medir.py`** mede onde termina a ação principal a 375 × 812.
+  idênticas fora do que muda. Ele usa as marcas `CORPO` e `COMUNICACAO` da maquete principal; o resto é copiado.
+- **`capturar_maquetes.py`** captura as maquetes por `file://`. A de depois do envio abre em
+  `#confirmacao`.
+- **`medir.py`** mede as quatro maquetes da convocação em seis condições: 375 × 812, 320 × 568,
+  fonte a 125 % e a 150 %, zoom de 200 % e 1280 × 900. Ele mede onde termina a ação, se há rolagem
+  horizontal e se a ação vem antes do andamento. Mede também o foco depois do envio. A tabela da
+  seção 2.2 é a saída dele.
+- **`conferir_datas.py`** confere cada dia da semana escrito nas maquetes contra a data ao lado,
+  com `python3 roteiro/conferir_datas.py maquetes`.
 
 ```bash
 createdb ps_estudo_conv_base && make preparar DB_NAME=ps_estudo_conv_base

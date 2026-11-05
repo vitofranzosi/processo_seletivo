@@ -23,36 +23,37 @@
 </header>
 <main id="conteudo" tabindex="-1">
 
-<!-- Bloco 1: o significado. -->
-<section class="significado-da-convocacao" aria-labelledby="titulo">
-  <p class="contexto">Processo Seletivo 2026/1 — Curso Técnico em Informática · Edital 72/2026</p>
+<!-- A chamada: o que aconteceu, a etapa, o prazo, o que falta e a ação. -->
+<section class="chamada-da-convocacao" id="o-que-fazer" aria-labelledby="titulo" tabindex="-1">
+  <p class="contexto">Curso Técnico em Informática · Edital 72/2026</p>
   <h1 id="titulo">Você foi convocado!</h1>
-  <p class="explicacao">Esta é a etapa de enviar seus documentos e o Requerimento de Matrícula para a comissão conferir. Ela ainda não é a matrícula.</p>
+  <p class="etapa">Nesta etapa, você envia seus documentos e o Requerimento de Matrícula para a comissão conferir.</p>
+  <!-- CORPO -->
+  <div class="prazo-da-convocacao" id="prazo">
+    <p class="rotulo-do-prazo">Prazo para atender</p>
+    <p class="data-do-prazo">10/11/2026, às 10h23</p>
+    <p class="dia-e-contagem">terça-feira · faltam 5 dias</p>
+  </div>
+  <p class="resumo-do-que-falta">Você ainda precisa enviar 4 documentos e o Requerimento de Matrícula.</p>
+  <a class="principal" href="#item-certidao">Ver o que preciso fazer</a>
+  <!-- /CORPO -->
+  <p class="depois-da-acao">Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação.</p>
+  <p class="depois-da-acao">Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o resultado.</p>
 </section>
 
-<!-- Bloco 2: o prazo. -->
-<section class="prazo-em-destaque" id="prazo" aria-labelledby="titulo-prazo">
-  <h2 id="titulo-prazo">Prazo para atender</h2>
-  <p class="data-do-prazo">até segunda-feira, 10/11/2026, às 10h23</p>
-  <p class="faltam">Faltam 5 dias.</p>
-  <p class="consequencia">Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação.</p>
-</section>
-
-<!-- Bloco 3: o progresso. -->
-<section class="progresso-das-obrigacoes" aria-labelledby="titulo-progresso">
-  <h2 id="titulo-progresso">O que você precisa fazer</h2>
-  <p class="proximo-passo">Falta enviar 4 documentos e o Requerimento de Matrícula.</p>
+<!-- O andamento, depois da ação. -->
+<section class="andamento" aria-labelledby="titulo-andamento">
+  <h2 id="titulo-andamento">Andamento</h2>
   <ul class="contagem-das-obrigacoes">
     <li class="a-fazer"><span class="numero">5</span><span class="rotulo">a enviar</span></li>
     <li><span class="numero">0</span><span class="rotulo">aguardando conferência</span></li>
     <li class="conferido"><span class="numero">0</span><span class="rotulo">conferidos</span></li>
   </ul>
-  <p><a class="principal" href="#item-certidao">Ver os documentos que faltam</a></p>
 </section>
 
-<!-- Bloco 4: os formulários, logo abaixo do resumo. -->
+<!-- Os formulários. -->
 <section class="bloco-dos-formularios" id="o-que-falta" aria-labelledby="titulo-falta">
-  <h2 id="titulo-falta">Envie até 10/11/2026, às 10h23</h2>
+  <h2 id="titulo-falta">O que falta</h2>
   <ul class="requisitos-lista">
     <li class="requisito cartao-do-documento" id="item-certidao" tabindex="-1">
       <h3>Certidão de nascimento ou casamento</h3>
@@ -107,7 +108,7 @@
         <span class="ajuda limite" id="ajuda-residencia">Somente PDF, até 10 MB.</span>
       </form></div>
     </li>
-    <li class="cartao-do-requerimento" id="item-requerimento">
+    <li class="cartao-do-requerimento" id="item-requerimento" tabindex="-1">
       <h3>Requerimento de Matrícula</h3>
       <p>Falta preencher. É um formulário nesta mesma área; o que você já informou na inscrição vem preenchido.</p>
       <a class="principal" href="#">Preencher o Requerimento de Matrícula</a>
@@ -115,12 +116,13 @@
   </ul>
 </section>
 
-<!-- Bloco 5: os dados do ato, em segundo plano. -->
+<!-- Os dados do ato, em segundo plano. -->
 <section class="dados-do-ato" aria-labelledby="titulo-dados">
   <h2 id="titulo-dados">Sobre esta convocação</h2>
   <dl class="campos">
+    <dt>Processo Seletivo</dt><dd>Processo Seletivo 2026/1 — Curso Técnico em Informática</dd>
     <dt>Chamada</dt><dd>1ª chamada, para vaga inicial</dd>
-    <dt>Comunicação</dt><dd>Mensagem enviada em 05/11/2026, às 10h23. O prazo conta a partir deste envio.</dd>
+    <!-- COMUNICACAO --><dt>Comunicação</dt><dd>Mensagem enviada em 05/11/2026, às 10h23. O prazo conta a partir deste envio.</dd><!-- /COMUNICACAO -->
     <dt>Fundamento</dt><dd>No interesse da Administração, item 8.2 do Edital 72/2026.</dd>
     <dt>Dúvidas</dt><dd><a href="#">selecao@exemplo.test</a></dd>
   </dl>

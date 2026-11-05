@@ -1,116 +1,212 @@
-import os, sys
-os.chdir(sys.argv[1])
-base = open("convocacao.html").read()
+"""Gera as três variantes a partir de `maquetes/convocacao.html` (versão 2).
 
-def bloco(html, inicio, fim, novo):
-    i = html.index(inicio); j = html.index(fim, i)
-    return html[:i] + novo + html[j:]
+A maquete principal marca com comentários o trecho que muda: `CORPO` (o prazo, o resumo e a ação)
+e `COMUNICACAO` (a linha dos dados do ato). Fora deles, as variantes são idênticas a ela.
+"""
+
+import os
+import re
+import sys
+
+os.chdir(sys.argv[1])
+BASE = open("convocacao.html").read()
+
+
+def marcado(html, nome, novo):
+    return re.sub(rf"<!-- {nome} -->.*?<!-- /{nome} -->", novo, html, count=1, flags=re.S)
+
 
 def cartao(html, chave, novo):
-    i = html.index(f'<li class="requisito cartao-do-documento" id="item-{chave}"')
+    i = html.index(f'id="item-{chave}"')
+    i = html.rindex("<li", 0, i)
     j = html.index("</li>", i) + len("</li>")
     return html[:i] + novo + html[j:]
 
-def recebido(chave, nome, quando, conferido=False):
-    selo = '<span class="selo selo-conferido">Conferido</span>' if conferido else '<span class="selo selo-comissao">Aguardando conferência</span>'
-    texto = "Conferido: de acordo com o Edital." if conferido else f"Recebido em {quando}. A comissão vai conferir; você não precisa fazer nada agora."
-    return f'''<li class="requisito cartao-do-documento" id="item-{chave}" tabindex="-1">
-      <h3>{nome}</h3>
-      <p class="selos">{selo}</p>
-      <p class="situacao-do-documento">{texto}</p>
-      <p class="arquivo"><a href="#">Ver o arquivo recebido<span class="oculto">: {nome}</span></a></p>
-    </li>'''
 
-def contagem(a, b, c, rot_a="a enviar", rot_c="conferidos"):
-    return f'''<ul class="contagem-das-obrigacoes">
-    <li class="a-fazer"><span class="numero">{a}</span><span class="rotulo">{rot_a}</span></li>
-    <li><span class="numero">{b}</span><span class="rotulo">aguardando conferência</span></li>
-    <li class="conferido"><span class="numero">{c}</span><span class="rotulo">{rot_c}</span></li>
-  </ul>'''
+def recebido(chave, nome, quando="", conferido=False):
+    if conferido:
+        selo, texto = "conferido", "Conferido: de acordo com o Edital."
+        rotulo = "Conferido"
+    else:
+        selo, rotulo = "comissao", "Aguardando conferência"
+        texto = f"Recebido em {quando}. A comissão vai conferir; você não precisa fazer nada agora."
+    return (
+        f'<li class="requisito cartao-do-documento" id="item-{chave}" tabindex="-1">\n'
+        f"      <h3>{nome}</h3>\n"
+        f'      <p class="selos"><span class="selo selo-{selo}">{rotulo}</span></p>\n'
+        f'      <p class="situacao-do-documento">{texto}</p>\n'
+        f'      <p class="arquivo"><a href="#">Ver o arquivo recebido'
+        f'<span class="oculto">: {nome}</span></a></p>\n'
+        "    </li>"
+    )
 
-# --- Depois do envio do primeiro documento ---------------------------------------------------
-h = base.replace("<title>Sua convocação", "<title>Sua convocação (depois do envio)")
-h = bloco(h, "<!-- Bloco 3", "<!-- Bloco 4", '''<!-- Bloco 3: o progresso, com a confirmação do envio onde a pessoa está. -->
-<section class="progresso-das-obrigacoes" id="progresso" aria-labelledby="titulo-progresso" tabindex="-1">
-  <h2 id="titulo-progresso">O que você precisa fazer</h2>
-  <div class="confirmacao-do-envio" role="status">
-    <p><strong>Recebemos a Certidão de nascimento ou casamento</strong> em 05/11/2026, às 10h25. A comissão vai conferir.</p>
-    <p>Próximo: <a href="#item-historico">Histórico escolar do ensino médio</a>.</p>
-  </div>
-  <p class="proximo-passo">Falta enviar 3 documentos e o Requerimento de Matrícula.</p>
-  ''' + contagem(4, 1, 0) + '''
-</section>
 
-<p class="nota-da-maquete"><strong>Maquete.</strong> Hoje o envio volta a <code>#item-‹id›</code>: a página rola até o cartão, que já desceu para "O que você já apresentou", e a confirmação fica no topo, fora da tela. A proposta volta a <code>#progresso</code>, com a confirmação e o próximo item juntos.</p>
+def contagem(html, a, b, c, rotulo_a="a enviar"):
+    novo = (
+        '<ul class="contagem-das-obrigacoes">\n'
+        f'    <li class="a-fazer"><span class="numero">{a}</span>'
+        f'<span class="rotulo">{rotulo_a}</span></li>\n'
+        f'    <li><span class="numero">{b}</span><span class="rotulo">aguardando conferência</span></li>\n'
+        f'    <li class="conferido"><span class="numero">{c}</span>'
+        '<span class="rotulo">conferidos</span></li>\n'
+        "  </ul>"
+    )
+    return re.sub(r'<ul class="contagem-das-obrigacoes">.*?</ul>', novo, html, count=1, flags=re.S)
 
-''')
+
+def prazo(data, dia, contagem_, correcao=""):
+    linha = f'\n    <p class="correcao">{correcao}</p>' if correcao else ""
+    return (
+        f'<div class="prazo-da-convocacao" id="prazo">{linha}\n'
+        '    <p class="rotulo-do-prazo">Prazo para atender</p>\n'
+        f'    <p class="data-do-prazo">{data}</p>\n'
+        f'    <p class="dia-e-contagem">{dia} · {contagem_}</p>\n'
+        "  </div>"
+    )
+
+
+def enviados(html, itens, depois=""):
+    bloco = (
+        '<section class="bloco-dos-formularios" id="o-que-voce-ja-enviou" '
+        'aria-labelledby="titulo-enviado">\n'
+        '  <h2 id="titulo-enviado">O que você já enviou</h2>\n'
+        '  <ul class="requisitos-lista">\n    ' + "\n    ".join(itens) + "\n  </ul>\n"
+        + depois
+        + "</section>\n\n"
+    )
+    return html.replace("<!-- Os dados do ato", bloco + "<!-- Os dados do ato")
+
+
+def nota(html, texto):
+    return html.replace(
+        "<!-- Os dados do ato",
+        f'<p class="nota-da-maquete"><strong>Maquete.</strong> {texto}</p>\n\n<!-- Os dados do ato',
+    )
+
+
+NOVE_DE_NOV = prazo("10/11/2026, às 10h23", "terça-feira", "faltam 5 dias")
+
+# --- Depois do envio do primeiro documento -----------------------------------------------------
+h = BASE.replace("<title>Sua convocação", "<title>Sua convocação (depois do envio)")
+h = h.replace(
+    '<p class="contexto">',
+    '<div class="confirmacao-do-envio" id="confirmacao" role="status" tabindex="-1" data-confirmacao>\n'
+    "    <p><strong>Recebemos: Certidão de nascimento ou casamento</strong>, em 05/11/2026, "
+    "às 10h25. Ela aguarda a conferência da comissão.</p>\n"
+    '    <p>Próxima tarefa: <a href="#item-historico">Histórico escolar do ensino médio</a></p>\n'
+    "  </div>\n"
+    '  <p class="contexto">',
+    1,
+)
+h = marcado(
+    h,
+    "CORPO",
+    NOVE_DE_NOV
+    + '\n  <p class="resumo-do-que-falta">Você ainda precisa enviar 3 documentos e o Requerimento '
+    "de Matrícula.</p>\n"
+    '  <a class="principal" href="#item-historico">Ver o que preciso fazer</a>',
+)
+h = contagem(h, 4, 1, 0)
 h = cartao(h, "certidao", "")
-h = h.replace("<!-- Bloco 5", '''<section class="bloco-dos-formularios" id="o-que-voce-ja-enviou" aria-labelledby="titulo-enviado">
-  <h2 id="titulo-enviado">O que você já enviou</h2>
-  <ul class="requisitos-lista">
-    ''' + recebido("certidao", "Certidão de nascimento ou casamento", "05/11/2026, às 10h25") + '''
-  </ul>
-</section>
-
-<!-- Bloco 5''')
+h = enviados(h, [recebido("certidao", "Certidão de nascimento ou casamento", "05/11/2026, às 10h25")])
+h = nota(
+    h,
+    "O envio volta a <code>#confirmacao</code>, e não ao cartão: a confirmação, o prazo, o que "
+    "falta e a próxima tarefa ficam juntos. Como a confirmação tem <code>tabindex=\"-1\"</code>, o "
+    "próprio navegador põe o foco nela ao seguir a âncora, sem script: o leitor de tela lê "
+    "\"Recebemos: ‹documento›\", e o teclado fica a um Tab da próxima tarefa. (Voltar a uma âncora "
+    "da seção punha o foco na seção, e o leitor anunciava o título dela; e um script que movesse o "
+    "foco perdia para a âncora, que é seguida depois dele — as duas coisas foram medidas.) No último "
+    "envio, a frase da próxima tarefa vira a da FR-3728 da 118: <em>\"Você não tem mais documentos "
+    "para enviar agora. A comissão ainda vai concluir a análise.\"</em>",
+)
 open("convocacao-apos-envio.html", "w").write(h)
 
-# --- Com pendência (o cenário F) ---------------------------------------------------------------
-h = base.replace("<title>Sua convocação", "<title>Sua convocação (com pendência)")
-h = h.replace('<p class="faltam">Faltam 5 dias.</p>', '<p class="faltam">Faltam 2 dias.</p>')
-h = bloco(h, "<!-- Bloco 3", "<!-- Bloco 4", '''<!-- Bloco 3: o progresso, com a pendência à frente. -->
-<section class="progresso-das-obrigacoes" aria-labelledby="titulo-progresso">
-  <h2 id="titulo-progresso">O que você precisa fazer</h2>
-  <p class="proximo-passo">A comissão pediu a correção de 1 documento, e falta enviar 1.</p>
-  ''' + contagem(2, 0, 2, rot_a="a corrigir ou enviar", rot_c="conferidos") + '''
-  <p><a class="principal" href="#item-historico">Ver e corrigir os documentos pendentes</a></p>
-</section>
-
-''')
-h = h.replace('<h2 id="titulo-falta">Envie até 10/11/2026, às 10h23</h2>', '<h2 id="titulo-falta">Corrija e envie até 10/11/2026, às 10h23</h2>')
+# --- Com pendência (o cenário F, numa volta três dias depois) ----------------------------------
+h = BASE.replace("<title>Sua convocação", "<title>Sua convocação (com pendência)")
+h = marcado(
+    h,
+    "CORPO",
+    prazo("10/11/2026, às 10h23", "terça-feira", "faltam 2 dias")
+    + '\n  <p class="resumo-do-que-falta">A comissão pediu a correção de 1 documento, e falta '
+    "enviar 1.</p>\n"
+    '  <a class="principal" href="#item-historico">Ver o que preciso fazer</a>',
+)
+h = contagem(h, 2, 0, 2, rotulo_a="a corrigir ou enviar")
 h = cartao(h, "certidao", "")
 h = cartao(h, "certificado", "")
-i = h.index('<li class="cartao-do-requerimento"'); j = h.index("</li>", i) + 5
-h = h[:i] + h[j:]
-h = cartao(h, "historico", '''<li class="requisito cartao-do-documento destaque" id="item-historico" tabindex="-1">
-      <h3>Histórico escolar do ensino médio</h3>
-      <p class="selos"><span class="selo selo-correcao">Precisa de correção</span></p>
-      <p class="instrucao">Todas as páginas, em arquivo único.</p>
-      <p class="situacao-do-documento" id="situacao-historico">Precisa de correção: Falta a página 2. Envie um novo arquivo até 10/11/2026, às 10h23.</p>
-      <p class="arquivo"><a href="#">Ver o arquivo recebido<span class="oculto">: Histórico escolar do ensino médio</span></a></p>
-      <div class="envio"><form method="post" action="#">
-        <div class="escolher">
-          <input type="file" id="arquivo-historico" name="arquivo" accept="application/pdf" aria-describedby="situacao-historico ajuda-historico">
-          <label class="botao-arquivo" for="arquivo-historico">Escolher o novo arquivo PDF<span class="oculto"> para Histórico escolar do ensino médio</span></label>
-          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>
-          <button type="submit" class="acao">Enviar<span class="oculto">: Histórico escolar do ensino médio</span></button>
-        </div>
-        <span class="ajuda limite" id="ajuda-historico">Somente PDF, até 10 MB.</span>
-      </form></div>
-    </li>''')
-h = h.replace("<!-- Bloco 5", '''<section class="bloco-dos-formularios" id="o-que-voce-ja-enviou" aria-labelledby="titulo-enviado">
-  <h2 id="titulo-enviado">O que você já enviou</h2>
-  <ul class="requisitos-lista">
-    ''' + recebido("certidao", "Certidão de nascimento ou casamento", "", True) + recebido("certificado", "Certificado de conclusão do ensino médio", "", True) + '''
-  </ul>
-  <p class="requerimento-nas-obrigacoes"><span aria-hidden="true">✓</span> Requerimento de Matrícula enviado. <a href="#">Conferir o Requerimento de Matrícula enviado</a></p>
-</section>
-
-<p class="nota-da-maquete"><strong>Maquete.</strong> O motivo da pendência aparece só aqui, no portal (115, FR-3584). A política de aviso da seção 7 do estudo diria por e-mail apenas que "há documento da convocação que precisa de atenção".</p>
-
-<!-- Bloco 5''')
+h = cartao(h, "requerimento", "")
+h = cartao(
+    h,
+    "historico",
+    '<li class="requisito cartao-do-documento destaque" id="item-historico" tabindex="-1">\n'
+    "      <h3>Histórico escolar do ensino médio</h3>\n"
+    '      <p class="selos"><span class="selo selo-correcao">Precisa de correção</span></p>\n'
+    '      <p class="instrucao">Todas as páginas, em arquivo único.</p>\n'
+    '      <p class="situacao-do-documento" id="situacao-historico">Precisa de correção: Falta a '
+    "página 2. Envie um novo arquivo até 10/11/2026, às 10h23.</p>\n"
+    '      <p class="arquivo"><a href="#">Ver o arquivo recebido<span class="oculto">: Histórico '
+    "escolar do ensino médio</span></a></p>\n"
+    '      <div class="envio"><form method="post" action="#">\n'
+    '        <div class="escolher">\n'
+    '          <input type="file" id="arquivo-historico" name="arquivo" accept="application/pdf" '
+    'aria-describedby="situacao-historico ajuda-historico">\n'
+    '          <label class="botao-arquivo" for="arquivo-historico">Escolher o novo arquivo PDF'
+    '<span class="oculto"> para Histórico escolar do ensino médio</span></label>\n'
+    '          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>\n'
+    '          <button type="submit" class="acao">Enviar<span class="oculto">: Histórico escolar '
+    "do ensino médio</span></button>\n"
+    "        </div>\n"
+    '        <span class="ajuda limite" id="ajuda-historico">Somente PDF, até 10 MB.</span>\n'
+    "      </form></div>\n"
+    "    </li>",
+)
+h = enviados(
+    h,
+    [
+        recebido("certidao", "Certidão de nascimento ou casamento", conferido=True),
+        recebido("certificado", "Certificado de conclusão do ensino médio", conferido=True),
+    ],
+    '  <p class="requerimento-nas-obrigacoes"><span aria-hidden="true">✓</span> Requerimento de '
+    'Matrícula enviado. <a href="#">Conferir o Requerimento de Matrícula enviado</a></p>\n',
+)
+h = nota(
+    h,
+    "O motivo da pendência aparece só aqui, no portal (115, FR-3584). A ação leva ao cartão pendente, "
+    "que é a primeira obrigação que exige atenção. A política de aviso da seção 7 do estudo diria por "
+    'e-mail apenas que "há documento da convocação que precisa de atenção".',
+)
 open("convocacao-pendencia.html", "w").write(h)
 
-# --- A sucessora (correção da 120) --------------------------------------------------------------
-h = base.replace("<title>Sua convocação", "<title>Sua convocação (corrigida)")
-h = h.replace('<p class="explicacao">', '''<p class="aviso convocacao-substituida" role="note"><strong>Esta convocação foi corrigida.</strong> Ela substitui a mensagem enviada em 05/11/2026, às 10h23. O prazo que vale é o desta página.</p>
-  <p class="explicacao">''', 1)
-h = h.replace("até segunda-feira, 10/11/2026, às 10h23", "até quarta-feira, 12/11/2026, às 10h23").replace("Faltam 5 dias.", "Faltam 7 dias.")
-h = h.replace("Envie até 10/11/2026, às 10h23", "Envie até 12/11/2026, às 10h23")
-h = h.replace("<dt>Comunicação</dt><dd>Mensagem enviada em 05/11/2026, às 10h23. O prazo conta a partir deste envio.</dd>",
-              "<dt>Comunicação</dt><dd>Mensagem da correção enviada em 05/11/2026, às 10h24. O prazo conta a partir deste envio. Ela substitui a de 05/11/2026, às 10h23.</dd>")
-h = h.replace("<!-- Bloco 5", '''<p class="nota-da-maquete"><strong>Maquete.</strong> Hoje a sucessora não diz que substitui: o prazo muda em silêncio, e quem guardou a data da primeira mensagem não tem como saber qual vale. O motivo da correção continua fora do portal (120, linhas 486–487); o que se acrescenta é só o fato e a data da anterior.</p>
-
-<!-- Bloco 5''')
+# --- A sucessora (correção da 120) ---------------------------------------------------------------
+h = BASE.replace("<title>Sua convocação", "<title>Sua convocação (corrigida)")
+h = marcado(
+    h,
+    "CORPO",
+    prazo(
+        "12/11/2026, às 10h23",
+        "quinta-feira",
+        "faltam 7 dias",
+        correcao="Convocação corrigida: este é o prazo válido.",
+    )
+    + '\n  <p class="resumo-do-que-falta">Você ainda precisa enviar 4 documentos e o Requerimento '
+    "de Matrícula.</p>\n"
+    '  <a class="principal" href="#item-certidao">Ver o que preciso fazer</a>',
+)
+h = marcado(
+    h,
+    "COMUNICACAO",
+    "<dt>Comunicação</dt><dd>Mensagem da correção enviada em 05/11/2026, às 10h24. O prazo conta a "
+    "partir deste envio.</dd>\n"
+    "    <dt>Convocação substituída</dt><dd>Comunicada em 05/11/2026, às 10h23, com prazo até "
+    "10/11/2026, às 10h23. Esse prazo não vale mais.</dd>",
+)
+h = nota(
+    h,
+    "A correção é dita dentro do cartão do prazo, que é o que ela corrigiu, e a mensagem substituída "
+    "fica nos dados do ato, com o prazo antigo por extenso: quem guardou a primeira mensagem reconhece "
+    "a data e lê que ela não vale mais. O motivo da correção continua fora do portal (120, linhas "
+    "486–487).",
+)
 open("convocacao-sucessora.html", "w").write(h)
 print("ok")
