@@ -28,8 +28,9 @@ from processo_seletivo.interface.kit_formatos import FORMATOS, Formato
 
 PASTA_DOS_ATIVOS = Path(__file__).resolve().parent.parent / "kit_ativos"
 
-#: Os papéis de fonte que uma família declara (data-model §Família).
-PAPEIS = ("titulo", "corpo", "destaque")
+#: Os papéis de fonte que uma família declara (data-model §Família). O `rotulo` é o da FIC: a Space
+#: Mono do número e da faixa, uma terceira fonte além da do título e da do corpo.
+PAPEIS = ("titulo", "corpo", "destaque", "rotulo")
 #: O que uma caixa faz quando nenhum corpo cabe. Só `titulo` e `contato` podem omitir (FR-3803).
 RECUSAR, OMITIR = "recusar", "omitir"
 PODEM_OMITIR = frozenset({"titulo", "contato"})
