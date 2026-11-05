@@ -1781,7 +1781,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tr><th>Quando faz sentido</th><td>Cursos sem requisito a analisar antes: todos os inscritos concorrem em igualdade, e a ordem vem de uma fonte pública.</td></tr>
       <tr><th>O que configurar</th><td>Perfis, cotas e quadro; <em>Método do sorteio comum a este Edital</em> (fonte, ocorrência, quando acontece, normalização, substituição); um marco por Perfil “Por sorteio”, sem Etapas, “Etapa que habilita”: nenhuma; regra de corte do quadro, com suplentes; forma de convocação. Etapas de Avaliação não são necessárias.</td></tr>
       <tr><th>Decisões</th><td>Qual concurso da Loteria Federal fixa a semente, e quando; quantos suplentes; como comunicar a convocação.</td></tr>
-      <tr><th>Limites</th><td>Congele a relação até o <strong>dia anterior</strong> à extração (a fonte só publica a data); declarar a extração no dia do fim das inscrições, ou antes, <a href="#sorteio-viavel">impede publicar</a>. Cada lista (ampla e cotas) tem o seu sorteio. A Modalidade “AC” declarada ganha um recorte próprio na tela do sorteio — não a cadastre. <a href="#sorteio">Detalhes</a></td></tr>
+      <tr><th>Limites</th><td>Congele a relação até o <strong>dia anterior</strong> à extração (a fonte só publica a data); declarar a extração no dia do fim das inscrições, ou antes, <a href="#sorteio-viavel">impede publicar</a>. Cada lista (ampla e cotas) tem o seu sorteio. A Modalidade “AC” apontada como a ampla não tem sorteio próprio: desde a 122, a tela diz que a ampla já reúne todos os inscritos (<a href="#recortes-alinhados">ver</a>). <a href="#sorteio">Detalhes</a></td></tr>
     </tbody></table></div>
 
     <h3 id="r-documental-sorteio">Receita 2 — Análise documental, depois sorteio</h3>
@@ -2142,7 +2142,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>A frase de “a quem pedir”</dt><dd><code>interface/conducao.py</code></dd>
       <dt>A página do Processo</dt><dd><code>interface/views.py</code> (<code>processo_detalhe</code>) · <code>processo_detalhe.html</code> · <code>_sinal.html</code> · <code>_serie_de_inscricoes.html</code></dd>
       <dt>Fase do Evento</dt><dd><code>editais/domain/fase_do_evento.py</code></dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 16 413 passando, 18 pulados e nenhuma falha (medido em 05/11 sobre a árvore que virou a <code>main</code> em <code>21b728af</code>, com o grupo opcional <code>assistente</code> e sem o <code>navegador</code>, 4 workers, em 701s; mais cedo, sobre <code>9a459a0e</code>, eram 16 136). Os 18 são 10 pares do vocabulário, a recusa por vendor, o E2E contra a Caixa e os <strong>seis</strong> arquivos de jornada no navegador (107, 110, 115, 117, 118, 120), que pulam sem o grupo <code>navegador</code>; o CI instala os dois grupos. Em 04/11, sobre <code>a3e23b1f</code>, eram 15 878 e 17; a medição de 02/11 dava 14 638 e 14</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 16 413 passando, 18 pulados e nenhuma falha (medido em 05/11 sobre a árvore que virou a <code>main</code> em <code>21b728af</code>, com o grupo opcional <code>assistente</code> e sem o <code>navegador</code>, 4 workers, em 701s; mais cedo, sobre <code>9a459a0e</code>, eram 16 136). Os 18 são 10 pares do vocabulário, a recusa por vendor, o E2E contra a Caixa e os <strong>seis</strong> arquivos de jornada no navegador (107, 110, 115, 117, 118, 120), que pulam sem o grupo <code>navegador</code>; o CI instala os dois grupos. A 122 mediu, na worktree dela e sem os dois grupos, 16 470 e 19 (o pulado a mais é o do tokenizer), antes de acrescentar a sua jornada no navegador, que é um sétimo arquivo a pular sem o grupo. Em 04/11, sobre <code>a3e23b1f</code>, eram 15 878 e 17; a medição de 02/11 dava 14 638 e 14</dd>
     </dl></div></details>
   </section>
 
@@ -4820,11 +4820,17 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <li>Perfil com a <code>AC</code> declarada: a pessoa escolhe entre as Modalidades listadas.</li>
       <li>Perfil com uma só Modalidade e linha geral zerada: a Modalidade é assumida.</li>
     </ul>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: o sorteio não normaliza a grafia</span>
-      <p>No <a href="#sorteio">sorteio</a>, a relação pedida para a Modalidade <code>AC</code> declarada
-        filtra só quem a escolheu: um recorte à parte, diferente do que a classificação usa. A
-        divergência está registrada e não foi corrigida. Também não se recusa, na publicação, o Edital
-        que usa as duas grafias. <span class="selo selo-infer">Inferido</span></p>
+    <div class="aviso aviso-nota"><span class="titulo">Desde a 122, o sorteio também a reduz à ampla</span>
+      <p>Até 05/11, a relação pedida no <a href="#sorteio">sorteio</a> para a Modalidade <code>AC</code>
+        apontada filtrava só quem a escolheu, num recorte que a classificação e a ocupação não usavam.
+        Agora o sorteio, a divulgação, a ocupação, a Supervisão e o relatório do Edital leem os mesmos
+        recortes, e os atos já feitos naquele recorte ficam preservados como registro fora da operação.
+        Ver <a href="#recortes-alinhados">os mesmos recortes em toda parte</a>.</p>
+    </div>
+    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: as duas grafias sem apontamento</span>
+      <p>Não se recusa, na publicação, o Edital que declara uma Modalidade chamada “Ampla concorrência”
+        <strong>sem</strong> apontá-la como a ampla: ela conta como lista reservada. A 122 registrou o caso
+        e não o desenvolveu. <span class="selo selo-infer">Inferido</span></p>
     </div>
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
       <dt>Recortes e normalização</dt><dd><code>editais/domain/recortes.py</code> · <code>recortes_do_perfil</code>, <code>normalizar_recorte</code></dd>
@@ -7282,6 +7288,10 @@ FILA        = chamáveis
     <p class="miudo">
       Na página do Edital, cada marco mostra um resumo de presença (“Recortes: 3 · com ordem 2 · com
       corte 1 · apurados 0 · publicados 0”). Ele não sabe de obsolescência; a tabela do marco sabe.
+      Desde a 122, o marco tem <strong>um</strong> <span class="rotulo-ui">divulgar o resultado</span>, e não
+      um por ato: ele leva à coluna <span class="rotulo-ui">Publicação</span> desta tabela, onde cada recorte
+      aparece pelo nome e a célula <span class="rotulo-ui">Falta</span> leva à prévia daquele ato. O
+      Publicador puro continua chegando lá.
     </p>
 
     <h3>Os gestos</h3>
@@ -7622,22 +7632,48 @@ FILA        = chamáveis
         (lido no código)
       </p>
     </div>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: a ampla declarada vira recorte no sorteio</span>
-      <p>
-        Em toda a classificação, a Modalidade que o Perfil declara como ampla concorrência <strong>não</strong>
-        é recorte próprio. A tela do sorteio é a exceção: ela lista <span class="rotulo-ui">Todos os inscritos
-        do recorte de vaga (sem lista de concorrência)</span> <em>e</em> cada Modalidade, inclusive essa.
-        A tela <a href="#operar-por-marco">Condução do marco</a> não a mostra. A divergência é conhecida e
-        foi deixada de propósito, porque mexer nela exige decidir o que fazer com atos já emitidos.
-        <span class="selo selo-parc">Parcial</span>
-      </p>
-    </div>
+    <h3 id="recortes-alinhados">Os mesmos recortes em toda parte (122) <span class="selo selo-impl">Implementado</span></h3>
+    <p>
+      Até 05/11, a tela do sorteio listava a ampla <em>e</em> cada Modalidade, inclusive a que o Perfil
+      aponta como a ampla. Dali saíam uma relação, um sorteio e um ato que a ocupação não consumia, e a
+      página do Edital mostrava quatro <span class="rotulo-ui">divulgar o resultado</span> iguais para três
+      recortes. A 122 fez o sorteio, a divulgação, a ocupação, a Supervisão e o relatório do Edital lerem
+      a mesma lista de recortes: a ampla primeiro e as reservas na ordem do Perfil.
+    </p>
+    <ul>
+      <li><strong>A tela do sorteio</strong> mostra só os recortes operacionais, e diz numa frase por que a
+        Modalidade apontada não está ali: <em>“…não tem sorteio próprio: a ampla concorrência já reúne todos
+        os inscritos, inclusive quem a declarou.”</em> A prévia do sorteio diz o mesmo.</li>
+      <li><strong>Os comandos recusam.</strong> Congelar a relação, sortear (inclusive sobre uma relação já
+        congelada) e divulgar no recorte excedente terminam em <code>list_is_general_competition_alias</code>
+        (422), por formulário antigo ou chamada direta, sem gravar nada.</li>
+      <li><strong>O acervo fica.</strong> O que já existia nesse recorte não se apaga nem se converte para a
+        ampla: a tela do sorteio ganhou <span class="rotulo-ui">Registros fora da operação atual</span>, sem
+        botão, e cada registro diz a sua origem, “nascido excedente” ou tornado excedente pela Retificação
+        nº N, pela versão que cita. A tela do ato, a prévia (<span class="rotulo-ui">Este ato está fora da
+        operação atual</span>) e os resultados divulgados também o marcam.</li>
+      <li><strong>A Retificação do apontamento</strong> deixa obsoleto o ato produzido sob o outro papel do
+        recorte, com a causa <code>papel_do_recorte</code>. Ele não volta a valer sem ato novo.</li>
+      <li><strong>A Supervisão</strong> deixou de cobrar a lista excedente: os sinais de ato não divulgado,
+        de recorte sem apuração e de ordem obsoleta percorrem só os recortes operacionais, também no sorteio.
+        O <a href="#relatorio-do-edital">relatório do Edital</a> marca a publicação excedente já feita.</li>
+      <li><strong>Divulgar tem um caminho por marco</strong>: ver <a href="#operar-por-marco">Operar por
+        marco</a>.</li>
+    </ul>
+    <p class="miudo">
+      Não confunda com os <a href="#corte">excedentes da regra de corte</a>, que são pessoas além das
+      vagas. Ficaram fora, registrados: o Edital com uma Modalidade “Ampla concorrência” não apontada, o que
+      o portal mostra de uma publicação excedente já feita e a Modalidade que uma Retificação remove do
+      Perfil. O percurso humano da jornada num banco de demonstração (T040) fica com o usuário; a jornada
+      foi verificada no navegador pela suíte. Não há migration, tabela nem coluna nova.
+    </p>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
       <dt>Congelar a relação</dt><dd><code>sorteios/application/relacao.py</code> · <code>sorteios/domain/projecao.py</code> · <code>sorteios/application/habilitacao.py</code></dd>
       <dt>Observar a ocorrência</dt><dd><code>sorteios/application/ocorrencia.py</code></dd>
       <dt>Normalização e substituição</dt><dd><code>sorteios/domain/normalizacao.py</code> · <code>substituicao.py</code></dd>
       <dt>Constituir e anular</dt><dd><code>sorteios/application/sorteio.py</code></dd>
+      <dt>Os recortes operacionais e o acervo excedente (122)</dt><dd><code>editais/domain/recortes.py</code> · <code>recortes_do_perfil</code>, <code>exigir_recorte_operacional</code>, <code>origem_do_registro</code> · <code>publicacoes/application/papel_do_recorte.py</code></dd>
       <dt>A chave e a ordem</dt><dd><code>sorteios/domain/chave.py</code></dd>
       <dt>A tela</dt><dd><code>interface/templates/interface/sorteio.html</code> · <code>sorteios/application/previa.py</code></dd>
       <dt>O concurso conferido na Caixa (116)</dt><dd><code>sorteios/domain/conferencia.py</code> · <code>sorteios/application/conferencia.py</code> · <code>sorteios/infrastructure/fontes/loteria_federal.py</code> · <code>_conferencia_do_ato.html</code>, <code>_conferencia_sob_demanda.html</code></dd>
@@ -9246,8 +9282,10 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
         <li>o link direto sem sessão levando ao acesso e voltando à convocação, no lugar do 404 de hoje;</li>
         <li>o e-mail institucional em HTML, que diz quando há documentos a enviar.</li>
       </ul>
-      <p>As decisões de desenho dela (D-001 a D-012) aguardam o usuário. Até a implementação, vale o que esta seção
-        descreve.</p>
+      <p>O plano e as tarefas foram mergeados em 05/11, com as decisões de desenho aceitas pelo usuário. Na
+        D-009 ele escolheu gravar, em cada comunicação emitida, o nome do modelo e o resumo SHA-256 dos arquivos
+        que renderizaram o envio, porque o histórico de implantação não provava a versão. Até a implementação,
+        vale o que esta seção descreve.</p>
     </div>
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
       <dt>A leitura das obrigações</dt><dd><code>portal/obrigacoes.py</code> (<code>obrigacoes_da_convocacao</code>, <code>estado_do_requerimento</code>)</dd>
@@ -10808,7 +10846,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr class="grupo-linha"><td colspan="6">Reservas e cotas</td></tr>
 <tr data-marca="impl"><td><a href="#modalidades">Modalidades por Perfil com regra normativa</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="na"><td><a href="#modalidades">Catálogo de Modalidades no Edital</a></td><td><span class="selo selo-na">Não se aplica</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Recusado por decisão; substituído por “aplicar a todos”.</td></tr>
-<tr data-marca="impl"><td><a href="#ampla-concorrencia">Modalidade “AC” declarada como a ampla</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Grafia-armadilha; o sorteio não a normaliza.</td></tr>
+<tr data-marca="impl"><td><a href="#ampla-concorrencia">Modalidade “AC” declarada como a ampla</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Grafia-armadilha; desde a 122 o sorteio também a reduz à ampla.</td></tr>
 <tr data-marca="impl"><td><a href="#reversao">Reversão de cota para a ampla (duas espécies)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Na apuração da cota, por ato humano.</td></tr>
 <tr data-marca="lacun"><td><a href="#reversao">Retificar a reversão torna a apuração obsoleta</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td></td></tr>
 <tr data-marca="nop"><td><a href="#modalidades">Cálculo, distribuição e regras de chamada da cota</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Guardados e publicados; ninguém lê.</td></tr>
@@ -12365,7 +12403,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <dt>Rotas do portal</dt><dd><code>portal/urls.py</code> (36 entradas)</dd>
       <dt>Raiz</dt><dd><code>config/urls.py</code></dd>
       <dt>Papéis e permissões</dt><dd><code>interface/identidade.py</code> (<code>PAPEIS</code>)</dd>
-      <dt>Destinos do marco na página do Edital</dt><dd><code>interface/views.py</code> — “conduzir o marco”, “corte”, “ocupação”, “convocação”, “divulgar o resultado”</dd>
+      <dt>Destinos do marco na página do Edital</dt><dd><code>interface/views.py</code> — “conduzir o marco”, “corte”, “ocupação”, “convocação”, “divulgar o resultado” (um por marco, desde a 122)</dd>
     </dl></div></details>
   </section>
 
@@ -12842,7 +12880,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>30/10/2026</td><td><code>main</code> em <code>62824816</code>, specs 098–104</td><td>As sete specs mergeadas entre 21 e 30/10 descritas como entregues: a <a href="#previa-do-sorteio">prévia do sorteio</a>, com semente fictícia (098); o <a href="#relatorio-do-edital">relatório do Edital</a> (099) e o <a href="#relatorio-consolidado">consolidado da unidade</a> (100); a <a href="#agenda">Agenda dos Editais</a> (101); a <a href="#sorteio-viavel">extração inviável</a>, impedida na publicação (102, com o PR 335); a <a href="#retificacao-em-curso">Retificação em curso</a> pela navegação comum (103); e as <a href="#acoes-disponiveis">Ações disponíveis para você</a> (104). Registro no mesmo arquivo.</td></tr>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
-          <tr><td>05/11/2026</td><td><code>main</code> em <code>de5df85c</code>, spec 120, os incrementos 3a a 3f da 119 e a 121 só especificada</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); e <a href="#convocado-no-portal">o que a 121 prevê</a> para a experiência da convocação, ainda sem código. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>05/11/2026</td><td><code>main</code> em <code>5c3501d3</code>, spec 120, os incrementos 3a a 3f da 119, a 122 e o plano da 121</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">o que a 121 prevê</a> para a experiência da convocação, com plano e decisões, ainda sem código; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -12899,8 +12937,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>0edc0f8d</code>), as 069 a 072 em 15/10/2026 (<code>db428b30</code>) as 073 a 092 em 19/10/2026
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
-  (<code>a3e23b1f</code>) e a 120, com as seis famílias que faltavam da 119 e a 121 só especificada, em 05/11/2026
-  (<code>de5df85c</code>). Onde documentação e código
+  (<code>a3e23b1f</code>) e a 120 e a 122, com as seis famílias que faltavam da 119 e o plano da 121, em 05/11/2026
+  (<code>5c3501d3</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>

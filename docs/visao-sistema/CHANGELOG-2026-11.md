@@ -177,3 +177,19 @@ Feita na hora do merge, a pedido de 04/11 ("quando for feito o PR, atualize a do
 ## Acréscimo de 05/11: a spec 121, só especificada
 
 O PR #396 mergeou a spec 121 (*A experiência da convocação — incremento 1*), sem código, sobre o estudo do #394. A página ganhou um aviso *Previsto* em *O convocado no portal* com o que ela propõe, e a frase que dizia a 120 "ainda em PR" passou a apontar para a correção já descrita. A revisão de 05/11 e o rodapé apontam para a `main` em `de5df85c`. As decisões D-001 a D-012 da 121 aguardam o usuário; nada da 121 foi descrito como entregue.
+
+## Acréscimo de 05/11: a spec 122, o plano da 121 e o estudo do sorteio
+
+Entraram na `main`, que chegou a `5c3501d3`, a 122 com especificação e implementação (#398), o plano e as tarefas da 121 (#399) e o estudo de caso do sorteio do Edital 35/2026 (#400, `doc/estudo-sorteio-edital-35-2026-11-05.md`). O estudo é só documento e não muda a descrição do sistema.
+
+- **122, os mesmos recortes em toda parte:** a nova subseção `#recortes-alinhados`, no rito do sorteio, substitui a lacuna *"a ampla declarada vira recorte no sorteio"*. Ela descreve a tela do sorteio só com os recortes operacionais e a frase da Modalidade apontada; a recusa `list_is_general_competition_alias` (422) ao congelar, sortear e divulgar; o acervo em *Registros fora da operação atual*, com a frase de origem (nascido ou tornado excedente); a obsolescência por `papel_do_recorte` na Retificação do apontamento; e a Supervisão e o relatório do Edital sem a lista excedente.
+- **A ampla e as suas duas grafias:** a lacuna *"o sorteio não normaliza a grafia"* virou nota, e o que dela continua aberto ficou numa lacuna própria: o Edital com uma Modalidade "Ampla concorrência" não apontada.
+- **Operar por marco, Receita 1, matriz e rotas:** a página do Edital tem um *divulgar o resultado* por marco, que leva à coluna *Publicação* da condução. A Receita 1 não manda mais "não cadastrar" a AC, e a matriz não diz mais que o sorteio deixa de normalizá-la.
+- **121:** o aviso *Previsto* diz que o plano e as tarefas foram mergeados com as decisões aceitas, e registra a D-009 na opção escolhida: o nome do modelo e o SHA-256 dos arquivos gravados em cada comunicação emitida.
+- **Revisão, testes e rodapé** apontam para `5c3501d3`. A linha dos testes cita a medição da 122 na worktree dela (16 470 e 19, sem os dois grupos).
+
+**O que não foi verificado:**
+
+- a suíte não rodou de novo; antes dos merges, a integração local dos três PRs passou nos testes de citação e da documentação;
+- o percurso humano da 122 (T040) fica com o usuário;
+- os números de maturidade não foram recontados.
