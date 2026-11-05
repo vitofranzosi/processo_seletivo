@@ -392,7 +392,9 @@ class TestOAto:
         assert fluxo.efeito_do_vencimento(raiz.vencimento, antecipado) == "antecipado"
 
     def test_o_efeito_do_vencimento(self):
-        agora = timezone.now()
+        # **Do minuto cheio**: o campo tem minuto, e não segundo, e somar segundos a um instante
+        # qualquer cruzava a virada do minuto com o relógio depois dos 40: falhou assim uma vez.
+        agora = timezone.now().replace(second=0, microsecond=0)
         assert fluxo.efeito_do_vencimento(agora, agora + TRES_DIAS) == "estendido"
         assert fluxo.efeito_do_vencimento(agora + TRES_DIAS, agora) == "antecipado"
         assert fluxo.efeito_do_vencimento(agora, agora + timedelta(seconds=20)) == "mantido"

@@ -239,6 +239,7 @@ class TestAPrevia:
         assert "(derivado" in formulario
         assert "(da forma que o Perfil publicado declara)" in formulario
         assert "A lista de documentos, os envios e as conferências desta chamada" in formulario
+        assert "Esta convocação continua legível no histórico, com o motivo." in formulario
 
     def test_a_previa_diz_que_reabre_so_na_chamada_vencida(self, client, cenario, gestor):
         edital, _, _ = cenario

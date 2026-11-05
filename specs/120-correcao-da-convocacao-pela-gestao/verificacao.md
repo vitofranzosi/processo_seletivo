@@ -72,3 +72,24 @@ para a causa que vier depois. É a única mudança fora do escopo estrito, e é 
   oferece a ação nela — D-004, como planejado.
 - **O 404 da convocação nomeada fora do recorte** é um `raise Http404 from` novo em `convocar_view`,
   função que o inventário da `033` já registrava; a linha de mudança foi acrescentada lá.
+
+## T041 — a suíte final
+
+`make lint check test-pg`, com os grupos `assistente` e `navegador`, 4 workers, `DB_NAME=ps_120`:
+**lint e check verdes; 15 905 passando, 12 pulados, nenhuma falha**, em 799 s. Contra a linha de
+base: **110 casos a mais**, os desta feature, e **a mesma lista de pulados**, comparada por arquivo e
+motivo.
+
+A primeira rodada final deu **uma falha, e era desta feature**:
+`integration/convocacao/test_correcao_da_convocacao.py::TestOAto::test_o_efeito_do_vencimento` somava
+20 segundos ao instante atual e cruzava a virada do minuto quando o relógio passava dos 40 — o campo
+tem minuto, e não segundo. O caso passou a partir do minuto cheio, e a segunda rodada, inteira, é a
+de cima. O teste de tempo da ocupação, que falhou na linha de base, passou nas duas.
+
+## T042 — convergência
+
+Um achado, LOW, parcial: o item *"O que não muda"* da prévia não dizia que a convocação corrigida
+continua legível no histórico — o parágrafo de irreversibilidade dizia. Virou a T044, feita e presa
+no teste da prévia; o arquivo da tela, a varredura de vocabulário, a de acessibilidade e a jornada no
+navegador rodaram de novo depois dela (1098 passando). O parcial comum das causas foi o único
+acréscimo não pedido, e está justificado acima, em *Achado de passagem*.

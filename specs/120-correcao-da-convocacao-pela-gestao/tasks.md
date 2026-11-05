@@ -132,8 +132,8 @@ repetição; as recusas próprias da correção existem; a trilha nomeia a corri
 
 - [X] T039 `rastreabilidade.md`: acrescentar a coluna de tarefas e conferir cada nome de teste contra o que foi escrito; corrigir o que mudou de nome
 - [X] T040 [P] `README.md`: a linha da `120` passa a *implementada, sem merge*; `CLAUDE.md` só se algum número citado mudar (as tabelas append-only continuam 53)
-- [ ] T041 `make lint check test-pg` com os dois grupos opcionais; totais e pulados em `verificacao.md`, comparados com T002 por lista, e não por total
-- [ ] T042 `/speckit-converge`: o código contra a spec, o plano e as tarefas; o que faltar vira tarefa e é feito
+- [X] T041 `make lint check test-pg` com os dois grupos opcionais; totais e pulados em `verificacao.md`, comparados com T002 por lista, e não por total
+- [X] T042 `/speckit-converge`: o código contra a spec, o plano e as tarefas; o que faltar vira tarefa e é feito
 - [ ] T043 PR para `main`, com o resumo, a verificação e as capturas; **sem merge** (o merge é do usuário)
 
 ---
@@ -162,3 +162,7 @@ repetição; as recusas próprias da correção existem; a trilha nomeia a corri
 3. **US3** torna a recusa compreensível — sem ela, a apuração superada parece defeito.
 4. **US4** prende pela tela a idempotência que o comando já garante.
 5. Um PR só, com a suíte verde e a jornada demonstrada.
+
+## Phase 8: Convergence
+
+- [X] T044 Acrescentar ao item "O que não muda" da prévia, em `processo_seletivo/interface/templates/interface/_correcao_da_convocacao.html`, que a convocação corrigida continua legível no histórico, com o motivo, e prendê-lo em `tests/interface/test_correcao_da_convocacao.py::test_a_previa_mostra_cada_valor_com_a_origem` per FR-3844 (partial)
