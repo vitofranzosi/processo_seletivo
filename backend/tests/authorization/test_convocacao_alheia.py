@@ -153,6 +153,70 @@ def test_sem_sessao_nenhuma_rota_revela_se_a_inscricao_existe(client, maria_e_jo
 
     assert existente.status_code == inexistente.status_code
     assert corpo(existente) == corpo(inexistente)
+    if rota == "convocacao":
+        # Desde a 121, a convocação sem sessão leva ao acesso, com o destino (FR-3876): o mesmo
+        # redirecionamento para os dois, salvo o próprio caminho.
+        assert existente.status_code == 302
+
+
+# --- Sem sessão, a convocação leva ao acesso (121, FR-3876, SC-1157) -----------------------------
+
+
+def _sem_sessao(client, inscricao_id):
+    from urllib.parse import urlencode
+
+    caminho = reverse("portal:convocacao", args=[inscricao_id])
+    resposta = client.get(caminho)
+    destino = f"{reverse('portal:acesso')}?{urlencode({'destino': caminho})}"
+    return resposta, destino
+
+
+def test_sem_sessao_real_inventado_e_alheio_recebem_o_mesmo_redirecionamento(client, maria_e_joao):
+    maria, joao, _ = maria_e_joao
+
+    for inscricao_id in (maria.id, INEXISTENTE, joao.id):
+        resposta, destino = _sem_sessao(client, inscricao_id)
+        assert resposta.status_code == 302
+        assert resposta["Location"] == destino
+        assert resposta.content == b""
+
+
+def test_nenhuma_consulta_a_inscricao_ao_edital_nem_a_convocacao_antes_da_resposta(
+    client, maria_e_joao
+):
+    """SC-1157: a resposta não depende do identificador, porque ninguém o procura."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    from processo_seletivo.convocacao.models import Convocacao
+    from processo_seletivo.inscricoes.models import Inscricao
+    from processo_seletivo.processos.models import Edital
+
+    maria, joao, _ = maria_e_joao
+    tabelas = [modelo._meta.db_table for modelo in (Inscricao, Edital, Convocacao)]
+
+    for inscricao_id in (maria.id, INEXISTENTE, joao.id):
+        with CaptureQueriesContext(connection) as consultas:
+            resposta, _ = _sem_sessao(client, inscricao_id)
+        assert resposta.status_code == 302
+        lidas = " ".join(q["sql"] for q in consultas.captured_queries)
+        for tabela in tabelas:
+            assert f'"{tabela}"' not in lidas, (tabela, inscricao_id)
+
+
+def test_so_o_email_na_sessao_sem_codigo_conta_como_sem_sessao(client, maria_e_joao):
+    """Caso-limite: identificada sem código provado é sem sessão (FR-3876)."""
+    from processo_seletivo.portal.views import CHAVE_DO_DESAFIO, CHAVE_DO_ENDERECO
+
+    maria, _, _ = maria_e_joao
+    sessao = client.session
+    sessao[CHAVE_DO_ENDERECO] = "maria@exemplo.test"
+    sessao[CHAVE_DO_DESAFIO] = str(uuid.uuid4())
+    sessao.save()
+
+    resposta, destino = _sem_sessao(client, maria.id)
+
+    assert (resposta.status_code, resposta["Location"]) == (302, destino)
 
 
 def test_nenhum_endereco_novo_carrega_dado_pessoal(client, maria_e_joao):

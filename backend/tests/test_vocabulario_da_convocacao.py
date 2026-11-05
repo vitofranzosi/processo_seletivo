@@ -75,8 +75,8 @@ DA_019 = [
     PORTAL / "_cartao_do_documento_da_convocacao.html",
     PORTAL / "_requerimento_nas_obrigacoes.html",
     # A `121` (FR-3892): a chamada no portal e os dois modelos da mensagem, nas duas partes. A
-    # mensagem é onde "recebido em" mais tenta: o sistema sabe que **enviou**, e o quadro da correção
-    # diz "enviamos". A escolha da mensagem e o prazo apresentado escrevem o que os modelos dizem.
+    # mensagem é onde "recebido em" mais tenta: o sistema sabe que **enviou**, e o quadro da
+    # correção diz "enviamos". A escolha e o prazo apresentado escrevem o que os modelos dizem.
     PORTAL / "_chamada_da_convocacao.html",
     RAIZ / "convocacao/templates/convocacao/mensagem/inicial.html",
     RAIZ / "convocacao/templates/convocacao/mensagem/inicial.txt",

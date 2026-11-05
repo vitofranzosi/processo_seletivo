@@ -838,9 +838,15 @@ def acesso(request):
         request.session[CHAVE_DO_DESTINO] = destino
     if identidade_do_candidato.identidade_autenticada(request):
         return redirect(reverse("portal:inscricoes"))
-    vaga = _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, ""))
+    guardado = request.session.get(CHAVE_DO_DESTINO, "")
+    vaga = _vaga_do_destino(guardado)
+    convocacao = _destino_e_convocacao(guardado)
     if request.method != "POST":
-        return render(request, "portal/acesso_email.html", {"email": "", "erro": "", "vaga": vaga})
+        return render(
+            request,
+            "portal/acesso_email.html",
+            {"email": "", "erro": "", "vaga": vaga, "destino_e_convocacao": convocacao},
+        )
 
     informado = request.POST.get("email", "").strip()
     if not endereco_aceitavel(informado):
@@ -848,7 +854,12 @@ def acesso(request):
         return render(
             request,
             "portal/acesso_email.html",
-            {"email": informado, "erro": "Informe um e-mail válido.", "vaga": vaga},
+            {
+                "email": informado,
+                "erro": "Informe um e-mail válido.",
+                "vaga": vaga,
+                "destino_e_convocacao": convocacao,
+            },
         )
 
     canonico = canonizar(informado)
@@ -926,6 +937,7 @@ def acesso_codigo(request):
         "aviso": AVISO_NEUTRO,
         "noticia": request.session.pop(CHAVE_DO_ENVIO, ""),
         "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
+        "destino_e_convocacao": _destino_e_convocacao(request.session.get(CHAVE_DO_DESTINO, "")),
     }
     if request.method != "POST":
         return render(request, "portal/acesso_codigo.html", contexto)
@@ -1107,8 +1119,17 @@ def _de_volta_a_vaga(destino):
     restrição acima é contra **praticar ato** a partir de um endereço compartilhado; a página do
     Edital é pública, é GET e não pratica ato nenhum. Qualquer outra rota continua indo para a
     lista.
+
+    **E a convocação, desde a `121`** (FR-3878, FR-3879, R-005): a lista fechada tem três rotas —
+    a vaga, a página do Edital e a convocação. O link da mensagem leva à convocação, e sem sessão o
+    caminho passa pelo acesso; depois do código, a pessoa chega a ela sem passar pela lista. O
+    endereço é **reconstruído** pela rota, sem consulta nem fragmento vindos de fora, e não carrega
+    autorização: a titularidade é conferida de novo pela própria convocação, ao abrir (`S4`). O nome
+    da função ficou, porque três chamadores e dois testes o usam.
     """
     rota = _rota_do_destino(destino)
+    if rota is not None and rota.view_name == "portal:convocacao":
+        return reverse("portal:convocacao", args=[rota.kwargs["inscricao_id"]])
     if rota is not None and rota.view_name == "portal:selecao":
         selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
         return f"{selecao}#resultados-titulo"
@@ -1183,6 +1204,17 @@ def _rota_do_destino(destino):
 def _destino_e_vaga(destino):
     rota = _rota_do_destino(destino)
     return rota is not None and rota.view_name == "portal:inscrever"
+
+
+def _destino_e_convocacao(destino):
+    """O destino guardado é a convocação? Só pelo nome da rota (121, FR-3880).
+
+    **Não lê o identificador nem abre a inscrição**: o texto das telas de acesso é o mesmo para o
+    identificador real, o inventado e o alheio, e não diz de quem é a convocação nem de qual Edital
+    (FR-020 e FR-021 da `010`).
+    """
+    rota = _rota_do_destino(destino) if destino else None
+    return rota is not None and rota.view_name == "portal:convocacao"
 
 
 def _desafio_provado(request):
