@@ -12,6 +12,7 @@ link guardado lê o número da posição primeiro e cita o ato sem saber que ele
 do que está congelado abaixo muda — o ato continua íntegro na data em que foi emitido; o que mudou
 é que já não é ele que produz efeito.
 {% endcomment %}
+{% if frase_do_excedente %}<p class="aviso"><strong>Fora da operação atual.</strong> {{ frase_do_excedente }}</p>{% endif %}
 {% if sucessor %}
 <p class="aviso"><strong>Este ato foi sucedido</strong> em {{ sucessor.emitido_em|date:"d/m/Y H:i" }} por {% nome_de_pessoa sucessor.emitido_por %}: {{ sucessor.motivo_da_sucessao }} Os valores abaixo continuam sendo os que este ato congelou. <a href="{% url 'interface:ato-de-ordenacao' edital.id ato.marco_id sucessor.id %}">Consultar o ato que o sucedeu</a>.</p>
 {% endif %}

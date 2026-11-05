@@ -377,7 +377,12 @@ def do_ato_de_ordenacao(ato, ator, *, edital):
     publicar existiria e ninguém a encontraria — FR-069. A condição é a capacidade, e a
     desabilitação continua sendo previsão e não autorização: quem recusa é o command.
     """
-    if ator.can("resultado:publicar"):
+    # **O ato do recorte excedente não oferece divulgar** (122, FR-3901): o comando o recusa, e
+    # oferecer o que se vai recusar é pior do que não oferecer. A tela do ato diz por quê, com a
+    # frase da origem dele (FR-3904).
+    from processo_seletivo.publicacoes.application.papel_do_recorte import frase_do_ato
+
+    if ator.can("resultado:publicar") and not frase_do_ato(ato):
         yield Acao(
             "publicar-resultado",
             "Publicar resultado",

@@ -65,6 +65,16 @@ def _conducao(certame):
 
 
 def _divulgacao(certame):
+    """O caminho de divulgação do marco: o quadro de recortes da condução (122, FR-3906).
+
+    Era a prévia do ato, um link por ato emitido. Com três recortes e um ato do recorte excedente,
+    a página mostrava quatro "divulgar o resultado" iguais; a `122` os trocou por um caminho só, e a
+    prévia de cada recorte passou a ser alcançada pelo quadro (FR-3908).
+    """
+    return reverse("interface:marco", args=[certame["edital"].id, certame["marco"]]) + "#divulgacao"
+
+
+def _previa(certame):
     return reverse(
         "interface:previa-de-publicacao",
         args=[certame["edital"].id, certame["marco"], certame["ato"].id],
@@ -86,6 +96,10 @@ def test_o_publicador_puro_ve_o_caminho_ate_a_divulgacao(client, seletor_ligado,
 
     assert destinos is not None, "o bloco de classificação não apareceu para quem publica"
     assert _divulgacao(certame) in _urls(destinos)
+    # **E do quadro à prévia** (122, FR-3907): o caminho único só vale se a prévia do ato estiver
+    # a um clique dele.
+    quadro = client.get(_divulgacao(certame).split("#")[0]).content.decode()
+    assert _previa(certame) in quadro
 
 
 def test_o_publicador_puro_nao_ve_o_que_nao_e_dele(client, seletor_ligado, certame):

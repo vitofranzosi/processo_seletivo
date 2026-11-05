@@ -34,7 +34,7 @@ mesma condição (D-003 da 083).
       A situação dita **em texto**, e não só por cor ou por posição na lista: quem lê sem enxergar
       cor precisa da mesma informação que quem enxerga (FR-052).
       {% endcomment %}
-      <td>{% if linha.vigente %}<strong>Vigente</strong>{% else %}Sucedida{% endif %}</td>
+      <td>{% if linha.vigente %}<strong>Vigente</strong>{% else %}Sucedida{% endif %}{% if linha.fora_da_operacao %}<p class="aviso">Fora da operação atual. {{ linha.fora_da_operacao }}</p>{% endif %}</td>
       <td>{{ linha.natureza_rotulo }}
         {% if linha.publicacao.prazo_encerrado_fundamento %}
         {% comment %}

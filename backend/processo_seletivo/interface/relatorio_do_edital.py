@@ -632,8 +632,16 @@ def fatos_do_edital(edital, *, agora):
         tem_publicacao = False
         for marco in perfil.get("classificationMilestones") or []:
             marco_id = str(marco["id"])
-            listas = listas_por_marco.get((perfil_id, marco_id), set())
-            emitidas = atos_por_marco.get((perfil_id, marco_id), set())
+            # **O recorte excedente não conta para o estado do marco** (122, FR-3916). A lista que o
+            # sorteio dava à Modalidade apontada como a ampla aparecia aqui como uma segunda
+            # "Ampla Concorrência", e um ato dela não divulgado como definitivo impedia o marco de
+            # chegar a "definitivo em todas" para sempre. A publicação dela já feita continua
+            # listada, marcada, depois das operacionais; o ato dela não divulgado some.
+            excedente = perfil.get("generalCompetitionModalityId")
+            excedente = str(excedente) if excedente else None
+            todas_as_listas = listas_por_marco.get((perfil_id, marco_id), set())
+            listas = todas_as_listas - {excedente} if excedente else todas_as_listas
+            emitidas = atos_por_marco.get((perfil_id, marco_id), set()) - {excedente}
             if sem_inscricao and not listas and not emitidas:
                 continue
             marcos_declarados += 1
@@ -666,6 +674,22 @@ def fatos_do_edital(edital, *, agora):
                         lista=_nome_da_lista(perfil, lista),
                         classificadas=Numero.de(len(da_lista)),
                         vagas=Numero.de(vagas_da_lista),
+                        natureza=publicacao.get_natureza_display(),
+                    )
+                )
+            if excedente and excedente in todas_as_listas:
+                publicacao = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=excedente)
+                linhas_das_listas.append(
+                    LinhaDaLista(
+                        marco=marco.get("name") or "",
+                        lista=f"{_nome_da_lista(perfil, excedente)} — fora da operação atual",
+                        classificadas=Numero.de(
+                            SituacaoDivulgada.objects.filter(
+                                publicacao=publicacao,
+                                situacao=SituacaoDivulgada.Situacao.CLASSIFICADA,
+                            ).count()
+                        ),
+                        vagas=Numero.nao_aplicavel("não se aplica: a lista não ocupa vagas"),
                         natureza=publicacao.get_natureza_display(),
                     )
                 )

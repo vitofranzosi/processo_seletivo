@@ -25,6 +25,7 @@ from django.urls import reverse
 
 from processo_seletivo.classificacao.application import previa as calculo
 from processo_seletivo.classificacao.domain import cenarios_da_previa as cenarios
+from processo_seletivo.editais.domain.recortes import FRASE_DA_MODALIDADE_APONTADA
 from processo_seletivo.interface import previa_da_classificacao as pontuacao
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.application import simulacao as aplicacao
@@ -269,11 +270,9 @@ def _frases_da_semente(p, perfil):
             ),
             "apontada como ampla",
         )
-        frases.append(
-            f"A Modalidade “{nome}”, que este Perfil aponta como a ampla concorrência, ganha "
-            "uma lista própria no sorteio do certame, e esta prévia não a sorteia: a ocupação das "
-            "vagas não tem linha para ela, e a quantidade dela mora na linha geral."
-        )
+        # **O sorteio do certame também deixou de lhe dar lista** (122, FR-3895): a frase dizia
+        # que ela "ganha uma lista própria no sorteio do certame", e era verdade até a `122`.
+        frases.append(FRASE_DA_MODALIDADE_APONTADA.format(nome=nome))
     return frases
 
 

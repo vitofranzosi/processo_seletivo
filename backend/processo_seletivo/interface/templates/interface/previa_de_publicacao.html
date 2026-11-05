@@ -20,7 +20,17 @@ retomar: sair desta tela não deixa nada para trás, e voltar a ela recompõe a 
 {% endcomment %}
 <p class="imutavel">Esta é uma <strong>prévia</strong>: nada foi gravado. A publicação só existe depois de você confirmar.</p>
 
-{% if publicabilidade.publicavel %}
+{% if frase_do_excedente %}
+{% comment %}
+**O ato do recorte excedente não se divulga** (122, FR-3899, FR-3904). O comando o recusa; a tela
+diz por quê com a frase da origem dele, e não oferece o botão. É o endereço antigo, que ainda pode
+estar num favorito ou numa aba aberta.
+{% endcomment %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-excedente">
+  <h2 id="titulo-excedente">Este ato está fora da operação atual</h2>
+  <p class="aviso" role="status">{{ frase_do_excedente }}</p>
+</section>
+{% elif publicabilidade.publicavel %}
 {% comment %}
 **Os três níveis são apresentados, e não só os dois que pedem atenção** (FR-005). O nível normal
 tem texto próprio: sem ele, "não há aviso" e "a verificação não rodou" ficariam indistinguíveis na

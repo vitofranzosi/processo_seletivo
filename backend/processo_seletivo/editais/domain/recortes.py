@@ -17,10 +17,12 @@ classificação e para a ocupação, que são os dois lados do mesmo ato: quem e
 
 A regra adotada é a da **ocupação**, e a escolha é verificável: é a cauda que consome a ordem.
 
-**O sorteio fica como está** (`D-004`), com a divergência registrada em `FR-491a`. A `021` construiu
-sobre o recorte por lista decisões, telas, relações publicadas, verificadores e cadeias históricas,
-e retirar o recorte excedente obriga a responder como os atos já emitidos nele continuam
-alcançáveis. Ato publicado não se apaga: é desenho, e é spec própria.
+**O sorteio ficou de fora na `034`**, com a divergência registrada em `FR-491a`, porque retirar o
+recorte excedente obrigava a responder como os atos já emitidos nele continuam alcançáveis. **A
+`122` é essa resposta** (FR-3893): o sorteio, a divulgação, a condução, a Supervisão e o relatório
+passam a perguntar aqui, e o acervo que o sorteio produziu antes fica preservado e explicado. O
+**papel** de um recorte é uma pergunta feita à versão, e não uma marca gravada no registro (a
+decisão de não gravar é a D-002 da `122`).
 
 **Vive no domínio** porque `editais/domain/validation.py` também o consome, e domínio não importa
 aplicação. É a mesma direção que a `032` registrou ao colocar `emite_ordem_no_recorte` aqui.
@@ -29,6 +31,58 @@ aplicação. É a mesma direção que a `032` registrou ao colocar `emite_ordem_
 from processo_seletivo.shared.api.problems import DomainError
 
 ROTULO_DA_AMPLA = "Ampla concorrência (linha geral do quadro)"
+
+# **Os três papéis de um recorte numa versão** (122, `data-model.md`). Excedente é a Modalidade que
+# o Perfil aponta como a ampla — e só o apontamento decide (FR-3894): o nome e o código da
+# Modalidade não dizem nada, e um Edital pode ter uma "AC" que não é a ampla.
+OPERACIONAL = "OPERACIONAL"
+EXCEDENTE = "EXCEDENTE"
+AUSENTE = "AUSENTE"
+
+# As duas origens de um registro excedente (122, FR-3903). A frase de um sai da versão que ele cita.
+NASCIDO = "NASCIDO"
+TORNADO = "TORNADO"
+
+CODIGO_DA_RECUSA = "list_is_general_competition_alias"
+
+
+def frase_da_recusa(nome):
+    """A frase única da recusa (122, D-003): os três comandos e as telas dizem a mesma coisa."""
+    return (
+        f"A Modalidade «{nome}» é a que este Perfil aponta como a ampla concorrência, e não tem "
+        "recorte próprio: a ampla já reúne todos os inscritos, inclusive quem a declarou. Use o "
+        "recorte da ampla concorrência."
+    )
+
+
+FRASE_DA_MODALIDADE_APONTADA = (
+    "A Modalidade «{nome}», que este Perfil aponta como a ampla concorrência, não tem sorteio "
+    "próprio: a ampla concorrência já reúne todos os inscritos, inclusive quem a declarou."
+)
+
+FRASE_DO_NASCIDO = (
+    "Produzido quando o sorteio dava lista própria à Modalidade apontada como a ampla "
+    "concorrência. A ocupação das vagas não usa esta lista, e ela fica preservada como foi feita."
+)
+
+
+def frase_do_tornado(numero):
+    """A frase do registro que uma Retificação tirou da operação (122, FR-3903)."""
+    retificacao = f"A Retificação nº {numero}" if numero else "Uma Retificação"
+    return (
+        f"Produzido quando esta Modalidade tinha recorte próprio. {retificacao} passou a apontá-la "
+        "como a ampla concorrência, e desde então a ocupação das vagas não usa esta lista. O "
+        "registro fica preservado como foi feito."
+    )
+
+
+def frase_do_papel_mudado(numero):
+    """A causa de obsolescência do ato cujo recorte mudou de papel (122, FR-3912, contrato §3)."""
+    retificacao = f"na Retificação nº {numero}" if numero else "numa Retificação"
+    return (
+        f"O papel deste recorte mudou {retificacao}: o ato foi produzido para outro universo e não "
+        "vale para o recorte de hoje."
+    )
 
 
 def recortes_do_perfil(conteudo, *, perfil_id):
@@ -92,6 +146,93 @@ def normalizar_recorte(conteudo, *, perfil_id, lista_id):
     raise DomainError("not_found", "Recurso não encontrado.", 404)
 
 
+def papel_do_recorte(conteudo, *, perfil_id, lista_id):
+    """`OPERACIONAL`, `EXCEDENTE` ou `AUSENTE` — o papel daquele recorte **naquela** versão (122).
+
+    Operacional é estar em `recortes_do_perfil`, e a definição é essa de propósito: as duas
+    perguntas não podem divergir. A ampla (lista nula) é sempre operacional.
+    """
+    if not lista_id:
+        return OPERACIONAL
+    alvo = str(lista_id)
+    ampla_declarada = _perfil(conteudo, perfil_id).get("generalCompetitionModalityId")
+    if ampla_declarada and alvo == str(ampla_declarada):
+        return EXCEDENTE
+    if any(lista == alvo for lista, _ in recortes_do_perfil(conteudo, perfil_id=perfil_id)):
+        return OPERACIONAL
+    return AUSENTE
+
+
+def exigir_recorte_operacional(conteudo, *, perfil_id, lista_id):
+    """Recusa o recorte excedente na versão dada (122, FR-3897 a FR-3899).
+
+    **A recusa é do comando, e não da tela**: a porta do comando é alcançada por formulário antigo e
+    por chamada direta, e esconder o botão sozinho deixaria a lista nascer do mesmo jeito. Só o
+    excedente é recusado aqui; o recorte ausente segue o que cada comando já fazia com ele, porque
+    esta feature não o mede (`Registrado, sem desenvolver`, na spec).
+    """
+    if papel_do_recorte(conteudo, perfil_id=perfil_id, lista_id=lista_id) != EXCEDENTE:
+        return
+    raise DomainError(
+        CODIGO_DA_RECUSA,
+        frase_da_recusa(_nome_da_modalidade(conteudo, perfil_id, lista_id)),
+        422,
+    )
+
+
+def origem_do_registro(versoes, *, perfil_id, lista_id, versao_do_registro):
+    """`(NASCIDO, None)` ou `(TORNADO, numero)` para um registro excedente (122, FR-3903, FR-3911).
+
+    `versoes` são as versões do Edital **em ordem de vigência**, como `(identidade, conteudo,
+    numero)`, até a vigente; quem chama as lê uma vez para todos os registros. A frase de um
+    registro depende só da versão dele e das posteriores — nunca de estado de sessão.
+
+    O tornado nomeia a **primeira** Retificação que o tirou da operação, e não a última: um
+    apontamento retirado e refeito não reescreve a história do registro (T5 da `research.md`).
+    """
+    alvo = str(versao_do_registro)
+    vistas = list(versoes)
+    indice = next((i for i, (ident, _, _) in enumerate(vistas) if str(ident) == alvo), None)
+    if indice is None:
+        return NASCIDO, None
+    _, conteudo_de_origem, _ = vistas[indice]
+    if papel_do_recorte(conteudo_de_origem, perfil_id=perfil_id, lista_id=lista_id) == EXCEDENTE:
+        return NASCIDO, None
+    for _, conteudo, numero in vistas[indice + 1 :]:
+        if papel_do_recorte(conteudo, perfil_id=perfil_id, lista_id=lista_id) == EXCEDENTE:
+            return TORNADO, numero
+    return TORNADO, None
+
+
+def frase_da_origem(origem, numero=None):
+    return FRASE_DO_NASCIDO if origem == NASCIDO else frase_do_tornado(numero)
+
+
+def retificacao_que_mudou_o_papel(versoes, *, perfil_id, lista_id, versao_do_registro):
+    """O número da primeira versão posterior à do registro em que o papel do recorte mudou."""
+    alvo = str(versao_do_registro)
+    vistas = list(versoes)
+    indice = next((i for i, (ident, _, _) in enumerate(vistas) if str(ident) == alvo), None)
+    if indice is None:
+        return None
+    _, conteudo_de_origem, _ = vistas[indice]
+    papel = papel_do_recorte(conteudo_de_origem, perfil_id=perfil_id, lista_id=lista_id)
+    for _, conteudo, numero in vistas[indice + 1 :]:
+        if papel_do_recorte(conteudo, perfil_id=perfil_id, lista_id=lista_id) != papel:
+            return numero
+    return None
+
+
+def _nome_da_modalidade(conteudo, perfil_id, lista_id):
+    alvo = str(lista_id)
+    for modalidade in _perfil(conteudo, perfil_id).get("competitionModalities") or []:
+        if isinstance(modalidade, dict) and str(modalidade.get("id")) == alvo:
+            nome = modalidade.get("name") or ""
+            codigo = modalidade.get("code")
+            return f"{nome} ({codigo})" if codigo else nome
+    return alvo
+
+
 def rotulo_do_recorte(conteudo, *, perfil_id, lista_id):
     """O rótulo publicado daquele recorte, pela mesma derivação que os oferece."""
     alvo = str(lista_id) if lista_id else None
@@ -110,8 +251,24 @@ def _perfil(conteudo, perfil_id):
 
 
 __all__ = [
+    "AUSENTE",
+    "CODIGO_DA_RECUSA",
+    "EXCEDENTE",
+    "FRASE_DA_MODALIDADE_APONTADA",
+    "FRASE_DO_NASCIDO",
+    "NASCIDO",
+    "OPERACIONAL",
     "ROTULO_DA_AMPLA",
+    "TORNADO",
+    "exigir_recorte_operacional",
+    "frase_da_origem",
+    "frase_da_recusa",
+    "frase_do_papel_mudado",
+    "frase_do_tornado",
     "normalizar_recorte",
+    "origem_do_registro",
+    "papel_do_recorte",
     "recortes_do_perfil",
+    "retificacao_que_mudou_o_papel",
     "rotulo_do_recorte",
 ]

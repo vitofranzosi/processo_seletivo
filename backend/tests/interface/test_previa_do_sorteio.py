@@ -234,8 +234,10 @@ def test_perfil_sem_reserva_tem_uma_lista_e_nao_fala_de_cotas(client, sem_reserv
     assert 'id="recorte-da-previa"' not in previa(client, sem_reserva, vista="detalhe")
     assert "Quem concorre por uma reservada" not in visivel
     assert "rodadas com esta população" not in visivel
-    # A D-005: a Modalidade apontada como ampla teria lista própria no certame, e a prévia diz.
-    assert "ganha uma lista própria no sorteio do certame, e esta prévia não a sorteia" in visivel
+    # A D-005 da `098` dizia que a Modalidade apontada como ampla teria lista própria no certame. A
+    # `122` tirou essa lista do sorteio (FR-3895), e a prévia passa a dizer que ela não a tem.
+    assert "ganha uma lista própria" not in visivel
+    assert "que este Perfil aponta como a ampla concorrência, não tem sorteio próprio" in visivel
 
 
 def test_o_marco_pela_pontuacao_continua_na_previa_da_classificacao(client, com_reservas):
