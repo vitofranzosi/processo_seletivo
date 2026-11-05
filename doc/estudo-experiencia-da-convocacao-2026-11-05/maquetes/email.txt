@@ -1,0 +1,78 @@
+Assunto: Ifes · Convocação no Edital 72/2026: envie seus documentos até 10/11
+
+Ifes — Instituto Federal do Espírito Santo
+Cefor · Processos Seletivos
+
+VOCÊ FOI CONVOCADO NO EDITAL 72/2026
+Processo Seletivo 2026/1 — Curso Técnico em Informática
+
+Esta convocação pede documentos e o Requerimento de Matrícula. Você envia
+tudo pela sua área do candidato, no portal de seleções.
+
+PRAZO PARA ATENDER: até terça-feira, 10/11/2026, às 10h23,
+contado do envio desta mensagem.
+
+Acessar minha convocação:
+https://portal.exemplo.test/selecoes/inscricoes/85d3d64f-a150-454d-bc6d-f1e651f171fc/convocacao
+
+Para entrar, informe este e-mail na tela de acesso. Você recebe um código
+de seis dígitos, numa mensagem separada, e vai direto para a convocação.
+
+Esta convocação ainda não é a matrícula. Depois de conferir o que você
+enviar, a comissão registra o resultado, conforme o Edital.
+
+Dúvidas: selecao@exemplo.test
+
+PARA A SUA SEGURANÇA
+O Ifes não pede senha, pagamento nem documentos por e-mail. Os documentos
+vão só pela sua área do candidato. O código de acesso só chega quando você
+o pede, e não deve ser repassado a ninguém.
+
+--
+Cefor/Ifes — Seleções. Mensagem automática; não responda.
+Você a recebe porque se inscreveu no Edital 72/2026.
+
+======================================================================
+A CORREÇÃO (120) — mensagem própria, e não variante silenciosa
+(o HTML está em email-correcao.html)
+
+Assunto: Ifes · Convocação corrigida no Edital 72/2026: prazo válido até 12/11
+
+SUA CONVOCAÇÃO NO EDITAL 72/2026 FOI CORRIGIDA
+Processo Seletivo 2026/1 — Curso Técnico em Informática
+
+Esta mensagem substitui a que enviamos em 05/11/2026, às 10h23. Aquela
+informava prazo até terça-feira, 10/11/2026. O prazo que vale é o desta
+mensagem.
+
+PRAZO VÁLIDO PARA ATENDER: até quinta-feira, 12/11/2026, às 10h23,
+contado do envio desta mensagem.
+
+(o resto é igual à mensagem inicial; o motivo da correção não vai)
+
+======================================================================
+A FRASE DAS OBRIGAÇÕES E O ASSUNTO, PELO QUE A CHAMADA PEDE DE FATO
+(lidos da lista gravada no ato de convocar e da política do Requerimento)
+
+Documentos e Requerimento
+  Assunto: Ifes · Convocação no Edital 72/2026: envie seus documentos até 10/11
+  Frase:   Esta convocação pede documentos e o Requerimento de Matrícula.
+
+Só documentos
+  Assunto: Ifes · Convocação no Edital 72/2026: envie seus documentos até 10/11
+  Frase:   Esta convocação pede documentos, que você envia pela sua área
+           do candidato.
+
+Só o Requerimento
+  Assunto: Ifes · Convocação no Edital 72/2026: preencha o Requerimento até 10/11
+  Frase:   Esta convocação pede o Requerimento de Matrícula, que você
+           preenche pela sua área do candidato.
+
+Nenhum dos dois (a de hoje, com a mesma estrutura)
+  Assunto: Ifes · Convocação no Edital 72/2026: prazo até 10/11
+  Frase:   Siga as instruções do Edital dentro do prazo. As instruções
+           estão na sua área do candidato.
+
+Sem vencimento registrado (o Edital publica o prazo)
+  Assunto: Ifes · Convocação no Edital 72/2026
+  Prazo:   O prazo para atender é o que o Edital publica.

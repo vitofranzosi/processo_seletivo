@@ -1,0 +1,79 @@
+/*
+Só o que a proposta acrescenta à folha real do portal (versão 2, depois do parecer de 05/11).
+
+As maquetes carregam `shared/tokens.css` e `portal/portal.css` do próprio repositório, e esta folha
+por cima. Tudo o que está aqui é candidato a entrar em `portal.css` se o incremento 1 for aceito; o
+que já existe lá (cartão do documento, selo, formulário de envio, `.principal`) é reaproveitado sem
+cópia. Nenhuma maquete usa `style=""` nem `<script>` embutido: a CSP da 091/092 os recusaria.
+
+**A primeira tela cabe pela ordem, e não por encolhimento.** A versão 1 reduzia título, data e
+espaçamento a 375 px para a ação caber, e mesmo assim ficava a 1 px do fim. Esta não reduz nada no
+celular: tira da primeira parte o que não precisa estar antes da ação (as contagens, a origem do
+prazo, a ressalva longa) e deixa o tamanho de letra da folha real.
+
+As classes `.nota-da-maquete` são do estudo, e não da proposta.
+*/
+
+/* A chamada: o que aconteceu, para qual etapa, o prazo, o que falta e a ação — nesta ordem. */
+.chamada-da-convocacao{max-width:var(--leitura);margin:0 0 1.5rem}
+.chamada-da-convocacao .contexto{color:var(--texto-fraco);font-size:.9375rem;margin:0 0 .25rem}
+.chamada-da-convocacao h1{font-size:1.75rem;margin:0 0 .4rem}
+.chamada-da-convocacao .etapa{font-size:1.0625rem;margin:0 0 .9rem}
+
+/* O prazo: um cartão baixo, com a data como a maior coisa dele. A consequência não mora aqui:
+   ela vem logo depois da ação, perto do prazo, sem disputar a primeira tela com ele. */
+.prazo-da-convocacao{margin:0 0 .9rem;padding:.65rem 1rem;background:var(--branco);
+  border:1px solid var(--borda);border-left:4px solid var(--amarelo);border-radius:0 8px 8px 0}
+.prazo-da-convocacao .rotulo-do-prazo{margin:0;font-size:.875rem;font-weight:600;color:var(--texto-fraco)}
+.prazo-da-convocacao .data-do-prazo{margin:0;font-size:1.35rem;font-weight:700;line-height:1.3}
+.prazo-da-convocacao .dia-e-contagem{margin:0;font-size:.9375rem}
+/* Na sucessora, a correção é dita dentro do prazo, que é o que ela corrigiu. */
+.prazo-da-convocacao .correcao{margin:0 0 .2rem;font-size:.9375rem;font-weight:700;color:var(--texto)}
+
+.resumo-do-que-falta{font-weight:600;margin:0 0 .6rem}
+.chamada-da-convocacao .principal{margin:0 0 .75rem}
+.depois-da-acao{color:var(--texto);font-size:.9375rem;margin:0 0 .35rem}
+
+/* A confirmação do envio, na região a que o envio volta, com o foco nela (ver a nota da maquete). */
+.confirmacao-do-envio{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
+  padding:.75rem 1rem;margin:0 0 .9rem;border-radius:0 4px 4px 0}
+.confirmacao-do-envio:focus{outline:3px solid var(--verde);outline-offset:2px}
+.confirmacao-do-envio p{margin:0}
+.confirmacao-do-envio p+p{margin-top:.35rem}
+
+/* O andamento, depois da ação: contagem em palavra e número, sem barra. Barra sugere "quanto falta
+   para ser aprovado"; a contagem diz só onde cada coisa está. */
+.andamento{max-width:var(--leitura);margin:0 0 1.5rem}
+.andamento>h2{margin:0 0 .5rem;font-size:1.05rem}
+.contagem-das-obrigacoes{list-style:none;margin:0;padding:0;display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem}
+.contagem-das-obrigacoes li{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.6rem .75rem;display:grid;gap:.1rem}
+.contagem-das-obrigacoes .numero{font-size:1.5rem;font-weight:700;line-height:1.1}
+.contagem-das-obrigacoes .rotulo{font-size:.875rem}
+.contagem-das-obrigacoes li.a-fazer{border-color:var(--amarelo);border-width:2px}
+.contagem-das-obrigacoes li.conferido .numero{color:var(--sucesso)}
+
+/* Os formulários: o cartão real da 118, num bloco que só muda de título. */
+.bloco-dos-formularios{max-width:var(--leitura);margin:0 0 1.5rem}
+.bloco-dos-formularios>h2{margin:0 0 .5rem;font-size:1.05rem}
+.cartao-do-requerimento{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem}
+.cartao-do-requerimento:focus{outline:3px solid var(--verde);outline-offset:2px}
+.cartao-do-requerimento>h3{margin:0 0 .25rem;font-size:1rem}
+.cartao-do-requerimento p{margin:.35rem 0 .75rem}
+
+/* Os dados do ato, em segundo plano: sem moldura, depois de tudo. */
+.dados-do-ato{max-width:var(--leitura);margin:2rem 0 1rem;padding-top:1rem;
+  border-top:1px solid var(--borda)}
+.dados-do-ato>h2{margin:0 0 .5rem;font-size:1rem;color:var(--texto-fraco)}
+.dados-do-ato dl.campos dd{margin-bottom:.4rem}
+
+/* As telas de acesso com destino: a frase diz para onde se vai, sem dizer de quem. */
+.destino-do-acesso{margin:0 0 1rem;padding:.6rem .8rem;border-left:4px solid var(--verde);
+  background:var(--verde-claro);max-width:32rem}
+
+/* --- Do estudo, e não da proposta --------------------------------------------------------- */
+.nota-da-maquete{max-width:var(--leitura);margin:.5rem 0 1rem;padding:.5rem .75rem;
+  border:2px dashed #7b61ff;color:#3b2a99;background:#f4f1ff;font-size:.8125rem;border-radius:4px}
+.nota-da-maquete strong{color:#3b2a99}

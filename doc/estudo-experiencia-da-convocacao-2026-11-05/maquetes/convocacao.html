@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sua convocação — Edital 72/2026 — Cefor/Ifes</title>
+<!-- A folha real do portal, do próprio repositório, e só as classes novas por cima. -->
+<link rel="stylesheet" href="../../../backend/processo_seletivo/shared/static/shared/tokens.css">
+<link rel="stylesheet" href="../../../backend/processo_seletivo/portal/static/portal/portal.css">
+<link rel="stylesheet" href="maquetes.css">
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <span class="marca"><a href="#">Cefor/Ifes · <span class="nome-por-extenso">Gestão de Processos Seletivos</span><span class="sigla" aria-hidden="true">GPS</span></a></span>
+  <nav class="acessos" aria-label="Acessos">
+    <span class="quem-esta">
+      <a class="no-topo" href="#">Minhas inscrições</a>
+      <span class="nome">Candidata 601</span>
+      <form method="post" action="#"><button type="submit" class="sair">Sair</button></form>
+    </span>
+  </nav>
+</header>
+<main id="conteudo" tabindex="-1">
+
+<!-- A chamada: o que aconteceu, a etapa, o prazo, o que falta e a ação. -->
+<section class="chamada-da-convocacao" id="o-que-fazer" aria-labelledby="titulo" tabindex="-1">
+  <p class="contexto">Curso Técnico em Informática · Edital 72/2026</p>
+  <h1 id="titulo">Você foi convocado!</h1>
+  <p class="etapa">Nesta etapa, você envia seus documentos e o Requerimento de Matrícula para a comissão conferir.</p>
+  <!-- CORPO -->
+  <div class="prazo-da-convocacao" id="prazo">
+    <p class="rotulo-do-prazo">Prazo para atender</p>
+    <p class="data-do-prazo">10/11/2026, às 10h23</p>
+    <p class="dia-e-contagem">terça-feira · faltam 5 dias</p>
+  </div>
+  <p class="resumo-do-que-falta">Você ainda precisa enviar 4 documentos e o Requerimento de Matrícula.</p>
+  <a class="principal" href="#item-certidao">Ver o que preciso fazer</a>
+  <!-- /CORPO -->
+  <p class="depois-da-acao">Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação.</p>
+  <p class="depois-da-acao">Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o resultado.</p>
+</section>
+
+<!-- O andamento, depois da ação. -->
+<section class="andamento" aria-labelledby="titulo-andamento">
+  <h2 id="titulo-andamento">Andamento</h2>
+  <ul class="contagem-das-obrigacoes">
+    <li class="a-fazer"><span class="numero">5</span><span class="rotulo">a enviar</span></li>
+    <li><span class="numero">0</span><span class="rotulo">aguardando conferência</span></li>
+    <li class="conferido"><span class="numero">0</span><span class="rotulo">conferidos</span></li>
+  </ul>
+</section>
+
+<!-- Os formulários. -->
+<section class="bloco-dos-formularios" id="o-que-falta" aria-labelledby="titulo-falta">
+  <h2 id="titulo-falta">O que falta</h2>
+  <ul class="requisitos-lista">
+    <li class="requisito cartao-do-documento" id="item-certidao" tabindex="-1">
+      <h3>Certidão de nascimento ou casamento</h3>
+      <p class="situacao-do-documento" id="situacao-certidao">Falta enviar.</p>
+      <div class="envio"><form method="post" action="#">
+        <div class="escolher">
+          <input type="file" id="arquivo-certidao" name="arquivo" accept="application/pdf" aria-describedby="situacao-certidao ajuda-certidao">
+          <label class="botao-arquivo" for="arquivo-certidao">Escolher arquivo PDF<span class="oculto"> para Certidão de nascimento ou casamento</span></label>
+          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>
+          <button type="submit" class="acao">Enviar<span class="oculto">: Certidão de nascimento ou casamento</span></button>
+        </div>
+        <span class="ajuda limite" id="ajuda-certidao">Somente PDF, até 10 MB.</span>
+      </form></div>
+    </li>
+    <li class="requisito cartao-do-documento" id="item-historico" tabindex="-1">
+      <h3>Histórico escolar do ensino médio</h3>
+      <p class="instrucao">Todas as páginas, em arquivo único.</p>
+      <p class="situacao-do-documento" id="situacao-historico">Falta enviar.</p>
+      <div class="envio"><form method="post" action="#">
+        <div class="escolher">
+          <input type="file" id="arquivo-historico" name="arquivo" accept="application/pdf" aria-describedby="situacao-historico ajuda-historico">
+          <label class="botao-arquivo" for="arquivo-historico">Escolher arquivo PDF<span class="oculto"> para Histórico escolar do ensino médio</span></label>
+          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>
+          <button type="submit" class="acao">Enviar<span class="oculto">: Histórico escolar do ensino médio</span></button>
+        </div>
+        <span class="ajuda limite" id="ajuda-historico">Somente PDF, até 10 MB.</span>
+      </form></div>
+    </li>
+    <li class="requisito cartao-do-documento" id="item-certificado" tabindex="-1">
+      <h3>Certificado de conclusão do ensino médio</h3>
+      <p class="situacao-do-documento" id="situacao-certificado">Falta enviar.</p>
+      <div class="envio"><form method="post" action="#">
+        <div class="escolher">
+          <input type="file" id="arquivo-certificado" name="arquivo" accept="application/pdf" aria-describedby="situacao-certificado ajuda-certificado">
+          <label class="botao-arquivo" for="arquivo-certificado">Escolher arquivo PDF<span class="oculto"> para Certificado de conclusão do ensino médio</span></label>
+          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>
+          <button type="submit" class="acao">Enviar<span class="oculto">: Certificado de conclusão do ensino médio</span></button>
+        </div>
+        <span class="ajuda limite" id="ajuda-certificado">Somente PDF, até 10 MB.</span>
+      </form></div>
+    </li>
+    <li class="requisito cartao-do-documento" id="item-residencia" tabindex="-1">
+      <h3>Comprovante de residência</h3>
+      <p class="situacao-do-documento" id="situacao-residencia">Falta enviar.</p>
+      <div class="envio"><form method="post" action="#">
+        <div class="escolher">
+          <input type="file" id="arquivo-residencia" name="arquivo" accept="application/pdf" aria-describedby="situacao-residencia ajuda-residencia">
+          <label class="botao-arquivo" for="arquivo-residencia">Escolher arquivo PDF<span class="oculto"> para Comprovante de residência</span></label>
+          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>
+          <button type="submit" class="acao">Enviar<span class="oculto">: Comprovante de residência</span></button>
+        </div>
+        <span class="ajuda limite" id="ajuda-residencia">Somente PDF, até 10 MB.</span>
+      </form></div>
+    </li>
+    <li class="cartao-do-requerimento" id="item-requerimento" tabindex="-1">
+      <h3>Requerimento de Matrícula</h3>
+      <p>Falta preencher. É um formulário nesta mesma área; o que você já informou na inscrição vem preenchido.</p>
+      <a class="principal" href="#">Preencher o Requerimento de Matrícula</a>
+    </li>
+  </ul>
+</section>
+
+<!-- Os dados do ato, em segundo plano. -->
+<section class="dados-do-ato" aria-labelledby="titulo-dados">
+  <h2 id="titulo-dados">Sobre esta convocação</h2>
+  <dl class="campos">
+    <dt>Processo Seletivo</dt><dd>Processo Seletivo 2026/1 — Curso Técnico em Informática</dd>
+    <dt>Chamada</dt><dd>1ª chamada, para vaga inicial</dd>
+    <!-- COMUNICACAO --><dt>Comunicação</dt><dd>Mensagem enviada em 05/11/2026, às 10h23. O prazo conta a partir deste envio.</dd><!-- /COMUNICACAO -->
+    <dt>Fundamento</dt><dd>No interesse da Administração, item 8.2 do Edital 72/2026.</dd>
+    <dt>Dúvidas</dt><dd><a href="#">selecao@exemplo.test</a></dd>
+  </dl>
+  <p><a href="#">Voltar ao acompanhamento</a></p>
+</section>
+
+</main>
+</body>
+</html>
