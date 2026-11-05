@@ -59,7 +59,8 @@ saber que foi chamado, que é exatamente o caso que a `019` existia para cobrir.
 
 - Q: Para onde a mensagem de convocação deve apontar? → A: Continua apontando "Minhas inscrições",
   que passa a mostrar a convocação; endereço e texto não mudam, e nada muda na gestão nem nos lotes
-  da `050` (FR-1104).
+  da `050` (FR-1104). *(Revista pela `121` em 2026-11-05: o endereço passa a ser o da convocação, e o
+  texto, o da FR-290 da `019` revista.)*
 - Q: A exibição da convocação no acompanhamento entra na trilha como leitura? → A: Não. Só a abertura
   da tela da convocação registra leitura; lista e acompanhamento não gravam nada (FR-1103).
 - Q: Convocação concluída aparece em "Minhas inscrições"? → A: Sim, como nota discreta de texto com o
@@ -283,8 +284,14 @@ de uma inscrição inexistente.
 
 **A mensagem**
 
-- **FR-1104**: O endereço da mensagem de convocação MUST continuar sendo "Minhas inscrições", que
-  passa a mostrar a convocação; o texto da mensagem MUST NOT mudar.
+- **FR-1104** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O endereço da mensagem de convocação MUST ser o da convocação da inscrição, e não "Minhas
+  inscrições"; sem sessão, ele leva ao acesso e, depois do código, à convocação (FR-3876 a FR-3880 da
+  `121`). O texto da mensagem é o da FR-290 da `019`, revista pela `121`.
+
+  > **Redação anterior à `121`, preservada:**
+  > O endereço da mensagem de convocação MUST continuar sendo "Minhas inscrições", que
+  > passa a mostrar a convocação; o texto da mensagem MUST NOT mudar.
 
 **O corte**
 

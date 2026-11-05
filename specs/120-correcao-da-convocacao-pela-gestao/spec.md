@@ -80,6 +80,7 @@ entregou a precedência justificada e a chamada para regularizar, mas não a suc
 
 - **a redação própria da mensagem da sucessora** (*"A sua convocação foi corrigida…"*), que é decisão
   sobre a FR-290 da `019`, com parente em `doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md`;
+  *(Decidida pelo usuário em 05/11/2026 e especificada na `121`, FR-3885 e FR-3890: a mensagem da sucessora comunicada diz que substitui a anterior, com a data do envio substituído e o prazo que ele informava, e sem o motivo.)*
 - **o aviso de pendência (`QI-7`)**, que continua com a decisão institucional registrada na `118`;
 - **correção em lote, prazo próprio por item e mudança na fila** — a fila continua sem quem tem
   chamada em aberto, e o lote continua sem sucessão (FR-861 da `050`);
@@ -337,9 +338,15 @@ os SC-.
   - o vencimento atual e a situação da chamada;
   - a espécie e o fundamento que a sucessora levará, derivados como na chamada individual, e a
     indicação de quando diferem dos da convocação corrigida (D-006);
-  - a forma de comunicação do Perfil e o que ela fará no ato: a mensagem individual sai de novo, com o
-    texto da convocação e o prazo novo, sem dizer que corrige a anterior (D-007); por publicação, a
-    comunicação aguarda a publicação, como hoje;
+  - a forma de comunicação do Perfil e o que ela fará no ato *(item revisto pela `121` em 2026-11-05,
+    que vigora com a implementação dela — a redação anterior está ao fim deste item)*: a mensagem
+    individual sai de novo, **como mensagem da correção**, com o prazo válido, dizendo que substitui a
+    anterior e sem o motivo (FR-3885 e FR-3890 da `121`); por publicação, a comunicação aguarda a
+    publicação, como hoje;
+
+    > **Redação anterior à `121`, preservada:** a mensagem individual sai de novo, com o texto da
+    > convocação e o prazo novo, sem dizer que corrige a anterior (D-007); por publicação, a
+    > comunicação aguarda a publicação, como hoje;
   - o efeito do vencimento informado sobre o atual, que são três, e a prévia diz qual:
     - **posterior ao atual:** o prazo é estendido até o vencimento novo;
     - **anterior ao atual, e ainda futuro:** o prazo é **antecipado**, e encurta um prazo já
@@ -485,7 +492,9 @@ Nenhum dado pessoal novo é coletado, guardado ou enviado.
 - **O motivo da correção** é texto da comissão sobre o ato, e é guardado onde o motivo da sucessão já
   mora: na convocação, append-only, e na razão da trilha. Ele não vai ao convocado: a mensagem da
   sucessora é a de hoje (D-007), e o portal não o mostra. Quem redige o motivo MUST NOT precisar de
-  dado pessoal além do que a convocação já identifica, e a ajuda do campo o diz.
+  dado pessoal além do que a convocação já identifica, e a ajuda do campo o diz. *(Desde a `121`,
+  revista em 2026-11-05, a mensagem da sucessora é a da correção, que diz o que substitui; o motivo
+  continua fora dela e do portal.)*
 - **A sessão do operador** guarda os campos digitados só entre a recusa e a tela seguinte, que os
   consome ao exibir (D-009). Nada disso vai a log.
 - **A prévia** mostra o protocolo e o nome do convocado, que o cartão já mostra, a quem já pode
@@ -573,6 +582,11 @@ prazo novo, como a chamada individual. A mensagem não diz que corrige a anterio
 com essas palavras, para ninguém supor o contrário. A redação própria da correção é decisão sobre a
 FR-290 da `019`, fora desta spec.
 
+> **Revista pela `121` em 2026-11-05**, que vigora com a implementação dela: a redação própria foi
+> decidida pelo usuário, e a sucessora comunicada por mensagem individual sai com a **mensagem da
+> correção**, que diz o que substitui e não diz o motivo (FR-3885 da `121`); a prévia passa a dizê-lo
+> (FR-3890 da `121`). O resto desta decisão continua.
+
 ### D-008 — A prévia está no próprio formulário, como na chamada individual da `050`
 
 A chamada individual da `050` mostra as derivações no formulário, antes do botão, e não numa segunda
@@ -612,6 +626,7 @@ acontece.
 - **A mensagem da sucessora.** Uma redação que diga *"A sua convocação foi corrigida: o novo prazo é
   …"* é decisão sobre a FR-290 da `019`, com parente em
   `doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md`. Fica para o usuário.
+  *(Decidida pelo usuário em 05/11/2026 e especificada na `121`, FR-3885 e FR-3890: a mensagem da sucessora comunicada diz que substitui a anterior, com a data do envio substituído e o prazo que ele informava, e sem o motivo.)* O texto não diz *"novo prazo"*, porque a sucessora pode antecipar (FR-3856).
 - **O aviso de pendência (`QI-7`).** Continua com a decisão institucional registrada na `118`.
 - **O formulário montado à mão.** O achado observava, sem executar, que um POST montado por quem já
   pode convocar criaria a sucessora. Com a FR-3843 esse POST continua possível para quem tem a

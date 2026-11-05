@@ -562,31 +562,61 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
 
 #### C. A tela da convocação
 
-- **FR-3735**: Com documento pedido na chamada, a tela da convocação MUST ter cinco blocos, nesta
-  ordem, cada um com título de segundo nível:
-  1. **O que fazer agora** (FR-3736);
-  2. **Prazo** (FR-3737);
-  3. **O que falta** — documentos e Requerimento; sem tarefa, **Documentos opcionais** (FR-3738);
-  4. **O que você já apresentou** — com a comissão e conferidos (FR-3739);
-  5. **Sobre esta convocação** — fundamentos e metadados (FR-3740).
+- **FR-3735** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Com documento pedido na chamada, a tela da convocação MUST ter, nesta ordem: a **chamada**
+  (FR-3858 a FR-3864 da `121`), que substitui os blocos *O que fazer agora* e *Prazo*; o
+  **Andamento**, com a chamada aberta (FR-3865 da `121`); **O que falta** — documentos e
+  Requerimento; sem tarefa, **Documentos opcionais** (FR-3738); **O que você já apresentou**
+  (FR-3739); e **Sobre esta convocação** (FR-3740).
 
-  Os blocos 3 e 4 MUST NOT aparecer vazios. O bloco 3 aparece, com a chamada aberta, quando houver
-  tarefa **ou** opcional a enviar; sem nenhum dos dois, ele some, e o bloco 1 diz por quê.
-  O opcional MUST NOT ficar inalcançável por falta de tarefa (FR-3723).
-- **FR-3736**: O bloco **O que fazer agora** MUST trazer:
-  - a frase de estado: a mesma ação principal do acompanhamento (FR-3730, linhas 4 e 5);
-  - a lista das tarefas na ordem da FR-3726, cada uma com âncora para o cartão dela — e, no
-    Requerimento, o link *"Preencher o Requerimento de Matrícula"*; no item com pendência registrada
-    (*a corrigir* ou *a enviar* com motivo), o motivo;
-  - com documento a corrigir ou a enviar, **um** botão de navegação ao primeiro cartão da lista, com
-    rótulo que diga o que se vê ao chegar: *"Ver e corrigir os documentos pendentes"* ou *"Ver os
-    documentos que faltam"*. MUST NOT começar por "Enviar" (D-004);
-  - a linha *"Com a comissão: N documento(s)."* quando houver, sem verbo de tarefa;
-  - sem tarefa e com opcional, a linha *"Há documento opcional que você pode enviar, se quiser."*,
-    com âncora para o bloco 3.
-- **FR-3737**: O bloco **Prazo** MUST dizer o prazo único da FR-3747; com o prazo correndo, a frase de
-  consequência da FR-1177 da `063`, na mesma condição; com o prazo não iniciado, só a frase da
-  FR-3749, sem data; sem vencimento, que esta convocação não tem prazo registrado.
+  Os blocos *O que falta* e *O que você já apresentou* MUST NOT aparecer vazios. *O que falta*
+  aparece, com a chamada aberta, quando houver tarefa **ou** opcional a enviar; sem nenhum dos dois,
+  ele some, e a chamada diz por quê. O opcional MUST NOT ficar inalcançável por falta de tarefa
+  (FR-3723).
+
+  > **Redação anterior à `121`, preservada:**
+  > Com documento pedido na chamada, a tela da convocação MUST ter cinco blocos, nesta
+  > ordem, cada um com título de segundo nível:
+  > 1. **O que fazer agora** (FR-3736);
+  > 2. **Prazo** (FR-3737);
+  > 3. **O que falta** — documentos e Requerimento; sem tarefa, **Documentos opcionais** (FR-3738);
+  > 4. **O que você já apresentou** — com a comissão e conferidos (FR-3739);
+  > 5. **Sobre esta convocação** — fundamentos e metadados (FR-3740).
+  >
+  > Os blocos 3 e 4 MUST NOT aparecer vazios. O bloco 3 aparece, com a chamada aberta, quando houver
+  > tarefa **ou** opcional a enviar; sem nenhum dos dois, ele some, e o bloco 1 diz por quê.
+  > O opcional MUST NOT ficar inalcançável por falta de tarefa (FR-3723).
+- **FR-3736** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O conteúdo do bloco *O que fazer agora* passa à chamada da `121`: a frase de estado é o resumo
+  (FR-3862 da `121`); o botão é *"Ver o que preciso fazer"*, para a primeira tarefa da FR-3726
+  (FR-3863 da `121`), e MUST NOT começar por "Enviar" (D-004); a lista das tarefas com âncora e a
+  linha *"Com a comissão: N documento(s)."* saem, porque os cartões vêm logo depois, na ordem da
+  FR-3726, com o motivo no cartão, e o andamento diz o que está com a comissão (FR-3865 da `121`). Sem
+  tarefa e com opcional, continua a linha *"Há documento opcional que você pode enviar, se quiser."*,
+  com âncora para o bloco *O que falta*.
+
+  > **Redação anterior à `121`, preservada:**
+  > O bloco **O que fazer agora** MUST trazer:
+  > - a frase de estado: a mesma ação principal do acompanhamento (FR-3730, linhas 4 e 5);
+  > - a lista das tarefas na ordem da FR-3726, cada uma com âncora para o cartão dela — e, no
+  >   Requerimento, o link *"Preencher o Requerimento de Matrícula"*; no item com pendência registrada
+  >   (*a corrigir* ou *a enviar* com motivo), o motivo;
+  > - com documento a corrigir ou a enviar, **um** botão de navegação ao primeiro cartão da lista, com
+  >   rótulo que diga o que se vê ao chegar: *"Ver e corrigir os documentos pendentes"* ou *"Ver os
+  >   documentos que faltam"*. MUST NOT começar por "Enviar" (D-004);
+  > - a linha *"Com a comissão: N documento(s)."* quando houver, sem verbo de tarefa;
+  > - sem tarefa e com opcional, a linha *"Há documento opcional que você pode enviar, se quiser."*,
+  >   com âncora para o bloco 3.
+- **FR-3737** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O prazo é dito no cartão do prazo da chamada (FR-3861 da `121`): o prazo único da FR-3747, com o
+  dia da semana e a contagem; com o prazo não iniciado, só a frase da FR-3749, sem data; sem
+  vencimento, que esta convocação não tem prazo registrado. A frase de consequência da FR-1177 da
+  `063` vem logo depois da ação principal, na mesma condição (FR-3864 da `121`).
+
+  > **Redação anterior à `121`, preservada:**
+  > O bloco **Prazo** MUST dizer o prazo único da FR-3747; com o prazo correndo, a frase de
+  > consequência da FR-1177 da `063`, na mesma condição; com o prazo não iniciado, só a frase da
+  > FR-3749, sem data; sem vencimento, que esta convocação não tem prazo registrado.
 - **FR-3738**: O bloco **O que falta** MUST conter os cartões das tarefas, na ordem da FR-3726, com o
   envio de arquivo da `115` e o cartão do Requerimento *a preencher*. Os opcionais a enviar
   — *a apresentar* ou *pendentes* — MUST vir no fim do bloco, sob o título de terceiro nível
@@ -595,37 +625,64 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   a comissão (o facultativo com o selo *"Opcional"*), depois os conferidos, e a linha do Requerimento
   *enviado* (FR-3731). O cartão com a comissão MUST oferecer *"Enviar outro arquivo"* recolhido, como
   a `115` já oferece, enquanto a chamada estiver aberta.
-- **FR-3740**: O bloco **Sobre esta convocação** MUST continuar visível, sem `details`: espécie,
+- **FR-3740** *(acrescida pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O bloco **Sobre esta convocação** MUST continuar visível, sem `details`: espécie,
   chamada, comunicação enviada em, vencimento registrado, fundamento e atendimento. É o ato que a
   pessoa tem direito de ler; ele só desce de posição.
-- **FR-3741**: Com a chamada *encerrada*, nenhum formulário de envio de documento MUST aparecer, e os
-  blocos 3 e 4 viram leitura, com os textos da coluna da causa na FR-3746. O bloco 1 MUST depender
-  da causa:
-  - **pelo prazo**: título *"O prazo terminou"*, a frase da FR-3748 e o resumo *"Até o prazo, ficou
-    assim"*, que inclui o Requerimento *não enviado até o prazo*;
-  - **pelo Processo**: título *"O envio pelo portal está encerrado"*, com *"Este Processo Seletivo
-    foi ‹encerrado / cancelado›, e não é mais possível enviar documentos pelo portal. Se você enviou
-    algo que não aparece aqui, fale com o atendimento: ‹canal›."* e o resumo *"Até o encerramento do
-    Processo, ficou assim"*. Esta frase MUST NOT dizer que um prazo venceu, nem que a comissão vai
-    conferir ou decidir. O Requerimento *na convocação* não enviado entra no resumo como *"Requerimento
-    de Matrícula: não enviado. O envio pelo portal está encerrado."*, sem link (FR-3725, linha 3a;
-    D-020). Nenhum bloco oferece o preenchimento. A frase de abertura passa a *"…e não é mais
-    possível enviar documentos nem o Requerimento de Matrícula pelo portal"* quando a chamada pede os
-    dois.
-- **FR-3742**: Com desfecho vigente, a página MUST ser **só histórico**:
-  - o bloco 1 se chama *"Resultado registrado"*, com o rótulo da FR-3750, o fundamento e a data;
-  - os blocos 3 e 4 dão lugar a um só, *"O que você enviou nesta convocação"*, na ordem do Edital,
-    com os textos da coluna *decidida* da FR-3746;
-  - MUST NOT aparecer formulário, *"Envie até…"*, *"Falta enviar"*, *"aguardando conferência"* nem
-    convite a corrigir;
-  - o Requerimento enviado continua com o link de conferir (FR-1097 da `059`); o pedido e não
-    enviado aparece como *"Requerimento de Matrícula: não enviado."* (FR-3725, linha 3).
-- **FR-3743**: Sem documento pedido na chamada, a tela da convocação MUST manter a estrutura de hoje
+
+  **Acréscimo da `121`.** Quando a convocação vigente sucede outra, o bloco ganha a linha
+  *"Convocação substituída"*, com a comunicação e o prazo da anterior e *"Esse prazo não vale
+  mais."*, sem o motivo (FR-3869 da `121`). O resto não muda.
+
+  > **Redação anterior à `121`:** a mesma, sem este acréscimo.
+- **FR-3741** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O título do bloco 1 passa a ser o título de primeiro nível da página (FR-3858 da `121`): pelo
+  prazo, *"O prazo desta convocação terminou"*; pelo Processo, *"O envio pelo portal está
+  encerrado"*. O bloco 1 não repete título abaixo dele. As frases, os resumos e o resto desta alínea
+  continuam como na redação anterior, abaixo.
+
+  > **Redação anterior à `121`, preservada:**
+  > Com a chamada *encerrada*, nenhum formulário de envio de documento MUST aparecer, e os
+  > blocos 3 e 4 viram leitura, com os textos da coluna da causa na FR-3746. O bloco 1 MUST depender
+  > da causa:
+  > - **pelo prazo**: título *"O prazo terminou"*, a frase da FR-3748 e o resumo *"Até o prazo, ficou
+  >   assim"*, que inclui o Requerimento *não enviado até o prazo*;
+  > - **pelo Processo**: título *"O envio pelo portal está encerrado"*, com *"Este Processo Seletivo
+  >   foi ‹encerrado / cancelado›, e não é mais possível enviar documentos pelo portal. Se você enviou
+  >   algo que não aparece aqui, fale com o atendimento: ‹canal›."* e o resumo *"Até o encerramento do
+  >   Processo, ficou assim"*. Esta frase MUST NOT dizer que um prazo venceu, nem que a comissão vai
+  >   conferir ou decidir. O Requerimento *na convocação* não enviado entra no resumo como *"Requerimento
+  >   de Matrícula: não enviado. O envio pelo portal está encerrado."*, sem link (FR-3725, linha 3a;
+  >   D-020). Nenhum bloco oferece o preenchimento. A frase de abertura passa a *"…e não é mais
+  >   possível enviar documentos nem o Requerimento de Matrícula pelo portal"* quando a chamada pede os
+  >   dois.
+- **FR-3742** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Com desfecho vigente, o título de primeiro nível da página é *"Resultado da sua convocação"*
+  (FR-3858 da `121`), e *"Resultado registrado"* fica como rótulo da linha do desfecho. O resto desta
+  alínea continua como na redação anterior, abaixo.
+
+  > **Redação anterior à `121`, preservada:**
+  > Com desfecho vigente, a página MUST ser **só histórico**:
+  > - o bloco 1 se chama *"Resultado registrado"*, com o rótulo da FR-3750, o fundamento e a data;
+  > - os blocos 3 e 4 dão lugar a um só, *"O que você enviou nesta convocação"*, na ordem do Edital,
+  >   com os textos da coluna *decidida* da FR-3746;
+  > - MUST NOT aparecer formulário, *"Envie até…"*, *"Falta enviar"*, *"aguardando conferência"* nem
+  >   convite a corrigir;
+  > - o Requerimento enviado continua com o link de conferir (FR-1097 da `059`); o pedido e não
+  >   enviado aparece como *"Requerimento de Matrícula: não enviado."* (FR-3725, linha 3).
+- **FR-3743** *(acrescida pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Sem documento pedido na chamada, a tela da convocação MUST manter a estrutura de hoje
   (FR-3574 da `115`): os dados, *"O que fazer"* e o chamado ao Requerimento. Mudam só o formato do
   prazo, a frase do vencido, o rótulo do desfecho — *"Resultado registrado: ‹rótulo da FR-3750›"*, no
   lugar de *"Situação registrada: ‹espécie›"* — e a frase do aceite (FR-3747 a FR-3750). A exceção
   informativa da FR-3732 vale também aqui, com as mesmas frases, no lugar onde hoje fica o chamado ao
   Requerimento, e com as mesmas condições.
+
+  **Acréscimo da `121`.** Sem documento pedido na chamada, mudam também o título da página (FR-3858
+  da `121`), o prazo, que passa ao cartão da FR-3861 da `121`, e a correção dita nele (FR-3869 da
+  `121`); a frase *"Você foi convocada(o)"* sai, porque o título a diz. O resto da estrutura não muda.
+
+  > **Redação anterior à `121`:** a mesma, sem este acréscimo.
 - **FR-3744**: O cartão com pendência registrada — *a corrigir*, ou *a enviar* com motivo (cenário J)
   — MUST ter destaque visual de aviso (borda e fundo) **e** o selo em texto *"Precisa de correção"*.
   O cartão com a comissão MUST ter o selo *"Aguardando conferência"*; o conferido, *"Conferido"*; o
@@ -763,9 +820,18 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
 - **SC-1118**: Zero falsas conclusões: em nenhum cenário com tarefa a frase de conclusão ou o
   Requerimento enviado aparece como ação principal; em nenhum cenário anterior ao *conforme* aparece
   "atendido"; em nenhum cenário aparece frase de que a pessoa enviou ou reenviou tudo.
-- **SC-1119**: A 375 × 812 px, nos cenários A, C1, C2, F e J, o bloco *O que fazer agora*, com a
-  contagem e o primeiro link de tarefa, termina dentro da primeira tela; o cartão a corrigir se
-  distingue por um selo em texto, verificável sem cor.
+- **SC-1119** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Nos cenários A, C1, C2, F, J e o corrigido pela `120`: (1) a ação principal é o primeiro controle
+  do conteúdo depois do título, da etapa, do prazo e do resumo, e vem antes do andamento, dos
+  formulários e dos dados; (2) não há rolagem horizontal a 320 px, com a fonte a 150 % e com zoom de
+  200 %; (3) a 375 × 812, com a fonte padrão, a ação está na primeira tela com folga de pelo menos uma
+  linha de texto (SC-1151 a SC-1153 da `121`). O cartão a corrigir se distingue por um selo em texto,
+  verificável sem cor.
+
+  > **Redação anterior à `121`, preservada:**
+  > A 375 × 812 px, nos cenários A, C1, C2, F e J, o bloco *O que fazer agora*, com a
+  > contagem e o primeiro link de tarefa, termina dentro da primeira tela; o cartão a corrigir se
+  > distingue por um selo em texto, verificável sem cor.
 - **SC-1120**: Nos cenários I1 e I2, a tela da convocação tem zero formulários e zero ocorrências de
   *"Envie até"*, *"Falta enviar"*, *"aguardando conferência"* e *"Envie um novo arquivo"*.
 - **SC-1121**: Em cada cenário, todas as ocorrências do prazo no acompanhamento, na convocação, nos

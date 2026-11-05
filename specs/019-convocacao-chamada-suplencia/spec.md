@@ -668,8 +668,17 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 - **FR-289**: Mensagem individual de convocação MUST NOT existir antes da revisão escrita da
   `FR-084` da `010`, que limita o canal a duas situações nominais e manda revisar-se para admitir
   uma terceira.
-- **FR-290**: A mensagem MUST conter o que fazer, o prazo e o canal de atendimento, e MUST NOT
-  conter dado da inscrição além do necessário para identificar a chamada.
+- **FR-290** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  A mensagem MUST conter o que fazer, o prazo e o canal de atendimento, e MUST NOT conter dado da
+  inscrição além do necessário para identificar a chamada. Quando a chamada pede documento
+  obrigatório ou o Requerimento de Matrícula, a mensagem MUST dizê-lo, sem nomear nem contar os
+  documentos; a mensagem da sucessora de convocação comunicada MUST dizer que a substitui, com a data
+  do envio substituído e o prazo que ele informava, e sem o motivo. A mensagem sai em HTML com
+  alternativa completa em texto, e o assunto segue o que a chamada pede (FR-3882 a FR-3887 da `121`).
+
+  > **Redação anterior à `121`, preservada:**
+  > A mensagem MUST conter o que fazer, o prazo e o canal de atendimento, e MUST NOT
+  > conter dado da inscrição além do necessário para identificar a chamada.
 
 **O recurso**
 
