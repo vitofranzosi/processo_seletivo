@@ -72,6 +72,11 @@ def problemas(peca):
     obstaculos = dict(template.dimensoes.get("obstaculos", {}))
     if template.area_da_imagem:
         obstaculos["imagem"] = template.area_da_imagem
+    # Os ativos posicionados que não recebem texto são obstáculo (D-011).
+    opacos = template.dimensoes.get("opacos", {})
+    for nome, (x, y, largura, altura) in template.ativos_posicionados.items():
+        if nome not in opacos:
+            obstaculos[nome] = (x, y, x + largura, y + altura)
 
     for texto in textos:
         nome = f"{texto.campo} {texto.conteudo!r}"
@@ -95,7 +100,8 @@ def problemas(peca):
             if _cruzam(texto.caixa, figura.caixa) and not _dentro(texto.caixa, figura.caixa):
                 achados.append(f"{nome}: cortado pelo {figura.campo}")
         if texto.fundo != fundo_da_pagina and any(
-            _dentro(texto.caixa, f.caixa) and texto.fundo == kit_peca.BRANCO for f in opacas
+            _dentro(texto.caixa, f.caixa) and texto.fundo == (f.cor or kit_peca.BRANCO)
+            for f in opacas
         ):
             continue
         if texto.fundo != fundo_da_pagina:

@@ -161,7 +161,7 @@ recusa e motivo.
 Cada família segue o mesmo roteiro das T037, T038, T040 e T041 (fontes, ativos, declaração com `RESUMOS`, referências) e da T046 (galeria e aprovação registrada por versão). Nenhuma toca o motor; se precisar, o ajuste do motor é tarefa
 própria, com as referências das famílias anteriores intactas.
 
-- [ ] T047 [US1] **3a — FIC**: Archivo Black, Barlow Semi Condensed, Space Mono; selo de prorrogação como faixa; bloco de contato (EC-4); três ofertas com carga horária (cenários 18, 19); `backend/processo_seletivo/interface/kit_familias/fic.py` e ativos em `kit_ativos/fic/`
+- [x] T047 [US1] **3a — FIC**: Archivo Black, Barlow Semi Condensed, Space Mono; selo de prorrogação como faixa; bloco de contato (EC-4); três ofertas com carga horária (cenários 18, 19); `backend/processo_seletivo/interface/kit_familias/fic.py` e ativos em `kit_ativos/fic/`
 - [ ] T048 [US1] **3b — Libras**: Unbounded e a substituta da Helvetica Neue (espera a P-2); recorte em círculo; `kit_familias/libras.py` e `kit_ativos/libras/`
 - [ ] T049 [US1] **3c — UAB/bolsista**: Anton e Poppins; chamada fixa "Seleção de bolsista" aprovada; `kit_familias/uab.py` e `kit_ativos/uab/`
 - [ ] T050 [US1] **3d — Aperfeiçoamento**: Unbounded, Lexend, Poppins; foto com clipe; `kit_familias/aperfeicoamento.py` e `kit_ativos/aperfeicoamento/`

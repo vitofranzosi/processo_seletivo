@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 91/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade FIC, com ilustração de uma estudante sorridente estudando ao notebook, numa mesa com livros. Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Inscrições até 30/10/2026, às 23h59 (horário de Brasília). Início em 13/10/2026. 80 vagas em 2 opções. Polo Bom Jesus do Norte — 480 horas: 40 vagas. Especialização em Informática na Educação — 480 horas: 40 vagas. Acesse o edital, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1500" height="850" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
+<image x="1183" y="161" width="258" height="175" preserveAspectRatio="none" data-campo="bolha" href="data:image/png;base64,MARCA"/>
+<image x="960" y="175" width="200" height="193" preserveAspectRatio="none" data-campo="megafone" href="data:image/png;base64,MARCA"/>
+<text x="100" y="173" font-family="Archivo Black" font-size="28" font-weight="400" fill="#5027ad" data-campo="titulo_sem_numero">Curso de Pós-graduação Lato Sensu em Informática</text>
+<text x="100" y="212" font-family="Archivo Black" font-size="28" font-weight="400" fill="#5027ad" data-campo="titulo_sem_numero">na Educação na modalidade EaD (DEMONSTRAÇÃO)</text>
+<text x="1312" y="222" font-family="Space Mono" font-size="32" font-weight="700" fill="#5027ad" text-anchor="middle" data-campo="identificacao">Edital nº</text>
+<text x="1312" y="269" font-family="Space Mono" font-size="32" font-weight="700" fill="#5027ad" text-anchor="middle" data-campo="identificacao">91/2026</text>
+<text x="100" y="363" font-family="Barlow Semi Condensed" font-size="36" font-weight="700" fill="#5027ad" data-campo="periodo_curto">Inscrições até 30/10/2026</text>
+<text x="100" y="414" font-family="Barlow Semi Condensed" font-size="30" font-weight="500" fill="#5027ad" data-campo="hora">às 23h59 (horário de Brasília)</text>
+<text x="100" y="462" font-family="Barlow Semi Condensed" font-size="30" font-weight="500" fill="#5027ad" data-campo="inicio">Início em 13/10/2026</text>
+<text x="100" y="511" font-family="Barlow Semi Condensed" font-size="30" font-weight="700" fill="#5027ad" data-campo="total_de_vagas">80 vagas em 2 opções</text>
+<text x="100" y="557" font-family="Barlow Semi Condensed" font-size="28" font-weight="700" fill="#5027ad" data-campo="oferta:1b8b03eb-3518-54af-bcf4-4a59017eab1f">Polo Bom Jesus do Norte — 480 horas: 40 vagas</text>
+<text x="100" y="603" font-family="Barlow Semi Condensed" font-size="28" font-weight="700" fill="#5027ad" data-campo="oferta:5697656f-4e68-5b16-a154-ab5d2861c32b">Especialização em Informática na Educação — 480 horas: 40 vagas</text>
+<image x="100" y="620" width="420" height="209" preserveAspectRatio="none" data-campo="balao" href="data:image/png;base64,MARCA"/>
+<text x="310" y="700" font-family="Barlow Semi Condensed" font-size="32" font-weight="700" fill="#ffffff" text-anchor="middle" data-campo="chamada_a_acao">Acesse o edital</text>
+<text x="310" y="752" font-family="Barlow Semi Condensed" font-size="28" font-weight="500" fill="#ffffff" text-anchor="middle" data-campo="busca">busque por 91/2026 – Cefor</text>
+<text x="540" y="728" font-family="Barlow Semi Condensed" font-size="28" font-weight="500" fill="#5027ad" data-campo="selo">Versão vigente desde 08/10/2026</text>
+<text x="540" y="768" font-family="Barlow Semi Condensed" font-size="28" font-weight="500" fill="#5027ad" data-campo="selo">· ref. IMPRESSAO</text>
+</svg>
