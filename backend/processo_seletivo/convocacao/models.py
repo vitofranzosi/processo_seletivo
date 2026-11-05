@@ -386,6 +386,17 @@ class ComunicacaoEmitida(models.Model):
         max_length=16, choices=[("ENVIADA", "Enviada"), ("FALHA", "Falha")]
     )
     detalhe_tecnico = models.TextField(blank=True, default="")
+    # **A versão exata do modelo que escreveu a mensagem** (121, D-009, FR-3889): `inicial:sha256:…`
+    # ou `correcao:sha256:…`, o resumo das duas fontes — HTML e texto — que renderizaram o envio,
+    # gravado na mesma linha do resultado, também na `FALHA`. O histórico de implantação não
+    # identificava a versão: a linha da ativação vem depois do *readiness*, e fica fora do banco e
+    # da suíte (R-001). O resumo confere-se contra o Git em qualquer commit, pela regra da R-009.
+    #
+    # Vazio na publicação, que não tem modelo, e nas linhas anteriores à `121`: nenhuma recebe
+    # versão
+    # atribuída depois. Sem `CheckConstraint` de formato — ela recusaria o vazio das publicações, e
+    # a forma é garantida pela função que calcula o valor e pelo teste.
+    modelo_da_mensagem = models.CharField(max_length=100, blank=True, default="")
 
     class Meta:
         constraints = [

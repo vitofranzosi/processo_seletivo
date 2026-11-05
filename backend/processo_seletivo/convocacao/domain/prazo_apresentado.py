@@ -47,12 +47,13 @@ class PrazoApresentado:
     data_curta: str
     #: *"faltam 7 dias"*, *"termina amanhã"*, *"termina hoje, às 17h00"*, ou vazio quando vencido.
     contagem: str
-    #: O instante de referência passou do vencimento: é o estado encerrado, e não há linha (FR-3874).
+    #: O instante de referência passou do vencimento: é o estado encerrado, e não há linha
+    #: (FR-3874).
     vencido: bool
 
     @property
     def ate(self):
-        """*"até 12/11/2026, às 17h00"* — o formato único das telas do candidato (FR-3747 da 118)."""
+        """*"até 12/11/2026, às 17h00"*: o formato único das telas do candidato (FR-3747)."""
         return f"até {self.data}, às {self.hora}"
 
     @property
@@ -82,7 +83,8 @@ class PrazoApresentado:
 def apresentar(vencimento: datetime, agora: datetime, fuso: tzinfo) -> PrazoApresentado:
     """O prazo de `vencimento` lido em `agora`, no `fuso` da instalação (FR-3873, FR-3874).
 
-    Os dois instantes são cientes de fuso; a data, a hora, o dia e a contagem são os do **dia local**
+    Os dois instantes são cientes de fuso; a data, a hora, o dia e a contagem são os do **dia
+    local**
     — um vencimento às 23h30 em São Paulo é 02h30 UTC do dia seguinte, e a pessoa lê o dia dela.
 
     Os casos sem linha que não são o vencido — a comunicação não enviada e a convocação sem

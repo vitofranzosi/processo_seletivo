@@ -30,7 +30,8 @@ def titulares_convocados(edital, gestor, *, falhar_o_segundo=False):
     previa = fluxo.previa_dos_titulares(edital=edital, **RECORTE)
     envios = [1, ConnectionError("smtp")] if falhar_o_segundo else [1, 1]
     with mock.patch(
-        "processo_seletivo.convocacao.application.comunicar.send_mail", side_effect=envios
+        "processo_seletivo.convocacao.application.comunicar.EmailMultiAlternatives.send",
+        side_effect=envios,
     ):
         return fluxo.convocar_titulares(
             actor=gestor,

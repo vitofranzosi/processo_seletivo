@@ -42,6 +42,13 @@ DA_115 = [
     PORTAL / "acompanhamento.html",
     RAIZ / "portal/obrigacoes.py",
     RAIZ / "portal/situacao.py",
+    # A `121` (FR-3892): a chamada, com a confirmação do envio — que diz "o arquivo aguarda", e
+    # nunca aceito, aprovado nem atendido (FR-3870) — e os modelos da mensagem.
+    PORTAL / "_chamada_da_convocacao.html",
+    RAIZ / "convocacao/templates/convocacao/mensagem/inicial.html",
+    RAIZ / "convocacao/templates/convocacao/mensagem/inicial.txt",
+    RAIZ / "convocacao/templates/convocacao/mensagem/correcao.html",
+    RAIZ / "convocacao/templates/convocacao/mensagem/correcao.txt",
 ]
 
 PROIBIDOS = {

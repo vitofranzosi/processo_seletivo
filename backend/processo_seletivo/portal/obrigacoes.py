@@ -128,8 +128,8 @@ ETAPAS = {
     "opcional para a comissão conferir.",
     (False, False): "Nesta etapa, você pode enviar documento opcional para a comissão conferir.",
 }
-# **"Matrícula" só com o Requerimento de Matrícula** (D-003): num Edital de bolsista, que não o pede,
-# "ainda não é a matrícula" seria falso.
+# **"Matrícula" só com o Requerimento de Matrícula** (D-003): num Edital de bolsista, que não o
+# pede, "ainda não é a matrícula" seria falso.
 RESSALVA_DA_MATRICULA = (
     "Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o "
     "resultado."
@@ -228,8 +228,8 @@ class ConfirmacaoDoEnvio:
 def confirmacao_do_envio(projecao, *, item_id, apresentacao_id, ja_recebido):
     """A confirmação do envio aceito, montada da projeção depois dele (FR-3870, R-006).
 
-    Cada volta mostra só o seu envio (D-010); o andamento mostra o acumulado. O mesmo arquivo de novo
-    diz só que já tinha sido recebido, sem próxima tarefa nova.
+    Cada volta mostra só o seu envio (D-010); o andamento mostra o acumulado. O mesmo arquivo de
+    novo diz só que já tinha sido recebido, sem próxima tarefa nova.
     """
     item = next((i for i in projecao.itens if str(i.id) == str(item_id)), None)
     if item is None:
@@ -259,8 +259,8 @@ _POR_PUBLICACAO = "PUBLICATION"
 def linha_da_substituida(anterior):
     """A linha *"Convocação substituída"* dos dados do ato, da **imediatamente anterior** (FR-3869).
 
-    **A anterior, e não a última comunicada da cadeia** (R-008, D-008): a mensagem da correção cita a
-    última enviada com sucesso, e os dados do ato dizem qual convocação esta substituiu. As duas
+    **A anterior, e não a última comunicada da cadeia** (R-008, D-008): a mensagem da correção cita
+    a última enviada com sucesso, e os dados do ato dizem qual convocação esta substituiu. As duas
     leituras são diferentes por decisão do usuário, e não se unificam.
 
     Lê só o que `vigentes_por_inscricao` já trouxe no *prefetch* — a anterior e as comunicações dela
@@ -774,8 +774,8 @@ class Obrigacoes:
     @property
     def primeira_ancora(self):
         """A âncora da primeira tarefa da FR-3726 — e a do Requerimento quando ele é a única (121,
-        FR-3863, SC-1151). Antes da `121` ela só olhava documentos, e o botão sumia justamente quando
-        a única coisa a fazer era o Requerimento."""
+        FR-3863, SC-1151). Antes da `121` ela só olhava documentos, e o botão sumia justamente
+        quando a única coisa a fazer era o Requerimento."""
         tarefas = self.tarefas_de_documento
         if tarefas:
             return tarefas[0].ancora

@@ -2667,11 +2667,11 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     **Volta à tela da convocação**, com o resultado dito lá: a recusa sobre o arquivo e a de prazo
     são as mesmas da inscrição e do requerimento.
 
-    **Aceito, a volta é `#confirmacao`; recusado, o cartão do item** (121, FR-3870, FR-3871). A volta
-    ao cartão deixava a confirmação no topo, fora da tela, e o cartão — que já tinha descido para *O
-    que você já apresentou* — sem dizer o que acontecera. A confirmação é o primeiro elemento da
-    chamada, focável pela âncora sem script; a recusa fica no próprio cartão, e `recusa.js` lhe dá o
-    foco.
+    **Aceito, a volta é `#confirmacao`; recusado, o cartão do item** (121, FR-3870, FR-3871). A
+    volta ao cartão deixava a confirmação no topo, fora da tela, e o cartão — que já tinha descido
+    para *O que você já apresentou* — sem dizer o que acontecera. A confirmação é o primeiro
+    elemento da chamada, focável pela âncora sem script; a recusa fica no próprio cartão, e
+    `recusa.js` lhe dá o foco.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
 

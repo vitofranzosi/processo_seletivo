@@ -19,8 +19,28 @@ import pytest
 from django.core import mail
 
 from processo_seletivo.convocacao.application.comunicar import enviar_mensagem_de_convocacao
+from processo_seletivo.convocacao.domain.mensagem import INICIAL, SO_DOCUMENTO, EscolhaDaMensagem
 
 VENCIMENTO = datetime(2026, 9, 20, 17, 0, tzinfo=UTC)
+ENVIO = datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
+
+
+def dados_da_mensagem(**overrides):
+    """O que `_enviar` resolve antes de chamar a função: nada da inscrição além do link (121)."""
+    return {
+        "edital": "Edital 77/2026",
+        "processo": "Processo Seletivo de Alunos",
+        "vencimento": VENCIMENTO,
+        "enviado_em": ENVIO,
+        "link": "https://selecoes.exemplo.test/selecoes/inscricoes/abc/convocacao",
+        "escolha": EscolhaDaMensagem(INICIAL, SO_DOCUMENTO),
+        "atendimento": "selecao@exemplo.test",
+        # A unidade do Edital, que quem envia resolve (109): a função a recebe pronta.
+        "assinatura": "Cefor/Ifes",
+        "unidade": "Cefor",
+        **overrides,
+    }
+
 
 # O que **não** pode estar na mensagem, e por quê: dados da pessoa que a mensagem não precisa para
 # cumprir a sua função, e a frase que promete o que a convocação não decide.
@@ -44,17 +64,10 @@ def caixa(settings):
 
 
 def enviar(caixa, **overrides):
-    dados = {
-        "edital": "Edital 77/2026",
-        "vencimento": VENCIMENTO,
-        "endereco": "https://selecoes.exemplo.test/portal/minhas-inscricoes",
-        "atendimento": "selecao@exemplo.test",
-        # A unidade do Edital, que quem envia resolve (109): a função a recebe pronta.
-        "assinatura": "Cefor/Ifes",
-    }
-    dados.update(overrides)
-    detalhe = enviar_mensagem_de_convocacao(para="candidata@exemplo.test", dados=dados)
-    assert detalhe == "", "o caminho feliz não devolve detalhe técnico"
+    envio = enviar_mensagem_de_convocacao(
+        para="candidata@exemplo.test", dados=dados_da_mensagem(**overrides)
+    )
+    assert envio.detalhe == "", "o caminho feliz não devolve detalhe técnico"
     return caixa[-1]
 
 
@@ -64,14 +77,19 @@ class TestOQueAMensagemDiz:
         mensagem = enviar(caixa)
 
         assert "20/09/2026" in mensagem.body, "até quando"
-        assert "acesse a sua área" in mensagem.body, "o que fazer"
+        # O que fazer, pela frase da obrigação (121, FR-3884, revendo a FR-290 da 019).
+        assert "que você envia pela sua área do candidato" in mensagem.body, "o que fazer"
         assert "selecao@exemplo.test" in mensagem.body, "com quem falar"
 
     def test_o_assunto_nomeia_o_edital(self, caixa):
-        """Quem recebe precisa saber de qual certame se trata antes de abrir."""
+        """Quem recebe precisa saber de qual certame se trata antes de abrir — e, desde a 121, o que
+        a chamada pede e até quando (FR-3884)."""
         mensagem = enviar(caixa)
 
-        assert mensagem.subject == "Convocação — Edital 77/2026"
+        assert (
+            mensagem.subject
+            == "Ifes · Convocação no Edital 77/2026: envie seus documentos até 20/09"
+        )
 
     def test_o_prazo_diz_de_que_referencia_corre(self, caixa):
         """`UX-038`: um prazo sem referência é uma data solta.
@@ -123,19 +141,13 @@ class TestAFalhaNaoInterrompe:
         """
         settings.EMAIL_BACKEND = "tests.unit.convocacao.test_mensagem.CorreioQueFalha"
 
-        detalhe = enviar_mensagem_de_convocacao(
-            para="candidata@exemplo.test",
-            dados={
-                "edital": "Edital 77/2026",
-                "vencimento": VENCIMENTO,
-                "endereco": "https://selecoes.exemplo.test/portal",
-                "atendimento": "selecao@exemplo.test",
-                "assinatura": "Cefor/Ifes",
-            },
+        envio = enviar_mensagem_de_convocacao(
+            para="candidata@exemplo.test", dados=dados_da_mensagem()
         )
 
-        assert detalhe
-        assert "candidata@exemplo.test" not in detalhe
+        assert envio.detalhe
+        assert "candidata@exemplo.test" not in envio.detalhe
+        assert envio.modelo.startswith("inicial:sha256:"), "a falha grava o modelo (FR-3889)"
 
 
 class CorreioQueFalha:
@@ -157,13 +169,20 @@ def test_o_prazo_e_dito_no_fuso_de_quem_le(caixa):
     descobriria não ter depois de perder.
 
     *A primeira versão deste teste afirmava "17:00" e prendia o defeito em vez de acusá-lo.*
+
+    Desde a 121 o prazo sai da função única, com o dia da semana e no formato `HHhMM` (FR-3873,
+    FR-3875): a mesma do portal.
     """
-    from django.utils import timezone
+    from zoneinfo import ZoneInfo
+
+    from django.conf import settings
+
+    from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
 
     mensagem = enviar(caixa)
-    local = timezone.localtime(VENCIMENTO).strftime("%d/%m/%Y às %H:%M")
+    prazo = apresentar(VENCIMENTO, ENVIO, ZoneInfo(settings.TIME_ZONE))
 
-    assert local in mensagem.body
+    assert f"até {prazo.por_extenso}, contado do envio desta mensagem" in mensagem.body
     assert "2026-09-20T17:00" not in mensagem.body
 
 
@@ -173,8 +192,9 @@ def test_o_prazo_em_sao_paulo_sai_tres_horas_antes_do_utc(caixa, settings):
 
     mensagem = enviar(caixa)
 
-    assert "20/09/2026 às 14:00" in mensagem.body
-    assert "às 17:00" not in mensagem.body
+    # `HHhMM`, e nunca `HH:MM` (121, FR-3875).
+    assert "domingo, 20/09/2026, às 14h00" in mensagem.body
+    assert "17h00" not in mensagem.body and ":00" not in mensagem.body
 
 
 class CorreioQueEngole:
@@ -200,16 +220,7 @@ def test_o_retorno_zero_do_correio_e_falha(settings):
     """
     settings.EMAIL_BACKEND = "tests.unit.convocacao.test_mensagem.CorreioQueEngole"
 
-    detalhe = enviar_mensagem_de_convocacao(
-        para="candidata@exemplo.test",
-        dados={
-            "edital": "Edital 77/2026",
-            "vencimento": VENCIMENTO,
-            "endereco": "https://selecoes.exemplo.test/portal",
-            "atendimento": "selecao@exemplo.test",
-            "assinatura": "Cefor/Ifes",
-        },
-    )
+    envio = enviar_mensagem_de_convocacao(para="candidata@exemplo.test", dados=dados_da_mensagem())
 
-    assert detalhe, "zero mensagens entregues é falha, e não sucesso"
-    assert "candidata@exemplo.test" not in detalhe
+    assert envio.detalhe, "zero mensagens entregues é falha, e não sucesso"
+    assert "candidata@exemplo.test" not in envio.detalhe

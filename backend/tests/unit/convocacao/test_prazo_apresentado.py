@@ -65,7 +65,7 @@ class TestODiaLocal:
         assert prazo.linha == "quinta-feira · faltam 2 dias"
 
     def test_vencimento_a_meia_noite_e_o_instante_no_fuso(self):
-        """Caso-limite: 00h00 de 11/11 é quarta-feira, 11/11/2026, às 00h00 — e não "fim de 10/11"."""
+        """Caso-limite: 00h00 de 11/11 é quarta-feira, 11/11/2026, às 00h00, não "fim de 10/11"."""
         prazo = apresentar(local(2026, 11, 11, 0, 0), local(2026, 11, 9, 10, 0), SP)
 
         assert prazo.data == "11/11/2026"

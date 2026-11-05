@@ -13,9 +13,16 @@ publicação não passa por caixa de entrada nenhuma.
 """
 
 import logging
+import re
+from dataclasses import dataclass
+from types import SimpleNamespace
+from urllib.parse import urljoin
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
+from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
@@ -23,12 +30,25 @@ from processo_seletivo.classificacao.domain.universo import por_identidade
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.domain import nomes, prazo
-from processo_seletivo.convocacao.models import ComunicacaoEmitida, Convocacao
+from processo_seletivo.convocacao.domain.mensagem import (
+    CORRECAO,
+    INICIAL,
+    escolha_da_mensagem,
+    identificacao_do_modelo,
+)
+from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
+from processo_seletivo.convocacao.models import (
+    ComunicacaoEmitida,
+    Convocacao,
+    ItemDaListaDaConvocacao,
+)
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_POR_MENSAGEM_INDIVIDUAL,
     FORMA_POR_PUBLICACAO,
     FORMAS_DE_CONVOCACAO,
 )
+from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
+from processo_seletivo.requerimentos.domain.disponibilidade import momento_declarado
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.unidades.application import identificacao
 
@@ -37,29 +57,28 @@ logger = logging.getLogger("processo_seletivo.convocacao")
 COMUNICAR = "CONVOCACAO_COMUNICAR"
 ATO = "convocacao:comunicar"
 
-ASSUNTO = "Convocação — {edital}"
-
-# **O mínimo necessário** (`FR-290`): o que fazer, até quando, e por onde falar com a instituição.
-# Sem CPF, sem telefone, sem pontuação e sem posição na ordem — dados que não ajudam quem lê e
-# viajam para onde a mensagem for encaminhada.
+# **O texto da mensagem mora em arquivos de modelo, e não aqui** (121, FR-3882, D-009). Cada envio
+# grava o resumo das duas fontes que o renderizaram (`modelo_da_mensagem`), e só o que está no
+# arquivo entra no resumo: uma frase escrita neste módulo sairia sem versão identificável. Por isso
+# o assunto também mora no modelo, na primeira linha do texto puro.
 #
-# **E sem afirmar direito à vaga** (`FR-292c`): a convocação chama para cumprir uma etapa, e o que
-# decide a vaga é o que a pessoa fizer dentro do prazo.
-CORPO = """Você foi convocada(o) no {edital}.
+# O mínimo necessário continua (`FR-290`, revista pela `121`): o que a chamada pede, sem nomear nem
+# contar documentos, até quando, como entrar e por onde falar. Sem CPF, sem nome, sem posição na
+# ordem; e sem afirmar direito à vaga (`FR-292c`).
+MODELOS = {
+    INICIAL: ("convocacao/mensagem/inicial.html", "convocacao/mensagem/inicial.txt"),
+    CORRECAO: ("convocacao/mensagem/correcao.html", "convocacao/mensagem/correcao.txt"),
+}
+SEM_ENDERECO = "sem endereço de destino para esta Inscrição"
 
-{prazo}
 
-O que fazer: acesse a sua área e siga as instruções da convocação em
-{endereco}
+@dataclass(frozen=True)
+class Envio:
+    """O que o envio devolve: o detalhe técnico da falha, ou `""`, e o modelo que renderizou."""
 
-Em caso de dúvida, fale com {atendimento}.
+    detalhe: str
+    modelo: str
 
-{assinatura} — Seleções
-Esta mensagem é automática; não responda.
-"""
-
-COM_PRAZO = "Prazo para atender: até {vencimento}, contado do envio desta mensagem."
-SEM_PRAZO = "O prazo para atender é o que o Edital publica."
 
 #: A data da revisão escrita da `FR-084` da `010`, declarada aqui e conferida contra a spec por
 #: `tests/test_situacoes_de_mensagem.py`.
@@ -198,12 +217,16 @@ def comunicar(
             409,
         )
 
-    destinatario, detalhe = "", ""
+    destinatario, detalhe, modelo = "", "", ""
     if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
         destinatario = destinatario_de(convocacao)
-        detalhe = _enviar(
-            convocacao, destinatario=destinatario, endereco_do_portal=endereco_do_portal
+        envio = _enviar(
+            convocacao,
+            destinatario=destinatario,
+            endereco_do_portal=endereco_do_portal,
+            agora=agora,
         )
+        detalhe, modelo = envio.detalhe, envio.modelo
 
     with comando_de_comissao(
         actor=actor,
@@ -224,6 +247,10 @@ def comunicar(
             enviado_em=None if detalhe else agora,
             resultado="FALHA" if detalhe else "ENVIADA",
             detalhe_tecnico=detalhe,
+            # A versão do modelo que renderizou, na mesma linha e na mesma transação do resultado
+            # — também na falha, que diz qual texto se tentou enviar (121, FR-3889). Vazia na
+            # publicação, que não tem modelo.
+            modelo_da_mensagem=modelo,
         )
         emitida.save()
         return _concluir(ctx, emitida, actor, correlation_id, idempotency_key)
@@ -305,77 +332,165 @@ def _recusar_vencimento_anterior_ao_envio(convocacao, *, agora):
         )
 
 
-def _enviar(convocacao, *, destinatario, endereco_do_portal):
-    """Põe a mensagem na fila e devolve o detalhe técnico da falha, ou `""` no sucesso.
+def escolha_de(convocacao, *, instante):
+    """A mensagem que sai para `convocacao` no `instante`, só de registros gravados (121, R-002).
+
+    **A mesma função no envio e na reconstrução** (FR-3889): chamada depois, sobre os mesmos
+    registros, ela devolve o mesmo modelo, a mesma variante e a mesma citada. A cadeia é lida de uma
+    vez — todas as convocações da inscrição, com as comunicações — e percorrida em memória, da
+    imediatamente anterior à raiz. A lista é a da raiz, que é a dona dela (D-009 da `115`); o
+    Requerimento é o da versão que a convocação citou, e não o de hoje.
+    """
+    da_inscricao = {
+        elo.id: elo
+        for elo in Convocacao.objects.filter(inscricao_id=convocacao.inscricao_id).prefetch_related(
+            "comunicacoes"
+        )
+    }
+    anteriores, raiz_id = [], convocacao.id
+    atual = da_inscricao.get(convocacao.convocacao_anterior_id)
+    while atual is not None:
+        anteriores.append(
+            SimpleNamespace(
+                vencimento=atual.vencimento, comunicacoes=list(atual.comunicacoes.all())
+            )
+        )
+        raiz_id = atual.id
+        atual = da_inscricao.get(atual.convocacao_anterior_id)
+    itens = ItemDaListaDaConvocacao.objects.filter(chamada_id=raiz_id).only(
+        "situacao", "gravada_em"
+    )
+    return escolha_da_mensagem(
+        itens=list(itens),
+        instante=instante,
+        requerimento_na_chamada=(
+            momento_declarado(convocacao.versao.content) == requerimento_nomes.NA_CONVOCACAO
+        ),
+        anteriores=anteriores,
+    )
+
+
+def link_da_convocacao(endereco_do_portal, inscricao_id):
+    """A convocação da inscrição, juntada à origem do portal; o caminho, sem base (121, FR-3883).
+
+    O link nunca autentica (P-001 da `010`): sem sessão, ele leva ao acesso, e depois do código à
+    convocação. O identificador da inscrição só vai aqui (FR-1102 da `059`).
+    """
+    return urljoin(endereco_do_portal or "", reverse("portal:convocacao", args=[inscricao_id]))
+
+
+def _enviar(convocacao, *, destinatario, endereco_do_portal, agora=None, escolha=None):
+    """Monta e envia a mensagem, e devolve o `Envio`: o detalhe da falha e o modelo que renderizou.
 
     **Sem dado pessoal no detalhe técnico**: ele vai para o registro e para a tela de quem conduz o
     certame, e o endereço de alguém não tem por que estar em nenhum dos dois.
     """
-    if not destinatario:
-        return "sem endereço de destino para esta Inscrição"
+    agora = agora or timezone.now()
+    escolha = escolha or escolha_de(convocacao, instante=agora)
     # A unidade do Edital assina e diz por onde falar (109, FR-3209, FR-3212). Uma leitura por
     # envio, e o envio é de uma pessoa: a convocação por mensagem individual não sai em lote.
     unidade = identificacao.da_unidade(convocacao.edital.institution_scope)
+    conteudo = convocacao.versao.content or {}
     return enviar_mensagem_de_convocacao(
         para=destinatario,
         dados={
             "edital": f"Edital {convocacao.edital.number}/{convocacao.edital.year}",
+            "processo": conteudo.get("processoTitle", ""),
             "vencimento": convocacao.vencimento,
-            "endereco": endereco_do_portal,
+            "enviado_em": agora,
+            "link": link_da_convocacao(endereco_do_portal, convocacao.inscricao_id),
+            "escolha": escolha,
+            "requerimento_exigido": bool(momento_declarado(conteudo)),
             "atendimento": unidade.canal("a comissão do certame"),
             "assinatura": unidade.rotulo,
+            "unidade": unidade.sigla,
         },
     )
+
+
+def _contexto(dados):
+    """O que os modelos leem: o prazo apresentado no fuso da instalação, do instante do envio."""
+    fuso = ZoneInfo(settings.TIME_ZONE)
+    enviado_em = dados.get("enviado_em") or timezone.now()
+    escolha = dados["escolha"]
+    citada = escolha.citada
+    return {
+        "instituicao": identificacao.SIGLA_DA_INSTITUICAO,
+        "instituicao_por_extenso": identificacao.NOME_DA_INSTITUICAO,
+        "unidade": dados.get("unidade", ""),
+        "edital": dados["edital"],
+        "processo": dados.get("processo", ""),
+        "variante": escolha.variante,
+        "prazo": (
+            apresentar(dados["vencimento"], enviado_em, fuso) if dados.get("vencimento") else None
+        ),
+        "link": dados["link"],
+        "requerimento_exigido": dados.get("requerimento_exigido", False),
+        # Chega resolvida, como o canal: quem envia sabe o Edital (109). Exigida, e sem recaída —
+        # uma recaída aqui seria um Cefor escrito de novo, ou uma consulta que a função não faz.
+        "assinatura": dados["assinatura"],
+        "atendimento": dados["atendimento"],
+        "citada_enviada": apresentar(citada.enviado_em, enviado_em, fuso) if citada else None,
+        "citada_prazo": (
+            apresentar(citada.vencimento, enviado_em, fuso)
+            if citada and citada.vencimento
+            else None
+        ),
+    }
+
+
+def _assunto_e_corpo(texto):
+    """A primeira linha do texto puro é o assunto; o resto, sem as linhas vazias das tags."""
+    linhas = [linha.rstrip() for linha in texto.strip("\n").split("\n")]
+    corpo = re.sub(r"\n{3,}", "\n\n", "\n".join(linhas[1:]).strip("\n"))
+    return linhas[0].strip(), corpo + "\n"
 
 
 def enviar_mensagem_de_convocacao(*, para, dados):
     """A terceira situação em que o sistema envia mensagem (`FR-084` da `010`, revisada).
 
-    **Nada da inscrição além do necessário para identificar a chamada** (`FR-290`): o Edital, o
-    prazo e o canal de atendimento. Nem CPF, nem telefone, nem pontuação, nem posição na ordem.
+    **HTML e texto puro, dos modelos da mensagem** (121, FR-3882 a FR-3887): o texto contém tudo o
+    que o HTML diz, e a mensagem diz o que a chamada pede, com o prazo e o dia da semana, o link da
+    convocação e o que o Ifes nunca pede por e-mail.
 
-    **Nenhum link que autentica** (P-001 da `010`): a mensagem manda a pessoa à área dela, e a
-    entrada continua sendo por código digitado.
+    **A renderização vem antes da conferência do destinatário** (121, plano, seção 5): toda
+    tentativa
+    tem modelo, e a falha por endereço ausente também grava qual texto se tentou enviar. Nada sai a
+    mais: sem endereço, nada sai.
+
+    **Nenhum link que autentica** (P-001 da `010`): o link leva à convocação, e a entrada continua
+    sendo por código digitado.
     """
-    corpo = CORPO.format(
-        edital=dados["edital"],
-        prazo=(
-            COM_PRAZO.format(
-                # **No fuso da instalação, e não em UTC.** `strftime` sobre um instante ciente
-                # formata no fuso que ele carrega: um vencimento gravado às 17:00 UTC saía
-                # como "17:00" numa mensagem lida em São Paulo, onde ele vence às 14:00 — três
-                # horas a mais de prazo que a pessoa não tem.
-                vencimento=timezone.localtime(dados["vencimento"]).strftime("%d/%m/%Y às %H:%M")
-            )
-            if dados.get("vencimento")
-            else SEM_PRAZO
-        ),
-        endereco=dados["endereco"] or "a área do candidato, no endereço do certame",
-        atendimento=dados["atendimento"],
-        # Chega resolvida, como o canal: quem envia sabe o Edital (109). Exigida, e sem recaída —
-        # uma recaída aqui seria um Cefor escrito de novo, ou uma consulta que a função não faz.
-        assinatura=dados["assinatura"],
+    nome = dados["escolha"].modelo
+    html_do_modelo, texto_do_modelo = (get_template(caminho) for caminho in MODELOS[nome])
+    contexto = _contexto(dados)
+    html = html_do_modelo.render(contexto)
+    assunto, corpo = _assunto_e_corpo(texto_do_modelo.render(contexto))
+    # O resumo das fontes que acabaram de renderizar, e não do arquivo relido do disco (R-009).
+    modelo = identificacao_do_modelo(nome, html_do_modelo, texto_do_modelo)
+    if not para:
+        return Envio(SEM_ENDERECO, modelo)
+    mensagem = EmailMultiAlternatives(
+        subject=assunto,
+        body=corpo,
+        from_email=settings.DEFAULT_FROM_EMAIL or None,
+        to=[para],
     )
+    mensagem.attach_alternative(html, "text/html")
     try:
-        # **O retorno é contado**, e não descartado: `send_mail` devolve quantas mensagens entraram
-        # na fila, e um backend que engole a mensagem devolve `0` sem levantar exceção nenhuma.
+        # **O retorno é contado**, e não descartado: o envio devolve quantas mensagens entraram na
+        # fila, e um backend que engole a mensagem devolve `0` sem levantar exceção nenhuma.
         # Ignorá-lo gravava `ENVIADA` e iniciava o prazo de uma convocação que não saiu — a falha
         # mais silenciosa possível, porque tudo indica sucesso.
-        entregues = send_mail(
-            subject=ASSUNTO.format(edital=dados["edital"]),
-            message=corpo,
-            from_email=settings.DEFAULT_FROM_EMAIL or None,
-            recipient_list=[para],
-            fail_silently=False,
-        )
+        entregues = mensagem.send(fail_silently=False)
     except Exception as erro:
         # Sem o endereço: o registro técnico diz que falhou e qual foi o erro, e nada além disso.
         logger.exception("Falha ao emitir a comunicação de convocação.")
-        return f"{type(erro).__name__}: falha na emissão"
+        return Envio(f"{type(erro).__name__}: falha na emissão", modelo)
     if not entregues:
         logger.error("A comunicação de convocação não foi aceita pelo servidor de correio.")
-        return "o servidor de correio não aceitou a mensagem"
-    return ""
+        return Envio("o servidor de correio não aceitou a mensagem", modelo)
+    return Envio("", modelo)
 
 
 def _concluir(ctx, emitida, actor, correlation_id, idempotency_key):
@@ -409,10 +524,14 @@ def _concluir(ctx, emitida, actor, correlation_id, idempotency_key):
 
 
 __all__ = [
+    "MODELOS",
     "REVISAO_DA_FR_084",
+    "Envio",
     "comunicar",
     "destinatario_de",
     "enviar_mensagem_de_convocacao",
+    "escolha_de",
     "forma_declarada",
     "guarda_da_revisao_da_010",
+    "link_da_convocacao",
 ]

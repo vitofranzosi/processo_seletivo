@@ -167,7 +167,7 @@ def test_as_comunicacoes_que_falharam_sao_reemitidas_num_gesto(
     """`FR-874`: a falha fica na lista das pendentes, e um botão as emite de novo."""
     edital, _, _ = cenario_da_tela
     with mock.patch(
-        "processo_seletivo.convocacao.application.comunicar.send_mail",
+        "processo_seletivo.convocacao.application.comunicar.EmailMultiAlternatives.send",
         side_effect=ConnectionError("smtp"),
     ):
         fluxo.convocar_titulares(
