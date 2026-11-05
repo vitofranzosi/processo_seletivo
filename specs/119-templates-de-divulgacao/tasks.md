@@ -162,7 +162,7 @@ Cada família segue o mesmo roteiro das T037, T038, T040 e T041 (fontes, ativos,
 própria, com as referências das famílias anteriores intactas.
 
 - [x] T047 [US1] **3a — FIC**: Archivo Black, Barlow Semi Condensed, Space Mono; selo de prorrogação como faixa; bloco de contato (EC-4); três ofertas com carga horária (cenários 18, 19); `backend/processo_seletivo/interface/kit_familias/fic.py` e ativos em `kit_ativos/fic/`
-- [ ] T048 [US1] **3b — Libras**: Unbounded e a substituta da Helvetica Neue (espera a P-2); recorte em círculo; `kit_familias/libras.py` e `kit_ativos/libras/`
+- [x] T048 [US1] **3b — Libras**: Unbounded e a Inter, a substituta da Helvetica Neue (P-2, 05/11/2026), que entra em leve, regular e negrito para Internos e TMD não tocarem nas fontes; recorte em círculo; `kit_familias/libras.py` e `kit_ativos/libras/`
 - [x] T049 [US1] **3c — UAB/bolsista**: Anton e Poppins; chamada fixa "Seleção de bolsista" aprovada; `kit_familias/uab.py` e `kit_ativos/uab/`
 - [x] T050 [US1] **3d — Aperfeiçoamento**: Unbounded, Lexend, Poppins; foto com clipe; `kit_familias/aperfeicoamento.py` e `kit_ativos/aperfeicoamento/`
 - [ ] T051 [US1] **3e — Internos**: variantes `servidores` e `estudantes` (EC-19, cenário 23); recorte em losango; substituta da Helvetica Neue (P-2); `kit_familias/internos.py` e `kit_ativos/internos/`

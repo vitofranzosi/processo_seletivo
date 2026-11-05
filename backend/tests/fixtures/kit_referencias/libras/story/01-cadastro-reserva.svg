@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 01/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade Libras, com foto em círculo de três pessoas sentadas conversando em Libras. Edital nº 01/2026: Professor Substituto e Técnico-Administrativo. Inscrições até 31/10/2026, às 09h43 (horário de Brasília). Início em 11/10/2026. Professor de Informática — Campus Serra: 2 vagas e cadastro reserva. Técnico de Laboratório — Campus Vitória: cadastro reserva. Acesse o link na bio, busque por 01/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1080" height="1920" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
+<text x="540" y="876" font-family="Inter" font-size="60" font-weight="700" fill="#000000" text-anchor="middle" data-campo="titulo_sem_numero">Professor Substituto e</text>
+<text x="540" y="961" font-family="Inter" font-size="60" font-weight="700" fill="#000000" text-anchor="middle" data-campo="titulo_sem_numero">Técnico-Administrativo</text>
+<text x="540" y="1052" font-family="Unbounded" font-size="46" font-weight="700" fill="#000000" text-anchor="middle" data-campo="identificacao">Edital nº 01/2026</text>
+<text x="540" y="1235" font-family="Unbounded" font-size="44" font-weight="700" fill="#000000" text-anchor="middle" data-campo="periodo_curto">Inscrições até 31/10/2026</text>
+<text x="540" y="1289" font-family="Inter" font-size="32" font-weight="400" fill="#000000" text-anchor="middle" data-campo="hora">às 09h43 (horário de Brasília)</text>
+<text x="540" y="1340" font-family="Inter" font-size="32" font-weight="400" fill="#000000" text-anchor="middle" data-campo="inicio">Início em 11/10/2026</text>
+<text x="540" y="1390" font-family="Inter" font-size="32" font-weight="400" fill="#000000" text-anchor="middle" data-campo="oferta:00000000-0000-0000-0001-0000000000b1">Professor de Informática — Campus Serra: 2 vagas e</text>
+<text x="540" y="1436" font-family="Inter" font-size="32" font-weight="400" fill="#000000" text-anchor="middle" data-campo="oferta:00000000-0000-0000-0001-0000000000b1">cadastro reserva</text>
+<text x="540" y="1486" font-family="Inter" font-size="32" font-weight="400" fill="#000000" text-anchor="middle" data-campo="oferta:00000000-0000-0000-0001-0000000000b2">Técnico de Laboratório — Campus Vitória: cadastro reserva</text>
+<text x="540" y="1533" font-family="Inter" font-size="28" font-weight="400" fill="#000000" text-anchor="middle" data-campo="busca">busque por 01/2026 – Cefor</text>
+<text x="540" y="1577" font-family="Inter" font-size="28" font-weight="400" fill="#000000" text-anchor="middle" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+<text x="544" y="1632" font-family="Unbounded" font-size="32" font-weight="400" fill="#000000" text-anchor="middle" data-campo="chamada_a_acao">Acesse o link na bio</text>
+</svg>
