@@ -15,4 +15,12 @@
     return;
   }
   recusa.focus();
+  /* A recusa no cartão da convocação (121, FR-3871): a volta é a âncora do item, e o navegador
+     trata a âncora **depois** deste script, focando o cartão — que é focável, para a âncora da 118.
+     O foco volta à recusa no `load`, quando a âncora já foi tratada; antes dele, nada a fazer. */
+  window.addEventListener("load", function () {
+    if (document.activeElement !== recusa) {
+      recusa.focus();
+    }
+  });
 })();

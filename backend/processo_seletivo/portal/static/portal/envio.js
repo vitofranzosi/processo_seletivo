@@ -48,6 +48,56 @@
     });
   });
 
+  /* O formulário sem htmx: o envio de documento da convocação (121, FR-3872, R-007).
+
+     Ali o envio é POST comum, porque a volta precisa ser a âncora `#confirmacao`, com o foco dado
+     pelo próprio navegador, sem script — trocar a resposta por fragmento perderia isso. Só que os
+     ouvintes acima são do htmx, e com eles o "Enviando… não feche esta página." que o cartão já
+     traz nunca aparecia. Aqui ele aparece no `submit`, e o botão fica desabilitado até a página
+     seguinte; a barra fica indeterminada, porque sem o htmx não há evento de progresso a medir.
+
+     Só no formulário marcado com `data-envio` e sem `hx-post`: o da inscrição continua no ramo do
+     htmx, que mede o percentual. */
+  function semHtmx(formulario) {
+    return (
+      formulario &&
+      formulario.hasAttribute &&
+      formulario.hasAttribute("data-envio") &&
+      !formulario.hasAttribute("hx-post")
+    );
+  }
+
+  document.body.addEventListener("submit", function (evento) {
+    var formulario = evento.target;
+    if (!semHtmx(formulario)) return;
+    var bloco = progressoDe(formulario);
+    if (bloco) {
+      bloco.hidden = false;
+      var barra = bloco.querySelector("progress");
+      if (barra) barra.removeAttribute("value");
+    }
+    botoesDe(formulario).forEach(function (botao) {
+      botao.disabled = true;
+    });
+  });
+
+  /* A volta pelo botão "voltar" do navegador restaura a página do cache como estava no instante do
+     envio — com o botão desabilitado e o aviso à mostra. Sem isto, a pessoa ficaria sem como enviar
+     de novo. */
+  if (typeof window !== "undefined" && window.addEventListener) {
+    window.addEventListener("pageshow", function () {
+      var formularios = document.querySelectorAll("form[data-envio]");
+      for (var i = 0; i < formularios.length; i++) {
+        if (!semHtmx(formularios[i])) continue;
+        var bloco = progressoDe(formularios[i]);
+        if (bloco) bloco.hidden = true;
+        botoesDe(formularios[i]).forEach(function (botao) {
+          botao.disabled = false;
+        });
+      }
+    });
+  }
+
   /* A falha que não aparecia.
 
      O htmx só troca conteúdo em resposta bem-sucedida — o que está certo, e por isso mesmo uma
