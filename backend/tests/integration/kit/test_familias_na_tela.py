@@ -163,7 +163,7 @@ def test_versao_divergente_da_liberada_diz_versao_nova(comunicacao, edital, sett
 
 def test_escolha_fora_da_lista_na_tela_abre_com_a_pre_escolha_e_diz_por_que(comunicacao, edital):
     # Uma família que nenhum módulo registra: fora da lista fechada (EC-9).
-    resposta = _tela(comunicacao, edital, familia="libras")
+    resposta = _tela(comunicacao, edital, familia="inexistente")
     assert resposta.status_code == 200
     assert resposta.context["escolha"].familia.chave == institucional.CHAVE
     assert kit_escolha.ESCOLHA_INDISPONIVEL in resposta.content.decode()

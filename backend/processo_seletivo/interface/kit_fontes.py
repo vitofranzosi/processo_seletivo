@@ -148,6 +148,40 @@ FONTES = {
             "Lexend-ExtraBold.ttf",
             "64c5421403046c7f6f61db724c6d897a5369c303a466de5ad84f7a7d2e518268",
         ),
+        # A Libras (119, incremento 3b): o negrito da Unbounded, das informações do slide, pelo
+        # mesmo roteiro e da mesma origem da regular.
+        _do_kit(
+            "unbounded-negrito",
+            "Unbounded",
+            700,
+            "Unbounded-Bold.ttf",
+            "28bb0d3b70521e03d5856a0f09c0a46949ddb439d0e4f5fd3947c3a1c56157e3",
+            sem_grafia="µ",
+        ),
+        # A substituta livre da Helvetica Neue (P-2, 05/11/2026), de Libras, Internos e TMD: a Inter
+        # 4.1, OFL sem nome reservado. A leve é da TMD, e entra agora para que as famílias
+        # seguintes não toquem nas fontes.
+        _do_kit(
+            "inter-leve",
+            "Inter",
+            300,
+            "Inter-Light.ttf",
+            "f7dd17c00ffc680f1c282ac65aefb926d25ace556cfa5378e0cbbd7c79956757",
+        ),
+        _do_kit(
+            "inter-regular",
+            "Inter",
+            400,
+            "Inter-Regular.ttf",
+            "dbacf55135637df6fb3cf41a991befb60e757413b515691c208cfdc993a95b31",
+        ),
+        _do_kit(
+            "inter-negrito",
+            "Inter",
+            700,
+            "Inter-Bold.ttf",
+            "42b065a835ac5c595f397be754a2ab209fce80aefc9ed2a0d6dc3ddbcbe601b4",
+        ),
     )
 }
 

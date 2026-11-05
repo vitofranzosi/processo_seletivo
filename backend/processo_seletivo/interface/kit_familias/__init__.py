@@ -329,6 +329,7 @@ def _registrar_as_familias():
         aperfeicoamento,
         fic,
         institucional,
+        libras,
         pos_lato_sensu,
     )
 
@@ -336,6 +337,7 @@ def _registrar_as_familias():
     registrar(pos_lato_sensu.FAMILIA)
     registrar(fic.FAMILIA)
     registrar(aperfeicoamento.FAMILIA)
+    registrar(libras.FAMILIA)
 
 
 _registrar_as_familias()

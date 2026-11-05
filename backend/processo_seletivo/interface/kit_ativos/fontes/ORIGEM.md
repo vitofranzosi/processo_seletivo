@@ -24,6 +24,10 @@ roteiro que gerou o subconjunto nomeado na origem.
 | `SpaceMono-Bold.ttf` | Space Mono | 700 | SIL OFL 1.1 | a Space Mono de `google/fonts`, `ofl/spacemono/` (commit `bbda7253`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `SpaceMono-OFL.txt` (original `405e73d41afb…`) | `81c793fc957300ca0521c18f7ebd2ca3f751c373182ceafcfc63cd171c1447d5` |
 | `Unbounded-Regular.ttf` | Unbounded | 400 | SIL OFL 1.1 | a Unbounded de `google/fonts`, `ofl/unbounded/Unbounded[wght].ttf` (commit `bbda7253`, original `323b511be380…`), baixada em 04/11/2026; instância estática em `wght` 400 e subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Unbounded-OFL.txt` | `94c048a78a9b3ff3023dd970d1ca93c5c9918c32acd3c2f1948b2d41bfc3aba2` |
 | `Lexend-ExtraBold.ttf` | Lexend | 800 | SIL OFL 1.1 | a Lexend de `google/fonts`, `ofl/lexend/Lexend[wght].ttf` (commit `bbda7253`, original `3add53e641fb…`), baixada em 04/11/2026; instância estática em `wght` 800 e subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Lexend-OFL.txt` | `64c5421403046c7f6f61db724c6d897a5369c303a466de5ad84f7a7d2e518268` |
+| `Unbounded-Bold.ttf` | Unbounded | 700 | SIL OFL 1.1 | a Unbounded de `google/fonts`, `ofl/unbounded/Unbounded[wght].ttf` (commit `bbda7253`, original `323b511be380…`), baixada em 05/11/2026; instância estática em `wght` 700 e subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Unbounded-OFL.txt` | `28bb0d3b70521e03d5856a0f09c0a46949ddb439d0e4f5fd3947c3a1c56157e3` |
+| `Inter-Light.ttf` | Inter | 300 | SIL OFL 1.1 | a Inter 4.1 da release oficial de `rsms/inter` (`https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`, SHA-256 `9883fdd4a49d…`), `extras/ttf/Inter-Light.ttf` (original `164414f0aacb…`), baixada em 05/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Inter-OFL.txt` | `f7dd17c00ffc680f1c282ac65aefb926d25ace556cfa5378e0cbbd7c79956757` |
+| `Inter-Regular.ttf` | Inter | 400 | SIL OFL 1.1 | a Inter 4.1 da release oficial de `rsms/inter` (`https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`, SHA-256 `9883fdd4a49d…`), `extras/ttf/Inter-Regular.ttf` (original `40d692fce188…`), baixada em 05/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Inter-OFL.txt` | `dbacf55135637df6fb3cf41a991befb60e757413b515691c208cfdc993a95b31` |
+| `Inter-Bold.ttf` | Inter | 700 | SIL OFL 1.1 | a Inter 4.1 da release oficial de `rsms/inter` (`https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`, SHA-256 `9883fdd4a49d…`), `extras/ttf/Inter-Bold.ttf` (original `288316099b1e…`), baixada em 05/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Inter-OFL.txt` | `42b065a835ac5c595f397be754a2ab209fce80aefc9ed2a0d6dc3ddbcbe601b4` |
 
 **Por que a Edital Sans não é copiada para cá.** É a fonte da peça Institucional desde a `111`, e a
 peça mede com ela exatamente o que o Edital mede. Duas cópias do mesmo arquivo poderiam divergir em
@@ -54,3 +58,18 @@ mantém.
 a lacuna fica declarada em `kit_fontes.FONTES` (`sem_grafia`), o teste confere que ela é a única, e
 a peça cujo texto a pedir numa caixa em Unbounded é recusada nomeando o caractere e a fonte
 (FR-3823, EC-13).
+
+**A Inter, no lugar da Helvetica Neue (Libras, Internos e TMD).** Os arquivos da comunicação pedem a
+Helvetica Neue, que é proprietária: não se versiona nem se embute no SVG exportado. A P-2 foi
+respondida em 04/11/2026 ("escolha a mais próxima possível") e, em 05/11/2026, o responsável pelo
+produto decidiu pela substituta livre; a escolhida é a **Inter** (`rsms/inter`), uma grotesca
+neo-humanista de desenho próximo, com os mesmos pesos que os templates usam — leve (TMD), regular e
+negrito (Libras e Internos), sem itálico. Veio da release oficial 4.1, fixada pela versão e pelo
+resumo do ZIP, e não do Google Fonts, que publica outra compilação. A OFL da Inter não reserva nome,
+e os subconjuntos mantêm "Inter". As três cobrem o WinAnsi inteiro — «º», «ª», «–», «—», as aspas
+curvas e todos os acentos —, sem lacuna declarada. A leve entra já com a Libras, que não a usa, para
+que Internos e TMD não precisem tocar nesta pasta.
+
+**O negrito da Unbounded (Libras).** As informações do slide de Libras — número e prazo — estão em
+Unbounded negrito; a instância é a do mesmo arquivo variável da regular, em `wght` 700, e herda a
+mesma lacuna do micro (U+00B5).

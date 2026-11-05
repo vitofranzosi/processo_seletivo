@@ -1104,11 +1104,15 @@ def _faixa(c, ficha):
 
 
 def _balao(c):
-    balao = c.template.dimensoes["balao"]
-    ativo = c.familia.ativos[balao["ativo"]]
-    cor = c.cor(balao["cor"]) if balao.get("cor") else ""
-    figura = Figura(*balao["retangulo"], ativo.arquivo, "image/png", "balao", opaca=True, cor=cor)
-    c.elementos.append(figura)
+    """A chamada à ação, no balão quando o template o declara; sem ele, direto no fundo."""
+    balao = c.template.dimensoes.get("balao")
+    if balao:
+        ativo = c.familia.ativos[balao["ativo"]]
+        cor = c.cor(balao["cor"]) if balao.get("cor") else ""
+        figura = Figura(
+            *balao["retangulo"], ativo.arquivo, "image/png", "balao", opaca=True, cor=cor
+        )
+        c.elementos.append(figura)
     _caixa_unica(
         c,
         "chamada_a_acao",

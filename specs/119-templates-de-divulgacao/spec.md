@@ -512,6 +512,12 @@ dela dependem.
 | **P-3** | "Adote o tamanho padrão de banner na web" (com um exemplo de 1500 × 850) | O banner continua em 1500 × 850, e deixa de esperar resposta |
 | **P-4** | "Apenas adote o template." | A adoção do responsável pelo produto é o registro de aprovação da FR-3834, em [verificacao.md](verificacao.md), com o identificador, a versão e o resumo de cada template; a galeria continua como prova visual, e a liberação em produção continua da operação, pela configuração |
 
+### Resposta da P-2: a substituta da Helvetica Neue (05/11/2026)
+
+| # | Decisão | Como a implementação a lê |
+|---|---|---|
+| **P-2** | O responsável pelo produto decidiu pela substituta livre; a escolhida é a **Inter** (`rsms/inter`, release 4.1, SIL OFL 1.1 sem nome reservado) | Libras, Internos e TMD desenham com a Inter onde os arquivos pedem a Helvetica Neue: negrito e regular (Libras e Internos) e leve (TMD), sem itálico. Os três pesos entram juntos em `kit_ativos/fontes/`, com a origem, a versão, o resumo do arquivo baixado e a cobertura do WinAnsi registrados no `ORIGEM.md` de lá; a Inter cobre a grafia inteira do Edital («º», «ª», «–», «—», aspas curvas e acentos), sem lacuna declarada. As três famílias deixam de esperar a P-2 |
+
 **Resumo por falta de espaço (04/11/2026).** Depois da revisão do incremento 2, o responsável pelo
 produto aprovou o resumo das opções quando a lista não cabe nos templates da Pós Lato Sensu, "por
 formato, depois de tentar a lista no tamanho mínimo legível", mantendo o convite à página, a regra
