@@ -45,6 +45,8 @@ from processo_seletivo.convocacao.application.desfechar import (
     registrar,
 )
 from processo_seletivo.convocacao.domain import alcance, fundamento, nomes, prazo
+from processo_seletivo.convocacao.domain import especie as especie_da_posicao
+from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.editais.domain.recortes import rotulo_do_recorte
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
@@ -393,6 +395,99 @@ def comunicar_cada(
     return {"enviadas": enviadas, "falhas": falhas, "aguardandoPublicacao": 0, "recusas": recusas}
 
 
+# --- A correção da convocação pela tela (120) ---------------------------------------------------
+
+#: O formato do `datetime-local`, que é o que o script da prévia compara (`R-009` da `120`).
+FORMATO_DO_CAMPO = "%Y-%m-%dT%H:%M"
+
+_ESPECIES_POR_EXTENSO = dict(Convocacao._meta.get_field("especie").choices)
+
+_FRASE_DA_COMUNICACAO = {
+    FORMA_POR_MENSAGEM_INDIVIDUAL: "A mensagem da convocação sai de novo, com o prazo novo. Ela "
+    "não diz que corrige a anterior.",
+    FORMA_POR_PUBLICACAO: "A comunicação aguarda a publicação da chamada, como nas demais "
+    "convocações deste Perfil.",
+    None: "O Perfil publicado não declara como este Edital comunica a convocação: a comunicação "
+    "não sai, e o prazo não começa a correr até que a forma seja declarada por Retificação.",
+}
+
+
+def impedimento_da_correcao(leitura):
+    """Por que nenhuma convocação do recorte se corrige agora, ou `None` (120, `FR-3839`).
+
+    **As mesmas causas que o comando recusaria**, lidas da leitura que a tela já fez: com elas, a
+    tela não oferece formulário que a confirmação recusaria. A ordem sucedida chega aqui como causa
+    de obsolescência da apuração, e por isso não precisa de leitura própria.
+    """
+    if leitura["apuracao"] is None:
+        return {"codigo": nomes.APURACAO_AUSENTE, "causas": []}
+    if leitura["causasDeObsolescencia"]:
+        return {"codigo": nomes.APURACAO_OBSOLETA, "causas": list(leitura["causasDeObsolescencia"])}
+    return None
+
+
+def previa_das_correcoes(leitura, *, versao, perfil_id, fundamentos):
+    """O que cada cartão em aberto mostra antes de corrigir, sem consulta (120, `FR-3844`).
+
+    **Em memória, da leitura que a tela já fez** (`FR-3855`): a espécie pela mesma função que o
+    comando usa (`R-004`), o fundamento do dicionário que a chamada individual já calculou, e a
+    assinatura do que é mostrado (`FR-3857`). Só a chamada em aberto e com vencimento se corrige
+    pela tela (`D-004`).
+    """
+    apuracao = leitura["apuracao"]
+    forma = forma_vigente(versao, perfil_id)
+    previas = {}
+    if apuracao is None:
+        return previas
+    regularizaveis = [pessoa["id"] for pessoa in leitura["regularizaveis"]]
+    for linha in leitura["linhas"]:
+        convocacao = linha["convocacao"]
+        if linha["desfecho"] is not None or convocacao.vencimento is None:
+            continue
+        especie = especie_da_posicao.especie_da_sucessora(
+            convocacao.inscricao_id,
+            ocupando=leitura["ocupando"],
+            alcancados=leitura["alcancados"],
+            regularizaveis=regularizaveis,
+            anterior=convocacao,
+        )
+        previas[str(convocacao.id)] = {
+            "especie": especie,
+            "especiePorExtenso": _ESPECIES_POR_EXTENSO.get(especie, especie),
+            "especieDifere": especie != convocacao.especie,
+            "fundamento": fundamentos.get(especie, ""),
+            # **O fundamento muda quando a corrigida cita outra apuração ou outra versão**
+            # (`D-006`): comparar os textos esbarraria no complemento, que a corrigida guarda junto.
+            "fundamentoDifere": convocacao.apuracao_id != apuracao.id
+            or convocacao.versao_id != getattr(versao, "id", None),
+            "forma": forma,
+            "fraseDaComunicacao": _FRASE_DA_COMUNICACAO.get(forma, _FRASE_DA_COMUNICACAO[None]),
+            "venceu": linha["estado"] == nomes.CONVOCADO_VENCIMENTO_DECORRIDO,
+            "vencimentoAtual": timezone.localtime(convocacao.vencimento).strftime(FORMATO_DO_CAMPO),
+            "assinatura": alcance.assinatura_da_correcao(
+                convocacao_id=convocacao.id,
+                apuracao_id=apuracao.id,
+                versao_id=getattr(versao, "id", None),
+                forma=forma,
+                especie=especie,
+            ),
+        }
+    return previas
+
+
+def efeito_do_vencimento(anterior, novo):
+    """Estendido, antecipado ou mantido — o que a correção fez com o prazo (120, `FR-3849`)."""
+    if anterior is None or novo is None:
+        return ""
+    antes = timezone.localtime(anterior).strftime(FORMATO_DO_CAMPO)
+    depois = timezone.localtime(novo).strftime(FORMATO_DO_CAMPO)
+    if depois > antes:
+        return "estendido"
+    if depois < antes:
+        return "antecipado"
+    return "mantido"
+
+
 # --- A chamada individual, que continua para o suplente e para a exceção -----------------------
 
 
@@ -433,6 +528,7 @@ def convocar_e_comunicar(
     motivo="",
     justifica_precedencia=False,
     endereco_do_portal="",
+    correcao=None,
 ):
     """A chamada individual da `050`: espécie e fundamento derivados, e a comunicação no mesmo ato.
 
@@ -448,6 +544,15 @@ def convocar_e_comunicar(
     instante, origem = resolver_vencimento(
         versao=versao, vencimento=vencimento, evento_id=evento_id
     )
+    if correcao is not None and instante is None:
+        # **Na correção, vazio não quer dizer "o Edital não publica prazo"** (120, `D-004`): a tela
+        # só oferece a correção em chamada com vencimento, e é o prazo que ela existe para corrigir.
+        raise DomainError(
+            nomes.VENCIMENTO_DA_CORRECAO_OBRIGATORIO,
+            "Informe o vencimento novo — a data e a hora, ou o fim de um Evento do Cronograma.",
+            422,
+            campo="vencimento",
+        )
     _recusar_vencimento_passado(instante, timezone.now())
     texto_do_edital, texto_do_recorte = rotulos(
         edital, versao, perfil_id=identificador(perfil_id), lista_id=lista_id
@@ -481,6 +586,7 @@ def convocar_e_comunicar(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
         razao_adicional=_razao_do_vencimento(instante, origem),
+        correcao=correcao,
     )
     forma = forma_vigente(versao, identificador(perfil_id))
     return {

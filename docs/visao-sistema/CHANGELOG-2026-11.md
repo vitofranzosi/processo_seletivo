@@ -91,3 +91,61 @@ Esta revisão descreve tudo isso contra a `main` em `4dbc5872`.
   - os 58 links da página para o repositório (`../../backend/…`, `../../specs/…`), que respondem 404 quando ela é aberta dentro da gestão (105). Esse é novo.
 - **A divergência do papel Comunicação foi descrita, não resolvida:** a spec manda não atribuí-lo antes da 112, e o código o oferece.
 - **O manual (`doc/manual/`) não foi tocado.** Uma Revisão 7 é decisão do usuário.
+
+---
+
+# Revisão de 04/11/2026 da Visão do Sistema
+
+A documentação descrevia o sistema até a 113 (02/11). Entre 02 e 04/11 entraram na `main` 19 PRs:
+
+- as specs 114 a 118 e a 119 (spec e incrementos 1 e 2);
+- o incremento C da 111;
+- a correção da 029 (#380, #381);
+- dois documentos sem código (#367, a auditoria de matrícula e dossiê; #375, a revisão de UX da jornada do convocado) e a correção de um teste intermitente (#379).
+
+Algumas frases ficaram falsas:
+
+- o candidato que "só lê" a convocação;
+- "nada acontece por passagem de tempo", sem dizer que o prazo fecha o envio;
+- o pacote do Kit que "não existe";
+- "Situação registrada" e as três grafias do desfecho no portal;
+- o concurso "Concurso 5900" como forma aceita na Loteria Federal;
+- os nove papéis, as 46 tabelas append-only, os 72 gatilhos e as 153 + 36 rotas.
+
+Esta revisão descreve tudo isso contra a `main` em `a3e23b1f`.
+
+## Como foi conferido
+
+- **Quatro leituras paralelas** confrontaram as specs e os PRs com o código da `main`, e não só com a própria spec:
+  - 115 e 117 (documentos na convocação e formalização);
+  - 118 e a correção da 029 (o convocado no portal e o Requerimento com o Processo encerrado);
+  - 114 e 116 (desempate por outra Etapa e o concurso conferido na Caixa);
+  - 111-C e 119 (o pacote e as famílias do Kit).
+
+  Onde spec e código divergiam, valeu o código.
+- **Os números de *Maturidade*** foram recontados pelo método da própria página. Rodado sobre `4dbc5872`, a base da revisão de 02/11, ele reproduz todos os números publicados naquela data. Hoje: 53 tabelas append-only, 83 gatilhos em 33 migrations sobre 67 tabelas, 107 migrations, 23 módulos, 515 arquivos Python de aplicação (135,6 mil linhas), 213 templates, 1 062 arquivos de teste Python e 17 de JavaScript, 166 + 38 rotas.
+- **A página foi verificada estruturalmente**: todas as âncoras internas têm destino, nenhum `id` se repete, o HTML fecha as tags que abre, e nada do que entrou usa `style=`, `<style>`, `<script>` ou `on…=`. `tests/interface/test_documentacao_do_sistema.py` passa (12 casos).
+- **A suíte rodou contra PostgreSQL**: 15 878 passando, 17 pulados e nenhuma falha (4 workers, 2 184s, com outra suíte no mesmo cluster). Os 17 são 10 do vocabulário, a recusa por vendor, o E2E da Caixa e cinco arquivos de jornada no navegador, que pulam sem o grupo `navegador`.
+
+## O que mudou na documentação
+
+- **Seções novas:**
+  - *Documentos e conferência na convocação* (`#documentos-da-convocacao`, 115), com a subseção *Quem confere* (`#alocacao-a-conferencia`);
+  - *Entrega documental ao setor da formalização* (`#formalizacao`, 117);
+  - *O convocado no portal* (`#convocado-no-portal`, 118);
+  - *As famílias e os formatos da peça* (`#kit-familias-e-formatos`, 119);
+  - as subseções *Desempatar pela nota de uma Etapa que o marco não soma* (`#desempate-por-outra-etapa`, 114), *O concurso conferido na Caixa antes do compromisso* (`#sorteio-conferencia`, 116), *O Processo encerrado ou cancelado fecha o Requerimento na convocação* (`#requerimento-processo-encerrado`, 029) e *O pacote (.zip)* (`#kit-pacote`, 111-C);
+  - *Abertas desde 02/11* (`#abertas-desde-02-11`).
+- **Kit:** a tela em cinco passos (a identidade da peça entrou como o terceiro), a ficha versão 2 com carga horária e contato, e o que acende a faixa de desatualização em cada versão.
+- **Sorteio:** a forma do concurso na Loteria Federal, a conferência na Caixa nos quatro atos, o botão *Conferir na Caixa*, o reaproveitamento sem a extração e a lacuna da regra de substituição, que não dispara contra a Caixa real.
+- **Convocação e Requerimento:** o candidato envia documentos; o prazo fecha o envio sem decidir nada; aceite e regularização exigem os documentos conferidos; o Requerimento na convocação fecha com o Processo encerrado ou cancelado, e o pedido na inscrição continua aberto (decisão pendente).
+- **Papéis e barra:** dez papéis de operação, com a Formalização; a seção *Formalização* no grupo Trabalho; o Administrador de acessos também designa para a formalização; a busca do seletor aparece com mais de dez entradas.
+- **Matriz de capacidades:** linhas novas para o pacote do Kit, as famílias e formatos, o concurso conferido, a conferência sob demanda e a lacuna da substituição; o desempate por Etapa anotado.
+
+## O que não foi verificado, e o que ficou de fora
+
+- **O produto não foi percorrido**, e as jornadas no navegador não rodaram aqui, por falta do grupo `navegador`. A peça das famílias, o pacote de família e a conferência na Caixa contra o serviço real nunca foram vistos num navegador nesta revisão.
+- **Nem todo trecho apontado pelas leituras entrou.** Ficaram para a próxima revisão: as linhas novas da matriz de permissões (conferir documentos, definir e exportar para a formalização), o degrau da alocação à conferência em *Da pessoa à avaliação*, as respostas rápidas sobre convocação, o glossário (*Apto para formalização*, *Conferência de documento*, *Designação para a formalização*), a lista de rotas e os passos 8, 11 e 12 da jornada do candidato. As seções novas descrevem o comportamento; esses trechos são índices e remissões.
+- **Achado desta revisão, visto no código e não reproduzido:** todo download do Kit recebe o nome `kit-<n>-<ano>.<extensão>`, sem o formato; post, story e banner em PNG saem com o mesmo nome.
+- **As specs não acompanharam o merge:** a 114, a 116 e a 118 dizem `Draft`, e a 119 diz "Não implementada".
+- **O `CLAUDE.md`** diz que dois arquivos de jornada no navegador pulam sem o grupo `navegador`, e mede a suíte em 14 638 e 14; hoje são cinco arquivos (107, 110, 115, 117, 118), e a suíte, 15 878 e 17. A correção não foi feita aqui: o `CLAUDE.md` é das instruções de quem trabalha no repositório, e fica para quem o mantém.

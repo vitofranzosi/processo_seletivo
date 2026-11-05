@@ -24,6 +24,11 @@ desenhada.
 
 **Determinístico**: `recalc_timestamp=False` mantém a data do `head` de origem.
 
+**O hífen condicional que falta vira o hífen.** A Space Mono (FIC) não mapeia o U+00AD, que o
+WinAnsi tem; o subconjunto o aponta para o glifo do U+002D, que é como o hífen condicional aparece
+quando aparece. Só se a origem não o tiver: nas outras fontes nada muda, e o resultado delas é o
+mesmo de antes.
+
 **O nome continua o da origem** quando a licença não reserva nenhum: a Poppins é OFL sem "Reserved
 Font Name". Fonte com nome reservado precisa ser renomeada, como a Edital Sans.
 """
@@ -53,6 +58,12 @@ def _sha256(caminho):
     return hashlib.sha256(Path(caminho).read_bytes()).hexdigest()
 
 
+def _hifen_condicional(fonte):
+    for tabela in fonte["cmap"].tables:
+        if tabela.isUnicode() and 0x2D in tabela.cmap and 0xAD not in tabela.cmap:
+            tabela.cmap[0xAD] = tabela.cmap[0x2D]
+
+
 def gerar(origem, destino, peso=None):
     opcoes = subset.Options()
     opcoes.recalc_timestamp = False
@@ -70,6 +81,7 @@ def gerar(origem, destino, peso=None):
     subconjunto = subset.Subsetter(opcoes)
     subconjunto.populate(unicodes=_winansi())
     subconjunto.subset(fonte)
+    _hifen_condicional(fonte)
     DESTINO.mkdir(parents=True, exist_ok=True)
     caminho = DESTINO / destino
     fonte.save(caminho, reorderTables=True)

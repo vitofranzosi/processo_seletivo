@@ -50,12 +50,29 @@ distintos, lista no story e resume no post.
 
 | Cenário | Onde está coberto |
 |---|---|
-| 18. FIC com três Perfis de carga declarada | Da família FIC (incremento 3a); na Pós, o caso de várias ofertas é o 91 de quatro polos |
+| 18. FIC com três Perfis de carga declarada | Da família FIC (incremento 3a, abaixo); na Pós, o caso de várias ofertas é o 91 de quatro polos |
 | 19. Carga vazia num Perfil e longa noutro | Galeria (`c_carga`) e `test_peca_das_familias.py` |
 | 20–22. Atendimento declarado, ausente e de 255 caracteres | Nenhum template da Pós tem caixa de contato (FR-3820): a peça não muda; o contato é dos textos, em `test_textos_com_carga_e_contato.py` |
 | 23. Internos nas duas variantes | Da família Internos (incremento 3) |
 | 24. Edital de unidade sem família | `test_familias_na_tela.py::test_unidade_sem_familia_so_tem_a_institucional` |
 | 25. Caractere sem grafia só na fonte de título | `test_peca_das_familias.py::test_caractere_sem_glifo_so_na_fonte_de_titulo`; na galeria não cabe, porque as três Poppins têm o mesmo repertório |
+
+## Cenários de referência na FIC (incremento 3a, T047)
+
+Os da `111` e o 17 rodam na FIC como em toda família; os de baixo são só dela, em
+`test_referencias.py::test_a_peca_dos_cenarios_da_familia_e_a_referencia`, e não entram na pasta da
+Pós, cujo resumo não muda.
+
+| Cenário | Post | Story | Banner |
+|---|---|---|---|
+| 18. Três Perfis de carga declarada | lista as três | lista as três | lista as três |
+| 19. Carga vazia num Perfil e longa noutro | recusa nomeando a carga (EC-3) | recusa nomeando a carga | recusa nomeando a carga |
+| 20. Atendimento declarado | "Dúvidas?" no lugar do contato dos slides | idem | sem caixa de contato, como o slide do site |
+| 22. Atendimento de 255 caracteres | sai da peça, com o aviso (EC-4) | idem | sem caixa de contato |
+| 91, quatro polos (e o prorrogado) | lista as quatro | lista as quatro | recusa: o painel não as comporta, e a FIC não está na FR-3836 |
+
+O 21 (unidade sem atendimento) é o caso de todos os outros cenários, e `test_peca_da_fic.py` o
+confere à parte. A prorrogação é a faixa vermelha do alto, e não item do painel.
 
 ## Validações que dependem do ambiente de implantação
 

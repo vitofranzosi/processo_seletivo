@@ -36,7 +36,7 @@ def cenario(db, gestor, api_client, manager_headers, process_payload, raiz_de_ar
     )
 
 
-def semear(edital, quantas, *, desde=0):
+def semear(edital, quantas, *, desde=0, vencimento=None):
     """`quantas` convocações praticadas no recorte, gravadas direto.
 
     **Direto, e não pelo comando**: o que se mede é o custo da **leitura**, e fazer o comando
@@ -75,6 +75,7 @@ def semear(edital, quantas, *, desde=0):
             versao=versao,
             criado_por="medicao",
             criado_em=agora,
+            vencimento=vencimento,
         )
         for inscricao in inscricoes
     )
@@ -184,3 +185,36 @@ def test_as_previas_da_050_nao_crescem_com_as_convocacoes_do_recorte(cenario):
 
     assert (pendentes_com_cinco, pendentes_com_oitenta_e_cinco) == (5, 85)
     assert com_oitenta_e_cinco <= com_cinco + 2, (com_cinco, com_oitenta_e_cinco)
+
+
+def test_a_correcao_nao_custa_consulta_por_cartao(cenario, client, settings):
+    """`FR-3855`, `SC-1147` da `120`: a tela com 1 e com 20 chamadas que se corrigem custa o mesmo.
+
+    **A tela inteira, e não só a prévia**: o cartão também cita a convocação anterior e o motivo, e
+    uma relação lida no template — `convocacao_anterior` em vez de `convocacao_anterior_id` — seria
+    uma consulta por cartão que a prévia sozinha não mostraria. A folga de duas é a deste arquivo.
+    """
+    from datetime import timedelta
+
+    from django.urls import reverse
+
+    from tests.interface.conftest import identificar
+
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    edital, _, _ = cenario
+    identificar(client, "carlos", ["gestor"])
+    endereco = reverse("interface:convocacao", args=[edital.id, MARCO])
+    vencimento = timezone.now() + timedelta(days=3)
+
+    def custo():
+        with CaptureQueriesContext(connection) as consultas:
+            pagina = client.get(endereco).content.decode()
+        return len(consultas), pagina.count("data-correcao ")
+
+    semear(edital, 1, vencimento=vencimento)
+    com_um, formularios_com_um = custo()
+    semear(edital, 19, desde=1, vencimento=vencimento)
+    com_vinte, formularios_com_vinte = custo()
+
+    assert (formularios_com_um, formularios_com_vinte) == (1, 20)
+    assert com_vinte <= com_um + 2, (com_um, com_vinte)

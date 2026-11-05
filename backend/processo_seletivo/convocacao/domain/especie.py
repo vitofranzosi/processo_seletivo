@@ -33,4 +33,22 @@ def derivada(inscricao, *, ocupando, alcancados, regularizaveis):
     return None
 
 
-__all__ = ["derivada"]
+def especie_da_sucessora(inscricao, *, ocupando, alcancados, regularizaveis, anterior):
+    """A espécie que a sucessora levará: a da posição, e, sem ela, a da convocação que corrige.
+
+    **Corrigir não muda a posição da pessoa.** Quem tem chamada em aberto saiu da fila dos
+    regularizáveis justamente por ter sido chamado, e a espécie da raiz é a dela. Mas a contagem
+    pode ter mudado desde a chamada — o suplente que passou a ocupar é chamado *para vaga
+    inicial* —, e a sucessora diz o que vale no instante dela (`D-006` da `120`).
+
+    **Uma regra só para a tela e para o comando** (`R-004` da `120`): a prévia assina a espécie, e a
+    confirmação recusa quando a do ato for outra. Escrita duas vezes, ela divergiria na primeira
+    mudança, e a assinatura nunca casaria.
+    """
+    return (
+        derivada(inscricao, ocupando=ocupando, alcancados=alcancados, regularizaveis=regularizaveis)
+        or anterior.especie
+    )
+
+
+__all__ = ["derivada", "especie_da_sucessora"]

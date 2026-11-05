@@ -1,4 +1,4 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Convocação — quem foi chamado e o que respondeu{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Convocação</span></nav>{% endblock %}
 {% block conteudo %}
@@ -36,13 +36,15 @@ há outros recortes, nem em qual está. A lista e os endereços vêm da view.
 {% endif %}
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro }}</p>{% endif %}
+{% if recusa_da_correcao_sem_cartao %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>A correção não foi feita:</strong> {{ recusa_da_correcao_sem_cartao.detalhe }}</p>{% endif %}
 {% comment %}
 A mensagem de sucesso nomeia **o ato praticado**, e nao "deu certo". Foi o defeito E2E16-004 da
 `016`: tres acoes voltavam para a mesma tela com um aviso unico, e quem acabara de desfechar lia
 "Apuracao emitida" (UX-036).
 {% endcomment %}
 {% if resultado %}
-{% if acao == "convocacao" %}<p class="sucesso" role="status" tabindex="-1">Convocação praticada. O ato é imutável; corrigi-lo é sucedê-lo com motivo, e a anterior continua legível. {% include "interface/_resultado_da_comunicacao.html" %}</p>
+{% if acao == "correcao" %}<p class="sucesso" role="status" tabindex="-1">Convocação de {{ resultado.protocolo }} corrigida. O vencimento passou de {{ resultado.vencimentoAnterior }} para {{ resultado.vencimentoNovo }}: o prazo foi {{ resultado.efeito }}. A convocação anterior continua legível no histórico. {% include "interface/_resultado_da_comunicacao.html" %}</p>
+{% elif acao == "convocacao" %}<p class="sucesso" role="status" tabindex="-1">Convocação praticada. O ato é imutável; corrigi-lo é sucedê-lo com motivo, e a anterior continua legível. {% include "interface/_resultado_da_comunicacao.html" %}</p>
 {% elif acao == "titulares" %}<p class="sucesso" role="status" tabindex="-1">{{ resultado.convocadas|length }} {{ resultado.convocadas|length|plural:"convocação praticada,convocações praticadas" }} num ato só, uma por pessoa. {% include "interface/_resultado_da_comunicacao.html" %}</p>
 {% elif acao == "pendentes" %}<p class="sucesso" role="status" tabindex="-1">{% include "interface/_resultado_da_comunicacao.html" %}</p>
 {% elif acao == "desfecho" or acao == "vencidos" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "vencidos" %}{{ resultado.desfechos|length }} {{ resultado.desfechos|length|plural:"desfecho de não atendimento registrado,desfechos de não atendimento registrados" }}, um por convocação vencida.{% else %}Desfecho registrado.{% endif %}
@@ -78,7 +80,7 @@ cartao. Ela volta a ser o que e, e as secoes voltam ao fluxo normal da pagina.
   <p class="aviso" role="status"><strong>A apuração deste recorte está obsoleta.</strong> Os números abaixo são os que ela apurou, e o mundo mudou depois dela. Convocar sobre eles é recusado: emita a apuração seguinte.</p>
   <ul class="consequencias">
     {% for causa in leitura.ocupacao.causasDeObsolescencia %}
-    <li>{% if causa == "ordem_sucedida" %}a ordem deste recorte foi sucedida{% elif causa == "corte_obsoleto" %}o corte deste recorte não é o que ela leu{% elif causa == "quadro_retificado" %}a linha do quadro que ela leu mudou por Retificação{% elif causa == "movimento_posterior" %}um movimento de vaga alcançou este recorte depois dela{% elif causa == "efeito_posterior" %}um desfecho de convocação mudou quem ocupa vaga neste recorte depois dela{% endif %}</li>
+    <li>{% include "interface/_causa_de_obsolescencia.html" %}</li>
     {% endfor %}
   </ul>
   <p class="acoes"><a class="acao" href="{% url 'interface:ocupacao' edital.id marco_id %}">Emitir a apuração seguinte</a></p>
@@ -414,6 +416,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
       <dt>Espécie</dt><dd>{{ linha.convocacao.get_especie_display }}</dd>
       {% if linha.enviadaEm %}<dt>Enviada em</dt><dd>{{ linha.enviadaEm|date:"d/m/Y H:i" }}</dd>{% endif %}
       {% if linha.convocacao.vencimento %}<dt>Vencimento</dt><dd>{{ linha.convocacao.vencimento|date:"d/m/Y H:i" }} — contado do envio da comunicação</dd>{% endif %}
+      {% if linha.convocacao.convocacao_anterior_id %}<dt>Correção</dt><dd>Corrigida em {{ linha.convocacao.criado_em|date:"d/m/Y H:i" }} — <a href="{% url 'interface:convocacao-historico' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">ver o histórico</a></dd>{% endif %}
       {% comment %}
       Na ordem em que as coisas aconteceram — envio, vencimento, desfecho. A linha da situação só quando ela diz mais que a pastilha (050, segunda rodada): "Prazo em
       curso" aparecia duas vezes no mesmo cartão.
@@ -579,8 +582,15 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
       <p class="acoes">{% if linha.enviadaEm %}<button type="submit" class="acao">Emitir a comunicação de novo</button>{% else %}<button type="submit" class="botao">Emitir a comunicação</button>{% endif %}</p>
     </form>
     {% endif %}
+    {% comment %}
+    A correção (120), por último no cartão: é a exceção, e o desfecho continua a ação principal. Fora
+    do bloco sem desfecho, porque a recusa de quem corrigia uma chamada que teve desfecho no
+    intervalo aparece aqui, no cartão que agora mostra o desfecho.
+    {% endcomment %}
+    {% if pode_emitir %}{% include "interface/_correcao_da_convocacao.html" with n=forloop.counter|stringformat:"s" %}{% endif %}
   </article>
   {% endfor %}
   {% endif %}
 </section>
+<script src="{% estatico 'interface/correcao-da-convocacao.js' %}" defer></script>
 {% endblock %}
