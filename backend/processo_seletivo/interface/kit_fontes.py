@@ -44,6 +44,9 @@ class FonteDoKit:
     peso: int
     caminho: Path
     sha256: str
+    #: Os caracteres do repertório que a fonte de origem não desenha, conferidos pela suíte. Não se
+    #: desenha glifo pelo projeto: a peça que os pedir é recusada nomeando-os (FR-3823, EC-13).
+    sem_grafia: str = ""
 
     @property
     def arquivo(self):
@@ -65,8 +68,8 @@ def _edital_sans(chave, recurso, peso):
     return FonteDoKit(chave, "Edital Sans", peso, fonte.PASTA / arquivo, fonte.SHA256[arquivo])
 
 
-def _do_kit(chave, familia, peso, arquivo, sha256):
-    return FonteDoKit(chave, familia, peso, PASTA / arquivo, sha256)
+def _do_kit(chave, familia, peso, arquivo, sha256, sem_grafia=""):
+    return FonteDoKit(chave, familia, peso, PASTA / arquivo, sha256, sem_grafia)
 
 
 FONTES = {
@@ -104,6 +107,54 @@ FONTES = {
             400,
             "Anton-Regular.ttf",
             "a7ad74685f149ccc513aaa57de7cfbeeba676d57b4328be0240ca139b85ba76d",
+        ),
+        # A FIC (119, incremento 3a): subconjuntos WinAnsi de três famílias OFL sem nome
+        # reservado, do mesmo `google/fonts` e pelo mesmo roteiro.
+        _do_kit(
+            "archivo-black",
+            "Archivo Black",
+            400,
+            "ArchivoBlack-Regular.ttf",
+            "24efaface31f64b28d2e34a09753230ef00181f1fe1188bf1e15c9522b426e8a",
+        ),
+        _do_kit(
+            "barlow-semi-condensed-medio",
+            "Barlow Semi Condensed",
+            500,
+            "BarlowSemiCondensed-Medium.ttf",
+            "feeb1c5417579e1b9e5b2e5f8a0bfc6a7e9f84fac02b947a9354890285c21cac",
+        ),
+        _do_kit(
+            "barlow-semi-condensed-negrito",
+            "Barlow Semi Condensed",
+            700,
+            "BarlowSemiCondensed-Bold.ttf",
+            "6e904ce4579c543817016f540d27bb8bfbf706d7aac8d1eccaedd5721dca0cda",
+        ),
+        _do_kit(
+            "space-mono-negrito",
+            "Space Mono",
+            700,
+            "SpaceMono-Bold.ttf",
+            "81c793fc957300ca0521c18f7ebd2ca3f751c373182ceafcfc63cd171c1447d5",
+        ),
+        # A Aperfeiçoamento (119, incremento 3d): instâncias estáticas das variáveis do Google
+        # Fonts, no peso dos arquivos da comunicação, e o mesmo subconjunto WinAnsi.
+        _do_kit(
+            "unbounded-regular",
+            "Unbounded",
+            400,
+            "Unbounded-Regular.ttf",
+            "94c048a78a9b3ff3023dd970d1ca93c5c9918c32acd3c2f1948b2d41bfc3aba2",
+            # O micro (U+00B5) não está na Unbounded de origem, em nenhum peso.
+            sem_grafia="µ",
+        ),
+        _do_kit(
+            "lexend-extranegrito",
+            "Lexend",
+            800,
+            "Lexend-ExtraBold.ttf",
+            "64c5421403046c7f6f61db724c6d897a5369c303a466de5ad84f7a7d2e518268",
         ),
     )
 }

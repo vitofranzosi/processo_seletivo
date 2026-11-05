@@ -4,11 +4,10 @@
 <image x="0" y="0" width="1080" height="1350" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
 <text x="340" y="372" font-family="Anton" font-size="112" font-weight="400" fill="#3b2204" data-campo="chamada">SELEÇÃO DE</text>
 <text x="340" y="542" font-family="Anton" font-size="112" font-weight="400" fill="#bf247a" data-campo="chamada">BOLSISTA</text>
-<text x="340" y="658" font-family="Poppins" font-size="40" font-weight="700" fill="#3b2204" data-campo="titulo_do_processo">Seleção de Tutores UAB —</text>
-<text x="340" y="715" font-family="Poppins" font-size="40" font-weight="700" fill="#3b2204" data-campo="titulo_do_processo">Cadastro de Reserva 2026</text>
-<text x="340" y="772" font-family="Poppins" font-size="40" font-weight="700" fill="#3b2204" data-campo="titulo_do_processo">(DEMONSTRAÇÃO)</text>
+<text x="340" y="654" font-family="Poppins" font-size="36" font-weight="700" fill="#3b2204" data-campo="titulo_do_processo">Seleção de Tutores UAB — Cadastro</text>
+<text x="340" y="705" font-family="Poppins" font-size="36" font-weight="700" fill="#3b2204" data-campo="titulo_do_processo">de Reserva 2026 (DEMONSTRAÇÃO)</text>
 <text x="340" y="1038" font-family="Poppins" font-size="30" font-weight="400" fill="#3b2204" data-campo="identificacao">Edital nº 92/2026</text>
-<text x="340" y="893" font-family="Anton" font-size="46" font-weight="400" fill="#3b2204" data-campo="periodo_curto">Inscrições até 28/10/2026</text>
+<text x="340" y="889" font-family="Anton" font-size="46" font-weight="400" fill="#3b2204" data-campo="periodo_curto">Inscrições até 28/10/2026</text>
 <text x="340" y="942" font-family="Poppins" font-size="28" font-weight="400" fill="#3b2204" data-campo="hora">às 23h59 (horário de Brasília)</text>
 <text x="340" y="990" font-family="Poppins" font-size="28" font-weight="400" fill="#3b2204" data-campo="inicio">Início em 14/10/2026</text>
 <text x="340" y="1083" font-family="Poppins" font-size="28" font-weight="700" fill="#3b2204" data-campo="chamada_a_acao">Acesse o link na bio</text>

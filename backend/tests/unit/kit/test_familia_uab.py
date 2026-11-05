@@ -44,15 +44,6 @@ def test_sem_painel_de_cor_sem_balao_e_sem_vagas(template):
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=lambda t: t.identificador)
-def test_nenhuma_caixa_em_anton_tem_mais_de_uma_linha(template):
-    """A caixa tipográfica da Anton mede 1,5 corpo, mais que a entrelinha: duas linhas se
-    cruzariam. A chamada é duas caixas de uma linha, e não uma de duas."""
-    for caixa in template.caixas:
-        if uab.FONTES[caixa.fonte] == "anton-regular":
-            assert all(linhas == 1 for _, linhas in caixa.medidas()), caixa.campo
-
-
-@pytest.mark.parametrize("template", TEMPLATES, ids=lambda t: t.identificador)
 def test_o_pior_caso_da_pilha_cabe(template):
     """Prorrogado, término, hora e início no maior corpo: a pilha não recai de corpo pela altura."""
     peca = _compor(template, imagem="escritorio", prorrogado=True)

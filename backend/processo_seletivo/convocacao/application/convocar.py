@@ -14,6 +14,8 @@ menos que venha motivo, e aí nasce a sucessora, sem tocar na anterior. É a mes
 `emitir_apuracao` usa, e pela mesma razão: a tabela é append-only, e `UPDATE` não existe nela.
 """
 
+from django.utils import timezone
+
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.application.selectors import ato_vigente
 from processo_seletivo.comissoes.application import comando_de_comissao
@@ -51,6 +53,7 @@ def convocar(
     razao_adicional="",
     especie="",
     fundamento_por_especie=None,
+    correcao=None,
 ):
     """Pratica a convocação e devolve o que ela declarou. Recusa antes de gravar qualquer coisa.
 
@@ -59,6 +62,11 @@ def convocar(
     derivada. `razao_adicional` entra na trilha: é por onde a `050` registra a origem do vencimento.
     `fundamento_por_especie(especie, apuracao)`, quando vem, deriva o fundamento **sob a trava**,
     depois de a espécie ser conhecida — é o caminho da chamada individual da `050`.
+
+    `correcao`, quando vem, é a correção pela tela da `120`: `{"convocacao_id", "assinatura"}`. Ela
+    acrescenta duas conferências sob a trava — a convocação nomeada ainda é a que está em aberto
+    (`FR-3843`), e a prévia que a pessoa viu ainda é a do ato (`FR-3857`) — e as recusas próprias de
+    quem corrige: motivo e vencimento. Sem ela, o comando é o de sempre.
     """
     payload = {
         "edital": str(edital_id),
@@ -68,6 +76,11 @@ def convocar(
         "inscricao": str(inscricao_id),
         "especie": (especie or "").strip(),
     }
+    if correcao is not None:
+        # **O que se assinou entra na reserva**: a mesma chave com outra prévia é outro pedido, e
+        # recebe `idempotency_conflict`, como em todo comando.
+        payload["corrige"] = str(correcao["convocacao_id"])
+        payload["previa"] = correcao["assinatura"]
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
@@ -127,20 +140,55 @@ def convocar(
             )
 
         anterior = _em_aberto_da_pessoa(contexto, inscricao)
-        derivada = especie_da_posicao.derivada(
-            inscricao,
-            ocupando=contexto["ocupando"],
-            alcancados=contexto["alcancados"],
-            regularizaveis=contexto["regularizaveis"],
-        )
-        if derivada is None and anterior is not None:
-            # **Corrigir não muda a posição da pessoa.** Quem tem chamada em aberto saiu da fila dos
-            # regularizáveis justamente por ter sido chamado, e a espécie da raiz é a dela.
-            derivada = anterior.especie
+        texto_do_motivo = (motivo or "").strip()
+        if correcao is not None:
+            # **Depois da repetição, e não antes** (`R-002` da `120`): o segundo clique do mesmo
+            # formulário já voltou com o resultado do primeiro, lá em cima. O que chega aqui é outro
+            # formulário — e, se ele viu uma convocação que já não está em aberto, é recusado.
+            _conferir_a_nomeada(
+                contexto,
+                inscricao=inscricao,
+                anterior=anterior,
+                nomeada_id=correcao["convocacao_id"],
+            )
+            if not texto_do_motivo:
+                raise DomainError(
+                    nomes.MOTIVO_DA_CORRECAO_OBRIGATORIO,
+                    "Declare o motivo da correção: ele fica na convocação e na trilha, ao lado da "
+                    "convocação corrigida.",
+                    422,
+                    campo="motivo",
+                )
+        if anterior is not None:
+            derivada = especie_da_posicao.especie_da_sucessora(
+                inscricao,
+                ocupando=contexto["ocupando"],
+                alcancados=contexto["alcancados"],
+                regularizaveis=contexto["regularizaveis"],
+                anterior=anterior,
+            )
+        else:
+            derivada = especie_da_posicao.derivada(
+                inscricao,
+                ocupando=contexto["ocupando"],
+                alcancados=contexto["alcancados"],
+                regularizaveis=contexto["regularizaveis"],
+            )
         # Sem espécie derivável, a pessoa não é chamável por nenhuma: as recusas abaixo dizem por
         # quê, e a espécie de trabalho só decide qual delas se aplica.
         especie = informada or derivada or nomes.SUPLENCIA
-        texto_do_motivo = (motivo or "").strip()
+        # **A versão é lida uma vez, sob a trava**, e serve à assinatura e à gravação: lida duas
+        # vezes, uma Retificação entre as leituras gravaria um fundamento que a prévia não mostrou.
+        versao = effective_version(edital_id=edital.id, at=ctx.now)
+        if correcao is not None:
+            _conferir_a_previa(
+                correcao,
+                anterior=anterior,
+                apuracao=apuracao,
+                versao=versao,
+                perfil=perfil,
+                especie=especie,
+            )
         if anterior is not None and not texto_do_motivo:
             raise DomainError(
                 nomes.CONVOCACAO_VIGENTE_EXISTENTE,
@@ -190,7 +238,6 @@ def convocar(
 
         if fundamento_por_especie is not None:
             texto_do_fundamento = fundamento_por_especie(especie, apuracao)
-        versao = effective_version(edital_id=edital.id, at=ctx.now)
         # **A sucessora copia o número da raiz que corrige**; a chamada nova recebe o seguinte. É
         # a diferença entre corrigir um ato e praticar outro, dita por dado.
         chamada = (
@@ -295,6 +342,94 @@ def _em_aberto_da_pessoa(contexto, inscricao):
         if selectors.desfecho_de(convocacao) is None:
             return convocacao
     return None
+
+
+def _quando(instante):
+    """O instante na hora local, como as frases da condução o dizem."""
+    return timezone.localtime(instante).strftime("%d/%m/%Y às %Hh%M")
+
+
+def _conferir_a_nomeada(contexto, *, inscricao, anterior, nomeada_id):
+    """A convocação que o formulário corrige ainda é a que está em aberto (120, `FR-3843`).
+
+    **Sem esta conferência, o formulário velho praticaria outro ato.** O comando corrige a
+    convocação em aberto *no instante do ato*: se outra pessoa já a corrigiu, ele corrigiria a
+    sucessora, com um motivo escrito para a anterior; se ela teve desfecho, não haveria nada em
+    aberto, e a chamada seguiria como **chamada nova**, com o motivo ignorado. As duas recusas dizem
+    o que aconteceu, e as duas param o ato.
+
+    A nomeada que não é do recorte, ou não é desta inscrição, é referência fora do escopo do ato, e
+    recebe o 404 de sempre: a resposta não diz se ela existe em outro lugar.
+    """
+    from processo_seletivo.comissoes.application import nao_encontrado
+
+    alvo = chave_da_inscricao(inscricao)
+    nomeada = next(
+        (c for c in contexto["convocacoes"] if str(c.id) == str(nomeada_id)),
+        None,
+    )
+    if nomeada is None or chave_da_inscricao(nomeada.inscricao_id) != alvo:
+        raise nao_encontrado()
+    if anterior is None or anterior.id != nomeada.id:
+        desfecho = selectors.desfecho_de(nomeada)
+        if desfecho is not None:
+            raise DomainError(
+                nomes.CONVOCACAO_CORRIGIDA_COM_DESFECHO,
+                f"Esta convocação teve desfecho em {_quando(desfecho.registrado_em)} "
+                f"({desfecho.get_especie_display().lower()}), depois que você abriu o formulário: "
+                "não há mais o que corrigir nela, e nada foi gravado.",
+                409,
+            )
+        sucessora = next(
+            (c for c in contexto["convocacoes"] if c.convocacao_anterior_id == nomeada.id),
+            None,
+        )
+        raise DomainError(
+            nomes.CONVOCACAO_CORRIGIDA_SUCEDIDA,
+            (
+                f"Esta convocação já foi corrigida em {_quando(sucessora.criado_em)}, depois que "
+                "você abriu o formulário. Nada foi gravado: confira a convocação vigente antes de "
+                "corrigir de novo."
+            )
+            if sucessora is not None
+            else "Esta convocação não está mais em aberto. Nada foi gravado.",
+            409,
+        )
+    if nomeada.vencimento is None:
+        raise DomainError(
+            nomes.CORRECAO_SEM_VENCIMENTO,
+            "Esta convocação não tem vencimento, porque o Edital não publica prazo: não há prazo a "
+            "corrigir nela.",
+            409,
+        )
+
+
+def _conferir_a_previa(correcao, *, anterior, apuracao, versao, perfil, especie):
+    """O que a prévia mostrou ainda é o que o ato vai gravar (120, `FR-3857`, `D-010`).
+
+    **Nomear a convocação não basta.** A apuração seguinte, emitida por outra pessoa no intervalo,
+    muda a data que o fundamento cita sem tocar na convocação; uma Retificação muda os rótulos; a
+    contagem nova pode mudar a espécie. A assinatura é recalculada aqui, sob a trava, com o que o
+    ato vai usar — e a recusa recarrega a tela, que monta a prévia nova.
+    """
+    from processo_seletivo.convocacao.application.fluxo import forma_vigente
+    from processo_seletivo.convocacao.domain import alcance
+
+    agora = alcance.assinatura_da_correcao(
+        convocacao_id=anterior.id,
+        apuracao_id=apuracao.id,
+        versao_id=getattr(versao, "id", None),
+        forma=forma_vigente(versao, perfil),
+        especie=especie,
+    )
+    if agora != (correcao.get("assinatura") or ""):
+        raise DomainError(
+            nomes.PREVIA_DA_CORRECAO_SUPERADA,
+            "A prévia mudou desde que você abriu este formulário — a apuração, o Edital ou a "
+            "posição da pessoa não são mais os mesmos. Nada foi gravado: confira o fundamento e a "
+            "espécie abaixo antes de confirmar.",
+            409,
+        )
 
 
 def _recusar_por_deficit(contexto, *, especie, inscricao, apuracao, sucede):
@@ -533,6 +668,20 @@ def _auditar(
             + (
                 f" Motivo da sucessão: {convocacao.motivo_da_sucessao}"
                 if convocacao.motivo_da_sucessao
+                else ""
+            )
+            # **O estado anterior ao lado do posterior** (Constituição, III; 120, `FR-3851`): a
+            # razão já dizia o vencimento novo; sem a convocação corrigida e o vencimento dela, a
+            # trilha não reconstruía de quanto a correção mudou o prazo.
+            + (
+                f" Sucede a convocação {convocacao.convocacao_anterior_id}, de vencimento "
+                + (
+                    convocacao.convocacao_anterior.vencimento.isoformat()
+                    if convocacao.convocacao_anterior.vencimento
+                    else "não informado"
+                )
+                + "."
+                if convocacao.convocacao_anterior_id
                 else ""
             )
             # **Pular alguém fica escrito** (`FR-267`). A recusa admite a precedência com

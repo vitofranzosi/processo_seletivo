@@ -8445,6 +8445,7 @@ def convocacao(request, edital_id, marco_id):
     )
     # Os documentos de cada linha, numa leitura só para o recorte inteiro (115, FR-3607).
     _documentos_por_linha(leitura["linhas"], ordem=request.GET.get("ordem") or "")
+    recusa_da_correcao = request.session.pop("recusa_da_correcao", None)
     # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra
     # e o que cada gesto alcançaria são a mesma fotografia do recorte (`FR-888`).
     recorte = {
@@ -8471,6 +8472,11 @@ def convocacao(request, edital_id, marco_id):
                 # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
                 # quem só consulta, e calculá-las ali seria trabalho sem leitor.
                 **(_previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}),
+                **(
+                    _correcoes_por_linha(fluxo, recorte, leitura, recusa_da_correcao)
+                    if pode_emitir
+                    else {}
+                ),
                 # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
                 # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
                 # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
@@ -8852,8 +8858,20 @@ def convocar_view(request, edital_id, marco_id):
     # sem passar por ela — o mesmo cuidado da emissão da ordem (034, FR-499).
     lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    # **A correção pela tela (120)** chega pela mesma porta, com a convocação que corrige e a
+    # assinatura da prévia que mostrou (`FR-3843`, `FR-3857`). É o mesmo ato, com a mesma
+    # autorização: o ramo existe só para o portador da recusa e para o resultado (`R-005`).
+    corrige = (request.POST.get("corrige") or "").strip()
+    correcao = (
+        {
+            "convocacao_id": _identidade_ou_404(corrige),
+            "assinatura": request.POST.get("previa") or "",
+        }
+        if corrige
+        else None
+    )
     try:
-        request.session["resultado_da_convocacao"] = _serializavel(
+        declarado = _serializavel(
             convocar_e_comunicar(
                 actor=ator,
                 processo_id=edital.processo_id,
@@ -8871,12 +8889,73 @@ def convocar_view(request, edital_id, marco_id):
                 idempotency_key=request.POST.get("chave") or uuid4().hex,
                 correlation_id=f"interface-convocacao-{edital_id}",
                 endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+                correcao=correcao,
             )
         )
-        request.session["acao_da_convocacao"] = "convocacao"
+        if correcao is not None:
+            declarado = {**declarado, **_resultado_da_correcao(declarado)}
+        request.session["resultado_da_convocacao"] = declarado
+        request.session["acao_da_convocacao"] = "correcao" if correcao is not None else "convocacao"
     except DomainError as erro:
-        request.session["erro_da_convocacao"] = erro.detail
+        if correcao is None:
+            request.session["erro_da_convocacao"] = erro.detail
+        elif erro.status == 404:
+            # A convocação nomeada fora do recorte ou da inscrição: referência fora do escopo do
+            # ato, e a resposta é a de toda referência assim (`FR-3847`).
+            raise Http404 from erro
+        else:
+            request.session["recusa_da_correcao"] = _recusa_da_correcao(request, corrige, erro)
     return redirect(destino)
+
+
+#: As recusas em que o cartão mudou no intervalo: o motivo não volta ao formulário (`R-008`).
+_CARTAO_MUDOU = {"convocacao_corrigida_sucedida", "convocacao_corrigida_com_desfecho"}
+
+
+def _recusa_da_correcao(request, corrige, erro):
+    """O que volta ao cartão depois de uma recusa, com o que foi digitado (120, `FR-3850`).
+
+    **A sessão é o portador**, como do resultado e do erro de hoje: a tela seguinte a consome. O
+    motivo fica na sessão do próprio operador por um redirecionamento, e sai dela ao ser exibido.
+    """
+    return {
+        "convocacao": corrige,
+        "inscricao": (request.POST.get("inscricao") or "").strip(),
+        "codigo": erro.code,
+        "detalhe": erro.detail,
+        "campo": erro.campo,
+        "campos": {
+            chave: request.POST.get(chave) or ""
+            for chave in ("motivo", "vencimento", "evento", "complemento")
+        },
+        "cartaoMudou": erro.code in _CARTAO_MUDOU,
+    }
+
+
+def _resultado_da_correcao(declarado):
+    """Os dois vencimentos e o efeito, lidos das convocações, e não do formulário (`FR-3849`)."""
+    from processo_seletivo.convocacao.application.fluxo import efeito_do_vencimento
+    from processo_seletivo.convocacao.models import Convocacao
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    def por_extenso(instante):
+        return timezone.localtime(instante).strftime("%d/%m/%Y %H:%M") if instante else ""
+
+    sucessora = (
+        Convocacao.objects.select_related("convocacao_anterior")
+        .filter(id=declarado["convocacao"]["id"])
+        .first()
+    )
+    if sucessora is None or sucessora.convocacao_anterior is None:
+        return {}
+    anterior = sucessora.convocacao_anterior
+    inscricao = Inscricao.objects.filter(id=sucessora.inscricao_id).only("protocolo").first()
+    return {
+        "protocolo": getattr(inscricao, "protocolo", "") or str(sucessora.inscricao_id),
+        "vencimentoAnterior": por_extenso(anterior.vencimento),
+        "vencimentoNovo": por_extenso(sucessora.vencimento),
+        "efeito": efeito_do_vencimento(anterior.vencimento, sucessora.vencimento),
+    }
 
 
 def _previas_da_convocacao(fluxo, recorte, leitura):
@@ -8894,6 +8973,42 @@ def _previas_da_convocacao(fluxo, recorte, leitura):
             at=recorte["at"],
         ),
         **_fila_com_especie(leitura),
+    }
+
+
+def _correcoes_por_linha(fluxo, recorte, leitura, recusa):
+    """A prévia da correção em cada cartão em aberto, e a recusa no cartão dela (120).
+
+    **Da mesma leitura, sem consulta por cartão** (`FR-3855`): a versão e os fundamentos são lidos
+    uma vez por página. A recusa volta ao cartão **da mesma inscrição** — a chamada é a mesma, ainda
+    que a convocação vigente agora seja outra (`FR-3850`); sem cartão, ela cai no topo da tela.
+    """
+    versao = effective_version(edital_id=recorte["edital"].id, at=recorte["at"])
+    fundamentos = fluxo.fundamentos_por_especie(
+        edital=recorte["edital"],
+        perfil_id=recorte["perfil_id"],
+        lista_id=recorte["lista_id"],
+        apuracao=leitura["apuracao"],
+        at=recorte["at"],
+    )
+    previas = fluxo.previa_das_correcoes(
+        leitura, versao=versao, perfil_id=recorte["perfil_id"], fundamentos=fundamentos
+    )
+    sem_cartao = recusa
+    for linha in leitura["linhas"]:
+        linha["correcao"] = previas.get(str(linha["convocacao"].id))
+        linha["recusaDaCorrecao"] = None
+        if recusa and str(linha["convocacao"].inscricao_id) == recusa.get("inscricao"):
+            linha["recusaDaCorrecao"] = recusa
+            sem_cartao = None
+    from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
+
+    return {
+        "impedimento_da_correcao": fluxo.impedimento_da_correcao(leitura),
+        "recusa_da_correcao_sem_cartao": sem_cartao,
+        # **Com o Processo encerrado ou cancelado, a ação não aparece** (`FR-3838`): o comando a
+        # recusaria como recusa toda escrita no Processo em estado final.
+        "correcao_fechada": recorte["edital"].processo.status in PROCESSO_FINAL,
     }
 
 

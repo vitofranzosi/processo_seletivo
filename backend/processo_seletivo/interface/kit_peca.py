@@ -209,6 +209,9 @@ class Figura:
     #: Pinta por inteiro o retângulo que ocupa (o balão é branco por dentro): texto declarado sobre
     #: ele tem esse fundo, e não o da imagem embaixo.
     opaca: bool = False
+    #: A cor de dentro da figura opaca, quando não é o branco (o balão roxo da FIC). Não vai ao SVG:
+    #: é o que o teste geométrico confere contra o fundo declarado do texto.
+    cor: str = ""
 
     @property
     def caixa(self):
@@ -810,6 +813,19 @@ def _base(elemento):
 #: A altura de uma linha, em corpos: a caixa tipográfica da Poppins mede 1,4 corpo (1050 + 350
 #: milésimos), e linhas mais juntas que isso teriam caixas que se cruzam.
 ENTRELINHA = 1.42
+
+
+def entrelinha(fonte):
+    """A altura de uma linha, em corpos, na fonte de chave dada.
+
+    A `ENTRELINHA`, ou a caixa tipográfica da fonte quando ela é maior: a Space Mono da FIC mede
+    1,48 corpo (1120 + 361 milésimos), e duas linhas dela a 1,42 teriam caixas que se cruzam. A
+    Poppins mede 1,40, e a peça da Pós Lato Sensu não muda.
+    """
+    medidas = kit_fontes.medidas(fonte)
+    return max(ENTRELINHA, (medidas.ascendente - medidas.descendente) / 1000)
+
+
 SEM_TITULO_EM = "O título oficial não coube em: {formatos}."
 SEM_CONTATO_EM = "O contato não coube em: {formatos}."
 #: FR-3836: o formato que passou ao resumo diz na tela; as ofertas completas seguem nos textos.
@@ -829,7 +845,7 @@ def _linhas_na_caixa(texto, caixa, fonte, largura_util, altura=None):
         linhas = quebrar(texto, corpo, fonte, limite=largura_util)
         if linhas is None or len(linhas) > maximo:
             continue
-        if altura is not None and len(linhas) * corpo * ENTRELINHA > altura + 0.5:
+        if altura is not None and len(linhas) * corpo * entrelinha(fonte) > altura + 0.5:
             continue
         return corpo, linhas
     return None
@@ -848,7 +864,7 @@ def _escrever_em(c, nome, retangulo, linhas, corpo, campo):
     y = retangulo[1]
     for linha in linhas:
         c.escrever(nome, x, y + ascendente * corpo, linha, campo=campo, tamanho=corpo)
-        y += corpo * ENTRELINHA
+        y += corpo * entrelinha(c.fonte(nome))
     return y
 
 
@@ -893,7 +909,7 @@ def _itens_do_painel(c, ficha, frases, resumir=False):
     for nome in nomes:
         if nome == "periodo":
             if ficha.modo == fichas.COM_PERIODO:
-                if ficha.prorrogado:
+                if ficha.prorrogado and "faixa" not in c.template.dimensoes:
                     itens.append(("selo_prorrogado", frases["prorrogado"], "fixo"))
                 if ficha.fim_data:
                     itens.append(("periodo", f"{frases['ate']} {ficha.fim_data}", "periodo_curto"))
@@ -1012,7 +1028,9 @@ def _painel_com(c, ficha, frases, *, resumir, oferta_no_minimo=False):
             )
         medidos.append((nome, campo, *medida))
     espaco = painel["espaco"]
-    altura_do_conteudo = sum(len(linhas) * corpo * ENTRELINHA for _, _, corpo, linhas in medidos)
+    altura_do_conteudo = sum(
+        len(linhas) * corpo * entrelinha(c.fonte(nome)) for nome, _, corpo, linhas in medidos
+    )
     altura_do_conteudo += espaco * max(len(medidos) - 1, 0)
     topo = painel["base"] - painel["recuo_em_baixo"] - altura_do_conteudo - recuo
     if topo < painel["topo_minimo"]:
@@ -1021,10 +1039,10 @@ def _painel_com(c, ficha, frases, *, resumir, oferta_no_minimo=False):
             f"subiria até {round(topo)} px, e o limite é {painel['topo_minimo']} px."
         )
     if painel.get("cor"):
-        # Sem cor, o painel é só a pilha: o texto fica direto sobre o fundo, como na UAB.
-        c.retangulo(
-            x, topo, largura_, painel["base"] - topo, cor=painel["cor"], raio=painel["raio"]
-        )
+        # Sem cor, o painel não se desenha: os itens ficam direto sobre o fundo, como na FIC e na
+        # UAB, e o teste geométrico os confere contra os obstáculos da imagem.
+        altura = painel["base"] - topo
+        c.retangulo(x, topo, largura_, altura, cor=painel["cor"], raio=painel["raio"])
     y = topo + recuo
     for nome, campo, corpo, linhas in medidos:
         y = _escrever_em(c, nome, (x + recuo, y, util, 0), linhas, corpo, campo) + espaco
@@ -1045,12 +1063,55 @@ def _fundo(c, imagem):
     )
 
 
+def _ativos_posicionados(c):
+    """Os ativos fixos que o template posiciona (D-004, D-011).
+
+    Os que `dimensoes["opacos"]` nomeia, com a cor de dentro, recebem texto, como o balão; os
+    outros são obstáculo para o teste geométrico.
+    """
+    opacos = c.template.dimensoes.get("opacos", {})
+    for nome, retangulo in c.template.ativos_posicionados.items():
+        cor = opacos.get(nome)
+        c.elementos.append(
+            Figura(
+                *retangulo,
+                c.familia.ativos[nome].arquivo,
+                "image/png",
+                nome,
+                opaca=cor is not None,
+                cor=c.cor(cor) if cor else "",
+            )
+        )
+
+
+def _faixa(c, ficha):
+    """A prorrogação como faixa de ponta a ponta, quando o template a declara (119, T047).
+
+    Sai nas mesmas condições do selo no painel — período declarado e prorrogação comprovada — e o
+    painel deixa de trazê-lo.
+    """
+    faixa = c.template.dimensoes.get("faixa")
+    if not faixa or ficha.modo != fichas.COM_PERIODO or not ficha.prorrogado:
+        return
+    c.retangulo(*faixa["retangulo"], cor=faixa["cor"])
+    _caixa_unica(
+        c,
+        "selo_prorrogado",
+        c.familia.frases["prorrogado"],
+        "fixo",
+        recusa="A faixa da prorrogação não cabe no {formato}.",
+    )
+
+
 def _balao(c):
     """A chamada à ação, no balão quando o template o declara; sem ele, direto no fundo."""
     balao = c.template.dimensoes.get("balao")
     if balao:
         ativo = c.familia.ativos[balao["ativo"]]
-        figura = Figura(*balao["retangulo"], ativo.arquivo, "image/png", "balao", opaca=True)
+        cor = c.cor(balao["cor"]) if balao.get("cor") else ""
+        figura = Figura(
+            *balao["retangulo"], ativo.arquivo, "image/png", "balao", opaca=True, cor=cor
+        )
         c.elementos.append(figura)
     _caixa_unica(
         c,
@@ -1076,6 +1137,8 @@ def _compor_em_caixas(ficha, template, escolha):
     imagem = _imagem_escolhida(familia, escolha)
     if imagem is not None:
         _fundo(c, imagem)
+    _ativos_posicionados(c)
+    _faixa(c, ficha)
     # As frases fixas posicionadas da família — a chamada do alto da UAB —, `{caixa: frase}`. Cada
     # uma é aprovada pela comunicação e passa pela varredura (FR-3814).
     for nome, frase in template.dimensoes.get("frases_posicionadas", {}).items():

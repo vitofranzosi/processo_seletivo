@@ -14,9 +14,9 @@ rabisco verde e o de tom rosa pediriam a chamada numa cor que não passa o contr
 noutra cor — seriam outro template.
 
 **A chamada é frase fixa aprovada da família** (FR-3814): "Seleção de bolsista", em duas caixas
-de uma linha — "SELEÇÃO DE" em marrom e "BOLSISTA" em magenta, como nos slides. A caixa tipográfica
-da Anton mede 1,5 corpo, mais que a entrelinha do compositor, e por isso nenhuma caixa em Anton tem
-mais de uma linha.
+de uma linha — "SELEÇÃO DE" em marrom e "BOLSISTA" em magenta, como nos slides. A Anton mede 1,5
+corpo de caixa tipográfica, e é essa a altura de cada linha dela (`kit_peca.entrelinha`): as caixas
+e a pilha do período estão medidas com ela.
 
 **O que os arquivos dizem e a peça não diz.** "Inscrições até 09 de abril", sem ano, sai como
 "Inscrições até DD/MM/AAAA", com a hora e o início (T-1). Os slides não trazem vagas, e a peça
@@ -99,7 +99,8 @@ IMAGENS = (
     ),
 )
 
-#: A altura de uma linha, em corpos; a mesma do compositor (`kit_peca.ENTRELINHA`).
+#: A altura de uma linha de Poppins, em corpos; a do compositor (`kit_peca.ENTRELINHA`). O título,
+#: única caixa de várias linhas, é em Poppins.
 _ENTRELINHA = 1.42
 
 
@@ -156,16 +157,16 @@ _FRASES_POSICIONADAS = {"chamada": "chamada", "chamada_destaque": "chamada_desta
 #: conferidos pela suíte (FR-3833, `D-014`).
 RESUMOS = {
     ("post", 1): (
-        "6590150a267c5accf0ad37b41463d991ed891f2f2ef9d1e3ee33aabc25ecbb85",
-        "fefb76c4a72b100e93f66b48306d5e68d9e1987a67b8647da9072c13b63d61e9",
+        "097ae75135d3f664ff58b40d34d696f6dccaf87eec574230b0c4a90f0fc042e0",
+        "34c0c7073af88b801476f8bfcf54a2a318d3ac36ef24d1fd94b6ae4315cfb81d",
     ),
     ("story", 1): (
-        "e098ca4d6231f5c0c4d4000655ac262d397dd9b493affddfcddb1814e10114bc",
-        "540d91d5260bfecac255bf578f883e0d64caaed4b15cf9e8e7a57768db12c281",
+        "90ba21efc647ce550b56526421ae74559a4fa3c8fde2ebeca283ff6b583ba4cb",
+        "00f01d3909fd98b10187d39fef5030a72a45f24bf8815c79c980e1ddbaa9f659",
     ),
     ("banner", 1): (
-        "1b22abb4d5255f0a5daa47963d9fe351f6b7a371178fec1580b9146df07504be",
-        "0a742699553adfb710fdcf885d72ac912c8c651daad7a22d9eddf806311fac8b",
+        "e3f32e09906de27d11ce8574a42f428dc4863d03c9fec4b55b3392744fba726b",
+        "fca039587c979d23e2cc1690ba871bfabe8bf409b2c4c5b0b58c2232c5f15012",
     ),
 }
 
@@ -179,7 +180,7 @@ POST = Template(
     caixas=(
         _chamada("chamada", "marrom", 112, (340, 240, 660, 170)),
         _chamada("chamada_destaque", "magenta", 112, (340, 410, 660, 170)),
-        _titulo((340, 616, 660, 170), (42, 40, 36, 32, 30, 28)),
+        _titulo((340, 616, 660, 166), (42, 40, 36, 32, 30, 28)),
         *_painel((46, 42, 38, 34), (28, 26, 24), (30, 28)),
         _fixa("numero", "corpo", (30, 28, 26, 24), (340, 1006, 660, 44)),
         _fixa("chamada_a_acao", "titulo", (28, 26, 24), (340, 1054, 660, 42)),
@@ -193,7 +194,7 @@ POST = Template(
             "base": 1000,
             "recuo": 0,
             "recuo_em_baixo": 0,
-            "topo_minimo": 786,
+            "topo_minimo": 782,
             "espaco": 8,
             "raio": 0,
             "cor": None,
@@ -220,9 +221,9 @@ STORY = Template(
     forma_do_periodo="ate",
     tem_ofertas=False,
     caixas=(
-        _chamada("chamada", "marrom", 110, (510, 470, 490, 160)),
-        _chamada("chamada_destaque", "magenta", 110, (510, 640, 490, 160)),
-        _titulo((120, 1000, 840, 215), (50, 46, 42, 38, 34, 30, 28), "middle"),
+        _chamada("chamada", "marrom", 110, (510, 465, 490, 166)),
+        _chamada("chamada_destaque", "magenta", 110, (510, 635, 490, 166)),
+        _titulo((120, 1000, 840, 205), (50, 46, 42, 38, 34, 30, 28), "middle"),
         *_painel((54, 50, 46, 42), (32, 30, 28), (36, 32), "middle"),
         _fixa("numero", "corpo", (34, 32, 30, 28), (120, 1490, 840, 50), "middle"),
         _fixa("chamada_a_acao", "titulo", (30, 28), (120, 1544, 840, 44), "middle"),
@@ -236,7 +237,7 @@ STORY = Template(
             "base": 1480,
             "recuo": 0,
             "recuo_em_baixo": 0,
-            "topo_minimo": 1225,
+            "topo_minimo": 1215,
             "espaco": 10,
             "raio": 0,
             "cor": None,

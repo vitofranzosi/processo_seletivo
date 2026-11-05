@@ -23,7 +23,7 @@ evento de exportação que a `111` já grava (D-008); a ficha continua leitura s
 | `versao` | inteiro | sobe a cada mudança de ativo, frase ou caixa |
 | `unidades` | conjunto de códigos de unidade | vazio só na Institucional, que vale para todas (FR-3805) |
 | `paleta` | nome → cor | as cores que as caixas citam |
-| `fontes` | papel → fonte livre | `titulo`, `corpo`, `destaque`; cada uma com arquivo e resumo (D-005) |
+| `fontes` | papel → fonte livre | `titulo`, `corpo`, `destaque` e, quando a família tem uma terceira fonte, `rotulo` (a Space Mono da FIC, no número e na faixa); cada uma com arquivo e resumo (D-005) |
 | `ativos` | nome → arquivo com resumo | marca, padrão, balão, ilustração, rodapé (D-004) |
 | `imagens` | lista de 0 a 6 `Imagem` | banco curto (FR-3807) |
 | `variantes` | lista de `Variante` | vazia, ou Internos: `servidores`, `estudantes` |
@@ -46,7 +46,7 @@ evento de exportação que a `111` já grava (D-008); a ficha continua leitura s
 | `forma_do_periodo` | `ate` ou `de-a` (FR-3815) |
 | `tem_ofertas` | booleano (FR-3817, EC-6) |
 | `tem_contato` | booleano (FR-3820) |
-| `ativos_posicionados` | ativo → retângulo; contam como obstáculo (D-011) |
+| `ativos_posicionados` | ativo → retângulo; contam como obstáculo (D-011), salvo os que `dimensoes["opacos"]` nomeia com a cor de dentro, que recebem texto (a bolha do número da FIC) |
 | `area_da_imagem` | retângulo e recorte, quando a família tem banco |
 
 **Caixa**: `campo` (`chamada`, `titulo`, `ofertas`, `periodo`, `selo_prorrogado`, `numero`,

@@ -149,3 +149,19 @@ def lato_uma_oferta(conteudo):
     )
     conteudo["title"] = f"Edital nº 91/2026 – {titulo}"
     _podar_referencias(conteudo)
+
+
+def fic_tres_cargas(conteudo):
+    """Cenário 18 da `119`: FIC com três Perfis de carga horária declarada, como nos slides."""
+    conteudo["profiles"] = conteudo["profiles"][:3]
+    cursos = (
+        ("Assistente Administrativo", "180h"),
+        ("Assistente de Secretaria Escolar", "180h"),
+        ("Inglês Básico", "60h"),
+    )
+    for perfil, (nome, carga) in zip(conteudo["profiles"], cursos, strict=True):
+        perfil["name"] = nome
+        perfil["workload"] = carga
+        perfil["locality"] = ""
+    conteudo["title"] = "Edital nº 91/2026 – Cursos de Formação Inicial e Continuada (DEMONSTRAÇÃO)"
+    _podar_referencias(conteudo)
