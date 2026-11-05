@@ -428,8 +428,17 @@ class TestAcompanhamento:
 
         for pagina in (secao, tela):
             assert novo.strftime("%d/%m/%Y, às %Hh%M") in pagina
-            assert antigo.strftime("%d/%m/%Y, às %Hh%M") not in pagina
-            assert antigo.strftime("%d/%m/%Y") not in pagina
+        assert antigo.strftime("%d/%m/%Y") not in secao
+        # Na tela, a data antiga só nos dados do ato, como a da substituída, que não vale mais
+        # (121, FR-3869); e o cartão do prazo diz que este é o prazo válido.
+        substituida = (
+            "Convocação substituída Não comunicada. O prazo registrado era até "
+            f"{antigo.strftime('%d/%m/%Y, às %Hh%M')}, e não vale mais."
+        )
+        lido = " ".join(re.sub(r"<[^>]+>", " ", tela).split())
+        assert substituida in lido
+        assert lido.replace(substituida, "").count(antigo.strftime("%d/%m/%Y")) == 0
+        assert "Convocação corrigida: este é o prazo válido." in lido
 
     def test_sem_convocacao_nao_ha_secao(self, client, certame):
         _, _, inscricoes = certame

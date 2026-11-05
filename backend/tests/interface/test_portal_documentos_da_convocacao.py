@@ -80,7 +80,9 @@ def test_a_convocada_ve_o_que_apresentar_e_ate_quando(aluno, gestor, client):
     # convocação não teve a comunicação enviada: a tela antiga mostrava a data como prazo de um
     # prazo que não corria (F12); a de agora diz que ele não começou, e a data fica só nos dados do
     # ato (FR-3749 da `118`).
-    assert "O que fazer agora" in corpo and "O que falta" in corpo
+    # A chamada da 121 no lugar de "O que fazer agora" (FR-3735 da 118, revista).
+    assert "Você foi convocado!" in corpo and "O que falta" in corpo
+    assert "O que fazer agora" not in corpo
     assert "Certidão de nascimento ou casamento" in corpo
     assert "Todas as páginas, em arquivo único." in corpo
     assert corpo.count("Falta enviar") == 4
@@ -88,7 +90,7 @@ def test_a_convocada_ve_o_que_apresentar_e_ate_quando(aluno, gestor, client):
     assert "Você já pode enviar." in corpo
     assert "Envie até" not in corpo
     assert "Prazo desta convocação" not in corpo
-    assert "Documento de identificação" not in corpo.split('id="o-que-fazer-agora"')[1]
+    assert "Documento de identificação" not in corpo.split('class="chamada-da-convocacao"')[1]
 
 
 def test_a_convocada_envia_pelo_portal_e_le_o_resultado(aluno, gestor, client):
@@ -101,9 +103,13 @@ def test_a_convocada_envia_pelo_portal_e_le_o_resultado(aluno, gestor, client):
         reverse("portal:apresentar-documento-da-convocacao", args=[pessoa.id, alvo.id]),
         {"arquivo": cenarios.pdf(b"historico")},
     )
+    # A volta é a confirmação, e não o cartão (121, FR-3870): ela diz o documento e a data, e que
+    # o arquivo aguarda a conferência da comissão.
     assert resposta.status_code == 302
+    assert resposta["Location"].endswith("#confirmacao")
     corpo = tela(client, pessoa)
-    assert "Documento recebido. A comissão vai conferir." in corpo
+    assert "Recebemos: Histórico escolar do ensino médio, em " in corpo
+    assert "O arquivo aguarda a conferência da comissão." in corpo
     # O selo e a frase da FR-3746 da `118`, no lugar do sufixo "aguardando conferência".
     assert "Aguardando conferência" in corpo
     assert "A comissão vai conferir; você não precisa fazer nada agora." in corpo
@@ -219,8 +225,9 @@ def test_sem_documento_na_convocacao_a_tela_e_a_de_antes(
 
     corpo = tela(client, pessoa)
     # Sem documento, a estrutura de antes (FR-3574 da `115`; FR-3743 da `118`): nenhum bloco novo.
+    # O título de primeiro nível é o da chamada (121, FR-3868), e "O que fazer" é de segundo nível.
     assert "O que fazer agora" not in corpo
-    assert "<h3>O que fazer</h3>" in corpo
+    assert "<h2>O que fazer</h2>" in corpo
 
 
 def test_o_certificado_da_inscricao_aparece_atendido(

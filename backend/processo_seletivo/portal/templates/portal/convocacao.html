@@ -1,8 +1,13 @@
 {% extends "portal/base.html" %}
-{% block titulo %}Convocação{% endblock %}
+{% load static %}
+{% block titulo %}{{ titulo_da_chamada }}{% endblock %}
 {% block conteudo %}
-<h1>Convocação</h1>
-<p class="sub">{{ selecao.processo_titulo }}</p>
+{% comment %}
+**O título diz o estado** (121, FR-3858): com convocação vigente, ele vem da chamada, nos dois
+ramos; sem ela, continua "Convocação", e o texto é o de hoje.
+{% endcomment %}
+{% if not convocacao %}<h1>Convocação</h1>
+<p class="sub">{{ selecao.processo_titulo }}</p>{% endif %}
 {% include "portal/_mensagens.html" %}
 
 {% comment %}
@@ -32,7 +37,8 @@ frase neutra é a mesma do acompanhamento, e vem da mesma constante (063, FR-118
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
 
 {% elif obrigacoes %}
-{% comment %}Com documento pedido na chamada, os cinco blocos da 118 (FR-3735).{% endcomment %}
+{% comment %}Com documento pedido na chamada: a chamada da 121 e os blocos da 118 (FR-3735, revista).{% endcomment %}
+{% include "portal/_chamada_da_convocacao.html" %}
 {% include "portal/_obrigacoes_da_convocacao.html" %}
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
 
@@ -43,27 +49,25 @@ chamado ao Requerimento. Mudam so o que e comum a todas as telas: o formato do p
 vencido, o rotulo do resultado e a frase do aceite. E, no lugar do chamado, a linha estritamente
 informativa do Requerimento pedido e nao enviado, sem link, quando a politica ja nao admite o
 preenchimento (D-019, D-020).
+
+**E as tres mudancas da 121** (FR-3868): o titulo por estado, o cartao do prazo no lugar da linha
+do prazo, e a correcao dita nele. A frase "Voce foi convocada(o)" saiu, porque o titulo a diz.
 {% endcomment %}
-<section aria-labelledby="chamada">
-  <h2 id="chamada">Você foi convocada(o)</h2>
+{% include "portal/_chamada_da_convocacao.html" %}
+<section class="dados-da-convocacao" aria-label="Dados da convocação">
   <dl class="meta">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
     {% if enviada_em %}
     <dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y" }}, às {{ enviada_em|date:"H\hi" }}</dd>
     {% endif %}
-    {% if convocacao.vencimento %}
-    {% if not prazo_correndo %}
+    {% if convocacao.vencimento and not prazo_correndo %}
     <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>
-    {% else %}
-    <dt>Prazo desta convocação</dt><dd>até {{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>
     {% endif %}
-    {% endif %}
+    {% if substituida %}<dt>Convocação substituída</dt><dd>{{ substituida }}</dd>{% endif %}
     <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>
   </dl>
 
-  {% if estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}
-  <p class="aviso" role="status">{{ prazo_nao_iniciado }}</p>
-  {% elif frase_do_vencido %}
+  {% if frase_do_vencido %}
   <p class="aviso" role="status">{{ frase_do_vencido }}</p>
   {% endif %}
 
@@ -71,12 +75,22 @@ preenchimento (D-019, D-020).
   <p class="ajuda">Resultado registrado: {{ rotulo_do_desfecho }} — {{ desfecho.fundamento }}</p>
   {% if aceite %}<p>{{ aceite }}</p>{% endif %}
   {% else %}
-  <h3>O que fazer</h3>
+  <h2>O que fazer</h2>
   <p>Siga as instruções do Edital para esta convocação{% if prazo_correndo %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
   {% endif %}
 </section>
 {% comment %}O caminho ao requerimento, quando a politica da 029 diz que ele cabe (059, D-007).{% endcomment %}
 {% if informativo_do_requerimento %}<p class="informativo">{{ informativo_do_requerimento }}</p>{% else %}{% include "portal/_chamado_do_requerimento.html" %}{% endif %}
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+{% endif %}
+{% comment %}
+Os tres scripts da inscricao, e nenhum novo (121, FR-3872): o nome do arquivo escolhido, o
+progresso do envio e o foco na recusa. Sem eles, o envio funciona, e a confirmacao continua
+recebendo o foco pela ancora.
+{% endcomment %}
+{% if obrigacoes %}
+<script src="{% static 'portal/arquivo.js' %}" defer></script>
+<script src="{% static 'portal/envio.js' %}" defer></script>
+<script src="{% static 'portal/recusa.js' %}" defer></script>
 {% endif %}
 {% endblock %}
