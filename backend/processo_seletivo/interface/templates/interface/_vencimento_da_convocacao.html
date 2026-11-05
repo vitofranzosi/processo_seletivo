@@ -6,6 +6,12 @@ prazo de zero. A origem escolhida vai para a trilha de cada convocação.
 
 Com Eventos a escolher, as duas origens vão num grupo; sem eles, o campo é um só, e um quadro com
 legenda em volta dele era uma moldura dentro de outra (050, segunda rodada).
+
+Na correção (120), `obrigatorio` troca a ajuda — vazio não quer dizer "o Edital não publica prazo",
+porque só se corrige chamada com vencimento (D-004) —, os valores digitados voltam depois de uma
+recusa (`valor_vencimento`, `valor_evento`), e o fim de cada Evento vai em `data-fim`, para o script
+que diz se o prazo é estendido, antecipado ou mantido. O `required` não vai no campo: o Evento é
+alternativa a ele, e quem confere é o servidor.
 {% endcomment %}
 {% if eventos %}
 <fieldset class="campo">
@@ -15,20 +21,20 @@ legenda em volta dele era uma moldura dentro de outra (050, segunda rodada).
     <select id="evento-{{ prefixo }}" name="evento">
       <option value="">Nenhum — informar a data abaixo</option>
       {% for evento in eventos %}
-      <option value="{{ evento.id }}">Fim do Evento «{{ evento.rotulo }}» — {{ evento.fim|date:"d/m/Y H:i" }}</option>
+      <option value="{{ evento.id }}" data-fim="{{ evento.fim|date:'Y-m-d\TH:i' }}"{% if valor_evento and valor_evento == evento.id|stringformat:"s" %} selected{% endif %}>Fim do Evento «{{ evento.rotulo }}» — {{ evento.fim|date:"d/m/Y H:i" }}</option>
       {% endfor %}
     </select>
   </p>
   <p class="campo">
     <label for="vencimento-{{ prefixo }}">Ou a data e a hora</label>
-    <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}">
-    <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
+    <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}"{% if valor_vencimento %} value="{{ valor_vencimento }}"{% endif %}>
+    <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. {% if obrigatorio %}Obrigatório: a correção informa o vencimento novo.{% else %}Deixe em branco se o Edital não publica prazo.{% endif %}</span>
   </p>
 </fieldset>
 {% else %}
 <p class="campo">
   <label for="vencimento-{{ prefixo }}">Vencimento do prazo</label>
-  <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}">
-  <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
+  <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}"{% if valor_vencimento %} value="{{ valor_vencimento }}"{% endif %}>
+  <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. {% if obrigatorio %}Obrigatório: a correção informa o vencimento novo.{% else %}Deixe em branco se o Edital não publica prazo.{% endif %}</span>
 </p>
 {% endif %}

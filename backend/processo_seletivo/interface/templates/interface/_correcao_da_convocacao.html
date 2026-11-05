@@ -1,0 +1,83 @@
+{% load interface_extras %}{% comment %}
+A correção da convocação pelo cartão da chamada (120). **É por aqui que se dá mais prazo** (FR-3618
+da 115): não existe outro ato para isso, e a tela não o chama por outro nome (FR-3856).
+
+O que este parcial decide, e por quê:
+
+- **Só na chamada em aberto e com vencimento** (FR-3837, FR-3838, D-004). A chamada sem vencimento
+  existe porque o Edital não publica prazo, e não há prazo a corrigir nela.
+- **Com o recorte impedido, a limitação no lugar do formulário** (FR-3839, D-005): a confirmação
+  seria recusada, e o motivo digitado se perderia. A causa é a mesma do topo da tela.
+- **A prévia é a do próprio formulário** (FR-3844, D-008): espécie, fundamento, comunicação, o que
+  reabre e o que não muda, cada um com a origem ao lado. A única parte que depende do que se digita
+  — se o prazo é estendido, antecipado ou mantido — é dita pelo script, e sem ele pelas três regras.
+- **O formulário nomeia a convocação e assina a prévia** (FR-3843, FR-3857): `corrige` e `previa`.
+- **A recusa volta ao cartão, com os campos** (FR-3850, D-009). Quando o cartão mudou no intervalo —
+  corrigido por outra pessoa, ou com desfecho —, o motivo aparece como texto, para copiar, e não
+  preenche o formulário da sucessora, porque foi escrito para outra convocação (R-008).
+{% endcomment %}{% with recusa=linha.recusaDaCorrecao previa=linha.correcao convocacao=linha.convocacao %}
+{% if recusa and recusa.cartaoMudou %}
+<div class="erro" role="alert" tabindex="-1" autofocus id="recusa-da-correcao-{{ n }}">
+  <p><strong>A correção não foi feita.</strong> {{ recusa.detalhe }}{% if linha.desfecho %} Registrado por {% nome_de_pessoa linha.desfecho.registrado_por %}.{% elif convocacao.convocacao_anterior_id %} Corrigida por {% nome_de_pessoa convocacao.criado_por %}.{% endif %}</p>
+  {% if recusa.campos.motivo %}
+  <p>O motivo que você escreveu. Copie, se ainda quiser usá-lo:</p>
+  <blockquote class="nota">{{ recusa.campos.motivo }}</blockquote>
+  {% endif %}
+</div>
+{% endif %}
+{% if not linha.desfecho and convocacao.vencimento and not correcao_fechada %}
+<details class="como-preencher"{% if recusa and not recusa.cartaoMudou %} open{% endif %}>
+  <summary>Corrigir esta convocação</summary>
+  {% if impedimento_da_correcao %}
+  {% if recusa and not recusa.cartaoMudou %}
+  <p class="erro" role="alert" tabindex="-1" autofocus id="recusa-da-correcao-{{ n }}"><strong>A correção não foi feita.</strong> {{ recusa.detalhe }}</p>
+  {% if recusa.campos.motivo %}
+  <p>O motivo que você escreveu. Copie, se ainda quiser usá-lo depois de emitir a apuração seguinte:</p>
+  <blockquote class="nota">{{ recusa.campos.motivo }}</blockquote>
+  {% endif %}
+  {% endif %}
+  <p class="aviso"><strong>A correção está impedida.</strong> {% if impedimento_da_correcao.codigo == "apuracao_ausente" %}Este recorte não tem apuração de ocupação emitida.{% else %}A apuração vigente deste recorte ficou para trás: {% for causa in impedimento_da_correcao.causas %}{% include "interface/_causa_de_obsolescencia.html" %}{% if not forloop.last %}; {% endif %}{% endfor %}.{% endif %} Nenhuma convocação nasce sobre ela, e corrigir é praticar uma convocação nova. Emita a apuração seguinte e volte a este cartão.</p>
+  <p class="acoes"><a class="acao" href="{% url 'interface:ocupacao' edital.id marco_id %}">Emitir a apuração seguinte</a></p>
+  {% elif previa %}
+  <form method="post" action="{% url 'interface:convocar' edital.id marco_id %}" class="confirmar" data-correcao data-vencimento-atual="{{ previa.vencimentoAtual }}">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-corrigir-{{ convocacao.id }}">
+    <input type="hidden" name="inscricao" value="{{ convocacao.inscricao_id }}">
+    <input type="hidden" name="corrige" value="{{ convocacao.id }}">
+    <input type="hidden" name="previa" value="{{ previa.assinatura }}">
+    {% if recusa and not recusa.cartaoMudou %}
+    <p class="erro" role="alert" tabindex="-1" autofocus id="recusa-da-correcao-{{ n }}"><strong>A correção não foi feita.</strong> {{ recusa.detalhe }}</p>
+    {% endif %}
+    <p><strong>Corrigir é irreversível.</strong> A correção é uma convocação nova, que sucede esta; esta continua legível no histórico, com o motivo. Um vencimento anterior ao atual encurta um prazo já comunicado.</p>
+    <p class="nota">É por aqui que se dá mais prazo a quem foi convocado.</p>
+    <dl class="dados-da-inscricao">
+      <dt>Pessoa</dt><dd>{{ linha.inscricao.protocolo }} — {{ linha.inscricao.nome }}, chamada nº {{ convocacao.chamada }}</dd>
+      <dt>Vencimento atual</dt><dd>{{ convocacao.vencimento|date:"d/m/Y H:i" }} — {% if linha.estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}já decorrido, sem desfecho{% elif linha.estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}prazo ainda não iniciado: a comunicação não foi enviada com sucesso{% else %}prazo em curso{% endif %}</dd>
+      <dt>Espécie</dt><dd>{{ previa.especiePorExtenso }} <span class="ajuda">(da posição na fila{% if previa.especieDifere %}; a convocação corrigida era {{ convocacao.get_especie_display|lower }}, e a posição mudou desde então{% endif %})</span></dd>
+      <dt>Fundamento</dt><dd>{{ previa.fundamento }} <span class="ajuda">(derivado{% if previa.fundamentoDifere %}; cita a apuração e o Edital vigentes hoje, e não os da convocação corrigida{% endif %})</span></dd>
+      <dt>Comunicação</dt><dd>{{ previa.fraseDaComunicacao }} <span class="ajuda">(da forma que o Perfil publicado declara)</span></dd>
+      {% if previa.venceu %}<dt>O que reabre</dt><dd>Até o vencimento novo, a pessoa volta a poder enviar e complementar os documentos desta chamada e preencher e enviar o Requerimento de Matrícula declarado na convocação.</dd>{% endif %}
+      <dt>O que não muda</dt><dd>A lista de documentos, os envios e as conferências desta chamada continuam os mesmos.</dd>
+    </dl>
+    <p class="campo">
+      <label for="motivo-da-correcao-{{ n }}">Motivo da correção</label>
+      <textarea id="motivo-da-correcao-{{ n }}" name="motivo" rows="2" required aria-describedby="ajuda-motivo-da-correcao-{{ n }}"{% if recusa.campo == "motivo" %} aria-invalid="true"{% endif %}>{% if recusa and not recusa.cartaoMudou %}{{ recusa.campos.motivo }}{% endif %}</textarea>
+      <span class="ajuda" id="ajuda-motivo-da-correcao-{{ n }}">O que aconteceu com a convocação. Fica nela e na trilha, e não vai à pessoa convocada; não escreva dado pessoal além do que a chamada já identifica.</span>
+    </p>
+    {% if recusa and not recusa.cartaoMudou %}
+    {% include "interface/_vencimento_da_convocacao.html" with prefixo="corrigir-"|add:n eventos=titulares.eventos obrigatorio=True valor_vencimento=recusa.campos.vencimento valor_evento=recusa.campos.evento %}
+    {% else %}
+    {% include "interface/_vencimento_da_convocacao.html" with prefixo="corrigir-"|add:n eventos=titulares.eventos obrigatorio=True %}
+    {% endif %}
+    <p class="nota" aria-live="polite" data-efeito-do-vencimento>Um vencimento posterior ao atual estende o prazo; anterior, e ainda futuro, o antecipa; igual, o mantém.</p>
+    <p class="campo">
+      <label for="complemento-da-correcao-{{ n }}">Complemento do fundamento <span class="opcional">(opcional)</span></label>
+      <textarea id="complemento-da-correcao-{{ n }}" name="complemento" rows="2">{% if recusa and not recusa.cartaoMudou %}{{ recusa.campos.complemento }}{% endif %}</textarea>
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Corrigir a convocação de {{ linha.inscricao.protocolo }}</button></p>
+  </form>
+  {% endif %}
+</details>
+{% endif %}
+{% endwith %}
