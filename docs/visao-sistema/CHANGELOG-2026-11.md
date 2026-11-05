@@ -149,3 +149,27 @@ Esta revisão descreve tudo isso contra a `main` em `a3e23b1f`.
 - **Achado desta revisão, visto no código e não reproduzido:** todo download do Kit recebe o nome `kit-<n>-<ano>.<extensão>`, sem o formato; post, story e banner em PNG saem com o mesmo nome.
 - **As specs não acompanharam o merge:** a 114, a 116 e a 118 dizem `Draft`, e a 119 diz "Não implementada".
 - **O `CLAUDE.md`** diz que dois arquivos de jornada no navegador pulam sem o grupo `navegador`, e mede a suíte em 14 638 e 14; hoje são cinco arquivos (107, 110, 115, 117, 118), e a suíte, 15 878 e 17. A correção não foi feita aqui: o `CLAUDE.md` é das instruções de quem trabalha no repositório, e fica para quem o mantém.
+
+# Atualização de 05/11/2026 da Visão do Sistema
+
+Feita na hora do merge, a pedido de 04/11 ("quando for feito o PR, atualize a documentação do sistema"), sobre a `main` em `7a4f7aec`. Cobre o que entrou nesse dia: a spec 120 (PR #385) e os incrementos 3a, FIC (PR #387), 3d, Aperfeiçoamento (PR #389), e 3c, UAB/bolsista (PR #386), da 119.
+
+## Como foi conferido
+
+- **Leitura direta**, sem leituras paralelas: a spec, a verificação e as decisões da 120; o parcial `_correcao_da_convocacao.html`, `convocar.py` e `fluxo.py` para os rótulos e para o lugar onde cada conferência mora; os módulos `kit_familias/fic.py`, `uab.py` e `aperfeicoamento.py`, as referências em `kit_referencias/` e as settings para as famílias.
+- **A suíte rodou contra PostgreSQL** sobre a árvore que virou a `main` (a integração local dos três PRs, idêntica a `9a459a0e`): 16 136 passando, 18 pulados e nenhuma falha (4 workers, 729 s, com o grupo `assistente` e sem o `navegador`). O 18º pulado é a jornada da 120 no navegador. A UAB entrou depois, sobre essa mesma `main`, com o CI verde no PR (a suíte inteira contra PostgreSQL).
+
+## O que mudou na documentação
+
+- **Convocação:** a lacuna *"corrigir uma convocação não tem tela"* deu lugar à subseção *Corrigir uma convocação em aberto, e dar mais prazo* (`#correcao-da-convocacao`), com a prévia no formulário, o motivo e o vencimento obrigatórios, a assinatura conferida sob a trava, a recusa que volta ao cartão, o impedimento pela apuração superada e o que fica fora por decisão. O aviso *Um prazo só por chamada* aponta para ela.
+- **Matriz de capacidades:** a linha *Corrigir convocação ou suceder desfecho* (não operacionalizado) virou duas. *Corrigir convocação em aberto* está implementado. *Suceder desfecho registrado* continua não operacionalizado.
+- **Pendências:** a linha da convocação ganhou a correção. Fica a sucessão do desfecho e a chamada sem vencimento.
+- **Kit:** a tabela de templates ganhou os nove da FIC, da UAB e da Aperfeiçoamento, e a seção ganhou um parágrafo por família. *O que ainda falta* passou a três famílias: Libras, Internos e TMD. A matriz diz 4 das 7, e as pendências foram atualizadas.
+- **Testes, revisões e rodapé:** a linha da suíte foi atualizada, e a tabela de revisões, o *Onde esta documentação não alcança* e o rodapé ganharam a entrada de 05/11.
+
+## O que não foi verificado, e o que ficou de fora
+
+- **O produto não foi percorrido.** A jornada da 120 no navegador não rodou aqui; a verificação dela é a do PR (4 de 4, com capturas em `specs/120-…/capturas/`).
+- **Maturidade não foi recontada:** os números de arquivos, *templates* e testes são os de 04/11. A 120 não acrescenta tabela, gatilho, migration nem rota.
+- **A UAB (PR #386) entrou por último.** Integrada depois da FIC, ela reprovava 23 testes do kit: a FIC passou a usar no motor a caixa tipográfica da fonte como altura mínima da linha (`kit_peca.entrelinha`), e a Anton mede 1,5 corpo. A sessão da UAB refez as caixas com a altura nova e regenerou as referências e os resumos, sem tocar nas das outras famílias, e o PR foi mergeado com o CI verde.
+- **A spec 120 ainda diz** *"Draft, só documental"* no cabeçalho, embora a implementação tenha entrado no mesmo PR.

@@ -2142,7 +2142,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>A frase de “a quem pedir”</dt><dd><code>interface/conducao.py</code></dd>
       <dt>A página do Processo</dt><dd><code>interface/views.py</code> (<code>processo_detalhe</code>) · <code>processo_detalhe.html</code> · <code>_sinal.html</code> · <code>_serie_de_inscricoes.html</code></dd>
       <dt>Fase do Evento</dt><dd><code>editais/domain/fase_do_evento.py</code></dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 15 878 passando, 17 pulados e nenhuma falha (medido nesta revisão, em 04/11, sobre a <code>main</code> em <code>a3e23b1f</code>, com o grupo opcional <code>assistente</code> e sem o <code>navegador</code>, 4 workers, em 2 184s, com outra suíte no mesmo cluster). Os 17 são 10 pares do vocabulário, a recusa por vendor, o E2E contra a Caixa e os <strong>cinco</strong> arquivos de jornada no navegador (107, 110, 115, 117, 118), que pulam sem o grupo <code>navegador</code>; o CI instala os dois grupos. A medição anterior, de 02/11, dava 14 638 e 14</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 16 136 passando, 18 pulados e nenhuma falha (medido em 05/11 sobre a árvore que virou a <code>main</code> em <code>9a459a0e</code>, com o grupo opcional <code>assistente</code> e sem o <code>navegador</code>, 4 workers, em 729s). Os 18 são 10 pares do vocabulário, a recusa por vendor, o E2E contra a Caixa e os <strong>seis</strong> arquivos de jornada no navegador (107, 110, 115, 117, 118, 120), que pulam sem o grupo <code>navegador</code>; o CI instala os dois grupos. Em 04/11, sobre <code>a3e23b1f</code>, eram 15 878 e 17; a medição de 02/11 dava 14 638 e 14</dd>
     </dl></div></details>
   </section>
 
@@ -4244,8 +4244,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <p class="lead">
       A 119 generaliza a peça única da 111 para os templates que a comunicação usa: <strong>famílias</strong>
       (a identidade visual de um tipo de oferta) em <strong>formatos</strong> (onde a peça vai circular).
-      Especificou sete famílias; o código tem hoje a Institucional e a primeira família da comunicação, a
-      Pós Lato Sensu.
+      Especificou sete famílias; o código tem hoje a Institucional e quatro da comunicação: a Pós Lato
+      Sensu, a FIC, a UAB/bolsista e a Aperfeiçoamento.
     </p>
     <table>
       <thead><tr><th>Formato</th><th>Tamanho</th><th>Observação</th></tr></thead>
@@ -4277,6 +4277,15 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td><code>pos-lato-sensu/post</code></td><td>1</td><td><code>bfcb25490b8e</code></td></tr>
         <tr><td><code>pos-lato-sensu/story</code></td><td>2</td><td><code>8a16aef0abbd</code></td></tr>
         <tr><td><code>pos-lato-sensu/banner</code></td><td>1</td><td><code>1badbdf0cb93</code></td></tr>
+        <tr><td><code>fic/post</code></td><td>1</td><td><code>48c8b8c71eb3</code></td></tr>
+        <tr><td><code>fic/story</code></td><td>1</td><td><code>795eb249d0c1</code></td></tr>
+        <tr><td><code>fic/banner</code></td><td>1</td><td><code>dedce5f30536</code></td></tr>
+        <tr><td><code>uab/post</code></td><td>1</td><td><code>34c0c7073af8</code></td></tr>
+        <tr><td><code>uab/story</code></td><td>1</td><td><code>00f01d3909fd</code></td></tr>
+        <tr><td><code>uab/banner</code></td><td>1</td><td><code>fca039587c97</code></td></tr>
+        <tr><td><code>aperfeicoamento/post</code></td><td>1</td><td><code>973b8dd70eb1</code></td></tr>
+        <tr><td><code>aperfeicoamento/story</code></td><td>1</td><td><code>089ea18ee6e7</code></td></tr>
+        <tr><td><code>aperfeicoamento/banner</code></td><td>1</td><td><code>4f26004ae0ba</code></td></tr>
       </tbody>
     </table>
     <p>
@@ -4287,11 +4296,42 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       resumiu — <em>“As opções não couberam listadas em: {formatos}.”</em> Foi essa regra que levou o story à
       versão 2.
     </p>
+    <p>
+      <strong>A FIC</strong> (desde 05/11) também é só do Cefor. Ela tem quatro fundos ilustrados sobre o
+      amarelo dos slides, Archivo Black no título, Barlow Semi Condensed no corpo e Space Mono no número e
+      na prorrogação. A prorrogação comprovada vira uma <strong>faixa vermelha de ponta a ponta</strong>,
+      <em>“ATENÇÃO! PRAZO PRORROGADO”</em>, e sai do painel. O número do Edital vai numa bolha branca e a
+      chamada num balão roxo, os dois ativos fixos, porque o número não pode mudar de lugar quando a foto
+      muda. As ofertas ficam direto sobre o fundo, como <em>“Nome — carga horária”</em>, e o contato vem da
+      ficha, nunca o desenhado no slide. A FIC <strong>não resume</strong>: a lista que não cabe recusa o
+      formato, e por isso quatro polos não saem no banner.
+    </p>
+    <p>
+      <strong>A UAB/bolsista</strong> (desde 05/11), também do Cefor, põe o texto numa coluna à direita da
+      foto, sobre dois fundos claros com o rabisco magenta. Dos cinco exemplos da comunicação, três ficaram
+      de fora: ou a chamada não passaria o contraste AA, ou o texto fica noutra posição, e seriam outro template. A chamada é
+      frase fixa aprovada, <em>“SELEÇÃO DE”</em> em marrom e <em>“BOLSISTA”</em> em magenta, em Anton, uma
+      linha cada. A Anton mede 1,5 corpo, e as caixas foram medidas com a altura de linha por fonte que a
+      FIC trouxe ao motor. O título vai em Poppins Bold. O painel é só o período, sem vagas, como nos slides.
+    </p>
+    <p>
+      <strong>A Aperfeiçoamento</strong> (desde 05/11), também do Cefor, usa cinco fotos presas por clipe,
+      cada uma com um arquivo por formato. O título vai em Lexend, à esquerda da foto. O painel é a faixa
+      azul-escura: o prazo em Lexend e as ofertas em Unbounded verde, subindo sobre o pé da foto quando a
+      lista cresce. O número e a busca vão nas pílulas, e a chamada à ação no contorno ao lado do botão.
+      Também não resume: quatro opções recusam o post. A Unbounded não desenha o micro (µ), e a peça que o
+      pedir nela é recusada, nomeando o caractere e a fonte.
+    </p>
+    <p>
+      O que os slides dizem e a peça não diz fica de fora nas duas: <em>“INSCRIÇÕES ABERTAS”</em>,
+      <em>“GRATUITA E 100% A DISTÂNCIA”</em>, <em>“modalidade a distância”</em>, o tipo de curso e datas sem ano.
+      As duas estão liberadas no desenvolvimento e na suíte, e em nenhum outro lugar.
+    </p>
     <div class="aviso aviso-lacuna"><span class="titulo">O que ainda falta</span>
       <ul>
-        <li>As outras cinco famílias especificadas — FIC, Libras, UAB, Aperfeiçoamento, Internos (com as
-          variantes servidores e estudantes) e TMD — não existem: aparecem só na lista que valida a variável,
-          e liberá-las não tem efeito. Libras, TMD e Internos esperam a escolha da fonte que substitui a
+        <li>As outras três famílias especificadas — Libras, Internos (com as variantes servidores e
+          estudantes) e TMD — não existem na <code>main</code>: aparecem só na lista que valida a variável, e
+          liberá-las não tem efeito. Libras, TMD e Internos esperam a escolha da fonte que substitui a
           Helvetica Neue (P-2).</li>
         <li>A homologação no servidor está toda por fazer: tempo, PNG idêntico em duas gerações, as prévias e
           os downloads num navegador, e uma pessoa da comunicação obtendo post, story e banner em menos de três
@@ -8352,19 +8392,64 @@ Em paralelo, se o Edital pede:
     </div>
     <p class="miudo">A falha de envio não apaga a convocação: ela fica com o prazo não iniciado e volta para <span class="rotulo-ui">Comunicações que ainda não saíram</span>. Uma emissão que reservou a chave e não registrou o que aconteceu fica de fora, e a tela manda conferir o histórico antes de emitir de novo.</p>
 
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: corrigir uma convocação não tem tela</span>
-      <p>A tela diz <em>“corrigi-lo é sucedê-lo com motivo”</em>, e a aplicação sabe fazê-lo — a convocação
-      sucessora cita a anterior, que continua legível. Mas nenhum formulário tem o campo de motivo.
-      Na prática, um vencimento digitado errado ou uma convocação praticada sob Perfil sem forma de
-      comunicar não se corrige pela interface: a forma é lida da versão que a convocação citou, e só
-      uma sucessora a leria da versão nova. <span class="selo selo-nop">Implementado, não operacionalizado</span></p>
+    <h3 id="correcao-da-convocacao">Corrigir uma convocação em aberto, e dar mais prazo <span class="selo selo-impl">Implementado</span></h3>
+    <p>
+      Desde a 120, cada cartão de chamada em aberto e com vencimento tem
+      <span class="rotulo-ui">Corrigir esta convocação</span>, para quem pode convocar. <strong>É o único
+      jeito de dar mais prazo</strong> a quem foi convocado — a tela o diz com essas palavras. Vale para
+      o prazo em curso, para o vencimento já decorrido sem desfecho e para a comunicação que ainda não
+      saiu. A correção é uma convocação nova, <strong>sucessora</strong> da corrigida: mesmo número de
+      chamada, mesma lista de documentos, mesmos envios e conferências, vencimento novo. A corrigida
+      continua legível no histórico, com o motivo.
+    </p>
+    <ol class="linha-tempo">
+      <li><span class="passo">1</span><span class="titulo">O formulário já é a prévia</span>
+        <p>Antes do botão, cada valor com a origem ao lado: a espécie (da posição na fila), o fundamento
+          (derivado da apuração e do Edital vigentes hoje — e a tela avisa quando diferem dos da
+          corrigida), a comunicação (da forma que o Perfil publicado declara), <span class="rotulo-ui">O
+          que reabre</span> quando o prazo já venceu e <span class="rotulo-ui">O que não muda</span>.
+          Não há tela intermediária.</p></li>
+      <li><span class="passo">2</span><span class="titulo">Motivo e vencimento novo, os dois obrigatórios</span>
+        <p><span class="rotulo-ui">Motivo da correção</span> fica na convocação e na trilha, e não vai ao
+          convocado. O vencimento vem do Cronograma ou de data e hora, como na chamada. A tela diz, pelo
+          valor digitado, se o prazo é <em>estendido</em>, <em>antecipado</em> ou <em>mantido</em>.
+          O complemento do fundamento é opcional.</p></li>
+      <li><span class="passo">3</span><span class="titulo">Confirma-se o que se viu</span>
+        <p>O formulário nomeia a convocação que corrige e leva a assinatura da prévia — convocação,
+          apuração, versão do Edital e espécie. O comando confere tudo sob a trava: se outra pessoa
+          corrigiu ou desfechou a chamada, se a apuração seguinte saiu ou uma Retificação mudou o
+          Edital no intervalo, nada é gravado. A recusa volta aberta no cartão, com o que foi digitado;
+          se o cartão mudou, o motivo aparece como texto para copiar, com quem praticou o ato.</p></li>
+      <li><span class="passo">4</span><span class="titulo">O resultado e o portal</span>
+        <p><em>“O vencimento passou de … para …: o prazo foi estendido.”</em> Com mensagem individual, a
+          sucessora comunica como a chamada: com o texto da convocação e o prazo novo — <strong>a mensagem
+          não diz que corrige a anterior</strong>, e a prévia avisa disso. No portal, o convocado lê a
+          sucessora pelas regras da <a href="#documentos-da-convocacao">115</a> e da
+          <a href="#convocado-no-portal">118</a>: com o prazo vencido, voltam a abrir o envio de documentos
+          e o Requerimento pedido na convocação.</p></li>
+    </ol>
+    <div class="aviso aviso-nota"><span class="titulo">Quando a correção está impedida</span>
+      <p>Com a apuração do recorte superada — basta um desfecho em outro cartão — ou ausente, nenhuma
+        convocação nasce, e corrigir é convocar. No lugar do formulário, o cartão diz <em>“A correção está
+        impedida.”</em>, com a mesma causa do topo da tela, e oferece <span class="rotulo-ui">Emitir a
+        apuração seguinte</span>. As recusas que dependem da pessoa — fora da faixa, sem vaga faltante —
+        só aparecem na confirmação.</p>
     </div>
+    <p class="miudo">
+      Fora da tela, por decisão: a chamada <strong>sem</strong> vencimento (o Edital não publica prazo, e a
+      correção não o inventa; o serviço recusa com <code>correcao_sem_vencimento</code>); corrigir só o
+      complemento do fundamento; correção em lote; e a fila, que continua sem quem tem chamada em aberto.
+      Esperam o usuário a redação própria da mensagem da sucessora (<em>“A sua convocação foi
+      corrigida…”</em>, FR-290 da 019) e o aviso de pendência (QI-7). <strong>Suceder um desfecho</strong> já
+      registrado continua sem tela — ver a <a href="#desfechos">lacuna da inércia</a>.
+    </p>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
       <dt>Os três gestos e a chamada individual</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/fluxo.py">convocacao/application/fluxo.py</a></dd>
       <dt>O alcance e a assinatura</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/alcance.py">domain/alcance.py</a></dd>
       <dt>A comunicação</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/comunicar.py">application/comunicar.py</a></dd>
       <dt>A tela</dt><dd><code>interface/templates/interface/convocacao.html</code> · <code>interface/views.py</code> (<code>convocacao</code>, <code>convocar_titulares_view</code>, <code>emitir_pendentes_view</code>)</dd>
+      <dt>A correção (120)</dt><dd><code>convocacao/application/convocar.py</code> (a convocação nomeada e a assinatura conferidas sob a trava) · <code>convocacao/application/fluxo.py</code> (a prévia e o impedimento) · <code>_correcao_da_convocacao.html</code> · <code>static/interface/correcao-da-convocacao.js</code> (estende, antecipa ou mantém) · <code>tests/navegador/test_jornada_da_correcao_da_convocacao.py</code> · <a href="../../specs/120-correcao-da-convocacao-pela-gestao/spec.md">spec 120</a></dd>
     </dl></div></details>
   </section>
 
@@ -8427,7 +8512,8 @@ Em paralelo, se o Edital pede:
       <p>Vencido o prazo da chamada, contado do envio da comunicação, fecham-se juntos o envio de documentos e o
         preenchimento, o envio e a atualização do Requerimento de Matrícula pedido na convocação. A comissão
         continua conferindo, e <strong>nenhum desfecho nasce do prazo</strong>: quem registra o resultado é a
-        comissão.</p>
+        comissão. Para dar mais prazo, a comissão <a href="#correcao-da-convocacao">corrige a convocação</a>
+        (120), e os dois reabrem juntos.</p>
     </div>
 
     <h3 id="alocacao-a-conferencia">Quem confere</h3>
@@ -10750,14 +10836,15 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#kit-de-divulgacao">Kit de divulgação: ficha e textos</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Da versão vigente, com origem de cada valor; avisa o material exportado que ficou antigo (111, A).</td></tr>
 <tr data-marca="parc"><td><a href="#kit-de-divulgacao">Kit de divulgação: a peça para o feed</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>PNG e SVG com a marca oficial; desligada em produção até a comunicação aprovar (111, B).</td></tr>
 <tr data-marca="impl"><td><a href="#kit-pacote">Kit de divulgação: o pacote (.zip)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Textos, peça, ficha e manifesto num arquivo; sai só com os textos quando não há peça (111, C).</td></tr>
-<tr data-marca="parc"><td><a href="#kit-familias-e-formatos">Kit de divulgação: peças por família e formato</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Pós Lato Sensu em post, story e banner, liberada por template; nada liberado em produção; 1 das 7 famílias (119).</td></tr>
+<tr data-marca="parc"><td><a href="#kit-familias-e-formatos">Kit de divulgação: peças por família e formato</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Pós Lato Sensu, FIC, UAB e Aperfeiçoamento em post, story e banner, liberadas por template; nada liberado em produção; 4 das 7 famílias (119).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Convocação</td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Convocar os titulares num ato</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Chamar suplente, regularizar, precedência justificada</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">E-mail de convocação no ato</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Por mensagem individual; por publicação, registra-se onde saiu.</td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Não atendimento dos vencidos em lote</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Apuração seguinte emitida pelo desfecho</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só se não move vaga entre listas.</td></tr>
-<tr data-marca="nop"><td><a href="#convocacao">Corrigir convocação ou suceder desfecho</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Existe no código, sem tela.</td></tr>
+<tr data-marca="impl"><td><a href="#correcao-da-convocacao">Corrigir convocação em aberto (dar mais prazo)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>No cartão da chamada, com prévia assinada (120). Só chamada com vencimento.</td></tr>
+<tr data-marca="nop"><td><a href="#desfechos">Suceder desfecho registrado</a></td><td><span class="selo selo-nop">Não operacionalizado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Existe no código, sem tela.</td></tr>
 <tr data-marca="na"><td><a href="#convocacao">Candidato responder à convocação pelo portal</a></td><td><span class="selo selo-na">Não se aplica</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Todo desfecho é registrado pela comissão.</td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Página de convocação com link no portal</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Ver convocação, em Minhas inscrições e no acompanhamento (059).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Matrícula e integração</td></tr>
@@ -11733,8 +11820,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#convocacao">Convocação e suplência</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>3 espécies, 7 desfechos, atestado de fato externo, fila derivada, comunicação append-only. Porta pela página do Edital e pela ocupação; convocar os titulares num ato; registrar o não atendimento de todos os vencidos num gesto; apuração seguinte emitida pelo desfecho</td>
-            <td>Corrigir uma convocação ou um desfecho com motivo não tem tela. O <a href="#cadastro-de-reserva">cadastro de reserva</a> convoca pela vaga acrescida só na ampla de Perfil sem Modalidade (097); com cotas, a convocação é feita fora</td>
+            <td>3 espécies, 7 desfechos, atestado de fato externo, fila derivada, comunicação append-only. Porta pela página do Edital e pela ocupação; convocar os titulares num ato; registrar o não atendimento de todos os vencidos num gesto; apuração seguinte emitida pelo desfecho; corrigir a convocação em aberto pelo cartão, que é como se dá mais prazo (120)</td>
+            <td>Suceder um desfecho com motivo não tem tela; a chamada sem vencimento não se corrige pela tela. O <a href="#cadastro-de-reserva">cadastro de reserva</a> convoca pela vaga acrescida só na ampla de Perfil sem Modalidade (097); com cotas, a convocação é feita fora</td>
           </tr>
           <tr>
             <td><strong><a href="#matricula">Requerimento de Matrícula</a></strong></td>
@@ -11787,8 +11874,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#kit-de-divulgacao">Kit de divulgação</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Ficha da versão vigente, textos prontos, a peça do feed em PNG e SVG com a marca oficial, exportação na trilha e aviso do material antigo (111, A e B); o pacote .zip (111, C); famílias e formatos, com a Pós Lato Sensu em post, story e banner (119, incrementos 1 e 2)</td>
-            <td>A peça desligada em produção até a comunicação aprovar (SC-1054); nenhum template da 119 liberado em produção; as outras cinco famílias; a homologação no servidor; o papel Comunicação não se atribui antes da 112</td>
+            <td>Ficha da versão vigente, textos prontos, a peça do feed em PNG e SVG com a marca oficial, exportação na trilha e aviso do material antigo (111, A e B); o pacote .zip (111, C); famílias e formatos, com a Pós Lato Sensu, a FIC, a UAB e a Aperfeiçoamento em post, story e banner (119, incrementos 1, 2, 3a, 3c e 3d)</td>
+            <td>A peça desligada em produção até a comunicação aprovar (SC-1054); nenhum template da 119 liberado em produção; as outras três famílias (Libras, Internos, TMD); a homologação no servidor; o papel Comunicação não se atribui antes da 112</td>
           </tr>
           <tr>
             <td><strong>Autenticação institucional</strong></td>
@@ -12709,6 +12796,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>30/10/2026</td><td><code>main</code> em <code>62824816</code>, specs 098–104</td><td>As sete specs mergeadas entre 21 e 30/10 descritas como entregues: a <a href="#previa-do-sorteio">prévia do sorteio</a>, com semente fictícia (098); o <a href="#relatorio-do-edital">relatório do Edital</a> (099) e o <a href="#relatorio-consolidado">consolidado da unidade</a> (100); a <a href="#agenda">Agenda dos Editais</a> (101); a <a href="#sorteio-viavel">extração inviável</a>, impedida na publicação (102, com o PR 335); a <a href="#retificacao-em-curso">Retificação em curso</a> pela navegação comum (103); e as <a href="#acoes-disponiveis">Ações disponíveis para você</a> (104). Registro no mesmo arquivo.</td></tr>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
+          <tr><td>05/11/2026</td><td><code>main</code> em <code>7a4f7aec</code>, spec 120 e os incrementos 3a, 3c e 3d da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as famílias <a href="#kit-familias-e-formatos">FIC, UAB/bolsista e Aperfeiçoamento</a> do kit. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -12724,6 +12812,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>A revisão de 30/10 seguiu o mesmo método: três leituras paralelas — 098 e 102; 099 e 100; 101, 103 e 104 — contra o código da <code>main</code>, e os rótulos citados conferidos de novo nos <em>templates</em> e no código. Não se rodou a suíte nem se percorreu o produto: o número da suíte continua o de 21/10, sem os testes das sete specs.</li>
         <li>A revisão de 02/11 seguiu o mesmo método: três leituras paralelas — identidade, acessos e unidades (106, 107, 109, 110); documentação, trilha, Kit e a 112; o encerramento e as correções A-01 a A-12 — contra o código da <code>main</code>, e os rótulos principais conferidos de novo nos <em>templates</em>. Desta vez a suíte rodou contra PostgreSQL (14 638 passando, 14 pulados); o produto não foi percorrido, e as jornadas no navegador não rodaram aqui, por falta do grupo <code>navegador</code>.</li>
         <li>A revisão de 04/11 seguiu o mesmo método: quatro leituras paralelas — 115 e 117; 118 e a correção da 029; 114 e 116; o incremento C da 111 e a 119 — contra o código da <code>main</code>, e as contagens refeitas pelo método da página. A suíte rodou contra PostgreSQL (15 878 passando, 17 pulados); o produto não foi percorrido, e as jornadas no navegador não rodaram aqui. Nem todo trecho apontado pelas leituras entrou: a matriz de permissões, o glossário, as rotas e as respostas rápidas ainda não citam a 115, a 117 e a 118 — ver o registro desta revisão em <code>CHANGELOG-2026-11.md</code>.</li>
+        <li>A atualização de 05/11 foi feita na hora do merge, por leitura direta das specs, dos <em>templates</em> e do código mergeado — sem leituras paralelas. A suíte rodou contra PostgreSQL sobre a mesma árvore da <code>main</code>; as jornadas no navegador e o produto não foram percorridos aqui. A seção <em>Maturidade</em> não foi recontada: só a linha da suíte mudou.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
         <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
@@ -12763,8 +12852,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   em 30/09/2026 (<code>main</code> em <code>86bbf49</code>), as 055 a 068 em 10/10/2026
   (<code>0edc0f8d</code>), as 069 a 072 em 15/10/2026 (<code>db428b30</code>) as 073 a 092 em 19/10/2026
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
-  (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>) e as 114 a 119 em 04/11/2026
-  (<code>a3e23b1f</code>). Onde documentação e código
+  (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
+  (<code>a3e23b1f</code>) e a 120, com as famílias FIC, UAB e Aperfeiçoamento da 119, em 05/11/2026
+  (<code>7a4f7aec</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
