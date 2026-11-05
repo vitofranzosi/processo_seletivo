@@ -5,8 +5,8 @@ spec ou requisito mudou. Onde a proposta esbarra num requisito escrito, a justif
 **a decisão é do usuário**. As decisões estão fechadas desde o parecer de 05/11 (seção 11).
 
 > **De onde vem.** O usuário percorreu a jornada do convocado na `main` e registrou o achado
-> `doc/achado-comunicacao-ao-convocado-2026-11-05.md` (worktree `documentacao-kit-divulgacao`, ainda
-> sem commit). Faltam duas coisas: a X3 da `118`, porque a mensagem não diz que há documentos, e a
+> [`doc/achado-comunicacao-ao-convocado-2026-11-05.md`](../achado-comunicacao-ao-convocado-2026-11-05.md).
+> Faltam duas coisas: a X3 da `118`, porque a mensagem não diz que há documentos, e a
 > QI-7 da `115`, porque a pendência não gera aviso. Este estudo junta as duas com o pedido de mudança
 > de perspectiva. A convocação tem de ler como **comunicação institucional importante**, com prazo,
 > consequência e uma ação principal, e não como tela de administrar documentos.
