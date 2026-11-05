@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 01/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade Internos, com fotos em losango de uma servidora sorridente ao computador, de uma colega com um tablet e de uma sala de trabalho com computadores. Seleção para servidores. Edital nº 01/2026: Professor Substituto e Técnico-Administrativo. Inscrições até 31/10/2026, às 09h43 (horário de Brasília). Início em 11/10/2026. Acesse o edital, busque por 01/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1500" height="850" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
+<text x="810" y="92" font-family="Unbounded" font-size="30" font-weight="400" fill="#ffffff" data-campo="chamada">Seleção para servidores</text>
+<text x="810" y="149" font-family="Inter" font-size="40" font-weight="700" fill="#ffffff" data-campo="titulo_sem_numero">Professor Substituto e</text>
+<text x="810" y="206" font-family="Inter" font-size="40" font-weight="700" fill="#ffffff" data-campo="titulo_sem_numero">Técnico-Administrativo</text>
+<text x="810" y="274" font-family="Unbounded" font-size="30" font-weight="700" fill="#ffffff" data-campo="identificacao">Edital nº 01/2026</text>
+<text x="810" y="372" font-family="Unbounded" font-size="30" font-weight="700" fill="#ffffff" data-campo="periodo_curto">Inscrições até 31/10/2026</text>
+<text x="810" y="416" font-family="Inter" font-size="28" font-weight="400" fill="#ffffff" data-campo="hora">às 09h43 (horário de Brasília)</text>
+<text x="810" y="460" font-family="Inter" font-size="28" font-weight="400" fill="#ffffff" data-campo="inicio">Início em 11/10/2026</text>
+<text x="810" y="504" font-family="Inter" font-size="28" font-weight="700" fill="#ffffff" data-campo="busca">busque por 01/2026 – Cefor</text>
+<text x="810" y="548" font-family="Inter" font-size="28" font-weight="400" fill="#ffffff" data-campo="selo">Versão vigente desde 08/10/2026 · ref.</text>
+<text x="810" y="587" font-family="Inter" font-size="28" font-weight="400" fill="#ffffff" data-campo="selo">IMPRESSAO</text>
+<text x="810" y="638" font-family="Unbounded" font-size="32" font-weight="400" fill="#ffffff" data-campo="chamada_a_acao">Acesse o edital</text>
+</svg>

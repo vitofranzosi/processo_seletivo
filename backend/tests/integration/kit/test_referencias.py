@@ -142,14 +142,22 @@ CENARIOS_POR_FAMILIA = {
         "20-com-atendimento": ("91", 1, kit.fic_tres_cargas, ATENDIMENTO),
         "22-atendimento-longo": ("91", 1, kit.fic_tres_cargas, ATENDIMENTO_LONGO),
     },
+    # Cenário 23: a outra variante, com a outra imagem; a primeira é a de todos os cenários comuns.
+    "internos": {"23-estudantes": ("91", 1, None, "")},
 }
+#: A escolha de um cenário de família, quando não é a primeira da lista (EC-19).
+ESCOLHA_DO_CENARIO = {"23-estudantes": {"variante": "estudantes", "imagem": "estudantes"}}
 
 
 def _compor_e_comparar(ficha, templates, nome):
     regeradas = []
     for template in templates:
         familia = kit_familias.familia(template.familia)
-        escolha = kit_peca.Escolha(imagem=familia.imagens[0].chave if familia.imagens else None)
+        primeiras = {
+            "imagem": familia.imagens[0].chave if familia.imagens else None,
+            "variante": familia.variantes[0].chave if familia.variantes else None,
+        }
+        escolha = kit_peca.Escolha(**{**primeiras, **ESCOLHA_DO_CENARIO.get(nome, {})})
         pasta = PASTA / template.pasta_das_referencias
         try:
             peca = kit_peca.compor_template(ficha, template, escolha)
@@ -181,7 +189,8 @@ def test_a_peca_dos_cenarios_da_familia_e_a_referencia(api_client, familia, nome
 def test_a_peca_de_cada_template_das_familias_e_a_referencia(api_client, nome):
     """A peça, ou a recusa com o motivo, de cada template no cenário (SC-1132, SC-1134).
 
-    A imagem é a primeira do banco: a peça muda de fundo com a escolha, e de mais nada.
+    A imagem é a primeira do banco, e a variante a primeira da lista: a peça muda de fundo com a
+    imagem, e da chamada com a variante, e de mais nada.
     """
     corpus, ate, mudar = CENARIOS_DAS_FAMILIAS[nome]
     edital = kit.publicar(api_client, corpus, ate=ate, mudar=mudar, chave=f"familias-{nome}")

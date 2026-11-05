@@ -53,7 +53,7 @@ distintos, lista no story e resume no post.
 | 18. FIC com três Perfis de carga declarada | Da família FIC (incremento 3a, abaixo); na Pós, o caso de várias ofertas é o 91 de quatro polos |
 | 19. Carga vazia num Perfil e longa noutro | Galeria (`c_carga`) e `test_peca_das_familias.py` |
 | 20–22. Atendimento declarado, ausente e de 255 caracteres | Nenhum template da Pós tem caixa de contato (FR-3820): a peça não muda; o contato é dos textos, em `test_textos_com_carga_e_contato.py` |
-| 23. Internos nas duas variantes | Da família Internos (incremento 3) |
+| 23. Internos nas duas variantes | Da família Internos (incremento 3e, T051): os cenários comuns na variante `servidores` e o `23-estudantes` em `test_referencias.py`, e a chamada como única diferença em `test_familia_internos.py` |
 | 24. Edital de unidade sem família | `test_familias_na_tela.py::test_unidade_sem_familia_so_tem_a_institucional` |
 | 25. Caractere sem grafia só na fonte de título | `test_peca_das_familias.py::test_caractere_sem_glifo_so_na_fonte_de_titulo`; na galeria não cabe, porque as três Poppins têm o mesmo repertório |
 

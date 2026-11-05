@@ -260,7 +260,7 @@ def gravar(leitura, saida):
     return resultado
 
 
-def gravar_template(leitura, template, imagem, saida):
+def gravar_template(leitura, template, imagem, saida, variante=None):
     """A peça de um template de família no cenário, ou a recusa com o motivo (FR-3831)."""
     ficha = leitura.ficha
     chave = f"{leitura.chave}-{template.formato.chave}"
@@ -271,7 +271,9 @@ def gravar_template(leitura, template, imagem, saida):
         resultado.motivo = f"Sem material: {ficha.motivo}"
         return resultado
     try:
-        peca = kit_peca.compor_template(ficha, template, kit_peca.Escolha(imagem=imagem))
+        peca = kit_peca.compor_template(
+            ficha, template, kit_peca.Escolha(imagem=imagem, variante=variante)
+        )
     except kit_peca.PecaRecusada as recusa:
         resultado.motivo = recusa.motivo
         return resultado
@@ -391,6 +393,7 @@ def principal():
     parser.add_argument("--familia", default="institucional", help="a família (119)")
     parser.add_argument("--formato", help="um formato só: post, story ou banner")
     parser.add_argument("--imagem", help="a imagem do banco; a primeira, se não dita")
+    parser.add_argument("--variante", help="a variante da família; a primeira, se não dita")
     argumentos = parser.parse_args()
     familia = kit_familias.familia(argumentos.familia)
     templates = [
@@ -399,6 +402,7 @@ def principal():
     if not templates:
         raise SystemExit(f"A família {familia.chave} não tem o formato {argumentos.formato}.")
     imagem = argumentos.imagem or (familia.imagens[0].chave if familia.imagens else None)
+    variante = argumentos.variante or (familia.variantes[0].chave if familia.variantes else None)
     da_111 = familia.chave == "institucional"
     saida = argumentos.saida.resolve()
     # Pasta vazia, e não limpa aqui: um arquivo de cenário que deixou de existir ficaria na galeria
@@ -424,7 +428,7 @@ def principal():
                         resultados.append(gravar(leitura, saida))
                     else:
                         resultados.extend(
-                            gravar_template(leitura, t, imagem, saida) for t in templates
+                            gravar_template(leitura, t, imagem, saida, variante) for t in templates
                         )
                     print(f"{leitura.chave}: {resultados[-1].motivo or 'peça gerada'}")
                 transaction.set_rollback(True)

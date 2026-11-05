@@ -1131,10 +1131,25 @@ def _imagem_escolhida(familia, escolha):
     raise EscolhaInvalida("A imagem escolhida não está no banco da família.")
 
 
+def _variante_escolhida(familia, escolha):
+    """A variante da escolha, nas famílias que as têm (EC-19); fora da lista, recusada (EC-9).
+
+    Como a imagem: a família com variantes não tem uma padrão. Quem escolhe é a tela, pela lista
+    fechada, e o motor não decide por ela a quem o Edital se dirige.
+    """
+    if not familia.variantes:
+        return None
+    for variante in familia.variantes:
+        if variante.chave == escolha.variante:
+            return variante
+    raise EscolhaInvalida("A variante escolhida não está na família.")
+
+
 def _compor_em_caixas(ficha, template, escolha):
     c = _Composicao(template)
     familia, frases = c.familia, c.familia.frases
     imagem = _imagem_escolhida(familia, escolha)
+    variante = _variante_escolhida(familia, escolha)
     if imagem is not None:
         _fundo(c, imagem)
     _ativos_posicionados(c)
@@ -1143,6 +1158,12 @@ def _compor_em_caixas(ficha, template, escolha):
     # uma é aprovada pela comunicação e passa pela varredura (FR-3814).
     for nome, frase in template.dimensoes.get("frases_posicionadas", {}).items():
         _caixa_unica(c, nome, frases[frase], "chamada", recusa="{texto!r} não cabe no {formato}.")
+    # A chamada fixa da variante, na caixa `chamada`: a única diferença de texto entre as
+    # variantes (EC-19). Família sem variante não passa por aqui, e o desenho dela não muda.
+    if variante is not None:
+        _caixa_unica(
+            c, "chamada", variante.chamada, "chamada", recusa="{texto!r} não cabe no {formato}."
+        )
     avisos, omissao = [], ""
     titulo = _resolver_titulo(ficha, template, escolha)
     if titulo is None:
