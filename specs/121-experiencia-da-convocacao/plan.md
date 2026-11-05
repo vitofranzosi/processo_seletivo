@@ -319,6 +319,12 @@ Em cada um, o texto do quadro tem *"enviamos"* e não tem *"recebeu"* nem *"rece
    A migration não preenche nada: o teste da migration confere zero linhas alteradas.
 5. **Repetição.** A repetição concluída com a mesma chave não grava linha nova, e por isso não grava
    identificação nova (FR-3888).
+6. **Recuperável pelo Git.** Os quatro arquivos de modelo estão no índice do Git (`git ls-files
+   --error-unmatch`) e não são ignorados (`git check-ignore` devolve vazio). O CI faz o *checkout*
+   com o `.git`, e o teste roda lá. O procedimento de conferência contra um commit histórico está na
+   R-009 e no [quickstart.md](quickstart.md).
+7. **Reconstrução da variante e da citada.** Já está no caso de integração *reconstrução*, da tabela
+   acima, e é a mesma função do envio (R-002).
 
 **Guardiões que a migration toca.** Ela é a primeira da `convocacao` depois da `120`, e o guardião da
 contagem de migrations por app, da `022`, ganha uma linha. O `provisionar_papeis` continua

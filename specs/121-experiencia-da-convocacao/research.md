@@ -240,9 +240,26 @@ e a gravação produziria um resumo de um texto que não saiu. Tirar o resumo da
 essa janela. Os rótulos `html` e `texto` no conteúdo resumido impedem que um texto movido de um
 arquivo para o outro produza o mesmo resumo.
 
-**Como se confere depois.** Num commit qualquer, recalcula-se o resumo dos dois arquivos pela mesma
-regra. O commit cujo resumo for igual ao gravado tem o texto que saiu. A regra está escrita aqui para
-que a conferência não dependa do código de produção.
+**A composição é determinística.** A regra fixa a ordem dos arquivos (HTML, depois texto), os rótulos
+e o separador. Fixa também a codificação UTF-8 da fonte como o motor a leu, sem normalizar fim de
+linha nem espaço. O mesmo par de arquivos dá sempre o mesmo resumo, em qualquer máquina.
+
+**Como se confere depois, pelo Git.** Os quatro arquivos de modelo são versionados no repositório, sob
+`backend/`, e por isso entram em toda release (`ps-construir` arquiva `backend/` do commit). Dado um
+resumo gravado:
+
+1. `git log --format=%H -- <os dois arquivos do modelo>` lista os commits que os mudaram;
+2. em cada um, `git show <commit>:<arquivo>` devolve o conteúdo histórico, que se resume pela mesma
+   regra;
+3. o commit cujo resumo for igual ao gravado tem o texto que saiu. Se ninguém mexeu nos arquivos
+   desde então, o commit atual também tem.
+
+A regra está escrita aqui para que a conferência não dependa do código de produção. Duas condições a
+mantêm possível:
+
+- **os arquivos não saem do Git**: nem gerados no *build*, nem ignorados. Um teste confere isso;
+- **um arquivo renomeado continua rastreável**, com `git log --follow`. O caminho de cada modelo é
+  fixado no código, e mudá-lo é mudança de código, revisada como as demais.
 
 **Na tentativa falhada.** A renderização passa a vir antes da conferência do destinatário (plano,
 seção 5). Assim, toda `FALHA` individual tem modelo, e a identificação diz que texto se tentou enviar.

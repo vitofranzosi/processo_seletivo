@@ -123,10 +123,12 @@ arquivos das specs revistas neste mesmo PR (D-001).
 - Q: As demais propostas? → A: D-001 a D-007, D-010 e D-012 aceitas como estão; a D-009 aceita sob a
   condição de o plano provar a variante **e** a versão exata do modelo usado no envio.
 - Q: A prova do plano mostrou que o histórico de implantação não identifica a versão exata do modelo
-  (R-001 do plano). Como fica a D-009? → A: **Opção A**: uma coluna em `ComunicacaoEmitida`, com o
-  nome do modelo e o SHA-256 dos arquivos HTML e texto efetivamente usados na renderização, gravada
-  também na tentativa que falhou. Os registros anteriores ficam sem identificação, sem versão
-  atribuída retroativamente (decisão de 2026-11-05, sobre o plano).
+  (R-001 do plano). Como fica a D-009? → A: **Opção A**: uma coluna em `ComunicacaoEmitida`,
+  `modelo_da_mensagem`, com o nome do modelo e o SHA-256 dos arquivos HTML e texto efetivamente
+  usados na renderização, numa composição determinística, gravada também na tentativa que falhou. Os
+  registros anteriores e a publicação ficam sem identificação, sem versão inferida retroativamente.
+  A FR-3891 abre a exceção só para essa coluna e a migration dela. Os arquivos históricos continuam
+  recuperáveis pelo Git (decisão de 2026-11-05, sobre o plano).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -570,7 +572,12 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   na mesma linha e na mesma transação que registra o resultado:
   - o **nome do modelo**, *inicial* ou *correção*;
   - o **resumo SHA-256** do conteúdo dos dois arquivos, HTML e texto, **efetivamente usados na
-    renderização** daquele envio, e não lidos de novo do disco depois.
+    renderização** daquele envio, e não lidos de novo do disco depois, numa composição
+    **determinística** dos dois: a mesma ordem, os mesmos rótulos e o mesmo separador, de modo que o
+    mesmo par de arquivos dê sempre o mesmo resumo.
+
+  Os arquivos de modelo MUST ser versionados no repositório, nunca gerados nem ignorados, de modo que
+  o conteúdo de cada versão gravada continue **recuperável pelo Git**.
 
   A identificação MUST ser gravada também na tentativa que **falhou**, porque ela diz qual texto se
   tentou enviar. A comunicação por publicação não tem modelo, e fica sem identificação. As comunicações
@@ -675,7 +682,8 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **SC-1172**: Em 100 % dos envios individuais, inclusive os que falham, a comunicação emitida grava
   o nome do modelo e um resumo igual ao SHA-256 recalculado dos dois arquivos que renderizaram aquele
   envio. Trocado o conteúdo de um modelo, o envio seguinte grava outro resumo, e o já gravado não
-  muda. A publicação e as linhas anteriores à `121` têm zero identificações.
+  muda. A publicação e as linhas anteriores à `121` têm zero identificações. Os quatro arquivos de
+  modelo estão no índice do Git, e o resumo de um commit histórico se recalcula do `git show` dele.
 
 ## Assumptions
 

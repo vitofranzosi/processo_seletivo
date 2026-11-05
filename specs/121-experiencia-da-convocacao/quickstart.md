@@ -50,6 +50,17 @@ cd backend && LETRA=C1 CORRIGIR=1 uv run python manage.py shell < ../doc/estudo-
 A D-008 se demonstra pela suíte, e não pelo navegador: provocar a falha de um envio no meio da cadeia
 exige o *backend* de e-mail que recusa, que só a suíte monta.
 
+## Conferir uma comunicação contra o Git (D-009)
+
+Com o valor de `modelo_da_mensagem` de uma comunicação emitida, por exemplo `correcao:sha256:…`:
+
+```bash
+git log --format=%H -- backend/processo_seletivo/convocacao/templates/convocacao/mensagem/correcao.html backend/processo_seletivo/convocacao/templates/convocacao/mensagem/correcao.txt
+```
+
+Em cada commit listado, recalcule o resumo pela regra da R-009 sobre `git show <commit>:<arquivo>` dos
+dois arquivos. O commit com o mesmo resumo tem o texto que saiu.
+
 ## Antes do uso real
 
 - A matriz de clientes de e-mail da SC-1164, com uma captura por linha, sobre o SMTP de homologação.
