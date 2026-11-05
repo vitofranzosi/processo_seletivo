@@ -29,7 +29,6 @@ tela (contrato).
 
 import hashlib
 
-from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -37,7 +36,15 @@ from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
-from processo_seletivo.interface import identidade, kit_pacote, kit_peca, kit_textos
+from processo_seletivo.interface import (
+    identidade,
+    kit_escolha,
+    kit_familias,
+    kit_pacote,
+    kit_peca,
+    kit_textos,
+)
+from processo_seletivo.interface.kit_familias import institucional
 from processo_seletivo.portal import ficha as fichas
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.seguranca.application.authorization import (
@@ -124,13 +131,44 @@ def _indice_da_manchete(dados):
         raise DomainError("kit_manchete_invalida", MANCHETE_INVALIDA, 422) from None
 
 
-def _motivo_sem_peca(request):
-    """Por que a peça não existe neste acesso, antes de compor: chave desligada ou host local."""
-    if not settings.KIT_DE_DIVULGACAO_PECA:
-        return PECA_EM_VALIDACAO
+def _motivo_sem_peca(request, *, da_institucional=True):
+    """Por que a peça não existe neste acesso, antes de compor: chave desligada ou host local.
+
+    A chave da `111` é da Institucional; as famílias da comunicação têm a liberação por template
+    (119, FR-3808), conferida na composição.
+    """
+    if da_institucional:
+        motivo = _motivo_da_institucional()
+        if motivo:
+            return motivo
     if host_local(request):
         return kit_peca.HOST_LOCAL
     return ""
+
+
+def _motivo_da_institucional():
+    """A Institucional também passa pela liberação (FR-3835): `liberados()` decide.
+
+    A versão 1 com o resumo congelado continua da chave da `111`; qualquer outra versão, ou outro
+    resumo, só sai pela configuração nova, que a nomeia — a chave da `111` não a alcança.
+    """
+    if institucional.POST in kit_familias.liberados():
+        return ""
+    if kit_familias.institucional_v1(institucional.POST):
+        return PECA_EM_VALIDACAO
+    return kit_familias.VERSAO_EM_APROVACAO
+
+
+#: O que só uma família da comunicação pede. A Institucional não tem banco, variante nem outro
+#: formato; um envio que os traz não saiu da tela e é recusado sem gerar (EC-9).
+CAMPOS_SO_DAS_FAMILIAS = ("variante", "imagem")
+
+
+def _conferir_institucional(dados):
+    if any((dados.get(campo) or "").strip() for campo in CAMPOS_SO_DAS_FAMILIAS):
+        raise kit_escolha.EscolhaInvalida
+    if (dados.get("formato_da_peca") or "").strip() not in ("", institucional.POST.formato.chave):
+        raise kit_escolha.EscolhaInvalida
 
 
 def _compor(ficha, indice):
@@ -139,6 +177,88 @@ def _compor(ficha, indice):
         return kit_peca.compor(ficha, manchete=indice)
     except kit_peca.MancheteInvalida:
         raise DomainError("kit_manchete_invalida", MANCHETE_INVALIDA, 422) from None
+
+
+#: O nome de cada formato na tela.
+NOMES_DOS_FORMATOS = {"post": "Post", "story": "Story", "banner": "Banner do site"}
+
+
+def _da_familia(dados):
+    """O pedido é de uma família da comunicação? A Institucional segue o caminho da `111`."""
+    return (dados.get("familia") or "").strip() not in ("", institucional.CHAVE)
+
+
+def _peca_pedida(ficha, edital, dados, indice):
+    """`(peca, escolhida)` do pedido de prévia ou exportação de PNG e SVG.
+
+    Sem família da comunicação, a peça da `111`, como sempre foi. Com ela, a escolha validada
+    contra as listas e o template do `formato_da_peca` (`D-012`).
+    """
+    if not _da_familia(dados):
+        _conferir_institucional(dados)
+        peca = _compor(ficha, indice)
+        return peca, kit_escolha.Escolhida(institucional.FAMILIA, None, None, indice)
+    escolhida = kit_escolha.ler(dados, ficha, edital, indice_da_manchete=indice)
+    liberados = kit_familias.liberados()
+    peca = kit_escolha.compor(
+        ficha,
+        escolhida,
+        (dados.get("formato_da_peca") or "").strip(),
+        liberados,
+        kit_escolha.manchetes(ficha, escolhida, liberados),
+    )
+    return peca, escolhida
+
+
+def _secoes_da_familia(request, ficha, escolhida):
+    """Uma prévia por formato da família, com o motivo de cada um que não sai (FR-3830)."""
+    motivo = _motivo_sem_peca(request, da_institucional=False) or (
+        "" if ficha.tem_material else ficha.motivo
+    )
+    liberados = kit_familias.liberados()
+    lista = () if motivo else kit_escolha.manchetes(ficha, escolhida, liberados)
+    formatos, sem_titulo, sem_contato, resumidos = [], [], [], []
+    for template in kit_escolha.templates_da_familia(escolhida.familia):
+        formato = template.formato
+        item = {
+            "formato": formato.chave,
+            "nome": NOMES_DOS_FORMATOS[formato.chave],
+            "largura": formato.largura // 2,
+            "altura": formato.altura // 2,
+            "peca": None,
+            "motivo": motivo,
+        }
+        if not motivo:
+            try:
+                peca = kit_escolha.compor(ficha, escolhida, formato.chave, liberados, lista)
+            except kit_peca.PecaRecusada as recusa:
+                item["motivo"] = recusa.motivo
+            else:
+                item["peca"] = peca
+                if kit_peca.SEM_TITULO_EM.split(":")[0] in " ".join(peca.avisos):
+                    sem_titulo.append(item["nome"].lower())
+                if kit_peca.SEM_CONTATO_EM.split(":")[0] in " ".join(peca.avisos):
+                    sem_contato.append(item["nome"].lower())
+                if kit_peca.RESUMO_EM.split(":")[0] in " ".join(peca.avisos):
+                    resumidos.append(item["nome"].lower())
+        formatos.append(item)
+    avisos = []
+    if sem_titulo:
+        avisos.append(kit_peca.SEM_TITULO_EM.format(formatos=", ".join(sem_titulo)))
+    if sem_contato:
+        avisos.append(kit_peca.SEM_CONTATO_EM.format(formatos=", ".join(sem_contato)))
+    if resumidos:
+        avisos.append(kit_peca.RESUMO_EM.format(formatos=", ".join(resumidos)))
+    return {
+        "formatos": formatos,
+        "manchetes": lista,
+        "manchete": escolhida.manchete,
+        "png": kit_pacote.disponivel(),
+        "sem_rasterizador": "" if kit_pacote.disponivel() else SEM_RASTERIZADOR,
+        "avisos": avisos,
+        # O motivo comum a todos os formatos (host local, sem material): dito uma vez só.
+        "motivo": motivo,
+    }
 
 
 def _secao_da_peca(request, ficha, indice):
@@ -205,7 +325,21 @@ def kit(request, edital_id):
     if ator is None:
         return identidade.pedir_identificacao(request)
     ficha = fichas.ler(edital, agora=timezone.now(), base_url=_base_url(request))
-    indice = _indice_da_manchete(request.GET)
+    dados = request.GET
+    tela = (dados.get("familia_da_tela") or "").strip()
+    if tela and tela != (dados.get("familia") or "").strip():
+        # A pessoa trocou de família no formulário: a imagem, a variante e a manchete marcadas
+        # eram da família anterior, e não um pedido para a nova. A nova abre com as primeiras da
+        # lista dela; sem isto, sair da Pós para a Institucional era "escolha indisponível".
+        dados = {"familia": dados.get("familia", "")}
+    indice = _indice_da_manchete(dados)
+    try:
+        escolhida = kit_escolha.ler(dados, ficha, edital, indice_da_manchete=indice)
+        aviso_da_escolha = escolhida.aviso
+    except kit_escolha.EscolhaInvalida:
+        # A tela abre com a pré-escolha e diz por quê; nada é gerado com a escolha pedida (EC-9).
+        escolhida, indice = kit_escolha.ler({}, ficha, edital), None
+        aviso_da_escolha = kit_escolha.ESCOLHA_INDISPONIVEL
     textos, notas = _material(ficha)
     anteriores = exportacoes(edital)
     desatualizadas, mais = fichas.desatualizacoes(anteriores, ficha)
@@ -232,7 +366,17 @@ def kit(request, edital_id):
                 "formatos": list(TEXTOS),
                 "formatos_da_peca": list(PECAS),
                 "formato_do_pacote": next(iter(PACOTE)),
-                "secao_da_peca": _secao_da_peca(request, ficha, indice),
+                "secao_da_peca": (
+                    _secao_da_peca(request, ficha, indice) if escolhida.institucional else None
+                ),
+                "secoes_da_familia": (
+                    None
+                    if escolhida.institucional
+                    else _secoes_da_familia(request, ficha, escolhida)
+                ),
+                "escolha": escolhida,
+                "familias": kit_escolha.familias_oferecidas(ficha),
+                "aviso_da_escolha": aviso_da_escolha,
             },
         )
     )
@@ -244,7 +388,8 @@ def previa(request, edital_id):
     ator, edital = _edital_do_kit(request, edital_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
-    if _motivo_sem_peca(request) or not kit_pacote.disponivel():
+    da_institucional = not _da_familia(request.GET)
+    if _motivo_sem_peca(request, da_institucional=da_institucional) or not kit_pacote.disponivel():
         raise Http404
     indice = _indice_da_manchete(request.GET)
     ficha = fichas.ler(edital, agora=timezone.now(), base_url=_base_url(request))
@@ -253,7 +398,8 @@ def previa(request, edital_id):
     if request.GET.get("impressao", "") != ficha.impressao:
         raise DomainError("kit_desatualizado", MUDOU, 409)
     try:
-        peca = _compor(ficha, indice)
+        # Escolha fora da lista e template não liberado são a peça que não existe neste acesso.
+        peca, _ = _peca_pedida(ficha, edital, request.GET, indice)
     except kit_peca.PecaRecusada:
         raise Http404 from None
     resposta = HttpResponse(
@@ -303,6 +449,57 @@ def pacote(ficha, *, manchete, motivo_sem_peca):
     return dados, peca, motivo
 
 
+def pacote_da_familia(ficha, edital, dados, indice):
+    """O ZIP da família: a peça de cada formato liberado, e o motivo dos que não entram (FR-3829).
+
+    Escolha fora da lista continua 400 — é pedido inválido, e não formato que não cabe.
+    """
+    escolhida = kit_escolha.ler(dados, ficha, edital, indice_da_manchete=indice)
+    liberados = kit_familias.liberados()
+    lista = kit_escolha.manchetes(ficha, escolhida, liberados)
+    formatos = []
+    for template in kit_escolha.templates_da_familia(escolhida.familia):
+        item = {"formato": template.formato.chave, "template": template, "peca": None}
+        item.update(svg=None, png=None, motivo="", recusa="")
+        try:
+            peca = kit_escolha.compor(ficha, escolhida, item["formato"], liberados, lista)
+        except kit_escolha.EscolhaInvalida:
+            raise
+        except kit_escolha.NaoLiberado as fechado:
+            divergente = fechado.motivo == kit_escolha.VERSAO_EM_APROVACAO
+            item["motivo"] = "versao_divergente" if divergente else "nao_liberado"
+        except kit_peca.PecaRecusada as recusa:
+            item.update(motivo="recusa", recusa=recusa.motivo)
+        else:
+            item["peca"] = peca
+            item["svg"] = kit_peca.svg(peca, ficha, fonte_embutida=True).encode()
+            if kit_pacote.disponivel():
+                item["png"] = kit_pacote.rasterizar(
+                    kit_peca.svg(peca, ficha), kit_peca.fontes_da_peca(peca)
+                )
+            else:
+                item["motivo"] = "sem_rasterizador"
+        formatos.append(item)
+    textos, notas = _material(ficha)
+    dados_do_zip, pecas = kit_pacote.montar_da_familia(
+        ficha,
+        markdown=kit_textos.em_markdown(ficha, textos, notas),
+        texto=kit_textos.em_texto(ficha, textos, notas),
+        escolhida=escolhida,
+        formatos=formatos,
+    )
+    imagem = escolhida.imagem_do_banco()
+    detalhe = {
+        "familia": escolhida.familia.chave,
+        "familia_versao": escolhida.familia.versao,
+        "variante": escolhida.variante,
+        "imagem": imagem.chave if imagem else None,
+        "imagem_sha256": {f: imagem.sha256(f) for f in imagem.arquivos} if imagem else None,
+        "pecas": pecas,
+    }
+    return dados_do_zip, detalhe
+
+
 @require_http_methods(["POST"])
 def exportar(request, edital_id, formato):
     """O material num arquivo, registrado na trilha do Edital (`FR-3435`, `FR-3436`)."""
@@ -312,7 +509,11 @@ def exportar(request, edital_id, formato):
     if ator is None:
         return identidade.pedir_identificacao(request)
     e_peca = formato in PECAS
-    if e_peca and (_motivo_sem_peca(request) or (formato == "png" and not kit_pacote.disponivel())):
+    da_institucional = not _da_familia(request.POST)
+    if e_peca and (
+        _motivo_sem_peca(request, da_institucional=da_institucional)
+        or (formato == "png" and not kit_pacote.disponivel())
+    ):
         raise Http404
     agora = timezone.now()
     ficha = fichas.ler(edital, agora=agora, base_url=_base_url(request))
@@ -320,8 +521,24 @@ def exportar(request, edital_id, formato):
         raise DomainError("kit_sem_material", ficha.motivo, 409)
     if request.POST.get("impressao", "") != ficha.impressao:
         raise DomainError("kit_desatualizado", MUDOU, 409)
-    peca, sem_peca = None, None
-    if formato in PACOTE:
+    peca, sem_peca, escolhida, da_familia = None, None, None, {}
+    if formato in PACOTE and not da_institucional:
+        try:
+            dados, da_familia = pacote_da_familia(
+                ficha, edital, request.POST, _indice_da_manchete(request.POST)
+            )
+        except kit_escolha.EscolhaInvalida as invalida:
+            raise DomainError("kit_escolha_invalida", invalida.motivo, 400) from None
+    elif formato in PACOTE:
+        try:
+            _conferir_institucional(request.POST)
+        except kit_escolha.EscolhaInvalida as invalida:
+            raise DomainError("kit_escolha_invalida", invalida.motivo, 400) from None
+        # A família também no ZIP da Institucional (FR-3828): é por ela que a tela reabre na
+        # escolha mais recente, e não na última exportação que a registrou.
+        da_familia = kit_escolha.detalhe_da_familia(
+            kit_escolha.Escolhida(institucional.FAMILIA, None, None, None)
+        )
         dados, peca, motivo = pacote(
             ficha,
             manchete=_indice_da_manchete(request.POST),
@@ -331,7 +548,11 @@ def exportar(request, edital_id, formato):
     elif e_peca:
         indice = _indice_da_manchete(request.POST)
         try:
-            peca = _compor(ficha, indice)
+            peca, escolhida = _peca_pedida(ficha, edital, request.POST, indice)
+        except kit_escolha.EscolhaInvalida as invalida:
+            raise DomainError("kit_escolha_invalida", invalida.motivo, 400) from None
+        except kit_escolha.NaoLiberado as fechado:
+            raise DomainError("kit_template_indisponivel", fechado.motivo, 409) from None
         except kit_peca.PecaRecusada as recusa:
             raise DomainError("kit_peca_recusada", recusa.motivo, 409) from None
         dados = _arquivo_da_peca(ficha, peca, formato)
@@ -361,13 +582,16 @@ def exportar(request, edital_id, formato):
                 "vigente_desde": ficha.versao_desde,
                 "ato": ficha.versao_ato,
             },
-            "template": kit_peca.TEMPLATE if peca else None,
+            "template": peca.template.identificador if peca else None,
             "impressao": ficha.impressao,
             "versao_da_impressao": ficha.versao_da_impressao,
             "campos": ficha.campos,
             "manchete": peca.manchete if peca else None,
             "sha256": hashlib.sha256(dados).hexdigest(),
             **({"sem_peca": sem_peca} if formato in PACOTE else {}),
+            # A escolha da peça, que não é guardada em lugar nenhum além daqui (FR-3828, D-008).
+            **(kit_escolha.detalhe(escolhida, peca) if escolhida and peca else {}),
+            **da_familia,
         },
     )
     tipo, extensao = FORMATOS[formato]

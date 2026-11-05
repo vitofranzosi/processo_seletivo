@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 01/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade Pós Lato Sensu, com foto de uma estudante sorridente, de fone de ouvido, escrevendo diante do notebook. Edital nº 01/2026: Professor Substituto e Técnico-Administrativo. Inscrições até 31/10/2026, às 09h43 (horário de Brasília). Início em 11/10/2026. Acesse o edital, busque por 01/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1500" height="850" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
+<text x="286" y="110" font-family="Poppins" font-size="48" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">Professor Substituto e</text>
+<text x="286" y="179" font-family="Poppins" font-size="48" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">Técnico-Administrativo</text>
+<text x="286" y="362" font-family="Poppins" font-size="32" font-weight="400" fill="#ffffff" data-campo="identificacao">Edital nº 01/2026</text>
+<rect x="102" y="530" width="780" height="282" rx="24" fill="#f3b514"/>
+<text x="126" y="592" font-family="Poppins" font-size="36" font-weight="700" fill="#450460" data-campo="periodo_curto">Inscrições até 31/10/2026</text>
+<text x="126" y="640" font-family="Poppins" font-size="28" font-weight="400" fill="#450460" data-campo="hora">às 09h43 (horário de Brasília)</text>
+<text x="126" y="686" font-family="Poppins" font-size="28" font-weight="400" fill="#450460" data-campo="inicio">Início em 11/10/2026</text>
+<text x="126" y="732" font-family="Poppins" font-size="28" font-weight="700" fill="#450460" data-campo="busca">busque por 01/2026 – Cefor</text>
+<text x="126" y="778" font-family="Poppins" font-size="28" font-weight="400" fill="#450460" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+<image x="580" y="350" width="360" height="110" preserveAspectRatio="none" data-campo="balao" href="data:image/png;base64,MARCA"/>
+<text x="760" y="416" font-family="Poppins" font-size="30" font-weight="700" fill="#5d299c" text-anchor="middle" data-campo="chamada_a_acao">Acesse o edital</text>
+</svg>

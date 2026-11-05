@@ -6,6 +6,11 @@ cada família de template que vier depois. Rode de `backend/`, com o PostgreSQL 
     TEST_DB_ENGINE=postgresql DB_USER=$USER DB_RUNTIME_USER=$USER DB_NAME=ps_galeria LC_ALL=C \\
         uv run python scripts/galeria_do_kit.py --saida /tmp/galeria-kit
 
+**Por família e formato** (119, FR-3831, FR-3834): `--familia pos-lato-sensu` mostra cada template
+da família — `--formato post` restringe a um — em todo cenário, com a recusa e o motivo onde não
+couber, e o identificador, a versão e o resumo curto de cada template em cada peça. É sobre essa
+página que a aprovação de um template se registra, nomeando exatamente essa versão e esse resumo.
+
 Grava em `--saida`, que precisa estar vazia, um `index.html` com um cartão por cenário — a peça, o
 texto alternativo, a recusa quando há — e, por cenário, o PNG, o SVG e o ZIP que a exportação
 entregaria. A página abre direto do disco, sem servidor.
@@ -55,7 +60,12 @@ from django.utils import timezone  # noqa: E402
 from django.utils.dateparse import parse_datetime  # noqa: E402
 from rest_framework.test import APIClient  # noqa: E402
 
-from processo_seletivo.interface import kit_de_divulgacao, kit_pacote, kit_peca  # noqa: E402
+from processo_seletivo.interface import (  # noqa: E402
+    kit_de_divulgacao,
+    kit_familias,
+    kit_pacote,
+    kit_peca,
+)
 from processo_seletivo.portal import ficha as fichas  # noqa: E402
 from processo_seletivo.processos.application.finalizacao import cancel_edital  # noqa: E402
 from tests.fixtures import editais_do_piloto, kit  # noqa: E402
@@ -174,6 +184,18 @@ def c_termo(cliente):
     return [Leitura("17-91-termo", "Valor oficial com termo da lista (EC-26)", _ler(edital))]
 
 
+def c_lato(cliente):
+    edital = kit.publicar(cliente, chave="galeria-lato", mudar=kit.lato_uma_oferta)
+    titulo = "17. Pós lato sensu de uma oferta, título de 120 caracteres (119)"
+    return [Leitura("18-91-lato-uma-oferta", titulo, _ler(edital))]
+
+
+def c_carga(cliente):
+    edital = kit.publicar(cliente, chave="galeria-carga", mudar=kit.carga_vazia_e_longa)
+    titulo = "19. Carga horária vazia num Perfil e longa noutro (119, EC-2, EC-3)"
+    return [Leitura("19-91-carga-vazia-e-longa", titulo, _ler(edital))]
+
+
 CENARIOS = (
     c91,
     c91_prorrogado,
@@ -185,6 +207,8 @@ CENARIOS = (
     c_cancelado,
     c_so_hora,
     c_termo,
+    c_lato,
+    c_carga,
 )
 
 
@@ -202,6 +226,8 @@ class Resultado:
     omissao: str = ""
     zip_identico: bool | None = None
     resumo_png: str = ""
+    largura: int = 1080
+    altura: int = 1350
 
 
 def gravar(leitura, saida):
@@ -231,6 +257,35 @@ def gravar(leitura, saida):
             (saida / resultado.png).write_bytes(png)
         resultado.svg = f"{leitura.chave}.svg"
         (saida / resultado.svg).write_bytes(pacote.read(kit_pacote.SVG))
+    return resultado
+
+
+def gravar_template(leitura, template, imagem, saida):
+    """A peça de um template de família no cenário, ou a recusa com o motivo (FR-3831)."""
+    ficha = leitura.ficha
+    chave = f"{leitura.chave}-{template.formato.chave}"
+    resumo = kit_familias.resumo(template)[: kit_familias.RESUMO_CURTO]
+    titulo = f"{leitura.titulo} — {template.identificador} #{resumo}"
+    resultado = Resultado(dataclasses.replace(leitura, chave=chave, titulo=titulo))
+    if not ficha.tem_material:
+        resultado.motivo = f"Sem material: {ficha.motivo}"
+        return resultado
+    try:
+        peca = kit_peca.compor_template(ficha, template, kit_peca.Escolha(imagem=imagem))
+    except kit_peca.PecaRecusada as recusa:
+        resultado.motivo = recusa.motivo
+        return resultado
+    resultado.alternativo = peca.alternativo
+    resultado.omissao = " ".join(peca.avisos)
+    svg = kit_peca.svg(peca, ficha)
+    resultado.svg = f"{chave}.svg"
+    (saida / resultado.svg).write_text(kit_peca.svg(peca, ficha, fonte_embutida=True))
+    if kit_pacote.disponivel():
+        png = kit_pacote.rasterizar(svg, kit_peca.fontes_da_peca(peca))
+        resultado.png = f"{chave}.png"
+        resultado.resumo_png = hashlib.sha256(png).hexdigest()
+        (saida / resultado.png).write_bytes(png)
+    resultado.largura, resultado.altura = template.formato.largura, template.formato.altura
     return resultado
 
 
@@ -268,14 +323,15 @@ code { font-size: .8rem; word-break: break-all; }
 """
 
 
-def pagina(resultados, *, gerada_em):
+def pagina(resultados, *, gerada_em, templates=None):
     esc = html.escape
     cartoes = []
     for r in resultados:
         partes = [f"<h2>{esc(r.leitura.titulo)}</h2>"]
         if r.png:
             partes.append(
-                f'<img src="{esc(r.png)}" width="1080" height="1350" alt="{esc(r.alternativo)}">'
+                f'<img src="{esc(r.png)}" width="{r.largura}" height="{r.altura}" '
+                f'alt="{esc(r.alternativo)}">'
             )
         else:
             partes.append(f'<div class="sem-peca">{esc(r.motivo or "Sem peça.")}</div>')
@@ -314,7 +370,7 @@ def pagina(resultados, *, gerada_em):
 <body>
 <header class="cabecalho">
 <h1>Galeria do kit de divulgação</h1>
-<p>Template <strong>{esc(kit_peca.TEMPLATE)}</strong> · rasterizador
+<p>Template <strong>{esc(templates or kit_peca.TEMPLATE)}</strong> · rasterizador
 {esc(kit_pacote.versao_do_rasterizador() or "ausente")} · commit {esc(_commit())}</p>
 <p>Gerada em {esc(gerada_em)}, sobre os cenários de referência da spec 111, publicados pelo fluxo
 real num banco descartável. As datas são as do dia da geração.</p>
@@ -332,7 +388,18 @@ versão do template e o commit acima junto da aprovação.</p>
 def principal():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--saida", required=True, type=Path, help="pasta da galeria")
+    parser.add_argument("--familia", default="institucional", help="a família (119)")
+    parser.add_argument("--formato", help="um formato só: post, story ou banner")
+    parser.add_argument("--imagem", help="a imagem do banco; a primeira, se não dita")
     argumentos = parser.parse_args()
+    familia = kit_familias.familia(argumentos.familia)
+    templates = [
+        t for formato, t in familia.templates.items() if argumentos.formato in (None, formato)
+    ]
+    if not templates:
+        raise SystemExit(f"A família {familia.chave} não tem o formato {argumentos.formato}.")
+    imagem = argumentos.imagem or (familia.imagens[0].chave if familia.imagens else None)
+    da_111 = familia.chave == "institucional"
     saida = argumentos.saida.resolve()
     # Pasta vazia, e não limpa aqui: um arquivo de cenário que deixou de existir ficaria na galeria
     # como se fosse desta geração, e apagar o que está numa pasta alheia não é papel da galeria.
@@ -340,7 +407,7 @@ def principal():
         raise SystemExit(f"A pasta {saida} não está vazia: use uma pasta nova para a galeria.")
     saida.mkdir(parents=True, exist_ok=True)
 
-    if not settings.KIT_DE_DIVULGACAO_PECA:
+    if da_111 and not settings.KIT_DE_DIVULGACAO_PECA:
         raise SystemExit("A peça está desligada nestas settings (KIT_DE_DIVULGACAO_PECA).")
     if connection.vendor != "postgresql":
         raise SystemExit("A galeria publica pelo fluxo real: rode com TEST_DB_ENGINE=postgresql.")
@@ -353,14 +420,27 @@ def principal():
             with transaction.atomic():
                 garantir_o_cefor()
                 for leitura in cenario(APIClient()):
-                    resultados.append(gravar(leitura, saida))
+                    if da_111:
+                        resultados.append(gravar(leitura, saida))
+                    else:
+                        resultados.extend(
+                            gravar_template(leitura, t, imagem, saida) for t in templates
+                        )
                     print(f"{leitura.chave}: {resultados[-1].motivo or 'peça gerada'}")
                 transaction.set_rollback(True)
     finally:
         connection.creation.destroy_test_db(nome_original, verbosity=0)
     resultados.sort(key=lambda r: r.leitura.chave)
     gerada_em = fichas.instante_por_extenso(timezone.now())
-    (saida / "index.html").write_text(pagina(resultados, gerada_em=gerada_em), encoding="utf-8")
+    rotulo = None
+    if not da_111:
+        rotulo = " · ".join(
+            f"{t.identificador} #{kit_familias.resumo(t)[: kit_familias.RESUMO_CURTO]}"
+            for t in templates
+        )
+    (saida / "index.html").write_text(
+        pagina(resultados, gerada_em=gerada_em, templates=rotulo), encoding="utf-8"
+    )
     print(f"Galeria: {saida / 'index.html'} ({len(resultados)} cenários)")
     if any(r.zip_identico is False for r in resultados):
         raise SystemExit("Algum ZIP saiu diferente em duas montagens: o pacote não é determinista.")

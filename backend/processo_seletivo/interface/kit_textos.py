@@ -23,6 +23,8 @@ RESSALVA = (
 )
 CHAMADA_A_PAGINA = "Condições, documentos exigidos e cronograma completo na página oficial"
 BUSCA = "Acesse {caminho} e busque por {numero}/{ano}{sigla}."
+#: O contato, quando a unidade o declara (119, FR-3820): a mesma forma na peça e nos textos.
+DUVIDAS = "Dúvidas? {contato}"
 
 #: O teto único de opções listadas, na peça e na legenda (`FR-3425`).
 TETO_DE_OPCOES = 4
@@ -88,13 +90,21 @@ def lista_as_opcoes(ficha):
     return 0 < len(ficha.ofertas) <= TETO_DE_OPCOES and rotulos_distintos(ficha)
 
 
+def com_carga_horaria(rotulo, oferta):
+    """ "Nome — carga horária", quando o Perfil a declara; sem ela, só o rótulo (119, FR-3817)."""
+    return f"{rotulo} — {oferta.carga_horaria}" if oferta.carga_horaria else rotulo
+
+
 def linhas_da_oferta(ficha):
-    return [
-        f"{rotulo_da_oferta(oferta, ficha)}: {oferta.quantidade}"
-        if oferta.quantidade
-        else rotulo_da_oferta(oferta, ficha)
-        for oferta in ficha.ofertas
-    ]
+    linhas = []
+    for oferta in ficha.ofertas:
+        rotulo = com_carga_horaria(rotulo_da_oferta(oferta, ficha), oferta)
+        linhas.append(f"{rotulo}: {oferta.quantidade}" if oferta.quantidade else rotulo)
+    return linhas
+
+
+def duvidas(ficha):
+    return DUVIDAS.format(contato=ficha.contato) if ficha.contato else ""
 
 
 def total_em_frase(ficha):
@@ -153,6 +163,15 @@ def compor(ficha):
             resumo.append(frase_da_prorrogacao(ficha))
     if ficha.ofertas:
         resumo.append(frase_da_oferta(ficha))
+    # A carga horária de cada opção listada (FR-3813); a de opção única já vai na frase da oferta.
+    if lista_as_opcoes(ficha) and len(ficha.ofertas) > 1:
+        cargas = [
+            com_carga_horaria(rotulo_da_oferta(oferta, ficha), oferta)
+            for oferta in ficha.ofertas
+            if oferta.carga_horaria
+        ]
+        if cargas:
+            resumo.append(f"Carga horária: {'; '.join(cargas)}.")
 
     legenda = [f"{ficha.identificacao} — {quem}", titulo(ficha), ""]
     if ficha.modo == COM_PERIODO:
@@ -173,6 +192,8 @@ def compor(ficha):
         legenda.append(f"{CHAMADA_A_PAGINA}. {busca(ficha)}")
     else:
         legenda.append(f"{CHAMADA_A_PAGINA}.")
+    if ficha.contato:
+        legenda.append(duvidas(ficha))
     legenda += ["", ressalva(ficha)]
 
     if ficha.modo == COM_PERIODO and ficha.inicio_data and ficha.fim_data:
@@ -190,7 +211,7 @@ def compor(ficha):
         "resumo": " ".join([*resumo, destino]),
         "legenda": "\n".join(legenda).strip(),
         "chamada_para_o_site": chamada,
-        "texto_para_mensagem": " ".join([*resumo, destino]),
+        "texto_para_mensagem": " ".join([*resumo, destino, *filter(None, [duvidas(ficha)])]),
         "link_oficial": ficha.endereco or "",
         "links_por_opcao": "\n".join(
             f"{rotulo_da_oferta(o, ficha)}: {ficha.endereco}{o.ancora}"
@@ -243,6 +264,9 @@ def conferencia(ficha):
     linhas += [f"Oferta — {linha}" for linha in linhas_da_oferta(ficha)]
     if ficha.endereco:
         linhas.append(f"Página oficial: {ficha.endereco}")
+    if ficha.contato:
+        # O contato não é do Edital: a conferência diz de onde ele veio (FR-3812).
+        linhas.append(f"Contato: {ficha.contato} (cadastro da unidade, não é ato do Edital)")
     linhas.append(f"Versão: {ficha.versao_ato}, vigente desde {ficha.versao_desde_texto}.")
     for origem in ficha.origens:
         linhas.append(f"Origem — {origem.campo}: {', '.join(origem.atos) or 'sem registro'}")

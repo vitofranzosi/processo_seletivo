@@ -32,4 +32,9 @@ KIT_DE_DIVULGACAO_PECA = True
 # Todos os templates do registro, com a versão e o resumo do código (119, `D-010`): a suíte confere
 # que esta lista é o registro inteiro, e uma família nova, ou uma versão nova, reprova até entrar
 # aqui.
-KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit("institucional/post@1#d7ab660ea755")
+KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit(
+    "institucional/post@1#d7ab660ea755,"
+    "pos-lato-sensu/post@1#bfcb25490b8e,"
+    "pos-lato-sensu/story@2#8a16aef0abbd,"
+    "pos-lato-sensu/banner@1#1badbdf0cb93"
+)

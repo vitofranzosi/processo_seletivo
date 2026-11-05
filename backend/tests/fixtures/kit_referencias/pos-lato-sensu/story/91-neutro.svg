@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 91/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade Pós Lato Sensu, com foto de uma estudante sorridente, de fone de ouvido, escrevendo diante do notebook. Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Edital publicado. Consulte as condições na página oficial. 160 vagas em 4 opções. Acesse o link na bio, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1080" height="1920" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
+<text x="318" y="308" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">Curso de Pós-graduação</text>
+<text x="318" y="381" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">Lato Sensu em</text>
+<text x="318" y="455" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">Informática na Educação</text>
+<text x="318" y="529" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">na modalidade EaD</text>
+<text x="318" y="603" font-family="Poppins" font-size="52" font-weight="700" fill="#f3b514" data-campo="titulo_sem_numero">(DEMONSTRAÇÃO)</text>
+<text x="119" y="911" font-family="Poppins" font-size="39" font-weight="400" fill="#ffffff" data-campo="identificacao">Edital nº 91/2026</text>
+<rect x="100" y="1051" width="680" height="529" rx="32" fill="#f3b514"/>
+<text x="132" y="1133" font-family="Poppins" font-size="47" font-weight="700" fill="#450460" data-campo="fixo">EDITAL PUBLICADO</text>
+<text x="132" y="1192" font-family="Poppins" font-size="32" font-weight="400" fill="#450460" data-campo="fixo">Consulte as condições na página</text>
+<text x="132" y="1237" font-family="Poppins" font-size="32" font-weight="400" fill="#450460" data-campo="fixo">oficial</text>
+<text x="132" y="1291" font-family="Poppins" font-size="32" font-weight="700" fill="#450460" data-campo="total_de_vagas">160 vagas em 4 opções</text>
+<text x="132" y="1340" font-family="Poppins" font-size="28" font-weight="400" fill="#450460" data-campo="fixo">Confira todas na página oficial</text>
+<text x="132" y="1388" font-family="Poppins" font-size="28" font-weight="700" fill="#450460" data-campo="busca">busque por 91/2026 – Cefor</text>
+<text x="132" y="1431" font-family="Poppins" font-size="24" font-weight="400" fill="#450460" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+<image x="171" y="1456" width="592" height="168" preserveAspectRatio="none" data-campo="balao" href="data:image/png;base64,MARCA"/>
+<text x="459" y="1561" font-family="Poppins" font-size="39" font-weight="700" fill="#5d299c" text-anchor="middle" data-campo="chamada_a_acao">Acesse o link na bio</text>
+</svg>

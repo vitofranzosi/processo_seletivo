@@ -94,7 +94,9 @@ def test_o_termino_prorrogado_vem_da_retificacao(api_client):
 
     assert por_campo["Término das inscrições"] == ("Retificação nº 1",)
     assert por_campo["Início das inscrições"] == ("Publicação original",)
-    acrescidas = [atos for campo, atos in por_campo.items() if "Bom Jesus" in campo]
+    acrescidas = [
+        atos for campo, atos in por_campo.items() if "Bom Jesus" in campo and "Vagas" in campo
+    ]
     assert acrescidas == [("Retificação nº 1",)]
     assert lida.prorrogado
     assert lida.versao_ato.startswith("Retificação nº 1")

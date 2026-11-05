@@ -111,3 +111,81 @@ def test_as_frases_fixas_nao_tem_termo_proibido():
         *(marca.descricao for marca in kit_peca.MARCAS.values()),
     ]
     assert _proibicoes("\n".join(fixas)) == []
+
+
+# ---- As famílias da comunicação (119, FR-3814, D-013, SC-1131, EC-21) ----------------------
+
+#: Os termos que a FR-3814 veda às frases fixas enquanto nenhum dado publicado os comprova (T-3).
+VEDADOS_ATE_HAVER_DADO = (
+    r"\binscrições abertas\b",
+    r"\bgratuit[oa]s?\b",
+    r"\ba distância\b",
+    r"\bpresencia(?:l|is)\b",
+    r"\bremanescentes?\b",
+)
+
+
+def _frases_das_familias(com_os_ativos=True):
+    """Toda frase fixa de toda família registrada, lida do registro e não de uma lista literal.
+
+    A descrição dos ativos fica fora da vedação da FR-3814: a da marca do Cefor é o nome oficial
+    da unidade, "Centro de Referência em Formação e em Educação a Distância", e não afirmação de
+    modalidade. Ela continua na lista da FR-3414.
+    """
+    from processo_seletivo.interface import kit_familias
+    from processo_seletivo.interface.kit_formatos import FORMATOS
+
+    for familia in kit_familias.REGISTRO.values():
+        yield from (f"{familia.chave}: {frase}" for frase in familia.frases.values())
+        yield from (f"{familia.chave}: {v.chamada}" for v in familia.variantes)
+        yield from (f"{familia.chave}: {i.descricao}" for i in familia.imagens)
+        if com_os_ativos:
+            yield from (f"{familia.chave}: {a.descricao}" for a in familia.ativos.values())
+    yield from (formato.chamada_a_acao for formato in FORMATOS.values())
+
+
+def test_as_frases_de_todas_as_familias_passam_as_duas_listas():
+    assert _proibicoes("\n".join(_frases_das_familias())) == []
+    frases = "\n".join(_frases_das_familias(com_os_ativos=False))
+    vedados = [p for p in VEDADOS_ATE_HAVER_DADO if re.search(p, frases, re.IGNORECASE)]
+    assert vedados == []
+
+
+def test_a_varredura_le_familia_nova_sem_lista(monkeypatch):
+    """Uma família registrada depois desta suíte entra na varredura sozinha (D-013)."""
+    import dataclasses
+
+    from processo_seletivo.interface import kit_familias
+    from processo_seletivo.interface.kit_familias import institucional
+
+    nova = dataclasses.replace(institucional.FAMILIA, chave="tmd", frases={"x": "Curso gratuito"})
+    monkeypatch.setitem(kit_familias.REGISTRO, "tmd", nova)
+    frases = "\n".join(_frases_das_familias())
+    assert any(re.search(p, frases, re.IGNORECASE) for p in VEDADOS_ATE_HAVER_DADO)
+
+
+def _titulo_vedado(conteudo):
+    conteudo["profiles"] = conteudo["profiles"][:1]
+    conteudo["profiles"][0]["name"] = "Curso gratuito de Libras"
+    conteudo["title"] = "Edital nº 91/2026 – Especialização a distância em Educação"
+    kit._podar_referencias(conteudo)
+
+
+def test_valor_oficial_com_termo_vedado_entra_literal_e_e_apontado(api_client):
+    """EC-21: a vedação é das frases fixas, e não do que o Edital publicou."""
+    from processo_seletivo.interface import kit_familias
+
+    edital = kit.publicar(api_client, chave="vocab-ec21", mudar=_titulo_vedado)
+    ficha = fichas.ler(edital, agora=timezone.now(), base_url=kit.BASE)
+    for template in kit_familias.familia("pos-lato-sensu").templates.values():
+        peca = kit_peca.compor_template(
+            ficha, template, kit_peca.Escolha(imagem="fone", manchete_texto=None)
+        )
+        desenhado = " ".join(t.conteudo for t in peca.textos)
+        assert "Especialização a distância em Educação" in desenhado
+        if template.tem_ofertas:
+            assert "Curso gratuito de Libras" in desenhado
+    textos = "\n".join(kit_textos.compor(ficha).values())
+    assert "Curso gratuito de Libras" in textos
+    apontados = " ".join(kit_textos.conferencia(ficha))
+    assert "Especialização a distância em Educação" in apontados

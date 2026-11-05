@@ -84,6 +84,9 @@ class Escolha:
     manchete: int | None = None
     variante: str | None = None
     imagem: str | None = None
+    #: O texto da manchete, resolvido pela tela contra a lista da família (FR-3818): vale só nos
+    #: formatos em que nenhum título oficial cabe.
+    manchete_texto: str | None = None
 
 
 class PecaRecusada(Exception):
@@ -92,6 +95,21 @@ class PecaRecusada(Exception):
     def __init__(self, motivo):
         super().__init__(motivo)
         self.motivo = motivo
+
+
+ESCOLHA_INDISPONIVEL = "A escolha não está disponível; abra o kit de novo."
+
+
+class EscolhaInvalida(PecaRecusada):
+    """Família, variante, imagem, formato ou manchete fora das listas fechadas (EC-9).
+
+    Uma classe só, e filha de `PecaRecusada`: a prévia, que só sabe responder "não encontrado",
+    trata a escolha forjada como a peça que não existe neste acesso, e quem chamar `compor_template`
+    com imagem fora do banco recebe a recusa, e não um 500.
+    """
+
+    def __init__(self, motivo=ESCOLHA_INDISPONIVEL):
+        super().__init__(motivo)
 
 
 class MancheteInvalida(ValueError):
@@ -121,7 +139,12 @@ class Texto:
     def caixa(self):
         """`(esquerda, topo, direita, base)` em px, pela métrica tipográfica da fonte."""
         medidas = kit_fontes.medidas(self.fonte)
-        esquerda = self.x - self.largura if self.ancora == "end" else self.x
+        if self.ancora == "end":
+            esquerda = self.x - self.largura
+        elif self.ancora == "middle":
+            esquerda = self.x - self.largura / 2
+        else:
+            esquerda = self.x
         return (
             esquerda,
             self.y - medidas.ascendente * self.tamanho / 1000,
@@ -172,6 +195,26 @@ class Imagem:
         )
 
 
+@dataclass(frozen=True)
+class Figura:
+    """Um arquivo da família desenhado na peça: a imagem do banco, um ativo fixo (D-004)."""
+
+    x: int
+    y: int
+    largura: int
+    altura: int
+    arquivo: str
+    tipo: str  # "image/jpeg" ou "image/png"
+    campo: str
+    #: Pinta por inteiro o retângulo que ocupa (o balão é branco por dentro): texto declarado sobre
+    #: ele tem esse fundo, e não o da imagem embaixo.
+    opaca: bool = False
+
+    @property
+    def caixa(self):
+        return (self.x, self.y, self.x + self.largura, self.y + self.altura)
+
+
 def _deslocar(elemento, dy):
     return replace(elemento, y=elemento.y + dy)
 
@@ -189,6 +232,10 @@ class Peca:
     corpo: tuple
     deslocamento: int
     template: kit_familias.Template = INSTITUCIONAL
+    #: O que saiu da peça sem a recusar, para a tela dizer (FR-3818, FR-3820).
+    avisos: tuple = ()
+    #: A imagem do banco escolhida, quando a família tem banco.
+    imagem: kit_familias.Imagem | None = None
 
     @property
     def textos(self):
@@ -344,6 +391,11 @@ def manchetes(ficha, template=INSTITUCIONAL):
     """
     if _algum_oficial_cabe(ficha, template) or not ficha.ofertas:
         return ()
+    return tuple(c for c in _candidatas(ficha) if medidas_do_titulo(c, template))
+
+
+def _candidatas(ficha):
+    """As manchetes que a ficha dá, sem repetir e sem termo da FR-3414, antes de medir."""
     ofertas = ficha.ofertas
     nomes = [oferta.nome for oferta in ofertas if oferta.nome]
     candidatas = []
@@ -357,9 +409,8 @@ def manchetes(ficha, template=INSTITUCIONAL):
     for candidata in candidatas:
         if candidata in vistas or fichas.termos_proibidos(candidata):
             continue
-        if medidas_do_titulo(candidata, template):
-            vistas.append(candidata)
-    return tuple(vistas)
+        vistas.append(candidata)
+    return vistas
 
 
 def escolher_manchete(ficha, indice, template=INSTITUCIONAL):
@@ -748,6 +799,394 @@ def _base(elemento):
     return elemento.y
 
 
+# ---- O compositor de caixas posicionadas (119, D-004, FR-3815–FR-3825) -------------------------
+#
+# As famílias da comunicação: cada caixa tem o seu retângulo, e as que não têm entram, empilhadas,
+# no painel — o retângulo de cor lisa de altura variável dos templates ("o retângulo amarelo pode
+# aumentar ou diminuir a altura"), preso pela base. O fundo é a imagem do banco, inteira; as partes
+# dela que não podem receber texto (foto, padrões, rodapé) estão em `dimensoes["obstaculos"]`, e o
+# teste geométrico as confere.
+
+#: A altura de uma linha, em corpos: a caixa tipográfica da Poppins mede 1,4 corpo (1050 + 350
+#: milésimos), e linhas mais juntas que isso teriam caixas que se cruzam.
+ENTRELINHA = 1.42
+SEM_TITULO_EM = "O título oficial não coube em: {formatos}."
+SEM_CONTATO_EM = "O contato não coube em: {formatos}."
+#: FR-3836: o formato que passou ao resumo diz na tela; as ofertas completas seguem nos textos.
+RESUMO_EM = (
+    "As opções não couberam listadas em: {formatos}. Esses formatos trazem o total e o convite à "
+    "página; as opções completas estão nos textos."
+)
+
+
+class _NaoCabe(PecaRecusada):
+    """Uma caixa obrigatória não coube em nenhum corpo: o template é recusado (FR-3824)."""
+
+
+def _linhas_na_caixa(texto, caixa, fonte, largura_util, altura=None):
+    """`(corpo, linhas)` no maior corpo em que o texto cabe na caixa, ou `None`."""
+    for corpo, maximo in caixa.medidas():
+        linhas = quebrar(texto, corpo, fonte, limite=largura_util)
+        if linhas is None or len(linhas) > maximo:
+            continue
+        if altura is not None and len(linhas) * corpo * ENTRELINHA > altura + 0.5:
+            continue
+        return corpo, linhas
+    return None
+
+
+def _x_da_ancora(retangulo, alinhamento):
+    x, _, largura, _ = retangulo
+    return {"start": x, "middle": x + largura / 2, "end": x + largura}[alinhamento]
+
+
+def _escrever_em(c, nome, retangulo, linhas, corpo, campo):
+    """As linhas na caixa de retângulo dado, do topo, pela linha de base da fonte."""
+    caixa = c.template.caixa(nome)
+    ascendente = kit_fontes.medidas(c.fonte(nome)).ascendente / 1000
+    x = _x_da_ancora(retangulo, caixa.alinhamento)
+    y = retangulo[1]
+    for linha in linhas:
+        c.escrever(nome, x, y + ascendente * corpo, linha, campo=campo, tamanho=corpo)
+        y += corpo * ENTRELINHA
+    return y
+
+
+def _caixa_unica(c, nome, texto, campo, *, recusa):
+    """Uma caixa posicionada de uma linha só, ou a recusa com o motivo (FR-3824)."""
+    caixa = c.template.caixa(nome)
+    x, y, largura_, altura = caixa.retangulo
+    medida = _linhas_na_caixa(texto, caixa, c.fonte(nome), largura_, altura)
+    if medida is None:
+        raise _NaoCabe(recusa.format(texto=texto, formato=c.formato.chave))
+    corpo, linhas = medida
+    _escrever_em(c, nome, caixa.retangulo, linhas, corpo, campo)
+
+
+def _resolver_titulo(ficha, template, escolha):
+    """`(campo, corpo, linhas)` do título, pela ordem da FR-3426 da `111`, ou `None` (FR-3818)."""
+    caixa = template.caixa("titulo")
+    fonte = kit_familias.familia(template.familia).fonte(caixa.fonte)
+    _, _, largura_, altura = caixa.retangulo
+    for campo, texto in titulos_oficiais(ficha):
+        medida = _linhas_na_caixa(texto, caixa, fonte, largura_, altura)
+        if medida:
+            return (campo, *medida)
+    if escolha.manchete_texto:
+        medida = _linhas_na_caixa(escolha.manchete_texto, caixa, fonte, largura_, altura)
+        if medida:
+            return ("manchete", *medida)
+    return None
+
+
+def titulo_oficial_cabe(ficha, template):
+    """Algum título oficial cabe na caixa de título do template? (FR-3818)."""
+    if template.composicao != "caixas":
+        return _algum_oficial_cabe(ficha, template)
+    return _resolver_titulo(ficha, template, Escolha()) is not None
+
+
+def _itens_do_painel(c, ficha, frases, resumir=False):
+    """`[(caixa, texto, campo)]` do painel, na ordem em que a peça os mostra."""
+    itens = []
+    nomes = c.template.dimensoes["painel"]["itens"]
+    for nome in nomes:
+        if nome == "periodo":
+            if ficha.modo == fichas.COM_PERIODO:
+                if ficha.prorrogado:
+                    itens.append(("selo_prorrogado", frases["prorrogado"], "fixo"))
+                if ficha.fim_data:
+                    itens.append(("periodo", f"{frases['ate']} {ficha.fim_data}", "periodo_curto"))
+                    itens.append(("hora", f"às {ficha.fim_hora} {frases['horario']}", "hora"))
+                    if ficha.inicio_data:
+                        itens.append(
+                            ("inicio", f"{frases['inicio']} {ficha.inicio_data}", "inicio")
+                        )
+                else:
+                    texto = f"{frases['a_partir']} {ficha.inicio_data}"
+                    itens.append(("periodo", texto, "periodo_curto"))
+                    itens.append(("hora", f"às {ficha.inicio_hora} {frases['horario']}", "hora"))
+            else:
+                itens.append(("publicado", frases["publicado"], "fixo"))
+                itens.append(("consulte", frases["consulte"], "fixo"))
+        elif nome == "ofertas" and c.template.tem_ofertas and ficha.ofertas:
+            total = kit_textos.total_em_frase(ficha)
+            if total:
+                itens.append(("total", total, "total_de_vagas"))
+            if kit_textos.lista_as_opcoes(ficha) and not resumir:
+                for oferta, linha in zip(
+                    ficha.ofertas, kit_textos.linhas_da_oferta(ficha), strict=True
+                ):
+                    itens.append(("oferta", linha, f"oferta:{oferta.perfil_id}"))
+            else:
+                # O total já diz o número de opções ("160 vagas em 4 opções"); a contagem só sai
+                # sozinha quando não há total (FR-3425 da `111`).
+                if not total:
+                    itens.append(("contagem", f"{len(ficha.ofertas)} opções", "contagem"))
+                itens.append(("todas", frases["todas"], "fixo"))
+        elif nome == "busca":
+            itens.append(("busca", busca_na_peca(ficha), "busca"))
+        elif nome == "selo_da_versao":
+            itens.append(("selo_da_versao", selo_da_versao(ficha), "selo"))
+    return itens
+
+
+#: As famílias em que a FR-3836 admite o resumo por falta de espaço. Fica no motor, e não na
+#: declaração do template, para que a lista não mude o resumo dos templates já aprovados; outra
+#: família só entra por emenda da FR-3836, e então aqui.
+RESUMO_POR_ESPACO = frozenset({"pos-lato-sensu"})
+CARGA_NAO_CABE = "A carga horária não cabe no {formato} no corpo mínimo: {cargas}."
+
+
+def _carga_que_nao_cabe(c, ficha):
+    """As cargas horárias cuja linha não cabe na caixa da oferta, e que sem elas caberia (EC-3)."""
+    caixa = c.template.caixa("oferta")
+    util = c.template.dimensoes["painel"]["largura"] - 2 * c.template.dimensoes["painel"]["recuo"]
+    sem = replace(ficha, ofertas=tuple(replace(o, carga_horaria="") for o in ficha.ofertas))
+    culpadas = []
+    for oferta, com_carga, sem_carga in zip(
+        ficha.ofertas,
+        kit_textos.linhas_da_oferta(ficha),
+        kit_textos.linhas_da_oferta(sem),
+        strict=True,
+    ):
+        if not oferta.carga_horaria or oferta.carga_horaria in culpadas:
+            continue
+        fonte = c.fonte("oferta")
+        if _linhas_na_caixa(com_carga, caixa, fonte, util) is None and (
+            _linhas_na_caixa(sem_carga, caixa, fonte, util) is not None
+        ):
+            culpadas.append(oferta.carga_horaria)
+    return culpadas
+
+
+def _painel(c, ficha, frases):
+    """O painel com as opções listadas, ou o resumo; `True` quando resumiu (FR-3836).
+
+    Pela ordem da FR-3836, que formaliza a exceção à FR-3425 da `111` para os templates de caixas:
+
+    1. as opções listadas, cada caixa no maior corpo que a deixa caber;
+    2. as opções listadas no **corpo mínimo** da caixa de oferta — a lista legível vem antes do
+       resumo;
+    3. se a carga horária é o que não cabe na linha, a recusa nomeando-a (EC-3): o resumo a
+       apagaria da peça sem dizer;
+    4. o resumo — o total, ou a contagem, e o convite à página —, nunca para uma opção só, que
+       viraria "1 opções".
+    """
+    try:
+        _painel_com(c, ficha, frases, resumir=False)
+        return False
+    except _NaoCabe:
+        if not (c.template.tem_ofertas and kit_textos.lista_as_opcoes(ficha)):
+            raise
+    try:
+        _painel_com(c, ficha, frases, resumir=False, oferta_no_minimo=True)
+        return False
+    except _NaoCabe:
+        culpadas = _carga_que_nao_cabe(c, ficha)
+        if culpadas:
+            texto = "; ".join(f"«{carga}»" for carga in culpadas)
+            raise _NaoCabe(CARGA_NAO_CABE.format(formato=c.formato.chave, cargas=texto)) from None
+        if len(ficha.ofertas) < 2 or c.template.familia not in RESUMO_POR_ESPACO:
+            raise
+    _painel_com(c, ficha, frases, resumir=True)
+    return True
+
+
+def _painel_com(c, ficha, frases, *, resumir, oferta_no_minimo=False):
+    """O retângulo de cor lisa preso pela base, com os itens empilhados de cima (D-004)."""
+    painel = c.template.dimensoes["painel"]
+    x, largura_ = painel["x"], painel["largura"]
+    recuo = painel["recuo"]
+    util = largura_ - 2 * recuo
+    medidos = []
+    for nome, texto, campo in _itens_do_painel(c, ficha, frases, resumir):
+        caixa = c.template.caixa(nome)
+        if oferta_no_minimo and nome == "oferta":
+            caixa = replace(caixa, corpos=caixa.corpos[-1:])
+        medida = _linhas_na_caixa(texto, caixa, c.fonte(nome), util)
+        if medida is None:
+            raise _NaoCabe(
+                f"{_rotulo(campo.split(':', 1)[0]).capitalize()} não cabe no {c.formato.chave}: "
+                f"{texto!r}."
+            )
+        medidos.append((nome, campo, *medida))
+    espaco = painel["espaco"]
+    altura_do_conteudo = sum(len(linhas) * corpo * ENTRELINHA for _, _, corpo, linhas in medidos)
+    altura_do_conteudo += espaco * max(len(medidos) - 1, 0)
+    topo = painel["base"] - painel["recuo_em_baixo"] - altura_do_conteudo - recuo
+    if topo < painel["topo_minimo"]:
+        raise _NaoCabe(
+            f"O conteúdo não cabe no {c.formato.chave} sem descer abaixo do corpo mínimo: o painel "
+            f"subiria até {round(topo)} px, e o limite é {painel['topo_minimo']} px."
+        )
+    c.retangulo(x, topo, largura_, painel["base"] - topo, cor=painel["cor"], raio=painel["raio"])
+    y = topo + recuo
+    for nome, campo, corpo, linhas in medidos:
+        y = _escrever_em(c, nome, (x + recuo, y, util, 0), linhas, corpo, campo) + espaco
+
+
+def _fundo(c, imagem):
+    formato = c.formato
+    c.elementos.append(
+        Figura(
+            0,
+            0,
+            formato.largura,
+            formato.altura,
+            imagem.arquivo(formato.chave),
+            "image/jpeg",
+            "imagem",
+        )
+    )
+
+
+def _balao(c):
+    balao = c.template.dimensoes["balao"]
+    ativo = c.familia.ativos[balao["ativo"]]
+    c.elementos.append(Figura(*balao["retangulo"], ativo.arquivo, "image/png", "balao", opaca=True))
+    _caixa_unica(
+        c,
+        "chamada_a_acao",
+        c.formato.chamada_a_acao,
+        "chamada_a_acao",
+        recusa="A chamada à ação não cabe no {formato}.",
+    )
+
+
+def _imagem_escolhida(familia, escolha):
+    if not familia.imagens:
+        return None
+    for imagem in familia.imagens:
+        if imagem.chave == escolha.imagem:
+            return imagem
+    raise EscolhaInvalida("A imagem escolhida não está no banco da família.")
+
+
+def _compor_em_caixas(ficha, template, escolha):
+    c = _Composicao(template)
+    familia, frases = c.familia, c.familia.frases
+    imagem = _imagem_escolhida(familia, escolha)
+    if imagem is not None:
+        _fundo(c, imagem)
+    avisos, omissao = [], ""
+    titulo = _resolver_titulo(ficha, template, escolha)
+    if titulo is None:
+        omissao = SEM_TITULO
+        avisos.append(SEM_TITULO_EM.format(formatos=template.formato.chave))
+    else:
+        campo, corpo, linhas = titulo
+        _escrever_em(c, "titulo", template.caixa("titulo").retangulo, linhas, corpo, campo)
+    _caixa_unica(
+        c,
+        "numero",
+        ficha.identificacao,
+        "identificacao",
+        recusa="O número do Edital não cabe no {formato}: {texto!r}.",
+    )
+    if _painel(c, ficha, frases):
+        avisos.append(RESUMO_EM.format(formatos=template.formato.chave))
+    _balao(c)
+    for nome, texto, campo in (
+        ("busca", busca_na_peca(ficha), "busca"),
+        ("selo_da_versao", selo_da_versao(ficha), "selo"),
+    ):
+        if template.caixa(nome).retangulo is not None:
+            _caixa_unica(c, nome, texto, campo, recusa="{texto!r} não cabe no {formato}.")
+    if template.tem_contato and ficha.contato:
+        caixa = template.caixa("contato")
+        texto = kit_textos.duvidas(ficha)
+        medida = _linhas_na_caixa(
+            texto, caixa, c.fonte("contato"), caixa.retangulo[2], caixa.retangulo[3]
+        )
+        if medida is None:
+            avisos.append(SEM_CONTATO_EM.format(formatos=template.formato.chave))
+        else:
+            _escrever_em(c, "contato", caixa.retangulo, medida[1], medida[0], "contato")
+    peca = Peca(
+        elementos=tuple(c.elementos),
+        alternativo=_alternativo_em_caixas(ficha, familia, imagem, c.elementos),
+        titulo=titulo[0] if titulo else "",
+        manchete=" ".join(titulo[2]) if titulo and titulo[0] == "manchete" else None,
+        omissao=omissao,
+        corpo=tuple(c.elementos),
+        deslocamento=0,
+        template=template,
+        avisos=tuple(avisos),
+        imagem=imagem,
+    )
+    ausentes = fora_dos_textos(peca, kit_textos.compor(ficha))
+    if ausentes:
+        raise PecaRecusada(f"A peça diria o que o kit textual não diz: {', '.join(ausentes)}.")
+    return peca
+
+
+def _alternativo_em_caixas(ficha, familia, imagem, elementos):
+    """Em frases, na ordem em que a peça mostra, com a descrição da imagem (FR-3825)."""
+    por_campo = {}
+    for elemento in elementos:
+        if isinstance(elemento, Texto):
+            por_campo.setdefault(elemento.campo, []).append(elemento.conteudo)
+
+    def junto(campo):
+        return " ".join(por_campo.get(campo, []))
+
+    abertura = f"Peça de divulgação do {kit_textos.assinatura(ficha)}, na identidade {familia.nome}"
+    frases = [f"{abertura}, com {imagem.descricao}." if imagem else f"{abertura}."]
+    titulo = junto("titulo_sem_numero") or junto("titulo_do_processo") or junto("manchete")
+    frases.append(f"{ficha.identificacao}: {titulo}." if titulo else f"{ficha.identificacao}.")
+    if "periodo_curto" in por_campo:
+        if ficha.prorrogado:
+            frases.append("Prazo prorrogado.")
+        partes = [junto("periodo_curto"), junto("hora")]
+        frases.append(", ".join(filter(None, partes)) + ".")
+        if "inicio" in por_campo:
+            frases.append(f"{junto('inicio')}.")
+    elif "fixo" in por_campo:
+        frases.append(f"{familia.frases['publicado'].capitalize()}. {familia.frases['consulte']}.")
+    if "total_de_vagas" in por_campo:
+        frases.append(f"{junto('total_de_vagas')}.")
+    for oferta in ficha.ofertas:
+        linha = junto(f"oferta:{oferta.perfil_id}")
+        if linha:
+            frases.append(f"{linha}.")
+    if "contagem" in por_campo:
+        frases.append(f"{junto('contagem')}; {familia.frases['todas'].lower()}.")
+    frases.append(f"{junto('chamada_a_acao')}, {junto('busca')}.")
+    if "contato" in por_campo:
+        frases.append(f"{junto('contato')}.")
+    frases.append(f"{junto('selo').replace(' · ', ', ')}.")
+    return " ".join(frases)
+
+
+COMPOSITORES["caixas"] = _compor_em_caixas
+
+
+def manchetes_dos_templates(ficha, templates):
+    """A lista fechada da FR-3427 para vários formatos (FR-3818).
+
+    Oferecida quando nenhum título oficial cabe em algum dos templates; fica com as candidatas que
+    cabem como título em ao menos um deles, e cada formato a usa só se nenhum oficial couber nele.
+    """
+    sem_titulo = [t for t in templates if not titulo_oficial_cabe(ficha, t)]
+    if not sem_titulo or not ficha.ofertas:
+        return ()
+    return tuple(
+        candidata
+        for candidata in _candidatas(ficha)
+        if any(_cabe_como_titulo(candidata, template) for template in sem_titulo)
+    )
+
+
+def _cabe_como_titulo(texto, template):
+    if template.composicao != "caixas":
+        return bool(medidas_do_titulo(texto, template))
+    caixa = template.caixa("titulo")
+    fonte = kit_familias.familia(template.familia).fonte(caixa.fonte)
+    _, _, largura_, altura = caixa.retangulo
+    return _linhas_na_caixa(texto, caixa, fonte, largura_, altura) is not None
+
+
 # ---- A conferência de coerência (FR-3423) ------------------------------------------------------
 
 _DATA = re.compile(r"\b\d{2}/\d{2}(?:/\d{4})?\b")
@@ -755,10 +1194,25 @@ _HORA = re.compile(r"\b\d{2}h\d{2}\b")
 _QUANTIDADE = re.compile(r"\b\d+ (?:vagas?|opções)\b")
 
 
+#: Os campos da peça que entram inteiros na conferência, além de datas e quantidades (119, FR-3813):
+#: toda carga horária e todo contato que a peça mostra estão também nos textos.
+CAMPOS_CONFERIDOS_POR_INTEIRO = ("carga_horaria", "contato", "oferta")
+
+
 def fora_dos_textos(peca, textos):
     """As datas, horas e quantidades da peça que o kit textual não traz. Vazio é coerente."""
     corpo_dos_textos = "\n".join(textos.values())
     ausentes = []
+    por_inteiro = {}
+    for texto in peca.textos:
+        campo = texto.campo.split(":", 1)[0]
+        if campo in CAMPOS_CONFERIDOS_POR_INTEIRO:
+            # Pode ter quebrado em linhas: confere-se o valor juntado, e não cada linha.
+            por_inteiro.setdefault(texto.campo, []).append(texto.conteudo)
+    for partes in por_inteiro.values():
+        valor = " ".join(partes).removeprefix("Dúvidas? ")
+        if " ".join(valor.split()) not in " ".join(corpo_dos_textos.split()):
+            ausentes.append(valor)
     for texto in peca.textos:
         if texto.campo == "selo":
             # A referência da impressão e a data da versão são do selo, e o kit textual diz a
@@ -793,7 +1247,7 @@ def _fontes_embutidas(chaves):
 def _elemento_em_svg(elemento, familia):
     if isinstance(elemento, Texto):
         fonte = kit_fontes.FONTES[elemento.fonte]
-        ancora = ' text-anchor="end"' if elemento.ancora == "end" else ""
+        ancora = f' text-anchor="{elemento.ancora}"' if elemento.ancora != "start" else ""
         return (
             f'<text x="{elemento.x}" y="{elemento.y}" font-family="{fonte.familia}" '
             f'font-size="{elemento.tamanho}" font-weight="{fonte.peso}" fill="{elemento.cor}"'
@@ -809,6 +1263,14 @@ def _elemento_em_svg(elemento, familia):
         return (
             f'<line x1="{elemento.x1}" y1="{elemento.y}" x2="{elemento.x2}" y2="{elemento.y}" '
             f'stroke="{elemento.cor}" stroke-width="2"/>'
+        )
+    if isinstance(elemento, Figura):
+        dados = _ativo_em_base64(str(familia.pasta_dos_ativos / elemento.arquivo))
+        return (
+            f'<image x="{elemento.x}" y="{elemento.y}" width="{elemento.largura}" '
+            f'height="{elemento.altura}" preserveAspectRatio="none" '
+            f"data-campo={quoteattr(elemento.campo)} "
+            f'href="data:{elemento.tipo};base64,{dados}"/>'
         )
     # A marca entra em `data:`: o rasterizador não resolve nenhum recurso externo, e o arquivo
     # exportado é inteiro em si (D-007, item 4).

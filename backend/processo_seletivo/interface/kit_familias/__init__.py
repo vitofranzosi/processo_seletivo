@@ -51,14 +51,23 @@ class Ativo:
 
 @dataclass(frozen=True)
 class Imagem:
-    """Uma imagem do banco curto da família (FR-3807), com o que o alternativo diz dela."""
+    """Uma imagem do banco curto da família (FR-3807), com o que o alternativo diz dela.
+
+    Uma escolha vale para todos os formatos, e cada formato tem o seu arquivo, recortado e reduzido
+    para ele: `arquivos` é `{formato: (arquivo, sha256)}`.
+    """
 
     chave: str
-    arquivo: str
-    sha256: str
     descricao: str
     licenca: str
     origem: str
+    arquivos: dict
+
+    def arquivo(self, formato):
+        return self.arquivos[formato][0]
+
+    def sha256(self, formato):
+        return self.arquivos[formato][1]
 
 
 @dataclass(frozen=True)
@@ -253,7 +262,10 @@ def declaracao(template_):
             "imagens": [
                 {
                     **dataclasses.asdict(imagem),
-                    "sha256": _resumo_de_arquivo(registrada.pasta_dos_ativos / imagem.arquivo),
+                    "lidos": {
+                        formato: _resumo_de_arquivo(registrada.pasta_dos_ativos / arquivo)
+                        for formato, (arquivo, _) in imagem.arquivos.items()
+                    },
                 }
                 for imagem in registrada.imagens
             ],
@@ -269,7 +281,12 @@ def resumo(template_):
 # ---- A liberação (FR-3808, FR-3835, D-010) -----------------------------------------------------
 
 
-def _institucional_v1(template_):
+#: O motivo do template cuja versão ou resumo no código não são os liberados (EC-23, FR-3835).
+VERSAO_EM_APROVACAO = "Versão nova em aprovação pela comunicação."
+
+
+def institucional_v1(template_):
+    """A Institucional na versão 1 com o resumo congelado: a única que a chave da `111` rege."""
     from processo_seletivo.interface.kit_familias import institucional
 
     return (
@@ -295,7 +312,7 @@ def liberados():
     }
     saida = []
     for candidato in templates():
-        if _institucional_v1(candidato):
+        if institucional_v1(candidato):
             if settings.KIT_DE_DIVULGACAO_PECA:
                 saida.append(candidato)
             continue
@@ -307,9 +324,10 @@ def liberados():
 
 def _registrar_as_familias():
     # Importadas aqui, e não no topo: cada família importa as classes deste módulo.
-    from processo_seletivo.interface.kit_familias import institucional
+    from processo_seletivo.interface.kit_familias import institucional, pos_lato_sensu
 
     registrar(institucional.FAMILIA)
+    registrar(pos_lato_sensu.FAMILIA)
 
 
 _registrar_as_familias()

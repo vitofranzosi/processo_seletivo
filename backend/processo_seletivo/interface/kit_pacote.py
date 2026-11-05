@@ -69,6 +69,26 @@ ARQUIVOS = (
 )
 PNG, SVG, ALTERNATIVO = ARQUIVOS[2:5]
 
+#: Os arquivos do ZIP de uma família da comunicação (119, FR-3829, `D-015`): os textos, depois
+#: post, story e banner, cada um em PNG, SVG e texto alternativo, depois a ficha e o manifesto. O
+#: ZIP da Institucional continua com `ARQUIVOS`.
+FORMATOS_DO_PACOTE = ("post", "story", "banner")
+
+
+def arquivos_do_formato(formato):
+    return (f"peca-{formato}.png", f"peca-{formato}.svg", f"peca-{formato}-alternativo.txt")
+
+
+ARQUIVOS_DA_FAMILIA = (
+    "kit.md",
+    "kit.txt",
+    *(nome for formato in FORMATOS_DO_PACOTE for nome in arquivos_do_formato(formato)),
+    "ficha.json",
+    "manifesto.json",
+)
+#: A versão do manifesto do ZIP de família; o da `111`, sem o campo, é a versão 1.
+VERSAO_DO_MANIFESTO = 2
+
 #: A data de cada entrada do ZIP. **Não é o instante da geração**: com ele, dois downloads do mesmo
 #: material dariam arquivos diferentes, e o resumo gravado na trilha não serviria para reconhecer o
 #: arquivo que circula. O instante está no manifesto, onde é lido; a data do ZIP é a menor que o
@@ -138,11 +158,11 @@ def manifesto(ficha, *, arquivos, peca, motivo_sem_peca):
     }
 
 
-def zipar(arquivos):
+def zipar(arquivos, ordem=ARQUIVOS):
     """Os bytes do ZIP, montado na memória (`FR-3441`) com data e permissões fixas."""
     memoria = io.BytesIO()
     with zipfile.ZipFile(memoria, "w") as pacote:
-        for nome in ARQUIVOS:
+        for nome in ordem:
             if nome not in arquivos:
                 continue
             info = zipfile.ZipInfo(nome, date_time=DATA_FIXA)
@@ -175,3 +195,86 @@ def montar(ficha, *, markdown, texto, peca, svg, png, motivo_sem_peca):
         )
     )
     return zipar(arquivos)
+
+
+# ---------------------------------------------------------------------------
+# O pacote de uma família da comunicação (119, FR-3829, `D-015`)
+# ---------------------------------------------------------------------------
+
+
+def _resumo(dados):
+    return hashlib.sha256(dados).hexdigest()
+
+
+def montar_da_familia(ficha, *, markdown, texto, escolhida, formatos):
+    """O ZIP da família, com uma entrada no manifesto por formato, incluído ou não.
+
+    `formatos` é a lista, na ordem do pacote, de `{formato, template, peca, svg, png, motivo,
+    detalhe}`: `peca` nula quando o formato não entra, e `motivo` dizendo por quê (`nao_liberado`,
+    `versao_divergente`, `recusa`), ou `sem_rasterizador` quando entra sem o PNG. Devolve os bytes
+    e a lista `pecas`, que o evento leva igual à do manifesto.
+    """
+    arquivos = {"kit.md": markdown.encode(), "kit.txt": texto.encode()}
+    pecas, fontes, ativos = [], {}, {}
+    for item in formatos:
+        template, peca = item["template"], item["peca"]
+        png, svg, alternativo = arquivos_do_formato(item["formato"])
+        incluidos = {}
+        if peca is not None:
+            if item["png"] is not None:
+                incluidos[png] = item["png"]
+            incluidos[svg] = item["svg"]
+            incluidos[alternativo] = (peca.alternativo + "\n").encode()
+            arquivos.update(incluidos)
+            fontes.update(kit_fontes.resumos(kit_peca.fontes_da_peca(peca)))
+            familia = kit_familias.familia(template.familia)
+            for ativo in familia.ativos.values():
+                ativos[ativo.arquivo] = ativo.sha256
+            if peca.imagem is not None:
+                formato = template.formato.chave
+                ativos[peca.imagem.arquivo(formato)] = peca.imagem.sha256(formato)
+        pecas.append(
+            {
+                "formato_da_peca": item["formato"],
+                "template": template.identificador,
+                "template_versao": template.versao,
+                "template_resumo": kit_familias.resumo(template),
+                "incluida": peca is not None,
+                "motivo": item["motivo"] or None,
+                **({"recusa": item["recusa"]} if item.get("recusa") else {}),
+                "manchete": peca.manchete if peca is not None else None,
+                "arquivos": [
+                    {"nome": nome, "sha256": _resumo(dados)} for nome, dados in incluidos.items()
+                ],
+            }
+        )
+    arquivos["ficha.json"] = _json(ficha.como_dict())
+    base = manifesto(ficha, arquivos=arquivos, peca=None, motivo_sem_peca="")
+    imagem = escolhida.imagem_do_banco()
+    arquivos["manifesto.json"] = _json(
+        {
+            **base,
+            # Os campos singulares da `111` significam a Institucional; aqui vêm nulos, e quem lê
+            # usa `pecas` (FR-3829).
+            "template": None,
+            "peca": None,
+            "versao_do_manifesto": VERSAO_DO_MANIFESTO,
+            "familia": {
+                "chave": escolhida.familia.chave,
+                "versao": escolhida.familia.versao,
+                "variante": escolhida.variante,
+            },
+            "imagem": (
+                {"chave": imagem.chave, "sha256": {f: imagem.sha256(f) for f in imagem.arquivos}}
+                if imagem
+                else None
+            ),
+            "pecas": pecas,
+            "fontes": fontes,
+            "ativos": ativos,
+            "arquivos": [
+                {"nome": nome, "sha256": _resumo(dados)} for nome, dados in arquivos.items()
+            ],
+        }
+    )
+    return zipar(arquivos, ARQUIVOS_DA_FAMILIA), pecas
