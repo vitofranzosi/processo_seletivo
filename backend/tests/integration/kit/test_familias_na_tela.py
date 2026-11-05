@@ -18,7 +18,7 @@ from django.utils import timezone
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.interface import kit_escolha, kit_familias, kit_pacote, kit_peca
-from processo_seletivo.interface.kit_familias import institucional, pos_lato_sensu
+from processo_seletivo.interface.kit_familias import fic, institucional, pos_lato_sensu
 from processo_seletivo.portal import ficha as fichas
 from tests.fixtures import kit
 from tests.interface.conftest import identificar
@@ -78,12 +78,12 @@ def _eventos(edital):
     ).order_by("occurred_at")
 
 
-def _sem(settings, *formatos):
-    """A configuração da suíte sem os formatos dados da Pós Lato Sensu."""
+def _sem(settings, *formatos, familia=LATO):
+    """A configuração da suíte sem os formatos dados da família (a Pós Lato Sensu, se não dita)."""
     settings.KIT_DE_DIVULGACAO_TEMPLATES = tuple(
         entrada
         for entrada in settings.KIT_DE_DIVULGACAO_TEMPLATES
-        if not (entrada[0] == LATO and entrada[1] in formatos)
+        if not (entrada[0] == familia and entrada[1] in formatos)
     )
 
 
@@ -97,7 +97,7 @@ def test_sem_exportacao_a_tela_traz_a_institucional_e_oferece_a_familia_da_unida
     assert resposta.status_code == 200
     escolha = resposta.context["escolha"]
     assert escolha.familia.chave == institucional.CHAVE
-    assert [f.chave for f in resposta.context["familias"]] == [institucional.CHAVE, LATO]
+    assert [f.chave for f in resposta.context["familias"]] == [institucional.CHAVE, LATO, fic.CHAVE]
     assert resposta.context["secoes_da_familia"] is None
 
 
@@ -108,6 +108,9 @@ def test_unidade_sem_familia_so_tem_a_institucional():
 
 def test_familia_sem_template_liberado_nao_e_oferecida(settings):
     _sem(settings, "post", "story", "banner")
+    oferecidas = [f.chave for f in kit_escolha.familias_oferecidas(_ficha_qualquer())]
+    assert oferecidas == [institucional.CHAVE, fic.CHAVE]
+    _sem(settings, "post", "story", "banner", familia=fic.CHAVE)
     assert [f.chave for f in kit_escolha.familias_oferecidas(_ficha_qualquer())] == [
         institucional.CHAVE
     ]
@@ -156,7 +159,8 @@ def test_versao_divergente_da_liberada_diz_versao_nova(comunicacao, edital, sett
 
 
 def test_escolha_fora_da_lista_na_tela_abre_com_a_pre_escolha_e_diz_por_que(comunicacao, edital):
-    resposta = _tela(comunicacao, edital, familia="fic")
+    # Uma família que nenhum módulo registra: fora da lista fechada (EC-9).
+    resposta = _tela(comunicacao, edital, familia="libras")
     assert resposta.status_code == 200
     assert resposta.context["escolha"].familia.chave == institucional.CHAVE
     assert kit_escolha.ESCOLHA_INDISPONIVEL in resposta.content.decode()

@@ -195,32 +195,37 @@ def test_carga_horaria_vazia_numa_oferta_e_curta_noutra(template):
 # ---- EC-13: caractere sem glifo numa das fontes da família ---------------------------------
 
 
-@pytest.fixture
-def negrito_sem_u_agudo(monkeypatch):
-    """A Poppins Bold, numa cópia sem «ú»; a Regular continua inteira."""
+def _titulo_sem_u_agudo(monkeypatch, template):
+    """A fonte do título da família, numa cópia sem «ú»; as outras continuam inteiras.
+
+    Lida da família, e não da Poppins: a FIC desenha o título na Archivo Black.
+    """
     from processo_seletivo.interface import kit_fontes
 
+    chave_do_titulo = kit_familias.familia(template.familia).fonte("titulo")
     original = kit_fontes.medidas
 
     def medidas(chave):
         lidas = original(chave)
-        if chave != "poppins-negrito":
+        if chave != chave_do_titulo:
             return lidas
         larguras = {c: v for c, v in lidas.larguras.items() if c != "ú"}
         return kit_fontes.Medidas(lidas.dados, larguras, lidas.ascendente, lidas.descendente)
 
     monkeypatch.setattr(kit_fontes, "medidas", medidas)
+    return kit_fontes.FONTES[chave_do_titulo].familia
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=_id)
-def test_caractere_sem_glifo_so_na_fonte_de_titulo(template, negrito_sem_u_agudo):
+def test_caractere_sem_glifo_so_na_fonte_de_titulo(template, monkeypatch):
     """Cenário 25: recusa nomeando caractere e fonte; o mesmo caractere no corpo continua."""
+    nome_da_fonte = _titulo_sem_u_agudo(monkeypatch, template)
     no_titulo = _uma(titulo_sem_numero="Curso de Gestão Pública", titulo_do_processo="Gestão")
     with pytest.raises(kit_peca.PecaRecusada) as recusa:
         _compor(no_titulo, template)
-    assert "Poppins" in recusa.value.motivo and "«ú»" in recusa.value.motivo
+    assert nome_da_fonte in recusa.value.motivo and "«ú»" in recusa.value.motivo
     if template.tem_ofertas:
-        # «ú» no nome da oferta, que é corpo (Poppins Regular), não é recusa.
+        # «ú» no nome da oferta, que não é da fonte do título, não é recusa.
         ofertas = (dataclasses.replace(UMA[0], nome="Especialização em Gestão Pública"),)
         _compor(_ficha(ofertas=ofertas, nomes_iguais=False, total_de_vagas=40), template)
 

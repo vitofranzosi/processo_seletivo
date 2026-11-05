@@ -97,6 +97,36 @@ FONTES = {
             "Poppins-Bold.ttf",
             "7422528506b3264a11d167a0de0e757a322ded7c08f4fca6df4a7d43d02951f5",
         ),
+        # A FIC (119, incremento 3a): subconjuntos WinAnsi de três famílias OFL sem nome
+        # reservado, do mesmo `google/fonts` e pelo mesmo roteiro.
+        _do_kit(
+            "archivo-black",
+            "Archivo Black",
+            400,
+            "ArchivoBlack-Regular.ttf",
+            "24efaface31f64b28d2e34a09753230ef00181f1fe1188bf1e15c9522b426e8a",
+        ),
+        _do_kit(
+            "barlow-semi-condensed-medio",
+            "Barlow Semi Condensed",
+            500,
+            "BarlowSemiCondensed-Medium.ttf",
+            "feeb1c5417579e1b9e5b2e5f8a0bfc6a7e9f84fac02b947a9354890285c21cac",
+        ),
+        _do_kit(
+            "barlow-semi-condensed-negrito",
+            "Barlow Semi Condensed",
+            700,
+            "BarlowSemiCondensed-Bold.ttf",
+            "6e904ce4579c543817016f540d27bb8bfbf706d7aac8d1eccaedd5721dca0cda",
+        ),
+        _do_kit(
+            "space-mono-negrito",
+            "Space Mono",
+            700,
+            "SpaceMono-Bold.ttf",
+            "81c793fc957300ca0521c18f7ebd2ca3f751c373182ceafcfc63cd171c1447d5",
+        ),
     )
 }
 

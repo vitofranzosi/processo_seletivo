@@ -31,6 +31,7 @@ from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.interface import kit_familias, kit_peca
 from processo_seletivo.portal import ficha as fichas
+from processo_seletivo.unidades.models import Unidade
 from tests.fixtures import kit
 from tests.unit.kit import geometria
 
@@ -128,17 +129,25 @@ def _comparar(arquivo, obtido):
     return ""
 
 
-@pytest.mark.parametrize("nome", CENARIOS_DAS_FAMILIAS)
-def test_a_peca_de_cada_template_das_familias_e_a_referencia(api_client, nome):
-    """A peça, ou a recusa com o motivo, de cada template no cenário (SC-1132, SC-1134).
+#: O atendimento do cenário 20, o dos slides da FIC; e um de 255 caracteres, o do cenário 22.
+ATENDIMENTO = "selecaoextensao.cefor@ifes.edu.br, (27) 3198-0925 (seg. a sex., das 8h às 16h)"
+ATENDIMENTO_LONGO = ((ATENDIMENTO + " — ") * 4)[:255]
 
-    A imagem é a primeira do banco: a peça muda de fundo com a escolha, e de mais nada.
-    """
-    corpus, ate, mudar = CENARIOS_DAS_FAMILIAS[nome]
-    edital = kit.publicar(api_client, corpus, ate=ate, mudar=mudar, chave=f"familias-{nome}")
-    ficha = no_calendario_do_corpus(fichas.ler(edital, agora=timezone.now(), base_url=kit.BASE))
+#: Os cenários que são de uma família só (119, §Cenários de referência). Ficam fora do dicionário
+#: comum de propósito: uma referência nova numa família já aprovada mudaria o resumo dela.
+CENARIOS_POR_FAMILIA = {
+    "fic": {
+        "18-fic-tres-cargas": ("91", 1, kit.fic_tres_cargas, ""),
+        "19-carga-vazia-e-longa": ("91", 1, kit.carga_vazia_e_longa, ""),
+        "20-com-atendimento": ("91", 1, kit.fic_tres_cargas, ATENDIMENTO),
+        "22-atendimento-longo": ("91", 1, kit.fic_tres_cargas, ATENDIMENTO_LONGO),
+    },
+}
+
+
+def _compor_e_comparar(ficha, templates, nome):
     regeradas = []
-    for template in TEMPLATES_DAS_FAMILIAS:
+    for template in templates:
         familia = kit_familias.familia(template.familia)
         escolha = kit_peca.Escolha(imagem=familia.imagens[0].chave if familia.imagens else None)
         pasta = PASTA / template.pasta_das_referencias
@@ -151,3 +160,30 @@ def test_a_peca_de_cada_template_das_familias_e_a_referencia(api_client, nome):
         regeradas.append(_comparar(pasta / f"{nome}.svg", normalizar(kit_peca.svg(peca, ficha))))
     if any(regeradas):
         pytest.fail(" ".join(filter(None, regeradas)) + " Confira o diff e rode de novo.")
+
+
+@pytest.mark.parametrize(
+    ("familia", "nome"),
+    [(familia, nome) for familia, cenarios in CENARIOS_POR_FAMILIA.items() for nome in cenarios],
+)
+def test_a_peca_dos_cenarios_da_familia_e_a_referencia(api_client, familia, nome):
+    """Os cenários 18 a 22, nos templates da família que os declara (SC-1132)."""
+    corpus, ate, mudar, atendimento = CENARIOS_POR_FAMILIA[familia][nome]
+    edital = kit.publicar(api_client, corpus, ate=ate, mudar=mudar, chave=f"{familia}-{nome}")
+    Unidade.objects.filter(codigo=edital.institution_scope).update(atendimento=atendimento)
+    ficha = no_calendario_do_corpus(fichas.ler(edital, agora=timezone.now(), base_url=kit.BASE))
+    assert ficha.contato == atendimento.strip()
+    templates = [t for t in TEMPLATES_DAS_FAMILIAS if t.familia == familia]
+    _compor_e_comparar(ficha, templates, nome)
+
+
+@pytest.mark.parametrize("nome", CENARIOS_DAS_FAMILIAS)
+def test_a_peca_de_cada_template_das_familias_e_a_referencia(api_client, nome):
+    """A peça, ou a recusa com o motivo, de cada template no cenário (SC-1132, SC-1134).
+
+    A imagem é a primeira do banco: a peça muda de fundo com a escolha, e de mais nada.
+    """
+    corpus, ate, mudar = CENARIOS_DAS_FAMILIAS[nome]
+    edital = kit.publicar(api_client, corpus, ate=ate, mudar=mudar, chave=f"familias-{nome}")
+    ficha = no_calendario_do_corpus(fichas.ler(edital, agora=timezone.now(), base_url=kit.BASE))
+    _compor_e_comparar(ficha, TEMPLATES_DAS_FAMILIAS, nome)
