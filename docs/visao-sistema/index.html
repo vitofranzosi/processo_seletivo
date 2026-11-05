@@ -4244,8 +4244,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <p class="lead">
       A 119 generaliza a peça única da 111 para os templates que a comunicação usa: <strong>famílias</strong>
       (a identidade visual de um tipo de oferta) em <strong>formatos</strong> (onde a peça vai circular).
-      Especificou sete famílias; o código tem hoje a Institucional e três da comunicação: a Pós Lato
-      Sensu, a FIC e a Aperfeiçoamento.
+      Especificou sete famílias; o código tem hoje a Institucional e quatro da comunicação: a Pós Lato
+      Sensu, a FIC, a UAB/bolsista e a Aperfeiçoamento.
     </p>
     <table>
       <thead><tr><th>Formato</th><th>Tamanho</th><th>Observação</th></tr></thead>
@@ -4280,6 +4280,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td><code>fic/post</code></td><td>1</td><td><code>48c8b8c71eb3</code></td></tr>
         <tr><td><code>fic/story</code></td><td>1</td><td><code>795eb249d0c1</code></td></tr>
         <tr><td><code>fic/banner</code></td><td>1</td><td><code>dedce5f30536</code></td></tr>
+        <tr><td><code>uab/post</code></td><td>1</td><td><code>34c0c7073af8</code></td></tr>
+        <tr><td><code>uab/story</code></td><td>1</td><td><code>00f01d3909fd</code></td></tr>
+        <tr><td><code>uab/banner</code></td><td>1</td><td><code>fca039587c97</code></td></tr>
         <tr><td><code>aperfeicoamento/post</code></td><td>1</td><td><code>973b8dd70eb1</code></td></tr>
         <tr><td><code>aperfeicoamento/story</code></td><td>1</td><td><code>089ea18ee6e7</code></td></tr>
         <tr><td><code>aperfeicoamento/banner</code></td><td>1</td><td><code>4f26004ae0ba</code></td></tr>
@@ -4304,6 +4307,14 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       formato, e por isso quatro polos não saem no banner.
     </p>
     <p>
+      <strong>A UAB/bolsista</strong> (desde 05/11), também do Cefor, põe o texto numa coluna à direita da
+      foto, sobre dois fundos claros com o rabisco magenta. Dos cinco exemplos da comunicação, três ficaram
+      de fora: ou a chamada não passaria o contraste AA, ou o texto fica noutra posição, e seriam outro template. A chamada é
+      frase fixa aprovada, <em>“SELEÇÃO DE”</em> em marrom e <em>“BOLSISTA”</em> em magenta, em Anton, uma
+      linha cada. A Anton mede 1,5 corpo, e as caixas foram medidas com a altura de linha por fonte que a
+      FIC trouxe ao motor. O título vai em Poppins Bold. O painel é só o período, sem vagas, como nos slides.
+    </p>
+    <p>
       <strong>A Aperfeiçoamento</strong> (desde 05/11), também do Cefor, usa cinco fotos presas por clipe,
       cada uma com um arquivo por formato. O título vai em Lexend, à esquerda da foto. O painel é a faixa
       azul-escura: o prazo em Lexend e as ofertas em Unbounded verde, subindo sobre o pé da foto quando a
@@ -4318,10 +4329,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     </p>
     <div class="aviso aviso-lacuna"><span class="titulo">O que ainda falta</span>
       <ul>
-        <li>As outras quatro famílias especificadas — Libras, UAB, Internos (com as variantes servidores e
+        <li>As outras três famílias especificadas — Libras, Internos (com as variantes servidores e
           estudantes) e TMD — não existem na <code>main</code>: aparecem só na lista que valida a variável, e
-          liberá-las não tem efeito. A UAB está no PR #386, que não entra sobre a FIC sem ajuste: a altura de
-          linha que a FIC trouxe ao motor não deixa mais a chamada da UAB caber nas caixas dela. Libras, TMD e Internos esperam a escolha da fonte que substitui a
+          liberá-las não tem efeito. Libras, TMD e Internos esperam a escolha da fonte que substitui a
           Helvetica Neue (P-2).</li>
         <li>A homologação no servidor está toda por fazer: tempo, PNG idêntico em duas gerações, as prévias e
           os downloads num navegador, e uma pessoa da comunicação obtendo post, story e banner em menos de três
@@ -10826,7 +10836,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#kit-de-divulgacao">Kit de divulgação: ficha e textos</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Da versão vigente, com origem de cada valor; avisa o material exportado que ficou antigo (111, A).</td></tr>
 <tr data-marca="parc"><td><a href="#kit-de-divulgacao">Kit de divulgação: a peça para o feed</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>PNG e SVG com a marca oficial; desligada em produção até a comunicação aprovar (111, B).</td></tr>
 <tr data-marca="impl"><td><a href="#kit-pacote">Kit de divulgação: o pacote (.zip)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Textos, peça, ficha e manifesto num arquivo; sai só com os textos quando não há peça (111, C).</td></tr>
-<tr data-marca="parc"><td><a href="#kit-familias-e-formatos">Kit de divulgação: peças por família e formato</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Pós Lato Sensu, FIC e Aperfeiçoamento em post, story e banner, liberadas por template; nada liberado em produção; 3 das 7 famílias (119).</td></tr>
+<tr data-marca="parc"><td><a href="#kit-familias-e-formatos">Kit de divulgação: peças por família e formato</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Pós Lato Sensu, FIC, UAB e Aperfeiçoamento em post, story e banner, liberadas por template; nada liberado em produção; 4 das 7 famílias (119).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Convocação</td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Convocar os titulares num ato</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Chamar suplente, regularizar, precedência justificada</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
@@ -11864,8 +11874,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#kit-de-divulgacao">Kit de divulgação</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Ficha da versão vigente, textos prontos, a peça do feed em PNG e SVG com a marca oficial, exportação na trilha e aviso do material antigo (111, A e B); o pacote .zip (111, C); famílias e formatos, com a Pós Lato Sensu, a FIC e a Aperfeiçoamento em post, story e banner (119, incrementos 1, 2, 3a e 3d)</td>
-            <td>A peça desligada em produção até a comunicação aprovar (SC-1054); nenhum template da 119 liberado em produção; as outras quatro famílias (Libras, UAB, Internos, TMD); a homologação no servidor; o papel Comunicação não se atribui antes da 112</td>
+            <td>Ficha da versão vigente, textos prontos, a peça do feed em PNG e SVG com a marca oficial, exportação na trilha e aviso do material antigo (111, A e B); o pacote .zip (111, C); famílias e formatos, com a Pós Lato Sensu, a FIC, a UAB e a Aperfeiçoamento em post, story e banner (119, incrementos 1, 2, 3a, 3c e 3d)</td>
+            <td>A peça desligada em produção até a comunicação aprovar (SC-1054); nenhum template da 119 liberado em produção; as outras três famílias (Libras, Internos, TMD); a homologação no servidor; o papel Comunicação não se atribui antes da 112</td>
           </tr>
           <tr>
             <td><strong>Autenticação institucional</strong></td>
@@ -12786,7 +12796,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>30/10/2026</td><td><code>main</code> em <code>62824816</code>, specs 098–104</td><td>As sete specs mergeadas entre 21 e 30/10 descritas como entregues: a <a href="#previa-do-sorteio">prévia do sorteio</a>, com semente fictícia (098); o <a href="#relatorio-do-edital">relatório do Edital</a> (099) e o <a href="#relatorio-consolidado">consolidado da unidade</a> (100); a <a href="#agenda">Agenda dos Editais</a> (101); a <a href="#sorteio-viavel">extração inviável</a>, impedida na publicação (102, com o PR 335); a <a href="#retificacao-em-curso">Retificação em curso</a> pela navegação comum (103); e as <a href="#acoes-disponiveis">Ações disponíveis para você</a> (104). Registro no mesmo arquivo.</td></tr>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
-          <tr><td>05/11/2026</td><td><code>main</code> em <code>9a459a0e</code>, spec 120 e os incrementos 3a e 3d da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as famílias <a href="#kit-familias-e-formatos">FIC e Aperfeiçoamento</a> do kit. A UAB (PR #386) ficou de fora do merge. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>05/11/2026</td><td><code>main</code> em <code>7a4f7aec</code>, spec 120 e os incrementos 3a, 3c e 3d da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as famílias <a href="#kit-familias-e-formatos">FIC, UAB/bolsista e Aperfeiçoamento</a> do kit. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -12843,8 +12853,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>0edc0f8d</code>), as 069 a 072 em 15/10/2026 (<code>db428b30</code>) as 073 a 092 em 19/10/2026
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
-  (<code>a3e23b1f</code>) e a 120, com as famílias FIC e Aperfeiçoamento da 119, em 05/11/2026
-  (<code>9a459a0e</code>). Onde documentação e código
+  (<code>a3e23b1f</code>) e a 120, com as famílias FIC, UAB e Aperfeiçoamento da 119, em 05/11/2026
+  (<code>7a4f7aec</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
