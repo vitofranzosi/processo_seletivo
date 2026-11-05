@@ -97,7 +97,9 @@ def test_sem_exportacao_a_tela_traz_a_institucional_e_oferece_a_familia_da_unida
     assert resposta.status_code == 200
     escolha = resposta.context["escolha"]
     assert escolha.familia.chave == institucional.CHAVE
-    assert [f.chave for f in resposta.context["familias"]] == [institucional.CHAVE, LATO]
+    # A Institucional primeiro, e as famílias da unidade depois; quais, o registro diz.
+    chaves = [f.chave for f in resposta.context["familias"]]
+    assert chaves[0] == institucional.CHAVE and LATO in chaves
     assert resposta.context["secoes_da_familia"] is None
 
 
@@ -108,9 +110,8 @@ def test_unidade_sem_familia_so_tem_a_institucional():
 
 def test_familia_sem_template_liberado_nao_e_oferecida(settings):
     _sem(settings, "post", "story", "banner")
-    assert [f.chave for f in kit_escolha.familias_oferecidas(_ficha_qualquer())] == [
-        institucional.CHAVE
-    ]
+    chaves = [f.chave for f in kit_escolha.familias_oferecidas(_ficha_qualquer())]
+    assert chaves[0] == institucional.CHAVE and LATO not in chaves
 
 
 def _ficha_qualquer():

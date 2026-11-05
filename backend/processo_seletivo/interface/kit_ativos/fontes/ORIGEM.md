@@ -18,6 +18,7 @@ roteiro que gerou o subconjunto nomeado na origem.
 | `Poppins-Regular.ttf` | Poppins | 400 | SIL OFL 1.1 | a Poppins de `google/fonts`, `ofl/poppins/` (commit `bbda7253`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Poppins-OFL.txt` (original `7e65201e9b79…`) | `1a28e1d7124696a93c1e5894aff6dc0ca74c72c71777ed8fb8c747c2a657a3aa` |
 | `Poppins-SemiBold.ttf` | Poppins | 600 | SIL OFL 1.1 | a Poppins de `google/fonts`, `ofl/poppins/` (commit `bbda7253`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Poppins-OFL.txt` (original `d3bf1bdaf055…`) | `fefe0b3d545ead98fb66a28b5f23fc9b570d5eeb025c11fe3ae0252531892a7e` |
 | `Poppins-Bold.ttf` | Poppins | 700 | SIL OFL 1.1 | a Poppins de `google/fonts`, `ofl/poppins/` (commit `bbda7253`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Poppins-OFL.txt` (original `983676516167…`) | `7422528506b3264a11d167a0de0e757a322ded7c08f4fca6df4a7d43d02951f5` |
+| `Anton-Regular.ttf` | Anton | 400 | SIL OFL 1.1 | a Anton de `google/fonts`, `ofl/anton/` (commit `cee74d7c`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Anton-OFL.txt` (original `a4ba3a92350e…`) | `a7ad74685f149ccc513aaa57de7cfbeeba676d57b4328be0240ca139b85ba76d` |
 
 **Por que a Edital Sans não é copiada para cá.** É a fonte da peça Institucional desde a `111`, e a
 peça mede com ela exatamente o que o Edital mede. Duas cópias do mesmo arquivo poderiam divergir em
@@ -28,3 +29,9 @@ Express, que o projeto não descomprime; a original veio do repositório oficial
 aprovação do responsável pelo produto (04/11/2026). A OFL da Poppins não reserva nome, e o
 subconjunto mantém o nome da família. Sem `kern` nem `GPOS`: o compositor mede pelo avanço de cada
 glifo, e o rasterizador desenha o mesmo.
+
+**A Anton (UAB/bolsista).** Como a Poppins: os PPTX embutem a Anton em MicroType Express, e a
+original veio do repositório oficial do Google Fonts. A OFL da Anton não reserva nome, e o
+subconjunto mantém o nome da família. A caixa tipográfica dela mede 1,5 corpo (2409 + 674 de 2048),
+mais que a entrelinha do compositor: a família não a usa em caixa de mais de uma linha, e a chamada
+"Seleção de bolsista" é duas caixas de uma linha cada.

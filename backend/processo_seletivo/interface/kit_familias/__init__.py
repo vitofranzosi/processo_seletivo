@@ -324,10 +324,11 @@ def liberados():
 
 def _registrar_as_familias():
     # Importadas aqui, e não no topo: cada família importa as classes deste módulo.
-    from processo_seletivo.interface.kit_familias import institucional, pos_lato_sensu
+    from processo_seletivo.interface.kit_familias import institucional, pos_lato_sensu, uab
 
     registrar(institucional.FAMILIA)
     registrar(pos_lato_sensu.FAMILIA)
+    registrar(uab.FAMILIA)
 
 
 _registrar_as_familias()

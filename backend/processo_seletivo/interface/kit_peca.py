@@ -1020,7 +1020,11 @@ def _painel_com(c, ficha, frases, *, resumir, oferta_no_minimo=False):
             f"O conteúdo não cabe no {c.formato.chave} sem descer abaixo do corpo mínimo: o painel "
             f"subiria até {round(topo)} px, e o limite é {painel['topo_minimo']} px."
         )
-    c.retangulo(x, topo, largura_, painel["base"] - topo, cor=painel["cor"], raio=painel["raio"])
+    if painel.get("cor"):
+        # Sem cor, o painel é só a pilha: o texto fica direto sobre o fundo, como na UAB.
+        c.retangulo(
+            x, topo, largura_, painel["base"] - topo, cor=painel["cor"], raio=painel["raio"]
+        )
     y = topo + recuo
     for nome, campo, corpo, linhas in medidos:
         y = _escrever_em(c, nome, (x + recuo, y, util, 0), linhas, corpo, campo) + espaco
@@ -1042,9 +1046,12 @@ def _fundo(c, imagem):
 
 
 def _balao(c):
-    balao = c.template.dimensoes["balao"]
-    ativo = c.familia.ativos[balao["ativo"]]
-    c.elementos.append(Figura(*balao["retangulo"], ativo.arquivo, "image/png", "balao", opaca=True))
+    """A chamada à ação, no balão quando o template o declara; sem ele, direto no fundo."""
+    balao = c.template.dimensoes.get("balao")
+    if balao:
+        ativo = c.familia.ativos[balao["ativo"]]
+        figura = Figura(*balao["retangulo"], ativo.arquivo, "image/png", "balao", opaca=True)
+        c.elementos.append(figura)
     _caixa_unica(
         c,
         "chamada_a_acao",
@@ -1069,6 +1076,10 @@ def _compor_em_caixas(ficha, template, escolha):
     imagem = _imagem_escolhida(familia, escolha)
     if imagem is not None:
         _fundo(c, imagem)
+    # As frases fixas posicionadas da família — a chamada do alto da UAB —, `{caixa: frase}`. Cada
+    # uma é aprovada pela comunicação e passa pela varredura (FR-3814).
+    for nome, frase in template.dimensoes.get("frases_posicionadas", {}).items():
+        _caixa_unica(c, nome, frases[frase], "chamada", recusa="{texto!r} não cabe no {formato}.")
     avisos, omissao = [], ""
     titulo = _resolver_titulo(ficha, template, escolha)
     if titulo is None:
@@ -1133,6 +1144,8 @@ def _alternativo_em_caixas(ficha, familia, imagem, elementos):
 
     abertura = f"Peça de divulgação do {kit_textos.assinatura(ficha)}, na identidade {familia.nome}"
     frases = [f"{abertura}, com {imagem.descricao}." if imagem else f"{abertura}."]
+    if "chamada" in por_campo:
+        frases.append(f"{junto('chamada').capitalize()}.")
     titulo = junto("titulo_sem_numero") or junto("titulo_do_processo") or junto("manchete")
     frases.append(f"{ficha.identificacao}: {titulo}." if titulo else f"{ficha.identificacao}.")
     if "periodo_curto" in por_campo:

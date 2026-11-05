@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 91/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade UAB/bolsista, com foto de um homem sorridente, de fone de ouvido, diante do notebook. Seleção de bolsista. Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Edital publicado. Consulte as condições na página oficial. Acesse o edital, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1500" height="850" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
+<text x="640" y="154" font-family="Anton" font-size="80" font-weight="400" fill="#3b2204" data-campo="chamada">SELEÇÃO DE</text>
+<text x="1000" y="154" font-family="Anton" font-size="80" font-weight="400" fill="#bf247a" data-campo="chamada">BOLSISTA</text>
+<text x="640" y="228" font-family="Poppins" font-size="30" font-weight="700" fill="#3b2204" data-campo="titulo_sem_numero">Curso de Pós-graduação Lato Sensu em</text>
+<text x="640" y="270" font-family="Poppins" font-size="30" font-weight="700" fill="#3b2204" data-campo="titulo_sem_numero">Informática na Educação na modalidade EaD</text>
+<text x="640" y="313" font-family="Poppins" font-size="30" font-weight="700" fill="#3b2204" data-campo="titulo_sem_numero">(DEMONSTRAÇÃO)</text>
+<text x="640" y="638" font-family="Poppins" font-size="30" font-weight="400" fill="#3b2204" data-campo="identificacao">Edital nº 91/2026</text>
+<text x="640" y="504" font-family="Anton" font-size="44" font-weight="400" fill="#3b2204" data-campo="fixo">EDITAL PUBLICADO</text>
+<text x="640" y="550" font-family="Poppins" font-size="28" font-weight="400" fill="#3b2204" data-campo="fixo">Consulte as condições na página</text>
+<text x="640" y="590" font-family="Poppins" font-size="28" font-weight="400" fill="#3b2204" data-campo="fixo">oficial</text>
+<text x="640" y="681" font-family="Poppins" font-size="28" font-weight="700" fill="#3b2204" data-campo="chamada_a_acao">Acesse o edital</text>
+<text x="1440" y="681" font-family="Poppins" font-size="28" font-weight="700" fill="#3b2204" text-anchor="end" data-campo="busca">busque por 91/2026 – Cefor</text>
+<text x="640" y="725" font-family="Poppins" font-size="28" font-weight="400" fill="#3b2204" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+</svg>
