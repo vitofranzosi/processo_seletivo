@@ -110,6 +110,8 @@ arquivos das specs revistas neste mesmo PR (D-001).
   estudo).
 - Q: A duração da sessão? → A: Rever com a TI (9ª decisão do estudo); fora daqui.
 - Q: A finalidade da convocação? → A: Fora do MVP, sem campo novo (10ª decisão do estudo).
+- Q: As revisões da `118` e da `120` além das quatro pedidas (D-011)? → A: Aceitas como estão
+  (parecer de 2026-11-05, depois da spec escrita).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -879,8 +881,10 @@ mensagem da sucessora da `120`. A nova ordem da página não cabe na letra de se
 `118`: o botão da FR-3736, o bloco de prazo da FR-3737, a linha da substituída na FR-3740, os títulos
 da FR-3741 e da FR-3742 e o *"Mudam só"* da FR-3743. E a prévia da `120` (FR-3844) diz hoje, com essas
 palavras, que a mensagem não corrige a anterior — o que deixa de ser verdade. Revistas em silêncio,
-elas contradiriam a `121`; por isso estão escritas por extenso, com a redação anterior. **É a decisão
-que mais pede o olhar do usuário.**
+elas contradiriam a `121`; por isso estão escritas por extenso, com a redação anterior.
+
+**Aceita pelo usuário em 2026-11-05**, como está: as revisões vão além das quatro pedidas e vigoram com
+a implementação da `121`.
 
 ### D-012 — A identificação institucional vem da unidade
 
