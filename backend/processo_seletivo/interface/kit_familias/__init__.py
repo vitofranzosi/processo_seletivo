@@ -329,6 +329,7 @@ def _registrar_as_familias():
         aperfeicoamento,
         fic,
         institucional,
+        internos,
         libras,
         pos_lato_sensu,
         tmd,
@@ -342,6 +343,7 @@ def _registrar_as_familias():
     registrar(libras.FAMILIA)
     registrar(uab.FAMILIA)
     registrar(tmd.FAMILIA)
+    registrar(internos.FAMILIA)
 
 
 _registrar_as_familias()

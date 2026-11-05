@@ -37,5 +37,8 @@ KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit(
     "uab/banner@1#fca039587c97,"
     "tmd/post@1#9a544f2f3d14,"
     "tmd/story@1#82ecc2986f98,"
-    "tmd/banner@1#19a61ab2cb53"
+    "tmd/banner@1#19a61ab2cb53,"
+    "internos/post@1#9818523a0de0,"
+    "internos/story@1#c9737cbea0fd,"
+    "internos/banner@1#ecf22fd996e9"
 )

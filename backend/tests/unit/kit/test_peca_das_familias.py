@@ -24,6 +24,7 @@ def _id(template):
 def _compor(ficha, template, **escolha):
     familia = kit_familias.familia(template.familia)
     escolha.setdefault("imagem", familia.imagens[0].chave if familia.imagens else None)
+    escolha.setdefault("variante", familia.variantes[0].chave if familia.variantes else None)
     peca = kit_peca.compor_template(ficha, template, kit_peca.Escolha(**escolha))
     assert geometria.problemas(peca) == [], template.identificador
     return peca
