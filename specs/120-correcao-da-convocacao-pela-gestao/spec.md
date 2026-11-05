@@ -9,8 +9,12 @@ decisões têm duas origens:
 
 - **Do usuário, em 04/11/2026:** D-001 (spec própria, e não emenda à `050`) e as quatro respostas de
   *Clarifications*. Não se reabrem.
-- **Propostas de desenho desta spec:** D-002 a D-009. **Aguardam a revisão do usuário** antes do
-  planejamento.
+- **Propostas de desenho desta spec:** D-002 a D-009, **mantidas pelo usuário** na revisão do commit
+  `4b2bd844` (04/11/2026).
+- **Da revisão do commit `4b2bd844` (04/11/2026):** os ajustes da FR-3844, da FR-3848, da SC-1144 e
+  da FR-3854, e duas ampliações que o plano exigiu, registradas como tal: a D-010 (a confirmação
+  assina a prévia, FR-3857), que amplia a D-003, e o complemento da D-009 para o cartão que mudou no
+  intervalo.
 
 **Input**: o achado
 [`doc/achado-correcao-da-convocacao-pela-gestao-2026-11-04.md`](../../doc/achado-correcao-da-convocacao-pela-gestao-2026-11-04.md),
@@ -96,6 +100,21 @@ entregou a precedência justificada e a chamada para regularizar, mas não a suc
   quem opera (FR-3839, D-005).
 - Q: A validação no portal depende do PR #384? → A: Ele foi mergeado em 04/11/2026. A validação usa
   a jornada consolidada da `118`, e a reabertura é a da FR-3622 da `115`.
+
+### Session 2026-11-04 (revisão do commit `4b2bd844`)
+
+- Q: Com o prazo em curso, a prévia diz sempre "prazo estendido"? → A: Não. A própria spec admite
+  antecipar. A prévia distingue estender, antecipar e manter o vencimento, pelo vencimento informado
+  (FR-3844), e o resultado diz qual aconteceu (FR-3849).
+- Q: "Uma comunicação" vale com a forma por publicação e com falha de envio? → A: O requisito é
+  impedir duplicidade, e não garantir envio. O ato pode ficar aguardando publicação, ou com a
+  comunicação falha; a repetição devolve esse mesmo resultado (FR-3848, SC-1144).
+- Q: Registrar um defeito do portal dispensa demonstrar a User Story 2? → A: Não. A demonstração é
+  condição de conclusão. Se um defeito a impedir, a conclusão fica bloqueada até ele ser resolvido,
+  por decisão do usuário, sem que o defeito entre no escopo desta feature (FR-3854).
+- Q: Identificar a convocação corrigida garante que espécie e fundamento gravados sejam os da
+  prévia? → A: Não. A apuração seguinte, ou uma Retificação, pode mudar os dois no intervalo sem
+  tocar na convocação. A confirmação passa a assinar a prévia (FR-3857, D-010).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -255,6 +274,12 @@ os SC-.
   prévia a mostra ao lado da atual (D-006).
 - **Fundamento diferente.** A sucessora cita a apuração vigente no ato da correção. Quando ela não é a
   que a corrigida citou, a prévia diz (D-006).
+- **Apuração seguinte emitida, ou Retificação publicada, entre a prévia e a confirmação.** O recorte
+  não fica impedido, mas o fundamento, e talvez a espécie, mudaram: a confirmação é recusada como
+  prévia superada, com a prévia nova à vista e os campos preservados (FR-3857).
+- **O cartão mudou no intervalo.** Quando a recusa é porque a chamada foi corrigida por outra pessoa,
+  ou teve desfecho, o motivo digitado aparece para copiar, e o formulário da sucessora nasce vazio
+  (FR-3850).
 - **Ordem sucedida, apuração ausente ou superada.** O recorte inteiro está impedido; a ação mostra a
   limitação e o caminho, sem formulário (FR-3839). Se o impedimento surgir entre a abertura e a
   confirmação, a recusa vem com a mesma orientação.
@@ -315,9 +340,19 @@ os SC-.
   - a forma de comunicação do Perfil e o que ela fará no ato: a mensagem individual sai de novo, com o
     texto da convocação e o prazo novo, sem dizer que corrige a anterior (D-007); por publicação, a
     comunicação aguarda a publicação, como hoje;
-  - o que reabre: até o vencimento novo, o convocado volta a poder enviar e complementar os documentos
-    da chamada e preencher e enviar o Requerimento declarado na convocação (FR-3622 da `115`). Dito
-    com essas palavras quando a chamada já venceu; com o prazo em curso, dito como prazo estendido;
+  - o efeito do vencimento informado sobre o atual, que são três, e a prévia diz qual:
+    - **posterior ao atual:** o prazo é estendido até o vencimento novo;
+    - **anterior ao atual, e ainda futuro:** o prazo é **antecipado**, e encurta um prazo já
+      comunicado;
+    - **igual ao atual:** o vencimento é mantido, e a correção muda só o que mais ela levar — o
+      fundamento derivado no ato, o complemento e a comunicação.
+
+    Enquanto nenhum vencimento foi informado, a prévia diz as três regras; quando é informado, diz a
+    que se aplica. A FR-3849 repete, depois do ato, a que se aplicou;
+  - o que reabre, quando a chamada já venceu: até o vencimento novo, o convocado volta a poder enviar
+    e complementar os documentos da chamada e preencher e enviar o Requerimento declarado na
+    convocação (FR-3622 da `115`). Com o prazo em curso, nada estava fechado, e a prévia não diz que
+    reabre;
   - o que não muda: a lista, as apresentações e as conferências da chamada (FR-3573 da `115`), e a
     convocação corrigida, que continua legível no histórico com o motivo.
 - **FR-3845**: O formulário MUST declarar, antes do botão, que corrigir é irreversível, que a
@@ -329,13 +364,17 @@ os SC-.
 
 - **FR-3846**: A confirmação MUST praticar o ato pelo comando de convocar que já existe, com motivo —
   a sucessora aponta a corrigida, tem o mesmo número de chamada e o vencimento novo —, acrescido só
-  da conferência da FR-3843. MUST NOT criar comando, papel, tabela, estado, desfecho ou mensagem
+  das conferências da FR-3843 e da FR-3857. MUST NOT criar comando, papel, tabela, estado, desfecho ou mensagem
   novos.
 - **FR-3847**: Sem base para convocar, a confirmação MUST ser recusada com 403 e a recusa explicada;
   Edital de outra unidade, ou inexistente, MUST responder 404 (FR-478 da `033`). Nos dois casos,
   nada é gravado.
-- **FR-3848**: O mesmo formulário enviado mais de uma vez MUST produzir uma sucessora e uma
-  comunicação; a repetição MUST devolver o resultado da primeira.
+- **FR-3848**: O mesmo formulário enviado mais de uma vez MUST NOT produzir duplicidade: no máximo
+  **uma** sucessora, **um** evento de trilha do ato e **uma** mensagem enviada para ela. A repetição
+  MUST devolver o resultado do primeiro envio, qualquer que ele tenha sido: comunicação enviada,
+  aguardando publicação ou com falha de envio. A repetição MUST NOT ser o caminho para tentar de novo
+  uma comunicação que falhou; esse caminho continua sendo o das comunicações que ainda não saíram,
+  como na chamada individual.
 - **FR-3849**: Depois do ato, a tela MUST dizer que a convocação foi corrigida, o vencimento anterior
   e o novo — e se o prazo foi estendido ou antecipado —, e o resultado da comunicação, como a chamada
   individual diz (UX-103 da `050`), sem *"recebido"*, *"lido"* nem *"entregue"* (UX-039 da `019`).
@@ -344,7 +383,11 @@ os SC-.
 - **FR-3850**: A recusa MUST aparecer junto do cartão da chamada, nas palavras do domínio, e MUST
   preservar o motivo, o vencimento e o complemento digitados (UX-104 da `050`). Vale para as recusas
   que a leitura da condução não antecipa — fora da faixa, sem vaga faltante, impedimento surgido no
-  intervalo — e para as do formulário (D-009).
+  intervalo, prévia superada (FR-3857) — e para as do formulário (D-009). Quando a recusa é porque a
+  convocação corrigida já foi sucedida ou teve desfecho (FR-3843), o cartão daquela chamada mostra a
+  situação nova, a recusa diz quem praticou o ato e quando, e o motivo digitado aparece como texto,
+  para copiar: ele MUST NOT pré-preencher o formulário da sucessora, porque foi escrito para outra
+  convocação.
 
 #### A trilha e o histórico
 
@@ -362,12 +405,25 @@ os SC-.
   nenhum item de documento ganha prazo próprio (FR-3618 da `115`).
 - **FR-3854**: O portal MUST mostrar o prazo novo e reabrir documentos e Requerimento pelas regras
   que a `115` e a `118` já fixaram; esta feature MUST NOT acrescentar regra ao portal. Divergência
-  encontrada na verificação é defeito daquelas specs, registrado como achado.
+  encontrada na verificação é defeito daquelas specs, registrado como achado. **A demonstração da
+  User Story 2, de ponta a ponta, é condição de conclusão desta feature:** se o defeito a impedir, a
+  conclusão fica bloqueada até que ele seja resolvido, pela via que o usuário decidir, e ele não
+  entra no escopo desta feature por ter sido encontrado aqui.
 - **FR-3855**: O custo de consulta da tela da condução MUST NOT crescer com o número de cartões que
   oferecem a ação (FR-888 da `050`).
 - **FR-3856**: O nome do ato na tela MUST ser *"Corrigir esta convocação"*. A tela MUST NOT chamar o
   ato de *"prorrogação"* nem de *"reabertura de prazo"*, porque esses atos não existem (FR-3618 da
   `115`); a ajuda da ação PODE dizer que é por ela que se dá mais prazo.
+
+#### A prévia confirmada (ampliação da revisão de `4b2bd844`)
+
+- **FR-3857**: O formulário MUST carregar a assinatura do que a prévia mostrou: a convocação
+  corrigida, a apuração, a versão do Edital e a espécie derivada. A confirmação MUST ser recusada
+  quando, sob a trava do ato, qualquer uma delas diferir da vigente — porque a apuração seguinte foi
+  emitida, porque uma Retificação mudou a versão, ou porque a posição da pessoa mudou a espécie. A
+  recusa MUST mostrar a prévia nova, com os campos preservados (FR-3850), e nada é gravado. O
+  fundamento gravado é função desses quatro e do complemento digitado, e é por isso o que foi
+  mostrado (FR-869 da `050`) (D-010).
 
 ### Key Entities
 
@@ -390,10 +446,12 @@ Nenhuma entidade nova. A feature usa:
   o envio do Requerimento, os dois antes do vencimento novo; decorrido o vencimento novo, os dois são
   recusados com a mesma frase.
 - **SC-1143**: Cada uma das recusas — motivo vazio, vencimento passado, chamada com desfecho,
-  convocação já sucedida, ator sem base (403), Edital de outra unidade (404), recorte impedido — grava
+  convocação já sucedida, prévia superada, ator sem base (403), Edital de outra unidade (404), recorte
+  impedido — grava
   **zero** convocações, **zero** comunicações e **zero** eventos de trilha.
-- **SC-1144**: Dois envios do mesmo formulário produzem exatamente **uma** sucessora, **uma**
-  comunicação e **um** evento de trilha.
+- **SC-1144**: Dois envios do mesmo formulário produzem exatamente **uma** sucessora e **um** evento
+  de trilha do ato, e no máximo **uma** mensagem enviada; a segunda resposta repete a primeira nos
+  três resultados possíveis da comunicação — enviada, aguardando publicação e falha de envio.
 - **SC-1145**: Depois de duas correções em cadeia, o histórico mostra **três** linhas da mesma
   chamada, com o motivo em cada sucedida, e a lista, as apresentações e as conferências da chamada
   têm a mesma contagem antes e depois.
@@ -508,11 +566,31 @@ reabre, o que continua) não depende do que se digita, e o que se digita (motivo
 nos campos à vista. O resultado depois do ato repete o vencimento anterior e o novo. Uma tela
 intermediária de confirmação acrescentaria rota e estado sem mostrar nada que o formulário não mostre.
 
+*Na revisão de `4b2bd844`:* a única parte da prévia que depende do que se digita é o efeito do
+vencimento — estende, antecipa ou mantém (FR-3844). O formulário a diz pelo valor informado, e, sem
+o valor, diz as três regras. A decisão de não ter tela intermediária fica.
+
 ### D-009 — A recusa volta ao cartão com o que foi digitado
 
 Hoje a recusa da condução aparece no topo da tela, e os campos voltam vazios. Para um ato com motivo
 obrigatório, redigitar o motivo a cada recusa é o atrito que faz a pessoa desistir, ou escrever menos
 na segunda vez. A recusa da correção volta aberta no cartão da chamada, com os campos como estavam.
+
+*Complemento da revisão de `4b2bd844`:* quando o cartão mudou no intervalo — a chamada foi corrigida
+por outra pessoa, ou teve desfecho —, os campos não voltam para um formulário, porque o formulário
+que existe agora é o da sucessora, ou nenhum. O motivo aparece como texto, para copiar, e a recusa diz
+quem praticou o ato e quando (FR-3850).
+
+### D-010 — A confirmação assina a prévia
+
+*Ampliação da D-003, na revisão de `4b2bd844`.* Nomear a convocação corrigida impede corrigir a
+sucessora ou praticar chamada nova, mas não impede gravar um fundamento que ninguém viu: a apuração
+seguinte, emitida por outra pessoa entre a prévia e a confirmação, muda a data que o fundamento cita
+sem tocar na convocação; uma Retificação muda os rótulos do Edital e do recorte; a contagem nova pode
+mudar a espécie. O formulário leva a assinatura do que mostrou — convocação, apuração, versão e
+espécie —, e o comando a confere sob a mesma trava em que deriva o fundamento. É a mesma garantia que
+a assinatura do alcance dá ao gesto dos vencidos da `050`: confirma-se o que se viu, ou nada
+acontece.
 
 ## Registrado, sem desenvolver
 

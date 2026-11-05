@@ -41,12 +41,16 @@ Validado em 04/11/2026, numa iteração.
 - **Critérios mensuráveis.** SC-1143, SC-1144, SC-1145 e SC-1149 se medem por contagem de registros;
   SC-1147 por número de consultas com 1 e com 20 cartões; SC-1141, SC-1142, SC-1146 e SC-1148 por
   verificação no navegador.
-- **Casos-limite são requisitos.** Os treze da seção *Edge Cases* não têm identificador, e por isso
-  nenhuma ferramenta os cobra: a matriz de rastreabilidade do plano MUST ter uma linha para cada um.
+- **Casos-limite são requisitos.** Os quinze da seção *Edge Cases* não têm identificador, e por isso
+  nenhuma ferramenta os cobra: `rastreabilidade.md` tem uma linha para cada um.
 - **O que este checklist não detecta.** Ele não acusa contradição entre requisitos. Conferido à mão:
   a FR-3838 (sem ação na chamada sem vencimento) e a FR-3841 (vencimento obrigatório) dizem o mesmo
   pela D-004; a FR-3839 (sem formulário no recorte impedido) e a FR-3850 (recusa no cartão) cobrem
   casos disjuntos — o impedimento que a leitura conhece e o que só a confirmação descobre.
-- **Para a revisão do usuário.** D-002 a D-009 são propostas desta spec. As que mais mudam a
-  implementação são a D-003 (a conferência nova sob a trava), a D-004 (chamada sem vencimento fora) e
+- **Revisão de `4b2bd844` (04/11/2026).** Revalidado depois dos ajustes da FR-3844, da FR-3848, da
+  SC-1144 e da FR-3854 e das ampliações (FR-3857, D-010; complemento da D-009): todos os itens
+  continuam marcados. A contradição que a revisão apontou — a prévia dizia "prazo estendido" e a
+  spec admitia antecipar — é do tipo que este checklist não pega.
+- **Para a revisão do usuário.** D-002 a D-009 são propostas desta spec, mantidas na revisão. As
+  que mais mudam a implementação são a D-003 (a conferência nova sob a trava), a D-004 (chamada sem vencimento fora) e
   a D-009 (a recusa preserva o que foi digitado).
