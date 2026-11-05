@@ -11,7 +11,7 @@ decisões têm duas origens:
   Edital, a proposta de escopo, os três acréscimos, as duas precisões e o critério de aceite da
   jornada, resumidos em *Clarifications*. Não se reabrem.
 - **Propostas de desenho desta spec:** D-001 a D-007, abaixo. Elas resolvem o que a conversa deixou
-  aberto. **Aguardam o usuário.**
+  aberto. **Aprovadas pelo usuário em 05/11/2026**, a D-004 no caminho mais simples (11ª decisão).
 
 **Input**: *"Alinhar sorteio, divulgação, ocupação e Supervisão pelos mesmos recortes (a Modalidade
 apontada como ampla deixa de ter recorte próprio no sorteio), com transição explícita para o acervo
@@ -92,7 +92,8 @@ A avaliação de 05/11 encontrou o mesmo defeito em mais quatro lugares, e eles 
 
 **Cobre:**
 
-- uma derivação de recortes só para sorteio, classificação, ocupação, divulgação e Supervisão;
+- uma derivação de recortes só para sorteio, classificação, ocupação, divulgação, Supervisão e
+  relatório do Edital;
 - a recusa, nos comandos, de relação, sorteio e divulgação no recorte excedente;
 - o acervo excedente existente: preservado, consultável e explicado, sem competir com o trabalho;
 - a regra temporal: a versão vigente decide o que é operacional, e a versão de origem explica o
@@ -131,6 +132,17 @@ Decisões do usuário nesta sessão. Não se reabrem.
 - **9ª — A relação excedente já congelada não produz sorteio.** O comando recusa; retirar a relação
   das pendências e dos botões não basta. Ela continua consultável, com a explicação do impedimento.
 - **10ª — O critério de aceite da jornada** é o da SC-1165, nas palavras do usuário.
+
+### Session 2026-11-05 (parecer do usuário sobre a spec)
+
+- **11ª — D-001 a D-007 aprovadas.** Na D-004 fica o caminho mais simples: quando o papel do recorte
+  muda, o trabalho segue por relação, sorteio e ato novos, sem reaproveitamento.
+- **12ª — A explicação do acervo distingue as duas origens.** Um registro pode ter nascido excedente
+  ou ter se tornado excedente por Retificação (FR-3913), e a frase de cada um sai da versão que ele
+  cita (FR-3911). A FR-3903 foi reescrita para isso.
+- **13ª — O que o portal diz de publicação excedente não entra por si.** Se o levantamento da
+  instalação encontrar publicação excedente, os números vão ao usuário, que decide; o escopo não se
+  amplia automaticamente.
 - **Ressalva aceita ao diagnóstico:** posições diferentes da mesma pessoa na ampla e na lista
   excedente não provam, sozinhas, classificações contraditórias, porque os universos são diferentes.
   O defeito comprovado é oferecer como resultado operacional uma lista que a ocupação não consome.
@@ -260,8 +272,9 @@ estado de cada ato anterior na condução do marco e na Supervisão.
 
 1. **Given** um Edital sem apontamento, em que a Modalidade AC é recorte operacional e tem ato
    divulgado, **When** uma Retificação passa a apontá-la como a ampla, **Then** aquele ato vira
-   registro excedente: fora do quadro operacional, sem sinal na Supervisão, e com publicação e
-   verificador preservados.
+   registro excedente: fora do quadro operacional, sem sinal na Supervisão, com publicação e
+   verificador preservados, e com a frase de quem se tornou excedente pela Retificação, nomeada pelo
+   número; um registro nascido excedente no mesmo marco mantém a frase dele.
 2. **Given** um Edital em que a Modalidade AC é apontada como a ampla e tem ato excedente, **When** uma
    Retificação retira o apontamento, **Then** a Modalidade AC volta a ser recorte operacional e o ato
    antigo **não** vira o ato vigente dela por isso: o recorte aparece com o ato obsoleto e a causa
@@ -329,9 +342,11 @@ Cada caso-limite é requisito, e o plano dá a cada um um teste na matriz de ras
 - **FR-3899**: O comando de divulgar o resultado MUST recusar o ato cujo recorte é excedente na versão
   vigente, com a mesma explicação. Publicações feitas antes desta feature MUST NOT ser alteradas,
   sucedidas nem invalidadas pela recusa.
-- **FR-3900**: O comando de emitir ato de ordenação, inclusive o sucessor, MUST recusar o recorte
-  excedente na versão vigente. Na classificação computada isso já acontece pela normalização da
-  `034`; o requisito vale para todo caminho que grave ato de ordenação.
+- **FR-3900**: Nenhum caminho MUST gravar ato de ordenação, inclusive o sucessor, no recorte excedente
+  da versão vigente. A classificação computada continua como a `034` a deixou: o pedido do apelido é
+  **normalizado** para a ampla, e não recusado, porque ele não grava no recorte excedente. O caminho
+  do sorteio, que grava o ato a partir da relação, fica fechado pela recusa da FR-3898.
+  *Redação corrigida no plano (05/11/2026): a primeira dizia que a classificação "recusava".*
 - **FR-3901**: Nenhuma tela MUST oferecer congelar, sortear, emitir ou divulgar no recorte excedente.
   As portas de divulgação que existem hoje são quatro, e todas MUST seguir a regra: a página do
   Edital, a tela do sorteio, a tela do ato e o destino do sinal da Supervisão. A prévia aberta por
@@ -343,11 +358,18 @@ Cada caso-limite é requisito, e o plano dá a cada um um teste na matriz de ras
   MUST continuar com a identidade, o conteúdo, os documentos e os verificadores que têm. Nenhum MUST
   ter o recorte convertido para a ampla, nem ser sucedido, anulado ou ocultado por esta feature.
 - **FR-3903**: A tela do sorteio MUST mostrar os registros excedentes do marco numa seção própria,
-  depois dos recortes operacionais, com a frase: o registro foi produzido quando o sorteio dava lista
-  própria à Modalidade apontada como a ampla; a ocupação das vagas não usa essa lista; e ele fica
-  preservado como foi feito. A seção MUST NOT oferecer ação nenhuma além de consultar.
+  depois dos recortes operacionais, sem ação nenhuma além de consultar. Cada registro MUST trazer a
+  frase da **origem dele**, decidida pela versão que ele cita (FR-3911):
+  - **nascido excedente** — na versão de origem, a Modalidade já era apontada como a ampla: o registro
+    foi produzido quando o sorteio dava lista própria à Modalidade apontada como a ampla concorrência;
+    a ocupação das vagas não usa essa lista; ele fica preservado como foi feito;
+  - **tornado excedente por Retificação** — na versão de origem, a Modalidade era recorte próprio: o
+    registro foi produzido quando esta Modalidade tinha recorte próprio; a Retificação que passou a
+    apontá-la como a ampla concorrência, nomeada pelo número, o tirou da operação; ele fica
+    preservado como foi feito.
 - **FR-3904**: A tela do ato, a lista de resultados divulgados do marco e a prévia de um registro
-  excedente MUST identificar o registro como fora da operação atual, com a mesma frase.
+  excedente MUST identificar o registro como fora da operação atual, com a frase da origem dele
+  (FR-3903).
 - **FR-3905**: As páginas públicas de verificação de relação, sorteio e resultado MUST continuar
   respondendo para os registros excedentes exatamente como antes desta feature (D-005).
 
@@ -392,6 +414,17 @@ Cada caso-limite é requisito, e o plano dá a cada um um teste na matriz de ras
 - **FR-3915**: Esta feature MUST NOT mudar o que o candidato vê no portal, nem os avisos já
   despachados (`066`).
 
+#### H. O relatório do Edital
+
+*Acrescentada no plano, em 05/11/2026: a pesquisa (`R-7`) encontrou no relatório do Edital uma
+sexta superfície que monta linhas por lista a partir dos atos e das publicações.*
+
+- **FR-3916**: O relatório do Edital (`099`, `100`) MUST montar as linhas de lista de cada marco a
+  partir dos recortes operacionais, e o estado do marco (*definitivo em todas*, pendência) MUST
+  considerar só eles. Uma publicação excedente já feita MUST aparecer identificada como fora da
+  operação atual, sem contar para o estado do marco; um ato excedente não divulgado MUST NOT
+  aparecer como pendência.
+
 ### Key Entities
 
 - **Recorte operacional**: um par marco × lista sobre o qual se congela, sorteia, ordena, apura e
@@ -415,15 +448,15 @@ Cada caso-limite é requisito, e o plano dá a cada um um teste na matriz de ras
   humano num Edital de demonstração com o apontamento e acervo excedente, e por teste de jornada no
   navegador.)*
 - **SC-1166**: Num Edital com o apontamento e acervo excedente, a tela do sorteio, a condução do marco,
-  o resumo da página do Edital, a ocupação e a Supervisão mostram **o mesmo número** de recortes
-  operacionais: três, nas cinco superfícies.
+  o resumo da página do Edital, a ocupação, a Supervisão e o relatório do Edital mostram **o mesmo
+  número** de recortes operacionais: três, nas seis superfícies.
 - **SC-1167**: A seção *Classificação* da página do Edital mostra **no máximo um** caminho de
   divulgação por marco, e o Publicador puro chega à prévia de qualquer recorte operacional em **dois
   cliques** a partir dela.
 - **SC-1168**: **Zero** sinais da Supervisão sobre registro excedente, depois de divulgados e apurados
   os recortes operacionais.
-- **SC-1169**: Os quatro comandos (congelar, sortear, emitir, divulgar) recusam o recorte excedente em
-  **100%** dos pedidos diretos, sem gravar nada; e **nenhuma** das quatro portas de divulgação oferece
+- **SC-1169**: Os três comandos (congelar, sortear, divulgar) recusam o recorte excedente em **100%**
+  dos pedidos diretos, sem gravar nada, e a emissão computada continua normalizando-o para a ampla; e **nenhuma** das quatro portas de divulgação oferece
   o botão para ele.
 - **SC-1170**: **100%** dos registros excedentes gravados antes da implementação continuam
   consultáveis, e as páginas públicas de verificação deles devolvem o mesmo conteúdo de antes,
@@ -462,7 +495,7 @@ ficaram fora delas.
 
 ## Decisões
 
-Propostas desta spec. **Aguardam o usuário.**
+Propostas desta spec, **aprovadas pelo usuário em 05/11/2026** (11ª decisão).
 
 ### D-001 — O destino do caminho único é a condução do marco
 
@@ -480,11 +513,11 @@ Nada se grava para dizer que um registro é excedente. A resposta vem do recorte
 versão vigente e do apontamento do Perfil. Uma marca gravada envelheceria na primeira Retificação
 do apontamento, e o append-only impediria corrigi-la.
 
-### D-003 — A recusa é a mesma frase nos quatro comandos e nas telas
+### D-003 — A recusa é a mesma frase nos três comandos e nas telas
 
-Congelar, sortear, emitir e divulgar recusam com o mesmo código e a mesma explicação, e a tela que
-deixa de oferecer o botão diz a mesma frase. Quatro frases para o mesmo fato divergiriam na primeira
-edição.
+Congelar, sortear e divulgar recusam com o mesmo código e a mesma explicação, e a tela que
+deixa de oferecer o botão diz a mesma frase. Frases diferentes para o mesmo fato divergiriam na primeira
+edição. A emissão computada fica fora da lista porque não recusa: normaliza (FR-3900).
 
 ### D-004 — Mudança de papel por Retificação torna o ato obsoleto, e não excedente nem vigente
 
