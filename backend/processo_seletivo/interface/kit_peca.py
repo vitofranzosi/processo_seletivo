@@ -1038,9 +1038,9 @@ def _painel_com(c, ficha, frases, *, resumir, oferta_no_minimo=False):
             f"O conteúdo não cabe no {c.formato.chave} sem descer abaixo do corpo mínimo: o painel "
             f"subiria até {round(topo)} px, e o limite é {painel['topo_minimo']} px."
         )
-    if painel["cor"]:
-        # Sem cor, o painel não se desenha: os itens ficam direto sobre o fundo, como na FIC, e o
-        # teste geométrico os confere contra os obstáculos da imagem.
+    if painel.get("cor"):
+        # Sem cor, o painel não se desenha: os itens ficam direto sobre o fundo, como na FIC e na
+        # UAB, e o teste geométrico os confere contra os obstáculos da imagem.
         altura = painel["base"] - topo
         c.retangulo(x, topo, largura_, altura, cor=painel["cor"], raio=painel["raio"])
     y = topo + recuo
@@ -1139,6 +1139,10 @@ def _compor_em_caixas(ficha, template, escolha):
         _fundo(c, imagem)
     _ativos_posicionados(c)
     _faixa(c, ficha)
+    # As frases fixas posicionadas da família — a chamada do alto da UAB —, `{caixa: frase}`. Cada
+    # uma é aprovada pela comunicação e passa pela varredura (FR-3814).
+    for nome, frase in template.dimensoes.get("frases_posicionadas", {}).items():
+        _caixa_unica(c, nome, frases[frase], "chamada", recusa="{texto!r} não cabe no {formato}.")
     avisos, omissao = [], ""
     titulo = _resolver_titulo(ficha, template, escolha)
     if titulo is None:
@@ -1203,6 +1207,8 @@ def _alternativo_em_caixas(ficha, familia, imagem, elementos):
 
     abertura = f"Peça de divulgação do {kit_textos.assinatura(ficha)}, na identidade {familia.nome}"
     frases = [f"{abertura}, com {imagem.descricao}." if imagem else f"{abertura}."]
+    if "chamada" in por_campo:
+        frases.append(f"{junto('chamada').capitalize()}.")
     titulo = junto("titulo_sem_numero") or junto("titulo_do_processo") or junto("manchete")
     frases.append(f"{ficha.identificacao}: {titulo}." if titulo else f"{ficha.identificacao}.")
     if "periodo_curto" in por_campo:

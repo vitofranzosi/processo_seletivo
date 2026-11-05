@@ -28,6 +28,7 @@ roteiro que gerou o subconjunto nomeado na origem.
 | `Inter-Light.ttf` | Inter | 300 | SIL OFL 1.1 | a Inter 4.1 da release oficial de `rsms/inter` (`https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`, SHA-256 `9883fdd4a49d…`), `extras/ttf/Inter-Light.ttf` (original `164414f0aacb…`), baixada em 05/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Inter-OFL.txt` | `f7dd17c00ffc680f1c282ac65aefb926d25ace556cfa5378e0cbbd7c79956757` |
 | `Inter-Regular.ttf` | Inter | 400 | SIL OFL 1.1 | a Inter 4.1 da release oficial de `rsms/inter` (`https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`, SHA-256 `9883fdd4a49d…`), `extras/ttf/Inter-Regular.ttf` (original `40d692fce188…`), baixada em 05/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Inter-OFL.txt` | `dbacf55135637df6fb3cf41a991befb60e757413b515691c208cfdc993a95b31` |
 | `Inter-Bold.ttf` | Inter | 700 | SIL OFL 1.1 | a Inter 4.1 da release oficial de `rsms/inter` (`https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`, SHA-256 `9883fdd4a49d…`), `extras/ttf/Inter-Bold.ttf` (original `288316099b1e…`), baixada em 05/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Inter-OFL.txt` | `42b065a835ac5c595f397be754a2ab209fce80aefc9ed2a0d6dc3ddbcbe601b4` |
+| `Anton-Regular.ttf` | Anton | 400 | SIL OFL 1.1 | a Anton de `google/fonts`, `ofl/anton/` (commit `cee74d7c`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Anton-OFL.txt` (original `a4ba3a92350e…`) | `a7ad74685f149ccc513aaa57de7cfbeeba676d57b4328be0240ca139b85ba76d` |
 
 **Por que a Edital Sans não é copiada para cá.** É a fonte da peça Institucional desde a `111`, e a
 peça mede com ela exatamente o que o Edital mede. Duas cópias do mesmo arquivo poderiam divergir em
@@ -73,3 +74,8 @@ que Internos e TMD não precisem tocar nesta pasta.
 **O negrito da Unbounded (Libras).** As informações do slide de Libras — número e prazo — estão em
 Unbounded negrito; a instância é a do mesmo arquivo variável da regular, em `wght` 700, e herda a
 mesma lacuna do micro (U+00B5).
+
+**A Anton (UAB/bolsista).** Como a Poppins: os PPTX embutem a Anton em MicroType Express, e a
+original veio do repositório oficial do Google Fonts. A OFL da Anton não reserva nome, e o
+subconjunto mantém o nome da família. A caixa tipográfica dela mede 1,5 corpo (2409 + 674 de 2048),
+e o compositor dá a cada linha dela essa altura (`kit_peca.entrelinha`), e não a de 1,42.
