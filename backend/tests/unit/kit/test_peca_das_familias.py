@@ -116,7 +116,12 @@ def test_sem_material_e_host_local_nao_geram_peca(template):
         kit_peca.compor_template(_uma(caminho_curto=None), template, kit_peca.Escolha())
 
 
-@pytest.mark.parametrize("template", TEMPLATES, ids=_id)
+@pytest.mark.parametrize(
+    "template",
+    # A família sem banco de imagens (EC-20, a TMD) não tem o que trocar.
+    [t for t in TEMPLATES if len(kit_familias.familia(t.familia).imagens) >= 2],
+    ids=_id,
+)
 def test_mesma_escolha_mesmo_svg_e_a_imagem_muda_so_o_fundo(template):
     """FR-3827, SC-1134; FR-3825: o alternativo descreve a imagem escolhida."""
     familia = kit_familias.familia(template.familia)
