@@ -581,7 +581,7 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
   A identificação MUST ser gravada também na tentativa que **falhou**, porque ela diz qual texto se
   tentou enviar. A comunicação por publicação não tem modelo, e fica sem identificação. As comunicações
-  gravadas antes da `121` ficam **sem identificação**: nenhuma versão lhes MUST ser atribuída
+  gravadas antes da `121` ficam **sem identificação**, e MUST NOT receber versão atribuída
   retroativamente. Uma mudança posterior nos modelos MUST NOT alterar a identificação já gravada, que
   é append-only como o resto da linha (D-009).
 

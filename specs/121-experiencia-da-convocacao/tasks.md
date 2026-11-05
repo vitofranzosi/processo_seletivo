@@ -46,7 +46,8 @@ o portal e o e-mail (FR-3873 a FR-3875, R-003).
 
 - [ ] T004 [P] `tests/unit/convocacao/test_prazo_apresentado.py`:
   - o dia da semana nos 365 dias de 2027, contra `calendar.weekday`;
-  - vencimento às 23h30 locais: a data, o dia e a contagem do dia local;
+  - vencimento às 23h30 locais (02h30 UTC do dia seguinte): a data, o dia e a contagem do dia local;
+  - vencimento à meia-noite local: a data, o dia da semana e a contagem do instante no fuso, e não do dia anterior;
   - a contagem às 23h59 e às 00h01 locais, e a uma hora do vencimento, nunca arredondando para cima;
   - *"termina hoje, às HHhMM"*, *"‹dia› · termina amanhã"*, *"‹dia› · faltam N dias"* e vencido sem linha;
   - `HHhMM`, nunca `HH:MM`;
@@ -76,12 +77,17 @@ resumo, a ação, a consequência, a ressalva e o andamento (FR-3858 a FR-3868).
   - `ressalva` com e sem o Requerimento (D-003);
   - `andamento` só com obrigatórios, sem o Requerimento e sem frase de conclusão (D-004);
   - `acao`: *"Ver o que preciso fazer"* com a âncora da primeira tarefa da FR-3726 — a pendente em F e J, a primeira a enviar em C1, o Requerimento quando ele é a única;
-  - sem tarefa, sem ação (SC-1150, SC-1151)
+  - sem tarefa, sem ação;
+  - prazo não iniciado (cenário K): título *"Você foi convocado!"*, cartão só com a frase da FR-3749 da `118`, sem contagem;
+  - chamada só com documento facultativo: a etapa da FR-3860 e o bloco *O que falta* da `118` (SC-1150, SC-1151)
 - [ ] T009 [P] [US1] `tests/interface/test_portal_convocacao.py`:
   - o `h1` por estado, e nenhum `h2` que repita o título no bloco 1 (D-005);
   - a ordem do documento: contexto, título, etapa, cartão do prazo, resumo, ação, consequência e ressalva, andamento;
   - a consequência da FR-1177 uma vez só por estado;
   - o ramo sem documento sem *"Você foi convocada(o)"* e com o cartão do prazo (FR-3868);
+  - encerrada pelo prazo, encerrada pelo Processo e com desfecho: o título por estado e os textos do bloco 1 da FR-3741 ou da FR-3742, e **nenhuma** etapa, contagem, ação principal, consequência, ressalva ou andamento (FR-3867);
+  - com a chamada aberta, os blocos *O que falta*, *O que você já apresentou* e *Sobre esta convocação* depois do andamento, com o conteúdo da `118` (FR-3866);
+  - estado aguardando e não convocado: o título e o texto de hoje, sem a chamada (caso-limite);
   - o caso existente de `:107` reescrito para o texto novo, citando a FR-3868 e a FR-3861
 - [ ] T010 [P] [US1] `tests/interface/test_portal_jornada_consolidada.py`: a contagem de consultas da convocação continua a mesma com 1 e com 6 itens (`:679`)
 
@@ -135,7 +141,7 @@ hostis.
 
 - [ ] T022 [P] [US3] `tests/authorization/test_convocacao_alheia.py`:
   - sem sessão, identificador real, inventado e alheio dão o mesmo `302`, para `acesso?destino=<caminho>`, com o mesmo corpo;
-  - com `CaptureQueriesContext`, zero consultas a `inscricoes_inscricao`, `editais_edital` e `convocacao_convocacao` antes da resposta;
+  - com `CaptureQueriesContext`, zero consultas às tabelas de `Inscricao`, `Edital` e `Convocacao` antes da resposta, com os nomes lidos de `Modelo._meta.db_table`, e não escritos à mão (o Edital mora em `processos`);
   - só o e-mail na sessão, sem código provado, dá a mesma resposta;
   - a sessão alheia continua com o 404 de inexistente;
   - o caso `:148` reescrito, citando a FR-3876 (SC-1157)
@@ -143,6 +149,8 @@ hostis.
   - depois do código, a chegada é a convocação, sem passar pela lista, nos três percursos — sessão vencida, primeiro acesso e reconciliação (SC-1156);
   - outro host, esquema estranho, rota fora da lista, consulta e fragmento acrescentados: a chegada é "Minhas inscrições" ou o caminho reconstruído, nunca o recebido (SC-1158);
   - o POST de envio e o GET do arquivo, sem sessão, respondem como hoje (D-002);
+  - destino guardado de outra visita: um destino antigo na sessão leva só à rota que ele nomeia, e a convocação de outra pessoa nele continua recusada como inexistente depois do código (FR-3879, `S4`);
+  - pessoa com duas inscrições convocadas: o link de cada uma leva à convocação daquela inscrição, e não à outra nem à lista;
   - abrir a convocação não move prazo e só registra a leitura com sessão titular (FR-3881)
 - [ ] T024 [P] [US3] `tests/integration/portal/test_contexto_do_acesso.py`: com destino na convocação, *"Entre para ver a sua convocação"* e *"Depois do código, você vai direto para a convocação."*; o mesmo texto para identificador real, inventado e alheio; nenhum nome de Edital ou de pessoa (FR-3880)
 - [ ] T025 [P] [US3] `tests/portal/test_resultados_por_perfil.py`: `_de_volta_a_vaga` com a convocação, ao lado dos casos do Edital e da vaga (`:590`, `:600`)
@@ -175,7 +183,8 @@ hostis.
   - o assunto e a frase das quatro variantes, e zero `HH:MM`;
   - o link para a convocação da inscrição, absoluto com base e relativo sem ela;
   - a identificação institucional da unidade;
-  - a repetição com a mesma chave não envia (SC-1155, SC-1159, SC-1161)
+  - a repetição com a mesma chave não envia;
+  - todos os documentos obrigatórios aproveitados: a mensagem diz o que a chamada **pede** (*"pede documentos"*), e não o estado (caso-limite) (SC-1155, SC-1159, SC-1161)
 - [ ] T033 [P] [US4] No mesmo arquivo, os cenários da D-008 pela gestão de teste, com o *backend* que devolve `0` para provocar a falha:
   1. A enviada, B falhada, C: o assunto e o título da correção, e o quadro com o `enviado_em` e o `vencimento` de A;
   2. A e B falhadas, C: a inicial, sem quadro, sem *"corrigida"*, sem *"Prazo válido"*;
