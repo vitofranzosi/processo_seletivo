@@ -9,7 +9,11 @@ arquivos gerados com o próprio leitor (`kit_fontes.py`).
 Uso, a partir de `backend/`:
 
     uv run --no-project --with fonttools python scripts/gerar_subconjunto_do_kit.py \\
-        <arquivo de origem .ttf> <arquivo de destino .ttf>
+        <arquivo de origem .ttf> <arquivo de destino .ttf> [peso]
+
+**Fonte variável pede o peso** (a Unbounded e a Lexend do Google Fonts só existem assim): o eixo
+`wght` é fixado nele antes do subconjunto, e o arquivo versionado é estático. O compositor lê um
+avanço por glifo, e uma fonte variável desenharia outro conforme o peso que o SVG pedisse.
 
 **O subconjunto cobre o WinAnsi inteiro**, o repertório que a `grafia` deixa chegar à peça, e um
 teste confere a cobertura.
@@ -30,6 +34,7 @@ from pathlib import Path
 
 from fontTools import subset
 from fontTools.ttLib import TTFont
+from fontTools.varLib import instancer
 
 DESTINO = Path(__file__).resolve().parents[1] / "processo_seletivo/interface/kit_ativos/fontes"
 
@@ -48,7 +53,7 @@ def _sha256(caminho):
     return hashlib.sha256(Path(caminho).read_bytes()).hexdigest()
 
 
-def gerar(origem, destino):
+def gerar(origem, destino, peso=None):
     opcoes = subset.Options()
     opcoes.recalc_timestamp = False
     opcoes.name_IDs = ["*"]
@@ -58,6 +63,10 @@ def gerar(origem, destino):
     opcoes.layout_features = []
     opcoes.drop_tables += ["GSUB", "GPOS", "GDEF", "kern", "DSIG"]
     fonte = TTFont(origem, recalcTimestamp=False)
+    if "fvar" in fonte:
+        if peso is None:
+            sys.exit(f"{Path(origem).name} é variável: diga o peso.")
+        fonte = instancer.instantiateVariableFont(fonte, {"wght": int(peso)}, updateFontNames=True)
     subconjunto = subset.Subsetter(opcoes)
     subconjunto.populate(unicodes=_winansi())
     subconjunto.subset(fonte)
@@ -71,6 +80,6 @@ def gerar(origem, destino):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         sys.exit(__doc__)
-    gerar(sys.argv[1], sys.argv[2])
+    gerar(*sys.argv[1:])

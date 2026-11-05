@@ -50,7 +50,9 @@ def test_os_arquivos_sao_os_registrados():
 
 @pytest.mark.parametrize("chave", kit_fontes.FONTES)
 def test_cada_fonte_cobre_o_repertorio_da_grafia(chave):
-    assert kit_fontes.sem_glifo("".join(kit_fontes.repertorio()), chave) == []
+    """Menos a lacuna que a fonte de origem tem e o registro declara, e nada além dela."""
+    faltam = kit_fontes.sem_glifo("".join(kit_fontes.repertorio()), chave)
+    assert faltam == list(kit_fontes.FONTES[chave].sem_grafia)
 
 
 @pytest.mark.parametrize(

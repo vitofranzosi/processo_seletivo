@@ -22,5 +22,8 @@ KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit(
     "institucional/post@1#d7ab660ea755,"
     "pos-lato-sensu/post@1#bfcb25490b8e,"
     "pos-lato-sensu/story@2#8a16aef0abbd,"
-    "pos-lato-sensu/banner@1#1badbdf0cb93"
+    "pos-lato-sensu/banner@1#1badbdf0cb93,"
+    "aperfeicoamento/post@1#973b8dd70eb1,"
+    "aperfeicoamento/story@1#089ea18ee6e7,"
+    "aperfeicoamento/banner@1#4f26004ae0ba"
 )

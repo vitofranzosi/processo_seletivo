@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 92/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade Aperfeiçoamento, com foto de uma mulher sorridente, de blazer, digitando diante do computador. Edital nº 92/2026: Seleção de Tutores UAB — Cadastro de Reserva 2026 (DEMONSTRAÇÃO). Inscrições até 28/10/2026, às 23h59 (horário de Brasília). Início em 14/10/2026. 18 opções; confira todas na página oficial. Acesse o link na bio, busque por 92/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1080" height="1920" preserveAspectRatio="none" data-campo="imagem" href="data:image/jpeg;base64,IMAGEM"/>
+<text x="80" y="496" font-family="Lexend" font-size="40" font-weight="800" fill="#ffffff" data-campo="titulo_do_processo">Seleção de Tutores</text>
+<text x="80" y="553" font-family="Lexend" font-size="40" font-weight="800" fill="#ffffff" data-campo="titulo_do_processo">UAB — Cadastro de</text>
+<text x="80" y="610" font-family="Lexend" font-size="40" font-weight="800" fill="#ffffff" data-campo="titulo_do_processo">Reserva 2026</text>
+<text x="80" y="666" font-family="Lexend" font-size="40" font-weight="800" fill="#ffffff" data-campo="titulo_do_processo">(DEMONSTRAÇÃO)</text>
+<text x="318" y="1228" font-family="Poppins" font-size="36" font-weight="400" fill="#dbff61" text-anchor="middle" data-campo="identificacao">Edital nº 92/2026</text>
+<rect x="80" y="852" width="920" height="314" rx="22" fill="#004aad"/>
+<text x="100" y="916" font-family="Lexend" font-size="44" font-weight="800" fill="#ffffff" data-campo="periodo_curto">Inscrições até 28/10/2026</text>
+<text x="100" y="972" font-family="Poppins" font-size="30" font-weight="400" fill="#ffffff" data-campo="hora">às 23h59 (horário de Brasília)</text>
+<text x="100" y="1021" font-family="Poppins" font-size="30" font-weight="400" fill="#ffffff" data-campo="inicio">Início em 14/10/2026</text>
+<text x="100" y="1082" font-family="Lexend" font-size="44" font-weight="800" fill="#dbff61" data-campo="contagem">18 opções</text>
+<text x="100" y="1136" font-family="Poppins" font-size="28" font-weight="400" fill="#ffffff" data-campo="fixo">Confira todas na página oficial</text>
+<image x="86" y="1523" width="906" height="152" preserveAspectRatio="none" data-campo="balao" href="data:image/png;base64,MARCA"/>
+<text x="720" y="1612" font-family="Poppins" font-size="40" font-weight="400" fill="#dbff61" text-anchor="middle" data-campo="chamada_a_acao">Acesse o link na bio</text>
+<text x="758" y="1219" font-family="Poppins" font-size="26" font-weight="400" fill="#dbff61" text-anchor="middle" data-campo="busca">busque por 92/2026 – Cefor</text>
+<text x="540" y="1405" font-family="Poppins" font-size="24" font-weight="400" fill="#ffffff" text-anchor="middle" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+</svg>
