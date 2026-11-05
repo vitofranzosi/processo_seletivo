@@ -9232,9 +9232,23 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       O acompanhamento de uma convocação sem documento paga uma consulta a mais — a da lista gravada na chamada, que é como ele sabe
       que ela não pede documento —, troca aceita pelo usuário (D-021); a tela da convocação ficou uma consulta abaixo. Registrados e
       não feitos: o aviso de pendência por e-mail (QI-7), a nota de pendência em <span class="rotulo-ui">Minhas inscrições</span>, a
-      mensagem da convocação e o teste com candidatos reais, que a spec recomenda. A correção da convocação pela gestão é a spec 120,
-      ainda em PR.
+      mensagem da convocação e o teste com candidatos reais, que a spec recomenda. A correção da convocação pela gestão é a
+      <a href="#correcao-da-convocacao">spec 120</a>, mergeada em 05/11.
     </p>
+    <div class="aviso aviso-nota"><span class="titulo">O que vem: a experiência da convocação, incremento 1 <span class="selo selo-prev">Previsto</span></span>
+      <p>A spec 121 foi mergeada em 05/11 só como especificação, sem código. Ela nasceu do estudo de 05/11
+        (<code>doc/estudo-experiencia-da-convocacao-2026-11-05/</code>), que percorreu a jornada e mostrou que a
+        página não diz o que aconteceu. A 121 propõe:</p>
+      <ul>
+        <li>a página da convocação com o título por estado e o prazo com o dia da semana e quanto falta;</li>
+        <li>a correção dita no cartão do prazo, para a sucessora dizer que substitui a anterior;</li>
+        <li>a confirmação do envio à vista;</li>
+        <li>o link direto sem sessão levando ao acesso e voltando à convocação, no lugar do 404 de hoje;</li>
+        <li>o e-mail institucional em HTML, que diz quando há documentos a enviar.</li>
+      </ul>
+      <p>As decisões de desenho dela (D-001 a D-012) aguardam o usuário. Até a implementação, vale o que esta seção
+        descreve.</p>
+    </div>
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
       <dt>A leitura das obrigações</dt><dd><code>portal/obrigacoes.py</code> (<code>obrigacoes_da_convocacao</code>, <code>estado_do_requerimento</code>)</dd>
       <dt>Acompanhamento</dt><dd><code>portal/situacao.py</code> · <code>acompanhamento.html</code></dd>
@@ -12828,7 +12842,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>30/10/2026</td><td><code>main</code> em <code>62824816</code>, specs 098–104</td><td>As sete specs mergeadas entre 21 e 30/10 descritas como entregues: a <a href="#previa-do-sorteio">prévia do sorteio</a>, com semente fictícia (098); o <a href="#relatorio-do-edital">relatório do Edital</a> (099) e o <a href="#relatorio-consolidado">consolidado da unidade</a> (100); a <a href="#agenda">Agenda dos Editais</a> (101); a <a href="#sorteio-viavel">extração inviável</a>, impedida na publicação (102, com o PR 335); a <a href="#retificacao-em-curso">Retificação em curso</a> pela navegação comum (103); e as <a href="#acoes-disponiveis">Ações disponíveis para você</a> (104). Registro no mesmo arquivo.</td></tr>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
-          <tr><td>05/11/2026</td><td><code>main</code> em <code>21b728af</code>, spec 120 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>05/11/2026</td><td><code>main</code> em <code>de5df85c</code>, spec 120, os incrementos 3a a 3f da 119 e a 121 só especificada</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); e <a href="#convocado-no-portal">o que a 121 prevê</a> para a experiência da convocação, ainda sem código. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -12885,8 +12899,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>0edc0f8d</code>), as 069 a 072 em 15/10/2026 (<code>db428b30</code>) as 073 a 092 em 19/10/2026
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
-  (<code>a3e23b1f</code>) e a 120, com as seis famílias que faltavam da 119, em 05/11/2026
-  (<code>21b728af</code>). Onde documentação e código
+  (<code>a3e23b1f</code>) e a 120, com as seis famílias que faltavam da 119 e a 121 só especificada, em 05/11/2026
+  (<code>de5df85c</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
