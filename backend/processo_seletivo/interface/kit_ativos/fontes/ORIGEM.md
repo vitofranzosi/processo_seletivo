@@ -24,6 +24,7 @@ roteiro que gerou o subconjunto nomeado na origem.
 | `SpaceMono-Bold.ttf` | Space Mono | 700 | SIL OFL 1.1 | a Space Mono de `google/fonts`, `ofl/spacemono/` (commit `bbda7253`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `SpaceMono-OFL.txt` (original `405e73d41afb…`) | `81c793fc957300ca0521c18f7ebd2ca3f751c373182ceafcfc63cd171c1447d5` |
 | `Unbounded-Regular.ttf` | Unbounded | 400 | SIL OFL 1.1 | a Unbounded de `google/fonts`, `ofl/unbounded/Unbounded[wght].ttf` (commit `bbda7253`, original `323b511be380…`), baixada em 04/11/2026; instância estática em `wght` 400 e subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Unbounded-OFL.txt` | `94c048a78a9b3ff3023dd970d1ca93c5c9918c32acd3c2f1948b2d41bfc3aba2` |
 | `Lexend-ExtraBold.ttf` | Lexend | 800 | SIL OFL 1.1 | a Lexend de `google/fonts`, `ofl/lexend/Lexend[wght].ttf` (commit `bbda7253`, original `3add53e641fb…`), baixada em 04/11/2026; instância estática em `wght` 800 e subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Lexend-OFL.txt` | `64c5421403046c7f6f61db724c6d897a5369c303a466de5ad84f7a7d2e518268` |
+| `Anton-Regular.ttf` | Anton | 400 | SIL OFL 1.1 | a Anton de `google/fonts`, `ofl/anton/` (commit `cee74d7c`), baixada em 04/11/2026; subconjunto WinAnsi por `scripts/gerar_subconjunto_do_kit.py`; licença em `Anton-OFL.txt` (original `a4ba3a92350e…`) | `a7ad74685f149ccc513aaa57de7cfbeeba676d57b4328be0240ca139b85ba76d` |
 
 **Por que a Edital Sans não é copiada para cá.** É a fonte da peça Institucional desde a `111`, e a
 peça mede com ela exatamente o que o Edital mede. Duas cópias do mesmo arquivo poderiam divergir em
@@ -54,3 +55,8 @@ mantém.
 a lacuna fica declarada em `kit_fontes.FONTES` (`sem_grafia`), o teste confere que ela é a única, e
 a peça cujo texto a pedir numa caixa em Unbounded é recusada nomeando o caractere e a fonte
 (FR-3823, EC-13).
+
+**A Anton (UAB/bolsista).** Como a Poppins: os PPTX embutem a Anton em MicroType Express, e a
+original veio do repositório oficial do Google Fonts. A OFL da Anton não reserva nome, e o
+subconjunto mantém o nome da família. A caixa tipográfica dela mede 1,5 corpo (2409 + 674 de 2048),
+e o compositor dá a cada linha dela essa altura (`kit_peca.entrelinha`), e não a de 1,42.

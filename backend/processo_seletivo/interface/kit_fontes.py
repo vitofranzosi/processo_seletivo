@@ -100,6 +100,14 @@ FONTES = {
             "Poppins-Bold.ttf",
             "7422528506b3264a11d167a0de0e757a322ded7c08f4fca6df4a7d43d02951f5",
         ),
+        # A UAB/bolsista (119, incremento 3c): a Anton, OFL sem nome reservado, no mesmo roteiro.
+        _do_kit(
+            "anton-regular",
+            "Anton",
+            400,
+            "Anton-Regular.ttf",
+            "a7ad74685f149ccc513aaa57de7cfbeeba676d57b4328be0240ca139b85ba76d",
+        ),
         # A FIC (119, incremento 3a): subconjuntos WinAnsi de três famílias OFL sem nome
         # reservado, do mesmo `google/fonts` e pelo mesmo roteiro.
         _do_kit(

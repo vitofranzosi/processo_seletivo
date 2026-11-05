@@ -330,12 +330,14 @@ def _registrar_as_familias():
         fic,
         institucional,
         pos_lato_sensu,
+        uab,
     )
 
     registrar(institucional.FAMILIA)
     registrar(pos_lato_sensu.FAMILIA)
     registrar(fic.FAMILIA)
     registrar(aperfeicoamento.FAMILIA)
+    registrar(uab.FAMILIA)
 
 
 _registrar_as_familias()

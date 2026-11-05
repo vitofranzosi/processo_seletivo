@@ -42,5 +42,8 @@ KIT_DE_DIVULGACAO_TEMPLATES = liberacao_do_kit(
     "fic/banner@1#dedce5f30536,"
     "aperfeicoamento/post@1#973b8dd70eb1,"
     "aperfeicoamento/story@1#089ea18ee6e7,"
-    "aperfeicoamento/banner@1#4f26004ae0ba"
+    "aperfeicoamento/banner@1#4f26004ae0ba,"
+    "uab/post@1#34c0c7073af8,"
+    "uab/story@1#00f01d3909fd,"
+    "uab/banner@1#fca039587c97"
 )
