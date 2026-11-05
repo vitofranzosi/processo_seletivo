@@ -173,3 +173,7 @@ Feita na hora do merge, a pedido de 04/11 ("quando for feito o PR, atualize a do
 - **Maturidade não foi recontada:** os números de arquivos, *templates* e testes são os de 04/11. A 120 não acrescenta tabela, gatilho, migration nem rota.
 - **A UAB (PR #386) entrou por último.** Integrada depois da FIC, ela reprovava 23 testes do kit: a FIC passou a usar no motor a caixa tipográfica da fonte como altura mínima da linha (`kit_peca.entrelinha`), e a Anton mede 1,5 corpo. A sessão da UAB refez as caixas com a altura nova e regenerou as referências e os resumos, sem tocar nas das outras famílias, e o PR foi mergeado com o CI verde.
 - **A spec 120 ainda diz** *"Draft, só documental"* no cabeçalho, embora a implementação tenha entrado no mesmo PR.
+
+## Acréscimo de 05/11: a spec 121, só especificada
+
+O PR #396 mergeou a spec 121 (*A experiência da convocação — incremento 1*), sem código, sobre o estudo do #394. A página ganhou um aviso *Previsto* em *O convocado no portal* com o que ela propõe, e a frase que dizia a 120 "ainda em PR" passou a apontar para a correção já descrita. A revisão de 05/11 e o rodapé apontam para a `main` em `de5df85c`. As decisões D-001 a D-012 da 121 aguardam o usuário; nada da 121 foi descrito como entregue.
