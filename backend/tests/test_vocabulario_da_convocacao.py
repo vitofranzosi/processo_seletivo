@@ -50,6 +50,9 @@ DA_019 = [
     # afirmar recebimento.
     TEMPLATES / "_resultado_da_comunicacao.html",
     TEMPLATES / "_vencimento_da_convocacao.html",
+    # A `120`: a correção pelo cartão da chamada, e a frase da causa que ela divide com o topo.
+    TEMPLATES / "_correcao_da_convocacao.html",
+    TEMPLATES / "_causa_de_obsolescencia.html",
     RAIZ / "convocacao/application/fluxo.py",
     RAIZ / "convocacao/domain/especie.py",
     RAIZ / "convocacao/domain/fundamento.py",
