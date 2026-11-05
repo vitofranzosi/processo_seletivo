@@ -208,9 +208,17 @@ de uma inscrição inexistente.
 
 - **FR-1089**: Item de inscrição com convocação **em aberto** — vigente e sem desfecho, em qualquer
   dos estados de prazo — MUST dizer, por texto e por símbolo, que há convocação aberta.
-- **FR-1090**: A ação principal desse item MUST ser "Ver convocação", levando à tela da convocação da
+- **FR-1090** *(acrescida pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  A ação principal desse item MUST ser "Ver convocação", levando à tela da convocação da
   inscrição. O item continua com **uma** ação principal; o acompanhamento MUST continuar alcançável a
   partir dele, como ação secundária.
+
+  **Acréscimo da `118`.** A ação continua *"Ver convocação"* haja ou não documento ou
+  Requerimento na chamada, e a lista MUST NOT dizer o que falta na convocação: isso pediria ler
+  documentos de cada inscrição, e a FR-1092 continua valendo. A nota de pendência na lista fica
+  para decisão própria (X1 da revisão de 04/11/2026).
+
+  > **Redação anterior à `118`:** a mesma, sem este acréscimo.
 - **FR-1091**: Item com convocação **concluída** MUST dizer, em texto discreto, a situação registrada
   — a espécie do desfecho —, e a ação principal dele MUST continuar "Acompanhar". Item sem convocação
   MUST ficar como está hoje.
@@ -230,12 +238,29 @@ de uma inscrição inexistente.
 
 **O Requerimento de Matrícula**
 
-- **FR-1096**: Quando o Edital pede o requerimento e ele está **disponível** ou **em preenchimento**,
-  a tela da convocação e a seção "Convocação" do acompanhamento MUST oferecer "Preencher Requerimento
-  de Matrícula" como ação principal, levando à tela do requerimento da inscrição.
-- **FR-1097**: Quando o requerimento foi **enviado**, os mesmos dois lugares MUST oferecer o caminho
-  para conferir o que foi enviado — com a convocação aberta ou concluída —, e MUST NOT oferecer o
-  chamado para preencher.
+- **FR-1096** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  Quando o Edital pede o requerimento, ele está **disponível** ou **em preenchimento**, e a
+  chamada **não pede documento**, a tela da convocação e a seção "Convocação" do acompanhamento MUST
+  oferecer "Preencher Requerimento de Matrícula" como ação principal, levando à tela do requerimento
+  da inscrição. Quando a chamada pede documento, o Requerimento entra nas obrigações da convocação
+  (FR-3725 da `118`), com o link próprio no bloco *O que fazer agora*, e a ação principal leva à
+  tela da convocação (FR-3730 da `118`).
+
+  > **Redação anterior à `118`, preservada:**
+  > Quando o Edital pede o requerimento e ele está **disponível** ou **em preenchimento**,
+  > a tela da convocação e a seção "Convocação" do acompanhamento MUST oferecer "Preencher Requerimento
+  > de Matrícula" como ação principal, levando à tela do requerimento da inscrição.
+- **FR-1097** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  Quando o requerimento foi **enviado**, os mesmos dois lugares MUST oferecer o caminho para
+  conferir o que foi enviado — com a convocação aberta ou concluída —, e MUST NOT oferecer o chamado
+  para preencher. Quando a chamada pede documento, esse caminho é linha secundária, e o enviado MUST
+  NOT ser a ação principal (FR-3730 e FR-3731 da `118`); sem documento, continua como antes (FR-3732
+  da `118`).
+
+  > **Redação anterior à `118`, preservada:**
+  > Quando o requerimento foi **enviado**, os mesmos dois lugares MUST oferecer o caminho
+  > para conferir o que foi enviado — com a convocação aberta ou concluída —, e MUST NOT oferecer o
+  > chamado para preencher.
 - **FR-1098**: Quando o requerimento está **ainda indisponível** ou **não se aplica**, nenhum chamado
   ao requerimento MUST aparecer.
 - **FR-1099**: O estado do requerimento MUST vir da mesma política que a tela do requerimento

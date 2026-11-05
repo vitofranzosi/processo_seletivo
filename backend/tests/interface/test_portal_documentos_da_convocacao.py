@@ -76,12 +76,19 @@ def test_a_convocada_ve_o_que_apresentar_e_ate_quando(aluno, gestor, client):
 
     corpo = tela(client, pessoa)
 
-    assert "Documentos pedidos nesta convocação" in corpo
+    # Os blocos da `118` (FR-3735) no lugar da lista única, e "Envie até…" saiu da lista. Esta
+    # convocação não teve a comunicação enviada: a tela antiga mostrava a data como prazo de um
+    # prazo que não corria (F12); a de agora diz que ele não começou, e a data fica só nos dados do
+    # ato (FR-3749 da `118`).
+    assert "O que fazer agora" in corpo and "O que falta" in corpo
     assert "Certidão de nascimento ou casamento" in corpo
     assert "Todas as páginas, em arquivo único." in corpo
     assert corpo.count("Falta enviar") == 4
-    assert "Envie até" in corpo
-    assert "Documento de identificação" not in corpo.split("Documentos pedidos")[1]
+    assert "O prazo ainda não começou a correr" in corpo
+    assert "Você já pode enviar." in corpo
+    assert "Envie até" not in corpo
+    assert "Prazo desta convocação" not in corpo
+    assert "Documento de identificação" not in corpo.split('id="o-que-fazer-agora"')[1]
 
 
 def test_a_convocada_envia_pelo_portal_e_le_o_resultado(aluno, gestor, client):
@@ -97,11 +104,13 @@ def test_a_convocada_envia_pelo_portal_e_le_o_resultado(aluno, gestor, client):
     assert resposta.status_code == 302
     corpo = tela(client, pessoa)
     assert "Documento recebido. A comissão vai conferir." in corpo
-    assert "aguardando conferência" in corpo
+    # O selo e a frase da FR-3746 da `118`, no lugar do sufixo "aguardando conferência".
+    assert "Aguardando conferência" in corpo
+    assert "A comissão vai conferir; você não precisa fazer nada agora." in corpo
 
     conferir(gestor, convocacao, HISTORICO, "PENDENTE", chave="pp", motivo="Falta a página 2.")
     corpo = tela(client, pessoa)
-    assert "Pendente: Falta a página 2." in corpo
+    assert "Precisa de correção: Falta a página 2. Envie um novo arquivo" in corpo
     assert "carlos" not in corpo, "a tela não diz quem conferiu (FR-3584)"
     assert not any(termo in corpo.lower() for termo in TERMOS_DE_VINCULO)
 
@@ -170,8 +179,12 @@ def test_depois_do_vencimento_a_tela_diz_o_prazo_e_nao_oferece_envio(aluno, gest
     with mock.patch("django.utils.timezone.now", return_value=timezone.now() + timedelta(days=2)):
         corpo = tela(client, pessoa)
 
+    # O núcleo único do vencido (FR-3748 da `118`), no lugar de "A comissão vai decidir.".
     assert "O prazo terminou em" in corpo
-    assert "A comissão vai decidir." in corpo
+    assert (
+        "O fim do prazo não decide nada sozinho: quem registra o resultado é a comissão." in corpo
+    )
+    assert "A comissão vai decidir." not in corpo
     assert "Escolher arquivo PDF" not in corpo
 
 
@@ -204,7 +217,10 @@ def test_sem_documento_na_convocacao_a_tela_e_a_de_antes(
     pessoa, _ = cenarios.convocar_primeira(cenario, gestor)
     entrar_como(client, pessoa)
 
-    assert "Documentos pedidos nesta convocação" not in tela(client, pessoa)
+    corpo = tela(client, pessoa)
+    # Sem documento, a estrutura de antes (FR-3574 da `115`; FR-3743 da `118`): nenhum bloco novo.
+    assert "O que fazer agora" not in corpo
+    assert "<h3>O que fazer</h3>" in corpo
 
 
 def test_o_certificado_da_inscricao_aparece_atendido(
@@ -225,7 +241,12 @@ def test_o_certificado_da_inscricao_aparece_atendido(
 
     corpo = tela(client, pessoa)
 
-    assert "Atendido pelo documento enviado na inscrição em" in corpo
+    # "Atendido" antes da conferência era a falsa conclusão de um item (118, FR-3746): o texto diz
+    # que a pessoa já o enviou e que a comissão vai conferir. A garantia de antes continua — nenhum
+    # envio, e a referência é uma só.
+    assert "Você já enviou este documento na inscrição, em " in corpo
+    assert "Não precisa enviar de novo. A comissão vai conferir." in corpo
+    assert "tendid" not in corpo.lower()
     assert item(convocacao, CERTIFICADO_NA_CONVOCACAO).apresentacoes.count() == 1
 
 
@@ -280,7 +301,9 @@ def test_a_pendencia_sobre_o_que_nao_chegou_mostra_o_motivo(aluno, gestor, clien
 
     corpo = tela(client, pessoa)
 
-    assert "Pendente: Envie a de casamento." in corpo
+    # O motivo continua, agora com o convite certo: não há arquivo anterior (118, cenário J).
+    assert "Precisa de correção: Envie a de casamento. Envie o arquivo" in corpo
+    assert "outro arquivo" not in corpo.split("Envie a de casamento.")[1].split("</p>")[0]
 
 
 def test_a_pagina_publica_avisa_o_que_a_convocacao_pedira(aluno, client):

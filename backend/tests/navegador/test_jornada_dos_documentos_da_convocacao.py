@@ -239,7 +239,8 @@ def test_aluno_envia_corrige_a_pendencia_e_fica_apto(
 
     # O candidato vê o que apresentar, e envia três dos quatro, com o histórico incompleto.
     abrir_convocacao(candidata, tela.servidor, pessoa)
-    expect(candidata.get_by_text("Documentos pedidos nesta convocação")).to_be_visible()
+    # Os blocos da `118` (FR-3735) no lugar da lista única; "Falta enviar." continua.
+    expect(candidata.get_by_role("heading", name="O que fazer agora")).to_be_visible()
     expect(candidata.get_by_text("Falta enviar")).to_have_count(4)
     sem_rolagem_horizontal(candidata)
     tela.capturar(candidata, "candidato-lista")
@@ -269,7 +270,7 @@ def test_aluno_envia_corrige_a_pendencia_e_fica_apto(
 
     # O candidato lê a pendência e complementa; envia o que faltava.
     abrir_convocacao(candidata, tela.servidor, pessoa)
-    expect(candidata.get_by_text("Pendente: Falta a página 2.")).to_be_visible()
+    expect(candidata.get_by_text("Precisa de correção: Falta a página 2.")).to_be_visible()
     tela.capturar(candidata, "candidato-pendencia")
     enviar(candidata, _item(convocacao, HISTORICO), pdfs("historico-completo"))
     enviar(candidata, _item(convocacao, RESIDENCIA), pdfs("residencia"))
@@ -388,8 +389,10 @@ def test_o_certificado_da_inscricao_atende_sem_reenvio(
     comissao = tela.gestao("carlos", ["gestor"])
 
     abrir_convocacao(candidata, tela.servidor, pessoa)
+    # "Atendido" antes da conferência saiu (FR-3746 da `118`): ela já o enviou, e a comissão vai
+    # conferir.
     expect(
-        candidata.get_by_text(re.compile("Atendido pelo documento enviado na inscrição"))
+        candidata.get_by_text(re.compile("Você já enviou este documento na inscrição"))
     ).to_be_visible()
     tela.capturar(candidata, "candidata-aproveitado")
 
@@ -479,8 +482,11 @@ def test_depois_do_prazo_nada_se_envia_e_nada_se_decide_sozinho(
     candidata = tela.candidato(pessoa)
 
     abrir_convocacao(candidata, tela.servidor, pessoa)
+    # O núcleo único do vencido (FR-3748 da `118`).
     expect(
-        candidata.get_by_text(re.compile("O prazo terminou em .* A comissão vai decidir."))
+        candidata.get_by_text(
+            re.compile("O prazo terminou em .* quem registra o resultado é a comissão.")
+        )
     ).to_be_visible()
     expect(candidata.get_by_text("Escolher arquivo PDF")).to_have_count(0)
     tela.capturar(candidata, "candidata-prazo-vencido")

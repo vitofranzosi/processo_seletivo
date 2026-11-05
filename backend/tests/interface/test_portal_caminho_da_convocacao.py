@@ -352,7 +352,8 @@ class TestAcompanhamento:
         secao = self.secao(self.abrir(client, pessoa))
 
         assert "Para vaga inicial" in secao
-        assert vencimento.strftime("%d/%m/%Y %H:%M") in secao
+        # O formato único do prazo (FR-3747 da `118`), dito como dado do ato nesta seção.
+        assert vencimento.strftime("%d/%m/%Y, às %Hh%M") in secao
         assert "contado do envio da comunicação" in secao
         assert f'href="{reverse("portal:convocacao", args=[pessoa.id])}">Ver convocação</a>' in (
             secao
@@ -363,7 +364,8 @@ class TestAcompanhamento:
 
         topo = self.topo(self.abrir(client, pessoa))
 
-        assert "ainda não foi enviada" in topo
+        # A frase única do prazo que não começou (FR-3749 da `118`).
+        assert "conta a partir do envio da comunicação" in topo
         assert "não começou a correr" in topo
         assert "poderá registrar o não atendimento" not in topo, (
             "sem envio não há prazo correndo, e nenhuma consequência de prazo (FR-1177)"
@@ -388,10 +390,11 @@ class TestAcompanhamento:
             topo = self.topo(self.abrir(client, pessoa))
 
         # O vencimento não decide nada sozinho (`FR-274`): a situação continua "Convocado", e a tela
-        # diz que o prazo terminou e que o resultado ainda não foi registrado — sem afirmar perda.
+        # diz que o prazo terminou e quem registra o resultado — sem afirmar perda. O núcleo é o da
+        # FR-3748 da `118`, o mesmo das recusas de envio.
         assert "Convocado" in topo
         assert "terminou em" in topo
-        assert "ainda não foi registrado" in topo
+        assert "não decide nada sozinho: quem registra o resultado é a comissão" in topo
         assert "perd" not in topo
         assert "poderá registrar o não atendimento" not in topo
 
@@ -424,8 +427,9 @@ class TestAcompanhamento:
         tela = visivel(client.get(reverse("portal:convocacao", args=[pessoa.id])))
 
         for pagina in (secao, tela):
-            assert novo.strftime("%d/%m/%Y %H:%M") in pagina
-            assert antigo.strftime("%d/%m/%Y %H:%M") not in pagina
+            assert novo.strftime("%d/%m/%Y, às %Hh%M") in pagina
+            assert antigo.strftime("%d/%m/%Y, às %Hh%M") not in pagina
+            assert antigo.strftime("%d/%m/%Y") not in pagina
 
     def test_sem_convocacao_nao_ha_secao(self, client, certame):
         _, _, inscricoes = certame

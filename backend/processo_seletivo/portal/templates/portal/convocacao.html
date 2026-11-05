@@ -31,37 +31,52 @@ frase neutra é a mesma do acompanhamento, e vem da mesma constante (063, FR-118
 {% endif %}
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
 
+{% elif obrigacoes %}
+{% comment %}Com documento pedido na chamada, os cinco blocos da 118 (FR-3735).{% endcomment %}
+{% include "portal/_obrigacoes_da_convocacao.html" %}
+<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+
 {% else %}
+{% comment %}
+**Sem documento, a estrutura de hoje** (118, FR-3743; 115, FR-3574): os dados, "O que fazer" e o
+chamado ao Requerimento. Mudam so o que e comum a todas as telas: o formato do prazo, a frase do
+vencido, o rotulo do resultado e a frase do aceite. E, no lugar do chamado, a linha estritamente
+informativa do Requerimento pedido e nao enviado, sem link, quando a politica ja nao admite o
+preenchimento (D-019, D-020).
+{% endcomment %}
 <section aria-labelledby="chamada">
   <h2 id="chamada">Você foi convocada(o)</h2>
   <dl class="meta">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
     {% if enviada_em %}
-    <dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y H:i" }}</dd>
+    <dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y" }}, às {{ enviada_em|date:"H\hi" }}</dd>
     {% endif %}
     {% if convocacao.vencimento %}
-    <dt>Prazo para atender</dt><dd>até {{ convocacao.vencimento|date:"d/m/Y H:i" }}, contado do envio da comunicação</dd>
+    {% if not prazo_correndo %}
+    <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>
+    {% else %}
+    <dt>Prazo desta convocação</dt><dd>até {{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>
+    {% endif %}
     {% endif %}
     <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>
   </dl>
 
   {% if estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}
-  <p class="aviso" role="status">A comunicação desta convocação ainda não foi enviada. <strong>O seu prazo não começou a correr.</strong></p>
-  {% elif estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}
-  <p class="aviso" role="status">O prazo informado nesta convocação já passou. Isso <strong>não decide nada sozinho</strong>: fale com o atendimento se você atendeu e não consta.</p>
+  <p class="aviso" role="status">{{ prazo_nao_iniciado }}</p>
+  {% elif frase_do_vencido %}
+  <p class="aviso" role="status">{{ frase_do_vencido }}</p>
   {% endif %}
 
   {% if desfecho %}
-  <p class="ajuda">Situação registrada: {{ desfecho.get_especie_display }} — {{ desfecho.fundamento }}</p>
+  <p class="ajuda">Resultado registrado: {{ rotulo_do_desfecho }} — {{ desfecho.fundamento }}</p>
+  {% if aceite %}<p>{{ aceite }}</p>{% endif %}
   {% else %}
   <h3>O que fazer</h3>
-  <p>Siga as instruções do Edital para esta convocação{% if convocacao.vencimento %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
+  <p>Siga as instruções do Edital para esta convocação{% if prazo_correndo %} dentro do prazo acima{% endif %}. Em caso de dúvida, fale com o atendimento{% if atendimento %}: {{ atendimento }}{% endif %}.</p>
   {% endif %}
 </section>
-{% comment %}Os documentos que a chamada pede, quando pede algum (115). Sem eles, a tela e a de antes.{% endcomment %}
-{% if documentos_da_convocacao %}{% include "portal/_documentos_da_convocacao.html" %}{% endif %}
 {% comment %}O caminho ao requerimento, quando a politica da 029 diz que ele cabe (059, D-007).{% endcomment %}
-{% include "portal/_chamado_do_requerimento.html" %}
+{% if informativo_do_requerimento %}<p class="informativo">{{ informativo_do_requerimento }}</p>{% else %}{% include "portal/_chamado_do_requerimento.html" %}{% endif %}
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
 {% endif %}
 {% endblock %}

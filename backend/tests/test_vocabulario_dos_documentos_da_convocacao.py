@@ -32,8 +32,16 @@ DA_115 = [
     TEMPLATES / "convocacao_documentos.html",
     TEMPLATES / "convocacao.html",
     TEMPLATES / "alocacoes.html",
-    PORTAL / "_documentos_da_convocacao.html",
     PORTAL / "convocacao.html",
+    # A `118`: a lista da `115` virou cinco blocos e um cartão por documento, e os textos de cada
+    # item e de cada momento da chamada moram na projeção (FR-3751). O parcial de antes,
+    # `_documentos_da_convocacao.html`, saiu.
+    PORTAL / "_obrigacoes_da_convocacao.html",
+    PORTAL / "_cartao_do_documento_da_convocacao.html",
+    PORTAL / "_requerimento_nas_obrigacoes.html",
+    PORTAL / "acompanhamento.html",
+    RAIZ / "portal/obrigacoes.py",
+    RAIZ / "portal/situacao.py",
 ]
 
 PROIBIDOS = {
@@ -46,6 +54,20 @@ PROIBIDOS = {
     r"autentic": "conforme é conforme ao exigido, e o arquivo é cópia simples (FR-3589)",
     r"documento original": "idem",
     r"documentos de matr[íi]cula": "a lista serve a qualquer vínculo, e não só à matrícula (D-001)",
+    # A `118` (FR-3751): o documento não é dito atendido, aprovado nem aceito antes da conferência,
+    # e nenhuma frase diz que a pessoa enviou tudo — o aproveitado da inscrição não foi reenviado.
+    r"atendid[oa] pelo": '"atendido" antes da conferência era a falsa conclusão de um item (118)',
+    r"documento aprovad": "a conferência diz conforme ao exigido, e nunca aprovado (FR-3589)",
+    r"documento aceit": "idem",
+    r"enviou tudo": "o aproveitado não foi reenviado, e a frase apagaria a diferença (D-005)",
+    r"apto para formaliza": "o termo é da gestão; no portal soaria como promessa (D-014 da 118)",
+}
+
+#: A frase da gestão, que o portal não diz (D-014 da `118`): só as superfícies da gestão a usam.
+DA_GESTAO = {
+    TEMPLATES / "convocacao_documentos.html",
+    TEMPLATES / "convocacao.html",
+    TEMPLATES / "alocacoes.html",
 }
 
 
@@ -53,7 +75,10 @@ PROIBIDOS = {
 def test_nenhuma_tela_dos_documentos_afirma_vinculo_nem_autenticidade(caminho):
     corpo = visivel(caminho).lower()
     achados = [
-        f"{termo!r} — {porque}" for termo, porque in PROIBIDOS.items() if re.search(termo, corpo)
+        f"{termo!r} — {porque}"
+        for termo, porque in PROIBIDOS.items()
+        if re.search(termo, corpo)
+        and not (termo == r"apto para formaliza" and caminho in DA_GESTAO)
     ]
     assert achados == [], f"{caminho.name}: " + "; ".join(achados)
 

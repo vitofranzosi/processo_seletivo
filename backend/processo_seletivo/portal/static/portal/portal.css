@@ -985,3 +985,37 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
   padding:1rem 1.25rem;margin:1.25rem 0}
 .proveniencia-do-sorteio h2{margin:0 0 .5rem;font-size:1.0625rem}
 
+
+/* A convocação em cinco blocos (118, FR-3735). Cada bloco é uma seção com título próprio; o
+   primeiro, que diz o que fazer agora, leva a borda de destaque do topo do acompanhamento, porque é
+   a resposta da página. Os dados do ato descem para o fim, visíveis e sem moldura de destaque. */
+.bloco-da-convocacao{margin:0 0 1.5rem;max-width:var(--leitura)}
+.bloco-da-convocacao>h2{margin:0 0 .5rem;font-size:1.05rem}
+.o-que-fazer-agora,.resultado-registrado{background:var(--branco);border:1px solid var(--borda);
+  border-left:4px solid var(--verde);border-radius:0 8px 8px 0;padding:1rem 1.25rem}
+.o-que-fazer-agora p:last-child,.resultado-registrado p:last-child{margin-bottom:0}
+.o-que-fazer-agora>h3{margin:1rem 0 .35rem;font-size:.9375rem}
+.tarefas,.resumo-da-convocacao{margin:.25rem 0 .75rem;padding-left:1.1rem;display:grid;gap:.3rem}
+.tarefas .motivo{color:var(--texto-fraco);overflow-wrap:anywhere}
+.conclusao{font-weight:400}
+.subtitulo-do-bloco{margin:1rem 0 .5rem;font-size:.9375rem}
+.requerimento-nas-obrigacoes{margin:.75rem 0 0;overflow-wrap:anywhere}
+/* A linha do Requerimento não enviado, sem link (118, D-019) e a linha secundária do enviado
+   (FR-3731): texto pleno, abaixo da ação principal e nunca no lugar dela. */
+.informativo{font-weight:600;max-width:var(--leitura)}
+.linha-secundaria{margin:0 0 .5rem;overflow-wrap:anywhere}
+/* O cartão do documento da convocação (118, FR-3744). O estado vai no selo, em palavra; a borda e a
+   cor só acompanham, e sobrevivem ao preto e branco pela palavra. O pendente ganha o fundo e a borda
+   do aviso, que é onde a pessoa precisa agir. O cartão recebe o foco quando a âncora o alcança. */
+.cartao-do-documento>h3{margin:0 0 .25rem;font-size:1rem;overflow-wrap:anywhere}
+.cartao-do-documento:focus{outline:3px solid var(--verde);outline-offset:2px}
+.cartao-do-documento.destaque{background:var(--amarelo-fundo);border-color:var(--amarelo);
+  border-left:4px solid var(--amarelo)}
+.selos{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 .35rem}
+.selo{display:inline-block;padding:.05rem .5rem;border-radius:4px;border:1px solid var(--borda);
+  background:var(--branco);font-size:.8125rem;font-weight:700;color:var(--texto)}
+.selo-correcao{border:2px solid var(--amarelo);color:var(--texto)}
+.selo-comissao{border-color:var(--borda);color:var(--texto)}
+.selo-conferido{border-color:var(--sucesso);color:var(--sucesso)}
+.selo-opcional{border-style:dashed;font-weight:600}
+.sobre-esta-convocacao dl{margin:0;overflow-wrap:anywhere}

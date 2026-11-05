@@ -89,7 +89,7 @@ from processo_seletivo.inscricoes.infrastructure import comprovante_pdf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import assistente as assistente_do_edital
 from processo_seletivo.portal import identidade as identidade_do_candidato
-from processo_seletivo.portal import leitura
+from processo_seletivo.portal import leitura, obrigacoes
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal import situacao as situacao_da_inscricao
 from processo_seletivo.portal.arquivos import entregar_ao_titular
@@ -1894,7 +1894,22 @@ def acompanhamento(request, inscricao_id):
     agora = timezone.now()
     chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
     convocacao = _convocacao_para_a_tela(chamada, agora)
-    requerimento = _requerimento_da_convocacao(registro, chamada, versao.content)
+    requerimento, politica = _politica_do_requerimento(registro, chamada, versao.content)
+    # **As obrigações da convocação, e só com convocação** (118, FR-3734): sem ela nada aqui
+    # consulta; com ela, a leitura documental é a da tela da convocação, em número fixo de
+    # consultas. É ela que impede o Requerimento enviado de esconder os documentos (F1).
+    documentos = _documentos_da_convocacao_para_a_tela(chamada, agora)
+    obrigacoes_da_convocacao = _obrigacoes_da_convocacao(
+        documentos,
+        politica,
+        convocacao,
+        # O canal só entra na frase do fechamento: sem ela, a unidade não é lida.
+        canal=(
+            identificacao.da_unidade(registro.edital.institution_scope).canal()
+            if documentos.get("causa_do_fechamento")
+            else ""
+        ),
+    )
     recursos = recursos_do_titular(registro)
     # **O Perfil do conteúdo vigente**, de onde saem o canal e o cadastro reserva: são fatos sobre
     # as próximas chamadas, e o calendário de hoje é o vigente — a mesma razão do Cronograma (063,
@@ -1924,6 +1939,8 @@ def acompanhamento(request, inscricao_id):
                 requerimento=requerimento,
                 recorriveis=recorriveis,
                 recursos=recursos,
+                politica_do_requerimento=politica,
+                obrigacoes=obrigacoes_da_convocacao,
             ),
             # **A convocação, aberta ou concluída** (059, `FR-1093`). Mostrá-la aqui **não** grava
             # leitura na trilha: a trilha responde "a pessoa abriu a convocação?", e a resposta
@@ -2381,6 +2398,15 @@ def convocacao(request, inscricao_id):
         else True
     )
     _registrar_leitura_da_convocacao(request, registro, chamada, agora)
+    da_convocacao = _convocacao_para_a_tela(chamada, agora)
+    # Os documentos pedidos nesta chamada (115, FR-3577): lidos da lista gravada no ato de
+    # convocar, e não da regra de hoje. Mostrá-los não registra outra leitura (FR-3613).
+    documentos = _documentos_da_convocacao_para_a_tela(chamada, agora)
+    requerimento, politica = _politica_do_requerimento(registro, chamada, versao.content)
+    # O canal da unidade do Edital, e o institucional na falta (109, FR-3212): é a convocação deste
+    # certame, e não a conta da pessoa.
+    atendimento = identificacao.da_unidade(registro.edital.institution_scope).canal()
+    desfecho = da_convocacao["desfecho"]
     return render(
         request,
         "portal/convocacao.html",
@@ -2388,17 +2414,83 @@ def convocacao(request, inscricao_id):
             "inscricao": registro,
             "selecao": _selecao(versao),
             **_mensagens(request),
-            **_convocacao_para_a_tela(chamada, agora),
-            # Os documentos pedidos nesta chamada (115, FR-3577): lidos da lista gravada no ato de
-            # convocar, e não da regra de hoje. Mostrá-los não registra outra leitura (FR-3613).
-            **_documentos_da_convocacao_para_a_tela(chamada, agora),
+            **da_convocacao,
+            **documentos,
+            # **Os cinco blocos, com documento na chamada** (118, FR-3735): a mesma projeção que o
+            # acompanhamento lê, e o template não escreve frase de estado nenhuma.
+            "obrigacoes": _obrigacoes_da_convocacao(
+                documentos, politica, da_convocacao, canal=atendimento
+            ),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
             "novas_chamadas": situacao_da_inscricao.NOVAS_CHAMADAS,
-            "requerimento": _requerimento_da_convocacao(registro, chamada, versao.content),
-            # O canal da unidade do Edital, e o institucional na falta (109, FR-3212): é a
-            # convocação deste certame, e não a conta da pessoa.
-            "atendimento": identificacao.da_unidade(registro.edital.institution_scope).canal(),
+            "requerimento": requerimento,
+            # Sem documento, a linha estritamente informativa do Requerimento não enviado, no
+            # lugar do chamado (118, FR-3743, D-019): da mesma política, sem consulta nova.
+            "informativo_do_requerimento": obrigacoes.linha_informativa_do_requerimento(
+                politica, desfecho=desfecho
+            ),
+            "frase_do_vencido": _frase_do_vencido(da_convocacao, politica, atendimento),
+            # **A data é prazo só enquanto ele corre** (118, FR-3747, FR-3749): sem a comunicação,
+            # vencido, com resultado ou com o Processo encerrado, ela é o vencimento registrado.
+            "prazo_correndo": _prazo_correndo(da_convocacao, politica),
+            # O rótulo do desfecho é o do acompanhamento (FR-3750), e não a espécie crua.
+            "rotulo_do_desfecho": (
+                situacao_da_inscricao.DESFECHOS.get(
+                    desfecho.especie, desfecho.get_especie_display()
+                )
+                if desfecho is not None
+                else ""
+            ),
+            "aceite": situacao_da_inscricao.frase_do_aceite(desfecho),
+            "prazo_nao_iniciado": obrigacoes.PRAZO_NAO_INICIADO,
+            "consequencia": situacao_da_inscricao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO,
+            "atendimento": atendimento,
         },
+    )
+
+
+def _prazo_correndo(da_convocacao, politica):
+    from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+
+    return da_convocacao["estado"] == convocacao_nomes.CONVOCADO_PRAZO_EM_CURSO and not (
+        politica is not None and politica.fechado_pelo_processo
+    )
+
+
+def _frase_do_vencido(da_convocacao, politica, atendimento):
+    """O núcleo do vencido e o canal, na tela sem documento (118, FR-3743, FR-3748).
+
+    **Nunca com o Processo em estado final**: ali ninguém registra resultado, e o núcleo diria o
+    contrário (D-015). Sem documento, a tela só sabe do Processo pela política do Requerimento.
+    """
+    from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+
+    if da_convocacao["estado"] != convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO:
+        return ""
+    if politica is not None and politica.fechado_pelo_processo:
+        return ""
+    return " ".join(
+        (
+            obrigacoes.frase_do_prazo_decorrido(da_convocacao["convocacao"].vencimento),
+            obrigacoes.frase_do_atendimento(atendimento),
+        )
+    )
+
+
+def _obrigacoes_da_convocacao(documentos, politica, da_convocacao, *, canal):
+    """A projeção da `118` sobre o que as duas telas já leram, ou `None` sem documento pedido."""
+    leitura = documentos.get("documentos_da_convocacao")
+    if not leitura:
+        return None
+    return obrigacoes.obrigacoes_da_convocacao(
+        leitura=leitura,
+        requerimento=politica,
+        estado_do_prazo=da_convocacao["estado"],
+        causa_do_fechamento=documentos["causa_do_fechamento"],
+        desfecho=da_convocacao["desfecho"],
+        vencimento=documentos["documentos_vencimento"],
+        estado_final_do_processo=documentos["estado_final_do_processo"],
+        canal=canal,
     )
 
 
@@ -2430,30 +2522,41 @@ def _documentos_da_convocacao_para_a_tela(chamada, agora):
     """A lista da chamada, o estado de cada item e se ainda se apresenta (115, FR-3577, FR-3612).
 
     Sem convocação, ou sem documento pedido, a chave fica vazia e a tela é a de antes (FR-3574).
+
+    **`chamada` já é a vigente**, a que `vigentes_por_inscricao` (019) leu com os desfechos e as
+    comunicações: reler a cadeia a partir da raiz custava consultas a toda tela com convocação, e o
+    acompanhamento passou a fazer esta leitura (118, FR-3734).
     """
     from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
 
     if chamada is None:
         return {"documentos_da_convocacao": None}
     raiz = documentos_da_convocacao.raiz_da_chamada(chamada)
-    vigente = documentos_da_convocacao.vigente_da_chamada(raiz)
+    vigente = chamada
     aberta = documentos_da_convocacao.em_aberto(vigente)
     leitura = documentos_da_convocacao.leitura_da_chamada(raiz, decidida=not aberta)
     if not leitura.pedidos:
         return {"documentos_da_convocacao": None}
+    from processo_seletivo.portal.obrigacoes import PRAZO, PROCESSO
     from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 
-    decorrido = aberta and documentos_da_convocacao.prazo_decorrido(vigente, agora=agora)
-    # Com o Processo em estado final ninguém confere nem desfecha, e o envio é recusado do mesmo
-    # modo: oferecer o formulário seria convidar a um ato que não existe mais.
-    processo_aberto = raiz.edital.processo.status not in PROCESSO_FINAL
+    # **A causa do fechamento, da mesma condição que recusa o envio** (118, FR-3721, D-015): não há
+    # segunda conta. O desfecho fecha antes de qualquer causa, e a causa só existe com a chamada em
+    # aberto; com o Processo em estado final e o prazo decorrido juntos, vale o Processo, porque
+    # com ele ninguém confere nem desfecha — oferecer o formulário seria convidar a um ato que não
+    # existe mais.
+    status = raiz.edital.processo.status
+    causa = None
+    if aberta and status in PROCESSO_FINAL:
+        causa = PROCESSO
+    elif aberta and documentos_da_convocacao.prazo_decorrido(vigente, agora=agora):
+        causa = PRAZO
     return {
         "documentos_da_convocacao": leitura,
         "documentos_vencimento": vigente.vencimento,
-        "pode_apresentar": aberta and not decorrido and processo_aberto,
-        "frase_do_prazo": (
-            documentos_da_convocacao.frase_do_prazo_decorrido(vigente) if decorrido else ""
-        ),
+        "pode_apresentar": aberta and causa is None,
+        "causa_do_fechamento": causa,
+        "estado_final_do_processo": status if causa == PROCESSO else "",
     }
 
 
@@ -2528,21 +2631,32 @@ CHAMADO_DO_REQUERIMENTO = {
 
 
 def _requerimento_da_convocacao(registro, chamada, conteudo):
-    """O chamado ao requerimento — `"preencher"`, `"conferir"` ou `""` —, **só** onde há convocação.
+    """O chamado ao requerimento — `"preencher"`, `"conferir"` ou `""` —, só onde há convocação."""
+    return _politica_do_requerimento(registro, chamada, conteudo)[0]
+
+
+def _politica_do_requerimento(registro, chamada, conteudo):
+    """O chamado ao requerimento e a `Disponibilidade` de onde ele sai, **só** onde há convocação.
 
     Sem convocação vigente a resposta é vazia sem consulta nenhuma, e é isso que mantém o zero que a
     `029` prende para o acompanhamento de quem não foi chamado (059, `D-006`). Com ela, a pergunta
     vai à mesma política que a tela do requerimento consulta (`FR-1099`): decidir aqui seria uma
     segunda leitura de disponibilidade, e a pessoa leria um chamado que o comando recusa.
+
+    **A `Disponibilidade` viaja junto** (118, FR-3725): a projeção lê dela a exigência, a situação
+    e a disponibilidade, nessa ordem, e a linha informativa da chamada sem documento sai dela
+    também — sem consulta nova (D-019).
     """
     if chamada is None:
-        return ""
+        return "", None
     apurado = preencher_requerimento.apurar(registro, conteudo)
     estado = apurado.estado_de_leitura
-    if apurado.prazo_decorrido and estado != requerimento_nomes.ESTADO_ENVIADO:
-        # O prazo da chamada terminou (115, FR-3622): um botão "preencher" levaria a uma recusa.
-        return ""
-    return CHAMADO_DO_REQUERIMENTO.get(estado, "")
+    fechado = apurado.prazo_decorrido or apurado.fechado_pelo_processo
+    if fechado and estado != requerimento_nomes.ESTADO_ENVIADO:
+        # O prazo da chamada terminou (115, FR-3622), ou o Processo está em estado final (FR-373 da
+        # `029`, revista): um botão "preencher" levaria a uma recusa.
+        return "", apurado
+    return CHAMADO_DO_REQUERIMENTO.get(estado, ""), apurado
 
 
 def _registrar_leitura_da_convocacao(request, registro, chamada, agora):
@@ -3297,14 +3411,87 @@ def requerimento(request, inscricao_id):
         return _tela_do_requerimento(
             request, registro, identidade, versao, apurado, vigente, atualizando=True
         )
-    if apurado.disponivel and vigente is None:
+    if (
+        apurado.disponivel
+        and vigente is None
+        and not apurado.fechado_pelo_processo
+        and not apurado.prazo_decorrido
+    ):
         # Abrir no `GET` é o que faz a cópia-para-a-frente acontecer antes de a pessoa ver a tela:
         # ela encontra o que já sabemos preenchido, em vez de vinte campos vazios (`FR-377`).
+        #
+        # **Com o Processo em estado final ou o prazo da chamada decorrido, o `GET` não abre**
+        # (FR-3754 da `118`): o comando recusaria — com 409, e a pessoa caía na recusa genérica —, e
+        # a página diz que o envio está encerrado, ou que o prazo terminou. A regra de
+        # disponibilidade não muda (FR-374 da `029`): só a resposta da leitura, e nenhum rascunho
+        # nasce.
         vigente = preencher_requerimento.abrir_rascunho(
             inscricao=registro, correlation_id=correlacao
         )
         apurado = preencher_requerimento.apurar(registro, conteudo)
     return _tela_do_requerimento(request, registro, identidade, versao, apurado, vigente)
+
+
+def _convocacao_do_requerimento(registro):
+    """A convocação vigente da Inscrição e o desfecho dela, para as frases da página (118).
+
+    **Vigente, e não em aberto**: a política só enxerga a chamada em aberto, e quem teve a chamada
+    desfechada lia "Ainda não é a hora" e "quando você for convocado" (FR-3754). A leitura é a do
+    seletor da `019`, a mesma da tela da convocação, com os desfechos no `prefetch`.
+    """
+    from processo_seletivo.convocacao.application.selectors import (
+        desfecho_de,
+        vigentes_por_inscricao,
+    )
+
+    chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
+    return chamada, (desfecho_de(chamada) if chamada is not None else None)
+
+
+def _prazo_do_requerimento(apurado, lido):
+    """O prazo, no formato único, na página do Requerimento a preencher (FR-3753 da `118`).
+
+    Só com o Requerimento *na convocação* e o preenchimento admitido; com a comunicação ainda não
+    enviada, a frase do prazo que não começou, e nenhuma data como prazo (FR-3749).
+    """
+    from processo_seletivo.convocacao.application.selectors import estado_de
+    from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+
+    if not lido.pode_escrever or apurado.momento != requerimento_nomes.NA_CONVOCACAO:
+        return ""
+    chamada = apurado.chamada
+    if chamada is None:
+        return ""
+    if estado_de(chamada, agora=timezone.now()) == convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO:
+        return obrigacoes.PRAZO_NAO_INICIADO
+    if chamada.vencimento is None:
+        return obrigacoes.SEM_PRAZO_REGISTRADO
+    return f"Prazo desta convocação: {obrigacoes.ate(chamada.vencimento)}."
+
+
+def _aviso_do_envio(registro):
+    """O aviso do envio do Requerimento: com documento na chamada, que olhe a convocação (FR-3755).
+
+    Uma consulta, e só quando o envio acontece. Sem documento, o aviso de sempre.
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
+    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
+    from processo_seletivo.convocacao.models import ItemDaListaDaConvocacao
+
+    chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
+    pede_documento = (
+        chamada is not None
+        and ItemDaListaDaConvocacao.objects.filter(
+            chamada=documentos_da_convocacao.raiz_da_chamada(chamada)
+        )
+        .exclude(situacao=ItemDaListaDaConvocacao.Situacao.NAO_SE_APLICA)
+        .exists()
+    )
+    if pede_documento:
+        return (
+            "Requerimento de Matrícula enviado. Veja na convocação se ainda falta algum documento."
+        )
+    return "Requerimento de Matrícula enviado."
 
 
 def _declarado(request):
@@ -3362,7 +3549,7 @@ def _gravar_ou_enviar(request, registro, identidade, versao, correlacao):
             exigencia_do_requerimento.vigente_de(registro),
             recusa=recusa,
         )
-    _avisar(request, "Requerimento de Matrícula enviado.")
+    _avisar(request, _aviso_do_envio(registro))
     return redirect(reverse("portal:requerimento", args=[registro.id]))
 
 
@@ -3370,16 +3557,24 @@ def _tela_do_requerimento(
     request, registro, identidade, versao, apurado, vigente, *, recusa=None, atualizando=False
 ):
     conteudo = versao.content
+    chamada, desfecho = _convocacao_do_requerimento(registro)
     # **A view não decide estado: ela renderiza o que o tradutor devolver** (T041). Nenhuma leitura
     # de disponibilidade vive aqui nem no template — uma segunda leitura divergiria da do comando, e
-    # quem paga é o candidato, que leria na tela um estado que o comando não reconhece.
-    lido = leitura_do_requerimento.leitura(apurado)
+    # quem paga é o candidato, que leria na tela um estado que o comando não reconhece. A convocação
+    # vigente só muda as frases (FR-3752, FR-3754 da `118`).
+    lido = leitura_do_requerimento.leitura(
+        apurado, convocado=chamada is not None, desfechada=desfecho is not None
+    )
     enviado = apurado.enviado
     # **Conferir e atualizar só aparece quando as duas coisas coexistem** (`FR-410`): requerimento
     # enviado **e** chamada em aberto. É também a mitigação do dado envelhecido de quem declarou na
     # inscrição meses antes (`R-2`) — sem regra nova, pelo caminho que a correção já usa.
     pode_atualizar = (
-        enviado and apurado.chamada is not None and not apurado.prazo_decorrido and not atualizando
+        enviado
+        and apurado.chamada is not None
+        and not apurado.prazo_decorrido
+        and not apurado.fechado_pelo_processo
+        and not atualizando
     )
     # **Conferindo**: os campos do enviado, editáveis, e ainda **sem linha nova** — ela nasce em
     # `atualizar`, e só se alguma coisa mudar.
@@ -3406,6 +3601,10 @@ def _tela_do_requerimento(
             "titulo_do_estado": lido.titulo,
             "explicacao_do_estado": lido.explicacao,
             "pode_escrever": lido.pode_escrever,
+            # **Com convocação vigente, a volta é à convocação**, de onde a pessoa veio (FR-3752,
+            # FR-3754 da `118`); sem ela, ao acompanhamento, como antes.
+            "convocacao_vigente": chamada is not None,
+            "prazo_do_requerimento": _prazo_do_requerimento(apurado, lido),
             "enviado": enviado,
             "ja_sabemos": _o_que_o_sistema_ja_sabe(registro, identidade, conteudo),
             "grupos": _grupos_para_a_tela(

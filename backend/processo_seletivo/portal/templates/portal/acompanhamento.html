@@ -27,9 +27,19 @@ As três partes aparecem sempre. "Nada por enquanto." é resposta, e não ausên
     {% endfor %}
   </ul>
   <h3>O que fazer</h3>
-  <p class="acao-principal">{{ acao.principal }}</p>
+  {% comment %}
+  **A acao principal, e depois o que a completa** (118, FR-3728, FR-3731). A frase de conclusao vem
+  colada ao "Nada por enquanto." porque e ela que diz que a comissao ainda vai concluir; o
+  Requerimento enviado vem abaixo do link principal, e nunca no lugar dele: com documento na chamada,
+  era ele que dizia "enviado" com documentos sem envio (F1).
+  {% endcomment %}
+  <p class="acao-principal">{{ acao.principal }}{% if acao.conclusao %} <span class="conclusao">{{ acao.conclusao }}</span>{% endif %}</p>
+  {% if acao.opcional %}<p>{{ acao.opcional }}</p>{% endif %}
+  {% if acao.informativo %}<p class="informativo">{{ acao.informativo }}</p>{% endif %}
+  {% if acao.aceite %}<p>{{ acao.aceite }}</p>{% endif %}
   {% if acao.link %}<p><a class="principal" href="{{ acao.link }}">{{ acao.link_rotulo }}</a></p>{% endif %}
-  {% if acao.prazo %}<p class="prazo-da-convocacao"><strong>Prazo desta convocação:</strong> até {{ acao.prazo|date:"d/m/Y" }} às {{ acao.prazo|date:"H\hi" }}.</p>{% endif %}
+  {% if acao.secundaria %}<p class="linha-secundaria">{{ acao.secundaria }} <a href="{{ acao.secundaria_link }}">{{ acao.secundaria_rotulo }}</a></p>{% endif %}
+  {% if acao.prazo %}<p class="prazo-da-convocacao"><strong>Prazo desta convocação:</strong> até {{ acao.prazo|date:"d/m/Y" }}, às {{ acao.prazo|date:"H\hi" }}.</p>{% endif %}
   {% if acao.aviso_de_prazo %}<p class="aviso" role="status">{{ acao.aviso_de_prazo }}</p>{% endif %}
   {% if acao.consequencia %}<p class="consequencia">{{ acao.consequencia }}</p>{% endif %}
   {% if acao.canal %}<p class="meta">{{ acao.canal }}</p>{% endif %}

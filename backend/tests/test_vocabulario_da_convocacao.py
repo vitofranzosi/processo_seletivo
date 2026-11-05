@@ -64,6 +64,13 @@ DA_019 = [
     # desfecho —, e as frases moram no módulo, e não no template.
     RAIZ / "portal/situacao.py",
     PORTAL / "acompanhamento.html",
+    # A `118`: os cinco blocos da convocação. **A projeção, `portal/obrigacoes.py`, não entra**, e
+    # pela razão que `test_vocabulario_dos_documentos_da_convocacao.py` registra: ali "Recebido em"
+    # é sobre o **arquivo**, que o sistema recebeu, e não sobre a mensagem. Ela está na varredura
+    # da `115` e na da `029`.
+    PORTAL / "_obrigacoes_da_convocacao.html",
+    PORTAL / "_cartao_do_documento_da_convocacao.html",
+    PORTAL / "_requerimento_nas_obrigacoes.html",
 ]
 
 # Cada termo com o que ele afirmaria indevidamente. A mensagem entra na falha, para que quem a

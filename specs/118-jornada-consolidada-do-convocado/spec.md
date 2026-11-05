@@ -16,6 +16,8 @@ decisões têm três origens:
   não enviado sem documento.
 - **Do usuário, depois do merge (04/11/2026):** D-020, o Processo em estado final fecha o
   Requerimento *na convocação*.
+- **Do usuário, na revisão da implementação (PR #384, 04/11/2026):** D-021, o acompanhamento sem
+  documento pode pagar uma consulta a mais; a SC-1128 foi revista.
 - **Revisões de requisitos de outras specs** (`063`, `115`, `059`, `029`): estão escritas por
   extenso em *Revisões de requisitos anteriores*. Elas se aplicam aos arquivos daquelas specs na
   **primeira tarefa da implementação** (T001), com a redação anterior preservada, como a `117` fez
@@ -167,6 +169,12 @@ Uma revisão do PR apontou cinco contradições e dois excessos do plano. O usu�
 - Q: (depois do merge) O Requerimento *na convocação* deixa de aceitar escrita com o Processo
   encerrado ou cancelado? → A: Sim, preservando a leitura (D-020). A `029` foi revista; a `118` foi
   ajustada na FR-3725, na FR-3730, na FR-3732, na FR-3741, na FR-3748 e na FR-3754.
+
+### Session 2026-11-04 (revisão da implementação, PR #384)
+
+- Q: Em G0, N0 e M0, o acompanhamento pode pagar a consulta à lista da chamada, que é como ele sabe
+  que ela não pede documento? → A: Sim, no máximo uma em relação à linha de base; a convocação não
+  pode aumentar a sua contagem, e sem convocação nada muda (D-021; SC-1128 revista).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -787,11 +795,27 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   em K2, nenhuma data aparece como
   prazo. Em todos, nenhuma requisição de leitura grava linha nova além da leitura da convocação na
   trilha, e a inscrição alheia recebe a mesma recusa de inexistente.
-- **SC-1128**: Nos cenários G0, N0 e M0 — chamada sem documento, Requerimento pedido na convocação e não
-  enviado, com e sem rascunho —, o acompanhamento e a convocação mostram a linha informativa da
-  FR-3732, sem nenhum link ou botão de preenchimento, com a ação principal de hoje (em M0, a de quem
-  não tem Requerimento a preencher); o número de
-  consultas das duas telas é o mesmo de antes; e nenhuma linha é gravada.
+- **SC-1128** *(revisado pela `118` em 2026-11-04, na revisão da implementação — a redação anterior
+  está ao fim desta alínea)*: Nos cenários G0, N0 e M0 — chamada sem documento, Requerimento pedido
+  na convocação e não enviado, com e sem rascunho —, o acompanhamento e a convocação mostram a linha
+  informativa da FR-3732, sem nenhum link ou botão de preenchimento, com a ação principal de hoje
+  (em M0, a de quem não tem Requerimento a preencher); e nenhuma linha é gravada. Quanto às
+  consultas, em relação à linha de base:
+  - o acompanhamento acrescenta **no máximo uma** — a leitura da lista da chamada (D-021);
+  - a convocação **não aumenta** a sua contagem;
+  - sem convocação, o acompanhamento continua com a mesma contagem;
+  - com convocação, o custo das duas telas continua independente da quantidade de documentos
+    (FR-3734).
+
+  > **Redação anterior, preservada:** "Nos cenários G0, N0 e M0 — chamada sem documento,
+  > Requerimento pedido na convocação e não enviado, com e sem rascunho —, o acompanhamento e a
+  > convocação mostram a linha informativa da FR-3732, sem nenhum link ou botão de preenchimento,
+  > com a ação principal de hoje (em M0, a de quem não tem Requerimento a preencher); o número de
+  > consultas das duas telas é o mesmo de antes; e nenhuma linha é gravada."
+  >
+  > *Por que mudou:* a redação anterior contradizia a FR-3734, que admite número fixo de consultas
+  > com convocação. Para saber que a chamada não pede documento, o acompanhamento lê a lista gravada
+  > nela (D-021).
 
 ## Assumptions
 
@@ -1138,6 +1162,18 @@ fechar também, com a leitura e o rascunho preservados (FR-373 e FR-408 da `029`
 spec, a projeção o mostra como não enviado, sem ação, antes da linha do prazo (FR-3725, linha 3a), e
 nenhuma tela oferece o preenchimento. O Requerimento *na inscrição* não muda. A implementação da
 recusa é PR próprio; a `118` não muda comando (FR-3756).
+
+### D-021 — O acompanhamento sem documento pode pagar a leitura da lista
+
+**Decisão do usuário (04/11/2026), na revisão da implementação (PR #384).** Para saber se a chamada
+pede documento, o acompanhamento lê a lista gravada nela no ato de convocar — a mesma que a tela da
+convocação já lia. Em toda convocação sem documento, isso é uma consulta a mais em relação à linha de
+base; a convocação, que já a pagava, não aumenta. O custo é fixo, e a leitura usa os documentos
+registrados na chamada, de modo que o histórico se preserva diante de uma Retificação posterior que
+tire o documento do Edital. *Alternativa descartada na implementação*: decidir pelo conteúdo vigente
+do Edital, sem ler a lista — economizaria a consulta, mas uma Retificação que retirasse o documento
+depois da convocação esconderia itens que a chamada pediu. Não se demonstrou que ela seja a única
+alternativa; é a troca aceita. A SC-1128 foi revista (redação anterior preservada nela).
 
 ## Registrado, sem desenvolver
 

@@ -410,16 +410,44 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
 
 **O que fazer**
 
-- **FR-1175**: A ação DEVE vir do Edital ou do ato: o Requerimento de Matrícula, quando a política
-  da `029` disser que ele está disponível, em preenchimento ou enviado; o recurso, quando houver
-  objeto recorrível com prazo aberto (com data e hora de encerramento); e, na convocação sem
-  Requerimento, "siga as instruções do Edital para esta convocação".
-- **FR-1176**: O prazo da convocação DEVE ser o vencimento registrado nela, com data e hora, e DEVE
-  ser chamado "prazo desta convocação". Sem comunicação enviada com sucesso, a tela DEVE dizer que
-  o prazo não começou. Com vencimento decorrido sem desfecho, a situação DEVE continuar "Convocado",
-  e a tela DEVE dizer a data em que o prazo terminou e que o resultado da convocação ainda não foi
-  registrado, sem afirmar perda (FR-274).
-- **FR-1177**: A consequência DEVE vir do Edital ou do ato quando ele a declarar; enquanto nenhum
+- **FR-1175** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  A ação DEVE vir do Edital ou do ato: o recurso, quando houver objeto recorrível com prazo
+  aberto (com data e hora de encerramento); e, na convocação vigente:
+
+  - com documento pedido na chamada, a tabela da FR-3730 da `118`, que lê as obrigações da
+    convocação (documentos e Requerimento de Matrícula) e leva à tela da convocação;
+  - sem documento, como antes: o Requerimento de Matrícula, quando a política da `029` disser que
+    ele está disponível, em preenchimento ou enviado; e, sem Requerimento, "siga as instruções do
+    Edital para esta convocação" (FR-3732 da `118`).
+
+  Com documento pedido na chamada, o Requerimento enviado é linha secundária, com o caminho para
+  conferi-lo (FR-3731 da `118`).
+
+  > **Redação anterior à `118`, preservada:**
+  > A ação DEVE vir do Edital ou do ato: o Requerimento de Matrícula, quando a política
+  > da `029` disser que ele está disponível, em preenchimento ou enviado; o recurso, quando houver
+  > objeto recorrível com prazo aberto (com data e hora de encerramento); e, na convocação sem
+  > Requerimento, "siga as instruções do Edital para esta convocação".
+  >
+  > *Por que mudou:* a `115` passou a pedir documentos na convocação, e com o Requerimento enviado a ação dizia "enviado" com documentos obrigatórios sem envio (F1 da revisão de 04/11/2026).
+- **FR-1176** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  O prazo da convocação DEVE ser o vencimento registrado nela, chamado "prazo desta
+  convocação", no formato da FR-3747 da `118`. Sem comunicação enviada com sucesso, a tela DEVE dizer
+  que o prazo não começou, pela frase da FR-3749 da `118`, sem mostrar a data como prazo. Com
+  vencimento decorrido sem desfecho, a situação DEVE continuar "Convocado", e a tela DEVE dizer, pela
+  frase da FR-3748 da `118`, a data em que o prazo terminou e que quem registra o resultado é a
+  comissão, sem afirmar perda (FR-274).
+
+  > **Redação anterior à `118`, preservada:**
+  > O prazo da convocação DEVE ser o vencimento registrado nela, com data e hora, e DEVE
+  > ser chamado "prazo desta convocação". Sem comunicação enviada com sucesso, a tela DEVE dizer que
+  > o prazo não começou. Com vencimento decorrido sem desfecho, a situação DEVE continuar "Convocado",
+  > e a tela DEVE dizer a data em que o prazo terminou e que o resultado da convocação ainda não foi
+  > registrado, sem afirmar perda (FR-274).
+  >
+  > *Por que mudou:* o mesmo instante era dito em três formatos e em três redações do vencido (F4).
+- **FR-1177** *(acrescida pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  A consequência DEVE vir do Edital ou do ato quando ele a declarar; enquanto nenhum
   dos dois a declarar em forma estruturada (L-4), a tela DEVE usar só as duas frases neutras:
   "Novas chamadas, se houver, serão publicadas conforme o Edital." (aguardando) e "Se você não
   atender no prazo, a comissão poderá registrar o não atendimento desta convocação." (convocado,
@@ -427,7 +455,21 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   comunicação enviada, sem vencimento ou com o prazo encerrado, nenhuma frase de consequência. A
   tela NÃO DEVE afirmar perda automática da convocação ou da vaga. Nenhuma outra frase de
   consequência DEVE existir na tela.
-- **FR-1178**: "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa.
+
+  **Acréscimo da `118`.** As frases que dizem quem age e que o fim do prazo não decide nada
+  sozinho — *"A comissão ainda vai concluir a análise."*, *"quem registra o resultado é a
+  comissão"* — não são frases de consequência: elas negam a consequência automática, e não a
+  preveem. A segunda frase neutra pode aparecer também na tela da convocação, na mesma condição
+  (FR-3737 da `118`). As duas continuam sendo as únicas que falam de consequência.
+
+  > **Redação anterior à `118`:** a mesma, sem este acréscimo.
+- **FR-1178** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+  "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa. Na convocação com
+  documento pedido e nada a fazer, ela DEVE vir seguida da frase de conclusão da FR-3728 da `118`,
+  que diz que a comissão ainda vai concluir a análise.
+
+  > **Redação anterior à `118`, preservada:**
+  > "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa.
 - **FR-1179**: O canal citado DEVE ser o que o Perfil declara na forma de convocação ("por
   publicação no endereço eletrônico do certame" ou "por mensagem individual"); sem declaração, a
   tela NÃO DEVE nomear canal. A tela NÃO DEVE prometer e-mail quando a forma for publicação.

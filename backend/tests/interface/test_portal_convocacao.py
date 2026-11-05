@@ -117,7 +117,8 @@ class TestAConvocacaoDaPropriaPessoa:
         pagina = abrir(client, titular).content.decode()
 
         assert "Você foi convocada(o)" in pagina
-        assert vencimento.strftime("%d/%m/%Y %H:%M") in pagina
+        # O formato único do prazo (FR-3747 da `118`).
+        assert vencimento.strftime("%d/%m/%Y, às %Hh%M") in pagina
         assert "O que fazer" in pagina
 
     def test_antes_do_envio_a_tela_diz_que_o_prazo_nao_comecou(self, client, certame, gestor):
@@ -130,7 +131,7 @@ class TestAConvocacaoDaPropriaPessoa:
 
         pagina = abrir(client, titular).content.decode()
 
-        assert "prazo não começou a correr" in pagina
+        assert "prazo ainda não começou a correr" in pagina
 
     def test_a_tela_escreve_enviada_em_e_nunca_recebida_em(self, client, certame, gestor, settings):
         """`UX-039`, `T067`: o sistema afirma o envio, e não afirma o recebimento.
