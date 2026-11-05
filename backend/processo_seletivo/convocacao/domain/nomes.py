@@ -127,6 +127,19 @@ LISTA_ALCANCADA_ESGOTADA = "lista_alcancada_esgotada"
 FORMA_DE_COMUNICACAO_NAO_DECLARADA = "forma_de_comunicacao_nao_declarada"
 MOTIVO_DA_SUCESSAO_OBRIGATORIO = "motivo_da_sucessao_obrigatorio"
 
+# --- A correção pela tela (120) -----------------------------------------------------------------
+# **A correção nomeia o que corrige, e assina o que mostrou** (`D-003` e `D-010` da `120`). Pela
+# tela, o comando de hoje corrigiria a convocação em aberto *no instante do ato*: um formulário
+# aberto antes de outra pessoa corrigir a chamada corrigiria a sucessora, e um aberto antes de um
+# desfecho praticaria chamada nova, com o motivo ignorado. Os dois casos têm recusa própria, e a
+# prévia que mudou no intervalo — apuração seguinte, Retificação, espécie — também.
+MOTIVO_DA_CORRECAO_OBRIGATORIO = "motivo_da_correcao_obrigatorio"
+VENCIMENTO_DA_CORRECAO_OBRIGATORIO = "vencimento_da_correcao_obrigatorio"
+CORRECAO_SEM_VENCIMENTO = "correcao_sem_vencimento"
+CONVOCACAO_CORRIGIDA_SUCEDIDA = "convocacao_corrigida_sucedida"
+CONVOCACAO_CORRIGIDA_COM_DESFECHO = "convocacao_corrigida_com_desfecho"
+PREVIA_DA_CORRECAO_SUPERADA = "previa_da_correcao_superada"
+
 # **Este não é reescrito aqui, e a diferença é a que importa**: quem recusa é `ocupacao.apurar`,
 # e a grafia mora com quem a levanta. Reescrevê-la produziria duas cadeias de caracteres iguais
 # hoje e divergentes depois.

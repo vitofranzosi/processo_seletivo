@@ -114,12 +114,37 @@ def assinatura(*, gesto, apuracao_id, versao_id, forma, identidades):
     )
 
 
+def assinatura_da_correcao(*, convocacao_id, apuracao_id, versao_id, forma, especie):
+    """A identidade do que a prévia da correção mostrou (120, `FR-3857`, `D-010`).
+
+    **Por que estes cinco bastam.** O fundamento da sucessora é a espécie, os rótulos do Edital e do
+    recorte — que saem da versão —, a data da apuração e o complemento, que viaja no próprio
+    formulário. Fixados os quatro primeiros, o texto gravado é o mostrado. A forma entra porque a
+    prévia diz o que a comunicação vai fazer; a convocação, para que a assinatura de um cartão não
+    sirva para outro.
+
+    **Não reaproveita `assinatura`**: a dos vencidos não tem espécie, e acrescentar o campo
+    mudaria o resumo de um gesto que nada tem com a correção.
+    """
+    return canonical_sha256(
+        {
+            "gesto": "correcao",
+            "convocacao": str(convocacao_id),
+            "apuracao": str(apuracao_id) if apuracao_id else None,
+            "versao": str(versao_id) if versao_id else None,
+            "forma": forma or None,
+            "especie": especie,
+        }
+    )
+
+
 __all__ = [
     "PARADA_REABILITADO",
     "PARADA_SUPLENTE",
     "Particao",
     "Titulares",
     "assinatura",
+    "assinatura_da_correcao",
     "pendentes",
     "titulares_do_comeco_da_fila",
     "vencidas",
