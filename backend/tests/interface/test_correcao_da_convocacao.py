@@ -194,8 +194,11 @@ class TestAAcao:
         identificar(client, "joao", [])
 
         pagina = abrir(client, edital)
+        montado = postar(client, edital, raiz, assinatura="x")
 
-        assert raiz.chamada and ACAO not in pagina
+        assert ACAO not in pagina
+        assert montado.status_code == 403, "quem só confere não corrige"
+        assert sucessora_de(raiz) is None
 
     def test_sem_acao_para_a_auditoria(self, client, cenario, gestor):
         edital, _, _ = cenario

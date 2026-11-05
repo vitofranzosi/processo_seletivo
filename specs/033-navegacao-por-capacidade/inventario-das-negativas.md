@@ -235,6 +235,7 @@ O que mudou desde então, e por quê:
 | **+2 funções** | a `107` acrescentou a revogação de acesso, em módulo de view próprio — só o vínculo inexistente ou de outro escopo —, e, no incremento 2, a suspensão e a reativação de pessoa — só o identificador que não é de pessoa |
 | **+4 funções** | a `115` acrescentou os documentos da convocação: a porta `_convocacao_para_conferir`, o alcance por Perfil de quem só confere na condução, a apresentação que não é da chamada e o item que não é da lista |
 | **+4 funções** | a `117` acrescentou a entrega documental à formalização, em módulo de view próprio e em `acessos.py`: o Perfil fora do alcance na página do setor, o documento que não é do conjunto de uma pessoa apta do alcance, a porta da definição na condução e a designação de outra unidade. A porta do setor é o predicado `pode_acessar`, que responde 404 pela recusa do domínio, e não por `Http404` |
+| **+0 funções** | a `120` acrescentou um `raise Http404 from` em `convocar_view`, que já estava registrada: a convocação que a correção nomeia e que não é do recorte nem da inscrição do formulário é referência fora do escopo do ato, como o recorte que `_recorte_pedido` já recusa ali. A falta de base continua a recusa explicada |
 
 **A linha da `031` é o detector funcionando, e na primeira oportunidade real.** Ela não veio desta
 feature: entrou pela `main`, no merge, e a `T038` reprovou a suíte pedindo que fosse classificada.
