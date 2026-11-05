@@ -367,8 +367,9 @@ os SC-.
   das conferências da FR-3843 e da FR-3857. MUST NOT criar comando, papel, tabela, estado, desfecho ou mensagem
   novos.
 - **FR-3847**: Sem base para convocar, a confirmação MUST ser recusada com 403 e a recusa explicada;
-  Edital de outra unidade, ou inexistente, MUST responder 404 (FR-478 da `033`). Nos dois casos,
-  nada é gravado.
+  Edital de outra unidade, ou inexistente, MUST responder 404 (FR-478 da `033`), e a convocação
+  nomeada que não é do recorte ou da inscrição do formulário também, porque é referência fora do
+  escopo do ato. Nos casos, nada é gravado.
 - **FR-3848**: O mesmo formulário enviado mais de uma vez MUST NOT produzir duplicidade: no máximo
   **uma** sucessora, **um** evento de trilha do ato e **uma** mensagem enviada para ela. A repetição
   MUST devolver o resultado do primeiro envio, qualquer que ele tenha sido: comunicação enviada,
@@ -476,6 +477,20 @@ Nenhuma entidade nova. A feature usa:
   verificação de ponta a ponta.
 - A verificação no navegador usa os cenários da `115` e da `118` e um banco de teste próprio desta
   worktree.
+
+## Proteção de dados (LGPD)
+
+Nenhum dado pessoal novo é coletado, guardado ou enviado.
+
+- **O motivo da correção** é texto da comissão sobre o ato, e é guardado onde o motivo da sucessão já
+  mora: na convocação, append-only, e na razão da trilha. Ele não vai ao convocado: a mensagem da
+  sucessora é a de hoje (D-007), e o portal não o mostra. Quem redige o motivo MUST NOT precisar de
+  dado pessoal além do que a convocação já identifica, e a ajuda do campo o diz.
+- **A sessão do operador** guarda os campos digitados só entre a recusa e a tela seguinte, que os
+  consome ao exibir (D-009). Nada disso vai a log.
+- **A prévia** mostra o protocolo e o nome do convocado, que o cartão já mostra, a quem já pode
+  convocar; nenhuma leitura nova de dado da inscrição.
+- **Nenhum endereço novo carrega dado pessoal**: a correção usa a rota da chamada individual, por POST.
 
 ## Compatibilidade com regras anteriores
 

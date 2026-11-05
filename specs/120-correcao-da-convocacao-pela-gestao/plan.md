@@ -147,7 +147,7 @@ backend/tests/
    - o motivo vazio → `motivo_da_correcao_obrigatorio`, com `campo="motivo"`. Hoje, sem motivo, a
      recusa é `convocacao_vigente_existente`, que manda declarar o motivo; com `correcao` a recusa é
      a do campo, porque quem a recebe já está no formulário certo.
-4. Espécie: `especie_da_sucessora(contexto, anterior)`, a função pura que a tela também usa (R-004).
+4. Espécie: `especie_da_sucessora(inscricao, ocupando=…, alcancados=…, regularizaveis=…, anterior=…)`, a função pura que a tela também usa (R-004).
 5. **A assinatura da prévia** (seção 2): calculada com a apuração, a versão e a forma lidas **aqui**,
    e comparada com a do formulário → `previa_da_correcao_superada`.
 6. As guardas de ordem, regularização e déficit, como hoje com `sucede=anterior`.

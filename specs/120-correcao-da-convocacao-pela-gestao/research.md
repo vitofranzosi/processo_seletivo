@@ -70,7 +70,7 @@ para outro.
 
 ## R-004 — Uma função pura decide a espécie da sucessora, para a tela e para o comando
 
-**Decisão.** `especie.especie_da_sucessora(contexto, anterior)`: a espécie derivada da posição
+**Decisão.** `especie.especie_da_sucessora(inscricao, *, ocupando, alcancados, regularizaveis, anterior)`: a espécie derivada da posição
 (`derivada(inscricao, ocupando, alcancados, regularizaveis)`) e, sem ela, a da convocação corrigida —
 a regra que o comando já aplica em linha.
 

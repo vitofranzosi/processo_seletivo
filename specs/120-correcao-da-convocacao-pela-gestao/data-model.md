@@ -50,7 +50,7 @@ assinatura_da_correcao = canonical_sha256({
 ## A espécie da sucessora
 
 ```text
-especie_da_sucessora(contexto, anterior) =
+especie_da_sucessora(inscricao, *, ocupando, alcancados, regularizaveis, anterior) =
     derivada(inscricao, ocupando, alcancados, regularizaveis)   — a da posição, quando há
     ou anterior.especie                                          — a da raiz, quando a posição não a dá
 ```
