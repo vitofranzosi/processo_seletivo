@@ -14,8 +14,9 @@ tarefas.
 
 **Resposta curta.** A variante se reconstrói, e o plano a prova com um teste (R-002). **A versão exata
 do modelo, não:** o histórico de implantação a data com uma janela de incerteza a cada ativação,
-mora fora do banco e da trilha, e nenhum teste da suíte o alcança. **A gravação da versão volta ao
-usuário** (seção *Decisão pendente do usuário*, no [plan.md](plan.md)).
+mora fora do banco e da trilha, e nenhum teste da suíte o alcança. **A gravação da versão voltou ao
+usuário**, que escolheu a opção A em 2026-11-05 (R-009; *A decisão da D-009*, no
+[plan.md](plan.md)).
 
 ### O que já se grava, e o que reconstrói
 
@@ -62,7 +63,7 @@ do Git, no SHA dessa linha. Isso **quase** funciona, e falha em quatro pontos:
 janela, mas não a fecharia: requisições em curso no worker antigo terminam depois de T0. Os pontos 3
 e 4 continuariam. Corrigir o script é operação, e não atende à condição da D-009.
 
-### O que a gravação precisaria guardar, se o usuário a aceitar
+### O que a gravação precisava guardar
 
 O mínimo que fecha os quatro pontos é **uma coluna em `ComunicacaoEmitida`**, gravada na mesma linha
 e na mesma transação do envio: o **nome do modelo** (`inicial` ou `correcao`) e o **resumo SHA-256 do
@@ -71,7 +72,8 @@ carregou. O resumo se confere contra o Git: em qualquer commit, o resumo dos doi
 reproduzível, e o commit que produz aquele resumo é o texto que saiu. Ele não depende da implantação,
 vale em todo ambiente e se testa na suíte.
 
-As alternativas estão na seção *Decisão pendente do usuário* do plano, com o custo de cada uma.
+As alternativas estão na seção *A decisão da D-009* do plano, com o custo de cada uma. O usuário
+escolheu esta, e o desenho dela está na R-009.
 
 ## R-002 — A variante e a mensagem citada saem de uma função pura, chamada no envio e na reconstrução
 
@@ -217,3 +219,41 @@ com a comunicação `ENVIADA` mais recente da anterior, a publicação ou nenhum
 **Distinção.** A linha dos dados do ato descreve a **imediatamente anterior**, e a mensagem cita a
 última **enviada** da cadeia (R-002). As duas leituras são diferentes por decisão do usuário (D-008),
 e não devem ser unificadas.
+
+## R-009 — O resumo sai das fontes que o carregador entregou para o envio
+
+**Decisão.** `identificacao_do_modelo(nome, html, texto)`, em `convocacao/domain/mensagem.py`, recebe
+os dois objetos de modelo que o envio acabou de usar para renderizar. Ela devolve:
+
+```text
+<nome>:sha256:<hex de sha256( b"html\0" + fonte_html_utf8 + b"\0texto\0" + fonte_texto_utf8 )>
+```
+
+A fonte é a que o motor compilou (`template.template.source`), e não um arquivo relido do disco.
+Em produção, o carregador com cache entrega a mesma fonte enquanto o processo vive, e é essa fonte que
+renderizou o envio. O envio grava o valor em `ComunicacaoEmitida.modelo_da_mensagem`, na mesma linha
+do resultado. O nome é `inicial` ou `correcao`, da escolha da R-002.
+
+**Por quê.** O usuário pediu o resumo **dos arquivos efetivamente usados na renderização**. Reler o
+arquivo do disco no instante da gravação abriria uma janela: um arquivo trocado entre a renderização
+e a gravação produziria um resumo de um texto que não saiu. Tirar o resumo da fonte compilada fecha
+essa janela. Os rótulos `html` e `texto` no conteúdo resumido impedem que um texto movido de um
+arquivo para o outro produza o mesmo resumo.
+
+**Como se confere depois.** Num commit qualquer, recalcula-se o resumo dos dois arquivos pela mesma
+regra. O commit cujo resumo for igual ao gravado tem o texto que saiu. A regra está escrita aqui para
+que a conferência não dependa do código de produção.
+
+**Na tentativa falhada.** A renderização passa a vir antes da conferência do destinatário (plano,
+seção 5). Assim, toda `FALHA` individual tem modelo, e a identificação diz que texto se tentou enviar.
+
+**Sem retroatividade.** A migration só acrescenta a coluna, com `default ""`. Nenhuma linha anterior
+recebe valor, e nenhuma função tenta deduzir a versão delas. Para essas linhas, o que vale continua
+sendo o histórico de implantação, com as limitações da R-001.
+
+**Descartado.**
+
+- **Um número de versão escrito à mão**, como o `VERSAO_DO_COMPROVANTE` da `118`: depende de alguém
+  lembrar de mudá-lo, e um texto alterado sem mudar o número sairia com a identificação de outro.
+- **O resumo da mensagem renderizada**: muda a cada pessoa, e não identifica o modelo. E, por levar
+  o link com o identificador da inscrição, viraria dado ligado à pessoa.

@@ -7,15 +7,17 @@
 | Parte | Onde | Por quê |
 |---|---|---|
 | a escolha do modelo e da variante | `convocacao/domain/mensagem.py`, nova e pura | é chamada no envio e no teste de reconstrução (R-002) |
-| os quatro arquivos de modelo | `convocacao/templates/convocacao/mensagem/{inicial,correcao}.{html,txt}` | o texto é arquivo versionado. Um resumo por modelo, se a D-009 o pedir |
+| os quatro arquivos de modelo | `convocacao/templates/convocacao/mensagem/{inicial,correcao}.{html,txt}` | o texto é arquivo versionado, e o resumo de cada par identifica a versão (R-009) |
 | a montagem e o envio | `convocacao/application/comunicar.py`, que já é a situação declarada | o guardião de `tests/test_situacoes_de_mensagem.py` aceita `EmailMultiAlternatives` só nos quatro módulos declarados |
+| a identificação do modelo | `identificacao_do_modelo`, em `convocacao/domain/mensagem.py`, sobre as fontes que renderizaram | R-009; gravada em `ComunicacaoEmitida.modelo_da_mensagem` |
 
 Nenhum módulo novo envia. O guardião das quatro situações não muda (FR-3888, SC-1161).
 
 ## Entradas do envio
 
 `enviar_mensagem_de_convocacao(para=, dados=)` continua a ser o ponto de envio. O dicionário `dados`
-ganha três chaves; nada nele é dado pessoal:
+ganha três chaves; nada nele é dado pessoal. Ela passa a devolver, além do detalhe da falha, a
+identificação do modelo que renderizou, para o comando gravá-la na `ComunicacaoEmitida`:
 
 | Chave | Origem |
 |---|---|
@@ -47,3 +49,6 @@ Uma `EmailMultiAlternatives` com:
 4. A da correção traz o quadro com o `enviado_em` e o `vencimento` da citada, e nunca o motivo, nem
    *"novo prazo"*, nem *"prorrogação"* (FR-3885).
 5. A repetição com a mesma chave não renderiza nem envia (FR-3888).
+6. Toda comunicação individual, `ENVIADA` ou `FALHA`, grava `modelo_da_mensagem` igual ao resumo das
+   fontes que a renderizaram. A publicação grava `""`, e a mudança de um modelo não altera linha já
+   gravada (SC-1172).

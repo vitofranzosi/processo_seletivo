@@ -26,6 +26,11 @@ divergem, a divergência está dita numa decisão.
 > da `120`. A pasta `121` não existe em nenhuma delas, e o único PR aberto (#395) é só da Visão do
 > Sistema. **Nenhum `UX-` é aberto aqui.** As decisões reiniciam em `D-001`.
 >
+> **A SC-1172 fica fora da sequência.** Ela entrou com a decisão da D-009, depois do plano, quando a
+> `122` (PR #398, ainda aberto) já tinha tomado os critérios de mil cento e sessenta e cinco a mil
+> cento e setenta e um. O teto foi medido de novo em
+> 05/11/2026, nas mesmas worktrees e nos PRs abertos.
+>
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-1104 da `059`"). Uma decisão de outra feature é citada pelo assunto e pela feature,
 > nunca pelo número. Os achados e as garantias do estudo (`E1`, `T6`, `A1`, `S1`–`S8`, `R-12`) e a
@@ -117,6 +122,11 @@ arquivos das specs revistas neste mesmo PR (D-001).
   inicial. Os dados do ato continuam identificando B. Diz *"enviada"*, sem afirmar recebimento.
 - Q: As demais propostas? → A: D-001 a D-007, D-010 e D-012 aceitas como estão; a D-009 aceita sob a
   condição de o plano provar a variante **e** a versão exata do modelo usado no envio.
+- Q: A prova do plano mostrou que o histórico de implantação não identifica a versão exata do modelo
+  (R-001 do plano). Como fica a D-009? → A: **Opção A**: uma coluna em `ComunicacaoEmitida`, com o
+  nome do modelo e o SHA-256 dos arquivos HTML e texto efetivamente usados na renderização, gravada
+  também na tentativa que falhou. Os registros anteriores ficam sem identificação, sem versão
+  atribuída retroativamente (decisão de 2026-11-05, sobre o plano).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -551,21 +561,47 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   contado do envio gravado, e não do texto (FR-269a da `019`); a contagem do retorno do envio; e a
   convocação **por publicação** sem e-mail nenhum. A FR-084 da `010` MUST continuar com quatro
   situações, e o guardião delas MUST NOT mudar.
-- **FR-3889**: A escolha entre a mensagem inicial e a da correção, e a variante de obrigação, MUST
-  ser **função só de dados já gravados** no instante do envio: a lista da chamada, a política do
-  Requerimento do Edital publicado, as convocações anteriores da cadeia e a comunicação delas. A
-  versão exata do modelo usado em cada envio MUST ser identificável depois; a trilha só ganha coluna se
-  o que já se grava, com o histórico de implantação, não o provar (D-009).
+- **FR-3889** *(revista em 2026-11-05, pela decisão do usuário sobre a D-009 — a redação anterior está
+  ao fim desta alínea)*: A escolha entre a mensagem inicial e a da correção, e a variante de obrigação,
+  MUST ser **função só de dados já gravados** no instante do envio: a lista da chamada, a política do
+  Requerimento do Edital publicado, as convocações anteriores da cadeia e a comunicação delas.
+
+  A versão exata do modelo usado em cada envio MUST ficar **gravada na própria comunicação emitida**,
+  na mesma linha e na mesma transação que registra o resultado:
+  - o **nome do modelo**, *inicial* ou *correção*;
+  - o **resumo SHA-256** do conteúdo dos dois arquivos, HTML e texto, **efetivamente usados na
+    renderização** daquele envio, e não lidos de novo do disco depois.
+
+  A identificação MUST ser gravada também na tentativa que **falhou**, porque ela diz qual texto se
+  tentou enviar. A comunicação por publicação não tem modelo, e fica sem identificação. As comunicações
+  gravadas antes da `121` ficam **sem identificação**: nenhuma versão lhes MUST ser atribuída
+  retroativamente. Uma mudança posterior nos modelos MUST NOT alterar a identificação já gravada, que
+  é append-only como o resto da linha (D-009).
+
+  > **Redação anterior, preservada:** A escolha entre a mensagem inicial e a da correção, e a variante
+  > de obrigação, MUST ser **função só de dados já gravados** no instante do envio: a lista da
+  > chamada, a política do Requerimento do Edital publicado, as convocações anteriores da cadeia e a
+  > comunicação delas. A versão exata do modelo usado em cada envio MUST ser identificável depois; a
+  > trilha só ganha coluna se o que já se grava, com o histórico de implantação, não o provar (D-009).
 - **FR-3890**: A prévia da correção na gestão, com a forma individual, MUST dizer que a mensagem sai
   de novo com o prazo válido **e dizendo que corrige a anterior** (FR-3844 da `120`, revista). É a
   única mudança na gestão.
 
 #### G. Limites
 
-- **FR-3891**: Esta feature MUST NOT criar tabela, coluna, migration, rota, endpoint, comando, papel,
-  estado gravado, situação de mensagem, tela ou script novo, nem mudar regra de prazo, de autorização,
-  de conferência, de desfecho, de disponibilidade do Requerimento ou de idempotência. A FR-1101 da
-  `059`, a FR-3613 e a FR-3614 da `115` e a FR-3729 da `118` continuam.
+- **FR-3891** *(revista em 2026-11-05, pela decisão do usuário sobre a D-009 — a redação anterior está
+  ao fim desta alínea)*: Esta feature MUST NOT criar tabela, rota, endpoint, comando, papel, estado
+  gravado, situação de mensagem, tela ou script novo, nem mudar regra de prazo, de autorização, de
+  conferência, de desfecho, de disponibilidade do Requerimento ou de idempotência. A **única** coluna
+  e a **única** migration admitidas são as da identificação do modelo em `ComunicacaoEmitida`
+  (FR-3889). A tabela MUST continuar append-only, com as duas camadas, e o total de tabelas protegidas
+  MUST NOT mudar. A FR-1101 da `059`, a FR-3613 e a FR-3614 da `115` e a FR-3729 da `118` continuam.
+
+  > **Redação anterior, preservada:** Esta feature MUST NOT criar tabela, coluna, migration, rota,
+  > endpoint, comando, papel, estado gravado, situação de mensagem, tela ou script novo, nem mudar
+  > regra de prazo, de autorização, de conferência, de desfecho, de disponibilidade do Requerimento ou
+  > de idempotência. A FR-1101 da `059`, a FR-3613 e a FR-3614 da `115` e a FR-3729 da `118`
+  > continuam.
 - **FR-3892**: Os textos novos — da tela, das telas de acesso e dos dois modelos de mensagem — MUST
   ficar sob as varreduras de vocabulário da `063`, da `115` e da `118`, inclusive os termos da
   FR-3751 da `118`.
@@ -577,10 +613,12 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   vigente. Nasce e morre com a requisição.
 - **Prazo apresentado** (apresentação, sem persistência): a data, a hora, o dia da semana e a
   contagem de um vencimento, num instante de referência, no fuso da instalação (FR-3873).
-- **Modelo de mensagem** (arquivo, sem persistência): a inicial e a da correção, cada uma em HTML e
-  texto, com as variantes de obrigação.
-- **Convocação, convocação anterior, comunicação emitida, lista da chamada, política do
-  Requerimento** (existem, não mudam): as fontes.
+- **Modelo de mensagem** (arquivo): a inicial e a da correção, cada uma em HTML e texto, com as
+  variantes de obrigação. O arquivo não se persiste; a identificação dele, sim (FR-3889).
+- **Comunicação emitida** (existe; ganha uma coluna): a identificação do modelo usado no envio, com
+  o nome e o resumo SHA-256, vazia na publicação e nos registros anteriores à `121` (FR-3889).
+- **Convocação, convocação anterior, lista da chamada, política do Requerimento** (existem, não
+  mudam): as fontes.
 
 ## Success Criteria *(mandatory)*
 
@@ -634,6 +672,10 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   outro provedor), Outlook de mesa, Outlook.com e app, Apple Mail e o webmail institucional — está
   preenchida, com uma captura por linha, nas colunas que se aplicam. É critério **humano**, sobre o
   SMTP de homologação, e fecha antes do uso real, junto com a verificação de SPF, DKIM e DMARC.
+- **SC-1172**: Em 100 % dos envios individuais, inclusive os que falham, a comunicação emitida grava
+  o nome do modelo e um resumo igual ao SHA-256 recalculado dos dois arquivos que renderizaram aquele
+  envio. Trocado o conteúdo de um modelo, o envio seguinte grava outro resumo, e o já gravado não
+  muda. A publicação e as linhas anteriores à `121` têm zero identificações.
 
 ## Assumptions
 
@@ -662,6 +704,8 @@ Nenhum dado pessoal novo é coletado, guardado ou enviado, e a mensagem perde, e
 - **O motivo da correção** continua fora do portal e da mensagem (FR-3869, FR-3885).
 - **O número de documentos** não vai na mensagem: a lista pode variar com a modalidade, e a contagem
   diria algo sobre a cota de quem lê (FR-3886).
+- **A identificação do modelo** (FR-3889) não é dado pessoal: o resumo é dos arquivos do modelo, e não
+  da mensagem renderizada, e por isso é o mesmo para todas as pessoas que receberam a mesma versão.
 - **O computador compartilhado** continua o risco que a 9ª decisão do estudo manda rever com a TI:
   esta spec não o muda nem o agrava, porque o código continua obrigatório para quem não tem sessão.
 
@@ -821,7 +865,8 @@ hoje"* ganha a mesma nota; o motivo continua fora.
 ## Decisões
 
 **Estado em 2026-11-05.** O usuário aceitou D-001 a D-008, D-010, D-011 e D-012 — a D-008 com o caso
-da cadeia de correções decidido por ele —, e a D-009 sob a condição da prova no plano.
+da cadeia de correções decidido por ele. A D-009, aceita sob a condição da prova no plano, foi
+decidida depois dela: a prova não fechou, e o usuário escolheu gravar a versão (opção A).
 
 ### D-001 — As revisões se aplicam neste PR, e não na implementação
 
@@ -886,20 +931,39 @@ continuam identificando B como a convocação imediatamente substituída (FR-384
 **Aceita pelo usuário em 2026-11-05**, com o caso de A, B e C decidido por ele. A redação proposta
 antes descrevia a imediatamente anterior, e mandava C sair como inicial.
 
-### D-009 — A versão do modelo se reconstrói, e a trilha não ganha coluna
+### D-009 — A versão do modelo se grava na comunicação emitida
 
-A 7ª decisão do estudo manda acrescentar coluna só se o que se grava não bastar. A escolha do modelo e
-da variante é função de dados append-only gravados antes do envio — a lista da chamada, a política do
-Requerimento do Edital publicado, as convocações anteriores da cadeia e a comunicação delas — e o
-texto é o do código em vigor no instante do envio.
+**Decidida pelo usuário em 2026-11-05, sobre o plano.** A prova pedida abaixo foi feita (R-001 da
+[pesquisa do plano](research.md)). A variante se reconstrói dos registros. A versão exata do modelo não se
+reconstrói pelo histórico de implantação, por quatro razões:
 
-Reconstruir a variante não basta: a auditoria precisa identificar também a **versão exata do modelo**
-usado no envio. O plano MUST provar as duas coisas — um teste que, dados os registros, reconstrói a
-variante, e a evidência de que o histórico de implantação diz qual versão do código estava em vigor
-no instante gravado do envio. Se o histórico não oferecer essa evidência, a coluna volta ao usuário
-como decisão, antes das tarefas.
+- a linha da ativação é gravada depois do *readiness*, o que deixa uma janela a cada implantação;
+- a linha de falha não diz qual versão serviu;
+- o arquivo está fora do banco e da trilha;
+- nenhum teste o alcança.
 
-**Aceita pelo usuário em 2026-11-05 sob essa condição**: a decisão só se fecha com a prova no plano.
+Entre as três opções do plano, o usuário escolheu a **A**: uma coluna em `ComunicacaoEmitida`, com o
+nome do modelo e o SHA-256 dos arquivos HTML e texto efetivamente usados na renderização. Ela é
+gravada também na tentativa falhada, e não se atribui versão aos registros anteriores (FR-3889). A
+FR-3891 admite essa coluna e essa migration, e só elas. A 7ª decisão do estudo fica cumprida nos
+termos dela: o que se gravava não bastava.
+
+> **Redação anterior à decisão, preservada:**
+>
+> *D-009 — A versão do modelo se reconstrói, e a trilha não ganha coluna.*
+>
+> A 7ª decisão do estudo manda acrescentar coluna só se o que se grava não bastar. A escolha do modelo e
+> da variante é função de dados append-only gravados antes do envio — a lista da chamada, a política do
+> Requerimento do Edital publicado, as convocações anteriores da cadeia e a comunicação delas — e o
+> texto é o do código em vigor no instante do envio.
+>
+> Reconstruir a variante não basta: a auditoria precisa identificar também a **versão exata do modelo**
+> usado no envio. O plano MUST provar as duas coisas — um teste que, dados os registros, reconstrói a
+> variante, e a evidência de que o histórico de implantação diz qual versão do código estava em vigor
+> no instante gravado do envio. Se o histórico não oferecer essa evidência, a coluna volta ao usuário
+> como decisão, antes das tarefas.
+>
+> **Aceita pelo usuário em 2026-11-05 sob essa condição**: a decisão só se fecha com a prova no plano.
 
 ### D-010 — A confirmação concorda com "arquivo"
 

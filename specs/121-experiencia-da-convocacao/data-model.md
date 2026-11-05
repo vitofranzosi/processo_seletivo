@@ -2,9 +2,9 @@
 
 **Plano**: [plan.md](plan.md) · **Data**: 2026-11-05
 
-**Nenhuma tabela nova, e nenhuma coluna nova enquanto o usuário não decidir a D-009** (seção
-*Decisão pendente do usuário* do [plan.md](plan.md)). As tabelas append-only continuam 53. Tudo o que
-esta feature monta é apresentação, derivada de registros que já existem.
+**Nenhuma tabela nova, e uma coluna nova**: a identificação do modelo em `ComunicacaoEmitida`,
+decidida pelo usuário na D-009 (FR-3889). As tabelas append-only continuam 53. Fora dessa coluna,
+tudo o que esta feature monta é apresentação, derivada de registros que já existem.
 
 ## O que se lê
 
@@ -63,16 +63,22 @@ publicação não contam. Sem nenhuma, `modelo = inicial`.
 - O prazo apresentado nunca lê `datetime.now()` sozinho: o instante de referência é parâmetro, e é o
   da requisição.
 
-## Se o usuário aceitar a gravação da versão (D-009)
+## A coluna da versão do modelo (D-009, FR-3889)
 
 Uma coluna em `ComunicacaoEmitida`, em migration própria:
 
 | Coluna | Tipo | Valor | Quando vazia |
 |---|---|---|---|
-| `modelo_da_mensagem` | texto curto, `blank=True`, `default=""` | `inicial:sha256:<64 hex>` ou `correcao:sha256:<64 hex>`. O resumo cobre os dois arquivos do modelo, HTML e texto, nessa ordem | publicação, e as linhas anteriores à `121` |
+| `modelo_da_mensagem` | `CharField(max_length=100, blank=True, default="")` | `inicial:sha256:<64 hex>` ou `correcao:sha256:<64 hex>`, pela regra da R-009, das fontes que renderizaram o envio | publicação, e as linhas anteriores à `121`, sem valor atribuído depois |
 
 - **Append-only sem mudança.** A migration é só `ADD COLUMN` com `default` constante, que o PostgreSQL
   aplica sem reescrever linha, e o gatilho de `UPDATE` não dispara. A tabela continua na lista, e o
   `N de M` continua `53 de 53`.
-- **Gravada também na `FALHA`**: registra qual texto se tentou enviar, sem dado pessoal.
+- **Gravada também na `FALHA`**: registra qual texto se tentou enviar, sem dado pessoal. A
+  renderização vem antes da conferência do destinatário, e por isso até a falha por endereço ausente
+  tem modelo.
+- **Nunca reescrita**: a mudança posterior de um modelo só altera os envios seguintes (SC-1172).
+- **Sem `CheckConstraint` de formato.** A forma é garantida pela função que a calcula e pelo teste. Uma
+  constraint por expressão regular recusaria a linha vazia das publicações, ou precisaria de uma
+  exceção por forma.
 - **Sem dado pessoal**: o resumo é do arquivo do modelo, e não da mensagem renderizada.
