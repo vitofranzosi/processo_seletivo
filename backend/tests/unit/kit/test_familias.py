@@ -105,11 +105,11 @@ def test_registrar_recusa_familia_repetida_e_template_fora_do_lugar():
     with pytest.raises(ValueError, match="duas vezes"):
         kit_familias.registrar(institucional.FAMILIA)
     deslocada = dataclasses.replace(
-        institucional.FAMILIA, chave="tmd", templates={"story": institucional.POST}
+        institucional.FAMILIA, chave="inexistente", templates={"story": institucional.POST}
     )
     with pytest.raises(ValueError, match="fora do lugar"):
         kit_familias.registrar(deslocada)
-    assert "tmd" not in kit_familias.REGISTRO
+    assert "inexistente" not in kit_familias.REGISTRO
 
 
 # ---- O resumo do template (FR-3833, D-014) e a liberação (FR-3808, FR-3835, D-010) -------------

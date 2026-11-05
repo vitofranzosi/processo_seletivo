@@ -1063,6 +1063,22 @@ def _fundo(c, imagem):
     )
 
 
+def _fundo_fixo(c):
+    """O fundo da família sem banco de imagens (EC-20, a TMD): um ativo da página inteira.
+
+    Fica fora de `ativos_posicionados` de propósito: lá, todo ativo que não recebe texto é
+    obstáculo, e o fundo inteiro o seria de todo texto. Os obstáculos de dentro dele são os que o
+    template declara em `dimensoes["obstaculos"]`, como os das imagens do banco.
+    """
+    nome = c.template.dimensoes.get("fundo_fixo")
+    if nome:
+        formato = c.formato
+        arquivo = c.familia.ativos[nome].arquivo
+        c.elementos.append(
+            Figura(0, 0, formato.largura, formato.altura, arquivo, "image/png", "fundo")
+        )
+
+
 def _ativos_posicionados(c):
     """Os ativos fixos que o template posiciona (D-004, D-011).
 
@@ -1123,11 +1139,12 @@ def _balao(c):
 
 
 def _imagem_escolhida(familia, escolha):
-    if not familia.imagens:
-        return None
+    # Sem banco (EC-20), nenhuma imagem; a nomeada assim mesmo é recusada como a de fora do banco.
     for imagem in familia.imagens:
         if imagem.chave == escolha.imagem:
             return imagem
+    if not familia.imagens and not escolha.imagem:
+        return None
     raise EscolhaInvalida("A imagem escolhida não está no banco da família.")
 
 
@@ -1152,6 +1169,8 @@ def _compor_em_caixas(ficha, template, escolha):
     variante = _variante_escolhida(familia, escolha)
     if imagem is not None:
         _fundo(c, imagem)
+    else:
+        _fundo_fixo(c)
     _ativos_posicionados(c)
     _faixa(c, ficha)
     # As frases fixas posicionadas da família — a chamada do alto da UAB —, `{caixa: frase}`. Cada

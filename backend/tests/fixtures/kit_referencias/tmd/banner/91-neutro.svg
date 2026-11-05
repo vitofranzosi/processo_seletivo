@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-labelledby="titulo descricao">
+<title id="titulo">Edital nº 91/2026 — material de divulgação</title>
+<desc id="descricao">Peça de divulgação do Cefor/Ifes, na identidade TMD. Edital nº 91/2026: Curso de Pós-graduação Lato Sensu em Informática na Educação na modalidade EaD (DEMONSTRAÇÃO). Edital publicado. Consulte as condições na página oficial. Acesse o edital, busque por 91/2026 – Cefor. Versão vigente desde 08/10/2026, ref. IMPRESSAO.</desc>
+<image x="0" y="0" width="1500" height="850" preserveAspectRatio="none" data-campo="fundo" href="data:image/png;base64,MARCA"/>
+<text x="60" y="99" font-family="Archivo Black" font-size="44" font-weight="400" fill="#d6d58e" data-campo="titulo_sem_numero">Curso de Pós-graduação Lato Sensu</text>
+<text x="60" y="161" font-family="Archivo Black" font-size="44" font-weight="400" fill="#d6d58e" data-campo="titulo_sem_numero">em Informática na Educação na</text>
+<text x="60" y="224" font-family="Archivo Black" font-size="44" font-weight="400" fill="#d6d58e" data-campo="titulo_sem_numero">modalidade EaD (DEMONSTRAÇÃO)</text>
+<text x="60" y="305" font-family="Inter" font-size="36" font-weight="300" fill="#ffffff" data-campo="identificacao">Edital nº 91/2026</text>
+<text x="500" y="490" font-family="Inter" font-size="44" font-weight="300" fill="#ffffff" text-anchor="middle" data-campo="fixo">EDITAL PUBLICADO</text>
+<text x="500" y="545" font-family="Inter" font-size="30" font-weight="400" fill="#ffffff" text-anchor="middle" data-campo="fixo">Consulte as condições na página oficial</text>
+<text x="500" y="592" font-family="Inter" font-size="28" font-weight="400" fill="#ffffff" text-anchor="middle" data-campo="busca">busque por 91/2026 – Cefor</text>
+<text x="500" y="637" font-family="Inter" font-size="28" font-weight="400" fill="#ffffff" text-anchor="middle" data-campo="selo">Versão vigente desde 08/10/2026 · ref. IMPRESSAO</text>
+<text x="540" y="751" font-family="Inter" font-size="34" font-weight="400" fill="#d6d58e" data-campo="chamada_a_acao">Acesse o edital</text>
+</svg>

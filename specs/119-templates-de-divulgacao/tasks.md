@@ -166,7 +166,7 @@ própria, com as referências das famílias anteriores intactas.
 - [x] T049 [US1] **3c — UAB/bolsista**: Anton e Poppins; chamada fixa "Seleção de bolsista" aprovada; `kit_familias/uab.py` e `kit_ativos/uab/`
 - [x] T050 [US1] **3d — Aperfeiçoamento**: Unbounded, Lexend, Poppins; foto com clipe; `kit_familias/aperfeicoamento.py` e `kit_ativos/aperfeicoamento/`
 - [x] T051 [US1] **3e — Internos**: variantes `servidores` e `estudantes` (EC-19, cenário 23); recorte em losango; a Inter no lugar da Helvetica Neue (P-2); a chamada da variante na caixa `chamada`, pelo compositor de caixas; `kit_familias/internos.py` e `kit_ativos/internos/`
-- [ ] T052 [US1] **3f — TMD**: Archivo Black e a substituta da Helvetica Neue (P-2); ilustração plana sem banco de fotos (EC-20); `kit_familias/tmd.py` e `kit_ativos/tmd/`
+- [x] T052 [US1] **3f — TMD**: Archivo Black e a Inter leve e regular, a substituta da Helvetica Neue (P-2); sem banco de imagens (EC-20), com o fundo fixo de cada formato desenhado pelo projeto (`scripts/desenhar_fundo_do_tmd.py`), porque a ilustração dos slides é de banco sem licença conferida (P-1); `kit_familias/tmd.py` e `kit_ativos/tmd/`
 
 ---
 
