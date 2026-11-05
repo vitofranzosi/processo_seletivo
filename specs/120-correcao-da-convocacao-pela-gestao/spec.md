@@ -80,7 +80,7 @@ entregou a precedência justificada e a chamada para regularizar, mas não a suc
 
 - **a redação própria da mensagem da sucessora** (*"A sua convocação foi corrigida…"*), que é decisão
   sobre a FR-290 da `019`, com parente em `doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md`;
-  *(Decidida pelo usuário em 05/11/2026 e especificada na `121`, FR-3885 e FR-3890: a mensagem da sucessora comunicada diz que substitui a anterior, com a data do envio substituído e o prazo que ele informava, e sem o motivo.)*
+  *(Decidida pelo usuário em 05/11/2026 e especificada na `121`, FR-3885 e FR-3890: a mensagem da sucessora diz que substitui a última mensagem enviada com sucesso na cadeia de correções, com a data desse envio e o prazo que ele informava, e sem o motivo; sem envio com sucesso na cadeia, sai como inicial.)*
 - **o aviso de pendência (`QI-7`)**, que continua com a decisão institucional registrada na `118`;
 - **correção em lote, prazo próprio por item e mudança na fila** — a fila continua sem quem tem
   chamada em aberto, e o lote continua sem sucessão (FR-861 da `050`);
@@ -341,7 +341,7 @@ os SC-.
   - a forma de comunicação do Perfil e o que ela fará no ato *(item revisto pela `121` em 2026-11-05,
     que vigora com a implementação dela — a redação anterior está ao fim deste item)*: a mensagem
     individual sai de novo, **como mensagem da correção**, com o prazo válido, dizendo que substitui a
-    anterior e sem o motivo (FR-3885 e FR-3890 da `121`); por publicação, a comunicação aguarda a
+    última mensagem enviada com sucesso na cadeia, e sem o motivo (FR-3885 e FR-3890 da `121`); por publicação, a comunicação aguarda a
     publicação, como hoje;
 
     > **Redação anterior à `121`, preservada:** a mensagem individual sai de novo, com o texto da
@@ -626,7 +626,7 @@ acontece.
 - **A mensagem da sucessora.** Uma redação que diga *"A sua convocação foi corrigida: o novo prazo é
   …"* é decisão sobre a FR-290 da `019`, com parente em
   `doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md`. Fica para o usuário.
-  *(Decidida pelo usuário em 05/11/2026 e especificada na `121`, FR-3885 e FR-3890: a mensagem da sucessora comunicada diz que substitui a anterior, com a data do envio substituído e o prazo que ele informava, e sem o motivo.)* O texto não diz *"novo prazo"*, porque a sucessora pode antecipar (FR-3856).
+  *(Decidida pelo usuário em 05/11/2026 e especificada na `121`, FR-3885 e FR-3890: a mensagem da sucessora diz que substitui a última mensagem enviada com sucesso na cadeia de correções, com a data desse envio e o prazo que ele informava, e sem o motivo; sem envio com sucesso na cadeia, sai como inicial.)* O texto não diz *"novo prazo"*, porque a sucessora pode antecipar (FR-3856).
 - **O aviso de pendência (`QI-7`).** Continua com a decisão institucional registrada na `118`.
 - **O formulário montado à mão.** O achado observava, sem executar, que um POST montado por quem já
   pode convocar criaria a sucessora. Com a FR-3843 esse POST continua possível para quem tem a

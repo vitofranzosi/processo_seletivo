@@ -112,6 +112,11 @@ arquivos das specs revistas neste mesmo PR (D-001).
 - Q: A finalidade da convocação? → A: Fora do MVP, sem campo novo (10ª decisão do estudo).
 - Q: As revisões da `118` e da `120` além das quatro pedidas (D-011)? → A: Aceitas como estão
   (parecer de 2026-11-05, depois da spec escrita).
+- Q: A enviada, a mensagem da correção B falhou, C substitui B: o que diz a mensagem de C (D-008)? →
+  A: Cita a última mensagem enviada com sucesso na cadeia, A; sem envio com sucesso na cadeia, sai a
+  inicial. Os dados do ato continuam identificando B. Diz *"enviada"*, sem afirmar recebimento.
+- Q: As demais propostas? → A: D-001 a D-007, D-010 e D-012 aceitas como estão; a D-009 aceita sob a
+  condição de o plano provar a variante **e** a versão exata do modelo usado no envio.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -281,11 +286,16 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **Todos os documentos obrigatórios aproveitados.** A mensagem diz o que a chamada **pede**, e não o
   estado: *"pede documentos"* continua verdadeiro, e a página diz *"Não precisa enviar de novo"*
   (FR-3746 da `118`). Sem tarefa, não há botão; vale a frase de conclusão (FR-3728 da `118`).
-- **Sucessora cuja anterior nunca foi comunicada com sucesso.** A mensagem é a inicial, porque não
-  há mensagem a substituir; a página continua dizendo *"Convocação corrigida"* no cartão do prazo, e
-  os dados do ato dizem que a substituída não foi comunicada (D-008).
-- **Correção da correção.** A mensagem e os dados do ato descrevem a **imediatamente anterior**, que
-  é a que a pessoa recebeu por último (D-008).
+- **Cadeia de correções sem nenhuma mensagem enviada com sucesso.** A mensagem é a inicial, porque
+  não há mensagem a substituir; a página continua dizendo *"Convocação corrigida"* no cartão do prazo,
+  e os dados do ato dizem que a substituída não foi comunicada (D-008).
+- **A mensagem da imediatamente anterior falhou, mas outra da cadeia foi enviada.** A convocação A
+  teve a mensagem enviada, a mensagem da correção B falhou, e C substitui B: a mensagem de C é a da
+  correção e cita **A**, a última mensagem enviada com sucesso na cadeia. Os dados do ato continuam
+  identificando **B** como a convocação imediatamente substituída (D-008).
+- **Correção da correção, sem falha.** A última mensagem enviada com sucesso é a da imediatamente
+  anterior, e é ela que a mensagem cita; os dados do ato também descrevem a imediatamente anterior
+  (D-008). A mensagem diz *"enviamos"*, e nunca afirma que a pessoa recebeu (FR-288a da `019`).
 - **Convocação por publicação.** Nenhum e-mail sai, como hoje (FR-287 da `019`). A página segue esta
   spec, e a correção é dita no cartão do prazo do mesmo jeito.
 - **O mesmo arquivo enviado de novo.** A confirmação diz *"Este arquivo já tinha sido recebido."*, a
@@ -511,19 +521,22 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
   Os primeiros caracteres do assunto MUST trazer a instituição, a palavra "Convocação" e o Edital,
   nessa ordem.
-- **FR-3885**: Quando a convocação comunicada sucede outra cuja mensagem foi **enviada com sucesso**,
-  a mensagem MUST ser a **da correção**, modelo próprio:
+- **FR-3885**: Quando a convocação comunicada sucede outra, e alguma convocação da cadeia de
+  correções dela teve mensagem **enviada com sucesso**, a mensagem MUST ser a **da correção**, modelo
+  próprio:
   - o assunto *"Ifes · Convocação corrigida no Edital ‹NN/AAAA›: prazo válido até ‹DD/MM›"*, com as
     mesmas variantes de obrigação da FR-3884 no corpo;
   - o título *"Sua convocação no Edital ‹NN/AAAA› foi corrigida"*;
   - logo abaixo, o quadro *"Esta mensagem substitui a que enviamos em ‹data›, às ‹hora›. Aquela
-    informava prazo até ‹dia da semana›, ‹data›. O prazo que vale é o desta mensagem."*, com os dados
-    da **imediatamente anterior** (D-008);
+    informava prazo até ‹dia da semana›, ‹data›. O prazo que vale é o desta mensagem."*, com a data,
+    a hora e o prazo da **última mensagem enviada com sucesso** na cadeia — que não é a da
+    imediatamente anterior quando a desta falhou (D-008);
   - o rótulo do prazo *"Prazo válido para atender"*;
   - o resto como a inicial.
 
   A mensagem MUST NOT trazer o motivo da correção, nem dizer *"novo prazo"* ou *"prorrogação"*
-  (FR-3856 da `120`). Sem envio anterior com sucesso, a mensagem é a inicial (D-008).
+  (FR-3856 da `120`). Sem nenhum envio com sucesso na cadeia, a mensagem é a inicial (D-008). O
+  quadro diz *"enviamos"*, e MUST NOT afirmar que a pessoa recebeu (FR-288a da `019`).
 - **FR-3886**: Nenhuma das duas mensagens, em nenhuma das duas partes, MUST conter: nome, CPF,
   telefone, número de inscrição, posição na ordem, nome de documento, número de documentos, motivo de
   pendência, modalidade de reserva, anexo, imagem, fonte ou folha externa, pixel de rastreio,
@@ -540,8 +553,9 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   situações, e o guardião delas MUST NOT mudar.
 - **FR-3889**: A escolha entre a mensagem inicial e a da correção, e a variante de obrigação, MUST
   ser **função só de dados já gravados** no instante do envio: a lista da chamada, a política do
-  Requerimento do Edital publicado, a convocação anterior e a comunicação dela. A trilha não ganha
-  coluna; a versão do modelo é a do código em vigor no instante do envio (D-009).
+  Requerimento do Edital publicado, as convocações anteriores da cadeia e a comunicação delas. A
+  versão exata do modelo usado em cada envio MUST ser identificável depois; a trilha só ganha coluna se
+  o que já se grava, com o histórico de implantação, não o provar (D-009).
 - **FR-3890**: A prévia da correção na gestão, com a forma individual, MUST dizer que a mensagem sai
   de novo com o prazo válido **e dizendo que corrige a anterior** (FR-3844 da `120`, revista). É a
   única mudança na gestão.
@@ -603,8 +617,11 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **SC-1159**: Em todas as variantes das duas mensagens, o texto puro contém cada frase do HTML; o
   HTML tem zero `src=`, zero endereço fora do link da convocação e do canal, e zero ocorrências do
   nome, do CPF e dos nomes de documento da fixture.
-- **SC-1160**: A mensagem da sucessora tem o assunto e o título da correção, e diz a data e a hora do
-  envio substituído e o prazo dele; a inicial não tem nenhum dos três; nenhuma das duas tem o motivo.
+- **SC-1160**: A mensagem da sucessora tem o assunto e o título da correção, e diz a data e a hora da
+  última mensagem enviada com sucesso na cadeia e o prazo que ela informava — com A enviada, a
+  mensagem de B falhada e C sucessora de B, os de A, enquanto os dados do ato de C identificam B —; a
+  inicial não tem nenhum dos três; nenhuma das duas tem o motivo; sem envio com sucesso na cadeia, C
+  sai como inicial.
 - **SC-1161**: A repetição com a mesma chave envia zero mensagens; o guardião das quatro situações da
   FR-084 da `010` passa sem mudança.
 - **SC-1162**: Depois do envio aceito, num navegador real, o foco está na confirmação, que nomeia o
@@ -803,6 +820,9 @@ hoje"* ganha a mesma nota; o motivo continua fora.
 
 ## Decisões
 
+**Estado em 2026-11-05.** O usuário aceitou D-001 a D-008, D-010, D-011 e D-012 — a D-008 com o caso
+da cadeia de correções decidido por ele —, e a D-009 sob a condição da prova no plano.
+
 ### D-001 — As revisões se aplicam neste PR, e não na implementação
 
 A `118` escreveu as revisões na spec e as aplicou aos arquivos das specs revistas na primeira tarefa da
@@ -853,20 +873,33 @@ Uma chamada só com documento facultativo não pede documento. Dizer *"envie seu
 assunto convidaria a um envio que não é obrigação. A variante dela é a do Requerimento ou a de nenhum
 dos dois; a página, que mostra o opcional, diz que a pessoa *pode* enviá-lo (FR-3860).
 
-### D-008 — A mensagem da correção descreve a imediatamente anterior, e só se ela saiu
+### D-008 — A mensagem da correção cita a última mensagem enviada com sucesso na cadeia
 
-O quadro *"Esta mensagem substitui a que enviamos em…"* só é verdadeiro se houve envio com sucesso. Sem
-ele, a pessoa nunca recebeu outra mensagem, e a da correção a confundiria: sai a inicial. Na correção
-da correção, a mensagem que a pessoa tem é a da última anterior, e é ela que se descreve.
+O quadro *"Esta mensagem substitui a que enviamos em…"* só é verdadeiro se houve envio com sucesso.
+Sem nenhum na cadeia de correções, nada foi enviado à pessoa, e a mensagem da correção a confundiria:
+sai a inicial. Havendo, o quadro cita a **última mensagem enviada com sucesso** — que é a da
+imediatamente anterior na correção da correção sem falha, e não é quando a mensagem dela falhou: com A
+enviada, a mensagem de B falhada e C sucessora de B, C cita A. Os dados do ato, que são outra coisa,
+continuam identificando B como a convocação imediatamente substituída (FR-3844 da `120`). A palavra é
+*"enviamos"*: a mensagem não afirma que a pessoa recebeu.
+
+**Aceita pelo usuário em 2026-11-05**, com o caso de A, B e C decidido por ele. A redação proposta
+antes descrevia a imediatamente anterior, e mandava C sair como inicial.
 
 ### D-009 — A versão do modelo se reconstrói, e a trilha não ganha coluna
 
 A 7ª decisão do estudo manda acrescentar coluna só se o que se grava não bastar. A escolha do modelo e
 da variante é função de dados append-only gravados antes do envio — a lista da chamada, a política do
-Requerimento do Edital publicado, a convocação anterior e a comunicação dela — e o texto é o do código
-em vigor no instante do envio, que o histórico de implantação data. O plano MUST provar isso com um
-teste que, dados os registros, reconstrói a variante; se a prova falhar, a coluna volta ao usuário
-como decisão.
+Requerimento do Edital publicado, as convocações anteriores da cadeia e a comunicação delas — e o
+texto é o do código em vigor no instante do envio.
+
+Reconstruir a variante não basta: a auditoria precisa identificar também a **versão exata do modelo**
+usado no envio. O plano MUST provar as duas coisas — um teste que, dados os registros, reconstrói a
+variante, e a evidência de que o histórico de implantação diz qual versão do código estava em vigor
+no instante gravado do envio. Se o histórico não oferecer essa evidência, a coluna volta ao usuário
+como decisão, antes das tarefas.
+
+**Aceita pelo usuário em 2026-11-05 sob essa condição**: a decisão só se fecha com a prova no plano.
 
 ### D-010 — A confirmação concorda com "arquivo"
 

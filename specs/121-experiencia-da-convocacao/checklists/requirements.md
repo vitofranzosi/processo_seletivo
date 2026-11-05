@@ -39,8 +39,9 @@ Validado em 05/11/2026, numa iteração.
   o redirecionamento se faz ficam com o plano. A SC-1157 conta consultas porque é a forma verificável
   de "antes de qualquer consulta" (`S1`).
 - **Nenhuma marca de esclarecimento.** As dez decisões do estudo estão fechadas pelo usuário; o que o
-  estudo deixou aberto virou proposta de desenho (D-001 a D-012), que aguarda o usuário — salvo a
-  D-011, já aceita.
+  estudo deixou aberto virou proposta de desenho (D-001 a D-012). Em 2026-11-05 o usuário aceitou
+  todas, a D-008 com o caso da cadeia de correções decidido por ele, e a D-009 sob a condição de o
+  plano provar a variante e a versão exata do modelo usado no envio.
 - **A D-011 foi aceita pelo usuário em 2026-11-05**: as revisões da `118` e da `120` vão além das quatro
   nomeadas no pedido, porque a nova ordem da página não cabe na letra das alíneas vizinhas.
 - **Critério humano**: a SC-1164 (clientes de e-mail reais) não é verificável pela suíte, e fecha

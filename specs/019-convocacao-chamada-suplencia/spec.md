@@ -672,8 +672,9 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
   A mensagem MUST conter o que fazer, o prazo e o canal de atendimento, e MUST NOT conter dado da
   inscrição além do necessário para identificar a chamada. Quando a chamada pede documento
   obrigatório ou o Requerimento de Matrícula, a mensagem MUST dizê-lo, sem nomear nem contar os
-  documentos; a mensagem da sucessora de convocação comunicada MUST dizer que a substitui, com a data
-  do envio substituído e o prazo que ele informava, e sem o motivo. A mensagem sai em HTML com
+  documentos; a mensagem da sucessora, quando alguma convocação da cadeia de correções teve mensagem
+  enviada com sucesso, MUST dizer que substitui a última delas, com a data desse envio e o prazo que
+  ele informava, e sem o motivo. A mensagem sai em HTML com
   alternativa completa em texto, e o assunto segue o que a chamada pede (FR-3882 a FR-3887 da `121`).
 
   > **Redação anterior à `121`, preservada:**
