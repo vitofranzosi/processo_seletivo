@@ -21,7 +21,9 @@ from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.models import AtoDeOrdenacao, OrigemDaOrdem, PosicaoNaOrdem
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.editais.domain.recortes import exigir_recorte_operacional
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.domain import chave as dominio_da_chave
 from processo_seletivo.sorteios.domain import manifesto as dominio_do_manifesto
@@ -70,6 +72,14 @@ def constituir_sorteio(
             return ctx.desfecho_anterior
         edital = _edital_do_processo(ctx.processo, edital_id)
         relacao = _relacao(edital, relacao_id)
+        # **A relação excedente já congelada não sorteia** (122, FR-3898; 9ª decisão do usuário).
+        # Tirá-la dos botões não basta: ela é alcançável por chamada direta. A pergunta é feita à
+        # versão vigente, e não à que a relação cita, porque o que se recusa é o ato de hoje.
+        exigir_recorte_operacional(
+            effective_version(edital_id=edital.id, at=ctx.now).content,
+            perfil_id=relacao.perfil_id,
+            lista_id=relacao.lista_id,
+        )
         ocorrencia = _ocorrencia(ocorrencia_id)
         anterior = _anterior(edital, sorteio_anterior_id, motivo_da_anulacao, relacao, ocorrencia)
 

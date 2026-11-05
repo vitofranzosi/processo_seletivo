@@ -74,7 +74,9 @@ def _estado_do_marco_sorteado(*, edital, marco_id, vigente, at):
         # já dava.** Devolver a forma dele aqui — sem a chave `origem` — é o que faz `aferir` cair
         # no mesmo degrau, em vez de precisar de um segundo ramo dizendo a mesma coisa.
         return _marco_removido(vigente, perfil_historico, marco_historico)
-    divergencias = _divergencias_do_sorteio(vigente)
+    divergencias = _divergencias_do_sorteio(vigente) + _divergencia_de_papel(
+        vigente, versao_atual.content
+    )
     return {
         "proposta": None,
         "vigente": vigente,
@@ -155,6 +157,21 @@ def _marco_removido(vigente, perfil_historico, marco_historico):
         ],
         "posicoes_divergentes": [],
     }
+
+
+def _divergencia_de_papel(vigente, conteudo_vigente):
+    """`[causa]` quando o recorte do ato mudou de papel desde a versão que ele cita (122, FR-3912).
+
+    **Retificação não reabilita ato por si** (8ª decisão do usuário na `122`, D-004 da `122`). O
+    ato que o sorteio fez na Modalidade apontada como a ampla, quando uma Retificação retira o
+    apontamento, volta a cair num recorte operacional — e foi produzido para outro universo. Ele
+    aparece obsoleto, com a causa nomeada, e o recorte segue pela sucessão que já existe: relação,
+    sorteio e ato novos. A publicabilidade o recusa pelo mesmo caminho de toda obsolescência.
+    """
+    from processo_seletivo.publicacoes.application.papel_do_recorte import divergencia_de_papel
+
+    causa = divergencia_de_papel(vigente, conteudo_vigente)
+    return [causa] if causa else []
 
 
 def _divergencias_do_sorteio(vigente):
@@ -377,7 +394,7 @@ def estado_do_marco(*, edital, marco_id, at=None, lista_id=None):
                 marco_id=marco_id,
             ),
             reingressos=_reingressos(edital, proposta),
-        )
+        ) + _divergencia_de_papel(vigente, versao_atual.content)
     _nomear_modalidades(proposta, versao_atual.content, perfil_id=perfil["id"], marco_id=marco_id)
     return {
         "proposta": proposta,

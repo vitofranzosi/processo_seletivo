@@ -806,8 +806,14 @@ def listas_do_marco(perfil, marco, conteudo=None):
     via (reavaliação de 27/09, anexo B §8). O nome da ampla continua vazio, que é o que mantém o
     alvo dela igual ao nome do marco.
 
-    **O sorteio fica com a leitura dele** (`034`, `FR-491a`, `D-004`): dá recorte próprio à
-    Modalidade declarada como ampla, e os atos já emitidos nela precisam continuar alcançáveis.
+    **O sorteio também, desde a `122`** (FR-3909, D-007 da `122`). Esta função dava ao marco por
+    sorteio a lista dele — a ampla e **toda** Modalidade, inclusive a que o Perfil aponta como a
+    ampla —, porque a `034` deixou o sorteio de fora. O ato daquele recorte gerava, então, "não
+    divulgado" e "sem apuração" para sempre: a ocupação não tem linha para ele, e a divulgação
+    passou a recusá-lo. Agora os três sinais percorrem os mesmos recortes que a ocupação apura, e
+    o acervo excedente fica onde a `122` o mostra — na seção de histórico da tela do sorteio. Os
+    nomes do sorteio continuam os da Modalidade, sem o código, que é o que os sinais dele sempre
+    disseram.
 
     `conteudo` é o da versão vigente, e existe porque a pergunta "este marco sorteia" passou a ter
     resolução própria (030, FR-429): o marco pode referenciar o método comum do Edital, e ler só a
@@ -824,18 +830,20 @@ def listas_do_marco(perfil, marco, conteudo=None):
         if conteudo is not None
         else bool(marco.get("drawMethod"))
     )
+    if not sorteia and conteudo is None:
+        return [(None, "")]
+    recortes = recortes_do_perfil(
+        conteudo if conteudo is not None else {"profiles": [perfil]},
+        perfil_id=perfil.get("id"),
+    )
     if not sorteia:
-        if conteudo is None:
-            return [(None, "")]
-        return [
-            (lista, rotulo if lista else "")
-            for lista, rotulo in recortes_do_perfil(conteudo, perfil_id=perfil.get("id"))
-        ]
-    return [(None, "")] + [
-        (modalidade.get("id"), modalidade.get("name") or "")
+        return [(lista, rotulo if lista else "") for lista, rotulo in recortes]
+    nomes = {
+        str(modalidade.get("id")): modalidade.get("name") or ""
         for modalidade in perfil.get("competitionModalities") or []
         if modalidade.get("id")
-    ]
+    }
+    return [(None, "")] + [(lista, nomes.get(lista, "")) for lista, _ in recortes if lista]
 
 
 def candidato_a_obsoleto(edital, ato, marco, versao_vigente):

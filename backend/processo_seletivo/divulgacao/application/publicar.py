@@ -50,11 +50,13 @@ from processo_seletivo.divulgacao.models import (
     PublicacaoResultado,
     SituacaoDivulgada,
 )
+from processo_seletivo.editais.domain.recortes import exigir_recorte_operacional
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.contexto_do_ato import (
     colunas_da_unidade,
     contexto_do_ato,
 )
+from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -145,6 +147,15 @@ def publicar_resultado(
             # A repetição devolve o desfecho que o primeiro pedido declarou, e não uma leitura do
             # mundo depois dele — inclusive quando esse mundo já mudou (FR-030).
             return PublicacaoResultado.objects.get(pk=reserva.result_id)
+
+        # **O ato do recorte excedente não se divulga mais** (122, FR-3899). A pergunta é feita à
+        # versão vigente: o que a operação de hoje usa. Publicações feitas antes não se tocam — a
+        # recusa é só da divulgação nova, e vem depois da repetição, que devolve o que já foi.
+        exigir_recorte_operacional(
+            effective_version(edital_id=edital.id, at=agora).content,
+            perfil_id=ato.perfil_id,
+            lista_id=ato.lista_id,
+        )
 
         # A autoridade habilitada na unidade do Edital e vigente hoje, conferida e travada — a mesma
         # regra da publicação do Edital e da Retificação (060, FR-1125, FR-1126).

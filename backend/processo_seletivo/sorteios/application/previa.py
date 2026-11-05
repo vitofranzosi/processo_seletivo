@@ -12,6 +12,7 @@ from processo_seletivo.avaliacoes.domain.conjunto import (
     CONGELAR_A_RELACAO,
     recusa_por_inscricoes_em_curso,
 )
+from processo_seletivo.editais.domain.recortes import recortes_do_perfil
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
@@ -39,22 +40,19 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     habilitadas = habilitadas_na_etapa(edital, metodo)
     ocorrencia_da_vez, proxima_referencia, descartadas, recusa = _ocorrencia_declarada(metodo)
     # **Os recortes precisam ser distinguíveis na tela** (021, D-006). O primeiro é o recorte sem
-    # lista — todos os inscritos do Perfil —, e os demais são as modalidades declaradas. Quando o
-    # Edital declara uma modalidade chamada "Ampla concorrência", que é o caso normal, os dois
-    # nomes colidiam: a tela mostrava dois blocos homônimos, um com o sorteio feito e outro vazio,
-    # e quem conduz o certame não tinha como saber em qual publicar.
+    # lista — todos os inscritos do Perfil —, e os demais são as modalidades declaradas, com o
+    # código que o Edital publica.
     #
-    # O rótulo do recorte sem lista passa a dizer o que ele é — o universo inteiro do Perfil —, e
-    # cada modalidade carrega o código que o Edital publica.
+    # **E são os da derivação única** (122, FR-3893). A lista daqui dava recorte próprio à
+    # Modalidade que o Perfil aponta como a ampla, e dela nascia uma relação, um sorteio e um ato
+    # que a ocupação não consome — o quarto "divulgar o resultado" da página do Edital. O que o
+    # sorteio já produziu nesse recorte não some: vai para `registros_excedentes`, que a tela
+    # mostra à parte, só para consulta (FR-3903).
     agora = at or timezone.now()
     listas = [(None, "Todos os inscritos do recorte de vaga (sem lista de concorrência)")] + [
-        (
-            str(modalidade.get("id")),
-            f"{modalidade.get('name') or ''} ({modalidade.get('code')})"
-            if modalidade.get("code")
-            else (modalidade.get("name") or ""),
-        )
-        for modalidade in perfil.get("competitionModalities") or []
+        (lista, _rotulo_da_modalidade(perfil, lista))
+        for lista, _ in recortes_do_perfil(versao.content, perfil_id=perfil_id)
+        if lista is not None
     ]
     recortes = [
         _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas, metodo)
@@ -101,6 +99,13 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
             versao.content, agora, consequencia=CONGELAR_A_RELACAO
         ),
         "recortes": recortes,
+        # **O acervo do recorte excedente, para consulta** (122, FR-3902, FR-3903): o que o sorteio
+        # produziu quando dava lista própria à Modalidade apontada, ou o que uma Retificação tirou
+        # da operação. Nenhum gesto o alcança.
+        "registros_excedentes": registros_excedentes(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, at=at
+        ),
+        "modalidade_apontada": _nome_da_apontada(perfil),
         # **O congelamento que condena o sorteio, dito antes do ato** (102, FR-2659). Congelar é
         # append-only, e quem congelava no dia da extração só descobria na recusa do sorteio, sem
         # caminho de volta. O botão continua (D-005): a relação pode ter data no cronograma.
@@ -410,3 +415,99 @@ def _perfil_e_marco(conteudo, perfil_id, marco_id):
 
 
 __all__ = ["recortes_do_marco"]
+
+
+def _rotulo_da_modalidade(perfil, lista_id):
+    for modalidade in perfil.get("competitionModalities") or []:
+        if str(modalidade.get("id")) == str(lista_id):
+            nome = modalidade.get("name") or ""
+            return f"{nome} ({modalidade.get('code')})" if modalidade.get("code") else nome
+    return ""
+
+
+def _nome_da_apontada(perfil):
+    """O nome da Modalidade apontada como a ampla, para a frase da tela (FR-3895); "" sem ela."""
+    apontada = perfil.get("generalCompetitionModalityId")
+    return _rotulo_da_modalidade(perfil, apontada) if apontada else ""
+
+
+def registros_excedentes(*, edital, perfil_id, marco_id, at=None):
+    """O acervo do recorte excedente daquele marco, com a frase da origem de cada um (122, FR-3903).
+
+    **Uma consulta por espécie**, e as versões do Edital uma vez só: são as quatro espécies que o
+    sorteio produzia no recorte — relação, sorteio, ato e publicação —, e cada uma é rara. O
+    recorte excedente é o que a versão **vigente** aponta (FR-3911); a frase de cada registro sai da
+    versão que **ele** cita, e por isso distingue o nascido excedente do que uma Retificação tornou
+    excedente.
+
+    Nenhuma linha leva a gesto: o endereço de cada uma é o de consulta — a página pública da
+    relação, a verificação do sorteio, a tela do ato e a página pública do resultado.
+    """
+    from django.urls import reverse
+
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao
+    from processo_seletivo.divulgacao.models import PublicacaoResultado
+    from processo_seletivo.publicacoes.application.papel_do_recorte import (
+        frase_do_registro,
+        versoes_do_edital,
+    )
+    from processo_seletivo.sorteios.models import RelacaoDeHabilitados, Sorteio
+
+    versoes = versoes_do_edital(edital, at=at)
+    if not versoes:
+        return []
+    perfil = next(
+        (p for p in versoes[-1][1].get("profiles") or [] if str(p.get("id")) == str(perfil_id)),
+        {},
+    )
+    apontada = perfil.get("generalCompetitionModalityId")
+    if not apontada:
+        return []
+    filtro = {"edital": edital, "perfil_id": perfil_id, "marco_id": marco_id, "lista_id": apontada}
+    especies = (
+        (
+            "Relação de habilitados",
+            RelacaoDeHabilitados.objects.filter(**filtro),
+            lambda r: r.versao_id,
+            lambda r: r.publicada_em,
+            lambda r: reverse("portal:relacao-de-habilitados", args=[r.id]),
+        ),
+        (
+            "Sorteio",
+            Sorteio.objects.filter(**filtro).select_related("relacao"),
+            lambda r: r.relacao.versao_id,
+            lambda r: r.executado_em,
+            lambda r: reverse("portal:verificar-sorteio", args=[r.id]),
+        ),
+        (
+            "Ato de classificação",
+            AtoDeOrdenacao.objects.filter(**filtro),
+            lambda r: r.versao_id,
+            lambda r: r.emitido_em,
+            lambda r: reverse("interface:ato-de-ordenacao", args=[edital.id, marco_id, r.id]),
+        ),
+        (
+            "Resultado divulgado",
+            PublicacaoResultado.objects.filter(**filtro).select_related("ato"),
+            lambda r: r.ato.versao_id,
+            lambda r: r.publicado_em,
+            lambda r: reverse("portal:resultado", args=[r.id]),
+        ),
+    )
+    registros = []
+    for especie, consulta, versao_de, quando, url in especies:
+        for registro in consulta:
+            registros.append(
+                {
+                    "especie": especie,
+                    "quando": quando(registro),
+                    "url": url(registro),
+                    "frase": frase_do_registro(
+                        versoes,
+                        perfil_id=perfil_id,
+                        lista_id=apontada,
+                        versao_id=versao_de(registro),
+                    ),
+                }
+            )
+    return sorted(registros, key=lambda r: r["quando"])

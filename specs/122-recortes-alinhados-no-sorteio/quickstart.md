@@ -2,8 +2,8 @@
 
 ## Passo 0 — Levantamento do acervo na instalação (antes de implementar)
 
-**Só de leitura**, exigido pela 13ª decisão do usuário. **Não feito em 05/11/2026**: esta sessão não
-alcança o banco da instalação. Roda quem tem acesso à VM, no `manage.py shell` do serviço, com as
+**Só de leitura.** Era exigido pela 13ª decisão do usuário; **o usuário o dispensou em 05/11/2026**
+(*"esquece a VM"*), e a implementação seguiu sem ele. O roteiro fica para quem quiser medir depois. Roda quem tem acesso à VM, no `manage.py shell` do serviço, com as
 variáveis de ambiente do serviço carregadas.
 
 O roteiro abre uma transação, a declara só de leitura antes de qualquer consulta e a desfaz no fim.

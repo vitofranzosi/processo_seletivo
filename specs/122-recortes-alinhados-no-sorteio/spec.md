@@ -143,6 +143,8 @@ Decisões do usuário nesta sessão. Não se reabrem.
 - **13ª — O que o portal diz de publicação excedente não entra por si.** Se o levantamento da
   instalação encontrar publicação excedente, os números vão ao usuário, que decide; o escopo não se
   amplia automaticamente.
+- **14ª — O levantamento na instalação foi dispensado** (*"esquece a VM"*). A implementação segue sem
+  ele; o portal continua fora (FR-3915), e o roteiro fica no quickstart.
 - **Ressalva aceita ao diagnóstico:** posições diferentes da mesma pessoa na ampla e na lista
   excedente não provam, sozinhas, classificações contraditórias, porque os universos são diferentes.
   O defeito comprovado é oferecer como resultado operacional uma lista que a ocupação não consome.
@@ -467,7 +469,7 @@ sexta superfície que monta linhas por lista a partir dos atos e das publicaçõ
 ## Assumptions
 
 - **A instalação do Cefor tem acervo excedente.** O Edital 35/2026 tem ao menos um ato no recorte
-  excedente. O plano MUST medir, antes de implementar, quantas relações, sorteios, atos e publicações
+  excedente. *A medição abaixo foi dispensada pelo usuário em 05/11/2026 (14ª decisão).* O plano MUST medir, antes de implementar, quantas relações, sorteios, atos e publicações
   excedentes existem lá, com uma consulta só de leitura, e dizer se algum foi divulgado.
 - **O Publicador puro abre a condução do marco** desde a `049` (FR-830 da `049`), porque abre a prévia
   de divulgação, que é tela de recorte do marco. O plano confere isso com o papel exato antes de

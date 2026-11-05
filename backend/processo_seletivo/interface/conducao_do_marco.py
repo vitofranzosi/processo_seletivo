@@ -308,6 +308,15 @@ def _celula_da_apuracao(edital, conteudo, perfil_id, marco_id, lista_id, pode_cl
 
 def _celula_da_publicacao(edital, marco_id, lista_id, ato, historico, pode_publicar):
     url = reverse("interface:publicacoes-do-marco", args=[edital.id, marco_id])
+    # **O que falta divulgar leva à prévia daquele ato** (122, FR-3908). A célula levava a
+    # "Resultados divulgados", que lista o que já saiu, e a prévia de cada recorte só se alcançava
+    # pelo link por ato da página do Edital — que a `122` trocou por um caminho só, para cá. Sem
+    # isto, o Publicador puro chegaria ao quadro e não teria por onde seguir.
+    previa = (
+        reverse("interface:previa-de-publicacao", args=[edital.id, marco_id, ato.id])
+        if ato is not None
+        else ""
+    )
     if ato is None:
         # **Sem ordem não há o que publicar, e isso conta como falta** (`data-model.md`): o
         # recorte ainda não chegou à divulgação, e dizer "não se aplica" o tiraria da conta.
@@ -321,10 +330,10 @@ def _celula_da_publicacao(edital, marco_id, lista_id, ato, historico, pode_publi
         return {
             "estado": OBSOLETO,
             "nota": "o público lê um ato anterior",
-            "url": url if pode_publicar else "",
+            "url": previa if pode_publicar else "",
         }
     if estado["nunca_divulgado"]:
-        return {"estado": FALTA, "nota": "", "url": url if pode_publicar else ""}
+        return {"estado": FALTA, "nota": "", "url": previa if pode_publicar else ""}
     natureza = next(
         (
             linha["publicacao"].get_natureza_display()

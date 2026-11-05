@@ -66,7 +66,6 @@ from processo_seletivo.classificacao.application.emissao_do_corte import (
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
     ato_vigente,
-    atos_vigentes_por_marco,
     estado_do_marco,
     nomear_criterios,
     nomes_do_ato,
@@ -137,6 +136,7 @@ from processo_seletivo.editais.domain.calendario import vencido
 from processo_seletivo.editais.domain.duplicacao import duplicar_perfil
 from processo_seletivo.editais.domain.perfis import listas_reservadas
 from processo_seletivo.editais.domain.reaproveitamento import ReferenciaNaoMapeada
+from processo_seletivo.editais.domain.recortes import FRASE_DA_MODALIDADE_APONTADA
 from processo_seletivo.editais.domain.teto import CAMPO as CAMPO_DO_TETO
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
@@ -196,6 +196,7 @@ from processo_seletivo.publicacoes.application.contexto_do_ato import (
     fechos_previstos,
     unidade_para_o_compositor,
 )
+from processo_seletivo.publicacoes.application.papel_do_recorte import frase_do_ato
 from processo_seletivo.publicacoes.application.publish_edital import edital_snapshot
 from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
@@ -4004,7 +4005,7 @@ def _conferencia_do_ato(agregado, operacao):
     return itens
 
 
-def _destinos_do_marco(edital, marco, *, pode_classificar, atos_vigentes):
+def _destinos_do_marco(edital, marco, *, pode_classificar, pode_divulgar, tem_ordem):
     """Para onde este marco leva **aquele** ator, e nada além.
 
     Um destino entra se, e só se, quem está olhando o alcança — que é o princípio que esta tela já
@@ -4064,16 +4065,19 @@ def _destinos_do_marco(edital, marco, *, pode_classificar, atos_vigentes):
                 "url": reverse("interface:convocacao", args=[edital.id, marco_id]),
             }
         )
-    # **A divulgação de cada ato emitido** — o destino que a tela não oferecia a ninguém. Ela
-    # depende do ato **existir**: marco sem ato não tem o que divulgar, e oferecer um caminho que
-    # termina em nada é o mesmo defeito que este bloco existe para evitar, com outra roupa.
-    for ato in atos_vigentes:
+    # **A divulgação, um caminho por marco** (122, FR-3906, D-001). Era um link por ato emitido,
+    # todos com o mesmo rótulo e na ordem de emissão — quatro "divulgar o resultado" iguais num
+    # marco com três recortes e um ato do recorte excedente. O caminho leva agora ao quadro de
+    # recortes da condução, onde cada um aparece pelo nome, com o estado e a prévia (FR-3908).
+    #
+    # Ele continua dependendo de haver ordem: marco sem ato não tem o que divulgar, e oferecer um
+    # caminho que termina em nada é o mesmo defeito que este bloco existe para evitar (FR-476 da
+    # `033`). A ordem contada é a dos recortes operacionais, lida do resumo que a tela já faz.
+    if pode_divulgar and tem_ordem:
         destinos.append(
             {
                 "rotulo": "divulgar o resultado",
-                "url": reverse(
-                    "interface:previa-de-publicacao", args=[edital.id, marco_id, ato.id]
-                ),
+                "url": reverse("interface:marco", args=[edital.id, marco_id]) + "#divulgacao",
             }
         )
     return destinos
@@ -4112,16 +4116,6 @@ def _marcos_publicados(edital, ator=None):
 
     pode_classificar = ator is None or _pode_ver_a_classificacao(ator, edital)
     pode_divulgar = ator is not None and ator.can("resultado:publicar")
-    atos_por_marco = {}
-    if pode_divulgar:
-        atos_por_marco = atos_vigentes_por_marco(
-            edital=edital,
-            marcos_ids=[
-                str(marco.get("id"))
-                for perfil in perfis_com_marcos
-                for marco in perfil["classificationMilestones"]
-            ],
-        )
 
     # **O resumo por marco é presença, e numa leitura só** (049, `UX-090`, `R-6`): quatro consultas
     # para o Edital inteiro, e não uma por recorte. O que envelheceu aparece inteiro na tela do
@@ -4134,7 +4128,8 @@ def _marcos_publicados(edital, ator=None):
                 edital,
                 marco,
                 pode_classificar=pode_classificar,
-                atos_vigentes=atos_por_marco.get(str(marco.get("id")), ()),
+                pode_divulgar=pode_divulgar,
+                tem_ordem=bool((resumo.get(str(marco.get("id"))) or {}).get("ordem")),
             )
             if not destinos:
                 continue
@@ -9381,6 +9376,8 @@ def ato_de_ordenacao(request, edital_id, marco_id, ato_id):
                 # Quem abre um ato histórico precisa ler, antes dos valores, que eles já foram
                 # sucedidos — sem isso dá para citar um ato superado sem perceber (E2E15-010).
                 "sucessor": sucessor_de(ato),
+                # O ato do recorte excedente diz de onde veio e por que não opera (122, FR-3904).
+                "frase_do_excedente": frase_do_ato(ato),
                 # O critério de desempate é nomeado pela versão que o ato cita, como tudo o mais
                 # nesta tela: o snapshot guarda o enum, e a FR-050 pede a frase (E2E15-006).
                 "linhas": nomear_criterios(list(pagina), ato),
@@ -9509,6 +9506,8 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 "posicoes": projecao["posicoes"],
                 "consideradas": len(projecao["situacoes"]),
                 "publicabilidade": publicabilidade,
+                # O ato do recorte excedente, com a frase da origem (122, FR-3904); "" nos demais.
+                "frase_do_excedente": frase_do_ato(ato),
                 # Quem alcança a tela da classificação. A porta dela é outra — presidência ou
                 # auditoria —, e quem só publica recebe 404 lá. Oferecer o caminho a essa pessoa
                 # é oferecer um beco, e foi o que a auditoria da 017 encontrou (E2E17-002).
@@ -9598,6 +9597,22 @@ def _pode_ver_avisos(ator, edital):
     return pode_consultar(ator, edital.processo)
 
 
+def _com_a_marca_do_excedente(edital, historico):
+    """Cada publicação do recorte excedente marcada, com a frase da origem (122, FR-3904).
+
+    Ela continua na lista, e como foi feita: a marca só diz que a operação de hoje não a usa. As
+    versões do Edital se leem uma vez para a lista inteira.
+    """
+    from processo_seletivo.publicacoes.application.papel_do_recorte import versoes_do_edital
+
+    if not historico:
+        return historico
+    versoes = versoes_do_edital(edital)
+    for linha in historico:
+        linha["fora_da_operacao"] = frase_do_ato(linha["ato"], versoes)
+    return historico
+
+
 @require_http_methods(["GET"])
 def publicacoes_do_marco(request, edital_id, marco_id):
     """O que foi divulgado, quando, por quem — e o que vale hoje (FR-068).
@@ -9616,7 +9631,9 @@ def publicacoes_do_marco(request, edital_id, marco_id):
                 "processo": edital.processo,
                 "edital": edital,
                 "marco_id": marco_id,
-                "historico": historico_das_publicacoes(edital=edital, marco_id=marco_id),
+                "historico": _com_a_marca_do_excedente(
+                    edital, historico_das_publicacoes(edital=edital, marco_id=marco_id)
+                ),
                 # Os dois caminhos para as telas da 015 — o **ato de origem** e a **classificação
                 # do marco** — condicionados à autorização de quem lê: elas têm porta própria, e
                 # oferecê-las a quem receberia 404 seria oferecer um beco (FR-022).
@@ -10984,6 +11001,15 @@ def sorteio(request, edital_id, marco_id):
                 # uma visita por lista — e num certame com cotas é justamente onde o esforço se
                 # multiplica.
                 "recortes": _com_o_corte(edital, estado["marco"], estado["recortes"]),
+                # **O que mudou na `122`**, dito na tela: a Modalidade apontada como a ampla não tem
+                # sorteio (FR-3895), e o que o sorteio fez nela antes fica à parte (FR-3903).
+                "modalidade_apontada": estado["modalidade_apontada"],
+                "frase_da_modalidade_apontada": (
+                    FRASE_DA_MODALIDADE_APONTADA.format(nome=estado["modalidade_apontada"])
+                    if estado["modalidade_apontada"]
+                    else ""
+                ),
+                "registros_excedentes": estado["registros_excedentes"],
                 "pode_emitir": pode_emitir,
                 # **Quem lê e não conduz o sorteio sabe a quem pedir** (045, `FR-740`). A tela
                 # escondia todo formulário de quem não emite, e a auditoria que chegava pelo

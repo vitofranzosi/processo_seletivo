@@ -224,6 +224,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
 
 <section aria-labelledby="titulo-recortes">
   <h2 id="titulo-recortes">Recortes deste marco</h2>
+  {% if frase_da_modalidade_apontada %}<p class="ajuda">{{ frase_da_modalidade_apontada }}</p>{% endif %}
   {% comment %}
   **Uma vez, e não por recorte**: o período é do Edital, e vale para as três listas. É a frase da
   recusa, lida da mesma função — duas redações do mesmo impedimento divergem no dia em que uma
@@ -490,4 +491,20 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   </article>
   {% endfor %}
 </section>
+{% if registros_excedentes %}
+{% comment %}
+**O acervo do recorte excedente, à parte e só para consulta** (122, FR-3902, FR-3903). É o que o
+sorteio fazia na Modalidade apontada como a ampla, ou o que uma Retificação tirou da operação. Fica
+depois dos recortes, sem botão nenhum: preservado como foi feito, e sem competir com o trabalho de
+hoje. A frase de cada registro sai da versão que ele cita.
+{% endcomment %}
+<section aria-labelledby="titulo-historico-excedente">
+  <h2 id="titulo-historico-excedente">Registros fora da operação atual</h2>
+  <ul>
+  {% for registro in registros_excedentes %}
+    <li><a href="{{ registro.url }}">{{ registro.especie }}</a>, {{ registro.quando|date:"d/m/Y H:i" }}. {{ registro.frase }}</li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% endblock %}

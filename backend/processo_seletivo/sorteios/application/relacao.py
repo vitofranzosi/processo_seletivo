@@ -19,6 +19,7 @@ from processo_seletivo.avaliacoes.domain.conjunto import (
 )
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.editais.domain.recortes import exigir_recorte_operacional
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -71,6 +72,10 @@ def publicar_relacao(
             return ctx.desfecho_anterior
         edital = _edital_do_processo(ctx.processo, edital_id)
         versao = effective_version(edital_id=edital.id, at=ctx.now)
+        # **A Modalidade apontada como a ampla não tem relação própria** (122, FR-3897). A recusa é
+        # sob a trava e sobre a versão relida, antes de qualquer outra: a relação da ampla já a
+        # inclui, e congelar a dela produziria a lista que a ocupação não consome.
+        exigir_recorte_operacional(versao.content, perfil_id=perfil_id, lista_id=lista_id)
         # **O método antes de qualquer coisa.** Recusar aqui é o que impede congelar sob método
         # indefinido, e a recusa nomeia o Edital como o lugar da correção (FR-066).
         metodo, metodo_hash = dominio_do_metodo.exigir_metodo(
