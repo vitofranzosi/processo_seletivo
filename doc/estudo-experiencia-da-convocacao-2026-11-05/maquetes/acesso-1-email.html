@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entre para ver a sua convocação — Cefor/Ifes</title>
+<!-- A folha real do portal, do próprio repositório, e só as classes novas por cima. -->
+<link rel="stylesheet" href="../../../backend/processo_seletivo/shared/static/shared/tokens.css">
+<link rel="stylesheet" href="../../../backend/processo_seletivo/portal/static/portal/portal.css">
+<link rel="stylesheet" href="maquetes.css">
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <span class="marca"><a href="#">Cefor/Ifes · <span class="nome-por-extenso">Gestão de Processos Seletivos</span><span class="sigla" aria-hidden="true">GPS</span></a></span>
+  <nav class="acessos" aria-label="Acessos"></nav>
+</header>
+<main id="conteudo" tabindex="-1">
+<h1>Entre para ver a sua convocação</h1>
+<p class="destino-do-acesso">Depois do código, você vai direto para a convocação.</p>
+<p class="sub">Sem senha: enviamos um código para o seu e-mail. Use o mesmo e-mail que recebeu a convocação.</p>
+<form method="post" action="#" novalidate>
+  <div class="campo">
+    <label for="email">Seu e-mail</label>
+    <input type="email" id="email" name="email" value="" autocomplete="email" inputmode="email" required>
+  </div>
+  <button type="submit" class="principal">Receber código</button>
+</form>
+<p class="nota-da-maquete"><strong>Maquete — alternativa A.</strong> A frase não diz de quem é a convocação nem de qual Edital: antes do código, o sistema não lê o identificador do endereço, e a tela é a mesma para um identificador que existe e para um que não existe (010, FR-020 e FR-021). É a diferença para a tela da vaga da 072, que é pública.</p>
+</main>
+</body>
+</html>

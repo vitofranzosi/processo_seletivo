@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sua convocação (com pendência) — Edital 72/2026 — Cefor/Ifes</title>
+<!-- A folha real do portal, do próprio repositório, e só as classes novas por cima. -->
+<link rel="stylesheet" href="../../../backend/processo_seletivo/shared/static/shared/tokens.css">
+<link rel="stylesheet" href="../../../backend/processo_seletivo/portal/static/portal/portal.css">
+<link rel="stylesheet" href="maquetes.css">
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <span class="marca"><a href="#">Cefor/Ifes · <span class="nome-por-extenso">Gestão de Processos Seletivos</span><span class="sigla" aria-hidden="true">GPS</span></a></span>
+  <nav class="acessos" aria-label="Acessos">
+    <span class="quem-esta">
+      <a class="no-topo" href="#">Minhas inscrições</a>
+      <span class="nome">Candidata 601</span>
+      <form method="post" action="#"><button type="submit" class="sair">Sair</button></form>
+    </span>
+  </nav>
+</header>
+<main id="conteudo" tabindex="-1">
+
+<!-- Bloco 1: o significado. -->
+<section class="significado-da-convocacao" aria-labelledby="titulo">
+  <p class="contexto">Processo Seletivo 2026/1 — Curso Técnico em Informática · Edital 72/2026</p>
+  <h1 id="titulo">Você foi convocado!</h1>
+  <p class="explicacao">Esta é a etapa de enviar seus documentos e o Requerimento de Matrícula para a comissão conferir. Ela ainda não é a matrícula.</p>
+</section>
+
+<!-- Bloco 2: o prazo. -->
+<section class="prazo-em-destaque" id="prazo" aria-labelledby="titulo-prazo">
+  <h2 id="titulo-prazo">Prazo para atender</h2>
+  <p class="data-do-prazo">até segunda-feira, 10/11/2026, às 10h23</p>
+  <p class="faltam">Faltam 2 dias.</p>
+  <p class="consequencia">Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação.</p>
+</section>
+
+<!-- Bloco 3: o progresso, com a pendência à frente. -->
+<section class="progresso-das-obrigacoes" aria-labelledby="titulo-progresso">
+  <h2 id="titulo-progresso">O que você precisa fazer</h2>
+  <p class="proximo-passo">A comissão pediu a correção de 1 documento, e falta enviar 1.</p>
+  <ul class="contagem-das-obrigacoes">
+    <li class="a-fazer"><span class="numero">2</span><span class="rotulo">a corrigir ou enviar</span></li>
+    <li><span class="numero">0</span><span class="rotulo">aguardando conferência</span></li>
+    <li class="conferido"><span class="numero">2</span><span class="rotulo">conferidos</span></li>
+  </ul>
+  <p><a class="principal" href="#item-historico">Ver e corrigir os documentos pendentes</a></p>
+</section>
+
+<!-- Bloco 4: os formulários, logo abaixo do resumo. -->
+<section class="bloco-dos-formularios" id="o-que-falta" aria-labelledby="titulo-falta">
+  <h2 id="titulo-falta">Corrija e envie até 10/11/2026, às 10h23</h2>
+  <ul class="requisitos-lista">
+    
+    <li class="requisito cartao-do-documento destaque" id="item-historico" tabindex="-1">
+      <h3>Histórico escolar do ensino médio</h3>
+      <p class="selos"><span class="selo selo-correcao">Precisa de correção</span></p>
+      <p class="instrucao">Todas as páginas, em arquivo único.</p>
+      <p class="situacao-do-documento" id="situacao-historico">Precisa de correção: Falta a página 2. Envie um novo arquivo até 10/11/2026, às 10h23.</p>
+      <p class="arquivo"><a href="#">Ver o arquivo recebido<span class="oculto">: Histórico escolar do ensino médio</span></a></p>
+      <div class="envio"><form method="post" action="#">
+        <div class="escolher">
+          <input type="file" id="arquivo-historico" name="arquivo" accept="application/pdf" aria-describedby="situacao-historico ajuda-historico">
+          <label class="botao-arquivo" for="arquivo-historico">Escolher o novo arquivo PDF<span class="oculto"> para Histórico escolar do ensino médio</span></label>
+          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>
+          <button type="submit" class="acao">Enviar<span class="oculto">: Histórico escolar do ensino médio</span></button>
+        </div>
+        <span class="ajuda limite" id="ajuda-historico">Somente PDF, até 10 MB.</span>
+      </form></div>
+    </li>
+    
+    <li class="requisito cartao-do-documento" id="item-residencia" tabindex="-1">
+      <h3>Comprovante de residência</h3>
+      <p class="situacao-do-documento" id="situacao-residencia">Falta enviar.</p>
+      <div class="envio"><form method="post" action="#">
+        <div class="escolher">
+          <input type="file" id="arquivo-residencia" name="arquivo" accept="application/pdf" aria-describedby="situacao-residencia ajuda-residencia">
+          <label class="botao-arquivo" for="arquivo-residencia">Escolher arquivo PDF<span class="oculto"> para Comprovante de residência</span></label>
+          <span class="nome-do-arquivo">Nenhum arquivo escolhido</span>
+          <button type="submit" class="acao">Enviar<span class="oculto">: Comprovante de residência</span></button>
+        </div>
+        <span class="ajuda limite" id="ajuda-residencia">Somente PDF, até 10 MB.</span>
+      </form></div>
+    </li>
+    
+  </ul>
+</section>
+
+<section class="bloco-dos-formularios" id="o-que-voce-ja-enviou" aria-labelledby="titulo-enviado">
+  <h2 id="titulo-enviado">O que você já enviou</h2>
+  <ul class="requisitos-lista">
+    <li class="requisito cartao-do-documento" id="item-certidao" tabindex="-1">
+      <h3>Certidão de nascimento ou casamento</h3>
+      <p class="selos"><span class="selo selo-conferido">Conferido</span></p>
+      <p class="situacao-do-documento">Conferido: de acordo com o Edital.</p>
+      <p class="arquivo"><a href="#">Ver o arquivo recebido<span class="oculto">: Certidão de nascimento ou casamento</span></a></p>
+    </li><li class="requisito cartao-do-documento" id="item-certificado" tabindex="-1">
+      <h3>Certificado de conclusão do ensino médio</h3>
+      <p class="selos"><span class="selo selo-conferido">Conferido</span></p>
+      <p class="situacao-do-documento">Conferido: de acordo com o Edital.</p>
+      <p class="arquivo"><a href="#">Ver o arquivo recebido<span class="oculto">: Certificado de conclusão do ensino médio</span></a></p>
+    </li>
+  </ul>
+  <p class="requerimento-nas-obrigacoes"><span aria-hidden="true">✓</span> Requerimento de Matrícula enviado. <a href="#">Conferir o Requerimento de Matrícula enviado</a></p>
+</section>
+
+<p class="nota-da-maquete"><strong>Maquete.</strong> O motivo da pendência aparece só aqui, no portal (115, FR-3584). A política de aviso da seção 7 do estudo diria por e-mail apenas que "há documento da convocação que precisa de atenção".</p>
+
+<!-- Bloco 5: os dados do ato, em segundo plano. -->
+<section class="dados-do-ato" aria-labelledby="titulo-dados">
+  <h2 id="titulo-dados">Sobre esta convocação</h2>
+  <dl class="campos">
+    <dt>Chamada</dt><dd>1ª chamada, para vaga inicial</dd>
+    <dt>Comunicação</dt><dd>Mensagem enviada em 05/11/2026, às 10h23. O prazo conta a partir deste envio.</dd>
+    <dt>Fundamento</dt><dd>No interesse da Administração, item 8.2 do Edital 72/2026.</dd>
+    <dt>Dúvidas</dt><dd><a href="#">selecao@exemplo.test</a></dd>
+  </dl>
+  <p><a href="#">Voltar ao acompanhamento</a></p>
+</section>
+
+</main>
+</body>
+</html>
