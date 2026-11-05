@@ -2142,7 +2142,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>A frase de “a quem pedir”</dt><dd><code>interface/conducao.py</code></dd>
       <dt>A página do Processo</dt><dd><code>interface/views.py</code> (<code>processo_detalhe</code>) · <code>processo_detalhe.html</code> · <code>_sinal.html</code> · <code>_serie_de_inscricoes.html</code></dd>
       <dt>Fase do Evento</dt><dd><code>editais/domain/fase_do_evento.py</code></dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 16 136 passando, 18 pulados e nenhuma falha (medido em 05/11 sobre a árvore que virou a <code>main</code> em <code>9a459a0e</code>, com o grupo opcional <code>assistente</code> e sem o <code>navegador</code>, 4 workers, em 729s). Os 18 são 10 pares do vocabulário, a recusa por vendor, o E2E contra a Caixa e os <strong>seis</strong> arquivos de jornada no navegador (107, 110, 115, 117, 118, 120), que pulam sem o grupo <code>navegador</code>; o CI instala os dois grupos. Em 04/11, sobre <code>a3e23b1f</code>, eram 15 878 e 17; a medição de 02/11 dava 14 638 e 14</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 16 413 passando, 18 pulados e nenhuma falha (medido em 05/11 sobre a árvore que virou a <code>main</code> em <code>21b728af</code>, com o grupo opcional <code>assistente</code> e sem o <code>navegador</code>, 4 workers, em 701s; mais cedo, sobre <code>9a459a0e</code>, eram 16 136). Os 18 são 10 pares do vocabulário, a recusa por vendor, o E2E contra a Caixa e os <strong>seis</strong> arquivos de jornada no navegador (107, 110, 115, 117, 118, 120), que pulam sem o grupo <code>navegador</code>; o CI instala os dois grupos. Em 04/11, sobre <code>a3e23b1f</code>, eram 15 878 e 17; a medição de 02/11 dava 14 638 e 14</dd>
     </dl></div></details>
   </section>
 
@@ -4244,8 +4244,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <p class="lead">
       A 119 generaliza a peça única da 111 para os templates que a comunicação usa: <strong>famílias</strong>
       (a identidade visual de um tipo de oferta) em <strong>formatos</strong> (onde a peça vai circular).
-      Especificou sete famílias; o código tem hoje a Institucional e quatro da comunicação: a Pós Lato
-      Sensu, a FIC, a UAB/bolsista e a Aperfeiçoamento.
+      Especificou sete famílias; desde 05/11 o código tem todas, além da Institucional: Pós Lato Sensu, FIC,
+      Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD.
     </p>
     <table>
       <thead><tr><th>Formato</th><th>Tamanho</th><th>Observação</th></tr></thead>
@@ -4280,12 +4280,21 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td><code>fic/post</code></td><td>1</td><td><code>48c8b8c71eb3</code></td></tr>
         <tr><td><code>fic/story</code></td><td>1</td><td><code>795eb249d0c1</code></td></tr>
         <tr><td><code>fic/banner</code></td><td>1</td><td><code>dedce5f30536</code></td></tr>
+        <tr><td><code>libras/post</code></td><td>1</td><td><code>db26f4737c4b</code></td></tr>
+        <tr><td><code>libras/story</code></td><td>1</td><td><code>6d699167abba</code></td></tr>
+        <tr><td><code>libras/banner</code></td><td>1</td><td><code>a9ad7cba0bd6</code></td></tr>
         <tr><td><code>uab/post</code></td><td>1</td><td><code>34c0c7073af8</code></td></tr>
         <tr><td><code>uab/story</code></td><td>1</td><td><code>00f01d3909fd</code></td></tr>
         <tr><td><code>uab/banner</code></td><td>1</td><td><code>fca039587c97</code></td></tr>
         <tr><td><code>aperfeicoamento/post</code></td><td>1</td><td><code>973b8dd70eb1</code></td></tr>
         <tr><td><code>aperfeicoamento/story</code></td><td>1</td><td><code>089ea18ee6e7</code></td></tr>
         <tr><td><code>aperfeicoamento/banner</code></td><td>1</td><td><code>4f26004ae0ba</code></td></tr>
+        <tr><td><code>internos/post</code></td><td>1</td><td><code>9818523a0de0</code></td></tr>
+        <tr><td><code>internos/story</code></td><td>1</td><td><code>c9737cbea0fd</code></td></tr>
+        <tr><td><code>internos/banner</code></td><td>1</td><td><code>ecf22fd996e9</code></td></tr>
+        <tr><td><code>tmd/post</code></td><td>1</td><td><code>9a544f2f3d14</code></td></tr>
+        <tr><td><code>tmd/story</code></td><td>1</td><td><code>82ecc2986f98</code></td></tr>
+        <tr><td><code>tmd/banner</code></td><td>1</td><td><code>19a61ab2cb53</code></td></tr>
       </tbody>
     </table>
     <p>
@@ -4323,22 +4332,45 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       pedir nela é recusada, nomeando o caractere e a fonte.
     </p>
     <p>
-      O que os slides dizem e a peça não diz fica de fora nas duas: <em>“INSCRIÇÕES ABERTAS”</em>,
+      <strong>A Helvetica Neue dos slides é a Inter.</strong> Libras, Internos e TMD a pediam, e ela é
+      proprietária, não se embute no SVG exportado. O responsável pelo produto decidiu a P-2 em 05/11: a
+      Inter 4.1 (OFL, sem nome reservado), em leve, regular e negrito, cobre a grafia inteira do Edital, sem
+      lacuna declarada. A Unbounded ganhou o peso negrito, que herda a lacuna do «µ».
+    </p>
+    <p>
+      <strong>A Libras</strong> (desde 05/11) usa duas fotos recortadas em círculo sobre o amarelo, com o
+      ícone das mãos e os traços que ladeiam a chamada. O título vai em Inter negrita, e o número, o prazo e a
+      chamada vão em Unbounded. Tudo fica centrado, menos o título do post, que ocupa o canto livre à esquerda
+      do pé da foto. O painel não tem cor e não resume: quatro polos ou a prorrogação recusam o post.
+    </p>
+    <p>
+      <strong>A Internos</strong> (desde 05/11) tem <strong>duas variantes, e não dois templates</strong>:
+      <em>servidores</em> e <em>estudantes</em> diferem só na chamada fixa, no alto da coluna, porque o Edital
+      não diz o público em campo publicado (EC-19). O texto vai em branco, alinhado à esquerda, na faixa
+      diagonal de verde escuro entre as fotos em losango. O painel é o período, a busca e o selo, sem vagas,
+      como na UAB.
+    </p>
+    <p>
+      <strong>A TMD</strong> (desde 05/11) <strong>não tem banco de imagens</strong> (EC-20). A ilustração dos
+      slides é de banco, com licença não conferida, e a peça sai com um fundo fixo por formato, de formas
+      geométricas desenhadas pelo projeto (<code>scripts/desenhar_fundo_do_tmd.py</code>) nas cores e na
+      disposição do slide. O título vai em Archivo Black dourado, o prazo em Inter leve e a chamada na barra
+      roxa. Todo texto fica sobre o roxo liso: sobre o lilás da colina, o branco não passa o contraste AA.
+    </p>
+    <p>
+      Todas as famílias são do Cefor. O que os slides dizem e a peça não diz fica de fora em todas: <em>“INSCRIÇÕES ABERTAS”</em>,
       <em>“GRATUITA E 100% A DISTÂNCIA”</em>, <em>“modalidade a distância”</em>, o tipo de curso e datas sem ano.
-      As duas estão liberadas no desenvolvimento e na suíte, e em nenhum outro lugar.
+      As sete estão liberadas no desenvolvimento e na suíte, e em nenhum outro lugar.
     </p>
     <div class="aviso aviso-lacuna"><span class="titulo">O que ainda falta</span>
       <ul>
-        <li>As outras três famílias especificadas — Libras, Internos (com as variantes servidores e
-          estudantes) e TMD — não existem na <code>main</code>: aparecem só na lista que valida a variável, e
-          liberá-las não tem efeito. Libras, TMD e Internos esperam a escolha da fonte que substitui a
-          Helvetica Neue (P-2).</li>
         <li>A homologação no servidor está toda por fazer: tempo, PNG idêntico em duas gerações, as prévias e
           os downloads num navegador, e uma pessoa da comunicação obtendo post, story e banner em menos de três
           minutos. A prévia, o PNG, o SVG e o pacote de família nunca foram vistos num navegador, porque no
           servidor local não há peça.</li>
-        <li>A aprovação da Pós Lato Sensu foi por adoção do responsável pelo produto, não da comunicação sobre
-          a galeria, e a licença das imagens está registrada como não verificada.</li>
+        <li>A aprovação das famílias foi por adoção do responsável pelo produto (P-4), não da comunicação
+          sobre a galeria. A licença das imagens de banco está registrada como não verificada em todas (P-1),
+          e só a TMD escapa, porque não usa banco.</li>
         <li><strong>Achado desta revisão, visto no código e não reproduzido:</strong> todo download do kit
           recebe o nome <code>kit-&lt;n&gt;-&lt;ano&gt;.&lt;extensão&gt;</code>, sem o formato. Post, story e
           banner em PNG saem com o mesmo nome, e o navegador renomeia ou sobrescreve; só o pacote de família
@@ -10836,7 +10868,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#kit-de-divulgacao">Kit de divulgação: ficha e textos</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Da versão vigente, com origem de cada valor; avisa o material exportado que ficou antigo (111, A).</td></tr>
 <tr data-marca="parc"><td><a href="#kit-de-divulgacao">Kit de divulgação: a peça para o feed</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>PNG e SVG com a marca oficial; desligada em produção até a comunicação aprovar (111, B).</td></tr>
 <tr data-marca="impl"><td><a href="#kit-pacote">Kit de divulgação: o pacote (.zip)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Textos, peça, ficha e manifesto num arquivo; sai só com os textos quando não há peça (111, C).</td></tr>
-<tr data-marca="parc"><td><a href="#kit-familias-e-formatos">Kit de divulgação: peças por família e formato</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Pós Lato Sensu, FIC, UAB e Aperfeiçoamento em post, story e banner, liberadas por template; nada liberado em produção; 4 das 7 famílias (119).</td></tr>
+<tr data-marca="parc"><td><a href="#kit-familias-e-formatos">Kit de divulgação: peças por família e formato</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>As sete famílias da comunicação em post, story e banner, liberadas por template; nada liberado em produção (119).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Convocação</td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Convocar os titulares num ato</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#convocacao">Chamar suplente, regularizar, precedência justificada</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
@@ -11874,8 +11906,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#kit-de-divulgacao">Kit de divulgação</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Ficha da versão vigente, textos prontos, a peça do feed em PNG e SVG com a marca oficial, exportação na trilha e aviso do material antigo (111, A e B); o pacote .zip (111, C); famílias e formatos, com a Pós Lato Sensu, a FIC, a UAB e a Aperfeiçoamento em post, story e banner (119, incrementos 1, 2, 3a, 3c e 3d)</td>
-            <td>A peça desligada em produção até a comunicação aprovar (SC-1054); nenhum template da 119 liberado em produção; as outras três famílias (Libras, Internos, TMD); a homologação no servidor; o papel Comunicação não se atribui antes da 112</td>
+            <td>Ficha da versão vigente, textos prontos, a peça do feed em PNG e SVG com a marca oficial, exportação na trilha e aviso do material antigo (111, A e B); o pacote .zip (111, C); famílias e formatos, com as sete famílias da comunicação em post, story e banner (119, incrementos 1, 2 e 3a a 3f)</td>
+            <td>A peça desligada em produção até a comunicação aprovar (SC-1054); nenhum template da 119 liberado em produção; a homologação no servidor; o papel Comunicação não se atribui antes da 112</td>
           </tr>
           <tr>
             <td><strong>Autenticação institucional</strong></td>
@@ -12796,7 +12828,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>30/10/2026</td><td><code>main</code> em <code>62824816</code>, specs 098–104</td><td>As sete specs mergeadas entre 21 e 30/10 descritas como entregues: a <a href="#previa-do-sorteio">prévia do sorteio</a>, com semente fictícia (098); o <a href="#relatorio-do-edital">relatório do Edital</a> (099) e o <a href="#relatorio-consolidado">consolidado da unidade</a> (100); a <a href="#agenda">Agenda dos Editais</a> (101); a <a href="#sorteio-viavel">extração inviável</a>, impedida na publicação (102, com o PR 335); a <a href="#retificacao-em-curso">Retificação em curso</a> pela navegação comum (103); e as <a href="#acoes-disponiveis">Ações disponíveis para você</a> (104). Registro no mesmo arquivo.</td></tr>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
-          <tr><td>05/11/2026</td><td><code>main</code> em <code>7a4f7aec</code>, spec 120 e os incrementos 3a, 3c e 3d da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as famílias <a href="#kit-familias-e-formatos">FIC, UAB/bolsista e Aperfeiçoamento</a> do kit. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>05/11/2026</td><td><code>main</code> em <code>21b728af</code>, spec 120 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -12853,8 +12885,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>0edc0f8d</code>), as 069 a 072 em 15/10/2026 (<code>db428b30</code>) as 073 a 092 em 19/10/2026
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
-  (<code>a3e23b1f</code>) e a 120, com as famílias FIC, UAB e Aperfeiçoamento da 119, em 05/11/2026
-  (<code>7a4f7aec</code>). Onde documentação e código
+  (<code>a3e23b1f</code>) e a 120, com as seis famílias que faltavam da 119, em 05/11/2026
+  (<code>21b728af</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>

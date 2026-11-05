@@ -152,11 +152,11 @@ Esta revisão descreve tudo isso contra a `main` em `a3e23b1f`.
 
 # Atualização de 05/11/2026 da Visão do Sistema
 
-Feita na hora do merge, a pedido de 04/11 ("quando for feito o PR, atualize a documentação do sistema"), sobre a `main` em `7a4f7aec`. Cobre o que entrou nesse dia: a spec 120 (PR #385) e os incrementos 3a, FIC (PR #387), 3d, Aperfeiçoamento (PR #389), e 3c, UAB/bolsista (PR #386), da 119.
+Feita na hora do merge, a pedido de 04/11 ("quando for feito o PR, atualize a documentação do sistema"), sobre a `main` em `21b728af`, em duas passadas. Cobre o que entrou nesse dia: a spec 120 (PR #385) e, da 119, os incrementos 3a FIC (#387), 3d Aperfeiçoamento (#389), 3c UAB/bolsista (#386) — documentados no #390 — e 3b Libras (#391), 3f TMD (#392) e 3e Internos (#393), documentados na segunda passada. O estudo da experiência da convocação (#394, `doc/estudo-experiencia-da-convocacao-2026-11-05/`) é só documento, e não muda a descrição do sistema.
 
 ## Como foi conferido
 
-- **Leitura direta**, sem leituras paralelas: a spec, a verificação e as decisões da 120; o parcial `_correcao_da_convocacao.html`, `convocar.py` e `fluxo.py` para os rótulos e para o lugar onde cada conferência mora; os módulos `kit_familias/fic.py`, `uab.py` e `aperfeicoamento.py`, as referências em `kit_referencias/` e as settings para as famílias.
+- **Leitura direta**, sem leituras paralelas: a spec, a verificação e as decisões da 120; o parcial `_correcao_da_convocacao.html`, `convocar.py` e `fluxo.py` para os rótulos e para o lugar onde cada conferência mora; os módulos das seis famílias em `kit_familias/`, as referências em `kit_referencias/` e as settings para as famílias.
 - **A suíte rodou contra PostgreSQL** sobre a árvore que virou a `main` (a integração local dos três PRs, idêntica a `9a459a0e`): 16 136 passando, 18 pulados e nenhuma falha (4 workers, 729 s, com o grupo `assistente` e sem o `navegador`). O 18º pulado é a jornada da 120 no navegador. A UAB entrou depois, sobre essa mesma `main`, com o CI verde no PR (a suíte inteira contra PostgreSQL).
 
 ## O que mudou na documentação
@@ -164,7 +164,7 @@ Feita na hora do merge, a pedido de 04/11 ("quando for feito o PR, atualize a do
 - **Convocação:** a lacuna *"corrigir uma convocação não tem tela"* deu lugar à subseção *Corrigir uma convocação em aberto, e dar mais prazo* (`#correcao-da-convocacao`), com a prévia no formulário, o motivo e o vencimento obrigatórios, a assinatura conferida sob a trava, a recusa que volta ao cartão, o impedimento pela apuração superada e o que fica fora por decisão. O aviso *Um prazo só por chamada* aponta para ela.
 - **Matriz de capacidades:** a linha *Corrigir convocação ou suceder desfecho* (não operacionalizado) virou duas. *Corrigir convocação em aberto* está implementado. *Suceder desfecho registrado* continua não operacionalizado.
 - **Pendências:** a linha da convocação ganhou a correção. Fica a sucessão do desfecho e a chamada sem vencimento.
-- **Kit:** a tabela de templates ganhou os nove da FIC, da UAB e da Aperfeiçoamento, e a seção ganhou um parágrafo por família. *O que ainda falta* passou a três famílias: Libras, Internos e TMD. A matriz diz 4 das 7, e as pendências foram atualizadas.
+- **Kit:** a tabela de templates ganhou os dezoito das seis famílias, e a seção ganhou um parágrafo por família e um sobre a Inter (P-2). *O que ainda falta* deixou de listar famílias, e a matriz e as pendências dizem as sete. A suíte da segunda passada, sobre a árvore de `21b728af`: 16 413 passando, 18 pulados, nenhuma falha (701 s).
 - **Testes, revisões e rodapé:** a linha da suíte foi atualizada, e a tabela de revisões, o *Onde esta documentação não alcança* e o rodapé ganharam a entrada de 05/11.
 
 ## O que não foi verificado, e o que ficou de fora
