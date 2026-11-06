@@ -1,0 +1,79 @@
+/* Estilo das maquetes do estudo de orientação da jornada (06/11/2026). Não é folha do produto.
+   Usa só os tokens de `shared/tokens.css`; o resto vem das folhas reais da gestão. */
+
+.selo-maquete{position:fixed;top:8px;right:12px;z-index:50;background:var(--amarelo-fundo);
+  color:var(--amarelo);border:1px solid var(--amarelo);font:700 .75rem/1.2 system-ui;
+  padding:.35rem .6rem;border-radius:4px;letter-spacing:.04em}
+.proposto{outline:3px dashed #b7791f;outline-offset:6px}
+
+.andamento .ajuda{margin:.25rem 0 .75rem}
+.andamento .linha-inscricoes{margin:0 0 .9rem;font-size:.9375rem}
+.andamento table{width:100%;border-collapse:collapse;font-size:.875rem}
+.andamento caption{text-align:left;caption-side:top;margin-bottom:.4rem}
+.andamento th,.andamento td{text-align:left;vertical-align:top;padding:.55rem .6rem;border-bottom:1px solid var(--borda)}
+.andamento thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--texto-fraco)}
+.andamento tbody th{font-weight:600;max-width:15rem}
+.andamento td .detalhe,.andamento th .detalhe{display:block;font-weight:400;color:var(--texto-fraco);font-size:.8125rem}
+.andamento h3{margin:1.1rem 0 .4rem}
+
+/* Os estados de apresentação: palavra + sinal, nunca só cor. */
+[data-m]{white-space:nowrap}
+[data-m="feito"]{color:var(--sucesso)}
+[data-m="falta"]{color:var(--amarelo);font-weight:700}
+[data-m="aguarda"]{color:var(--texto)}
+[data-m="na"]{color:var(--texto-fraco);white-space:normal;font-style:italic}
+[data-m="depois"]{color:var(--texto-fraco)}
+[data-m="obsoleto"]{color:var(--vermelho);font-weight:700}
+td[data-m] .detalhe{white-space:normal}
+
+.em-aberto{list-style:none;margin:0;padding:0}
+.em-aberto li{display:grid;grid-template-columns:11rem 1fr;gap:.75rem;padding:.5rem 0;
+  border-bottom:1px solid var(--borda);font-size:.9375rem}
+.em-aberto li:last-child{border-bottom:0}
+.em-aberto .quem{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  color:var(--texto-fraco);padding-top:.15rem}
+.em-aberto .quem.voce{color:var(--verde-texto)}
+
+.proximo{background:var(--verde-claro);border-left:4px solid var(--verde);padding:.8rem 1rem;margin:0 0 1rem}
+.proximo p{margin:.15rem 0}
+.proximo .botao{margin-top:.5rem}
+.sucessao-recolhida{margin:1rem 0;border:1px solid var(--borda);background:var(--branco);padding:.6rem 1rem}
+.sucessao-recolhida summary{cursor:pointer;font-weight:600}
+
+/* v2 (revisão de 06/11): o nível 1 dentro de "O que fazer agora", o nível 2 recolhido por Perfil. */
+.providencias{margin:0 0 1rem}
+.providencias .contagem{margin:0 0 .5rem;font-size:.9375rem}
+.lista-providencias{list-style:none;margin:0;padding:0;border-top:1px solid var(--borda)}
+.lista-providencias li{display:grid;grid-template-columns:7.5rem 1fr;gap:.6rem;padding:.55rem 0;border-bottom:1px solid var(--borda);font-size:.9375rem;line-height:1.4}
+.lista-providencias .quem{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--texto-fraco);padding-top:.2rem}
+.lista-providencias li.sua .quem{color:var(--verde-texto)}
+.lista-providencias li.sua{background:var(--verde-claro);margin:0 -.5rem;padding-left:.5rem;padding-right:.5rem}
+.lista-providencias .onde{display:block;font-size:.8125rem;color:var(--texto-fraco)}
+.lista-providencias li.aguarda .quem{color:var(--amarelo)}
+.publicado-curto{font-size:.8125rem;color:var(--texto-fraco);margin:.75rem 0 0}
+.andamento details.perfil{border-top:1px solid var(--borda);padding:.55rem 0}
+.andamento details.perfil summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:.15rem .75rem;align-items:baseline}
+.andamento details.perfil summary .nome{font-weight:600}
+.andamento details.perfil summary .resumo{font-size:.875rem;color:var(--texto-fraco)}
+.andamento details.perfil[open] summary{margin-bottom:.5rem}
+.andamento details.perfil summary{list-style:none}
+.andamento details.perfil summary::-webkit-details-marker{display:none}
+.andamento details.perfil summary::before{content:"▸";color:var(--verde-texto);width:1rem}
+.andamento details.perfil[open] summary::before{content:"▾"}
+.publicado-curto{margin-bottom:.6rem}
+
+/* v3 (generalidade, 06/11): a linha da jornada vem da configuração do Perfil. As Etapas valem para o
+   Perfil inteiro (rowspan); os atos do marco, por lista. O grupo de colunas diz de onde cada uma vem. */
+.jornada thead tr.grupos th{font-size:.7rem;letter-spacing:.05em;border-bottom:0;padding-bottom:0;color:var(--texto)}
+.jornada thead tr.grupos th.g-etapas{border-top:3px solid #6b7cc4}
+.jornada thead tr.grupos th.g-marco{border-top:3px solid var(--verde)}
+.jornada thead tr.grupos th.g-depois{border-top:3px solid var(--texto-fraco)}
+.jornada td.etapa{background:#f2f4fb;border-left:1px solid var(--borda);border-right:1px solid var(--borda)}
+.jornada th .forma{display:block;font-weight:400;text-transform:none;letter-spacing:0;font-size:.75rem}
+/* A matriz rola dentro da própria moldura em qualquer largura: com 8 ou 9 colunas ela não cabe a
+   1280 px, e a página não pode rolar de lado (achado da v3). */
+.andamento{min-width:0;overflow:hidden}
+.andamento .rolavel-no-estreito{overflow-x:auto;max-width:100%}
+.andamento details.perfil{min-width:0}
+.jornada td,.jornada th{white-space:normal}
+.jornada td[data-m]{min-width:6.5rem}
