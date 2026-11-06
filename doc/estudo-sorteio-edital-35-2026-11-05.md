@@ -46,20 +46,23 @@ propõe C6, e nada nela avisa que a vaga ainda vai mudar de mãos.
 | Confirmado | **O sorteio está correto e é reproduzível.** Os quatro sorteios foram recalculados a partir da relação congelada e da semente da Loteria 6115. A ordem e o resumo do manifesto conferem nos quatro. |
 | Confirmado | **A regra da concorrência simultânea existe no sistema.** A ocupação e a fila de convocação descontam quem já ocupa vaga pela ampla. Na cópia, o caminho completo termina com seis pessoas distintas nas seis vagas, e C9 na PcD. |
 | Desencontro | **O corte reservado não sabe disso.** Emitir o corte PcD grava "C6 — progride" na lista PcD, num ato irreversível. C9 só é alcançada depois de mais três atos: apurar, pedir faixa seguinte e apurar de novo. |
-| Indício de defeito | **Três comportamentos a corrigir**, todos observados na cópia. Sem corte, a convocação PcD oferece "chamar para regularizar" começando por C6. Sem ninguém a alcançar, a faixa seguinte é emitida vazia. E a vaga reservada sem candidato nunca reverte. |
+| Indício de defeito | **Quatro comportamentos a corrigir**, todos observados na cópia. Sem corte, a convocação PcD oferece "chamar para regularizar" começando por C6. Sem ninguém a alcançar, a faixa seguinte é emitida vazia. A vaga reservada sem candidato nunca reverte. E quem aceitou a vaga PPI pode ser chamado e aceitar também pela ampla, ficando contado nas duas (§5, cenário F). |
+| Atenção | **"Ocupada" no GPS não é matrícula.** A apuração conta como ocupada a vaga que tem titular designado pelo corte e nenhum desfecho que o tirou. A ampla já mostra 4 de 4 sem ninguém convocado. |
 
 > **Risco de emitir novos atos agora.** Emitir os cortes PcD e PPI não leva a vaga à pessoa errada,
 > porque a convocação chama C9 e C7. O custo é deixar no histórico um ato PcD que diz o contrário do
-> Edital. Na ampla já há uma segunda faixa emitida (5º a 8º, motivo "Suplente"). Ela fez quatro
-> pessoas *progredirem*, e isso não se desfaz. **Sugestão:** só emitir os cortes PcD e PPI depois da
-> decisão Q1, na §9.
+> Edital. Na ampla já há uma segunda faixa emitida (5º a 8º, motivo "Suplente"), e ela não se
+> desfaz. Na prática, as quatro pessoas dessa faixa são suplentes: progridem, não ocupam vaga e formam
+> a fila para quando uma vagar. **Sugestão:** só emitir os cortes PcD e PPI depois da decisão Q1, na
+> §9.
 
 ## 2. Linha do tempo (fatos do banco)
 
 - **28/10, 10h53.** O Edital é publicado. O método do sorteio apontava o concurso `3819` da Loteria
   Federal, um número de 2004.
-- **28/10, 10h56–11h09.** Chegam 11 inscrições: 6 AC, 2 PcD e 3 PPI. Às 13h01 são congeladas as
-  primeiras relações, ainda com o concurso 3819.
+- **28/10, 10h56–11h09.** Chegam 11 inscrições: 6 AC, 2 PcD e 3 PPI. Uma 12ª ficou em rascunho,
+  nunca foi enviada e não participa. Às 13h01 são congeladas as primeiras relações, ainda com o
+  concurso 3819.
 - **29/10 e 03/11, 12h04.** Duas Retificações. A segunda troca o concurso para o `6115`, de 04/11.
 - **03/11, 12h05–12h06.** As quatro relações são publicadas de novo, sucedendo as anteriores, com o
   motivo "Alteração de concurso". A relação que vale é essa.
@@ -204,11 +207,15 @@ reservada, e chegar ao próximo exige faixa seguinte.
 
 ### 3.7 Convocação: chamar, desistir, chamar o próximo
 
-Convocar não é ocupar. A pessoa convocada é chamada para enviar documentos e se matricular. A vaga só
-conta como ocupada quando o desfecho é aceite ou regularização.
+A pessoa convocada é chamada para enviar documentos e se matricular. Para a apuração do GPS, porém,
+"ocupada" não depende da convocação. O titular conta como ocupante desde a apuração, antes de ser
+chamado, e o aceite dele não muda o número. O suplente faz o contrário: só passa a contar quando
+aceita. O mapa está em `convocacao/domain/nomes.py`, `EFEITO_POR_DESFECHO`, e a conta em
+`ocupacao/domain/apuracao.py`, `titulares_iniciais` e `ocupantes`.
 
-Se a pessoa desiste, não atende ou é indeferida, o desfecho a tira da vaga. A ocupação é refeita
-sozinha e a fila aponta o próximo. O que aconteceu na simulação está na §5.
+Desistência, não atendimento, indeferimento, cancelamento por inércia e reclassificação tiram a pessoa
+da vaga; aceite e regularização a põem. A ocupação é refeita sozinha a cada desfecho, e a fila aponta
+o próximo. O que aconteceu na simulação está na §5.
 
 ## 4. Duas leituras lado a lado
 
@@ -232,6 +239,11 @@ que essa pessoa "não constará na lista de classificados como autodeclarados".
 | D. Desistência na ampla | C1 desiste | A ocupação é refeita sozinha: 3 de 4. A próxima da fila é C10, a 5ª. Ela já estava alcançada pela faixa 5º–8º; sem essa faixa, seria preciso pedi-la. |
 | D. Desistência na reserva | C9 desiste | PcD fica com 0 de 1, e a fila fica vazia. A única outra pessoa PcD é C6, que ocupa a ampla. |
 | E. Reserva sem candidato | Pedir a faixa seguinte PcD | **O sistema emitiu uma faixa vazia**: ela começa na 3ª posição, que não existe, e ninguém progrediu. A vaga continua 0 de 1 e não reverte para a ampla, embora o Perfil declare "reverte ao esgotar". C6 ainda conta como alguém que poderia ocupá-la. |
+| F. A fila da ampla alcança um titular da PPI | Numa segunda cópia: aceites de C2, C6, C4, C9 e C7; C1 desiste; C10 é convocada e desiste | O GPS **aceita convocar C7 pela ampla**, como suplência, embora ele tenha aceitado a vaga PPI. Com o aceite, C7 passa a contar nas duas: ampla 4 de 4 e PPI 1 de 1, mesmo depois de reapurar a PPI. São 5 pessoas em 6 vagas, e C11, a próxima PPI, nunca é alcançada. |
+
+Na mesma segunda cópia, a apuração marcava 4 de 4 na ampla, 1 de 1 na PcD e 1 de 1 na PPI **antes
+de qualquer convocação**; os aceites dos titulares não mudaram nenhum número; a desistência de C1
+baixou a ampla para 3 de 4; e a convocação de C10 a manteve em 3 de 4 até a resposta.
 
 **Estado real do banco, sem corte PcD.** A tela de convocação PcD oferece "chamar para regularizar"
 C6 e depois C9. Foi o que apareceu na reunião, aos 58 minutos. Sem corte, o sistema trata a lista
@@ -250,7 +262,7 @@ mesmo mecanismo da PcD.
 | 32 min | "A cotista PcD da ampla não deveria estar no sorteio PcD." | Ela tem de estar. A relação é congelada antes da Loteria, quando ninguém sabe quem cai na ampla, e o desconto é feito depois. O Edital manda as duas listas e a dupla concorrência. |
 | 44–47 min | O corte PcD mostra C6 progredindo. | O corte é calculado só sobre a lista PcD. A ocupação corrige depois, sem que a tela avise. |
 | 45 e 65 min | "O 1º da PPI já foi contemplado na ampla; a vaga PPI é da 2ª." | Não é. C7 é o 6º, e a ampla vai até o 4º. A cotista PPI dentro da ampla é C2, que é a 3ª na PPI. C7 fica com a vaga PPI. A própria reunião corrigiu isso aos 66 min. |
-| 49–52 min | Faixa seguinte com motivo "Suplente": do 5º ao 8º apareceram como "progride". | Faixa seguinte quer dizer **mais uma chamada**: quem ela alcança progride. Suplente, no corte, é outra coisa: a sobra que a regra publicada manda analisar junto, e aqui a regra publicou 0. O efeito prático foi que C10, C7, C3 e C8 entraram na fila da ampla. |
+| 49–52 min | Faixa seguinte com motivo "Suplente": do 5º ao 8º apareceram como "progride". | Faixa seguinte quer dizer **mais uma chamada**: quem ela alcança progride. No GPS, quem progride além dos titulares é suplente: não ocupa vaga e espera uma vagar. O efeito prático foi o que a equipe queria: C10, C7, C3 e C8 viraram os suplentes da ampla. O que confundiu foi a tela dizer "progride", e não "suplente". |
 | 58 min | Convocação PcD: "vai chamar a cotista da ampla", "próxima na ordem", "chamar para regularizar". | Sem corte PcD, a convocação lista a ordem inteira como "regularizáveis". É indício de defeito. |
 | 59 min | "Apuração vigente não alterada, a nova sucede a anterior." | Atos não se editam. Cada apuração ou corte novo é mais um registro, que substitui o vigente, e o anterior continua legível para auditoria. |
 | 01h07 | Datas: congelado em 03/11, Loteria em 04/11, sorteio em 05/11. | Está correto. A regra exige congelar antes do dia da extração, porque a Caixa só publica a data. |
@@ -273,15 +285,18 @@ Legenda: **Fato** está comprovado no banco ou no código. **Hipótese** é plau
 | Faixa seguinte sem ninguém | — | É emitida vazia, e é irreversível | **Hipótese:** defeito provável | Cenário E |
 | Regularizar sem corte | Só quem foi alcançado pode ser chamado | Sem corte, oferece a ordem inteira, começando por C6 | **Hipótese:** defeito provável | `convocacao/domain/fila.py:92`; leitura do estado real |
 | Suplentes | "Até 15 suplentes por código de vaga" para chamada imediata | Regra de corte publicada com 0 suplentes | **Pendente.** A configuração difere do texto | `cutRule.surplusCount = 0` na versão de 03/11 |
-| Mesma pessoa em dois recortes | Uma vaga por pessoa | Não há trava entre recortes; a proteção vem da exclusão na fila | **Hipótese:** risco. C7 é titular PPI e está na fila da ampla (6º) | `convocacao/models.py:163` |
+| Mesma pessoa em dois recortes | Uma vaga por pessoa | Não há trava entre recortes. A fila da reserva exclui quem ocupa a ampla, mas a fila da ampla não exclui quem ocupa a reserva | **Fato:** defeito. C7 aceitou a PPI, foi convocado e aceitou pela ampla, e conta nas duas | `convocacao/models.py:163`; `contexto_do_recorte` (concomitantes só com `lista_id`); cenário F |
+| Significado de "ocupada" | — | Titular designado pelo corte sem desfecho de saída, mais suplente que aceitou | **Pendente.** A equipe leu o número como matrícula | `ocupacao/domain/apuracao.py`, `ocupantes`; cenário F |
 | Nome do resultado | — | A página diz "Classificação final", e a linha diz "Resultado preliminar" | **Fato:** é questão de linguagem. Um é o nome dado ao marco, o outro a natureza da publicação | Marco `PEEI-CEFOR`; natureza PRELIMINAR |
 
-Três pontos técnicos ficaram de fora da matriz por falta de teste:
+Dois pontos técnicos ficaram de fora da matriz por falta de teste:
 
 - a apuração reservada não guarda quem ocupava a ampla quando foi emitida, e por isso não fica
   obsoleta se a ampla mudar;
-- um titular da ampla que foi eliminado continua sendo descontado da reserva;
-- um aceite numa reserva pode continuar contando ali, mesmo que a pessoa depois ocupe pela ampla.
+- um titular da ampla que foi eliminado continua sendo descontado da reserva.
+
+Um terceiro, o aceite na reserva que continua contando depois de a pessoa ocupar pela ampla, foi
+observado no cenário F e está na matriz.
 
 ## 8. Glossário operacional
 
@@ -303,16 +318,19 @@ Três pontos técnicos ficaram de fora da matriz por falta de teste:
 - **Corte.** Ato que marca até onde uma lista avança para a etapa seguinte. É calculado lista por
   lista, e é irreversível.
 - **Progressão.** Estar dentro da faixa de um corte. Não é o mesmo que ocupar vaga: C6 pode progredir
-  na PcD e não ocupar a vaga PcD.
+  na PcD e não ocupar a vaga PcD, e os quatro da faixa 5º–8º da ampla progridem como suplentes.
+- **Titular.** Quem ocupa uma vaga inicial: as primeiras pessoas que progridem, até o número de vagas.
+  Na lista reservada, sem contar quem ocupa pela ampla.
 - **Faixa seguinte.** Mais um trecho da mesma lista, a partir de onde o corte anterior parou. Quem ela
   alcança passa a progredir. Serve para chegar a quem vem depois quando faltam ocupantes.
-- **Suplente.** Tem duas acepções. No corte, são as posições a mais que a regra publicada manda
-  incluir além do alvo (aqui, 0). No Edital, é qualquer pessoa da ordem que espera vaga. A palavra é
-  ambígua e confundiu a reunião.
-- **Ocupação.** A apuração de quantas vagas de uma linha do quadro estão ocupadas. É aqui que o
-  cotista dentro da ampla deixa de contar na reserva.
-- **Convocação.** Chamar uma pessoa para enviar documentos e se matricular. Ainda não é ocupar a vaga:
-  a pessoa ocupa quando aceita ou regulariza.
+- **Suplente.** No GPS, quem progride além dos titulares: não ocupa vaga e espera uma vagar. Entra na
+  faixa de duas maneiras: pelo excedente da regra de corte publicada (aqui, 0) ou por faixa seguinte
+  (aqui, a 5º–8º). No Edital, é qualquer pessoa da ordem que espera vaga.
+- **Ocupação.** A apuração de quantas vagas de uma linha do quadro estão ocupadas. Conta o titular
+  designado sem desfecho de saída, mais o suplente que aceitou. **Não é matrícula**: conta antes de
+  qualquer convocação. É aqui que o cotista dentro da ampla deixa de contar na reserva.
+- **Convocação.** Chamar uma pessoa para enviar documentos e se matricular. Para o titular, não muda a
+  ocupação: ele já contava. Para o suplente, a vaga só conta depois do aceite.
 - **Cadastro de reserva.** Não se aplica a este Edital, porque o Polo Cefor publica 6 vagas. Em
   Editais de cadastro de reserva, a ordem toda é a fila.
 - **Geração vigente.** O corte em vigor numa lista: o corte inicial e as faixas seguintes dele. Um
@@ -331,13 +349,22 @@ Nenhum foi implementado. A ordem segue o risco diante de atos irreversíveis.
 - **P2 — Q3.** Os "15 suplentes por código de vaga" do Edital devem virar suplentes na regra de corte?
 - **P2 — Q4.** A vaga reservada sem candidato disponível deve reverter para a ampla quando a única
   pessoa restante ocupa pela ampla?
-- **P2 — Q5.** O que fazer com a faixa 5º–8º já emitida na ampla deste Edital?
+- **P2 — Q5.** O que fazer com a faixa 5º–8º já emitida na ampla deste Edital? Na prática, ela
+  criou os quatro suplentes de que a fila precisa.
+- **P1 — Q6.** O § 2º do art. 1º da Resolução CS nº 10/2017, que manda abrir a vaga ao próximo, fala
+  só de "negros e indígenas". Ele vale também para PcD? A equipe e o GPS já o aplicam assim.
+- **P1 — Q7.** Quem já aceitou vaga reservada pode ser chamado pela ampla quando a fila dela o
+  alcança? Se sim e ele aceitar, a reservada passa ao próximo; se não, a fila da ampla deve pulá-lo.
+- **P2 — Q8.** O número "ocupadas" deve contar o titular designado, como hoje, o aceite ou a
+  matrícula? Se continuar como hoje, a tela precisa dizê-lo.
 
 ### Correção (há evidência; falta confirmar por teste)
 
 - **P1.** Sem corte, a convocação reservada oferece "chamar para regularizar" a ordem inteira,
   inclusive quem ocupa pela ampla.
 - **P1.** A faixa seguinte é emitida vazia quando não há mais ninguém na lista.
+- **P1.** A mesma pessoa é convocada e conta como ocupante em dois recortes (cenário F). A forma da
+  correção depende de Q7.
 - **P2.** Os três pontos técnicos do fim da §7: a apuração reservada não guarda a ampla, o eliminado
   continua descontado e o aceite pode ser contado duas vezes.
 
@@ -435,6 +462,11 @@ A simulação rodou só no clone, com a comissão como ator (`comissao:gerir`), 
    - `fluxo.previa_dos_titulares` e `fluxo.convocar_titulares` nos três recortes, com `alcance_confirmado` igual à assinatura da prévia;
    - `desfechar` com `DESISTENCIA_EXPRESSA` para C1 na ampla e para C9 na PcD;
    - `causar_faixa_seguinte` na PcD.
+
+O cenário F rodou numa segunda cópia, clonada do banco de leitura: as quatro etapas da ocupação
+acima, `convocar_titulares` nos três recortes, `desfechar` com `ACEITE` para C2, C6, C4, C9 e C7 e
+com `DESISTENCIA_EXPRESSA` para C1, `convocacao.application.convocar.convocar` para C10, desistência
+dela, `convocar` para C7 pela ampla, `ACEITE` dele e `emitir_apuracao` na PPI.
 
 O estado real foi lido com `convocacao.application.selectors.leitura_do_recorte` e
 `fluxo.previa_dos_titulares`, recorte a recorte, no clone de leitura.
