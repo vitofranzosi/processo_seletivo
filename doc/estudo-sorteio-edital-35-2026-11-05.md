@@ -19,6 +19,10 @@ são de specs existentes. As decisões pendentes usam `Q`, para não colidir com
 > **Governança.** Este documento registra fatos medidos e recomendações. Nada aqui vira escopo por
 > estar escrito. Priorizar e decidir são do usuário.
 
+O guia de condução que parte deste estudo, com a jornada inteira, da configuração do Edital ao
+encerramento, e as telas reais, está em
+[`guia-jornada-do-sorteio-2026-11-05/`](guia-jornada-do-sorteio-2026-11-05/index.html).
+
 ## Candidatos, sem nome
 
 O repositório é público, por isso os candidatos aparecem por código. **C*n*** é a pessoa que recebeu o

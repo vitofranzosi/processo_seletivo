@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jornada do Sorteio no GPS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: um caderno de condução em capítulos; cada capítulo tem narrativa à esquerda e ficha operacional à direita, e as telas reais logo abaixo. As cores das modalidades são as mesmas dos outros dois estudos. */
+:root{
+  --bg:#f3f4f0; --surface:#ffffff; --ink:#1a211d; --muted:#57625b; --line:#d5dad3; --soft:#eaede7;
+  --accent:#245e6b; --accent-soft:#e0eef0;
+  --ac:#35598d; --ac-soft:#e3eaf5; --pcd:#77489a; --pcd-soft:#eee5f6; --ppi:#9a5f0c; --ppi-soft:#f7ebd8;
+  --ok:#2c6a3d; --ok-soft:#e2eee4; --edital:#3d5a73; --edital-soft:#e4ecf2; --prev:#5d5b70; --prev-soft:#ecebf2;
+  --warn:#8a5a00; --warn-soft:#fff2da; --bad:#a1382a; --bad-soft:#f9e5e1; --idea:#2f6b5a; --idea-soft:#e1f0ea;
+  --f-display:"Literata", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111513; --surface:#1a201d; --ink:#e2e8e3; --muted:#9aa59e; --line:#2e3732; --soft:#222a25;
+  --accent:#7cc3cf; --accent-soft:#1b2f33;
+  --ac:#96b5e3; --ac-soft:#1e2938; --pcd:#caa8e6; --pcd-soft:#2c2236; --ppi:#e4af5e; --ppi-soft:#33281a;
+  --ok:#7cc591; --ok-soft:#1f3326; --edital:#9cc0dc; --edital-soft:#1d2a34; --prev:#bdbad3; --prev-soft:#27263a;
+  --warn:#e9b95c; --warn-soft:#33291a; --bad:#ee907f; --bad-soft:#3a201c; --idea:#86d0b8; --idea-soft:#1b3129;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#111513; --surface:#1a201d; --ink:#e2e8e3; --muted:#9aa59e; --line:#2e3732; --soft:#222a25;
+  --accent:#7cc3cf; --accent-soft:#1b2f33;
+  --ac:#96b5e3; --ac-soft:#1e2938; --pcd:#caa8e6; --pcd-soft:#2c2236; --ppi:#e4af5e; --ppi-soft:#33281a;
+  --ok:#7cc591; --ok-soft:#1f3326; --edital:#9cc0dc; --edital-soft:#1d2a34; --prev:#bdbad3; --prev-soft:#27263a;
+  --warn:#e9b95c; --warn-soft:#33291a; --bad:#ee907f; --bad-soft:#3a201c; --idea:#86d0b8; --idea-soft:#1b3129;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding-block:36px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:72px}
+h1,h2,h3{font-family:var(--f-display);font-weight:650;line-height:1.18;text-wrap:balance;margin:0}
+h1{font-size:2.55rem} h2{font-size:1.75rem} h3{font-size:1.06rem;font-family:var(--f-body);font-weight:700}
+p{margin:0;max-width:70ch} ul,ol{margin:0}
+.eyebrow{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .small{font-size:.87rem}
+code,.mono{font-family:var(--f-mono);font-size:.84em}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.c{display:inline-block;font-weight:700;font-family:var(--f-mono);font-size:.86em;padding:0 5px;border-radius:4px;white-space:nowrap}
+.c.ac{background:var(--ac-soft);color:var(--ac)} .c.pcd{background:var(--pcd-soft);color:var(--pcd)} .c.ppi{background:var(--ppi-soft);color:var(--ppi)}
+
+/* selos de evidência */
+.s{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;vertical-align:2px;white-space:nowrap}
+.s.gps{background:var(--ok-soft);color:var(--ok)} .s.prev{background:var(--prev-soft);color:var(--prev)} .s.edital{background:var(--edital-soft);color:var(--edital)} .s.dec{background:var(--warn-soft);color:var(--warn)} .s.mel{background:var(--idea-soft);color:var(--idea)} .s.def{background:var(--bad-soft);color:var(--bad)} .s.sim{background:var(--soft);color:var(--muted)}
+
+header.capa{display:flex;flex-direction:column;gap:16px}
+.lede{font-size:1.14rem;max-width:64ch}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.btn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:600;font-size:.88rem}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted);align-items:center}
+nav.indice{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 20px;font-size:.92rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:14px}
+nav.indice a{text-decoration:none;color:var(--ink);display:flex;gap:8px}
+nav.indice a span{font-family:var(--f-mono);color:var(--accent);min-width:2.2em}
+nav.indice a:hover{color:var(--accent)}
+
+/* duas histórias */
+.duas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.duas>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+
+/* linha do tempo */
+.trilho{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.fase{padding:14px 12px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--line);min-width:0}
+.fase:last-child{border-right:0}
+.fase .n{font-family:var(--f-display);font-size:1.5rem;color:var(--accent);line-height:1}
+.fase b{font-size:.92rem;line-height:1.3}
+.fase ul{padding-left:1em;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.fase .quando{font-family:var(--f-mono);font-size:.72rem;color:var(--ink);background:var(--soft);border-radius:4px;padding:2px 6px;align-self:flex-start}
+.fase.simulada .quando{background:var(--warn-soft);color:var(--warn)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.69rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--soft)}
+tr:last-child td{border-bottom:0}
+.tabela{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+td.nw{white-space:nowrap}
+
+/* mapa de estados */
+.raias{display:flex;flex-direction:column;gap:10px}
+.raia{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center}
+.raia>b{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.estados{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.estado{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:.84rem;white-space:nowrap}
+.estado.ato{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.estado.fora{border-style:dashed;color:var(--muted)}
+.seta{color:var(--muted);font-size:.9rem}
+.desvios{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.desvio{border-left:3px solid var(--warn);background:var(--surface);border-radius:0 8px 8px 0;padding:10px 12px;font-size:.88rem;display:flex;flex-direction:column;gap:4px;min-width:0}
+.desvio b{font-size:.9rem}
+
+/* capítulo */
+.cap{display:flex;flex-direction:column;gap:22px;scroll-margin-top:16px}
+.cap-head{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:baseline}
+.cap-n{font-family:var(--f-display);font-size:3.2rem;line-height:.85;color:var(--accent);grid-row:span 3}
+.cap-head .eyebrow{grid-column:2}
+.pergunta-op{font-family:var(--f-display);font-size:1.18rem;font-style:italic;color:var(--muted);grid-column:2;max-width:64ch}
+.corpo{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+.narr{display:flex;flex-direction:column;gap:12px}
+.ficha{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;font-size:.88rem}
+.ficha div{display:flex;flex-direction:column;gap:2px}
+.ficha dt,.ficha .k{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ficha .prox{border-top:1px solid var(--line);padding-top:10px}
+.ficha .prox .k{color:var(--accent)}
+.atencao{border-left:3px solid var(--bad);background:var(--bad-soft);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.atencao b.t{color:var(--bad);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.cand{border-left:3px solid var(--ac);background:var(--surface);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.cand b.t{color:var(--ac);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.q{border-left:3px solid var(--warn);background:var(--warn-soft);padding:10px 14px;border-radius:0 8px 8px 0;max-width:80ch;font-size:.92rem}
+.q b{color:var(--warn)}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block;background:var(--surface)}
+figcaption{font-size:.84rem;color:var(--muted);max-width:90ch}
+.telas{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.telas.uma{grid-template-columns:1fr}
+.blocos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.bloco{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;min-width:0}
+.bloco b{font-size:.9rem}
+.bloco.of{border-color:var(--accent)} .bloco.of b::before{content:"Ato oficial · ";color:var(--accent);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.bloco.le b::before{content:"Só consulta · ";color:var(--muted);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.escada{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.degrau{display:grid;grid-template-columns:38px minmax(150px,220px) 1fr auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:baseline;font-size:.88rem}
+.degrau:last-child{border-bottom:0}
+.degrau .i{font-family:var(--f-mono);color:var(--accent)}
+.degrau.fora{background:var(--soft)}
+
+/* listas finais */
+.diag{display:flex;flex-direction:column;gap:10px;padding-left:0;list-style:none}
+.diag li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:52px 1fr;gap:4px 12px;min-width:0}
+.diag .p{font-family:var(--f-mono);font-weight:500;grid-row:span 3;color:var(--bad)}
+.diag .p.p2{color:var(--warn)} .diag .p.p3{color:var(--idea)}
+.diag .cat{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.diag .ev{font-size:.85rem;color:var(--muted)}
+.diag .int{font-size:.88rem}
+.diag .int b{color:var(--idea)}
+.aceite{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.aceite div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;min-width:0}
+.aceite b{font-size:.92rem}
+.aceite .gap{border-color:var(--warn);background:var(--warn-soft)}
+footer{border-top:1px solid var(--line);padding-top:18px;font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+
+/* modo apresentação */
+#barra{display:none}
+.modo .fora-do-modo{display:none}
+.modo .cap{display:none}
+.modo .cap.atual{display:flex}
+.modo #barra{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:10px;align-items:center;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#barra .pos{font-family:var(--f-mono);font-size:.85rem;min-width:64px;text-align:center}
+#barra button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 14px;cursor:pointer}
+#barra button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:820px){
+  h1{font-size:1.95rem} .cap-n{font-size:2.3rem}
+  .corpo,.duas,.telas{grid-template-columns:1fr}
+  .trilho{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fase{border-bottom:1px solid var(--line)}
+  .raia{grid-template-columns:1fr}
+  .degrau{grid-template-columns:30px 1fr;}
+  .degrau>:nth-child(3),.degrau>:nth-child(4){grid-column:2}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="capa fora-do-modo">
+  <span class="eyebrow">GPS · Cefor/Ifes · guia de condução · terceiro estudo do Edital 35/2026</span>
+  <h1>Da publicação do Edital à matrícula</h1>
+  <p class="lede">Como funciona um processo seletivo por sorteio no GPS, contado em treze capítulos na ordem em que as coisas acontecem. Cada capítulo responde à pergunta de quem conduz, mostra a tela real e diz o que o candidato vê do outro lado.</p>
+  <div class="controls">
+    <button type="button" class="btn" id="apresentar">Apresentar capítulo a capítulo</button>
+    <span class="small muted">Setas do teclado avançam e voltam; Esc sai.</span>
+  </div>
+  <div class="legenda" aria-label="Legenda das marcas de evidência">
+    <span><span class="s gps">Comprovado</span> visto no código e na tela</span>
+    <span><span class="s sim">Simulado</span> feito numa cópia do banco</span>
+    <span><span class="s edital">Edital</span> regra publicada</span>
+    <span><span class="s prev">Previsto</span> em spec, não confirmado</span>
+    <span><span class="s dec">Decisão pendente</span></span>
+    <span><span class="s def">Provável defeito</span></span>
+    <span><span class="s mel">Melhoria</span></span>
+  </div>
+  <p class="small muted">Os candidatos aparecem como <span class="c ac">C1</span> a <span class="c ppi">C11</span>: o número que cada um recebeu na relação geral congelada. <b>Não é a posição no sorteio.</b> As telas foram capturadas numa cópia do banco de 05/11 em que nomes, e-mails, CPFs e protocolos foram trocados por fictícios; os operadores aparecem pelo papel (<span class="mono">gestor.a</span>, <span class="mono">publicador.a</span>). Por isso os resumos criptográficos exibidos nas telas não conferem com o conteúdo trocado: são os do original.</p>
+  <nav class="indice" aria-label="Índice">
+    <a href="#jornada"><span>—</span>A jornada inteira numa página</a>
+    <a href="#papeis"><span>—</span>Quem faz o quê</a>
+    <a href="#cap-1"><span>1</span>Como nasce o processo</a>
+    <a href="#cap-2"><span>2</span>Cronograma: o que controla o quê</a>
+    <a href="#cap-3"><span>3</span>Inscrições</a>
+    <a href="#cap-4"><span>4</span>Congelamento</a>
+    <a href="#cap-5"><span>5</span>Loteria Federal e semente</a>
+    <a href="#cap-6"><span>6</span>Realizar o sorteio</a>
+    <a href="#cap-7"><span>7</span>Da ordem às vagas</a>
+    <a href="#cap-8"><span>8</span>Corte, faixa e ocupação</a>
+    <a href="#cap-9"><span>9</span>Divulgação</a>
+    <a href="#cap-10"><span>10</span>Convocação e documentos</a>
+    <a href="#cap-11"><span>11</span>Conferência e decisão</a>
+    <a href="#cap-12"><span>12</span>Desistência e não atendimento</a>
+    <a href="#cap-13"><span>13</span>Como o processo termina</a>
+    <a href="#roteiro"><span>B</span>Roteiro operacional</a>
+    <a href="#matriz"><span>C</span>Conceitos ambíguos</a>
+    <a href="#diagnostico"><span>D</span>Diagnóstico de obviedade</a>
+    <a href="#aceitacao"><span>✓</span>As 15 perguntas</a>
+  </nav>
+</header>
+
+<section class="fora-do-modo" id="jornada" aria-labelledby="t-jornada">
+  <span class="eyebrow">Entrega A · visão geral</span>
+  <h2 id="t-jornada">A jornada inteira numa página</h2>
+  <div class="duas" style="margin-top:14px">
+    <div><h3>A história de quem conduz</h3><p class="small">Configura, publica, congela, busca a semente, sorteia, divulga, corta, apura, convoca, confere, registra o desfecho e encerra. São pelo menos quatro papéis diferentes no caminho.</p></div>
+    <div><h3>A história de quem se inscreve</h3><p class="small">Encontra a seleção, entra com um código enviado ao e-mail, escolhe a modalidade, envia, confere a relação e o resultado, é chamado ou não, e acompanha o que a comissão registrou.</p></div>
+  </div>
+  <div class="trilho" style="margin-top:16px" aria-label="Linha do tempo do Edital 35/2026">
+    <div class="fase"><span class="n">1</span><b>Preparar e publicar</b><span class="quando">até 28/10 10h53</span><ul><li>Perfis, modalidades, quadro</li><li>Cronograma</li><li>Método do sorteio: concurso 6115</li><li>Regra de corte</li></ul></div>
+    <div class="fase"><span class="n">2</span><b>Receber inscrições</b><span class="quando">28/10 10h56–11h09</span><ul><li>11 enviadas</li><li>1 rascunho que não conta</li><li>Período até 28/10 12h28</li></ul></div>
+    <div class="fase"><span class="n">3</span><b>Congelar e sortear</b><span class="quando">03/11 → 05/11</span><ul><li>Relações congeladas 03/11</li><li>Extração 6115 em 04/11</li><li>Semente observada 05/11 09h23</li><li>Sorteios 05/11 14h36</li></ul></div>
+    <div class="fase"><span class="n">4</span><b>Divulgar, cortar, apurar</b><span class="quando">05/11 14h41–15h26</span><ul><li>Resultados preliminares</li><li>Corte da ampla, 2 faixas</li><li>Apuração da ocupação</li><li>PcD e PPI sem corte</li></ul></div>
+    <div class="fase simulada"><span class="n">5</span><b>Convocar e decidir</b><span class="quando">simulado na cópia</span><ul><li>Cortes PcD e PPI</li><li>6 titulares convocados</li><li>Publicação registrada</li><li>Aceites e uma desistência</li></ul></div>
+    <div class="fase simulada"><span class="n">6</span><b>Concluir</b><span class="quando">não realizado</span><ul><li>Formalização: fora do Edital 35</li><li>Matrícula: fora do GPS</li><li>Encerrar o Edital</li></ul></div>
+  </div>
+  <h3 style="margin-top:22px">O que existe de fato no GPS: atos, não uma máquina de estados</h3>
+  <p class="small muted">O GPS não tem um "status do processo" que avança de casa em casa. Tem o estado do Edital, o estado de cada inscrição e, para cada lista, uma sequência de atos imutáveis em que cada um exige o anterior. As setas abaixo são essas dependências, conferidas no código.</p>
+  <div class="raias" style="margin-top:12px">
+    <div class="raia"><b>Edital</b><div class="estados"><span class="estado">Em elaboração</span><span class="seta">→</span><span class="estado">Em revisão</span><span class="seta">→</span><span class="estado">Homologado</span><span class="seta">→</span><span class="estado ato">Publicado</span><span class="seta">→</span><span class="estado">Encerrado</span><span class="estado fora">Cancelado, de qualquer um</span></div></div>
+    <div class="raia"><b>Inscrição</b><div class="estados"><span class="estado">Rascunho</span><span class="seta">→</span><span class="estado ato">Submetida</span><span class="estado fora">não existe "habilitada" nem "indeferida" na inscrição</span></div></div>
+    <div class="raia"><b>Cada lista</b><div class="estados"><span class="estado ato">Relação congelada</span><span class="seta">→</span><span class="estado ato">Semente observada</span><span class="seta">→</span><span class="estado ato">Sorteio</span><span class="seta">→</span><span class="estado ato">Corte</span><span class="seta">→</span><span class="estado ato">Apuração</span><span class="seta">→</span><span class="estado ato">Convocação</span><span class="seta">→</span><span class="estado ato">Desfecho</span></div></div>
+    <div class="raia"><b>Em paralelo</b><div class="estados"><span class="estado ato">Divulgação do resultado</span><span class="estado fora">não é pré-requisito de corte, apuração ou convocação</span></div></div>
+  </div>
+  <h3 style="margin-top:22px">Caminhos alternativos</h3>
+  <div class="desvios" style="margin-top:10px">
+    <div class="desvio"><b>A Caixa não responde</b><span>Nada é gravado. O próximo passo é observar de novo. Não existe digitar os números à mão (cap. 5).</span></div>
+    <div class="desvio"><b>A extração ainda não aconteceu</b><span>Observar devolve erro; antes do horário declarado, nem a indisponibilidade pode ser registrada (cap. 5).</span></div>
+    <div class="desvio"><b>Extração antes do congelamento</b><span>O sorteio é recusado. Saída: Retificação, relação nova sucedendo a anterior, nova observação (cap. 4 e 6).</span></div>
+    <div class="desvio"><b>Não há candidato disponível</b><span>A fila acaba; a faixa seguinte pode sair vazia; a vaga reservada não reverte se o único restante ocupa a ampla (cap. 12).</span></div>
+    <div class="desvio"><b>O candidato desiste</b><span>Quem registra é a comissão. A ocupação é refeita sozinha, e a fila aponta o próximo (cap. 12).</span></div>
+    <div class="desvio"><b>Documento recusado</b><span>Pendência com motivo, o candidato corrige até o prazo; persistindo, indeferimento (cap. 11).</span></div>
+    <div class="desvio"><b>Nova chamada</b><span>Chamar uma pessoa da fila, como "para vaga que vagou"; se a faixa acabou, pedir a faixa seguinte (cap. 12).</span></div>
+    <div class="desvio"><b>Retificação depois de um ato</b><span>O ato publicado não muda. O que depende dele fica obsoleto e precisa de sucessor com motivo (cap. 1, 4, 8, 9).</span></div>
+  </div>
+</section>
+
+<section class="fora-do-modo" id="papeis" aria-labelledby="t-papeis">
+  <span class="eyebrow">Antes do capítulo 1</span>
+  <h2 id="t-papeis">Quem faz o quê</h2>
+  <p style="margin-top:10px">Nenhuma pessoa conduz o processo inteiro sozinha, e o GPS impede uma combinação: <b>a mesma pessoa não pode elaborar, homologar e publicar</b> o mesmo Edital. A presidência da comissão não é papel do sistema: vem do vínculo com a comissão de um Processo, e dá os mesmos poderes de condução que o papel Gestor.</p>
+  <div class="tabela scroll" style="margin-top:14px"><table>
+    <thead><tr><th>Papel no GPS</th><th>O que faz neste processo</th><th>Capítulos</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><b>Gestor</b></td><td>Cria o Processo e o Edital, constitui a comissão, conduz o sorteio (congela, observa, sorteia), corta, apura, convoca, registra desfechos e encerra.</td><td>1, 4–8, 10–13</td></tr>
+      <tr><td class="nw"><b>Presidência da comissão</b></td><td>Os mesmos atos de condução do Gestor, só no Processo que preside. Não é papel: é vínculo.</td><td>4–8, 10–12</td></tr>
+      <tr><td class="nw"><b>Elaborador</b></td><td>Compõe o Edital em nove etapas e propõe Retificações. É quem declara o concurso da Loteria.</td><td>1, 2, 5</td></tr>
+      <tr><td class="nw"><b>Homologador</b></td><td>Confere e homologa o Edital e as Retificações, ou devolve.</td><td>1</td></tr>
+      <tr><td class="nw"><b>Publicador</b></td><td>Publica o Edital, as Retificações e os resultados, e manda os avisos. Não abre corte nem ocupação.</td><td>1, 9</td></tr>
+      <tr><td class="nw"><b>Membro alocado à conferência</b></td><td>Confere documentos da convocação no Perfil para o qual foi alocado. Não registra desfecho.</td><td>11</td></tr>
+      <tr><td class="nw"><b>Formalização</b></td><td>Setor que recebe os documentos de quem foi aceito, só nos Editais em que foi designado.</td><td>11, 13</td></tr>
+      <tr><td class="nw"><b>Exportador de matrículas</b></td><td>Gera o arquivo de importação para o Registro Acadêmico, que é outro sistema.</td><td>11, 13</td></tr>
+      <tr><td class="nw"><b>Julgador de recursos</b> · <b>Auditor</b></td><td>Julga recursos; consulta a trilha.</td><td>9, 13</td></tr>
+      <tr><td class="nw"><b>Candidato</b></td><td>Não tem papel na gestão: entra no portal público com um código enviado ao e-mail.</td><td>3, 9, 10</td></tr>
+    </tbody>
+  </table></div>
+  <figure style="margin-top:16px"><img src="capturas/00-papeis.jpg" alt="Tela de escolha de identidade de demonstração, com comissões e responsabilidades da unidade" loading="lazy"><figcaption>A porta da gestão em ambiente de demonstração. Em produção a entrada é institucional; aqui cada papel é uma identidade escolhida. <span class="s gps">Comprovado</span></figcaption></figure>
+</section>
+
+<!-- ============ CAPÍTULOS ============ -->
+
+<section class="cap" id="cap-1">
+  <div class="cap-head"><span class="cap-n">1</span><span class="eyebrow">Preparar · antes de 28/10</span><h2>Como nasce o processo seletivo</h2><p class="pergunta-op">"Tenho um Edital para publicar. Como digo que serão seis vagas, que haverá reserva e que a ordem sai de sorteio?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O processo nasce em duas mãos. O <b>Gestor</b> cria o Processo Seletivo e, junto, o primeiro Edital; os dois nascem "em elaboração". A Unidade não é digitada: é a do próprio gestor. Depois o <b>Elaborador</b> compõe o Edital num assistente de nove etapas: identificação, perfis, cronograma, etapas, classificação, inscrição, anexos, conteúdo e revisão.</p>
+      <p>Três conceitos aparecem aqui e acompanham o resto do guia.</p>
+      <p><b>Perfil de vaga</b> é a oferta: um curso num polo. O Edital 35 tem dois, <span class="mono">PEEI-CEFOR</span> e <span class="mono">PEEI-VITÓRIA</span>, cada um com 6 vagas imediatas. Este guia acompanha o primeiro.</p>
+      <p><b>Modalidades</b> são livres: o GPS não conhece "AC, PcD e PPI" de fábrica. O Elaborador as cria e diz <b>qual delas é a ampla concorrência</b>. No Edital 35 são três: AC, apontada como ampla, PcD e PPI. O <b>quadro de vagas</b> tem uma linha geral, que é a ampla (4 vagas), e uma linha por modalidade reservada (PcD 1, PPI 1). A modalidade apontada como ampla não tem linha própria.</p>
+      <p><b>Marco classificatório</b> é o ponto do Perfil em que uma ordem é produzida. No Edital 35 há um, "Classificação final", com a ordem <b>por sorteio</b>. É no marco que se declaram o método do sorteio e a regra de corte (capítulos 5 e 8).</p>
+      <p>Pronto, o Edital é <b>submetido</b>, <b>homologado</b> por outra pessoa e <b>publicado</b> pelo Publicador, que escolhe a autoridade signatária. Publicar congela tudo numa versão: daí em diante, mudar é <b>Retificação</b>, com o mesmo percurso de três passos.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Gestor cria · Elaborador compõe · Homologador homologa · Publicador publica</dd></div>
+      <div><dt>Onde</dt><dd><span class="mono">Gestão › Processos › Criar</span>, depois <span class="mono">Edital › Compor</span> (9 etapas)</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Na submissão e na publicação: quadro soma as vagas imediatas, método do sorteio completo, regra de corte, forma de comunicar a convocação, concurso não realizado.</dd></div>
+      <div><dt>Produz</dt><dd>Versão publicada do Edital, com documento PDF e resumo. Imutável.</dd></div>
+      <div><dt>Candidato vê</dt><dd>A seleção na vitrine pública, com vagas e prazos.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Esperar o período de inscrições, que é o único evento do cronograma que o GPS obedece (cap. 2).</span></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/11-compor-perfis.jpg" alt="Etapa Perfis de Vaga do assistente de composição, na seção do quadro de vagas" loading="lazy"><figcaption>Etapa "Perfis" do Edital 35, no quadro de vagas: linha geral e uma linha por modalidade reservada. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/13-compor-classificacao.jpg" alt="Etapa Classificação, com o método do sorteio do marco" loading="lazy"><figcaption>Etapa "Classificação": é aqui que o Elaborador declara a ocorrência, isto é, o número do concurso da Loteria. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <div class="blocos">
+    <div class="bloco"><b>O que se corrige por Retificação</b><span>Título, vagas imediatas, linhas do quadro, qual modalidade é a ampla, reversão de vaga, forma de comunicar a convocação, todo o método do sorteio (inclusive o concurso), alvo e suplentes do corte, datas do cronograma.</span></div>
+    <div class="bloco"><b>O que não se corrige depois de publicado</b><span>Número e ano, tipo de cadastro reserva, se o corte vem do quadro ou é fixo, a Etapa que o corte alimenta, se admite faixa seguinte, o momento em que um documento é pedido.</span></div>
+  </div>
+  <div class="atencao"><b class="t">Atenção</b><span>Retificar não reescreve as tabelas: o GPS sempre lê a <b>versão vigente</b>. E um ato já praticado, como uma relação congelada, não acompanha a Retificação: precisa de um sucessor. Foi o que aconteceu em 03/11, quando o concurso passou de 3819 para 6115 e as quatro relações tiveram de ser congeladas de novo. <span class="s gps">Comprovado</span></span></div>
+  <p class="small muted">No Edital 35 publicado, o campo "Empate na última posição" da regra de corte está vazio, e os textos de normalização e de substituição da semente dizem só "Site". A validação de hoje exige o desfecho de empate (<span class="mono">cut_rule_sem_desfecho_de_empate</span>); não verifiquei se ela já existia em 28/10. <span class="s dec">A conferir</span></p>
+</section>
+
+<section class="cap" id="cap-2">
+  <div class="cap-head"><span class="cap-n">2</span><span class="eyebrow">Preparar · cronograma</span><h2>Cronograma: o que controla e o que só informa</h2><p class="pergunta-op">"Quais datas preciso configurar, e o sistema faz alguma coisa sozinho quando elas chegam?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O cronograma é uma lista de eventos com tipo em <b>texto livre</b>, início e, opcionalmente, fim. O GPS não sabe o que é "Sorteio" ou "Convocação" no cronograma: ele só lê três ligações estruturais. A primeira é <b>qual evento é o período de inscrições</b>. A segunda é a Etapa de avaliação ligada a um evento. A terceira é a <b>cópia</b> do instante de um evento para o campo "quando a extração acontece" do sorteio, e cópia quer dizer que mudar o evento depois não muda o sorteio.</p>
+      <p>Daí a regra prática: <b>só o período de inscrições controla operações</b>. Ele abre e fecha o recebimento, e enquanto está aberto a relação do sorteio não pode ser congelada. Todo o resto são datas para o público, que o operador cumpre com atos.</p>
+      <p>A distinção que importa é entre <b>data prevista</b>, no cronograma, e <b>instante do ato</b>, gravado quando alguém age: relação congelada em 03/11 12h05, semente observada em 05/11 09h23, sorteio em 05/11 14h36. Ninguém precisa fazer o ato na hora do evento, e o GPS não avisa quando um evento passa sem o ato.</p>
+      <p>O único processo que roda sozinho por tempo é o envio dos avisos aos candidatos (<span class="mono">despachar_avisos</span>), a cada minuto em produção. Nada abre, fecha, sorteia ou convoca por data.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Elaborador declara; Gestor cumpre com atos</dd></div>
+      <div><dt>Onde</dt><dd>Compor › Cronograma; Compor › Inscrição (qual evento é o período); <span class="mono">Gestão › Agenda</span> para acompanhar</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Recebe inscrição só com Edital publicado e período aberto. Congela relação só com o período fechado. Avisa, sem impedir, eventos no passado.</dd></div>
+      <div><dt>Candidato vê</dt><dd>O cronograma no Edital e na página pública. Pode se inscrever só dentro do período.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>O período de inscrições abre; o processo segue sem ação do operador até ele fechar.</span></div>
+    </dl>
+  </div>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>Evento do cronograma do Edital 35 (horário de Brasília)</th><th>Controla alguma operação?</th><th>O ato real</th></tr></thead>
+    <tbody>
+      <tr><td>Publicação · 27/10 15h16</td><td>Não</td><td>Publicado em 28/10 10h53</td></tr>
+      <tr><td><b>Inscrições · 27/10 15h16 a 28/10 12h28</b></td><td><b>Sim:</b> abre e fecha o recebimento; enquanto aberto, impede congelar a relação</td><td>11 enviadas entre 10h56 e 11h09 de 28/10</td></tr>
+      <tr><td>Sorteio · 05/11 09h30</td><td>Não. O que conta é o concurso e o instante declarados no método</td><td>Semente observada 09h23; sorteio 14h36</td></tr>
+      <tr><td>Resultado (cinco eventos) · 27/10 e 03/11</td><td>Não</td><td>Resultados preliminares 05/11 14h41–15h15</td></tr>
+      <tr><td>Recursos · 03/11 11h30 a 12h00</td><td>Não. O prazo recursal conta da publicação do resultado, e o marco não declarou recurso</td><td>Nenhum</td></tr>
+      <tr><td>Convocação · 03/11 12h20</td><td>Não. O vencimento é informado em cada convocação</td><td>Nenhuma no banco real</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">O cronograma vigente marca resultados, recursos e convocação em 03/11, antes do sorteio de 05/11, e um "Resultado" em 27/10, antes da publicação. O GPS não acusa a incoerência, porque essas datas não ligam a nada. <span class="s gps">Comprovado</span> <span class="s mel">Melhoria</span></p>
+  <figure><img src="capturas/12-compor-cronograma.jpg" alt="Etapa Cronograma do Edital 35" loading="lazy"><figcaption>O cronograma na composição. Cada evento tem um tipo digitado; só o período de inscrições é designado na etapa "Inscrição". <span class="s gps">Comprovado</span></figcaption></figure>
+  <div class="atencao"><b class="t">Atenção</b><span>A data da extração tem de ser <b>posterior ao dia</b> em que a relação será congelada, e a relação só congela depois do fim das inscrições. Um Edital pode ser configurado com o sorteio já inviável. Desde a spec 102 o GPS acusa isso na publicação; numa Retificação, só adverte.</span></div>
+</section>
+
+<section class="cap" id="cap-3">
+  <div class="cap-head"><span class="cap-n">3</span><span class="eyebrow">Receber · 28/10</span><h2>Inscrições e quem participa</h2><p class="pergunta-op">"Como sei quem vai entrar no sorteio?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O candidato entra no portal sem senha: digita o e-mail, recebe um <b>código de seis dígitos</b> válido por 10 minutos, informa nome e CPF no primeiro acesso e escolhe a vaga. Na tela da inscrição escolhe a <b>modalidade</b>, envia os documentos pedidos na inscrição (no Edital 35, um documento de identificação), aceita duas declarações e envia.</p>
+      <p>A inscrição tem só dois estados: <b>rascunho</b> e <b>submetida</b>. Depois de enviada, nada nela muda, nem a modalidade. Recebe um protocolo aleatório (<span class="mono">INS-2026-…</span>), sem sequência.</p>
+      <p>Não existe "habilitada" nem "indeferida" na inscrição. Quando o Edital não declara uma etapa de habilitação antes do sorteio, que é o caso do 35, <b>toda inscrição submetida entra no sorteio</b>. A tela e a página pública chamam esse conjunto de "habilitados" mesmo assim.</p>
+      <p>Cada modalidade gera uma lista. A ampla reúne <b>todos</b> os inscritos do Perfil; cada modalidade reservada reúne quem a marcou. Por isso o cotista concorre nas duas ao mesmo tempo.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Candidato</dd></div>
+      <div><dt>Onde</dt><dd>Portal público › seleção › "Ver vagas e inscrever-se"</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Período aberto, Edital publicado, documentos obrigatórios em PDF, as duas declarações, uma inscrição por pessoa e Perfil, teto por candidato.</dd></div>
+      <div><dt>Produz</dt><dd>Inscrição submetida, com protocolo e comprovante por e-mail.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Quando o período fecha, o Gestor congela a relação (cap. 4).</span></div>
+    </dl>
+  </div>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>Lista</th><th>Quem entra no Edital 35</th><th>Quantos</th></tr></thead>
+    <tbody>
+      <tr><td>Ampla (linha geral)</td><td><span class="c ac">C1</span> <span class="c ppi">C2</span> <span class="c ac">C3</span> <span class="c ac">C4</span> <span class="c ac">C5</span> <span class="c pcd">C6</span> <span class="c ppi">C7</span> <span class="c ac">C8</span> <span class="c pcd">C9</span> <span class="c ac">C10</span> <span class="c ppi">C11</span></td><td>11</td></tr>
+      <tr><td>PcD</td><td><span class="c pcd">C6</span> <span class="c pcd">C9</span></td><td>2</td></tr>
+      <tr><td>PPI</td><td><span class="c ppi">C2</span> <span class="c ppi">C7</span> <span class="c ppi">C11</span></td><td>3</td></tr>
+      <tr><td>AC, só quem marcou AC</td><td>Sorteada em 05/11, mas nenhuma vaga sai dela. Desde a spec 122 o GPS não a cria mais.</td><td>6</td></tr>
+    </tbody>
+  </table></div>
+  <div class="cand"><b class="t">Visão do candidato</b><span>O comprovante e a área "Minhas inscrições". A situação fica "Inscrição enviada" até a primeira publicação de resultado. O candidato não vê, na área dele, o número que recebeu no sorteio: só na relação pública.</span></div>
+  <p class="small muted">Uma 12ª inscrição ficou em rascunho e nunca foi enviada. Ela não entra em lista nenhuma.</p>
+</section>
+
+<section class="cap" id="cap-4">
+  <div class="cap-head"><span class="cap-n">4</span><span class="eyebrow">Congelar · 03/11 12h05</span><h2>Congelamento: por que não basta encerrar as inscrições</h2><p class="pergunta-op">"As inscrições fecharam. Por que ainda preciso congelar alguma coisa?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Encerrar as inscrições impede que entre gente nova. <b>Congelar a relação</b> é outra coisa: é publicar, para cada lista, quem participa do sorteio e com que número, num registro que não muda mais. Cada pessoa recebe um <b>número do sorteio</b>, de 1 a N, e o conjunto ganha um <b>resumo criptográfico</b>, que muda se alguém for incluído, retirado ou renumerado.</p>
+      <p>O congelamento tem de acontecer <b>antes</b> da extração da Loteria. Assim ninguém pode montar a lista já sabendo o resultado. A Loteria Federal publica só a data da extração, então o GPS considera que ela aconteceu "não antes de 00h00 daquele dia", e a relação precisa ter sido congelada antes disso.</p>
+      <p>O número segue a ordem do protocolo, em ordem alfabética. Como o protocolo é aleatório, <b>o número não reflete a ordem de chegada</b>, embora a frase publicada diga "ordem crescente de protocolo".</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Gestor ou presidência da comissão</dd></div>
+      <div><dt>Onde</dt><dd>Edital › marco › <b>Sorteio</b> › em cada lista, "Publicar e congelar a relação"</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Método declarado; inscrições encerradas; concurso ainda não realizado (pergunta à Caixa); motivo, se já houver relação vigente; ao menos uma inscrição.</dd></div>
+      <div><dt>Produz</dt><dd>Relação congelada, pública em <span class="mono">/selecoes/sorteio/relacoes/…</span>, com o resumo.</dd></div>
+      <div><dt>Candidato vê</dt><dd>"Ver quem vai participar, e com que número", na página da seleção.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Depois da extração, observar a semente na mesma tela (cap. 5).</span></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/05-sorteio-recorte.jpg" alt="Tela do sorteio no trecho da lista geral, com relação congelada e sorteio realizado" loading="lazy"><figcaption>Uma lista na tela do sorteio: relação congelada em 03/11 com 11 participantes, o resumo e o link para o canal público. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/16-pub-relacao.jpg" alt="Página pública da relação de habilitados" loading="lazy"><figcaption>A mesma relação no portal público: número, candidato e protocolo, e se foi sucedida. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <div class="atencao"><b class="t">Atenção</b><span>"Publicar e congelar a relação" é um botão de um clique, sem passo de conferência, e congelar não se desfaz. Corrigir é publicar uma <b>relação nova, sucedendo a atual</b>, com motivo; a anterior continua pública como "sucedida". A tela mostra o aviso "Não congele a relação hoje: o sorteio seria recusado" quando a extração declarada não deixa tempo, mas o botão continua lá. <span class="s gps">Comprovado</span> <span class="s mel">Melhoria</span></span></div>
+</section>
+
+<section class="cap" id="cap-5">
+  <div class="cap-head"><span class="cap-n">5</span><span class="eyebrow">Semente · 04/11 e 05/11 09h23</span><h2>Loteria Federal e semente</h2><p class="pergunta-op">"O GPS busca os números na Caixa sozinho? E se a Caixa estiver fora do ar?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Quatro palavras, na ordem em que acontecem. O <b>concurso</b> é o número que o Edital declara: 6115. A <b>extração</b> é o sorteio da Caixa, em 04/11. A <b>ocorrência da fonte</b> é o registro, no GPS, dos números que a Caixa publicou. A <b>semente</b> é a sequência que entra na conta, normalizada desses números: <span class="mono">032588 078206 078624 063078 020763</span>.</p>
+      <p>Quem define o concurso é o <b>Elaborador</b>, na composição, e só o número. O instante da extração também é digitado ou copiado de um evento do cronograma: o GPS não o busca. Mudar depois de publicado é Retificação.</p>
+      <p>O GPS fala com a Caixa em dois momentos. A <b>conferência</b> só pergunta se o concurso já foi realizado: acontece na submissão, na publicação, na Retificação, no congelamento e no botão "Conferir na Caixa". A <b>observação</b> busca os números: é o botão "Observar a ocorrência 6115 na fonte", e <b>só acontece quando alguém clica</b>. Não há rotina automática.</p>
+      <p>Se a Caixa não responde, nada é gravado e o próximo passo é clicar de novo; o GPS tenta três vezes por clique. Se a Caixa responde sem os números, o GPS registra a indisponibilidade e pode passar ao concurso seguinte, pela regra de substituição que o Edital declarou. <b>Não existe digitar os números à mão.</b> A spec 021 proíbe semente digitada, e o código não tem esse caminho.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Elaborador declara o concurso · Gestor ou presidência observa</dd></div>
+      <div><dt>Onde</dt><dd>Compor › Classificação › método do sorteio · Edital › marco › Sorteio › "Observar a ocorrência"</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Concurso só com algarismos; antes do horário declarado, recusa registrar indisponibilidade; observar de novo devolve o mesmo registro.</dd></div>
+      <div><dt>Produz</dt><dd>Ocorrência: material bruto, "aconteceu não antes de" (00h00 do dia), quem observou e quando.</dd></div>
+      <div><dt>Candidato vê</dt><dd>Nada, até o sorteio.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Realizar o sorteio de cada lista (cap. 6).</span></div>
+    </dl>
+  </div>
+  <figure><img src="capturas/04-sorteio-topo.jpg" alt="Topo da tela do sorteio: método declarado e ocorrência observada" loading="lazy"><figcaption>Topo da tela do sorteio: o método que o Edital publicou, o botão "Conferir na Caixa" e a ocorrência 6115, observada em 05/11 09h23. <span class="s gps">Comprovado</span></figcaption></figure>
+  <div class="atencao"><b class="t">Atenção</b><span>Quando a Caixa falha, a mensagem ao operador traz o erro técnico cru ("URLError: …"). O campo "Aconteceu não antes de" mostra "04/11/2026 00:00", e quem lê pode tomar 00h00 por horário da extração. Na composição, a explicação do campo "Ocorrência" existe, mas só para leitores de tela: na tela visível há apenas o exemplo <span class="mono">6115</span>. <span class="s gps">Comprovado</span> <span class="s mel">Melhoria</span></span></div>
+</section>
+
+<section class="cap" id="cap-6">
+  <div class="cap-head"><span class="cap-n">6</span><span class="eyebrow">Sortear · 05/11 14h36–14h38</span><h2>Realizar o sorteio</h2><p class="pergunta-op">"Cliquei em sortear. Quantas vezes preciso fazer isso, e como confiro?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O sorteio é <b>um por lista</b>. A observação da semente é uma só, compartilhada, mas cada lista tem o seu botão "Realizar o sorteio", que só aparece quando aquela lista tem relação congelada, a ocorrência foi observada e ainda não há sorteio.</p>
+      <p>A conta não tem nada de aleatório depois do congelamento. Para cada participante o GPS calcula um SHA-256 de cinco dados: um rótulo fixo, o resumo da relação, a lista, a semente e o número da pessoa. A ordem é a desses resultados, do menor para o maior. Por isso cada lista dá uma ordem diferente, e a mesma pessoa pode ter posições diferentes: <span class="c ppi">C2</span> é 1ª na geral e 3ª na PPI.</p>
+      <p>Ao realizar, o GPS grava a ordem de <b>todos</b> os participantes (o sorteio não corta ninguém), a semente usada e o resumo do manifesto. A tela diz "Sorteio realizado… Falta publicar a classificação". Publicar é com o Publicador (cap. 9).</p>
+      <p>Qualquer pessoa pode conferir em <span class="mono">/selecoes/sorteio/…/verificar</span>. A página refaz cinco conferências a partir das entradas: a relação, o método, a semente, a ordem e o manifesto. Os quatro sorteios do Edital 35 foram refeitos fora do GPS no primeiro estudo, e conferem.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Gestor ou presidência</dd></div>
+      <div><dt>Onde</dt><dd>Edital › marco › Sorteio › em cada lista, "Realizar o sorteio"</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Extração posterior ao congelamento; ocorrência disponível e declarada; relação não sucedida; sorteio ainda não feito.</dd></div>
+      <div><dt>Produz</dt><dd>Ato de ordenação com a posição de cada um, semente e manifesto. Imutável; anular é constituir um sucessor.</dd></div>
+      <div><dt>Candidato vê</dt><dd>"Sorteio realizado" na página da seleção; a ordem, só depois da divulgação.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Divulgar a classificação (cap. 9) e cortar cada lista (cap. 8). Um não espera o outro.</span></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/15-pub-selecao.jpg" alt="Página pública da seleção, bloco do sorteio público" loading="lazy"><figcaption>Página pública da seleção, no bloco "Sorteio público". <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/03-marco.jpg" alt="Condução do marco, com uma linha por lista e colunas ordem, corte, apuração e publicação" loading="lazy"><figcaption>"Condução do marco" em 05/11: ordem e publicação feitas nas três listas; corte só na ampla; apuração na ampla e na PcD, esta sem corte. É o melhor painel de "o que falta". <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <div class="atencao"><b class="t">Atenção</b><span>"Realizar o sorteio" aparece mesmo quando a recusa é certa (extração anterior ao congelamento): a recusa só vem ao clicar, num parágrafo de três passos. Num marco com três listas são três congelamentos, uma observação e três sorteios, sem gesto em lote. <span class="s gps">Comprovado</span> <span class="s mel">Melhoria</span></span></div>
+</section>
+
+<section class="cap" id="cap-7">
+  <div class="cap-head"><span class="cap-n">7</span><span class="eyebrow">A regra · sem o GPS ainda</span><h2>Da ordem sorteada à distribuição de vagas</h2><p class="pergunta-op">"<span class="c pcd">C6</span> é 1ª na lista PcD. Ela fica com a vaga PcD?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Não necessariamente. A ordem diz quem ficou em que posição; a <b>distribuição</b> diz qual vaga alcança cada pessoa. Ficar entre os quatro primeiros da ordem geral é estar dentro das vagas da ampla. <span class="c pcd">C6</span> é 3ª na geral: está dentro das vagas da ampla <b>e</b> dentro da vaga PcD.</p>
+      <p>O Edital resolve: o cotista sorteado dentro das vagas das duas listas fica na ampla, e não é computado na reserva, "abrindo vaga para o próximo". Então <span class="c pcd">C6</span> ocupa a Ampla 3, e a vaga PcD vai para <span class="c pcd">C9</span>. Aparecer em duas listas não dá duas vagas.</p>
+      <p><span class="c ppi">C7</span> é o caso contrário: 1º na PPI, mas 6º na geral, fora da ampla. Ele fica com a vaga PPI. <span class="c ppi">C2</span> é PPI e está na ampla (1ª), mas é a 3ª na PPI e não alcançaria a reserva de qualquer forma.</p>
+      <p>No GPS, a distribuição <b>não é um ato</b>. Ela acontece na <b>apuração da ocupação</b>: a lista reservada desconta quem já ocupa pela ampla (cap. 8).</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Ampla, 4 vagas</dt><dd><span class="c ppi">C2</span> <span class="c ac">C1</span> <span class="c pcd">C6</span> <span class="c ac">C4</span></dd></div>
+      <div><dt>PcD, 1 vaga</dt><dd><span class="c pcd">C9</span>, porque <span class="c pcd">C6</span> ficou na ampla</dd></div>
+      <div><dt>PPI, 1 vaga</dt><dd><span class="c ppi">C7</span></dd></div>
+      <div><dt>Suplentes da ampla</dt><dd><span class="c ac">C10</span> <span class="c ppi">C7</span> <span class="c ac">C3</span> <span class="c ac">C8</span>, pela faixa 5º–8º emitida em 05/11</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Formalizar, lista por lista, com o corte e a apuração (cap. 8).</span></div>
+    </dl>
+  </div>
+  <div class="q"><b>Decisão pendente (Q6).</b> O texto que manda "abrir vaga ao próximo" (§ 2º do art. 1º da Resolução CS nº 10/2017) fala de candidatos negros e indígenas. Aplicá-lo à PcD é interpretação. A equipe e o GPS já a aplicam. <span class="s dec">Decisão pendente</span> <span class="s edital">Edital</span></div>
+</section>
+
+<section class="cap" id="cap-8">
+  <div class="cap-head"><span class="cap-n">8</span><span class="eyebrow">Avançar · 05/11 15h20 e simulação</span><h2>Corte, faixa, progressão e ocupação</h2><p class="pergunta-op">"O sorteio terminou. Por que ainda não posso convocar?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Porque convocar exige uma <b>apuração da ocupação</b>, e a apuração conta sobre o <b>corte</b>. São dois atos por lista, nesta ordem.</p>
+      <p>O <b>corte</b> marca até que posição a lista avança. No Edital 35 o alvo vem do quadro de vagas (ampla 4, PcD 1, PPI 1), com 0 suplentes. Quem está dentro <b>progride</b>; quem está depois fica <b>fora da faixa</b>, o que não é eliminação. A tela calcula uma <b>prévia</b> sem gravar nada; "Emitir corte" é o ato, irreversível.</p>
+      <p>A <b>apuração da ocupação</b> conta, para cada lista: vagas publicadas, efetivas, ocupadas e "a ocupar". <b>Titular</b> é quem cabe nas primeiras vagas entre os que progridem; na lista reservada, sem contar quem já ocupa pela ampla. <b>Suplente</b> é quem progride além dos titulares.</p>
+      <p>Quando faltam ocupantes, a <b>faixa seguinte</b> continua a lista de onde a anterior parou, e quem ela alcança passa a progredir. As faixas de um corte formam uma <b>geração</b>. Emitir o corte de novo, com motivo, cria uma <b>geração sucessora</b>, que substitui todas as faixas da anterior.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Gestor ou presidência</dd></div>
+      <div><dt>Onde</dt><dd>Edital › marco › <b>Corte</b> (uma aba por lista) e › <b>Ocupação</b></dd></div>
+      <div><dt>O GPS verifica</dt><dd>Corte: ordem vigente e regra de corte publicada. Apuração: ordem vigente e linha no quadro. Faixa seguinte: apuração vigente com déficit.</dd></div>
+      <div><dt>Produz</dt><dd>Ato de corte (quem progride, quem fica fora e por quê) e apuração (os quatro números).</dd></div>
+      <div><dt>Candidato vê</dt><dd>Nada. O corte e a ocupação são internos; a área do candidato diz "Aguardando chamada".</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Convocar os titulares (cap. 10).</span></div>
+    </dl>
+  </div>
+  <h3>O caminho da vaga PcD até <span class="c pcd">C9</span>, executado na cópia <span class="s sim">Simulado</span></h3>
+  <div class="escada">
+    <div class="degrau"><span class="i">1</span><b>Emitir o corte PcD</b><span>O corte lê só a lista PcD: <span class="c pcd">C6</span> progride, <span class="c pcd">C9</span> fica fora da faixa.</span><span class="s def">grava o contrário do Edital</span></div>
+    <div class="degrau"><span class="i">2</span><b>Apurar a ocupação PcD</b><span><span class="c pcd">C6</span> já ocupa pela ampla e não conta: 0 de 1 ocupada.</span><span></span></div>
+    <div class="degrau"><span class="i">3</span><b>Pedir a faixa seguinte</b><span>Pelo déficit de 1. Agora <span class="c pcd">C9</span> progride.</span><span></span></div>
+    <div class="degrau"><span class="i">4</span><b>Apurar de novo</b><span>1 de 1 ocupada; <span class="c pcd">C9</span> é a titular.</span><span class="s gps">bate com o Edital</span></div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/07-corte-pcd-previa.jpg" alt="Prévia do corte PcD: C6 progride, C9 fora da faixa" loading="lazy"><figcaption>A prévia do corte PcD, antes de emitir: <span class="c pcd">C6</span> progride. Nada na tela diz que ela ocupa a ampla nem que a vaga vai mudar de mãos. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/20-corte-pcd-emitido.jpg" alt="Corte PcD depois da faixa seguinte: geração com 2 faixas, mas a faixa calculada ainda mostra C9 fora" loading="lazy"><figcaption>Depois dos quatro passos: "Geração vigente com 2 faixas", mas "A faixa calculada" continua mostrando <span class="c pcd">C9</span> fora da faixa. A tela recalcula a faixa inicial, não a geração. <span class="s sim">Simulado</span> <span class="s def">Provável defeito</span></figcaption></figure>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/06-corte-ampla.jpg" alt="Corte da ampla com geração de duas faixas" loading="lazy"><figcaption>O corte da ampla emitido em 05/11: geração com a faixa inicial e uma faixa seguinte, motivo "Suplente". <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/08-ocupacao.jpg" alt="Tela de ocupação com os quatro números por lista" loading="lazy"><figcaption>A ocupação em 05/11, com os quatro números por lista. A ampla já mostra as vagas ocupadas, embora ninguém tenha sido convocado. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <div class="blocos">
+    <div class="bloco le"><b>Abrir corte, ocupação, sorteio, convocação</b><span>Nenhuma tela grava ao abrir. A prévia do corte e a lista de "quem será convocado" são cálculos.</span></div>
+    <div class="bloco of"><b>Emitir corte · Emitir faixa seguinte</b><span>Imutáveis. "Motivo da sucessão" cria uma geração nova; "Motivo" da faixa seguinte acrescenta à atual. Os dois campos estão na mesma tela.</span></div>
+    <div class="bloco of"><b>Apurar a ocupação · Pedir a faixa seguinte com este déficit</b><span>A apuração é de um clique, sem conferência. A faixa pedida pela ocupação usa o déficit e escreve o motivo sozinha.</span></div>
+  </div>
+  <div class="atencao"><b class="t">Atenção</b><span>A faixa da ampla de 05/11, com motivo "Suplente", criou de fato os quatro suplentes da ampla: <span class="c ac">C10</span>, <span class="c ppi">C7</span>, <span class="c ac">C3</span> e <span class="c ac">C8</span> progridem, não ocupam e esperam vaga. O que confundiu foi a tela dizer "Progride", e não "suplente". O Edital fala em "até 15 suplentes por código de vaga", e a regra publicada traz 0 (Q3). <span class="s dec">Decisão pendente</span></span></div>
+  <div class="q"><b>Decisão pendente (Q1).</b> O corte da lista reservada deve pular quem já ocupa pela ampla? Ou os quatro atos ficam, e a tela passa a mostrá-los antes da emissão? Enquanto isso, a sugestão é não emitir os cortes PcD e PPI reais do Edital 35.</div>
+</section>
+
+<section class="cap" id="cap-9">
+  <div class="cap-head"><span class="cap-n">9</span><span class="eyebrow">Divulgar · 05/11 14h41–15h15</span><h2>Divulgação e leitura dos resultados</h2><p class="pergunta-op">"O que eu publico, e o que o candidato fica sabendo?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Três coisas ficam públicas em momentos diferentes. A <b>relação</b> sai quando se congela (cap. 4). A <b>verificação do sorteio</b> fica disponível quando se sorteia (cap. 6). O <b>resultado</b> é um ato próprio do <b>Publicador</b>, por lista, depois do sorteio.</p>
+      <p>Publicar tem duas fases. A <b>prévia</b> não grava nada e mostra se algo impede: ato sucedido, corte obsoleto, recurso pendente. A confirmação publica: o resultado fica público, cada participante vê a própria situação, e o ato não se despublica. A natureza é <b>Resultado preliminar</b> ou <b>Resultado definitivo</b>; o GPS não usa "final". A preliminar abre o prazo de recurso, quando o marco o declara; a definitiva só sai sem recurso pendente.</p>
+      <p>A divulgação <b>não é pré-requisito</b> de corte, apuração ou convocação: corre em paralelo. O contrário vale: um corte obsoleto impede publicar.</p>
+      <p>A página pública do resultado traz posição, candidato, protocolo e modalidade, e o selo "Esta ordem foi produzida por sorteio público". É a <b>ordem do sorteio</b>: a lista PcD publicada mostra <span class="c pcd">C6</span> em 1º, sem dizer que ela ficou na ampla.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Publicador. Gestor e presidência não publicam resultado.</dd></div>
+      <div><dt>Onde</dt><dd>Edital › marco › Sorteio › "Publicar a classificação deste sorteio", ou Condução do marco</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Ordem vigente, corte em dia, autoridade signatária; para a definitiva, prazo recursal encerrado e nenhum recurso pendente.</dd></div>
+      <div><dt>Produz</dt><dd>Publicação imutável, com PDF assinado. Os avisos por e-mail saem depois, pelo despacho.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Corte e apuração (cap. 8), se ainda não feitos; depois convocar.</span></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/17-pub-resultado-pcd.jpg" alt="Página pública do resultado preliminar da lista PcD" loading="lazy"><figcaption>Resultado preliminar da lista PcD, como o público o lê. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/14-publicacoes.jpg" alt="Resultados divulgados do marco, vistos pelo Publicador" loading="lazy"><figcaption>O histórico de publicações do marco, na visão do Publicador. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <div class="cand"><b class="t">Visão do candidato</b><span>Na área dele: "Sua situação", "Por quê" e "O que fazer", com "{N}º lugar" em cada lista e a frase "Você concorre em mais de uma lista, e cada lista tem a sua classificação". Ele nunca vê corte nem ocupação: até ser convocado, a situação é "Aguardando chamada", sem dizer se está dentro das vagas.</span></div>
+  <div class="q"><b>Decisão pendente (Q2).</b> A lista reservada divulgada deve marcar ou omitir quem ficou na ampla? O Edital diz que essas pessoas "não constarão na lista de classificados como autodeclarados".</div>
+  <div class="atencao"><b class="t">Atenção</b><span>Na prévia, a natureza já vem marcada como "Resultado preliminar". Quem não olha publica preliminar, e isso abre o prazo de recurso. <span class="s gps">Comprovado</span> <span class="s mel">Melhoria</span></span></div>
+</section>
+
+<section class="cap" id="cap-10">
+  <div class="cap-head"><span class="cap-n">10</span><span class="eyebrow">Convocar · simulado na cópia</span><h2>Convocação e documentos do candidato</h2><p class="pergunta-op">"Quem eu chamo, como ele fica sabendo, e o que ele precisa entregar?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>A tela de convocação de cada lista começa pelos números da apuração e oferece <b>"Convocar os titulares num ato só"</b>: as pessoas que ocupam vaga pela apuração, do começo da fila. A <b>espécie</b> da chamada não é escolhida: titular é "para vaga inicial", suplente é "para vaga que vagou", indeferido é "para regularizar". O prazo vem de um evento do cronograma ou de uma data digitada; o GPS não calcula dias úteis.</p>
+      <p>Como o candidato fica sabendo depende do Edital. Com <b>mensagem individual</b>, o GPS envia um e-mail de texto simples que manda o candidato entrar no portal. Com <b>publicação</b>, que é o caso do Edital 35, <b>o GPS não publica nada</b>: o operador publica a lista fora do sistema e registra "onde e quando a lista foi publicada". O prazo de cada convocação só começa a correr a partir dessa comunicação.</p>
+      <p>Os documentos da convocação são os que o Edital declarou como pedidos "na convocação", por Perfil e modalidade. O candidato envia cada um na página da convocação, em PDF; não há botão de "concluir envio". <b>O Edital 35 não pede documento na convocação</b>, só na inscrição, e não declara Requerimento de Matrícula. Por isso, neste caso, a página do convocado é a versão simples. <span class="s prev">Visto no código, não exercitado</span></p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Gestor ou presidência</dd></div>
+      <div><dt>Onde</dt><dd>Edital › marco › <b>Convocação</b> (uma por lista), ou "Abrir a convocação deste recorte" na Ocupação</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Apuração emitida e não obsoleta; pessoa dentro da faixa; ordem da fila; forma de comunicar declarada.</dd></div>
+      <div><dt>Produz</dt><dd>Convocação com espécie, fundamento, vencimento e lista de documentos; depois, a comunicação.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Registrar a publicação; esperar a resposta; conferir (cap. 11).</span></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/26-convocacao-ampla-pendente.jpg" alt="Convocação da ampla com quatro comunicações pendentes e a fila de suplentes" loading="lazy"><figcaption>Titulares da ampla convocados, comunicação pendente: o prazo não corre até registrar a publicação. Abaixo, a fila: <span class="c ppi">C7</span> aparece como suplente da ampla sem nenhuma marca de que é o titular da PPI. <span class="s sim">Simulado</span></figcaption></figure>
+    <figure><img src="capturas/42-portal-c10-convocacao.jpg" alt="Página da convocação no portal, vista por C10" loading="lazy"><figcaption><span class="c ac">C10</span> no portal: "Você foi convocada(o)" antes de a publicação ser registrada, com o fundamento que o operador digitou e "Siga as instruções do Edital". <span class="s sim">Simulado</span></figcaption></figure>
+  </div>
+  <figure><img src="capturas/09-convocacao-pcd.jpg" alt="Convocação PcD em 05/11, sem corte, oferecendo chamar para regularizar C6 e C9" loading="lazy"><figcaption>A convocação PcD no banco real, em 05/11, sem corte emitido: "Quem pode ser chamado para regularizar" lista <span class="c pcd">C6</span> e <span class="c pcd">C9</span> como indeferidas, embora ninguém tenha tido documento indeferido. Sem corte, o GPS lê todos como não habilitados. Foi o que confundiu a reunião aos 58 minutos. <span class="s gps">Comprovado</span> <span class="s def">Provável defeito</span></figcaption></figure>
+  <div class="atencao"><b class="t">Atenção</b><span>O candidato vê a convocação no portal <b>antes</b> da publicação oficial. O fundamento digitado pelo operador vai para o candidato como está: se disser "vaga aberta pela desistência de Fulana", expõe outra pessoa. Na convocação por publicação, a página diz "Comunicação enviada em" e "contado do envio", embora nada tenha sido enviado. <span class="s sim">Simulado</span> <span class="s def">Provável defeito</span> <span class="s mel">Melhoria</span></span></div>
+  <div class="cand"><b class="t">Visão do candidato, quando há documentos</b><span>Cada documento tem um cartão com o estado: "Falta enviar", "Recebido… A comissão vai conferir", "Precisa de correção: {motivo}. Envie um novo arquivo até…" ou "Conferido". O candidato não recebe e-mail quando um documento vira pendência: só sabe se voltar ao portal. A spec 121, que melhora o e-mail e leva direto à convocação, ainda não foi implementada. <span class="s prev">Previsto</span></span></div>
+</section>
+
+<section class="cap" id="cap-11">
+  <div class="cap-head"><span class="cap-n">11</span><span class="eyebrow">Conferir e decidir</span><h2>Conferência, decisão e o que é "ocupar"</h2><p class="pergunta-op">"Quando a vaga está garantida? Quando é matrícula?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Quem confere documentos é o Gestor, a presidência ou o membro alocado à conferência daquele Perfil. Na página "Documentos da convocação", cada item recebe um de três resultados: <b>Conforme ao exigido pelo Edital</b> (só depois de abrir o arquivo), <b>Pendente</b> ou <b>Não se aplica</b>, os dois últimos com motivo, e o motivo vai ao candidato. Não há fila própria de conferência: o operador usa a lista "Chamadas praticadas", com uma ordenação opcional.</p>
+      <p>A <b>decisão</b> é o <b>desfecho</b>, registrado pelo Gestor ou pela presidência no cartão da chamada. Aceite e regularização só entram com todo documento obrigatório conferido. A conferência completa não gera o desfecho sozinha: a tela diz "Pronta para decidir", e alguém precisa registrar.</p>
+      <p>O aceite <b>não é matrícula</b>, e o próprio portal o diz: "Este registro não é matrícula, bolsa nem contrato". Quem tem aceite fica "apto para formalização". O setor de Formalização recebe os documentos, e o Exportador gera o arquivo para o Registro Acadêmico. A matrícula acontece fora do GPS.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Conferir: Gestor, presidência ou membro alocado. Desfecho: Gestor ou presidência.</dd></div>
+      <div><dt>Onde</dt><dd>Convocação › cartão da pessoa › "Documentos da convocação" e "Registrar desfecho"</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Abriu o arquivo antes de "conforme"; motivo em pendência; documentos conferidos antes do aceite.</dd></div>
+      <div><dt>Produz</dt><dd>Conferência por item; desfecho, que tira ou põe a pessoa na contagem de ocupantes.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Se alguém sai, chamar o próximo (cap. 12). Se todos aceitam, formalização e exportação.</span></div>
+    </dl>
+  </div>
+  <h3>Nove momentos que a equipe chama de "ocupar"</h3>
+  <div class="escada">
+    <div class="degrau"><span class="i">1</span><b>Titular designado</b><span>Está entre os primeiros que o corte fez progredir, até o número de vagas. <span class="c pcd">C9</span> depois da faixa seguinte.</span><span class="s gps">no GPS</span></div>
+    <div class="degrau"><span class="i">2</span><b>Vaga "Ocupada" no contador</b><span>Titular sem desfecho de saída, mais suplente que aceitou. A ampla marcou 4 de 4 sem ninguém convocado.</span><span class="s gps">no GPS</span></div>
+    <div class="degrau"><span class="i">3</span><b>Convocada</b><span>Ato de convocação praticado. Contador "Convocadas".</span><span class="s gps">no GPS</span></div>
+    <div class="degrau"><span class="i">4</span><b>Prazo correndo</b><span>Comunicação enviada, ou publicação registrada.</span><span class="s gps">no GPS</span></div>
+    <div class="degrau fora"><span class="i">5</span><b>Convocação "atendida"</b><span>Não existe como estado. O mais próximo é o desfecho.</span><span class="s dec">não existe</span></div>
+    <div class="degrau"><span class="i">6</span><b>Documentação conforme</b><span>Todo item obrigatório "Conforme" ou "Não se aplica": "Pronta para decidir". Não existe "deferida".</span><span class="s gps">no GPS</span></div>
+    <div class="degrau"><span class="i">7</span><b>Aceite</b><span>"Vaga aceita", registrada pela comissão. Para o suplente, é aqui que ele passa a contar como ocupante.</span><span class="s gps">no GPS</span></div>
+    <div class="degrau"><span class="i">8</span><b>Apto para formalização</b><span>Derivado do aceite ou da regularização.</span><span class="s gps">no GPS</span></div>
+    <div class="degrau fora"><span class="i">9</span><b>Matrícula efetivada</b><span>Fora do GPS, no Registro Acadêmico. O GPS só exporta o arquivo e, se a pessoa não comparecer, registra o cancelamento por inércia com atestado.</span><span class="s dec">fora do GPS</span></div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/29-convocacao-ampla-desfechos.jpg" alt="Chamadas praticadas da ampla, com aceites, uma desistência e uma suplente convocada" loading="lazy"><figcaption>As chamadas praticadas da ampla depois dos desfechos simulados: três aceites, a desistência de <span class="c ac">C1</span> e <span class="c ac">C10</span> convocada para a vaga que vagou. <span class="s sim">Simulado</span></figcaption></figure>
+    <figure><img src="capturas/42-portal-c9-convocacao.jpg" alt="Página da convocação de C9 no portal, com vaga aceita" loading="lazy"><figcaption><span class="c pcd">C9</span> no portal depois do aceite: "Vaga aceita" e "Este registro não é matrícula, bolsa nem contrato". <span class="s sim">Simulado</span></figcaption></figure>
+  </div>
+  <div class="q"><b>Decisão pendente (Q8).</b> O contador "Ocupadas" deve continuar contando o titular designado, como hoje, ou passar a contar o aceite? Se continuar, a tela precisa dizer isso. A equipe o leu como matrícula na reunião de 05/11.</div>
+  <div class="atencao"><b class="t">Atenção</b><span>Um desfecho registrado por engano não tem correção pela tela: o formulário só aparece enquanto não há desfecho, embora o serviço aceite sucessão com motivo. <span class="s gps">Comprovado</span> <span class="s def">Provável defeito</span></span></div>
+</section>
+
+<section class="cap" id="cap-12">
+  <div class="cap-head"><span class="cap-n">12</span><span class="eyebrow">Quando alguém não assume · simulado</span><h2>Desistência e não atendimento</h2><p class="pergunta-op">"<span class="c ac">C1</span> desistiu por e-mail. O que eu faço?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O candidato não tem botão de desistir. A comissão registra o <b>desfecho</b> "Desistência expressa", com fundamento. Se a pessoa simplesmente não responde, o prazo vencido <b>não decide nada sozinho</b>: depois do vencimento, a comissão registra "Não atendimento à convocação", uma a uma ou em lote ("Não atendimento das convocações vencidas").</p>
+      <p>Com o desfecho, a ocupação é refeita sozinha: a ampla caiu de 4 de 4 para 3 de 4. A fila aponta a próxima, <span class="c ac">C10</span>, que já estava alcançada pela faixa 5º–8º; sem essa faixa, seria preciso pedir a faixa seguinte antes. A chamada dela é "para vaga que vagou", e ela só passa a contar como ocupante quando aceitar. Tudo fica no histórico do recorte.</p>
+      <p>Dois casos a mais, simulados no estudo anterior, mostram onde o GPS ainda não acompanha a regra.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Gestor ou presidência</dd></div>
+      <div><dt>Onde</dt><dd>Convocação › cartão › "Registrar desfecho"; "Quem pode ser chamado" › "Chamar uma pessoa da fila"</dd></div>
+      <div><dt>O GPS verifica</dt><dd>Não atendimento só depois do vencimento; um desfecho por chamada; fila em ordem.</dd></div>
+      <div><dt>Produz</dt><dd>Desfecho, apuração sucessora automática, nova convocação.</dd></div>
+      <div><dt>Candidato vê</dt><dd>"Desistência registrada" ou "Convocação não atendida"; quem é chamado vê a nova convocação.</dd></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Se a fila acabou: Ocupação › "Pedir a faixa seguinte com este déficit".</span></div>
+    </dl>
+  </div>
+  <div class="blocos">
+    <div class="bloco"><b>Reserva sem candidato</b><span>Se <span class="c pcd">C9</span> desiste, a PcD fica 0 de 1 e a fila vazia: a única outra PcD é <span class="c pcd">C6</span>, que ocupa a ampla. O GPS emite uma faixa seguinte <b>vazia</b> e a vaga <b>não reverte</b> para a ampla, embora o Perfil declare "reverte ao esgotar". <span class="s def">Provável defeito</span> <span class="s dec">Q4</span></span></div>
+    <div class="bloco"><b>A mesma pessoa em duas vagas</b><span>Se <span class="c ac">C1</span> e <span class="c ac">C10</span> não assumem, a fila da ampla chega a <span class="c ppi">C7</span>, que já aceitou a PPI. O GPS deixa convocá-lo e aceitar também pela ampla, e ele passa a contar nas duas. <span class="c ppi">C11</span>, a próxima PPI, nunca é chamada. <span class="s def">Provável defeito</span> <span class="s dec">Q7</span></span></div>
+  </div>
+  <figure><img src="capturas/31-ocupacao-depois.jpg" alt="Ocupação depois dos desfechos simulados" loading="lazy"><figcaption>A ocupação depois da desistência de <span class="c ac">C1</span>: ampla com uma vaga a ocupar. <span class="s sim">Simulado</span></figcaption></figure>
+  <div class="atencao"><b class="t">Atenção</b><span>Dar mais prazo a quem foi convocado é "Corrigir esta convocação", dentro do cartão da chamada, com motivo e vencimento novo. A palavra não é "prorrogar", e o botão fica escondido num bloco recolhível. <span class="s gps">Comprovado</span> <span class="s mel">Melhoria</span></span></div>
+</section>
+
+<section class="cap" id="cap-13">
+  <div class="cap-head"><span class="cap-n">13</span><span class="eyebrow">Concluir</span><h2>Como o processo termina</h2><p class="pergunta-op">"Quando posso dizer que acabou?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O GPS não encerra nada sozinho, nem por data nem pelo último ato. O Gestor <b>encerra o Edital</b>, com motivo, num ato irreversível. Antes, a tela lista o que <b>impede</b>: inscrições em curso, prazo recursal em curso, recurso sem decisão, Retificação homologada não publicada. E lista o que <b>só adverte</b>: convocações aguardando resposta, convocações vencidas sem registro, resultado não divulgado, apuração desatualizada.</p>
+      <p><b>Vagas podem ficar sem ocupar.</b> Nenhuma regra exige preencher todas antes de encerrar.</p>
+      <p>Encerrar o Edital tira a seleção do recebimento de inscrições e de Retificações. Ele <b>não fecha</b> a convocação: um Edital encerrado ainda aceita desfecho e envio de documento. Só o encerramento do <b>Processo</b>, que exige todos os seus Editais encerrados ou cancelados, fecha tudo.</p>
+      <p>Para prestar contas, o <b>Relatório do Edital</b> reúne números, pontos de atenção e documentos oficiais, e a trilha de auditoria guarda cada ato, inclusive os sucedidos.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>Quem age</dt><dd>Gestor</dd></div>
+      <div><dt>Onde</dt><dd>Edital › "Encerrar"; Edital › Relatório; Processo › "Encerrar Processo"</dd></div>
+      <div><dt>O GPS verifica</dt><dd>As pendências impeditivas; para o Processo, todos os Editais em estado final.</dd></div>
+      <div><dt>Produz</dt><dd>Edital encerrado; relatório de encerramento em PDF.</dd></div>
+      <div><dt>Candidato vê</dt><dd>"Edital encerrado" na vitrine; com o Processo encerrado, não envia mais documento.</dd></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/33-encerrar.jpg" alt="Tela de confirmação do encerramento do Edital" loading="lazy"><figcaption>Confirmação do encerramento, com o que impede e o que "continua depois do encerramento". <span class="s sim">Simulado</span>, sem confirmar.</figcaption></figure>
+    <figure><img src="capturas/32-relatorio.jpg" alt="Relatório do Edital, pontos de atenção" loading="lazy"><figcaption>O Relatório do Edital, nos pontos de atenção. Não é ato administrativo. <span class="s sim">Simulado</span></figcaption></figure>
+  </div>
+  <div class="q"><b>Decisão pendente.</b> Encerrar o Edital deveria fechar também convocações e envios? Hoje não fecha.</div>
+</section>
+
+<!-- ============ ENTREGA B ============ -->
+<section class="fora-do-modo" id="roteiro" aria-labelledby="t-roteiro">
+  <span class="eyebrow">Entrega B</span>
+  <h2 id="t-roteiro">Roteiro operacional</h2>
+  <p style="margin-top:8px">Para quem vai executar. Os caminhos partem de <span class="mono">Gestão › Processos Seletivos › Edital</span>; "marco" é o marco classificatório do Perfil.</p>
+  <div class="tabela scroll" style="margin-top:14px"><table>
+    <thead><tr><th>Marco</th><th>Papel</th><th>Pré-requisitos</th><th>Caminho e ação</th><th>Resultado e onde conferir</th><th>Impedimentos comuns</th></tr></thead>
+    <tbody>
+      <tr><td>1. Criar</td><td>Gestor</td><td>Unidade registrada e ativa</td><td>Processos › Criar: identificação, título, número e ano do 1º Edital</td><td>Processo e Edital "em elaboração"</td><td>Número/ano já usado</td></tr>
+      <tr><td>2. Compor</td><td>Elaborador</td><td>Edital em elaboração</td><td>Edital › Compor: Perfis (vagas, modalidades, qual é a ampla, quadro, reversão, forma de convocação), Cronograma, Classificação (marco por sorteio, concurso, instante, normalização, regra de corte), Inscrição (período, documentos)</td><td>Etapa "Revisão" sem achados bloqueantes</td><td>Quadro não soma; método incompleto; regra de corte sem desfecho de empate; período não designado</td></tr>
+      <tr><td>3. Homologar e publicar</td><td>Elaborador › Homologador › Publicador</td><td>Três pessoas, ou ao menos duas</td><td>Atos "Submeter", "Homologar", "Publicar", com autoridade signatária</td><td>Edital "Publicado", página pública</td><td>Segregação; concurso já realizado; extração inviável</td></tr>
+      <tr><td>4. Inscrições</td><td>Candidato</td><td>Período aberto</td><td>Portal</td><td>Gestão › Edital › inscrições</td><td>—</td></tr>
+      <tr><td>5. Congelar</td><td>Gestor ou presidência</td><td>Inscrições encerradas; extração no dia seguinte ou depois</td><td>Marco › Sorteio › "Publicar e congelar a relação", em cada lista</td><td>"Relação congelada em…", link para o canal público</td><td>Inscrições em curso; concurso já realizado</td></tr>
+      <tr><td>6. Semente</td><td>Gestor ou presidência</td><td>Depois da extração</td><td>Marco › Sorteio › "Observar a ocorrência N na fonte"</td><td>"Material bruto observado"</td><td>Caixa fora do ar: clicar de novo</td></tr>
+      <tr><td>7. Sortear</td><td>Gestor ou presidência</td><td>Relação congelada; ocorrência observada</td><td>Marco › Sorteio › "Realizar o sorteio", em cada lista</td><td>"Sorteio realizado", "Verificar no canal público"</td><td>Extração anterior ao congelamento</td></tr>
+      <tr><td>8. Divulgar</td><td>Publicador</td><td>Ordem vigente; autoridade signatária</td><td>Sorteio › "Publicar a classificação" › prévia › natureza › "Publicar este resultado"</td><td>Marco › Publicações; página pública</td><td>Corte obsoleto; para definitiva, recurso pendente</td></tr>
+      <tr><td>9. Cortar</td><td>Gestor ou presidência</td><td>Ordem vigente; regra de corte</td><td>Marco › Corte › aba da lista › conferir a prévia › "Emitir corte"</td><td>"Geração vigente com N faixas"</td><td>Empate na última posição</td></tr>
+      <tr><td>10. Apurar</td><td>Gestor ou presidência</td><td>Ordem e linha no quadro</td><td>Marco › Ocupação › "Apurar a ocupação deste recorte"; na reservada, se faltar, "Pedir a faixa seguinte com este déficit" e apurar de novo</td><td>Publicadas, Efetivas, Ocupadas, A ocupar</td><td>Apuração obsoleta</td></tr>
+      <tr><td>11. Convocar</td><td>Gestor ou presidência</td><td>Apuração vigente</td><td>Marco › Convocação › "Convocar os titulares num ato só"; prazo do cronograma ou data</td><td>Cartões em "Chamadas praticadas"</td><td>Forma de comunicar não declarada</td></tr>
+      <tr><td>12. Comunicar</td><td>Gestor ou presidência</td><td>Convocação praticada</td><td>Por publicação: publicar fora e registrar "Onde e quando a lista foi publicada". Por mensagem: "Emitir a comunicação"</td><td>Prazo começa a correr</td><td>Falha de envio: emitir de novo</td></tr>
+      <tr><td>13. Conferir</td><td>Gestor, presidência ou membro alocado</td><td>Documento enviado</td><td>Cartão › "Documentos da convocação" › abrir › Conforme / Pendente / Não se aplica</td><td>"N de M conferido(s)"; "Pronta para decidir"</td><td>"Abra o documento antes de conferi-lo como conforme"</td></tr>
+      <tr><td>14. Decidir</td><td>Gestor ou presidência</td><td>Para aceite: obrigatórios conferidos</td><td>Cartão › "Registrar desfecho"</td><td>Ocupação refeita; candidato vê o resultado</td><td>Documentos não conferidos; não atendimento antes do vencimento</td></tr>
+      <tr><td>15. Chamar o próximo</td><td>Gestor ou presidência</td><td>Vaga a ocupar</td><td>Convocação › "Chamar uma pessoa da fila"</td><td>Nova convocação "para vaga que vagou"</td><td>Fila esgotada: pedir faixa seguinte</td></tr>
+      <tr><td>16. Encerrar</td><td>Gestor</td><td>Sem pendências impeditivas</td><td>Edital › "Encerrar", com motivo; depois, Processo › "Encerrar Processo"</td><td>Edital "Encerrado"; Relatório de encerramento</td><td>Prazo recursal ou recurso em curso</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ ENTREGA C ============ -->
+<section class="fora-do-modo" id="matriz" aria-labelledby="t-matriz">
+  <span class="eyebrow">Entrega C</span>
+  <h2 id="t-matriz">Matriz de conceitos ambíguos</h2>
+  <div class="tabela scroll" style="margin-top:14px"><table>
+    <thead><tr><th>Na tela</th><th>Significado técnico atual</th><th>O que a equipe entendeu</th><th>Exemplo do Edital 35</th><th>Risco</th><th>Esclarecimento proposto</th></tr></thead>
+    <tbody>
+      <tr><td><b>Corte</b></td><td>Ato que fixa até onde uma lista avança, calculado só sobre ela</td><td>A distribuição final das vagas</td><td>Corte PcD diz <span class="c pcd">C6</span> progride</td><td>Emitir ato que contraria o Edital</td><td>Mostrar, na lista reservada, quem ocupa pela ampla, antes de emitir</td></tr>
+      <tr><td><b>Faixa / geração</b></td><td>Faixa é um trecho alcançado; geração é o conjunto das faixas vigentes</td><td>Sinônimos, ou uma "nova lista"</td><td>Ampla: geração com 2 faixas</td><td>Confundir continuar com refazer</td><td>Mostrar a geração acumulada, não só a faixa inicial</td></tr>
+      <tr><td><b>Progride</b></td><td>Está dentro de alguma faixa</td><td>Tem vaga</td><td><span class="c ac">C10</span> progride e é suplente</td><td>Chamar suplente de titular</td><td>"Progride como titular" / "progride como suplente"</td></tr>
+      <tr><td><b>Fora da faixa</b></td><td>Ainda não alcançado; não é eliminação</td><td>Eliminado</td><td><span class="c pcd">C9</span> antes da faixa seguinte</td><td>Desistir de quem ainda pode ser chamado</td><td>"Ainda não alcançado"</td></tr>
+      <tr><td><b>Suplente</b></td><td>Progride além dos titulares; não ocupa até aceitar</td><td>Qualquer um da lista, ou o motivo digitado</td><td>Faixa com motivo "Suplente"</td><td>Achar que o motivo cria suplência</td><td>Separar o campo "motivo" da noção de suplente na tela</td></tr>
+      <tr><td><b>Ocupadas</b></td><td>Titular sem desfecho de saída, mais suplente que aceitou</td><td>Matrícula feita</td><td>Ampla 4 de 4 sem convocação</td><td>Achar que o processo terminou</td><td>"Com titular designado" ou legenda fixa (Q8)</td></tr>
+      <tr><td><b>Para regularizar</b></td><td>Chamar quem teve documento indeferido</td><td>Chamar o próximo da lista</td><td>Lista PcD sem corte oferece <span class="c pcd">C6</span> e <span class="c pcd">C9</span></td><td>Chamada sem fundamento</td><td>Corrigir a lista sem corte; nomear "indeferidos que podem corrigir"</td></tr>
+      <tr><td><b>Deferimento</b></td><td>Não existe na convocação: há "Conforme" por item e "Pronta para decidir"</td><td>Aprovação dos documentos</td><td>—</td><td>Esperar um ato que não existe</td><td>Usar a mesma palavra no guia e na tela</td></tr>
+      <tr><td><b>Matrícula</b></td><td>Fora do GPS; o aceite "não é matrícula"</td><td>Último passo no GPS</td><td>"Vaga aceita" de <span class="c pcd">C9</span></td><td>Encerrar sem confirmar matrícula</td><td>Dizer na tela onde a matrícula acontece</td></tr>
+      <tr><td><b>Habilitados</b></td><td>Todas as inscrições submetidas, quando não há etapa de habilitação</td><td>Quem teve documentos aprovados</td><td>"Relação de habilitados ao sorteio"</td><td>Achar que houve análise</td><td>"Participantes do sorteio"</td></tr>
+      <tr><td><b>Marco</b></td><td>Na configuração: ponto onde nasce uma ordem. Na Agenda: um evento do cronograma</td><td>Uma data</td><td>"Classificação final" × "Sorteio 05/11"</td><td>Procurar a tela errada</td><td>Dar nomes diferentes às duas coisas</td></tr>
+      <tr><td><b>Comunicação enviada</b></td><td>Por publicação: o registro de onde e quando a lista foi publicada</td><td>Um e-mail enviado</td><td>Página de <span class="c pcd">C9</span></td><td>Candidato procura e-mail</td><td>"Publicada em…" quando a forma é publicação</td></tr>
+      <tr><td><b>Ordem de protocolo</b></td><td>Ordem alfabética de um protocolo aleatório</td><td>Ordem de chegada</td><td>Número do sorteio</td><td>Suspeita de favorecimento</td><td>"Ordem alfabética do protocolo"</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ ENTREGA D ============ -->
+<section class="fora-do-modo" id="diagnostico" aria-labelledby="t-diag">
+  <span class="eyebrow">Entrega D</span>
+  <h2 id="t-diag">Diagnóstico de obviedade</h2>
+  <p style="margin-top:8px">Sem notas. Cada item tem a evidência, a categoria e a menor intervenção que melhora a compreensão. A prioridade segue o risco diante de atos irreversíveis e o tempo que a equipe perdeu.</p>
+  <h3 style="margin-top:18px">Onde o GPS já é autoexplicativo</h3>
+  <ul style="padding-left:1.2em;display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:.93rem">
+    <li><b>Condução do marco</b>: uma tabela com ordem, corte, apuração e publicação por lista, "Feito/Falta/Obsoleto", e "Abrir esta tela não pratica nada".</li>
+    <li><b>Recusas que dizem o caminho</b>: "Antes de congelar, peça a quem elabora as Retificações…", "Não há mais quem chamar dentro da faixa… Ir para a ocupação e pedir a faixa seguinte".</li>
+    <li><b>Telas que avisam que não gravam</b>: corte, ocupação e convocação dizem que abrir não altera nada.</li>
+    <li><b>Prévia da publicação</b>: duas fases, impedimentos com frase pronta, e botão ausente quando há impedimento.</li>
+    <li><b>Portal do candidato</b>: "Sua situação / Por quê / O que fazer", e "Este registro não é matrícula".</li>
+  </ul>
+  <h3 style="margin-top:18px">Onde ainda é preciso alguém ensinar</h3>
+  <ol class="diag" style="margin-top:10px">
+    <li><span class="p">P1</span><span class="cat">Dependência pouco visível · conceito</span><span class="int">O corte reservado não mostra a concorrência simultânea, e depois da faixa seguinte a tela continua mostrando a faixa inicial (<span class="c pcd">C9</span> "fora da faixa"). <b>Menor intervenção:</b> marcar na prévia "ocupa pela ampla" e mostrar a geração acumulada.</span><span class="ev">Cap. 8, capturas da prévia e do corte emitido. A prévia da classificação (095), no compositor, já explica a regra; a tela de operação não.</span></li>
+    <li><span class="p">P1</span><span class="cat">Possível defeito funcional</span><span class="int">A fila da ampla não exclui quem ocupa vaga reservada: a mesma pessoa é convocada e conta em dois recortes. <b>Menor intervenção:</b> marcar na fila "titular da PPI"; a regra depende de Q7.</span><span class="ev">Cap. 12; simulação do Guia do Sorteio; captura da fila com <span class="c ppi">C7</span>.</span></li>
+    <li><span class="p">P1</span><span class="cat">Possível defeito funcional</span><span class="int">Sem corte, "Quem pode ser chamado para regularizar" lista a ordem inteira como indeferida. <b>Menor intervenção:</b> não oferecer a área sem corte emitido.</span><span class="ev">Captura da convocação PcD em 05/11; foi o que apareceu aos 58 min da reunião.</span></li>
+    <li><span class="p">P1</span><span class="cat">Linguagem · conceito mal definido</span><span class="int">"Ocupadas" é lido como matrícula. <b>Menor intervenção:</b> legenda fixa ("titular designado, ou suplente que aceitou; não é matrícula"), até Q8.</span><span class="ev">Cap. 11; a ampla marca 4 de 4 sem convocação.</span></li>
+    <li><span class="p">P1</span><span class="cat">Validação inadequada</span><span class="int">A faixa seguinte é emitida vazia quando não há ninguém a alcançar, e é irreversível. <b>Menor intervenção:</b> recusar com "não há mais ninguém nesta lista".</span><span class="ev">Cap. 12, simulação.</span></li>
+    <li><span class="p">P1</span><span class="cat">Prevenção de erros · segurança administrativa</span><span class="int">"Publicar e congelar a relação" e "Realizar o sorteio" são de um clique, irreversíveis, e o segundo aparece mesmo com recusa certa. <b>Menor intervenção:</b> conferência em duas fases, como no corte e na publicação; esconder "Realizar" quando o diagnóstico já diz que será recusado.</span><span class="ev">Caps. 4 e 6.</span></li>
+    <li><span class="p">P1</span><span class="cat">Possível defeito · privacidade</span><span class="int">Na convocação por publicação, o candidato vê a convocação antes do registro da publicação, e o fundamento digitado chega a ele como está. <b>Menor intervenção:</b> mostrar só depois da comunicação; avisar no campo que o texto vai ao candidato.</span><span class="ev">Cap. 10, captura de <span class="c ac">C10</span>.</span></li>
+    <li><span class="p">P2</span><span class="cat">Navegação</span><span class="int">"O que posso fazer" não cobre sorteio, corte, apuração nem convocação; o operador precisa achar Edital › marco. <b>Menor intervenção:</b> incluir as faltas da Condução do marco na faixa de ações.</span><span class="ev">Spec 104 declara a exclusão.</span></li>
+    <li><span class="p">P2</span><span class="cat">Dependência pouco visível</span><span class="int">O cronograma não fala com os atos: eventos incoerentes passam sem aviso, a Agenda diz "data passada" e nada avisa que o sorteio não foi feito. <b>Menor intervenção:</b> na Agenda, ligar o evento ao ato correspondente quando existir.</span><span class="ev">Cap. 2, cronograma do Edital 35.</span></li>
+    <li><span class="p">P2</span><span class="cat">Dependência pouco visível</span><span class="int">O prazo vencido não age; é preciso registrar o não atendimento. <b>Menor intervenção:</b> destacar "N convocações vencidas sem registro" no topo da convocação e na Condução do marco.</span><span class="ev">Cap. 12.</span></li>
+    <li><span class="p">P2</span><span class="cat">Linguagem</span><span class="int">Dar mais prazo é "Corrigir esta convocação", escondido. <b>Menor intervenção:</b> rótulo "Corrigir ou prorrogar o prazo".</span><span class="ev">Cap. 12.</span></li>
+    <li><span class="p">P2</span><span class="cat">Possível defeito · decisão</span><span class="int">Encerrar o Edital não fecha convocação nem envio de documento. <b>Menor intervenção:</b> dizer isso na confirmação, até a decisão.</span><span class="ev">Cap. 13.</span></li>
+    <li><span class="p">P2</span><span class="cat">Prevenção de erros</span><span class="int">Na publicação, "Resultado preliminar" vem marcado, e ele abre o prazo de recurso. <b>Menor intervenção:</b> sem opção marcada.</span><span class="ev">Cap. 9.</span></li>
+    <li><span class="p">P2</span><span class="cat">Linguagem · possível defeito</span><span class="int">Uma recusa da faixa seguinte aparece como "Não foi possível apurar". <b>Menor intervenção:</b> usar o rótulo da ação que falhou.</span><span class="ev">Relatório de código: a view não grava a ação do erro.</span></li>
+    <li><span class="p">P2</span><span class="cat">Dependência pouco visível</span><span class="int">A reversão de vaga não é anunciada no ato e obriga a apurar a ampla de novo. <b>Menor intervenção:</b> "Reverteu N vaga(s) para a ampla; apure a ampla" na mensagem de sucesso.</span><span class="ev">Relatório de código.</span></li>
+    <li><span class="p">P2</span><span class="cat">Navegação</span><span class="int">Desfecho registrado não tem correção pela tela. <b>Menor intervenção:</b> "Corrigir o desfecho", com motivo, que o serviço já aceita.</span><span class="ev">Cap. 11.</span></li>
+    <li><span class="p">P3</span><span class="cat">Falta de informação contextual</span><span class="int">A ajuda do campo "Ocorrência" só existe para leitores de tela; o horário 00h00 parece hora da extração; a falha da Caixa traz erro técnico. <b>Menor intervenção:</b> tornar visível a ajuda e reescrever as duas mensagens.</span><span class="ev">Caps. 1 e 5.</span></li>
+    <li><span class="p">P3</span><span class="cat">Linguagem</span><span class="int">Palavras com dois sentidos: marco, etapa, divulgação, habilitados, comunicação enviada, ordem de protocolo. <b>Menor intervenção:</b> as trocas da Entrega C.</span><span class="ev">Entrega C.</span></li>
+    <li><span class="p">P3</span><span class="cat">Falta de informação ao candidato</span><span class="int">Sem e-mail de pendência, conferência ou desfecho; o e-mail de convocação não leva à convocação. <b>Menor intervenção:</b> a spec 121, já escrita, cobre parte.</span><span class="ev">Cap. 10.</span></li>
+    <li><span class="p">P3</span><span class="cat">Complexidade intrínseca</span><span class="int">Concorrência simultânea, Loteria só com data, segregação entre quem conduz e quem publica. São regras, não falhas. <b>Menor intervenção:</b> explicá-las na tela no momento em que pesam, não removê-las.</span><span class="ev">Caps. 4, 7 e 9.</span></li>
+  </ol>
+  <h3 style="margin-top:22px">Auditoria por etapa (critérios A a H)</h3>
+  <p class="small muted">A orientação · B linguagem · C previsibilidade · D dependências · E prevenção de erros · F próxima ação · G coerência · H segurança administrativa. Só os critérios com fricção observada.</p>
+  <div class="tabela scroll" style="margin-top:10px"><table>
+    <thead><tr><th>Etapa</th><th>Fricções</th><th>Evidência</th></tr></thead>
+    <tbody>
+      <tr><td>Configurar</td><td>B, D</td><td>Ajuda invisível no campo do concurso; "marco" e "etapa" com dois sentidos; eventos do cronograma sem efeito</td></tr>
+      <tr><td>Congelar e sortear</td><td>C, E, H</td><td>Atos irreversíveis sem conferência; botão oferecido com recusa certa; três listas, três sorteios</td></tr>
+      <tr><td>Semente</td><td>B</td><td>Erro técnico cru; 00h00 lido como horário</td></tr>
+      <tr><td>Corte</td><td>A, C, G, H</td><td>Faixa inicial exibida depois da faixa seguinte; nenhuma menção a quem ocupa pela ampla; dois campos "motivo" de efeitos opostos</td></tr>
+      <tr><td>Ocupação</td><td>B, D, F</td><td>"Ocupadas" lido como matrícula; reversão silenciosa; apuração da ampla a refazer sem aviso</td></tr>
+      <tr><td>Divulgação</td><td>E, G</td><td>Natureza pré-marcada; papel separado sem aviso nas telas de recorte</td></tr>
+      <tr><td>Convocação</td><td>A, D, G</td><td>Regularizáveis sem corte; mesma pessoa em duas filas; convocação visível antes da publicação</td></tr>
+      <tr><td>Conferência e desfecho</td><td>F, H</td><td>Sem fila própria; desfecho sem correção pela tela; prazo vencido que não age</td></tr>
+      <tr><td>Encerramento</td><td>C, G</td><td>Edital encerrado que ainda aceita desfecho e documento</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ ACEITAÇÃO ============ -->
+<section class="fora-do-modo" id="aceitacao" aria-labelledby="t-aceite">
+  <span class="eyebrow">Critério de aceitação</span>
+  <h2 id="t-aceite">As 15 perguntas, respondidas</h2>
+  <p style="margin-top:8px">As caixas em amarelo são lacunas: o GPS não tem a resposta, ou este estudo não conseguiu demonstrá-la no caso real.</p>
+  <div class="aceite" style="margin-top:14px">
+    <div><b>1. Como configurar para sorteio?</b><span>Marco "por sorteio" na etapa Classificação, com concurso, instante, normalização e regra de corte; modalidades e quadro na etapa Perfis. Cap. 1.</span></div>
+    <div><b>2. Quais datas e por quê?</b><span>O período de inscrições, que controla o recebimento e o congelamento, e o instante da extração, que tem de ser num dia posterior ao congelamento. O resto informa. Cap. 2.</span></div>
+    <div><b>3. Quem participa e quando fica definitivo?</b><span>Toda inscrição submetida, por lista; definitivo no congelamento. Caps. 3 e 4.</span></div>
+    <div><b>4. Como a semente é obtida?</b><span>Um clique em "Observar a ocorrência", depois da extração; sem digitação manual. Cap. 5.</span></div>
+    <div><b>5. O que é automático?</b><span>Só o envio dos avisos e a apuração sucessora depois de um desfecho. Todo o resto é ato de alguém. Caps. 2 e 12.</span></div>
+    <div><b>6. Por que várias listas?</b><span>Uma por modalidade reservada, mais a geral; a lista AC era a mais e deixou de existir. Caps. 3 e 6.</span></div>
+    <div><b>7. Como as vagas se distribuem?</b><span>Ampla pela geral; reserva para quem não ocupou a ampla. No GPS, isso acontece na apuração. Caps. 7 e 8.</span></div>
+    <div><b>8. Corte, faixa, progressão, suplência?</b><span>Cap. 8 e Entrega C.</span></div>
+    <div><b>9. O que vem antes de convocar?</b><span>Ordem, corte e apuração vigente da lista. A divulgação não é exigida. Caps. 8 e 10.</span></div>
+    <div class="gap"><b>10. Como o candidato apresenta documentos?</b><span>Na página da convocação, item a item, em PDF. Visto no código; o Edital 35 não pede documento na convocação, e não foi exercitado neste estudo. Cap. 10.</span></div>
+    <div class="gap"><b>11. Como é a conferência e a decisão?</b><span>Conforme, Pendente ou Não se aplica por item; desfecho registrado pela comissão. Telas de conferência não capturadas pelo mesmo motivo. Cap. 11.</span></div>
+    <div><b>12. Quando a vaga é ocupada?</b><span>Para o GPS, quando há titular designado, ou quando o suplente aceita. Não é matrícula. Q8 pendente. Cap. 11.</span></div>
+    <div class="gap"><b>13. Quando a matrícula é efetivada?</b><span>Fora do GPS. O GPS registra aceite, entrega documentos à Formalização e exporta o arquivo. Cap. 11.</span></div>
+    <div><b>14. Desistência ou indeferimento?</b><span>A comissão registra; a ocupação é refeita; chama-se o próximo, ou pede-se a faixa seguinte. Cap. 12.</span></div>
+    <div><b>15. Como termina?</b><span>O Gestor encerra o Edital e depois o Processo; vagas podem ficar vazias. Cap. 13.</span></div>
+  </div>
+  <h3 style="margin-top:22px">Um teste antes de mudar o produto</h3>
+  <p class="small" style="margin-top:6px">Peça a uma pessoa de TI e a uma do negócio que percorram, sem ajuda, o Edital 35 na cópia: configurar o sorteio, congelar e observar, distinguir ordem e distribuição, emitir corte e apurar, convocar e registrar uma desistência. Anote onde procuram, onde hesitam antes de clicar e que palavra entendem diferente. Esses pontos valem mais que as respostas certas.</p>
+</section>
+
+<footer class="fora-do-modo">
+  <span><b>Base.</b> Código da <span class="mono">main</span> em 05/11/2026; backup do banco de 05/11; Edital 35/2026; quatro leituras independentes do código (configuração e cronograma; inscrição, relação e sorteio; resultado, corte e ocupação; convocação, documentos e encerramento).</span>
+  <span><b>Simulações.</b> Os cortes PcD e PPI, as convocações, a publicação registrada, os aceites e a desistência rodaram numa cópia descartável do banco, com nomes, e-mails, CPFs, protocolos e operadores trocados, e o envio de e-mail fora do ar. Nenhum ato foi praticado no banco original.</span>
+  <span><b>Os outros dois estudos.</b> "Sorteio do Edital 35/2026" é a evidência técnica e a reprodução; "Guia do Sorteio 35/2026" é a demonstração do sorteio real. Este é o guia de condução.</span>
+</footer>
+
+</div>
+
+<nav id="barra" aria-label="Navegar entre os capítulos">
+  <button type="button" id="ant">← Anterior</button>
+  <span class="pos" id="pos">1 / 13</span>
+  <button type="button" id="prox">Próximo →</button>
+  <button type="button" id="sair">Sair</button>
+</nav>
+
+<script>
+(function(){
+  var caps = Array.prototype.slice.call(document.querySelectorAll('.cap'));
+  var atual = 0, root = document.documentElement;
+  function mostrar(i){
+    atual = Math.max(0, Math.min(caps.length - 1, i));
+    caps.forEach(function(c, j){ c.classList.toggle('atual', j === atual); });
+    document.getElementById('pos').textContent = (atual + 1) + ' / ' + caps.length;
+    document.getElementById('ant').disabled = atual === 0;
+    document.getElementById('prox').disabled = atual === caps.length - 1;
+    window.scrollTo(0, 0);
+  }
+  document.getElementById('apresentar').addEventListener('click', function(){ root.classList.add('modo'); mostrar(0); });
+  document.getElementById('sair').addEventListener('click', function(){ root.classList.remove('modo'); caps.forEach(function(c){ c.classList.remove('atual'); }); });
+  document.getElementById('ant').addEventListener('click', function(){ mostrar(atual - 1); });
+  document.getElementById('prox').addEventListener('click', function(){ mostrar(atual + 1); });
+  document.addEventListener('keydown', function(e){
+    if(!root.classList.contains('modo')) return;
+    if(e.key === 'ArrowRight' || e.key === 'PageDown') mostrar(atual + 1);
+    else if(e.key === 'ArrowLeft' || e.key === 'PageUp') mostrar(atual - 1);
+    else if(e.key === 'Escape'){ root.classList.remove('modo'); caps.forEach(function(c){ c.classList.remove('atual'); }); }
+  });
+})();
+</script>
+</body>
+</html>
