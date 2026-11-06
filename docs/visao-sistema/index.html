@@ -8416,7 +8416,7 @@ Em paralelo, se o Edital pede:
         <tbody>
           <tr><td><span class="rotulo-ui">Convocar os titulares num ato só</span></td><td>O começo da fila, na ordem, até o primeiro que não é titular — e para ali. A prévia diz quem fica de fora e por quê (<em>“é suplente”</em>, ou <em>“a decisão de recurso a pôs à frente”</em>)</td><td><span class="rotulo-ui">Convocar as N</span></td><td>Uma convocação por pessoa, todas <span class="rotulo-ui">para vaga inicial</span>, e a comunicação de cada uma</td></tr>
           <tr><td><span class="rotulo-ui">Não atendimento das convocações vencidas</span></td><td>As convocações com vencimento decorrido e sem desfecho. Ficam de fora, contadas: prazo em curso, prazo não iniciado, e sem vencimento</td><td><span class="rotulo-ui">Registrar o não atendimento das N</span></td><td>Um desfecho de não atendimento por pessoa, igual ao registrado um a um, e a apuração seguinte</td></tr>
-          <tr><td><span class="rotulo-ui">Comunicações que ainda não saíram</span></td><td>Convocações sem desfecho e sem envio com sucesso</td><td><span class="rotulo-ui">Emitir N comunicações</span> — ou, por publicação, <span class="rotulo-ui">Registrar a publicação das N</span></td><td>Uma comunicação emitida por convocação</td></tr>
+          <tr><td><span class="rotulo-ui">Comunicações que ainda não saíram</span> — na publicação, <span class="rotulo-ui">Publicações a registrar</span> (125)</td><td>Convocações sem desfecho e sem envio com sucesso</td><td><span class="rotulo-ui">Emitir N comunicações</span> — ou, por publicação, <span class="rotulo-ui">Registrar a publicação das N</span></td><td>Uma comunicação emitida por convocação</td></tr>
         </tbody>
       </table>
     </div>
@@ -8487,6 +8487,40 @@ Em paralelo, se o Edital pede:
       </div>
     </div>
     <p class="miudo">A falha de envio não apaga a convocação: ela fica com o prazo não iniciado e volta para <span class="rotulo-ui">Comunicações que ainda não saíram</span>. Uma emissão que reservou a chave e não registrou o que aconteceu fica de fora, e a tela manda conferir o histórico antes de emitir de novo.</p>
+
+    <h3 id="convocacao-segue-o-canal">A convocação segue o canal (125) <span class="selo selo-impl">Implementado</span></h3>
+    <p>
+      A convocação por publicação <strong>só aparece ao candidato depois do registro da
+      publicação</strong>. O predicado <em>visível ao candidato</em> é derivado, mora no seletor da 019, e
+      toda superfície do portal lê por ele: a lista, o acompanhamento, a tela da convocação, o endereço
+      direto, o envio e a consulta de documento e o Requerimento da chamada. Antes do registro, a
+      convocação é tratada como ausente, e o envio de documento é recusado no comando com a mesma
+      resposta do item inexistente. A correção de uma convocação já publicada continua visível; na
+      mensagem individual, nada muda.
+    </p>
+    <p>
+      <strong>O texto digitado que chega ao candidato tem aviso e prévia.</strong> Sete campos dizem
+      <em>“Este texto será mostrado ao candidato.”</em> Com texto digitado, os formulários da condução
+      passam por <span class="rotulo-ui">Conferir o texto</span>, renderizado pelo servidor e sem script,
+      com o texto composto e <em>“Este texto será mostrado a N pessoas.”</em> A prévia assina o texto: se
+      ele mudar até o clique, o ato não é praticado. O desfecho passa sempre pela conferência, porque o
+      fundamento é obrigatório; a correção da 120, quando há complemento digitado, também.
+    </p>
+    <p>
+      <strong>A palavra segue o canal.</strong> Uma tabela única de frases por forma
+      (<code>convocacao/domain/vocabulario_do_canal.py</code>) alimenta o portal, a gestão, as recusas e a
+      trilha. Na publicação, as telas dizem <em>“Publicada em ‹referência›”</em>, <em>“contado da
+      publicação”</em>, <span class="rotulo-ui">Publicações a registrar</span> e
+      <span class="rotulo-ui">Registrar a publicação</span>; na mensagem, ficam como estavam, salvo
+      <em>“Comunicada em”</em>, que vira <em>“Enviada em”</em> na linha da convocação substituída.
+      <span class="selo selo-lacun">Lacuna</span> menor: a SC-1209, que pede que um operador que nunca viu
+      a tela diga sozinho que o candidato ainda não vê a convocação, é validação humana e não foi feita.
+    </p>
+    <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
+      <dt>Visível ao candidato</dt><dd><code>convocacao/application/selectors.py</code> · <code>portal/situacao.py</code>, <code>portal/obrigacoes.py</code>, <code>portal/views.py</code> · <code>convocacao/application/documentos.py</code></dd>
+      <dt>Conferir o texto</dt><dd><code>interface/conferencia_do_texto.py</code> · <code>_conferir_o_texto.html</code></dd>
+      <dt>Vocabulário do canal</dt><dd><code>convocacao/domain/vocabulario_do_canal.py</code> · guardião <code>tests/test_vocabulario_da_convocacao.py</code></dd>
+    </dl></div></details>
 
     <h3 id="correcao-da-convocacao">Corrigir uma convocação em aberto, e dar mais prazo <span class="selo selo-impl">Implementado</span></h3>
     <p>
@@ -12923,6 +12957,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>30/10/2026</td><td><code>main</code> em <code>62824816</code>, specs 098–104</td><td>As sete specs mergeadas entre 21 e 30/10 descritas como entregues: a <a href="#previa-do-sorteio">prévia do sorteio</a>, com semente fictícia (098); o <a href="#relatorio-do-edital">relatório do Edital</a> (099) e o <a href="#relatorio-consolidado">consolidado da unidade</a> (100); a <a href="#agenda">Agenda dos Editais</a> (101); a <a href="#sorteio-viavel">extração inviável</a>, impedida na publicação (102, com o PR 335); a <a href="#retificacao-em-curso">Retificação em curso</a> pela navegação comum (103); e as <a href="#acoes-disponiveis">Ações disponíveis para você</a> (104). Registro no mesmo arquivo.</td></tr>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
+          <tr><td>06/11/2026</td><td><code>main</code> em <code>22a722af</code>, spec 125</td><td><a href="#convocacao-segue-o-canal">A convocação segue o canal</a> (125): a convocação por publicação só aparece ao candidato depois do registro, o texto digitado que chega a ele passa por <em>Conferir o texto</em>, e a palavra da comunicação segue a forma. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>05/11/2026</td><td><code>main</code> em <code>4e6d211f</code>, specs 120, 121 e 122 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">a experiência da convocação</a> (121): a tela que abre pelo título e pelo prazo, <a href="#convocacao-pelo-link">o link que passa pelo acesso e o e-mail em HTML</a>, com o modelo gravado em cada envio; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
@@ -12982,7 +13017,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
   (<code>a3e23b1f</code>), a 120 a 122, com as seis famílias que faltavam da 119, em 05/11/2026
-  (<code>4e6d211f</code>) e a 123 e a 124 em 06/11/2026 (<code>a1d3bf26</code>). Onde documentação e código
+  (<code>4e6d211f</code>) e a 123 a 125 em 06/11/2026 (<code>22a722af</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
