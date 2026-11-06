@@ -6,8 +6,8 @@ e a `128`)
 **Created**: 2026-11-06
 
 **Status**: Draft. **Leitura e apresentação, sem regra de negócio nova.** A confirmação de "Encerrar
-Processo" passa a dizer, por Edital, o que ainda está em aberto nele. O encerramento continua aceito nos
-mesmos casos de hoje. Sem migration, tabela, coluna, permissão ou estado persistido novo; a lista de
+Processo" passa a dizer, por Edital, o que ainda está em aberto nele, e volta a mostrá-lo quando ele mudou
+antes do envio. O comando de encerramento continua aceitando nos mesmos casos de hoje. Sem migration, tabela, coluna, permissão ou estado persistido novo; a lista de
 Processos não muda.
 
 **Input**: *"A advertência das providências em aberto na confirmação de 'Encerrar Processo' — a décima
@@ -60,6 +60,8 @@ Cobre:
    providências em aberto, com os tipos e as frases do encerramento do Edital.
 2. **O caso sem nada em aberto**, dito sem afirmar que o certame acabou.
 3. **A reexibição** da advertência quando o encerramento é recusado por outro motivo.
+4. **A renovação da confirmação** quando a lista mudou entre a abertura da tela e o envio (decidida no
+   esclarecimento de 06/11): a tela volta com a lista atual, sem encerrar.
 
 Fica fora, de propósito:
 
@@ -75,6 +77,22 @@ Fica fora, de propósito:
 - **Aviso confirmado e ainda não despachado.** A revisão o cita entre as providências possíveis, mas
   nenhum tipo do encerramento do Edital o representa, e criá-lo seria regra nova (é o A-4).
 - **Registrar o que foi advertido.** O ato continua gravando o motivo e nada mais (D-006).
+
+## Clarifications
+
+### Session 2026-11-06
+
+- Q: Quando a lista de providências em aberto muda entre abrir a confirmação e clicar em Confirmar, o
+  encerramento deve seguir mesmo assim, ou a tela deve voltar mostrando a lista nova para o gestor
+  confirmar de novo? → A: **B.** Se a lista exibida mudou em qualquer coisa, a confirmação é
+  reapresentada com a lista atualizada e a frase da UX-279, sem encerrar; sem mudança, o encerramento
+  prossegue. É **renovação da confirmação**, e não impedimento: nenhuma providência passa a impedir o
+  encerramento por si só, e o gestor que confirma de novo diante da lista nova encerra. Fica uma janela
+  entre a releitura e o comando, que esta solução não elimina (D-005).
+- As decisões D-001, D-002 e D-004 foram revistas na mesma sessão contra o código e mantidas, sem
+  pergunta: a D-002 se apoia em `ensure_edital_accepts_changes`, que recusa Edital Encerrado ou Cancelado
+  e é chamada por todo ato da Retificação. A FR-4360 foi alinhada à D-004: a advertência só reaparece
+  quando a tela reexibida ainda oferece o Confirmar.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -176,6 +194,34 @@ convocação entre a abertura e o envio e conferir que ela aparece na reexibiç�
 
 ---
 
+### User Story 5 — A lista mudou depois que a tela abriu: o gestor confere antes de encerrar (Priority: P1)
+
+O gestor abre a confirmação sem nada em aberto e a deixa aberta. Enquanto isso, a comissão convoca mais
+uma pessoa num dos Editais. O gestor preenche o motivo e confirma. O Processo não é encerrado: a tela
+volta com a convocação nova, a frase de que a lista mudou e o motivo que ele escreveu. Ele lê e confirma
+de novo; agora o Processo é encerrado.
+
+**Why this priority**: a confirmação pode ficar aberta por horas, e a convocação feita nesse intervalo é
+justamente a que o encerramento corta sem que o gestor a tenha visto (esclarecimento de 06/11).
+
+**Independent Test**: abrir a confirmação, criar uma convocação, enviar; conferir que nada foi gravado e
+que a tela traz a lista nova; enviar de novo e conferir o encerramento.
+
+**Acceptance Scenarios**:
+
+1. **Given** a confirmação aberta com a lista L, **When** a lista passa a ser L′ ≠ L e o gestor confirma
+   com motivo, **Then** o Processo continua Ativo, nenhum ato é gravado, e a tela reapresenta a
+   confirmação com L′, a frase da UX-279 e o motivo preenchido.
+2. **Given** a confirmação reapresentada com L′, **When** o gestor confirma de novo e a lista continua L′,
+   **Then** o Processo é encerrado, ainda que L′ tenha providência em aberto.
+3. **Given** a confirmação aberta com a lista L, **When** nada muda e o gestor confirma, **Then** o
+   Processo é encerrado na primeira tentativa, como hoje.
+4. **Given** a confirmação aberta com 2 convocações aguardando, **When** uma delas é respondida antes do
+   envio, **Then** a confirmação também é reapresentada: qualquer diferença conta, inclusive a que reduz
+   a lista.
+
+---
+
 ### Edge Cases
 
 - **Edital ainda publicado (fora de estado final)**: o ato já é dito recusado ("Este ato será
@@ -200,9 +246,21 @@ convocação entre a abertura e o envio e conferir que ela aparece na reexibiç�
   públicas aparecem como o relatório as diz para o Edital inteiro, somadas, sem Perfil.
 - **Muitos Editais** (o Processo com uma dezena): um grupo por Edital com algo em aberto, na ordem
   número/ano; o bloco não é truncado.
-- **Ato concorrente entre a abertura e o envio**: o encerramento aceito não relê nada; a advertência é a
-  do instante da tela. Quem confirmou viu a lista daquele instante, e o comando continua o mesmo (D-005).
-- **Pedido repetido com a mesma chave de idempotência**: devolve o desfecho do primeiro, como hoje.
+- **Ato concorrente entre a abertura e o envio**: a lista é relida no envio e comparada à que foi
+  mostrada; se mudou, a confirmação é reapresentada sem encerrar (FR-4365). **Fica uma janela** entre essa
+  releitura e o comando: uma convocação feita nesses instantes não é vista. A solução reduz a janela de
+  horas para o tempo de uma requisição, e não a elimina (D-005).
+- **A lista oscila** (uma convocação feita e respondida entre a abertura e o envio, voltando à lista
+  mostrada): nada mudou do ponto de vista do que o gestor viu, e o encerramento prossegue.
+- **Reapresentações sucessivas**: se a lista mudar de novo a cada envio, a confirmação é reapresentada a
+  cada vez; não há limite nem desistência automática, porque cada mudança é algo que o gestor não viu.
+- **Envio sem o resumo da lista mostrada** (formulário antigo em cache, ou envio fabricado): tratado como
+  lista diferente — a confirmação é reapresentada com a lista atual, sem encerrar.
+- **Pedido repetido com a mesma chave de idempotência**: devolve o desfecho do primeiro, como hoje. A
+  reapresentação não chama o comando, e por isso não consome a chave; o envio seguinte usa a mesma.
+- **O Processo deixou de ser encerrável entre a abertura e o envio** (a permissão foi retirada, ou outro
+  gestor encerrou o Processo): a tela reexibida já não oferece o
+  Confirmar, e não há advertência nem comparação (FR-4357, FR-4360); vale a recusa de hoje.
 - **Processo encerrado com sucesso**: o redirecionamento ao detalhe é o de hoje; nada da advertência é
   gravado nem repetido ali.
 
@@ -245,16 +303,35 @@ convocação entre a abertura e o envio e conferir que ela aparece na reexibiç�
 - **FR-4359**: Sem nenhuma providência em aberto, a confirmação MUST dizer que nenhuma está registrada nos
   Editais do Processo, MUST dizer que o sistema não sabe se ainda haverá convocação do cadastro de
   reserva, e MUST NOT dizer que a seleção, o certame ou os Editais foram concluídos.
-- **FR-4360**: Quando o encerramento é recusado e a confirmação é reexibida, a advertência MUST ser lida
-  de novo, no instante da reexibição.
+- **FR-4360**: Quando o encerramento é recusado ou a confirmação é reapresentada, e a tela reexibida
+  ainda oferece o Confirmar, a advertência MUST ser lida de novo, no instante da reexibição; quando a
+  tela reexibida não oferece o Confirmar, a advertência MUST NOT ser lida nem exibida (D-004).
 - **FR-4361**: A advertência de todos os Editais MUST ser lida num mesmo instante e numa leitura
   consistente, como o relatório do Edital: dois Editais não podem ser lidos em momentos diferentes da
   mesma tela.
 
+#### A renovação da confirmação
+
+- **FR-4365**: O envio da confirmação MUST levar um resumo da lista de providências exibida. Antes de
+  chamar o comando, quando a tela ainda ofereceria o Confirmar, a lista MUST ser relida e comparada a
+  esse resumo; havendo qualquer diferença — providência nova ou resolvida, contagem ou data alterada,
+  Edital que entrou ou saiu do bloco —, ou faltando o resumo, o encerramento MUST NOT ser tentado, e a
+  confirmação MUST ser reapresentada com a lista atual, o resumo dela, a frase da UX-279 e o motivo já
+  preenchido. Sem diferença, o encerramento MUST prosseguir.
+- **FR-4366**: A renovação MUST NOT impedir o encerramento por si só: confirmada diante da lista atual,
+  e sem nova mudança, o encerramento MUST prosseguir, qualquer que seja o conteúdo da lista. O resumo
+  MUST NOT ser gravado (FR-4363), e a reapresentação MUST NOT gravar ato, trilha nem consumir a chave de
+  idempotência.
+- **FR-4367**: A spec MUST registrar, e a verificação MUST NOT afirmar o contrário, que resta uma janela
+  entre a releitura e o comando, na qual uma mudança não é vista: a renovação reduz a concorrência, e não
+  a elimina (D-005).
+
 #### O que não muda
 
-- **FR-4362**: O comando de encerrar o Processo MUST continuar aceitando e recusando exatamente nos mesmos
-  casos de hoje; esta spec MUST NOT tornar recusado nenhum ato, antes ou depois do encerramento.
+- **FR-4362**: As regras de elegibilidade do encerramento — permissão, Processo Ativo e Editais em estado
+  final — MUST continuar as de hoje, e o comando MUST aceitar e recusar exatamente nos mesmos casos. A
+  única etapa nova é a renovação da confirmação na tela (FR-4365), que adia a tentativa sem recusá-la;
+  esta spec MUST NOT tornar recusado nenhum ato, antes ou depois do encerramento.
 - **FR-4363**: O ato de encerramento MUST NOT gravar a advertência exibida, nem exigir declaração de
   ciência; o motivo continua sendo o único texto do gestor no ato (D-006).
 - **FR-4364**: As consequências anunciadas do encerramento, a confirmação de "Cancelar Processo", o
@@ -276,6 +353,9 @@ convocação entre a abertura e o envio e conferir que ela aparece na reexibiç�
   validade dele está no texto do Edital."*
 - **UX-278**: O título do bloco MUST NOT ser o da `113` ("Continuam depois do encerramento"): no Processo,
   boa parte do que está em aberto não continua — é cortado (D-001).
+- **UX-279**: Na reapresentação, antes do bloco, uma mensagem que não é de erro: *"As providências em
+  aberto mudaram desde que você abriu esta tela. Confira a lista atual e confirme de novo."* Ela recebe o
+  foco, como a mensagem de erro de hoje, para que o leitor de tela a anuncie.
 
 ### Key Entities
 
@@ -293,8 +373,9 @@ leitura. Nada é gravado.
 - **SC-1321**: Para **cada** tipo da FR-4351, um Edital final com aquela providência produz na
   advertência a mesma frase que a confirmação de encerrar o Edital produziria; e **zero** providências
   listadas pelo relatório de um Edital final, nos tipos da FR-4351, ficam fora da advertência.
-- **SC-1322**: Em **100%** dos casos em que hoje o encerramento do Processo é aceito, ele continua
-  aceito, e em **100%** dos recusados continua recusado, com a mesma recusa.
+- **SC-1322**: Em **100%** dos casos em que hoje o comando de encerramento do Processo aceita, ele
+  continua aceitando, e em **100%** dos recusados continua recusando, com a mesma recusa; a única
+  diferença observável é a reapresentação da SC-1327, que adia a tentativa.
 - **SC-1323**: **Zero** dados pessoais de candidato na confirmação, conferido por varredura do HTML em
   cenário com nome, CPF, e-mail e protocolo conhecidos.
 - **SC-1324**: **Zero** mudanças no número de leituras da lista de Processos e do detalhe do Processo;
@@ -302,6 +383,10 @@ leitura. Nada é gravado.
   fixado por teste no plano.
 - **SC-1325**: **Zero** migrations, permissões e estados persistidos novos; **zero** mudanças na
   confirmação de "Cancelar Processo".
+- **SC-1327**: Em **100%** dos envios em que a lista mudou desde a abertura (providência nova,
+  resolvida ou com contagem ou data alterada), **zero** encerramentos são gravados e a confirmação volta
+  com a lista atual; em **100%** dos envios sem mudança, inclusive com providência em aberto, o
+  encerramento é gravado na primeira tentativa.
 - **SC-1326**: A suíte contra PostgreSQL fecha sem falha nova em relação à linha de base da `main`, e cada
   teste ajustado está nomeado na verificação.
 
@@ -329,7 +414,8 @@ leitura. Nada é gravado.
 | FR-3528 a FR-3533 da `113` (o que impede encerrar o Edital) | lidas como advertência no Processo (FR-4353); continuam impedindo o encerramento do Edital |
 | FR-3538 e FR-3540 da `113` (caminho a quem a tela aceita; sem dado pessoal) | aplicadas (FR-4355, FR-4356) |
 | FR-3541 da `113` (sem nada, não dizer que a seleção foi concluída) | estendida ao Processo, com a ressalva do cadastro de reserva (FR-4359) |
-| FR-3545 da `113` (não recusar ato posterior; não mexer no encerramento do Processo) | continua: esta spec só lê e mostra (FR-4362) |
+| FR-3543 da `113` (a conferência vale no instante do ato; a recusa reexibe a lista atual) | adaptada: aqui não há recusa, e a lista é relida no envio, com renovação da confirmação (FR-4365) |
+| FR-3545 da `113` (não recusar ato posterior; não mexer no encerramento do Processo) | continua: o comando não muda, e a renovação só adia a tentativa (FR-4362, FR-4366) |
 | FR-4029 da `126` (convocação sem comunicação é espécie própria) | continua, com a frase dela (FR-4351) |
 | A correção A-09 da auditoria de prontidão (#358: Edital final recusa os atos da Retificação) | é a razão de as Retificações ficarem fora (FR-4352) |
 
@@ -388,12 +474,28 @@ mesmo vale para quem não pode encerrar, como na `113`, onde o impedimento esvaz
 **Alternativa descartada**: mostrar a advertência dos Editais finais junto da recusa — informativo, mas
 desvia do que falta fazer e paga a leitura em todo acesso à tela recusada.
 
-### D-005 — A advertência é do instante da tela; o comando não muda
+### D-005 — A lista é conferida de novo no envio; o comando não muda
 
 A `113` confere os impedimentos no comando, sob as travas, porque eles recusam. Aqui nada recusa, e
-conferir sob as travas não teria o que fazer com o resultado. A leitura vale para o instante em que a
-tela é mostrada — na abertura e em cada reexibição (FR-4360). Uma convocação feita entre a abertura e o
-envio aceito não é vista: é o limite de uma advertência, e a razão de ela reduzir o risco sem eliminá-lo.
+conferir sob as travas não teria o que fazer com o resultado. Mas a confirmação pode ficar aberta por
+horas, e a convocação feita nesse intervalo é justamente a que o encerramento corta sem que o gestor a
+tenha visto.
+
+**Decidido pelo usuário no esclarecimento de 06/11 (opção B)**: o formulário leva um resumo da lista
+mostrada; no envio, a tela relê a lista e, se ela mudou em qualquer coisa, reapresenta a confirmação com
+a lista atual, sem tentar o encerramento (FR-4365). É **renovação da confirmação**, e não impedimento: o
+gestor que confirma de novo diante da lista atual encerra, com o que estiver em aberto (FR-4366). Nada é
+gravado, e as regras de elegibilidade do comando são as de hoje (FR-4362).
+
+**O limite que fica**: entre a releitura na tela e o comando há uma janela — o tempo de uma requisição —
+em que uma mudança não é vista (FR-4367). A renovação a reduz de horas para isso, e não a elimina.
+
+**Alternativas descartadas**:
+- (A) a lista só da abertura, sem releitura: deixava a janela de horas;
+- (C) reapresentar só quando aparece algo novo ou uma contagem sobe: menos interrupção, mas a
+  comparação teria de entender cada tipo, e a lista que reduziu também é algo que o gestor não viu;
+- (D) reler dentro do comando, sob as travas: fecharia a janela, mas levaria a advertência para o
+  domínio e faria dela uma recusa do comando, que é o que a décima decisão da revisão deixou de fora.
 
 ### D-006 — Sem registro e sem ciência
 

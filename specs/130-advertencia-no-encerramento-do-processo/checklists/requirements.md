@@ -38,3 +38,5 @@
   (D-001 a D-007), confirmáveis no `/speckit-clarify`. As que mais merecem o olhar do usuário são a
   D-002 (período e Retificação fora) e a D-004 (nada é lido com recusa certa).
 - "Cancelar Processo" fica fora por escopo do pedido, e está registrado em *Fora de escopo*.
+- Esclarecimento de 06/11: uma pergunta (D-005, opção B, renovação da confirmação). D-001, D-002 e
+  D-004 revistas e mantidas; FR-4360 alinhada à D-004.
