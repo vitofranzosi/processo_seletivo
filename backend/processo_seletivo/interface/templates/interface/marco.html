@@ -56,11 +56,12 @@ o marco parecer pronto (`FR-814`).
   usa só o teclado não rolaria até elas. {% endcomment %}
   <div class="rolavel-no-estreito" tabindex="0" role="region" aria-labelledby="indicador-titulo">
   <table>
-    <caption class="sub">Feitos por operação:
+    {% comment %} Sem "0 de 0" (126, FR-4022): o marco cujas listas ninguém declarou não tem operação a contar. {% endcomment %}
+    <caption class="sub">{% if indicador.nada_a_conduzir %}Nenhuma operação se aplica a este marco.{% else %}Feitos por operação:
       ordem {{ indicador.totais.ordenar.feitos }} de {{ indicador.totais.ordenar.aplicaveis }} ·
       {% if indicador.totais.cortar.se_aplica %}corte {{ indicador.totais.cortar.feitos }} de {{ indicador.totais.cortar.aplicaveis }} · {% endif %}
       apuração {{ indicador.totais.apurar.feitos }} de {{ indicador.totais.apurar.aplicaveis }} ·
-      publicação {{ indicador.totais.publicar.feitos }} de {{ indicador.totais.publicar.aplicaveis }}</caption>
+      publicação {{ indicador.totais.publicar.feitos }} de {{ indicador.totais.publicar.aplicaveis }}{% endif %}</caption>
     <thead>
       <tr>
         <th scope="col">Recorte</th>
@@ -84,10 +85,18 @@ o marco parecer pronto (`FR-814`).
   </div>
 </section>
 
+{% if not indicador.nada_a_conduzir %}
 {% if conducao_para_emitir %}<p class="ajuda">{{ conducao_para_emitir }} A presidência não é papel: ela vem da composição da comissão.</p>{% endif %}
 {% if conducao_para_publicar %}<p class="ajuda">{{ conducao_para_publicar }}</p>{% endif %}
+{% endif %}
 
-{% if not gestos %}{% if not conducao_para_emitir or not conducao_para_publicar %}
+{% if indicador.nada_a_conduzir %}
+{% comment %}
+**Nada a conduzir, e por quê** (126, FR-4022). "Nenhum recorte em falta" diria que o trabalho foi
+feito; aqui ele nunca existiu, porque nenhuma inscrição enviada declarou as listas do marco.
+{% endcomment %}
+<p class="nota"><strong>Nada a conduzir neste marco.</strong> Nenhuma inscrição enviada declarou as listas dele.</p>
+{% elif not gestos %}{% if not conducao_para_emitir or not conducao_para_publicar %}
 <p class="nota">Nenhum recorte deste marco está em falta nas operações que você pratica. Suceder um ato já emitido se faz na tela do recorte, com motivo.</p>
 {% endif %}{% endif %}
 {% if gestos %}

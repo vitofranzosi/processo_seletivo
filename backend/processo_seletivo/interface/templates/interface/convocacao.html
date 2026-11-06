@@ -70,7 +70,14 @@ cartao. Ela volta a ser o que e, e as secoes voltam ao fluxo normal da pagina.
 {% endcomment %}
 <section aria-labelledby="numeros">
   <h2 id="numeros">As vagas deste recorte</h2>
-  {% if leitura.ocupacao.estado == "NO_VACANCY_TABLE" %}
+  {% if sem_inscrito %}
+  {% comment %}
+  **Não se aplica, e nenhum caminho** (126, FR-4024). A lista que nenhuma inscrição declarou não terá
+  relação, ordem nem apuração: mandar apurar a ocupação, como o estado "não apurado" manda, era o
+  primeiro de dois becos.
+  {% endcomment %}
+  <p class="nota" role="status"><strong>Não se aplica.</strong> Nenhuma inscrição enviada declarou esta lista: não há ocupação a apurar nem quem convocar neste recorte.</p>
+  {% elif leitura.ocupacao.estado == "NO_VACANCY_TABLE" %}
   <p class="aviso" role="status">Este Edital não publicou quadro de vagas para este recorte.</p>
   {% elif leitura.ocupacao.estado == "NOT_APPRAISED" %}
   <p class="aviso" role="status">A ocupação deste recorte ainda não foi apurada. Sem apuração não há vaga faltante conhecida, e convocar é recusado.</p>
@@ -112,7 +119,7 @@ dar por não atendidas as vencidas, emitir o que não saiu. A fila e as chamadas
 convocados os titulares, ela ficava na página só para dizer que não havia ninguém; o porquê — a
 próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai procurar a próxima chamada.
 {% endcomment %}
-{% if pode_emitir and titulares.impedimento or pode_emitir and titulares.pessoas %}
+{% if not sem_inscrito and pode_emitir and titulares.impedimento or not sem_inscrito and pode_emitir and titulares.pessoas %}
 <section aria-labelledby="titulares">
   <h2 id="titulares">Convocar os titulares num ato só</h2>
   {% if titulares.impedimento %}
@@ -230,10 +237,22 @@ gesto disponível, ela é a exceção — precedência justificada, sucessão �
 dividia a atenção entre dois botões de convocar. Sem titular pendente, ela é o caminho do suplente,
 e abre sozinha.
 {% endcomment %}
+{% if not sem_inscrito %}
 <section aria-labelledby="fila">
   <h2 id="fila">Quem pode ser chamado</h2>
   {% if leitura.esgotou %}
+  {% comment %}
+  **A faixa só existe onde houve corte** (126, FR-4025). Sem corte, "a faixa que o corte alcançou"
+  não descreve nada, e pedir a faixa seguinte seria recusado: a fila é a ordem inteira do recorte, e
+  é dela que não há mais ninguém a chamar.
+  {% endcomment %}
+  {% if leitura.corte %}
   <p class="aviso" role="status">Não há mais quem chamar dentro da faixa que o corte alcançou. Ampliar a faixa é ato do corte, e não desta tela.</p>
+  {% elif leitura.apuracao %}
+  <p class="nota" role="status">Não há mais quem chamar na ordem deste recorte.</p>
+  {% else %}
+  <p class="nota" role="status">Ainda não há fila neste recorte: ela nasce da ordem e da apuração da ocupação dele.</p>
+  {% endif %}
   {% if sem_quadro_publicado %}
   {% comment %}
   **A causa, quando ela é outra** (027, FR-332, UX-045). A frase acima é verdadeira e manda a pessoa
@@ -245,7 +264,7 @@ e abre sozinha.
     quantidade a apurar nem faixa a ampliar. A quantidade é declarada por Retificação do Perfil,
     acrescentando a linha deste recorte ao quadro{% if pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir
     a Retificação deste Edital</a>{% else %}: quem elabora Retificações é quem pode declará-la{% endif %}.</p>
-  {% else %}
+  {% elif leitura.corte %}
   <p class="acoes"><a class="acao" href="{% url 'interface:ocupacao' edital.id marco_id %}">Ir para a ocupação e pedir a faixa seguinte</a></p>
   {% endif %}
   {% else %}
@@ -305,6 +324,7 @@ e abre sozinha.
   {% endif %}
   {% endif %}
 </section>
+{% endif %}
 
 {% comment %}
 A convocacao para **regularizar** tem fila propria: a dos indeferidos (US3). Eles nao estao na fila

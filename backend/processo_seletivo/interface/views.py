@@ -161,6 +161,7 @@ from processo_seletivo.interface import (
     atos_processo,
     atos_retificacao,
     conducao_do_marco,
+    conferencia_da_ordem,
     demonstracao,
     encerramento,
     forms,
@@ -7434,6 +7435,24 @@ def _recortes_navegaveis(edital, marco_id, *, rota, atual):
     ]
 
 
+def _recortes_sem_inscrito(edital, marco_id):
+    """Os recortes do marco que nenhuma inscrição declarou, em texto — `None` é a ampla (126).
+
+    A mesma pergunta da condução do marco, feita pela convocação e pela ocupação: as três telas
+    precisam dizer a mesma coisa da mesma lista (FR-4020, FR-4024, FR-4026). Marco que a norma
+    vigente não conhece não tem recorte sem inscrito: a tela do ato histórico continua como é.
+    """
+    conteudo, perfil, marco_publicado = conducao_do_marco.marco_publicado(edital, marco_id)
+    if perfil is None:
+        return set()
+    return {
+        str(lista) if lista else None
+        for lista in conducao_do_marco.recortes_sem_inscrito(
+            edital, conteudo, perfil, marco_publicado
+        )
+    }
+
+
 def _navegacao_do_recorte(edital, marco_id, *, rota, atual):
     """`{recortes, recorte_atual, url_do_recorte}` — o que a navegação lê, derivado junto.
 
@@ -7778,6 +7797,8 @@ def emitir_ordenacao(request, edital_id, marco_id):
                     ),
                     "quantas_com_posicao": len(proposta["posicoes"]),
                     "sem_posicao": proposta["sem_posicao"],
+                    # **Por que ficam sem posição, dito onde se decide** (126, FR-4035 a FR-4037).
+                    "conferencia": conferencia_da_ordem.resumo(proposta),
                     "ato_vigente": estado["vigente"],
                     "obsoleto": estado["obsoleto"],
                     "decisoes": escolhidas,
@@ -7795,7 +7816,7 @@ def emitir_ordenacao(request, edital_id, marco_id):
             )
         )
     try:
-        request.session["resultado_da_ordenacao"] = emitir_ordem(
+        resultado = emitir_ordem(
             actor=ator,
             processo_id=edital.processo_id,
             edital_id=edital.id,
@@ -7814,7 +7835,25 @@ def emitir_ordenacao(request, edital_id, marco_id):
         if recusa.status == 404:
             raise Http404 from recusa
         request.session["erro_da_ordenacao"] = recusa.detail
+        return redirect(destino)
+    request.session["resultado_da_ordenacao"] = {
+        **resultado,
+        **_posicoes_do_ato_emitido(edital, marco_id, lista_id),
+    }
     return redirect(destino)
+
+
+def _posicoes_do_ato_emitido(edital, marco_id, lista_id):
+    """Quantos o ato vigente posicionou e quantos ficaram sem posição (126, FR-4015).
+
+    Lidas do ato gravado, e não da proposta que a tela mostrou: a mensagem diz o que foi feito. Na
+    repetição do envio o ato é o mesmo, e os números também.
+    """
+    ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    if ato is None:
+        return {}
+    com_posicao = ato.posicoes.filter(posicao__isnull=False).count()
+    return {"comPosicao": com_posicao, "semPosicao": ato.posicoes.count() - com_posicao}
 
 
 @require_http_methods(["GET"])
@@ -8023,6 +8062,9 @@ def corte(request, edital_id, marco_id):
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_do_corte", None),
+                # Qual dos dois atos do corte voltou (126, FR-4014): a faixa seguinte não é "corte
+                # emitido", e dizer o número dela como se fosse a geração inteira enganaria.
+                "acao": request.session.pop("acao_do_corte", None),
                 "erro": request.session.pop("erro_do_corte", None),
             },
         )
@@ -8048,6 +8090,14 @@ def ocupacao(request, edital_id, marco_id):
     perfil_id = _perfil_do_marco(edital, marco_id)
     recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
     _com_o_acrescimo(edital, perfil_id, recortes)
+    # **A lista que ninguém declarou não manda emitir ordem** (126, FR-4026): a ordem dela nunca
+    # existirá, e "emita a ordem deste recorte" levava à tela do sorteio, onde não há o que fazer.
+    resultado = request.session.pop("resultado_da_ocupacao", None)
+    sem_inscrito = _recortes_sem_inscrito(edital, marco_id)
+    for recorte in recortes:
+        recorte["semInscrito"] = (
+            str(recorte["listaId"]) if recorte.get("listaId") else None
+        ) in sem_inscrito
     return marcar_como_privada(
         render(
             request,
@@ -8078,7 +8128,16 @@ def ocupacao(request, edital_id, marco_id):
                         que="a apure",
                     )
                 ),
-                "resultado": request.session.pop("resultado_da_ocupacao", None),
+                "resultado": resultado,
+                "recorte_apurado": next(
+                    (
+                        recorte["rotulo"]
+                        for recorte in recortes
+                        if (resultado or {}).get("listaId") is not None
+                        and (recorte.get("listaId") or "") == resultado["listaId"]
+                    ),
+                    "",
+                ),
                 # **Qual das duas ações aconteceu**, e não só que algo deu certo. As duas voltam
                 # para esta tela, e um aviso único dizia "Apuração emitida" depois de causar a
                 # faixa seguinte — frase falsa, porque apuração nenhuma foi emitida ali, e quem
@@ -8178,6 +8237,9 @@ def emitir_apuracao_view(request, edital_id, marco_id):
             correlation_id=f"interface-ocupacao-{edital_id}",
             motivo=(request.POST.get("motivo") or "").strip(),
         )
+        # O recorte apurado vai junto (126, FR-4016): a tela mostra todos os recortes do marco, e
+        # "Apuração emitida" sem dizer qual deixava a pessoa procurar o que mudou.
+        request.session["resultado_da_ocupacao"]["listaId"] = str(lista_id) if lista_id else ""
         request.session["acao_da_ocupacao"] = "apuracao"
     except DomainError as erro:
         request.session["erro_da_ocupacao"] = erro.detail
@@ -8472,6 +8534,11 @@ def convocacao(request, edital_id, marco_id):
                     if pode_emitir
                     else {}
                 ),
+                # **A lista que ninguém declarou não tem convocação** (126, FR-4024). A tela mandava
+                # apurar a ocupação e, logo abaixo, pedir a faixa seguinte — dois caminhos que só
+                # terminam em recusa, para um recorte que nunca terá ordem.
+                "sem_inscrito": (str(lista_id) if lista_id else None)
+                in _recortes_sem_inscrito(edital, marco_id),
                 # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
                 # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
                 # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
@@ -9290,6 +9357,7 @@ def emitir_corte_view(request, edital_id, marco_id):
     if lista_id:
         destino = f"{destino}?lista={lista_id}"
     try:
+        request.session.pop("acao_do_corte", None)
         request.session["resultado_do_corte"] = emitir_corte(
             actor=ator,
             processo_id=edital.processo_id,
@@ -9334,6 +9402,9 @@ def continuar_corte_view(request, edital_id, marco_id):
             quantidade=_inteiro_do_formulario(request.POST.get("quantidade")),
             motivo=request.POST.get("motivo", ""),
         )
+        # **Só depois do sucesso** (126): gravada antes do comando, a marca sobrava na sessão quando
+        # ele recusava com 404, e o corte seguinte, em qualquer marco, se diria "faixa seguinte".
+        request.session["acao_do_corte"] = "continuacao"
     except DomainError as recusa:
         if recusa.status == 404:
             raise Http404 from recusa
@@ -11182,17 +11253,21 @@ def publicar_relacao_do_sorteio(request, edital_id, marco_id):
         _desfecho_do_sorteio(
             request,
             RELACAO,
-            publicar_relacao(
-                actor=ator,
-                processo_id=edital.processo_id,
-                edital_id=edital.id,
-                perfil_id=_perfil_do_marco(edital, marco_id),
-                marco_id=marco_id,
-                lista_id=lista_id,
-                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-                correlation_id=getattr(request, "correlation_id", ""),
-                motivo=request.POST.get("motivo", ""),
-            ),
+            {
+                **publicar_relacao(
+                    actor=ator,
+                    processo_id=edital.processo_id,
+                    edital_id=edital.id,
+                    perfil_id=_perfil_do_marco(edital, marco_id),
+                    marco_id=marco_id,
+                    lista_id=lista_id,
+                    idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                    motivo=request.POST.get("motivo", ""),
+                ),
+                # De qual recorte é a relação (126, FR-4017): a tela mostra todos os do marco.
+                "listaId": lista_id or "",
+            },
         )
     except DomainError as recusa:
         if recusa.status == 404:

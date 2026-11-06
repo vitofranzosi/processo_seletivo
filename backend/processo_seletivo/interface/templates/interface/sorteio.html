@@ -51,7 +51,7 @@ visto do certame, com a transmissão aberta — e a faixa de recusa tinha o mesm
 
 {% if resultado %}
 {% if resultado.tipo == "relacao" %}
-<p class="sucesso" role="status" tabindex="-1">Relação publicada e congelada, com
+<p class="sucesso" role="status" tabindex="-1">Relação publicada e congelada{% for recorte in recortes %}{% if recorte.lista_id == resultado.listaId %} — <strong>{{ recorte.nome }}</strong>{% endif %}{% endfor %}, com
   {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }}. O resumo é
   <code>{{ resultado.resumo }}</code>.</p>
 {% for advertencia in resultado.advertencias %}
@@ -242,7 +242,12 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   Escrito para quem conduz o sorteio (revisão de 30/10): o que fazer primeiro, a data pronta, e a
   sucessão também, porque ela congela na hora.
   {% endcomment %}
-  {% if congelar_agora_inviavel %}
+  {% comment %}
+  **No topo, só quando há relação a congelar** (126, FR-4031): com todas congeladas, o aviso vale só
+  para a sucessão, e mora dentro do bloco dela, mais abaixo (FR-4032). A regra é a da `102`. Quem
+  não sucede não tem o bloco, e continua lendo o aviso aqui — é quem pode pedir a Retificação.
+  {% endcomment %}
+  {% if congelar_agora_inviavel.inscricoes_correndo or congelar_agora_inviavel.inclui_congelamento or congelar_agora_inviavel.inclui_sucessao and not pode_emitir %}
   {% with a=congelar_agora_inviavel %}
   <div class="aviso" role="status">
     <p>{% if a.inscricoes_correndo %}<strong>A extração do Edital é cedo demais: o sorteio seria recusado.</strong>{% else %}<strong>Não congele a relação hoje: o sorteio seria recusado.</strong>{% endif %}
@@ -252,7 +257,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     <p>{% if a.inscricoes_correndo %}Antes do fim das inscrições{% else %}Antes de congelar{% endif %},
       {% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">retifique o Edital</a>{% else %}peça a quem elabora as Retificações deste Edital que o retifique{% endif %},
       trocando a extração por uma a partir de <strong>{{ a.primeiro_dia|date:"d/m/Y" }}</strong>.
-      {% if a.inclui_sucessao %}Vale também para publicar relação nova, sucedendo a atual: ela é congelada na hora. {% endif %}Congelar não se desfaz.</p>
+      {% if a.inclui_sucessao and not pode_emitir %}Vale também para publicar relação nova, sucedendo a atual: ela é congelada na hora. {% endif %}Congelar não se desfaz.</p>
   </div>
   {% endwith %}
   {% endif %}
@@ -408,7 +413,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% endcomment %}
       <ol class="passos-da-anulacao">
         <li>Retificar o Edital para declarar a ocorrência nova — a anulação não escolhe extração.</li>
-        <li>Publicar a relação nova, no formulário <strong>logo abaixo desta caixa</strong>, com o motivo da sucessão.</li>
+        <li>Publicar a relação nova, no bloco <strong>Suceder esta relação</strong>, logo abaixo desta caixa, com o motivo da sucessão.</li>
         <li>Observar a ocorrência que a Retificação declarou.</li>
         <li>Anular, escolhendo os dois abaixo.</li>
       </ol>
@@ -444,7 +449,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% else %}
       <p class="aviso">Faltam os insumos do sucessor:
         {% if not recorte.relacoes_sucessoras %}<strong>a relação nova</strong>, que se publica no
-        formulário logo abaixo desta caixa{% endif %}{% if not recorte.relacoes_sucessoras and not recorte.ocorrencias_disponiveis %} e {% endif %}{% if not recorte.ocorrencias_disponiveis %}<strong>a ocorrência nova</strong>, que se observa depois de a Retificação declará-la{% endif %}.
+        bloco "Suceder esta relação", logo abaixo desta caixa{% endif %}{% if not recorte.relacoes_sucessoras and not recorte.ocorrencias_disponiveis %} e {% endif %}{% if not recorte.ocorrencias_disponiveis %}<strong>a ocorrência nova</strong>, que se observa depois de a Retificação declará-la{% endif %}.
         Enquanto eles não existirem, não há sucessor a constituir — e não há como anular sem
         sucessor.</p>
       {% endif %}
@@ -470,6 +475,28 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     domínio — inalcançável pela tela, o que a Constituição §VI não admite.
     {% endcomment %}
     {% if pode_emitir and metodo and recorte.projetados and not inscricoes_em_curso %}
+    {% if recorte.congelada %}
+    {% comment %}
+    **A sucessão da relação, recolhida** (126, FR-4010, FR-4011, UX-223). Aberta logo abaixo de
+    "Relação publicada e congelada", ela era a ação mais visível depois do ato que ela desfaria. Abre
+    sozinha quando a relação nunca sortearia, que é quando suceder é a saída. E é aqui que mora o
+    aviso de congelamento inviável quando ele vale só para a sucessão (FR-4032): a relação nova
+    seria congelada na hora.
+    {% endcomment %}
+    <details class="sucessao"{% if recorte.diagnostico_da_relacao %} open{% endif %}>
+    <summary>Suceder esta relação (exige motivo)</summary>
+    {% if congelar_agora_inviavel and not recorte.diagnostico_da_relacao %}
+    {% with a=congelar_agora_inviavel %}
+    <div class="aviso">
+      <p><strong>A relação nova seria congelada hoje, e o sorteio dela seria recusado.</strong>
+        A extração do Edital ({{ a.referencia }} de {{ a.fonte }}) é de {{ a.dia|date:"d/m/Y" }}, e o
+        sorteio só aceita extração de dia posterior ao congelamento da relação.</p>
+      <p>Antes de suceder, {% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">retifique o Edital</a>{% else %}peça a quem elabora as Retificações deste Edital que o retifique{% endif %},
+        trocando a extração por uma a partir de <strong>{{ a.primeiro_dia|date:"d/m/Y" }}</strong>. Congelar não se desfaz.</p>
+    </div>
+    {% endwith %}
+    {% endif %}
+    {% endif %}
     <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
       {% csrf_token %}
       <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-relacao-{{ recorte.lista_id }}">
@@ -487,6 +514,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       <button type="submit" class="botao">Publicar e congelar a relação</button>
       {% endif %}
     </form>
+    {% if recorte.congelada %}</details>{% endif %}
     {% endif %}
   </article>
   {% endfor %}

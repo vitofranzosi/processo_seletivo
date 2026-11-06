@@ -50,7 +50,12 @@ contraprova da `FR-493` vista na tela.
 {% endif %}
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
-{% if resultado %}<p class="sucesso" role="status" tabindex="-1">Corte emitido. O ato é imutável, e quem ficou fora continua legível nele.</p>{% endif %}
+{% comment %}
+**O que foi feito, e onde** (126, FR-4014). "Corte emitido." não dizia em qual recorte nem quantos
+progrediram, e logo abaixo vinha outro "Emitir corte". A frase não diz o próximo passo: isso é da
+orientação da jornada, e não desta tela.
+{% endcomment %}
+{% if resultado %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "continuacao" %}<strong>Faixa seguinte emitida</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}: {{ resultado.progrediram|contagem:"progride,progridem" }} nela{% else %}<strong>Corte emitido</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}{% if geracao.0.corte_anterior_id %}, sucedendo a geração anterior{% endif %}: {{ resultado.progrediram|contagem:"progride,progridem" }}{% endif %}{% if resultado.ultimaPosicao %}, até a {{ resultado.ultimaPosicao }}ª posição{% endif %}. O ato é imutável, e quem ficou fora continua legível nele.</p>{% endif %}
 
 {% if recusa %}
 {% comment %}
@@ -128,6 +133,17 @@ divergência genérica uma vez.
 </section>
 
 {% if pode_emitir %}
+{% if geracao %}
+{% comment %}
+**A sucessão, recolhida** (126, FR-4010, FR-4011, UX-223). Era o mesmo formulário da primeira
+emissão, aberto e com o botão de maior peso logo abaixo de "Corte emitido". Sucessão é ato imutável
+com motivo, e a exceção: fica fechada enquanto a geração vigente está íntegra, e abre sozinha quando
+ela está obsoleta, que é quando suceder é o passo esperado. O que ela exige não muda (FR-4012); a
+faixa seguinte, abaixo, não é sucessão, e continua como era (FR-4013).
+{% endcomment %}
+<details class="sucessao"{% if corte_obsoleto %} open{% endif %}>
+  <summary>Suceder este corte (exige motivo)</summary>
+{% endif %}
 <form method="post" action="{% url 'interface:emitir-corte' edital.id marco_id %}" class="confirmar">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
@@ -141,7 +157,7 @@ divergência genérica uma vez.
   {% if geracao %}<p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required></textarea><span class="ajuda">A geração vigente permanece íntegra e legível; este motivo explica por que outra a sucede — e a sucessão alcança todas as faixas dela.</span></p>{% endif %}
   <p class="acoes"><button type="submit" class="botao">Emitir corte</button></p>
 </form>
-
+{% if geracao %}</details>{% endif %}
 {% if geracao and proposta.regra.continuation == "ALLOWED" %}
 <form method="post" action="{% url 'interface:continuar-corte' edital.id marco_id %}" class="confirmar">
   {% csrf_token %}
@@ -163,7 +179,6 @@ divergência genérica uma vez.
 {% endif %}
 {% endif %}
 {% endif %}
-
 {% if geracao %}
 <section aria-labelledby="titulo-geracao">
   <h2 id="titulo-geracao">Faixas desta geração</h2>

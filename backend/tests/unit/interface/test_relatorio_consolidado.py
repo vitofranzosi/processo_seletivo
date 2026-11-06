@@ -206,6 +206,7 @@ def test_cada_numero_e_a_soma_dos_fatos_de_cada_edital():
         "aceitas": 9,
         "aguardando": 2,
         "vencidas": 1,
+        "sem_comunicacao": 0,
         "outros": 3,
     }
     assert c.recursos == rel.Recursos(5, 1, 2, 1, 1)

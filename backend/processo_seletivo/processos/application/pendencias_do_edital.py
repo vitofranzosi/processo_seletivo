@@ -27,6 +27,10 @@ PROVIDENCIA_PENDENTE = "PROVIDENCIA_PENDENTE"
 APURACAO_DESATUALIZADA = "APURACAO_DESATUALIZADA"
 CONVOCACAO_AGUARDANDO = "CONVOCACAO_AGUARDANDO"
 CONVOCACAO_VENCIDA = "CONVOCACAO_VENCIDA"
+# A convocação cuja comunicação não saiu (126, FR-4029). Ela não aguarda resposta — o prazo dela
+# não começou (`convocacao/domain/prazo`) — e não está vencida pela mesma razão: o que falta é
+# emitir a comunicação, e é de quem conduz.
+CONVOCACAO_SEM_COMUNICACAO = "CONVOCACAO_SEM_COMUNICACAO"
 RECURSO_AGUARDANDO = "RECURSO_AGUARDANDO"
 
 # Os que a `113` acrescenta.

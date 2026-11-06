@@ -35,6 +35,7 @@ from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.classificacao.models import AtoDeOrdenacao
 from processo_seletivo.convocacao.application import selectors as convocacao
 from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
+from processo_seletivo.convocacao.domain import prazo as prazo_da_convocacao
 from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
 from processo_seletivo.divulgacao.models import (
@@ -59,6 +60,7 @@ from processo_seletivo.portal.situacao import DESFECHOS
 from processo_seletivo.processos.application.pendencias_do_edital import (
     APURACAO_DESATUALIZADA,
     CONVOCACAO_AGUARDANDO,
+    CONVOCACAO_SEM_COMUNICACAO,
     CONVOCACAO_VENCIDA,
     DEFINITIVO_NAO_PUBLICADO,
     PROVIDENCIA_PENDENTE,
@@ -167,6 +169,8 @@ class Convocacoes:
     aguardando_ate: datetime | None
     vencidas: int
     outros: tuple = ()
+    #: Sem comunicação enviada: o prazo não começou (126, FR-4029). Nem aguardando, nem vencida.
+    sem_comunicacao: int = 0
 
 
 @dataclass(frozen=True)
@@ -885,6 +889,8 @@ def texto_da_pendencia(pendencia):
     if pendencia.tipo == CONVOCACAO_AGUARDANDO:
         ate = f", até {data_curta(pendencia.ate)}" if pendencia.ate else ""
         return f"{n} {_plural(n, 'convocação aguardando', 'convocações aguardando')} resposta{ate}"
+    if pendencia.tipo == CONVOCACAO_SEM_COMUNICACAO:
+        return f"{n} {_plural(n, 'convocação', 'convocações')} sem comunicação enviada"
     if pendencia.tipo == CONVOCACAO_VENCIDA:
         return (
             f"{n} {_plural(n, 'convocação', 'convocações')} com prazo encerrado sem registro de "
@@ -1154,7 +1160,7 @@ def _convocacoes(edital, agora):
     """
     todas = list(
         Convocacao.objects.filter(edital=edital).prefetch_related(
-            "sucessoras", "desfechos__sucessores"
+            "sucessoras", "desfechos__sucessores", "comunicacoes"
         )
     )
     por_perfil = defaultdict(list)
@@ -1164,7 +1170,7 @@ def _convocacoes(edital, agora):
     pendencias = []
     prazos = []
     for perfil_id, lista in por_perfil.items():
-        aceitas = aguardando = vencidas = 0
+        aceitas = aguardando = vencidas = sem_comunicacao = 0
         prazo = None
         outros = Counter()
         for c in lista:
@@ -1174,7 +1180,20 @@ def _convocacoes(edital, agora):
                     aceitas += 1
                 else:
                     outros[ROTULOS_DOS_DESFECHOS.get(desfecho.especie, desfecho.especie)] += 1
-            elif c.vencimento is not None and c.vencimento <= agora:
+                continue
+            # **Pelos estados do domínio, e não pela data** (126, FR-4027). A conta pela data dizia
+            # "aguardando resposta, até 10/11" de quem nunca recebeu a comunicação, e "prazo
+            # encerrado" de quem a recebeu nunca — os dois o domínio proíbe: o prazo só corre do
+            # envio. É a mesma função que a tela da convocação e o portal leem.
+            estado = prazo_da_convocacao.estado(
+                tem_desfecho=False,
+                enviado_em=convocacao.envio_de(c),
+                vencimento=c.vencimento,
+                agora=agora,
+            )
+            if estado == nomes_da_convocacao.CONVOCADO_PRAZO_NAO_INICIADO:
+                sem_comunicacao += 1
+            elif estado == nomes_da_convocacao.CONVOCADO_VENCIMENTO_DECORRIDO:
                 vencidas += 1
             else:
                 aguardando += 1
@@ -1189,7 +1208,10 @@ def _convocacoes(edital, agora):
             aguardando_ate=prazo,
             vencidas=vencidas,
             outros=tuple(sorted(outros.items())),
+            sem_comunicacao=sem_comunicacao,
         )
+        if sem_comunicacao:
+            pendencias.append(Pendencia(CONVOCACAO_SEM_COMUNICACAO, perfil_id, sem_comunicacao))
         if aguardando:
             pendencias.append(Pendencia(CONVOCACAO_AGUARDANDO, perfil_id, aguardando, ate=prazo))
         if vencidas:
@@ -1238,6 +1260,7 @@ def _somar_convocacoes(itens):
         aguardando=sum(c.aguardando for c in itens),
         aguardando_ate=max(prazos) if prazos else None,
         vencidas=sum(c.vencidas for c in itens),
+        sem_comunicacao=sum(c.sem_comunicacao for c in itens),
     )
 
 
@@ -1266,6 +1289,8 @@ def _situacao_das_vagas(vagas, habilitadas, convocacoes, motivo_da_omissao, perf
             partes.append(f"{convocacoes.aguardando} aguardando resposta{ate}")
         if convocacoes.vencidas:
             partes.append(f"{convocacoes.vencidas} com prazo encerrado sem registro")
+        if convocacoes.sem_comunicacao:
+            partes.append(f"{convocacoes.sem_comunicacao} sem comunicação enviada")
         for rotulo, n in convocacoes.outros:
             partes.append(f"{n} {_minuscula(rotulo)}")
     return "; ".join(partes)
@@ -1567,6 +1592,8 @@ def _indicadores(
             partes.append(f"{convocacoes.aguardando} aguardando resposta{ate}")
         if convocacoes.vencidas:
             partes.append(f"{convocacoes.vencidas} com prazo encerrado sem registro")
+        if convocacoes.sem_comunicacao:
+            partes.append(f"{convocacoes.sem_comunicacao} sem comunicação enviada")
         base_aceitas = "; ".join(partes) or "todas com resposta registrada"
     else:
         aceitas = Numero.nao_disponivel("nenhuma convocação registrada")
