@@ -14,7 +14,7 @@ from django.urls import reverse
 from processo_seletivo.interface import conducao_do_marco
 from tests.interface.conftest import identificar
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 SUCESSAO = re.compile(r'<details class="sucessao"( open)?>\s*<summary>([^<]+)</summary>')
 

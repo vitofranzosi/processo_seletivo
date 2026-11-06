@@ -862,6 +862,6 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
   color:var(--verde-texto);padding:.35rem .7rem;border:1px solid var(--borda);border-radius:4px}
 .sucessao>summary:hover{border-color:var(--verde-texto)}
 .sucessao[open]>summary{margin-bottom:.6rem}
-.sucessao>summary::before{content:"▸ "}
-.sucessao[open]>summary::before{content:"▾ "}
+.sucessao>summary::before{content:"▸ "/""}
+.sucessao[open]>summary::before{content:"▾ "/""}
 .sucessao>form,.sucessao>.aviso{margin-top:.5rem}

@@ -448,3 +448,18 @@ def test_a_situacao_no_gps_e_as_providencias_da_ficha():
     assert c.por_especie == Counter(
         {rel.ACOMPANHAMENTO: 1, rel.ENCERRAMENTO: 1, rel.INTERRUPCAO: 1}
     )
+
+
+def test_a_frase_diz_as_convocacoes_sem_comunicacao_enviada():
+    """126, FR-4029: fora de "aguardam resposta", e não fora da frase — eram contadas ali."""
+    um = fatos("1", perfis=[perfil(10, 30)], apuradas=10, habilitadas=9, convocacoes=(3, 0, 1, 0))
+    um.convocacoes = rel.Convocacoes(3, 0, 1, None, 0, sem_comunicacao=2)
+
+    c = somar(um)
+
+    assert c.convocacoes["sem_comunicacao"] == 2
+    assert c.convocacoes["outros"] == 0
+    assert any(
+        "1 aguarda resposta" in frase and "2 estão sem comunicação enviada" in frase
+        for frase in c.frases
+    ), c.frases

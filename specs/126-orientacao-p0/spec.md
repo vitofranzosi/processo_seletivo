@@ -286,7 +286,8 @@ conferir o motivo e as contagens por Etapa.
 #### A2. Lista sem inscrito: *Não se aplica*
 
 - **FR-4019**: Um recorte de **marco de sorteio** MUST ser tratado como **sem inscrito** quando, ao mesmo
-  tempo: o período de inscrições terminou; nenhuma inscrição enviada do Perfil declara aquela lista (na
+  tempo: o período de inscrições terminou, ou o Edital não designa período (não recebe inscrição
+  por este sistema); nenhuma inscrição enviada do Perfil declara aquela lista (na
   ampla, nenhuma inscrição enviada do Perfil); e a relação do recorte não está congelada. A ausência de
   ato, sozinha, MUST NOT bastar (D-002).
 - **FR-4020**: Na condução do marco, as quatro células de um recorte sem inscrito MUST dizer *Não se
@@ -438,8 +439,9 @@ O pedido manda usar o critério que já faz o congelamento ser recusado (`relati
 lido de `previa.recortes_do_marco` (`projetados == 0`, relação não congelada), e não a ausência de ato.
 Duas condições se acrescentam, para que *Não se aplica* nunca seja dito cedo demais:
 
-- **inscrições encerradas**: com o período aberto, alguém ainda pode declarar a lista — o próprio
-  sorteio recusa congelar nessa hora, e por outra razão;
+- **inscrições que não chegam mais**: período encerrado, ou não designado — o Edital que não recebe
+  inscrição por este sistema (`periodo_de_inscricoes`). Com o período aberto ou por abrir, alguém
+  ainda pode declarar a lista, e o próprio sorteio recusa congelar nessa hora, por outra razão;
 - **sem o filtro da Etapa de habilitação**: com `qualifyingStageId`, a projeção conta só os habilitados,
   e é zero enquanto a Etapa não foi consolidada. Zero por espera não é "ninguém se inscreveu".
 

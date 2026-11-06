@@ -16,11 +16,15 @@ de virar requisito.
 
 ## R-2 — O critério de "sem inscrito", e por que não chamar a prévia inteira
 
-**Decision**: `conducao_do_marco.recortes_sem_inscrito(edital, conteudo, perfil, marco, *, agora)` devolve
-o conjunto de `lista_id` (com `None` para a ampla). Vazio quando o marco não sorteia ou quando
-`recusa_por_inscricoes_em_curso` não é `None`. Para os demais: uma consulta das inscrições enviadas do
-Perfil (`modality_id`), `projecao.elegiveis(..., habilitadas=None)` por recorte, e `relacao_vigente` por
-recorte; sem inscrito é elegíveis vazio **e** relação não congelada.
+**Decision**: `sorteios/application/previa.recortes_sem_inscrito(*, edital, conteudo, perfil_id,
+marco_id, agora)`, ao lado de `recortes_do_marco`, devolve o conjunto de `lista_id` (com `None` para a
+ampla); `conducao_do_marco.recortes_sem_inscrito` só a chama com o marco que já leu (revisão do PR, que
+apontou a terceira redação da regra em `interface/`). Vazio quando o marco não sorteia ou quando o
+período está aberto ou por abrir (`periodo_de_inscricoes`; o não designado conta como fechado). Para os
+demais: **uma** consulta às Modalidades declaradas, distintas, pelas inscrições enviadas do Perfil — a
+mesma pergunta de `projecao.elegiveis(..., habilitadas=None)`, sem trazer as inscrições —, e
+`relacao_vigente` e `ato_vigente` só para os recortes vazios; sem inscrito é nenhuma declarante, sem
+relação nem ordem vigente.
 
 **Rationale**: são as mesmas peças que `previa.recortes_do_marco` usa para `projetados` e `congelada`,
 e que `publicar_relacao` usa para recusar com `relation_would_be_empty`. Chamar a prévia inteira na

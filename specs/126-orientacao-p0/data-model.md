@@ -8,11 +8,12 @@ instante da tela.
 | Campo | Origem |
 |---|---|
 | `lista_id` | a derivação canônica de recortes do Perfil (`recortes_do_perfil`); `None` é a ampla |
-| inscrições encerradas | `recusa_por_inscricoes_em_curso(conteudo, agora, consequencia=CONGELAR_A_RELACAO) is None` |
-| elegíveis | `projecao.elegiveis(submetidas_do_perfil, lista_id=..., habilitadas=None)` |
+| inscrições que não chegam mais | `periodo_de_inscricoes(conteudo, agora).estado` em `ENCERRADO` ou `NAO_DESIGNADO` |
+| declarantes | as Modalidades distintas das inscrições enviadas do Perfil (a ampla: qualquer uma) |
 | congelada | `relacao_vigente(...) is not None` |
+| ordem | `ato_vigente(...) is not None` |
 
-**Regra**: marco que sorteia **e** inscrições encerradas **e** elegíveis vazio **e** não congelada (D-002).
+**Regra**: marco que sorteia **e** inscrições que não chegam mais **e** nenhuma declarante **e** não congelada **e** sem ordem (D-002).
 
 ## Estado da convocação (do domínio, sem mudança)
 

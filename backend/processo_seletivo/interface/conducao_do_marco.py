@@ -165,57 +165,22 @@ SEM_INSCRITO = "Nenhuma inscrição nesta lista: não há relação, ordem nem a
 
 
 def recortes_sem_inscrito(edital, conteudo, perfil, marco, *, agora=None):
-    """Os recortes de um marco de sorteio em que **não haverá** ato — e não só os que ainda não têm.
+    """Os recortes deste marco que nenhuma inscrição declarou (126, FR-4019, D-002).
 
-    **Ausência de ato não é pendência** (126, FR-4019, D-002). A condução contava como *Falta* a
-    lista que nenhuma inscrição declarou, e oferecia cortá-la e apurá-la: no Polo Vitória do
-    Edital 35, doze células em falta e dois gestos que só podiam ser recusados. Congelar a relação
-    dela é recusado (`relation_would_be_empty`), e sem relação não há sorteio, ordem, corte nem
-    apuração.
-
-    O critério é o da recusa, lido das mesmas peças que a prévia do sorteio usa — e não da prévia
-    inteira, que leria ocorrência, sorteios e diagnósticos para usar dois campos. Duas condições a
-    mais impedem dizer *Não se aplica* cedo demais:
-
-    - **as inscrições terminaram**: com o período aberto, alguém ainda pode declarar a lista;
-    - **sem o filtro da Etapa de habilitação**: com ela, a projeção é zero enquanto a Etapa não é
-      consolidada, e zero por espera não é "ninguém se inscreveu".
-
-    O resultado é um subconjunto de "congelar seria recusado por universo vazio". Só o marco que
-    sorteia: no marco por Etapas a lista vazia **tem** ordem, emitida e *Feito* (D-003 da `049`).
+    A regra é do sorteio (`sorteios/application/previa.recortes_sem_inscrito`), ao lado da prévia e
+    da recusa de congelar; aqui ela só é perguntada com o marco que a condução já leu.
     """
-    if not sorteia(conteudo, perfil, marco):
-        return set()
-    from processo_seletivo.avaliacoes.domain.conjunto import (
-        CONGELAR_A_RELACAO,
-        recusa_por_inscricoes_em_curso,
+    from processo_seletivo.sorteios.application.previa import (
+        recortes_sem_inscrito as do_sorteio,
     )
-    from processo_seletivo.inscricoes.models import Inscricao
-    from processo_seletivo.sorteios.application.selectors import relacao_vigente
-    from processo_seletivo.sorteios.domain import projecao
 
-    agora = agora or timezone.now()
-    if recusa_por_inscricoes_em_curso(conteudo, agora, consequencia=CONGELAR_A_RELACAO):
-        return set()
-    enviadas = list(
-        Inscricao.objects.filter(
-            edital=edital, profile_id=perfil["id"], status=Inscricao.Status.SUBMETIDA
-        ).only("id", "modality_id")
+    return do_sorteio(
+        edital=edital,
+        conteudo=conteudo,
+        perfil_id=perfil["id"],
+        marco_id=str(marco["id"]),
+        agora=agora,
     )
-    vazios = set()
-    for lista_id, _ in recortes_do_marco(conteudo, perfil):
-        if projecao.elegiveis(enviadas, lista_id=lista_id, habilitadas=None):
-            continue
-        if relacao_vigente(
-            edital=edital, perfil_id=perfil["id"], marco_id=marco["id"], lista_id=lista_id
-        ):
-            continue
-        # **Ato que exista não se esconde** (revisão da 126): um Edital retificado de pontuação para
-        # sorteio pode ter ordem vazia emitida antes; ela continua na condução, com o estado dela.
-        if ato_vigente(edital=edital, marco_id=str(marco["id"]), lista_id=lista_id) is not None:
-            continue
-        vazios.add(lista_id)
-    return vazios
 
 
 # ---------------------------------------------------------------------------------------------

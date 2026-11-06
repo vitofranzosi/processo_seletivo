@@ -7838,22 +7838,29 @@ def emitir_ordenacao(request, edital_id, marco_id):
         return redirect(destino)
     request.session["resultado_da_ordenacao"] = {
         **resultado,
-        **_posicoes_do_ato_emitido(edital, marco_id, lista_id),
+        **_posicoes_do_ato_emitido(resultado),
     }
     return redirect(destino)
 
 
-def _posicoes_do_ato_emitido(edital, marco_id, lista_id):
-    """Quantos o ato vigente posicionou e quantos ficaram sem posição (126, FR-4015).
+def _posicoes_do_ato_emitido(resultado):
+    """Quantos **o ato emitido** posicionou e quantos ficaram sem posição (126, FR-4015).
 
-    Lidas do ato gravado, e não da proposta que a tela mostrou: a mensagem diz o que foi feito. Na
-    repetição do envio o ato é o mesmo, e os números também.
+    Do ato que o comando devolveu, e não do vigente: outra emissão entre o comando e esta leitura —
+    ou a repetição do envio, que devolve o desfecho da primeira — faria a mensagem dizer os números
+    de outro ato. Uma consulta só.
     """
-    ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
-    if ato is None:
+    from django.db.models import Count, Q
+
+    from processo_seletivo.classificacao.models import PosicaoNaOrdem
+
+    ids = (resultado or {}).get("ids") or []
+    if not ids:
         return {}
-    com_posicao = ato.posicoes.filter(posicao__isnull=False).count()
-    return {"comPosicao": com_posicao, "semPosicao": ato.posicoes.count() - com_posicao}
+    contagem = PosicaoNaOrdem.objects.filter(ato_id=ids[0]).aggregate(
+        total=Count("id"), com=Count("id", filter=Q(posicao__isnull=False))
+    )
+    return {"comPosicao": contagem["com"], "semPosicao": contagem["total"] - contagem["com"]}
 
 
 @require_http_methods(["GET"])
