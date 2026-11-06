@@ -26,8 +26,9 @@ competente, e não do GPS.
 
 from dataclasses import dataclass, field, replace
 from types import SimpleNamespace
+from zoneinfo import ZoneInfo
 
-from django.utils import formats, timezone
+from django.conf import settings
 
 from processo_seletivo.convocacao.application.documentos import NUCLEO_DO_PRAZO_DECORRIDO
 from processo_seletivo.convocacao.application.documentos import (
@@ -35,6 +36,7 @@ from processo_seletivo.convocacao.application.documentos import (
 )
 from processo_seletivo.convocacao.domain import documentos as dominio
 from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
 from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 
 # --- O momento da chamada (FR-3722) -------------------------------------------------------------
@@ -101,6 +103,207 @@ LINHA_DO_REQUERIMENTO = {
     REQ_NAO_ENVIADO_ENCERRADO: REQUERIMENTO_NAO_ENVIADO_ENCERRADO,
 }
 
+# --- A chamada da `121` (FR-3858 a FR-3869) -----------------------------------------------------
+# **O título diz o estado, e absorve o do bloco 1** (D-005): com *"O prazo desta convocação
+# terminou"* no topo, o bloco não repete *"O prazo terminou"* abaixo. Nenhum promete vaga,
+# matrícula nem contratação (FR-3751 da `118`).
+TITULO_ABERTA = "Você foi convocado!"
+TITULO_ENCERRADA_PELO_PRAZO = "O prazo desta convocação terminou"
+TITULO_ENCERRADA_PELO_PROCESSO = "O envio pelo portal está encerrado"
+TITULO_DECIDIDA = "Resultado da sua convocação"
+TITULOS = {
+    ABERTA: TITULO_ABERTA,
+    ENCERRADA_PELO_PRAZO: TITULO_ENCERRADA_PELO_PRAZO,
+    ENCERRADA_PELO_PROCESSO: TITULO_ENCERRADA_PELO_PROCESSO,
+    DECIDIDA: TITULO_DECIDIDA,
+}
+# **A etapa descreve as obrigações da chamada, e não o estado** (FR-3860): sai da lista gravada no
+# ato de convocar e da política do Requerimento, e vale igual antes e depois de qualquer envio. Sem
+# imperativo — *"envie o Requerimento"* o pediria a quem já o enviou (cenário F).
+ETAPAS = {
+    (True, True): "Nesta etapa, você envia seus documentos e o Requerimento de Matrícula para a "
+    "comissão conferir.",
+    (True, False): "Nesta etapa, você envia seus documentos para a comissão conferir.",
+    (False, True): "Nesta etapa, você envia o Requerimento de Matrícula e pode enviar documento "
+    "opcional para a comissão conferir.",
+    (False, False): "Nesta etapa, você pode enviar documento opcional para a comissão conferir.",
+}
+# **"Matrícula" só com o Requerimento de Matrícula** (D-003): num Edital de bolsista, que não o
+# pede, "ainda não é a matrícula" seria falso.
+RESSALVA_DA_MATRICULA = (
+    "Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o "
+    "resultado."
+)
+RESSALVA_DO_RESULTADO = (
+    "Esta convocação ainda não é o resultado: a comissão confere o que você enviar e registra o "
+    "resultado."
+)
+# O link só navega, e por isso não começa por "Enviar" (FR-3863; FR-3730 da `118`).
+VER_O_QUE_PRECISO_FAZER = "Ver o que preciso fazer"
+ROTULO_DO_PRAZO = "Prazo desta convocação"
+CORRIGIDA = "Convocação corrigida: este é o prazo válido."
+# A âncora do cartão do Requerimento a preencher, no bloco *O que falta* (FR-3738 da `118`).
+ANCORA_DO_REQUERIMENTO = "requerimento-a-preencher"
+
+
+def requerimento_na_chamada(disponibilidade):
+    """O Requerimento é pedido **nesta chamada**: exigido, e declarado *na convocação*."""
+    d = disponibilidade
+    return bool(d is not None and d.exigido and d.momento == requerimento_nomes.NA_CONVOCACAO)
+
+
+def requerimento_exigido(disponibilidade):
+    """O Edital exige o Requerimento de Matrícula, em qualquer momento (D-003)."""
+    return bool(disponibilidade is not None and disponibilidade.exigido)
+
+
+def ressalva(disponibilidade):
+    """A ressalva da FR-3864: *"ainda não é a matrícula"* só com o Requerimento (D-003)."""
+    return RESSALVA_DA_MATRICULA if requerimento_exigido(disponibilidade) else RESSALVA_DO_RESULTADO
+
+
+@dataclass(frozen=True)
+class CartaoDoPrazo:
+    """O cartão do prazo da chamada (FR-3861): o rótulo e o formato da `118`, a data como o maior
+    texto, e a linha do dia da semana e da contagem abaixo dela (FR-3874).
+
+    Sem data, ele diz só a frase do caso: o prazo não iniciado (FR-3749 da `118`) ou a convocação
+    sem vencimento (FR-3737 da `118`). A correção vem acima da data, no próprio cartão (FR-3869).
+    """
+
+    #: Só com data: com o prazo não iniciado ou sem vencimento, o cartão diz **só** a frase do caso.
+    rotulo: str = ""
+    corrigida: str = ""
+    data: str = ""
+    linha: str = ""
+    frases: tuple = ()
+
+
+def cartao_do_prazo(*, prazo_nao_iniciado, vencimento, agora, corrigida, ja_pode_enviar=False):
+    """O cartão do prazo de uma chamada **aberta**; com ela fechada, não há cartão (FR-3867)."""
+    frase_da_correcao = CORRIGIDA if corrigida else ""
+    if prazo_nao_iniciado:
+        frases = (PRAZO_NAO_INICIADO,) + ((JA_PODE_ENVIAR,) if ja_pode_enviar else ())
+        return CartaoDoPrazo(corrigida=frase_da_correcao, frases=frases)
+    if vencimento is None:
+        return CartaoDoPrazo(corrigida=frase_da_correcao, frases=(SEM_PRAZO_REGISTRADO,))
+    prazo = apresentado(vencimento, agora)
+    return CartaoDoPrazo(
+        rotulo=ROTULO_DO_PRAZO,
+        corrigida=frase_da_correcao,
+        data=prazo.ate,
+        # Sem o instante da requisição, a contagem não se diz: inventá-la do relógio aqui faria a
+        # função depender de quando é chamada (FR-3873).
+        linha=prazo.linha if agora is not None else "",
+    )
+
+
+@dataclass(frozen=True)
+class AcaoDaChamada:
+    rotulo: str
+    ancora: str
+
+
+# --- A volta do envio (121, FR-3870) -------------------------------------------------------------
+# **"O arquivo aguarda"**, e não "ela aguarda" (D-010): concorda com todo nome de documento. Nunca
+# "aceito", "aprovado", "conferido" nem "atendido" — a comissão ainda não disse nada (FR-3751).
+RECEBEMOS = (
+    "Recebemos: {documento}, em {data}, às {hora}. O arquivo aguarda a conferência da comissão."
+)
+JA_RECEBIDO = "Este arquivo já tinha sido recebido."
+PROXIMA_TAREFA = "Próxima tarefa:"
+
+
+@dataclass(frozen=True)
+class ConfirmacaoDoEnvio:
+    frase: str
+    #: A primeira tarefa da FR-3726 **depois** do envio, ou `None`.
+    proxima: object = None
+    proxima_ancora: str = ""
+    #: Sem tarefa restante, a frase de conclusão da FR-3728 no lugar da próxima tarefa.
+    conclusao: str = ""
+    rotulo: str = PROXIMA_TAREFA
+
+
+def confirmacao_do_envio(projecao, *, item_id, apresentacao_id, ja_recebido):
+    """A confirmação do envio aceito, montada da projeção depois dele (FR-3870, R-006).
+
+    Cada volta mostra só o seu envio (D-010); o andamento mostra o acumulado. O mesmo arquivo de
+    novo diz só que já tinha sido recebido, sem próxima tarefa nova.
+    """
+    item = next((i for i in projecao.itens if str(i.id) == str(item_id)), None)
+    if item is None:
+        return None
+    if ja_recebido:
+        return ConfirmacaoDoEnvio(frase=JA_RECEBIDO)
+    apresentacao = next(
+        (a for a in item.lido.apresentacoes if str(a.id) == str(apresentacao_id)), None
+    )
+    instante = apresentacao.apresentado_em if apresentacao is not None else None
+    frase = RECEBEMOS.format(
+        documento=item.nome,
+        data=data(instante) if instante else "",
+        hora=hora(instante) if instante else "",
+    )
+    if not projecao.aberta:
+        # **Fechada entre o envio e a volta** — o prazo venceu, o Processo encerrou ou o resultado
+        # saiu: nem próxima tarefa nem conclusão. A conclusão diria "não tem mais documentos para
+        # enviar" logo acima de "ficaram sem envio", e a chamada já conta o que houve.
+        return ConfirmacaoDoEnvio(frase=frase)
+    if projecao.tarefas:
+        return ConfirmacaoDoEnvio(
+            frase=frase, proxima=projecao.tarefas[0], proxima_ancora=projecao.primeira_ancora
+        )
+    return ConfirmacaoDoEnvio(frase=frase, conclusao=FRASE_DE_CONCLUSAO)
+
+
+SUBSTITUIDA = "Convocação substituída"
+_POR_PUBLICACAO = "PUBLICATION"
+
+
+def linha_da_substituida(anterior):
+    """A linha *"Convocação substituída"* dos dados do ato, da **imediatamente anterior** (FR-3869).
+
+    **A anterior, e não a última comunicada da cadeia** (R-008, D-008): a mensagem da correção cita
+    a última enviada com sucesso, e os dados do ato dizem qual convocação esta substituiu. As duas
+    leituras são diferentes por decisão do usuário, e não se unificam.
+
+    Lê só o que `vigentes_por_inscricao` já trouxe no *prefetch* — a anterior e as comunicações dela
+    —, sem consulta por item. **Sem o motivo** (a proteção de dados da `120`), e sem *"novo prazo"*
+    nem *"prorrogação"*: a sucessora pode antecipar (FR-3856 da `120`).
+    """
+    if anterior is None:
+        return ""
+    prazo = f"até {data_e_hora(anterior.vencimento)}" if anterior.vencimento else ""
+    enviadas = [c for c in anterior.comunicacoes.all() if c.resultado == "ENVIADA" and c.enviado_em]
+    if not enviadas:
+        if not prazo:
+            return "Não comunicada, sem prazo registrado."
+        return f"Não comunicada. O prazo registrado era {prazo}, e não vale mais."
+    ultima = max(enviadas, key=lambda comunicacao: comunicacao.enviado_em)
+    if ultima.forma == _POR_PUBLICACAO:
+        quando = f"Publicada em {ultima.referencia_da_publicacao.strip()}"
+    else:
+        quando = f"Comunicada em {data_e_hora(ultima.enviado_em)}"
+    if not prazo:
+        return f"{quando}, sem prazo registrado."
+    return f"{quando}, com prazo {prazo}. Esse prazo não vale mais."
+
+
+def momento_sem_documento(*, estado_do_prazo, desfecho, fechado_pelo_processo):
+    """O momento da chamada que não pede documento, para o título da FR-3858 (FR-3868).
+
+    A causa vem do que a tela sem documento já sabe: o estado do prazo e, pela política do
+    Requerimento, se o Processo está em estado final. Com os dois, vale o Processo (D-015 da `118`).
+    """
+    if desfecho is not None:
+        return DECIDIDA
+    if fechado_pelo_processo:
+        return ENCERRADA_PELO_PROCESSO
+    if estado_do_prazo == convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO:
+        return ENCERRADA_PELO_PRAZO
+    return ABERTA
+
 
 # Os selos dos cartões (FR-3744): o estado em texto, nunca só em cor ou símbolo. Fechada a chamada,
 # o pendente se diz no passado e o que estava com a comissão não promete conferência.
@@ -122,25 +325,37 @@ SELO_OPCIONAL = Selo("Opcional", "opcional")
 
 ENCERRADO_OU_CANCELADO = {"ENCERRADO": "encerrado", "CANCELADO": "cancelado"}
 
-HORA = "H\\hi"
+
+def fuso():
+    """O fuso da instalação, das settings, e nunca o do servidor (121, FR-3873)."""
+    return ZoneInfo(settings.TIME_ZONE)
+
+
+def apresentado(vencimento, agora=None):
+    """O prazo apresentado da `121`: a mesma função do e-mail, no fuso da instalação (FR-3873).
+
+    Sem `agora`, a data e a hora valem e a contagem é a do próprio instante — é o caso de quem só
+    quer escrever uma data, como os recebimentos.
+    """
+    return apresentar(vencimento, agora or vencimento, fuso())
 
 
 def data(instante):
-    return formats.date_format(timezone.localtime(instante), "d/m/Y")
+    return apresentado(instante).data
 
 
 def hora(instante):
-    return formats.date_format(timezone.localtime(instante), HORA)
+    return apresentado(instante).hora
 
 
 def data_e_hora(instante):
     """*"09/11/2026, às 13h27"* — o formato único do prazo e dos recebimentos (FR-3747)."""
-    return f"{data(instante)}, às {hora(instante)}"
+    return apresentado(instante).data_e_hora
 
 
 def ate(vencimento):
     """*"até 09/11/2026, às 13h27"* (FR-3747), ou vazio sem vencimento."""
-    return f"até {data_e_hora(vencimento)}" if vencimento is not None else ""
+    return apresentado(vencimento).ate if vencimento is not None else ""
 
 
 def frase_do_prazo_decorrido(vencimento):
@@ -444,10 +659,86 @@ class Obrigacoes:
     titulo_do_resumo: str = ""
     resumo: tuple = field(default_factory=tuple)
     linha_do_requerimento: str = ""
+    # A chamada da `121`: o instante da requisição, para a contagem do prazo; se a vigente sucede
+    # outra; e o que a política do Requerimento diz da etapa e da ressalva.
+    agora: object = None
+    corrigida: bool = False
+    pede_requerimento: bool = False
+    requerimento_exigido: bool = False
 
     @property
     def aberta(self):
         return self.momento == ABERTA
+
+    # --- A chamada (121, FR-3858 a FR-3865) ----------------------------------------------------
+
+    @property
+    def titulo(self):
+        """O título de primeiro nível, pelo estado (FR-3858)."""
+        return TITULOS[self.momento]
+
+    @property
+    def pede_documento_obrigatorio(self):
+        return any(not item.opcional for item in self.itens)
+
+    @property
+    def etapa(self):
+        """O que a chamada pede, só com ela aberta (FR-3860, FR-3867)."""
+        if not self.aberta:
+            return ""
+        return ETAPAS[(self.pede_documento_obrigatorio, self.pede_requerimento)]
+
+    @property
+    def cartao(self):
+        """O cartão do prazo, só com a chamada aberta (FR-3861, FR-3867)."""
+        if not self.aberta:
+            return None
+        return cartao_do_prazo(
+            prazo_nao_iniciado=self.prazo_nao_iniciado,
+            vencimento=self.vencimento,
+            agora=self.agora,
+            corrigida=self.corrigida,
+            ja_pode_enviar=bool(self.tarefas or self.opcionais_a_enviar),
+        )
+
+    @property
+    def resumo_do_que_falta(self):
+        """*"Você ainda precisa ‹tarefas›."*, ou a frase de conclusão sem tarefa (FR-3862)."""
+        if not self.aberta:
+            return ""
+        return frase_das_tarefas(self.totais) or FRASE_DE_CONCLUSAO
+
+    @property
+    def acao(self):
+        """**Um** link à primeira tarefa da FR-3726, ou nada sem tarefa (FR-3863)."""
+        if not self.aberta or not self.tarefas:
+            return None
+        return AcaoDaChamada(rotulo=VER_O_QUE_PRECISO_FAZER, ancora=self.primeira_ancora)
+
+    @property
+    def ressalva(self):
+        """A ressalva da FR-3864, depois da ação, só com a chamada aberta (D-003)."""
+        if not self.aberta:
+            return ""
+        return RESSALVA_DA_MATRICULA if self.requerimento_exigido else RESSALVA_DO_RESULTADO
+
+    @property
+    def andamento(self):
+        """As contagens da FR-3727, só obrigatórios e sem o Requerimento (FR-3865, D-004).
+
+        *A corrigir* só quando houver. Sem barra, sem percentual e sem frase de conclusão: "100 %
+        enviado" leria como aprovado (FR-3728 da `118`).
+        """
+        if not self.aberta:
+            return ()
+        t = self.totais
+        linhas = [("A corrigir", t["a_corrigir"])] if t["a_corrigir"] else []
+        return (
+            *linhas,
+            ("A enviar", t["a_enviar"]),
+            ("Aguardando conferência", t["com_a_comissao"]),
+            ("Conferidos", t["conferidos"]),
+        )
 
     @property
     def encerrada(self):
@@ -479,27 +770,27 @@ class Obrigacoes:
 
     @property
     def tem_bloco_que_falta(self):
-        return bool(self.que_falta or self.opcionais_a_enviar)
+        """*O que falta*: documentos e o Requerimento a preencher; sem tarefa, os opcionais (FR-3735
+        da `118`, revista pela `121`)."""
+        return bool(
+            self.que_falta or self.opcionais_a_enviar or self.requerimento_a_preencher_na_chamada
+        )
 
     @property
     def primeira_ancora(self):
+        """A âncora da primeira tarefa da FR-3726 — e a do Requerimento quando ele é a única (121,
+        FR-3863, SC-1151). Antes da `121` ela só olhava documentos, e o botão sumia justamente
+        quando a única coisa a fazer era o Requerimento."""
         tarefas = self.tarefas_de_documento
-        return tarefas[0].ancora if tarefas else ""
+        if tarefas:
+            return tarefas[0].ancora
+        return ANCORA_DO_REQUERIMENTO if self.totais["requerimento"] else ""
 
     @property
-    def rotulo_do_botao(self):
-        """O botão ao primeiro cartão: diz o que se vê ao chegar, e não "Enviar" (D-004)."""
-        if not self.tarefas_de_documento:
-            return ""
-        if self.totais["a_corrigir"]:
-            return "Ver e corrigir os documentos pendentes"
-        return "Ver os documentos que faltam"
-
-    @property
-    def linha_com_a_comissao(self):
-        """*"Com a comissão: N documentos."*, sem verbo de tarefa (FR-3736)."""
-        total = self.totais["com_a_comissao"]
-        return f"Com a comissão: {documentos(total)}." if total else ""
+    def requerimento_a_preencher_na_chamada(self):
+        """O cartão do Requerimento no bloco *O que falta* (FR-3738). O total já só vale com a
+        chamada aberta: é a mesma condição que faz dele tarefa."""
+        return bool(self.totais["requerimento"])
 
     @property
     def convite_ao_opcional(self):
@@ -539,12 +830,17 @@ def obrigacoes_da_convocacao(
     vencimento,
     estado_final_do_processo="",
     canal="",
+    agora=None,
+    corrigida=False,
 ):
     """As obrigações da chamada vigente, ou `None` quando ela não pede documento (FR-3743).
 
     `causa_do_fechamento` é `None`, `PRAZO` ou `PROCESSO`, derivada pela view da mesma condição que
     recusa o envio; com as duas, vale o Processo (D-015). `estado_final_do_processo` é o status do
     Processo encerrado ou cancelado, para dizer qual dos dois; `canal`, o atendimento da unidade.
+
+    `agora` é o instante da requisição, para a contagem do cartão do prazo, e `corrigida` diz que a
+    vigente sucede outra (121, FR-3861, FR-3869). A projeção continua sem ler relógio.
     """
     pedidos = list(getattr(leitura, "pedidos", None) or [])
     if not pedidos:
@@ -585,6 +881,10 @@ def obrigacoes_da_convocacao(
         prazo=prazo,
         frase_de_estado="",
         linha_do_requerimento=LINHA_DO_REQUERIMENTO.get(estado_req, ""),
+        agora=agora,
+        corrigida=corrigida,
+        pede_requerimento=requerimento_na_chamada(requerimento),
+        requerimento_exigido=requerimento_exigido(requerimento),
     )
     tarefas = ()
     if momento == ABERTA:
@@ -721,6 +1021,7 @@ def _encerrada_pelo_processo(base, estado_req, estado_final_do_processo, canal):
 __all__ = [
     "ABERTA",
     "ACEITE",
+    "CORRIGIDA",
     "DECIDIDA",
     "ENCERRADA_PELO_PRAZO",
     "ENCERRADA_PELO_PROCESSO",
@@ -728,12 +1029,19 @@ __all__ = [
     "NUCLEO_DO_PRAZO",
     "PRAZO",
     "PROCESSO",
+    "TITULOS",
+    "CartaoDoPrazo",
     "Obrigacoes",
+    "apresentado",
     "ate",
+    "cartao_do_prazo",
     "categoria",
     "estado_do_requerimento",
     "frase_do_prazo_decorrido",
+    "linha_da_substituida",
     "linha_informativa_do_requerimento",
+    "momento_sem_documento",
     "obrigacoes_da_convocacao",
+    "ressalva",
     "texto_do_item",
 ]

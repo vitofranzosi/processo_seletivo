@@ -218,16 +218,29 @@ class TestMinhasInscricoes:
             "Acompanhar",
         )
 
-    def test_a_mensagem_continua_apontando_minhas_inscricoes(self):
-        """`FR-1104`, `D-009`: o endereço é montado na gestão, e a lista é o destino que serve aos
-        gestos individuais e aos lotes da `050`. Mudar um deles em silêncio mandaria parte das
-        pessoas a outro lugar — e é por isso que a regra fica presa aqui, e não num comentário.
+    def test_a_mensagem_aponta_a_convocacao_da_inscricao(self):
+        """`FR-1104`, revista pela 121: o endereço da mensagem é o da convocação da inscrição, e não
+        "Minhas inscrições". A gestão continua montando a base do portal num lugar só — os gestos
+        individuais e os lotes da `050` —, e o envio junta a ela a rota da convocação (FR-3883).
+        Mudar um deles em silêncio mandaria parte das pessoas a outro lugar — e é por isso que a
+        regra fica presa aqui, e não num comentário.
         """
+        import uuid
+
+        from processo_seletivo.convocacao.application.comunicar import link_da_convocacao
+
         views = (RAIZ / "processo_seletivo/interface/views.py").read_text(encoding="utf-8")
         enderecos = re.findall(r"endereco_do_portal=([^\n]+)", views)
 
         assert enderecos, "a varredura deixou de achar onde a gestão monta o endereço"
         assert set(enderecos) == {'request.build_absolute_uri(reverse("portal:inscricoes")),'}
+        inscricao_id = uuid.uuid4()
+        convocacao = reverse("portal:convocacao", args=[inscricao_id])
+        base = "https://selecoes.exemplo.test" + reverse("portal:inscricoes")
+        assert (
+            link_da_convocacao(base, inscricao_id) == f"https://selecoes.exemplo.test{convocacao}"
+        )
+        assert link_da_convocacao("", inscricao_id) == convocacao, "sem base, o caminho"
 
 
 class TestRequerimentoNaConvocacao:
@@ -428,8 +441,17 @@ class TestAcompanhamento:
 
         for pagina in (secao, tela):
             assert novo.strftime("%d/%m/%Y, às %Hh%M") in pagina
-            assert antigo.strftime("%d/%m/%Y, às %Hh%M") not in pagina
-            assert antigo.strftime("%d/%m/%Y") not in pagina
+        assert antigo.strftime("%d/%m/%Y") not in secao
+        # Na tela, a data antiga só nos dados do ato, como a da substituída, que não vale mais
+        # (121, FR-3869); e o cartão do prazo diz que este é o prazo válido.
+        substituida = (
+            "Convocação substituída Não comunicada. O prazo registrado era até "
+            f"{antigo.strftime('%d/%m/%Y, às %Hh%M')}, e não vale mais."
+        )
+        lido = " ".join(re.sub(r"<[^>]+>", " ", tela).split())
+        assert substituida in lido
+        assert lido.replace(substituida, "").count(antigo.strftime("%d/%m/%Y")) == 0
+        assert "Convocação corrigida: este é o prazo válido." in lido
 
     def test_sem_convocacao_nao_ha_secao(self, client, certame):
         _, _, inscricoes = certame

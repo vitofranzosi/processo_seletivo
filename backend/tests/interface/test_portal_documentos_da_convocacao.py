@@ -80,7 +80,9 @@ def test_a_convocada_ve_o_que_apresentar_e_ate_quando(aluno, gestor, client):
     # convocação não teve a comunicação enviada: a tela antiga mostrava a data como prazo de um
     # prazo que não corria (F12); a de agora diz que ele não começou, e a data fica só nos dados do
     # ato (FR-3749 da `118`).
-    assert "O que fazer agora" in corpo and "O que falta" in corpo
+    # A chamada da 121 no lugar de "O que fazer agora" (FR-3735 da 118, revista).
+    assert "Você foi convocado!" in corpo and "O que falta" in corpo
+    assert "O que fazer agora" not in corpo
     assert "Certidão de nascimento ou casamento" in corpo
     assert "Todas as páginas, em arquivo único." in corpo
     assert corpo.count("Falta enviar") == 4
@@ -88,7 +90,7 @@ def test_a_convocada_ve_o_que_apresentar_e_ate_quando(aluno, gestor, client):
     assert "Você já pode enviar." in corpo
     assert "Envie até" not in corpo
     assert "Prazo desta convocação" not in corpo
-    assert "Documento de identificação" not in corpo.split('id="o-que-fazer-agora"')[1]
+    assert "Documento de identificação" not in corpo.split('class="chamada-da-convocacao"')[1]
 
 
 def test_a_convocada_envia_pelo_portal_e_le_o_resultado(aluno, gestor, client):
@@ -101,9 +103,13 @@ def test_a_convocada_envia_pelo_portal_e_le_o_resultado(aluno, gestor, client):
         reverse("portal:apresentar-documento-da-convocacao", args=[pessoa.id, alvo.id]),
         {"arquivo": cenarios.pdf(b"historico")},
     )
+    # A volta é a confirmação, e não o cartão (121, FR-3870): ela diz o documento e a data, e que
+    # o arquivo aguarda a conferência da comissão.
     assert resposta.status_code == 302
+    assert resposta["Location"].endswith("#confirmacao")
     corpo = tela(client, pessoa)
-    assert "Documento recebido. A comissão vai conferir." in corpo
+    assert "Recebemos: Histórico escolar do ensino médio, em " in corpo
+    assert "O arquivo aguarda a conferência da comissão." in corpo
     # O selo e a frase da FR-3746 da `118`, no lugar do sufixo "aguardando conferência".
     assert "Aguardando conferência" in corpo
     assert "A comissão vai conferir; você não precisa fazer nada agora." in corpo
@@ -219,8 +225,9 @@ def test_sem_documento_na_convocacao_a_tela_e_a_de_antes(
 
     corpo = tela(client, pessoa)
     # Sem documento, a estrutura de antes (FR-3574 da `115`; FR-3743 da `118`): nenhum bloco novo.
+    # O título de primeiro nível é o da chamada (121, FR-3868), e "O que fazer" é de segundo nível.
     assert "O que fazer agora" not in corpo
-    assert "<h3>O que fazer</h3>" in corpo
+    assert "<h2>O que fazer</h2>" in corpo
 
 
 def test_o_certificado_da_inscricao_aparece_atendido(
@@ -313,3 +320,229 @@ def test_a_pagina_publica_avisa_o_que_a_convocacao_pedira(aluno, client):
 
     assert "Se for convocado, a convocação pedirá também:" in corpo
     assert "Certidão de nascimento ou casamento" in corpo
+
+
+# --- A volta do envio (121, FR-3870 a FR-3872, R-006) ---------------------------------------------
+
+
+def _postar(client, pessoa, alvo, arquivo=None):
+    return client.post(
+        reverse("portal:apresentar-documento-da-convocacao", args=[pessoa.id, alvo.id]),
+        {"arquivo": arquivo} if arquivo is not None else {},
+    )
+
+
+def _chamada(corpo):
+    return corpo.split('<section class="chamada-da-convocacao"', 1)[1].split("</section>", 1)[0]
+
+
+def _confirmacao(corpo):
+    return corpo.split('id="confirmacao"', 1)[1].split(">", 1)[1].split("</div>", 1)[0]
+
+
+def _texto(html):
+    import re
+
+    return " ".join(re.sub(r"<[^>]+>", " ", html).split())
+
+
+class TestAConfirmacao:
+    def test_o_envio_aceito_volta_a_confirmacao(self, aluno, gestor, client):
+        """FR-3870, D-010: o primeiro elemento da chamada, focável pela âncora, com o documento, a
+        data e a hora, "o arquivo aguarda a conferência" e a próxima tarefa."""
+        from processo_seletivo.portal import obrigacoes
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        resposta = _postar(client, pessoa, alvo, cenarios.pdf(b"certidao"))
+
+        destino = reverse("portal:convocacao", args=[pessoa.id])
+        assert resposta.status_code == 302 and resposta["Location"] == f"{destino}#confirmacao"
+        corpo = tela(client, pessoa)
+        chamada = _chamada(corpo)
+        assert (
+            '<div class="confirmacao-do-envio" id="confirmacao" tabindex="-1" role="status">'
+            in (chamada)
+        )
+        assert chamada.index('id="confirmacao"') < chamada.index('class="contexto-da-chamada"')
+        recebida = alvo.apresentacoes.get().apresentado_em
+        confirmacao = _texto(_confirmacao(corpo))
+        assert (
+            f"Recebemos: Certidão de nascimento ou casamento, em {obrigacoes.data(recebida)}, às "
+            f"{obrigacoes.hora(recebida)}. O arquivo aguarda a conferência da comissão."
+        ) in confirmacao
+        historico = item(convocacao, HISTORICO)
+        assert "Próxima tarefa: Histórico escolar do ensino médio" in confirmacao
+        assert f'href="#item-{historico.id}"' in _confirmacao(corpo)
+        for proibido in ("aceito", "aprovado", "conferido", "atendido"):
+            assert proibido not in confirmacao.lower(), proibido
+
+    def test_cada_volta_mostra_so_o_seu_envio(self, aluno, gestor, client):
+        """D-010: a confirmação se consome ao exibir, e o andamento mostra o acumulado."""
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        _postar(client, pessoa, item(convocacao, CERTIDAO), cenarios.pdf(b"um"))
+        tela(client, pessoa)
+
+        _postar(client, pessoa, item(convocacao, HISTORICO), cenarios.pdf(b"dois"))
+        corpo = tela(client, pessoa)
+
+        confirmacao = _texto(_confirmacao(corpo))
+        assert "Histórico escolar do ensino médio" in confirmacao.split("Próxima tarefa")[0]
+        assert "Certidão" not in confirmacao
+        assert 'id="confirmacao"' not in tela(client, pessoa)
+        assert "Aguardando conferência: 2" in _texto(corpo)
+
+    def test_o_ultimo_documento_diz_a_conclusao(self, aluno, gestor, client):
+        from tests.fixtures.documentos_da_convocacao import CERTIFICADO_DO_MEDIO, RESIDENCIA
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        for requisito in (CERTIDAO, HISTORICO, CERTIFICADO_DO_MEDIO):
+            apresentar(pessoa, convocacao, requisito, corpo=f"c-{requisito}".encode())
+
+        _postar(client, pessoa, item(convocacao, RESIDENCIA), cenarios.pdf(b"residencia"))
+        confirmacao = _texto(_confirmacao(tela(client, pessoa)))
+
+        assert "Próxima tarefa" not in confirmacao
+        assert (
+            "Você não tem mais documentos para enviar agora. A comissão ainda vai concluir a "
+            "análise." in confirmacao
+        )
+
+    def test_o_mesmo_arquivo_de_novo(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+        _postar(client, pessoa, alvo, cenarios.pdf(b"igual"))
+        tela(client, pessoa)
+
+        resposta = _postar(client, pessoa, alvo, cenarios.pdf(b"igual"))
+
+        assert resposta["Location"].endswith("#confirmacao")
+        confirmacao = _texto(_confirmacao(tela(client, pessoa)))
+        assert confirmacao == "Este arquivo já tinha sido recebido."
+
+    def test_a_volta_de_outra_inscricao_fica_para_ela(self, aluno, gestor, client):
+        """A sessão é da pessoa, e não da inscrição: a convocação de uma não consome a volta do
+        envio feito na outra, que continua guardada para quando aquela abrir."""
+        import uuid
+
+        from processo_seletivo.portal.views import (
+            CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO,
+            CHAVE_DA_RECUSA_DA_CONVOCACAO,
+        )
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        outra = str(uuid.uuid4())
+        sessao = client.session
+        sessao[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO] = {
+            "inscricao": outra,
+            "item_id": str(item(convocacao, CERTIDAO).id),
+            "apresentacao_id": str(uuid.uuid4()),
+            "ja_recebido": True,
+        }
+        sessao[CHAVE_DA_RECUSA_DA_CONVOCACAO] = {
+            "inscricao": outra,
+            "ancora": f"item-{item(convocacao, CERTIDAO).id}",
+            "frase": "Recusa de outra inscrição.",
+        }
+        sessao.save()
+
+        corpo = tela(client, pessoa)
+
+        assert 'id="confirmacao"' not in corpo and "Recusa de outra inscrição." not in corpo
+        guardado = client.session
+        assert guardado[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO]["inscricao"] == outra
+        assert guardado[CHAVE_DA_RECUSA_DA_CONVOCACAO]["inscricao"] == outra
+
+
+class TestARecusaNoCartao:
+    """FR-3871: a volta é o cartão do item, com a recusa nele e o foco nela, e sem confirmação."""
+
+    def _recusa(self, client, pessoa, alvo, arquivo=None):
+        resposta = _postar(client, pessoa, alvo, arquivo)
+        destino = reverse("portal:convocacao", args=[pessoa.id])
+        assert resposta.status_code == 302
+        assert resposta["Location"] == f"{destino}#item-{alvo.id}"
+        return resposta
+
+    def _cartao(self, corpo, alvo):
+        return corpo.split(f'id="item-{alvo.id}"', 1)[1].split("</li>", 1)[0]
+
+    def test_sem_arquivo(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        self._recusa(client, pessoa, alvo)
+        corpo = tela(client, pessoa)
+
+        cartao = self._cartao(corpo, alvo)
+        assert 'role="alert" tabindex="-1" data-recusa>Escolha um arquivo PDF antes de enviar.' in (
+            cartao
+        )
+        assert 'id="confirmacao"' not in corpo
+        assert corpo.count("data-recusa") == 1
+
+    def test_nao_pdf(self, aluno, gestor, client):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+        foto = SimpleUploadedFile("foto.jpg", b"\xff\xd8\xff", content_type="image/jpeg")
+
+        self._recusa(client, pessoa, alvo, foto)
+
+        assert "data-recusa" in self._cartao(tela(client, pessoa), alvo)
+        assert not alvo.apresentacoes.exists()
+
+    def test_acima_do_limite(self, aluno, gestor, client, settings):
+        settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES = 20
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        self._recusa(client, pessoa, alvo, cenarios.pdf(b"x" * 200))
+
+        assert "data-recusa" in self._cartao(tela(client, pessoa), alvo)
+
+    def test_fora_do_prazo(self, aluno, gestor, client):
+        """A recusa com o núcleo do vencido da FR-3748 da 118, e a página já no estado encerrado."""
+        edital, _, _ = aluno
+        pessoa, convocacao = cenarios.convocar_primeira(
+            aluno, gestor, vencimento=timezone.now() + timedelta(minutes=1)
+        )
+        comunicar(edital, gestor, convocacao)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        with mock.patch(
+            "django.utils.timezone.now", return_value=timezone.now() + timedelta(days=2)
+        ):
+            self._recusa(client, pessoa, alvo, cenarios.pdf(b"tarde"))
+            corpo = tela(client, pessoa)
+
+        recusa = _texto(self._cartao(corpo, alvo).split("data-recusa>", 1)[1].split("</p>")[0])
+        assert recusa.startswith("O prazo terminou em")
+        assert "O prazo desta convocação terminou" in corpo, "a página já está encerrada"
+        assert 'id="confirmacao"' not in corpo
+
+
+def test_a_convocacao_carrega_os_tres_scripts_e_nenhum_outro(aluno, gestor, client):
+    """FR-3872: os três da inscrição, por arquivo estático, e nenhum script novo."""
+    import re
+
+    pessoa, _ = cenarios.convocar_primeira(aluno, gestor)
+    entrar_como(client, pessoa)
+
+    corpo = tela(client, pessoa)
+    scripts = re.findall(r'<script src="([^"]+)"', corpo)
+    proprios = [s.rsplit("/", 1)[1].split("?")[0] for s in scripts if "/portal/" in s]
+
+    assert proprios[-3:] == ["arquivo.js", "envio.js", "recusa.js"]
+    assert not re.search(r"<script(?![^>]*\bsrc=)", corpo), "nenhum script embutido"

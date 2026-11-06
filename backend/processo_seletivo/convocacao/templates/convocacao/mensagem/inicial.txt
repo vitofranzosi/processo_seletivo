@@ -1,0 +1,42 @@
+{% autoescape off %}{% comment %}
+A mensagem inicial de convocação, em texto puro (121, FR-3882 a FR-3888).
+
+A PRIMEIRA LINHA É O ASSUNTO. O envio a separa do corpo. Ele mora aqui, e não no código, para que o
+resumo do modelo gravado na comunicação (FR-3889) identifique também o assunto que saiu.
+
+Este arquivo e o inicial.html dizem as mesmas frases: o texto puro contém tudo o que o HTML diz
+(FR-3882), e o teste da SC-1159 confere frase a frase. Mudou uma frase aqui? Mude lá também.
+
+Nenhum dado pessoal (FR-3886): sem nome, CPF, nome nem número de documento, motivo ou modalidade.
+O identificador da inscrição só vai no link.
+{% endcomment %}{{ instituicao }} · Convocação no {{ edital }}{% if prazo %}: {% if variante == "documento_e_requerimento" or variante == "so_documento" %}envie seus documentos{% elif variante == "so_requerimento" %}preencha o Requerimento{% else %}prazo{% endif %} até {{ prazo.data_curta }}{% endif %}
+
+{{ instituicao_por_extenso }}
+{% if unidade %}{{ unidade }} · Seleções
+{% endif %}
+Você foi convocado no {{ edital }}
+{{ processo }}
+
+{% if variante == "documento_e_requerimento" %}Esta convocação pede documentos e o Requerimento de Matrícula.
+Você envia tudo pela sua área do candidato.{% elif variante == "so_documento" %}Esta convocação pede documentos, que você envia pela sua área do candidato.{% elif variante == "so_requerimento" %}Esta convocação pede o Requerimento de Matrícula, que você preenche pela sua área do candidato.{% else %}Siga as instruções do Edital dentro do prazo. As instruções estão na sua área do candidato.{% endif %}
+
+{% if prazo %}Prazo para atender: até {{ prazo.por_extenso }}, contado do envio desta mensagem.{% else %}O prazo para atender é o que o Edital publica.{% endif %}
+
+Acessar minha convocação:
+{{ link }}
+
+Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviamos numa mensagem separada.
+
+{% if requerimento_exigido %}Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o resultado.{% else %}Esta convocação ainda não é o resultado: a comissão confere o que você enviar e registra o resultado.{% endif %}
+
+Em caso de dúvida, fale com {{ atendimento }}.
+
+Para a sua segurança
+- O {{ instituicao }} não pede senha, pagamento nem documentos por e-mail.
+- Os documentos vão só pela sua área do candidato.
+- O código de acesso só chega quando você o pede. Não o repasse a ninguém.
+
+{{ assinatura }} — Seleções
+Esta mensagem é automática; não responda.
+Você a recebe porque foi convocado num processo seletivo em que se inscreveu.
+{% endautoescape %}

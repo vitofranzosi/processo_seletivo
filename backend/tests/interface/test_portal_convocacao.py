@@ -116,10 +116,49 @@ class TestAConvocacaoDaPropriaPessoa:
 
         pagina = abrir(client, titular).content.decode()
 
-        assert "Você foi convocada(o)" in pagina
+        # Sem documento pedido, a estrutura da 118 com as três mudanças da 121 (FR-3868): o título
+        # por estado, que diz o que "Você foi convocada(o)" dizia, e o vencimento nos dados.
+        assert "<h1" in pagina and "Você foi convocado!" in pagina
+        assert "Você foi convocada(o)" not in pagina
         # O formato único do prazo (FR-3747 da `118`).
         assert vencimento.strftime("%d/%m/%Y, às %Hh%M") in pagina
         assert "O que fazer" in pagina
+
+    def test_com_o_prazo_correndo_o_cartao_diz_a_data_o_dia_e_a_contagem(
+        self, client, certame, gestor, settings
+    ):
+        """FR-3861 e FR-3868: o cartão do prazo no lugar da linha do prazo, também sem documento."""
+        from datetime import timedelta
+
+        from processo_seletivo.convocacao.application.comunicar import comunicar
+        from processo_seletivo.portal import obrigacoes
+
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        edital, _, inscricoes = certame
+        chamada = proximo(edital)
+        vencimento = timezone.now() + timedelta(days=4)
+        convocada = convocar(
+            edital, gestor, chamada, vencimento=vencimento, idempotency_key="portal-cartao"
+        )
+        comunicar(
+            actor=gestor,
+            processo_id=edital.processo_id,
+            convocacao_id=convocada["id"],
+            idempotency_key="portal-cartao-com",
+            correlation_id="teste",
+        )
+        titular = next(i for i in inscricoes if i.id == chamada)
+        entrar_como(client, titular)
+
+        pagina = abrir(client, titular).content.decode()
+        cartao = pagina.split('class="cartao-do-prazo"', 1)[1].split("</div>", 1)[0]
+        prazo = obrigacoes.apresentado(vencimento, timezone.now())
+
+        assert "Prazo desta convocação" in cartao
+        assert f'<p class="data-do-prazo">{prazo.ate}</p>' in cartao
+        assert f"{prazo.dia_da_semana} · " in cartao and "faltam 4 dias" in cartao
+        assert "Você foi convocada(o)" not in pagina
+        assert pagina.count("Prazo desta convocação") == 1, "o prazo é dito uma vez só"
 
     def test_antes_do_envio_a_tela_diz_que_o_prazo_nao_comecou(self, client, certame, gestor):
         """`R-009`, e aqui ele é o que impede a pessoa de contar um prazo que não corre."""
@@ -271,3 +310,323 @@ def test_a_tela_cabe_em_375_px(client, certame, gestor):
     )
     assert "style=" not in marcacao, "nenhum estilo embutido, e portanto nenhuma largura fixa"
     assert "<table" not in marcacao
+
+
+# --- A chamada da 121 (FR-3858 a FR-3869) -------------------------------------------------------
+
+
+@pytest.fixture
+def fx(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    from tests.fixtures import jornada_do_convocado as jornada
+
+    return jornada.Montagem(gestor, api_client, manager_headers, process_payload)
+
+
+def _main(client, cenario, pessoa=None):
+    import re
+
+    with cenario.relogio():
+        entrar_como(client, pessoa or cenario.pessoa)
+        resposta = client.get(reverse("portal:convocacao", args=[cenario.pessoa.id]))
+    assert resposta.status_code == 200
+    return re.search(r"<main[^>]*>(.*)</main>", resposta.content.decode(), re.S).group(1)
+
+
+def _texto(html):
+    import re
+
+    return " ".join(re.sub(r"<[^>]+>", " ", html).split())
+
+
+def _montar(fx, letra):
+    from tests.fixtures import jornada_do_convocado as jornada
+
+    return jornada.montar(letra, fx)
+
+
+# A ordem da FR-3859, pelas marcas que o parcial da chamada escreve, e o andamento logo depois.
+ORDEM_DA_CHAMADA = (
+    'class="contexto-da-chamada"',
+    'id="titulo-da-chamada"',
+    'class="etapa-da-chamada"',
+    'class="cartao-do-prazo"',
+    'class="resumo-da-chamada"',
+    'class="acao-da-chamada"',
+    'class="consequencia"',
+    'class="ressalva"',
+    'id="andamento"',
+)
+SO_DA_CHAMADA_ABERTA = (
+    'class="etapa-da-chamada"',
+    'class="cartao-do-prazo"',
+    'class="acao-da-chamada"',
+    'class="consequencia"',
+    'class="ressalva"',
+    'id="andamento"',
+)
+
+
+class TestAChamada:
+    def test_a_ordem_da_chamada(self, client, fx):
+        """FR-3859, SC-1151: contexto, título, etapa, prazo, resumo, ação, consequência e ressalva,
+        e o andamento antes dos cartões e dos dados do ato."""
+        cenario = _montar(fx, "C1")
+        pagina = _main(client, cenario)
+
+        posicoes = [pagina.index(marca) for marca in ORDEM_DA_CHAMADA]
+        assert posicoes == sorted(posicoes), posicoes
+        assert pagina.index('id="andamento"') < pagina.index('id="o-que-falta"')
+        assert pagina.index('id="o-que-falta"') < pagina.index('id="sobre-esta-convocacao"')
+        assert pagina.count("<h1") == 1
+        assert "Você foi convocado!" in _texto(pagina)
+        contexto = pagina.split('class="contexto-da-chamada">', 1)[1].split("</p>", 1)[0]
+        edital = cenario.edital
+        assert contexto.endswith(f" · Edital {edital.number}/{edital.year}"), contexto
+
+    @pytest.mark.parametrize("letra", ["C1", "G"])
+    def test_o_titulo_nao_se_repete_num_h2(self, client, fx, letra):
+        """D-005: o título por estado absorve o do bloco 1."""
+        import re
+
+        pagina = _main(client, _montar(fx, letra))
+        titulo = _texto(re.search(r"<h1[^>]*>(.*?)</h1>", pagina, re.S).group(1))
+        secoes = [_texto(h) for h in re.findall(r"<h2[^>]*>(.*?)</h2>", pagina, re.S)]
+        assert titulo not in secoes
+        assert "O prazo terminou" not in secoes and "O que fazer agora" not in secoes
+
+    @pytest.mark.parametrize(
+        ("letra", "vezes"), [("C1", 1), ("K", 0), ("G", 0), ("I1", 0), ("M", 0)]
+    )
+    def test_a_consequencia_uma_vez_so(self, client, fx, letra, vezes):
+        """FR-3864, FR-1177 da 063: a mesma frase, na mesma condição, e uma vez só."""
+        from processo_seletivo.portal import situacao
+
+        pagina = _texto(_main(client, _montar(fx, letra)))
+
+        assert pagina.count(situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO) == vezes
+
+    @pytest.mark.parametrize(
+        ("letra", "titulo"),
+        [
+            ("G", "O prazo desta convocação terminou"),
+            ("M", "O envio pelo portal está encerrado"),
+            ("I1", "Resultado da sua convocação"),
+        ],
+    )
+    def test_fechada_so_conta_o_que_houve(self, client, fx, letra, titulo):
+        """FR-3867: nenhuma etapa, contagem, ação, consequência, ressalva ou andamento."""
+        pagina = _main(client, _montar(fx, letra))
+
+        assert f'<h1 id="titulo-da-chamada">{titulo}</h1>' in pagina
+        for marca in SO_DA_CHAMADA_ABERTA:
+            assert marca not in pagina, marca
+        assert "Ver o que preciso fazer" not in pagina
+
+    def test_aberta_mantem_os_blocos_da_118_depois_do_andamento(self, client, fx):
+        """FR-3866: *O que falta*, *O que você já apresentou* e *Sobre esta convocação*."""
+        pagina = _main(client, _montar(fx, "F"))
+
+        marcas = (
+            'id="andamento"',
+            'id="o-que-falta"',
+            'id="o-que-voce-ja-apresentou"',
+            'id="sobre-esta-convocacao"',
+        )
+        posicoes = [pagina.index(marca) for marca in marcas]
+        assert posicoes == sorted(posicoes)
+
+    def test_sem_documento_a_chamada_sem_a_frase_antiga(self, client, fx):
+        """FR-3868: o título e o cartão do prazo, sem "Você foi convocada(o)"."""
+        pagina = _main(client, _montar(fx, "B"))
+
+        assert '<h1 id="titulo-da-chamada">Você foi convocado!</h1>' in pagina
+        assert 'class="cartao-do-prazo"' in pagina
+        assert "Você foi convocada(o)" not in pagina
+        assert 'class="etapa-da-chamada"' not in pagina, "a etapa é da chamada com documento"
+
+    def test_sem_convocacao_o_titulo_de_hoje(self, client, certame):
+        """Caso-limite: aguardando ou não convocado, o título e o texto de hoje."""
+        _, _, inscricoes = certame
+        entrar_como(client, inscricoes[0])
+
+        pagina = abrir(client, inscricoes[0]).content.decode()
+
+        assert "<h1>Convocação</h1>" in pagina
+        assert "chamada-da-convocacao" not in pagina
+
+
+class TestACorrecaoNoPortal:
+    """FR-3869, R-008, D-008: o cartão diz qual prazo vale, e os dados do ato, o que foi
+    substituído."""
+
+    PROIBIDOS = ("novo prazo", "prorrogação", "motivo")
+
+    def _corrigir(self, cenario, gestor, chave):
+        from processo_seletivo.convocacao.models import Convocacao
+        from tests.integration.convocacao.test_correcao_da_convocacao import MOTIVO, corrigir
+
+        corrigir(cenario.edital, gestor, cenario.convocacao, chave=chave)
+        cenario.convocacao = Convocacao.objects.get(convocacao_anterior=cenario.convocacao)
+        return MOTIVO
+
+    def test_comunicada(self, client, fx, gestor):
+        from processo_seletivo.convocacao.models import ComunicacaoEmitida
+        from processo_seletivo.portal import obrigacoes
+
+        cenario = _montar(fx, "A")
+        anterior = cenario.convocacao
+        motivo = self._corrigir(cenario, gestor, "p121-comunicada")
+        enviada = ComunicacaoEmitida.objects.get(convocacao=anterior, resultado="ENVIADA")
+
+        pagina = _texto(_main(client, cenario))
+
+        assert "Convocação corrigida: este é o prazo válido." in pagina
+        assert pagina.index("Convocação corrigida") < pagina.index(
+            obrigacoes.ate(cenario.convocacao.vencimento)
+        ), "acima da data"
+        assert (
+            f"Convocação substituída Comunicada em {obrigacoes.data_e_hora(enviada.enviado_em)}, "
+            f"com prazo {obrigacoes.ate(anterior.vencimento)}. Esse prazo não vale mais."
+        ) in pagina
+        assert motivo not in pagina
+        for proibido in self.PROIBIDOS:
+            assert proibido not in pagina.lower()
+
+    def test_nao_comunicada(self, client, fx, gestor):
+        from processo_seletivo.portal import obrigacoes
+
+        cenario = _montar(fx, "K")
+        anterior = cenario.convocacao
+        self._corrigir(cenario, gestor, "p121-nao-comunicada")
+
+        pagina = _texto(_main(client, cenario))
+
+        assert (
+            "Convocação substituída Não comunicada. O prazo registrado era "
+            f"{obrigacoes.ate(anterior.vencimento)}, e não vale mais."
+        ) in pagina
+
+    def test_por_publicacao(self, client, fx, gestor):
+        from django.utils import timezone as tz
+
+        from processo_seletivo.convocacao.models import ComunicacaoEmitida
+
+        cenario = _montar(fx, "K")
+        ComunicacaoEmitida.objects.create(
+            convocacao=cenario.convocacao,
+            forma="PUBLICATION",
+            referencia_da_publicacao="ifes.edu.br/editais, 05/11/2026",
+            enviado_em=tz.now(),
+            resultado="ENVIADA",
+        )
+        self._corrigir(cenario, gestor, "p121-publicada")
+
+        pagina = _texto(_main(client, cenario))
+
+        assert "Convocação substituída Publicada em ifes.edu.br/editais, 05/11/2026, com prazo" in (
+            pagina
+        )
+
+    def test_a_linha_fica_em_todos_os_estados_e_a_frase_so_aberta(self, client, fx, gestor):
+        from processo_seletivo.convocacao.domain import nomes
+        from tests.fixtures import documentos_da_convocacao as cenarios
+
+        cenario = _montar(fx, "A")
+        self._corrigir(cenario, gestor, "p121-desfecho")
+        cenarios.desfechar(
+            cenario.edital,
+            gestor,
+            cenario.convocacao,
+            nomes.INDEFERIMENTO,
+            chave="p121-desfecho-d",
+            fundamento="Documentação exigida na convocação não atendida.",
+        )
+
+        pagina = _texto(_main(client, cenario))
+
+        assert "Convocação substituída Comunicada em" in pagina
+        assert "Convocação corrigida: este é o prazo válido." not in pagina
+
+    def test_a_falha_no_meio_descreve_a_imediatamente_anterior(self, client, fx, gestor, settings):
+        """D-008: A enviada, B falhada, C vigente — os dados do ato descrevem **B**."""
+        from processo_seletivo.convocacao.models import Convocacao
+
+        cenario = _montar(fx, "A")
+        settings.EMAIL_BACKEND = "tests.unit.convocacao.test_mensagem.CorreioQueEngole"
+        self._corrigir(cenario, gestor, "p121-b")
+        b = cenario.convocacao
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        self._corrigir(cenario, gestor, "p121-c")
+        assert Convocacao.objects.get(id=cenario.convocacao.id).convocacao_anterior_id == b.id
+
+        pagina = _texto(_main(client, cenario))
+
+        assert "Convocação substituída Não comunicada." in pagina
+
+
+def _frases_da_sc_1150(letra):
+    """As respostas que a chamada dá pelo próprio texto, por cenário (SC-1150): o título, a etapa
+    (abertos), o prazo ou o estado dele, o resumo ou o desfecho, e, abertos, a consequência e a
+    ressalva; em P7, o selo *"Conferido"* nos cartões."""
+    from processo_seletivo.convocacao.domain import nomes
+    from processo_seletivo.portal import obrigacoes, situacao
+
+    aberta = [situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO, obrigacoes.RESSALVA_DA_MATRICULA]
+    etapa = obrigacoes.ETAPAS[(True, True)]
+    return {
+        "C1": [
+            "Você foi convocado!",
+            etapa,
+            "Prazo desta convocação",
+            "Você ainda precisa enviar 4 documentos e preencher o Requerimento de Matrícula.",
+            "Ver o que preciso fazer",
+            *aberta,
+        ],
+        "F": [
+            "Você foi convocado!",
+            etapa,
+            "Prazo desta convocação",
+            "Você ainda precisa corrigir 1 documento e enviar 1 documento.",
+            "Ver o que preciso fazer",
+            "Conferido",
+            *aberta,
+        ],
+        "G": [
+            "O prazo desta convocação terminou",
+            "O prazo terminou em",
+            "Até o prazo, ficou assim",
+        ],
+        "I1": [
+            "Resultado da sua convocação",
+            f"Resultado registrado: {situacao.DESFECHOS[nomes.ACEITE]}",
+            obrigacoes.ACEITE,
+            "Conferido",
+        ],
+        "corr": [
+            "Você foi convocado!",
+            obrigacoes.CORRIGIDA,
+            "Convocação substituída Comunicada em",
+            "Ver o que preciso fazer",
+            obrigacoes.RESSALVA_DO_RESULTADO,
+        ],
+    }[letra]
+
+
+@pytest.mark.parametrize("letra", ["C1", "F", "G", "I1", "corr"])
+def test_a_chamada_responde_pelo_proprio_texto(client, fx, gestor, letra):
+    """SC-1150: a lista de frases por cenário, lida na tela."""
+    from processo_seletivo.convocacao.models import Convocacao
+
+    if letra == "corr":
+        from tests.integration.convocacao.test_correcao_da_convocacao import corrigir
+
+        cenario = _montar(fx, "A")
+        corrigir(cenario.edital, gestor, cenario.convocacao, chave="sc1150-corr")
+        cenario.convocacao = Convocacao.objects.get(convocacao_anterior=cenario.convocacao)
+    else:
+        cenario = _montar(fx, letra)
+
+    pagina = _texto(_main(client, cenario))
+
+    faltam = [frase for frase in _frases_da_sc_1150(letra) if frase not in pagina]
+    assert faltam == []

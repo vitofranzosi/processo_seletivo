@@ -97,7 +97,22 @@ def _universo(edital):
 
 
 def _convocacao(edital):
-    return SimpleNamespace(edital=edital, vencimento=timezone.now() + timezone.timedelta(days=3))
+    import uuid
+
+    return SimpleNamespace(
+        edital=edital,
+        vencimento=timezone.now() + timezone.timedelta(days=3),
+        # Desde a 121, o link é o da convocação da inscrição, e o Processo vem da versão citada.
+        inscricao_id=uuid.uuid4(),
+        versao=SimpleNamespace(content={"processoTitle": "Processo Seletivo"}),
+    )
+
+
+def _escolha():
+    """A mensagem inicial, sem consultar a cadeia: o cenário não tem convocação gravada (121)."""
+    from processo_seletivo.convocacao.domain.mensagem import INICIAL, NENHUM, EscolhaDaMensagem
+
+    return EscolhaDaMensagem(INICIAL, NENHUM)
 
 
 # --- O resolvedor ---------------------------------------------------------------------------------
@@ -302,11 +317,13 @@ def test_4_a_convocacao_e_o_comprovante_assinam_pela_unidade(settings):
         _convocacao(SimpleNamespace(institution_scope="campus-a", number="7", year=2026)),
         destinatario="pessoa@ex.br",
         endereco_do_portal="http://x/",
+        escolha=_escolha(),
     )
     _enviar(
         _convocacao(SimpleNamespace(institution_scope="cefor", number="8", year=2026)),
         destinatario="pessoa@ex.br",
         endereco_do_portal="http://x/",
+        escolha=_escolha(),
     )
     do_campus, do_cefor = (mensagem.body for mensagem in mail.outbox)
     assert f"fale com {CANAL_DO_CAMPUS}." in do_campus and "Campus A/Ifes — Seleções" in do_campus

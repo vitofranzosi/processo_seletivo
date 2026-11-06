@@ -141,7 +141,7 @@ razão de 0,88 a 1,49 com a `097` e de 0,64 a 1,06 sem ela, longe do 2,0. Uma ro
 sinal; uma distribuição que se desloca é.
 
 **A preparação do banco não tem nada com o tempo.** Criar o banco de teste e aplicar as 80
-migrations — hoje são 102 — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
+migrations — hoje são 108, com a coluna da `121` — custa **~2 segundos**, medido em 2026-09-20, isolando a preparação com
 `--reuse-db` sobre um caso só. O custo está nos casos transacionais: **3108 dos 11 468 coletados,
 27%, e 79% do tempo em série** (medido em 2026-10-17). Eles não podem terminar em `ROLLBACK`, e o
 Django limpa depois de cada um truncando as tabelas e refazendo o `post_migrate` — só essa limpeza

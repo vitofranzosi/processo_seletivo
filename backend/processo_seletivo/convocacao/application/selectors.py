@@ -106,7 +106,12 @@ def vigentes_por_inscricao(inscricao_ids):
     por_inscricao = {}
     for convocacao in (
         Convocacao.objects.filter(inscricao_id__in=inscricao_ids, sucessoras__isnull=True)
-        .prefetch_related("desfechos", "comunicacoes")
+        # **A anterior e as comunicações dela vêm junto** (121, R-008): a linha *"Convocação
+        # substituída"* dos dados do ato as lê, e lidas por item quebrariam a contagem fixa que a
+        # `118` mede. A anterior entra pelo `JOIN`; as comunicações dela custam uma consulta só
+        # quando há alguma anterior, e nenhuma quando nenhuma vigente corrige outra.
+        .select_related("convocacao_anterior")
+        .prefetch_related("desfechos", "comunicacoes", "convocacao_anterior__comunicacoes")
         .order_by("-criado_em", "-id")
     ):
         # A ordem decrescente faz a primeira vista ser a mais recente; as seguintes da mesma

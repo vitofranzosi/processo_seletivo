@@ -597,6 +597,20 @@ def test_o_destino_na_pagina_do_edital_volta_ao_bloco_de_resultados():
     assert _de_volta_a_vaga("/selecoes/sair") == reverse("portal:inscricoes")
 
 
+def test_o_destino_na_convocacao_volta_a_convocacao_reconstruida():
+    """121, FR-3878, R-005: a terceira rota da lista fechada, reconstruída sem consulta nem
+    fragmento, ao lado da vaga e da página do Edital."""
+    from processo_seletivo.portal.views import _de_volta_a_vaga
+
+    inscricao_id = uuid.uuid4()
+    convocacao = reverse("portal:convocacao", args=[inscricao_id])
+
+    assert _de_volta_a_vaga(convocacao) == convocacao
+    assert _de_volta_a_vaga(f"{convocacao}?x=1#y") == convocacao
+    acompanhamento = reverse("portal:acompanhamento", args=[inscricao_id])
+    assert _de_volta_a_vaga(acompanhamento) == reverse("portal:inscricoes"), "D-002"
+
+
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_voltar_ao_edital_nao_pede_nome_e_cpf_e_a_vaga_continua_pedindo(rf):

@@ -64,3 +64,21 @@ def test_selecao_aberta_e_telas_de_acesso_a_caminho_de_uma_vaga(client, selecao,
 
     for pagina in paginas:
         assert proibidas_em(visivel(pagina)) == []
+
+
+def test_as_telas_de_acesso_a_caminho_da_convocacao(client, selecao, settings):
+    """121, FR-3892: a frase do destino da convocação (FR-3880) fica sob o mesmo dicionário."""
+    import uuid
+
+    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    mail.outbox.clear()
+    destino = reverse("portal:convocacao", args=[uuid.uuid4()])
+
+    paginas = [
+        client.get(reverse("portal:acesso"), {"destino": destino}),
+        client.post(reverse("portal:acesso"), {"email": "nova@exemplo.test"}, follow=True),
+    ]
+
+    for pagina in paginas:
+        assert "direto para a convocação" in visivel(pagina)
+        assert proibidas_em(visivel(pagina)) == []

@@ -173,3 +173,55 @@ def test_o_numero_nao_se_repete_quando_o_titulo_do_edital_ja_o_traz(
     assert contexto.group(1).count("01/2026") == 1
     assert "Edital 01/2026 — Docentes" in contexto.group(1)
     assert "<title>Confirme seu e-mail" in resposta.content.decode()
+
+
+# --- A caminho da convocação (121, FR-3880) -----------------------------------------------------
+
+
+def a_convocacao(inscricao_id):
+    return reverse("portal:convocacao", args=[inscricao_id])
+
+
+def test_a_caminho_da_convocacao_as_duas_telas_dizem_para_onde_se_vai(client, selecao, canal):
+    acesso = texto(client.get(reverse("portal:acesso"), {"destino": a_convocacao(uuid.uuid4())}))
+
+    assert acesso.startswith("Entre para ver a sua convocação")
+    assert "Depois do código, você vai direto para a convocação." in acesso
+
+    codigo_ = texto(
+        client.post(reverse("portal:acesso"), {"email": "nova@exemplo.test"}, follow=True)
+    )
+
+    assert "Depois do código, você vai direto para a convocação." in codigo_
+
+
+def test_o_texto_e_o_mesmo_para_identificador_real_inventado_e_alheio(client, selecao, canal):
+    """FR-3880: a decisão sai só do nome da rota; nada de Edital nem de pessoa."""
+    real = Inscricao.objects.create(
+        id=uuid.uuid4(),
+        identity_subject=novo_subject(),
+        edital_id=selecao.id,
+        profile_id=PERFIL_DOCENTE,
+        nome="Maria Silva",
+        cpf="123.456.789-09",
+        cpf_normalizado="12345678909",
+        email="maria.real@exemplo.test",
+        created_at=timezone.now(),
+    )
+
+    def tela(inscricao_id):
+        client.cookies.clear()
+        return texto(client.get(reverse("portal:acesso"), {"destino": a_convocacao(inscricao_id)}))
+
+    telas = {tela(real.id), tela(uuid.uuid4()), tela(uuid.uuid4())}
+
+    assert len(telas) == 1
+    (unica,) = telas
+    for revelador in ("Maria", "Edital", "01/2026", "Primeiro Edital", CONTEXTO):
+        assert revelador not in unica
+
+
+def test_sem_destino_de_convocacao_nenhuma_frase_nova(client, selecao, canal):
+    acesso = texto(client.get(reverse("portal:acesso"), {"destino": a_vaga(selecao)}))
+
+    assert "direto para a convocação" not in acesso

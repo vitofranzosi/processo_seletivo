@@ -1019,3 +1019,39 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 .selo-conferido{border-color:var(--sucesso);color:var(--sucesso)}
 .selo-opcional{border-style:dashed;font-weight:600}
 .sobre-esta-convocacao dl{margin:0;overflow-wrap:anywhere}
+/* A chamada da convocação (121, FR-3858 a FR-3865). Ela abre a página e responde, nesta ordem, o
+   que aconteceu, o que a etapa pede, até quando, o que falta e onde começar. O cartão do prazo leva a
+   data como o maior texto, e nada encolhe em tela estreita (FR-3861, D-006): a primeira tela cabe pela
+   ordem, e não pelo tamanho. Sem moldura na consequência e na ressalva (FR-3864). */
+.chamada-da-convocacao{margin:0 0 1.5rem;max-width:var(--leitura)}
+.chamada-da-convocacao>h1{margin:0 0 .5rem}
+.contexto-da-chamada{margin:0 0 .25rem;color:var(--texto-fraco);overflow-wrap:anywhere}
+.etapa-da-chamada{margin:0 0 .75rem}
+.cartao-do-prazo{background:var(--branco);border:1px solid var(--borda);border-left:4px solid var(--verde);
+  border-radius:0 8px 8px 0;padding:.75rem 1rem;margin:0 0 .75rem}
+.cartao-do-prazo p{margin:0 0 .25rem}
+.cartao-do-prazo p:last-child{margin-bottom:0}
+.rotulo-do-prazo{font-weight:600}
+.prazo-corrigido{font-weight:600;color:var(--amarelo)}
+.data-do-prazo{font-size:1.375rem;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.contagem-do-prazo{color:var(--texto)}
+.resumo-da-chamada{font-weight:600;margin:0 0 .75rem}
+.acao-da-chamada{margin:0 0 .75rem}
+.ressalva{margin:0 0 .5rem}
+.titulo-do-resumo{margin:1rem 0 .35rem;font-size:1rem}
+/* A confirmação do envio (FR-3870): o primeiro elemento da chamada, e o alvo da âncora `#confirmacao`.
+   Recebe o foco do próprio navegador, sem script, e o contorno mostra onde ele está. */
+.confirmacao-do-envio{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
+  padding:.75rem 1rem;margin:0 0 1rem;overflow-wrap:anywhere}
+.confirmacao-do-envio p{margin:0 0 .25rem}
+.confirmacao-do-envio p:last-child{margin-bottom:0}
+.confirmacao-do-envio:focus{outline:3px solid var(--verde);outline-offset:2px}
+/* O andamento (FR-3865): palavra e número, sem barra e sem percentual. */
+.andamento-da-convocacao>h2{margin:0 0 .35rem}
+.contagens-do-andamento{margin:0;padding-left:1.1rem;display:grid;gap:.2rem}
+/* O Requerimento a preencher no bloco "O que falta", alvo da ação quando ele é a única tarefa. */
+.requerimento-a-preencher:focus{outline:3px solid var(--verde);outline-offset:2px}
+/* A recusa do envio no cartão do item (FR-3871), com o foco que `recusa.js` lhe dá. */
+.recusa-no-cartao{margin:.25rem 0 .5rem;font-weight:600}
+.recusa-no-cartao:focus{outline:3px solid var(--vermelho);outline-offset:2px}
+.dados-da-convocacao{max-width:var(--leitura)}

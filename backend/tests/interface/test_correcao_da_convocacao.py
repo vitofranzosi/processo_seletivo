@@ -255,8 +255,14 @@ class TestAPrevia:
 
         formulario = formulario_de(abrir(client, edital), raiz)
 
-        assert "A mensagem da convocação sai de novo, com o prazo novo." in formulario
-        assert "Ela não diz que corrige a anterior." in formulario
+        # A mensagem da correção da 121 (FR-3890, revendo a FR-3844 da 120): ela diz que corrige
+        # a anterior, e a prévia o diz à comissão.
+        assert (
+            "A mensagem da convocação sai de novo, com o prazo válido, dizendo que corrige a "
+            "anterior, e sem o motivo." in formulario
+        )
+        assert "Ela não diz que corrige a anterior." not in formulario
+        assert "prazo novo" not in formulario
 
     def test_a_previa_diz_as_tres_regras_sem_vencimento(self, client, cenario, gestor):
         edital, _, _ = cenario

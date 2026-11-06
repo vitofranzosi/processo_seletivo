@@ -159,7 +159,9 @@ def test_corrigida_na_gestao_o_convocado_complementa_e_envia(tela, fx, pdfs):
     sem_rolagem_horizontal(candidata)
     tela.capturar(candidata, "portal-prazo-novo")
     enviar(candidata, cenarios.item(raiz, HISTORICO).id, pdfs("historico-completo"))
-    expect(candidata.get_by_text("Documento recebido. A comissão vai conferir.")).to_be_visible()
+    expect(candidata.locator("#confirmacao")).to_contain_text(
+        "O arquivo aguarda a conferência da comissão."
+    )
 
     candidata.goto(tela.servidor.url + reverse("portal:requerimento", args=[pessoa.id]))
     candidata.locator("#aceite").check()

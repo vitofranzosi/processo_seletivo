@@ -402,9 +402,14 @@ FORMATO_DO_CAMPO = "%Y-%m-%dT%H:%M"
 
 _ESPECIES_POR_EXTENSO = dict(Convocacao._meta.get_field("especie").choices)
 
+# **A mensagem individual sai como a da correção** (121, FR-3890, revendo a FR-3844 da `120`): ela
+# diz que substitui a anterior, com a data do envio substituído e o prazo que ele informava, e sem
+# o motivo. Sem nenhuma mensagem enviada com sucesso na cadeia, não há o que substituir, e sai a
+# inicial (D-008 da `121`) — a prévia o diz, para a comissão não esperar o quadro que não virá.
 _FRASE_DA_COMUNICACAO = {
-    FORMA_POR_MENSAGEM_INDIVIDUAL: "A mensagem da convocação sai de novo, com o prazo novo. Ela "
-    "não diz que corrige a anterior.",
+    FORMA_POR_MENSAGEM_INDIVIDUAL: "A mensagem da convocação sai de novo, com o prazo válido, "
+    "dizendo que corrige a anterior, e sem o motivo. Se nenhuma mensagem desta convocação foi "
+    "enviada com sucesso, ela sai como a primeira.",
     FORMA_POR_PUBLICACAO: "A comunicação aguarda a publicação da chamada, como nas demais "
     "convocações deste Perfil.",
     None: "O Perfil publicado não declara como este Edital comunica a convocação: a comunicação "

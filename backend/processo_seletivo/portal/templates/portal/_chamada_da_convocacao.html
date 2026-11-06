@@ -1,0 +1,68 @@
+{% comment %}
+A chamada da convocação (121, FR-3858 a FR-3870): a primeira parte da tela, nos dois ramos.
+
+**Nesta ordem** (FR-3859): o contexto curto, o título por estado, a etapa, o cartão do prazo, o
+resumo do que falta e a ação; logo depois da ação, a consequência e a ressalva. A pessoa lê que foi
+convocada, o que a etapa pede, até quando, o que falta e onde começar — e só então o andamento, os
+cartões e os dados do ato. Antes, ela lia "Convocação", depois a lista, e o prazo era uma linha
+entre outras.
+
+**A confirmação do envio vem antes de tudo** (FR-3870): a volta do envio aceito é `#confirmacao`, e
+o elemento é focável pelo próprio navegador ao seguir a âncora, sem script (`tabindex="-1"`).
+
+**O título absorve o do bloco 1** (D-005): nenhum `h2` abaixo dele repete o estado. Fechada a
+chamada, não há etapa, cartão, ação, consequência, ressalva nem andamento (FR-3867): a página
+conta o que houve, e não convida a ato nenhum.
+
+Toda frase vem de `portal/obrigacoes.py`; o template só a coloca no lugar.
+{% endcomment %}
+{% with o=obrigacoes %}
+<section class="chamada-da-convocacao" aria-labelledby="titulo-da-chamada">
+  {% if confirmacao_do_envio %}
+  <div class="confirmacao-do-envio" id="confirmacao" tabindex="-1" role="status">
+    <p>{{ confirmacao_do_envio.frase }}</p>
+    {% if confirmacao_do_envio.proxima %}
+    <p>{{ confirmacao_do_envio.rotulo }} <a href="#{{ confirmacao_do_envio.proxima_ancora }}">{{ confirmacao_do_envio.proxima.texto }}</a></p>
+    {% elif confirmacao_do_envio.conclusao %}
+    <p>{{ confirmacao_do_envio.conclusao }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if contexto_da_chamada %}<p class="contexto-da-chamada">{{ contexto_da_chamada }}</p>{% endif %}
+  <h1 id="titulo-da-chamada">{{ titulo_da_chamada }}</h1>
+  {% if o.etapa %}<p class="etapa-da-chamada">{{ o.etapa }}</p>{% endif %}
+
+  {% if cartao_do_prazo %}
+  <div class="cartao-do-prazo">
+    {% if cartao_do_prazo.rotulo %}<p class="rotulo-do-prazo">{{ cartao_do_prazo.rotulo }}</p>{% endif %}
+    {% if cartao_do_prazo.corrigida %}<p class="prazo-corrigido">{{ cartao_do_prazo.corrigida }}</p>{% endif %}
+    {% if cartao_do_prazo.data %}<p class="data-do-prazo">{{ cartao_do_prazo.data }}</p>{% endif %}
+    {% if cartao_do_prazo.linha %}<p class="contagem-do-prazo">{{ cartao_do_prazo.linha }}</p>{% endif %}
+    {% for frase in cartao_do_prazo.frases %}<p>{{ frase }}</p>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if o.aberta %}
+  <p class="resumo-da-chamada">{{ o.resumo_do_que_falta }}</p>
+  {% if o.frase_do_opcional %}<p>{{ o.frase_do_opcional }}</p>{% endif %}
+  {% if o.acao %}<p class="acao-da-chamada"><a class="principal" href="#{{ o.acao.ancora }}">{{ o.acao.rotulo }}</a></p>{% endif %}
+  {% if o.convite_ao_opcional %}<p><a href="#documentos-opcionais">{{ o.convite_ao_opcional }}</a></p>{% endif %}
+  {% comment %}A consequência da 063, só com o prazo correndo, uma vez só (FR-3864; FR-1177 da 063).{% endcomment %}
+  {% if o.prazo %}<p class="consequencia">{{ consequencia }}</p>{% endif %}
+  <p class="ressalva">{{ o.ressalva }}</p>
+
+  {% elif o.encerrada %}
+  {% for frase in o.frase_do_fechamento %}<p{% if forloop.first %} class="acao-principal"{% endif %}>{{ frase }}</p>{% endfor %}
+  <h2 class="titulo-do-resumo">{{ o.titulo_do_resumo }}</h2>
+  <ul class="resumo-da-convocacao">
+    {% for linha in o.resumo %}<li>{{ linha }}</li>{% endfor %}
+  </ul>
+
+  {% elif o.decidida %}
+  <p class="acao-principal">Resultado registrado: {{ rotulo_do_desfecho }}</p>
+  <p>Registrado em {{ desfecho.registrado_em|date:"d/m/Y" }}: {{ desfecho.fundamento }}</p>
+  {% if aceite %}<p>{{ aceite }}</p>{% endif %}
+  {% endif %}
+</section>
+{% endwith %}

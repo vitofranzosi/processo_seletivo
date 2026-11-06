@@ -18,6 +18,11 @@ O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584
 {% endcomment %}
 <li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1">
   <h3>{{ item.nome }}</h3>
+  {% comment %}
+  A recusa do envio mora no cartao do item, e nao no topo (121, FR-3871): a volta e a ancora do item, e
+  `recusa.js` move o foco para ela. Sem script, a ancora leva ao cartao, e a recusa esta nele.
+  {% endcomment %}
+  {% if recusa_do_envio and recusa_do_envio.ancora == item.ancora %}<p class="recusa recusa-no-cartao" role="alert" tabindex="-1" data-recusa>{{ recusa_do_envio.frase }}</p>{% endif %}
   {% if item.selos %}<p class="selos">{% for selo in item.selos %}<span class="selo selo-{{ selo.tipo }}">{{ selo }}</span>{% endfor %}</p>{% endif %}
   {% if item.lido.instrucao and not obrigacoes.decidida %}<p class="instrucao">{{ item.lido.instrucao }}</p>{% endif %}
   {% if item.lido.modelo and not obrigacoes.decidida %}

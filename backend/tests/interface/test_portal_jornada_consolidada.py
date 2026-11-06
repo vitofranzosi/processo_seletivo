@@ -78,6 +78,17 @@ def titulos(pagina):
     return [texto(t) for t in re.findall(r"<h2[^>]*>(.*?)</h2>", pagina, re.S)]
 
 
+def chamada(pagina):
+    """A chamada da `121` (FR-3859): o primeiro bloco da tela, com o título de primeiro nível."""
+    (secao,) = re.findall(r'<section class="chamada-da-convocacao".*?</section>', pagina, re.S)
+    return secao
+
+
+def titulo_da_pagina(pagina):
+    (h1,) = re.findall(r"<h1[^>]*>(.*?)</h1>", pagina, re.S)
+    return texto(h1)
+
+
 def bloco(pagina, titulo):
     """A `<section>` de bloco cujo `h2` é `titulo`."""
     for secao in re.findall(r'<section class="bloco-da-convocacao.*?</section>', pagina, re.S):
@@ -122,20 +133,15 @@ def test_c1_e_c2_o_acompanhamento_representa_o_conjunto(fx, client):
     )
     assert links(fazer)[0] == (destino, "Ver o que falta na convocação")
 
+    # A chamada da 121 no lugar de "O que fazer agora" e "Prazo" (FR-3735 da 118, revista): um link
+    # só, para o primeiro cartão, e os cartões, na ordem da FR-3726, logo depois do andamento.
     pagina = main(abrir(client, cenario, "convocacao"))
-    assert titulos(pagina)[:3] == ["O que fazer agora", "Prazo", "O que falta"]
-    agora = bloco(pagina, "O que fazer agora")
-    tarefas = [rotulo for _, rotulo in links(agora)]
-    assert tarefas == [
-        "Certidão de nascimento ou casamento",
-        "Histórico escolar do ensino médio",
-        "Certificado de conclusão do ensino médio",
-        "Comprovante de residência",
-        "Preencher o Requerimento de Matrícula",
-        "Ver os documentos que faltam",
-    ]
-    for href, _ in links(agora)[:4]:
-        assert f'id="{href.lstrip("#")}"' in pagina, "cada âncora aponta um cartão existente"
+    assert titulos(pagina)[:2] == ["Andamento", "O que falta"]
+    ((href, rotulo),) = links(chamada(pagina))
+    assert rotulo == "Ver o que preciso fazer"
+    falta = bloco(pagina, "O que falta")
+    assert f'id="{href.lstrip("#")}"' in cartao(falta, "Certidão de nascimento ou casamento")
+    assert "Preencher o Requerimento de Matrícula" in texto(falta), "o Requerimento é tarefa"
 
     jornada.enviar_requerimento(cenario.pessoa)
 
@@ -152,7 +158,7 @@ def test_c1_e_c2_o_acompanhamento_representa_o_conjunto(fx, client):
     assert not [r for _, r in links(fazer) if r.startswith("Enviar")], "D-004"
 
     pagina = main(abrir(client, cenario, "convocacao"))
-    assert "Preencher o Requerimento" not in texto(bloco(pagina, "O que fazer agora"))
+    assert "Preencher o Requerimento" not in texto(bloco(pagina, "O que falta"))
     apresentado = bloco(pagina, "O que você já apresentou")
     assert "Requerimento de Matrícula enviado." in texto(apresentado)
     assert "Conferir o Requerimento de Matrícula enviado" in texto(apresentado)
@@ -231,7 +237,10 @@ def test_b_e_b2_sem_documento_ficam_como_hoje(fx, client, letra):
 
     pagina = main(abrir(client, cenario, "convocacao"))
     assert "O que fazer agora" not in titulos(pagina)
-    assert "<h3>O que fazer</h3>" in pagina
+    # O título de primeiro nível passou a ser o da chamada (121, FR-3868), e "O que fazer" subiu um
+    # nível, para não pular do h1 ao h3.
+    assert titulo_da_pagina(pagina) == obrigacoes.TITULO_ABERTA
+    assert "<h2>O que fazer</h2>" in pagina
     assert situacao.SIGA_AS_INSTRUCOES.rstrip(".") in texto(pagina)
     assert any(href == requerimento for href, _ in links(pagina))
     assert "Requerimento de Matrícula: não enviado" not in texto(pagina)
@@ -265,13 +274,16 @@ def test_f_a_pendencia_vem_primeiro_com_o_motivo_e_o_selo(fx, client):
     assert links(fazer)[0][1] == "Ver e corrigir os documentos pendentes"
     assert "✓ Requerimento de Matrícula enviado." in texto(fazer)
 
+    # A ação da chamada leva à pendente, antes da que falta (121, FR-3863, SC-1151); o motivo está
+    # no cartão, e a linha "Com a comissão" saiu (FR-3736 da 118, revista).
     pagina = main(abrir(client, cenario, "convocacao"))
-    agora = bloco(pagina, "O que fazer agora")
-    primeira = links(agora)[0]
-    assert primeira[1] == "Histórico escolar do ensino médio"
-    assert jornada.MOTIVO_DO_HISTORICO in texto(agora)
-    assert links(agora)[-1] == (primeira[0], "Ver e corrigir os documentos pendentes")
+    agora = chamada(pagina)
+    ((href, rotulo),) = links(agora)
+    assert rotulo == "Ver o que preciso fazer"
+    assert "Você ainda precisa corrigir 1 documento e enviar 1 documento." in texto(agora)
     assert "Com a comissão" not in texto(agora)
+    assert f'id="{href.lstrip("#")}"' in cartao(pagina, "Histórico escolar do ensino médio")
+    assert jornada.MOTIVO_DO_HISTORICO in texto(cartao(pagina, "Histórico escolar do ensino médio"))
 
     historico = cartao(bloco(pagina, "O que falta"), "Histórico escolar do ensino médio")
     assert "destaque" in historico.split(">", 1)[0]
@@ -325,7 +337,9 @@ def test_j_a_pendencia_sem_envio_diz_envie_o_arquivo(fx, client):
     assert f"Envie o arquivo {ate_o_prazo(cenario)}." in residencia
     assert "outro arquivo" not in residencia and "novo arquivo" not in residencia
     assert "Precisa de correção" in residencia
-    assert links(bloco(pagina, "O que fazer agora"))[-1][1] == "Ver os documentos que faltam"
+    ((href, rotulo),) = links(chamada(pagina))
+    assert rotulo == "Ver o que preciso fazer"
+    assert f'id="{href.lstrip("#")}"' in cartao(pagina, "Comprovante de residência")
 
 
 # --- US3: o que está com a comissão não parece tarefa -------------------------------------------
@@ -351,8 +365,11 @@ def test_e_enviados_aguardando_nada_por_enquanto_e_a_frase_de_conclusao(fx, clie
     assert fazer.startswith(f"Nada por enquanto. {obrigacoes.FRASE_DE_CONCLUSAO}")
     pagina = main(abrir(client, cenario, "convocacao"))
     assert "O que falta" not in titulos(pagina)
-    agora = texto(bloco(pagina, "O que fazer agora"))
-    assert "Com a comissão: 4 documentos." in agora
+    # O que está com a comissão vai para o andamento (121, FR-3865), e a chamada diz a conclusão,
+    # sem ação (FR-3862, FR-3863).
+    agora = texto(chamada(pagina))
+    assert obrigacoes.FRASE_DE_CONCLUSAO in agora and not links(chamada(pagina))
+    assert "Aguardando conferência: 4" in texto(bloco(pagina, "Andamento"))
     assert "Siga as instruções do Edital" not in texto(pagina), "E induzia uma ação inexistente"
     assert "enviou tudo" not in texto(pagina)
 
@@ -379,15 +396,12 @@ def test_l_o_opcional_se_envia_sem_tarefa_nenhuma(fx, client):
     assert "Se quiser, você ainda pode enviar o documento opcional" in fazer
 
     pagina = main(abrir(client, cenario, "convocacao"))
-    assert titulos(pagina)[:4] == [
-        "O que fazer agora",
-        "Prazo",
-        "Documentos opcionais",
-        "O que você já apresentou",
-    ]
-    agora = bloco(pagina, "O que fazer agora")
+    assert titulos(pagina)[:3] == ["Andamento", "Documentos opcionais", "O que você já apresentou"]
+    agora = chamada(pagina)
     assert "Há documento opcional que você pode enviar, se quiser." in texto(agora)
-    assert "Com a comissão: 2 documentos." in texto(agora), "o opcional não entra na contagem"
+    assert links(agora) == [("#documentos-opcionais", obrigacoes.CONVITE_AO_OPCIONAL)]
+    andamento = texto(bloco(pagina, "Andamento"))
+    assert "Aguardando conferência: 2" in andamento, "o opcional não entra na contagem"
     opcionais = bloco(pagina, "Documentos opcionais")
     assert formularios(opcionais) == 1
     assert "Opcional: envie se quiser." in texto(opcionais)
@@ -423,8 +437,11 @@ def test_k_e_k2_nenhuma_data_aparece_como_prazo(fx, client, letra):
     pagina = main(abrir(client, cenario, "convocacao"))
     antes_dos_dados = pagina.split('id="sobre-esta-convocacao"', 1)[0]
     assert not DATA_COMO_PRAZO.search(texto(antes_dos_dados)), "FR-3749 prevalece"
-    prazo = texto(bloco(pagina, "Prazo"))
+    # O cartão do prazo diz só a frase da FR-3749 da 118, sem data nem contagem (121, FR-3861).
+    assert titulo_da_pagina(pagina) == obrigacoes.TITULO_ABERTA
+    prazo = texto(chamada(pagina).split('class="cartao-do-prazo"', 1)[1].split("</div>", 1)[0])
     assert obrigacoes.PRAZO_NAO_INICIADO in prazo and "Você já pode enviar." in prazo
+    assert "faltam" not in prazo and "termina" not in prazo
     sobre = texto(bloco(pagina, "Sobre esta convocação"))
     assert obrigacoes.data_e_hora(cenario.convocacao.vencimento) in sobre
     assert "contado do envio da comunicação" in sobre
@@ -443,10 +460,12 @@ def test_g_o_prazo_terminou_com_o_resumo_e_o_requerimento(fx, client):
     assert "Requerimento de Matrícula" in texto(fazer).split("ficaram sem envio:")[1]
     assert links(fazer)[0][1] == "Ver como ficou a convocação"
 
+    # O título por estado absorve o do bloco 1 (121, FR-3858, D-005; FR-3741 da 118, revista).
     pagina = main(abrir(client, cenario, "convocacao"))
-    assert titulos(pagina)[0] == "O prazo terminou"
+    assert titulo_da_pagina(pagina) == "O prazo desta convocação terminou"
+    assert "O prazo terminou" not in titulos(pagina), "o título não se repete"
     assert formularios(pagina) == 0
-    topo_da_tela = texto(bloco(pagina, "O prazo terminou"))
+    topo_da_tela = texto(chamada(pagina))
     assert nucleo in topo_da_tela
     assert "Até o prazo, ficou assim" in topo_da_tela
     assert obrigacoes.REQUERIMENTO_NAO_ENVIADO_ATE_O_PRAZO in topo_da_tela
@@ -478,7 +497,8 @@ def test_m_o_processo_encerrado_nao_diz_prazo_vencido_nem_promete_conferencia(fx
 
     pagina = main(abrir(client, cenario, "convocacao"))
     lido = texto(pagina).lower()
-    assert titulos(pagina)[0] == "O envio pelo portal está encerrado"
+    assert titulo_da_pagina(pagina) == "O envio pelo portal está encerrado"
+    assert "O envio pelo portal está encerrado" not in titulos(pagina), "D-005"
     assert formularios(pagina) == 0
     for proibido in ("prazo terminou", "vai conferir", "aguardando conferência", "vai decidir"):
         assert proibido not in lido, proibido
@@ -500,8 +520,11 @@ def test_m_o_processo_encerrado_nao_diz_prazo_vencido_nem_promete_conferencia(fx
 def test_n_o_pedido_e_nunca_enviado_aparece_como_nao_enviado(fx, client, rascunho):
     cenario = jornada._n(fx, rascunho=rascunho)
 
+    # FR-3742 da 118, revista: "Resultado da sua convocação" no topo, e "Resultado registrado" é o
+    # rótulo da linha do desfecho.
     pagina = main(abrir(client, cenario, "convocacao"))
-    assert titulos(pagina)[0] == "Resultado registrado"
+    assert titulo_da_pagina(pagina) == "Resultado da sua convocação"
+    assert "Resultado registrado:" in texto(chamada(pagina))
     assert "O que você enviou nesta convocação" in titulos(pagina)
     assert obrigacoes.REQUERIMENTO_NAO_ENVIADO in texto(pagina)
     assert formularios(pagina) == 0
@@ -524,7 +547,8 @@ def test_i_depois_do_resultado_a_pagina_e_so_historico(fx, client, letra):
 
     pagina = main(abrir(client, cenario, "convocacao"))
     lido = texto(pagina)
-    assert titulos(pagina)[:2] == ["Resultado registrado", "O que você enviou nesta convocação"]
+    assert titulo_da_pagina(pagina) == "Resultado da sua convocação"
+    assert titulos(pagina)[:1] == ["O que você enviou nesta convocação"]
     assert formularios(pagina) == 0
     for proibido in (
         "Envie até",
@@ -703,6 +727,34 @@ def test_as_duas_telas_custam_o_mesmo_com_um_e_com_seis_itens(fx, client):
     assert com_um == com_seis, (com_um, com_seis)
 
 
+def test_com_a_vigente_sucedendo_outra_o_custo_continua_o_mesmo(fx, client):
+    """121, R-008: a linha da substituída lê a anterior e as comunicações dela do *prefetch*, e o
+    custo continua sem crescer com os itens quando a vigente corrige outra."""
+    from processo_seletivo.convocacao.models import Convocacao, ItemDaListaDaConvocacao
+    from tests.integration.convocacao.test_correcao_da_convocacao import corrigir
+
+    c = jornada.certame(fx, prefixo="j121-custo", documentos=jornada.documentos_em_numero(1))
+    pessoa, conv = jornada.convocar(c, fx.gestor, letra="custo121")
+    corrigir(c[0], fx.gestor, conv, chave="custo121-corrige")
+    assert Convocacao.objects.filter(convocacao_anterior=conv).exists()
+    telas = ("acompanhamento", "convocacao")
+    com_um = {tela: len(_consultas(client, pessoa, tela)) for tela in telas}
+
+    modelo = cenarios.servico.raiz_da_chamada(conv).itens_da_lista.get()
+    campos = {f.attname: getattr(modelo, f.attname) for f in modelo._meta.concrete_fields}
+    for n in range(5):
+        ItemDaListaDaConvocacao.objects.create(
+            **{**campos, "id": uuid.uuid4(), "requisito_id": uuid.uuid4(), "chave": f"extra-{n}"}
+        )
+    com_seis = {tela: len(_consultas(client, pessoa, tela)) for tela in telas}
+
+    assert com_um == com_seis, (com_um, com_seis)
+    assert (
+        "Convocação substituída"
+        in client.get(reverse("portal:convocacao", args=[pessoa.id])).content.decode()
+    )
+
+
 def test_sem_convocacao_o_acompanhamento_nao_le_documentos_da_convocacao(fx, client):
     c = jornada.certame(fx, prefixo="j118-semconv", documentos=cenarios.documentos_do_aluno())
     _, _, inscricoes = c
@@ -777,7 +829,8 @@ def test_a_retificacao_que_tira_o_documento_nao_apaga_o_que_a_chamada_pediu(fx, 
     fazer = texto(o_que_fazer(main(abrir(client, cenario, "acompanhamento"))))
     assert fazer.startswith("Você ainda precisa enviar 4 documentos.")
     pagina = main(abrir(client, cenario, "convocacao"))
-    assert [r for _, r in links(bloco(pagina, "O que fazer agora"))][:4] == [
+    nomes = re.findall(r"<h3>(.*?)</h3>", bloco(pagina, "O que falta"))
+    assert nomes == [
         "Certidão de nascimento ou casamento",
         "Histórico escolar do ensino médio",
         "Certificado de conclusão do ensino médio",

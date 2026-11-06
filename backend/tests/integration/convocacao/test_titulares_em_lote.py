@@ -121,7 +121,7 @@ def test_repetir_a_confirmacao_nao_convoca_nem_comunica_de_novo(cenario_do_77, g
 def test_a_falha_de_um_envio_nao_desfaz_nem_impede_os_outros(cenario_do_77, gestor):
     """`FR-872`, `FR-873`: a convocação continua, e o prazo daquela pessoa não corre."""
     edital, _, _ = cenario_do_77
-    alvo = "processo_seletivo.convocacao.application.comunicar.send_mail"
+    alvo = "processo_seletivo.convocacao.application.comunicar.EmailMultiAlternatives.send"
 
     with mock.patch(alvo, side_effect=[ConnectionError("smtp"), 1]):
         resultado = confirmar(edital, gestor, previa(edital)["assinatura"])
@@ -228,7 +228,7 @@ def test_emissao_em_estado_indeterminado_fica_fora_das_pendentes(cenario_do_77, 
 
     edital, _, _ = cenario_do_77
     with mock.patch(
-        "processo_seletivo.convocacao.application.comunicar.send_mail",
+        "processo_seletivo.convocacao.application.comunicar.EmailMultiAlternatives.send",
         side_effect=ConnectionError("smtp"),
     ):
         convocadas = confirmar(edital, gestor, previa(edital)["assinatura"])["convocadas"]

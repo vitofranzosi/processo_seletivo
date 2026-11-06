@@ -838,9 +838,15 @@ def acesso(request):
         request.session[CHAVE_DO_DESTINO] = destino
     if identidade_do_candidato.identidade_autenticada(request):
         return redirect(reverse("portal:inscricoes"))
-    vaga = _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, ""))
+    guardado = request.session.get(CHAVE_DO_DESTINO, "")
+    vaga = _vaga_do_destino(guardado)
+    convocacao = _destino_e_convocacao(guardado)
     if request.method != "POST":
-        return render(request, "portal/acesso_email.html", {"email": "", "erro": "", "vaga": vaga})
+        return render(
+            request,
+            "portal/acesso_email.html",
+            {"email": "", "erro": "", "vaga": vaga, "destino_e_convocacao": convocacao},
+        )
 
     informado = request.POST.get("email", "").strip()
     if not endereco_aceitavel(informado):
@@ -848,7 +854,12 @@ def acesso(request):
         return render(
             request,
             "portal/acesso_email.html",
-            {"email": informado, "erro": "Informe um e-mail válido.", "vaga": vaga},
+            {
+                "email": informado,
+                "erro": "Informe um e-mail válido.",
+                "vaga": vaga,
+                "destino_e_convocacao": convocacao,
+            },
         )
 
     canonico = canonizar(informado)
@@ -926,6 +937,7 @@ def acesso_codigo(request):
         "aviso": AVISO_NEUTRO,
         "noticia": request.session.pop(CHAVE_DO_ENVIO, ""),
         "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
+        "destino_e_convocacao": _destino_e_convocacao(request.session.get(CHAVE_DO_DESTINO, "")),
     }
     if request.method != "POST":
         return render(request, "portal/acesso_codigo.html", contexto)
@@ -1107,8 +1119,17 @@ def _de_volta_a_vaga(destino):
     restrição acima é contra **praticar ato** a partir de um endereço compartilhado; a página do
     Edital é pública, é GET e não pratica ato nenhum. Qualquer outra rota continua indo para a
     lista.
+
+    **E a convocação, desde a `121`** (FR-3878, FR-3879, R-005): a lista fechada tem três rotas —
+    a vaga, a página do Edital e a convocação. O link da mensagem leva à convocação, e sem sessão o
+    caminho passa pelo acesso; depois do código, a pessoa chega a ela sem passar pela lista. O
+    endereço é **reconstruído** pela rota, sem consulta nem fragmento vindos de fora, e não carrega
+    autorização: a titularidade é conferida de novo pela própria convocação, ao abrir (`S4`). O nome
+    da função ficou, porque três chamadores e dois testes o usam.
     """
     rota = _rota_do_destino(destino)
+    if rota is not None and rota.view_name == "portal:convocacao":
+        return reverse("portal:convocacao", args=[rota.kwargs["inscricao_id"]])
     if rota is not None and rota.view_name == "portal:selecao":
         selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
         return f"{selecao}#resultados-titulo"
@@ -1183,6 +1204,17 @@ def _rota_do_destino(destino):
 def _destino_e_vaga(destino):
     rota = _rota_do_destino(destino)
     return rota is not None and rota.view_name == "portal:inscrever"
+
+
+def _destino_e_convocacao(destino):
+    """O destino guardado é a convocação? Só pelo nome da rota (121, FR-3880).
+
+    **Não lê o identificador nem abre a inscrição**: o texto das telas de acesso é o mesmo para o
+    identificador real, o inventado e o alheio, e não diz de quem é a convocação nem de qual Edital
+    (FR-020 e FR-021 da `010`).
+    """
+    rota = _rota_do_destino(destino) if destino else None
+    return rota is not None and rota.view_name == "portal:convocacao"
 
 
 def _desafio_provado(request):
@@ -2381,10 +2413,22 @@ def convocacao(request, inscricao_id):
 
     **Ler não move o relógio** (`FR-288b`). O prazo corre do envio da comunicação, e abrir esta
     página não é nem o envio nem o recebimento: o acesso fica na trilha, e o prazo fica onde estava.
+
+    **Sem identidade na sessão, o acesso, e antes de qualquer consulta** (121, FR-3876, R-004). O
+    link da mensagem leva aqui; sem sessão ele dava 404 ao próprio titular. A pergunta lê só a
+    sessão, e por isso a resposta não depende do identificador: real, inventado e alheio recebem o
+    mesmo redirecionamento, no mesmo tempo. O destino é só um caminho, e a titularidade é conferida
+    de novo quando a pessoa voltar (FR-3879). As rotas de escrita da convocação continuam como
+    estavam (D-002): nenhum redirecionamento leva a praticar ato.
     """
     from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
     from processo_seletivo.convocacao.models import Convocacao
 
+    # A chave da sessão, e não `identidade_da_sessao`: a chave só existe depois do código provado
+    # (`abrir_sessao`), e ler o registro aqui seria a segunda leitura da mesma identidade, que
+    # `_inscricao_do_titular` já faz logo abaixo.
+    if not request.session.get(identidade_do_candidato.CHAVE_SESSAO):
+        return redirect(f"{reverse('portal:acesso')}?{urlencode({'destino': request.path})}")
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     agora = timezone.now()
     # **Vigente é a que ninguém sucedeu**, como em toda a feature: uma convocação corrigida foi
@@ -2407,20 +2451,34 @@ def convocacao(request, inscricao_id):
     # certame, e não a conta da pessoa.
     atendimento = identificacao.da_unidade(registro.edital.institution_scope).canal()
     desfecho = da_convocacao["desfecho"]
+    # **Os blocos, com documento na chamada** (118, FR-3735, revista pela 121): a mesma projeção que
+    # o acompanhamento lê, e o template não escreve frase de estado nenhuma. O instante e a correção
+    # entram para o cartão do prazo (121, FR-3861, FR-3869).
+    projecao = _obrigacoes_da_convocacao(
+        documentos,
+        politica,
+        da_convocacao,
+        canal=atendimento,
+        agora=agora,
+        corrigida=chamada is not None and chamada.convocacao_anterior_id is not None,
+    )
+    selecao = _selecao(versao)
     return render(
         request,
         "portal/convocacao.html",
         {
             "inscricao": registro,
-            "selecao": _selecao(versao),
+            "selecao": selecao,
             **_mensagens(request),
             **da_convocacao,
             **documentos,
-            # **Os cinco blocos, com documento na chamada** (118, FR-3735): a mesma projeção que o
-            # acompanhamento lê, e o template não escreve frase de estado nenhuma.
-            "obrigacoes": _obrigacoes_da_convocacao(
-                documentos, politica, da_convocacao, canal=atendimento
+            "obrigacoes": projecao,
+            # A chamada da 121: o contexto curto, o título, o cartão do prazo e a substituída
+            # (FR-3858 a FR-3869), e a volta do envio (FR-3870, FR-3871).
+            **_chamada_da_tela(
+                chamada, projecao, politica, da_convocacao, versao, selecao, agora=agora
             ),
+            **_volta_do_envio(request, registro, projecao),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
             "novas_chamadas": situacao_da_inscricao.NOVAS_CHAMADAS,
             "requerimento": requerimento,
@@ -2477,7 +2535,9 @@ def _frase_do_vencido(da_convocacao, politica, atendimento):
     )
 
 
-def _obrigacoes_da_convocacao(documentos, politica, da_convocacao, *, canal):
+def _obrigacoes_da_convocacao(
+    documentos, politica, da_convocacao, *, canal, agora=None, corrigida=False
+):
     """A projeção da `118` sobre o que as duas telas já leram, ou `None` sem documento pedido."""
     leitura = documentos.get("documentos_da_convocacao")
     if not leitura:
@@ -2491,7 +2551,92 @@ def _obrigacoes_da_convocacao(documentos, politica, da_convocacao, *, canal):
         vencimento=documentos["documentos_vencimento"],
         estado_final_do_processo=documentos["estado_final_do_processo"],
         canal=canal,
+        agora=agora,
+        corrigida=corrigida,
     )
+
+
+def _chamada_da_tela(chamada, projecao, politica, da_convocacao, versao, selecao, *, agora):
+    """O contexto curto, o título por estado, o cartão do prazo e a substituída (121).
+
+    **Os dois ramos usam a mesma chamada** (FR-3868): com documento, ela sai da projeção; sem
+    documento, das mesmas funções, sobre o que a tela sem documento já sabe — o estado do prazo, o
+    desfecho e, pela política do Requerimento, o Processo em estado final. Sem convocação, o título
+    continua o de hoje: esta spec só muda a página quando há convocação vigente (caso-limite).
+    """
+    if chamada is None:
+        return {"titulo_da_chamada": "Convocação"}
+    perfil = _perfil_do_conteudo(versao.content, chamada.perfil_id).get("name", "")
+    numero = f"Edital {selecao['numero']}/{selecao['ano']}"
+    contexto = f"{perfil} · {numero}" if perfil else numero
+    corrigida = chamada.convocacao_anterior_id is not None
+    if projecao is not None:
+        titulo, cartao = projecao.titulo, projecao.cartao
+    else:
+        from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+
+        momento = obrigacoes.momento_sem_documento(
+            estado_do_prazo=da_convocacao["estado"],
+            desfecho=da_convocacao["desfecho"],
+            fechado_pelo_processo=politica is not None and politica.fechado_pelo_processo,
+        )
+        titulo = obrigacoes.TITULOS[momento]
+        cartao = (
+            obrigacoes.cartao_do_prazo(
+                prazo_nao_iniciado=(
+                    da_convocacao["estado"] == convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO
+                ),
+                vencimento=chamada.vencimento,
+                agora=agora,
+                corrigida=corrigida,
+            )
+            if momento == obrigacoes.ABERTA
+            else None
+        )
+    return {
+        "contexto_da_chamada": contexto,
+        "titulo_da_chamada": titulo,
+        "cartao_do_prazo": cartao,
+        # A imediatamente anterior, do *prefetch* da vigente (R-008), em todos os estados.
+        "substituida": obrigacoes.linha_da_substituida(chamada.convocacao_anterior)
+        if corrigida
+        else "",
+    }
+
+
+# A volta do envio de documento da convocação (121, FR-3870, FR-3871, R-006). Registros próprios,
+# e não o aviso e a recusa do topo: a confirmação é o primeiro elemento da chamada, e a recusa mora
+# no cartão do item. Guardam identificadores, e não texto do documento, para que o nome e a próxima
+# tarefa sejam os da projeção **depois** do envio.
+CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO = "confirmacao_da_convocacao"
+CHAVE_DA_RECUSA_DA_CONVOCACAO = "recusa_da_convocacao"
+
+
+def _da_inscricao(request, chave, registro):
+    """O registro da volta, consumido **só** pela convocação da inscrição em que o envio aconteceu.
+
+    A sessão é da pessoa, e não da inscrição: quem tem duas convocadas e abre a outra antes da volta
+    consumiria ali uma confirmação que não acha item nenhum, e a volta certa chegaria vazia.
+    """
+    guardado = request.session.get(chave)
+    if not guardado or guardado.get("inscricao") != str(registro.id):
+        return None
+    del request.session[chave]
+    return {campo: valor for campo, valor in guardado.items() if campo != "inscricao"}
+
+
+def _volta_do_envio(request, registro, projecao):
+    """Consome os dois registros da volta do envio, lidos uma vez só, como `_mensagens`."""
+    confirmacao = _da_inscricao(request, CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO, registro)
+    recusa = _da_inscricao(request, CHAVE_DA_RECUSA_DA_CONVOCACAO, registro)
+    return {
+        "confirmacao_do_envio": (
+            obrigacoes.confirmacao_do_envio(projecao, **confirmacao)
+            if confirmacao and projecao is not None
+            else None
+        ),
+        "recusa_do_envio": recusa,
+    }
 
 
 def _convocacao_para_a_tela(chamada, agora):
@@ -2565,16 +2710,23 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     """O titular apresenta um arquivo para um item da lista da convocação (115, FR-3578).
 
     **Volta à tela da convocação**, com o resultado dito lá: a recusa sobre o arquivo e a de prazo
-    são as mesmas da inscrição e do requerimento, e ficam onde a pessoa está.
+    são as mesmas da inscrição e do requerimento.
+
+    **Aceito, a volta é `#confirmacao`; recusado, o cartão do item** (121, FR-3870, FR-3871). A
+    volta ao cartão deixava a confirmação no topo, fora da tela, e o cartão — que já tinha descido
+    para *O que você já apresentou* — sem dizer o que acontecera. A confirmação é o primeiro
+    elemento da chamada, focável pela âncora sem script; a recusa fica no próprio cartão, e
+    `recusa.js` lhe dá o foco.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
 
     registro, identidade, _ = _inscricao_do_titular(request, inscricao_id)
     arquivo = request.FILES.get("arquivo")
-    destino = reverse("portal:convocacao", args=[registro.id]) + f"#item-{item_id}"
+    convocacao_da_pessoa = reverse("portal:convocacao", args=[registro.id])
+    no_cartao = f"{convocacao_da_pessoa}#item-{item_id}"
     if arquivo is None:
-        _recusar(request, "Escolha um arquivo PDF antes de enviar.")
-        return redirect(destino)
+        _recusar_no_cartao(request, registro, item_id, "Escolha um arquivo PDF antes de enviar.")
+        return redirect(no_cartao)
     try:
         feita = documentos_da_convocacao.apresentar(
             identidade=identidade,
@@ -2587,15 +2739,24 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     except DomainError as recusa:
         if recusa.status == 404:
             raise
-        _recusar(request, recusa.detail)
-        return redirect(destino)
-    _avisar(
-        request,
-        "Este arquivo já tinha sido recebido."
-        if feita.ja_recebido
-        else "Documento recebido. A comissão vai conferir.",
-    )
-    return redirect(destino)
+        _recusar_no_cartao(request, registro, item_id, recusa.detail)
+        return redirect(no_cartao)
+    request.session[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO] = {
+        "inscricao": str(registro.id),
+        "item_id": str(item_id),
+        "apresentacao_id": str(feita.apresentacao.id),
+        "ja_recebido": feita.ja_recebido,
+    }
+    return redirect(f"{convocacao_da_pessoa}#confirmacao")
+
+
+def _recusar_no_cartao(request, registro, item_id, frase):
+    """A recusa guardada para o cartão do item, e não para o topo (121, FR-3871)."""
+    request.session[CHAVE_DA_RECUSA_DA_CONVOCACAO] = {
+        "inscricao": str(registro.id),
+        "ancora": f"item-{item_id}",
+        "frase": frase,
+    }
 
 
 @require_http_methods(["GET"])

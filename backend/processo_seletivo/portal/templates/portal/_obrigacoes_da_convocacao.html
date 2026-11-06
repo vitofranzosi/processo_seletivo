@@ -1,7 +1,12 @@
-{% comment %}
-A convocacao que pede documento, em cinco blocos (118, FR-3735 a FR-3742).
+{% load prazo_da_convocacao %}{% comment %}
+A convocacao que pede documento, depois da chamada (118, FR-3735 a FR-3742, revistas pela 121).
 
-**O que fazer agora vem primeiro**, e os dados do ato descem para o fim. A 375 px, a lista da 115
+**A chamada saiu daqui** (121, FR-3859): o titulo por estado, a etapa, o cartao do prazo, o resumo, a
+acao, a consequencia e a ressalva moram em `_chamada_da_convocacao.html`, acima deste parcial, e os
+blocos "O que fazer agora" e "Prazo" deixaram de existir. Logo depois da chamada vem o Andamento, so
+com a chamada aberta (FR-3865).
+
+**A chamada vem primeiro**, e os dados do ato descem para o fim. A 375 px, a lista da 115
 comecava no fim da primeira tela e o Requerimento ficava na terceira; a pessoa lia "Situacao
 registrada", espécie e fundamento antes de saber que faltavam quatro documentos (ponto 3 do achado
 do PR #374). Os dados continuam visiveis, sem `details`: e o ato que a pessoa tem direito de ler,
@@ -18,13 +23,6 @@ Toda frase de estado vem de `portal/obrigacoes.py`; o template so a coloca no bl
 {% with o=obrigacoes %}
 
 {% if o.decidida %}
-<section class="bloco-da-convocacao resultado-registrado" aria-labelledby="bloco-resultado">
-  <h2 id="bloco-resultado">Resultado registrado</h2>
-  <p class="acao-principal">{{ rotulo_do_desfecho }}</p>
-  <p>Registrado em {{ desfecho.registrado_em|date:"d/m/Y" }}: {{ desfecho.fundamento }}</p>
-  {% if aceite %}<p>{{ aceite }}</p>{% endif %}
-</section>
-
 <section class="bloco-da-convocacao" aria-labelledby="bloco-enviado">
   <h2 id="bloco-enviado">O que você enviou nesta convocação</h2>
   <ul class="requisitos-lista">
@@ -34,50 +32,37 @@ Toda frase de estado vem de `portal/obrigacoes.py`; o template so a coloca no bl
 </section>
 
 {% else %}
-<section class="bloco-da-convocacao o-que-fazer-agora" id="o-que-fazer-agora" aria-labelledby="bloco-agora">
-  {% if o.encerrada %}
-  <h2 id="bloco-agora">{{ o.titulo_do_fechamento }}</h2>
-  {% for frase in o.frase_do_fechamento %}<p{% if forloop.first %} class="acao-principal"{% endif %}>{{ frase }}</p>{% endfor %}
-  <h3>{{ o.titulo_do_resumo }}</h3>
-  <ul class="resumo-da-convocacao">
-    {% for linha in o.resumo %}<li>{{ linha }}</li>{% endfor %}
+{% if o.andamento %}
+{% comment %}
+O andamento conta so documentos obrigatorios, e sem o Requerimento (D-004): o Requerimento enviado
+nao fica "aguardando conferencia" no sentido da 115. Sem barra, sem percentual e sem frase de
+conclusao — "100 % enviado" leria como aprovado (FR-3865).
+{% endcomment %}
+<section class="bloco-da-convocacao andamento-da-convocacao" id="andamento" aria-labelledby="bloco-andamento">
+  <h2 id="bloco-andamento">Andamento</h2>
+  <ul class="contagens-do-andamento">
+    {% for rotulo, numero in o.andamento %}<li>{{ rotulo }}: <strong>{{ numero }}</strong></li>{% endfor %}
   </ul>
-  {% else %}
-  <h2 id="bloco-agora">O que fazer agora</h2>
-  <p class="acao-principal">{{ o.frase_de_estado }}{% if o.frase_de_conclusao %} <span class="conclusao">{{ o.frase_de_conclusao }}</span>{% endif %}</p>
-  {% if o.tarefas %}
-  <ul class="tarefas">
-    {% for tarefa in o.tarefas %}
-    <li>{% if tarefa.requerimento %}<a href="{% url 'portal:requerimento' inscricao.id %}">Preencher o Requerimento de Matrícula</a>{% else %}<a href="#{{ tarefa.ancora }}">{{ tarefa.texto }}</a>{% if tarefa.motivo %} <span class="motivo">— {{ tarefa.motivo }}</span>{% endif %}{% endif %}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-  {% if o.rotulo_do_botao %}<p><a class="principal" href="#{{ o.primeira_ancora }}">{{ o.rotulo_do_botao }}</a></p>{% endif %}
-  {% if o.linha_com_a_comissao %}<p>{{ o.linha_com_a_comissao }}</p>{% endif %}
-  {% if o.frase_do_opcional %}<p>{{ o.frase_do_opcional }}</p>{% endif %}
-  {% if o.convite_ao_opcional %}<p><a href="#documentos-opcionais">{{ o.convite_ao_opcional }}</a></p>{% endif %}
-  {% endif %}
-</section>
-
-{% if o.frase_do_prazo %}
-<section class="bloco-da-convocacao" id="prazo" aria-labelledby="bloco-prazo">
-  <h2 id="bloco-prazo">Prazo</h2>
-  {% for frase in o.frase_do_prazo %}<p>{{ frase }}</p>{% endfor %}
-  {% comment %}A consequencia da 063, so com o prazo correndo (FR-3737; FR-1177 da 063).{% endcomment %}
-  {% if o.aberta and o.prazo %}<p class="consequencia">{{ consequencia }}</p>{% endif %}
 </section>
 {% endif %}
 
 {% if o.tem_bloco_que_falta %}
-<section class="bloco-da-convocacao" id="{% if o.que_falta %}o-que-falta{% else %}documentos-opcionais{% endif %}" aria-labelledby="bloco-falta">
-  <h2 id="bloco-falta">{% if o.encerrada %}O que ficou sem envio{% elif o.que_falta %}O que falta{% else %}Documentos opcionais{% endif %}</h2>
+<section class="bloco-da-convocacao" id="{% if o.que_falta or o.requerimento_a_preencher_na_chamada %}o-que-falta{% else %}documentos-opcionais{% endif %}" aria-labelledby="bloco-falta">
+  <h2 id="bloco-falta">{% if o.encerrada %}O que ficou sem envio{% elif o.que_falta or o.requerimento_a_preencher_na_chamada %}O que falta{% else %}Documentos opcionais{% endif %}</h2>
   {% if o.que_falta %}
   <ul class="requisitos-lista">
     {% for item in o.que_falta %}{% include "portal/_cartao_do_documento_da_convocacao.html" %}{% endfor %}
   </ul>
   {% endif %}
+  {% comment %}
+  O Requerimento a preencher, depois dos documentos, na ordem da FR-3726, e com a ancora para onde a
+  acao principal leva quando ele e a unica tarefa (121, FR-3863; FR-3738 da 118).
+  {% endcomment %}
+  {% if o.requerimento_a_preencher_na_chamada %}
+  <p class="requerimento-nas-obrigacoes requerimento-a-preencher" id="requerimento-a-preencher" tabindex="-1"><a href="{% url 'portal:requerimento' inscricao.id %}">Preencher o Requerimento de Matrícula</a></p>
+  {% endif %}
   {% if o.opcionais_a_enviar %}
-  {% if o.que_falta %}<h3 class="subtitulo-do-bloco" id="documentos-opcionais">Opcional</h3>{% endif %}
+  {% if o.que_falta or o.requerimento_a_preencher_na_chamada %}<h3 class="subtitulo-do-bloco" id="documentos-opcionais">Opcional</h3>{% endif %}
   <ul class="requisitos-lista">
     {% for item in o.opcionais_a_enviar %}{% include "portal/_cartao_do_documento_da_convocacao.html" %}{% endfor %}
   </ul>
@@ -103,8 +88,9 @@ Toda frase de estado vem de `portal/obrigacoes.py`; o template so a coloca no bl
   <dl class="campos">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
     <dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada</dd>
-    {% if enviada_em %}<dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y" }}, às {{ enviada_em|date:"H\hi" }}</dd>{% endif %}
-    {% if convocacao.vencimento %}<dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>{% endif %}
+    {% if enviada_em %}<dt>Comunicação enviada em</dt><dd>{{ enviada_em|data_e_hora_do_prazo }}</dd>{% endif %}
+    {% if substituida %}<dt>Convocação substituída</dt><dd>{{ substituida }}</dd>{% endif %}
+    {% if convocacao.vencimento %}<dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, contado do envio da comunicação</dd>{% endif %}
     <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>
     <dt>Atendimento</dt><dd>{% include "portal/_atendimento.html" %}</dd>
   </dl>

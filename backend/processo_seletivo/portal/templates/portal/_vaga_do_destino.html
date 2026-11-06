@@ -6,3 +6,10 @@ nunca do e-mail: a tela é a mesma para quem existe e para quem não existe (010
 {% if vaga %}
 <p class="vaga-do-destino">Inscrição em <strong>{{ vaga.perfil }}</strong> · {% if vaga.numero_no_titulo %}{{ vaga.titulo }}{% else %}Edital {{ vaga.numero }}{% if vaga.titulo %} — {{ vaga.titulo }}{% endif %}{% endif %}</p>
 {% endif %}
+{% comment %}
+O destino da convocação (121, FR-3880), nas duas telas de acesso: a mesma frase para identificador
+real, inventado e alheio, porque ela sai só do nome da rota.
+{% endcomment %}
+{% if destino_e_convocacao %}
+<p class="vaga-do-destino">Depois do código, você vai direto para a convocação.</p>
+{% endif %}

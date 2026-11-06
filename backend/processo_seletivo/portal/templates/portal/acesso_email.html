@@ -1,12 +1,17 @@
 {% extends "portal/base.html" %}
-{% block titulo %}{% if vaga %}Confirme seu e-mail{% else %}Entrar{% endif %}{% endblock %}
+{% block titulo %}{% if vaga %}Confirme seu e-mail{% elif destino_e_convocacao %}Entre para ver a sua convocação{% else %}Entrar{% endif %}{% endblock %}
 {% block convite_de_entrar %}{% endblock %}
 {% block conteudo %}
 {% comment %}
 "Entrar" continua sendo o nome da porta (Q7); a caminho de uma vaga, a tela diz para que se entra
 (072, FR-1619).
 {% endcomment %}
-<h1>{% if vaga %}Confirme seu e-mail para se inscrever{% else %}Entrar{% endif %}</h1>
+{% comment %}
+A caminho da convocação, a tela diz para onde a pessoa vai (121, FR-3880): o link da mensagem trouxe
+quem estava sem sessão, e depois do código ela chega à convocação, sem passar pela lista. Sem dizer
+de quem é a convocação nem de qual Edital: a decisão sai só do nome da rota.
+{% endcomment %}
+<h1>{% if vaga %}Confirme seu e-mail para se inscrever{% elif destino_e_convocacao %}Entre para ver a sua convocação{% else %}Entrar{% endif %}</h1>
 {% include "portal/_vaga_do_destino.html" %}
 <p class="sub">Sem senha: enviamos um código para o seu e-mail.</p>
 

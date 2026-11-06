@@ -6,8 +6,8 @@ acompanhamento, a convocação e, quando há, o Requerimento, a 375 × 812 e a 1
 
 Em toda página: nenhuma rolagem horizontal e nenhuma violação da política de conteúdo no console
 (a `Tela` da `115` vigia o console). Na convocação: nenhum nome acessível de botão de envio ou de
-escolha de arquivo se repete. Nos cenários em que há o que fazer, o bloco *O que fazer agora*
-termina dentro da primeira tela a 375 px, com a contagem e o primeiro link de tarefa.
+escolha de arquivo se repete. Nos cenários em que há o que fazer, a ação da chamada da `121`
+termina dentro da primeira tela a 375 px, com folga de uma linha (SC-1119 da 118, revista).
 
 `NAVEGADOR_CAPTURAS=<pasta>` grava, por cenário, as telas inteiras e o texto visível de cada uma —
 é de onde saem as capturas e as citações literais da `verificacao.md`.
@@ -104,14 +104,16 @@ def test_cada_cenario_nas_duas_larguras(tela, fx, letra):
 
 
 def _o_que_fazer_na_primeira_tela(tela, pagina, cenario):
-    """SC-1119: a contagem e o primeiro link de tarefa terminam dentro de 812 px."""
+    """SC-1119 da 118, revista pela 121 (SC-1152): o resumo e a ação da chamada terminam dentro de
+    812 px com folga de pelo menos uma linha de texto corrido."""
     pagina.goto(tela.servidor.url + reverse("portal:convocacao", args=[cenario.pessoa.id]))
-    bloco = pagina.locator("#o-que-fazer-agora")
-    expect(bloco).to_be_visible()
-    frase = bloco.locator(".acao-principal").bounding_box()
-    primeira = bloco.locator(".tarefas a").first.bounding_box()
-    assert frase["y"] + frase["height"] <= CELULAR["height"], frase
-    assert primeira["y"] + primeira["height"] <= CELULAR["height"], primeira
+    chamada = pagina.locator(".chamada-da-convocacao")
+    expect(chamada).to_be_visible()
+    linha = pagina.evaluate("parseFloat(getComputedStyle(document.body).lineHeight)")
+    resumo = chamada.locator(".resumo-da-chamada").bounding_box()
+    acao = chamada.locator(".acao-da-chamada a").bounding_box()
+    assert resumo["y"] + resumo["height"] <= CELULAR["height"], resumo
+    assert acao["y"] + acao["height"] + linha <= CELULAR["height"], (acao, linha)
 
 
 def test_f_pelo_teclado_a_ordem_e_a_visual_e_o_foco_se_ve(tela, fx):
@@ -149,13 +151,15 @@ def test_f_pelo_teclado_a_ordem_e_a_visual_e_o_foco_se_ve(tela, fx):
     alturas = [p["y"] for p in conteudo]
     assert alturas == sorted(alturas), conteudo
     rotulos = [p["texto"] for p in no_main]
-    assert "Histórico escolar do ensino médio" in rotulos
-    assert "Ver e corrigir os documentos pendentes" in rotulos
+    # A lista das tarefas com âncora saiu da chamada (121, revendo a FR-3736 da 118): o cartão do
+    # pendente se alcança pela ação e pelos controles dele, que dizem o nome do documento.
+    assert any("Histórico escolar do ensino médio" in rotulo for rotulo in rotulos), rotulos
+    assert "Ver o que preciso fazer" in rotulos
     assert any(r.startswith("Enviar: ") for r in rotulos), rotulos
 
     # Ativar a âncora do pendente leva o foco ao cartão dele (quickstart).
     pagina.goto(tela.servidor.url + reverse("portal:convocacao", args=[cenario.pessoa.id]))
-    pagina.locator("#o-que-fazer-agora .tarefas a").first.click()
+    pagina.locator(".acao-da-chamada a").click()
     alvo = pagina.evaluate("() => document.activeElement.id")
     assert re.match(r"item-[0-9a-f-]{36}$", alvo), alvo
     assert pagina.locator(f"#{alvo} .selo", has_text="Precisa de correção").count() == 1
