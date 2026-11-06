@@ -29,27 +29,31 @@ depois da publicação (D-002). Em elaboração, em revisão, homologado e cance
    declarada no Edital, e nenhum ato do GPS depende do resultado dela."
 7. **As ações de hoje**, `ul.lista-acoes` como hoje; com providência da pessoa, nenhuma é cheia.
 8. **Conteúdo imutável**: `p.imutavel` numa linha no pé do cartão.
-9. A Retificação que aguarda a pessoa e as frases da FR-2820 da `104` continuam (são providências de
-   Retificação: aparecem no item 2 ou 3, e não duas vezes).
+9. A Retificação que aguarda a pessoa e as frases da FR-2820 da `104` continuam, logo abaixo das
+   providências, e não entram na lista delas (D-017): com providência da pessoa, as linhas da
+   Retificação aparecem sem o "Nenhum ato do Edital para seus papéis".
 
 "Nenhum ato disponível para seus papéis nesta situação" **não** aparece quando há providência da
 pessoa (FR-4086).
 
 ### "Andamento da seleção" (nível 2, B2) — no lugar de "Classificação"
 
-Só para quem hoje via o cartão "Classificação" (D-004). `section.cartao.andamento` com
-`aria-labelledby="andamento-titulo"`:
+Só para quem hoje via o cartão "Classificação" (D-004), e só os Perfis que a pessoa alcança por algum
+destino. `section.cartao.andamento-da-selecao` com `aria-labelledby="classificacao-titulo"` — **o id
+do cartão antigo continua**, porque as jornadas da `033`, da `049` e da `122` acham os destinos pela
+seção:
 
 - `p.linha-das-inscricoes`: "Inscrições encerradas em dd/mm/aaaa · N enviadas" ou "Inscrições
   abertas até dd/mm/aaaa hh:mm · N enviadas até agora".
 - Um `details.perfil-do-andamento` por Perfil com marco, **fechado**; `summary` com o nome do Perfil,
   a forma e o resumo em palavras. O Perfil sem inscrição: um `p` só, "Não se aplica: nenhuma
   inscrição enviada".
-- Aberto: `div.rolavel.moldura-do-andamento` com `table` (`caption` = "Andamento de <Perfil>, por
+- Aberto: `div.moldura-do-andamento` (rola em qualquer largura) com `table` (`caption` = "Andamento de <Perfil>, por
   lista"), uma linha de grupos (`th colspan scope="colgroup"`), uma de pontos (`th scope="col"`), e
   uma linha por lista (`th scope="row"`). Cada `td` tem `data-situacao`, o sinal (`aria-hidden`), a
   palavra, a nota; é link (`a`) só para quem abre a tela.
-- `p.destinos-do-perfil`: os destinos do antigo cartão para aquele Perfil (por marco).
+- `ul.destinos-do-perfil`, **fora** do `details`, à vista: os destinos do antigo cartão para aquele
+  Perfil, por marco (o principal com o nome da tela, "sorteio público" ou "ordenação").
 - Nota da matrícula (D-003), quando cabe.
 
 ## As telas de ato (por último, D-015)

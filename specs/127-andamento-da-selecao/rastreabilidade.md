@@ -11,6 +11,7 @@ Arquivos de teste, abreviados:
 - `ed` = `tests/interface/test_andamento_do_edital.py`
 - `coer` = `tests/interface/test_andamento_coerencia.py`
 - `esc` = `tests/performance/test_andamento_em_escala.py`
+- `sel` = `tests/interface/test_andamento_da_selecao.py`
 
 ## Requisitos funcionais
 
@@ -54,7 +55,17 @@ Arquivos de teste, abreviados:
 | FR-4088 | `detalhe.html` (principal secundária) | `ed::test_s1_com_providencia_da_pessoa_nenhuma_acao_vem_cheia` |
 | FR-4089 | `views.detalhe` (`trilha` vazia), `p.imutavel.em-uma-linha` | `ed::test_depois_da_publicacao_a_trilha_de_situacao_sai` |
 | FR-4090 a FR-4092 | transições — por último (D-015) | `test_andamento_transicoes.py` (no PR das transições) |
-| FR-4100 a FR-4110 | B2 | `test_andamento_da_selecao.py` (no PR do B2) |
+| FR-4100 | `detalhe.html` (`_andamento_da_selecao.html` no lugar do cartão) | `sel::test_o_andamento_toma_o_lugar_do_cartao_classificacao`, `sel::test_quem_nao_via_o_cartao_classificacao_nao_ve_o_andamento` |
+| FR-4101 | `resumo_do_perfil`, `linha_das_inscricoes` | `sel::test_o_andamento_toma_o_lugar_do_cartao_classificacao`, `comp::test_o_resumo_conta_feitos_sobre_os_que_se_aplicam`, `comp::test_a_linha_das_inscricoes` |
+| FR-4102 | `p.perfil-sem-inscricao` | `sel::test_o_perfil_sem_inscricao_e_uma_linha_so` |
+| FR-4103 | `sequencia_do_perfil` | `sel::test_s1_a_matriz_comeca_pela_relacao_…`, `sel::test_p1_a_matriz_comeca_pelas_etapas_…`, `sel::test_p2_a_etapa_governada_…`, `comp` |
+| FR-4104 | `PerfilNoAndamento.grupos` (`th scope="colgroup"`) | `sel::test_s1_…` (`Sem efeito no GPS`), `sel::test_p2_…` (`Etapa governada pela faixa`) |
+| FR-4105 | `td[data-situacao]`, link só com `url` | `sel::test_quem_so_publica_nao_ve_o_perfil_sem_ordem`; `coer` (as URLs vêm do mesmo `Alcance`) |
+| FR-4106 | `.moldura-do-andamento { overflow-x: auto }` | `sel::test_a_matriz_rola_dentro_da_moldura`; `medidas.json` (`rola_de_lado`, aberto e recolhido) |
+| FR-4107 | o nível 1 lê as mesmas células | `sel::test_nenhuma_pendencia_so_na_matriz` |
+| FR-4108 | `perfil.destinos` de `_marcos_publicados` | `sel::test_os_destinos_do_cartao_classificacao_continuam`; `test_destinos_do_edital.py`, `test_publicar_resultado.py`, `test_recortes_alinhados.py` (suíte) |
+| FR-4109 | `matricula_fora` | nota fixa, sem cenário de convocação encerrada nos testes (registrado em `verificacao.md`) |
+| FR-4110 | folha enxuta; Perfis só de quem os alcança (D-004) | `capturas/depois-b2/medidas.json` contra `depois-b1` |
 | FR-4120 | leituras em lote; `esc` | `esc::test_o_sorteio_nao_cresce_com_as_inscricoes`, `esc::test_a_pontuacao_com_etapas_nao_cresce_com_as_inscricoes` |
 | FR-4121 | `ul`, "Sua" em texto, palavra e sinal | `ed::test_s1_quem_conduz_…` (`marca-sua`), `sit::test_toda_situacao_tem_palavra_e_sinal` |
 | FR-4122 | `interface/telas/andamento.css`, nada inline | `test_acessibilidade`, `test_estaticos`, CSP (suíte) |
@@ -76,8 +87,8 @@ Arquivos de teste, abreviados:
 | SC-1239 | `esc` |
 | SC-1240 | capturas `depois-b1/medidas.json` (`fim_das_suas`) |
 | SC-1241 | `medidas.json` (`rola_de_lado`) |
-| SC-1242 | B2 |
-| SC-1243 | `comp`; no B2, `test_andamento_da_selecao.py` |
+| SC-1242 | `capturas/depois-b2/medidas.json`: recolhido, de 16 a 42 px mais baixo que o cartão antigo a 1280 px |
+| SC-1243 | `comp`; `sel::test_s1_…`, `sel::test_p1_…` |
 | SC-1244 | `make check`; suíte completa (`verificacao.md`) |
 | SC-1245 | validação com pessoas — espera o usuário (`quickstart.md`) |
 
@@ -88,7 +99,7 @@ Arquivos de teste, abreviados:
 | UX-230 | `sit::test_toda_situacao_tem_palavra_e_sinal`; `_providencia.html` |
 | UX-231 | `ed::test_s1_quem_conduz_…` (`<span class="marca-sua">Sua</span>`), `ed::test_s1_quem_nao_conduz_…` (`Quem conduz a seleção:`) |
 | UX-232 | `medidas.json` (`fim_das_providencias`, `fim_das_suas`) |
-| UX-233 | B2 |
+| UX-233 | `sel::test_o_andamento_toma_o_lugar_do_cartao_classificacao` (`details` fechado), `sel::test_a_matriz_rola_dentro_da_moldura` |
 
 ## Casos-limite
 

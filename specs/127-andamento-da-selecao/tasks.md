@@ -59,11 +59,11 @@ julgador e auditor.
 
 **Goal**: o cartão "Classificação" vira o andamento por Perfil, composto pela configuração.
 
-- [ ] T026 [US5] Resumo em palavras por Perfil, linha das inscrições e nota da matrícula em `backend/processo_seletivo/interface/andamento.py` (FR-4101, FR-4102, FR-4109)
-- [ ] T027 [US5] Parcial `backend/processo_seletivo/interface/templates/interface/_andamento_da_selecao.html` no lugar do cartão "Classificação" em `detalhe.html`, para quem via o cartão, com os destinos de `_marcos_publicados` (FR-4100, FR-4105, FR-4108)
-- [ ] T028 [P] [US5] Moldura com rolagem própria e a tabela acessível em `backend/processo_seletivo/interface/static/interface/telas/andamento.css` (FR-4106, FR-4121, UX-233)
-- [ ] T029 [US5] Testes do nível 2: colunas por família, Perfil sem inscrito em uma linha, quem vê, destinos preservados, nenhuma pendência só na matriz, em `backend/tests/interface/test_andamento_da_selecao.py` (SC-1243, FR-4107)
-- [ ] T030 [US5] Capturas do nível 2 recolhido e aberto a 1280 e 375 px; altura recolhida contra a do cartão antigo (SC-1241, SC-1242) em `specs/127-andamento-da-selecao/capturas/depois-b2/`
+- [x] T026 [US5] Resumo em palavras por Perfil, linha das inscrições e nota da matrícula em `backend/processo_seletivo/interface/andamento.py` (FR-4101, FR-4102, FR-4109)
+- [x] T027 [US5] Parcial `backend/processo_seletivo/interface/templates/interface/_andamento_da_selecao.html` no lugar do cartão "Classificação" em `detalhe.html`, para quem via o cartão, com os destinos de `_marcos_publicados` (FR-4100, FR-4105, FR-4108)
+- [x] T028 [P] [US5] Moldura com rolagem própria e a tabela acessível em `backend/processo_seletivo/interface/static/interface/telas/andamento.css` (FR-4106, FR-4121, UX-233)
+- [x] T029 [US5] Testes do nível 2: colunas por família, Perfil sem inscrito em uma linha, quem vê, destinos preservados, nenhuma pendência só na matriz, em `backend/tests/interface/test_andamento_da_selecao.py` (SC-1243, FR-4107)
+- [x] T030 [US5] Capturas do nível 2 recolhido e aberto a 1280 e 375 px; altura recolhida contra a do cartão antigo (SC-1241, SC-1242) em `specs/127-andamento-da-selecao/capturas/depois-b2/`
 
 ## Phase 7: US6 — "Próximo nesta lista" (B1, por último, D-015)
 

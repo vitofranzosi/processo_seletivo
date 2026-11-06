@@ -246,3 +246,125 @@ def test_cr_o_cadastro_de_reserva_nao_muda_a_sequencia():
 def _grupos(pontos):
     perfil = a.PerfilNoAndamento(perfil={}, forma="", listas=[], pontos=pontos, inscritos=0)
     return perfil.grupos
+
+
+# --- o resumo em palavras e a linha das inscrições (B2, FR-4101) ------------------------------
+
+
+def test_o_resumo_conta_feitos_sobre_os_que_se_aplicam():
+    c = conteudo([], [sorteio()])
+    _, pontos = tipos(c)
+    perfil = a.PerfilNoAndamento(
+        perfil={"name": "Cefor"},
+        forma="por sorteio",
+        listas=[(None, "Ampla"), ("pcd", "PcD")],
+        pontos=pontos,
+        inscritos=3,
+    )
+    for ponto in pontos:
+        ponto.celulas = {"": a.Celula(a.FEITO), "pcd": a.Celula(a.FEITO)}
+    por_tipo = {p.tipo: p for p in pontos}
+    por_tipo[a.CORTE].celulas["pcd"] = a.Celula(a.PENDENTE)
+    por_tipo[a.APURACAO].celulas["pcd"] = a.Celula(a.NAO_SE_APLICA)
+    por_tipo[a.RESULTADO].celulas = {
+        "": a.Celula(a.PENDENTE, nota="resultado preliminar"),
+        "pcd": a.Celula(a.PENDENTE, nota="resultado preliminar"),
+    }
+    resumo = a.resumo_do_perfil(perfil)
+    assert resumo.startswith("2 listas")
+    assert "sorteio 2 de 2" in resumo and "corte 1 de 2" in resumo and "apuração 1 de 1" in resumo
+    assert "resultado preliminar" in resumo
+
+
+def test_as_etapas_do_resumo_sao_as_que_se_aplicam():
+    """Item 9 da revisão do B2: a Etapa sem participante do Perfil não conta como feita."""
+    c = conteudo([etapa("p", "Prova", 1)], [pontuacao(stages=["p"])])
+    _, pontos = tipos(c)
+    perfil = a.PerfilNoAndamento(
+        perfil={}, forma="", listas=[(None, "Ampla")], pontos=pontos, inscritos=3
+    )
+    pontos[0].celulas = {"": a.Celula(a.NAO_SE_APLICA, nota="nenhuma inscrição deste Perfil")}
+    assert "Etapas" not in a.resumo_do_perfil(perfil)
+
+
+def test_a_linha_das_inscricoes():
+    from datetime import UTC, datetime
+
+    from processo_seletivo.inscricoes.domain import periodo
+
+    fim = datetime(2026, 10, 28, 15, tzinfo=UTC)
+    assert a.linha_das_inscricoes({"estado": periodo.ENCERRADO, "fim": fim, "enviadas": 11}) == (
+        "Inscrições encerradas em 28/10/2026 · 11 enviadas"
+    )
+    aberta = a.linha_das_inscricoes({"estado": periodo.ABERTO, "fim": fim, "enviadas": 1})
+    assert (
+        aberta.startswith("Inscrições abertas até 28/10/2026") and "1 enviada até agora" in aberta
+    )
+    assert "não designado" in a.linha_das_inscricoes({"estado": "nao-designado", "enviadas": 0})
+
+
+def _perfil_com_resultado(*celulas):
+    c = conteudo([], [sorteio()])
+    _, pontos = tipos(c)
+    listas = [(None, "Ampla")] + [(f"l{n}", f"L{n}") for n in range(1, len(celulas))]
+    perfil = a.PerfilNoAndamento(
+        perfil={"name": "Cefor"}, forma="", listas=listas, pontos=pontos, inscritos=3
+    )
+    resultado = next(p for p in pontos if p.tipo == a.RESULTADO)
+    resultado.celulas = {
+        a._chave(lista): cel for (lista, _), cel in zip(listas, celulas, strict=True)
+    }
+    return perfil
+
+
+def test_o_resultado_em_palavras_le_qualquer_situacao():
+    """Item 1 da revisão do B2: o preliminar na janela recursal é *Aguarda*, e está publicado."""
+    preliminar = a.Celula(a.AGUARDA, nota="resultado preliminar")
+    assert a._resultado_em_palavras(_perfil_com_resultado(preliminar)) == "resultado preliminar"
+    definitivo = a.Celula(a.FEITO, nota="resultado definitivo")
+    nada = a.Celula(a.PENDENTE)
+    assert a._resultado_em_palavras(_perfil_com_resultado(definitivo, nada, nada)) == (
+        "resultado publicado em 1 de 3 listas"
+    )
+    assert a._resultado_em_palavras(_perfil_com_resultado(definitivo, definitivo)) == (
+        "resultado definitivo"
+    )
+
+
+def test_o_periodo_cancelado_nao_diz_encerradas_em():
+    """Item 2 da revisão do B2."""
+    from datetime import UTC, datetime
+
+    fim = datetime(2026, 12, 1, tzinfo=UTC)
+    linha = a.linha_das_inscricoes(
+        {"estado": "encerrado", "fim": fim, "cancelado": True, "enviadas": 2}
+    )
+    assert linha == "Período de inscrições cancelado · 2 enviadas"
+    assert a.linha_das_inscricoes({"estado": "encerrado", "enviadas": 2}) == (
+        "Inscrições encerradas · 2 enviadas"
+    )
+
+
+def test_a_convocacao_feita_com_chamada_sem_desfecho_nao_poe_a_matricula():
+    """Item 5 da revisão do B2: FR-4109 pede toda convocação com desfecho."""
+    resumo, _ = a.situacoes_da_convocacao(
+        {"apuracao": a.Celula(a.FEITO), "faltando": 0, "convocadas": 3, "desfechadas": 2}
+    )
+    assert resumo.situacao == a.FEITO and resumo.contagem == 1
+    c = conteudo([], [sorteio()])
+    _, pontos = tipos(c)
+    perfil = a.PerfilNoAndamento(
+        perfil={}, forma="", listas=[(None, "Ampla")], pontos=pontos, inscritos=3
+    )
+    next(p for p in pontos if p.tipo == a.CONVOCACAO).celulas = {"": resumo}
+    assert not a.matricula_fora(perfil)
+    next(p for p in pontos if p.tipo == a.CONVOCACAO).celulas = {
+        "": a.Celula(a.FEITO, nota="3 de 3 com desfecho", contagem=0)
+    }
+    assert a.matricula_fora(perfil)
+
+
+def test_a_etapa_citada_por_um_marco_do_perfil_fica_na_sequencia():
+    """Item 4 do code review do B2: sem ela a `jornada()` poria o marco no começo."""
+    citadas = a._citadas_pelos_marcos([pontuacao(stages=["p"], desempate=["ent"])])
+    assert citadas == {"p", "ent"}

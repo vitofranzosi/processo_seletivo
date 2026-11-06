@@ -990,8 +990,18 @@ def situacoes_da_convocacao(f):
     convocadas = f.get("convocadas") or 0
     if not faltando and not convocadas:
         return _c(NAO_SE_APLICA, natureza=CONVOCACAO, nota="nenhuma vaga a ocupar"), []
-    nota = f"{f.get('desfechadas') or 0} de {convocadas} com desfecho" if convocadas else ""
-    return _c(FEITO, natureza=CONVOCACAO, nota=nota, url=url), []
+    desfechadas = f.get("desfechadas") or 0
+    nota = f"{desfechadas} de {convocadas} com desfecho" if convocadas else ""
+    return (
+        _c(
+            FEITO,
+            natureza=CONVOCACAO,
+            nota=nota,
+            url=url,
+            contagem=max(convocadas - desfechadas, 0),
+        ),
+        [],
+    )
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1182,6 +1192,8 @@ class PerfilNoAndamento:
     providencias: list = field(default_factory=list)
     resumo: str = ""
     matricula_fora: bool = False
+    #: Os destinos que o cartão "Classificação" oferecia, por marco, para quem os abre (FR-4108).
+    destinos: list = field(default_factory=list)
 
     @property
     def nome(self):
@@ -1220,6 +1232,10 @@ class Andamento:
     providencias: list
     atencoes: list
     inscricoes: dict
+    #: A matriz por lista mostra o estado da convocação e das Etapas, que só quem conduz ou audita
+    #: alcança (`_edital_para_classificar`). Quem só publica resultado vê o Perfil recolhido, com o
+    #: resumo, como o cartão "Classificação" lhe mostrava a presença (D-004, item 1 do code review).
+    ve_a_matriz: bool = False
 
     # A apresentação do nível 1 mora em `providencias.py`; estas propriedades só a expõem.
     @property
@@ -1362,6 +1378,7 @@ class _Leitor:
         self.perfil_de, self.inscritos_por_perfil = self._perfis_das_inscricoes()
         self.trabalho = self._trabalho_da_104(em_curso)
         expectativa = expectativa_das_etapas(self.conteudo)
+        self.expectativa_do_edital = expectativa
         self.etapas_no_edital = self._etapas_no_edital(expectativa)
         perfis = [
             self._perfil(perfil)
@@ -1373,9 +1390,11 @@ class _Leitor:
             perfis=perfis,
             providencias=self.providencias,
             atencoes=self.atencoes,
+            ve_a_matriz=self.alcance.consulta,
             inscricoes={
                 "estado": self.periodo.estado,
                 "fim": self.periodo.fim,
+                "cancelado": self.periodo.cancelado,
                 "enviadas": sum(self.inscritos_por_perfil.values()),
             },
         )
@@ -1511,7 +1530,20 @@ class _Leitor:
         pid = str(perfil.get("id"))
         marcos = list(perfil.get("classificationMilestones") or [])
         expectativa = expectativa_das_etapas(self.conteudo, [perfil])
-        pontos = sequencia_do_perfil(self.etapas, marcos, expectativa)
+        # **A Etapa que outro Perfil lê fica fora da matriz deste** (item 3 da revisão do B2): para
+        # ele ela não muda nada, mas "sem efeito no GPS" seria falso — o nível 1 a cobra pelo
+        # Edital. "Sem efeito" é só a que nada consome no Edital inteiro (D-010).
+        citadas = _citadas_pelos_marcos(marcos)
+        etapas_do_perfil = [
+            e
+            for e in self.etapas
+            if expectativa.get(str(e["id"])) == ESPERADA
+            or self.expectativa_do_edital.get(str(e["id"])) == SEM_EFEITO
+            # A que um marco do Perfil cita fica, ainda que sem efeito nele: sem ela a `jornada()`
+            # perde a "última Etapa" do marco e o põe no começo (item 4 do code review do B2).
+            or str(e["id"]) in citadas
+        ]
+        pontos = sequencia_do_perfil(etapas_do_perfil, marcos, expectativa)
         listas = recortes_do_perfil(self.conteudo, perfil_id=perfil.get("id"))
         inscritos = self.inscritos_por_perfil.get(pid, 0)
         formas = {"por sorteio" if por_sorteio(m) else "por pontuação" for m in marcos}
@@ -1535,6 +1567,11 @@ class _Leitor:
             # **O Perfil sem inscrição é uma linha só** (FR-4102): nada dele é providência, e o que
             # já existe (a ordem vazia emitida) continua dito como feito.
             self.providencias = [p for p in self.providencias if p.perfil_id != pid]
+        # **Só as do Perfil** (item 3 do code review do B2): as das Etapas são do Edital inteiro e
+        # entrariam na linha de cada Perfil que as vê; o andamento delas está em "Etapas X de Y".
+        no_perfil.providencias = [p for p in self.providencias if p.perfil_id == pid]
+        no_perfil.resumo = resumo_do_perfil(no_perfil)
+        no_perfil.matricula_fora = matricula_fora(no_perfil)
         return no_perfil
 
     def _marco(self, no_perfil, marco, etapas_do_perfil, listas, expectativa):
@@ -2036,6 +2073,24 @@ def _com_os_metodos_resolvidos(conteudo):
     return {**conteudo, "profiles": perfis}
 
 
+def _citadas_pelos_marcos(marcos):
+    """As Etapas que os marcos citam: enumeradas, governadas, de habilitação ou de desempate."""
+    from processo_seletivo.classificacao.domain import faixa
+    from processo_seletivo.classificacao.domain.desempate import etapas_do_desempate
+
+    saida = set()
+    for marco in marcos:
+        saida.update(str(e) for e in marco.get("stages") or [])
+        saida.update(etapas_do_desempate(marco))
+        governada = faixa.etapa_governada(marco.get("cutRule"))
+        if governada:
+            saida.add(str(governada))
+        habilitacao = (marco.get("drawMethod") or {}).get("qualifyingStageId")
+        if habilitacao:
+            saida.add(str(habilitacao))
+    return saida
+
+
 def _rotulos_curtos(perfil):
     """`{lista: rótulo}` para o nível 1: "Ampla concorrência" e o código de cada Modalidade (D-020).
 
@@ -2110,6 +2165,124 @@ def _frase(texto):
     return texto[:-1] if texto.endswith(".") else texto
 
 
+# ---------------------------------------------------------------------------------------------
+# O nível 2: o "Andamento da seleção" (B2, FR-4100 a FR-4110) — puro
+# ---------------------------------------------------------------------------------------------
+
+#: Como cada ponto de marco se diz no resumo em palavras ("sorteio 3 de 3").
+NOMES_NO_RESUMO = {
+    RELACAO: "relação",
+    SORTEIO: "sorteio",
+    ORDEM: "ordem",
+    CORTE: "corte",
+    APURACAO: "apuração",
+}
+
+
+def resumo_do_perfil(perfil):
+    """A linha recolhida do Perfil, em palavras (FR-4101): quantas listas e onde cada ato está.
+
+    **Contagem de feitos sobre os que se aplicam**, como a condução do marco conta (049, FR-814):
+    contar o obsoleto faria o Perfil parecer pronto com um ato que o sistema sabe estar para trás. O
+    resultado diz a natureza do que foi publicado, e a convocação diz quantas providências tem — a
+    contagem que manda olhar, e não um percentual.
+    """
+    listas = len(perfil.listas)
+    partes = [f"{listas} {'lista' if listas == 1 else 'listas'}"]
+    etapas = [
+        _primeira(p) for p in perfil.pontos if p.tipo == ETAPA and p.grupo != GRUPO_SEM_EFEITO
+    ]
+    # Sobre as que se aplicam, como os atos do marco (item 9 da revisão do B2): a Etapa em que
+    # ninguém do Perfil participa não conta nem como feita nem como falta.
+    etapas = [c for c in etapas if c is not None and c.situacao != NAO_SE_APLICA]
+    if etapas:
+        feitas = sum(1 for c in etapas if c.situacao == FEITO)
+        partes.append(f"Etapas {feitas} de {len(etapas)}")
+    for tipo, nome in NOMES_NO_RESUMO.items():
+        celulas = [c for p in perfil.pontos if p.tipo == tipo for c in _por_lista(p, perfil)]
+        aplicaveis = [c for c in celulas if c.situacao != NAO_SE_APLICA]
+        if aplicaveis:
+            feitas = sum(1 for c in aplicaveis if c.situacao == FEITO)
+            partes.append(f"{nome} {feitas} de {len(aplicaveis)}")
+    partes.append(_resultado_em_palavras(perfil))
+    from processo_seletivo.interface.providencias import agrupar
+
+    # Agrupadas como o nível 1 as agrupa (D-016), inclusive as que esperam; as das Etapas, que são
+    # do Edital, ficam no nível 1 e em "Etapas X de Y".
+    em_aberto = len(agrupar(perfil.providencias))
+    if em_aberto:
+        partes.append(
+            f"{em_aberto} {'providência' if em_aberto == 1 else 'providências'} em aberto"
+        )
+    return " · ".join(p for p in partes if p)
+
+
+def _resultado_em_palavras(perfil):
+    """A natureza do que o público lê, sobre as listas em que há o que divulgar (item 1).
+
+    Lê a nota de qualquer situação: o preliminar na janela recursal é *Aguarda*, e continua
+    publicado. "Definitivo" só quando todas as listas o têm; publicado em parte, diz quantas.
+    """
+    resultados = [c for p in perfil.pontos if p.tipo == RESULTADO for c in _por_lista(p, perfil)]
+    aplicaveis = [c for c in resultados if c.situacao != NAO_SE_APLICA]
+    if not aplicaveis:
+        return ""
+    publicadas = [c for c in aplicaveis if "resultado" in (c.nota or "") or c.situacao == OBSOLETO]
+    definitivas = [c for c in publicadas if "definitivo" in (c.nota or "")]
+    if not publicadas:
+        return "resultado não publicado"
+    if len(publicadas) < len(aplicaveis):
+        return f"resultado publicado em {len(publicadas)} de {len(aplicaveis)} listas"
+    if len(definitivas) == len(aplicaveis):
+        return "resultado definitivo"
+    return "resultado preliminar"
+
+
+def _por_lista(ponto, perfil):
+    return [c for lista, _ in perfil.listas for c in [ponto.celula(lista)] if c is not None]
+
+
+def _primeira(ponto):
+    return next(iter(ponto.celulas.values()), None)
+
+
+def matricula_fora(perfil):
+    """FR-4109, D-003: toda convocação do Perfil tem desfecho, e nada falta ocupar."""
+    convocacoes = [c for p in perfil.pontos if p.tipo == CONVOCACAO for c in _por_lista(p, perfil)]
+    aplicaveis = [c for c in convocacoes if c.situacao != NAO_SE_APLICA]
+    # `contagem` da célula feita é quantas convocações seguem sem desfecho (item 5 da revisão).
+    return bool(aplicaveis) and all(
+        c.situacao == FEITO and c.nota and c.contagem == 0 for c in aplicaveis
+    )
+
+
+def linha_das_inscricoes(inscricoes):
+    """ "Inscrições encerradas em 20/10/2026 · 14 enviadas" (FR-4101), do período publicado."""
+    from processo_seletivo.inscricoes.domain import periodo
+
+    enviadas = inscricoes.get("enviadas") or 0
+    quantas = f"{enviadas} {'enviada' if enviadas == 1 else 'enviadas'}"
+    fim = inscricoes.get("fim")
+    estado = inscricoes.get("estado")
+    if inscricoes.get("cancelado"):
+        # O período cancelado é encerrado sem ter terminado (`periodo.Periodo`, item 2 da revisão
+        # do B2): "encerradas em" com o término publicado poria uma data que não aconteceu.
+        return f"Período de inscrições cancelado · {quantas}"
+    if estado == periodo.ENCERRADO:
+        quando = f" em {_data(fim)}" if fim else ""
+        return f"Inscrições encerradas{quando} · {quantas}"
+    if estado == periodo.ABERTO:
+        ate = (
+            f" até {timezone.localtime(fim):%d/%m/%Y às %H:%M}"
+            if fim
+            else ", sem término declarado"
+        )
+        return f"Inscrições abertas{ate} · {quantas} até agora"
+    if estado == periodo.FUTURO:
+        return "Inscrições ainda não abertas"
+    return f"Período de inscrições não designado · {quantas}"
+
+
 __all__ = [
     "AGUARDA",
     "DEPOIS",
@@ -2123,5 +2296,7 @@ __all__ = [
     "da_lista",
     "do_edital",
     "expectativa_das_etapas",
+    "linha_das_inscricoes",
+    "resumo_do_perfil",
     "sequencia_do_perfil",
 ]
