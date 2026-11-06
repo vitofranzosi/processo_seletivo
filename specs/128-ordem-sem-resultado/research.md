@@ -69,8 +69,9 @@ acervo —, e o `monkeypatch` é a forma honesta de dizer isso.
 
 ## R-6 — A base da branch e a `127`
 
-**Decisão**: esta branch parte de `claude/126-orientacao-p0-307906` (PR #414, aberto em 06/11). O PR
-diz que depende do #414. A `127` (PRs #415, #416, #417) não está na `main`: `andamento.situacao_da_ordem`
-diz *Depois* enquanto alguma Etapa lida pela ordem não está feita no Perfil, e só diz *Pendente* quando
-todas estão — feitas, todo participante do Perfil tem Resultado, e a regra não recusa (FR-4218). Se a
-`127` for mergeada antes desta, entra um teste de coerência.
+**Decisão**: esta branch partiu de `claude/126-orientacao-p0-307906` (PR #414, aberto em 06/11). O
+#414 e a `127` (PRs #415, #416, #417) entraram na `main` durante a implementação, e a branch foi
+sincronizada com ela. Pela regra da `127`, `andamento.situacao_da_ordem` diz *Depois* enquanto
+alguma Etapa lida pela ordem não está feita no Perfil, e só diz *Pendente* quando todas estão —
+feitas, todo participante do Perfil tem Resultado, e a regra não recusa (FR-4218). O teste de
+coerência está em `tests/interface/test_ordem_sem_resultado.py`.

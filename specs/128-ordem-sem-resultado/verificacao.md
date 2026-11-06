@@ -1,7 +1,10 @@
 # Verificação: A ordem por pontuação sem nenhum resultado é recusada (128)
 
-Feita em 06/11/2026, na branch `claude/128-ordem-sem-resultado-9720fd`, sobre a da `126`
-(`claude/126-orientacao-p0-307906`, PR #414, aberto e `MERGEABLE` no início e antes do push).
+Feita em 06/11/2026, na branch `claude/128-ordem-sem-resultado-9720fd`. Ela partiu da branch da `126`
+(PR #414); o #414 e a `127` (#415, #416, #417) entraram na `main` durante a implementação, e a branch
+foi sincronizada com a `main` antes do PR (um conflito em `views.py`: o contexto da tela da ordem
+ganhou, dos dois lados, uma chave — `proximo_nesta_lista` da `127` e `sem_resultado` desta —, e as duas
+ficaram).
 
 ## A análise cruzada (spec × plano × tarefas)
 
@@ -20,6 +23,7 @@ de nenhum resultado, pela decisão do usuário, e o diz em *Compatibilidade*.
 | 1ª, com a recusa ligada e antes dos ajustes | **16916 passando, 12 pulados, 2 falhas, 3 erros** (1408s; o fim esperou o `DROP DATABASE` por outra suíte no cluster) |
 | 2ª, depois dos ajustes abaixo | **16922 passando, 12 pulados, sem falha** (1416s); `make lint check` verde, `makemigrations --check`: *No changes detected* |
 | depois da revisão (título com ato vigente, recorte reservado, ordem do `avaliar` em `test_resultado_da_etapa`) | os arquivos tocados e os guardiões de acessibilidade, CSP, estáticos e vocabulário: **57 + 1972 passando**, 10 pulados (os do vocabulário); lint verde |
+| 3ª, depois de sincronizar com a `main` (com a `126` e a `127`) e do teste de coerência | **17103 passando, 12 pulados, sem falha** (1627s, 4 workers); `make lint check` verde; `makemigrations --check`: *No changes detected* |
 
 As cinco da primeira rodada foram todas previstas pelo plano (R-5): quatro emitiam ordem sem nenhum
 Resultado por conveniência, e a quinta era a linha do README que faltava
@@ -48,14 +52,16 @@ cenário pressupunha.
   mais no caso recusado (`te::test_a_confirmacao_nao_abre`); no parcial, abre e diz o que dizia
   (`te::test_a_ordem_parcial_continua_com_formulario_e_confirmacao`). `test_orientacao_p0.py` e
   `test_conferencia_da_ordem.py` passaram sem mudança.
-- **A `127`** (PRs #415, #416, #417) não está na `main` nem nesta base. Pela leitura de
-  `interface/andamento.py::situacao_da_ordem` na branch dela: a ordem é *Depois* enquanto alguma Etapa
+- **A `127`** (PRs #415, #416, #417) entrou na `main` durante esta implementação. Pela leitura de
+  `interface/andamento.py::situacao_da_ordem`: a ordem é *Depois* enquanto alguma Etapa
   que a ordem lê (enumerada ou de desempate) não está *feita* no Perfil, e só é *Pendente* quando todas
   estão feitas — todo participante do Perfil consolidado, ou ninguém participando. Feitas as
   enumeradas, ou todo inscrito do recorte tem Resultado, ou o universo é vazio; nos dois casos esta
   regra aceita. Logo a `127` nunca diz *Pendente* para o que a `128` recusa. O inverso não vale, e não
-  precisa: a `127` diz *Depois* também para a ordem parcial, que esta regra aceita. **Quando a `127`
-  for mergeada, falta o teste de coerência**, que fica registrado como pendência (T015).
+  precisa: a `127` diz *Depois* também para a ordem parcial, que esta regra aceita. O teste
+  `te::test_o_andamento_nunca_diz_pendente_para_a_ordem_que_o_comando_recusa` prende isso; o
+  "Próximo nesta lista" da `127` lê o mesmo andamento. O comentário de `situacao_da_ordem`, que dizia
+  "a ordem não é recusada sem avaliação", foi atualizado.
 
 ## A captura antes e depois (SC-1302, UX-261)
 
@@ -102,6 +108,5 @@ sem mudança de comportamento; e que o `seed_demo` consolida antes de emitir.
 
 - **A decisão P-1** (o universo esvaziado pelo portão da progressão), com o usuário.
 
-- O teste de coerência com a `127`, quando ela estiver na `main` (T015).
 - Trocar *Falta* por *Depois* na célula da ordem da condução continua P3 (fora desta spec): a célula leva
   à tela, que agora explica.

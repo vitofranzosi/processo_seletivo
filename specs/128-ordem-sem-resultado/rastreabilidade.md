@@ -30,7 +30,7 @@ Cada requisito → as tarefas que o implementam → os testes que o verificam. C
 | FR-4215 (a confirmação não abre) | T009 | `te::test_a_confirmacao_nao_abre` |
 | FR-4216 (o impedido na conferência) | T013 | `te::test_a_conferencia_do_gesto_poe_o_recorte_entre_os_impedidos` |
 | FR-4217 (uma regra só) | T005, T011 | `unit/interface/test_conferencia_da_ordem.py` inteiro, sem mudança; leitura: as quatro chamadas são a `ordem_sem_resultado` ou a `nenhuma_com_resultado` |
-| FR-4218 (a `127`) | T015 | leitura de `andamento.situacao_da_ordem` (`verificacao.md`); a `127` não está na `main` |
+| FR-4218 (a `127`) | T015 | `te::test_o_andamento_nunca_diz_pendente_para_a_ordem_que_o_comando_recusa`; leitura de `andamento.situacao_da_ordem` (`verificacao.md`) |
 | FR-4219 (acervo, sem migration) | T006, T016 | `co::test_a_sucessao_de_uma_ordem_do_acervo_sem_resultado_e_recusada`; `manage.py makemigrations --check` |
 | FR-4220 (testes de conveniência) | T014 | `verificacao.md`, seção dos ajustes |
 
@@ -52,4 +52,4 @@ Cada requisito → as tarefas que o implementam → os testes que o verificam. C
 | SC-1303 | `te::test_a_conferencia_do_gesto_poe_o_recorte_entre_os_impedidos` |
 | SC-1304 | `co::test_a_sucessao_de_uma_ordem_do_acervo_sem_resultado_e_recusada`; `makemigrations --check` |
 | SC-1305 | a suíte contra PostgreSQL (`verificacao.md`) |
-| SC-1306 | leitura (`verificacao.md`); teste quando a `127` estiver na `main` |
+| SC-1306 | `te::test_o_andamento_nunca_diz_pendente_para_a_ordem_que_o_comando_recusa` |

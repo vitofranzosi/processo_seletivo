@@ -36,7 +36,7 @@
 ## Phase 6: Polish
 
 - [x] T014 Rodar a suíte e ajustar os testes e fixtures de conveniência (R-5, FR-4220)
-- [ ] T015 Coerência com a `127`: leitura de `andamento.situacao_da_ordem` **feita** (`verificacao.md`); falta o teste, quando ela estiver na `main` (FR-4218, SC-1306)
+- [x] T015 Coerência com a `127`: leitura de `andamento.situacao_da_ordem` e teste, depois que ela entrou na `main` (FR-4218, SC-1306)
 - [x] T016 `make lint check test-pg` com `DB_NAME` próprio; `migrate --check` sem migration nova (FR-4219, SC-1305)
 - [x] T017 Captura antes e depois da tela da ordem, em `capturas/` (quickstart)
 - [x] T018 `rastreabilidade.md`, `verificacao.md` e a linha da `128` no README

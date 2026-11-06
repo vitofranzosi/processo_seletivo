@@ -1,6 +1,6 @@
 # Feature Specification: A ordem por pontuação sem nenhum resultado é recusada
 
-**Feature Branch**: `claude/128-ordem-sem-resultado-9720fd`, sobre a branch da `126`
+**Feature Branch**: `claude/128-ordem-sem-resultado-9720fd`, iniciada sobre a branch da `126`
 (`claude/126-orientacao-p0-307906`, PR #414), em `262cf30f`
 
 **Created**: 2026-11-06
@@ -279,10 +279,10 @@ e os Resultados vigentes das Etapas enumeradas de cada inscrição.
 - **O Edital 91** do estudo não está num banco disponível: a captura de antes e depois sai de um cenário
   montado pelos helpers dos testes num banco descartável, com um marco por pontuação, uma Etapa
   enumerada e inscrições sem avaliação.
-- **A `126` é mergeada antes desta**, ou junto: esta spec parte da confirmação que ela escreveu. Se
-  não for, o PR desta depende do #414.
-- **A `127` ainda não está na `main`**: a coerência com ela (FR-4218) é verificada por leitura da regra
-  dela e, se ela for mergeada antes desta, por teste.
+- **A `126` é mergeada antes desta**: esta spec parte da confirmação que ela escreveu. Foi o que
+  aconteceu: o #414 entrou na `main` durante a implementação, e a branch foi sincronizada.
+- **A `127`** entrou na `main` no mesmo dia (#415, #416, #417): a coerência com ela (FR-4218) é
+  verificada por leitura da regra dela e por teste.
 - **O texto das frases** é proposta e passa pela varredura de vocabulário.
 
 ## Compatibilidade com regras anteriores
