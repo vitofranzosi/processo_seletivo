@@ -190,3 +190,77 @@ def test_a_anulacao_e_percorrivel_pela_tela(certame, client):
     assert '<select id="relacao-nova-1" name="relacao_id"' in corpo
     assert '<select id="ocorrencia-nova-1" name="ocorrencia_id"' in corpo
     assert "Anular e constituir o sucessor" in corpo
+
+
+# ------------------------------------------------ o que a fonte publica do instante (124)
+
+
+def _observada(certame, fonte_externa, fonte):
+    observar_ocorrencia(
+        actor=presidente(),
+        processo_id=certame["processo"].id,
+        fonte=fonte,
+        referencia=METODO["occurrence"],
+        idempotency_key="tela-instante",
+        correlation_id="teste-124",
+        fonte_externa=fonte_externa,
+    )
+
+
+def _limite(corpo):
+    return " ".join(
+        corpo.split("<dt>Aconteceu não antes de</dt><dd>", 1)[1].split("</dd>", 1)[0].split()
+    )
+
+
+def test_a_fonte_que_publica_so_o_dia_nao_parece_ter_dado_a_hora(
+    gestor, api_client, manager_headers, process_payload, seletor_ligado, client
+):
+    """`FR-3964` — "04/11/2026 00:00 — é o que a fonte publica" afirmava uma hora que não existe.
+
+    A Loteria Federal publica o dia, e a meia-noite é o limite que o sistema deduz (102, FR-2649).
+    O falso que publica só a data responde como a Caixa, sem rede.
+    """
+    from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import (
+        FonteDeTesteSoData,
+    )
+
+    fonte = "Fonte de demonstração (só a data)"
+    certame = certame_de_sorteio(
+        gestor, api_client, manager_headers, process_payload, metodo={**METODO, "source": fonte}
+    )
+    _observada(certame, FonteDeTesteSoData(), fonte)
+
+    limite = _limite(_abrir(client, certame))
+
+    assert "a fonte publica só a data da extração, sem o horário" in limite
+    assert "00h00" in limite and "não a hora em que a extração aconteceu" in limite
+    assert not re.search(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}", limite), (
+        "a data sem a hora: 00:00 ao lado do dia volta a parecer a hora da extração"
+    )
+
+
+def test_a_fonte_que_publica_a_hora_continua_dizendo_que_a_publica(certame, client):
+    """`FR-3965` — a frase não pode errar no sentido inverso: aqui o instante é da fonte."""
+    _observada(certame, FonteDeTeste(), METODO["source"])
+
+    limite = _limite(_abrir(client, certame))
+
+    assert re.search(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}", limite), limite
+    assert "é o instante que a fonte publica para a extração" in limite
+    assert "só a data" not in limite
+
+
+def test_a_fonte_fora_do_vocabulario_nao_ganha_afirmacao(certame, client, settings):
+    """`FR-3965`, a outra metade — o ambiente que tirou a fonte do vocabulário depois do Edital.
+
+    A tela não sabe o que ela publica, e então não diz nem "só o dia" nem "o instante que a fonte
+    publica": diz só que é o limite inferior.
+    """
+    _observada(certame, FonteDeTeste(), METODO["source"])
+    settings.SORTEIO_FONTE_DE_DEMONSTRACAO = False
+
+    limite = _limite(_abrir(client, certame))
+
+    assert "é o limite inferior que se compara com o congelamento" in limite
+    assert "só a data" not in limite and "que a fonte publica" not in limite

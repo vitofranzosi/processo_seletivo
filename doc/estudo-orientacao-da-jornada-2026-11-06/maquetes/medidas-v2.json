@@ -1,0 +1,32 @@
+{
+ "N1-35-quem-conduz": {
+  "hoje": 1767,
+  "proposta": 1732,
+  "fim_do_nivel1": 458
+ },
+ "N1b-35-quem-conduz-com-o-perfil-aberto": {
+  "hoje": 1767,
+  "proposta": 1957,
+  "fim_do_nivel1": 458
+ },
+ "N2-35-quem-publica": {
+  "hoje": 1615,
+  "proposta": 1590,
+  "fim_do_nivel1": 458
+ },
+ "N3-35-quem-elabora": {
+  "hoje": 1175,
+  "proposta": 1124,
+  "fim_do_nivel1": 458
+ },
+ "N4-57-quem-conduz-listas-em-estagios-distintos": {
+  "hoje": 1657,
+  "proposta": 1804,
+  "fim_do_nivel1": 449
+ },
+ "N5-91-presidencia-da-comissao": {
+  "hoje": 1710,
+  "proposta": 1403,
+  "fim_do_nivel1": 366
+ }
+}

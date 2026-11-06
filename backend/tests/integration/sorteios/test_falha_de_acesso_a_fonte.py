@@ -15,10 +15,14 @@ A correção não afrouxa a FR-015: qual ocorrência substitui continua sendo de
 O que muda é **quem afirma** que não houve extração — a fonte, e não a rede.
 """
 
+import logging
+from urllib import error
+
 import pytest
 
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.application.ocorrencia import observar_ocorrencia
+from processo_seletivo.sorteios.domain import conferencia
 from processo_seletivo.sorteios.infrastructure.fontes import Observacao
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte
 from tests.fixtures.sorteio import METODO, certame_de_sorteio, presidente
@@ -33,8 +37,8 @@ class FonteInalcancavel:
         return Observacao(
             falha_de_acesso=True,
             evidencia=(
-                f"Concurso {referencia} de {fonte}: não foi possível falar com a fonte em "
-                "3 tentativa(s). Última falha: URLError: <urlopen error timed out>"
+                f"Concurso {referencia} de {fonte}: a Caixa não respondeu a tempo, "
+                "em 3 tentativa(s)."
             ),
         )
 
@@ -80,8 +84,9 @@ def test_a_recusa_diz_que_nada_foi_registrado_e_qual_e_o_proximo_passo(certame):
     detalhe = recusa.value.detail
     assert "nada foi registrado" in detalhe
     assert "observá-la de novo" in detalhe
-    # A evidência do que se observou viaja junto: quem lê precisa saber o que a rede respondeu.
-    assert "URLError" in detalhe
+    # A evidência do que se observou viaja junto: quem lê precisa saber por que não deu certo — nas
+    # palavras dele, e não nas da biblioteca de rede (124, FR-3961).
+    assert "a Caixa não respondeu a tempo, em 3 tentativa(s)" in detalhe
 
 
 def test_depois_da_falha_a_ocorrencia_declarada_continua_sendo_a_que_vale(certame):
@@ -152,7 +157,7 @@ def test_o_adaptador_da_loteria_separa_os_dois_desfechos():
 
     assert sem_numeros.indisponivel is True and sem_numeros.falha_de_acesso is False
     assert sem_rede.falha_de_acesso is True and sem_rede.indisponivel is False
-    assert "não foi possível falar com a fonte" in sem_rede.evidencia
+    assert conferencia.SEM_CONEXAO in sem_rede.evidencia
 
 
 def test_a_semente_nunca_vem_do_rateio_de_premios():
@@ -199,3 +204,156 @@ def test_a_semente_nunca_vem_do_rateio_de_premios():
     assert observado.material_bruto == ""
     assert "500000" not in observado.material_bruto
     assert "sem os números da extração" in observado.evidencia
+
+
+# ------------------------------------------------ a mensagem é de quem opera (124)
+
+
+def _fonte_que_falha(monkeypatch, falha):
+    """A Caixa de verdade, com `urlopen` trocado por uma chamada que sempre falha assim."""
+
+    def cair(*_args, **_kwargs):
+        if isinstance(falha, bytes):
+            return _Resposta(falha)
+        raise falha
+
+    monkeypatch.setattr("urllib.request.urlopen", cair)
+
+
+class _Resposta:
+    def __init__(self, corpo):
+        self.corpo = corpo
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+    def read(self):
+        return self.corpo
+
+
+FALHAS = [
+    pytest.param(
+        error.URLError(TimeoutError("timed out")), conferencia.SEM_RESPOSTA_A_TEMPO, id="url-tempo"
+    ),
+    pytest.param(TimeoutError("timed out"), conferencia.SEM_RESPOSTA_A_TEMPO, id="tempo"),
+    pytest.param(error.URLError("Name or service not known"), conferencia.SEM_CONEXAO, id="rede"),
+    pytest.param(
+        error.HTTPError("https://caixa", 503, "Service Unavailable", {}, None),
+        conferencia.COM_ERRO,
+        id="http",
+    ),
+    pytest.param(b"<html>manutencao</html>", conferencia.COM_ERRO, id="nao-json"),
+]
+
+
+@pytest.mark.parametrize(("falha", "motivo"), FALHAS)
+def test_a_observacao_diz_o_motivo_com_as_palavras_da_conferencia(monkeypatch, falha, motivo):
+    """`FR-3961` — a mesma falha, a mesma frase, na publicação e no sorteio.
+
+    A conferência da `116` já traduzia a falha de rede para os quatro motivos; a observação, que
+    fala com a mesma Caixa, guardava `URLError: <urlopen error timed out>`. São os mesmos motivos,
+    e não uma tradução nova: duas maneiras de dizer a mesma falha divergem na primeira mudança.
+    """
+    from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import LoteriaFederal
+
+    _fonte_que_falha(monkeypatch, falha)
+    observado = LoteriaFederal().observar(fonte="Loteria Federal", referencia="6098")
+
+    assert observado.falha_de_acesso is True and observado.indisponivel is False
+    assert motivo in observado.evidencia
+    assert type(falha).__name__ not in observado.evidencia
+    # O detalhe técnico não se perde: viaja em `falhas`, uma por tentativa, só para o log.
+    assert len(observado.falhas) == 3
+    esperado = "JSONDecodeError" if isinstance(falha, bytes) else type(falha).__name__
+    assert all(item.startswith(esperado) for item in observado.falhas), observado.falhas
+
+
+@pytest.mark.parametrize(("falha", "motivo"), FALHAS)
+def test_a_recusa_nao_traz_nome_de_excecao_nem_asteriscos(certame, monkeypatch, falha, motivo):
+    """`FR-3961`, `FR-3963` — o que a tela imprime por `{{ erro.detalhe }}`, ao vivo.
+
+    O caso passa pelo adaptador de verdade, e não pelo falso do início deste arquivo: a evidência
+    crua nascia no adaptador, e um falso que escrevesse a frase certa provaria só o falso. E a tela
+    não interpreta Markdown: `**nada foi registrado**` chegava com os asteriscos.
+    """
+    from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import LoteriaFederal
+
+    _fonte_que_falha(monkeypatch, falha)
+    with pytest.raises(DomainError) as recusa:
+        observar_ocorrencia(
+            actor=presidente(),
+            processo_id=certame["processo"].id,
+            fonte="Loteria Federal",
+            referencia="6098",
+            idempotency_key="fonte-fora-124",
+            correlation_id="teste-124",
+            fonte_externa=LoteriaFederal(),
+        )
+
+    detalhe = recusa.value.detail
+    assert recusa.value.code == "source_unreachable"
+    assert motivo in detalhe
+    assert "nada foi registrado" in detalhe
+    assert "**" not in detalhe, detalhe
+    # A primeira frase vale para toda falha de acesso: "não foi possível falar com a fonte"
+    # contradizia a evidência quando a Caixa respondeu com erro.
+    assert detalhe.startswith("Loteria Federal não entregou a extração agora"), detalhe
+    assert "falar com Loteria Federal" not in detalhe
+    for cru in (
+        "URLError",
+        "HTTPError",
+        "TimeoutError",
+        "JSONDecodeError",
+        "Error:",
+        "<urlopen",
+        "503",
+    ):
+        assert cru not in detalhe, (cru, detalhe)
+    assert not OcorrenciaDaFonte.objects.exists()
+
+
+class _Coletor(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.registros = []
+
+    def emit(self, record):
+        self.registros.append(record)
+
+
+def test_o_detalhe_tecnico_vai_para_o_log_com_a_correlacao(certame, monkeypatch):
+    """`FR-3962` — o que saiu da mensagem não se perde, e se liga ao pedido que o produziu.
+
+    A linha sai da aplicação, e não do adaptador: só ela conhece a correlação. Uma linha só por
+    observação, com as três tentativas dentro.
+    """
+    from processo_seletivo.sorteios.infrastructure.fontes.loteria_federal import LoteriaFederal
+
+    _fonte_que_falha(monkeypatch, error.URLError(TimeoutError("timed out")))
+    # O logger do projeto não propaga até o `caplog`; o coletor se pendura nele direto.
+    logger = logging.getLogger("processo_seletivo.sorteios.application.ocorrencia")
+    coletor = _Coletor()
+    logger.addHandler(coletor)
+    try:
+        with pytest.raises(DomainError):
+            observar_ocorrencia(
+                actor=presidente(),
+                processo_id=certame["processo"].id,
+                fonte="Loteria Federal",
+                referencia="6098",
+                idempotency_key="fonte-fora-log",
+                correlation_id="correlacao-do-clique",
+                fonte_externa=LoteriaFederal(),
+            )
+    finally:
+        logger.removeHandler(coletor)
+
+    (registro,) = [
+        r for r in coletor.registros if r.getMessage().startswith("observacao_sem_acesso_a_fonte")
+    ]
+    assert registro.correlationId == "correlacao-do-clique"
+    assert registro.getMessage().count("URLError") == 3
+    assert '"referencia": "6098"' in registro.getMessage()

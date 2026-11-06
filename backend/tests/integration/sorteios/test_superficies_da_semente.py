@@ -98,6 +98,9 @@ def test_a_porta_da_fonte_devolve_material_bruto_e_nao_semente():
         # extração que o Edital declarou.
         "falha_de_acesso",
         "evidencia",
+        # O detalhe técnico da falha de acesso, só para o log que a aplicação escreve com a
+        # correlação do pedido (124, FR-3962). Não é material, e nada o grava.
+        "falhas",
     }
     assert set(inspect.signature(FonteExterna.observar).parameters) == {
         "self",
