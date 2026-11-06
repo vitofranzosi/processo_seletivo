@@ -157,6 +157,7 @@ from processo_seletivo.inscricoes.application.consulta import (
 )
 from processo_seletivo.interface import (
     acoes,
+    andamento,
     atos,
     atos_processo,
     atos_retificacao,
@@ -169,6 +170,7 @@ from processo_seletivo.interface import (
     identidade,
     navegacao,
     origens,
+    providencias,
     revisao,
     trabalho,
 )
@@ -3922,12 +3924,34 @@ def detalhe(request, edital_id):
     # como bandeiras soltas — eram elas que o `{% empty %}` não enxergava.
     conjunto = acoes.do_edital(edital, ator, pendencias=pendencias, segregacao=segregacao)
     em_curso = atos_retificacao.em_curso(edital, ator)
+    # **O andamento da seleção, depois da publicação** (127, FR-4050, FR-4080). `None` antes dela:
+    # o cartão continua o de hoje, com a trilha e o bastão, que orientam bem até ali.
+    andamento_do_edital = andamento.do_edital(edital, ator, em_curso=em_curso)
+    nivel_1 = andamento_do_edital.nivel_1 if andamento_do_edital is not None else None
     return render(
         request,
         "interface/detalhe.html",
         {
             "edital": edital,
-            "trilha": _trilha(edital),
+            # **A trilha sai depois da publicação** (127, D-002, FR-4089): o selo ao lado do título
+            # diz a situação, e a trilha sugeria que faltava pouco quando a seleção nem começara.
+            "trilha": _trilha(edital) if andamento_do_edital is None else [],
+            "andamento": andamento_do_edital,
+            "nivel_1": nivel_1,
+            # Com providência da pessoa, nenhuma ação vem cheia: a principal é a providência (127,
+            # FR-4088). O peso sai daqui para que o template desenhe a principal num lugar só.
+            "peso_da_principal": "secundario" if nivel_1 and nivel_1.suas else "",
+            "contagem_de_providencias": providencias.contagem(nivel_1) if nivel_1 else "",
+            "frase_da_atencao": (
+                providencias.frase_da_atencao(andamento_do_edital.atencoes)
+                if andamento_do_edital is not None
+                else ""
+            ),
+            "porque_nada": (
+                providencias.porque_nada(andamento_do_edital, edital)
+                if andamento_do_edital is not None and not nivel_1
+                else ""
+            ),
             "participantes": participantes,
             "documentos": _documentos_publicados(edital),
             # As Retificações ainda não publicadas (103, FR-2701). As publicadas estão em

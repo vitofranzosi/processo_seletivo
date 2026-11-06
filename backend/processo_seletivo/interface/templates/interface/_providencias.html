@@ -1,0 +1,23 @@
+{% comment %}
+O começo de "O que fazer agora" depois da publicação (127, FR-4080 a FR-4087). Até a publicação o
+bastão diz quem age; depois dela o cartão era o mesmo num Edital que espera a semente e num em
+convocação (`J-01`). A ordem é a regra fixa do contrato: as suas, as de outros papéis, as que
+esperam — e até cinco, com as demais em "Mais N", sem página nova.
+{% endcomment %}
+{% if nivel_1 %}
+<p class="contagem-de-providencias">{{ contagem_de_providencias }}</p>
+{% if nivel_1.suas_mostradas %}<ul class="providencias suas">{% for item in nivel_1.suas_mostradas %}{% include "interface/_providencia.html" %}{% endfor %}</ul>{% endif %}
+{% if nivel_1.de_outros_mostradas %}<ul class="providencias de-outros">{% for item in nivel_1.de_outros_mostradas %}{% include "interface/_providencia.html" %}{% endfor %}</ul>{% endif %}
+{% if nivel_1.em_espera_mostradas %}<ul class="providencias em-espera">{% for item in nivel_1.em_espera_mostradas %}{% include "interface/_providencia.html" %}{% endfor %}</ul>{% endif %}
+{% if nivel_1.demais %}
+<details class="mais-providencias">
+  <summary>Mais {{ nivel_1.demais|length }}</summary>
+  {% if nivel_1.suas_demais %}<ul class="providencias suas">{% for item in nivel_1.suas_demais %}{% include "interface/_providencia.html" %}{% endfor %}</ul>{% endif %}
+  {% if nivel_1.de_outros_demais %}<ul class="providencias de-outros">{% for item in nivel_1.de_outros_demais %}{% include "interface/_providencia.html" %}{% endfor %}</ul>{% endif %}
+  {% if nivel_1.em_espera_demais %}<ul class="providencias em-espera">{% for item in nivel_1.em_espera_demais %}{% include "interface/_providencia.html" %}{% endfor %}</ul>{% endif %}
+</details>
+{% endif %}
+{% else %}
+<p class="nada-em-aberto"><strong>Nada em aberto:</strong> {{ porque_nada }}.</p>
+{% endif %}
+{% if frase_da_atencao %}<p class="atencao-do-andamento"><strong>Atenção:</strong> {{ frase_da_atencao }}</p>{% endif %}
