@@ -85,7 +85,8 @@ class LoteriaFederal(FonteExterna):
         """
         tentativas = max(int(getattr(settings, "SORTEIO_FONTE_TENTATIVAS", 3)), 1)
         limite = float(getattr(settings, "SORTEIO_FONTE_TIMEOUT_SEGUNDOS", 10))
-        acesso = ""
+        motivo = ""
+        falhas = []
         resposta_da_fonte = ""
         for _ in range(tentativas):
             try:
@@ -94,7 +95,8 @@ class LoteriaFederal(FonteExterna):
                 ) as resposta:
                     corpo = json.loads(resposta.read().decode("utf-8"))
             except (error.URLError, TimeoutError, ValueError) as falha:
-                acesso = f"{type(falha).__name__}: {falha}"
+                motivo = _motivo_da_falha(falha)
+                falhas.append(f"{type(falha).__name__}: {falha}")
                 continue
             material = _bilhetes_premiados(corpo)
             quando = _nao_antes_de(corpo)
@@ -117,12 +119,16 @@ class LoteriaFederal(FonteExterna):
                     f"Observado em {tentativas} tentativa(s)."
                 ),
             )
+        # **A evidência da falha de acesso só existe na mensagem**, porque nada se grava — e a
+        # mensagem é lida por quem conduz o sorteio, com a transmissão aberta (124, FR-3961). Ela
+        # dizia "Última falha: URLError: <urlopen error timed out>": nome de exceção que quem opera
+        # não tem o que fazer com ele, quando a conferência da mesma fonte já traduzia a mesma falha
+        # em palavras dele (116, FR-3641). O detalhe técnico vai em `falhas`, para o log que a
+        # aplicação escreve com a correlação do pedido (FR-3962).
         return Observacao(
             falha_de_acesso=True,
-            evidencia=(
-                f"Concurso {referencia} de {fonte}: não foi possível falar com a fonte em "
-                f"{tentativas} tentativa(s). Última falha: {acesso}"
-            ),
+            evidencia=f"Concurso {referencia} de {fonte}: {motivo}, em {tentativas} tentativa(s).",
+            falhas=tuple(falhas),
         )
 
 
@@ -130,25 +136,15 @@ def _uma_chamada(endereco):
     """`(corpo, "")` de uma resposta JSON, ou `(None, motivo)` — numa tentativa, sem levantar.
 
     **O motivo é dito nas palavras de quem opera, e só ele sai daqui** (FR-3641, FR-3648): código
-    HTTP, nome de exceção e corpo da resposta não chegam à mensagem nem ao registro. O `HTTPError`
-    vem antes do `URLError` porque é subclasse dele, e é a Caixa que respondeu, e não a rede que
-    caiu.
+    HTTP, nome de exceção e corpo da resposta não chegam à mensagem nem ao registro. A tradução é
+    `_motivo_da_falha`, a mesma da observação.
     """
     limite = float(getattr(settings, "SORTEIO_CONFERENCIA_TIMEOUT_SEGUNDOS", 5))
     try:
         with request.urlopen(endereco, timeout=limite) as resposta:
             bruto = resposta.read()
-    except error.HTTPError as falha:
-        falha.close()
-        return None, conferencia.COM_ERRO
-    except error.URLError as falha:
-        if isinstance(falha.reason, TimeoutError):
-            return None, conferencia.SEM_RESPOSTA_A_TEMPO
-        return None, conferencia.SEM_CONEXAO
-    except TimeoutError:
-        return None, conferencia.SEM_RESPOSTA_A_TEMPO
-    except OSError:
-        return None, conferencia.SEM_CONEXAO
+    except OSError as falha:
+        return None, _motivo_da_falha(falha)
     try:
         corpo = json.loads(bruto.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
@@ -156,6 +152,30 @@ def _uma_chamada(endereco):
     if not isinstance(corpo, dict):
         return None, conferencia.SEM_O_ULTIMO
     return corpo, ""
+
+
+def _motivo_da_falha(falha):
+    """A falha de uma chamada à Caixa, nas palavras de quem opera (116, FR-3641; 124, FR-3961).
+
+    **Uma tradução só, para a conferência e para a observação.** As duas falam com a mesma fonte, e
+    a mesma falha de rede não pode chegar à tela da publicação como "a Caixa não respondeu a tempo"
+    e à do sorteio como `URLError`. O `HTTPError` vem antes do `URLError` porque é subclasse dele, e
+    é a Caixa que respondeu, e não a rede que caiu. O `ValueError` é a resposta que não se lê como
+    JSON — só a observação o recebe aqui, porque a conferência decodifica fora do `try` —, e é a
+    Caixa respondendo com algo que não é a extração: um erro dela, e não da rede.
+    """
+    if isinstance(falha, error.HTTPError):
+        falha.close()
+        return conferencia.COM_ERRO
+    if isinstance(falha, error.URLError):
+        if isinstance(falha.reason, TimeoutError):
+            return conferencia.SEM_RESPOSTA_A_TEMPO
+        return conferencia.SEM_CONEXAO
+    if isinstance(falha, TimeoutError):
+        return conferencia.SEM_RESPOSTA_A_TEMPO
+    if isinstance(falha, ValueError):
+        return conferencia.COM_ERRO
+    return conferencia.SEM_CONEXAO
 
 
 def _inteiro(valor):
