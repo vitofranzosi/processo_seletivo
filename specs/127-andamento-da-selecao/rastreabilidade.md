@@ -12,6 +12,7 @@ Arquivos de teste, abreviados:
 - `coer` = `tests/interface/test_andamento_coerencia.py`
 - `esc` = `tests/performance/test_andamento_em_escala.py`
 - `sel` = `tests/interface/test_andamento_da_selecao.py`
+- `tra` = `tests/interface/test_andamento_transicoes.py`
 
 ## Requisitos funcionais
 
@@ -54,7 +55,9 @@ Arquivos de teste, abreviados:
 | FR-4087 | `p.atencao-do-andamento` | `ed::test_s1_as_etapas_que_nada_consome_sao_atencao_e_nao_providencia` |
 | FR-4088 | `detalhe.html` (principal secundária) | `ed::test_s1_com_providencia_da_pessoa_nenhuma_acao_vem_cheia` |
 | FR-4089 | `views.detalhe` (`trilha` vazia), `p.imutavel.em-uma-linha` | `ed::test_depois_da_publicacao_a_trilha_de_situacao_sai` |
-| FR-4090 a FR-4092 | transições — por último (D-015) | `test_andamento_transicoes.py` (no PR das transições) |
+| FR-4090 | `views._proximo_nesta_lista`, `andamento.da_lista`, `_proximo_nesta_lista.html` em corte, ordenação, ocupação, sorteio, convocação e documentos | `tra::test_depois_do_corte_o_proximo_e_a_etapa_governada_e_nao_outro_corte`, `tra::test_depois_de_convocar_o_proximo_e_da_mesma_lista`, `tra::test_abrir_a_tela_nao_mostra_o_proximo` |
+| FR-4091 | "Nada mais em aberto nesta lista."; o papel sem link | `tra::test_sem_nada_em_aberto_a_lista_diz_isso` |
+| FR-4092 | uma linha a mais abaixo do sucesso; a sucessão da `126` intocada | o diff das transições (uma linha por template); a suíte com a `126` mesclada |
 | FR-4100 | `detalhe.html` (`_andamento_da_selecao.html` no lugar do cartão) | `sel::test_o_andamento_toma_o_lugar_do_cartao_classificacao`, `sel::test_quem_nao_via_o_cartao_classificacao_nao_ve_o_andamento` |
 | FR-4101 | `resumo_do_perfil`, `linha_das_inscricoes` | `sel::test_o_andamento_toma_o_lugar_do_cartao_classificacao`, `comp::test_o_resumo_conta_feitos_sobre_os_que_se_aplicam`, `comp::test_a_linha_das_inscricoes` |
 | FR-4102 | `p.perfil-sem-inscricao` | `sel::test_o_perfil_sem_inscricao_e_uma_linha_so` |
@@ -83,7 +86,7 @@ Arquivos de teste, abreviados:
 | SC-1235 | `sit` |
 | SC-1236 | `coer::test_convocar_troca_convocar_por_emitir_a_comunicacao`, `coer::test_avaliar_e_consolidar_libera_a_ordem` |
 | SC-1237 | `comp` (S1, S2, S3, P1, P2, P3, CR, mista), `ed` (S1, P1, P2), `coer` |
-| SC-1238 | transições — por último |
+| SC-1238 | `tra::test_depois_do_corte_o_proximo_e_a_etapa_governada_e_nao_outro_corte` |
 | SC-1239 | `esc` |
 | SC-1240 | capturas `depois-b1/medidas.json` (`fim_das_suas`) |
 | SC-1241 | `medidas.json` (`rola_de_lado`) |

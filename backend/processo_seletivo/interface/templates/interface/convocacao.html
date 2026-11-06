@@ -55,6 +55,7 @@ A mensagem de sucesso nomeia **o ato praticado**, e nao "deu certo". Foi o defei
 {% else %}<p class="sucesso" role="status" tabindex="-1">Comunicação enviada. O prazo desta convocação corre a partir do envio.</p>{% endif %}
 {% endif %}
 {% endif %}
+{% if resultado %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
 <p class="imutavel">Abrir esta tela <strong>não convoca ninguém e não apura nada</strong>. Os números abaixo vêm de atos já emitidos.</p>
 

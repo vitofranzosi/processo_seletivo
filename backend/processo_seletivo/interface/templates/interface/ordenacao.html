@@ -50,6 +50,7 @@ contraprova da `FR-493` vista na tela.
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
 {% comment %} O que foi gravado, e em qual recorte (126, FR-4015); sem o próximo passo, que é da orientação da jornada. {% endcomment %}
 {% if resultado %}<p class="sucesso" role="status" tabindex="-1"><strong>Ordem emitida</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}{% if resultado.comPosicao is not None %}: {{ resultado.comPosicao }} com posição, {{ resultado.semPosicao }} sem posição{% endif %}. O ato é imutável e já pode ser consultado.</p>{% endif %}
+{% if resultado %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
 {% if ato_vigente %}
 {% comment %}

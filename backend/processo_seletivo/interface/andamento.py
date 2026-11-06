@@ -1306,7 +1306,7 @@ def do_edital(edital, ator, *, agora=None, em_curso=None):
     return leitor.andamento(em_curso=em_curso)
 
 
-def da_lista(andamento, marco_id, lista_id):
+def da_lista(andamento, marco_id, lista_id, preferir=None):
     """`(primeira em aberto desta lista, [(rótulo, célula)] das outras listas do marco)` (R-012)."""
     if andamento is None:
         return None, []
@@ -1316,15 +1316,19 @@ def da_lista(andamento, marco_id, lista_id):
         if not pontos:
             continue
         rotulos = dict(perfil.listas)
+        # **Primeiro o trecho do marco, na ordem da jornada** (FR-4090): depois do corte vem a Etapa
+        # governada, se houver, e depois a apuração — e não uma Etapa que corre em paralelo, que só
+        # entra se o marco não tiver nada em aberto nesta lista.
+        indices = [n for n, p in enumerate(perfil.pontos) if p in pontos]
+        trecho = perfil.pontos[min(indices) : max(indices) + 1]
+        demais = [p for p in perfil.pontos if p.tipo == ETAPA and p not in trecho]
+        abertas = [
+            c for p in [*trecho, *demais] for c in [p.celula(alvo)] if c is not None and c.em_aberto
+        ]
+        # Quem acabou de praticar um ato lê primeiro o que é dele nesta lista (`preferir`); sem
+        # isso, o primeiro em aberto, que pode ser de outro papel.
         desta = next(
-            (
-                c
-                for p in perfil.pontos
-                if p.tipo == ETAPA or p in pontos
-                for c in [p.celula(alvo)]
-                if c is not None and c.em_aberto
-            ),
-            None,
+            (c for c in abertas if preferir and preferir(c)), abertas[0] if abertas else None
         )
         outras = []
         for lista, rotulo in perfil.listas:
