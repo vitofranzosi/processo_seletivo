@@ -28,11 +28,14 @@ ausência de ato nunca é pendência: sem ato vigente, a célula é *Depois*, *A
 se aplica* ou *Pendente*, pela regra do ato.
 """
 
+import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 
 from django.urls import reverse
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------------------------
 # As situações, a expectativa e os responsáveis (data-model)
@@ -1229,6 +1232,10 @@ class Andamento:
     providencias: list
     atencoes: list
     inscricoes: dict
+    #: A matriz por lista mostra o estado da convocação e das Etapas, que só quem conduz ou audita
+    #: alcança (`_edital_para_classificar`). Quem só publica resultado vê o Perfil recolhido, com o
+    #: resumo, como o cartão "Classificação" lhe mostrava a presença (D-004, item 1 do code review).
+    ve_a_matriz: bool = False
 
     # A apresentação do nível 1 mora em `providencias.py`; estas propriedades só a expõem.
     @property
@@ -1289,8 +1296,8 @@ class Alcance:
 def do_edital(edital, ator, *, agora=None, em_curso=None):
     """O andamento do Edital publicado ou encerrado, para este ator — ou `None` antes disso.
 
-    `em_curso` são as Retificações em curso, que o detalhe já leu (103): elas viram providência
-    aqui, e o cartão deixa de repeti-las à parte.
+    `em_curso` são as Retificações em curso, que o detalhe já leu (103). Elas **não** viram
+    providência (D-017): continuam ditas pelas frases da `104`, e servem aqui só à `104`.
     """
     from processo_seletivo.publicacoes.application.selectors import effective_version
     from processo_seletivo.shared.api.problems import DomainError
@@ -1302,8 +1309,15 @@ def do_edital(edital, ator, *, agora=None, em_curso=None):
         conteudo = effective_version(edital_id=edital.id, at=agora).content
     except DomainError:
         return None
-    leitor = _Leitor(edital, ator, conteudo, agora)
-    return leitor.andamento(em_curso=em_curso)
+    try:
+        return _Leitor(edital, ator, conteudo, agora).andamento(em_curso=em_curso)
+    except Exception:  # noqa: BLE001 — orientação não derruba a página (item 2 do code review)
+        # **A orientação não pode derrubar o detalhe do Edital.** A derivação lê vinte funções de
+        # outras features; um conteúdo que uma delas não espere faria o detalhe responder 500 para
+        # todo papel. Sem andamento, o cartão volta a ser o de antes da 127 — e o defeito fica no
+        # log, com o Edital, para ser corrigido.
+        logger.exception("andamento_indisponivel", extra={"edital": str(edital.id)})
+        return None
 
 
 def da_lista(andamento, marco_id, lista_id, preferir=None):
@@ -1357,6 +1371,7 @@ class _Leitor:
         self.etapas_por_id = {str(e["id"]): e for e in self.etapas}
         self.providencias = []
         self.atencoes = []
+        self._conferencia = {}
 
     # --- o todo ----------------------------------------------------------------------------
 
@@ -1379,6 +1394,7 @@ class _Leitor:
             perfis=perfis,
             providencias=self.providencias,
             atencoes=self.atencoes,
+            ve_a_matriz=self.alcance.consulta,
             inscricoes={
                 "estado": self.periodo.estado,
                 "fim": self.periodo.fim,
@@ -1521,11 +1537,15 @@ class _Leitor:
         # **A Etapa que outro Perfil lê fica fora da matriz deste** (item 3 da revisão do B2): para
         # ele ela não muda nada, mas "sem efeito no GPS" seria falso — o nível 1 a cobra pelo
         # Edital. "Sem efeito" é só a que nada consome no Edital inteiro (D-010).
+        citadas = _citadas_pelos_marcos(marcos)
         etapas_do_perfil = [
             e
             for e in self.etapas
             if expectativa.get(str(e["id"])) == ESPERADA
             or self.expectativa_do_edital.get(str(e["id"])) == SEM_EFEITO
+            # A que um marco do Perfil cita fica, ainda que sem efeito nele: sem ela a `jornada()`
+            # perde a "última Etapa" do marco e o põe no começo (item 4 do code review do B2).
+            or str(e["id"]) in citadas
         ]
         pontos = sequencia_do_perfil(etapas_do_perfil, marcos, expectativa)
         listas = recortes_do_perfil(self.conteudo, perfil_id=perfil.get("id"))
@@ -1546,23 +1566,19 @@ class _Leitor:
                 etapas_do_perfil[eid] = celula
                 ponto.celulas = {_chave(lista): celula for lista, _ in listas}
         for marco in marcos:
-            self._marco(no_perfil, marco, etapas_do_perfil, listas)
+            self._marco(no_perfil, marco, etapas_do_perfil, listas, expectativa)
         if not inscritos:
             # **O Perfil sem inscrição é uma linha só** (FR-4102): nada dele é providência, e o que
             # já existe (a ordem vazia emitida) continua dito como feito.
             self.providencias = [p for p in self.providencias if p.perfil_id != pid]
-        etapas_vistas = {str(p.etapa.get("id")) for p in pontos if p.tipo == ETAPA}
-        no_perfil.providencias = [
-            p
-            for p in self.providencias
-            if p.perfil_id == pid
-            or (p.chave and p.chave[0] == "etapa" and str(p.chave[1]) in etapas_vistas)
-        ]
+        # **Só as do Perfil** (item 3 do code review do B2): as das Etapas são do Edital inteiro e
+        # entrariam na linha de cada Perfil que as vê; o andamento delas está em "Etapas X de Y".
+        no_perfil.providencias = [p for p in self.providencias if p.perfil_id == pid]
         no_perfil.resumo = resumo_do_perfil(no_perfil)
         no_perfil.matricula_fora = matricula_fora(no_perfil)
         return no_perfil
 
-    def _marco(self, no_perfil, marco, etapas_do_perfil, listas):
+    def _marco(self, no_perfil, marco, etapas_do_perfil, listas, expectativa):
         from processo_seletivo.classificacao.domain import faixa
         from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le
         from processo_seletivo.interface import conducao_do_marco
@@ -1592,7 +1608,7 @@ class _Leitor:
             return
         por_lista = {_chave(linha["lista_id"]): linha["celulas"] for linha in indicador["linhas"]}
         sorteado = por_sorteio(marco)
-        sorteio_lido = self._sorteio(perfil, marco) if sorteado else None
+        sorteio_lido = self._sorteio(perfil, marco, expectativa) if sorteado else None
         governada_id = faixa.etapa_governada(marco.get("cutRule"))
         governada = etapas_do_perfil.get(str(governada_id)) if governada_id else None
         nome_da_governada = (self.etapas_por_id.get(str(governada_id)) or {}).get("name")
@@ -1679,7 +1695,7 @@ class _Leitor:
 
     # --- o sorteio -------------------------------------------------------------------------
 
-    def _sorteio(self, perfil, marco):
+    def _sorteio(self, perfil, marco, expectativa):
         from processo_seletivo.shared.api.problems import DomainError
         from processo_seletivo.sorteios.application import previa
 
@@ -1707,11 +1723,7 @@ class _Leitor:
         metodo = lido.get("metodo") or {}
         habilitacao_id = str(metodo.get("qualifyingStageId") or "")
         habilitacao = (
-            self._etapa_no_perfil(
-                habilitacao_id,
-                str(perfil.get("id")),
-                expectativa_das_etapas(self.conteudo, [perfil]),
-            )
+            self._etapa_no_perfil(habilitacao_id, str(perfil.get("id")), expectativa)
             if habilitacao_id
             else None
         )
@@ -1927,9 +1939,15 @@ class _Leitor:
         return contagem
 
     def _confere(self, perfil):
+        """Se a pessoa confere documentos deste Perfil: uma consulta por Perfil, e não por lista."""
         from processo_seletivo.comissoes.domain.autorizacao import pode_conferir_documentos
 
-        return pode_conferir_documentos(self.ator, self.edital, perfil.get("id")) is not None
+        chave = str(perfil.get("id"))
+        if chave not in self._conferencia:
+            self._conferencia[chave] = (
+                pode_conferir_documentos(self.ator, self.edital, perfil.get("id")) is not None
+            )
+        return self._conferencia[chave]
 
     # --- os objetos da 104 -----------------------------------------------------------------
 
@@ -2020,6 +2038,7 @@ class _Leitor:
                 marco_id=str(marco.get("id")) if marco else "",
                 perfil_id=str(perfil.get("id")) if perfil else "",
                 lista=lista,
+                lugar=(perfil.get("name") or "") if (perfil and lista) else onde,
             )
         )
 
@@ -2056,6 +2075,24 @@ def _com_os_metodos_resolvidos(conteudo):
             resolvidos.append(marco)
         perfis.append({**perfil, "classificationMilestones": resolvidos})
     return {**conteudo, "profiles": perfis}
+
+
+def _citadas_pelos_marcos(marcos):
+    """As Etapas que os marcos citam: enumeradas, governadas, de habilitação ou de desempate."""
+    from processo_seletivo.classificacao.domain import faixa
+    from processo_seletivo.classificacao.domain.desempate import etapas_do_desempate
+
+    saida = set()
+    for marco in marcos:
+        saida.update(str(e) for e in marco.get("stages") or [])
+        saida.update(etapas_do_desempate(marco))
+        governada = faixa.etapa_governada(marco.get("cutRule"))
+        if governada:
+            saida.add(str(governada))
+        habilitacao = (marco.get("drawMethod") or {}).get("qualifyingStageId")
+        if habilitacao:
+            saida.add(str(habilitacao))
+    return saida
 
 
 def _rotulos_curtos(perfil):
@@ -2096,13 +2133,8 @@ def _uuid(texto):
 
 
 def _pendentes_do_objeto(objeto):
-    """As pendentes do avaliador, pelo número que o objeto da `104` já carrega no rótulo."""
-    if objeto is None:
-        return 0
-    import re
-
-    achado = re.search(r"\((\d+) pendente", objeto.ato)
-    return int(achado.group(1)) if achado else 0
+    """As pendentes do avaliador, pela quantidade que o objeto da `104` carrega."""
+    return (objeto.quantidade or 0) if objeto is not None else 0
 
 
 def _n(quantos, singular, plural=None):
@@ -2179,8 +2211,8 @@ def resumo_do_perfil(perfil):
     partes.append(_resultado_em_palavras(perfil))
     from processo_seletivo.interface.providencias import agrupar
 
-    # **O mesmo conjunto que o nível 1 conta** (item 4 da revisão do B2): as providências do
-    # Perfil e as das Etapas que a matriz dele mostra, agrupadas como lá, inclusive as que esperam.
+    # Agrupadas como o nível 1 as agrupa (D-016), inclusive as que esperam; as das Etapas, que são
+    # do Edital, ficam no nível 1 e em "Etapas X de Y".
     em_aberto = len(agrupar(perfil.providencias))
     if em_aberto:
         partes.append(

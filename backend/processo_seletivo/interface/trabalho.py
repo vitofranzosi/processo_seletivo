@@ -59,6 +59,9 @@ class ObjetoDeTrabalho:
     url: str
     edital: Edital
     desde: datetime | None = None
+    #: Quantos itens o ato alcança, quando ele conta (as pendentes da avaliação). Lido pelo
+    #: andamento da seleção (127), que não deve extrair o número do rótulo.
+    quantidade: int | None = None
 
 
 def _nome(edital):
@@ -193,6 +196,7 @@ def _das_avaliacoes(ator):
                 item["edital"].title,
                 reverse("interface:minha-etapa", args=[item["edital"].id, item["etapa_id"]]),
                 item["edital"],
+                quantidade=pendentes,
             )
 
 

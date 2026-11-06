@@ -178,6 +178,8 @@ def test_todo_link_da_secao_abre_para_quem_o_recebe(
     bloco = secao(detalhe(client, edital))
     links = sorted(set(re.findall(r'<a href="([^"]+)"', bloco)))
     assert links, "o cenário deveria oferecer caminho"
+    # Quem só publica não vê a matriz: ela diz convocação e Etapas, que ele não alcança (D-004).
+    assert ("<table" in bloco) is (subject != "paula.publicadora")
     for link in links:
         resposta = client.get(link.replace("&amp;", "&"))
         assert resposta.status_code == 200, (link, resposta.status_code)

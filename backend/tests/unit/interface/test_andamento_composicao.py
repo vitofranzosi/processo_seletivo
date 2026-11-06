@@ -362,3 +362,9 @@ def test_a_convocacao_feita_com_chamada_sem_desfecho_nao_poe_a_matricula():
         "": a.Celula(a.FEITO, nota="3 de 3 com desfecho", contagem=0)
     }
     assert a.matricula_fora(perfil)
+
+
+def test_a_etapa_citada_por_um_marco_do_perfil_fica_na_sequencia():
+    """Item 4 do code review do B2: sem ela a `jornada()` poria o marco no começo."""
+    citadas = a._citadas_pelos_marcos([pontuacao(stages=["p"], desempate=["ent"])])
+    assert citadas == {"p", "ent"}
