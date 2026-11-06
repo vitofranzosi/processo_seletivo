@@ -26,10 +26,9 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
-from processo_seletivo.classificacao.domain.universo import por_identidade
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
-from processo_seletivo.convocacao.domain import nomes, prazo
+from processo_seletivo.convocacao.domain import nomes, prazo, vocabulario_do_canal
 from processo_seletivo.convocacao.domain.mensagem import (
     CORRECAO,
     INICIAL,
@@ -45,7 +44,6 @@ from processo_seletivo.convocacao.models import (
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_POR_MENSAGEM_INDIVIDUAL,
     FORMA_POR_PUBLICACAO,
-    FORMAS_DE_CONVOCACAO,
 )
 from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 from processo_seletivo.requerimentos.domain.disponibilidade import momento_declarado
@@ -118,9 +116,9 @@ def forma_declarada(convocacao):
     `None` significa *"este Edital não declarou forma"*, e nunca a publicação por omissão: as duas
     formas da amostra são normais, e escolher uma decidiria norma no lugar do Edital.
     """
-    perfil = por_identidade((convocacao.versao.content or {}).get("profiles"), convocacao.perfil_id)
-    forma = (perfil or {}).get("callForm")
-    return forma if forma in FORMAS_DE_CONVOCACAO else None
+    from processo_seletivo.convocacao.application.selectors import forma_do_perfil
+
+    return forma_do_perfil((convocacao.versao.content or {}).get("profiles"), convocacao.perfil_id)
 
 
 def destinatario_de(convocacao):
@@ -212,9 +210,7 @@ def comunicar(
     if pendente:
         raise DomainError(
             nomes.EMISSAO_EM_ESTADO_INDETERMINADO,
-            "Já há uma emissão desta convocação em curso com esta chave, ou uma que não chegou a "
-            "ser registrada. A mensagem pode ter saído: confira o histórico da convocação antes de "
-            "emitir de novo, e use a tela recarregada — ela traz chave nova.",
+            vocabulario_do_canal.canal(forma).recusa_do_estado_indeterminado,
             409,
         )
 
@@ -327,8 +323,9 @@ def _recusar_vencimento_anterior_ao_envio(convocacao, *, agora):
     if prazo.vencimento_precede_o_envio(vencimento=convocacao.vencimento, enviado_em=agora):
         raise DomainError(
             nomes.VENCIMENTO_ANTERIOR_AO_ENVIO,
-            "O vencimento informado nesta convocação é anterior ao envio: corrija a convocação, "
-            "sucedendo-a com motivo, antes de comunicar.",
+            # A frase do canal (125, FR-4001).
+            vocabulario_do_canal.canal(forma_declarada(convocacao)).recusa_do_vencimento
+            + "corrija a convocação, sucedendo-a com motivo, antes de comunicar.",
             409,
         )
 
@@ -530,11 +527,25 @@ def _concluir(ctx, emitida, actor, correlation_id, idempotency_key):
         correlation_id=correlation_id,
         # **"Enviada em", e nunca "recebida em"** (`UX-039`, `FR-288a`). A trilha diz o que o
         # sistema fez; o que aconteceu na caixa de entrada da pessoa ele não sabe, e não afirma.
+        # Na publicação, nada foi enviado: a trilha diz que a comissão registrou onde publicou
+        # (125, R-008). Os registros antigos ficam como estão — a trilha só acrescenta.
         reason=(
-            f"Comunicação {emitida.resultado} da convocação {convocacao.id}, inscrição "
-            f"{convocacao.inscricao_id}, na forma {emitida.forma}."
-            + (f" Enviada em {emitida.enviado_em.isoformat()}." if emitida.enviado_em else "")
-            + (f" Detalhe técnico: {emitida.detalhe_tecnico}" if emitida.detalhe_tecnico else "")
+            (
+                f"Publicação da convocação {convocacao.id}, inscrição {convocacao.inscricao_id}, "
+                f"registrada pela comissão: {emitida.referencia_da_publicacao}. Registro em "
+                f"{emitida.enviado_em.isoformat()}."
+            )
+            if emitida.forma == FORMA_POR_PUBLICACAO and emitida.enviado_em
+            else (
+                f"Comunicação {emitida.resultado} da convocação {convocacao.id}, inscrição "
+                f"{convocacao.inscricao_id}, na forma {emitida.forma}."
+                + (f" Enviada em {emitida.enviado_em.isoformat()}." if emitida.enviado_em else "")
+                + (
+                    f" Detalhe técnico: {emitida.detalhe_tecnico}"
+                    if emitida.detalhe_tecnico
+                    else ""
+                )
+            )
         ),
         idempotency_key=idempotency_key,
     )
@@ -544,6 +555,8 @@ def _concluir(ctx, emitida, actor, correlation_id, idempotency_key):
         "forma": emitida.forma,
         "resultado": emitida.resultado,
         "enviadaEm": emitida.enviado_em.isoformat() if emitida.enviado_em else None,
+        # A referência, para a confirmação dizer onde foi publicada (125, FR-4000).
+        "referencia": emitida.referencia_da_publicacao,
     }
     ctx.concluir_sem_resultado(201, declarado)
     return declarado

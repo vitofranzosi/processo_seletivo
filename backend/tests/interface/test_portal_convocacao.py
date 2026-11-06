@@ -485,7 +485,7 @@ class TestACorrecaoNoPortal:
             obrigacoes.ate(cenario.convocacao.vencimento)
         ), "acima da data"
         assert (
-            f"Convocação substituída Comunicada em {obrigacoes.data_e_hora(enviada.enviado_em)}, "
+            f"Convocação substituída Enviada em {obrigacoes.data_e_hora(enviada.enviado_em)}, "
             f"com prazo {obrigacoes.ate(anterior.vencimento)}. Esse prazo não vale mais."
         ) in pagina
         assert motivo not in pagina
@@ -544,7 +544,7 @@ class TestACorrecaoNoPortal:
 
         pagina = _texto(_main(client, cenario))
 
-        assert "Convocação substituída Comunicada em" in pagina
+        assert "Convocação substituída Enviada em" in pagina
         assert "Convocação corrigida: este é o prazo válido." not in pagina
 
     def test_a_falha_no_meio_descreve_a_imediatamente_anterior(self, client, fx, gestor, settings):
@@ -605,7 +605,7 @@ def _frases_da_sc_1150(letra):
         "corr": [
             "Você foi convocado!",
             obrigacoes.CORRIGIDA,
-            "Convocação substituída Comunicada em",
+            "Convocação substituída Enviada em",
             "Ver o que preciso fazer",
             obrigacoes.RESSALVA_DO_RESULTADO,
         ],

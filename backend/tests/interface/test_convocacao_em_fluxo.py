@@ -111,7 +111,8 @@ def test_a_chamada_individual_nao_pergunta_a_especie_e_ja_comunica(
 
     pagina = abrir(client, edital)
     assert 'name="especie"' not in pagina.split('id="regularizar"')[0]
-    assert "Fundamento, para vaga inicial" in pagina
+    # O rótulo diz quem lê o fundamento desde a `125` (FR-3991).
+    assert "O candidato lerá este fundamento, para vaga inicial" in pagina
 
     pessoa = previa(edital)["pessoas"][0]["id"]
     client.post(

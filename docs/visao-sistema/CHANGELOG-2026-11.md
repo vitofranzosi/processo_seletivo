@@ -217,3 +217,27 @@ Os quatro últimos são documentos em `doc/` e não mudam a descrição do siste
 - a suíte não rodou aqui;
 - o produto não foi percorrido;
 - a SC-1164 (clientes de e-mail, SPF, DKIM e DMARC) continua pendente.
+
+## Acréscimo de 06/11: as specs 123 e 124, o guia do sorteio e o estudo da jornada operacional
+
+Entraram na `main`, que chegou a `a1d3bf26`:
+
+- a especificação, o plano e as tarefas da 123, o MVP de UX da Retificação (#409);
+- a 124, os textos que o operador do sorteio lê, especificada e implementada (#410);
+- a correção de quatro quadros *Atenção* do guia da jornada do sorteio (#408, `doc/guia-jornada-do-sorteio-2026-11-05/`);
+- o estudo de orientação da jornada operacional do Edital (#412, `doc/estudo-orientacao-da-jornada-2026-11-06/`).
+
+Os dois últimos são documentos em `doc/` e não mudam a descrição do sistema.
+
+- **123:** um aviso *Previsto* em `#retificacao-lacunas` resume o MVP M1–M4. A busca acha o campo e leva o foco até ele. A conferência separa *na proposta* de *alterados desde a última conferência*. A versão-base é dita pelo que incorpora, sem a coluna “Vigente hoje”. Os impeditivos da criação aparecem já na conferência. As decisões D-001 a D-009 aguardam o usuário.
+- **124, no rito do sorteio:**
+  - o passo *Indisponibilidade* diz que a falha de acesso à Caixa sai com os motivos da conferência da 116, sem exceção nem código HTTP, e com o detalhe no log;
+  - o *Aconteceu não antes de* da fonte que publica só a data diz que 00h00 é o limite inferior, e não a hora da extração;
+  - a seção *O que se declara no Edital* registra o item *Ocorrência que fixará a semente* no *Como preencher* da Classificação.
+- **Revisão e rodapé** apontam para `a1d3bf26`.
+
+**Não verificado:**
+
+- a suíte não rodou aqui; o #410 fechou em 16 755 passando e 12 pulados na worktree dele;
+- o produto não foi percorrido;
+- o #411 (125) não entrou: CI vermelho em três jornadas de navegador e conflito com a `main`.

@@ -36,6 +36,7 @@ from processo_seletivo.convocacao.application.documentos import (
 )
 from processo_seletivo.convocacao.domain import documentos as dominio
 from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+from processo_seletivo.convocacao.domain import vocabulario_do_canal
 from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
 from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 
@@ -75,9 +76,8 @@ NADA_POR_ENQUANTO = "Nada por enquanto."
 FRASE_DE_CONCLUSAO = (
     "Você não tem mais documentos para enviar agora. A comissão ainda vai concluir a análise."
 )
-PRAZO_NAO_INICIADO = (
-    "O prazo ainda não começou a correr: ele conta a partir do envio da comunicação."
-)
+# A da mensagem, que é a de sempre; a da publicação mora com ela, na tabela do canal (125, FR-3999).
+PRAZO_NAO_INICIADO = vocabulario_do_canal.MENSAGEM.prazo_nao_iniciado
 JA_PODE_ENVIAR = "Você já pode enviar."
 SEM_PRAZO_REGISTRADO = "Esta convocação não tem prazo registrado."
 CONVITE_AO_OPCIONAL = "Há documento opcional que você pode enviar, se quiser."
@@ -179,11 +179,22 @@ class CartaoDoPrazo:
     frases: tuple = ()
 
 
-def cartao_do_prazo(*, prazo_nao_iniciado, vencimento, agora, corrigida, ja_pode_enviar=False):
-    """O cartão do prazo de uma chamada **aberta**; com ela fechada, não há cartão (FR-3867)."""
+def cartao_do_prazo(
+    *,
+    prazo_nao_iniciado,
+    vencimento,
+    agora,
+    corrigida,
+    ja_pode_enviar=False,
+    frase_do_nao_iniciado=PRAZO_NAO_INICIADO,
+):
+    """O cartão do prazo de uma chamada **aberta**; com ela fechada, não há cartão (FR-3867).
+
+    `frase_do_nao_iniciado` é a do canal da convocação (125, FR-3999); sem ela, a da mensagem.
+    """
     frase_da_correcao = CORRIGIDA if corrigida else ""
     if prazo_nao_iniciado:
-        frases = (PRAZO_NAO_INICIADO,) + ((JA_PODE_ENVIAR,) if ja_pode_enviar else ())
+        frases = (frase_do_nao_iniciado,) + ((JA_PODE_ENVIAR,) if ja_pode_enviar else ())
         return CartaoDoPrazo(corrigida=frase_da_correcao, frases=frases)
     if vencimento is None:
         return CartaoDoPrazo(corrigida=frase_da_correcao, frases=(SEM_PRAZO_REGISTRADO,))
@@ -284,7 +295,8 @@ def linha_da_substituida(anterior):
     if ultima.forma == _POR_PUBLICACAO:
         quando = f"Publicada em {ultima.referencia_da_publicacao.strip()}"
     else:
-        quando = f"Comunicada em {data_e_hora(ultima.enviado_em)}"
+        # *"Enviada"*, e não *"Comunicada"*: a palavra da mensagem (125, D-008, FR-3869 revista).
+        quando = f"Enviada em {data_e_hora(ultima.enviado_em)}"
     if not prazo:
         return f"{quando}, sem prazo registrado."
     return f"{quando}, com prazo {prazo}. Esse prazo não vale mais."
@@ -665,6 +677,8 @@ class Obrigacoes:
     corrigida: bool = False
     pede_requerimento: bool = False
     requerimento_exigido: bool = False
+    # A frase do prazo não iniciado, no canal da convocação (125, FR-3999).
+    frase_do_nao_iniciado: str = PRAZO_NAO_INICIADO
 
     @property
     def aberta(self):
@@ -695,6 +709,7 @@ class Obrigacoes:
             return None
         return cartao_do_prazo(
             prazo_nao_iniciado=self.prazo_nao_iniciado,
+            frase_do_nao_iniciado=self.frase_do_nao_iniciado,
             vencimento=self.vencimento,
             agora=self.agora,
             corrigida=self.corrigida,
@@ -832,6 +847,7 @@ def obrigacoes_da_convocacao(
     canal="",
     agora=None,
     corrigida=False,
+    prazo_nao_iniciado=PRAZO_NAO_INICIADO,
 ):
     """As obrigações da chamada vigente, ou `None` quando ela não pede documento (FR-3743).
 
@@ -841,6 +857,8 @@ def obrigacoes_da_convocacao(
 
     `agora` é o instante da requisição, para a contagem do cartão do prazo, e `corrigida` diz que a
     vigente sucede outra (121, FR-3861, FR-3869). A projeção continua sem ler relógio.
+
+    `prazo_nao_iniciado` é a frase do canal da convocação (125, FR-3999): a projeção não lê a forma.
     """
     pedidos = list(getattr(leitura, "pedidos", None) or [])
     if not pedidos:
@@ -855,6 +873,7 @@ def obrigacoes_da_convocacao(
     else:
         momento = ABERTA
 
+    frase_do_nao_iniciado = prazo_nao_iniciado
     prazo_nao_iniciado = estado_do_prazo == convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO
     prazo = "" if prazo_nao_iniciado else ate(vencimento)
 
@@ -885,6 +904,7 @@ def obrigacoes_da_convocacao(
         corrigida=corrigida,
         pede_requerimento=requerimento_na_chamada(requerimento),
         requerimento_exigido=requerimento_exigido(requerimento),
+        frase_do_nao_iniciado=frase_do_nao_iniciado,
     )
     tarefas = ()
     if momento == ABERTA:
@@ -930,7 +950,7 @@ def _aberta(base, tarefas, totais, prazo, prazo_nao_iniciado):
             ate_o_prazo = f" {prazo}" if prazo else ""
             extras["frase_do_opcional"] = f"Se quiser, você ainda pode enviar {qual}{ate_o_prazo}."
     if prazo_nao_iniciado:
-        frases = (PRAZO_NAO_INICIADO,)
+        frases = (base.frase_do_nao_iniciado,)
         if tarefas or opcionais:
             frases += (JA_PODE_ENVIAR,)
         extras["frase_do_prazo"] = frases

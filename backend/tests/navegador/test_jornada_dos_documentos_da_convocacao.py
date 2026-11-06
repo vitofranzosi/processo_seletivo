@@ -212,6 +212,10 @@ def registrar_aceite(gestao, servidor, edital):
     gestao.locator("textarea[name=fundamento]").first.fill("Documentação conferida e conforme.")
     gestao.get_by_role("button", name="Registrar desfecho").first.click()
     gestao.wait_for_load_state()
+    # O fundamento chega ao candidato, e o desfecho passa sempre pela conferência do texto (FR-3993
+    # da `125`, D-004): o primeiro clique só mostra a prévia; o ato é o da confirmação.
+    gestao.locator("#conferir-o-texto button[value=confirmar]").click()
+    gestao.wait_for_load_state()
 
 
 def _item(convocacao, requisito):

@@ -14,9 +14,11 @@ corte da `014`; e o estado do prazo é calculado a cada leitura, e não guardado
 `UPDATE` em tabela append-only, e o relógio andaria dentro de um ato imutável.
 """
 
+from dataclasses import dataclass
+
 from django.utils import timezone
 
-from processo_seletivo.convocacao.domain import fila, nomes, prazo
+from processo_seletivo.convocacao.domain import fila, nomes, prazo, vocabulario_do_canal
 from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupacao
 from processo_seletivo.ocupacao.application import selectors as ocupacao_selectors
@@ -76,15 +78,138 @@ def chamada_em_aberto(inscricao):
     "em aberto" que divergiriam na primeira mudança — e o preço dessa divergência já foi pago uma
     vez nesta feature.
     """
-    convocacoes = (
+    convocacoes = vigentes(
         Convocacao.objects.filter(inscricao=inscricao)
-        .prefetch_related("desfechos", "sucessoras")
+        .prefetch_related("desfechos", "sucessoras", "comunicacoes")
         .order_by("-criado_em")
     )
-    for convocacao in vigentes(convocacoes):
-        if desfecho_de(convocacao) is None:
+    # **Só a visível ao candidato** (125, FR-3986, D-003): quem consulta aqui é o Requerimento de
+    # Matrícula, que é do portal; a chamada por publicação ainda não publicada não abre nada. A
+    # gestão, que vê toda convocação, não passa por esta função.
+    visiveis = visiveis_ao_candidato(convocacoes)
+    for convocacao in convocacoes:
+        if desfecho_de(convocacao) is None and convocacao.id in visiveis:
             return convocacao
     return None
+
+
+# --- A visibilidade ao candidato (125) ---------------------------------------------------------
+
+
+def forma_do_perfil(profiles, perfil_id):
+    """A forma de comunicar que um Perfil declarou, de uma lista `profiles` de versão publicada.
+
+    `None` quando o Perfil não declarou forma, ou declarou uma desconhecida — e nunca a publicação
+    por omissão, pela mesma razão de `comunicar.forma_declarada`, que lê daqui.
+    """
+    from processo_seletivo.classificacao.domain.universo import por_identidade
+    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import FORMAS_DE_CONVOCACAO
+
+    forma = (por_identidade(profiles, perfil_id) or {}).get("callForm")
+    return forma if forma in FORMAS_DE_CONVOCACAO else None
+
+
+def _comunicada(convocacao):
+    """Tem comunicação bem-sucedida? Lê só o que estiver no `prefetch` de `comunicacoes`."""
+    return any(
+        c.resultado == "ENVIADA" and c.enviado_em is not None for c in convocacao.comunicacoes.all()
+    )
+
+
+def visiveis_ao_candidato(convocacoes):
+    """Os `id` das convocações que o portal pode mostrar ao candidato (125, FR-3981).
+
+    **Visível** é a convocação cuja forma citada não é a publicação, ou cuja cadeia de correções —
+    ela ou uma anterior — já teve comunicação bem-sucedida, em qualquer forma (D-001). A convocação
+    por publicação que ninguém publicou ainda **não existe para o candidato**: na publicação, quem
+    convoca é a publicação, e o portal não pode anunciar o ato antes do ato oficial (1ª decisão).
+
+    **A gestão não passa por aqui**: ela vê toda convocação, e diz quando o candidato ainda não vê.
+
+    **Por conjunto, e só paga quem não foi comunicada** (FR-3990, R-002). As comunicações vêm do
+    `prefetch` de quem chama; sem convocação pendente, nenhuma consulta. Com alguma, até três: a
+    cadeia das inscrições em questão, as comunicadas entre elas, e os `profiles` das versões citadas
+    — nunca o conteúdo inteiro, que é o Edital todo. Cada convocação lida no terceiro passo recebe a
+    forma em `forma_lida`, para que o vocabulário da tela não a leia de novo.
+    """
+    from processo_seletivo.convocacao.models import ComunicacaoEmitida
+    from processo_seletivo.publicacoes.models import VersaoConsolidada
+
+    convocacoes = list(convocacoes)
+    pendentes = [c for c in convocacoes if not _comunicada(c)]
+    visiveis = {c.id for c in convocacoes if _comunicada(c)}
+    if not pendentes:
+        return visiveis
+
+    # **A cadeia**, percorrida em memória: a correção não tem profundidade máxima (a `121` corrige a
+    # correção), e subir elo a elo pelo banco custaria uma consulta por elo.
+    pela_cadeia = set()
+    if any(c.convocacao_anterior_id for c in pendentes):
+        inscricoes = {c.inscricao_id for c in pendentes}
+        anterior_de = dict(
+            Convocacao.objects.filter(inscricao_id__in=inscricoes).values_list(
+                "id", "convocacao_anterior_id"
+            )
+        )
+        comunicadas = set(
+            ComunicacaoEmitida.objects.filter(
+                convocacao__inscricao_id__in=inscricoes,
+                resultado="ENVIADA",
+                enviado_em__isnull=False,
+            ).values_list("convocacao_id", flat=True)
+        )
+        for convocacao in pendentes:
+            atual, vistos = convocacao.convocacao_anterior_id, set()
+            while atual is not None and atual not in vistos:
+                if atual in comunicadas:
+                    pela_cadeia.add(convocacao.id)
+                    break
+                vistos.add(atual)
+                atual = anterior_de.get(atual)
+    visiveis |= pela_cadeia
+
+    restantes = [c for c in pendentes if c.id not in pela_cadeia]
+    if restantes:
+        profiles = dict(
+            VersaoConsolidada.objects.filter(id__in={c.versao_id for c in restantes}).values_list(
+                "id", "content__profiles"
+            )
+        )
+        for convocacao in restantes:
+            convocacao.forma_lida = forma_do_perfil(
+                profiles.get(convocacao.versao_id), convocacao.perfil_id
+            )
+            # Sem forma declarada a convocação não pode ser comunicada, e continua como sempre foi:
+            # a 1ª decisão alcança só a publicação.
+            if convocacao.forma_lida != FORMA_POR_PUBLICACAO:
+                visiveis.add(convocacao.id)
+    return visiveis
+
+
+def visivel_ao_candidato(convocacao):
+    """A FR-3981 para uma convocação só — nos comandos do portal, que leem uma de cada vez."""
+    return convocacao.id in visiveis_ao_candidato([convocacao])
+
+
+def ha_convocacao_visivel_no_recorte(*, edital, perfil_id):
+    """O certame chegou a convocar, **para o candidato**, neste Perfil? (125, FR-3984, R-003).
+
+    É a pergunta que separa *"não há convocação"* de *"você não foi chamado"* (US6 da `019`).
+    Contar as convocações que ninguém publicou diria a todo inscrito que a convocação começou antes
+    de publicada — e diria ao próprio convocado que ele não foi chamado.
+    """
+    from processo_seletivo.publicacoes.models import VersaoConsolidada
+
+    convocacoes = Convocacao.objects.filter(edital=edital, perfil_id=perfil_id)
+    if convocacoes.filter(
+        comunicacoes__resultado="ENVIADA", comunicacoes__enviado_em__isnull=False
+    ).exists():
+        return True
+    # As versões citadas são poucas — uma por Retificação —, e de cada uma só os `profiles`.
+    versoes = VersaoConsolidada.objects.filter(id__in=convocacoes.values("versao_id")).values_list(
+        "content__profiles", flat=True
+    )
+    return any(forma_do_perfil(p, perfil_id) != FORMA_POR_PUBLICACAO for p in versoes)
 
 
 def vigentes_por_inscricao(inscricao_ids):
@@ -104,7 +229,7 @@ def vigentes_por_inscricao(inscricao_ids):
     if not inscricao_ids:
         return {}
     por_inscricao = {}
-    for convocacao in (
+    lidas = list(
         Convocacao.objects.filter(inscricao_id__in=inscricao_ids, sucessoras__isnull=True)
         # **A anterior e as comunicações dela vêm junto** (121, R-008): a linha *"Convocação
         # substituída"* dos dados do ato as lê, e lidas por item quebrariam a contagem fixa que a
@@ -113,11 +238,17 @@ def vigentes_por_inscricao(inscricao_ids):
         .select_related("convocacao_anterior")
         .prefetch_related("desfechos", "comunicacoes", "convocacao_anterior__comunicacoes")
         .order_by("-criado_em", "-id")
-    ):
+    )
+    # **Só as visíveis ao candidato** (125, FR-3982, FR-1100 da `059` revista): a convocação por
+    # publicação que ninguém publicou é ausente aqui, e por isso é ausente na lista, no
+    # acompanhamento, na tela e no Requerimento ao mesmo tempo.
+    visiveis = visiveis_ao_candidato(lidas)
+    for convocacao in lidas:
         # A ordem decrescente faz a primeira vista ser a mais recente; as seguintes da mesma
         # Inscrição — vigentes em paralelo, que o domínio não produz — ficam de fora, como ficavam
         # no `.first()` da view.
-        por_inscricao.setdefault(convocacao.inscricao_id, convocacao)
+        if convocacao.id in visiveis:
+            por_inscricao.setdefault(convocacao.inscricao_id, convocacao)
     return por_inscricao
 
 
@@ -129,6 +260,50 @@ def envio_de(convocacao):
     """
     enviados = [c.enviado_em for c in convocacao.comunicacoes.all() if c.enviado_em is not None]
     return max(enviados) if enviados else None
+
+
+@dataclass(frozen=True)
+class Comunicacao:
+    """A comunicação que as telas citam: a forma, o instante e, na publicação, a referência."""
+
+    forma: str | None
+    instante: object = None
+    referencia: str = ""
+
+
+def comunicacao_de(convocacao):
+    """A última comunicação bem-sucedida, ou só a forma, quando nenhuma houve (125, R-007).
+
+    **A forma é a da convocação**, e não a vigente do Edital: a da comunicação, que é o que
+    aconteceu; sem comunicação nenhuma, a que a visibilidade já leu (`forma_lida`); e só na falta
+    das duas, a versão citada, numa consulta — o caso da correção de convocação publicada que
+    aguarda a própria publicação. `envio_de` continua sendo a fonte do prazo: o instante que inicia
+    o prazo não muda (FR-4005).
+    """
+    comunicacoes = list(convocacao.comunicacoes.all())
+    enviadas = [c for c in comunicacoes if c.resultado == "ENVIADA" and c.enviado_em is not None]
+    if enviadas:
+        ultima = max(enviadas, key=lambda c: c.enviado_em)
+        return Comunicacao(
+            forma=ultima.forma,
+            instante=ultima.enviado_em,
+            referencia=(ultima.referencia_da_publicacao or "").strip(),
+        )
+    if comunicacoes:
+        # Só a mensagem falha: a publicação não tem envio que falhe.
+        return Comunicacao(forma=comunicacoes[0].forma)
+    if hasattr(convocacao, "forma_lida"):
+        return Comunicacao(forma=convocacao.forma_lida)
+    from processo_seletivo.convocacao.application.comunicar import forma_declarada
+
+    return Comunicacao(forma=forma_declarada(convocacao))
+
+
+def canal_de(convocacao):
+    """As frases do canal desta convocação (FR-4004)."""
+    from processo_seletivo.convocacao.domain import vocabulario_do_canal
+
+    return vocabulario_do_canal.canal(comunicacao_de(convocacao).forma)
 
 
 def estado_de(convocacao, *, agora):
@@ -276,6 +451,24 @@ def _forma_do_recorte(convocacoes):
     return None
 
 
+def comunicacao_da_linha(convocacao, forma_do_recorte):
+    """A comunicação e as frases do canal de um cartão, **sem consulta** (125, FR-4000; `SC-088`).
+
+    Com comunicação, a forma dela; sem nenhuma, a do recorte — que é a que a convocação citou,
+    salvo Retificação no meio do caminho. `comunicacao_de` leria a versão de cada cartão sem
+    comunicação, e a tela tem dezenas.
+    """
+    comunicacoes = list(convocacao.comunicacoes.all())
+    if comunicacoes:
+        comunicacao = comunicacao_de(convocacao)
+    else:
+        comunicacao = Comunicacao(forma=forma_do_recorte)
+    return {
+        "comunicacao": comunicacao,
+        "canal": vocabulario_do_canal.canal(comunicacao.forma),
+    }
+
+
 def identidades_de(inscricoes):
     """`{id: {"id", "protocolo", "nome"}}` — o que a tela mostra no lugar do identificador.
 
@@ -376,6 +569,7 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # inscrições chamadas, e não uma por linha da tela.
     atestados = _atestados_por_inscricao([c.inscricao_id for c in vigentes_do_recorte])
     identificadas = identidades_de({c.inscricao_id for c in vigentes_do_recorte})
+    forma_do_recorte = _forma_do_recorte(vigentes_do_recorte)
     linhas = [
         {
             "inscricao": identificadas[convocacao.inscricao_id],
@@ -385,6 +579,7 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
             "estado": estado_de(convocacao, agora=agora),
             "comunicacoes": list(convocacao.comunicacoes.all()),
             "atestados": atestados.get(convocacao.inscricao_id, []),
+            **comunicacao_da_linha(convocacao, forma_do_recorte),
         }
         for convocacao in vigentes_do_recorte
     ]
@@ -408,7 +603,10 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         "linhas": linhas,
         # A tela precisa saber **qual** forma o Edital declarou para oferecer o campo certo: a
         # emissão por publicação pede onde se publicou, e a individual não tem esse campo.
-        "formaPorPublicacao": _forma_do_recorte(vigentes_do_recorte) == FORMA_POR_PUBLICACAO,
+        "formaPorPublicacao": forma_do_recorte == FORMA_POR_PUBLICACAO,
+        # As frases do canal do recorte (125, FR-4000), para o que a tela diz do recorte inteiro.
+        "canal": vocabulario_do_canal.canal(forma_do_recorte),
+        "formaDoRecorte": forma_do_recorte,
         "convocadas": len(vigentes_do_recorte),
         # **Quantas chamadas em cada estado**, para a tela dizer onde agir antes da lista (050). São
         # contagens de chamadas, e não de vagas: a contagem de ocupação continua sendo da `016`.
