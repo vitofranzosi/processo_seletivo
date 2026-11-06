@@ -1,0 +1,102 @@
+{
+  "35-gestor-1280": {
+    "altura": 1767,
+    "fim_do_nivel_1": 696,
+    "rola_de_lado": false
+  },
+  "35-publicador-1280": {
+    "altura": 1615,
+    "fim_do_nivel_1": 556,
+    "rola_de_lado": false
+  },
+  "35-elaborador-1280": {
+    "altura": 1175,
+    "fim_do_nivel_1": 532,
+    "rola_de_lado": false
+  },
+  "57-gestor-1280": {
+    "altura": 1657,
+    "fim_do_nivel_1": 672,
+    "rola_de_lado": false
+  },
+  "51-gestor-1280": {
+    "altura": 1838,
+    "fim_do_nivel_1": 672,
+    "rola_de_lado": false
+  },
+  "91-arodrigues-1280": {
+    "altura": 1710,
+    "fim_do_nivel_1": 601,
+    "rola_de_lado": false
+  },
+  "91-gestor-1280": {
+    "altura": 1783,
+    "fim_do_nivel_1": 720,
+    "rola_de_lado": false
+  },
+  "72-gestor-1280": {
+    "altura": 1778,
+    "fim_do_nivel_1": 720,
+    "rola_de_lado": false
+  },
+  "26-gestor-1280": {
+    "altura": 1782,
+    "fim_do_nivel_1": 672,
+    "rola_de_lado": false
+  },
+  "90-elaborador-1280": {
+    "altura": 1203,
+    "fim_do_nivel_1": 592,
+    "rola_de_lado": false
+  },
+  "35-gestor-375": {
+    "altura": 3102,
+    "fim_do_nivel_1": 1049,
+    "rola_de_lado": false
+  },
+  "35-publicador-375": {
+    "altura": 2669,
+    "fim_do_nivel_1": 830,
+    "rola_de_lado": false
+  },
+  "35-elaborador-375": {
+    "altura": 1973,
+    "fim_do_nivel_1": 741,
+    "rola_de_lado": false
+  },
+  "57-gestor-375": {
+    "altura": 2929,
+    "fim_do_nivel_1": 1049,
+    "rola_de_lado": false
+  },
+  "51-gestor-375": {
+    "altura": 3016,
+    "fim_do_nivel_1": 1025,
+    "rola_de_lado": false
+  },
+  "91-arodrigues-375": {
+    "altura": 2979,
+    "fim_do_nivel_1": 976,
+    "rola_de_lado": false
+  },
+  "91-gestor-375": {
+    "altura": 3148,
+    "fim_do_nivel_1": 1145,
+    "rola_de_lado": false
+  },
+  "72-gestor-375": {
+    "altura": 3008,
+    "fim_do_nivel_1": 1097,
+    "rola_de_lado": false
+  },
+  "26-gestor-375": {
+    "altura": 2892,
+    "fim_do_nivel_1": 1025,
+    "rola_de_lado": false
+  },
+  "90-elaborador-375": {
+    "altura": 2297,
+    "fim_do_nivel_1": 917,
+    "rola_de_lado": false
+  }
+}

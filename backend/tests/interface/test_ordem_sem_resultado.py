@@ -28,13 +28,16 @@ def _campo(pagina, nome):
     return re.search(rf'name="{nome}" value="([^"]*)"', pagina).group(1)
 
 
-def _frase(edital):
+def _proposta(edital):
     from processo_seletivo.classificacao.application.calculo import calcular_ordem
     from tests.fixtures.corte import MARCO
     from tests.fixtures.edital import PROFILE_ID
 
-    proposta = calcular_ordem(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
-    return ordem_sem_resultado.impedimento(proposta)["frase"]
+    return calcular_ordem(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
+
+
+def _frase(edital):
+    return ordem_sem_resultado.impedimento(_proposta(edital))["frase"]
 
 
 @pytest.fixture
@@ -257,3 +260,24 @@ def test_o_recorte_em_que_ninguem_concorreu_continua_a_praticar(
 
     assert "ninguém concorreu — a ordem vazia é emitida e registra isso" in pagina
     assert "Impedidos (1)" in pagina
+
+
+# --- Coerência com a `127` (FR-4218, SC-1306) -----------------------------------------------------
+
+
+def test_o_andamento_nunca_diz_pendente_para_a_ordem_que_o_comando_recusa(sem_avaliacao):
+    """A `127` deriva a ordem como *Depois* das Etapas que ela lê; a `128` recusa o mesmo caso.
+
+    Se um dia a derivação disser *Pendente* aqui, o cartão "O que fazer agora" e o "Próximo nesta
+    lista" mandariam emitir o que o comando recusa — o beco que a FR-476 da `033` proíbe.
+    """
+    from processo_seletivo.interface import andamento
+    from tests.conftest import ator_institucional
+
+    edital, _, _ = sem_avaliacao
+    assert ordem_sem_resultado.impedimento(_proposta(edital)) is not None
+
+    [perfil] = andamento.do_edital(edital, ator_institucional("maria")).perfis
+    ordem = next(p for p in perfil.pontos if p.tipo == andamento.ORDEM)
+
+    assert ordem.celula(None).situacao == andamento.DEPOIS

@@ -1,0 +1,209 @@
+/* O andamento da seleção no detalhe do Edital publicado (127).
+   O nível 1 começa "O que fazer agora"; ele é lista, e "Sua" é texto além de cor (FR-4121). */
+
+.contagem-de-providencias {
+  margin: 0 0 .35rem;
+  font-weight: 600;
+}
+
+.nada-em-aberto {
+  margin: 0 0 .75rem;
+  color: var(--texto-fraco);
+}
+
+.providencias {
+  list-style: none;
+  margin: 0 0 .6rem;
+  padding: 0;
+}
+
+.providencias li {
+  padding: .2rem 0;
+  border-bottom: 1px solid var(--borda);
+  line-height: 1.4;
+}
+
+.providencias li:last-child {
+  border-bottom: 0;
+}
+
+.providencias.suas li {
+  border-left: 4px solid var(--verde);
+  padding-left: .6rem;
+  background: var(--verde-claro);
+}
+
+.marca-sua {
+  display: inline-block;
+  margin-right: .35rem;
+  padding: 0 .4rem;
+  border-radius: 4px;
+  background: var(--verde-escuro);
+  color: var(--branco);
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.onde-da-providencia,
+.providencias .razao {
+  color: var(--texto-fraco);
+}
+
+.providencias.de-outros li,
+.providencias.em-espera li {
+  color: var(--texto);
+}
+
+.situacao-do-andamento {
+  display: inline-block;
+  margin-right: .3rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.situacao-do-andamento.s-aguarda {
+  color: var(--texto-fraco);
+}
+
+.situacao-do-andamento.s-impedido,
+.situacao-do-andamento.s-obsoleto {
+  color: var(--vermelho);
+}
+
+.situacao-do-andamento.s-pendente {
+  color: var(--verde-texto);
+}
+
+.mais-providencias {
+  margin: 0 0 .6rem;
+}
+
+.mais-providencias summary {
+  cursor: pointer;
+  color: var(--verde-texto);
+}
+
+.atencao-do-andamento {
+  margin: .4rem 0 .75rem;
+  padding: .5rem .8rem;
+  border-left: 4px solid var(--amarelo);
+  background: var(--amarelo-fundo);
+  font-size: .9rem;
+}
+
+.imutavel.em-uma-linha {
+  margin-top: .75rem;
+  padding: .35rem .8rem;
+  font-size: .85rem;
+}
+
+/* O nível 2: o "Andamento da seleção", no lugar do cartão "Classificação" (127, B2). */
+
+.linha-das-inscricoes {
+  margin: 0 0 .3rem;
+  color: var(--texto-fraco);
+}
+
+.perfil-sem-inscricao {
+  margin: .3rem 0 0;
+  border-top: 1px solid var(--borda);
+  padding-top: .3rem;
+  color: var(--texto-fraco);
+}
+
+.perfil-do-andamento {
+  margin: .3rem 0 0;
+  border-top: 1px solid var(--borda);
+  padding-top: .3rem;
+}
+
+.perfil-do-andamento summary {
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.resumo-do-perfil {
+  color: var(--texto-fraco);
+}
+
+/* FR-4106: a matriz rola dentro da moldura em qualquer largura, e a página nunca de lado.
+   Com oito ou nove colunas ela não cabe a 1280 px (G-06 do estudo). */
+.moldura-do-andamento {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: .5rem 0;
+}
+
+.matriz-do-andamento {
+  border-collapse: collapse;
+  font-size: .85rem;
+}
+
+.matriz-do-andamento caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 0 0 .3rem;
+}
+
+.matriz-do-andamento th,
+.matriz-do-andamento td {
+  padding: .3rem .5rem;
+  border: 1px solid var(--borda);
+  vertical-align: top;
+  text-align: left;
+}
+
+.matriz-do-andamento thead th {
+  white-space: nowrap;
+  background: var(--cinza-fundo);
+}
+
+.matriz-do-andamento tbody th {
+  min-width: 9rem;
+  font-weight: 600;
+}
+
+.matriz-do-andamento td {
+  min-width: 6.5rem;
+}
+
+.matriz-do-andamento td[data-situacao="pendente"],
+.matriz-do-andamento td[data-situacao="obsoleto"] {
+  background: var(--verde-claro);
+}
+
+.matriz-do-andamento td[data-situacao="impedido"] {
+  background: var(--vermelho-fundo);
+}
+
+.matriz-do-andamento td[data-situacao="aguarda"] {
+  background: var(--amarelo-fundo);
+}
+
+.matriz-do-andamento td[data-situacao="nao_se_aplica"],
+.matriz-do-andamento td[data-situacao="depois"] {
+  color: var(--texto-fraco);
+}
+
+.matriz-do-andamento .sinal {
+  margin-right: .2rem;
+}
+
+.nota-da-celula {
+  display: block;
+  color: var(--texto-fraco);
+  font-size: .8rem;
+}
+
+.destinos-do-perfil {
+  list-style: none;
+  margin: .15rem 0 .3rem;
+  padding: 0;
+  font-size: .85rem;
+}
+
+.andamento-da-selecao h2 {
+  margin-bottom: .2rem;
+}

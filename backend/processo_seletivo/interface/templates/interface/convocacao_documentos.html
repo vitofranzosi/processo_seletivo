@@ -17,6 +17,7 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
 {% endcomment %}
 {% if erro %}<p class="aviso" role="alert">{{ erro }}</p>{% endif %}
 {% if aviso %}<p class="aviso" role="status">{{ aviso }}</p>{% endif %}
+{% if aviso %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
 <p class="aviso" role="status"><strong>{{ rotulo_documental }}</strong>{% if desfecho %} — {{ desfecho.get_especie_display }}, registrado em {{ desfecho.registrado_em|date:"d/m/Y H:i" }}{% endif %}</p>
 {% if leitura.pendencias_para_incluir and not desfecho %}

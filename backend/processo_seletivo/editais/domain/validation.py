@@ -2021,6 +2021,16 @@ def _perfil_sem_marco(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     return findings
 
 
+def quem_exige_o_resultado(snapshot: dict) -> dict:
+    """O nome público de `_quem_exige_o_resultado`, para quem lê a expectativa de uma Etapa (127).
+
+    O andamento da seleção pergunta aqui quais Etapas um marco consome, em vez de reescrever as
+    três ligações: a resposta é a mesma que impede publicar Edital com Etapa que nunca consolidaria,
+    e duas cópias dela divergiriam na primeira mudança (D-012 da `127`).
+    """
+    return _quem_exige_o_resultado(snapshot)
+
+
 def _quem_exige_o_resultado(snapshot: dict) -> dict:
     """`{identidade da Etapa: frase do consumidor}` para toda Etapa que um marco referencia.
 

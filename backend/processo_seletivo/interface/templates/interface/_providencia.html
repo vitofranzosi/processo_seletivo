@@ -1,0 +1,10 @@
+{% comment %} Uma providência do nível 1 (127, contrato das telas). A da pessoa é link com o verbo do
+   ato; a de outro papel nomeia o papel, sem link; a que espera diz a razão e, no impedimento, quem o
+   resolve. "Sua" é texto, e não só cor (FR-4121, UX-231). {% endcomment %}
+{% if item.grupo == "sua" %}
+<li><span class="marca-sua">Sua</span> {% if item.url %}<a href="{{ item.url }}">{{ item.ato }}</a>{% else %}{{ item.ato }}{% endif %} <span class="onde-da-providencia">— {{ item.onde_por_extenso }}</span>{% if item.ate %} <span class="quando">até {{ item.ate|date:"d/m/Y" }}</span>{% endif %}{% if item.condicional and item.razao %} <span class="razao">{{ item.razao }}</span>{% endif %}</li>
+{% elif item.grupo == "de_outro" %}
+<li><strong>{{ item.texto_do_papel }}:</strong> {{ item.ato_no_meio_da_frase }} <span class="onde-da-providencia">— {{ item.onde_por_extenso }}</span></li>
+{% else %}
+<li><span class="situacao-do-andamento s-{{ item.situacao }}"><span aria-hidden="true">{{ item.sinal }}</span> {{ item.rotulo }}</span> {{ item.ato }} <span class="onde-da-providencia">— {{ item.onde_por_extenso }}</span>{% if item.razao %}: <span class="razao">{{ item.razao }}</span>{% endif %}.{% if item.situacao == "impedido" and item.texto_de_quem_resolve %} Quem resolve: {{ item.texto_de_quem_resolve|lower }}{% if item.url_da_saida %} — <a href="{{ item.url_da_saida }}">Retificar</a>{% endif %}.{% endif %}</li>
+{% endif %}

@@ -210,8 +210,11 @@ def test_detalhe_mostra_a_trilha_e_quem_atuou(
     identificar(client, "auditor", ["auditor"])
     corpo = client.get(reverse("interface:detalhe", args=[publicado.id])).content.decode()
 
-    assert 'class="e-atual"' in corpo
-    assert corpo.count('class="e-concluida"') == 3, "elaboração, revisão e homologação concluídas"
+    # **Depois da publicação a trilha de situação sai** (127, D-002, FR-4089): o selo ao lado do
+    # título diz a situação, e a trilha sugeria que faltava pouco quando a seleção nem começara. A
+    # trilha da pré-publicação continua provada em `test_andamento_do_edital.py`.
+    assert 'class="e-atual"' not in corpo
+    assert 'class="situacao s-PUBLICADO"' in corpo
     assert "preparador" in corpo and "homologador" in corpo and "publicador" in corpo
     assert "Diretora-Geral" in corpo, "Autoridade Signatária aparece"
 

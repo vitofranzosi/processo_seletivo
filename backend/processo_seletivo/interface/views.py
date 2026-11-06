@@ -158,6 +158,7 @@ from processo_seletivo.inscricoes.application.consulta import (
 )
 from processo_seletivo.interface import (
     acoes,
+    andamento,
     atos,
     atos_processo,
     atos_retificacao,
@@ -170,6 +171,7 @@ from processo_seletivo.interface import (
     identidade,
     navegacao,
     origens,
+    providencias,
     revisao,
     trabalho,
 )
@@ -3923,12 +3925,44 @@ def detalhe(request, edital_id):
     # como bandeiras soltas — eram elas que o `{% empty %}` não enxergava.
     conjunto = acoes.do_edital(edital, ator, pendencias=pendencias, segregacao=segregacao)
     em_curso = atos_retificacao.em_curso(edital, ator)
+    # **O andamento da seleção, depois da publicação** (127, FR-4050, FR-4080). `None` antes dela:
+    # o cartão continua o de hoje, com a trilha e o bastão, que orientam bem até ali.
+    andamento_do_edital = andamento.do_edital(edital, ator, em_curso=em_curso)
+    nivel_1 = andamento_do_edital.nivel_1 if andamento_do_edital is not None else None
+    marcos_classificatorios = _marcos_publicados(edital, ator)
+    if andamento_do_edital is not None:
+        # **O nível 2 leva os destinos do cartão que substitui** (127, FR-4108): os mesmos que
+        # `_marcos_publicados` decide por destino (033), agora no Perfil de cada marco.
+        for perfil in andamento_do_edital.perfis:
+            perfil.destinos = [
+                item
+                for item in marcos_classificatorios
+                if str(item["perfil"].get("id")) == str(perfil.perfil.get("id"))
+            ]
     return render(
         request,
         "interface/detalhe.html",
         {
             "edital": edital,
-            "trilha": _trilha(edital),
+            # **A trilha sai depois da publicação** (127, D-002, FR-4089): o selo ao lado do título
+            # diz a situação, e a trilha sugeria que faltava pouco quando a seleção nem começara.
+            "trilha": _trilha(edital) if andamento_do_edital is None else [],
+            "andamento": andamento_do_edital,
+            "nivel_1": nivel_1,
+            # Com providência da pessoa, nenhuma ação vem cheia: a principal é a providência (127,
+            # FR-4088). O peso sai daqui para que o template desenhe a principal num lugar só.
+            "peso_da_principal": "secundario" if nivel_1 and nivel_1.suas else "",
+            "contagem_de_providencias": providencias.contagem(nivel_1) if nivel_1 else "",
+            "frase_da_atencao": (
+                providencias.frase_da_atencao(andamento_do_edital.atencoes)
+                if andamento_do_edital is not None
+                else ""
+            ),
+            "porque_nada": (
+                providencias.porque_nada(andamento_do_edital, edital)
+                if andamento_do_edital is not None and not nivel_1
+                else ""
+            ),
             "participantes": participantes,
             "documentos": _documentos_publicados(edital),
             # As Retificações ainda não publicadas (103, FR-2701). As publicadas estão em
@@ -3964,7 +3998,14 @@ def detalhe(request, edital_id):
                 "" if acoes.pode_retificar(edital, ator) else CONDUCAO_DA_RETIFICACAO
             ),
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
-            "marcos_classificatorios": _marcos_publicados(edital, ator),
+            # **Quem vê o "Andamento da seleção" é quem via o cartão "Classificação"** (127, D-004,
+            # FR-4100): a mesma lista, que é vazia para quem não alcança destino nenhum.
+            "marcos_classificatorios": marcos_classificatorios,
+            "linha_das_inscricoes": (
+                andamento.linha_das_inscricoes(andamento_do_edital.inscricoes)
+                if andamento_do_edital is not None
+                else ""
+            ),
             "conferencia_do_ato": _conferencia_do_ato(
                 edital, OPERACAO_DO_ATO_COM_CONFERENCIA.get(request.GET.get("ato", ""))
             ),
@@ -7592,6 +7633,7 @@ def ordenacao(request, edital_id, marco_id):
                 # ato as cite, e é a citação **publicada** que prova o cumprimento (FR-089, T-015).
                 "decisoes_a_citar": _decisoes_a_citar(edital, marco_id, estado["marco"]),
                 "resultado": request.session.pop("resultado_da_ordenacao", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(edital, ator, marco_id, lista_id),
                 # **A recusa da `128` não é dita duas vezes** (R-4): o bloco que fica no lugar do
                 # formulário já traz a frase, e é ele que recebe o foco.
                 "erro": None if sem_resultado and erro == sem_resultado["frase"] else erro,
@@ -8111,6 +8153,7 @@ def corte(request, edital_id, marco_id):
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_do_corte", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(edital, ator, marco_id, lista_id),
                 # Qual dos dois atos do corte voltou (126, FR-4014): a faixa seguinte não é "corte
                 # emitido", e dizer o número dela como se fosse a geração inteira enganaria.
                 "acao": request.session.pop("acao_do_corte", None),
@@ -8178,6 +8221,9 @@ def ocupacao(request, edital_id, marco_id):
                     )
                 ),
                 "resultado": resultado,
+                "proximo_nesta_lista": _proximo_nesta_lista(
+                    edital, ator, marco_id, (resultado or {}).get("listaId") or None
+                ),
                 "recorte_apurado": next(
                     (
                         recorte["rotulo"]
@@ -8618,6 +8664,7 @@ def convocacao(request, edital_id, marco_id):
                 # quem acabara de desfechar lia "Apuração emitida".
                 "acao": request.session.pop("acao_da_convocacao", None),
                 "resultado": request.session.pop("resultado_da_convocacao", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(edital, ator, marco_id, lista_id),
                 "erro": request.session.pop("erro_da_convocacao", None),
             },
         )
@@ -8840,9 +8887,53 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
                 "chave_idempotencia": uuid4().hex,
                 "erro": request.session.pop("erro_da_conferencia", None),
                 "aviso": request.session.pop("aviso_da_conferencia", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(
+                    edital, ator, marco_id, getattr(vigente, "lista_id", None)
+                ),
             },
         )
     )
+
+
+def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=False):
+    """O "Próximo nesta lista" da mensagem de sucesso de um ato (127, FR-4090 a FR-4092, D-015).
+
+    **Um callable, e não o valor**: o template só o lê dentro do bloco de sucesso, uma vez, com
+    `{% with %}`. Abrir a tela não paga a derivação; quem acabou de praticar um ato paga a do
+    Perfil do marco, e não a do Edital inteiro.
+
+    **"Sua" é a regra do andamento** (`Andamento.e_sua`), a mesma do nível 1: a porta do papel, a
+    mesa da `104` e a alocação à conferência. Refazê-la aqui era a segunda regra que diverge.
+    """
+
+    def ler():
+        atual = andamento.do_edital(edital, ator, perfis=[_perfil_do_marco(edital, marco_id)])
+        if atual is None:
+            return None
+        desta, outras, perfil = andamento.da_lista(
+            atual, marco_id, lista_id, preferir=atual.e_sua, todas_as_listas=todas_as_listas
+        )
+
+        def item(celula):
+            sua = atual.e_sua(celula, perfil)
+            ato = celula.ato or celula.rotulo
+            return {
+                "ato": ato,
+                "ato_minusculo": ato[:1].lower() + ato[1:],
+                "situacao": celula.situacao,
+                "rotulo": celula.rotulo,
+                "razao": celula.razao,
+                "sua": sua,
+                "url": celula.url if sua else "",
+                "papel": andamento.PAPEIS.get(celula.responsavel, ""),
+            }
+
+        return {
+            "desta": item(desta) if desta is not None else None,
+            "outras": [(rotulo, item(celula)) for rotulo, celula in outras],
+        }
+
+    return ler
 
 
 @require_http_methods(["GET"])
@@ -11311,7 +11402,17 @@ def sorteio(request, edital_id, marco_id):
                 # sorteio terminou**, em vez de exigir que alguém reconstrua a navegação por cinco
                 # telas com a transmissão no ar.
                 "pode_publicar": ator.can("resultado:publicar"),
-                "resultado": request.session.pop("resultado_do_sorteio", None),
+                "resultado": (
+                    resultado_do_sorteio := request.session.pop("resultado_do_sorteio", None)
+                ),
+                "proximo_nesta_lista": _proximo_nesta_lista(
+                    edital,
+                    ator,
+                    marco_id,
+                    (resultado_do_sorteio or {}).get("listaId") or None,
+                    # A semente vale para o marco: o próximo passo é do marco (item 4 do review).
+                    todas_as_listas=(resultado_do_sorteio or {}).get("tipo") == "ocorrencia",
+                ),
                 "erro": request.session.pop("erro_do_sorteio", None),
                 # **A chave de idempotência nasce na leitura, e viaja no formulário** — como a tela
                 # da `015` já fazia. Sem ela, cada envio gerava chave nova: o duplo clique no botão

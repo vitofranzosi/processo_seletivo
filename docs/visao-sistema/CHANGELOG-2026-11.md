@@ -241,3 +241,20 @@ Os dois últimos são documentos em `doc/` e não mudam a descrição do sistema
 - a suíte não rodou aqui; o #410 fechou em 16 755 passando e 12 pulados na worktree dele;
 - o produto não foi percorrido;
 - o #411 (125) não entrou: CI vermelho em três jornadas de navegador e conflito com a `main`.
+
+## Acréscimo de 06/11: a 125, a convocação segue o canal
+
+Entrou na `main`, que chegou a `22a722af`, a 125, especificada, planejada e implementada (#411).
+
+- **Nova subseção `#convocacao-segue-o-canal`**, antes da correção da convocação, com três mudanças:
+  - a convocação por publicação só aparece ao candidato depois do registro da publicação; toda superfície do portal lê pelo predicado derivado, e o envio de documento antes disso é recusado como item inexistente;
+  - o texto digitado que chega ao candidato tem aviso nos sete campos e o passo *Conferir o texto*, sem script, que assina o texto;
+  - a palavra segue o canal, por uma tabela única de frases.
+- **Os três gestos:** a linha das pendentes diz *Publicações a registrar* na publicação.
+- **Revisão e rodapé** apontam para `22a722af`.
+
+**Não verificado:**
+
+- a suíte não rodou aqui; o #411 fechou em 16 770 passando e 21 pulados na worktree dele, sem o grupo `navegador`, e o CI dele ficou verde;
+- a SC-1209 é validação humana e está pendente;
+- o produto não foi percorrido.
