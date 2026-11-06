@@ -76,9 +76,13 @@ def observar_ocorrencia(
         # ninguém tivesse decidido isso e sem caminho de volta.
         #
         # Aqui nada é gravado, e a recusa é repetível: tentar de novo é o ato certo, e é barato.
+        #
+        # **A mensagem é texto, e não Markdown** (124, FR-3963). A tela a imprime por
+        # `{{ erro.detalhe }}`, que não interpreta nada: o destaque escrito com asteriscos chegava
+        # ao operador como `**nada foi registrado**`, ao vivo.
         raise DomainError(
             "source_unreachable",
-            f"Não foi possível falar com {fonte} agora, e por isso **nada foi registrado**: a "
+            f"Não foi possível falar com {fonte} agora, e por isso nada foi registrado: a "
             f"ocorrência {referencia!r} continua sendo a que vale, e observá-la de novo é o "
             "próximo passo. Falha de acesso não é ausência de extração — registrá-la como "
             "indisponibilidade descartaria a extração que o Edital declarou. "

@@ -691,3 +691,54 @@ def test_o_campo_pede_so_o_numero(client, com_etapas):
         assert "só o" in ajuda and "número do concurso, como 6115" in ajuda, ajuda_id
         assert "sem dígito verificador, texto ou ano" in ajuda, ajuda_id
     assert 'placeholder="6115"' in corpo
+
+
+# ------------------------------------------------ a ocorrência explicada a quem enxerga (124)
+
+
+def _sem_espacos(texto):
+    return " ".join(texto.split())
+
+
+def test_a_ajuda_da_etapa_explica_a_ocorrencia_a_quem_enxerga(client, com_etapas):
+    """`FR-3966` — a explicação do campo existia só na descrição `.oculto`.
+
+    Quem enxerga via o rótulo e o exemplo 6115, sem saber o que é a ocorrência nem por que vai só o
+    número. O conceito entra no `details.como-preencher` da etapa, e a descrição escondida continua
+    apontada pelo campo (035, FR-508).
+    """
+    corpo = _com_marco_de_sorteio(client, com_etapas)
+
+    bloco = re.search(r'<details class="como-preencher">(.*?)</details>', corpo, re.S).group(1)
+    assert f'<dt><a href="#marco-{PERFIL}-0">Ocorrência que fixará a semente</a></dt>' in bloco
+    texto = _sem_espacos(bloco)
+    assert "É a extração da fonte pública cujos números viram a semente do sorteio" in texto
+    assert "posterior ao congelamento da relação de participantes" in texto
+    for ajuda_id in (f"ajuda-ocorrencia-{PERFIL}-0", "ajuda-ocorrencia-comum"):
+        assert f'aria-describedby="{ajuda_id}"' in corpo, "a descrição continua apontada"
+
+
+def test_a_ajuda_da_etapa_usa_as_frases_da_descricao_do_campo(client, com_etapas):
+    """`FR-3967` — a forma e a consequência com as palavras da descrição, e não com outras.
+
+    Uma segunda redação para a mesma coisa é o que a FR-509 da `035` proíbe. As duas frases são
+    procuradas, palavra por palavra, nas três: a ajuda da etapa, a descrição do marco e a do comum.
+    """
+    corpo = _com_marco_de_sorteio(client, com_etapas)
+
+    bloco = _sem_espacos(
+        re.search(r'<details class="como-preencher">(.*?)</details>', corpo, re.S).group(1)
+    )
+    descricoes = [
+        _sem_espacos(corpo.split(f'id="{ajuda_id}">', 1)[1].split("</span>", 1)[0])
+        for ajuda_id in (f"ajuda-ocorrencia-{PERFIL}-0", "ajuda-ocorrencia-comum")
+    ]
+    for frase in (
+        "Na Loteria Federal, só o número do concurso, como 6115 — sem dígito verificador, texto ou "
+        "ano.",
+        "É do número final que a regra de substituição deriva a ocorrência seguinte quando a fonte "
+        "não publica; sem ele, não há substituta e prosseguir exige Retificação.",
+    ):
+        assert frase in bloco, frase
+        for descricao in descricoes:
+            assert frase in descricao, frase
