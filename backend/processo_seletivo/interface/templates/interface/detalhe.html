@@ -1,6 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/andamento.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Edital {{ edital.number }}/{{ edital.year }}</h1>
@@ -12,6 +12,8 @@
 {% endif %}
 {% include "interface/_conferencia_do_ato.html" %}
 
+{% comment %} Depois da publicação a trilha não aparece (127, D-002): `trilha` chega vazia. {% endcomment %}
+{% if trilha %}
 <ol class="etapas" aria-label="Situação do Edital no fluxo">
   {% for etapa in trilha %}
   <li class="e-{{ etapa.estado }}">
@@ -21,6 +23,7 @@
   </li>
   {% endfor %}
 </ol>
+{% endif %}
 {% if edital.status == 'CANCELADO' %}
 <p class="aviso"><strong>Cancelado.</strong> Este Edital foi interrompido administrativamente
 antes da conclusão regular — o que não é o mesmo que encerramento. Publicações e histórico
@@ -34,6 +37,7 @@ permanecem preservados.</p>
 <div class="colunas ao-topo">
   <section aria-labelledby="acoes-titulo" class="cartao">
     <h2 id="acoes-titulo">O que fazer agora</h2>
+    {% if andamento %}{% include "interface/_providencias.html" %}{% endif %}
 
     {% if impedido_por_segregacao %}
     <p class="aviso"><strong>Você não poderá publicar este Edital.</strong> Você elaborou e
@@ -56,7 +60,7 @@ permanecem preservados.</p>
     uma pessoa (FR-543b). Não vire isto em ação desabilitada com motivo: a lista não oferece
     destino que o ator não abre, e desfazê-lo desfaria a regra da 007 e da 033 (FR-541c).
     {% endcomment %}
-    {% if edital.status == 'PUBLICADO' %}
+    {% if edital.status == 'PUBLICADO' and not andamento %}
     <p class="imutavel"><strong>Conteúdo imutável.</strong> Um Edital publicado não pode ser
     editado. Correções ocorrem por Retificação, com novo fluxo de aprovação.{% if conducao_do_imutavel %}
     {{ conducao_do_imutavel }}{% endif %}</p>
@@ -102,7 +106,8 @@ permanecem preservados.</p>
     {% if grupo %}
     {% if grupo.principal or grupo.secundarias %}
     <ul class="lista-acoes em-linha">
-      {% if grupo.principal %}{% include "interface/_acao_do_edital.html" with acao=grupo.principal peso="" %}{% endif %}
+      {% comment %} Com providência da pessoa, nenhuma ação vem cheia: a principal é a providência (127, FR-4088). {% endcomment %}
+      {% if grupo.principal %}{% include "interface/_acao_do_edital.html" with acao=grupo.principal peso=peso_da_principal %}{% endif %}
       {% for acao in grupo.secundarias %}{% include "interface/_acao_do_edital.html" with peso="secundario" %}{% endfor %}
     </ul>
     {% endif %}
@@ -113,15 +118,23 @@ permanecem preservados.</p>
     {% endif %}
     {% elif not retificacao_aguarda_voce %}
     {% comment %} Sem ato do Edital e sem Retificação para a pessoa: o cartão diz quem age em cada
-       Retificação em curso, e só sem nenhuma volta a frase de sempre (FR-2820). {% endcomment %}
+       Retificação em curso, e só sem nenhuma volta a frase de sempre (FR-2820). Com providência da
+       pessoa, as linhas da Retificação continuam, sem o "Nenhum ato" (127, D-017, FR-4086). {% endcomment %}
+    {% if retificacoes_em_curso or not nivel_1.suas %}
     <ul class="lista-acoes">
       {% for item in retificacoes_em_curso %}
-      <li class="nenhuma">Nenhum ato do Edital para seus papéis. A Retificação de
+      <li class="nenhuma">{% if not nivel_1.suas %}Nenhum ato do Edital para seus papéis. {% endif %}A Retificação de
         {{ item.retificacao.created_at|date:"d/m/Y" }} ({{ item.rotulo_situacao }}) {% if item.parada %}não pode mais prosseguir: o Edital foi {{ item.parada }}{% else %}aguarda {{ item.passo.papel }}{% endif %}.</li>
       {% empty %}
       <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
       {% endfor %}
     </ul>
+    {% endif %}
+    {% endif %}
+    {% comment %} O aviso de conteúdo imutável numa linha, no pé do cartão (127, FR-4089), com a mesma
+       condução da 037: quem pode retificar recebe a ação, e para ele a frase cala. {% endcomment %}
+    {% if andamento and edital.status == 'PUBLICADO' %}
+    <p class="imutavel em-uma-linha"><strong>Conteúdo imutável.</strong> Correções ocorrem por Retificação, com novo fluxo de aprovação.{% if conducao_do_imutavel %} {{ conducao_do_imutavel }}{% endif %}</p>
     {% endif %}
   </section>
   <section aria-labelledby="participantes-titulo" class="cartao">

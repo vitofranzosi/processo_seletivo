@@ -289,6 +289,8 @@ QUEM_CARREGA = {
     },
     # A prévia da classificação (094): o painel só existe na etapa Classificação.
     "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},
+    # O andamento da seleção (127): as providências e a matriz, só no detalhe do Edital.
+    "interface/telas/andamento.css": {"detalhe.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
         for tela in (
