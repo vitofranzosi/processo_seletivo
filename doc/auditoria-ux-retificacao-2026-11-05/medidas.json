@@ -1,0 +1,332 @@
+{
+ "entrada": {
+  "capturas": {
+   "01-detalhe-do-edital": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/",
+    "altura": 1302,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 0
+   },
+   "01b-detalhe-do-edital-inteiro": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/",
+    "altura": 1302,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 0
+   },
+   "02-retificar-primeira-dobra": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 14852,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   },
+   "03-retificar-pagina-inteira": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 14852,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   }
+  },
+  "acoes": 1,
+  "passos": [
+   "1. clica em «Retificar» no detalhe do Edital"
+  ]
+ },
+ "A-cronograma": {
+  "termino_mostrado": "2026-12-05T21:38",
+  "capturas": {
+   "A2-campo-alterado-com-selo": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 14852,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 6417,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   },
+   "A3-conferencia-o-que-vai-mudar": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 15036,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 1
+   },
+   "A4-detalhe-da-retificacao-criada": {
+    "url": "/gestao/retificacoes/35e145ef-beee-46b3-bf5d-b2dd75d3bd2b/",
+    "altura": 980,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 1
+   }
+  },
+  "acoes": 5,
+  "passos": [
+   "1. clica em «Cronograma» no índice «Ir para»",
+   "2. altera «Término» do Evento 1 — Inscrições",
+   "3. clica em «Ver o que vai mudar» (barra fixa)",
+   "4. preenche a Justificativa (no fim da página)",
+   "5. clica em «Criar Retificação»"
+  ]
+ },
+ "B-vagas": {
+  "encontrar_vagas": "Nenhuma linha corresponde",
+  "capturas": {
+   "B2-perfil-alterado": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 15157,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 1322,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   },
+   "B3-conferencia-vagas-sem-quadro": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 15341,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 1
+   },
+   "B4-conferencia-vagas-com-quadro": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 15381,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 2
+   }
+  },
+  "acoes": 6,
+  "passos": [
+   "1. digita «vagas» em «Encontrar»",
+   "2. clica em «Perfis de Vaga» no índice",
+   "3. rola até o Perfil DOC-INFO e altera «Vagas imediatas» de 3 para 4",
+   "4. clica em «Ver o que vai mudar» (barra fixa)",
+   "5. altera também a linha «Ampla concorrência — DOC-INFO» do quadro",
+   "6. clica em «Ver o que vai mudar» (barra fixa)"
+  ]
+ },
+ "C-requisitos": {
+  "encontrar_requisito": "1 linha",
+  "capturas": {
+   "C1-encontrar-requisito": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 1734,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   },
+   "C2-encontrar-o-perfil": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 2398,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   },
+   "C3-documento-exigido": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 1806,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 812,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   },
+   "C4-conferencia-requisitos": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 15364,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 1
+   }
+  },
+  "acoes": 5,
+  "passos": [
+   "1. digita «requisito» em «Encontrar»",
+   "2. digita «Técnico de Laboratório» em «Encontrar»",
+   "3. acrescenta uma linha a «Requisitos de participação»",
+   "4. digita «Diploma» em «Encontrar»",
+   "5. clica em «Ver o que vai mudar» (barra fixa)"
+  ]
+ },
+ "D-multipla": {
+  "depois_da_conferencia_contagem": "Nada alterado desde a conferência",
+  "capturas": {
+   "D3-barra-depois-da-conferencia": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 15420,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 786,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 3
+   }
+  },
+  "acoes": 5,
+  "passos": [
+   "1. altera o Local da Prova objetiva (Cronograma)",
+   "2. altera a Remuneração do Perfil TEC-LAB",
+   "3. altera o Prazo em dias do recurso do Marco FINAL",
+   "4. liga «Só o que eu alterei»",
+   "5. clica em «Ver o que vai mudar» (barra fixa)"
+  ]
+ },
+ "G-sucessivas": {
+  "capturas": {
+   "G1-detalhe-do-edital-documentos": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/",
+    "altura": 1415,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 0
+   }
+  },
+  "acoes": 0,
+  "passos": []
+ },
+ "F-submeter": {
+  "capturas": {
+   "F0-confirmar-submeter": {
+    "url": "/gestao/retificacoes/35e145ef-beee-46b3-bf5d-b2dd75d3bd2b/atos/submeter",
+    "altura": 900,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 0
+   },
+   "F1-detalhe-apos-submeter": {
+    "url": "/gestao/retificacoes/35e145ef-beee-46b3-bf5d-b2dd75d3bd2b/?ato=submeter",
+    "altura": 1000,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 1
+   }
+  },
+  "acoes": 2,
+  "passos": [
+   "1. clica em «Submeter»",
+   "2. confirma"
+  ]
+ },
+ "F-homologar": {
+  "capturas": {
+   "F2-inicio-do-homologador": {
+    "url": "/gestao/",
+    "altura": 1204,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 0
+   },
+   "F3-edital-visto-pelo-homologador": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/",
+    "altura": 1420,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 0
+   },
+   "F4-detalhe-visto-pelo-homologador": {
+    "url": "/gestao/retificacoes/35e145ef-beee-46b3-bf5d-b2dd75d3bd2b/",
+    "altura": 998,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 1
+   },
+   "F5-confirmar-homologar": {
+    "url": "/gestao/retificacoes/35e145ef-beee-46b3-bf5d-b2dd75d3bd2b/atos/homologar",
+    "altura": 953,
+    "largura": 1280,
+    "janela": 900,
+    "rolagem": 0,
+    "cartoes": 0,
+    "campos": 0,
+    "linhas_do_resumo": 0
+   }
+  },
+  "acoes": 1,
+  "passos": [
+   "1. clica em «Homologar»"
+  ]
+ },
+ "375": {
+  "capturas": {
+   "M1-retificar-375": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 27420,
+    "largura": 375,
+    "janela": 812,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   },
+   "M2-retificar-375-inteira": {
+    "url": "/gestao/editais/0b0173ac-9992-4e27-aad0-50e19c459f37/retificar",
+    "altura": 27420,
+    "largura": 375,
+    "janela": 812,
+    "rolagem": 0,
+    "cartoes": 41,
+    "campos": 180,
+    "linhas_do_resumo": 0
+   }
+  },
+  "acoes": 0,
+  "passos": []
+ }
+}
