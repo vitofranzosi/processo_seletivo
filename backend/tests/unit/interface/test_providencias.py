@@ -142,3 +142,17 @@ def test_a_atencao_numa_frase_so():
         "Entrevista está declarada no Edital, e nenhum ato do GPS depende do resultado dela."
     )
     assert p.frase_da_atencao([a.Atencao("A"), a.Atencao("B")]).startswith("A e B estão")
+
+
+def test_o_lugar_vem_dito_e_nao_recortado_do_nome_do_perfil():
+    """Item 1 do code review: o nome do Perfil pode ter " · "."""
+    nome = "Oferta de Vagas · Polo Vitória"
+    item = p.Providencia.da_celula(
+        a.Celula(a.PENDENTE, natureza=a.CORTE, ato="Emitir o corte", responsavel=a.CONDUZ),
+        onde=f"{nome} · PCD",
+        sua=True,
+        chave=("corte",),
+        lista=("pcd", "PCD"),
+        lugar=nome,
+    )
+    assert item.onde_por_extenso == "Oferta de Vagas · Polo Vitória · PCD"
