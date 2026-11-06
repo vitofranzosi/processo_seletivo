@@ -6,14 +6,16 @@ tela anterior lista o motivo de cada um; a confirmação, que é onde se decide,
 todos ficavam de fora — e a ordem emitida assim fica obsoleta assim que os resultados chegam.
 
 **Só leitura, da proposta que a confirmação já calculou.** Nada aqui recalcula a ordem nem consulta
-o banco, e nada recusa: recusar a emissão sem resultado é decisão do usuário, registrada na spec
-(G-01, D-004).
+o banco, e nada recusa: a recusa da emissão sem nenhum resultado, decidida pelo usuário (G-01), é
+da `128`, no comando, e esta confirmação lê a mesma regra.
 
 **"Sem resultado" é a chave da Etapa ausente em `pontuacoes`, e não o motivo gravado.** O motivo
 ("Sem pontuação nas Etapas enumeradas: X, Y.") lista também a Etapa decisória com resultado, porque
 ela nunca tem pontuação; para contar quem está sem resultado, ele diria a mais. A chave existe
 sempre que há Resultado vigente da Etapa, com ou sem pontuação (`universo_classificavel.preparar`).
 """
+
+from processo_seletivo.classificacao.domain import universo_classificavel
 
 
 def resumo(proposta):
@@ -42,14 +44,10 @@ def resumo(proposta):
             nome = (etapas.get(etapa) or {}).get("name") or etapa
             por_etapa.append((nome, quantas))
     consideradas = len(posicoes) + len(sem_posicao)
-    nenhuma_com_resultado = (
-        bool(consideradas)
-        and not posicoes
-        and all(
-            not item.get("consequencia")
-            and not any(etapa in (item.get("pontuacoes") or {}) for etapa in enumeradas)
-            for item in sem_posicao
-        )
+    # **A mesma regra que recusa a emissão** (128, FR-4217): com ela, este caso deixa de chegar à
+    # confirmação; se chegar por outro caminho, a frase daqui e a recusa do comando concordam.
+    nenhuma_com_resultado = universo_classificavel.nenhuma_com_resultado(
+        marco, list(posicoes) + list(sem_posicao)
     )
     grupos = {}
     for item in sem_posicao:

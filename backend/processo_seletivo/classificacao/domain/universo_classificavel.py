@@ -113,6 +113,25 @@ def que_decidem_posicao(marco, resultados):
     return [item for item in resultados if str(item["etapa_id"]) in enumeradas]
 
 
+def nenhuma_com_resultado(marco, linhas):
+    """O universo tem alguém, e ninguém dele tem Resultado numa Etapa que o marco enumera (128).
+
+    `linhas` são as que `preparar` devolve, com e sem posição. **Resultado é a chave da Etapa em
+    `pontuacoes`, e não o valor** (128, D-001): a Etapa decisória entra com pontuação nula, e a
+    Ocorrência que elimina também; as duas são Resultado. A Etapa do desempate não enumerada também
+    entra em `pontuacoes`, e por isso a pergunta é só sobre as enumeradas (D-003): ela não decide
+    quem tem posição.
+
+    O universo vazio responde `False`: é a ordem em que ninguém concorreu, que se emite (FR-4205).
+    """
+    if not linhas:
+        return False
+    enumeradas = [str(item) for item in marco.get("stages") or []]
+    return not any(
+        etapa in (linha.get("pontuacoes") or {}) for linha in linhas for etapa in enumeradas
+    )
+
+
 def _eliminacao_mais_recente(resultados, etapas):
     eliminadas = [item for item in resultados if item["consequencia"] == ELIMINADA]
     if not eliminadas:
@@ -134,4 +153,4 @@ def _motivo_da_pontuacao_ausente(enumeradas, pontuacoes, etapas):
     return "Sem pontuação nas Etapas enumeradas: " + ", ".join(faltantes) + "."
 
 
-__all__ = ["ELIMINADA", "HABILITADA", "preparar", "que_decidem_posicao"]
+__all__ = ["ELIMINADA", "HABILITADA", "nenhuma_com_resultado", "preparar", "que_decidem_posicao"]

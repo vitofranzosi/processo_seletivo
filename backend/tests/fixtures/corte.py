@@ -136,18 +136,22 @@ def montar_cenario_do_corte(
         documentos=documentos_da_inscricao or (),
     )
     avaliados = inscricoes[: len(pontuacoes)]
-    distribuir_para(contexto, gestor, ["joao"], avaliados, chave=f"{prefixo}-lote")
-    for indice, pontuacao in enumerate(pontuacoes):
-        concluir_como(contexto, "joao", inscricoes[indice], pontuacao=pontuacao)
-    consolidar(
-        actor=gestor,
-        processo_id=edital.processo_id,
-        edital_id=edital.id,
-        etapa_id=pontuada["id"],
-        inscricao_ids=[item.id for item in avaliados],
-        idempotency_key=f"{prefixo}-consolidar",
-        correlation_id="teste-corte-014",
-    )
+    # **`pontuacoes=()` é o Edital em que ninguém foi avaliado** (128): o inscrito fica sem
+    # Resultado, e a ordem dele é a que a regra da `128` recusa. Distribuir e consolidar uma lista
+    # vazia seria recusado, e não é o que o cenário diz.
+    if avaliados:
+        distribuir_para(contexto, gestor, ["joao"], avaliados, chave=f"{prefixo}-lote")
+        for indice, pontuacao in enumerate(pontuacoes):
+            concluir_como(contexto, "joao", inscricoes[indice], pontuacao=pontuacao)
+        consolidar(
+            actor=gestor,
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            etapa_id=pontuada["id"],
+            inscricao_ids=[item.id for item in avaliados],
+            idempotency_key=f"{prefixo}-consolidar",
+            correlation_id="teste-corte-014",
+        )
     # `emitir_a_ordem` existe para quem precisa do marco **inteiro** sem ordem — a condução por
     # marco da `049` emite a da ampla junto com as reservadas, num gesto, e um cenário que já a
     # trouxesse emitida deixaria de fora o recorte que todo marco tem.

@@ -20,7 +20,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from processo_seletivo.resultados.application.selectors import resultados_visiveis
-from tests.fixtures.divulgacao import emitir, montar_marco, pontuar, publicar_o_ato
+from tests.fixtures.divulgacao import avaliar, emitir, montar_marco, pontuar, publicar_o_ato
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.performance]
 
@@ -61,6 +61,16 @@ def com_dois_marcos(gestor, api_client, manager_headers, process_payload):
     )
     cenario["ato"] = emitir(cenario, gestor, chave="emitir-perf-018-a")
     publicar_o_ato(cenario, chave="publicar-perf-018-a")
+    # **O intermediário precisa de Resultado na Etapa dele** (128): a ordem sem nenhum é recusada.
+    # As mesmas duas inscrições, aprovadas na primeira Etapa, continuam participando da segunda; e
+    # a avaliação vem depois do ato final, para que ele seja emitido como no cenário de um marco só.
+    avaliar(
+        cenario,
+        gestor,
+        [(inscricao, "80.0000") for inscricao in cenario["inscricoes"]],
+        etapa=cenario["primeira"],
+        sufixo="86-primeira",
+    )
     intermediario = cenario.get("marco_intermediario")
     if intermediario:
         ato = emitir(cenario, gestor, marco=intermediario, chave="emitir-perf-018-b")

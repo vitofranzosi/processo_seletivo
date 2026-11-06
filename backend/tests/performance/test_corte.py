@@ -18,6 +18,7 @@ from processo_seletivo.classificacao.application.corte import calcular_corte
 from processo_seletivo.classificacao.application.emissao import assinatura_da_proposta, emitir_ordem
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+from processo_seletivo.resultados.application.ocorrencia import registrar_ocorrencia
 from tests.fixtures.comissao import rascunho_com_etapas
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.publicacao import publish_original
@@ -100,6 +101,19 @@ def edital_com_corte(gestor, api_client, manager_headers, process_payload):
     ]
     edital = publish_original(api_client, manager_headers, process_payload, draft=rascunho)
     _acrescentar_inscricoes(edital, quantidade=ESCALA, inicio=1)
+    # **Um Resultado, para que a ordem possa ser emitida** (128): sem nenhum, ela é recusada. Uma
+    # Ocorrência na primeira inscrição é o mínimo que o comando aceita, e deixa a população do teste
+    # como era — mil considerados, sem posição —, que é o que a contagem e o relógio medem.
+    registrar_ocorrencia(
+        actor=gestor,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        etapa_id=etapa["id"],
+        inscricao_ids=[Inscricao.objects.filter(edital=edital).order_by("protocolo").first().id],
+        motivo="Não compareceu à Etapa.",
+        idempotency_key="corte-escala-ocorrencia",
+        correlation_id="teste-014-escala",
+    )
     emitir_ordem(
         actor=gestor,
         processo_id=edital.processo_id,

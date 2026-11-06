@@ -164,7 +164,9 @@ gesto mostra o primeiro impedido, com a razão, e o segundo a praticar.
 - **Resultado superado** por recurso: só o vigente conta. O sucessor de um Resultado é Resultado.
 - **Resultado só na Etapa de desempate não enumerada**: não conta (D-003).
 - **Universo esvaziado pela progressão** (todos eliminados numa Etapa anterior, não enumerada): é
-  universo vazio, e a ordem vazia é emissível, como hoje.
+  universo vazio, e a ordem vazia é emissível, como hoje. **Um subcaso fica com o usuário**: o
+  universo esvaziado porque a Etapa anterior tem Resultado (uma Ocorrência) e ainda ninguém foi
+  habilitado nela — ver *Decisão pendente do usuário*.
 - **Repetição de um pedido já atendido** (mesma chave de idempotência): devolve o desfecho do primeiro,
   como hoje, ainda que a regra recusasse um pedido novo.
 - **Ordem vazia do acervo**, emitida antes desta regra sem nenhum resultado: continua vigente, válida e
@@ -339,3 +341,25 @@ que convidaria a reler e tentar de novo.
 pontuação quando nenhuma inscrição considerada no recorte tem resultado em nenhuma Etapa enumerada
 pelo marco. As opções c (recusar se alguma inscrição está sem resultado) e d (exigir declaração) foram
 descartadas.
+
+## Decisão pendente do usuário
+
+### P-1 — O universo esvaziado por uma habilitação que ainda não aconteceu
+
+**Achado da revisão independente** (`verificacao.md`). A progressão da `011` exige, para participar de
+uma Etapa, a habilitação na imediatamente anterior — mas só depois que a anterior tem algum Resultado
+(`prontidao.restringir_a_participantes`, regra 2). Uma Ocorrência registrada na Etapa anterior, antes
+de ela ser consolidada, acorda essa exigência: ninguém está habilitado ainda, e o universo do marco
+fica vazio. Por esta spec, universo vazio é a ordem em que ninguém concorreu (FR-4205), e ela sai —
+com a conferência do gesto dizendo "ninguém concorreu", o que é falso.
+
+O caso não é criado por esta spec (a ordem vazia já saía assim antes dela), e a opção b, como
+decidida, o deixa passar. As saídas:
+
+| Opção | Efeito | Custo |
+|---|---|---|
+| a. Deixar como está (a letra da opção b) | nada muda | a ordem vazia precoce continua possível nesse subcaso |
+| b. Recusar também o universo vazio quando há inscrições do recorte que a Etapa anterior ainda não decidiu (sem Resultado nela, e não eliminadas antes) | fecha o subcaso; "todos eliminados" continua emissível | uma leitura a mais no comando e na tela, fora do universo do cálculo (contraria a D-004 em parte) |
+
+**Recomendação**: b, numa spec própria, depois de medir quantos Editais do acervo têm Etapa anterior
+com Ocorrência e sem consolidação. Esta spec não o implementa.

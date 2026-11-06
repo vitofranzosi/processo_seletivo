@@ -45,6 +45,7 @@ from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_a
 from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
+from processo_seletivo.classificacao.application import ordem_sem_resultado
 from processo_seletivo.classificacao.application.corte import (
     calcular_corte,
     corte_por_id,
@@ -7520,6 +7521,8 @@ def ordenacao(request, edital_id, marco_id):
         raise
     proposta = estado["proposta"] or {"posicoes": [], "sem_posicao": []}
     navegacao = _navegacao_do_recorte(edital, marco_id, rota="interface:ordenacao", atual=lista_id)
+    sem_resultado = _ordem_sem_resultado(edital, estado, pode_emitir)
+    erro = request.session.pop("erro_da_ordenacao", None)
     return marcar_como_privada(
         render(
             request,
@@ -7589,7 +7592,11 @@ def ordenacao(request, edital_id, marco_id):
                 # ato as cite, e é a citação **publicada** que prova o cumprimento (FR-089, T-015).
                 "decisoes_a_citar": _decisoes_a_citar(edital, marco_id, estado["marco"]),
                 "resultado": request.session.pop("resultado_da_ordenacao", None),
-                "erro": request.session.pop("erro_da_ordenacao", None),
+                # **A recusa da `128` não é dita duas vezes** (R-4): o bloco que fica no lugar do
+                # formulário já traz a frase, e é ele que recebe o foco.
+                "erro": None if sem_resultado and erro == sem_resultado["frase"] else erro,
+                "sem_resultado": sem_resultado,
+                "sem_resultado_em_destaque": bool(sem_resultado and erro == sem_resultado["frase"]),
                 "chave_idempotencia": uuid4().hex,
                 "confirmacao_do_calculo": (
                     assinatura_da_proposta(proposta, ato_vigente=estado["vigente"])
@@ -7768,6 +7775,15 @@ def emitir_ordenacao(request, edital_id, marco_id):
             request.session["erro_da_ordenacao"] = recusa.detail
             return redirect(destino)
         proposta = estado["proposta"] or {"posicoes": [], "sem_posicao": []}
+        # **A confirmação não abre para o que o comando recusaria** (128, FR-4215). Ela é o segundo
+        # passo de um ato; aberta aqui, ofereceria "Emitir a ordem" sobre um recorte sem nenhum
+        # Resultado, e o clique voltaria recusado.
+        impedimento = (
+            ordem_sem_resultado.impedimento(estado["proposta"]) if estado["proposta"] else None
+        )
+        if impedimento is not None:
+            request.session["erro_da_ordenacao"] = impedimento["frase"]
+            return redirect(destino)
         # As decisões chegam como identificadores; a confirmação precisa dizer **quais** são, e o
         # nome delas já está na lista que a tela anterior ofereceu. Citar por UUID na tela que
         # pergunta "confirma?" seria perguntar sobre o que não se pode ler.
@@ -7842,6 +7858,31 @@ def emitir_ordenacao(request, edital_id, marco_id):
         **_posicoes_do_ato_emitido(resultado),
     }
     return redirect(destino)
+
+
+def _ordem_sem_resultado(edital, estado, pode_emitir):
+    """O impedimento da `128` para a tela da ordem, e o caminho até a distribuição (FR-4212).
+
+    **Prever não é autorizar**, e não esconder: a ordem calculada continua na tela (FR-4214), e o
+    comando recusa sozinho. O link vai só a quem tem a base de gestão da comissão, que é a mesma que
+    a distribuição exige (FR-4213); para os outros, ele levaria a uma recusa (FR-476 da `033`).
+    """
+    if estado["proposta"] is None or not estado["recomputavel"]:
+        return None
+    achado = ordem_sem_resultado.impedimento(estado["proposta"])
+    if achado is None:
+        return None
+    return {
+        **achado,
+        "distribuicoes": (
+            [
+                (nome, reverse("interface:distribuicao", args=[edital.id, etapa_id]))
+                for etapa_id, nome in achado["etapas"]
+            ]
+            if pode_emitir
+            else []
+        ),
+    }
 
 
 def _posicoes_do_ato_emitido(resultado):
