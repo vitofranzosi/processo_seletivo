@@ -84,6 +84,9 @@ Três ausências diferentes, e elas pedem providências diferentes (034, FR-492a
 <p class="aviso"><strong>Ninguém concorreu por este recorte.</strong> Nenhuma inscrição se autodeclarou nesta Modalidade de Concorrência, e por isso a ordem dele é vazia. Isso não é pendência de conferência: a ordem vazia é um fato normativo, e emiti-la declara que ninguém concorreu ali. Emitir continua sendo ato seu — nada foi constituído automaticamente.</p>
 {% elif ordem_unica_do_marco %}
 <p class="aviso"><strong>Este recorte ainda não tem ordem própria.</strong> O que este marco tem é a ordem da ampla concorrência, emitida em {{ ordem_unica_do_marco.emitido_em|date:"d/m/Y H:i" }}, e ela alcança <em>todos</em> os inscritos do Perfil — inclusive quem se autodeclarou nesta Modalidade. Ela não é corrigida nem substituída por esta: emitir a ordem deste recorte é ato novo, e a da ampla continua vigente. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ordem_unica_do_marco.id %}">Consultar a ordem da ampla concorrência</a>.</p>
+{% elif sem_resultado %}
+{% comment %}"É aqui que ele se emite" contradiria o bloco da 128, adiante: sem nenhum Resultado, não se emite ainda.{% endcomment %}
+<p class="aviso">Ainda não existe ato emitido para este recorte. A lista abaixo é uma proposta calculada agora, e abrir esta tela não constitui ato algum.</p>
 {% else %}
 <p class="aviso">Ainda não existe ato emitido para este recorte, e é aqui que ele se emite. A lista abaixo é uma proposta calculada agora, e abrir esta tela não constitui ato algum.</p>
 {% endif %}
@@ -223,7 +226,20 @@ divergência genérica uma vez.
 </section>
 {% endif %}
 
-{% if not pode_emitir %}
+{% if sem_resultado %}
+{% comment %}
+**No lugar do formulário, por que não há o que emitir** (128, FR-4212, FR-4213, UX-261). Com nenhum
+Resultado nas Etapas do marco, o comando recusa a emissão, e oferecer o botão, a sucessão ou o pedido
+"peça a alguém que a emita" seria oferecer o que se vai recusar (FR-476 da 033). A ordem calculada
+continua acima: prever a recusa não esconde a prévia. O caminho até a distribuição vai só a quem a
+alcança, que é quem gere a comissão.
+{% endcomment %}
+<section class="aviso" aria-labelledby="sem-resultado"{% if sem_resultado_em_destaque %} role="alert" tabindex="-1" autofocus{% endif %}>
+  <h2 id="sem-resultado">{% if ato_vigente %}A ordem vigente ainda não pode ser sucedida{% else %}A ordem ainda não pode ser emitida{% endif %}</h2>
+  <p>{{ sem_resultado.frase }}</p>
+  {% if sem_resultado.distribuicoes %}<ul>{% for nome, url in sem_resultado.distribuicoes %}<li><a href="{{ url }}">Distribuir {{ nome }}</a></li>{% endfor %}</ul>{% endif %}
+</section>
+{% elif not pode_emitir %}
 {% comment %}
 **Quem lê e não emite sabe a quem pedir** (033, `FR-484`, `FR-485`, `FR-479`).
 
@@ -252,7 +268,7 @@ papel. É explicação sobre a natureza da base, e não formulação do pedido.
 comissão.</p>
 {% endif %}
 
-{% if pode_emitir and recomputavel %}
+{% if pode_emitir and recomputavel and not sem_resultado %}
 {% if ato_vigente %}
 {% comment %}
 **A sucessão, recolhida** (126, FR-4010, FR-4011, UX-223). Logo depois de "Ordem emitida" vinha,

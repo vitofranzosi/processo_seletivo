@@ -605,9 +605,11 @@ def situacao_da_ordem(f):
     `f`: `celula` (a da ordem no indicador da condução), `faltam` (nomes das Etapas que a ordem lê e
     que ainda não estão feitas no Perfil).
 
-    **A ordem não é recusada sem avaliação, e mesmo assim é *Depois*** (o `G-01` do estudo, que é da
-    `126`): emiti-la antes das Etapas grava uma ordem que envelhece quando os resultados chegam, e a
-    sucessão exige motivo. Dizer *Pendente* mandaria emitir.
+    ***Depois* enquanto as Etapas não estão feitas** (o `G-01` do estudo): emiti-la antes delas
+    grava uma ordem que envelhece quando os resultados chegam, e a sucessão exige motivo. Desde a
+    `128`, o comando recusa a ordem sem nenhum Resultado; esta derivação é mais estrita (diz
+    *Depois* também para a parcial, que o comando aceita), e por isso nunca diz *Pendente* para o
+    que ele recusa (`test_o_andamento_nunca_diz_pendente_para_a_ordem_que_o_comando_recusa`).
     """
     celula = f.get("celula") or {}
     estado, url = celula.get("estado"), celula.get("url") or ""

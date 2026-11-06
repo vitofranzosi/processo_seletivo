@@ -24,7 +24,7 @@ from processo_seletivo.classificacao.models import CitacaoDeDecisao
 from processo_seletivo.recursos.application.julgar import julgar
 from processo_seletivo.recursos.models import DecisaoRecurso
 from tests.conftest import ator_institucional
-from tests.fixtures.divulgacao import emitir
+from tests.fixtures.divulgacao import avaliar, emitir
 from tests.fixtures.recursos_us4 import cenario_julgavel, julgador
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -65,6 +65,15 @@ def test_a_citacao_pertinente_e_aceita(cenario):
 def test_citacao_para_ato_de_outro_marco_e_recusada(cenario):
     """O caso que a trigger existe para impedir: liberar a definitiva de um marco alheio."""
     outro = cenario["cenario"]["marco"]
+    # **O outro marco precisa de um Resultado na Etapa dele** (128): a ordem sem nenhum é recusada.
+    # A habilitada na primeira Etapa é avaliada na segunda; a recorrente, eliminada, não chega lá.
+    avaliar(
+        cenario["cenario"],
+        _gestor(),
+        [(cenario["cenario"]["inscricoes"][1], "80.0000")],
+        etapa=cenario["cenario"]["segunda"],
+        sufixo="citacao-segunda",
+    )
     ato = emitir(cenario["cenario"], _gestor(), marco=outro, chave="emitir-citacao-outro-marco")
 
     with pytest.raises(ProgrammingError, match="pertinent to another milestone"):

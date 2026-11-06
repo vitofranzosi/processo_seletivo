@@ -264,33 +264,54 @@ def pontuar(
         # projeção um rótulo institucional a resolver em vez de uma coluna vazia.
         modalidades=cenario["modalidade"],
     )
-    com_nota = [
-        inscricao
-        for inscricao, nota in zip(inscricoes, pontuacoes, strict=True)
-        if nota is not None
-    ]
-    if com_nota:
-        distribuir_para(cenario, gestor, ["joao"], com_nota, chave=f"lote-017-{sufixo}")
-        for inscricao, nota in zip(inscricoes, pontuacoes, strict=True):
-            if nota is not None:
-                concluir_como(
-                    cenario,
-                    "joao",
-                    inscricao,
-                    pontuacao=nota,
-                    **({"parecer": parecer} if parecer is not None else {}),
-                )
-        consolidar(
-            actor=gestor,
-            processo_id=cenario["edital"].processo_id,
-            edital_id=cenario["edital"].id,
-            etapa_id=alvo,
-            inscricao_ids=[item.id for item in com_nota],
-            idempotency_key=f"consolidar-017-{sufixo}",
-            correlation_id="fixture",
-        )
+    avaliar(
+        cenario,
+        gestor,
+        [
+            (inscricao, nota)
+            for inscricao, nota in zip(inscricoes, pontuacoes, strict=True)
+            if nota is not None
+        ],
+        etapa=alvo,
+        sufixo=sufixo,
+        parecer=parecer,
+    )
     cenario["etapa"] = anterior
     return inscricoes
+
+
+def avaliar(cenario, gestor, notas, *, etapa, sufixo, parecer=None):
+    """Distribui, conclui e consolida `notas` — `[(inscricao, nota)]` — na `etapa` (128).
+
+    Saiu de dentro de `pontuar` para servir também às inscrições **que já existem**: a ordem sem
+    nenhum Resultado passou a ser recusada (128), e o cenário que emitia a ordem de um marco cuja
+    Etapa ninguém avaliou precisa avaliar alguém dela, e não inscrever gente nova — gente nova não
+    participaria da Etapa que vem depois de uma habilitação.
+    """
+    if not notas:
+        return
+    anterior = cenario["etapa"]
+    cenario["etapa"] = etapa
+    avaliadas = [inscricao for inscricao, _ in notas]
+    distribuir_para(cenario, gestor, ["joao"], avaliadas, chave=f"lote-017-{sufixo}")
+    for inscricao, nota in notas:
+        concluir_como(
+            cenario,
+            "joao",
+            inscricao,
+            pontuacao=nota,
+            **({"parecer": parecer} if parecer is not None else {}),
+        )
+    consolidar(
+        actor=gestor,
+        processo_id=cenario["edital"].processo_id,
+        edital_id=cenario["edital"].id,
+        etapa_id=etapa,
+        inscricao_ids=[item.id for item in avaliadas],
+        idempotency_key=f"consolidar-017-{sufixo}",
+        correlation_id="fixture",
+    )
+    cenario["etapa"] = anterior
 
 
 def emitir(cenario, gestor, *, marco=None, chave="emitir-017", motivo="", decisoes=()):

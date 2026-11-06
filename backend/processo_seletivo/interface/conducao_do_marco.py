@@ -29,6 +29,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.auditoria.models import IdempotencyRecord
+from processo_seletivo.classificacao.application import ordem_sem_resultado
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
 from processo_seletivo.classificacao.application.corte import (
     calcular_corte,
@@ -545,6 +546,10 @@ def _alcance_da_ordem(edital, conteudo, perfil, marco):
             proposta = calcular_ordem(
                 edital=edital, perfil_id=perfil["id"], marco_id=marco_id, lista_id=lista_id
             )
+            # **A recusa da `128` é prevista aqui, com a frase do comando** (FR-4216): sem ela, a
+            # conferência prometia emitir a ordem do recorte sem nenhum Resultado, e a confirmação
+            # devolvia a recusa. É a mesma função que o comando chama, e não uma segunda regra.
+            ordem_sem_resultado.recusar(proposta)
         except DomainError as recusa:
             itens.append(_item(lista_id, rotulo, IMPEDIDO, razao=recusa.detail))
             continue

@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from processo_seletivo.avaliacoes.application.distribuicao import resultado_declarado
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.classificacao.application import ordem_sem_resultado
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
 from processo_seletivo.classificacao.models import AtoDeOrdenacao, PosicaoNaOrdem
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
@@ -94,6 +95,12 @@ def emitir_ordem(
             lista_id=lista_id,
             at=ctx.now,
         )
+        # **Sem nenhum Resultado, não há ordem a emitir** (128, FR-4200, FR-4206). Aqui, sob a trava
+        # e sobre o cálculo que se grava, para que a sucessão e o gesto da condução passem pela
+        # mesma recusa. Antes da assinatura, de propósito (D-005): a quem tem o formulário antigo
+        # aberto, "a ordem mudou desde a sua leitura" convidaria a reler e tentar de novo, e o que
+        # falta é avaliar. O universo vazio passa: é a ordem em que ninguém concorreu.
+        ordem_sem_resultado.recusar(proposta)
         recorte = proposta["lista_id"]
         vigente = AtoDeOrdenacao.objects.filter(
             edital=edital,
