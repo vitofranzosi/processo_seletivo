@@ -19,13 +19,13 @@ pessoa achar que sao dois estados. As mesmas proibicoes continuam valendo: nada 
   <h2 id="convocacao-da-inscricao">Convocação</h2>
   <dl class="campos">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
-    {% if enviada_em %}<dt>Comunicação enviada em</dt><dd>{{ enviada_em|data_e_hora_do_prazo }}</dd>{% endif %}
+    {% include "portal/_comunicacao_da_convocacao.html" %}
     {% comment %}
     **O vencimento como dado do ato, e nao como prazo** (118, FR-3747, FR-3749). O prazo, quando
     corre, ja esta no topo, no formato unico; aqui fica o que a convocacao registrou — e, com a
     comunicacao ainda nao enviada, e so aqui que a data aparece.
     {% endcomment %}
-    {% if convocacao.vencimento %}<dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, contado do envio da comunicação</dd>{% endif %}
+    {% if convocacao.vencimento %}<dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd>{% endif %}
   </dl>
   <p><a href="{% url 'portal:convocacao' inscricao.id %}">Ver convocação</a></p>
 </section>

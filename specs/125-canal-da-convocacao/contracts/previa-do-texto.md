@@ -12,7 +12,7 @@ Incremento B (FR-3991 a FR-3997), com a D-004.
 | 4 | Não atendimento dos vencidos | complemento do fundamento | sim | com texto |
 | 5 | Registrar desfecho | fundamento | não | sempre (obrigatório) |
 | 6 | Indeferir pelas pendências | fundamento do indeferimento (pré-preenchido) | não | sempre |
-| 7 | Corrigir a convocação (`_correcao_da_convocacao.html`) | complemento do fundamento | não | na prévia da `120` |
+| 7 | Corrigir a convocação (`_correcao_da_convocacao.html`) | complemento do fundamento | não | com texto (ajuste da D-004) |
 
 ## O aviso
 
@@ -25,12 +25,15 @@ fundamento"*.
 
 ## O passo *"Conferir o texto"*
 
-- Aparece no lugar do formulário, na mesma tela, renderizado pelo servidor. Não usa script.
+- Aparece no topo da tela de condução, com a âncora `#conferir-o-texto` e o foco nela, renderizado
+  pelo servidor. Não usa script. O formulário de origem fica onde estava.
 - Mostra, nesta ordem: o título *"Conferir o texto"*; a prévia, emoldurada como o portal a mostra; a
-  frase *"Este texto será mostrado a N pessoas."* (*"a 1 pessoa"* no singular); o botão do ato, com o
-  mesmo rótulo de hoje; e *"Voltar e corrigir o texto"*, que devolve o formulário preenchido.
+  frase *"Este texto será mostrado a N pessoas."* (*"a 1 pessoa"* no singular); o texto, editável, com
+  o aviso; o botão do ato, com o mesmo rótulo de hoje; e *"Conferir o texto de novo"*, para editar e
+  ver a prévia nova.
 - A prévia da convocação mostra *"Fundamento"* e o texto composto (derivado + complemento). A prévia do
-  desfecho mostra a linha *"‹rótulo do desfecho›: ‹fundamento›"*.
+  desfecho mostra *"Resultado registrado"* e *"‹rótulo do desfecho› — ‹fundamento›"*, como a tela da
+  convocação o mostra.
 - O bloco repassa `chave`, `alcance`, `lista` e as escolhas do formulário, e acrescenta
   `etapa=confirmar` e `texto_conferido`.
 

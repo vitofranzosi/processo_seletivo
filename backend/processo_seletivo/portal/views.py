@@ -2421,8 +2421,10 @@ def convocacao(request, inscricao_id):
     de novo quando a pessoa voltar (FR-3879). As rotas de escrita da convocação continuam como
     estavam (D-002): nenhum redirecionamento leva a praticar ato.
     """
-    from processo_seletivo.convocacao.application.selectors import vigentes_por_inscricao
-    from processo_seletivo.convocacao.models import Convocacao
+    from processo_seletivo.convocacao.application.selectors import (
+        ha_convocacao_visivel_no_recorte,
+        vigentes_por_inscricao,
+    )
 
     # A chave da sessão, e não `identidade_da_sessao`: a chave só existe depois do código provado
     # (`abrir_sessao`), e ler o registro aqui seria a segunda leitura da mesma identidade, que
@@ -2436,8 +2438,10 @@ def convocacao(request, inscricao_id):
     # seletor da `019`, e não aqui: a lista e o acompanhamento mostram a mesma (059, `FR-1100`).
     chamada = vigentes_por_inscricao([registro.id]).get(registro.id)
     # **O certame chegou a convocar neste recorte?** É esta pergunta que separa as duas ausências.
+    # Só a convocação visível ao candidato conta (125, FR-3984): a que ninguém publicou ainda não
+    # existe para ele, nem para os outros inscritos do recorte.
     houve_convocacao_no_recorte = (
-        Convocacao.objects.filter(edital=registro.edital, perfil_id=registro.profile_id).exists()
+        ha_convocacao_visivel_no_recorte(edital=registro.edital, perfil_id=registro.profile_id)
         if chamada is None
         else True
     )
@@ -2500,7 +2504,6 @@ def convocacao(request, inscricao_id):
                 else ""
             ),
             "aceite": situacao_da_inscricao.frase_do_aceite(desfecho),
-            "prazo_nao_iniciado": obrigacoes.PRAZO_NAO_INICIADO,
             "consequencia": situacao_da_inscricao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO,
             "atendimento": atendimento,
         },
@@ -2553,6 +2556,7 @@ def _obrigacoes_da_convocacao(
         canal=canal,
         agora=agora,
         corrigida=corrigida,
+        prazo_nao_iniciado=da_convocacao["canal_da_comunicacao"].prazo_nao_iniciado,
     )
 
 
@@ -2586,6 +2590,7 @@ def _chamada_da_tela(chamada, projecao, politica, da_convocacao, versao, selecao
                 prazo_nao_iniciado=(
                     da_convocacao["estado"] == convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO
                 ),
+                frase_do_nao_iniciado=da_convocacao["canal_da_comunicacao"].prazo_nao_iniciado,
                 vencimento=chamada.vencimento,
                 agora=agora,
                 corrigida=corrigida,
@@ -2648,18 +2653,32 @@ def _convocacao_para_a_tela(chamada, agora):
     decorrido não decide nada sozinho (`FR-274`).
     """
     from processo_seletivo.convocacao.application.selectors import (
+        comunicacao_de,
         desfecho_de,
         envio_de,
         estado_de,
     )
+    from processo_seletivo.convocacao.domain import vocabulario_do_canal
 
     if chamada is None:
-        return {"convocacao": None, "desfecho": None, "enviada_em": None, "estado": None}
+        return {
+            "convocacao": None,
+            "desfecho": None,
+            "enviada_em": None,
+            "estado": None,
+            "comunicacao": None,
+            "canal_da_comunicacao": vocabulario_do_canal.MENSAGEM,
+        }
+    # **A palavra é a do canal** (125, FR-3998): na publicação, a referência que a comissão
+    # registrou, e não o instante do registro, que não é a data da publicação (D-005).
+    comunicacao = comunicacao_de(chamada)
     return {
         "convocacao": chamada,
         "desfecho": desfecho_de(chamada),
         "enviada_em": envio_de(chamada),
         "estado": estado_de(chamada, agora=agora),
+        "comunicacao": comunicacao,
+        "canal_da_comunicacao": vocabulario_do_canal.canal(comunicacao.forma),
     }
 
 
@@ -2763,18 +2782,23 @@ def _recusar_no_cartao(request, registro, item_id, frase):
 def documento_da_convocacao_do_candidato(request, inscricao_id, apresentacao_id):
     """O titular vê o que apresentou na convocação — mediado, como o documento da inscrição."""
     from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
+    from processo_seletivo.convocacao.application import selectors as selectors_da_convocacao
     from processo_seletivo.convocacao.models import ApresentacaoDeDocumento
     from processo_seletivo.portal.arquivos import entregar
 
     registro, _, _ = _inscricao_do_titular(request, inscricao_id)
     apresentacao = (
         ApresentacaoDeDocumento.objects.select_related(
-            "documento_da_inscricao", "apresentacao_de_origem"
+            "documento_da_inscricao", "apresentacao_de_origem", "item__chamada"
         )
         .filter(pk=apresentacao_id, item__inscricao=registro)
         .first()
     )
-    if apresentacao is None:
+    # **A convocação que ninguém publicou não existe para o candidato** (125, FR-3985), e o arquivo
+    # que ele apresentou antes desta regra também não: a mesma recusa do arquivo inexistente.
+    if apresentacao is None or not selectors_da_convocacao.visivel_ao_candidato(
+        documentos_da_convocacao.vigente_da_chamada(apresentacao.item.chamada)
+    ):
         raise DomainError("not_found", "Recurso não encontrado.", 404)
     return entregar(
         documentos_da_convocacao.fonte_do_arquivo(apresentacao),
@@ -3624,7 +3648,9 @@ def _prazo_do_requerimento(apurado, lido):
     if chamada is None:
         return ""
     if estado_de(chamada, agora=timezone.now()) == convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO:
-        return obrigacoes.PRAZO_NAO_INICIADO
+        from processo_seletivo.convocacao.application.selectors import canal_de
+
+        return canal_de(chamada).prazo_nao_iniciado
     if chamada.vencimento is None:
         return obrigacoes.SEM_PRAZO_REGISTRADO
     return f"Prazo desta convocação: {obrigacoes.ate(chamada.vencimento)}."

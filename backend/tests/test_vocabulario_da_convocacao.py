@@ -147,13 +147,22 @@ def test_a_019_nomeia_o_envio_positivamente():
     """A ausência das palavras proibidas não basta: a frase certa precisa estar lá.
 
     Uma tela vazia passaria na varredura acima — e não diria à pessoa de onde o prazo dela corre.
-    """
-    gestao = visivel(TEMPLATES / "convocacao.html").lower()
-    portal = visivel(PORTAL / "convocacao.html").lower()
 
-    assert "enviada em" in gestao
-    assert "enviada em" in portal
-    assert "contado do envio" in gestao or "contado do envio" in portal
+    **Desde a `125` a frase mora na tabela do canal** (FR-4004): o template diz qual frase usar, e a
+    tabela diz o texto. A da mensagem continua sendo a de sempre; a da publicação diz *publicada*.
+    """
+    from processo_seletivo.convocacao.domain import vocabulario_do_canal as canal
+
+    gestao = visivel(TEMPLATES / "convocacao.html")
+    portal = visivel(PORTAL / "_comunicacao_da_convocacao.html")
+
+    assert "linha.canal.rotulo_do_registro" in gestao
+    assert "canal_da_comunicacao.rotulo_da_comunicacao" in portal
+    assert canal.MENSAGEM.rotulo_do_registro == "Enviada em"
+    assert canal.MENSAGEM.rotulo_da_comunicacao == "Comunicação enviada em"
+    assert "contado do envio" in canal.MENSAGEM.contado_de
+    assert canal.PUBLICACAO.rotulo_da_comunicacao == "Publicada em"
+    assert "contado da publicação" in canal.PUBLICACAO.contado_de
 
 
 # --- A acentuação do que a tela diz -------------------------------------------------------------

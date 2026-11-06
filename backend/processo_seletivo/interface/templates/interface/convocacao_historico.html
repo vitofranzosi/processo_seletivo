@@ -26,7 +26,7 @@ historia (FR-294).
       <th scope="col">Praticada em</th>
       <th scope="col">Apuração citada</th>
       <th scope="col">Ordem citada</th>
-      <th scope="col">Enviada em</th>
+      <th scope="col">Comunicação</th>
       <th scope="col">Desfecho</th>
       <th scope="col">Fundamento do desfecho</th>
       <th scope="col">Situação do ato</th>
@@ -40,7 +40,7 @@ historia (FR-294).
       <td>{{ item.convocacao.criado_em|date:"d/m/Y H:i" }}</td>
       <td>{{ item.convocacao.apuracao_id }}</td>
       <td>{{ item.convocacao.ato_de_ordenacao_id }}</td>
-      <td>{% if item.enviadaEm %}{{ item.enviadaEm|date:"d/m/Y H:i" }}{% else %}não enviada{% endif %}</td>
+      <td>{% if item.enviadaEm %}{% if item.canal.publicacao %}publicada em {{ item.comunicacao.referencia }} (registro em {{ item.enviadaEm|date:"d/m/Y H:i" }}){% else %}enviada em {{ item.enviadaEm|date:"d/m/Y H:i" }}{% endif %}{% else %}{{ item.canal.pastilha_sem_comunicacao|lower }}{% endif %}</td>
       <td>{% if item.desfecho %}{{ item.desfecho.get_especie_display }}{% if item.desfecho.especie == "RECLASSIFICACAO" and item.posicaoNaFila %} — hoje em {{ item.posicaoNaFila }}º na fila de chamada{% endif %}{% else %}sem desfecho{% endif %}</td>
       <td>{% if item.desfecho %}{{ item.desfecho.fundamento }}{% else %}—{% endif %}</td>
       <td>{% if item.vigente %}vigente{% else %}sucedida — {{ item.convocacao.sucessoras.first.motivo_da_sucessao }}{% endif %}</td>

@@ -407,10 +407,11 @@ def _recusar_nao_atendimento_prematuro(convocacao, *, especie, agora):
         return
     enviado_em = selectors.envio_de(convocacao)
     if not prazo.prazo_corre(enviado_em=enviado_em):
+        # A frase do canal (125, FR-4001): na publicação, nada foi enviado.
         raise DomainError(
             nomes.NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO,
-            "A comunicação desta convocação não foi enviada com sucesso: o prazo não começou a "
-            "correr, e não há não atendimento a registrar.",
+            selectors.canal_de(convocacao).recusa_do_nao_atendimento
+            + "correr, e não há não atendimento a registrar.",
             409,
         )
     if convocacao.vencimento is not None and not prazo.decorrido(

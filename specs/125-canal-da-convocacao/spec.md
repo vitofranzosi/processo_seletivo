@@ -4,8 +4,8 @@
 
 **Created**: 2026-11-06
 
-**Status**: Draft, **só documental**. Nenhum código, migration, rota ou tela foi alterado. As
-decisões têm duas origens:
+**Status**: Implementada em 2026-11-06, no mesmo PR da spec, sem migration nem rota nova. As decisões
+têm duas origens:
 
 - **Do usuário, em 06/11/2026**, sobre os três pontos do quadro *"Atenção"* do capítulo 10 do guia da
   jornada do sorteio: a *1ª*, a *2ª* e a *3ª decisão*, abaixo. Não se reabrem.
@@ -290,7 +290,7 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **FR-3993**: Com texto digitado em algum desses campos, o formulário MUST mostrar, **antes** do botão
   que pratica o ato, a **prévia** do texto como o candidato o verá: na convocação, o fundamento composto
   — o derivado seguido do complemento —, sob o rótulo *"Fundamento"*; no desfecho, a linha
-  *"‹rótulo do desfecho›: ‹fundamento›"*, como a tela da convocação a mostra. A prévia MUST usar a
+  *"Resultado registrado: ‹rótulo do desfecho› — ‹fundamento›"*, como a tela da convocação a mostra. A prévia MUST usar a
   mesma composição que o ato gravará, e não uma segunda.
 - **FR-3994**: A prévia MUST dizer a **quantas pessoas** o mesmo texto será mostrado: *"Este texto será
   mostrado a N pessoas."*, com N igual ao número de convocações ou desfechos que a confirmação
@@ -300,8 +300,13 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **FR-3996**: A confirmação a partir da prévia MUST manter as garantias de hoje: a chave de
   idempotência, a assinatura do alcance do lote e a recusa quando o alcance mudou. A prévia em si MUST
   NOT praticar ato nem gravar nada.
-- **FR-3997**: Na correção da convocação, a prévia de texto MUST entrar na prévia que a `120` já mostra
-  (FR-3844 da `120`), e MUST NOT criar um segundo passo.
+- **FR-3997** *(ajustada na implementação, em 2026-11-06 — ver a D-004)*: Na correção da convocação, a
+  prévia que a `120` já mostra (FR-3844 da `120`) MUST rotular o fundamento derivado como o que o
+  candidato lerá; com complemento digitado, a correção MUST passar pela mesma conferência dos demais
+  gestos, levando a assinatura da prévia da `120` nos campos.
+
+  > *Redação aceita antes da implementação:* "Na correção da convocação, a prévia de texto MUST entrar
+  > na prévia que a `120` já mostra (FR-3844 da `120`), e MUST NOT criar um segundo passo."
 
 #### C. A palavra da comunicação é a do canal
 
@@ -548,6 +553,14 @@ pratica o ato. Sem texto digitado — complemento vazio —, o formulário confi
 fundamento derivado já está na tela, e passa a ser rotulado *"O candidato lerá este fundamento"*. O
 fundamento do desfecho é obrigatório, e por isso o desfecho sempre passa pelo passo. Na correção, a
 prévia de texto entra na prévia que a `120` já tem (FR-3997).
+
+**Ajuste na implementação, em 2026-11-06 — aguarda o usuário.** A prévia da `120` é montada pelo
+servidor **antes** de o operador digitar o complemento, e mostrar nela o texto composto exigiria
+script, que a FR-3995 dispensa. As duas metades da proposta não cabem juntas. A implementação manteve
+a prévia sem script, e, com complemento digitado, a correção passa pela mesma conferência dos demais
+gestos. É o segundo passo que a proposta evitava, só quando há texto, e leva a assinatura da prévia da
+`120` intacta. A alternativa é um script que componha o texto ao vivo na prévia da `120`, como o
+efeito do vencimento já faz, aceitando que quem não tem script não veja o texto composto.
 
 ### D-005 — A data da publicação é a da referência, e não a do registro
 

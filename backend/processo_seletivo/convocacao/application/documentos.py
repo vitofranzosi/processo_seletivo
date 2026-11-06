@@ -459,6 +459,7 @@ def apresentar(*, identidade, inscricao_id, item_id, arquivo, nome_original, cor
     serializa dois envios do mesmo item, e a conferência e o desfecho travam a mesma linha.
     """
     from processo_seletivo.auditoria.application import record_event
+    from processo_seletivo.convocacao.application.selectors import visivel_ao_candidato
     from processo_seletivo.inscricoes.application.rascunho import ator_do_candidato
     from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
     from processo_seletivo.inscricoes.models import Inscricao
@@ -480,6 +481,13 @@ def apresentar(*, identidade, inscricao_id, item_id, arquivo, nome_original, cor
         item = item_da_chamada(item_id, inscricao_id=inscricao.id)
         if item is None or item.situacao == ItemDaListaDaConvocacao.Situacao.NAO_SE_APLICA:
             raise nao_encontrado()
+        vigente = vigente_da_chamada(item.chamada)
+        # **A convocação que ninguém publicou não existe para o candidato** (125, FR-3985), e a
+        # recusa é a do item inexistente, antes de qualquer outra: uma recusa própria, ou a do
+        # Processo encerrado, diria que a convocação existe. A tela já não oferece o envio; esta é a
+        # regra no comando, para o formulário velho e para o endereço digitado.
+        if not visivel_ao_candidato(vigente):
+            raise nao_encontrado()
         # **O mesmo estado do Processo que a conferência e o desfecho exigem**: receber o que
         # ninguém mais pode conferir diria "a comissão vai conferir" de algo que não será.
         ensure_processo_accepts_changes(inscricao.edital.processo)
@@ -495,7 +503,6 @@ def apresentar(*, identidade, inscricao_id, item_id, arquivo, nome_original, cor
                 "Este documento já foi conferido pela comissão, e não recebe outro arquivo.",
                 409,
             )
-        vigente = vigente_da_chamada(item.chamada)
         if not em_aberto(vigente):
             raise DomainError(
                 nomes.CHAMADA_FECHADA,

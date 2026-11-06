@@ -1,0 +1,9 @@
+{% load prazo_da_convocacao %}{% comment %}
+A comunicação nos dados do ato, na palavra do canal (125, FR-3998, D-005). Na mensagem, o instante do
+envio; na publicação, a referência que a comissão registrou, e nunca o instante do registro, que não é
+a data da publicação. Sem comunicação, nada: o prazo não iniciado já está dito no cartão do prazo.
+{% endcomment %}
+{% if enviada_em %}
+{% if canal_da_comunicacao.publicacao %}<dt>{{ canal_da_comunicacao.rotulo_da_comunicacao }}</dt><dd>{{ comunicacao.referencia|default:"referência não registrada" }}</dd>
+{% else %}<dt>{{ canal_da_comunicacao.rotulo_da_comunicacao }}</dt><dd>{{ enviada_em|data_e_hora_do_prazo }}</dd>{% endif %}
+{% endif %}

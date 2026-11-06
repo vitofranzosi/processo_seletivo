@@ -161,6 +161,7 @@ from processo_seletivo.interface import (
     atos_processo,
     atos_retificacao,
     conducao_do_marco,
+    conferencia_do_texto,
     demonstracao,
     encerramento,
     forms,
@@ -8467,6 +8468,8 @@ def convocacao(request, edital_id, marco_id):
                 # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
                 # quem só consulta, e calculá-las ali seria trabalho sem leitor.
                 **(_previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}),
+                # A conferência do texto pendente, consumida aqui (125, FR-3993).
+                "conferencia": (conferencia_do_texto.da_sessao(request) if pode_emitir else None),
                 **(
                     _correcoes_por_linha(fluxo, recorte, leitura, recusa_da_correcao)
                     if pode_emitir
@@ -8514,6 +8517,7 @@ def convocacao_historico(request, edital_id, marco_id):
     corrigido e por quê — esconder as sucedidas deixaria a trilha contando metade da história.
     """
     from processo_seletivo.convocacao.application.selectors import (
+        comunicacao_da_linha,
         convocacoes_do_recorte,
         desfecho_de,
         envio_de,
@@ -8552,6 +8556,7 @@ def convocacao_historico(request, edital_id, marco_id):
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     posicoes = {str(item["id"]): indice for indice, item in enumerate(contexto["fila"], start=1)}
+    forma_do_recorte = contexto["formaDoRecorte"]
     identificadas = identidades_de({c.inscricao_id for c in convocacoes})
     return marcar_como_privada(
         render(
@@ -8569,6 +8574,8 @@ def convocacao_historico(request, edital_id, marco_id):
                         "desfecho": desfecho_de(convocacao),
                         "enviadaEm": envio_de(convocacao),
                         "comunicacoes": list(convocacao.comunicacoes.all()),
+                        # A palavra do canal (125, FR-4000), sem consulta por linha.
+                        **comunicacao_da_linha(convocacao, forma_do_recorte),
                         "vigente": convocacao.id in em_vigor,
                         "posicaoNaFila": posicoes.get(str(convocacao.inscricao_id)),
                     }
@@ -8865,6 +8872,16 @@ def convocar_view(request, edital_id, marco_id):
         if corrige
         else None
     )
+    # **O texto que o candidato lerá, antes do ato** (125, FR-3993): com complemento digitado, a
+    # conferência mostra o fundamento composto e só depois deixa praticar.
+    conferencia = conferencia_do_texto.exigir(
+        request,
+        acao="correcao" if corrige else "convocacao",
+        compor=lambda: _texto_da_convocacao(request, edital, marco_id, lista_id, corrige),
+        destino=destino,
+    )
+    if conferencia is not None:
+        return conferencia
     try:
         declarado = _serializavel(
             convocar_e_comunicar(
@@ -8901,6 +8918,71 @@ def convocar_view(request, edital_id, marco_id):
         else:
             request.session["recusa_da_correcao"] = _recusa_da_correcao(request, corrige, erro)
     return redirect(destino)
+
+
+def _texto_da_convocacao(request, edital, marco_id, lista_id, corrige):
+    """O fundamento que a convocação gravará, como o candidato o lerá (125, FR-3993).
+
+    Da mesma derivação do comando: os fundamentos por espécie da `050` e, na correção, a prévia da
+    `120` — e o complemento depois, por `com_complemento`. Sem apuração, ou sem a convocação a
+    corrigir, `None`: a recusa é a do comando, como sempre.
+    """
+    from processo_seletivo.convocacao.application import fluxo
+    from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
+    from processo_seletivo.convocacao.domain import fundamento
+    from processo_seletivo.convocacao.domain.especie import derivada
+
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    agora = timezone.now()
+    leitura = leitura_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=agora
+    )
+    fundamentos = fluxo.fundamentos_por_especie(
+        edital=edital,
+        perfil_id=perfil_id,
+        lista_id=lista_id,
+        apuracao=leitura["apuracao"],
+        at=agora,
+    )
+    complemento = request.POST.get("complemento") or ""
+    if corrige and not (request.POST.get("vencimento") or request.POST.get("evento")):
+        # A correção sem vencimento novo é recusada pelo comando, com o campo nomeado e o que foi
+        # digitado de volta no cartão (120, `FR-3850`): conferir um texto antes dela seria um passo
+        # que só leva à recusa.
+        return None
+    if corrige:
+        previa = fluxo.previa_das_correcoes(
+            leitura,
+            versao=effective_version(edital_id=edital.id, at=agora),
+            perfil_id=perfil_id,
+            fundamentos=fundamentos,
+        ).get(corrige)
+        if previa is None:
+            return None
+        texto = fundamento.com_complemento(previa["fundamento"], complemento)
+        return texto, 1, "Fundamento", "Corrigir a convocação"
+    especie = (request.POST.get("especie") or "").strip() or derivada(
+        _identidade_ou_404(request.POST.get("inscricao")),
+        ocupando=leitura["ocupando"],
+        alcancados=leitura["alcancados"],
+        regularizaveis=(),
+    )
+    if not fundamentos.get(especie):
+        return None
+    botao = "Convocar para regularizar" if especie == "PARA_REGULARIZAR" else "Convocar"
+    return fundamento.com_complemento(fundamentos[especie], complemento), 1, "Fundamento", botao
+
+
+def _texto_do_desfecho(especie, fundamento_digitado):
+    """A linha que o portal mostrará, *"‹desfecho› — ‹fundamento›"* (125, FR-3993).
+
+    O rótulo é o do acompanhamento e da tela da convocação (FR-3750 da `118`), e não a espécie
+    crua.
+    """
+    from processo_seletivo.portal.situacao import DESFECHOS
+
+    rotulo = DESFECHOS.get(especie, especie)
+    return f"{rotulo} — {fundamento_digitado.strip()}"
 
 
 #: As recusas em que o cartão mudou no intervalo: o motivo não volta ao formulário (`R-008`).
@@ -8955,8 +9037,14 @@ def _resultado_da_correcao(declarado):
 
 def _previas_da_convocacao(fluxo, recorte, leitura):
     """As prévias dos gestos da `050` e o que a chamada individual mostra antes do ato."""
+    from processo_seletivo.convocacao.domain import vocabulario_do_canal
+
+    titulares = fluxo.previa_dos_titulares(**recorte)
     return {
-        "titulares": fluxo.previa_dos_titulares(**recorte),
+        "titulares": titulares,
+        # As frases do canal que o Perfil declara hoje, para os gestos que vão convocar (125,
+        # FR-4000): o que sai no ato, e a partir de quando o prazo corre.
+        "canal_declarado": vocabulario_do_canal.canal(titulares["forma"]),
         "vencidos": fluxo.previa_dos_vencidos(**recorte),
         "pendentes": fluxo.previa_das_pendentes(**recorte),
         # O fundamento de cada espécie (`FR-870`): a espécie depende de quem for escolhido.
@@ -9036,7 +9124,7 @@ def _serializavel(valor):
     return json.loads(json.dumps(valor, cls=DjangoJSONEncoder))
 
 
-def _gesto_da_convocacao(request, edital_id, marco_id, *, acao, praticar):
+def _gesto_da_convocacao(request, edital_id, marco_id, *, acao, praticar, compor=None):
     """O esqueleto comum dos três gestos da `050`: autorizar, praticar, e voltar ao recorte.
 
     **`alcance_mudou` volta à tela, e a tela recalcula a prévia** (`UX-104`): quem confirmou vê o
@@ -9057,6 +9145,21 @@ def _gesto_da_convocacao(request, edital_id, marco_id, *, acao, praticar):
         "alcance_confirmado": request.POST.get("alcance") or "",
         "idempotency_key": request.POST.get("chave") or uuid4().hex,
     }
+    # A conferência do texto, antes do ato e depois da autorização (125, FR-3993, FR-3996).
+    if compor is not None:
+        conferencia = conferencia_do_texto.exigir(
+            request,
+            acao=acao,
+            compor=lambda: compor(
+                edital=edital,
+                perfil_id=comum["perfil_id"],
+                marco_id=marco_id,
+                lista_id=lista_id,
+            ),
+            destino=destino,
+        )
+        if conferencia is not None:
+            return conferencia
     try:
         request.session["resultado_da_convocacao"] = _serializavel(praticar(**comum))
         request.session["acao_da_convocacao"] = acao
@@ -9079,7 +9182,23 @@ def convocar_titulares_view(request, edital_id, marco_id):
             endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
         )
 
-    return _gesto_da_convocacao(request, edital_id, marco_id, acao="titulares", praticar=praticar)
+    def compor(**recorte):
+        from processo_seletivo.convocacao.application.fluxo import previa_dos_titulares
+        from processo_seletivo.convocacao.domain import fundamento
+
+        previa = previa_dos_titulares(**recorte)
+        pessoas = len(previa["pessoas"])
+        if not previa["fundamento"] or not pessoas:
+            return None
+        texto = fundamento.com_complemento(
+            previa["fundamento"], request.POST.get("complemento") or ""
+        )
+        botao = f"Convocar {'a' if pessoas == 1 else 'as'} {pessoas}"
+        return texto, pessoas, "Fundamento", botao
+
+    return _gesto_da_convocacao(
+        request, edital_id, marco_id, acao="titulares", praticar=praticar, compor=compor
+    )
 
 
 @require_http_methods(["POST"])
@@ -9094,7 +9213,25 @@ def nao_atendimento_dos_vencidos_view(request, edital_id, marco_id):
             **comum, complemento=request.POST.get("complemento") or ""
         )
 
-    return _gesto_da_convocacao(request, edital_id, marco_id, acao="vencidos", praticar=praticar)
+    def compor(**recorte):
+        from processo_seletivo.convocacao.application.fluxo import previa_dos_vencidos
+        from processo_seletivo.convocacao.domain import fundamento
+        from processo_seletivo.convocacao.domain.nomes import NAO_ATENDIMENTO
+
+        previa = previa_dos_vencidos(**recorte)
+        pessoas = len(previa["linhas"])
+        if not pessoas:
+            return None
+        texto = _texto_do_desfecho(
+            NAO_ATENDIMENTO,
+            fundamento.com_complemento(previa["fundamento"], request.POST.get("complemento") or ""),
+        )
+        botao = f"Registrar o não atendimento {'da' if pessoas == 1 else 'das'} {pessoas}"
+        return texto, pessoas, "Resultado registrado", botao
+
+    return _gesto_da_convocacao(
+        request, edital_id, marco_id, acao="vencidos", praticar=praticar, compor=compor
+    )
 
 
 @require_http_methods(["POST"])
@@ -9122,12 +9259,32 @@ def desfechar_view(request, edital_id, marco_id, convocacao_id):
         return identidade.pedir_identificacao(request)
     lista_id = _identidade_ou_404(request.POST.get("lista"))
     destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    especie = request.POST.get("especie") or ""
+    # O fundamento do desfecho chega ao candidato (125, FR-3993): a conferência sempre, porque ele é
+    # obrigatório. Sem espécie escolhida, a recusa é a do comando.
+    conferencia = conferencia_do_texto.exigir(
+        request,
+        acao="desfecho",
+        compor=lambda: (
+            (
+                _texto_do_desfecho(especie, request.POST.get("fundamento") or ""),
+                1,
+                "Resultado registrado",
+                "Registrar indeferimento" if especie == "INDEFERIMENTO" else "Registrar desfecho",
+            )
+            if especie
+            else None
+        ),
+        destino=destino,
+    )
+    if conferencia is not None:
+        return conferencia
     try:
         request.session["resultado_da_convocacao"] = desfechar(
             actor=ator,
             processo_id=edital.processo_id,
             convocacao_id=convocacao_id,
-            especie=request.POST.get("especie") or "",
+            especie=especie,
             fundamento=request.POST.get("fundamento") or "",
             atestado_id=_identidade_ou_404(request.POST.get("atestado")),
             idempotency_key=request.POST.get("chave") or uuid4().hex,
