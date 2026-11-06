@@ -280,9 +280,17 @@ o que a confirmação diz; enviar um arquivo que não é PDF e conferir a recusa
 
 Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
-- **Prazo não iniciado** (cenário K). O título é *"Você foi convocado!"*; o cartão do prazo diz só a
-  frase da FR-3749 da `118`, sem data, sem dia da semana e sem contagem; a consequência não aparece
-  (FR-1177 da `063`). O e-mail não existe ainda: ele é o que inicia o prazo.
+- **Prazo não iniciado** (cenário K) *(revisto pela `125` em 2026-11-06, que vigora com a
+  implementação dela — a redação anterior está ao fim deste item)*. O título é *"Você foi
+  convocado!"*; o cartão do prazo diz só a frase da FR-3749 da `118`, revista pela `125`, no canal da
+  convocação, sem data, sem dia da semana e sem contagem; a consequência não aparece (FR-1177 da
+  `063`). Na mensagem, o e-mail não existe ainda: ele é o que inicia o prazo. Na publicação, o cenário
+  só existe na correção de convocação já comunicada: antes do registro da primeira publicação, a
+  convocação não aparece no portal (FR-3981 da `125`).
+
+  > **Redação anterior à `125`, preservada:** O título é *"Você foi convocado!"*; o cartão do prazo diz
+  > só a frase da FR-3749 da `118`, sem data, sem dia da semana e sem contagem; a consequência não
+  > aparece (FR-1177 da `063`). O e-mail não existe ainda: ele é o que inicia o prazo.
 - **Sem vencimento registrado.** O cartão do prazo diz a frase de hoje para esse caso (FR-3737 da
   `118`), sem contagem; o assunto do e-mail não leva data, e o corpo diz *"O prazo para atender é o
   que o Edital publica."*
@@ -409,8 +417,10 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **FR-3869**: Quando a convocação vigente sucede outra (`convocacao_anterior`) e a chamada está
   *aberta*, o cartão do prazo MUST dizer, acima da data, *"Convocação corrigida: este é o prazo
   válido."* Os dados do ato MUST ter a linha *"Convocação substituída"*, em todos os estados:
-  - comunicada: *"Comunicada em ‹data›, às ‹hora›, com prazo até ‹data›, às ‹hora›. Esse prazo não
-    vale mais."*;
+  - comunicada *(alínea revista pela `125` em 2026-11-06, que vigora com a implementação dela)*:
+    *"Enviada em ‹data›, às ‹hora›, com prazo até ‹data›, às ‹hora›. Esse prazo não vale mais."*
+    — redação anterior à `125`, preservada: *"Comunicada em ‹data›, às ‹hora›, com prazo até ‹data›,
+    às ‹hora›. Esse prazo não vale mais."*;
   - por publicação: *"Publicada em ‹referência›, com prazo até ‹data›, às ‹hora›. Esse prazo não vale
     mais."*;
   - não comunicada: *"Não comunicada. O prazo registrado era até ‹data›, às ‹hora›, e não vale
