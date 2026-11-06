@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Maquete — MVP da Retificação</title>
+<!-- Maquete de auditoria (05/11/2026). Não é tela do produto: estilo embutido de propósito, porque
+     este arquivo não passa pela CSP da aplicação. Os dados são os do Edital 01/2026 do seed_demo. -->
+<style>
+  :root{--verde:#1b6b3a;--verde-claro:#e8f4ec;--borda:#d6d9d6;--fraco:#5f6660;--fundo:#f6f7f6;--aviso:#fdf5e6;--erro:#fbeaea;--erro-borda:#b3261e}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d211e;background:#fff}
+  .quadro{width:1180px;margin:24px auto;border:1px solid var(--borda);border-radius:8px;overflow:hidden;background:var(--fundo)}
+  .quadro>header{background:#fff;border-bottom:1px solid var(--borda);padding:10px 18px;font-size:12px;color:var(--fraco);display:flex;justify-content:space-between}
+  .quadro>header strong{color:#1d211e;font-size:13px}
+  .etiqueta{display:inline-block;background:#1d211e;color:#fff;border-radius:3px;padding:1px 6px;font-size:11px;margin-right:6px}
+  .novo{outline:2px dashed #c77700;outline-offset:3px;border-radius:4px}
+  .nota-novo{font-size:11px;color:#8a5200;margin:4px 0 0}
+  .grade{display:grid;grid-template-columns:230px 1fr;gap:18px;padding:18px}
+  nav.indice{position:sticky;top:0;background:#fff;border:1px solid var(--borda);border-radius:6px;padding:12px;font-size:13px;align-self:start}
+  nav.indice h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--fraco)}
+  nav.indice ul{list-style:none;margin:0;padding:0}
+  nav.indice li{padding:3px 0}
+  nav.indice li li{padding-left:12px;font-size:12px}
+  nav.indice a{color:var(--verde);text-decoration:none}
+  nav.indice .conta{color:var(--fraco);font-size:11px}
+  nav.indice .alt{background:var(--verde);color:#fff;border-radius:8px;padding:0 6px;font-size:10px;margin-left:4px}
+  .cartao{background:#fff;border:1px solid var(--borda);border-radius:6px;padding:14px 16px;margin-bottom:14px}
+  h1{font-size:22px;margin:0 0 4px}
+  h2{font-size:16px;margin:0 0 10px}
+  .sub{color:var(--fraco);margin:0 0 12px}
+  input[type=search]{width:100%;padding:8px 10px;border:2px solid var(--verde);border-radius:5px;font:inherit}
+  .resultado{border-top:1px solid var(--borda);padding:8px 0;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  .resultado .onde{font-size:12px;color:var(--fraco)}
+  .resultado mark{background:#fff1a8}
+  .resultado .valor{font-variant-numeric:tabular-nums}
+  a.ir{color:var(--verde);font-size:12px;white-space:nowrap}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--borda);vertical-align:top}
+  thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--fraco);background:var(--fundo)}
+  td.antes{text-decoration:line-through;color:var(--fraco)}
+  td.depois{color:var(--verde);font-weight:600}
+  .base{background:var(--aviso);border-left:4px solid #8a5200;padding:8px 12px;margin:0 0 12px;font-size:13px}
+  .achado{background:var(--erro);border-left:4px solid var(--erro-borda);padding:8px 12px;margin:8px 0;font-size:13px}
+  .achado.adv{background:var(--aviso);border-left-color:#8a5200}
+  details{font-size:12px;color:var(--fraco);margin-top:4px}
+  code{font-size:11px}
+  .tres{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px}
+  .barra{position:relative;background:#fff;border-top:1px solid var(--borda);padding:10px 18px;display:flex;gap:10px;align-items:center}
+  .botao{border:1px solid var(--verde);color:var(--verde);background:#fff;border-radius:4px;padding:6px 12px;font:inherit}
+  .botao.pri{background:var(--verde);color:#fff}
+  .selo{background:var(--verde);color:#fff;border-radius:3px;padding:0 5px;font-size:10px;text-transform:uppercase;margin-left:6px}
+  .legenda{font-size:12px;color:var(--fraco);margin:0 18px 18px}
+</style>
+</head>
+<body>
+
+<section class="quadro">
+  <header><span><span class="etiqueta">1</span><strong>Localizar</strong> — a mesma tela Retificar, com a busca lendo rótulo e valor</span><span>Edital 01/2026 · ana.elaboradora</span></header>
+  <div class="grade">
+    <nav class="indice novo" aria-label="Seções do Edital">
+      <h4>Ir para</h4>
+      <ul>
+        <li><a href="#">Identificação</a> <span class="conta">1</span></li>
+        <li><a href="#">Perfis de Vaga</a> <span class="conta">12</span>
+          <ul>
+            <li><a href="#">DOC-INFO — Professor de Informática</a></li>
+            <li><a href="#">TEC-LAB — Técnico de Laboratório</a></li>
+          </ul></li>
+        <li><a href="#">Cronograma</a> <span class="conta">3</span><span class="alt">1 alterada</span></li>
+        <li><a href="#">Etapas de Avaliação</a> <span class="conta">3</span></li>
+        <li><a href="#">Documentos Exigidos</a> <span class="conta">3</span></li>
+        <li><a href="#">Anexos</a> <span class="conta">2</span></li>
+        <li><a href="#">Seções do texto</a> <span class="conta">17</span></li>
+        <li><a href="#">Justificativa</a></li>
+      </ul>
+      <p class="nota-novo">Índice fixo ao lado, com um nível por Perfil e o que já foi alterado (P2).</p>
+    </nav>
+    <div>
+      <h1>Retificar Edital 01/2026</h1>
+      <p class="sub">Altere os campos que precisam mudar. O que você não tocar permanece como está.</p>
+      <div class="cartao novo">
+        <label for="busca"><strong>Encontrar</strong></label>
+        <input id="busca" type="search" value="vagas">
+        <p class="sub" style="margin:6px 0 0">4 campos em 4 cartões</p>
+        <div class="resultado"><div><span class="onde">Perfil DOC-INFO — Professor de Informática</span><br><mark>Vagas</mark> imediatas: <span class="valor">3</span></div><a class="ir" href="#">Ir ao campo</a></div>
+        <div class="resultado"><div><span class="onde">Linha do quadro de <mark>vagas</mark> · Ampla concorrência — DOC-INFO</span><br><mark>Vagas</mark> imediatas: <span class="valor">2</span></div><a class="ir" href="#">Ir ao campo</a></div>
+        <div class="resultado"><div><span class="onde">Linha do quadro de <mark>vagas</mark> · PPP — DOC-INFO</span><br><mark>Vagas</mark> imediatas: <span class="valor">1</span></div><a class="ir" href="#">Ir ao campo</a></div>
+        <div class="resultado"><div><span class="onde">Perfil TEC-LAB — Técnico de Laboratório</span><br><mark>Vagas</mark> imediatas: <span class="valor">0</span></div><a class="ir" href="#">Ir ao campo</a></div>
+        <p class="nota-novo">Hoje a busca lê só o nome do cartão: «vagas», «remuneração» e «prazo recursal» não encontram nada (M1).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="quadro">
+  <header><span><span class="etiqueta">2</span><strong>Conferir</strong> — «Ver o que vai mudar», com o caminho de volta e os achados antes do clique final</span><span>mesma tela, depois do envio</span></header>
+  <div style="padding:18px">
+    <div class="cartao">
+      <h2>O que vai mudar (2)</h2>
+      <p class="base novo"><strong>Comparado com a última versão publicada</strong>, que passa a vigorar em 20/11/2026 (Retificação nº 3).
+        Hoje ainda vigora a versão anterior, em que as inscrições terminam em 25/11/2026 21:38.
+        <span class="nota-novo" style="display:block">Hoje a coluna se chama «Vigente hoje» e mostra 05/12, que ainda não vigora (M3).</span></p>
+      <table>
+        <thead><tr><th>Onde</th><th>Campo</th><th>Última versão publicada</th><th>Passará a ser</th><th></th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Evento 1 — Inscrições</th><td>Término</td><td class="antes">05/12/2026 21:38</td><td class="depois">12/12/2026 23:59</td><td class="novo"><a class="ir" href="#">Ir ao campo</a></td></tr>
+          <tr><th scope="row">Perfil DOC-INFO — Professor de Informática</th><td>Vagas imediatas</td><td class="antes">3</td><td class="depois">4</td><td class="novo"><a class="ir" href="#">Ir ao campo</a></td></tr>
+        </tbody>
+      </table>
+      <div class="novo" style="margin-top:12px">
+        <div class="achado"><strong>Impede a criação:</strong> o quadro de vagas do Perfil DOC-INFO soma 3 e o Perfil passará a declarar 4. <a class="ir" href="#">Ir às linhas do quadro</a></div>
+        <div class="achado adv"><strong>Depende de decisão (D1):</strong> as inscrições passariam a terminar em 12/12, depois da Prova objetiva (10/12). Hoje nada avisa.</div>
+        <p class="nota-novo">Hoje a recusa do quadro só aparece no «Criar Retificação», sem link; a ordem do cronograma não é conferida em ponto nenhum (M4, D1).</p>
+      </div>
+    </div>
+    <p class="legenda">Os cartões alterados continuam marcados «alterada» depois da conferência, e «Só o que eu alterei» continua achando-os (M2). Hoje a marcação zera: «Nada alterado desde a conferência».</p>
+  </div>
+  <div class="barra"><button class="botao">Ver o que vai mudar</button><button class="botao pri">Criar Retificação</button><span style="margin-left:auto;font-size:12px"><strong>2</strong> alterações no ato</span></div>
+</section>
+
+<section class="quadro">
+  <header><span><span class="etiqueta">3</span><strong>Homologar</strong> — o mesmo vocabulário de quem elaborou, e o contexto ao lado</span><span>bruno.homologador</span></header>
+  <div class="tres">
+    <div class="cartao">
+      <h2>O que esta Retificação altera (1)</h2>
+      <table>
+        <thead><tr><th>Onde</th><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead>
+        <tbody><tr><th scope="row">Evento 1 — Inscrições</th><td>Término</td><td class="antes">05/12/2026 21:38</td><td class="depois">12/12/2026 23:59</td></tr></tbody>
+      </table>
+      <details class="novo"><summary>Detalhe técnico</summary><code>REPLACE /schedule/id=…c1/endAt</code></details>
+      <p class="nota-novo">Hoje: «Evento do cronograma “Inscrições pelo sistema, com isenção de taxa até o 5º dia.”», a operação «REPLACE» numa coluna e o caminho JSON sempre à vista (P1).</p>
+    </div>
+    <div class="cartao novo">
+      <h2>O Cronograma, com a alteração</h2>
+      <table>
+        <thead><tr><th>Evento</th><th>Quando</th></tr></thead>
+        <tbody>
+          <tr><td>1 — Inscrições <span class="selo">altera</span></td><td>05/11 21:38 a <s>05/12 21:38</s> <strong>12/12 23:59</strong></td></tr>
+          <tr><td>2 — Prova objetiva</td><td>10/12 21:38</td></tr>
+          <tr><td>3 — Resultado final</td><td>04/01/2027 21:38</td></tr>
+        </tbody>
+      </table>
+      <p class="nota-novo">A coleção inteira em que a alteração cai, lida do conteúdo proposto — é o que faria ver que a inscrição passa da prova (P3).</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
