@@ -136,4 +136,9 @@ Mesmas condições da linha de base (`DB_NAME=ps_121`, `assistente` e `navegador
 10 pares de `test_vocabulario_da_composicao.py`, o E2E da Caixa e a recusa por vendor. Nenhum teste
 novo pula. A diferença de total (+213) é a dos testes novos e parametrizados desta feature.
 
-**Segunda rodada**, depois da correção: ver abaixo.
+**Segunda rodada**, sobre `87bd0a93`, depois da correção: `lint` e `check` verdes; **16 730
+passando, 12 pulados, 1 falha**, em 855 s. Os pulados são os mesmos 12, por lista. A falha é de novo
+`test_a_apuracao_cabe_no_dobro_do_tempo_da_emissao_da_ordem`, e pelo procedimento do `AGENTS.md`
+(*Um teste de tempo oscila sob carga*) ela foi medida isolada: **8 de 8** passando, com
+`PYTEST_WORKERS=0`. O diff desta feature não toca nenhum arquivo de `ocupacao`, `classificacao` ou
+`resultados`, que são o que o teste mede. Não é regressão; a decisão de mexer no teto é do usuário.

@@ -272,8 +272,8 @@ escopo, registrados só na seção *Registrado, sem desenvolver* do plano.
   - o nome do arquivo escolhido (SC-1163)
 - [X] T055 [P] `tests/navegador/test_jornada_dos_documentos_da_convocacao.py:154`: o heading pelo título por estado, e não mais *"Convocação"*
 - [X] T056 Preencher `rastreabilidade.md` com o teste de cada linha. Nenhuma linha sem teste, salvo a SC-1164, marcada como humana
-- [ ] T057 `make lint check test-pg` com os dois grupos, `DB_NAME` próprio, 4 workers. Comparar com a linha de base de T002 por lista de pulados e de falhas, e não por total, e registrar em `verificacao.md`
-- [ ] T058 Jornada do [quickstart.md](quickstart.md) no navegador, com capturas a 375 px e a 1280 px em `specs/121-experiencia-da-convocacao/capturas/`, e a conferência de uma comunicação contra o Git pelo roteiro do quickstart
+- [X] T057 `make lint check test-pg` com os dois grupos, `DB_NAME` próprio, 4 workers. Comparar com a linha de base de T002 por lista de pulados e de falhas, e não por total, e registrar em `verificacao.md`
+- [X] T058 Jornada do [quickstart.md](quickstart.md) no navegador, com capturas a 375 px e a 1280 px em `specs/121-experiencia-da-convocacao/capturas/`, e a conferência de uma comunicação contra o Git pelo roteiro do quickstart
 - [X] T059 `CLAUDE.md`: atualizar as contagens que a migration muda, se alguma estiver escrita. As tabelas append-only continuam 53
 
 ---
