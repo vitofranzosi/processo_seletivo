@@ -182,15 +182,17 @@ com o erro, e o bloco volta junto, lido de novo naquele instante.
 **Why this priority**: perder o bloco na reexibição é perder a advertência no momento em que o gestor
 está prestes a confirmar de novo.
 
-**Independent Test**: enviar a confirmação sem motivo e conferir que o bloco reaparece; criar uma
-convocação entre a abertura e o envio e conferir que ela aparece na reexibição.
+**Independent Test**: enviar a confirmação sem motivo e conferir que o bloco reaparece; depois do 422,
+criar uma convocação e conferir que o envio seguinte a mostra.
 
 **Acceptance Scenarios**:
 
 1. **Given** a confirmação com uma convocação aguardando, **When** o gestor envia sem motivo, **Then** a
    tela volta com "Motivo do encerramento é obrigatório." e o bloco das providências em aberto.
-2. **Given** a confirmação aberta sem nada em aberto, **When** uma convocação é feita antes do envio e o
-   envio é recusado por outro motivo, **Then** a reexibição mostra a convocação.
+2. **Given** a confirmação reexibida depois de um 422 por motivo vazio, com a lista L, **When** uma
+   convocação é feita e o gestor envia de novo, agora com motivo, **Then** a confirmação é reapresentada
+   pela renovação (história 5), com a convocação, e o Processo continua Ativo. A mudança da lista é
+   conferida antes do motivo e antes do comando (FR-4365).
 
 ---
 
@@ -245,7 +247,7 @@ que a tela traz a lista nova; enviar de novo e conferir o encerramento.
 - **Edital com poucos inscritos**, abaixo do limiar de privacidade do relatório: as providências não
   públicas aparecem como o relatório as diz para o Edital inteiro, somadas, sem Perfil.
 - **Muitos Editais** (o Processo com uma dezena): um grupo por Edital com algo em aberto, na ordem
-  número/ano; o bloco não é truncado.
+  número/ano; o bloco não é truncado nem paginado.
 - **Ato concorrente entre a abertura e o envio**: a lista é relida no envio e comparada à que foi
   mostrada; se mudou, a confirmação é reapresentada sem encerrar (FR-4365). **Fica uma janela** entre essa
   releitura e o comando: uma convocação feita nesses instantes não é vista. A solução reduz a janela de
@@ -261,6 +263,9 @@ que a tela traz a lista nova; enviar de novo e conferir o encerramento.
 - **O Processo deixou de ser encerrável entre a abertura e o envio** (a permissão foi retirada, ou outro
   gestor encerrou o Processo): a tela reexibida já não oferece o
   Confirmar, e não há advertência nem comparação (FR-4357, FR-4360); vale a recusa de hoje.
+- **Prazo que vence entre a abertura e o envio**: a convocação passa de "aguardando resposta" a "com
+  prazo encerrado sem registro de resposta", ou o prazo de recurso termina, e a frase muda. A lista
+  mudou, e a confirmação é reapresentada (FR-4365): o gestor vê o novo estado antes de encerrar.
 - **Processo encerrado com sucesso**: o redirecionamento ao detalhe é o de hoje; nada da advertência é
   gravado nem repetido ali.
 
@@ -322,9 +327,9 @@ que a tela traz a lista nova; enviar de novo e conferir o encerramento.
   e sem nova mudança, o encerramento MUST prosseguir, qualquer que seja o conteúdo da lista. O resumo
   MUST NOT ser gravado (FR-4363), e a reapresentação MUST NOT gravar ato, trilha nem consumir a chave de
   idempotência.
-- **FR-4367**: A spec MUST registrar, e a verificação MUST NOT afirmar o contrário, que resta uma janela
-  entre a releitura e o comando, na qual uma mudança não é vista: a renovação reduz a concorrência, e não
-  a elimina (D-005).
+- **FR-4367**: Nenhuma frase da confirmação MUST afirmar que o encerramento só ocorre com a lista que o
+  gestor viu, nem que a lista é garantida até o ato: resta uma janela entre a releitura e o comando, na
+  qual uma mudança não é vista, e a renovação reduz a concorrência sem eliminá-la (D-005).
 
 #### O que não muda
 
@@ -389,6 +394,25 @@ leitura. Nada é gravado.
   encerramento é gravado na primeira tentativa.
 - **SC-1326**: A suíte contra PostgreSQL fecha sem falha nova em relação à linha de base da `main`, e cada
   teste ajustado está nomeado na verificação.
+
+## Proteção de dados (LGPD)
+
+Avaliação exigida pelo princípio III da Constituição.
+
+- **Dado tratado.** Nenhum dado pessoal novo é coletado, gravado ou derivado. A advertência lê
+  convocações, recursos, resultados e apurações que já existem, e só para contar.
+- **Necessidade e minimização.** A tela mostra contagens do Edital, o nome publicado do marco e datas de
+  prazo (FR-4356), como a confirmação do Edital (FR-3540 da `113`). Convocação e recurso são fato não
+  público: nunca aparecem por pessoa, e as providências que vêm do relatório respeitam a omissão de
+  detalhe por Perfil da `099` (FR-2587 da `100`).
+- **Finalidade e acesso.** A advertência só é lida para quem detém `processo:encerrar`, com o Processo
+  Ativo (FR-4357). Quem quer saber *quem* segue o caminho até a tela dona, sob a permissão dela
+  (FR-4355).
+- **O resumo do formulário.** É um hash das frases exibidas, que não têm dado pessoal. Ele não identifica
+  pessoa nem é gravado (FR-4366).
+- **Registros.** A renovação não grava ato, auditoria nem trilha. O ato de encerramento grava o mesmo de
+  hoje (FR-4363).
+- **Retenção.** Nada novo é guardado, e por isso nada novo a reter ou descartar.
 
 ## Assumptions
 
@@ -486,6 +510,10 @@ mostrada; no envio, a tela relê a lista e, se ela mudou em qualquer coisa, reap
 a lista atual, sem tentar o encerramento (FR-4365). É **renovação da confirmação**, e não impedimento: o
 gestor que confirma de novo diante da lista atual encerra, com o que estiver em aberto (FR-4366). Nada é
 gravado, e as regras de elegibilidade do comando são as de hoje (FR-4362).
+
+**Os dois nomes**: *reexibição* é a confirmação devolvida por uma recusa (do motivo ou do comando);
+*reapresentação* é a confirmação devolvida pela renovação, sem chamar o comando. As duas releem a lista
+(FR-4360, FR-4365).
 
 **O limite que fica**: entre a releitura na tela e o comando há uma janela — o tempo de uma requisição —
 em que uma mudança não é vista (FR-4367). A renovação a reduz de horas para isso, e não a elimina.

@@ -15,7 +15,7 @@ devem falhar primeiro. Toda a suíte roda contra PostgreSQL, com `DB_NAME=ps_130
 ## Phase 1: Setup
 
 - [ ] T001 Conferir que a branch está atualizada com a `main` (`gh pr view 421 --json state,mergeable`; se preciso, sincronizar) e que `uv run python backend/manage.py migrate --check` não acusa migration pendente com `DB_NAME=ps_130`
-- [ ] T002 Rodar a linha de base de `backend/tests/interface/test_processo.py`, `backend/tests/interface/test_confirmacao_do_encerramento.py` e `backend/tests/performance/test_confirmacao_do_encerramento.py` contra PostgreSQL e anotar o resultado, para o `verificacao.md`
+- [ ] T002 Medir e anotar, antes de qualquer mudança, o número de consultas do GET do detalhe do Processo (`interface:processo-detalhe`) e da lista de Processos (`interface:lista`) com `CaptureQueriesContext`, sobre `montar_cenario(final="pendente")`, para o T023. Rodar também a linha de base de `backend/tests/interface/test_processo.py`, `backend/tests/interface/test_confirmacao_do_encerramento.py` e `backend/tests/performance/test_confirmacao_do_encerramento.py` contra PostgreSQL e anotar o resultado, para o `verificacao.md`
 
 ## Phase 2: Foundational — a composição (R-1, R-2, R-3, R-5)
 
@@ -72,7 +72,7 @@ resumo encerra.
 cancelado publicado com convocação vencida, cancelado antes de publicar —; os grupos e as frases
 batem com as funções da `113` e da `099`.
 
-- [ ] T012 [P] [US2] Testes em `backend/tests/interface/test_advertencia_do_encerramento_do_processo.py`:
+- [ ] T012 [US2] Testes em `backend/tests/interface/test_advertencia_do_encerramento_do_processo.py`:
   - a paridade (SC-1321): para cada grupo, as mensagens são exatamente as de `_item` sobre as situações de `TIPOS_NO_PROCESSO` mais as de `_providencias_da_099`, no mesmo `agora`;
   - toda providência de `fatos_do_edital(...).pendencias` nos tipos do `DA_099` aparece (FR-4354);
   - o Edital cancelado não tem frase de resultado;
@@ -80,7 +80,10 @@ batem com as funções da `113` e da `099`.
   - a ordem dos grupos é ano, número;
   - "Ir aos recursos" para quem julga e "Peça a quem julga recursos." para quem não julga (FR-4355);
   - nenhuma frase de período nem de Retificação, mesmo com o período sem término no conteúdo e uma Retificação em elaboração anterior ao encerramento do Edital (FR-4352, D-002);
-  - um Edital encerrado por `tests/fixtures/encerramento.encerrar_antes_da_113` com recurso aguardando aparece como advertência, e o Confirmar continua oferecido (FR-4353, D-003).
+  - um Edital encerrado por `tests/fixtures/encerramento.encerrar_antes_da_113` com recurso aguardando aparece como advertência, e o Confirmar continua oferecido (FR-4353, D-003);
+  - um Processo com três Editais finais com providência mostra os três grupos, sem truncar (caso-limite *Muitos Editais*);
+  - o título "Continuam depois do encerramento" não aparece na confirmação do Processo (UX-278);
+  - o GET de "Cancelar Processo" no mesmo Processo não tem o título da UX-275 nem o campo `resumo_das_providencias` (FR-4364, SC-1325).
 - [ ] T013 [US2] Ajustar `do_processo` ou os cenários até T012 passar, sem mudar `pendencias_do_edital` nem `relatorio_do_edital` (FR-4364). Se um caso exigir mudar uma das duas, parar e registrar como achado.
 
 ## Phase 5: User Story 5 — a lista mudou depois que a tela abriu (P1)
@@ -90,14 +93,15 @@ batem com as funções da `113` e da `099`.
 **Independent Test**: abrir, criar uma convocação, enviar → 409, nada gravado; enviar de novo com o
 resumo novo → 302.
 
-- [ ] T014 [P] [US5] Testes em `backend/tests/interface/test_advertencia_do_encerramento_do_processo.py`:
+- [ ] T014 [US5] Testes em `backend/tests/interface/test_advertencia_do_encerramento_do_processo.py`:
   - a lista muda entre GET e POST (nova convocação, ou uma resposta registrada) → 409, Processo Ativo, nenhum `AtoAdministrativo` novo, a mensagem da UX-279, a lista atual, o resumo novo no formulário, o motivo de volta no `<textarea>` e a mesma `chave_idempotencia`;
   - o reenvio com o resumo novo → 302 e Processo Encerrado, mesmo com providência em aberto (FR-4366);
   - POST sem `resumo_das_providencias` → 409;
   - lista que muda e volta ao que era → 302 na primeira tentativa;
   - lista mudada e motivo vazio → 409 da renovação, e não 422;
+  - um prazo de convocação que vence entre o GET e o POST (vencimento ajustado no banco para depois do GET e antes do POST) → 409, e a frase passa a "com prazo encerrado sem registro de resposta" (caso-limite *Prazo que vence*);
   - o "Cancelar Processo" com resumo ausente segue como hoje (FR-4365, FR-4366, UX-279, SC-1327).
-- [ ] T015 [US5] Na view (POST): quando `acao == "encerrar"` e a tela é confirmável, reler a advertência como em T009 e comparar com `request.POST.get("resumo_das_providencias")`. Se diferente ou ausente, renderizar com status 409, `renovada=True` e `motivo`, **sem** chamar o comando. A comparação vem antes da validação do motivo (R-6). Comentário citando a D-005 e a janela da FR-4367.
+- [ ] T015 [US5] Na view (POST): quando `acao == "encerrar"` e a tela é confirmável, reler a advertência como em T009 e comparar com `request.POST.get("resumo_das_providencias")`. Se diferente ou ausente, renderizar com status 409, `renovada=True` e `motivo`, **sem** chamar o comando. A comparação vem antes da validação do motivo (R-6). Comentário citando a D-005 e a janela que fica; nenhuma frase da tela promete o contrário (FR-4367).
 - [ ] T016 [US5] No template: a mensagem da UX-279 com `class="aviso" role="status" tabindex="-1" autofocus`, antes do bloco, só com `renovada`; o `<textarea>` com `{{ motivo }}`.
 - [ ] T017 [US5] Ajustar o helper `ato()` em `backend/tests/interface/test_processo.py` para ler `context["advertencia"]` do GET e enviar o resumo quando existir (R-7); rodar o arquivo inteiro.
 
@@ -107,7 +111,7 @@ resumo novo → 302.
 
 **Independent Test**: `montar_cenario(final="sem-pendencia")`; abrir a confirmação.
 
-- [ ] T018 [P] [US3] Testes: a frase da UX-277 inteira; ausência de "concluíd", "encerrad… a seleção" e "certame foi"; o resumo da lista vazia no formulário; o POST encerra na primeira tentativa (FR-4359, UX-277).
+- [ ] T018 [US3] Testes: a frase da UX-277 inteira; ausência de "concluíd", "encerrad… a seleção" e "certame foi"; o resumo da lista vazia no formulário; o POST encerra na primeira tentativa (FR-4359, UX-277).
 - [ ] T019 [US3] No template: a frase da UX-277 no lugar do bloco quando `advertencia.vazia`, com `class="aviso" role="status"`.
 
 ## Phase 7: User Story 4 — a recusa por outro motivo reexibe a advertência atual (P2)
@@ -116,9 +120,9 @@ resumo novo → 302.
 
 **Independent Test**: enviar sem motivo; enviar com revisão vencida; enviar depois de retirar a permissão.
 
-- [ ] T020 [P] [US4] Testes:
+- [ ] T020 [US4] Testes:
   - motivo vazio com o resumo certo → 422, "Motivo do encerramento é obrigatório." e o bloco;
-  - uma convocação criada depois de um 422 aparece na reexibição seguinte;
+  - depois de um 422, uma convocação nova faz o envio seguinte, já com motivo, voltar pela renovação (409), e não encerrar (história 4, cenário 2);
   - revisão vencida (outro ato no Processo entre GET e POST) → a recusa de hoje, com o bloco relido;
   - Processo já encerrado por outra sessão → sem bloco e sem Confirmar (FR-4357, FR-4360).
 - [ ] T021 [US4] No `except DomainError` da view: recalcular `pendentes`, `impedimento`, `recusa_certa` e, se confirmável, a advertência, dentro de `leitura_consistente()` (FR-4360, D-004).
@@ -129,7 +133,7 @@ resumo novo → 302.
 - [ ] T023 [P] Desempenho em `backend/tests/performance/test_confirmacao_do_encerramento_do_processo.py`:
   - as consultas de `do_processo` com `montar_cenario(escala=1)` e `escala=10` são iguais, e o orçamento medido fica como constante, com a data;
   - com dois Editais, o número cresce pelo custo de um Edital (SC-1324, D-007);
-  - o detalhe do Processo e a lista de Processos fazem o mesmo número de consultas que antes, medido em T002 ou com `CaptureQueriesContext`.
+  - o detalhe do Processo e a lista de Processos fazem o mesmo número de consultas que antes, comparado aos números anotados em T002.
 - [ ] T024 [P] Os textos novos (UX-275 a UX-277, UX-279) pela varredura de vocabulário. Se `processo_confirmar.html` não estiver na lista literal de nenhuma varredura, registrar no `verificacao.md` (memória *Varredura de vocabulário tem lista literal*).
 - [ ] T025 `cd backend && DB_NAME=ps_130 make lint check test-pg`; `migrate --check` sem migration nova (SC-1325, SC-1326). Se o teste de tempo da ocupação oscilar, medir isolado (CLAUDE.md).
 - [ ] T026 Capturas dos passos (a), (c) e (e) do quickstart em `specs/130-advertencia-no-encerramento-do-processo/capturas/`, num banco descartável montado pelos helpers dos testes.
@@ -150,7 +154,7 @@ resumo novo → 302.
 ## Parallel Opportunities
 
 - T003 (testes unitários) em paralelo a T004 e T005.
-- T012, T014, T018 e T020 são testes no mesmo arquivo. Escritos em sequência, mas cada um pode ser redigido antes da implementação da sua fase.
+- T012, T014, T018 e T020 **não** são paralelos: são testes no mesmo arquivo, escritos em sequência, cada um antes da implementação da sua fase.
 - T022, T023 e T024 em paralelo.
 
 ## Implementation Strategy

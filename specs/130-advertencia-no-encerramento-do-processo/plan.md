@@ -44,9 +44,8 @@ orçamento de consultas fica em `tests/performance/`
 
 **Performance Goals**: a lista de Processos e o detalhe do Processo **sem consulta nova** (a
 composição só roda na confirmação). Na confirmação, o número de consultas é constante por Edital final
-e não cresce com inscrições, convocações ou recursos. O orçamento é medido e fixado no teste de
-desempenho, como o da `113` (23 por Edital publicado com o período correndo). O POST que encerra paga
-uma releitura (R-6)
+e não cresce com inscrições, convocações ou recursos. O orçamento é medido na implementação e fixado no
+teste de desempenho, como a `113` fez com o dela. O POST que encerra paga uma releitura (R-6)
 
 **Constraints**:
 - CSP sem `inline`, e só classes que já têm regra na folha (R-8);
