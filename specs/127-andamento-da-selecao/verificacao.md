@@ -89,3 +89,20 @@ seguinte e a apuração sem corte, a progressão do S2, o lugar longo.
 
 Não feita. O roteiro do estudo (`validacao.md`) vale com as telas implementadas no lugar das
 maquetes, e a SC-1245 espera o usuário. **Inspeção não substitui teste com pessoas.**
+
+## Code review dos três PRs (06/11/2026)
+
+Feito com o `/code-review` (esforço alto), um por PR, depois das revisões independentes. Os achados
+e o que se fez:
+
+| PR | Achados | Corrigidos | Registrados, sem correção |
+|---|---|---|---|
+| #415 (B1) | 8 | o lugar da providência recortado do nome do Perfil (com " · "); a falha da derivação derrubando o detalhe (agora volta ao cartão de antes, com log); a carga do avaliador lida do rótulo da `104` (agora `ObjetoDeTrabalho.quantidade`); a conferência consultada por lista; a expectativa recalculada; a docstring contra a D-017 | o andamento inteiro derivado para todo papel, e as avaliações de todos os Editais da pessoa — custo, junto da pendência de passar a versão vigente adiante |
+| #416 (B2) | 7 | quem só publica via a matriz da convocação (agora vê o Perfil recolhido, D-004); a contagem por Perfil com as Etapas do Edital; a Etapa citada pelo marco tirada da sequência; Perfis homônimos (agora com o número de inscritos); a condição repetida | o `resumo_dos_marcos` lido sem leitor; a view gravando os destinos nos objetos do andamento |
+| #417 (transições) | 6 | "sua" refeito na view (agora `Andamento.e_sua`, a regra do nível 1, com a mesa e a conferência); o Edital inteiro derivado por ato (agora só o Perfil do marco); a semente apontando uma lista só; "Ainda neste marco" sem situação nem papel; testes em ordenação, ocupação e sorteio | — |
+
+A tela dos documentos da convocação recebeu a transição e não tem teste próprio: o cenário pede a
+infraestrutura de arquivos da suíte.
+
+Suíte depois das correções, sobre a pilha inteira (B1 + B2 + `126` + transições): **16 910 passaram,
+20 pulados, nenhuma falha, em 678 s.**
