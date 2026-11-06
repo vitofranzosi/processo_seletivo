@@ -499,7 +499,10 @@ def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso, po
 
     prazo, aviso, consequencia = None, "", ""
     if estado == convocacao_nomes.CONVOCADO_PRAZO_NAO_INICIADO:
-        aviso = PRAZO_NAO_INICIADO
+        from processo_seletivo.convocacao.application.selectors import canal_de
+
+        # A frase do canal da convocação (125, FR-3999).
+        aviso = canal_de(convocacao).prazo_nao_iniciado
     elif estado == convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO:
         # O núcleo único do vencido (FR-3748), **e nunca com o Processo em estado final**, em que
         # ninguém registra resultado (D-015): ali a linha informativa já diz que o envio encerrou.

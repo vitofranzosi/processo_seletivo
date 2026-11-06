@@ -734,11 +734,22 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   núcleo MUST ser usado **só** com o vencimento decorrido e sem o Processo em estado final, para os
   documentos e para o Requerimento (FR-3725, linhas 3a e 4; D-015, D-020). Nunca sem vencimento
   registrado. Nenhuma frase MUST afirmar perda (FR-274 da `019`).
-- **FR-3749**: Com a comunicação ainda não enviada, as telas MUST dizer *"O prazo ainda não começou a
-  correr: ele conta a partir do envio da comunicação."*, seguido de *"Você já pode enviar."* **só**
-  quando a escrita estiver aberta e houver tarefa ou opcional a enviar. Esta regra **prevalece** sobre
-  toda menção ao prazo: a data do vencimento MUST NOT aparecer como prazo em nenhum bloco, cartão,
-  opcional ou frase de conclusão; ela fica só no bloco *Sobre esta convocação*.
+- **FR-3749** *(revista pela `125` em 2026-11-06, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Com a comunicação ainda não bem-sucedida, as telas MUST dizer a frase do canal da convocação — na
+  mensagem, *"O prazo ainda não começou a correr: ele conta a partir do envio da comunicação."*; na
+  publicação, *"O prazo ainda não começou a correr: ele conta a partir da publicação da convocação."*
+  (FR-3999 da `125`) —, seguida de *"Você já pode enviar."* **só** quando a escrita estiver aberta e
+  houver tarefa ou opcional a enviar. Esta regra **prevalece** sobre toda menção ao prazo: a data do
+  vencimento MUST NOT aparecer como prazo em nenhum bloco, cartão, opcional ou frase de conclusão;
+  ela fica só no bloco *Sobre esta convocação*. Na publicação, a frase só aparece na correção de
+  convocação já comunicada: antes do registro, a convocação não aparece (FR-3981 da `125`).
+
+  > **Redação anterior à `125`, preservada:**
+  > Com a comunicação ainda não enviada, as telas MUST dizer *"O prazo ainda não começou a
+  > correr: ele conta a partir do envio da comunicação."*, seguido de *"Você já pode enviar."* **só**
+  > quando a escrita estiver aberta e houver tarefa ou opcional a enviar. Esta regra **prevalece** sobre
+  > toda menção ao prazo: a data do vencimento MUST NOT aparecer como prazo em nenhum bloco, cartão,
+  > opcional ou frase de conclusão; ela fica só no bloco *Sobre esta convocação*.
 - **FR-3750**: O desfecho MUST ter, na tela da convocação e no acompanhamento, o mesmo rótulo: o da
   tabela da FR-1172 da `063` (por exemplo, *"Vaga aceita"*). Com aceite ou regularização, as duas
   telas MUST dizer *"Este registro não é matrícula, bolsa nem contrato: ele registra o resultado desta

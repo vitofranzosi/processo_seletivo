@@ -893,13 +893,16 @@ def _anterior(*comunicacoes, vencimento=VENCIMENTO):
 
 
 class TestASubstituida:
-    """FR-3869, R-008: a imediatamente anterior, nos três textos, sem motivo nem "novo prazo"."""
+    """FR-3869, R-008: a imediatamente anterior, nos três textos, sem motivo nem "novo prazo".
+
+    Na mensagem, *"Enviada em"*, e não *"Comunicada em"*, desde a `125` (D-008): a palavra do canal.
+    """
 
     def test_comunicada(self):
         enviada = _comunicacao("ENVIADA", RECEBIDO_EM)
 
         assert o.linha_da_substituida(_anterior(enviada)) == (
-            "Comunicada em 04/11/2026, às 09h05, com prazo até 09/11/2026, às 13h27. Esse prazo "
+            "Enviada em 04/11/2026, às 09h05, com prazo até 09/11/2026, às 13h27. Esse prazo "
             "não vale mais."
         )
 
@@ -928,7 +931,7 @@ class TestASubstituida:
             _comunicacao("ENVIADA", RECEBIDO_EM + timedelta(days=1)),
         )
 
-        assert o.linha_da_substituida(anterior).startswith("Comunicada em 05/11/2026")
+        assert o.linha_da_substituida(anterior).startswith("Enviada em 05/11/2026")
 
     def test_nada_de_motivo_nem_novo_prazo(self):
         for anterior in (_anterior(), _anterior(_comunicacao("ENVIADA", RECEBIDO_EM))):

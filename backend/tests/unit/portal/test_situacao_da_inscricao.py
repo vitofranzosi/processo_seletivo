@@ -77,6 +77,10 @@ def convocacao(*, lista_id=None, vencimento=INSTANTE, especie="Para vaga inicial
         vencimento=vencimento,
         criado_em=INSTANTE,
         get_especie_display=lambda: especie,
+        # A frase do prazo não iniciado é a do canal (125, FR-3999): sem comunicação e com a forma
+        # já lida, como a visibilidade a deixa, a da mensagem — a de sempre.
+        comunicacoes=SimpleNamespace(all=lambda: []),
+        forma_lida=None,
     )
 
 
