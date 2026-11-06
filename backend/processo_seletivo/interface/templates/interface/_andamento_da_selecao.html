@@ -14,14 +14,18 @@ rola dentro da moldura em qualquer largura, e a primeira coluna pode ficar fora 
   {% for perfil in andamento.perfis %}{% if perfil.destinos %}
   {% comment %} Só o Perfil que a pessoa alcança, como o cartão "Classificação" fazia por destino (D-004):
      quem só publica resultado vê o Perfil com ordem a divulgar, e não os outros. {% endcomment %}
+  {% comment %} O número de inscritos distingue Perfis homônimos, que o conteúdo publicado admite (o 91 tem três
+     com o mesmo nome; item 6 do code review do B2). {% endcomment %}
   {% if perfil.sem_inscricao %}
   <p class="perfil-sem-inscricao"><strong>{{ perfil.nome }}</strong> · {{ perfil.forma }} — Não se aplica: nenhuma inscrição enviada.</p>
+  {% elif not andamento.ve_a_matriz %}
+  <p class="perfil-sem-inscricao"><strong>{{ perfil.nome }}</strong> · {{ perfil.forma }} · {{ perfil.inscritos }} inscriç{{ perfil.inscritos|pluralize:"ão,ões" }} <span class="resumo-do-perfil">— {{ perfil.resumo }}</span></p>
   {% else %}
   <details class="perfil-do-andamento">
-    <summary><strong>{{ perfil.nome }}</strong> · {{ perfil.forma }} <span class="resumo-do-perfil">— {{ perfil.resumo }}</span></summary>
+    <summary><strong>{{ perfil.nome }}</strong> · {{ perfil.forma }} · {{ perfil.inscritos }} inscriç{{ perfil.inscritos|pluralize:"ão,ões" }} <span class="resumo-do-perfil">— {{ perfil.resumo }}</span></summary>
     <div class="moldura-do-andamento" role="region" tabindex="0" aria-label="Andamento de {{ perfil.nome }}, por lista">
       <table class="matriz-do-andamento">
-        <caption>Andamento de {{ perfil.nome }}, por lista</caption>
+        <caption>Andamento de {{ perfil.nome }} ({{ perfil.inscritos }} inscriç{{ perfil.inscritos|pluralize:"ão,ões" }}), por lista</caption>
         {% comment %} Os grupos ancorados em `colgroup`, para o leitor de tela associar o cabeçalho do grupo
            às colunas dele (item 8 da revisão do B2). {% endcomment %}
         <colgroup span="1"></colgroup>{% for grupo, quantos in perfil.grupos %}<colgroup span="{{ quantos }}"></colgroup>{% endfor %}
@@ -46,7 +50,6 @@ rola dentro da moldura em qualquer largura, e a primeira coluna pode ficar fora 
   {% endif %}
   {% comment %} Fora do `details`, e por isso à vista: são os caminhos que o cartão "Classificação"
      oferecia (FR-4108), e quem só divulga resultado chega por eles sem abrir a matriz. {% endcomment %}
-  {% if perfil.destinos %}
   <ul class="destinos-do-perfil">
     {% for item in perfil.destinos %}
     {% comment %} O principal leva o nome do tipo de tela, e não o do marco, que já está na linha do Perfil
@@ -54,6 +57,5 @@ rola dentro da moldura em qualquer largura, e a primeira coluna pode ficar fora 
     <li>{% if perfil.destinos|length > 1 %}<span class="quando">{{ item.marco.name }}:</span> {% endif %}{% for destino in item.destinos %}{% if not forloop.first %} · {% endif %}<a href="{{ destino.url }}">{% if destino.principal %}{{ destino.nota|default:"ordenação" }}{% else %}{{ destino.rotulo }}{% endif %}</a>{% endfor %}</li>
     {% endfor %}
   </ul>
-  {% endif %}
   {% endif %}{% endfor %}
 </section>

@@ -1232,6 +1232,10 @@ class Andamento:
     providencias: list
     atencoes: list
     inscricoes: dict
+    #: A matriz por lista mostra o estado da convocação e das Etapas, que só quem conduz ou audita
+    #: alcança (`_edital_para_classificar`). Quem só publica resultado vê o Perfil recolhido, com o
+    #: resumo, como o cartão "Classificação" lhe mostrava a presença (D-004, item 1 do code review).
+    ve_a_matriz: bool = False
 
     # A apresentação do nível 1 mora em `providencias.py`; estas propriedades só a expõem.
     @property
@@ -1386,6 +1390,7 @@ class _Leitor:
             perfis=perfis,
             providencias=self.providencias,
             atencoes=self.atencoes,
+            ve_a_matriz=self.alcance.consulta,
             inscricoes={
                 "estado": self.periodo.estado,
                 "fim": self.periodo.fim,
@@ -1528,11 +1533,15 @@ class _Leitor:
         # **A Etapa que outro Perfil lê fica fora da matriz deste** (item 3 da revisão do B2): para
         # ele ela não muda nada, mas "sem efeito no GPS" seria falso — o nível 1 a cobra pelo
         # Edital. "Sem efeito" é só a que nada consome no Edital inteiro (D-010).
+        citadas = _citadas_pelos_marcos(marcos)
         etapas_do_perfil = [
             e
             for e in self.etapas
             if expectativa.get(str(e["id"])) == ESPERADA
             or self.expectativa_do_edital.get(str(e["id"])) == SEM_EFEITO
+            # A que um marco do Perfil cita fica, ainda que sem efeito nele: sem ela a `jornada()`
+            # perde a "última Etapa" do marco e o põe no começo (item 4 do code review do B2).
+            or str(e["id"]) in citadas
         ]
         pontos = sequencia_do_perfil(etapas_do_perfil, marcos, expectativa)
         listas = recortes_do_perfil(self.conteudo, perfil_id=perfil.get("id"))
@@ -1558,13 +1567,9 @@ class _Leitor:
             # **O Perfil sem inscrição é uma linha só** (FR-4102): nada dele é providência, e o que
             # já existe (a ordem vazia emitida) continua dito como feito.
             self.providencias = [p for p in self.providencias if p.perfil_id != pid]
-        etapas_vistas = {str(p.etapa.get("id")) for p in pontos if p.tipo == ETAPA}
-        no_perfil.providencias = [
-            p
-            for p in self.providencias
-            if p.perfil_id == pid
-            or (p.chave and p.chave[0] == "etapa" and str(p.chave[1]) in etapas_vistas)
-        ]
+        # **Só as do Perfil** (item 3 do code review do B2): as das Etapas são do Edital inteiro e
+        # entrariam na linha de cada Perfil que as vê; o andamento delas está em "Etapas X de Y".
+        no_perfil.providencias = [p for p in self.providencias if p.perfil_id == pid]
         no_perfil.resumo = resumo_do_perfil(no_perfil)
         no_perfil.matricula_fora = matricula_fora(no_perfil)
         return no_perfil
@@ -2068,6 +2073,24 @@ def _com_os_metodos_resolvidos(conteudo):
     return {**conteudo, "profiles": perfis}
 
 
+def _citadas_pelos_marcos(marcos):
+    """As Etapas que os marcos citam: enumeradas, governadas, de habilitação ou de desempate."""
+    from processo_seletivo.classificacao.domain import faixa
+    from processo_seletivo.classificacao.domain.desempate import etapas_do_desempate
+
+    saida = set()
+    for marco in marcos:
+        saida.update(str(e) for e in marco.get("stages") or [])
+        saida.update(etapas_do_desempate(marco))
+        governada = faixa.etapa_governada(marco.get("cutRule"))
+        if governada:
+            saida.add(str(governada))
+        habilitacao = (marco.get("drawMethod") or {}).get("qualifyingStageId")
+        if habilitacao:
+            saida.add(str(habilitacao))
+    return saida
+
+
 def _rotulos_curtos(perfil):
     """`{lista: rótulo}` para o nível 1: "Ampla concorrência" e o código de cada Modalidade (D-020).
 
@@ -2184,8 +2207,8 @@ def resumo_do_perfil(perfil):
     partes.append(_resultado_em_palavras(perfil))
     from processo_seletivo.interface.providencias import agrupar
 
-    # **O mesmo conjunto que o nível 1 conta** (item 4 da revisão do B2): as providências do
-    # Perfil e as das Etapas que a matriz dele mostra, agrupadas como lá, inclusive as que esperam.
+    # Agrupadas como o nível 1 as agrupa (D-016), inclusive as que esperam; as das Etapas, que são
+    # do Edital, ficam no nível 1 e em "Etapas X de Y".
     em_aberto = len(agrupar(perfil.providencias))
     if em_aberto:
         partes.append(
