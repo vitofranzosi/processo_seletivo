@@ -1236,6 +1236,8 @@ class Andamento:
     #: alcança (`_edital_para_classificar`). Quem só publica resultado vê o Perfil recolhido, com o
     #: resumo, como o cartão "Classificação" lhe mostrava a presença (D-004, item 1 do code review).
     ve_a_matriz: bool = False
+    #: `e_sua(celula, perfil)`: a regra de "sua" do nível 1, para as transições (FR-4090).
+    e_sua: object = None
 
     # A apresentação do nível 1 mora em `providencias.py`; estas propriedades só a expõem.
     @property
@@ -1293,7 +1295,7 @@ class Alcance:
         }.get(responsavel, False)
 
 
-def do_edital(edital, ator, *, agora=None, em_curso=None):
+def do_edital(edital, ator, *, agora=None, em_curso=None, perfis=None):
     """O andamento do Edital publicado ou encerrado, para este ator — ou `None` antes disso.
 
     `em_curso` são as Retificações em curso, que o detalhe já leu (103). Elas **não** viram
@@ -1310,7 +1312,7 @@ def do_edital(edital, ator, *, agora=None, em_curso=None):
     except DomainError:
         return None
     try:
-        return _Leitor(edital, ator, conteudo, agora).andamento(em_curso=em_curso)
+        return _Leitor(edital, ator, conteudo, agora).andamento(em_curso=em_curso, perfis=perfis)
     except Exception:  # noqa: BLE001 — orientação não derruba a página (item 2 do code review)
         # **A orientação não pode derrubar o detalhe do Edital.** A derivação lê vinte funções de
         # outras features; um conteúdo que uma delas não espere faria o detalhe responder 500 para
@@ -1320,10 +1322,15 @@ def do_edital(edital, ator, *, agora=None, em_curso=None):
         return None
 
 
-def da_lista(andamento, marco_id, lista_id, preferir=None):
-    """`(primeira em aberto desta lista, [(rótulo, célula)] das outras listas do marco)` (R-012)."""
+def da_lista(andamento, marco_id, lista_id, preferir=None, todas_as_listas=False):
+    """`(primeira em aberto desta lista, [(rótulo, célula)] das outras listas do marco, Perfil)`.
+
+    É a leitura das transições (R-012). `todas_as_listas` lê o marco inteiro — a semente vale para
+    todas as listas, e depois de observá-la o próximo passo é do marco, e não de uma lista (item 4
+    do code review das transições); então não há "outras".
+    """
     if andamento is None:
-        return None, []
+        return None, [], None
     alvo, marco_id = _chave(lista_id), str(marco_id)
     for perfil in andamento.perfis:
         pontos = [p for p in perfil.pontos if p.marco and str(p.marco.get("id")) == marco_id]
@@ -1336,16 +1343,22 @@ def da_lista(andamento, marco_id, lista_id, preferir=None):
         indices = [n for n, p in enumerate(perfil.pontos) if p in pontos]
         trecho = perfil.pontos[min(indices) : max(indices) + 1]
         demais = [p for p in perfil.pontos if p.tipo == ETAPA and p not in trecho]
+        listas = [lista for lista, _ in perfil.listas] if todas_as_listas else [lista_id]
         abertas = [
-            c for p in [*trecho, *demais] for c in [p.celula(alvo)] if c is not None and c.em_aberto
+            c
+            for p in [*trecho, *demais]
+            for lista in listas
+            for c in [p.celula(lista)]
+            if c is not None and c.em_aberto
         ]
         # Quem acabou de praticar um ato lê primeiro o que é dele nesta lista (`preferir`); sem
         # isso, o primeiro em aberto, que pode ser de outro papel.
         desta = next(
-            (c for c in abertas if preferir and preferir(c)), abertas[0] if abertas else None
+            (c for c in abertas if preferir and preferir(c, perfil.perfil)),
+            abertas[0] if abertas else None,
         )
         outras = []
-        for lista, rotulo in perfil.listas:
+        for lista, rotulo in [] if todas_as_listas else perfil.listas:
             if _chave(lista) == alvo:
                 continue
             primeira = next(
@@ -1353,8 +1366,8 @@ def da_lista(andamento, marco_id, lista_id, preferir=None):
             )
             if primeira is not None:
                 outras.append((rotulos.get(lista, rotulo), primeira))
-        return desta, outras
-    return None, []
+        return desta, outras, perfil.perfil
+    return None, [], None
 
 
 _VAZIA = Celula(DEPOIS)
@@ -1375,7 +1388,12 @@ class _Leitor:
 
     # --- o todo ----------------------------------------------------------------------------
 
-    def andamento(self, *, em_curso=None):
+    def andamento(self, *, em_curso=None, perfis=None):
+        """O andamento; `perfis` restringe a leitura dos marcos a esses Perfis.
+
+        A transição de um ato (FR-4090) lê o Perfil do marco, e não o Edital inteiro (item 3 do
+        code review). As Etapas continuam lidas no Edital, que é como valem.
+        """
         from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes
 
         self.periodo = periodo_de_inscricoes(self.conteudo, self.agora)
@@ -1384,10 +1402,12 @@ class _Leitor:
         expectativa = expectativa_das_etapas(self.conteudo)
         self.expectativa_do_edital = expectativa
         self.etapas_no_edital = self._etapas_no_edital(expectativa)
+        pedidos = {str(p) for p in perfis} if perfis is not None else None
         perfis = [
             self._perfil(perfil)
             for perfil in self.conteudo.get("profiles") or []
             if perfil.get("classificationMilestones")
+            and (pedidos is None or str(perfil.get("id")) in pedidos)
         ]
         self._providencias_da_104(em_curso)
         return Andamento(
@@ -1395,6 +1415,7 @@ class _Leitor:
             providencias=self.providencias,
             atencoes=self.atencoes,
             ve_a_matriz=self.alcance.consulta,
+            e_sua=self.e_sua,
             inscricoes={
                 "estado": self.periodo.estado,
                 "fim": self.periodo.fim,
@@ -1999,15 +2020,7 @@ class _Leitor:
 
         if not celula.em_aberto:
             return
-        if celula.situacao not in A_PRATICAR:
-            sua = False
-        elif celula.natureza == AVALIAR:
-            # O link da mesa só existe para quem tem inscrição pendente nela (a carga da `104`).
-            sua = bool(celula.url)
-        elif celula.responsavel == CONFERE:
-            sua = self._pode_conferir(perfil)
-        else:
-            sua = self.alcance.pratica(celula.responsavel)
+        sua = self.e_sua(celula, perfil)
         if celula.quem_resolve == RETIFICA and self.edital.status != "PUBLICADO":
             # Só o Edital publicado se retifica (item 4 da revisão).
             celula = replace(celula, quem_resolve="")
@@ -2041,6 +2054,22 @@ class _Leitor:
                 lugar=(perfil.get("name") or "") if (perfil and lista) else onde,
             )
         )
+
+    def e_sua(self, celula, perfil=None):
+        """Se a pessoa pratica o ato desta célula agora — a regra única do nível 1 e das transições.
+
+        As transições (FR-4090) a leem daqui, e não refazem a pergunta: a confirmação de "sua" tem
+        três formas (a porta do papel, a mesa da `104`, a alocação à conferência), e uma cópia dela
+        na view divergiria na primeira mudança (item 1 do code review das transições).
+        """
+        if celula.situacao not in A_PRATICAR:
+            return False
+        if celula.natureza == AVALIAR:
+            # O link da mesa só existe para quem tem inscrição pendente nela (a carga da `104`).
+            return bool(celula.url)
+        if celula.responsavel == CONFERE:
+            return self._pode_conferir(perfil)
+        return self.alcance.pratica(celula.responsavel)
 
     def _pode_conferir(self, perfil):
         return self.alcance.conduz or (perfil is not None and self._confere(perfil))

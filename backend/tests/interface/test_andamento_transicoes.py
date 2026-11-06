@@ -79,6 +79,52 @@ def test_depois_de_convocar_o_proximo_e_da_mesma_lista(
     assert "/convocacao" in proximo, proximo
 
 
+def test_depois_da_ordem_o_proximo_aparece_na_ordenacao(
+    client, gestor, api_client, manager_headers, process_payload, seletor_ligado
+):
+    """Item 6 do code review: as seis telas, e não só corte e convocação."""
+    from tests.fixtures.recortes import montar_cenario_7_1_2
+
+    edital, _, _ = montar_cenario_7_1_2(
+        gestor, api_client, manager_headers, process_payload, prefixo="transicao-127-ordem"
+    )
+    identificar(client, "carlos", ["gestor"])
+    com_resultado(client, "resultado_da_ordenacao", {"comPosicao": 5, "semPosicao": 1})
+    corpo = client.get(reverse("interface:ordenacao", args=[edital.id, MARCO])).content.decode()
+    assert PROXIMO in corpo
+
+
+def test_depois_da_apuracao_o_proximo_aparece_na_ocupacao(
+    client, gestor, api_client, manager_headers, process_payload, seletor_ligado
+):
+    edital, _, _ = montar_cenario_da_convocacao(
+        gestor, api_client, manager_headers, process_payload, prefixo="transicao-127-ocup"
+    )
+    identificar(client, "carlos", ["gestor"])
+    com_resultado(client, "resultado_da_ocupacao", {"listaId": None, "efetivas": 2})
+    corpo = client.get(reverse("interface:ocupacao", args=[edital.id, MARCO])).content.decode()
+    proximo = corpo.split(PROXIMO, 1)[1].split("</p>", 1)[0]
+    assert "Convocar" in proximo, proximo
+
+
+def test_depois_de_congelar_o_proximo_aparece_no_sorteio(
+    client, gestor, api_client, manager_headers, process_payload, seletor_ligado
+):
+    from tests.fixtures.sorteio import certame_de_sorteio
+
+    certame = certame_de_sorteio(gestor, api_client, manager_headers, process_payload)
+    identificar(client, "carlos", ["gestor"])
+    com_resultado(
+        client,
+        "resultado_do_sorteio",
+        {"tipo": "relacao", "listaId": "", "quantidade": 3, "resumo": "x", "advertencias": []},
+    )
+    corpo = client.get(
+        reverse("interface:sorteio", args=[certame["edital"].id, certame["marco"]])
+    ).content.decode()
+    assert PROXIMO in corpo
+
+
 def test_sem_nada_em_aberto_a_lista_diz_isso():
     """FR-4091: não inventa passo."""
     marco = {"id": "m", "name": "Final", "orderProduction": "POR_PONTUACAO", "stages": []}
@@ -89,5 +135,5 @@ def test_sem_nada_em_aberto_a_lista_diz_isso():
         perfil={}, forma="", listas=[(None, "Ampla")], pontos=pontos, inscritos=1
     )
     andamento = a.Andamento(perfis=[perfil], providencias=[], atencoes=[], inscricoes={})
-    desta, outras = a.da_lista(andamento, "m", None)
+    desta, outras, _ = a.da_lista(andamento, "m", None)
     assert desta is None and outras == []

@@ -8,5 +8,5 @@ outras listas do mesmo marco. Sem nada em aberto, diz isso, e não inventa passo
 {% endcomment %}
 {% with proximo=proximo_nesta_lista %}{% if proximo %}
 <p class="proximo-nesta-lista">{% if proximo.desta %}<strong>Próximo nesta lista:</strong> {% if proximo.desta.url %}<a href="{{ proximo.desta.url }}">{{ proximo.desta.ato }}</a>{% elif proximo.desta.situacao == "aguarda" or proximo.desta.situacao == "impedido" %}{{ proximo.desta.ato_minusculo }} ({{ proximo.desta.rotulo|lower }}{% if proximo.desta.razao %}: {{ proximo.desta.razao }}{% endif %}){% else %}{{ proximo.desta.ato_minusculo }}, com {{ proximo.desta.papel|lower }}{% endif %}.{% else %}Nada mais em aberto nesta lista.{% endif %}</p>
-{% if proximo.outras %}<p class="ainda-neste-marco"><strong>Ainda neste marco:</strong> {% for rotulo, item in proximo.outras %}{% if not forloop.first %}; {% endif %}{{ rotulo }} — {{ item.ato_minusculo }}{% endfor %}.</p>{% endif %}
+{% if proximo.outras %}<p class="ainda-neste-marco"><strong>Ainda neste marco:</strong> {% for rotulo, item in proximo.outras %}{% if not forloop.first %}; {% endif %}{{ rotulo }} — {{ item.ato_minusculo }}{% if item.situacao == "aguarda" or item.situacao == "impedido" %} ({{ item.rotulo|lower }}){% elif not item.sua and item.papel %}, com {{ item.papel|lower }}{% endif %}{% endfor %}.</p>{% endif %}
 {% endif %}{% endwith %}

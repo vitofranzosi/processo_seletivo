@@ -8840,30 +8840,27 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     )
 
 
-def _proximo_nesta_lista(edital, ator, marco_id, lista_id):
+def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=False):
     """O "Próximo nesta lista" da mensagem de sucesso de um ato (127, FR-4090 a FR-4092, D-015).
 
     **Um callable, e não o valor**: o template só o lê dentro do bloco de sucesso, uma vez, com
-    `{% with %}`. Abrir a tela não paga a derivação do andamento; quem acabou de praticar um ato
-    paga uma vez, e lê pela mesma derivação que o detalhe do Edital usa o que vem a seguir naquela
-    lista e o que falta nas outras do mesmo marco.
+    `{% with %}`. Abrir a tela não paga a derivação; quem acabou de praticar um ato paga a do
+    Perfil do marco, e não a do Edital inteiro.
+
+    **"Sua" é a regra do andamento** (`Andamento.e_sua`), a mesma do nível 1: a porta do papel, a
+    mesa da `104` e a alocação à conferência. Refazê-la aqui era a segunda regra que diverge.
     """
 
     def ler():
-        atual = andamento.do_edital(edital, ator)
+        atual = andamento.do_edital(edital, ator, perfis=[_perfil_do_marco(edital, marco_id)])
         if atual is None:
             return None
-        alcance = andamento.Alcance.de(ator, edital)
-        desta, outras = andamento.da_lista(
-            atual,
-            marco_id,
-            lista_id,
-            preferir=lambda c: c.situacao in andamento.A_PRATICAR
-            and alcance.pratica(c.responsavel),
+        desta, outras, perfil = andamento.da_lista(
+            atual, marco_id, lista_id, preferir=atual.e_sua, todas_as_listas=todas_as_listas
         )
 
         def item(celula):
-            sua = celula.situacao in andamento.A_PRATICAR and alcance.pratica(celula.responsavel)
+            sua = atual.e_sua(celula, perfil)
             ato = celula.ato or celula.rotulo
             return {
                 "ato": ato,
@@ -8871,6 +8868,7 @@ def _proximo_nesta_lista(edital, ator, marco_id, lista_id):
                 "situacao": celula.situacao,
                 "rotulo": celula.rotulo,
                 "razao": celula.razao,
+                "sua": sua,
                 "url": celula.url if sua else "",
                 "papel": andamento.PAPEIS.get(celula.responsavel, ""),
             }
@@ -11203,7 +11201,12 @@ def sorteio(request, edital_id, marco_id):
                     resultado_do_sorteio := request.session.pop("resultado_do_sorteio", None)
                 ),
                 "proximo_nesta_lista": _proximo_nesta_lista(
-                    edital, ator, marco_id, (resultado_do_sorteio or {}).get("listaId") or None
+                    edital,
+                    ator,
+                    marco_id,
+                    (resultado_do_sorteio or {}).get("listaId") or None,
+                    # A semente vale para o marco: o próximo passo é do marco (item 4 do review).
+                    todas_as_listas=(resultado_do_sorteio or {}).get("tipo") == "ocorrencia",
                 ),
                 "erro": request.session.pop("erro_do_sorteio", None),
                 # **A chave de idempotência nasce na leitura, e viaja no formulário** — como a tela
