@@ -562,3 +562,71 @@ class TestACorrecaoNoPortal:
         pagina = _texto(_main(client, cenario))
 
         assert "Convocação substituída Não comunicada." in pagina
+
+
+def _frases_da_sc_1150(letra):
+    """As respostas que a chamada dá pelo próprio texto, por cenário (SC-1150): o título, a etapa
+    (abertos), o prazo ou o estado dele, o resumo ou o desfecho, e, abertos, a consequência e a
+    ressalva; em P7, o selo *"Conferido"* nos cartões."""
+    from processo_seletivo.convocacao.domain import nomes
+    from processo_seletivo.portal import obrigacoes, situacao
+
+    aberta = [situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO, obrigacoes.RESSALVA_DA_MATRICULA]
+    etapa = obrigacoes.ETAPAS[(True, True)]
+    return {
+        "C1": [
+            "Você foi convocado!",
+            etapa,
+            "Prazo desta convocação",
+            "Você ainda precisa enviar 4 documentos e preencher o Requerimento de Matrícula.",
+            "Ver o que preciso fazer",
+            *aberta,
+        ],
+        "F": [
+            "Você foi convocado!",
+            etapa,
+            "Prazo desta convocação",
+            "Você ainda precisa corrigir 1 documento e enviar 1 documento.",
+            "Ver o que preciso fazer",
+            "Conferido",
+            *aberta,
+        ],
+        "G": [
+            "O prazo desta convocação terminou",
+            "O prazo terminou em",
+            "Até o prazo, ficou assim",
+        ],
+        "I1": [
+            "Resultado da sua convocação",
+            f"Resultado registrado: {situacao.DESFECHOS[nomes.ACEITE]}",
+            obrigacoes.ACEITE,
+            "Conferido",
+        ],
+        "corr": [
+            "Você foi convocado!",
+            obrigacoes.CORRIGIDA,
+            "Convocação substituída Comunicada em",
+            "Ver o que preciso fazer",
+            obrigacoes.RESSALVA_DO_RESULTADO,
+        ],
+    }[letra]
+
+
+@pytest.mark.parametrize("letra", ["C1", "F", "G", "I1", "corr"])
+def test_a_chamada_responde_pelo_proprio_texto(client, fx, gestor, letra):
+    """SC-1150: a lista de frases por cenário, lida na tela."""
+    from processo_seletivo.convocacao.models import Convocacao
+
+    if letra == "corr":
+        from tests.integration.convocacao.test_correcao_da_convocacao import corrigir
+
+        cenario = _montar(fx, "A")
+        corrigir(cenario.edital, gestor, cenario.convocacao, chave="sc1150-corr")
+        cenario.convocacao = Convocacao.objects.get(convocacao_anterior=cenario.convocacao)
+    else:
+        cenario = _montar(fx, letra)
+
+    pagina = _texto(_main(client, cenario))
+
+    faltam = [frase for frase in _frases_da_sc_1150(letra) if frase not in pagina]
+    assert faltam == []

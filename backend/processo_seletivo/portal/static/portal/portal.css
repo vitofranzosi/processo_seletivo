@@ -1047,6 +1047,7 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 .confirmacao-do-envio p:last-child{margin-bottom:0}
 .confirmacao-do-envio:focus{outline:3px solid var(--verde);outline-offset:2px}
 /* O andamento (FR-3865): palavra e número, sem barra e sem percentual. */
+.andamento-da-convocacao>h2{margin:0 0 .35rem}
 .contagens-do-andamento{margin:0;padding-left:1.1rem;display:grid;gap:.2rem}
 /* O Requerimento a preencher no bloco "O que falta", alvo da ação quando ele é a única tarefa. */
 .requerimento-a-preencher:focus{outline:3px solid var(--verde);outline-offset:2px}
