@@ -300,7 +300,7 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **FR-3996**: A confirmação a partir da prévia MUST manter as garantias de hoje: a chave de
   idempotência, a assinatura do alcance do lote e a recusa quando o alcance mudou. A prévia em si MUST
   NOT praticar ato nem gravar nada.
-- **FR-3997** *(ajustada na implementação, em 2026-11-06 — ver a D-004)*: Na correção da convocação, a
+- **FR-3997** *(ajustada na implementação e aceita pelo usuário em 2026-11-06 — ver a D-004)*: Na correção da convocação, a
   prévia que a `120` já mostra (FR-3844 da `120`) MUST rotular o fundamento derivado como o que o
   candidato lerá; com complemento digitado, a correção MUST passar pela mesma conferência dos demais
   gestos, levando a assinatura da prévia da `120` nos campos.
@@ -413,7 +413,7 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 | FR-3749 da `118` | **revista**: a frase do prazo não iniciado segue o canal |
 | Cenário K da `121` | **revisto**: vale para a mensagem e para a correção de convocação já comunicada |
 | FR-3869 da `121` | **revista** só na mensagem: *"Enviada em"* no lugar de *"Comunicada em"* (D-008); o *"Publicada em"* vira o padrão das demais linhas |
-| FR-3844 da `120` | continua; a prévia de texto entra na prévia que ela já mostra (FR-3997) |
+| FR-3844 da `120` | continua; com complemento digitado, a correção passa ainda pela conferência do texto (FR-3997, ajuste da D-004) |
 | Avisos da `066` | continuam: o aviso de chamada já exige a publicação registrada |
 
 ## Revisões de requisitos anteriores
@@ -552,15 +552,16 @@ pelo servidor, com a prévia, o número de pessoas, os mesmos campos ocultos do 
 pratica o ato. Sem texto digitado — complemento vazio —, o formulário confirma direto, como hoje: o
 fundamento derivado já está na tela, e passa a ser rotulado *"O candidato lerá este fundamento"*. O
 fundamento do desfecho é obrigatório, e por isso o desfecho sempre passa pelo passo. Na correção, a
-prévia de texto entra na prévia que a `120` já tem (FR-3997).
+prévia de texto entra na prévia que a `120` já tem (FR-3997) — redação da proposta, ajustada abaixo.
 
-**Ajuste na implementação, em 2026-11-06 — aguarda o usuário.** A prévia da `120` é montada pelo
+**Ajuste na implementação, aceito pelo usuário em 2026-11-06.** A prévia da `120` é montada pelo
 servidor **antes** de o operador digitar o complemento, e mostrar nela o texto composto exigiria
 script, que a FR-3995 dispensa. As duas metades da proposta não cabem juntas. A implementação manteve
 a prévia sem script, e, com complemento digitado, a correção passa pela mesma conferência dos demais
 gestos. É o segundo passo que a proposta evitava, só quando há texto, e leva a assinatura da prévia da
 `120` intacta. A alternativa é um script que componha o texto ao vivo na prévia da `120`, como o
-efeito do vencimento já faz, aceitando que quem não tem script não veja o texto composto.
+efeito do vencimento já faz, aceitando que quem não tem script não veja o texto composto. O usuário
+ficou com o passo do servidor.
 
 ### D-005 — A data da publicação é a da referência, e não a do registro
 

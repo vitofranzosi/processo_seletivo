@@ -102,7 +102,8 @@ prévia assinada.
 
 A composição é a de `convocacao/domain/fundamento.py` (`com_complemento`), a mesma que o ato grava; o
 número é o do alcance assinado que a confirmação já confere (FR-3994, FR-3996). Na correção, o texto
-entra na prévia que a `120` já mostra (FR-3997), sem passo novo.
+entraria na prévia que a `120` já mostra (FR-3997), sem passo novo — na implementação, a correção com
+complemento passa pela mesma conferência (ajuste da D-004, aceito pelo usuário em 2026-11-06).
 
 **Por quê:** a CSP da `091`/`092` recusa script no template, e a prévia precisa funcionar sem script
 (FR-3995). Um passo do servidor é o padrão já usado pela correção, e não grava nada até a confirmação.

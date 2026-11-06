@@ -24,4 +24,4 @@ nenhuma tela percorrida.
 
 - **SC-1209** é validação humana: um operador que nunca viu a tela diz, sem ajuda, que o candidato ainda
   não vê a convocação.
-- **O ajuste da D-004 na correção** (FR-3997) aguarda o usuário.
+- **O ajuste da D-004 na correção** (FR-3997) foi aceito pelo usuário em 2026-11-06.

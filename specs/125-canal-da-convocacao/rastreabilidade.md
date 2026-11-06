@@ -35,7 +35,7 @@ A faixa abre em **FR-3981** e **SC-1201**, e as duas foram gastas: nenhuma reser
 | FR-3994 — quantas pessoas | T012 | `ct::test_com_complemento_a_previa_vem_antes_e_nao_pratica_nada` (2), `::test_o_desfecho_passa_sempre_pela_previa` (1) |
 | FR-3995 — sem script, e a volta preservada | T011 | `ct::test_a_volta_preserva_o_que_foi_preenchido`; o cliente de teste não roda script |
 | FR-3996 — as garantias de hoje, e a prévia não pratica nada | T012 | `ct::test_com_complemento_a_previa_vem_antes_e_nao_pratica_nada`, `::test_texto_editado_na_previa_volta_a_previa`, `::test_sem_complemento_o_gesto_e_direto_como_hoje` |
-| FR-3997 — a correção (ajustada, D-004) | T013 | o mesmo caminho de `convocar_view`, coberto por `ct::test_a_chamada_individual_com_complemento_tambem_confere`; o rótulo, na verificação |
+| FR-3997 — a correção (ajustada, D-004, aceita em 06/11) | T013 | o mesmo caminho de `convocar_view`, coberto por `ct::test_a_chamada_individual_com_complemento_tambem_confere`; o rótulo, na verificação |
 | FR-3998 — *"Publicada em ‹referência›"* e *"contado da publicação"* no portal | T016 | `vi::TestAsSuperficiesDoPortal::test_depois_do_registro_todas_mostram` |
 | FR-3999 — a frase do prazo não iniciado por canal | T016 | `vo::test_a_frase_do_prazo_nao_iniciado_e_a_de_sempre_na_mensagem` |
 | FR-4000 — a gestão na língua da publicação | T017 | `cg` (os três casos) |
