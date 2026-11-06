@@ -193,3 +193,27 @@ Entraram na `main`, que chegou a `5c3501d3`, a 122 com especificação e impleme
 - a suíte não rodou de novo; antes dos merges, a integração local dos três PRs passou nos testes de citação e da documentação;
 - o percurso humano da 122 (T040) fica com o usuário;
 - os números de maturidade não foram recontados.
+
+## Acréscimo de 06/11: a 121 implementada e três estudos
+
+Entraram na `main`, que chegou a `4e6d211f`:
+
+- a implementação da 121 (#404);
+- o achado da comunicação ao convocado (#401);
+- o estudo de ocupação e dupla vaga do sorteio 35/2026 (#403);
+- o guia de condução da jornada do sorteio (#405);
+- a auditoria de UX da Retificação (#406).
+
+Os quatro últimos são documentos em `doc/` e não mudam a descrição do sistema.
+
+- **O convocado no portal:** a subseção *Na tela da convocação* deixou de descrever os cinco blocos da 118. Agora descreve a ordem da 121: título por estado, cartão do prazo com o dia da semana e a correção, um único *Ver o que preciso fazer*, *Andamento* e os blocos da 118. Também registra a volta a `#confirmacao` depois do envio. O aviso *Previsto* saiu.
+- **Nova subseção `#convocacao-pelo-link`:** o link sem sessão passa pelo acesso e volta à convocação; antes terminava em 404. Também descreve os quatro modelos da mensagem, em HTML e texto, e a gravação do modelo e do SHA-256 em cada envio (D-009, `convocacao/0006`).
+- **O que ficou de fora:** QI-7, o redirecionamento no acompanhamento e no Requerimento, e a SC-1164 humana.
+- **Matriz:** as linhas do e-mail de convocação e da página de convocação ganharam a 121.
+- **Revisão, testes e rodapé** apontam para `4e6d211f`. A linha dos testes cita a medição da 121: 16 730 e 12, com os dois grupos.
+
+**Não verificado:**
+
+- a suíte não rodou aqui;
+- o produto não foi percorrido;
+- a SC-1164 (clientes de e-mail, SPF, DKIM e DMARC) continua pendente.
