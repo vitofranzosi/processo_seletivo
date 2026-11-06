@@ -89,3 +89,44 @@ seguinte e a apuração sem corte, a progressão do S2, o lugar longo.
 
 Não feita. O roteiro do estudo (`validacao.md`) vale com as telas implementadas no lugar das
 maquetes, e a SC-1245 espera o usuário. **Inspeção não substitui teste com pessoas.**
+
+## B2 — o nível 2 (06/11/2026)
+
+### Suíte
+
+`make test-pg` com `DB_NAME=spec127`, 4 workers, sobre o B1 (#415) mais o B2, com a `main` em
+`e228d6ec`: **16 850 passaram, 20 pulados, nenhuma falha, em 807 s.** Uma falha conhecida antes dela,
+corrigida: o teste da `049` lia o resumo de presença do cartão antigo ("Recortes: 3 · com ordem 1…"),
+e passou a ler o resumo em palavras ("ordem 1 de 3 · corte 0 de 3"), que diz a mesma presença.
+
+### Revisão independente
+
+Um subagente que não escreveu o código leu o diff do B2. Visibilidade (D-004), dado pessoal,
+alinhamento da matriz, CSP e destinos conferidos sem achado. Nove achados, todos corrigidos:
+
+| # | Achado | Gravidade | Feito |
+|---|---|---|---|
+| 1 | O resumo dizia "não publicado" com o preliminar na janela recursal (*Aguarda*), e "definitivo" com uma lista só | média-alta | lê a nota de qualquer situação; "publicado em X de Y listas"; definitivo só com todas |
+| 2 | A linha das inscrições ignorava o período cancelado | média | frase própria; encerrado sem término também |
+| 3 | A Etapa que outro Perfil lê aparecia como "sem efeito no GPS" | média | fica fora da matriz desse Perfil; "sem efeito" é só a que nada consome no Edital |
+| 4 | A contagem do resumo divergia da do nível 1 | média | o mesmo conjunto, agrupado, com as Etapas da matriz |
+| 5 | A nota da matrícula com chamada sem desfecho | baixa-média | exige todas desfechadas |
+| 6 | A nota da matrícula dentro do `details` | baixa | à vista |
+| 7 | Nenhum teste abria os links da matriz | baixa | `test_todo_link_da_secao_abre_para_quem_o_recebe` (gestor, auditor, publicador) |
+| 8 | `scope="colgroup"` sem `colgroup` | baixa | `colgroup` por grupo |
+| 9 | "Etapas X de Y" contava *Não se aplica* | baixa | sobre as que se aplicam |
+
+### Capturas e medidas (banco do estudo)
+
+Recolhido, o "Andamento da seleção" deixa a página **mais baixa** que o cartão "Classificação" em todo
+caso medido (`depois-b2/medidas.json` contra `depois-b1/medidas.json`): de 0 a 42 px a 1280 px, e de
+10 a 122 px a 375 px (FR-4110, SC-1242). Aberto o primeiro Perfil, a matriz rola dentro da moldura e
+a página não rola de lado, a 1280 nem a 375 px (FR-4106, SC-1241). Quem só publica resultado vê os
+Perfis em que há ordem a divulgar, como o cartão antigo fazia (D-004).
+
+Nas colunas: o 35 começa pela relação e termina nas duas Etapas "sem efeito no GPS"; o 91 começa
+pelas Etapas e não tem coluna de sorteio; o 51 põe a Etapa governada pela faixa entre o corte e a
+apuração (SC-1243). No 91, dois Perfis têm o mesmo nome no conteúdo publicado: cada um é uma linha.
+
+**Não verificado**: a nota da matrícula (FR-4109) com dados reais — nenhum Perfil do banco tem toda a
+convocação desfechada; e a suíte com o grupo `navegador`, que o CI roda.

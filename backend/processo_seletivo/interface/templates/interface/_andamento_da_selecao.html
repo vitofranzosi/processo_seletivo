@@ -1,0 +1,59 @@
+{% comment %}
+O "Andamento da seleção" (127, B2, FR-4100 a FR-4110), no lugar do cartão "Classificação" e para as
+mesmas pessoas (D-004). **O id do título continua `classificacao-titulo`**: os destinos que o cartão
+oferecia continuam aqui (FR-4108), e quem os procura pela seção — as jornadas da 033, da 049 e da 122
+— continua achando.
+
+Uma linha por Perfil, recolhida, com o resumo em palavras; aberta, a matriz composta pela `jornada()`
+da 094, sem colunas fixas. **Quem descobre o que fazer é o nível 1, e nunca a matriz** (FR-4107): ela
+rola dentro da moldura em qualquer largura, e a primeira coluna pode ficar fora da vista.
+{% endcomment %}
+<section aria-labelledby="classificacao-titulo" class="cartao andamento-da-selecao">
+  <h2 id="classificacao-titulo">Andamento da seleção</h2>
+  <p class="linha-das-inscricoes">{{ linha_das_inscricoes }}</p>
+  {% for perfil in andamento.perfis %}{% if perfil.destinos %}
+  {% comment %} Só o Perfil que a pessoa alcança, como o cartão "Classificação" fazia por destino (D-004):
+     quem só publica resultado vê o Perfil com ordem a divulgar, e não os outros. {% endcomment %}
+  {% if perfil.sem_inscricao %}
+  <p class="perfil-sem-inscricao"><strong>{{ perfil.nome }}</strong> · {{ perfil.forma }} — Não se aplica: nenhuma inscrição enviada.</p>
+  {% else %}
+  <details class="perfil-do-andamento">
+    <summary><strong>{{ perfil.nome }}</strong> · {{ perfil.forma }} <span class="resumo-do-perfil">— {{ perfil.resumo }}</span></summary>
+    <div class="moldura-do-andamento" role="region" tabindex="0" aria-label="Andamento de {{ perfil.nome }}, por lista">
+      <table class="matriz-do-andamento">
+        <caption>Andamento de {{ perfil.nome }}, por lista</caption>
+        {% comment %} Os grupos ancorados em `colgroup`, para o leitor de tela associar o cabeçalho do grupo
+           às colunas dele (item 8 da revisão do B2). {% endcomment %}
+        <colgroup span="1"></colgroup>{% for grupo, quantos in perfil.grupos %}<colgroup span="{{ quantos }}"></colgroup>{% endfor %}
+        <thead>
+          <tr><td></td>{% for grupo, quantos in perfil.grupos %}<th scope="colgroup" colspan="{{ quantos }}">{{ grupo }}</th>{% endfor %}</tr>
+          <tr><th scope="col">Lista</th>{% for ponto in perfil.pontos %}<th scope="col">{{ ponto.titulo }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for rotulo, celulas in perfil.linhas %}
+          <tr>
+            <th scope="row">{{ rotulo }}</th>
+            {% for celula in celulas %}
+            <td data-situacao="{{ celula.situacao }}">{% if celula.url %}<a href="{{ celula.url }}">{% endif %}<span class="sinal" aria-hidden="true">{{ celula.sinal }}</span> {{ celula.rotulo }}{% if celula.url %}</a>{% endif %}{% if celula.nota %}<span class="nota-da-celula">{{ celula.nota }}</span>{% endif %}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+  {% if perfil.matricula_fora %}<p class="nota">A convocação deste Perfil terminou. A matrícula acontece fora do GPS.</p>{% endif %}
+  {% endif %}
+  {% comment %} Fora do `details`, e por isso à vista: são os caminhos que o cartão "Classificação"
+     oferecia (FR-4108), e quem só divulga resultado chega por eles sem abrir a matriz. {% endcomment %}
+  {% if perfil.destinos %}
+  <ul class="destinos-do-perfil">
+    {% for item in perfil.destinos %}
+    {% comment %} O principal leva o nome do tipo de tela, e não o do marco, que já está na linha do Perfil
+       e dobrava a linha. {% endcomment %}
+    <li>{% if perfil.destinos|length > 1 %}<span class="quando">{{ item.marco.name }}:</span> {% endif %}{% for destino in item.destinos %}{% if not forloop.first %} · {% endif %}<a href="{{ destino.url }}">{% if destino.principal %}{{ destino.nota|default:"ordenação" }}{% else %}{{ destino.rotulo }}{% endif %}</a>{% endfor %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endif %}{% endfor %}
+</section>

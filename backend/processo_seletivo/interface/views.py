@@ -3926,6 +3926,16 @@ def detalhe(request, edital_id):
     # o cartão continua o de hoje, com a trilha e o bastão, que orientam bem até ali.
     andamento_do_edital = andamento.do_edital(edital, ator, em_curso=em_curso)
     nivel_1 = andamento_do_edital.nivel_1 if andamento_do_edital is not None else None
+    marcos_classificatorios = _marcos_publicados(edital, ator)
+    if andamento_do_edital is not None:
+        # **O nível 2 leva os destinos do cartão que substitui** (127, FR-4108): os mesmos que
+        # `_marcos_publicados` decide por destino (033), agora no Perfil de cada marco.
+        for perfil in andamento_do_edital.perfis:
+            perfil.destinos = [
+                item
+                for item in marcos_classificatorios
+                if str(item["perfil"].get("id")) == str(perfil.perfil.get("id"))
+            ]
     return render(
         request,
         "interface/detalhe.html",
@@ -3985,7 +3995,14 @@ def detalhe(request, edital_id):
                 "" if acoes.pode_retificar(edital, ator) else CONDUCAO_DA_RETIFICACAO
             ),
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
-            "marcos_classificatorios": _marcos_publicados(edital, ator),
+            # **Quem vê o "Andamento da seleção" é quem via o cartão "Classificação"** (127, D-004,
+            # FR-4100): a mesma lista, que é vazia para quem não alcança destino nenhum.
+            "marcos_classificatorios": marcos_classificatorios,
+            "linha_das_inscricoes": (
+                andamento.linha_das_inscricoes(andamento_do_edital.inscricoes)
+                if andamento_do_edital is not None
+                else ""
+            ),
             "conferencia_do_ato": _conferencia_do_ato(
                 edital, OPERACAO_DO_ATO_COM_CONFERENCIA.get(request.GET.get("ato", ""))
             ),

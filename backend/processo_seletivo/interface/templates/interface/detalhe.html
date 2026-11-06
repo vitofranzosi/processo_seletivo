@@ -209,7 +209,11 @@ elaboração seria responder a uma pergunta que ninguém fez.
 </section>
 {% endif %}
 
-{% if marcos_classificatorios %}
+{% comment %} O "Andamento da seleção" no lugar do cartão "Classificação", para as mesmas pessoas (127, D-004,
+   FR-4100). Antes da publicação não há andamento, e o cartão é o de sempre. {% endcomment %}
+{% if marcos_classificatorios and andamento %}
+{% include "interface/_andamento_da_selecao.html" %}
+{% elif marcos_classificatorios %}
 <section aria-labelledby="classificacao-titulo" class="cartao">
   <h2 id="classificacao-titulo">Classificação</h2>
   <p class="ajuda">Abra um marco para conferir a ordem calculada, emitir o ato e consultar seu histórico. Em <em>conduzir o marco</em>, os recortes dele aparecem juntos, com o que falta em cada um.</p>

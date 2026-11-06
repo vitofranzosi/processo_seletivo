@@ -255,7 +255,10 @@ def test_a_pagina_do_edital_resume_cada_marco_e_leva_a_ele(client, cenario, gest
 
     pagina = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
 
-    assert "Recortes: 3 · com ordem 1 · com corte 0 · apurados 0 · publicados 0" in pagina
+    # O resumo de presença virou o resumo em palavras do "Andamento da seleção" (127, FR-4101), que
+    # conta feitos sobre os que se aplicam — a mesma presença, por ato.
+    assert "3 listas" in pagina
+    assert "ordem 1 de 3" in pagina and "corte 0 de 3" in pagina
     assert reverse("interface:marco", args=[edital.id, MARCO]) in pagina
     assert "conduzir o marco" in pagina
 
