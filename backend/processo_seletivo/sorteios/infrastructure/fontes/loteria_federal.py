@@ -11,7 +11,6 @@ interpreta ausência como erro. Devolve o que a fonte publicou, ou diz que não 
 """
 
 import json
-import logging
 from datetime import date, datetime
 from urllib import error, request
 
@@ -24,8 +23,6 @@ from processo_seletivo.sorteios.infrastructure.fontes import FonteExterna, Obser
 
 ENDERECO_DO_ULTIMO = "https://servicebus2.caixa.gov.br/portaldeloterias/api/federal"
 ENDERECO = ENDERECO_DO_ULTIMO + "/{referencia}"
-
-logger = logging.getLogger(__name__)
 
 
 class LoteriaFederal(FonteExterna):
@@ -126,19 +123,12 @@ class LoteriaFederal(FonteExterna):
         # mensagem é lida por quem conduz o sorteio, com a transmissão aberta (124, FR-3961). Ela
         # dizia "Última falha: URLError: <urlopen error timed out>": nome de exceção que quem opera
         # não tem o que fazer com ele, quando a conferência da mesma fonte já traduzia a mesma falha
-        # em palavras dele (116, FR-3641). O detalhe técnico tem valor para quem mantém o sistema, e
-        # vai para o log, com o nome da fonte e da referência para a busca (FR-3962).
-        logger.warning(
-            "observacao_sem_acesso_a_fonte %s",
-            json.dumps(
-                {"fonte": fonte, "referencia": referencia, "falhas": falhas},
-                ensure_ascii=False,
-                sort_keys=True,
-            ),
-        )
+        # em palavras dele (116, FR-3641). O detalhe técnico vai em `falhas`, para o log que a
+        # aplicação escreve com a correlação do pedido (FR-3962).
         return Observacao(
             falha_de_acesso=True,
             evidencia=f"Concurso {referencia} de {fonte}: {motivo}, em {tentativas} tentativa(s).",
+            falhas=tuple(falhas),
         )
 
 

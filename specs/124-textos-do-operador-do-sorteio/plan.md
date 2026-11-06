@@ -28,14 +28,15 @@ apontada (`tests/interface/test_medida_dos_campos.py`).
 | I · Linguagem Ubíqua | os motivos são os quatro da `116`, e não uma tradução nova (D-001) |
 | III · Auditoria | nada se grava na falha de acesso; o detalhe técnico vai ao log estruturado (FR-3962), que é onde a FR-3649 da `116` já põe o que não é ato |
 | IV · Publicação imutável | nada publicado muda: a tela do sorteio lê a ocorrência como está |
-| V · Observabilidade | o registro `observacao_sem_acesso_a_fonte` leva fonte, referência e as falhas de cada tentativa |
+| V · Observabilidade | o registro `observacao_sem_acesso_a_fonte` leva fonte, referência, as falhas de cada tentativa e a correlação do pedido |
 
 ## Onde mexe
 
 | Arquivo | O quê |
 |---|---|
-| `backend/processo_seletivo/sorteios/infrastructure/fontes/loteria_federal.py` | `_motivo_da_falha`, compartilhada por `_uma_chamada` e `observar`; evidência nova; log |
-| `backend/processo_seletivo/sorteios/application/ocorrencia.py` | a recusa `source_unreachable` sem `**` |
+| `backend/processo_seletivo/sorteios/infrastructure/fontes/loteria_federal.py` | `_motivo_da_falha`, compartilhada por `_uma_chamada` e `observar`; evidência nova; `falhas` |
+| `backend/processo_seletivo/sorteios/infrastructure/fontes/__init__.py` | `Observacao.falhas`, o detalhe técnico só para o log (D-005) |
+| `backend/processo_seletivo/sorteios/application/ocorrencia.py` | a recusa `source_unreachable` sem `**` e com a primeira frase nova; o log, com a correlação |
 | `backend/processo_seletivo/interface/views.py` | `fonte_publica_so_a_data` no contexto da tela do sorteio |
 | `backend/processo_seletivo/interface/templates/interface/sorteio.html` | três frases para o "Aconteceu não antes de" |
 | `backend/processo_seletivo/interface/templates/interface/_como_preencher_o_marco.html` | o item "Ocorrência que fixará a semente" |

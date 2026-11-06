@@ -21,6 +21,10 @@
 - [x] T007 [US3] Acrescentar o item "Ocorrência que fixará a semente" a `PS/interface/templates/interface/_como_preencher_o_marco.html`, com as frases da descrição do campo (FR-3966, FR-3967, D-003, D-004)
 - [x] T008 [US3] Em `T/interface/test_metodo_do_marco.py`, provar o item, o link e as frases idênticas nas três ocorrências
 
+## Phase 3b: Achados da revisão do PR
+
+- [x] T012 Levar o log da falha de acesso para `PS/sorteios/application/ocorrencia.py`, com a correlação, e o detalhe técnico para `Observacao.falhas`; trocar a primeira frase da recusa, que dizia "não foi possível falar com a fonte" mesmo quando a Caixa respondeu com erro (FR-3962, FR-3963, D-005)
+
 ## Phase 4: Verificação
 
 - [x] T009 `cd backend && make lint check test-pg`

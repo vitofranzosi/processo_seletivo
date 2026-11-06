@@ -115,10 +115,12 @@ leitor de tela anuncia no campo.
   os mesmos quatro motivos da conferência da mesma fonte (a FR-3641 da `116`), pela mesma tradução.
   Ela MUST NOT trazer nome de exceção, código HTTP nem corpo da resposta.
 - **FR-3962**: O detalhe técnico de cada tentativa malsucedida MUST ir ao log estruturado, num
-  registro só por observação, com a fonte e a referência. Ele MUST NOT ir à mensagem nem a registro
-  nenhum do banco — nada se grava na falha de acesso.
+  registro só por observação, com a fonte, a referência e a correlação do pedido. Ele MUST NOT ir à
+  mensagem nem a registro nenhum do banco — nada se grava na falha de acesso.
 - **FR-3963**: A mensagem da recusa `source_unreachable` MUST ser texto sem marcação. A tela a
-  imprime como texto, e marcação escrita nela chega literal a quem lê.
+  imprime como texto, e marcação escrita nela chega literal a quem lê. A primeira frase MUST valer
+  para toda falha de acesso — que a extração não chegou —, e MUST NOT afirmar que não houve contato
+  com a fonte, porque a evidência pode dizer que a Caixa respondeu com um erro.
 
 #### O limite inferior da ocorrência
 
@@ -189,3 +191,10 @@ por palavra é o que a FR-509 da `035` admite.
 Como o item "Método do sorteio", e pela mesma razão: o campo da ocorrência só existe depois de a
 primeira pergunta do cartão responder "por sorteio", e um link para âncora ausente não leva a lugar
 nenhum.
+
+#### D-005 — O log sai da aplicação, e o detalhe viaja na observação
+
+O adaptador não conhece a correlação do pedido, e a primeira escrita registrava ali uma linha que
+não se ligava ao clique. A `Observacao` ganhou `falhas`, o detalhe técnico de cada tentativa, que
+não é material nem se grava; `observar_ocorrencia`, que tem o `correlation_id`, escreve o registro.
+Passar a correlação ao adaptador mudaria a porta de toda fonte por causa de um log.

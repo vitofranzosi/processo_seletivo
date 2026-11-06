@@ -64,6 +64,11 @@ class Observacao:
     indisponivel: bool = False
     falha_de_acesso: bool = False
     evidencia: str = ""
+    # **O detalhe técnico da falha de acesso, e só para o log** (124, FR-3962): nome de exceção e
+    # texto da biblioteca de rede, uma entrada por tentativa. Não vai à mensagem nem a registro do
+    # banco. Viaja até a aplicação, e não é o adaptador quem o registra, porque só ela conhece a
+    # correlação do pedido.
+    falhas: tuple = ()
 
 
 # O teto da SC-1097: a espera que a conferência pode acrescentar a um ato, somadas as chamadas.
