@@ -129,6 +129,9 @@ A revisão do PR achou seis pontos, todos corrigidos e cobertos por teste:
   convocação em lote. A primeira chamada não a lê.
 - **Uma condição repetida** no cartão do Requerimento saiu.
 
+Depois das correções, a suíte inteira, nas mesmas condições, sobre `8018ce32`: **16 739 passando, 12
+pulados, nenhuma falha**, em 849 s. Os pulados são os mesmos 12 da linha de base, por lista.
+
 ## Registrado, sem desenvolver
 
 Além dos dois achados do plano (a convocação sem `@resposta_privada`, e `_dias_ate`):
