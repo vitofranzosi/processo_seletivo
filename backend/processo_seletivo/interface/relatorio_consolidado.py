@@ -431,6 +431,7 @@ ROTULOS_DAS_PENDENCIAS = {
     rel.REAVALIACAO_PENDENTE: "reavaliação determinada por recurso ainda não concluída",
     rel.PROVIDENCIA_PENDENTE: "providência determinada por recurso ainda não cumprida",
     rel.APURACAO_DESATUALIZADA: "apuração das vagas desatualizada",
+    rel.CONVOCACAO_SEM_COMUNICACAO: "convocação sem comunicação enviada",
     rel.CONVOCACAO_AGUARDANDO: "convocação aguardando resposta",
     rel.CONVOCACAO_VENCIDA: "convocação com prazo encerrado sem registro de resposta",
     rel.RECURSO_AGUARDANDO: "recurso aguardando decisão",
@@ -442,6 +443,7 @@ ROTULOS_NO_PLURAL = {
     rel.REAVALIACAO_PENDENTE: "reavaliações determinadas por recurso ainda não concluídas",
     rel.PROVIDENCIA_PENDENTE: "providências determinadas por recurso ainda não cumpridas",
     rel.APURACAO_DESATUALIZADA: "apurações das vagas desatualizadas",
+    rel.CONVOCACAO_SEM_COMUNICACAO: "convocações sem comunicação enviada",
     rel.CONVOCACAO_AGUARDANDO: "convocações aguardando resposta",
     rel.CONVOCACAO_VENCIDA: "convocações com prazo encerrado sem registro de resposta",
     rel.RECURSO_AGUARDANDO: "recursos aguardando decisão",
@@ -527,12 +529,16 @@ def consolidar(fatos, conjunto, *, agora, unidade=None):
         aceitas = sum(f.convocacoes.aceitas for f in nao_publicos)
         aguardando = sum(f.convocacoes.aguardando for f in nao_publicos)
         vencidas = sum(f.convocacoes.vencidas for f in nao_publicos)
+        sem_comunicacao = sum(f.convocacoes.sem_comunicacao for f in nao_publicos)
         convocacoes = {
             "realizadas": realizadas,
             "aceitas": aceitas,
             "aguardando": aguardando,
             "vencidas": vencidas,
-            "outros": realizadas - aceitas - aguardando - vencidas,
+            # Fora de "aguardando" desde a 126 (FR-4027), e fora de "outras respostas" também: a
+            # convocação sem comunicação não teve resposta nenhuma.
+            "sem_comunicacao": sem_comunicacao,
+            "outros": realizadas - aceitas - aguardando - vencidas - sem_comunicacao,
         }
 
     vagas_np = sum(f.vagas for f in nao_publicos)
@@ -777,6 +783,8 @@ def _indicadores(c):
                 partes.append(f"{conv['aguardando']} aguardando resposta")
             if conv["vencidas"]:
                 partes.append(f"{conv['vencidas']} com prazo encerrado sem registro de resposta")
+            if conv["sem_comunicacao"]:
+                partes.append(f"{conv['sem_comunicacao']} sem comunicação enviada")
             base_aceitas = ("; ".join(partes) or "todas com resposta registrada") + _fora_pequenos(
                 c
             )
@@ -867,6 +875,13 @@ def _frases(c):
         if conv["aguardando"]:
             partes.append(
                 f"{conv['aguardando']} {_plural(conv['aguardando'], AGUARDA, AGUARDAM)} resposta"
+            )
+        # Fora de "aguardam resposta" desde a 126 (FR-4029), e não fora da frase: elas eram
+        # contadas ali, e sumir com elas diria menos trabalho em aberto do que há.
+        if conv["sem_comunicacao"]:
+            partes.append(
+                f"{conv['sem_comunicacao']} "
+                f"{_plural(conv['sem_comunicacao'], 'está', 'estão')} sem comunicação enviada"
             )
         if partes:
             frase += ": " + ", e ".join(partes)

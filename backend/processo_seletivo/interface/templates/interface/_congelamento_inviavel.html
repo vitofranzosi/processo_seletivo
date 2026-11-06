@@ -1,0 +1,18 @@
+{% comment %}
+**O congelamento que condena o sorteio, numa redação só** (102, FR-2659; 126, FR-4031, FR-4032).
+O aviso aparece em dois lugares — no topo dos recortes, quando há relação a congelar, e dentro do
+bloco "Suceder esta relação", quando só a sucessão congelaria — e as duas cópias divergiriam na
+primeira mudança de uma delas. `para_a_sucessao` troca só a primeira frase e o "antes de".
+{% endcomment %}
+{% with a=congelar_agora_inviavel %}
+<div class="aviso"{% if not para_a_sucessao %} role="status"{% endif %}>
+  <p>{% if para_a_sucessao %}<strong>A relação nova seria congelada hoje, e o sorteio dela seria recusado.</strong>{% elif a.inscricoes_correndo %}<strong>A extração do Edital é cedo demais: o sorteio seria recusado.</strong>{% else %}<strong>Não congele a relação hoje: o sorteio seria recusado.</strong>{% endif %}
+    A extração do Edital ({{ a.referencia }} de {{ a.fonte }}) é de {{ a.dia|date:"d/m/Y" }}, e
+    essa fonte publica só a data, sem o horário. O sorteio só aceita extração de dia posterior ao
+    congelamento da relação{% if a.inscricoes_correndo and not para_a_sucessao %}, e a relação só pode ser congelada depois do fim das inscrições{% endif %}.</p>
+  <p>{% if para_a_sucessao %}Antes de suceder{% elif a.inscricoes_correndo %}Antes do fim das inscrições{% else %}Antes de congelar{% endif %},
+    {% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">retifique o Edital</a>{% else %}peça a quem elabora as Retificações deste Edital que o retifique{% endif %},
+    trocando a extração por uma a partir de <strong>{{ a.primeiro_dia|date:"d/m/Y" }}</strong>.
+    {% if a.inclui_sucessao and not pode_emitir and not para_a_sucessao %}Vale também para publicar relação nova, sucedendo a atual: ela é congelada na hora. {% endif %}Congelar não se desfaz.</p>
+</div>
+{% endwith %}

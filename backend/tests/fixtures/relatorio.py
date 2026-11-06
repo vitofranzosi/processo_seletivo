@@ -714,6 +714,7 @@ class _Cenario:
                 )
 
     def convocar(self):
+        from processo_seletivo.convocacao.application.comunicar import comunicar
         from processo_seletivo.convocacao.application.convocar import convocar
 
         with em(dia(13, 10, 10)):
@@ -741,6 +742,17 @@ class _Cenario:
                     vencimento=vencimento,
                     fundamento="No interesse da Administração, conforme o item 8.2 do Edital.",
                     idempotency_key=f"{self.chave}-convocar-{lista}",
+                    correlation_id=CORRELACAO,
+                )
+                # **Comunicada, e no mesmo dia** (126, FR-4027). O cenário é o de quem aguarda
+                # resposta; sem o envio, o prazo não corre, e o relatório a diz — com razão — "sem
+                # comunicação enviada". A conta pela data, que a 126 trocou pela do domínio, é que
+                # fazia este cenário parecer aguardar.
+                comunicar(
+                    actor=self.presidencia,
+                    processo_id=self.processo.id,
+                    convocacao_id=self.convocacoes[lista]["id"],
+                    idempotency_key=f"{self.chave}-comunicar-{lista}",
                     correlation_id=CORRELACAO,
                 )
 

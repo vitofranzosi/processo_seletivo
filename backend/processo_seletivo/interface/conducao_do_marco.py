@@ -159,12 +159,38 @@ def lista_para_o_formulario(lista_id):
     return str(lista_id) if lista_id else AMPLA
 
 
+#: A nota da célula e a razão da conferência, para o recorte que ninguém declarou (126, UX-224).
+NENHUMA_INSCRICAO = "nenhuma inscrição nesta lista"
+SEM_INSCRITO = "Nenhuma inscrição nesta lista: não há relação, ordem nem apuração a praticar nela."
+
+
+def recortes_sem_inscrito(edital, conteudo, perfil, marco, *, agora=None):
+    """Os recortes deste marco que nenhuma inscrição declarou (126, FR-4019, D-002).
+
+    A regra é do sorteio (`sorteios/application/previa.recortes_sem_inscrito`), ao lado da prévia e
+    da recusa de congelar; aqui ela só é perguntada com o marco que a condução já leu.
+    """
+    from processo_seletivo.sorteios.application.previa import (
+        recortes_sem_inscrito as do_sorteio,
+    )
+
+    return do_sorteio(
+        edital=edital,
+        conteudo=conteudo,
+        perfil_id=perfil["id"],
+        marco_id=str(marco["id"]),
+        agora=agora,
+    )
+
+
 # ---------------------------------------------------------------------------------------------
 # O indicador (`FR-810` a `FR-815`)
 # ---------------------------------------------------------------------------------------------
 
 
-def indicador_do_marco(edital, conteudo, perfil, marco, *, pode_classificar, pode_publicar):
+def indicador_do_marco(
+    edital, conteudo, perfil, marco, *, pode_classificar, pode_publicar, agora=None
+):
     """Uma linha por recorte, uma célula por operação, com o estado completo (`UX-091`, `R-6`).
 
     **Completo quer dizer com obsolescência.** A página do Edital diz só se há ato; aqui se
@@ -183,13 +209,28 @@ def indicador_do_marco(edital, conteudo, perfil, marco, *, pode_classificar, pod
     com_corte = corta(marco)
     # A cadeia de publicações é do marco, e não do recorte: uma leitura para todas as listas.
     historico = historico_do_marco(edital=edital, marco_id=marco_id)
+    sem_inscrito = recortes_sem_inscrito(edital, conteudo, perfil, marco, agora=agora)
     linhas = []
     for lista_id, rotulo in recortes_do_marco(conteudo, perfil):
+        if lista_id in sem_inscrito:
+            # **As quatro, e sem caminho** (126, FR-4020): nenhuma tela de ato tem o que fazer aqui,
+            # e o link levaria a uma recusa. Fora dos totais, como o "o marco não corta".
+            celula = {"estado": NAO_SE_APLICA, "nota": NENHUMA_INSCRICAO, "url": ""}
+            linhas.append(
+                {
+                    "lista_id": lista_id,
+                    "rotulo": rotulo,
+                    "sem_inscrito": True,
+                    "celulas": {operacao: dict(celula) for operacao in OPERACOES},
+                }
+            )
+            continue
         ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
         linhas.append(
             {
                 "lista_id": lista_id,
                 "rotulo": rotulo,
+                "sem_inscrito": False,
                 "celulas": {
                     ORDENAR: _celula_da_ordem(
                         edital, marco, lista_id, ato, versao, do_sorteio, pode_classificar
@@ -206,7 +247,13 @@ def indicador_do_marco(edital, conteudo, perfil, marco, *, pode_classificar, pod
                 },
             }
         )
-    return {"linhas": linhas, "totais": _totais(linhas)}
+    return {
+        "linhas": linhas,
+        "totais": _totais(linhas),
+        # **Nada a conduzir** (126, FR-4022): todo recorte é de lista sem inscrito, e a tela diz
+        # isso em vez de "nenhum recorte em falta", que soaria como trabalho concluído.
+        "nada_a_conduzir": bool(linhas) and all(linha["sem_inscrito"] for linha in linhas),
+    }
 
 
 def _totais(linhas):
@@ -405,7 +452,7 @@ def resumo_dos_marcos(edital, conteudo):
 # ---------------------------------------------------------------------------------------------
 
 
-def alcance(edital, conteudo, perfil, marco, operacao, *, natureza="", autoridade=""):
+def alcance(edital, conteudo, perfil, marco, operacao, *, natureza="", autoridade="", agora=None):
     """Um item por recorte do marco: `praticar`, `fora` ou `impedido`, com a razão (`FR-818`).
 
     **Nada é gravado aqui.** É a conferência: compõe, para cada recorte a praticar, a mesma
@@ -429,10 +476,31 @@ def alcance(edital, conteudo, perfil, marco, operacao, *, natureza="", autoridad
     if operacao == ORDENAR:
         return _alcance_da_ordem(edital, conteudo, perfil, marco)
     if operacao == CORTAR:
-        return _alcance_do_corte(edital, conteudo, perfil, marco)
-    if operacao == APURAR:
-        return _alcance_da_apuracao(edital, conteudo, perfil, marco)
-    return _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade)
+        itens = _alcance_do_corte(edital, conteudo, perfil, marco)
+    elif operacao == APURAR:
+        itens = _alcance_da_apuracao(edital, conteudo, perfil, marco)
+    else:
+        itens = _alcance_da_publicacao(edital, conteudo, perfil, marco, natureza, autoridade)
+    return _sem_inscrito_fora(
+        itens, recortes_sem_inscrito(edital, conteudo, perfil, marco, agora=agora)
+    )
+
+
+def _sem_inscrito_fora(itens, sem_inscrito):
+    """O recorte sem inscrito fica *fora*, e não *impedido* (126, FR-4021).
+
+    *Impedido* diz que algo falta e tem caminho; aqui não falta nada, porque não haverá ato. A
+    ordenação não passa por aqui: só o marco de sorteio tem recorte sem inscrito, e ordenar um marco
+    de sorteio é recusado antes.
+    """
+    if not sem_inscrito:
+        return itens
+    return [
+        _item(item["lista_id"], item["rotulo"], FORA, razao=SEM_INSCRITO)
+        if item["lista_id"] in sem_inscrito
+        else item
+        for item in itens
+    ]
 
 
 def _item(

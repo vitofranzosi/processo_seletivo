@@ -43,13 +43,38 @@ para nada.
   cálculo de agora, e o vigente permanece registrado como está.</p>
 {% endif %}
 
+{% if conferencia.sem_resultado %}
+{% comment %}
+**Por que ficam sem posição, onde se decide** (126, FR-4035 a FR-4037, UX-227). A confirmação dizia
+"sem posição: 12" e oferecia o ato irreversível; o motivo estava só na tela anterior. A ordem emitida
+antes dos resultados fica obsoleta quando eles chegam, e a sucessão exige motivo — quem confirma
+precisa ler isso aqui. A emissão continua possível: recusá-la é decisão de regra, que não é desta tela.
+{% endcomment %}
+<section aria-labelledby="sem-resultado" class="aviso">
+  <h2 id="sem-resultado">Inscrições sem resultado nas Etapas deste marco</h2>
+  {% if conferencia.nenhuma_com_resultado %}
+  <p><strong>Nenhuma inscrição deste recorte tem resultado nas Etapas que o marco enumera.</strong>
+    Emitida agora, a ordem grava todas sem posição.</p>
+  {% else %}
+  <p><strong>{{ conferencia.sem_resultado }} das {{ conferencia.consideradas }} inscrições consideradas
+    {{ conferencia.sem_resultado|plural:"está,estão" }} sem resultado numa Etapa que o marco enumera</strong>, e
+    {{ conferencia.sem_resultado|plural:"fica,ficam" }} sem posição por isso.</p>
+  {% endif %}
+  <ul>{% for nome, quantas in conferencia.por_etapa %}<li>{{ nome }}: {{ quantas }} sem resultado</li>{% endfor %}</ul>
+  <p>Quando os resultados forem consolidados, esta ordem ficará obsoleta, e sucedê-la exigirá motivo.</p>
+</section>
+{% endif %}
+
 <section aria-labelledby="alcance" class="consequencias">
   <h2 id="alcance">O que será gravado</h2>
   <dl class="conferencia">
     <dt>Participantes com posição</dt>
     <dd><strong>{{ quantas_com_posicao }}</strong></dd>
     <dt>Participantes sem posição</dt>
-    <dd>{% if sem_posicao %}<strong>{{ sem_posicao|length }}</strong> — {% for item in sem_posicao %}{{ item.protocolo|default:item.inscricao_id }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}nenhum{% endif %}</dd>
+    {% comment %} Agrupados pelo motivo (126, FR-4037): a contagem sozinha não dizia por que ficam de fora. {% endcomment %}
+    <dd>{% if sem_posicao %}<strong>{{ sem_posicao|length }}</strong>
+      <ul>{% for grupo in conferencia.grupos %}<li>{{ grupo.protocolos|length }} — {% if grupo.consequencia %}{{ grupo.consequencia|lower }}: {% endif %}{{ grupo.motivo|default:"sem motivo registrado" }} ({{ grupo.protocolos|join:", " }})</li>{% endfor %}</ul>
+      {% else %}nenhum{% endif %}</dd>
     <dt>Este ato</dt>
     {% comment %}
     **"deste recorte", e não "deste marco"** (034, FR-490). O vigente passou a ser lido por recorte:

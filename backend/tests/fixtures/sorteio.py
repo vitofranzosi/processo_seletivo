@@ -133,11 +133,23 @@ def certame_de_sorteio(
     }
 
 
-def certame_com_cotas(gestor, api_client, manager_headers, process_payload, *, quantos=6):
+def certame_com_cotas(
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    *,
+    quantos=6,
+    modalidades=None,
+    metodo=None,
+):
     """O 57 e o 28: ampla concorrência, PPI e PcD sobre o mesmo marco.
 
     O cotista aparece em **duas** listas — a de ampla concorrência alcança todos, a de reserva
     alcança quem declarou aquela modalidade —, e é isso que a US4 precisa exercitar.
+
+    `modalidades` troca quem declara qual lista, por posição; `{0: LISTA_PPI}` deixa a PcD sem
+    inscrito, que é o Polo Vitória do Edital 35 numa lista só (126). `metodo` troca o método.
     """
     from processo_seletivo.comissoes.domain.funcoes import Funcao
     from tests.fixtures.comissao import constituir, inscrever, rascunho_com_etapas
@@ -145,7 +157,9 @@ def certame_com_cotas(gestor, api_client, manager_headers, process_payload, *, q
     from tests.fixtures.publicacao import publish_original
 
     rascunho = rascunho_com_etapas()
-    marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
+    marco_com_metodo(
+        rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"], metodo=metodo
+    )
     for perfil in rascunho["profiles"]:
         if str(perfil["id"]) == PROFILE_ID:
             perfil["competitionModalities"] = [
@@ -176,15 +190,16 @@ def certame_com_cotas(gestor, api_client, manager_headers, process_payload, *, q
     constituir(gestor, edital.processo, [("maria", Funcao.PRESIDENTE)], prefixo="cotas-021")
     # Os dois primeiros declaram cota: eles figuram na ampla concorrência **e** na reserva deles,
     # com numeração própria em cada (FR-004).
-    inscricoes = inscrever(edital, quantos, primeiro=701, modalidades={0: LISTA_PPI, 1: LISTA_PCD})
+    declaradas = {0: LISTA_PPI, 1: LISTA_PCD} if modalidades is None else modalidades
+    inscricoes = inscrever(edital, quantos, primeiro=701, modalidades=declaradas)
     return {
         "edital": edital,
         "processo": edital.processo,
         "perfil": PROFILE_ID,
         "marco": MARCO,
         "inscricoes": inscricoes,
-        "cotista_ppi": inscricoes[0],
-        "cotista_pcd": inscricoes[1],
+        "cotista_ppi": inscricoes[0] if inscricoes else None,
+        "cotista_pcd": inscricoes[1] if len(inscricoes) > 1 else None,
     }
 
 

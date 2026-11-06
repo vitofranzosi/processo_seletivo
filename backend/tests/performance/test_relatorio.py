@@ -22,7 +22,10 @@ pytestmark = [pytest.mark.django_db, pytest.mark.performance]
 # 119 desde a `115`: a trilha do Edital passou a reunir os documentos da convocação — apresentações,
 # conferências e alocações à conferência —, numa consulta só (uma união), que não cresce com as
 # inscrições nem com os documentos.
-ORCAMENTO = 119
+#
+# 120 desde a `126` (FR-4027): as convocações são classificadas pelo estado do domínio, que depende
+# do envio da comunicação — lidas num `prefetch` só, que não cresce com as convocações.
+ORCAMENTO = 120
 
 
 @pytest.mark.parametrize("escala", [1, 10])

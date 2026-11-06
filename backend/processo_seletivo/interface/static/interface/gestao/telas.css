@@ -854,3 +854,14 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
 .avisos-anteriores{margin:.75rem 0;padding:.5rem .75rem;border:1px solid var(--borda);border-radius:4px}
 .avisos-anteriores summary{cursor:pointer;font-size:.9rem}
 .avisos-anteriores .aviso{margin:.5rem 0 0}
+/* A sucessão do ato vigente, recolhida (126, FR-4010, UX-223). Logo depois de emitir, o formulário
+   de suceder ficava aberto e com o botão de maior peso da tela; sucessão é ato imutável, com motivo,
+   e a exceção. O resumo diz qual ato e que ele exige motivo; aberto, o formulário é o de sempre. */
+.sucessao{margin:1rem 0;max-width:var(--leitura)}
+.sucessao>summary{display:inline-block;cursor:pointer;font-size:.875rem;font-weight:600;
+  color:var(--verde-texto);padding:.35rem .7rem;border:1px solid var(--borda);border-radius:4px}
+.sucessao>summary:hover{border-color:var(--verde-texto)}
+.sucessao[open]>summary{margin-bottom:.6rem}
+.sucessao>summary::before{content:"▸ "/""}
+.sucessao[open]>summary::before{content:"▾ "/""}
+.sucessao>form,.sucessao>.aviso{margin-top:.5rem}

@@ -120,6 +120,16 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
                     recorte["congelada"] and recorte["diagnostico_da_relacao"] is None
                     for recorte in recortes
                 ),
+                # **Há relação a congelar pela primeira vez** (126, FR-4031). Sem ela, o aviso vale
+                # só para a sucessão, e a tela o mostra dentro do bloco dela — e não como primeira
+                # frase dos recortes, onde lia como a próxima ação. A lista sem inscrito não conta:
+                # não há o que congelar nela (FR-4033).
+                "inclui_congelamento": any(
+                    not recorte["congelada"]
+                    and recorte["projetados"]
+                    and recorte["diagnostico_da_relacao"] is None
+                    for recorte in recortes
+                ),
             }
             if congelar_agora_inviavel
             and any(recorte["diagnostico_da_relacao"] is None for recorte in recortes)
@@ -414,7 +424,67 @@ def _perfil_e_marco(conteudo, perfil_id, marco_id):
     raise DomainError("not_found", "Recurso não encontrado.", 404)
 
 
-__all__ = ["recortes_do_marco"]
+__all__ = ["recortes_do_marco", "recortes_sem_inscrito"]
+
+
+def recortes_sem_inscrito(*, edital, conteudo, perfil_id, marco_id, agora=None):
+    """Os recortes do marco de sorteio em que **não haverá** relação — não só os que não a têm.
+
+    **Ausência de ato não é pendência** (126, FR-4019, D-002). A condução contava como *Falta* a
+    lista que nenhuma inscrição declarou, e oferecia cortá-la e apurá-la: no Polo Vitória do
+    Edital 35, doze células em falta e dois gestos que só podiam ser recusados.
+
+    **Mora aqui, ao lado de `recortes_do_marco`, porque é a mesma pergunta que ela responde** em
+    `projetados` e `congelada`, e que `publicar_relacao` faz ao recusar com
+    `relation_would_be_empty`. Três redações da mesma regra divergiriam na primeira mudança da
+    projeção. As diferenças são de propósito, e só estreitam — tudo o que sai daqui teria o
+    congelamento recusado:
+
+    - **inscrições que não chegam mais**: o período encerrado, ou não designado — o Edital que não
+      recebe inscrição por este sistema (`periodo_de_inscricoes`); aberto ou por abrir, alguém ainda
+      pode declarar a lista;
+    - **sem o filtro da Etapa de habilitação**: com ela, a projeção é zero enquanto a Etapa não é
+      consolidada, e zero por espera não é "ninguém se inscreveu";
+    - **sem relação nem ordem vigente**: ato que exista não se esconde — um Edital retificado de
+      pontuação para sorteio pode ter ordem vazia emitida antes.
+
+    **Uma consulta para o Perfil**, e não a lista das inscrições: as Modalidades declaradas,
+    distintas. É o que `projecao.elegiveis` pergunta a cada inscrição, sem trazê-las.
+    """
+    from processo_seletivo.classificacao.application.selectors import ato_vigente
+    from processo_seletivo.editais.domain import marcos
+    from processo_seletivo.inscricoes.domain.periodo import (
+        ENCERRADO,
+        NAO_DESIGNADO,
+        periodo_de_inscricoes,
+    )
+
+    if not marcos.marco_ordena_por_sorteio(conteudo, perfil_id=perfil_id, marco_id=marco_id):
+        return set()
+    estado = periodo_de_inscricoes(conteudo, agora or timezone.now()).estado
+    if estado not in (ENCERRADO, NAO_DESIGNADO):
+        return set()
+    declaradas = {
+        str(modalidade) if modalidade else None
+        for modalidade in Inscricao.objects.filter(
+            edital=edital, profile_id=perfil_id, status=Inscricao.Status.SUBMETIDA
+        )
+        .values_list("modality_id", flat=True)
+        .distinct()
+    }
+    vazios = set()
+    for lista_id, _ in recortes_do_perfil(conteudo, perfil_id=perfil_id):
+        # A ampla reúne todos os inscritos; a lista, quem a declarou (`projecao.elegiveis`).
+        if declaradas if lista_id is None else str(lista_id) in declaradas:
+            continue
+        if relacao_vigente(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        ):
+            continue
+        if ato_vigente(edital=edital, marco_id=str(marco_id), lista_id=lista_id) is not None:
+            continue
+        vazios.add(lista_id)
+    return vazios
 
 
 def _rotulo_da_modalidade(perfil, lista_id):

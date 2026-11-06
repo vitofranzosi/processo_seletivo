@@ -36,7 +36,7 @@ comissão.</p>
 {% elif acao == "acrescimo" or acao == "desfazimento" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "acrescimo" %}Vaga acrescida: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% else %}Vaga acrescida desfeita: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% endif %}
   {% if resultado.apuracaoSeguinte %}A apuração seguinte foi emitida por este ato, em seu nome.{% else %}A apuração seguinte não foi emitida: {{ resultado.apuracaoPendente.detalhe }}{% endif %}
   O ato é imutável; corrigir é praticar outro, com motivo.</p>
-{% else %}<p class="sucesso" role="status" tabindex="-1">Apuração emitida. O ato é imutável; corrigir é emitir uma sucessora com motivo.</p>{% endif %}
+{% else %}<p class="sucesso" role="status" tabindex="-1"><strong>Apuração emitida</strong>{% if recorte_apurado %} para {{ recorte_apurado }}{% endif %}{% if resultado.efetivas is not None %}: {{ resultado.efetivas|contagem:"vaga efetiva,vagas efetivas" }}, {{ resultado.ocupadas|contagem:"ocupada,ocupadas" }}, {{ resultado.faltando }} a ocupar{% endif %}. O ato é imutável; corrigir é emitir uma sucessora com motivo.</p>{% endif %}
 {% endif %}
 
 <p class="imutavel">Abrir esta tela <strong>não apura nada</strong>. Os números abaixo vêm de atos já emitidos, e onde não há ato não há número.</p>
@@ -157,7 +157,9 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   todo. Trocar um pelo outro e o que mantem a promessa da SC-170: a acao so aparece onde ela
   conclui, e onde nao conclui aparece a razao com o caminho.
   {% endcomment %}
-  {% if pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and not recorte.temOrdem %}
+  {% if recorte.semInscrito %}
+  <p class="nota"><strong>Não se aplica.</strong> Nenhuma inscrição enviada declarou esta lista: não há ordem a emitir nem ocupação a apurar neste recorte.</p>
+  {% elif pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and not recorte.temOrdem %}
   {% comment %}
   **A razao no lugar do botao, e o caminho junto** (034, FR-498, SC-170). Apurar exige ordem vigente
   daquele recorte, e o comando recusa com `ordem_nao_vigente` quando ela nao existe. Oferecer o
@@ -183,6 +185,12 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   A nova apuração tem o formulário do Corte, e não a fileira `acoes` do de um botão: a fileira punha
   o motivo e o botão lado a lado, com o botão esticado à altura da área de texto (058, D-013).
   {% endcomment %}
+  {% comment %}
+  **A sucessão, recolhida** (126, FR-4010, FR-4011, UX-223): cada recorte apurado trazia, aberto, o
+  formulário de outra apuração. Abre sozinho quando a vigente está obsoleta.
+  {% endcomment %}
+  <details class="sucessao"{% if recorte.estado == "OBSOLETE" %} open{% endif %}>
+  <summary>Suceder esta apuração (exige motivo)</summary>
   <form method="post" action="{% url 'interface:emitir-apuracao' edital.id marco_id %}">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
@@ -199,6 +207,7 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
     </p>
     <p class="acoes"><button type="submit" class="botao">Emitir nova apuração</button></p>
   </form>
+  </details>
   {% endif %}
   {% endif %}
 

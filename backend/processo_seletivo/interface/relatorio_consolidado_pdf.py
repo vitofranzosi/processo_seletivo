@@ -418,6 +418,7 @@ def _convocacoes(c):
             [
                 "Realizadas",
                 "Convocação aceita",
+                "Sem comunicação enviada",
                 "Aguardando resposta",
                 "Prazo encerrado sem registro",
                 "Outras respostas",
@@ -426,13 +427,14 @@ def _convocacoes(c):
                 [
                     str(k["realizadas"]),
                     str(k["aceitas"]),
+                    str(k.get("sem_comunicacao", 0)),
                     str(k["aguardando"]),
                     str(k["vencidas"]),
                     str(k["outros"]),
                 ]
             ],
-            larguras=[1, 1.1, 1.1, 1.3, 1.1],
-            alinhamentos=[DIREITA] * 5,
+            larguras=[1, 1.1, 1.1, 1.1, 1.3, 1.1],
+            alinhamentos=[DIREITA] * 6,
         ),
         Nota(
             "Outras respostas são desistência, não atendimento, indeferimento da documentação e "
