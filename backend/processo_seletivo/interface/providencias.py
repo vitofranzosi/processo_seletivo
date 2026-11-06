@@ -62,9 +62,12 @@ class Providencia:
         pode_resolver=False,
         url_da_saida="",
         url_do_marco="",
+        lugar=None,
     ):
         rotulo = lista[1] if lista else ""
-        lugar = onde.split(" · ")[0] if lista else onde
+        # **O lugar vem dito, e não recortado de `onde`** (item 1 do code review): o nome do Perfil
+        # pode ter " · " ("Oferta de Vagas … · Polo Vitória"), e o recorte o trocava pelo de outro.
+        lugar = onde if lugar is None else lugar
         return cls(
             natureza=celula.natureza,
             chave=chave,

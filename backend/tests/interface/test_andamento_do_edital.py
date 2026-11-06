@@ -233,3 +233,17 @@ def test_antes_da_publicacao_nada_desta_feature_aparece(
     _, corpo, _ = cartao(client, edital)
     assert 'aria-label="Situação do Edital no fluxo"' in corpo
     assert "contagem-de-providencias" not in corpo
+
+
+def test_uma_falha_na_derivacao_nao_derruba_o_detalhe(client, s1, monkeypatch):
+    """Item 2 do code review: sem andamento, o cartão volta a ser o de antes da 127."""
+
+    def quebra(self, **_):
+        raise KeyError("conteúdo inesperado")
+
+    monkeypatch.setattr(andamento._Leitor, "andamento", quebra)
+    identificar(client, "carlos", ["gestor"])
+    _, corpo, resposta = cartao(client, s1["edital"])
+    assert resposta.context["andamento"] is None
+    assert "contagem-de-providencias" not in corpo
+    assert 'aria-label="Situação do Edital no fluxo"' in corpo
