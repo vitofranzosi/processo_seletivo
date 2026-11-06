@@ -309,6 +309,11 @@ Quatro consequências, e a terceira é um estado que a tela precisa ter:
    a convocação existe desde que foi praticada; o relógio só começa quando houver envio com sucesso.
 3. **Existe, portanto, o estado "convocado, prazo não iniciado"** — e ele tem de ser legível, sob
    pena de alguém tratar como silêncio o que é falha de infraestrutura.
+
+   > **Nota da `125`, de 2026-11-06, que vigora com a implementação dela.** A decisão não se reescreve;
+   > o alcance dela no portal mudou. O estado continua legível na gestão nas duas formas. No portal,
+   > continua na mensagem individual e na correção de convocação já comunicada; a convocação por
+   > publicação só aparece ao candidato depois do registro da publicação (FR-3981 da `125`).
 4. **O acesso autenticado é fato de auditoria.** Ele entra na trilha, e não move o relógio nem vira
    prova de ciência.
 
@@ -542,8 +547,13 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
 
 **Acceptance Scenarios**:
 
-1. **Given** uma convocação vigente, **When** o candidato abre sua área, **Then** vê a chamada, o
-   que fazer e o prazo, sem depender de e-mail.
+1. *(revista pela `125` em 2026-11-06, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*
+   **Given** uma convocação vigente **visível ao candidato** — na publicação, só depois do registro
+   dela (FR-3981 da `125`) —, **When** o candidato abre sua área, **Then** vê a chamada, o que fazer e
+   o prazo, sem depender de e-mail.
+
+   > **Redação anterior à `125`, preservada:** **Given** uma convocação vigente, **When** o candidato
+   > abre sua área, **Then** vê a chamada, o que fazer e o prazo, sem depender de e-mail.
 2. **Given** nenhuma convocação, **When** ele abre a área, **Then** a tela distingue *"não há
    convocação"* de *"você não foi chamado"*.
 
@@ -661,8 +671,13 @@ comunicação é o candidato. A forma é a que o Edital declarar, e o prazo corr
   mensagem individual (`D-009`).
 - **FR-288**: A emissão MUST ser registrada com instante, destinatário e resultado do envio, e MUST
   NOT apagar o ato praticado quando o envio falha.
-- **FR-288a**: Nenhuma superfície MUST afirmar que a comunicação foi recebida, lida ou entregue: o
-  que o sistema sabe é que **enviou** (`D-009`).
+- **FR-288a** *(revista pela `125` em 2026-11-06, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Nenhuma superfície MUST afirmar que a comunicação foi recebida, lida ou entregue. O que o sistema
+  sabe, e o que a tela diz, depende do canal: na mensagem, que **enviou**; na publicação, que a
+  comissão **registrou** onde e quando publicou (FR-3998 a FR-4004 da `125`).
+
+  > **Redação anterior à `125`, preservada:** Nenhuma superfície MUST afirmar que a comunicação foi
+  > recebida, lida ou entregue: o que o sistema sabe é que **enviou** (`D-009`).
 - **FR-288b**: O acesso autenticado do convocado à própria convocação MUST ser registrado na trilha,
   e MUST NOT alterar o início nem o fim do prazo.
 - **FR-289**: Mensagem individual de convocação MUST NOT existir antes da revisão escrita da

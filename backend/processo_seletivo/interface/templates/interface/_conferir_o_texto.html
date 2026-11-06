@@ -1,0 +1,25 @@
+{% load interface_extras %}{% comment %}
+A conferência do texto que chega ao candidato (125, FR-3993 a FR-3996, D-004). Renderizada pelo
+servidor, sem script: a prévia é a mesma composição que o ato grava, o número é o de atos que a
+confirmação praticará, e o texto volta editável. Confirmar com o texto editado volta aqui, com a prévia
+nova — o resumo assinado não confere.
+{% endcomment %}
+<section aria-labelledby="titulo-conferir-o-texto" id="conferir-o-texto" tabindex="-1">
+  <h2 id="titulo-conferir-o-texto">Conferir o texto</h2>
+  {% if conferencia.erro %}<p class="aviso" role="alert">{{ conferencia.erro }}</p>{% endif %}
+  <p>Antes de confirmar, veja o texto como o candidato o verá no portal. <strong>Este texto será mostrado a {{ conferencia.pessoas }} {{ conferencia.pessoas|plural:"pessoa,pessoas" }}.</strong></p>
+  <dl class="dados-da-inscricao">
+    <dt>{{ conferencia.previa.rotulo }}</dt><dd>{{ conferencia.previa.texto }}</dd>
+  </dl>
+  <form method="post" action="{{ conferencia.url }}" class="confirmar">
+    {% csrf_token %}
+    {% for chave, valor in conferencia.campos.items %}<input type="hidden" name="{{ chave }}" value="{{ valor }}">
+    {% endfor %}<input type="hidden" name="texto_conferido" value="{{ conferencia.resumo }}">
+    <p class="campo">
+      <label for="texto-da-conferencia">{{ conferencia.rotuloDoCampo }}</label>
+      <textarea id="texto-da-conferencia" name="{{ conferencia.campo }}" rows="3" required aria-describedby="aviso-texto-da-conferencia">{{ conferencia.digitado }}</textarea>
+      <span class="ajuda" id="aviso-texto-da-conferencia"><strong>Este texto será mostrado ao candidato.</strong> Editou? Confira de novo antes de confirmar.</span>
+    </p>
+    <p class="acoes"><button type="submit" name="etapa" value="confirmar" class="botao">{{ conferencia.rotuloDoBotao }}</button> <button type="submit" name="etapa" value="conferir" class="acao">Conferir o texto de novo</button></p>
+  </form>
+</section>

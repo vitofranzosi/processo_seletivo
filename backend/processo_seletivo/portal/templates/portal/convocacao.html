@@ -58,11 +58,9 @@ do prazo, e a correcao dita nele. A frase "Voce foi convocada(o)" saiu, porque o
 <section class="dados-da-convocacao" aria-label="Dados da convocação">
   <dl class="meta">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
-    {% if enviada_em %}
-    <dt>Comunicação enviada em</dt><dd>{{ enviada_em|data_e_hora_do_prazo }}</dd>
-    {% endif %}
+    {% include "portal/_comunicacao_da_convocacao.html" %}
     {% if convocacao.vencimento and not prazo_correndo %}
-    <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, contado do envio da comunicação</dd>
+    <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd>
     {% endif %}
     {% if substituida %}<dt>Convocação substituída</dt><dd>{{ substituida }}</dd>{% endif %}
     <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>

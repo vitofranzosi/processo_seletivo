@@ -876,6 +876,13 @@ def _frases(c):
             partes.append(
                 f"{conv['aguardando']} {_plural(conv['aguardando'], AGUARDA, AGUARDAM)} resposta"
             )
+        # Fora de "aguardam resposta" desde a 126 (FR-4029), e não fora da frase: elas eram
+        # contadas ali, e sumir com elas diria menos trabalho em aberto do que há.
+        if conv["sem_comunicacao"]:
+            partes.append(
+                f"{conv['sem_comunicacao']} "
+                f"{_plural(conv['sem_comunicacao'], 'está', 'estão')} sem comunicação enviada"
+            )
         if partes:
             frase += ": " + ", e ".join(partes)
         frases.append(frase + ".")

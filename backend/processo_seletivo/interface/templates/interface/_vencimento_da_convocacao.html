@@ -28,13 +28,13 @@ alternativa a ele, e quem confere é o servidor.
   <p class="campo">
     <label for="vencimento-{{ prefixo }}">Ou a data e a hora</label>
     <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}"{% if valor_vencimento %} value="{{ valor_vencimento }}"{% endif %}>
-    <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. {% if obrigatorio %}Obrigatório: a correção informa o vencimento novo.{% else %}Deixe em branco se o Edital não publica prazo.{% endif %}</span>
+    <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>{{ canal_declarado.a_partir_de }}</strong>, e não desta tela. {% if obrigatorio %}Obrigatório: a correção informa o vencimento novo.{% else %}Deixe em branco se o Edital não publica prazo.{% endif %}</span>
   </p>
 </fieldset>
 {% else %}
 <p class="campo">
   <label for="vencimento-{{ prefixo }}">Vencimento do prazo</label>
   <input type="datetime-local" id="vencimento-{{ prefixo }}" name="vencimento" aria-describedby="ajuda-vencimento-{{ prefixo }}"{% if valor_vencimento %} value="{{ valor_vencimento }}"{% endif %}>
-  <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. {% if obrigatorio %}Obrigatório: a correção informa o vencimento novo.{% else %}Deixe em branco se o Edital não publica prazo.{% endif %}</span>
+  <span class="ajuda" id="ajuda-vencimento-{{ prefixo }}">Data e hora locais. O prazo corre <strong>{{ canal_declarado.a_partir_de }}</strong>, e não desta tela. {% if obrigatorio %}Obrigatório: a correção informa o vencimento novo.{% else %}Deixe em branco se o Edital não publica prazo.{% endif %}</span>
 </p>
 {% endif %}

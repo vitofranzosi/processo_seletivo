@@ -44,7 +44,13 @@ from processo_seletivo.convocacao.application.desfechar import (
     declarado_do_desfecho,
     registrar,
 )
-from processo_seletivo.convocacao.domain import alcance, fundamento, nomes, prazo
+from processo_seletivo.convocacao.domain import (
+    alcance,
+    fundamento,
+    nomes,
+    prazo,
+    vocabulario_do_canal,
+)
 from processo_seletivo.convocacao.domain import especie as especie_da_posicao
 from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.editais.domain.recortes import rotulo_do_recorte
@@ -367,8 +373,16 @@ def comunicar_cada(
     **Por publicação, sem referência, nada é emitido**: o sistema não publica, e o prazo corre de
     onde a lista foi publicada. As convocações esperam o gesto das pendentes (`FR-876`).
     """
-    if forma == FORMA_POR_PUBLICACAO and not (referencia or "").strip():
-        return {"enviadas": 0, "falhas": 0, "aguardandoPublicacao": len(convocacoes), "recusas": {}}
+    por_publicacao = forma == FORMA_POR_PUBLICACAO
+    if por_publicacao and not (referencia or "").strip():
+        return {
+            "enviadas": 0,
+            "falhas": 0,
+            "aguardandoPublicacao": len(convocacoes),
+            "recusas": {},
+            "porPublicacao": True,
+            "referencia": "",
+        }
     enviadas, falhas, recusas = 0, 0, {}
     for convocacao_id in convocacoes:
         try:
@@ -392,7 +406,16 @@ def comunicar_cada(
             enviadas += 1
         else:
             falhas += 1
-    return {"enviadas": enviadas, "falhas": falhas, "aguardandoPublicacao": 0, "recusas": recusas}
+    # A forma e a referência viajam, para a confirmação dizer *"Publicação registrada"* e não
+    # *"comunicações enviadas"* (125, FR-4000).
+    return {
+        "enviadas": enviadas,
+        "falhas": falhas,
+        "aguardandoPublicacao": 0,
+        "recusas": recusas,
+        "porPublicacao": por_publicacao,
+        "referencia": (referencia or "").strip() if por_publicacao else "",
+    }
 
 
 # --- A correção da convocação pela tela (120) ---------------------------------------------------
@@ -808,7 +831,10 @@ def emitir_pendentes(
     if not previa["linhas"]:
         raise DomainError(
             nomes.NENHUMA_COMUNICACAO_PENDENTE,
-            "Não há convocação sem comunicação enviada neste recorte.",
+            # A frase do canal (125, FR-4001).
+            vocabulario_do_canal.canal(
+                FORMA_POR_PUBLICACAO if previa["porPublicacao"] else None
+            ).recusa_sem_pendente,
             409,
         )
     referencia = (referencia_da_publicacao or "").strip()

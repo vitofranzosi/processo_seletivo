@@ -207,8 +207,14 @@ de uma inscrição inexistente.
 
 **Em "Minhas inscrições"**
 
-- **FR-1089**: Item de inscrição com convocação **em aberto** — vigente e sem desfecho, em qualquer
-  dos estados de prazo — MUST dizer, por texto e por símbolo, que há convocação aberta.
+- **FR-1089** *(revista pela `125` em 2026-11-06, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Item de inscrição com convocação **em aberto** — vigente, sem desfecho e visível ao candidato
+  (FR-3981 da `125`), em qualquer dos estados de prazo — MUST dizer, por texto e por símbolo, que há
+  convocação aberta.
+
+  > **Redação anterior à `125`, preservada:** Item de inscrição com convocação **em aberto** — vigente
+  > e sem desfecho, em qualquer dos estados de prazo — MUST dizer, por texto e por símbolo, que há
+  > convocação aberta.
 - **FR-1090** *(acrescida pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
   A ação principal desse item MUST ser "Ver convocação", levando à tela da convocação da
   inscrição. O item continua com **uma** ação principal; o acompanhamento MUST continuar alcançável a
@@ -229,12 +235,23 @@ de uma inscrição inexistente.
 
 **No acompanhamento**
 
-- **FR-1093**: Inscrição com convocação vigente — aberta ou concluída — MUST ter, no acompanhamento,
-  uma seção "Convocação" com a espécie, o prazo quando houver, a situação e o caminho "Ver
-  convocação".
-- **FR-1094**: A situação MUST distinguir quatro casos, nos termos que a tela da convocação já usa:
-  comunicação ainda não enviada; prazo correndo; prazo informado decorrido sem registro; desfecho
-  registrado, com a espécie dele.
+- **FR-1093** *(revista pela `125` em 2026-11-06, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Inscrição com convocação vigente **visível ao candidato** (FR-3981 da `125`) — aberta ou concluída —
+  MUST ter, no acompanhamento, uma seção "Convocação" com a espécie, o prazo quando houver, a situação
+  e o caminho "Ver convocação".
+
+  > **Redação anterior à `125`, preservada:** Inscrição com convocação vigente — aberta ou concluída —
+  > MUST ter, no acompanhamento, uma seção "Convocação" com a espécie, o prazo quando houver, a
+  > situação e o caminho "Ver convocação".
+- **FR-1094** *(revista pela `125` em 2026-11-06, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  A situação MUST distinguir quatro casos, nos termos que a tela da convocação já usa e no vocabulário
+  do canal (FR-3998 da `125`): comunicação ainda não enviada — ou, na correção de convocação
+  publicada, publicação da correção ainda não registrada —; prazo correndo; prazo informado decorrido
+  sem registro; desfecho registrado, com a espécie dele.
+
+  > **Redação anterior à `125`, preservada:** A situação MUST distinguir quatro casos, nos termos que a
+  > tela da convocação já usa: comunicação ainda não enviada; prazo correndo; prazo informado
+  > decorrido sem registro; desfecho registrado, com a espécie dele.
 - **FR-1095**: Inscrição sem convocação vigente MUST NOT ter seção de convocação no acompanhamento.
 
 **O Requerimento de Matrícula**
@@ -269,8 +286,13 @@ de uma inscrição inexistente.
 
 **Uma regra de vigência só**
 
-- **FR-1100**: Lista, acompanhamento e tela da convocação MUST apresentar a **mesma** convocação de
-  uma inscrição, escolhida pela regra que a tela da convocação já usa: a vigente mais recente.
+- **FR-1100** *(revista pela `125` em 2026-11-06, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Lista, acompanhamento e tela da convocação MUST apresentar a **mesma** convocação de uma inscrição:
+  a vigente mais recente **entre as visíveis ao candidato** (FR-3981 da `125`).
+
+  > **Redação anterior à `125`, preservada:** Lista, acompanhamento e tela da convocação MUST
+  > apresentar a **mesma** convocação de uma inscrição, escolhida pela regra que a tela da convocação
+  > já usa: a vigente mais recente.
 
 **Autorização e trilha**
 

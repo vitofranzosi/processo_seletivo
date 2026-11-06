@@ -85,3 +85,23 @@ Um subagente que não escreveu o código leu o diff, a spec e o plano. Achados e
 - A captura de A5 dentro do bloco foi feita com o bloco aberto por script; a tela o mostra recolhido.
 - As capturas são de antes do merge com o #410, que mexeu na tela do sorteio em trechos que elas não
   mostram (as mensagens da ocorrência).
+
+## Code review do PR #414
+
+Revisão do diff do PR, oito achados, todos tratados no mesmo PR:
+
+| Achado | Destino |
+|---|---|
+| A frase do consolidado deixava de contar as convocações sem comunicação, que antes entravam em "aguardam resposta" | corrigido: a frase diz "N estão sem comunicação enviada"; teste `test_a_frase_diz_as_convocacoes_sem_comunicacao_enviada` |
+| As contagens da mensagem da ordem saíam do ato vigente, e não do emitido | corrigido: lidas do ato que o comando devolveu, numa consulta (`aggregate`) |
+| "Sem período declarado" valia como encerrado | correto no domínio — o período não designado é o Edital que não recebe inscrição por este sistema —, e agora explícito: o critério lê `periodo_de_inscricoes` e aceita `ENCERRADO` ou `NAO_DESIGNADO` |
+| A convocação e a ocupação traziam todas as inscrições do Perfil a cada leitura | corrigido: uma consulta às Modalidades declaradas, distintas |
+| O aviso da `102` escrito duas vezes no `sorteio.html` | corrigido: `_congelamento_inviavel.html`, com `para_a_sucessao` (sem "aviso" no nome: o guardião da `066` trata todo template `*aviso*` como tela dos avisos ao candidato) |
+| O critério de sem inscrito era a terceira redação da regra, em `interface/` | corrigido: `sorteios/application/previa.recortes_sem_inscrito`, ao lado de `recortes_do_marco`; a condução só o chama |
+| `test_orientacao_p0.py` inteiro transacional | corrigido: os 17 casos passam sem transação |
+| O marcador ▸/▾ entrava no nome lido pelo leitor de tela | corrigido: texto alternativo vazio no `content` |
+
+Suíte completa depois dessas correções: **16796 passando, 13 pulados, 1 falhando** (1326s) — o
+guardião `test_vocabulario_do_aviso::test_a_lista_literal_alcanca_toda_tela_dos_avisos`, pelo nome do
+novo trecho de template. Renomeado para `_congelamento_inviavel.html`; o guardião e os arquivos do
+sorteio rodaram de novo: 34 passando. Nada mais mudou depois da suíte.

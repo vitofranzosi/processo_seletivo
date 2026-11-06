@@ -257,18 +257,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   não sucede não tem o bloco, e continua lendo o aviso aqui — é quem pode pedir a Retificação.
   {% endcomment %}
   {% if congelar_agora_inviavel.inscricoes_correndo or congelar_agora_inviavel.inclui_congelamento or congelar_agora_inviavel.inclui_sucessao and not pode_emitir %}
-  {% with a=congelar_agora_inviavel %}
-  <div class="aviso" role="status">
-    <p>{% if a.inscricoes_correndo %}<strong>A extração do Edital é cedo demais: o sorteio seria recusado.</strong>{% else %}<strong>Não congele a relação hoje: o sorteio seria recusado.</strong>{% endif %}
-      A extração do Edital ({{ a.referencia }} de {{ a.fonte }}) é de {{ a.dia|date:"d/m/Y" }}, e
-      essa fonte publica só a data, sem o horário. O sorteio só aceita extração de dia posterior ao
-      congelamento da relação{% if a.inscricoes_correndo %}, e a relação só pode ser congelada depois do fim das inscrições{% endif %}.</p>
-    <p>{% if a.inscricoes_correndo %}Antes do fim das inscrições{% else %}Antes de congelar{% endif %},
-      {% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">retifique o Edital</a>{% else %}peça a quem elabora as Retificações deste Edital que o retifique{% endif %},
-      trocando a extração por uma a partir de <strong>{{ a.primeiro_dia|date:"d/m/Y" }}</strong>.
-      {% if a.inclui_sucessao and not pode_emitir %}Vale também para publicar relação nova, sucedendo a atual: ela é congelada na hora. {% endif %}Congelar não se desfaz.</p>
-  </div>
-  {% endwith %}
+  {% include "interface/_congelamento_inviavel.html" with para_a_sucessao=False %}
   {% endif %}
   {% for recorte in recortes %}
   <article class="recorte">
@@ -495,15 +484,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     <details class="sucessao"{% if recorte.diagnostico_da_relacao %} open{% endif %}>
     <summary>Suceder esta relação (exige motivo)</summary>
     {% if congelar_agora_inviavel and not recorte.diagnostico_da_relacao %}
-    {% with a=congelar_agora_inviavel %}
-    <div class="aviso">
-      <p><strong>A relação nova seria congelada hoje, e o sorteio dela seria recusado.</strong>
-        A extração do Edital ({{ a.referencia }} de {{ a.fonte }}) é de {{ a.dia|date:"d/m/Y" }}, e o
-        sorteio só aceita extração de dia posterior ao congelamento da relação.</p>
-      <p>Antes de suceder, {% if pode_retificar %}<a href="{% url 'interface:retificar' edital.id %}">retifique o Edital</a>{% else %}peça a quem elabora as Retificações deste Edital que o retifique{% endif %},
-        trocando a extração por uma a partir de <strong>{{ a.primeiro_dia|date:"d/m/Y" }}</strong>. Congelar não se desfaz.</p>
-    </div>
-    {% endwith %}
+    {% include "interface/_congelamento_inviavel.html" with para_a_sucessao=True %}
     {% endif %}
     {% endif %}
     <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">

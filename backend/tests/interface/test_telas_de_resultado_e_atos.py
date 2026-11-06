@@ -159,8 +159,9 @@ BOTOES = {
         # FR-3594). Mesmo desenho do "Registrar desfecho": é o mesmo ato, por outro caminho.
         ("botao", "Registrar indeferimento"),
         ("botao", "Registrar atestado"),
-        ("acao", "Emitir a comunicação de novo"),
-        ("botao", "Emitir a comunicação"),
+        # A palavra do canal (125, FR-4000): *"Registrar a publicação"* na publicação.
+        ("acao", "{{ linha.canal.emitir_de_novo }}"),
+        ("botao", "{{ linha.canal.emitir }}"),
     ],
     "convocacao_historico.html": [],
     "matriculas.html": [("botao", "Ver o que sairá vazio"), ("botao", "Baixar o arquivo")],
