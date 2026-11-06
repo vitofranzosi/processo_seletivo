@@ -32,7 +32,7 @@
 ## Notes
 
 - Não há marcador `[NEEDS CLARIFICATION]`: o que as três decisões deixaram aberto virou proposta de
-  desenho (D-001 a D-007), que **aguarda o usuário**, como a `121` fez. A D-001 (a cadeia de correções
+  desenho (D-001 a D-008), que o usuário **aceitou em 06/11/2026**, as oito. A D-001 (a cadeia de correções
   já comunicada continua visível) e a D-003 (o Requerimento da chamada segue a convocação) são as que
   mais mudam o escopo; a D-004 (a prévia é um passo do servidor, só com texto digitado) é a que mais
   muda a experiência do operador.

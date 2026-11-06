@@ -3,8 +3,8 @@
 **Feature**: [spec.md](spec.md) · **Plano**: [plan.md](plan.md) · **Data**: 2026-11-06, sobre a `main`
 em `250efe97`
 
-Cada decisão abaixo é **técnica**, e serve às decisões de desenho da spec (D-001 a D-008), que
-aguardam o usuário. Onde uma delas mudar, a decisão técnica correspondente muda junto, e o plano diz
+Cada decisão abaixo é **técnica**, e serve às decisões de desenho da spec (D-001 a D-008), aceitas
+pelo usuário em 2026-11-06. Onde uma delas mudar, a decisão técnica correspondente muda junto, e o plano diz
 qual.
 
 ## R-001 — A visibilidade mora num seletor só, da `019`

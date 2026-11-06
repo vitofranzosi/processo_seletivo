@@ -10,8 +10,8 @@ decisões têm duas origens:
 - **Do usuário, em 06/11/2026**, sobre os três pontos do quadro *"Atenção"* do capítulo 10 do guia da
   jornada do sorteio: a *1ª*, a *2ª* e a *3ª decisão*, abaixo. Não se reabrem.
 - **Propostas de desenho desta spec:** D-001 a D-008, ao fim. Elas resolvem o que as três decisões
-  deixaram aberto, ou o que a leitura do código mostrou que elas não alcançavam. **Aguardam o
-  usuário.**
+  deixaram aberto, ou o que a leitura do código mostrou que elas não alcançavam. **Aceitas pelo
+  usuário em 06/11/2026, as oito, como propostas.**
 
 **Input**: o guia de condução
 [`doc/guia-jornada-do-sorteio-2026-11-05/`](../../doc/guia-jornada-do-sorteio-2026-11-05/index.html),
@@ -502,7 +502,7 @@ convocação já comunicada: antes do registro da primeira publicação, a convo
 
 ## Decisões
 
-**Estado em 2026-11-06.** D-001 a D-008 são propostas desta spec, e **aguardam o usuário**.
+**Estado em 2026-11-06.** D-001 a D-008 foram propostas por esta spec e **aceitas pelo usuário em 2026-11-06**, as oito, sem alteração.
 
 ### D-001 — A cadeia de correções já comunicada continua visível
 

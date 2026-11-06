@@ -4,8 +4,9 @@
 
 **Input**: Feature specification from `specs/125-canal-da-convocacao/spec.md`
 
-**Estado**: plano escrito sobre as propostas D-001 a D-008 da spec, que **aguardam o usuário**. Cada
-seção diz o que muda se uma delas for recusada. Nenhum código foi alterado.
+**Estado**: plano escrito sobre as decisões D-001 a D-008 da spec, **aceitas pelo usuário em
+2026-11-06**, as oito. As notas *"Se a D-00N for recusada"* ficam como registro da alternativa. Nenhum
+código foi alterado.
 
 ## Summary
 
