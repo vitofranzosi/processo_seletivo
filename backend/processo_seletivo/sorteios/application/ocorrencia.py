@@ -14,6 +14,9 @@ por `(fonte, referência)`, e guardar a derivada aqui congelaria a regra do prim
 passasse por ela.
 """
 
+import json
+import logging
+
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
@@ -27,6 +30,8 @@ from processo_seletivo.sorteios.models import OcorrenciaDaFonte
 
 OBSERVAR = "SORTEIO_OBSERVAR_OCORRENCIA"
 ATO = "sorteios:observar-ocorrencia"
+
+logger = logging.getLogger(__name__)
 
 
 def observar_ocorrencia(
@@ -76,9 +81,29 @@ def observar_ocorrencia(
         # ninguém tivesse decidido isso e sem caminho de volta.
         #
         # Aqui nada é gravado, e a recusa é repetível: tentar de novo é o ato certo, e é barato.
+        #
+        # **O detalhe técnico vai ao log, e é daqui que ele sai** (124, FR-3962): o adaptador não
+        # conhece a correlação do pedido, e uma linha sem ela não se liga ao clique que a produziu.
+        logger.warning(
+            "observacao_sem_acesso_a_fonte %s",
+            json.dumps(
+                {"fonte": fonte, "referencia": referencia, "falhas": list(observacao.falhas)},
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+            extra={"correlationId": correlation_id, "operation": ATO},
+        )
+        # **A mensagem é texto, e não Markdown** (124, FR-3963). A tela a imprime por
+        # `{{ erro.detalhe }}`, que não interpreta nada: o destaque escrito com asteriscos chegava
+        # ao operador como `**nada foi registrado**`, ao vivo.
+        #
+        # **E a primeira frase vale para toda falha de acesso.** Ela dizia "não foi possível falar
+        # com a fonte", e a evidência, logo depois, pode dizer que a Caixa respondeu com um erro: o
+        # operador lia as duas coisas na mesma faixa. Que a extração não chegou é verdade nos dois
+        # casos; o porquê é da evidência.
         raise DomainError(
             "source_unreachable",
-            f"Não foi possível falar com {fonte} agora, e por isso **nada foi registrado**: a "
+            f"{fonte} não entregou a extração agora, e por isso nada foi registrado: a "
             f"ocorrência {referencia!r} continua sendo a que vale, e observá-la de novo é o "
             "próximo passo. Falha de acesso não é ausência de extração — registrá-la como "
             "indisponibilidade descartaria a extração que o Edital declarou. "

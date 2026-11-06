@@ -11044,6 +11044,12 @@ def sorteio(request, edital_id, marco_id):
                 # lugar dela —, é o que põe a semente à vista **antes** do ato, que é o que a
                 # transmissão precisa mostrar.
                 "ocorrencia": estado["ocorrencia"],
+                # **O que a fonte publica do instante da extração** (124, FR-3964): a Loteria
+                # Federal publica o dia, e o 00h00 que a tela mostrava é o limite que o sistema
+                # deduz — lido como hora da extração, ele afirmava o que a fonte nunca disse.
+                # `None` para fonte fora do vocabulário deste ambiente, e a tela então não afirma
+                # nem uma coisa nem outra.
+                "fonte_publica_so_a_data": _fonte_publica_so_a_data(estado["ocorrencia"]),
                 # A referência que ainda falta observar, derivada pela regra publicada. É ela que a
                 # tela nomeia no botão: quem observa precisa saber o que vai buscar, e não há campo
                 # para trocá-la (FR-015, FR-017).
@@ -11123,6 +11129,14 @@ def sorteio(request, edital_id, marco_id):
 # participantes"* — no minuto mais visto do certame, com a transmissão aberta. A recusa tinha o
 # mesmo vício, e prefixava *"Não foi possível publicar"* uma falha da fonte externa.
 RELACAO, OCORRENCIA, SORTEIO, ANULACAO = "relacao", "ocorrencia", "sorteio", "anulacao"
+
+
+def _fonte_publica_so_a_data(ocorrencia):
+    from processo_seletivo.sorteios.infrastructure import fontes
+
+    if ocorrencia is None:
+        return None
+    return fontes.publica_so_a_data(ocorrencia.fonte)
 
 
 def _pode_conferir_a_referencia(metodo, proxima_referencia):
