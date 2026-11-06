@@ -10,6 +10,7 @@ estado. Publicar já condenado não é caminho: a publicação o recusa (cenári
 """
 
 import copy
+import re
 from datetime import datetime, time, timedelta
 
 import pytest
@@ -156,7 +157,12 @@ def test_com_as_inscricoes_correndo_ate_o_dia_da_extracao_o_aviso_ja_aparece(
 def test_a_sucessao_de_uma_relacao_que_sorteia_tambem_e_avisada(
     gestor, api_client, manager_headers, process_payload, seletor_ligado, client
 ):
-    """A relação congelada sorteia; sucedê-la hoje, com a extração retificada para hoje, não."""
+    """A relação congelada sorteia; sucedê-la hoje, com a extração retificada para hoje, não.
+
+    **O aviso mora dentro do bloco de sucessão** desde a 126 (FR-4031, FR-4032): com todas as
+    relações congeladas, ele vale só para a sucessão, e no topo dos recortes lia como a próxima
+    ação. A regra é a mesma; o lugar, não.
+    """
     certame = _certame(gestor, api_client, manager_headers, process_payload)
     encerrar_inscricoes(api_client, certame["edital"], timezone.now() - timedelta(minutes=1))
     _congelar(certame)
@@ -165,9 +171,63 @@ def test_a_sucessao_de_uma_relacao_que_sorteia_tambem_e_avisada(
     corpo = _abrir(client, certame)
 
     assert DIAGNOSTICO not in corpo, "a relação congelada continua sorteando"
-    assert f"Não congele a relação hoje: {AVISO}" in corpo
-    assert "Vale também para publicar relação nova, sucedendo a atual" in corpo
-    assert corpo.index(AVISO) < corpo.index("Publicar relação nova, sucedendo a atual</button>")
+    assert "Não congele a relação hoje" not in corpo, "não há relação a congelar pela primeira vez"
+    assert "Vale também para publicar relação nova" not in corpo
+    bloco = corpo[corpo.index('<details class="sucessao">') :]
+    assert bloco.startswith(
+        '<details class="sucessao"> <summary>Suceder esta relação (exige motivo)</summary>'
+    ), "recolhido: a relação vigente sorteia"
+    assert "A relação nova seria congelada hoje, e o sorteio dela seria recusado." in bloco
+    assert f"a partir de <strong>{_amanha()}</strong>" in bloco
+    assert bloco.index("seria recusado") < bloco.index(
+        "Publicar relação nova, sucedendo a atual</button>"
+    )
+
+
+def test_a_lista_sem_inscrito_nao_faz_o_aviso_aparecer(
+    gestor, api_client, manager_headers, process_payload, seletor_ligado, client
+):
+    """FR-4033, SC-1215: o 35 Cefor — as relações com inscrição congeladas, e a PcD vazia."""
+    from tests.fixtures.sorteio import LISTA_PCD, LISTA_PPI, certame_com_cotas
+
+    metodo = copy.deepcopy(METODO)
+    metodo.update(
+        {
+            "source": "Loteria Federal",
+            "occurrence": "6113",
+            "occurrenceAt": (timezone.now() + timedelta(days=5)).astimezone(ZONA).isoformat(),
+        }
+    )
+    certame = certame_com_cotas(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        quantos=3,
+        modalidades={0: LISTA_PPI},
+        metodo=metodo,
+    )
+    for lista in (None, LISTA_PPI):
+        publicar_relacao(
+            actor=presidente(),
+            processo_id=certame["processo"].id,
+            edital_id=certame["edital"].id,
+            perfil_id=certame["perfil"],
+            marco_id=certame["marco"],
+            lista_id=lista,
+            idempotency_key=f"inviavel-126-{lista}",
+            correlation_id="teste-126",
+        )
+    _retificar_a_extracao(api_client, certame, _hoje(0, 1), suffix="hoje")
+
+    corpo = _abrir(client, certame)
+
+    recortes = corpo[corpo.index('id="titulo-recortes"') :]
+    assert "Não congele a relação hoje" not in recortes
+    assert recortes.count("A relação nova seria congelada hoje") == 2, "uma por relação congelada"
+    assert LISTA_PCD not in [
+        m for m in re.findall(r'name="lista_id" value="([^"]*)"', recortes) if m
+    ], "a PcD não tem relação a publicar"
 
 
 def test_com_a_extracao_depois_do_fim_nao_ha_aviso(
@@ -312,3 +372,24 @@ def test_sem_estilo_nem_script_embutido(
     assert "<style" not in corpo
     assert "<script>" not in corpo
     assert "onclick=" not in corpo
+
+
+def test_quem_so_le_continua_vendo_o_aviso_da_sucessao_no_topo(
+    gestor, api_client, manager_headers, process_payload, seletor_ligado, client
+):
+    """Revisão da 126: sem bloco de sucessão, o aviso não teria onde aparecer para quem retifica."""
+    certame = _certame(gestor, api_client, manager_headers, process_payload)
+    encerrar_inscricoes(api_client, certame["edital"], timezone.now() - timedelta(minutes=1))
+    _congelar(certame)
+    _retificar_a_extracao(api_client, certame, _hoje(0, 1), suffix="hoje")
+    identificar(client, "auditoria", ["auditor"])
+
+    resposta = client.get(
+        reverse("interface:sorteio", args=[certame["edital"].id, certame["marco"]])
+    )
+    corpo = " ".join(resposta.content.decode().split())
+
+    assert resposta.status_code == 200
+    assert '<details class="sucessao"' not in corpo, "quem só lê não sucede"
+    assert f"Não congele a relação hoje: {AVISO}" in corpo
+    assert "Vale também para publicar relação nova, sucedendo a atual" in corpo

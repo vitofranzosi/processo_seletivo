@@ -120,6 +120,16 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
                     recorte["congelada"] and recorte["diagnostico_da_relacao"] is None
                     for recorte in recortes
                 ),
+                # **Há relação a congelar pela primeira vez** (126, FR-4031). Sem ela, o aviso vale
+                # só para a sucessão, e a tela o mostra dentro do bloco dela — e não como primeira
+                # frase dos recortes, onde lia como a próxima ação. A lista sem inscrito não conta:
+                # não há o que congelar nela (FR-4033).
+                "inclui_congelamento": any(
+                    not recorte["congelada"]
+                    and recorte["projetados"]
+                    and recorte["diagnostico_da_relacao"] is None
+                    for recorte in recortes
+                ),
             }
             if congelar_agora_inviavel
             and any(recorte["diagnostico_da_relacao"] is None for recorte in recortes)

@@ -127,6 +127,7 @@ def _item(situacao, edital, ator, acao):
 # As providências da `099` que a confirmação repete. Recurso, reavaliação e providência de recurso
 # ficam de fora: já são impedimentos, ditos pela regra da `113`, e apareceriam duas vezes.
 DA_099 = (
+    p.CONVOCACAO_SEM_COMUNICACAO,
     p.CONVOCACAO_AGUARDANDO,
     p.CONVOCACAO_VENCIDA,
     p.RESULTADO_NAO_DIVULGADO,
@@ -149,7 +150,10 @@ def _providencias_da_099(edital, agora):
         if pendencia.tipo in DA_099
     ]
     somadas = []
-    for tipo in (p.CONVOCACAO_AGUARDANDO, p.CONVOCACAO_VENCIDA):
+    # A convocação sem comunicação enviada é espécie própria (126, FR-4029): somada a "aguardando
+    # resposta", a única lista do que falta no Edital dizia o contrário do domínio.
+    da_convocacao = (p.CONVOCACAO_SEM_COMUNICACAO, p.CONVOCACAO_AGUARDANDO, p.CONVOCACAO_VENCIDA)
+    for tipo in da_convocacao:
         do_tipo = [pendencia for pendencia in pendencias if pendencia.tipo == tipo]
         if do_tipo:
             prazos = [pendencia.ate for pendencia in do_tipo if pendencia.ate]
@@ -163,7 +167,7 @@ def _providencias_da_099(edital, agora):
             )
     vistos = set()
     for pendencia in pendencias:
-        if pendencia.tipo in (p.CONVOCACAO_AGUARDANDO, p.CONVOCACAO_VENCIDA):
+        if pendencia.tipo in da_convocacao:
             continue
         # Por marco, e não por Perfil: o nome do marco é público, e o Perfil pequeno não aparece.
         chave = (pendencia.tipo, pendencia.marco)
