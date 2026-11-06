@@ -7630,6 +7630,7 @@ def ordenacao(request, edital_id, marco_id):
                 # ato as cite, e é a citação **publicada** que prova o cumprimento (FR-089, T-015).
                 "decisoes_a_citar": _decisoes_a_citar(edital, marco_id, estado["marco"]),
                 "resultado": request.session.pop("resultado_da_ordenacao", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(edital, ator, marco_id, lista_id),
                 "erro": request.session.pop("erro_da_ordenacao", None),
                 "chave_idempotencia": uuid4().hex,
                 "confirmacao_do_calculo": (
@@ -8111,6 +8112,7 @@ def corte(request, edital_id, marco_id):
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
                 "resultado": request.session.pop("resultado_do_corte", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(edital, ator, marco_id, lista_id),
                 # Qual dos dois atos do corte voltou (126, FR-4014): a faixa seguinte não é "corte
                 # emitido", e dizer o número dela como se fosse a geração inteira enganaria.
                 "acao": request.session.pop("acao_do_corte", None),
@@ -8178,6 +8180,9 @@ def ocupacao(request, edital_id, marco_id):
                     )
                 ),
                 "resultado": resultado,
+                "proximo_nesta_lista": _proximo_nesta_lista(
+                    edital, ator, marco_id, (resultado or {}).get("listaId") or None
+                ),
                 "recorte_apurado": next(
                     (
                         recorte["rotulo"]
@@ -8618,6 +8623,7 @@ def convocacao(request, edital_id, marco_id):
                 # quem acabara de desfechar lia "Apuração emitida".
                 "acao": request.session.pop("acao_da_convocacao", None),
                 "resultado": request.session.pop("resultado_da_convocacao", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(edital, ator, marco_id, lista_id),
                 "erro": request.session.pop("erro_da_convocacao", None),
             },
         )
@@ -8840,9 +8846,53 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
                 "chave_idempotencia": uuid4().hex,
                 "erro": request.session.pop("erro_da_conferencia", None),
                 "aviso": request.session.pop("aviso_da_conferencia", None),
+                "proximo_nesta_lista": _proximo_nesta_lista(
+                    edital, ator, marco_id, getattr(vigente, "lista_id", None)
+                ),
             },
         )
     )
+
+
+def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=False):
+    """O "Próximo nesta lista" da mensagem de sucesso de um ato (127, FR-4090 a FR-4092, D-015).
+
+    **Um callable, e não o valor**: o template só o lê dentro do bloco de sucesso, uma vez, com
+    `{% with %}`. Abrir a tela não paga a derivação; quem acabou de praticar um ato paga a do
+    Perfil do marco, e não a do Edital inteiro.
+
+    **"Sua" é a regra do andamento** (`Andamento.e_sua`), a mesma do nível 1: a porta do papel, a
+    mesa da `104` e a alocação à conferência. Refazê-la aqui era a segunda regra que diverge.
+    """
+
+    def ler():
+        atual = andamento.do_edital(edital, ator, perfis=[_perfil_do_marco(edital, marco_id)])
+        if atual is None:
+            return None
+        desta, outras, perfil = andamento.da_lista(
+            atual, marco_id, lista_id, preferir=atual.e_sua, todas_as_listas=todas_as_listas
+        )
+
+        def item(celula):
+            sua = atual.e_sua(celula, perfil)
+            ato = celula.ato or celula.rotulo
+            return {
+                "ato": ato,
+                "ato_minusculo": ato[:1].lower() + ato[1:],
+                "situacao": celula.situacao,
+                "rotulo": celula.rotulo,
+                "razao": celula.razao,
+                "sua": sua,
+                "url": celula.url if sua else "",
+                "papel": andamento.PAPEIS.get(celula.responsavel, ""),
+            }
+
+        return {
+            "desta": item(desta) if desta is not None else None,
+            "outras": [(rotulo, item(celula)) for rotulo, celula in outras],
+        }
+
+    return ler
 
 
 @require_http_methods(["GET"])
@@ -11311,7 +11361,17 @@ def sorteio(request, edital_id, marco_id):
                 # sorteio terminou**, em vez de exigir que alguém reconstrua a navegação por cinco
                 # telas com a transmissão no ar.
                 "pode_publicar": ator.can("resultado:publicar"),
-                "resultado": request.session.pop("resultado_do_sorteio", None),
+                "resultado": (
+                    resultado_do_sorteio := request.session.pop("resultado_do_sorteio", None)
+                ),
+                "proximo_nesta_lista": _proximo_nesta_lista(
+                    edital,
+                    ator,
+                    marco_id,
+                    (resultado_do_sorteio or {}).get("listaId") or None,
+                    # A semente vale para o marco: o próximo passo é do marco (item 4 do review).
+                    todas_as_listas=(resultado_do_sorteio or {}).get("tipo") == "ocorrencia",
+                ),
                 "erro": request.session.pop("erro_do_sorteio", None),
                 # **A chave de idempotência nasce na leitura, e viaja no formulário** — como a tela
                 # da `015` já fazia. Sem ela, cada envio gerava chave nova: o duplo clique no botão

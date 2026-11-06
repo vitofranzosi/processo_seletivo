@@ -38,6 +38,7 @@ comissão.</p>
   O ato é imutável; corrigir é praticar outro, com motivo.</p>
 {% else %}<p class="sucesso" role="status" tabindex="-1"><strong>Apuração emitida</strong>{% if recorte_apurado %} para {{ recorte_apurado }}{% endif %}{% if resultado.efetivas is not None %}: {{ resultado.efetivas|contagem:"vaga efetiva,vagas efetivas" }}, {{ resultado.ocupadas|contagem:"ocupada,ocupadas" }}, {{ resultado.faltando }} a ocupar{% endif %}. O ato é imutável; corrigir é emitir uma sucessora com motivo.</p>{% endif %}
 {% endif %}
+{% if resultado %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
 <p class="imutavel">Abrir esta tela <strong>não apura nada</strong>. Os números abaixo vêm de atos já emitidos, e onde não há ato não há número.</p>
 

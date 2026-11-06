@@ -130,6 +130,27 @@ apuração (SC-1243). No 91, dois Perfis têm o mesmo nome no conteúdo publicad
 
 **Não verificado**: a nota da matrícula (FR-4109) com dados reais — nenhum Perfil do banco tem toda a
 convocação desfechada; e a suíte com o grupo `navegador`, que o CI roda.
+
+## Transições — "Próximo nesta lista" (06/11/2026)
+
+**Sobre a `126`** (D-015): a branch das transições mescla a branch da `126` (#414, CI verde, ainda sem
+merge), que mexe nos mesmos templates. A mescla foi limpa; a inclusão é uma linha por template, logo
+abaixo do bloco de sucesso, e não toca a sucessão recolhida que a `126` introduziu. Enquanto o #414
+não for mergeado, o diff deste PR mostra também os commits dele.
+
+- **Onde**: corte, ordenação, ocupação, sorteio, convocação e documentos da convocação.
+- **Como**: `views._proximo_nesta_lista` devolve um callable, que o template lê uma vez com `{% with %}`
+  e só no retorno de um ato. Abrir a tela não paga a derivação.
+- **O que diz**: o primeiro em aberto do trecho do marco naquela lista, na ordem da jornada — no P2,
+  depois do corte, a Etapa governada, e não a apuração —, preferindo o que é da pessoa; e o que falta
+  nas outras listas do mesmo marco. Sem nada em aberto, "Nada mais em aberto nesta lista."
+- **Testes**: `tests/interface/test_andamento_transicoes.py`, 4 casos (corte no P2, convocação,
+  abertura sem ato, lista sem nada em aberto).
+- **Suíte**: `make test-pg` (4 workers) sobre B1 + B2 + a `126` + as transições: **16 904 passaram,
+  20 pulados, nenhuma falha, em 1131 s.**
+
+**Não verificado no banco do estudo**: praticar um ato no clone para fotografar a mensagem. Os testes
+fazem o GET de retorno com o resultado na sessão, como a view o grava.
 ## Code review dos três PRs (06/11/2026)
 
 Feito com o `/code-review` (esforço alto), um por PR, depois das revisões independentes. Os achados

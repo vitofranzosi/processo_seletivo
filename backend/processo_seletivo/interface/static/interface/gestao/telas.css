@@ -865,3 +865,6 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
 .sucessao>summary::before{content:"▸ "/""}
 .sucessao[open]>summary::before{content:"▾ "/""}
 .sucessao>form,.sucessao>.aviso{margin-top:.5rem}
+/* O próximo passo da lista, abaixo da mensagem de sucesso de um ato (127, FR-4090). */
+.proximo-nesta-lista{margin:.4rem 0 .2rem}
+.ainda-neste-marco{margin:0 0 .6rem;color:var(--texto-fraco)}

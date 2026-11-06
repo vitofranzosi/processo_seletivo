@@ -67,10 +67,10 @@ julgador e auditor.
 
 ## Phase 7: US6 — "Próximo nesta lista" (B1, por último, D-015)
 
-- [ ] T031 [US6] Conferir com a sessão da `126` o estado dela; base sobre a `126` mergeada ou sobre a branch dela
-- [ ] T032 [US6] `andamento.da_lista(edital, ator, marco_id, lista_id)` e o parcial `backend/processo_seletivo/interface/templates/interface/_proximo_nesta_lista.html` (FR-4090, FR-4091)
-- [ ] T033 [US6] Incluir o parcial nas mensagens de sucesso de corte, ordenação, ocupação, sorteio, convocação e documentos, em `backend/processo_seletivo/interface/views.py` e templates (FR-4092)
-- [ ] T034 [US6] Testes de transição nas telas em `backend/tests/interface/test_andamento_transicoes.py` (SC-1238)
+- [x] T031 [US6] Conferir com a sessão da `126` o estado dela; base sobre a `126` mergeada ou sobre a branch dela
+- [x] T032 [US6] `andamento.da_lista(edital, ator, marco_id, lista_id)` e o parcial `backend/processo_seletivo/interface/templates/interface/_proximo_nesta_lista.html` (FR-4090, FR-4091)
+- [x] T033 [US6] Incluir o parcial nas mensagens de sucesso de corte, ordenação, ocupação, sorteio, convocação e documentos, em `backend/processo_seletivo/interface/views.py` e templates (FR-4092)
+- [x] T034 [US6] Testes de transição nas telas em `backend/tests/interface/test_andamento_transicoes.py` (SC-1238)
 
 ## Phase 8: Polish
 

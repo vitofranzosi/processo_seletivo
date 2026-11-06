@@ -56,6 +56,7 @@ progrediram, e logo abaixo vinha outro "Emitir corte". A frase não diz o próxi
 orientação da jornada, e não desta tela.
 {% endcomment %}
 {% if resultado %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "continuacao" %}<strong>Faixa seguinte emitida</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}: {{ resultado.progrediram|contagem:"progride,progridem" }} nela{% else %}<strong>Corte emitido</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}{% if geracao.0.corte_anterior_id %}, sucedendo a geração anterior{% endif %}: {{ resultado.progrediram|contagem:"progride,progridem" }}{% endif %}{% if resultado.ultimaPosicao %}, até a {{ resultado.ultimaPosicao }}ª posição{% endif %}. O ato é imutável, e quem ficou fora continua legível nele.</p>{% endif %}
+{% if resultado %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
 {% if recusa %}
 {% comment %}
