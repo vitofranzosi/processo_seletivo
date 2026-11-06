@@ -58,7 +58,7 @@ pelo PR #410 (`124`), e as mudanças aqui ficam em trechos distantes dos dele (R
 | III — negar por padrão | nenhuma porta nova; a sucessão continua só para quem emite; a conferência dos gestos continua recusando no comando | ✅ |
 | III — LGPD | a espécie nova é fato não público, com a regra de privacidade das outras da convocação (D-003) | ✅ |
 | IV — regra explícita | uma função para sem inscrito, lida por quatro telas; a classificação da convocação é a do domínio (`prazo.estado`), e não uma segunda conta | ✅ |
-| V — simplicidade | sem rota, tela ou estado novo; a G-01 não vira regra sem decisão do usuário (D-004) | ✅ |
+| V — simplicidade | sem rota, tela ou estado novo; a G-01 não vira regra aqui: decidida pelo usuário (opção b), ela é da `128` (D-004) | ✅ |
 | VI — jornada demonstrável | antes e depois no navegador, no Edital 35 (quickstart) | ✅ |
 
 Nenhuma entrada em *Complexity Tracking*. Reavaliado depois do desenho: sem mudança.

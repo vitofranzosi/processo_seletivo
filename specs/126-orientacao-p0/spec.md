@@ -6,8 +6,8 @@
 
 **Status**: Draft. Corrige apresentação: nenhuma regra de negócio, migration, tabela, coluna ou
 estado persistido novo. A única mudança de regra discutida, recusar a emissão da ordem sem
-resultado nas Etapas (G-01), **não** é implementada: fica como pergunta ao usuário, com as opções,
-em *Decisão pendente do usuário*.
+resultado nas Etapas (G-01), **não** é implementada aqui: o usuário a decidiu em 06/11/2026 (opção b,
+em *Decisão do usuário*), e quem a implementa é a spec `128`.
 
 **Input**: *"Correções pontuais que induzem a erro ou contradizem o domínio depois da publicação:
 sucessão em destaque logo depois de um ato, 'Falta' em lista sem inscrito, rótulo de convocação sem
@@ -347,7 +347,8 @@ conferir o motivo e as contagens por Etapa.
   protocolos de cada grupo.
 - **FR-4038**: A inscrição sem posição por eliminação MUST NOT contar como "sem resultado".
 - **FR-4039**: A confirmação MUST continuar permitindo a emissão. Recusar a emissão sem resultado é
-  decisão do usuário, registrada em *Decisão pendente do usuário* (D-004).
+  regra, decidida pelo usuário em 06/11/2026 e implementada pela spec `128`, e não por esta
+  (*Decisão do usuário*; D-004).
 
 #### Limites
 
@@ -460,7 +461,7 @@ regra de privacidade.
 
 Recusar a emissão da ordem sem resultado muda o que o comando aceita, e a ordem vazia emitida é
 legítima em outros casos (ninguém concorreu, pela decisão da `049` sobre a ordem vazia). A spec implementa o que a confirmação diz
-e leva a recusa ao usuário, abaixo.
+e levou a recusa ao usuário, que a decidiu (abaixo); ela é implementada numa spec própria.
 
 ### D-005 — A ocupação entra junto da convocação
 
@@ -468,21 +469,24 @@ O pedido nomeia a condução e a convocação. A ocupação da mesma lista manda
 na classificação dele", que leva à tela do sorteio, onde não há o que fazer: é o mesmo beco, pelo mesmo
 critério, e corrigi-lo custa uma frase. Fica dentro, para que as três telas digam a mesma coisa.
 
-## Decisão pendente do usuário
+## Decisão do usuário
 
-### G-01 — A ordem por pontuação sem resultado nas Etapas deve ser recusada?
+### G-01 — A ordem por pontuação sem nenhum resultado é recusada (opção b)
 
-**Hoje**: `emitir_ordem` grava a ordem mesmo quando nenhuma inscrição tem resultado nas Etapas
-enumeradas. Ela nasce com todos sem posição, fica obsoleta quando os resultados chegam, e a sucessão
-exige motivo. Esta spec faz a confirmação dizer isso (FR-4035 a FR-4037), e **não** recusa.
+**Decidida pelo usuário em 06/11/2026**, à pergunta "a ordem por pontuação sem nenhum resultado deve ser
+recusada?": *"Sim, recusar (b)"*. **Quem a implementa é a spec `128`** ("recusar a ordem sem nenhum
+resultado"), em sessão própria; esta spec não muda o comando.
+
+**O que esta spec entrega, e continua valendo**: a confirmação diz o motivo, a contagem por Etapa e a
+consequência (FR-4035 a FR-4037). Com a `128`, o caso que ela recusa — nenhuma inscrição considerada
+com resultado nas Etapas enumeradas — deixa de chegar à confirmação; a confirmação continua dizendo o
+caso parcial, que a decisão mantém possível.
+
+As opções que foram ao usuário, para o registro:
 
 | Opção | Efeito | Custo |
 |---|---|---|
-| **a. Só a apresentação** (o que esta spec entrega) | Quem confirma lê o motivo e as contagens; continua podendo emitir | Nenhum além desta spec; a ordem precoce continua possível |
-| b. Recusar se **nenhuma** inscrição considerada tem resultado em alguma Etapa enumerada | Fecha o caso do Edital 91; ordem parcial continua possível | Recusa nova no domínio, com teste; a ordem vazia "ninguém concorreu" não é afetada (universo vazio) |
-| c. Recusar se **alguma** inscrição considerada está sem resultado | Obriga consolidar tudo antes de ordenar | Pode travar o Edital em que uma inscrição nunca terá resultado (desistência sem registro); precisa de saída |
+| a. Só a apresentação (o que esta spec entrega) | Quem confirma lê o motivo e as contagens; continua podendo emitir | Nenhum além desta spec; a ordem precoce continua possível |
+| **b. Recusar se nenhuma inscrição considerada tem resultado numa Etapa enumerada** — **escolhida** | Fecha o caso do Edital 91; ordem parcial continua possível | Recusa nova no domínio, com teste; a ordem vazia "ninguém concorreu" não é afetada (universo vazio) |
+| c. Recusar se alguma inscrição considerada está sem resultado | Obriga consolidar tudo antes de ordenar | Pode travar o Edital em que uma inscrição nunca terá resultado (desistência sem registro); precisa de saída |
 | d. Exigir uma declaração na confirmação ("emito sabendo que N estão sem resultado") | Mantém a possibilidade e registra a ciência no ato | Campo novo no ato ou na trilha: estado persistido novo |
-
-**Recomendação**: **b**, numa spec própria. Ela recusa o caso que não tem uso legítimo conhecido (ordem
-emitida antes de qualquer avaliação) e não toca a ordem parcial nem a vazia. Até a decisão, **a**
-reduz o risco sem mudar regra.
