@@ -2478,7 +2478,7 @@ def convocacao(request, inscricao_id):
             **_chamada_da_tela(
                 chamada, projecao, politica, da_convocacao, versao, selecao, agora=agora
             ),
-            **_volta_do_envio(request, projecao),
+            **_volta_do_envio(request, registro, projecao),
             "houve_convocacao_no_recorte": houve_convocacao_no_recorte,
             "novas_chamadas": situacao_da_inscricao.NOVAS_CHAMADAS,
             "requerimento": requerimento,
@@ -2612,10 +2612,23 @@ CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO = "confirmacao_da_convocacao"
 CHAVE_DA_RECUSA_DA_CONVOCACAO = "recusa_da_convocacao"
 
 
-def _volta_do_envio(request, projecao):
+def _da_inscricao(request, chave, registro):
+    """O registro da volta, consumido **só** pela convocação da inscrição em que o envio aconteceu.
+
+    A sessão é da pessoa, e não da inscrição: quem tem duas convocadas e abre a outra antes da volta
+    consumiria ali uma confirmação que não acha item nenhum, e a volta certa chegaria vazia.
+    """
+    guardado = request.session.get(chave)
+    if not guardado or guardado.get("inscricao") != str(registro.id):
+        return None
+    del request.session[chave]
+    return {campo: valor for campo, valor in guardado.items() if campo != "inscricao"}
+
+
+def _volta_do_envio(request, registro, projecao):
     """Consome os dois registros da volta do envio, lidos uma vez só, como `_mensagens`."""
-    confirmacao = request.session.pop(CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO, None)
-    recusa = request.session.pop(CHAVE_DA_RECUSA_DA_CONVOCACAO, None)
+    confirmacao = _da_inscricao(request, CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO, registro)
+    recusa = _da_inscricao(request, CHAVE_DA_RECUSA_DA_CONVOCACAO, registro)
     return {
         "confirmacao_do_envio": (
             obrigacoes.confirmacao_do_envio(projecao, **confirmacao)
@@ -2712,7 +2725,7 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     convocacao_da_pessoa = reverse("portal:convocacao", args=[registro.id])
     no_cartao = f"{convocacao_da_pessoa}#item-{item_id}"
     if arquivo is None:
-        _recusar_no_cartao(request, item_id, "Escolha um arquivo PDF antes de enviar.")
+        _recusar_no_cartao(request, registro, item_id, "Escolha um arquivo PDF antes de enviar.")
         return redirect(no_cartao)
     try:
         feita = documentos_da_convocacao.apresentar(
@@ -2726,9 +2739,10 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     except DomainError as recusa:
         if recusa.status == 404:
             raise
-        _recusar_no_cartao(request, item_id, recusa.detail)
+        _recusar_no_cartao(request, registro, item_id, recusa.detail)
         return redirect(no_cartao)
     request.session[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO] = {
+        "inscricao": str(registro.id),
         "item_id": str(item_id),
         "apresentacao_id": str(feita.apresentacao.id),
         "ja_recebido": feita.ja_recebido,
@@ -2736,9 +2750,13 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     return redirect(f"{convocacao_da_pessoa}#confirmacao")
 
 
-def _recusar_no_cartao(request, item_id, frase):
+def _recusar_no_cartao(request, registro, item_id, frase):
     """A recusa guardada para o cartão do item, e não para o topo (121, FR-3871)."""
-    request.session[CHAVE_DA_RECUSA_DA_CONVOCACAO] = {"ancora": f"item-{item_id}", "frase": frase}
+    request.session[CHAVE_DA_RECUSA_DA_CONVOCACAO] = {
+        "inscricao": str(registro.id),
+        "ancora": f"item-{item_id}",
+        "frase": frase,
+    }
 
 
 @require_http_methods(["GET"])

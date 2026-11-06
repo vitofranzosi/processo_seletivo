@@ -245,7 +245,12 @@ def confirmacao_do_envio(projecao, *, item_id, apresentacao_id, ja_recebido):
         data=data(instante) if instante else "",
         hora=hora(instante) if instante else "",
     )
-    if projecao.aberta and projecao.tarefas:
+    if not projecao.aberta:
+        # **Fechada entre o envio e a volta** — o prazo venceu, o Processo encerrou ou o resultado
+        # saiu: nem próxima tarefa nem conclusão. A conclusão diria "não tem mais documentos para
+        # enviar" logo acima de "ficaram sem envio", e a chamada já conta o que houve.
+        return ConfirmacaoDoEnvio(frase=frase)
+    if projecao.tarefas:
         return ConfirmacaoDoEnvio(
             frase=frase, proxima=projecao.tarefas[0], proxima_ancora=projecao.primeira_ancora
         )
@@ -783,8 +788,9 @@ class Obrigacoes:
 
     @property
     def requerimento_a_preencher_na_chamada(self):
-        """O cartão do Requerimento no bloco *O que falta*, com a chamada aberta (FR-3738)."""
-        return self.aberta and self.totais["requerimento"]
+        """O cartão do Requerimento no bloco *O que falta* (FR-3738). O total já só vale com a
+        chamada aberta: é a mesma condição que faz dele tarefa."""
+        return bool(self.totais["requerimento"])
 
     @property
     def convite_ao_opcional(self):

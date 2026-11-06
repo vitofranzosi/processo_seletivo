@@ -576,10 +576,16 @@ def frase_do_prazo_decorrido(vigente):
     quando = vigente.vencimento
     if quando is None:
         return f"O prazo desta convocação terminou. {NUCLEO_DO_PRAZO_DECORRIDO}"
-    from django.utils import timezone
+    from zoneinfo import ZoneInfo
 
-    local = timezone.localtime(quando)
-    return f"O prazo terminou em {local:%d/%m/%Y}, às {local:%Hh%M}. {NUCLEO_DO_PRAZO_DECORRIDO}"
+    from django.conf import settings
+
+    from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
+
+    # Pela função única do prazo (121, FR-3873): a recusa e as telas dizem a data como o cartão do
+    # prazo e o e-mail a dizem, no fuso das settings.
+    prazo = apresentar(quando, quando, ZoneInfo(settings.TIME_ZONE))
+    return f"O prazo terminou em {prazo.data_e_hora}. {NUCLEO_DO_PRAZO_DECORRIDO}"
 
 
 # ---------------------------------------------------------------------------

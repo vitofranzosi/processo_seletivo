@@ -430,6 +430,16 @@ class TestAReconstrucao:
         assert escolha_de_c.citada.enviado_em == _comunicacao(a).enviado_em
         assert escolha_de_c.citada.vencimento == a.vencimento
 
+    def test_sem_anterior_nao_le_a_cadeia(self, caixa, cenario, gestor, django_assert_num_queries):
+        """A primeira chamada é a inicial sem consultar a cadeia: só a lista da chamada é lida."""
+        edital, _, _ = cenario
+        a = Convocacao.objects.select_related("versao").get(id=chamar(edital, gestor, chave="q").id)
+
+        with django_assert_num_queries(1):
+            escolha = escolha_de(a, instante=timezone.now())
+
+        assert escolha.modelo == INICIAL
+
     def test_a_variante_se_refaz(self, caixa, fx):
         cenario = jornada.montar("C1", fx)
         enviada = _comunicacao(cenario.convocacao)

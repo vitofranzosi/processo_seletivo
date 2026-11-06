@@ -242,3 +242,60 @@ class TestRecuperavelPeloGit:
 
         assert git("ls-files", "--error-unmatch", caminho).returncode == 0, caminho
         assert git("check-ignore", caminho).stdout == "", caminho
+
+
+class TestAFalhaNaMontagem:
+    """A chave já está reservada quando a mensagem se monta: nada pode subir dali sem registro, ou
+    a reserva ficaria aberta e cada nova tentativa diria "estado indeterminado"."""
+
+    def test_a_escolha_que_quebra_vira_falha_gravada(self, caixa, cenario, gestor, monkeypatch):
+        from processo_seletivo.convocacao.application import comunicar as modulo
+
+        def quebrar(convocacao, *, instante):
+            raise RuntimeError("banco fora")
+
+        edital, _, _ = cenario
+        a = chamar(edital, gestor, chave="m-escolha")
+        monkeypatch.setattr(modulo, "escolha_de", quebrar)
+
+        declarado = comunicar(edital, gestor, a, "m-escolha-com")
+
+        emitida = ComunicacaoEmitida.objects.get(id=declarado["id"])
+        assert (emitida.resultado, emitida.modelo_da_mensagem) == ("FALHA", "")
+        assert "falha na montagem da mensagem" in emitida.detalhe_tecnico
+        assert len(caixa) == 0
+
+    def test_a_renderizacao_que_quebra_grava_o_modelo(self, caixa, cenario, gestor, monkeypatch):
+        from processo_seletivo.convocacao.application import comunicar as modulo
+
+        def quebrar(dados):
+            raise KeyError("link")
+
+        edital, _, _ = cenario
+        a = chamar(edital, gestor, chave="m-render")
+        monkeypatch.setattr(modulo, "_contexto", quebrar)
+
+        declarado = comunicar(edital, gestor, a, "m-render-com")
+
+        emitida = ComunicacaoEmitida.objects.get(id=declarado["id"])
+        assert emitida.resultado == "FALHA"
+        assert emitida.modelo_da_mensagem == do_carregador("inicial"), "o modelo carregou"
+
+    def test_o_modelo_que_nao_carrega_vira_falha(self, caixa, cenario, gestor, tmp_path):
+        edital, _, _ = cenario
+        a = chamar(edital, gestor, chave="m-modelo")
+        pasta = tmp_path / "convocacao" / "mensagem"
+        pasta.mkdir(parents=True)
+        (pasta / "inicial.html").write_text("{% if %}", encoding="utf-8")
+        modelos = [dict(django_settings.TEMPLATES[0])]
+        modelos[0]["DIRS"] = [tmp_path, *modelos[0]["DIRS"]]
+
+        with override_settings(TEMPLATES=modelos):
+            declarado = comunicar(edital, gestor, a, "m-modelo-com")
+
+        emitida = ComunicacaoEmitida.objects.get(id=declarado["id"])
+        assert (emitida.resultado, emitida.modelo_da_mensagem) == ("FALHA", "")
+
+        # A chave não ficou presa: outra emissão, com a chave nova da tela, sai.
+        declarado = comunicar(edital, gestor, a, "m-modelo-de-novo")
+        assert declarado["resultado"] == "ENVIADA"

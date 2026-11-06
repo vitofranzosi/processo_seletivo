@@ -70,6 +70,7 @@ MODELOS = {
     CORRECAO: ("convocacao/mensagem/correcao.html", "convocacao/mensagem/correcao.txt"),
 }
 SEM_ENDERECO = "sem endereço de destino para esta Inscrição"
+FALHA_NA_MONTAGEM = "falha na montagem da mensagem"
 
 
 @dataclass(frozen=True)
@@ -341,12 +342,18 @@ def escolha_de(convocacao, *, instante):
     imediatamente anterior à raiz. A lista é a da raiz, que é a dona dela (D-009 da `115`); o
     Requerimento é o da versão que a convocação citou, e não o de hoje.
     """
-    da_inscricao = {
-        elo.id: elo
-        for elo in Convocacao.objects.filter(inscricao_id=convocacao.inscricao_id).prefetch_related(
-            "comunicacoes"
-        )
-    }
+    # Sem anterior não há cadeia a ler: a primeira chamada é a inicial, e é a maioria dos envios —
+    # na convocação em lote, a leitura seriam duas consultas por pessoa sem resposta nenhuma.
+    da_inscricao = (
+        {
+            elo.id: elo
+            for elo in Convocacao.objects.filter(
+                inscricao_id=convocacao.inscricao_id
+            ).prefetch_related("comunicacoes")
+        }
+        if convocacao.convocacao_anterior_id is not None
+        else {}
+    )
     anteriores, raiz_id = [], convocacao.id
     atual = da_inscricao.get(convocacao.convocacao_anterior_id)
     while atual is not None:
@@ -386,11 +393,18 @@ def _enviar(convocacao, *, destinatario, endereco_do_portal, agora=None, escolha
     certame, e o endereço de alguém não tem por que estar em nenhum dos dois.
     """
     agora = agora or timezone.now()
-    escolha = escolha or escolha_de(convocacao, instante=agora)
-    # A unidade do Edital assina e diz por onde falar (109, FR-3209, FR-3212). Uma leitura por
-    # envio, e o envio é de uma pessoa: a convocação por mensagem individual não sai em lote.
-    unidade = identificacao.da_unidade(convocacao.edital.institution_scope)
-    conteudo = convocacao.versao.content or {}
+    try:
+        escolha = escolha or escolha_de(convocacao, instante=agora)
+        # A unidade do Edital assina e diz por onde falar (109, FR-3209, FR-3212). Uma leitura por
+        # envio, e o envio é de uma pessoa: a convocação por mensagem individual não sai em lote.
+        unidade = identificacao.da_unidade(convocacao.edital.institution_scope)
+        conteudo = convocacao.versao.content or {}
+    except Exception as erro:
+        # **A chave já está reservada** quando se chega aqui: uma exceção que subisse deixaria a
+        # reserva sem registro, e toda nova tentativa com ela diria "estado indeterminado" por uma
+        # mensagem que nunca saiu. A falha vira `FALHA` gravada, como a do correio (`FR-269a`).
+        logger.exception("Falha ao montar a comunicação de convocação.")
+        return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", "")
     return enviar_mensagem_de_convocacao(
         para=destinatario,
         dados={
@@ -454,20 +468,32 @@ def enviar_mensagem_de_convocacao(*, para, dados):
     convocação e o que o Ifes nunca pede por e-mail.
 
     **A renderização vem antes da conferência do destinatário** (121, plano, seção 5): toda
-    tentativa
-    tem modelo, e a falha por endereço ausente também grava qual texto se tentou enviar. Nada sai a
-    mais: sem endereço, nada sai.
+    tentativa tem modelo, e a falha por endereço ausente também grava qual texto se tentou enviar.
+    Nada sai a mais: sem endereço, nada sai.
+
+    **Nenhuma exceção sai daqui** depois da reserva da chave: o modelo que não carrega, a
+    renderização que quebra e o correio que recusa voltam todos como `Envio` com detalhe, e o
+    comando grava a `FALHA` — com o modelo, sempre que ele chegou a carregar.
 
     **Nenhum link que autentica** (P-001 da `010`): o link leva à convocação, e a entrada continua
     sendo por código digitado.
     """
     nome = dados["escolha"].modelo
-    html_do_modelo, texto_do_modelo = (get_template(caminho) for caminho in MODELOS[nome])
-    contexto = _contexto(dados)
-    html = html_do_modelo.render(contexto)
-    assunto, corpo = _assunto_e_corpo(texto_do_modelo.render(contexto))
-    # O resumo das fontes que acabaram de renderizar, e não do arquivo relido do disco (R-009).
+    try:
+        html_do_modelo, texto_do_modelo = (get_template(caminho) for caminho in MODELOS[nome])
+    except Exception as erro:
+        logger.exception("Falha ao carregar o modelo da comunicação de convocação.")
+        return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", "")
+    # O resumo das fontes que o motor compilou e que renderizam logo abaixo, e não do arquivo
+    # relido do disco (R-009). Antes da renderização, para a falha dela também dizer o modelo.
     modelo = identificacao_do_modelo(nome, html_do_modelo, texto_do_modelo)
+    try:
+        contexto = _contexto(dados)
+        html = html_do_modelo.render(contexto)
+        assunto, corpo = _assunto_e_corpo(texto_do_modelo.render(contexto))
+    except Exception as erro:
+        logger.exception("Falha ao renderizar a comunicação de convocação.")
+        return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", modelo)
     if not para:
         return Envio(SEM_ENDERECO, modelo)
     mensagem = EmailMultiAlternatives(

@@ -1,4 +1,5 @@
 {% extends "portal/base.html" %}
+{% load prazo_da_convocacao %}
 {% load static %}
 {% block titulo %}{{ titulo_da_chamada }}{% endblock %}
 {% block conteudo %}
@@ -58,10 +59,10 @@ do prazo, e a correcao dita nele. A frase "Voce foi convocada(o)" saiu, porque o
   <dl class="meta">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
     {% if enviada_em %}
-    <dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y" }}, às {{ enviada_em|date:"H\hi" }}</dd>
+    <dt>Comunicação enviada em</dt><dd>{{ enviada_em|data_e_hora_do_prazo }}</dd>
     {% endif %}
     {% if convocacao.vencimento and not prazo_correndo %}
-    <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>
+    <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, contado do envio da comunicação</dd>
     {% endif %}
     {% if substituida %}<dt>Convocação substituída</dt><dd>{{ substituida }}</dd>{% endif %}
     <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>

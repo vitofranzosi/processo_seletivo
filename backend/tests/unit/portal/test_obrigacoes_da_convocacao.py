@@ -993,6 +993,25 @@ class TestAConfirmacaoDoEnvio:
             None,
         )
 
+    @pytest.mark.parametrize(
+        "momento", [o.ENCERRADA_PELO_PRAZO, o.ENCERRADA_PELO_PROCESSO, o.DECIDIDA]
+    )
+    def test_fechada_entre_o_envio_e_a_volta_nao_conclui_nada(self, momento):
+        """O prazo fechou depois do envio, com documento ainda sem envio: a confirmação diz o que
+        foi recebido, e nem próxima tarefa nem *"não tem mais documentos para enviar"*."""
+        recebido, apresentacao = self._enviado()
+        projetada = projetar([recebido, lido(nomes.ITEM_A_APRESENTAR)], momento)
+
+        confirmacao = o.confirmacao_do_envio(
+            projetada,
+            item_id=recebido.item.id,
+            apresentacao_id=apresentacao.id,
+            ja_recebido=False,
+        )
+
+        assert confirmacao.frase.startswith("Recebemos: Certidão de nascimento ou casamento")
+        assert (confirmacao.proxima, confirmacao.conclusao) == (None, "")
+
     def test_nunca_aceito_aprovado_conferido_nem_atendido(self):
         recebido, apresentacao = self._enviado()
         confirmacao = o.confirmacao_do_envio(

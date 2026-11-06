@@ -1,4 +1,4 @@
-{% extends "portal/base.html" %}{% load interface_extras %}
+{% extends "portal/base.html" %}{% load interface_extras %}{% load prazo_da_convocacao %}
 {% block titulo %}Acompanhar{% endblock %}
 {% block conteudo %}
 <h1>Acompanhar</h1>
@@ -39,7 +39,7 @@ As três partes aparecem sempre. "Nada por enquanto." é resposta, e não ausên
   {% if acao.aceite %}<p>{{ acao.aceite }}</p>{% endif %}
   {% if acao.link %}<p><a class="principal" href="{{ acao.link }}">{{ acao.link_rotulo }}</a></p>{% endif %}
   {% if acao.secundaria %}<p class="linha-secundaria">{{ acao.secundaria }} <a href="{{ acao.secundaria_link }}">{{ acao.secundaria_rotulo }}</a></p>{% endif %}
-  {% if acao.prazo %}<p class="prazo-da-convocacao"><strong>Prazo desta convocação:</strong> até {{ acao.prazo|date:"d/m/Y" }}, às {{ acao.prazo|date:"H\hi" }}.</p>{% endif %}
+  {% if acao.prazo %}<p class="prazo-da-convocacao"><strong>Prazo desta convocação:</strong> {{ acao.prazo|ate_o_prazo }}.</p>{% endif %}
   {% if acao.aviso_de_prazo %}<p class="aviso" role="status">{{ acao.aviso_de_prazo }}</p>{% endif %}
   {% if acao.consequencia %}<p class="consequencia">{{ acao.consequencia }}</p>{% endif %}
   {% if acao.canal %}<p class="meta">{{ acao.canal }}</p>{% endif %}

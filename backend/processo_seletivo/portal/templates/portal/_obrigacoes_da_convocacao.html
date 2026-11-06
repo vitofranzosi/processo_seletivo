@@ -1,4 +1,4 @@
-{% comment %}
+{% load prazo_da_convocacao %}{% comment %}
 A convocacao que pede documento, depois da chamada (118, FR-3735 a FR-3742, revistas pela 121).
 
 **A chamada saiu daqui** (121, FR-3859): o titulo por estado, a etapa, o cartao do prazo, o resumo, a
@@ -88,9 +88,9 @@ conclusao — "100 % enviado" leria como aprovado (FR-3865).
   <dl class="campos">
     <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
     <dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada</dd>
-    {% if enviada_em %}<dt>Comunicação enviada em</dt><dd>{{ enviada_em|date:"d/m/Y" }}, às {{ enviada_em|date:"H\hi" }}</dd>{% endif %}
+    {% if enviada_em %}<dt>Comunicação enviada em</dt><dd>{{ enviada_em|data_e_hora_do_prazo }}</dd>{% endif %}
     {% if substituida %}<dt>Convocação substituída</dt><dd>{{ substituida }}</dd>{% endif %}
-    {% if convocacao.vencimento %}<dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|date:"d/m/Y" }}, às {{ convocacao.vencimento|date:"H\hi" }}, contado do envio da comunicação</dd>{% endif %}
+    {% if convocacao.vencimento %}<dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, contado do envio da comunicação</dd>{% endif %}
     <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>
     <dt>Atendimento</dt><dd>{% include "portal/_atendimento.html" %}</dd>
   </dl>

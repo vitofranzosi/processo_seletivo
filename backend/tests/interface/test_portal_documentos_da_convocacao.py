@@ -425,6 +425,40 @@ class TestAConfirmacao:
         confirmacao = _texto(_confirmacao(tela(client, pessoa)))
         assert confirmacao == "Este arquivo já tinha sido recebido."
 
+    def test_a_volta_de_outra_inscricao_fica_para_ela(self, aluno, gestor, client):
+        """A sessão é da pessoa, e não da inscrição: a convocação de uma não consome a volta do
+        envio feito na outra, que continua guardada para quando aquela abrir."""
+        import uuid
+
+        from processo_seletivo.portal.views import (
+            CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO,
+            CHAVE_DA_RECUSA_DA_CONVOCACAO,
+        )
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        outra = str(uuid.uuid4())
+        sessao = client.session
+        sessao[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO] = {
+            "inscricao": outra,
+            "item_id": str(item(convocacao, CERTIDAO).id),
+            "apresentacao_id": str(uuid.uuid4()),
+            "ja_recebido": True,
+        }
+        sessao[CHAVE_DA_RECUSA_DA_CONVOCACAO] = {
+            "inscricao": outra,
+            "ancora": f"item-{item(convocacao, CERTIDAO).id}",
+            "frase": "Recusa de outra inscrição.",
+        }
+        sessao.save()
+
+        corpo = tela(client, pessoa)
+
+        assert 'id="confirmacao"' not in corpo and "Recusa de outra inscrição." not in corpo
+        guardado = client.session
+        assert guardado[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO]["inscricao"] == outra
+        assert guardado[CHAVE_DA_RECUSA_DA_CONVOCACAO]["inscricao"] == outra
+
 
 class TestARecusaNoCartao:
     """FR-3871: a volta é o cartão do item, com a recusa nele e o foco nela, e sem confirmação."""

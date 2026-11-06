@@ -109,6 +109,26 @@ Os 12 pulados: os 10 pares *termo × template* de `test_vocabulario_da_composica
 - ***"Você envia tudo pela sua área do candidato."*** saiu só na variante documento e Requerimento:
   nas outras, a frase da FR-3884 já diz por onde se envia, e em *"nenhum"* não há o que enviar.
 
+## A revisão de código
+
+A revisão do PR achou seis pontos, todos corrigidos e cobertos por teste:
+
+- **A confirmação com a chamada fechada entre o envio e a volta** dizia *"Você não tem mais
+  documentos para enviar agora"* acima de *"ficaram sem envio"*. Fechada a chamada, ela diz só o
+  que foi recebido.
+- **A volta do envio não guardava a inscrição**: a convocação de outra inscrição da mesma pessoa
+  consumia a confirmação ou a recusa. Os dois registros levam a inscrição, e só a convocação dela
+  os consome.
+- **Uma falha na escolha ou na montagem da mensagem subia depois da reserva da chave**, sem
+  registro, e cada nova tentativa diria *"estado indeterminado"*. Ela vira `FALHA` gravada, com o
+  modelo quando ele chegou a carregar.
+- **O prazo ainda era formatado à mão** no acompanhamento, na lista, nos dados do ato e no núcleo
+  do vencido. Passou pela função única (FR-3873), por dois filtros de template
+  (`portal/templatetags/prazo_da_convocacao.py`) e por `apresentar` em `frase_do_prazo_decorrido`.
+- **A cadeia era lida em todo envio**, também sem convocação anterior: duas consultas por pessoa na
+  convocação em lote. A primeira chamada não a lê.
+- **Uma condição repetida** no cartão do Requerimento saiu.
+
 ## Registrado, sem desenvolver
 
 Além dos dois achados do plano (a convocação sem `@resposta_privada`, e `_dias_ate`):
