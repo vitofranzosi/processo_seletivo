@@ -479,6 +479,16 @@
       "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_129_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8129"],
       "port": 8129,
       "url": "http://localhost:8129"
+    },
+    {
+      "name": "advertencia-130",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_130_demo DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true uv run python ../specs/130-advertencia-no-encerramento-do-processo/demonstracao/servidor.py 8130"
+      ],
+      "port": 8130,
+      "url": "http://localhost:8130"
     }
   ]
 }

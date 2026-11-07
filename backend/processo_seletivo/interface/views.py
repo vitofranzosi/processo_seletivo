@@ -173,6 +173,7 @@ from processo_seletivo.interface import (
     navegacao,
     origens,
     providencias,
+    relatorio_do_edital,
     revisao,
     trabalho,
 )
@@ -5671,24 +5672,38 @@ def praticar_ato_processo(request, processo_id, acao):
     if ato is None:
         raise Http404
 
-    pendentes = pending_editais(processo) if ato.depende_dos_editais else []
-    impedimento = atos_processo.impedimento(processo, ator, ato)
     contexto = {
         "processo": processo,
         "ato": ato,
-        # FR-018: o que impede é mostrado antes da tentativa, com caminho para cada pendência.
-        "pendentes": pendentes,
-        "impedimento": impedimento,
-        "recusa_certa": bool(impedimento) or bool(pendentes),
         "chave_idempotencia": request.POST.get("chave_idempotencia") or f"ui-{uuid4().hex}",
     }
+    motivo = (request.POST.get("motivo") or "").strip()
+    if ato.chave == "encerrar":
+        # Só no encerrar o motivo volta ao formulário: a renovação devolve a tela sem que o gestor
+        # tenha errado, e perder o texto dele ali seria castigo. Ativar e cancelar ficam como eram
+        # (FR-4364 da `130`).
+        contexto["motivo"] = motivo
+    _situacao_do_ato_processo(contexto, processo, ator, ato)
     if request.method == "GET":
         return render(request, "interface/processo_confirmar.html", contexto)
 
+    advertencia = contexto.get("advertencia")
+    if advertencia is not None and (
+        request.POST.get("resumo_das_providencias") != advertencia.resumo
+    ):
+        # **A lista mudou desde que a tela abriu** (130, FR-4365, D-005): a confirmação volta com a
+        # lista de agora, sem chamar o comando — e por isso sem reservar a chave de idempotência. É
+        # renovação, e não impedimento: confirmada de novo diante dela, encerra (FR-4366). Fica a
+        # janela entre esta releitura e a trava do comando, em que uma mudança não é vista.
+        contexto["renovada"] = True
+        return render(request, "interface/processo_confirmar.html", contexto, status=409)
+
+    if not motivo:
+        # A lista já foi lida neste pedido, logo acima: a tela volta com a de agora, sem relê-la.
+        contexto["erro"] = f"{ato.rotulo_motivo} é obrigatório."
+        return render(request, "interface/processo_confirmar.html", contexto, status=422)
+
     try:
-        motivo = (request.POST.get("motivo") or "").strip()
-        if not motivo:
-            raise DomainError("motivo_obrigatorio", f"{ato.rotulo_motivo} é obrigatório.", 422)
         ato.command(
             actor=ator,
             processo_id=processo.id,
@@ -5699,9 +5714,36 @@ def praticar_ato_processo(request, processo_id, acao):
         )
     except DomainError as exc:
         contexto["erro"] = exc.detail
-        contexto["pendentes"] = pending_editais(processo) if ato.depende_dos_editais else []
+        if ato.chave == "encerrar":
+            # **A situação de agora, e não a da abertura** (FR-4360 da `130`): o comando recusou,
+            # e o que mudou pode ser o próprio Processo. A advertência só volta se a tela ainda
+            # oferece o Confirmar.
+            processo.refresh_from_db()
+            _situacao_do_ato_processo(contexto, processo, ator, ato)
+        else:
+            contexto["pendentes"] = pending_editais(processo) if ato.depende_dos_editais else []
         return render(request, "interface/processo_confirmar.html", contexto, status=exc.status)
     return redirect(f"{reverse('interface:processo-detalhe', args=[processo.id])}?ato={ato.chave}")
+
+
+def _situacao_do_ato_processo(contexto, processo, ator, ato):
+    """O que a confirmação do ato do Processo diz antes da tentativa.
+
+    FR-018 da `002`: o que impede é mostrado antes, com caminho para cada pendência. No encerrar, e
+    só quando a tela oferece o Confirmar, as providências em aberto dos Editais finais (130,
+    FR-4357): com recusa certa a leitura não decide nada, e as contagens não são de quem não pode
+    praticar o ato (D-004 da `130`).
+    """
+    pendentes = pending_editais(processo) if ato.depende_dos_editais else []
+    impedimento = atos_processo.impedimento(processo, ator, ato)
+    recusa_certa = bool(impedimento) or bool(pendentes)
+    contexto.update(pendentes=pendentes, impedimento=impedimento, recusa_certa=recusa_certa)
+    contexto.pop("advertencia", None)
+    if ato.chave == "encerrar" and not recusa_certa:
+        # Um instante só para todos os Editais (FR-4361), e o bloco se fecha aqui: o comando abre a
+        # transação dele, com as travas, e dentro de um `REPEATABLE READ` leria o retrato do início.
+        with relatorio_do_edital.leitura_consistente():
+            contexto["advertencia"] = encerramento.do_processo(processo, ator, agora=timezone.now())
 
 
 @require_http_methods(["GET"])

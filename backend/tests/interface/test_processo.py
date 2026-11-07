@@ -48,8 +48,14 @@ def sem_publicacao(client, seletor_ligado):
 
 def ato(client, processo, acao, motivo="Ato motivado"):
     url = reverse("interface:processo-ato", args=[processo.id, acao])
-    chave = client.get(url).context["chave_idempotencia"]
-    return client.post(url, {"chave_idempotencia": chave, "motivo": motivo})
+    aberta = client.get(url)
+    dados = {"chave_idempotencia": aberta.context["chave_idempotencia"], "motivo": motivo}
+    # O encerrar confere se a lista de providências que a tela mostrou é a de agora (130, FR-4365):
+    # o envio leva o resumo dela, como o navegador leva o campo oculto.
+    advertencia = aberta.context.get("advertencia")
+    if advertencia is not None:
+        dados["resumo_das_providencias"] = advertencia.resumo
+    return client.post(url, dados)
 
 
 @pytest.mark.django_db(transaction=True)

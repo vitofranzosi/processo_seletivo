@@ -23,6 +23,26 @@
 </div>
 {% endif %}
 
+{% if renovada %}<p class="aviso" role="status" tabindex="-1" autofocus>As providências em aberto mudaram desde que você abriu esta tela. Confira a lista atual e confirme de novo.</p>{% endif %}
+
+{% if advertencia %}{% if advertencia.vazia %}
+<p class="aviso" role="status">Nenhuma providência em aberto registrada no GPS nos Editais deste Processo. O GPS não sabe se ainda haverá convocação do cadastro de reserva: a validade dele está no texto do Edital.</p>
+{% else %}
+<div class="aviso" role="status">
+  <p><strong>Em aberto nos Editais deste Processo</strong></p>
+  <p>Encerrar o Processo não conclui estas providências, e os Editais dele deixam de aceitar alteração.</p>
+  {% if advertencia.convocado_no_prazo %}<p>Quem foi convocado e ainda está no prazo não poderá mais apresentar documento nem enviar o Requerimento de Matrícula.</p>{% endif %}
+  {% for grupo in advertencia.grupos %}
+  <h3><a href="{% url 'interface:detalhe' grupo.edital.id %}">{{ grupo.edital.number }}/{{ grupo.edital.year }}</a>
+    — {{ grupo.edital.title }}
+    <span class="situacao s-{{ grupo.edital.status }}">{{ grupo.edital.status|situacao }}</span></h3>
+  <ul class="impedimentos">{% for item in grupo.itens %}
+    <li>{{ item.mensagem }}{% if item.url %} <a href="{{ item.url }}">{{ item.rotulo }}</a>{% elif item.a_quem_pedir %} {{ item.a_quem_pedir }}{% endif %}</li>
+  {% endfor %}</ul>
+  {% endfor %}
+</div>
+{% endif %}{% endif %}
+
 <section aria-labelledby="consequencias-titulo"
          class="consequencias {% if ato.irreversivel %}irreversivel{% endif %}">
   <h2 id="consequencias-titulo">
@@ -34,9 +54,10 @@
 <form method="post" class="confirmar">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  {% if advertencia %}<input type="hidden" name="resumo_das_providencias" value="{{ advertencia.resumo }}">{% endif %}
   <p class="campo largo">
     <label for="motivo">{{ ato.rotulo_motivo }} <span class="obrigatorio" aria-hidden="true">*</span></label>
-    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo" aria-required="true"></textarea>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo" aria-required="true">{{ motivo }}</textarea>
     <span class="ajuda" id="ajuda-motivo">Fica registrado no ato administrativo e na auditoria.</span>
   </p>
   <p class="salvar">
