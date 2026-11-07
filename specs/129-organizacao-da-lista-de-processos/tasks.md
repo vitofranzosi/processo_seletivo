@@ -58,7 +58,7 @@ junto da implementação de cada fase.
 - [X] T024 `cd backend && DB_NAME=ps_129 make lint check test-pg`; `migrate --check` sem migration nova
 - [X] T025 Verificação no navegador, a 1280 e a 375 px, como gestor e como julgador, com capturas em `specs/129-organizacao-da-lista-de-processos/capturas/` e a medida em telas (SC-1310)
 - [X] T026 `rastreabilidade.md` (todo FR-, SC-, UX- e D- da spec), `verificacao.md` (com o SC-1315, de validação humana, como pendente) e a linha da `129` no README
-- [ ] T027 Revisão independente por subagente; corrigir os achados
+- [X] T027 Revisão independente por subagente; corrigir os achados
 - [ ] T028 PR sem merge; conferir o CI
 
 ## Dependencies

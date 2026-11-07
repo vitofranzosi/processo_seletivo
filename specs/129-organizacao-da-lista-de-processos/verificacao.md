@@ -12,7 +12,19 @@ com a Constituição; nenhuma ambiguidade aberta.
 
 ## Suíte
 
-SUITE
+`make lint check test-pg` com `DB_NAME=ps_129`, 4 workers, sem os grupos opcionais `assistente` e
+`navegador` (por isso 21 pulados, e não 12: os do vocabulário, a recusa por vendor, o E2E da Caixa, o
+tokenizer e os dois arquivos de jornada no navegador, entre outros).
+
+| Rodada | Resultado |
+|---|---|
+| 1ª, com a implementação e os testes que a tarefa já previa ajustados | **17115 passando, 21 pulados, 5 falhas** (805s) — as cinco liam a coluna ou a tabela que saíram, e estão na tabela abaixo |
+| depois da revisão independente | os arquivos da feature e os guardiões, verdes; lint verde |
+| 2ª, depois de sincronizar com a `main` (com a `130`, #421) | **17154 passando, 21 pulados, sem falha** (749s); `make lint check` verde; `makemigrations --check`: *No changes detected* |
+
+O merge com a `main` teve dois conflitos de texto, nas linhas da `129` e da `130` do README e nas
+entradas `lista-129` e `advertencia-130` do `.claude/launch.json`; ficaram os dois lados.
+`tests/performance/test_trabalho_em_escala.py` (a medida da `104`) passou sem mudança (T022).
 
 ## Os testes que mudaram (Compatibilidade da spec)
 
