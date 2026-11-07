@@ -1,0 +1,5 @@
+{"situacao": "S0", "faixa": ["Decidir recursos (1)"], "detalhe_existe": true, "detalhe": [["Decidir recursos (1)", true, "/gestao/editais/05a2345b-a9b2-46ba-a882-f2450157352d/recursos"]], "alcance_pratica_julga": true}
+{"situacao": "S1", "faixa": ["Decidir recursos (1)"], "detalhe_existe": true, "detalhe": [["Decidir recursos (1)", true, "/gestao/editais/a0c09177-aa3e-432b-82ab-810a91a056b4/recursos"]], "alcance_pratica_julga": true}
+{"situacao": "S2", "faixa": ["Decidir recursos (1)"], "detalhe_existe": true, "detalhe": [["Decidir recursos (1)", true, "/gestao/editais/4499a753-1652-4f26-b15e-aa90af16bd7f/recursos"]], "alcance_pratica_julga": false}
+{"situacao": "S3", "faixa": ["Decidir recursos (1)"], "detalhe_existe": false, "detalhe": [], "alcance_pratica_julga": false}
+{"situacao": "S3b", "faixa": ["Decidir recursos (1)"], "detalhe_existe": true, "detalhe": [["Decidir recursos (1)", true, "/gestao/editais/ee954202-8271-4832-b12f-00bcc328e71a/recursos"]], "alcance_pratica_julga": false}

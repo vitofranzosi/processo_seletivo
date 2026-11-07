@@ -1,0 +1,50 @@
+"""Exploratório, temporário: a D-021 da 127 contra o recurso no Processo final. Não versionar."""
+
+import json
+import os
+
+import pytest
+
+from processo_seletivo.processos.models import Edital, ProcessoSeletivo
+
+pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+
+SITUACOES = {
+    "S0": (Edital.Status.PUBLICADO, ProcessoSeletivo.Status.ATIVO),
+    "S1": (Edital.Status.ENCERRADO, ProcessoSeletivo.Status.ATIVO),
+    "S2": (Edital.Status.ENCERRADO, ProcessoSeletivo.Status.ENCERRADO),
+    "S3": (Edital.Status.CANCELADO, ProcessoSeletivo.Status.CANCELADO),
+    "S3b": (Edital.Status.ENCERRADO, ProcessoSeletivo.Status.CANCELADO),
+}
+
+
+@pytest.mark.parametrize("situacao", list(SITUACOES))
+def test_recurso_pendente_na_faixa_e_no_detalhe(
+    situacao, gestor, api_client, manager_headers, process_payload
+):
+    from processo_seletivo.interface import andamento, trabalho
+    from tests.fixtures.recursos_us4 import cenario_julgavel, julgador
+
+    peca = cenario_julgavel(
+        gestor, api_client, manager_headers, process_payload,
+        seed=911, codigo="0911", admitir_a_peca=False,
+    )
+    edital = peca["inscricao"].edital
+    st_e, st_p = SITUACOES[situacao]
+    Edital.objects.filter(pk=edital.pk).update(status=st_e)
+    ProcessoSeletivo.objects.filter(pk=edital.processo_id).update(status=st_p)
+    edital = Edital.objects.select_related("processo").get(pk=edital.pk)
+
+    ator = julgador()
+    faixa = [o for o in trabalho.do_ator(ator, [edital]) if o.natureza == "recursos"]
+    det = andamento.do_edital(edital, ator)
+    provs = [] if det is None else [p for p in det.providencias if p.natureza == andamento.RECURSO]
+    linha = {
+        "situacao": situacao,
+        "faixa": [o.ato for o in faixa],
+        "detalhe_existe": det is not None,
+        "detalhe": [(p.ato, p.sua, getattr(p, "url", "")) for p in provs],
+        "alcance_pratica_julga": andamento.Alcance.de(ator, edital).pratica(andamento.JULGA),
+    }
+    with open(os.environ["ESTUDO_SAIDA"], "a", encoding="utf-8") as f:
+        f.write(json.dumps(linha, ensure_ascii=False, default=str) + "\n")
