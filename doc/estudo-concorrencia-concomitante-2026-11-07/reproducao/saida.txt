@@ -1,0 +1,232 @@
+##### cenário A
+A. Continuação do caso Helena
+  apurar PPI: 1/1/1 (pub/efet/ocup)
+  prévia 'Convocar titulares' em PPI: ['Helena']
+  [e-mail de convocação impresso no console; nada saiu]
+    gesto confirmado: OK
+  ACEITE de Helena em PPI: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1}
+  apurar PPI: 1/1/1 (pub/efet/ocup)
+=== Edital 93/2026 22d2c6db-d3c9-43e4-94aa-53b54933675c
+--- recorte AMPLA perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=2 efet=2 ocup=1 emitida=07/11 01:45 causas=[]
+  progrediram (ordem): ['Helena', 'Fábio', 'Davi', 'Ícaro']
+  convocação Helena   VAGA_INICIAL   -> DESISTENCIA_EXPRESSA
+  convocação Fábio    VAGA_INICIAL   -> ACEITE
+  convocação Davi     SUPLENCIA      -> —
+  titulares (recalc.): ['Helena', 'Fábio']
+  ocupando (recalc.):  ['Fábio']
+  servidos: ['Fábio'] encerrados: ['Helena'] emAberto: ['Davi']
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 1, 'faltando': 1, 'estado': 'CURRENT'}
+--- recorte 30cdeae3 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=1 emitida=07/11 19:01 causas=[]
+  progrediram (ordem): ['Helena', 'Carla']
+  ocupantes da ampla (hoje): ['Fábio']
+  convocação Carla    VAGA_INICIAL   -> ACEITE
+  convocação Helena   VAGA_INICIAL   -> ACEITE
+  titulares (recalc.): ['Helena']
+  ocupando (recalc.):  ['Helena', 'Carla']
+  servidos: ['Helena', 'Carla'] encerrados: [] emAberto: []
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1, 'faltando': 0, 'estado': 'CURRENT'}
+--- recorte cfed95c1 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=0 emitida=07/11 01:45 causas=[]
+  progrediram (ordem): ['Bruno', 'Gael', 'Ícaro']
+  ocupantes da ampla (hoje): ['Fábio']
+  convocação Bruno    VAGA_INICIAL   -> INDEFERIMENTO
+  convocação Gael     SUPLENCIA      -> —
+  titulares (recalc.): ['Bruno']
+  ocupando (recalc.):  []
+  servidos: [] encerrados: ['Bruno'] emAberto: ['Gael']
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0, 'faltando': 1, 'estado': 'CURRENT'}
+
+##### cenário B2
+B2. Dupla ocupação: regulariza na PcD, aceita na ampla
+  DESISTENCIA_EXPRESSA de Gael em PcD: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0}
+  convocar Ícaro em PcD: OK, espécie PARA_REGULARIZAR
+  REGULARIZACAO de Ícaro em PcD: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1}
+  DESISTENCIA_EXPRESSA de Davi em AMPLA: OK; apuração seguinte do mesmo recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 1}
+  convocar Ícaro em AMPLA: OK, espécie SUPLENCIA
+  ACEITE de Ícaro em AMPLA: OK; apuração seguinte do mesmo recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 2}
+  apurar PcD: 1/1/1 (pub/efet/ocup)
+=== Edital 93/2026 22d2c6db-d3c9-43e4-94aa-53b54933675c
+--- recorte AMPLA perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=2 efet=2 ocup=2 emitida=07/11 19:02 causas=[]
+  progrediram (ordem): ['Helena', 'Fábio', 'Davi', 'Ícaro']
+  convocação Helena   VAGA_INICIAL   -> DESISTENCIA_EXPRESSA
+  convocação Fábio    VAGA_INICIAL   -> ACEITE
+  convocação Davi     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  convocação Ícaro    SUPLENCIA      -> ACEITE
+  titulares (recalc.): ['Helena', 'Fábio']
+  ocupando (recalc.):  ['Ícaro', 'Fábio']
+  servidos: ['Fábio', 'Ícaro'] encerrados: ['Helena', 'Davi'] emAberto: []
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 2, 'faltando': 0, 'estado': 'CURRENT'}
+--- recorte 30cdeae3 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=1 emitida=07/11 01:45 causas=[]
+  progrediram (ordem): ['Helena', 'Carla']
+  ocupantes da ampla (hoje): ['Ícaro', 'Fábio']
+  convocação Carla    VAGA_INICIAL   -> ACEITE
+  titulares (recalc.): ['Helena']
+  ocupando (recalc.):  ['Carla', 'Helena']
+  servidos: ['Carla'] encerrados: [] emAberto: []
+  fila: ['Helena']
+  prévia 'Convocar titulares': ['Helena'] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1, 'faltando': 0, 'estado': 'CURRENT'}
+--- recorte cfed95c1 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=1 emitida=07/11 19:02 causas=[]
+  progrediram (ordem): ['Bruno', 'Gael', 'Ícaro']
+  ocupantes da ampla (hoje): ['Ícaro', 'Fábio']
+  convocação Bruno    VAGA_INICIAL   -> INDEFERIMENTO
+  convocação Gael     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  convocação Ícaro    PARA_REGULARIZAR -> REGULARIZACAO
+  titulares (recalc.): ['Bruno']
+  ocupando (recalc.):  ['Ícaro']
+  servidos: ['Ícaro'] encerrados: ['Gael', 'Bruno'] emAberto: []
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1, 'faltando': 0, 'estado': 'CURRENT'}
+
+##### cenário C
+C. Desistência na reservada não alcança a ampla
+  DESISTENCIA_EXPRESSA de Gael em PcD: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0}
+  convocar Ícaro em PcD: OK, espécie PARA_REGULARIZAR
+  DESISTENCIA_EXPRESSA de Ícaro em PcD: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0}
+  DESISTENCIA_EXPRESSA de Davi em AMPLA: OK; apuração seguinte do mesmo recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 1}
+  convocar Ícaro em AMPLA: OK, espécie PARA_REGULARIZAR
+=== Edital 93/2026 22d2c6db-d3c9-43e4-94aa-53b54933675c
+--- recorte AMPLA perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=2 efet=2 ocup=1 emitida=07/11 19:01 causas=[]
+  progrediram (ordem): ['Helena', 'Fábio', 'Davi', 'Ícaro']
+  convocação Helena   VAGA_INICIAL   -> DESISTENCIA_EXPRESSA
+  convocação Fábio    VAGA_INICIAL   -> ACEITE
+  convocação Davi     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  convocação Ícaro    PARA_REGULARIZAR -> —
+  titulares (recalc.): ['Helena', 'Fábio']
+  ocupando (recalc.):  ['Fábio']
+  servidos: ['Fábio'] encerrados: ['Helena', 'Davi'] emAberto: ['Ícaro']
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 1, 'faltando': 1, 'estado': 'CURRENT'}
+--- recorte 30cdeae3 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=1 emitida=07/11 01:45 causas=[]
+  progrediram (ordem): ['Helena', 'Carla']
+  ocupantes da ampla (hoje): ['Fábio']
+  convocação Carla    VAGA_INICIAL   -> ACEITE
+  titulares (recalc.): ['Helena']
+  ocupando (recalc.):  ['Carla', 'Helena']
+  servidos: ['Carla'] encerrados: [] emAberto: []
+  fila: ['Helena']
+  prévia 'Convocar titulares': ['Helena'] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1, 'faltando': 0, 'estado': 'CURRENT'}
+--- recorte cfed95c1 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=0 emitida=07/11 19:01 causas=[]
+  progrediram (ordem): ['Bruno', 'Gael', 'Ícaro']
+  ocupantes da ampla (hoje): ['Fábio']
+  convocação Bruno    VAGA_INICIAL   -> INDEFERIMENTO
+  convocação Gael     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  convocação Ícaro    PARA_REGULARIZAR -> DESISTENCIA_EXPRESSA
+  titulares (recalc.): ['Bruno']
+  ocupando (recalc.):  []
+  servidos: [] encerrados: ['Ícaro', 'Gael', 'Bruno'] emAberto: []
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0, 'faltando': 1, 'estado': 'CURRENT'}
+
+##### cenário C2
+C2. Desistência na reservada, depois de ocupar, não alcança a ampla
+  DESISTENCIA_EXPRESSA de Gael em PcD: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0}
+  convocar Ícaro em PcD: OK, espécie PARA_REGULARIZAR
+  REGULARIZACAO de Ícaro em PcD: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1}
+  INERCIA de Ícaro em PcD: RECUSA desfecho_ja_registrado: Esta convocação já tem desfecho registrado. Um fato posterior — o cancelamento por inércia de quem havia aceitado, por exemplo — o sucede, e a sucessão exige motivo; o desfecho anterior continua legível.
+  DESISTENCIA_EXPRESSA de Davi em AMPLA: OK; apuração seguinte do mesmo recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 1}
+  convocar Ícaro em AMPLA: OK, espécie SUPLENCIA
+=== Edital 93/2026 22d2c6db-d3c9-43e4-94aa-53b54933675c
+--- recorte AMPLA perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=2 efet=2 ocup=1 emitida=07/11 19:02 causas=[]
+  progrediram (ordem): ['Helena', 'Fábio', 'Davi', 'Ícaro']
+  convocação Helena   VAGA_INICIAL   -> DESISTENCIA_EXPRESSA
+  convocação Fábio    VAGA_INICIAL   -> ACEITE
+  convocação Davi     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  convocação Ícaro    SUPLENCIA      -> —
+  titulares (recalc.): ['Helena', 'Fábio']
+  ocupando (recalc.):  ['Fábio']
+  servidos: ['Fábio'] encerrados: ['Helena', 'Davi'] emAberto: ['Ícaro']
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 1, 'faltando': 1, 'estado': 'CURRENT'}
+--- recorte 30cdeae3 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=1 emitida=07/11 01:45 causas=[]
+  progrediram (ordem): ['Helena', 'Carla']
+  ocupantes da ampla (hoje): ['Fábio']
+  convocação Carla    VAGA_INICIAL   -> ACEITE
+  titulares (recalc.): ['Helena']
+  ocupando (recalc.):  ['Carla', 'Helena']
+  servidos: ['Carla'] encerrados: [] emAberto: []
+  fila: ['Helena']
+  prévia 'Convocar titulares': ['Helena'] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1, 'faltando': 0, 'estado': 'CURRENT'}
+--- recorte cfed95c1 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=1 emitida=07/11 19:02 causas=[]
+  progrediram (ordem): ['Bruno', 'Gael', 'Ícaro']
+  ocupantes da ampla (hoje): ['Fábio']
+  convocação Bruno    VAGA_INICIAL   -> INDEFERIMENTO
+  convocação Gael     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  convocação Ícaro    PARA_REGULARIZAR -> REGULARIZACAO
+  titulares (recalc.): ['Bruno']
+  ocupando (recalc.):  ['Ícaro']
+  servidos: ['Ícaro'] encerrados: ['Gael', 'Bruno'] emAberto: []
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1, 'faltando': 0, 'estado': 'CURRENT'}
+
+##### cenário D2
+D2. Ordem inversa: ampla primeiro
+  DESISTENCIA_EXPRESSA de Davi em AMPLA: OK; apuração seguinte do mesmo recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 1}
+  convocar Ícaro em AMPLA: OK, espécie PARA_REGULARIZAR
+  REGULARIZACAO de Ícaro em AMPLA: OK; apuração seguinte do mesmo recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 2}
+  DESISTENCIA_EXPRESSA de Gael em PcD: OK; apuração seguinte do mesmo recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0}
+  convocar Ícaro em PcD: RECUSA lista_alcancada_esgotada: Não há mais quem chamar dentro da faixa que o corte alcançou neste recorte. Ampliar a faixa é ato do corte.
+  apurar PcD: 1/1/0 (pub/efet/ocup)
+=== Edital 93/2026 22d2c6db-d3c9-43e4-94aa-53b54933675c
+--- recorte AMPLA perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=2 efet=2 ocup=2 emitida=07/11 19:02 causas=[]
+  progrediram (ordem): ['Helena', 'Fábio', 'Davi', 'Ícaro']
+  convocação Helena   VAGA_INICIAL   -> DESISTENCIA_EXPRESSA
+  convocação Fábio    VAGA_INICIAL   -> ACEITE
+  convocação Davi     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  convocação Ícaro    PARA_REGULARIZAR -> REGULARIZACAO
+  titulares (recalc.): ['Helena', 'Fábio']
+  ocupando (recalc.):  ['Fábio', 'Ícaro']
+  servidos: ['Fábio', 'Ícaro'] encerrados: ['Helena', 'Davi'] emAberto: []
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 2, 'efetivas': 2, 'ocupadas': 2, 'faltando': 0, 'estado': 'CURRENT'}
+--- recorte 30cdeae3 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=1 emitida=07/11 01:45 causas=[]
+  progrediram (ordem): ['Helena', 'Carla']
+  ocupantes da ampla (hoje): ['Fábio', 'Ícaro']
+  convocação Carla    VAGA_INICIAL   -> ACEITE
+  titulares (recalc.): ['Helena']
+  ocupando (recalc.):  ['Helena', 'Carla']
+  servidos: ['Carla'] encerrados: [] emAberto: []
+  fila: ['Helena']
+  prévia 'Convocar titulares': ['Helena'] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 1, 'faltando': 0, 'estado': 'CURRENT'}
+--- recorte cfed95c1 perfil=240b7f2c marco=c1895070
+  apuração vigente: pub=1 efet=1 ocup=0 emitida=07/11 19:02 causas=[]
+  progrediram (ordem): ['Bruno', 'Gael', 'Ícaro']
+  ocupantes da ampla (hoje): ['Fábio', 'Ícaro']
+  convocação Bruno    VAGA_INICIAL   -> INDEFERIMENTO
+  convocação Gael     SUPLENCIA      -> DESISTENCIA_EXPRESSA
+  titulares (recalc.): ['Bruno']
+  ocupando (recalc.):  []
+  servidos: [] encerrados: ['Gael', 'Bruno'] emAberto: []
+  fila: []
+  prévia 'Convocar titulares': [] impedimento=None
+  ocupacao_do_recorte: {'publicadas': 1, 'efetivas': 1, 'ocupadas': 0, 'faltando': 1, 'estado': 'CURRENT'}
