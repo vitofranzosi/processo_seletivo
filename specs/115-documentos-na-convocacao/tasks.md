@@ -63,6 +63,7 @@ referência.
 ### Tests
 
 - [X] T014 [P] [US1] `tests/integration/convocacao/test_lista_da_convocacao.py`: lista na raiz (individual, lote de titulares, suplência, para regularizar); sucessora sem lista própria; Retificação posterior não altera; chamada nova grava lista nova; convocação anterior sem lista; sem exigência = sem itens (FR-3572 a FR-3575)
+  - *Nota de 07/11/2026:* o arquivo nunca existiu. Os casos foram para `test_documentos_da_convocacao.py`, sem o do lote de titulares — e o lote não gravava a lista. Corrigido na Phase 9 (T057 a T062).
 - [X] T015 [P] [US3] `tests/integration/convocacao/test_aproveitamento.py`: referência sem cópia (nenhum arquivo novo no armazenamento, mesmo hash); sem documento na inscrição, a apresentar; nada entre inscrições (FR-3576, SC-1083)
 - [X] T016 [P] [US1] `tests/integration/convocacao/test_apresentacao.py`: versões, vigente, substituição da referência, recusas (FR-3577 a FR-3580, FR-3582, FR-3583)
 - [X] T017 [P] [US1] `tests/integration/convocacao/test_concorrencia_da_apresentacao.py` (transacional): idempotência, mesmo hash, duplo envio concorrente (FR-3581)
@@ -88,6 +89,7 @@ referência.
 - [X] T025 [P] [US1] `tests/unit/convocacao/test_estado_documental.py`: tabelas da FR-3590 e da FR-3591, precedência
 - [X] T026 [P] [US1] `tests/integration/convocacao/test_conferencia.py`: os três resultados e os motivos; substituição; versão superada; depois do desfecho; depois do vencimento; "conforme" sem abertura (FR-3585 a FR-3589, FR-3611)
 - [X] T027 [P] [US1] `tests/integration/convocacao/test_guarda_do_aceite.py`: aceite e regularização recusados; facultativo adverte; os outros desfechos livres; desfecho sucessor que inclui também guardado (FR-3592, FR-3593, SC-1086)
+  - *Nota de 07/11/2026:* o arquivo também nunca existiu; a guarda está provada em `test_documentos_da_convocacao.py` e, desde a Phase 9, em `test_lista_da_chamada_no_gesto.py`.
 - [X] T028 [P] [US4] `tests/integration/convocacao/test_vencimento_sem_automatismo.py`: nada nasce do decurso; recusa do envio; a sucessão com vencimento novo reabre o envio e mantém a lista (FR-3593, FR-3618)
 
 ### Implementation
@@ -142,6 +144,21 @@ referência.
 - [X] T049 `specs/115-documentos-na-convocacao/rastreabilidade.md`: todo FR, SC e caso-limite → tarefa → teste
 - [X] T050 Verificação completa: `make lint check test-pg` com os dois grupos opcionais; anotar em `verificacao.md` os totais e a diferença de pulados por arquivo e motivo, em relação à T002
 - [X] T051 Percorrer o [quickstart](quickstart.md) no navegador do painel e registrar as capturas — percorrido pelo Playwright, com as capturas das telas do candidato e da comissão (`verificacao.md`), e não pelo painel
+
+---
+
+## Phase 9: Correção de 07/11/2026 — a lista no gesto de titulares (P0)
+
+**Goal**: toda raiz de chamada grava a lista, e o desfecho que inclui não passa sem ela (FR-3572
+revista, FR-4401, SC-1341, D-020). Sem modelo novo, sem migration, sem reparo de registros.
+
+- [X] T057 Auditoria dos caminhos que criam `Convocacao`: só a chamada individual (vaga inicial, suplência, para regularizar, correção por sucessão e correção pela tela da `120`) e o gesto de titulares (`convocar_em_sequencia`); só o segundo não gravava. Contagem nos bancos locais (D-020; `verificacao.md`)
+- [X] T058 [P] `tests/integration/convocacao/test_lista_da_chamada_no_gesto.py`: individual, para regularizar e lote com obrigatórios, equivalência entre os caminhos, recorte por modalidade, facultativo, aproveitamento da inscrição, Edital sem documento na convocação, aceite e regularização com lista ausente ou incompleta, desfecho que não inclui, falha na gravação sem persistência parcial, repetição sem duplicar, herança na correção (FR-3572, FR-4401, SC-1341)
+- [X] T059 `convocacao/application/convocar.py`: `convocar_em_sequencia` chama `gravar_lista_da_chamada` com a versão do gesto, dentro do laço e da transação (FR-3572)
+- [X] T060 `convocacao/application/documentos.py` (`faltas_na_lista`), `convocacao/application/desfechar.py` e `convocacao/domain/nomes.py`: a guarda da FR-4401 antes da FR-3592, com o código `lista_da_convocacao_incompleta`
+- [X] T061 `spec.md` (FR-3572 revista, FR-4401, SC-1341, caso-limite, D-020), `rastreabilidade.md` e `verificacao.md`
+- [X] T062 Verificação: `make lint check test-pg`; os testes novos falham com a correção desligada (13 de 16)
+- [X] T063 Revisão final (07/11/2026): a D-020 separa os dados de demonstração, que não se reparam, da hipótese de registros reais, que pediria análise institucional antes de qualquer alteração; pendências 11 a 13 registradas (UX da lista incompleta, registros reais, "não se aplica" em spec própria); caso positivo da convocação para regularizar
 
 ---
 

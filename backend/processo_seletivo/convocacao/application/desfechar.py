@@ -194,10 +194,28 @@ def _recusar_inclusao_sem_documentos(convocacao, *, especie):
     """
     if especie not in nomes.DESFECHOS_QUE_INCLUEM:
         return
-    from processo_seletivo.convocacao.application.documentos import leitura_da_chamada
+    from processo_seletivo.convocacao.application.documentos import (
+        faltas_na_lista,
+        leitura_da_chamada,
+    )
     from processo_seletivo.inscricoes.models import Inscricao
 
     Inscricao.objects.select_for_update().filter(pk=convocacao.inscricao_id).first()
+    # **Antes das pendências, e não junto delas** (FR-4401, D-020). A leitura só vê os itens
+    # gravados: sem a lista, ela diz "sem exigência" e o aceite passa — foi assim que o gesto de
+    # titulares registrou aceite sem documento nenhum. A falta é do registro, e não da pessoa
+    # convocada, e a recusa diz isso, em vez de mandar conferir o que ninguém pode apresentar.
+    faltas = faltas_na_lista(convocacao)
+    if faltas:
+        raise DomainError(
+            nomes.LISTA_DA_CONVOCACAO_INCOMPLETA,
+            "Esta convocação foi registrada sem a lista de documentos que o Edital pede a esta "
+            f"pessoa — falta: {', '.join(faltas)}. Sem a lista não há como saber se os documentos "
+            "foram apresentados e conferidos, e este desfecho não pode ser registrado. Nada foi "
+            "gravado. A falha é do registro da convocação, e não da pessoa convocada: comunique o "
+            "suporte do sistema.",
+            409,
+        )
     pendentes = leitura_da_chamada(convocacao).pendencias_para_incluir
     if not pendentes:
         return

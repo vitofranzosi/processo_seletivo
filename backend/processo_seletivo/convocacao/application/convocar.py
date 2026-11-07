@@ -800,6 +800,14 @@ def convocar_em_sequencia(
             criado_em=ctx.now,
         )
         convocacao.save()
+        # **A mesma rotina, com a mesma versão, que a chamada individual usa** (115, FR-3572). O
+        # gesto nasceu na `050`, antes de a convocação pedir documento, e a `115` só ligou a lista
+        # ao caminho individual: as convocações do gesto saíam sem lista, e o aceite passava sem
+        # documento nenhum. A gravação fica dentro do laço, e não depois dele, para que a falha de
+        # uma pessoa desfaça o gesto inteiro pela mesma transação que desfaz as recusas.
+        from processo_seletivo.convocacao.application.documentos import gravar_lista_da_chamada
+
+        gravar_lista_da_chamada(convocacao, versao=versao)
         _auditar(ctx, convocacao, actor, correlation_id, "", razao_adicional=razao_adicional)
         # **O que uma releitura diria, sem relê-la.** A pessoa sai da fila e passa a ter chamada
         # em aberto; a próxima do gesto é, a partir daqui, a primeira da fila.
