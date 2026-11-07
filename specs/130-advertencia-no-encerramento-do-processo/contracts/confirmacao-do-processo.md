@@ -45,7 +45,7 @@ Campos: `chave_idempotencia` e `motivo` (de hoje), mais `resumo_das_providencias
 |---|---|---|
 | não confirmável (impedimento ou pendentes) | o de hoje | segue ao comando, como hoje; sem releitura |
 | confirmável, resumo ausente ou diferente do recalculado | **409** | **não chama o comando**; reapresenta com a lista atual, o resumo novo, a mensagem da UX-279 (com foco) e o motivo enviado; a mesma chave de idempotência (FR-4365, FR-4366) |
-| confirmável, resumo igual, motivo vazio | 422 | "Motivo do encerramento é obrigatório."; relê e mostra o bloco (FR-4360) |
+| confirmável, resumo igual, motivo vazio | 422 | "Motivo do encerramento é obrigatório."; o bloco é o lido neste pedido, sem segunda leitura (FR-4360) |
 | confirmável, resumo igual, comando recusa (revisão, Edital que deixou de ser final…) | o do comando | relê `pendentes`, `impedimento` e, se ainda confirmável, a advertência (FR-4360) |
 | confirmável, resumo igual, comando aceita | 302 | ao detalhe do Processo, `?ato=encerrar`, como hoje; nada da advertência é gravado (FR-4363) |
 

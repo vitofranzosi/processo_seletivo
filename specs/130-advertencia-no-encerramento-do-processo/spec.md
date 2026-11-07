@@ -99,7 +99,7 @@ Fica fora, de propósito:
 ### User Story 1 — O gestor vê o convocado que o encerramento vai cortar (Priority: P1)
 
 O gestor com permissão de encerrar abre "Encerrar Processo" num Processo ativo cujos Editais estão todos
-Encerrados ou Cancelados. Num deles há duas convocações aguardando resposta, com prazo até 20/11. Antes
+Encerrados ou Cancelados. Num deles há duas convocações aguardando resposta, com prazo até 20/11/2026. Antes
 do motivo, a confirmação mostra um bloco com o Edital, a frase da convocação e o que acontece com quem
 está no prazo. O gestor decide: volta e espera o prazo, ou encerra assim mesmo, sabendo.
 
@@ -114,7 +114,7 @@ confirmação e ler o bloco; depois confirmar e verificar que o encerramento é 
 1. **Given** um Processo ativo com um Edital encerrado que tem 2 convocações aguardando resposta até
    20/11, **When** o gestor abre "Encerrar Processo", **Then** a confirmação mostra o bloco das
    providências em aberto, com o Edital identificado por número, ano e título, a frase "2 convocações
-   aguardando resposta, até 20/11." e a frase de que quem está no prazo não poderá mais apresentar
+   aguardando resposta, até 20/11/2026." e a frase de que quem está no prazo não poderá mais apresentar
    documento nem enviar o Requerimento de Matrícula.
 2. **Given** a mesma confirmação, **When** o gestor preenche o motivo e confirma, **Then** o Processo é
    encerrado, como hoje, e nada além do motivo é gravado.

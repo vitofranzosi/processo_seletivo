@@ -55,7 +55,7 @@ fixa, cada uma com o que se escolheu, por quê e o que se descartou. Tudo foi co
 ## R-5 — O resumo da lista: um hash das frases, num campo oculto, sem assinatura
 
 - **Decisão**: `resumo = sha256` sobre a serialização canônica (JSON ordenado) de
-  `[(id do Edital, [mensagem de cada item, na ordem])]`, em hexadecimal. Ele vai num
+  `[(id do Edital, [mensagens do Edital, ordenadas])]`, em hexadecimal. As frases de cada Edital entram ordenadas porque a regra da `113` percorre os recortes de resultado sem `order_by`: a ordem dos prazos de recurso entre marcos é a do banco, e mudaria o resumo sem nada ter mudado (achado da revisão independente). Ele vai num
   `<input type="hidden" name="resumo_das_providencias">`. No POST, a view relê a advertência e compara o
   resumo enviado com o recalculado. Qualquer diferença, ou a ausência do campo, leva à reapresentação
   (FR-4365).
@@ -81,9 +81,11 @@ fixa, cada uma com o que se escolheu, por quê e o que se descartou. Tudo foi co
 - **A ordem no POST**: primeiro a renovação, depois o motivo. Com a lista mudada e o motivo vazio, a
   tela volta com a renovação e o motivo continua vazio; o erro do motivo vem no envio seguinte, se for
   o caso. Assim o gestor nunca é levado ao comando sem ter visto a lista atual.
-- **Na recusa do comando** (409 de revisão, 422 do motivo): a view recalcula `pendentes`, o
-  `impedimento` e, se a tela ainda oferece o Confirmar, a advertência e o resumo (FR-4360). Hoje ela
-  recalcula só os pendentes.
+- **O motivo vazio** é conferido depois da renovação e antes do comando, e a tela volta (422) com a
+  lista lida no próprio pedido, sem relê-la.
+- **Na recusa do comando**, só no encerrar: a view relê o Processo, `pendentes`, o `impedimento` e, se
+  a tela ainda oferece o Confirmar, a advertência e o resumo (FR-4360). No ativar e no cancelar, nada
+  muda: a view recalcula só os pendentes, como antes, e o motivo não volta ao formulário (FR-4364).
 
 ## R-7 — Os testes
 

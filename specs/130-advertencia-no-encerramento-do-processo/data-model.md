@@ -36,7 +36,7 @@ são valores derivados no instante da leitura (R-4) e descartados depois da resp
 |---|---|---|
 | `grupos` | tupla de `GrupoDoEdital` | só Editais finais publicados com algo em aberto, por ano, número e id (R-3) |
 | `convocado_no_prazo` | booleano | algum item é `CONVOCACAO_AGUARDANDO` (UX-276) |
-| `resumo` | texto (64 hex) | `sha256` do JSON canônico `[[id do Edital, [mensagens]], …]` (R-5); a lista vazia também tem resumo |
+| `resumo` | texto (64 hex) | `sha256` do JSON canônico `[[id do Edital, [mensagens ordenadas]], …]` (R-5): os Editais na ordem da tela, as frases de cada um ordenadas, porque a regra da `113` lê os prazos de recurso sem ordem fixa; a lista vazia também tem resumo |
 | `vazia` | propriedade | `not grupos`, que decide a frase da UX-277 |
 
 ## As constantes de tipo (R-2)
