@@ -43,6 +43,7 @@ from processo_seletivo.editais.domain.documentos import (
     OBRIGATORIO,
     aplicaveis,
     modelo_do_requisito,
+    nome_com_a_condicao,
 )
 from processo_seletivo.identidade.application import associacao
 from processo_seletivo.identidade.application import credenciais as nucleo_da_identidade
@@ -257,7 +258,7 @@ def _anunciados_do_momento(conteudo, perfil, *, momento):
     por_modalidade = []
     for modalidade in perfil.get("competitionModalities") or []:
         com_ela = [
-            item.get("name", "")
+            nome_com_a_condicao(item)
             for item in aplicaveis(
                 conteudo,
                 profile_id=perfil_id,
@@ -268,7 +269,9 @@ def _anunciados_do_momento(conteudo, perfil, *, momento):
         ]
         if com_ela:
             por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
-    return [item.get("name", "") for item in sempre], por_modalidade
+    # O nome leva a condição de exigência, como o PDF (131, FR-4454): quem lê antes de se inscrever
+    # sabe que o documento só será pedido no caso que o Edital diz.
+    return [nome_com_a_condicao(item) for item in sempre], por_modalidade
 
 
 def _documentos_anunciados(conteudo, perfil):

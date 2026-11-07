@@ -511,6 +511,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
         "inscrição contou com não precisar enviá-lo de novo, e retirar ou acrescentar esse vínculo "
         "depois de publicado é outra exigência."
     ),
+    # A condição de exigência (131, D-013). Diz **a quem** o obrigatório da convocação se aplica,
+    # da mesma natureza da obrigatoriedade e do recorte, que já se retificam. O que protege as
+    # convocações já praticadas é a lista da chamada, que lê a versão em que nasceu (FR-3573 da
+    # `115`), e não o congelamento deste campo.
+    ("documentRequirements", "requiredWhen"): retificavel(),
 }
 
 

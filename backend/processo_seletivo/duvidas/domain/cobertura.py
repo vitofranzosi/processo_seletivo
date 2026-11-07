@@ -21,7 +21,7 @@ decide o que a resposta mostra sem ser mostrado; e `EXCLUIDO`, com o motivo.
 from __future__ import annotations
 
 #: A versão do conteúdo publicado que esta tabela classifica (`shared/canonical.py`).
-VERSAO_DO_ESQUEMA = 18
+VERSAO_DO_ESQUEMA = 19
 
 LOCALIZACAO = "LOCALIZACAO"
 #: O campo decide **o que** a resposta mostra, sem ser mostrado: a aplicabilidade do documento, o
@@ -167,6 +167,11 @@ COBERTURA = {
     # quê, como o recorte.
     "/documentRequirements/*/moment": REGRA,
     "/documentRequirements/*/reusesRequirementId": REGRA,
+    # A condição de exigência (131). Só existe no obrigatório da convocação, e nenhuma pergunta do
+    # catálogo responde sobre a convocação: incluí-la é decisão do assistente, e não desta spec.
+    "/documentRequirements/*/requiredWhen": excluido(
+        "condição do documento da convocação (131): nenhuma pergunta do catálogo trata dela"
+    ),
     # ---- Etapas
     "/stages/*/id": IDENTIDADE,
     "/stages/*/name": ("P-07",),

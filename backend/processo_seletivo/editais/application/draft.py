@@ -497,6 +497,8 @@ def replace_draft(
                     # O momento e o aproveitamento (115), pela mesma razão: viajam em toda gravação.
                     momento=requirement.get("moment") or "AT_ENROLLMENT",
                     aproveita=requirement.get("reusesRequirementId"),
+                    # A condição de exigência (131), pela mesma razão: viaja em toda gravação.
+                    condicao=(requirement.get("requiredWhen") or "").strip(),
                 )
                 for requirement in document_requirements
             ]

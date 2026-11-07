@@ -150,6 +150,8 @@ CAMPOS = {
         # entre versões pode vir da publicação original comparada à primeira Retificação.
         "moment": "Quando é pedido",
         "reusesRequirementId": "Atendido pelo documento da inscrição",
+        # A condição de exigência (131), com o rótulo da composição.
+        "requiredWhen": "Exigido somente quando",
     },
     "competitionModalities": {
         "code": "Código",

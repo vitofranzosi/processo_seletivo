@@ -120,6 +120,23 @@
     </p>
   </div>
   {% comment %}
+  A condição de exigência (131, FR-4451, UX-302). Em todo documento, e não só no obrigatório da
+  convocação: a tela não tem script, e quem recusa a condição fora do lugar é o domínio (FR-4453).
+  {% endcomment %}
+  <div class="campos">
+    <p class="campo">
+      <label for="documento-{{ indice }}-requiredWhen">Exigido somente quando</label>
+      {% recusa_de recusas "documento" indice "requiredWhen" as recusado_condicao %}
+      <input type="text" id="documento-{{ indice }}-requiredWhen" name="documento-{{ indice }}-requiredWhen"
+             maxlength="300" value="{{ documento.requiredWhen|default:'' }}"
+             placeholder="ex.: no caso de candidatos do sexo masculino, maiores de 18 anos"
+             aria-describedby="ajuda-condicao-{{ indice }}"
+             {% if recusado_condicao %}aria-invalid="true"{% endif %}>
+      {% if recusado_condicao %}<span class="recusa" role="alert">{{ recusado_condicao }}</span>{% endif %}
+      <span class="oculto" id="ajuda-condicao-{{ indice }}">Só para documento obrigatório pedido na convocação. Escreva como o Edital publica. O sistema não confere a condição: quem confere os documentos decide se ela alcança a pessoa.</span>
+    </p>
+  </div>
+  {% comment %}
   O Modelo não cabe numa linha de três: o rótulo de anexo mais longo da amostra pede 459 px, e a
   terça parte da faixa dá 426 — cortaria justamente o texto pelo qual se escolhe o anexo. Ele fica
   numa linha de dois, e quem preenche o resto dela é a marcação de obrigatório, que não tem largura

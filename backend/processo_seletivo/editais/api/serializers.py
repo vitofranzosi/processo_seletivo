@@ -304,6 +304,12 @@ class DocumentRequirementSerializer(serializers.Serializer):
     # O documento da inscrição que atende este, da convocação (115, FR-3566). Ausente e nulo
     # significam "não aproveita".
     reusesRequirementId = serializers.UUIDField(required=False, allow_null=True)
+    # A condição de exigência (131, FR-4451): o caso em que o obrigatório da convocação é
+    # exigido. Ausente, nulo e vazio significam "incondicional". A coerência com a obrigatoriedade
+    # e o momento é do domínio (FR-4453), porque a Retificação chega ao documento sem passar aqui.
+    requiredWhen = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True, max_length=300, trim_whitespace=True
+    )
 
 
 class EditalDraftSerializer(serializers.Serializer):

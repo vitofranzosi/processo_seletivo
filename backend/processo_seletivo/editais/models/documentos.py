@@ -76,6 +76,12 @@ class DocumentoExigido(models.Model):
     # FK entre duas delas se perderia na recriação. A coerência é conferida na publicação, como a do
     # Perfil que o recorte aponta.
     aproveita = models.UUIDField(null=True, blank=True)
+    # **A condição de exigência** (131, FR-4451): o caso em que o documento obrigatório da
+    # convocação é exigido, como o Edital o publica — *"no caso de candidatos do sexo masculino,
+    # maiores de 18 anos"*. É texto, e o sistema não o avalia (D-002): ele o publica, o congela pela
+    # versão da lista e decide por ele se a conferência admite *"não se aplica"*. `""` quando não
+    # há, pela convenção de `instructions`; no conteúdo publicado a ausência é `null` (degrau 19).
+    condicao = models.CharField(max_length=300, blank=True, default="")
 
     class Meta:
         ordering = ["order", "id"]
