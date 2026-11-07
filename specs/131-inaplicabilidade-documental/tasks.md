@@ -5,9 +5,9 @@
 
 **Antes de começar:**
 
-- a P-1 e a P-2 da spec respondidas;
-- as D-001 a D-016 aceitas, ou revistas;
-- o PR #425 mergeado. Esta spec acrescenta guardas depois da dele, nos mesmos arquivos.
+- ~~a P-1 e a P-2 respondidas~~: decididas em 07/11/2026 (11ª e 12ª decisões);
+- ~~as D-001 a D-016 aceitas~~: o comportamento foi aprovado em 07/11/2026 (10ª decisão);
+- ~~o PR #425 mergeado~~: mergeado em 07/11/2026, e a `main` está na branch.
 
 A ordem é A → B → C. `[P]` marca tarefa sem dependência de arquivo com a anterior. Os testes vêm
 antes do código que os torna verdes, dentro de cada fase.
@@ -70,7 +70,7 @@ antes do código que os torna verdes, dentro de cada fase.
   `assinatura_das_inaplicabilidades` estável na ordem e sensível ao conjunto
 - [ ] T021 [P] Testes de integração (`ic`):
   - cenários 2, 9 e 12;
-  - a P-1 com uma convocação aberta e uma decidida, ambas com *"não se aplica"* em item
+  - a 11ª decisão com uma convocação aberta e uma decidida, ambas com *"não se aplica"* em item
     incondicional gravado direto no banco;
   - regularização com e sem ciência
 - [ ] T022 [P] Testes de interface (`ia`):
@@ -80,7 +80,7 @@ antes do código que os torna verdes, dentro de cada fase.
   - recusa e volta com a lista nova
 - [ ] T023 `LeituraDocumental`: `contagens["nao_se_aplica"]`, `conformes` só conforme,
   `ItemLido.condicao`, `inaplicabilidades`, sem consulta nova (contrato `conferencia.md` §3; SC-1377)
-- [ ] T024 `impede_incluir` com a condicionalidade (FR-4470, P-1 escolhida)
+- [ ] T024 `impede_incluir` com a condicionalidade (FR-4470, 11ª decisão)
 - [ ] T025 `desfechar`: a ciência sob a trava, depois da guarda da lista e da das pendências; as duas
   recusas; a trilha citando os `id` (FR-4468, FR-4469; R-005)
 - [ ] T026 Condução e formulário de desfecho: contagens, bloco, caixa e assinatura (UX-301, UX-303;

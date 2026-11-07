@@ -43,7 +43,7 @@ teste e o que ele prova.
 | Condição chega ao PDF depois de vírgula; documento sem condição sai byte a byte igual | `cp`, `tests/contract/test_documento_publicado.py` | FR-4454, SC-1375 |
 | Reaproveitamento (`023`) leva a condição | `cp` | FR-4455 |
 | Versão publicada antes da feature eleva com `requiredWhen: null` | `tests/integration/publicacoes/test_elevacao_de_versao.py` | FR-4455, FR-4477 |
-| *"Não se aplica"* gravado antes em item incondicional: decidida continua decidida; aberta segue a P-1 | `ic` | FR-4470, FR-4476, FR-4478 |
+| *"Não se aplica"* gravado antes em item incondicional: decidida continua decidida; aberta deixa de atender (11ª decisão) | `ic` | FR-4470, FR-4476, FR-4478 |
 | Substituição envolvendo *"não se aplica"* sem arquivo exige motivo | `ic` | FR-4462 |
 | Nova versão depois do *"não se aplica"* recusada | `ic` | FR-4463 |
 | Orçamento de consultas da condução e da página | `tests/interface/` (orçamento existente da `115`) | SC-1377 |

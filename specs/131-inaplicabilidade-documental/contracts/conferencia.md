@@ -55,4 +55,4 @@ A recusa grava nada, e a tela volta com a lista nova, como a recusa da prévia s
 | `ItemLido.condicao` | — | `requiredWhen` da versão do item, ou `None` |
 | `ItemLido.condicional` | — | `condicao is not None` |
 | `inaplicabilidades` | — | itens obrigatórios com estado *não se aplica*, na ordem do Edital |
-| `pendencias_para_incluir` | obrigatório fora de `ATENDIDOS` | obrigatório fora de `ATENDIDOS`, **ou** *não se aplica* incondicional (P-1 a) |
+| `pendencias_para_incluir` | obrigatório fora de `ATENDIDOS` | obrigatório fora de `ATENDIDOS`, **ou** *não se aplica* incondicional (11ª decisão) |

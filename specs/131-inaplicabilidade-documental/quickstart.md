@@ -60,5 +60,5 @@ Num clone do banco de demonstração de 07/11 (`createdb -T gps_docs_demo ps131t
 na origem), abra a convocação do Gael, que tem *"não se aplica"* nos três obrigatórios
 incondicionais:
 
-- com a P-1 (a), o aceite é recusado, nomeando os três como *"registrado sem condição publicada"*;
+- pela 11ª decisão, o aceite é recusado, nomeando os três como *"registrado sem condição publicada"*;
 - as convocações decididas continuam decididas.

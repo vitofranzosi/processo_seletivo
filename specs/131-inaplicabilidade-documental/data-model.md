@@ -75,7 +75,7 @@ Muda o que **atende** (FR-4470):
 |---|---|---|
 | *conforme* | B ou C | sim |
 | *não se aplica* | C | sim, **com ciência** (FR-4468) |
-| *não se aplica* | B (gravado antes da feature) | P-1 (recomendado: **não**) |
+| *não se aplica* | B (gravado antes da feature) | **não** (11ª decisão) |
 | demais | qualquer | não |
 
 ## 5. A ciência

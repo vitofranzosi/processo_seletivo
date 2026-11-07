@@ -186,7 +186,7 @@ SC-1377).
 
 **Por quê:** é o único ponto que alcança as conferências gravadas antes da feature. Sem ele, a regra
 vale só daqui em diante, e o *"não se aplica"* do laudo gravado ontem continua abrindo o aceite
-(D-015, P-1).
+(D-015, 11ª decisão).
 
 **Contagens:** `contagens["conformes"]` deixa de somar o *"não se aplica"*
 (`convocacao/application/documentos.py:341`) [C][X], e entra `contagens["nao_se_aplica"]`.
@@ -212,7 +212,7 @@ O estudo deixou sete perguntas ao produto (§8). Cada uma, com a resposta que es
 
 | # | Pergunta | Recomendada | Por quê | Descartadas | Impacto técnico |
 |---|---|---|---|---|---|
-| 1 | A dispensa excepcional existe? | **Não no GPS**, até decisão institucional (2ª decisão; P-2) | Nenhum fundamento achado: os Editais têm só *casos omissos*, e o 89/2026 pune a falta com desclassificação [N] | Estado *"Dispensado"* com base de gestão (alternativa B do estudo) | Nenhum. O GPS não oferece substituto para a dispensa: correção com prazo novo, indeferimento e Retificação não são intercambiáveis, e cada uma exige o fundamento próprio. A limitação do GPS não fundamenta indeferimento |
+| 1 | A dispensa excepcional existe? | **Não no GPS**, até decisão institucional (2ª e 12ª decisões) | Nenhum fundamento achado: os Editais têm só *casos omissos*, e o 89/2026 pune a falta com desclassificação [N] | Estado *"Dispensado"* com base de gestão (alternativa B do estudo) | Nenhum. O GPS não oferece substituto para a dispensa: correção com prazo novo, indeferimento e Retificação não são intercambiáveis, e cada uma exige o fundamento próprio. A limitação do GPS não fundamenta indeferimento |
 | 2 | O "não se aplica" de obrigatório exige a base de gestão? | **Não**: o alocado registra, no condicional (D-005) | A âncora passa a ser a condição publicada, e o juízo é de fato, como o *conforme*; o controle é a ciência no aceite | Restringir à presidência e a `comissao:gerir` | Nenhum no predicado (FR-3595 da `115` intacta) |
 | 3 | Fato já comprovado ao Ifes (Lei 14.129/2021, art. 3º, XIII)? | **No Edital, como condição** (*"exceto para quem concluiu no Ifes"*) (P-4) | Vira figura C sem caminho próprio; a aplicação da lei é da Procuradoria | Caminho próprio na conferência (*"comprovado ao órgão"*) | Nenhum além do campo |
 | 4 | O "não se aplica" sobre arquivo exige abrir? | **Sim** (D-008; FR-4460) | O arquivo pode provar que a condição se aplica; a razão da `115` para dispensar a abertura não cobre o caso | Manter sem abertura (5ª decisão: o arquivo, sozinho, não decide; mas olhá-lo é o mínimo) | Uma consulta à trilha, a mesma do *conforme* |

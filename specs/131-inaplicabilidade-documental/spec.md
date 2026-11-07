@@ -4,13 +4,14 @@
 
 **Created**: 2026-11-07
 
-**Status**: Especificada, sem implementação. As decisões têm duas origens:
+**Status**: Em implementação, desde 07/11/2026. As decisões têm duas origens:
 
-- **Do usuário, em 07/11/2026**, no pedido desta spec: a *1ª* à *9ª decisão*, em *Clarifications*.
-  Não se reabrem.
-- **Propostas de desenho desta spec:** D-001 a D-016, ao fim. Elas fecham o que as nove decisões
-  deixaram aberto. **Aguardam o usuário.** As que dependem de resposta estão em *Pendências do
-  usuário*, e a implementação não começa antes delas (P-1 e P-2).
+- **Do usuário, em 07/11/2026**, em duas rodadas: no pedido desta spec, a *1ª* à *9ª decisão*; na
+  revisão do PR #426, a *10ª* à *12ª*. Estão em *Clarifications* e não se reabrem.
+- **Propostas de desenho desta spec:** D-001 a D-016, ao fim. Elas fecham o que as decisões deixaram
+  aberto. **O comportamento que descrevem foi aprovado pelo usuário em 07/11/2026** (10ª decisão),
+  sem aprovação individual de cada uma. As escolhas técnicas compatíveis com ele ficam para a
+  implementação. Continua pendente só a P-3, que não impede implementar.
 
 **Input**: o estudo [`doc/estudo-nao-se-aplica-2026-11-07.md`](../../doc/estudo-nao-se-aplica-2026-11-07.md)
 (commit `8ed8d28d`), reconferido no código e nas specs em 07/11/2026. Ver a
@@ -110,6 +111,25 @@ pela conferência, por ninguém.
   encerrada fica como está; transição de dados vai como alternativa para decisão. *(8ª decisão)*
 - Q: A conferência sobre item excluído pelo recorte se corrige na tela? → A: **Não basta.** O domínio
   rejeita operação documental incompatível com a aplicabilidade do item. *(9ª decisão)*
+
+### Session 2026-11-07 (revisão do PR #426)
+
+- Q: O desenho se aprova? → A: **Sim, a opção 2, com o desenho mínimo:**
+  - a condição como texto publicado, sem interpretar os fatos da pessoa;
+  - o *"não se aplica"* só no obrigatório condicional, com motivo;
+  - o aceite mostrando as inaplicabilidades e exigindo ciência do conjunto atual;
+  - a reutilização do mecanismo da `120` para detectar o conjunto desatualizado, que não prova
+    leitura e evita confirmar o que mudou;
+  - nenhuma tabela de ciência, papel, aprovação, rota ou serviço novo.
+
+  O comportamento das D-001 a D-016 fica aprovado, sem rodada individual. *(10ª decisão)*
+- Q: O *"não se aplica"* já gravado em obrigatório incondicional, numa chamada aberta, ainda atende? →
+  A: **Não** (a P-1, alternativa *a*). Os registros e os desfechos encerrados se preservam. Sem
+  calendário de transição nem compatibilidade especial para os bancos de demonstração. *(11ª
+  decisão)*
+- Q: A dispensa excepcional precisa de pendência própria? → A: **Não.** Ela já está fora pela 2ª
+  decisão; a redação corrigida da antiga P-2 passa para a D-003. A P-3 continua pendente, sem
+  aceitação implícita. *(12ª decisão)*
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -252,15 +272,15 @@ reclassificam.
 
 **Independent Test**: com uma convocação aberta e outra decidida, ambas com *"não se aplica"*
 registrado antes da feature num obrigatório incondicional, verificar que a decidida continua como
-estava, e que a aberta segue a transição escolhida na P-1.
+estava, e que a aberta deixa de atender ao aceite (11ª decisão).
 
 **Acceptance Scenarios**:
 
 1. **Given** uma convocação decidida com *"não se aplica"* num obrigatório incondicional, **When**
    qualquer tela a lê, **Then** ela continua decidida, e o item aparece como *"não se aplica após
    análise — registrado sem condição publicada"*.
-2. **Given** uma convocação aberta no mesmo caso, **When** o gestor tenta o aceite, **Then** vale a
-   regra escolhida na P-1 (recomendada: o item não conta como atendido, e a tela diz por quê).
+2. **Given** uma convocação aberta no mesmo caso, **When** o gestor tenta o aceite, **Then** o item não
+   conta como atendido, e a recusa diz *"registrado sem condição publicada"* (11ª decisão).
 3. **Given** um Edital publicado sem condição, **When** se retifica para acrescentar a condição ao
    Alistamento, **Then** a condição vale para as chamadas seguintes, e a chamada aberta continua
    lendo a versão em que nasceu (FR-3573 da `115`).
@@ -316,9 +336,13 @@ estava, e que a aberta segue a transição escolhida na P-1.
 - **FR-4452**: A condição MUST ser texto declarativo. O sistema MUST NOT avaliá-la, decompô-la nem
   derivar dela campo, critério ou pergunta ao candidato. O texto é aparado, e o vazio depois de
   aparado é ausência (D-002).
-- **FR-4453**: A publicação MUST ser impedida, com a razão, quando a condição aparecer em documento
-  **facultativo** ou em documento **da inscrição** (D-004). A composição MUST NOT oferecer o campo
-  nesses casos.
+- **FR-4453**: A condição em documento **facultativo** ou em documento **da inscrição** MUST ser
+  recusada pela mesma regra em dois pontos: a gravação do rascunho recusa, e a conferência da
+  publicação impede, com a razão. A segunda existe porque a Retificação alcança o documento sem passar
+  pela tela (o molde é o do momento incoerente, FR-3566 da `115`) (D-004). A composição mostra o campo
+  em todo documento, com a ajuda do UX-302: a tela não tem script (CSP), e a regra é do domínio.
+  *Revista em 07/11/2026, na análise de consistência: a redação anterior mandava a composição esconder
+  o campo, o que a tela sem script não faz.*
 - **FR-4454**: A condição MUST aparecer, com o mesmo texto e junto do nome do documento, em toda
   superfície que apresenta o Documento Exigido da convocação: a revisão antes da publicação, o PDF
   oficial, a página pública do Edital, a tela da convocação no portal e a página dos documentos na
@@ -394,9 +418,9 @@ estava, e que a aberta segue a transição escolhida na P-1.
 - **FR-4469**: O registro do aceite e da regularização na trilha MUST citar as conferências de que
   houve ciência, pelo identificador, e MUST NOT conter o motivo (FR-3603 da `115`; D-011).
 - **FR-4470**: A guarda da FR-3592 da `115` MUST contar o *"não se aplica"* como atendido **só** em
-  item condicional, pela versão da lista. O *"não se aplica"* vigente em item incondicional MUST ser
-  tratado conforme a transição decidida na P-1. A recomendação é não contá-lo como atendido, e dizer
-  por quê na recusa (D-015).
+  item condicional, pela versão da lista. O *"não se aplica"* vigente em item incondicional MUST NOT
+  contar como atendido, e a recusa do aceite MUST dizer *"registrado sem condição publicada"* (11ª
+  decisão; D-015).
 - **FR-4471**: A ciência MUST ser parte do mesmo ato de desfecho, pela mesma base (FR-3596 da `115`).
   MUST NOT existir aprovação documental separada, segunda assinatura nem papel novo (3ª decisão).
 
@@ -498,7 +522,7 @@ estava, e que a aberta segue a transição escolhida na P-1.
 
 - O sistema não está em produção: não há acervo de convocações reais a transicionar (o mesmo
   pressuposto da decisão sobre lista retroativa da `115`). Os bancos de demonstração têm *"não se
-  aplica"* gravados em itens incondicionais, e é deles que a P-1 trata.
+  aplica"* gravados em itens incondicionais, e é deles que a 11ª decisão trata.
 - A condição é escrita por quem compõe, como o Edital a publica. Ela é norma do Edital, e não dado
   pessoal: o texto é igual para todos.
 - O motivo continua texto livre que o candidato lê (FR-3584 da `115`). Esta spec não muda o aviso
@@ -522,7 +546,7 @@ estava, e que a aberta segue a transição escolhida na P-1.
 | Spec | O que muda | O que fica |
 |---|---|---|
 | `044` | Nada no recorte. A decisão sobre a condição do candidato continua: a condição publicada não é forma estruturada, não se avalia e não entra na aplicabilidade. O *"facultativo com instrução"* continua disponível, e passa a ter uma alternativa no documento da convocação | A lista gravada da inscrição, o recorte transversal |
-| `115` | FR-3585 (quando o *"não se aplica"* existe), FR-3586 (substituição que envolve o *"não se aplica"*), FR-3592 (o que atende, com a P-1), FR-3607 (contagens), o caso-limite *"Obrigatório marcado 'não se aplica'"* | A lista congelada (FR-3573), o predicado único (FR-3595), o alocado que não desfecha (FR-3596), a trilha sem motivo (FR-3603), o *"conforme"* com abertura (FR-3611) |
+| `115` | FR-3585 (quando o *"não se aplica"* existe), FR-3586 (substituição que envolve o *"não se aplica"*), FR-3592 (o que atende, pela 11ª decisão), FR-3607 (contagens), o caso-limite *"Obrigatório marcado 'não se aplica'"* | A lista congelada (FR-3573), o predicado único (FR-3595), o alocado que não desfecha (FR-3596), a trilha sem motivo (FR-3603), o *"conforme"* com abertura (FR-3611) |
 | `117` | FR-3672 (sétima situação) | O manifesto sem motivo (FR-3687), o alcance de quem formaliza |
 | `118` | A tela da convocação mostra a condição no item condicional (FR-4475), com uma linha nova na tabela de textos da FR-3746 | A categoria *conferido* do *"não se aplica"* (FR-3722), o texto *"Não se aplica: ‹motivo›."* |
 | `120` | Nada | A sucessora herda lista, apresentações e conferências |
@@ -552,7 +576,8 @@ As revisões são escritas nos arquivos das specs afetadas na implementação, c
 
 ## Decisões
 
-Propostas de desenho desta spec. **Aguardam o usuário.** As alternativas descartadas estão na
+Propostas de desenho desta spec, com o comportamento **aprovado pelo usuário em 07/11/2026** (10ª
+decisão). As alternativas descartadas estão na
 [pesquisa](research.md).
 
 ### D-001 — A condicionalidade se representa no Edital (opção 2), e não só na conferência (opção 1)
@@ -579,6 +604,17 @@ sistema usa o campo para três coisas: publicá-lo, congelá-lo pela versão da 
 | B — obrigatório incondicional | Documento Exigido sem condição | ninguém o afasta: só *conforme* atende |
 | C — obrigatório condicional | Documento Exigido com condição | quem confere, com o motivo; quem desfecha dá ciência |
 | D — dispensa excepcional | **em lugar nenhum** | decisão institucional, fora do sistema (2ª decisão) |
+
+**O GPS não oferece substituto para a dispensa.** As operações que já existem não são respostas
+intercambiáveis a um caso excepcional, e esta spec não as recomenda como tal:
+
+- a correção da convocação com prazo novo (FR-3618 da `115`);
+- o indeferimento;
+- a Retificação.
+
+Cada uma continua exigindo o fundamento próprio, na regra que a rege. Em particular, **a limitação do
+GPS não fundamenta indeferimento**: o sistema não ter como registrar uma exceção não é razão para
+indeferir quem dela trataria.
 
 ### D-004 — Só o obrigatório da convocação tem condição
 
@@ -667,7 +703,8 @@ mudou depois.
 
 Sem isto, o *"não se aplica"* gravado antes da feature num obrigatório incondicional continuaria
 abrindo o aceite, e a regra nova valeria só para conferências novas. A guarda lê a versão da lista,
-como a guarda da lista incompleta, da correção da `115` no PR #425, lê. O tratamento das linhas antigas em chamadas abertas é a P-1.
+como a FR-4401 da `115` lê. As linhas antigas em chamadas abertas deixam de atender (P-1, 11ª
+decisão).
 
 ### D-016 — Na formalização, a origem vai e o motivo fica
 
@@ -678,28 +715,12 @@ esta spec o corrige: a FR-3687 da `117` o proíbe.
 
 ## Pendências do usuário
 
-**Impedem a implementação:**
+**Decididas em 07/11/2026:**
 
-- **P-1 — O "não se aplica" já gravado em obrigatório incondicional, numa chamada aberta.**
-  - *(a) Recomendada:* não conta como atendido (FR-4470). O aceite é recusado, nomeando o item e
-    dizendo *"registrado sem condição publicada"*. A comissão o substitui por *conforme* ou
-    *pendente*.
-  - *(b)* Conta, com a ciência da FR-4468. A regra nova vale só para conferências novas.
-  - *(c)* Só a P-1 (a) daqui a uma data.
-
-  Com o sistema fora de produção, (a) só afeta os bancos de demonstração.
-- **P-2 — A dispensa excepcional fica fora.** Confirmar que, até decisão institucional, o GPS não tem
-  operação, estado nem permissão para afastar uma exigência que se aplica. Nenhum botão novo.
-
-  **O GPS não oferece substituto para a dispensa.** As operações que já existem não são respostas
-  intercambiáveis a um caso excepcional, e esta spec não as recomenda como tal:
-  - a correção da convocação com prazo novo (FR-3618 da `115`);
-  - o indeferimento;
-  - a Retificação.
-
-  Cada uma continua exigindo o fundamento próprio, na regra que a rege. Em particular, **a limitação
-  do GPS não fundamenta indeferimento**: o sistema não ter como registrar uma exceção não é razão
-  para indeferir quem dela trataria.
+- **P-1** — o *"não se aplica"* já gravado em obrigatório incondicional, numa chamada aberta, **não**
+  atende ao aceite (11ª decisão; FR-4470). As alternativas descartadas eram contá-lo com a ciência,
+  ou adiar a regra para uma data.
+- A antiga **P-2** foi absorvida pela 2ª decisão (12ª decisão); a redação está na D-003.
 
 **Não impedem:**
 

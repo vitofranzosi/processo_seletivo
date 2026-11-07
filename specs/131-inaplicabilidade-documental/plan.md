@@ -4,10 +4,9 @@
 
 **Input**: Feature specification from `specs/131-inaplicabilidade-documental/spec.md`
 
-**Estado**: plano escrito sobre as decisões D-001 a D-016 da spec, **propostas**, ainda não aceitas.
-Nenhum código foi alterado. **A implementação espera a P-1 e a P-2.** Se a D-001 for recusada (opção
-1), o incremento A sai inteiro, e os incrementos B e C ficam, com a FR-4457 trocada por *"o
-'não se aplica' de obrigatório pede a ciência"* e a FR-4470 sem efeito.
+**Estado**: plano escrito sobre as decisões D-001 a D-016 da spec, com o comportamento **aprovado pelo
+usuário em 07/11/2026** (10ª decisão), e com a P-1 decidida (11ª). A implementação começou em
+07/11/2026, sobre a `main` com o PR #425.
 
 ## Summary
 
@@ -170,7 +169,7 @@ que as torna verdadeiras.
 |---|---|
 | Um guardião de lista de campos esquecido | R-004 lista os dezenove; a suíte inteira roda depois do incremento A, antes de B |
 | Os bytes do PDF mudam para documento sem condição | `texto_do_documento` só acrescenta quando há condição; o teste byte a byte prende |
-| A P-1 (a) trava uma chamada aberta de demonstração | É o efeito pedido; a recusa nomeia o item e diz *"registrado sem condição publicada"* |
+| A 11ª decisão trava uma chamada aberta de demonstração | É o efeito pedido; a recusa nomeia o item e diz *"registrado sem condição publicada"* |
 | A ciência vira clique automático | A assinatura prende o conjunto visto. A leitura do conteúdo é humana, e esta spec não finge resolvê-la |
 | Conflito com o PR #425 em `desfechar.py` e `documentos.py` | Implementar depois do merge do #425; a guarda da lista vem antes de tudo o que esta spec acrescenta |
 | Compositor usar a condição para documento que não é condicional | A condição é publicada no PDF e passa pela homologação: é norma do Edital, e não atalho da conferência |

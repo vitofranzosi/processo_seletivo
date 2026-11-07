@@ -91,7 +91,10 @@ A faixa abre em **FR-4451**, **SC-1371** e **UX-301**, e as três foram gastas.
 | Decisão | Requisitos |
 |---|---|
 | 1ª — as quatro figuras | FR-4457, FR-4464, D-003 |
-| 2ª — sem dispensa | P-2; nenhum requisito cria a operação |
+| 2ª — sem dispensa | D-003; nenhum requisito cria a operação |
+| 10ª — o desenho mínimo aprovado | FR-4451 a FR-4478 |
+| 11ª — o antigo incondicional não atende | FR-4470, FR-4478 |
+| 12ª — a dispensa sem pendência própria; a P-3 pendente | D-003; FR-4473 |
 | 3ª — sem motor, papel ou fluxo | FR-4452, FR-4465, FR-4471 |
 | 4ª — a inaplicabilidade legítima se preserva | FR-4451, FR-4457 |
 | 5ª — o arquivo, sozinho, não decide | FR-4460 |
