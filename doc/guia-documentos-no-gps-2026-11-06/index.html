@@ -191,7 +191,7 @@ ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:
 <header class="capa fora-do-modo">
   <span class="eyebrow">GPS · Cefor/Ifes · complemento do guia da jornada do sorteio</span>
   <h1>Da inscrição à matrícula: como os documentos percorrem o GPS</h1>
-  <p class="lede">Um certame de demonstração inteiro, com pessoas e arquivos fictícios. O operador configura oito documentos em dois momentos. Os candidatos enviam arquivos na inscrição. A comissão faz a análise documental, sorteia, convoca e confere os documentos da convocação. Depois registra aceite, indeferimento, desistência e não atendimento.</p>
+  <p class="lede">Um certame de demonstração inteiro, com pessoas e arquivos fictícios. O operador configura oito documentos em dois momentos. Os candidatos enviam arquivos na inscrição. A comissão faz a análise documental, sorteia, convoca e confere os documentos da convocação. Depois registra aceite, indeferimento, desistência e não atendimento, e entrega os documentos de quem foi aceito ao setor que formaliza a matrícula.</p>
   <div class="aviso-demo"><b>Tudo aqui é fictício.</b> Os Editais 90/2026 e 93/2026, as nove pessoas, os CPFs e os PDFs foram criados para esta demonstração, num banco descartável e isolado, sobre a <span class="mono">main</span> do GPS em 06/11/2026 (<span class="mono">ffde747b</span>). Nenhum e-mail saiu: as mensagens ficaram no terminal do servidor de demonstração. A regra documental (quais documentos, em que momento) é inventada e serve só para mostrar o mecanismo.</div>
   <div class="legenda">
     <span><span class="s gps">Comprovado</span> visto funcionando nesta demonstração</span>
@@ -213,7 +213,8 @@ ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:
     <a href="#cap-8"><span>8</span>Quatro acontecimentos</a>
     <a href="#cap-9"><span>9</span>Cenários A, B e C</a>
     <a href="#cap-10"><span>10</span>Vaga, aceite e matrícula</a>
-    <a href="#cap-11"><span>11</span>O que não é óbvio</a>
+    <a href="#cap-11"><span>11</span>O setor recebe os documentos</a>
+    <a href="#cap-12"><span>12</span>O que não é óbvio</a>
     <a href="#roteiro"><span>B</span>Roteiro operacional</a>
     <a href="#diagnostico"><span>C</span>Diagnóstico de UX</a>
   </nav>
@@ -522,7 +523,7 @@ ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:
       <tr><td>Aceite significa matrícula?</td><td>Não. O portal diz "Este registro não é matrícula, bolsa nem contrato", e a gestão mostra "Apto para formalização". <span class="s gps">Comprovado</span></td></tr>
       <tr><td>Qual evento o GPS chama de aceite?</td><td>O desfecho ACEITE da convocação, registrado na condução do recorte. <span class="s gps">Comprovado</span></td></tr>
       <tr><td>Quando a vaga conta como ocupada?</td><td>O <b>titular inicial</b> habilitado conta desde a apuração, antes de ser convocado. No 93, a ampla mostrava "Ocupadas 2" antes de qualquer resposta. O <b>suplente</b> só conta depois do aceite. Os desfechos excludentes tiram a pessoa. "Ocupada" no GPS quer dizer "titular da vaga", e não matriculado nem documentado. É a mesma semântica do estudo do Edital 35. <span class="s gps">Comprovado</span></td></tr>
-      <tr><td>O GPS representa a matrícula efetivada?</td><td>Não. A formalização (spec 117) entrega os documentos conformes de quem está apto ao setor designado, com exportação em ZIP. Quem matricula é o Registro Acadêmico, fora do GPS. <span class="s dec">Não existe</span> <span class="s edital">Decisão registrada</span></td></tr>
+      <tr><td>O GPS representa a matrícula efetivada?</td><td>Não. A formalização (spec 117) entrega ao setor designado os documentos de quem está apto: visualizar, baixar e exportar em ZIP, com manifesto (capítulo 11). Quem matricula é o Registro Acadêmico, fora do GPS. <span class="s gps">Comprovado</span> <span class="s edital">Decisão registrada</span></td></tr>
       <tr><td>A desistência muda o quadro?</td><td>Sim: exclui, e a apuração seguinte sai no mesmo ato, com "1 a ocupar". Convocar o próximo é ato humano. <span class="s gps">Comprovado</span></td></tr>
       <tr><td>Quando uma nova pessoa pode ser chamada?</td><td>Depois do desfecho excludente e da apuração seguinte. A fila mostra quem é ("para vaga que vagou"), e "Chamar a próxima da fila" aparece como próximo passo. <span class="s gps">Comprovado</span></td></tr>
     </tbody>
@@ -532,13 +533,58 @@ ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:
     <figure class="alta"><div class="rolo"><img src="capturas/30-resultado-aceite.jpg" alt="Portal de Fábio com Vaga aceita" loading="lazy"></div><figcaption>Fábio no portal: "Vaga aceita" e "Este registro não é matrícula, bolsa nem contrato". <span class="s gps">Comprovado</span></figcaption></figure>
     <figure><img src="capturas/34-ppi-apos-desistencia.jpg" alt="PPI propõe convocar Helena como titular depois da desistência na ampla" loading="lazy"><figcaption>A PPI, depois da desistência de Helena na ampla, propõe convocá-la como titular. <span class="s dec">Decisão pendente</span></figcaption></figure>
     <figure><img src="capturas/32-andamento.jpg" alt="Andamento do Edital com providências" loading="lazy"><figcaption>O Andamento do Edital: as providências de conferir documentos e convocar aparecem por recorte. <span class="s gps">Comprovado</span></figcaption></figure>
-    <figure><img src="capturas/33-formalizacao.jpg" alt="Definição dos documentos para a formalização" loading="lazy"><figcaption>A formalização: a presidência ou o gestor escolhem quais documentos vão ao setor; quem acessa é designado pela gestão de acessos. Não foi exercitada até a exportação. <span class="s prev">Visto no código</span></figcaption></figure>
+    <figure><img src="capturas/33-formalizacao.jpg" alt="Definição dos documentos para a formalização" loading="lazy"><figcaption>A definição dos documentos para a formalização, antes de ser gravada. O capítulo 11 segue daqui. <span class="s gps">Comprovado</span></figcaption></figure>
   </div>
 </section>
 
 <!-- 11 -->
 <section class="cap" id="cap-11">
-  <div class="cap-head"><span class="cap-n">11</span><span class="eyebrow">Três perspectivas</span><h2>O que não é óbvio</h2><p class="pergunta-op">"Onde a tela exige saber o que ela não diz?"</p></div>
+  <div class="cap-head"><span class="cap-n">11</span><span class="eyebrow">Setor de formalização · por exemplo, a secretaria acadêmica</span><h2>O setor recebe os documentos</h2><p class="pergunta-op">"Terminada a convocação, onde a secretaria acadêmica pega os documentos de quem vai ser matriculado?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Os documentos não ficam presos na condução da comissão. Depois do aceite, eles vão a uma área própria, <b>Formalização</b>, que é do setor que formaliza o vínculo, como a secretaria acadêmica ou o setor de bolsas. Três atos levam até lá:</p>
+      <ul>
+        <li><b>Definir</b>, pela presidência ou por quem gere a comissão, na página "Documentos para a formalização" do Edital. Marca-se quais documentos o setor recebe e escreve-se um motivo, que fica no histórico. Aqui foram quatro: a identificação, a escolaridade e o laudo atualizado da convocação, e a autodeclaração da inscrição. A residência, facultativa, ficou de fora. A definição não muda o Edital nem o que o candidato precisa apresentar.</li>
+        <li><b>Designar</b>, pelo Administrador institucional, em Gestão de acessos › Formalização. Quem recebe o papel <b>Formalização</b> é designado para um Edital, com Perfis opcionais. <span class="s prev">Visto no código</span></li>
+        <li><b>Consultar e exportar</b>, pelo setor. O menu ganha "Formalização", com a lista dos Editais designados. Em cada Edital aparecem só as pessoas <b>aptas</b>, isto é, com aceite ou regularização na chamada mais recente. Cada documento definido aparece com "Visualizar" e "Baixar", ou "não se aplica".</li>
+      </ul>
+      <p>No Edital 93, o setor viu <b>Carla e Fábio</b>, os dois aceites. Bruno (indeferido) e Gael e Davi (ainda sem resposta) não aparecem. Da convocação vem só a versão conferida como conforme: a escolaridade de Carla é a versão 2, a corrigida. Da inscrição vem o arquivo enviado, com a nota "enviado na inscrição; sem conferência na convocação".</p>
+      <p>A exportação começa por uma <b>verificação</b>. O GPS lê e confere cada arquivo e mostra "Pacote completo: 2 de 2 pessoas incluídas · 5 documentos" antes de qualquer download. A verificação vale por 15 minutos. O pacote é um ZIP com uma pasta por pessoa e um <span class="mono">manifesto.csv</span>. A exportação fica no histórico do Edital, com autor e alcance; a pessoa passa a constar como exportada.</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Quem faz o quê</span><span>Presidência ou gestão: define os documentos. Administrador institucional: designa o setor. Setor (papel Formalização): consulta e exporta. O setor não confere nem registra desfecho.</span></div>
+      <div><span class="k">Tela do setor</span><span>Gestão › Formalização › Edital › pessoas aptas › Visualizar · Baixar · "Exportar esta pessoa" · "Verificar e exportar todos os aptos".</span></div>
+      <div><span class="k">O que o pacote não traz</span><span>Os dados do Requerimento de Matrícula, a confirmação de recebimento pelo setor e a integração com o sistema acadêmico. <span class="s dec">Não existe</span></span></div>
+      <div><span class="k">Na demonstração</span><span>A designação foi gravada pelo atalho dos testes, porque o seletor de demonstração não oferece a capacidade <span class="mono">acesso:gerir</span>. Todo o resto foi feito pela tela.</span></div>
+      <div class="prox"><span class="k">Depois</span><span>O setor matricula no sistema acadêmico, fora do GPS. O GPS registra a exportação, não a matrícula.</span></div>
+    </div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/36-formalizacao-definir.jpg" alt="Definição dos documentos para a formalização, com quatro marcados e o motivo" loading="lazy"><figcaption>A gestão marca os quatro documentos e escreve o motivo. Embaixo, "Quem acessa os documentos" é só leitura. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/37-setor-lista.jpg" alt="Área Formalização do setor com o Edital designado" loading="lazy"><figcaption>O setor entra pelo item "Formalização" do menu: os Editais em que foi designado. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <figure><img src="capturas/38-setor-edital.jpg" alt="Documentos para formalização: Carla e Fábio, com Visualizar e Baixar" loading="lazy"><figcaption>A tela do setor: as pessoas aptas, cada documento definido com "Visualizar" e "Baixar" ou "não se aplica", e a exportação por pessoa, pelas marcadas ou por todos. <span class="s gps">Comprovado</span></figcaption></figure>
+  <div class="telas">
+    <figure><img src="capturas/39-setor-verificacao.jpg" alt="Verificação da exportação antes do download" loading="lazy"><figcaption>A verificação antes do download: quem entra, quais documentos e o tamanho. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/40-setor-historico.jpg" alt="Lista do setor depois da exportação, com o histórico" loading="lazy"><figcaption>Depois do download, o histórico registra quem exportou, quando e o alcance. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <h3>O que veio no pacote</h3>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>Pasta no ZIP</th><th>Arquivo</th><th>Momento</th><th>Conferência</th></tr></thead>
+    <tbody>
+      <tr><td>INS-2026-7WD8PY7S Carla Cardoso</td><td>autodeclaracao.pdf</td><td>inscrição</td><td>enviado na inscrição; sem conferência na convocação</td></tr>
+      <tr><td></td><td>identificacao-na-convocacao.pdf</td><td>convocação</td><td>conferido em 06/11/2026 22:44</td></tr>
+      <tr><td></td><td>escolaridade.pdf</td><td>convocação</td><td>conferido em 06/11/2026 22:45 (a versão corrigida)</td></tr>
+      <tr><td>INS-2026-YP2V2YUR Fábio Fontes</td><td>identificacao-na-convocacao.pdf</td><td>convocação</td><td>conferido em 06/11/2026 22:44</td></tr>
+      <tr><td></td><td>escolaridade.pdf</td><td>convocação</td><td>conferido em 06/11/2026 22:44</td></tr>
+      <tr><td>(raiz)</td><td>manifesto.csv</td><td>—</td><td>Edital, alcance, versão da definição, autor, "Pacote completo: 2 de 2", e uma linha por documento com caminho, SHA-256, envio e conferência; os "não se aplica" também aparecem</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 12 -->
+<section class="cap" id="cap-12">
+  <div class="cap-head"><span class="cap-n">12</span><span class="eyebrow">Três perspectivas</span><h2>O que não é óbvio</h2><p class="pergunta-op">"Onde a tela exige saber o que ela não diz?"</p></div>
   <div class="blocos">
     <div class="bloco"><b>Quem configura</b><span>Entende o momento de cada documento pelo cartão e pelo PDF. Mas a Revisão lista os oito numa sequência só, com "Pedido: na inscrição" ou "na convocação" escrito em cada item. Um documento posto no momento errado não salta aos olhos. A ajuda geral não fala de momento nem de aproveitamento. E o Edital publicado parece editável.</span></div>
     <div class="bloco"><b>Quem se inscreve ou é convocado</b><span>A distinção entre recebido e deferido está escrita nos lugares certos: "O recebimento não implica deferimento", "Aguardando conferência", "Esta convocação ainda não é o resultado", "não é matrícula". A pendência, porém, só aparece se a pessoa voltar ao portal. E a página pública conta como "4 documentos" o que, para a ampla, são dois.</span></div>
@@ -567,6 +613,9 @@ ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:
       <tr><td>12</td><td>Corrigir</td><td>Convocado</td><td>Convocação › item "Precisa de correção"</td><td>Pendência; prazo em curso</td><td>Enviar novo arquivo</td><td>Item "Complementado"; volta para conferência</td></tr>
       <tr><td>13</td><td>Decidir</td><td>Gestor ou presidência</td><td>Convocação › linha › "Registrar desfecho" ou "Indeferir pelas pendências"</td><td>Para aceite: todos os obrigatórios conformes</td><td>Espécie, fundamento; conferir o texto; Registrar</td><td>"Desfecho registrado. A apuração seguinte… N a ocupar"</td></tr>
       <tr><td>14</td><td>Próxima providência</td><td>Gestor</td><td>A mesma tela e o Andamento do Edital</td><td>Desfecho registrado</td><td>Seguir o "Próximo nesta lista"</td><td>Chamar a próxima da fila, pedir a faixa seguinte, publicar o resultado ou definir a formalização</td></tr>
+      <tr><td>15</td><td>Definir os documentos da formalização</td><td>Presidência ou gestor</td><td>Edital › Documentos para a formalização</td><td>Edital publicado</td><td>Marcar os documentos que o setor recebe; motivo; "Gravar a definição"</td><td>"Definição gravada"; histórico da definição</td></tr>
+      <tr><td>16</td><td>Designar o setor</td><td>Administrador institucional</td><td>Gestão de acessos › Formalização</td><td>Pessoa com o papel Formalização</td><td>Designar para o Edital (e Perfis, se for o caso), com motivo</td><td>"Quem acessa os documentos" lista a pessoa</td></tr>
+      <tr><td>17</td><td>Baixar os documentos</td><td>Setor de formalização (ex.: secretaria acadêmica)</td><td>Formalização › Edital</td><td>Definição gravada; designação; pessoas com aceite</td><td>Visualizar ou baixar um a um; "Verificar e exportar todos os aptos"; "Baixar pacote"</td><td>ZIP com uma pasta por pessoa e manifesto.csv; exportação no histórico</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -586,6 +635,7 @@ ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:
       <tr><td class="p3">P3</td><td>A ajuda "Como preencher" dos documentos não explica momento, aproveitamento e obrigatoriedade</td><td>Compor › Inscrição</td><td>Aproveitamento</td><td>Quem configura pela primeira vez erra o aproveitamento e só descobre no salvar</td><td>Capturas 05 e 06</td><td>Levar ao "Como preencher" as frases que já estão sob cada campo</td></tr>
       <tr><td class="p3">P3</td><td>A página pública conta todos os documentos e não marca o facultativo</td><td>Portal › página da seleção</td><td>"Quantos documentos eu preciso?"</td><td>O candidato da ampla lê "4 documentos" quando lhe cabem dois, um opcional</td><td>Captura 08</td><td>Marcar "(facultativo)" e contar só os de todos</td></tr>
       <tr><td class="p3">P3</td><td>Fundamento pré-redigido do indeferimento termina em ".."</td><td>Convocação › Indeferir pelas pendências</td><td>—</td><td>Texto oficial com erro de pontuação, lido pelo candidato</td><td>Capturas 28 e 31</td><td>Não repetir o ponto quando o motivo já termina em ponto</td></tr>
+      <tr><td class="p2">P2</td><td>O pacote do setor não traz os dados do Requerimento de Matrícula nem tem confirmação de recebimento</td><td>Formalização › Edital</td><td>"Exportado" é "entregue"?</td><td>A secretaria precisa juntar o Requerimento por outro caminho, e a comissão não sabe se o setor recebeu</td><td>Capítulo 11; spec 117 (FR-3673, fora de escopo)</td><td>Decisão registrada na 117; reavaliar com a secretaria acadêmica</td></tr>
       <tr><td class="p3">P3</td><td>Não há visualizador embutido nem fila de conferência entre Editais</td><td>Documentos da convocação</td><td>—</td><td>Quem confere alterna abas e acha o trabalho pelo Andamento de cada Edital</td><td>Capítulo 7</td><td>Decisão registrada (FR-3606, FR-3608, FR-3609); reavaliar quando houver volume</td></tr>
     </tbody>
   </table></div>
@@ -597,12 +647,13 @@ ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:
     <li>O aceite recusado diz qual documento falta, e o atalho "Indeferir pelas pendências" separa indeferir a convocação de marcar o item.</li>
     <li>"Conferir o texto" mostra o texto como o candidato o verá e quantas pessoas o recebem.</li>
     <li>Depois de cada desfecho, a tela diz a apuração seguinte e o próximo passo.</li>
+    <li>O setor de formalização vê só quem está apto e só o que foi definido. A verificação antes do download e o manifesto com SHA-256 tornam o pacote conferível.</li>
   </ul>
 </section>
 
 <footer class="fora-do-modo">
   <p><b>Como foi feito.</b> O banco foi criado do zero e migrado, e as unidades semeadas, sobre a <span class="mono">main</span> em <span class="mono">ffde747b</span> (06/11/2026). Os Editais foram publicados pela API administrativa, com os mesmos auxiliares da suíte de testes. As inscrições foram feitas pelos comandos do portal (Alice, pelo navegador). A análise documental, a consolidação, as convocações, a conferência e os desfechos foram feitos pela tela, com Playwright. A relação, o sorteio, o corte e a apuração foram feitos pelos comandos de domínio. A fonte do sorteio é a "Fonte de demonstração".</p>
-  <p><b>O que não foi exercitado.</b> Retificação de documentos, Requerimento de Matrícula, convocação "para regularizar" até a regularização, inércia, correção da convocação (mais prazo), exportação da formalização, recurso, e o candidato substituindo um arquivo já conferido. O que está marcado "Visto no código" foi lido, não executado.</p>
+  <p><b>O que não foi exercitado.</b> Retificação de documentos, Requerimento de Matrícula, convocação "para regularizar" até a regularização, inércia, correção da convocação (mais prazo), a designação do setor pela tela (gravada pelo atalho dos testes), recurso, e o candidato substituindo um arquivo já conferido. O que está marcado "Visto no código" foi lido, não executado.</p>
   <p>Complementa o <a href="../guia-jornada-do-sorteio-2026-11-05/index.html">guia da jornada do sorteio</a> e o <a href="../estudo-sorteio-edital-35-2026-11-05.md">estudo do Edital 35</a>.</p>
 </footer>
 </div>
