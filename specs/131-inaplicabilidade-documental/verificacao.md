@@ -88,4 +88,17 @@ cada arquivo e envia cada formulário como os botões o fazem. Não há capturas
 
 ## 4. Segunda rodada completa
 
-Registrada depois da correção, no commit que fecha a implementação.
+Sobre o commit `c4c2cece`, com o mesmo `make lint check test-pg`. Lint e `check` ficaram verdes, e
+a suíte teve **2 falhas, 17 229 passando e 21 pulados**, em 817s. As duas não são da 131:
+
+| Teste | Mensagem | Isolado | O arquivo inteiro, `-n 4` |
+|---|---|---|---|
+| `integration/agenda/test_fonte.py::test_retificacao_vigente_muda_a_data_na_leitura_seguinte` | `assert [] == [datetime.date(2026, 11, 10)]` | passou 3 de 3 | passou |
+| `integration/convocacao/test_visibilidade_ao_candidato.py::TestACadeia::test_correcao_de_nao_publicada_continua_invisivel` | `no_effective_version`: *"Não havia conteúdo vigente para este Edital no instante consultado."* | passou 3 de 3 | passou |
+
+Os dois dependem do instante em que a versão vigente é lida, e nenhum passou por código que a 131
+mudou: a 131 não toca `agenda/` nem o seletor de visibilidade da `125`. Na primeira rodada, sobre o
+código quase idêntico, os dois tinham passado. É intermitência sob carga, como a do teste de tempo da
+ocupação que o `CLAUDE.md` descreve. Fica registrada, e não investigada aqui.
+
+**Ninguém rodou uma terceira rodada completa** para obter uma rodada sem falha nenhuma.
