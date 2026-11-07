@@ -712,6 +712,7 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   | *conforme* | *"Conferido: de acordo com o Edital."* | idem | idem | idem |
   | *conforme*, aproveitado | *"Conferido: de acordo com o Edital. É o arquivo enviado na inscrição, em ‹data›."* (ou *"…na chamada anterior, em ‹data›."*) | idem | idem | idem |
   | *não se aplica* | *"Não se aplica: ‹motivo›."* | idem | idem | idem |
+  | obrigatório condicional *a apresentar* *(revista pela `131`, FR-4475)* | *"Obrigatório ‹condição›. Se for o seu caso, envie até ‹prazo›. Se não for, você não precisa enviar: a comissão registra."* | como o obrigatório *a apresentar* | idem | idem |
   | facultativo *a apresentar* | *"Opcional: envie se quiser."* | *"Opcional, não enviado."* | *"Opcional, não enviado."* | *"Opcional, não enviado."* |
   | facultativo *pendente* | *"Opcional. A comissão apontou: ‹motivo›. Se quiser, envie um novo arquivo até ‹prazo›."* (sem apresentação: *"…envie o arquivo até ‹prazo›."*) | *"Opcional. A comissão apontou: ‹motivo›."* | idem | idem |
 

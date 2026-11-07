@@ -438,13 +438,22 @@ def test_pendente_exige_motivo_e_o_motivo_volta_ao_estado(aluno, gestor):
 
 
 def test_nao_se_aplica_sem_apresentacao_com_motivo(aluno, gestor):
+    """*Revisto pela `131`* (FR-4457): o comprovante de residência do aluno é incondicional.
+
+    Antes, o "não se aplica" valia em todo item, e este teste o provava sobre um obrigatório que o
+    Edital exige de todos — *"Mora no exterior."* —, que é a dispensa sem fundamento publicado que a
+    `131` fecha. O "não se aplica" do condicional, sem e com arquivo, está em
+    `test_inaplicabilidade.py`.
+    """
     _, convocacao = convocar_primeira(aluno, gestor)
 
-    conferir(
-        gestor, convocacao, RESIDENCIA, "NAO_SE_APLICA", chave="n1", motivo="Mora no exterior."
-    )
+    with pytest.raises(DomainError) as recusa:
+        conferir(
+            gestor, convocacao, RESIDENCIA, "NAO_SE_APLICA", chave="n1", motivo="Mora no exterior."
+        )
 
-    assert lido(convocacao, RESIDENCIA).estado == nomes.ITEM_NAO_SE_APLICA
+    assert recusa.value.code == nomes.NAO_SE_APLICA_SEM_CONDICAO
+    assert lido(convocacao, RESIDENCIA).estado == nomes.ITEM_A_APRESENTAR
 
 
 def test_conferencia_sobre_versao_superada_e_recusada(aluno, gestor):

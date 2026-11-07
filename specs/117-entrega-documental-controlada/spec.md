@@ -447,6 +447,9 @@ injetar uma exceção na geração e simular o tempo-limite.
   *"enviado na inscrição; sem conferência na convocação"*.
 - **FR-3672**: As situações do item são *incluído*, *não se aplica*, *não apresentado*, *não
   conferido*, *indisponível* e *integridade*. Só as duas últimas tornam a pessoa incompleta.
+  *Revista pela `131` em 07/11/2026:* uma sétima, *não se aplica após análise*, para a conferência
+  vigente *não se aplica*, com o instante da conferência e sem o motivo; o *não se aplica* fica para
+  o que o recorte excluiu. Nenhuma das duas torna a pessoa incompleta (FR-4473 da `131`).
 - **FR-3673**: Documento fora da definição, de pessoa não apta, dados do Requerimento de Matrícula,
   notas, pareceres e recursos MUST NOT aparecer na página, na verificação, no pacote ou no manifesto.
 - **FR-3674**: Um **seletor único** MUST compor o conjunto. Página, verificação e pacote MUST mostrar o

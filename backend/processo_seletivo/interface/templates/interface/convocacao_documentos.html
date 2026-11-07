@@ -21,7 +21,7 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
 
 <p class="aviso" role="status"><strong>{{ rotulo_documental }}</strong>{% if desfecho %} — {{ desfecho.get_especie_display }}, registrado em {{ desfecho.registrado_em|date:"d/m/Y H:i" }}{% endif %}</p>
 {% if leitura.pendencias_para_incluir and not desfecho %}
-<p class="nota">Aceite e regularização ainda não podem ser registrados: falta conferir como conforme ou não se aplica — {% for lido in leitura.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+<p class="nota">Aceite e regularização ainda não podem ser registrados: falta conferir como conforme, ou como não se aplica quando o Edital publicou a condição — {% for lido in leitura.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
 {% endif %}
 {% if leitura.facultativos_sem_conferencia and not desfecho %}
 <p class="nota">Documento facultativo recebido e ainda não conferido: {% for lido in leitura.facultativos_sem_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. Isso não impede o desfecho.</p>
@@ -30,7 +30,14 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
 {% for lido in leitura.pedidos %}
 <article class="recorte documento-da-convocacao" id="item-{{ lido.item.id }}" aria-labelledby="item-titulo-{{ forloop.counter }}">
   <h2 id="item-titulo-{{ forloop.counter }}">{{ lido.nome }}{% if not lido.obrigatorio %} <span class="nenhuma">(facultativo)</span>{% endif %}
-    <span class="situacao {% if lido.estado == 'CONFORME' or lido.estado == 'NAO_SE_APLICA' %}s-PUBLICADO{% elif lido.estado == 'PENDENTE' %}s-EM_REVISAO{% elif lido.estado == 'A_APRESENTAR' %}s-CANCELADO{% else %}s-EM_ELABORACAO{% endif %}">{% for chave, rotulo in rotulo_do_item.items %}{% if chave == lido.estado %}{{ rotulo }}{% endif %}{% endfor %}</span></h2>
+    <span class="situacao {% if lido.estado == 'CONFORME' %}s-PUBLICADO{% elif lido.estado == 'NAO_SE_APLICA' %}s-NAO_SE_APLICA{% elif lido.estado == 'PENDENTE' %}s-EM_REVISAO{% elif lido.estado == 'A_APRESENTAR' %}s-CANCELADO{% else %}s-EM_ELABORACAO{% endif %}">{% for chave, rotulo in rotulo_do_item.items %}{% if chave == lido.estado %}{{ rotulo }}{% endif %}{% endfor %}{% if lido.sem_condicao_publicada %} — registrado sem condição publicada{% endif %}</span></h2>
+  {% comment %}
+  A condição de exigência, com o texto que o Edital publicou (131, FR-4454, FR-4459). É o que
+  fundamenta o "não se aplica", junto do motivo; sem ela, o documento é exigido de todos, e a opção
+  nem aparece.
+  {% endcomment %}
+  {% if lido.condicao %}<p class="condicao-publicada">Condição publicada: {{ lido.condicao }}.</p>{% endif %}
+  {% if lido.sem_condicao_publicada and not desfecho %}<p class="nota">Este "não se aplica" foi registrado num documento que o Edital exige de todos, e não atende ao aceite. Registre outra conferência: conforme ou pendente.</p>{% endif %}
   {% if lido.instrucao %}<p class="nota">{{ lido.instrucao }}</p>{% endif %}
   {% if lido.exigencia_mudou %}<p class="nota">A exigência deste documento mudou desde a apresentação de origem.</p>{% endif %}
 
@@ -83,14 +90,24 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
       {% endif %}
       <p class="opcao"><input type="radio" id="pendente-{{ forloop.counter }}" name="resultado" value="PENDENTE" required>
         <label for="pendente-{{ forloop.counter }}">Pendente</label></p>
+      {% if lido.admite_nao_se_aplica %}
       <p class="opcao"><input type="radio" id="nao-se-aplica-{{ forloop.counter }}" name="resultado" value="NAO_SE_APLICA" required>
-        <label for="nao-se-aplica-{{ forloop.counter }}">Não se aplica</label></p>
+        <label for="nao-se-aplica-{{ forloop.counter }}">Não se aplica: a condição publicada não alcança esta pessoa</label></p>
+      {% endif %}
     </fieldset>
     <p class="campo">
-      <label for="motivo-{{ forloop.counter }}">Motivo <span class="opcional">(obrigatório em pendente e não se aplica; a pessoa convocada o lê)</span></label>
+      {% if lido.admite_nao_se_aplica %}
+      <label for="motivo-{{ forloop.counter }}">Motivo <span class="opcional">(obrigatório em pendente e não se aplica. No "não se aplica", que fato da pessoa a põe fora da condição? A pessoa convocada lê este texto.)</span></label>
+      {% else %}
+      <label for="motivo-{{ forloop.counter }}">Motivo <span class="opcional">(obrigatório em pendente; a pessoa convocada o lê)</span></label>
+      {% endif %}
       <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="2"></textarea>
     </p>
-    {% if lido.vigente and lido.conferencia and lido.conferencia.apresentacao_id == lido.vigente.id %}
+    {% comment %}
+    O motivo da revisão: sobre a mesma versão (FR-3586 da `115`), e sempre que o "não se aplica"
+    entra ou sai, haja ou não arquivo (131, FR-4462).
+    {% endcomment %}
+    {% if lido.conferencia and lido.vigente and lido.conferencia.apresentacao_id == lido.vigente.id or lido.conferencia and lido.admite_nao_se_aplica or lido.conferencia and lido.estado == "NAO_SE_APLICA" %}
     <p class="campo">
       <label for="revisao-{{ forloop.counter }}">Por que mudar a conferência desta versão</label>
       <textarea id="revisao-{{ forloop.counter }}" name="motivo_da_substituicao" rows="2"></textarea>

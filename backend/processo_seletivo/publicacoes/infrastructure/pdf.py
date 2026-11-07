@@ -2224,9 +2224,22 @@ def frase_da_etapa(etapa, eventos):
     return " ".join(frases)
 
 
+def _com_a_condicao(texto, documento):
+    """O nome seguido da condição de exigência, depois de vírgula (131, FR-4454, UX-302).
+
+    É como os Editais da amostra a escrevem — *"Certificado de Alistamento Militar, no caso de
+    candidatos do sexo masculino"* —, e por isso quem compõe a escreve como ela vem depois do
+    nome. O documento sem condição sai como antes, byte a byte.
+    """
+    from processo_seletivo.editais.domain.documentos import condicao_de
+
+    condicao = condicao_de(documento)
+    return f"{texto}, {condicao}" if condicao else texto
+
+
 def texto_do_documento(documento):
     """D5 — o nome, "(facultativo)" quando é, e a instrução depois do travessão, em minúscula."""
-    texto = documento.get("name", "") or ""
+    texto = _com_a_condicao(documento.get("name", "") or "", documento)
     if not documento.get("required", True):
         texto += " (facultativo)"
     if documento.get("instructions"):
@@ -4317,7 +4330,7 @@ def _grupos_de_documentos(composicao, snapshot, requisitos, *, nomes_por_id=None
                     _item(composicao, _alinea(indice), texto, recuo=18.0)
                 continue
             for indice, documento in enumerate(documentos):
-                texto = f"{_alinea(indice)} {documento.get('name', '')}"
+                texto = _com_a_condicao(f"{_alinea(indice)} {documento.get('name', '')}", documento)
                 if documento.get("instructions"):
                     texto += f" — {documento['instructions']}"
                 if not documento.get("required", True):

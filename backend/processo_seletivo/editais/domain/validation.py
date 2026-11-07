@@ -38,6 +38,7 @@ from processo_seletivo.editais.domain.calendario import (
 )
 from processo_seletivo.editais.domain.documentos import (
     perfis_que_o_documento_publicado_alcanca,
+    problemas_da_condicao,
     problemas_do_momento,
     rotulo_da_modalidade,
 )
@@ -220,6 +221,8 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
     Campo("moment", str, valores=("AT_ENROLLMENT", "AT_CALL")),
     # O documento da inscrição que atende este, da convocação (115, FR-3566).
     Campo("reusesRequirementId", str, admite_nulo=True, formato="uuid"),
+    # A condição de exigência (131, FR-4451): texto do Edital, que o sistema não avalia, ou nulo.
+    Campo("requiredWhen", str, admite_nulo=True),
 )
 
 # A forma canônica do decimal de `weight` e `minimumScore`, os dois `decimal(7,4)`: no máximo três
@@ -1614,6 +1617,7 @@ def validate_for_publication(
     findings.extend(_periodo_de_inscricoes_cancelado(snapshot, ato=ato, agora=agora))
     findings.extend(_coerencia_dos_documentos_exigidos(snapshot))
     findings.extend(_momento_dos_documentos_exigidos(snapshot))
+    findings.extend(_condicao_dos_documentos_exigidos(snapshot))
     findings.extend(_coerencia_dos_anexos(snapshot))
     findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
     findings.extend(_secao_universal_vazia(snapshot, ato=ato))
@@ -3097,6 +3101,26 @@ def _secao_universal_vazia(snapshot: dict, *, ato: str) -> list[ValidationFindin
     return findings
 
 
+def _condicao_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding]:
+    """A condição de exigência onde ela não cabe (131, FR-4453).
+
+    A gravação do rascunho já recusa, mas a Retificação alcança o documento sem passar pela tela:
+    tornar facultativo um documento condicional deixaria a condição sem o que ela qualifica.
+    """
+    requisitos = snapshot.get("documentRequirements")
+    if not isinstance(requisitos, list):
+        return []
+    posicao = {str(r.get("id")): i for i, r in enumerate(requisitos) if isinstance(r, dict)}
+    return [
+        _impeditivo(
+            "document_requirement_condition_incoherent",
+            mensagem,
+            f"/documentRequirements/{posicao.get(identidade, 0)}/{campo}",
+        )
+        for identidade, campo, mensagem in problemas_da_condicao(requisitos)
+    ]
+
+
 def _momento_dos_documentos_exigidos(snapshot: dict) -> list[ValidationFinding]:
     """Aproveitamento que aponta o que não é da inscrição deste Edital (115, FR-3566).
 
@@ -3883,7 +3907,12 @@ def _textos_impressos(snapshot: dict):
         ("attachments", (("label", "no rótulo"),), "do Anexo", ("label",)),
         (
             "documentRequirements",
-            (("name", "no nome"), ("instructions", "nas instruções")),
+            # A condição de exigência (131) sai no PDF depois do nome, e passa pela mesma regra.
+            (
+                ("name", "no nome"),
+                ("instructions", "nas instruções"),
+                ("requiredWhen", "na condição de exigência"),
+            ),
             "do documento exigido",
             ("name", "key"),
         ),

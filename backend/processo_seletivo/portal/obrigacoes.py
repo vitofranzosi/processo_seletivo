@@ -539,6 +539,15 @@ def texto_do_item(lido, categoria_do_item, momento, prazo):
         arquivo = "um novo arquivo" if apresentado else "o arquivo"
         return f"{apontou} Se quiser, envie {arquivo}{ate_o_prazo}."
 
+    condicao = getattr(lido, "condicao", None)
+    if estado == convocacao_nomes.ITEM_A_APRESENTAR and condicao and aberta:
+        # **O condicional orienta e não manda enviar** (131, FR-4475, UX-304): a quem a condição
+        # não alcança, *"Falta enviar."* pedia o que o Edital não pede. Continua tarefa, porque a
+        # comissão pode precisar do arquivo para saber se a condição se aplica.
+        return (
+            f"Obrigatório {condicao}. Se for o seu caso, envie{ate_o_prazo}. Se não for, você não "
+            "precisa enviar: a comissão registra."
+        )
     if estado == convocacao_nomes.ITEM_A_APRESENTAR:
         return {
             ABERTA: "Falta enviar.",

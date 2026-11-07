@@ -490,6 +490,8 @@ def rascunho_completo():
             "order": 3,
             "moment": "AT_CALL",
             "reusesRequirementId": DOCUMENTO["A"],
+            # A condição de exigência (131): pela mesma razão, o Edital máximo a publica com valor.
+            "requiredWhen": "no caso de quem mudou de nome depois da inscrição",
         },
     ]
     # O Evento ganha local: `location` é emitido no conteúdo publicado e, até a `026`, não era

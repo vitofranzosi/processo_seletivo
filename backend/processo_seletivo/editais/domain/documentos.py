@@ -84,6 +84,83 @@ def validate_document_requirements(requirements: list[dict], *, profiles: list[d
         _validate_aplicabilidade(requirement, por_perfil)
     for identidade, campo, mensagem in problemas_do_momento(requirements):
         raise DocumentRequirementValidationError(mensagem, campo=campo, identidade=identidade)
+    for identidade, campo, mensagem in problemas_da_condicao(requirements):
+        raise DocumentRequirementValidationError(mensagem, campo=campo, identidade=identidade)
+
+
+#: O maior texto de condição que o Edital publica (131, R-002): a maior da amostra tem menos de 150.
+LIMITE_DA_CONDICAO = 300
+
+
+def condicao_de(requisito: dict) -> str | None:
+    """A condição de exigência publicada, aparada, ou `None` — o documento incondicional (131).
+
+    **Só lê o campo.** Nenhuma condição se infere das instruções (D-012): *"apenas para candidatos
+    do sexo masculino"* numa instrução é texto ao candidato, e não regra publicada. A versão
+    anterior à canônica 19 não tem o campo, e é incondicional (FR-4477).
+    """
+    if not isinstance(requisito, dict):
+        return None
+    texto = requisito.get("requiredWhen")
+    if not isinstance(texto, str):
+        return None
+    return texto.strip() or None
+
+
+def nome_com_a_condicao(requisito: dict) -> str:
+    """O nome, seguido da condição depois de vírgula, como o PDF o imprime (131, FR-4454, UX-302).
+
+    Uma frase só para as superfícies que listam documentos por nome — o anúncio da página pública e
+    o PDF —, para que as duas digam o mesmo texto.
+    """
+    nome = requisito.get("name", "") or ""
+    condicao = condicao_de(requisito)
+    return f"{nome}, {condicao}" if condicao else nome
+
+
+def problemas_da_condicao(requisitos: list[dict]) -> list[tuple[str, str, str]]:
+    """A condição onde ela não cabe, como `(id, campo, mensagem)` (131, FR-4453).
+
+    Uma regra, duas leituras, como o momento: a gravação do rascunho recusa a primeira, e a
+    conferência da publicação lista todas — a Retificação alcança o documento sem passar pela tela.
+    **Só o obrigatório da convocação tem condição** (D-004): o facultativo não impede o aceite, e o
+    obrigatório da inscrição impede o envio sem que ninguém confira antes.
+    """
+    problemas = []
+    for requisito in requisitos:
+        condicao = condicao_de(requisito)
+        if condicao is None:
+            continue
+        identidade = str(requisito.get("id", ""))
+        nome = requisito.get("name", "")
+        if len(condicao) > LIMITE_DA_CONDICAO:
+            problemas.append(
+                (
+                    identidade,
+                    "requiredWhen",
+                    f"A condição do Documento Exigido '{nome}' passa de {LIMITE_DA_CONDICAO} "
+                    "caracteres.",
+                )
+            )
+        elif momento_de(requisito) != NA_CONVOCACAO:
+            problemas.append(
+                (
+                    identidade,
+                    "requiredWhen",
+                    f"O Documento Exigido '{nome}' é pedido na inscrição, e só o documento "
+                    "obrigatório pedido na convocação tem condição de exigência.",
+                )
+            )
+        elif not requisito.get("required", True):
+            problemas.append(
+                (
+                    identidade,
+                    "requiredWhen",
+                    f"O Documento Exigido '{nome}' é facultativo, e só o documento obrigatório tem "
+                    "condição de exigência.",
+                )
+            )
+    return problemas
 
 
 def problemas_do_momento(requisitos: list[dict]) -> list[tuple[str, str, str]]:

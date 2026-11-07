@@ -439,6 +439,10 @@ def _documento(documento, snapshot):
             "na convocação" if documento.get("moment") == "AT_CALL" else "na inscrição",
         ),
     ]
+    # A condição de exigência (131, FR-4454): quem homologa vê o caso em que o obrigatório da
+    # convocação se exige, com o texto que o PDF vai imprimir.
+    if documento.get("requiredWhen"):
+        linhas.append(Rotulada("Exigido somente quando", documento["requiredWhen"]))
     aproveitado = _nome_do_aproveitado(documento, snapshot)
     if aproveitado:
         linhas.append(Rotulada("Atendido por", f"{aproveitado}, se enviado na inscrição"))
@@ -944,6 +948,7 @@ _LIDOS_POR_COLECAO = {
         "modalityCode",
         "moment",
         "reusesRequirementId",
+        "requiredWhen",
     ),
 }
 LIDOS = frozenset(

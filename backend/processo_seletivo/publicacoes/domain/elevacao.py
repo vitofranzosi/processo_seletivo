@@ -123,6 +123,9 @@ DEGRAUS_DE_DOCUMENTO = {
     # **O degrau 18 é o momento** (115, FR-3563). Todo documento publicado antes era pedido na
     # inscrição — a convocação não sabia pedir nada —, e nenhum aproveitava outro.
     18: {"moment": "AT_ENROLLMENT", "reusesRequirementId": None},
+    # **O degrau 19 é a condição de exigência** (131, FR-4455). Todo documento publicado antes era
+    # incondicional — a condição não existia —, e nenhuma se infere das instruções (D-012).
+    19: {"requiredWhen": None},
 }
 
 COLECAO_DE_DOCUMENTOS = "documentRequirements"

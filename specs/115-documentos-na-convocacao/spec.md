@@ -474,6 +474,9 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 - **Conferência depois do desfecho** (FR-3588).
 - **"Conforme" sem ter aberto o arquivo** (FR-3611, D-012).
 - **Obrigatório marcado "não se aplica"** com motivo. Conta como atendido para o aceite (FR-3592).
+  *Revisto pela `131` em 07/11/2026:* conta como atendido só no obrigatório que o Edital publicou com
+  condição de exigência, e o aceite pede a ciência de quem desfecha (FR-4457, FR-4468 e FR-4470 da
+  `131`). No incondicional, o "não se aplica" é recusado, e o gravado antes não atende.
 - **Facultativo apresentado e não conferido.** Adverte e não impede (FR-3592).
 - **Documento da inscrição aproveitado e o titular ausente** (inscrição sem o arquivo). O item nasce a
   apresentar (FR-3576).
@@ -664,9 +667,16 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   
   A conferência MUST citar a apresentação julgada e o hash dela. Item sem apresentação só pode ser
   conferido como pendente ou não se aplica.
+
+  *Revista pela `131` em 07/11/2026.* O **não se aplica** existe só no obrigatório cujo requisito, na
+  versão da lista, declara condição de exigência (FR-4457 da `131`); com apresentação vigente, pede
+  que o conferente a tenha aberto (FR-4460 da `131`). O motivo do pendente e do não se aplica precisa
+  ter ao menos uma palavra (FR-4458 da `131`). Item excluído pelo recorte não se confere (FR-4464 da
+  `131`). A redação acima fica como estava.
 - **FR-3586**: A conferência MUST ser append-only. A mais recente do item prevalece, e as anteriores
   continuam legíveis. Uma conferência que substitui outra sobre a **mesma** apresentação MUST exigir
-  motivo.
+  motivo. *Revista pela `131` em 07/11/2026:* também a que substitui um *não se aplica*, ou que
+  registra um sobre conferência vigente, haja ou não apresentação (FR-4462 da `131`).
 - **FR-3587**: A conferência sobre apresentação que deixou de ser a vigente MUST ser recusada, com a
   indicação de que há versão nova, e nada é gravado.
 - **FR-3588**: A conferência MUST ser aceita enquanto a chamada estiver em aberto, inclusive depois do
@@ -711,6 +721,11 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   - tem código próprio.
   
   Facultativo apresentado e não conferido MUST gerar advertência na tela e MUST NOT impedir.
+
+  *Revista pela `131` em 07/11/2026.* O *não se aplica* atende só em item condicional, pela versão da
+  lista; o gravado em incondicional não atende, e a recusa diz *"registrado sem condição publicada"*
+  (FR-4470 da `131`). Com obrigatório *não se aplica* vigente, o aceite e a regularização pedem a
+  ciência de quem desfecha, pela assinatura do conjunto mostrado (FR-4467 e FR-4468 da `131`).
 - **FR-4401** *(correção de 07/11/2026)*: O aceite e a regularização MUST ser recusados também quando
   a **versão da chamada** pede à pessoa um documento na convocação, obrigatório ou facultativo, e a
   lista da chamada não tem o item dele. A recusa:
@@ -809,7 +824,9 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   as contagens (recebidos, pendentes, complementados, conformes e obrigatórios) e o caminho para os
   documentos daquela convocação. Ela MUST oferecer a ordem *vencimento mais próximo, depois estado*:
   *para conferir*, *complementado*, *com pendência*, *aguardando*, *pronta para decidir*, *decidida*.
-  Linha sem exigência MUST aparecer como hoje.
+  Linha sem exigência MUST aparecer como hoje. *Revista pela `131` em 07/11/2026:* os conformes e os
+  *não se aplica após análise* são contados à parte, e o segundo não soma no primeiro (FR-4466 da
+  `131`).
 - **FR-3608**: A página **Documentos da convocação**, filha da condução, MUST listar:
   - os itens, com o estado;
   - por item, as apresentações, com versão e instante;

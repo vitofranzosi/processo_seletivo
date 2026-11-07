@@ -996,6 +996,7 @@ components:
           modalityCode,
           moment,
           reusesRequirementId,
+          requiredWhen,
         ]
       properties:
         id: { $ref: '#/components/schemas/Id' }
@@ -1022,6 +1023,10 @@ components:
         moment: { type: string, enum: [AT_ENROLLMENT, AT_CALL] }
         # O documento da inscrição que atende este, da convocação, ou `null` (115).
         reusesRequirementId: { type: [string, 'null'], format: uuid }
+        # A condição de exigência (131): o caso em que o obrigatório da convocação é exigido, como o
+        # Edital o publica, ou `null` para "incondicional". Texto que o sistema não avalia. Versões
+        # anteriores à canônica 19 não trazem o campo, e a ausência é "incondicional".
+        requiredWhen: { type: [string, 'null'] }
     AnexoPublicado:
       type: object
       description: >-

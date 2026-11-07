@@ -172,7 +172,13 @@ def _da_convocacao(lido, requisito):
         conferencia is not None
         and conferencia.resultado == ConferenciaDeDocumento.Resultado.NAO_SE_APLICA
     ):
-        return Documento(situacao=nomes.NAO_SE_APLICA, **base)
+        # A decisão de quem conferiu, com o instante dela, na coluna que o manifesto já tem
+        # (131, FR-4473): distinta do "não se aplica" do recorte, e sem o motivo (FR-3687).
+        return Documento(
+            situacao=nomes.NAO_SE_APLICA_APOS_ANALISE,
+            conferido_em=conferencia.conferido_em,
+            **base,
+        )
     if apresentacao is None:
         return Documento(situacao=nomes.NAO_APRESENTADO, **base)
     if (

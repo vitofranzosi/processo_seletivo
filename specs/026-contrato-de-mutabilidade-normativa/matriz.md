@@ -225,6 +225,7 @@ carregue todo campo faria o guardião falhar conforme a seção que a travessia 
 | `profileId` | | **R** | Já oferecido. |
 | `modalityId` | | **R** | Já oferecido. |
 | `attachmentId` | | **R** | Já oferecido (020, FR-020). |
+| `requiredWhen` | | **R** | *Revista pela `131`.* A condição de exigência do obrigatório da convocação: diz a quem ele se aplica, como `required` e o recorte, e alcança só as chamadas seguintes (FR-4456). |
 
 ---
 

@@ -191,6 +191,12 @@ def test_documento_da_convocacao_sem_conferencia_conforme_vigente_nao_sai(cenari
 
 
 def test_a_conferencia_nao_se_aplica_e_situacao_nao_se_aplica(cenario, gestor):
+    """*Revisto pela `131`* (FR-4473): a conferência "não se aplica" é **após análise**.
+
+    Antes, o setor recebia o mesmo *"não se aplica"* do item que o recorte excluiu, e não tinha
+    como saber que o documento não veio por decisão da comissão. A situação nova leva o instante
+    da conferência, e nunca o motivo (FR-3687 da `117`).
+    """
     definir_documentos(cenario.edital, gestor, requisitos=[RESIDENCIA])
     _, convocacao = cenario.aptas[0]
     item = cenarios.item(convocacao, RESIDENCIA)
@@ -206,7 +212,11 @@ def test_a_conferencia_nao_se_aplica_e_situacao_nao_se_aplica(cenario, gestor):
     )
 
     pessoa = next(p for p in _aptos(cenario) if p.convocacao_id == str(convocacao.id))
-    assert _situacoes(pessoa) == {"residencia": nomes.NAO_SE_APLICA}
+    assert _situacoes(pessoa) == {"residencia": nomes.NAO_SE_APLICA_APOS_ANALISE}
+    (documento,) = pessoa.documentos
+    assert documento.conferido_em is not None
+    assert documento.rotulo == "não se aplica após análise"
+    assert not documento.incluivel
 
 
 def test_o_arquivo_aproveitado_por_referencia_sai_uma_vez(

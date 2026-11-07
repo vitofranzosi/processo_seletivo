@@ -153,7 +153,12 @@ from uuid import UUID
 # **O degrau 18 é o momento do Documento Exigido** (115, FR-3563): `moment` e `reusesRequirementId`.
 # Todo documento publicado antes era da inscrição e não aproveitava outro — a convocação não pedia
 # documento. Conversão sem invenção, no molde do degrau 17.
-SCHEMA_VERSION = 18
+#
+# **O degrau 19 é a condição de exigência do Documento Exigido** (131, FR-4455): `requiredWhen`
+# nulo diz "incondicional", e é verdade sobre todo documento publicado antes — a condição não
+# existia. Conversão sem invenção, no molde dos degraus 17 e 18, e nenhuma condição se infere das
+# instruções (131, D-012).
+SCHEMA_VERSION = 19
 
 
 def _default(value):

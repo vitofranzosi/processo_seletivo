@@ -411,6 +411,8 @@ def _document_requirements(edital: Edital) -> list[dict]:
             "reusesRequirementId": None
             if documento.aproveita is None
             else str(documento.aproveita),
+            # A condição de exigência, ou `null` para "incondicional" (131, FR-4451, FR-4455).
+            "requiredWhen": documento.condicao or None,
         }
         for documento in edital.documentos_exigidos.all()
     ]

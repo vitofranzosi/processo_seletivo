@@ -8,3 +8,7 @@
 .acao.secundaria{border-color:var(--borda);color:var(--texto-fraco)}
 .aberto-por-voce{font-size:.8125rem;color:var(--verde-texto);font-weight:600}
 .conferencias{margin:.25rem 0;padding-left:1.25rem;overflow-wrap:anywhere}
+/* O "não se aplica após análise" não se parece com o "conforme" (131, UX-301): o selo verde dizia o
+   mesmo dos dois, e o aceite se apoiava nessa leitura. Contorno tracejado, sem a cor do atendido. */
+.s-NAO_SE_APLICA{background:#fff;color:#333;border:1px dashed #666}
+.condicao-publicada{margin:.25rem 0;font-size:.875rem;overflow-wrap:anywhere}

@@ -30,6 +30,7 @@ from processo_seletivo.convocacao.models import (
 from processo_seletivo.editais.domain.documentos import (
     NA_CONVOCACAO,
     aplicabilidade,
+    condicao_de,
     modelo_do_requisito,
 )
 from processo_seletivo.shared.api.problems import DomainError
@@ -318,6 +319,28 @@ class ItemLido:
         return self.item.situacao == dominio.OBRIGATORIO
 
     @property
+    def condicao(self):
+        """A condição de exigência publicada na versão da lista, ou `None` (131, FR-4459).
+
+        Lida do requisito que a leitura já trouxe da versão do item, sem consulta nova (SC-1377), e
+        nunca copiada para a conferência (D-007).
+        """
+        return condicao_de(self.requisito)
+
+    @property
+    def condicional(self):
+        return self.condicao is not None
+
+    @property
+    def admite_nao_se_aplica(self):
+        return dominio.admite_nao_se_aplica(self.item.situacao, condicional=self.condicional)
+
+    @property
+    def sem_condicao_publicada(self):
+        """O *"não se aplica"* gravado antes da `131` em obrigatório incondicional (FR-4478)."""
+        return self.obrigatorio and self.estado == nomes.ITEM_NAO_SE_APLICA and not self.condicional
+
+    @property
     def vigente(self):
         return dominio.vigente(self.apresentacoes)
 
@@ -349,6 +372,7 @@ class ItemLido:
 class LeituraDocumental:
     itens: list = field(default_factory=list)
     estado: str = nomes.DOCUMENTOS_SEM_EXIGENCIA
+    chamada_id: object = None
 
     @property
     def pedidos(self):
@@ -357,8 +381,29 @@ class LeituraDocumental:
     @property
     def pendencias_para_incluir(self):
         return [
-            lido for lido in self.pedidos if dominio.impede_incluir(lido.item.situacao, lido.estado)
+            lido
+            for lido in self.pedidos
+            if dominio.impede_incluir(lido.item.situacao, lido.estado, condicional=lido.condicional)
         ]
+
+    @property
+    def inaplicabilidades(self):
+        """Os obrigatórios condicionais considerados não aplicáveis: o que o aceite mostra (131)."""
+        return [
+            lido
+            for lido in self.pedidos
+            if lido.obrigatorio and lido.condicional and lido.estado == nomes.ITEM_NAO_SE_APLICA
+        ]
+
+    @property
+    def assinatura_das_inaplicabilidades(self):
+        """O que a confirmação do aceite leva, e o que o comando confere (131, FR-4468)."""
+        from processo_seletivo.convocacao.domain.alcance import assinatura_das_inaplicabilidades
+
+        return assinatura_das_inaplicabilidades(
+            chamada_id=self.chamada_id,
+            conferencias=[lido.conferencia.id for lido in self.inaplicabilidades],
+        )
 
     @property
     def facultativos_sem_conferencia(self):
@@ -377,15 +422,25 @@ class LeituraDocumental:
             "recebidos": self.contar(nomes.ITEM_RECEBIDO),
             "complementados": self.contar(nomes.ITEM_COMPLEMENTADO),
             "pendentes": self.contar(nomes.ITEM_PENDENTE),
-            "conformes": self.contar(nomes.ITEM_CONFORME) + self.contar(nomes.ITEM_NAO_SE_APLICA),
+            # **Separados** (131, FR-4466): somados, *"3 de 4 conferidos"* dizia o mesmo de três
+            # conformes e de três afastados, e o aceite se apoiava nessa leitura.
+            "conformes": self.contar(nomes.ITEM_CONFORME),
+            "nao_se_aplica": self.contar(nomes.ITEM_NAO_SE_APLICA),
             "a_apresentar": self.contar(nomes.ITEM_A_APRESENTAR),
             "obrigatorios": sum(1 for lido in self.pedidos if lido.obrigatorio),
             "total": len(self.pedidos),
         }
 
     def fundamento_do_indeferimento(self):
+        # O motivo do *"não se aplica"* sem condição publicada não é pendência da pessoa: é a
+        # conferência que precisa ser refeita (131, FR-4478), e o fundamento não o cita.
         pendentes = [
-            (lido.nome, getattr(lido.conferencia, "motivo", "") or "")
+            (
+                lido.nome,
+                ""
+                if lido.sem_condicao_publicada
+                else getattr(lido.conferencia, "motivo", "") or "",
+            )
             for lido in self.pendencias_para_incluir
         ]
         return dominio.fundamento_das_pendencias(pendentes)
@@ -443,10 +498,16 @@ def leituras_por_chamada(raizes, *, decididas=frozenset()):
     leituras = {}
     for raiz in raizes:
         lidos = sorted(por_chamada[raiz.id], key=lambda lido: lido.requisito.get("order", 0))
+        # O *"não se aplica"* sem condição publicada não deixa a convocação pronta para decidir: o
+        # aceite o recusa (131, FR-4470), e a condução precisa dizer que há o que refazer.
         estado = dominio.estado_da_convocacao(
-            [(lido.item, lido.estado) for lido in lidos], decidida=raiz.id in decididas
+            [
+                (lido.item, nomes.ITEM_PENDENTE if lido.sem_condicao_publicada else lido.estado)
+                for lido in lidos
+            ],
+            decidida=raiz.id in decididas,
         )
-        leituras[raiz.id] = LeituraDocumental(itens=lidos, estado=estado)
+        leituras[raiz.id] = LeituraDocumental(itens=lidos, estado=estado, chamada_id=raiz.id)
     return leituras
 
 
@@ -639,6 +700,29 @@ def frase_do_prazo_decorrido(vigente):
 # ---------------------------------------------------------------------------
 
 
+def requisito_do_item(item):
+    """O Documento Exigido que fundamentou o item, na versão da lista (FR-3572, FR-3573).
+
+    A versão é a que o item cita, e não a vigente: uma Retificação posterior não muda o que a
+    chamada pede, nem a condição de exigência (131, FR-4456).
+    """
+    for requisito in item.versao.content.get("documentRequirements") or []:
+        if str(requisito.get("id")) == str(item.requisito_id):
+            return requisito
+    return {}
+
+
+def _aberta_por(actor, apresentacao):
+    """Se o próprio conferente abriu esta apresentação (FR-3611 da `115`; FR-4460 da `131`)."""
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+
+    return RegistroAuditoria.objects.filter(
+        operation=CONSULTAR_APRESENTACAO,
+        aggregate_id=apresentacao.id,
+        actor_subject=actor.subject,
+    ).exists()
+
+
 def conferir(
     *,
     actor,
@@ -656,7 +740,6 @@ def conferir(
     Processo, e a apresentação trava a inscrição — a conferência fica serializada com os dois.
     """
     from processo_seletivo.auditoria.application import record_event
-    from processo_seletivo.auditoria.models import RegistroAuditoria
     from processo_seletivo.comissoes.domain.autorizacao import pode_conferir_documentos
     from processo_seletivo.inscricoes.models import Inscricao
     from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
@@ -677,6 +760,11 @@ def conferir(
     with command_context() as agora:
         item = item_da_chamada(item_id)
         if item is None or actor is None:
+            raise nao_encontrado()
+        # **O item que o recorte excluiu não existe para a conferência** (131, FR-4464): é a recusa
+        # que `apresentar` já faz, e pela mesma razão. Antes, a conferência se gravava e sumia — a
+        # leitura não conta o item que a lista não pede (9ª decisão).
+        if item.situacao == ItemDaListaDaConvocacao.Situacao.NAO_SE_APLICA:
             raise nao_encontrado()
         edital = item.chamada.edital
         processo = (
@@ -727,6 +815,19 @@ def conferir(
                     "versão atual antes de registrar a conferência.",
                     409,
                 )
+        nao_se_aplica = resultado == nomes.NAO_SE_APLICA_NA_CONFERENCIA
+        # **Só onde o Edital publicou a condição** (131, FR-4457). A condição é a da versão em que
+        # a lista nasceu, e não a vigente: a Retificação não alcança a chamada aberta (FR-3573).
+        if nao_se_aplica and not dominio.admite_nao_se_aplica(
+            item.situacao, condicional=condicao_de(requisito_do_item(item)) is not None
+        ):
+            raise DomainError(
+                nomes.NAO_SE_APLICA_SEM_CONDICAO,
+                "Este documento é exigido de toda pessoa a quem o Edital o pede. 'Não se aplica' "
+                "só existe para documento que o Edital publicou com condição.",
+                422,
+                campo="resultado",
+            )
         if resultado == nomes.CONFORME:
             if julgada is None:
                 raise DomainError(
@@ -734,31 +835,48 @@ def conferir(
                     "Só se confere como conforme o documento que foi apresentado.",
                     422,
                 )
-            aberta = RegistroAuditoria.objects.filter(
-                operation=CONSULTAR_APRESENTACAO,
-                aggregate_id=julgada.id,
-                actor_subject=actor.subject,
-            ).exists()
-            if not aberta:
+            if not _aberta_por(actor, julgada):
                 raise DomainError(
                     nomes.CONFORME_SEM_ABERTURA,
                     "Abra o documento antes de conferi-lo como conforme.",
                     409,
                 )
-        elif not motivo:
-            raise DomainError(
-                nomes.MOTIVO_DA_CONFERENCIA_OBRIGATORIO,
-                "Diga o motivo: ele aparece para a pessoa convocada.",
-                422,
-                campo="motivo",
-            )
+        else:
+            # **Com arquivo, o "não se aplica" também pede a abertura** (131, FR-4460, D-008): o
+            # arquivo pode provar que a condição se aplica, e afastar sem olhar é decidir contra a
+            # evidência que está no processo. Sem arquivo, nada a abrir.
+            if nao_se_aplica and julgada is not None and not _aberta_por(actor, julgada):
+                raise DomainError(
+                    nomes.NAO_SE_APLICA_SEM_ABERTURA,
+                    "Abra o documento antes de registrar que ele não se aplica: ele pode mostrar "
+                    "que a condição se aplica.",
+                    409,
+                )
+            if not motivo:
+                raise DomainError(
+                    nomes.MOTIVO_DA_CONFERENCIA_OBRIGATORIO,
+                    "Diga o motivo: ele aparece para a pessoa convocada.",
+                    422,
+                    campo="motivo",
+                )
+            if not dominio.motivo_tem_conteudo(motivo):
+                raise DomainError(
+                    nomes.MOTIVO_SEM_CONTEUDO,
+                    "Escreva o motivo com palavras: ele aparece para a pessoa convocada.",
+                    422,
+                    campo="motivo",
+                )
         anterior = item.conferencias.order_by("-conferido_em", "-id").first()
-        if (
-            anterior is not None
-            and julgada is not None
-            and anterior.apresentacao_id == julgada.id
-            and not motivo_da_substituicao
-        ):
+        # A substituição sobre a mesma versão pede motivo (FR-3586); a que **envolve** o "não se
+        # aplica" também, haja ou não arquivo (131, FR-4462): sem versão a comparar, trocar a
+        # pendência por "não se aplica" abria o aceite sem dizer por quê.
+        envolve_nao_se_aplica = anterior is not None and (
+            nao_se_aplica or anterior.resultado == nomes.NAO_SE_APLICA_NA_CONFERENCIA
+        )
+        mesma_versao = (
+            anterior is not None and julgada is not None and anterior.apresentacao_id == julgada.id
+        )
+        if (mesma_versao or envolve_nao_se_aplica) and not motivo_da_substituicao:
             raise DomainError(
                 nomes.MOTIVO_DA_SUBSTITUICAO_OBRIGATORIO,
                 "Este documento já foi conferido. Para mudar a conferência, diga por quê.",

@@ -8816,7 +8816,9 @@ ROTULO_DO_ITEM = {
     "PENDENTE": "Pendente",
     "COMPLEMENTADO": "Complementado, aguardando conferência",
     "CONFORME": "Conforme",
-    "NAO_SE_APLICA": "Não se aplica",
+    # **"após análise"** (131, UX-301): é juízo de quem conferiu, e não o "não se aplica" do
+    # recorte, que nem chega a esta página.
+    "NAO_SE_APLICA": "Não se aplica após análise",
 }
 
 
@@ -8979,7 +8981,7 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
     que o "conforme" lê (FR-3611).
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
-    from processo_seletivo.convocacao.models import ApresentacaoDeDocumento
+    from processo_seletivo.convocacao.models import ApresentacaoDeDocumento, ItemDaListaDaConvocacao
 
     ator, edital, convocacao, base = _convocacao_para_conferir(request, edital_id, convocacao_id)
     if ator is None:
@@ -8990,6 +8992,9 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
             "item", "documento_da_inscricao", "apresentacao_de_origem"
         )
         .filter(pk=apresentacao_id, item__chamada=raiz)
+        # O item que o recorte excluiu não se abre, como não se confere (131, FR-4464). Hoje não há
+        # apresentação nele — o envio é recusado —, e a regra fica aqui para continuar não havendo.
+        .exclude(item__situacao=ItemDaListaDaConvocacao.Situacao.NAO_SE_APLICA)
         .first()
     )
     if apresentacao is None:
@@ -9529,6 +9534,12 @@ def desfechar_view(request, edital_id, marco_id, convocacao_id):
             atestado_id=_identidade_ou_404(request.POST.get("atestado")),
             idempotency_key=request.POST.get("chave") or uuid4().hex,
             correlation_id=f"interface-desfecho-{edital_id}",
+            # A ciência dos obrigatórios considerados não aplicáveis, e a assinatura do que a tela
+            # mostrou (131, FR-4468). O comando confere as duas; a tela só as leva.
+            ciencia={
+                "assinatura": request.POST.get("inaplicabilidades") or "",
+                "marcada": request.POST.get("ciencia_das_inaplicabilidades") == "1",
+            },
         )
         request.session["acao_da_convocacao"] = "desfecho"
     except DomainError as erro:

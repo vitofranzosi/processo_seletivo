@@ -1661,6 +1661,9 @@ def ler_inscricao(dados):
                 # inscrição e "não aproveita", como em todo documento anterior.
                 "moment": _texto(dados, f"{base}-moment") or "AT_ENROLLMENT",
                 "reusesRequirementId": _texto(dados, f"{base}-reusesRequirementId") or None,
+                # A condição de exigência (131). Vazia é "incondicional"; a coerência com a
+                # obrigatoriedade e o momento é do domínio, que devolve a recusa a este campo.
+                "requiredWhen": _texto(dados, f"{base}-requiredWhen") or None,
             }
         )
     return {
@@ -1708,6 +1711,7 @@ def documentos_do_edital(edital):
             "attachmentId": "" if documento.anexo_id is None else str(documento.anexo_id),
             "moment": documento.momento,
             "reusesRequirementId": "" if documento.aproveita is None else str(documento.aproveita),
+            "requiredWhen": documento.condicao,
         }
         for documento in edital.documentos_exigidos.order_by("order")
     ]
@@ -1746,6 +1750,8 @@ def documentos_persistidos(edital):
             "reusesRequirementId": None
             if documento.aproveita is None
             else str(documento.aproveita),
+            # E a condição de exigência, pela mesma razão (131).
+            "requiredWhen": documento.condicao or None,
         }
         for documento in edital.documentos_exigidos.order_by("order")
     ]

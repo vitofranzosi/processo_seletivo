@@ -54,8 +54,12 @@ def desfechar(
     atestado_id=None,
     resultado_sucessor=None,
     motivo="",
+    ciencia=None,
 ):
     """Registra o desfecho, escreve o efeito na porta, e devolve o que o ato declarou.
+
+    `ciencia` é `{"assinatura": str, "marcada": bool}`, a confirmação de quem desfecha sobre os
+    obrigatórios considerados não aplicáveis (131, FR-4468). Só o aceite e a regularização a leem.
 
     **E emite a apuração seguinte, quando a única coisa que mudou foi este desfecho** (050,
     `D-005`). Antes da `050`, a apuração vigente envelhecia aqui e a convocação seguinte era
@@ -85,6 +89,7 @@ def desfechar(
             atestado_id=atestado_id,
             resultado_sucessor=resultado_sucessor,
             motivo=motivo,
+            ciencia=ciencia,
         )
         auditar_desfecho(ctx, desfecho, actor, correlation_id, idempotency_key)
         seguinte = apuracao_seguinte(
@@ -105,6 +110,7 @@ def registrar(
     atestado_id=None,
     resultado_sucessor=None,
     motivo="",
+    ciencia=None,
 ):
     """O registro de **um** desfecho, com as recusas, o efeito e a linha — e nada além disso.
 
@@ -136,7 +142,7 @@ def registrar(
     _recusar_desfecho_incompativel(convocacao, especie=especie)
     _recusar_nao_atendimento_prematuro(convocacao, especie=especie, agora=ctx.now)
     _recusar_inercia_sem_ocupacao(convocacao, especie=especie, agora=ctx.now)
-    _recusar_inclusao_sem_documentos(convocacao, especie=especie)
+    cientes = _recusar_inclusao_sem_documentos(convocacao, especie=especie, ciencia=ciencia)
     atestado = _atestado(especie, atestado_id, convocacao)
     # **O identificador do desfecho nasce antes dele**, e a ordem é a mesma que a `016` usa para
     # o movimento de vaga: o Resultado sucessor precisa citar o desfecho que o produziu, e o
@@ -179,10 +185,13 @@ def registrar(
         registrado_em=ctx.now,
     )
     desfecho.save()
+    # As conferências de que houve ciência, para a trilha do ato (131, FR-4469). Não é coluna: o
+    # conjunto se reconstitui das conferências, que são append-only, e a trilha diz quais se viram.
+    desfecho.inaplicabilidades_cientes = cientes
     return desfecho
 
 
-def _recusar_inclusao_sem_documentos(convocacao, *, especie):
+def _recusar_inclusao_sem_documentos(convocacao, *, especie, ciencia=None):
     """Aceite e regularização só com os obrigatórios conferidos (115, FR-3592).
 
     **Vale para o desfecho raiz e para o sucessor**: a guarda é sobre incluir alguém na ocupação, e
@@ -193,7 +202,7 @@ def _recusar_inclusao_sem_documentos(convocacao, *, especie):
     travada, para que um envio do candidato não atravesse a decisão.
     """
     if especie not in nomes.DESFECHOS_QUE_INCLUEM:
-        return
+        return []
     from processo_seletivo.convocacao.application.documentos import (
         faltas_na_lista,
         leitura_da_chamada,
@@ -216,16 +225,53 @@ def _recusar_inclusao_sem_documentos(convocacao, *, especie):
             "suporte do sistema.",
             409,
         )
-    pendentes = leitura_da_chamada(convocacao).pendencias_para_incluir
-    if not pendentes:
-        return
-    nomes_dos_itens = ", ".join(lido.nome for lido in pendentes)
-    raise DomainError(
-        nomes.DOCUMENTOS_NAO_CONFERIDOS,
-        "Para registrar este desfecho, todo documento obrigatório da convocação precisa estar "
-        f"conferido como conforme ou como não se aplica. Falta: {nomes_dos_itens}.",
-        409,
-    )
+    leitura = leitura_da_chamada(convocacao)
+    pendentes = leitura.pendencias_para_incluir
+    if pendentes:
+        # O "não se aplica" registrado sem condição publicada não atende (131, FR-4470, 11ª
+        # decisão), e a recusa diz por quê: sem isto, a comissão leria "falta" num item que a tela
+        # mostra como conferido.
+        nomes_dos_itens = ", ".join(
+            f'{lido.nome} ("não se aplica" registrado sem condição publicada)'
+            if lido.sem_condicao_publicada
+            else lido.nome
+            for lido in pendentes
+        )
+        raise DomainError(
+            nomes.DOCUMENTOS_NAO_CONFERIDOS,
+            "Para registrar este desfecho, todo documento obrigatório da convocação precisa estar "
+            "conferido como conforme, ou como não se aplica quando o Edital publicou a condição. "
+            f"Falta: {nomes_dos_itens}.",
+            409,
+        )
+    return _conferir_a_ciencia(leitura, ciencia)
+
+
+def _conferir_a_ciencia(leitura, ciencia):
+    """Quem desfecha viu cada obrigatório considerado não aplicável (131, FR-4468, D-014).
+
+    Lida sob a trava do desfecho, depois da lista e das pendências. Sem inaplicabilidade, nada se
+    pede — o aceite fica como era. Devolve as conferências de que houve ciência, para a trilha.
+    """
+    inaplicaveis = leitura.inaplicabilidades
+    if not inaplicaveis:
+        return []
+    ciencia = ciencia or {}
+    if not ciencia.get("marcada"):
+        raise DomainError(
+            nomes.CIENCIA_DAS_INAPLICABILIDADES,
+            "Para registrar este desfecho, confirme que viu os documentos obrigatórios "
+            "considerados não aplicáveis.",
+            409,
+        )
+    if (ciencia.get("assinatura") or "") != leitura.assinatura_das_inaplicabilidades:
+        raise DomainError(
+            nomes.INAPLICABILIDADES_MUDARAM,
+            "A conferência dos documentos mudou desde que você abriu este formulário. Nada foi "
+            "gravado: confira a lista abaixo antes de confirmar.",
+            409,
+        )
+    return [str(lido.conferencia.id) for lido in inaplicaveis]
 
 
 def apuracao_seguinte(ctx, convocacao, *, actor, quantos, correlation_id):
@@ -529,9 +575,22 @@ def auditar_desfecho(ctx, desfecho, actor, correlation_id, idempotency_key=""):
             f"{convocacao.inscricao_id} no marco {convocacao.marco_id}, lista "
             f"{convocacao.lista_id or 'ampla concorrência'}. Efeito na ocupação: "
             f"{desfecho.efeito.especie}. Fundamento: {desfecho.fundamento}"
+            + _ciencia_na_trilha(desfecho)
         ),
         idempotency_key=idempotency_key,
     )
+
+
+def _ciencia_na_trilha(desfecho):
+    """As conferências de que houve ciência, por identificador e sem o motivo (131, FR-4469).
+
+    O motivo fica fora pela regra da trilha da `115` (FR-3603): ele está na conferência, que é
+    append-only, e o identificador basta para chegar a ele.
+    """
+    cientes = getattr(desfecho, "inaplicabilidades_cientes", None) or []
+    if not cientes:
+        return ""
+    return f" Com ciência de {len(cientes)} inaplicabilidade(s): {', '.join(cientes)}."
 
 
 def declarado_do_desfecho(desfecho):

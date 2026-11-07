@@ -452,6 +452,9 @@ CAMPOS_DOCUMENTO = [
     # requisito seria irrealizável pelo canal do ator: a regra da referência pendurada recusaria o
     # ato, e a tela não ofereceria o campo que precisa mudar junto.
     ("attachmentId", "Modelo que o Edital fornece", REFERENCIA),
+    # A condição de exigência (131, FR-4456): retificável como a obrigatoriedade, e com o rótulo da
+    # composição. Vazia é "incondicional".
+    ("requiredWhen", "Exigido somente quando", TEXTO),
 ]
 
 # ------------------------------------------------------------------------------------------------
