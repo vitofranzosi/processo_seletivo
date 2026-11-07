@@ -153,11 +153,12 @@ referência.
 revista, FR-4401, SC-1341, D-020). Sem modelo novo, sem migration, sem reparo de registros.
 
 - [X] T057 Auditoria dos caminhos que criam `Convocacao`: só a chamada individual (vaga inicial, suplência, para regularizar, correção por sucessão e correção pela tela da `120`) e o gesto de titulares (`convocar_em_sequencia`); só o segundo não gravava. Contagem nos bancos locais (D-020; `verificacao.md`)
-- [X] T058 [P] `tests/integration/convocacao/test_lista_da_chamada_no_gesto.py`: individual e lote com obrigatórios, equivalência entre os caminhos, recorte por modalidade, facultativo, aproveitamento da inscrição, Edital sem documento na convocação, aceite e regularização com lista ausente ou incompleta, desfecho que não inclui, falha na gravação sem persistência parcial, repetição sem duplicar, herança na correção (FR-3572, FR-4401, SC-1341)
+- [X] T058 [P] `tests/integration/convocacao/test_lista_da_chamada_no_gesto.py`: individual, para regularizar e lote com obrigatórios, equivalência entre os caminhos, recorte por modalidade, facultativo, aproveitamento da inscrição, Edital sem documento na convocação, aceite e regularização com lista ausente ou incompleta, desfecho que não inclui, falha na gravação sem persistência parcial, repetição sem duplicar, herança na correção (FR-3572, FR-4401, SC-1341)
 - [X] T059 `convocacao/application/convocar.py`: `convocar_em_sequencia` chama `gravar_lista_da_chamada` com a versão do gesto, dentro do laço e da transação (FR-3572)
 - [X] T060 `convocacao/application/documentos.py` (`faltas_na_lista`), `convocacao/application/desfechar.py` e `convocacao/domain/nomes.py`: a guarda da FR-4401 antes da FR-3592, com o código `lista_da_convocacao_incompleta`
 - [X] T061 `spec.md` (FR-3572 revista, FR-4401, SC-1341, caso-limite, D-020), `rastreabilidade.md` e `verificacao.md`
 - [X] T062 Verificação: `make lint check test-pg`; os testes novos falham com a correção desligada (13 de 16)
+- [X] T063 Revisão final (07/11/2026): a D-020 separa os dados de demonstração, que não se reparam, da hipótese de registros reais, que pediria análise institucional antes de qualquer alteração; pendências 11 a 13 registradas (UX da lista incompleta, registros reais, "não se aplica" em spec própria); caso positivo da convocação para regularizar
 
 ---
 

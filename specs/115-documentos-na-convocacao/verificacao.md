@@ -200,12 +200,16 @@ individual do mesmo Processo se serializam pela trava.
 
 As seis do 93/2026 (individuais) estão íntegras. O aceite sem documento foi registrado numa cópia
 descartável, que não entra na contagem. Nada foi reparado: com a guarda nova, as quatro não chegam a
-aceite. O procedimento para uma convocação real afetada está na D-020.
+aceite. Para registros reais afetados, a D-020 não fixa procedimento: exige análise institucional,
+preservação do histórico e proteção do candidato antes de qualquer alteração, e registra a hipótese
+nas pendências da spec.
 
-**Os testes novos** (`test_lista_da_chamada_no_gesto.py`, T058) somam 16 casos, todos verdes contra
-PostgreSQL. Com a correção desligada — sem a gravação no gesto e sem a guarda —, 13 falham. Os 3 que
-passam dos dois jeitos são de propósito: a chamada individual, o Edital sem documento na convocação e
-o desfecho que não inclui.
+**Os testes novos** (`test_lista_da_chamada_no_gesto.py`, T058) somam 17 casos, todos verdes contra
+PostgreSQL. Com a correção desligada — sem a gravação no gesto e sem a guarda —, 13 falham (medido
+sobre os 16 primeiros). Os que passam dos dois jeitos são de propósito: a chamada individual, a
+convocação para regularizar (as duas pelo caminho que já gravava), o Edital sem documento na
+convocação e o desfecho que não inclui. Este último prova só o alcance da guarda (FR-3593), e não é remédio para a
+falha (D-020).
 
 **A suíte** (T062): `make test-pg` contra PostgreSQL, 4 workers, sobre a `main` em `5fcbfa54`, com o grupo
 `assistente` e **sem** o `navegador`: **17172 passaram, 20 pulados, 0 falhas** (804 s). Os 20 pulados

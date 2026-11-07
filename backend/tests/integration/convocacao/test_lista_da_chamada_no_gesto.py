@@ -376,31 +376,46 @@ def test_o_aceite_da_lista_incompleta_e_recusado_nomeando_so_o_que_falta(aluno, 
     assert not DesfechoDaConvocacao.objects.filter(convocacao=convocacao).exists()
 
 
-def test_a_regularizacao_da_convocacao_sem_lista_e_recusada(
-    db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
-):
-    """A regularização também inclui na ocupação, e passa pela mesma guarda (FR-3592)."""
-    edital, _, _ = cenarios.montar(
+@pytest.fixture
+def com_indeferidos(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """Os dois da faixa indeferidos e vagas sobrando: o recorte da convocação para regularizar."""
+    return cenarios.montar(
         gestor,
         api_client,
         manager_headers,
         process_payload,
         documentos=cenarios.documentos_do_aluno(),
-        prefixo="regularizar-sem-lista",
+        prefixo="regularizar-lista",
         indeferidas=(0, 1),
     )
+
+
+def _convocar_para_regularizar(edital, gestor):
     primeiro = leitura_do_recorte.contexto_do_recorte(
         edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
     )["regularizaveis"][0]
+    declarado = convocar(
+        edital, gestor, primeiro, especie=nomes.PARA_REGULARIZAR, idempotency_key="regularizar"
+    )
+    return Convocacao.objects.get(id=declarado["id"])
+
+
+def test_a_convocacao_para_regularizar_grava_a_lista(com_indeferidos, gestor):
+    """FR-3572: a raiz "de qualquer espécie" — a para regularizar também nasce com a lista."""
+    edital, _, _ = com_indeferidos
+
+    convocacao = _convocar_para_regularizar(edital, gestor)
+
+    assert convocacao.especie == nomes.PARA_REGULARIZAR
+    assert {str(i.requisito_id) for i in convocacao.itens_da_lista.all()} == DO_ALUNO
+    assert servico.faltas_na_lista(convocacao) == []
+
+
+def test_a_regularizacao_da_convocacao_sem_lista_e_recusada(com_indeferidos, gestor):
+    """A regularização também inclui na ocupação, e passa pela mesma guarda (FR-4401)."""
+    edital, _, _ = com_indeferidos
     with sem_lista():
-        declarado = convocar(
-            edital,
-            gestor,
-            primeiro,
-            especie=nomes.PARA_REGULARIZAR,
-            idempotency_key="para-regularizar",
-        )
-    convocacao = Convocacao.objects.get(id=declarado["id"])
+        convocacao = _convocar_para_regularizar(edital, gestor)
 
     with pytest.raises(DomainError) as recusa:
         desfechar(edital, gestor, convocacao, nomes.REGULARIZACAO, "regularizar")
@@ -410,7 +425,11 @@ def test_a_regularizacao_da_convocacao_sem_lista_e_recusada(
 
 
 def test_os_desfechos_que_nao_incluem_nao_leem_a_lista(aluno, gestor):
-    """FR-3593: a guarda é de quem inclui; a desistência da convocação defeituosa se registra."""
+    """FR-3593: a guarda é só de quem inclui, e não alcança a desistência.
+
+    Prova o alcance da guarda, e não um remédio: a falha do registro não é fundamento para desfecho
+    nenhum (D-020). A desistência aqui é a da pessoa, e não a saída para a convocação sem lista.
+    """
     edital, _, _ = aluno
     with sem_lista():
         convocacao, _ = convocadas(convocar_titulares(edital, gestor))

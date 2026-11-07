@@ -486,7 +486,8 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 - **Documento pendente e desfecho de aceite tentado** (FR-3592).
 - **Convocação registrada sem a lista, ou com lista incompleta** (o gesto de titulares antes de
   07/11/2026). O aceite e a regularização são recusados nomeando o que falta; corrigir a convocação
-  não a conserta; os outros desfechos seguem livres (FR-4401, D-020).
+  não a conserta. Os outros desfechos seguem livres, o que não os torna remédio para a falha
+  (FR-4401, FR-3593, D-020).
 - **Acesso indevido**, por qualquer dos atores da matriz (FR-3595 a FR-3600).
 
 ## Requirements *(mandatory)*
@@ -721,7 +722,8 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 
   Lista vazia não é falta: a versão que nada pede na convocação passa, como na FR-3574 e na FR-3575.
   O "não se aplica" não pede item, e a semântica dele não muda aqui. Os demais desfechos continuam
-  livres (FR-3593). A correção da convocação herda a lista da raiz e, com ela, a falta (D-009).
+  livres (FR-3593), e a falha do registro não é fundamento para nenhum deles (D-020). A correção da
+  convocação herda a lista da raiz e, com ela, a falta (D-009).
 - **FR-3593**: Os demais desfechos MUST NOT depender do estado documental. As guardas da `019` MUST
   continuar como estão: não atendimento só depois do vencimento, inércia só com atestado, regularização
   só com Resultado sucessor. Nenhum desfecho, perda de vaga, prazo novo ou chamada nova MUST nascer do
@@ -1298,7 +1300,7 @@ da convocação vencido, sem desfecho"* da `029` também foi revisto.
 
 O teste da FR-402 (`test_convivencia_com_o_anexo.py`) não muda.
 
-### D-020 — A guarda confere a versão, e os registros antigos não se reparam
+### D-020 — A guarda confere a versão; os dados de demonstração não se reparam, e os reais pediriam análise institucional
 
 **Correção de 07/11/2026, registrada nesta spec por decisão do usuário.**
 
@@ -1320,13 +1322,36 @@ versão da chamada pede à pessoa — contra a lista (FR-4401).
 | Reconstruir a lista que falta pela versão atual | é a lista retroativa que a D-013 recusa, e a Retificação posterior mudaria a exigência de uma chamada já feita (FR-3573) |
 | Reconstruir pela versão da chamada, em massa | as quatro convocações afetadas são de um banco de demonstração; com o sistema fora de produção, o reparo seria código sem caso real |
 
-**Sem correção em massa, sem e-mail retroativo, sem prazo reiniciado.** Pela D-013, o sistema não
-está em produção. Contadas em 07/11/2026: quatro convocações afetadas no banco de demonstração do
-estudo dos documentos (todas do gesto, nenhuma com aceite) e nenhuma no de desenvolvimento. A guarda
-basta: a convocação afetada não chega a aceite. Se houvesse convocação real afetada, o procedimento
-seria por pessoa, decidido pela comissão: registrar desfecho que não inclui, com fundamento que cite o
-defeito, e convocar de novo. A chamada nova grava a lista pela versão vigente (FR-3573) e aproveita o
-que já houver (FR-3619). O caminho não foi automatizado.
+**Duas situações, tratadas de modo diferente.**
+
+*1. Os dados exclusivamente demonstrativos, os únicos afetados hoje: sem reparo retroativo.* Pela
+D-013, o sistema não está em produção. Contadas em 07/11/2026, há quatro convocações afetadas no
+banco de demonstração do estudo dos documentos, todas do gesto e nenhuma com aceite, e nenhuma no
+de desenvolvimento. São registros fictícios, e não há candidato a proteger nem ato a preservar.
+Ficam como estão:
+- sem lista reconstruída, sem e-mail retroativo, sem prazo reiniciado e sem desfecho registrado
+  para contornar a guarda;
+- a guarda impede que cheguem a aceite, e isso basta para a demonstração.
+
+*2. A hipótese de registros reais afetados: nenhum procedimento operacional é fixado aqui.* Se uma
+convocação real tivesse nascido sem lista, a falha seria do GPS, e não da pessoa convocada. Uma
+falha do sistema não é, por si só, fundamento para desistência, indeferimento, não atendimento,
+reclassificação ou qualquer exclusão do candidato. Também não autoriza reescrever a convocação.
+Antes de qualquer alteração, o caso exigiria:
+- **análise institucional**, pela comissão e pela instância a que ela responde, de cada convocação
+  afetada e do que a pessoa já fez nela;
+- **preservação do histórico**: a convocação, a comunicação, o prazo e o que foi apresentado
+  continuam legíveis como foram, e o defeito fica registrado ao lado deles, não no lugar deles;
+- **definição de um procedimento legítimo**, com fundamento normativo e motivação no ato, decidido
+  antes de ser aplicado e não improvisado caso a caso;
+- **proteção dos direitos do candidato**: nenhuma perda de vaga, de prazo ou de ordem por causa do
+  defeito, e a comunicação do que for decidido.
+
+Nada disso está implementado, nem deve ser por esta correção: o reparo retroativo seria código sem
+caso real. A guarda (FR-4401) só impede o dano maior, o aceite sem documento, enquanto a decisão não
+existir. Que os outros desfechos continuem livres (FR-3593) é consequência de a guarda ser só de
+quem inclui. Não é remédio para a falha, e não deve ser usado como tal. A hipótese está registrada
+nas *Pendências do usuário*.
 
 ## Pendências do usuário
 
@@ -1367,3 +1392,16 @@ mais a produção: a QI-3 foi decidida, e a QI-4 e o MAT-08 foram adiados.
 10. **MAT-08**: varredura de PDF (TI), D-016. *Adiada pelo usuário em 04/11/2026*, para retomar
     depois. Ela não depende da QI-3: o risco é do arquivo enviado, qualquer que seja o documento, e
     já existe nos documentos da inscrição.
+
+**Registradas na correção de 07/11/2026 (FR-4401, D-020), fora dela:**
+
+11. **UX da lista incompleta.** Numa convocação registrada sem a lista, ou com lista incompleta, a
+    condução e a página de documentos mostram *sem exigência*, ou só os itens gravados. A tela diz
+    que nada se pede quando a versão pedia. A recusa da FR-4401 só aparece ao tentar o desfecho.
+    A exibição precisa de decisão de UX, e não entra nesta correção.
+12. **Registros reais afetados.** Se houver um dia, a análise institucional, a preservação do
+    histórico e o procedimento legítimo da D-020 vêm antes de qualquer alteração. Hoje não há
+    nenhum.
+13. **A semântica de "não se aplica"** (FR-3585 e FR-3592) é objeto de estudo e de spec próprios,
+    separados desta correção. A FR-4401 não a toca: ignora o requisito que a versão julga "não se
+    aplica" à pessoa (FR-3572) e não lê o resultado "não se aplica" da conferência (FR-3585).
