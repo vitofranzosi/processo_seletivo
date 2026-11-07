@@ -22,6 +22,11 @@ migration ou tela foi alterado. Cada grupo de decisões tem uma situação:
 
 Aprovada com o merge do PR #368 (03/11/2026). **Implementada** na branch `claude/115-documentos-na-convocacao`; a verificação está em [verificacao.md](verificacao.md) e a matriz em [rastreabilidade.md](rastreabilidade.md).
 
+**Corrigida em 07/11/2026 (defeito P0), dentro desta spec, por decisão do usuário.** O gesto de
+convocar os titulares num ato só não gravava a lista, contra a FR-3572, e o aceite passava sem
+documento nenhum. A correção está na FR-3572 (revista), na FR-4401, na SC-1341, na D-020 e na seção
+*Correção de 07/11/2026* da [verificação](verificacao.md).
+
 **Input**: a [auditoria de matrícula e dossiê documental](../../doc/auditoria-matricula-e-dossie-documental-2026-11-03.md)
 e o [complemento](../../doc/auditoria-matricula-e-dossie-documental-2026-11-03-complemento.md), de
 03/11/2026. A §10 do complemento (decisão de fronteira do GPS) prevalece. Os dois estão no PR
@@ -479,6 +484,9 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 - **Candidato com duas inscrições em Editais distintos.** Cada convocação tem a sua lista; nada se
   aproveita entre Editais (FR-3576).
 - **Documento pendente e desfecho de aceite tentado** (FR-3592).
+- **Convocação registrada sem a lista, ou com lista incompleta** (o gesto de titulares antes de
+  07/11/2026). O aceite e a regularização são recusados nomeando o que falta; corrigir a convocação
+  não a conserta; os outros desfechos seguem livres (FR-4401, D-020).
 - **Acesso indevido**, por qualquer dos atores da matriz (FR-3595 a FR-3600).
 
 ## Requirements *(mandatory)*
@@ -541,6 +549,13 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   
   A gravação MUST NOT ter evento de trilha próprio: faz parte do ato da convocação (molde da FR-729 da
   `044`).
+
+  *Revista em 07/11/2026, sem mudar a redação.* O lote de titulares não a cumpria: a convocação do
+  gesto nascia sem lista, e a T014 marcava como testado um arquivo que nunca existiu. Desde a
+  correção, todo caminho que registra a raiz passa pela mesma rotina de gravação, com a versão lida
+  sob a mesma trava, na mesma transação: a chamada individual (vaga inicial, suplência e para
+  regularizar) e o gesto de titulares. A correção da convocação continua sem lista própria
+  (FR-3573). A guarda do desfecho deixou de depender só da lista gravada (FR-4401, D-020).
 - **FR-3573**: A lista MUST ser imutável e MUST pertencer à **chamada**:
   - a convocação que corrige outra por sucessão MUST usar a lista, as apresentações e as conferências
     da chamada que corrige, e MUST NOT gravar outra;
@@ -695,6 +710,18 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   - tem código próprio.
   
   Facultativo apresentado e não conferido MUST gerar advertência na tela e MUST NOT impedir.
+- **FR-4401** *(correção de 07/11/2026)*: O aceite e a regularização MUST ser recusados também quando
+  a **versão da chamada** pede à pessoa um documento na convocação, obrigatório ou facultativo, e a
+  lista da chamada não tem o item dele. A recusa:
+  - é conferida pela versão da raiz da chamada e pela mesma regra de aplicabilidade da gravação
+    (FR-3572), e não pela versão vigente nem pela lista;
+  - vem antes da guarda da FR-3592, nomeia os documentos que faltam, não grava nada e tem código
+    próprio (`lista_da_convocacao_incompleta`);
+  - diz que a falha é do registro da convocação, e não da pessoa convocada.
+
+  Lista vazia não é falta: a versão que nada pede na convocação passa, como na FR-3574 e na FR-3575.
+  O "não se aplica" não pede item, e a semântica dele não muda aqui. Os demais desfechos continuam
+  livres (FR-3593). A correção da convocação herda a lista da raiz e, com ela, a falta (D-009).
 - **FR-3593**: Os demais desfechos MUST NOT depender do estado documental. As guardas da `019` MUST
   continuar como estão: não atendimento só depois do vencimento, inércia só com atestado, regularização
   só com Resultado sucessor. Nenhum desfecho, perda de vaga, prazo novo ou chamada nova MUST nascer do
@@ -914,6 +941,11 @@ leitura das linhas que a alocação cobre. A regra das recusas é a da FR-3599: 
 - **SC-1093**: Depois do vencimento, o envio e o sucessor do Requerimento são recusados em 100% dos
   casos verificados, com ou sem documento na chamada, e com a mesma frase da recusa dos documentos.
   Com o prazo não iniciado ou sem vencimento, 100% são aceitos.
+- **SC-1341** *(correção de 07/11/2026)*: Para a mesma pessoa, versão e condições, a convocação do
+  gesto de titulares e a individual gravam listas iguais em 100% dos casos verificados — obrigatório,
+  facultativo, recorte por modalidade e aproveitamento da inscrição. Nenhum aceite nem regularização é
+  registrado em convocação cuja lista não tem o que a versão pede, e nenhuma convocação do gesto
+  persiste sem lista quando a gravação falha.
 
 ## Assumptions
 
@@ -1265,6 +1297,36 @@ da convocação vencido, sem desfecho"* da `029` também foi revisto.
 - a convocação para regularizar abrindo de novo.
 
 O teste da FR-402 (`test_convivencia_com_o_anexo.py`) não muda.
+
+### D-020 — A guarda confere a versão, e os registros antigos não se reparam
+
+**Correção de 07/11/2026, registrada nesta spec por decisão do usuário.**
+
+**O defeito.** A FR-3572 pedia a lista "individualmente ou no lote de titulares", e só o caminho
+individual a gravava. A guarda da FR-3592 lê os itens gravados: sem itens, a leitura diz *sem
+exigência*, e o aceite passava. Duas falhas independentes, e a segunda transformava a primeira em
+aceite sem documento.
+
+**Corrigir só o lote não bastava.** Uma convocação já gravada sem lista, ou um caminho novo que
+esquecesse a gravação, voltaria a aceitar sem documento. A guarda passa a conferir a fonte — o que a
+versão da chamada pede à pessoa — contra a lista (FR-4401).
+
+**Alternativas descartadas:**
+
+| Opção | Contra |
+|---|---|
+| Recusar toda convocação sem itens | recusaria o Edital que nada pede na convocação (FR-3574) e a convocação de antes desta spec (FR-3575) |
+| Comparar só os obrigatórios | a lista incompleta é defeito do registro, e o facultativo que falta some da advertência sem ninguém saber |
+| Reconstruir a lista que falta pela versão atual | é a lista retroativa que a D-013 recusa, e a Retificação posterior mudaria a exigência de uma chamada já feita (FR-3573) |
+| Reconstruir pela versão da chamada, em massa | as quatro convocações afetadas são de um banco de demonstração; com o sistema fora de produção, o reparo seria código sem caso real |
+
+**Sem correção em massa, sem e-mail retroativo, sem prazo reiniciado.** Pela D-013, o sistema não
+está em produção. Contadas em 07/11/2026: quatro convocações afetadas no banco de demonstração do
+estudo dos documentos (todas do gesto, nenhuma com aceite) e nenhuma no de desenvolvimento. A guarda
+basta: a convocação afetada não chega a aceite. Se houvesse convocação real afetada, o procedimento
+seria por pessoa, decidido pela comissão: registrar desfecho que não inclui, com fundamento que cite o
+defeito, e convocar de novo. A chamada nova grava a lista pela versão vigente (FR-3573) e aproveita o
+que já houver (FR-3619). O caminho não foi automatizado.
 
 ## Pendências do usuário
 

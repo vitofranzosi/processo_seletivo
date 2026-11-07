@@ -154,6 +154,45 @@ def gravar_lista_da_chamada(convocacao, *, versao):
     return itens
 
 
+def faltas_na_lista(convocacao):
+    """Os documentos que a versão da chamada pede à pessoa e que a lista gravada não tem (FR-4401).
+
+    **Recalcula pela versão da raiz, e não pela vigente**: a lista é a da chamada (D-009), e uma
+    Retificação posterior não muda o que ela pede (FR-3573). Pela mesma regra de aplicabilidade
+    que a gravação usa, e só os itens que a pessoa precisaria apresentar — obrigatórios e
+    facultativos; o "não se aplica" não pede nada, e a semântica dele não é desta guarda.
+
+    **Lista vazia não é falta** (FR-3574): o Edital sem documento na convocação não pede nada, e a
+    convocação anterior à `115` tem versão sem documento nesse momento (FR-3575). Falta é o que a
+    versão pede e não está gravado — a convocação que o gesto de titulares registrava sem lista.
+    """
+    raiz = raiz_da_chamada(convocacao)
+    inscricao = raiz.inscricao
+    pedidos = [
+        veredito
+        for veredito in aplicabilidade(
+            raiz.versao.content,
+            profile_id=str(inscricao.profile_id),
+            modality_id=None if inscricao.modality_id is None else str(inscricao.modality_id),
+            momento=NA_CONVOCACAO,
+        )
+        if veredito.situacao != dominio.NAO_SE_APLICA
+    ]
+    if not pedidos:
+        return []
+    gravados = {
+        str(requisito)
+        for requisito in ItemDaListaDaConvocacao.objects.filter(chamada=raiz).values_list(
+            "requisito_id", flat=True
+        )
+    }
+    return [
+        veredito.requisito.get("name") or veredito.requisito.get("key") or ""
+        for veredito in pedidos
+        if str(veredito.requisito["id"]) not in gravados
+    ]
+
+
 def _aproveitar(itens, raiz):
     """As referências com que os itens já nascem, nesta precedência (FR-3619, FR-3576).
 
