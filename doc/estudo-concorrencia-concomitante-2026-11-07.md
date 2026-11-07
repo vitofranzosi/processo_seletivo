@@ -49,6 +49,11 @@ seria separado pela causa, e a reclassificação ficaria na lista. A isso se som
 uma ocupação por pessoa** no Perfil e marco, que o banco não garante hoje. Até lá, a mitigação é
 operacional (§8.1).
 
+> **Revisão de 07/11, depois do merge do #428.** O pacote A2 + A4 + A1 **não** deve ser aprovado como
+> solução puramente técnica. A A4 faz a ordem dos atos decidir a lista de ocupação, e isso é escolha
+> institucional. O caminho passa a ser uma decisão de domínio curta, em três blocos (§9), e só então
+> uma spec. A §8.4 registra a revisão. As decisões continuam abertas.
+
 ---
 
 ## 2. Os dois casos
@@ -368,9 +373,52 @@ ou A5 tratam a pessoa que aceita duas listas. A recomendação é:
 4. **A3 só se o usuário quiser ler o 8.9 ao pé da letra** e resolver junto o Q1 do estudo do 35. Ela
    não substitui A4 nem A5.
 
+A recomendação acima fica como foi escrita, porque é ela que a revisão seguinte corrige.
+
+### 8.4 Revisão da recomendação (07/11)
+
+A revisão veio depois do merge do #428. Ela não muda nenhum fato medido; muda o que se pede ao usuário
+e a forma da spec seguinte.
+
+1. **A A4 não é trava técnica.** Pular na ampla quem aceitou primeiro na reservada faz **a ordem dos
+   atos** decidir em que lista a pessoa ocupa. A mesma Inscrição terminaria na ampla ou na reservada
+   conforme a convocação que saiu antes. Mesmo como provisória, a A4 depende da QC7.
+2. **São duas garantias, e não uma.**
+   - **Uma pessoa não ocupa duas vagas.** É o caso de Ícaro, no cenário B2, e o do C7 no 35.
+   - **Uma vaga não comporta duas pessoas.** É o caso de Helena, no cenário A: Carla e Helena com
+     aceite na mesma vaga da PPI.
+
+   A unicidade por pessoa só resolve a primeira. A segunda depende do alcance do desfecho (QC1 a QC4)
+   e de quem volta à reservada (QC6). Também depende do fim do teto silencioso (QC9).
+3. **Mudar só os seletores também reinterpreta atos antigos.** Nenhuma linha gravada muda, mas a
+   leitura de hoje sobre os desfechos de ontem passa a dar outra fila e outra contagem. Por isso
+   "vale daqui em diante" precisa de uma **regra de transição** explícita (QC10 e QC13).
+4. **A spec entrega uma jornada, e não só uma regra.** Quem conduz precisa de quatro coisas:
+   - ver o desfecho que a pessoa tem em outra lista;
+   - entender o alcance do desfecho antes de confirmar;
+   - receber uma proposta de convocação coerente;
+   - saber quando precisa reapurar.
+5. **A Resolução CS nº 10/2017 é lida antes de fechar QC6 e QC7.** As duas decidem a preferência
+   entre ampla e reservada, e se decidem juntas.
+
 ---
 
 ## 9. Perguntas ao usuário
+
+### 9.1 As três decisões que vêm antes da spec (revisão de 07/11)
+
+As perguntas da §9.2 continuam as mesmas, com as razões. A revisão as agrupa em três decisões, com o prefixo `DC` pela mesma razão do `QC`. Cada
+uma tem a recomendação da revisão, e **nenhuma está fechada**.
+
+| Decisão | Perguntas | Recomendação da revisão | Estado |
+|---|---|---|---|
+| **DC1. Alcance dos desfechos** | QC1 a QC5 | Desistência expressa e inércia alcançam todas as listas da mesma Inscrição, no mesmo Perfil e marco. O indeferimento exige causa, porque condição de cotista e documentação geral têm consequências diferentes. O não atendimento precisa de decisão expressa. | aberta |
+| **DC2. Preferência entre ampla e reservada** | QC6, QC7 e QC11, decididas juntas | Fechar só depois de ler a Resolução CS nº 10/2017. A QC6 pergunta se quem sai da ampla volta à reservada. A QC7 pergunta se quem ocupa a reservada migra quando a ampla o alcança. | aberta |
+| **DC3. Chamadas simultâneas e acervo** | QC8, QC10 e QC13 | Uma chamada em aberto por Inscrição no Perfil e marco. Inventariar os registros antes de aplicar a mudança, e dizer expressamente como os atos anteriores serão lidos. | aberta |
+
+A QC9 (contar pessoas distintas) e a QC12 (o escopo) dependem das três.
+
+### 9.2 As perguntas
 
 1. **QC1.** A **desistência expressa** registrada numa lista alcança só aquela vaga, só aquela lista,
    ou a pessoa no certame, isto é, todas as listas dela no mesmo Perfil e marco? *Recomendação: a
@@ -403,13 +451,38 @@ ou A5 tratam a pessoa que aceita duas listas. A recomendação é:
 11. **QC11.** O setor pode confirmar a leitura, ou trazer o texto da **Resolução CS nº 10/2017**
     (§ 2º do art. 1º e § 3º do art. 10)? Ela pode responder a QC6 e a QC7.
 12. **QC12.** Quer o caminho da §8.3 (A2, A4 e A1, com A5 depois de decidida a QC7) como escopo de uma
-    spec, ou prefere outra combinação?
+    spec, ou prefere outra combinação? *Revisão de 07/11: o pacote não se aprova como técnico. O
+    escopo sai de DC1, DC2 e DC3 (§8.4 e §9.1).*
+13. **QC13** (acrescentada pela revisão). Qual é a **regra de transição** para os atos gravados antes
+    da regra nova? Há duas leituras possíveis:
+    - os desfechos anteriores são lidos pela regra nova, e então as filas e contagens de hoje mudam;
+    - eles continuam lidos como "da lista", e então a regra nova alcança só os desfechos registrados
+      depois dela.
+
+    *Recomendação: decidir depois do inventário. Num caso como o de Helena, a segunda leitura deixaria
+    a PPI propondo convocar quem desistiu do curso.*
 
 ---
 
 ## 10. Escopo mínimo de uma spec futura
 
-A spec depende das respostas às QC1 a QC8. O escopo abaixo supõe a recomendação da §8.3.
+A spec depende das decisões DC1, DC2 e DC3 da §9.1. O escopo abaixo foi escrito sobre a
+recomendação da §8.3. A revisão da §8.4 o altera em três pontos:
+
+- **A invariante por pessoa só entra na forma que a DC2 decidir:** pular ou migrar. Ela não entra
+  como trava provisória.
+- **A garantia de que uma vaga não comporta duas pessoas é um requisito próprio.** Ela não decorre da
+  unicidade por pessoa.
+- **Entra a regra de transição da QC13**, e com ela uma jornada completa: ver, entender o alcance,
+  propor e reapurar (§8.4, item 4).
+
+Os cenários A, B2, C e D2 da §4 entram como regressões. A eles se somam dois casos que a reprodução
+não cobriu:
+- chamadas concorrentes da mesma Inscrição em duas listas;
+- a conferência em lote: o não atendimento em lote e o gesto dos titulares.
+
+Reversão e corte da reservada continuam nos registros próprios, salvo decisão do usuário de
+reuni-los neste incremento.
 
 **Entra:**
 - **Alcance do desfecho, por espécie e por causa**:
