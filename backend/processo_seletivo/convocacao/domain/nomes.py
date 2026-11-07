@@ -267,6 +267,14 @@ CONFORME_SEM_ABERTURA = "conforme_sem_abertura"
 CONFORME_SEM_APRESENTACAO = "conforme_sem_apresentacao"
 MOTIVO_DA_CONFERENCIA_OBRIGATORIO = "motivo_da_conferencia_obrigatorio"
 MOTIVO_DA_SUBSTITUICAO_OBRIGATORIO = "motivo_da_substituicao_obrigatorio"
+# A inaplicabilidade com fundamento publicado (131): o "não se aplica" só no obrigatório que o
+# Edital publicou com condição, sobre o arquivo aberto, e o motivo com alguma palavra.
+NAO_SE_APLICA_SEM_CONDICAO = "nao_se_aplica_sem_condicao"
+NAO_SE_APLICA_SEM_ABERTURA = "nao_se_aplica_sem_abertura"
+MOTIVO_SEM_CONTEUDO = "motivo_sem_conteudo"
+# A ciência de quem desfecha sobre as inaplicabilidades (131, FR-4468).
+CIENCIA_DAS_INAPLICABILIDADES = "ciencia_das_inaplicabilidades"
+INAPLICABILIDADES_MUDARAM = "inaplicabilidades_mudaram"
 RESULTADO_DA_CONFERENCIA_INVALIDO = "resultado_da_conferencia_invalido"
 DOCUMENTO_JA_RECEBIDO = "documento_ja_recebido"
 DOCUMENTO_JA_CONFERIDO = "documento_ja_conferido"

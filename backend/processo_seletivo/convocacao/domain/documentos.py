@@ -9,6 +9,8 @@ Funções puras sobre objetos que tenham os atributos dos modelos — a aplicaç
 já leu, numa consulta só por chamada, e o domínio não consulta nada por conta própria.
 """
 
+import re
+
 from processo_seletivo.convocacao.domain import nomes
 
 OBRIGATORIO = "OBRIGATORIO"
@@ -56,9 +58,42 @@ def estado_do_item(apresentacoes, conferencias):
 ATENDIDOS = (nomes.ITEM_CONFORME, nomes.ITEM_NAO_SE_APLICA)
 
 
-def impede_incluir(situacao, estado):
-    """O item obrigatório ainda não atendido impede o aceite e a regularização (FR-3592)."""
-    return situacao == OBRIGATORIO and estado not in ATENDIDOS
+def admite_nao_se_aplica(situacao, *, condicional):
+    """Se a conferência pode dizer *"não se aplica"* deste item (131, FR-4457, D-003).
+
+    Só no obrigatório cujo requisito, na versão da lista, o Edital publicou com condição de
+    exigência. No incondicional, o *"não se aplica"* afastaria o que o Edital exige de todos — é a
+    dispensa que nenhuma regra autoriza; no facultativo, não teria efeito no aceite.
+    """
+    return situacao == OBRIGATORIO and condicional
+
+
+def impede_incluir(situacao, estado, *, condicional):
+    """O item obrigatório ainda não atendido impede o aceite e a regularização (FR-3592).
+
+    **O "não se aplica" só atende no condicional** (131, FR-4470). O registrado antes da `131` num
+    obrigatório incondicional continua gravado e legível, mas não abre o aceite numa chamada aberta
+    (11ª decisão): a comissão o substitui por *conforme* ou *pendente*.
+    """
+    if situacao != OBRIGATORIO:
+        return False
+    if estado == nomes.ITEM_NAO_SE_APLICA:
+        return not condicional
+    return estado not in ATENDIDOS
+
+
+#: Uma letra ou um algarismo, em qualquer alfabeto (`\w` sem o sublinhado).
+_PALAVRA = re.compile(r"[^\W_]")
+
+
+def motivo_tem_conteudo(texto):
+    """Se o motivo diz alguma coisa: ao menos uma letra ou um algarismo (131, FR-4458, D-006).
+
+    **É um piso, e não a salvaguarda.** Recusa o que não diz nada — `"."`, `"-"`, `"..."` —, e não
+    tenta medir o que diz pouco: o tamanho mínimo só produz textos mais longos sem conteúdo. A
+    salvaguarda é a condição publicada e a ciência no aceite.
+    """
+    return bool(_PALAVRA.search(texto or ""))
 
 
 def adverte_sem_impedir(situacao, estado):
