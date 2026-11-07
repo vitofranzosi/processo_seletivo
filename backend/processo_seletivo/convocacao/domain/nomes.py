@@ -257,6 +257,9 @@ DOCUMENTOS_PRONTA = "PRONTA_PARA_DECIDIR"
 
 # Recusas.
 DOCUMENTOS_NAO_CONFERIDOS = "documentos_nao_conferidos"
+# A lista da chamada não tem o que a versão dela pede à pessoa — defeito do registro, e não
+# pendência de quem foi convocado.
+LISTA_DA_CONVOCACAO_INCOMPLETA = "lista_da_convocacao_incompleta"
 PRAZO_DA_CONVOCACAO_DECORRIDO = "prazo_da_convocacao_decorrido"
 CHAMADA_FECHADA = "chamada_fechada"
 VERSAO_SUPERADA = "versao_superada"

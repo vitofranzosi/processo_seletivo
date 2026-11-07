@@ -153,6 +153,71 @@ Sete pontos, cada um com teste que falhava antes da correção:
 6. **Uma consulta por conferência** para dizer a versão julgada na página dos documentos.
 7. **O campo "por que mudar a conferência"** aparecia em item sem arquivo nenhum.
 
+## Correção de 07/11/2026: a lista no gesto de titulares (P0)
+
+**O que se viu.** No estudo da jornada documental do GPS (guia em
+`doc/guia-documentos-no-gps-2026-11-06/`, PR #423), um banco de demonstração teve o Edital 90/2026
+convocado em lote e o 93/2026 convocado um a um. As convocações do gesto de titulares nasceram sem
+nenhum item na lista. A página de documentos dizia *sem documento pedido*, e o e-mail não dizia que a
+convocação pede documentos. Numa cópia descartável do banco, o aceite foi registrado sem documento
+nenhum.
+
+**A causa.** São duas falhas, e a segunda transformava a primeira em aceite:
+- `convocar_em_sequencia` (o gesto da `050`) criava a convocação sem chamar
+  `gravar_lista_da_chamada`, contra a FR-3572;
+- a guarda da FR-3592 só lia os itens gravados, e sem itens a leitura é *sem exigência*.
+
+A T014 marcava como testado o "lote de titulares" num arquivo, `test_lista_da_convocacao.py`, que
+nunca existiu. O mesmo vale para o `test_guarda_do_aceite.py` da T027. Os casos foram parar em
+`test_documentos_da_convocacao.py`, e o do lote não foi.
+
+**A auditoria dos caminhos (T057).**
+
+| Caminho | Grava a lista |
+|---|---|
+| Chamada individual: vaga inicial, suplência e para regularizar (`convocar`) | sim, antes e depois |
+| Correção por sucessão e correção pela tela da `120` (o mesmo `convocar`) | não grava, por construção: herda a da raiz (FR-3573, D-009) |
+| Gesto de titulares (`fluxo.convocar_titulares` → `convocar_em_sequencia`) | **não gravava**; grava desde a correção |
+
+Nenhum outro código de produto, comando ou semente cria `Convocacao`.
+
+Os dois caminhos que gravam:
+- leem a versão uma vez, sob a trava do Processo (`comando_de_comissao`);
+- gravam pela mesma rotina, que resolve o recorte, a situação e o aproveitamento (FR-3576, FR-3619).
+
+Sob falha, a gravação está dentro do `atomic` do comando, junto com a reserva da chave: a exceção
+desfaz o gesto inteiro. Na repetição, a mesma chave devolve o ato sem reexecutar, e a restrição
+`uq_item_da_convocacao_por_requisito` impede item duplicado. Na concorrência, o gesto e a chamada
+individual do mesmo Processo se serializam pela trava.
+
+**Os registros afetados**, contados em 07/11/2026 pela regra de aplicabilidade e só para leitura:
+
+| Banco | Raízes | Afetadas | Estado das afetadas |
+|---|---|---|---|
+| `gps_docs_demo` (demonstração do estudo) | 10 | 4, todas do 90/2026 (gesto) | 3 sem desfecho, 1 não atendimento, 0 aceite |
+| `processo_seletivo` (desenvolvimento) | 0 | 0 | — |
+| produção | não existe (D-013) | — | — |
+
+As seis do 93/2026 (individuais) estão íntegras. O aceite sem documento foi registrado numa cópia
+descartável, que não entra na contagem. Nada foi reparado: com a guarda nova, as quatro não chegam a
+aceite. Para registros reais afetados, a D-020 não fixa procedimento: exige análise institucional,
+preservação do histórico e proteção do candidato antes de qualquer alteração, e registra a hipótese
+nas pendências da spec.
+
+**Os testes novos** (`test_lista_da_chamada_no_gesto.py`, T058) somam 17 casos, todos verdes contra
+PostgreSQL. Com a correção desligada — sem a gravação no gesto e sem a guarda —, 13 falham (medido
+sobre os 16 primeiros). Os que passam dos dois jeitos são de propósito: a chamada individual, a
+convocação para regularizar (as duas pelo caminho que já gravava), o Edital sem documento na
+convocação e o desfecho que não inclui. Este último prova só o alcance da guarda (FR-3593), e não é remédio para a
+falha (D-020).
+
+**A suíte** (T062): `make test-pg` contra PostgreSQL, 4 workers, sobre a `main` em `5fcbfa54`, com o grupo
+`assistente` e **sem** o `navegador`: **17172 passaram, 20 pulados, 0 falhas** (804 s). Os 20 pulados
+são os 10 do vocabulário da composição, a recusa por vendor, o E2E da Caixa e os 8 arquivos de
+`tests/navegador/`, que pulam sem o grupo. Com o grupo instalado, os 8 arquivos de navegador, o
+arquivo novo e `test_citacoes_de_requisito.py`, rodados juntos (2 workers): **80 passaram, 0
+falhas**. Nenhum teste existente mudou de expectativa. `make lint check` verde.
+
 ## O que esta verificação não cobre
 
 - **A validação por pessoas** — uma chamada real conduzida por quem confere, com o tempo de análise

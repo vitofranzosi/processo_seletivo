@@ -14,6 +14,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 - `pdf` = `unit/publicacoes/test_secao_da_convocacao.py`
 - `fi` = `integration/inscricoes/test_documento_da_convocacao_fora_da_inscricao.py`
 - `vc` = `test_vocabulario_dos_documentos_da_convocacao.py`
+- `lg` = `integration/convocacao/test_lista_da_chamada_no_gesto.py` (correção de 07/11/2026)
 
 ## Requisitos funcionais
 
@@ -28,7 +29,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3569 (seção do PDF) | T013 | `pt::test_a_pagina_publica_avisa_o_que_a_convocacao_pedira`; `unit/duvidas/test_casos_da_revisao.py::test_a_p05_menciona_o_que_so_a_convocacao_pede`; `pdf` inteiro — ver *Divergências* em `verificacao.md` |
 | FR-3570 (Retificação não oferece momento nem aproveitamento) | T012 | `interface/test_retificar_exclusoes.py`; `interface/test_campos_vem_do_contrato.py` |
 | FR-3571 (a classificação não lê documento da convocação) | T011 | `md::test_a_aplicabilidade_padrao_nao_ve_o_documento_da_convocacao`; `fi::test_a_inscricao_e_enviada_sem_o_documento_da_convocacao` |
-| FR-3572 (lista gravada na raiz, no ato) | T020 | `dc::test_a_raiz_da_chamada_grava_um_item_por_documento_da_convocacao` |
+| FR-3572 (lista gravada na raiz, no ato; revista em 07/11/2026) | T020, T059 | `dc::test_a_raiz_da_chamada_grava_um_item_por_documento_da_convocacao`; `lg::test_a_chamada_individual_grava_os_obrigatorios`, `::test_a_convocacao_para_regularizar_grava_a_lista`, `::test_o_gesto_dos_titulares_grava_a_lista_de_cada_convocada`, `::test_o_email_do_gesto_pede_os_documentos`, `::test_o_gesto_e_a_chamada_individual_gravam_listas_equivalentes`, `::test_o_recorte_por_modalidade_vale_pessoa_a_pessoa_no_gesto`, `::test_o_facultativo_entra_na_lista_do_gesto_e_nao_impede_o_aceite`, `::test_o_gesto_aproveita_o_documento_da_inscricao`, `::test_a_falha_na_lista_de_uma_pessoa_desfaz_o_gesto_inteiro`, `::test_repetir_o_gesto_nao_duplica_a_lista` |
 | FR-3573 (lista imutável, da chamada) | T019, T020 | `dc::test_a_sucessora_que_corrige_nao_grava_outra_lista`, `::test_o_item_da_lista_e_append_only`; `ec::test_a_chamada_nova_aproveita_o_que_nao_estava_pendente_sem_copia` |
 | FR-3574 (sem exigência, como antes) | T020, T022 | `dc::test_sem_documento_na_convocacao_a_lista_fica_vazia`; `pt::test_sem_documento_na_convocacao_a_tela_e_a_de_antes` |
 | FR-3575 (sem lista retroativa) | T020 | a migration `convocacao/0005` não percorre linha; `dc::test_sem_documento_na_convocacao_a_lista_fica_vazia` (convocação sem itens é sem exigência) |
@@ -49,6 +50,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3590 (estado do item, derivado) | T031 | `dc::test_pendente_exige_motivo_e_o_motivo_volta_ao_estado` (pendente → complementado), `::test_o_certificado_enviado_na_inscricao_atende_a_convocacao_sem_copia` (recebido), `::test_nao_se_aplica_sem_apresentacao_com_motivo` |
 | FR-3591 (estado da convocação) | T031 | `dc::test_o_aceite_espera_os_obrigatorios_conferidos` (decidida), `::test_sem_documento_na_convocacao_a_lista_fica_vazia` (sem exigência); `mx::test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos` (para conferir) |
 | FR-3592 (guarda do aceite e da regularização) | T032 | `dc::test_o_aceite_espera_os_obrigatorios_conferidos`; `nv::test_aluno_envia_corrige_a_pendencia_e_fica_apto` |
+| FR-4401 (guarda da lista ausente ou incompleta) | T058, T060 | `lg::test_o_aceite_da_convocacao_sem_lista_e_recusado`, `::test_o_aceite_da_lista_incompleta_e_recusado_nomeando_so_o_que_falta`, `::test_a_regularizacao_da_convocacao_sem_lista_e_recusada`, `::test_os_desfechos_que_nao_incluem_nao_leem_a_lista`, `::test_o_edital_sem_documento_na_convocacao_aceita_sem_lista`, `::test_a_correcao_da_convocacao_do_gesto_herda_a_lista`, `::test_corrigir_a_convocacao_sem_lista_nao_a_conserta` |
 | FR-3593 (os outros desfechos livres; nada automático) | T032 | `dc::test_os_outros_desfechos_nao_dependem_dos_documentos`, `::test_o_vencimento_nao_produz_desfecho`; `nv::test_depois_do_prazo_nada_se_envia_e_nada_se_decide_sozinho` |
 | FR-3594 (fundamento pré-redigido) | T034 | `dc::test_o_fundamento_do_indeferimento_vem_das_pendencias`; `mx::test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos` |
 | FR-3595 (predicado único) | T029, T033 | `al` inteiro; `mx` inteiro |
@@ -97,6 +99,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | SC-1091 (abrir e conferir em três interações) | T033 | `nv::abrir_e_conferir` (abrir, escolher, registrar), na mesma página |
 | SC-1092 (chamada nova sem arquivo novo nem "conforme") | T055 | `ec::test_a_chamada_nova_aproveita_o_que_nao_estava_pendente_sem_copia` |
 | SC-1093 (prazo único no Requerimento) | T053 | `pz` inteiro |
+| SC-1341 (listas iguais pelos dois caminhos; nenhum aceite sem lista; nada parcial) | T058 a T060 | `lg` inteiro |
 
 ## Casos-limite
 
@@ -128,4 +131,5 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | Edital encerrado com convocação em aberto | FR-3616 | `dc::test_edital_encerrado_com_convocacao_em_aberto_continua_recebendo_e_conferindo` |
 | Duas inscrições em Editais distintos | FR-3576 | a referência é da mesma inscrição, e o gatilho recusa a de outra: `dc::test_a_referencia_a_documento_de_outra_inscricao_e_recusada_pelo_banco` |
 | Pendente e aceite tentado | FR-3592 | `dc::test_o_aceite_espera_os_obrigatorios_conferidos` |
+| Convocação sem a lista, ou com lista incompleta | FR-4401 | `lg::test_o_aceite_da_convocacao_sem_lista_e_recusado`, `::test_o_aceite_da_lista_incompleta_e_recusado_nomeando_so_o_que_falta`, `::test_corrigir_a_convocacao_sem_lista_nao_a_conserta`, `::test_os_desfechos_que_nao_incluem_nao_leem_a_lista` |
 | Acesso indevido | FR-3595 a FR-3600 | `mx` inteiro; `pt::test_outro_candidato_nao_alcanca_nem_a_lista_nem_o_arquivo` |
