@@ -1,0 +1,3 @@
+[{"arquivo":"03-t5-o-que-fazer-agora.jpg","quem":"demo.presidente","url":"/gestao/editais/9e8a1d1a-8b58-4045-ae6b-5480195988a5/","altura":1300},
+ {"arquivo":"04-t5-andamento-aberto.jpg","quem":"demo.presidente","url":"/gestao/editais/9e8a1d1a-8b58-4045-ae6b-5480195988a5/","acao":"document.querySelectorAll('details').forEach(d=>d.open=true); document.querySelector('details')?.scrollIntoView();","janela":true,"espera":800},
+ {"arquivo":"05-t5-ocupacao-m1.jpg","quem":"demo.presidente","url":"/gestao/editais/9e8a1d1a-8b58-4045-ae6b-5480195988a5/marcos/3c9e07d8-9253-47be-88ee-76cd5718f647/ocupacao","altura":1300}]
