@@ -40,11 +40,21 @@ from processo_seletivo.recursos.application import admitir as recursos_admitir
 #: primeira tela a 375 px junto do título; mais do que isso transforma a faixa na lista inteira.
 MOSTRADOS = 5
 
-#: O que a faixa não cobre, e onde isso está (104, D-002, FR-2812). Dito na própria tela para que a
-#: faixa não se apresente como "todas as pendências".
+#: O que a faixa não cobre, e onde isso está (104, D-002; emendado pela 129, FR-4324). Eram três
+#: famílias, ditas depois dos itens e em cinza, quando ficam de fora onze: quem conduz a convocação
+#: lia a faixa como fila completa e concluía que não havia nada a fazer. A frase vazia lê a mesma
+#: constante (FR-4325), para que as duas nunca nomeiem famílias diferentes.
 FORA_DA_FAIXA = (
-    "Inclui atos de Edital e de Retificação, recursos e avaliações de comissão. Classificação, "
-    "divulgação de resultado e avisos aos candidatos continuam no detalhe de cada Edital."
+    "Classificação, sorteio, resultado, convocação, documentos e formalização, Requerimento de "
+    "Matrícula, avisos aos candidatos e encerramento não entram aqui: ficam em “O que fazer "
+    "agora”, no detalhe de cada Edital."
+)
+
+#: A nota da faixa com itens: o que ela reúne, e depois o que fica de fora (FR-4324). A frase vazia
+#: já começa dizendo o que a faixa olhou, e acrescenta só `FORA_DA_FAIXA`.
+COBERTURA = (
+    "Esta faixa reúne atos de Edital e de Retificação, recursos e avaliações de comissão. "
+    + FORA_DA_FAIXA
 )
 
 
@@ -153,14 +163,11 @@ def _da_retificacao(em_curso, editais):
             )
 
 
-def _dos_recursos(editais, ator, contagens):
+def _dos_recursos(editais, ator):
     if not ator.can(recursos_admitir.PERMISSAO):
         return
-    if contagens is None:
-        ids = [edital.id for edital in editais if edital.status in acoes.ESTADOS_COM_INSCRICOES]
-        por_edital = acoes.recursos_por_edital(ids) if ids else {}
-    else:
-        por_edital = contagens["recursos"]
+    ids = [edital.id for edital in editais if edital.status in acoes.ESTADOS_COM_INSCRICOES]
+    por_edital = acoes.recursos_por_edital(ids) if ids else {}
     for edital in editais:
         quantos = por_edital.get(edital.id, 0)
         if quantos:
@@ -217,12 +224,13 @@ def _ordem(objeto):
     )
 
 
-def do_ator(ator, editais, *, em_curso=None, contagens=None):
+def do_ator(ator, editais, *, em_curso=None):
     """Os objetos de trabalho do ator, um por objeto, na ordem da faixa (FR-2801 a FR-2806).
 
-    `editais` são os que a tela já carregou, no escopo do ator. `em_curso` e `contagens` chegam de
-    quem já os leu para a mesma página — a Lista lê as Retificações em curso para a marca e as
-    contagens para a coluna — e são lidos aqui quando não chegam.
+    `editais` são os que a tela já carregou, no escopo do ator — na Lista, **todos** os da unidade,
+    e não os da página (129, FR-4323): o recorte não pode esconder trabalho. `em_curso` chega de
+    quem já o leu para os mesmos Editais — a Lista o lê para a marca — e é lido aqui quando não
+    chega.
     """
     editais = list(editais)
     if em_curso is None:
@@ -230,7 +238,7 @@ def do_ator(ator, editais, *, em_curso=None, contagens=None):
     objetos = [
         *_do_edital(editais, ator),
         *_da_retificacao(em_curso, editais),
-        *_dos_recursos(editais, ator, contagens),
+        *_dos_recursos(editais, ator),
         *_das_avaliacoes(ator),
     ]
     vistos, unicos = set(), []
@@ -260,4 +268,5 @@ class Faixa:
     def __bool__(self):
         return bool(self.objetos)
 
-    cobertura = FORA_DA_FAIXA
+    cobertura = COBERTURA
+    fora_da_faixa = FORA_DA_FAIXA

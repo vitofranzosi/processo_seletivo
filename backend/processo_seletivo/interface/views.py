@@ -169,6 +169,7 @@ from processo_seletivo.interface import (
     encerramento,
     forms,
     identidade,
+    lista_de_processos,
     navegacao,
     origens,
     providencias,
@@ -191,6 +192,7 @@ from processo_seletivo.processos.application.commands import (
 )
 from processo_seletivo.processos.application.selectors import (
     contar_por_situacao,
+    editais_da_unidade,
     listar_processos,
     obter_edital,
 )
@@ -215,7 +217,6 @@ from processo_seletivo.publicacoes.application.selectors import (
     homologar_fecharia_a_publicacao,
     impede_por_segregacao,
     participantes_do_edital,
-    participantes_em_lote,
 )
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.elevacao import elevar
@@ -255,72 +256,56 @@ from processo_seletivo.unidades.domain import vigencia as vigencia_de_autoridade
 from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
 from processo_seletivo.unidades.domain.rotulos import rotulo_da_autoridade
 
-# Ordem em que as situações aparecem: o fluxo do Edital, não a ordem alfabética.
-ORDEM_SITUACAO = [
-    "EM_ELABORACAO",
-    "EM_REVISAO",
-    "HOMOLOGADO",
-    "PUBLICADO",
-    "ENCERRADO",
-    "CANCELADO",
-]
-
 # `ACOES_POR_SITUACAO` foi removido: era a segunda fonte de verdade que FR-023 proíbe, e ela **já
 # divergia**. O mapa não conhecia `Cancelar`, então um gestor via a ação no detalhe do Edital e a
 # listagem, ao lado, afirmava que não havia nenhuma — a mesma contradição do achado 08, um nível
 # acima. `acoes.do_edital` é agora o único lugar que responde à pergunta.
 
 
+def _sem_espacos(texto):
+    return " ".join((texto or "").split()).casefold()
+
+
 @require_http_methods(["GET"])
 def lista(request):
+    """A página inicial da gestão: a faixa de trabalho e os Processos, recortados (129).
+
+    **Duas leituras distintas, e de propósito.** A faixa "Ações disponíveis para você" lê os
+    Editais da **unidade inteira** (FR-4323): Edital encerrado ainda convoca e recebe recurso, e um
+    recorte que alcançasse a faixa esconderia trabalho (D-006). A lista lê só a página. Os Editais
+    da página saem da mesma leitura da faixa, agrupados por Processo — um `prefetch` seria uma
+    consulta a mais, que some quando a página vem vazia, e o custo mudaria com a aba (FR-4327).
+
+    **A linha diz fatos, e não ações** (variante V1, D-003): a lista não chama mais
+    `acoes.do_edital` por Edital, e o custo que crescia com o acervo para quem exporta para
+    matrícula — duas consultas por Edital — saiu com a coluna (D-007).
+    """
     ator = identidade.ator_da_sessao(request)
     if ator is None:
         return identidade.pedir_identificacao(request)
 
-    processos = list(listar_processos(actor=ator))
-    editais = [edital for processo in processos for edital in processo.editais.all()]
-    # **Tudo o que a coluna e a faixa precisam, lido para a página inteira** (104, FR-2806,
-    # FR-2818): as contagens de inscrições e recursos, a segregação dos Editais em revisão ou
-    # homologados e as Retificações em curso. Eram duas consultas por Edital publicado; agora são
-    # leituras em lote, e a faixa de ações não acrescenta custo por linha.
-    contagens = acoes.contagens_da_lista(editais, ator)
-    em_fluxo = [
-        e for e in editais if e.status in (Edital.Status.EM_REVISAO, Edital.Status.HOMOLOGADO)
-    ]
-    participantes = participantes_em_lote(em_fluxo) if em_fluxo else {}
-    # **A entrada de quem homologa e de quem publica** (103, FR-2706, D-002): uma consulta para a
-    # página inteira (FR-2707) — a marca precisa da situação e de dois nomes, e nada mais.
-    em_curso = atos_retificacao.em_curso_por_edital((edital.id for edital in editais), ator)
-    for edital in editais:
-        # Sem pendências: a validação do conteúdo custaria dezenas de consultas por linha. Por isso
-        # os atos que dependem dela saem como "Conferir e…", levando ao detalhe, que a calcula
-        # (104, D-004). A segregação, que se lê em lote, entra — e "Publicar" sai desabilitado
-        # com o motivo, como no detalhe (FR-2816).
-        segregacao = edital.id in participantes and impede_por_segregacao(
-            participantes[edital.id], ator
-        )
-        edital.acoes = acoes.para_a_lista(
-            [
-                acao
-                for acao in acoes.do_edital(
-                    edital,
-                    ator,
-                    segregacao=segregacao,
-                    com_relatorio=False,
-                    contagens=contagens,
-                )
-                if acao.chave != "auditoria"
-            ],
-            edital,
-        )
-        # A ordem da linha: as frequentes primeiro, as terminais à parte (057, FR-1049).
-        edital.grupo = acoes.da_linha(edital.acoes)
-        edital.retificacoes_em_curso = em_curso.get(edital.id, [])
-        # O ato da Retificação na coluna (104, FR-2814): a linha que tem trabalho para a pessoa não
-        # pode dizer "Nenhuma ação disponível" ao lado dele.
-        edital.atos_de_retificacao = [
-            item for item in edital.retificacoes_em_curso if item["meu_ato"]
+    recorte = lista_de_processos.recorte_de(request.GET)
+    contagem = contar_por_situacao(actor=ator, busca=recorte.busca)
+    total = (
+        contagem.encontrados_no_total
+        if recorte.busca
+        else (contagem.todos if recorte.grupo is None else contagem.por_grupo[recorte.grupo])
+    )
+    pagina = lista_de_processos.paginar(recorte, total)
+    processos = list(
+        listar_processos(actor=ator, grupo=recorte.grupo, busca=recorte.busca)[
+            pagina.inicio : pagina.inicio + lista_de_processos.POR_PAGINA
         ]
+    )
+
+    editais = list(editais_da_unidade(actor=ator))
+    # **A entrada de quem homologa e de quem publica** (103, FR-2706, D-002): uma consulta para a
+    # unidade inteira (FR-2707). Serve à marca da linha e à faixa, que a recebe pronta.
+    em_curso = atos_retificacao.em_curso_por_edital((edital.id for edital in editais), ator)
+    por_processo = {}
+    for edital in editais:
+        edital.retificacoes_em_curso = em_curso.get(edital.id, [])
+        por_processo.setdefault(edital.processo_id, []).append(edital)
 
     # A base contextual da 011: sem isto a tela decide só por `ator.permissions` e diz a quem
     # preside uma comissão que sua conta não possui papel algum.
@@ -331,6 +316,11 @@ def lista(request):
     # por Processo.
     gere_por_papel = ator.can("comissao:gerir")
     for processo in processos:
+        processo.editais_da_linha = por_processo.get(processo.id, [])
+        for edital in processo.editais_da_linha:
+            # O título do Edital só quando difere do do Processo (FR-4318): na maioria repete, e a
+            # linha compacta não tem por que dizer a mesma coisa duas vezes.
+            edital.titulo_difere = _sem_espacos(edital.title) != _sem_espacos(processo.title)
         processo.vinculo = vinculos.get(processo.id)
         # E a recíproca: **quem pode gerir vê o caminho**, ainda que não integre a comissão. O
         # gestor com `comissao:gerir` que não fosse membro não recebia link nenhum para a comissão
@@ -341,25 +331,27 @@ def lista(request):
             processo.vinculo is not None and processo.vinculo.funcao == Funcao.PRESIDENTE
         )
 
-    contagem = contar_por_situacao(processos)
+    # O nome do registro de Unidades, e não o código do escopo (FR-4322). Sem registro, o código.
+    unidade = unidades_selectors.unidade(ator.institution_scope)
     return render(
         request,
         "interface/lista.html",
         {
             # A faixa "Ações disponíveis para você" (104, FR-2807): os objetos em que a pessoa pode
-            # atuar agora, derivados das mesmas regras dos detalhes, e lidos sobre o que esta view
-            # já carregou.
-            "faixa": trabalho.Faixa(
-                trabalho.do_ator(ator, editais, em_curso=em_curso, contagens=contagens)
-            ),
+            # atuar agora, derivados das mesmas regras dos detalhes, sobre a unidade inteira.
+            "faixa": trabalho.Faixa(trabalho.do_ator(ator, editais, em_curso=em_curso)),
             "processos": processos,
             "vinculos": list(vinculos.values()),
-            "total_editais": sum(contagem.values()),
-            "resumo": [
-                (situacao, contagem[situacao])
-                for situacao in ORDEM_SITUACAO
-                if situacao in contagem
-            ],
+            "recorte": recorte,
+            "pagina": pagina,
+            "contagem": contagem,
+            "abas": lista_de_processos.abas(recorte, contagem),
+            "frase": (
+                lista_de_processos.frase_da_busca(pagina, contagem)
+                if recorte.busca
+                else lista_de_processos.frase_do_recorte(pagina)
+            ),
+            "nome_da_unidade": unidade.nome if unidade else ator.institution_scope,
             # Visão Geral, Autoridades e Modelos de aviso saíram da lista para a barra (077,
             # `FR-1740`): a capacidade deles é decidida em `navegacao.py`, e só lá.
             "pode_criar": ator.can("processo:criar"),

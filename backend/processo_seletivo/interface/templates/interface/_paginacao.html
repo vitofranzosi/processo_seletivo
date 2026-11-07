@@ -1,0 +1,17 @@
+{% comment %}
+A navegação entre páginas de uma listagem cujo recorte mora no endereço (129, FR-4312, FR-4314).
+
+`pagina` é uma `lista_de_processos.Pagina`: `anterior` e `seguinte` são as querystrings prontas,
+que já levam a aba ou a busca — avançar de página não pode desfazer a pergunta que trouxe a pessoa
+até aqui. `base` é o endereço da tela, escrito antes delas: `href=""` sozinho repetiria a
+querystring da página atual, e a "Anterior" da página 2 voltaria à 2.
+
+Só com mais de uma página: uma navegação que diz "Página 1 de 1" é ruído.
+{% endcomment %}
+{% if pagina.varias %}
+<nav class="paginacao" aria-label="{{ rotulo }}">
+  {% if pagina.tem_anterior %}<a href="{{ base }}{{ pagina.anterior }}" rel="prev">Anterior</a>{% endif %}
+  <span aria-current="page">Página {{ pagina.numero }} de {{ pagina.total_de_paginas }}</span>
+  {% if pagina.tem_seguinte %}<a href="{{ base }}{{ pagina.seguinte }}" rel="next">Próxima</a>{% endif %}
+</nav>
+{% endif %}

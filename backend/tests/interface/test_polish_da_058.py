@@ -140,7 +140,8 @@ def test_a_moldura_rola_so_abaixo_de_60_rem_na_mesma_regra_da_alocacao():
 
 @pytest.mark.parametrize(
     ("tela", "antes_da_tabela"),
-    [("lista.html", "{% if processo.editais.all %}"), ("marco.html", "Recortes deste marco</h2>")],
+    # A lista de Processos saiu daqui na 129: deixou de ser tabela (FR-4320), e não há moldura.
+    [("marco.html", "Recortes deste marco</h2>")],
 )
 def test_a_tabela_mora_na_moldura(tela, antes_da_tabela):
     """FR-1071, FR-1073: a tabela dentro da moldura, e não solta no cartão ou na seção."""

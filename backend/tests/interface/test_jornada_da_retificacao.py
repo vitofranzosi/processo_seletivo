@@ -180,8 +180,8 @@ def test_a_criar_retomar_editar_submeter_homologar_e_publicar(edital, vigente):
     # Ana sai e volta noutra sessão: a Lista diz o que a Retificação espera, e de quem.
     ana = sessao(*ANA)
     lista = ana.get(reverse("interface:lista")).content.decode()
-    # Desde a 104 o ato vai para a faixa e para a coluna, e a marca diz só a situação.
-    assert "Retificação em elaboração</a>" in lista
+    # O ato vai para a faixa; a marca diz a situação e de quem é a vez (129, R-9).
+    assert "Retificação em elaboração · aguarda quem elabora</a>" in lista
     assert "Concluir e submeter a Retificação" in lista
     editar(ana, retificacao, "7")
     assert vagas_propostas(retificacao) == 7
@@ -193,14 +193,14 @@ def test_a_criar_retomar_editar_submeter_homologar_e_publicar(edital, vigente):
 
     bruno = sessao(*BRUNO)
     lista = bruno.get(reverse("interface:lista")).content.decode()
-    assert "Retificação em revisão</a>" in lista
+    assert "Retificação em revisão · aguarda quem homologa</a>" in lista
     assert "Analisar a Retificação" in lista
     assert "O próximo ato é seu" in detalhe(bruno, retificacao)
     praticar(bruno, retificacao, "homologar", motivo="Conferido")
 
     carla = sessao(*CARLA)
     lista = carla.get(reverse("interface:lista")).content.decode()
-    assert "Retificação homologada</a>" in lista
+    assert "Retificação homologada · aguarda quem publica</a>" in lista
     assert "Publicar a Retificação" in lista
     praticar(carla, retificacao, "publicar", **SIGNATARIO)
 

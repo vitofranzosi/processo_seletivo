@@ -8,6 +8,7 @@ divergir — e o primeiro deles é o que teria pego o defeito original.
 import pytest
 from django.urls import reverse
 
+from processo_seletivo.interface.identidade import PAPEIS
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.edital import actor_headers, complete_draft
 from tests.fixtures.publicacao import publish_original
@@ -216,36 +217,113 @@ def test_ato_sem_impedimento_permanece_disponivel(
 
 
 # ---------------------------------------------------------------------------
-# A listagem e o detalhe respondem à mesma pergunta (FR-023)
+# A lista e o detalhe não se contradizem (FR-023, na forma da 129: FR-4329)
 # ---------------------------------------------------------------------------
+#
+# Até a 129 a lista tinha uma coluna de ações por Edital, e a garantia era que ela e o detalhe
+# oferecessem o mesmo conjunto — a segunda fonte de verdade, `ACOES_POR_SITUACAO`, não conhecia
+# "Cancelar", e a lista dizia que não havia ação ao lado do detalhe que a oferecia. A coluna saiu
+# (variante V1), e a garantia virou duas: a lista não apresenta ação de Edital nenhuma, e todo ato
+# de Edital que a faixa nomeia o detalhe do mesmo Edital oferece à mesma pessoa.
+
+#: O ato de Edital que a faixa nomeia, e a chave dele no conjunto do detalhe.
+ATO_DA_FAIXA = {
+    "Continuar a elaboração": "elaborar",
+    "Homologar o Edital": "homologar",
+    "Conferir e publicar o Edital": "publicar",
+}
 
 
-def test_listagem_e_detalhe_nao_divergem(client, seletor_ligado, edital):
-    """A segunda fonte de verdade que sobreviveu à primeira correção.
+def _linhas_dos_editais(corpo):
+    return [trecho.split("</ul>")[0] for trecho in corpo.split('class="editais-do-processo"')[1:]]
 
-    `ACOES_POR_SITUACAO` não conhecia `Cancelar`: um gestor via a ação no detalhe do Edital e a
-    listagem, ao lado, afirmava que não havia nenhuma. É o achado 08 um nível acima.
-    """
-    identificar(client, "gestora", ["gestor", "elaborador"])
 
-    do_detalhe = {a.chave for a in cartao_de_acoes(client, edital).context["acoes"]}
-    listagem = client.get(reverse("interface:lista"))
-    processo = listagem.context["processos"][0]
-    da_lista = {a.chave for a in list(processo.editais.all())[0].acoes}
+@pytest.mark.parametrize(
+    "papeis",
+    [[papel] for papel in sorted(PAPEIS)] + [sorted(PAPEIS)],
+    ids=[*sorted(PAPEIS), "todos"],
+)
+def test_a_lista_nao_apresenta_acao_de_edital(client, seletor_ligado, papeis):
+    """Para todo papel, nenhuma linha de Edital traz ação, contador ou "Nenhuma ação" (FR-4319)."""
+    from processo_seletivo.processos.models import ProcessoSeletivo
+    from tests.performance.test_visao_institucional import publicar_direto
 
-    # As duas ausências deliberadas: a listagem não oferece auditoria por linha, e o relatório do
-    # Edital (099) é do detalhe — na lista, a porta dele custaria uma consulta à comissão por linha.
-    assert da_lista == do_detalhe - {"auditoria", "relatorio"}, (
-        f"listagem {da_lista} diverge do detalhe {do_detalhe}"
+    publicar_direto(2, ano=2026)
+    ProcessoSeletivo.objects.update(status=ProcessoSeletivo.Status.ATIVO)
+    identificar(client, "gestora", papeis)
+
+    corpo = client.get(reverse("interface:lista")).content.decode()
+
+    linhas = _linhas_dos_editais(corpo)
+    assert linhas, "o cenário precisa de linhas de Edital"
+    for linha in linhas:
+        assert 'class="acao' not in linha
+        assert "(0)" not in linha
+    assert "Nenhuma ação disponível" not in corpo
+    for rotulo in (
+        "Inscrições recebidas",
+        "Recursos aguardando decisão",
+        "Exportar para matrícula",
+    ):
+        assert rotulo not in corpo
+
+
+def _atos_da_faixa_estao_no_detalhe(client):
+    faixa = client.get(reverse("interface:lista")).context["faixa"]
+    do_edital = [objeto for objeto in faixa.objetos if objeto.natureza == "edital"]
+    for objeto in do_edital:
+        chaves = {
+            acao.chave
+            for acao in cartao_de_acoes(client, objeto.edital).context["acoes"]
+            if acao.disponivel
+        }
+        assert ATO_DA_FAIXA[objeto.ato] in chaves, (objeto.ato, chaves)
+    return [objeto.ato for objeto in do_edital]
+
+
+def _submetido(api_client, manager_headers, process_payload):
+    """Até a submissão: o estado em que `homologar` fica oferecido."""
+    criado = api_client.post(
+        "/api/v1/admin/processos", process_payload, format="json", **manager_headers
     )
+    edital = Edital.objects.get(processo_id=criado.json()["id"])
+    preparer = actor_headers("preparador", ["edital:elaborar", "edital:submeter"])
+    api_client.put(
+        f"/api/v1/admin/editais/{edital.id}/rascunho",
+        complete_draft(),
+        format="json",
+        **{**preparer, "HTTP_IF_MATCH": '"1"'},
+    )
+    api_client.post(
+        f"/api/v1/admin/editais/{edital.id}/submissoes",
+        format="json",
+        **{**preparer, "HTTP_IF_MATCH": '"2"'},
+    )
+    return Edital.objects.get(pk=edital.pk)
 
 
-def test_cancelar_aparece_na_listagem_para_quem_pode(client, seletor_ligado, edital):
-    """O caso concreto da divergência: `Cancelar` não estava no mapa antigo."""
-    identificar(client, "gestora", ["gestor"])
+@pytest.mark.parametrize(
+    ("situacao", "papel", "ato"),
+    [
+        ("EM_ELABORACAO", "elaborador", "Continuar a elaboração"),
+        ("EM_REVISAO", "homologador", "Homologar o Edital"),
+        ("HOMOLOGADO", "publicador", "Conferir e publicar o Edital"),
+    ],
+)
+def test_o_ato_de_edital_que_a_faixa_nomeia_o_detalhe_tambem_oferece(
+    client, seletor_ligado, api_client, manager_headers, process_payload, situacao, papel, ato
+):
+    """A paridade nova (FR-4329): faixa ⊂ detalhe, para elaborar, homologar e publicar."""
+    if situacao == "HOMOLOGADO":
+        edital = homologado(api_client, manager_headers, process_payload)
+    elif situacao == "EM_REVISAO":
+        edital = _submetido(api_client, manager_headers, process_payload)
+    else:
+        api_client.post(
+            "/api/v1/admin/processos", process_payload, format="json", **manager_headers
+        )
+        edital = Edital.objects.get()
+    assert edital.status == situacao
 
-    listagem = client.get(reverse("interface:lista"))
-    processo = listagem.context["processos"][0]
-    rotulos_da_linha = {a.rotulo for a in list(processo.editais.all())[0].acoes}
-
-    assert "Cancelar" in rotulos_da_linha
+    identificar(client, f"{papel}.paridade", [papel])
+    assert _atos_da_faixa_estao_no_detalhe(client) == [ato]

@@ -165,7 +165,9 @@ def test_c_a_devolvida_se_reconhece_e_a_reenviada_tambem(edital, vigente):
     [objeto] = resposta.context["faixa"].objetos
     assert objeto.ato == "Corrigir a Retificação devolvida"
     assert objeto.detalhe == "Motivo da devolução: Falta a linha da ampla"
-    assert "Retificação devolvida</a>" in corpo
+    # A marca diz de quem é a vez também a quem é a vez (129, R-9): sem a coluna, o ato fica na
+    # faixa.
+    assert "Retificação devolvida · aguarda" in corpo
     pagina = ana.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
     assert ">Devolvida</span>" in pagina
     # Um verbo só para a devolvida (D-013): o cartão diz "Corrigir", e a seção abaixo também.
@@ -207,17 +209,14 @@ def test_d_a_lista_nao_oferece_submeter_que_a_validacao_pode_recusar(
     ana = sessao(*ANA)
 
     resposta = lista(ana)
-    linha = list(resposta.context["processos"][0].editais.all())[0]
-    submeter = next(a for a in linha.acoes if a.chave == "submeter")
     detalhe = ana.get(reverse("interface:detalhe", args=[edital.id]))
     no_detalhe = next(a for a in detalhe.context["acoes"] if a.chave == "submeter")
 
     assert not no_detalhe.disponivel, "o detalhe vê a pendência"
-    assert (submeter.rotulo, submeter.url) == (
-        "Conferir e submeter",
-        reverse("interface:detalhe", args=[edital.id]),
-    )
-    assert "Submeter para revisão" not in resposta.content.decode()
+    # A lista não oferece nem "Submeter" nem "Conferir e submeter" (129, FR-4319): os atos são do
+    # detalhe, que os desabilita com o motivo.
+    corpo = resposta.content.decode()
+    assert "Submeter para revisão" not in corpo and "Conferir e submeter" not in corpo
     # Na faixa, o Edital em elaboração conta como continuar a elaboração, que nunca é recusado.
     assert [o.ato for o in resposta.context["faixa"].objetos] == ["Continuar a elaboração"]
 
@@ -229,10 +228,12 @@ def test_d_quem_submeteu_e_homologou_nao_ve_publicar_como_acao(
     dora = sessao("dora", ["publicador"])
 
     resposta = lista(dora)
-    linha = list(resposta.context["processos"][0].editais.all())[0]
-    publicar = next(a for a in linha.acoes if a.chave == "publicar")
+    detalhe = dora.get(reverse("interface:detalhe", args=[edital.id]))
+    publicar = next(a for a in detalhe.context["acoes"] if a.chave == "publicar")
 
     assert not resposta.context["faixa"]
+    # O ato que a segregação recusaria continua desabilitado com o motivo, mas no detalhe (129,
+    # FR-4319): a lista não o apresenta.
     assert not publicar.disponivel and "outra pessoa" in publicar.motivo
     assert "Conferir e publicar" not in resposta.content.decode()
 
@@ -323,17 +324,21 @@ def test_g_varios_procedimentos_ordenados_e_sem_duplicidade(
 
 
 # ---------------------------------------------------------------------------------------------
-# A coluna e o detalhe não se contradizem
+# A linha e a faixa não se contradizem (129: a coluna saiu, variante V1)
 # ---------------------------------------------------------------------------------------------
 
 
-def test_a_coluna_tem_o_ato_e_nao_diz_nenhuma_acao(edital, vigente):
+def test_a_linha_tem_a_marca_e_o_ato_fica_na_faixa(edital, vigente):
     retificacao = submetida(edital, vigente)
 
-    corpo = lista(sessao(*BRUNO)).content.decode()
+    resposta = lista(sessao(*BRUNO))
+    corpo = resposta.content.decode()
     url = reverse("interface:retificacao-detalhe", args=[retificacao.id])
 
-    assert f'<a class="acao principal-da-linha" href="{url}">Analisar a Retificação</a>' in corpo
+    # A linha diz a situação e de quem é a vez; o ato da pessoa é um item da faixa (FR-4318).
+    assert f'<a class="marca-da-retificacao" href="{url}">Retificação em revisão · aguarda' in corpo
+    assert [o.chave for o in resposta.context["faixa"].objetos] == [("retificacao", retificacao.id)]
+    assert "principal-da-linha" not in corpo
     assert "Nenhuma ação disponível para seus papéis" not in corpo
 
 
@@ -422,7 +427,9 @@ def test_os_recursos_que_aguardam_decisao_sao_um_item_por_edital(
     [objeto] = faixa(marta).objetos
     assert (objeto.natureza, objeto.ato) == ("recursos", "Decidir recursos (1)")
     assert objeto.url == reverse("interface:recursos", args=[edital.id])
-    assert "Recursos aguardando decisão (1)" in lista(marta).content.decode()
+    # A linha não conta mais os recursos (129, FR-4319): o contador era da coluna, e o trabalho é
+    # da faixa.
+    assert "Recursos aguardando decisão" not in lista(marta).content.decode()
 
     # O cenário traz a peça já admitida, aguardando julgamento; decidida, ela sai.
     decidir(peca["recurso"], especie=DecisaoRecurso.Especie.INDEFERIDO)
@@ -501,7 +508,8 @@ def test_cada_item_da_faixa_e_um_link_so_com_o_ato_no_nome(edital, vigente):
 
     retificacao = submetida(edital, vigente)
     corpo = lista(sessao(*BRUNO)).content.decode()
-    faixa_html = corpo[corpo.index('class="acoes-disponiveis"') : corpo.index("cobertura-da-faixa")]
+    inicio = corpo.index('class="acoes-disponiveis"')
+    faixa_html = corpo[inicio : corpo.index("</section>", inicio)]
     url = reverse("interface:retificacao-detalhe", args=[retificacao.id])
 
     assert faixa_html.count(f'href="{url}"') == 1

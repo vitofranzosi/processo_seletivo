@@ -210,8 +210,11 @@ def test_rascunho_nao_conta_como_inscricao_recebida(
 def test_a_acao_do_edital_conta_apenas_as_inscricoes_enviadas(
     gestor, selecao, inscricao_enviada, inscricao_de_maria
 ):
-    """O rótulo diz "recebidas", e o número precisa concordar com a lista que ele abre."""
-    corpo = gestor.get(reverse("interface:lista")).content.decode()
+    """O rótulo diz "recebidas", e o número precisa concordar com a lista que ele abre.
+
+    No detalhe do Edital desde a 129: a lista de Processos não tem mais a coluna de ações (FR-4319).
+    """
+    corpo = gestor.get(reverse("interface:detalhe", args=[selecao.id])).content.decode()
 
     assert "Inscrições recebidas (1)" in corpo
     assert "Inscrições recebidas (2)" not in corpo
