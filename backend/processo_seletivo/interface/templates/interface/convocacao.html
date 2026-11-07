@@ -542,7 +542,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
         <legend>Documentos obrigatórios considerados não aplicáveis</legend>
         <ul>
           {% for lido in linha.documentos.inaplicabilidades %}
-          <li>{{ lido.nome }} — condição publicada: {{ lido.condicao }}. Motivo: {{ lido.conferencia.motivo }}. Registrado por {% nome_de_pessoa lido.conferencia.conferido_por %} em {{ lido.conferencia.conferido_em|date:"d/m/Y H:i" }}{% if lido.conferencia.apresentacao_id %} (versão {{ lido.conferencia.apresentacao.numero }}){% endif %}.</li>
+          <li>{{ lido.nome }} — condição publicada: {{ lido.condicao }}. Motivo: {{ lido.conferencia.motivo }}{% if lido.conferencia.motivo|last != "." %}.{% endif %} Registrado por {% nome_de_pessoa lido.conferencia.conferido_por %} em {{ lido.conferencia.conferido_em|date:"d/m/Y H:i" }}{% if lido.conferencia.apresentacao_id %} (versão {{ lido.conferencia.apresentacao.numero }}){% endif %}.</li>
           {% endfor %}
         </ul>
         <input type="hidden" name="inaplicabilidades" value="{{ linha.documentos.assinatura_das_inaplicabilidades }}">

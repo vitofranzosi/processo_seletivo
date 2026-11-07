@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-07
 
-**Status**: Em implementação, desde 07/11/2026. As decisões têm duas origens:
+**Status**: Implementada em 07/11/2026, no PR #426, com uma migration (`editais/0025`) e o degrau 19 de elevação. Verificação em [verificacao.md](verificacao.md); a SC-1378 (humana) e a P-3 continuam pendentes. As decisões têm duas origens:
 
 - **Do usuário, em 07/11/2026**, em duas rodadas: no pedido desta spec, a *1ª* à *9ª decisão*; na
   revisão do PR #426, a *10ª* à *12ª*. Estão em *Clarifications* e não se reabrem.

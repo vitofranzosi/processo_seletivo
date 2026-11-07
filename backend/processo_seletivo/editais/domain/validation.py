@@ -3907,7 +3907,12 @@ def _textos_impressos(snapshot: dict):
         ("attachments", (("label", "no rótulo"),), "do Anexo", ("label",)),
         (
             "documentRequirements",
-            (("name", "no nome"), ("instructions", "nas instruções")),
+            # A condição de exigência (131) sai no PDF depois do nome, e passa pela mesma regra.
+            (
+                ("name", "no nome"),
+                ("instructions", "nas instruções"),
+                ("requiredWhen", "na condição de exigência"),
+            ),
             "do documento exigido",
             ("name", "key"),
         ),

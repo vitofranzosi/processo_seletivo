@@ -21,7 +21,7 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
 
 <p class="aviso" role="status"><strong>{{ rotulo_documental }}</strong>{% if desfecho %} — {{ desfecho.get_especie_display }}, registrado em {{ desfecho.registrado_em|date:"d/m/Y H:i" }}{% endif %}</p>
 {% if leitura.pendencias_para_incluir and not desfecho %}
-<p class="nota">Aceite e regularização ainda não podem ser registrados: falta conferir como conforme ou não se aplica — {% for lido in leitura.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+<p class="nota">Aceite e regularização ainda não podem ser registrados: falta conferir como conforme, ou como não se aplica quando o Edital publicou a condição — {% for lido in leitura.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
 {% endif %}
 {% if leitura.facultativos_sem_conferencia and not desfecho %}
 <p class="nota">Documento facultativo recebido e ainda não conferido: {% for lido in leitura.facultativos_sem_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. Isso não impede o desfecho.</p>
