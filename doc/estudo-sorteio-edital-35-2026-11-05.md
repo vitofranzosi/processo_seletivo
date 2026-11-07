@@ -21,7 +21,9 @@ são de specs existentes. As decisões pendentes usam `Q`, para não colidir com
 
 O guia de condução que parte deste estudo, com a jornada inteira, da configuração do Edital ao
 encerramento, e as telas reais, está em
-[`guia-jornada-do-sorteio-2026-11-05/`](guia-jornada-do-sorteio-2026-11-05/index.html).
+[`guia-jornada-do-sorteio-2026-11-05/`](guia-jornada-do-sorteio-2026-11-05/index.html). O
+complemento sobre os documentos, da inscrição ao aceite, num certame fictício montado do zero, está
+em [`guia-documentos-no-gps-2026-11-06/`](guia-documentos-no-gps-2026-11-06/index.html).
 
 ## Candidatos, sem nome
 
