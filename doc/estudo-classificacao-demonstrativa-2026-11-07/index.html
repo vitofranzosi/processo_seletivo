@@ -1,0 +1,795 @@
+<title>Jornada da Classificação no GPS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: o mesmo caderno de condução do guia do sorteio (capítulo = narrativa + ficha + telas reais), com três peças próprias da classificação: o trilho de dependências, o "siga um candidato" e as contas abertas. Cores das modalidades iguais às dos outros estudos. */
+:root{
+  --bg:#f3f4f0; --surface:#ffffff; --ink:#1a211d; --muted:#57625b; --line:#d5dad3; --soft:#eaede7;
+  --accent:#245e6b; --accent-soft:#e0eef0;
+  --ac:#35598d; --ac-soft:#e3eaf5; --pcd:#77489a; --pcd-soft:#eee5f6; --ppi:#9a5f0c; --ppi-soft:#f7ebd8;
+  --ok:#2c6a3d; --ok-soft:#e2eee4; --edital:#3d5a73; --edital-soft:#e4ecf2; --prev:#5d5b70; --prev-soft:#ecebf2;
+  --warn:#8a5a00; --warn-soft:#fff2da; --bad:#a1382a; --bad-soft:#f9e5e1; --idea:#2f6b5a; --idea-soft:#e1f0ea;
+  --f-display:"Literata", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111513; --surface:#1a201d; --ink:#e2e8e3; --muted:#9aa59e; --line:#2e3732; --soft:#222a25;
+  --accent:#7cc3cf; --accent-soft:#1b2f33;
+  --ac:#96b5e3; --ac-soft:#1e2938; --pcd:#caa8e6; --pcd-soft:#2c2236; --ppi:#e4af5e; --ppi-soft:#33281a;
+  --ok:#7cc591; --ok-soft:#1f3326; --edital:#9cc0dc; --edital-soft:#1d2a34; --prev:#bdbad3; --prev-soft:#27263a;
+  --warn:#e9b95c; --warn-soft:#33291a; --bad:#ee907f; --bad-soft:#3a201c; --idea:#86d0b8; --idea-soft:#1b3129;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#111513; --surface:#1a201d; --ink:#e2e8e3; --muted:#9aa59e; --line:#2e3732; --soft:#222a25;
+  --accent:#7cc3cf; --accent-soft:#1b2f33;
+  --ac:#96b5e3; --ac-soft:#1e2938; --pcd:#caa8e6; --pcd-soft:#2c2236; --ppi:#e4af5e; --ppi-soft:#33281a;
+  --ok:#7cc591; --ok-soft:#1f3326; --edital:#9cc0dc; --edital-soft:#1d2a34; --prev:#bdbad3; --prev-soft:#27263a;
+  --warn:#e9b95c; --warn-soft:#33291a; --bad:#ee907f; --bad-soft:#3a201c; --idea:#86d0b8; --idea-soft:#1b3129;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding-block:36px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:72px}
+h1,h2,h3{font-family:var(--f-display);font-weight:650;line-height:1.18;text-wrap:balance;margin:0}
+h1{font-size:2.55rem} h2{font-size:1.75rem} h3{font-size:1.06rem;font-family:var(--f-body);font-weight:700}
+p{margin:0;max-width:70ch} ul,ol{margin:0}
+.eyebrow{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .small{font-size:.87rem}
+code,.mono{font-family:var(--f-mono);font-size:.84em}
+a{color:var(--accent)}
+button,select{font:inherit;color:inherit}
+button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.c{display:inline-block;font-weight:700;font-family:var(--f-mono);font-size:.86em;padding:0 5px;border-radius:4px;white-space:nowrap}
+.c.ac{background:var(--ac-soft);color:var(--ac)} .c.pcd{background:var(--pcd-soft);color:var(--pcd)} .c.ppi{background:var(--ppi-soft);color:var(--ppi)}
+.s{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;vertical-align:2px;white-space:nowrap}
+.s.gps{background:var(--ok-soft);color:var(--ok)} .s.prev{background:var(--prev-soft);color:var(--prev)} .s.edital{background:var(--edital-soft);color:var(--edital)} .s.dec{background:var(--warn-soft);color:var(--warn)} .s.aus{background:var(--bad-soft);color:var(--bad)}
+
+header.capa{display:flex;flex-direction:column;gap:16px}
+.lede{font-size:1.14rem;max-width:64ch}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.btn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:600;font-size:.88rem}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted);align-items:center}
+nav.indice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:4px 20px;font-size:.92rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:14px}
+nav.indice a{text-decoration:none;color:var(--ink);display:flex;gap:8px}
+nav.indice a span{font-family:var(--f-mono);color:var(--accent);min-width:2.2em}
+nav.indice a:hover{color:var(--accent)}
+
+/* números do caso */
+.placar{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:10px}
+.placar div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.placar b{font-family:var(--f-display);font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.placar span{font-size:.82rem;color:var(--muted)}
+
+/* trilho de dependências */
+.rail{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 18px 8px}
+.no{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1.05fr);gap:4px 16px;position:relative;padding-bottom:18px}
+.no::before{content:"";position:absolute;left:21px;top:34px;bottom:0;width:2px;background:var(--line)}
+.no:last-child::before{display:none}
+.no .pin{width:44px;height:34px;border-radius:8px;border:2px solid var(--accent);display:grid;place-items:center;font-family:var(--f-mono);font-weight:500;color:var(--accent);background:var(--surface);position:relative;z-index:1;font-size:.88rem}
+.no.marco .pin{border-style:dashed;background:var(--accent-soft)}
+.no.fim .pin{border-color:var(--ok);color:var(--ok)}
+.no .o{display:flex;flex-direction:column;gap:2px;min-width:0}
+.no .o b{font-size:.98rem}
+.no .o .tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);max-width:100%}
+.tag.el{border-color:var(--bad);color:var(--bad)} .tag.so{border-color:var(--idea);color:var(--idea)} .tag.co{border-color:var(--accent);color:var(--accent)} .tag.pe{border-color:var(--edital);color:var(--edital)}
+.no .regra{font-size:.86rem;color:var(--muted);border-left:2px solid var(--soft);padding-left:12px;min-width:0}
+.no .regra b{color:var(--ink);font-weight:600}
+.no .conta{font-size:.8rem;font-family:var(--f-mono);color:var(--muted)}
+
+/* elenco e "siga um candidato" */
+.siga{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:18px;align-items:start}
+.lista-cand{display:flex;flex-direction:column;gap:3px;max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:6px}
+.lista-cand button{display:grid;grid-template-columns:3em 1fr auto;gap:8px;align-items:center;text-align:left;border:0;background:transparent;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:.88rem}
+.lista-cand button:hover{background:var(--soft)}
+.lista-cand button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.lista-cand .fim-s{font-size:.7rem;color:var(--muted)}
+.percurso{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.percurso h3{font-family:var(--f-display);font-size:1.3rem;font-weight:650}
+.passos{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.passo{position:relative;padding:0 0 12px 18px;font-size:.9rem}
+.passo::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--ok)}
+.passo.x::before{border-color:var(--bad);background:var(--bad)}
+.passo.n::before{border-color:var(--line)}
+.passo.f::before{border-color:var(--accent);background:var(--accent)}
+.passo b{display:block}
+.passo .m{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.passo.n{color:var(--muted)}
+
+/* tabela */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.86rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--soft)}
+tr:last-child td{border-bottom:0}
+.tabela{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+td.nw{white-space:nowrap} td.n{text-align:right;font-family:var(--f-mono);font-size:.82rem}
+td .x{color:var(--bad);font-weight:700}
+tr.sel td{background:var(--accent-soft)}
+
+/* contas */
+.contas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:10px}
+.conta-b{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:.88rem;min-width:0}
+.conta-b b{font-size:.95rem}
+.conta-b pre{margin:0;font-family:var(--f-mono);font-size:.8rem;white-space:pre-wrap;background:var(--soft);border-radius:6px;padding:8px 10px;line-height:1.5}
+
+/* capítulo */
+.cap{display:flex;flex-direction:column;gap:22px;scroll-margin-top:16px}
+.cap-head{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:baseline}
+.cap-n{font-family:var(--f-display);font-size:3.2rem;line-height:.85;color:var(--accent);grid-row:span 3}
+.cap-head .eyebrow{grid-column:2}
+.pergunta-op{font-family:var(--f-display);font-size:1.18rem;font-style:italic;color:var(--muted);grid-column:2;max-width:64ch}
+.corpo{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+.narr{display:flex;flex-direction:column;gap:12px}
+.ficha{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;font-size:.88rem;margin:0}
+.ficha div{display:flex;flex-direction:column;gap:2px}
+.ficha dt{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ficha dd{margin:0}
+.ficha .prox{border-top:1px solid var(--line);padding-top:10px}
+.ficha .prox dt{color:var(--accent)}
+.atencao{border-left:3px solid var(--bad);background:var(--bad-soft);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.atencao b.t{color:var(--bad);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.cand{border-left:3px solid var(--ac);background:var(--surface);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.cand b.t{color:var(--ac);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.bom{border-left:3px solid var(--ok);background:var(--ok-soft);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.bom b.t{color:var(--ok);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block;background:var(--surface)}
+figcaption{font-size:.84rem;color:var(--muted);max-width:90ch}
+.telas{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.telas.uma{grid-template-columns:1fr}
+.telas.tres{grid-template-columns:1fr 1fr 1fr}
+
+/* diagnóstico e glossário */
+.diag{display:flex;flex-direction:column;gap:10px;padding-left:0;list-style:none}
+.diag li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:52px 1fr;gap:4px 12px;min-width:0}
+.diag .p{font-family:var(--f-mono);font-weight:500;grid-row:span 3;color:var(--bad)}
+.diag .p.p2{color:var(--warn)} .diag .p.p3{color:var(--idea)}
+.diag .ev{font-size:.85rem;color:var(--muted)}
+.diag .int{font-size:.88rem}
+.diag .int b{color:var(--idea)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:10px}
+.gloss div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;min-width:0}
+.gloss b{font-family:var(--f-display);font-size:1.02rem;font-weight:650}
+.gloss .ex{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.aceite{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:10px}
+.aceite div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;min-width:0}
+.aceite b{font-size:.92rem}
+footer{border-top:1px solid var(--line);padding-top:18px;font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+
+/* modo apresentação */
+#barra{display:none}
+.modo .fora-do-modo{display:none}
+.modo .cap{display:none}
+.modo .cap.atual{display:flex}
+.modo #barra{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:10px;align-items:center;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#barra .pos{font-family:var(--f-mono);font-size:.85rem;min-width:64px;text-align:center}
+#barra button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 14px;cursor:pointer}
+#barra button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:820px){
+  h1{font-size:1.95rem} .cap-n{font-size:2.3rem}
+  .corpo,.telas,.telas.tres,.siga{grid-template-columns:1fr}
+  .no{grid-template-columns:44px minmax(0,1fr)}
+  .no .regra{grid-column:2}
+  .lista-cand{max-height:240px}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<div class="wrap">
+
+<header class="capa fora-do-modo">
+  <span class="eyebrow">GPS · Cefor/Ifes · Estudo de caso demonstrativo · 07/11/2026</span>
+  <h1>Da nota de cada Etapa à matrícula: a classificação por etapas no GPS</h1>
+  <p class="lede">Um processo seletivo fictício, o <b>Edital 900/2026</b> (Especialização em Docência, turma DEMO), configurado à mão pela interface e executado até a matrícula. São quatro Etapas, dois marcos de classificação, três listas de concorrência, 18 candidatos, dois recursos, uma reversão de vaga e oito convocações. Cada número deste guia foi lido do banco depois da execução.</p>
+  <div class="controls">
+    <button class="btn" id="apresentar" type="button">Apresentar por capítulos</button>
+    <span class="legenda"><span><span class="s gps">GPS</span> visto na execução</span><span><span class="s prev">prévia</span> calculado pelo simulador</span><span><span class="s dec">decisão</span> pergunta à equipe</span><span><span class="s aus">ausente</span> o GPS não tem</span></span>
+  </div>
+  <div class="legenda"><span><span class="c ac">AC</span> ampla concorrência</span><span><span class="c pcd">PcD</span> pessoas com deficiência</span><span><span class="c ppi">PPI</span> pessoas pretas, pardas e indígenas</span><span>Nomes e números são inventados.</span></div>
+  <div class="placar">
+    <div><b>18</b><span>inscrições</span></div>
+    <div><b>4</b><span>Etapas, em sequência</span></div>
+    <div><b>2</b><span>marcos de classificação</span></div>
+    <div><b>12</b><span>chegaram à Entrevista</span></div>
+    <div><b>6 / 6</b><span>vagas ocupadas por aceite</span></div>
+    <div><b>12 · 1</b><span>salvamentos e recusas na configuração</span></div>
+  </div>
+  <nav class="indice" aria-label="Capítulos">
+    <a href="#trilho"><span>—</span>O caso numa página</a>
+    <a href="#cap-1"><span>1</span>A oferta: vagas e listas</a>
+    <a href="#cap-2"><span>2</span>As Etapas e o que a ordem delas faz</a>
+    <a href="#cap-3"><span>3</span>Os marcos: soma, desempate e corte</a>
+    <a href="#cap-4"><span>4</span>Conferir antes de publicar</a>
+    <a href="#cap-5"><span>5</span>Requisitos, Currículo e Prova</a>
+    <a href="#cap-6"><span>6</span>A primeira classificação</a>
+    <a href="#cap-7"><span>7</span>Um recurso muda a ordem</a>
+    <a href="#cap-8"><span>8</span>O corte: quem vai à Entrevista</a>
+    <a href="#cap-9"><span>9</span>A classificação final</a>
+    <a href="#cap-10"><span>10</span>Três listas, seis vagas</a>
+    <a href="#cap-11"><span>11</span>Convocar com documentos</a>
+    <a href="#cap-12"><span>12</span>Desistência, reversão e nova chamada</a>
+    <a href="#cap-13"><span>13</span>O simulador, posto à prova</a>
+    <a href="#siga"><span>—</span>Siga um candidato</a>
+    <a href="#t-tabela"><span>—</span>A tabela completa</a>
+    <a href="#t-glossario"><span>—</span>Glossário com números</a>
+    <a href="#t-diag"><span>—</span>Diagnóstico de clareza</a>
+    <a href="#t-aceite"><span>—</span>Os 12 critérios, respondidos</a>
+  </nav>
+</header>
+
+<section class="fora-do-modo" id="trilho" aria-labelledby="t-trilho">
+  <span class="eyebrow">O caso numa página</span>
+  <h2 id="t-trilho">Quem chega a cada passo, e por quê</h2>
+  <p style="margin-top:10px">O GPS não tem um campo "a Etapa B depende da A". A dependência nasce de três regras, e este trilho mostra cada uma no lugar onde age. Ele é também a <b>sugestão de UX</b> deste estudo (D4): uma estrutura assim, na Revisão, diria ao operador o que a ordem das Etapas significa.</p>
+  <div class="rail" style="margin-top:16px">
+    <div class="no"><span class="pin">18</span><div class="o"><b>Inscrição</b><span class="small muted">16–27/11 · 12 AC, 3 PcD, 3 PPI · cada um declara a data de nascimento</span></div><div class="regra">A inscrição não é "homologada" no GPS: o filtro de requisitos é uma Etapa.</div></div>
+    <div class="no"><span class="pin">1</span><div class="o"><b>Análise dos requisitos</b><div class="tags"><span class="tag el">elimina</span><span class="tag pe">decisória</span></div><span class="conta">17 Deferidos · 1 Indeferida (C05)</span></div><div class="regra"><b>Regra 1.</b> Quem é eliminado em qualquer Etapa sai de tudo o que vem depois.</div></div>
+    <div class="no"><span class="pin">2</span><div class="o"><b>Análise do currículo</b><div class="tags"><span class="tag so">só soma</span><span class="tag pe">peso 1</span></div><span class="conta">17 notas · ninguém sai</span></div><div class="regra"><b>Regra 2.</b> A Etapa anterior precisa ter habilitado a pessoa. Etapa só classificatória sempre habilita.</div></div>
+    <div class="no"><span class="pin">3</span><div class="o"><b>Prova escrita</b><div class="tags"><span class="tag el">mínima 60</span><span class="tag pe">peso 3</span></div><span class="conta">16 presentes · 2 abaixo de 60 · 1 ausente</span></div><div class="regra">A nota mínima <b>elimina</b> porque a Etapa é eliminatória. Ausência é Ocorrência: elimina e nunca vale zero.</div></div>
+    <div class="no marco"><span class="pin">M1</span><div class="o"><b>Classificação para a entrevista</b><div class="tags"><span class="tag co">corta para a Entrevista</span></div><span class="conta">(CUR + 3·PRO) / 4 · 14 com posição na ampla</span></div><div class="regra"><b>Regra 3.</b> O corte declara a Etapa que alimenta. Alvo fixo <b>8 em cada lista</b>: 8 pela ampla + 2 PcD + 2 PPI = <b>12</b>.</div></div>
+    <div class="no"><span class="pin">4</span><div class="o"><b>Entrevista</b><div class="tags"><span class="tag el">mínima 60</span><span class="tag pe">peso 2</span></div><span class="conta">12 chamados · 1 ausente · 1 abaixo de 60</span></div><div class="regra">Só participa quem está dentro de alguma faixa do marco 1, além das regras 1 e 2.</div></div>
+    <div class="no marco"><span class="pin">M2</span><div class="o"><b>Classificação final</b><div class="tags"><span class="tag co">corta pelo quadro + 2</span></div><span class="conta">(CUR + 3·PRO + 2·ENT) / 6</span></div><div class="regra">Não governa Etapa: a faixa (vagas + 2 suplentes) é quem a convocação alcança primeiro.</div></div>
+    <div class="no fim"><span class="pin">6</span><div class="o"><b>Ocupação e convocação</b><div class="tags"><span class="tag co">por lista</span></div><span class="conta">ampla 5 (4 + 1 revertida) · PPI 1 · PcD 0</span></div><div class="regra">O cotista dentro das vagas da ampla ocupa pela ampla. Vaga reservada sem ninguém volta à ampla.</div></div>
+  </div>
+</section>
+
+<!-- ============ CAPÍTULOS ============ -->
+
+<section class="cap" id="cap-1">
+  <div class="cap-head"><span class="cap-n">1</span><span class="eyebrow">Configurar · 09/11 · Gestor e Elaborador</span><h2>A oferta: vagas e listas</h2><p class="pergunta-op">"Seis vagas, uma para PcD e uma para PPI, cadastro de reserva de seis. Como digo isso ao sistema?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O <b>Gestor</b> cria o Processo e o primeiro Edital; o Elaborador não tem esse botão, e a tela vazia dele não diz quem tem. Depois o Elaborador compõe o Edital num assistente de nove etapas.</p>
+      <p>Na etapa <b>Perfis de Vaga</b> nascem a oferta e as listas. As modalidades são livres: o GPS não conhece "PcD" nem "PPI" de fábrica. Criamos três (AC, PcD 5 %, PPI 20 %) e dissemos qual delas é a ampla. O quadro tem a linha geral (a ampla, 4) e uma linha por reservada (1 e 1). A sugestão pelo percentual aparece na própria linha: "5% de 6 = 0,3, sugestão 1".</p>
+      <p>A primeira gravação foi recusada: <i>"O quadro de vagas soma 8 e o Perfil declara 6 — excesso de 2"</i>. A linha geral nasce preenchida com o total (6), e é preciso subtrair as reservadas à mão. A mensagem nomeou o número e o lugar, e a correção saiu de primeira.</p>
+      <p>Dois seletores importantes, <b>"Qual delas é a ampla concorrência"</b> e <b>"Reverter vaga reservada não preenchida"</b>, só aparecem <b>depois</b> do primeiro salvamento. Escolhemos reverter "a quantidade que ficou sem preencher". O capítulo 12 mostra o efeito.</p>
+      <p>Por fim, o <b>fato declarado</b> "Data de nascimento": é o dado que o terceiro critério de desempate vai comparar. A ajuda diz "idade sai de data", e é a única pista, três etapas antes, de que o desempate depende daqui.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Quantas vagas, em quais listas, e o que acontece com a vaga reservada que sobrar.</dd></div>
+      <div><dt>Regra configurada</dt><dd>6 vagas: ampla 4 · PcD 1 · PPI 1. Reversão "a quantidade que ficou sem preencher". Cadastro de reserva limitado a 6. Convocação por mensagem individual.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Cada lista terá ordem, corte e apuração próprios. A lista da ampla inclui todos, cotistas também.</dd></div>
+      <div><dt>Resultado</dt><dd>2 salvamentos, 1 recusa por soma do quadro. <span class="s gps">GPS</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Cronograma e Etapas.</dd></div>
+    </dl>
+  </div>
+  <div class="telas uma"><figure><img src="capturas/10-compor-perfis.jpg" alt="Etapa Perfis de Vaga do Edital 900, com o Perfil ESP-DOC" loading="lazy"><figcaption>Perfis de Vaga do Edital 900. <span class="s gps">GPS</span></figcaption></figure></div>
+</section>
+
+<section class="cap" id="cap-2">
+  <div class="cap-head"><span class="cap-n">2</span><span class="eyebrow">Configurar · Etapas de Avaliação</span><h2>As Etapas e o que a ordem delas faz</h2><p class="pergunta-op">"Primeiro confiro o diploma, depois pontuo currículo e prova, e só os melhores vão à entrevista. Onde digo 'depois'?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Cada Etapa tem uma forma de conclusão, <b>com nota</b> ou <b>com decisão, sem nota</b> (Deferido/Indeferido), e duas caixas independentes: <b>eliminatória</b> e <b>classificatória</b>. Nota mínima, nota máxima e peso também ficam na Etapa.</p>
+      <p>Não existe "a Prova depende dos Requisitos". O que existe é a <b>ordem</b> (as setas ↑↓ do cartão), e ela faz mais do que arrumar a tela: quem é eliminado numa Etapa sai de todas as seguintes, e a Etapa imediatamente anterior precisa ter habilitado a pessoa.</p>
+      <p>Por isso o <b>Currículo veio antes da Prova</b>. Um marco só classifica quem participa da última Etapa que ele lê. Com o Currículo depois da Prova, quem fosse eliminado na Prova nem apareceria na classificação, nem com o motivo.</p>
+      <p>Duas coisas que a tela não diz:</p>
+      <ul>
+        <li>o <b>peso</b> é da Etapa e vale igual em todos os marcos;</li>
+        <li>uma nota mínima numa Etapa <b>não eliminatória</b> é aceita e não elimina ninguém.</li>
+      </ul>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>As fases, o que cada uma mede, se elimina e quanto pesa.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Requisitos (decisória, elimina) › Currículo (0–100, só classifica, peso 1) › Prova (0–100, mín. 60, peso 3) › Entrevista (0–100, mín. 60, peso 2).</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Nota abaixo da mínima numa Etapa eliminatória elimina; nota igual habilita. A decisória elimina pelo "Indeferido".</dd></div>
+      <div><dt>Resultado</dt><dd>1 salvamento, 1 aviso (Etapa sem Evento, corrigido noutra etapa do assistente).</dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Os marcos, que dizem o que se faz com as notas.</dd></div>
+    </dl>
+  </div>
+  <div class="telas uma"><figure><img src="capturas/11-compor-etapas.jpg" alt="Etapas de Avaliação: quatro cartões em ordem" loading="lazy"><figcaption>As quatro Etapas. A ordem é a do cartão, e ela é regra. <span class="s gps">GPS</span></figcaption></figure></div>
+  <div class="atencao"><b class="t">O GPS não tem</b><span><b>Nota por critério dentro da Etapa.</b> A banca pontua o currículo num barema e lança o total; a Prova recebe um número só. "Critério", no GPS, é <b>critério de desempate</b>. <b>Duas avaliações da mesma Etapa</b> também não: com 2, a Etapa não consolida, por falta de regra de combinação. <span class="s aus">ausente</span></span></div>
+</section>
+
+<section class="cap" id="cap-3">
+  <div class="cap-head"><span class="cap-n">3</span><span class="eyebrow">Configurar · Classificação</span><h2>Os marcos: soma, desempate e corte</h2><p class="pergunta-op">"Como as notas viram uma ordem, como desempato, e como digo que só oito vão à entrevista?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Um <b>marco</b> é um ponto em que o Perfil produz uma ordem. Configuramos dois:</p>
+      <ul>
+        <li><b>Classificação para a entrevista</b>: <span class="mono">(CUR + 3·PRO) / 4</span>, desempate pela Prova e depois pela data de nascimento mais antiga, corte de 8 que <b>alimenta a Entrevista</b>;</li>
+        <li><b>Classificação final</b>: <span class="mono">(CUR + 3·PRO + 2·ENT) / 6</span>, desempate pela Entrevista, pela Prova e pela data de nascimento, corte "vagas do quadro + 2 suplentes", sem Etapa seguinte.</li>
+      </ul>
+      <p>"Como as pontuações se combinam" só aparece depois de marcar a <b>segunda</b> Etapa. O arredondamento acontece <b>uma vez</b>, no fim: 556 / 6 = 92,666… vira 92,67.</p>
+      <p>O cartão do marco novo <b>nasce como "Classificação final"</b>, com o código do Perfil, corte pelo quadro e "não governa Etapa". Para o marco intermediário foi preciso desfazer quatro padrões, e o segundo marco nasceu igual ao primeiro.</p>
+      <p>Os critérios de desempate do GPS são três tipos: maior nota numa Etapa, maior valor de um fato, menor valor de um fato. "Mais velho" é "menor data de nascimento". O empate que sobra a todos os critérios <b>não se resolve</b>: as pessoas dividem a posição (1, 1, 3).</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Quais Etapas somam, com que peso, como desempatar, quantos seguem.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Dois marcos, média ponderada, 2 casas, meio para cima. Corte 1: fixo 8 → Entrevista. Corte 2: quadro + 2. Recurso: 3 dias corridos nos dois.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>A ordem é calculada por lista. O corte seleciona da ordem, não a reordena. Sem nota numa Etapa enumerada, a pessoa fica sem posição; nunca vale zero.</dd></div>
+      <div><dt>Resultado</dt><dd>2 salvamentos, nenhuma pendência. <span class="s gps">GPS</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Conferir o conjunto antes de submeter.</dd></div>
+    </dl>
+  </div>
+  <div class="telas uma"><figure><img src="capturas/12-compor-marco-entrevista.jpg" alt="Cartão do marco Classificação para a entrevista, com combinação, recurso, corte e critérios" loading="lazy"><figcaption>O cartão do primeiro marco. A "Etapa que o corte alimenta" é declarada, nunca deduzida. <span class="s gps">GPS</span></figcaption></figure></div>
+</section>
+
+<section class="cap" id="cap-4">
+  <div class="cap-head"><span class="cap-n">4</span><span class="eyebrow">Configurar · Revisão e prévia</span><h2>Conferir antes de publicar</h2><p class="pergunta-op">"Está tudo certo? O que o Edital vai dizer, e o que vai acontecer de verdade?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>A <b>Revisão</b> separa "O que falta para submeter" (só avisos, aqui) de "O que será congelado na submissão", e imprime a <b>frase normativa</b> de cada decisão. É a melhor conferência da configuração: quem lê entende o Edital.</p>
+      <p>Mas a frase do corte do marco 1 diz <i>"Passam para a Etapa 'Entrevista' os 8 (oito) primeiros classificados"</i>, e o motor aplica <b>8 em cada lista</b>. O marco 2, cujo alvo vem do quadro, diz "de cada lista de concorrência".</p>
+      <p>Quem mostrou o efeito real foi a <b>prévia</b>, ainda em 09/11: "Pessoas com deficiência (PCD): 9 autodeclarados; 8 avançariam" e "14 candidatos poderiam participar" da Entrevista. Na execução foram 12: 8 pela ampla + 2 PcD + 2 PPI.</p>
+      <p>Dos 12 salvamentos, um foi recusado, por erro de preenchimento. O ciclo "salvar, errar, corrigir" não apareceu. O risco que ficou é o contrário: <b>uma escolha de consequência grande passou sem aviso</b>, descrita de um jeito no documento e executada de outro.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Se a configuração diz o que o Edital quer dizer.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Impeditivos e avisos (marco sem peso, corte sem empate declarado, quadro que não soma…). Frase do documento por decisão. Prévia com candidatos fictícios.</dd></div>
+      <div><dt>Resultado</dt><dd>Submetido, homologado e publicado. A publicação pediu uma autoridade signatária, que só o Gestor cadastra.</dd></div>
+      <div><dt>Por quê</dt><dd>Corte fixo por lista: a prévia mostra, a Revisão não diz. <span class="s dec">decisão G1</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Abrir as inscrições.</dd></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/13-revisao-marcos.jpg" alt="Revisão: as frases dos dois marcos" loading="lazy"><figcaption>A Revisão imprime o corte do marco 1 como "os 8 primeiros classificados". <span class="s gps">GPS</span></figcaption></figure>
+    <figure><img src="capturas/14-simulador-marco1.jpg" alt="Prévia do marco 1: 9 avançariam na ampla, 8 na PcD, 14 poderiam participar da Entrevista" loading="lazy"><figcaption>A prévia do mesmo marco: 8 por lista, 14 na Entrevista. <span class="s prev">prévia</span></figcaption></figure>
+  </div>
+</section>
+
+<section class="cap" id="cap-5">
+  <div class="cap-head"><span class="cap-n">5</span><span class="eyebrow">Executar · 16/11 a 08/12 · comissão</span><h2>Requisitos, Currículo e Prova</h2><p class="pergunta-op">"Quem foi eliminado, onde e por quê, e a nota alta de alguém pode salvá-lo de uma nota baixa noutra Etapa?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Dezoito pessoas se inscreveram, cada uma com Diploma, Currículo e data de nascimento. A comissão (presidente e dois avaliadores) foi alocada nas quatro Etapas, e cada Etapa seguiu o mesmo ciclo: distribuir, avaliar, consolidar. A presidência confirma um cálculo; não digita nota.</p>
+      <p><b>Requisitos.</b> 17 Deferidos. <b>C05</b> foi Indeferida ("certidão sem data de colação") e saiu de tudo, sem currículo nem prova.</p>
+      <p><b>Currículo.</b> 17 notas, ninguém sai: a Etapa não é eliminatória. A melhor nota foi de <b>C03</b>, 95.</p>
+      <p><b>Prova.</b> <b>C04</b> faltou: a presidência registrou uma <b>Ocorrência</b> com o motivo, e o Resultado é "eliminado", sem nota. <b>C03</b> tirou 55 e <b>C14</b> 52: abaixo de 60, eliminados. O 95 de C03 no Currículo não a salva, porque a regra da Prova age antes de qualquer soma.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Quem segue para a classificação.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Requisitos elimina pelo Indeferido; Prova elimina abaixo de 60; ausência é Ocorrência.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Consolidação: a nota da Etapa é a da avaliação concluída, e a consequência sai da regra publicada. O parecer é obrigatório quando a nota elimina.</dd></div>
+      <div><dt>Resultado</dt><dd>3 eliminados na Prova (2 pela nota, 1 por ausência) e 1 nos Requisitos. 14 seguem.</dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>A primeira ordem.</dd></div>
+    </dl>
+  </div>
+  <div class="telas uma"><figure><img src="capturas/20-resultados-prova.jpg" alt="Resultados da Etapa Prova escrita, com eliminações e ausência" loading="lazy"><figcaption>Resultados da Prova escrita na gestão. <span class="s gps">GPS</span></figcaption></figure></div>
+</section>
+
+<section class="cap" id="cap-6">
+  <div class="cap-head"><span class="cap-n">6</span><span class="eyebrow">Executar · 09/12 · presidência e Publicador</span><h2>A primeira classificação</h2><p class="pergunta-op">"Por que Sofia ficou à frente de Rafael, se os dois têm 76,50?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>A presidência abre a ordenação do marco 1 e vê uma <b>proposta calculada agora</b>; abrir a tela não grava nada. Ela confere ("O que será gravado": 14 com posição, 3 sem posição, com o motivo de cada um) e <b>emite</b>. O ato é imutável. A conta bateu, pessoa a pessoa, com a feita fora do sistema pelo mesmo motor.</p>
+      <p>Dois empates foram resolvidos pelos critérios publicados:</p>
+      <ul>
+        <li><b>C07 × C06</b>, 76,50: o 1º critério separa (Prova 80 &gt; 76).</li>
+        <li><b>C08 × C09</b>, 73,50: a Prova empata em 74, e o 2º critério separa (nascido em 1980 antes de 1992).</li>
+      </ul>
+      <p>A tela da ordenação mostra só a <b>pontuação combinada</b>. Ela não mostra as notas por Etapa nem o critério que separou: Sofia aparece em 4º e Rafael em 5º, com a mesma nota e sem explicação. A explicação está no <b>ato emitido</b> ("Critério que separou"), abaixo de uma lista de 34 identificadores internos.</p>
+      <p>Logo depois de emitir, a tela sugere "Próximo nesta lista: <b>Emitir o corte</b>", antes da preliminar e da janela de recurso. Seguimos o Edital: o Publicador divulgou a <b>preliminar</b> das três listas.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>A ordem de quem passou nas Etapas eliminatórias.</dd></div>
+      <div><dt>Regra configurada</dt><dd><span class="mono">(CUR + 3·PRO) / 4</span> · Prova › nascimento.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Um ato por lista: a ampla com todos, cada reservada só com os autodeclarados.</dd></div>
+      <div><dt>Resultado</dt><dd>Ampla: 14 com posição. PcD: 2. PPI: 3. Preliminares publicadas.</dd></div>
+      <div><dt>Por quê</dt><dd>Ver as contas abaixo. <span class="s gps">GPS</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Janela de recurso de 3 dias.</dd></div>
+    </dl>
+  </div>
+  <div class="contas">
+    <div class="conta-b"><b>C07 × C06 — o 1º critério separa</b><pre>C07  (66 + 3·80) / 4 = 306 / 4 = 76,50
+C06  (78 + 3·76) / 4 = 306 / 4 = 76,50
+1º critério, maior Prova:  80 &gt; 76
+→ C07 4ª · C06 5º</pre></div>
+    <div class="conta-b"><b>C08 × C09 — só o 2º critério separa</b><pre>C08  (72 + 3·74) / 4 = 294 / 4 = 73,50
+C09  (72 + 3·74) / 4 = 294 / 4 = 73,50
+1º critério, maior Prova:  74 = 74
+2º, nascimento mais antigo: 1980 &lt; 1992
+→ C08 6º · C09 7ª</pre></div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/18-ordenacao-proposta.jpg" alt="Ordenação do marco 1 antes da emissão: proposta calculada" loading="lazy"><figcaption>A proposta: só a pontuação combinada. <span class="s gps">GPS</span></figcaption></figure>
+    <figure><img src="capturas/21b-ato-desempate.jpg" alt="Ato emitido: posições e valores de desempate, com o critério que separou" loading="lazy"><figcaption>O ato emitido explica o desempate, com códigos internos. <span class="s gps">GPS</span></figcaption></figure>
+  </div>
+  <div class="telas uma"><figure><img src="capturas/22-previa-publicacao.jpg" alt="Prévia da publicação do resultado preliminar" loading="lazy"><figcaption>A prévia que o Publicador confere: posição, nome, protocolo, modalidade e pontuação. <span class="s gps">GPS</span></figcaption></figure></div>
+</section>
+
+<section class="cap" id="cap-7">
+  <div class="cap-head"><span class="cap-n">7</span><span class="eyebrow">Executar · 10 a 14/12 · candidato, Julgador e presidência</span><h2>Um recurso muda a ordem</h2><p class="pergunta-op">"A nota de uma pessoa foi corrigida. O que acontece com a classificação que já foi publicada?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p><b>C10</b>, 11º na preliminar, recorreu pelo portal: "as questões 3 e 4 somam 76 no espelho, e não 68". O Julgador admitiu e decidiu "Deferir fixando a correção". O formulário oferece as Etapas que o recurso alcança, com as notas vigentes (Currículo 60, Prova 68), e o campo da nota corrigida.</p>
+      <p>Antes de decidir, o Julgador <b>não vê a prova nem o resultado atacado</b>: isso depende de um ato de instrução da presidência ou do Gestor. Depois de decidir, a página diz só "Recurso deferido — o resultado foi corrigido".</p>
+      <p>A nota antiga não é apagada: nasce um <b>Resultado sucessor</b>. A ordem emitida fica <b>obsoleta</b>, e a tela da presidência diz isso, com as "Mudanças posição a posição":</p>
+      <ul>
+        <li>INS-…ASY299FG de 11º para 8º;</li>
+        <li>INS-…Q239KA73 de 8º para 9º.</li>
+      </ul>
+      <p>As mudanças vêm por protocolo, sem nome, e sem dizer que a 8ª posição é a última do corte. A presidência emitiu a ordem sucessora, com motivo obrigatório. As listas PcD e PPI não ficaram obsoletas, porque C10 não está nelas.</p>
+      <p>A sucessora foi publicada direto como <b>definitiva</b> em 14/12. O público nunca viu uma "preliminar corrigida". <span class="s dec">decisão G2</span></p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Se a nota estava errada, e o que muda se estava.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Recurso em 3 dias corridos, contados da 1ª publicação.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Correção fixada → Resultado sucessor → ordem obsoleta → sucessora com motivo. A definitiva é recusada com recurso pendente ou janela aberta.</dd></div>
+      <div><dt>Resultado</dt><dd>C10: 66,00 → 72,00, de 11º a 8º. C13 (PcD) cai de 8ª a 9ª na ampla.</dd></div>
+      <div><dt>Por quê</dt><dd><span class="mono">(60 + 3·76) / 4 = 288 / 4 = 72,00</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>O corte.</dd></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/22b-ordem-obsoleta.jpg" alt="Ordenação do marco 1 com o aviso de ato obsoleto e as mudanças posição a posição" loading="lazy"><figcaption>"O ato vigente está obsoleto": as mudanças, por protocolo. <span class="s gps">GPS</span></figcaption></figure>
+    <figure><img src="capturas/23-recurso-julgado.jpg" alt="Recurso de C10 julgado" loading="lazy"><figcaption>O recurso julgado: a peça, a admissão e a decisão. <span class="s gps">GPS</span></figcaption></figure>
+  </div>
+</section>
+
+<section class="cap" id="cap-8">
+  <div class="cap-head"><span class="cap-n">8</span><span class="eyebrow">Executar · 14/12 · presidência</span><h2>O corte: quem vai à Entrevista</h2><p class="pergunta-op">"Os 8 primeiros vão à entrevista. Por que foram 12?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O corte é emitido <b>por lista</b>, com o alvo fixo de 8 em cada uma:</p>
+      <ul>
+        <li>na ampla, os 8 primeiros progridem (C10 entre eles, graças ao recurso);</li>
+        <li>na PcD, as duas que têm posição, C13 e C15;</li>
+        <li>na PPI, os três, C16, C17 e C18.</li>
+      </ul>
+      <p>A Entrevista recebe a <b>união</b>: 8 + C13, C15, C17 e C18 = 12. C16 está em duas faixas e conta uma vez.</p>
+      <p>A tela do corte, aberta na ampla, mostra C13, C15, C17 e C18 como <b>"Fora da faixa"</b>, e eles vão à Entrevista por outra lista. Nenhuma tela mostra a lista de quem chega à Entrevista nem por onde cada um chegou. Para saber, abre-se o corte nas três abas e se junta à mão.</p>
+      <p>Ficaram sem Entrevista C11 (10º) e C12 (14º): passaram na Prova e pararam no marco 1. É o caso de quem "progride numa Etapa e não na outra".</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Quem participa da Entrevista.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Alvo fixo 8, sem suplentes, empate admite excedente, governa a Entrevista, sem faixa seguinte.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Faixa por lista. A Etapa governada só aceita quem está em alguma faixa. Corte obsoleto bloqueia distribuir, concluir e consolidar ali.</dd></div>
+      <div><dt>Resultado</dt><dd>12 na Entrevista. <span class="s gps">GPS</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Entrevistas, 15 a 17/12.</dd></div>
+    </dl>
+  </div>
+  <div class="telas uma"><figure><img src="capturas/24-corte-m1.jpg" alt="Corte do marco 1 na ampla: 8 progridem; Elisa, Kátia, Iara e Luan aparecem fora da faixa" loading="lazy"><figcaption>O corte na ampla. Elisa (9ª), Kátia (11ª), Iara (12ª) e Luan (13º) aparecem "Fora da faixa", e os quatro foram à Entrevista pelas listas PcD e PPI. <span class="s gps">GPS</span></figcaption></figure></div>
+</section>
+
+<section class="cap" id="cap-9">
+  <div class="cap-head"><span class="cap-n">9</span><span class="eyebrow">Executar · 15 a 28/12</span><h2>A classificação final</h2><p class="pergunta-op">"Caio e Sofia empataram em 75,67. Quem fica com a última posição da faixa?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Das 12 pessoas chamadas, <b>C18</b> faltou (Ocorrência) e <b>C15</b> tirou 55 (abaixo de 60). As duas ficam sem posição no marco final.</p>
+      <p>O marco 2 soma as três Etapas com pesos 1, 3 e 2 e divide por 6. Na ampla, a faixa é 4 vagas + 2 suplentes = 6 posições. <b>C08</b> e <b>C07</b> empatam em 75,67, exatamente na 6ª posição. O 1º critério (maior nota na Entrevista, 80 &gt; 74) põe Caio dentro e Sofia fora.</p>
+      <p>C07 recorreu da Entrevista; o recurso foi indeferido ("o desempate seguiu o critério publicado"). Saíram as definitivas em 28/12, e os cortes: ampla 6, PcD 1 (C13), PPI 2 (C16, C17).</p>
+      <p>No portal, Sofia vê "Aguardando chamada" e "7º lugar · pontuação 75,67", com o resultado de cada Etapa. Não vê que empatou com o 6º nem o que decidiu o empate.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>A ordem final de cada lista.</dd></div>
+      <div><dt>Regra configurada</dt><dd><span class="mono">(CUR + 3·PRO + 2·ENT) / 6</span> · Entrevista › Prova › nascimento · quadro + 2.</dd></div>
+      <div><dt>Resultado</dt><dd>Ampla: 10 com posição. PcD: 1. PPI: 2. <span class="s gps">GPS</span></dd></div>
+      <div><dt>Por quê</dt><dd>Ver as contas abaixo.</dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Apurar as vagas de cada lista.</dd></div>
+    </dl>
+  </div>
+  <div class="contas">
+    <div class="conta-b"><b>C01 — o primeiro lugar</b><pre>(90 + 3·92 + 2·95) / 6 = 556 / 6
+= 92,666…  →  92,67 (meio para cima, 2 casas)</pre></div>
+    <div class="conta-b"><b>C08 × C07 — o empate que decide a faixa</b><pre>C08  (72 + 222 + 160) / 6 = 454 / 6 = 75,67
+C07  (66 + 240 + 148) / 6 = 454 / 6 = 75,67
+1º critério, maior Entrevista: 80 &gt; 74
+→ C08 6º, dentro da faixa · C07 7ª, fora</pre></div>
+    <div class="conta-b"><b>C03 — a melhor nota de currículo</b><pre>Currículo 95  → habilita (não elimina)
+Prova 55 &lt; 60 → ELIMINADA
+Nenhuma soma acontece: sem posição nos dois marcos</pre></div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/30-ordenacao-m2.jpg" alt="Ordenação do marco 2" loading="lazy"><figcaption>A classificação final, na gestão. <span class="s gps">GPS</span></figcaption></figure>
+    <figure><img src="capturas/62-portal-c07.jpg" alt="Acompanhamento de Sofia Arruda no portal" loading="lazy"><figcaption>Sofia (C07) no portal: posições e notas, e nada sobre o desempate. <span class="s gps">GPS</span></figcaption></figure>
+  </div>
+</section>
+
+<section class="cap" id="cap-10">
+  <div class="cap-head"><span class="cap-n">10</span><span class="eyebrow">Executar · 29/12 · presidência</span><h2>Três listas, seis vagas</h2><p class="pergunta-op">"João é 2º na ampla e 1º na PPI. Ele ocupa qual vaga?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Cada lista apura as próprias vagas. A <b>ampla</b> é apurada primeiro: Helena, João, Bruno e Rafael, os 4 primeiros. João (C16) se declarou PPI, mas está dentro das vagas da ampla e <b>ocupa pela ampla</b>. A apuração da <b>PPI</b> o exclui, e a vaga PPI vai para <b>Kátia</b> (C17), que é 10ª na ampla. A <b>PcD</b> tem uma pessoa, Elisa (C13).</p>
+      <p>Na classificação, o cotista disputa a ampla com a mesma nota e o mesmo desempate. A reserva só entra em conta na hora de ocupar vaga. A concorrência simultânea age <b>na apuração, e não no corte</b>: o corte da PPI marcou João como "progride".</p>
+      <p>A tela da Ocupação mostra números (publicadas, efetivas, ocupadas, a ocupar) e não diz <b>quem</b> ocupa. "Ocupadas: 4" aparece antes de qualquer convocação: conta os titulares desde a apuração, e não matrículas.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Quem é titular de cada vaga.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Quadro 4 / 1 / 1; reversão pelo saldo.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>A apuração da reservada desconta quem ocupa pela ampla. A fila da ampla não desconta quem aceitou a reservada (lacuna do estudo do sorteio).</dd></div>
+      <div><dt>Resultado</dt><dd>Ampla 4/4/4 · PcD 1/1/1 · PPI 1/1/1. <span class="s gps">GPS</span></dd></div>
+      <div><dt>Por quê</dt><dd>C16: <span class="mono">517 / 6 = 86,17</span>, 2º na ampla.</dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Convocar os titulares.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="cap" id="cap-11">
+  <div class="cap-head"><span class="cap-n">11</span><span class="eyebrow">Executar · 04 a 06/01/2027 · presidência e candidatos</span><h2>Convocar com documentos</h2><p class="pergunta-op">"Chamo os seis, peço a identidade e confiro. E se o documento vier ilegível?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>"<b>Convocar os titulares num ato só</b>" é a tela mais clara do processo. Ela:</p>
+      <ul>
+        <li>lista quem será chamado e diz por que Diana fica de fora ("é suplente");</li>
+        <li>mostra o <b>fundamento que o candidato lerá</b> e oferece o prazo do Cronograma (08/01, 23h59);</li>
+        <li>com um complemento escrito, obriga a <b>conferir o texto</b> antes de confirmar.</li>
+      </ul>
+      <p>Resultado: "4 convocações praticadas… 4 comunicações enviadas… 4 aguardam documentos". O mesmo para PcD e PPI.</p>
+      <p>Cada convocado apresenta a identidade pelo portal. Para dizer <b>"Conforme"</b>, quem confere precisa ter <b>aberto</b> a versão; o sistema recusa o contrário. O documento de <b>Rafael</b> (C06) veio ilegível: "Pendente", com motivo que ele lê. Ele reapresentou (versão 2), e a página mostra as duas versões e as duas conferências.</p>
+      <p>O aceite é recusado enquanto faltar conferir documento obrigatório.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Quem é convocado, até quando, com quais documentos.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Identidade para todos e Laudo só para PcD, na convocação; comunicação por mensagem individual.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>A lista de documentos é gravada na convocação, inclusive em lote. Conferência por versão. Aceite só com a lista conferida.</dd></div>
+      <div><dt>Resultado</dt><dd>6 convocações; 1 pendência resolvida por reapresentação. <span class="s gps">GPS</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Registrar o que cada um respondeu.</dd></div>
+    </dl>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/41-convocacao-ampla.jpg" alt="Convocação da ampla, com as chamadas praticadas" loading="lazy"><figcaption>A convocação da ampla ao fim: chamadas, prazos e desfechos. <span class="s gps">GPS</span></figcaption></figure>
+    <figure><img src="capturas/42-documentos-rafael.jpg" alt="Documentos da convocação de Rafael: versão 1 pendente, versão 2 conforme" loading="lazy"><figcaption>Rafael (C06): versão 1 "Pendente", versão 2 "Conforme". <span class="s gps">GPS</span></figcaption></figure>
+  </div>
+</section>
+
+<section class="cap" id="cap-12">
+  <div class="cap-head"><span class="cap-n">12</span><span class="eyebrow">Executar · 05 e 06/01/2027 · presidência</span><h2>Desistência, reversão e nova chamada</h2><p class="pergunta-op">"Bruno e Elisa desistiram. Quem entra no lugar, e a vaga PcD se perde?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Helena e João aceitaram. <b>Bruno</b> (ampla) desistiu: o desfecho emitiu a apuração seguinte no mesmo ato ("1 a ocupar"). A linha "Próximo nesta lista" continuou apontando a resposta pendente, e não a chamada do suplente.</p>
+      <p><b>Elisa</b>, a única da lista PcD, desistiu. Desta vez a apuração <b>não</b> saiu sozinha: <i>"moveria vaga deste recorte para a ampla concorrência, pela reversão que o Edital declarou: emita-a na ocupação"</i>. A sequência foi:</p>
+      <ol>
+        <li>na Ocupação, a apuração da PcD, com motivo, que registra a <b>reversão de 1 vaga</b>;</li>
+        <li>a da ampla, que passou a 4 publicadas e <b>5 efetivas</b>.</li>
+      </ol>
+      <p>Com 5 vagas efetivas, <b>Diana</b> (C09) virou <b>titular</b> ("para vaga inicial") e <b>Caio</b> (C08) entrou "para vaga que vagou", a de Bruno. Os dois foram convocados, apresentaram, foram conferidos e aceitaram, junto com Rafael e Kátia.</p>
+      <p>Final: <b>6 vagas ocupadas por aceite</b>, 5 na ampla e 1 na PPI. Sofia (C07) é a próxima da fila, fora da faixa.</p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Quem ocupa a vaga de quem saiu.</dd></div>
+      <div><dt>Regra configurada</dt><dd>Reversão "a quantidade que ficou sem preencher"; faixa seguinte admitida no marco final.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Desfecho → apuração seguinte no mesmo ato, salvo se ela mover vaga entre listas; aí ela é um ato próprio, na Ocupação.</dd></div>
+      <div><dt>Resultado</dt><dd>Ampla 4 publicadas / 5 efetivas / 5 ocupadas · PcD 1 / 0 / 0 · PPI 1 / 1 / 1. <span class="s gps">GPS</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Fora deste estudo: Requerimento de Matrícula, formalização, encerramento.</dd></div>
+    </dl>
+  </div>
+  <div class="telas uma"><figure><img src="capturas/40-ocupacao-final.jpg" alt="Ocupação final: ampla 4 publicadas, 5 efetivas; PcD 0 efetivas; reversão de cota" loading="lazy"><figcaption>A ocupação ao fim, com a reversão da vaga PcD. <span class="s gps">GPS</span></figcaption></figure></div>
+</section>
+
+<section class="cap" id="cap-13">
+  <div class="cap-head"><span class="cap-n">13</span><span class="eyebrow">Depois · 06/01/2027 · Edital publicado, sem salvar nada</span><h2>O simulador, posto à prova</h2><p class="pergunta-op">"Se a Prova fosse o 1º critério de desempate, o que mudaria?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O botão "Simular classificação" funciona também no Edital publicado: a etapa Classificação abre com os controles habilitados e sem "Salvar". Ele calcula com o <b>motor oficial</b>, sobre <b>20 candidatos fictícios</b>, e explica cada empate critério a critério, com os valores. É a melhor explicação de desempate do sistema.</p>
+      <p><b>Experimento 1.</b> Invertemos os critérios 1 e 2 do marco final.</p>
+      <ul>
+        <li>O simulador: <i>"Com a última alteração, a consequência não mudou para ninguém."</i></li>
+        <li>Com as notas reais, o mesmo motor põe <b>Sofia em 6º e tira Caio da faixa</b>. Caio foi quem acabou matriculado.</li>
+      </ul>
+      <p><b>Experimento 2.</b> Alvo do marco 1 de 8 para 6. O simulador: "Avançam: 9 → 6. PCD: avançam 8 → 6. Poderiam participar da Etapa seguinte: 14 → 10".</p>
+      <p>O simulador ensina <b>a regra</b>, não <b>o caso</b>:</p>
+      <ul>
+        <li>cada fictício tem a mesma nota nas três Etapas (95/95/95), então o peso nunca muda nada;</li>
+        <li>as eliminações são plantadas, e não calculadas pela nota mínima;</li>
+        <li>não há opção de usar as notas consolidadas.</li>
+      </ul>
+      <p>Os fictícios se chamam Bruno, Elisa, Fábio, Sofia…, os mesmos nomes de candidatos reais deste caso. <span class="s dec">decisão G3</span></p>
+    </div>
+    <dl class="ficha">
+      <div><dt>O que decidir</dt><dd>Se uma mudança de regra muda quem é classificado.</dd></div>
+      <div><dt>Como o GPS executa</dt><dd>Um marco por vez, por lista, com uma rodada de ocupação "sob hipóteses". Nada é gravado.</dd></div>
+      <div><dt>Resultado</dt><dd>Mostrou o corte por lista antes de publicar (cap. 4). Não mostrou o efeito da troca de critérios sobre Caio e Sofia. <span class="s prev">prévia</span></dd></div>
+      <div class="prox"><dt>Próximo passo</dt><dd>Siga um candidato, abaixo.</dd></div>
+    </dl>
+  </div>
+  <div class="telas tres">
+    <figure><img src="capturas/15-simulador-final.jpg" alt="Prévia do marco final" loading="lazy"><figcaption>A prévia do marco final. <span class="s prev">prévia</span></figcaption></figure>
+    <figure><img src="capturas/16-simulador-desempate.jpg" alt="Detalhe do desempate na prévia, critério a critério" loading="lazy"><figcaption>O desempate explicado, para os fictícios. <span class="s prev">prévia</span></figcaption></figure>
+    <figure><img src="capturas/17-simulador-o-que-mudou.jpg" alt="Prévia depois de mudar o alvo de 8 para 6: o que mudou" loading="lazy"><figcaption>"O que mudou com a sua alteração." <span class="s prev">prévia</span></figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ SIGA UM CANDIDATO ============ -->
+
+<section class="fora-do-modo" id="siga" aria-labelledby="t-siga">
+  <span class="eyebrow">Para cada pessoa</span>
+  <h2 id="t-siga">Siga um candidato</h2>
+  <p style="margin-top:10px">Escolha uma pessoa e veja o caminho dela: cada Etapa, cada conta, cada lista, e onde o percurso parou. É a explicação que as telas do GPS não dão de uma vez só.</p>
+  <div class="siga" style="margin-top:16px">
+    <div class="lista-cand" id="lista-cand" role="group" aria-label="Candidatos"></div>
+    <div class="percurso" id="percurso" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="fora-do-modo" id="tabela" aria-labelledby="t-tabela">
+  <span class="eyebrow">Para conferir</span>
+  <h2 id="t-tabela">A tabela completa</h2>
+  <p style="margin-top:10px" class="small muted">Notas de 0 a 100. M1 = (CUR + 3·PRO) / 4; M2 = (CUR + 3·PRO + 2·ENT) / 6, arredondados a 2 casas, meio para cima. Posições na ampla, que inclui os cotistas; entre parênteses, na lista reservada. Lido do banco depois da execução. <span class="s gps">GPS</span></p>
+  <div class="tabela scroll" style="margin-top:12px"><table id="tab">
+    <thead><tr><th>Cód.</th><th>Nome</th><th>Lista</th><th>Req.</th><th>Cur.</th><th>Prova</th><th>M1</th><th>Pos. M1</th><th>Entrev.</th><th>M2</th><th>Pos. M2</th><th>Desfecho</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</section>
+
+<section class="fora-do-modo" id="glossario" aria-labelledby="t-glossario">
+  <span class="eyebrow">Os termos, com números deste caso</span>
+  <h2 id="t-glossario">Glossário</h2>
+  <div class="gloss" style="margin-top:14px">
+    <div><b>Nota</b><span>O número que a avaliação dá numa Etapa. No GPS, uma por Etapa.</span><span class="ex">C03: Currículo 95, Prova 55</span></div>
+    <div><b>Critério</b><span>No GPS, quase sempre <i>critério de desempate</i>. Os critérios do barema ficam fora do sistema.</span><span class="ex">1º Entrevista › 2º Prova › 3º nascimento</span></div>
+    <div><b>Peso</b><span>Quanto a nota da Etapa vale no marco. Fica na Etapa, igual em todos os marcos.</span><span class="ex">Prova peso 3: 76 conta como 228</span></div>
+    <div><b>Pontuação combinada (nota consolidada)</b><span>A conta do marco sobre as Etapas que ele lê, arredondada uma vez.</span><span class="ex">(90 + 276 + 190) / 6 = 92,67</span></div>
+    <div><b>Nota mínima</b><span>Elimina quem fica abaixo, <i>se</i> a Etapa for eliminatória. Igual à mínima habilita.</span><span class="ex">55 &lt; 60 elimina · 60 = 60 passaria</span></div>
+    <div><b>Etapa eliminatória</b><span>Quem é eliminado nela sai de tudo o que vem depois.</span><span class="ex">Requisitos, Prova, Entrevista</span></div>
+    <div><b>Etapa classificatória</b><span>Entra na soma de um marco. Pode ser só isso, sem eliminar.</span><span class="ex">Currículo: 17 notas, 0 eliminados</span></div>
+    <div><b>Dependência</b><span>Quem chega a cada Etapa: eliminação anterior, habilitação na imediatamente anterior, corte que governa a Etapa.</span><span class="ex">Entrevista: só quem está numa faixa do M1</span></div>
+    <div><b>Desempate</b><span>Os critérios, em ordem, só para quem tem a mesma pontuação. O empate que sobra divide a posição.</span><span class="ex">75,67 = 75,67; Entrevista 80 &gt; 74</span></div>
+    <div><b>Classificação preliminar</b><span>A ordem divulgada que ainda admite recurso.</span><span class="ex">09/12 e 21/12; 3 dias de recurso</span></div>
+    <div><b>Classificação definitiva</b><span>A que só sai sem recurso pendente e com a janela fechada.</span><span class="ex">14/12 e 28/12</span></div>
+    <div><b>Progressão</b><span>Seguir para a próxima Etapa. Não é a mesma coisa que ter posição.</span><span class="ex">C11: 10ª no M1, sem Entrevista</span></div>
+    <div><b>Corte</b><span>O trecho da ordem que avança: alvo, suplentes, empate na última posição. Por lista.</span><span class="ex">M1: 8 por lista → 12 na Entrevista</span></div>
+    <div><b>Ocupação</b><span>Quantas vagas cada lista tem e quantas estão tomadas. "Ocupada" conta o titular antes de ele responder.</span><span class="ex">Ampla: 4 publicadas, 5 efetivas</span></div>
+    <div><b>Convocação</b><span>A chamada de uma pessoa, com prazo, fundamento e documentos. Termina num desfecho.</span><span class="ex">8 convocações · 6 aceites · 2 desistências</span></div>
+  </div>
+</section>
+
+<section class="fora-do-modo" id="diag" aria-labelledby="t-diag">
+  <span class="eyebrow">Para a equipe de produto</span>
+  <h2 id="t-diag">Diagnóstico de clareza</h2>
+  <p style="margin-top:10px">O que obrigou a recorrer ao código ou à conta à parte para explicar uma posição. São sugestões, não decisões; as perguntas de governança estão no estudo, seção 14.</p>
+  <ol class="diag" style="margin-top:14px">
+    <li><span class="p">D1</span><b>A ordem não explica a posição</b><span class="ev">Ordenação, publicação, resultado público e portal mostram só a pontuação combinada. O critério que separou está no ato, entre 34 identificadores internos. Sofia vê "7º lugar" e mais nada (cap. 6 e 9).</span><span class="int"><b>Sugestão:</b> levar à ordenação e ao portal a tabela "critério a critério" que o simulador já produz, com as notas por Etapa.</span></li>
+    <li><span class="p">D2</span><b>O corte fixo vale por lista, e a Revisão não diz</b><span class="ev">"Os 8 primeiros" no documento; 12 na Entrevista. A tela do corte marca "Fora da faixa" quem vai à Entrevista por outra lista (cap. 4 e 8).</span><span class="int"><b>Sugestão:</b> "de cada lista" na frase do alvo fixo; uma visão da Etapa governada com a união das faixas e a lista de chegada de cada pessoa.</span></li>
+    <li><span class="p">D3</span><b>O simulador não simula o caso</b><span class="ev">"Não mudou para ninguém" onde a matrícula mudaria; notas iguais em todas as Etapas escondem o peso (cap. 13).</span><span class="int"><b>Sugestão:</b> opção, só leitura, com as notas consolidadas; fictícios com notas diferentes por Etapa.</span></li>
+    <li><span class="p p2">D4</span><b>A dependência entre Etapas é implícita</b><span class="ev">As setas ↑↓ parecem só arrumação; a Revisão não escreve "só os Deferidos fazem a Prova" (cap. 2).</span><span class="int"><b>Sugestão:</b> um trilho como o do início deste guia, na Revisão e na Classificação. Não um Gantt: o tempo não é a pergunta, e sim quem chega a cada passo.</span></li>
+    <li><span class="p p2">D5</span><b>Todo marco novo nasce como "Classificação final"</b><span class="ev">Código do Perfil, corte pelo quadro, "não governa", inclusive no 2º marco (cap. 3).</span><span class="int"><b>Sugestão:</b> perguntar se o marco é intermediário quando há Etapa depois dele.</span></li>
+    <li><span class="p p2">D6</span><b>O "próximo passo" ignora a janela de recurso e o suplente</b><span class="ev">"Emitir o corte" antes da preliminar; depois da desistência, "resposta de 1 convocação" (cap. 6 e 12).</span><span class="int"><b>Sugestão:</b> considerar a janela recursal e o "a ocupar".</span></li>
+    <li><span class="p p2">D7</span><b>"Ocupada" e a concorrência simultânea não aparecem</b><span class="ev">4 ocupadas antes de convocar; nenhuma tela diz que João ocupa pela ampla e por isso a PPI vai a Kátia (cap. 10).</span><span class="int"><b>Sugestão:</b> listar os ocupantes por lista, com a marca "ocupa pela ampla".</span></li>
+    <li><span class="p p2">D8</span><b>A decisão do recurso não mostra o efeito</b><span class="ev">O Julgador não vê o objeto sem instrução; a ordem obsoleta lista mudanças por protocolo, sem nome nem linha do corte (cap. 7).</span><span class="int"><b>Sugestão:</b> nomes e a fronteira do corte nas "mudanças posição a posição".</span></li>
+    <li><span class="p p3">D9–D16</span><b>Menores</b><span class="ev">Peso único e mínima inócua sem aviso · seletores de ampla e reversão só depois do 1º salvamento · "O que ele compara" mistura Etapas e fatos · Edital publicado com controles habilitados · "apuração 0 de 6" conta o marco intermediário · notas em formatos diferentes · Evento fora de ordem sem aviso · a reversão pede três telas.</span><span class="int"><b>Detalhe:</b> estudo, seção 13.</span></li>
+  </ol>
+  <div class="bom" style="margin-top:14px"><b class="t">O que funciona bem</b><span>Mensagens de validação que nomeiam número e lugar · as frases normativas da Revisão · a conferência antes de emitir · a detecção da ordem obsoleta · a tela da convocação · "Conforme" só com o documento aberto · a mensagem da reversão · o portal com o resultado de cada Etapa e o motivo.</span></div>
+</section>
+
+<section class="fora-do-modo" id="aceite" aria-labelledby="t-aceite">
+  <span class="eyebrow">Critérios de aceitação do estudo</span>
+  <h2 id="t-aceite">Os 12 critérios, respondidos</h2>
+  <div class="aceite" style="margin-top:14px">
+    <div><b>1. Configurar um processo por classificação</b><span>Gestor cria; Elaborador compõe em 9 etapas: Perfis, Cronograma, Etapas, Classificação, Inscrição… Cap. 1–4.</span></div>
+    <div><b>2. Etapas e critérios de pontuação</b><span>Etapa = uma nota (0–máxima), mínima, peso, caráter. Não há barema no GPS. Cap. 2.</span></div>
+    <div><b>3. Relações e dependências</b><span>Três regras: eliminação anterior, habilitação da imediatamente anterior, corte que governa. O trilho, no início.</span></div>
+    <div><b>4. Quem avança</b><span>Corte por lista sobre a ordem do marco; a Etapa governada recebe a união. Cap. 8.</span></div>
+    <div><b>5. Notas e pesos → classificação</b><span>Média ponderada, arredondada uma vez. Contas nos cap. 6 e 9.</span></div>
+    <div><b>6. Empates</b><span>Critérios em ordem; o que sobra divide a posição. C07 × C06, C08 × C09, C08 × C07.</span></div>
+    <div><b>7. Modalidades e reservas</b><span>Ampla = todos; reservada = autodeclarados; ocupação desconta quem ocupa a ampla; reversão. Cap. 10 e 12.</span></div>
+    <div><b>8. O simulador</b><span>Bom para entender a regra antes de publicar; não prevê o efeito sobre os candidatos reais. Cap. 4 e 13.</span></div>
+    <div><b>9. Resultados</b><span>Ato por marco e por lista; preliminar e definitiva; o público vê posição e pontuação. Cap. 6.</span></div>
+    <div><b>10. Recursos e correções</b><span>Resultado sucessor → ordem obsoleta → sucessora com motivo. Cap. 7.</span></div>
+    <div><b>11. Da classificação à convocação</b><span>Corte final → apuração por lista → convocação dos titulares. Cap. 10 e 11.</span></div>
+    <div><b>12. Depois da convocação</b><span>Documentos, conferência, desfechos, reversão, nova chamada. Cap. 11 e 12.</span></div>
+  </div>
+</section>
+
+<footer class="fora-do-modo">
+  <span>Estudo de caso demonstrativo do GPS (Cefor/Ifes), 07/11/2026, sobre a <span class="mono">main</span> em <span class="mono">f5fc1c5d</span>. Banco isolado; relógio da aplicação deslocado fase a fase; nenhuma notificação real.</span>
+  <span>O documento completo, com inventário, matriz de capacidades, diário e roteiro de reprodução, está em <span class="mono">doc/estudo-classificacao-demonstrativa-2026-11-07.md</span>. O script <span class="mono">reproduzir.py</span> recria este certame do zero, e a reprodução foi conferida linha a linha.</span>
+</footer>
+
+</div>
+
+<div id="barra" role="navigation" aria-label="Apresentação">
+  <button id="ant" type="button">← Anterior</button><span class="pos" id="pos">1 / 13</span><button id="prox" type="button">Próximo →</button><button id="sair" type="button">Sair</button>
+</div>
+
+<script>
+(function(){
+  /* O elenco, como o GPS o deixou: notas por Etapa, posições por lista e desfecho. */
+  var E = [
+    ["C01","Helena Prado","AC","1988-03-14","D",90,92,null,95,"91,50","1",null,"92,67","1",null,"ampla","Aceite (ampla)"],
+    ["C02","Bruno Taveira","AC","1990-07-02","D",80,85,null,88,"83,75","3",null,"85,17","3",null,"ampla","Desistência expressa"],
+    ["C03","Lívia Montes","AC","1985-11-23","D",95,55,null,null,null,null,null,null,null,null,null,"Eliminada na Prova (55 < 60)"],
+    ["C04","Otávio Rangel","AC","1993-01-09","D",70,"aus",null,null,null,null,null,null,null,null,null,"Eliminado na Prova (ausência)"],
+    ["C05","Marina Couto","AC","1991-05-30","I",null,null,null,null,null,null,null,null,null,null,null,"Eliminada nos Requisitos"],
+    ["C06","Rafael Quintão","AC","1987-09-18","D",78,76,null,80,"76,50","5",null,"77,67","4",null,"ampla","Aceite (documento reapresentado)"],
+    ["C07","Sofia Arruda","AC","1994-02-27","D",66,80,null,74,"76,50","4",null,"75,67","7",null,"ampla","Fora da faixa final: aguarda"],
+    ["C08","Caio Bettencourt","AC","1980-06-05","D",72,74,null,80,"73,50","6",null,"75,67","6",null,"ampla","Aceite (vaga de Bruno)"],
+    ["C09","Diana Ferraz","AC","1992-12-01","D",72,74,null,82,"73,50","7",null,"76,33","5",null,"ampla","Aceite (vaga revertida)"],
+    ["C10","Gustavo Lemos","AC","1989-08-21","D",60,76,68,70,"72,00","8",null,"71,33","9",null,"ampla","Fora da faixa final"],
+    ["C11","Patrícia Nogueira","AC","1986-04-11","D",68,70,null,null,"69,50","10",null,null,null,null,null,"Parou no marco 1 (10ª)"],
+    ["C12","Renato Sales","AC","1995-10-03","D",50,62,null,null,"59,00","14",null,null,null,null,null,"Parou no marco 1 (14º)"],
+    ["C13","Elisa Viana","PCD","1984-01-19","D",64,72,null,76,"70,00","9","1","72,00","8","1","PcD","Desistência: vaga revertida à ampla"],
+    ["C14","Fábio Guerra","PCD","1990-03-08","D",75,52,null,null,null,null,null,null,null,null,null,"Eliminado na Prova (52 < 60)"],
+    ["C15","Iara Batista","PCD","1997-07-25","D",58,66,null,55,"64,00","12","2",null,null,null,"PcD","Eliminada na Entrevista (55 < 60)"],
+    ["C16","João Benedito","PPI","1983-10-30","D",85,88,null,84,"87,25","2","1","86,17","2","1","ampla e PPI","Aceite pela ampla"],
+    ["C17","Kátia Moura","PPI","1996-02-14","D",62,70,null,72,"68,00","11","2","69,33","10","2","PPI","Aceite (vaga PPI)"],
+    ["C18","Luan Tavares","PPI","1998-09-06","D",55,64,null,"aus","61,75","13","3",null,null,null,"PPI","Eliminado na Entrevista (ausência)"]
+  ];
+  var CLS = {AC:"ac",PCD:"pcd",PPI:"ppi"}, ROT = {AC:"AC",PCD:"PcD",PPI:"PPI"};
+  function n(v){ return (v===null||v===undefined) ? "—" : (v==="aus" ? "ausente" : String(v)); }
+  function data(s){ var p=s.split("-"); return p[2]+"/"+p[1]+"/"+p[0]; }
+  function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+
+  /* tabela */
+  var tb = document.querySelector("#tab tbody");
+  E.forEach(function(r){
+    var tr = document.createElement("tr"); tr.id = "linha-"+r[0];
+    var pro = r[7] ? r[6]+" <span class='muted'>(era "+r[7]+")</span>" : (r[6]!==null && r[6]!=="aus" && r[6]<60 ? "<span class='x'>"+r[6]+"</span>" : (r[6]==="aus" ? "<span class='x'>ausente</span>" : n(r[6])));
+    var ent = (r[8]==="aus") ? "<span class='x'>ausente</span>" : (r[8]!==null && r[8]<60 ? "<span class='x'>"+r[8]+"</span>" : n(r[8]));
+    tr.innerHTML = "<td class='nw mono'>"+r[0]+"</td><td class='nw'>"+esc(r[1])+"</td><td><span class='c "+CLS[r[2]]+"'>"+ROT[r[2]]+"</span></td>"+
+      "<td>"+(r[4]==="D"?"Def.":"<span class='x'>Indef.</span>")+"</td><td class='n'>"+n(r[5])+"</td><td class='n'>"+pro+"</td>"+
+      "<td class='n'>"+n(r[9])+"</td><td class='nw'>"+(r[10]?r[10]+"º"+(r[11]?" ("+r[11]+"º)":""):"—")+"</td>"+
+      "<td class='n'>"+ent+"</td><td class='n'>"+n(r[12])+"</td><td class='nw'>"+(r[13]?r[13]+"º"+(r[14]?" ("+r[14]+"º)":""):"—")+"</td><td>"+esc(r[16])+"</td>";
+    tb.appendChild(tr);
+  });
+
+  /* siga um candidato */
+  var lista = document.getElementById("lista-cand"), alvo = document.getElementById("percurso");
+  function passo(cl, titulo, meta){ return "<div class='passo "+cl+"'><b>"+titulo+"</b>"+(meta?"<span class='m'>"+meta+"</span>":"")+"</div>"; }
+  function mostrar(i){
+    var r = E[i], h = [];
+    Array.prototype.forEach.call(lista.children, function(b,j){ b.setAttribute("aria-pressed", j===i ? "true":"false"); });
+    Array.prototype.forEach.call(tb.children, function(t){ t.classList.toggle("sel", t.id === "linha-"+r[0]); });
+    h.push("<h3>"+r[0]+" · "+esc(r[1])+"</h3><span class='small muted'><span class='c "+CLS[r[2]]+"'>"+ROT[r[2]]+"</span> · nascimento "+data(r[3])+"</span>");
+    h.push("<div class='passos'>");
+    if(r[4]==="I"){ h.push(passo("x","Análise dos requisitos: Indeferida","Certidão sem data de colação. Sai de tudo: nenhuma outra Etapa a recebe.")); h.push("</div>"); alvo.innerHTML=h.join(""); return; }
+    h.push(passo("","Análise dos requisitos: Deferido","Etapa decisória; segue."));
+    h.push(passo("","Análise do currículo: "+r[5],"Só classificatória: sempre habilita. Peso 1."));
+    if(r[6]==="aus"){ h.push(passo("x","Prova escrita: ausente","Ocorrência registrada pela presidência. Eliminado, sem nota. Sem posição no marco 1.")); h.push("</div>"); alvo.innerHTML=h.join(""); return; }
+    if(r[6]<60){ h.push(passo("x","Prova escrita: "+r[6]+" < 60","Eliminatória: abaixo da mínima. O currículo ("+r[5]+") não entra em soma nenhuma. Sem posição.")); h.push("</div>"); alvo.innerHTML=h.join(""); return; }
+    h.push(passo("","Prova escrita: "+r[6]+(r[7]?" (era "+r[7]+", corrigida em recurso)":""),"Peso 3. Habilitado ("+r[6]+" ≥ 60)."));
+    var c1 = "("+r[5]+" + 3·"+r[6]+") / 4 = "+(r[5]+3*r[6])+" / 4 = "+r[9];
+    var faixa = r[15], pos1 = r[10]+"º na ampla"+(r[11]?" · "+r[11]+"º na "+ROT[r[2]]:"");
+    if(!faixa){ h.push(passo("x","Marco 1: "+r[9]+" · "+pos1, c1+". Fora da faixa de 8 em todas as listas: não vai à Entrevista.")); h.push("</div>"); alvo.innerHTML=h.join(""); return; }
+    h.push(passo("f","Marco 1: "+r[9]+" · "+pos1, c1+". Chega à Entrevista pela faixa: "+faixa+"."));
+    if(r[8]==="aus"){ h.push(passo("x","Entrevista: ausente","Ocorrência. Eliminado: sem posição no marco final.")); h.push("</div>"); alvo.innerHTML=h.join(""); return; }
+    if(r[8]<60){ h.push(passo("x","Entrevista: "+r[8]+" < 60","Eliminatória: abaixo da mínima. Sem posição no marco final.")); h.push("</div>"); alvo.innerHTML=h.join(""); return; }
+    h.push(passo("","Entrevista: "+r[8],"Peso 2. Habilitado."));
+    var soma = r[5]+3*r[6]+2*r[8];
+    var c2 = "("+r[5]+" + 3·"+r[6]+" + 2·"+r[8]+") / 6 = "+soma+" / 6 = "+r[12];
+    var pos2 = r[13]+"º na ampla"+(r[14]?" · "+r[14]+"º na "+ROT[r[2]]:"");
+    var dentro = ["C01","C16","C02","C06","C09","C08","C13","C17"].indexOf(r[0])>=0;
+    var extra = r[0]==="C08" ? " Empata com C07 em 75,67; a Entrevista (80 > 74) o põe em 6º, o último da faixa." : (r[0]==="C07" ? " Empata com C08 em 75,67; a Entrevista (74 < 80) a põe em 7º, fora da faixa de 6." : "");
+    h.push(passo(dentro?"f":"n","Marco final: "+r[12]+" · "+pos2, c2+"."+extra));
+    var fim = r[16];
+    h.push(passo(/Aceite/.test(fim)?"f":(/Desist/.test(fim)?"x":"n"),"Desfecho: "+fim, {
+      C01:"Titular da ampla; documento conforme; aceite.",
+      C02:"Titular da ampla; desistiu. A apuração seguinte abriu 1 vaga.",
+      C06:"Titular da ampla; identidade ilegível (Pendente), reapresentada, Conforme; aceite.",
+      C07:"7ª, a primeira fora da faixa. Recorreu da Entrevista: indeferido. Próxima da fila.",
+      C08:"Suplente; convocado 'para vaga que vagou', a de Bruno; aceite.",
+      C09:"Suplente; com a vaga PcD revertida, a ampla passou a 5 e ela virou titular; aceite.",
+      C10:"Entrou na Entrevista pelo recurso; 9º no final, fora da faixa de 6.",
+      C13:"Titular da PcD, a única da lista. Desistiu: a vaga reverteu à ampla.",
+      C16:"2º na ampla: ocupa pela ampla, e a vaga PPI vai a Kátia.",
+      C17:"10ª na ampla, 2ª na PPI. Com João na ampla, é a titular da PPI; aceite."
+    }[r[0]] || ""));
+    h.push("</div>");
+    alvo.innerHTML = h.join("");
+  }
+  E.forEach(function(r,i){
+    var b = document.createElement("button"); b.type="button"; b.setAttribute("aria-pressed","false");
+    b.innerHTML = "<span class='mono'>"+r[0]+"</span><span>"+esc(r[1])+"</span><span class='c "+CLS[r[2]]+"'>"+ROT[r[2]]+"</span>";
+    b.addEventListener("click", function(){ mostrar(i); });
+    lista.appendChild(b);
+  });
+  mostrar(6);
+
+  /* modo apresentação */
+  var caps = Array.prototype.slice.call(document.querySelectorAll(".cap"));
+  var atual = 0, root = document.documentElement;
+  function ir(i){
+    atual = Math.max(0, Math.min(caps.length-1, i));
+    caps.forEach(function(c,j){ c.classList.toggle("atual", j===atual); });
+    document.getElementById("pos").textContent = (atual+1)+" / "+caps.length;
+    document.getElementById("ant").disabled = atual===0;
+    document.getElementById("prox").disabled = atual===caps.length-1;
+    window.scrollTo(0,0);
+  }
+  function sair(){ root.classList.remove("modo"); caps.forEach(function(c){ c.classList.remove("atual"); }); }
+  document.getElementById("apresentar").addEventListener("click", function(){ root.classList.add("modo"); ir(0); });
+  document.getElementById("sair").addEventListener("click", sair);
+  document.getElementById("ant").addEventListener("click", function(){ ir(atual-1); });
+  document.getElementById("prox").addEventListener("click", function(){ ir(atual+1); });
+  document.addEventListener("keydown", function(e){
+    if(!root.classList.contains("modo")) return;
+    if(e.key==="ArrowRight"||e.key==="PageDown") ir(atual+1);
+    else if(e.key==="ArrowLeft"||e.key==="PageUp") ir(atual-1);
+    else if(e.key==="Escape") sair();
+  });
+})();
+</script>

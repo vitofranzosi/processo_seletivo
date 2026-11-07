@@ -1,0 +1,457 @@
+{
+ "profiles": [
+  {
+   "id": "401587a7-717f-4cd4-a7dd-1ec702e4dbb0",
+   "code": "ESP-DOC",
+   "name": "Especialização em Docência para a Educação Profissional — turma DEMO",
+   "duties": "",
+   "callForm": "INDIVIDUAL_MESSAGE",
+   "locality": "Cefor — oferta a distância",
+   "workload": "360 horas",
+   "description": "Curso de pós-graduação lato sensu, a distância, com encontros síncronos. Turma fictícia, para estudo.",
+   "reserveType": "LIMITED",
+   "compensation": "",
+   "requirements": [
+    "Diploma de graduação (bacharelado, licenciatura ou tecnologia) reconhecido pelo MEC"
+   ],
+   "reserveLimit": 6,
+   "vacancyTable": [
+    {
+     "id": "c8e0b669-78f0-5044-abbc-a2d3f77a2497",
+     "modalityId": null,
+     "immediateVacancies": 4
+    },
+    {
+     "id": "88805c84-1228-4ef3-8c54-c045ed2e3f35",
+     "modalityId": "6ee1e8c5-8f77-4eaf-ba8b-bc2a5809964b",
+     "immediateVacancies": 1
+    },
+    {
+     "id": "99b5edbb-e28d-446f-91c8-0190eb8f1b1a",
+     "modalityId": "ec34686f-1d92-491b-be8e-d49df882b36c",
+     "immediateVacancies": 1
+    }
+   ],
+   "declaredFacts": [
+    {
+     "id": "a35a3287-f3db-4d6f-8374-39e6d33f22a7",
+     "code": "NASCIMENTO",
+     "type": "DATA",
+     "label": "Data de nascimento"
+    }
+   ],
+   "callInformation": {},
+   "vacancyReversion": {
+    "kind": "ON_BALANCE"
+   },
+   "immediateVacancies": 6,
+   "competitionModalities": [
+    {
+     "id": "1b64c9e8-720e-4502-a7d8-5755e5f42586",
+     "code": "AC",
+     "name": "Ampla concorrência",
+     "description": "",
+     "normativeRule": null
+    },
+    {
+     "id": "6ee1e8c5-8f77-4eaf-ba8b-bc2a5809964b",
+     "code": "PCD",
+     "name": "Pessoas com deficiência",
+     "description": "",
+     "normativeRule": {
+      "id": "52275a8f-ab03-4792-ae24-53bc24b68c09",
+      "version": "2026-01-01",
+      "rounding": {
+       "mode": "PARA_CIMA"
+      },
+      "callRules": {},
+      "foundation": "Política de ações afirmativas da pós-graduação (norma fictícia DEMO)",
+      "percentage": "5.0000",
+      "calculation": {},
+      "distribution": {},
+      "effectiveFrom": null
+     }
+    },
+    {
+     "id": "ec34686f-1d92-491b-be8e-d49df882b36c",
+     "code": "PPI",
+     "name": "Pessoas pretas, pardas e indígenas",
+     "description": "",
+     "normativeRule": {
+      "id": "e467bb36-1afd-440b-a654-ec6cc61bc3be",
+      "version": "2026-01-01",
+      "rounding": {
+       "mode": "PARA_BAIXO"
+      },
+      "callRules": {},
+      "foundation": "Política de ações afirmativas da pós-graduação (norma fictícia DEMO)",
+      "percentage": "20.0000",
+      "calculation": {},
+      "distribution": {},
+      "effectiveFrom": null
+     }
+    }
+   ],
+   "classificationMilestones": [
+    {
+     "id": "3c9e07d8-9253-47be-88ee-76cd5718f647",
+     "code": "ENTREVISTA",
+     "name": "Classificação para a entrevista",
+     "stages": [
+      "bf01ffbd-bbe4-4cf2-9654-e78e2adb05b6",
+      "a089578c-989b-4c1f-8325-22a5d32f2795"
+     ],
+     "cutRule": {
+      "targetKind": "FIXED",
+      "tieOutcome": "ADMITS_SURPLUS",
+      "targetCount": 8,
+      "continuation": "NONE",
+      "surplusCount": 0,
+      "governedStage": "dea19f4a-a1b9-46e9-850e-12bcf01c3e96"
+     },
+     "rounding": {
+      "mode": "MEIO_PARA_CIMA",
+      "scale": 2
+     },
+     "operation": "MEDIA_PONDERADA",
+     "drawMethod": null,
+     "tiebreakers": [
+      {
+       "id": "21d3cfed-93ef-4e6b-b925-3db44563b83e",
+       "type": "MAIOR_PONTUACAO_NA_ETAPA",
+       "order": 1,
+       "parameters": {
+        "stageId": "a089578c-989b-4c1f-8325-22a5d32f2795"
+       },
+       "whenMissing": "ULTIMO_NO_CRITERIO"
+      },
+      {
+       "id": "045a698a-4fc2-41f3-a719-0dbdf5befca0",
+       "type": "MENOR_VALOR_DE_FATO",
+       "order": 2,
+       "parameters": {
+        "factId": "a35a3287-f3db-4d6f-8374-39e6d33f22a7"
+       },
+       "whenMissing": "ULTIMO_NO_CRITERIO"
+      }
+     ],
+     "appealWindow": {
+      "unit": "DIAS_CORRIDOS",
+      "admits": true,
+      "durationDays": 3
+     },
+     "normalization": "NENHUMA",
+     "orderProduction": "POR_PONTUACAO"
+    },
+    {
+     "id": "ac65221f-c9bc-496e-aa71-dfaa4087e533",
+     "code": "FINAL",
+     "name": "Classificação final",
+     "stages": [
+      "bf01ffbd-bbe4-4cf2-9654-e78e2adb05b6",
+      "a089578c-989b-4c1f-8325-22a5d32f2795",
+      "dea19f4a-a1b9-46e9-850e-12bcf01c3e96"
+     ],
+     "cutRule": {
+      "targetKind": "FROM_VACANCY_TABLE",
+      "tieOutcome": "ADMITS_SURPLUS",
+      "targetCount": null,
+      "continuation": "ALLOWED",
+      "surplusCount": 2,
+      "governedStage": "NONE"
+     },
+     "rounding": {
+      "mode": "MEIO_PARA_CIMA",
+      "scale": 2
+     },
+     "operation": "MEDIA_PONDERADA",
+     "drawMethod": null,
+     "tiebreakers": [
+      {
+       "id": "934eb1d6-30cc-4938-a52a-015d25636d14",
+       "type": "MAIOR_PONTUACAO_NA_ETAPA",
+       "order": 1,
+       "parameters": {
+        "stageId": "dea19f4a-a1b9-46e9-850e-12bcf01c3e96"
+       },
+       "whenMissing": "ULTIMO_NO_CRITERIO"
+      },
+      {
+       "id": "69ede8af-933a-4b20-ab7e-16a5c29fa283",
+       "type": "MAIOR_PONTUACAO_NA_ETAPA",
+       "order": 2,
+       "parameters": {
+        "stageId": "a089578c-989b-4c1f-8325-22a5d32f2795"
+       },
+       "whenMissing": "ULTIMO_NO_CRITERIO"
+      },
+      {
+       "id": "4318b733-0bfe-4f2c-a06c-ff277fef1a31",
+       "type": "MENOR_VALOR_DE_FATO",
+       "order": 3,
+       "parameters": {
+        "factId": "a35a3287-f3db-4d6f-8374-39e6d33f22a7"
+       },
+       "whenMissing": "ULTIMO_NO_CRITERIO"
+      }
+     ],
+     "appealWindow": {
+      "unit": "DIAS_CORRIDOS",
+      "admits": true,
+      "durationDays": 3
+     },
+     "normalization": "NENHUMA",
+     "orderProduction": "POR_PONTUACAO"
+    }
+   ],
+   "classificationInformation": {},
+   "generalCompetitionModalityId": "1b64c9e8-720e-4502-a7d8-5755e5f42586"
+  }
+ ],
+ "schedule": [
+  {
+   "id": "bb6a7429-dee8-4970-b5cf-0668f6ee9992",
+   "type": "Inscrições",
+   "endAt": "2026-11-28T02:59:00+00:00",
+   "order": 1,
+   "status": "PLANEJADO",
+   "startAt": "2026-11-16T11:00:00+00:00",
+   "location": "Portal de Seleções",
+   "description": "Inscrições pelo Portal de Seleções do Cefor.",
+   "isRegistrationPeriod": true
+  },
+  {
+   "id": "742ecfc4-688c-4e5d-81fa-84cb6066f949",
+   "type": "Análise dos requisitos",
+   "endAt": "2026-12-02T21:00:00+00:00",
+   "order": 2,
+   "status": "PLANEJADO",
+   "startAt": "2026-11-30T11:00:00+00:00",
+   "location": "",
+   "description": "Conferência do diploma de graduação enviado na inscrição.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "154afad3-1dc9-4492-9743-f4c13fb5fe83",
+   "type": "Prova escrita",
+   "endAt": "2026-12-05T15:00:00+00:00",
+   "order": 3,
+   "status": "PLANEJADO",
+   "startAt": "2026-12-05T12:00:00+00:00",
+   "location": "Cefor — Vitória",
+   "description": "Prova escrita dissertativa sobre educação profissional.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "279d1dc9-1bc0-43e9-a5f9-7b8f0eb95b5c",
+   "type": "Classificação para a entrevista — preliminar",
+   "endAt": null,
+   "order": 4,
+   "status": "PLANEJADO",
+   "startAt": "2026-12-09T15:00:00+00:00",
+   "location": "",
+   "description": "Divulgação da classificação preliminar da prova escrita, com prazo de recurso de 3 dias.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "04615017-9c00-43ae-a092-1f04041963eb",
+   "type": "Classificação para a entrevista — definitiva",
+   "endAt": null,
+   "order": 5,
+   "status": "PLANEJADO",
+   "startAt": "2026-12-14T15:00:00+00:00",
+   "location": "",
+   "description": "Divulgação da classificação definitiva e da relação dos convocados para a entrevista.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "bd5ef8ac-2990-427c-b010-44d14fcd32ba",
+   "type": "Entrevista",
+   "endAt": "2026-12-17T21:00:00+00:00",
+   "order": 6,
+   "status": "PLANEJADO",
+   "startAt": "2026-12-15T11:00:00+00:00",
+   "location": "Videoconferência",
+   "description": "Entrevistas individuais, por videoconferência.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "5ca38b4c-3994-4bbd-954d-40cb8158117c",
+   "type": "Resultado final — preliminar",
+   "endAt": null,
+   "order": 7,
+   "status": "PLANEJADO",
+   "startAt": "2026-12-21T15:00:00+00:00",
+   "location": "",
+   "description": "Divulgação da classificação final preliminar, com prazo de recurso de 3 dias.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "c5a2236b-e2d5-429a-b83c-2f7c93e060d7",
+   "type": "Resultado final — definitivo",
+   "endAt": null,
+   "order": 8,
+   "status": "PLANEJADO",
+   "startAt": "2026-12-28T15:00:00+00:00",
+   "location": "",
+   "description": "Divulgação da classificação final definitiva.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "4eb930c7-18d8-408a-a7e7-49baae682c38",
+   "type": "Convocação e entrega de documentos",
+   "endAt": "2027-01-09T02:59:00+00:00",
+   "order": 9,
+   "status": "PLANEJADO",
+   "startAt": "2027-01-04T11:00:00+00:00",
+   "location": "Portal de Seleções",
+   "description": "Convocação dos classificados e envio dos documentos de matrícula.",
+   "isRegistrationPeriod": false
+  },
+  {
+   "id": "3fe5b430-6e3b-435b-9633-da89ca69fe3d",
+   "type": "Análise do currículo",
+   "endAt": "2026-12-04T21:00:00+00:00",
+   "order": 10,
+   "status": "PLANEJADO",
+   "startAt": "2026-11-30T11:00:00+00:00",
+   "location": "",
+   "description": "Pontuação do currículo Lattes enviado na inscrição.",
+   "isRegistrationPeriod": false
+  }
+ ],
+ "stages": [
+  {
+   "id": "1c4625a8-c077-4080-9051-12ee097de766",
+   "name": "Análise dos requisitos",
+   "forma": "DECISORIA",
+   "order": 1,
+   "weight": null,
+   "eliminatory": true,
+   "maximumScore": null,
+   "minimumScore": null,
+   "classificatory": false,
+   "rotuloFavoravel": "Deferido",
+   "scheduleEventId": "742ecfc4-688c-4e5d-81fa-84cb6066f949",
+   "rotuloDesfavoravel": "Indeferido",
+   "evaluationsPerRegistration": null
+  },
+  {
+   "id": "bf01ffbd-bbe4-4cf2-9654-e78e2adb05b6",
+   "name": "Análise do currículo",
+   "forma": "PONTUADA",
+   "order": 2,
+   "weight": "1.0000",
+   "eliminatory": false,
+   "maximumScore": "100.0000",
+   "minimumScore": null,
+   "classificatory": true,
+   "rotuloFavoravel": null,
+   "scheduleEventId": "3fe5b430-6e3b-435b-9633-da89ca69fe3d",
+   "rotuloDesfavoravel": null,
+   "evaluationsPerRegistration": null
+  },
+  {
+   "id": "a089578c-989b-4c1f-8325-22a5d32f2795",
+   "name": "Prova escrita",
+   "forma": "PONTUADA",
+   "order": 3,
+   "weight": "3.0000",
+   "eliminatory": true,
+   "maximumScore": "100.0000",
+   "minimumScore": "60.0000",
+   "classificatory": true,
+   "rotuloFavoravel": null,
+   "scheduleEventId": "154afad3-1dc9-4492-9743-f4c13fb5fe83",
+   "rotuloDesfavoravel": null,
+   "evaluationsPerRegistration": null
+  },
+  {
+   "id": "dea19f4a-a1b9-46e9-850e-12bcf01c3e96",
+   "name": "Entrevista",
+   "forma": "PONTUADA",
+   "order": 4,
+   "weight": "2.0000",
+   "eliminatory": true,
+   "maximumScore": "100.0000",
+   "minimumScore": "60.0000",
+   "classificatory": true,
+   "rotuloFavoravel": null,
+   "scheduleEventId": "bd5ef8ac-2990-427c-b010-44d14fcd32ba",
+   "rotuloDesfavoravel": null,
+   "evaluationsPerRegistration": null
+  }
+ ],
+ "documentRequirements": [
+  {
+   "id": "4afbddfe-7bfa-449e-b16d-56949ca7a625",
+   "key": "DIPLOMA",
+   "name": "Diploma de graduação",
+   "order": 1,
+   "moment": "AT_ENROLLMENT",
+   "required": true,
+   "profileId": null,
+   "modalityId": null,
+   "attachmentId": null,
+   "instructions": "PDF do diploma (frente e verso) ou da certidão de conclusão.",
+   "modalityCode": null,
+   "reusesRequirementId": null
+  },
+  {
+   "id": "65fcf0bb-de91-4cfd-a85c-8e00f0e44eb6",
+   "key": "CURRICULO",
+   "name": "Currículo Lattes",
+   "order": 2,
+   "moment": "AT_ENROLLMENT",
+   "required": true,
+   "profileId": null,
+   "modalityId": null,
+   "attachmentId": null,
+   "instructions": "PDF do currículo Lattes atualizado; é ele que a comissão pontua na Análise do currículo.",
+   "modalityCode": null,
+   "reusesRequirementId": null
+  },
+  {
+   "id": "f8009639-626b-4509-a88c-a42699a781f6",
+   "key": "IDENTIDADE",
+   "name": "Documento de identidade",
+   "order": 3,
+   "moment": "AT_CALL",
+   "required": true,
+   "profileId": null,
+   "modalityId": null,
+   "attachmentId": null,
+   "instructions": "PDF de documento oficial com foto.",
+   "modalityCode": null,
+   "reusesRequirementId": null
+  },
+  {
+   "id": "d51f5d5f-ee28-4b1d-b150-5b5d1f691210",
+   "key": "LAUDO_PCD",
+   "name": "Laudo médico (PcD)",
+   "order": 4,
+   "moment": "AT_CALL",
+   "required": true,
+   "profileId": null,
+   "modalityId": "6ee1e8c5-8f77-4eaf-ba8b-bc2a5809964b",
+   "attachmentId": null,
+   "instructions": "Laudo emitido nos últimos 12 meses, com o CID.",
+   "modalityCode": null,
+   "reusesRequirementId": null
+  }
+ ],
+ "_outros": {
+  "year": 2026,
+  "title": "Seleção de estudantes — Especialização em Docência para a Educação Profissional (turma demonstrativa)",
+  "number": "900",
+  "editalId": "a7595de1-599e-4851-8241-f80db61f823f",
+  "processoId": "32b91c86-0a90-45f3-a37d-d9a3a1bc05cd",
+  "attachments": [],
+  "description": "Edital fictício, para estudo de caso da classificação por etapas. Nenhum dado é real.",
+  "processoCode": "PS-DEMO-CLASSIF-2027",
+  "processoTitle": "Processo Seletivo Demonstrativo — Especialização em Docência (DEMO)",
+  "schemaVersion": 18,
+  "matriculationRequest": null,
+  "maxInscricoesPorCandidato": 1
+ }
+}

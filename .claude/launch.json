@@ -489,6 +489,26 @@
       ],
       "port": 8130,
       "url": "http://localhost:8130"
+    },
+    {
+      "name": "estudo-classificacao",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=${ESTUDO_DB:-ps_estudo_classif} DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true AVISOS_AOS_CANDIDATOS=false ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-estudo-classif RELOGIO=$(cat ../doc/estudo-classificacao-demonstrativa-2026-11-07/reproducao/.relogio 2>/dev/null) uv run python ../doc/estudo-classificacao-demonstrativa-2026-11-07/reproducao/servidor.py 8140"
+      ],
+      "port": 8140,
+      "url": "http://localhost:8140"
+    },
+    {
+      "name": "estudo-classificacao-fase",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_ec_fase DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true AVISOS_AOS_CANDIDATOS=false ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-estudo-classif RELOGIO=$(cat ../doc/estudo-classificacao-demonstrativa-2026-11-07/reproducao/.relogio-fase 2>/dev/null) uv run python ../doc/estudo-classificacao-demonstrativa-2026-11-07/reproducao/servidor.py 8141"
+      ],
+      "port": 8141,
+      "url": "http://localhost:8141"
     }
   ]
 }
