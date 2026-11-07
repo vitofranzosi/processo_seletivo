@@ -17,8 +17,11 @@ varredura de `test_gramatica_das_portas.py` lê o texto e não enxergaria o dest
 do template.
 """
 
-from dataclasses import dataclass
+import hashlib
+import json
+from dataclasses import dataclass, replace
 
+from django.db.models import Exists, OuterRef
 from django.urls import reverse
 
 from processo_seletivo.comissoes.domain.autorizacao import pode_gerir_comissao
@@ -32,6 +35,9 @@ class Item:
     url: str = ""
     rotulo: str = ""
     a_quem_pedir: str = ""
+    #: O tipo da situação ou da providência. A confirmação do Edital não o lê; o "Encerrar Processo"
+    #: (`130`) precisa dele para saber se há convocado no prazo (UX-276).
+    tipo: str = ""
 
 
 @dataclass(frozen=True)
@@ -79,6 +85,10 @@ def da_confirmacao(edital, ator, *, acao, agora):
 
 
 def _item(situacao, edital, ator, acao):
+    return replace(_item_sem_tipo(situacao, edital, ator, acao), tipo=situacao.tipo)
+
+
+def _item_sem_tipo(situacao, edital, ator, acao):
     mensagem = p.frase(situacao, acao) + "."
     if acao == "cancelar":
         # No cancelamento o item diz o efeito; o caminho para resolver antes seria contraditório.
@@ -174,8 +184,124 @@ def _providencias_da_099(edital, agora):
         if chave not in vistos:
             vistos.add(chave)
             somadas.append(pendencia)
-    return [Item(_frase_da_099(texto_da_pendencia(pendencia))) for pendencia in somadas]
+    return [
+        Item(_frase_da_099(texto_da_pendencia(pendencia)), tipo=pendencia.tipo)
+        for pendencia in somadas
+    ]
 
 
 def _frase_da_099(texto):
     return texto[:1].upper() + texto[1:] + "."
+
+
+# --- O "Encerrar Processo" (130) ----------------------------------------------------------------
+#
+# **A mesma regra e a mesma frase do Edital, Edital a Edital** (FR-4351). O encerramento do
+# Processo corta o que ainda corre nos Editais finais dele — o convocado no prazo é o caso que
+# motivou a feature —, e a tela diz isso antes do ato. Diz, e não impede: impedir seria outra
+# decisão de domínio (a décima decisão da revisão de 06/11 da página de Processos Seletivos).
+
+#: Os tipos da `113` que dizem algo verdadeiro num Edital já final. Os de recurso continuam a
+#: correr depois do encerramento do Edital, e aqui são advertência mesmo os que lá impedem (D-003
+#: da `130`).
+TIPOS_NO_PROCESSO = frozenset(
+    {
+        p.PRAZO_RECURSAL_EM_CURSO,
+        p.PRAZO_RECURSAL_NAO_DECLARADO,
+        p.RECURSO_AGUARDANDO,
+        p.REAVALIACAO_PENDENTE,
+        p.PROVIDENCIA_PENDENTE,
+    }
+)
+
+#: Os que não: o Edital final já não recebe inscrição, e desde o A-09 recusa os atos da
+#: Retificação — a frase da homologada mandaria "publique-a ou devolva-a" (D-002 da `130`). O
+#: rascunho só existe no cancelar. Um tipo novo em `pendencias_do_edital` reprova o guardião até
+#: cair num dos três conjuntos.
+TIPOS_FORA_DO_PROCESSO = frozenset(
+    {
+        p.PERIODO_EM_CURSO,
+        p.PERIODO_POR_ABRIR,
+        p.PERIODO_SEM_TERMINO,
+        p.RETIFICACAO_HOMOLOGADA,
+        p.RETIFICACAO_EM_CURSO,
+        p.RASCUNHOS_NAO_ENVIAVEIS,
+    }
+)
+
+
+@dataclass(frozen=True)
+class GrupoDoEdital:
+    edital: object
+    itens: tuple
+
+
+@dataclass(frozen=True)
+class AdvertenciaDoProcesso:
+    """O que a confirmação do Processo diz, e o resumo que o envio devolve (FR-4365)."""
+
+    grupos: tuple = ()
+    convocado_no_prazo: bool = False
+    resumo: str = ""
+
+    @property
+    def vazia(self):
+        return not self.grupos
+
+    @classmethod
+    def de(cls, grupos):
+        grupos = tuple(grupos)
+        return cls(
+            grupos=grupos,
+            convocado_no_prazo=any(
+                item.tipo == p.CONVOCACAO_AGUARDANDO for grupo in grupos for item in grupo.itens
+            ),
+            resumo=resumo_de(grupos),
+        )
+
+
+def resumo_de(grupos):
+    """O hash do que o gestor leu: o Edital e as frases, na ordem (R-5 da `130`).
+
+    **As frases, e não os fatos**: a frase já leva a contagem, a data e o marco, que é o que precisa
+    ser igual. O caminho fica fora, porque depende de quem lê. Sem assinatura: o resumo não autoriza
+    nada — quem o forjasse só pularia uma renovação que confirmar duas vezes já pula.
+
+    **As frases de cada Edital entram ordenadas**: a regra da `113` percorre os recortes de
+    resultado sem `order_by`, e a ordem dos prazos de recurso entre marcos é a do banco. Na tela
+    isso é só exibição; aqui seria um 409 sem nada ter mudado. Os Editais, de ordem estável, entram
+    nela.
+    """
+    lido = [
+        [str(grupo.edital.id), sorted(item.mensagem for item in grupo.itens)] for grupo in grupos
+    ]
+    texto = json.dumps(lido, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(texto.encode("utf-8")).hexdigest()
+
+
+def do_processo(processo, ator, *, agora):
+    """A advertência de "Encerrar Processo": por Edital final publicado, o que está em aberto (130).
+
+    Supõe `leitura_consistente` aberta por quem chama, como `fatos_do_edital`: os Editais são lidos
+    no mesmo instante (FR-4361). O Edital nunca publicado não tem conteúdo vigente, e fica de fora;
+    o final sem nada em aberto também (FR-4358). A ordem é a em que a recusa nomeia os pendentes.
+    """
+    from processo_seletivo.processos.domain.finalizacao import EDITAL_FINAL
+    from processo_seletivo.publicacoes.models import Publicacao
+
+    editais = (
+        processo.editais.filter(status__in=EDITAL_FINAL)
+        .filter(Exists(Publicacao.objects.filter(edital=OuterRef("pk"))))
+        .order_by("year", "number", "id")
+    )
+    grupos = []
+    for edital in editais:
+        itens = [
+            _item(situacao, edital, ator, "encerrar")
+            for situacao in p.situacoes(edital, agora=agora, ato="encerrar", com_advertencias=True)
+            if situacao.tipo in TIPOS_NO_PROCESSO
+        ]
+        itens.extend(_providencias_da_099(edital, agora))
+        if itens:
+            grupos.append(GrupoDoEdital(edital, tuple(itens)))
+    return AdvertenciaDoProcesso.de(grupos)
