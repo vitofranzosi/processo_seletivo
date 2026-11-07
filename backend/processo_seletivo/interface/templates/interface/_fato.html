@@ -28,9 +28,9 @@
         experiência sai de número.</span>
     </p>
   </div>
-  <p class="remover">
+  {% if not somente_leitura %}<p class="remover">
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover este fato</button>
-  </p>
+  </p>{% endif %}
 </fieldset>

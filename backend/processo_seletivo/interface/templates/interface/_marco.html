@@ -53,7 +53,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
   <div class="campos">
     <p class="campo largo">
       <label for="marco-{{ indice }}-{{ sub }}-orderProduction">Como a ordem deste marco é produzida <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="marco-{{ indice }}-{{ sub }}-orderProduction"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-orderProduction"
               name="marco-{{ indice }}-{{ sub }}-orderProduction"
               required aria-required="true"
               hx-get="{% url 'interface:fragmento-marco-recomposto' indice sub %}?edital={{ edital.id }}"
@@ -77,13 +77,13 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
   <div class="campos">
     <p class="campo curto">
       <label for="marco-{{ indice }}-{{ sub }}-code">Código <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-code"
+      <input{% if somente_leitura %} disabled{% endif %} type="text" id="marco-{{ indice }}-{{ sub }}-code"
              name="marco-{{ indice }}-{{ sub }}-code"
              value="{{ marco.code|default:'' }}" required placeholder="ex.: FINAL" aria-required="true">
     </p>
     <p class="campo largo">
       <label for="marco-{{ indice }}-{{ sub }}-name">Denominação <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-name"
+      <input{% if somente_leitura %} disabled{% endif %} type="text" id="marco-{{ indice }}-{{ sub }}-name"
              name="marco-{{ indice }}-{{ sub }}-name"
              value="{{ marco.name|default:'' }}" required
              placeholder="ex.: Classificação final" aria-required="true">
@@ -154,7 +154,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
         <legend>Etapas que entram na ordem {% if not marco|ordena_por_sorteio %}<span class="obrigatorio" aria-hidden="true">*</span>{% endif %}</legend>
         {% for etapa in etapas_classificatorias %}
         <p class="opcao">
-          <input type="checkbox" id="marco-{{ indice }}-{{ sub }}-stages-{{ forloop.counter0 }}"
+          <input{% if somente_leitura %} disabled{% endif %} type="checkbox" id="marco-{{ indice }}-{{ sub }}-stages-{{ forloop.counter0 }}"
                  name="marco-{{ indice }}-{{ sub }}-stages" value="{{ etapa.id }}"
                  {% if etapa.id in marco.etapas %}checked{% endif %}
                  hx-get="{% url 'interface:fragmento-marco-recomposto' indice sub %}?edital={{ edital.id }}"
@@ -219,13 +219,13 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
   <div class="campos">
     <p class="campo curto">
       <label for="marco-{{ indice }}-{{ sub }}-scale">Casas decimais <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <input type="number" min="0" max="4" step="1"
+      <input{% if somente_leitura %} disabled{% endif %} type="number" min="0" max="4" step="1"
              id="marco-{{ indice }}-{{ sub }}-scale" name="marco-{{ indice }}-{{ sub }}-scale"
              value="{{ marco.scale }}" required aria-required="true">
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-mode">Arredondamento <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="marco-{{ indice }}-{{ sub }}-mode" name="marco-{{ indice }}-{{ sub }}-mode" required aria-required="true"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-mode" name="marco-{{ indice }}-{{ sub }}-mode" required aria-required="true"
               aria-describedby="ajuda-modo-{{ indice }}-{{ sub }}">
         <option value="">Escolha o arredondamento</option>
         <option value="MEIO_PARA_CIMA" {% if marco.mode == "MEIO_PARA_CIMA" %}selected{% endif %}>Meio para cima (2,5 vira 3)</option>
@@ -272,7 +272,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       diferentes: o silêncio devolve a tempestividade ao juízo de admissibilidade motivado; a
       negativa é norma publicada, e recusa a interposição nomeando-a.</span>
     <p class="opcao">
-      <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite"
+      <input{% if somente_leitura %} disabled{% endif %} type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite"
              name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="admite" data-resumo="admite"
              {% if marco.appealDeclaration == "admite" %}checked{% endif %}>
       <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-admite">Admite recurso, no prazo abaixo</label>
@@ -280,7 +280,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     <div class="campos dependentes so-admite">
       <p class="campo curto">
         <label for="marco-{{ indice }}-{{ sub }}-appealDurationDays">Prazo, em dias</label>
-        <input type="number" min="1" step="1"
+        <input{% if somente_leitura %} disabled{% endif %} type="number" min="1" step="1"
                id="marco-{{ indice }}-{{ sub }}-appealDurationDays"
                name="marco-{{ indice }}-{{ sub }}-appealDurationDays"
                value="{{ marco.appealDurationDays }}"
@@ -289,7 +289,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       </p>
       <p class="campo curto">
         <label for="marco-{{ indice }}-{{ sub }}-appealUnit">Unidade</label>
-        <select id="marco-{{ indice }}-{{ sub }}-appealUnit"
+        <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-appealUnit"
                 name="marco-{{ indice }}-{{ sub }}-appealUnit"
                 aria-describedby="ajuda-unidade-{{ indice }}-{{ sub }}">
           <option value="DIAS_CORRIDOS" {% if marco.appealUnit == "DIAS_CORRIDOS" %}selected{% endif %}>Dias corridos</option>
@@ -299,14 +299,14 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       </p>
     </div>
     <p class="opcao">
-      <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite"
+      <input{% if somente_leitura %} disabled{% endif %} type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite"
              name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_admite"
              data-resumo="não admite por esta via"
              {% if marco.appealDeclaration == "nao_admite" %}checked{% endif %}>
       <label for="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_admite">Não admite recurso por esta via</label>
     </p>
     <p class="opcao">
-      <input type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada"
+      <input{% if somente_leitura %} disabled{% endif %} type="radio" id="marco-{{ indice }}-{{ sub }}-appealDeclaration-nao_declarada"
              name="marco-{{ indice }}-{{ sub }}-appealDeclaration" value="nao_declarada"
              data-resumo="nada declarado"
              {% if marco.appealDeclaration != "admite" and marco.appealDeclaration != "nao_admite" %}checked{% endif %}>
@@ -369,7 +369,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     {% endcomment %}
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-algorithm">Algoritmo e versão</label>
-      <select id="marco-{{ indice }}-{{ sub }}-draw-algorithm"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-draw-algorithm"
               name="marco-{{ indice }}-{{ sub }}-draw-algorithm">
         <option value="">Não declarado</option>
         {% escolhas_do_metodo "drawMethod/algorithm" marco.drawAlgorithm as algoritmos %}
@@ -380,7 +380,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-source">Fonte pública externa da semente</label>
-      <select id="marco-{{ indice }}-{{ sub }}-draw-source"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-draw-source"
               name="marco-{{ indice }}-{{ sub }}-draw-source">
         <option value="">Não declarada</option>
         {% escolhas_do_metodo "drawMethod/source" marco.drawSource as fontes %}
@@ -391,7 +391,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-occurrence">Ocorrência que fixará a semente</label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrence"
+      <input{% if somente_leitura %} disabled{% endif %} type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrence"
              name="marco-{{ indice }}-{{ sub }}-draw-occurrence" value="{{ marco.drawOccurrence }}"
              placeholder="6115"
              aria-describedby="ajuda-ocorrencia-{{ indice }}-{{ sub }}">
@@ -431,7 +431,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       Evento, e o texto, quando preenchido, vale sobre ela — é assim que se diverge.
       {% endcomment %}
       {% if eventos_do_sorteio %}
-      <select id="marco-{{ indice }}-{{ sub }}-draw-occurrenceEvent" name="marco-{{ indice }}-{{ sub }}-draw-occurrenceEvent"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-draw-occurrenceEvent" name="marco-{{ indice }}-{{ sub }}-draw-occurrenceEvent"
               aria-label="Tirar o instante de um Evento do Cronograma">
         <option value="">Outro instante, digitado ao lado</option>
         {% for evento in eventos_do_sorteio %}
@@ -439,7 +439,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
         {% endfor %}
       </select>
       {% endif %}
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
+      <input{% if somente_leitura %} disabled{% endif %} type="text" id="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
              name="marco-{{ indice }}-{{ sub }}-draw-occurrenceAt"
              value="{% if not marco.drawOccurrenceAt|instante_de_evento:eventos_do_sorteio %}{{ marco.drawOccurrenceAt }}{% endif %}" placeholder="2026-11-20T20:00:00-03:00"
              aria-describedby="ajuda-quando-{{ indice }}-{{ sub }}">
@@ -449,12 +449,12 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-derivation">Como a ocorrência decorre da data programada</label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-derivation"
+      <input{% if somente_leitura %} disabled{% endif %} type="text" id="marco-{{ indice }}-{{ sub }}-draw-derivation"
              name="marco-{{ indice }}-{{ sub }}-draw-derivation" value="{{ marco.drawDerivation }}">
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-normalizationRule">Regra de normalização</label>
-      <select id="marco-{{ indice }}-{{ sub }}-draw-normalizationRule"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-draw-normalizationRule"
               name="marco-{{ indice }}-{{ sub }}-draw-normalizationRule"
               aria-describedby="ajuda-normalizacao-do-sorteio-{{ indice }}-{{ sub }}">
         <option value="">Não declarada</option>
@@ -474,13 +474,13 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-normalizationText">Como a regra de normalização será publicada</label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-normalizationText"
+      <input{% if somente_leitura %} disabled{% endif %} type="text" id="marco-{{ indice }}-{{ sub }}-draw-normalizationText"
              name="marco-{{ indice }}-{{ sub }}-draw-normalizationText"
              value="{{ marco.drawNormalizationText }}">
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-substitutionRule">Regra de substituição</label>
-      <select id="marco-{{ indice }}-{{ sub }}-draw-substitutionRule"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-draw-substitutionRule"
               name="marco-{{ indice }}-{{ sub }}-draw-substitutionRule"
               aria-describedby="ajuda-substituicao-{{ indice }}-{{ sub }}">
         <option value="">Não declarada</option>
@@ -491,13 +491,13 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-substitutionText">Como a regra de substituição será publicada</label>
-      <input type="text" id="marco-{{ indice }}-{{ sub }}-draw-substitutionText"
+      <input{% if somente_leitura %} disabled{% endif %} type="text" id="marco-{{ indice }}-{{ sub }}-draw-substitutionText"
              name="marco-{{ indice }}-{{ sub }}-draw-substitutionText"
              value="{{ marco.drawSubstitutionText }}">
     </p>
     <p class="campo largo">
       <label for="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId">Etapa que habilita a participar do sorteio</label>
-      <select id="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId"
               name="marco-{{ indice }}-{{ sub }}-draw-qualifyingStageId"
               aria-describedby="ajuda-habilitacao-{{ indice }}-{{ sub }}">
         <option value="">Nenhuma — entram todas as inscrições submetidas</option>
@@ -558,7 +558,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
   <div class="campos">
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-operation">Como as pontuações se combinam <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="marco-{{ indice }}-{{ sub }}-operation" name="marco-{{ indice }}-{{ sub }}-operation" required aria-required="true"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-operation" name="marco-{{ indice }}-{{ sub }}-operation" required aria-required="true"
               aria-describedby="ajuda-operacao-{{ indice }}-{{ sub }}">
         <option value="SOMA_PONDERADA" {% if marco.operation == "SOMA_PONDERADA" %}selected{% endif %}>Soma ponderada pelos pesos das Etapas</option>
         <option value="MEDIA_PONDERADA" {% if marco.operation == "MEDIA_PONDERADA" %}selected{% endif %}>Média ponderada pelos pesos das Etapas</option>
@@ -568,7 +568,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     </p>
     <p class="campo">
       <label for="marco-{{ indice }}-{{ sub }}-normalization">Normalização <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="marco-{{ indice }}-{{ sub }}-normalization" name="marco-{{ indice }}-{{ sub }}-normalization" required aria-required="true"
+      <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-normalization" name="marco-{{ indice }}-{{ sub }}-normalization" required aria-required="true"
               aria-describedby="ajuda-normalizacao-{{ indice }}-{{ sub }}">
         <option value="NENHUMA" {% if marco.normalization == "NENHUMA" %}selected{% endif %}>Nenhuma</option>
         <option value="PELA_SOMA_DOS_PESOS" {% if marco.normalization == "PELA_SOMA_DOS_PESOS" %}selected{% endif %}>Dividir pela soma dos pesos</option>
@@ -604,7 +604,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     <legend class="oculto">Regra de corte</legend>
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutTargetKind">Quantos progridem</label>
-        <select id="marco-{{ indice }}-{{ sub }}-cutTargetKind" name="marco-{{ indice }}-{{ sub }}-cutTargetKind"
+        <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-cutTargetKind" name="marco-{{ indice }}-{{ sub }}-cutTargetKind"
                 data-resumo-nenhuma="este marco não corta" data-resumo-fixed="quantidade fixa"
                 data-resumo-from_vacancy_table="o que o quadro de vagas publicar"
                 aria-describedby="ajuda-corte-{{ indice }}-{{ sub }}">
@@ -618,7 +618,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       </p>
       <p class="campo curto so-fixo">
         <label for="marco-{{ indice }}-{{ sub }}-cutTargetCount">Alvo</label>
-        <input type="number" min="0" step="1"
+        <input{% if somente_leitura %} disabled{% endif %} type="number" min="0" step="1"
                id="marco-{{ indice }}-{{ sub }}-cutTargetCount" name="marco-{{ indice }}-{{ sub }}-cutTargetCount"
                value="{{ marco.cutTargetCount }}"
                aria-describedby="ajuda-alvo-{{ indice }}-{{ sub }}">
@@ -627,7 +627,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       </p>
       <p class="campo curto">
         <label for="marco-{{ indice }}-{{ sub }}-cutSurplusCount">Suplentes</label>
-        <input type="number" min="0" step="1"
+        <input{% if somente_leitura %} disabled{% endif %} type="number" min="0" step="1"
                id="marco-{{ indice }}-{{ sub }}-cutSurplusCount" name="marco-{{ indice }}-{{ sub }}-cutSurplusCount"
                value="{{ marco.cutSurplusCount }}"
                aria-describedby="ajuda-suplentes-{{ indice }}-{{ sub }}">
@@ -644,7 +644,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       {% else %}
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutTieOutcome">Empate na última posição</label>
-        <select id="marco-{{ indice }}-{{ sub }}-cutTieOutcome" name="marco-{{ indice }}-{{ sub }}-cutTieOutcome"
+        <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-cutTieOutcome" name="marco-{{ indice }}-{{ sub }}-cutTieOutcome"
                 aria-describedby="ajuda-empate-{{ indice }}-{{ sub }}">
           <option value="">Escolha o que acontece</option>
           <option value="ADMITS_SURPLUS" {% if marco.cutTieOutcome == "ADMITS_SURPLUS" %}selected{% endif %}>Todos os empatados progridem</option>
@@ -656,7 +656,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       {% endif %}
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutGovernedStage">Etapa que o corte alimenta</label>
-        <select id="marco-{{ indice }}-{{ sub }}-cutGovernedStage" name="marco-{{ indice }}-{{ sub }}-cutGovernedStage"
+        <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-cutGovernedStage" name="marco-{{ indice }}-{{ sub }}-cutGovernedStage"
                 aria-describedby="ajuda-governada-{{ indice }}-{{ sub }}">
           <option value="">Escolha a Etapa</option>
           <option value="NONE" {% if marco.cutGovernedStage == "NONE" %}selected{% endif %}>Não governa Etapa alguma</option>
@@ -669,7 +669,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
       </p>
       <p class="campo">
         <label for="marco-{{ indice }}-{{ sub }}-cutContinuation">Faixa seguinte</label>
-        <select id="marco-{{ indice }}-{{ sub }}-cutContinuation" name="marco-{{ indice }}-{{ sub }}-cutContinuation"
+        <select{% if somente_leitura %} disabled{% endif %} id="marco-{{ indice }}-{{ sub }}-cutContinuation" name="marco-{{ indice }}-{{ sub }}-cutContinuation"
                 aria-describedby="ajuda-continuacao-{{ indice }}-{{ sub }}">
           <option value="">Escolha se este Edital a admite</option>
           <option value="ALLOWED" {% if marco.cutContinuation == "ALLOWED" %}selected{% endif %}>Admite continuar além da faixa publicada</option>
@@ -691,9 +691,9 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     <div id="criterios-{{ indice }}-{{ sub }}">
       {% for criterio in marco.criterios %}{% include "interface/_criterio.html" with n=forloop.counter0 %}{% endfor %}
     </div>
-    <button type="button" class="acao"
+    {% if not somente_leitura %}<button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-criterio' indice sub %}?edital={{ edital.id }}"
-            hx-target="#criterios-{{ indice }}-{{ sub }}" hx-swap="beforeend">Acrescentar critério</button>
+            hx-target="#criterios-{{ indice }}-{{ sub }}" hx-swap="beforeend">Acrescentar critério</button>{% endif %}
   </section>
   {% comment %}
   **"Simular classificação"** (094, FR-2200) e **"Simular sorteio"** (098, FR-2477). Um botão por
@@ -711,7 +711,7 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
             hx-swap="innerHTML">{% if marco.orderProduction == "POR_SORTEIO" %}Simular sorteio{% else %}Simular classificação{% endif %}</button>
   </p>
   {% endif %}
-  <p class="remover">
+  {% if not somente_leitura %}<p class="remover">
     {% comment %}
     **"Aplicar aos demais Perfis"** (051, UX-110). Um envio do formulário, e não um fragmento: a
     prévia precisa do que está digitado em todos os cartões, e a gravação é a da etapa (R-001).
@@ -722,5 +722,5 @@ cartão não ganha texto visível nenhum (FR-428 da 030).
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover este marco</button>
-  </p>
+  </p>{% endif %}
 </fieldset>

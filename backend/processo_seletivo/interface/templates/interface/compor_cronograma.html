@@ -6,7 +6,7 @@
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
-      data-lista="#eventos"{% endif %}>
+      data-lista="#eventos"{% endif %}{% if somente_leitura %} data-somente-leitura{% endif %}>
   {% csrf_token %}
   <section aria-labelledby="cronograma-titulo">
     <h2 id="cronograma-titulo">Cronograma</h2>

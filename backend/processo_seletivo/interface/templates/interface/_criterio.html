@@ -8,14 +8,14 @@
   <div class="campos">
     <p class="campo curto">
       <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-order">Ordem <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <input type="number" min="1" step="1"
+      <input{% if somente_leitura %} disabled{% endif %} type="number" min="1" step="1"
              id="criterio-{{ indice }}-{{ sub }}-{{ n }}-order"
              name="criterio-{{ indice }}-{{ sub }}-{{ n }}-order"
              value="{{ criterio.order|default:'' }}" required aria-required="true">
     </p>
     <p class="campo largo">
       <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-type">Critério <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-type"
+      <select{% if somente_leitura %} disabled{% endif %} id="criterio-{{ indice }}-{{ sub }}-{{ n }}-type"
               name="criterio-{{ indice }}-{{ sub }}-{{ n }}-type" required aria-required="true"
               {% comment %}O sentido do critério na linha da tabela da etapa (053, R-003).{% endcomment %}
               data-resumo-maior_pontuacao_na_etapa="maior nota em"
@@ -27,7 +27,7 @@
     </p>
     <p class="campo largo">
       <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-target">O que ele compara <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-target"
+      <select{% if somente_leitura %} disabled{% endif %} id="criterio-{{ indice }}-{{ sub }}-{{ n }}-target"
               name="criterio-{{ indice }}-{{ sub }}-{{ n }}-target" required aria-required="true">
         <option value="">—</option>
         <optgroup label="Pontuação na Etapa">
@@ -46,7 +46,7 @@
     </p>
     <p class="campo">
       <label for="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing">Quando o valor não existe <span class="obrigatorio" aria-hidden="true">*</span></label>
-      <select id="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing"
+      <select{% if somente_leitura %} disabled{% endif %} id="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing"
               name="criterio-{{ indice }}-{{ sub }}-{{ n }}-whenMissing" required aria-required="true">
         <option value="ULTIMO_NO_CRITERIO" {% if criterio.whenMissing == "ULTIMO_NO_CRITERIO" %}selected{% endif %}>Fica por último neste critério</option>
         <option value="CRITERIO_NAO_SE_APLICA" {% if criterio.whenMissing == "CRITERIO_NAO_SE_APLICA" %}selected{% endif %}>O critério não se aplica</option>
@@ -54,9 +54,9 @@
       <span class="ajuda">Precisa ser declarado: o silêncio não vira zero nem último lugar.</span>
     </p>
   </div>
-  <p class="remover">
+  {% if not somente_leitura %}<p class="remover">
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover este critério</button>
-  </p>
+  </p>{% endif %}
 </fieldset>

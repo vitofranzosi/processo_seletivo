@@ -4,7 +4,7 @@
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
-      data-lista="#documentos"{% endif %}>
+      data-lista="#documentos"{% endif %}{% if somente_leitura %} data-somente-leitura{% endif %}>
   {% csrf_token %}
   <section aria-labelledby="inscricao-periodo">
     <h2 id="inscricao-periodo">Período de inscrições</h2>
@@ -17,7 +17,7 @@
       datas continuam sendo as do Evento — nada é digitado duas vezes.</p>
     <p class="campo largo">
       <label for="periodo-inscricoes">Evento do Cronograma</label>
-      <select id="periodo-inscricoes" name="periodo-inscricoes" aria-describedby="ajuda-periodo">
+      <select id="periodo-inscricoes" name="periodo-inscricoes" aria-describedby="ajuda-periodo"{% if somente_leitura %} disabled{% endif %}>
         <option value="">Este Edital não recebe inscrições pelo sistema</option>
         {% for evento in eventos %}
         <option value="{{ evento.id }}" {% if periodo_escolhido == evento.id %}selected{% endif %}>{{ evento.rotulo }} — {{ evento.description }}</option>
@@ -35,7 +35,7 @@
     {% with recusado_teto=recusas|dicionario_simples:"teto-inscricoes" %}
     <p class="campo curto">
       <label for="teto-inscricoes">Inscrições por candidato neste Edital</label>
-      <input type="number" min="1" step="1" inputmode="numeric" id="teto-inscricoes"
+      <input type="number" min="1" step="1" inputmode="numeric" id="teto-inscricoes"{% if somente_leitura %} disabled{% endif %}
              name="teto-inscricoes" value="{{ teto_de_inscricoes }}"
              aria-describedby="ajuda-teto{% if recusado_teto %} recusa-teto-inscricoes{% endif %}"
              {% if recusado_teto %}aria-invalid="true"{% endif %}>
@@ -67,6 +67,28 @@
         <dt>Modelo que o Edital fornece</dt>
         <dd>O anexo que o candidato baixa, preenche e devolve neste requisito. Os anexos são
           cadastrados na etapa <strong>Anexos</strong>.</dd>
+        {% comment %}
+        Os quatro abaixo vieram com a 115 e a 131 e só tinham a descrição escondida de cada campo
+        (132, FR-4510). Cada um começa pela frase do campo, palavra por palavra, e acrescenta o que
+        o campo não diz (FR-4511, D-006): uma segunda redação da mesma frase se afastaria dela na
+        primeira correção.
+        {% endcomment %}
+        <dt>Quando é pedido</dt>
+        <dd>Na convocação, o documento é pedido só a quem for convocado, e não na inscrição. Ele não
+          conta para o envio da inscrição, e o Edital o publica em seção própria. O momento não se
+          retifica depois de publicado.</dd>
+        <dt>Atendido pelo documento da inscrição</dt>
+        <dd>Só para documento pedido na convocação: quem já o enviou na inscrição não envia de novo.
+          Quem não o enviou na inscrição apresenta este na convocação.</dd>
+        <dt>Obrigatório</dt>
+        <dd>Na inscrição, sem ele a inscrição não pode ser enviada; na convocação, sem ele conferido
+          a vaga não pode ser aceita. A obrigatoriedade vale para um momento só: um documento
+          facultativo na inscrição e obrigatório na convocação são dois documentos, ligados pelo
+          aproveitamento.</dd>
+        <dt>Exigido somente quando</dt>
+        <dd>Só para documento obrigatório pedido na convocação. Escreva como o Edital publica. O
+          sistema não confere a condição: quem confere os documentos decide se ela alcança a
+          pessoa.</dd>
       </dl>
     </details>
     <p class="contadores" data-contador="#documentos" data-item=".documento" data-singular="documento" data-plural="documentos">
@@ -95,7 +117,7 @@
     {% endcomment %}
     <p class="campo largo">
       <label for="requerimento-momento">Quando pedir</label>
-      <select id="requerimento-momento" name="requerimento-momento"
+      <select id="requerimento-momento" name="requerimento-momento"{% if somente_leitura %} disabled{% endif %}
               aria-describedby="ajuda-requerimento-momento">
         <option value="">Este Edital não pede Requerimento de Matrícula</option>
         {% for valor, rotulo in momentos_do_requerimento %}
@@ -108,7 +130,7 @@
     </p>
     <p class="campo largo">
       <label for="requerimento-declaracao">Texto da declaração de veracidade</label>
-      <textarea id="requerimento-declaracao" name="requerimento-declaracao" rows="4"
+      <textarea id="requerimento-declaracao" name="requerimento-declaracao" rows="4"{% if somente_leitura %} disabled{% endif %}
                 aria-describedby="ajuda-requerimento-declaracao">{{ requerimento_declaracao }}</textarea>
       <span class="ajuda" id="ajuda-requerimento-declaracao">Obrigatório quando o Edital pede o
         requerimento. É o que o candidato lê e aceita antes de enviar, e a publicação é recusada

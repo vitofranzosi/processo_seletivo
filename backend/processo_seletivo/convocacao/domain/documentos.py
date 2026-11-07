@@ -132,5 +132,19 @@ def fundamento_das_pendencias(pendentes):
     """
     if not pendentes:
         return ""
-    itens = "; ".join(f"{nome}: {motivo}" if motivo else nome for nome, motivo in pendentes)
+    itens = "; ".join(
+        f"{nome}: {_sem_ponto_final(motivo)}" if motivo else nome for nome, motivo in pendentes
+    )
     return f"Documentação exigida na convocação não atendida — {itens}."
+
+
+def _sem_ponto_final(motivo):
+    """O motivo sem o ponto final simples, que cede à pontuação da frase (132, FR-4516, D-008).
+
+    Quem confere escreve o motivo como frase, e frase termina em ponto: o fundamento saía com ".;"
+    entre os itens e ".." no fim. Reticências, "?" e "!" dizem algo, e ficam.
+    """
+    motivo = motivo.rstrip()
+    if motivo.endswith(".") and not motivo.endswith(".."):
+        return motivo[:-1].rstrip()
+    return motivo

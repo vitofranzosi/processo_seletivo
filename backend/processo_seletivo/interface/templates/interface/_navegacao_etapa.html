@@ -1,3 +1,9 @@
+{% comment %}
+**Em somente leitura, a navegação é link** (132, FR-4506, D-005), como a da etapa Anexos. O botão
+enviava o formulário, e o servidor, que recusa gravar, respondia "Não foi possível salvar" a quem só
+queria passar à etapa seguinte.
+{% endcomment %}
+{% if somente_leitura %}{% include "interface/_navegacao_etapa_links.html" %}{% else %}
 <p class="navegacao-etapa">
   {% if anterior %}
   <button type="submit" name="destino" value="{{ anterior }}" class="acao">‹ Voltar</button>
@@ -14,3 +20,4 @@
   <button type="submit" name="destino" value="{{ proxima }}" class="botao">Avançar ›</button>
   {% endif %}
 </p>
+{% endif %}

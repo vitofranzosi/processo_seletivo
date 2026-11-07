@@ -5,7 +5,7 @@ reabre o cartão depois de um envio precisa continuar apontando o mesmo Perfil. 
 as pendências da etapa que o têm por objeto, contadas no servidor; `data-nao-salvo` diz que o que
 voltou do servidor difere do gravado — a tela não tem como saber, porque ali o valor inicial dos
 campos já é o digitado.
-{% endcomment %}<fieldset class="linha perfil" id="cartao-{{ perfil.id }}"
+{% endcomment %}<fieldset class="linha perfil" id="cartao-{{ perfil.id }}"{% if somente_leitura %} disabled{% endif %}
           data-pendencias="{{ pendencias_por_perfil|dicionario_simples:perfil.id|default:0 }}"{% if perfil.id in perfis_alterados %}
           data-nao-salvo{% endif %}>
   <legend>{{ perfil|legenda_do_perfil }}</legend>
@@ -153,10 +153,10 @@ campos já é o digitado.
     formulário, digitado agora. `hx-include` é o que o traz, e não exige `hx-vals='js:{...}'`, que
     pediria o `allowEval` do HTMX e quebraria sob a CSP desta interface.
     {% endcomment %}
-    <button type="button" class="acao"
+    {% if not somente_leitura %}<button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-modalidade' indice %}"
             hx-include="closest fieldset"
-            hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>
+            hx-target="#modalidades-{{ indice }}" hx-swap="beforeend">Acrescentar Modalidade</button>{% endif %}
     {% comment %}
     Qual das Modalidades acima é a ampla concorrência (014, D-014, FR-231).
 
@@ -309,14 +309,14 @@ campos já é o digitado.
     <div id="fatos-{{ indice }}">
       {% for fato in perfil.fatos %}{% include "interface/_fato.html" with sub=forloop.counter0 %}{% endfor %}
     </div>
-    <button type="button" class="acao"
+    {% if not somente_leitura %}<button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-fato' indice %}"
-            hx-target="#fatos-{{ indice }}" hx-swap="beforeend">Acrescentar fato</button>
+            hx-target="#fatos-{{ indice }}" hx-swap="beforeend">Acrescentar fato</button>{% endif %}
   </section>
   {% if editavel and edital %}{% include "interface/_duplicar_perfil.html" with codigo="" localidade="" erro="" aberto=False %}{% endif %}
-  <p class="remover">
+  {% if not somente_leitura %}<p class="remover">
     <button type="button" class="acao perigo"
             hx-get="{% url 'interface:fragmento-remover' %}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover este Perfil</button>
-  </p>
+  </p>{% endif %}
 </fieldset>

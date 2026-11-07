@@ -1,4 +1,4 @@
-{% load interface_extras %}<fieldset class="linha documento">
+{% load interface_extras %}<fieldset class="linha documento"{% if somente_leitura %} disabled{% endif %}>
   {% comment %}
   A legenda diz qual Documento é, e as ações moram na linha dela (056, FR-1023, FR-1024; ver `_evento.html`).
   {% endcomment %}

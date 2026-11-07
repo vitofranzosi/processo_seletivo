@@ -17,7 +17,7 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
 <div class="composicao-com-previa">
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
-      data-lista="#classificacao-perfis"{% endif %}>
+      data-lista="#classificacao-perfis"{% endif %}{% if somente_leitura %} data-somente-leitura{% endif %}>
   {% csrf_token %}
   {% if previa %}{% include "interface/_previa_da_aplicacao.html" %}{% endif %}
 <section aria-labelledby="titulo-classificacao">
@@ -122,7 +122,7 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
       {% endcomment %}
       <p class="campo">
         <label for="edital-draw-algorithm">Algoritmo e versão</label>
-        <select id="edital-draw-algorithm" name="edital-draw-algorithm">
+        <select{% if somente_leitura %} disabled{% endif %} id="edital-draw-algorithm" name="edital-draw-algorithm">
           <option value="">Não declarado</option>
           {% escolhas_do_metodo "drawMethod/algorithm" metodo_comum.drawAlgorithm as algoritmos %}
           {% for escolha in algoritmos %}
@@ -132,7 +132,7 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
       </p>
       <p class="campo">
         <label for="edital-draw-source">Fonte pública externa da semente</label>
-        <select id="edital-draw-source" name="edital-draw-source">
+        <select{% if somente_leitura %} disabled{% endif %} id="edital-draw-source" name="edital-draw-source">
           <option value="">Não declarada</option>
           {% escolhas_do_metodo "drawMethod/source" metodo_comum.drawSource as fontes %}
           {% for escolha in fontes %}
@@ -142,7 +142,7 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
       </p>
       <p class="campo">
         <label for="edital-draw-occurrence">Ocorrência que fixará a semente</label>
-        <input type="text" id="edital-draw-occurrence" name="edital-draw-occurrence"
+        <input{% if somente_leitura %} disabled{% endif %} type="text" id="edital-draw-occurrence" name="edital-draw-occurrence"
                value="{{ metodo_comum.drawOccurrence }}" placeholder="6115"
                aria-describedby="ajuda-ocorrencia-comum">
         {% comment %}
@@ -164,7 +164,7 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
       <p class="campo">
         <label for="edital-draw-occurrenceAt">Quando a ocorrência acontece</label>
       {% if eventos_do_sorteio %}
-      <select id="edital-draw-occurrenceEvent" name="edital-draw-occurrenceEvent"
+      <select{% if somente_leitura %} disabled{% endif %} id="edital-draw-occurrenceEvent" name="edital-draw-occurrenceEvent"
               aria-label="Tirar o instante de um Evento do Cronograma">
         <option value="">Outro instante, digitado ao lado</option>
         {% for evento in eventos_do_sorteio %}
@@ -172,17 +172,17 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
         {% endfor %}
       </select>
       {% endif %}
-        <input type="text" id="edital-draw-occurrenceAt" name="edital-draw-occurrenceAt"
+        <input{% if somente_leitura %} disabled{% endif %} type="text" id="edital-draw-occurrenceAt" name="edital-draw-occurrenceAt"
                value="{% if not metodo_comum.drawOccurrenceAt|instante_de_evento:eventos_do_sorteio %}{{ metodo_comum.drawOccurrenceAt }}{% endif %}" placeholder="2026-11-20T20:00:00-03:00">
       </p>
       <p class="campo">
         <label for="edital-draw-derivation">Como a ocorrência decorre da data programada</label>
-        <input type="text" id="edital-draw-derivation" name="edital-draw-derivation"
+        <input{% if somente_leitura %} disabled{% endif %} type="text" id="edital-draw-derivation" name="edital-draw-derivation"
                value="{{ metodo_comum.drawDerivation }}">
       </p>
       <p class="campo">
         <label for="edital-draw-normalizationRule">Regra de normalização</label>
-        <select id="edital-draw-normalizationRule" name="edital-draw-normalizationRule">
+        <select{% if somente_leitura %} disabled{% endif %} id="edital-draw-normalizationRule" name="edital-draw-normalizationRule">
           <option value="">Não declarada</option>
           <option value="DIGITOS_EM_SEQUENCIA" {% if metodo_comum.drawNormalizationRule == "DIGITOS_EM_SEQUENCIA" %}selected{% endif %}>Os dígitos do material, na ordem em que aparecem</option>
           <option value="TEXTO_LITERAL" {% if metodo_comum.drawNormalizationRule == "TEXTO_LITERAL" %}selected{% endif %}>O texto literal do material observado</option>
@@ -190,19 +190,19 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
       </p>
       <p class="campo">
         <label for="edital-draw-normalizationText">Como a regra de normalização será publicada</label>
-        <input type="text" id="edital-draw-normalizationText" name="edital-draw-normalizationText"
+        <input{% if somente_leitura %} disabled{% endif %} type="text" id="edital-draw-normalizationText" name="edital-draw-normalizationText"
                value="{{ metodo_comum.drawNormalizationText }}">
       </p>
       <p class="campo">
         <label for="edital-draw-substitutionRule">Regra de substituição</label>
-        <select id="edital-draw-substitutionRule" name="edital-draw-substitutionRule">
+        <select{% if somente_leitura %} disabled{% endif %} id="edital-draw-substitutionRule" name="edital-draw-substitutionRule">
           <option value="">Não declarada</option>
           <option value="OCORRENCIA_SEGUINTE_DA_MESMA_FONTE" {% if metodo_comum.drawSubstitutionRule == "OCORRENCIA_SEGUINTE_DA_MESMA_FONTE" %}selected{% endif %}>A ocorrência seguinte da mesma fonte</option>
         </select>
       </p>
       <p class="campo">
         <label for="edital-draw-substitutionText">Como a regra de substituição será publicada</label>
-        <input type="text" id="edital-draw-substitutionText" name="edital-draw-substitutionText"
+        <input{% if somente_leitura %} disabled{% endif %} type="text" id="edital-draw-substitutionText" name="edital-draw-substitutionText"
                value="{{ metodo_comum.drawSubstitutionText }}">
       </p>
     </fieldset>
@@ -228,11 +228,11 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
     <div id="marcos-{{ perfil.id }}">
       {% for marco in perfil.marcos %}{% include "interface/_marco.html" with indice=perfil.id sub=forloop.counter0 %}{% endfor %}
     </div>
-    <button type="button" class="acao"
+    {% if not somente_leitura %}<button type="button" class="acao"
             hx-get="{% url 'interface:fragmento-marco' perfil.id %}?edital={{ edital.id }}"
             {% comment %}Os cartões que o Perfil já tem na tela: o único nasce com o corte padrão, e o segundo não (051, FR-927).{% endcomment %}
             hx-include="#marcos-{{ perfil.id }}"
-            hx-target="#marcos-{{ perfil.id }}" hx-swap="beforeend">Acrescentar marco</button>
+            hx-target="#marcos-{{ perfil.id }}" hx-swap="beforeend">Acrescentar marco</button>{% endif %}
   </fieldset>
   {% endfor %}
   </div>
@@ -250,4 +250,9 @@ Edital, e não podem viajar na gravação da etapa. No estreito, a folha o põe 
 <script src="{% static 'interface/vista-do-conjunto.js' %}" defer></script>
 <script src="{% static 'interface/classificacao.js' %}" defer></script>
 <script src="{% static 'interface/previa-da-classificacao.js' %}" defer></script>
+{% comment %}
+Em somente leitura, cada campo sai desabilitado, e os botões que só leem — simular, conferir na
+Caixa — continuam: o script devolve ao pedido deles o que o cartão mostra (132, FR-4507, D-004).
+{% endcomment %}
+{% if somente_leitura %}<script src="{% static 'interface/somente-leitura.js' %}" defer></script>{% endif %}
 {% endblock %}

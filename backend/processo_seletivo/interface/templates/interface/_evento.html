@@ -1,4 +1,4 @@
-{% load interface_extras %}<fieldset class="linha evento">
+{% load interface_extras %}<fieldset class="linha evento"{% if somente_leitura %} disabled{% endif %}>
   {% comment %}
   A legenda diz **qual** Evento é (056, FR-1024, D-004): a categoria com a posição, que o
   `ordenacao.js` escreve em `[data-ordem]`, e o Tipo como o servidor o tem. Eram três legendas iguais

@@ -250,6 +250,23 @@ def _oferta(vagas, tipo_de_reserva, limite_da_reserva):
     return {"titulo": "Cadastro reserva", "detalhe": detalhe}
 
 
+class DocumentoAnunciado(str):
+    """O nome do documento como a página o anuncia, sabendo se é obrigatório (132, FR-4514).
+
+    É o nome, e continua sendo — quem compara, procura ou imprime a lista lê o texto de sempre. O
+    que ele acrescenta é a obrigatoriedade, para a página marcar o facultativo e contar só os
+    obrigatórios: sem ela, "Currículo" e "Documento de identificação" eram a mesma coisa para quem
+    lê antes de se inscrever.
+    """
+
+    obrigatorio: bool
+
+    def __new__(cls, requisito):
+        anunciado = super().__new__(cls, nome_com_a_condicao(requisito))
+        anunciado.obrigatorio = bool(requisito.get("required", True))
+        return anunciado
+
+
 def _anunciados_do_momento(conteudo, perfil, *, momento):
     """O que vale para todos no Perfil, e o que cada modalidade acrescenta, num momento só."""
     perfil_id = str(perfil.get("id"))
@@ -258,7 +275,7 @@ def _anunciados_do_momento(conteudo, perfil, *, momento):
     por_modalidade = []
     for modalidade in perfil.get("competitionModalities") or []:
         com_ela = [
-            nome_com_a_condicao(item)
+            DocumentoAnunciado(item)
             for item in aplicaveis(
                 conteudo,
                 profile_id=perfil_id,
@@ -271,7 +288,7 @@ def _anunciados_do_momento(conteudo, perfil, *, momento):
             por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
     # O nome leva a condição de exigência, como o PDF (131, FR-4454): quem lê antes de se inscrever
     # sabe que o documento só será pedido no caso que o Edital diz.
-    return [nome_com_a_condicao(item) for item in sempre], por_modalidade
+    return [DocumentoAnunciado(item) for item in sempre], por_modalidade
 
 
 def _documentos_anunciados(conteudo, perfil):
@@ -301,9 +318,14 @@ def _documentos_anunciados(conteudo, perfil):
         "na_convocacao": na_convocacao,
         "na_convocacao_por_modalidade": na_convocacao_por_modalidade,
         # **Quantos são**, para o resumo dizer isso antes de a pessoa abrir. Um triângulo com
-        # “Documentos que serão pedidos” parece enfeite; “2 documentos que serão pedidos” é
-        # informação — e é o que decide se dá para se inscrever agora ou se é preciso preparar.
-        "total": len(sempre) + sum(len(grupo["documentos"]) for grupo in por_modalidade),
+        # “Documentos que serão pedidos” parece enfeite; um número é informação — e é o que decide
+        # se dá para se inscrever agora ou se é preciso preparar.
+        #
+        # **Só os obrigatórios a todos do Perfil na inscrição** (132, FR-4513, D-007; decisão do
+        # usuário de 07/11/2026). A conta somava o facultativo e o que só uma modalidade pede, e
+        # quem lia "4 documentos" tomava a soma por sua. O resto continua na lista, com as marcas.
+        "total": sum(1 for documento in sempre if documento.obrigatorio),
+        "pede_na_inscricao": bool(sempre or por_modalidade),
     }
 
 

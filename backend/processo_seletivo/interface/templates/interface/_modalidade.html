@@ -13,7 +13,7 @@
   remover e que não aparecia mais em lugar nenhum.
   {% endcomment %}
   {% with alvo="quadro-de-"|add:modalidade.id %}
-  <p class="acoes-da-linha"><span class="grupo">
+  {% if not somente_leitura %}<p class="acoes-da-linha"><span class="grupo">
     {% comment %}
     O mesmo `alvo` nos dois atributos, e por isso escrito uma vez só: `junto=` diz ao servidor o que
     apagar, e `data-junto` diz a `remocao.js` o que **contar** antes de perguntar. Repetir o valor
@@ -30,7 +30,7 @@
             hx-get="{% url 'interface:fragmento-remover' %}?junto={{ alvo }}"
             data-junto="{{ alvo }}"
             hx-target="closest fieldset" hx-swap="outerHTML">Remover esta Modalidade</button>
-  </span></p>
+  </span></p>{% endif %}
   {% endwith %}
   {% comment %}
   Os dois identificadores viajam ocultos. O da Regra existe mesmo antes de a Regra existir: a
