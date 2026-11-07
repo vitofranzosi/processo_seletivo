@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentos no GPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: o mesmo caderno dos guias da jornada do sorteio, para que os três se leiam como uma série: capítulo com narrativa e ficha, telas reais abaixo. */
+:root{
+  --bg:#f3f4f0; --surface:#ffffff; --ink:#1a211d; --muted:#57625b; --line:#d5dad3; --soft:#eaede7;
+  --accent:#245e6b; --accent-soft:#e0eef0;
+  --ac:#35598d; --ac-soft:#e3eaf5; --pcd:#77489a; --pcd-soft:#eee5f6; --ppi:#9a5f0c; --ppi-soft:#f7ebd8;
+  --ok:#2c6a3d; --ok-soft:#e2eee4; --edital:#3d5a73; --edital-soft:#e4ecf2; --prev:#5d5b70; --prev-soft:#ecebf2;
+  --warn:#8a5a00; --warn-soft:#fff2da; --bad:#a1382a; --bad-soft:#f9e5e1; --idea:#2f6b5a; --idea-soft:#e1f0ea;
+  --f-display:"Literata", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111513; --surface:#1a201d; --ink:#e2e8e3; --muted:#9aa59e; --line:#2e3732; --soft:#222a25;
+  --accent:#7cc3cf; --accent-soft:#1b2f33;
+  --ac:#96b5e3; --ac-soft:#1e2938; --pcd:#caa8e6; --pcd-soft:#2c2236; --ppi:#e4af5e; --ppi-soft:#33281a;
+  --ok:#7cc591; --ok-soft:#1f3326; --edital:#9cc0dc; --edital-soft:#1d2a34; --prev:#bdbad3; --prev-soft:#27263a;
+  --warn:#e9b95c; --warn-soft:#33291a; --bad:#ee907f; --bad-soft:#3a201c; --idea:#86d0b8; --idea-soft:#1b3129;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#111513; --surface:#1a201d; --ink:#e2e8e3; --muted:#9aa59e; --line:#2e3732; --soft:#222a25;
+  --accent:#7cc3cf; --accent-soft:#1b2f33;
+  --ac:#96b5e3; --ac-soft:#1e2938; --pcd:#caa8e6; --pcd-soft:#2c2236; --ppi:#e4af5e; --ppi-soft:#33281a;
+  --ok:#7cc591; --ok-soft:#1f3326; --edital:#9cc0dc; --edital-soft:#1d2a34; --prev:#bdbad3; --prev-soft:#27263a;
+  --warn:#e9b95c; --warn-soft:#33291a; --bad:#ee907f; --bad-soft:#3a201c; --idea:#86d0b8; --idea-soft:#1b3129;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding-block:36px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:72px}
+h1,h2,h3{font-family:var(--f-display);font-weight:650;line-height:1.18;text-wrap:balance;margin:0}
+h1{font-size:2.55rem} h2{font-size:1.75rem} h3{font-size:1.06rem;font-family:var(--f-body);font-weight:700}
+p{margin:0;max-width:70ch} ul,ol{margin:0}
+.eyebrow{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .small{font-size:.87rem}
+code,.mono{font-family:var(--f-mono);font-size:.84em}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.c{display:inline-block;font-weight:700;font-family:var(--f-mono);font-size:.86em;padding:0 5px;border-radius:4px;white-space:nowrap}
+.c.ac{background:var(--ac-soft);color:var(--ac)} .c.pcd{background:var(--pcd-soft);color:var(--pcd)} .c.ppi{background:var(--ppi-soft);color:var(--ppi)}
+
+/* selos de evidência */
+.s{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;vertical-align:2px;white-space:nowrap}
+.s.gps{background:var(--ok-soft);color:var(--ok)} .s.prev{background:var(--prev-soft);color:var(--prev)} .s.edital{background:var(--edital-soft);color:var(--edital)} .s.dec{background:var(--warn-soft);color:var(--warn)} .s.mel{background:var(--idea-soft);color:var(--idea)} .s.def{background:var(--bad-soft);color:var(--bad)} .s.sim{background:var(--soft);color:var(--muted)}
+
+header.capa{display:flex;flex-direction:column;gap:16px}
+.lede{font-size:1.14rem;max-width:64ch}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.btn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:600;font-size:.88rem}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted);align-items:center}
+nav.indice{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 20px;font-size:.92rem;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:14px}
+nav.indice a{text-decoration:none;color:var(--ink);display:flex;gap:8px}
+nav.indice a span{font-family:var(--f-mono);color:var(--accent);min-width:2.2em}
+nav.indice a:hover{color:var(--accent)}
+
+/* duas histórias */
+.duas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.duas>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+
+/* linha do tempo */
+.trilho{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.fase{padding:14px 12px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--line);min-width:0}
+.fase:last-child{border-right:0}
+.fase .n{font-family:var(--f-display);font-size:1.5rem;color:var(--accent);line-height:1}
+.fase b{font-size:.92rem;line-height:1.3}
+.fase ul{padding-left:1em;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.fase .quando{font-family:var(--f-mono);font-size:.72rem;color:var(--ink);background:var(--soft);border-radius:4px;padding:2px 6px;align-self:flex-start}
+.fase.simulada .quando{background:var(--warn-soft);color:var(--warn)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.69rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--soft)}
+tr:last-child td{border-bottom:0}
+.tabela{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+td.nw{white-space:nowrap}
+
+/* mapa de estados */
+.raias{display:flex;flex-direction:column;gap:10px}
+.raia{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center}
+.raia>b{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.estados{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.estado{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:.84rem;white-space:nowrap}
+.estado.ato{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.estado.fora{border-style:dashed;color:var(--muted)}
+.seta{color:var(--muted);font-size:.9rem}
+.desvios{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.desvio{border-left:3px solid var(--warn);background:var(--surface);border-radius:0 8px 8px 0;padding:10px 12px;font-size:.88rem;display:flex;flex-direction:column;gap:4px;min-width:0}
+.desvio b{font-size:.9rem}
+
+/* capítulo */
+.cap{display:flex;flex-direction:column;gap:22px;scroll-margin-top:16px}
+.cap-head{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:baseline}
+.cap-n{font-family:var(--f-display);font-size:3.2rem;line-height:.85;color:var(--accent);grid-row:span 3}
+.cap-head .eyebrow{grid-column:2}
+.pergunta-op{font-family:var(--f-display);font-size:1.18rem;font-style:italic;color:var(--muted);grid-column:2;max-width:64ch}
+.corpo{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+.narr{display:flex;flex-direction:column;gap:12px}
+.ficha{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;font-size:.88rem}
+.ficha div{display:flex;flex-direction:column;gap:2px}
+.ficha dt,.ficha .k{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ficha .prox{border-top:1px solid var(--line);padding-top:10px}
+.ficha .prox .k{color:var(--accent)}
+.atencao{border-left:3px solid var(--bad);background:var(--bad-soft);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.atencao b.t{color:var(--bad);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.cand{border-left:3px solid var(--ac);background:var(--surface);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.cand b.t{color:var(--ac);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.q{border-left:3px solid var(--warn);background:var(--warn-soft);padding:10px 14px;border-radius:0 8px 8px 0;max-width:80ch;font-size:.92rem}
+.q b{color:var(--warn)}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block;background:var(--surface)}
+figcaption{font-size:.84rem;color:var(--muted);max-width:90ch}
+.telas{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.telas.uma{grid-template-columns:1fr}
+.blocos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.bloco{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;min-width:0}
+.bloco b{font-size:.9rem}
+.bloco.of{border-color:var(--accent)} .bloco.of b::before{content:"Ato oficial · ";color:var(--accent);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.bloco.le b::before{content:"Só consulta · ";color:var(--muted);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.escada{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.degrau{display:grid;grid-template-columns:38px minmax(150px,220px) 1fr auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:baseline;font-size:.88rem}
+.degrau:last-child{border-bottom:0}
+.degrau .i{font-family:var(--f-mono);color:var(--accent)}
+.degrau.fora{background:var(--soft)}
+
+/* listas finais */
+.diag{display:flex;flex-direction:column;gap:10px;padding-left:0;list-style:none}
+.diag li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:52px 1fr;gap:4px 12px;min-width:0}
+.diag .p{font-family:var(--f-mono);font-weight:500;grid-row:span 3;color:var(--bad)}
+.diag .p.p2{color:var(--warn)} .diag .p.p3{color:var(--idea)}
+.diag .cat{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.diag .ev{font-size:.85rem;color:var(--muted)}
+.diag .int{font-size:.88rem}
+.diag .int b{color:var(--idea)}
+.aceite{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.aceite div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;min-width:0}
+.aceite b{font-size:.92rem}
+.aceite .gap{border-color:var(--warn);background:var(--warn-soft)}
+footer{border-top:1px solid var(--line);padding-top:18px;font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+
+/* modo apresentação */
+#barra{display:none}
+.modo .fora-do-modo{display:none}
+.modo .cap{display:none}
+.modo .cap.atual{display:flex}
+.modo #barra{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:10px;align-items:center;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#barra .pos{font-family:var(--f-mono);font-size:.85rem;min-width:64px;text-align:center}
+#barra button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 14px;cursor:pointer}
+#barra button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:820px){
+  h1{font-size:1.95rem} .cap-n{font-size:2.3rem}
+  .corpo,.duas,.telas{grid-template-columns:1fr}
+  .trilho{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fase{border-bottom:1px solid var(--line)}
+  .raia{grid-template-columns:1fr}
+  .degrau{grid-template-columns:30px 1fr;}
+  .degrau>:nth-child(3),.degrau>:nth-child(4){grid-column:2}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+.aviso-demo{border-left:3px solid var(--warn);background:var(--warn-soft);padding:12px 16px;border-radius:0 8px 8px 0;max-width:80ch;font-size:.93rem}
+.narr ul{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:70ch}
+.quatro{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.quatro>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px;font-size:.88rem;min-width:0}
+.quatro .n{font-family:var(--f-display);font-size:1.6rem;color:var(--accent);line-height:1}
+.quatro .quem{margin-top:auto;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.cenarios{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.cenario{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:.9rem;min-width:0}
+.cenario .tag{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+figure.alta .rolo{max-height:760px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+figure.alta .rolo img{border:0;border-radius:0}
+table.diagm td:first-child{font-family:var(--f-mono);font-weight:700}
+td.p1{color:var(--bad)} td.p2{color:var(--warn)} td.p3{color:var(--idea)}
+ul.bons{padding-left:1.2em;display:flex;flex-direction:column;gap:4px;max-width:80ch}
+@media (max-width:820px){.quatro{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.quatro{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="capa fora-do-modo">
+  <span class="eyebrow">GPS · Cefor/Ifes · complemento do guia da jornada do sorteio</span>
+  <h1>Da inscrição à matrícula: como os documentos percorrem o GPS</h1>
+  <p class="lede">Um certame de demonstração inteiro, com pessoas e arquivos fictícios. O operador configura oito documentos em dois momentos. Os candidatos enviam arquivos na inscrição. A comissão faz a análise documental, sorteia, convoca e confere os documentos da convocação. Depois registra aceite, indeferimento, desistência e não atendimento.</p>
+  <div class="aviso-demo"><b>Tudo aqui é fictício.</b> Os Editais 90/2026 e 93/2026, as nove pessoas, os CPFs e os PDFs foram criados para esta demonstração, num banco descartável e isolado, sobre a <span class="mono">main</span> do GPS em 06/11/2026 (<span class="mono">ffde747b</span>). Nenhum e-mail saiu: as mensagens ficaram no terminal do servidor de demonstração. A regra documental (quais documentos, em que momento) é inventada e serve só para mostrar o mecanismo.</div>
+  <div class="legenda">
+    <span><span class="s gps">Comprovado</span> visto funcionando nesta demonstração</span>
+    <span><span class="s prev">Visto no código</span> lido, não exercitado</span>
+    <span><span class="s edital">Decisão registrada</span> escolha escrita numa spec</span>
+    <span><span class="s dec">Não existe</span> o GPS não tem</span>
+    <span><span class="s def">Provável defeito</span></span>
+    <span><span class="s mel">Melhoria</span></span>
+  </div>
+  <div class="controls"><button class="btn" id="apresentar" type="button">Modo apresentação</button><span class="small muted">Setas do teclado avançam; Esc sai.</span></div>
+  <nav class="indice" aria-label="Capítulos">
+    <a href="#cap-1"><span>1</span>Dois momentos, oito documentos</a>
+    <a href="#cap-2"><span>2</span>O operador configura</a>
+    <a href="#cap-3"><span>3</span>A candidata se inscreve</a>
+    <a href="#cap-4"><span>4</span>Análise documental da inscrição</a>
+    <a href="#cap-5"><span>5</span>Do sorteio à convocação</a>
+    <a href="#cap-6"><span>6</span>O convocado envia</a>
+    <a href="#cap-7"><span>7</span>A equipe confere</a>
+    <a href="#cap-8"><span>8</span>Quatro acontecimentos</a>
+    <a href="#cap-9"><span>9</span>Cenários A, B e C</a>
+    <a href="#cap-10"><span>10</span>Vaga, aceite e matrícula</a>
+    <a href="#cap-11"><span>11</span>O que não é óbvio</a>
+    <a href="#roteiro"><span>B</span>Roteiro operacional</a>
+    <a href="#diagnostico"><span>C</span>Diagnóstico de UX</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="cap" id="cap-1">
+  <div class="cap-head"><span class="cap-n">1</span><span class="eyebrow">A distinção que organiza tudo</span><h2>Dois momentos, oito documentos</h2><p class="pergunta-op">"O que se pede na inscrição é o mesmo que se pede de quem é convocado?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Não. No GPS, cada Documento Exigido tem um <b>momento</b>: <b>na inscrição</b> ou <b>na convocação</b>. O momento fica no próprio documento, no campo "Quando é pedido", e não pode ser mudado por Retificação.</p>
+      <p>O que se pede na inscrição chega de <b>todos</b> que se inscrevem e é lido pela comissão na análise documental. O que se pede na convocação chega só de <b>quem for chamado</b>, dentro do prazo da chamada, e é conferido item a item.</p>
+      <p>Um documento da convocação pode <b>aproveitar</b> o de mesmo propósito da inscrição. Quem já o enviou não envia de novo, mas a conferência começa do zero: o aproveitamento leva o arquivo, não o julgamento.</p>
+      <p>A tabela ao lado é a regra fictícia desta demonstração. Ela foi montada para exercitar as formas que o GPS aceita: documento de todos, documento de uma modalidade, documento facultativo e aproveitamento.</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Onde isto vive no código</span><span><span class="mono">editais/domain/documentos.py</span>, com <span class="mono">moment</span> igual a <span class="mono">AT_ENROLLMENT</span> ou <span class="mono">AT_CALL</span>, e a ausência lida como inscrição. Specs 009, 044 e 115 (FR-3563 a FR-3570).</span></div>
+      <div><span class="k">A quem um documento se aplica</span><span>A todos, a um Perfil, a uma modalidade de um Perfil, ou a uma modalidade em todos os Perfis que a têm. Não há recorte por oferta, campus ou condição livre.</span></div>
+      <div><span class="k">Obrigatório ou facultativo</span><span>Uma caixa por documento. Na inscrição, sem o obrigatório a inscrição não é enviada. Na convocação, sem o obrigatório conferido, o aceite não é registrado.</span></div>
+    </div>
+  </div>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>#</th><th>Documento</th><th>Quando é pedido</th><th>De quem</th><th>Exigência</th><th>Observação</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Documento de identificação com foto</td><td>Inscrição</td><td>Todos</td><td>Obrigatório</td><td>—</td></tr>
+      <tr><td>2</td><td>Laudo médico</td><td>Inscrição</td><td><span class="c pcd">PCD</span></td><td>Obrigatório</td><td>"Emitido nos últimos 12 meses"</td></tr>
+      <tr><td>3</td><td>Autodeclaração étnico-racial</td><td>Inscrição</td><td><span class="c ppi">PPI</span></td><td>Obrigatório</td><td>—</td></tr>
+      <tr><td>4</td><td>Currículo</td><td>Inscrição</td><td>Todos</td><td>Facultativo</td><td>—</td></tr>
+      <tr><td>5</td><td>Documento de identificação com foto</td><td>Convocação</td><td>Todos</td><td>Obrigatório</td><td><b>Aproveita o nº 1</b>: quem enviou na inscrição não envia de novo</td></tr>
+      <tr><td>6</td><td>Comprovante de escolaridade</td><td>Convocação</td><td>Todos</td><td>Obrigatório</td><td>—</td></tr>
+      <tr><td>7</td><td>Laudo médico atualizado</td><td>Convocação</td><td><span class="c pcd">PCD</span></td><td>Obrigatório</td><td>"Emitido nos últimos 90 dias"</td></tr>
+      <tr><td>8</td><td>Comprovante de residência</td><td>Convocação</td><td>Todos</td><td>Facultativo</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Quem é quem nesta demonstração</h3>
+  <p class="small muted">O elenco saiu do sorteio real de cada Edital, e não de escolha prévia: cotistas também concorrem na ampla, e o sorteio decidiu quem ficou com qual vaga. Por isso os papéis não seguem a lista "A ampla, B PcD, C PPI, D pendência" do pedido; os quatro casos estão aqui, distribuídos entre quem o sorteio chamou.</p>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>Pessoa (fictícia)</th><th>Concorre em</th><th>O que acontece</th><th>Cenário</th></tr></thead>
+    <tbody>
+      <tr><td>Alice Andrade</td><td><span class="c ac">Ampla</span></td><td>Inscreve-se pelo portal: erra o arquivo, envia, substitui, revisa, recebe o comprovante (Edital 90)</td><td>Inscrição</td></tr>
+      <tr><td>Ícaro Iglesias</td><td><span class="c pcd">PCD</span></td><td>Laudo da inscrição de 2023: indeferido na análise documental; fica "para regularizar"</td><td>Inscrição</td></tr>
+      <tr><td>Fábio Fontes</td><td><span class="c ac">Ampla</span></td><td>Titular. Envia tudo certo; a identificação vem aproveitada da inscrição; aceite</td><td><b>A</b></td></tr>
+      <tr><td>Carla Cardoso</td><td><span class="c ppi">PPI</span></td><td>Titular da PPI. Escolaridade ilegível, pendência, corrige, aceite</td><td><b>B</b></td></tr>
+      <tr><td>Bruno Barbosa</td><td><span class="c pcd">PCD</span></td><td>Titular da PcD. Laudo atualizado fora dos 90 dias, pendência que não corrige, indeferimento</td><td><b>C</b></td></tr>
+      <tr><td>Helena Hora</td><td><span class="c ppi">PPI</span> (ocupa a ampla)</td><td>No 93, desiste por escrito. No 90, não responde no prazo e recebe o não atendimento</td><td><b>C</b></td></tr>
+      <tr><td>Gael Guimarães, Davi Duarte</td><td><span class="c pcd">PCD</span>, <span class="c ac">Ampla</span></td><td>Suplentes chamados depois do indeferimento e da desistência</td><td>Suplência</td></tr>
+    </tbody>
+  </table></div>
+  <div class="atencao"><b class="t">Por que há dois Editais</b><span>O Edital 90 foi montado primeiro, e nele Alice se inscreveu pelo portal. Lá os titulares foram convocados pelo botão "Convocar os titulares num ato só", e as quatro convocações nasceram <b>sem lista de documentos</b> (capítulo 5). Para mostrar o ciclo documental que funciona, o mesmo Edital foi montado de novo como 93/2026: mesmas pessoas, mesmos documentos, inscrições pelos mesmos comandos do portal, e convocação uma a uma. Um terceiro, o 92, ficou pelo caminho por erro de montagem: reaproveitava a extração já observada para o 90. <span class="s def">Provável defeito</span></span></div>
+</section>
+
+<!-- 2 -->
+<section class="cap" id="cap-2">
+  <div class="cap-head"><span class="cap-n">2</span><span class="eyebrow">Elaborador · antes da publicação</span><h2>O operador configura</h2><p class="pergunta-op">"Onde digo ao sistema o que pedir, de quem e quando?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Os documentos ficam na etapa <b>Inscrição</b> do assistente de composição do Edital, na seção <b>Documentos exigidos</b>. Cada documento é um cartão com nove campos:</p>
+      <ul>
+        <li>chave e nome;</li>
+        <li>instrução ao candidato;</li>
+        <li>Perfil;</li>
+        <li>modalidade;</li>
+        <li>"Quando é pedido";</li>
+        <li>"Atendido pelo documento da inscrição";</li>
+        <li>modelo que o Edital fornece;</li>
+        <li>"Obrigatório".</li>
+      </ul>
+      <p>Só quem tem o papel <b>Elaborador</b> (<span class="mono">edital:elaborar</span>) e só com o Edital <b>em elaboração</b>. Publicado, o Edital mostra a mesma tela com o aviso "Somente leitura", e mudar passa a ser Retificação.</p>
+      <p>Para não começar do zero, "Partir de outro" copia os documentos de um Edital já publicado. Não há catálogo de tipos de documento: é decisão registrada da spec 009, que veda taxonomia.</p>
+      <p>Ao salvar, o GPS confere a coerência. Uma chave repetida é recusada. Um documento da inscrição marcado para "aproveitar" outro também é recusado, com a mensagem: "só o documento pedido na convocação aproveita outro".</p>
+      <p>Na publicação, a lista é congelada no conteúdo do Edital. O PDF a escreve na seção "Quais documentos enviar?", com um bloco próprio "Documentos exigidos na convocação".</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Papel</span><span>Elaborador. Submeter, homologar e publicar são de outros papéis.</span></div>
+      <div><span class="k">Tela</span><span>Edital › Compor › 7. Inscrição › Documentos exigidos › "Acrescentar documento"</span></div>
+      <div><span class="k">Verifica</span><span>A Revisão da composição lista os oito documentos, cada um com "Pedido: na inscrição" ou "na convocação"; o PDF agrupa por momento.</span></div>
+      <div><span class="k">Depois de publicado</span><span>Retificação muda nome, instrução, obrigatoriedade, recorte e modelo. <b>Não</b> muda chave, momento nem aproveitamento, e <b>não</b> acrescenta nem remove documento. <span class="s prev">Visto no código</span></span></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Submeter, homologar e publicar o Edital.</span></div>
+    </div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/01-partir-de-outro.jpg" alt="Tela Partir de outro Edital" loading="lazy"><figcaption>"Partir de outro" lista o que vem: "documentos exigidos" estão na cópia. Arquivos, avaliações e resultados não vêm. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/02-documentos-exigidos.jpg" alt="Seção Documentos exigidos com o primeiro cartão" loading="lazy"><figcaption>A seção no Edital publicado: "Somente leitura" no topo, mas campos, setas e lixeira continuam com aparência de editáveis. <span class="s mel">Melhoria</span></figcaption></figure>
+    <figure><img src="capturas/03-cartao-na-convocacao.jpg" alt="Cartão do documento 5, pedido na convocação, que aproveita o da inscrição" loading="lazy"><figcaption>O documento 5: "Na convocação", atendido pelo documento de identificação da inscrição. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/04-cartao-laudo-pcd.jpg" alt="Cartão do laudo médico exigido da modalidade PcD" loading="lazy"><figcaption>O laudo: "Exigido apenas da modalidade PCD, em todos os Perfis que a têm". É o recorte da spec 044. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/05-como-preencher.jpg" alt="Ajuda Como preencher estes campos" loading="lazy"><figcaption>"Como preencher estes campos" explica chave, instrução, recorte e modelo, mas não fala de momento, aproveitamento nem obrigatoriedade por momento. Essas explicações ficam só abaixo de cada campo. <span class="s mel">Melhoria</span></figcaption></figure>
+    <figure><img src="capturas/06-recusa-aproveitamento.jpg" alt="Recusa ao salvar aproveitamento em documento da inscrição" loading="lazy"><figcaption>O campo de aproveitamento fica disponível num documento da inscrição, e só o salvar recusa. A mensagem é clara. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/07-pdf-documentos.jpg" alt="Página do PDF do Edital com os documentos" loading="lazy"><figcaption>O PDF publicado separa o que se pede na inscrição do que se pede na convocação e escreve a frase do aproveitamento. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <h3>As dez perguntas da configuração</h3>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>Pergunta</th><th>Resposta no GPS de hoje</th></tr></thead>
+    <tbody>
+      <tr><td>1. Onde se cadastram os documentos?</td><td>Compor › Inscrição › Documentos exigidos, pelo Elaborador, com o Edital em elaboração. <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>2. Como se define o momento?</td><td>Campo "Quando é pedido", por documento: na inscrição ou na convocação. <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>3. Varia por modalidade, Perfil, oferta?</td><td>Por Perfil, por modalidade de um Perfil e por modalidade em todos os Perfis. Por oferta, campus ou condição livre, não. <span class="s gps">Comprovado</span> <span class="s edital">Decisão registrada</span></td></tr>
+      <tr><td>4. Como se define a obrigatoriedade?</td><td>Caixa "Obrigatório". Desmarcada, o documento aparece como "(facultativo)" ou "Opcional". <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>5. Há tipos de documento reutilizáveis?</td><td>Não há catálogo. Reutiliza-se copiando um Edital ("Partir de outro") e, para o modelo, um Anexo do próprio Edital. <span class="s dec">Não existe</span> <span class="s edital">Decisão registrada</span></td></tr>
+      <tr><td>6. Dá para pedir documento adicional depois?</td><td>Só o que o Edital já declarou "na convocação". Um pedido avulso não existe. A pendência pede um novo arquivo do mesmo documento. A Retificação não acrescenta documento. <span class="s dec">Não existe</span></td></tr>
+      <tr><td>7. Como as regras ficam vinculadas ao Edital publicado?</td><td>A publicação congela a lista. A inscrição enviada grava a "lista exigida" da versão que a pessoa aceitou. A convocação grava a lista da chamada da versão vigente no ato de convocar. <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>8. E se uma Retificação mexer nos documentos?</td><td>Muda nome, instrução, obrigatoriedade, recorte e modelo. Quem já enviou a inscrição mantém a lista gravada. Quem está em rascunho precisa reconhecer a versão nova, e os arquivos que deixam de valer são descartados com aviso. <span class="s prev">Visto no código</span></td></tr>
+      <tr><td>9. Como o candidato fica sabendo?</td><td>Pela página pública ("N documentos que serão pedidos", "Se for convocado, a convocação pedirá também"), pelo PDF, pelo formulário de inscrição e, na convocação, pelo e-mail ("Esta convocação pede documentos") e pela página da convocação. <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>10. Como o sistema controla o envio dos obrigatórios?</td><td>Na inscrição: a barra "n de m obrigatórios", a revisão "Falta enviar" e o envio recusado. Na convocação: "O que falta", o andamento, e o aceite recusado enquanto um obrigatório não está conferido. <span class="s gps">Comprovado</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 3 -->
+<section class="cap" id="cap-3">
+  <div class="cap-head"><span class="cap-n">3</span><span class="eyebrow">Alice Andrade · portal · Edital 90</span><h2>A candidata se inscreve</h2><p class="pergunta-op">"O que eu preciso mandar, e como sei que mandei certo?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>A página pública mostra os documentos antes de a pessoa entrar. Dentro da inscrição, a lista segue a <b>modalidade escolhida</b>. Alice, na ampla, vê dois documentos (um obrigatório e um facultativo). Se escolhesse PcD, o laudo apareceria na hora.</p>
+      <p>Ela tenta enviar uma foto do documento renomeada para .pdf. O GPS recusa e explica: "Este arquivo é uma imagem (JPEG), e não um PDF — é o que o celular produz ao fotografar um documento". Embaixo aparece a ajuda "Como transformar uma foto em PDF". Com o PDF, o envio é aceito: nome do arquivo, data e hora, e "Substituir ou remover".</p>
+      <p>Substituir troca o arquivo, porque há um arquivo por documento até o envio. A revisão lista o que foi enviado e o que é facultativo. As duas declarações são obrigatórias. O comprovante lista cada arquivo com tamanho, horário e resumo SHA-256, e diz com todas as letras: <b>"O recebimento não implica deferimento"</b>.</p>
+      <p>Depois do envio, a inscrição não muda mais. Em "Minha inscrição", Alice vê o arquivo, com "Visualizar · Baixar".</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Aceite técnico</span><span>Só PDF de verdade, verificado pela assinatura e pela extensão, até 10 MB. Mensagens para imagem, vazio, nome sem .pdf e tamanho.</span></div>
+      <div><span class="k">O que o upload <b>não</b> é</span><span>Não é análise. Na inscrição, nenhum arquivo é aprovado ou reprovado: quem decide é a Etapa de análise documental, para a inscrição inteira (capítulo 4).</span></div>
+      <div><span class="k">Sem o obrigatório</span><span>"Você poderá enviar a inscrição depois de anexar o documento que falta". A revisão diz "Falta enviar", e o envio é recusado no servidor.</span></div>
+      <div><span class="k">A equipe vê</span><span>Gestão › Edital › Inscrições: a coluna "Documentos" diz "1 de 1", "2 de 2". É consulta, sem deferimento.</span></div>
+    </div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/08-pagina-publica.jpg" alt="Página pública com os documentos que serão pedidos" loading="lazy"><figcaption>A página pública conta "4 documentos que serão pedidos", e o Currículo aparece sem "(facultativo)". Para quem é da ampla, só dois se aplicam, e um deles é facultativo. <span class="s mel">Melhoria</span></figcaption></figure>
+    <figure><img src="capturas/09-modalidade-muda-a-lista.jpg" alt="Lista de documentos com a modalidade PcD escolhida" loading="lazy"><figcaption>Com PcD escolhida, o laudo entra na lista: "0 de 2 documentos obrigatórios enviados". <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/10-erro-foto.jpg" alt="Erro ao enviar foto renomeada" loading="lazy"><figcaption>A foto renomeada é recusada, com a causa e o caminho. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/11-substituir.jpg" alt="Arquivo enviado com Substituir ou remover aberto" loading="lazy"><figcaption>Enviado: nome, horário e "Substituir ou remover". <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/12-revisao.jpg" alt="Revisão da inscrição" loading="lazy"><figcaption>A revisão, com as duas declarações antes de "Enviar inscrição". O CPF fictício foi coberto na imagem. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/13-comprovante.jpg" alt="Comprovante de inscrição" loading="lazy"><figcaption>O comprovante: cada arquivo com resumo SHA-256, e "O recebimento não implica deferimento". O CPF fictício foi coberto na imagem. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <figure><img src="capturas/14-inscricoes-recebidas.jpg" alt="Lista de inscrições recebidas na gestão" loading="lazy"><figcaption>Na gestão, as inscrições recebidas, com a contagem de documentos e o CPF mascarado. <span class="s gps">Comprovado</span></figcaption></figure>
+</section>
+
+<!-- 4 -->
+<section class="cap" id="cap-4">
+  <div class="cap-head"><span class="cap-n">4</span><span class="eyebrow">Avaliadora · presidência · depois das inscrições</span><h2>Análise documental da inscrição</h2><p class="pergunta-op">"Quem olha os arquivos da inscrição, e o que acontece com quem tem documento errado?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Neste Edital existe uma Etapa <b>Análise documental</b>, eliminatória e decisória ("Deferido" ou "Indeferido"), como nos Editais 35 e 57. Ela começa depois do fim das inscrições: antes disso, distribuir é recusado ("Distribuir agora deixaria sem avaliador quem se inscrever depois").</p>
+      <p>A avaliadora (lia.avaliadora) recebe as nove inscrições na <b>Mesa</b>. A Mesa lista os documentos da lista exigida, marca quais ela já abriu e separa os que "não se aplicam". O laudo de Ícaro é de março de 2023, fora dos 12 meses. Ela conclui "Indeferido", com parecer.</p>
+      <p>A presidência <b>consolida</b>. Antes de confirmar, a tela mostra cada inscrição e a consequência: "1 eliminada, 8 habilitadas". A consolidação é irreversível; corrigir é outro ato.</p>
+      <p>Ícaro continua na ordem do sorteio, porque a relação inclui todas as inscrições enviadas. Mas, como o corte governa a análise documental, ele <b>não ocupa vaga</b>. A tela da convocação o põe em "Quem pode ser chamado para regularizar".</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Veredito por arquivo na inscrição?</span><span>Não. A Mesa registra a abertura de cada arquivo, mas a decisão é sobre a inscrição, na Etapa. <span class="s edital">Decisão registrada</span></span></div>
+      <div><span class="k">Quem</span><span>Avaliador alocado à Etapa (avalia). Presidência ou gestor (distribui e consolida).</span></div>
+      <div><span class="k">Candidato vê</span><span>O resultado da Etapa, quando ele é publicado. Esta demonstração não publicou resultado. <span class="s prev">Visto no código</span></span></div>
+      <div class="prox"><span class="k">Próximo passo</span><span>Relação, sorteio, corte e apuração, como no guia da jornada do sorteio.</span></div>
+    </div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/35-mesa.jpg" alt="Mesa da avaliadora" loading="lazy"><figcaption>A Mesa da avaliadora: nove inscrições a avaliar. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/15-mesa-parecer.jpg" alt="Avaliação de Ícaro com parecer de indeferimento" loading="lazy"><figcaption>Ícaro: "2 de 2 abertos por você", "Indeferido" e parecer. O aviso "fora do período previsto para a Etapa" vem de uma escolha desta montagem, que ligou a Etapa ao evento de inscrições. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <figure><img src="capturas/16-consolidar.jpg" alt="Confirmação da consolidação" loading="lazy"><figcaption>A confirmação: "1 eliminada, 8 habilitadas", e o porquê de cada uma. <span class="s gps">Comprovado</span></figcaption></figure>
+</section>
+
+<!-- 5 -->
+<section class="cap" id="cap-5">
+  <div class="cap-head"><span class="cap-n">5</span><span class="eyebrow">Gestor · condução da convocação</span><h2>Do sorteio à convocação</h2><p class="pergunta-op">"Quando eu convoco, quem decide quais documentos a pessoa vai mandar?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O sorteio, o corte e a apuração seguem o guia da jornada do sorteio. No Edital 93 o resultado foi este:</p>
+      <ul>
+        <li><b>Ampla:</b> Helena (cotista PPI, que ocupa a vaga da ampla por concorrência concomitante) e Fábio;</li>
+        <li><b>PPI:</b> Carla;</li>
+        <li><b>PcD:</b> Bruno.</li>
+      </ul>
+      <p>Na convocação, <b>ninguém escolhe documento</b>. No ato de convocar, o GPS grava a <b>lista da chamada</b>, tirada dos documentos "na convocação" do Edital e recortada pela modalidade da pessoa. Para Fábio, o laudo vira "Não se aplica"; para Bruno, é obrigatório. O operador informa só o vencimento, um complemento opcional do fundamento e, nas exceções, a precedência.</p>
+      <p>Desde a spec 125, todo texto livre que vai ao candidato traz o aviso "Este texto será mostrado ao candidato" e uma etapa <b>Conferir o texto</b>. No lote, a etapa mostra quantas pessoas recebem o mesmo texto.</p>
+      <p><b>Mas o lote não grava a lista.</b> No Edital 90, os titulares foram convocados por "Convocar os titulares num ato só".</p>
+      <ul>
+        <li>As quatro convocações nasceram sem nenhum item de documento.</li>
+        <li>A página de documentos diz "Sem documento pedido".</li>
+        <li>O e-mail não diz que a chamada pede documentos.</li>
+        <li>O portal só manda "seguir as instruções do Edital".</li>
+      </ul>
+      <p>No código, o caminho individual (<span class="mono">convocar</span>) chama <span class="mono">gravar_lista_da_chamada</span>, e o caminho em lote (<span class="mono">convocar_em_sequencia</span>) não chama. Nenhum teste cobre o lote com documentos. Sem itens obrigatórios, nada impediria um aceite sem documento nenhum.</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Prazo</span><span>Um só por chamada, para todos os documentos e para o Requerimento de Matrícula. Ele corre do <b>envio</b> da comunicação. Dar mais prazo é corrigir a convocação (spec 120).</span></div>
+      <div><span class="k">Aproveitamento</span><span>Automático: o documento da inscrição declarado no Edital ou o da chamada anterior da mesma pessoa. A conferência não é transportada.</span></div>
+      <div><span class="k">Caminho que grava a lista</span><span>"Chamar uma pessoa da fila", a convocação individual.</span></div>
+      <div><span class="k">Caminho que não grava</span><span>"Convocar os titulares num ato só". <span class="s def">Provável defeito</span></span></div>
+    </div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/17-lote-conferir-texto.jpg" alt="Conferir o texto no lote de titulares" loading="lazy"><figcaption>Conferir o texto no lote: "Este texto será mostrado a 2 pessoas", com o complemento do fundamento como o candidato o lê. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/20-chamar-uma-pessoa.jpg" alt="Chamar uma pessoa da fila preenchido" loading="lazy"><figcaption>A convocação individual, preenchida. É o caminho usado no Edital 93. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/18-lote-sem-documento.jpg" alt="Documentos da convocação: Sem documento pedido" loading="lazy"><figcaption>Edital 90, convocação em lote: "Sem documento pedido", embora o Edital peça quatro documentos na convocação. <span class="s def">Provável defeito</span></figcaption></figure>
+    <figure><img src="capturas/19-portal-lote-sem-documento.jpg" alt="Portal do convocado em lote, sem documentos" loading="lazy"><figcaption>O mesmo convocado no portal: prazo, fundamento e "Siga as instruções do Edital", sem nenhum documento a enviar. <span class="s def">Provável defeito</span></figcaption></figure>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="cap" id="cap-6">
+  <div class="cap-head"><span class="cap-n">6</span><span class="eyebrow">Convocado · portal · Edital 93</span><h2>O convocado envia</h2><p class="pergunta-op">"O que falta eu mandar, até quando, e a comissão já viu?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>O e-mail diz no assunto "envie seus documentos até 09/11" e no corpo "Esta convocação pede documentos". O link não autentica: quem o abre sem sessão vê <b>"Entre para ver a sua convocação"</b>, pede o código de seis dígitos e, depois dele, volta direto para a convocação.</p>
+      <p>A página abre pelo essencial:</p>
+      <ul>
+        <li>"Você foi convocado!";</li>
+        <li>o prazo, com o dia da semana e quanto falta;</li>
+        <li>"Você ainda precisa enviar 1 documento";</li>
+        <li>o aviso de que a convocação "ainda não é o resultado".</li>
+      </ul>
+      <p>Abaixo vêm "O que falta", "Opcional" e "O que você já apresentou". A identificação de Fábio está em "já apresentou", com "Você já enviou este documento na inscrição. Não precisa enviar de novo. A comissão vai conferir."</p>
+      <p>Cada arquivo enviado leva a "Recebemos…" e o item passa a "Aguardando conferência". Se a comissão registrar pendência, o cartão sobe com <b>"Precisa de correção"</b>, mostra o motivo escrito por quem conferiu (sem o nome dessa pessoa) e reabre o envio até o vencimento.</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Sem sessão</span><span>Redireciona ao acesso antes de qualquer consulta, com a mesma resposta para um endereço real ou inventado. <span class="s gps">Comprovado</span></span></div>
+      <div><span class="k">Enviar de novo</span><span>Cada envio é uma versão nova, imutável. Um item já conferido como conforme não aceita outro arquivo.</span></div>
+      <div><span class="k">Aviso de pendência por e-mail</span><span>Não existe, por decisão: o candidato só descobre a pendência voltando ao portal. <span class="s dec">Não existe</span> <span class="s edital">Decisão registrada</span></span></div>
+    </div>
+  </div>
+  <div class="telas">
+    <figure><img src="capturas/21-sem-sessao.jpg" alt="Tela Entre para ver a sua convocação" loading="lazy"><figcaption>O link aberto sem sessão. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure class="alta"><div class="rolo"><img src="capturas/22-convocado-documentos.jpg" alt="Página da convocação com o que falta, o opcional e o que já foi apresentado" loading="lazy"></div><figcaption>Fábio: o que falta (escolaridade), o opcional (residência) e o que já apresentou (identificação aproveitada). Role dentro da imagem. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <figure class="alta"><div class="rolo"><img src="capturas/23-precisa-de-correcao.jpg" alt="Item com Precisa de correção e o motivo" loading="lazy"></div><figcaption>Carla: "Precisa de correção", com o motivo e o envio reaberto. <span class="s gps">Comprovado</span></figcaption></figure>
+</section>
+
+<!-- 7 -->
+<section class="cap" id="cap-7">
+  <div class="cap-head"><span class="cap-n">7</span><span class="eyebrow">Membro alocado à conferência · presidência · gestor</span><h2>A equipe confere</h2><p class="pergunta-op">"Onde estão os documentos que chegaram, e o que eu posso decidir sobre cada um?"</p></div>
+  <div class="corpo">
+    <div class="narr">
+      <p>Não há fila global de conferência. O trabalho aparece em dois lugares:</p>
+      <ul>
+        <li>no <b>Andamento do Edital</b>, como "Conferir os documentos de N convocações" e "Registrar o desfecho de N convocações prontas";</li>
+        <li>na <b>condução da convocação</b> de cada recorte, com o rótulo de cada linha ("Documentos para conferir", "Documentos com pendência", "Pronta para decidir") e a ordenação "por vencimento e situação dos documentos".</li>
+      </ul>
+      <p>Na página de documentos de uma convocação, cada item mostra as versões. Para cada versão há "Abrir", que serve o PDF numa aba nova, "Baixar" e a marca <b>"aberto por você"</b>. O conferente registra um de três resultados:</p>
+      <ul>
+        <li><b>Conforme ao exigido pelo Edital</b>, que só é aceito se ele abriu aquela versão;</li>
+        <li><b>Pendente</b>, com motivo obrigatório, que a pessoa lê;</li>
+        <li><b>Não se aplica</b>, também com motivo.</li>
+      </ul>
+      <p>Cada conferência guarda quem, de que unidade e quando. Mudar a conferência de uma versão exige "Por que mudar a conferência desta versão". O <b>conjunto</b> não tem ato próprio: "Pronta para decidir" é só leitura derivada.</p>
+      <p>Quem é só alocado à conferência (joao.conferente) confere e não registra desfecho. Desfecho é de quem gere a comissão ou da presidência.</p>
+    </div>
+    <div class="ficha">
+      <div><span class="k">Visualizar sem baixar</span><span>Pelo leitor de PDF do navegador. Não há visualizador embutido com zoom ou rotação, nem conferência em lote. <span class="s edital">Decisão registrada</span></span></div>
+      <div><span class="k">Integridade</span><span>Cada abertura confere o resumo SHA-256 e fica registrada na trilha.</span></div>
+      <div><span class="k">"Conforme" quer dizer</span><span>Conforme ao Edital, e não autêntico nem original: o arquivo é cópia simples.</span></div>
+    </div>
+  </div>
+  <div class="telas">
+    <figure class="alta"><div class="rolo"><img src="capturas/24-conferencia-pagina.jpg" alt="Página Documentos da convocação com três itens a conferir" loading="lazy"></div><figcaption>Fábio na tela do conferente. A identificação mostra "documento enviado na inscrição", o aproveitamento. Há "aberto por você" em cada versão, e o aviso "Aceite e regularização ainda não podem ser registrados". <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/25-conferencia-pendente.jpg" alt="Formulário de conferência com Pendente" loading="lazy"><figcaption>O formulário de um item: resultado e motivo. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+  <figure><img src="capturas/26-duas-versoes.jpg" alt="Item com duas versões e duas conferências" loading="lazy"><figcaption>Carla depois da correção: duas versões e duas conferências registradas (pendente na 1, conforme na 2). <span class="s gps">Comprovado</span></figcaption></figure>
+</section>
+
+<!-- 8 -->
+<section class="cap" id="cap-8">
+  <div class="cap-head"><span class="cap-n">8</span><span class="eyebrow">Para não confundir</span><h2>Quatro acontecimentos</h2><p class="pergunta-op">"Recebido, conferido, completo e aceito são a mesma coisa?"</p></div>
+  <div class="quatro">
+    <div><span class="n">1</span><b>O arquivo foi recebido</b><span>O portal aceitou um PDF. Grava-se uma <span class="mono">ApresentacaoDeDocumento</span> (versão nova, imutável). O candidato lê "Recebemos" e "Aguardando conferência".</span><span class="quem">Candidato</span></div>
+    <div><span class="n">2</span><b>O documento foi conferido</b><span>Alguém abriu a versão e registrou conforme, pendente ou não se aplica. Grava-se uma <span class="mono">ConferenciaDeDocumento</span>. O candidato lê "Conferido" ou "Precisa de correção".</span><span class="quem">Conferente</span></div>
+    <div><span class="n">3</span><b>O conjunto está suficiente</b><span>Todo obrigatório está conforme ou não se aplica. <b>Não é ato e não grava nada</b>: é o rótulo "Pronta para decidir" e a trava que libera o aceite.</span><span class="quem">Ninguém registra</span></div>
+    <div><span class="n">4</span><b>A convocação teve desfecho</b><span>Aceite, indeferimento, desistência, não atendimento etc. Grava-se um <span class="mono">DesfechoDaConvocacao</span> com efeito na ocupação, e a apuração seguinte sai no mesmo ato quando dá.</span><span class="quem">Gestor ou presidência</span></div>
+  </div>
+  <p class="small muted">Na inscrição só existem os passos 1 e, separadamente, o resultado da Etapa de análise documental, que é sobre a inscrição inteira e não sobre cada arquivo.</p>
+</section>
+
+<!-- 9 -->
+<section class="cap" id="cap-9">
+  <div class="cap-head"><span class="cap-n">9</span><span class="eyebrow">Edital 93 (e o 90 no não atendimento)</span><h2>Cenários A, B e C</h2><p class="pergunta-op">"O que acontece em cada desfecho, e quem é chamado depois?"</p></div>
+  <div class="cenarios">
+    <div class="cenario"><span class="tag">A · documentação adequada</span><b>Fábio Fontes</b><p>A identificação veio aproveitada da inscrição. A escolaridade e a residência (facultativa) foram enviadas. O conferente abriu e marcou os três como conforme, e o rótulo passou a "Pronta para decidir". O gestor registrou o <b>aceite</b>, depois de conferir o texto. Fábio passa a "Apto para formalização", e o portal diz "Vaga aceita" e "Este registro não é matrícula, bolsa nem contrato".</p></div>
+    <div class="cenario"><span class="tag">B · problema corrigível</span><b>Carla Cardoso</b><p>Escolaridade ilegível: <b>pendente</b>, com o motivo. Carla vê "Precisa de correção" e envia a versão 2, que vira "Complementado". O conferente abre e marca conforme. Aceite. O prazo da correção é o mesmo da chamada; mais prazo só corrigindo a convocação (spec 120).</p></div>
+    <div class="cenario"><span class="tag">C · indeferimento</span><b>Bruno Barbosa</b><p>O laudo atualizado é de fevereiro de 2026, fora dos 90 dias: pendente, e Bruno não corrige. Uma tentativa de <b>aceite é recusada</b>: "Falta: Laudo médico atualizado". O gestor usa "Indeferir pelas pendências de documento", que traz o fundamento já redigido a partir dos motivos. A apuração seguinte sai no mesmo ato ("1 a ocupar"), e a tela sugere "Chamar a próxima da fila". Gael é convocado por suplência, com a sua própria lista (inclusive o laudo).</p></div>
+    <div class="cenario"><span class="tag">C · não atendimento</span><b>Helena Hora (Edital 90)</b><p>Convocada com prazo curto, não envia nada. Vencido o prazo, o gestor usa "Não atendimento das convocações vencidas", que registra o desfecho em lote com fundamento derivado. A apuração seguinte sai no mesmo ato. Na PPI não há mais ninguém na faixa, e a tela sugere "Pedir a faixa seguinte". O GPS não convoca ninguém sozinho.</p></div>
+    <div class="cenario"><span class="tag">Desistência</span><b>Helena Hora (Edital 93)</b><p>Desistência expressa, por escrito: só o fundamento. A ampla abre vaga, e Davi é convocado por suplência. <b>Depois disso, a PPI passa a propor convocar Helena como titular</b> ("Convocar 1 titular"), embora ela tenha desistido. Ver o capítulo 10. <span class="s dec">Decisão pendente</span> <span class="s def">Provável defeito</span></p></div>
+  </div>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>Desfecho</th><th>O que exige além do fundamento</th><th>Efeito na vaga</th><th>Nova convocação</th></tr></thead>
+    <tbody>
+      <tr><td>Aceite</td><td>Todo obrigatório conforme ou não se aplica</td><td>Inclui (o suplente passa a ocupar)</td><td>—</td></tr>
+      <tr><td>Indeferimento</td><td>Nada (há o atalho "pelas pendências")</td><td>Exclui</td><td>Apuração seguinte automática; chamar é ato humano</td></tr>
+      <tr><td>Desistência expressa</td><td>Nada</td><td>Exclui</td><td>Idem</td></tr>
+      <tr><td>Não atendimento</td><td>Comunicação enviada e vencimento decorrido</td><td>Exclui</td><td>Idem; há o lote "dos vencidos"</td></tr>
+      <tr><td>Inércia</td><td>Atestado de fato externo; a pessoa ocupando</td><td>Exclui</td><td>Idem <span class="s prev">Visto no código</span></td></tr>
+      <tr><td>Regularização</td><td>Só na convocação "para regularizar"; documentos conferidos; gera Resultado habilitado</td><td>Inclui</td><td>— <span class="s prev">Visto no código</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="telas">
+    <figure><img src="capturas/27-aceite-recusado.jpg" alt="Recusa do aceite por documento não conferido" loading="lazy"><figcaption>O aceite de Bruno recusado, com o nome do documento que falta. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/28-indeferir-conferir-texto.jpg" alt="Conferir o texto do indeferimento" loading="lazy"><figcaption>O indeferimento pelas pendências, no "Conferir o texto": o fundamento é montado com o motivo da conferência e termina com dois pontos finais. <span class="s mel">Melhoria</span></figcaption></figure>
+    <figure><img src="capturas/29-nao-atendimento.jpg" alt="Não atendimento registrado em lote" loading="lazy"><figcaption>Edital 90: "1 desfecho de não atendimento registrado… A apuração seguinte deste recorte foi emitida no mesmo ato: 1 a ocupar." <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure class="alta"><div class="rolo"><img src="capturas/31-resultado-indeferido.jpg" alt="Portal de Bruno com o indeferimento" loading="lazy"></div><figcaption>Bruno no portal: "Indeferido na convocação", com o fundamento e o histórico do que enviou. <span class="s gps">Comprovado</span></figcaption></figure>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="cap" id="cap-10">
+  <div class="cap-head"><span class="cap-n">10</span><span class="eyebrow">Depois da conferência</span><h2>Vaga, aceite e matrícula</h2><p class="pergunta-op">"Conferido é aprovado? Aceito é matriculado? Quando a vaga conta como ocupada?"</p></div>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>Pergunta</th><th>Resposta</th></tr></thead>
+    <tbody>
+      <tr><td>Documento conforme significa convocação aprovada?</td><td>Não. Conformar todos os obrigatórios só <b>libera</b> o aceite, que é outro ato, de outra pessoa (gestor ou presidência). <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>Aceite significa matrícula?</td><td>Não. O portal diz "Este registro não é matrícula, bolsa nem contrato", e a gestão mostra "Apto para formalização". <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>Qual evento o GPS chama de aceite?</td><td>O desfecho ACEITE da convocação, registrado na condução do recorte. <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>Quando a vaga conta como ocupada?</td><td>O <b>titular inicial</b> habilitado conta desde a apuração, antes de ser convocado. No 93, a ampla mostrava "Ocupadas 2" antes de qualquer resposta. O <b>suplente</b> só conta depois do aceite. Os desfechos excludentes tiram a pessoa. "Ocupada" no GPS quer dizer "titular da vaga", e não matriculado nem documentado. É a mesma semântica do estudo do Edital 35. <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>O GPS representa a matrícula efetivada?</td><td>Não. A formalização (spec 117) entrega os documentos conformes de quem está apto ao setor designado, com exportação em ZIP. Quem matricula é o Registro Acadêmico, fora do GPS. <span class="s dec">Não existe</span> <span class="s edital">Decisão registrada</span></td></tr>
+      <tr><td>A desistência muda o quadro?</td><td>Sim: exclui, e a apuração seguinte sai no mesmo ato, com "1 a ocupar". Convocar o próximo é ato humano. <span class="s gps">Comprovado</span></td></tr>
+      <tr><td>Quando uma nova pessoa pode ser chamada?</td><td>Depois do desfecho excludente e da apuração seguinte. A fila mostra quem é ("para vaga que vagou"), e "Chamar a próxima da fila" aparece como próximo passo. <span class="s gps">Comprovado</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="atencao"><b class="t">A ambiguidade que continua</b><span>No Edital 93, Helena é cotista PPI e ocupava a vaga da <b>ampla</b>; por isso Carla ficou com a vaga da PPI. Helena desistiu na ampla, e a PPI passou a propor convocá-la como <b>titular</b>, com "Convocar 1 titular", enquanto Carla já tinha aceite. A desistência registrada numa lista não alcança a outra, e a contagem da PPI muda sem ato na PPI. É a família das questões Q6–Q8 do estudo do Edital 35 (concorrência concomitante e mesma pessoa em duas filas): decisão normativa pendente, e não algo a corrigir sem ela. <span class="s dec">Decisão pendente</span></span></div>
+  <div class="telas">
+    <figure class="alta"><div class="rolo"><img src="capturas/30-resultado-aceite.jpg" alt="Portal de Fábio com Vaga aceita" loading="lazy"></div><figcaption>Fábio no portal: "Vaga aceita" e "Este registro não é matrícula, bolsa nem contrato". <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/34-ppi-apos-desistencia.jpg" alt="PPI propõe convocar Helena como titular depois da desistência na ampla" loading="lazy"><figcaption>A PPI, depois da desistência de Helena na ampla, propõe convocá-la como titular. <span class="s dec">Decisão pendente</span></figcaption></figure>
+    <figure><img src="capturas/32-andamento.jpg" alt="Andamento do Edital com providências" loading="lazy"><figcaption>O Andamento do Edital: as providências de conferir documentos e convocar aparecem por recorte. <span class="s gps">Comprovado</span></figcaption></figure>
+    <figure><img src="capturas/33-formalizacao.jpg" alt="Definição dos documentos para a formalização" loading="lazy"><figcaption>A formalização: a presidência ou o gestor escolhem quais documentos vão ao setor; quem acessa é designado pela gestão de acessos. Não foi exercitada até a exportação. <span class="s prev">Visto no código</span></figcaption></figure>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="cap" id="cap-11">
+  <div class="cap-head"><span class="cap-n">11</span><span class="eyebrow">Três perspectivas</span><h2>O que não é óbvio</h2><p class="pergunta-op">"Onde a tela exige saber o que ela não diz?"</p></div>
+  <div class="blocos">
+    <div class="bloco"><b>Quem configura</b><span>Entende o momento de cada documento pelo cartão e pelo PDF. Mas a Revisão lista os oito numa sequência só, com "Pedido: na inscrição" ou "na convocação" escrito em cada item. Um documento posto no momento errado não salta aos olhos. A ajuda geral não fala de momento nem de aproveitamento. E o Edital publicado parece editável.</span></div>
+    <div class="bloco"><b>Quem se inscreve ou é convocado</b><span>A distinção entre recebido e deferido está escrita nos lugares certos: "O recebimento não implica deferimento", "Aguardando conferência", "Esta convocação ainda não é o resultado", "não é matrícula". A pendência, porém, só aparece se a pessoa voltar ao portal. E a página pública conta como "4 documentos" o que, para a ampla, são dois.</span></div>
+    <div class="bloco"><b>Quem confere</b><span>Sabe o que falta, porque a tela diz quais itens impedem o aceite. Sabe que indeferir é sobre a convocação e pendência é sobre o item, porque há um atalho "Indeferir pelas pendências". E vê a consequência antes de registrar, com "Conferir o texto" e a apuração seguinte informada. Não há fila de conferência entre Editais: o trabalho se acha pelo Andamento.</span></div>
+    <div class="bloco"><b>Quem convoca</b><span>Nada na tela avisa que o lote "Convocar os titulares num ato só" deixa a convocação sem documentos. A diferença entre o lote e a chamada individual é invisível, e o efeito só aparece na página de documentos ou no portal.</span></div>
+  </div>
+</section>
+
+<!-- B -->
+<section class="cap" id="roteiro">
+  <div class="cap-head"><span class="cap-n">B</span><span class="eyebrow">Para praticar num banco de demonstração</span><h2>Roteiro operacional</h2><p class="pergunta-op">Configurar → inscrever → enviar → selecionar → convocar → enviar de novo → conferir → decidir → registrar → próxima providência.</p></div>
+  <div class="tabela scroll"><table>
+    <thead><tr><th>#</th><th>Passo</th><th>Papel</th><th>Tela</th><th>Pré-requisito</th><th>Ação</th><th>Resultado esperado</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Configurar documentos</td><td>Elaborador</td><td>Edital › Compor › Inscrição › Documentos exigidos</td><td>Edital em elaboração; Perfis e modalidades já declarados</td><td>"Acrescentar documento"; chave, nome, instrução, recorte, "Quando é pedido", aproveitamento, obrigatório; Salvar</td><td>Revisão lista cada documento com "Pedido: na inscrição/na convocação"</td></tr>
+      <tr><td>2</td><td>Publicar</td><td>Elaborador › Homologador › Publicador</td><td>Submeter, Homologar, Publicar</td><td>Composição sem pendência</td><td>Praticar os três atos</td><td>PDF com "Quais documentos enviar?" e "Documentos exigidos na convocação"</td></tr>
+      <tr><td>3</td><td>Inscrever-se</td><td>Candidato</td><td>Portal › seleção › "Inscrever-se nesta vaga"</td><td>Período aberto; e-mail com código</td><td>Escolher modalidade; enviar cada PDF; revisar; declarar; enviar</td><td>Comprovante com SHA-256 e "O recebimento não implica deferimento"</td></tr>
+      <tr><td>4</td><td>Distribuir a análise documental</td><td>Gestor ou presidência</td><td>Edital › Distribuir › Etapa</td><td>Inscrições encerradas; avaliador alocado à Etapa</td><td>Atribuir as inscrições</td><td>Mesa do avaliador com as inscrições</td></tr>
+      <tr><td>5</td><td>Avaliar</td><td>Avaliador</td><td>Minhas Etapas › Mesa › inscrição</td><td>Atribuição</td><td>Abrir cada documento; Deferido/Indeferido; parecer; Concluir</td><td>"Avaliação concluída", e a próxima pendente</td></tr>
+      <tr><td>6</td><td>Consolidar</td><td>Gestor ou presidência</td><td>Distribuir › "Consolidar as N prontas"</td><td>Avaliações concluídas</td><td>Conferir a lista e confirmar</td><td>"N habilitadas, M eliminadas"</td></tr>
+      <tr><td>7</td><td>Selecionar</td><td>Presidência e gestor</td><td>Marco › Sorteio, Corte, Ocupação</td><td>Ver o guia da jornada do sorteio</td><td>Relação, sorteio, corte, apuração</td><td>"A ocupar" por recorte</td></tr>
+      <tr><td>8</td><td>Convocar</td><td>Gestor ou presidência</td><td>Marco › Convocação › "Chamar uma pessoa da fila"</td><td>Apuração vigente</td><td>Pessoa, vencimento, complemento (opcional); conferir o texto; Convocar</td><td>"Convocação praticada… 1 comunicação enviada"; página de documentos com a lista</td></tr>
+      <tr><td>9</td><td>Verificar a lista</td><td>Gestor</td><td>Linha da convocação › Documentos</td><td>Convocação praticada</td><td>Abrir a página</td><td>Os documentos "na convocação" aplicáveis; o aproveitado já "Recebido". <b>Se aparecer "Sem documento pedido" num Edital que pede documentos, a convocação veio do lote.</b></td></tr>
+      <tr><td>10</td><td>Enviar documentos</td><td>Convocado</td><td>E-mail › link › código › convocação</td><td>Comunicação enviada</td><td>Enviar cada PDF de "O que falta"</td><td>"Recebemos"; item em "Aguardando conferência"</td></tr>
+      <tr><td>11</td><td>Conferir</td><td>Alocado à conferência, presidência ou gestor</td><td>Documentos da convocação</td><td>Versão recebida</td><td>Abrir; Conforme, Pendente (com motivo) ou Não se aplica</td><td>"Conferência registrada"; rótulo da linha muda</td></tr>
+      <tr><td>12</td><td>Corrigir</td><td>Convocado</td><td>Convocação › item "Precisa de correção"</td><td>Pendência; prazo em curso</td><td>Enviar novo arquivo</td><td>Item "Complementado"; volta para conferência</td></tr>
+      <tr><td>13</td><td>Decidir</td><td>Gestor ou presidência</td><td>Convocação › linha › "Registrar desfecho" ou "Indeferir pelas pendências"</td><td>Para aceite: todos os obrigatórios conformes</td><td>Espécie, fundamento; conferir o texto; Registrar</td><td>"Desfecho registrado. A apuração seguinte… N a ocupar"</td></tr>
+      <tr><td>14</td><td>Próxima providência</td><td>Gestor</td><td>A mesma tela e o Andamento do Edital</td><td>Desfecho registrado</td><td>Seguir o "Próximo nesta lista"</td><td>Chamar a próxima da fila, pedir a faixa seguinte, publicar o resultado ou definir a formalização</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- C -->
+<section class="cap" id="diagnostico">
+  <div class="cap-head"><span class="cap-n">C</span><span class="eyebrow">Achados para validar · nada foi implementado</span><h2>Diagnóstico de UX/UI</h2><p class="pergunta-op">O que se viu, onde, por que importa e o que se recomenda. Prioridade: P1 afeta o resultado do certame; P2, o trabalho de alguém; P3, a clareza.</p></div>
+  <div class="tabela scroll"><table class="diagm">
+    <thead><tr><th>P</th><th>Problema observado</th><th>Tela e etapa</th><th>Conceito mal compreendido</th><th>Consequência</th><th>Evidência</th><th>Recomendação</th></tr></thead>
+    <tbody>
+      <tr><td class="p1">P1</td><td>Convocar pelo lote não grava a lista de documentos da chamada <span class="s def">Provável defeito</span></td><td>Convocação › "Convocar os titulares num ato só"</td><td>"Convocar" grava a obrigação documental</td><td>O convocado não vê documento nenhum e o e-mail não os anuncia. Sem itens obrigatórios, nada impede um aceite sem documento</td><td>Edital 90: quatro convocações com lista vazia. <span class="mono">convocar_em_sequencia</span> não chama <span class="mono">gravar_lista_da_chamada</span>; nenhum teste cobre o lote com documentos</td><td>Gravar a lista também no lote, na mesma transação; um teste do lote com documentos</td></tr>
+      <tr><td class="p1">P1</td><td>Desistência numa lista não alcança a outra lista da mesma pessoa <span class="s dec">Decisão pendente</span></td><td>Convocação › recorte PPI, depois da desistência na ampla</td><td>"Desistiu" é da vaga ou do certame?</td><td>A PPI propõe convocar como titular quem desistiu, e a titular que já aceitou fica em dúvida na contagem</td><td>Edital 93, Helena; família das questões Q6–Q8 do estudo do Edital 35</td><td>Decidir a norma antes de qualquer correção; até lá, avisar na tela quando a pessoa tem desfecho excludente em outra lista</td></tr>
+      <tr><td class="p2">P2</td><td>Nada diferencia, na tela, o lote da chamada individual quanto aos documentos</td><td>Convocação</td><td>Os dois caminhos parecem equivalentes</td><td>O operador escolhe o lote por comodidade e não percebe a perda</td><td>Capítulo 5</td><td>Resolvido pelo primeiro achado; até lá, conferir a página de documentos depois de convocar (roteiro, passo 9)</td></tr>
+      <tr><td class="p2">P2</td><td>O Edital publicado parece editável na composição</td><td>Compor › Inscrição</td><td>"Somente leitura" vs. controles ativos</td><td>A pessoa altera e só descobre no salvar que nada vale; pode achar que retificou</td><td>Captura 02: setas e lixeira ativas</td><td>Desabilitar os controles, ou trocar o formulário por leitura, quando não é editável</td></tr>
+      <tr><td class="p2">P2</td><td>A pendência não chega ao candidato fora do portal</td><td>Conferência → portal</td><td>"Pendente" pede uma ação dentro de um prazo que já corre</td><td>Quem não volta ao portal perde o prazo sem saber</td><td>Capítulo 6; questão QI-7 da 115</td><td>Fora do escopo por decisão; manter registrado</td></tr>
+      <tr><td class="p3">P3</td><td>A Revisão da composição mistura os dois momentos numa lista só</td><td>Compor › Revisão</td><td>Momento do documento</td><td>Um documento posto "na inscrição" por engano passa</td><td>Revisão do Edital 90: oito itens em sequência</td><td>Agrupar por momento, como o PDF já faz</td></tr>
+      <tr><td class="p3">P3</td><td>A ajuda "Como preencher" dos documentos não explica momento, aproveitamento e obrigatoriedade</td><td>Compor › Inscrição</td><td>Aproveitamento</td><td>Quem configura pela primeira vez erra o aproveitamento e só descobre no salvar</td><td>Capturas 05 e 06</td><td>Levar ao "Como preencher" as frases que já estão sob cada campo</td></tr>
+      <tr><td class="p3">P3</td><td>A página pública conta todos os documentos e não marca o facultativo</td><td>Portal › página da seleção</td><td>"Quantos documentos eu preciso?"</td><td>O candidato da ampla lê "4 documentos" quando lhe cabem dois, um opcional</td><td>Captura 08</td><td>Marcar "(facultativo)" e contar só os de todos</td></tr>
+      <tr><td class="p3">P3</td><td>Fundamento pré-redigido do indeferimento termina em ".."</td><td>Convocação › Indeferir pelas pendências</td><td>—</td><td>Texto oficial com erro de pontuação, lido pelo candidato</td><td>Capturas 28 e 31</td><td>Não repetir o ponto quando o motivo já termina em ponto</td></tr>
+      <tr><td class="p3">P3</td><td>Não há visualizador embutido nem fila de conferência entre Editais</td><td>Documentos da convocação</td><td>—</td><td>Quem confere alterna abas e acha o trabalho pelo Andamento de cada Edital</td><td>Capítulo 7</td><td>Decisão registrada (FR-3606, FR-3608, FR-3609); reavaliar quando houver volume</td></tr>
+    </tbody>
+  </table></div>
+  <h3>O que funcionou e vale preservar</h3>
+  <ul class="bons">
+    <li>A recusa do arquivo de imagem explica a causa e o caminho.</li>
+    <li>"O recebimento não implica deferimento", "Aguardando conferência", "ainda não é o resultado" e "não é matrícula" separam bem os quatro acontecimentos para o candidato.</li>
+    <li>O aproveitamento aparece para os dois lados: "já enviou na inscrição" no portal e "documento enviado na inscrição" na gestão.</li>
+    <li>O aceite recusado diz qual documento falta, e o atalho "Indeferir pelas pendências" separa indeferir a convocação de marcar o item.</li>
+    <li>"Conferir o texto" mostra o texto como o candidato o verá e quantas pessoas o recebem.</li>
+    <li>Depois de cada desfecho, a tela diz a apuração seguinte e o próximo passo.</li>
+  </ul>
+</section>
+
+<footer class="fora-do-modo">
+  <p><b>Como foi feito.</b> O banco foi criado do zero e migrado, e as unidades semeadas, sobre a <span class="mono">main</span> em <span class="mono">ffde747b</span> (06/11/2026). Os Editais foram publicados pela API administrativa, com os mesmos auxiliares da suíte de testes. As inscrições foram feitas pelos comandos do portal (Alice, pelo navegador). A análise documental, a consolidação, as convocações, a conferência e os desfechos foram feitos pela tela, com Playwright. A relação, o sorteio, o corte e a apuração foram feitos pelos comandos de domínio. A fonte do sorteio é a "Fonte de demonstração".</p>
+  <p><b>O que não foi exercitado.</b> Retificação de documentos, Requerimento de Matrícula, convocação "para regularizar" até a regularização, inércia, correção da convocação (mais prazo), exportação da formalização, recurso, e o candidato substituindo um arquivo já conferido. O que está marcado "Visto no código" foi lido, não executado.</p>
+  <p>Complementa o <a href="../guia-jornada-do-sorteio-2026-11-05/index.html">guia da jornada do sorteio</a> e o <a href="../estudo-sorteio-edital-35-2026-11-05.md">estudo do Edital 35</a>.</p>
+</footer>
+</div>
+
+<div id="barra" aria-label="Navegação da apresentação"><button id="ant" type="button">← Anterior</button><span class="pos" id="pos"></span><button id="prox" type="button">Próximo →</button><button id="sair" type="button">Sair</button></div>
+
+<script>
+(function(){
+  var caps = Array.prototype.slice.call(document.querySelectorAll('.cap'));
+  var atual = 0, root = document.documentElement;
+  function mostrar(i){
+    atual = Math.max(0, Math.min(caps.length - 1, i));
+    caps.forEach(function(c, j){ c.classList.toggle('atual', j === atual); });
+    document.getElementById('pos').textContent = (atual + 1) + ' / ' + caps.length;
+    document.getElementById('ant').disabled = atual === 0;
+    document.getElementById('prox').disabled = atual === caps.length - 1;
+    window.scrollTo(0, 0);
+  }
+  document.getElementById('apresentar').addEventListener('click', function(){ root.classList.add('modo'); mostrar(0); });
+  document.getElementById('sair').addEventListener('click', function(){ root.classList.remove('modo'); caps.forEach(function(c){ c.classList.remove('atual'); }); });
+  document.getElementById('ant').addEventListener('click', function(){ mostrar(atual - 1); });
+  document.getElementById('prox').addEventListener('click', function(){ mostrar(atual + 1); });
+  document.addEventListener('keydown', function(e){
+    if(!root.classList.contains('modo')) return;
+    if(e.key === 'ArrowRight' || e.key === 'PageDown') mostrar(atual + 1);
+    else if(e.key === 'ArrowLeft' || e.key === 'PageUp') mostrar(atual - 1);
+    else if(e.key === 'Escape'){ root.classList.remove('modo'); caps.forEach(function(c){ c.classList.remove('atual'); }); }
+  });
+})();
+</script>
+</body>
+</html>
