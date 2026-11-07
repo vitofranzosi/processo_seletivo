@@ -147,7 +147,7 @@ Quem registra o indeferimento recebe a frase pré-redigida com a pontuação de 
 - **Fragmento acrescentado.** O cartão novo que o htmx traz só é pedido na composição editável, e
   continua editável.
 - **Motivo que termina em reticências, "?" ou "!".** Só o ponto final simples cede; a pontuação que
-  diz algo fica.
+  diz algo fica, e no último motivo a frase não lhe acrescenta ponto.
 - **Facultativo com condição.** Não existe: a condição só se publica no obrigatório (a FR-4453 da
   `131`).
 
@@ -213,9 +213,11 @@ Quem registra o indeferimento recebe a frase pré-redigida com a pontuação de 
 
 #### O fundamento do indeferimento
 
-- **FR-4516**: O fundamento pré-redigido do indeferimento (a FR-3594 da `115`) MUST NOT conter "..";
-  o ponto final de cada motivo MUST ceder à pontuação da frase — "; " entre os itens e um ponto no
-  fim. O início da frase e a ordem dos itens MUST continuar os mesmos.
+- **FR-4516**: No fundamento pré-redigido do indeferimento (a FR-3594 da `115`), o ponto final
+  simples de cada motivo MUST ceder à pontuação da frase — "; " entre os itens e um ponto no fim —,
+  e a frase MUST NOT pôr ponto depois de pontuação que já fecha o último motivo (reticências, "?" ou
+  "!"). Sem ".;" e sem pontuação dobrada no fim. O início da frase e a ordem dos itens MUST
+  continuar os mesmos.
 
 ### Fora do escopo — registrado, e não corrigido
 
@@ -238,8 +240,8 @@ Quem registra o indeferimento recebe a frase pré-redigida com a pontuação de 
   continua com as mesmas descrições escondidas e sem ajuda visível nova.
 - **SC-1405**: Na página pública, o número do resumo é o de obrigatórios a todos na inscrição, e
   todo facultativo listado leva "(facultativo)".
-- **SC-1406**: O fundamento pré-redigido de pendências com motivos terminados em ponto não contém
-  ".." nem ".;".
+- **SC-1406**: O fundamento pré-redigido não contém ".;", e não termina em pontuação dobrada —
+  "..", "....", "?." — qualquer que seja a pontuação do último motivo.
 - **SC-1407**: As capturas de antes e depois das quatro telas estão em [capturas/](capturas/),
   tiradas de um banco descartável clonado de `gps_docs_demo`.
 
@@ -275,6 +277,10 @@ um script pequeno (`somente-leitura.js`, carregado só em somente leitura) devol
 botões os valores dos campos desabilitados que o `hx-include` deles alcança. A alternativa de
 ler o marco do rascunho gravado mudaria a prévia da `094`, que lê o digitado por desenho.
 
+O preço é que o campo novo precisa nascer com a condição. Um guardião lê os três templates — todos
+os ramos, e não só os que um rascunho de teste desenha — e reprova o campo sem ela (revisão do PR
+#429).
+
 ### D-005 — O "Avançar" vira link, como na etapa Anexos
 
 A etapa Anexos já navega por link, porque não tem o que enviar, e a Identificação já trocava o
@@ -298,4 +304,7 @@ conta; a lista aberta mostra o resto, com as marcas.
 ### D-008 — Só o ponto final simples cede
 
 O motivo é texto de quem conferiu. Reticências, "?" e "!" dizem algo e ficam; o ponto final simples
-é pontuação de fim de frase, e a frase do fundamento tem a sua.
+é pontuação de fim de frase, e a frase do fundamento tem a sua. Quando é o último motivo que termina
+em reticências, "?" ou "!", a frase não acrescenta o ponto dela: a primeira versão desta spec dizia
+que reticências ficavam e que a frase nunca teria "..", e as duas regras juntas imprimiam "...."
+(achado da revisão do PR #429).

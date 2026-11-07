@@ -135,7 +135,13 @@ def fundamento_das_pendencias(pendentes):
     itens = "; ".join(
         f"{nome}: {_sem_ponto_final(motivo)}" if motivo else nome for nome, motivo in pendentes
     )
-    return f"Documentação exigida na convocação não atendida — {itens}."
+    # O ponto que fecha a frase não vem depois de pontuação que já a fecha: reticências, "?" e "!"
+    # do último motivo ficam, e um ponto a mais imprimia "...." ou "?." (132, FR-4516, D-008).
+    fim = "" if itens.endswith(_FECHAM_A_FRASE) else "."
+    return f"Documentação exigida na convocação não atendida — {itens}{fim}"
+
+
+_FECHAM_A_FRASE = (".", "?", "!", "…")
 
 
 def _sem_ponto_final(motivo):

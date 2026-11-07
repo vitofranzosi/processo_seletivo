@@ -138,3 +138,22 @@ def test_so_a_convocacao_pede_e_o_resumo_diz_isso(
     tecnico = _cartao(corpo, "Técnico de Laboratório")
     assert "<summary>Documentos pedidos só na convocação</summary>" in tecnico
     assert "<li>Comprovante de residência</li>" in tecnico
+
+
+def test_o_documento_anunciado_sobrevive_a_copia_e_ao_pickle():
+    """Um `str` derivado se reconstrói por `cls(texto)`: o construtor recebe o nome, e a marca de
+    obrigatório viaja no estado (revisão do PR #429)."""
+    import copy
+    import pickle
+
+    from processo_seletivo.portal.views import DocumentoAnunciado
+
+    facultativo = DocumentoAnunciado.do_requisito({"name": "Currículo", "required": False})
+
+    for copia in (
+        copy.copy(facultativo),
+        copy.deepcopy(facultativo),
+        pickle.loads(pickle.dumps(facultativo)),
+    ):
+        assert copia == "Currículo"
+        assert copia.obrigatorio is False

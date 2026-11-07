@@ -13,7 +13,13 @@ superusuário local, 4 workers, sem o grupo `assistente`, com o grupo `navegador
   da `115`, que fixava o motivo **com** o ponto final — o ".;" que a FR-4516 tira. O caso foi
   revisto, com a razão no comentário, e passa; nenhuma outra falha.
 
-Os casos novos: 29 em `interface/test_ajustes_dos_documentos.py`, 5 em
+**Depois da revisão do PR #429** (sete achados, todos corrigidos), a mesma verificação deu **17 339
+passaram, 13 pulados, 1 falha**, em 901 s. A falha foi
+`performance/test_ocupacao.py::test_a_apuracao_cabe_no_dobro_do_tempo_da_emissao_da_ordem`, o teste
+de tempo que o `CLAUDE.md` registra como oscilante com 4 workers: ele passou três de três isolado,
+e esta spec não toca a ocupação.
+
+Os casos novos da primeira rodada: 29 em `interface/test_ajustes_dos_documentos.py`, 5 em
 `integration/portal/test_anuncio_dos_documentos.py`, 6 em
 `unit/convocacao/test_fundamento_das_pendencias.py` e 5 em `javascript/somente-leitura.test.js`.
 

@@ -8,6 +8,7 @@ leitura para qualquer um, que é o caso que o guia da seção C fotografou no 90
 
 import re
 from html.parser import HTMLParser
+from pathlib import Path
 
 import pytest
 from django.urls import reverse
@@ -45,19 +46,91 @@ class _Controles(HTMLParser):
     `desabilitado` é o efetivo: o atributo no próprio controle **ou** num `fieldset` acima dele,
     que é como o navegador o lê. `dentro` são os `id` dos ancestrais, para recortar o cartão de um
     Perfil.
+
+    **A árvore é a que o navegador monta**, e não a da marcação (revisão do PR #429): o HTML fecha
+    sozinho o `<p>` que encontra um bloco, o `<li>` que encontra outro, a `<option>` que encontra a
+    seguinte, e ignora a etiqueta de fecho que não tem par. A primeira versão desempilhava até achar
+    o par, e os ancestrais vazavam — um `fieldset` desabilitado que ficasse na pilha faria um campo
+    habilitado parecer desabilitado, e o teste passaria sem razão.
     """
 
-    VAZIOS = {"input", "br", "img", "hr", "meta", "link", "source", "wbr", "area", "col"}
+    VAZIOS = {
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "source",
+        "track",
+        "wbr",
+    }
+    FECHAM_O_P = {
+        "address",
+        "article",
+        "aside",
+        "blockquote",
+        "details",
+        "dialog",
+        "div",
+        "dl",
+        "fieldset",
+        "figcaption",
+        "figure",
+        "footer",
+        "form",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "header",
+        "hgroup",
+        "hr",
+        "main",
+        "menu",
+        "nav",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "ul",
+    }
+    # Quem fecha quem ao começar: o irmão do mesmo tipo, nos elementos de fecho opcional.
+    IRMAOS = {
+        "li": {"li"},
+        "dt": {"dt", "dd"},
+        "dd": {"dt", "dd"},
+        "option": {"option"},
+        "optgroup": {"option", "optgroup"},
+        "tr": {"tr", "td", "th"},
+        "td": {"td", "th"},
+        "th": {"td", "th"},
+    }
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.pilha = []
         self.controles = []
         self._select = None
-        self._textarea = None
+        self._texto = None
+
+    def _fechar_implicitos(self, tag):
+        if tag in self.FECHAM_O_P and self.pilha and self.pilha[-1]["tag"] == "p":
+            self.pilha.pop()
+        irmaos = self.IRMAOS.get(tag)
+        while irmaos and self.pilha and self.pilha[-1]["tag"] in irmaos:
+            self.pilha.pop()
 
     def handle_starttag(self, tag, attrs):
         atributos = dict(attrs)
+        self._fechar_implicitos(tag)
         desabilitado_acima = any(
             item["tag"] == "fieldset" and item["disabled"] for item in self.pilha
         )
@@ -75,7 +148,7 @@ class _Controles(HTMLParser):
             if tag == "select":
                 self._select = controle
             if tag in ("textarea", "button"):
-                self._textarea = controle
+                self._texto = controle
         if tag == "option" and self._select is not None and "selected" in atributos:
             self._select["valores"].append(atributos.get("value", ""))
         if tag not in self.VAZIOS:
@@ -87,16 +160,15 @@ class _Controles(HTMLParser):
         if tag == "select":
             self._select = None
         if tag in ("textarea", "button"):
-            self._textarea = None
-        if tag in self.VAZIOS:
+            self._texto = None
+        if tag in self.VAZIOS or not any(item["tag"] == tag for item in self.pilha):
             return
-        while self.pilha:
-            if self.pilha.pop()["tag"] == tag:
-                break
+        while self.pilha.pop()["tag"] != tag:
+            pass
 
     def handle_data(self, data):
-        if self._textarea is not None:
-            self._textarea["texto"] += data
+        if self._texto is not None:
+            self._texto["texto"] += data
 
 
 def _controles(corpo):
@@ -383,3 +455,89 @@ def test_o_cartao_do_documento_nao_ganha_ajuda(client, seletor_ligado, edital):
         f"ajuda-{nome}-0"
         for nome in ("chave", "instrucao", "alcance", "momento", "aproveita", "condicao", "modelo")
     )
+
+
+# ------------------------------------------------------------------ a régua dos próprios testes
+
+
+def test_o_leitor_monta_a_arvore_que_o_navegador_monta():
+    """O `<p>` que encontra um bloco se fecha, e o fecho sem par é ignorado: o campo depois do
+    `fieldset` desabilitado não herda o `disabled` dele."""
+    corpo = (
+        '<form id="formulario"><fieldset disabled><p>texto<div></div></p>'
+        "<ul><li>a<li>b</ul></span></fieldset>"
+        '<select name="depois"><option selected value="x">x<option value="y">y</select></form>'
+    )
+    (campo,) = _controles(corpo)
+
+    assert campo["atributos"]["name"] == "depois"
+    assert campo["desabilitado"] is False
+    assert campo["valores"] == ["x"]
+    assert campo["dentro"] == {"formulario"}
+
+
+# ------------------------------------------------------------------ a Classificação, campo a campo
+
+TEMPLATES_DA_CLASSIFICACAO = ("compor_classificacao.html", "_marco.html", "_criterio.html")
+_DESABILITA = "{% if somente_leitura %} disabled{% endif %}"
+
+
+def _sem_comentarios(fonte):
+    return re.sub(r"{% comment %}.*?{% endcomment %}", "", fonte, flags=re.S)
+
+
+@pytest.mark.parametrize("nome", TEMPLATES_DA_CLASSIFICACAO)
+def test_todo_campo_da_classificacao_nasce_desabilitavel(nome):
+    """O guardião da D-004: na Classificação o `disabled` é campo a campo, e não do cartão.
+
+    Os testes que renderizam só alcançam os ramos que o rascunho de teste exercita; este lê o
+    template inteiro, todos os ramos, e reprova o campo novo que nascer sem a condição — o defeito
+    que esta spec corrigiu, de volta pela porta da frente (revisão do PR #429).
+    """
+    from django.template.loader import get_template
+
+    fonte = _sem_comentarios(
+        Path(get_template(f"interface/{nome}").origin.name).read_text(encoding="utf-8")
+    )
+    sem_condicao = []
+    for achado in re.finditer(r"<(input|select|textarea)\b", fonte):
+        if achado.group(1) == "input":
+            fim = re.search(r"(?<![%}])>", fonte[achado.end() :])
+            if 'type="hidden"' in fonte[achado.end() : achado.end() + fim.start()]:
+                continue
+        if not fonte.startswith(_DESABILITA, achado.end()):
+            linha = fonte.count("\n", 0, achado.start()) + 1
+            sem_condicao.append(f"{nome}:{linha}")
+
+    assert sem_condicao == []
+
+
+@pytest.mark.django_db
+@pytest.mark.integration
+def test_o_marco_por_pontuacao_com_criterio_tambem_e_leitura(client, seletor_ligado, com_etapas):
+    """Os ramos da pontuação e do desempate, que o rascunho máximo (só sorteio) não desenha."""
+    from tests.interface.test_compor import PERFIL
+    from tests.interface.test_compor_classificacao import marco_form
+
+    identificar(client, "ana.elaboradora", ["elaborador"])
+    gravou = client.post(
+        reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]),
+        marco_form(**{f"marco-{PERFIL}-0-orderProduction": "POR_PONTUACAO"}),
+    )
+    assert gravou.status_code == 302, gravou.content
+
+    identificar(client, "bruno.homologador", ["homologador"])
+    corpo = _etapa(client, com_etapas, "classificacao")
+    controles = _controles(corpo)
+    campos = _campos(controles)
+    formulario = corpo[corpo.index('id="formulario"') : corpo.index("</form>")]
+
+    assert any("criterio-" in (c["atributos"].get("name") or "") for c in campos), "o critério"
+    assert any(c["atributos"].get("name") == f"marco-{PERFIL}-0-scale" for c in campos), (
+        "o arredondamento, que só a pontuação pede"
+    )
+    assert [c["atributos"].get("name") for c in campos if not c["desabilitado"]] == []
+    assert "Acrescentar critério" not in formulario
+    assert "Remover este critério" not in formulario
+    simular = [c for c in _consultas(controles) if "data-abre-previa" in c["atributos"]]
+    assert simular and not simular[0]["desabilitado"]

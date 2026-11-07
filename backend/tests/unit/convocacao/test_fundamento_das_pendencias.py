@@ -45,7 +45,16 @@ def test_reticencias_e_interrogacao_ficam():
     )
 
     assert "a data não se lê...;" in texto
-    assert "é o do Edital anterior?" in texto
+    assert texto.endswith("é o do Edital anterior?"), "sem ponto depois da interrogação"
+
+
+def test_reticencias_no_ultimo_motivo_nao_ganham_ponto():
+    """O ponto da frase não se soma às reticências: saía "...." no fim."""
+    texto = fundamento_das_pendencias([("Laudo médico", "a data não se lê...")])
+    unicode = fundamento_das_pendencias([("Laudo médico", "a data não se lê…")])
+
+    assert texto.endswith("a data não se lê...")
+    assert unicode.endswith("a data não se lê…")
 
 
 def test_o_espaco_depois_do_ponto_nao_o_esconde():

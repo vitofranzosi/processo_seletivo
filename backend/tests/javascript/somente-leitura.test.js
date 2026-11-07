@@ -72,3 +72,22 @@ test("seleção simples manda o valor escolhido", () => {
   ]);
   assert.deepEqual(pares, [["producao", "POR_SORTEIO"]]);
 });
+
+test("o hx-include se lê com os modos estendidos do htmx", () => {
+  assert.deepEqual(
+    regras.interpretar("#cartao-1, closest fieldset, find .marco, this, next .x, previous .y"),
+    [
+      { modo: "documento", css: "#cartao-1" },
+      { modo: "closest", css: "fieldset" },
+      { modo: "find", css: ".marco" },
+      { modo: "this", css: "" },
+      { modo: "next", css: ".x" },
+      { modo: "previous", css: ".y" },
+    ]
+  );
+});
+
+test("seletor vazio não alcança nada", () => {
+  assert.deepEqual(regras.interpretar(""), []);
+  assert.deepEqual(regras.interpretar(" , "), []);
+});

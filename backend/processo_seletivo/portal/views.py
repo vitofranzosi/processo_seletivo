@@ -257,14 +257,22 @@ class DocumentoAnunciado(str):
     que ele acrescenta é a obrigatoriedade, para a página marcar o facultativo e contar só os
     obrigatórios: sem ela, "Currículo" e "Documento de identificação" eram a mesma coisa para quem
     lê antes de se inscrever.
+
+    O construtor recebe o **nome**, como o de `str`, e não o requisito: a cópia e o `pickle` de um
+    `str` derivado reconstroem o objeto chamando `cls(texto)`, e um construtor que esperasse o
+    dicionário quebrava ali (revisão do PR #429). Do requisito se parte por `do_requisito`.
     """
 
     obrigatorio: bool
 
-    def __new__(cls, requisito):
-        anunciado = super().__new__(cls, nome_com_a_condicao(requisito))
-        anunciado.obrigatorio = bool(requisito.get("required", True))
+    def __new__(cls, nome, obrigatorio=True):
+        anunciado = super().__new__(cls, nome)
+        anunciado.obrigatorio = obrigatorio
         return anunciado
+
+    @classmethod
+    def do_requisito(cls, requisito):
+        return cls(nome_com_a_condicao(requisito), bool(requisito.get("required", True)))
 
 
 def _anunciados_do_momento(conteudo, perfil, *, momento):
@@ -275,7 +283,7 @@ def _anunciados_do_momento(conteudo, perfil, *, momento):
     por_modalidade = []
     for modalidade in perfil.get("competitionModalities") or []:
         com_ela = [
-            DocumentoAnunciado(item)
+            DocumentoAnunciado.do_requisito(item)
             for item in aplicaveis(
                 conteudo,
                 profile_id=perfil_id,
@@ -288,7 +296,7 @@ def _anunciados_do_momento(conteudo, perfil, *, momento):
             por_modalidade.append({"modalidade": modalidade.get("name", ""), "documentos": com_ela})
     # O nome leva a condição de exigência, como o PDF (131, FR-4454): quem lê antes de se inscrever
     # sabe que o documento só será pedido no caso que o Edital diz.
-    return [DocumentoAnunciado(item) for item in sempre], por_modalidade
+    return [DocumentoAnunciado.do_requisito(item) for item in sempre], por_modalidade
 
 
 def _documentos_anunciados(conteudo, perfil):
