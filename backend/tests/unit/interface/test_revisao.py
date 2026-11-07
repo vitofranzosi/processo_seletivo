@@ -243,7 +243,9 @@ def test_a_conferencia_mostra_o_documento_exigido_e_de_quem(
         api_client, manager_headers, process_payload, draft=rascunho_completo()
     )
     blocos = revisao.blocos(edital_snapshot(Edital.objects.get(pk=edital.pk)))
-    documentos = next(bloco for bloco in blocos if bloco["titulo"] == "Documentos Exigidos")
+    documentos = next(
+        bloco for bloco in blocos if bloco["titulo"] == "Documentos Exigidos na inscrição"
+    )
     tudo = "\n".join(
         f"{item['titulo']}\n" + "\n".join(item["linhas"]) for item in documentos["itens"]
     )

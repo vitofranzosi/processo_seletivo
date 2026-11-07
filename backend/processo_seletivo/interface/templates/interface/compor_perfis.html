@@ -4,7 +4,7 @@
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
-      data-lista="#perfis"{% endif %}>
+      data-lista="#perfis"{% endif %}{% if somente_leitura %} data-somente-leitura{% endif %}>
   {% csrf_token %}
   {% if previa %}{% include "interface/_previa_da_aplicacao.html" %}{% endif %}
   <section aria-labelledby="perfis-titulo">

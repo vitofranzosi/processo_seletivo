@@ -267,32 +267,39 @@ documentos, que é a ordem das perguntas de quem decide.
           {% endcomment %}
           {% if perfil.documentos_anunciados.sempre or perfil.documentos_anunciados.por_modalidade or perfil.documentos_anunciados.na_convocacao or perfil.documentos_anunciados.na_convocacao_por_modalidade %}
           <details class="documentos-anunciados">
+            {% comment %}
+            O número é o dos **obrigatórios a todos** do Perfil na inscrição, e o resumo diz isso
+            (132, FR-4513, FR-4515, D-007): o facultativo e o de uma modalidade estão na lista, com
+            as marcas, e fora da conta. Sem obrigatório a todos, o resumo não diz zero.
+            {% endcomment %}
             {% if perfil.documentos_anunciados.total %}
-            <summary>{{ perfil.documentos_anunciados.total }} documento{{ perfil.documentos_anunciados.total|pluralize:"s" }} que ser{{ perfil.documentos_anunciados.total|pluralize:"á,ão" }} pedido{{ perfil.documentos_anunciados.total|pluralize:"s" }}</summary>
+            <summary>{{ perfil.documentos_anunciados.total }} documento{{ perfil.documentos_anunciados.total|pluralize:"s" }} obrigatório{{ perfil.documentos_anunciados.total|pluralize:"s" }} na inscrição</summary>
+            {% elif perfil.documentos_anunciados.pede_na_inscricao %}
+            <summary>Documentos que podem ser pedidos na inscrição</summary>
             {% else %}
             <summary>Documentos pedidos só na convocação</summary>
             {% endif %}
             {% if perfil.documentos_anunciados.sempre %}
             <ul>
-              {% for documento in perfil.documentos_anunciados.sempre %}<li>{{ documento }}</li>{% endfor %}
+              {% for documento in perfil.documentos_anunciados.sempre %}<li>{{ documento }}{% if not documento.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</li>{% endfor %}
             </ul>
             {% endif %}
             {% for grupo in perfil.documentos_anunciados.por_modalidade %}
             <p class="meta">Se concorrer em <strong>{{ grupo.modalidade }}</strong>, também:</p>
             <ul>
-              {% for documento in grupo.documentos %}<li>{{ documento }}</li>{% endfor %}
+              {% for documento in grupo.documentos %}<li>{{ documento }}{% if not documento.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</li>{% endfor %}
             </ul>
             {% endfor %}
             {% if perfil.documentos_anunciados.na_convocacao %}
             <p class="meta">Se for convocado, a convocação pedirá também:</p>
             <ul>
-              {% for documento in perfil.documentos_anunciados.na_convocacao %}<li>{{ documento }}</li>{% endfor %}
+              {% for documento in perfil.documentos_anunciados.na_convocacao %}<li>{{ documento }}{% if not documento.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</li>{% endfor %}
             </ul>
             {% endif %}
             {% for grupo in perfil.documentos_anunciados.na_convocacao_por_modalidade %}
             <p class="meta">Se concorrer em <strong>{{ grupo.modalidade }}</strong> e for convocado, a convocação pedirá também:</p>
             <ul>
-              {% for documento in grupo.documentos %}<li>{{ documento }}</li>{% endfor %}
+              {% for documento in grupo.documentos %}<li>{{ documento }}{% if not documento.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</li>{% endfor %}
             </ul>
             {% endfor %}
             <p class="meta">Cada um em PDF, até {% limite_de_arquivo %}.</p>

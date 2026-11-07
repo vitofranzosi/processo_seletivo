@@ -129,9 +129,9 @@ def test_os_documentos_exigidos_aparecem_antes_da_identificacao(
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
 
     # O resumo conta quantos são: um triângulo com “Documentos que serão pedidos” parece enfeite,
-    # e a contagem é o que decide se dá para se inscrever agora ou se é preciso preparar.
-    assert "documentos que serão pedidos" in corpo
-    assert re.search(r"<summary>\s*\d+ documentos? que ser", corpo), corpo[:0]
+    # e a contagem é o que decide se dá para se inscrever agora ou se é preciso preparar. Desde a
+    # `132` (FR-4513) conta só os obrigatórios a todos, e diz isso.
+    assert re.search(r"<summary>\s*\d+ documentos? obrigatórios? na inscrição", corpo), corpo[:0]
     assert "Documento de identificação" in corpo, "o que vale para todo mundo"
     assert "Diploma de graduação" in corpo, "o que vale para o Perfil"
     assert "Se concorrer em" in corpo, "e o que a modalidade reservada acrescenta"
@@ -179,7 +179,7 @@ def test_o_requisito_vem_antes_do_botao_de_inscrever(
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
 
     requisitos = corpo.index("Requisitos")
-    documentos = corpo.index("que serão pedidos")
+    documentos = corpo.index("na inscrição</summary>")
     botao = corpo.index("Inscrever-se nesta vaga")
 
     assert requisitos < botao, "o requisito é o primeiro filtro que a pessoa aplica"
@@ -587,7 +587,7 @@ def test_o_requerimento_e_anunciado_so_quando_e_pedido_na_inscricao(
     assert (frase in _texto_de(vagas)) is anuncia
     if anuncia:
         assert vagas.index(frase) < vagas.index('<li class="perfil"'), "antes do primeiro Perfil"
-    assert "documentos que serão pedidos" in corpo, "os documentos continuam anunciados (FR-1628)"
+    assert "na inscrição</summary>" in corpo, "os documentos continuam anunciados (FR-1628)"
 
 
 @pytest.mark.django_db(transaction=True)

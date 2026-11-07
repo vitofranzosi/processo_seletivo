@@ -17,8 +17,11 @@ palavra por ícone sem isso seria apagar o nome da ação, não encurtá-lo.
 O respiro antes do botão vermelho é deliberado. "Descer" e "Remover" tinham larguras diferentes;
 iguais e colados, os dois viram um alvo só — e foi a vizinhança deles que originou a confirmação de
 `remocao.js`, que continua valendo aqui.
+
+Em somente leitura o grupo não sai (132, FR-4505): seta e lixeira desabilitadas ainda dizem que a
+lista se edita.
 {% endcomment %}
-<p class="acoes-da-linha">
+{% if not somente_leitura %}<p class="acoes-da-linha">
   <span class="grupo">
     <button type="button" class="acao simbolo" data-mover="cima"
             aria-label="Subir" title="Subir"><span aria-hidden="true">↑</span></button>
@@ -31,4 +34,4 @@ iguais e colados, os dois viram um alvo só — e foi a vizinhança deles que or
       {% include "interface/_lixeira.html" %}
     </button>
   </span>
-</p>
+</p>{% endif %}

@@ -1849,6 +1849,11 @@ def compor_etapa(request, edital_id, etapa):
             "anterior": anterior,
             "proxima": proxima,
             "editavel": editavel,
+            # **Só esta tela liga a leitura** (132, D-002). Os cartões são os mesmos que os
+            # fragmentos htmx e a Retificação desenham, e nem todos têm `editavel` no contexto:
+            # ausente, ele desabilitaria o cartão que o "Acrescentar" acabou de pedir. Ausente,
+            # `somente_leitura` é o cartão de sempre (FR-4509).
+            "somente_leitura": not editavel,
             "erros": erros,
             "salvo": dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(
                 request.GET.get("salvo", "")

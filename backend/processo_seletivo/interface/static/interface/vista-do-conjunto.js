@@ -73,6 +73,9 @@
   function montar(config) {
     var formulario = config.formulario;
     var lista = config.lista;
+    // Em somente leitura o cartão se abre para ler, e o rótulo diz isso (132, FR-4504): "Editar"
+    // sobre campos desabilitados era a mesma promessa que a seta e a lixeira faziam.
+    var leitura = !!(formulario && formulario.hasAttribute("data-somente-leitura"));
     var lugar = config.lugar;
     var contador = config.contador;
     var CARTAO = ":scope > " + config.item;
@@ -202,7 +205,7 @@
       // O nome acessível leva o código (UX-117 da 052, UX-124 da 053), e o texto visível diz qual
       // está aberto (UX-118, UX-125).
       botao.replaceChildren(
-        emEdicao ? "Em edição" : "Editar",
+        emEdicao ? (leitura ? "Aberto" : "Em edição") : leitura ? "Ver" : "Editar",
         elemento("span", " " + lido.rotulo, "oculto")
       );
       if (emEdicao) linha.setAttribute("aria-current", "true");
@@ -219,7 +222,7 @@
     function atualizar(cartao) {
       var linha = linhaDe(cartao);
       if (linha) preencherLinha(linha, cartao);
-      if (cartao === aberto) editor.titulo.textContent = "Editando " + config.ler(cartao).titulo;
+      if (cartao === aberto) editor.titulo.textContent = (leitura ? "" : "Editando ") + config.ler(cartao).titulo;
     }
 
     /* ── O editor ── */

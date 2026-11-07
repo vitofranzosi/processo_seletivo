@@ -572,8 +572,11 @@ def test_o_fundamento_do_indeferimento_vem_das_pendencias(aluno, gestor):
 
     texto = servico.leitura_da_chamada(convocacao).fundamento_do_indeferimento()
 
-    assert "Histórico escolar do ensino médio: Falta a página 2." in texto
+    # O ponto final do motivo cede à pontuação da frase desde a `132` (FR-4516): com ele, o texto
+    # saía "Falta a página 2.;" no meio e ".." no fim.
+    assert "Histórico escolar do ensino médio: Falta a página 2" in texto
     assert "Certidão de nascimento ou casamento" in texto
+    assert ".." not in texto and ".;" not in texto
 
 
 def test_o_vencimento_nao_produz_desfecho(aluno, gestor):

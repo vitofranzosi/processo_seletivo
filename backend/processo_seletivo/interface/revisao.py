@@ -433,11 +433,7 @@ def _documento(documento, snapshot):
     linhas = [
         Rotulada("Exigência", "obrigatória" if documento.get("required", True) else "facultativa"),
         Rotulada("Aplica-se a", _alcance(documento, snapshot)),
-        # Quando é pedido (115): quem homologa precisa ver que o documento saiu da inscrição.
-        Rotulada(
-            "Pedido",
-            "na convocação" if documento.get("moment") == "AT_CALL" else "na inscrição",
-        ),
+        # Quando é pedido (115) não é mais linha do item: é o bloco em que ele está (132, FR-4503).
     ]
     # A condição de exigência (131, FR-4454): quem homologa vê o caso em que o obrigatório da
     # convocação se exige, com o texto que o PDF vai imprimir.
@@ -806,22 +802,65 @@ def _cada(chave, leitura):
     return lambda snapshot: [leitura(item, snapshot) for item in snapshot.get(chave) or []]
 
 
-# Bloco da conferência → como se lê, e onde se corrige. A ordem é a do assistente.
+def _bloco(titulo, etapa, leitura):
+    """Um bloco só, com os itens que `leitura` produz e a etapa em que se corrige."""
+    return lambda snapshot: [{"titulo": titulo, "etapa": etapa, "itens": leitura(snapshot)}]
+
+
+TITULO_DOS_DOCUMENTOS_NA_INSCRICAO = "Documentos Exigidos na inscrição"
+TITULO_DOS_DOCUMENTOS_NA_CONVOCACAO = "Documentos Exigidos na convocação"
+
+
+def _documentos_por_momento(snapshot):
+    """Os Documentos Exigidos em um bloco por momento, na ordem declarada (132, FR-4501 a FR-4503).
+
+    O da inscrição existe sempre — vazio, diz "Nada declarado." como o bloco único dizia —; o da
+    convocação, só quando há algum, como a seção do PDF. O número do item continua o da ordem
+    declarada, e não recomeça no bloco (D-001): o "Revisar" leva aos cartões "Documento exigido 6 de
+    8", e a conferência e a correção falariam de números diferentes para o mesmo documento.
+    """
+    documentos = snapshot.get("documentRequirements") or []
+    da_convocacao = [d for d in documentos if d.get("moment") == "AT_CALL"]
+    da_inscricao = [d for d in documentos if d.get("moment") != "AT_CALL"]
+    blocos_ = [
+        {
+            "titulo": TITULO_DOS_DOCUMENTOS_NA_INSCRICAO,
+            "etapa": "inscricao",
+            "itens": [_documento(documento, snapshot) for documento in da_inscricao],
+        }
+    ]
+    if da_convocacao:
+        blocos_.append(
+            {
+                "titulo": TITULO_DOS_DOCUMENTOS_NA_CONVOCACAO,
+                "etapa": "inscricao",
+                "itens": [_documento(documento, snapshot) for documento in da_convocacao],
+            }
+        )
+    return blocos_
+
+
+# Bloco da conferência → como se lê, e onde se corrige. A ordem é a do assistente. Cada entrada
+# produz a **lista** de blocos que lhe cabe: quase todas, um; os Documentos Exigidos, um por
+# momento.
 BLOCOS = (
-    ("Perfis de Vaga", "perfis", _cada("profiles", _perfil)),
-    ("Cronograma", "cronograma", _cada("schedule", _evento)),
-    ("Etapas de Avaliação", "etapas", _cada("stages", _etapa)),
+    _bloco("Perfis de Vaga", "perfis", _cada("profiles", _perfil)),
+    _bloco("Cronograma", "cronograma", _cada("schedule", _evento)),
+    _bloco("Etapas de Avaliação", "etapas", _cada("stages", _etapa)),
     # Depois das Etapas porque é a ordem do assistente: o marco enumera Etapas, e é na etapa
     # `classificacao` que ele se corrige.
-    ("Classificação", "classificacao", _classificacao),
+    _bloco("Classificação", "classificacao", _classificacao),
     # Estava no snapshot que a submissão congela e não estava aqui: quem revisava homologava
     # sem ver o que o Edital exigiria do candidato. Entre Etapas e Conteúdo porque é a ordem
     # do assistente, e a etapa é `inscricao` — é lá que se corrige.
-    ("Documentos Exigidos", "inscricao", _cada("documentRequirements", _documento)),
+    # **Dois blocos, por momento** (132, FR-4501, FR-4502): oito documentos numa fila só, cada um
+    # com "Pedido: na inscrição" ou "na convocação", deixavam a quem homologa a conta de quantos
+    # são de cada momento — que o PDF já faz separando a seção da convocação (FR-3569 da 115).
+    _documentos_por_momento,
     # Depois dos Documentos Exigidos pela mesma razão: no assistente, Anexos vem logo após
     # Inscrição, e é o Anexo que serve de modelo ao requisito — não o contrário.
-    ("Anexos do Edital", "anexos", _cada("attachments", _anexo)),
-    ("Conteúdo do Edital", "conteudo", _secoes_do_documento),
+    _bloco("Anexos do Edital", "anexos", _cada("attachments", _anexo)),
+    _bloco("Conteúdo do Edital", "conteudo", _secoes_do_documento),
 )
 
 
@@ -1122,8 +1161,8 @@ def blocos(snapshot, registros=None):
     ]
     conferencia.extend(_teto_de_inscricoes(snapshot))
     conferencia.extend(_requerimento_de_matricula(snapshot))
-    for titulo, etapa, leitura in BLOCOS:
-        conferencia.append({"titulo": titulo, "etapa": etapa, "itens": leitura(snapshot)})
+    for compor in BLOCOS:
+        conferencia.extend(compor(snapshot))
     return conferencia
 
 
