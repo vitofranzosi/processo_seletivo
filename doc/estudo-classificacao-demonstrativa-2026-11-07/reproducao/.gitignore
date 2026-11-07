@@ -1,0 +1,4 @@
+# O instante do relógio do servidor do estudo é local de cada sessão.
+.relogio
+.relogio-fase
+__pycache__/
