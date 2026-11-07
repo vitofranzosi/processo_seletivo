@@ -1,12 +1,7 @@
-/* A mesma ordem na linha da Lista (057, FR-1049, FR-1050): as terminais depois de um filete —
-   só quando há ação antes delas —, e o contador zerado esmaecido, presente, porque "nenhuma" também
-   é resposta. */
-.acoes>*+.terminais{padding-left:.5rem;border-left:1px solid var(--borda)}
-.acao.zerada{color:var(--texto-fraco);border-color:var(--borda)}
-/* A marca da Retificação em curso na célula de situação (103, FR-2706, FR-2708): um link de texto
-   embaixo da situação do Edital, um por Retificação. A situação já diz o estado do Edital; a marca
-   diz o que a Retificação dele espera, e de quem. */
-.marca-da-retificacao{display:block;margin-top:.3rem;font-size:.8125rem;overflow-wrap:anywhere}
+/* A marca da Retificação em curso na linha do Edital (103, FR-2706, FR-2708; 129, FR-4318): um link
+   de texto depois da situação do Edital, um por Retificação. A situação já diz o estado do Edital; a
+   marca diz o que a Retificação dele espera, e de quem. */
+.marca-da-retificacao{font-size:.8125rem;overflow-wrap:anywhere}
 
 /* "Ações disponíveis para você" (104, FR-2807 a FR-2813). Uma caixa com filete verde à esquerda,
    para que o trabalho se distinga do inventário sem depender só da cor: tem título, número e verbo.
@@ -38,12 +33,57 @@
 .detalhe-do-item{color:var(--texto-fraco)}
 .demais-acoes{margin-top:.3rem}
 .demais-acoes summary{cursor:pointer;color:var(--verde);font-size:.9rem}
-.cobertura-da-faixa{margin:.6rem 0 0;font-size:.8rem;color:var(--texto-fraco)}
+/* A nota de cobertura logo abaixo do título, em tamanho de texto (129, FR-4324): no fim e a .8rem
+   ela não era lida, e é ela que impede a faixa de se passar por fila completa. */
+.cobertura-da-faixa{margin:0 0 .6rem;font-size:.9rem;color:var(--texto);max-width:var(--leitura)}
 .sem-acoes{margin:.8rem 0;font-size:.9rem;color:var(--texto-fraco)}
 @media (max-width:40rem){
   .item-de-trabalho{grid-template-columns:minmax(0,1fr)}
   .ato-do-item{grid-column:1;grid-row:auto;text-align:left}
 }
-/* O ato da Retificação na coluna da linha (104, FR-2814): o único preenchido da linha, porque é o
-   trabalho que espera a pessoa — Encerrar e Cancelar continuam contornados, e por último. */
-.acao.principal-da-linha{background:var(--verde);border-color:var(--verde);color:var(--branco)}
+
+/* O recorte da lista (129). As abas são uma navegação, e a atual tem um traço de 3 px embaixo, além
+   da cor: quem não distingue o verde distingue o traço (UX-270). Quebram de linha no estreito, em
+   vez de rolar. */
+.consulta-dos-processos{margin-top:1.5rem}
+.abas-da-lista ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.25rem 1.25rem;
+  border-bottom:1px solid var(--borda)}
+.aba-da-lista{display:inline-block;padding:.45rem 0;color:var(--texto-fraco);text-decoration:none;
+  border-bottom:3px solid transparent;margin-bottom:-1px}
+.aba-da-lista:hover{color:var(--texto)}
+.aba-da-lista[aria-current="page"]{color:var(--texto);font-weight:600;border-bottom-color:var(--verde)}
+.contagem-da-aba{font-variant-numeric:tabular-nums}
+/* A busca: rótulo visível em cima, campo e botão lado a lado, que empilham se faltar largura. */
+.busca-da-lista{display:grid;gap:.25rem;margin:1rem 0 .5rem;max-width:36rem}
+.busca-da-lista label{font-weight:600}
+.campo-da-busca{display:flex;gap:.5rem;min-width:0}
+.campo-da-busca input{flex:1 1 12rem;min-width:0}
+.dica-da-busca{font-size:.85rem;color:var(--texto-fraco)}
+.frase-do-recorte{margin:.5rem 0 1rem;max-width:var(--leitura)}
+/* O cartão do Processo, só desta tela: a linha dele em cima, as dos Editais embaixo. **Compacto**
+   (129, SC-1310): com 1rem de respiro, o título em 1,15rem e 1,25rem entre cartões, cada Processo
+   media 149 px, e 20 deles davam 4,2 telas no computador; a maquete V1 mediu 82. Os dois grupos do
+   cabeçalho continuam — quem é o Processo e como está de um lado, o que se faz nele do outro: sem
+   isso o estado caía depois dos botões, longe do título que ele qualifica. */
+.processo{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  margin-bottom:.5rem;overflow:hidden}
+.processo>header{padding:.4rem 1rem;border-bottom:1px solid var(--borda);
+  display:flex;align-items:center;gap:.35rem 1rem;flex-wrap:wrap}
+.processo>header h2{font-size:1rem}
+.processo>header>.quem-e{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;min-width:0}
+.processo>header>.acoes{margin-left:auto}
+/* A linha compacta do Edital (variante V1, FR-4318, FR-4320): número e título quando difere à
+   esquerda, a situação e a marca da Retificação à direita, numa linha que quebra — e nunca rola de
+   lado. O estado vai para a direita com ou sem título, para que os selos de um mesmo Processo fiquem
+   alinhados entre si. */
+.editais-do-processo{list-style:none;margin:0;padding:.15rem 1rem .25rem}
+.linha-do-edital{display:flex;flex-wrap:wrap;align-items:baseline;gap:.15rem .75rem;padding:.2rem 0;
+  min-width:0}
+.linha-do-edital+.linha-do-edital{border-top:1px solid var(--fundo)}
+.numero-do-edital{min-width:4.5rem;font-variant-numeric:tabular-nums}
+.titulo-do-edital{min-width:0;overflow-wrap:anywhere}
+.estado-do-edital{margin-left:auto;display:flex;flex-wrap:wrap;align-items:baseline;
+  justify-content:flex-end;gap:.15rem .6rem;min-width:0}
+@media (max-width:40rem){
+  .titulo-do-edital{display:none}
+}

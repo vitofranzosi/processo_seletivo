@@ -88,17 +88,24 @@ def test_lista_nao_revela_processo_de_outro_escopo(client, seletor_ligado, cenar
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_acoes_seguem_a_permissao_de_quem_olha(client, seletor_ligado, cenario):
-    """FR-002: a tela oferece só o que a pessoa pode fazer — sem que isso substitua o backend."""
+    """FR-002: a tela oferece só o que a pessoa pode fazer — sem que isso substitua o backend.
+
+    **Desde a 129 a linha do Edital não oferece ato** (FR-4319, variante V1): "Retificar" e
+    "Encerrar" moram no detalhe do Edital, que continua decidindo por papel. Na lista, o que segue a
+    permissão é o caminho de quem gere o Processo — Comissão e Alocação por Etapa.
+    """
+    processo = ProcessoSeletivo.objects.get()
+    comissao = reverse("interface:comissao", args=[processo.id])
     identificar(client, "ana.elaboradora", ["elaborador"])
     elaborador = client.get(reverse("interface:lista")).content.decode()
-    assert "Retificar" in elaborador
-    assert "Encerrar" not in elaborador
+    assert comissao not in elaborador
+    assert ">Retificar<" not in elaborador
 
     client.post(reverse("interface:sair"))
     identificar(client, "marcia.gestora", ["gestor"])
     gestor = client.get(reverse("interface:lista")).content.decode()
-    assert "Encerrar" in gestor
-    assert "Retificar" not in gestor
+    assert comissao in gestor
+    assert ">Encerrar<" not in gestor
 
 
 @pytest.mark.django_db
@@ -137,9 +144,11 @@ def test_estrutura_acessivel_da_lista(client, seletor_ligado, cenario):
     assert 'lang="pt-BR"' in corpo
     assert 'class="pular" href="#conteudo"' in corpo, "link de pular para o conteúdo"
     assert corpo.count("<h1>") == 1, "exatamente um h1 por página"
-    assert 'scope="col"' in corpo and 'scope="row"' in corpo, "cabeçalhos de tabela associados"
-    assert "<caption>" in corpo, "tabela precisa de legenda"
-    assert "aria-label" in corpo
+    # A lista deixou de ser tabela (129, FR-4320): as abas são navegação nomeada, e a busca tem
+    # rótulo visível (UX-270, UX-271).
+    assert "<table" not in corpo
+    assert '<nav class="abas-da-lista" aria-label="Situação dos Processos">' in corpo
+    assert '<label for="busca-da-lista">Buscar em todas as situações</label>' in corpo
 
 
 @pytest.mark.django_db
@@ -208,14 +217,18 @@ def test_a_acao_indisponivel_nao_se_parece_com_a_disponivel(client, seletor_liga
 def test_a_contagem_diz_o_que_ela_conta(client, seletor_ligado, edital_a):
     """ "5 Publicado, 2 Cancelado, 7 no total" — de quê?
 
-    A página se chama Processos Seletivos e lista Processos; quem conta são os Editais dentro
-    deles. O nome acessível já dizia; quem vê a tela é que ficava sem saber.
+    A página se chama Processos Seletivos e lista Processos, e o resumo contava os Editais dentro
+    deles. O rótulo "Editais no total" corrigiu a leitura; a 129 corrigiu o nível (FR-4321): as abas
+    contam **Processos**, e o resumo por Edital saiu — o panorama por Edital é da Visão Geral.
     """
     identificar(client, "carlos", ["gestor"])
 
     corpo = client.get(reverse("interface:lista")).content.decode()
 
-    assert "Editais no total" in corpo
+    assert "Editais no total" not in corpo
+    assert 'aria-label="Editais por situação"' not in corpo
+    assert 'Em andamento <span class="contagem-da-aba">(1)</span>' in corpo
+    assert "1 Processo, mostrando 1–1." in corpo
 
 
 @pytest.mark.django_db

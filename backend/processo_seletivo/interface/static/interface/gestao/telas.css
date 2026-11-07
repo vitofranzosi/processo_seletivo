@@ -27,27 +27,7 @@ object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda)
 .marcos{margin:.75rem 0 0;padding:.75rem 0 0;border-top:1px solid var(--borda)}
 .marcos h3{font-size:.9375rem;margin:0 0 .25rem}
 .marcos h4{font-size:.875rem;margin:0 0 .25rem}
-.processo{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
-  margin-bottom:1.25rem;overflow:hidden}
-.processo>header{padding:1rem 1.25rem;border-bottom:1px solid var(--borda);
-  display:flex;align-items:baseline;gap:.75rem 1rem;flex-wrap:wrap}
-/* Dois grupos, e não seis itens soltos: quem é o Processo e como ele está de um lado; o que se
-   faz nele, do outro. Sem isso o estado caía depois dos botões, longe do título que ele qualifica. */
-.processo>header>.quem-e{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;min-width:0}
-.processo>header>.acoes{margin-left:auto}
 .sem-edital{padding:1rem 1.25rem;color:var(--texto-fraco)}
-/* Cada Processo monta a sua própria tabela, e sem largura declarada cada uma se media pelo que
-   tinha dentro: em cartões empilhados, "Situação" aparecia em posições diferentes a cada um, e o
-   olho que desce a lista precisava reencontrar as colunas. Três têm conteúdo limitado e recebem
-   medida; o título, que é o texto variável, fica com o que sobra.
-
-   As ações ganharam seis rem (057, FR-1049): em 24, as cinco ações de um Edital publicado quebravam
-   em três linhas e a linha tinha 118 px; em 30, quebram em duas, e quem passa a ditar a altura é o
-   título — 82 px. */
-.processo table th:nth-child(1){width:7rem}
-.processo table th:nth-child(3){width:8rem}
-.processo table th:nth-child(4){width:30rem}
-.processo table th:first-child{white-space:nowrap}
 /* **Toda moldura que rola é a referência do que carrega** (078, `FR-1760`). O rótulo oculto de cada
    linha é `position:absolute`, e toma como referência o primeiro ancestral posicionado: com a moldura
    sem posição, era a página — e o rótulo que caía além da borda alargava a página inteira, e não a

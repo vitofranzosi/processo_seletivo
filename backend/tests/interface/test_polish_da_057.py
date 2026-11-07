@@ -10,7 +10,6 @@ import re
 from pathlib import Path
 
 import pytest
-from django.template.loader import render_to_string
 from django.urls import reverse
 
 from processo_seletivo.interface import acoes, revisao
@@ -150,35 +149,18 @@ def test_a_conducao_destaca_so_o_primeiro_gesto():
 
 
 # --- T1 — a coluna da Lista (FR-1049, FR-1050) -------------------------------------------------
+#
+# Substituídos pela FR-4319 da 129: a coluna "O que posso fazer" saiu da Lista (variante V1), e com
+# ela a ordem da linha e o contador esmaecido. O que fica é a garantia de que nada disso voltou.
 
 
-def test_a_lista_poe_as_frequentes_primeiro_e_as_terminais_no_fim():
-    linha = acoes.da_linha([a for a in PUBLICADO if a.chave != "auditoria"])
-    assert linha.principal is None, "na Lista não há ação cheia (D-004)"
-    assert [a.chave for a in linha.secundarias] == [
-        "inscricoes",
-        "recursos",
-        "retificar",
-        "matriculas",
-    ]
-    assert [a.chave for a in linha.terminais] == ["encerrar", "cancelar"]
+def test_a_lista_nao_tem_mais_a_coluna_nem_o_contador_da_linha():
     lista = (GESTAO / "lista.html").read_text()
-    assert '<span class="acoes terminais">' in lista
-    assert "border-left:1px" in regra(".acoes>*+.terminais", da_pagina("lista.html"))
-
-
-def test_o_contador_zero_esmaece_sem_perder_o_rotulo():
-    zerada = render_to_string(
-        "interface/_acao_de_linha.html",
-        {"acao": Acao("recursos", "Recursos aguardando decisão (0)", "/r", quantidade=0)},
-    )
-    assert 'class="acao zerada" href="/r">Recursos aguardando decisão (0)</a>' in zerada
-    com_sete = render_to_string(
-        "interface/_acao_de_linha.html",
-        {"acao": Acao("inscricoes", "Inscrições recebidas (7)", "/i", quantidade=7)},
-    )
-    assert "zerada" not in com_sete
-    assert "color:var(--texto-fraco)" in regra(".acao.zerada", da_pagina("lista.html"))
+    assert "acoes terminais" not in lista
+    assert "_acao_de_linha.html" not in lista
+    assert not (GESTAO / "_acao_de_linha.html").exists()
+    assert regra(".acao.zerada", da_pagina("lista.html")) is None
+    assert not hasattr(acoes, "da_linha")
 
 
 # --- D2 — o glossário recolhido (FR-1051 a FR-1053) --------------------------------------------

@@ -125,12 +125,17 @@ def test_texto_que_comeca_com_numero_nao_e_convertido():
 @pytest.mark.django_db
 @pytest.mark.integration
 def test_lista_abre_o_edital_pelo_numero_e_pelo_titulo(client, seletor_ligado, publicado):
-    """Da página inicial, as únicas portas eram as ações — "Cancelar" entre elas."""
+    """Da página inicial, as únicas portas eram as ações — "Cancelar" entre elas.
+
+    Desde a 129 a porta é o número, e só ele (FR-4318): o título só aparece quando difere do do
+    Processo, e um segundo link para o mesmo destino seria uma parada de teclado a mais.
+    """
     identificar(client, "bruno.homologador", ["homologador"])
     corpo = client.get(reverse("interface:lista")).content.decode()
 
     destino = reverse("interface:detalhe", args=[publicado.id])
-    assert corpo.count(f'href="{destino}"') >= 2
+    numero = f"{publicado.number}/{publicado.year}"
+    assert f'<a class="codigo numero-do-edital" href="{destino}">{numero}</a>' in corpo
 
 
 @pytest.mark.django_db
@@ -1151,15 +1156,16 @@ def test_a_acao_de_recursos_conta_so_as_pecas_que_aguardam_decisao(
         ).content.decode()
         return lista, cartao
 
-    # A recém-interposta, sem juízo, já espera — e a admitida do cenário também.
+    # A recém-interposta, sem juízo, já espera — e a admitida do cenário também. Na lista o número
+    # é o da faixa: o contador da linha saiu com a coluna (129, FR-4319).
     lista, cartao = rotulos()
-    assert "Recursos aguardando decisão (2)" in lista
+    assert "Decidir recursos (2)" in lista
     assert "Recursos aguardando decisão (2)" in cartao
 
     admitir(recem_chegada, admitido=False, motivo="Intempestivo.")
 
     lista, cartao = rotulos()
-    assert "Recursos aguardando decisão (1)" in lista
+    assert "Decidir recursos (1)" in lista
     assert "Recursos aguardando decisão (1)" in cartao
     assert "Recursos recebidos" not in cartao
 
@@ -1167,5 +1173,5 @@ def test_a_acao_de_recursos_conta_so_as_pecas_que_aguardam_decisao(
     decidir(peca["recurso"], especie=DecisaoRecurso.Especie.INDEFERIDO)
 
     lista, cartao = rotulos()
-    assert "Recursos aguardando decisão (0)" in lista
+    assert "Decidir recursos" not in lista
     assert "Recursos aguardando decisão (0)" in cartao
