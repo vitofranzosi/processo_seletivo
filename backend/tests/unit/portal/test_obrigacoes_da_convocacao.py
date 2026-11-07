@@ -1027,3 +1027,44 @@ class TestAConfirmacaoDoEnvio:
 
         for proibido in ("aceito", "aprovado", "conferido", "atendido"):
             assert proibido not in lida
+
+
+# --- 131: o obrigatório condicional -------------------------------------------------------------
+
+
+def _condicional(estado):
+    """O alistamento militar, obrigatório com a condição que o Edital publicou (131)."""
+    lido_ = lido(estado, nome="Certificado de alistamento militar")
+    lido_.requisito["requiredWhen"] = "no caso de candidatos do sexo masculino, maiores de 18 anos"
+    return lido_
+
+
+def test_condicional_a_apresentar_orienta_e_nao_manda_enviar():
+    """FR-4475, UX-304: "Falta enviar." pedia, a quem a condição não alcança, o que não se pede."""
+    item = _condicional(nomes.ITEM_A_APRESENTAR)
+    categoria = o.categoria(True, item.estado, apresentado=False)
+
+    texto = o.texto_do_item(item, categoria, o.ABERTA, "até 10/11/2026, às 17h00")
+
+    assert texto == (
+        "Obrigatório no caso de candidatos do sexo masculino, maiores de 18 anos. Se for o seu "
+        "caso, envie até 10/11/2026, às 17h00. Se não for, você não precisa enviar: a comissão "
+        "registra."
+    )
+    assert categoria == o.A_ENVIAR
+
+
+def test_condicional_fechada_a_chamada_vale_o_texto_de_antes():
+    item = _condicional(nomes.ITEM_A_APRESENTAR)
+    categoria = o.categoria(True, item.estado, apresentado=False)
+
+    assert (
+        o.texto_do_item(item, categoria, o.ENCERRADA_PELO_PRAZO, "") == "Não enviado até o prazo."
+    )
+
+
+def test_incondicional_a_apresentar_continua_falta_enviar():
+    item = lido(nomes.ITEM_A_APRESENTAR)
+    categoria = o.categoria(True, item.estado, apresentado=False)
+
+    assert o.texto_do_item(item, categoria, o.ABERTA, "") == "Falta enviar."

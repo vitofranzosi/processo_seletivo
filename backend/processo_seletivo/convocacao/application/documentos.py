@@ -372,6 +372,7 @@ class ItemLido:
 class LeituraDocumental:
     itens: list = field(default_factory=list)
     estado: str = nomes.DOCUMENTOS_SEM_EXIGENCIA
+    chamada_id: object = None
 
     @property
     def pedidos(self):
@@ -393,6 +394,16 @@ class LeituraDocumental:
             for lido in self.pedidos
             if lido.obrigatorio and lido.condicional and lido.estado == nomes.ITEM_NAO_SE_APLICA
         ]
+
+    @property
+    def assinatura_das_inaplicabilidades(self):
+        """O que a confirmação do aceite leva, e o que o comando confere (131, FR-4468)."""
+        from processo_seletivo.convocacao.domain.alcance import assinatura_das_inaplicabilidades
+
+        return assinatura_das_inaplicabilidades(
+            chamada_id=self.chamada_id,
+            conferencias=[lido.conferencia.id for lido in self.inaplicabilidades],
+        )
 
     @property
     def facultativos_sem_conferencia(self):
@@ -496,7 +507,7 @@ def leituras_por_chamada(raizes, *, decididas=frozenset()):
             ],
             decidida=raiz.id in decididas,
         )
-        leituras[raiz.id] = LeituraDocumental(itens=lidos, estado=estado)
+        leituras[raiz.id] = LeituraDocumental(itens=lidos, estado=estado, chamada_id=raiz.id)
     return leituras
 
 

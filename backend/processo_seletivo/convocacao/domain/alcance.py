@@ -138,6 +138,24 @@ def assinatura_da_correcao(*, convocacao_id, apuracao_id, versao_id, forma, espe
     )
 
 
+def assinatura_das_inaplicabilidades(*, chamada_id, conferencias):
+    """A identidade do conjunto de *"não se aplica"* que a confirmação do aceite mostrou (131).
+
+    **O mecanismo da prévia da correção da `120`**, e não outro: a tela leva a assinatura do que
+    mostrou, e o comando a recalcula sob a trava com o que o ato vai usar. Ela não prova leitura —
+    prova que quem desfecha não confirma um conjunto que mudou depois que a tela foi montada (10ª
+    decisão, FR-4468). A ordem dos identificadores não importa; a chamada entra para que a
+    assinatura de um cartão não sirva para outro.
+    """
+    return canonical_sha256(
+        {
+            "gesto": "inaplicabilidades",
+            "chamada": str(chamada_id),
+            "conferencias": sorted(str(c) for c in conferencias),
+        }
+    )
+
+
 __all__ = [
     "PARADA_REABILITADO",
     "PARADA_SUPLENTE",

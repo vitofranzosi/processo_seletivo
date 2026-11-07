@@ -8816,8 +8816,8 @@ ROTULO_DO_ITEM = {
     "PENDENTE": "Pendente",
     "COMPLEMENTADO": "Complementado, aguardando conferência",
     "CONFORME": "Conforme",
-    # **"após análise"** (131, UX-301): é juízo de quem conferiu, e não o "não se aplica" do recorte,
-    # que nem chega a esta página.
+    # **"após análise"** (131, UX-301): é juízo de quem conferiu, e não o "não se aplica" do
+    # recorte, que nem chega a esta página.
     "NAO_SE_APLICA": "Não se aplica após análise",
 }
 
@@ -9534,6 +9534,12 @@ def desfechar_view(request, edital_id, marco_id, convocacao_id):
             atestado_id=_identidade_ou_404(request.POST.get("atestado")),
             idempotency_key=request.POST.get("chave") or uuid4().hex,
             correlation_id=f"interface-desfecho-{edital_id}",
+            # A ciência dos obrigatórios considerados não aplicáveis, e a assinatura do que a tela
+            # mostrou (131, FR-4468). O comando confere as duas; a tela só as leva.
+            ciencia={
+                "assinatura": request.POST.get("inaplicabilidades") or "",
+                "marcada": request.POST.get("ciencia_das_inaplicabilidades") == "1",
+            },
         )
         request.session["acao_da_convocacao"] = "desfecho"
     except DomainError as erro:

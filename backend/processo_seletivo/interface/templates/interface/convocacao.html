@@ -461,7 +461,11 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     antes. "Apto para formalização" é o que o desfecho que inclui afirma, e nada além (D-005).
     {% endcomment %}
     {% if linha.documentos %}
-    <p class="nota"><strong>{{ linha.rotulo_documental }}</strong> — {{ linha.documentos.contagens.conformes }} de {{ linha.documentos.contagens.total }} conferido{{ linha.documentos.contagens.total|pluralize }}{% if linha.documentos.contagens.recebidos %} · {{ linha.documentos.contagens.recebidos }} para conferir{% endif %}{% if linha.documentos.contagens.complementados %} · {{ linha.documentos.contagens.complementados }} complementado{{ linha.documentos.contagens.complementados|pluralize }}{% endif %}{% if linha.documentos.contagens.pendentes %} · {{ linha.documentos.contagens.pendentes }} pendente{{ linha.documentos.contagens.pendentes|pluralize }}{% endif %}{% if linha.documentos.contagens.a_apresentar %} · {{ linha.documentos.contagens.a_apresentar }} a apresentar{% endif %}
+    {% comment %}
+    **Conformes e "não se aplica" em números separados** (131, FR-4466, UX-301): somados, *"3 de 4
+    conferidos"* dizia o mesmo de três conformes e de três afastados.
+    {% endcomment %}
+    <p class="nota"><strong>{{ linha.rotulo_documental }}</strong> — {{ linha.documentos.contagens.conformes }} de {{ linha.documentos.contagens.total }} conforme{{ linha.documentos.contagens.conformes|pluralize }}{% if linha.documentos.contagens.nao_se_aplica %} · {{ linha.documentos.contagens.nao_se_aplica }} não se aplica após análise{% endif %}{% if linha.documentos.contagens.recebidos %} · {{ linha.documentos.contagens.recebidos }} para conferir{% endif %}{% if linha.documentos.contagens.complementados %} · {{ linha.documentos.contagens.complementados }} complementado{{ linha.documentos.contagens.complementados|pluralize }}{% endif %}{% if linha.documentos.contagens.pendentes %} · {{ linha.documentos.contagens.pendentes }} pendente{{ linha.documentos.contagens.pendentes|pluralize }}{% endif %}{% if linha.documentos.contagens.a_apresentar %} · {{ linha.documentos.contagens.a_apresentar }} a apresentar{% endif %}
       · <a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id linha.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Documentos da convocação</a></p>
     {% endif %}
     <details class="como-preencher">
@@ -525,7 +529,27 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
       </p>
       {% endif %}
       {% if linha.documentos.pendencias_para_incluir %}
-      <p class="nota">Aceite e regularização são recusados enquanto faltar conferir: {% for lido in linha.documentos.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+      <p class="nota">Aceite e regularização são recusados enquanto faltar conferir: {% for lido in linha.documentos.pendencias_para_incluir %}{{ lido.nome }}{% if lido.sem_condicao_publicada %} ("não se aplica" registrado sem condição publicada){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+      {% endif %}
+      {% comment %}
+      **O que o aceite está aceitando** (131, FR-4467, FR-4468, UX-303). Cada obrigatório afastado,
+      com a condição que o Edital publicou, o motivo, quem registrou e quando. A ciência vai com a
+      assinatura do conjunto: se outra pessoa mudar uma conferência depois que esta tela abriu, o
+      comando recusa e a tela volta com a lista nova. Só o aceite e a regularização a leem.
+      {% endcomment %}
+      {% if linha.documentos.inaplicabilidades %}
+      <fieldset class="opcoes">
+        <legend>Documentos obrigatórios considerados não aplicáveis</legend>
+        <ul>
+          {% for lido in linha.documentos.inaplicabilidades %}
+          <li>{{ lido.nome }} — condição publicada: {{ lido.condicao }}. Motivo: {{ lido.conferencia.motivo }}. Registrado por {% nome_de_pessoa lido.conferencia.conferido_por %} em {{ lido.conferencia.conferido_em|date:"d/m/Y H:i" }}{% if lido.conferencia.apresentacao_id %} (versão {{ lido.conferencia.apresentacao.numero }}){% endif %}.</li>
+          {% endfor %}
+        </ul>
+        <input type="hidden" name="inaplicabilidades" value="{{ linha.documentos.assinatura_das_inaplicabilidades }}">
+        <p class="opcao"><input type="checkbox" id="ciencia-{{ forloop.counter }}" name="ciencia_das_inaplicabilidades" value="1">
+          <label for="ciencia-{{ forloop.counter }}">Vi os documentos acima e registro o desfecho com eles considerados não aplicáveis.</label></p>
+        <p class="nota">A ciência é pedida no aceite e na regularização.</p>
+      </fieldset>
       {% endif %}
       <p class="acoes"><button type="submit" class="botao">Registrar desfecho</button></p>
     </form>

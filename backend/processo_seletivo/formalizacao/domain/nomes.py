@@ -58,18 +58,32 @@ INTERROMPIDA = "A exportação não foi concluída. Nada foi baixado nem registr
 
 INCLUIDO = "INCLUIDO"
 NAO_SE_APLICA = "NAO_SE_APLICA"
+# **O "não se aplica" que alguém decidiu** (131, FR-4473, D-016): a conferência afastou um
+# obrigatório cuja condição publicada não alcança a pessoa. Distinto do que o recorte excluiu, para
+# o setor saber que o documento não veio por decisão da comissão, e quando. O motivo não vai
+# (FR-3687 da `117`).
+NAO_SE_APLICA_APOS_ANALISE = "NAO_SE_APLICA_APOS_ANALISE"
 NAO_APRESENTADO = "NAO_APRESENTADO"
 NAO_CONFERIDO = "NAO_CONFERIDO"
 INDISPONIVEL = "INDISPONIVEL"
 INTEGRIDADE = "INTEGRIDADE"
 
-SITUACOES = (INCLUIDO, NAO_SE_APLICA, NAO_APRESENTADO, NAO_CONFERIDO, INDISPONIVEL, INTEGRIDADE)
+SITUACOES = (
+    INCLUIDO,
+    NAO_SE_APLICA,
+    NAO_SE_APLICA_APOS_ANALISE,
+    NAO_APRESENTADO,
+    NAO_CONFERIDO,
+    INDISPONIVEL,
+    INTEGRIDADE,
+)
 #: Só estas duas tornam a pessoa incompleta, e só se conhecem lendo o arquivo (FR-3672, FR-3694).
 QUE_EXCLUEM = (INDISPONIVEL, INTEGRIDADE)
 
 ROTULO_DA_SITUACAO = {
     INCLUIDO: "disponível",
     NAO_SE_APLICA: "não se aplica",
+    NAO_SE_APLICA_APOS_ANALISE: "não se aplica após análise",
     NAO_APRESENTADO: "não apresentado",
     NAO_CONFERIDO: "não conferido",
     INDISPONIVEL: "arquivo indisponível",

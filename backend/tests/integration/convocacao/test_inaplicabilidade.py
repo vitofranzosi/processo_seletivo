@@ -355,3 +355,263 @@ def test_a_condicao_se_le_da_versao_da_lista(cenario):
 
     assert servico.requisito_do_item(alvo)["requiredWhen"] == CONDICAO
     assert alvo.versao_id == cenario["ppi"].versao_id
+
+
+# --- 9: o aceite com ciência ----------------------------------------------------------------------
+
+
+def _pronta_com_um_nao_se_aplica(cenario, alocado):
+    """A pessoa PPI com os incondicionais conformes e o alistamento afastado pelo alocado."""
+    convocacao, pessoa = cenario["ppi"], cenario["pessoa_ppi"]
+    for requisito in (CERTIDAO, HISTORICO, AUTODECLARACAO):
+        apresentar(pessoa, convocacao, requisito, corpo=f"arquivo {requisito}".encode())
+        conferir(alocado, convocacao, requisito, "CONFORME", chave=f"c-{requisito}")
+    afastada = conferir(alocado, convocacao, ALISTAMENTO, "NAO_SE_APLICA", chave="n", motivo=FATO)
+    return convocacao, afastada
+
+
+def _aceite(cenario, gestor, convocacao, *, chave, ciencia=None, especie="ACEITE"):
+    from processo_seletivo.convocacao.application.desfechar import desfechar
+
+    return desfechar(
+        actor=gestor,
+        processo_id=cenario["edital"].processo_id,
+        convocacao_id=convocacao.id,
+        especie=especie,
+        fundamento="Apto para formalização.",
+        idempotency_key=chave,
+        correlation_id="teste-131",
+        ciencia=ciencia,
+    )
+
+
+def _assinatura(convocacao):
+    return servico.leitura_da_chamada(convocacao).assinatura_das_inaplicabilidades
+
+
+def test_a_leitura_separa_conformes_e_nao_se_aplica(cenario, alocado):
+    convocacao, _ = _pronta_com_um_nao_se_aplica(cenario, alocado)
+
+    leitura = servico.leitura_da_chamada(convocacao)
+
+    assert leitura.estado == nomes.DOCUMENTOS_PRONTA
+    assert leitura.contagens["conformes"] == 3
+    assert leitura.contagens["nao_se_aplica"] == 1
+    assert [lido.nome for lido in leitura.inaplicabilidades] == [
+        "Certificado de alistamento militar ou de reservista"
+    ]
+
+
+def test_aceite_sem_ciencia(cenario, alocado, gestor):
+    from processo_seletivo.convocacao.models import DesfechoDaConvocacao
+
+    convocacao, _ = _pronta_com_um_nao_se_aplica(cenario, alocado)
+
+    for ciencia in (None, {"assinatura": _assinatura(convocacao), "marcada": False}):
+        recusa = _recusa(
+            lambda ciencia=ciencia: _aceite(cenario, gestor, convocacao, chave="s", ciencia=ciencia)
+        )
+        assert recusa.code == nomes.CIENCIA_DAS_INAPLICABILIDADES
+    assert not DesfechoDaConvocacao.objects.filter(convocacao=convocacao).exists()
+
+
+def test_aceite_com_ciencia_superada(cenario, alocado, gestor):
+    """O conjunto mudou entre a tela e o clique: a ciência não vale para o que não se viu."""
+    from processo_seletivo.convocacao.models import DesfechoDaConvocacao
+
+    convocacao, _ = _pronta_com_um_nao_se_aplica(cenario, alocado)
+    vista = _assinatura(convocacao)
+    conferir(
+        alocado,
+        convocacao,
+        ALISTAMENTO,
+        "NAO_SE_APLICA",
+        chave="n-de-novo",
+        motivo="Candidata do sexo feminino, conforme a certidão.",
+        motivo_da_substituicao="Corrigido o documento citado.",
+    )
+
+    recusa = _recusa(
+        lambda: _aceite(
+            cenario, gestor, convocacao, chave="v", ciencia={"assinatura": vista, "marcada": True}
+        )
+    )
+
+    assert recusa.code == nomes.INAPLICABILIDADES_MUDARAM
+    assert not DesfechoDaConvocacao.objects.filter(convocacao=convocacao).exists()
+
+
+def test_aceite_com_ciencia(cenario, alocado, gestor):
+    from processo_seletivo.auditoria.models import RegistroAuditoria
+    from processo_seletivo.convocacao.application.desfechar import DESFECHAR
+
+    convocacao, afastada = _pronta_com_um_nao_se_aplica(cenario, alocado)
+
+    declarado = _aceite(
+        cenario,
+        gestor,
+        convocacao,
+        chave="ok",
+        ciencia={"assinatura": _assinatura(convocacao), "marcada": True},
+    )
+
+    assert declarado["especie"] == "ACEITE"
+    trilha = RegistroAuditoria.objects.get(operation=DESFECHAR, aggregate_id=declarado["id"])
+    assert str(afastada.id) in trilha.reason
+    assert FATO not in trilha.reason
+
+
+def test_indeferimento_sem_ciencia(cenario, alocado, gestor):
+    """Os desfechos que não incluem não leem o estado documental (FR-3593 da `115`)."""
+    convocacao, _ = _pronta_com_um_nao_se_aplica(cenario, alocado)
+
+    declarado = _aceite(cenario, gestor, convocacao, chave="i", especie="INDEFERIMENTO")
+
+    assert declarado["especie"] == "INDEFERIMENTO"
+
+
+def test_sem_inaplicabilidade_o_aceite_e_o_de_antes(cenario, alocado, gestor):
+    convocacao, pessoa = cenario["ppi"], cenario["pessoa_ppi"]
+    for requisito in (CERTIDAO, HISTORICO, AUTODECLARACAO, ALISTAMENTO):
+        apresentar(pessoa, convocacao, requisito, corpo=f"arquivo {requisito}".encode())
+        conferir(alocado, convocacao, requisito, "CONFORME", chave=f"c-{requisito}")
+
+    assert _aceite(cenario, gestor, convocacao, chave="a")["especie"] == "ACEITE"
+
+
+# --- a 11ª decisão: o "não se aplica" antigo, sem condição publicada -------------------------
+
+
+def _nao_se_aplica_antigo(convocacao, requisito):
+    """A linha que a `115` deixava gravar num incondicional, posta direto no banco, como estava."""
+    alvo = item(convocacao, requisito)
+    return ConferenciaDeDocumento.objects.create(
+        item=alvo,
+        resultado="NAO_SE_APLICA",
+        motivo="Dispensado.",
+        conferido_por="joao",
+        unidade_de_atuacao="cefor",
+        conferido_em=timezone.now(),
+    )
+
+
+def test_p1_chamada_aberta_o_antigo_nao_atende(cenario, alocado, gestor):
+    convocacao, _ = _pronta_com_um_nao_se_aplica(cenario, alocado)
+    gravada = ConferenciaDeDocumento.objects.filter(item=item(convocacao, CERTIDAO)).count()
+    _nao_se_aplica_antigo(convocacao, CERTIDAO)
+
+    lido_antigo = lido(convocacao, CERTIDAO)
+    assert lido_antigo.sem_condicao_publicada
+    assert servico.leitura_da_chamada(convocacao).estado == nomes.DOCUMENTOS_COM_PENDENCIA
+    recusa = _recusa(
+        lambda: _aceite(
+            cenario,
+            gestor,
+            convocacao,
+            chave="p1",
+            ciencia={"assinatura": _assinatura(convocacao), "marcada": True},
+        )
+    )
+    assert recusa.code == nomes.DOCUMENTOS_NAO_CONFERIDOS
+    assert "registrado sem condição publicada" in recusa.detail
+    # O registro antigo continua gravado e legível: nada se reescreve (FR-4476).
+    assert (
+        ConferenciaDeDocumento.objects.filter(item=item(convocacao, CERTIDAO)).count()
+        == gravada + 1
+    )
+
+
+def test_p1_chamada_decidida_continua(cenario, alocado, gestor):
+    convocacao, _ = _pronta_com_um_nao_se_aplica(cenario, alocado)
+    _aceite(
+        cenario,
+        gestor,
+        convocacao,
+        chave="a",
+        ciencia={"assinatura": _assinatura(convocacao), "marcada": True},
+    )
+    _nao_se_aplica_antigo(convocacao, CERTIDAO)
+
+    leitura = servico.leitura_da_chamada(convocacao, decidida=True)
+
+    assert leitura.estado == nomes.DOCUMENTOS_DECIDIDA
+    assert lido(convocacao, CERTIDAO).sem_condicao_publicada
+
+
+# --- as telas: a página dos documentos, a condução e o POST do desfecho ------------------------
+
+
+@pytest.fixture
+def na_gestao(client, settings):
+    """O cliente identificado como quem gere a comissão, pelo seletor da demonstração."""
+    from django.urls import reverse
+
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    resposta = client.post(
+        reverse("interface:identificar"), {"subject": "carlos", "papeis": ["gestor"]}
+    )
+    assert resposta.status_code == 302
+    return client
+
+
+def _rotas(cenario, convocacao):
+    from django.urls import reverse
+
+    edital = cenario["edital"]
+    return {
+        "pagina": reverse(
+            "interface:documentos-da-convocacao", args=[edital.id, MARCO, convocacao.id]
+        ),
+        "conducao": reverse("interface:convocacao", args=[edital.id, MARCO]),
+        "desfecho": reverse("interface:desfechar", args=[edital.id, MARCO, convocacao.id]),
+    }
+
+
+def test_a_pagina_so_oferece_o_nao_se_aplica_no_condicional(cenario, na_gestao):
+    corpo = na_gestao.get(_rotas(cenario, cenario["ppi"])["pagina"]).content.decode()
+
+    assert corpo.count('value="NAO_SE_APLICA"') == 1
+    assert f"Condição publicada: {CONDICAO}." in corpo
+    assert "que fato da pessoa a põe fora da condição?" in corpo
+
+
+def test_a_conducao_separa_as_contagens_e_mostra_o_bloco(cenario, alocado, na_gestao):
+    convocacao, afastada = _pronta_com_um_nao_se_aplica(cenario, alocado)
+
+    corpo = na_gestao.get(_rotas(cenario, convocacao)["conducao"]).content.decode()
+
+    assert "3 de 4 conformes · 1 não se aplica após análise" in corpo
+    assert "Documentos obrigatórios considerados não aplicáveis" in corpo
+    assert f"condição publicada: {CONDICAO}. Motivo: {FATO}" in corpo
+    assert f'name="inaplicabilidades" value="{_assinatura(convocacao)}"' in corpo
+    assert 'name="ciencia_das_inaplicabilidades"' in corpo
+
+
+def _desfechar_pela_tela(cliente, rota, campos):
+    """O POST do desfecho, pelos dois passos da conferência do texto da `125`."""
+    from processo_seletivo.interface.conferencia_do_texto import CHAVE
+
+    cliente.post(rota, campos)
+    resumo = cliente.session[CHAVE]["resumo"]
+    return cliente.post(rota, {**campos, "etapa": "confirmar", "texto_conferido": resumo})
+
+
+def test_o_post_do_desfecho_leva_a_ciencia(cenario, alocado, na_gestao):
+    from processo_seletivo.convocacao.models import DesfechoDaConvocacao
+
+    convocacao, _ = _pronta_com_um_nao_se_aplica(cenario, alocado)
+    rota = _rotas(cenario, convocacao)["desfecho"]
+    campos = {
+        "especie": "ACEITE",
+        "fundamento": "Apto para formalização.",
+        "inaplicabilidades": _assinatura(convocacao),
+        "chave": "sem-ciencia",
+    }
+
+    _desfechar_pela_tela(na_gestao, rota, campos)
+    assert not DesfechoDaConvocacao.objects.filter(convocacao=convocacao).exists()
+
+    _desfechar_pela_tela(
+        na_gestao, rota, {**campos, "chave": "com-ciencia", "ciencia_das_inaplicabilidades": "1"}
+    )
+    assert DesfechoDaConvocacao.objects.get(convocacao=convocacao).especie == "ACEITE"
