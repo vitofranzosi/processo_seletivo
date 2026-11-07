@@ -513,7 +513,8 @@ estava, e que a aberta segue a transição escolhida na P-1.
   revela tanto quanto o *"não se aplica"* do recorte já revela: que a exigência não alcançou a
   pessoa, sem o porquê. Para o documento condicional, a condição publicada permite inferir o fato
   (*"não é do sexo masculino ou não é maior de 18 anos"*). Esse é o mesmo grau de inferência que o
-  recorte por modalidade já produz para o laudo, e fica registrado como risco aceito, sujeito à P-3.
+  recorte por modalidade já produz para o laudo. O risco fica **registrado e pendente**, na P-3: não
+  foi aceito.
 - **O auditor não ganha acesso** (FR-4474).
 
 ## Compatibilidade com regras anteriores
@@ -687,19 +688,25 @@ esta spec o corrige: a FR-3687 da `117` o proíbe.
   - *(c)* Só a P-1 (a) daqui a uma data.
 
   Com o sistema fora de produção, (a) só afeta os bancos de demonstração.
-- **P-2 — A dispensa excepcional fica fora.** Confirmar que, até decisão institucional, a resposta do
-  GPS a um caso excepcional é a que já existe:
+- **P-2 — A dispensa excepcional fica fora.** Confirmar que, até decisão institucional, o GPS não tem
+  operação, estado nem permissão para afastar uma exigência que se aplica. Nenhum botão novo.
+
+  **O GPS não oferece substituto para a dispensa.** As operações que já existem não são respostas
+  intercambiáveis a um caso excepcional, e esta spec não as recomenda como tal:
   - a correção da convocação com prazo novo (FR-3618 da `115`);
   - o indeferimento;
-  - a Retificação, para as chamadas seguintes.
+  - a Retificação.
 
-  Nenhum botão novo.
+  Cada uma continua exigindo o fundamento próprio, na regra que a rege. Em particular, **a limitação
+  do GPS não fundamenta indeferimento**: o sistema não ter como registrar uma exceção não é razão
+  para indeferir quem dela trataria.
 
 **Não impedem:**
 
 - **P-3** — O grau de inferência da situação *"não se aplica após análise"* no manifesto (LGPD).
-  Recomendação: aceitar, pelo mesmo grau que o recorte já produz. Alternativa: omitir a linha do
-  documento condicional não aplicável do manifesto.
+  Pendente. O que esta spec recomenda é aceitar o risco, pelo mesmo grau de inferência que o recorte já
+  produz. A alternativa é omitir do manifesto a linha do documento condicional não aplicável. Enquanto
+  o usuário não decidir, a FR-4473 vale como está escrita, e o risco não conta como aceito.
 - **P-4** — O fato já comprovado ao Ifes (Lei 14.129/2021, art. 3º, XIII). Recomendação: o Edital o
   publica como condição (*"exceto para quem concluiu o ensino médio no Ifes"*), e a conferência o
   aplica. A aplicação da lei ao caso continua sendo da Procuradoria.
