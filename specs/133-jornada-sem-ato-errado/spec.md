@@ -130,6 +130,15 @@ Fica fora, de propósito:
   orienta a aguardar e explica a consequência antes da confirmação, e o corte continua emissível.
 - R4: abrir a spec antes do teste com pessoas? → **Sim.** São defeitos com evidência reproduzida.
 
+### Session 2026-11-08
+
+- Q: O marco **sem** corte que governe Etapa, seguido de outro marco, também é intermediário? → A:
+  **Não.** Só o marco cujo corte governa uma Etapa que outro marco do Perfil enumera (D-001). A
+  definição não se amplia sem caso conhecido e sem o acervo conferido.
+- Q: A correção de uma convocação já existente num marco intermediário continua permitida? → A:
+  **Não.** A correção cria uma convocação nova, com comunicação: é começar um ato. Encerrar a chamada
+  existente continua possível pelo desfecho e pela conferência (FR-4534, FR-4535).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — O marco intermediário não apura nem convoca (Priority: P1)
@@ -252,7 +261,7 @@ conferir as providências de quem publica e tentar publicar a definitiva da ampl
 1. **Given** a preliminar da ampla publicada e a ordem da ampla obsoleta, **When** quem publica abre
    o detalhe, **Then** o definitivo da ampla não é *Pendente*. Ele aparece como *Depois*, com a razão.
 2. **Given** o corte que o resultado reflete obsoleto, **When** quem publica abre o detalhe, **Then**
-   o mesmo, com a razão do corte.
+   o definitivo aparece *Impedido*, com a razão do corte e quem resolve, e não *Pendente*.
 3. **Given** a ordem sucessora emitida, **When** quem publica abre o detalhe, **Then** o definitivo
    volta a ser *Pendente*, como hoje.
 
@@ -286,15 +295,16 @@ publicação. Conferir que um Edital já publicado continua com o documento que 
 - **O marco intermediário com apuração ou convocação já gravadas antes desta feature.** Elas continuam
   vigentes, válidas e legíveis, e a trilha não muda. A recusa vale para **atos novos**. Os atos que
   **encerram** uma convocação já existente continuam permitidos (desfecho, conferência de documento,
-  comunicação pendente), para que ninguém fique preso numa chamada sem saída. A derivação mostra o
+  comunicação pendente), para que ninguém fique preso numa chamada sem saída. A **correção** da
+  convocação existente é recusada: ela cria uma convocação nova (decidido em 08/11). A derivação mostra o
   que existe, sem chamar de erro, e não pede ato novo.
 - **O marco intermediário por sorteio.** O sorteio cujo corte governa uma Etapa que outro marco lê é
   intermediário pela mesma regra. A definição não olha a forma de ordenar.
 - **Mais de dois marcos em cadeia.** Cada marco cuja Etapa governada é lida por **algum** marco do
   mesmo Perfil é intermediário. O último, que nenhum outro alimenta, não é.
 - **Marco sem regra de corte, ou com corte que não governa Etapa, seguido de outro marco.** **Não** é
-  intermediário por esta definição (D-001). Ele continua apurando e convocando como hoje. Ver a
-  pergunta aberta em *Assumptions*.
+  intermediário por esta definição (D-001, confirmada em 08/11). Ele continua apurando e convocando
+  como hoje.
 - **A faixa seguinte do corte num marco intermediário.** Ela é ato de corte, e não de ocupação: amplia
   quem vai à Etapa seguinte, e continua permitida. O que se recusa é a faixa **causada por déficit de
   ocupação**, que só existe com apuração.
@@ -383,8 +393,10 @@ publicação. Conferir que um Edital já publicado continua com o documento que 
 
 - **FR-4550**: Na derivação do resultado de uma lista, a publicação MUST ser *Depois*, com a razão,
   sempre que a ordem vigente estiver obsoleta, **também** quando já houver publicação preliminar.
-- **FR-4551**: O mesmo MUST valer quando o corte do marco, do qual o resultado depende, estiver
-  obsoleto.
+- **FR-4551**: Quando o corte do marco, do qual o resultado depende, estiver obsoleto, a publicação
+  MUST ser *Impedido* ou *Depois*, com a razão e quem resolve, e nunca *Pendente*. *Ajustada no plano
+  (R-007 da pesquisa): a aferição da definitiva já devolve o impedimento do corte obsoleto, com a
+  mesma frase da prévia de publicação.*
 - **FR-4552**: A derivação MUST NOT dizer *Pendente* para uma publicação que o comando de publicação
   recusaria pelos mesmos motivos. É a mesma garantia que a `128` deu à ordem, agora para a divulgação.
 
@@ -447,10 +459,8 @@ publicação. Conferir que um Edital já publicado continua com o documento que 
   que a `016` e a `019` aceitavam num recorte de marco intermediário. Nenhum requisito vigente
   **exige** apurar ou convocar nesse recorte. A FR-239 da `016` define **como** se apura por recorte,
   e não que todo recorte se apura.
-- **Pergunta aberta, que não bloqueia esta entrega:** o marco sem corte que governe Etapa, seguido de
-  outro marco, também deveria ser intermediário? Não há caso no acervo conhecido nem evidência do
-  estudo. A definição mais estreita (D-001) evita recusar um ato legítimo por inferência. Se o usuário
-  quiser ampliar, é decisão própria, com o acervo conferido.
+- O marco sem corte que governe Etapa, seguido de outro marco, **não** é intermediário (decidido em
+  08/11, *Clarifications*). Ampliar a definição seria decisão própria, com o acervo conferido.
 - O texto exato das frases (recusa, espera, consequência) é do plano, em linguagem simples, sem
   identificador interno. As frases das maquetes A1 a A3 do estudo são o ponto de partida.
 - A demonstração no navegador e `make lint check test-pg` fazem parte da verificação da entrega, como

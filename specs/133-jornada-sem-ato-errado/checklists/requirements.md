@@ -35,9 +35,8 @@
   conferida, que é a convenção deste repositório (ver a `128`), e não como desenho. Nenhum requisito
   prescreve módulo, função ou tecnologia. FR-4531 e FR-4546 exigem **uma** regra, e não dizem onde
   ela mora.
-- **Pergunta aberta sem marcador.** O marco sem corte que governe Etapa, seguido de outro marco, fica
-  fora da definição (D-001), e está registrado em *Assumptions* como decisão possível do usuário. Não
-  bloqueia: a definição escolhida é a mais estreita, e não recusa nenhum ato legítimo conhecido.
+- **Clarificação de 08/11.** O usuário confirmou a definição estreita (D-001) e a recusa da correção
+  da convocação no marco intermediário. Nenhuma pergunta aberta restante.
 - **Regra nova declarada.** A recusa (FR-4532 a FR-4534) muda o que a `016` e a `019` aceitavam. Por
   isso há a seção *Compatibilidade com regras anteriores*, conferida contra as specs vigentes.
 - **Guardiões rodados:** `tests/test_citacoes_de_requisito.py` e `tests/test_readme_acompanha_o_codigo.py`
