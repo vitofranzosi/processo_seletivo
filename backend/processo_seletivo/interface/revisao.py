@@ -61,6 +61,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     frases_da_combinacao,
     frases_do_corte,
     sem_cadastro_de_reserva,
+    tem_lista_reservada,
     teto_de_inscricoes,
 )
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
@@ -604,7 +605,12 @@ def _leitura_do_marco(marco, perfil, snapshot):
         # A unidade do corte, como o documento a imprime (K1 a K10): o corte, o empate, os suplentes
         # e a continuação. A regra sem alvo não publica, e a pendência o diz; aqui a linha não sai
         # vazia.
-        unidade = frases_do_corte(marco, etapas, sem_cadastro=sem_cadastro_de_reserva(snapshot))
+        unidade = frases_do_corte(
+            marco,
+            etapas,
+            sem_cadastro=sem_cadastro_de_reserva(snapshot),
+            com_reservadas=tem_lista_reservada(snapshot, perfil),
+        )
         pares.append(
             (
                 "Corte",

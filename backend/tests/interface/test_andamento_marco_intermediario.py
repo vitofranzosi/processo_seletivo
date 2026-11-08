@@ -112,3 +112,30 @@ def test_depois_da_desistencia_a_proxima_da_fila_e_providencia(cenario):
     assert "Chamar a próxima da fila" in atos, atos
     esperas = [c for c in _providencias(lido) if c.situacao == andamento.AGUARDA]
     assert any("Resposta de 1 convocação" in c.ato for c in esperas)
+
+
+def test_com_chamada_aberta_para_a_vaga_que_vagou_nao_se_chama_outra(cenario):
+    """D-004: a chamada da vaga que vagou ainda não ocupa, e já responde pela vaga."""
+    m900.ate_a_desistencia_com_titular_pendente(cenario)
+    m900.convocar(cenario, cenario["inscricoes"][4], chave="vaga-que-vagou")
+
+    atos = [c.ato for c in _suas(_ler(cenario))]
+    assert "Chamar a próxima da fila" not in atos, atos
+
+
+def test_a_tela_da_convocacao_e_o_cartao_apontam_a_mesma_proxima(client, cenario, seletor_ligado):
+    """FR-4549: a mesma parada, as duas leituras."""
+    from django.urls import reverse
+
+    from tests.interface.conftest import identificar
+
+    m900.ate_a_desistencia_com_titular_pendente(cenario)
+    identificar(client, "carlos", ["gestor"])
+    edital = cenario["edital"]
+    tela = client.get(
+        reverse("interface:convocacao", args=[edital.id, m900.MARCO_2])
+    ).content.decode()
+    cartao = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+
+    assert "próxima da fila" in tela
+    assert "Chamar a próxima da fila" in cartao

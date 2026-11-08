@@ -257,7 +257,9 @@ def test_a_funcao_nao_muda_o_snapshot():
 DOCUMENTOS = RAIZ / "doc" / "auditoria-edital-pdf-2026-10-08" / "pdf"
 ESPERADOS = {
     "A": RAIZ / "specs" / "069-edital-linguagem-simples" / "demonstracao" / "A-plana-069.pdf",
-    "B": RAIZ / "specs" / "096-cadastro-de-reserva-como-cr" / "demonstracao" / "B-plana-096.pdf",
+    # Da `133`: o corte de alvo fixo diz "de cada lista de concorrência" (FR-4553); a diferença
+    # para o da `096` é presa por `test_documento_da_auditoria_depois_da_133.py`.
+    "B": RAIZ / "specs" / "133-jornada-sem-ato-errado" / "demonstracao" / "B-plana-133.pdf",
 }
 CARGO = "Diretora-Geral do Centro de Referência em Formação e em Educação a Distância"
 # O contexto do ato com que cada cenário foi publicado na auditoria de 08/10/2026: A com nome e ato

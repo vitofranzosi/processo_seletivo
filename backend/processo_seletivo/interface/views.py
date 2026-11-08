@@ -8150,6 +8150,7 @@ def corte(request, edital_id, marco_id):
         codigo_da_recusa = erro.code
     if proposta:
         _com_a_inscricao(proposta["itens"])
+    espera = _espera_do_corte(edital, marco_id, lista_id) if proposta and not geracao else None
     para_a_ordenacao = reverse("interface:ordenacao", args=[edital.id, marco_id]) + (
         f"?lista={lista_id}" if lista_id else ""
     )
@@ -8179,6 +8180,7 @@ def corte(request, edital_id, marco_id):
                 "caminho_da_recusa": caminho_da_recusa,
                 "conducao_da_recusa": conducao_da_recusa,
                 "proposta": proposta,
+                "espera_do_corte": espera,
                 "recusa": recusa,
                 "geracao": geracao,
                 "corte_obsoleto": estado["obsoleto"],
@@ -8221,6 +8223,11 @@ def ocupacao(request, edital_id, marco_id):
     perfil_id = _perfil_do_marco(edital, marco_id)
     recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
     _com_o_acrescimo(edital, perfil_id, recortes)
+    # **O marco intermediário não apura** (133, FR-4538): nenhum formulário, e o aviso leva à
+    # ocupação do marco que apura. O que já existe continua legível.
+    intermediario = _marco_intermediario(edital, marco_id, "interface:ocupacao")
+    if intermediario is not None:
+        pode_emitir = False
     # **A lista que ninguém declarou não manda emitir ordem** (126, FR-4026): a ordem dela nunca
     # existirá, e "emita a ordem deste recorte" levava à tela do sorteio, onde não há o que fazer.
     resultado = request.session.pop("resultado_da_ocupacao", None)
@@ -8247,12 +8254,13 @@ def ocupacao(request, edital_id, marco_id):
                 # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
+                "marco_intermediario": intermediario,
                 # **Quem lê e não apura sabe a quem pedir** (045, `FR-740`). A auditoria abre a
                 # ocupação pelo `UX-065` e encontrava só "Ocupação ainda não apurada", sem botão e
                 # sem dizer de quem é o ato. Pelo mecanismo único, das mesmas bases da ordenação.
                 "conducao_para_emitir": (
                     ""
-                    if pode_emitir
+                    if pode_emitir or intermediario
                     else frase_do_aviso(
                         BASES_DA_GESTAO_DA_COMISSAO,
                         acao="Apurar a ocupação deste marco",
@@ -8630,6 +8638,9 @@ def convocacao(request, edital_id, marco_id):
     # 404, e não a tela vazia de um recorte que "ainda não começou"; e a Modalidade apontada como
     # ampla é a ampla, e não um recorte à parte, sem apuração, onde convocar é recusado.
     lista_id = _recorte_pedido(edital, marco_id, request.GET.get("lista"))
+    # **O marco intermediário não convoca** (133, FR-4538): some o que cria convocação — titulares,
+    # chamada da fila, regularização, correção —, e o que encerra uma convocação legada continua.
+    intermediario = _marco_intermediario(edital, marco_id, "interface:convocacao")
     agora = timezone.now()
     leitura = leitura_do_recorte(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=agora
@@ -8691,6 +8702,8 @@ def convocacao(request, edital_id, marco_id):
                 # cada POST, um duplo clique praticaria dois atos sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
+                "pode_convocar": pode_emitir and intermediario is None,
+                "marco_intermediario": intermediario,
                 # O aviso complementar das chamadas comunicadas por publicação (066, `UX-174`): a
                 # mesma porta da comunicação, e nada para quem convoca por mensagem individual.
                 "chamadas_publicadas": avisos_da_interface.chamadas_publicadas(
@@ -8934,6 +8947,66 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
             },
         )
     )
+
+
+def _espera_do_corte(edital, marco_id, lista_id):
+    """A espera recomendada do primeiro corte desta lista, ou `None` (133, FR-4544, FR-4546).
+
+    **A mesma regra e a mesma leitura do andamento**: `andamento.espera_do_corte` sobre
+    `andamento.leitura_da_definitiva`. A tela do corte diz a consequência antes do botão, e o
+    cartão do Edital diz a mesma coisa — duas contas do prazo divergiriam na primeira mudança dele.
+    O botão continua: esperar é recomendação, e não impedimento (R2 do usuário).
+    """
+    from processo_seletivo.classificacao.application.selectors import ato_vigente
+    from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
+    from processo_seletivo.interface import andamento
+
+    conteudo = effective_version(edital_id=edital.id).content
+    marco = next(
+        (
+            m
+            for perfil in conteudo.get("profiles") or []
+            for m in perfil.get("classificationMilestones") or []
+            if str(m.get("id")) == str(marco_id)
+        ),
+        None,
+    )
+    ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    if marco is None or ato is None:
+        return None
+    publicada = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    divulgado = publicada is not None
+    definitiva = (
+        andamento.leitura_da_definitiva(
+            edital=edital,
+            marco=marco,
+            ato=ato,
+            lista_id=lista_id,
+            at=timezone.now(),
+            preliminar=publicada.natureza == "PRELIMINAR",
+        )
+        if divulgado and publicada.natureza == "PRELIMINAR"
+        else None
+    )
+    return andamento.espera_do_corte(marco, divulgado=divulgado, definitiva=definitiva)
+
+
+def _marco_intermediario(edital, marco_id, rota):
+    """O impedimento do marco intermediário para a tela, com o link do marco que apura (133,
+    FR-4538), ou `None`. A frase é a da recusa do comando: a tela prevê o que ele diria."""
+    from processo_seletivo.classificacao.application import marco_intermediario
+
+    impedimento = marco_intermediario.impedimento(
+        effective_version(edital_id=edital.id).content,
+        _perfil_do_marco(edital, marco_id),
+        marco_id,
+    )
+    if impedimento is None:
+        return None
+    return {
+        **impedimento,
+        "url": reverse(rota, args=[edital.id, impedimento["marco_que_le_id"]]),
+    }
 
 
 def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=False):

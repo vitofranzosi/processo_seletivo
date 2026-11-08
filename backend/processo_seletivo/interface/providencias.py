@@ -47,6 +47,8 @@ class Providencia:
     lugar: str = ""
     #: A condução do marco, para onde vai a providência que junta listas de telas diferentes.
     url_do_marco: str = ""
+    #: A espera é recomendação: o ato é aceito, e a tela diz por que esperar (133, FR-4542).
+    recomendacao: bool = False
 
     @classmethod
     def da_celula(
@@ -90,6 +92,7 @@ class Providencia:
             listas=(rotulo,) if rotulo else (),
             lugar=lugar,
             url_do_marco=url_do_marco if sua else "",
+            recomendacao=celula.recomendacao,
         )
 
     @classmethod

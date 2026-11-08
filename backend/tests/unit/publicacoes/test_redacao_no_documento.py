@@ -211,7 +211,8 @@ def test_a_leitura_pega_o_termo_que_o_sistema_voltasse_a_gerar(monkeypatch):
         "Depois, o resultado é dividido pela soma dos pesos.",
         "Passam para a Etapa “Análise de títulos” os primeiros classificados de cada lista de "
         "concorrência, em número igual ao das vagas dessa lista, mais 3 (três) suplentes.",
-        "Seguem no processo os 10 (dez) primeiros classificados.",
+        # 133 (FR-4553): o Perfil do cenário tem reservada, e o alvo fixo vale para cada lista.
+        "Seguem no processo os 10 (dez) primeiros classificados de cada lista de concorrência.",
         "Se houver empate na última posição, passam todos os empatados, mesmo que ultrapassem "
         "esse número.",
         "Depois, poderão ser chamados outros candidatos, além desses, seguindo a mesma ordem.",

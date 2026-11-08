@@ -65,11 +65,14 @@ def _em_ordem(palavras, tokens):
 # testes de cobertura abaixo os leem. O que mudou entre os dois é preso por
 # `test_documento_da_auditoria_depois_da_096.py`.
 DEMONSTRACAO_096 = RAIZ / "specs" / "096-cadastro-de-reserva-como-cr" / "demonstracao"
+# E de novo na `133` (o corte de alvo fixo diz "de cada lista de concorrência"): o que mudou entre a
+# `096` e a `133` é preso por `test_documento_da_auditoria_depois_da_133.py`.
+DEMONSTRACAO_133 = RAIZ / "specs" / "133-jornada-sem-ato-errado" / "demonstracao"
 
 
 def gravado_agora(nome):
     if nome.startswith("B-"):
-        return (DEMONSTRACAO_096 / nome.replace("-069.pdf", "-096.pdf")).read_bytes()
+        return (DEMONSTRACAO_133 / nome.replace("-069.pdf", "-133.pdf")).read_bytes()
     return da_069(nome)
 
 
