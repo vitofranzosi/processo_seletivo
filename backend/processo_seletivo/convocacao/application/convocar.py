@@ -17,6 +17,7 @@ menos que venha motivo, e aí nasce a sucessora, sem tocar na anterior. É a mes
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.classificacao.application import marco_intermediario
 from processo_seletivo.classificacao.application.selectors import ato_vigente
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
@@ -95,6 +96,12 @@ def convocar(
         marco = identificador(marco_id)
         lista = identificador(lista_id) if lista_id else None
         inscricao = identificador(inscricao_id)
+        # **O marco intermediário não convoca** (133, FR-4534): ele decidiu quem foi à Etapa
+        # seguinte, e as vagas são do marco que a lê. Antes de tudo, porque nenhuma outra recusa
+        # diria o motivo verdadeiro — e porque a correção da `120` também passa por aqui.
+        marco_intermediario.recusar(
+            effective_version(edital_id=edital.id, at=ctx.now).content, perfil, marco
+        )
         informada = _especie(especie) if (especie or "").strip() else ""
         texto_do_fundamento = (fundamento or "").strip()
         if not texto_do_fundamento and fundamento_por_especie is None:
@@ -737,6 +744,11 @@ def convocar_em_sequencia(
     **Sem precedência justificada e sem sucessão.** Os dois são exceções que uma pessoa decide sobre
     outra, e continuam exclusivos da chamada individual (`FR-861`).
     """
+    # O lote não passa por `convocar`, e por isso a recusa do marco intermediário se repete aqui
+    # (133, FR-4534): são os dois únicos lugares que gravam `Convocacao`.
+    marco_intermediario.recusar(
+        effective_version(edital_id=edital.id, at=ctx.now).content, perfil_id, marco_id
+    )
     ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
     if ato is None:
         raise DomainError(

@@ -114,6 +114,9 @@ class Celula:
     contagem: int | None = None
     #: Quem resolve o impedimento, quando não é quem pratica o ato (quase sempre a Retificação).
     quem_resolve: str = ""
+    #: A espera é recomendação, e não impedimento: o domínio aceita o ato, e a tela diz por que
+    #: esperar (133, FR-4542). Só apresentação — nenhum comando a lê.
+    recomendacao: bool = False
 
     @property
     def rotulo(self):
@@ -638,9 +641,93 @@ def situacao_da_ordem(f):
     return _c(PENDENTE, natureza=ORDEM, ato="Emitir a ordem", responsavel=CONDUZ, url=url)
 
 
+def leitura_da_definitiva(*, edital, marco, ato, lista_id, at, preliminar):
+    """A aferição da publicação deste ato, como a célula do resultado e a tela do corte a leem.
+
+    `{"nivel", "codigo", "mensagem", "ate"}`. `ate` é o fim do prazo recursal quando a recusa é a
+    janela aberta — a mesma data que a mensagem escreve, lida da mesma função (133, FR-4546).
+    Uma leitura só, para que o corte e o resultado não digam prazos diferentes.
+    """
+    from processo_seletivo.divulgacao.domain import publicabilidade
+    from processo_seletivo.shared.api.problems import DomainError
+
+    marco_id = str((marco or {}).get("id"))
+    try:
+        afericao = publicabilidade.aferir(
+            edital=edital,
+            marco_id=marco_id,
+            ato=ato,
+            natureza="DEFINITIVA" if preliminar else "",
+            lista_id=lista_id,
+            at=at,
+        )
+        lida = {"nivel": afericao.nivel, "codigo": afericao.codigo, "mensagem": afericao.mensagem}
+    except DomainError as recusa:
+        lida = {
+            "nivel": publicabilidade.IMPEDIMENTO,
+            "codigo": recusa.code,
+            "mensagem": recusa.detail,
+        }
+    lida["ate"] = None
+    if lida["codigo"] == publicabilidade.JANELA_ABERTA:
+        lida["ate"] = publicabilidade.janela_aberta_ate(
+            edital=edital, marco_id=marco_id, marco=marco, at=at, lista_id=lista_id
+        )
+    return lida
+
+
+def espera_do_corte(marco, *, divulgado, definitiva):
+    """`None`, ou `{"ate", "razao"}` quando o corte desta lista deve esperar o prazo de recurso
+    (133, FR-4541, FR-4546, D-003). Pura.
+
+    **Recomendação, e não impedimento** (R2 do usuário). O domínio aceita o corte a qualquer
+    momento depois da ordem; o que o estudo de 07/11 mediu é o custo de cortar cedo: no Edital 900 o
+    recurso deferido em 13/12 tornou obsoleto o corte que o cartão mandara emitir em 09/12, e a
+    sucessão exigiu motivo. **Lê a aferição da definitiva**, que a célula do resultado já lê — uma
+    segunda conta do prazo divergiria na primeira mudança dele.
+
+    `divulgado`: o resultado da lista já tem publicação. `definitiva`: a aferição da definitiva,
+    `{"nivel", "codigo", "mensagem", "ate"}`, quando há preliminar; `None` quando não há.
+    """
+    from processo_seletivo.divulgacao.domain import publicabilidade as p
+
+    janela = (marco or {}).get("appealWindow") or {}
+    if not janela.get("admits"):
+        return None
+    if not divulgado:
+        return {
+            "ate": None,
+            "razao": (
+                "O prazo de recurso começa com a divulgação do resultado; o corte emitido depois "
+                "dele evita a sucessão"
+            ),
+        }
+    if not definitiva or definitiva.get("nivel") != p.IMPEDIMENTO:
+        return None
+    if definitiva.get("codigo") not in (
+        p.JANELA_ABERTA,
+        p.RECURSO_PENDENTE,
+        p.REAVALIACAO_PENDENTE,
+        p.PROVIDENCIA_PENDENTE,
+    ):
+        return None
+    ate = definitiva.get("ate")
+    return {
+        "ate": ate,
+        "razao": (
+            (
+                f"Aguarde o fim do prazo de recurso, até {_data(ate)}"
+                if ate
+                else "Aguarde os recursos"
+            )
+            + ": um recurso deferido tornaria o corte obsoleto, com sucessão motivada"
+        ),
+    }
+
+
 def situacao_do_corte(f):
     """O corte de uma lista (FR-4069). `f`: `celula` (do indicador), `ordem` (a célula da ordem ou
-    do     sorteio, já derivada)."""
+    do sorteio, já derivada), `espera` (de `espera_do_corte`, ou `None`)."""
     celula = f.get("celula") or {}
     estado, url = celula.get("estado"), celula.get("url") or ""
     if estado == "nao_se_aplica":
@@ -661,6 +748,18 @@ def situacao_do_corte(f):
         return _c(NAO_SE_APLICA, natureza=CORTE, nota="nenhuma inscrição nesta lista")
     if ordem is None or ordem.situacao != FEITO:
         return _c(DEPOIS, natureza=CORTE, razao="o corte lê a ordem, que ainda não está vigente")
+    espera = f.get("espera")
+    if espera:
+        # Sem responsável: ninguém precisa agir agora, e por isso a espera não é "sua" (FR-4543).
+        return _c(
+            AGUARDA,
+            natureza=CORTE,
+            ato="Emitir o corte",
+            razao=espera["razao"],
+            url=url,
+            ate=espera.get("ate"),
+            recomendacao=True,
+        )
     return _c(PENDENTE, natureza=CORTE, ato="Emitir o corte", responsavel=CONDUZ, url=url)
 
 
@@ -740,7 +839,10 @@ def situacao_do_resultado(f):
     url = celula.get("url") or ""
     previa = f.get("url_da_previa") or url
     ordem = f.get("ordem")
-    if estado != "feito" and ordem is not None and ordem.situacao == OBSOLETO:
+    # **A ordem obsoleta vem antes da publicação feita** (133, FR-4550, CV-04). Com a preliminar
+    # publicada, este teste olhava só `estado != "feito"`, e a célula caía em "publicar a
+    # definitiva" — que o comando recusa pela mesma ordem obsoleta.
+    if ordem is not None and ordem.situacao == OBSOLETO:
         return _c(
             DEPOIS,
             natureza=RESULTADO,
@@ -1355,9 +1457,14 @@ def da_lista(andamento, marco_id, lista_id, preferir=None, todas_as_listas=False
         ]
         # Quem acabou de praticar um ato lê primeiro o que é dele nesta lista (`preferir`); sem
         # isso, o primeiro em aberto, que pode ser de outro papel.
+        # Sem nada da pessoa, primeiro o que alguém pratica, e só então o que espera (133,
+        # FR-4543): depois da ordem, o que destrava a lista é divulgar, e não o corte em espera.
         desta = next(
             (c for c in abertas if preferir and preferir(c, perfil.perfil)),
-            abertas[0] if abertas else None,
+            next(
+                (c for c in abertas if c.situacao in A_PRATICAR),
+                abertas[0] if abertas else None,
+            ),
         )
         outras = []
         for lista, rotulo in [] if todas_as_listas else perfil.listas:
@@ -1671,9 +1778,21 @@ class _Leitor:
             else:
                 ordem = situacao_da_ordem({"celula": celulas.get("ordenar"), "faltam": faltam})
                 derivadas = {ORDEM: ordem}
+            # **O resultado antes do corte** (133, FR-4541): a espera do corte lê a mesma aferição
+            # da definitiva que a célula do resultado leu.
+            resultado, definitiva = self._resultado(marco, lista, celulas.get("publicar"), ordem)
             if CORTE in pontos:
+                publicar = celulas.get("publicar") or {}
                 derivadas[CORTE] = situacao_do_corte(
-                    {"celula": celulas.get("cortar"), "ordem": ordem}
+                    {
+                        "celula": celulas.get("cortar"),
+                        "ordem": ordem,
+                        "espera": espera_do_corte(
+                            marco,
+                            divulgado=publicar.get("estado") in ("feito", "obsoleto"),
+                            definitiva=definitiva,
+                        ),
+                    }
                 )
             derivadas[APURACAO] = situacao_da_apuracao(
                 {
@@ -1684,7 +1803,7 @@ class _Leitor:
                     "nome_da_governada": nome_da_governada,
                 }
             )
-            derivadas[RESULTADO] = self._resultado(marco, lista, celulas.get("publicar"), ordem)
+            derivadas[RESULTADO] = resultado
             convocacao, da_convocacao = self._convocacao(
                 perfil,
                 marco,
@@ -1799,9 +1918,9 @@ class _Leitor:
     # --- o resultado -----------------------------------------------------------------------
 
     def _resultado(self, marco, lista, celula, ordem):
+        """`(célula do resultado, aferição da definitiva ou None)` — a segunda é o que a espera do
+        corte lê (133, FR-4546)."""
         from processo_seletivo.classificacao.application.selectors import ato_vigente
-        from processo_seletivo.divulgacao.domain import publicabilidade
-        from processo_seletivo.shared.api.problems import DomainError
 
         celula = celula or {}
         fatos = {"celula": celula, "ordem": ordem}
@@ -1812,7 +1931,7 @@ class _Leitor:
             or (estado == "falta" and ordem is not None and ordem.situacao in (FEITO, OBSOLETO))
         )
         if not precisa_do_ato:
-            return situacao_do_resultado(fatos)
+            return situacao_do_resultado(fatos), None
         marco_id = str(marco.get("id"))
         ato = ato_vigente(edital=self.edital, marco_id=marco_id, lista_id=lista)
         if ato is not None and self.alcance.publica:
@@ -1823,28 +1942,17 @@ class _Leitor:
             # **A mesma aferição da prévia** (item 1 da revisão): sucedido, desatualizado, corte
             # obsoleto e reingresso impedem as duas naturezas, e a prévia não oferece o botão.
             preliminar = estado == "feito"
-            try:
-                afericao = publicabilidade.aferir(
-                    edital=self.edital,
-                    marco_id=marco_id,
-                    ato=ato,
-                    natureza="DEFINITIVA" if preliminar else "",
-                    lista_id=lista,
-                    at=self.agora,
-                )
-                lida = {
-                    "nivel": afericao.nivel,
-                    "codigo": afericao.codigo,
-                    "mensagem": afericao.mensagem,
-                }
-            except DomainError as recusa:
-                lida = {
-                    "nivel": publicabilidade.IMPEDIMENTO,
-                    "codigo": recusa.code,
-                    "mensagem": recusa.detail,
-                }
+            lida = leitura_da_definitiva(
+                edital=self.edital,
+                marco=marco,
+                ato=ato,
+                lista_id=lista,
+                at=self.agora,
+                preliminar=preliminar,
+            )
             fatos["definitiva" if preliminar else "afericao"] = lida
-        return situacao_do_resultado(fatos)
+            return situacao_do_resultado(fatos), (lida if preliminar else None)
+        return situacao_do_resultado(fatos), None
 
     # --- a convocação ----------------------------------------------------------------------
 
@@ -1910,7 +2018,16 @@ class _Leitor:
                 (lin["convocacao"].vencimento for lin in em_curso if lin["convocacao"].vencimento),
                 default=None,
             ),
-            "em_aberto": sum(1 for lin in linhas if lin["desfecho"] is None),
+            # **Só a chamada que ainda não ocupa** (133, FR-4547, CV-03): o titular conta como
+            # ocupado desde a apuração, e descontá-lo de novo de `faltando` escondia a próxima da
+            # fila depois de uma desistência. A chamada para a vaga que vagou, ou para regularizar,
+            # ainda não ocupa — ela responde pela vaga, e chamar outra pessoa a dobraria.
+            "em_aberto": sum(
+                1
+                for lin in linhas
+                if lin["desfecho"] is None
+                and getattr(lin.get("convocacao"), "especie", None) != nomes.VAGA_INICIAL
+            ),
             "faltando": (leitura.get("ocupacao") or {}).get("faltando") or 0,
             "fila": len(leitura.get("fila") or []),
             "esgotou": leitura.get("esgotou"),

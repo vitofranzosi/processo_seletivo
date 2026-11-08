@@ -43,7 +43,8 @@ isso a resposta não depende do instante.
 | `ocupacao/application/emissao.py`, `_apurar` | logo depois de `effective_version`, antes de qualquer leitura de corte ou gravação | É a conta única da tela da ocupação, do gesto "Apurar" da condução e do efeito de desfecho e de acréscimo (`emitir_sucessora_por_efeito`). Uma recusa alcança os três |
 | `ocupacao/application/acrescimo.py`, `acrescentar_vagas` | sob a trava, antes de `_previa` | O acréscimo grava o registro antes de pedir a apuração seguinte. Sem a recusa própria, o registro sairia mesmo com a apuração recusada |
 | `ocupacao/application/causar_faixa.py`, `causar_faixa_seguinte` | no início | Só existiria com apuração legada no marco intermediário, mas é ato que alcança pessoas (R1) |
-| `convocacao/application/convocar.py`, `convocar` | sob a trava, antes da leitura do contexto do recorte | É a porta da chamada individual, do lote (`fluxo.py:600`) e da correção da `120` (`correcao=`). Uma recusa cobre as três (FR-4534 e a clarificação de 08/11) |
+| `convocacao/application/convocar.py`, `convocar` | sob a trava, antes da leitura do contexto do recorte | É a porta da chamada individual e da correção da `120` (`correcao=`) (FR-4534 e a clarificação de 08/11) |
+| `convocacao/application/convocar.py`, `convocar_em_sequencia` | no início | **Corrigido na implementação:** o lote de titulares (`fluxo.convocar_titulares`) não passa por `convocar`, e grava pela própria função. São os dois únicos pontos que criam `Convocacao`. O teste do lote acusou a lacuna |
 
 `desfechar`, `comunicar`, `atestar` e a conferência de documentos **não** recusam (D-002, FR-4535).
 

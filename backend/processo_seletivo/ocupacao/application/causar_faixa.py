@@ -15,9 +15,11 @@ decisão previu exatamente isto: *"quando a `016` existir, ela passa a ser a ori
 que o ato mude de forma"*. Antes, quem emitia digitava o motivo; agora o déficit o escreve.
 """
 
+from processo_seletivo.classificacao.application import marco_intermediario
 from processo_seletivo.classificacao.application.emissao_do_corte import continuar_corte
 from processo_seletivo.ocupacao.application import selectors
 from processo_seletivo.ocupacao.domain import nomes
+from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
 
 
@@ -38,6 +40,9 @@ def causar_faixa_seguinte(
     três pelo mesmo princípio: a faixa seguinte é ato que alcança pessoas, e pedi-la sobre número
     que ninguém apurou, ou que já se sabe para trás, é pedi-la sem fundamento.
     """
+    # O marco intermediário não tem déficit de vaga (133, FR-4533): uma apuração legada nele não
+    # pode virar faixa que alcança pessoas.
+    marco_intermediario.recusar(effective_version(edital_id=edital.id).content, perfil_id, marco_id)
     vigente = selectors.apuracao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
