@@ -414,7 +414,9 @@ publicação. Conferir que um Edital já publicado continua com o documento que 
 **Coerência e regressão**
 
 - **FR-4557**: Os quatro instantes do estudo (10/12, 13/12, 29/12 e 05/01 do Edital 900) MUST ter
-  teste de regressão sobre a derivação, com o resultado esperado da sonda do estudo.
+  teste de regressão sobre a derivação, nas paradas equivalentes de uma versão reduzida do Edital 900
+  (R-009 da pesquisa), com o resultado que a sonda do estudo conferiu. O Edital 900 completo é o da
+  demonstração no navegador.
 - **FR-4558**: Cada recusa nova MUST ter teste que chame o comando diretamente, sem passar pela tela,
   e confira que nada foi gravado nem comunicado.
 - **FR-4559**: Os casos da `127` que hoje provam a apuração depois da Etapa governada, quando nenhum
@@ -434,7 +436,7 @@ publicação. Conferir que um Edital já publicado continua com o documento que 
 - **SC-1420**: Em **100%** das tentativas de apurar, mover ou acrescentar vaga, causar faixa por
   déficit ou convocar num marco intermediário, pelo comando ou pela tela, o pedido é recusado, e
   **zero** registros e **zero** comunicações são gravados.
-- **SC-1421**: No Edital 900 em 29/12 e em 06/01, **zero** providências do marco intermediário
+- **SC-1421**: No Edital 900 (completo na demonstração, reduzido na suíte) em 29/12 e em 06/01, **zero** providências do marco intermediário
   aparecem para qualquer papel. Em 29/12, as três providências da presidência são as convocações do
   marco final.
 - **SC-1422**: No Edital 900 em 10/12, **zero** providências "suas" de corte. O corte das três listas
