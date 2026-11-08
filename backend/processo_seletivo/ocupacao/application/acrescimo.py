@@ -16,8 +16,8 @@ dois apps corre da convocação para a ocupação, e não o contrário (`T-005`)
 
 from django.db import transaction
 
+import processo_seletivo.classificacao.application.marco_intermediario as marco_intermediario
 from processo_seletivo.avaliacoes.application.trilha import auditar
-from processo_seletivo.classificacao.application import marco_intermediario
 from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente
 from processo_seletivo.classificacao.domain.universo import por_identidade

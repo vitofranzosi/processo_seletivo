@@ -11,8 +11,8 @@ que a `013` consolidou, e conta. Quem escolhe é a `014`; quem convoca é a `019
 
 from uuid import uuid4
 
+import processo_seletivo.classificacao.application.marco_intermediario as marco_intermediario
 from processo_seletivo.avaliacoes.application.trilha import auditar
-from processo_seletivo.classificacao.application import marco_intermediario
 from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente
 from processo_seletivo.comissoes.application import comando_de_comissao

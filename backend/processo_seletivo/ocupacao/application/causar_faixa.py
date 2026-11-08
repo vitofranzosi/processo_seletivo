@@ -15,7 +15,7 @@ decisão previu exatamente isto: *"quando a `016` existir, ela passa a ser a ori
 que o ato mude de forma"*. Antes, quem emitia digitava o motivo; agora o déficit o escreve.
 """
 
-from processo_seletivo.classificacao.application import marco_intermediario
+import processo_seletivo.classificacao.application.marco_intermediario as marco_intermediario
 from processo_seletivo.classificacao.application.emissao_do_corte import continuar_corte
 from processo_seletivo.ocupacao.application import selectors
 from processo_seletivo.ocupacao.domain import nomes
