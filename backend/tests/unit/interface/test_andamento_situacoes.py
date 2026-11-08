@@ -533,3 +533,28 @@ def test_com_o_corte_obsoleto_a_definitiva_e_impedida_e_nao_pendente():
     )
     assert situacao.situacao == a.IMPEDIDO
     assert situacao.situacao != a.PENDENTE
+
+
+def test_o_sorteio_com_recurso_declarado_tambem_espera():
+    """A espera vale para todo marco com prazo recursal, inclusive o sorteio (FR-4541): o rito do
+    Edital 35 — publicar a preliminar e cortar no mesmo dia — passa a ver o corte em espera.
+
+    **Preso de propósito**: se a decisão for outra para o sorteio, é aqui que ela se diz (registrado
+    na verificação da `133` como pergunta ao usuário).
+    """
+    sorteio = {
+        "id": "s",
+        "orderProduction": "POR_SORTEIO",
+        "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
+    }
+    espera = a.espera_do_corte(
+        sorteio,
+        divulgado=True,
+        definitiva={
+            "nivel": p.IMPEDIMENTO,
+            "codigo": p.JANELA_ABERTA,
+            "mensagem": "",
+            "ate": FECHA,
+        },
+    )
+    assert espera["ate"] == FECHA

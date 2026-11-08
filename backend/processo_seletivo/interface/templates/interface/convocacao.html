@@ -243,7 +243,10 @@ gesto disponível, ela é a exceção — precedência justificada, sucessão �
 dividia a atenção entre dois botões de convocar. Sem titular pendente, ela é o caminho do suplente,
 e abre sozinha.
 {% endcomment %}
-{% if not sem_inscrito %}
+{% comment %} No marco intermediário a fila não chama ninguém (133, FR-4538): listá-la, com "próxima
+da fila", contradiria o aviso do topo. As convocações legadas continuam abaixo, em "Chamadas
+praticadas". {% endcomment %}
+{% if not sem_inscrito and not marco_intermediario %}
 <section aria-labelledby="fila">
   <h2 id="fila">Quem pode ser chamado</h2>
   {% if leitura.esgotou %}
@@ -342,7 +345,7 @@ O item 8.2 do 77/2026 e o fundamento dela, e a ordem entre os indeferidos e a me
 classificacao: chamar o terceiro antes do primeiro e a mesma quebra que chamar o terceiro
 classificado antes do primeiro.
 {% endcomment %}
-{% if leitura.regularizaveis %}
+{% if leitura.regularizaveis and not marco_intermediario %}
 <section aria-labelledby="regularizar">
   <h2 id="regularizar">Quem pode ser chamado para regularizar</h2>
   <p class="nota">Inscrições que a faixa alcançou e cujo Resultado está indeferido. Convocar para regularizar não ocupa vaga: o que ocupa é a regularização, quando ela acontece.</p>

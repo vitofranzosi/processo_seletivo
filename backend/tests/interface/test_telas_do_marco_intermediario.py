@@ -104,3 +104,11 @@ def test_o_gesto_apurar_da_conducao_poe_os_recortes_entre_os_impedidos(cenario):
     assert itens
     assert {item["situacao"] for item in itens} == {conducao_do_marco.IMPEDIDO}
     assert all(FRASE in item["razao"] for item in itens)
+
+
+def test_a_convocacao_do_marco_intermediario_nao_lista_a_fila(client, cenario):
+    """Revisão do PR #432: a fila, com "próxima da fila", contradizia o aviso do topo."""
+    corpo = _abrir(client, "interface:convocacao", cenario["edital"], m900.MARCO_1)
+
+    assert 'id="fila"' not in corpo
+    assert 'id="regularizar"' not in corpo

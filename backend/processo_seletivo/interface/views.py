@@ -8150,7 +8150,12 @@ def corte(request, edital_id, marco_id):
         codigo_da_recusa = erro.code
     if proposta:
         _com_a_inscricao(proposta["itens"])
-    espera = _espera_do_corte(edital, marco_id, lista_id) if proposta and not geracao else None
+    # O aviso só sai no formulário de emissão, que só quem emite vê: os outros não pagam a leitura.
+    espera = (
+        _espera_do_corte(edital, marco_id, lista_id)
+        if proposta and not geracao and pode_emitir
+        else None
+    )
     para_a_ordenacao = reverse("interface:ordenacao", args=[edital.id, marco_id]) + (
         f"?lista={lista_id}" if lista_id else ""
     )
@@ -8952,55 +8957,33 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
 def _espera_do_corte(edital, marco_id, lista_id):
     """A espera recomendada do primeiro corte desta lista, ou `None` (133, FR-4544, FR-4546).
 
-    **A mesma regra e a mesma leitura do andamento**: `andamento.espera_do_corte` sobre
-    `andamento.leitura_da_definitiva`. A tela do corte diz a consequência antes do botão, e o
-    cartão do Edital diz a mesma coisa — duas contas do prazo divergiriam na primeira mudança dele.
-    O botão continua: esperar é recomendação, e não impedimento (R2 do usuário).
+    **A mesma leitura do andamento** (`andamento.espera_da_lista`): a tela do corte diz a
+    consequência antes do botão, e o cartão do Edital diz a mesma coisa. O botão continua: esperar é
+    recomendação, e não impedimento (R2 do usuário).
     """
-    from processo_seletivo.classificacao.application.selectors import ato_vigente
-    from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
-    from processo_seletivo.interface import andamento
+    from processo_seletivo.interface import andamento, conducao_do_marco
 
-    conteudo = effective_version(edital_id=edital.id).content
-    marco = next(
-        (
-            m
-            for perfil in conteudo.get("profiles") or []
-            for m in perfil.get("classificationMilestones") or []
-            if str(m.get("id")) == str(marco_id)
-        ),
-        None,
-    )
-    ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
-    if marco is None or ato is None:
+    _, _, marco = conducao_do_marco.marco_publicado(edital, marco_id)
+    if marco is None:
         return None
-    publicada = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
-    divulgado = publicada is not None
-    definitiva = (
-        andamento.leitura_da_definitiva(
-            edital=edital,
-            marco=marco,
-            ato=ato,
-            lista_id=lista_id,
-            at=timezone.now(),
-            preliminar=publicada.natureza == "PRELIMINAR",
-        )
-        if divulgado and publicada.natureza == "PRELIMINAR"
-        else None
+    return andamento.espera_da_lista(
+        edital=edital, marco=marco, lista_id=lista_id, at=timezone.now()
     )
-    return andamento.espera_do_corte(marco, divulgado=divulgado, definitiva=definitiva)
 
 
 def _marco_intermediario(edital, marco_id, rota):
     """O impedimento do marco intermediário para a tela, com o link do marco que apura (133,
-    FR-4538), ou `None`. A frase é a da recusa do comando: a tela prevê o que ele diria."""
-    from processo_seletivo.classificacao.application import marco_intermediario
+    FR-4538), ou `None`. A frase é a da recusa do comando: a tela prevê o que ele diria.
 
-    impedimento = marco_intermediario.impedimento(
-        effective_version(edital_id=edital.id).content,
-        _perfil_do_marco(edital, marco_id),
-        marco_id,
-    )
+    Pela busca única do marco (`marco_publicado`): uma leitura da versão vigente, com o Perfil.
+    """
+    from processo_seletivo.classificacao.application import marco_intermediario
+    from processo_seletivo.interface import conducao_do_marco
+
+    conteudo, perfil, _ = conducao_do_marco.marco_publicado(edital, marco_id)
+    if perfil is None:
+        return None
+    impedimento = marco_intermediario.impedimento(conteudo, perfil.get("id"), marco_id)
     if impedimento is None:
         return None
     return {

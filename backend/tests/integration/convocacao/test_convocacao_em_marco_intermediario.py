@@ -137,3 +137,22 @@ def test_convocar_no_marco_final_continua(cenario):
     declarado = m900.convocar(cenario, cenario["inscricoes"][1])
 
     assert Convocacao.objects.filter(pk=declarado["id"], marco_id=m900.MARCO_2).exists()
+
+
+def test_o_lote_sem_apuracao_recusa_pelo_motivo_verdadeiro(cenario):
+    """Revisão do PR #432: sem apuração no marco 1, o lote recusava por "apuração ausente" ou
+    "nenhum titular". A recusa do marco intermediário vem antes da prévia (FR-4537)."""
+    edital = cenario["edital"]
+
+    with pytest.raises(DomainError) as recusa:
+        fluxo.convocar_titulares(
+            actor=cenario["gestor"],
+            processo_id=edital.processo_id,
+            edital_id=edital.id,
+            perfil_id=PROFILE_ID,
+            marco_id=m900.MARCO_1,
+            alcance_confirmado="qualquer",
+            idempotency_key="titulares-m1-sem-apuracao",
+        )
+
+    assert recusa.value.code == marco_intermediario.CODIGO

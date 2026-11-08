@@ -139,3 +139,68 @@ def test_a_tela_da_convocacao_e_o_cartao_apontam_a_mesma_proxima(client, cenario
 
     assert "próxima da fila" in tela
     assert "Chamar a próxima da fila" in cartao
+
+
+def _suceder_a_ordem_da_ampla(cenario):
+    from processo_seletivo.classificacao.application.calculo import calcular_ordem
+    from processo_seletivo.classificacao.application.emissao import (
+        assinatura_da_proposta,
+        emitir_ordem,
+    )
+    from processo_seletivo.classificacao.application.selectors import ato_vigente
+    from tests.fixtures.edital import PROFILE_ID
+
+    edital = cenario["edital"]
+    vigente = ato_vigente(edital=edital, marco_id=m900.MARCO_1, lista_id=None)
+    emitir_ordem(
+        actor=cenario["gestor"],
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        perfil_id=PROFILE_ID,
+        marco_id=m900.MARCO_1,
+        lista_id=None,
+        motivo="Resultado novo no universo da ordem.",
+        idempotency_key="m900-sucessora-ampla",
+        correlation_id="teste-133",
+        confirmacao_do_calculo=assinatura_da_proposta(
+            calcular_ordem(edital=edital, perfil_id=PROFILE_ID, marco_id=m900.MARCO_1),
+            ato_vigente=vigente,
+        ),
+    )
+
+
+def test_com_a_sucessora_ainda_nao_publicada_o_corte_continua_esperando_o_prazo(
+    client, cenario, seletor_ligado
+):
+    """Revisão do PR #432: a publicação vigente é a de um ato anterior, e o prazo ainda corre.
+
+    O cartão e a tela do corte dizem a mesma coisa — a espera (FR-4546).
+    """
+    from django.urls import reverse
+
+    from tests.interface.conftest import identificar
+
+    m900.ate_a_ordem_obsoleta(cenario)
+    _suceder_a_ordem_da_ampla(cenario)
+
+    ampla = _celulas(_ler(cenario), m900.MARCO_1, andamento.CORTE)[None]
+    assert ampla.situacao == andamento.AGUARDA, ampla
+    assert ampla.recomendacao
+
+    identificar(client, "carlos", ["gestor"])
+    tela = client.get(
+        reverse("interface:corte", args=[cenario["edital"].id, m900.MARCO_1])
+    ).content.decode()
+    assert "Recomendação: aguarde." in tela
+
+
+def test_sem_nada_de_ninguem_a_praticar_no_marco_o_proximo_nao_pula_para_a_etapa_paralela(
+    cenario,
+):
+    """Revisão do PR #432 (FR-4090 da `127`): com o corte e a definitiva em espera, o próximo
+    desta lista é do marco — e não a Etapa de base sem avaliação, que é paralela a ele."""
+    lido = _ler(m900.ate_a_preliminar_m1(cenario))
+
+    desta, _, _ = andamento.da_lista(lido, m900.MARCO_1, None, preferir=lambda *_: False)
+
+    assert desta.natureza in (andamento.CORTE, andamento.RESULTADO), desta

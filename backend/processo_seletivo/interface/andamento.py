@@ -645,8 +645,8 @@ def leitura_da_definitiva(*, edital, marco, ato, lista_id, at, preliminar):
     """A aferição da publicação deste ato, como a célula do resultado e a tela do corte a leem.
 
     `{"nivel", "codigo", "mensagem", "ate"}`. `ate` é o fim do prazo recursal quando a recusa é a
-    janela aberta — a mesma data que a mensagem escreve, lida da mesma função (133, FR-4546).
-    Uma leitura só, para que o corte e o resultado não digam prazos diferentes.
+    janela aberta — a mesma data que a mensagem escreve, que a própria aferição devolve (133,
+    FR-4546). Uma leitura só, para que o corte e o resultado não digam prazos diferentes.
     """
     from processo_seletivo.divulgacao.domain import publicabilidade
     from processo_seletivo.shared.api.problems import DomainError
@@ -661,19 +661,19 @@ def leitura_da_definitiva(*, edital, marco, ato, lista_id, at, preliminar):
             lista_id=lista_id,
             at=at,
         )
-        lida = {"nivel": afericao.nivel, "codigo": afericao.codigo, "mensagem": afericao.mensagem}
+        return {
+            "nivel": afericao.nivel,
+            "codigo": afericao.codigo,
+            "mensagem": afericao.mensagem,
+            "ate": afericao.ate,
+        }
     except DomainError as recusa:
-        lida = {
+        return {
             "nivel": publicabilidade.IMPEDIMENTO,
             "codigo": recusa.code,
             "mensagem": recusa.detail,
+            "ate": None,
         }
-    lida["ate"] = None
-    if lida["codigo"] == publicabilidade.JANELA_ABERTA:
-        lida["ate"] = publicabilidade.janela_aberta_ate(
-            edital=edital, marco_id=marco_id, marco=marco, at=at, lista_id=lista_id
-        )
-    return lida
 
 
 def espera_do_corte(marco, *, divulgado, definitiva):
@@ -723,6 +723,38 @@ def espera_do_corte(marco, *, divulgado, definitiva):
             + ": um recurso deferido tornaria o corte obsoleto, com sucessão motivada"
         ),
     }
+
+
+def espera_da_lista(*, edital, marco, lista_id, at, publicada=None, definitiva=None):
+    """A espera do corte de uma lista, lida do banco: a regra única da tela do corte e do andamento
+    (133, FR-4546). `None` quando o corte não espera.
+
+    `publicada` é a publicação vigente da lista, quando quem chama já a tem; `definitiva`, a
+    aferição da definitiva já lida, para não aferir duas vezes. **A publicação vigente pode ser a de
+    um ato anterior** — a preliminar continua sendo do marco depois de a ordem sucessora sair, e o
+    prazo recursal continua correndo dela; por isso a aferição é feita sobre o ato vigente, com a
+    natureza da definitiva, e não sobre o publicado (o que a revisão do PR #432 acusou).
+    """
+    from processo_seletivo.classificacao.application.selectors import ato_vigente
+    from processo_seletivo.divulgacao.application.selectors import vigente_do_marco
+
+    if not ((marco or {}).get("appealWindow") or {}).get("admits"):
+        return None
+    marco_id = str(marco.get("id"))
+    if publicada is None:
+        publicada = vigente_do_marco(edital=edital, marco_id=marco_id, lista_id=lista_id)
+    if publicada is None:
+        return espera_do_corte(marco, divulgado=False, definitiva=None)
+    if publicada.natureza != "PRELIMINAR":
+        return None
+    if definitiva is None:
+        ato = ato_vigente(edital=edital, marco_id=marco_id, lista_id=lista_id)
+        if ato is None:
+            return None
+        definitiva = leitura_da_definitiva(
+            edital=edital, marco=marco, ato=ato, lista_id=lista_id, at=at, preliminar=True
+        )
+    return espera_do_corte(marco, divulgado=True, definitiva=definitiva)
 
 
 def situacao_do_corte(f):
@@ -1448,21 +1480,28 @@ def da_lista(andamento, marco_id, lista_id, preferir=None, todas_as_listas=False
         trecho = perfil.pontos[min(indices) : max(indices) + 1]
         demais = [p for p in perfil.pontos if p.tipo == ETAPA and p not in trecho]
         listas = [lista for lista, _ in perfil.listas] if todas_as_listas else [lista_id]
-        abertas = [
-            c
-            for p in [*trecho, *demais]
-            for lista in listas
-            for c in [p.celula(lista)]
-            if c is not None and c.em_aberto
-        ]
+
+        do_marco, paralelas = (
+            [
+                c
+                for p in pontos_
+                for lista in listas
+                for c in [p.celula(lista)]
+                if c is not None and c.em_aberto
+            ]
+            for pontos_ in (trecho, demais)
+        )
+        abertas = do_marco + paralelas
         # Quem acabou de praticar um ato lê primeiro o que é dele nesta lista (`preferir`); sem
         # isso, o primeiro em aberto, que pode ser de outro papel.
-        # Sem nada da pessoa, primeiro o que alguém pratica, e só então o que espera (133,
-        # FR-4543): depois da ordem, o que destrava a lista é divulgar, e não o corte em espera.
+        # Sem nada da pessoa, primeiro o que alguém pratica **no marco**, e só então o que espera
+        # (133, FR-4543): depois da ordem, o que destrava a lista é divulgar, e não o corte em
+        # espera. Só do trecho do marco: a Etapa paralela continua entrando só quando o marco não
+        # tem nada em aberto (FR-4090 da `127`; a revisão do PR #432 acusou o atalho).
         desta = next(
             (c for c in abertas if preferir and preferir(c, perfil.perfil)),
             next(
-                (c for c in abertas if c.situacao in A_PRATICAR),
+                (c for c in do_marco if c.situacao in A_PRATICAR),
                 abertas[0] if abertas else None,
             ),
         )
@@ -1782,16 +1821,16 @@ class _Leitor:
             # da definitiva que a célula do resultado leu.
             resultado, definitiva = self._resultado(marco, lista, celulas.get("publicar"), ordem)
             if CORTE in pontos:
-                publicar = celulas.get("publicar") or {}
+                corte = celulas.get("cortar") or {}
                 derivadas[CORTE] = situacao_do_corte(
                     {
-                        "celula": celulas.get("cortar"),
+                        "celula": corte,
                         "ordem": ordem,
-                        "espera": espera_do_corte(
-                            marco,
-                            divulgado=publicar.get("estado") in ("feito", "obsoleto"),
-                            definitiva=definitiva,
-                        ),
+                        "espera": self._espera_do_corte(
+                            marco, lista, celulas.get("publicar") or {}, definitiva
+                        )
+                        if corte.get("estado") == "falta" and ordem.situacao == FEITO
+                        else None,
                     }
                 )
             derivadas[APURACAO] = situacao_da_apuracao(
@@ -1914,6 +1953,26 @@ class _Leitor:
             # Uma observação serve a todo marco da mesma fonte e referência (item 14 da revisão).
             "chave_da_semente": (SEMENTE, metodo.get("source") or "", semente.nota or ""),
         }
+
+    # --- a espera do corte ------------------------------------------------------------------
+
+    def _espera_do_corte(self, marco, lista, publicar, definitiva):
+        """A leitura única (`espera_da_lista`), sem consulta quando a célula da publicação já diz.
+
+        Sem publicação, a espera é a da divulgação; com a preliminar do ato vigente, a aferição que
+        o resultado já leu. Só a publicação obsoleta (a de um ato anterior) ou a definitiva pedem a
+        leitura do banco.
+        """
+        if not (marco.get("appealWindow") or {}).get("admits"):
+            return None
+        estado = publicar.get("estado")
+        if estado not in ("feito", "obsoleto"):
+            return espera_do_corte(marco, divulgado=False, definitiva=None)
+        if estado == "feito" and "preliminar" not in (publicar.get("nota") or ""):
+            return None
+        return espera_da_lista(
+            edital=self.edital, marco=marco, lista_id=lista, at=self.agora, definitiva=definitiva
+        )
 
     # --- o resultado -----------------------------------------------------------------------
 
