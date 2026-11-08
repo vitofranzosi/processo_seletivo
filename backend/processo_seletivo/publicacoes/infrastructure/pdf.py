@@ -1972,6 +1972,17 @@ SUPLENTES_SEM_CADASTRO = (
 )
 
 
+def tem_lista_reservada(snapshot, perfil):
+    """Se o Perfil ordena mais de uma lista — a ampla e ao menos uma reservada (133, D-005).
+
+    Pela derivação única dos recortes, e não pela contagem das Modalidades: a Modalidade declarada
+    como a ampla não é lista à parte.
+    """
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
+
+    return len(recortes_do_perfil(snapshot, perfil_id=(perfil or {}).get("id"))) > 1
+
+
 def frase_da_continuacao(marco):
     """K9 e K10 — a continuação além dos que o corte publica, ou `""`."""
     regra = marco.get("cutRule")
@@ -1980,7 +1991,7 @@ def frase_da_continuacao(marco):
     )
 
 
-def frases_do_corte(marco, etapas, *, sem_cadastro):
+def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False):
     """K1 a K10 — **a unidade indivisível** (FR-1375, R-009): corte, empate, suplentes, continuação.
 
     O empate fala de "esse número", e a continuação de "além desses": separadas na partilha parcial
@@ -2011,6 +2022,12 @@ def frases_do_corte(marco, etapas, *, sem_cadastro):
             if um_so
             else f"os {_numero_por_extenso(alvo)} primeiros classificados"
         )
+        # **O alvo fixo vale para cada lista** (133, FR-4553, CV-10). O motor o aplica em cada
+        # recorte, e a frase dizia "os 8 primeiros" num Perfil com ampla, PcD e PPI: no Edital 900
+        # do estudo de 07/11, 12 foram à Entrevista, e o teto era 24. Só com reservada, porque
+        # num Perfil só com a ampla "de cada lista" seria verdade e estranheza (D-005).
+        if com_reservadas:
+            quantos += " de cada lista de concorrência"
     excedente = regra.get("surplusCount")
     com_suplentes = _inteiro(excedente) and excedente > 0
     plural = not (um_so and not com_suplentes)
@@ -2535,7 +2552,12 @@ def _marcos_na_redacao_2(
                         composicao.escrever(
                             recurso, recuo=degrau + 14, antes=ANTES_DE_LINHA, justificar=True
                         )
-                if corte := frases_do_corte(marco, etapas, sem_cadastro=sem_cadastro):
+                if corte := frases_do_corte(
+                    marco,
+                    etapas,
+                    sem_cadastro=sem_cadastro,
+                    com_reservadas=tem_lista_reservada(snapshot, perfil),
+                ):
                     with parte():
                         for indice, frase in enumerate(corte):
                             _item(

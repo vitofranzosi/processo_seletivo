@@ -29,7 +29,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from processo_seletivo.auditoria.models import IdempotencyRecord
-from processo_seletivo.classificacao.application import ordem_sem_resultado
+from processo_seletivo.classificacao.application import marco_intermediario, ordem_sem_resultado
 from processo_seletivo.classificacao.application.calculo import calcular_ordem
 from processo_seletivo.classificacao.application.corte import (
     calcular_corte,
@@ -334,6 +334,13 @@ def _celula_do_corte(edital, perfil_id, marco_id, lista_id, com_corte, pode_clas
 
 
 def _celula_da_apuracao(edital, conteudo, perfil_id, marco_id, lista_id, pode_classificar):
+    # **O marco intermediário não apura, e isso não é falta** (133, FR-4539). Contado como falta, o
+    # andamento mandava apurar a *Classificação para a entrevista* depois de as vagas estarem
+    # ocupadas pela final — o CV-01 do estudo de 07/11. Antes da apuração legada, de propósito: se
+    # houver uma, ela continua legível na ocupação, mas não pede sucessora.
+    impedimento = marco_intermediario.impedimento(conteudo, perfil_id, marco_id)
+    if impedimento is not None:
+        return {"estado": NAO_SE_APLICA, "nota": impedimento["nota"], "url": ""}
     url = reverse("interface:ocupacao", args=[edital.id, marco_id]) if pode_classificar else ""
     vigente = apuracao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
@@ -636,6 +643,14 @@ def assinatura_da_apuracao(edital, perfil_id, marco_id, lista_id):
 
 def _alcance_da_apuracao(edital, conteudo, perfil, marco):
     marco_id = str(marco["id"])
+    # O gesto "Apurar" recusaria cada recorte (133, FR-4538): a conferência os mostra impedidos,
+    # com a frase da recusa, antes do clique.
+    impedimento = marco_intermediario.impedimento(conteudo, perfil["id"], marco_id)
+    if impedimento is not None:
+        return [
+            _item(lista_id, rotulo, IMPEDIDO, razao=impedimento["frase"])
+            for lista_id, rotulo in recortes_do_marco(conteudo, perfil)
+        ]
     itens = []
     for lista_id, rotulo in recortes_do_marco(conteudo, perfil):
         if apuracao_vigente(

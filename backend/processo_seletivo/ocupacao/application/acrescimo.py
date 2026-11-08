@@ -16,6 +16,7 @@ dois apps corre da convocação para a ocupação, e não o contrário (`T-005`)
 
 from django.db import transaction
 
+import processo_seletivo.classificacao.application.marco_intermediario as marco_intermediario
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente
@@ -216,6 +217,11 @@ def acrescentar_vagas(
         edital = _edital_do_processo(ctx.processo, edital_id)
         perfil, marco = identificador(perfil_id), identificador(marco_id)
         lista = identificador(lista_id) if lista_id else None
+        # O marco intermediário não tem vagas a acrescer (133, FR-4533): o registro sairia antes da
+        # apuração seguinte, que a regra recusaria — e ficaria uma vaga acrescida sem conta.
+        marco_intermediario.recusar(
+            effective_version(edital_id=edital.id, at=ctx.now).content, perfil, marco
+        )
         previa = _previa(
             edital=edital,
             perfil_id=perfil,

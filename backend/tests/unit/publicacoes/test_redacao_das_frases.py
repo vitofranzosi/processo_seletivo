@@ -1166,3 +1166,57 @@ def test_g1_a_g3_regras_de_classificacao():
 def test_a_hora_mantem_dois_digitos():
     """A paridade com o portal (`humano.instante`): "às 08h", e não "às 8h" (L14 contrariava)."""
     assert pdf._instante(datetime(2026, 11, 3, 8, 0).isoformat()).endswith("às 08h")
+
+
+# --- 133: o alvo fixo vale para cada lista (FR-4553, FR-4554, D-005) --------------------------
+
+
+def test_o_alvo_fixo_com_reservada_diz_de_cada_lista():
+    """CV-10 do estudo de 07/11: o motor aplica o alvo fixo em cada recorte."""
+    marco = _marco(cutRule=_corte(targetCount=8))
+
+    assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=True)[0] == (
+        "Passam para a Etapa “Análise documental” os 8 (oito) primeiros classificados de cada "
+        "lista de concorrência."
+    )
+
+
+def test_o_alvo_de_um_com_reservada_diz_de_cada_lista_no_singular():
+    marco = _marco(cutRule=_corte(targetCount=1))
+
+    assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=True)[0] == (
+        "Passa para a Etapa “Análise documental” o 1 (um) primeiro classificado de cada lista de "
+        "concorrência."
+    )
+
+
+def test_o_alvo_fixo_so_com_a_ampla_continua_como_era():
+    marco = _marco(cutRule=_corte(targetCount=8))
+
+    assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=False)[0] == (
+        "Passam para a Etapa “Análise documental” os 8 (oito) primeiros classificados."
+    )
+
+
+def test_o_alvo_do_quadro_nao_muda_com_reservada():
+    marco = _marco(cutRule=_corte(targetKind="FROM_VACANCY_TABLE", targetCount=None))
+
+    com = pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=True)
+    sem = pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=False)
+    assert com == sem
+    assert com[0].count("de cada lista de concorrência") == 1
+
+
+def test_a_lista_reservada_vem_da_derivacao_dos_recortes():
+    so_ampla = {"profiles": [{"id": "p", "competitionModalities": []}]}
+    com_ppi = {
+        "profiles": [
+            {
+                "id": "p",
+                "competitionModalities": [{"id": "ppi", "code": "PPI", "name": "PPI"}],
+            }
+        ]
+    }
+
+    assert not pdf.tem_lista_reservada(so_ampla, so_ampla["profiles"][0])
+    assert pdf.tem_lista_reservada(com_ppi, com_ppi["profiles"][0])

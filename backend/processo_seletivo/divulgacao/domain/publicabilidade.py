@@ -176,6 +176,9 @@ class Afericao:
     # comando recusaria com 422 depois do clique. O fato existe antes do clique, e esta é a
     # travessia que o leva à tela (FR-005, FR-081).
     impede_a_definitiva: tuple | None = None
+    # **Quando a janela recursal impede, o instante em que ela fecha** (133, FR-4546). A mensagem já
+    # o escreve; quem precisa da data — a espera do corte — a lê daqui, e não refaz a conta.
+    ate: object = None
 
     @property
     def publicavel(self) -> bool:
@@ -356,7 +359,7 @@ def aferir(
             lista_id=lista_id,
         )
         if impedimento is not None:
-            codigo, mensagem = impedimento
+            codigo, mensagem, *instante = impedimento
             return Afericao(
                 IMPEDIMENTO,
                 codigo,
@@ -364,6 +367,7 @@ def aferir(
                 STATUS[codigo],
                 estado["divergencias"],
                 ADMITE_SUCESSOR[codigo],
+                ate=instante[0] if instante else None,
             )
 
     if estado["obsoleto"]:
@@ -459,7 +463,9 @@ def _impedimento_da_definitiva(*, edital, marco_id, marco, ato, at=None, lista_i
     if fecha is not None:
         # **A mensagem diz o instante**, e não só que há prazo: quem lê precisa saber quando voltar,
         # e "aguarde" sem data manda a pessoa tentar de novo às cegas.
-        return (JANELA_ABERTA, MENSAGENS[JANELA_ABERTA].format(fecha=_quando(fecha)))
+        # O instante vai junto, como terceiro elemento (133): a mensagem é para ler, e a data, para
+        # quem precisa dela sem refazer a conta da janela.
+        return (JANELA_ABERTA, MENSAGENS[JANELA_ABERTA].format(fecha=_quando(fecha)), fecha)
     return None
 
 

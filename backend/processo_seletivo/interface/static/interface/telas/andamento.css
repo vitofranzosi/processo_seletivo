@@ -46,6 +46,18 @@
   letter-spacing: .02em;
 }
 
+/* A espera recomendada (133, FR-4542): texto, e não só cor; contornada, para não ler como "Sua". */
+.marca-recomendacao {
+  display: inline-block;
+  margin: 0 .35rem;
+  padding: 0 .4rem;
+  border: 1px solid var(--texto-fraco);
+  border-radius: 4px;
+  color: var(--texto);
+  font-size: .75rem;
+  font-weight: 600;
+}
+
 .onde-da-providencia,
 .providencias .razao {
   color: var(--texto-fraco);

@@ -27,6 +27,7 @@ do gesto: repetir a confirmação completa os envios que não começaram e não 
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.classificacao.application import marco_intermediario
 from processo_seletivo.classificacao.domain.universo import por_identidade
 from processo_seletivo.comissoes.application import comando_de_comissao, exigir_base_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
@@ -302,6 +303,12 @@ def convocar_titulares(
             edital = _edital_do_processo(ctx.processo, edital_id)
             perfil, marco = identificador(perfil_id), identificador(marco_id)
             lista = identificador(lista_id) if lista_id else None
+            # **Antes da prévia** (133, FR-4537): sem isto, o marco intermediário sem apuração
+            # recusava por "apuração ausente" ou "nenhum titular", e a frase do motivo verdadeiro
+            # nunca chegava a quem pediu (a revisão do PR #432 acusou).
+            marco_intermediario.recusar(
+                effective_version(edital_id=edital.id, at=ctx.now).content, perfil, marco
+            )
             previa = previa_dos_titulares(
                 edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista, at=ctx.now
             )

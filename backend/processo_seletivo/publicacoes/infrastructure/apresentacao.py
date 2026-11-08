@@ -1130,7 +1130,12 @@ def _unidades_do_perfil(snapshot, perfil, sem_cadastro, rotular):
         # divisão depois do arredondamento, sob outro rótulo de grupo.
         if ordem := composicao_pdf.frases_da_ordem(snapshot, perfil, marco):
             unidades.append((marco_, "ordem", tuple(ordem)))
-        if corte := composicao_pdf.frases_do_corte(marco, etapas, sem_cadastro=sem_cadastro):
+        if corte := composicao_pdf.frases_do_corte(
+            marco,
+            etapas,
+            sem_cadastro=sem_cadastro,
+            com_reservadas=composicao_pdf.tem_lista_reservada(snapshot, perfil),
+        ):
             unidades.append((marco_, "corte", tuple(corte)))
         if desempate := composicao_pdf.frases_do_desempate(marco, etapas, fatos):
             unidades.append((marco_, "desempate", tuple(desempate)))

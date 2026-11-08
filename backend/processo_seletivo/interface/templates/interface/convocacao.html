@@ -4,6 +4,7 @@
 {% block conteudo %}
 <h1>Convocação</h1>
 <p class="sub">Quem a ordem indica para as vagas que faltam, o que cada pessoa respondeu, e quem é a próxima da fila.</p>
+{% if marco_intermediario %}<p class="aviso" role="note">{{ marco_intermediario.frase }} <a href="{{ marco_intermediario.url }}">Abrir a convocação da {{ marco_intermediario.nome_do_marco_que_le }}</a>.</p>{% endif %}
 {% comment %}
 Os termos do domínio definidos no primeiro uso desta tela (030, FR-424, SC-141). Fora de qualquer
 ramo, porque uma definição que só aparece em um dos ramos não é "no primeiro uso" — é "às vezes".
@@ -123,7 +124,7 @@ dar por não atendidas as vencidas, emitir o que não saiu. A fila e as chamadas
 convocados os titulares, ela ficava na página só para dizer que não havia ninguém; o porquê — a
 próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai procurar a próxima chamada.
 {% endcomment %}
-{% if not sem_inscrito and pode_emitir and titulares.impedimento or not sem_inscrito and pode_emitir and titulares.pessoas %}
+{% if not sem_inscrito and pode_convocar and titulares.impedimento or not sem_inscrito and pode_convocar and titulares.pessoas %}
 <section aria-labelledby="titulares">
   <h2 id="titulares">Convocar os titulares num ato só</h2>
   {% if titulares.impedimento %}
@@ -242,7 +243,10 @@ gesto disponível, ela é a exceção — precedência justificada, sucessão �
 dividia a atenção entre dois botões de convocar. Sem titular pendente, ela é o caminho do suplente,
 e abre sozinha.
 {% endcomment %}
-{% if not sem_inscrito %}
+{% comment %} No marco intermediário a fila não chama ninguém (133, FR-4538): listá-la, com "próxima
+da fila", contradiria o aviso do topo. As convocações legadas continuam abaixo, em "Chamadas
+praticadas". {% endcomment %}
+{% if not sem_inscrito and not marco_intermediario %}
 <section aria-labelledby="fila">
   <h2 id="fila">Quem pode ser chamado</h2>
   {% if leitura.esgotou %}
@@ -284,7 +288,7 @@ e abre sozinha.
     {% endfor %}
   </ol>
 
-  {% if pode_emitir %}
+  {% if pode_convocar %}
   <details class="como-preencher"{% if not titulares.pessoas %} open{% endif %}>
     <summary>Chamar uma pessoa da fila</summary>
   <form method="post" action="{% url 'interface:convocar' edital.id marco_id %}" class="confirmar">
@@ -341,7 +345,7 @@ O item 8.2 do 77/2026 e o fundamento dela, e a ordem entre os indeferidos e a me
 classificacao: chamar o terceiro antes do primeiro e a mesma quebra que chamar o terceiro
 classificado antes do primeiro.
 {% endcomment %}
-{% if leitura.regularizaveis %}
+{% if leitura.regularizaveis and not marco_intermediario %}
 <section aria-labelledby="regularizar">
   <h2 id="regularizar">Quem pode ser chamado para regularizar</h2>
   <p class="nota">Inscrições que a faixa alcançou e cujo Resultado está indeferido. Convocar para regularizar não ocupa vaga: o que ocupa é a regularização, quando ela acontece.</p>
@@ -351,7 +355,7 @@ classificado antes do primeiro.
     {% endfor %}
   </ol>
 
-  {% if pode_emitir %}
+  {% if pode_convocar %}
   <details class="como-preencher">
     <summary>Chamar para regularizar</summary>
   <form method="post" action="{% url 'interface:convocar' edital.id marco_id %}" class="confirmar">
@@ -640,7 +644,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     do bloco sem desfecho, porque a recusa de quem corrigia uma chamada que teve desfecho no
     intervalo aparece aqui, no cartão que agora mostra o desfecho.
     {% endcomment %}
-    {% if pode_emitir %}{% include "interface/_correcao_da_convocacao.html" with n=forloop.counter|stringformat:"s" %}{% endif %}
+    {% if pode_convocar %}{% include "interface/_correcao_da_convocacao.html" with n=forloop.counter|stringformat:"s" %}{% endif %}
   </article>
   {% endfor %}
   {% endif %}

@@ -154,6 +154,7 @@ faixa seguinte, abaixo, não é sucessão, e continua como era (FR-4013).
   A faixa nunca vem do navegador: o POST só confirma que o servidor deve recalcular sob trava e
   constituir o ato. É a mesma regra da emissão da ordem, e pela mesma razão.
   {% endcomment %}
+  {% if espera_do_corte %}<p class="aviso" role="note"><strong>Recomendação: aguarde.</strong> {{ espera_do_corte.razao }}. Emitir agora continua possível.</p>{% endif %}
   <p><strong>Emitir é irreversível.</strong> O ato é imutável e define quem prossegue para a Etapa seguinte; quem ficar fora continua registrado nele, com a posição e a causa.</p>
   {% if geracao %}<p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required></textarea><span class="ajuda">A geração vigente permanece íntegra e legível; este motivo explica por que outra a sucede — e a sucessão alcança todas as faixas dela.</span></p>{% endif %}
   <p class="acoes"><button type="submit" class="botao">Emitir corte</button></p>

@@ -756,7 +756,11 @@ def test_o_documento_imprime_o_desfecho_do_empate_no_corte(desfecho, frase):
     """`FR-181` declara, `FR-185` publica: com alvo 10 e três empatados na 10ª, um leva doze."""
     escrito = texto(com_classificacao(marcos=[cortado(tieOutcome=desfecho, continuation="NONE")]))
 
-    assert "Seguem no processo os 10 (dez) primeiros classificados." in escrito
+    # 133 (FR-4553): com reservada no Perfil, o alvo fixo diz "de cada lista de concorrência".
+    assert (
+        "Seguem no processo os 10 (dez) primeiros classificados de cada lista de concorrência."
+        in escrito
+    )
     assert frase in escrito
 
 
@@ -796,10 +800,11 @@ def test_o_alvo_de_um_concorda_com_o_numero():
         com_classificacao(marcos=[cortado(targetCount=1, surplusCount=1, tieOutcome="STRICT")])
     )
 
-    assert "Segue no processo o 1 (um) primeiro classificado." in um
-    assert "Seguem no processo o 1 (um) primeiro classificado, mais 1 (um) suplente." in (
-        com_suplente
-    )
+    assert "Segue no processo o 1 (um) primeiro classificado de cada lista de concorrência." in um
+    assert (
+        "Seguem no processo o 1 (um) primeiro classificado de cada lista de concorrência, mais "
+        "1 (um) suplente."
+    ) in com_suplente
 
 
 def test_o_sorteio_sem_etapa_de_habilitacao_diz_que_todas_participam():

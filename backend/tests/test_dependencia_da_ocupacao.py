@@ -30,6 +30,10 @@ PERMITIDOS = {
     "processo_seletivo.classificacao.application.corte",
     "processo_seletivo.classificacao.application.emissao_do_corte",
     "processo_seletivo.classificacao.domain.universo",
+    # A regra do marco intermediário (133, FR-4532, FR-4533): diz se o marco decide quem vai a uma
+    # Etapa que outro marco lê, pelo conteúdo publicado. Não ordena, não desempata, não escolhe
+    # ninguém — é a recusa de apurar onde não há vagas a apurar.
+    "processo_seletivo.classificacao.application.marco_intermediario",
 }
 
 # O que ela **não** pode importar, e a razão de cada um.

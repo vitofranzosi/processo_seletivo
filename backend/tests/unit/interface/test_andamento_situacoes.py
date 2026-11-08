@@ -451,3 +451,110 @@ def test_com_o_processo_encerrado_ninguem_pratica():
     )
     assert not any(alcance.pratica(papel) for papel in (a.CONDUZ, a.PUBLICA, a.JULGA, a.RETIFICA))
     assert alcance.consulta, "a leitura continua"
+
+
+# --- 133: o corte espera o prazo recursal, como recomendação (FR-4541 a FR-4546, D-003) -------
+
+COM_RECURSO = {"id": "m", "appealWindow": {"admits": True, "durationDays": 3}}
+FECHA = datetime(2026, 12, 13, 2, 59, tzinfo=UTC)
+
+
+def test_sem_recurso_declarado_o_corte_nao_espera():
+    assert a.espera_do_corte({"id": "m"}, divulgado=False, definitiva=None) is None
+
+
+def test_sem_divulgacao_o_corte_espera_sem_data():
+    espera = a.espera_do_corte(COM_RECURSO, divulgado=False, definitiva=None)
+    assert espera["ate"] is None
+    assert "divulgação" in espera["razao"]
+
+
+@pytest.mark.parametrize("codigo", [p.JANELA_ABERTA, p.RECURSO_PENDENTE])
+def test_com_o_prazo_ou_o_recurso_em_aberto_o_corte_espera(codigo):
+    espera = a.espera_do_corte(
+        COM_RECURSO,
+        divulgado=True,
+        definitiva={"nivel": p.IMPEDIMENTO, "codigo": codigo, "mensagem": "", "ate": FECHA},
+    )
+    assert espera["ate"] == FECHA
+    assert "obsoleto" in espera["razao"]
+
+
+def test_prazo_encerrado_sem_pendencia_e_sem_definitiva_o_corte_nao_espera():
+    """D-003: a publicação da definitiva não é condição — o domínio não a exige para cortar."""
+    assert a.espera_do_corte(COM_RECURSO, divulgado=True, definitiva={"nivel": p.AVISO}) is None
+
+
+def test_o_corte_em_espera_e_recomendacao_e_nao_e_de_ninguem():
+    espera = {"ate": FECHA, "razao": "Aguarde"}
+    situacao = a.situacao_do_corte(
+        {"celula": {"estado": "falta"}, "ordem": celula(a.FEITO), "espera": espera}
+    )
+    assert (situacao.situacao, situacao.recomendacao, situacao.responsavel) == (
+        a.AGUARDA,
+        True,
+        "",
+    )
+    assert situacao.ate == FECHA
+    assert situacao.ato == "Emitir o corte"
+
+
+def test_o_corte_feito_ou_obsoleto_ignora_a_espera():
+    espera = {"ate": FECHA, "razao": "Aguarde"}
+    feito = a.situacao_do_corte({"celula": {"estado": "feito"}, "espera": espera})
+    assert feito.situacao == a.FEITO
+    obsoleto = a.situacao_do_corte({"celula": {"estado": "obsoleto"}, "espera": espera})
+    assert obsoleto.situacao == a.OBSOLETO
+
+
+# --- 133: a divulgação com ordem obsoleta (FR-4550, CV-04) ------------------------------------
+
+
+def test_com_a_preliminar_feita_e_a_ordem_obsoleta_a_definitiva_e_depois():
+    situacao = a.situacao_do_resultado(
+        {
+            "celula": {"estado": "feito", "nota": "resultado preliminar"},
+            "ordem": celula(a.OBSOLETO),
+        }
+    )
+    assert situacao.situacao == a.DEPOIS
+    assert "ordem vigente" in situacao.razao
+
+
+def test_com_o_corte_obsoleto_a_definitiva_e_impedida_e_nao_pendente():
+    """FR-4551, como a R-007 ajustou: a aferição já devolve o impedimento do corte obsoleto."""
+    situacao = resultado(
+        {"estado": "feito", "nota": "resultado preliminar"},
+        definitiva={
+            "nivel": p.IMPEDIMENTO,
+            "codigo": p.CORTE_OBSOLETO,
+            "mensagem": "A faixa está para trás.",
+        },
+    )
+    assert situacao.situacao == a.IMPEDIDO
+    assert situacao.situacao != a.PENDENTE
+
+
+def test_o_sorteio_com_recurso_declarado_tambem_espera():
+    """A espera vale para todo marco com prazo recursal, inclusive o sorteio (FR-4541): o rito do
+    Edital 35 — publicar a preliminar e cortar no mesmo dia — passa a ver o corte em espera.
+
+    **Preso de propósito**: se a decisão for outra para o sorteio, é aqui que ela se diz (registrado
+    na verificação da `133` como pergunta ao usuário).
+    """
+    sorteio = {
+        "id": "s",
+        "orderProduction": "POR_SORTEIO",
+        "appealWindow": {"admits": True, "durationDays": 5, "unit": "DIAS_CORRIDOS"},
+    }
+    espera = a.espera_do_corte(
+        sorteio,
+        divulgado=True,
+        definitiva={
+            "nivel": p.IMPEDIMENTO,
+            "codigo": p.JANELA_ABERTA,
+            "mensagem": "",
+            "ate": FECHA,
+        },
+    )
+    assert espera["ate"] == FECHA

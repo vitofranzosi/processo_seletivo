@@ -11,6 +11,7 @@ que a `013` consolidou, e conta. Quem escolhe é a `014`; quem convoca é a `019
 
 from uuid import uuid4
 
+import processo_seletivo.classificacao.application.marco_intermediario as marco_intermediario
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.classificacao.application.corte import linha_do_quadro
 from processo_seletivo.classificacao.application.selectors import ato_vigente
@@ -137,6 +138,11 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
         )
 
     versao = effective_version(edital_id=edital.id, at=now)
+    # **O marco intermediário não apura** (133, FR-4532, R1 do usuário). Ele decidiu quem foi à
+    # Etapa que outro marco lê, e apurar ali designava "titulares" de uma classificação que não é a
+    # das vagas — no estudo de 07/11, a convocação que vinha depois chamava quem já tinha desistido.
+    # Aqui, porque esta é a conta única da tela, do gesto da condução e do efeito de desfecho.
+    marco_intermediario.recusar(versao.content, perfil, marco)
     linha = linha_do_quadro(versao.content, perfil_id=perfil, lista_id=lista)
     if linha is None:
         # **Ausência de quadro não é zero** (`FR-242`, `UX-032`). Edital publicado antes do
