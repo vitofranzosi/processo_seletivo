@@ -1,0 +1,362 @@
+{
+  "base": "da566ff2",
+  "elenco": [
+    {
+      "id": "ana",
+      "nome": "Ana",
+      "sigla": "AN",
+      "reserva": true,
+      "prova": 90,
+      "entrevista": 60,
+      "nascimento": "1992-03-01"
+    },
+    {
+      "id": "bruno",
+      "nome": "Bruno",
+      "sigla": "BR",
+      "reserva": false,
+      "prova": 85,
+      "entrevista": 90,
+      "nascimento": "1986-06-20"
+    },
+    {
+      "id": "carla",
+      "nome": "Carla",
+      "sigla": "CA",
+      "reserva": true,
+      "prova": 80,
+      "entrevista": 92,
+      "nascimento": "1990-02-10"
+    },
+    {
+      "id": "davi",
+      "nome": "Davi",
+      "sigla": "DA",
+      "reserva": false,
+      "prova": 80,
+      "entrevista": 100,
+      "nascimento": "1988-07-12"
+    },
+    {
+      "id": "elisa",
+      "nome": "Elisa",
+      "sigla": "EL",
+      "reserva": true,
+      "prova": 65,
+      "entrevista": 90,
+      "nascimento": "1994-01-15"
+    },
+    {
+      "id": "fabio",
+      "nome": "Fábio",
+      "sigla": "FA",
+      "reserva": false,
+      "prova": 60,
+      "entrevista": null,
+      "nascimento": "1989-08-14"
+    },
+    {
+      "id": "gabi",
+      "nome": "Gabi",
+      "sigla": "GA",
+      "reserva": false,
+      "prova": 55,
+      "entrevista": null,
+      "nascimento": "1996-09-11"
+    },
+    {
+      "id": "hugo",
+      "nome": "Hugo",
+      "sigla": "HU",
+      "reserva": false,
+      "prova": 70,
+      "entrevista": null,
+      "nascimento": "1991-04-07"
+    }
+  ],
+  "inicial": [
+    {
+      "id": "ana",
+      "posicao": 1,
+      "nota": "90.00",
+      "desempate": false
+    },
+    {
+      "id": "bruno",
+      "posicao": 2,
+      "nota": "85.00",
+      "desempate": false
+    },
+    {
+      "id": "davi",
+      "posicao": 3,
+      "nota": "80.00",
+      "desempate": true
+    },
+    {
+      "id": "carla",
+      "posicao": 4,
+      "nota": "80.00",
+      "desempate": true
+    },
+    {
+      "id": "hugo",
+      "posicao": 5,
+      "nota": "70.00",
+      "desempate": false
+    },
+    {
+      "id": "elisa",
+      "posicao": 6,
+      "nota": "65.00",
+      "desempate": false
+    },
+    {
+      "id": "fabio",
+      "posicao": 7,
+      "nota": "60.00",
+      "desempate": false
+    }
+  ],
+  "corrigida": [
+    {
+      "id": "ana",
+      "posicao": 1,
+      "nota": "90.00",
+      "desempate": false
+    },
+    {
+      "id": "carla",
+      "posicao": 2,
+      "nota": "88.00",
+      "desempate": false
+    },
+    {
+      "id": "bruno",
+      "posicao": 3,
+      "nota": "85.00",
+      "desempate": false
+    },
+    {
+      "id": "davi",
+      "posicao": 4,
+      "nota": "80.00",
+      "desempate": false
+    },
+    {
+      "id": "hugo",
+      "posicao": 5,
+      "nota": "70.00",
+      "desempate": false
+    },
+    {
+      "id": "elisa",
+      "posicao": 6,
+      "nota": "65.00",
+      "desempate": false
+    },
+    {
+      "id": "fabio",
+      "posicao": 7,
+      "nota": "60.00",
+      "desempate": false
+    }
+  ],
+  "reservada": [
+    {
+      "id": "ana",
+      "posicao": 1,
+      "nota": "90.00",
+      "desempate": false
+    },
+    {
+      "id": "carla",
+      "posicao": 2,
+      "nota": "88.00",
+      "desempate": false
+    },
+    {
+      "id": "elisa",
+      "posicao": 3,
+      "nota": "65.00",
+      "desempate": false
+    }
+  ],
+  "corteAC": [
+    "ana",
+    "carla",
+    "bruno",
+    "davi"
+  ],
+  "cortePCD": [
+    "ana",
+    "carla",
+    "elisa"
+  ],
+  "avancam": [
+    "ana",
+    "carla",
+    "bruno",
+    "davi",
+    "elisa"
+  ],
+  "final": [
+    {
+      "id": "carla",
+      "posicao": 1,
+      "nota": "89.00",
+      "desempate": false
+    },
+    {
+      "id": "bruno",
+      "posicao": 2,
+      "nota": "86.25",
+      "desempate": false
+    },
+    {
+      "id": "davi",
+      "posicao": 3,
+      "nota": "85.00",
+      "desempate": false
+    },
+    {
+      "id": "ana",
+      "posicao": 4,
+      "nota": "82.50",
+      "desempate": false
+    },
+    {
+      "id": "elisa",
+      "posicao": 5,
+      "nota": "71.25",
+      "desempate": false
+    }
+  ],
+  "finalPCD": [
+    {
+      "id": "carla",
+      "posicao": 1,
+      "nota": "89.00",
+      "desempate": false
+    },
+    {
+      "id": "ana",
+      "posicao": 2,
+      "nota": "82.50",
+      "desempate": false
+    },
+    {
+      "id": "elisa",
+      "posicao": 3,
+      "nota": "71.25",
+      "desempate": false
+    }
+  ],
+  "titularesAC": [
+    "carla",
+    "bruno"
+  ],
+  "titularesPCD": [
+    "ana"
+  ],
+  "apuracoes": [
+    [
+      2,
+      2,
+      2
+    ],
+    [
+      2,
+      2,
+      1
+    ],
+    [
+      2,
+      2,
+      2
+    ]
+  ],
+  "sorteio": [
+    {
+      "id": "hugo",
+      "numero": 8,
+      "posicao": 1
+    },
+    {
+      "id": "carla",
+      "numero": 3,
+      "posicao": 2
+    },
+    {
+      "id": "elisa",
+      "numero": 5,
+      "posicao": 3
+    },
+    {
+      "id": "bruno",
+      "numero": 2,
+      "posicao": 4
+    },
+    {
+      "id": "gabi",
+      "numero": 7,
+      "posicao": 5
+    },
+    {
+      "id": "ana",
+      "numero": 1,
+      "posicao": 6
+    },
+    {
+      "id": "davi",
+      "numero": 4,
+      "posicao": 7
+    },
+    {
+      "id": "fabio",
+      "numero": 6,
+      "posicao": 8
+    }
+  ],
+  "sorteioEntradas": {
+    "relation_hash": "02a043a078ddf551d1f095d09e7ec962f1365fdef1ff1339791c6f9dffc520a4",
+    "draw_scope_id": "guia-ficticio:ampla",
+    "seed": "DEMONSTRACAO-FIXA-2026",
+    "public_numbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  "empate": {
+    "posicoes": [
+      [
+        "ana",
+        1
+      ],
+      [
+        "bruno",
+        2
+      ],
+      [
+        "carla",
+        2
+      ],
+      [
+        "davi",
+        4
+      ]
+    ],
+    "admite": [
+      "ana",
+      "bruno",
+      "carla"
+    ],
+    "estrito": "EMISSAO_RECUSADA"
+  }
+}
