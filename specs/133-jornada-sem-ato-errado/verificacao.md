@@ -30,6 +30,7 @@ falhas, e não por total.
 |---|---|
 | 1ª, com tudo implementado | **17345 passando, 21 pulados, 2 falhas** (739s) |
 | 2ª, depois dos ajustes abaixo | **17347 passando, 21 pulados, sem falha** (713s, 4 workers) |
+| 3ª, depois dos achados da revisão do PR #432 (abaixo) | **17352 passando, 21 pulados, sem falha** (784s, 4 workers) |
 
 As duas falhas da 1ª rodada:
 
@@ -94,3 +95,31 @@ foi rodada nos cinco bancos, e confirma o que as capturas mostram.
 
 **Polimento anotado, fora do escopo.** A ocupação do marco intermediário ainda diz "Ocupação ainda
 não apurada" em cada lista. É verdade, mas é ruído abaixo do aviso. Fica para quem retomar a tela.
+
+## A revisão do PR #432
+
+`/code-review` (alto esforço) achou nove pontos, todos corrigidos no commit `eff2c08b`:
+
+1. **A espera do corte sumia com a publicação de um ato anterior.** Ordem sucessora emitida e não
+   publicada, prazo ainda correndo: o cartão voltava a dizer "SUA: Emitir o corte", e a tela do
+   corte dizia "aguarde". Agora as duas leem `andamento.espera_da_lista`, que afere o ato vigente
+   quando a preliminar publicada é de outro. Teste:
+   `test_com_a_sucessora_ainda_nao_publicada_o_corte_continua_esperando_o_prazo`.
+2. **"Próximo nesta lista" pulava para a Etapa paralela.** Sem nada da pessoa, o que se pratica agora
+   é procurado só no trecho do marco (a FR-4090 da `127`). Teste:
+   `test_sem_nada_de_ninguem_a_praticar_no_marco_o_proximo_nao_pula_para_a_etapa_paralela`.
+3. **A convocação do marco intermediário listava a fila.** As seções "Quem pode ser chamado" e "…
+   para regularizar" saem. Teste: `test_a_convocacao_do_marco_intermediario_nao_lista_a_fila`.
+4. **O lote recusava pelo motivo errado.** A recusa vem antes da prévia. Teste:
+   `test_o_lote_sem_apuracao_recusa_pelo_motivo_verdadeiro`.
+5. **O sorteio com recurso declarado também espera.** O comportamento é o que a FR-4541 descreve, e
+   está preso em `test_o_sorteio_com_recurso_declarado_tambem_espera`. **Decisão do usuário, em
+   aberto:** no rito do Edital 35 (publicar a preliminar e cortar no mesmo dia), o corte passa a
+   aparecer em espera durante o prazo. Se o sorteio deve ficar de fora, a mudança é na
+   `espera_do_corte`, com a forma do marco.
+6. **Reuso:** a tela do corte usa `conducao_do_marco.marco_publicado`.
+7. **Leitura evitada:** a espera só é aferida para quem emite.
+8. **Conta repetida:** a data do prazo sai da própria `Afericao` (campo `ate`, preenchido por
+   `_impedimento_da_definitiva`), e não de uma segunda chamada a `janela_aberta_ate`.
+9. **Leitura repetida:** o aviso do marco intermediário lê a versão vigente uma vez (por
+   `marco_publicado`).
