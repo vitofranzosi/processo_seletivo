@@ -138,6 +138,10 @@ Fica fora, de propósito:
 - Q: A correção de uma convocação já existente num marco intermediário continua permitida? → A:
   **Não.** A correção cria uma convocação nova, com comunicação: é começar um ato. Encerrar a chamada
   existente continua possível pelo desfecho e pela conferência (FR-4534, FR-4535).
+- Q: A espera recomendada do corte vale também para o marco por sorteio? (levantada pela revisão
+  do PR #432) → A: **Sim.** A FR-4541 abrange todo marco com prazo recursal, e a recomendação
+  continua permitindo emitir o corte no mesmo dia. O rito do Edital 35 (publicar a preliminar e
+  cortar no mesmo dia), por si só, não justifica uma exceção (D-006).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -533,3 +537,12 @@ pessoa duplicaria a chamada. É a regra da tela da convocação, que a derivaç�
 
 Num Perfil só com a ampla, "de cada lista" seria verdadeiro e estranho. A regra é a mesma, e a frase
 só precisa do complemento quando existe mais de uma lista.
+
+### D-006 — A espera vale também para o sorteio
+
+Decisão do usuário de 08/11/2026, depois da revisão do PR #432. O marco por sorteio que declara
+prazo recursal recebe a mesma espera recomendada do corte que o marco por pontuação. A ordem
+sorteada também pode ser atacada por recurso, e um corte emitido antes da decisão teria a mesma
+sucessão motivada. A emissão continua permitida no mesmo dia: quem segue o rito do Edital 35 vê a
+recomendação e decide. Não há exceção por forma de ordem, e o teste
+`test_o_sorteio_com_recurso_declarado_tambem_espera` prende a decisão.

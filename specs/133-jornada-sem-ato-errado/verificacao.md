@@ -113,10 +113,9 @@ não apurada" em cada lista. É verdade, mas é ruído abaixo do aviso. Fica par
 4. **O lote recusava pelo motivo errado.** A recusa vem antes da prévia. Teste:
    `test_o_lote_sem_apuracao_recusa_pelo_motivo_verdadeiro`.
 5. **O sorteio com recurso declarado também espera.** O comportamento é o que a FR-4541 descreve, e
-   está preso em `test_o_sorteio_com_recurso_declarado_tambem_espera`. **Decisão do usuário, em
-   aberto:** no rito do Edital 35 (publicar a preliminar e cortar no mesmo dia), o corte passa a
-   aparecer em espera durante o prazo. Se o sorteio deve ficar de fora, a mudança é na
-   `espera_do_corte`, com a forma do marco.
+   está preso em `test_o_sorteio_com_recurso_declarado_tambem_espera`. **Decidido pelo usuário em
+   08/11 (D-006 da spec):** a espera vale também para o sorteio, sem bloquear a emissão. O rito do
+   Edital 35, por si só, não justifica exceção. Pendência encerrada.
 6. **Reuso:** a tela do corte usa `conducao_do_marco.marco_publicado`.
 7. **Leitura evitada:** a espera só é aferida para quem emite.
 8. **Conta repetida:** a data do prazo sai da própria `Afericao` (campo `ate`, preenchido por
