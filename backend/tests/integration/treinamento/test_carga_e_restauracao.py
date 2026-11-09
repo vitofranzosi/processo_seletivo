@@ -54,14 +54,14 @@ def _sortear_pela_tela(client, manifesto):
     ocorrencia = OcorrenciaDaFonte.objects.get(
         referencia=concurso_da_rodada(manifesto.unidade, "C07", manifesto.rodada)
     )
-    client.post(
-        reverse("interface:realizar-sorteio", args=[edital.id, marco]),
-        {
-            "relacao_id": manifesto.registros["relacao_do_sorteio"][0],
-            "ocorrencia_id": str(ocorrencia.id),
-        },
-    )
-    return Sorteio.objects.get(edital=edital)
+    for relacao in manifesto.registros["relacao_do_sorteio"]:
+        client.post(
+            reverse("interface:realizar-sorteio", args=[edital.id, marco]),
+            {"relacao_id": relacao, "ocorrencia_id": str(ocorrencia.id)},
+        )
+    sorteios = Sorteio.objects.filter(edital=edital)
+    assert sorteios.count() == 2, "a ampla concorrência e a cota PPP"
+    return sorteios.get(lista_id__isnull=True)
 
 
 def test_a_carga_acrescenta_sem_tocar_em_nada_e_a_segunda_nao_muda_nada(banco_populado):

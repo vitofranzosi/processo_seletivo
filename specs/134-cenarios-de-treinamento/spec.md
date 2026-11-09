@@ -125,6 +125,10 @@ comandos da aplicação que a tela usa.
   demonstração passa a oferecer sozinha.
 - **FR-4654**: A listagem diz, por cenário, a rodada em uso e as substituídas.
 - **FR-4655**: Para cada cenário, a próxima ação da ficha é executável pelo ator que ela nomeia.
+- **FR-4656**: Os cenários de sorteio (C06 e C07) declaram a cota PPP ao lado da ampla
+  concorrência: três dos dez inscritos a declaram na inscrição, sem anexo, e a autodeclaração é
+  pedida só aos cotistas, na convocação. O C07 nasce com as duas relações congeladas, e a mesma
+  ocorrência semeia os dois sorteios (D-008).
 
 ## Critérios de sucesso
 
@@ -183,6 +187,16 @@ por todas as conferências do envio.
 Conferir como conforme exige que o conferente tenha aberto o arquivo, e a abertura é registrada
 pela tela que o serve. O gerador não fabrica esse registro: nenhum item nasce conforme, e a
 primeira conferência conforme de cada cenário é da equipe.
+
+#### D-008 — O sorteio com cota, e a comprovação depois dele
+
+Pedido do setor em 09/11: o sorteio real do Cefor tem reserva de vagas, e a comprovação da cota é
+analisada depois do sorteio, na convocação. O molde do `seed_demo` sorteia só a ampla concorrência,
+de propósito (uma relação, um ato), e a primeira versão dos cenários o seguiu. Agora o Perfil de
+sorteio reparte as quatro vagas em três na ampla e uma na PPP, como o de notas, e o C07 congela as
+duas relações — a da ampla com todos, a da cota com quem a declarou (021, D-006 daquela spec). A
+conferência do comprovante depois do sorteio **não** ganhou cenário próprio: os cenários de
+convocação (C10 a C12) partem de um Edital por notas.
 
 ## Limitações e o que fica de fora
 

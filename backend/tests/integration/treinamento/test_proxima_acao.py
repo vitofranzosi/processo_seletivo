@@ -123,7 +123,14 @@ def test_c06_a_presidencia_congela_a_relacao(cenario):
     m = cenario("C06")
     assert not RelacaoDeHabilitados.objects.filter(edital=m.edital).exists()
     m.congelar_relacao()
-    assert RelacaoDeHabilitados.objects.filter(edital=m.edital).count() == 1
+    m.congelar_relacao(reservada=True)
+    relacoes = {
+        (str(r.lista_id) if r.lista_id else None): r.quantidade
+        for r in RelacaoDeHabilitados.objects.filter(edital=m.edital)
+    }
+    assert relacoes == {None: 10, m.id(c.RESERVADA): 3}, (
+        "a ampla alcança todos; a cota, quem a declarou"
+    )
 
 
 def test_c07_o_sorteio_se_realiza_sem_esperar_e_so_pela_presidencia(cenario):
@@ -142,21 +149,30 @@ def test_c07_o_sorteio_se_realiza_sem_esperar_e_so_pela_presidencia(cenario):
         idempotency_key="exercicio-c07-ocorrencia",
         correlation_id="exercicio",
     )
+    ampla, cota = manifesto.registros["relacao_do_sorteio"]
     argumentos = {
         "processo_id": m.processo.id,
         "edital_id": m.edital.id,
-        "relacao_id": manifesto.registros["relacao_do_sorteio"][0],
         "ocorrencia_id": ocorrencia["ocorrencia"],
         "correlation_id": "exercicio",
     }
     with pytest.raises(DomainError):
         constituir_sorteio(
-            actor=m.ator(c.AVALIACAO_1), idempotency_key="exercicio-c07-intruso", **argumentos
+            actor=m.ator(c.AVALIACAO_1),
+            idempotency_key="exercicio-c07-intruso",
+            relacao_id=ampla,
+            **argumentos,
         )
-    constituir_sorteio(
-        actor=m.ator(c.PRESIDENCIA), idempotency_key="exercicio-c07-sorteio", **argumentos
-    )
-    assert Sorteio.objects.filter(edital=m.edital).count() == 1
+    for indice, relacao in enumerate((ampla, cota)):
+        constituir_sorteio(
+            actor=m.ator(c.PRESIDENCIA),
+            idempotency_key=f"exercicio-c07-sorteio-{indice}",
+            relacao_id=relacao,
+            **argumentos,
+        )
+    sorteios = Sorteio.objects.filter(edital=m.edital)
+    assert sorteios.count() == 2
+    assert len({s.ocorrencia_id for s in sorteios}) == 1, "a mesma extração semeia as duas listas"
 
 
 def test_c08_o_candidato_recorre_do_resultado_preliminar(cenario):
