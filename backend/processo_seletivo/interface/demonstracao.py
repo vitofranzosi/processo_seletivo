@@ -33,9 +33,11 @@ ICONES = {
     "formalizacao": "pacote",
 }
 
-# Sujeitos da trilha que não são pessoas da equipe: o candidato tem eixo próprio, e a implantação é
-# o comando que prepara o banco.
-_FORA_DA_EQUIPE = ("cand:", "implantacao")
+# Sujeitos da trilha que não são pessoas da equipe: o candidato tem eixo próprio, a implantação é
+# o comando que prepara o banco, e `treino.` são os atores do gerador de cenários de treinamento
+# (134). Sem este último, quinze cenários bastavam para que "Publicador" fosse sugerido "como
+# treino.publicacao", e a equipe passaria a agir nos Editais reais com o nome do gerador.
+_FORA_DA_EQUIPE = ("cand:", "implantacao", "treino.")
 
 # A partir de quantas entradas a busca aparece (`FR-1695`). Abaixo disso, ela é um campo a mais
 # entre a pessoa e uma lista que cabe inteira na tela. Eram 8, os papéis de então; o nono, o da

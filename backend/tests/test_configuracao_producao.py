@@ -96,6 +96,11 @@ def test_producao_nasce_sem_a_fonte_de_demonstracao():
     assert _carregar().SORTEIO_FONTE_DE_DEMONSTRACAO is False
 
 
+def test_os_cenarios_de_treinamento_vem_desligados_por_padrao():
+    """A chave dos cenários (134, FR-4601) nasce desligada, pela mesma razão da fonte acima."""
+    assert _carregar().CENARIOS_DE_TREINAMENTO is False
+
+
 @pytest.mark.parametrize(
     ("alteracoes", "variavel"),
     [
@@ -127,6 +132,8 @@ def test_producao_nasce_sem_a_fonte_de_demonstracao():
         # A terceira demonstração (046, `FR-758`): a fonte do sorteio de semente fixa. Um sorteio
         # publicado com ela teria o resultado conhecido antes da extração.
         ({"SORTEIO_FONTE_DE_DEMONSTRACAO": "true"}, "SORTEIO_FONTE_DE_DEMONSTRACAO"),
+        # Os cenários de treinamento (134, FR-4601): publicam Editais fictícios, irreversíveis.
+        ({"CENARIOS_DE_TREINAMENTO": "true"}, "CENARIOS_DE_TREINAMENTO"),
         ({"ARQUIVOS_CANDIDATOS_RAIZ": None}, "ARQUIVOS_CANDIDATOS_RAIZ"),
         ({"ARQUIVOS_CANDIDATOS_RAIZ": "arquivos-dos-candidatos"}, "ARQUIVOS_CANDIDATOS_RAIZ"),
         (

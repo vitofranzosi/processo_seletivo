@@ -33,6 +33,7 @@ from .base import (
     ASSISTENTE_SERVICO,
     ASSISTENTE_TEMPO_LIMITE_SEGUNDOS,
     BASE_DIR,
+    CENARIOS_DE_TREINAMENTO,
     DATABASES,
     DEFAULT_FROM_EMAIL,
     EMAIL_BACKEND,
@@ -120,6 +121,14 @@ _exigir(
     "SORTEIO_FONTE_DE_DEMONSTRACAO",
     "a fonte de demonstração do sorteio tem semente fixa, e um sorteio publicado com ela seria "
     "previsível; ela não pode existir em produção.",
+)
+
+# Os cenários de treinamento (134, FR-4601): publicam Editais fictícios, que não se desfazem.
+_exigir(
+    not CENARIOS_DE_TREINAMENTO,
+    "CENARIOS_DE_TREINAMENTO",
+    "os cenários de treinamento publicam Editais fictícios, e publicação é ato imutável; eles "
+    "não podem existir em produção.",
 )
 
 # Onde os documentos do candidato ficam (FR-051 da 009). Três exigências, e cada uma cobre um
