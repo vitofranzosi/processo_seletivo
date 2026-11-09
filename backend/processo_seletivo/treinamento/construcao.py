@@ -25,6 +25,7 @@ from django.utils import timezone
 
 from processo_seletivo.processos.management.commands import seed_demo as molde
 from processo_seletivo.seguranca.domain import Actor
+from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.treinamento import identificadores as ids
 from processo_seletivo.treinamento.identificadores import MOLDE, do_molde
 
@@ -241,6 +242,31 @@ def metodo_do_sorteio(concurso):
 # ---------------------------------------------------------------------------------------------
 
 
+def ator(subject, unidade, *extras):
+    """O ator do gerador na unidade, com as permissões do papel dele e as `extras` do passo."""
+    return Actor(subject, unidade, frozenset(_PERMISSOES[subject]) | frozenset(extras))
+
+
+def numero_do_edital(codigo, rodada):
+    """O número do Edital: `SIM07`, e `SIM07R2` a partir da segunda rodada."""
+    base = f"SIM{codigo[1:]}"
+    return base if rodada == 1 else f"{base}R{rodada}"
+
+
+def codigo_do_processo(codigo, rodada):
+    base = f"SIM-TREINAMENTO-{int(codigo[1:]):03d}"
+    return base if rodada == 1 else f"{base}-R{rodada}"
+
+
+def ano_local(instante=None):
+    """O ano do Edital é o do calendário de Brasília, e não o do UTC.
+
+    Na noite de 31/12, depois das 21h, o UTC já está no ano seguinte: o Edital nascia datado de um
+    ano em que ainda não se está.
+    """
+    return timezone.localtime(instante or timezone.now(), ZONA).year
+
+
 @dataclass
 class Montagem:
     """Uma rodada de um cenário em construção: os identificadores dela e o que já foi criado."""
@@ -257,23 +283,23 @@ class Montagem:
 
     def __post_init__(self):
         self.agora = self.agora or timezone.now()
-        self.correlacao = f"treinamento-{self.codigo}-r{self.rodada}"
+        self.correlacao = f"treinamento-{ids.etiqueta(self.unidade)}-{self.codigo}-r{self.rodada}"
 
     # -- identidade e atores --------------------------------------------------------------
 
     def id(self, molde_ou_posicao):
         posicao = molde_ou_posicao[-2:] if len(molde_ou_posicao) == 36 else molde_ou_posicao
-        return ids.identificador(self.codigo, self.rodada, posicao)
+        return ids.identificador(self.unidade, self.codigo, self.rodada, posicao)
 
     def ator(self, subject, *extras):
-        return Actor(subject, self.unidade, frozenset(_PERMISSOES[subject]) | frozenset(extras))
+        return ator(subject, self.unidade, *extras)
 
     def chave(self, passo):
         """A chave de idempotência do passo: única por rodada, entre 16 e 128 caracteres."""
         return f"{self.correlacao}-{passo}"[:128]
 
     def remapear(self, valor):
-        return ids.remapear(valor, self.codigo, self.rodada)
+        return ids.remapear(valor, self.unidade, self.codigo, self.rodada)
 
     def anotar(self, especie, *valores):
         self.registros.setdefault(especie, []).extend(str(valor) for valor in valores)
@@ -284,14 +310,15 @@ class Montagem:
 
     @property
     def numero(self):
-        """O número do Edital: `SIM07`, e `SIM07R2` a partir da segunda rodada."""
-        base = f"SIM{self.codigo[1:]}"
-        return base if self.rodada == 1 else f"{base}R{self.rodada}"
+        return numero_do_edital(self.codigo, self.rodada)
 
     @property
     def codigo_do_processo(self):
-        base = f"SIM-TREINAMENTO-{int(self.codigo[1:]):03d}"
-        return base if self.rodada == 1 else f"{base}-R{self.rodada}"
+        return codigo_do_processo(self.codigo, self.rodada)
+
+    @property
+    def ano(self):
+        return ano_local(self.agora)
 
     # -- Processo e Edital ----------------------------------------------------------------
 
@@ -310,9 +337,8 @@ class Montagem:
                 "title": rotulo[:255],
                 "firstEdital": {
                     "number": self.numero,
-                    "year": self.agora.year,
-                    "title": f"Edital {self.numero}/{self.agora.year} — {self.titulo} "
-                    "(treinamento)",
+                    "year": self.ano,
+                    "title": f"Edital {self.numero}/{self.ano} — {self.titulo} (treinamento)",
                     "description": (
                         f"{MARCA}. Edital fictício do cenário {self.codigo}, criado pelo gerador "
                         "de cenários de treinamento para exercício da equipe de seleção."
@@ -513,7 +539,7 @@ class Montagem:
         inscricoes = []
         inicio = len(self.pessoas)
         for ordem in range(inicio + 1, inicio + quantidade + 1):
-            pessoa = ids.pessoa(self.codigo, self.rodada, ordem)
+            pessoa = ids.pessoa(self.unidade, self.codigo, self.rodada, ordem)
             self.pessoas.append(pessoa)
             self.dar_acesso(pessoa)
             identidade = self.identidade(pessoa)

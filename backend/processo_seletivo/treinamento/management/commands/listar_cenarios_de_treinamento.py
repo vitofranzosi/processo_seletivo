@@ -1,4 +1,4 @@
-"""Lista os cenários de treinamento e a situação de cada um (134, FR-4616)."""
+"""Lista os cenários de treinamento e a situação de cada um (134, FR-4654)."""
 
 from django.utils import timezone
 

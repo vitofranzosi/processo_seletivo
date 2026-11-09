@@ -86,7 +86,7 @@ def retomar(manifesto, autoridade=None):
     por_id = {str(inscricao.id): inscricao for inscricao in inscricoes}
     montagem.inscricoes = [por_id[pk] for pk in manifesto.registros.get("inscricao", [])]
     montagem.pessoas = [
-        identificadores.pessoa(manifesto.codigo, manifesto.rodada, ordem)
+        identificadores.pessoa(manifesto.unidade, manifesto.codigo, manifesto.rodada, ordem)
         for ordem in range(1, len(montagem.inscricoes) + 1)
     ]
     return montagem

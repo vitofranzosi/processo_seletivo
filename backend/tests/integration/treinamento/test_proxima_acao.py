@@ -138,7 +138,7 @@ def test_c07_o_sorteio_se_realiza_sem_esperar_e_so_pela_presidencia(cenario):
         actor=m.ator(c.PRESIDENCIA),
         processo_id=m.processo.id,
         fonte="Fonte de demonstração",
-        referencia=concurso_da_rodada("C07", 1),
+        referencia=concurso_da_rodada("cefor", "C07", 1),
         idempotency_key="exercicio-c07-ocorrencia",
         correlation_id="exercicio",
     )

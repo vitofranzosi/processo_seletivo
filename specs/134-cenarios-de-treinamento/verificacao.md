@@ -5,7 +5,8 @@ sobre a `main` em `86cd0ee0`.
 
 ## Testes da feature
 
-`tests/unit/treinamento/` e `tests/integration/treinamento/`, contra PostgreSQL: **54 casos**.
+`tests/unit/treinamento/` e `tests/integration/treinamento/`, contra PostgreSQL: **63 casos**,
+depois da revisão de código.
 
 | O que se prova | Onde | Requisitos |
 |---|---|---|
@@ -39,6 +40,25 @@ desempate da prova; 03 e 04 dividem o 3º lugar; 08, eliminado na prova, fica fo
 4. **O mesmo arquivo reenviado não conta como entrega nova** — o roteiro de correção do C11 usa
    um arquivo diferente.
 
+## Achados da revisão de código (09/11)
+
+Dez, todos corrigidos, cada um com o seu caso na suíte:
+
+1. **Os identificadores não levavam a unidade.** Perfis, Etapas, pessoas e concurso são globais
+   no banco, e o `--unidade` de uma segunda unidade falhava em todos os cenários. A unidade entrou
+   na derivação (FR-4630, FR-4643); o caso carrega o C04 e o C07 no Cefor e numa segunda unidade.
+2. **Os Editais a cancelar eram lidos fora da transação.** Um Edital criado depois da
+   pré-visualização fazia o cancelamento do Processo recusar a restauração inteira. Agora são
+   relidos sob trava, e o plano vencido por outra restauração é recusado sem mudar nada (FR-4624).
+3. **O CPF usava a rodada módulo 10**, e a rodada 11 repetia os da 1 (FR-4631).
+4. **A procura de vestígios ia só até a R99.**
+5. **Defeito do gerador saía como recusa do domínio**, sem pilha: agora é `ERRO` (FR-4612).
+6. **O ano do Edital era o do UTC**, e a noite de 31/12 datava o Edital do ano seguinte.
+7. A pré-visualização calculava o retrato de cada cenário pronto só para dizer `MANTER`.
+8. O plano da restauração era calculado duas vezes, pelo comando e pelo serviço.
+9. Uma montagem incompleta era construída só para obter o código, o número e o ator.
+10. Duas citações de requisito estavam trocadas (listagem → FR-4654, retrato → FR-4617).
+
 ## No navegador
 
 Banco `ps_demo_134`, com o `seed_demo` no papel de dados preexistentes, e os quinze cenários
@@ -49,7 +69,7 @@ carregados pelo comando (entrada `cenarios-134` do `.claude/launch.json`):
   Processos de cada uma;
 - o Edital `SIM04/2026` mostra uma só providência: **SUA — Emitir a ordem**;
 - o Edital `SIM07/2026` mostra **SUA — Observar a extração**; na tela do sorteio, a fonte é a
-  **Fonte de demonstração** e o concurso 80701 diz "cenário de treinamento, sem valor legal";
+  **Fonte de demonstração** e o concurso da rodada diz "cenário de treinamento, sem valor legal";
   **Observar a ocorrência** e **Realizar o sorteio** funcionaram, e a tela passou a mostrar
   "Sorteio realizado … por treino.presidencia" com semente e manifesto;
 - a verificação acusou o C07 como `EXERCITADO` (ato de ordenação, 10 posições, sorteio) e o C04
@@ -77,6 +97,9 @@ Depois das correções finais (sugestões da página de acesso, travessão do PD
 sorteio): `ruff check`, `ruff format --check`, `manage.py check` e `makemigrations --check` limpos,
 e os 108 casos afetados — a feature, a entrada da gestão, o `seed_demo`, as citações, o README e a
 configuração de produção — passando.
+
+Depois da revisão de código de 09/11, a suíte completa (`make test-pg`, 4 workers): **17 427
+passando, 20 pulados, sem falha, em 1389 s**.
 
 ## Pendente
 

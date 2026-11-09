@@ -55,7 +55,8 @@ comandos da aplicação que a tela usa.
 - **FR-4611**: A carga cria só os cenários sem rodada em uso; os que existem são mantidos sem
   nenhuma escrita, nem de trilha.
 - **FR-4612**: Cada cenário é criado numa transação, junto com o manifesto: ou nasce inteiro, ou
-  não deixa nada. A falha de um cenário não impede os outros.
+  não deixa nada. A falha de um cenário não impede os outros. A recusa do domínio sai como
+  `FALHOU`, com a frase dela; o defeito do gerador, como `ERRO`, com a pilha na saída de erros.
 - **FR-4613**: A propriedade de um Processo pelo gerador se comprova pelo manifesto **e** pela
   trilha (o registro de criação com a correlação da rodada), e não pelo prefixo do código.
 - **FR-4614**: Um Processo com o código reservado de um cenário e sem manifesto é relatado como
@@ -78,6 +79,8 @@ comandos da aplicação que a tela usa.
 - **FR-4623**: Antes de restaurar, o comando mostra o que muda: a rodada nova, os Editais e o
   Processo a cancelar, e o que a equipe fez no cenário desde a criação.
 - **FR-4624**: A rodada nova, o cancelamento da anterior e a troca no manifesto são uma transação.
+  Os Editais a cancelar são relidos sob trava dentro dela, e a rodada anterior precisa continuar
+  em uso; se outra restauração passou na frente, nada é alterado.
 - **FR-4625**: A restauração não altera outro cenário, Edital real, pessoa, unidade ou autoridade.
 - **FR-4626**: A rodada anterior continua consultável, com o histórico do exercício, na aba
   "Cancelados".
@@ -85,8 +88,10 @@ comandos da aplicação que a tela usa.
 ### Dados fictícios e efeitos externos
 
 - **FR-4630**: Os identificadores de Perfil, Etapa, marco, Evento, Modalidade e Documento são
-  derivados do cenário e da rodada, e nunca colidem entre rodadas nem com outro Edital.
-- **FR-4631**: Os CPFs são calculados, com dígitos verificadores corretos e iniciados por `000`.
+  derivados da unidade, do cenário e da rodada, e nunca colidem entre rodadas, entre unidades nem
+  com outro Edital. O mesmo vale para os e-mails, os sujeitos e a correlação das pessoas e dos atos.
+- **FR-4631**: Os CPFs são calculados, com dígitos verificadores corretos e iniciados por `000`, e
+  não se repetem num cenário antes da rodada 500.
 - **FR-4632**: Nomes levam o sobrenome "Treinamento" e o código do cenário; e-mails são de
   `treinamento.exemplo.test`, domínio reservado que não entrega.
 - **FR-4633**: Título do Processo, título e descrição do Edital, justificativas, pareceres e todo
@@ -103,7 +108,8 @@ comandos da aplicação que a tela usa.
   encerramento, avaliações concluídas e consolidadas, ordem, resultado, corte, apuração.
 - **FR-4642**: Cada passo é praticado por um ator com as permissões do papel do seletor que lhe
   corresponde, ou sem permissão nenhuma quando a base é a comissão.
-- **FR-4643**: O sorteio usa a Fonte de demonstração com um concurso próprio da rodada (D-004);
+- **FR-4643**: O sorteio usa a Fonte de demonstração com um concurso próprio da rodada e da
+  unidade (D-004);
   sem a fonte ligada no ambiente, os cenários de sorteio são recusados na pré-visualização.
 
 ### Catálogo

@@ -9,11 +9,13 @@ a linha**, sobre todas as tabelas do banco (`tests/fixtures/treinamento.instanta
 import pytest
 from django.core.management import CommandError, call_command
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.sorteios.models import OcorrenciaDaFonte, Sorteio
 from processo_seletivo.treinamento import servico
-from processo_seletivo.treinamento.catalogo import POR_CODIGO, concurso_da_rodada
+from processo_seletivo.treinamento.catalogo import concurso_da_rodada
+from processo_seletivo.treinamento.identificadores import identificador
 from processo_seletivo.treinamento.models import CenarioDeTreinamento
 from processo_seletivo.treinamento.retrato import retratar
 from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
@@ -41,9 +43,7 @@ def _manifesto(codigo, situacao=CenarioDeTreinamento.Situacao.PRONTO):
 def _sortear_pela_tela(client, manifesto):
     """O exercício do C07, como a presidência o faz: observar a ocorrência e realizar o sorteio."""
     edital = Edital.objects.get(processo=manifesto.processo)
-    marco = POR_CODIGO["C07"] and servico.Montagem(
-        codigo="C07", rodada=manifesto.rodada, unidade="cefor", autoridade_id="", titulo=""
-    ).id("a1")
+    marco = identificador(manifesto.unidade, "C07", manifesto.rodada, "a1")
     identificar(client, "treino.presidencia", [])
     tela = reverse("interface:sorteio", args=[edital.id, marco])
     antes = client.get(tela)
@@ -52,7 +52,7 @@ def _sortear_pela_tela(client, manifesto):
     client.post(reverse("interface:observar-ocorrencia-do-sorteio", args=[edital.id, marco]), {})
     assert "Realizar o sorteio" in client.get(tela).content.decode()
     ocorrencia = OcorrenciaDaFonte.objects.get(
-        referencia=concurso_da_rodada("C07", manifesto.rodada)
+        referencia=concurso_da_rodada(manifesto.unidade, "C07", manifesto.rodada)
     )
     client.post(
         reverse("interface:realizar-sorteio", args=[edital.id, marco]),
@@ -224,3 +224,93 @@ def test_autoridade_nunca_usada_so_com_escolha_expressa(treinamento):
     assert instantaneo() == antes
     assert "C03  CRIADO" in carregar("C03", autoridade=str(AUTORIDADE_DA_SUITE))
     assert AutoridadeHabilitada.objects.get(pk=AUTORIDADE_DA_SUITE).usada_em is not None
+
+
+def test_uma_segunda_unidade_recebe_os_mesmos_cenarios_sem_esbarrar_na_primeira(treinamento):
+    """Identificadores, pessoas e concurso são globais no banco: a unidade entra na derivação.
+
+    Sem ela, o C04 da segunda unidade esbarrava nos Perfis do C04 da primeira
+    (`identifier_belongs_to_another_edital`), e o C07 era recusado pelo concurso já observado.
+    """
+    from tests.fixtures.autoridades import registrar_autoridade, registrar_unidade
+
+    outra = registrar_autoridade(registrar_unidade("campus-serra"))
+    assert carregar("C04", "C07", autoridade=str(AUTORIDADE_DA_SUITE)).count("CRIADO") == 2
+    saida = carregar("C04", "C07", unidade="campus-serra", autoridade=str(outra.pk))
+    assert saida.count("CRIADO") == 2, saida
+    for unidade in ("cefor", "campus-serra"):
+        assert CenarioDeTreinamento.objects.filter(unidade=unidade, situacao="PRONTO").count() == 2
+        assert (
+            ProcessoSeletivo.objects.filter(
+                institution_scope=unidade, institutional_code__startswith="SIM-TREINAMENTO-"
+            ).count()
+            == 2
+        )
+    assert "INTACTO" in verificar("C04")
+
+
+def test_a_restauracao_cancela_tambem_o_edital_criado_depois_da_previa(treinamento):
+    """Os Editais a cancelar são relidos sob trava: o que entrou depois do plano também sai."""
+    from processo_seletivo.processos.application.commands import add_edital
+    from processo_seletivo.treinamento.construcao import GESTAO, ano_local, ator
+
+    carregar("C03", autoridade=str(AUTORIDADE_DA_SUITE))
+    manifesto = _manifesto("C03")
+    plano = servico.plano_de_restauracao("C03", "cefor")
+    add_edital(
+        actor=ator(GESTAO, "cefor"),
+        processo_id=manifesto.processo_id,
+        data={"number": "SIM03X", "year": ano_local(), "title": "Edital acrescido no exercício"},
+        idempotency_key="treinamento-teste-edital-acrescido",
+        correlation_id="treinamento-teste",
+    )
+    anterior, novo = servico.restaurar(plano, "cefor", autoridade=str(AUTORIDADE_DA_SUITE))
+    assert {e.status for e in Edital.objects.filter(processo=anterior.processo)} == {"CANCELADO"}
+    anterior.processo.refresh_from_db()
+    assert anterior.processo.status == "CANCELADO"
+    assert novo.rodada == 2
+
+
+def test_restaurar_com_plano_vencido_por_outra_restauracao_nao_muda_nada(treinamento):
+    carregar("C03", autoridade=str(AUTORIDADE_DA_SUITE))
+    plano = servico.plano_de_restauracao("C03", "cefor")
+    servico.restaurar(plano, "cefor", autoridade=str(AUTORIDADE_DA_SUITE))
+    antes = instantaneo()
+    with pytest.raises(servico.Recusa, match="deixou de ser a rodada em uso"):
+        servico.restaurar(plano, "cefor", autoridade=str(AUTORIDADE_DA_SUITE))
+    assert instantaneo() == antes
+
+
+def test_defeito_do_gerador_sai_como_erro_com_a_pilha_e_nao_como_recusa(treinamento, monkeypatch):
+    from processo_seletivo.treinamento.construcao import Montagem
+
+    original = Montagem.criar
+
+    def criar(self):
+        if self.codigo == "C03":
+            raise AttributeError("'Apresentada' object has no attribute 'id'")
+        return original(self)
+
+    monkeypatch.setattr(Montagem, "criar", criar)
+    saida = carregar("C03", "C05", autoridade=str(AUTORIDADE_DA_SUITE))
+    assert "C03  ERRO" in saida and "defeito do gerador" in saida, saida
+    assert "Traceback" in saida, "a pilha vai para a saída de erros"
+    assert "C05  CRIADO" in saida, "o defeito de um não impede os outros"
+    assert not CenarioDeTreinamento.objects.filter(codigo="C03").exists()
+
+
+def test_vestigio_de_rodada_alta_tambem_e_acusado(treinamento):
+    """A procura era por lista, de R2 a R99; um -R100 sem manifesto passava em silêncio."""
+    from processo_seletivo.treinamento.catalogo import POR_CODIGO
+
+    ProcessoSeletivo.objects.create(
+        institution_scope="cefor",
+        institutional_code="SIM-TREINAMENTO-003-R100",
+        title="Criado à mão",
+        created_at=timezone.now(),
+        created_by="teste",
+        last_changed_at=timezone.now(),
+    )
+    assert [p.institutional_code for p in servico._vestigios(POR_CODIGO["C03"], "cefor")] == [
+        "SIM-TREINAMENTO-003-R100"
+    ]

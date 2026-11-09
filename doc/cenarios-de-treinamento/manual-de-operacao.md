@@ -111,8 +111,10 @@ Para só alguns cenários, repita `--cenario`:
 uv run python manage.py carregar_cenarios_de_treinamento --banco processo_seletivo --cenario C04 --cenario C07 --cenario C11
 ```
 
-A carga dos quinze levou 8 segundos numa máquina de desenvolvimento. Cada cenário é uma transação: um que falha (`FALHOU`,
-com a frase do domínio) não deixa nada no banco, e os outros seguem. Rodar de novo cria só os que
+A carga dos quinze levou 8 segundos numa máquina de desenvolvimento. Cada cenário é uma
+transação: um que falha não deixa nada no banco, e os outros seguem. `FALHOU` é uma recusa do
+domínio, com a frase dela — a regra funcionando. `ERRO` é defeito do gerador, e a pilha sai na saída
+de erros: registre-a como achado, sem tentar contornar. Rodar de novo cria só os que
 faltam: os prontos aparecem como `MANTER`, e nada neles é tocado, nem o que a equipe já fez.
 
 ## Listar e verificar

@@ -8,21 +8,23 @@ from processo_seletivo.treinamento import construcao, identificadores
 from processo_seletivo.treinamento.catalogo import CENARIOS
 
 
-def test_o_cpf_gerado_e_valido_comeca_por_000_e_nao_se_repete_entre_cenarios():
+def test_o_cpf_gerado_e_valido_comeca_por_000_e_nao_se_repete_entre_cenarios_nem_rodadas():
+    """A rodada 11 repetia os CPFs da 1, quando o número levava só o último dígito da rodada."""
+    rodadas = (1, 2, 11, 21, 500)
     gerados = {
         identificadores.cpf(cenario.codigo, rodada, ordem)
         for cenario in CENARIOS
-        for rodada in (1, 2)
-        for ordem in range(1, 13)
+        for rodada in rodadas
+        for ordem in range(1, identificadores.PESSOAS_POR_RODADA + 1)
     }
-    assert len(gerados) == len(CENARIOS) * 2 * 12
+    assert len(gerados) == len(CENARIOS) * len(rodadas) * identificadores.PESSOAS_POR_RODADA
     for numero in gerados:
         assert cpf_valido(numero), numero
         assert numero.startswith("000.")
 
 
 def test_a_pessoa_ficticia_se_denuncia_no_nome_e_no_e_mail_reservado():
-    pessoa = identificadores.pessoa("C07", 1, 3)
+    pessoa = identificadores.pessoa("cefor", "C07", 1, 3)
     assert "Treinamento" in pessoa["nome"]
     assert pessoa["email"].endswith(".test")
     assert pessoa["subject"].startswith("cand:treinamento-")
@@ -30,12 +32,39 @@ def test_a_pessoa_ficticia_se_denuncia_no_nome_e_no_e_mail_reservado():
 
 def test_remapear_troca_so_os_identificadores_do_molde_e_distingue_as_rodadas():
     molde = {"id": identificadores.do_molde("b1"), "outro": "00000000-0000-0000-0001-0000000000b1"}
-    primeira = identificadores.remapear(molde, "C07", 1)
-    segunda = identificadores.remapear(molde, "C07", 2)
+    primeira = identificadores.remapear(molde, "cefor", "C07", 1)
+    segunda = identificadores.remapear(molde, "cefor", "C07", 2)
+    outra_unidade = identificadores.remapear(molde, "campus-serra", "C07", 1)
     assert primeira["outro"] == molde["outro"], "identificador que não é do molde fica"
     assert primeira["id"] != molde["id"]
     assert primeira["id"] != segunda["id"], "cada rodada tem o seu espaço"
-    assert primeira == identificadores.remapear(molde, "C07", 1), "e é estável"
+    assert primeira["id"] != outra_unidade["id"], "e cada unidade também"
+    assert primeira == identificadores.remapear(molde, "cefor", "C07", 1), "e é estável"
+
+
+def test_pessoa_e_concurso_distinguem_a_unidade():
+    from processo_seletivo.treinamento.catalogo import concurso_da_rodada
+
+    cefor = identificadores.pessoa("cefor", "C07", 1, 3)
+    serra = identificadores.pessoa("campus-serra", "C07", 1, 3)
+    assert cefor["email"] != serra["email"] and cefor["subject"] != serra["subject"]
+    assert concurso_da_rodada("cefor", "C07", 1) != concurso_da_rodada("campus-serra", "C07", 1)
+    assert concurso_da_rodada("cefor", "C07", 100) != concurso_da_rodada("cefor", "C07", 10)
+    assert int(concurso_da_rodada("cefor", "C07", 1)) > 5000, "a fonte o dá por não realizado"
+
+
+def test_a_etiqueta_da_unidade_cabe_na_correlacao():
+    assert identificadores.etiqueta("cefor") == "cefor"
+    longa = identificadores.etiqueta("Unidade Com Nome Livre E Muito Comprido" * 2)
+    assert len(longa) <= 24 and longa == identificadores.etiqueta(
+        "Unidade Com Nome Livre E Muito Comprido" * 2
+    )
+
+
+def test_o_ano_do_edital_e_o_de_brasilia_na_noite_de_31_de_dezembro():
+    from datetime import UTC, datetime
+
+    assert construcao.ano_local(datetime(2026, 1, 1, 1, 30, tzinfo=UTC)) == 2025
 
 
 def test_o_pdf_ficticio_e_pdf_e_carrega_a_marca_de_treinamento():

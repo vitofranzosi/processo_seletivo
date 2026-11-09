@@ -1,4 +1,4 @@
-"""O retrato de um cenário: quantas linhas de cada espécie ele tem agora (134, FR-4613).
+"""O retrato de um cenário: quantas linhas de cada espécie ele tem agora (134, FR-4617).
 
 **Por introspecção, e não por lista.** Uma lista de modelos esqueceria o primeiro app que nascesse
 depois dela — e um cenário exercitado nele pareceria intacto. Aqui entra todo modelo com chave

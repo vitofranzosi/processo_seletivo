@@ -39,6 +39,10 @@
   ensaio, carga, verificação, restauração.
 - [x] T016 Linhas do README (módulo e incremento); [verificação](verificacao.md).
 
+## Fase 6 — Revisão de código
+
+- [x] T019 Os dez achados da revisão de 09/11, registrados na [verificação](verificacao.md).
+
 ## Pendente
 
 - [ ] T017 Carga na homologação compartilhada, pelo administrador, depois do ensaio.

@@ -36,7 +36,7 @@
    Retificação — o caminho do `seed_demo`.
 3. **Distribuir exige o conjunto fechado**: avaliação só depois da Retificação de encerramento.
 4. **Ocorrência única por fonte e referência** no acervo: cada rodada de sorteio declara o seu
-   concurso (`8NNRR`).
+   concurso (`8NNRRRUUU`: cenário, rodada e um resumo da unidade).
 5. **O primeiro uso de uma autoridade a torna imutável** (a FR-1121 da `060`). Achado da suíte desta
    feature: o instantâneo linha a linha acusou a autoridade da suíte alterada pela carga. Daí a
    FR-4616.
@@ -70,7 +70,7 @@
 ```text
 backend/processo_seletivo/treinamento/
 ├── ambiente.py          # as três barreiras
-├── identificadores.py   # uuid5 por cenário e rodada, CPF, pessoa fictícia
+├── identificadores.py   # uuid5 por unidade, cenário e rodada, CPF, pessoa fictícia
 ├── construcao.py        # Montagem: os passos sobre os comandos da aplicação
 ├── catalogo.py          # as quinze fichas e receitas
 ├── retrato.py           # o estado de um cenário, por introspecção

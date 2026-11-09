@@ -18,12 +18,14 @@ class Command(ComandoDeTreinamento):
                 linha(self.stdout, item.codigo, decisao, [item.nome, *motivos])
             return
         resultados = servico.carregar(
-            cenario, unidade, saida=self.stdout, autoridade=autoridade or None
+            cenario, unidade, saida=self.stdout, erros=self.stderr, autoridade=autoridade or None
         )
         self.stdout.write("\nResumo:")
         for item, decisao, motivos in resultados:
             linha(self.stdout, item.codigo, decisao, [item.nome, *motivos])
-        falhas = [item for item, decisao, _ in resultados if decisao in ("FALHOU", "RECUSAR")]
+        falhas = [
+            item for item, decisao, _ in resultados if decisao in ("FALHOU", "ERRO", "RECUSAR")
+        ]
         if falhas:
             self.stderr.write(
                 f"{len(falhas)} cenário(s) não foram criados; os demais ficaram como estão."

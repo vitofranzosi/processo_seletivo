@@ -40,6 +40,9 @@ class Command(ComandoDeTreinamento):
             self.stdout.write(
                 f"  Será cancelado o Edital {edital.number}/{edital.year} ({edital.status})."
             )
+        self.stdout.write(
+            "  Um Edital que entrar no Processo até a gravação também será cancelado."
+        )
         if plano["processo_a_cancelar"] is not None:
             self.stdout.write(
                 f"  Será cancelado o Processo {anterior.processo.institutional_code}."
@@ -55,7 +58,7 @@ class Command(ComandoDeTreinamento):
                 f"Recusado: confirme a restauração repetindo o código, com --confirmar {codigo}."
             )
         anterior, novo = servico.restaurar(
-            codigo, unidade, saida=self.stdout, autoridade=autoridade or None
+            plano, unidade, saida=self.stdout, autoridade=autoridade or None
         )
         self.stdout.write(
             self.style.SUCCESS(

@@ -11,6 +11,7 @@ versão com que nasceu, e a verificação acusa quando ela é anterior à do có
 válido, mas não é mais o que o roteiro descreve, e restaurá-lo traz a versão nova.
 """
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import timedelta
 
@@ -282,7 +283,7 @@ def _edital_de_sorteio(m, *, inscritos=10):
         inicio=m.agora - timedelta(days=10),
         duracao_dias=40,
         documentos=c.documentos_de_sorteio(),
-        metodo=c.metodo_do_sorteio(concurso_da_rodada(m.codigo, m.rodada)),
+        metodo=c.metodo_do_sorteio(concurso_da_rodada(m.unidade, m.codigo, m.rodada)),
         etapas=(ETAPA_TITULOS,),
     )
     m.publicar()
@@ -291,9 +292,19 @@ def _edital_de_sorteio(m, *, inscritos=10):
     m.constituir_comissao()
 
 
-def concurso_da_rodada(codigo, rodada):
-    """`80701` para o C07 na rodada 1: acima do 5000 que a fonte de demonstração dá por feito."""
-    return f"8{int(codigo[1:]):02d}{rodada:02d}"
+def concurso_da_rodada(unidade, codigo, rodada):
+    """`807001NNN` para o C07 na rodada 1 da unidade NNN — acima do 5000 que a fonte de
+    demonstração dá por feito.
+
+    **A ocorrência é única por fonte e referência no banco inteiro**, e não por unidade: sem a
+    unidade no número, o C07 da segunda unidade a carregar era recusado, porque o concurso dele já
+    tinha sido observado pela primeira. Os três últimos dígitos são um resumo do código da
+    unidade; duas unidades que caíssem no mesmo resumo teriam o cenário de sorteio recusado na
+    pré-visualização, com o motivo — não há colisão silenciosa. A rodada tem três dígitos, para que
+    a rodada 100 de um cenário não se confunda com a 10 de outra unidade.
+    """
+    resumo = int(hashlib.sha256(unidade.encode()).hexdigest(), 16) % 1000
+    return f"8{int(codigo[1:]):02d}{rodada:03d}{resumo:03d}"
 
 
 def montar_c06(m):

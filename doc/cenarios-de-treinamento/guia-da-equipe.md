@@ -200,7 +200,8 @@ congelada**. Falta observar a ocorrência e sortear.
    **SUA — Observar a extração**; siga até a tela **Sorteio — Sorteio público**.
 2. Confira o método (a fonte é a **Fonte de demonstração**) e a relação de 10 participantes
    congelada.
-3. Clique em **Observar a ocorrência 80701 na fonte**.
+3. Clique em **Observar a ocorrência … na fonte** — no Cefor, a primeira rodada do C07 usa o
+   concurso 807001106; cada rodada e cada unidade têm o seu.
 4. Clique em **Realizar o sorteio**.
 5. Leia o quadro **Sorteio realizado**, com a semente e o manifesto, e abra **Verificar no canal
    público**.

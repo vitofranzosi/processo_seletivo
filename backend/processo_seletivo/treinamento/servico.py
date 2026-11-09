@@ -16,6 +16,7 @@ cenário, do zero e com as datas de hoje, e cancelar a anterior pelos comandos d
 que deixam o histórico inteiro, e tiram o Processo antigo da aba "Em andamento".
 """
 
+import traceback
 from dataclasses import dataclass, field
 
 from django.conf import settings
@@ -24,9 +25,18 @@ from django.test.utils import override_settings
 from django.utils import timezone
 
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
+from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.treinamento import ambiente
 from processo_seletivo.treinamento.catalogo import CENARIOS, POR_CODIGO, concurso_da_rodada
-from processo_seletivo.treinamento.construcao import GESTAO, MARCA, Montagem
+from processo_seletivo.treinamento.construcao import (
+    GESTAO,
+    MARCA,
+    Montagem,
+    ano_local,
+    ator,
+    codigo_do_processo,
+    numero_do_edital,
+)
 from processo_seletivo.treinamento.models import CenarioDeTreinamento
 from processo_seletivo.treinamento.retrato import diferencas, retratar
 
@@ -113,10 +123,11 @@ def autoridade_vigente(unidade, escolhida=None):
 
 def _vestigios(cenario, unidade):
     """Processos com o código reservado do cenário que nenhum manifesto reconhece."""
-    numero = int(cenario.codigo[1:])
-    base = f"{PREFIXO_DO_CODIGO}{numero:03d}"
-    candidatos = ProcessoSeletivo.objects.filter(institution_scope=unidade).filter(
-        institutional_code__in=[base] + [f"{base}-R{rodada}" for rodada in range(2, 100)]
+    # Por expressão, e não por lista de rodadas: a lista ia até a R99, e um Processo -R100 sem
+    # manifesto passava sem ser acusado.
+    base = codigo_do_processo(cenario.codigo, 1)
+    candidatos = ProcessoSeletivo.objects.filter(
+        institution_scope=unidade, institutional_code__regex=rf"^{base}(-R[0-9]+)?$"
     )
     reconhecidos = set(
         CenarioDeTreinamento.objects.filter(unidade=unidade, codigo=cenario.codigo).values_list(
@@ -155,14 +166,18 @@ def _conferir_propriedade(manifesto):
     return problemas
 
 
-def situacao(cenario, unidade):
-    manifesto = (
+def _em_uso(cenario, unidade):
+    return (
         CenarioDeTreinamento.objects.select_related("processo")
         .filter(
             unidade=unidade, codigo=cenario.codigo, situacao=CenarioDeTreinamento.Situacao.PRONTO
         )
         .first()
     )
+
+
+def situacao(cenario, unidade):
+    manifesto = _em_uso(cenario, unidade)
     resultado = Situacao(
         cenario=cenario, manifesto=manifesto, vestigios=_vestigios(cenario, unidade)
     )
@@ -201,15 +216,16 @@ def conflitos_de_montagem(cenario, unidade, rodada, ano):
     from processo_seletivo.sorteios.models import OcorrenciaDaFonte
 
     conflitos = []
-    montagem = Montagem(
-        codigo=cenario.codigo, rodada=rodada, unidade=unidade, autoridade_id="", titulo=""
+    codigo, numero = (
+        codigo_do_processo(cenario.codigo, rodada),
+        numero_do_edital(cenario.codigo, rodada),
     )
     if ProcessoSeletivo.objects.filter(
-        institution_scope=unidade, institutional_code=montagem.codigo_do_processo
+        institution_scope=unidade, institutional_code=codigo
     ).exists():
-        conflitos.append(f"já existe Processo {montagem.codigo_do_processo} na unidade.")
-    if Edital.objects.filter(institution_scope=unidade, number=montagem.numero, year=ano).exists():
-        conflitos.append(f"já existe Edital {montagem.numero}/{ano} na unidade.")
+        conflitos.append(f"já existe Processo {codigo} na unidade.")
+    if Edital.objects.filter(institution_scope=unidade, number=numero, year=ano).exists():
+        conflitos.append(f"já existe Edital {numero}/{ano} na unidade.")
     if cenario.exige_fonte_de_demonstracao:
         if not getattr(settings, "SORTEIO_FONTE_DE_DEMONSTRACAO", False):
             conflitos.append(
@@ -217,26 +233,32 @@ def conflitos_de_montagem(cenario, unidade, rodada, ano):
                 "(SORTEIO_FONTE_DE_DEMONSTRACAO)."
             )
         elif OcorrenciaDaFonte.objects.filter(
-            referencia=concurso_da_rodada(cenario.codigo, rodada)
+            referencia=(concurso := concurso_da_rodada(unidade, cenario.codigo, rodada))
         ).exists():
             conflitos.append(
-                f"o concurso {concurso_da_rodada(cenario.codigo, rodada)} da fonte de "
-                "demonstração já foi observado por outro certame."
+                f"o concurso {concurso} da fonte de demonstração já foi observado por outro "
+                "certame."
             )
     return conflitos
 
 
 def planejar(codigos, unidade):
-    """O que a carga faria, sem escrever nada — a pré-visualização (FR-4604)."""
+    """O que a carga faria, sem escrever nada — a pré-visualização (FR-4604).
+
+    **Sem o retrato.** Decidir entre criar e manter só pede o manifesto em uso e os vestígios; o
+    retrato é uma contagem por vínculo do domínio, e a pré-visualização dos quinze prontos fazia
+    centenas delas para descartá-las.
+    """
     plano = []
-    ano = timezone.now().year
+    ano = ano_local()
     for cenario in escolher(codigos):
-        atual = situacao(cenario, unidade)
-        if atual.manifesto is not None:
-            plano.append((cenario, "MANTER", [f"rodada {atual.manifesto.rodada} já existe"]))
+        manifesto = _em_uso(cenario, unidade)
+        if manifesto is not None:
+            plano.append((cenario, "MANTER", [f"rodada {manifesto.rodada} já existe"]))
             continue
-        if atual.vestigios:
-            codigos_achados = ", ".join(p.institutional_code for p in atual.vestigios)
+        vestigios = _vestigios(cenario, unidade)
+        if vestigios:
+            codigos_achados = ", ".join(p.institutional_code for p in vestigios)
             plano.append((cenario, "RECUSAR", [f"Processo sem manifesto: {codigos_achados}"]))
             continue
         rodada = _proxima_rodada(cenario, unidade)
@@ -259,8 +281,7 @@ def _correio_inerte():
 
 def montar(cenario, unidade, *, rodada, autoridade_id, saida=None, por="linha de comando"):
     """Uma rodada nova do cenário, inteira ou nenhuma, com o manifesto na mesma transação."""
-    ano = timezone.now().year
-    conflitos = conflitos_de_montagem(cenario, unidade, rodada, ano)
+    conflitos = conflitos_de_montagem(cenario, unidade, rodada, ano_local())
     if conflitos:
         raise Recusa(f"{cenario.codigo}: " + " ".join(conflitos))
     with _correio_inerte(), transaction.atomic():
@@ -289,8 +310,13 @@ def montar(cenario, unidade, *, rodada, autoridade_id, saida=None, por="linha de
         )
 
 
-def carregar(codigos, unidade, *, saida=None, por="linha de comando", autoridade=None):
-    """Cria só os cenários que não existem; relata e pula os demais (FR-4611)."""
+def carregar(codigos, unidade, *, saida=None, erros=None, por="linha de comando", autoridade=None):
+    """Cria só os cenários que não existem; relata e pula os demais (FR-4611).
+
+    **A recusa do domínio e o defeito do gerador saem diferentes.** Os dois desfazem o cenário e
+    deixam os outros seguirem (FR-4612), mas só a recusa é a regra funcionando: o defeito sai como
+    `ERRO`, com a pilha em `erros`, para que ninguém o leia como frase do domínio.
+    """
     resultados = []
     plano = planejar(codigos, unidade)
     autoridade_id = None
@@ -310,8 +336,22 @@ def carregar(codigos, unidade, *, saida=None, por="linha de comando", autoridade
                 saida=saida,
                 por=por,
             )
-        except Exception as erro:  # noqa: BLE001 — a recusa do domínio vira linha do relatório
+        except (DomainError, Recusa) as erro:
             resultados.append((cenario, "FALHOU", [_frase(erro)]))
+            continue
+        except Exception as erro:  # noqa: BLE001 — um defeito não impede os outros cenários
+            if erros is not None:
+                erros.write(f"{cenario.codigo}: " + "".join(traceback.format_exception(erro)))
+            resultados.append(
+                (
+                    cenario,
+                    "ERRO",
+                    [
+                        f"defeito do gerador ({erro.__class__.__name__}: {erro}); a pilha está "
+                        "na saída de erros. Nada deste cenário foi gravado."
+                    ],
+                )
+            )
             continue
         resultados.append(
             (
@@ -345,15 +385,11 @@ def plano_de_restauracao(codigo, unidade):
             + " Nada foi alterado; examine o Processo antes de decidir."
         )
     rodada = _proxima_rodada(cenario, unidade)
-    conflitos = conflitos_de_montagem(cenario, unidade, rodada, timezone.now().year)
+    conflitos = conflitos_de_montagem(cenario, unidade, rodada, ano_local())
     if conflitos:
         raise Recusa(f"{cenario.codigo}: " + " ".join(conflitos))
     processo = atual.manifesto.processo
-    editais = list(
-        Edital.objects.filter(processo=processo).exclude(
-            status__in=[Edital.Status.ENCERRADO, Edital.Status.CANCELADO]
-        )
-    )
+    editais = _editais_a_cancelar(processo)
     return {
         "cenario": cenario,
         "manifesto": atual.manifesto,
@@ -367,20 +403,45 @@ def plano_de_restauracao(codigo, unidade):
     }
 
 
-def restaurar(codigo, unidade, *, saida=None, por="linha de comando", autoridade=None):
-    """A rodada nova e o cancelamento da anterior, na mesma transação (FR-4624, FR-4625)."""
+def _editais_a_cancelar(processo, *, travar=False):
+    """Os Editais fora de estado final. Sob trava, o Processo primeiro e os Editais por id — a
+    ordem dos comandos de finalização, para não abrir caminho a impasse com eles."""
+    editais = Edital.objects.filter(processo=processo).exclude(
+        status__in=[Edital.Status.ENCERRADO, Edital.Status.CANCELADO]
+    )
+    if travar:
+        ProcessoSeletivo.objects.select_for_update().get(pk=processo.pk)
+        editais = editais.select_for_update()
+    return list(editais.order_by("id"))
+
+
+def restaurar(plano, unidade, *, saida=None, por="linha de comando", autoridade=None):
+    """A rodada nova e o cancelamento da anterior, na mesma transação (FR-4624, FR-4625).
+
+    **Recebe o plano que o comando mostrou, e não o refaz.** O que muda entre mostrar e gravar é
+    relido sob trava, dentro da transação: o manifesto, que outra restauração pode ter trocado, e
+    os Editais a cancelar — um Edital que a equipe criasse no Processo depois da pré-visualização
+    ficava fora da lista, e o cancelamento do Processo recusava a restauração inteira.
+    """
     from processo_seletivo.processos.application.finalizacao import cancel_edital, cancel_process
 
-    plano = plano_de_restauracao(codigo, unidade)
     cenario, anterior = plano["cenario"], plano["manifesto"]
     autoridade_id = autoridade_vigente(unidade, autoridade)
     with _correio_inerte(), transaction.atomic():
         # A anterior sai de PRONTO **antes** de a nova nascer: a constraint de uma rodada em uso por
-        # cenário recusaria as duas juntas — e é ela que garante que nunca convivam.
-        CenarioDeTreinamento.objects.filter(pk=anterior.pk).update(
+        # cenário recusaria as duas juntas — e é ela que garante que nunca convivam. O filtro por
+        # PRONTO é a trava otimista: se outra restauração passou na frente, nada muda aqui.
+        trocadas = CenarioDeTreinamento.objects.filter(
+            pk=anterior.pk, situacao=CenarioDeTreinamento.Situacao.PRONTO
+        ).update(
             situacao=CenarioDeTreinamento.Situacao.SUBSTITUIDO,
             substituido_em=timezone.now(),
         )
+        if trocadas != 1:
+            raise Recusa(
+                f"{cenario.codigo}: a rodada {anterior.rodada} deixou de ser a rodada em uso "
+                "desde a pré-visualização. Nada foi alterado; rode a restauração de novo."
+            )
         novo = montar(
             cenario,
             unidade,
@@ -390,20 +451,13 @@ def restaurar(codigo, unidade, *, saida=None, por="linha de comando", autoridade
             por=por,
         )
         CenarioDeTreinamento.objects.filter(pk=anterior.pk).update(substituido_por=novo)
-        gestor = Montagem(
-            codigo=cenario.codigo,
-            rodada=anterior.rodada,
-            unidade=unidade,
-            autoridade_id="",
-            titulo="",
-        ).ator(GESTAO)
+        gestor = ator(GESTAO, unidade)
         motivo = (
             f"Cenário de treinamento {cenario.codigo} restaurado: substituído pela rodada "
             f"{novo.rodada} ({novo.processo.institutional_code}). {MARCA}."
         )
         correlacao = f"{anterior.correlation_id}-substituida"
-        for edital in plano["a_cancelar"]:
-            edital.refresh_from_db()
+        for edital in _editais_a_cancelar(anterior.processo, travar=True):
             cancel_edital(
                 actor=gestor,
                 edital_id=edital.id,
@@ -412,8 +466,11 @@ def restaurar(codigo, unidade, *, saida=None, por="linha de comando", autoridade
                 idempotency_key=f"{correlacao}-edital-{edital.id.hex[:12]}",
                 correlation_id=correlacao,
             )
-        if plano["processo_a_cancelar"] is not None:
-            processo = ProcessoSeletivo.objects.get(pk=anterior.processo_id)
+        processo = ProcessoSeletivo.objects.get(pk=anterior.processo_id)
+        if processo.status not in (
+            ProcessoSeletivo.Status.ENCERRADO,
+            ProcessoSeletivo.Status.CANCELADO,
+        ):
             cancel_process(
                 actor=gestor,
                 processo_id=processo.id,
