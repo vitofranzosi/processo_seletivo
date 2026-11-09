@@ -34,11 +34,11 @@ Nenhum `POST`. Nenhuma escrita.
 ## O HTML que os testes prendem
 
 - `<h1>` com "Edital N/AAAA" e a linha "Onde estamos" (`.cc-onde`).
-- O mapa: `<nav aria-labelledby="mapa-titulo">`, um `<ol class="cc-fases">` por grupo, um `<li>` por
+- O mapa: `<nav class="cc-mapa" aria-labelledby="mapa-titulo">`, um `<ol class="cc-fases">` por grupo, um `<li>` por
   fase com `data-fase="<chave>"` e `data-andamento="<valor>"`.
 - A fase consultada: o link do cartão tem `aria-current="true"` e contém
-  `<span class="cc-oculto">fase consultada</span>`; o `<li>` tem a classe `consultada`. Nenhum outro
-  cartão tem `aria-current`.
+  `<span class="oculto">fase consultada: </span>` (a classe visualmente oculta da folha comum); o `<li>` tem a classe `consultada`. Nenhum outro
+  cartão tem `aria-current`; o único outro `aria-current="true"` da página é o da barra lateral.
 - As marcas: `.cc-marca.sua`, `.cc-marca.outro`, `.cc-marca.espera`, `.cc-marca.impedida`,
   `.cc-marca.nada`.
 - O destaque: `<article class="cc-destaque">` com "Por que esta:".
