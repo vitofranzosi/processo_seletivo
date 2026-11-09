@@ -20,6 +20,8 @@
   <h2 id="titulo-ato">O ato citado</h2>
   {% if aviso.origem == "CHAMADA" %}
   <p>Chamada publicada em <strong>{{ aviso.referencia_da_publicacao }}</strong>.</p>
+  {% elif aviso.origem == "PENDENCIA" %}
+  <p>Pendência documental da convocação, avisada pela tela de condução. O aviso não é a convocação e não altera o prazo.</p>
   {% else %}
   <p>Resultado {{ aviso.natureza|lower }}{% if aviso.retificadora %}, em publicação retificadora{% endif %}:</p>
   <ul>{% for item in publicacoes %}<li><a href="{% url 'portal:resultado' item.publicacao.id %}">Publicação de {{ item.publicacao.publicado_em|date:"d/m/Y" }} às {{ item.publicacao.publicado_em|date:"H:i" }}</a></li>{% endfor %}</ul>
@@ -38,8 +40,8 @@
   {% if pode_agir %}
   <p class="acoes">
     {% if not concluido and not interrompido %}<a class="botao perigoso" href="{% url 'interface:aviso-interromper' aviso.id %}">Interromper o envio</a>{% endif %}
-    {% if habilitado and reenviaveis.REENVIO_DE_FALHAS and not reenvio_de_falhas %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_DE_FALHAS">Tentar de novo as {{ reenviaveis.REENVIO_DE_FALHAS }} que não saíram</a>{% endif %}
-    {% if habilitado and reenviaveis.REENVIO_JUSTIFICADO %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_JUSTIFICADO">Reenviar, com justificativa, {{ reenviaveis.REENVIO_JUSTIFICADO }} de resultado indeterminado ou interrompido</a>{% endif %}
+    {% if habilitado and aviso.origem != "PENDENCIA" and reenviaveis.REENVIO_DE_FALHAS and not reenvio_de_falhas %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_DE_FALHAS">Tentar de novo as {{ reenviaveis.REENVIO_DE_FALHAS }} que não saíram</a>{% endif %}
+    {% if habilitado and aviso.origem != "PENDENCIA" and reenviaveis.REENVIO_JUSTIFICADO %}<a class="botao secundario" href="{% url 'interface:aviso-reenviar' aviso.id %}?motivo=REENVIO_JUSTIFICADO">Reenviar, com justificativa, {{ reenviaveis.REENVIO_JUSTIFICADO }} de resultado indeterminado ou interrompido</a>{% endif %}
   </p>
   {% endif %}
   {% if reenvio_de_falhas %}<p>As que não saíram já foram reenviadas, no <a href="{% url 'interface:aviso' reenvio_de_falhas.id %}">aviso de {{ reenvio_de_falhas.solicitado_em|date:"d/m/Y" }} às {{ reenvio_de_falhas.solicitado_em|date:"H:i" }}</a>. O que não saiu nele se tenta de novo a partir de lá.</p>{% endif %}

@@ -348,6 +348,21 @@ def recusar_falhas_ja_reenviadas(anterior):
         )
 
 
+def recusar_reenvio_da_pendencia(anterior):
+    """O aviso de pendência não tem reenvio pela `066` (134, FR-4622, D-008).
+
+    O reenvio recompõe o texto do ato publicado, e o aviso de pendência não tem ato publicado: o
+    caminho é um novo gesto, que relê o que continua pendente. Recusado na prévia e na confirmação.
+    """
+    if anterior.origem == nomes.PENDENCIA:
+        raise DomainError(
+            nomes.AVISO_DE_PENDENCIA_SEM_REENVIO,
+            "O aviso de pendência não se reenvia por aqui. Se a pendência continuar, avise de novo "
+            "pela tela de condução da convocação, a partir do dia seguinte.",
+            409,
+        )
+
+
 def confirmar_reenvio(
     *,
     actor,
@@ -376,6 +391,7 @@ def confirmar_reenvio(
     if motivo not in nomes.ALCANCE_DO_REENVIO:
         raise DomainError(nomes.AVISO_SEM_ATO, "Motivo de reenvio desconhecido.", 404)
     anterior = aviso_do_ator(actor, aviso_id)
+    recusar_reenvio_da_pendencia(anterior)
     justificativa = (justificativa or "").strip()
     if motivo == nomes.REENVIO_JUSTIFICADO:
         justificativa = _exigir_justificativa(justificativa)
@@ -436,6 +452,7 @@ def validar_texto_do_modelo(*, assunto, corpo):
 
 __all__ = [
     "confirmar_reenvio",
+    "recusar_reenvio_da_pendencia",
     "recusar_falhas_ja_reenviadas",
     "confirmar_aviso_da_chamada",
     "confirmar_aviso_do_resultado",

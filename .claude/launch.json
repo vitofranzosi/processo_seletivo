@@ -509,6 +509,16 @@
       ],
       "port": 8141,
       "url": "http://localhost:8141"
+    },
+    {
+      "name": "cenarios-134",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_134 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-134 uv run python manage.py runserver 8134"
+      ],
+      "port": 8134,
+      "url": "http://localhost:8134"
     }
   ]
 }

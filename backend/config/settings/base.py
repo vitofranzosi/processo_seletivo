@@ -145,6 +145,10 @@ INSTALLED_APPS = [
     # `inscricoes` e `editais`, e nenhum deles passa a conhecê-lo; o arquivo que ele entrega
     # continua único, onde a inscrição e a convocação o guardaram (117, D-004).
     "processo_seletivo.formalizacao",
+    # Os cenários de treinamento e homologação (134): o manifesto do que o gerador criou, e nada
+    # mais. **Nenhum app do domínio o conhece**: ele chama os comandos da aplicação como qualquer
+    # ator, e some inteiro sem que o produto perceba.
+    "processo_seletivo.treinamento",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são
@@ -238,6 +242,11 @@ PORTAL_IDENTIDADE_DEMO = os.getenv("PORTAL_IDENTIDADE_DEMO", "false").lower() ==
 SORTEIO_FONTE_DE_DEMONSTRACAO = (
     os.getenv("SORTEIO_FONTE_DE_DEMONSTRACAO", "false").lower() == "true"
 )
+
+# Os cenários de treinamento (134). **Desligados por padrão, e recusados em produção**: o gerador
+# publica Editais fictícios, e publicação é ato imutável. A chave é a segunda das três barreiras —
+# a primeira é a marca de produção, a terceira é o nome do banco que o comando exige por extenso.
+CENARIOS_DE_TREINAMENTO = os.getenv("CENARIOS_DE_TREINAMENTO", "false").lower() == "true"
 
 # O canal de e-mail que a 010 inaugura: até ela, o projeto não enviava mensagem nenhuma. O
 # mecanismo vem do ambiente porque desenvolvimento imprime no terminal e produção entrega de
