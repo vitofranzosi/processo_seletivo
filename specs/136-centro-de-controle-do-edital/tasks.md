@@ -73,8 +73,8 @@ lista".
 - [X] T022 [P] Jornada no navegador em `backend/tests/navegador/test_jornada_do_centro.py` (SC-1470, SC-1477, FR-4747): C06 a 1440 × 900 com as três respostas na dobra; 375 px sem rolagem horizontal; nenhuma violação de CSP; a ordem do Tab.
 - [X] T023 Casos-limite em `backend/tests/interface/test_centro_do_edital.py` (SC-1480): Edital sem providência, prazo, impedimento com quem resolve, Retificação em curso.
 - [X] T024 `specs/136-centro-de-controle-do-edital/rastreabilidade.md` cobrindo FR-4700 a FR-4748, SC-1470 a SC-1480 e UX-314 a UX-318.
-- [ ] T025 Conferir no navegador os C06, C08 e C12 com dois papéis (quickstart), e registrar em `specs/136-centro-de-controle-do-edital/verificacao.md`.
-- [ ] T026 `cd backend && make lint check test-pg`, sem falha nova; os números da suíte em `verificacao.md`.
+- [X] T025 Conferir no navegador os C06, C08 e C12 com dois papéis (quickstart), e registrar em `specs/136-centro-de-controle-do-edital/verificacao.md`.
+- [X] T026 `cd backend && make lint check test-pg`, sem falha nova; os números da suíte em `verificacao.md`.
 
 ## Dependencies
 
