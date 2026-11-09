@@ -1,15 +1,22 @@
-"""A composição do Centro de Controle do Edital — protótipo do estudo de 2026-11-09.
+"""A composição do Centro de Controle do Edital — protótipo do estudo de 2026-11-09 (versão 2).
 
 **Leitura de leitura.** Nada aqui deriva fato novo do banco. A entrada é o `Andamento` que a `127`
-já monta (`interface/andamento.do_edital`), com as sete situações por ponto e por lista; esta
-camada só **agrupa** os pontos em macrofases e **agrega** as situações de cada grupo, por regra fixa
-e pura. Se a derivação da `127` mudar, a mudança chega aqui sem tocar neste arquivo.
+já monta (`interface/andamento.do_edital`), com as sete situações por ponto e por lista. Esta
+camada só **agrupa** os pontos em macrofases e **agrega** as situações, por regras fixas e puras.
+
+**Duas leituras separadas** (refinamento de 09/11). A primeira versão dava a cada fase uma situação
+só — "ação disponível", "aguardando", "em andamento" —, misturando duas perguntas:
+
+- **em que ponto a fase está** (o andamento: ainda não, em curso, concluída);
+- **o que ela oferece agora, e a quem** (as providências: suas, de outro papel, em espera,
+  impedidas).
+
+Uma fase pode estar em curso, com uma lista concluída, e ainda assim oferecer duas ações — uma sua,
+outra de outro papel. As duas leituras agora são dados diferentes, e a tela as desenha diferente.
 
 **O que a macrofase é, e o que ela não é.** É um rótulo de apresentação para um conjunto de pontos
-que a derivação já conhece. Não é coluna, não é estado persistido, e o Edital não tem "a" macrofase
-atual: várias podem estar em andamento ao mesmo tempo, porque as listas andam separadas e porque o
-resultado corre em paralelo com o corte e a convocação (D-006 e R2 da `133`). Por isso a trilha
-marca **todas** as que têm coisa em aberto — é a resposta honesta a "onde estou?".
+que a derivação já conhece. Não é coluna nem estado persistido, e o Edital não tem "a" macrofase
+atual: várias podem estar em curso ao mesmo tempo.
 
 As frases pedagógicas (`CONCEITOS`) são texto de protótipo, conferido contra os guias de
 `doc/guia-jornada-do-sorteio-2026-11-05/` e `doc/gps-por-dentro/`. Não são regra.
@@ -20,7 +27,7 @@ from dataclasses import dataclass, field
 from processo_seletivo.interface import andamento as a
 
 # ---------------------------------------------------------------------------------------------
-# As macrofases
+# As macrofases, em três grupos
 # ---------------------------------------------------------------------------------------------
 
 PUBLICACAO, INSCRICOES, AVALIACAO, CLASSIFICACAO = (
@@ -38,9 +45,15 @@ MACROFASES = (
     (AVALIACAO, "Avaliação", "As Etapas foram avaliadas e consolidadas?", "Perfil"),
     (CLASSIFICACAO, "Classificação", "Em que ordem cada lista ficou?", "lista"),
     (RESULTADO, "Resultado e recursos", "O resultado foi divulgado, e cabe recurso?", "lista"),
-    (VAGAS, "Vagas", "Quem a faixa alcança, e que vaga cada um ocupa?", "lista"),
+    (VAGAS, "Vagas", "Quem a lista alcança, e que vaga cada um ocupa?", "lista"),
     (CONVOCACAO, "Convocação", "Quem foi chamado, entregou e foi conferido?", "lista"),
     (CONCLUSAO, "Conclusão", "Tudo tem desfecho, e o Edital pode ser encerrado?", "Edital"),
+)
+#: Os grupos só orientam a leitura do mapa; não mudam nenhuma regra.
+GRUPOS = (
+    ("Abertura", (PUBLICACAO, INSCRICOES)),
+    ("Seleção", (AVALIACAO, CLASSIFICACAO, RESULTADO, VAGAS)),
+    ("Ocupação", (CONVOCACAO, CONCLUSAO)),
 )
 NOMES = {chave: nome for chave, nome, _, _ in MACROFASES}
 POR_LISTA = (AVALIACAO, CLASSIFICACAO, RESULTADO, VAGAS, CONVOCACAO)
@@ -65,6 +78,7 @@ _DA_NATUREZA = {
     a.CONFERIR: CONVOCACAO,
     a.RECURSO: RESULTADO,
 }
+_DA_ETAPA = (a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR, a.ETAPA)
 
 
 def macrofase_do_ponto(ponto):
@@ -76,202 +90,192 @@ def macrofase_do_ponto(ponto):
 
 
 # ---------------------------------------------------------------------------------------------
-# A agregação — a única regra nova, e é de apresentação
+# Primeira leitura: o andamento da fase
 # ---------------------------------------------------------------------------------------------
 
-CONCLUIDA, ACAO, AGUARDANDO, IMPEDIDA = "concluida", "acao", "aguardando", "impedida"
-PARCIAL, NAO_INICIADA, NAO_SE_APLICA = "parcial", "nao_iniciada", "nao_se_aplica"
-
+CONCLUIDA, EM_CURSO, NAO_INICIADA, NAO_SE_APLICA = (
+    "concluida",
+    "em_curso",
+    "nao_iniciada",
+    "nao_se_aplica",
+)
 ROTULOS = {
     CONCLUIDA: "Concluída",
-    ACAO: "Ação disponível",
-    AGUARDANDO: "Aguardando",
-    IMPEDIDA: "Com impedimento",
-    PARCIAL: "Em andamento",
-    NAO_INICIADA: "Ainda não",
+    EM_CURSO: "Em curso",
+    NAO_INICIADA: "Ainda não começou",
     NAO_SE_APLICA: "Não se aplica",
 }
-SINAIS = {
-    CONCLUIDA: "✓",
-    ACAO: "●",
-    AGUARDANDO: "◷",
-    IMPEDIDA: "⊘",
-    PARCIAL: "◐",
-    NAO_INICIADA: "·",
-    NAO_SE_APLICA: "—",
-}
-#: A ordem em que uma situação "vence" outra quando se juntam listas: o que pede gesto primeiro.
-_PESO = (ACAO, IMPEDIDA, AGUARDANDO, PARCIAL, NAO_INICIADA, CONCLUIDA, NAO_SE_APLICA)
-EM_CURSO = frozenset({ACAO, AGUARDANDO, IMPEDIDA, PARCIAL})
+SINAIS = {CONCLUIDA: "✓", EM_CURSO: "◐", NAO_INICIADA: "○", NAO_SE_APLICA: "—"}
+_PESO = (EM_CURSO, NAO_INICIADA, CONCLUIDA, NAO_SE_APLICA)
 
 
 def agregar(celulas):
-    """A situação de um grupo de células — de uma macrofase numa lista.
+    """O andamento de um grupo de células — de uma macrofase numa lista.
 
-    Puro, e por regra fixa: há ato a praticar → *ação disponível*; senão, impedimento; senão,
-    espera; feito ao lado de *Depois* → *em andamento*; tudo feito → *concluída*. Nunca devolve
-    "pendente" para o que a derivação chamou de *Depois* — a ausência de ato não é pendência (D-007
-    da 127).
+    Puro e fixo: tudo feito → *concluída*; só *Depois* → *ainda não começou*; o resto (algo feito,
+    ou algo em aberto) → *em curso*. **Não diz se há o que fazer**: isso é a segunda leitura, das
+    providências. A ausência de ato nunca é pendência (D-007 da 127).
     """
     s = [c.situacao for c in celulas if c is not None]
     if not s:
         return None
     if all(x in (a.FEITO, a.NAO_SE_APLICA) for x in s):
         return CONCLUIDA if a.FEITO in s else NAO_SE_APLICA
-    if any(x in a.A_PRATICAR for x in s):
-        return ACAO
-    if a.IMPEDIDO in s:
-        return IMPEDIDA
-    if a.AGUARDA in s:
-        return AGUARDANDO
-    if a.FEITO in s:
-        return PARCIAL
-    return NAO_INICIADA
+    if all(x in (a.DEPOIS, a.NAO_SE_APLICA) for x in s):
+        return NAO_INICIADA
+    return EM_CURSO
 
 
 def juntar(situacoes):
-    """A situação de uma macrofase no Edital, a partir das situações por lista."""
-    s = [x for x in situacoes if x is not None]
+    """O andamento de uma macrofase no Edital, a partir do andamento em cada lista."""
+    s = [x for x in situacoes if x is not None and x != NAO_SE_APLICA]
     if not s:
-        return None
-    if all(x == NAO_SE_APLICA for x in s):
-        return NAO_SE_APLICA
-    s = [x for x in s if x != NAO_SE_APLICA]
+        return NAO_SE_APLICA if situacoes else None
     if all(x == CONCLUIDA for x in s):
         return CONCLUIDA
-    # Uma lista concluída ao lado de outra que nem começou é andamento, e não "ainda não".
-    vencedora = min(s, key=_PESO.index)
-    if vencedora in (NAO_INICIADA,) and CONCLUIDA in s:
-        return PARCIAL
-    return vencedora
+    if all(x == NAO_INICIADA for x in s):
+        return NAO_INICIADA
+    # Uma lista concluída ao lado de outra que não começou é andamento, e não "ainda não".
+    return EM_CURSO
 
 
 # ---------------------------------------------------------------------------------------------
-# O texto pedagógico — curto, opcional, por conceito
+# A linguagem: o que o operador faz, antes do termo técnico
 # ---------------------------------------------------------------------------------------------
 
-#: `{chave: (o que é, por que existe, o que acontece ao confirmar)}`. Chave = tipo do ponto ou
-#: natureza da providência.
+#: `{tipo do ponto ou natureza: {...}}`. `simples` é o nome do passo na língua de quem conduz;
+#: `termo` é o nome no GPS; `curta` fica sempre visível; `porque` e `ao_confirmar`, sob demanda.
 CONCEITOS = {
-    a.RELACAO: (
-        "Congelar a relação",
-        "É publicar, para cada lista, quem participa do sorteio e com que número, num registro que "
+    a.RELACAO: {
+        "simples": "Fixar os participantes",
+        "termo": "congelar a relação",
+        "curta": "Publica, para cada lista, quem participa do sorteio e com que número — e isso "
         "não muda mais.",
-        "Encerrar as inscrições impede que entre gente nova; congelar fixa a lista **antes** de a "
-        "semente existir, para que ninguém possa montá-la já sabendo o resultado.",
-        "Irreversível. Uma correção depois disso exige Retificação e uma relação sucessora. Congele "
-        "todas as listas do marco antes de observar a extração: a relação congelada depois da "
-        "semente conhecida é recusada.",
-    ),
-    a.SEMENTE: (
-        "Observar a extração",
-        "A semente são os números da extração declarada no Edital (a Loteria Federal, no certame "
-        "real). Ela é uma só para todas as listas do marco.",
-        "Ninguém escolhe a semente: ela vem de uma fonte pública, depois do congelamento. É o que "
-        "torna o sorteio verificável por qualquer pessoa.",
-        "Com a Loteria Federal, só depois da data da extração. Se a fonte não responde, nada é "
-        "gravado: observa-se de novo; não existe digitar os números à mão.",
-    ),
-    a.SORTEIO: (
-        "Realizar o sorteio",
-        "O algoritmo publicado no Edital aplica a semente à relação congelada e produz a ordem da "
-        "lista.",
-        "A mesma relação e a mesma semente dão sempre a mesma ordem: o resultado pode ser "
-        "reproduzido no canal público.",
-        "Grava a ordem da lista como ato imutável, com manifesto e página de verificação.",
-    ),
-    a.ORDEM: (
-        "Emitir a ordem",
-        "É gravar a classificação da lista, calculada pelas notas consolidadas, pesos e critérios "
-        "de desempate do Edital.",
-        "A ordem é a base de tudo o que vem depois: corte, apuração, resultado e convocação leem a "
-        "ordem vigente.",
-        "Irreversível. Se uma nota mudar depois (um recurso deferido, por exemplo), a ordem fica "
-        "obsoleta e é preciso emitir uma sucessora, com motivo. Numa lista sem inscritos, emitir "
-        "declara que ninguém concorreu ali.",
-    ),
-    a.CORTE: (
-        "Emitir o corte",
-        "O corte define a faixa: até que posição de cada lista as pessoas seguem — para as vagas e "
-        "para a reserva, se o Edital a prevê.",
-        "Ele limita quem passa à Etapa governada (a análise documental, em geral) e quem a "
-        "apuração considera.",
-        "Com o prazo de recurso aberto, a recomendação é esperar: um recurso deferido tornaria o "
-        "corte obsoleto.",
-    ),
-    a.APURACAO: (
-        "Apurar a ocupação",
-        "A apuração cruza as listas (ampla concorrência e cotas) e decide que vaga cada pessoa "
-        "alcançada ocupa, sem contar ninguém duas vezes.",
-        "Quem está bem colocado na ampla ocupa pela ampla, e a vaga da cota passa ao próximo da "
-        "cota. A convocação chama quem a apuração indicou.",
-        "Grava a apuração vigente. Uma desistência ou um corte novo a tornam obsoleta, e ela é "
+        "porque": "Encerrar as inscrições impede que entre gente nova; fixar a lista antes de a "
+        "semente existir impede que alguém a monte já sabendo o resultado.",
+        "ao_confirmar": "Irreversível: corrigir exige Retificação e uma relação nova. Fixe todas as "
+        "listas do marco antes de obter a semente — depois dela, a relação é recusada.",
+    },
+    a.SEMENTE: {
+        "simples": "Obter a semente pública",
+        "termo": "observar a extração",
+        "curta": "Registra os números da extração declarada no Edital (a Loteria Federal, no "
+        "certame real). Uma só semente vale para todas as listas.",
+        "porque": "Ninguém escolhe a semente: ela vem de uma fonte pública, depois que os "
+        "participantes estão fixados. É o que torna o sorteio verificável.",
+        "ao_confirmar": "Com a Loteria Federal, só depois da data da extração. Se a fonte não "
+        "responde, nada é gravado e se tenta de novo; não se digitam números à mão.",
+    },
+    a.SORTEIO: {
+        "simples": "Realizar o sorteio",
+        "termo": "sorteio",
+        "curta": "Aplica a semente à lista fixada e produz a ordem dos participantes.",
+        "porque": "A mesma lista e a mesma semente dão sempre a mesma ordem: qualquer pessoa pode "
+        "reproduzir o resultado no canal público.",
+        "ao_confirmar": "Grava a ordem da lista como ato imutável, com página de verificação.",
+    },
+    a.ORDEM: {
+        "simples": "Classificar a lista",
+        "termo": "emitir a ordem",
+        "curta": "Grava a classificação da lista, pelas notas consolidadas, pesos e desempates do "
+        "Edital.",
+        "porque": "A ordem é a base do que vem depois: resultado, faixa de chamada, vagas e "
+        "convocação a leem.",
+        "ao_confirmar": "Irreversível. Se uma nota mudar (um recurso deferido, por exemplo), é "
+        "preciso emitir uma ordem nova, com motivo. Numa lista sem inscritos, emitir declara que "
+        "ninguém concorreu ali.",
+    },
+    a.CORTE: {
+        "simples": "Definir até onde se chama",
+        "termo": "emitir o corte",
+        "curta": "Fixa até que posição de cada lista as pessoas seguem — para as vagas e para a "
+        "reserva, se houver.",
+        "porque": "Limita quem passa à análise de documentos e quem disputa as vagas.",
+        "ao_confirmar": "Com o prazo de recurso aberto, a recomendação é esperar: um recurso "
+        "deferido tornaria a faixa obsoleta.",
+    },
+    a.APURACAO: {
+        "simples": "Distribuir as vagas entre as listas",
+        "termo": "apurar a ocupação",
+        "curta": "Cruza ampla concorrência e cotas e decide que vaga cada pessoa alcançada ocupa, "
+        "sem contar ninguém duas vezes.",
+        "porque": "Quem está bem colocado na ampla ocupa pela ampla, e a vaga da cota passa ao "
+        "próximo da cota. A convocação chama quem a apuração indicou.",
+        "ao_confirmar": "Uma desistência ou uma faixa nova tornam a apuração obsoleta, e ela é "
         "refeita.",
-    ),
-    a.RESULTADO: (
-        "Divulgar o resultado",
-        "O resultado é a ordem tornada pública. O preliminar abre o prazo de recurso; o definitivo "
-        "vem depois que o prazo acaba e os recursos são decididos.",
-        "O definitivo não é pré-requisito do corte, da apuração nem da convocação — mas um recurso "
-        "deferido pode mudá-los.",
-        "Publicar é ato do Publicador, com documento próprio.",
-    ),
-    a.RECURSO: (
-        "Decidir recursos",
-        "O candidato pode recorrer do resultado preliminar dentro do prazo. O recurso é admitido e "
-        "julgado por quem tem a atribuição de julgar.",
-        "Um recurso deferido pode mudar uma nota, e com ela a ordem, o corte e a apuração.",
-        "A decisão é registrada e comunicada; a ordem afetada passa a pedir sucessora.",
-    ),
-    a.CONVOCACAO: (
-        "Convocar",
-        "Chamar, com prazo, quem a apuração indicou para ocupar a vaga. Cada convocação é "
-        "comunicada e acompanhada até o desfecho.",
-        "É a passagem da classificação para a ocupação real da vaga. Quem não responde no prazo "
+    },
+    a.RESULTADO: {
+        "simples": "Divulgar o resultado",
+        "termo": "publicar resultado",
+        "curta": "Torna a ordem pública: o preliminar abre o prazo de recurso; o definitivo vem "
+        "depois do prazo e dos recursos.",
+        "porque": "O definitivo não é pré-requisito da faixa, das vagas nem da convocação — mas um "
+        "recurso deferido pode mudá-las.",
+        "ao_confirmar": "Ato de quem publica resultados, com documento próprio.",
+    },
+    a.RECURSO: {
+        "simples": "Decidir os recursos",
+        "termo": "recursos",
+        "curta": "Julga os pedidos de revisão feitos no prazo.",
+        "porque": "Um recurso deferido pode mudar uma nota, e com ela a ordem, a faixa e as vagas.",
+        "ao_confirmar": "A decisão é registrada e comunicada; a ordem afetada passa a pedir uma nova.",
+    },
+    a.CONVOCACAO: {
+        "simples": "Convocar e decidir",
+        "termo": "convocação",
+        "curta": "Chama, com prazo, quem a apuração indicou, e acompanha cada chamada até o "
+        "desfecho.",
+        "porque": "É a passagem da classificação para a vaga ocupada. Quem não responde no prazo "
         "tem o não atendimento registrado, e a fila anda.",
-        "A convocação e a comunicação são atos registrados. A matrícula acontece fora do GPS.",
-    ),
-    a.CONFERIR: (
-        "Conferir documentos",
-        "Cada documento entregue pelo convocado é aberto e marcado como conforme ou pendente, com "
-        "motivo.",
-        "O GPS só aceita 'conforme' de quem abriu o arquivo. Com tudo conforme, registra-se o "
-        "desfecho da convocação.",
-        "A pendência volta ao candidato, que pode reenviar dentro do prazo.",
-    ),
-    a.ETAPA: (
-        "Avaliar uma Etapa",
-        "A Etapa (prova, títulos, análise documental) é distribuída a avaliadores, avaliada e "
-        "consolidada.",
-        "Só a Etapa consolidada alimenta a ordem. Distribuir é atribuir as inscrições a avaliadores "
-        "alocados.",
-        "Consolidar fecha os resultados da Etapa; mudá-los depois é reavaliação, por recurso.",
-    ),
+        "ao_confirmar": "Convocação e comunicação são atos registrados. A matrícula acontece fora "
+        "do GPS.",
+    },
+    a.CONFERIR: {
+        "simples": "Conferir os documentos",
+        "termo": "conferência documental",
+        "curta": "Abre cada documento entregue e o marca como conforme ou pendente, com motivo.",
+        "porque": "O GPS só aceita 'conforme' de quem abriu o arquivo. Com tudo conforme, "
+        "registra-se o desfecho.",
+        "ao_confirmar": "A pendência volta ao candidato, que pode reenviar no prazo.",
+    },
+    a.ETAPA: {
+        "simples": "Avaliar a Etapa",
+        "termo": "Etapa",
+        "curta": "Distribui as inscrições a avaliadores, registra as avaliações e consolida.",
+        "porque": "Só a Etapa consolidada alimenta a classificação.",
+        "ao_confirmar": "Consolidar fecha os resultados; mudá-los depois é reavaliação, por "
+        "recurso.",
+    },
 }
-for _n in (a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR):
-    CONCEITOS[_n] = CONCEITOS[a.ETAPA]
+for _n in _DA_ETAPA:
+    CONCEITOS.setdefault(_n, CONCEITOS[a.ETAPA])
+#: As naturezas cujo nome no GPS é jargão: a providência mostra primeiro o nome simples.
+JARGAO = frozenset({a.RELACAO, a.SEMENTE, a.ORDEM, a.CORTE, a.APURACAO})
 
 
 def conceito(chave):
-    dados = CONCEITOS.get(chave)
-    if not dados:
-        return None
-    titulo, oque, porque, ao_confirmar = dados
-    return {"titulo": titulo, "oque": oque, "porque": porque, "ao_confirmar": ao_confirmar}
+    return CONCEITOS.get(chave)
 
 
 # ---------------------------------------------------------------------------------------------
-# A composição
+# As estruturas
 # ---------------------------------------------------------------------------------------------
 
 
 @dataclass
 class PassoDoRoteiro:
-    titulo: str
+    simples: str
+    termo: str
+    curta: str
     situacao: str
     feitas: int
     total: int
     unico: bool
+    tem_acao: bool = False
+    porque: str = ""
+    ao_confirmar: str = ""
+    #: Por que o passo ainda não começou — a razão que a derivação já dá à célula *Depois*.
+    razao: str = ""
 
     @property
     def sinal(self):
@@ -289,14 +293,23 @@ class ItemDeProvidencia:
     fase_chave: str
     conceito: dict | None
     paralela: str = ""
+    #: O nome do ato na língua de quem conduz; o `p.ato` da 127 vira a linha "No GPS".
+    titulo: str = ""
+    no_gps: str = ""
 
 
 @dataclass
 class CelulaNaFase:
-    lista: str
     ponto: str
     celula: object
-    conceito: dict | None
+
+    @property
+    def ato(self):
+        """O ato da célula na língua da coluna: "Classificar a lista", e não "Emitir a ordem"."""
+        c = self.celula
+        if c.natureza in JARGAO and c.natureza in CONCEITOS and c.situacao in a.A_PRATICAR:
+            return CONCEITOS[c.natureza]["simples"]
+        return c.ato
 
 
 @dataclass
@@ -315,8 +328,7 @@ class Macrofase:
     situacao: str | None
     resumo: str = ""
     nota: str = ""
-    #: `[(perfil, [ListaNaFase])]` — o detalhamento por lista
-    perfis: list = field(default_factory=list)
+    perfis: list = field(default_factory=list)  # [(perfil, [ListaNaFase], [PassoDoRoteiro])]
     providencias: list = field(default_factory=list)
     paralela: str = ""
     espera_ate: object = None
@@ -331,18 +343,39 @@ class Macrofase:
 
     @property
     def em_curso(self):
-        return self.situacao in EM_CURSO
+        return self.situacao == EM_CURSO
+
+    # A segunda leitura: o que a fase oferece agora, e a quem.
+    @property
+    def suas(self):
+        return [i for i in self.providencias if i.p.grupo == "sua"]
+
+    @property
+    def de_outros(self):
+        return [i for i in self.providencias if i.p.grupo == "de_outro"]
+
+    @property
+    def aguardando(self):
+        return [i for i in self.providencias if i.p.situacao == a.AGUARDA]
+
+    @property
+    def impedidas(self):
+        return [i for i in self.providencias if i.p.situacao == a.IMPEDIDO]
+
+    @property
+    def parada(self):
+        """Em curso, mas sem nada que alguém possa fazer agora: depende de outra fase."""
+        return self.situacao == EM_CURSO and not self.providencias
 
 
 @dataclass
 class ListaNoCentro:
     rotulo: str
     curto: str
-    fases: list  # [(chave, situacao)]
-    agora: object  # Celula ou None
-    agora_fase: str
+    fases: list  # [(chave, andamento)]
     concluida: bool
-    atos: list = field(default_factory=list)
+    atos: list = field(default_factory=list)  # [(fase, Celula, nome)] a praticar, um por fase
+    espera: object = None  # a primeira célula em espera ou impedida, sem ato a praticar
 
 
 @dataclass
@@ -352,20 +385,35 @@ class PerfilNoCentro:
     inscritos: int
     listas: list
     resumo: str
-    matriz: object  # o PerfilNoAndamento, para o "ver tudo"
+    matriz: object
     matricula_fora: bool
+
+
+@dataclass
+class Destaque:
+    item: object
+    porque: str
+    destrava: list = field(default_factory=list)
 
 
 @dataclass
 class Centro:
     fases: list
+    grupos: list
     perfis: list
     providencias: dict
     onde: str
+    onde_detalhe: str
     em_curso: list
-    principal: object = None
+    destaque: object = None
+    sem_destaque: str = ""
     alcance: str = ""
     ve_a_matriz: bool = False
+
+
+# ---------------------------------------------------------------------------------------------
+# A composição
+# ---------------------------------------------------------------------------------------------
 
 
 def _curto(rotulo):
@@ -377,14 +425,22 @@ def _curto(rotulo):
 
 
 def _macrofase_da_providencia(prov, perfis):
-    natureza = prov.natureza
-    if natureza in (a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR, a.ETAPA):
+    if prov.natureza in _DA_ETAPA:
         governadas = {
             p.titulo for pf in perfis for p in pf.pontos if p.grupo == a.GRUPO_DA_GOVERNADA
         }
         if any(nome in (prov.onde or "") for nome in governadas):
             return VAGAS
-    return _DA_NATUREZA.get(natureza, CLASSIFICACAO)
+    return _DA_NATUREZA.get(prov.natureza, CLASSIFICACAO)
+
+
+def _passo(ponto):
+    """`(nome simples, termo, dados)` de um ponto da jornada."""
+    dados = CONCEITOS.get(ponto.tipo) or CONCEITOS[a.ETAPA]
+    if ponto.tipo == a.ETAPA:
+        # A Etapa tem nome próprio no Edital ("Prova objetiva"), que é o nome que a pessoa conhece.
+        return ponto.titulo, "Etapa", dados
+    return dados["simples"], dados["termo"], dados
 
 
 def _fase_edital_publicacao(edital, documentos, em_curso):
@@ -397,14 +453,13 @@ def _fase_edital_publicacao(edital, documentos, em_curso):
             else ""
         )
     elif edital.status == "CANCELADO":
-        situacao, resumo = IMPEDIDA, "Cancelado"
+        situacao, resumo = CONCLUIDA, "Cancelado"
     else:
-        situacao, resumo = ACAO, "Em elaboração"
+        situacao, resumo = EM_CURSO, "Em elaboração"
     nota = ""
     if em_curso:
         nota = f"{len(em_curso)} Retificação em curso — ela pode mudar datas, vagas ou regras."
-        if situacao == CONCLUIDA:
-            situacao = PARCIAL
+        situacao = EM_CURSO
     return situacao, resumo, nota
 
 
@@ -413,12 +468,13 @@ def _fase_inscricoes(inscricoes):
 
     estado = inscricoes.get("estado")
     enviadas = inscricoes.get("enviadas") or 0
+    quantas = f"{enviadas} inscriç{'ão' if enviadas == 1 else 'ões'}"
     if inscricoes.get("cancelado"):
-        return IMPEDIDA, f"Período cancelado · {enviadas} enviadas"
+        return CONCLUIDA, f"Período cancelado · {quantas}"
     if estado == periodo.ENCERRADO:
-        return CONCLUIDA, f"{enviadas} inscriç{'ão' if enviadas == 1 else 'ões'} · encerradas"
+        return CONCLUIDA, f"{quantas} · encerradas"
     if estado == periodo.ABERTO:
-        return AGUARDANDO, f"Abertas · {enviadas} até agora"
+        return EM_CURSO, f"Abertas · {quantas} até agora"
     if estado == periodo.FUTURO:
         return NAO_INICIADA, "Ainda não abertas"
     return NAO_INICIADA, "Período não designado"
@@ -427,76 +483,74 @@ def _fase_inscricoes(inscricoes):
 def compor(edital, andamento, *, documentos, em_curso, alcance=None):
     perfis_c, fases_lista = [], {chave: [] for chave in POR_LISTA}
     for perfil in andamento.perfis:
-        listas = []
         pontos_por_fase = {chave: [] for chave in POR_LISTA}
         for ponto in perfil.pontos:
             pontos_por_fase[macrofase_do_ponto(ponto)].append(ponto)
         detalhes = {chave: [] for chave in POR_LISTA}
+        listas = []
         for lista_id, rotulo in perfil.listas:
-            fases, agora, agora_fase = [], None, ""
+            fases = []
             for chave in POR_LISTA:
                 celulas = [p.celula(lista_id) for p in pontos_por_fase[chave]]
-                sit = agregar(celulas)
-                fases.append((chave, sit))
+                andamento_da_lista = agregar(celulas)
+                fases.append((chave, andamento_da_lista))
                 detalhes[chave].append(
                     ListaNaFase(
                         _curto(rotulo),
-                        sit,
+                        andamento_da_lista,
                         [
-                            CelulaNaFase(
-                                _curto(rotulo),
-                                p.titulo,
-                                p.celula(lista_id),
-                                conceito(p.tipo),
-                            )
+                            CelulaNaFase(_passo(p)[0], p.celula(lista_id))
                             for p in pontos_por_fase[chave]
                             if p.celula(lista_id) is not None
                         ],
                     )
                 )
-            # "Agora nesta lista": os atos a praticar, um por macrofase, na ordem da jornada — e não
-            # só o primeiro, porque a Etapa paralela vem antes do sorteio na sequência e esconderia a
-            # frente principal. Sem ato a praticar, a primeira espera ou impedimento (a preferência
-            # de `da_lista`, FR-4543 da 133).
-            vistas = set()
-            agora_varios = []
+            # "Agora nesta lista": os atos a praticar, um por fase, na ordem da jornada; sem eles,
+            # a primeira espera ou impedimento (a preferência de `da_lista`, FR-4543 da 133).
+            vistas, atos, espera = set(), [], None
             for ponto in perfil.pontos:
                 c = ponto.celula(lista_id)
+                if c is None:
+                    continue
                 fase_do_ponto = macrofase_do_ponto(ponto)
-                if c is not None and c.situacao in a.A_PRATICAR and fase_do_ponto not in vistas:
+                if c.situacao in a.A_PRATICAR and fase_do_ponto not in vistas:
                     vistas.add(fase_do_ponto)
-                    agora_varios.append((NOMES[fase_do_ponto], c))
-            if agora_varios:
-                agora_fase, agora = agora_varios[0][0], agora_varios[0][1]
-            if agora is None:
-                for ponto in perfil.pontos:
-                    c = ponto.celula(lista_id)
-                    if c is not None and c.em_aberto:
-                        agora, agora_fase = c, macrofase_do_ponto(ponto)
-                        break
+                    nome_do_ato = c.ato
+                    if c.natureza in JARGAO and c.natureza in CONCEITOS:
+                        nome_do_ato = CONCEITOS[c.natureza]["simples"]
+                    atos.append((NOMES[fase_do_ponto], c, nome_do_ato))
+                elif espera is None and c.situacao in (a.AGUARDA, a.IMPEDIDO):
+                    espera = c
             concluida = all(s in (CONCLUIDA, NAO_SE_APLICA, None) for _, s in fases)
-            item = ListaNoCentro(rotulo, _curto(rotulo), fases, agora, agora_fase, concluida)
-            item.atos = agora_varios
-            listas.append(item)
+            listas.append(ListaNoCentro(rotulo, _curto(rotulo), fases, concluida, atos, espera))
         for chave in POR_LISTA:
-            if pontos_por_fase[chave]:
-                roteiro = []
-                for ponto in pontos_por_fase[chave]:
-                    celulas = [ponto.celula(lista_id) for lista_id, _ in perfil.listas]
-                    validas = [
-                        c for c in celulas if c is not None and c.situacao != a.NAO_SE_APLICA
-                    ]
-                    roteiro.append(
-                        PassoDoRoteiro(
-                            ponto.titulo,
-                            agregar(celulas) or NAO_SE_APLICA,
-                            sum(1 for c in validas if c.situacao == a.FEITO),
-                            len(validas),
-                            # A semente vale para o marco inteiro, e a Etapa para o Perfil: uma só.
-                            ponto.tipo in (a.SEMENTE, a.ETAPA),
-                        )
+            if not pontos_por_fase[chave]:
+                continue
+            roteiro = []
+            for ponto in pontos_por_fase[chave]:
+                celulas = [ponto.celula(lista_id) for lista_id, _ in perfil.listas]
+                validas = [c for c in celulas if c is not None and c.situacao != a.NAO_SE_APLICA]
+                simples, termo, dados = _passo(ponto)
+                roteiro.append(
+                    PassoDoRoteiro(
+                        simples,
+                        termo,
+                        dados["curta"],
+                        agregar(celulas) or NAO_SE_APLICA,
+                        sum(1 for c in validas if c.situacao == a.FEITO),
+                        len(validas),
+                        # A semente vale para o marco inteiro, e a Etapa para o Perfil: uma só.
+                        ponto.tipo in (a.SEMENTE, a.ETAPA),
+                        any(c.situacao in a.A_PRATICAR for c in validas),
+                        dados["porque"],
+                        dados["ao_confirmar"],
+                        next(
+                            (c.razao for c in validas if c.situacao == a.DEPOIS and c.razao),
+                            "",
+                        ),
                     )
-                fases_lista[chave].append((perfil, detalhes[chave], roteiro))
+                )
+            fases_lista[chave].append((perfil, detalhes[chave], roteiro))
         perfis_c.append(
             PerfilNoCentro(
                 perfil.nome,
@@ -508,10 +562,6 @@ def compor(edital, andamento, *, documentos, em_curso, alcance=None):
                 a.matricula_fora(perfil),
             )
         )
-
-    # As providências, cada uma na macrofase dela — as mesmas do nível 1, sem reordenar.
-    nivel = andamento.nivel_1
-    todas = list(nivel.mostradas) + list(nivel.demais) if nivel else []
 
     fases = []
     for chave, nome, pergunta, escopo in MACROFASES:
@@ -526,11 +576,11 @@ def compor(edital, andamento, *, documentos, em_curso, alcance=None):
         if chave == CONCLUSAO:
             if edital.status == "ENCERRADO":
                 sit, resumo = CONCLUIDA, "Edital encerrado"
-            elif all(lst.concluida for p in perfis_c for lst in p.listas) and perfis_c:
-                # **Nunca "ação disponível" aqui.** Se o Edital pode ser encerrado, quem decide são as
+            elif perfis_c and all(lst.concluida for p in perfis_c for lst in p.listas):
+                # **Nunca uma ação daqui.** Se o Edital pode ser encerrado, quem decide são as
                 # pendências do encerramento (prazos, recursos, Retificações, rascunhos), que a tela
                 # do ato confere; dizê-lo daqui seria uma regra de disponibilidade nova, mais fraca.
-                sit, resumo = PARCIAL, "Listas concluídas — o encerramento é do Gestor"
+                sit, resumo = EM_CURSO, "Listas concluídas — o encerramento é do Gestor"
             else:
                 sit, resumo = NAO_INICIADA, "Depois das convocações"
             nota = (
@@ -542,28 +592,21 @@ def compor(edital, andamento, *, documentos, em_curso, alcance=None):
             continue
         detalhe = fases_lista[chave]
         por_lista = [lst.situacao for _, listas, _ in detalhe for lst in listas]
-        sit = juntar(por_lista)
+        sit = juntar(por_lista) or NAO_SE_APLICA
         conta = [s for s in por_lista if s not in (None, NAO_SE_APLICA)]
         feitas = sum(1 for s in conta if s == CONCLUIDA)
-        if sit is None:
+        resumo = ""
+        if not detalhe:
             resumo = "Não há neste Edital"
-            sit = NAO_SE_APLICA
-        elif sit == NAO_SE_APLICA:
-            resumo = "Não se aplica"
         elif len(conta) > 1 and 0 < feitas < len(conta):
             resumo = f"{feitas} de {len(conta)} listas concluídas"
-        elif len(conta) > 1 and sit == CONCLUIDA:
-            resumo = f"{len(conta)} listas"
-        else:
-            resumo = ""
         fase = Macrofase(chave, nome, pergunta, escopo, sit, resumo, perfis=detalhe)
         if chave == AVALIACAO:
             fase.paralela = _avaliacao_paralela(andamento)
         if chave == RESULTADO:
-            # **Lacuna G-3 do estudo.** O preliminar publicado não muda a situação da célula — por
-            # decisão: D8a do estudo de 06/11, adotada pela 127, segue a pendência do definitivo —, e só
-            # a nota o diz. O protótipo lê a nota para a trilha não
-            # afirmar "nada divulgado" — a spec precisa de um campo estruturado no lugar disto.
+            # **Lacuna G-3 do estudo** (spec 135). O preliminar publicado não muda a situação da
+            # célula — por decisão: D8a do estudo de 06/11, adotada pela 127 —, e só a nota o diz.
+            # O protótipo lê a nota para a trilha não afirmar "nada divulgado".
             preliminares = sum(
                 1
                 for _, listas, _ in detalhe
@@ -572,29 +615,39 @@ def compor(edital, andamento, *, documentos, em_curso, alcance=None):
                 if "preliminar" in (c.celula.nota or "")
             )
             if preliminares:
-                fase.resumo = f"preliminar publicado em {preliminares} lista" + (
-                    "s" if preliminares > 1 else ""
+                fase.resumo = "Preliminar publicado" + (
+                    f" em {preliminares} listas" if preliminares > 1 else ""
                 )
         fases.append(fase)
 
-    em_curso_ = [f for f in fases if f.em_curso]
-    onde = _onde(em_curso_, fases)
+    # A segunda leitura: as providências, as mesmas do nível 1 da 127, cada uma na sua fase.
+    nivel = andamento.nivel_1
+    todas = list(nivel.mostradas) + list(nivel.demais) if nivel else []
+    paralela_da = {f.chave: f.paralela for f in fases}
 
     def item(prov):
         chave = _macrofase_da_providencia(prov, andamento.perfis)
-        return ItemDeProvidencia(prov, NOMES[chave], chave, conceito(prov.natureza))
+        dados = conceito(prov.natureza)
+        titulo, no_gps = prov.ato, ""
+        if dados and prov.natureza in JARGAO:
+            titulo, no_gps = dados["simples"], prov.ato
+        return ItemDeProvidencia(
+            prov, NOMES[chave], chave, dados, paralela_da.get(chave, ""), titulo, no_gps
+        )
 
     itens = [item(p) for p in todas]
     for fase in fases:
         fase.providencias = [i for i in itens if i.fase_chave == fase.chave]
-        for i in fase.providencias:
-            i.paralela = fase.paralela
-        datas = [i.p.ate for i in fase.providencias if i.p.situacao == a.AGUARDA and i.p.ate]
+        datas = [i.p.ate for i in fase.aguardando if i.p.ate]
         fase.espera_ate = min(datas) if datas else None
+
     suas = [i for i in itens if i.p.grupo == "sua"]
-    principal = suas[0] if len(suas) == 1 else None
+    destaque, sem_destaque = _destaque(suas, fases)
+    onde, onde_detalhe = _onde(fases, itens)
+    grupos = [(rotulo, [f for f in fases if f.chave in chaves]) for rotulo, chaves in GRUPOS]
     return Centro(
         fases=fases,
+        grupos=grupos,
         perfis=perfis_c,
         providencias={
             "suas": suas,
@@ -604,11 +657,75 @@ def compor(edital, andamento, *, documentos, em_curso, alcance=None):
             "total": len(itens),
         },
         onde=onde,
-        em_curso=em_curso_,
-        principal=principal,
+        onde_detalhe=onde_detalhe,
+        em_curso=[f for f in fases if f.em_curso],
+        destaque=destaque,
+        sem_destaque=sem_destaque,
         alcance=_texto_do_alcance(alcance),
         ve_a_matriz=andamento.ve_a_matriz,
     )
+
+
+def _destaque(suas, fases):
+    """`(Destaque | None, frase quando não há destaque)`. **O critério, dito na tela.**
+
+    1. Uma ação sua só → é ela, porque não há outra.
+    2. Várias, e só uma **destrava** passos seguintes enquanto as outras correm em paralelo (a Etapa
+       que o sorteio não lê, D-019 da 127) → é a que destrava, e a tela diz quais passos esperam
+       por ela. É dependência que a derivação já conhece, e não prioridade inventada.
+    3. Qualquer outro caso → nenhum destaque. Toda providência *Pendente* já pode ser praticada —
+       o que depende de outro ato fica *Depois* e nem vira providência —, e o GPS não tem como
+       saber qual importa mais.
+    """
+    if not suas:
+        return None, ""
+    por_chave = {f.chave: f for f in fases}
+    if len(suas) == 1:
+        item = suas[0]
+        return Destaque(
+            item, "É a única ação sua disponível agora.", _destrava(item, por_chave)
+        ), ""
+    principais = [i for i in suas if not i.paralela]
+    if len(principais) == 1:
+        item = principais[0]
+        destrava = _destrava(item, por_chave)
+        if destrava:
+            outras = [i for i in suas if i is not item]
+            return (
+                Destaque(
+                    item,
+                    "É a que destrava os próximos passos. "
+                    + (
+                        "A outra ação sua corre em paralelo"
+                        if len(outras) == 1
+                        else "As outras correm em paralelo"
+                    )
+                    + " e não segura nada.",
+                    destrava,
+                ),
+                "",
+            )
+    return None, (
+        f"Você tem {len(suas)} ações disponíveis agora. Todas já podem ser feitas — o que depende "
+        "de outro ato ainda não aparece aqui — e o GPS não escolhe a ordem entre elas."
+    )
+
+
+def _destrava(item, por_chave):
+    """Os passos da mesma fase que ainda não começaram e vêm depois do passo desta providência."""
+    fase = por_chave.get(item.fase_chave)
+    if fase is None:
+        return []
+    nomes = []
+    for _, _, roteiro in fase.perfis:
+        visto_o_atual = False
+        for passo in roteiro:
+            if passo.tem_acao:
+                visto_o_atual = True
+                continue
+            if visto_o_atual and passo.situacao == NAO_INICIADA and passo.simples not in nomes:
+                nomes.append(passo.simples)
+    return nomes
 
 
 def _avaliacao_paralela(andamento):
@@ -626,27 +743,63 @@ def _avaliacao_paralela(andamento):
             ):
                 if any(p.tipo == a.ETAPA for p in perfil.pontos):
                     return (
-                        "Independente do sorteio: a relação, a semente e o sorteio não leem o "
-                        "resultado desta Etapa. Ela segue em paralelo."
+                        "Paralela ao sorteio: fixar os participantes, obter a semente e sortear "
+                        "não dependem desta Etapa."
                     )
     return ""
 
 
-def _onde(em_curso, fases):
-    if not em_curso:
+def _lista_de(nomes):
+    return nomes[0] if len(nomes) == 1 else ", ".join(nomes[:-1]) + " e " + nomes[-1]
+
+
+def _onde(fases, itens):
+    """`(frase, detalhe)`. Nomeia as fases com algo em aberto **agora**, e não "N frentes".
+
+    A primeira versão dizia "a seleção avança em 4 frentes ao mesmo tempo", e contava como frente a
+    fase em curso sem nada a fazer. Com muitas fases parcialmente ativas, o número deixava de dizer
+    alguma coisa. Agora a frase lista as fases que têm providência, e a segunda diz de quem é.
+    """
+    abertas = [f for f in fases if f.providencias]
+    if not abertas:
         if fases and fases[-1].situacao == CONCLUIDA:
-            return "Seleção concluída. Nada em aberto."
-        return "Nada em andamento agora."
-    nomes = [
-        f"{f.nome.lower() if f.chave != RESULTADO else 'resultado e recursos'}" for f in em_curso
-    ]
-    if len(nomes) == 1:
-        return f"A seleção está na fase de {nomes[0]}."
-    return (
-        f"A seleção avança em {len(nomes)} frentes ao mesmo tempo: "
-        + ", ".join(nomes[:-1])
-        + f" e {nomes[-1]}."
+            return "Seleção concluída. Nada em aberto.", ""
+        em_curso = [f.nome.lower() for f in fases if f.em_curso]
+        if em_curso:
+            return (
+                f"Nada em aberto agora. Em curso: {_lista_de(em_curso)}.",
+                "",
+            )
+        return "Nada em aberto agora.", ""
+    nomes = [f.nome.lower() for f in abertas]
+    frase = (
+        f"Há algo em aberto em {_lista_de(nomes)}."
+        if len(nomes) > 1
+        else f"Há algo em aberto em {nomes[0]}."
     )
+    suas = sum(1 for i in itens if i.p.grupo == "sua")
+    de_outros = sum(1 for i in itens if i.p.grupo == "de_outro")
+    aguardando = [i for i in itens if i.p.situacao == a.AGUARDA]
+    impedidas = sum(1 for i in itens if i.p.situacao == a.IMPEDIDO)
+    partes = []
+    if suas:
+        partes.append(f"{suas} {'ação é sua' if suas == 1 else 'ações são suas'}")
+    if de_outros:
+        partes.append(
+            f"{de_outros} {'está com outro papel' if de_outros == 1 else 'estão com outros papéis'}"
+        )
+    if aguardando:
+        datas = [i.p.ate for i in aguardando if i.p.ate]
+        ate = f" (a primeira até {min(datas):%d/%m})" if datas else ""
+        partes.append(
+            f"{len(aguardando)} {'aguarda' if len(aguardando) == 1 else 'aguardam'} prazo ou "
+            f"resposta{ate}"
+        )
+    if impedidas:
+        partes.append(f"{impedidas} {'está impedida' if impedidas == 1 else 'estão impedidas'}")
+    detalhe = _lista_de(partes) + "." if partes else ""
+    detalhe = detalhe[:1].upper() + detalhe[1:]
+    return frase, detalhe
 
 
 def _texto_do_alcance(alcance):
@@ -665,7 +818,7 @@ def _texto_do_alcance(alcance):
         partes.append("propõe Retificações")
     if not partes:
         return "Você acompanha este Edital sem ato a praticar nele."
-    texto = "Você " + ", ".join(partes[:-1]) + (" e " if len(partes) > 1 else "") + partes[-1]
+    texto = "Você " + _lista_de(partes)
     if not alcance.ativo:
         texto += " — mas o Processo está encerrado, e nenhum ato é seu"
     return texto + "."

@@ -19,7 +19,8 @@ distingue da principal, o fim de ciclo compete com a operação, e o histórico 
 
 **Escopo.**
 - Cabeçalho com a frase "Onde estamos" e os três estados rotulados.
-- A trilha das oito macrofases, com a legenda recolhida.
+- A trilha das oito macrofases em três grupos, com o andamento separado das marcas de providência, e
+  a legenda recolhida (versão 2).
 - "O que fazer agora" com as regras de apresentação da Entrega 3:
   - destaque só com uma providência sua;
   - a fase de cada providência;
@@ -43,10 +44,11 @@ distingue da principal, o fim de ciclo compete com a operação, e o histórico 
 
 **Critérios de aceite.**
 - Nos 14 cenários publicados da 134 (C02 a C15), a frase "Onde estamos" e a trilha aparecem na primeira dobra a 1440 × 900.
-- Nas cinco macrofases por lista (Avaliação a Convocação), a situação é "ação disponível" **se, e só
-  se**, alguma célula dela está em `A_PRATICAR`. É o teste de coerência, no molde do SC-1230 da 127. As
-  três do Edital nunca dizem "ação disponível" por conta própria: a Conclusão, em especial, não
-  antecipa o encerramento, que é das pendências conferidas pela tela do ato.
+- O andamento da fase (concluída, em curso, ainda não começou) sai só das células, e a marca "sua"
+  existe numa fase **se, e só se**, há providência sua nela. É o teste de coerência, no molde do
+  SC-1230 da 127 (versão 2, [07](07-refinamento.md)). A Conclusão não antecipa o encerramento, que é
+  das pendências conferidas pela tela do ato.
+- O destaque segue as três regras do `_destaque` e escreve o porquê na tela.
 - Nenhuma providência do nível 1 deixa de aparecer. A soma das seções é igual ao `Nivel1.total`.
 - Encerrar e cancelar não aparecem no cartão "O que fazer agora".
 - A 375 px, nenhuma rolagem horizontal; a trilha empilha.

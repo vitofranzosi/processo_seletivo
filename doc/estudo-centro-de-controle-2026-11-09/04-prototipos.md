@@ -87,6 +87,10 @@ cd backend && uv run python ../doc/estudo-centro-de-controle-2026-11-09/prototip
 (`_fixture_concluida`), com Edital `FIX05/2026`, e a página abre com a faixa "Ilustração (fixture)".
 Nenhuma página de cenário real recebe dado fictício.
 
+**Versão 2 (refinamento de 09/11).** As capturas `proposta-*.png` são da versão 2. As da versão 1
+ficaram em `v1-proposta-c06-dobra.png`, `v1-proposta-c12-dobra.png`, `v1-proposta-c08.png` e
+`v1-proposta-c06-avaliacao1.png`, para comparação; o resto da versão 1 está no histórico do git.
+
 **Capturas de apoio**, fora dos cinco cenários:
 - `proposta-indice.png`: o índice do protótipo;
 - `proposta-c14.png` e `atual-c14-edital.png`: resultado definitivo, perto do encerramento;

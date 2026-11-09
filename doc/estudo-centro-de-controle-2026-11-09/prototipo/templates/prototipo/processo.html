@@ -23,9 +23,9 @@
       <h3><a href="{% url 'prototipo:centro' e.edital.id %}">Edital {{ e.edital.number }}/{{ e.edital.year }}</a> <span class="situacao s-{{ e.edital.status }}">{{ e.edital.status|situacao }}</span></h3>
       <p class="cc-fraco">{{ e.edital.title }}</p>
       {% if e.centro %}
-      <p><strong>{{ e.centro.onde }}</strong></p>
+      <p><strong>{{ e.centro.onde }}</strong>{% if e.centro.onde_detalhe %} {{ e.centro.onde_detalhe }}{% endif %}</p>
       <ol class="cc-mini-trilha" aria-label="Fases do Edital {{ e.edital.number }}">
-        {% for f in e.centro.fases %}<li class="f-{{ f.situacao }}"><span aria-hidden="true">{{ f.sinal }}</span> {{ f.nome }}<span class="cc-fraco"> — {{ f.rotulo|lower }}</span></li>{% endfor %}
+        {% for f in e.centro.fases %}<li class="f-{{ f.situacao }}"><span aria-hidden="true">{{ f.sinal }}</span> {{ f.nome }}<span class="cc-fraco"> — {{ f.rotulo|lower }}</span>{% if f.suas %} <span class="cc-marca sua">{{ f.suas|length }} sua{{ f.suas|length|pluralize:"s" }}</span>{% endif %}{% if f.espera_ate %} <span class="cc-marca espera">◷ até {{ f.espera_ate|date:"d/m" }}</span>{% endif %}</li>{% endfor %}
       </ol>
       <p>{% with p=e.centro.providencias %}{% if p.total %}{{ p.total }} providência{{ p.total|pluralize:"s" }} em aberto{% if p.suas %} · <strong>{{ p.suas|length }} sua{{ p.suas|length|pluralize:"s" }}</strong>{% endif %}{% if p.aguardando %} · {{ p.aguardando|length }} aguardando prazo ou resposta{% endif %}{% else %}Nada em aberto{% endif %}{% endwith %} — <a href="{% url 'prototipo:centro' e.edital.id %}">abrir o Centro de Controle</a></p>
       {% else %}

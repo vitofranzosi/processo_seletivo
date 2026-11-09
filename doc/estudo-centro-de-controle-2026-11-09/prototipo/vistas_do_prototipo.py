@@ -110,11 +110,14 @@ def _contexto_do_centro(edital, ator, *, fase=None):
 
 
 def _fase_escolhida(centro, pedida):
-    """A fase aberta no detalhe: a pedida; senão, a primeira com ato **seu** (a frente paralela por
-    último); senão, a primeira em curso; senão, a última concluída. Regra de apresentação, fixa."""
+    """A fase aberta no detalhe: a pedida; senão, a da ação em destaque; senão, a primeira com ato
+    **seu** (a frente paralela por último); senão, a primeira com algo em aberto; senão, a primeira em
+    curso; senão, a última concluída. Regra de apresentação, fixa."""
     por_chave = {f.chave: f for f in centro.fases}
     if pedida in por_chave:
         return por_chave[pedida]
+    if centro.destaque is not None:
+        return por_chave[centro.destaque.item.fase_chave]
     # A frente paralela (a Etapa que o sorteio não lê) fica para depois da principal.
     for paralela_por_ultimo in (False, True):
         for fase in centro.fases:
@@ -122,6 +125,9 @@ def _fase_escolhida(centro, pedida):
                 continue
             if any(i.p.grupo == "sua" for i in fase.providencias):
                 return fase
+    for fase in centro.fases:
+        if fase.providencias:
+            return fase
     if centro.em_curso:
         return centro.em_curso[0]
     concluidas = [f for f in centro.fases if f.situacao == cc.CONCLUIDA]

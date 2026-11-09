@@ -1,218 +1,150 @@
-/* O Centro de Controle do Edital — protótipo do estudo de 2026-11-09.
-   Só tokens de shared/tokens.css; nenhuma cor nova além das três de situação que a 127 já usa.
-   A situação nunca é só cor: todo estado leva sinal e palavra (WCAG 1.4.1). */
+/* O Centro de Controle do Edital — protótipo do estudo de 2026-11-09, versão 2.
+   Só tokens de shared/tokens.css. A situação nunca é só cor: todo estado leva sinal e palavra
+   (WCAG 1.4.1).
+
+   **Duas linguagens visuais, porque são duas leituras** (refinamento de 09/11):
+   - o ANDAMENTO da fase é a borda superior do cartão e o sinal (✓ ◐ ○ —), em tons neutros e verde;
+   - o que a fase OFERECE agora são as marcas em pílula ("1 sua", "1 de outro papel", "◷ até 14/11",
+     "⊘ impedida"), cada uma com a sua cor.
+   A primeira versão usava a mesma cor para "fase em andamento" e "há ação", e as duas se confundiam. */
 
 .cc-faixa-prototipo,
-.cc-faixa-fixture {
-  margin: 0 0 1rem;
-  padding: .45rem .75rem;
-  border-radius: 6px;
-  font-size: .85rem;
-}
+.cc-faixa-fixture { margin: 0 0 .6rem; padding: .3rem .6rem; border-radius: 6px; font-size: .8rem; }
 .cc-faixa-prototipo { background: var(--cinza-fundo); color: var(--texto-fraco); }
 .cc-faixa-fixture { background: var(--amarelo-fundo); color: var(--amarelo); border: 1px solid var(--amarelo); }
 
 .cc-fraco { color: var(--texto-fraco); font-weight: 400; }
 .cc-ajuda-curta { color: var(--texto-fraco); font-size: .9rem; margin: 0 0 .75rem; max-width: var(--leitura); }
-.cc-rotulo-pequeno {
-  margin: 0 0 .25rem;
-  font-size: .75rem;
-  font-weight: 600;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: var(--texto-fraco);
-}
+.cc-rotulo-pequeno { margin: 0 0 .25rem; font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--texto-fraco); }
 .cc-titulo-de-camada { font-size: 1.05rem; margin: 0 0 .35rem; }
+.cc-visualmente-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cc-no-gps { color: var(--texto-fraco); font-size: .82rem; font-style: italic; }
+.cc-curta { margin: .2rem 0; font-size: .9rem; line-height: 1.4; max-width: var(--leitura); }
 
-/* ---------- Cabeçalho: os três estados, separados ---------- */
-.cc-cabecalho { margin-bottom: 1.25rem; }
-.cc-cabecalho h1 { margin: 0; }
-.cc-sobretitulo { margin: 0 0 .15rem; font-size: .8rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--verde-texto); }
-.cc-onde {
-  margin: .75rem 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-.cc-onde-rotulo {
-  display: inline-block;
-  margin-right: .5rem;
-  padding: .05rem .5rem;
-  border-radius: 4px;
-  background: var(--verde-escuro);
-  color: var(--branco);
-  font-size: .75rem;
-  letter-spacing: .03em;
-  text-transform: uppercase;
-  vertical-align: .15em;
-}
-.cc-estados {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: .5rem 1.5rem;
-  margin: 0;
-  padding: .75rem 1rem;
-  border: 1px solid var(--borda);
-  border-radius: 6px;
-  background: var(--branco);
-}
-.cc-estados dt { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-fraco); }
-.cc-estados dd { margin: .15rem 0 0; }
+/* ---------- Cabeçalho ---------- */
+.cc-cabecalho { margin-bottom: .75rem; }
+.cc-cabecalho h1 { margin: 0; font-size: 1.45rem; }
+.cc-titulo-do-edital { display: block; font-size: .95rem; font-weight: 400; color: var(--texto-fraco); }
+.cc-onde { margin: .55rem 0; }
+.cc-onde p { margin: 0; }
+.cc-onde-frase { font-size: 1.08rem; font-weight: 600; line-height: 1.4; }
+.cc-onde-detalhe { margin-top: .15rem; color: var(--texto); }
+.cc-onde-rotulo { display: inline-block; margin-right: .5rem; padding: .05rem .5rem; border-radius: 4px; background: var(--verde-escuro); color: var(--branco); font-size: .72rem; letter-spacing: .03em; text-transform: uppercase; vertical-align: .15em; }
+.cc-estados { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .25rem 1.25rem; margin: 0; padding: .45rem .8rem; border: 1px solid var(--borda); border-radius: 6px; background: var(--branco); font-size: .9rem; }
+.cc-estados dt { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-fraco); }
+.cc-estados dd { margin: .1rem 0 0; }
 
-/* ---------- Camada A: a jornada ---------- */
-.cc-jornada { margin-bottom: 1.25rem; }
-.cc-fases {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: .4rem;
-  counter-reset: fase;
-}
-.cc-fase { position: relative; }
-.cc-fase a {
-  display: flex;
-  flex-direction: column;
-  gap: .1rem;
-  height: 100%;
-  box-sizing: border-box;
-  padding: .55rem .6rem .6rem;
-  border: 1px solid var(--borda);
-  border-top-width: 5px;
-  border-radius: 6px;
-  background: var(--branco);
-  color: var(--texto);
-  text-decoration: none;
-}
+/* ---------- As marcas: o que a fase oferece agora ---------- */
+.cc-marca { display: inline-block; padding: 0 .4rem; border-radius: 999px; border: 1px solid transparent; font-size: .72rem; font-weight: 600; line-height: 1.5; white-space: nowrap; }
+.cc-marca.sua { background: var(--verde-escuro); color: var(--branco); }
+.cc-marca.outro { border-color: var(--texto-fraco); color: var(--texto); background: var(--branco); }
+.cc-marca.espera { background: var(--amarelo-fundo); color: var(--amarelo); border-color: var(--amarelo); }
+.cc-marca.impedida { background: var(--vermelho-fundo); color: var(--vermelho); border-color: var(--vermelho); }
+.cc-marca.nada { color: var(--texto-fraco); border-color: var(--borda); }
+.cc-marca.acao-da-lista { background: var(--verde-claro); color: var(--verde-escuro); border-color: var(--verde); }
+
+/* ---------- Camada A: o mapa, em três grupos ---------- */
+.cc-jornada { margin-bottom: .9rem; }
+.cc-mapa { display: grid; grid-template-columns: 2fr 4fr 2fr; gap: .6rem; }
+.cc-grupo { min-width: 0; }
+.cc-grupo-rotulo { margin: 0 0 .2rem; padding-bottom: .15rem; border-bottom: 1px solid var(--borda); font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--texto-fraco); }
+.cc-fases { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: .35rem; }
+.cc-fase { position: relative; min-width: 0; }
+.cc-fase a { display: flex; flex-direction: column; gap: .15rem; height: 100%; box-sizing: border-box; padding: .4rem .5rem .45rem; border: 1px solid var(--borda); border-top-width: 4px; border-radius: 6px; background: var(--branco); color: var(--texto); text-decoration: none; }
 .cc-fase a:hover { border-color: var(--verde-texto); }
 .cc-fase a:focus-visible { outline: 3px solid var(--verde-escuro); outline-offset: 2px; }
-.cc-fase-sinal { font-size: 1.1rem; line-height: 1; }
-.cc-fase-nome { font-weight: 700; font-size: .95rem; line-height: 1.2; }
-.cc-fase-situacao { font-size: .8rem; font-weight: 600; }
-.cc-fase-resumo, .cc-fase-conta { font-size: .78rem; color: var(--texto-fraco); line-height: 1.3; }
-.cc-fase-conta { color: var(--verde-texto); font-weight: 600; }
+.cc-fase-linha { display: flex; gap: .3rem; align-items: baseline; }
+.cc-fase-sinal { font-size: .95rem; line-height: 1; }
+.cc-fase-nome { font-weight: 700; font-size: .88rem; line-height: 1.2; }
+.cc-fase-andamento { font-size: .74rem; color: var(--texto-fraco); line-height: 1.25; }
+.cc-fase-resumo { font-weight: 400; }
+.cc-marcas { display: flex; flex-wrap: wrap; gap: .2rem; margin-top: auto; padding-top: .15rem; }
 
-.cc-fase.f-concluida a { border-top-color: var(--verde); background: var(--verde-claro); }
-.cc-fase.f-concluida .cc-fase-sinal, .cc-fase.f-concluida .cc-fase-situacao { color: var(--verde-texto); }
-.cc-fase.f-acao a { border-top-color: var(--verde-escuro); border-color: var(--verde-escuro); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
-.cc-fase.f-acao .cc-fase-sinal, .cc-fase.f-acao .cc-fase-situacao { color: var(--verde-escuro); }
-.cc-fase.f-parcial a { border-top-color: var(--verde); }
-.cc-fase.f-parcial .cc-fase-situacao { color: var(--verde-texto); }
-.cc-fase.f-aguardando a { border-top-color: var(--amarelo); background: var(--amarelo-fundo); }
-.cc-fase.f-aguardando .cc-fase-sinal, .cc-fase.f-aguardando .cc-fase-situacao { color: var(--amarelo); }
-.cc-fase.f-impedida a { border-top-color: var(--vermelho); background: var(--vermelho-fundo); }
-.cc-fase.f-impedida .cc-fase-sinal, .cc-fase.f-impedida .cc-fase-situacao { color: var(--vermelho); }
-.cc-fase.f-nao_iniciada a { border-top-color: var(--borda); color: var(--texto-fraco); }
-.cc-fase.f-nao_se_aplica a { border-style: dashed; border-top-style: solid; border-top-color: var(--borda); color: var(--texto-fraco); background: transparent; }
+/* O andamento: só a borda e o sinal. */
+.cc-fase.f-concluida a { border-top-color: var(--verde); }
+.cc-fase.f-concluida .cc-fase-sinal { color: var(--verde-texto); }
+.cc-fase.f-em_curso a { border-top-color: var(--texto); }
+.cc-fase.f-em_curso .cc-fase-andamento { color: var(--texto); font-weight: 600; }
+.cc-fase.f-nao_iniciada a { border-top-color: var(--borda); border-style: dashed; border-top-style: solid; color: var(--texto-fraco); }
+.cc-fase.f-nao_se_aplica a { border-top-color: var(--borda); border-style: dashed; color: var(--texto-fraco); background: transparent; }
 
-/* A fase aberta no detalhe: contorno e uma seta, para ligar a trilha ao painel abaixo. */
-.cc-fase.selecionada a { outline: 2px solid var(--texto); outline-offset: 1px; }
-.cc-fase.selecionada::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -.55rem;
-  margin-left: -.45rem;
-  border: .45rem solid transparent;
-  border-top-color: var(--texto);
-  border-bottom: 0;
-}
+.cc-fase.selecionada a { outline: 2px solid var(--verde-escuro); outline-offset: 1px; background: var(--verde-claro); }
+.cc-fase.selecionada::after { content: ""; position: absolute; left: 50%; bottom: -.5rem; margin-left: -.4rem; border: .4rem solid transparent; border-top-color: var(--verde-escuro); border-bottom: 0; }
 
-.cc-legenda { margin-top: .6rem; font-size: .85rem; }
+.cc-legenda { margin-top: .45rem; font-size: .85rem; }
 .cc-legenda summary { cursor: pointer; color: var(--verde-texto); }
-.cc-legenda ul { margin: .4rem 0 0; padding-left: 1.1rem; columns: 2 22rem; }
+.cc-legenda-colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: .5rem 1.5rem; }
+.cc-legenda p { margin: .45rem 0 .2rem; max-width: var(--leitura); }
+.cc-legenda ul { margin: 0; padding-left: 1.1rem; }
+.cc-legenda li { margin: .15rem 0; }
 
 /* ---------- O corpo: o que fazer + o detalhe da fase ---------- */
-.cc-grade {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: 1rem;
-  align-items: start;
-  margin-bottom: 1rem;
-}
+.cc-grade { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1rem; align-items: start; margin-bottom: 1rem; }
 .cc-grade > .cartao { min-width: 0; }
+.cc-agora h2, .cc-detalhe h2 { margin-bottom: .5rem; }
 .cc-subtitulo { font-size: 1rem; margin: 1rem 0 .4rem; }
-.cc-subtitulo:first-of-type { margin-top: 0; }
-.cc-conta {
-  display: inline-block;
-  min-width: 1.4rem;
-  padding: 0 .35rem;
-  border-radius: 999px;
-  background: var(--verde-escuro);
-  color: var(--branco);
-  font-size: .8rem;
-  text-align: center;
-}
+.cc-conta { display: inline-block; min-width: 1.4rem; padding: 0 .35rem; border-radius: 999px; background: var(--verde-escuro); color: var(--branco); font-size: .8rem; text-align: center; }
+.cc-nenhuma-sua { margin: 0 0 .6rem; }
 
-.cc-acao-principal {
-  margin: 0 0 1rem;
-  padding: .9rem 1rem;
-  border: 2px solid var(--verde-escuro);
-  border-radius: 8px;
-  background: var(--verde-claro);
-}
-.cc-acao-principal h3 { margin: .1rem 0 .2rem; font-size: 1.3rem; }
-.cc-acao-principal p { margin: .35rem 0; }
+.cc-acao-principal { margin: 0 0 .75rem; padding: .8rem 1rem; border: 2px solid var(--verde-escuro); border-radius: 8px; background: var(--verde-claro); }
+.cc-acao-principal h3 { margin: .1rem 0 .15rem; font-size: 1.25rem; }
+.cc-acao-principal p { margin: .3rem 0; }
+.cc-porque-destaque { font-size: .88rem; }
 
 .cc-providencias { list-style: none; margin: 0 0 .5rem; padding: 0; }
-.cc-providencia {
-  margin: 0 0 .5rem;
-  padding: .55rem .75rem;
-  border: 1px solid var(--borda);
-  border-left-width: 4px;
-  border-radius: 6px;
-  background: var(--branco);
-}
-.cc-providencia p { margin: .15rem 0; }
+.cc-providencia { margin: 0 0 .5rem; padding: .5rem .75rem; border: 1px solid var(--borda); border-left-width: 4px; border-radius: 6px; background: var(--branco); }
+.cc-providencia p { margin: .12rem 0; }
 .cc-providencia.sua { border-left-color: var(--verde-escuro); background: var(--verde-claro); }
 .cc-providencia.aguardando { border-left-color: var(--amarelo); }
 .cc-providencia.impedida { border-left-color: var(--vermelho); background: var(--vermelho-fundo); }
-.cc-providencias.compactas .cc-providencia { padding: .35rem .6rem; border-left-color: var(--borda); font-size: .92rem; }
+.cc-providencias.compactas .cc-providencia { padding: .35rem .6rem; border-left-color: var(--texto-fraco); font-size: .92rem; }
 .cc-ato { font-weight: 700; font-size: 1.02rem; }
-.cc-onde-da-acao { color: var(--texto-fraco); font-size: .88rem; }
+.cc-onde-da-acao { color: var(--texto-fraco); font-size: .86rem; }
 .cc-razao { color: var(--texto-fraco); font-size: .88rem; }
 .cc-retificacao { margin-top: .75rem; }
+.cc-paralela-curta { font-size: .85rem; color: var(--verde-texto); }
 
-.cc-entenda { margin: .35rem 0 0; font-size: .9rem; }
+.cc-entenda { margin: .3rem 0 0; font-size: .88rem; }
 .cc-entenda summary { cursor: pointer; color: var(--verde-texto); font-weight: 600; }
-.cc-entenda p { margin: .35rem 0; max-width: var(--leitura); }
+.cc-entenda p { margin: .3rem 0; max-width: var(--leitura); }
+.cc-entenda-da-fase { margin-top: .6rem; }
+.cc-entenda-da-fase dt { margin-top: .45rem; font-weight: 700; }
+.cc-entenda-da-fase dd { margin: .1rem 0 0; max-width: var(--leitura); }
 
-.cc-detalhe h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; margin-bottom: .25rem; }
-.cc-situacao-da-fase { font-size: .85rem; font-weight: 600; padding: .05rem .5rem; border-radius: 999px; border: 1px solid currentColor; }
+.cc-detalhe h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
+.cc-situacao-da-fase { font-size: .82rem; font-weight: 600; padding: .05rem .5rem; border-radius: 999px; border: 1px solid currentColor; }
 .cc-situacao-da-fase.f-concluida, .cc-fase-sinal-inline.f-concluida { color: var(--verde-texto); }
-.cc-situacao-da-fase.f-acao, .cc-fase-sinal-inline.f-acao { color: var(--verde-escuro); }
-.cc-situacao-da-fase.f-parcial, .cc-fase-sinal-inline.f-parcial { color: var(--verde-texto); }
-.cc-situacao-da-fase.f-aguardando, .cc-fase-sinal-inline.f-aguardando { color: var(--amarelo); }
-.cc-situacao-da-fase.f-impedida, .cc-fase-sinal-inline.f-impedida { color: var(--vermelho); }
+.cc-situacao-da-fase.f-em_curso, .cc-fase-sinal-inline.f-em_curso { color: var(--texto); }
 .cc-situacao-da-fase.f-nao_iniciada, .cc-situacao-da-fase.f-nao_se_aplica { color: var(--texto-fraco); }
-.cc-pergunta { margin: 0 0 .5rem; color: var(--texto-fraco); font-style: italic; }
+.cc-pergunta { margin: 0 0 .4rem; color: var(--texto-fraco); font-style: italic; }
+.cc-oferece { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin: 0 0 .5rem; }
 .cc-nota { padding: .4rem .6rem; border-radius: 4px; background: var(--cinza-fundo); font-size: .9rem; }
-.cc-paralela { padding: .45rem .7rem; border-left: 4px solid var(--verde); background: var(--verde-claro); font-size: .92rem; }
+.cc-paralela { padding: .4rem .7rem; border-left: 4px solid var(--verde); background: var(--verde-claro); font-size: .9rem; }
 
-.cc-tabela-da-fase, .cc-tabela-das-listas { width: 100%; border-collapse: collapse; font-size: .9rem; }
-.cc-tabela-da-fase caption { text-align: left; padding-bottom: .3rem; font-size: .82rem; }
-.cc-tabela-da-fase th, .cc-tabela-da-fase td,
-.cc-tabela-das-listas th, .cc-tabela-das-listas td {
-  padding: .45rem .5rem;
-  border-bottom: 1px solid var(--borda);
-  text-align: left;
-  vertical-align: top;
-}
-.cc-tabela-da-fase thead th, .cc-tabela-das-listas thead th {
-  font-size: .75rem;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  color: var(--texto-fraco);
-  background: var(--fundo);
-}
+/* O roteiro: os passos da fase, em linguagem de quem conduz, com a frase curta sempre visível. */
+.cc-roteiro { list-style: none; margin: .4rem 0 .75rem; padding: 0; display: grid; gap: .35rem; }
+.cc-roteiro li { display: flex; gap: .55rem; align-items: flex-start; padding: .45rem .6rem; border: 1px solid var(--borda); border-radius: 6px; background: var(--branco); }
+.cc-roteiro-n { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--cinza-fundo); font-weight: 700; font-size: .78rem; flex: none; }
+.cc-roteiro-texto { display: flex; flex-direction: column; gap: .05rem; min-width: 0; }
+.cc-roteiro-nome { font-weight: 700; }
+.cc-roteiro-situacao { font-size: .82rem; color: var(--texto-fraco); }
+.cc-roteiro li.f-concluida { background: var(--verde-claro); border-color: var(--verde-claro); }
+.cc-roteiro li.f-concluida .cc-roteiro-n { background: var(--verde); color: var(--branco); }
+.cc-roteiro li.com-acao { border: 2px solid var(--verde-escuro); }
+.cc-roteiro li.com-acao .cc-roteiro-n { background: var(--verde-escuro); color: var(--branco); }
+.cc-roteiro li.com-acao .cc-roteiro-situacao { color: var(--verde-escuro); }
+.cc-roteiro li.f-nao_iniciada { border-style: dashed; }
+.cc-roteiro li.f-nao_iniciada .cc-roteiro-nome { color: var(--texto-fraco); }
+
+.cc-tabela-da-fase, .cc-tabela-das-listas { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.cc-tabela-da-fase caption { text-align: left; padding-bottom: .3rem; font-size: .8rem; }
+.cc-tabela-da-fase th, .cc-tabela-da-fase td, .cc-tabela-das-listas th, .cc-tabela-das-listas td { padding: .4rem .5rem; border-bottom: 1px solid var(--borda); text-align: left; vertical-align: top; }
+.cc-tabela-da-fase thead th, .cc-tabela-das-listas thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-fraco); background: var(--fundo); }
 .cc-tabela-da-fase td > span { display: block; }
 .cc-celula-ato { font-weight: 600; margin-top: .15rem; }
 .cc-tabela-da-fase td[data-situacao="pendente"], .cc-tabela-da-fase td[data-situacao="obsoleto"] { background: var(--verde-claro); }
 .cc-tabela-da-fase td[data-situacao="aguarda"] { background: var(--amarelo-fundo); }
 .cc-tabela-da-fase td[data-situacao="impedido"] { background: var(--vermelho-fundo); }
-.cc-conceitos { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
-.cc-conceitos .cc-entenda { flex: 1 1 18rem; }
 .cc-perfil-na-fase + .cc-perfil-na-fase { margin-top: 1rem; }
 .cc-historico { list-style: none; padding: 0; }
 .cc-historico li { padding: .2rem 0; }
@@ -224,12 +156,11 @@
 .cc-celula-fase a { display: inline-flex; gap: .3rem; align-items: baseline; color: inherit; text-decoration: none; white-space: nowrap; }
 .cc-celula-fase a:hover .cc-rotulo-da-celula { text-decoration: underline; }
 .cc-celula-fase.f-concluida { color: var(--verde-texto); }
-.cc-celula-fase.f-acao { color: var(--verde-escuro); font-weight: 700; background: var(--verde-claro); }
-.cc-celula-fase.f-parcial { color: var(--verde-texto); }
-.cc-celula-fase.f-aguardando { color: var(--amarelo); background: var(--amarelo-fundo); }
-.cc-celula-fase.f-impedida { color: var(--vermelho); background: var(--vermelho-fundo); }
+.cc-celula-fase.f-em_curso { color: var(--texto); font-weight: 600; }
 .cc-celula-fase.f-nao_iniciada, .cc-celula-fase.f-nao_se_aplica { color: var(--texto-fraco); }
-.cc-agora-da-lista { min-width: 14rem; }
+.cc-agora-da-lista { min-width: 15rem; }
+.cc-atos-da-lista { margin: 0; padding: 0; list-style: none; }
+.cc-atos-da-lista li + li { margin-top: .2rem; }
 .cc-matriz-completa { margin-top: .6rem; }
 .cc-matriz-completa summary, .cc-terminais summary { cursor: pointer; color: var(--verde-texto); font-weight: 600; }
 .cc-telas { font-size: .88rem; margin: .6rem 0 0; }
@@ -253,66 +184,28 @@
 .cc-edital:last-child { border-bottom: 0; }
 .cc-edital h3 { margin: 0 0 .25rem; }
 .cc-mini-trilha { list-style: none; margin: .5rem 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; }
-.cc-mini-trilha li { padding: .1rem .5rem; border-radius: 4px; border: 1px solid var(--borda); font-size: .8rem; background: var(--branco); }
-.cc-mini-trilha li.f-concluida { color: var(--verde-texto); background: var(--verde-claro); border-color: var(--verde-claro); }
-.cc-mini-trilha li.f-acao { color: var(--verde-escuro); border-color: var(--verde-escuro); font-weight: 700; }
-.cc-mini-trilha li.f-parcial { color: var(--verde-texto); border-color: var(--verde); }
-.cc-mini-trilha li.f-aguardando { color: var(--amarelo); background: var(--amarelo-fundo); border-color: var(--amarelo); }
-.cc-mini-trilha li.f-impedida { color: var(--vermelho); background: var(--vermelho-fundo); border-color: var(--vermelho); }
-.cc-mini-trilha li.f-nao_iniciada, .cc-mini-trilha li.f-nao_se_aplica { color: var(--texto-fraco); }
+.cc-mini-trilha li { padding: .1rem .5rem; border-radius: 4px; border: 1px solid var(--borda); border-top-width: 3px; font-size: .8rem; background: var(--branco); }
+.cc-mini-trilha li.f-concluida { border-top-color: var(--verde); color: var(--verde-texto); }
+.cc-mini-trilha li.f-em_curso { border-top-color: var(--texto); font-weight: 600; }
+.cc-mini-trilha li.f-nao_iniciada, .cc-mini-trilha li.f-nao_se_aplica { color: var(--texto-fraco); border-style: dashed; }
 .cc-indice { list-style: none; padding: 0; }
 .cc-indice li { padding: .6rem 0; border-bottom: 1px solid var(--borda); }
 
-/* ---------- Telas estreitas: a trilha vira lista vertical ---------- */
-@media (max-width: 1100px) {
-  .cc-fases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* ---------- Telas estreitas ---------- */
+@media (max-width: 1180px) {
+  .cc-mapa { grid-template-columns: minmax(0, 1fr); }
   .cc-grade { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
-  .cc-fases { grid-template-columns: minmax(0, 1fr); gap: .3rem; }
-  .cc-fase a { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: .15rem .5rem; border-top-width: 1px; border-left-width: 5px; }
+  .cc-fases { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); gap: .3rem; }
+  .cc-fase a { border-top-width: 1px; border-left-width: 4px; }
   .cc-fase.f-concluida a { border-left-color: var(--verde); }
-  .cc-fase.f-acao a { border-left-color: var(--verde-escuro); }
-  .cc-fase.f-parcial a { border-left-color: var(--verde); }
-  .cc-fase.f-aguardando a { border-left-color: var(--amarelo); }
-  .cc-fase.f-impedida a { border-left-color: var(--vermelho); }
-  .cc-fase-resumo, .cc-fase-conta { flex-basis: 100%; }
+  .cc-fase.f-em_curso a { border-left-color: var(--texto); }
   .cc-fase.selecionada::after { display: none; }
-  .cc-onde { font-size: 1.02rem; }
+  .cc-onde-frase { font-size: 1rem; }
 }
 
-.cc-atos-da-lista { margin: 0; padding: 0; list-style: none; }
-.cc-atos-da-lista li + li { margin-top: .2rem; }
-
-/* O roteiro da fase: a sequência dos atos, na ordem da jornada, com a situação de cada um. */
-.cc-roteiro { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 .75rem; padding: 0; }
-.cc-roteiro li { display: flex; gap: .45rem; align-items: flex-start; padding: .35rem .6rem; border: 1px solid var(--borda); border-radius: 6px; font-size: .85rem; line-height: 1.3; background: var(--branco); }
-.cc-roteiro li + li { position: relative; }
-.cc-roteiro-n { display: inline-flex; align-items: center; justify-content: center; width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--cinza-fundo); font-weight: 700; font-size: .75rem; flex: none; }
-.cc-roteiro li.f-concluida { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-texto); }
-.cc-roteiro li.f-acao { border-color: var(--verde-escuro); border-width: 2px; color: var(--verde-escuro); }
-.cc-roteiro li.f-acao .cc-roteiro-n { background: var(--verde-escuro); color: var(--branco); }
-.cc-roteiro li.f-aguardando { border-color: var(--amarelo); background: var(--amarelo-fundo); color: var(--amarelo); }
-.cc-roteiro li.f-impedida { border-color: var(--vermelho); background: var(--vermelho-fundo); color: var(--vermelho); }
-.cc-roteiro li.f-nao_iniciada, .cc-roteiro li.f-nao_se_aplica { color: var(--texto-fraco); }
-.cc-paralela-curta { font-size: .85rem; color: var(--verde-texto); }
-
-/* Compactação do topo (iteração 2): a medida da primeira versão pôs "O que fazer agora" abaixo da
-   dobra de 900 px — a próxima ação, que a tela atual mostra sem rolar, foi para 1009 px. */
-.cc-faixa-prototipo, .cc-faixa-fixture { margin-bottom: .6rem; padding: .3rem .6rem; font-size: .8rem; }
-.cc-cabecalho { margin-bottom: .75rem; }
-.cc-cabecalho h1 { font-size: 1.45rem; }
-.cc-titulo-do-edital { display: block; font-size: .95rem; font-weight: 400; color: var(--texto-fraco); }
-.cc-onde { margin: .5rem 0; font-size: 1.08rem; }
-.cc-estados { padding: .45rem .8rem; gap: .25rem 1.25rem; font-size: .9rem; }
-.cc-estados dt { font-size: .7rem; }
-.cc-jornada { margin-bottom: .9rem; }
-.cc-fase a { padding: .4rem .5rem .45rem; }
-.cc-fase-nome { font-size: .9rem; }
-.cc-fase-situacao { font-size: .76rem; }
-.cc-fase-resumo, .cc-fase-conta { font-size: .72rem; }
-.cc-legenda { margin-top: .4rem; }
-.cc-legenda p { margin: .4rem 0 0; max-width: var(--leitura); }
-.cc-visualmente-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.cc-agora h2, .cc-detalhe h2 { margin-bottom: .5rem; }
-.cc-fase-espera { font-size: .72rem; font-weight: 600; color: var(--amarelo); }
+/* O roteiro em colunas na tela larga: a altura é a do passo mais longo, e não a soma dos passos. */
+@media (min-width: 1181px) {
+  .cc-roteiro { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+}

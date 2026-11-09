@@ -49,6 +49,11 @@ lado. Ver a decisão D-2.
   a seleção", "Você publica resultados", "Você acompanha este Edital sem ato a praticar nele").
 
 ### Camada A — a jornada
+
+> **Versão 2** ([07](07-refinamento.md)): o cartão separa o **andamento** (borda e sinal: concluída, em
+> curso, ainda não começou) do que a fase **oferece agora** (marcas: "1 sua", "1 de outro papel",
+> "◷ até", "⊘ impedida"). Os cartões ficam em três grupos (Abertura, Seleção, Ocupação). A descrição
+> abaixo é a da versão 1.
 - **Oito cartões**, um por macrofase, com sinal, nome, situação em palavras e um resumo curto ("1 de 2
   listas concluídas", "preliminar publicado em 1 lista", "◷ espera até 14/11", "2 providências").
 - **Sem percentual nem barra contínua.** Várias fases podem estar acesas ao mesmo tempo. A situação
@@ -58,6 +63,9 @@ lado. Ver a decisão D-2.
 - "Como ler a jornada" fica recolhido, com a legenda das sete situações de apresentação.
 
 ### Camada B — o que fazer agora
+
+> **Versão 2** ([07](07-refinamento.md)): o destaque segue três regras ditas na tela ("Por que esta:
+> …"); as providências de jargão mostram o nome simples, e o termo do GPS fica em "no GPS".
 A mesma derivação do nível 1 da 127, com quatro regras de apresentação:
 
 1. **Uma ação em destaque só quando é seguro identificá-la**: a pessoa tem **exatamente uma**

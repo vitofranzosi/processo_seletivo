@@ -11,6 +11,10 @@ pessoa a encontra, nem se a entende. A validação humana segue em aberto, como 
 
 ## As tarefas medidas
 
+> **Versão 2.** A tabela abaixo é a da versão 1. A medição da versão 2, com três tarefas a mais, está em
+> [07-refinamento.md](07-refinamento.md) e em [validacao-automatizada.txt](validacao-automatizada.txt):
+> 14 de 15 na primeira dobra, e a página do C06 com 2164 px.
+
 "Primeira dobra" é o que cabe numa janela de 1440 × 900 sem rolar. A medição conta só o texto
 visível: o que está dentro de um bloco recolhido não conta.
 

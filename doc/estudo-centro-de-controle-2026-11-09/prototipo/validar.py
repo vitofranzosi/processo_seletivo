@@ -24,15 +24,25 @@ TAREFAS = [
         "T1 Situação operacional dita em palavras",
         r"Onde estamos|frentes? ao mesmo tempo|fase de",
     ),
-    ("C06", C06, "T2 Próxima operação do operador", r"Congelar a relação"),
+    (
+        "C06",
+        C06,
+        "T2 Próxima operação do operador",
+        r"Fixar os participantes|[Cc]ongelar a relação",
+    ),
     (
         "C06",
         C06,
         "T3 Por que o sorteio ainda não pode",
         r"[Nn]enhuma relação deste marco está congelada|[Ff]alta congelar a relação",
     ),
-    ("C06", C06, "T5 O que é congelar a relação", r"registro que\s+não muda mais"),
-    ("C06", C06, "T5b A Etapa de títulos não segura o sorteio", r"[Ii]ndependente do sorteio"),
+    ("C06", C06, "T5 O que é congelar a relação", r"não muda mais"),
+    (
+        "C06",
+        C06,
+        "T5b A Etapa de títulos não segura o sorteio",
+        r"[Pp]aralela ao sorteio|corre em paralelo",
+    ),
     (
         "C12",
         C12,
@@ -47,7 +57,7 @@ TAREFAS = [
         "C08",
         C08,
         "T7 Corte aguarda o prazo de recurso",
-        r"(recurso deferido tornaria o corte obsoleto|espera até 14/11)",
+        r"(recurso deferido tornaria o corte obsoleto|até 14/11)",
     ),
     (
         "C08",
@@ -55,6 +65,9 @@ TAREFAS = [
         "T1 Situação operacional dita em palavras",
         r"Onde estamos|frentes? ao mesmo tempo",
     ),
+    ("C06", C06, "T10 Por que esta ação vem primeiro", r"Por que esta"),
+    ("C12", C12, "T11 Ações independentes, sem ranking", r"não escolhe a ordem entre elas"),
+    ("C06", C06, "T12 Fase em curso com marca de ação sua", r"Em curso[\s\S]{0,40}1 sua"),
 ]
 
 

@@ -24,6 +24,9 @@ só duas regras puras de agregação sobre o `Andamento` existente.
 5. [Avaliação comparativa](05-avaliacao-comparativa.md): 12 tarefas medidas por Playwright, os riscos
    e o que não foi validado.
 6. [Plano de implementação](06-plano-de-implementacao.md): as specs C1 a C6; o MVP = C3 → C1 → C2.
+7. [Rodada de refinamento, versão 2 do protótipo](07-refinamento.md): o andamento da fase separado das
+   providências, nomes simples nos passos, o critério do destaque, menos texto à vista e o mapa em três
+   grupos. Inclui as peças existentes reutilizadas e as novas.
 
 ## Recomendação crítica
 
@@ -65,16 +68,20 @@ Mesmo assim, é a mesma pergunta respondida de outro jeito, e **a decisão é su
 
 ## Decisões que precisam ser tomadas antes das specs
 
+Em 09/11 o usuário aprovou o conceito e a direção arquitetural, e pediu uma rodada de refinamento
+([07](07-refinamento.md)). Duas decisões ficaram tomadas, e as demais seguem pendentes.
+
+
 | # | Decisão | Opções | O que o estudo sugere |
 |---|---|---|---|
-| D-1 | Aceitar macrofases como apresentação sobre os pontos da 127 | (a) sim, várias acesas ao mesmo tempo; (b) manter a recusa da 127 | (a) |
+| D-1 | Aceitar macrofases como apresentação sobre os pontos da 127 | (a) sim, várias acesas ao mesmo tempo; (b) manter a recusa da 127 | **Decidida em 09/11: (a)**, pela aprovação do conceito |
 | D-2 | Onde mora o Centro de Controle | (a) o próprio detalhe do Edital publicado; (b) uma página nova | (a), coerente com D-001 da 104 |
 | D-3 | Os nomes das oito fases | Os do protótipo: Edital, Inscrições, Avaliação, Classificação, Resultado e recursos, Vagas, Convocação, Conclusão — ou outros | Validar "Vagas" com operadores |
-| D-4 | Quando destacar "Sua próxima ação" | (a) só com exatamente uma providência sua; (b) nunca; (c) por prioridade | (a), depois da C3 |
+| D-4 | Quando destacar "Sua próxima ação" | (a) só com exatamente uma providência sua; (b) nunca; (c) por prioridade; (d) a da versão 2: uma só, **ou** a única que destrava passos seguintes quando as outras são paralelas | (d), depois da C3 |
 | D-5 | Observar a extração antes de congelar todas as relações | (a) o comando recusa; (b) confirmação em duas fases; (c) só alertar | Decisão de domínio; o estudo não escolhe |
 | D-6 | Quem vê o detalhe por lista | (a) quem conduz ou audita (D-004 da 127); (b) também quem publica | (a) |
 | D-7 | Quem aprova os textos pedagógicos, e se vão a produção antes de teste com operadores | — | Fonte única no código; teste com 3 a 5 operadores antes |
-| D-8 | O "O que fazer agora" do Processo | (a) some, e o Processo agrega os Editais; (b) soma as providências dos Editais | (a) |
+| D-8 | O "O que fazer agora" do Processo | (a) some, e o Processo agrega os Editais; (b) soma as providências dos Editais | **Decidida em 09/11: (a)**. O Processo agrega; o Centro de Controle é do Edital |
 
 ## Achados fora do MVP
 
