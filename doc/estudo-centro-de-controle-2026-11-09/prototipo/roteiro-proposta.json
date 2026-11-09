@@ -1,0 +1,140 @@
+[
+ {
+  "nome": "proposta-c06",
+  "url": "/gestao/prototipo-centro/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c06-dobra",
+  "url": "/gestao/prototipo-centro/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/",
+  "identidade": "treino.presidencia",
+  "pagina_inteira": false
+ },
+ {
+  "nome": "proposta-c06-fase-avaliacao",
+  "url": "/gestao/prototipo-centro/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/?fase=avaliacao",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c06-gestor",
+  "url": "/gestao/prototipo-centro/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/",
+  "identidade": "treino.gestao",
+  "papeis": [
+   "gestor"
+  ]
+ },
+ {
+  "nome": "proposta-c06-avaliacao1",
+  "url": "/gestao/prototipo-centro/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/",
+  "identidade": "treino.avaliacao1"
+ },
+ {
+  "nome": "proposta-c04",
+  "url": "/gestao/prototipo-centro/editais/856b6a7d-b982-47fd-9796-9fb8f58dc519/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c08",
+  "url": "/gestao/prototipo-centro/editais/ec9fa21d-3b7f-4910-9510-ca267d478309/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c08-fase-resultado",
+  "url": "/gestao/prototipo-centro/editais/ec9fa21d-3b7f-4910-9510-ca267d478309/?fase=resultado",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c08-publicador",
+  "url": "/gestao/prototipo-centro/editais/ec9fa21d-3b7f-4910-9510-ca267d478309/",
+  "identidade": "treino.publicacao",
+  "papeis": [
+   "publicador"
+  ]
+ },
+ {
+  "nome": "proposta-c12",
+  "url": "/gestao/prototipo-centro/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c12-dobra",
+  "url": "/gestao/prototipo-centro/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/",
+  "identidade": "treino.presidencia",
+  "pagina_inteira": false
+ },
+ {
+  "nome": "proposta-c12-fase-vagas",
+  "url": "/gestao/prototipo-centro/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/?fase=vagas",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c12-processo",
+  "url": "/gestao/prototipo-centro/processos/68d51d6d-8c72-4bf1-b7d4-bb686a303017/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c11",
+  "url": "/gestao/prototipo-centro/editais/20b9a622-0aac-4344-9a17-e85ad8599690/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c14",
+  "url": "/gestao/prototipo-centro/editais/8201d0ef-04bf-4851-a8e1-3f8e2287d0c5/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c05-concluida-fixture",
+  "url": "/gestao/prototipo-centro/concluida/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-indice",
+  "url": "/gestao/prototipo-centro/",
+  "identidade": "treino.presidencia"
+ },
+ {
+  "nome": "proposta-c12-celular",
+  "url": "/gestao/prototipo-centro/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/",
+  "identidade": "treino.presidencia",
+  "largura": 390,
+  "altura": 844
+ },
+ {
+  "nome": "atual-c12-celular",
+  "url": "/gestao/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/",
+  "identidade": "treino.presidencia",
+  "largura": 390,
+  "altura": 844
+ },
+ {
+  "nome": "proposta-c06-entenda-aberto",
+  "url": "/gestao/prototipo-centro/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/",
+  "identidade": "treino.presidencia",
+  "clicar": [
+   ".cc-detalhe .cc-entenda summary"
+  ],
+  "pagina_inteira": false
+ },
+ {
+  "nome": "proposta-c06-celular",
+  "url": "/gestao/prototipo-centro/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/",
+  "identidade": "treino.presidencia",
+  "largura": 390,
+  "altura": 844
+ },
+ {
+  "nome": "atual-c06-celular",
+  "url": "/gestao/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/",
+  "identidade": "treino.presidencia",
+  "largura": 390,
+  "altura": 844
+ },
+ {
+  "nome": "atual-c12-matriz-aberta",
+  "url": "/gestao/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/",
+  "identidade": "treino.presidencia",
+  "clicar": [
+   ".perfil-do-andamento > summary, details summary"
+  ]
+ }
+]

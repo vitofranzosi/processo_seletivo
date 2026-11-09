@@ -1,0 +1,7 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}Centro de Controle · Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'prototipo/centro.css' %}">{% endblock %}
+{% block conteudo %}
+<h1>Edital {{ edital.number }}/{{ edital.year }}</h1>
+<p>Antes da publicação, o detalhe atual do Edital já conduz bem: a trilha da elaboração e o bastão dizem quem age. O Centro de Controle começa na publicação. <a href="{% url 'interface:detalhe' edital.id %}">Abrir a tela atual</a>.</p>
+{% endblock %}

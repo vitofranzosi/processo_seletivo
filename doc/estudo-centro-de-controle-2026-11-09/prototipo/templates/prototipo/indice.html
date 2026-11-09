@@ -1,0 +1,22 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}Protótipo do Centro de Controle{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'prototipo/centro.css' %}">{% endblock %}
+{% block conteudo %}
+<h1>Centro de Controle do Edital — protótipo</h1>
+<p class="cc-faixa-prototipo" role="note"><strong>Estudo de 2026-11-09.</strong> Rotas servidas só pelo servidor do estudo; o código de produção não muda. Você está como <strong>{{ ator.subject }}</strong> — <a href="{% url 'interface:identificar' %}?proximo={% url 'prototipo:indice' %}">trocar de identidade</a> para ver o mesmo Edital com outras permissões.</p>
+<ul class="cc-indice">
+  {% for l in linhas %}
+  <li>
+    <strong>{{ l.descricao }}</strong> <span class="cc-fraco">({{ l.cenario }}{% if l.processo %} · {{ l.processo.institutional_code }}{% endif %})</span><br>
+    {% if l.edital %}
+    <a href="{% url 'prototipo:centro' l.edital.id %}">Centro de Controle proposto</a> ·
+    <a href="{% url 'interface:detalhe' l.edital.id %}">tela atual do Edital</a> ·
+    <a href="{% url 'prototipo:processo' l.processo.id %}">Processo proposto</a> ·
+    <a href="{% url 'interface:processo-detalhe' l.processo.id %}">tela atual do Processo</a>
+    {% else %}<span class="cc-fraco">Cenário não carregado neste banco.</span>{% endif %}
+  </li>
+  {% endfor %}
+  <li><strong>5 · Seleção concluída, sem providências</strong> <span class="cc-fraco">(ilustração — nenhum cenário termina assim)</span><br>
+    <a href="{% url 'prototipo:concluida' %}">Centro de Controle proposto (fixture)</a></li>
+</ul>
+{% endblock %}

@@ -1,0 +1,288 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}Centro de Controle · Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/andamento.css' %}"><link rel="stylesheet" href="{% estatico 'prototipo/centro.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'prototipo:indice' %}">Protótipo</a>{% if edital.processo_id %} › <a href="{% url 'prototipo:processo' edital.processo_id %}">{{ edital.processo.institutional_code }}</a>{% endif %} › <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span></nav>{% endblock %}
+{% block conteudo %}
+<p class="cc-faixa-prototipo" role="note"><strong>Protótipo de estudo.</strong> Estado lido do banco pelas mesmas funções do detalhe do Edital; os botões levam às telas reais, que autorizam e recusam. {% if url_atual %}<a href="{{ url_atual }}">Ver a tela atual deste Edital</a>.{% endif %}</p>
+{% if fixture %}<p class="cc-faixa-fixture" role="note"><strong>Ilustração (fixture).</strong> Nenhum cenário de treinamento termina concluído: estes dados foram montados à mão no protótipo e não existem no banco.</p>{% endif %}
+
+<header class="cc-cabecalho">
+  <h1>Edital {{ edital.number }}/{{ edital.year }} <span class="cc-titulo-do-edital">{{ edital.title }}</span></h1>
+  <p class="cc-onde" role="status"><span class="cc-onde-rotulo">Onde estamos</span> {{ centro.onde }}</p>
+  <dl class="cc-estados">
+    <div><dt>Situação administrativa</dt><dd><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span> <span class="cc-fraco">Processo {{ edital.processo.status|situacao|lower }}</span></dd></div>
+    <div><dt>Inscrições</dt><dd>{{ linha_das_inscricoes }}</dd></div>
+    <div><dt>Seu papel aqui</dt><dd>{{ centro.alcance }}</dd></div>
+  </dl>
+</header>
+
+{# ===================== Camada A — a jornada ===================== #}
+<nav class="cc-jornada" aria-labelledby="jornada-titulo">
+  <h2 id="jornada-titulo" class="cc-visualmente-oculto">A jornada deste Edital</h2>
+  <ol class="cc-fases">
+    {% for f in centro.fases %}
+    <li class="cc-fase f-{{ f.situacao }}{% if f.chave == fase.chave %} selecionada{% endif %}">
+      <a href="?fase={{ f.chave }}#detalhe-da-fase"{% if f.chave == fase.chave %} aria-current="step"{% endif %}>
+        <span class="cc-fase-sinal" aria-hidden="true">{{ f.sinal }}</span>
+        <span class="cc-fase-nome">{{ f.nome }}</span>
+        <span class="cc-fase-situacao">{{ f.rotulo }}</span>
+        {% if f.resumo %}<span class="cc-fase-resumo">{{ f.resumo }}</span>{% endif %}
+        {% if f.espera_ate %}<span class="cc-fase-espera"><span aria-hidden="true">◷</span> espera até {{ f.espera_ate|date:"d/m" }}</span>{% endif %}
+        {% if f.providencias %}<span class="cc-fase-conta">{{ f.providencias|length }} providência{{ f.providencias|length|pluralize:"s" }}</span>{% endif %}
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  <details class="cc-legenda"><summary>Como ler a jornada</summary>
+    <p>Cada fase reúne atos do GPS. Várias podem estar em curso ao mesmo tempo, porque cada lista anda no seu ritmo. Escolha uma fase para ver o detalhe dela.</p>
+    <ul>
+      <li><span aria-hidden="true">✓</span> <strong>Concluída</strong> — todos os atos da fase estão feitos em todas as listas.</li>
+      <li><span aria-hidden="true">●</span> <strong>Ação disponível</strong> — há ao menos um ato que alguém pode praticar agora.</li>
+      <li><span aria-hidden="true">◷</span> <strong>Aguardando</strong> — nada a fazer até um prazo correr ou alguém responder.</li>
+      <li><span aria-hidden="true">⊘</span> <strong>Com impedimento</strong> — o ato não pode ser praticado; o detalhe diz por quê e quem resolve.</li>
+      <li><span aria-hidden="true">◐</span> <strong>Em andamento</strong> — parte feita; o resto depende de uma fase anterior.</li>
+      <li><span aria-hidden="true">·</span> <strong>Ainda não</strong> — depende de atos anteriores; não é pendência.</li>
+      <li><span aria-hidden="true">—</span> <strong>Não se aplica</strong> — este Edital não tem esta fase.</li>
+    </ul>
+  </details>
+</nav>
+
+<div class="cc-grade">
+{# ===================== Camada B — o que fazer agora ===================== #}
+<section class="cartao cc-agora" aria-labelledby="agora-titulo">
+  <h2 id="agora-titulo">O que fazer agora</h2>
+  {% with p=centro.providencias %}
+  {% if not p.total %}
+  <p class="nada-em-aberto"><strong>Nada em aberto.</strong> {% if edital.status == 'ENCERRADO' %}O Edital está encerrado; o histórico de cada fase continua acessível na jornada acima.{% else %}Nenhum ato espera alguém agora.{% endif %}</p>
+  {% endif %}
+
+  {% if centro.principal %}
+  {% with item=centro.principal %}
+  <article class="cc-acao-principal" aria-labelledby="principal-titulo">
+    <p class="cc-rotulo-pequeno">Sua próxima ação · {{ item.fase }}</p>
+    <h3 id="principal-titulo">{{ item.p.ato }}</h3>
+    <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}{% if item.p.ate %} · até {{ item.p.ate|date:"d/m/Y" }}{% endif %}</p>
+    {% if item.conceito %}<p>{{ item.conceito.oque }}</p>{% endif %}
+    {% if item.p.url %}<p><a class="botao" href="{{ item.p.url }}">Abrir a tela para {{ item.p.ato|lower }}</a></p>{% endif %}
+    {% if item.conceito %}
+    <details class="cc-entenda"><summary>Por que e o que acontece ao confirmar</summary>
+      <p><strong>Por quê.</strong> {{ item.conceito.porque }}</p>
+      <p><strong>Ao confirmar.</strong> {{ item.conceito.ao_confirmar }}</p>
+    </details>
+    {% endif %}
+  </article>
+  {% endwith %}
+  {% elif p.suas %}
+  <h3 class="cc-subtitulo">Suas ações disponíveis <span class="cc-conta">{{ p.suas|length }}</span></h3>
+  <p class="cc-ajuda-curta">O GPS não as ordena por importância: cada uma está numa fase, e a ordem da jornada aparece no detalhe de cada fase.</p>
+  <ul class="cc-providencias">
+    {% for item in p.suas %}
+    <li class="cc-providencia sua">
+      <p class="cc-rotulo-pequeno"><span class="marca-sua">Sua</span> {{ item.fase }}</p>
+      <p class="cc-ato">{% if item.p.url %}<a href="{{ item.p.url }}">{{ item.p.ato }}</a>{% else %}{{ item.p.ato }}{% endif %}</p>
+      <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}{% if item.p.ate %} · até {{ item.p.ate|date:"d/m/Y" }}{% endif %}</p>
+      {% if item.paralela %}<p class="cc-paralela-curta">{{ item.paralela }}</p>{% endif %}
+      {% if item.conceito %}
+      <details class="cc-entenda"><summary>Entenda: {{ item.conceito.titulo|lower }}</summary>
+        <p>{{ item.conceito.oque }}</p>
+        <p><strong>Por quê.</strong> {{ item.conceito.porque }}</p>
+        <p><strong>Ao confirmar.</strong> {{ item.conceito.ao_confirmar }}</p>
+      </details>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if p.aguardando or p.impedidas %}
+  <h3 class="cc-subtitulo">Esperando um prazo, uma resposta ou uma correção</h3>
+  <ul class="cc-providencias">
+    {% for item in p.impedidas %}
+    <li class="cc-providencia impedida">
+      <p class="cc-rotulo-pequeno"><span class="situacao-do-andamento s-impedido"><span aria-hidden="true">⊘</span> Impedido</span> {{ item.fase }}</p>
+      <p class="cc-ato">{{ item.p.ato }}</p>
+      <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}</p>
+      {% if item.p.razao %}<p><strong>Por quê:</strong> {{ item.p.razao }}.</p>{% endif %}
+      {% if item.p.texto_de_quem_resolve %}<p><strong>Quem resolve:</strong> {{ item.p.texto_de_quem_resolve|lower }}{% if item.p.url_da_saida %} — <a href="{{ item.p.url_da_saida }}">Retificar</a>{% endif %}.</p>{% endif %}
+    </li>
+    {% endfor %}
+    {% for item in p.aguardando %}
+    <li class="cc-providencia aguardando">
+      <p class="cc-rotulo-pequeno"><span class="situacao-do-andamento s-aguarda"><span aria-hidden="true">◷</span> Aguarda{% if item.p.ate %} até {{ item.p.ate|date:"d/m" }}{% endif %}</span>{% if item.p.recomendacao %} <span class="marca-recomendacao">recomendação</span>{% endif %} {{ item.fase }}</p>
+      <p class="cc-ato">{{ item.p.ato }}</p>
+      <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}</p>
+      {% if item.p.razao %}<p class="cc-razao">{{ item.p.razao|capfirst }}.</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if p.de_outros %}
+  <h3 class="cc-subtitulo">Com outros papéis</h3>
+  <ul class="cc-providencias compactas">
+    {% for item in p.de_outros %}
+    <li class="cc-providencia de-outro"><strong>{{ item.p.texto_do_papel }}:</strong> {{ item.p.ato_no_meio_da_frase }} <span class="cc-onde-da-acao">— {{ item.p.onde_por_extenso }}</span> <span class="cc-fraco">({{ item.fase }})</span></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+
+  {% for item in retificacoes_em_curso %}
+  <p class="aviso cc-retificacao"><strong>Retificação em curso</strong> ({{ item.rotulo_situacao }}){% if item.meu_ato %} — aguarda você: <a href="{{ item.url }}">{{ item.ato_na_lista }}</a>{% elif not item.parada %} — aguarda {{ item.passo.papel }}{% endif %}. Ela pode mudar datas, vagas ou regras de qualquer fase.</p>
+  {% endfor %}
+</section>
+
+{# ===================== Detalhe da fase escolhida ===================== #}
+<section class="cartao cc-detalhe" id="detalhe-da-fase" aria-labelledby="detalhe-titulo">
+  <p class="cc-rotulo-pequeno">Detalhe da fase</p>
+  <h2 id="detalhe-titulo"><span class="cc-fase-sinal-inline f-{{ fase.situacao }}" aria-hidden="true">{{ fase.sinal }}</span> {{ fase.nome }} <span class="cc-situacao-da-fase f-{{ fase.situacao }}">{{ fase.rotulo }}</span></h2>
+  <p class="cc-pergunta">{{ fase.pergunta }}</p>
+  {% if fase.resumo %}<p>{{ fase.resumo }}.</p>{% endif %}
+  {% if fase.nota %}<p class="cc-nota">{{ fase.nota }}</p>{% endif %}
+  {% if fase.paralela %}<p class="cc-paralela"><strong>Frente paralela.</strong> {{ fase.paralela }}</p>{% endif %}
+
+  {% if fase.chave == 'publicacao' %}
+  <ul class="cc-historico">
+    {% for d in documentos %}<li><span aria-hidden="true">✓</span> <a href="{{ d.url }}">{{ d.ato }} nº {{ d.ordem }}</a>{% if d.publicada_em %} · {{ d.publicada_em|date:"d/m/Y H:i" }}{% endif %}</li>{% endfor %}
+  </ul>
+  <p class="cc-ajuda-curta">Publicado não se corrige: corrige-se por Retificação, que passa de novo por elaboração, homologação e publicação.</p>
+  {% elif fase.chave == 'inscricoes' %}
+  <p>{{ linha_das_inscricoes }}.</p>
+  <p class="cc-ajuda-curta">A consulta das inscrições, para quem tem a permissão, fica em <a href="#administracao">Administração e histórico</a>.</p>
+  {% elif fase.chave == 'conclusao' %}
+  {% if edital.status == 'ENCERRADO' %}<p>O Edital foi encerrado. Os atos de todas as fases estão no histórico e nos documentos publicados.</p>
+  {% else %}<p>O Edital se encerra quando nenhuma lista tiver ato em aberto. O encerramento é do Gestor, em <a href="#administracao">Administração</a>, que mostra antes o que ainda falta.</p>{% endif %}
+  {% elif not centro.ve_a_matriz %}
+  <p class="cc-nota">O detalhe desta fase por lista é de quem conduz ou audita a seleção — a mesma regra do "Andamento da seleção" de hoje (D-004 da 127). As providências que dependem de você estão em "O que fazer agora".</p>
+  {% else %}
+  {% for perfil, listas, roteiro in fase.perfis %}
+  <div class="cc-perfil-na-fase">
+    {% if fase.perfis|length > 1 %}<h3>{{ perfil.nome }}</h3>{% endif %}
+    <ol class="cc-roteiro" aria-label="Sequência dos atos desta fase">
+      {% for passo in roteiro %}<li class="f-{{ passo.situacao }}"><span class="cc-roteiro-n">{{ forloop.counter }}</span> <span><strong>{{ passo.titulo }}</strong><br><span aria-hidden="true">{{ passo.sinal }}</span> {{ passo.rotulo }}{% if not passo.unico and passo.total > 1 %} · {{ passo.feitas }} de {{ passo.total }} listas{% elif passo.unico and passo.total > 1 %} · vale para todas as listas{% endif %}</span></li>{% endfor %}
+    </ol>
+    <div class="moldura-do-andamento">
+    <table class="cc-tabela-da-fase">
+      <caption class="cc-fraco">{{ perfil.nome }} · {{ perfil.forma }} · {{ perfil.inscritos }} inscriç{{ perfil.inscritos|pluralize:"ão,ões" }}</caption>
+      <thead><tr><th scope="col">Lista</th>{% for c in listas.0.celulas %}<th scope="col">{{ c.ponto }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for lst in listas %}
+        <tr><th scope="row">{{ lst.rotulo }}</th>
+          {% for c in lst.celulas %}
+          <td data-situacao="{{ c.celula.situacao }}">
+            <span class="situacao-do-andamento s-{{ c.celula.situacao }}"><span aria-hidden="true">{{ c.celula.sinal }}</span> {{ c.celula.rotulo }}</span>
+            {% if c.celula.ato and c.celula.situacao != 'feito' %}<span class="cc-celula-ato">{% if c.celula.url and centro.ve_a_matriz %}<a href="{{ c.celula.url }}">{{ c.celula.ato }}</a>{% else %}{{ c.celula.ato }}{% endif %}</span>{% elif c.celula.situacao == 'feito' and c.celula.url and centro.ve_a_matriz %}<span class="cc-celula-ato"><a href="{{ c.celula.url }}">ver o ato</a></span>{% endif %}
+            {% if c.celula.nota %}<span class="nota-da-celula">{{ c.celula.nota }}</span>{% endif %}
+            {% if c.celula.razao and c.celula.situacao != 'feito' %}<span class="cc-razao">{{ c.celula.razao|capfirst }}{% if c.celula.ate %} (até {{ c.celula.ate|date:"d/m/Y" }}){% endif %}.</span>{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <div class="cc-conceitos">
+      {% for c in listas.0.celulas %}{% if c.conceito %}
+      <details class="cc-entenda"><summary>Entenda: {{ c.conceito.titulo|lower }}</summary>
+        <p>{{ c.conceito.oque }}</p><p><strong>Por quê.</strong> {{ c.conceito.porque }}</p><p><strong>Ao confirmar.</strong> {{ c.conceito.ao_confirmar }}</p>
+      </details>
+      {% endif %}{% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+</section>
+</div>
+
+{# ===================== Camada C — andamento por lista ===================== #}
+{% if centro.ve_a_matriz %}
+<section class="cartao cc-listas" aria-labelledby="listas-titulo">
+  <h2 id="listas-titulo">Onde cada lista está</h2>
+  <p class="cc-ajuda-curta">Cada lista de concorrência anda no seu ritmo: uma pode estar convocando enquanto outra ainda espera a ordem.</p>
+  {% for perfil in centro.perfis %}
+  <div class="cc-perfil">
+    <h3>{{ perfil.nome }} <span class="cc-fraco">· {{ perfil.forma }} · {{ perfil.inscritos }} inscriç{{ perfil.inscritos|pluralize:"ão,ões" }}</span></h3>
+    <div class="moldura-do-andamento">
+    <table class="cc-tabela-das-listas">
+      <thead><tr><th scope="col">Lista</th>{% for chave, s in perfil.listas.0.fases %}<th scope="col">{% if chave == 'avaliacao' %}Avaliação{% elif chave == 'classificacao' %}Classificação{% elif chave == 'resultado' %}Resultado{% elif chave == 'vagas' %}Vagas{% else %}Convocação{% endif %}</th>{% endfor %}<th scope="col">Agora nesta lista</th></tr></thead>
+      <tbody>
+      {% for lst in perfil.listas %}
+      <tr>
+        <th scope="row">{{ lst.curto }}</th>
+        {% for chave, s in lst.fases %}<td class="cc-celula-fase f-{{ s|default:'nao_se_aplica' }}"><a href="?fase={{ chave }}#detalhe-da-fase" aria-label="{{ lst.curto }}: {% firstof s|default:'nao_se_aplica' %}"><span aria-hidden="true">{% if s == 'concluida' %}✓{% elif s == 'acao' %}●{% elif s == 'aguardando' %}◷{% elif s == 'impedida' %}⊘{% elif s == 'parcial' %}◐{% elif s == 'nao_iniciada' %}·{% else %}—{% endif %}</span> <span class="cc-rotulo-da-celula">{% if s == 'concluida' %}Concluída{% elif s == 'acao' %}Ação{% elif s == 'aguardando' %}Aguarda{% elif s == 'impedida' %}Impedida{% elif s == 'parcial' %}Em andamento{% elif s == 'nao_iniciada' %}Ainda não{% else %}Não se aplica{% endif %}</span></a></td>{% endfor %}
+        <td class="cc-agora-da-lista">{% if lst.concluida %}Concluída{% elif lst.atos|length > 1 %}<ul class="cc-atos-da-lista">{% for nome, c in lst.atos %}<li><span class="situacao-do-andamento s-{{ c.situacao }}"><span aria-hidden="true">{{ c.sinal }}</span></span> {{ c.ato }} <span class="cc-fraco">({{ nome }})</span></li>{% endfor %}</ul>{% elif lst.agora %}<span class="situacao-do-andamento s-{{ lst.agora.situacao }}"><span aria-hidden="true">{{ lst.agora.sinal }}</span> {{ lst.agora.rotulo }}</span> {{ lst.agora.ato|default:lst.agora.razao }}{% if lst.agora.ate %} · até {{ lst.agora.ate|date:"d/m" }}{% endif %}{% else %}Nada em aberto{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% if centro.ve_a_matriz %}
+    <details class="cc-matriz-completa"><summary>Ver todos os pontos da jornada, por lista</summary>
+      <div class="moldura-do-andamento">
+      <table class="matriz-do-andamento">
+        <thead><tr><th scope="col">Lista</th>{% for ponto in perfil.matriz.pontos %}<th scope="col">{{ ponto.titulo }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for rotulo, celulas in perfil.matriz.linhas %}<tr><th scope="row">{{ rotulo }}</th>{% for c in celulas %}<td data-situacao="{{ c.situacao }}">{% if c %}<span class="situacao-do-andamento s-{{ c.situacao }}"><span aria-hidden="true">{{ c.sinal }}</span> {{ c.rotulo }}</span>{% if c.nota %}<span class="nota-da-celula">{{ c.nota }}</span>{% endif %}{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table>
+      </div>
+    </details>
+    {% if perfil.matriz.destinos %}
+    <p class="cc-telas"><span class="cc-fraco">Telas do marco:</span>
+      {% for item in perfil.matriz.destinos %}{% for destino in item.destinos %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}{% endfor %}</p>
+    {% endif %}
+    {% endif %}
+    {% if perfil.matricula_fora %}<p class="cc-nota">Todas as convocações têm desfecho. A matrícula acontece fora do GPS.</p>{% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{# ===================== Camada D — administração e histórico ===================== #}
+<section class="cc-administracao" id="administracao" aria-labelledby="admin-titulo">
+  <h2 id="admin-titulo" class="cc-titulo-de-camada">Administração e histórico</h2>
+  <div class="cc-admin-grade">
+    <div class="cartao">
+      <h3>Documentos publicados</h3>
+      <ul class="cc-lista-simples">{% for d in documentos %}<li><a href="{{ d.url }}">{{ d.ato }} nº {{ d.ordem }}</a>{% if d.publicada_em %} <span class="cc-fraco">{{ d.publicada_em|date:"d/m/Y" }}</span>{% endif %}{% if d.retificacao_id and edital.id %} · <a href="{% url 'interface:retificacao-detalhe' d.retificacao_id %}">o que mudou</a>{% endif %}</li>{% endfor %}</ul>
+      {% if retificacoes_em_curso %}<p>{{ retificacoes_em_curso|length }} Retificação em curso.</p>{% else %}<p class="cc-fraco">Nenhuma Retificação em curso.</p>{% endif %}
+    </div>
+    <div class="cartao">
+      <h3>Consultas e documentos</h3>
+      {% if grupo %}
+      <ul class="cc-lista-simples">
+        {% if grupo.principal %}<li>{% if grupo.principal.disponivel %}<a href="{{ grupo.principal.url }}">{{ grupo.principal.rotulo }}</a>{% else %}{{ grupo.principal.rotulo }} <span class="cc-fraco">— {{ grupo.principal.motivo }}</span>{% endif %}</li>{% endif %}
+        {% for acao in grupo.secundarias %}<li>{% if acao.disponivel %}<a href="{{ acao.url }}">{{ acao.rotulo }}</a>{% else %}{{ acao.rotulo }} <span class="cc-fraco">— {{ acao.motivo }}</span>{% endif %}</li>{% endfor %}
+        {% if pode_ver_avisos %}<li><a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a></li>{% endif %}
+        {% if edital.processo_id %}<li><a href="{% url 'interface:processo-detalhe' edital.processo_id %}">Comissão, alocação e supervisão do Processo</a></li>{% endif %}
+      </ul>
+      {% elif fixture %}<p class="cc-fraco">Sem consultas nesta ilustração.</p>{% else %}<p class="cc-fraco">Nenhuma consulta disponível para seus papéis.</p>{% endif %}
+    </div>
+    <div class="cartao">
+      <h3>Quem atuou</h3>
+      {% if participantes %}
+      <dl class="cc-quem">
+        {% if participantes.elaborou %}<div><dt>Elaborou</dt><dd>{{ participantes.elaborou }}</dd></div>{% endif %}
+        {% if participantes.homologou %}<div><dt>Homologou</dt><dd>{{ participantes.homologou }}</dd></div>{% endif %}
+        {% if participantes.publicou %}<div><dt>Publicou</dt><dd>{{ participantes.publicou }}</dd></div>{% endif %}
+        {% if participantes.signatario %}<div><dt>Assina</dt><dd>{{ participantes.signatario }}</dd></div>{% endif %}
+      </dl>
+      {% endif %}
+      {% if edital.id %}<p><a href="{{ url_atual }}#participantes-titulo">Autoridade, unidade e trilha completa</a></p>{% endif %}
+    </div>
+    <div class="cartao">
+      <h3>Validação do conteúdo</h3>
+      {% if pendencias %}<p>{{ pendencias|length }} aviso{{ pendencias|length|pluralize:"s" }} sobre o conteúdo publicado.</p>
+      <details><summary>Ver os avisos</summary><ul class="cc-lista-simples">{% for p in pendencias %}<li>{% if p.severidade == 'erro' %}<strong>Impede:</strong> {% endif %}{{ p.mensagem }}</li>{% endfor %}</ul></details>
+      {% else %}<p class="cc-fraco">Nenhum aviso.</p>{% endif %}
+    </div>
+  </div>
+  {% if grupo.terminais %}
+  <details class="cc-terminais">
+    <summary>Encerrar ou cancelar o Edital</summary>
+    <p class="cc-ajuda-curta">Atos de fim de ciclo, irreversíveis. A tela de cada um mostra antes o que ainda está em aberto.</p>
+    <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Edital">
+      {% for acao in grupo.terminais %}{% include "interface/_acao_do_edital.html" with peso=acao.estilo %}{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>
+{% endblock %}
