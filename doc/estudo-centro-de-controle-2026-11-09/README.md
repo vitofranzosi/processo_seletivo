@@ -27,6 +27,9 @@ só duas regras puras de agregação sobre o `Andamento` existente.
 7. [Rodada de refinamento, versão 2 do protótipo](07-refinamento.md): o andamento da fase separado das
    providências, nomes simples nos passos, o critério do destaque, menos texto à vista e o mapa em três
    grupos. Inclui as peças existentes reutilizadas e as novas.
+8. [Plano de produção](08-plano-de-producao.md): a versão 2 aprovada para implementação incremental em
+   09/11; as decisões pendentes classificadas, as specs 135 a 138, os critérios de aceite, a sequência e
+   a validação com operadores.
 
 ## Recomendação crítica
 
