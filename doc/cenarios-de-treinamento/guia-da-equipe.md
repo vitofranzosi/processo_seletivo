@@ -50,8 +50,15 @@ treinamento perceber essa separação.
 
 **Exercícios no portal do candidato** (C02, C08, C11): o candidato entra com um código enviado ao
 e-mail. Os candidatos dos cenários têm e-mails que não existem. Para se inscrever, use o seu próprio
-e-mail (C02). Para agir como um candidato já inscrito (C08, C11), peça ao administrador o código
-que chega ao correio do ambiente.
+e-mail (C02). Para agir como um candidato já inscrito (C08, C11):
+
+1. No portal, peça o código com o e-mail do candidato. Ele segue o padrão
+   `<unidade>-<cenário>r<rodada>p<número>@treinamento.exemplo.test` — o candidato 02 do C11, no
+   Cefor, na primeira rodada, é `cefor-c11r1p02@treinamento.exemplo.test`. O número é o do nome
+   ("Bernardo Treinamento C11-02"), e a rodada é a do Processo (`-R2` é a rodada 2).
+2. Abra a caixa de entrada do ambiente, o **mailpit**, na porta 8025 do servidor de homologação. O
+   código está na mensagem mais recente para aquele e-mail.
+3. Digite o código no portal: você está agindo como o candidato.
 
 ## O que observar em todo exercício
 
@@ -239,7 +246,7 @@ dias aberto. O candidato 08 foi eliminado na prova.
 
 **Seu desafio:**
 
-1. Como candidato (código do correio do ambiente), recorra do resultado com uma fundamentação.
+1. Como candidato (código no mailpit), recorra do resultado com uma fundamentação.
 2. Como **Julgador de recursos**, decida o recurso.
 3. Como `treino.presidencia`, cumpra a decisão, se for deferido.
 
@@ -301,7 +308,7 @@ emitidas, ninguém convocado.
 
 1. Como `treino.presidencia`, abra a convocação do Edital `SIM11/2026` e, em cada convocado,
    **Documentos**. O 02 mostra o diploma **Pendente** e a residência **A apresentar**.
-2. Como candidato 02 (código do correio), leia a pendência e envie o diploma de novo.
+2. Como candidato 02 (código no mailpit), leia a pendência e envie o diploma de novo.
 3. Como `treino.presidencia`, confira os documentos do 03.
 
 **Resultado esperado:** itens entregues e conferidos.

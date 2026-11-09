@@ -209,8 +209,8 @@ convocação (C10 a C12) partem de um Edital por notas.
 - **C09 e C14** chegam ao definitivo por um marco que **não admite recurso**: chegar ao definitivo
   com recurso exigiria esperar o fim do prazo, que é de dias corridos.
 - **O correio da homologação** recebe o código de acesso do candidato fictício (`.test`), que não
-  entrega. Para exercitar o portal (C02, C08, C11), a equipe se inscreve com o próprio e-mail, ou o
-  administrador lê o código no correio do ambiente.
+  entrega. Para exercitar o portal (C02, C08, C11), a equipe se inscreve com o próprio e-mail, ou
+  lê o código no mailpit da homologação, com o e-mail do candidato, que segue um padrão (guia).
 - **Os PDFs fictícios** são válidos e marcados, mas não imitam documento real.
 - **Arquivos.** Os documentos fictícios vão para `ARQUIVOS_CANDIDATOS_RAIZ`. Se a transação de um
   cenário falha depois de gravar um arquivo, o arquivo pode ficar órfão no disco: o banco não

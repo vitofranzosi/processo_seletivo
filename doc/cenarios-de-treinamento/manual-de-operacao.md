@@ -172,6 +172,19 @@ As datas de cada cenário contam do dia da carga. Os que têm prazo correndo val
 Os demais não dependem do calendário. Antes de uma sessão de treinamento, rode a verificação e
 restaure o que ela apontar.
 
+## O correio da homologação
+
+Os candidatos fictícios têm e-mail em `treinamento.exemplo.test`, que não entrega a ninguém. O
+código de acesso ao portal chega ao **mailpit** do ambiente, na porta 8025 do servidor, e é de lá
+que a equipe o lê para agir como candidato (C08, C11). O mailpit não guarda nada em disco:
+reiniciá-lo esvazia a caixa, e basta pedir um código novo.
+
+Sem o mailpit, o GPS imprime a mensagem no log do app, e só quem acessa o servidor a lê:
+
+```bash
+docker logs --tail 200 processo_seletivo-app-1 2>&1 | grep -B2 -A12 "treinamento.exemplo.test"
+```
+
 ## Script auxiliar
 
 Não há. Os quatro comandos já são a interface, e um script por cima esconderia justamente a linha
