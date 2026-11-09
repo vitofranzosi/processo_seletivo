@@ -30,7 +30,7 @@ página. Por isso as hipóteses do pedido foram tratadas como hipóteses, uma a 
 | H4 | "ordenação · conduzir o marco · corte · ocupação · convocação" pressupõe conhecimento | **Confirmada** | Os cinco links aparecem sem explicação. Nenhuma tela define "congelar", "semente" ou "apuração"; só existe "Termos desta tela" em cinco telas de ato |
 | H5 | "relação 0 de 2" não explica | **Confirmada** | A linha "relação 0 de 2 · sorteio 0 de 2 · corte 0 de 2 · apuração 0 de 2" conta atos e não distingue "falta fazer" de "ainda não dá" |
 | H6 | Prazo, bloqueio, providência e advertência sem hierarquia | **Parcial** | Dentro do cartão, a 127 já separa as três (Sua, Aguarda, de outro papel). Fora dele não: a "Validação do conteúdo" pós-publicação e o aviso de conteúdo imutável competem com elas |
-| H7 | Sem jornada visual | **Confirmada**, e por decisão | A 127 tirou a trilha pós-publicação e recusou uma barra de fases. A questão volta como decisão D-1 do README |
+| H7 | Sem jornada visual | **Confirmada**, e por decisão | A 127 tirou a trilha pós-publicação (D-002) e deixou a barra de fases fora do escopo ("Fica fora"). A questão volta como decisão D-1 do README |
 | H8 | Muita navegação e rolagem para reconstruir o estado | **Confirmada** | Medido: a situação operacional dita em palavras está **ausente** nos três Editais medidos, e o histórico de um ato feito só aparece abrindo um bloco recolhido ([validacao-automatizada.txt](validacao-automatizada.txt)) |
 
 ## Achados
@@ -106,8 +106,10 @@ dentro do produto.
 No C06, o resumo do Perfil diz *"1 providência em aberto"*, enquanto o cartão do mesmo Edital diz
 *"2 providências em aberto · 2 são suas"*.
 
-- **Causa:** a providência da Etapa é derivada no Edital inteiro (`situacoes_da_etapa`) e não entra
-  na contagem do Perfil.
+- **Causa, deliberada:** as providências das Etapas são do Edital, e por decisão do código
+  (comentário em `resumo_do_perfil`) ficam no nível 1 e em "Etapas X de Y", fora da contagem do
+  Perfil. O defeito não é a conta: são dois números com as mesmas palavras e escopos diferentes, sem
+  que nenhum diga o seu escopo.
 - **Impacto:** a pessoa desconfia de um dos dois números, e não sabe de qual.
 
 ### A-08 · Média — o texto da espera sugere um ato já praticado
@@ -115,7 +117,7 @@ No C08 e no C12, a espera diz: *"Publicar o resultado definitivo — … Aguarde
 publique como resultado preliminar**"*. O preliminar **já** foi publicado nos dois Editais: a célula
 mostra a nota "resultado preliminar".
 
-- **Causa:** é a razão genérica da aferição da publicabilidade, sem olhar o que já está publicado.
+- **Causa:** é a mensagem genérica `JANELA_ABERTA` de `divulgacao/domain/publicabilidade.py`, a mesma da tela de publicação, onde a escolha entre preliminar e definitivo faz sentido. Na providência, ela é lida sem olhar o que já está publicado. A `RECURSO_PENDENTE` tem o mesmo final ("…ou publique como resultado preliminar").
 
 ### A-09 · Média — a providência de lista vazia não diz que a lista é vazia
 "Emitir a ordem — PPP" aparece no C08, no C12 e no C14, Editais em que **ninguém** concorre pela
@@ -155,7 +157,7 @@ corrido para aparecer. Depois de aberta, rola na horizontal a 1440 px (`atual-c1
 | Processo "sem ato" com Edital cheio de providências | **Aplicação** | A-02 |
 | "ou publique como resultado preliminar" com o preliminar publicado | **Aplicação** | A-08 |
 | "Observar a ocorrência" antes do congelamento | **Aplicação** | A-03 |
-| Nenhum cenário termina concluído | **Limite do catálogo da 134** | O C14 para antes da convocação. O cenário 5 do protótipo é fixture, e a tela diz isso |
+| Nenhum cenário termina concluído | **Limite do catálogo da 134** | O C14 para antes da convocação. A situação 5 do pedido (seleção concluída) é fixture no protótipo, e a tela diz isso |
 | Nenhum cenário tem dois Perfis, dois Editais no Processo ou vários marcos | **Limite do catálogo da 134** | A proposta trata esses casos por construção (um bloco por Perfil, um item por Edital), mas eles **não foram vistos** com dado real |
 
 ## O que a tela atual já faz bem, e o protótipo preserva

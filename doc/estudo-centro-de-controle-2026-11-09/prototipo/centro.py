@@ -527,7 +527,10 @@ def compor(edital, andamento, *, documentos, em_curso, alcance=None):
             if edital.status == "ENCERRADO":
                 sit, resumo = CONCLUIDA, "Edital encerrado"
             elif all(lst.concluida for p in perfis_c for lst in p.listas) and perfis_c:
-                sit, resumo = ACAO, "Tudo com desfecho — pronto para encerrar"
+                # **Nunca "ação disponível" aqui.** Se o Edital pode ser encerrado, quem decide são as
+                # pendências do encerramento (prazos, recursos, Retificações, rascunhos), que a tela
+                # do ato confere; dizê-lo daqui seria uma regra de disponibilidade nova, mais fraca.
+                sit, resumo = PARCIAL, "Listas concluídas — o encerramento é do Gestor"
             else:
                 sit, resumo = NAO_INICIADA, "Depois das convocações"
             nota = (
@@ -557,8 +560,9 @@ def compor(edital, andamento, *, documentos, em_curso, alcance=None):
         if chave == AVALIACAO:
             fase.paralela = _avaliacao_paralela(andamento)
         if chave == RESULTADO:
-            # **Lacuna G-3 do estudo.** O preliminar publicado não muda a situação da célula (D8a da
-            # 127: ela segue o definitivo); só a nota o diz. O protótipo lê a nota para a trilha não
+            # **Lacuna G-3 do estudo.** O preliminar publicado não muda a situação da célula — por
+            # decisão: D8a do estudo de 06/11, adotada pela 127, segue a pendência do definitivo —, e só
+            # a nota o diz. O protótipo lê a nota para a trilha não
             # afirmar "nada divulgado" — a spec precisa de um campo estruturado no lugar disto.
             preliminares = sum(
                 1

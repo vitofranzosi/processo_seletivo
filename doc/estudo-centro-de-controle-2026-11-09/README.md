@@ -53,8 +53,9 @@ ordem de uma lista sem inscritos.
 **Não fazer.** Motor de workflow, "fase atual" persistida, percentual, próximo passo único por
 prioridade.
 
-**O que esta proposta revisita.** A 127 recusou uma barra de fases e um "próximo passo único" (FR-4051,
-D-002), e o estudo de 06/11 recusou a barra de seis momentos. A recusa tinha uma razão: o Edital **não
+**O que esta proposta revisita.** A 127 deixou de fora a barra de fases, o percentual e o "próximo passo" único
+(seção "Fica fora" da spec, e FR-4051), e tirou a trilha depois da publicação (D-002). O estudo de 06/11
+recusou a barra de seis momentos. A recusa tinha uma razão: o Edital **não
 tem** uma etapa atual, e uma barra única mentiria. A proposta conserva a razão e muda a forma:
 - várias fases acesas ao mesmo tempo;
 - a situação de cada uma diz "1 de 2 listas";
@@ -75,11 +76,11 @@ Mesmo assim, é a mesma pergunta respondida de outro jeito, e **a decisão é su
 | D-7 | Quem aprova os textos pedagógicos, e se vão a produção antes de teste com operadores | — | Fonte única no código; teste com 3 a 5 operadores antes |
 | D-8 | O "O que fazer agora" do Processo | (a) some, e o Processo agrega os Editais; (b) soma as providências dos Editais | (a) |
 
-## Achados que não são escopo desta proposta
+## Achados fora do MVP
 
 Registro, e não escopo:
 - **A-03.** A tela do sorteio oferece observar a extração antes do congelamento. Vira a C6 só com a D-5.
-- **A-10.** "Próximos marcos" lê só o cronograma declarado.
+- **A-10.** "Próximos marcos" lê só o cronograma declarado. Entra na C5, e não no MVP.
 - **Catálogo da 134.** Nenhum cenário termina concluído; nenhum tem dois Perfis, dois Editais no
   Processo, vários marcos, recurso interposto nem Retificação em curso. Esses casos ficaram **sem
   verificação com dado real**.
@@ -89,5 +90,5 @@ Registro, e não escopo:
 - **Os cenários são os da 134, rodada 1, num banco local** (`ps_cc_centro`), e não os da homologação:
   o pedido cita o `SIM-TREINAMENTO-006-R3`, e aqui o C06 é a rodada 1. O gerador é o mesmo, e o
   estado de partida também; os números de concurso e as datas diferem.
-- **O cenário 5 (concluído) é fixture**, dito na tela.
+- **A situação 5 do pedido (seleção concluída) é fixture**, dita na tela. Não confundir com o C05, cenário real "Avaliação pendente".
 - **O protótipo não pratica ato nenhum.** Os botões levam às telas reais do mesmo servidor.

@@ -5,17 +5,17 @@
 - Nenhuma coluna, tabela ou migration.
 - Nenhuma regra de disponibilidade duplicada: tudo lê o `Andamento` da 127 e o `acoes.do_edital`.
 - Cada spec é um incremento que entra sozinho e não quebra os anteriores.
-- **O MVP são as specs C1 e C2.** As demais são melhorias.
+- **O MVP são as specs C3, C1 e C2, nesta ordem.** A C3 vem primeiro porque o destaque de "Sua próxima ação" da C1 depende dela. As demais são melhorias.
 
-As specs só se escrevem depois das decisões D-1 a D-8 do README. A numeração vem de `--number N`, como
+Cada spec espera só as decisões listadas em **Dependências**; a C3 não espera nenhuma. A numeração vem de `--number N`, como
 sempre.
 
 ---
 
 ## C1 — Onde estamos: o detalhe do Edital reorganizado (MVP)
 
-**Problema.** A-01, A-05, A-08, A-11 e H1–H3: o estado não é dito, o fim de ciclo compete com a
-operação, e o histórico vem antes do andamento.
+**Problema.** A-01, A-04, A-05, A-11 e H1–H3: o estado não é dito, a providência paralela não se
+distingue da principal, o fim de ciclo compete com a operação, e o histórico vem antes do andamento.
 
 **Escopo.**
 - Cabeçalho com a frase "Onde estamos" e os três estados rotulados.
@@ -39,12 +39,14 @@ operação, e o histórico vem antes do andamento.
 - `detalhe.html` é reorganizado.
 - Uma folha `interface/telas/centro.css`.
 
-**Dependências.** Decisões D-1, D-2, D-3, D-4 e D-8 (esta só para a parte do Processo, que é a C5).
+**Dependências.** A C3 e as decisões D-1, D-2, D-3 e D-4.
 
 **Critérios de aceite.**
-- Nos 15 cenários da 134, a frase "Onde estamos" e a trilha aparecem na primeira dobra a 1440 × 900.
-- A macrofase está em "ação disponível" **se, e só se**, alguma célula dela está em `A_PRATICAR`
-  para alguém. É o teste de coerência, no molde do SC-1230 da 127.
+- Nos 14 cenários publicados da 134 (C02 a C15), a frase "Onde estamos" e a trilha aparecem na primeira dobra a 1440 × 900.
+- Nas cinco macrofases por lista (Avaliação a Convocação), a situação é "ação disponível" **se, e só
+  se**, alguma célula dela está em `A_PRATICAR`. É o teste de coerência, no molde do SC-1230 da 127. As
+  três do Edital nunca dizem "ação disponível" por conta própria: a Conclusão, em especial, não
+  antecipa o encerramento, que é das pendências conferidas pela tela do ato.
 - Nenhuma providência do nível 1 deixa de aparecer. A soma das seções é igual ao `Nivel1.total`.
 - Encerrar e cancelar não aparecem no cartão "O que fazer agora".
 - A 375 px, nenhuma rolagem horizontal; a trilha empilha.
@@ -92,7 +94,7 @@ por padrão).
 
 **Testes.** Template por papel; a regra da fase padrão, como função pura; e o navegador a 390 px.
 
-## C3 — Correções da derivação reveladas pelo estudo
+## C3 — Correções da derivação reveladas pelo estudo (MVP, primeira)
 
 **Problema.** Os achados de derivação e de texto, que nenhuma reorganização resolve.
 
@@ -100,18 +102,20 @@ por padrão).
 - **G-1 / A-09.** A célula da ordem leva a contagem da lista. A providência de lista vazia passa a
   dizer "Declarar que ninguém concorreu — PPP (lista sem inscritos)", e não entra no destaque.
 - **G-3.** A `Celula` do resultado ganha o que foi divulgado (`preliminar`/`definitivo`), e a nota
-  deixa de ser a única fonte.
+  deixa de ser a única fonte. **A situação não muda**: o preliminar continua sem ser *Feito*, pela
+  D8a do estudo de 06/11, que a 127 adotou. Mudar isso seria outra decisão.
 - **A-08.** A razão da espera do definitivo não oferece publicar como preliminar quando o preliminar
   já existe.
-- **G-7 / A-07.** A contagem de providências do Perfil e a do Edital somam o mesmo, ou dizem o seu
-  escopo.
+- **G-7 / A-07.** As duas contagens dizem o seu escopo: a do Perfil, que conta só as providências
+  dos marcos, e a do Edital, que conta todas. As das Etapas continuam fora da contagem do Perfil, como
+  o código decidiu.
 
 **O que se reutiliza.**
 - `conducao_do_marco.indicador_do_marco` (que já sabe a lista vazia);
 - `divulgacao_do_ato`;
 - `publicabilidade.aferir`.
 
-**Dependências.** Nenhuma. **Pode vir antes da C1**, e é a recomendação.
+**Dependências.** Nenhuma decisão pendente. **Vem antes da C1**: sem ela, a C1 destacaria a ordem de uma lista vazia (A-09).
 
 **Critérios de aceite.** Nos C08, C12 e C14, nenhuma providência "Emitir a ordem — PPP" sem a menção
 à lista vazia, e nenhuma espera do definitivo oferecendo o preliminar já publicado.
@@ -156,7 +160,7 @@ produção, como o POC da 133 recomenda.
 **O que muda.** **Leitura em lote**: com N Editais, N vezes a derivação estoura o orçamento. É o desenho
 pendente da 129.
 
-**Dependências.** C1 e D-8.
+**Dependências.** A C1 e a decisão D-8.
 
 **Riscos.** O orçamento de consulta da página do Processo e da Lista.
 

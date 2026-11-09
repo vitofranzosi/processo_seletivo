@@ -43,7 +43,7 @@ A hipótese do pedido tinha seis macrofases. A investigação propõe **oito**, 
 | 2 | **Inscrições** | Quem se inscreveu, e o período acabou? | `inscricoes` do `Andamento` (período e enviadas) | Edital |
 | 3 | **Avaliação** | As Etapas foram avaliadas e consolidadas? | pontos `etapa` do grupo "Etapas · valem para o Perfil" | Perfil (repetido por lista) |
 | 4 | **Classificação** | Em que ordem cada lista ficou? | `relacao`, `semente`, `sorteio` (sorteio) **ou** `ordem` (pontuação) | lista; a semente é do marco |
-| 5 | **Resultado e recursos** | O resultado foi divulgado, e cabe recurso? | `resultado`, mais as providências `recurso` (104) | lista |
+| 5 | **Resultado e recursos** | O resultado foi divulgado, e cabe recurso? | `resultado`. As providências `recurso` (104) aparecem na fase, mas **não mudam a situação dela**, que sai só das células (G-4) | lista |
 | 6 | **Vagas** | Quem a faixa alcança, e que vaga cada um ocupa? | `corte`, Etapa governada pela faixa (documental), `apuracao` | lista |
 | 7 | **Convocação** | Quem foi chamado, entregou e foi conferido? | `convocacao`, providência `conferir` | lista |
 | 8 | **Conclusão** | Tudo tem desfecho, e o Edital pode ser encerrado? | `Edital.status == ENCERRADO`; `matricula_fora()` | Edital |
@@ -96,7 +96,7 @@ Legenda das fontes, com o detalhe no relatório do agente que mapeou o código:
 | Convocação | Entregar documentos | O convocado envia os documentos | Comunicação | `ApresentacaoDeDocumento` | **Candidato** | — (espera, com prazo) | Prazo da convocação | convocação |
 | Convocação | Conferir | Cada documento conforme ou pendente | Entrega; quem confere **abriu** o arquivo | `ConferenciaDeDocumento`; `leituras_por_chamada` | Quem conduz ou confere | Conferir os documentos de N | Alocação à conferência por Perfil | convocação |
 | Convocação | Desfecho | Ocupou, não atendeu, desistiu | Tudo conforme, ou prazo vencido | `DesfechoDaConvocacao` | Quem conduz | Registrar desfecho / não atendimento; chamar a próxima | A fila anda; apuração refeita | lista |
-| Conclusão | Encerrar o Edital | Fim de ciclo do Edital | Nada pendente (advertências da 130 e da A-11) | `Edital.status`; `pendencias_do_edital.situacoes()` | Gestor | Encerrar | Prazos, recursos, Retificações e rascunhos em curso | Edital |
+| Conclusão | Encerrar o Edital | Fim de ciclo do Edital | Nada pendente (advertências da 130 e do A-11 da auditoria de prontidão, #362) | `Edital.status`; `pendencias_do_edital.situacoes()` | Gestor | Encerrar | Prazos, recursos, Retificações e rascunhos em curso | Edital |
 | Conclusão | Matrícula / formalização | Fora do GPS / área própria | Convocações com desfecho | `matricula_fora()`; `views_formalizacao` | Formalização, a unidade | Documentos para a formalização | — | Perfil |
 | Conclusão | Encerrar o Processo | Fim de ciclo do Processo | Todos os Editais encerrados | `pending_editais` | Gestor | Encerrar o Processo | — | Processo |
 
@@ -129,7 +129,8 @@ Legenda das fontes, com o detalhe no relatório do agente que mapeou o código:
 **Derivável hoje, sem tocar no domínio:** as macrofases e as situações agregadas, "onde estamos", a
 fase aberta por padrão, a frente paralela do sorteio, a sequência de cada fase, as esperas com data,
 os impedimentos com quem resolve e o "agora nesta lista". O protótipo faz tudo isso **só** a partir do
-`Andamento` da 127 (`prototipo/centro.py`).
+`Andamento` da 127: a composição em `prototipo/centro.py`, e a fase aberta por padrão em
+`_fase_escolhida`, de `prototipo/vistas_do_prototipo.py`.
 
 **Lacunas.** Cada uma precisa de ajuste em spec, e nenhuma pede tabela nova:
 
@@ -137,9 +138,9 @@ os impedimentos com quem resolve e o "agora nesta lista". O protótipo faz tudo 
 |---|---|---|---|
 | G-1 | A providência não sabe que a lista não tem inscritos | Acrescentar a contagem da lista à célula da ordem (o indicador da condução já a sabe) | Não |
 | G-2 | O Processo não agrega as providências dos Editais | "Frente B" da 129: leitura em lote com orçamento de consulta | Não |
-| G-3 | O preliminar publicado não muda a situação da célula, só a nota | Um campo estruturado (`divulgado: preliminar/definitivo`) na `Celula` | Não |
+| G-3 | O preliminar publicado não muda a situação da célula, só a nota | Um campo estruturado (`divulgado: preliminar/definitivo`) na `Celula`, **sem mudar a situação**: o preliminar não ser *Feito* é decisão (D8a do estudo de 06/11, adotada pela 127) | Não, se a situação ficar como está |
 | G-4 | Recursos são objetos do Edital (104), não células por lista | Aceitável na fase "Resultado e recursos"; a ligação recurso → lista afetada não é derivada | Sim, se quiser por lista |
 | G-5 | O efeito de uma Retificação em curso sobre cada fase | Não derivável hoje: o protótipo só avisa que ela existe | Sim |
 | G-6 | Tela e derivação divergem na semente (A-03) | Bloquear, confirmar em duas fases, ou só alertar | **Sim (D-5)** |
-| G-7 | A contagem de providências do Perfil omite as de Etapa (A-07) | Somar as do Edital, ou dizer o escopo | Não |
+| G-7 | A contagem de providências do Perfil omite as de Etapa, por decisão (A-07) | Dizer o escopo de cada número; somar mudaria a decisão de `resumo_do_perfil` | Não, se só disser o escopo |
 | G-8 | Matrícula e formalização não são pontos | Fora do GPS por decisão (D2a do estudo de 06/11); mantido como nota | Não |

@@ -64,9 +64,9 @@ volume; é de ordem: as respostas sobem.
 | A trilha ser lida como "fase única" | Um cartão aceso pode ser tomado como "a" fase | A frase "N frentes ao mesmo tempo"; vários cartões acesos; "1 de 2 listas" |
 | Destaque errado | O C08 destacou a ordem de uma lista **vazia** como "Sua próxima ação" | Destacar só com a lacuna G-1 resolvida; até lá, sem destaque, ou com "lista sem inscritos" |
 | Agregação que esconde uma célula | "Em andamento" pode cobrir uma lista *Depois* e outra *Feito* | A tabela por lista e o roteiro mostram a célula; regra pura e testada |
-| Divergir da 127 | Duas leituras do mesmo estado | Nenhuma: a composição só lê o `Andamento`. A coerência se prova por teste (macrofase ACAO se, e só se, existe célula `A_PRATICAR`) |
+| Divergir da 127 | Duas leituras do mesmo estado | Nenhuma: a composição só lê o `Andamento`. A coerência se prova por teste: nas cinco macrofases por lista, ACAO se, e só se, existe célula `A_PRATICAR`; a Conclusão não antecipa o encerramento |
 | Texto pedagógico errado | "Entenda" explica uma regra de modo impreciso | Fonte única, revisada por quem conduz certames, e conferida com os guias (D-7) |
-| Página mais longa | 20 a 30% mais altura | As respostas ficam na primeira dobra; o resto é consulta |
+| Página mais longa | 16 a 20% mais altura | As respostas ficam na primeira dobra; o resto é consulta |
 | Vazamento por agregação | A jornada e "onde estamos" para quem não `ve_a_matriz` | Mostram o que o nível 1 já mostra a todos. O detalhe por lista segue restrito (D-6) |
 | Desempenho | Mais leitura por página | Nenhuma: o mesmo `Andamento`. O Processo agregado, sim, pede leitura em lote (G-2) |
 

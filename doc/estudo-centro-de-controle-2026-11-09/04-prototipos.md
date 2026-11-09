@@ -81,11 +81,18 @@ cd backend && uv run python ../doc/estudo-centro-de-controle-2026-11-09/prototip
 | 2 | Pontuação com operações parcialmente concluídas | **C04, real**: Etapas feitas, ordem a emitir. O C08 e o C12 mostram a ordem em 1 de 2 listas | `atual-c04-edital.png` | `proposta-c04.png` |
 | 3 | Resultado ou recurso em andamento | **C08, real**: preliminar publicado, prazo recursal até 14/11 | `atual-c08-edital.png` | `proposta-c08.png`, `proposta-c08-fase-resultado.png`, `proposta-c08-publicador.png` |
 | 4 | Convocação e conferência, com ações e esperas | **C12, real**; também o C11 (entrega com pendência) | `atual-c12-edital.png`, `atual-c12-matriz-aberta.png`, `atual-c12-processo.png` | `proposta-c12.png`, `proposta-c12-dobra.png`, `proposta-c12-fase-vagas.png`, `proposta-c12-processo.png`, `proposta-c11.png` |
-| 5 | Seleção concluída, sem providências | **Fixture**, dita na tela: nenhum cenário termina concluído | — | `proposta-c05-concluida-fixture.png` |
+| 5 | Seleção concluída, sem providências | **Fixture**, dita na tela: nenhum cenário termina concluído | — | `proposta-fixture-concluida.png` |
 
-**Real e ilustrativo não se misturam.** A fixture do cenário 5 é montada inteira no protótipo
+**Real e ilustrativo não se misturam.** A fixture da situação 5 do pedido (que não tem relação com o C05, "Avaliação pendente") é montada inteira no protótipo
 (`_fixture_concluida`), com Edital `FIX05/2026`, e a página abre com a faixa "Ilustração (fixture)".
 Nenhuma página de cenário real recebe dado fictício.
+
+**Capturas de apoio**, fora dos cinco cenários:
+- `proposta-indice.png`: o índice do protótipo;
+- `proposta-c14.png` e `atual-c14-edital.png`: resultado definitivo, perto do encerramento;
+- `atual-c06-processo.png`: o Processo do C06 na tela atual;
+- `atual-c06-edital-avaliacao.png`: o Edital do C06 visto por `treino.avaliacao1` na tela atual, para comparar com `proposta-c06-avaliacao1.png`;
+- `atual-c06-edital-dobra.png` e `atual-c12-edital-dobra.png`: a primeira dobra da tela atual, para comparar com as dobras da proposta.
 
 ## O que cada protótipo demonstra
 
@@ -107,7 +114,7 @@ Nenhuma página de cenário real recebe dado fictício.
 | Processo agregado | `proposta-c12-processo.png`, contra `atual-c12-processo.png` |
 
 ## Verificações feitas no navegador
-- **23 capturas por Playwright** (Chromium sem janela), a 1440 e a 390 px, com cinco identidades:
+- **34 capturas por Playwright** (Chromium sem janela): 11 do roteiro da tela atual (`roteiro-atual.json`) e 23 do roteiro da proposta (`roteiro-proposta.json`), a 1440 e a 390 px, com quatro identidades (presidência, avaliação, Gestor e Publicador). As 23 do roteiro da proposta, que inclui três da tela atual, foram medidas:
   - **nenhuma rolagem horizontal** da página;
   - **nenhuma violação de CSP** no console: o protótipo segue a regra da 091/092, sem `style=` nem
     `<script>`.
