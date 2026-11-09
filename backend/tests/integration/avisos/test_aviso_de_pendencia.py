@@ -22,7 +22,13 @@ from processo_seletivo.avisos.application import pendencias
 from processo_seletivo.avisos.application.despacho import despachar
 from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.avisos.domain.pendencia import DOCUMENTO_DE_MODALIDADE, NAO_E_A_CONVOCACAO
-from processo_seletivo.avisos.models import Aviso, DestinatarioDoAviso
+from processo_seletivo.avisos.models import (
+    Aviso,
+    DestinatarioDoAviso,
+    InterrupcaoDoAviso,
+    ResultadoDaTentativa,
+    TentativaDeEnvio,
+)
 from processo_seletivo.convocacao.application import fluxo
 from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
 from processo_seletivo.convocacao.models import ComunicacaoEmitida, Convocacao
@@ -626,3 +632,145 @@ def test_o_historico_do_edital_nomeia_a_pendencia(cenario, alocado, na_gestao):
     corpo = detalhe.content.decode()
     assert "Pendência documental da convocação" in corpo
     assert "aviso-reenviar" not in corpo and "/reenviar" not in corpo
+
+
+# --- O despacho relê a pendência antes de enviar (FR-4623, SC-1449, D-011) ------------------------
+
+
+def _interrupcao_pelo_despacho():
+    interrupcao = InterrupcaoDoAviso.objects.get(aviso__origem=nomes.PENDENCIA)
+    assert interrupcao.interrompido_por == nomes.SUJEITO_DO_DESPACHO
+    return interrupcao
+
+
+def test_o_despacho_interrompe_o_aviso_cuja_pendencia_foi_resolvida(cenario, alocado):
+    ampla, pessoa = cenario["ampla"], cenario["pessoa_ampla"]
+    _pendente(alocado, ampla, RESIDENCIA, "pend-1")
+    _avisar(alocado, cenario["edital"])
+    # A pessoa reenvia entre o gesto e o despacho: o aviso já não tem o que pedir.
+    apresentar(pessoa, ampla, RESIDENCIA, corpo=b"comprovante legivel")
+
+    resumo = despachar()
+
+    assert (resumo.tentadas, resumo.interrompidos) == (0, 1)
+    assert mail.outbox == []
+    assert not TentativaDeEnvio.objects.exists()
+    assert pendencias.SEM_PENDENCIA in _interrupcao_pelo_despacho().motivo
+    trilha = RegistroAuditoria.objects.get(operation=nomes.OPERACAO_INTERROMPER)
+    assert trilha.actor_subject == nomes.SUJEITO_DO_DESPACHO
+    assert pessoa.nome not in trilha.reason
+    # **Interrompido, não sai mais**: a execução seguinte não o encontra.
+    assert despachar().tentadas == 0
+
+
+def test_o_despacho_interrompe_o_aviso_vencido_antes_do_envio(
+    cenario, alocado, monkeypatch, settings
+):
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    _avisar(alocado, cenario["edital"])
+    # A janela larga só para que o aviso ainda seja do despacho depois do vencimento.
+    settings.AVISOS_JANELA_DE_DESPACHO_HORAS = 24 * 5
+    depois = VENCIMENTO + timedelta(minutes=1)
+    monkeypatch.setattr(timezone, "now", lambda: depois)
+
+    resumo = despachar()
+
+    assert (resumo.tentadas, resumo.interrompidos) == (0, 1)
+    assert mail.outbox == []
+    assert pendencias.VENCIDA in _interrupcao_pelo_despacho().motivo
+
+
+def test_o_despacho_interrompe_o_aviso_cuja_lista_mudou(cenario, alocado):
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    _avisar(alocado, cenario["edital"])
+    # Outro documento passou a pendente depois do gesto: o texto congelado não o nomeia.
+    _pendente(alocado, cenario["ampla"], HISTORICO, "pend-2")
+
+    resumo = despachar()
+
+    assert (resumo.tentadas, resumo.interrompidos) == (0, 1)
+    assert pendencias.LISTA_MUDOU in _interrupcao_pelo_despacho().motivo
+
+
+def test_o_aviso_interrompido_pelo_despacho_nao_conta_no_dia(cenario, alocado):
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    _avisar(alocado, cenario["edital"], chave="primeiro")
+    _pendente(alocado, cenario["ampla"], HISTORICO, "pend-2")
+    despachar()
+
+    # **Nada saiu**, e o gesto do mesmo dia avisa de novo, com a lista de agora (D-011).
+    declarado = _avisar(alocado, cenario["edital"], chave="segundo")
+    resumo = despachar()
+
+    assert declarado["alcancadas"] == 1
+    assert (resumo.tentadas, resumo.interrompidos) == (1, 0)
+    assert len(mail.outbox) == 1
+    assert "- Comprovante de residência" in mail.outbox[0].body
+    assert "Histórico escolar" in mail.outbox[0].body
+
+
+def test_quem_ainda_tem_a_mesma_pendencia_recebe(cenario, alocado):
+    """A releitura não muda nada para quem continua como o gesto o encontrou."""
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    _avisar(alocado, cenario["edital"])
+
+    resumo = despachar()
+
+    assert (resumo.tentadas, resumo.interrompidos) == (1, 0)
+    assert not InterrupcaoDoAviso.objects.exists()
+
+
+# --- A trilha do envio (FR-4621) e o Processo em estado final (FR-4610) ---------------------------
+
+
+def test_a_tentativa_orfa_tambem_vai_a_trilha(cenario, alocado):
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    declarado = _avisar(alocado, cenario["edital"])
+    # Uma execução que morreu entre gravar o início e o resultado.
+    TentativaDeEnvio.objects.create(
+        destinatario=DestinatarioDoAviso.objects.get(), numero=1, iniciada_em=timezone.now()
+    )
+
+    resumo = despachar()
+
+    assert resumo.orfas == 1
+    # A indeterminada nunca se repete sozinha (FR-1267 da `066`).
+    assert (resumo.tentadas, mail.outbox) == (0, [])
+    envio = RegistroAuditoria.objects.get(operation=nomes.OPERACAO_ENVIO_DA_PENDENCIA)
+    assert str(envio.aggregate_id) == declarado["avisos"][0]
+    assert envio.detalhe == {"tentativa": 1, "resultado": nomes.INDETERMINADA}
+
+
+def test_a_trilha_que_falha_nao_desfaz_o_resultado(cenario, alocado, monkeypatch):
+    """A mensagem saiu: a falha da trilha vai ao log, e o resultado aceito fica registrado."""
+    from processo_seletivo.auditoria import application as auditoria
+
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    _avisar(alocado, cenario["edital"])
+
+    def falha(**_):
+        raise RuntimeError("trilha indisponível")
+
+    monkeypatch.setattr(auditoria, "record_event", falha)
+    resumo = despachar()
+
+    assert resumo.resultados == {nomes.ACEITA: 1}
+    assert len(mail.outbox) == 1
+    assert ResultadoDaTentativa.objects.get().resultado == nomes.ACEITA
+    assert not RegistroAuditoria.objects.filter(
+        operation=nomes.OPERACAO_ENVIO_DA_PENDENCIA
+    ).exists()
+
+
+def test_processo_em_estado_final_recusa_o_gesto(cenario, alocado):
+    from processo_seletivo.processos.models import ProcessoSeletivo
+
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    ProcessoSeletivo.objects.filter(pk=cenario["edital"].processo_id).update(
+        status=ProcessoSeletivo.Status.CANCELADO
+    )
+
+    erro = _recusa(lambda: _avisar(alocado, cenario["edital"]))
+
+    assert erro.code == nomes.AVISO_PROCESSO_EM_ESTADO_FINAL
+    assert not _avisos_de_pendencia().exists()

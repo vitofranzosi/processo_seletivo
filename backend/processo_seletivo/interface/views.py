@@ -8588,6 +8588,8 @@ def _documentos_por_linha(linhas, *, ordem=""):
 
     **Uma leitura para o recorte**, em três consultas, e não uma por linha. A ordem `documentos`
     põe primeiro o que pede trabalho: vencimento mais próximo, depois o estado.
+
+    Devolve as raízes e as leituras, para a prévia do aviso de pendência (134) não as ler de novo.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
@@ -8618,6 +8620,7 @@ def _documentos_por_linha(linhas, *, ordem=""):
             return (linha["convocacao"].vencimento or longe, ORDEM_DOCUMENTAL.index(estado))
 
         linhas.sort(key=chave)
+    return raizes, leituras
 
 
 def convocacao(request, edital_id, marco_id):
@@ -8655,7 +8658,9 @@ def convocacao(request, edital_id, marco_id):
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=agora
     )
     # Os documentos de cada linha, numa leitura só para o recorte inteiro (115, FR-3607).
-    _documentos_por_linha(leitura["linhas"], ordem=request.GET.get("ordem") or "")
+    raizes, leituras_documentais = _documentos_por_linha(
+        leitura["linhas"], ordem=request.GET.get("ordem") or ""
+    )
     recusa_da_correcao = request.session.pop("recusa_da_correcao", None)
     # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra
     # e o que cada gesto alcançaria são a mesma fotografia do recorte (`FR-888`).
@@ -8729,6 +8734,12 @@ def convocacao(request, edital_id, marco_id):
                     marco_id=marco_id,
                     lista_id=lista_id,
                     agora=agora,
+                    # A mesma fotografia que a tela acabou de ler, e não uma segunda leitura.
+                    conducao={
+                        "convocacoes": leitura["convocacoes"],
+                        "raizes": raizes,
+                        "leituras": leituras_documentais,
+                    },
                 ),
                 # **Qual ato aconteceu, e não só que algo deu certo** (`UX-036`). Foi o defeito
                 # `E2E16-004` da `016`: três ações voltavam para a mesma tela com um aviso único, e

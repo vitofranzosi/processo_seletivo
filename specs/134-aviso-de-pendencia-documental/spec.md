@@ -8,7 +8,7 @@
 Verificação em [verificacao.md](verificacao.md). As decisões têm duas origens:
 
 - **Do usuário, em 08/11/2026**: a *1ª* à *6ª decisão*, em *Clarifications*. Não se reabrem.
-- **Propostas de desenho desta spec:** D-001 a D-010, ao fim. Elas fecham o que as decisões deixaram
+- **Propostas de desenho desta spec:** D-001 a D-011, ao fim. Elas fecham o que as decisões deixaram
   aberto e estão sujeitas à revisão do PR.
 
 **Input**: a QI-7 da `115` (aviso de pendência por e-mail), a regra do §7 do
@@ -134,6 +134,9 @@ mesmo dia não grava aviso novo para quem já foi avisado.
    comunicada"*).
 7. **Dado** que ninguém do recorte pode receber, **quando** o gesto corre, **então** ele é recusado
    com explicação e nada é gravado.
+8. **Dado** um aviso gravado, **quando**, antes de ele sair, o vencimento passa, a convocação recebe
+   desfecho ou é corrigida, ou a lista de pendentes muda, **então** o despacho não o envia: ele o
+   interrompe, com o motivo, e o gesto do mesmo dia pode avisar de novo (FR-4623, D-011).
 
 ### User Story 3 — O texto diz o que fazer e não revela nada (Priority: P1)
 
@@ -179,6 +182,9 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
 - **Item de *"não se aplica"* pelo recorte**: não é pedido, não é pendente, e não entra no aviso.
 - **Reenvio pela tela da `066`**: o aviso de pendência não se reenvia por ela; o caminho é um novo gesto,
   no dia seguinte (D-008).
+- **A pendência muda entre o gesto e o envio** — retentativa, fila do limite por minuto, chave
+  desligada e religada dentro da janela: o despacho relê antes de cada tentativa e interrompe o que
+  chegaria tarde (FR-4623).
 
 ---
 
@@ -264,6 +270,12 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
 - **FR-4622**: O aviso de pendência MUST aparecer no histórico de avisos do Edital como *"Pendência
   documental"*, e a interrupção da `066` MUST valer para ele. O reenvio da `066` MUST ser recusado
   para ele com `aviso_de_pendencia_sem_reenvio`.
+- **FR-4623**: Antes de cada tentativa de um aviso de pendência, o despacho MUST reler, sob a trava do
+  aviso, a convocação do destinatário e a lista da chamada, e MUST interromper o aviso — pela
+  interrupção da `066`, com o motivo e o despacho como autor — em vez de enviá-lo quando: a convocação
+  foi corrigida, tem desfecho ou teve o vencimento decorrido; nenhum item continua pendente; ou o
+  parágrafo dos documentos composto agora não é o do texto congelado. O aviso assim interrompido MUST
+  NOT contar no limite de um por dia, e a interrupção MUST ir à trilha.
 
 ### Requisitos de experiência
 
@@ -300,6 +312,9 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
   despacho do aviso de pendência.
 - **SC-1448**: Uma migration só, que muda duas *constraints* da tabela de avisos; zero tabelas e zero
   colunas novas; o total de tabelas append-only protegidas não muda.
+- **SC-1449**: Em teste de integração, um aviso gravado cuja pendência foi resolvida, cuja convocação
+  venceu ou cuja lista mudou antes do despacho é interrompido sem tentativa, e o gesto seguinte no
+  mesmo dia pode avisar de novo.
 
 ---
 
@@ -403,7 +418,18 @@ prova. A 2ª decisão pede também a trilha de cada envio, e o despacho a grava 
 porta dela para a chamada: a gestão da comissão. Quem só confere vê, na tela de condução, o que o
 gesto gravou.
 
+### D-011 — O despacho relê a pendência antes de enviar
+
+*Da revisão do PR.* As exclusões do gesto valem no clique, e o envio pode vir minutos ou horas
+depois: retentativa a 5 e 15 minutos, fila do limite por minuto, janela de 24 horas, chave religada.
+Um aviso que saísse depois do vencimento, do desfecho ou do reenvio diria um prazo ou um pedido que
+já não existe — o que a User Story 2 proíbe. O despacho relê, para a pessoa, a regra do gesto, e mais
+duas que só o tempo produz: a convocação corrigida (o vencimento do texto pode não ser mais o dela) e
+a lista mudada (o texto congelou outra). **Interrompe, e não registra resultado**: nenhuma tentativa
+começou, e a interrupção da `066` é o registro que já existe para "este aviso não sai". Como nada
+saiu, o aviso interrompido pelo despacho não conta no limite do dia.
+
 ## Pendências do usuário
 
-- **Revisão do PR** (D-001 a D-010).
+- **Revisão do PR** (D-001 a D-011).
 - **A validação de LGPD e de SPF/DKIM** antes de ligar a chave em produção (5ª decisão).

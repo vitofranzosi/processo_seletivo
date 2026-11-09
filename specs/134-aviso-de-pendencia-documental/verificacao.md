@@ -1,6 +1,6 @@
 # Verificação: O aviso de pendência documental por e-mail (134)
 
-Preenchida ao fim da implementação, em 08/11/2026.
+Preenchida ao fim da implementação, em 08/11/2026, e de novo depois da revisão do PR, em 09/11/2026.
 
 ## Comandos
 
@@ -26,6 +26,20 @@ com `DB_NAME=spec134`, `TEST_DB_ENGINE=postgresql` e `DB_USER` do superusuário 
   passaram a incluí-lo, com o motivo escrito ao lado.
 - `test_trilha_legivel.py`: as operações `AVISO_PENDENCIAS` e `AVISO_PENDENCIA_ENVIO` ganharam
   rótulo na trilha.
+
+## Depois da revisão do PR (09/11/2026)
+
+| Passo | Resultado |
+|---|---|
+| `make lint` | verde |
+| `make check` | `manage.py check` sem problemas; `makemigrations --check` sem migration pendente |
+| `make test-pg` (4 workers, os mesmos grupos) | **17397 passaram, 20 pulados, 0 falhas**, em 1437s |
+| Casos novos | oito em `test_aviso_de_pendencia.py`: as três interrupções pelo despacho (pendência resolvida, vencida, lista mudada), o interrompido que não conta no dia, quem continua pendente e recebe, a órfã na trilha, a trilha que falha sem desfazer o resultado e o Processo em estado final |
+
+A revisão trouxe a FR-4623, o SC-1449 e a D-011 (o despacho relê a pendência antes de enviar), a trilha
+do envio num ponto de salvamento, a unidade lida uma vez por gesto, os avisos em lote, a raiz por
+`documentos.raizes_das` e a prévia sobre a leitura que a tela de condução já fez. O tempo da suíte
+subiu porque outras suítes dividiam o cluster na mesma hora; não é medida de custo da mudança.
 
 **O texto, como sai** (exemplo fictício, composto pela função do domínio):
 
@@ -55,4 +69,5 @@ Esta mensagem é automática; não responda.
   prévia, o POST e a mensagem de resultado), e não num navegador.
 - **O envio real.** O despacho foi exercido com o backend de correio em memória da suíte; nenhum
   e-mail saiu. A chave continua desligada em produção (5ª decisão).
-- **O Processo em estado final** reusa a recusa da `066`, sem caso novo nesta spec.
+- **A convocação corrigida entre o gesto e o envio** (`CORRIGIDA`, da D-011) não tem caso próprio: a
+  correção é o fluxo da `120`, e a releitura a reconhece pela sucessora, como `vigentes` faz.

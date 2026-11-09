@@ -1,6 +1,6 @@
 # Implementation Plan: O aviso de pendência documental por e-mail (134)
 
-**Branch**: `claude/nostalgic-taussig-0fb16b` | **Date**: 2026-11-08 | **Spec**: [spec.md](spec.md)
+**Branch**: `claude/134-aviso-de-pendencia` | **Date**: 2026-11-08 | **Spec**: [spec.md](spec.md)
 
 ## Summary
 
@@ -27,7 +27,7 @@ cinco situações, e a guarda que as conta, a pares (módulo, situação).
   convocação, lista, conferência nem desfecho.
 - **Negar por padrão**: o gesto passa pelo predicado da conferência (FR-3595 da `115`), sob a trava
   do Processo e com o escopo filtrado; quem não alcança recebe a recusa de inexistente.
-- **Rastreabilidade**: FR-4601 a FR-4622 e SC-1441 a SC-1448 na [matriz](rastreabilidade.md).
+- **Rastreabilidade**: FR-4601 a FR-4623 e SC-1441 a SC-1449 na [matriz](rastreabilidade.md).
 
 ## Project Structure
 
@@ -51,7 +51,12 @@ backend/processo_seletivo/interface/
 - **Um aviso por pessoa** (D-002): o aviso guarda o texto final, e o texto é da pessoa.
 - **A seleção lê o que a condução já lê**: `convocacoes_do_recorte`, `leituras_por_chamada`, as
   inscrições, os endereços e os avisos de hoje — consultas em número fixo, nenhuma por pessoa.
-- **A raiz sobe pela cadeia que o recorte já trouxe**, sem consulta (D-003).
+- **A raiz é a da condução**, por `documentos.raizes_das` (D-003): uma definição só, que a tela e o
+  gesto compartilham. A prévia recebe da tela as raízes e as leituras que ela já fez.
+- **O despacho relê a pendência antes de cada tentativa** (FR-4623, D-011), por
+  `pendencias.motivo_para_nao_enviar`, e interrompe o aviso que chegaria tarde.
+- **A unidade é lida uma vez por gesto, e os avisos se gravam em lote**: o gesto segura a trava do
+  Processo.
 - **O limite do dia** é lido de `DestinatarioDoAviso` (origem `PENDENCIA`, `solicitado_em` desde o
   início do dia local, convocações do recorte), mapeado para a raiz.
 - **A trilha do envio** é escrita pelo despacho só para a origem nova (D-009), com o sujeito

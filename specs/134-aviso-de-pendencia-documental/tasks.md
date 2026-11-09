@@ -1,6 +1,7 @@
 # Tasks: O aviso de pendência documental por e-mail (134)
 
-**Input**: [spec.md](spec.md), [plan.md](plan.md). Todas concluídas em 08/11/2026.
+**Input**: [spec.md](spec.md), [plan.md](plan.md). T001–T015 concluídas em 08/11/2026; T016–T019, da
+revisão do PR, em 09/11/2026.
 
 ## Fase 1 — A norma
 
@@ -38,3 +39,13 @@
 
 - [x] T014 README (tabela de incrementos) e `test_vocabulario_do_aviso` com o texto novo
 - [x] T015 `make lint check test-pg`, registro em [verificacao.md](verificacao.md)
+
+## Fase 6 — Revisão do PR (09/11/2026)
+
+- [x] T016 O despacho relê a pendência antes de cada tentativa e interrompe o aviso que chegaria tarde;
+  o interrompido pelo despacho não conta no dia (`pendencias.motivo_para_nao_enviar`,
+  `despacho._iniciar`) — FR-4623, SC-1449, D-011
+- [x] T017 A trilha do envio num ponto de salvamento: a falha dela não desfaz o resultado — FR-4621
+- [x] T018 A unidade lida uma vez por gesto, os avisos em lote, a raiz por `documentos.raizes_das`, e a
+  prévia sobre a leitura que a condução já fez — FR-4605, FR-4618
+- [x] T019 Testes: a órfã auditada, a trilha que falha e o Processo em estado final — FR-4610, FR-4621

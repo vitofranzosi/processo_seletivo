@@ -69,6 +69,16 @@ def linhas_dos_documentos(pendentes):
     return linhas
 
 
+def bloco_dos_documentos(pendentes):
+    """O parágrafo dos documentos, como ele fica no corpo: uma linha por documento, com travessão.
+
+    **Função própria porque o despacho a relê** (FR-4623, D-011): antes de cada tentativa, ele
+    compõe de novo o bloco com o que está pendente agora e o procura, parágrafo inteiro, no texto
+    congelado. Se não encontrar, a lista mudou desde o gesto, e o aviso não sai.
+    """
+    return "\n".join(f"- {linha}" for linha in linhas_dos_documentos(pendentes))
+
+
 def frase_do_prazo(prazo):
     """*"O prazo continua sendo até quinta-feira, 12/11/2026, às 17h00."* (FR-4615, D-007).
 
@@ -97,7 +107,7 @@ def compor(*, instituicao, edital, pendentes, prazo, link, atendimento, assinatu
     corpo = "\n\n".join(
         [
             abertura,
-            "\n".join(f"- {linha}" for linha in linhas),
+            bloco_dos_documentos(pendentes),
             f"Veja o que fazer na página da sua convocação: {link}",
             frase_do_prazo(prazo),
             RODAPE.format(atendimento=atendimento, assinatura=assinatura),
@@ -114,6 +124,7 @@ __all__ = [
     "NAO_E_A_CONVOCACAO",
     "Pendente",
     "RODAPE",
+    "bloco_dos_documentos",
     "compor",
     "frase_do_prazo",
     "linhas_dos_documentos",
