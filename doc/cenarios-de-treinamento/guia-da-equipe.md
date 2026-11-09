@@ -1,0 +1,379 @@
+# Cenários de treinamento — guia da equipe de seleção
+
+Este guia é para quem vai **usar** o GPS de homologação para treinar e avaliar as telas. Não é
+preciso saber nada de programação.
+
+## O que são os cenários
+
+São **Processos Seletivos fictícios**, já preparados pelo próprio GPS e parados em pontos
+diferentes do certame: um com inscrições abertas, outro pronto para sortear, outro com convocados
+entregando documentos, e assim por diante. Você não precisa percorrer o certame inteiro para
+treinar uma etapa: abre o cenário e faz o exercício.
+
+Tudo nos cenários é inventado: pessoas, CPFs, e-mails, notas e documentos. Os nomes levam a palavra
+**Treinamento**, e os documentos dizem *"TREINAMENTO — DADO FICTÍCIO, SEM VALOR LEGAL"*. Nada do
+que você fizer neles chega a um candidato de verdade.
+
+## Como reconhecer um cenário
+
+Na lista de Processos Seletivos, aba **Em andamento**, os cenários aparecem assim:
+
+> **SIM-TREINAMENTO-007** — Sorteio pronto para execução (FICTÍCIO)
+
+O número depois de `SIM-TREINAMENTO-` é o número do cenário (C07). O Edital de cada um se chama
+`SIM07/2026`. Use a busca da lista com **SIM-TREINAMENTO** para ver só os cenários.
+
+Se um cenário já foi restaurado, a versão nova termina em `-R2`, `-R3`… e a anterior fica na aba
+**Cancelados**, com tudo o que foi feito nela.
+
+## Como entrar
+
+1. Abra o GPS e clique em **Área de gestão**.
+2. Escolha **Acessar ambiente de demonstração**.
+3. Escolha com quem entrar:
+   - para os exercícios da **comissão** (classificar, sortear, convocar, conferir documentos),
+     escolha no grupo **Comissões** a identidade `treino.presidencia` (presidência) ou
+     `treino.avaliacao1` (avaliação);
+   - para os demais, escolha em **Responsabilidades da unidade** o papel pedido no exercício
+     (Gestor, Elaborador, Homologador, Publicador, Julgador de recursos). Se preferir que a
+     auditoria registre o seu nome, use o campo **Nome na auditoria** e marque o papel.
+
+**Para chegar ao lugar do exercício**, a presidência começa em **Minhas Etapas**, que lista as
+comissões de que ela faz parte; os demais papéis, em **Processos Seletivos**. Abra o Processo e, nele,
+o Edital (`SIM07/2026`, por exemplo). No alto da página do Edital, o quadro **O que fazer agora**
+mostra as providências em aberto e marca com **SUA** as que cabem a você. É o melhor ponto de
+partida de quase todos os exercícios.
+
+Cada exercício diz **quem** faz cada passo. Quando um passo é de outro papel, saia e entre de novo
+com o papel indicado: o GPS separa quem elabora, quem homologa e quem publica, e é parte do
+treinamento perceber essa separação.
+
+**Exercícios no portal do candidato** (C02, C08, C11): o candidato entra com um código enviado ao
+e-mail. Os candidatos dos cenários têm e-mails que não existem. Para se inscrever, use o seu próprio
+e-mail (C02). Para agir como um candidato já inscrito (C08, C11), peça ao administrador o código
+que chega ao correio do ambiente.
+
+## O que observar em todo exercício
+
+Anote, enquanto faz:
+
+- Foi fácil **encontrar** onde fazer?
+- As **palavras** da tela ficaram claras?
+- O sistema **explicou** o que ia acontecer antes de você confirmar?
+- As **mensagens de erro ou de impedimento** disseram o que fazer?
+- O **resultado** foi fácil de entender?
+- Ficou claro **qual é o próximo passo** e de quem ele é?
+
+---
+
+## C01 — Elaboração de edital
+
+**Objetivo:** completar um Edital em elaboração e levá-lo à publicação.
+
+**Você começa com:** o Edital `SIM01` em elaboração, com Perfil, vagas, cotas, Cronograma e Etapas
+já preenchidos. Faltam os **Documentos Exigidos**.
+
+**Quem faz:** Elaborador → Homologador → Publicador.
+
+**Seu desafio:**
+
+1. Como **Elaborador**, abra o Edital `SIM01` e vá à etapa de Documentos Exigidos.
+2. Acrescente pelo menos um documento (por exemplo, "Documento de identificação com foto").
+3. Revise o Edital inteiro e envie para homologação.
+4. Como **Homologador**, confira e homologue.
+5. Como **Publicador**, publique.
+
+**Resultado esperado:** Edital publicado, com o documento oficial em PDF.
+
+**Validade:** 7 dias depois da carga (as inscrições começam nesse dia).
+
+## C02 — Inscrições abertas
+
+**Objetivo:** viver a jornada de quem se inscreve e acompanhar as inscrições na gestão.
+
+**Você começa com:** o Edital `SIM02` publicado, inscrições abertas e 3 inscrições já enviadas.
+
+**Quem faz:** você como candidato (portal) e como Gestor.
+
+**Seu desafio:**
+
+1. Na página pública do Edital, leia o Perfil e as vagas.
+2. Inscreva-se com o **seu** e-mail; anexe um PDF qualquer como documento de identificação.
+3. Envie a inscrição e guarde o protocolo.
+4. Como **Gestor**, encontre a sua inscrição entre as do Edital.
+
+**Resultado esperado:** inscrição enviada, com protocolo e comprovante.
+
+**Validade:** 30 dias.
+
+## C03 — Inscrições encerradas
+
+**Objetivo:** organizar o certame depois do fim das inscrições.
+
+**Você começa com:** o Edital `SIM03` com 8 inscrições (2 na cota) e as inscrições encerradas por
+Retificação. Ainda não há comissão.
+
+**Quem faz:** Gestor.
+
+**Seu desafio:**
+
+1. Como **Gestor**, consulte os inscritos e confira quem concorre na cota.
+2. Constitua a comissão do Processo: uma presidência e pelo menos um membro.
+3. Aloque os membros nas Etapas.
+
+**Resultado esperado:** comissão pronta para distribuir as avaliações.
+
+## C04 — Classificação por notas
+
+**Objetivo:** emitir a ordem classificatória e conferir empates, desempate e listas.
+
+**Você começa com:** o Edital `SIM04`, 10 inscritos (2 na cota), prova e títulos já avaliados. As
+notas foram escolhidas para criar situações:
+
+| Candidato | Prova (peso 2) | Títulos (peso 1) | O que observar |
+|---|---|---|---|
+| 01 e 02 | 9,0 e 8,5 | 8,0 e 9,0 | mesmo total (26); o desempate pela prova põe 01 na frente |
+| 03 e 04 | 8,0 | 7,0 | tudo igual: ficam empatados na mesma posição |
+| 08 | 5,0 | — | eliminado na prova (mínima 6,0) |
+| 09 e 10 | 7,0 e 6,0 | 8,0 e 6,0 | concorrem na cota |
+
+São 4 vagas: 3 na ampla concorrência e 1 na cota.
+
+**Quem faz:** presidência da comissão (`treino.presidencia`) → Publicador.
+
+**Seu desafio:**
+
+1. Como `treino.presidencia`, abra a classificação do marco "Classificação final".
+2. Confira a prévia: posições, empate, desempate, quem ficou de fora e por quê.
+3. Emita a ordem da ampla concorrência e a da cota.
+4. Como **Publicador**, divulgue o resultado preliminar.
+
+**Resultado esperado:** ordem emitida por lista e resultado preliminar público.
+
+## C05 — Avaliação pendente
+
+**Objetivo:** registrar avaliações e fechar uma Etapa.
+
+**Você começa com:** o Edital `SIM05`, 8 inscritos, a prova distribuída para `treino.avaliacao1`:
+3 avaliações concluídas e 5 pendentes.
+
+**Quem faz:** avaliação (`treino.avaliacao1`) → presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Como `treino.avaliacao1`, abra as suas avaliações pendentes.
+2. Registre as notas das 5 pendentes; dê a alguém uma nota abaixo de 6,0.
+3. Como `treino.presidencia`, consolide a prova.
+
+**Resultado esperado:** prova consolidada; quem ficou abaixo de 6,0 aparece eliminado.
+
+## C06 — Sorteio antes do congelamento
+
+**Objetivo:** entender a preparação do sorteio e congelar a relação de participantes.
+
+**Você começa com:** o Edital `SIM06`, de curso técnico, com 10 inscrições para 4 vagas e as
+inscrições encerradas.
+
+**Quem faz:** presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Como `treino.presidencia`, abra o Edital `SIM06/2026`; em **O que fazer agora**, siga a
+   providência do sorteio até a tela **Sorteio — Sorteio público**.
+2. Leia o método declarado no Edital e a relação de participantes.
+3. Congele (publique) a relação.
+
+**Resultado esperado:** relação congelada, com a lista pública dos participantes.
+
+## C07 — Executando um sorteio
+
+**Objetivo:** realizar e conferir um sorteio.
+
+**Você começa com:** o Edital `SIM07`, inscrições encerradas e a relação de 10 participantes **já
+congelada**. Falta observar a ocorrência e sortear.
+
+**Quem faz:** presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Como `treino.presidencia`, abra o Edital `SIM07/2026`. Em **O que fazer agora** aparece
+   **SUA — Observar a extração**; siga até a tela **Sorteio — Sorteio público**.
+2. Confira o método (a fonte é a **Fonte de demonstração**) e a relação de 10 participantes
+   congelada.
+3. Clique em **Observar a ocorrência … na fonte** — no Cefor, a primeira rodada do C07 usa o
+   concurso 807001106; cada rodada e cada unidade têm o seu.
+4. Clique em **Realizar o sorteio**.
+5. Leia o quadro **Sorteio realizado**, com a semente e o manifesto, e abra **Verificar no canal
+   público**.
+
+**Resultado esperado:** sorteio realizado, com a ordem dos 10 participantes, o manifesto e a
+página de verificação.
+
+> **Uma providência a mais.** O quadro "O que fazer agora" também lista *Distribuir 10 inscrições
+> … — Análise de títulos*: é a Etapa que o marco de sorteio deste modelo enumera. O sorteio não
+> depende dela, e o exercício pode ignorá-la. Anote se a presença dela confundiu você.
+
+> **Por que não é preciso esperar a Loteria:** em treinamento, o sorteio usa a **Fonte de
+> demonstração**, que responde na hora. O nome dela aparece no Edital e no comprovante do sorteio.
+> Num certame real, a fonte é a Loteria Federal, e o sorteio só acontece depois da extração.
+
+## C08 — Resultado preliminar e recursos
+
+**Objetivo:** recorrer de um resultado e julgar o recurso.
+
+**Você começa com:** o Edital `SIM08`, resultado preliminar divulgado e o prazo de recurso de 5
+dias aberto. O candidato 08 foi eliminado na prova.
+
+**Quem faz:** candidato (portal) → Julgador de recursos → presidência.
+
+**Seu desafio:**
+
+1. Como candidato (código do correio do ambiente), recorra do resultado com uma fundamentação.
+2. Como **Julgador de recursos**, decida o recurso.
+3. Como `treino.presidencia`, cumpra a decisão, se for deferido.
+
+**Resultado esperado:** recurso julgado; se deferido, nova ordem.
+
+**Validade:** 5 dias (a janela de recurso).
+
+## C09 — Resultado definitivo
+
+**Objetivo:** examinar um resultado definitivo e preparar a convocação.
+
+**Você começa com:** o Edital `SIM09`, 6 inscritos e resultado **definitivo** divulgado. O marco
+deste Edital não admite recurso, e por isso o definitivo veio direto.
+
+**Quem faz:** presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Leia o resultado definitivo como o público lê.
+2. Como `treino.presidencia`, conclua a Etapa "Análise documental" (habilitar ou não cada um).
+3. Emita a faixa de corte e apure a ocupação das vagas.
+
+**Resultado esperado:** apuração emitida, pronta para convocar.
+
+## C10 — Convocação
+
+**Objetivo:** convocar candidatos para as vagas.
+
+**Você começa com:** o Edital `SIM10`, 6 candidatos habilitados, faixa de corte e apuração
+emitidas, ninguém convocado.
+
+**Quem faz:** presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Abra a convocação do marco "Classificação final".
+2. Convoque a primeira pessoa da fila, com fundamento e prazo.
+3. Comunique a convocação.
+4. Confira a lista de documentos pedida a ela. A autodeclaração étnico-racial é só da cota: para
+   quem concorre na ampla, ela não aparece na lista.
+
+**Resultado esperado:** convocação praticada e comunicada.
+
+## C11 — Entrega documental
+
+**Objetivo:** viver a entrega dos documentos da convocação.
+
+**Você começa com:** o Edital `SIM11`, 3 convocados:
+
+| Convocado | Situação |
+|---|---|
+| 01 | não entregou nada |
+| 02 | entregou o diploma, que voltou como **pendente** ("arquivo ilegível") |
+| 03 | entregou tudo; aguarda conferência |
+
+**Quem faz:** candidato (portal) → presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Como `treino.presidencia`, abra a convocação do Edital `SIM11/2026` e, em cada convocado,
+   **Documentos**. O 02 mostra o diploma **Pendente** e a residência **A apresentar**.
+2. Como candidato 02 (código do correio), leia a pendência e envie o diploma de novo.
+3. Como `treino.presidencia`, confira os documentos do 03.
+
+**Resultado esperado:** itens entregues e conferidos.
+
+**Validade:** 30 dias (o prazo da convocação).
+
+## C12 — Conferência documental
+
+**Objetivo:** conferir documentos, um a um, e decidir cada convocação.
+
+**Você começa com:** o Edital `SIM12`, 3 convocados com diploma e comprovante de residência
+entregues e **nada conferido**. A autodeclaração não aparece: ninguém deste cenário é da cota.
+
+**Quem faz:** presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Abra os documentos do primeiro convocado e **abra cada arquivo** — o GPS só aceita "conforme"
+   de quem abriu o documento.
+2. Marque um item como **conforme** e outro como **pendente**, com o motivo.
+3. Faça o mesmo nos outros convocados, e registre o desfecho de quem tiver tudo conforme.
+
+**Resultado esperado:** conferências registradas e desfecho das convocações.
+
+**Validade:** 30 dias.
+
+## C13 — Retificação
+
+**Objetivo:** retificar um Edital publicado.
+
+**Você começa com:** o Edital `SIM13` publicado, inscrições abertas e 2 inscrições enviadas.
+
+**Quem faz:** Elaborador → Homologador → Publicador.
+
+**Seu desafio:**
+
+1. Como **Elaborador**, crie uma Retificação: por exemplo, prorrogue as inscrições ou acrescente
+   uma vaga.
+2. Envie para homologação; como **Homologador**, homologue; como **Publicador**, publique.
+3. Veja o que mudou na página pública e o que os inscritos passam a ver.
+
+**Resultado esperado:** Retificação publicada e nova versão do Edital.
+
+**Validade:** 30 dias.
+
+## C14 — Encerramento
+
+**Objetivo:** ler as pendências finais e encerrar.
+
+**Você começa com:** o Edital `SIM14` com resultado definitivo divulgado e a convocação não
+iniciada.
+
+**Quem faz:** Gestor.
+
+**Seu desafio:**
+
+1. Como **Gestor**, abra o encerramento do Edital.
+2. Leia as advertências: o que o GPS diz que ficou por fazer.
+3. Decida: encerre o Edital, e depois o Processo.
+
+**Resultado esperado:** Edital e Processo encerrados, com o histórico na trilha.
+
+## C15 — Vagas não preenchidas
+
+**Objetivo:** ver o que acontece quando há menos habilitados que vagas.
+
+**Você começa com:** o Edital `SIM15`, 3 inscritos para 4 vagas; 1 deles inabilitado na análise
+documental; ninguém na cota. Corte e apuração já emitidos.
+
+**Quem faz:** presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Abra a ocupação das vagas e leia o que ela diz sobre as vagas que sobram e sobre a cota vazia.
+2. Convoque as duas pessoas habilitadas.
+3. Tente convocar a terceira e leia a mensagem.
+
+**Resultado esperado:** duas convocações; vagas restantes apontadas como não preenchidas.
+
+---
+
+## Quando o cenário já foi usado
+
+Os cenários **guardam** o que você fez. Se outra pessoa for repetir o exercício, peça ao
+administrador para **restaurar** aquele cenário: ele ganha uma versão nova (`-R2`) no estado
+inicial, e a sua fica na aba Cancelados, para consulta.

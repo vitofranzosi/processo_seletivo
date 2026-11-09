@@ -200,6 +200,17 @@ por isso a página é um servidor, e não um `page.route` —; e o ORM chamado c
 deixava uma sessão aberta no banco de teste, que travava o `DROP DATABASE` do fim — a fixture do
 navegador fecha as conexões ao sair.
 
+**Os cenários de treinamento (134) não rodam sozinhos, e restaurar não apaga.** Os quatro comandos
+(`carregar`, `listar`, `verificar` e `restaurar_cenario_de_treinamento`) exigem
+`CENARIOS_DE_TREINAMENTO=true` no ambiente **do comando**, e os que gravam exigem `--banco` igual ao
+banco conectado. Restaurar cria a rodada seguinte (`SIM-TREINAMENTO-007-R2`) e cancela a anterior:
+nada se exclui nesta base, e um "restaurar" que apagasse esbarraria nos gatilhos. Duas armadilhas já
+pagas: **o primeiro uso de uma autoridade congela o cadastro dela** (`usada_em`, FR-1121 da `060`), e
+por isso o gerador só usa sozinho autoridade já usada — o instantâneo linha a linha da suíte acusou a
+alteração; e a página de acesso da demonstração sugere para cada papel **quem mais o exerceu na
+trilha**, de modo que os atores `treino.*` precisam ficar fora das sugestões, como `cand:`. O roteiro
+está em `doc/cenarios-de-treinamento/`.
+
 **O piloto do assistente (071) pede três coisas de fora do repositório, e sem elas não chama o
 modelo.** O grupo opcional de dependências (`uv sync --extra dev --extra assistente`), que traz a
 `tokenizers`; o `tokenizer.json` do modelo, baixado para fora do repositório e apontado em
