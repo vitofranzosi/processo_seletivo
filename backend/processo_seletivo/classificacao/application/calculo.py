@@ -55,26 +55,12 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # grava —, nunca na progressão acima nem no que decide quem tem posição (`preparar`, FR-3548).
     lidas = etapas_que_a_ordem_le(marco)
 
-    # A progressão é aplicada no próprio queryset: nenhuma lista integral é lida uma segunda vez
-    # só para ser devolvida em ``id__in``. O conjunto inclui quem foi eliminado na Etapa do marco
-    # e exclui quem já havia sido eliminado antes dela.
-    consulta = Inscricao.objects.filter(
-        edital=edital,
-        profile_id=perfil["id"],
-        status=Inscricao.Status.SUBMETIDA,
-    )
+    consulta = _universo(edital, perfil, etapas, etapa_do_marco)
     # **O filtro do recorte reservado, e ele é o único acréscimo ao universo** (`FR-492`). Fica na
     # própria consulta, junto do resto: filtrar em memória depois de ler leria o Perfil inteiro por
     # recorte, e o projeto tem orçamento de consulta verificado por teste.
     if recorte is not None:
         consulta = consulta.filter(modality_id=recorte)
-    consulta = restringir_a_participantes(
-        consulta,
-        edital=edital,
-        etapa_id=etapa_do_marco["id"],
-        vigentes={_uuid_da_etapa(chave): valor for chave, valor in etapas.items()},
-        prefixo="",
-    )
     inscricoes = list(
         consulta.order_by("id").values("id", "protocolo", "nome", "identity_subject", "modality_id")
     )
@@ -178,6 +164,71 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     }
 
 
+def _universo(edital, perfil, etapas, etapa_do_marco):
+    """As inscrições que concorrem no marco, antes do filtro do recorte.
+
+    A progressão é aplicada no próprio queryset: nenhuma lista integral é lida uma segunda vez só
+    para ser devolvida em ``id__in``. O conjunto inclui quem foi eliminado na Etapa do marco e
+    exclui quem já havia sido eliminado antes dela. O filtro do recorte entra depois, em quem
+    chama.
+    """
+    consulta = Inscricao.objects.filter(
+        edital=edital,
+        profile_id=perfil["id"],
+        status=Inscricao.Status.SUBMETIDA,
+    )
+    return restringir_a_participantes(
+        consulta,
+        edital=edital,
+        etapa_id=etapa_do_marco["id"],
+        vigentes={_uuid_da_etapa(chave): valor for chave, valor in etapas.items()},
+        prefixo="",
+    )
+
+
+def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
+    """As listas reservadas do marco em que ninguém concorre — `{lista_id}`, sem a ampla (135).
+
+    **É a pergunta da tela da ordenação, sem calcular a ordem** (FR-4670, R-001). A tela diz
+    "Ninguém concorreu por este recorte" quando o recorte é reservado e a proposta de
+    `calcular_ordem` não tem ninguém, com posição ou sem. `universo_classificavel.preparar` põe toda
+    inscrição do universo numa das duas, e por isso a proposta é vazia exatamente quando o universo
+    filtrado pelo recorte é vazio. Aqui o universo é o mesmo (`_universo`), perguntado **uma vez
+    para o marco**: as Modalidades distintas de quem concorre. Calcular a ordem de cada lista leria
+    Resultados e fatos de cada inscrição só para contá-las (FR-4686).
+
+    A ampla fica fora, como na tela: a ampla vazia é um Perfil sem inscrição nenhuma, outro assunto.
+    O marco que `calcular_ordem` recusaria (sem Etapa executável) não tem lista vazia: a recusa é da
+    tela do ato, e a lista vazia não pode escondê-la.
+    """
+    from processo_seletivo.editais.domain.recortes import recortes_do_perfil
+
+    perfil = _por_identidade(conteudo.get("profiles"), perfil_id)
+    marco = _por_identidade(perfil.get("classificationMilestones") if perfil else None, marco_id)
+    if perfil is None or marco is None:
+        return set()
+    etapas = {str(item["id"]): item for item in conteudo.get("stages") or []}
+    try:
+        etapa_do_marco = _ultima_etapa([str(item) for item in marco.get("stages") or []], etapas)
+    except DomainError:
+        return set()
+    reservadas = {
+        normalizar_recorte(conteudo, perfil_id=perfil["id"], lista_id=lista_id)
+        for lista_id, _ in recortes_do_perfil(conteudo, perfil_id=perfil["id"])
+    } - {None}
+    if not reservadas:
+        return set()
+    concorrem = {
+        str(modalidade)
+        for modalidade in _universo(edital, perfil, etapas, etapa_do_marco)
+        .order_by()
+        .values_list("modality_id", flat=True)
+        .distinct()
+        if modalidade
+    }
+    return reservadas - concorrem
+
+
 def _por_identidade(itens, identidade):
     alvo = str(identidade)
     return next((item for item in itens or [] if str(item.get("id")) == alvo), None)
@@ -244,4 +295,4 @@ def _resumo_do_universo(edital, perfil, marco, versao, inscricoes, resultados):
     }
 
 
-__all__ = ["calcular_ordem"]
+__all__ = ["calcular_ordem", "listas_sem_concorrente"]

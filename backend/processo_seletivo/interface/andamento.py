@@ -97,6 +97,27 @@ ETAPA = "etapa"
 #: O que a Etapa "sem efeito" diz no nível 1 (D-010). Não manda fazer nada.
 SEM_EFEITO_NO_GPS = "está declarada no Edital, e nenhum ato do GPS depende do resultado dela"
 
+#: O que o público lê de uma lista (135, FR-4677).
+NADA, PRELIMINAR, DEFINITIVO = "nada", "preliminar", "definitivo"
+_DIVULGADO_POR_NATUREZA = {"PRELIMINAR": PRELIMINAR, "DEFINITIVA": DEFINITIVO}
+
+#: A lista sem inscritos, antes da ordem (135, FR-4671, FR-4672). A frase vai no próprio ato porque
+#: é o ato que o nível 1 e o "Próximo nesta lista" desenham; a razão só aparece na espera.
+NOTA_DA_LISTA_VAZIA = "lista sem inscritos"
+ATO_DA_ORDEM_VAZIA = "Emitir a ordem da lista sem inscritos, que declara que ninguém concorreu"
+ATO_DAS_ORDENS_VAZIAS = (
+    "Emitir as ordens das listas sem inscritos, que declaram que ninguém concorreu"
+)
+ATO_DA_SUCESSORA_VAZIA = (
+    "Emitir a ordem sucessora da lista sem inscritos, que declara que ninguém concorreu"
+)
+
+
+def divulgado_da_celula(celula):
+    """`NADA`, `PRELIMINAR` ou `DEFINITIVO`, da natureza que a célula da publicação da condução
+    carrega (`conducao_do_marco._celula_da_publicacao`) — e nunca da nota (135, FR-4679)."""
+    return _DIVULGADO_POR_NATUREZA.get((celula or {}).get("natureza") or "", NADA)
+
 
 @dataclass(frozen=True)
 class Celula:
@@ -117,6 +138,12 @@ class Celula:
     #: A espera é recomendação, e não impedimento: o domínio aceita o ato, e a tela diz por que
     #: esperar (133, FR-4542). Só apresentação — nenhum comando a lê.
     recomendacao: bool = False
+    #: Na ordem por pontuação: nenhuma inscrição concorre por esta lista, pelo critério da tela da
+    #: ordenação (135, FR-4670). Nunca muda a situação (FR-4676) — muda o que a providência diz.
+    lista_vazia: bool = False
+    #: No resultado: o que o público lê hoje — `NADA`, `PRELIMINAR` ou `DEFINITIVO` (135, FR-4677).
+    #: É o dado que decide; a nota é só o texto (FR-4679).
+    divulgado: str = ""
 
     @property
     def rotulo(self):
@@ -606,26 +633,34 @@ def situacao_da_ordem(f):
     """A ordem de uma lista num marco por pontuação (FR-4068).
 
     `f`: `celula` (a da ordem no indicador da condução), `faltam` (nomes das Etapas que a ordem lê e
-    que ainda não estão feitas no Perfil).
+    que ainda não estão feitas no Perfil), `vazia` (nenhuma inscrição concorre pela lista).
 
     ***Depois* enquanto as Etapas não estão feitas** (o `G-01` do estudo): emiti-la antes delas
     grava uma ordem que envelhece quando os resultados chegam, e a sucessão exige motivo. Desde a
     `128`, o comando recusa a ordem sem nenhum Resultado; esta derivação é mais estrita (diz
     *Depois* também para a parcial, que o comando aceita), e por isso nunca diz *Pendente* para o
     que ele recusa (`test_o_andamento_nunca_diz_pendente_para_a_ordem_que_o_comando_recusa`).
+
+    **A lista sem inscritos continua providência, e diz o que ela é** (135, D-001, FR-4671). A
+    ordem vazia é ato normativo — emiti-la declara que ninguém concorreu —, e a providência igual à
+    de uma lista com inscritos fazia ler "há uma classificação a fazer" (o C08 do estudo de 09/11).
+    A lista vazia só muda o texto e o dado: *Depois* e a recusa continuam decidindo (FR-4676).
     """
     celula = f.get("celula") or {}
     estado, url = celula.get("estado"), celula.get("url") or ""
+    vazia = bool(f.get("vazia"))
     if estado == "feito":
         return _c(FEITO, natureza=ORDEM, nota=celula.get("nota") or "", url=url)
     if estado == "obsoleto":
         return _c(
             OBSOLETO,
             natureza=ORDEM,
-            ato="Emitir a ordem sucessora",
+            ato=ATO_DA_SUCESSORA_VAZIA if vazia else "Emitir a ordem sucessora",
             responsavel=CONDUZ,
             razao="a regra ou o universo mudaram depois da emissão",
             url=url,
+            nota=NOTA_DA_LISTA_VAZIA if vazia else "",
+            lista_vazia=vazia,
         )
     if estado == "nao_se_aplica":
         return _c(NAO_SE_APLICA, natureza=ORDEM, nota=celula.get("nota") or "")
@@ -637,6 +672,16 @@ def situacao_da_ordem(f):
             razao=f"a ordem lê {_lista_de_nomes(faltam)}, que ainda não está feita"
             if len(faltam) == 1
             else f"a ordem lê {_lista_de_nomes(faltam)}, que ainda não estão feitas",
+        )
+    if vazia:
+        return _c(
+            PENDENTE,
+            natureza=ORDEM,
+            ato=ATO_DA_ORDEM_VAZIA,
+            responsavel=CONDUZ,
+            url=url,
+            nota=NOTA_DA_LISTA_VAZIA,
+            lista_vazia=True,
         )
     return _c(PENDENTE, natureza=ORDEM, ato="Emitir a ordem", responsavel=CONDUZ, url=url)
 
@@ -863,7 +908,16 @@ def situacao_do_resultado(f):
 
     `f`: `celula` (a da publicação no indicador), `ordem`, `definitiva` (a aferição da definitiva,
     quando a vigente é preliminar: `{"nivel", "codigo", "mensagem"}`), `url_da_previa`.
+
+    **O que foi divulgado é dado, e decide** (135, FR-4677 a FR-4679): a célula leva `divulgado`
+    em toda situação, e o ramo do preliminar é escolhido por ele, e não pela palavra na nota. A
+    situação é a de antes em todos os casos (D-002): o preliminar segue a pendência do definitivo.
     """
+    divulgado = divulgado_da_celula(f.get("celula"))
+    return replace(_situacao_do_resultado(f, divulgado), divulgado=divulgado)
+
+
+def _situacao_do_resultado(f, divulgado):
     from processo_seletivo.divulgacao.domain import publicabilidade as p
 
     celula = f.get("celula") or {}
@@ -901,7 +955,7 @@ def situacao_do_resultado(f):
             url=previa,
         )
     if estado == "feito":
-        if "preliminar" not in nota:
+        if divulgado != PRELIMINAR:
             return _c(FEITO, natureza=RESULTADO, nota=nota, url=url)
         definitiva = f.get("definitiva")
         if not definitiva or definitiva.get("nivel") != p.IMPEDIMENTO:
@@ -919,13 +973,19 @@ def situacao_do_resultado(f):
             p.REAVALIACAO_PENDENTE,
             p.PROVIDENCIA_PENDENTE,
         )
+        # **O preliminar já está publicado: a razão não o oferece de novo** (135, D-003, FR-4681).
+        # A mensagem da aferição continua a da prévia e a do comando; aqui vale a segunda redação,
+        # quando o código tem uma.
+        mensagem = p.mensagem_com_o_preliminar_publicado(
+            definitiva.get("codigo"), definitiva.get("ate")
+        ) or (definitiva.get("mensagem") or "")
         return _c(
             AGUARDA if espera else IMPEDIDO,
             natureza=RESULTADO,
             ato="Publicar o resultado definitivo",
             responsavel="" if espera else PUBLICA,
             nota=nota,
-            razao=_frase(_sem_marcacao(definitiva.get("mensagem") or "")),
+            razao=_frase(_sem_marcacao(mensagem)),
             url=previa,
             ate=definitiva.get("ate"),
         )
@@ -1798,6 +1858,7 @@ class _Leitor:
                 chave=sorteio_lido.get("chave_da_semente"),
             )
         curtos = _rotulos_curtos(perfil)
+        vazias = self._listas_vazias(perfil, marco)
         for lista, rotulo in listas:
             chave = _chave(lista)
             celulas = por_lista.get(chave) or {}
@@ -1815,7 +1876,15 @@ class _Leitor:
                 )
                 derivadas = {RELACAO: relacao, SORTEIO: ordem}
             else:
-                ordem = situacao_da_ordem({"celula": celulas.get("ordenar"), "faltam": faltam})
+                ordenar = celulas.get("ordenar") or {}
+                ordem = situacao_da_ordem(
+                    {
+                        "celula": ordenar,
+                        "faltam": faltam,
+                        "vazia": ordenar.get("estado") in ("falta", "obsoleto")
+                        and chave in vazias(),
+                    }
+                )
                 derivadas = {ORDEM: ordem}
             # **O resultado antes do corte** (133, FR-4541): a espera do corte lê a mesma aferição
             # da definitiva que a célula do resultado leu.
@@ -1873,6 +1942,35 @@ class _Leitor:
                     perfil=perfil,
                     lista=(lista, curtos.get(chave, rotulo)),
                 )
+
+    # --- a lista sem inscritos --------------------------------------------------------------
+
+    def _listas_vazias(self, perfil, marco):
+        """As chaves das listas reservadas em que ninguém concorre, perguntadas **uma vez por
+        marco** e só se alguma lista precisar (135, FR-4670, FR-4686): o marco já ordenado não paga
+        nada.
+
+        O critério é o da tela da ordenação, numa função ao lado do cálculo dela (R-001).
+        """
+        from processo_seletivo.classificacao.application.calculo import listas_sem_concorrente
+
+        lidas = None
+
+        def vazias():
+            nonlocal lidas
+            if lidas is None:
+                lidas = {
+                    _chave(lista)
+                    for lista in listas_sem_concorrente(
+                        edital=self.edital,
+                        conteudo=self.conteudo,
+                        perfil_id=perfil.get("id"),
+                        marco_id=marco.get("id"),
+                    )
+                }
+            return lidas
+
+        return vazias
 
     # --- o sorteio -------------------------------------------------------------------------
 
@@ -1968,7 +2066,7 @@ class _Leitor:
         estado = publicar.get("estado")
         if estado not in ("feito", "obsoleto"):
             return espera_do_corte(marco, divulgado=False, definitiva=None)
-        if estado == "feito" and "preliminar" not in (publicar.get("nota") or ""):
+        if estado == "feito" and divulgado_da_celula(publicar) != PRELIMINAR:
             return None
         return espera_da_lista(
             edital=self.edital, marco=marco, lista_id=lista, at=self.agora, definitiva=definitiva
@@ -1983,10 +2081,10 @@ class _Leitor:
 
         celula = celula or {}
         fatos = {"celula": celula, "ordem": ordem}
-        estado, nota = celula.get("estado"), celula.get("nota") or ""
+        estado = celula.get("estado")
         precisa_do_ato = (
             estado == "obsoleto"
-            or (estado == "feito" and "preliminar" in nota)
+            or (estado == "feito" and divulgado_da_celula(celula) == PRELIMINAR)
             or (estado == "falta" and ordem is not None and ordem.situacao in (FEITO, OBSOLETO))
         )
         if not precisa_do_ato:
@@ -2419,27 +2517,36 @@ def resumo_do_perfil(perfil):
     from processo_seletivo.interface.providencias import agrupar
 
     # Agrupadas como o nível 1 as agrupa (D-016), inclusive as que esperam; as das Etapas, que são
-    # do Edital, ficam no nível 1 e em "Etapas X de Y".
+    # do Edital, ficam no nível 1 e em "Etapas X de Y". **E a frase diz isso** (135, D-004,
+    # FR-4684): ao lado do "2 providências em aberto" do cartão, um "1 providência em aberto" sem
+    # escopo parecia contradição (A-07 do estudo de 09/11). Somar as Etapas contaria duas vezes a
+    # mesma providência num Edital de dois Perfis.
     em_aberto = len(agrupar(perfil.providencias))
     if em_aberto:
-        partes.append(
-            f"{em_aberto} {'providência' if em_aberto == 1 else 'providências'} em aberto"
-        )
+        providencias = "providência" if em_aberto == 1 else "providências"
+        partes.append(f"{em_aberto} {providencias} em aberto nos marcos")
     return " · ".join(p for p in partes if p)
 
 
 def _resultado_em_palavras(perfil):
     """A natureza do que o público lê, sobre as listas em que há o que divulgar (item 1).
 
-    Lê a nota de qualquer situação: o preliminar na janela recursal é *Aguarda*, e continua
-    publicado. "Definitivo" só quando todas as listas o têm; publicado em parte, diz quantas.
+    Lê o `divulgado` de qualquer situação (135, FR-4679): o preliminar na janela recursal é
+    *Aguarda*, e continua publicado. "Definitivo" só quando todas as listas o têm; publicado em
+    parte, diz quantas. Lia a palavra na nota, e por isso a célula *Depois* do preliminar com a
+    ordem obsoleta, que não tem nota, contava como não publicada (research R-006).
+
+    **O *Obsoleto* conta como publicado e nunca como definitivo**, como antes: o definitivo de um
+    ato anterior não é o definitivo da lista.
     """
     resultados = [c for p in perfil.pontos if p.tipo == RESULTADO for c in _por_lista(p, perfil)]
     aplicaveis = [c for c in resultados if c.situacao != NAO_SE_APLICA]
     if not aplicaveis:
         return ""
-    publicadas = [c for c in aplicaveis if "resultado" in (c.nota or "") or c.situacao == OBSOLETO]
-    definitivas = [c for c in publicadas if "definitivo" in (c.nota or "")]
+    publicadas = [
+        c for c in aplicaveis if c.divulgado in (PRELIMINAR, DEFINITIVO) or c.situacao == OBSOLETO
+    ]
+    definitivas = [c for c in publicadas if c.divulgado == DEFINITIVO and c.situacao != OBSOLETO]
     if not publicadas:
         return "resultado não publicado"
     if len(publicadas) < len(aplicaveis):
