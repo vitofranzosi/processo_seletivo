@@ -50,8 +50,15 @@ treinamento perceber essa separação.
 
 **Exercícios no portal do candidato** (C02, C08, C11): o candidato entra com um código enviado ao
 e-mail. Os candidatos dos cenários têm e-mails que não existem. Para se inscrever, use o seu próprio
-e-mail (C02). Para agir como um candidato já inscrito (C08, C11), peça ao administrador o código
-que chega ao correio do ambiente.
+e-mail (C02). Para agir como um candidato já inscrito (C08, C11):
+
+1. No portal, peça o código com o e-mail do candidato. Ele segue o padrão
+   `<unidade>-<cenário>r<rodada>p<número>@treinamento.exemplo.test` — o candidato 02 do C11, no
+   Cefor, na primeira rodada, é `cefor-c11r1p02@treinamento.exemplo.test`. O número é o do nome
+   ("Bernardo Treinamento C11-02"), e a rodada é a do Processo (`-R2` é a rodada 2).
+2. Abra a caixa de entrada do ambiente, o **mailpit**, na porta 8025 do servidor de homologação. O
+   código está na mensagem mais recente para aquele e-mail.
+3. Digite o código no portal: você está agindo como o candidato.
 
 ## O que observar em todo exercício
 
@@ -169,10 +176,11 @@ São 4 vagas: 3 na ampla concorrência e 1 na cota.
 
 ## C06 — Sorteio antes do congelamento
 
-**Objetivo:** entender a preparação do sorteio e congelar a relação de participantes.
+**Objetivo:** entender a preparação do sorteio e congelar as relações de participantes.
 
-**Você começa com:** o Edital `SIM06`, de curso técnico, com 10 inscrições para 4 vagas e as
-inscrições encerradas.
+**Você começa com:** o Edital `SIM06`, de curso técnico, com 10 inscrições para 4 vagas — 3 na
+ampla concorrência e 1 na cota PPP — e as inscrições encerradas. Três inscritos declararam a cota.
+Eles não anexaram comprovante: a autodeclaração é pedida na convocação, depois do sorteio.
 
 **Quem faz:** presidência (`treino.presidencia`).
 
@@ -180,17 +188,21 @@ inscrições encerradas.
 
 1. Como `treino.presidencia`, abra o Edital `SIM06/2026`; em **O que fazer agora**, siga a
    providência do sorteio até a tela **Sorteio — Sorteio público**.
-2. Leia o método declarado no Edital e a relação de participantes.
-3. Congele (publique) a relação.
+2. Leia o método declarado no Edital. Em **Recortes deste marco** há duas listas: **Todos os
+   inscritos** (a ampla concorrência, que inclui os cotistas) e **Pessoas pretas, pardas e
+   indígenas (PPP)**.
+3. Congele as duas, uma de cada vez, em **Publicar e congelar a relação**. **Congele as duas antes
+   de observar a ocorrência**: uma relação congelada depois de conhecida a semente é recusada.
 
-**Resultado esperado:** relação congelada, com a lista pública dos participantes.
+**Resultado esperado:** duas relações congeladas — 10 participantes na ampla concorrência e 3 na
+cota —, cada uma com a sua lista pública.
 
 ## C07 — Executando um sorteio
 
-**Objetivo:** realizar e conferir um sorteio.
+**Objetivo:** realizar e conferir os sorteios da ampla concorrência e da cota.
 
-**Você começa com:** o Edital `SIM07`, inscrições encerradas e a relação de 10 participantes **já
-congelada**. Falta observar a ocorrência e sortear.
+**Você começa com:** o Edital `SIM07`, inscrições encerradas e as duas relações **já congeladas**:
+10 participantes na ampla concorrência e 3 na cota PPP. Falta observar a ocorrência e sortear.
 
 **Quem faz:** presidência (`treino.presidencia`).
 
@@ -198,16 +210,22 @@ congelada**. Falta observar a ocorrência e sortear.
 
 1. Como `treino.presidencia`, abra o Edital `SIM07/2026`. Em **O que fazer agora** aparece
    **SUA — Observar a extração**; siga até a tela **Sorteio — Sorteio público**.
-2. Confira o método (a fonte é a **Fonte de demonstração**) e a relação de 10 participantes
-   congelada.
+2. Confira o método (a fonte é a **Fonte de demonstração**) e as duas relações congeladas. Repare
+   que os três cotistas aparecem nas duas, com um número diferente em cada uma.
 3. Clique em **Observar a ocorrência … na fonte** — no Cefor, a primeira rodada do C07 usa o
-   concurso 807001106; cada rodada e cada unidade têm o seu.
-4. Clique em **Realizar o sorteio**.
-5. Leia o quadro **Sorteio realizado**, com a semente e o manifesto, e abra **Verificar no canal
-   público**.
+   concurso 807001106; cada rodada e cada unidade têm o seu. A ocorrência é **uma só** para as duas
+   listas.
+4. Clique em **Realizar o sorteio** na ampla concorrência e, depois, no da cota PPP.
+5. Leia o quadro **Sorteio realizado** de cada lista: a semente é a mesma, e os manifestos são
+   diferentes. Abra **Verificar no canal público**.
 
-**Resultado esperado:** sorteio realizado, com a ordem dos 10 participantes, o manifesto e a
-página de verificação.
+**Resultado esperado:** dois sorteios realizados — a ordem dos 10 participantes da ampla e a dos 3
+da cota —, com manifesto e página de verificação cada um. A comprovação da cota fica para a
+convocação, como no certame real.
+
+> **A fonte de demonstração e a Caixa.** Aqui a observação vale na hora, e por isso dá para congelar
+> e sortear no mesmo dia. Com a Loteria Federal, que publica só a data da extração, a relação
+> precisa ser congelada **num dia anterior** ao da extração.
 
 > **Uma providência a mais.** O quadro "O que fazer agora" também lista *Distribuir 10 inscrições
 > … — Análise de títulos*: é a Etapa que o marco de sorteio deste modelo enumera. O sorteio não
@@ -228,7 +246,7 @@ dias aberto. O candidato 08 foi eliminado na prova.
 
 **Seu desafio:**
 
-1. Como candidato (código do correio do ambiente), recorra do resultado com uma fundamentação.
+1. Como candidato (código no mailpit), recorra do resultado com uma fundamentação.
 2. Como **Julgador de recursos**, decida o recurso.
 3. Como `treino.presidencia`, cumpra a decisão, se for deferido.
 
@@ -290,7 +308,7 @@ emitidas, ninguém convocado.
 
 1. Como `treino.presidencia`, abra a convocação do Edital `SIM11/2026` e, em cada convocado,
    **Documentos**. O 02 mostra o diploma **Pendente** e a residência **A apresentar**.
-2. Como candidato 02 (código do correio), leia a pendência e envie o diploma de novo.
+2. Como candidato 02 (código no mailpit), leia a pendência e envie o diploma de novo.
 3. Como `treino.presidencia`, confira os documentos do 03.
 
 **Resultado esperado:** itens entregues e conferidos.

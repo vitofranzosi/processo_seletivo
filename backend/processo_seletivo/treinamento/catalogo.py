@@ -276,6 +276,11 @@ def montar_c15(m):
     m.cortar_e_apurar()
 
 
+# Quem declara a cota PPP no cenário de sorteio: três dos dez, de modo que a relação da cota tenha
+# mais inscritos que a única vaga reservada e o sorteio dela também decida alguma coisa.
+COTISTAS_DO_SORTEIO = (2, 5, 9)
+
+
 def _edital_de_sorteio(m, *, inscritos=10):
     m.criar()
     m.elaborar(
@@ -287,7 +292,7 @@ def _edital_de_sorteio(m, *, inscritos=10):
         etapas=(ETAPA_TITULOS,),
     )
     m.publicar()
-    m.inscrever(inscritos)
+    m.inscrever(inscritos, reservada=COTISTAS_DO_SORTEIO)
     m.encerrar_inscricoes(timezone.now())
     m.constituir_comissao()
 
@@ -314,6 +319,7 @@ def montar_c06(m):
 def montar_c07(m):
     _edital_de_sorteio(m)
     m.congelar_relacao()
+    m.congelar_relacao(reservada=True)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -321,7 +327,7 @@ def montar_c07(m):
 # ---------------------------------------------------------------------------------------------
 
 _SELECAO = "Professor substituto (Perfil docente de Informática, com cota PPP)"
-_CURSO = "Curso técnico EaD (ampla concorrência)"
+_CURSO = "Curso técnico EaD (ampla concorrência e cota PPP)"
 _EQUIPE_DA_PUBLICACAO = (
     f"Elaborador ({ELABORACAO})",
     f"Homologador ({HOMOLOGACAO})",
@@ -420,14 +426,29 @@ CENARIOS = (
     Cenario(
         codigo="C06",
         nome="Sorteio antes do congelamento",
-        objetivo="Conferir as inscrições e congelar a relação de participantes do sorteio.",
+        objetivo=(
+            "Conferir as inscrições e congelar as relações do sorteio: a da ampla concorrência e "
+            "a da cota PPP."
+        ),
         tipo_de_selecao=_CURSO,
         metodo="Sorteio (Fonte de demonstração)",
-        estado_inicial="Edital de sorteio PUBLICADO, 10 inscrições, inscrições encerradas.",
-        precondicoes=("Comissão constituída.", "Quatro vagas para dez inscritos."),
+        estado_inicial=(
+            "Edital de sorteio PUBLICADO, 10 inscrições (3 declaram a cota PPP), inscrições "
+            "encerradas."
+        ),
+        precondicoes=(
+            "Comissão constituída.",
+            "Quatro vagas para dez inscritos: três na ampla concorrência e uma na cota PPP.",
+            "A cota se declara na inscrição, sem anexo; a autodeclaração é pedida na convocação.",
+        ),
         papeis=(f"Presidência da comissão ({PRESIDENCIA})",),
-        proxima_acao="Presidência: conferir a relação e congelá-la.",
-        resultado_esperado="Relação de participantes congelada e publicada.",
+        proxima_acao=(
+            "Presidência: conferir e congelar a relação da ampla concorrência e, em seguida, a da "
+            "cota PPP."
+        ),
+        resultado_esperado=(
+            "Duas relações congeladas e publicadas: 10 participantes na ampla, 3 na cota."
+        ),
         dependencias=("SORTEIO_FONTE_DE_DEMONSTRACAO=true no ambiente.",),
         montar=montar_c06,
         exige_fonte_de_demonstracao=True,
@@ -435,16 +456,26 @@ CENARIOS = (
     Cenario(
         codigo="C07",
         nome="Sorteio pronto para execução",
-        objetivo="Executar o sorteio, conferir o resultado e as listas.",
+        objetivo="Executar os dois sorteios, conferir o resultado e as listas.",
         tipo_de_selecao=_CURSO,
         metodo="Sorteio (Fonte de demonstração)",
-        estado_inicial="Relação de 10 participantes congelada; ocorrência ainda não observada.",
+        estado_inicial=(
+            "Relações congeladas — 10 participantes na ampla concorrência e 3 na cota PPP; "
+            "ocorrência ainda não observada."
+        ),
         precondicoes=(
             "A fonte de demonstração responde na hora: não há extração futura a esperar.",
+            "Os cotistas figuram nas duas listas, com número próprio em cada uma.",
         ),
         papeis=(f"Presidência da comissão ({PRESIDENCIA})",),
-        proxima_acao="Presidência: observar a ocorrência e constituir o sorteio.",
-        resultado_esperado="Sorteio constituído, com ordem, manifesto e verificação públicos.",
+        proxima_acao=(
+            "Presidência: observar a ocorrência e realizar o sorteio de cada lista — a mesma "
+            "extração semeia as duas."
+        ),
+        resultado_esperado=(
+            "Dois sorteios constituídos, com ordem, manifesto e verificação públicos; a "
+            "comprovação da cota fica para a convocação."
+        ),
         dependencias=("SORTEIO_FONTE_DE_DEMONSTRACAO=true no ambiente.",),
         montar=montar_c07,
         exige_fonte_de_demonstracao=True,

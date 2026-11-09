@@ -101,6 +101,24 @@ configuração de produção — passando.
 Depois da revisão de código de 09/11, a suíte completa (`make test-pg`, 4 workers): **17 427
 passando, 20 pulados, sem falha, em 1389 s**.
 
+## Sorteio com cota (09/11)
+
+Pedido do setor depois da carga na homologação (FR-4656, D-008). No banco `ps_demo_134`, o C06 e o
+C07 restaurados com o catálogo novo:
+
+- o C06 oferece **Publicar e congelar a relação** nas duas listas — "Todos os inscritos" e
+  "Pessoas pretas, pardas e indígenas (PPP)";
+- o C07 nasce com as duas relações congeladas, 10 e 3 participantes, os três cotistas com número
+  próprio em cada uma;
+- **Observar a ocorrência** uma vez, e **Realizar o sorteio** nas duas listas, pela tela: a mesma
+  semente, manifestos diferentes, cada um com o seu "Verificar no canal público".
+
+Os casos do C06 e do C07 em `test_proxima_acao.py` e o sorteio pela tela de
+`test_carga_e_restauracao.py` passaram a exigir as duas relações e os dois sorteios.
+
+Suíte completa (`make check test-pg`, 4 workers): **17 474 passando, 20 pulados, sem falha, em
+774 s**.
+
 ## Pendente
 
 - **SC-1456 (humana):** uma pessoa da comissão percorrer um cenário só com o guia.

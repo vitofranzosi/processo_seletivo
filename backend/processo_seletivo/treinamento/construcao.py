@@ -150,17 +150,22 @@ def perfil_de_notas(*, vagas=4, janela="declarada"):
 
 
 def perfil_de_sorteio(*, vagas=4):
-    """O Perfil do sorteio do `seed_demo`, só com a ampla concorrência e menos vagas que inscritos.
+    """O Perfil do sorteio do `seed_demo`, **com a cota PPP** e menos vagas que inscritos (FR-4656).
 
     **Menos vagas que inscritos** é o que torna o sorteio um exercício: com as quarenta vagas do
     molde, todo inscrito estaria classificado e a ordem não decidiria nada.
+
+    **A cota é a do setor, e não a do molde.** O `seed_demo` declara a PPP só para apontar a
+    autodeclaração e congela uma relação só; o certame real sorteia a ampla concorrência com todos
+    os inscritos e, em seguida, a reserva com quem a declarou (021, D-006). A comprovação da cota é
+    analisada depois do sorteio, na convocação — por isso a modalidade se declara na inscrição sem
+    anexo, e o documento é do momento da convocação (`documentos_de_sorteio`). O quadro reparte as
+    vagas como o do Perfil de notas: uma reservada, as outras na linha geral.
     """
     perfil = copy.deepcopy(molde.perfil_de_sorteio(MOLDE)[0])
     perfil["immediateVacancies"] = vagas
-    perfil["competitionModalities"] = [
-        m for m in perfil["competitionModalities"] if m["id"] == AMPLA
-    ]
-    perfil.pop("vacancyTable", None)
+    for linha in perfil["vacancyTable"]:
+        linha["immediateVacancies"] = vagas - 1 if linha["modalityId"] is None else 1
     perfil["classificationMilestones"][0]["cutRule"]["targetCount"] = vagas
     return [perfil]
 
@@ -213,7 +218,13 @@ def documentos_de_notas():
 
 
 def documentos_de_sorteio():
-    return documentos_de_notas()[:1]
+    """A identificação na inscrição e a autodeclaração da cota **na convocação**.
+
+    A comprovação da modalidade reservada é analisada depois do sorteio, quando o cotista é
+    convocado: pedir o anexo na inscrição anteciparia uma análise que o setor não faz ali.
+    """
+    identificacao, _diploma, _residencia, autodeclaracao = documentos_de_notas()
+    return [identificacao, autodeclaracao]
 
 
 def metodo_do_sorteio(concurso):
@@ -856,17 +867,29 @@ class Montagem:
 
     # -- Sorteio -----------------------------------------------------------------------------
 
-    def congelar_relacao(self):
+    def congelar_relacao(self, *, reservada=False):
+        """Congela a relação da ampla concorrência, ou a da cota PPP com `reservada`.
+
+        **As duas antes de qualquer ocorrência** (021, D-006): a ampla alcança todos os inscritos, e
+        a da cota só quem a declarou. As chaves de idempotência são distintas, e o manifesto guarda
+        as relações na ordem em que foram congeladas — a da ampla primeiro.
+        """
         from processo_seletivo.sorteios.application.relacao import publicar_relacao
 
-        self.dizer("Congelando a relação de participantes do sorteio…")
+        lista = self.id(RESERVADA) if reservada else None
+        self.dizer(
+            "Congelando a relação da cota PPP…"
+            if reservada
+            else "Congelando a relação da ampla concorrência…"
+        )
         relacao = publicar_relacao(
             actor=self.ator(PRESIDENCIA),
             processo_id=self.processo.id,
             edital_id=self.edital.id,
             perfil_id=self.id(PERFIL),
             marco_id=self.id(MARCO),
-            idempotency_key=self.chave("relacao"),
+            lista_id=lista,
+            idempotency_key=self.chave("relacao-ppp" if reservada else "relacao"),
             correlation_id=self.correlacao,
         )
         self.anotar("relacao_do_sorteio", relacao["relacao"])
