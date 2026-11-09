@@ -4,6 +4,7 @@ from processo_seletivo.interface import (
     acessos,
     assistente,
     avisos,
+    centro_do_edital,
     documentacao,
     duvidas,
     kit_de_divulgacao,
@@ -194,6 +195,12 @@ urlpatterns = [
         name="supervisao",
     ),
     path("editais/<uuid:edital_id>/", views.detalhe, name="detalhe"),
+    # O Centro de Controle do Edital (136), ao lado do detalhe durante a validação (D-001).
+    path(
+        "editais/<uuid:edital_id>/centro/",
+        centro_do_edital.centro_do_edital,
+        name="centro-do-edital",
+    ),
     # A validação interna das respostas do assistente de dúvidas (070). Só leitura, por GET, no
     # alcance da página do Edital (`D-010`); nenhuma rota pública nesta fase (`D-001`).
     path(

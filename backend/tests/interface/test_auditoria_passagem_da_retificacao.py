@@ -225,8 +225,14 @@ def test_a_lista_e_o_edital_citam_a_retificacao_pendente(edital, vigente):
 
     assert reverse("interface:detalhe", args=[edital.id]) in paginas
     assert reverse("interface:agenda") in paginas
+    # O Centro de Controle do Edital (136) cita a Retificação em curso como o detalhe a cita, com
+    # o mesmo resumo da 103 (FR-4728 da 136): é a terceira porta, alcançada pelo link do detalhe.
     assert sorted(alcancada(paginas, retificacao)) == sorted(
-        [reverse("interface:lista"), reverse("interface:detalhe", args=[edital.id])]
+        [
+            reverse("interface:lista"),
+            reverse("interface:detalhe", args=[edital.id]),
+            reverse("interface:centro-do-edital", args=[edital.id]),
+        ]
     )
     assert str(retificacao.id) not in paginas[reverse("interface:agenda")]
 
@@ -238,7 +244,13 @@ def test_a_unica_porta_e_a_da_retificacao_ja_publicada(edital, vigente):
 
     paginas = navegar(sessao("bruno.homologador", ["homologador"]), edital)
 
-    assert alcancada(paginas, retificacao) == [reverse("interface:detalhe", args=[edital.id])]
+    # E o Centro de Controle (136) liga a publicada pelo "o que mudou" dos documentos (FR-4740).
+    assert sorted(alcancada(paginas, retificacao)) == sorted(
+        [
+            reverse("interface:detalhe", args=[edital.id]),
+            reverse("interface:centro-do-edital", args=[edital.id]),
+        ]
+    )
 
 
 def test_quem_vai_compor_outro_rascunho_ve_o_primeiro_e_pode_continuar(edital, vigente):

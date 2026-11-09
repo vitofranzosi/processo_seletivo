@@ -11,6 +11,8 @@
 <p class="sucesso" role="status">Ato registrado: {{ request.GET.ato|rotulo_do_ato }}.</p>
 {% endif %}
 {% include "interface/_conferencia_do_ato.html" %}
+{% comment %} O Centro de Controle (136), ao lado desta página durante a validação: só o link de ida, e só onde há andamento (FR-4703). {% endcomment %}
+{% if andamento %}<p class="ajuda"><a class="acao" href="{% url 'interface:centro-do-edital' edital.id %}">Abrir o Centro de Controle do Edital (em validação)</a></p>{% endif %}
 
 {% comment %} Depois da publicação a trilha não aparece (127, D-002): `trilha` chega vazia. {% endcomment %}
 {% if trilha %}

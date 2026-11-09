@@ -56,6 +56,10 @@ MODULOS_DE_VIEW = (
     # setor é o predicado único `pode_acessar`, que responde 404 pela recusa do domínio, e 403 sem o
     # papel; a da definição, `_edital_da_definicao`.
     RAIZ / "processo_seletivo/interface/views_formalizacao.py",
+    # O Centro de Controle do Edital (136): 404 só para o Edital inexistente ou de outra unidade,
+    # pela mesma porta do detalhe (`obter_edital`). Não há recusa de autorização: a página é de
+    # leitura para quem abre o detalhe, e cada ato continua recusado na tela dele.
+    RAIZ / "processo_seletivo/interface/centro_do_edital.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 
