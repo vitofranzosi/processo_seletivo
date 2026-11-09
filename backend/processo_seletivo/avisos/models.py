@@ -130,7 +130,8 @@ class Aviso(_AppendOnly):
                 condition=Q(motivo__in=nomes.MOTIVOS), name="ck_aviso_motivo_conhecido"
             ),
             # **Cada origem cita o seu ato, e só ele.** O resultado tem natureza e não tem
-            # referência; a chamada tem a referência declarada e não tem natureza.
+            # referência; a chamada tem a referência declarada e não tem natureza. A pendência
+            # (134) não tem nenhuma das duas: o ato que ela aponta é a convocação do destinatário.
             models.CheckConstraint(
                 condition=(
                     Q(
@@ -139,6 +140,7 @@ class Aviso(_AppendOnly):
                         referencia_da_publicacao="",
                     )
                     | (Q(origem=nomes.CHAMADA, natureza="") & ~Q(referencia_da_publicacao=""))
+                    | Q(origem=nomes.PENDENCIA, natureza="", referencia_da_publicacao="")
                 ),
                 name="ck_aviso_ato_da_origem",
             ),

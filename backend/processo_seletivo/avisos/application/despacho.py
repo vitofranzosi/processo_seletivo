@@ -1,9 +1,16 @@
-"""O despacho dos avisos: a quarta situação em que o sistema envia mensagem (`FR-084` da `010`).
+"""O despacho dos avisos: a quarta e a quinta situações em que o sistema envia mensagem (`FR-084`).
 
 **É o único lugar dos avisos que chama o servidor de correio**, e o módulo que
 `tests/test_situacoes_de_mensagem.py` declara como a quarta situação. A `FR-084` foi revisada em
 2026-10-09 para admiti-la, com as redações anteriores preservadas: o aviso complementar vinculado a
 ato oficial, **sem efeito nenhum** sobre prazo, classificação, situação ou direito.
+
+**A quinta situação sai daqui também** (134, FR-4619). A `FR-084` foi revisada em 2026-11-08 para o
+aviso de pendência documental, que o gesto de quem confere grava como aviso de origem `PENDENCIA`.
+O despacho a distingue em dois pontos, e só neles — fila, tentativa antes do envio, indeterminada
+que nunca se repete e limite por minuto são os mesmos. **Antes de cada tentativa**, ele relê se a
+pendência ainda existe e o prazo ainda corre, e interrompe o aviso que chegaria tarde (FR-4623,
+D-011). **Depois**, cada resultado vai também à trilha de auditoria (FR-4621, D-009).
 
 **Fora da requisição, por um comando que o timer roda a cada minuto** (`R-005`). A confirmação grava
 e responde; aqui se envia, no máximo `AVISOS_LIMITE_POR_MINUTO` por execução — o limite por minuto
@@ -46,6 +53,9 @@ logger = logging.getLogger("processo_seletivo.avisos")
 #: carrega a árvore de documentação.
 REVISAO_DA_FR_084_PELA_066 = "2026-10-09"
 
+#: A data da revisão que admite a quinta situação, o aviso de pendência documental (134, FR-4602).
+REVISAO_DA_FR_084_PELA_134 = "2026-11-08"
+
 #: A trava da execução, uma constante só: duas execuções do despacho nunca correm juntas.
 TRAVA_DO_DESPACHO = int.from_bytes(hashlib.sha256(b"avisos:despacho").digest()[:8], "big") >> 1
 
@@ -62,6 +72,8 @@ class Resumo:
     ocupado: bool = False
     orfas: int = 0
     tentadas: int = 0
+    #: Avisos de pendência que o próprio despacho interrompeu antes de enviar (134, FR-4623).
+    interrompidos: int = 0
     resultados: dict = field(default_factory=dict)
     avisos: set = field(default_factory=set)
     parou_por: str = ""
@@ -76,6 +88,11 @@ class Resumo:
             f"{self.tentadas} tentativa(s) em {len(self.avisos)} aviso(s)"
             + (f": {contagem}" if contagem else "")
             + (f"; {self.orfas} órfã(s) marcada(s) como indeterminada(s)" if self.orfas else "")
+            + (
+                f"; {self.interrompidos} aviso(s) de pendência interrompido(s) antes do envio"
+                if self.interrompidos
+                else ""
+            )
             + (f"; parou: {self.parou_por}" if self.parou_por else "")
         )
 
@@ -115,7 +132,11 @@ def _marcar_orfas():
     """Passo 2: com a trava global, toda tentativa sem resultado é de uma execução que morreu."""
     from processo_seletivo.avisos.models import ResultadoDaTentativa, TentativaDeEnvio
 
-    orfas = list(TentativaDeEnvio.objects.filter(resultado__isnull=True))
+    orfas = list(
+        TentativaDeEnvio.objects.filter(resultado__isnull=True).select_related(
+            "destinatario__aviso"
+        )
+    )
     if orfas:
         agora = timezone.now()
         with transaction.atomic():
@@ -128,7 +149,86 @@ def _marcar_orfas():
                 )
                 for tentativa in orfas
             )
+            for tentativa in orfas:
+                _auditar_o_envio(
+                    tentativa.destinatario.aviso, tentativa, nomes.INDETERMINADA, agora
+                )
     return len(orfas)
+
+
+class _Despacho:
+    """Quem assina, na trilha, o que o despacho registra: um timer, e não uma pessoa (D-009)."""
+
+    subject = nomes.SUJEITO_DO_DESPACHO
+
+    def __init__(self, institution_scope):
+        self.institution_scope = institution_scope
+
+
+def _auditar_o_envio(aviso, tentativa, resultado, agora):
+    """A trilha de um resultado, **só para o aviso de pendência** (134, FR-4621, D-009).
+
+    As origens da `066` registram o envio nas tabelas de tentativa e resultado, e a trilha delas
+    continua sem ele. Sem endereço, sem nome e sem o detalhe técnico (FR-1279 da `066`): o aviso, o
+    número da tentativa e o resultado bastam para encontrar o resto no registro do aviso.
+    """
+    if aviso.origem != nomes.PENDENCIA:
+        return
+    from processo_seletivo.auditoria.application import record_event
+
+    # **Num ponto de salvamento, e não na transação do resultado.** O resultado é o registro do que
+    # o servidor de correio respondeu, e a mensagem já saiu: se a trilha falhasse junto, a tentativa
+    # ficaria sem resultado e a próxima execução a marcaria indeterminada — uma entrega aceita
+    # registrada como dúvida. A falha da trilha vai ao log, e o resultado fica.
+    try:
+        with transaction.atomic():
+            record_event(
+                actor=_Despacho(aviso.institution_scope),
+                permission="",
+                operation=nomes.OPERACAO_ENVIO_DA_PENDENCIA,
+                aggregate=aviso,
+                now=agora,
+                correlation_id=aviso.correlation_id or str(aviso.id),
+                reason=f"Tentativa {tentativa.numero} do aviso de pendência: {resultado}.",
+                new_state="",
+                new_revision=None,
+                detalhe={"tentativa": tentativa.numero, "resultado": resultado},
+            )
+    except Exception:  # noqa: BLE001 — a trilha não desfaz o resultado registrado
+        logger.exception(
+            "A trilha do envio do aviso de pendência %s, tentativa %s, não foi gravada.",
+            aviso.id,
+            tentativa.numero,
+        )
+
+
+def _interromper_pelo_despacho(aviso, motivo, agora):
+    """O aviso de pendência que chegaria tarde não sai: o despacho o interrompe (FR-4623, D-011).
+
+    **A interrupção da `066`, e não um resultado inventado.** Nenhuma tentativa começa, e a tela do
+    aviso o mostra interrompido, com o motivo e o despacho como autor. O gesto seguinte, no mesmo
+    dia, não o conta no limite: nada foi enviado.
+    """
+    from processo_seletivo.auditoria.application import record_event
+    from processo_seletivo.avisos.models import InterrupcaoDoAviso
+
+    interrupcao = InterrupcaoDoAviso.objects.create(
+        aviso=aviso,
+        motivo=f"Interrompido pelo despacho antes do envio: {motivo}.",
+        interrompido_por=nomes.SUJEITO_DO_DESPACHO,
+        interrompido_em=agora,
+    )
+    record_event(
+        actor=_Despacho(aviso.institution_scope),
+        permission="",
+        operation=nomes.OPERACAO_INTERROMPER,
+        aggregate=interrupcao,
+        now=agora,
+        correlation_id=aviso.correlation_id or str(aviso.id),
+        reason=f"Aviso de pendência {aviso.id} interrompido antes do envio: {motivo}.",
+        new_state="",
+        new_revision=None,
+    )
 
 
 def _tentativas(destinatario):
@@ -185,12 +285,15 @@ def _selecionar(*, agora, limite):
     return selecionados
 
 
-def _iniciar(destinatario, numero):
+def _iniciar(destinatario, numero, resumo):
     """Passo 5.1: sob a trava do aviso, confere a interrupção e grava o início — já confirmado.
 
     Devolve a tentativa, ou `None` quando o aviso foi interrompido desde a seleção. O `UNIQUE` de
     `(destinatario, numero)` é a última porta: se outra inserção da mesma tentativa existisse, a
     gravação colidiria em vez de duplicar (`R-002`).
+
+    **O aviso de pendência relê a pendência aqui** (134, FR-4623), sob a mesma trava: a regra do
+    gesto, para esta pessoa e neste instante. Se ela já não vale, o aviso é interrompido e nada sai.
     """
     from processo_seletivo.avisos.models import InterrupcaoDoAviso, TentativaDeEnvio
 
@@ -198,8 +301,17 @@ def _iniciar(destinatario, numero):
         travar_o_aviso(destinatario.aviso_id)
         if InterrupcaoDoAviso.objects.filter(aviso_id=destinatario.aviso_id).exists():
             return None
+        agora = timezone.now()
+        if destinatario.aviso.origem == nomes.PENDENCIA:
+            from processo_seletivo.avisos.application.pendencias import motivo_para_nao_enviar
+
+            motivo = motivo_para_nao_enviar(destinatario, agora=agora)
+            if motivo:
+                _interromper_pelo_despacho(destinatario.aviso, motivo, agora)
+                resumo.interrompidos += 1
+                return None
         return TentativaDeEnvio.objects.create(
-            destinatario=destinatario, numero=numero, iniciada_em=timezone.now()
+            destinatario=destinatario, numero=numero, iniciada_em=agora
         )
 
 
@@ -234,16 +346,18 @@ def _mensagem(destinatario, conexao):
     return mensagem
 
 
-def _registrar(tentativa, classificacao):
+def _registrar(tentativa, classificacao, *, aviso):
     from processo_seletivo.avisos.models import ResultadoDaTentativa
 
     with transaction.atomic():
+        agora = timezone.now()
         ResultadoDaTentativa.objects.create(
             tentativa=tentativa,
             resultado=classificacao.resultado,
-            registrado_em=timezone.now(),
+            registrado_em=agora,
             detalhe_tecnico=classificacao.detalhe,
         )
+        _auditar_o_envio(aviso, tentativa, classificacao.resultado, agora)
 
 
 def despachar(*, limite=None):
@@ -270,7 +384,7 @@ def despachar(*, limite=None):
             raise ConexaoNaoAbriu(f"{type(erro).__name__}: a conexão não se abriu") from erro
         try:
             for destinatario, numero in selecionados:
-                tentativa = _iniciar(destinatario, numero)
+                tentativa = _iniciar(destinatario, numero, resumo)
                 if tentativa is None:
                     continue
                 resumo.tentadas += 1
@@ -286,7 +400,7 @@ def despachar(*, limite=None):
                         classificacao = resposta.do_envio(erro=erro)
                     else:
                         classificacao = resposta.do_envio(enviadas=enviadas)
-                _registrar(tentativa, classificacao)
+                _registrar(tentativa, classificacao, aviso=destinatario.aviso)
                 resumo.resultados[classificacao.resultado] = (
                     resumo.resultados.get(classificacao.resultado, 0) + 1
                 )
@@ -306,6 +420,7 @@ def despachar(*, limite=None):
 __all__ = [
     "ConexaoNaoAbriu",
     "REVISAO_DA_FR_084_PELA_066",
+    "REVISAO_DA_FR_084_PELA_134",
     "Resumo",
     "TRAVA_DO_DESPACHO",
     "despachar",

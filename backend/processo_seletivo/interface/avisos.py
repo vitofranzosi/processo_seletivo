@@ -507,12 +507,15 @@ def aviso_reenviar(request, aviso_id):
     from processo_seletivo.avisos.application.confirmar import (
         confirmar_reenvio,
         recusar_falhas_ja_reenviadas,
+        recusar_reenvio_da_pendencia,
     )
 
     ator, anterior = _aviso_para_ler(request, aviso_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
     exigir_base(ator, anterior.edital.processo, origem=anterior.origem)
+    # A tela não oferece o reenvio do aviso de pendência, e a porta também não (134, D-008).
+    recusar_reenvio_da_pendencia(anterior)
     dados = request.POST if request.method == "POST" else request.GET
     motivo = dados.get("motivo") or nomes.REENVIO_DE_FALHAS
     if motivo not in nomes.ALCANCE_DO_REENVIO:

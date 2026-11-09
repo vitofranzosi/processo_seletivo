@@ -450,10 +450,17 @@ class TestAReconstrucao:
         assert (escolha.modelo, escolha.variante) == (INICIAL, "documento_e_requerimento")
 
 
-def test_as_quatro_situacoes_continuam_quatro():
-    """`SC-1161`: o envio continua em `comunicar.py`, e nenhum módulo novo envia."""
-    from tests.test_situacoes_de_mensagem import SITUACOES, modulos_que_enviam
+def test_o_envio_da_convocacao_continua_em_comunicar():
+    """`SC-1161`: o envio continua em `comunicar.py`, e nenhum módulo novo envia.
 
-    assert len(SITUACOES) == 4
-    assert modulos_que_enviam() <= set(SITUACOES)
+    A `134` acrescentou a quinta situação no despacho da `066`, e não aqui: a contagem é dela.
+    """
+    from tests.test_situacoes_de_mensagem import (
+        MODULOS_DAS_SITUACOES,
+        SITUACOES,
+        modulos_que_enviam,
+    )
+
+    assert len(SITUACOES) == 5
+    assert modulos_que_enviam() <= MODULOS_DAS_SITUACOES
     assert modulo_do_envio.__name__.endswith("convocacao.application.comunicar")

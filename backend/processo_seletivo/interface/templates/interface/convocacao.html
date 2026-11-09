@@ -50,6 +50,7 @@ A mensagem de sucesso nomeia **o ato praticado**, e nao "deu certo". Foi o defei
 {% elif acao == "pendentes" %}<p class="sucesso" role="status" tabindex="-1">{% include "interface/_resultado_da_comunicacao.html" %}</p>
 {% elif acao == "desfecho" or acao == "vencidos" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "vencidos" %}{{ resultado.desfechos|length }} {{ resultado.desfechos|length|plural:"desfecho de não atendimento registrado,desfechos de não atendimento registrados" }}, um por convocação vencida.{% else %}Desfecho registrado.{% endif %}
   {% if resultado.apuracaoSeguinte %}A apuração seguinte deste recorte foi emitida no mesmo ato: {{ resultado.apuracaoSeguinte.faltando }} a ocupar.{% elif resultado.apuracaoPendente %}A apuração seguinte não saiu com {% if acao == "vencidos" %}eles{% else %}ele{% endif %}: {{ resultado.apuracaoPendente.detalhe }} <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ir para a ocupação</a>.{% endif %}</p>
+{% elif acao == "pendencias_avisadas" %}<p class="sucesso" role="status" tabindex="-1">{{ resultado.alcancadas }} {{ resultado.alcancadas|plural:"aviso de pendência registrado,avisos de pendência registrados" }} para envio, um por pessoa. A mensagem sai pelo despacho dos avisos, e não neste clique; o prazo de ninguém mudou.{% for item in resultado.exclusoes %}{% if forloop.first %} Ficaram de fora:{% endif %} {{ item.motivo }}, {{ item.quantas }}{% if not forloop.last %};{% else %}.{% endif %}{% endfor %}</p>
 {% elif acao == "atestado" %}<p class="sucesso" role="status" tabindex="-1">Atestado de fato externo registrado. Ele não cancela matrícula: registre o desfecho de inércia citando-o.</p>
 {% elif acao == "comunicacao" %}
 {% if resultado.resultado == "FALHA" %}<p class="aviso" role="status" tabindex="-1">A emissão da comunicação falhou. <strong>A convocação continua praticada</strong>, e o prazo não começou a correr: emita de novo.</p>
@@ -415,6 +416,27 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     </li>
   {% endfor %}
   </ul>
+</section>
+{% endif %}
+
+{% if pendencias_a_avisar %}
+{% comment %}
+O aviso de pendência documental (134, FR-4603, FR-4605, UX-311): o gesto de quem confere, com o
+alcance de agora antes do botão. A quinta situação da FR-084 da 010: grava, e o despacho envia.
+{% endcomment %}
+<section aria-labelledby="avisar-pendencias">
+  <h2 id="avisar-pendencias">Avisar as pessoas com documento pendente</h2>
+  <p class="ajuda">Um e-mail diz a cada pessoa quais documentos da convocação precisam de atenção, sem o motivo, que fica no portal. O aviso não é a convocação e não altera o prazo de ninguém. No máximo um por pessoa, por chamada, por dia.</p>
+  <p><strong>{{ pendencias_a_avisar.alcancadas }} {{ pendencias_a_avisar.alcancadas|plural:"pessoa pode,pessoas podem" }} ser {{ pendencias_a_avisar.alcancadas|plural:"avisada,avisadas" }} agora.</strong>{% for item in pendencias_a_avisar.exclusoes %}{% if forloop.first %} Ficam de fora:{% endif %} {{ item.motivo }}, {{ item.quantas }}{% if not forloop.last %};{% else %}.{% endif %}{% endfor %}</p>
+  {% if not pendencias_a_avisar.habilitado %}<p><span class="nenhuma">envio de avisos desabilitado nesta instalação</span></p>
+  {% elif pendencias_a_avisar.alcancadas %}
+  <form method="post" action="{% url 'interface:avisar-pendencias' edital.id marco_id %}" class="confirmar">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-avisar-pendencias">
+    <p class="acoes"><button type="submit" class="botao">Avisar as pessoas com pendência nesta chamada</button></p>
+  </form>
+  {% endif %}
 </section>
 {% endif %}
 
