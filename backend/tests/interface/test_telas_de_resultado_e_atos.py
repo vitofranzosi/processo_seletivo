@@ -154,6 +154,8 @@ BOTOES = {
         ),
         ("botao", "Convocar"),
         ("botao", "Convocar para regularizar"),
+        # O aviso de pendência documental (134, FR-4603): grava avisos, e não muda a convocação.
+        ("botao", "Avisar as pessoas com pendência nesta chamada"),
         ("botao", "Registrar desfecho"),
         # O indeferimento com o fundamento pré-redigido a partir das pendências de documento (115,
         # FR-3594). Mesmo desenho do "Registrar desfecho": é o mesmo ato, por outro caminho.
@@ -197,7 +199,9 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
 
     # Eram 20 `botao`; os dois da vaga acrescida (097) abrem conferência, e não praticam ato. O 23º
     # é o indeferimento pelas pendências de documento (115): o mesmo desenho do desfecho, que ele é.
-    assert desenhos == {"botao": 23, "botao perigoso": 2, "acao": 2}
+    # O 24º é o aviso de pendência documental (134): não desfaz nada porque não muda ato nenhum — o
+    # prazo, a lista e o desfecho ficam como estão —, e o despacho manda no máximo um por dia.
+    assert desenhos == {"botao": 24, "botao perigoso": 2, "acao": 2}
 
 
 # ---- pela página renderizada -------------------------------------------------------------------

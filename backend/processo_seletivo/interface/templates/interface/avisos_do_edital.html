@@ -39,7 +39,7 @@
     {% for item in avisos %}
       <tr>
         <td><a href="{% url 'interface:aviso' item.id %}">{{ item.solicitado_em|date:"d/m/Y" }} às {{ item.solicitado_em|date:"H:i" }}</a></td>
-        <td>{% if item.origem == "CHAMADA" %}Chamada publicada{% else %}Resultado {{ item.natureza|lower }}{% if item.retificadora %} (retificação){% endif %}{% endif %}{% if item.aviso_anterior %} — reenvio{% endif %}</td>
+        <td>{% if item.origem == "CHAMADA" %}Chamada publicada{% elif item.origem == "PENDENCIA" %}Pendência documental{% else %}Resultado {{ item.natureza|lower }}{% if item.retificadora %} (retificação){% endif %}{% endif %}{% if item.aviso_anterior %} — reenvio{% endif %}</td>
         <td>{{ item.com_endereco }}</td>
         <td>{% nome_de_pessoa item.solicitado_por %}</td>
       </tr>

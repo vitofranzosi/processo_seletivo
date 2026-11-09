@@ -104,7 +104,7 @@ Cobre, para qualquer Edital que o declare (aluno, bolsista, professor formador, 
 - **Download em lote, ZIP ou exportação de documentos.** A FR-069 da `009` **não muda** (FR-3606).
 - **Recurso contra o desfecho.** A decisão da `019` que tira a convocação e os desfechos do recurso
   continua valendo.
-- **Aviso de pendência por e-mail.** Seria a quinta situação da FR-084 da `010` (FR-3614).
+- **Aviso de pendência por e-mail.** Seria a quinta situação da FR-084 da `010` (FR-3614). *(Revisto pela `134`, 08/11/2026: a QI-7 foi decidida pelo usuário e o aviso é a quinta situação.)*
 - **Multicampi**, ou seja, a designação de pessoa de outra unidade (MAT-09). Esta spec só não o
   fecha (FR-3602).
 - **Editais de bolsista de cadastro de reserva.** Dependem do que a `097` registrou como ausente.
@@ -869,8 +869,12 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   > *Por que mudou:* "Atendido" aparecia antes da conferência; "Envie outro arquivo", sem um primeiro; e a lista seguia pedindo depois do desfecho (F2, F6 e o ponto 4 do achado). "Nenhum texto diz matrícula" ganhou "como fato": a frase do aceite (FR-3750 da `118`) cita a matrícula para dizer que o registro **não** é ela.
 - **FR-3613**: Mostrar a lista e os estados MUST NOT mover prazo nem registrar leitura além da que a
   tela da convocação já registra (FR-1103 da `059`).
-- **FR-3614**: Apresentação, conferência e pendência MUST NOT disparar mensagem. A FR-084 da `010`
-  continua com quatro situações.
+- **FR-3614** *(revista pela `134` em 2026-11-08)*: Apresentação, conferência e pendência MUST NOT
+  disparar mensagem. O aviso de pendência por e-mail é a quinta situação da FR-084 da `010`, e só sai
+  por gesto de quem confere, à parte da conferência (FR-4601 e FR-4604 da `134`).
+
+  > *Redação anterior, preservada:* "Apresentação, conferência e pendência MUST NOT disparar
+  > mensagem. A FR-084 da `010` continua com quatro situações."
 
 #### J. Limites
 
@@ -1395,7 +1399,7 @@ Revistas em 03/11/2026, depois das decisões do usuário sobre o PR.
 5. **Entrega documental controlada** (segunda spec provável), que depende de revisar a FR-069 da
    `009`.
 6. **QI-6**: recurso contra o indeferimento.
-7. **QI-7**: aviso de pendência por e-mail, que revisaria a FR-084 da `010`.
+7. **QI-7**: aviso de pendência por e-mail, que revisaria a FR-084 da `010`. *Decidida pelo usuário em 08/11/2026 e especificada na `134`.*
 
 **Antes do uso em produção com dado real (não da spec).** Pela decisão do usuário em 04/11/2026, nenhuma das três bloqueia
 mais a produção: a QI-3 foi decidida, e a QI-4 e o MAT-08 foram adiados.

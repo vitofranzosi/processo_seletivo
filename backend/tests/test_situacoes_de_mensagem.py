@@ -13,6 +13,11 @@ duas primeiras. Admiti-la exigiu a revisão, que está datada na spec e declarad
 **A `066` acrescentou a quarta**, pelo mesmo caminho: a `FR-084` foi revisada de novo, com as
 redações anteriores preservadas, para admitir o aviso complementar vinculado a ato oficial — a
 primeira situação sem efeito nenhum. A data está declarada em `avisos/application/despacho.py`.
+
+**A `134` acrescentou a quinta, sem módulo novo.** O aviso de pendência documental é gravado por um
+gesto de quem confere e enviado pelo mesmo despacho da `066`. Por isso a lista deixou de ser um
+dicionário por módulo: duas situações moram no mesmo remetente, e a contagem é das situações, e não
+dos arquivos. A data da revisão está declarada no despacho, ao lado da da `066`.
 """
 
 import io
@@ -21,21 +26,32 @@ from pathlib import Path
 
 import pytest
 
-from processo_seletivo.avisos.application.despacho import REVISAO_DA_FR_084_PELA_066
+from processo_seletivo.avisos.application.despacho import (
+    REVISAO_DA_FR_084_PELA_066,
+    REVISAO_DA_FR_084_PELA_134,
+)
 from processo_seletivo.convocacao.application.comunicar import REVISAO_DA_FR_084
 
 RAIZ = Path(__file__).resolve().parents[1] / "processo_seletivo"
 SPEC_DA_010 = Path(__file__).resolve().parents[2] / "specs" / "010-area-do-candidato" / "spec.md"
 
-# As quatro situações da `FR-084` revisada, e o módulo onde cada uma vive. **Declaradas, e não
+# As cinco situações da `FR-084` revisada, e o módulo onde cada uma vive. **Declaradas, e não
 # descobertas**: é a lista contra a qual a varredura compara, e acrescentar uma linha aqui é o
-# gesto que obriga a revisar a norma antes — não depois.
-SITUACOES = {
-    "identidade/application/mensagem.py": "o código de acesso e o aviso de mudança de credencial",
-    "inscricoes/application/mensagem.py": "a confirmação do envio da inscrição",
-    "convocacao/application/comunicar.py": "a convocação, quando o Edital a comunica por mensagem",
-    "avisos/application/despacho.py": "o aviso complementar vinculado a ato oficial (066)",
-}
+# gesto que obriga a revisar a norma antes — não depois. **Pares, e não dicionário** (134): a
+# quarta e a quinta saem do mesmo despacho, e um dicionário por módulo não as contaria.
+SITUACOES = (
+    ("identidade/application/mensagem.py", "o código de acesso e o aviso de mudança de credencial"),
+    ("inscricoes/application/mensagem.py", "a confirmação do envio da inscrição"),
+    (
+        "convocacao/application/comunicar.py",
+        "a convocação, quando o Edital a comunica por mensagem",
+    ),
+    ("avisos/application/despacho.py", "o aviso complementar vinculado a ato oficial (066)"),
+    ("avisos/application/despacho.py", "o aviso de pendência documental (134)"),
+)
+
+#: Os módulos que podem pôr mensagem na fila: os das situações, sem repetição.
+MODULOS_DAS_SITUACOES = {modulo for modulo, _ in SITUACOES}
 
 
 #: Os nomes que põem mensagem na fila de envio do Django.
@@ -72,7 +88,7 @@ def test_nenhum_modulo_envia_fora_das_situacoes_declaradas():
     O modo de errar aqui não dá erro nenhum em produção — dá um Edital comunicando por um caminho
     que a norma da `010` não admite, descoberto por quem recebeu a mensagem.
     """
-    assert modulos_que_enviam() <= set(SITUACOES), (
+    assert modulos_que_enviam() <= MODULOS_DAS_SITUACOES, (
         "um módulo novo passou a enviar mensagem: ou ele é uma situação nova — e a FR-084 da 010 "
         "precisa ser revisada de novo antes —, ou o envio não deveria estar ali"
     )
@@ -98,11 +114,16 @@ def test_a_varredura_le_o_codigo_e_nao_a_prosa(tmp_path):
     assert _nomes_do_codigo(envia) & REMETENTES
 
 
-def test_sao_quatro_situacoes_e_a_quarta_e_o_aviso():
-    """Quatro: a contagem asseverada é a da regra revisada pela `066` (`FR-1280`)."""
-    assert len(SITUACOES) == 4
-    assert "convocacao/application/comunicar.py" in SITUACOES
-    assert "avisos/application/despacho.py" in SITUACOES
+def test_sao_cinco_situacoes_e_a_quinta_e_o_aviso_de_pendencia():
+    """Cinco: a contagem asseverada é a da regra revisada pela `134` (FR-4602, SC-1446).
+
+    A quarta (`066`, `FR-1280`) e a quinta saem do mesmo despacho: são duas situações e um módulo.
+    """
+    assert len(SITUACOES) == 5
+    assert "convocacao/application/comunicar.py" in MODULOS_DAS_SITUACOES
+    despacho = [s for m, s in SITUACOES if m == "avisos/application/despacho.py"]
+    assert len(despacho) == 2
+    assert any("pendência documental" in situacao for situacao in despacho)
 
 
 @pytest.mark.skipif(not SPEC_DA_010.exists(), reason="a árvore de specs não está neste checkout")
@@ -145,4 +166,23 @@ def test_a_revisao_da_066_esta_na_norma_escrita():
     assert REVISAO_DA_FR_084_PELA_066 in trecho
     assert "**quatro**" in trecho, "a regra vigente precisa dizer quantas situações admite"
     assert "Redação anterior" in trecho
+    assert "Redação original" in trecho
+
+
+@pytest.mark.skipif(not SPEC_DA_010.exists(), reason="a árvore de specs não está neste checkout")
+def test_a_revisao_da_134_esta_na_norma_escrita():
+    """A quinta situação só existe porque a `FR-084` foi revisada pela terceira vez (FR-4601).
+
+    **As três redações anteriores ficam**: a da `066`, a da `019` e a original. Revisar é
+    acrescentar por cima, e a guarda confere que nenhuma delas foi apagada no caminho.
+    """
+    texto = SPEC_DA_010.read_text(encoding="utf-8")
+    trecho = texto[texto.index("- **FR-084**") : texto.index("- **FR-084a**")]
+
+    assert f"pela `134` em {REVISAO_DA_FR_084_PELA_134}" in trecho
+    assert "**cinco**" in trecho, "a regra vigente precisa dizer quantas situações admite"
+    assert "aviso de pendência documental" in trecho
+    assert "Redação anterior, da revisão da `066`" in trecho
+    assert "**quatro**" in trecho, "a redação da 066, preservada, dizia quantas admitia"
+    assert "Redação da revisão da `019`" in trecho
     assert "Redação original" in trecho

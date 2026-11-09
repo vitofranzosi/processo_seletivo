@@ -621,6 +621,12 @@ urlpatterns = [
         views.emitir_pendentes_view,
         name="emitir-pendentes",
     ),
+    # O aviso de pendência documental (134): o gesto grava, e o despacho da 066 envia.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/avisar-pendencias",
+        views.avisar_pendencias_view,
+        name="avisar-pendencias",
+    ),
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/historico",
         views.convocacao_historico,

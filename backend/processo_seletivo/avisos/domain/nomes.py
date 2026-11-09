@@ -9,7 +9,10 @@ e o erro apareceria como `IntegrityError` longe da causa.
 
 RESULTADO = "RESULTADO"
 CHAMADA = "CHAMADA"
-ORIGENS = (RESULTADO, CHAMADA)
+# **A quinta situação da `FR-084` da `010`** (134, FR-4618): o aviso de pendência documental. Não
+# cita publicação nem referência; cita a convocação, pelo destinatário, e o texto é da pessoa.
+PENDENCIA = "PENDENCIA"
+ORIGENS = (RESULTADO, CHAMADA, PENDENCIA)
 
 # --- O motivo: primeiro aviso, ou reenvio (R-011) -------------------------------------------------
 
@@ -100,6 +103,9 @@ AVISO_FALHAS_JA_REENVIADAS = "aviso_falhas_ja_reenviadas"
 AVISO_ENVIO_DESABILITADO = "aviso_envio_desabilitado"
 AVISO_TEXTO_INVALIDO = "aviso_texto_invalido"
 AVISO_NAO_ENCONTRADO = "aviso_nao_encontrado"
+# 134: o gesto sem ninguém a avisar, e o reenvio que o aviso de pendência não tem (FR-4609, D-008).
+AVISO_SEM_PENDENCIA_A_AVISAR = "aviso_sem_pendencia_a_avisar"
+AVISO_DE_PENDENCIA_SEM_REENVIO = "aviso_de_pendencia_sem_reenvio"
 MODELO_NAO_ENCONTRADO = "modelo_de_aviso_nao_encontrado"
 MODELO_COM_NOME_REPETIDO = "modelo_de_aviso_com_nome_repetido"
 
@@ -109,6 +115,12 @@ OPERACAO_CONFIRMAR = "AVISO_CONFIRMAR"
 OPERACAO_INTERROMPER = "AVISO_INTERROMPER"
 OPERACAO_MODELO = "AVISO_MODELO"
 ATO_CONFIRMAR = "aviso:confirmar"
+# 134: o gesto, e cada resultado de envio do aviso de pendência (FR-4620, FR-4621).
+OPERACAO_AVISAR_PENDENCIAS = "AVISO_PENDENCIAS"
+OPERACAO_ENVIO_DA_PENDENCIA = "AVISO_PENDENCIA_ENVIO"
+ATO_AVISAR_PENDENCIAS = "aviso:pendencias"
+#: Quem assina, na trilha, o que o despacho registra: ele roda num timer, e não há pessoa.
+SUJEITO_DO_DESPACHO = "sistema:despacho-de-avisos"
 ATO_INTERROMPER = "aviso:interromper"
 
 PERMISSAO = "aviso:enviar"

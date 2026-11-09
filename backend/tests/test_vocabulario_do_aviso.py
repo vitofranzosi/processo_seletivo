@@ -28,6 +28,8 @@ DA_066 = [
     RAIZ / "avisos/domain/nomes.py",
     RAIZ / "avisos/domain/mensagem.py",
     RAIZ / "avisos/domain/modelos_iniciais.py",
+    # O texto do aviso de pendência documental (134): a mesma regra, para a quinta situação.
+    RAIZ / "avisos/domain/pendencia.py",
 ]
 
 #: O que nenhuma superfície dos avisos afirma. Por palavra inteira: "lida" não pode casar com

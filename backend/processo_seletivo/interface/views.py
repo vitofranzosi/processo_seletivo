@@ -45,6 +45,7 @@ from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_a
 from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
+from processo_seletivo.avisos.application import pendencias as avisos_pendencias
 from processo_seletivo.classificacao.application import ordem_sem_resultado
 from processo_seletivo.classificacao.application.corte import (
     calcular_corte,
@@ -5423,6 +5424,9 @@ OPERACOES = {
     "AVISO_MODELO": "Alteração de modelo de aviso",
     "AVISO_CONFIRMAR": "Confirmação de aviso aos candidatos",
     "AVISO_INTERROMPER": "Interrupção de aviso aos candidatos",
+    # O aviso de pendência documental (134): o gesto de quem confere e cada resultado do despacho.
+    "AVISO_PENDENCIAS": "Aviso de pendência documental às pessoas convocadas",
+    "AVISO_PENDENCIA_ENVIO": "Resultado do envio de aviso de pendência documental",
     "ACESSO_CONCEDER": "Concessão de acesso",
     "ACESSO_REVOGAR": "Revogação de acesso",
     # A entrega documental à formalização (117, FR-3699): a definição, a designação, a consulta e o
@@ -8584,6 +8588,8 @@ def _documentos_por_linha(linhas, *, ordem=""):
 
     **Uma leitura para o recorte**, em três consultas, e não uma por linha. A ordem `documentos`
     põe primeiro o que pede trabalho: vencimento mais próximo, depois o estado.
+
+    Devolve as raízes e as leituras, para a prévia do aviso de pendência (134) não as ler de novo.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
@@ -8614,6 +8620,7 @@ def _documentos_por_linha(linhas, *, ordem=""):
             return (linha["convocacao"].vencimento or longe, ORDEM_DOCUMENTAL.index(estado))
 
         linhas.sort(key=chave)
+    return raizes, leituras
 
 
 def convocacao(request, edital_id, marco_id):
@@ -8651,7 +8658,9 @@ def convocacao(request, edital_id, marco_id):
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=agora
     )
     # Os documentos de cada linha, numa leitura só para o recorte inteiro (115, FR-3607).
-    _documentos_por_linha(leitura["linhas"], ordem=request.GET.get("ordem") or "")
+    raizes, leituras_documentais = _documentos_por_linha(
+        leitura["linhas"], ordem=request.GET.get("ordem") or ""
+    )
     recusa_da_correcao = request.session.pop("recusa_da_correcao", None)
     # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra
     # e o que cada gesto alcançaria são a mesma fotografia do recorte (`FR-888`).
@@ -8716,6 +8725,22 @@ def convocacao(request, edital_id, marco_id):
                 )
                 if pode_emitir
                 else {"itens": []},
+                # O aviso de pendência documental (134, FR-4603, FR-4605): para quem confere este
+                # Perfil, com quantas pessoas o gesto alcançaria agora e quantas ficam de fora.
+                "pendencias_a_avisar": avisos_pendencias.previa(
+                    actor=ator,
+                    edital=edital,
+                    perfil_id=perfil_id,
+                    marco_id=marco_id,
+                    lista_id=lista_id,
+                    agora=agora,
+                    # A mesma fotografia que a tela acabou de ler, e não uma segunda leitura.
+                    conducao={
+                        "convocacoes": leitura["convocacoes"],
+                        "raizes": raizes,
+                        "leituras": leituras_documentais,
+                    },
+                ),
                 # **Qual ato aconteceu, e não só que algo deu certo** (`UX-036`). Foi o defeito
                 # `E2E16-004` da `016`: três ações voltavam para a mesma tela com um aviso único, e
                 # quem acabara de desfechar lia "Apuração emitida".
@@ -9553,6 +9578,46 @@ def emitir_pendentes_view(request, edital_id, marco_id):
         )
 
     return _gesto_da_convocacao(request, edital_id, marco_id, acao="pendentes", praticar=praticar)
+
+
+@require_http_methods(["POST"])
+def avisar_pendencias_view(request, edital_id, marco_id):
+    """*"Avisar as pessoas com pendência nesta chamada"* (134, FR-4603): grava, e não envia.
+
+    **Fora de `_gesto_da_convocacao`**, porque a porta é outra: aquele esqueleto exige a gestão da
+    comissão, e este gesto é de quem pode conferir os documentos do Perfil (FR-3595 da `115`). A
+    recusa de inexistente segue para o middleware; as demais voltam à tela, com o motivo.
+    """
+    from processo_seletivo.avisos.application.pendencias import avisar_pendencias
+
+    ator, edital, pode_emitir = _edital_para_classificar(
+        request, edital_id, admite_conferencia=True
+    )
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    _exigir_alcance_da_conferencia(ator, edital, perfil_id, pode_emitir=False)
+    lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
+    destino = _volta_para_convocacao(edital_id, marco_id, lista_id)
+    try:
+        declarado = avisar_pendencias(
+            actor=ator,
+            edital_id=edital.id,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=request.correlation_id,
+        )
+    except DomainError as erro:
+        if erro.status == 404:
+            raise
+        request.session["erro_da_convocacao"] = erro.detail
+        return redirect(destino)
+    request.session["resultado_da_convocacao"] = _serializavel(declarado)
+    request.session["acao_da_convocacao"] = "pendencias_avisadas"
+    return redirect(destino)
 
 
 @require_http_methods(["POST"])
