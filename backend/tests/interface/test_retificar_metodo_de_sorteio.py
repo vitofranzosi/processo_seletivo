@@ -276,3 +276,12 @@ def test_o_marco_sem_metodo_declara_o_metodo_inteiro_e_o_ato_publica(
     metodo = perfil["classificationMilestones"][0]["drawMethod"]
     assert metodo["occurrence"] == "5901"
     assert metodo["substitutionRule"]["text"] == "Vale a seguinte da mesma fonte."
+
+
+@pytest.mark.parametrize("valor", ["", "20/11/2026 20h"])
+def test_instante_invalido_nao_derruba_o_formulario_nem_o_resumo(valor):
+    """O rascunho guarda o instante como foi digitado, e o vocabulário da Retificação o lê."""
+    from processo_seletivo.interface.retificacao import INSTANTE, _exibir, _para_formulario
+
+    assert _para_formulario(valor, INSTANTE) == valor
+    assert _exibir(valor, {"tipo": INSTANTE}) == valor

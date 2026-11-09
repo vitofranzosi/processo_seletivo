@@ -742,3 +742,25 @@ def test_a_ajuda_da_etapa_usa_as_frases_da_descricao_do_campo(client, com_etapas
         assert frase in bloco, frase
         for descricao in descricoes:
             assert frase in descricao, frase
+
+
+def test_metodo_que_espera_a_extracao_volta_para_a_tela(client, com_etapas):
+    """**Salvar o rascunho dava 500 na tela seguinte**, e não no salvamento (09/11, produção).
+
+    O Edital reaproveitado chega sem a extração (116, FR-3715), e o rascunho a admite ausente
+    (FR-3716): quem compõe grava a etapa antes de saber o concurso. O formulário grava os dois
+    campos como `""`, e na volta as pendências leem os nomes dos caminhos pelo vocabulário da
+    Retificação, que convertia todo instante com `fromisoformat` — a Retificação só via Edital
+    publicado, onde o instante sempre existe. O reaproveitamento remove as chaves, e por isso a
+    tela abria antes do primeiro salvamento e quebrava depois dele.
+    """
+    formulario = dict(METODO_NO_FORMULARIO)
+    formulario[f"marco-{PERFIL}-0-draw-occurrence"] = ""
+    formulario[f"marco-{PERFIL}-0-draw-occurrenceAt"] = ""
+    gravacao = _compor(client, com_etapas, **formulario)
+    assert gravacao.status_code == 302, gravacao.content
+    assert MarcoClassificatorio.objects.get(pk=MARCO).metodo_de_sorteio["occurrenceAt"] == ""
+
+    resposta = client.get(reverse("interface:compor-etapa", args=[com_etapas.id, "classificacao"]))
+
+    assert resposta.status_code == 200
