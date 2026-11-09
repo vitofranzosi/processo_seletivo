@@ -569,40 +569,62 @@ remover o antigo e corrigir o nome.
 
 - **FR-083**: Falha de envio DEVE produzir mensagem neutra, idêntica à do caminho feliz, e registro
   técnico no servidor.
-- **FR-084** *(revisada pela `019` em 2026-09-12 e pela `066` em 2026-10-09 — as redações
-  anteriores estão ao fim desta alínea)*:
-  Além do desafio, o sistema envia mensagem em exatamente **quatro** situações, todas nominais: a
+- **FR-084** *(revisada pela `019` em 2026-09-12, pela `066` em 2026-10-09 e
+  pela `134` em 2026-11-08 — as redações anteriores estão ao fim desta alínea)*:
+  Além do desafio, o sistema envia mensagem em exatamente **cinco** situações, todas nominais: a
   confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
   endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal
   (`FR-018b`); a **convocação**, quando o Perfil publicado declara que este Edital comunica por
-  mensagem individual (`019`, `FR-287`); e o **aviso complementar vinculado a ato oficial**
-  (`066`), que a equipe do certame redige e decide enviar aos destinatários que um ato já publicado
-  identifica. O canal passar a existir não torna comunicação transacional escopo implícito:
-  lembrete, campanha, aviso que nenhum ato oficial fundamente e aviso disparado pela publicação sem
-  decisão humana continuam fora, e acrescentar uma quinta situação exige revisar esta regra de novo.
+  mensagem individual (`019`, `FR-287`); o **aviso complementar vinculado a ato oficial** (`066`),
+  que a equipe do certame redige e decide enviar aos destinatários que um ato já publicado identifica;
+  e o **aviso de pendência documental** (`134`), que quem confere os documentos da convocação decide
+  enviar, num gesto, às pessoas convocadas que têm documento pendente e prazo em curso. O canal
+  passar a existir não torna comunicação transacional escopo implícito: lembrete, campanha, aviso que
+  nenhum ato oficial fundamente e aviso disparado pela publicação ou pela conferência sem decisão
+  humana continuam fora, e acrescentar uma sexta situação exige revisar esta regra de novo.
 
-  **A quarta é a primeira que não produz efeito nenhum, e é isso que a delimita.** O aviso não
-  inicia, não suspende e não altera prazo; não altera classificação, situação da inscrição nem
-  direito; e não substitui a publicação oficial, que permanece a referência, conforme o Edital. Ele
-  não se confunde com a terceira situação: a convocação por mensagem individual **é** o ato que faz
-  o prazo correr (`019`, `FR-269a`), e o aviso só aponta para um ato que já existe. Sem essa
-  fronteira, uma mensagem de cortesia passaria a ser lida como a convocação, e a pessoa contaria o
-  prazo a partir dela.
+  **A quinta é a primeira dirigida a uma pessoa pelo estado dela, e é isso que a delimita.** O aviso
+  de pendência não inicia, não suspende e não altera prazo; não substitui a convocação, que continua
+  sendo o ato; e não diz o motivo da pendência, que fica no portal (`FR-3584` da `115`). Ele só sai
+  depois da comunicação da convocação e antes do vencimento, nunca a quem já tem desfecho, nunca por
+  item já reenviado, e no máximo uma vez por pessoa, por chamada, por dia. O que o admite é o custo
+  verificado da falta dele: a pendência só aparecia a quem voltasse ao portal, e o prazo corria do
+  mesmo jeito. As regras de conteúdo, de quem recebe e de envio são da `134`, e o envio é o mesmo
+  despacho da `066`.
 
-  **O que a admite é a demanda do setor e a lista que o sistema já tem.** O setor responsável pelos
-  processos seletivos pediu, em 09/10/2026, que cada convocação ou resultado publicado pudesse ser
-  avisado aos candidatos, com texto da própria seleção. Os Editais da amostra já tratam o e-mail
-  como canal que o candidato deve acompanhar — o 77 (9.3) e o 57 (11.4) —, sem fazer dele o ato. E,
-  para os atos que esta revisão alcança, quem é destinatário não é escolha de ninguém: o resultado
-  publicado guarda, congelada, cada inscrição que considerou, e a chamada guarda cada inscrição que
-  convocou. Os destinatários saem do ato, e nunca de filtro.
-
-  **A quarta entra por gesto, e nunca por padrão.** Publicar não envia nada. Quem envia é uma
-  pessoa com capacidade própria para isso, que não é a de publicar, depois de ver os destinatários,
-  o texto e o ato citado. As regras de conteúdo, de destinatários e de envio são da `066`.
-
-  > **Redação anterior, da revisão da `019` em 2026-09-12, preservada porque a regra mandava
+  > **Redação anterior, da revisão da `066` em 2026-10-09, preservada porque a regra mandava
   > revisá-la e não substituí-la em silêncio:**
+  > Além do desafio, o sistema envia mensagem em exatamente **quatro** situações, todas nominais: a
+  > confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
+  > endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal
+  > (`FR-018b`); a **convocação**, quando o Perfil publicado declara que este Edital comunica por
+  > mensagem individual (`019`, `FR-287`); e o **aviso complementar vinculado a ato oficial**
+  > (`066`), que a equipe do certame redige e decide enviar aos destinatários que um ato já publicado
+  > identifica. O canal passar a existir não torna comunicação transacional escopo implícito:
+  > lembrete, campanha, aviso que nenhum ato oficial fundamente e aviso disparado pela publicação sem
+  > decisão humana continuam fora, e acrescentar uma quinta situação exige revisar esta regra de novo.
+  >
+  > **A quarta é a primeira que não produz efeito nenhum, e é isso que a delimita.** O aviso não
+  > inicia, não suspende e não altera prazo; não altera classificação, situação da inscrição nem
+  > direito; e não substitui a publicação oficial, que permanece a referência, conforme o Edital. Ele
+  > não se confunde com a terceira situação: a convocação por mensagem individual **é** o ato que faz
+  > o prazo correr (`019`, `FR-269a`), e o aviso só aponta para um ato que já existe. Sem essa
+  > fronteira, uma mensagem de cortesia passaria a ser lida como a convocação, e a pessoa contaria o
+  > prazo a partir dela.
+  >
+  > **O que a admite é a demanda do setor e a lista que o sistema já tem.** O setor responsável pelos
+  > processos seletivos pediu, em 09/10/2026, que cada convocação ou resultado publicado pudesse ser
+  > avisado aos candidatos, com texto da própria seleção. Os Editais da amostra já tratam o e-mail
+  > como canal que o candidato deve acompanhar — o 77 (9.3) e o 57 (11.4) —, sem fazer dele o ato. E,
+  > para os atos que esta revisão alcança, quem é destinatário não é escolha de ninguém: o resultado
+  > publicado guarda, congelada, cada inscrição que considerou, e a chamada guarda cada inscrição que
+  > convocou. Os destinatários saem do ato, e nunca de filtro.
+  >
+  > **A quarta entra por gesto, e nunca por padrão.** Publicar não envia nada. Quem envia é uma
+  > pessoa com capacidade própria para isso, que não é a de publicar, depois de ver os destinatários,
+  > o texto e o ato citado. As regras de conteúdo, de destinatários e de envio são da `066`.
+  >
+  > **Redação da revisão da `019` em 2026-09-12, preservada pela mesma razão:**
   > Além do desafio, o sistema envia mensagem em exatamente **três** situações, todas nominais: a
   > confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
   > endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal

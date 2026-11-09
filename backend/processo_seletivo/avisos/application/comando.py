@@ -51,10 +51,12 @@ def base_do_aviso(actor, processo, *, origem):
       entra pelo vínculo, como em `comissao:gerir`.
     - **Chamada**: só a base de gestão da comissão — a mesma porta da comunicação da convocação. A
       convocação é ato da comissão, e o publicador sozinho não basta.
+    - **Pendência** (134, D-010): a mesma da chamada, para ler e interromper pelas telas da `066`.
+      O gesto que a grava tem porta própria, a da conferência (`pendencias.avisar_pendencias`).
     """
     if actor is None or actor.institution_scope != processo.institution_scope:
         return None
-    if origem == nomes.CHAMADA:
+    if origem in (nomes.CHAMADA, nomes.PENDENCIA):
         return pode_gerir_comissao(actor, processo)
     if actor.can(nomes.PERMISSAO):
         return Base(nomes.PERMISSAO)
