@@ -764,7 +764,16 @@ def _para_formulario(valor, tipo):
     if valor is None:
         return ""
     if tipo == INSTANTE:
-        return datetime.fromisoformat(str(valor)).astimezone(ZONA).strftime("%Y-%m-%dT%H:%M")
+        # **O rascunho também passa por aqui, e não só o Edital publicado.** As pendências da
+        # composição nomeiam os caminhos por este vocabulário, e o método que espera a extração
+        # (116, FR-3716) é gravado com `occurrenceAt` vazio: converter sem guarda derrubava a tela
+        # da Classificação logo depois de salvá-la (09/11). O que não é instante volta como veio —
+        # a recusa dele é da validação, que diz o que falta; a tela só precisa abrir.
+        try:
+            instante = datetime.fromisoformat(str(valor))
+        except ValueError:
+            return str(valor)
+        return instante.astimezone(ZONA).strftime("%Y-%m-%dT%H:%M")
     return str(valor)
 
 
@@ -1851,7 +1860,11 @@ def _exibir(valor, campo):
         return "Sim" if _para_formulario(valor, BOOLEANO) == "1" else "Não"
     if campo["tipo"] == INSTANTE and valor is not None:
         bruto = _para_formulario(valor, INSTANTE)
-        return datetime.fromisoformat(bruto).strftime("%d/%m/%Y %H:%M") if bruto else ""
+        try:
+            return datetime.fromisoformat(bruto).strftime("%d/%m/%Y %H:%M") if bruto else ""
+        except ValueError:
+            # O que `_para_formulario` devolveu como veio por não ser instante.
+            return bruto
     if campo["tipo"] != REFERENCIA:
         return _para_formulario(valor, campo["tipo"])
     if valor is None:
