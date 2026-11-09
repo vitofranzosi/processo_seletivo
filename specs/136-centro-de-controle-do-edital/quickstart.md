@@ -9,10 +9,12 @@ uv run playwright install chromium
 ```
 
 Um banco próprio desta worktree (o `.env` dela tem `DB_NAME=ps136`), preparado como o README manda
-(`make preparar`), e os cenários de treinamento carregados com a chave ligada:
+(`make preparar`), e os cenários de treinamento carregados com a chave ligada. Num banco novo o
+gerador recusa sem autoridade vigente da unidade e sem `ARQUIVOS_CANDIDATOS_RAIZ`; a flag
+`--cenario` se repete, uma por cenário:
 
 ```bash
-CENARIOS_DE_TREINAMENTO=true SORTEIO_FONTE_DE_DEMONSTRACAO=true uv run python manage.py carregar_cenarios_de_treinamento --cenario C06 C08 C12 --banco ps136
+CENARIOS_DE_TREINAMENTO=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps136-arquivos uv run python manage.py carregar_cenarios_de_treinamento --banco ps136 --cenario C06 --cenario C08 --cenario C12
 ```
 
 Suba o servidor pela entrada `centro-136` do `.claude/launch.json` (porta 8136, seletor ligado).
