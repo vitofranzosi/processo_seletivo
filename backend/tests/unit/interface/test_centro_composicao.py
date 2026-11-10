@@ -366,6 +366,103 @@ def test_a_retificacao_em_curso_poe_o_edital_em_curso():
     assert edital.andamento == c.EM_CURSO and edital.nota == c.RETIFICACAO_EM_CURSO
 
 
+RETIFICACAO_SUA = {"meu_ato": "Homologar", "passo": {"papel": "quem homologa"}, "parada": ""}
+RETIFICACAO_DE_OUTRO = {"meu_ato": "", "passo": {"papel": "quem publica"}, "parada": ""}
+
+
+def test_a_retificacao_que_aguarda_a_pessoa_e_algo_em_aberto_e_dela():
+    """Item 1 da revisão do PR #443: a regra da `104` (FR-2819, FR-2820) vale no Centro.
+
+    Sem providência nenhuma, o Centro dizia "Nada em aberto", "Nenhuma ação é sua agora" e
+    "nada a fazer agora" na fase Edital, ao lado de "Retificação em curso — aguarda você".
+    """
+    pontos = [ponto(a.ORDEM, "Ordem", "g", a.FEITO, marco=MARCO_NOTAS)]
+    centro = compor(andamento([perfil(pontos)], []), em_curso=[RETIFICACAO_SUA])
+    edital = centro.fases[0]
+
+    assert centro.tem_algo and centro.tem_sua
+    assert centro.retificacoes_suas == [RETIFICACAO_SUA]
+    assert edital.em_curso and not edital.parada
+    assert (edital.quantas_suas, edital.quantas_de_outros) == (1, 0)
+    assert centro.onde == "Há algo em aberto em Edital."
+    assert centro.onde_detalhe == "1 ação é sua."
+    # Não se destaca a si mesma: tem a linha da `104`, e nenhuma frase de "o GPS não escolhe".
+    assert centro.destaque is None and centro.sem_destaque == ""
+    assert cc.fase_consultada(centro).chave == c.PUBLICACAO
+
+
+def test_a_retificacao_de_outro_papel_nao_e_sua_nem_parada():
+    pontos = [ponto(a.ORDEM, "Ordem", "g", a.FEITO, marco=MARCO_NOTAS)]
+    centro = compor(andamento([perfil(pontos)], []), em_curso=[RETIFICACAO_DE_OUTRO])
+    edital = centro.fases[0]
+
+    assert centro.tem_algo and not centro.tem_sua
+    assert not edital.parada and (edital.quantas_suas, edital.quantas_de_outros) == (0, 1)
+    assert centro.onde_detalhe == "1 está com outro papel."
+
+
+def test_a_retificacao_parada_pelo_desfecho_nao_e_algo_em_aberto():
+    parada = {**RETIFICACAO_SUA, "meu_ato": "", "parada": "cancelado"}
+    pontos = [ponto(a.ORDEM, "Ordem", "g", a.FEITO, marco=MARCO_NOTAS)]
+    centro = compor(andamento([perfil(pontos)], []), em_curso=[parada])
+    assert not centro.tem_algo and not centro.tem_sua
+
+
+def test_com_retificacao_sua_a_unica_providencia_nao_e_a_unica_acao():
+    """A regra 1 do destaque mentiria ("É a única ação sua"), e a 2 também ("corre em paralelo")."""
+    dados = sorteio_antes_do_congelamento()
+    centro = compor(dados, em_curso=[RETIFICACAO_SUA])
+    assert centro.destaque is None
+    assert centro.sem_destaque == c.SEM_DESTAQUE.format(n=3)
+
+    dados.providencias = dados.providencias[:1]
+    centro = compor(dados, em_curso=[RETIFICACAO_SUA])
+    assert centro.destaque is None and centro.sem_destaque == c.SEM_DESTAQUE.format(n=2)
+
+
+def test_o_rotulo_curto_e_o_do_nivel_1_e_nunca_none():
+    """Item 2 da revisão: a Modalidade sem código mostrava "None", recortado do rótulo longo."""
+    listas = [
+        ("", "Ampla concorrência (linha geral do quadro)"),
+        ("m-ppp", "Pessoas pretas (None)"),
+    ]
+    novo = perfil(
+        [ponto(a.ORDEM, "Ordem", "g", a.PENDENTE, marco=MARCO_NOTAS, listas=listas)],
+        listas=listas,
+    )
+    novo.perfil["competitionModalities"] = [{"id": "m-ppp", "name": "Pessoas pretas", "code": None}]
+    centro = compor(andamento([novo], [prov(a.ORDEM)]))
+
+    curtos = [lista.curto for lista in centro.perfis[0].listas]
+    assert curtos == ["Ampla concorrência", "Pessoas pretas"]
+    [classificacao] = [f for f in centro.fases if f.chave == c.CLASSIFICACAO]
+    assert [lst.rotulo for lst in classificacao.perfis[0].listas] == curtos
+
+
+def test_o_titulo_no_meio_da_frase_so_baixa_a_inicial():
+    """Item 4 da revisão: o nome da Etapa e o código da lista ficam como o Edital os publica."""
+    item = cc._item(
+        prov(a.CONSOLIDAR, ato="Consolidar a Prova Prática da PPP", sua=False),
+        set(),
+        {c.AVALIACAO: cc.Macrofase(c.AVALIACAO, c.EM_CURSO)},
+    )
+    assert item.titulo_no_meio_da_frase == "consolidar a Prova Prática da PPP"
+
+
+def test_o_ato_em_jargao_se_traduz_num_lugar_so():
+    """Item 7 da revisão: a providência, a tabela da fase e a linha da lista leem a mesma função."""
+    assert c.ato_simples(a.ORDEM, "Emitir a ordem") == c.CONCEITOS[a.ORDEM]["simples"]
+    assert c.ato_simples(a.CONFERIR, "Conferir 3 documentos") == "Conferir 3 documentos"
+    pontos = [ponto(a.ORDEM, "Ordem", "g", a.PENDENTE, marco=MARCO_NOTAS)]
+    centro = compor(andamento([perfil(pontos)], [prov(a.ORDEM, ato="Emitir a ordem")]))
+    simples = c.CONCEITOS[a.ORDEM]["simples"]
+    [item] = centro.itens
+    assert (item.titulo, item.no_gps) == (simples, "Emitir a ordem")
+    assert {titulo for _, _, titulo in centro.perfis[0].listas[0].atos} == {simples}
+    [classificacao] = [f for f in centro.fases if f.chave == c.CLASSIFICACAO]
+    assert classificacao.perfis[0].listas[0].celulas[0].ato == simples
+
+
 def test_a_conclusao_nunca_diz_que_o_edital_pode_ser_encerrado():
     pontos = [ponto(a.ORDEM, "Ordem", "g", a.FEITO, marco=MARCO_NOTAS)]
     centro = compor(andamento([perfil(pontos)], []))
@@ -513,25 +610,32 @@ def test_os_conceitos_se_declaram_provisorios():
 
 
 @pytest.mark.parametrize(
-    ("inscricoes", "andamento_", "resumo"),
+    ("inscricoes", "andamento_"),
     [
-        ({"estado": "encerrado", "enviadas": 1}, c.CONCLUIDA, "1 inscrição · encerradas"),
-        ({"estado": "aberto", "enviadas": 3}, c.EM_CURSO, "Abertas · 3 inscrições até agora"),
-        ({"estado": "futuro", "enviadas": 0}, c.NAO_INICIADA, "Ainda não abertas"),
-        ({"cancelado": True, "enviadas": 2}, c.CONCLUIDA, "Período cancelado · 2 inscrições"),
+        ({"estado": "encerrado", "enviadas": 1}, c.CONCLUIDA),
+        ({"estado": "aberto", "enviadas": 3}, c.EM_CURSO),
+        ({"estado": "futuro", "enviadas": 0}, c.NAO_INICIADA),
+        ({"estado": "encerrado", "cancelado": True, "enviadas": 2}, c.CONCLUIDA),
+        ({"cancelado": True, "enviadas": 2}, c.CONCLUIDA),
+        ({"enviadas": 0}, c.NAO_INICIADA),
     ],
 )
-def test_a_fase_inscricoes_segue_o_periodo(inscricoes, andamento_, resumo):
-    """FR-4713: o período que o andamento já lê."""
+def test_a_fase_inscricoes_segue_o_periodo(inscricoes, andamento_):
+    """FR-4713: o período que o andamento já lê — e o resumo é a linha da `127`, e não outra.
+
+    A primeira versão tinha uma ramificação própria, com outro texto para o mesmo estado, e a
+    página mostrava os dois (item 5 da revisão do PR #443).
+    """
     from processo_seletivo.inscricoes.domain import periodo
 
     estado = {
         "encerrado": periodo.ENCERRADO,
         "aberto": periodo.ABERTO,
         "futuro": periodo.FUTURO,
-    }.get(inscricoes.get("estado"))
-    fase = cc._fase_inscricoes({**inscricoes, "estado": estado})
-    assert (fase.andamento, fase.resumo) == (andamento_, resumo)
+    }.get(inscricoes.get("estado"), periodo.NAO_DESIGNADO)
+    dados = {**inscricoes, "estado": estado}
+    fase = cc._fase_inscricoes(dados)
+    assert (fase.andamento, fase.resumo) == (andamento_, a.linha_das_inscricoes(dados))
 
 
 def test_o_impedimento_fica_na_espera_com_quem_resolve():

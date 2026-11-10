@@ -174,8 +174,8 @@ class CelulaNaFase:
     @property
     def ato(self):
         """O ato na língua da coluna: "Classificar a lista", e não "Emitir a ordem"."""
-        if self.celula.natureza in c.JARGAO and self.celula.situacao in a.A_PRATICAR:
-            return c.CONCEITOS[self.celula.natureza]["simples"]
+        if self.celula.situacao in a.A_PRATICAR:
+            return c.ato_simples(self.celula.natureza, self.celula.ato)
         return self.celula.ato
 
 
@@ -212,6 +212,12 @@ class ItemDeProvidencia:
     def fase(self):
         return c.NOMES[self.fase_chave]
 
+    @property
+    def titulo_no_meio_da_frase(self):
+        """Depois de "Quem conduz a seleção:", só com a inicial minúscula — o nome da Etapa e o
+        código da lista ficam como o Edital os publica."""
+        return self.titulo[:1].lower() + self.titulo[1:]
+
 
 @dataclass
 class Macrofase:
@@ -222,6 +228,9 @@ class Macrofase:
     paralela: str = ""
     perfis: list = field(default_factory=list)
     providencias: list = field(default_factory=list)
+    #: As Retificações em curso que ainda prosseguem, no resumo da `103` (só na fase Edital). Não
+    #: são providências (D-017 da `127`), mas são algo em aberto, e de alguém (FR-2819 da `104`).
+    retificacoes: list = field(default_factory=list)
 
     @property
     def nome(self):
@@ -270,9 +279,29 @@ class Macrofase:
         return min(datas) if datas else None
 
     @property
+    def retificacoes_suas(self):
+        return [r for r in self.retificacoes if r.get("meu_ato")]
+
+    @property
+    def retificacoes_de_outros(self):
+        return [r for r in self.retificacoes if not r.get("meu_ato") and r.get("passo")]
+
+    @property
+    def quantas_suas(self):
+        return len(self.suas) + len(self.retificacoes_suas)
+
+    @property
+    def quantas_de_outros(self):
+        return len(self.de_outros) + len(self.retificacoes_de_outros)
+
+    @property
+    def em_aberto(self):
+        return bool(self.providencias or self.retificacoes)
+
+    @property
     def parada(self):
         """Em curso, mas sem nada que alguém possa fazer agora: depende de outra fase."""
-        return self.em_curso and not self.providencias
+        return self.em_curso and not self.em_aberto
 
 
 @dataclass(frozen=True)
@@ -342,6 +371,8 @@ class Centro:
     ve_a_matriz: bool
     destaque: Destaque | None = None
     sem_destaque: str = ""
+    #: As Retificações em curso em que o próximo ato é da pessoa (104, FR-2819).
+    retificacoes_suas: list = field(default_factory=list)
 
     @property
     def grupos(self):
@@ -378,19 +409,24 @@ class Centro:
     def total(self):
         return len(self.itens)
 
+    @property
+    def tem_algo(self):
+        """Há algo em aberto, de alguém: uma providência, ou uma Retificação que prossegue."""
+        return any(fase.em_aberto for fase in self.fases)
+
+    @property
+    def tem_sua(self):
+        """A pessoa tem o que fazer: uma providência sua, ou o próximo ato de uma Retificação.
+
+        Sem a Retificação, o cartão dizia "Nenhuma ação é sua agora" ao lado de "Retificação em
+        curso — aguarda você" — a contradição que a `104` tirou do detalhe (FR-2820).
+        """
+        return bool(self.suas or self.retificacoes_suas)
+
 
 # ---------------------------------------------------------------------------------------------
 # A composição
 # ---------------------------------------------------------------------------------------------
-
-
-def _curto(rotulo):
-    """ "Ampla concorrência (linha geral do quadro)" → "Ampla concorrência"; "… (PPP)" → "PPP"."""
-    if rotulo.startswith("Ampla concorrência"):
-        return "Ampla concorrência"
-    if "(" in rotulo and rotulo.endswith(")"):
-        return rotulo[rotulo.rfind("(") + 1 : -1]
-    return rotulo
 
 
 def _passo(ponto):
@@ -425,7 +461,7 @@ def _roteiro(pontos, listas):
     return roteiro
 
 
-def _lista_no_centro(perfil, lista_id, rotulo, andamentos):
+def _lista_no_centro(perfil, lista_id, rotulo, curto, andamentos):
     """A linha de "Onde cada lista está": o andamento por fase e o que há agora nela."""
     vistas, atos, espera = set(), [], None
     for ponto in perfil.pontos:
@@ -435,15 +471,12 @@ def _lista_no_centro(perfil, lista_id, rotulo, andamentos):
         fase = fase_do_ponto(ponto)
         if celula.situacao in a.A_PRATICAR and fase not in vistas:
             vistas.add(fase)
-            titulo = celula.ato
-            if celula.natureza in c.JARGAO:
-                titulo = c.CONCEITOS[celula.natureza]["simples"]
-            atos.append((c.NOMES[fase], celula, titulo))
+            atos.append((c.NOMES[fase], celula, c.ato_simples(celula.natureza, celula.ato)))
         elif espera is None and celula.situacao in (a.AGUARDA, a.IMPEDIDO):
             espera = celula
     concluida = all(x in (c.CONCLUIDA, c.NAO_SE_APLICA, None) for _, x in andamentos)
     fases = [FaseNaLista(chave, x) for chave, x in andamentos]
-    return ListaNoCentro(rotulo, _curto(rotulo), fases, concluida, atos, espera)
+    return ListaNoCentro(rotulo, curto, fases, concluida, atos, espera)
 
 
 def paralela(perfis):
@@ -482,20 +515,18 @@ def _fase_publicacao(edital, documentos, em_curso):
 
 
 def _fase_inscricoes(inscricoes):
+    """O andamento sai do estado do período; o resumo é a linha da `127` (FR-4101), e não outra.
+
+    O cancelado terminou sem chegar ao fim: concluído, e a linha já diz que foi cancelado.
+    """
     from processo_seletivo.inscricoes.domain import periodo
 
-    enviadas = inscricoes.get("enviadas") or 0
-    quantas = f"{enviadas} {'inscrição' if enviadas == 1 else 'inscrições'}"
-    estado = inscricoes.get("estado")
+    andamento = {periodo.ENCERRADO: c.CONCLUIDA, periodo.ABERTO: c.EM_CURSO}.get(
+        inscricoes.get("estado"), c.NAO_INICIADA
+    )
     if inscricoes.get("cancelado"):
-        return Macrofase(c.INSCRICOES, c.CONCLUIDA, f"Período cancelado · {quantas}")
-    if estado == periodo.ENCERRADO:
-        return Macrofase(c.INSCRICOES, c.CONCLUIDA, f"{quantas} · encerradas")
-    if estado == periodo.ABERTO:
-        return Macrofase(c.INSCRICOES, c.EM_CURSO, f"Abertas · {quantas} até agora")
-    if estado == periodo.FUTURO:
-        return Macrofase(c.INSCRICOES, c.NAO_INICIADA, "Ainda não abertas")
-    return Macrofase(c.INSCRICOES, c.NAO_INICIADA, "Período não designado")
+        andamento = c.CONCLUIDA
+    return Macrofase(c.INSCRICOES, andamento, a.linha_das_inscricoes(inscricoes))
 
 
 def _fase_conclusao(edital, perfis_no_centro):
@@ -537,7 +568,11 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
             pontos[fase_do_ponto(ponto)].append(ponto)
         por_fase_e_lista = {chave: [] for chave in c.POR_LISTA}
         listas = []
+        # O rótulo curto é o do nível 1 (D-020 da `127`): "Ampla concorrência" e o código de cada
+        # Modalidade, ou o nome dela quando não tem código.
+        curtos = a._rotulos_curtos(perfil.perfil)
         for lista_id, rotulo in perfil.listas:
+            curto = curtos.get(a._chave(lista_id), rotulo)
             andamentos = []
             for chave in c.POR_LISTA:
                 celulas = [ponto.celula(lista_id) for ponto in pontos[chave]]
@@ -545,7 +580,7 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
                 andamentos.append((chave, andamento_da_lista))
                 por_fase_e_lista[chave].append(
                     ListaNaFase(
-                        _curto(rotulo),
+                        curto,
                         andamento_da_lista,
                         [
                             CelulaNaFase(_passo(ponto)[0], ponto.celula(lista_id))
@@ -554,7 +589,7 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
                         ],
                     )
                 )
-            listas.append(_lista_no_centro(perfil, lista_id, rotulo, andamentos))
+            listas.append(_lista_no_centro(perfil, lista_id, rotulo, curto, andamentos))
         for chave in c.POR_LISTA:
             if pontos[chave]:
                 detalhes[chave].append(
@@ -585,6 +620,8 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
             )
     por_chave = {fase.chave: fase for fase in fases}
     por_chave[c.AVALIACAO].paralela = paralela(perfis)
+    # A parada pelo desfecho do Edital não prossegue: é dita, mas não é algo em aberto.
+    por_chave[c.PUBLICACAO].retificacoes = [r for r in em_curso or () if not r.get("parada")]
 
     # A segunda leitura: as providências do nível 1 da `127`, na ordem dele, cada uma na sua fase.
     governadas = etapas_governadas(perfis)
@@ -594,7 +631,8 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
         fase.providencias = [i for i in itens if i.fase_chave == fase.chave]
 
     suas = [i for i in itens if i.p.grupo == p.SUA]
-    destacado, sem_destaque = destaque(suas, por_chave)
+    retificacoes_suas = por_chave[c.PUBLICACAO].retificacoes_suas
+    destacado, sem_destaque = destaque(suas, por_chave, retificacoes=len(retificacoes_suas))
     onde, onde_detalhe = onde_estamos(fases, itens)
     return Centro(
         fases=fases,
@@ -606,15 +644,15 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
         ve_a_matriz=bool(andamento.ve_a_matriz),
         destaque=destacado,
         sem_destaque=sem_destaque,
+        retificacoes_suas=retificacoes_suas,
     )
 
 
 def _item(providencia, governadas, por_chave):
     chave = fase_da_providencia(providencia, governadas)
     dados = c.conceito(providencia.natureza)
-    titulo, no_gps = providencia.ato, ""
-    if dados and providencia.natureza in c.JARGAO:
-        titulo, no_gps = dados["simples"], providencia.ato
+    titulo = c.ato_simples(providencia.natureza, providencia.ato)
+    no_gps = providencia.ato if titulo != providencia.ato else ""
     return ItemDeProvidencia(providencia, chave, dados, titulo, no_gps, por_chave[chave].paralela)
 
 
@@ -623,7 +661,7 @@ def _item(providencia, governadas, por_chave):
 # ---------------------------------------------------------------------------------------------
 
 
-def destaque(suas, por_chave):
+def destaque(suas, por_chave, *, retificacoes=0):
     """`(Destaque | None, frase quando não há destaque)`. **O critério, dito na tela.**
 
     1. Uma ação sua só → é ela, porque não há outra.
@@ -634,23 +672,29 @@ def destaque(suas, por_chave):
        que depende de outro ato é *Depois*, e nem vira providência —, e o GPS não tem como saber
        qual importa mais.
 
+    `retificacoes` são os atos da pessoa em Retificações em curso (104, FR-2819). Contam como ações
+    suas, e nenhuma é paralela: uma Retificação pode mudar datas, vagas ou regras de qualquer fase,
+    e o "corre em paralelo e não segura nada" da regra 2 seria falso. Elas mesmas não se destacam —
+    têm a linha da `104` no cartão.
+
     **Provisório.** O critério é a quarta decisão do estudo, pendente e bloqueante para a liberação
     geral. A regra 1 só fica segura com a `135`: no C08 ela destaca a ordem de uma lista sem
     inscritos, e é a providência que precisa dizê-lo.
     """
     if not suas:
         return None, ""
-    if len(suas) == 1:
+    quantas = len(suas) + retificacoes
+    if quantas == 1:
         item = suas[0]
         return Destaque(item, c.PORQUE_UNICA, destrava(item, por_chave)), ""
     principais = [i for i in suas if not i.paralela]
-    if len(principais) == 1:
+    if not retificacoes and len(principais) == 1:
         item = principais[0]
         passos = destrava(item, por_chave)
         if passos:
             porque = c.PORQUE_DESTRAVA_UMA if len(suas) == 2 else c.PORQUE_DESTRAVA_VARIAS
             return Destaque(item, porque, passos), ""
-    return None, c.SEM_DESTAQUE.format(n=len(suas))
+    return None, c.SEM_DESTAQUE.format(n=quantas)
 
 
 def destrava(item, por_chave):
@@ -696,18 +740,20 @@ def onde_estamos(fases, itens):
     curso sem nada a fazer. Com muitas fases parcialmente ativas, o número deixava de dizer alguma
     coisa. A frase lista as fases que têm providência, e a segunda diz de quem é.
     """
-    abertas = [fase for fase in fases if fase.providencias]
+    abertas = [fase for fase in fases if fase.em_aberto]
     if not abertas:
         conclusao = next((f for f in fases if f.chave == c.CONCLUSAO), None)
         if conclusao is not None and conclusao.andamento == c.CONCLUIDA:
             return "Seleção concluída. Nada em aberto.", ""
-        em_curso = [fase.nome.lower() for fase in fases if fase.em_curso]
+        em_curso = [c.NA_FRASE[fase.chave] for fase in fases if fase.em_curso]
         if em_curso:
             return f"Nada em aberto agora. Em curso: {_lista_de(em_curso)}.", ""
         return "Nada em aberto agora.", ""
-    frase = f"Há algo em aberto em {_lista_de([fase.nome.lower() for fase in abertas])}."
-    suas = sum(1 for i in itens if i.p.grupo == p.SUA)
-    de_outros = sum(1 for i in itens if i.p.grupo == p.DE_OUTRO)
+    frase = f"Há algo em aberto em {_lista_de([c.NA_FRASE[fase.chave] for fase in abertas])}."
+    # As Retificações que prosseguem contam com as providências: a que espera a pessoa é dela, e a
+    # que espera outro papel é dele (104, FR-2819, FR-2820).
+    suas = sum(fase.quantas_suas for fase in fases)
+    de_outros = sum(fase.quantas_de_outros for fase in fases)
     aguardando = [i for i in itens if i.p.situacao == a.AGUARDA]
     impedidas = sum(1 for i in itens if i.p.situacao == a.IMPEDIDO)
     partes = []
@@ -767,10 +813,10 @@ def fase_consultada(centro, pedida=None):
         return por_chave[centro.destaque.item.fase_chave]
     for paralela_por_ultimo in (False, True):
         for fase in centro.fases:
-            if bool(fase.paralela) == paralela_por_ultimo and fase.suas:
+            if bool(fase.paralela) == paralela_por_ultimo and fase.quantas_suas:
                 return fase
     for fase in centro.fases:
-        if fase.providencias:
+        if fase.em_aberto:
             return fase
     if centro.em_curso:
         return centro.em_curso[0]

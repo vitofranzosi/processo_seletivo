@@ -87,9 +87,9 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
 {# ===================== O que fazer agora (camada B) ===================== #}
 <section class="cartao cc-agora" aria-labelledby="agora-titulo">
   <h2 id="agora-titulo">O que fazer agora</h2>
-  {% if not centro.total %}
+  {% if not centro.tem_algo %}
   <p class="nada-em-aberto"><strong>Nada em aberto:</strong> {{ porque_nada }}.</p>
-  {% elif not centro.suas %}
+  {% elif not centro.tem_sua %}
   <p class="cc-nenhuma-sua"><strong>Nenhuma ação é sua agora.</strong>{% if centro.de_outros %} As disponíveis estão com outros papéis, abaixo.{% endif %}</p>
   {% endif %}
 
@@ -97,7 +97,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   <article class="cc-destaque" aria-labelledby="destaque-titulo">
     <p class="cc-rotulo-pequeno">Sua próxima ação · {{ item.fase }}</p>
     <h3 id="destaque-titulo">{{ item.titulo }}</h3>
-    <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}{% if item.p.ate %} · até {{ item.p.ate|date:"d/m/Y" }}{% endif %}{% if item.no_gps %} · <span class="cc-no-gps">no GPS: {{ item.no_gps|lower }}</span>{% endif %}</p>
+    <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}{% if item.p.ate %} · até {{ item.p.ate|date:"d/m/Y" }}{% endif %}{% if item.no_gps %} · <span class="cc-no-gps">no GPS: {{ item.no_gps|inicial_minuscula }}</span>{% endif %}</p>
     {% if item.p.nota %}<p class="cc-nota-da-acao">{{ item.p.nota|capfirst }}.</p>{% endif %}
     {% if item.conceito %}<p class="cc-curta">{{ item.conceito.curta }}</p>{% endif %}
     {% if item.p.url %}<p><a class="botao" href="{{ item.p.url }}">Abrir a tela</a></p>{% endif %}
@@ -111,6 +111,11 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   <p class="cc-sem-destaque">{{ centro.sem_destaque }}</p>
   {% endif %}
 
+  {% comment %} A Retificação que espera a pessoa conta como ação dela (104, FR-2819), com o texto e o destino da faixa da Lista e do detalhe — o mesmo resumo da 103 —, para que os três não divirjam. {% endcomment %}
+  {% for item in centro.retificacoes_suas %}
+  <p class="bastao"><strong>Uma Retificação deste Edital aguarda você:</strong> <a href="{{ item.url }}">{{ item.ato_na_lista }}</a> ({{ item.rotulo_situacao }}).</p>
+  {% endfor %}
+
   {% if centro.demais_suas %}
   <h3 class="cc-subtitulo">{% if centro.destaque %}Também sua{% else %}Suas ações{% endif %}</h3>
   <ul class="cc-providencias">
@@ -118,7 +123,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
     <li class="cc-providencia sua">
       <p class="cc-rotulo-pequeno"><span class="marca-sua">Sua</span> {{ item.fase }}</p>
       <p class="cc-ato">{% if item.p.url %}<a href="{{ item.p.url }}">{{ item.titulo }}</a>{% else %}{{ item.titulo }}{% endif %}</p>
-      <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}{% if item.p.ate %} · até {{ item.p.ate|date:"d/m/Y" }}{% endif %}{% if item.no_gps %} · <span class="cc-no-gps">no GPS: {{ item.no_gps|lower }}</span>{% endif %}</p>
+      <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}{% if item.p.ate %} · até {{ item.p.ate|date:"d/m/Y" }}{% endif %}{% if item.no_gps %} · <span class="cc-no-gps">no GPS: {{ item.no_gps|inicial_minuscula }}</span>{% endif %}</p>
       {% if item.p.nota %}<p class="cc-nota-da-acao">{{ item.p.nota|capfirst }}.</p>{% endif %}
       {% if item.conceito %}<p class="cc-curta">{{ item.conceito.curta }}</p>{% endif %}
       {% if item.paralela %}<p class="cc-paralela">{{ item.paralela }}</p>{% endif %}
@@ -140,7 +145,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
       <p class="cc-ato">{{ item.titulo }}</p>
       <p class="cc-onde-da-acao">{{ item.p.onde_por_extenso }}</p>
       {% if item.p.razao %}<p><strong>Por quê:</strong> {{ item.p.razao }}.</p>{% endif %}
-      {% if item.p.texto_de_quem_resolve %}<p><strong>Quem resolve:</strong> {{ item.p.texto_de_quem_resolve|lower }}{% if item.p.url_da_saida %} — <a href="{{ item.p.url_da_saida }}">Retificar</a>{% endif %}.</p>{% endif %}
+      {% if item.p.texto_de_quem_resolve %}<p><strong>Quem resolve:</strong> {{ item.p.texto_de_quem_resolve|inicial_minuscula }}{% if item.p.url_da_saida %} — <a href="{{ item.p.url_da_saida }}">Retificar</a>{% endif %}.</p>{% endif %}
     </li>
     {% endfor %}
     {% for item in centro.aguardando %}
@@ -158,7 +163,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   <h3 class="cc-subtitulo">Com outros papéis</h3>
   <ul class="cc-providencias compactas">
     {% for item in centro.de_outros %}
-    <li class="cc-providencia de-outro"><strong>{{ item.p.texto_do_papel }}:</strong> {{ item.titulo|lower }} <span class="cc-onde-da-acao">— {{ item.p.onde_por_extenso }}</span> <span class="cc-fraco">({{ item.fase }})</span></li>
+    <li class="cc-providencia de-outro"><strong>{{ item.p.texto_do_papel }}:</strong> {{ item.titulo_no_meio_da_frase }} <span class="cc-onde-da-acao">— {{ item.p.onde_por_extenso }}</span> <span class="cc-fraco">({{ item.fase }})</span></li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -173,7 +178,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   <p class="cc-rotulo-pequeno">Fase consultada</p>
   <h2 id="detalhe-titulo"><span class="cc-sinal" aria-hidden="true">{{ fase.sinal }}</span> {{ fase.nome }} <span class="cc-andamento-da-fase f-{{ fase.andamento }}">{{ fase.rotulo }}</span></h2>
   <p class="cc-pergunta">{{ fase.pergunta }}</p>
-  {% if fase.providencias %}<p class="cc-oferece"><span class="cc-fraco">Agora:</span> {% include "interface/_marcas_da_fase.html" with f=fase %}</p>
+  {% if fase.em_aberto %}<p class="cc-oferece"><span class="cc-fraco">Agora:</span> {% include "interface/_marcas_da_fase.html" with f=fase %}</p>
   {% elif fase.parada %}<p class="cc-oferece cc-fraco">Nada a fazer agora nesta fase: o que falta depende de outra fase.</p>{% endif %}
   {% if fase.resumo %}<p>{{ fase.resumo }}.</p>{% endif %}
   {% if fase.nota %}<p class="cc-nota">{{ fase.nota }}</p>{% endif %}
@@ -185,7 +190,6 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   </ul>
   <p class="cc-fraco">Publicado não se corrige: corrige-se por Retificação, que passa de novo por elaboração, homologação e publicação.</p>
   {% elif fase.chave == 'inscricoes' %}
-  <p>{{ linha_das_inscricoes }}.</p>
   <p class="cc-fraco">A consulta das inscrições, para quem tem a permissão, fica em <a href="#administracao">Administração e histórico</a>.</p>
   {% elif fase.chave == 'conclusao' %}
   {% if edital.status == 'ENCERRADO' %}<p>O Edital foi encerrado. Os atos de todas as fases estão no histórico e nos documentos publicados.</p>
@@ -294,10 +298,11 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
       {% if retificacoes_em_curso %}<p>{{ retificacoes_em_curso|length }} {% if retificacoes_em_curso|length == 1 %}Retificação em curso{% else %}Retificações em curso{% endif %}.</p>{% else %}<p class="cc-fraco">Nenhuma Retificação em curso.</p>{% endif %}
     </div>
     <div class="cartao">
-      <h3>Consultas e documentos</h3>
+      {% comment %} A principal é o ato do Edital, e não uma consulta: vem primeiro, com o peso que o detalhe lhe dá (057, D-002; 127, FR-4088). {% endcomment %}
+      <h3>Ações e consultas do Edital</h3>
       {% if grupo.principal or grupo.secundarias %}
       <ul class="lista-acoes em-linha">
-        {% if grupo.principal %}{% include "interface/_acao_do_edital.html" with acao=grupo.principal peso="secundario" %}{% endif %}
+        {% if grupo.principal %}{% include "interface/_acao_do_edital.html" with acao=grupo.principal peso=peso_da_principal %}{% endif %}
         {% for acao in grupo.secundarias %}{% include "interface/_acao_do_edital.html" with peso="secundario" %}{% endfor %}
       </ul>
       {% else %}<p class="cc-fraco">Nenhuma consulta disponível para seus papéis.</p>{% endif %}

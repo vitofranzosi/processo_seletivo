@@ -49,3 +49,41 @@ problema e sem migration, e **`make test-pg`: 17 688 passando, 12 pulados, nenhu
 do `CLAUDE.md` para quem tem os dois grupos opcionais. O total é o da primeira rodada (17 685 + as 3
 que falhavam). Os casos desta feature são 133: 116 puros, 10 da página, 3 dos cenários (cada um com
 os quatro papéis), 2 de orçamento e 2 de navegador — mais os guardiões que ela tocou.
+
+## A revisão do PR #443 (09/11/2026)
+
+Sete achados, todos corrigidos neste PR. O detalhe do Edital não muda de comportamento: o que ele
+ganhou na `136` continua sendo só o link de ida.
+
+1. **A Retificação que aguarda a pessoa.** O Centro aplicava só as providências da `127`, e por
+   isso, com o nível 1 vazio para quem homologa, dizia "Nenhuma ação é sua agora" e marcava a fase
+   Edital "nada a fazer agora" — e mais abaixo, "Retificação em curso — aguarda você". Agora vale a
+   regra que a `104` deu ao detalhe (FR-2819, FR-2820): a Retificação que ainda prossegue é algo em
+   aberto na fase Edital, e é da pessoa quando o próximo ato é dela. A linha "Uma Retificação deste
+   Edital aguarda você" tem o texto e o destino do detalhe. No destaque, ela conta como ação sua e
+   nunca é paralela, porque pode mudar qualquer fase: com ela, nem a regra 1 ("a única") nem a 2
+   ("a outra corre em paralelo") seriam verdade. O teste é o de quem homologa, com a Retificação
+   submetida, em `test_centro_do_edital.py`, mais quatro casos puros.
+2. **O rótulo curto** é o do nível 1 (`andamento._rotulos_curtos`, a vigésima decisão da `127`), e
+   não mais um recorte do rótulo longo, que mostrava "None" para a Modalidade sem código.
+3. **O cartão "Consultas e documentos"** passou a "Ações e consultas do Edital". A ação principal
+   do conjunto vem primeiro, com o peso que o detalhe lhe dá: cheia, a não ser que a pessoa tenha o
+   que fazer.
+4. **"Com outros papéis"** baixa só a inicial do ato: "consolidar a Prova Prática", e não
+   "consolidar a prova prática". O mesmo filtro (`inicial_minuscula`) serve o "no GPS: …" e o
+   "Quem resolve", que também baixavam "Edital" e "Retificações".
+5. **A fase Inscrições** tira o andamento do estado do período, e o resumo é a linha da `127`
+   (`linha_das_inscricoes`), e não uma segunda ramificação com outro texto.
+6. **O alcance** passou a ser um campo do `Andamento` — duas linhas em `andamento.py`, o único toque
+   desta feature no arquivo —, e o Centro não o calcula de novo.
+7. **A tradução do jargão** é uma função só, `conceitos.ato_simples`, lida pela providência, pela
+   tabela da fase e pela linha de cada lista.
+
+"Onde estamos" passou a escrever "Edital" com maiúscula no meio da frase (`conceitos.NA_FRASE`),
+porque a fase Edital agora aparece nela quando há Retificação em curso.
+
+Depois das correções: `make lint` limpo; `make check` sem problema e sem migration (o
+`makemigrations --check` com o superusuário, porque a role de runtime não lê `django_migrations` do
+banco de desenvolvimento desta worktree — ambiente, e não o diff); e **`make test-pg`: 17 698
+passando, 12 pulados, nenhuma falha** (4 workers, 1375 s). São os 17 688 da segunda rodada mais os
+10 casos novos da revisão. A conferência no navegador não foi refeita.

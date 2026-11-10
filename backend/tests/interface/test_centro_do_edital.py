@@ -51,7 +51,7 @@ def test_o_centro_abre_e_volta_ao_detalhe_e_o_detalhe_leva_a_ele(client, s1):
     assert "Você conduz a seleção." in texto
     # FR-4740: a administração depois da operação.
     administracao = texto.split('id="administracao"', 1)[1]
-    for titulo in ("Documentos publicados", "Consultas e documentos", "Quem atuou"):
+    for titulo in ("Documentos publicados", "Ações e consultas do Edital", "Quem atuou"):
         assert f"<h3>{titulo}</h3>" in administracao
     assert texto.index('id="agora-titulo"') < texto.index('id="administracao-titulo"')
 
@@ -134,6 +134,51 @@ def test_a_retificacao_em_curso_aparece_e_poe_o_edital_em_curso(client, s1, api_
     assert edital.andamento == c.EM_CURSO
     assert c.RETIFICACAO_EM_CURSO in texto
     assert "Retificação em curso</strong>" in texto
+
+
+def test_a_retificacao_em_homologacao_e_a_acao_de_quem_homologa(client, s1, api_client):
+    """Item 1 da revisão do PR #443: a regra da `104` (FR-2819, FR-2820) vale no Centro.
+
+    Quem homologa não tem providência sua no S1 — a relação é de quem conduz —, e a Retificação
+    submetida espera por ele. O Centro dizia "Nenhuma ação é sua agora" e "nada a fazer agora" na
+    fase Edital, e mais abaixo "aguarda você"; o detalhe, pela `104`, já nomeava a Retificação como
+    o ato da pessoa.
+    """
+    from tests.fixtures.edital import actor_headers
+
+    retificacao = create_retification(
+        api_client, s1["edital"], mudanca_de_vagas(5), suffix="cc136h"
+    )
+    submissao = api_client.post(
+        f"/api/v1/admin/retificacoes/{retificacao.id}/submissoes",
+        format="json",
+        **{
+            **actor_headers("retificador", ["retificacao:submeter"], key="retificacao-cc136h-2"),
+            "HTTP_IF_MATCH": '"1"',
+        },
+    )
+    assert submissao.status_code == 200, submissao.content
+    identificar(client, "bruno.homologador", ["homologador"])
+
+    detalhe = client.get(reverse("interface:detalhe", args=[s1["edital"].id]))
+    assert detalhe.context["retificacao_aguarda_voce"]
+
+    resposta = centro(client, s1["edital"])
+    texto = resposta.content.decode()
+    composto = resposta.context["centro"]
+    [edital] = [f for f in composto.fases if f.chave == c.PUBLICACAO]
+
+    assert composto.suas == [] and composto.tem_sua
+    assert "Nada em aberto" not in texto and "Nenhuma ação é sua agora" not in texto
+    assert "Uma Retificação deste Edital aguarda você:</strong>" in texto
+    assert f'href="{reverse("interface:retificacao-detalhe", args=[retificacao.id])}"' in texto
+    cartao = mapa(texto).split('data-fase="publicacao"', 1)[1].split("</li>", 1)[0]
+    assert not edital.parada and "nada a fazer agora" not in cartao
+    assert '<span class="cc-marca sua">1 sua</span>' in cartao
+    assert composto.onde == "Há algo em aberto em Edital e classificação."
+    assert composto.onde_detalhe.startswith("1 ação é sua e ")
+    # A fase consultada por padrão é a do ato da pessoa.
+    assert resposta.context["fase"].chave == c.PUBLICACAO
 
 
 def test_o_sorteio_s1_mostra_a_relacao_como_acao_de_quem_conduz(client, s1):

@@ -47,6 +47,9 @@ FASES = (
 CHAVES = tuple(chave for chave, _, _ in FASES)
 NOMES = {chave: nome for chave, nome, _ in FASES}
 PERGUNTAS = {chave: pergunta for chave, _, pergunta in FASES}
+#: O nome no meio de uma frase ("Há algo em aberto em …"): minúsculo, menos "Edital", que é nome
+#: do ato e se escreve com maiúscula em todo o sistema.
+NA_FRASE = {chave: nome if chave == PUBLICACAO else nome.lower() for chave, nome, _ in FASES}
 #: As fases que andam por lista; as outras três são do Edital inteiro.
 POR_LISTA = (AVALIACAO, CLASSIFICACAO, RESULTADO, VAGAS, CONVOCACAO)
 
@@ -200,6 +203,18 @@ JARGAO = frozenset({a.RELACAO, a.SEMENTE, a.ORDEM, a.CORTE, a.APURACAO})
 
 def conceito(chave):
     return CONCEITOS.get(chave)
+
+
+def ato_simples(natureza, ato):
+    """O nome do ato na língua de quem conduz: "Classificar a lista", e não "Emitir a ordem".
+
+    Só o jargão muda (FR-4729); os demais atos já se chamam como quem os pratica os chama. Uma
+    função só, lida pela providência, pela tabela da fase e pela linha de cada lista — com três
+    cópias, uma natureza nova entrava no jargão de uma e não das outras.
+    """
+    if natureza in JARGAO:
+        return CONCEITOS[natureza]["simples"]
+    return ato
 
 
 # ---------------------------------------------------------------------------------------------

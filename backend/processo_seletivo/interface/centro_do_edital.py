@@ -59,7 +59,7 @@ def centro_do_edital(request, edital_id):
         dados,
         documentos=documentos,
         em_curso=em_curso,
-        alcance=andamento.Alcance.de(ator, edital),
+        alcance=dados.alcance,
     )
     return render(
         request,
@@ -70,7 +70,10 @@ def centro_do_edital(request, edital_id):
             "fase": centro.fase_consultada(composto, request.GET.get("fase")),
             "andamento": dados,
             "linha_das_inscricoes": andamento.linha_das_inscricoes(dados.inscricoes),
-            "porque_nada": "" if composto.itens else prov.porque_nada(dados, edital),
+            "porque_nada": "" if composto.tem_algo else prov.porque_nada(dados, edital),
+            # A principal do conjunto é o ato do Edital, e vem cheia como no detalhe — a não ser
+            # que a pessoa tenha o que fazer, e então a principal é isso (127, FR-4088).
+            "peso_da_principal": "secundario" if composto.tem_sua else "",
             "documentos": documentos,
             "retificacoes_em_curso": em_curso,
             "participantes": participantes,
