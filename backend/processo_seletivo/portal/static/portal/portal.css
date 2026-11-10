@@ -275,19 +275,37 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
    acidental da ordem das colunas: empilhado, o cronograma cai entre as vagas e os documentos, que
    é a ordem das perguntas de quem decide. */
 .corpo-da-selecao{display:grid;gap:0 2rem;
-  grid-template-areas:"vagas" "sorteio" "cronograma" "documentos"}
+  grid-template-areas:"sorteio" "vagas" "cronograma" "documentos"}
 .vagas-da-selecao{grid-area:vagas;min-width:0}
-/* O sorteio **acima** do cronograma na coluna lateral, e logo depois das vagas no celular: quando
-   ele existe, é a pergunta mais urgente da página — "a lista já fechou? quando é?" —, e ela vem
-   antes do calendário inteiro (021). */
+/* **O sorteio antes das vagas em tela estreita, e acima do cronograma na lateral** (021; 145,
+   FR-5159). Ele vinha depois das vagas: com o que é de cada vaga dentro do cartão dela, o que sobra
+   aqui é a frase do Edital inteiro — "já sorteou?" —, e ela vem antes de procurar a vaga. */
 .sorteio-da-selecao{grid-area:sorteio;min-width:0}
 .cronograma-da-selecao{grid-area:cronograma;min-width:0}
 .documentos-da-selecao{grid-area:documentos;min-width:0}
-.sorteio-da-selecao .sorteio+.sorteio{margin-top:1.25rem;padding-top:1.25rem;
-  border-top:1px solid var(--borda)}
-.sorteio-da-selecao h3{margin:0 0 .35rem;font-size:1rem}
-.acoes-do-sorteio{margin:.5rem 0 0;padding:0;list-style:none}
+.sorteio-da-selecao .situacao{margin:0}
+.garantia-do-sorteio{color:var(--texto-fraco);font-size:.9375rem}
+.acoes-do-sorteio{margin:.5rem 0 0;padding:0;list-style:none;font-size:.9375rem}
 .acoes-do-sorteio li+li{margin-top:.35rem}
+/* **A classificação da vaga, no cartão dela** (145, FR-5150). Largura total, abaixo das duas zonas:
+   na coluna do argumento ela empurraria a oferta e a ação para longe do título. */
+.classificacao-da-vaga{grid-column:1/-1;margin-top:.85rem;padding-top:.6rem;
+  border-top:1px solid var(--borda);font-size:.9375rem}
+.classificacao-da-vaga .rotulo-vaga{margin-top:0}
+.marco-da-classificacao+.marco-da-classificacao{margin-top:.85rem}
+.marco-da-classificacao h4{margin:.35rem 0 .2rem;font-size:.9375rem;font-weight:600}
+.estado-da-classificacao{margin:.2rem 0 .35rem}
+.estado-da-classificacao .situacao{margin:0}
+.acesso-a-relacao{margin:.2rem 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:.1rem .75rem}
+.classificacao-da-vaga .quantos{color:var(--texto-fraco)}
+.classificacao-da-vaga .como-foi-feito{font-size:.875rem}
+/* O mesmo desenho do "documentos" do cartão: um canal, uma forma. */
+.listas-do-sorteio>summary{cursor:pointer;color:var(--verde-texto);width:fit-content;
+  border-radius:4px;padding:.15rem .1rem}
+.listas-do-sorteio>summary:hover{text-decoration:underline}
+.listas-do-sorteio ul{list-style:none;margin:.25rem 0 0;padding:0}
+.listas-do-sorteio li{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 .75rem;padding:.3rem 0}
+.listas-do-sorteio li>a:first-child{font-weight:600}
 @media (min-width:60rem){
   .corpo-da-selecao{grid-template-columns:minmax(0,1fr) 19rem;
     grid-template-areas:"vagas cronograma" "documentos cronograma"}
@@ -295,8 +313,11 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
      vazia e **não** desaparecia: as Vagas ocupam as duas linhas de cima, e a altura delas se
      repartia entre a linha do sorteio e a do cronograma — que começava 315 px abaixo do topo das
      Vagas. Sem `:has`, a grade volta a ser a de antes. */
+  /* As linhas pelo conteúdo, e a sobra para a do cronograma (145): com `auto` nas duas, a altura
+     das Vagas se repartia entre elas, e o cronograma descia para longe do resumo do sorteio. */
   .corpo-da-selecao:has(>.sorteio-da-selecao){
-    grid-template-areas:"vagas sorteio" "vagas cronograma" "documentos cronograma"}
+    grid-template-areas:"vagas sorteio" "vagas cronograma" "documentos cronograma";
+    grid-template-rows:auto 1fr auto}
   /* O título da coluna lateral alinha com o da principal: sem isto, o `margin-top` de `h2` deixava
      os dois em alturas diferentes e a lateral parecia ter escorregado. */
   .cronograma-da-selecao>h2{margin-top:1.75rem}

@@ -175,6 +175,51 @@ Duas colunas em tela larga, uma em 375px — e a ordem de leitura no celular é 
 documentos, que é a ordem das perguntas de quem decide.
 {% endcomment %}
 <div class="corpo-da-selecao">
+  {% comment %}
+  **O sorteio do Edital inteiro, numa frase, e antes das vagas** (021, FR-011, FR-048; 145, FR-5158,
+  FR-5159).
+
+  A relação de habilitados é publicada e congelada antes do sorteio, é imutável e é o compromisso do
+  universo. A `021` trouxe isso para esta página num bloco por lista, ao lado do Cronograma; com
+  três vagas e três listas eram nove blocos, cada um repetindo o nome da vaga e o mesmo parágrafo, e
+  a relação de uma vaga ficava a duas telas e meia do cartão dela (145, D-001).
+
+  O que é de cada vaga foi para o cartão dela. Aqui fica o que é do Edital: em que ponto o sorteio
+  está, e a garantia — *a lista fechou antes de existirem os números* —, dita uma vez.
+
+  **Antes das vagas no documento**, e não depois: em tela estreita é a ordem de leitura, e a
+  pergunta "já sorteou?" vem antes de procurar a vaga. Em tela larga a grade o leva para a lateral,
+  acima do Cronograma, onde sempre esteve. Sem nomes de vaga: o cabeçalho já lista cada uma, com a
+  âncora (072, FR-1615), e repeti-las aqui trocaria a repetição por lista pela repetição por vaga
+  (145, D-003).
+
+  A tabela dos participantes **não** vem para cá — ela vive no endereço estável da relação, que é o
+  que o manifesto, o documento publicado e qualquer ofício citam.
+  {% endcomment %}
+  {% if sorteios %}
+  <aside class="sorteio-da-selecao" aria-labelledby="sorteio-titulo">
+    <h2 id="sorteio-titulo">Sorteio público</h2>
+    <p>{% if resumo_do_sorteio.realizados == resumo_do_sorteio.total %}<span class="situacao aberto">✓ {% if resumo_do_sorteio.total == 1 %}Sorteio realizado.{% else %}Os {{ resumo_do_sorteio.total }} sorteios foram realizados.{% endif %}</span>{% elif resumo_do_sorteio.realizados %}<strong>{{ resumo_do_sorteio.realizados }} de {{ resumo_do_sorteio.total }} sorteios realizados.</strong>{% else %}<strong>Aguardando o sorteio.</strong>{% endif %}
+      Em cada vaga está a lista de quem participa, com o número de cada pessoa.</p>
+    <p class="garantia-do-sorteio">A lista de cada sorteio é publicada e fechada antes de existirem os números que decidem a ordem, e não muda mais.</p>
+    {% comment %}
+    Relação de vaga que o conteúdo vigente já não lista: não há cartão que a receba, e ela continua
+    publicada. Fica aqui, em vez de sumir (145, FR-5160).
+    {% endcomment %}
+    {% if resumo_do_sorteio.sem_vaga %}
+    <p class="garantia-do-sorteio">De vagas que o Edital vigente já não lista:</p>
+    <ul class="acoes-do-sorteio">
+      {% for item in resumo_do_sorteio.sem_vaga %}
+      <li><a href="{% url 'portal:relacao-de-habilitados' item.relacao.id %}">Ver quem {% if item.sorteio %}participou{% else %}vai participar{% endif %}, e com que número{% if item.marco %} — {{ item.marco }}{% endif %}{% if item.lista %} — {{ item.lista }}{% endif %}</a></li>
+      {% if item.sorteio %}
+      <li><a href="{% url 'portal:verificar-sorteio' item.sorteio.id %}">Como este sorteio foi feito{% if item.marco %}<span class="oculto"> — {{ item.marco }}{% if item.lista %} — {{ item.lista }}{% endif %}</span>{% endif %}</a></li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </aside>
+  {% endif %}
+
   <section class="vagas-da-selecao" aria-labelledby="vagas-titulo">
     {% comment %}
     "Vagas", e não "Perfis e vagas": Perfil é como **nós** chamamos o agrupamento; quem procura
@@ -363,6 +408,62 @@ documentos, que é a ordem das perguntas de quem decide.
           {% endif %}
           {% endif %}
         </div>
+
+        {% comment %}
+        **A classificação desta vaga, no cartão dela** (145, FR-5150 a FR-5157).
+
+        Quem abre a página pergunta pela vaga. O que o sorteio dela já tem de público — em que ponto
+        está, quem participa e com que número — estava na lateral, num bloco por lista, longe daqui
+        (145, D-001). Vaga sem relação publicada não ganha bloco nem frase de ausência: a que
+        classifica por outro método não tem sorteio a anunciar, e a que ainda não congelou a relação
+        não tem o que mostrar (FR-128).
+
+        A área é da **classificação** da vaga, e o sorteio é o que hoje a ocupa: outro método que um
+        dia tenha o que dizer antes do resultado entra aqui, e não numa segunda lateral (145, D-007).
+
+        O tempo do verbo acompanha o fato: antes do sorteio a lista diz quem **vai** participar,
+        depois dele diz quem participou. É o mesmo endereço — o que muda é que já aconteceu.
+
+        **Uma lista só, o acesso é direto; duas ou mais, elas abrem sob um controle** (FR-5157,
+        D-002). Três listas abertas dobravam a altura do cartão no celular, e a comparação entre
+        vagas se perdia. O controle diz o que abre e quantas são, e é o mesmo desenho do
+        "documentos" logo acima.
+        {% endcomment %}
+        {% if perfil.sorteio %}
+        <div class="classificacao-da-vaga">
+          <p class="rotulo-vaga">Sorteio público</p>
+          {% for marco in perfil.sorteio.marcos %}
+          <div class="marco-da-classificacao">
+            {% if perfil.sorteio.varios_marcos and marco.nome %}<h4>{{ marco.nome }}</h4>{% endif %}
+            {% if marco.realizados == marco.listas|length %}
+            <p class="estado-da-classificacao"><span class="situacao aberto">✓ Sorteio realizado</span>{% if marco.realizado %} em {{ marco.executado_em|date:"d/m/Y" }} às {{ marco.executado_em|date:"H:i" }}{% endif %}.</p>
+            {% elif marco.realizados %}
+            <p class="estado-da-classificacao"><strong>Sorteio em andamento.</strong> {{ marco.realizados }} de {{ marco.listas|length }} listas sorteadas.</p>
+            {% else %}
+            <p class="estado-da-classificacao"><strong>Aguardando o sorteio.</strong>{% if marco.aguardando %} Lista{{ marco.listas|pluralize }} fechada{{ marco.listas|pluralize }} em {{ marco.fechada_em|date:"d/m/Y" }} às {{ marco.fechada_em|date:"H:i" }}.{% endif %}</p>
+            {% endif %}
+            {% if marco.listas|length > 1 %}
+            <details class="listas-do-sorteio">
+              <summary>Ver quem {% if marco.realizados == marco.listas|length %}participou{% elif marco.realizados %}participa{% else %}vai participar{% endif %}, e com que número — {{ marco.listas|length }} listas</summary>
+              <ul>
+                {% for lista in marco.listas %}
+                <li><a href="{% url 'portal:relacao-de-habilitados' lista.relacao.id %}">{{ lista.nome }}<span class="oculto"> — quem {% if lista.sorteio %}participou{% else %}vai participar{% endif %}, e com que número{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>
+                  <span class="quantos">{{ lista.relacao.quantidade }} candidato{{ lista.relacao.quantidade|pluralize }} habilitado{{ lista.relacao.quantidade|pluralize }}{% if not marco.uniforme %} · {% if lista.sorteio %}sorteado em {{ lista.sorteio.executado_em|date:"d/m/Y" }} às {{ lista.sorteio.executado_em|date:"H:i" }}{% else %}aguardando; lista fechada em {{ lista.relacao.publicada_em|date:"d/m/Y" }}{% endif %}{% endif %}</span>
+                  {% if lista.sorteio %}<a class="como-foi-feito" href="{% url 'portal:verificar-sorteio' lista.sorteio.id %}">Como este sorteio foi feito<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>{% endif %}</li>
+                {% endfor %}
+              </ul>
+            </details>
+            {% else %}
+            {% for lista in marco.listas %}
+            <p class="acesso-a-relacao"><a href="{% url 'portal:relacao-de-habilitados' lista.relacao.id %}">Ver quem {% if lista.sorteio %}participou{% else %}vai participar{% endif %}, e com que número<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>
+              <span class="quantos">{{ lista.nome }} · {{ lista.relacao.quantidade }} candidato{{ lista.relacao.quantidade|pluralize }} habilitado{{ lista.relacao.quantidade|pluralize }}{% if not marco.uniforme %} · {% if lista.sorteio %}sorteado em {{ lista.sorteio.executado_em|date:"d/m/Y" }} às {{ lista.sorteio.executado_em|date:"H:i" }}{% else %}aguardando; lista fechada em {{ lista.relacao.publicada_em|date:"d/m/Y" }}{% endif %}{% endif %}</span>
+              {% if lista.sorteio %}<a class="como-foi-feito" href="{% url 'portal:verificar-sorteio' lista.sorteio.id %}">Como este sorteio foi feito<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>{% endif %}</p>
+            {% endfor %}
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
       </li>
       {% endfor %}
     </ul>
@@ -377,57 +478,6 @@ documentos, que é a ordem das perguntas de quem decide.
   vazio nem frase de ausência. Dizer "cronograma não divulgado" afirmaria uma omissão onde o Edital
   pode nunca ter tido o que declarar (FR-128).
   {% endcomment %}
-  {% comment %}
-  **O sorteio, e o que dele já é público antes de ele acontecer** (021, FR-011, FR-048).
-
-  A relação de habilitados é publicada e congelada dias antes do sorteio, é imutável e é o
-  compromisso do universo — e nenhuma página do portal a apontava: ela só respondia no endereço da
-  própria identidade. Quem se inscreveu não descobria que participava de um sorteio, nem com que
-  número, nem que a lista já estava fechada. A garantia que a feature existe para produzir — *o
-  universo foi comprometido antes de a semente existir* — era observável só depois do fato.
-
-  Ao lado do Cronograma, e não no corpo: a pergunta que este bloco responde é "em que ponto está?",
-  a mesma do calendário. A tabela dos participantes **não** vem para cá — ela vive no endereço
-  estável da relação, que é o que o manifesto, o documento publicado e qualquer ofício citam.
-  {% endcomment %}
-  {% if sorteios %}
-  <aside class="sorteio-da-selecao" aria-labelledby="sorteio-titulo">
-    <h2 id="sorteio-titulo">Sorteio público</h2>
-    {% for item in sorteios %}
-    <div class="sorteio">
-      {% comment %}
-      O recorte é nomeado **só quando há mais de um**: num certame de lista única, repetir o nome do
-      marco em cada bloco seria ruído; num com polos ou cotas, é o que diz de qual sorteio se fala.
-      {% endcomment %}
-      {% if sorteios|length > 1 %}
-      <h3>{{ item.marco }}{% if item.lista %} — {{ item.lista }}{% endif %}{% if item.perfil %} <span class="quando">{{ item.perfil }}</span>{% endif %}</h3>
-      {% endif %}
-      {% if item.sorteio %}
-      <p class="vigente" role="status"><strong>Sorteio realizado</strong> em
-        {{ item.sorteio.executado_em|date:"d/m/Y" }} às {{ item.sorteio.executado_em|date:"H:i" }}.</p>
-      {% else %}
-      <p class="aviso"><strong>Aguardando o sorteio.</strong> A lista de quem vai participar já está
-        publicada e não muda mais: ela foi fechada em
-        {{ item.relacao.publicada_em|date:"d/m/Y" }} às {{ item.relacao.publicada_em|date:"H:i" }},
-        antes de existirem os números que vão decidir a ordem.</p>
-      {% endif %}
-      <p>{{ item.relacao.quantidade }} candidato{{ item.relacao.quantidade|pluralize }} habilitado{{ item.relacao.quantidade|pluralize }}.</p>
-      <ul class="acoes-do-sorteio">
-        {% comment %}
-        O tempo do verbo acompanha o fato: antes do sorteio a lista diz quem **vai** participar,
-        depois dele diz quem participou. É a mesma frase e o mesmo endereço — o que muda é que já
-        aconteceu, e escrever o futuro sobre um fato passado faz a página parecer desatualizada.
-        {% endcomment %}
-        <li><a href="{% url 'portal:relacao-de-habilitados' item.relacao.id %}">Ver quem {% if item.sorteio %}participou{% else %}vai participar{% endif %}, e com que número</a></li>
-        {% if item.sorteio %}
-        <li><a href="{% url 'portal:verificar-sorteio' item.sorteio.id %}">Como este sorteio foi feito</a></li>
-        {% endif %}
-      </ul>
-    </div>
-    {% endfor %}
-  </aside>
-  {% endif %}
-
   {% if cronograma %}
   <aside class="cronograma-da-selecao" aria-labelledby="cronograma-titulo">
     <h2 id="cronograma-titulo">Cronograma</h2>

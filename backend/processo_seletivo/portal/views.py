@@ -618,6 +618,14 @@ def selecao(request, edital_id, *, assistente=True):
     # comprometido antes de a semente existir* — só era observável depois do fato, pela divulgação
     # do resultado, e por quem já tivesse o endereço.
     contexto["sorteios"] = sorteios_do_edital(versao.edital, versao.content)
+    # **E cada sorteio no cartão da vaga dele** (145, FR-5150). A lateral dizia nove listas em nove
+    # blocos, a duas telas e meia da vaga a que pertenciam. É a mesma leitura, reorganizada em
+    # memória: nenhuma consulta nova.
+    sorteio_da_vaga, contexto["resumo_do_sorteio"] = leitura.sorteios_por_vaga(
+        contexto["sorteios"], versao.content
+    )
+    for perfil in contexto["perfis"]:
+        perfil["sorteio"] = sorteio_da_vaga.get(perfil["id"])
     # **O Cronograma publicado, antes da identificação** (024, FR-125). Ele já estava no conteúdo
     # publicado e já era renderizado — mas só no acompanhamento, isto é, **depois** de a pessoa se
     # inscrever. Quem já se inscreveu via o calendário; quem estava decidindo se valia a pena, não.
