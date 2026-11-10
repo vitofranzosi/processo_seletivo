@@ -204,6 +204,9 @@ alguém entenda o botão como o ato.
   estão, com a conferência de texto da `125` quando há complemento.
 - **FR-4818**: A conferência MUST funcionar sem script e sem estilo escrito no template, sob a
   política de conteúdo da gestão.
+- **FR-4819**: A ajuda do complemento na correção da convocação MUST dizer que a conferência do
+  texto vale quando há complemento escrito, e não prometê-la em geral. É a mesma frase condicional
+  que, no gesto dos titulares, lia como promessa geral.
 
 ### Requisitos de experiência
 

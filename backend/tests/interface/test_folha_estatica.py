@@ -245,7 +245,13 @@ QUEM_CARREGA = {
         "sem_acesso.html",
     },
     "interface/grupos/assistente.css": {"assistente.html", "duvidas.html"},
-    "interface/grupos/aviso.css": {"aviso.html", "aviso_previa.html", "modelo_de_aviso.html"},
+    "interface/grupos/aviso.css": {
+        "aviso.html",
+        "aviso_previa.html",
+        "modelo_de_aviso.html",
+        # A mensagem da convocação, conferida antes de sair, na moldura da prévia dos avisos (140).
+        "convocacao_conferir.html",
+    },
     "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
     "interface/grupos/serie.css": {"processo_detalhe.html", "supervisao.html"},
     "interface/grupos/terminais.css": {

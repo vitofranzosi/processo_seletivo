@@ -404,19 +404,32 @@ def _enviar(convocacao, *, destinatario, endereco_do_portal, agora=None, escolha
         return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", "")
     return enviar_mensagem_de_convocacao(
         para=destinatario,
-        dados={
-            "edital": f"Edital {convocacao.edital.number}/{convocacao.edital.year}",
-            "processo": conteudo.get("processoTitle", ""),
-            "vencimento": convocacao.vencimento,
-            "enviado_em": agora,
-            "link": link_da_convocacao(endereco_do_portal, convocacao.inscricao_id),
-            "escolha": escolha,
-            "requerimento_exigido": bool(momento_declarado(conteudo)),
-            "atendimento": unidade.canal("a comissão do certame"),
-            "assinatura": unidade.rotulo,
-            "unidade": unidade.sigla,
-        },
+        dados=_dados_da_mensagem(
+            edital=convocacao.edital,
+            conteudo=conteudo,
+            unidade=unidade,
+            vencimento=convocacao.vencimento,
+            enviado_em=agora,
+            link=link_da_convocacao(endereco_do_portal, convocacao.inscricao_id),
+            escolha=escolha,
+        ),
     )
+
+
+def _dados_da_mensagem(*, edital, conteudo, unidade, vencimento, enviado_em, link, escolha):
+    """O que o modelo recebe, montado num lugar só para o envio e para a conferência (140)."""
+    return {
+        "edital": f"Edital {edital.number}/{edital.year}",
+        "processo": conteudo.get("processoTitle", ""),
+        "vencimento": vencimento,
+        "enviado_em": enviado_em,
+        "link": link,
+        "escolha": escolha,
+        "requerimento_exigido": bool(momento_declarado(conteudo)),
+        "atendimento": unidade.canal("a comissão do certame"),
+        "assinatura": unidade.rotulo,
+        "unidade": unidade.sigla,
+    }
 
 
 def _contexto(dados):
@@ -457,6 +470,81 @@ def _assunto_e_corpo(texto):
     return linhas[0].strip(), corpo + "\n"
 
 
+def _modelos(nome):
+    return tuple(get_template(caminho) for caminho in MODELOS[nome])
+
+
+def _renderizar(html_do_modelo, texto_do_modelo, dados):
+    """O HTML, o assunto e o corpo da mensagem — **a mesma composição no envio e na conferência**.
+
+    A conferência antes de convocar (140, D-003) mostra o texto que sairá. Uma segunda composição
+    feita para a tela poderia divergir do envio em silêncio; esta é a única.
+    """
+    contexto = _contexto(dados)
+    html = html_do_modelo.render(contexto)
+    assunto, corpo = _assunto_e_corpo(texto_do_modelo.render(contexto))
+    return html, assunto, corpo
+
+
+#: O que a conferência mostra no lugar do link, que é de cada pessoa (140, FR-4803).
+LINK_NA_CONFERENCIA = "[o link da convocação de cada pessoa, na área do candidato]"
+
+
+def previa_das_mensagens(*, edital, versao, inscricoes, vencimento, agora):
+    """As mensagens que o gesto dos titulares enviaria agora, **sem enviar nada** (140, D-003).
+
+    **A variante sai do que o ato gravaria**: a lista da chamada é a aplicabilidade da versão
+    vigente, no momento da convocação, para o Perfil e a Modalidade de cada pessoa
+    (`gravar_lista_da_chamada`), e o Requerimento é o que a versão declara para esse momento. O
+    modelo é o inicial: o gesto só alcança quem ainda não foi chamado, e quem não foi chamado não
+    tem mensagem anterior a citar (D-008 da `121`, pelo assunto).
+
+    Devolve um item por mensagem distinta, com quantas pessoas a receberiam e quem são, na ordem em
+    que vieram. Nenhuma consulta por pessoa: uma para as inscrições, uma para a unidade.
+    """
+    from processo_seletivo.convocacao.domain.mensagem import EscolhaDaMensagem, variante_de
+    from processo_seletivo.editais.domain.documentos import NA_CONVOCACAO, aplicabilidade
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    conteudo = versao.content or {}
+    requerimento = momento_declarado(conteudo) == requerimento_nomes.NA_CONVOCACAO
+    unidade = identificacao.da_unidade(edital.institution_scope)
+    por_id = {
+        str(linha["id"]): linha
+        for linha in Inscricao.objects.filter(id__in=list(inscricoes)).values(
+            "id", "profile_id", "modality_id"
+        )
+    }
+    modelos = _modelos(INICIAL)
+    grupos = {}
+    for inscricao in inscricoes:
+        linha = por_id[str(inscricao)]
+        vereditos = aplicabilidade(
+            conteudo,
+            profile_id=str(linha["profile_id"]),
+            modality_id=None if linha["modality_id"] is None else str(linha["modality_id"]),
+            momento=NA_CONVOCACAO,
+        )
+        itens = [SimpleNamespace(situacao=v.situacao, gravada_em=agora) for v in vereditos]
+        variante = variante_de(itens=itens, instante=agora, requerimento_na_chamada=requerimento)
+        if variante not in grupos:
+            _, assunto, corpo = _renderizar(
+                *modelos,
+                _dados_da_mensagem(
+                    edital=edital,
+                    conteudo=conteudo,
+                    unidade=unidade,
+                    vencimento=vencimento,
+                    enviado_em=agora,
+                    link=LINK_NA_CONFERENCIA,
+                    escolha=EscolhaDaMensagem(modelo=INICIAL, variante=variante),
+                ),
+            )
+            grupos[variante] = {"assunto": assunto, "corpo": corpo, "inscricoes": []}
+        grupos[variante]["inscricoes"].append(str(inscricao))
+    return list(grupos.values())
+
+
 def enviar_mensagem_de_convocacao(*, para, dados):
     """A terceira situação em que o sistema envia mensagem (`FR-084` da `010`, revisada).
 
@@ -475,19 +563,16 @@ def enviar_mensagem_de_convocacao(*, para, dados):
     **Nenhum link que autentica** (P-001 da `010`): o link leva à convocação, e a entrada continua
     sendo por código digitado.
     """
-    nome = dados["escolha"].modelo
     try:
-        html_do_modelo, texto_do_modelo = (get_template(caminho) for caminho in MODELOS[nome])
+        html_do_modelo, texto_do_modelo = _modelos(dados["escolha"].modelo)
     except Exception as erro:
         logger.exception("Falha ao carregar o modelo da comunicação de convocação.")
         return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", "")
     # O resumo das fontes que o motor compilou e que renderizam logo abaixo, e não do arquivo
     # relido do disco (R-009). Antes da renderização, para a falha dela também dizer o modelo.
-    modelo = identificacao_do_modelo(nome, html_do_modelo, texto_do_modelo)
+    modelo = identificacao_do_modelo(dados["escolha"].modelo, html_do_modelo, texto_do_modelo)
     try:
-        contexto = _contexto(dados)
-        html = html_do_modelo.render(contexto)
-        assunto, corpo = _assunto_e_corpo(texto_do_modelo.render(contexto))
+        html, assunto, corpo = _renderizar(html_do_modelo, texto_do_modelo, dados)
     except Exception as erro:
         logger.exception("Falha ao renderizar a comunicação de convocação.")
         return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", modelo)
@@ -573,4 +658,5 @@ __all__ = [
     "forma_declarada",
     "guarda_da_revisao_da_010",
     "link_da_convocacao",
+    "previa_das_mensagens",
 ]
