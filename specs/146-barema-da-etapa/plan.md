@@ -58,7 +58,10 @@ Se uma tarefa precisar mexer num desses, ela está fora do desenho e volta para 
 - `editais/models/etapas.py` — `CriterioAvaliacao` (ver data-model), com o comentário da D-001.
 - `editais/migrations/0027_criterios_de_avaliacao.py`.
 - `editais/domain/etapas.py::validate_stages` — FR-5201, FR-5203 (soma), FR-5204 (decisória),
-  FR-5205 (documento do Edital e da inscrição; recebe os documentos do payload).
+  FR-5205 (documento do Edital, da inscrição e sem restrição de Perfil, modalidade ou condição; recebe
+  os documentos do payload e decide pela mesma leitura de aplicabilidade de
+  `editais/domain/documentos.py`). A mesma conferência entra na validação de publicação, que é onde se
+  pega a restrição acrescentada ao documento depois do vínculo (D-010).
 - `editais/application/draft.py::replace_draft` — criar critérios depois do `bulk_create` das Etapas,
   no molde dos critérios de desempate do marco; `_reject_identifiers_of_other_editais` cobre os ids.
 - `editais/api/serializers.py` — `CriterionSerializer` aninhado em `StageSerializer.criteria`,
@@ -99,27 +102,35 @@ Se uma tarefa precisar mexer num desses, ela está fora do desenho e volta para 
 - `avaliacoes/domain/barema.py` — `calcular(criterios_publicados, detalhamento, *, exigir)`:
   normaliza cada linha (quantidade inteira 0–9999 xor pontos `decimal(7,4)` ≤ máxima), recusa
   critério desconhecido ou repetido, aplica `min`, soma com `Decimal`, devolve `(linhas, total)`;
-  `exigir=True` recusa pendentes nomeando-os. `pendentes_de_justificativa(linhas, apresentados)` para
-  FR-5218. Recusas por `DomainError` com `campo` apontando a linha.
+  `exigir=True` recusa pendentes nomeando-os. A justificativa é texto livre e nunca obrigatória
+  (D-008). Recusas por `DomainError` com `campo` apontando a linha.
+  `barema_da_versao(versao, etapa_id)` devolve os critérios publicados naquela versão — a leitura única
+  de toda tela que mostra detalhamento de ato (D-011). `reconciliar(detalhamento, criterios_vigentes)`
+  mantém os ids que continuam, descarta os removidos e deixa pendentes os novos (FR-5222).
 - `avaliacoes/models.py` — `criterios` em `Avaliacao` e `ConclusaoAvaliacao`.
 - `avaliacoes/migrations/0005_detalhamento_por_criterio.py` — `AddField` duplo e recriação da função
   do gatilho com a coluna nova (data-model).
 - `avaliacoes/application/avaliacao.py` — `gravar` e `concluir` recebem `criterios`; com barema,
   recusam `pontuacao` vinda do cliente e gravam o total calculado; sem barema, recusam `criterios` não
   vazio. `concluir` copia para a `ConclusaoAvaliacao`. `reabrir` não toca o detalhamento (ele já está
-  na linha).
-- `avaliacoes/application/mesa.py::inscricao_para_avaliar` — entrega o barema da versão vigente,
-  cada critério com o documento ligado já resolvido para o item da lista de documentos.
+  na linha); quem o reconcilia com o barema vigente é a leitura do rascunho, na Mesa.
+- `avaliacoes/application/mesa.py::inscricao_para_avaliar` — rascunho: o barema da versão vigente e o
+  detalhamento reconciliado; concluída: o barema de `avaliacao.versao`. Cada critério com o documento
+  ligado já resolvido para o item da lista de documentos.
 - `interface/forms.py::ler_avaliacao` — lê `criterio-<id>-quantidade|pontos|justificativa`.
 - `interface/templates/interface/mesa_inscricao.html` — com barema, `_ficha_do_barema.html` no lugar
   do campo; concluída, a leitura da ficha. `interface/static/interface/mesa_barema.js` — total ao vivo
   (só exibição; o servidor recalcula).
 - `interface/templates/interface/conclusoes.html` — o detalhamento de cada conclusão preservada.
-- `resultados/domain/compatibilidade.py` — "barema" em `CAMPOS_COMPARADOS`, lendo
-  `[(id, maximumScore, pointsPerUnit)]`.
+- `resultados/domain/compatibilidade.py` — "barema" em `CAMPOS_COMPARADOS`, lendo o conjunto de
+  critérios por `id`, cada um com nome, descrição, máxima, pontos por unidade, unidade e documento —
+  tudo menos a ordem (D-006).
 - `resultados/application/selectors.py::resultados_visiveis` — anexar o detalhamento lido da
-  `avaliacao` do Resultado (ou da `decisao`, no C). `portal/templates/portal/acompanhamento.html` —
-  a tabela (UX-423).
+  `avaliacao` do Resultado (ou da `decisao`, no C), com o barema de `resultado.versao` (D-011).
+  `portal/templates/portal/acompanhamento.html` — a tabela (UX-423).
+- `recursos/application/julgar.py` — a recusa temporária de FR-5232: correção fixada contra Resultado
+  de Etapa com barema responde 409 `correcao_fixada_sem_barema`, apontando a reavaliação determinada
+  (D-009). Uma constante e um teste; o C as remove.
 - `portal/templates/portal/_documentos.html` — "Comprova: …" (FR-5224), lido do barema publicado.
 
 ### Incremento C
@@ -127,7 +138,8 @@ Se uma tarefa precisar mexer num desses, ela está fora do desenho e volta para 
 - `recursos/models.py` + `recursos/migrations/0003_detalhamento_da_correcao.py` — `criterios` em
   `DecisaoRecurso`.
 - `recursos/domain/consequencia.py::derivar` — com barema, recebe o detalhamento e chama
-  `barema.calcular(exigir=True)`; o total entra no caminho de hoje (`validar`, `_recusar_se_piora`).
+  `barema.calcular(exigir=True)` contra o barema de `decisao.versao`; o total entra no caminho de hoje
+  (`validar`, `_recusar_se_piora`). Remove a recusa de FR-5232.
 - Tela de julgamento (template do julgamento em `interface/`) — mostrar o detalhamento do Resultado
   atacado e, na correção fixada, a mesma ficha (`_ficha_do_barema.html`) pré-preenchida.
 - Portal — FR-5228: detalhamento da decisão, critérios alterados marcados.
@@ -151,6 +163,9 @@ que o quebra, com a razão no comentário. E o degrau novo pede `contract/test_e
    nela, com "critério" e "barema" no vocabulário da composição.
 4. **O PDF mudar para Edital sem barema.** O texto extraído antes e depois é comparado (SC-1624).
 5. **Contagem de tabelas append-only** não deve mudar (53); se mudar, o desenho saiu da D-004.
+6. **B em produção sem C.** A recusa de FR-5232 é a rede; a regra é implantar B e C juntos (D-009).
+7. **Ler o detalhamento pela versão vigente.** Toda tela de ato lê por `barema_da_versao`; SC-1633 o
+   prende com uma Retificação que renomeia critério.
 
 ## Verificação
 

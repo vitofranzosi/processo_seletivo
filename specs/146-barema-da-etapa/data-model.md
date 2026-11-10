@@ -60,6 +60,11 @@ que reabre poderia trocar o detalhamento no mesmo ato.
 **Invariante** (domínio, não banco — o banco não lê a versão): com barema, `pontuacao` = soma das
 `parcela`; sem barema, `criterios = []`.
 
+**Leitura.** O detalhamento guarda só `criterionId`, e não nome nem descrição. Quem o mostra lê os
+critérios do conteúdo da versão que o ato cita — `ConclusaoAvaliacao.versao`, `ResultadoEtapa.versao`,
+`DecisaoRecurso.versao`, as três já existentes —, e o rascunho lê os da vigente (D-011). `justificativa`
+é sempre opcional (D-008).
+
 ## O que **não** muda
 
 `ResultadoEtapa` (copia o total; o detalhamento se lê pela `avaliacao` ou pela `decisao` que ele já

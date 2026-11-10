@@ -27,14 +27,20 @@ preparado, `INTERFACE_SELETOR_IDENTIDADE=true`, `runserver` em `localhost`.
 2. Alocar e distribuir; entrar como a avaliadora; abrir a inscrição na Mesa.
 3. Informar 1, 0, 3, 0, 52; conferir "10 — limitada ao máximo", "40 — limitada ao máximo" e total 70.
 4. Deixar Mestrado em branco e concluir: recusa nomeando "Diploma de Mestrado".
-5. Pôr 0 no Mestrado e concluir: recusa pedindo a justificativa do critério, porque o documento
-   ligado foi apresentado (FR-5218). Escrever "O arquivo não contém diploma de mestrado" e concluir.
-6. Presidência: consolidar → o Resultado tem 70; emitir a ordem e publicar o preliminar.
+5. Pôr 0 no Mestrado e concluir: conclui — o PDF de títulos comprova só o Doutorado, e o zero no
+   Mestrado não pede justificativa (FR-5218). Num segundo candidato, recusar um certificado de
+   especialização fora da área e escrever a razão na justificativa do critério.
+6. Antes de consolidar, retificar a descrição do critério de docência ("só em cursos EaD"): a
+   consolidação recusa a conclusão anterior; reabrir, conferir que a ficha volta preenchida, concluir.
+7. Presidência: consolidar → o Resultado tem 70; emitir a ordem e publicar o preliminar.
+8. Com o B implantado e o C não: tentar correção fixada contra esse Resultado — recusada, com a
+   orientação para a reavaliação.
 
 ## 3. O candidato (incremento B)
 
 1. Portal → a inscrição → documentos: "Títulos acadêmicos — comprova Doutorado (até 20), …".
-2. Acompanhamento depois do preliminar: a tabela por critério sob a nota.
+2. Acompanhamento depois do preliminar: a tabela por critério sob a nota, com a justificativa do
+   segundo candidato e a descrição de docência **da versão que o Resultado cita**.
 
 ## 4. Recurso (incremento C)
 

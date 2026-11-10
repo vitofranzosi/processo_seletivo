@@ -59,8 +59,8 @@ Extraídos por `pdftotext -layout` dos PDFs de `~/Downloads`.
 | 90/2026 Tutor TADS | Anexo IV, 100 | Mesma forma | — |
 | 173/2025 Designer educacional | Anexo IV, 100 | Experiência 5 por semestre até 30; Doutorado 25; Mestrado 20; Especialização 15; Aperfeiçoamento 10 | **Autopontuação vinculante**: "não sendo atribuída pontuação que exceda à informada pelo candidato" |
 
-Em todos: a soma dos tetos é a máxima da Etapa; títulos aparecem como linhas independentes, sem
-regra escrita de exclusividade; "só serão pontuados os títulos que excederem os exigidos no perfil"
+Em todos: a soma dos tetos é a máxima da Etapa; títulos aparecem como linhas separadas, sem regra
+escrita nem de acumulação nem de exclusividade — e a soma dar 100 não decide entre as duas; "só serão pontuados os títulos que excederem os exigidos no perfil"
 é juízo da comissão; a comprovação vai num arquivo único.
 
 ## D-001
@@ -124,13 +124,21 @@ Mesa e a correção fixada a chamam; o cliente nunca envia o total.
 
 ## D-006
 
-**A mudança de barema depois de conclusões não ganha trava nova.** Concluir já recusa versão mudada;
-consolidar já recusa conclusão sob norma divergente, desde que o barema entre em `CAMPOS_COMPARADOS`
-(identidade, máxima e pontos por unidade; nome, descrição e documento são redação, como os rótulos).
-É o tratamento que a máxima publicada já recebe.
+**A mudança de barema depois de conclusões não ganha trava nova**, e a comparação é conservadora.
+Concluir já recusa versão mudada; consolidar já recusa conclusão sob norma divergente, desde que o
+barema entre em `CAMPOS_COMPARADOS`. Entra **inteiro**: o conjunto dos critérios e, de cada um, nome,
+descrição, máxima, pontos por unidade, unidade e documento ligado. Só a ordem fica de fora.
 
-*Descartada:* bloquear a Retificação do barema depois da primeira conclusão — seria regra nova sobre a
-Retificação, que hoje não trava nenhum campo da Etapa por esse motivo.
+*Por que tudo:* a descrição é onde mora a condição material ("só experiência em EaD", "títulos que
+excedam os do perfil"), e o nome e o documento dizem o que se comprova. O sistema não distingue
+redação de regra, e a recusa custa pouco — reabrir e concluir de novo, com a ficha já preenchida. O
+contrário custaria um Resultado consolidado sob regra que não é a publicada.
+
+*Descartadas:* excluir nome, descrição e documento da comparação, no molde dos rótulos da forma
+decisória (a primeira escrita desta decisão — os rótulos não carregam condição, a descrição carrega);
+classificar a alteração como editorial ou material pela tela de Retificação (seria um campo novo e um
+juízo que ninguém confere); bloquear a Retificação depois da primeira conclusão (regra nova sobre a
+Retificação, que hoje não trava nenhum campo da Etapa por esse motivo).
 
 ## D-007
 
@@ -144,15 +152,66 @@ arquivo só); flag "passível de pontuação" no documento (o vínculo já diz i
 
 ## D-008
 
-**Justificativa obrigatória só no zero de documento apresentado** — o indeferimento, que é o caso
-contra o qual o recurso se dirige. Redução parcial ("três certificados, reconheço dois") pede a
-justificativa opcional e o parecer, que já existe. Exigir em toda redução pediria a expectativa do
-candidato (P-4).
+**A justificativa de critério é opcional; a fundamentação obrigatória continua no parecer.** O
+arquivo ligado não diz quais critérios o candidato reivindicou: o mesmo PDF de títulos se liga a
+Doutorado, Mestrado e Especialização, e quem só tem o Doutorado não pleiteou os outros dois. Exigir
+justificativa no zero de documento apresentado — a primeira escrita desta decisão — obrigaria a
+comissão a fundamentar o que ninguém pediu. Sem a expectativa do candidato (P-4), não há indeferimento
+identificável pelo sistema, e por isso a regra obrigatória que fica é a que já existe: o parecer,
+sobre o total. A justificativa escrita chega ao candidato com a parcela.
 
 ## D-009
 
-**Três incrementos, cada um útil sozinho.** A — configurar, publicar, imprimir (o PDF sai com a
-ficha). B — pontuar, consolidar, mostrar ao candidato (o total passa a ser provado). C — corrigir por
-recurso com detalhamento. Antes do C, a correção fixada continua aceitando o total, e a tela do
-candidato mostra, num Resultado de recurso, o total sem detalhamento e a frase "corrigido por
-recurso" que já existe.
+**Três incrementos em três PRs; B e C são uma entrega só para produção.** A — configurar, publicar,
+imprimir (o PDF sai com a ficha; pode ir sozinho). B — pontuar, consolidar, mostrar ao candidato.
+C — corrigir por recurso com detalhamento.
+
+*O risco que a primeira escrita aceitava:* com o B e sem o C, a correção fixada gravaria um Resultado
+com total corrigido e sem parcelas — a regressão de transparência no caso em que o candidato mais
+precisa entender. A menor alteração que o impede é uma recusa no B: correção fixada contra Resultado
+de Etapa com barema é recusada, com frase que orienta a reavaliação determinada, que já percorre a
+ficha (FR-5232). O C a remove. Além dela, B e C sobem juntos para produção; a recusa é o que garante
+a consistência se a ordem dos merges ou da implantação escapar disso.
+
+*Descartadas:* fundir C em B (um PR maior, sem ganho de consistência sobre a recusa); aceitar o
+intervalo (a primeira escrita).
+
+## D-010
+
+**O documento ligado a critério precisa valer para toda inscrição** — sem restrição de Perfil, de
+modalidade ou de condição. O barema é da Etapa, e a Etapa vale para todos os Perfis (D-001); um
+documento que só alguns podem apresentar criaria candidatos a quem se pede pontuar um critério que
+não podiam comprovar. A verificação usa a aplicabilidade que já decide o que o candidato vê
+(`editais/domain/documentos.py::aplicaveis`), na gravação e na publicação — esta pega a restrição
+acrescentada ao documento depois do vínculo.
+
+*Descartadas:* esconder o link e pedir a pontuação (a primeira escrita — semântica ambígua); critério
+restrito a Perfil (é o barema por Perfil, P-5).
+
+## D-011
+
+**O detalhamento se lê com o barema da versão que o ato cita.** `ConclusaoAvaliacao`, `ResultadoEtapa`
+e `DecisaoRecurso` já guardam a versão que os governou; nome, descrição e máxima mostrados vêm do
+conteúdo dela, por `criterionId`. É a regra que o projeto já segue para ato histórico (a norma é a que
+o ato citou, e não a vigente). Só o rascunho se lê pela vigente: é o que a avaliadora vai concluir, e
+a conclusão recusa versão mudada.
+
+*Descartada:* copiar nome e descrição para o JSON do detalhamento — segunda fonte do mesmo texto, que
+a versão já guarda.
+
+## 4. A revisão de 10/11
+
+A avaliação do usuário aprovou a direção (Etapa, tabela própria, detalhamento nas avaliações, total do
+servidor, classificação e recurso reaproveitados) e pediu seis ajustes pontuais, sem redesenho:
+
+| Ponto | Onde mudou | Decisão |
+|---|---|---|
+| 1. Justificativa no zero | FR-5218, US2 cenário 4, SC-1622, quickstart §2 | D-008 reescrita |
+| 2. Compatibilidade conservadora | FR-5221, casos-limite, SC-1628 | D-006 reescrita |
+| 3. B sem C | FR-5232, SC-1635, T036 | D-009 reescrita |
+| 4. Acumulação não demonstrada | "O que esta spec atende", P-1, SC-1620, README | — |
+| 5. Reprodutibilidade histórica | FR-5222, FR-5233, SC-1633, T018, T020, T026, T032 | D-011 |
+| 6. Documento por Perfil | FR-5205, casos-limite, SC-1634, T002 | D-010 |
+
+Nenhuma entidade, tabela, serviço ou fluxo novo: os ajustes são regras sobre o que já estava
+desenhado, e uma recusa temporária no julgamento.

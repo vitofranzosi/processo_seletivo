@@ -15,7 +15,7 @@ os nomes são os que as tarefas criam. Caminhos relativos a `backend/tests/`. Ab
 - `nv` = `navegador/test_jornada_do_barema.py`
 - `rc` = testes do julgamento de recurso
 
-A faixa abre em **FR-5200**, **SC-1620** e **UX-420**. Gastos até FR-5231, SC-1632 e UX-423; o resto
+A faixa abre em **FR-5200**, **SC-1620** e **UX-420**. Gastos até FR-5233, SC-1635 e UX-423; o resto
 da reserva (até o requisito cinco mil duzentos e quarenta e nove, o critério mil seiscentos e trinta e
 nove e o UX quatrocentos e vinte e nove) fica livre.
 
@@ -38,7 +38,7 @@ nove e o UX quatrocentos e vinte e nove) fica livre.
 | FR-5202 | T016 | `ba` |
 | FR-5203 | T002, T010 | `validate_stages`, `js` |
 | FR-5204 | T002, T009 | `validate_stages`, `eb` |
-| FR-5205 | T002 | `validate_stages` |
+| FR-5205 | T002 | `validate_stages` e validação de publicação |
 | FR-5206 | T007, T008, T009, T014 | `eb` |
 | FR-5207 | T010 | `js` |
 | FR-5208 | T004 | `el` |
@@ -51,11 +51,11 @@ nove e o UX quatrocentos e vinte e nove) fica livre.
 | FR-5215 | T016, T018 | `ba`, serviço |
 | FR-5216 | T016 | `ba` |
 | FR-5217 | T016, T018 | `ba`, serviço |
-| FR-5218 | T016, T018 | `ba`, serviço |
+| FR-5218 | T016, T018, T026 | `ba` (zero sem justificativa aceito), serviço, `po` |
 | FR-5219 | T017, T018 | `im`, serviço |
 | FR-5220 | T023 | `cl` |
-| FR-5221 | T022 | testes de compatibilidade |
-| FR-5222 | T018, T034 | serviço, `rc` |
+| FR-5221 | T022 | compatibilidade (máxima, descrição, documento; ordem não) |
+| FR-5222 | T016, T018, T019, T034 | `ba` (reconciliar), serviço, `me`, `rc` |
 | FR-5223 | T020 | `me` |
 | FR-5224 | T025 | `po` |
 | FR-5225 | T026 | `po` |
@@ -65,6 +65,8 @@ nove e o UX quatrocentos e vinte e nove) fica livre.
 | FR-5229 | T018, T019 | serviço, `me` (autorização inalterada) |
 | FR-5230 | T018 | serviço (trilha sem nota) |
 | FR-5231 | T024 | regressão de T024 e a suíte existente |
+| FR-5232 | T036, T031 | `rc` (recusa no B; removida no C) |
+| FR-5233 | T019, T020, T026, T032 | `me`, `po`, `rc` |
 
 ## Requisitos de experiência
 
@@ -92,6 +94,9 @@ nove e o UX quatrocentos e vinte e nove) fica livre.
 | SC-1630 | T017 | `im` |
 | SC-1631 | T026 | `po` |
 | SC-1632 | T035 | conferência do diff |
+| SC-1633 | T020, T026 | `me`, `po` (Retificação que renomeia critério) |
+| SC-1634 | T002 | `validate_stages` e validação de publicação |
+| SC-1635 | T036 | `rc` |
 
 ## Casos-limite
 
@@ -100,13 +105,14 @@ nove e o UX quatrocentos e vinte e nove) fica livre.
 | Etapa sem barema | T024 | regressão |
 | Mais de uma avaliação por inscrição | T023 | `cl` (continua bloqueada pela regra de combinação) |
 | Quantidade maior que o necessário | T016, T021 | `ba`, `js` |
-| Critério sem documento | T016, T025 | `ba` (zero sem justificativa), `po` |
-| Documento ligado a vários critérios | T025 | `po` |
-| Documento que não se aplica ao Perfil | T019 | `me` |
+| Critério sem documento | T016, T025 | `ba`, `po` |
+| Documento ligado a vários critérios | T016, T025 | `ba` (zeros sem justificativa), `po` |
+| Documento ligado com aplicabilidade restrita | T002 | `validate_stages` (SC-1634) |
 | Documento não apresentado | T016, T020 | `ba`, `me` |
 | Retificação do barema depois de conclusões | T022 | compatibilidade |
-| Retificação só de redação | T022 | compatibilidade |
-| Avaliação reaberta | T018 | serviço |
+| Retificação de nome, descrição, unidade ou documento | T022 | compatibilidade |
+| Avaliação reaberta | T016, T018, T019 | `ba` (reconciliar), serviço, `me` |
+| Leitura depois de Retificação | T020, T026, T032 | `me`, `po`, `rc` (SC-1633) |
 | Conteúdo publicado em versão anterior | T004 | `el` |
 | Reaproveitamento de Edital | T006 | reaproveitamento |
 | Remover o Documento Exigido ligado | T002, T009 | `validate_stages`, `eb` |

@@ -4,8 +4,10 @@
 
 **Created**: 2026-11-10
 
-**Status**: Spec, plano e tarefas escritos em 10/11/2026; implementação não iniciada. Sete questões
-(P-1 a P-7, ao fim) esperam validação institucional, e nenhuma delas bloqueia o incremento A.
+**Status**: Spec, plano e tarefas escritos em 10/11/2026 (PR #460) e revisados no mesmo dia pela
+avaliação do usuário — seis ajustes, listados em [research.md](research.md) §4; implementação não
+iniciada. Sete questões (P-1 a P-7, ao fim) esperam validação institucional, e nenhuma delas bloqueia
+o incremento A.
 
 **Uma regra muda, e as outras ficam.** Hoje a comissão soma o barema fora do sistema — no Anexo IV
 do Edital, numa planilha — e lança na Mesa o total. Esta feature traz a ficha para dentro: a Etapa
@@ -50,6 +52,21 @@ Três Editais reais da amostra têm a mesma ficha — 14/2026, 140/2025 e 90/202
 mesma forma sem a coluna de quantidade. Em todos, cada linha é **um título, um valor por unidade e um
 teto**, e a soma dos tetos é a pontuação máxima da Etapa (100 nos quatro). É essa forma, e só ela,
 que esta spec constrói ([research.md](research.md) §3).
+
+**O que esta spec atende, e o que não.** Ela atende a ficha cujas linhas se pontuam **cada uma por
+si** — critérios independentes, total igual à soma das parcelas. Ela **não** demonstra que os
+títulos dos Editais da amostra sejam cumulativos: nenhum deles escreve acumulação nem exclusividade,
+e a soma dos tetos dar 100 é compatível com as duas leituras (P-1). Por Edital:
+
+| Edital | Atendido? | Condição ou limite |
+|---|---|---|
+| 14/2026 — Prova de Títulos e Entrevista | **Sim, se** a comissão confirmar que os títulos se pontuam independentemente | A Entrevista (faixas por categoria) é pontuação direta |
+| 90/2026 — Prova de Títulos | **Sim, se** a mesma confirmação vier | — |
+| 173/2025 — Prova de Títulos | **Em parte** | O teto pela expectativa declarada pelo candidato continua sendo aplicado pela comissão, fora do sistema (P-4) |
+| 140/2025 — Prova de Títulos | **Não** | O teto do Doutorado varia por curso (P-5); o Edital continua lançando o total |
+
+Edital que exija "só o maior título" não é atendido por esta spec: ele continua lançando o total, ou
+espera uma regra de exclusividade validada.
 
 O diagnóstico do código ([research.md](research.md) §2) mostrou que quase tudo já existe:
 pontuação validada contra a máxima publicada, conclusão imutável e preservada, consolidação por
@@ -116,8 +133,11 @@ concluir; conferir a Avaliação, a Conclusão preservada e o Resultado consolid
    conclui, **Then** a conclusão é recusada nomeando os critérios pendentes.
 3. **Given** um critério com pontuação direta e máximo 15, **When** ela informa 16, **Then** a
    conclusão é recusada nomeando o critério e o máximo.
-4. **Given** um critério ligado a documento que o candidato apresentou, **When** ela atribui zero
-   sem justificativa, **Then** a conclusão é recusada pedindo a justificativa daquele critério.
+4. **Given** um PDF de títulos que comprova só o Doutorado, ligado também ao Mestrado e à
+   Especialização, **When** ela atribui zero aos dois sem justificativa, **Then** a conclusão é
+   aceita — zero é resposta, e o arquivo comum não é reivindicação de todos os critérios que ele
+   pode comprovar. **When** ela quer registrar por que recusou um título apresentado, **Then**
+   escreve na justificativa daquele critério ou no parecer, que o candidato verá.
 5. **Given** a Avaliação concluída, **When** a presidência consolida, **Then** o Resultado da Etapa
    recebe o total — o mesmo caminho, a mesma cópia, a mesma regra de nota mínima.
 
@@ -186,20 +206,28 @@ reemitir a ordem como hoje.
   regra de combinação ausente, como hoje; o barema não a resolve nem a agrava.
 - **Quantidade maior que o necessário.** "52 meses" num critério de 1 ponto por mês até 40 é aceito, e
   a parcela é 40, com a marca "limitado ao máximo" na Mesa e no acompanhamento.
-- **Critério sem documento.** Pontuado da mesma forma; não exige justificativa no zero (não houve o
-  que indeferir) e não aparece na lista de documentos do candidato.
+- **Critério sem documento.** Pontuado da mesma forma, e não aparece na lista de documentos do
+  candidato.
 - **Documento ligado a vários critérios.** Um arquivo só, como hoje; a linha dele lista os critérios
-  que comprova. O candidato não envia o mesmo título duas vezes.
-- **Documento ligado que não se aplica ao Perfil do candidato.** O link não aparece na linha do
-  critério ("não se aplica"); a pontuação continua sendo pedida.
-- **Documento não apresentado.** A linha mostra "não apresentado"; zero não exige justificativa.
+  que comprova. O candidato não envia o mesmo título duas vezes, e o arquivo comum não obriga a
+  comissão a justificar cada critério que ele não comprovou.
+- **Documento ligado com aplicabilidade restrita** (a um Perfil, a uma modalidade ou a uma condição).
+  Recusado na elaboração: o barema vale para toda inscrição da Etapa, e o documento que o comprova
+  também precisa valer. Assim não existe candidato a quem se peça pontuar um critério cujo documento
+  ele não podia apresentar.
+- **Documento não apresentado.** A linha mostra "não apresentado"; zero é a resposta esperada.
 - **Retificação do barema depois de conclusões.** A conclusão aberta sob a versão anterior é recusada
   ("o Edital foi retificado enquanto você avaliava"), e a conclusão feita antes não consolida até ser
   reaberta — os dois mecanismos que já existem para a máxima publicada.
-- **Retificação só de redação** (nome, descrição, documento ligado). Não bloqueia consolidação, pela
-  mesma razão que rótulos não bloqueiam hoje.
-- **Avaliação reaberta.** O rascunho volta com o detalhamento da conclusão anterior, para edição; a
-  conclusão anterior fica preservada.
+- **Retificação de nome, descrição, unidade ou documento ligado.** Também bloqueia a consolidação das
+  conclusões anteriores: a descrição é onde mora a condição ("só experiência em EaD"), e o sistema não
+  distingue redação de regra. Só a troca de **ordem** não bloqueia.
+- **Avaliação reaberta.** O rascunho volta com o detalhamento da conclusão anterior; a conclusão
+  anterior fica preservada. Se o barema vigente mudou, a Mesa o mostra pela versão vigente: o valor
+  de critério que continua é mantido para reconfirmação, o de critério removido sai, e critério novo
+  fica pendente.
+- **Leitura depois de Retificação.** Conclusão preservada, Resultado e decisão de recurso mostram
+  nome, descrição e máxima **da versão que cada um cita**, e não os da vigente.
 - **Conteúdo publicado em versão anterior.** Elevado com a lista vazia: nenhuma Etapa antiga ganha
   barema por elevação.
 - **Reaproveitamento de Edital.** Os critérios viajam com a Etapa, com identidades novas, e o
@@ -232,8 +260,11 @@ reemitir a ordem como hoje.
 - **FR-5204**: Barema em Etapa de forma decisória MUST ser erro impeditivo de publicação, e a tela
   MUST não oferecer a seção nessa forma.
 - **FR-5205**: O documento comprobatório MUST referenciar um Documento Exigido do mesmo Edital, do
-  momento da inscrição. Referência a documento inexistente, de outro Edital ou da convocação MUST ser
-  recusada na gravação.
+  momento da inscrição, **aplicável a toda inscrição** — sem restrição de Perfil, de modalidade ou de
+  condição. Referência a documento inexistente, de outro Edital, da convocação ou de aplicabilidade
+  restrita MUST ser recusada na gravação e na validação de publicação, inclusive quando a restrição
+  chega depois, pela edição do próprio documento. A aplicabilidade é lida pela função que já a decide
+  para o candidato (`aplicaveis`), sem regra paralela.
 - **FR-5206**: A etapa Etapas de Avaliação do assistente MUST oferecer, dentro do cartão de cada Etapa
   pontuada, a seção Barema: acrescentar, remover e mover critérios, com os campos de FR-5201 e a
   escolha do documento entre os Documentos Exigidos da inscrição (UX-420).
@@ -268,19 +299,25 @@ reemitir a ordem como hoje.
   aceita, e a parcela MUST ser mostrada como "limitada ao máximo".
 - **FR-5217**: O rascunho MUST aceitar critérios em branco. A conclusão MUST exigir todos respondidos
   — zero é resposta — e a recusa MUST nomear os pendentes.
-- **FR-5218**: A justificativa do critério MUST ser obrigatória na conclusão quando o critério tem
-  documento ligado, o candidato apresentou esse documento e a parcela é zero. As regras de parecer que
-  já existem continuam valendo sobre o total.
+- **FR-5218**: A justificativa do critério MUST ser opcional, e zero MUST ser resposta válida sem ela:
+  o arquivo apresentado não diz quais dos critérios ligados o candidato reivindicou, e exigir
+  justificativa por presença de arquivo produziria fundamentação artificial. A fundamentação do
+  indeferimento MUST continuar no parecer, sob as regras de obrigatoriedade que já existem sobre o
+  total, e a justificativa de critério, quando escrita, MUST chegar ao candidato junto com a parcela.
 - **FR-5219**: O detalhamento MUST ser gravado na Avaliação e copiado para a Conclusão preservada, junto
   com a versão que o governou. A imutabilidade da Avaliação concluída, garantida por gatilho, MUST
   cobrir o detalhamento.
 - **FR-5220**: Consolidação, classificação, desempate, publicação de resultado e reemissão de ordem
   MUST permanecer inalterados: recebem o total, pelo campo de hoje.
 - **FR-5221**: A conferência de compatibilidade entre a norma que governou a conclusão e a vigente MUST
-  comparar o barema — identidade, máxima e pontos por unidade de cada critério; nome, descrição e
-  documento ligado ficam de fora.
-- **FR-5222**: Reabrir MUST devolver ao rascunho o detalhamento da conclusão reaberta; a reavaliação
-  determinada por recurso MUST usar a mesma ficha.
+  comparar o barema de forma conservadora: o conjunto dos critérios e, de cada um, nome, descrição,
+  máxima, pontos por unidade, unidade e documento ligado. Só a ordem fica de fora. Qualquer outra
+  diferença bloqueia a consolidação da conclusão anterior, que se resolve reabrindo e concluindo de
+  novo sob o barema vigente.
+- **FR-5222**: Reabrir MUST devolver ao rascunho o detalhamento da conclusão reaberta. A Mesa MUST
+  mostrá-lo pelo barema vigente: valor de critério que continua é mantido, de critério removido é
+  descartado, e critério novo fica pendente. A reavaliação determinada por recurso MUST usar a mesma
+  ficha.
 - **FR-5223**: As telas que mostram uma avaliação concluída — a Mesa e as conclusões preservadas —
   MUST mostrar o detalhamento.
 - **FR-5224**: No portal, a linha de cada Documento Exigido ligado a critérios MUST dizer quais
@@ -288,6 +325,14 @@ reemitir a ordem como hoje.
 - **FR-5225**: No acompanhamento do candidato, onde o Resultado da Etapa já é visível hoje, MUST
   aparecer o detalhamento por critério com a justificativa, só ao titular e sob a mesma regra de
   visibilidade da nota (UX-423).
+- **FR-5232**: Enquanto o incremento C não estiver entregue, o julgamento por correção fixada de
+  recurso contra Resultado de Etapa com barema MUST ser recusado, com frase que oriente a reavaliação
+  determinada — que já percorre a ficha. Nenhum Resultado de Etapa com barema MUST nascer com total sem
+  detalhamento. O incremento C remove a recusa.
+- **FR-5233**: Todo detalhamento MUST ser lido com o barema **da versão que o ato cita** — a da
+  Conclusão preservada, a do Resultado, a da Decisão de recurso —, e não com o da versão vigente; nome,
+  descrição e máxima mostrados à comissão e ao candidato MUST ser os daquela versão. Só o rascunho se lê
+  pela vigente (FR-5222).
 
 **Incremento C — o recurso**
 
@@ -339,13 +384,14 @@ reemitir a ordem como hoje.
 
 - **SC-1620**: Cenário 1, títulos — com Doutorado (10), Mestrado (6) e Especialização (3), por
   quantidade e máxima igual ao valor, o barema publicado tem máxima 19; um candidato com mestrado e
-  especialização reconhecidos recebe 9; o PDF contém a tabela. A acumulação é a que o barema
-  declara: três critérios independentes somam (P-1).
+  especialização reconhecidos recebe 9; o PDF contém a tabela. O caso vale para o Edital cujos títulos
+  se pontuam independentemente; o que exige "só o maior título" não é atendido (P-1).
 - **SC-1621**: Cenário 2, experiência — 2 pontos por ano, máxima 10: 3 anos dão 6; 7 anos dão 10,
   "limitada ao máximo"; zero dá zero. Nenhum cálculo de duração é feito pelo sistema.
-- **SC-1622**: Cenário 3, avaliação e revisão — concluir com um critério indeferido exige
-  justificativa; a correção fixada por recurso produz um Resultado sucessor com o detalhamento da
-  decisão, a ordem vigente aparece desatualizada, e a ordem reemitida usa o total novo.
+- **SC-1622**: Cenário 3, avaliação e revisão — a avaliadora conclui com um critério indeferido e a
+  justificativa escrita, que o candidato lê junto da parcela; a correção fixada por recurso produz um
+  Resultado sucessor com o detalhamento da decisão, a ordem vigente aparece desatualizada, e a ordem
+  reemitida usa o total novo.
 - **SC-1623**: A reavaliação determinada é cumprida por outro avaliador pela ficha, e a consolidação
   produz o sucessor com o detalhamento novo.
 - **SC-1624**: Cenário 4, sem barema — a suíte existente passa; o conteúdo publicado de um Edital de
@@ -360,7 +406,8 @@ reemitir a ordem como hoje.
 - **SC-1627**: Avaliação incompleta — o rascunho grava critérios em branco; a conclusão os recusa,
   nomeando cada um.
 - **SC-1628**: Retificação do barema depois de conclusões — concluir sob a versão anterior é recusado;
-  consolidar conclusão anterior é bloqueado até a reabertura; retificar só o nome não bloqueia.
+  consolidar conclusão anterior é bloqueado até a reabertura, tanto por mudança de máxima quanto por
+  mudança só da descrição; reordenar os critérios não bloqueia.
 - **SC-1629**: Determinismo — o mesmo detalhamento, em qualquer ordem, produz o mesmo total com quatro
   casas.
 - **SC-1630**: Imutabilidade — alterar o detalhamento de uma Avaliação concluída por SQL direto é
@@ -370,6 +417,16 @@ reemitir a ordem como hoje.
 - **SC-1632**: Proporção — a comissão do 14/2026 configura o barema numa tela que já existe e pontua
   numa tela que já existe; nenhuma rota, permissão, tabela append-only ou mecanismo de classificação
   novo é criado (contagem verificável no diff do plano).
+- **SC-1633**: Reprodutibilidade — depois de uma Retificação que renomeia um critério e muda a
+  descrição de outro, a Conclusão preservada, o Resultado e a Decisão de recurso anteriores mostram os
+  nomes e as descrições da versão que citam, à comissão e ao candidato; a avaliação reaberta mostra os
+  da vigente, com o valor do critério que continuou.
+- **SC-1634**: Documento por Perfil — ligar a critério um Documento Exigido restrito a um Perfil, a
+  uma modalidade ou a uma condição é recusado, na gravação e na publicação, inclusive quando a
+  restrição é acrescentada ao documento depois do vínculo.
+- **SC-1635**: Consistência entre B e C — com o incremento B entregue e o C não, a correção fixada
+  contra Resultado de Etapa com barema é recusada, e nenhum Resultado de Etapa com barema existe sem
+  detalhamento; a reavaliação determinada continua disponível.
 
 ## Decisões
 
@@ -382,21 +439,29 @@ As decisões estão com a razão e as alternativas descartadas em [research.md](
   de hoje.
 - **D-005** — o total é calculado no servidor por uma função só, usada pela Mesa e pelo recurso.
 - **D-006** — a mudança de barema depois de conclusões é tratada pelos mecanismos de versão e
-  compatibilidade que já existem, sem trava nova.
+  compatibilidade que já existem, sem trava nova, e a comparação é conservadora: tudo menos a ordem.
 - **D-007** — a comprovação é um vínculo opcional a Documento Exigido; nenhum envio novo.
-- **D-008** — a justificativa só é obrigatória no indeferimento de documento apresentado.
-- **D-009** — três incrementos, cada um útil sozinho.
+- **D-008** — a justificativa de critério é opcional; a fundamentação obrigatória continua no
+  parecer.
+- **D-009** — três incrementos em três PRs; B e C são uma entrega só para produção, e o B recusa a
+  correção fixada até o C.
+- **D-010** — o documento ligado a critério precisa valer para toda inscrição.
+- **D-011** — o detalhamento se lê com o barema da versão que o ato cita.
 
 ## Questões para validação institucional
 
 Nenhuma bloqueia o incremento A. A recomendação de cada uma é a que a spec já adota.
 
-- **P-1 — Títulos acumulam?** A spec trata cada critério como independente, e todos somam. A regra
-  "só o maior título" não é construída: os quatro Editais da amostra não a escrevem, e os totais deles
-  (100 = soma de todos os tetos) só fecham se tudo somar. Edital que precise de exclusividade a
-  escreve na descrição do critério, e a comissão a aplica. **Confirmar com a CPS/Cefor.**
-- **P-2 — Quando a justificativa é obrigatória?** A spec a exige só no zero de documento apresentado.
-  Exigir em toda redução pediria saber quanto o candidato pleiteava (P-4).
+- **P-1 — Títulos acumulam?** **Não está demonstrado.** Os quatro Editais não escrevem acumulação
+  nem exclusividade, e a soma dos tetos dar 100 é compatível com as duas leituras — um teto total é
+  só um teto. A spec trata cada critério como independente, e por isso atende só o Edital cuja ficha
+  se pontua assim (tabela em "O que esta spec atende"). A exclusividade não é construída sem regra
+  validada; Edital que a exija continua lançando o total. **Confirmar, Edital a Edital, com a
+  CPS/Cefor, antes de operar um deles pelo barema.**
+- **P-2 — Quando a justificativa é obrigatória?** A spec não a torna obrigatória por critério: sem a
+  expectativa do candidato (P-4), o sistema não distingue "não reivindicou" de "reivindicou e foi
+  recusado". A obrigatoriedade continua sendo a do parecer, que já existe. Se a CPS/Cefor quiser
+  fundamentação por critério em todo indeferimento, o caminho é coletar a reivindicação, e isso é P-4.
 - **P-3 — O detalhamento é público?** A spec o mostra só ao titular. A lista pública continua com o
   total.
 - **P-4 — Autopontuação vinculante.** O 173/2025 proíbe pontuar acima da expectativa declarada pelo
@@ -415,7 +480,8 @@ Nenhuma bloqueia o incremento A. A recomendação de cada uma é a que a spec j�
 ## Assumptions
 
 - A forma de ficha dos quatro Editais da amostra — linha, valor por unidade, teto — é a dos próximos
-  processos de títulos do Cefor. Ficha de entrevista por faixas ("Fracos 0 a 5, Bons 6 a 10") é
+  processos de títulos do Cefor; se os títulos se pontuam independentemente é questão de cada Edital
+  (P-1). Ficha de entrevista por faixas ("Fracos 0 a 5, Bons 6 a 10") é
   atendida pela pontuação direta, com as faixas na descrição.
 - O candidato junta num PDF os títulos de cada Documento Exigido, como os Editais já pedem ("arquivo
   único"); um arquivo por documento continua sendo a regra.
