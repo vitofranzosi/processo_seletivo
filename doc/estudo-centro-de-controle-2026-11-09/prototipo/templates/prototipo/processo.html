@@ -1,0 +1,59 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}{{ processo.institutional_code }} · protótipo{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}"><link rel="stylesheet" href="{% estatico 'prototipo/centro.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'prototipo:indice' %}">Protótipo</a> › <span aria-current="page">{{ processo.institutional_code }}</span></nav>{% endblock %}
+{% block conteudo %}
+<p class="cc-faixa-prototipo" role="note"><strong>Protótipo de estudo.</strong> <a href="{% url 'interface:processo-detalhe' processo.id %}">Ver a tela atual deste Processo</a>.</p>
+<header class="cc-cabecalho">
+  <p class="cc-sobretitulo">Processo Seletivo</p>
+  <h1>{{ processo.title }}</h1>
+  <dl class="cc-estados">
+    <div><dt>Situação administrativa</dt><dd><span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span> <code>{{ processo.institutional_code }}</code></dd></div>
+    <div><dt>Editais</dt><dd>{{ editais|length }}</dd></div>
+    <div><dt>Ações suas nos Editais</dt><dd>{% if suas %}<strong>{{ suas }}</strong>, no Centro de Controle de cada Edital{% else %}Nenhuma{% endif %}</dd></div>
+  </dl>
+</header>
+
+<section class="cartao" aria-labelledby="editais-titulo">
+  <h2 id="editais-titulo">Onde cada Edital está</h2>
+  <p class="cc-ajuda-curta">O andamento operacional é do Edital. Aqui ele aparece resumido; o detalhe e as ações ficam no Centro de Controle de cada um.</p>
+  <ul class="cc-editais">
+    {% for e in editais %}
+    <li class="cc-edital">
+      <h3><a href="{% url 'prototipo:centro' e.edital.id %}">Edital {{ e.edital.number }}/{{ e.edital.year }}</a> <span class="situacao s-{{ e.edital.status }}">{{ e.edital.status|situacao }}</span></h3>
+      <p class="cc-fraco">{{ e.edital.title }}</p>
+      {% if e.centro %}
+      <p><strong>{{ e.centro.onde }}</strong>{% if e.centro.onde_detalhe %} {{ e.centro.onde_detalhe }}{% endif %}</p>
+      <ol class="cc-mini-trilha" aria-label="Fases do Edital {{ e.edital.number }}">
+        {% for f in e.centro.fases %}<li class="f-{{ f.situacao }}"><span aria-hidden="true">{{ f.sinal }}</span> {{ f.nome }}<span class="cc-fraco"> — {{ f.rotulo|lower }}</span>{% if f.suas %} <span class="cc-marca sua">{{ f.suas|length }} sua{{ f.suas|length|pluralize:"s" }}</span>{% endif %}{% if f.espera_ate %} <span class="cc-marca espera">◷ até {{ f.espera_ate|date:"d/m" }}</span>{% endif %}</li>{% endfor %}
+      </ol>
+      <p>{% with p=e.centro.providencias %}{% if p.total %}{{ p.total }} providência{{ p.total|pluralize:"s" }} em aberto{% if p.suas %} · <strong>{{ p.suas|length }} sua{{ p.suas|length|pluralize:"s" }}</strong>{% endif %}{% if p.aguardando %} · {{ p.aguardando|length }} aguardando prazo ou resposta{% endif %}{% else %}Nada em aberto{% endif %}{% endwith %} — <a href="{% url 'prototipo:centro' e.edital.id %}">abrir o Centro de Controle</a></p>
+      {% else %}
+      <p>Antes da publicação: <a href="{% url 'interface:detalhe' e.edital.id %}">abrir o Edital</a>.</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+{% if sinais %}
+<section class="cartao" aria-labelledby="atencao-titulo">
+  <h2 id="atencao-titulo">Atenção</h2>
+  <ul class="sinais">{% for sinal in sinais %}{% include "interface/_sinal.html" %}{% endfor %}</ul>
+</section>
+{% endif %}
+
+<section class="cc-administracao" aria-labelledby="admin-titulo">
+  <h2 id="admin-titulo" class="cc-titulo-de-camada">Administração do Processo</h2>
+  <ul class="cc-lista-simples">
+    {% if pode_gerir_comissao %}<li><a href="{% url 'interface:supervisao' processo.id %}">Supervisão</a></li><li><a href="{% url 'interface:comissao' processo.id %}">Comissão</a></li><li><a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a></li>{% endif %}
+    <li><a href="{% url 'interface:processo-detalhe' processo.id %}">Dados, trilha e atos do Processo</a></li>
+  </ul>
+  {% if atos or pendentes %}
+  <details class="cc-terminais"><summary>Encerrar ou cancelar o Processo</summary>
+    {% if pendentes %}<p class="cc-ajuda-curta">Hoje impedido: {{ pendentes|length }} Edital(is) ainda não encerrado(s). Encerre cada Edital antes, pelo Centro de Controle dele.</p>{% endif %}
+    <p class="cc-ajuda-curta">A tela de cada ato mostra antes o que ainda está em aberto.</p>
+  </details>
+  {% endif %}
+</section>
+{% endblock %}
