@@ -249,6 +249,8 @@ QUEM_CARREGA = {
     "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
     "interface/grupos/serie.css": {"processo_detalhe.html", "supervisao.html"},
     "interface/grupos/terminais.css": {
+        # O Centro de Controle (136) desenha Encerrar e Cancelar como o detalhe os desenha.
+        "centro_do_edital.html",
         "detalhe.html",
         "processo_detalhe.html",
         "retificacao_detalhe.html",
@@ -290,7 +292,10 @@ QUEM_CARREGA = {
     # A prévia da classificação (094): o painel só existe na etapa Classificação.
     "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},
     # O andamento da seleção (127): as providências e a matriz, só no detalhe do Edital.
-    "interface/telas/andamento.css": {"detalhe.html"},
+    # O Centro de Controle (136) lê as situações da 127 e a moldura das tabelas desta folha, e tem a
+    # sua por cima.
+    "interface/telas/andamento.css": {"centro_do_edital.html", "detalhe.html"},
+    "interface/telas/centro.css": {"centro_do_edital.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
         for tela in (

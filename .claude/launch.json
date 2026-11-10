@@ -521,6 +521,13 @@
       "url": "http://localhost:8134"
     },
     {
+      "name": "centro-136",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps136 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true CENARIOS_DE_TREINAMENTO=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps136-arquivos uv run python manage.py runserver 8136"],
+      "port": 8136,
+      "url": "http://localhost:8136"
+    },
+    {
       "name": "centro-de-controle",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

@@ -1,0 +1,588 @@
+/* O Centro de Controle do Edital (136). Carregada depois de grupos/terminais.css e
+   telas/andamento.css, que dão as situações da 127 e a moldura das tabelas.
+
+   Duas leituras com desenho próprio (UX-314): o andamento da fase é a borda superior e o sinal do
+   cartão; o que ela oferece agora, e a quem, são as marcas do rodapé. A fase consultada tem um
+   terceiro desenho, o contorno, que não se confunde com nenhum dos dois (UX-315). */
+
+.cc-em-validacao {
+  margin: 0 0 .75rem;
+  padding: .35rem .6rem;
+  border-left: 4px solid var(--amarelo);
+  background: var(--amarelo-fundo);
+  font-size: .9rem;
+}
+
+.cc-fraco {
+  color: var(--texto-fraco);
+}
+
+/* ---- o topo: onde estamos e os três estados ---- */
+
+.cc-cabecalho h1 {
+  margin-bottom: .4rem;
+}
+
+.cc-titulo-do-edital {
+  display: block;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--texto-fraco);
+}
+
+.cc-onde {
+  margin: 0 0 .6rem;
+  padding: .5rem .75rem;
+  border-radius: 6px;
+  background: var(--cinza-fundo);
+}
+
+.cc-onde-frase,
+.cc-onde-detalhe {
+  margin: 0;
+}
+
+.cc-onde-frase {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.cc-onde-rotulo {
+  display: inline-block;
+  margin-right: .4rem;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--texto-fraco);
+}
+
+.cc-estados {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: .4rem 1rem;
+  margin: 0 0 .9rem;
+}
+
+.cc-estados dt {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--texto-fraco);
+}
+
+.cc-estados dd {
+  margin: 0;
+}
+
+/* ---- o mapa ---- */
+
+.cc-mapa {
+  margin: 0 0 1rem;
+}
+
+.cc-grupos {
+  display: grid;
+  grid-template-columns: 2fr 4fr 2fr;
+  gap: .75rem;
+}
+
+.cc-grupo {
+  min-width: 0;
+}
+
+.cc-grupo-rotulo {
+  margin: 0 0 .3rem;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--texto-fraco);
+}
+
+.cc-fases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: .4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cc-fase {
+  min-width: 0;
+  border: 1px solid var(--borda);
+  border-top: 4px solid var(--borda);
+  border-radius: 6px;
+  background: var(--fundo);
+}
+
+.cc-fase a {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  height: 100%;
+  padding: .4rem .5rem;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.cc-fase a:hover .cc-fase-nome,
+.cc-fase a:focus .cc-fase-nome {
+  text-decoration: underline;
+}
+
+.cc-fase-linha {
+  font-weight: 700;
+}
+
+.cc-fase-andamento {
+  font-size: .85rem;
+}
+
+.cc-marcas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .2rem;
+  margin-top: auto;
+}
+
+/* O andamento: borda superior e sinal (a palavra vai ao lado, sempre). */
+.cc-fase.f-concluida {
+  border-top-color: var(--verde);
+}
+
+.cc-fase.f-em_curso {
+  border-top-color: var(--verde-escuro);
+}
+
+.cc-fase.f-nao_iniciada,
+.cc-fase.f-nao_se_aplica {
+  border-top-style: dashed;
+}
+
+.cc-fase.f-nao_se_aplica {
+  color: var(--texto-fraco);
+}
+
+/* A fase consultada: contorno e fundo próprios, que nem o andamento nem as marcas usam. */
+.cc-fase.consultada {
+  outline: 3px solid var(--texto);
+  outline-offset: 1px;
+  background: var(--cinza-fundo);
+}
+
+.cc-sinal {
+  display: inline-block;
+  min-width: 1em;
+  text-align: center;
+}
+
+/* As marcas: o que a fase oferece agora, e a quem. Texto, e não só cor. */
+.cc-marca {
+  display: inline-block;
+  padding: 0 .35rem;
+  border: 1px solid var(--borda);
+  border-radius: 4px;
+  font-size: .75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cc-marca.sua {
+  border-color: var(--verde-escuro);
+  background: var(--verde-escuro);
+  color: var(--branco);
+}
+
+.cc-marca.outro {
+  border-color: var(--verde-escuro);
+  color: var(--verde-texto);
+}
+
+.cc-marca.espera {
+  border-color: var(--amarelo);
+  background: var(--amarelo-fundo);
+}
+
+.cc-marca.impedida {
+  border-color: var(--vermelho);
+  background: var(--vermelho-fundo);
+}
+
+.cc-marca.nada {
+  border-style: dashed;
+  color: var(--texto-fraco);
+}
+
+.cc-marca.acao-da-lista {
+  border-color: var(--verde-escuro);
+}
+
+.cc-legenda {
+  margin-top: .5rem;
+  font-size: .9rem;
+}
+
+.cc-legenda-colunas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: .5rem 1.5rem;
+}
+
+.cc-legenda ul {
+  margin: .2rem 0;
+  padding-left: 1rem;
+}
+
+/* ---- o que fazer agora e o detalhe da fase ---- */
+
+.cc-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.cc-rotulo-pequeno {
+  margin: 0 0 .15rem;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--texto-fraco);
+}
+
+.cc-destaque {
+  margin: 0 0 .75rem;
+  padding: .6rem .75rem;
+  border-left: 5px solid var(--verde-escuro);
+  border-radius: 4px;
+  background: var(--verde-claro);
+}
+
+.cc-destaque h3 {
+  margin: 0 0 .2rem;
+}
+
+.cc-porque {
+  margin-bottom: .3rem;
+}
+
+.cc-nenhuma-sua,
+.cc-sem-destaque {
+  margin: 0 0 .6rem;
+}
+
+.cc-subtitulo {
+  margin: .8rem 0 .3rem;
+  font-size: 1rem;
+}
+
+.cc-providencias {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cc-providencia {
+  padding: .4rem 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.cc-providencia p {
+  margin: 0 0 .15rem;
+}
+
+.cc-providencia.sua {
+  padding-left: .6rem;
+  border-left: 4px solid var(--verde);
+}
+
+.cc-providencia.impedida {
+  padding-left: .6rem;
+  border-left: 4px solid var(--vermelho);
+}
+
+.cc-providencia.aguardando {
+  padding-left: .6rem;
+  border-left: 4px solid var(--amarelo);
+}
+
+.cc-providencia.de-outro {
+  padding: .25rem 0;
+}
+
+.cc-providencias.compactas .cc-providencia {
+  border-bottom-style: dotted;
+}
+
+.cc-ato {
+  font-weight: 600;
+}
+
+.cc-onde-da-acao,
+.cc-no-gps,
+.cc-razao,
+.cc-nota-da-acao {
+  color: var(--texto-fraco);
+  font-size: .9rem;
+}
+
+.cc-curta {
+  display: block;
+  font-size: .9rem;
+}
+
+.cc-paralela,
+.cc-nota {
+  font-size: .9rem;
+  color: var(--texto-fraco);
+  font-style: italic;
+}
+
+.cc-entenda {
+  margin: .25rem 0 0;
+  font-size: .9rem;
+}
+
+.cc-entenda summary {
+  cursor: pointer;
+}
+
+.cc-retificacao {
+  margin-top: .75rem;
+}
+
+.cc-pergunta {
+  margin: 0 0 .4rem;
+  color: var(--texto-fraco);
+}
+
+.cc-andamento-da-fase {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--texto-fraco);
+}
+
+.cc-oferece .cc-marca {
+  margin-right: .2rem;
+}
+
+.cc-perfil-na-fase + .cc-perfil-na-fase {
+  margin-top: 1rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--borda);
+}
+
+/* O roteiro: os passos da fase, na ordem, em língua de quem conduz. */
+.cc-roteiro {
+  margin: .5rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cc-roteiro li {
+  display: flex;
+  gap: .5rem;
+  padding: .35rem 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.cc-roteiro li.com-acao {
+  background: var(--verde-claro);
+}
+
+.cc-roteiro-numero {
+  flex: 0 0 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--borda);
+  border-radius: 50%;
+  text-align: center;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+
+.cc-roteiro li.f-concluida .cc-roteiro-numero {
+  border-color: var(--verde);
+}
+
+.cc-roteiro li.f-nao_iniciada .cc-roteiro-numero,
+.cc-roteiro li.f-nao_se_aplica .cc-roteiro-numero {
+  border-style: dashed;
+}
+
+.cc-roteiro-texto {
+  min-width: 0;
+}
+
+.cc-roteiro-nome {
+  font-weight: 700;
+}
+
+.cc-roteiro-situacao {
+  display: block;
+  font-size: .9rem;
+}
+
+.cc-tabela-da-fase,
+.cc-tabela-das-listas {
+  border-collapse: collapse;
+  font-size: .9rem;
+}
+
+.cc-tabela-da-fase caption {
+  text-align: left;
+  color: var(--texto-fraco);
+  font-size: .85rem;
+}
+
+.cc-tabela-da-fase th,
+.cc-tabela-da-fase td,
+.cc-tabela-das-listas th,
+.cc-tabela-das-listas td {
+  padding: .3rem .45rem;
+  border: 1px solid var(--borda);
+  text-align: left;
+  vertical-align: top;
+}
+
+.cc-celula-ato {
+  display: block;
+}
+
+.cc-tabela-da-fase .cc-razao {
+  display: block;
+}
+
+.cc-passos-explicados dt {
+  margin-top: .4rem;
+  font-weight: 700;
+}
+
+.cc-passos-explicados dd {
+  margin: 0;
+}
+
+/* ---- onde cada lista está ---- */
+
+.cc-listas {
+  margin-top: 1rem;
+}
+
+.cc-perfil + .cc-perfil {
+  margin-top: 1rem;
+}
+
+.cc-celula-da-fase a {
+  color: var(--texto);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cc-celula-da-fase.f-nao_iniciada,
+.cc-celula-da-fase.f-nao_se_aplica {
+  color: var(--texto-fraco);
+}
+
+.cc-celula-da-fase.f-concluida {
+  background: var(--sucesso-fundo);
+}
+
+.cc-agora-da-lista {
+  min-width: 12rem;
+}
+
+.cc-atos-da-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cc-matriz-completa,
+.cc-telas {
+  margin-top: .5rem;
+}
+
+/* ---- administração e histórico ---- */
+
+.cc-administracao {
+  margin-top: 1.25rem;
+}
+
+.cc-administracao-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.cc-lista-simples {
+  margin: 0 0 .4rem;
+  padding-left: 1rem;
+}
+
+.cc-quem div {
+  display: flex;
+  gap: .4rem;
+}
+
+.cc-quem dt {
+  font-weight: 600;
+}
+
+.cc-quem dd {
+  margin: 0;
+}
+
+.cc-terminais {
+  margin-top: 1rem;
+  padding: .5rem .75rem;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+}
+
+.cc-terminais summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ---- tela estreita (UX-317, FR-4746) ---- */
+
+@media (max-width: 1180px) {
+  .cc-grupos {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 60rem) {
+  .cc-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
+  .cc-fases {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cc-fase a {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: .5rem;
+  }
+
+  .cc-marcas {
+    margin-top: 0;
+  }
+}
+
+/* As duas colunas da grade: o que fazer agora, e a fase consultada. Encostadas no topo, para que
+   a coluna curta não estique até a altura da outra (o problema que a 057 achou em "Quem atuou"). */
+.cc-agora,
+.cc-detalhe {
+  min-width: 0;
+  margin: 0;
+}

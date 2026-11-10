@@ -28,6 +28,17 @@ SITUACOES = {
 
 
 @register.filter
+def inicial_minuscula(texto):
+    """ "Consolidar a Prova Prática" → "consolidar a Prova Prática", no meio de uma frase (136).
+
+    O `lower` do Django baixava a frase inteira, e com ela o nome da Etapa, o código da lista e o
+    "Edital" que os atos e os papéis carregam.
+    """
+    texto = str(texto or "")
+    return texto[:1].lower() + texto[1:]
+
+
+@register.filter
 def situacao(valor):
     return SITUACOES.get(valor, valor)
 

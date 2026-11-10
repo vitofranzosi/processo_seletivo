@@ -1439,6 +1439,9 @@ class Andamento:
     ve_a_matriz: bool = False
     #: `e_sua(celula, perfil)`: a regra de "sua" do nível 1, para as transições (FR-4090).
     e_sua: object = None
+    #: O `Alcance` com que o andamento foi lido. O Centro (136) diz o papel da pessoa por ele, e
+    #: recalculá-lo consultaria de novo a comissão e a Retificação.
+    alcance: object = None
 
     # A apresentação do nível 1 mora em `providencias.py`; estas propriedades só a expõem.
     @property
@@ -1629,6 +1632,7 @@ class _Leitor:
             atencoes=self.atencoes,
             ve_a_matriz=self.alcance.consulta,
             e_sua=self.e_sua,
+            alcance=self.alcance,
             inscricoes={
                 "estado": self.periodo.estado,
                 "fim": self.periodo.fim,
