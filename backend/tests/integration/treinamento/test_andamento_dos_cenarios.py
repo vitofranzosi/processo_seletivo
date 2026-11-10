@@ -11,6 +11,7 @@ ficha nomeia. As mesmas regras, sem banco, estão em
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.interface import andamento as a
 from processo_seletivo.interface import providencias as pr
@@ -159,8 +160,11 @@ def test_a_espera_do_definitivo_nao_oferece_publicar_como_preliminar(cenario, co
         [espera] = [i for i in nivel.itens if i.natureza == a.RESULTADO and i.grupo == pr.EM_ESPERA]
         assert espera.ato == "Publicar o resultado definitivo"
         assert OFERTA not in espera.razao
-        assert "prazo recursal" in espera.razao and "14/11/2026" in espera.razao
         assert espera.ate is not None
+        # O cenário calcula o fim do prazo a partir de hoje: a data esperada sai do próprio
+        # marco, e não de um dia escrito no teste, que reprovava a suíte inteira na virada.
+        fim = timezone.localtime(espera.ate).strftime("%d/%m/%Y")
+        assert "prazo recursal" in espera.razao and fim in espera.razao
         for celula in _celulas_do_resultado(andamento).values():
             assert OFERTA not in celula.razao
 
