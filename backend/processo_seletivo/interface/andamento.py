@@ -148,6 +148,9 @@ class Celula:
     #: No resultado: o que o público lê hoje — `NADA`, `PRELIMINAR` ou `DEFINITIVO` (135, FR-4677).
     #: É o dado que decide; a nota é só o texto (FR-4679).
     divulgado: str = ""
+    #: Na ordem *Depois*: há ordem vigente, e ela está para trás — a sucessora é que espera (141,
+    #: FR-4833). Sem o dado, o resultado leria "não há ordem vigente a divulgar", o que é falso.
+    vigente_para_tras: bool = False
 
     @property
     def rotulo(self):
@@ -654,8 +657,26 @@ def situacao_da_ordem(f):
     celula = f.get("celula") or {}
     estado, url = celula.get("estado"), celula.get("url") or ""
     vazia = bool(f.get("vazia"))
+    faltam = f.get("faltam") or []
     if estado == "feito":
         return _c(FEITO, natureza=ORDEM, nota=celula.get("nota") or "", url=url)
+    if estado == "obsoleto" and faltam:
+        # **A sucessora espera o que a primeira ordem esperaria** (141, FR-4830, D-001, D-002). Este
+        # ramo devolvia "Emitir a ordem sucessora" antes de olhar `faltam`: no C08, deferido o
+        # recurso que reabilita, o GPS mandava emitir a ordem ao lado da Análise de títulos que
+        # faltava ao reabilitado — uma sucessora parcial, que nasce para ser sucedida, e por cima
+        # dela o corte que deixava ele fora da faixa. *Depois*, e não *Obsoleto* sem ato: o
+        # obsoleto é a praticar, e entraria no nível 1 como providência sem ato.
+        return _c(
+            DEPOIS,
+            natureza=ORDEM,
+            razao=(
+                f"a ordem sucessora lê {_lista_de_nomes(faltam)}, que ainda "
+                f"{'não está feita' if len(faltam) == 1 else 'não estão feitas'}; a vigente "
+                "continua produzindo efeito"
+            ),
+            vigente_para_tras=True,
+        )
     if estado == "obsoleto":
         return _c(
             OBSOLETO,
@@ -669,7 +690,6 @@ def situacao_da_ordem(f):
         )
     if estado == "nao_se_aplica":
         return _c(NAO_SE_APLICA, natureza=ORDEM, nota=celula.get("nota") or "")
-    faltam = f.get("faltam") or []
     if faltam:
         return _c(
             DEPOIS,
@@ -807,15 +827,45 @@ def espera_da_lista(*, edital, marco, lista_id, at, publicada=None, definitiva=N
     return espera_do_corte(marco, divulgado=True, definitiva=definitiva)
 
 
+def ordem_para_tras(ordem):
+    """A ordem vigente está para trás: obsoleta, ou à espera da sucessora (141, FR-4833).
+
+    A pergunta é de quem lê a ordem para decidir o que vem depois dela — o resultado. A situação
+    sozinha não basta desde que a sucessora com Etapa por fazer passou a ser *Depois*.
+    """
+    return ordem is not None and (ordem.situacao == OBSOLETO or ordem.vigente_para_tras)
+
+
+#: A razão do corte que espera o reabilitado (141, UX-341).
+REINGRESSO_NO_CORTE = (
+    "há inscrição reabilitada por recurso ainda sem resultado numa Etapa deste marco: o corte "
+    "espera a consolidação dela e a ordem sucessora"
+)
+
+
 def situacao_do_corte(f):
     """O corte de uma lista (FR-4069). `f`: `celula` (do indicador), `ordem` (a célula da ordem ou
-    do sorteio, já derivada), `espera` (de `espera_do_corte`, ou `None`)."""
+    do sorteio, já derivada), `espera` (de `espera_do_corte`, ou `None`), `reingresso` (há inscrição
+    reabilitada por recurso sem resultado numa Etapa do marco).
+
+    **O reingresso pendente segura o corte nas duas formas** (141, FR-4835, FR-4836, D-003). É a
+    pergunta com que a publicação recusa (`publicabilidade.reingressos_pendentes`), e pela mesma
+    razão: emitir agora produziria o mesmo ato incompleto. A ordem à espera já segurava o corte;
+    faltavam a sucessora parcial que a tela aceita (128) e o corte que o reingresso tornou obsoleto.
+    """
     celula = f.get("celula") or {}
     estado, url = celula.get("estado"), celula.get("url") or ""
+    reingresso = bool(f.get("reingresso"))
     if estado == "nao_se_aplica":
         return _c(NAO_SE_APLICA, natureza=CORTE, nota=celula.get("nota") or "")
     if estado == "feito":
         return _c(FEITO, natureza=CORTE, url=url)
+    if estado == "obsoleto" and reingresso:
+        return _c(
+            DEPOIS,
+            natureza=CORTE,
+            razao=f"o corte vigente está para trás, e {REINGRESSO_NO_CORTE}",
+        )
     if estado == "obsoleto":
         return _c(
             OBSOLETO,
@@ -830,6 +880,8 @@ def situacao_do_corte(f):
         return _c(NAO_SE_APLICA, natureza=CORTE, nota="nenhuma inscrição nesta lista")
     if ordem is None or ordem.situacao != FEITO:
         return _c(DEPOIS, natureza=CORTE, razao="o corte lê a ordem, que ainda não está vigente")
+    if reingresso:
+        return _c(DEPOIS, natureza=CORTE, razao=REINGRESSO_NO_CORTE)
     espera = f.get("espera")
     if espera:
         # Sem responsável: ninguém precisa agir agora, e por isso a espera não é "sua" (FR-4543).
@@ -933,7 +985,7 @@ def _situacao_do_resultado(f, divulgado):
     # **A ordem obsoleta vem antes da publicação feita** (133, FR-4550, CV-04). Com a preliminar
     # publicada, este teste olhava só `estado != "feito"`, e a célula caía em "publicar a
     # definitiva" — que o comando recusa pela mesma ordem obsoleta.
-    if ordem is not None and ordem.situacao == OBSOLETO:
+    if ordem_para_tras(ordem):
         return _c(
             DEPOIS,
             natureza=RESULTADO,
@@ -1868,6 +1920,8 @@ class _Leitor:
             )
         curtos = _rotulos_curtos(perfil)
         vazias = None
+        # O reingresso é do marco, e não da lista: perguntado uma vez, na primeira que precisar.
+        reingresso = None
         for lista, rotulo in listas:
             chave = _chave(lista)
             celulas = por_lista.get(chave) or {}
@@ -1886,12 +1940,12 @@ class _Leitor:
                 derivadas = {RELACAO: relacao, SORTEIO: ordem}
             else:
                 ordenar = celulas.get("ordenar") or {}
-                # **Só pergunta quem vai ler a resposta** (a revisão do PR #441): a ordem a emitir
-                # com Etapa por fazer é *Depois*, e `situacao_da_ordem` nem olha a lista vazia; a
-                # obsoleta olha, com ou sem Etapa por fazer.
+                # **Só pergunta quem vai ler a resposta** (a revisão do PR #441): com Etapa por
+                # fazer, a ordem é *Depois* — a primeira e, desde a `141`, a sucessora —, e
+                # `situacao_da_ordem` nem olha a lista vazia.
                 estado = ordenar.get("estado")
                 vazia = False
-                if estado == "obsoleto" or (estado == "falta" and not faltam):
+                if estado in ("obsoleto", "falta") and not faltam:
                     if vazias is None:
                         vazias = self._listas_vazias(perfil, marco)
                     vazia = chave in vazias
@@ -1902,10 +1956,22 @@ class _Leitor:
             resultado, definitiva = self._resultado(marco, lista, celulas.get("publicar"), ordem)
             if CORTE in pontos:
                 corte = celulas.get("cortar") or {}
+                # **Só pergunta quando o corte seria providência** (141, FR-4843): com a ordem à
+                # espera, o corte já é *Depois* por ela, e a resposta não seria lida.
+                if (
+                    reingresso is None
+                    and not sorteado
+                    and (
+                        corte.get("estado") == "obsoleto"
+                        or (corte.get("estado") == "falta" and ordem.situacao == FEITO)
+                    )
+                ):
+                    reingresso = self._reingresso_pendente(marco)
                 derivadas[CORTE] = situacao_do_corte(
                     {
                         "celula": corte,
                         "ordem": ordem,
+                        "reingresso": bool(reingresso),
                         "espera": self._espera_do_corte(
                             marco, lista, celulas.get("publicar") or {}, definitiva
                         )
@@ -1953,6 +2019,19 @@ class _Leitor:
                     perfil=perfil,
                     lista=(lista, curtos.get(chave, rotulo)),
                 )
+
+    # --- o reingresso pendente (141) ---------------------------------------------------------
+
+    def _reingresso_pendente(self, marco):
+        """Há inscrição reabilitada por recurso sem resultado numa Etapa que o marco enumera?
+
+        **A função da publicação, e não uma cópia** (D-003): é ela que recusa divulgar, e uma
+        segunda conta diria "o corte espera" num dia e "pode publicar" no outro. Custa uma consulta
+        quando ninguém foi reabilitado no Edital, e uma por Etapa enumerada quando alguém foi.
+        """
+        from processo_seletivo.divulgacao.domain.publicabilidade import reingressos_pendentes
+
+        return bool(reingressos_pendentes(edital=self.edital, marco=marco, at=self.agora))
 
     # --- a lista em que ninguém concorre ----------------------------------------------------
 
@@ -2088,7 +2167,8 @@ class _Leitor:
         precisa_do_ato = (
             estado == "obsoleto"
             or (estado == "feito" and divulgado_da_celula(celula) == PRELIMINAR)
-            or (estado == "falta" and ordem is not None and ordem.situacao in (FEITO, OBSOLETO))
+            or (estado == "falta" and ordem is not None and ordem.situacao == FEITO)
+            or (estado == "falta" and ordem_para_tras(ordem))
         )
         if not precisa_do_ato:
             return situacao_do_resultado(fatos), None
@@ -2098,7 +2178,7 @@ class _Leitor:
             fatos["url_da_previa"] = reverse(
                 "interface:previa-de-publicacao", args=[self.edital.id, marco_id, ato.id]
             )
-        if ato is not None and (ordem is None or ordem.situacao != OBSOLETO):
+        if ato is not None and not ordem_para_tras(ordem):
             # **A mesma aferição da prévia** (item 1 da revisão): sucedido, desatualizado, corte
             # obsoleto e reingresso impedem as duas naturezas, e a prévia não oferece o botão.
             preliminar = estado == "feito"
@@ -2612,6 +2692,7 @@ __all__ = [
     "NAO_SE_APLICA",
     "OBSOLETO",
     "PENDENTE",
+    "REINGRESSO_NO_CORTE",
     "Andamento",
     "Celula",
     "da_lista",
