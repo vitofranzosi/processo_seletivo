@@ -342,3 +342,17 @@ Entraram na `main`, que chegou a `b202a7c0`, duas specs implementadas (#452, #45
 - a suíte inteira não rodou aqui; rodaram os guardiões que leem `specs/` e `doc/`. Os números de teste vêm do `verificacao.md` de cada spec, e nenhum mede a `main` com as três entregas juntas; a 143 não registra a suíte inteira depois das correções da revisão;
 - as telas não foram percorridas, e a *Maturidade* não foi recontada;
 - ficam abertas a conferência em dois passos do congelamento do sorteio, a observação da semente antes de fixar a primeira lista, o aviso da 143 de que a providência de conferir documentos leva ao título e não à primeira chamada, e a decisão de passar a chamada individual pela conferência da 140.
+
+## Acréscimo de 10/11: o incremento A da 144, a visibilidade do Evento no PDF
+
+Entraram na `main`, que chegou a `d184fcee`, o incremento A da 144 (#456) e um ajuste de largura do Cronograma (#457). Leitura direta do código, sem agentes: o olho, a Revisão, a numeração do PDF e a regra de omissão da seção foram conferidos nos arquivos.
+
+- **144, incremento A (#456):** a seção `#cronograma-pdf-ordem-previa` deixou de ser só *Previsto*. Descreve como *Implementado* o olho **Ocultar do PDF**, a marca *Oculto do PDF*, o efeito no PDF (numeração de 1 a k, a remissão do período que some, a seção que não sai com todos ocultos), a frase da Revisão, a visibilidade retificável (e o Evento acrescentado por Retificação nasce exibido), os seis outros canais que continuam mostrando todos os Eventos e o custo, `editais/0026` e o degrau 20 da versão canônica. A ordenação por data (B) e a prévia (C) seguem como *Previsto*.
+- **#457:** só a folha do Cronograma (datas na largura do controle, o Evento numa linha a 1.600 px); citado na lacuna, sem seção própria.
+- **Corrigido na Visão:** a ficha do Cronograma (*Na interface*), o tutorial *Montar o cronograma*, a tabela *Cronograma e inscrição* e a linha da Retificação em *Cronograma e Etapas*, que não diziam nada do olho nem da visibilidade retificável.
+
+**Não verificado:**
+
+- a suíte inteira não rodou aqui; rodaram os guardiões que leem `specs/` e `doc/`. O número de testes vem do `verificacao.md` da spec, que registra 17.923 passando e 3 falhas corrigidas, sem repetir a suíte inteira;
+- a tela não foi percorrida, e a *Maturidade* não foi recontada;
+- ficam abertos o Cronograma a 375 px, o rótulo *“(vazia — não sai no documento)”* da etapa Conteúdo com todos os Eventos ocultos, e os incrementos B e C.

@@ -1143,7 +1143,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
     <div class="passo-tutorial" id="t-06"><span class="num">6</span>
       <h3>Montar o cronograma</h3>
       <p class="onde">Passo 3 <em>Cronograma</em> › <span class="rotulo-ui">Acrescentar Evento</span></p>
-      <p>Um Evento por data que o Edital publica: “Tipo”, “Descrição”, “Onde acontece”, “Início”, “Término”.
+      <p>Um Evento por data que o Edital publica: “Tipo”, “Descrição”, “Onde acontece”, “Início”, “Término”. O olho <span class="rotulo-ui">Ocultar do PDF</span> tira a linha dele da tabela do Cronograma do documento, sem tirá-lo do Edital.
       Inclua o período de inscrições (ele é <em>designado</em> no passo 9), a Análise documental, a Prova, o
       resultado preliminar, o prazo de recurso. A fase de cada Evento (planejado, em andamento, concluído) o
       sistema deriva das datas.</p>
@@ -1424,7 +1424,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
     <div class="rolagem"><table>
       <thead><tr><th>Decisão</th><th>Opções reais</th><th>Onde</th><th>Observações</th></tr></thead>
       <tbody>
-        <tr><td>Datas do certame</td><td>Eventos com tipo, descrição, local, início, término</td><td>Passo <em>Cronograma</em></td><td>A fase é derivada das datas. Cancelar um Evento só pela API.</td></tr>
+        <tr><td>Datas do certame</td><td>Eventos com tipo, descrição, local, início, término</td><td>Passo <em>Cronograma</em></td><td>A fase é derivada das datas. Cancelar um Evento só pela API. Ocultá-lo do PDF é pelo olho, e não o cancela (<a href="#cronograma-pdf-ordem-previa">144</a>).</td></tr>
         <tr><td>Período de inscrições</td><td>Um Evento designado, ou “não recebe inscrições pelo sistema”</td><td>Passo <em>Inscrição</em></td><td>As inscrições abrem e fecham com o Evento. Encerrado ou cancelado impede publicar.</td></tr>
         <tr><td>Quantas inscrições por pessoa</td><td>Teto ≥ 1, ou sem teto</td><td>“Inscrições por candidato neste Edital”</td><td>Sai no documento e no portal. <span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td>Documentos exigidos</td><td>Obrigatório ou facultativo; para todos, um Perfil, uma Modalidade de um Perfil, ou uma Modalidade em todos os Perfis; modelo em Anexo</td><td>Passo <em>Inscrição</em></td><td>A lista aplicável fica gravada em cada inscrição no envio. Só PDF, 10 MB. <span class="selo selo-impl">Implementado</span></td></tr>
@@ -1674,7 +1674,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <thead><tr><th>Quando</th><th>O que acontece</th></tr></thead>
       <tbody>
         <tr><td>Rascunho</td><td>Livre. Remover Evento vinculado a uma Etapa é recusado na gravação. Evento no passado deixa o passo “pendente” e gera aviso; período de inscrições já encerrado impede publicar.</td></tr>
-        <tr><td>Retificação</td><td>Datas, descrição e local retificáveis; nova versão a partir da vigência. A fase e o período de inscrições são lidos da versão vigente — encurtar o período por Retificação é legítimo. Tipo do Evento e vínculo Etapa–Evento não mudam. Evento acrescentado entra sem período de inscrições.</td></tr>
+        <tr><td>Retificação</td><td>Datas, descrição, local e se a linha sai na tabela do PDF retificáveis; nova versão a partir da vigência. A fase e o período de inscrições são lidos da versão vigente — encurtar o período por Retificação é legítimo. Tipo do Evento e vínculo Etapa–Evento não mudam. Evento acrescentado entra sem período de inscrições e exibido no PDF.</td></tr>
         <tr><td>Efeito nas Etapas</td><td>A Etapa mostra as datas do Evento vinculado, mas o período só <em>informa</em>: avaliar fora dele é registrado, não bloqueado. Distribuir exige o período de inscrições encerrado.</td></tr>
         <tr><td>Efeito no recurso</td><td>Nenhum: o prazo de recurso é o do marco. Mudar o Evento “Prazo de recurso” não muda o prazo aplicado — a Revisão só os põe lado a lado, no aviso <em>“Prazos de recurso a conferir”</em> (067).</td></tr>
       </tbody>
@@ -3811,7 +3811,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <dd>
           Passo <span class="rotulo-ui">Cronograma</span>: <span class="rotulo-ui">Tipo</span>,
           <span class="rotulo-ui">Descrição</span>, <span class="rotulo-ui">Onde acontece</span>,
-          <span class="rotulo-ui">Início</span>, <span class="rotulo-ui">Término</span>.
+          <span class="rotulo-ui">Início</span>, <span class="rotulo-ui">Término</span> e, em cada Evento, o olho <span class="rotulo-ui">Ocultar do PDF</span>
+          (<a href="#cronograma-pdf-ordem-previa">144</a>).
           Passo <span class="rotulo-ui">Inscrição</span>: <span class="rotulo-ui">Evento do Cronograma</span>,
           com a opção <span class="rotulo-ui">Este Edital não recebe inscrições pelo sistema</span>.
         </dd>
@@ -3820,52 +3821,52 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       </dl>
     </div>
 
-    <h3 id="cronograma-pdf-ordem-previa">O que está previsto para o Cronograma: ocultar do PDF, ordenar por data e uma prévia (144) <span class="selo selo-prev">Previsto</span></h3>
-    <div class="aviso aviso-nota"><span class="titulo">Só especificação: nenhuma linha de código foi escrita</span>
-      <p>A 144 foi mergeada em 10/11/2026 como especificação (<code>specs/144-cronograma-no-pdf-ordem-e-previa/</code>). Tudo o que
-        este trecho diz do passo <span class="rotulo-ui">Cronograma</span> <strong>hoje</strong> continua valendo: os cartões, as setas
-        <span class="rotulo-ui">Subir</span> e <span class="rotulo-ui">Descer</span>, a lixeira e <span class="rotulo-ui">Acrescentar
-        Evento</span>, sem olho, sem ordenação por data e sem prévia. Hoje <strong>todo Evento do Cronograma vira linha da tabela do
-        Cronograma do PDF</strong>, e a ordem é só a manual.</p>
-    </div>
+    <h3 id="cronograma-pdf-ordem-previa">Ocultar um Evento do PDF (144, incremento A), e o que ainda está previsto <span class="selo selo-parc">Parcial</span></h3>
     <p>
-      Quem elabora ganharia três coisas, na mesma tela, e <strong>uma só muda o que se publica</strong>:
+      Hoje o Cronograma tem <strong>uma melhoria entregue e duas previstas</strong>. A <a href="#c-cronograma">tabela do Cronograma do PDF</a> imprimia todo Evento
+      cadastrado, e não havia como registrar uma data de que o sistema precisa, como a de uma Etapa interna, sem que ela virasse linha do ato.
+      A 144 muda isso, em três incrementos; o <strong>A</strong> foi mergeado em 10/11/2026 (#456), e o B e o C seguem só como especificação.
     </p>
+    <h4>Entregue: o olho <span class="selo selo-impl">Implementado</span></h4>
     <ul>
-      <li><strong>Ocultar um Evento do PDF.</strong> Um botão de olho no cartão, <span class="rotulo-ui">Ocultar do PDF</span>, marcaria
-        o Evento como <em>“Oculto do PDF”</em>. <strong>Ocultar não é desativar</strong>: o Evento continua gravado, publicado no
-        conteúdo do ato, vinculável a uma Etapa, designável como período de inscrições e conferido pelas mesmas validações. Só a linha
-        dele sai da tabela do Cronograma do PDF. Se todos ficam ocultos, a seção Cronograma não é impressa, e isso não impede publicar.
-        O objetivo é permitir cadastrar uma data de que o sistema precisa, como a de uma Etapa interna, sem que ela vire linha do ato.</li>
-      <li><strong>Ordenar por data.</strong> Um botão <span class="rotulo-ui">Ordenar por data de início ↑</span> reorganizaria os cartões
-        do mais cedo ao mais tarde, mantendo a ordem anterior nos empates e levando ao fim o Evento sem início válido. Não grava sozinho,
-        vale ao gravar a etapa, e as setas continuam. Nada se reordena sozinho ao editar uma data.</li>
-      <li><strong>Uma prévia compacta no topo</strong>, com uma linha por Evento (<em>Evento · Início · Término · PDF</em>) e o resumo
-        <em>“3 eventos · 2 no PDF · 1 oculto”</em>. Ela acompanha o formulário, inclusive o que ainda não foi salvo, sem consultar o
-        servidor. <strong>Não é a prévia do PDF</strong>: o botão <span class="rotulo-ui">Visualizar Edital</span>, da Revisão, continua sendo essa (a spec o chama de “Ver o Edital”; no código é este).</li>
+      <li><strong>No cartão do Evento.</strong> Um botão de olho nas ações da linha, antes das setas, com o nome <span class="rotulo-ui">Ocultar do PDF</span>. Aberto, o Evento é
+        exibido (<em>“Exibido no PDF — ocultar”</em>); fechado, é oculto (<em>“Oculto do PDF — exibir”</em>). O cartão oculto ganha a marca <em>“Oculto do PDF”</em> na legenda, em texto, e fica atenuado.
+        Alternar só muda o formulário, e vale ao gravar a etapa, como os outros campos. O botão sai escondido e só aparece com o script da página, porque sem ele não faria nada.</li>
+      <li><strong>Ocultar não é desativar.</strong> O Evento oculto continua gravado, publicado no conteúdo do ato, vinculável a uma Etapa, designável como período de inscrições e conferido pelas
+        mesmas validações; a fase dele segue derivada das datas, e não há estado novo. <strong>O que muda é uma só coisa: a linha dele na tabela do Cronograma do PDF.</strong></li>
+      <li><strong>No PDF.</strong> Sem nenhum Evento oculto, a coluna <em>Nº</em> é a de sempre; com algum oculto, os exibidos são numerados de 1 a k. A remissão <em>“(Cronograma, nº N)”</em> da frase do período de inscrições
+        some quando o Evento do período está oculto, e o período continua dito. Se <strong>todos</strong> ficam ocultos, a seção Cronograma não é impressa, e o sumário, a numeração das seções e o resumo acompanham,
+        nas duas apresentações do documento; isso não impede publicar.</li>
+      <li><strong>Na Revisão.</strong> O Evento oculto aparece como <em>“Não sai na tabela do Cronograma do PDF”</em>, e, com todos ocultos, a seção diz <em>“Nenhum Evento sai no PDF: a seção Cronograma não será impressa. Os Eventos continuam valendo para as Etapas e para o período de inscrições.”</em>
+        Quem homologa vê o que o documento vai mostrar.</li>
+      <li><strong>Na Retificação.</strong> A visibilidade é retificável, com o rótulo <em>“Sai na tabela do Cronograma do PDF”</em>, porque ocultar por engano precisa de correção formal. Um Evento acrescentado por Retificação nasce exibido.
+        Reaproveitar um Edital preserva a visibilidade, e o de antes da mudança chega todo exibido.</li>
+      <li><strong>Só o PDF.</strong> A página pública da seleção, o assistente de dúvidas, a Agenda dos Editais, o Kit de Divulgação, o relatório do Edital e a leitura pela API <strong>continuam mostrando todos os Eventos</strong>; ocultar nesses canais seria outra decisão de norma, que o usuário não tomou.
+        Nenhum documento já publicado é regenerado: o PDF de um Edital antigo sai igual.</li>
     </ul>
     <p>
-      <strong>O que a spec diz que não muda.</strong> Nenhum documento já publicado é regenerado; o PDF de um Edital antigo sai igual. Os
-      outros seis lugares em que o Cronograma aparece <strong>continuam mostrando todos os Eventos</strong>: a página pública da
-      seleção, o assistente de dúvidas, a Agenda dos Editais, o Kit de Divulgação, o relatório do Edital e a leitura pela API. Não há
-      estado novo de Evento, papel nem permissão nova. O custo declarado é uma migration, uma coluna booleana em <code>editais</code>
-      com padrão <em>exibido</em>, e um degrau da versão canônica do conteúdo publicado (de 19 para 20).
+      <strong>O que isso custa no banco:</strong> uma migration, <code>editais/0026</code>, com uma coluna booleana no Evento, <em>verdadeira por padrão</em>, e um degrau da versão canônica do conteúdo publicado (de 19 para 20), que acrescenta
+      <code>shownInPdf</code> a cada Evento, sempre presente. Nenhuma tabela, rota, papel nem permissão nova.
     </p>
-    <p>
-      <strong>Decidido pelo usuário em 10/11:</strong> a Retificação <strong>pode</strong> alterar a visibilidade de um Evento, pelo
-      mecanismo de campo que já existe, e um Evento acrescentado por Retificação nasce exibido; e os outros canais não acompanham o PDF
-      nesta spec, de modo que ocultar neles seria outra decisão de norma. Reaproveitar um Edital preserva a visibilidade.
-    </p>
-    <div class="aviso aviso-lacuna"><span class="titulo">Antes de ficar pronto</span>
-      <p>As 29 tarefas da spec estão desmarcadas e os testes ainda não existem. A entrega está planejada em três PRs sequenciais, um por
-        melhoria, cada um verde na suíte, com prova no navegador. Quando entrarem, esta descrição troca o <em>Previsto</em> pelo que
-        foi feito, e as seções que listam os campos do passo (o tutorial <em>Montar o cronograma</em>, a ficha acima e a tabela
-        <em>Cronograma e inscrição</em>) passam a citar o olho, o botão de ordenar e a prévia. A estimativa de horas não consta da
-        spec. <span class="selo selo-prev">Previsto</span></p>
+    <h4>Ainda previsto: ordenar por data e a prévia <span class="selo selo-prev">Previsto</span></h4>
+    <ul>
+      <li><strong>Ordenar por data de início.</strong> Um botão <span class="rotulo-ui">Ordenar por data de início ↑</span> reorganizaria os cartões do mais cedo ao mais tarde, mantendo a ordem anterior nos empates e levando ao fim o Evento sem início válido. Não grava sozinho, e as setas continuam.</li>
+      <li><strong>Uma prévia compacta no topo</strong>, com uma linha por Evento (<em>Evento · Início · Término · PDF</em>) e o resumo <em>“3 eventos · 2 no PDF · 1 oculto”</em>, que acompanha o formulário sem consultar o servidor.
+        Não é a prévia do PDF: <span class="rotulo-ui">Visualizar Edital</span>, na Revisão, continua sendo essa.</li>
+    </ul>
+    <div class="aviso aviso-lacuna"><span class="titulo">O que o incremento A deixa aberto</span>
+      <p>A 375 pixels o cartão não foi medido: o olho acrescenta um botão ao grupo de ações, que já quebrava linha, e a medição entra com a prévia. Na etapa Conteúdo, a seção Cronograma com todos os Eventos ocultos
+        aparece como <em>“(vazia — não sai no documento)”</em>, quando a causa certa é a ocultação; a Revisão já diz a causa, e distinguir os dois pede um estado novo no script, fora do incremento A. Os casos de navegador
+        (foco depois de ordenar, jornada inteira) são do incremento C. A verificação registra 17.923 testes passando e 3 falhas, que eram três literais de teste sem a chave nova e foram corrigidos, e depois não repetiu a suíte inteira;
+        o CI do PR rodou a completa. Dois detalhes de apresentação entraram à parte, no #457: as datas passaram a ter a largura do controle, e o Evento cabe numa linha a 1.600 pixels. As seções que listam os campos do passo (o tutorial
+        <em>Montar o cronograma</em>, a ficha acima e a tabela <em>Cronograma e inscrição</em>) passam a citar o olho agora, e o botão de ordenar e a prévia quando entrarem.</p>
     </div>
-    <details class="evidencia"><summary>Onde isso está registrado</summary><div class="evidencia-corpo"><dl>
-      <dt>Especificação</dt><dd><code>specs/144-cronograma-no-pdf-ordem-e-previa/</code> (<code>spec.md</code>, <code>plan.md</code>, <code>research.md</code>, <code>tasks.md</code> e a maquete)</dd>
-      <dt>O que existe hoje</dt><dd><code>compor_cronograma.html</code>, <code>_evento.html</code> e <code>_acoes_da_linha.html</code> em <code>interface/templates/interface/</code> · <code>ordenacao.js</code> · a tabela do PDF em <code>publicacoes/infrastructure/pdf.py</code> (<code>_cronograma</code>)</dd>
+    <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
+      <dt>O dado</dt><dd><code>shown_in_pdf</code> em <code>editais/models/cronograma.py</code> · <code>editais/migrations/0026_visibilidade_do_evento_no_pdf.py</code> · <code>SCHEMA_VERSION</code> em <code>shared/canonical.py</code></dd>
+      <dt>O olho</dt><dd><code>_olho.html</code>, <code>_acoes_da_linha.html</code> e <code>_evento.html</code> em <code>interface/templates/interface/</code> · <code>interface/static/interface/cronograma.js</code> · <code>compor-cronograma.css</code></dd>
+      <dt>O PDF</dt><dd><code>publicacoes/infrastructure/pdf.py</code> (<code>eventos_no_documento</code>, <code>numero_no_documento</code>, <code>fonte_presente</code>) · <code>apresentacao.py</code></dd>
+      <dt>A Revisão e a Retificação</dt><dd><code>interface/revisao.py</code> · <code>interface/retificacao.py</code> · <code>publicacoes/domain/alteracoes.py</code></dd>
+      <dt>Especificação</dt><dd><code>specs/144-cronograma-no-pdf-ordem-e-previa/</code> (<code>verificacao.md</code> traz o incremento A)</dd>
     </dl></div></details>
 
     <h3>Cronograma herdado de outro Edital, com datas vencidas</h3>
@@ -14414,6 +14415,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>08/11/2026</td><td><code>main</code> em <code>86cd0ee0</code>, specs 126 a 133 e a correção da 115</td><td>Descritas como entregues: a <a href="#orientacao-p0">orientação depois do ato</a> (126), o <a href="#andamento-da-selecao">Andamento da seleção</a> (127), a <a href="#ordem-sem-resultado">ordem recusada sem resultado</a> (128), a <a href="#lista-de-processos-recortada">Lista de Processos recortada</a> (129), a <a href="#encerrar-processo-adverte">advertência no Encerrar Processo</a> (130), a <a href="#condicao-de-exigencia">condição de exigência</a> (131), os <a href="#ajustes-de-leitura-dos-documentos">ajustes de leitura dos Documentos Exigidos</a> (132), o <a href="#marco-intermediario">marco intermediário</a> (133) e a <a href="#lista-no-gesto-de-titulares">lista de documentos no gesto de titulares</a> (correção da 115). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>daba322f</code>, specs 134 a 141</td><td>Descritas como entregues: o <a href="#aviso-de-pendencia">aviso de pendência documental por e-mail</a> (134, aviso), os <a href="#cenarios-de-treinamento">cenários de treinamento e homologação</a> (134, cenários), as <a href="#correcoes-do-andamento">correções da derivação do andamento</a> (135), o <a href="#centro-de-controle">Centro de Controle do Edital</a> (136), a <a href="#chegada-e-volta">chegada ao lugar do ato e a volta ao Centro</a> (139), a <a href="#conferencia-antes-de-convocar">conferência antes de convocar os titulares</a> (140) e a <a href="#sucessora-espera-o-reabilitado">sucessora que espera o reabilitado</a> (141). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>b202a7c0</code>, specs 142 a 144</td><td>Descritas como entregues: a <a href="#jornada-do-sorteio">tela do sorteio como a jornada de quem o conduz</a> (142) e a <a href="#convocacao-pelas-perguntas">convocação e a conferência documental pelas perguntas de quem conduz</a> (143). A 144, o <a href="#cronograma-pdf-ordem-previa">Cronograma</a> com ocultar do PDF, ordenar por data e prévia, entra como <em>Previsto</em>: só a especificação foi mergeada. Rótulos corrigidos nas seções que citavam os botões do sorteio e a ordem dos avisos da convocação. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>10/11/2026</td><td><code>main</code> em <code>d184fcee</code>, 144 (A)</td><td>O incremento A da 144, a <a href="#cronograma-pdf-ordem-previa">visibilidade do Evento no PDF</a>, descrito como entregue; a ordenação por data e a prévia seguem como <em>Previsto</em>. Corrigidas as seções que listavam os campos do passo Cronograma e a linha da Retificação. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>05/11/2026</td><td><code>main</code> em <code>4e6d211f</code>, specs 120, 121 e 122 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">a experiência da convocação</a> (121): a tela que abre pelo título e pelo prazo, <a href="#convocacao-pelo-link">o link que passa pelo acesso e o e-mail em HTML</a>, com o modelo gravado em cada envio; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
@@ -14435,6 +14437,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>A atualização de 08/11 foi feita depois dos merges, por três leituras paralelas — 126, 128 e 133; 127, 129 e 130; 131, 132 e a correção da 115 — contra o código da <code>main</code> em <code>86cd0ee0</code>, e os rótulos e códigos citados foram conferidos de novo no código. Rodaram só os testes que leem <code>specs/</code> e <code>doc/</code>; a suíte inteira não rodou aqui, e as telas não foram percorridas — o que vem de execução é o que cada PR registrou. Ficaram abertas, e o texto as diz abertas: a decisão P-1 da 128, a SC-1378 e as decisões P-3 e P-4 da 131 e a pendência 11 da 115. Os números de consultas por tela vêm do <code>verificacao.md</code> de cada spec. A contagem de campos do contrato de mutabilidade (<a href="#retificacao-contrato">O contrato de mutabilidade</a>) foi refeita por medição em 08/11, importando o contrato: 139 campos, sendo 85 retificáveis, 26 não retificáveis, 24 estruturais e 4 derivados. Os números antigos (136, 84 e 24) estavam defasados desde a 115 e a 131, que acrescentaram campos; a 131 explica um retificável a mais.</li>
         <li>A atualização de 10/11 foi feita depois dos merges, por três leituras paralelas — as duas 134; 135 e 136; 139, 140 e 141 —, cada uma conferindo no código da <code>main</code> em <code>daba322f</code> os rótulos, as rotas e os códigos citados; as divergências entre spec e código foram resolvidas a favor do código. Não rodou a suíte inteira: rodaram os guardiões que leem <code>specs/</code> e <code>doc/</code>. Os números de teste e de consulta vêm do <code>verificacao.md</code> de cada spec, e nenhum deles mede a <code>main</code> com as sete entregas juntas. As telas não foram percorridas. A <em>Maturidade</em> não foi recontada (migrations, rotas, módulos e contagem de testes), e as tabelas de estados ainda não citam a espera da sucessora (141). Ficam abertas as pendências que cada seção descreve, entre elas a validação do Centro com operadores, a chave do aviso desligada em produção e a numeração repetida da 133 e da 134.</li>
         <li>A atualização de 10/11 sobre as specs 142 a 144 foi feita por três leituras paralelas, uma por spec, conferindo rótulos, rotas e códigos no código da <code>main</code> em <code>b202a7c0</code>; as divergências entre spec e código foram resolvidas a favor do código. Não rodou a suíte inteira: rodaram os guardiões que leem <code>specs/</code> e <code>doc/</code>. As telas não foram percorridas, e os números de teste e de consulta vêm do <code>verificacao.md</code> de cada spec. A <em>Maturidade</em> não foi recontada, e o <code>estado-atual</code> ainda não conta as pastas de <code>specs/</code> até a 144.</li>
+        <li>A atualização de 10/11 sobre o incremento A da 144 foi feita por leitura do código da <code>main</code> em <code>d184fcee</code>, conferindo o olho, as frases da Revisão, a numeração do PDF e a regra de omissão da seção. Não rodou a suíte inteira, e a tela não foi percorrida; o número de testes vem do <code>verificacao.md</code> da spec.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
         <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
@@ -14476,7 +14479,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
   (<code>a3e23b1f</code>), a 120 a 122, com as seis famílias que faltavam da 119, em 05/11/2026
-  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) e a 142 a 144, esta só como especificação, também em 10/11/2026 (<code>b202a7c0</code>). Onde documentação e código
+  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) a 142 a 144, esta só como especificação, e o incremento A da 144, tudo em 10/11/2026 (<code>d184fcee</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
