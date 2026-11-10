@@ -19,7 +19,7 @@ abaixo são de leitura, em objetos que a derivação da `127` monta a cada requi
 
 **Regras.**
 - `lista_vazia` nunca muda a `situacao` (FR-4676). Com `lista_vazia`, a célula *Pendente* ou
-  *Obsoleta* ganha a nota "lista sem inscritos" e o ato com a frase da R-002.
+  *Obsoleta* ganha a nota "lista em que ninguém concorre" e o ato com a frase da R-002.
 - `divulgado` nunca muda a `situacao` (FR-4678): o preliminar continua *Pendente*, *Aguarda* ou
   *Impedido* conforme a aferição do definitivo (D-002).
 

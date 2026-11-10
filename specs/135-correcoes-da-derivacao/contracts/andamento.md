@@ -4,17 +4,18 @@ O contrato das telas da `127` (`specs/127-andamento-da-selecao/contracts/telas.m
 Aqui está só o que muda, nos três lugares em que o andamento aparece — o nível 1 ("O que fazer
 agora"), a matriz do "Andamento da seleção" e o "Próximo nesta lista".
 
-## 1. A ordem de lista sem inscritos (FR-4670 a FR-4676)
+## 1. A ordem da lista em que ninguém concorre (FR-4670 a FR-4676)
 
 | Lugar | Antes | Depois |
 |---|---|---|
-| Nível 1, da pessoa | Sua **Emitir a ordem** — Cefor · PPP | Sua **Emitir a ordem da lista sem inscritos, que declara que ninguém concorreu** — Cefor · PPP |
-| Nível 1, de outro papel | Quem conduz a seleção: emitir a ordem — Cefor · PPP | Quem conduz a seleção: emitir a ordem da lista sem inscritos, que declara que ninguém concorreu — Cefor · PPP |
-| Matriz, célula da ordem | ● Pendente | ● Pendente *lista sem inscritos* |
-| Próximo nesta lista | Próximo nesta lista: **Emitir a ordem**. | Próximo nesta lista: **Emitir a ordem da lista sem inscritos, que declara que ninguém concorreu**. |
+| Nível 1, da pessoa | Sua **Emitir a ordem** — Cefor · PPP | Sua **Emitir a ordem que declara que ninguém concorreu nesta lista** — Cefor · PPP |
+| Nível 1, de outro papel | Quem conduz a seleção: emitir a ordem — Cefor · PPP | Quem conduz a seleção: emitir a ordem que declara que ninguém concorreu nesta lista — Cefor · PPP |
+| Matriz, célula da ordem | ● Pendente | ● Pendente *lista em que ninguém concorre* |
+| Próximo nesta lista | Próximo nesta lista: **Emitir a ordem**. | Próximo nesta lista: **Emitir a ordem que declara que ninguém concorreu nesta lista**. |
 
-Duas listas vazias do mesmo marco: "Emitir as ordens das listas sem inscritos, que declaram que
-ninguém concorreu — Cefor · PPP e PcD". Uma vazia e uma com inscritos: duas linhas.
+Duas listas vazias do mesmo marco: "Emitir as ordens que declaram que ninguém concorreu nestas listas
+— Cefor · PPP e PcD"; com a ordem obsoleta, "Emitir as ordens sucessoras, que declaram que ninguém
+concorreu nestas listas". Uma vazia e uma em que alguém concorre: duas linhas.
 
 **Sem mudança**: a lista com inscritos; a ordem vazia emitida (*Feito*, "ninguém concorreu"); a ordem
 *Depois* ou *Impedida*; o sorteio.

@@ -17,14 +17,14 @@ em `backend/tests/integration/treinamento/test_andamento_dos_cenarios.py`.
 - [x] T003 `_celula_da_publicacao` devolve `natureza` (`PRELIMINAR`, `DEFINITIVA` ou vazio; a da defasada mais recente no *obsoleto*) em `backend/processo_seletivo/interface/conducao_do_marco.py`
 - [x] T004 Constantes `NADA`, `PRELIMINAR`, `DEFINITIVO`, a função `divulgado_da_celula` e os campos `lista_vazia` e `divulgado` de `Celula` em `backend/processo_seletivo/interface/andamento.py`; `lista_vazia` em `Providencia` e em `Providencia.da_celula` em `backend/processo_seletivo/interface/providencias.py`
 
-## Phase 3: User Story 1 — a lista sem inscritos é dita antes da ordem (P1)
+## Phase 3: User Story 1 — a lista em que ninguém concorre é dita antes da ordem (P1)
 
 - [x] T005 [P] [US1] Testes puros: *Pendente* e *Obsoleto* com `vazia` ganham nota, ato e dado; *Depois* e *Feito* não mudam; o agrupamento não junta vazia com não vazia e põe duas vazias no plural; a providência de outro papel diz a frase (FR-4671 a FR-4676)
-- [x] T006 [P] [US1] Testes de integração do critério em `backend/tests/integration/classificacao/test_listas_sem_concorrente.py`: a lista reservada sem autodeclarado é vazia; com um, não; a eliminada antes da Etapa do marco não concorre; a ampla nunca entra; igual ao `recorte_sem_ninguem` da tela da ordenação (FR-4670)
+- [x] T006 [P] [US1] Testes de integração do critério em `backend/tests/integration/classificacao/test_listas_sem_concorrente.py`: a lista reservada sem autodeclarado é vazia; com um, não; a ampla nunca entra; igual ao `recorte_sem_ninguem` da tela da ordenação (FR-4670). A eliminada antes da Etapa do marco **não tem caso próprio**: sai pelo mesmo `_universo` que a tela usa, e a comparação lista a lista é o que prova a igualdade
 - [x] T007 [US1] `_universo` (extraído de `calcular_ordem`) e `listas_sem_concorrente` em `backend/processo_seletivo/classificacao/application/calculo.py` (R-001)
 - [x] T008 [US1] `situacao_da_ordem` lê `vazia`; `_Leitor._marco` pergunta `listas_sem_concorrente` uma vez por marco por pontuação, só com ordem a emitir ou obsoleta, em `backend/processo_seletivo/interface/andamento.py` (R-001, R-002)
 - [x] T009 [US1] A chave do agrupamento com `lista_vazia` e o plural ao juntar duas vazias em `backend/processo_seletivo/interface/providencias.py` (FR-4674)
-- [x] T010 [US1] Testes de cenário: C08, C12 e C14 dizem "lista sem inscritos" na providência da ordem da PPP, para a presidência e para outro papel, na matriz e no "Próximo nesta lista"; C04 não diz (SC-1460, SC-1461, FR-4675)
+- [x] T010 [US1] Testes de cenário: C08, C12 e C14 dizem que ninguém concorre na providência da ordem da PPP, para a presidência e para outro papel, na matriz e no "Próximo nesta lista"; C04 não diz (SC-1460, SC-1461, FR-4675)
 
 ## Phase 4: User Story 2 — o que foi divulgado é dado (P2)
 
@@ -52,6 +52,17 @@ em `backend/tests/integration/treinamento/test_andamento_dos_cenarios.py`.
 - [x] T023 `make lint check test-pg` com `DB_NAME=ps135`; `migrate --check` sem migration nova (SC-1466)
 - [x] T024 Conferir no navegador o C08 e o C12 (e o C04, o C06 e o C14), num banco próprio dos cenários, e registrar em `specs/135-correcoes-da-derivacao/verificacao.md`
 - [x] T025 `specs/135-correcoes-da-derivacao/rastreabilidade.md`: cada FR- e SC- → tarefas → testes
+
+## Phase 8: A revisão do PR #441
+
+Sete achados da revisão da sessão do Centro de Controle (09/11), corrigidos no mesmo PR.
+
+- [x] T026 A frase da lista vazia diz **"ninguém concorre"**, e não "sem inscritos": a lista com inscrições eliminadas numa Etapa anterior também é vazia. Constantes em `andamento.py`, FR-4671/4672 e caso-limite novo na spec, R-002, contrato, testes (achado 1)
+- [x] T027 `_Leitor._marco` só pergunta `listas_sem_concorrente` quando a resposta é lida — a ordem obsoleta, ou a ordem a emitir sem Etapa por fazer —, sem a closure: uma variável no laço (achados 2 e 7)
+- [x] T028 `_universo` recebe o `conteudo` e o repassa a `restringir_a_participantes`; o custo dito "uma consulta" passa a "até duas" no docstring, no README, na FR-4686, no plano e na R-001; o teste do custo afirma `<= 2` (achado 3)
+- [x] T029 `ATO_DAS_SUCESSORAS_VAZIAS` e o plural da sucessora em `providencias._juntar`, com teste (achado 4)
+- [x] T030 `mensagem_com_o_preliminar_publicado(JANELA_ABERTA, ate=None)` devolve uma redação sem a data, e não `None`, com teste (achado 5)
+- [x] T031 `listas_sem_concorrente` monta as reservadas direto de `recortes_do_perfil` (achado 6)
 
 ## Dependencies
 

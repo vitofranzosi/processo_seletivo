@@ -32,10 +32,10 @@ ps135_cenarios --autoridade <pk>`. Sirva com `INTERFACE_SELETOR_IDENTIDADE=true`
 
 | Cenário | O que conferir |
 |---|---|
-| C08 | "O que fazer agora" e a matriz: a ordem da PPP diz "lista sem inscritos"; a espera do definitivo diz o prazo e **não** "publique como resultado preliminar" |
+| C08 | "O que fazer agora" e a matriz: a ordem da PPP diz que ninguém concorreu nesta lista; a espera do definitivo diz o prazo e **não** "publique como resultado preliminar" |
 | C12 | a espera do definitivo, idem; a ordem da PPP, idem |
 | C04 | a ordem da PPP (com inscritos) sem menção a lista vazia |
 | C06 | o resumo do Perfil diz "em aberto nos marcos"; o cartão continua com o total do Edital |
-| C14 | a ordem da PPP diz "lista sem inscritos" |
+| C14 | a ordem da PPP diz que ninguém concorreu nesta lista |
 
 Na prévia de publicação do marco do C08, a mensagem da aferição do definitivo é a de antes.

@@ -27,6 +27,22 @@ publicação só com a nota ("resultado preliminar"). Com a FR-4679, quem decide
 passam a informá-la (`"natureza": "PRELIMINAR"`, ou `divulgado=a.PRELIMINAR` nas células prontas). A
 expectativa de cada um é a mesma.
 
+## Depois da revisão do PR #441
+
+Sete achados, corrigidos no mesmo PR (T026 a T031 em [tasks.md](tasks.md)). O que muda para quem lê:
+
+- a frase da lista vazia passou a **"Emitir a ordem que declara que ninguém concorreu nesta lista"**,
+  e a nota a **"lista em que ninguém concorre"**. A tabela abaixo registra o que se viu **antes** da
+  troca, com a frase antiga; a nova foi conferida pelo HTML da página do C08
+  (`test_c08_a_pagina_do_edital_diz_que_ninguem_concorre_no_nivel_1_e_na_matriz`), e não de novo no
+  navegador;
+- com o preliminar publicado e a janela aberta sem data conhecida, a espera diz "O prazo recursal
+  deste marco ainda está aberto", sem a oferta;
+- duas ordens sucessoras vazias juntadas vão ao plural.
+
+O custo da pergunta caiu: o conteúdo já lido é repassado à condição do corte, e o marco que espera
+Etapas não pergunta nada. O resultado da suíte depois das correções está no fim deste arquivo.
+
 ## No navegador
 
 Um banco próprio, `ps135_cenarios`, com os cenários C04, C06, C08, C12 e C14 da `134` carregados
@@ -55,3 +71,11 @@ roteiro está em [quickstart.md](quickstart.md); a entrada do `launch.json` usad
   conferido por busca: os casos de resumo são o de `test_andamento_composicao.py` (sorteio, sem
   ordem obsoleta) e o da apuração do marco intermediário, que não lê o resultado. A decisão fica
   registrada para o usuário revê-la no PR.
+
+## A suíte depois da revisão
+
+`make lint check test-pg` com `DB_NAME=ps135`, 4 workers, os mesmos grupos: `ruff check` e
+`ruff format --check` sem achado, `manage.py check` sem problema, "No changes detected", e
+**17 585 passando, 12 pulados, nenhuma falha**, em 1530 s. São quatro casos a mais que na primeira
+rodada — o plural das sucessoras, a sucessora única, a janela sem data e o guardião do README, que
+desta vez passou —, e os 12 pulados são os mesmos.

@@ -66,11 +66,11 @@ def _celulas_do_resultado(andamento):
     return {rotulo: ponto.celula(lista) for lista, rotulo in perfil.listas}
 
 
-# --- US1: a lista sem inscritos (SC-1460, SC-1461) ---------------------------------------------
+# --- US1: a lista em que ninguém concorre (SC-1460, SC-1461) -----------------------------------
 
 
 @pytest.mark.parametrize("codigo", ["C08", "C12", "C14"])
-def test_a_ordem_da_ppp_sem_inscritos_diz_isso_para_qualquer_papel(cenario, codigo):
+def test_a_ordem_da_ppp_em_que_ninguem_concorre_diz_isso_para_qualquer_papel(cenario, codigo):
     """SC-1460: zero providências de ordem da PPP sem a menção, para quem conduz e para quem só a
     lê como de outro papel; a célula continua *Pendente*, com a nota (FR-4671 a FR-4673)."""
     m = cenario(codigo)
@@ -79,9 +79,9 @@ def test_a_ordem_da_ppp_sem_inscritos_diz_isso_para_qualquer_papel(cenario, codi
         [ordem] = _ordens(nivel)
         assert ordem.listas == (PPP,), quem
         assert ordem.lista_vazia and ordem.grupo == grupo, quem
-        assert "lista sem inscritos" in ordem.ato and "ninguém concorreu" in ordem.ato, quem
+        assert ordem.ato == a.ATO_DA_ORDEM_VAZIA, quem
         _, _, celula = _ordem_da_ppp(andamento)
-        assert celula.situacao == a.PENDENTE and celula.nota == "lista sem inscritos", quem
+        assert celula.situacao == a.PENDENTE and celula.nota == a.NOTA_DA_LISTA_VAZIA, quem
     # A ordem da ampla, já emitida, não é providência e não ganha nota nenhuma.
 
 
@@ -95,7 +95,7 @@ def test_c04_a_ppp_com_inscritos_nao_menciona_lista_vazia(cenario):
         assert ordem.listas == ("Ampla concorrência", PPP)
         _, _, celula = _ordem_da_ppp(andamento)
         assert (celula.situacao, celula.nota, celula.lista_vazia) == (a.PENDENTE, "", False)
-        assert not any("sem inscritos" in item.ato for item in nivel.itens)
+        assert not any("ninguém concorreu" in item.ato for item in nivel.itens)
 
 
 def test_c08_o_proximo_nesta_lista_diz_a_mesma_frase(cenario):
@@ -109,15 +109,16 @@ def test_c08_o_proximo_nesta_lista_diz_a_mesma_frase(cenario):
     assert andamento.e_sua(desta, perfil)
 
 
-def test_c08_a_pagina_do_edital_diz_lista_sem_inscritos_no_nivel_1_e_na_matriz(
+def test_c08_a_pagina_do_edital_diz_que_ninguem_concorre_no_nivel_1_e_na_matriz(
     cenario, client, seletor_ligado
 ):
     """O que a presidência lê no detalhe do Edital: o cartão e a matriz."""
     m = cenario("C08")
     identificar(client, c.PRESIDENCIA, [])
     pagina = client.get(reverse("interface:detalhe", args=[m.edital.id])).content.decode()
-    assert "Emitir a ordem da lista sem inscritos, que declara que ninguém concorreu" in pagina
-    assert '<span class="nota-da-celula">lista sem inscritos</span>' in pagina
+    assert "Emitir a ordem que declara que ninguém concorreu nesta lista" in pagina
+    assert '<span class="nota-da-celula">lista em que ninguém concorre</span>' in pagina
+    assert "sem inscritos" not in pagina
 
 
 # --- US2: o que foi divulgado é dado (FR-4677) -------------------------------------------------

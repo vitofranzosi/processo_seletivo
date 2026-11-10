@@ -193,6 +193,14 @@ def agrupar(providencias):
     return saida
 
 
+#: O ato de duas ou mais listas vazias juntadas (135, FR-4674): a sucessora também, e não só a
+#: primeira emissão — a revisão do PR #441 achou a sucessora no singular.
+_PLURAL_DA_LISTA_VAZIA = {
+    a.ATO_DA_ORDEM_VAZIA: a.ATO_DAS_ORDENS_VAZIAS,
+    a.ATO_DA_SUCESSORA_VAZIA: a.ATO_DAS_SUCESSORAS_VAZIAS,
+}
+
+
 def _juntar(primeira, outra):
     if primeira.grupo == EM_ESPERA and (primeira.ato != outra.ato or primeira.lugar != outra.lugar):
         atos = _unicos([*primeira.ato.split("; "), outra.ato])
@@ -217,8 +225,8 @@ def _juntar(primeira, outra):
     lugares = _unicos([*primeira.lugar.split("; "), outra.lugar])
     listas = tuple(_unicos([*primeira.listas, *outra.listas]))
     ato = primeira.ato
-    if primeira.lista_vazia and primeira.ato == a.ATO_DA_ORDEM_VAZIA and len(listas) > 1:
-        ato = a.ATO_DAS_ORDENS_VAZIAS
+    if primeira.lista_vazia and len(listas) > 1:
+        ato = _PLURAL_DA_LISTA_VAZIA.get(ato, ato)
     return replace(
         primeira,
         url=url,

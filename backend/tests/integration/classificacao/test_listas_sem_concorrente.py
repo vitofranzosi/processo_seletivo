@@ -1,8 +1,9 @@
-"""A lista sem inscritos, perguntada uma vez por marco, é a da tela da ordenação (135, FR-4670).
+"""A lista em que ninguém concorre, perguntada uma vez por marco, é a da tela da ordenação (135,
+FR-4670).
 
 A tela diz "Ninguém concorreu por este recorte" quando o recorte é reservado e a proposta de
 `calcular_ordem` não tem ninguém, com posição ou sem (`views.ordenacao`, `recorte_sem_ninguem`). A
-pergunta do andamento não calcula a ordem: lê as Modalidades do mesmo universo, numa consulta. Aqui
+pergunta do andamento não calcula a ordem: lê as Modalidades do mesmo universo, por marco. Aqui
 as duas respostas são comparadas lista a lista — divergir é o defeito que esta função não pode ter.
 """
 
@@ -77,10 +78,12 @@ def test_com_um_autodeclarado_a_lista_nao_e_vazia(
     _confere_com_a_tela(edital, vazias)
 
 
-def test_a_pergunta_e_uma_consulta_so_e_nao_cresce_com_as_inscricoes(
+def test_a_pergunta_custa_ate_duas_consultas_e_nao_cresce_com_as_inscricoes(
     gestor, api_client, manager_headers, process_payload
 ):
-    """FR-4686: por marco, e nunca por inscrição."""
+    """FR-4686: por marco, e nunca por inscrição. Até duas: o gate da progressão, quando a Etapa
+    anterior exige habilitação, e as Modalidades. O conteúdo vigente não é relido — ele chega de
+    quem chama (a revisão do PR #441)."""
     from django.db import connection
     from django.test.utils import CaptureQueriesContext
 
@@ -104,5 +107,6 @@ def test_a_pergunta_e_uma_consulta_so_e_nao_cresce_com_as_inscricoes(
         return len(capturadas)
 
     com_poucas = contar()
+    assert com_poucas <= 2
     inscrever(edital, 12, primeiro=700)
     assert contar() == com_poucas

@@ -21,8 +21,12 @@ privada que as duas chamam (`_universo`), e a nova pergunta com **uma** consulta
 distintas desse universo sem o filtro do recorte. As listas reservadas do Perfil que não aparecem
 nelas são as vazias. A ampla fica fora, como na tela.
 
-**Custo** (FR-4686): uma consulta por marco por pontuação, mais a leitura do gate de
-`restringir_a_participantes`, que também é por marco. Só é feita quando alguma lista do marco tem a
+**Custo** (FR-4686): até duas consultas por marco por pontuação — as Modalidades distintas e, quando
+a Etapa anterior exige habilitação, o gate de `restringir_a_participantes`. O conteúdo vigente que o
+andamento já leu é repassado à condição do corte, que de outro modo o releria (a revisão do PR #441
+achou essa terceira leitura).
+**Só é perguntada quando alguma lista lê a resposta**: a ordem a emitir sem Etapa por fazer, ou a
+obsoleta. A ordem a emitir com Etapa por fazer é *Depois*, e não paga a pergunta. Só é feita quando alguma lista do marco tem a
 ordem a emitir ou obsoleta — o que não acontece no marco já ordenado.
 
 **Recusa da norma.** O marco sem Etapa executável faz `calcular_ordem` recusar com `marco_sem_etapa`.
@@ -45,11 +49,17 @@ muda:
 
 | Situação | Ato |
 |---|---|
-| *Pendente*, lista vazia | Emitir a ordem da lista sem inscritos, que declara que ninguém concorreu |
-| *Pendente*, duas ou mais vazias agrupadas | Emitir as ordens das listas sem inscritos, que declaram que ninguém concorreu |
-| *Obsoleto*, lista que ficou vazia | Emitir a ordem sucessora da lista sem inscritos, que declara que ninguém concorreu |
+| *Pendente*, lista vazia | Emitir a ordem que declara que ninguém concorreu nesta lista |
+| *Pendente*, duas ou mais vazias agrupadas | Emitir as ordens que declaram que ninguém concorreu nestas listas |
+| *Obsoleto*, lista que ficou vazia | Emitir a ordem sucessora, que declara que ninguém concorreu nesta lista |
+| *Obsoleto*, duas ou mais agrupadas | Emitir as ordens sucessoras, que declaram que ninguém concorreu nestas listas |
 
-A nota da célula é **"lista sem inscritos"**, na matriz. O dado é `Celula.lista_vazia`, que
+A nota da célula é **"lista em que ninguém concorre"**, na matriz.
+
+**"Ninguém concorre", e não "sem inscritos"** (a revisão do PR #441). A primeira redação dizia "lista
+sem inscritos". O critério é o universo **depois da progressão**: uma lista com quatro inscrições, todas
+eliminadas na Etapa anterior à do marco, também é vazia, e "sem inscritos" faria ler que ninguém se
+inscreveu. A tela da ordenação diz "Ninguém concorreu por este recorte", que é o fato. O dado é `Celula.lista_vazia`, que
 `Providencia.da_celula` copia (FR-4673).
 
 **O agrupamento** (FR-4674) já separa atos de texto diferente; a chave ganha também o `lista_vazia`,

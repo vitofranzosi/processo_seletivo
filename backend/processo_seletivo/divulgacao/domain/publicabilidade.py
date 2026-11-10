@@ -152,6 +152,15 @@ MENSAGENS_COM_O_PRELIMINAR_PUBLICADO = {
 }
 
 
+#: A janela aberta sem a data (135, a revisão do PR #441). A aferição que recusa por `DomainError`
+#: chega ao andamento sem `ate`, e devolver `None` ali fazia voltar a mensagem que oferece publicar
+#: como preliminar — o que a FR-4681 proíbe. Melhor sem a data do que com a oferta.
+JANELA_ABERTA_SEM_DATA_COM_O_PRELIMINAR_PUBLICADO = (
+    "O prazo recursal deste marco ainda está aberto. "
+    "O resultado preliminar já está publicado, e o definitivo vem depois do encerramento."
+)
+
+
 def mensagem_com_o_preliminar_publicado(codigo, ate=None):
     """A razão da espera do definitivo para quem já publicou o preliminar, ou `None` quando o código
     não tem segunda redação — e então vale a mensagem da aferição, como hoje (FR-4683)."""
@@ -160,7 +169,7 @@ def mensagem_com_o_preliminar_publicado(codigo, ate=None):
         return None
     if codigo == JANELA_ABERTA:
         if ate is None:
-            return None
+            return JANELA_ABERTA_SEM_DATA_COM_O_PRELIMINAR_PUBLICADO
         return mensagem.format(fecha=_quando(ate))
     return mensagem
 
@@ -556,6 +565,7 @@ __all__ = [
     "DECLARACAO_EXIGIDA",
     "DECLARACAO_RECUSADA",
     "JANELA_ABERTA",
+    "JANELA_ABERTA_SEM_DATA_COM_O_PRELIMINAR_PUBLICADO",
     "MENSAGENS_COM_O_PRELIMINAR_PUBLICADO",
     "MARCO_REMOVIDO",
     "PROVIDENCIA_PENDENTE",

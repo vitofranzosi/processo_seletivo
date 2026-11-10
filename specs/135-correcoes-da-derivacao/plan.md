@@ -9,10 +9,11 @@
 
 Quatro correções de leitura na derivação da `127`, sem regra de domínio nova:
 
-1. **A lista sem inscritos** — uma consulta por marco por pontuação diz quais listas reservadas têm o
-   universo vazio, pelo mesmo critério da tela da ordenação (R-001). A célula da ordem continua com a
-   situação de hoje e ganha o dado `lista_vazia` e a nota "lista sem inscritos"; a providência diz, no
-   próprio ato, que a lista não tem inscritos e que emitir declara que ninguém concorreu (R-002).
+1. **A lista em que ninguém concorre** — até duas consultas por marco por pontuação dizem quais
+   listas reservadas têm o universo vazio, pelo mesmo critério da tela da ordenação (R-001). A célula
+   da ordem continua com a situação de hoje e ganha o dado `lista_vazia` e a nota "lista em que
+   ninguém concorre"; a providência diz, no próprio ato, que ninguém concorre pela lista e que
+   emitir declara isso (R-002).
 2. **O que foi divulgado** — a célula da publicação da condução do marco passa a dizer a natureza
    (`PRELIMINAR`, `DEFINITIVA`) como dado, e a célula do resultado do andamento a carrega como
    `divulgado` (`nada`, `preliminar`, `definitivo`). As quatro decisões que liam a palavra

@@ -1,7 +1,8 @@
 """O andamento diz o que cada providência é — as quatro correções, sem banco (135).
 
 As regras puras da `127` recebem os fatos e devolvem a célula; aqui se prova que o que a `135`
-acrescenta é **dado e texto**, e nunca situação: a lista sem inscritos (FR-4670 a FR-4676), o que
+acrescenta é **dado e texto**, e nunca situação: a lista em que ninguém concorre (FR-4670 a
+FR-4676), o que
 foi divulgado (FR-4677 a FR-4680), a razão da espera do definitivo (FR-4681 a FR-4683) e o escopo da
 contagem do Perfil (FR-4684, FR-4685). Os mesmos casos, sobre os cenários da `134`, estão em
 `tests/integration/treinamento/test_andamento_dos_cenarios.py`.
@@ -39,7 +40,7 @@ def resultado(estado, natureza="", *, nota=None, ordem_=a.FEITO, **fatos):
     return a.situacao_do_resultado({"celula": celula, "ordem": a.Celula(ordem_), **fatos})
 
 
-# --- US1: a lista sem inscritos ---------------------------------------------------------------
+# --- US1: a lista em que ninguém concorre -----------------------------------------------------
 
 
 def test_a_ordem_da_lista_vazia_continua_pendente_e_diz_o_que_e():
@@ -51,8 +52,11 @@ def test_a_ordem_da_lista_vazia_continua_pendente_e_diz_o_que_e():
         cheia.url,
     )
     assert vazia.lista_vazia and not cheia.lista_vazia
-    assert vazia.nota == "lista sem inscritos" and cheia.nota == ""
-    assert "lista sem inscritos" in vazia.ato and "declara que ninguém concorreu" in vazia.ato
+    assert vazia.nota == "lista em que ninguém concorre" and cheia.nota == ""
+    assert vazia.ato == "Emitir a ordem que declara que ninguém concorreu nesta lista"
+    # A lista com inscrições eliminadas antes da Etapa do marco também é vazia: a frase não pode
+    # fazer ler que ninguém se inscreveu (a revisão do PR #441).
+    assert "inscrit" not in vazia.ato and "inscrit" not in vazia.nota
     assert cheia.ato == "Emitir a ordem"
 
 
@@ -75,8 +79,8 @@ def test_a_ordem_obsoleta_de_lista_que_ficou_vazia_leva_a_nota():
     """Caso-limite: a célula é *Obsoleto*, como hoje; se a lista segue vazia, a nota acompanha."""
     celula = ordem("obsoleto", vazia=True)
     assert celula.situacao == a.OBSOLETO
-    assert celula.nota == "lista sem inscritos" and celula.lista_vazia
-    assert "lista sem inscritos" in celula.ato and "sucessora" in celula.ato
+    assert celula.nota == "lista em que ninguém concorre" and celula.lista_vazia
+    assert celula.ato == "Emitir a ordem sucessora, que declara que ninguém concorreu nesta lista"
 
 
 def _providencia(celula, lista, *, sua=True):
@@ -96,7 +100,9 @@ def test_a_providencia_carrega_o_dado_e_a_frase_para_qualquer_papel():
     de_outro = _providencia(ordem(vazia=True), "PPP", sua=False)
     assert de_outro.lista_vazia
     assert de_outro.grupo == pr.DE_OUTRO
-    assert "lista sem inscritos" in de_outro.ato_no_meio_da_frase
+    assert de_outro.ato_no_meio_da_frase == (
+        "emitir a ordem que declara que ninguém concorreu nesta lista"
+    )
     assert de_outro.texto_do_papel == "Quem conduz a seleção"
 
 
@@ -124,14 +130,34 @@ def test_a_vazia_nao_se_junta_mesmo_que_a_frase_coincida():
 
 
 def test_duas_vazias_viram_uma_providencia_no_plural():
-    """Caso-limite: a providência agrupada diz quais listas são, e que nenhuma tem inscritos."""
+    """Caso-limite: a providência agrupada diz quais listas são, e que ninguém concorre nelas."""
     [item] = pr.agrupar(
         [_providencia(ordem(vazia=True), "PPP"), _providencia(ordem(vazia=True), "PcD")]
     )
     assert item.listas == ("PPP", "PcD")
     assert item.ato == a.ATO_DAS_ORDENS_VAZIAS
-    assert "listas sem inscritos" in item.ato
+    assert "nestas listas" in item.ato
     assert item.onde_por_extenso == "Cefor · PPP e PcD"
+
+
+def test_duas_sucessoras_vazias_tambem_vao_ao_plural():
+    """A sucessora juntada ficava no singular (a revisão do PR #441)."""
+    [item] = pr.agrupar(
+        [
+            _providencia(ordem("obsoleto", vazia=True), "PPP"),
+            _providencia(ordem("obsoleto", vazia=True), "PcD"),
+        ]
+    )
+    assert item.listas == ("PPP", "PcD")
+    assert item.ato == a.ATO_DAS_SUCESSORAS_VAZIAS
+    assert (
+        item.ato == "Emitir as ordens sucessoras, que declaram que ninguém concorreu nestas listas"
+    )
+
+
+def test_uma_vazia_so_continua_no_singular():
+    [item] = pr.agrupar([_providencia(ordem("obsoleto", vazia=True), "PPP")])
+    assert item.ato == a.ATO_DA_SUCESSORA_VAZIA
 
 
 # --- US2: o que foi divulgado é dado ----------------------------------------------------------
@@ -255,6 +281,25 @@ def test_com_o_preliminar_publicado_a_espera_do_recurso_nao_oferece_o_preliminar
     assert celula.situacao == a.AGUARDA
     assert OFERTA not in celula.razao
     assert "recurso pendente" in celula.razao
+
+
+def test_sem_a_data_da_janela_a_espera_tambem_nao_oferece_o_preliminar():
+    """A recusa por `DomainError` chega sem `ate` (`leitura_da_definitiva`). Devolver `None` ali
+    fazia voltar a mensagem com a oferta (a revisão do PR #441): sem a data, mas sem a oferta."""
+    lida = {
+        "nivel": p.IMPEDIMENTO,
+        "codigo": p.JANELA_ABERTA,
+        "mensagem": p.MENSAGENS[p.JANELA_ABERTA].format(fecha="14/11/2026 às 18h00"),
+        "ate": None,
+    }
+    assert p.mensagem_com_o_preliminar_publicado(p.JANELA_ABERTA) == (
+        p.JANELA_ABERTA_SEM_DATA_COM_O_PRELIMINAR_PUBLICADO
+    )
+    celula = resultado("feito", "PRELIMINAR", definitiva=lida)
+    assert celula.situacao == a.AGUARDA
+    assert OFERTA not in celula.razao
+    assert "prazo recursal" in celula.razao
+    assert "resultado preliminar já está publicado" in celula.razao
 
 
 @pytest.mark.parametrize(

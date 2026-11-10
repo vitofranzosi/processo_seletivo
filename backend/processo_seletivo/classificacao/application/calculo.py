@@ -164,13 +164,16 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     }
 
 
-def _universo(edital, perfil, etapas, etapa_do_marco):
+def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None):
     """As inscrições que concorrem no marco, antes do filtro do recorte.
 
     A progressão é aplicada no próprio queryset: nenhuma lista integral é lida uma segunda vez só
     para ser devolvida em ``id__in``. O conjunto inclui quem foi eliminado na Etapa do marco e
     exclui quem já havia sido eliminado antes dela. O filtro do recorte entra depois, em quem
     chama.
+
+    `conteudo`, quando quem chama já o leu, poupa à condição do corte a releitura do conteúdo
+    vigente (135, a revisão do PR #441).
     """
     consulta = Inscricao.objects.filter(
         edital=edital,
@@ -183,6 +186,7 @@ def _universo(edital, perfil, etapas, etapa_do_marco):
         etapa_id=etapa_do_marco["id"],
         vigentes={_uuid_da_etapa(chave): valor for chave, valor in etapas.items()},
         prefixo="",
+        conteudo=conteudo,
     )
 
 
@@ -196,6 +200,10 @@ def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
     filtrado pelo recorte é vazio. Aqui o universo é o mesmo (`_universo`), perguntado **uma vez
     para o marco**: as Modalidades distintas de quem concorre. Calcular a ordem de cada lista leria
     Resultados e fatos de cada inscrição só para contá-las (FR-4686).
+
+    **Custa até duas consultas, e nenhuma por inscrição**: a do gate da progressão, quando a Etapa
+    anterior exige habilitação, e a das Modalidades. O conteúdo que chega é repassado à condição do
+    corte, que de outro modo o releria.
 
     A ampla fica fora, como na tela: a ampla vazia é um Perfil sem inscrição nenhuma, outro assunto.
     O marco que `calcular_ordem` recusaria (sem Etapa executável) não tem lista vazia: a recusa é da
@@ -212,15 +220,15 @@ def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
         etapa_do_marco = _ultima_etapa([str(item) for item in marco.get("stages") or []], etapas)
     except DomainError:
         return set()
+    # `recortes_do_perfil` já devolve a grafia canônica, sem a ampla declarada.
     reservadas = {
-        normalizar_recorte(conteudo, perfil_id=perfil["id"], lista_id=lista_id)
-        for lista_id, _ in recortes_do_perfil(conteudo, perfil_id=perfil["id"])
-    } - {None}
+        lista for lista, _ in recortes_do_perfil(conteudo, perfil_id=perfil["id"]) if lista
+    }
     if not reservadas:
         return set()
     concorrem = {
         str(modalidade)
-        for modalidade in _universo(edital, perfil, etapas, etapa_do_marco)
+        for modalidade in _universo(edital, perfil, etapas, etapa_do_marco, conteudo=conteudo)
         .order_by()
         .values_list("modality_id", flat=True)
         .distinct()

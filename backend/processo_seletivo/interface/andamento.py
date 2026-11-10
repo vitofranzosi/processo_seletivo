@@ -101,15 +101,19 @@ SEM_EFEITO_NO_GPS = "está declarada no Edital, e nenhum ato do GPS depende do r
 NADA, PRELIMINAR, DEFINITIVO = "nada", "preliminar", "definitivo"
 _DIVULGADO_POR_NATUREZA = {"PRELIMINAR": PRELIMINAR, "DEFINITIVA": DEFINITIVO}
 
-#: A lista sem inscritos, antes da ordem (135, FR-4671, FR-4672). A frase vai no próprio ato porque
-#: é o ato que o nível 1 e o "Próximo nesta lista" desenham; a razão só aparece na espera.
-NOTA_DA_LISTA_VAZIA = "lista sem inscritos"
-ATO_DA_ORDEM_VAZIA = "Emitir a ordem da lista sem inscritos, que declara que ninguém concorreu"
-ATO_DAS_ORDENS_VAZIAS = (
-    "Emitir as ordens das listas sem inscritos, que declaram que ninguém concorreu"
-)
-ATO_DA_SUCESSORA_VAZIA = (
-    "Emitir a ordem sucessora da lista sem inscritos, que declara que ninguém concorreu"
+#: A lista em que ninguém concorre, antes da ordem (135, FR-4671, FR-4672). A frase vai no
+#: próprio ato porque é o ato que o nível 1 e o "Próximo nesta lista" desenham; a razão só aparece
+#: na espera.
+#: **"Ninguém concorre", e não "sem inscritos"**: o critério é o universo depois da progressão, e
+#: uma lista com inscrições eliminadas numa Etapa anterior também é vazia — "sem inscritos" faria
+#: ler que ninguém se inscreveu. É o que a tela da ordenação diz: "Ninguém concorreu por este
+#: recorte" (a revisão do PR #441).
+NOTA_DA_LISTA_VAZIA = "lista em que ninguém concorre"
+ATO_DA_ORDEM_VAZIA = "Emitir a ordem que declara que ninguém concorreu nesta lista"
+ATO_DAS_ORDENS_VAZIAS = "Emitir as ordens que declaram que ninguém concorreu nestas listas"
+ATO_DA_SUCESSORA_VAZIA = "Emitir a ordem sucessora, que declara que ninguém concorreu nesta lista"
+ATO_DAS_SUCESSORAS_VAZIAS = (
+    "Emitir as ordens sucessoras, que declaram que ninguém concorreu nestas listas"
 )
 
 
@@ -641,10 +645,11 @@ def situacao_da_ordem(f):
     *Depois* também para a parcial, que o comando aceita), e por isso nunca diz *Pendente* para o
     que ele recusa (`test_o_andamento_nunca_diz_pendente_para_a_ordem_que_o_comando_recusa`).
 
-    **A lista sem inscritos continua providência, e diz o que ela é** (135, D-001, FR-4671). A
-    ordem vazia é ato normativo — emiti-la declara que ninguém concorreu —, e a providência igual à
-    de uma lista com inscritos fazia ler "há uma classificação a fazer" (o C08 do estudo de 09/11).
-    A lista vazia só muda o texto e o dado: *Depois* e a recusa continuam decidindo (FR-4676).
+    **A lista em que ninguém concorre continua providência, e diz o que ela é** (135, D-001,
+    FR-4671). A ordem vazia é ato normativo — emiti-la declara que ninguém concorreu —, e a
+    providência igual à de uma lista com quem concorre fazia ler "há uma classificação a fazer" (o
+    C08 do estudo de 09/11). A lista vazia só muda o texto e o dado: *Depois* e a recusa continuam
+    decidindo (FR-4676).
     """
     celula = f.get("celula") or {}
     estado, url = celula.get("estado"), celula.get("url") or ""
@@ -1858,7 +1863,7 @@ class _Leitor:
                 chave=sorteio_lido.get("chave_da_semente"),
             )
         curtos = _rotulos_curtos(perfil)
-        vazias = self._listas_vazias(perfil, marco)
+        vazias = None
         for lista, rotulo in listas:
             chave = _chave(lista)
             celulas = por_lista.get(chave) or {}
@@ -1877,14 +1882,16 @@ class _Leitor:
                 derivadas = {RELACAO: relacao, SORTEIO: ordem}
             else:
                 ordenar = celulas.get("ordenar") or {}
-                ordem = situacao_da_ordem(
-                    {
-                        "celula": ordenar,
-                        "faltam": faltam,
-                        "vazia": ordenar.get("estado") in ("falta", "obsoleto")
-                        and chave in vazias(),
-                    }
-                )
+                # **Só pergunta quem vai ler a resposta** (a revisão do PR #441): a ordem a emitir
+                # com Etapa por fazer é *Depois*, e `situacao_da_ordem` nem olha a lista vazia; a
+                # obsoleta olha, com ou sem Etapa por fazer.
+                estado = ordenar.get("estado")
+                vazia = False
+                if estado == "obsoleto" or (estado == "falta" and not faltam):
+                    if vazias is None:
+                        vazias = self._listas_vazias(perfil, marco)
+                    vazia = chave in vazias
+                ordem = situacao_da_ordem({"celula": ordenar, "faltam": faltam, "vazia": vazia})
                 derivadas = {ORDEM: ordem}
             # **O resultado antes do corte** (133, FR-4541): a espera do corte lê a mesma aferição
             # da definitiva que a célula do resultado leu.
@@ -1943,34 +1950,26 @@ class _Leitor:
                     lista=(lista, curtos.get(chave, rotulo)),
                 )
 
-    # --- a lista sem inscritos --------------------------------------------------------------
+    # --- a lista em que ninguém concorre ----------------------------------------------------
 
     def _listas_vazias(self, perfil, marco):
         """As chaves das listas reservadas em que ninguém concorre, perguntadas **uma vez por
-        marco** e só se alguma lista precisar (135, FR-4670, FR-4686): o marco já ordenado não paga
-        nada.
+        marco**, e só quando alguma lista lê a resposta (135, FR-4670, FR-4686): o marco já
+        ordenado, e o que ainda espera Etapas, não pagam nada.
 
         O critério é o da tela da ordenação, numa função ao lado do cálculo dela (R-001).
         """
         from processo_seletivo.classificacao.application.calculo import listas_sem_concorrente
 
-        lidas = None
-
-        def vazias():
-            nonlocal lidas
-            if lidas is None:
-                lidas = {
-                    _chave(lista)
-                    for lista in listas_sem_concorrente(
-                        edital=self.edital,
-                        conteudo=self.conteudo,
-                        perfil_id=perfil.get("id"),
-                        marco_id=marco.get("id"),
-                    )
-                }
-            return lidas
-
-        return vazias
+        return {
+            _chave(lista)
+            for lista in listas_sem_concorrente(
+                edital=self.edital,
+                conteudo=self.conteudo,
+                perfil_id=perfil.get("id"),
+                marco_id=marco.get("id"),
+            )
+        }
 
     # --- o sorteio -------------------------------------------------------------------------
 
