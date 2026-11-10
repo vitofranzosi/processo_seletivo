@@ -181,7 +181,8 @@ def abrir_processo(client, processo):
 
 
 def abrir_edital(client, edital):
-    return client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    """O detalhe, também do Edital publicado: desde a 138 ele é a página anterior."""
+    return client.get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
 
 
 # ---- o que fazer, antes do resto -------------------------------------------------------------
@@ -262,7 +263,8 @@ def test_no_edital_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, edital):
     """`FR-1767`, `FR-1768`, `SC-684`: GPS › Processos Seletivos › o código › o Edital."""
     identificar(client, "ana.elaboradora", ["elaborador"])
     processo = edital.processo
-    corpo = abrir_edital(client, edital)
+    # O Edital em elaboração não tem andamento: a página do Edital é o detalhe (138, FR-4860).
+    corpo = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
 
     trilha = trilha_unica_no_cabecalho(corpo)
     niveis = [

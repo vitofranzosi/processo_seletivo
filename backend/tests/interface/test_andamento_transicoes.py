@@ -159,7 +159,7 @@ def test_depois_do_ato_o_bloco_termina_no_centro_e_abrir_a_tela_nao_o_mostra(
     com_resultado(client, "resultado_do_corte", {"emitido": True, **(resultado or {})})
     corpo = client.get(url).content.decode()
 
-    centro = reverse("interface:centro-do-edital", args=[edital.id])
+    centro = reverse("interface:detalhe", args=[edital.id])
     retorno = corpo.split(RETORNO, 1)[1].split("</p>", 1)[0]
     assert f'<a href="{centro}">Voltar ao Centro de Controle do Edital</a>' in retorno
     # O retorno fecha o bloco: vem depois do próximo, e não antes.

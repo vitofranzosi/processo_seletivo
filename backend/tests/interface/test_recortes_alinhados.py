@@ -35,7 +35,9 @@ def _tela_do_sorteio(client, certame):
 
 def _recortes_da_tela_do_sorteio(corpo):
     secao = corpo.split('id="titulo-recortes"', 1)[1]
-    secao = secao.split('id="titulo-historico-excedente"', 1)[0]
+    # Desde a `142` o passo 1 (fixar os participantes) é a seção dos cartões das listas, e a da
+    # semente vem logo depois; a execução e o resultado repetem o nome de cada lista.
+    secao = secao.split('id="titulo-ocorrencia"', 1)[0]
     return re.findall(r"<h3>(.*?)</h3>", secao)
 
 
@@ -108,7 +110,7 @@ class TestQuemDivulgaEncontraCadaRecorte:
     def test_a_pagina_do_edital_tem_um_caminho_de_divulgacao_por_marco(self, client, com_acervo):
         identificar(client, "paula.publicadora", ["publicador"])
 
-        corpo = client.get(reverse("interface:detalhe", args=[com_acervo["edital"].id]))
+        corpo = client.get(reverse("interface:pagina-anterior", args=[com_acervo["edital"].id]))
         secao = _SECAO_CLASSIFICACAO.search(corpo.content.decode()).group(0)
 
         assert secao.count(">divulgar o resultado</a>") == 1

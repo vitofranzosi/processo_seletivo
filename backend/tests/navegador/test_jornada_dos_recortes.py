@@ -58,7 +58,7 @@ def test_a_jornada_dos_tres_recortes_sem_cobranca_da_lista_excedente(tela, certa
 
     # O Publicador puro: da página do Edital ao quadro, por um caminho só.
     publicador = tela.gestao("paula.publicadora", ["publicador"])
-    publicador.goto(base + reverse("interface:detalhe", args=[edital.id]))
+    publicador.goto(base + reverse("interface:pagina-anterior", args=[edital.id]))
     classificacao = publicador.locator("section[aria-labelledby='classificacao-titulo']")
     expect(classificacao.get_by_role("link", name="divulgar o resultado")).to_have_count(1)
     classificacao.get_by_role("link", name="divulgar o resultado").click()

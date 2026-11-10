@@ -113,12 +113,21 @@ BOTOES = {
     "ordenacao.html": [("botao", "Emitir ordem")],
     "ordenacao_confirmar.html": [("botao perigoso", "Emitir a ordem")],
     "ato_ordenacao.html": [],
+    # A `142` mudou a tela do sorteio de propósito: os rótulos dizem a tarefa ("Fixar os N
+    # participantes desta lista", e o nome no GPS ao lado), e observar perde peso enquanto há
+    # lista a fixar (D-004 dela). O desenho de nenhum ato que não se desfaz subiu.
     "sorteio.html": [
-        ("botao", "Observar a ocorrência {{ proxima_referencia }} na fonte"),
-        ("botao perigoso", "Anular e constituir o sucessor"),
-        ("botao", "Realizar o sorteio"),
         ("acao", "Publicar relação nova, sucedendo a atual"),
-        ("botao", "Publicar e congelar a relação"),
+        ("botao", "Fixar os {{ recorte.projetados }} participantes desta lista"),
+        (
+            "botao{% if fixar_por_fazer %} secundario{% endif %}",
+            "Observar a ocorrência {{ proxima_referencia }} na fonte",
+        ),
+        ("botao perigoso", "Anular e constituir o sucessor"),
+        (
+            "botao{% if fixar_e_a_vez %} secundario{% endif %}",
+            "Realizar o sorteio desta lista",
+        ),
     ],
     "corte.html": [("botao", "Emitir corte"), ("botao", "Emitir faixa seguinte")],
     "corte_historico.html": [],
@@ -208,7 +217,15 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
     # é o indeferimento pelas pendências de documento (115): o mesmo desenho do desfecho, que ele é.
     # O 24º é o aviso de pendência documental (134): não desfaz nada porque não muda ato nenhum — o
     # prazo, a lista e o desfecho ficam como estão —, e o despacho manda no máximo um por dia.
-    assert desenhos == {"botao": 24, "botao perigoso": 2, "acao": 2}
+    # Os desenhos de observar a semente e de sortear, na `142`: o mesmo `botao`, que passa a
+    # secundário enquanto fixar é a tarefa de agora — perdem peso, e não ganham.
+    assert desenhos == {
+        "botao": 22,
+        "botao{% if fixar_por_fazer %} secundario{% endif %}": 1,
+        "botao{% if fixar_e_a_vez %} secundario{% endif %}": 1,
+        "botao perigoso": 2,
+        "acao": 2,
+    }
 
 
 # ---- pela página renderizada -------------------------------------------------------------------

@@ -283,3 +283,23 @@ Entraram também, sem mudar a descrição do sistema, documentos em `doc/` e um 
 - a suíte inteira não rodou aqui; rodaram os 18 testes que leem `specs/` e `doc/`, que passaram. O que vem de execução é o que cada PR registrou;
 - as telas não foram percorridas; os rótulos e códigos citados foram conferidos no código por amostragem, e os números de consultas por tela vêm do `verificacao.md` de cada spec;
 - ficam abertas a P-1 da 128, a SC-1378, a P-3 e a P-4 da 131, a pendência 11 da 115 e a numeração repetida da 133 (`133-guia-visual-conceitos` e `133-jornada-sem-ato-errado`), que é decisão do usuário.
+
+## Acréscimo de 10/11: o Centro de Controle como página do Edital (136, 138)
+
+A página não descrevia o Centro de Controle do Edital da 136, que entrou em 09/11 numa rota própria e
+"em validação". A spec 138 o pôs na rota do Edital, por decisão do usuário em 10/11 (validação com
+operadores dispensada; o Centro mora na rota do Edital; os textos deixam de ser provisórios), e
+esta atualização vai no mesmo PR que a troca, de modo que chega à `main` com ela.
+
+- Seção nova, *A página do Edital publicado: o Centro de Controle (136, 138)*, depois do *Depois da
+  publicação* da 127: as quatro camadas, a escolha da composição pela rota, o retorno do ato, a volta
+  da 139, o endereço antigo `/centro/` e a página anterior por um ciclo.
+- *Depois da publicação* (127) ganhou uma frase dizendo que os cartões dele continuam na página
+  anterior.
+- Rótulos conferidos no código da worktree da 138: *Onde estamos*, *Situação administrativa*,
+  *Inscrições*, *Seu papel aqui*, *O que fazer agora*, *Por que esta*, *Onde cada lista está*,
+  *Administração e histórico*, *Voltar ao Centro de Controle do Edital* (`centro_do_edital.html`,
+  `_proximo_nesta_lista.html`).
+- Não foi recontada a seção *Maturidade*, e a 137 (o Processo agrega os Editais), que não foi feita,
+  não entrou.
+

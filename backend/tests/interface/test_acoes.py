@@ -51,7 +51,7 @@ def homologado(api_client, manager_headers, process_payload):
 
 
 def cartao_de_acoes(client, edital):
-    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
+    resposta = client.get(reverse("interface:pagina-anterior", args=[edital.id]))
     assert resposta.status_code == 200, resposta.content
     return resposta
 

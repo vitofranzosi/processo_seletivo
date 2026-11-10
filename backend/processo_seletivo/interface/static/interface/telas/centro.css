@@ -5,14 +5,6 @@
    cartão; o que ela oferece agora, e a quem, são as marcas do rodapé. A fase consultada tem um
    terceiro desenho, o contorno, que não se confunde com nenhum dos dois (UX-315). */
 
-.cc-em-validacao {
-  margin: 0 0 .75rem;
-  padding: .35rem .6rem;
-  border-left: 4px solid var(--amarelo);
-  background: var(--amarelo-fundo);
-  font-size: .9rem;
-}
-
 .cc-fraco {
   color: var(--texto-fraco);
 }
@@ -585,4 +577,11 @@
 .cc-detalhe {
   min-width: 0;
   margin: 0;
+}
+
+/* A página anterior, por um ciclo (138, UX-345): texto comum no fim da administração, separado das
+   ações por espaço e não por cor — nada nele chama a atenção de quem chega ao Centro. */
+.cc-pagina-anterior {
+  margin: 1.25rem 0 0;
+  font-size: .875rem;
 }

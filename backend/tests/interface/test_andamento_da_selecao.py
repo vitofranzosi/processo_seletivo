@@ -22,7 +22,7 @@ SECAO = re.compile(r'<section aria-labelledby="classificacao-titulo".*?</section
 
 
 def detalhe(client, edital):
-    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
+    resposta = client.get(reverse("interface:pagina-anterior", args=[edital.id]))
     assert resposta.status_code == 200
     return resposta
 
