@@ -38,10 +38,10 @@ def test_o_sorteio_nao_cresce_com_as_inscricoes(
 
     certame = certame_s1(gestor, api_client, manager_headers, process_payload, quantos=3)
     identificar(client, "carlos", ["gestor"])
-    com_poucas = consultas(client, "interface:centro-do-edital", certame["edital"])
+    com_poucas = consultas(client, "interface:detalhe", certame["edital"])
 
     inscrever(certame["edital"], 27, primeiro=900)
-    com_muitas = consultas(client, "interface:centro-do-edital", certame["edital"])
+    com_muitas = consultas(client, "interface:detalhe", certame["edital"])
     do_detalhe = consultas(client, "interface:detalhe", certame["edital"])
 
     assert com_poucas == com_muitas, (com_poucas, com_muitas)
@@ -55,10 +55,10 @@ def test_a_pontuacao_com_etapas_nao_cresce_com_as_inscricoes(
 
     certame = certame_p1(gestor, api_client, manager_headers, process_payload, quantos=3)
     identificar(client, "maria", [])
-    com_poucas = consultas(client, "interface:centro-do-edital", certame["edital"])
+    com_poucas = consultas(client, "interface:detalhe", certame["edital"])
 
     inscrever(certame["edital"], 27, primeiro=900)
-    com_muitas = consultas(client, "interface:centro-do-edital", certame["edital"])
+    com_muitas = consultas(client, "interface:detalhe", certame["edital"])
     do_detalhe = consultas(client, "interface:detalhe", certame["edital"])
 
     assert com_poucas == com_muitas, (com_poucas, com_muitas)

@@ -1,20 +1,23 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
-{% block titulo %}Centro de Controle · Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block titulo %}Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/andamento.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/centro.css' %}">{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Centro de Controle</span></nav>{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span></nav>{% endblock %}
 {% block conteudo %}
 {% comment %}
 O Centro de Controle do Edital (136). Uma página de leitura sobre o andamento da 127, em quatro
 camadas: onde estamos e o mapa; o que fazer agora e o detalhe da fase consultada; onde cada lista
-está; administração e histórico. A composição é de `centro.py`, e os textos, de `conceitos.py`,
-provisórios. Nenhum botão daqui pratica ato: todos levam à tela real, que autoriza e recusa.
+está; administração e histórico. A composição é de `centro.py`, e os textos, de `conceitos.py`.
+Nenhum botão daqui pratica ato: todos levam à tela real, que autoriza e recusa.
 
-Ao lado do detalhe, e não no lugar dele (D-001): a linha de validação leva de volta.
+É a página do Edital quando há andamento (138, FR-4860): a rota do Edital a desenha, e o detalhe de
+antes fica por um ciclo na página anterior, por um link só, no fim da administração (FR-4874).
 {% endcomment %}
-<p class="cc-em-validacao" role="note"><strong>Em validação.</strong> Os nomes e os textos desta página são provisórios. <a href="{% url 'interface:detalhe' edital.id %}">Voltar à página atual do Edital</a></p>
 
 <header class="cc-cabecalho">
   <h1>Edital {{ edital.number }}/{{ edital.year }} <span class="cc-titulo-do-edital">{{ edital.title }}</span></h1>
+  {% comment %} O retorno do ato, no lugar e com a aparência do detalhe (138, FR-4865, UX-346): publicar e encerrar chegam aqui, e sem ele o ato ficaria sem resposta. {% endcomment %}
+  {% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado: {{ request.GET.ato|rotulo_do_ato }}.</p>{% endif %}
+  {% include "interface/_conferencia_do_ato.html" %}
   <div class="cc-onde" role="status">
     <p class="cc-onde-frase"><span class="cc-onde-rotulo">Onde estamos</span> {{ centro.onde }}</p>
     {% if centro.onde_detalhe %}<p class="cc-onde-detalhe">{{ centro.onde_detalhe }}</p>{% endif %}
@@ -309,17 +312,23 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
       <ul class="cc-lista-simples">
         {% if pode_ver_avisos %}<li><a href="{% url 'interface:avisos-do-edital' edital.id %}">Avisos aos candidatos</a></li>{% endif %}
         <li><a href="{% url 'interface:processo-detalhe' edital.processo_id %}">Comissão, alocação e supervisão do Processo</a></li>
+        {% comment %} O que só o detalhe oferecia, nas mesmas condições (138, FR-4871): as respostas do assistente de dúvidas (070, FR-1413) e o piloto (071). {% endcomment %}
+        <li><a href="{% url 'interface:duvidas' edital.id %}">Ver as respostas do assistente de dúvidas (validação interna)</a></li>
+        {% if pode_conversar_com_o_assistente %}<li><a href="{% url 'interface:assistente' edital.id %}">Conversar com o assistente (piloto)</a></li>{% endif %}
       </ul>
+      {% comment %} O aviso de conteúdo imutável, com a condução da 037 que cala para quem pode retificar (FR-541b). {% endcomment %}
+      {% if edital.status == 'PUBLICADO' %}<p class="imutavel em-uma-linha"><strong>Conteúdo imutável.</strong> Correções ocorrem por Retificação, com novo fluxo de aprovação.{% if conducao_do_imutavel %} {{ conducao_do_imutavel }}{% endif %}</p>{% endif %}
     </div>
     <div class="cartao">
       <h3>Quem atuou</h3>
       <dl class="cc-quem">
-        {% if participantes.elaborou %}<div><dt>Elaborou</dt><dd>{{ participantes.elaborou }}</dd></div>{% endif %}
-        {% if participantes.homologou %}<div><dt>Homologou</dt><dd>{{ participantes.homologou }}</dd></div>{% endif %}
-        {% if participantes.publicou %}<div><dt>Publicou</dt><dd>{{ participantes.publicou }}</dd></div>{% endif %}
-        {% if participantes.signatario %}<div><dt>Assina</dt><dd>{{ participantes.signatario }}</dd></div>{% endif %}
+        {% comment %} As datas e a unidade no próprio cartão (138, FR-4872): o link para o detalhe levaria à própria página. {% endcomment %}
+        {% if participantes.elaborou %}<div><dt>Elaborou</dt><dd>{{ participantes.elaborou }} <span class="cc-fraco">{{ participantes.elaborou_em|date:"d/m/Y H:i" }}</span></dd></div>{% endif %}
+        {% if participantes.homologou %}<div><dt>Homologou</dt><dd>{{ participantes.homologou }} <span class="cc-fraco">{{ participantes.homologou_em|date:"d/m/Y H:i" }}</span></dd></div>{% endif %}
+        {% if participantes.publicou %}<div><dt>Publicou</dt><dd>{{ participantes.publicou }} <span class="cc-fraco">{{ participantes.publicou_em|date:"d/m/Y H:i" }}</span></dd></div>{% endif %}
+        {% if participantes.signatario %}<div><dt>Assina</dt><dd>{{ participantes.signatario }}</dd></div>
+        {% if participantes.unidade %}<div><dt>Unidade</dt><dd>{{ participantes.unidade }}</dd></div>{% endif %}{% endif %}
       </dl>
-      <p><a href="{% url 'interface:detalhe' edital.id %}#participantes-titulo">Autoridade, unidade e datas</a></p>
     </div>
     <div class="cartao">
       <h3>Validação do conteúdo</h3>
@@ -338,5 +347,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
     </ul>
   </details>
   {% endif %}
+  {% comment %} A página anterior, por um ciclo (138, D-004): um link só, em texto comum e tom fraco, no fim da administração — nunca botão, nunca no topo (FR-4874, UX-345). {% endcomment %}
+  <p class="cc-fraco cc-pagina-anterior">Procura a página de antes? A <a href="{% url 'interface:pagina-anterior' edital.id %}">página anterior deste Edital</a> fica disponível por um ciclo.</p>
 </section>
 {% endblock %}

@@ -40,7 +40,7 @@ def test_encerrado_com_retificacao_em_elaboracao_e_em_revisao(api_client, edital
 
     for papeis in (["gestor"], ["elaborador"], ["homologador"]):
         cliente = sessao("ana.elaboradora", papeis)
-        corpo = cliente.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+        corpo = cliente.get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
         trecho = secao(corpo)
         assert trecho.count("Não pode mais prosseguir:") == 2
         assert "o Edital foi encerrado" in trecho
@@ -71,7 +71,7 @@ def test_com_o_edital_publicado_o_proximo_passo_continua(api_client, edital):
 
     corpo = (
         sessao("carla.publicadora", ["publicador"])
-        .get(reverse("interface:detalhe", args=[edital.id]))
+        .get(reverse("interface:pagina-anterior", args=[edital.id]))
         .content.decode()
     )
     assert "Não pode mais prosseguir" not in secao(corpo)

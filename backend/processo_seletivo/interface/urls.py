@@ -194,12 +194,19 @@ urlpatterns = [
         views.supervisao,
         name="supervisao",
     ),
+    # A página do Edital: o Centro de Controle quando há andamento, o detalhe quando não (138).
     path("editais/<uuid:edital_id>/", views.detalhe, name="detalhe"),
-    # O Centro de Controle do Edital (136), ao lado do detalhe durante a validação (D-001).
+    # O endereço do Centro na `136`, que agora leva à página do Edital com a mesma consulta (138).
     path(
         "editais/<uuid:edital_id>/centro/",
         centro_do_edital.centro_do_edital,
         name="centro-do-edital",
+    ),
+    # O detalhe de antes, por um ciclo, alcançado por um link só no Centro (138, D-004).
+    path(
+        "editais/<uuid:edital_id>/pagina-anterior/",
+        views.pagina_anterior,
+        name="pagina-anterior",
     ),
     # A validação interna das respostas do assistente de dúvidas (070). Só leitura, por GET, no
     # alcance da página do Edital (`D-010`); nenhuma rota pública nesta fase (`D-001`).

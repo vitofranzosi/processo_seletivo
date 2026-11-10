@@ -117,7 +117,7 @@ Centro, sem faixa de validação; abrir a de um Edital em elaboração e conferi
 ### User Story 2 — Depois de um ato do Edital, o retorno aparece onde a pessoa chega (Priority: P1)
 
 O Publicador publica o Edital. A tela do ato o devolve à página do Edital com o ato no endereço.
-Hoje o detalhe diz "Ato registrado: Publicação" e, quando houve conferência do concurso na Caixa, o
+Hoje o detalhe diz "Ato registrado: Publicar." e, quando houve conferência do concurso na Caixa, o
 que ela disse. Depois da troca, a página do Edital publicado é o Centro — e o Centro precisa dizer o
 mesmo, ou o ato fica sem retorno.
 
@@ -130,12 +130,12 @@ chegada, a frase "Ato registrado" com o nome do ato.
 **Acceptance Scenarios**:
 
 1. **Given** um Edital homologado, **When** o Publicador publica, **Then** chega ao Centro com "Ato
-   registrado: Publicação" e, se a conferência do concurso prosseguiu com advertência ou com nota, a
+   registrado: Publicar." e, se a conferência do concurso prosseguiu com advertência ou com nota, a
    mesma lista que o detalhe mostrava.
 2. **Given** um Edital publicado em condições de encerrar, **When** a presidência encerra, **Then**
-   chega ao Centro com "Ato registrado: Encerramento".
+   chega ao Centro com "Ato registrado: Encerrar.".
 3. **Given** um Edital publicado, **When** alguém o cancela, **Then** chega ao detalhe (o cancelado
-   não tem andamento) com "Ato registrado: Cancelamento", como hoje.
+   não tem andamento) com "Ato registrado: Cancelar.", como hoje.
 4. **Given** um Edital antes da publicação, **When** alguém submete, homologa, devolve ou revoga a
    homologação, **Then** chega ao detalhe com o retorno de sempre.
 

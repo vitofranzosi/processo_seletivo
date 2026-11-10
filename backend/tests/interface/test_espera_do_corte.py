@@ -25,7 +25,9 @@ def cenario(client, gestor, api_client, manager_headers, process_payload, seleto
 
 
 def test_o_cartao_mostra_o_corte_em_espera_com_a_marca_de_recomendacao(client, cenario):
-    corpo = client.get(reverse("interface:detalhe", args=[cenario["edital"].id])).content.decode()
+    corpo = client.get(
+        reverse("interface:pagina-anterior", args=[cenario["edital"].id])
+    ).content.decode()
     cartao = corpo[corpo.index('id="acoes-titulo"') : corpo.index('id="participantes-titulo"')]
 
     assert 'class="marca-recomendacao"' in cartao

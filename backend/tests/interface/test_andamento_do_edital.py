@@ -27,7 +27,7 @@ NENHUM_ATO = "Nenhum ato disponível para seus papéis nesta situação."
 
 
 def cartao(client, edital):
-    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
+    resposta = client.get(reverse("interface:pagina-anterior", args=[edital.id]))
     assert resposta.status_code == 200
     corpo = resposta.content.decode()
     inicio = corpo.index('id="acoes-titulo"')
