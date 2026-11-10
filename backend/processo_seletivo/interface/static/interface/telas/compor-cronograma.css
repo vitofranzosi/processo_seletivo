@@ -1,3 +1,21 @@
+/* Início e Término na largura do próprio controle. O teto comum de `18rem` (formularios.css) é
+   folgado para não cortar segmento em navegador ou idioma nenhum, e por isso sobrava: no Chrome em
+   pt-BR, `dd/mm/aaaa, hh:mm` com o ícone mede 213 px, e a coluna tinha 288 — 75 px em branco depois
+   da hora, 150 por Evento, e eram eles que empurravam "Onde acontece" para a linha de baixo.
+
+   `width:auto`, e não um teto menor: a largura vem do navegador, que mede o formato que ele mesmo
+   desenha — com AM/PM, em outro idioma, em outro motor —, de modo que nada se corta por construção.
+   A coluna acompanha por `min-content`: com `auto` ela mediria a recusa do Término numa linha só, e
+   a mensagem alargaria a coluna em vez de quebrar dentro dela. Só aqui, e não na folha comum: nas
+   outras telas o campo de data leva ajuda visível ao lado, e a coluna de `18rem` é dela. */
+fieldset.evento .campo:has(>input[type=datetime-local]){flex:0 0 auto;width:min-content}
+fieldset.evento .campo>input[type=datetime-local]{width:auto;max-width:100%;}
+/* E a Descrição reserva menos para entrar na linha: `320px` é o mínimo que `.largo` exige antes de
+   aceitar vizinho, mas ela é a coluna que fica com toda a sobra (`flex-grow:2`), e a reserva só
+   decide onde a linha quebra. Com 320, a 1280 px com a barra aberta, faltavam 20 px e o Término
+   descia sozinho, longe do Início que ele confere; a 1600, faltavam 36 e "Onde acontece" descia.
+   Com 16rem, os quatro primeiros cabem a partir de 890 px de faixa, e os cinco a partir de 1226. */
+fieldset.evento .campo.largo{flex-basis:16rem}
 .campo.local{flex:0 1 20rem}
 /* A visibilidade no PDF (144, UX-390, UX-391).
 
