@@ -6,6 +6,17 @@ evidência, o que se sabe e o que não se sabe, e uma proposta de investigação
 
 > **Não viram escopo por estarem escritos aqui.** Governança é do usuário.
 
+> **Triagem de F-1 a F-3 em 10/11** ([07](07-triagem-f1-f3.md)):
+> - **F-1a** é intencional (102, D-006);
+> - **F-1b** é particularidade da fonte de demonstração e não ocorre com a Loteria Federal;
+> - **F-2** é falha confirmada na derivação;
+> - **F-3** é intencional (127, D-019).
+>
+> A D-5 foi decidida em 10/11 pela alternativa (d): a observação continua como está. O F-2 segue para a
+> spec 141. O F-3 está encerrado, sem correção.
+>
+> O texto abaixo é o de antes da triagem.
+
 ## F-1 — No sorteio, a semente observada antes da segunda lista condena a segunda lista em silêncio, e o Centro continua oferecendo o sorteio dela
 
 **Jornada A, C06 rodada 1** (`a04`–`a11`).
