@@ -73,7 +73,7 @@ Caminhos relativos a `backend/`, salvo indicação.
 - [X] T027 [P] Atualizar `../doc/estudo-centro-de-controle-2026-11-09/08-plano-de-producao.md` (as decisões de 10/11, o incremento 3 feito), o `../README.md` e a Visão do Sistema, se existir
 - [X] T028 `DB_NAME=ps138 make lint check test-pg` sem falha
 - [X] T029 Conferência no navegador com C06, C08 e C12 num banco isolado (quickstart), registrada em `verificacao.md`
-- [ ] T030 PR contra a `main`, sem merge
+- [X] T030 PR contra a `main`, sem merge (#451)
 
 ## Dependencies & Execution Order
 
