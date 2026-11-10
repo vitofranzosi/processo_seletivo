@@ -9,7 +9,7 @@
    a mensagem alargaria a coluna em vez de quebrar dentro dela. Só aqui, e não na folha comum: nas
    outras telas o campo de data leva ajuda visível ao lado, e a coluna de `18rem` é dela. */
 fieldset.evento .campo:has(>input[type=datetime-local]){flex:0 0 auto;width:min-content}
-fieldset.evento .campo>input[type=datetime-local]{width:auto;max-width:100%}
+fieldset.evento .campo>input[type=datetime-local]{width:auto;max-width:100%;}
 /* E a Descrição reserva menos para entrar na linha: `320px` é o mínimo que `.largo` exige antes de
    aceitar vizinho, mas ela é a coluna que fica com toda a sobra (`flex-grow:2`), e a reserva só
    decide onde a linha quebra. Com 320, a 1280 px com a barra aberta, faltavam 20 px e o Término
