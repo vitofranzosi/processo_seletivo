@@ -41,6 +41,14 @@ def desenhar(request, leitura):
             "andamento": dados,
             "linha_das_inscricoes": andamento.linha_das_inscricoes(dados.inscricoes),
             "porque_nada": "" if composto.tem_algo else prov.porque_nada(dados, edital),
+            # A "Atenção" das Etapas sem efeito no GPS (127, FR-4087), a mesma frase do detalhe.
+            "frase_da_atencao": prov.frase_da_atencao(dados.atencoes),
+            # **Os destinos dos marcos a quem não vê a matriz** (127, FR-4108). Quem vê a matriz os
+            # lê em "Onde cada lista está"; os demais — quem só divulga resultado, por exemplo —
+            # chegavam por eles no detalhe sem abrir a matriz, e sem eles voltaria o `ACH-40`.
+            "perfis_com_destinos": (
+                [] if dados.ve_a_matriz else [perfil for perfil in dados.perfis if perfil.destinos]
+            ),
             # A principal do conjunto é o ato do Edital, e vem cheia como no detalhe — a não ser
             # que a pessoa tenha o que fazer, e então a principal é isso (127, FR-4088).
             "peso_da_principal": "secundario" if composto.tem_sua else "",

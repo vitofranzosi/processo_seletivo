@@ -171,6 +171,9 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   </ul>
   {% endif %}
 
+  {% comment %} A "Atenção" das Etapas declaradas que nenhum ato do GPS consome (127, FR-4087), como no detalhe. {% endcomment %}
+  {% if frase_da_atencao %}<p class="atencao-do-andamento"><strong>Atenção:</strong> {{ frase_da_atencao }}</p>{% endif %}
+
   {% for item in retificacoes_em_curso %}
   <p class="aviso cc-retificacao"><strong>Retificação em curso</strong> ({{ item.rotulo_situacao }}){% if item.meu_ato %} — aguarda você: <a href="{{ item.url }}">{{ item.ato_na_lista }}</a>{% elif item.parada %} — não pode mais prosseguir: o Edital foi {{ item.parada }}{% else %} — aguarda {{ item.passo.papel }}{% endif %}. Ela pode mudar datas, vagas ou regras de qualquer fase.</p>
   {% endfor %}
@@ -198,7 +201,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   {% if edital.status == 'ENCERRADO' %}<p>O Edital foi encerrado. Os atos de todas as fases estão no histórico e nos documentos publicados.</p>
   {% else %}<p>O Edital se encerra quando nenhuma lista tiver ato em aberto. O encerramento é do Gestor, em <a href="#administracao">Administração e histórico</a>, e a tela dele mostra antes o que ainda falta.</p>{% endif %}
   {% elif not centro.ve_a_matriz %}
-  <p class="cc-nota">O detalhe desta fase por lista é de quem conduz ou audita a seleção — a mesma regra do "Andamento da seleção" da página atual. O que depende de você está em "O que fazer agora".</p>
+  <p class="cc-nota">O detalhe desta fase por lista é de quem conduz ou audita a seleção. O que depende de você está em "O que fazer agora".</p>
   {% elif not fase.perfis %}
   <p class="cc-fraco">Este Edital não tem esta fase.</p>
   {% else %}
@@ -287,6 +290,21 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
     {% endif %}
     {% if perfil.matricula_fora %}<p class="cc-nota">Todas as convocações têm desfecho. A matrícula acontece fora do GPS.</p>{% endif %}
   </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% comment %}
+Os destinos dos marcos para quem não vê a matriz (127, FR-4108). Quem só divulga resultado não recebe
+"Onde cada lista está", e é por estes links que chega ao marco — no detalhe eles ficavam fora da matriz
+pela mesma razão. Só os Perfis que a pessoa alcança, como lá.
+{% endcomment %}
+{% if perfis_com_destinos %}
+<section class="cartao cc-listas" aria-labelledby="telas-dos-marcos-titulo">
+  <h2 id="telas-dos-marcos-titulo">Telas dos marcos</h2>
+  {% for perfil in perfis_com_destinos %}
+  <p class="cc-telas"><strong>{{ perfil.nome }}</strong> <span class="cc-fraco">· {{ perfil.forma }}</span> —
+    {% for item in perfil.destinos %}{% for destino in item.destinos %}<a href="{{ destino.url }}">{{ destino.rotulo }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
   {% endfor %}
 </section>
 {% endif %}

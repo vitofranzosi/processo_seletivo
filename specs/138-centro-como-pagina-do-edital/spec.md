@@ -267,8 +267,10 @@ detalhe de antes, com o mesmo conteúdo para o mesmo papel.
 - **FR-4871**: O bloco "Administração e histórico" do Centro MUST oferecer o que o detalhe oferecia ao
   Edital publicado e o Centro não tinha, nas mesmas condições: as respostas do assistente de dúvidas
   (a FR-1413 da `070`); a conversa com o assistente, só para quem participa do piloto e só com o
-  piloto ligado; e o aviso de conteúdo imutável com a condução da `037`, que cala para quem pode
-  retificar.
+  piloto ligado; o aviso de conteúdo imutável com a condução da `037`, que cala para quem pode
+  retificar; a "Atenção" das Etapas que nenhum ato do GPS consome (a FR-4087 da `127`); e, para quem
+  não vê a matriz, os destinos dos marcos (a FR-4108 da `127`), pelos quais quem só divulga resultado
+  chega ao marco.
 - **FR-4872**: O cartão "Quem atuou" do Centro MUST mostrar as datas de cada ato e a unidade da
   autoridade signatária, no lugar do link para o detalhe, que passaria a levar à própria página.
 
@@ -385,7 +387,10 @@ volta.
 
 Para que a página anterior possa sair depois do ciclo sem levar consigo um destino, o Centro recebe o
 que só o detalhe oferecia ao Edital publicado: as respostas do assistente de dúvidas, a conversa com o
-assistente do piloto, o aviso de conteúdo imutável e as datas de "Quem atuou". São links e textos que
+assistente do piloto, o aviso de conteúdo imutável, a "Atenção" das Etapas sem efeito no GPS, os
+destinos dos marcos para quem não vê a matriz e as datas de "Quem atuou". Os dois penúltimos vieram
+da revisão do PR #451: sem os destinos, quem só divulga resultado abria a página do Edital e não
+encontrava caminho até o marco. São links e textos que
 o detalhe já mostrava, nas mesmas condições: nenhuma regra nova.
 
 ### D-006 — O título é o do Edital

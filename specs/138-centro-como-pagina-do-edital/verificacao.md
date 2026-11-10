@@ -76,3 +76,19 @@ autoridade criada para o banco), servidor pela entrada `centro-138` do `.claude/
   não deixam registro de conferência para o Edital.
 - O ato real pelo navegador: nenhum Edital dos cenários carregados podia ser publicado ou encerrado sem
   forçar o cenário.
+
+## A revisão do PR #451
+
+Quatro achados, corrigidos na mesma branch, cada um com teste:
+
+1. **Quem só divulga resultado perdia o caminho até o marco.** No Centro, os destinos dos marcos só
+   apareciam em "Onde cada lista está", que é de quem vê a matriz. Agora, quem não a vê recebe "Telas
+   dos marcos", com os mesmos destinos que o detalhe mostrava fora da matriz
+   (`test_quem_so_divulga_chega_ao_marco_pelo_centro`, com o publicador de uma ordem a divulgar).
+2. **A "Atenção" das Etapas sem efeito no GPS sumira.** Volta em "O que fazer agora", pela mesma
+   `providencias.frase_da_atencao` (`test_a_atencao_das_etapas_sem_efeito_aparece_no_centro`).
+3. **O orçamento de `test_centro_em_escala.py` media a mesma rota duas vezes.** A medida de
+   comparação passou a ser a página anterior.
+4. **A nota da fase consultada remetia ao "Andamento da seleção" da "página atual"**, que agora é o
+   próprio Centro. A remissão saiu; o primeiro teste confere a ausência.
+

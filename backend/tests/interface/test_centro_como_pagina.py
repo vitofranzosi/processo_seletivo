@@ -6,6 +6,7 @@ praticado pela tela de confirmação, como quem clica. **Os endereços antigos c
 (FR-4863), e **a página anterior** fica por um ciclo, por um link só (FR-4873 a FR-4875).
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from processo_seletivo.interface import andamento, atos
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.andamento import certame_s1
 from tests.fixtures.autoridades import registrar_unidade
+from tests.fixtures.divulgacao import montar_ato_publicavel
 from tests.fixtures.publicacao import publish_original
 from tests.interface.conftest import compor_rascunho, identificar
 from tests.interface.test_fluxo import EVENTOS, MARCOS, PERFIS, SIGNATARIO, praticar
@@ -40,6 +42,21 @@ def chegada(client, resposta):
 
 def retorno(ato):
     return f"Ato registrado: {atos.ATOS[ato].rotulo}."
+
+
+@pytest.fixture
+def cenario_de_divulgacao(gestor, api_client, manager_headers, process_payload):
+    """Uma ordem emitida a divulgar, como a de `test_publicar_resultado.py`, com chaves próprias."""
+    return montar_ato_publicavel(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        seed=138,
+        codigo="0138",
+        pontuacoes=("90.0000", "70.0000", None),
+        primeiro=1381,
+    )
 
 
 @pytest.fixture
@@ -280,3 +297,51 @@ def test_o_imutavel_cala_a_conducao_para_quem_pode_retificar(client, s1):
     com = client.get(url).context["conducao_do_imutavel"]
 
     assert {sem, com} != {""} and "" in {sem, com}
+
+
+# ---------------------------------------------------------------------------------------------
+# A revisão do PR #451
+# ---------------------------------------------------------------------------------------------
+
+
+def test_quem_so_divulga_chega_ao_marco_pelo_centro(client, seletor_ligado, cenario_de_divulgacao):
+    """FR-4108 da 127, `ACH-40`: quem só tem `resultado:publicar` não vê a matriz, e no detalhe
+    chegava ao marco pelos destinos fora dela. No Centro, os mesmos destinos, em "Telas dos
+    marcos"."""
+    edital = cenario_de_divulgacao["edital"]
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    anterior = client.get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
+    lista = anterior.split('<ul class="destinos-do-perfil">', 1)[1].split("</ul>", 1)[0]
+    destinos = re.findall(r'<a href="([^"]+)"', lista)
+    assert destinos, "o detalhe deixou de oferecer destino a quem divulga"
+
+    pagina = client.get(reverse("interface:detalhe", args=[edital.id]) + "?fase=classificacao")
+    assert desenhado(pagina) == CENTRO
+    assert not pagina.context["andamento"].ve_a_matriz
+    texto = pagina.content.decode()
+    secao = texto.split('aria-labelledby="telas-dos-marcos-titulo"', 1)[1].split("</section>", 1)[0]
+    assert all(f'href="{url}"' in secao for url in destinos), (destinos, secao)
+    # A nota da fase consultada não remete mais à "página atual", que agora é o próprio Centro.
+    assert "página atual" not in texto
+
+
+def test_quem_ve_a_matriz_le_os_destinos_em_onde_cada_lista_esta(client, s1):
+    """A seção nova é só de quem não vê a matriz: os demais leem "Telas do marco" na matriz."""
+    identificar(client, "carlos", ["gestor"])
+    pagina = client.get(reverse("interface:detalhe", args=[s1["edital"].id]))
+
+    assert pagina.context["andamento"].ve_a_matriz
+    assert "telas-dos-marcos-titulo" not in pagina.content.decode()
+
+
+def test_a_atencao_das_etapas_sem_efeito_aparece_no_centro(client, s1):
+    """FR-4087 da 127: a "Atenção" que o detalhe mostrava, em "O que fazer agora"."""
+    identificar(client, "carlos", ["gestor"])
+    texto = client.get(reverse("interface:detalhe", args=[s1["edital"].id])).content.decode()
+
+    agora = texto.split('id="agora-titulo"', 1)[1].split("</section>", 1)[0]
+    assert (
+        '<p class="atencao-do-andamento"><strong>Atenção:</strong> Análise documental e Prova '
+        "didática estão declaradas" in agora
+    )
