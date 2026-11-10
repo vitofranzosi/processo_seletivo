@@ -16,7 +16,7 @@ pastilha do cartão da chamada.
   {% if lugar.perfil %}<div><dt>Perfil</dt><dd>{{ lugar.perfil }}</dd></div>{% endif %}
   {% if lugar.marco %}<div><dt>Marco</dt><dd>{{ lugar.marco }}</dd></div>{% endif %}
   {% if lugar.lista %}<div><dt>Lista</dt><dd>{{ lugar.lista }}</dd></div>{% endif %}
-  <div><dt>Situação do prazo</dt><dd>{% if linha.estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}<span class="situacao s-CANCELADO">Sem comunicação: o prazo não corre</span>{% elif linha.estado == "CONVOCADO_PRAZO_EM_CURSO" %}<span class="situacao s-PUBLICADO">Prazo em curso</span>{% elif linha.estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}<span class="situacao s-EM_REVISAO">Vencimento decorrido</span>{% else %}<span class="situacao s-ENCERRADO">Com desfecho</span>{% endif %}{% if enviada_em %} <span class="ajuda">comunicação de {{ enviada_em|date:"d/m/Y H:i" }}</span>{% endif %}</dd></div>
+  <div><dt>Situação do prazo</dt><dd>{% if linha.estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}<span class="situacao s-CANCELADO">{{ linha.canal.pastilha_sem_comunicacao }}</span>{% elif linha.estado == "CONVOCADO_PRAZO_EM_CURSO" %}<span class="situacao s-PUBLICADO">Prazo em curso</span>{% elif linha.estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}<span class="situacao s-EM_REVISAO">Vencimento decorrido</span>{% else %}<span class="situacao s-ENCERRADO">Com desfecho</span>{% endif %}{% if enviada_em %} <span class="ajuda">comunicação de {{ enviada_em|date:"d/m/Y H:i" }}</span>{% endif %}</dd></div>
 </dl>
 {% endwith %}
 

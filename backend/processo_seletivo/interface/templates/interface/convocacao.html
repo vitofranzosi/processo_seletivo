@@ -401,7 +401,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     conferidos"* dizia o mesmo de três conformes e de três afastados.
     {% endcomment %}
     <p class="nota"><strong>{{ linha.rotulo_documental }}</strong> — {{ linha.documentos.contagens.conformes }} de {{ linha.documentos.contagens.total }} conforme{{ linha.documentos.contagens.conformes|pluralize }}{% if linha.documentos.contagens.nao_se_aplica %} · {{ linha.documentos.contagens.nao_se_aplica }} não se aplica após análise{% endif %}{% if linha.documentos.contagens.recebidos %} · {{ linha.documentos.contagens.recebidos }} para conferir{% endif %}{% if linha.documentos.contagens.complementados %} · {{ linha.documentos.contagens.complementados }} complementado{{ linha.documentos.contagens.complementados|pluralize }}{% endif %}{% if linha.documentos.contagens.pendentes %} · {{ linha.documentos.contagens.pendentes }} pendente{{ linha.documentos.contagens.pendentes|pluralize }}{% endif %}{% if linha.documentos.contagens.a_apresentar %} · {{ linha.documentos.contagens.a_apresentar }} a apresentar{% endif %}
-      · <a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id linha.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Documentos da convocação</a></p>
+      {% comment %}Só para quem confere (revisão do #453): a página dos documentos recusa a auditoria (115, FR-3595, FR-3598), e o link era um convite a um 403.{% endcomment %}{% if confere %}· <a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id linha.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Documentos da convocação</a>{% endif %}</p>
     {% endif %}
     <details class="como-preencher">
       <summary>Fundamento da convocação</summary>

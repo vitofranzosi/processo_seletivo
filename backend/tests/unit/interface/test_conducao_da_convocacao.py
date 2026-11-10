@@ -184,7 +184,7 @@ def test_envio_desabilitado_e_dito():
     situacao = c.situacao_do_aviso(_com_pendencia(), motivo="", habilitado=False)
 
     assert "desabilitado" in situacao.frase_do_aviso
-    assert situacao.oferece_o_aviso  # o link leva à seção, que diz o mesmo e não tem botão
+    assert not situacao.oferece_o_aviso  # a seção não tem botão: o link seria um beco (#453)
 
 
 @pytest.mark.parametrize(
@@ -241,14 +241,20 @@ def test_sem_pendencia_nem_reenvio_nao_ha_situacao():
 # --- O índice (FR-5001 a FR-5004, D-002) --------------------------------------------------------
 
 
-def _linha(estado, docs=None, *, vencimento=None, n=1, desfecho_=None, apto=False):
+def _linha(estado, docs=None, *, vencimento=None, n=1, desfecho_=None, apto=False, aviso=None):
+    """Uma linha já anotada (`anotar`): o índice lê a pendência e o aviso do cartão."""
     return {
         "convocacao": SimpleNamespace(id=f"c{n}", vencimento=vencimento),
         "estado": estado,
         "desfecho": desfecho_,
         "documentos": docs,
         "apto": apto,
+        "aviso": aviso,
     }
+
+
+def _aviso_alcancavel(habilitado=True):
+    return c.SituacaoDoAviso(pendencia_em=AGORA, alcancavel=True, habilitado=habilitado)
 
 
 def _leitura(linhas, **extra):
@@ -276,7 +282,6 @@ def _indice(leitura, **opcoes):
         "pode_convocar": True,
         "pode_emitir": True,
         "confere": True,
-        "pendencias_a_avisar": None,
         "sem_inscrito": False,
         "marco_intermediario": None,
         "secao_dos_pendentes": False,
@@ -298,6 +303,7 @@ def test_o_indice_leva_a_primeira_chamada_de_cada_pergunta():
             documentos(nomes.DOCUMENTOS_COM_PENDENCIA, pendentes=1),
             vencimento=AGORA + timedelta(days=3),
             n=2,
+            aviso=_aviso_alcancavel(),
         ),
         _linha(
             nomes.CONVOCADO_PRAZO_EM_CURSO,
@@ -305,18 +311,14 @@ def test_o_indice_leva_a_primeira_chamada_de_cada_pergunta():
             n=3,
         ),
     ]
-    perguntas = _indice(
-        _leitura(linhas),
-        titulares={"pessoas": []},
-        pendencias_a_avisar={"alcancadas": 1, "exclusoes": []},
-    )
+    perguntas = _indice(_leitura(linhas), titulares={"pessoas": []})
 
     assert perguntas["a_conferir"].ancora == "convocacao-c3"
     assert perguntas["a_conferir"].trabalho
     assert perguntas["pendencia"].ancora == "convocacao-c2"
     assert perguntas["pendencia"].detalhe == "1 pode ser avisada agora"
     assert perguntas["pendencia"].detalhe_ancora == "avisar-pendencias"
-    assert not perguntas["pendencia"].trabalho  # é o candidato quem age
+    assert perguntas["pendencia"].trabalho  # o aviso é de quem confere
     assert perguntas["aguardando"].quantas == 3
     assert "13/11/2026" in perguntas["aguardando"].detalhe  # o primeiro vencimento
     assert perguntas["a_convocar"].quantas == 0 and perguntas["a_convocar"].ancora == ""
@@ -350,7 +352,6 @@ def _opcoes(**extra):
         "pode_convocar": True,
         "pode_emitir": True,
         "confere": True,
-        "pendencias_a_avisar": None,
         "sem_inscrito": False,
         "marco_intermediario": None,
         "secao_dos_pendentes": True,
@@ -369,7 +370,7 @@ def test_quem_so_consulta_nao_tem_trabalho_marcado_nem_titulares():
         )
     }
 
-    assert "a_convocar" not in perguntas
+    assert perguntas["a_convocar"].ancora == ""
     assert not any(p.trabalho for p in perguntas.values())
 
 
@@ -387,3 +388,93 @@ def test_sem_providencia_quando_ninguem_tem_ato():
 
 def test_lista_que_ninguem_declarou_nao_tem_perguntas():
     assert c.indice(leitura=_leitura([]), **_opcoes(sem_inscrito=True)) == []
+
+
+# --- As regressões da revisão do #453 ---------------------------------------------------------
+
+
+def test_com_envio_desabilitado_o_aviso_nao_e_oferecido_nem_contado():
+    """Achado 1: com `AVISOS_AOS_CANDIDATOS` desligado, nem o cartão nem o índice oferecem o
+    gesto — a seção diz que está desabilitado e não tem botão."""
+    situacao = c.situacao_do_aviso(_com_pendencia(), motivo="", habilitado=False)
+    linhas = [
+        _linha(
+            nomes.CONVOCADO_PRAZO_EM_CURSO,
+            documentos(nomes.DOCUMENTOS_COM_PENDENCIA, pendentes=1),
+            aviso=_aviso_alcancavel(habilitado=False),
+        )
+    ]
+    perguntas = c.indice(leitura=_leitura(linhas), **_opcoes())
+    pendencia = next(p for p in perguntas if p.chave == "pendencia")
+
+    assert not situacao.oferece_o_aviso
+    assert "desabilitado" in situacao.frase_do_aviso
+    assert (pendencia.quantas, pendencia.detalhe, pendencia.detalhe_ancora) == (1, "", "")
+    assert not pendencia.trabalho and not pendencia.ato
+    assert c.sem_providencia(perguntas)
+
+
+def test_titulares_com_o_gesto_impedido_nao_sao_trabalho_e_o_indice_diz_o_impedimento():
+    """Achado 2: a prévia lista as pessoas mesmo com a apuração obsoleta; o índice não as conta
+    como trabalho, não aponta para o gesto, e diz por quê."""
+    titulares = {
+        "pessoas": [{"id": 1}, {"id": 2}, {"id": 3}],
+        "impedimento": {"codigo": "apuracao_obsoleta", "detalhe": "A apuração está obsoleta."},
+    }
+    perguntas = c.indice(leitura=_leitura([]), **_opcoes(titulares=titulares))
+    a_convocar = next(p for p in perguntas if p.chave == "a_convocar")
+
+    assert (a_convocar.quantas, a_convocar.ancora) == (0, "")
+    assert not a_convocar.trabalho and not a_convocar.ato
+    assert a_convocar.detalhe == "o gesto está impedido: A apuração está obsoleta."
+
+
+def test_quem_nao_convoca_le_que_ha_titulares_por_outro_papel():
+    """Achado 3 (a): a auditoria e quem só confere não leem "nenhum ato" com titulares esperando."""
+    perguntas = c.indice(
+        leitura=_leitura([]),
+        **_opcoes(
+            titulares={"pessoas": [{"id": 1}, {"id": 2}, {"id": 3}]},
+            pode_convocar=False,
+            pode_emitir=False,
+            confere=False,
+        ),
+    )
+    a_convocar = next(p for p in perguntas if p.chave == "a_convocar")
+
+    assert a_convocar.quantas == 3
+    assert a_convocar.texto == "titulares a convocar, por quem conduz a convocação"
+    assert a_convocar.ancora == "" and not a_convocar.trabalho
+    assert not c.sem_providencia(perguntas)
+
+
+def test_o_aviso_alcancavel_e_ato_a_praticar():
+    """Achado 3 (b): a única chamada tem pendência que o gesto alcança: há ato, e a frase de que
+    não há nenhum não aparece ao lado de "1 pode ser avisada agora"."""
+    linhas = [
+        _linha(
+            nomes.CONVOCADO_PRAZO_EM_CURSO,
+            documentos(nomes.DOCUMENTOS_COM_PENDENCIA, pendentes=1),
+            aviso=_aviso_alcancavel(),
+        )
+    ]
+    perguntas = c.indice(leitura=_leitura(linhas), **_opcoes())
+
+    assert not c.sem_providencia(perguntas)
+
+
+def test_pendencia_e_aviso_contam_o_mesmo_conjunto():
+    """Achado 6: um documento pendente e outro recém-recebido — a chamada está "a conferir" pelo
+    estado documental, e é também "com pendência", que é o que o gesto do aviso alcança."""
+    linhas = [
+        _linha(
+            nomes.CONVOCADO_PRAZO_EM_CURSO,
+            documentos(nomes.DOCUMENTOS_PARA_CONFERIR, recebidos=1, pendentes=1),
+            aviso=_aviso_alcancavel(),
+        )
+    ]
+    perguntas = {p.chave: p for p in c.indice(leitura=_leitura(linhas), **_opcoes())}
+
+    assert perguntas["pendencia"].quantas == 1
+    assert perguntas["pendencia"].detalhe == "1 pode ser avisada agora"
+    assert perguntas["a_conferir"].quantas == 1

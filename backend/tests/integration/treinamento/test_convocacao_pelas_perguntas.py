@@ -13,7 +13,6 @@ As regras sem banco estão em `tests/unit/interface/test_conducao_da_convocacao.
 import re
 
 import pytest
-from django.core.management import call_command
 from django.urls import reverse
 
 from processo_seletivo.convocacao.application import documentos as servico
@@ -119,6 +118,15 @@ def test_c10(client, cenario):
     assert "a ocupação dele ainda não foi apurada" in reservada
     assert "Não há gesto a praticar agora" in reservada
     assert "não quer dizer convocada" not in reservada
+    assert "o gesto está impedido" in reservada
+
+    # Quem não convoca lê que há titulares esperando, por outro papel, e não "nenhum ato" (revisão
+    # do #453, achado 3).
+    identificar(client, "auditora-143", ["auditor"])
+    leitura = _abrir(client, edital, marco_id).content.decode()
+    item, link = _pergunta(leitura, "titulares a convocar")
+    assert "por quem conduz a convocação" in item and link is None, item
+    assert "Nenhum ato a praticar" not in leitura
 
 
 def _marco_e_ppp(edital):
@@ -144,7 +152,7 @@ def _perfil(edital):
 # ---------------------------------------------------------------------------------------------
 
 
-def test_c11(client, cenario):
+def test_c11(client, cenario, settings):
     edital, manifesto = cenario("C11")
     identificar(client, k.PRESIDENCIA, [])
     marco_id = _marco_da_convocacao(edital)
@@ -168,6 +176,14 @@ def test_c11(client, cenario):
     assert "Aguardando o candidato enviar 2 documentos." in _cartao(corpo, alice.id)
     assert "Conferir os documentos</a>" in _cartao(corpo, cecilia.id)
 
+    # Com o envio de avisos desligado — o padrão de produção —, nada oferece o gesto (revisão do
+    # #453, achado 1): nem o cartão, nem o índice.
+    settings.AVISOS_AOS_CANDIDATOS = False
+    desligado = _abrir(client, edital, marco_id).content.decode()
+    assert "O envio de avisos está desabilitado" in _cartao(desligado, bernardo.id)
+    assert '<a href="#avisar-pendencias">' not in desligado.split('id="avisar-pendencias"')[0]
+    settings.AVISOS_AOS_CANDIDATOS = True
+
     # Momento 1: a pendência registrada, sem aviso (FR-5017, FR-5018).
     cartao = _cartao(corpo, bernardo.id)
     assert "Pendência registrada em" in cartao
@@ -187,8 +203,10 @@ def test_c11(client, cenario):
     assert "ainda não foi enviado" in cartao
     assert "pode ser pedido agora" not in cartao
 
-    # Momento 3: o despacho envia; a tela diz o que o servidor de correio respondeu.
-    call_command("despachar_avisos")
+    # Momento 3: o envio. **As tentativas gravadas fora da ordem do número** (revisão do #453,
+    # achado 5): a segunda, aceita, antes da primeira, que falhou. O estado da `066` lê a última
+    # pelo número; lida na ordem em que o banco a devolvesse, a tela diria "falha temporária".
+    _tentativas_fora_de_ordem(bernardo)
     cartao = _cartao(_abrir(client, edital, marco_id).content.decode(), bernardo.id)
     assert "aceito pelo servidor de correio em" in cartao
     assert "entregue" not in cartao
@@ -224,7 +242,34 @@ def test_c11(client, cenario):
     assert "Neste recorte, agora" in leitura
     assert "com-trabalho" not in leitura
     assert "Conferir os documentos</a>" not in leitura
+    # O link dos documentos, que a página recusaria à auditoria, só aparece a quem confere
+    # (revisão do #453, achado 4); o rótulo e as contagens continuam.
+    assert "Documentos da convocação</a>" not in leitura
+    assert "Documentos para conferir" in leitura
     assert "<form" not in leitura.split('id="chamadas"', 1)[1]
+
+
+def _tentativas_fora_de_ordem(convocacao):
+    from django.utils import timezone
+
+    from processo_seletivo.avisos.domain import nomes as avisos
+    from processo_seletivo.avisos.models import (
+        DestinatarioDoAviso,
+        ResultadoDaTentativa,
+        TentativaDeEnvio,
+    )
+
+    destinatario = DestinatarioDoAviso.objects.get(
+        convocacao=convocacao, aviso__origem=avisos.PENDENCIA
+    )
+    agora = timezone.now()
+    for numero, resultado in ((2, avisos.ACEITA), (1, avisos.FALHA_TEMPORARIA)):
+        tentativa = TentativaDeEnvio.objects.create(
+            destinatario=destinatario, numero=numero, iniciada_em=agora
+        )
+        ResultadoDaTentativa.objects.create(
+            tentativa=tentativa, resultado=resultado, registrado_em=agora
+        )
 
 
 # ---------------------------------------------------------------------------------------------

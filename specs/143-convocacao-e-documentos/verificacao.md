@@ -68,3 +68,24 @@ não defeito:
 Corrigidas as três, a pasta `tests/interface` inteira, os avisos, as jornadas de navegador da
 convocação, os guardiões de citação, vocabulário e README e os testes desta spec: **5.251 passando,
 1 pulado**, sem falha (250 s).
+
+## Revisão do #453 (10/11)
+
+Oito achados da revisão, corrigidos sem mudar regra das `115`, `117`, `118` e `140`, e sem estado
+persistido:
+
+| # | Achado | Correção | Regressão |
+|---|---|---|---|
+| 1 | aviso oferecido com o envio desabilitado | `oferece_o_aviso` e o detalhe do índice exigem o envio habilitado | `unit::test_com_envio_desabilitado_o_aviso_nao_e_oferecido_nem_contado`, `t::test_c11` |
+| 2 | "titulares a convocar" com o gesto impedido | sem trabalho nem âncora; o índice diz o impedimento | `unit::test_titulares_com_o_gesto_impedido_nao_sao_trabalho_e_o_indice_diz_o_impedimento`, `t::test_c10` (PPP) |
+| 3 | "Nenhum ato a praticar" com ato pendente | a frase vale só sem ato para ninguém; quem não convoca lê "titulares a convocar, por quem conduz a convocação"; o aviso alcançável conta | `unit::test_quem_nao_convoca_le_que_ha_titulares_por_outro_papel`, `unit::test_o_aviso_alcancavel_e_ato_a_praticar`, `t::test_c10` (auditoria) |
+| 4 | link dos documentos para quem não confere (A-2) | sob `confere`; o rótulo e as contagens ficam | `t::test_c11` (auditoria) |
+| 5 | tentativas de envio sem ordem | `Prefetch` ordenado pelo número, como o seletor da `066`; a raiz por `raizes_das` | `t::test_c11` (tentativas gravadas fora de ordem — falha sem o `order_by`, conferido) |
+| 6 | "com pendência" e "pode ser avisada" em conjuntos diferentes | os dois contam a chamada com documento pendente, a que o gesto da `134` seleciona | `unit::test_pendencia_e_aviso_contam_o_mesmo_conjunto` |
+| 7 | rótulo do canal escrito à mão | `linha.canal.pastilha_sem_comunicacao` (a FR-4000 da `125`) | — |
+| 8 | leituras repetidas nos documentos | a leitura e a identidade vêm das vizinhas; `pendencias_a_avisar` saiu do contexto | — |
+
+`make lint check` limpo; `tests/interface`, `tests/unit/interface`, `tests/integration/avisos`,
+`tests/integration/convocacao`, os testes desta spec e da `139`, os de desempenho da condução, as
+jornadas de navegador da convocação e os guardiões: **6.196 passando, 1 pulado**, sem falha (356 s).
+A suíte inteira sobre a integração dos três PRs fica com a revisão.

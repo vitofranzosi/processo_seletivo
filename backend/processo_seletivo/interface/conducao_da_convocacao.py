@@ -214,7 +214,12 @@ class SituacaoDoAviso:
 
     @property
     def oferece_o_aviso(self):
-        return bool(self.pendencia_em and self.aviso_em is None and self.alcancavel)
+        """O link para o gesto: só se ele a alcançaria **e** o envio está habilitado — com
+        `AVISOS_AOS_CANDIDATOS` desligado, o padrão de produção, a seção diz que está desabilitado
+        e não tem botão, e o cartão não pode mandar a pessoa até lá (revisão do #453)."""
+        return bool(
+            self.pendencia_em and self.aviso_em is None and self.alcancavel and self.habilitado
+        )
 
 
 def _pendencia_e_reenvio(documentos):
@@ -230,26 +235,27 @@ def _pendencia_e_reenvio(documentos):
     return pendencia, reenvio
 
 
-def _raiz_no_recorte(convocacao, por_id):
-    atual = convocacao
-    while atual.convocacao_anterior_id in por_id:
-        atual = por_id[atual.convocacao_anterior_id]
-    return atual.id
-
-
 def avisos_por_raiz(convocacoes, *, agora):
     """`{id da raiz: (destinatário mais recente, estado, aceito_em)}` dos avisos de pendência.
 
-    **Uma consulta, com as tentativas em `prefetch`** (FR-5027): a tela não paga uma por linha. O
-    destinatário pode ser de uma convocação que outra corrigiu depois: a raiz é subida dentro das
-    convocações do recorte, que a tela já leu, e cai na mesma chamada que o cartão mostra.
+    **Em consultas de número fixo, com as tentativas em `prefetch` e na ordem do número**
+    (FR-5027): a tela não paga uma por linha, e o estado da `066` lê a última tentativa — sem
+    `order_by`, a "última" seria a que o banco devolvesse por último. O destinatário pode ser de uma
+    convocação que outra corrigiu depois: a raiz é a da regra da condução (`raizes_das`), a mesma
+    que a prévia do gesto usa, e cai na chamada que o cartão mostra.
     """
     from django.conf import settings
+    from django.db.models import Prefetch
 
     from processo_seletivo.avisos.application.selectors import tentativas_de
     from processo_seletivo.avisos.domain import estado as estado_do_aviso
     from processo_seletivo.avisos.domain import nomes as avisos
-    from processo_seletivo.avisos.models import DestinatarioDoAviso, InterrupcaoDoAviso
+    from processo_seletivo.avisos.models import (
+        DestinatarioDoAviso,
+        InterrupcaoDoAviso,
+        TentativaDeEnvio,
+    )
+    from processo_seletivo.convocacao.application import documentos as documentos_app
 
     por_id = {c.id: c for c in convocacoes}
     if not por_id:
@@ -259,13 +265,22 @@ def avisos_por_raiz(convocacoes, *, agora):
             aviso__origem=avisos.PENDENCIA, convocacao_id__in=list(por_id)
         )
         .select_related("aviso", "aviso__interrupcao")
-        .prefetch_related("tentativas__resultado")
+        .prefetch_related(
+            Prefetch(
+                "tentativas",
+                queryset=TentativaDeEnvio.objects.select_related("resultado").order_by("numero"),
+            )
+        )
         .order_by("aviso__solicitado_em", "id")
+    )
+    if not destinatarios:
+        return {}
+    raizes = documentos_app.raizes_das(
+        {d.convocacao_id: por_id[d.convocacao_id] for d in destinatarios}.values()
     )
     ultimos = {}
     for destinatario in destinatarios:
-        raiz = _raiz_no_recorte(por_id[destinatario.convocacao_id], por_id)
-        ultimos[raiz] = destinatario
+        ultimos[raizes[destinatario.convocacao_id].id] = destinatario
     resultado = {}
     for raiz, destinatario in ultimos.items():
         tentativas = tentativas_de(destinatario)
@@ -369,6 +384,9 @@ class Pergunta:
     trabalho: bool = False
     detalhe: str = ""
     detalhe_ancora: str = ""
+    #: Se há ato a praticar **por alguém** no recorte, seja ou não de quem está vendo: é o que
+    #: decide a frase "Nenhum ato a praticar" (FR-5004, revisão do #453).
+    ato: bool = False
 
 
 def _primeira(linhas, condicao):
@@ -391,7 +409,6 @@ def indice(
     pode_convocar,
     pode_emitir,
     confere,
-    pendencias_a_avisar,
     sem_inscrito,
     marco_intermediario,
     secao_dos_pendentes,
@@ -399,24 +416,44 @@ def indice(
 ):
     """As perguntas do índice, na ordem fixa da FR-5001, com o número e o lugar do ato.
 
-    `secao_dos_*` diz se a tela desenhou a seção — o link só vai para onde há o que ver.
+    `secao_dos_*` diz se a tela desenhou a seção — o link só vai para onde há o que ver. As
+    linhas já vêm anotadas (`anotar`): a pendência e o aviso saem do cartão de cada uma.
+    `titulares` é a prévia do gesto, lida para todos os que leem; `None` onde o marco não convoca.
     """
     linhas = leitura["linhas"]
     por_estado = leitura["porEstado"]
     perguntas = []
     if sem_inscrito:
         return perguntas
-    if pode_convocar and not marco_intermediario:
-        quantas = len((titulares or {}).get("pessoas") or [])
-        perguntas.append(
-            Pergunta(
-                "a_convocar",
-                quantas,
-                "titular a convocar" if quantas == 1 else "titulares a convocar",
-                "titulares" if quantas else "",
-                trabalho=bool(quantas),
+    if not marco_intermediario and titulares is not None:
+        # **Para todos os que leem**, e não só para quem convoca: a auditoria e quem só confere
+        # precisam saber que há titulares esperando, por outro papel (revisão do #453). **Com o
+        # gesto impedido, não é trabalho nem tem âncora**: a prévia lista as pessoas mesmo com a
+        # apuração obsoleta ou sem forma de comunicação, e a seção diz que não há gesto — o índice
+        # diz o mesmo, com o impedimento.
+        pessoas = len(titulares.get("pessoas") or [])
+        impedimento = titulares.get("impedimento")
+        if impedimento:
+            perguntas.append(
+                Pergunta(
+                    "a_convocar",
+                    0,
+                    "titulares a convocar agora",
+                    detalhe=f"o gesto está impedido: {impedimento['detalhe']}",
+                )
             )
-        )
+        else:
+            perguntas.append(
+                Pergunta(
+                    "a_convocar",
+                    pessoas,
+                    ("titular a convocar" if pessoas == 1 else "titulares a convocar")
+                    + ("" if pode_convocar or not pessoas else ", por quem conduz a convocação"),
+                    "titulares" if pessoas and pode_convocar else "",
+                    trabalho=bool(pessoas and pode_convocar),
+                    ato=bool(pessoas),
+                )
+            )
     sem_comunicacao = por_estado.get(nomes.CONVOCADO_PRAZO_NAO_INICIADO, 0)
     if sem_comunicacao:
         perguntas.append(
@@ -428,6 +465,7 @@ def indice(
                 if secao_dos_pendentes
                 else _primeira(linhas, lambda x: x["estado"] == nomes.CONVOCADO_PRAZO_NAO_INICIADO),
                 trabalho=pode_emitir,
+                ato=True,
             )
         )
     perguntas.append(
@@ -464,42 +502,61 @@ def indice(
                     linhas, lambda x: x["estado"] == nomes.CONVOCADO_VENCIMENTO_DECORRIDO
                 ),
                 trabalho=pode_emitir,
+                ato=True,
             )
         )
-    for chave, estado, texto, de_quem in (
-        ("a_conferir", nomes.DOCUMENTOS_PARA_CONFERIR, "com documento a conferir", confere),
+
+    # **A pendência e o aviso falam do mesmo conjunto** (revisão do #453): a chamada com um
+    # documento pendente, mesmo que outro esteja a conferir, é "com pendência" — é o conjunto que o
+    # gesto da `134` seleciona —, e "pode ser avisada" é a parte dele que o cartão oferece ao gesto.
+    def com_pendencia(linha):
+        return linha["desfecho"] is None and bool(getattr(linha.get("aviso"), "pendencia_em", None))
+
+    def avisavel(linha):
+        return com_pendencia(linha) and linha["aviso"].oferece_o_aviso
+
+    for chave, condicao, texto, de_quem in (
         (
-            "pendencia",
-            nomes.DOCUMENTOS_COM_PENDENCIA,
-            "com pendência, aguardando o candidato",
-            False,
+            "a_conferir",
+            lambda x: _estado_documental(x) == nomes.DOCUMENTOS_PARA_CONFERIR,
+            "com documento a conferir",
+            confere,
         ),
+        ("pendencia", com_pendencia, "com pendência, aguardando o candidato", False),
         (
             "aguardando_documentos",
-            nomes.DOCUMENTOS_AGUARDANDO,
+            lambda x: _estado_documental(x) == nomes.DOCUMENTOS_AGUARDANDO,
             "aguardando o envio dos documentos",
             False,
         ),
-        ("prontas", nomes.DOCUMENTOS_PRONTA, "prontas para o desfecho", pode_emitir),
+        (
+            "prontas",
+            lambda x: _estado_documental(x) == nomes.DOCUMENTOS_PRONTA,
+            "prontas para o desfecho",
+            pode_emitir,
+        ),
     ):
-        quantas = sum(1 for x in linhas if _estado_documental(x) == estado)
+        quantas = sum(1 for x in linhas if condicao(x))
         if chave in ("a_conferir", "pendencia", "prontas") or quantas:
             detalhe = detalhe_ancora = ""
-            if chave == "pendencia" and pendencias_a_avisar and pendencias_a_avisar["alcancadas"]:
-                alcancadas = pendencias_a_avisar["alcancadas"]
-                detalhe = _n(alcancadas, "pode ser avisada agora", "podem ser avisadas agora")
-                detalhe_ancora = "avisar-pendencias"
+            ato = bool(quantas) and chave != "pendencia"
+            if chave == "pendencia":
+                avisaveis = sum(1 for x in linhas if avisavel(x))
+                if avisaveis:
+                    detalhe = _n(avisaveis, "pode ser avisada agora", "podem ser avisadas agora")
+                    detalhe_ancora = "avisar-pendencias"
+                    de_quem = confere
+                    ato = True
             perguntas.append(
                 Pergunta(
                     chave,
                     quantas,
                     texto,
-                    _primeira(linhas, lambda x, e=estado: _estado_documental(x) == e)
-                    if quantas
-                    else "",
-                    trabalho=bool(quantas and de_quem),
+                    _primeira(linhas, condicao) if quantas else "",
+                    trabalho=bool(ato and de_quem),
                     detalhe=detalhe,
                     detalhe_ancora=detalhe_ancora,
+                    ato=ato,
                 )
             )
     desfechadas = por_estado.get(nomes.DESFECHADO, 0)
@@ -517,9 +574,10 @@ def indice(
 
 
 def sem_providencia(perguntas):
-    """Se nenhuma pergunta tem ato a praticar por alguém (FR-5004): a resposta é dita, sem link."""
-    praticaveis = {"a_convocar", "sem_comunicacao", "vencidas", "a_conferir", "prontas"}
-    return not any(p.quantas for p in perguntas if p.chave in praticaveis)
+    """Se nenhuma pergunta tem ato a praticar **por ninguém** no recorte (FR-5004): só então a
+    frase "Nenhum ato a praticar" aparece. O ato de outro papel conta — a auditoria lia a frase
+    com três titulares esperando —, e o aviso alcançável com o envio habilitado também."""
+    return not any(p.ato for p in perguntas)
 
 
 # --- O contexto do recorte (FR-5000, FR-5019) ---------------------------------------------------
@@ -615,6 +673,7 @@ def pessoas_do_recorte(*, edital, vigente):
         "proxima_a_conferir": pessoa(proxima),
         "posicao": None if posicao is None else posicao + 1,
         "total": len(em_vigor),
+        "identidades": identidades,
         "convocacoes": todas,
         "raizes": raizes,
         "leituras": leituras,

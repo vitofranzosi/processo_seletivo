@@ -8712,11 +8712,16 @@ def convocacao(request, edital_id, marco_id):
     # andamento continua aparecendo depois de cada ato.
     perguntas = conducao_da_convocacao.indice(
         leitura=leitura,
-        titulares=previas.get("titulares"),
+        # **Para todos os que leem** (revisão do #453): quem não convoca lê que há titulares
+        # esperando, por outro papel. A prévia é leitura, da mesma fotografia do recorte.
+        titulares=(
+            None
+            if sem_inscrito or intermediario is not None
+            else previas.get("titulares") or fluxo.previa_dos_titulares(**recorte)
+        ),
         pode_convocar=pode_convocar,
         pode_emitir=pode_emitir,
         confere=confere,
-        pendencias_a_avisar=pendencias_a_avisar,
         sem_inscrito=sem_inscrito,
         marco_intermediario=intermediario,
         secao_dos_pendentes=bool(pode_emitir and (previas.get("pendentes") or {}).get("linhas")),
@@ -8974,7 +8979,17 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     raiz = documentos_app.raiz_da_chamada(convocacao)
     vigente = documentos_app.vigente_da_chamada(raiz)
     desfecho = desfecho_de(vigente)
-    leitura = documentos_app.leitura_da_chamada(raiz, decidida=desfecho is not None)
+    # **A pessoa no recorte dela** (143, FR-5019 a FR-5024): as pessoas vizinhas, numa leitura do
+    # recorte que traz também a leitura documental e a identidade desta — não se leem de novo
+    # (revisão do #453). Fora do recorte, que não deveria acontecer, a leitura da chamada sozinha.
+    vizinhas = conducao_da_convocacao.pessoas_do_recorte(edital=edital, vigente=vigente)
+    leitura = vizinhas["leituras"].get(raiz.id) or documentos_app.leitura_da_chamada(
+        raiz, decidida=desfecho is not None
+    )
+    inscricao = (
+        vizinhas["identidades"].get(convocacao.inscricao_id)
+        or identidades_de({convocacao.inscricao_id})[convocacao.inscricao_id]
+    )
     with command_context() as agora:
         record_event(
             actor=ator,
@@ -8988,12 +9003,10 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
             new_revision=None,
         )
     apresentacoes = [a.id for lido in leitura.itens for a in lido.apresentacoes]
-    # **A pessoa no recorte dela** (143, FR-5019 a FR-5024): o lugar (Edital, Perfil, marco e
-    # lista), o passo e o aviso da pendência — os mesmos do cartão da chamada —, e as pessoas
-    # vizinhas. O recorte é o da convocação, e não o do endereço: a página sabe de que lista é.
+    # O lugar (Edital, Perfil, marco e lista), o passo e o aviso da pendência — os mesmos do cartão
+    # da chamada. O recorte é o da convocação, e não o do endereço: a página sabe de que lista é.
     agora = timezone.now()
     lista_id = request.GET.get("lista") or (str(vigente.lista_id) if vigente.lista_id else "")
-    vizinhas = conducao_da_convocacao.pessoas_do_recorte(edital=edital, vigente=vigente)
     previa_do_aviso = avisos_pendencias.previa(
         actor=ator,
         edital=edital,
@@ -9053,13 +9066,12 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
                     ),
                     None,
                 ),
-                "pendencias_a_avisar": previa_do_aviso,
                 # O desfecho é da gestão (D-005): o link ao cartão da chamada, só para quem conduz.
                 "pode_emitir": pode_gerir_comissao(ator, edital.processo) is not None,
                 "url_da_convocacao": _volta_para_convocacao(edital.id, marco_id, lista_id),
                 "raiz": raiz,
                 "desfecho": desfecho,
-                "inscricao": identidades_de({convocacao.inscricao_id})[convocacao.inscricao_id],
+                "inscricao": inscricao,
                 "leitura": leitura,
                 "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
                 "rotulo_do_item": ROTULO_DO_ITEM,
