@@ -200,7 +200,7 @@ documentos, que é a ordem das perguntas de quem decide.
   <aside class="sorteio-da-selecao" aria-labelledby="sorteio-titulo">
     <h2 id="sorteio-titulo">Sorteio público</h2>
     <p>{% if resumo_do_sorteio.realizados == resumo_do_sorteio.total %}<span class="situacao aberto">✓ {% if resumo_do_sorteio.total == 1 %}Sorteio realizado.{% else %}Os {{ resumo_do_sorteio.total }} sorteios foram realizados.{% endif %}</span>{% elif resumo_do_sorteio.realizados %}<strong>{{ resumo_do_sorteio.realizados }} de {{ resumo_do_sorteio.total }} sorteios realizados.</strong>{% else %}<strong>Aguardando o sorteio.</strong>{% endif %}
-      Em cada vaga está a lista de quem participa, com o número de cada pessoa.</p>
+      {% if resumo_do_sorteio.em_cartao %}A lista de quem participa, com o número de cada pessoa, está na vaga a que o sorteio pertence.{% endif %}</p>
     <p class="garantia-do-sorteio">A lista de cada sorteio é publicada e fechada antes de existirem os números que decidem a ordem, e não muda mais.</p>
     {% comment %}
     Relação de vaga que o conteúdo vigente já não lista: não há cartão que a receba, e ela continua
@@ -210,9 +210,9 @@ documentos, que é a ordem das perguntas de quem decide.
     <p class="garantia-do-sorteio">De vagas que o Edital vigente já não lista:</p>
     <ul class="acoes-do-sorteio">
       {% for item in resumo_do_sorteio.sem_vaga %}
-      <li><a href="{% url 'portal:relacao-de-habilitados' item.relacao.id %}">Ver quem {% if item.sorteio %}participou{% else %}vai participar{% endif %}, e com que número{% if item.marco %} — {{ item.marco }}{% endif %}{% if item.lista %} — {{ item.lista }}{% endif %}</a></li>
+      <li><a href="{% url 'portal:relacao-de-habilitados' item.relacao.id %}">Ver quem {% if item.sorteio %}participou{% else %}vai participar{% endif %}, e com que número{% if item.marco %} — {{ item.marco }}{% endif %} — {{ item.lista }}</a></li>
       {% if item.sorteio %}
-      <li><a href="{% url 'portal:verificar-sorteio' item.sorteio.id %}">Como este sorteio foi feito{% if item.marco %}<span class="oculto"> — {{ item.marco }}{% if item.lista %} — {{ item.lista }}{% endif %}</span>{% endif %}</a></li>
+      <li><a href="{% url 'portal:verificar-sorteio' item.sorteio.id %}">Como este sorteio foi feito<span class="oculto">{% if item.marco %} — {{ item.marco }}{% endif %} — {{ item.lista }}</span></a></li>
       {% endif %}
       {% endfor %}
     </ul>
@@ -447,17 +447,13 @@ documentos, que é a ordem das perguntas de quem decide.
               <summary>Ver quem {% if marco.realizados == marco.listas|length %}participou{% elif marco.realizados %}participa{% else %}vai participar{% endif %}, e com que número — {{ marco.listas|length }} listas</summary>
               <ul>
                 {% for lista in marco.listas %}
-                <li><a href="{% url 'portal:relacao-de-habilitados' lista.relacao.id %}">{{ lista.nome }}<span class="oculto"> — quem {% if lista.sorteio %}participou{% else %}vai participar{% endif %}, e com que número{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>
-                  <span class="quantos">{{ lista.relacao.quantidade }} candidato{{ lista.relacao.quantidade|pluralize }} habilitado{{ lista.relacao.quantidade|pluralize }}{% if not marco.uniforme %} · {% if lista.sorteio %}sorteado em {{ lista.sorteio.executado_em|date:"d/m/Y" }} às {{ lista.sorteio.executado_em|date:"H:i" }}{% else %}aguardando; lista fechada em {{ lista.relacao.publicada_em|date:"d/m/Y" }}{% endif %}{% endif %}</span>
-                  {% if lista.sorteio %}<a class="como-foi-feito" href="{% url 'portal:verificar-sorteio' lista.sorteio.id %}">Como este sorteio foi feito<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>{% endif %}</li>
+                <li>{% include "portal/_lista_do_sorteio.html" with direto=False %}</li>
                 {% endfor %}
               </ul>
             </details>
             {% else %}
             {% for lista in marco.listas %}
-            <p class="acesso-a-relacao"><a href="{% url 'portal:relacao-de-habilitados' lista.relacao.id %}">Ver quem {% if lista.sorteio %}participou{% else %}vai participar{% endif %}, e com que número<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>
-              <span class="quantos">{{ lista.nome }} · {{ lista.relacao.quantidade }} candidato{{ lista.relacao.quantidade|pluralize }} habilitado{{ lista.relacao.quantidade|pluralize }}{% if not marco.uniforme %} · {% if lista.sorteio %}sorteado em {{ lista.sorteio.executado_em|date:"d/m/Y" }} às {{ lista.sorteio.executado_em|date:"H:i" }}{% else %}aguardando; lista fechada em {{ lista.relacao.publicada_em|date:"d/m/Y" }}{% endif %}{% endif %}</span>
-              {% if lista.sorteio %}<a class="como-foi-feito" href="{% url 'portal:verificar-sorteio' lista.sorteio.id %}">Como este sorteio foi feito<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>{% endif %}</p>
+            <p class="acesso-a-relacao">{% include "portal/_lista_do_sorteio.html" with direto=True %}</p>
             {% endfor %}
             {% endif %}
           </div>

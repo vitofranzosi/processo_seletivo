@@ -56,7 +56,7 @@ def test_a_vaga_sem_relacao_nao_ganha_nada():
     por_vaga, resumo = sorteios_por_vaga([_item("vaga-1", "iniciais")], CONTEUDO)
 
     assert "vaga-2" not in por_vaga
-    assert resumo == {"total": 1, "realizados": 0, "sem_vaga": []}
+    assert resumo == {"total": 1, "realizados": 0, "em_cartao": True, "sem_vaga": []}
 
 
 def test_a_ampla_vem_primeiro_e_as_listas_na_ordem_que_o_perfil_declara():
@@ -136,7 +136,8 @@ def test_a_relacao_de_vaga_que_o_vigente_nao_lista_fica_no_resumo():
     por_vaga, resumo = sorteios_por_vaga([orfa, _item("vaga-1", "iniciais")], CONTEUDO)
 
     assert list(por_vaga) == ["vaga-1"]
-    assert resumo["sem_vaga"] == [orfa]
+    # Com o nome da lista — também o da ampla: sem ele, dois acessos de texto igual (FR-5153).
+    assert resumo["sem_vaga"] == [{**orfa, "lista": "Ampla concorrência"}]
     assert resumo["total"] == 2
 
 
@@ -155,3 +156,113 @@ def test_a_lista_que_o_vigente_nao_nomeia_e_lida_da_versao_que_a_relacao_citou()
     )
 
     assert por_vaga["vaga-1"]["marcos"][0]["listas"][0]["nome"] == "Idosos"
+
+
+def test_so_relacao_sem_vaga_nao_promete_cartao():
+    """FR-5158: "está na vaga" só é verdade havendo cartão que receba o sorteio."""
+    _, resumo = sorteios_por_vaga([_item("vaga-retirada", "iniciais")], CONTEUDO)
+
+    assert not resumo["em_cartao"]
+
+
+# --- O modelo da página, sobre a leitura (FR-5151, FR-5154, FR-5160) ------------------------------
+#
+# Os ramos que um certame de teste não alcança sem uma Retificação que retire vaga ou sem dois
+# marcos por sorteio: aqui o modelo real é renderizado sobre um contexto de mentira, sem banco.
+
+
+def _pagina(itens):
+    from uuid import UUID
+
+    from django.template.loader import render_to_string
+
+    for n, item in enumerate(itens, start=1):
+        item["relacao"].id = UUID(int=n)
+        item["relacao"].quantidade = 10 + n
+        if item["sorteio"]:
+            item["sorteio"].id = UUID(int=100 + n)
+    por_vaga, resumo = sorteios_por_vaga(itens, CONTEUDO)
+    perfis = [
+        {
+            "id": perfil["id"],
+            "nome": perfil["name"],
+            "vagas": 1,
+            "documentos_anunciados": {},
+            "sorteio": por_vaga.get(perfil["id"]),
+        }
+        for perfil in CONTEUDO["profiles"]
+    ]
+    return render_to_string(
+        "portal/selecao.html",
+        {
+            "identificacao_publica": {"sigla": "Cefor", "instituicao": "Ifes", "rotulo": "Cefor"},
+            "processo_titulo": "Processo de teste",
+            "publicacao_id": UUID(int=900),
+            "edital_id": UUID(int=901),
+            "voltar_para": "/",
+            "perfis": perfis,
+            "sorteios": itens,
+            "resumo_do_sorteio": resumo,
+        },
+    )
+
+
+def test_a_pagina_nomeia_o_marco_quando_a_vaga_tem_dois():
+    corpo = _pagina([_item("vaga-1", "iniciais"), _item("vaga-1", "remanescentes")])
+
+    assert "<h4>Sorteio das vagas iniciais</h4>" in corpo
+    assert "<h4>Sorteio das vagas remanescentes</h4>" in corpo
+    # A vaga sem sorteio não ganha bloco (FR-5150).
+    assert corpo.count('<div class="classificacao-da-vaga">') == 1
+
+
+def test_a_pagina_aponta_a_relacao_de_vaga_retirada_com_o_nome_da_lista():
+    """FR-5160, FR-5153: a ampla e a reserva da vaga retirada são dois acessos distinguíveis."""
+    itens = [
+        _item("vaga-retirada", "x"),
+        _item("vaga-retirada", "x", "pcd", sorteado=SORTEADA),
+        _item("vaga-1", "iniciais"),
+    ]
+
+    corpo = _pagina(itens)
+    resumo = corpo[corpo.index('<aside class="sorteio-da-selecao"') : corpo.index("</aside>")]
+
+    assert "De vagas que o Edital vigente já não lista" in resumo
+    assert "Ver quem vai participar, e com que número — Ampla concorrência</a>" in resumo
+    assert "Ver quem participou, e com que número — Pessoa com Deficiência (PcD)</a>" in resumo
+    assert resumo.count("sorteio/relacoes/") == 2
+    assert resumo.count("/verificar") == 1
+    assert "está na vaga a que o sorteio pertence" in resumo
+
+
+def test_a_pagina_so_com_relacao_sem_vaga_nao_manda_procurar_no_cartao():
+    corpo = _pagina([_item("vaga-retirada", "x")])
+
+    assert "está na vaga a que o sorteio pertence" not in corpo
+    assert 'class="classificacao-da-vaga"' not in corpo
+
+
+def test_listas_sorteadas_em_instantes_diferentes_dizem_cada_uma_a_sua_hora():
+    """FR-5154: o estado único cai, e a linha traz a hora — o dia sozinho as deixaria iguais."""
+    depois = SORTEADA.replace(minute=45)
+    itens = [
+        _item("vaga-1", "iniciais", sorteado=SORTEADA),
+        _item("vaga-1", "iniciais", "pcd", sorteado=depois),
+    ]
+
+    corpo = _pagina(itens)
+
+    assert "✓ Sorteio realizado</span>.</p>" in corpo
+    assert "sorteado em 09/11/2026 às 10:30" in corpo
+    assert "sorteado em 09/11/2026 às 10:45" in corpo
+
+
+def test_listas_fechadas_com_um_minuto_de_intervalo_dizem_a_hora():
+    outra = FECHADA.replace(minute=1)
+
+    corpo = _pagina(
+        [_item("vaga-1", "iniciais"), _item("vaga-1", "iniciais", "pcd", fechada=outra)]
+    )
+
+    assert "aguardando; lista fechada em 03/11/2026 às 14:00" in corpo
+    assert "aguardando; lista fechada em 03/11/2026 às 14:01" in corpo

@@ -514,12 +514,32 @@ def _chave_da_lista(item, ordem_das_listas):
     Edital eventualmente declare com esse nome. Uma lista que o vigente já não conhece vai para o
     fim, pelo nome gravado, em vez de sumir.
     """
-    lista_id = item["publicacao"].lista_id
+    return posicao_da_lista(item["publicacao"].lista_id, item["lista"], ordem_das_listas)
+
+
+def posicao_da_lista(lista_id, nome, ordem_das_listas):
+    """A chave de ordenação de uma lista — a mesma para resultados e para sorteios (145)."""
     if lista_id is None:
         return (0, 0, "")
     if str(lista_id) in ordem_das_listas:
         return (1, ordem_das_listas[str(lista_id)], "")
-    return (2, 0, item["lista"])
+    return (2, 0, nome)
+
+
+def nome_da_lista_citada(relacao):
+    """O nome da lista na versão que a relação citou; "" quando ela não tem lista (021, FR-045).
+
+    Da versão citada, e não do conteúdo vigente, que uma Retificação posterior pode ter mudado.
+    """
+    if not relacao.lista_id:
+        return ""
+    for perfil in relacao.versao.content.get("profiles") or []:
+        if str(perfil.get("id")) != str(relacao.perfil_id):
+            continue
+        for modalidade in perfil.get("competitionModalities") or []:
+            if str(modalidade.get("id")) == str(relacao.lista_id):
+                return modalidade.get("name") or ""
+    return ""
 
 
 def _mais_recente(itens):
@@ -588,7 +608,11 @@ def sorteios_por_vaga(sorteios, conteudo):
     return por_vaga, {
         "total": len(sorteios),
         "realizados": sum(1 for item in sorteios if item["sorteio"]),
-        "sem_vaga": sem_vaga,
+        # A frase "está na vaga dele" só é verdade havendo cartão que o receba.
+        "em_cartao": bool(por_vaga),
+        # Com o nome da lista — também o da ampla, e o que o vigente já não diz (FR-5153): sem
+        # ele, duas relações da mesma vaga retirada seriam dois acessos de texto igual.
+        "sem_vaga": [{**item, "lista": _nome_da_lista_do_sorteio(item)} for item in sem_vaga],
     }
 
 
@@ -602,7 +626,9 @@ def _marco_do_sorteio(itens, ordem_das_listas):
             }
             for item in itens
         ),
-        key=lambda lista: _posicao_da_lista(lista, ordem_das_listas),
+        key=lambda lista: posicao_da_lista(
+            lista["relacao"].lista_id, lista["nome"], ordem_das_listas
+        ),
     )
     realizados = [lista["sorteio"] for lista in listas if lista["sorteio"]]
     # **O estado é dito uma vez quando as listas estão no mesmo ponto** (FR-5154): três listas
@@ -634,22 +660,7 @@ def _nome_da_lista_do_sorteio(item):
     relacao = item["relacao"]
     if not relacao.lista_id:
         return AMPLA_CONCORRENCIA
-    if item["lista"]:
-        return item["lista"]
-    for perfil in relacao.versao.content.get("profiles") or []:
-        for modalidade in perfil.get("competitionModalities") or []:
-            if str(modalidade.get("id")) == str(relacao.lista_id):
-                return modalidade.get("name") or ""
-    return ""
-
-
-def _posicao_da_lista(lista, ordem_das_listas):
-    lista_id = lista["relacao"].lista_id
-    if lista_id is None:
-        return (0, 0, "")
-    if str(lista_id) in ordem_das_listas:
-        return (1, ordem_das_listas[str(lista_id)], "")
-    return (2, 0, lista["nome"])
+    return item["lista"] or nome_da_lista_citada(relacao)
 
 
 def _ate_o_minuto(instante):

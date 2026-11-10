@@ -308,3 +308,15 @@ def test_o_cartao_com_tres_listas_custa_as_mesmas_duas_consultas(client, com_cot
         or "sorteios_sorteio" in consulta["sql"]
     ]
     assert len(do_sorteio) == 2, do_sorteio
+
+
+def test_a_versao_da_relacao_viaja_na_mesma_consulta(certame, django_assert_num_queries):
+    """FR-5161: nomear a lista que o vigente já não diz não custa uma consulta por relação."""
+    from processo_seletivo.sorteios.application.selectors import sorteios_do_edital
+
+    _congelar(certame)
+    edital = certame["edital"]
+    itens = sorteios_do_edital(edital, {})
+
+    with django_assert_num_queries(0):
+        assert itens[0]["relacao"].versao.content

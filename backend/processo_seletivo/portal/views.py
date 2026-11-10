@@ -3380,7 +3380,7 @@ def relacao_de_habilitados(request, relacao_id):
             "relacao": relacao,
             # O nome da lista, lido da versão que a relação cita — e não do conteúdo vigente, que
             # uma Retificação posterior poderia ter mudado (FR-045).
-            "lista": _nome_da_lista(relacao),
+            "lista": leitura.nome_da_lista_citada(relacao),
             "participantes": [
                 {
                     "numero": participante.numero_publico,
@@ -3396,18 +3396,6 @@ def relacao_de_habilitados(request, relacao_id):
             "sucessora": relacao.sucessoras.first(),
         },
     )
-
-
-def _nome_da_lista(relacao):
-    if not relacao.lista_id:
-        return ""
-    for perfil in relacao.versao.content.get("profiles") or []:
-        if str(perfil.get("id")) != str(relacao.perfil_id):
-            continue
-        for modalidade in perfil.get("competitionModalities") or []:
-            if str(modalidade.get("id")) == str(relacao.lista_id):
-                return modalidade.get("name") or ""
-    return ""
 
 
 def _sorteio_publicado(sorteio_id):

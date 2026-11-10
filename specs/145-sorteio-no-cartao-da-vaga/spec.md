@@ -118,7 +118,8 @@ documento, diz o andamento em uma frase e a garantia uma vez, e não nomeia vaga
   relação citou.
 - **FR-5154**: O estado MUST ser dito uma vez por marco quando as listas dele estão no mesmo ponto —
   aguardando, com a data e a hora do fechamento, ou realizado, com a data e a hora do sorteio —, e
-  por lista quando não estão; neste caso o marco MUST dizer quantas listas foram sorteadas.
+  por lista, também com data e hora, quando não estão; neste caso o marco MUST dizer quantas
+  listas foram sorteadas.
 - **FR-5155**: Cada lista MUST oferecer o acesso à sua relação, no endereço que já existe, com a
   quantidade de habilitados; o tempo do verbo MUST acompanhar o fato (vai participar; participou).
 - **FR-5156**: Realizado o sorteio de uma lista, ela MUST oferecer também o acesso à verificação
@@ -129,13 +130,14 @@ documento, diz o andamento em uma frase e a garantia uma vez, e não nomeia vaga
 - **FR-5158**: Havendo relação vigente no Edital, a página MUST ter um bloco "Sorteio público" que
   diz o andamento do Edital inteiro em uma frase e, uma única vez, que a lista de cada sorteio é
   fechada antes de existirem os números; o bloco MUST NOT repetir vaga, lista nem acesso que já
-  esteja num cartão.
+  esteja num cartão, e MUST NOT mandar procurar no cartão quando nenhuma vaga tem sorteio a mostrar.
 - **FR-5159**: O bloco do Edital MUST vir antes das vagas na ordem do documento, que é a ordem de
   leitura em tela estreita; em tela larga ele ocupa a coluna lateral, acima do Cronograma.
 - **FR-5160**: A relação vigente de uma vaga que o conteúdo vigente já não lista MUST continuar
-  alcançável a partir desta página, pelo bloco do Edital.
+  alcançável a partir desta página, pelo bloco do Edital, com o nome da lista dela.
 - **FR-5161**: A reorganização MUST NOT acrescentar consulta ao banco: o sorteio continua custando à
-  página duas consultas, qualquer que seja o número de vagas, marcos e listas.
+  página duas consultas, qualquer que seja o número de vagas, marcos e listas — inclusive quando o
+  nome de uma lista precisa ser lido da versão que a relação citou.
 - **FR-5162**: A feature MUST NOT criar rota, modelo, migration, estado de publicação nem regra de
   visibilidade; só o vigente é anunciado, e a tabela de participantes continua fora desta página.
 
@@ -157,8 +159,11 @@ vigente do Edital.
 
 ### Measurable Outcomes
 
-- **SC-1600**: No Edital de referência (quatro vagas, nove relações), a 375 px, do título de uma vaga
-  até o acesso à relação dela são no máximo 600 px — eram 2.801.
+- **SC-1600**: O acesso à relação de uma vaga está dentro do cartão dela: do título da vaga até o
+  acesso, a distância nunca passa da altura do próprio cartão. No Edital de referência (quatro
+  vagas, nove relações), a 375 px, são 508 px — eram 2.801, fora do cartão. Num Edital real com
+  atribuições, carga horária e remuneração declaradas, medido no preview, são 608 px: o bloco vem
+  depois de todo o argumento da vaga, e a distância cresce com ele.
 - **SC-1601**: Cada relação vigente tem exatamente um acesso na página.
 - **SC-1602**: A página lê as tabelas do sorteio em duas consultas, com uma lista ou com três.
 - **SC-1603**: Os seis casos que a `021` fixou para esta página continuam passando sem mudança de
