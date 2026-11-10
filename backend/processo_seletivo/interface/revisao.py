@@ -330,6 +330,10 @@ def _evento(evento, _snapshot):
     # é por ela que o portal abre e fecha as inscrições.
     if evento.get("isRegistrationPeriod"):
         linhas.append("É o período de inscrições deste Edital")
+    # Quem homologa confere o documento (144, D-009, FR-5110): o Evento que não sai na tabela do
+    # PDF precisa dizê-lo aqui, ou a conferência aprovaria uma tabela que ela não mostrou.
+    if evento.get("shownInPdf") is False:
+        linhas.append(NAO_SAI_NO_PDF)
     return {
         "titulo": f"{evento.get('order', '')}. {evento.get('type', '')}",
         "linhas": linhas,
@@ -451,7 +455,7 @@ def _documento(documento, snapshot):
     }
 
 
-def _secao(secao, numeros, no_corpo=None):
+def _secao(secao, numeros, no_corpo=None, snapshot=None):
     if secao.get("type") == catalogo.GERADA:
         origem = {
             "profiles": "Perfis",
@@ -468,6 +472,11 @@ def _secao(secao, numeros, no_corpo=None):
         # não distingue texto a transcrever de dado a cadastrar, e é essa a pergunta de quem
         # homologa diante da seção que falta (code review do PR 233).
         vazia = f"Nada cadastrado em {nome_da_origem} — não sai no documento."
+        # **Cadastrado e oculto não é "nada cadastrado"** (144, FR-5110): com todos os Eventos
+        # ocultos do PDF a seção também não sai, e dizer que não há Evento mandaria quem homologa
+        # pedir um Cronograma que existe.
+        if secao.get("source") == "schedule" and (snapshot or {}).get("schedule"):
+            vazia = "Nenhum Evento do Cronograma sai no PDF — não sai no documento."
     else:
         detalhe = secao.get("content", "")
         vazia = "Vazia — não sai no documento."
@@ -800,7 +809,7 @@ def _secoes_do_documento(snapshot):
         if numeros.get(catalogo.CHAVE_DAS_ETAPAS):
             numeros[catalogo.CHAVE_DAS_ETAPAS] = pdf._apresentacao().faixa_das_etapas(snapshot)
         no_corpo = pdf._apresentacao().membros_no_corpo(snapshot)
-    return [_secao(secao, numeros, no_corpo) for secao in snapshot.get("sections") or []]
+    return [_secao(secao, numeros, no_corpo, snapshot) for secao in snapshot.get("sections") or []]
 
 
 def _cada(chave, leitura):
@@ -811,6 +820,27 @@ def _cada(chave, leitura):
 def _bloco(titulo, etapa, leitura):
     """Um bloco só, com os itens que `leitura` produz e a etapa em que se corrige."""
     return lambda snapshot: [{"titulo": titulo, "etapa": etapa, "itens": leitura(snapshot)}]
+
+
+NAO_SAI_NO_PDF = "Não sai na tabela do Cronograma do PDF"
+SECAO_DO_CRONOGRAMA_NAO_SAI = (
+    "Nenhum Evento sai no PDF: a seção Cronograma não será impressa. Os Eventos continuam valendo "
+    "para as Etapas e para o período de inscrições."
+)
+
+
+def _cronograma(snapshot):
+    """O Cronograma, e a frase de quando nenhum Evento sai no PDF (144, FR-5110, D-004).
+
+    A seção não sai, pela regra que omite seção gerada sem o que compor — e quem homologa precisa
+    sabê-lo antes, e não descobri-lo no documento. A pergunta é a do PDF (`pdf.fonte_presente`), e
+    não uma segunda contagem.
+    """
+    itens = [_evento(evento, snapshot) for evento in snapshot.get("schedule") or []]
+    bloco = {"titulo": "Cronograma", "etapa": "cronograma", "itens": itens}
+    if itens and not pdf.fonte_presente(snapshot, "schedule"):
+        bloco["nota"] = SECAO_DO_CRONOGRAMA_NAO_SAI
+    return [bloco]
 
 
 TITULO_DOS_DOCUMENTOS_NA_INSCRICAO = "Documentos Exigidos na inscrição"
@@ -851,7 +881,7 @@ def _documentos_por_momento(snapshot):
 # momento.
 BLOCOS = (
     _bloco("Perfis de Vaga", "perfis", _cada("profiles", _perfil)),
-    _bloco("Cronograma", "cronograma", _cada("schedule", _evento)),
+    _cronograma,
     _bloco("Etapas de Avaliação", "etapas", _cada("stages", _etapa)),
     # Depois das Etapas porque é a ordem do assistente: o marco enumera Etapas, e é na etapa
     # `classificacao` que ele se corrige.
@@ -963,6 +993,8 @@ _LIDOS_POR_COLECAO = {
         "order",
         "location",
         "isRegistrationPeriod",
+        # A visibilidade no PDF (144, D-009): "Não sai na tabela do Cronograma do PDF".
+        "shownInPdf",
     ),
     "stages": (
         "order",

@@ -2160,11 +2160,19 @@ def frase_da_reversao(especie, *, redacao=REDACAO_VIGENTE):
     return tabela.get(especie, "")
 
 
-def frase_do_periodo_de_inscricoes(evento):
-    """V9 — **frase nova, gerada** do Evento marcado como período de inscrições (FR-1369)."""
+def frase_do_periodo_de_inscricoes(evento, numero):
+    """V9 — **frase nova, gerada** do Evento marcado como período de inscrições (FR-1369).
+
+    `numero` é o que a tabela do Cronograma imprime para o Evento (144, FR-5107), e `None` quando
+    ele não sai nela: a frase continua dizendo o período — o portal abre e fecha as inscrições por
+    ele —, e só a remissão some, porque não há linha a que remeter. **Obrigatório, sem padrão**: o
+    chamador que esquecesse de passá-lo perderia a remissão em silêncio.
+    """
     inicio, fim = evento.get("startAt"), evento.get("endAt")
     periodo = f"de {_instante(inicio)}, a {_instante(fim)}" if fim else f"em {_instante(inicio)}"
-    return f"Período de inscrições: {periodo} (Cronograma, nº {evento.get('order', '')})."
+    if numero is None:
+        return f"Período de inscrições: {periodo}."
+    return f"Período de inscrições: {periodo} (Cronograma, nº {numero})."
 
 
 def itens_dos_dados_declarados(fatos):
@@ -3973,6 +3981,42 @@ def _pares(composicao, pares, *, recuo=18.0, antes=ANTES_DE_LINHA):
         )
 
 
+def eventos_no_documento(snapshot):
+    """Os Eventos que a tabela do Cronograma imprime, com o número que terão nela (144, D-002).
+
+    Só a tabela e a presença da seção leem daqui. A Etapa e o período citam o Evento pelo vínculo,
+    e continuam dizendo as datas do oculto: ocultar não é desativar.
+
+    **O número tem duas regras, e a condição é a única situação nova** (D-003). Sem Evento oculto,
+    é o `order`, como sempre — inclusive o `0` e as lacunas que a API admite: o documento de antes
+    desta feature sai igual. Com algum oculto, os exibidos são numerados de 1 a k, porque "1, 3, 4"
+    num ato normativo lê como item suprimido por engano, e aqui seria a feature produzindo a lacuna.
+
+    `is not False`, e não `.get(..., True)`: o conteúdo anterior ao degrau 20 que chega sem elevar
+    é lido como exibido sem depender de quem o elevou.
+    """
+    eventos = [evento for evento in snapshot.get("schedule") or [] if isinstance(evento, dict)]
+    exibidos = [evento for evento in eventos if evento.get("shownInPdf") is not False]
+    if len(exibidos) == len(eventos):
+        return [(evento.get("order", ""), evento) for evento in exibidos]
+    return list(enumerate(exibidos, 1))
+
+
+def numero_no_documento(snapshot, evento):
+    """O número com que o Evento sai na tabela do Cronograma, ou `None` se não sai (FR-5107).
+
+    Pelo próprio objeto, ou pela identidade quando ela existe — nunca por `None == None`: o conteúdo
+    montado à mão sem `id` daria ao período o número do primeiro Evento sem `id` da tabela.
+    """
+    if not isinstance(evento, dict):
+        return None
+    identidade = evento.get("id")
+    for numero, item in eventos_no_documento(snapshot):
+        if item is evento or (identidade is not None and item.get("id") == identidade):
+            return numero
+    return None
+
+
 def _cronograma(composicao, snapshot, secao=0, tabelas=None):
     """O Cronograma em tabela, com **rótulo humano**, não com o código do tipo.
 
@@ -3981,13 +4025,15 @@ def _cronograma(composicao, snapshot, secao=0, tabelas=None):
     que a acompanha. O código continua no conteúdo publicado; o que muda é o que se imprime — a
     mesma decisão que tirou `PLANEJADO` do documento na `007`.
     """
-    eventos = snapshot.get("schedule") or []
-    if not eventos:
+    # Só os que saem, com o número que a tabela imprime (144, D-002, D-003).
+    numerados = eventos_no_documento(snapshot)
+    if not numerados:
         return
     # **A coluna do local só aparece quando algum Evento declara um** (021, FR-057). Uma coluna de
     # travessões em todo Edital anterior ao degrau 11 ocuparia largura para afirmar nada — e a
-    # ausência já significa "não declarado", que é diferente de "acontece em lugar nenhum".
-    algum_local = any((evento.get("location") or "").strip() for evento in eventos)
+    # ausência já significa "não declarado", que é diferente de "acontece em lugar nenhum". Entre
+    # os que **saem** (144, FR-5106): o local do oculto não justifica a coluna.
+    algum_local = any((evento.get("location") or "").strip() for _, evento in numerados)
     if composicao.redacao != REDACAO_1:
         # O período numa coluna, como se lê: "de … a …" (texto alvo da spec). Início e término
         # em duas colunas obrigavam a juntar de cabeça as duas metades de cada linha.
@@ -3996,12 +4042,12 @@ def _cronograma(composicao, snapshot, secao=0, tabelas=None):
             ["Nº", "Evento", "Quando", *(["Onde"] if algum_local else [])],
             [
                 [
-                    str(evento.get("order", "")),
+                    str(numero),
                     evento.get("description") or evento.get("type", ""),
                     _periodo_do_evento(evento),
                     *([evento.get("location") or "—"] if algum_local else []),
                 ]
-                for evento in eventos
+                for numero, evento in numerados
             ],
             recuo=0.0,
             alinhamentos=[CENTRO, ESQUERDA, ESQUERDA, *([ESQUERDA] if algum_local else [])],
@@ -4010,13 +4056,13 @@ def _cronograma(composicao, snapshot, secao=0, tabelas=None):
         return
     linhas = [
         [
-            str(evento.get("order", "")),
+            str(numero),
             evento.get("description") or evento.get("type", ""),
             _instante(evento.get("startAt")),
             _instante(evento["endAt"]) if evento.get("endAt") else "—",
             *([evento.get("location") or "—"] if algum_local else []),
         ]
-        for evento in eventos
+        for numero, evento in numerados
     ]
     _tabela(
         composicao,
@@ -4389,12 +4435,26 @@ def _materializaveis(snapshot):
     for secao in sorted(snapshot.get("sections") or [], key=lambda item: item.get("order", 0)):
         if secao.get("type") == GERADA:
             corpo = _CORPO_GERADO.get(secao.get("source"))
-            if corpo is None or not (snapshot.get(secao.get("source")) or []):
+            if corpo is None or not fonte_presente(snapshot, secao.get("source")):
                 continue
             materializaveis.append((secao, corpo))
         elif _paragrafos(secao.get("content", "")) or _norma_da_secao(secao, snapshot):
             materializaveis.append((secao, None))
     return materializaveis
+
+
+def fonte_presente(snapshot, fonte):
+    """A coleção que origina uma seção gerada tem o que compor? (144, D-002, FR-5109)
+
+    **Uma pergunta só, para as duas apresentações.** A plana (`_materializaveis`) e a por perguntas
+    (`apresentacao._principal_presente`) a faziam cada uma do seu jeito, com `snapshot.get(fonte)`.
+    Para o Cronograma a resposta deixou de ser "há Evento" e passou a ser "há Evento que sai": com
+    todos ocultos, uma diria que a seção sai e a outra não, e a "Tabela N" e o número das seções se
+    desalinhariam do que foi impresso.
+    """
+    if fonte == "schedule":
+        return bool(eventos_no_documento(snapshot))
+    return bool(snapshot.get(fonte) or [])
 
 
 def _apresentacao():

@@ -1,1 +1,21 @@
 .campo.local{flex:0 1 20rem}
+/* A visibilidade no PDF (144, UX-390, UX-391).
+
+   O olho sai do servidor com `hidden`, e `.acao.simbolo` declara `display`: sem esta regra, o
+   `hidden` perdia para a classe e o botão aparecia sem o script que o faz funcionar. */
+.acao.visibilidade-no-pdf[hidden]{display:none}
+/* Um traçado por estado, e quem escolhe é `aria-pressed` — o mesmo atributo que o leitor de tela
+   lê. O glifo não pode dizer uma coisa e o botão outra. */
+.visibilidade-no-pdf .olho-fechado{display:none}
+.visibilidade-no-pdf[aria-pressed="true"] .olho-aberto{display:none}
+.visibilidade-no-pdf[aria-pressed="true"] .olho-fechado{display:inline}
+.visibilidade-no-pdf[aria-pressed="true"]{background:var(--cinza-fundo)}
+/* O cartão oculto continua editável e continua valendo — ocultar não é desativar. Por isso nada de
+   texto cinza nos campos, que leria como desabilitado, e nada de borda tracejada, que nesta folha
+   já diz "linha ainda não gravada". Fundo e faixa à esquerda atenuam; quem diz o estado é a marca,
+   em texto, porque a diferença não pode depender só de cor. */
+fieldset.linha.evento.oculto-do-pdf{background:var(--fundo);border-left:.25rem solid var(--borda)}
+fieldset.linha>legend .marca-pdf{display:inline-block;margin-left:.5rem;padding:.05rem .5rem;
+  border-radius:999px;background:var(--cinza-fundo);color:var(--texto-fraco);font-size:.75rem;
+  font-weight:600;text-transform:none;letter-spacing:0;white-space:nowrap}
+fieldset.linha>legend .marca-pdf[hidden]{display:none}

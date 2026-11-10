@@ -303,6 +303,11 @@ def edital_snapshot(edital: Edital) -> dict:
                 # Retificação já alcança o campo por `/schedule/id=…/isRegistrationPeriod`, sem
                 # nenhuma gramática nova.
                 "isRegistrationPeriod": event.is_registration_period,
+                # Se a linha do Evento sai na tabela do Cronograma do PDF (144, D-001). Booleano
+                # sempre presente: o documento se compõe deste conteúdo, sem consultar o banco, e
+                # a Retificação e o consolidado precisam reproduzi-lo. Ocultar não tira o Evento
+                # daqui — ele continua no ato, e é só a tabela que deixa de imprimi-lo.
+                "shownInPdf": event.shown_in_pdf,
             }
             for event in cronograma.eventos.all()
         ]

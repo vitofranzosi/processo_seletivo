@@ -196,6 +196,9 @@ EVENTO_PUBLICADO = (
     # de quantos podem ser verdadeiros é de coerência entre itens e vive em
     # `_periodo_de_inscricoes`, porque a forma confere um campo por vez.
     Campo("isRegistrationPeriod", bool),
+    # Se a linha do Evento sai na tabela do Cronograma do PDF (144, D-001). Sempre presente, nunca
+    # nulo, pela convenção do vizinho de cima.
+    Campo("shownInPdf", bool),
 )
 
 # Os dois identificadores e o código são anuláveis por semântica: `null` é "não restringe". É a

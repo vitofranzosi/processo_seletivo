@@ -426,6 +426,10 @@ def replace_draft(
                     status=event.get("status", EventoCronograma.Status.PLANEJADO),
                     is_registration_period=event.get("isRegistrationPeriod", False),
                     location=(event.get("location") or "").strip(),
+                    # Ausente é exibido (144, FR-5104): o payload anterior à coluna, o
+                    # reaproveitamento de conteúdo publicado antes do degrau 20 e o cliente da API
+                    # que não conhece o campo não ocultam nada sem ter pedido.
+                    shown_in_pdf=event.get("shownInPdf", True) is not False,
                 )
                 for event in schedule
             ]

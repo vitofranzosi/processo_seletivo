@@ -190,7 +190,9 @@ def _principal_presente(snapshot, chave):
     if catalogada is None:
         return False
     if catalogada.gerada:
-        return bool(snapshot.get(catalogada.source))
+        # A mesma pergunta da apresentação plana (144, D-002): com todos os Eventos ocultos, o
+        # Cronograma não tem o que compor, e a seção não sai — nem no sumário, nem no resumo.
+        return composicao_pdf.fonte_presente(snapshot, catalogada.source)
     return _tem_texto(snapshot, chave)
 
 
@@ -1038,9 +1040,13 @@ def _atribuicoes(composicao, snapshot, plano_, tabelas):
 
 
 def _periodo(composicao, snapshot, plano_, tabelas):
+    evento = _evento_de_inscricao(snapshot)
     _paragrafo(
         composicao,
-        composicao_pdf.frase_do_periodo_de_inscricoes(_evento_de_inscricao(snapshot)),
+        # A remissão usa o número que a tabela imprime, e some com o Evento oculto (144, FR-5107).
+        composicao_pdf.frase_do_periodo_de_inscricoes(
+            evento, composicao_pdf.numero_no_documento(snapshot, evento)
+        ),
         antes=composicao_pdf.ANTES_DE_PARAGRAFO,
     )
 

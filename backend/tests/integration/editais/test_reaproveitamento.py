@@ -1114,6 +1114,7 @@ def test_o_resumo_conta_o_conteudo_que_vigora_e_nao_as_tabelas(origem, elaborado
                     "status": "PLANEJADO",
                     "isRegistrationPeriod": False,
                     "location": "",
+                    "shownInPdf": True,
                 },
             }
         ],

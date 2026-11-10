@@ -51,6 +51,8 @@ cartão.
       <h3 id="bloco-{{ forloop.counter }}">{{ bloco.titulo }} ({{ bloco.itens|length }})</h3>
       <a href="{% url 'interface:compor-etapa' edital.id bloco.etapa %}" class="acao">Revisar</a>
     </header>
+    {# O que o bloco inteiro diz, antes dos itens: hoje, só o Cronograma sem Evento no PDF (144). #}
+    {% if bloco.nota %}<p class="aviso">{{ bloco.nota }}</p>{% endif %}
     {% if bloco.itens %}
     <ul class="resumo-lista">
       {% for item in bloco.itens %}

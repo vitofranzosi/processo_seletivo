@@ -677,6 +677,8 @@ def test_swapping_the_whole_schedule_is_done_entity_by_entity(
         # Campo da forma publicada desde a versão canônica 4: o Evento acrescentado por
         # Retificação é declarado inteiro, como qualquer entidade que passa a vigorar.
         "isRegistrationPeriod": False,
+        # E a visibilidade no PDF, desde a versão canônica 20 (144): pela mesma regra.
+        "shownInPdf": True,
     }
     created = create_retification(
         api_client,

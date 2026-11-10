@@ -48,6 +48,17 @@ class EventoCronograma(models.Model):
     # a composição, que sugere o valor do evento anterior — sugerir é da tela, presumir é do
     # conteúdo publicado (FR-059).
     location = models.CharField(max_length=255, blank=True, default="")
+    # Se a linha do Evento sai na tabela do Cronograma do PDF (144, D-001, FR-5100). **Só isso**:
+    # o Evento oculto continua gravado, publicado no conteúdo do ato, vinculável a Etapa, designável
+    # como período de inscrições e conferido pelas mesmas validações — ocultar não é desativar.
+    #
+    # Booleano do próprio Evento, e não um `status` novo: o `status` é a única declaração que a
+    # `045` admite (o cancelamento), e um "OCULTO" ali seria estado, que a fase derivada das datas
+    # teria de ignorar. Positivo porque a pergunta da tela e do documento é "sai no PDF?".
+    #
+    # Verdadeiro por padrão: todo Edital anterior a esta coluna imprimiu todos os Eventos, e o
+    # Evento novo nasce exibido.
+    shown_in_pdf = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["order", "start_at", "id"]

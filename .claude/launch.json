@@ -603,6 +603,16 @@
       ],
       "port": 8143,
       "url": "http://localhost:8143"
+    },
+    {
+      "name": "cronograma-144",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_144 DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8144"
+      ],
+      "port": 8144,
+      "url": "http://localhost:8144"
     }
   ]
 }

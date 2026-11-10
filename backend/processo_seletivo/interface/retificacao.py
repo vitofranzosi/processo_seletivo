@@ -112,6 +112,10 @@ CAMPOS_EVENTO = [
     # Qual Evento designa o período de inscrições (009). Quantos podem ser verdadeiros é coerência
     # entre itens, e quem recusa dois é a conferência de publicação — não este campo.
     ("isRegistrationPeriod", "É o período de inscrições", BOOLEANO),
+    # Se a linha do Evento sai na tabela do Cronograma do PDF (144, P-1): retificável por decisão do
+    # usuário, porque ocultar por engano precisa de correção formal. Alterá-lo não muda o Evento —
+    # ele continua no ato e operacional —, só a tabela que o documento consolidado imprime.
+    ("shownInPdf", "Sai na tabela do Cronograma do PDF", BOOLEANO),
 ]
 # A ordem em que o cartão do Perfil **se desenha**, que é a do editor do Compor (056, FR-1038,
 # D-013): o que identifica o Perfil primeiro, os Requisitos depois. `CAMPOS_PERFIL` fica na ordem
@@ -2044,6 +2048,9 @@ def _evento_completo(valores, ordem):
         # **Fixo, e não lido do formulário**: `NOVO_EVENTO` não o oferece, por decisão escrita ao
         # lado dele. `False` é a ausência de marca, e não "não informado" (009).
         "isRegistrationPeriod": False,
+        # **Nasce exibido, e também fixo** (144, FR-5113): acrescentar um Evento por Retificação é
+        # publicá-lo, e quem quiser ocultá-lo depois retifica o campo, que é retificável.
+        "shownInPdf": True,
     }
 
 

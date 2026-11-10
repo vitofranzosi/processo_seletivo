@@ -7,47 +7,47 @@ verde. Caminhos de código relativos a `backend/processo_seletivo/`; de teste, a
 
 ## Phase 1: Incremento A — a fundação do dado e do contrato
 
-- [ ] T001 [A] `shown_in_pdf` em `editais/models/cronograma.py` e a migration
+- [x] T001 [A] `shown_in_pdf` em `editais/models/cronograma.py` e a migration
   `editais/migrations/0026_visibilidade_do_evento_no_pdf.py`; `migrations/test_migrations.py` passa a
   `editais: 26` e ganha o caso "Evento gravado antes da migração fica exibido" (FR-5100, SC-1580)
-- [ ] T002 [A] Degrau 20: `SCHEMA_VERSION = 20` e o parágrafo em `shared/canonical.py`;
+- [x] T002 [A] Degrau 20: `SCHEMA_VERSION = 20` e o parágrafo em `shared/canonical.py`;
   `DEGRAUS_DE_EVENTO[20]` em `publicacoes/domain/elevacao.py`; `contract/test_elevacao_degrau_20.py`
   no molde do 11; os testes que fixam a versão (FR-5105, D-001)
-- [ ] T003 [A] `shownInPdf` em `publicacoes/application/publish_edital.py`, `Campo("shownInPdf",
+- [x] T003 [A] `shownInPdf` em `publicacoes/application/publish_edital.py`, `Campo("shownInPdf",
   bool)` em `EVENTO_PUBLICADO` (`editais/domain/validation.py`) e na fixture `fixtures/snapshot.py`
   (FR-5105)
-- [ ] T004 [A] `("schedule", "shownInPdf"): retificavel()` em `editais/domain/mutabilidade.py`; a linha
+- [x] T004 [A] `("schedule", "shownInPdf"): retificavel()` em `editais/domain/mutabilidade.py`; a linha
   na matriz da `026` e no `openapi.yaml` da `001` (FR-5113, P-1)
-- [ ] T005 [A] `VERSAO_DO_ESQUEMA = 20` e a exclusão do caminho em `duvidas/domain/cobertura.py`
+- [x] T005 [A] `VERSAO_DO_ESQUEMA = 20` e a exclusão do caminho em `duvidas/domain/cobertura.py`
   (FR-5112)
-- [ ] T006 [A] Revisão: "Não sai no PDF" em `interface/revisao.py::_evento`, a frase da seção não
+- [x] T006 [A] Revisão: "Não sai no PDF" em `interface/revisao.py::_evento`, a frase da seção não
   impressa no bloco do Cronograma, e o campo em `_LIDOS_POR_COLECAO` (FR-5110, D-009)
-- [ ] T007 [A] Retificação: o campo em `CAMPOS_EVENTO`, o Evento acrescentado nasce exibido, o rótulo
+- [x] T007 [A] Retificação: o campo em `CAMPOS_EVENTO`, o Evento acrescentado nasce exibido, o rótulo
   em `publicacoes/domain/alteracoes.py`; `interface/test_campos_vem_do_contrato.py` passa a 86; um
   caso que retifica a visibilidade e confere o consolidado (FR-5100, FR-5113; P-1, decidida "sim")
 
 ## Phase 2: Incremento A — User Story 1, ocultar sem desativar (P1)
 
-- [ ] T008 [US1] A travessia: `ler_eventos`, `eventos_do_edital` e `eventos_persistidos` em
+- [x] T008 [US1] A travessia: `ler_eventos`, `eventos_do_edital` e `eventos_persistidos` em
   `interface/forms.py`; `replace_draft` em `editais/application/draft.py`; `shownInPdf` no
   `EventSerializer` de `editais/api/serializers.py`, com padrão verdadeiro (FR-5104)
-- [ ] T009 [US1] Testes da travessia em `interface/test_cronograma_visibilidade.py`: gravar e
+- [x] T009 [US1] Testes da travessia em `interface/test_cronograma_visibilidade.py`: gravar e
   recarregar; gravar Perfis, Etapas e Inscrição depois de ocultar; recusa que reexibe o digitado; API
   sem a chave; restauração do rascunho local pelo servidor (FR-5102, FR-5104, SC-1584)
-- [ ] T010 [US1] O cartão: campo oculto, marca "Oculto do PDF" e classe em `_evento.html`; o parâmetro
+- [x] T010 [US1] O cartão: campo oculto, marca "Oculto do PDF" e classe em `_evento.html`; o parâmetro
   `com_visibilidade_no_pdf` e o botão em `_acoes_da_linha.html`; `_olho.html`; as regras em
   `telas/compor-cronograma.css` (FR-5101, UX-390, UX-391)
-- [ ] T011 [US1] `interface/static/interface/cronograma.js` com a alternância e o `change` despachado;
+- [x] T011 [US1] `interface/static/interface/cronograma.js` com a alternância e o `change` despachado;
   o `<script>` em `compor_cronograma.html` (FR-5101, FR-5102, D-007)
-- [ ] T012 [US1] `eventos_no_documento` e `numero_no_documento` em
+- [x] T012 [US1] `eventos_no_documento` e `numero_no_documento` em
   `publicacoes/infrastructure/pdf.py`; `_cronograma` sobre eles; `frase_do_periodo_de_inscricoes` com
   o número impresso ou sem remissão. Sem oculto, o número é o `order`, com casos de `order` `0` e com
   lacunas (FR-5106, FR-5107, FR-5108, D-002, D-003)
-- [ ] T013 [US1] A presença da seção pela mesma função em `_materializaveis` e em
+- [x] T013 [US1] A presença da seção pela mesma função em `_materializaveis` e em
   `apresentacao._principal_presente`; testes em `unit/publicacoes/test_cronograma_no_documento.py`:
   todos ocultos nas duas apresentações, `tabelas_do_documento`, `numeracao`, o resumo sem "Datas"
   (FR-5109, D-004)
-- [ ] T014 [US1] O PDF de verdade em `interface/test_cronograma_no_pdf.py`, por
+- [x] T014 [US1] O PDF de verdade em `interface/test_cronograma_no_pdf.py`, por
   `texto_de_pdf_bytes`, **parametrizado pelas duas apresentações** (a plana e a por perguntas):
   - um oculto — a prévia e a publicação sem a descrição dele na tabela; numeração 1..k; a frase da
     Etapa com a data do Evento oculto;
@@ -57,15 +57,15 @@ verde. Caminhos de código relativos a `backend/processo_seletivo/`; de teste, a
     antes dele; a frase sem remissão, e com o período, quando ele está oculto;
   - compatibilidade — conteúdo sem oculto, com `order` começando em `0` e com lacunas, igual ao texto
     de antes da feature (SC-1580, SC-1581, SC-1582, SC-1587, SC-1588, FR-5114)
-- [ ] T015 [US1] Integridade e canais em `interface/test_cronograma_visibilidade.py`: o oculto na lista
+- [x] T015 [US1] Integridade e canais em `interface/test_cronograma_visibilidade.py`: o oculto na lista
   de Eventos da etapa Etapas, na pendência por vencido, na validação de datas e de vínculo, como
   período que abre as inscrições; e nos **seis** canais — a página pública da seleção, o assistente
   de dúvidas, a Agenda dos Editais, o Kit de Divulgação, o relatório do Edital e a leitura pela API —
   um caso por canal, cada um encontrando o Evento oculto (FR-5103, FR-5112, SC-1589)
-- [ ] T016 [US1] `javascript/cronograma.test.js`: a alternância muda campo, `aria-pressed`, `title`,
+- [x] T016 [US1] `javascript/cronograma.test.js`: a alternância muda campo, `aria-pressed`, `title`,
   classe e marca, e despacha `change`; o botão sai revelado só com o script; somente leitura sem botão
   (FR-5101, FR-5102, UX-390)
-- [ ] T017 [US1] Reaproveitamento em `integration/editais/test_reaproveitamento.py`: preserva o oculto
+- [x] T017 [US1] Reaproveitamento em `integration/editais/test_reaproveitamento.py`: preserva o oculto
   e o vínculo; origem de versão 19 chega toda exibida (FR-5111, D-008, SC-1586)
 
 **Checkpoint A**: PR do incremento A; a etapa já oculta e o PDF já filtra.
