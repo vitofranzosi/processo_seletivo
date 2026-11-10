@@ -299,8 +299,9 @@ QUEM_CARREGA = {
     "interface/telas/previa-da-classificacao.css": {"compor_classificacao.html"},
     # O andamento da seleção (127): as providências e a matriz, só no detalhe do Edital.
     # O Centro de Controle (136) lê as situações da 127 e a moldura das tabelas desta folha, e tem a
-    # sua por cima.
-    "interface/telas/andamento.css": {"centro_do_edital.html", "detalhe.html"},
+    # sua por cima. A tela do sorteio (142) mostra as mesmas situações em cada passo, com as mesmas
+    # classes: a cor de cada situação não pode divergir entre o Centro e a tela do ato.
+    "interface/telas/andamento.css": {"centro_do_edital.html", "detalhe.html", "sorteio.html"},
     "interface/telas/centro.css": {"centro_do_edital.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
@@ -331,6 +332,9 @@ QUEM_CARREGA = {
             "visao-geral",
         )
     },
+    # A convocação pelas perguntas de quem conduz (143): o passo da chamada e o aviso da pendência
+    # são os mesmos na convocação e nos documentos de uma convocação, e a folha também.
+    "interface/telas/convocacao.css": {"convocacao.html", "convocacao_documentos.html"},
 }
 
 

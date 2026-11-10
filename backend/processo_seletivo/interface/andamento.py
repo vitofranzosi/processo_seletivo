@@ -180,7 +180,13 @@ def _c(situacao, **campos):
 
 #: A seção que reúne as âncoras de um mesmo tipo: duas listas juntadas numa providência só (o
 #: caminho comum da `127`) chegam a ela, e não à primeira das duas.
-_SECAO_DAS_ANCORAS = {"recorte-": "titulo-recortes", "chamada-": "chamadas"}
+_SECAO_DAS_ANCORAS = {
+    "recorte-": "titulo-recortes",
+    # A execução de cada lista tem lugar próprio desde a `142` (D-002 dela): o sorteio saiu do
+    # cartão da lista, que ficou no passo de fixar os participantes.
+    "sorteio-": "titulo-execucao",
+    "chamada-": "chamadas",
+}
 
 
 def ancora_do_recorte(lista_id):
@@ -188,6 +194,20 @@ def ancora_do_recorte(lista_id):
     lista, e ganha um próprio; uma lista é um UUID, e nunca colide com ele. A tela lê esta mesma
     função, pelo filtro `ancora_do_recorte`, para que as duas não escrevam a regra cada uma."""
     return f"recorte-{lista_id or 'ampla'}"
+
+
+def ancora_do_sorteio(lista_id):
+    """O id da execução de uma lista na tela do sorteio (142, FR-4915). A relação continua no
+    cartão da lista (`ancora_do_recorte`); sortear e anular moram no passo da execução, e é lá que a
+    providência do sorteio precisa chegar."""
+    return f"sorteio-{lista_id or 'ampla'}"
+
+
+def ancora_da_ordem(lista_id):
+    """O id da ordem gravada de uma lista, no passo 4 da tela do sorteio (142). Uma função só para o
+    id, o link da mensagem do ato e a abertura da lista que acabou de ser sorteada: escrito à mão em
+    três lugares, a mensagem do sorteio de uma cota apontava para a ampla (a revisão do PR #452)."""
+    return f"ordem-{lista_id or 'ampla'}"
 
 
 def com_ancora(url, ancora):
@@ -2116,11 +2136,15 @@ class _Leitor:
         marco_id = str(marco.get("id"))
         base = reverse("interface:sorteio", args=[self.edital.id, marco_id])
 
-        def url(lista):
+        def url(lista, ancora=ancora_do_recorte):
             """O endereço do recorte de uma lista — a ampla também, cuja chave é `None`."""
             if not self.alcance.consulta:
                 return ""
-            return com_ancora(f"{base}?lista={lista}" if lista else base, ancora_do_recorte(lista))
+            return com_ancora(f"{base}?lista={lista}" if lista else base, ancora(lista))
+
+        def url_do_sorteio(lista):
+            """O da execução da lista, que desde a `142` não mora no cartão dela."""
+            return url(lista, ancora_do_sorteio)
 
         def da_tela(ancora):
             """O endereço do que é do marco, e não de uma lista (D-002 da 139)."""
@@ -2141,7 +2165,7 @@ class _Leitor:
             return {
                 "semente": impedida,
                 "relacoes": {},
-                "url": url,
+                "url": url_do_sorteio,
                 "anulavel": {},
                 "chave_da_semente": None,
             }
@@ -2193,7 +2217,7 @@ class _Leitor:
         return {
             "semente": semente,
             "relacoes": relacoes,
-            "url": url,
+            "url": url_do_sorteio,
             "anulavel": anulavel,
             # Uma observação serve a todo marco da mesma fonte e referência (item 14 da revisão).
             "chave_da_semente": (SEMENTE, metodo.get("source") or "", semente.nota or ""),

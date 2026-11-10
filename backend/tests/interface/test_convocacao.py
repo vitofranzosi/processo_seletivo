@@ -70,13 +70,22 @@ def test_as_rotas_de_leitura_e_de_ato_sao_distintas():
 
 class TestOsEstadosDistintos:
     def test_a_tela_mostra_os_quatro_numeros_da_016(self, client, seletor_ligado, cenario_da_tela):
-        """**Os quatro juntos** (`UX-031`), e vindos da `016` — esta tela não os recalcula."""
+        """**Os quatro juntos** (`UX-031`), e vindos da `016` — esta tela não os recalcula.
+
+        Desde a `143` (FR-5005), rotulados como da apuração: "Ocupadas", sozinho, se lia como
+        pessoas que já preenchem as vagas.
+        """
         edital, _, _ = cenario_da_tela
         identificar(client, "carlos", ["gestor"])
 
         pagina = abrir(client, edital).content.decode()
 
-        for rotulo in ("Publicadas", "Efetivas", "Ocupadas", "A ocupar"):
+        for rotulo in (
+            "Publicadas no Edital",
+            "Efetivas",
+            "Consideradas ocupadas na apuração",
+            "A ocupar na apuração",
+        ):
             assert rotulo in pagina
 
     def test_sem_convocacao_praticada_a_tela_o_diz_com_palavras(
@@ -284,9 +293,9 @@ def test_a_tela_nao_afirma_numero_de_ocupacao_diferente_do_apurado(
 
     assert "A apuração deste recorte está obsoleta" in pagina
     assert "um desfecho de convocação mudou quem ocupa vaga" in pagina
-    assert f"<li><strong>{vigente.ocupadas}</strong>Ocupadas</li>" in pagina, (
-        "o número exibido é o que a apuração vigente apurou, e não um recalculado pela tela"
-    )
+    assert (
+        f"<li><strong>{vigente.ocupadas}</strong>Consideradas ocupadas na apuração</li>" in pagina
+    ), "o número exibido é o que a apuração vigente apurou, e não um recalculado pela tela"
 
 
 def test_o_historico_mostra_a_reclassificacao_com_fundamento_e_posicao_nova(

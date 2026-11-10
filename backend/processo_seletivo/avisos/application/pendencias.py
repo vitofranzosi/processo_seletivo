@@ -312,7 +312,14 @@ def previa(*, actor, edital, perfil_id, marco_id, lista_id, agora=None, conducao
     )
     if not selecao.pessoas:
         return None
-    return {**selecao.resumo(), "habilitado": envio_habilitado()}
+    return {
+        **selecao.resumo(),
+        "habilitado": envio_habilitado(),
+        # **O motivo de cada chamada, da mesma seleção** (143, FR-5017): a tela da condução diz,
+        # no cartão de cada pessoa, se o gesto a alcançaria agora ou por que não. Uma segunda
+        # seleção na interface seria a regra escrita duas vezes. `""` é alcançada.
+        "por_chamada": {str(pessoa.raiz.id): pessoa.exclusao for pessoa in selecao.pessoas},
+    }
 
 
 def avisar_pendencias(

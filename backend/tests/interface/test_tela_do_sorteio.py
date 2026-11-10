@@ -94,8 +94,11 @@ def test_o_botao_de_sortear_so_aparece_com_relacao_congelada_e_ocorrencia_observ
     certame, client
 ):
     """A ordem dos fatos é a feature: universo comprometido, **depois** semente, depois ato."""
+    # **O controle, e não a prosa** (142): "Realizar o sorteio" é também o nome do passo 3, que a
+    # tela mostra sempre. O que não pode existir antes da hora é o formulário.
+    sortear = reverse("interface:realizar-sorteio", args=[certame["edital"].id, certame["marco"]])
     antes = _abrir(client, certame)
-    assert "Realizar o sorteio" not in antes
+    assert sortear not in antes
 
     identificar(client, "maria", [])
     client.post(
@@ -104,7 +107,7 @@ def test_o_botao_de_sortear_so_aparece_com_relacao_congelada_e_ocorrencia_observ
         ),
         {"lista_id": "", "chave_idempotencia": "tela-sorteio-relacao"},
     )
-    assert "Realizar o sorteio" not in _abrir(client, certame), "sem semente não há o que sortear"
+    assert sortear not in _abrir(client, certame), "sem semente não há o que sortear"
 
     observar_ocorrencia(
         actor=presidente(),
@@ -116,7 +119,7 @@ def test_o_botao_de_sortear_so_aparece_com_relacao_congelada_e_ocorrencia_observ
         fonte_externa=FonteDeTeste(),
     )
 
-    assert "Realizar o sorteio" in _abrir(client, certame)
+    assert sortear in _abrir(client, certame)
 
 
 def test_a_anulacao_e_percorrivel_pela_tela(certame, client):

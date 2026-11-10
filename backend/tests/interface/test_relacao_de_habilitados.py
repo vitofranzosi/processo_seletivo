@@ -14,6 +14,10 @@ from django.urls import reverse
 from tests.fixtures.sorteio import METODO, certame_de_sorteio
 from tests.interface.conftest import identificar
 
+# O botão de fixar desde a `142`: "Fixar os N participantes desta lista" (no GPS: publicar e
+# congelar a relação). O rótulo antigo, procurado com `not in`, passaria calado.
+BOTAO_DE_FIXAR = "participantes desta lista</button>"
+
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 
@@ -35,7 +39,7 @@ def test_a_tela_mostra_o_metodo_lido_do_edital_e_a_previa_da_relacao(client, cer
     # A fonte **declarada**, e não uma constante do teste: ela é o que determina qual adaptador
     # obtém a semente, e o nome vem do vocabulário publicado (FR-076).
     assert METODO["source"] in corpo
-    assert "Publicar e congelar a relação" in corpo
+    assert BOTAO_DE_FIXAR in corpo
     for inscricao in certame["inscricoes"]:
         assert inscricao.protocolo in corpo
 
@@ -99,5 +103,5 @@ def test_a_publicacao_congela_e_a_tela_passa_a_dizer_isso(client, certame):
     assert resposta.status_code == 302
     corpo = client.get(resposta["Location"]).content.decode()
     assert "Relação publicada e congelada" in corpo
-    assert "Relação congelada em" in corpo
+    assert "relação congelada em" in corpo
     assert "Motivo da sucessão" in corpo, "publicar outra passa a exigir motivo"

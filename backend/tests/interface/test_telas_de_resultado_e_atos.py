@@ -113,12 +113,21 @@ BOTOES = {
     "ordenacao.html": [("botao", "Emitir ordem")],
     "ordenacao_confirmar.html": [("botao perigoso", "Emitir a ordem")],
     "ato_ordenacao.html": [],
+    # A `142` mudou a tela do sorteio de propósito: os rótulos dizem a tarefa ("Fixar os N
+    # participantes desta lista", e o nome no GPS ao lado), e observar perde peso enquanto há
+    # lista a fixar (D-004 dela). O desenho de nenhum ato que não se desfaz subiu.
     "sorteio.html": [
-        ("botao", "Observar a ocorrência {{ proxima_referencia }} na fonte"),
-        ("botao perigoso", "Anular e constituir o sucessor"),
-        ("botao", "Realizar o sorteio"),
         ("acao", "Publicar relação nova, sucedendo a atual"),
-        ("botao", "Publicar e congelar a relação"),
+        ("botao", "Fixar os {{ recorte.projetados }} participantes desta lista"),
+        (
+            "botao{% if fixar_por_fazer %} secundario{% endif %}",
+            "Observar a ocorrência {{ proxima_referencia }} na fonte",
+        ),
+        ("botao perigoso", "Anular e constituir o sucessor"),
+        (
+            "botao{% if fixar_e_a_vez %} secundario{% endif %}",
+            "Realizar o sorteio desta lista",
+        ),
     ],
     "corte.html": [("botao", "Emitir corte"), ("botao", "Emitir faixa seguinte")],
     "corte_historico.html": [],
@@ -132,6 +141,10 @@ BOTOES = {
         ("botao", "Conferir o acréscimo"),
     ],
     "ocupacao_historico.html": [],
+    # **A mesma lista, noutra ordem** (143, FR-5008, D-001): as seções se agruparam em áreas —
+    # convocar; acompanhar e conferir; fila, suplentes e regularização —, e nenhum botão mudou de
+    # rótulo nem de desenho. As comunicações a emitir vieram para "Convocar", logo depois dos
+    # titulares; a chamada individual e a regularização foram para depois das chamadas.
     "convocacao.html": [
         # O gesto dos titulares abre a conferência, e o rótulo o diz (140, FR-4816): no C10 da
         # `134`, "Convocar as 3" praticou e enviou três mensagens num clique.
@@ -139,11 +152,6 @@ BOTOES = {
             "botao",
             "Conferir e convocar "
             '{{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}',
-        ),
-        (
-            "botao",
-            'Registrar o não atendimento {{ vencidos.linhas|length|plural:"da,das" }} '
-            "{{ vencidos.linhas|length }}",
         ),
         (
             "botao",
@@ -155,8 +163,11 @@ BOTOES = {
             "Emitir {{ pendentes.linhas|length }} "
             '{{ pendentes.linhas|length|plural:"comunicação,comunicações" }}',
         ),
-        ("botao", "Convocar"),
-        ("botao", "Convocar para regularizar"),
+        (
+            "botao",
+            'Registrar o não atendimento {{ vencidos.linhas|length|plural:"da,das" }} '
+            "{{ vencidos.linhas|length }}",
+        ),
         # O aviso de pendência documental (134, FR-4603): grava avisos, e não muda a convocação.
         ("botao", "Avisar as pessoas com pendência nesta chamada"),
         ("botao", "Registrar desfecho"),
@@ -167,6 +178,8 @@ BOTOES = {
         # A palavra do canal (125, FR-4000): *"Registrar a publicação"* na publicação.
         ("acao", "{{ linha.canal.emitir_de_novo }}"),
         ("botao", "{{ linha.canal.emitir }}"),
+        ("botao", "Convocar"),
+        ("botao", "Convocar para regularizar"),
     ],
     "convocacao_historico.html": [],
     "matriculas.html": [("botao", "Ver o que sairá vazio"), ("botao", "Baixar o arquivo")],
@@ -204,7 +217,15 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
     # é o indeferimento pelas pendências de documento (115): o mesmo desenho do desfecho, que ele é.
     # O 24º é o aviso de pendência documental (134): não desfaz nada porque não muda ato nenhum — o
     # prazo, a lista e o desfecho ficam como estão —, e o despacho manda no máximo um por dia.
-    assert desenhos == {"botao": 24, "botao perigoso": 2, "acao": 2}
+    # Os desenhos de observar a semente e de sortear, na `142`: o mesmo `botao`, que passa a
+    # secundário enquanto fixar é a tarefa de agora — perdem peso, e não ganham.
+    assert desenhos == {
+        "botao": 22,
+        "botao{% if fixar_por_fazer %} secundario{% endif %}": 1,
+        "botao{% if fixar_e_a_vez %} secundario{% endif %}": 1,
+        "botao perigoso": 2,
+        "acao": 2,
+    }
 
 
 # ---- pela página renderizada -------------------------------------------------------------------
