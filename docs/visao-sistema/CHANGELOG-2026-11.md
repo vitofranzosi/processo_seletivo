@@ -327,3 +327,18 @@ esta atualização vai no mesmo PR que a troca, de modo que chega à `main` com 
 - Não foi recontada a seção *Maturidade*, e a 137 (o Processo agrega os Editais), que não foi feita,
   não entrou.
 
+## Acréscimo de 10/11: as specs 142 e 143, e a 144 como Previsto
+
+Entraram na `main`, que chegou a `b202a7c0`, duas specs implementadas (#452, #453) e uma só especificada (#454). Três leituras paralelas, uma por spec, conferiram no código os rótulos, as rotas e os códigos citados; onde spec e código divergiram, valeu o código.
+
+- **142, a tela do sorteio como a jornada de quem o conduz (#452):** seção nova, *A tela do sorteio como a jornada de quem o conduz (142)*, em `#jornada-do-sorteio`, antes de *A extração inviável*. Quatro passos (*Fixar os participantes*, *Obter a semente pública*, *Realizar o sorteio*, *Consultar a ordem sorteada*), a marca *Agora* só para quem conduz, a auditoria sem formulário, a ordem sorteada pela primeira vez na tela de gestão, e as âncoras novas da ida pelo Centro. Os botões mudaram de rótulo: *Fixar os N participantes desta lista* e *Realizar o sorteio desta lista*. Nenhuma regra, migration, tabela ou permissão.
+- **143, a convocação e a conferência documental pelas perguntas de quem conduz (#453):** seção nova, `#convocacao-pelas-perguntas`, ao fim de *Convocar como fluxo*. O índice *Neste recorte, agora*, as vagas separadas da apuração e das chamadas praticadas, as três áreas, o passo e a situação do aviso por chamada, e a página dos documentos com a pessoa seguinte. Só leitura: o passo e a situação do aviso são derivados, e nunca gravados.
+- **144, o Cronograma (#454):** *Previsto*, em `#cronograma-pdf-ordem-previa`, dentro da página do Cronograma. Só a especificação foi mergeada: ocultar o Evento da tabela do PDF, ordenar por data de início e uma prévia compacta. Nada foi implementado, e as seções que listam os campos do passo não mudaram.
+- **Corrigido na Visão:** os rótulos dos botões do sorteio em cinco lugares (o rito, *A extração inviável*, os cenários de treinamento, a lista de atos sem conferência e a ida da 139); a frase da 127 que dizia que abrir uma tela não paga a derivação, que a tela do sorteio deixou de cumprir; a ordem dos dois avisos da convocação em *O aviso de pendência*; a lacuna desse aviso, que a 143 percorreu no navegador; os arquivos de evidência da tela da convocação.
+- **Corrigido no README:** as linhas da 138, da 141, da 142 e da 143 já diziam "mergeada" pela #450; a da 144 dizia "PR sem merge".
+
+**Não verificado:**
+
+- a suíte inteira não rodou aqui; rodaram os guardiões que leem `specs/` e `doc/`. Os números de teste vêm do `verificacao.md` de cada spec, e nenhum mede a `main` com as três entregas juntas; a 143 não registra a suíte inteira depois das correções da revisão;
+- as telas não foram percorridas, e a *Maturidade* não foi recontada;
+- ficam abertas a conferência em dois passos do congelamento do sorteio, a observação da semente antes de fixar a primeira lista, o aviso da 143 de que a providência de conferir documentos leva ao título e não à primeira chamada, e a decisão de passar a chamada individual pela conferência da 140.
