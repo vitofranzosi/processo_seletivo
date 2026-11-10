@@ -9053,6 +9053,10 @@ def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=Fa
         return {
             "desta": item(desta) if desta is not None else None,
             "outras": [(rotulo, item(celula)) for rotulo, celula in outras],
+            # **O retorno vem com o bloco, e não de cada tela** (139, FR-4768, D-004): a tela que
+            # passar a mostrá-lo ganha a volta sem lembrar dela, e a volta nunca aparece sem ele. A
+            # porta do Centro é o escopo do Edital, a mesma desta tela.
+            "centro": reverse("interface:centro-do-edital", args=[edital.id]),
         }
 
     return ler
