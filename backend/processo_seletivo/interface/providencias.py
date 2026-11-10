@@ -49,6 +49,9 @@ class Providencia:
     url_do_marco: str = ""
     #: A espera é recomendação: o ato é aceito, e a tela diz por que esperar (133, FR-4542).
     recomendacao: bool = False
+    #: A ordem de lista em que ninguém concorre (135, FR-4673): o dado, para a apresentação tratá-la
+    #: sem ler a frase do ato.
+    lista_vazia: bool = False
 
     @classmethod
     def da_celula(
@@ -93,6 +96,7 @@ class Providencia:
             lugar=lugar,
             url_do_marco=url_do_marco if sua else "",
             recomendacao=celula.recomendacao,
+            lista_vazia=celula.lista_vazia,
         )
 
     @classmethod
@@ -159,6 +163,9 @@ def agrupar(providencias):
     E o que **espera** pela mesma razão — o fim das inscrições, que segura a relação e a
     distribuição — vira uma linha só, com os atos juntos: a razão é uma, e repeti-la empurraria o
     resto para o "Mais N".
+
+    **A lista vazia não se junta à lista com inscritos** (135, FR-4674): a chave a separa pelo
+    dado, e não só pela frase do ato, que pode mudar. Duas vazias se juntam, no plural.
     """
     saida, por_chave = [], {}
     for item in providencias:
@@ -172,6 +179,7 @@ def agrupar(providencias):
                 item.responsavel,
                 item.ato,
                 item.sua,
+                item.lista_vazia,
             )
         else:
             chave = None
@@ -183,6 +191,14 @@ def agrupar(providencias):
         indice = por_chave[chave]
         saida[indice] = _juntar(saida[indice], item)
     return saida
+
+
+#: O ato de duas ou mais listas vazias juntadas (135, FR-4674): a sucessora também, e não só a
+#: primeira emissão — a revisão do PR #441 achou a sucessora no singular.
+_PLURAL_DA_LISTA_VAZIA = {
+    a.ATO_DA_ORDEM_VAZIA: a.ATO_DAS_ORDENS_VAZIAS,
+    a.ATO_DA_SUCESSORA_VAZIA: a.ATO_DAS_SUCESSORAS_VAZIAS,
+}
 
 
 def _juntar(primeira, outra):
@@ -207,10 +223,15 @@ def _juntar(primeira, outra):
     elif outra.url and outra.url != primeira.url:
         url = _sem_lista(primeira.url)
     lugares = _unicos([*primeira.lugar.split("; "), outra.lugar])
+    listas = tuple(_unicos([*primeira.listas, *outra.listas]))
+    ato = primeira.ato
+    if primeira.lista_vazia and len(listas) > 1:
+        ato = _PLURAL_DA_LISTA_VAZIA.get(ato, ato)
     return replace(
         primeira,
         url=url,
-        listas=tuple(_unicos([*primeira.listas, *outra.listas])),
+        ato=ato,
+        listas=listas,
         lugar="; ".join(lugares),
         onde=primeira.onde if len(lugares) == 1 else "; ".join(lugares),
     )

@@ -319,7 +319,8 @@ def test_o_resultado_nunca_divulgado_e_de_quem_publica():
 
 def test_o_preliminar_com_a_definitiva_publicavel_e_pendente():
     situacao = resultado(
-        {"estado": "feito", "nota": "resultado preliminar"}, definitiva={"nivel": p.AVISO}
+        {"estado": "feito", "nota": "resultado preliminar", "natureza": "PRELIMINAR"},
+        definitiva={"nivel": p.AVISO},
     )
     assert situacao.situacao == a.PENDENTE
     assert situacao.ato == "Publicar o resultado definitivo"
@@ -327,7 +328,7 @@ def test_o_preliminar_com_a_definitiva_publicavel_e_pendente():
 
 def test_o_preliminar_na_janela_recursal_aguarda():
     situacao = resultado(
-        {"estado": "feito", "nota": "resultado preliminar"},
+        {"estado": "feito", "nota": "resultado preliminar", "natureza": "PRELIMINAR"},
         definitiva={"nivel": p.IMPEDIMENTO, "codigo": p.JANELA_ABERTA, "mensagem": "Aguarde."},
     )
     assert situacao.situacao == a.AGUARDA
@@ -350,7 +351,12 @@ def test_a_afericao_que_impede_a_publicacao_e_impedido():
 
 
 def test_o_definitivo_e_feito_e_o_defasado_e_obsoleto():
-    assert resultado({"estado": "feito", "nota": "resultado definitivo"}).situacao == a.FEITO
+    assert (
+        resultado(
+            {"estado": "feito", "nota": "resultado definitivo", "natureza": "DEFINITIVA"}
+        ).situacao
+        == a.FEITO
+    )
     assert resultado({"estado": "obsoleto"}).situacao == a.OBSOLETO
 
 
@@ -513,7 +519,7 @@ def test_o_corte_feito_ou_obsoleto_ignora_a_espera():
 def test_com_a_preliminar_feita_e_a_ordem_obsoleta_a_definitiva_e_depois():
     situacao = a.situacao_do_resultado(
         {
-            "celula": {"estado": "feito", "nota": "resultado preliminar"},
+            "celula": {"estado": "feito", "nota": "resultado preliminar", "natureza": "PRELIMINAR"},
             "ordem": celula(a.OBSOLETO),
         }
     )
@@ -524,7 +530,7 @@ def test_com_a_preliminar_feita_e_a_ordem_obsoleta_a_definitiva_e_depois():
 def test_com_o_corte_obsoleto_a_definitiva_e_impedida_e_nao_pendente():
     """FR-4551, como a R-007 ajustou: a aferição já devolve o impedimento do corte obsoleto."""
     situacao = resultado(
-        {"estado": "feito", "nota": "resultado preliminar"},
+        {"estado": "feito", "nota": "resultado preliminar", "natureza": "PRELIMINAR"},
         definitiva={
             "nivel": p.IMPEDIMENTO,
             "codigo": p.CORTE_OBSOLETO,

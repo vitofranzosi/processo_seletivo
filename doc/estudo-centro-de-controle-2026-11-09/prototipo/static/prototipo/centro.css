@@ -1,0 +1,211 @@
+/* O Centro de Controle do Edital — protótipo do estudo de 2026-11-09, versão 2.
+   Só tokens de shared/tokens.css. A situação nunca é só cor: todo estado leva sinal e palavra
+   (WCAG 1.4.1).
+
+   **Duas linguagens visuais, porque são duas leituras** (refinamento de 09/11):
+   - o ANDAMENTO da fase é a borda superior do cartão e o sinal (✓ ◐ ○ —), em tons neutros e verde;
+   - o que a fase OFERECE agora são as marcas em pílula ("1 sua", "1 de outro papel", "◷ até 14/11",
+     "⊘ impedida"), cada uma com a sua cor.
+   A primeira versão usava a mesma cor para "fase em andamento" e "há ação", e as duas se confundiam. */
+
+.cc-faixa-prototipo,
+.cc-faixa-fixture { margin: 0 0 .6rem; padding: .3rem .6rem; border-radius: 6px; font-size: .8rem; }
+.cc-faixa-prototipo { background: var(--cinza-fundo); color: var(--texto-fraco); }
+.cc-faixa-fixture { background: var(--amarelo-fundo); color: var(--amarelo); border: 1px solid var(--amarelo); }
+
+.cc-fraco { color: var(--texto-fraco); font-weight: 400; }
+.cc-ajuda-curta { color: var(--texto-fraco); font-size: .9rem; margin: 0 0 .75rem; max-width: var(--leitura); }
+.cc-rotulo-pequeno { margin: 0 0 .25rem; font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--texto-fraco); }
+.cc-titulo-de-camada { font-size: 1.05rem; margin: 0 0 .35rem; }
+.cc-visualmente-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cc-no-gps { color: var(--texto-fraco); font-size: .82rem; font-style: italic; }
+.cc-curta { margin: .2rem 0; font-size: .9rem; line-height: 1.4; max-width: var(--leitura); }
+
+/* ---------- Cabeçalho ---------- */
+.cc-cabecalho { margin-bottom: .75rem; }
+.cc-cabecalho h1 { margin: 0; font-size: 1.45rem; }
+.cc-titulo-do-edital { display: block; font-size: .95rem; font-weight: 400; color: var(--texto-fraco); }
+.cc-onde { margin: .55rem 0; }
+.cc-onde p { margin: 0; }
+.cc-onde-frase { font-size: 1.08rem; font-weight: 600; line-height: 1.4; }
+.cc-onde-detalhe { margin-top: .15rem; color: var(--texto); }
+.cc-onde-rotulo { display: inline-block; margin-right: .5rem; padding: .05rem .5rem; border-radius: 4px; background: var(--verde-escuro); color: var(--branco); font-size: .72rem; letter-spacing: .03em; text-transform: uppercase; vertical-align: .15em; }
+.cc-estados { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .25rem 1.25rem; margin: 0; padding: .45rem .8rem; border: 1px solid var(--borda); border-radius: 6px; background: var(--branco); font-size: .9rem; }
+.cc-estados dt { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-fraco); }
+.cc-estados dd { margin: .1rem 0 0; }
+
+/* ---------- As marcas: o que a fase oferece agora ---------- */
+.cc-marca { display: inline-block; padding: 0 .4rem; border-radius: 999px; border: 1px solid transparent; font-size: .72rem; font-weight: 600; line-height: 1.5; white-space: nowrap; }
+.cc-marca.sua { background: var(--verde-escuro); color: var(--branco); }
+.cc-marca.outro { border-color: var(--texto-fraco); color: var(--texto); background: var(--branco); }
+.cc-marca.espera { background: var(--amarelo-fundo); color: var(--amarelo); border-color: var(--amarelo); }
+.cc-marca.impedida { background: var(--vermelho-fundo); color: var(--vermelho); border-color: var(--vermelho); }
+.cc-marca.nada { color: var(--texto-fraco); border-color: var(--borda); }
+.cc-marca.acao-da-lista { background: var(--verde-claro); color: var(--verde-escuro); border-color: var(--verde); }
+
+/* ---------- Camada A: o mapa, em três grupos ---------- */
+.cc-jornada { margin-bottom: .9rem; }
+.cc-mapa { display: grid; grid-template-columns: 2fr 4fr 2fr; gap: .6rem; }
+.cc-grupo { min-width: 0; }
+.cc-grupo-rotulo { margin: 0 0 .2rem; padding-bottom: .15rem; border-bottom: 1px solid var(--borda); font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--texto-fraco); }
+.cc-fases { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: .35rem; }
+.cc-fase { position: relative; min-width: 0; }
+.cc-fase a { display: flex; flex-direction: column; gap: .15rem; height: 100%; box-sizing: border-box; padding: .4rem .5rem .45rem; border: 1px solid var(--borda); border-top-width: 4px; border-radius: 6px; background: var(--branco); color: var(--texto); text-decoration: none; }
+.cc-fase a:hover { border-color: var(--verde-texto); }
+.cc-fase a:focus-visible { outline: 3px solid var(--verde-escuro); outline-offset: 2px; }
+.cc-fase-linha { display: flex; gap: .3rem; align-items: baseline; }
+.cc-fase-sinal { font-size: .95rem; line-height: 1; }
+.cc-fase-nome { font-weight: 700; font-size: .88rem; line-height: 1.2; }
+.cc-fase-andamento { font-size: .74rem; color: var(--texto-fraco); line-height: 1.25; }
+.cc-fase-resumo { font-weight: 400; }
+.cc-marcas { display: flex; flex-wrap: wrap; gap: .2rem; margin-top: auto; padding-top: .15rem; }
+
+/* O andamento: só a borda e o sinal. */
+.cc-fase.f-concluida a { border-top-color: var(--verde); }
+.cc-fase.f-concluida .cc-fase-sinal { color: var(--verde-texto); }
+.cc-fase.f-em_curso a { border-top-color: var(--texto); }
+.cc-fase.f-em_curso .cc-fase-andamento { color: var(--texto); font-weight: 600; }
+.cc-fase.f-nao_iniciada a { border-top-color: var(--borda); border-style: dashed; border-top-style: solid; color: var(--texto-fraco); }
+.cc-fase.f-nao_se_aplica a { border-top-color: var(--borda); border-style: dashed; color: var(--texto-fraco); background: transparent; }
+
+.cc-fase.selecionada a { outline: 2px solid var(--verde-escuro); outline-offset: 1px; background: var(--verde-claro); }
+.cc-fase.selecionada::after { content: ""; position: absolute; left: 50%; bottom: -.5rem; margin-left: -.4rem; border: .4rem solid transparent; border-top-color: var(--verde-escuro); border-bottom: 0; }
+
+.cc-legenda { margin-top: .45rem; font-size: .85rem; }
+.cc-legenda summary { cursor: pointer; color: var(--verde-texto); }
+.cc-legenda-colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: .5rem 1.5rem; }
+.cc-legenda p { margin: .45rem 0 .2rem; max-width: var(--leitura); }
+.cc-legenda ul { margin: 0; padding-left: 1.1rem; }
+.cc-legenda li { margin: .15rem 0; }
+
+/* ---------- O corpo: o que fazer + o detalhe da fase ---------- */
+.cc-grade { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1rem; align-items: start; margin-bottom: 1rem; }
+.cc-grade > .cartao { min-width: 0; }
+.cc-agora h2, .cc-detalhe h2 { margin-bottom: .5rem; }
+.cc-subtitulo { font-size: 1rem; margin: 1rem 0 .4rem; }
+.cc-conta { display: inline-block; min-width: 1.4rem; padding: 0 .35rem; border-radius: 999px; background: var(--verde-escuro); color: var(--branco); font-size: .8rem; text-align: center; }
+.cc-nenhuma-sua { margin: 0 0 .6rem; }
+
+.cc-acao-principal { margin: 0 0 .75rem; padding: .8rem 1rem; border: 2px solid var(--verde-escuro); border-radius: 8px; background: var(--verde-claro); }
+.cc-acao-principal h3 { margin: .1rem 0 .15rem; font-size: 1.25rem; }
+.cc-acao-principal p { margin: .3rem 0; }
+.cc-porque-destaque { font-size: .88rem; }
+
+.cc-providencias { list-style: none; margin: 0 0 .5rem; padding: 0; }
+.cc-providencia { margin: 0 0 .5rem; padding: .5rem .75rem; border: 1px solid var(--borda); border-left-width: 4px; border-radius: 6px; background: var(--branco); }
+.cc-providencia p { margin: .12rem 0; }
+.cc-providencia.sua { border-left-color: var(--verde-escuro); background: var(--verde-claro); }
+.cc-providencia.aguardando { border-left-color: var(--amarelo); }
+.cc-providencia.impedida { border-left-color: var(--vermelho); background: var(--vermelho-fundo); }
+.cc-providencias.compactas .cc-providencia { padding: .35rem .6rem; border-left-color: var(--texto-fraco); font-size: .92rem; }
+.cc-ato { font-weight: 700; font-size: 1.02rem; }
+.cc-onde-da-acao { color: var(--texto-fraco); font-size: .86rem; }
+.cc-razao { color: var(--texto-fraco); font-size: .88rem; }
+.cc-retificacao { margin-top: .75rem; }
+.cc-paralela-curta { font-size: .85rem; color: var(--verde-texto); }
+
+.cc-entenda { margin: .3rem 0 0; font-size: .88rem; }
+.cc-entenda summary { cursor: pointer; color: var(--verde-texto); font-weight: 600; }
+.cc-entenda p { margin: .3rem 0; max-width: var(--leitura); }
+.cc-entenda-da-fase { margin-top: .6rem; }
+.cc-entenda-da-fase dt { margin-top: .45rem; font-weight: 700; }
+.cc-entenda-da-fase dd { margin: .1rem 0 0; max-width: var(--leitura); }
+
+.cc-detalhe h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
+.cc-situacao-da-fase { font-size: .82rem; font-weight: 600; padding: .05rem .5rem; border-radius: 999px; border: 1px solid currentColor; }
+.cc-situacao-da-fase.f-concluida, .cc-fase-sinal-inline.f-concluida { color: var(--verde-texto); }
+.cc-situacao-da-fase.f-em_curso, .cc-fase-sinal-inline.f-em_curso { color: var(--texto); }
+.cc-situacao-da-fase.f-nao_iniciada, .cc-situacao-da-fase.f-nao_se_aplica { color: var(--texto-fraco); }
+.cc-pergunta { margin: 0 0 .4rem; color: var(--texto-fraco); font-style: italic; }
+.cc-oferece { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin: 0 0 .5rem; }
+.cc-nota { padding: .4rem .6rem; border-radius: 4px; background: var(--cinza-fundo); font-size: .9rem; }
+.cc-paralela { padding: .4rem .7rem; border-left: 4px solid var(--verde); background: var(--verde-claro); font-size: .9rem; }
+
+/* O roteiro: os passos da fase, em linguagem de quem conduz, com a frase curta sempre visível. */
+.cc-roteiro { list-style: none; margin: .4rem 0 .75rem; padding: 0; display: grid; gap: .35rem; }
+.cc-roteiro li { display: flex; gap: .55rem; align-items: flex-start; padding: .45rem .6rem; border: 1px solid var(--borda); border-radius: 6px; background: var(--branco); }
+.cc-roteiro-n { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--cinza-fundo); font-weight: 700; font-size: .78rem; flex: none; }
+.cc-roteiro-texto { display: flex; flex-direction: column; gap: .05rem; min-width: 0; }
+.cc-roteiro-nome { font-weight: 700; }
+.cc-roteiro-situacao { font-size: .82rem; color: var(--texto-fraco); }
+.cc-roteiro li.f-concluida { background: var(--verde-claro); border-color: var(--verde-claro); }
+.cc-roteiro li.f-concluida .cc-roteiro-n { background: var(--verde); color: var(--branco); }
+.cc-roteiro li.com-acao { border: 2px solid var(--verde-escuro); }
+.cc-roteiro li.com-acao .cc-roteiro-n { background: var(--verde-escuro); color: var(--branco); }
+.cc-roteiro li.com-acao .cc-roteiro-situacao { color: var(--verde-escuro); }
+.cc-roteiro li.f-nao_iniciada { border-style: dashed; }
+.cc-roteiro li.f-nao_iniciada .cc-roteiro-nome { color: var(--texto-fraco); }
+
+.cc-tabela-da-fase, .cc-tabela-das-listas { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.cc-tabela-da-fase caption { text-align: left; padding-bottom: .3rem; font-size: .8rem; }
+.cc-tabela-da-fase th, .cc-tabela-da-fase td, .cc-tabela-das-listas th, .cc-tabela-das-listas td { padding: .4rem .5rem; border-bottom: 1px solid var(--borda); text-align: left; vertical-align: top; }
+.cc-tabela-da-fase thead th, .cc-tabela-das-listas thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-fraco); background: var(--fundo); }
+.cc-tabela-da-fase td > span { display: block; }
+.cc-celula-ato { font-weight: 600; margin-top: .15rem; }
+.cc-tabela-da-fase td[data-situacao="pendente"], .cc-tabela-da-fase td[data-situacao="obsoleto"] { background: var(--verde-claro); }
+.cc-tabela-da-fase td[data-situacao="aguarda"] { background: var(--amarelo-fundo); }
+.cc-tabela-da-fase td[data-situacao="impedido"] { background: var(--vermelho-fundo); }
+.cc-perfil-na-fase + .cc-perfil-na-fase { margin-top: 1rem; }
+.cc-historico { list-style: none; padding: 0; }
+.cc-historico li { padding: .2rem 0; }
+
+/* ---------- Camada C: as listas ---------- */
+.cc-listas { margin-bottom: 1.5rem; }
+.cc-perfil + .cc-perfil { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--borda); }
+.cc-perfil h3 { margin: 0 0 .5rem; }
+.cc-celula-fase a { display: inline-flex; gap: .3rem; align-items: baseline; color: inherit; text-decoration: none; white-space: nowrap; }
+.cc-celula-fase a:hover .cc-rotulo-da-celula { text-decoration: underline; }
+.cc-celula-fase.f-concluida { color: var(--verde-texto); }
+.cc-celula-fase.f-em_curso { color: var(--texto); font-weight: 600; }
+.cc-celula-fase.f-nao_iniciada, .cc-celula-fase.f-nao_se_aplica { color: var(--texto-fraco); }
+.cc-agora-da-lista { min-width: 15rem; }
+.cc-atos-da-lista { margin: 0; padding: 0; list-style: none; }
+.cc-atos-da-lista li + li { margin-top: .2rem; }
+.cc-matriz-completa { margin-top: .6rem; }
+.cc-matriz-completa summary, .cc-terminais summary { cursor: pointer; color: var(--verde-texto); font-weight: 600; }
+.cc-telas { font-size: .88rem; margin: .6rem 0 0; }
+
+/* ---------- Camada D: administração ---------- */
+.cc-administracao { margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid var(--borda); }
+.cc-admin-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: .75rem; }
+.cc-admin-grade .cartao { font-size: .92rem; }
+.cc-admin-grade h3 { font-size: .95rem; margin: 0 0 .4rem; }
+.cc-lista-simples { margin: 0; padding-left: 1.1rem; }
+.cc-lista-simples li { margin: .15rem 0; }
+.cc-quem { margin: 0; }
+.cc-quem div { display: flex; gap: .5rem; }
+.cc-quem dt { min-width: 5.5rem; color: var(--texto-fraco); }
+.cc-quem dd { margin: 0; }
+.cc-terminais { margin-top: 1rem; padding: .6rem .9rem; border: 1px solid var(--borda); border-radius: 6px; background: var(--branco); }
+
+/* ---------- O Processo agregado ---------- */
+.cc-editais { list-style: none; margin: 0; padding: 0; }
+.cc-edital { padding: 1rem 0; border-bottom: 1px solid var(--borda); }
+.cc-edital:last-child { border-bottom: 0; }
+.cc-edital h3 { margin: 0 0 .25rem; }
+.cc-mini-trilha { list-style: none; margin: .5rem 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; }
+.cc-mini-trilha li { padding: .1rem .5rem; border-radius: 4px; border: 1px solid var(--borda); border-top-width: 3px; font-size: .8rem; background: var(--branco); }
+.cc-mini-trilha li.f-concluida { border-top-color: var(--verde); color: var(--verde-texto); }
+.cc-mini-trilha li.f-em_curso { border-top-color: var(--texto); font-weight: 600; }
+.cc-mini-trilha li.f-nao_iniciada, .cc-mini-trilha li.f-nao_se_aplica { color: var(--texto-fraco); border-style: dashed; }
+.cc-indice { list-style: none; padding: 0; }
+.cc-indice li { padding: .6rem 0; border-bottom: 1px solid var(--borda); }
+
+/* ---------- Telas estreitas ---------- */
+@media (max-width: 1180px) {
+  .cc-mapa { grid-template-columns: minmax(0, 1fr); }
+  .cc-grade { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .cc-fases { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); gap: .3rem; }
+  .cc-fase a { border-top-width: 1px; border-left-width: 4px; }
+  .cc-fase.f-concluida a { border-left-color: var(--verde); }
+  .cc-fase.f-em_curso a { border-left-color: var(--texto); }
+  .cc-fase.selecionada::after { display: none; }
+  .cc-onde-frase { font-size: 1rem; }
+}
+
+/* O roteiro em colunas na tela larga: a altura é a do passo mais longo, e não a soma dos passos. */
+@media (min-width: 1181px) {
+  .cc-roteiro { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+}

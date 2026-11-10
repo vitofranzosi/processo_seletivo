@@ -1,0 +1,21 @@
+| Cenário | Tarefa | Tela atual | Proposta |
+|---|---|---|---|
+| C06 | T1 Situação operacional dita em palavras | ausente | na primeira dobra |
+| C06 | T2 Próxima operação do operador | na primeira dobra | na primeira dobra |
+| C06 | T3 Por que o sorteio ainda não pode | ausente | na primeira dobra |
+| C06 | T5 O que é congelar a relação | ausente | na primeira dobra |
+| C06 | T5b A Etapa de títulos não segura o sorteio | ausente | na primeira dobra |
+| C12 | T1 Situação operacional dita em palavras | ausente | na primeira dobra |
+| C12 | T4 Onde está a lista PPP | na primeira dobra | na primeira dobra |
+| C12 | T6 Pendência atribuída ao operador | na primeira dobra | na primeira dobra |
+| C12 | T7 Espera com data (resposta dos convocados) | na primeira dobra | na primeira dobra |
+| C12 | T8 Histórico de etapa concluída (link do ato feito) | só abrindo um bloco recolhido | rolando, a 933px |
+| C08 | T7 Corte aguarda o prazo de recurso | na primeira dobra | na primeira dobra |
+| C08 | T1 Situação operacional dita em palavras | ausente | na primeira dobra |
+| C06 | T10 Por que esta ação vem primeiro | ausente | na primeira dobra |
+| C12 | T11 Ações independentes, sem ranking | ausente | na primeira dobra |
+| C06 | T12 Fase em curso com marca de ação sua | ausente | na primeira dobra |
+
+Altura da página e links no conteúdo: {"atual C06": [1586, 18], "proposta C06": [2164, 36], "atual C12": [1756, 25], "proposta C12": [2159, 36]}
+
+Ordem do Tab no conteúdo (proposta C06): Ver a tela atual → ✓ Edital Concluída · Publicado · 1 Retificação → ✓ Inscrições Concluída · 10 inscrições · encerrada → ◐ Avaliação Em curso 1 sua → ◐ Classificação Em curso 1 sua → ○ Resultado e recursos Ainda não começou → ○ Vagas Ainda não começou → ○ Convocação Ainda não começou → ○ Conclusão Ainda não começou · Depois das convoca → Como ler o mapa → Abrir a tela → Entenda o ato → Distribuir 10 inscrições sem avaliador suficiente → Entenda o ato

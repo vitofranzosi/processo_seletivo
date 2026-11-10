@@ -372,32 +372,42 @@ def _celula_da_publicacao(edital, marco_id, lista_id, ato, historico, pode_publi
         if ato is not None
         else ""
     )
+    # **A natureza do que o público lê vai como dado, ao lado da nota** (135, FR-4677). O andamento
+    # decidia "preliminar ou definitivo" procurando a palavra na nota, e mudar a redação mudaria a
+    # situação sem que teste de regra algum percebesse (G-3 do estudo de 09/11).
     if ato is None:
         # **Sem ordem não há o que publicar, e isso conta como falta** (`data-model.md`): o
         # recorte ainda não chegou à divulgação, e dizer "não se aplica" o tiraria da conta.
-        return {"estado": FALTA, "nota": "falta a ordem", "url": ""}
+        return {"estado": FALTA, "nota": "falta a ordem", "url": "", "natureza": ""}
     estado = divulgacao_do_ato(
         edital=edital, marco_id=marco_id, ato=ato, lista_id=lista_id, historico=historico
     )
     if estado["defasadas"]:
         # **Obsoleto, e com a frase do caso** (`FR-811`): o público lê um ato anterior, e isso se
-        # resolve publicando o vigente — que é outra coisa que "falta".
+        # resolve publicando o vigente — que é outra coisa que "falta". A natureza é a da defasada
+        # mais recente: o histórico vem da mais nova para a mais antiga.
         return {
             "estado": OBSOLETO,
             "nota": "o público lê um ato anterior",
             "url": previa if pode_publicar else "",
+            "natureza": estado["defasadas"][0].natureza,
         }
     if estado["nunca_divulgado"]:
-        return {"estado": FALTA, "nota": "", "url": previa if pode_publicar else ""}
-    natureza = next(
+        return {"estado": FALTA, "nota": "", "url": previa if pode_publicar else "", "natureza": ""}
+    publicacao = next(
         (
-            linha["publicacao"].get_natureza_display()
+            linha["publicacao"]
             for linha in historico
             if linha["vigente"] and str(linha["publicacao"].ato_id) == str(ato.id)
         ),
-        "",
+        None,
     )
-    return {"estado": FEITO, "nota": natureza.lower(), "url": url if pode_publicar else ""}
+    return {
+        "estado": FEITO,
+        "nota": publicacao.get_natureza_display().lower() if publicacao else "",
+        "url": url if pode_publicar else "",
+        "natureza": publicacao.natureza if publicacao else "",
+    }
 
 
 def resumo_dos_marcos(edital, conteudo):
