@@ -133,9 +133,12 @@ BOTOES = {
     ],
     "ocupacao_historico.html": [],
     "convocacao.html": [
+        # O gesto dos titulares abre a conferência, e o rótulo o diz (140, FR-4816): no C10 da
+        # `134`, "Convocar as 3" praticou e enviou três mensagens num clique.
         (
             "botao",
-            'Convocar {{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}',
+            "Conferir e convocar "
+            '{{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}',
         ),
         (
             "botao",

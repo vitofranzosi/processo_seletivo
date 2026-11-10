@@ -9526,34 +9526,135 @@ def _gesto_da_convocacao(request, edital_id, marco_id, *, acao, praticar, compor
 
 @require_http_methods(["POST"])
 def convocar_titulares_view(request, edital_id, marco_id):
-    """Convoca num ato só os titulares que a prévia declarou (050, `FR-860`)."""
-    from processo_seletivo.convocacao.application.fluxo import convocar_titulares
+    """Convoca num ato só os titulares que a prévia declarou (050, `FR-860`) — **depois da
+    conferência** (140, FR-4800).
+
+    **O mesmo endereço, duas etapas.** Sem `etapa=confirmar` e o resumo do texto conferido, o pedido
+    responde a conferência, e nada mais: nenhuma convocação, nenhuma mensagem, nenhuma trilha,
+    nenhuma reserva da chave, nada na sessão (FR-4807, D-002). No C10 da `134`, "Convocar as 3"
+    praticou e enviou três mensagens num clique, e a ajuda ao lado prometia uma conferência que só
+    existia com complemento digitado.
+
+    **A confirmação repetida vai direto ao comando** (D-005): depois do primeiro clique o recorte já
+    está convocado, e recompor a conferência recusaria o duplo clique como "alcance mudou", sobre um
+    ato que aconteceu. Com a chave concluída, o comando devolve o desfecho de antes.
+    """
+    from processo_seletivo.convocacao.application import fluxo
+
+    ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    lista_id = _recorte_pedido(edital, marco_id, request.POST.get("lista"))
+    # A chave vem da tela da convocação, que a emite no GET; um formulário sem ela ganha uma aqui,
+    # e a conferência a devolve — gerá-la a cada POST faria o duplo clique praticar duas vezes.
+    chave = request.POST.get("chave") or uuid4().hex
+    vencimento = _instante_ou_none(request.POST.get("vencimento"))
+    evento_id = (request.POST.get("evento") or "").strip()
+    complemento = request.POST.get("complemento") or ""
+    confirmar = request.POST.get("etapa") == "confirmar"
 
     def praticar(**comum):
-        return convocar_titulares(
+        return fluxo.convocar_titulares(
             **comum,
-            vencimento=_instante_ou_none(request.POST.get("vencimento")),
-            evento_id=(request.POST.get("evento") or "").strip(),
-            complemento=request.POST.get("complemento") or "",
+            vencimento=vencimento,
+            evento_id=evento_id,
+            complemento=complemento,
             endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
         )
 
-    def compor(**recorte):
-        from processo_seletivo.convocacao.application.fluxo import previa_dos_titulares
-        from processo_seletivo.convocacao.domain import fundamento
-
-        previa = previa_dos_titulares(**recorte)
-        pessoas = len(previa["pessoas"])
-        if not previa["fundamento"] or not pessoas:
-            return None
-        texto = fundamento.com_complemento(
-            previa["fundamento"], request.POST.get("complemento") or ""
+    def gesto():
+        return _gesto_da_convocacao(
+            request, edital_id, marco_id, acao="titulares", praticar=praticar
         )
-        botao = f"Convocar {'a' if pessoas == 1 else 'as'} {pessoas}"
-        return texto, pessoas, "Fundamento", botao
 
-    return _gesto_da_convocacao(
-        request, edital_id, marco_id, acao="titulares", praticar=praticar, compor=compor
+    if confirmar and fluxo.gesto_ja_concluido(actor=ator, chave=chave):
+        return gesto()
+    agora = timezone.now()
+    conferencia = fluxo.conferencia_dos_titulares(
+        actor=ator,
+        edital=edital,
+        perfil_id=_perfil_do_marco(edital, marco_id),
+        marco_id=marco_id,
+        lista_id=lista_id,
+        alcance_confirmado=request.POST.get("alcance") or "",
+        vencimento=vencimento,
+        evento_id=evento_id,
+        complemento=complemento,
+        agora=agora,
+    )
+    resumo = ""
+    if conferencia["recusa"] is None:
+        resumo = conferencia_do_texto.resumo(
+            _texto_conferido_dos_titulares(conferencia), len(conferencia["pessoas"])
+        )
+        if confirmar and request.POST.get("texto_conferido") == resumo:
+            return gesto()
+    return _pagina_da_conferencia_dos_titulares(
+        request,
+        edital,
+        marco_id,
+        lista_id,
+        conferencia=conferencia,
+        resumo=resumo,
+        campos={
+            "lista": "" if lista_id is None else str(lista_id),
+            "chave": chave,
+            "alcance": request.POST.get("alcance") or "",
+            "vencimento": (request.POST.get("vencimento") or "").strip(),
+            "evento": evento_id,
+        },
+        complemento=complemento,
+        # A confirmação que chegou e não conferiu: o texto de agora não é o que foi visto (FR-4809).
+        erro=conferencia_do_texto.TEXTO_MUDOU if confirmar else "",
+    )
+
+
+def _texto_conferido_dos_titulares(conferencia):
+    """O que o resumo assina, além do número de pessoas (140, D-006).
+
+    O alcance assinado pela tela já cobre quem, a apuração, a versão e a forma; o que muda sem mudar
+    o alcance — o complemento, a unidade que assina a mensagem, a contagem de dias — é texto, e a
+    pessoa confirma o texto que viu.
+    """
+    partes = [conferencia["fundamento"], conferencia["prazo"]["frase"]]
+    for mensagem in conferencia["mensagens"]:
+        partes += [mensagem["assunto"], mensagem["corpo"], ",".join(mensagem["inscricoes"])]
+    return "\n".join(partes)
+
+
+def _pagina_da_conferencia_dos_titulares(
+    request, edital, marco_id, lista_id, *, conferencia, resumo, campos, complemento, erro
+):
+    from processo_seletivo.convocacao.application.fluxo import rotulos
+
+    versao = conferencia.get("versao") or effective_version(edital_id=edital.id)
+    rotulo_do_edital, rotulo_do_recorte = rotulos(
+        edital, versao, perfil_id=_perfil_do_marco(edital, marco_id), lista_id=lista_id
+    )
+    pessoas = len(conferencia.get("pessoas") or ())
+    artigo = "a" if pessoas == 1 else "as"
+    botao = f"Convocar {artigo} {pessoas}"
+    if conferencia.get("recusa") is None and not conferencia["publicacao"]:
+        botao += f" e enviar {pessoas} {'mensagem' if pessoas == 1 else 'mensagens'}"
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/convocacao_conferir.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "destino": _volta_para_convocacao(edital.id, marco_id, lista_id),
+                "rotulo_do_edital": rotulo_do_edital,
+                "rotulo_do_recorte": rotulo_do_recorte,
+                "conferencia": conferencia,
+                "resumo": resumo,
+                "campos": campos,
+                "complemento": complemento,
+                "rotulo_do_botao": botao,
+                "erro": erro,
+            },
+        )
     )
 
 

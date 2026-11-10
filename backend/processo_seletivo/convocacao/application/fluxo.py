@@ -24,6 +24,9 @@ acontece dentro da transação que trava o Processo, e cada pessoa tem a sua cha
 do gesto: repetir a confirmação completa os envios que não começaram e não reenvia nenhum.
 """
 
+from zoneinfo import ZoneInfo
+
+from django.conf import settings
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -32,7 +35,7 @@ from processo_seletivo.classificacao.domain.universo import por_identidade
 from processo_seletivo.comissoes.application import comando_de_comissao, exigir_base_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
-from processo_seletivo.convocacao.application.comunicar import comunicar
+from processo_seletivo.convocacao.application.comunicar import comunicar, previa_das_mensagens
 from processo_seletivo.convocacao.application.convocar import (
     _edital_do_processo,
     convocar,
@@ -53,8 +56,10 @@ from processo_seletivo.convocacao.domain import (
     vocabulario_do_canal,
 )
 from processo_seletivo.convocacao.domain import especie as especie_da_posicao
+from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
 from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.editais.domain.recortes import rotulo_do_recorte
+from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_POR_MENSAGEM_INDIVIDUAL,
@@ -263,6 +268,217 @@ def previa_dos_titulares(*, edital, perfil_id, marco_id, lista_id=None, at=None,
     }
 
 
+def verificar_titulares(
+    *,
+    edital,
+    perfil_id,
+    marco_id,
+    lista_id,
+    alcance_confirmado,
+    vencimento,
+    evento_id,
+    agora,
+    leitura=None,
+):
+    """As recusas do gesto dos titulares pela leitura do recorte, na ordem do comando (140, D-004).
+
+    **Uma verificação só, para o comando e para a conferência.** O comando a chama sob a trava, e é
+    ali que ela decide; a conferência a chama sem trava, para não mostrar o botão de um ato que só
+    pode ser recusado. Duas listas de recusas divergiriam, e a conferência passaria a prometer o que
+    o comando nega.
+
+    Devolve `(previa, instante, origem)`, ou levanta a `DomainError` que o comando levantaria.
+    """
+    # **Antes da prévia** (133, FR-4537): sem isto, o marco intermediário sem apuração recusava por
+    # "apuração ausente" ou "nenhum titular", e a frase do motivo verdadeiro nunca chegava a quem
+    # pediu (a revisão do PR #432 acusou).
+    marco_intermediario.recusar(
+        effective_version(edital_id=edital.id, at=agora).content, perfil_id, marco_id
+    )
+    previa = previa_dos_titulares(
+        edital=edital,
+        perfil_id=perfil_id,
+        marco_id=marco_id,
+        lista_id=lista_id,
+        at=agora,
+        leitura=leitura,
+    )
+    if previa["impedimento"]:
+        raise DomainError(previa["impedimento"]["codigo"], previa["impedimento"]["detalhe"], 409)
+    _conferir(previa, alcance_confirmado)
+    if not previa["pessoas"]:
+        raise DomainError(
+            nomes.NENHUM_TITULAR_A_CONVOCAR,
+            "Não há titular ainda não chamado neste recorte.",
+            409,
+        )
+    instante, origem = resolver_vencimento(
+        versao=previa["versao"], vencimento=vencimento, evento_id=evento_id
+    )
+    _recusar_vencimento_passado(instante, agora)
+    return previa, instante, origem
+
+
+def conferencia_dos_titulares(
+    *,
+    actor,
+    edital,
+    perfil_id,
+    marco_id,
+    lista_id,
+    alcance_confirmado,
+    vencimento=None,
+    evento_id="",
+    complemento="",
+    agora=None,
+):
+    """O que a confirmação do gesto praticaria agora, **sem praticar nada** (140, FR-4800 a 4811).
+
+    Nada aqui grava: nem convocação, nem comunicação, nem trilha, nem a reserva da chave — por isso
+    esta função não abre o `comando_de_comissao`, que reserva a chave antes de qualquer coisa, e a
+    chave consumida por uma prévia faria a confirmação repetir um ato que nunca aconteceu.
+
+    **A recusa vem antes do conteúdo** (FR-4811): é a mesma verificação do comando, sem a trava, e
+    mostrar o botão de um ato que só pode ser recusado seria um passo que não leva a lugar nenhum.
+    Devolve `{"recusa": {codigo, detalhe}}` nesse caso.
+
+    A base de quem pede não é conferida aqui: é a porta da tela, a mesma do gesto (FR-4813), e o
+    comando a confere de novo sob a trava.
+    """
+    agora = agora or timezone.now()
+    perfil, marco = identificador(perfil_id), identificador(marco_id)
+    lista = identificador(lista_id) if lista_id else None
+    leitura = selectors.leitura_do_recorte(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista, at=agora
+    )
+    try:
+        ensure_processo_accepts_changes(edital.processo)
+        previa, instante, origem = verificar_titulares(
+            edital=edital,
+            perfil_id=perfil,
+            marco_id=marco,
+            lista_id=lista,
+            alcance_confirmado=alcance_confirmado,
+            vencimento=vencimento,
+            evento_id=evento_id,
+            agora=agora,
+            leitura=leitura,
+        )
+    except DomainError as recusa:
+        return {"recusa": {"codigo": recusa.code, "detalhe": recusa.detail}}
+    forma = previa["forma"]
+    canal = vocabulario_do_canal.canal(forma)
+    pessoas = previa["pessoas"]
+    nome_de = {str(pessoa["id"]): f"{pessoa['protocolo']} — {pessoa['nome']}" for pessoa in pessoas}
+    mensagens = []
+    if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
+        mensagens = [
+            {**grupo, "pessoas": [nome_de[inscricao] for inscricao in grupo["inscricoes"]]}
+            for grupo in previa_das_mensagens(
+                edital=edital,
+                versao=previa["versao"],
+                inscricoes=[pessoa["id"] for pessoa in pessoas],
+                vencimento=instante,
+                agora=agora,
+            )
+        ]
+    return {
+        "recusa": None,
+        "pessoas": pessoas,
+        "forma": forma,
+        "publicacao": canal.publicacao,
+        "canal": canal,
+        "fundamento": fundamento.com_complemento(previa["fundamento"], complemento),
+        "mensagens": mensagens,
+        "prazo": _prazo_da_conferencia(instante, origem, canal, agora),
+        "fora": _fora_do_gesto(previa, leitura),
+        "versao": previa["versao"],
+    }
+
+
+def _prazo_da_conferencia(instante, origem, canal, agora):
+    """O vencimento por extenso e a origem, ou a falta dele e o que a mensagem dirá (FR-4805)."""
+    if instante is None:
+        return {
+            "informado": False,
+            "frase": "Nenhum vencimento informado."
+            + (
+                ""
+                if canal.publicacao
+                else " A mensagem dirá que o prazo para atender é o que o Edital publica."
+            ),
+        }
+    lido = apresentar(instante, agora, ZoneInfo(settings.TIME_ZONE))
+    return {
+        "informado": True,
+        "frase": f"Até {lido.dia_da_semana}, {lido.data}, às {lido.hora} — {origem}. "
+        f"O prazo corre {canal.a_partir_de}.",
+    }
+
+
+def _fora_do_gesto(previa, leitura):
+    """Quem o gesto não alcança, e por quê, em grupos com a razão de cada um (FR-4806).
+
+    Os textos repetem os da tela da convocação: a parada é a mesma frase da `050`, e o gesto que
+    alcançaria cada grupo é o que a tela oferece abaixo do lote.
+    """
+    fora = []
+    parada = previa["parada"]
+    if parada is not None:
+        if parada["motivo"] == alcance.PARADA_REABILITADO:
+            razao = (
+                "a decisão de recurso a pôs à frente, e ela não está entre as vagas da apuração; "
+                "o gesto para nela, e chamá-la é a chamada individual."
+            )
+        else:
+            razao = (
+                "é suplente. O gesto convoca só titulares; chamar a vaga que vagou é a chamada "
+                "individual, na tela da convocação."
+            )
+        fora.append({"rotulo": f"{parada['protocolo']} — {parada['nome']}", "razao": razao})
+        alcancadas = {str(pessoa["id"]) for pessoa in previa["pessoas"]} | {str(parada["id"])}
+        depois = [pessoa for pessoa in leitura["fila"] if str(pessoa["id"]) not in alcancadas]
+        if depois:
+            fora.append(
+                {
+                    "rotulo": f"Mais {len(depois)} "
+                    + ("pessoa da fila" if len(depois) == 1 else "pessoas da fila"),
+                    "razao": "vêm depois na fila, e o gesto para na primeira que não é titular.",
+                }
+            )
+    for pessoa in leitura["regularizaveis"]:
+        fora.append(
+            {
+                "rotulo": f"{pessoa['protocolo']} — {pessoa['nome']}",
+                "razao": "Resultado indeferido: chamar para regularizar é outro gesto, na tela da "
+                "convocação.",
+            }
+        )
+    return fora
+
+
+def gesto_ja_concluido(*, actor, chave):
+    """Se esta pessoa já concluiu o gesto dos titulares com esta chave (140, D-005, FR-4812).
+
+    **Só leitura.** A confirmação repetida — o duplo clique, a recarga — encontra o recorte já
+    convocado, e recompor a conferência a recusaria como "alcance mudou" sobre um ato que aconteceu.
+    Com a chave concluída, a confirmação vai ao comando, que devolve o desfecho do primeiro clique e
+    não reenvia mensagem nenhuma. A reserva pendente não conta: é a do pedido ainda em curso, e o
+    comando a trata.
+    """
+    from processo_seletivo.auditoria.models import IdempotencyRecord
+
+    if actor is None or not chave:
+        return False
+    return IdempotencyRecord.objects.filter(
+        institution_scope=actor.institution_scope,
+        actor_subject=actor.subject,
+        operation=GESTO_TITULARES,
+        key=chave,
+        response_status__isnull=False,
+    ).exists()
+
+
 def convocar_titulares(
     *,
     actor,
@@ -303,30 +519,16 @@ def convocar_titulares(
             edital = _edital_do_processo(ctx.processo, edital_id)
             perfil, marco = identificador(perfil_id), identificador(marco_id)
             lista = identificador(lista_id) if lista_id else None
-            # **Antes da prévia** (133, FR-4537): sem isto, o marco intermediário sem apuração
-            # recusava por "apuração ausente" ou "nenhum titular", e a frase do motivo verdadeiro
-            # nunca chegava a quem pediu (a revisão do PR #432 acusou).
-            marco_intermediario.recusar(
-                effective_version(edital_id=edital.id, at=ctx.now).content, perfil, marco
+            previa, instante, origem = verificar_titulares(
+                edital=edital,
+                perfil_id=perfil,
+                marco_id=marco,
+                lista_id=lista,
+                alcance_confirmado=alcance_confirmado,
+                vencimento=vencimento,
+                evento_id=evento_id,
+                agora=ctx.now,
             )
-            previa = previa_dos_titulares(
-                edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista, at=ctx.now
-            )
-            if previa["impedimento"]:
-                raise DomainError(
-                    previa["impedimento"]["codigo"], previa["impedimento"]["detalhe"], 409
-                )
-            _conferir(previa, alcance_confirmado)
-            if not previa["pessoas"]:
-                raise DomainError(
-                    nomes.NENHUM_TITULAR_A_CONVOCAR,
-                    "Não há titular ainda não chamado neste recorte.",
-                    409,
-                )
-            instante, origem = resolver_vencimento(
-                versao=previa["versao"], vencimento=vencimento, evento_id=evento_id
-            )
-            _recusar_vencimento_passado(instante, ctx.now)
             praticadas = convocar_em_sequencia(
                 ctx,
                 actor=actor,

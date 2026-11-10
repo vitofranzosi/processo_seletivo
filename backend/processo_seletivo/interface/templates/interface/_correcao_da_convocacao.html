@@ -74,7 +74,7 @@ O que este parcial decide, e por quê:
     <p class="campo">
       <label for="complemento-da-correcao-{{ n }}">Complemento do fundamento <span class="opcional">(opcional)</span></label>
       <textarea id="complemento-da-correcao-{{ n }}" name="complemento" rows="2" aria-describedby="ajuda-complemento-da-correcao-{{ n }}">{% if recusa and not recusa.cartaoMudou %}{{ recusa.campos.complemento }}{% endif %}</textarea>
-      <span class="ajuda" id="ajuda-complemento-da-correcao-{{ n }}"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado; antes de corrigir, você o verá como o candidato.</span>
+      <span class="ajuda" id="ajuda-complemento-da-correcao-{{ n }}"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado. Escrito um complemento, você verá o texto como o candidato antes de corrigir.</span>
     </p>
     <p class="acoes"><button type="submit" class="botao">Corrigir a convocação de {{ linha.inscricao.protocolo }}</button></p>
   </form>

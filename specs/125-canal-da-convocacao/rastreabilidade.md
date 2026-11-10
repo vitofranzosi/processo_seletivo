@@ -34,7 +34,7 @@ A faixa abre em **FR-3981** e **SC-1201**, e as duas foram gastas: nenhuma reser
 | FR-3993 — a prévia antes do botão, da mesma composição | T011, T012 | `ct::test_com_complemento_a_previa_vem_antes_e_nao_pratica_nada`, `::test_o_desfecho_passa_sempre_pela_previa`, `::test_a_chamada_individual_com_complemento_tambem_confere` |
 | FR-3994 — quantas pessoas | T012 | `ct::test_com_complemento_a_previa_vem_antes_e_nao_pratica_nada` (2), `::test_o_desfecho_passa_sempre_pela_previa` (1) |
 | FR-3995 — sem script, e a volta preservada | T011 | `ct::test_a_volta_preserva_o_que_foi_preenchido`; o cliente de teste não roda script |
-| FR-3996 — as garantias de hoje, e a prévia não pratica nada | T012 | `ct::test_com_complemento_a_previa_vem_antes_e_nao_pratica_nada`, `::test_texto_editado_na_previa_volta_a_previa`, `::test_sem_complemento_o_gesto_e_direto_como_hoje` |
+| FR-3996 — as garantias de hoje, e a prévia não pratica nada | T012 | `ct::test_com_complemento_a_previa_vem_antes_e_nao_pratica_nada`, `::test_texto_editado_na_previa_volta_a_previa`, `::test_sem_complemento_o_gesto_passa_pela_conferencia_da_140` (nos titulares, revisto pela `140`) |
 | FR-3997 — a correção (ajustada, D-004, aceita em 06/11) | T013 | o mesmo caminho de `convocar_view`, coberto por `ct::test_a_chamada_individual_com_complemento_tambem_confere`; o rótulo, na verificação |
 | FR-3998 — *"Publicada em ‹referência›"* e *"contado da publicação"* no portal | T016 | `vi::TestAsSuperficiesDoPortal::test_depois_do_registro_todas_mostram` |
 | FR-3999 — a frase do prazo não iniciado por canal | T016 | `vo::test_a_frase_do_prazo_nao_iniciado_e_a_de_sempre_na_mensagem` |
@@ -73,7 +73,7 @@ A faixa abre em **FR-3981** e **SC-1201**, e as duas foram gastas: nenhuma reser
 | Arquivo enviado antes desta feature | `vi::TestAsSuperficiesDoPortal::test_o_arquivo_apresentado_antes_da_regra_tambem_some` |
 | Duas inscrições da mesma pessoa | o seletor escolhe por inscrição; `integration/convocacao/test_vigentes_por_inscricao.py` |
 | O recorte só com convocações sem registro | `vi::TestAsSuperficiesDoPortal::test_outro_inscrito_do_recorte_nao_le_que_o_certame_convocou` |
-| Complemento vazio | `ct::test_sem_complemento_o_gesto_e_direto_como_hoje` |
+| Complemento vazio | `ct::test_sem_complemento_o_gesto_passa_pela_conferencia_da_140` — nos titulares, desde a `140`, a conferência vale sempre |
 | Fundamento do indeferimento pré-preenchido | o mesmo caminho do desfecho, `ct::test_o_desfecho_passa_sempre_pela_previa` |
 | Lote de uma pessoa | `ct::test_o_desfecho_passa_sempre_pela_previa` (*"a 1 pessoa"*) |
 | Texto longo ou com quebra de linha | a prévia mostra o texto como o portal, sem filtro de quebra; verificação |

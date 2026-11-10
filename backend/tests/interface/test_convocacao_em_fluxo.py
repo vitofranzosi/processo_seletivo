@@ -4,6 +4,8 @@
 com que espécie, de onde veio cada valor, e que abrir a página não pratica nada.
 """
 
+import html
+import re
 from datetime import timedelta
 from unittest import mock
 
@@ -47,9 +49,35 @@ def previa(edital):
     return fluxo.previa_dos_titulares(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO)
 
 
-def postar_titulares(client, edital, assinatura, **extra):
+def conferir_titulares(client, edital, assinatura, **extra):
+    """A primeira etapa do gesto (140, FR-4800): a conferência, que não pratica nada."""
     dados = {"alcance": assinatura, "chave": "tela-titulares", "vencimento": VENCIMENTO, **extra}
     return client.post(reverse("interface:convocar-titulares", args=[edital.id, MARCO]), dados)
+
+
+def campos_da_conferencia(resposta):
+    """Os campos do formulário da conferência, como o navegador os enviaria."""
+    pagina = resposta.content.decode()
+    bloco = pagina.split('class="confirmar">', 1)[1].split("</form>", 1)[0]
+    campos = dict(re.findall(r'<input type="hidden" name="([^"]+)" value="([^"]*)"', bloco))
+    texto = re.search(r'<textarea[^>]*name="complemento"[^>]*>(.*?)</textarea>', bloco, re.S)
+    campos["complemento"] = texto.group(1)
+    return {chave: html.unescape(valor) for chave, valor in campos.items()}
+
+
+def postar_titulares(client, edital, assinatura, **extra):
+    """O gesto inteiro: a conferência, e a confirmação nela (140, FR-4800, FR-4809).
+
+    Sem botão de confirmar — a conferência recusou —, devolve a própria conferência.
+    """
+    conferencia = conferir_titulares(client, edital, assinatura, **extra)
+    assert conferencia.status_code == 200
+    if 'name="texto_conferido"' not in conferencia.content.decode():
+        return conferencia
+    return client.post(
+        reverse("interface:convocar-titulares", args=[edital.id, MARCO]),
+        {**campos_da_conferencia(conferencia), "etapa": "confirmar"},
+    )
 
 
 def test_a_previa_declara_o_alcance_antes_do_botao_e_nao_pratica_nada(
@@ -62,7 +90,7 @@ def test_a_previa_declara_o_alcance_antes_do_botao_e_nao_pratica_nada(
     pagina = abrir(client, edital)
 
     assert "2 pessoas serão convocadas" in pagina
-    assert "Convocar as 2" in pagina
+    assert "Conferir e convocar as 2" in pagina
     assert "da posição na fila" in pagina
     assert "é suplente. O gesto convoca só titulares" in pagina
     assert "derivado do Edital e dos atos deste recorte" in pagina
@@ -88,17 +116,20 @@ def test_o_gesto_convoca_e_conta_o_que_a_comunicacao_fez(client, seletor_ligado,
 def test_a_recusa_por_alcance_mudado_mostra_o_alcance_de_agora(
     client, seletor_ligado, cenario_da_tela, gestor
 ):
-    """`UX-104`: a recusa volta à tela, e a prévia recalculada está lá."""
+    """`UX-104`: a recusa diz a razão, e a volta leva à prévia recalculada.
+
+    Desde a `140` a recusa chega já na conferência (FR-4810), sem botão de confirmar.
+    """
     edital, _, _ = cenario_da_tela
     assinatura = previa(edital)["assinatura"]
     convocar(edital, gestor, previa(edital)["pessoas"][0]["id"], idempotency_key="no-meio")
     identificar(client, "carlos", ["gestor"])
 
     resposta = postar_titulares(client, edital, assinatura)
-    pagina = client.get(resposta["Location"]).content.decode()
 
-    assert "mudou desde que a tela foi aberta" in pagina
-    assert "1 pessoa será convocada" in pagina
+    assert "mudou desde que a tela foi aberta" in resposta.content.decode()
+    assert 'name="texto_conferido"' not in resposta.content.decode()
+    assert "1 pessoa será convocada" in abrir(client, edital)
     assert Convocacao.objects.count() == 1
 
 
