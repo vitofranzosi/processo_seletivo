@@ -55,9 +55,11 @@ def sorteios_do_edital(edital, conteudo):
     from processo_seletivo.sorteios.models import Sorteio
 
     relacoes = list(
-        RelacaoDeHabilitados.objects.filter(edital=edital, sucessoras__isnull=True).order_by(
-            "publicada_em"
-        )
+        RelacaoDeHabilitados.objects.filter(edital=edital, sucessoras__isnull=True)
+        # A versão viaja junto (145, FR-5161): a lista que o vigente já não nomeia é lida da
+        # versão que a relação citou, e sem isto cada uma custaria uma consulta.
+        .select_related("versao")
+        .order_by("publicada_em")
     )
     if not relacoes:
         return []

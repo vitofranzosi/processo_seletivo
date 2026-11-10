@@ -1,0 +1,16 @@
+{% comment %}
+Uma lista do sorteio de uma vaga, no cartão dela (145, FR-5155, FR-5156).
+
+**Um parcial, e não dois trechos**, porque a lista única e as listas sob o controle dizem a mesma
+coisa: o acesso à relação, quantos são e, havendo sorteio, a verificação. Escritas duas vezes, uma
+correção feita num ramo e esquecida no outro as faria dizer coisas diferentes.
+
+`direto` é o que muda: com uma lista só, o texto do acesso é a ação e o nome da lista vai ao lado;
+com várias, o controle já disse a ação, e o nome da lista é o acesso.
+
+No estado misto a linha diz o seu, **com a hora**: o estado único só deixa de valer quando os
+instantes diferem, e o dia sozinho escreveria três linhas iguais para listas fechadas com um minuto
+de intervalo.
+{% endcomment %}{% if direto %}<a href="{% url 'portal:relacao-de-habilitados' lista.relacao.id %}">Ver quem {% if lista.sorteio %}participou{% else %}vai participar{% endif %}, e com que número<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>{% else %}<a href="{% url 'portal:relacao-de-habilitados' lista.relacao.id %}">{{ lista.nome }}<span class="oculto"> — quem {% if lista.sorteio %}participou{% else %}vai participar{% endif %}, e com que número{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>{% endif %}
+<span class="quantos">{% if direto %}{{ lista.nome }} · {% endif %}{{ lista.relacao.quantidade }} candidato{{ lista.relacao.quantidade|pluralize }} habilitado{{ lista.relacao.quantidade|pluralize }}{% if not marco.uniforme %} · {% if lista.sorteio %}sorteado em {{ lista.sorteio.executado_em|date:"d/m/Y" }} às {{ lista.sorteio.executado_em|date:"H:i" }}{% else %}aguardando; lista fechada em {{ lista.relacao.publicada_em|date:"d/m/Y" }} às {{ lista.relacao.publicada_em|date:"H:i" }}{% endif %}{% endif %}</span>
+{% if lista.sorteio %}<a class="como-foi-feito" href="{% url 'portal:verificar-sorteio' lista.sorteio.id %}">Como este sorteio foi feito<span class="oculto"> — {{ lista.nome }}{% if perfil.sorteio.varios_marcos and marco.nome %} — {{ marco.nome }}{% endif %} — {{ perfil.nome }}</span></a>{% endif %}
