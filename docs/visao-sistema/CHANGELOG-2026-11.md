@@ -284,6 +284,30 @@ Entraram também, sem mudar a descrição do sistema, documentos em `doc/` e um 
 - as telas não foram percorridas; os rótulos e códigos citados foram conferidos no código por amostragem, e os números de consultas por tela vêm do `verificacao.md` de cada spec;
 - ficam abertas a P-1 da 128, a SC-1378, a P-3 e a P-4 da 131, a pendência 11 da 115 e a numeração repetida da 133 (`133-guia-visual-conceitos` e `133-jornada-sem-ato-errado`), que é decisão do usuário.
 
+## Acréscimo de 10/11: as specs 134 a 141 e o estudo de continuidade operacional
+
+Entraram na `main`, que chegou a `daba322f`, sete specs implementadas, em PRs de código, mais dois estudos de `doc/`. Há **duas specs 134** e, antes delas, duas 133; a numeração é decisão do usuário, e esta Visão diz "134, aviso" e "134, cenários".
+
+- **134, aviso de pendência documental (#435):** a comissão aciona, na condução da convocação, *Avisar as pessoas com pendência nesta chamada*; o gesto grava um aviso da 066 por pessoa, com origem nova (`avisos/0002`), e o despacho o envia. É a quinta situação em que o sistema escreve (a FR-084 da 010 foi revista de quatro para cinco): o e-mail traz o nome publicado dos documentos pendentes, nunca o motivo, e o de modalidade vira "um documento da sua modalidade de concorrência". No máximo um por pessoa, por chamada, por dia; o despacho relê a pendência antes de enviar e interrompe se ela já não existe. A chave `AVISOS_AOS_CANDIDATOS` segue desligada em produção. A QI-7 deixou de ser pendência nas páginas que a citavam.
+- **134, cenários de treinamento e homologação (#436, #438):** o app `treinamento`, quatro comandos de gestão e nenhuma tela. Cria quinze Processos fictícios, `SIM-TREINAMENTO-001` a `015`, parados em etapas diferentes, pelos mesmos comandos da aplicação; três barreiras (ambiente, chave `CENARIOS_DE_TREINAMENTO` e `--banco`). A #438 deu aos cenários de sorteio C06 e C07 a cota PPP. Uma seção nova, "Cenários de treinamento e homologação". Nada foi carregado na homologação compartilhada.
+- **135, o andamento diz o que cada providência é (#440, #441):** quatro correções de linguagem da derivação da 127, sem regra nova: a ordem de uma lista em que ninguém concorre diz isso; o que foi divulgado do resultado vira dado; a espera do definitivo não oferece publicar como preliminar quando o preliminar já está publicado (a prévia e o comando mantêm a mensagem de antes); o resumo do Perfil conta "nos marcos".
+- **136, o Centro de Controle do Edital (#442, #443):** página nova de leitura, que entrou em `/gestao/editais/<id>/centro/`, ao lado do detalhe, e que a 138 (#451) pôs na rota do Edital — a seção da Visão descreve os dois estados, com oito fases em três grupos, andamento separado do que cada fase oferece, uma ação em destaque por três regras e o detalhe da fase consultada. Em validação: nomes e textos provisórios.
+- **139, a chegada ao ato e a volta (#447):** a providência leva ao lugar do ato por fragmento no endereço, e o bloco "Próximo nesta lista" termina em "Voltar ao Centro de Controle do Edital". Sem rota, regra ou migration.
+- **140, a conferência antes de convocar (#448):** "Conferir e convocar as N" abre sempre a página "Confira antes de convocar", que não grava nada; só o botão dela pratica o ato, e o rótulo diz se mensagens saem.
+- **141, a sucessora espera o reabilitado (#449):** a ordem sucessora e o corte são *Depois* enquanto a Etapa de quem um recurso reabilitou está por fazer; o Centro mostra a fase *Em curso*; a tela do corte avisa e o botão continua.
+- **A tabela de revisões, o aviso de limites e o rodapé** apontam para `daba322f`.
+
+Entraram também, sem mudar a descrição do sistema, o estudo do Centro de Controle (#439, `doc/estudo-centro-de-controle-2026-11-09/`), o estudo de continuidade operacional (#445 e #446, `doc/estudo-continuidade-operacional-2026-11-10/`), a correção de um teste que fixava uma data (#444) e a correção da Classificação com o método que espera a extração (#437).
+
+**Corrigido no README:** a linha da 141 dizia "sem merge".
+
+**Não verificado:**
+
+- a suíte inteira não rodou aqui; rodaram os guardiões que leem `specs/` e `doc/`. Os números de teste e de consulta vêm do `verificacao.md` de cada spec, e nenhum mede a `main` com as sete entregas juntas;
+- as telas não foram percorridas; os rótulos, as rotas e os códigos citados foram conferidos no código por três leituras paralelas, e as divergências entre spec e código foram resolvidas a favor do código;
+- a *Maturidade* não foi recontada (migrations, rotas, módulos, testes), e as tabelas de estados não citam a espera da sucessora;
+- ficam abertas a SC-1456 (um cenário percorrido só com o guia), a validação do Centro com operadores e as decisões 2 a 7 do estudo, a validação de LGPD e de SPF/DKIM do aviso, o texto da lista vazia da 135 sem teste no Centro, e as tarefas desmarcadas em `tasks.md` da 139 e da 140, cujas specs seguem como rascunho.
+
 ## Acréscimo de 10/11: o Centro de Controle como página do Edital (136, 138)
 
 A página não descrevia o Centro de Controle do Edital da 136, que entrou em 09/11 numa rota própria e
