@@ -1,0 +1,47 @@
+[
+ {
+  "depois": "centro-c06-inicial",
+  "antes": "centro-c06-inicial",
+  "melhorias": "M-02"
+ },
+ {
+  "depois": "sorteio-c06-inicial",
+  "antes": "sorteio-c06-inicial",
+  "melhorias": "M-03, M-06, D-5"
+ },
+ {
+  "depois": "sorteio-c06-apos-fixar-a-ampla",
+  "antes": "sorteio-c06-apos-fixar-a-ampla",
+  "melhorias": "M-01, M-07, D-5"
+ },
+ {
+  "depois": "centro-c06-apos-fixar-a-ampla",
+  "antes": "centro-c06-apos-fixar-a-ampla",
+  "melhorias": "M-02, D-5"
+ },
+ {
+  "depois": "centro-c12",
+  "antes": "centro-c12",
+  "melhorias": "M-02, M-11"
+ },
+ {
+  "depois": "convocacao-c12",
+  "antes": "convocacao-c12",
+  "melhorias": "M-05, M-09"
+ },
+ {
+  "depois": "documentos-c12-apos-conferir",
+  "antes": "documentos-c12-apos-conferir",
+  "melhorias": "M-01, M-07, M-08"
+ },
+ {
+  "depois": "convocacao-c15",
+  "antes": "convocacao-c15",
+  "melhorias": "M-04, M-05, M-09"
+ },
+ {
+  "depois": "convocar-c15-conferencia",
+  "antes": "convocacao-c15",
+  "melhorias": "M-04"
+ }
+]

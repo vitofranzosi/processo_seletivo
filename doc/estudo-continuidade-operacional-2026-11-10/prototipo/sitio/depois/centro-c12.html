@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="htmx-config" content="{&quot;includeIndicatorStyles&quot;:false,&quot;allowEval&quot;:false}">
+<title>Centro de Controle · Edital SIM12/2026 — Cefor/Ifes</title>
+
+<link rel="stylesheet" href="/static/shared/tokens.css?v=239e9b1475d4">
+<link rel="stylesheet" href="/static/interface/gestao/base.css?v=1d03949b554d">
+<link rel="stylesheet" href="/static/interface/gestao/moldura.css?v=15deec11f8d5">
+<link rel="stylesheet" href="/static/interface/gestao/impressao.css?v=e428d2f85646">
+<link rel="stylesheet" href="/static/interface/gestao/componentes.css?v=668dbb8ad25b">
+<link rel="stylesheet" href="/static/interface/gestao/formularios.css?v=402951a07652">
+<link rel="stylesheet" href="/static/interface/gestao/tabelas.css?v=4b337bfff617">
+<link rel="stylesheet" href="/static/interface/gestao/telas.css?v=2fb955c0435f">
+
+<link rel="stylesheet" href="/static/interface/grupos/terminais.css?v=58695308ce73"><link rel="stylesheet" href="/static/interface/telas/andamento.css?v=2993ab302517"><link rel="stylesheet" href="/static/interface/telas/centro.css?v=dae466be9c97">
+<link rel="stylesheet" href="/static/prototipo/continuidade.css"></head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="shell" data-barra="expandida">
+
+<script src="/static/interface/shell.js"></script>
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+  <symbol id="i-prancheta" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3h6v1M9 12.5l2 2 4-4"></path></symbol>
+  <symbol id="i-pacote" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M4 7.5l8 4.5 8-4.5M12 12v9"></path></symbol>
+  <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3 20h18M7 16v-5M12 16V6M17 16v-8"></path></symbol>
+  <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2"></path></symbol>
+  <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"></path></symbol>
+  <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></symbol>
+  <symbol id="i-livro" viewBox="0 0 24 24"><path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2zM12 6.5v13"></path></symbol>
+  <symbol id="i-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l9-9M16 7l3 3M14 9l2 2"></path></symbol>
+  <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"></path><path d="M9 12l2 2 4-4"></path></symbol>
+  <symbol id="i-trilha" viewBox="0 0 24 24"><path d="M4 6h9M4 12h6M4 18h9"></path><circle cx="17" cy="14" r="4"></circle><path d="M17 12v2l1.5 1"></path></symbol>
+  <symbol id="i-sair" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"></path></symbol>
+  <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16"></path></symbol>
+</svg>
+<div class="barra-lateral">
+  <div class="marca-da-barra">
+    
+    <a class="marca" href="/gestao/"><span class="sigla-do-produto" aria-hidden="true">GPS</span><span class="nome-do-produto">Gestão de Processos Seletivos<span>Cefor/Ifes</span></span></a>
+  </div>
+  <button type="button" class="abrir-secoes" popovertarget="secoes-da-gestao">Seções</button>
+  <div class="secoes-da-gestao" id="secoes-da-gestao" popover="">
+    <button type="button" class="fechar-secoes" popovertarget="secoes-da-gestao" popovertargetaction="hide">Fechar</button>
+    
+    <nav aria-label="Seções da gestão">
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-1">Trabalho</p>
+      <ul aria-labelledby="grupo-de-secoes-1">
+        <li><a href="/gestao/" aria-current="true"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-pasta"></use></svg><span class="rotulo-da-secao">Processos Seletivos</span></a></li>
+        <li><a href="/gestao/minhas-etapas"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-prancheta"></use></svg><span class="rotulo-da-secao">Minhas Etapas</span></a></li>
+        <li><a href="/gestao/agenda"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-calendario"></use></svg><span class="rotulo-da-secao">Agenda</span></a></li>
+        
+      </ul>
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-2">Ajuda</p>
+      <ul aria-labelledby="grupo-de-secoes-2">
+        <li><a href="/gestao/documentacao/"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-livro"></use></svg><span class="rotulo-da-secao">Documentação do Sistema</span></a></li>
+        
+      </ul>
+      
+    </nav>
+    <div class="pessoa-identificada">
+      
+      <span class="iniciais" aria-hidden="true" title="treino.presidencia">TP</span>
+      <span class="nome-da-pessoa"><strong>treino.presidencia</strong></span>
+      <form method="post" action="/gestao/sair">
+        <input type="hidden" name="csrfmiddlewaretoken" value="">
+        <button type="submit" class="acao"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-sair"></use></svg><span class="rotulo-da-secao">Sair</span></button>
+      </form>
+    </div>
+    
+    
+    
+    <button type="button" class="alternar-barra" data-alternar-barra=""><svg class="icone-da-secao" aria-hidden="true"><use href="#i-painel"></use></svg><span class="rotulo-da-secao" data-rotulo="">Recolher a barra lateral</span></button>
+  </div>
+</div>
+<div class="area-de-trabalho">
+<header class="cabecalho-de-contexto">
+  
+  
+  <nav aria-label="Trilha de navegação" class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › <a href="/gestao/">Processos Seletivos</a> › <a href="/gestao/processos/68ffc754-7333-4994-8cb8-4db0e0eddb09/">SIM-TREINAMENTO-012</a> › <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/">Edital SIM12/2026</a> › <span aria-current="page">Centro de Controle</span></nav>
+  <a href="/gestao/identificar">Trocar identidade</a>
+</header>
+
+<!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco, que fica no
+     BODY — e a próxima tabulação volta ao cabeçalho, que é exatamente o que o link
+     existe para pular (WCAG 2.4.1). Verificador automatizado não pega: ele só
+     confere que o link e o alvo existem. -->
+<main id="conteudo" tabindex="-1"><p class="prototipo-faixa">Protótipo · depois · <a href="../antes/centro-c12.html">ver a tela real (antes)</a> · <a href="../index.html">índice do protótipo</a></p>
+
+
+<p class="cc-em-validacao" role="note"><strong>Em validação.</strong> Os nomes e os textos desta página são provisórios. <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/">Voltar à página atual do Edital</a></p>
+
+<header class="cc-cabecalho">
+  <h1>Edital SIM12/2026 <span class="cc-titulo-do-edital">Edital SIM12/2026 — Conferência documental (treinamento)</span></h1>
+  <div class="cc-onde" role="status">
+    <p class="cc-onde-frase"><span class="cc-onde-rotulo">Onde estamos</span> Há algo em aberto em classificação, resultado e recursos e convocação.</p>
+    <p class="cc-onde-detalhe">2 ações são suas e 2 aguardam prazo ou resposta (a primeira até 15/11).</p>
+  </div>
+  
+  <dl class="cc-estados">
+    <div><dt>Situação administrativa</dt><dd><span class="situacao s-PUBLICADO">Publicado</span> <span class="cc-fraco">Processo ativo</span></dd></div>
+    <div><dt>Inscrições</dt><dd>Inscrições encerradas em 10/11/2026 · 6 enviadas</dd></div>
+    <div><dt>Seu papel aqui</dt><dd>Você conduz a seleção.</dd></div>
+  </dl>
+</header>
+
+
+<nav class="cc-mapa" aria-labelledby="mapa-titulo">
+  <h2 id="mapa-titulo" class="oculto">As fases deste Edital</h2>
+  <div class="cc-grupos">
+    
+    <section class="cc-grupo" aria-labelledby="grupo-1">
+      <h3 class="cc-grupo-rotulo" id="grupo-1">Abertura</h3>
+      <ol class="cc-fases">
+        
+        <li class="cc-fase f-concluida" data-fase="publicacao" data-andamento="concluida">
+          <a href="?fase=publicacao#detalhe-da-fase">
+            
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">✓</span> <span class="cc-fase-nome">Edital</span></span>
+            <span class="cc-fase-andamento">Concluída<span class="cc-fraco"> · Publicado · 1 Retificação</span></span>
+            <span class="cc-marcas">
+</span>
+          </a>
+        </li>
+        
+        <li class="cc-fase f-concluida" data-fase="inscricoes" data-andamento="concluida">
+          <a href="?fase=inscricoes#detalhe-da-fase">
+            
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">✓</span> <span class="cc-fase-nome">Inscrições</span></span>
+            <span class="cc-fase-andamento">Concluída<span class="cc-fraco"> · Inscrições encerradas em 10/11/2026 · 6 enviadas</span></span>
+            <span class="cc-marcas">
+</span>
+          </a>
+        </li>
+        
+      </ol>
+    </section>
+    
+    <section class="cc-grupo" aria-labelledby="grupo-2">
+      <h3 class="cc-grupo-rotulo" id="grupo-2">Seleção</h3>
+      <ol class="cc-fases">
+        
+        <li class="cc-fase f-concluida" data-fase="avaliacao" data-andamento="concluida">
+          <a href="?fase=avaliacao#detalhe-da-fase">
+            
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">✓</span> <span class="cc-fase-nome">Avaliação</span></span>
+            <span class="cc-fase-andamento">Concluída</span>
+            <span class="cc-marcas">
+</span>
+          </a>
+        </li>
+        
+        <li class="cc-fase f-em_curso consultada" data-fase="classificacao" data-andamento="em_curso">
+          <a href="?fase=classificacao#detalhe-da-fase" aria-current="true">
+            <span class="oculto">fase consultada: </span>
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">◐</span> <span class="cc-fase-nome">Classificação</span></span>
+            <span class="cc-fase-andamento">Em curso<span class="cc-fraco"> · 1 de 2 listas concluídas</span></span>
+            <span class="cc-marcas"><span class="cc-marca sua">1 sua</span> 
+</span>
+          </a>
+        </li>
+        
+        <li class="cc-fase f-em_curso" data-fase="resultado" data-andamento="em_curso">
+          <a href="?fase=resultado#detalhe-da-fase">
+            
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">◐</span> <span class="cc-fase-nome">Resultado e recursos</span></span>
+            <span class="cc-fase-andamento">Em curso<span class="cc-fraco"> · Resultado publicado em 1 de 2 listas</span></span>
+            <span class="cc-marcas"><span class="cc-marca espera"><span aria-hidden="true">◷</span> até 15/11</span> 
+</span>
+          </a>
+        </li>
+        
+        <li class="cc-fase f-em_curso" data-fase="vagas" data-andamento="em_curso">
+          <a href="?fase=vagas#detalhe-da-fase">
+            
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">◐</span> <span class="cc-fase-nome">Vagas</span></span>
+            <span class="cc-fase-andamento">Em curso<span class="cc-fraco"> · 1 de 2 listas concluídas</span></span>
+            <span class="cc-marcas"><span class="cc-marca nada">nada a fazer agora</span>
+</span>
+          </a>
+        </li>
+        
+      </ol>
+    </section>
+    
+    <section class="cc-grupo" aria-labelledby="grupo-3">
+      <h3 class="cc-grupo-rotulo" id="grupo-3">Ocupação</h3>
+      <ol class="cc-fases">
+        
+        <li class="cc-fase f-em_curso" data-fase="convocacao" data-andamento="em_curso">
+          <a href="?fase=convocacao#detalhe-da-fase">
+            
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">◐</span> <span class="cc-fase-nome">Convocação</span></span>
+            <span class="cc-fase-andamento">Em curso</span>
+            <span class="cc-marcas"><span class="cc-marca sua">1 sua</span> <span class="cc-marca espera"><span aria-hidden="true">◷</span> até 10/12</span> 
+</span>
+          </a>
+        </li>
+        
+        <li class="cc-fase f-nao_iniciada" data-fase="conclusao" data-andamento="nao_iniciada">
+          <a href="?fase=conclusao#detalhe-da-fase">
+            
+            <span class="cc-fase-linha"><span class="cc-sinal" aria-hidden="true">○</span> <span class="cc-fase-nome">Conclusão</span></span>
+            <span class="cc-fase-andamento">Ainda não começou<span class="cc-fraco"> · Depois das convocações</span></span>
+            <span class="cc-marcas">
+</span>
+          </a>
+        </li>
+        
+      </ol>
+    </section>
+    
+  </div>
+  <details class="cc-legenda"><summary>Como ler o mapa</summary>
+    <div class="cc-legenda-colunas">
+      <div>
+        <p><strong>Em que ponto a fase está</strong> — o andamento, pelos atos já feitos:</p>
+        <ul>
+          <li><span aria-hidden="true">✓</span> Concluída — todos os atos feitos, em todas as listas.</li>
+          <li><span aria-hidden="true">◐</span> Em curso — começou, ou tem algo em aberto.</li>
+          <li><span aria-hidden="true">○</span> Ainda não começou — depende de fases anteriores. Não é pendência.</li>
+          <li><span aria-hidden="true">—</span> Não se aplica — este Edital não tem a fase.</li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>O que a fase oferece agora, e a quem</strong> — as marcas:</p>
+        <ul>
+          <li><span class="cc-marca sua">1 sua</span> ação que você pode fazer agora.</li>
+          <li><span class="cc-marca outro">1 de outro papel</span> ação disponível, mas de outra pessoa.</li>
+          <li><span class="cc-marca espera"><span aria-hidden="true">◷</span> até uma data</span> nada a fazer até um prazo correr ou alguém responder.</li>
+          <li><span class="cc-marca impedida"><span aria-hidden="true">⊘</span> impedida</span> o ato não pode ser feito; o detalhe diz por quê e quem resolve.</li>
+          <li><span class="cc-marca nada">nada a fazer agora</span> a fase está em curso, e o que falta depende de outra.</li>
+        </ul>
+      </div>
+    </div>
+    <p>Várias fases podem estar em curso ao mesmo tempo, porque cada lista anda no seu ritmo. A fase com o contorno destacado é a que você abriu para ler, e não uma fase do Edital.</p>
+  </details>
+</nav>
+
+<div class="cc-grade">
+
+<section class="cartao cc-agora" aria-labelledby="agora-titulo">
+  <h2 id="agora-titulo">O que fazer agora</h2>
+  
+
+  
+  <p class="cc-sem-destaque">Você tem 2 ações disponíveis agora. Todas já podem ser feitas — o que depende de outro ato ainda não aparece aqui — e o GPS não escolhe a ordem entre elas.</p>
+  
+
+  
+  
+
+  
+  <h3 class="cc-subtitulo">Suas ações</h3>
+  <ul class="cc-providencias">
+    
+    <li class="cc-providencia sua">
+      <p class="cc-rotulo-pequeno"><span class="marca-sua">Sua</span> Convocação</p>
+      <p class="cc-ato"><a href="convocacao-c12.html#chamadas">Conferir os documentos de 1 convocação</a></p>
+      <p class="cc-onde-da-acao">Professor de Informática · Ampla concorrência</p>
+      
+      <p class="cc-curta">Abre cada documento entregue e o marca como conforme ou pendente, com motivo.</p>
+      
+      <details class="cc-entenda"><summary>Entenda o ato</summary>
+        <p><strong>Por quê.</strong> O GPS só aceita «conforme» de quem abriu o arquivo. Com tudo conforme, registra-se o desfecho.</p>
+        <p><strong>Ao confirmar.</strong> A pendência volta ao candidato, que pode reenviar no prazo.</p>
+      </details>
+    </li>
+    
+    <li class="cc-providencia sua">
+      <p class="cc-rotulo-pequeno"><span class="marca-sua">Sua</span> Classificação</p>
+      <p class="cc-ato"><a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e?lista=23c262ad-d058-50a9-aa9c-c8d9aaab5577">Classificar a lista</a></p>
+      <p class="cc-onde-da-acao">Professor de Informática · PPP · <span class="cc-no-gps">no GPS: emitir a ordem que declara que ninguém concorreu nesta lista</span></p>
+      <p class="cc-nota-da-acao">Lista em que ninguém concorre.</p>
+      <p class="cc-curta">Grava a classificação da lista, pelas notas consolidadas, pesos e desempates do Edital.</p>
+      
+      <details class="cc-entenda"><summary>Entenda o ato</summary>
+        <p><strong>Por quê.</strong> A ordem é a base do que vem depois: o resultado, o limite de chamada, as vagas e a convocação a leem.</p>
+        <p><strong>Ao confirmar.</strong> Irreversível. Se uma nota mudar (um recurso deferido, por exemplo), é preciso emitir uma ordem nova, com motivo. Numa lista sem inscritos, emitir declara que ninguém concorreu ali.</p>
+      </details>
+    </li>
+    
+  </ul>
+  
+
+  
+  <h3 class="cc-subtitulo">Esperando um prazo, uma resposta ou uma correção</h3>
+  <ul class="cc-providencias">
+    
+    
+    <li class="cc-providencia aguardando">
+      <p class="cc-rotulo-pequeno"><span class="situacao-do-andamento s-aguarda"><span aria-hidden="true">◷</span> Aguarda até 15/11/2026</span> Resultado e recursos</p>
+      <p class="cc-ato">Publicar o resultado definitivo</p>
+      <p class="cc-onde-da-acao">Professor de Informática · Ampla concorrência</p>
+      <p class="cc-razao">O prazo recursal deste marco ainda está aberto: ele se encerra em 15/11/2026 às 23h59. O resultado preliminar já está publicado, e o definitivo vem depois do encerramento.</p>
+    </li>
+    
+    <li class="cc-providencia aguardando">
+      <p class="cc-rotulo-pequeno"><span class="situacao-do-andamento s-aguarda"><span aria-hidden="true">◷</span> Aguarda até 10/12/2026</span> Convocação</p>
+      <p class="cc-ato">Resposta de 2 convocações</p>
+      <p class="cc-onde-da-acao">Professor de Informática · Ampla concorrência</p>
+      <p class="cc-razao">O prazo corre até 10/12/2026; 1 aguarda documentos.</p>
+    </li>
+    
+  </ul>
+  
+
+  
+
+  
+</section>
+
+
+<section class="cartao cc-detalhe" id="detalhe-da-fase" aria-labelledby="detalhe-titulo">
+  <p class="cc-rotulo-pequeno">Fase consultada</p>
+  <h2 id="detalhe-titulo"><span class="cc-sinal" aria-hidden="true">◐</span> Classificação <span class="cc-andamento-da-fase f-em_curso">Em curso</span></h2>
+  <p class="cc-pergunta">Em que ordem cada lista ficou?</p>
+  <p class="cc-oferece"><span class="cc-fraco">Agora:</span> <span class="cc-marca sua">1 sua</span> 
+</p>
+  
+  <p>1 de 2 listas concluídas.</p>
+  
+  
+
+  
+  
+  <div class="cc-perfil-na-fase">
+    
+    <ol class="cc-roteiro" aria-label="Os passos desta fase, na ordem">
+      
+      <li class="f-em_curso com-acao">
+        <span class="cc-roteiro-numero" aria-hidden="true">1</span>
+        <span class="cc-roteiro-texto">
+          <span class="cc-roteiro-nome">Classificar a lista</span> <span class="cc-no-gps">no GPS: emitir a ordem</span>
+          <span class="cc-roteiro-situacao"><span aria-hidden="true">◐</span> Em curso · <strong>há ação agora</strong> · 1 de 2 listas</span>
+          <span class="cc-curta">Grava a classificação da lista, pelas notas consolidadas, pesos e desempates do Edital.</span>
+        </span>
+      </li>
+      
+    </ol>
+    <div class="moldura-do-andamento">
+    <table class="cc-tabela-da-fase">
+      <caption>Professor de Informática · por pontuação · 6 inscrições — por lista</caption>
+      <thead><tr><th scope="col">Lista</th><th scope="col">Classificar a lista</th></tr></thead>
+      <tbody>
+        
+        <tr><th scope="row">Ampla concorrência</th>
+          
+          <td data-situacao="feito">
+            <span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span>
+            <span class="cc-celula-ato"><a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e">ver o ato</a></span>
+            
+            
+          </td>
+          
+        </tr>
+        
+        <tr><th scope="row">PPP</th>
+          
+          <td data-situacao="pendente">
+            <span class="situacao-do-andamento s-pendente"><span aria-hidden="true">●</span> Pendente</span>
+            <span class="cc-celula-ato"><a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e?lista=23c262ad-d058-50a9-aa9c-c8d9aaab5577">Classificar a lista</a></span>
+            <span class="nota-da-celula">lista em que ninguém concorre</span>
+            
+          </td>
+          
+        </tr>
+        
+      </tbody>
+    </table>
+    </div>
+    <details class="cc-entenda"><summary>Entenda os passos desta fase</summary>
+      <dl class="cc-passos-explicados">
+        <dt>Classificar a lista</dt><dd><strong>Por quê.</strong> A ordem é a base do que vem depois: o resultado, o limite de chamada, as vagas e a convocação a leem. <strong>Ao confirmar.</strong> Irreversível. Se uma nota mudar (um recurso deferido, por exemplo), é preciso emitir uma ordem nova, com motivo. Numa lista sem inscritos, emitir declara que ninguém concorreu ali.</dd>
+      </dl>
+    </details>
+  </div>
+  
+  
+</section>
+</div>
+
+
+
+
+<section class="cartao cc-listas" aria-labelledby="listas-titulo">
+  <h2 id="listas-titulo">Onde cada lista está</h2>
+  <p class="cc-fraco">Cada lista de concorrência anda no seu ritmo: uma pode estar convocando enquanto outra ainda espera a classificação.</p>
+  
+  <div class="cc-perfil">
+    <h3>Professor de Informática <span class="cc-fraco">· por pontuação · 6 inscrições</span></h3>
+    <div class="moldura-do-andamento">
+    <table class="cc-tabela-das-listas">
+      <caption class="oculto">Professor de Informática: o andamento de cada fase em cada lista</caption>
+      <thead><tr><th scope="col">Lista</th><th scope="col">Avaliação</th><th scope="col">Classificação</th><th scope="col">Resultado e recursos</th><th scope="col">Vagas</th><th scope="col">Convocação</th><th scope="col">Agora nesta lista</th></tr></thead>
+      <tbody>
+      
+      <tr>
+        <th scope="row">Ampla concorrência</th>
+        <td class="cc-celula-da-fase f-concluida"><a href="?fase=avaliacao#detalhe-da-fase"><span aria-hidden="true">✓</span> Concluída</a></td><td class="cc-celula-da-fase f-concluida"><a href="?fase=classificacao#detalhe-da-fase"><span aria-hidden="true">✓</span> Concluída</a></td><td class="cc-celula-da-fase f-em_curso"><a href="?fase=resultado#detalhe-da-fase"><span aria-hidden="true">◐</span> Em curso</a></td><td class="cc-celula-da-fase f-concluida"><a href="?fase=vagas#detalhe-da-fase"><span aria-hidden="true">✓</span> Concluída</a></td><td class="cc-celula-da-fase f-em_curso"><a href="?fase=convocacao#detalhe-da-fase"><span aria-hidden="true">◐</span> Em curso</a></td>
+        <td class="cc-agora-da-lista"><ul class="cc-atos-da-lista"><li><span class="cc-marca acao-da-lista">ação</span> Conferir os documentos de 1 convocação <span class="cc-fraco">(Convocação)</span></li></ul></td>
+      </tr>
+      
+      <tr>
+        <th scope="row">PPP</th>
+        <td class="cc-celula-da-fase f-concluida"><a href="?fase=avaliacao#detalhe-da-fase"><span aria-hidden="true">✓</span> Concluída</a></td><td class="cc-celula-da-fase f-em_curso"><a href="?fase=classificacao#detalhe-da-fase"><span aria-hidden="true">◐</span> Em curso</a></td><td class="cc-celula-da-fase f-nao_iniciada"><a href="?fase=resultado#detalhe-da-fase"><span aria-hidden="true">○</span> Ainda não</a></td><td class="cc-celula-da-fase f-em_curso"><a href="?fase=vagas#detalhe-da-fase"><span aria-hidden="true">◐</span> Em curso</a></td><td class="cc-celula-da-fase f-nao_iniciada"><a href="?fase=convocacao#detalhe-da-fase"><span aria-hidden="true">○</span> Ainda não</a></td>
+        <td class="cc-agora-da-lista"><ul class="cc-atos-da-lista"><li><span class="cc-marca acao-da-lista">ação</span> Classificar a lista <span class="cc-fraco">(Classificação)</span></li></ul></td>
+      </tr>
+      
+      </tbody>
+    </table>
+    </div>
+    <details class="cc-matriz-completa"><summary>Ver todos os pontos da jornada, por lista</summary>
+      <div class="moldura-do-andamento">
+      <table class="matriz-do-andamento">
+        <caption>Professor de Informática — todos os pontos da jornada</caption>
+        <thead><tr><th scope="col">Lista</th><th scope="col">Prova objetiva</th><th scope="col">Análise de títulos</th><th scope="col">Ordem</th><th scope="col">Corte</th><th scope="col">Análise documental</th><th scope="col">Apuração</th><th scope="col">Resultado</th><th scope="col">Convocação</th></tr></thead>
+        <tbody><tr><th scope="row">Ampla concorrência (linha geral do quadro)</th><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span><span class="nota-da-celula">6 de 6 consolidadas</span></td><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span><span class="nota-da-celula">6 de 6 consolidadas</span></td><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span></td><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span></td><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span><span class="nota-da-celula">6 de 6 consolidadas</span></td><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span></td><td data-situacao="aguarda"><span class="situacao-do-andamento s-aguarda"><span aria-hidden="true">◷</span> Aguarda</span><span class="nota-da-celula">resultado preliminar</span></td><td data-situacao="pendente"><span class="situacao-do-andamento s-pendente"><span aria-hidden="true">●</span> Pendente</span></td></tr><tr><th scope="row">Pessoas pretas, pardas e indígenas (PPP)</th><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span><span class="nota-da-celula">6 de 6 consolidadas</span></td><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span><span class="nota-da-celula">6 de 6 consolidadas</span></td><td data-situacao="pendente"><span class="situacao-do-andamento s-pendente"><span aria-hidden="true">●</span> Pendente</span><span class="nota-da-celula">lista em que ninguém concorre</span></td><td data-situacao="depois"><span class="situacao-do-andamento s-depois"><span aria-hidden="true">·</span> Depois</span></td><td data-situacao="feito"><span class="situacao-do-andamento s-feito"><span aria-hidden="true">✓</span> Feito</span><span class="nota-da-celula">6 de 6 consolidadas</span></td><td data-situacao="depois"><span class="situacao-do-andamento s-depois"><span aria-hidden="true">·</span> Depois</span></td><td data-situacao="depois"><span class="situacao-do-andamento s-depois"><span aria-hidden="true">·</span> Depois</span></td><td data-situacao="depois"><span class="situacao-do-andamento s-depois"><span aria-hidden="true">·</span> Depois</span></td></tr></tbody>
+      </table>
+      </div>
+    </details>
+    
+    <p class="cc-telas"><span class="cc-fraco">Telas do marco:</span>
+      <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e">Classificação final</a> · <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/conducao">conduzir o marco</a> · <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/corte">corte</a> · <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/ocupacao">ocupação</a> · <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/convocacao">convocação</a></p>
+    
+    
+  </div>
+  
+</section>
+
+
+
+<section class="cc-administracao" id="administracao" aria-labelledby="administracao-titulo">
+  <h2 id="administracao-titulo">Administração e histórico</h2>
+  <div class="cc-administracao-grade">
+    <div class="cartao">
+      <h3>Documentos publicados</h3>
+      <ul class="cc-lista-simples"><li><a href="/api/v1/public/publicacoes/f40bf025-b78c-41af-b4d5-f8bf1d5e4b40/documento">Publicação original nº 1</a> <span class="cc-fraco">10/11/2026</span></li><li><a href="/api/v1/public/publicacoes/1a71491f-baeb-4c2f-b880-c1dc66495516/documento">Retificação nº 2</a> <span class="cc-fraco">10/11/2026</span> · <a href="/gestao/retificacoes/c462b8d6-13cc-4130-b786-bf0e5ceca736/">o que mudou</a></li></ul>
+      <p class="cc-fraco">Nenhuma Retificação em curso.</p>
+    </div>
+    <div class="cartao">
+      
+      <h3>Ações e consultas do Edital</h3>
+      
+      <ul class="lista-acoes em-linha">
+        
+        
+<li>
+  
+  <a class="botao secundario" href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/relatorio">Relatório do Edital</a>
+  
+  
+</li>
+
+<li>
+  
+  <a class="botao secundario" href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/formalizacao">Documentos para a formalização</a>
+  
+  
+</li>
+
+      </ul>
+      
+      <ul class="cc-lista-simples">
+        <li><a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/avisos">Avisos aos candidatos</a></li>
+        <li><a href="/gestao/processos/68ffc754-7333-4994-8cb8-4db0e0eddb09/">Comissão, alocação e supervisão do Processo</a></li>
+      </ul>
+    </div>
+    <div class="cartao">
+      <h3>Quem atuou</h3>
+      <dl class="cc-quem">
+        <div><dt>Elaborou</dt><dd>treino.elaboracao</dd></div>
+        <div><dt>Homologou</dt><dd>treino.homologacao</dd></div>
+        <div><dt>Publicou</dt><dd>treino.publicacao</dd></div>
+        <div><dt>Assina</dt><dd>Autoridade Fictícia — Diretor-Geral (fictício)</dd></div>
+      </dl>
+      <p><a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/#participantes-titulo">Autoridade, unidade e datas</a></p>
+    </div>
+    <div class="cartao">
+      <h3>Validação do conteúdo</h3>
+      <p>2 avisos sobre o conteúdo publicado.</p>
+      <details><summary>Ver os avisos</summary><ul class="cc-lista-simples"><li>A Etapa «Análise de títulos» não está vinculada a nenhum Evento do Cronograma.</li><li>A Etapa «Análise documental» não está vinculada a nenhum Evento do Cronograma.</li></ul></details>
+      
+    </div>
+  </div>
+  
+  
+</section>
+
+</main>
+
+</div>
+</div>
+
+
+
+</body></html>

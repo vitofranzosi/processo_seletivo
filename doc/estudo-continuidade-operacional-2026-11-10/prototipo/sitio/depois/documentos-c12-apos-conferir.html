@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="htmx-config" content="{&quot;includeIndicatorStyles&quot;:false,&quot;allowEval&quot;:false}">
+<title>Documentos da convocação — INS-2026-2ZB7P9KB — Cefor/Ifes</title>
+
+<link rel="stylesheet" href="/static/shared/tokens.css?v=239e9b1475d4">
+<link rel="stylesheet" href="/static/interface/gestao/base.css?v=1d03949b554d">
+<link rel="stylesheet" href="/static/interface/gestao/moldura.css?v=15deec11f8d5">
+<link rel="stylesheet" href="/static/interface/gestao/impressao.css?v=e428d2f85646">
+<link rel="stylesheet" href="/static/interface/gestao/componentes.css?v=668dbb8ad25b">
+<link rel="stylesheet" href="/static/interface/gestao/formularios.css?v=402951a07652">
+<link rel="stylesheet" href="/static/interface/gestao/tabelas.css?v=4b337bfff617">
+<link rel="stylesheet" href="/static/interface/gestao/telas.css?v=2fb955c0435f">
+
+<link rel="stylesheet" href="/static/interface/telas/convocacao-documentos.css?v=26820f5a845c">
+<link rel="stylesheet" href="/static/prototipo/continuidade.css"></head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="shell" data-barra="expandida">
+
+<script src="/static/interface/shell.js"></script>
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+  <symbol id="i-prancheta" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3h6v1M9 12.5l2 2 4-4"></path></symbol>
+  <symbol id="i-pacote" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M4 7.5l8 4.5 8-4.5M12 12v9"></path></symbol>
+  <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3 20h18M7 16v-5M12 16V6M17 16v-8"></path></symbol>
+  <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2"></path></symbol>
+  <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"></path></symbol>
+  <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></symbol>
+  <symbol id="i-livro" viewBox="0 0 24 24"><path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2zM12 6.5v13"></path></symbol>
+  <symbol id="i-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l9-9M16 7l3 3M14 9l2 2"></path></symbol>
+  <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"></path><path d="M9 12l2 2 4-4"></path></symbol>
+  <symbol id="i-trilha" viewBox="0 0 24 24"><path d="M4 6h9M4 12h6M4 18h9"></path><circle cx="17" cy="14" r="4"></circle><path d="M17 12v2l1.5 1"></path></symbol>
+  <symbol id="i-sair" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"></path></symbol>
+  <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16"></path></symbol>
+</svg>
+<div class="barra-lateral">
+  <div class="marca-da-barra">
+    
+    <a class="marca" href="/gestao/"><span class="sigla-do-produto" aria-hidden="true">GPS</span><span class="nome-do-produto">Gestão de Processos Seletivos<span>Cefor/Ifes</span></span></a>
+  </div>
+  <button type="button" class="abrir-secoes" popovertarget="secoes-da-gestao">Seções</button>
+  <div class="secoes-da-gestao" id="secoes-da-gestao" popover="">
+    <button type="button" class="fechar-secoes" popovertarget="secoes-da-gestao" popovertargetaction="hide">Fechar</button>
+    
+    <nav aria-label="Seções da gestão">
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-1">Trabalho</p>
+      <ul aria-labelledby="grupo-de-secoes-1">
+        <li><a href="/gestao/" aria-current="true"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-pasta"></use></svg><span class="rotulo-da-secao">Processos Seletivos</span></a></li>
+        <li><a href="/gestao/minhas-etapas"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-prancheta"></use></svg><span class="rotulo-da-secao">Minhas Etapas</span></a></li>
+        <li><a href="/gestao/agenda"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-calendario"></use></svg><span class="rotulo-da-secao">Agenda</span></a></li>
+        
+      </ul>
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-2">Ajuda</p>
+      <ul aria-labelledby="grupo-de-secoes-2">
+        <li><a href="/gestao/documentacao/"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-livro"></use></svg><span class="rotulo-da-secao">Documentação do Sistema</span></a></li>
+        
+      </ul>
+      
+    </nav>
+    <div class="pessoa-identificada">
+      
+      <span class="iniciais" aria-hidden="true" title="treino.presidencia">TP</span>
+      <span class="nome-da-pessoa"><strong>treino.presidencia</strong></span>
+      <form method="post" action="/gestao/sair">
+        <input type="hidden" name="csrfmiddlewaretoken" value="">
+        <button type="submit" class="acao"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-sair"></use></svg><span class="rotulo-da-secao">Sair</span></button>
+      </form>
+    </div>
+    
+    
+    
+    <button type="button" class="alternar-barra" data-alternar-barra=""><svg class="icone-da-secao" aria-hidden="true"><use href="#i-painel"></use></svg><span class="rotulo-da-secao" data-rotulo="">Recolher a barra lateral</span></button>
+  </div>
+</div>
+<div class="area-de-trabalho">
+<header class="cabecalho-de-contexto">
+  
+  
+  <nav aria-label="Trilha de navegação" class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › <a href="/gestao/">Processos Seletivos</a> › <a href="/gestao/processos/68ffc754-7333-4994-8cb8-4db0e0eddb09/">SIM-TREINAMENTO-012</a> › <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/">Edital SIM12/2026</a> › <a href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/convocacao">Convocação</a> › <span aria-current="page">Documentos</span></nav>
+  <a href="/gestao/identificar">Trocar identidade</a>
+</header>
+
+<!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco, que fica no
+     BODY — e a próxima tabulação volta ao cabeçalho, que é exatamente o que o link
+     existe para pular (WCAG 2.4.1). Verificador automatizado não pega: ele só
+     confere que o link e o alvo existem. -->
+<main id="conteudo" tabindex="-1"><p class="prototipo-faixa">Protótipo · depois · <a href="../antes/documentos-c12-apos-conferir.html">ver a tela real (antes)</a> · <a href="../index.html">índice do protótipo</a></p>
+
+<h1>Documentos da convocação</h1>
+<p class="sub">INS-2026-2ZB7P9KB — Cecília Treinamento C12-03 · Para vaga inicial · vencimento em 10/12/2026 05:14</p><p class="objetivo-da-tela">Edital SIM12/2026 · Professor de Informática · Ampla concorrência · Classificação final</p>
+
+
+
+<p class="aviso" role="status">Conferência registrada.</p>
+
+
+<p class="proximo-nesta-lista"><strong>Próximo para esta pessoa: </strong><a href="convocacao-c12.html#chamada-3">registrar o desfecho da Cecília</a> — os dois documentos estão conformes.</p><p class="proximo-nesta-lista"><strong>Depois, nesta lista: </strong><a href="convocacao-c12.html#chamadas">conferir os documentos de 1 convocação</a> (Alice: 1 documento pendente, aguardando o reenvio).</p>
+<p class="ainda-neste-marco"><strong>Ainda neste marco:</strong> Pessoas pretas, pardas e indígenas (PPP) — emitir a ordem que declara que ninguém concorreu nesta lista.</p><p class="retorno-ao-centro"><a href="centro-c12.html">Voltar ao Centro de Controle do Edital</a></p>
+
+
+
+<p class="aviso" role="status"><strong>Pronta para decidir</strong></p>
+
+
+
+
+<article class="recorte documento-da-convocacao" id="item-05f512f6-0b79-428c-864e-bbe70b50bbf1" aria-labelledby="item-titulo-1">
+  <h2 id="item-titulo-1">Diploma de graduação
+    <span class="situacao s-PUBLICADO">Conforme</span></h2>
+  
+  
+  
+  <p class="nota">Diploma ou certidão de conclusão, com histórico.</p>
+  
+
+  
+  <ol class="versoes" aria-label="Versões apresentadas">
+    
+    <li>
+      <span>Versão 1 (vigente) —
+      apresentado em 10/11/2026 05:14</span>
+      <a class="acao" href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/convocacao/855fc021-9e0c-4259-a05c-90f50f3461ee/documentos/cbbd09bd-ed56-4722-a435-6524ae911a6a" target="_blank" rel="noopener">Abrir</a>
+      <a class="acao secundaria" href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/convocacao/855fc021-9e0c-4259-a05c-90f50f3461ee/documentos/cbbd09bd-ed56-4722-a435-6524ae911a6a?baixar=1">Baixar</a>
+      <span class="aberto-por-voce">aberto por você</span>
+    </li>
+    
+  </ol>
+  
+
+  
+  <details class="como-preencher">
+    <summary>Conferências registradas (1)</summary>
+    <ul class="conferencias">
+      
+      <li>Conforme — treino.presidencia, unidade cefor, em 10/11/2026 05:33, versão 1</li>
+      
+    </ul>
+  </details>
+  
+
+  
+  
+  <details class="como-preencher">
+    <summary>Registrar outra conferência</summary>
+  <form method="post" action="#" class="confirmar">
+    <input type="hidden" name="csrfmiddlewaretoken" value="">
+    <input type="hidden" name="lista" value="">
+    <input type="hidden" name="chave" value="c9f2550500274273a9b58a95aab258a6-1">
+    <input type="hidden" name="apresentacao" value="cbbd09bd-ed56-4722-a435-6524ae911a6a">
+    <fieldset class="opcoes">
+      <legend>Resultado da versão 1</legend>
+      
+      <p class="opcao"><input type="radio" id="conforme-1" name="resultado" value="CONFORME" required="">
+        <label for="conforme-1">Conforme ao exigido pelo Edital</label></p>
+      
+      <p class="opcao"><input type="radio" id="pendente-1" name="resultado" value="PENDENTE" required="">
+        <label for="pendente-1">Pendente</label></p>
+      
+    </fieldset>
+    <p class="campo">
+      
+      <label for="motivo-1">Motivo <span class="opcional">(obrigatório em pendente; a pessoa convocada o lê)</span></label>
+      
+      <textarea id="motivo-1" name="motivo" rows="2"></textarea>
+    </p>
+    
+    
+    <p class="campo">
+      <label for="revisao-1">Por que mudar a conferência desta versão</label>
+      <textarea id="revisao-1" name="motivo_da_substituicao" rows="2"></textarea>
+    </p>
+    
+    <p class="acoes"><button type="submit" class="botao">Registrar conferência</button></p>
+  </form>
+  </details>
+  
+</article>
+
+<article class="recorte documento-da-convocacao" id="item-996c0062-94dd-402d-aef9-86bd589d3296" aria-labelledby="item-titulo-2">
+  <h2 id="item-titulo-2">Comprovante de residência
+    <span class="situacao s-PUBLICADO">Conforme</span></h2>
+  
+  
+  
+  <p class="nota">Emitido nos últimos três meses.</p>
+  
+
+  
+  <ol class="versoes" aria-label="Versões apresentadas">
+    
+    <li>
+      <span>Versão 1 (vigente) —
+      apresentado em 10/11/2026 05:14</span>
+      <a class="acao" href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/convocacao/855fc021-9e0c-4259-a05c-90f50f3461ee/documentos/f4068c25-bf9d-4037-9601-30d8736958bb" target="_blank" rel="noopener">Abrir</a>
+      <a class="acao secundaria" href="/gestao/editais/6e51666a-5ddf-4cad-9337-ae81c7477b5f/marcos/2f8b3812-cbe6-5f74-860e-a25a2e95348e/convocacao/855fc021-9e0c-4259-a05c-90f50f3461ee/documentos/f4068c25-bf9d-4037-9601-30d8736958bb?baixar=1">Baixar</a>
+      <span class="aberto-por-voce">aberto por você</span>
+    </li>
+    
+  </ol>
+  
+
+  
+  <details class="como-preencher">
+    <summary>Conferências registradas (1)</summary>
+    <ul class="conferencias">
+      
+      <li>Conforme — treino.presidencia, unidade cefor, em 10/11/2026 05:33, versão 1</li>
+      
+    </ul>
+  </details>
+  
+
+  
+  
+  <details class="como-preencher">
+    <summary>Registrar outra conferência</summary>
+  <form method="post" action="#" class="confirmar">
+    <input type="hidden" name="csrfmiddlewaretoken" value="">
+    <input type="hidden" name="lista" value="">
+    <input type="hidden" name="chave" value="c9f2550500274273a9b58a95aab258a6-2">
+    <input type="hidden" name="apresentacao" value="f4068c25-bf9d-4037-9601-30d8736958bb">
+    <fieldset class="opcoes">
+      <legend>Resultado da versão 1</legend>
+      
+      <p class="opcao"><input type="radio" id="conforme-2" name="resultado" value="CONFORME" required="">
+        <label for="conforme-2">Conforme ao exigido pelo Edital</label></p>
+      
+      <p class="opcao"><input type="radio" id="pendente-2" name="resultado" value="PENDENTE" required="">
+        <label for="pendente-2">Pendente</label></p>
+      
+    </fieldset>
+    <p class="campo">
+      
+      <label for="motivo-2">Motivo <span class="opcional">(obrigatório em pendente; a pessoa convocada o lê)</span></label>
+      
+      <textarea id="motivo-2" name="motivo" rows="2"></textarea>
+    </p>
+    
+    
+    <p class="campo">
+      <label for="revisao-2">Por que mudar a conferência desta versão</label>
+      <textarea id="revisao-2" name="motivo_da_substituicao" rows="2"></textarea>
+    </p>
+    
+    <p class="acoes"><button type="submit" class="botao">Registrar conferência</button></p>
+  </form>
+  </details>
+  
+</article>
+
+
+<p><a href="convocacao-c12.html#chamadas">Voltar à convocação</a></p>
+
+</main>
+
+</div>
+</div>
+
+
+
+</body></html>

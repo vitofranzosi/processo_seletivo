@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="htmx-config" content="{&quot;includeIndicatorStyles&quot;:false,&quot;allowEval&quot;:false}">
+<title>Convocação — quem foi chamado e o que respondeu — Cefor/Ifes</title>
+
+<link rel="stylesheet" href="/static/shared/tokens.css?v=239e9b1475d4">
+<link rel="stylesheet" href="/static/interface/gestao/base.css?v=1d03949b554d">
+<link rel="stylesheet" href="/static/interface/gestao/moldura.css?v=15deec11f8d5">
+<link rel="stylesheet" href="/static/interface/gestao/impressao.css?v=e428d2f85646">
+<link rel="stylesheet" href="/static/interface/gestao/componentes.css?v=668dbb8ad25b">
+<link rel="stylesheet" href="/static/interface/gestao/formularios.css?v=402951a07652">
+<link rel="stylesheet" href="/static/interface/gestao/tabelas.css?v=4b337bfff617">
+<link rel="stylesheet" href="/static/interface/gestao/telas.css?v=2fb955c0435f">
+
+
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="shell" data-barra="expandida">
+
+<script src="/static/interface/shell.js"></script>
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+  <symbol id="i-prancheta" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3h6v1M9 12.5l2 2 4-4"></path></symbol>
+  <symbol id="i-pacote" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M4 7.5l8 4.5 8-4.5M12 12v9"></path></symbol>
+  <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3 20h18M7 16v-5M12 16V6M17 16v-8"></path></symbol>
+  <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2"></path></symbol>
+  <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"></path></symbol>
+  <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></symbol>
+  <symbol id="i-livro" viewBox="0 0 24 24"><path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2zM12 6.5v13"></path></symbol>
+  <symbol id="i-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l9-9M16 7l3 3M14 9l2 2"></path></symbol>
+  <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"></path><path d="M9 12l2 2 4-4"></path></symbol>
+  <symbol id="i-trilha" viewBox="0 0 24 24"><path d="M4 6h9M4 12h6M4 18h9"></path><circle cx="17" cy="14" r="4"></circle><path d="M17 12v2l1.5 1"></path></symbol>
+  <symbol id="i-sair" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"></path></symbol>
+  <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16"></path></symbol>
+</svg>
+<div class="barra-lateral">
+  <div class="marca-da-barra">
+    
+    <a class="marca" href="/gestao/"><span class="sigla-do-produto" aria-hidden="true">GPS</span><span class="nome-do-produto">Gestão de Processos Seletivos<span>Cefor/Ifes</span></span></a>
+  </div>
+  <button type="button" class="abrir-secoes" popovertarget="secoes-da-gestao">Seções</button>
+  <div class="secoes-da-gestao" id="secoes-da-gestao" popover="">
+    <button type="button" class="fechar-secoes" popovertarget="secoes-da-gestao" popovertargetaction="hide">Fechar</button>
+    
+    <nav aria-label="Seções da gestão">
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-1">Trabalho</p>
+      <ul aria-labelledby="grupo-de-secoes-1">
+        <li><a href="/gestao/" aria-current="true"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-pasta"></use></svg><span class="rotulo-da-secao">Processos Seletivos</span></a></li>
+        <li><a href="/gestao/minhas-etapas"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-prancheta"></use></svg><span class="rotulo-da-secao">Minhas Etapas</span></a></li>
+        <li><a href="/gestao/agenda"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-calendario"></use></svg><span class="rotulo-da-secao">Agenda</span></a></li>
+        
+      </ul>
+      
+      <p class="grupo-de-secoes" id="grupo-de-secoes-2">Ajuda</p>
+      <ul aria-labelledby="grupo-de-secoes-2">
+        <li><a href="/gestao/documentacao/"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-livro"></use></svg><span class="rotulo-da-secao">Documentação do Sistema</span></a></li>
+        
+      </ul>
+      
+    </nav>
+    <div class="pessoa-identificada">
+      
+      <span class="iniciais" aria-hidden="true" title="treino.presidencia">TP</span>
+      <span class="nome-da-pessoa"><strong>treino.presidencia</strong></span>
+      <form method="post" action="/gestao/sair">
+        <input type="hidden" name="csrfmiddlewaretoken" value="">
+        <button type="submit" class="acao"><svg class="icone-da-secao" aria-hidden="true"><use href="#i-sair"></use></svg><span class="rotulo-da-secao">Sair</span></button>
+      </form>
+    </div>
+    
+    
+    
+    <button type="button" class="alternar-barra" data-alternar-barra=""><svg class="icone-da-secao" aria-hidden="true"><use href="#i-painel"></use></svg><span class="rotulo-da-secao" data-rotulo="">Recolher a barra lateral</span></button>
+  </div>
+</div>
+<div class="area-de-trabalho">
+<header class="cabecalho-de-contexto">
+  
+  
+  <nav aria-label="Trilha de navegação" class="caminho-da-secao"><abbr title="Gestão de Processos Seletivos">GPS</abbr> › <a href="/gestao/">Processos Seletivos</a> › <a href="/gestao/processos/4d509ecf-04e7-42fb-8f61-31a58b51f265/">SIM-TREINAMENTO-015</a> › <a href="/gestao/editais/71ed42cd-a440-4fc4-a6af-8402df0c274c/">Edital SIM15/2026</a> › <span aria-current="page">Convocação</span></nav>
+  <a href="/gestao/identificar">Trocar identidade</a>
+</header>
+
+<!-- tabindex="-1": sem ele o link de salto move a rolagem mas não o foco, que fica no
+     BODY — e a próxima tabulação volta ao cabeçalho, que é exatamente o que o link
+     existe para pular (WCAG 2.4.1). Verificador automatizado não pega: ele só
+     confere que o link e o alvo existem. -->
+<main id="conteudo" tabindex="-1">
+
+<h1>Convocação</h1>
+<p class="sub">Quem a ordem indica para as vagas que faltam, o que cada pessoa respondeu, e quem é a próxima da fila.</p>
+
+
+
+<details class="como-preencher">
+  <summary>Termos desta tela</summary>
+  <p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — a ampla
+    concorrência, ou uma Modalidade de Concorrência declarada. <dfn>Faixa</dfn> é o trecho da ordem que um ato publicou — do primeiro
+    colocado ao último que o alvo alcançou.</p>
+</details>
+
+
+
+<nav aria-label="Recortes deste marco" class="recortes">
+  <p class="sub">Recorte: <strong>Ampla concorrência (linha geral do quadro)</strong></p>
+  <ul class="abas">
+    
+    <li><span aria-current="true">Ampla concorrência (linha geral do quadro)</span></li>
+    
+    <li><a href="/gestao/editais/71ed42cd-a440-4fc4-a6af-8402df0c274c/marcos/d57ac8ed-d5e6-56ef-8cf7-3d9533b6570a/convocacao?lista=e6d3b15c-4c66-5b60-8ec5-6a237a504f3e">Pessoas pretas, pardas e indígenas (PPP)</a></li>
+    
+  </ul>
+</nav>
+
+
+
+
+
+
+
+
+
+
+<p class="imutavel">Abrir esta tela <strong>não convoca ninguém e não apura nada</strong>. Os números abaixo vêm de atos já emitidos.</p>
+
+
+<section aria-labelledby="numeros">
+  <h2 id="numeros">As vagas deste recorte</h2>
+  
+  
+  <ul class="resumo" aria-label="Vagas, pela apuração vigente">
+    <li><strong>3</strong>Publicadas</li>
+    <li><strong>3</strong>Efetivas</li>
+    <li><strong>2</strong>Ocupadas</li>
+    <li><strong>1</strong>A ocupar</li>
+  </ul>
+  
+  <ul class="resumo" aria-label="Chamadas deste recorte">
+    <li><strong>0</strong>Convocadas</li>
+    <li><strong>0</strong>Responderam</li>
+  </ul>
+  <p class="acoes"><a class="acao" href="/gestao/editais/71ed42cd-a440-4fc4-a6af-8402df0c274c/marcos/d57ac8ed-d5e6-56ef-8cf7-3d9533b6570a/convocacao/historico">Ver o histórico deste recorte</a></p>
+</section>
+
+
+
+
+<section aria-labelledby="titulares">
+  <h2 id="titulares">Convocar os titulares num ato só</h2>
+  
+  <p><strong>2 pessoas serão convocadas</strong>, uma convocação para cada, na ordem da fila, todas <strong>para vaga inicial</strong> <span class="ajuda">— espécie que vem da posição na fila: estão entre as vagas da apuração vigente.</span></p>
+  <ol class="consequencias">
+    
+    <li>INS-2026-WK5GYYEY — Alice Treinamento C15-01</li>
+    
+    <li>INS-2026-3FUGGRCQ — Bernardo Treinamento C15-02</li>
+    
+  </ol>
+  
+  <dl class="dados-da-inscricao">
+    <dt>Comunicação</dt><dd>Por mensagem individual, enviada a cada pessoa no mesmo ato <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
+    <dt>O candidato lerá este fundamento</dt><dd>Convocação para vaga inicial no Edital nº SIM15/2026, Perfil «Professor de Informática», recorte «Ampla concorrência (linha geral do quadro)»: a posição da pessoa na ordem de classificação vigente está dentro das vagas que a apuração de ocupação emitida em 10/11/2026 considerou, na faixa vigente deste recorte. <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd>
+  </dl>
+  <form method="post" action="/gestao/editais/71ed42cd-a440-4fc4-a6af-8402df0c274c/marcos/d57ac8ed-d5e6-56ef-8cf7-3d9533b6570a/convocacao/titulares" class="confirmar">
+    <input type="hidden" name="csrfmiddlewaretoken" value="">
+    <input type="hidden" name="lista" value="">
+    <input type="hidden" name="chave" value="0302a015446947e59e8b8517952787e0-titulares">
+    <input type="hidden" name="alcance" value="5493e6477532b4a8b24ba6bfd719d229d9a20cf6f8c894f4757095de9a53613e">
+    <p><strong>Convocar é irreversível.</strong> Nasce uma convocação por pessoa, imutável e com o seu nome como autor; corrigir qualquer uma é sucedê-la com motivo, uma a uma.</p>
+    
+
+<p class="campo">
+  <label for="vencimento-titulares">Vencimento do prazo</label>
+  <input type="datetime-local" id="vencimento-titulares" name="vencimento" aria-describedby="ajuda-vencimento-titulares">
+  <span class="ajuda" id="ajuda-vencimento-titulares">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
+</p>
+
+
+    <p class="campo">
+      <label for="complemento-titulares">Complemento do fundamento <span class="opcional">(opcional)</span></label>
+      <textarea id="complemento-titulares" name="complemento" rows="2" aria-describedby="ajuda-complemento-titulares"></textarea>
+      <span class="ajuda" id="ajuda-complemento-titulares"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado, igual em todas as convocações deste ato; antes de confirmar, você o verá como o candidato.</span>
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Convocar as 2</button></p>
+  </form>
+  
+</section>
+
+
+
+
+
+
+
+
+
+
+
+<section aria-labelledby="fila">
+  <h2 id="fila">Quem pode ser chamado</h2>
+  
+  
+  <p class="nota">A fila, na ordem de chamada. Chamar um a um é o caminho do suplente e das exceções.</p>
+  
+  <ol class="consequencias">
+    
+    <li>INS-2026-WK5GYYEY — Alice Treinamento C15-01 · para vaga inicial · <strong>próxima da fila</strong></li>
+    
+    <li>INS-2026-3FUGGRCQ — Bernardo Treinamento C15-02 · para vaga inicial</li>
+    
+  </ol>
+
+  
+  <details class="como-preencher">
+    <summary>Chamar uma pessoa da fila</summary>
+  <form method="post" action="/gestao/editais/71ed42cd-a440-4fc4-a6af-8402df0c274c/marcos/d57ac8ed-d5e6-56ef-8cf7-3d9533b6570a/convocacao/convocar" class="confirmar">
+    <input type="hidden" name="csrfmiddlewaretoken" value="">
+    <input type="hidden" name="lista" value="">
+    <input type="hidden" name="chave" value="0302a015446947e59e8b8517952787e0-convocar">
+    <p><strong>Convocar é irreversível.</strong> O ato é imutável e fica na trilha do certame; corrigi-lo é sucedê-lo com motivo, e a convocação anterior continua legível. A comunicação sai no mesmo ato.</p>
+    
+    <p class="campo">
+      <label for="inscricao">Inscrição a convocar</label>
+      <select id="inscricao" name="inscricao" required="">
+        
+        <option value="eecdeb8b-d72d-44b4-8278-dff5547272bc">INS-2026-WK5GYYEY — Alice Treinamento C15-01 · para vaga inicial (próxima da fila)</option>
+        
+        <option value="3d46dd69-3aa0-4e7b-a7ea-afaca29e914a">INS-2026-3FUGGRCQ — Bernardo Treinamento C15-02 · para vaga inicial</option>
+        
+      </select>
+      <span class="ajuda">A espécie ao lado do nome vem da posição na fila: quem está entre as vagas da apuração é chamado para vaga inicial; os demais, para vaga que vagou.</span>
+    </p>
+    
+    <dl class="dados-da-inscricao">
+      <dt>O candidato lerá este fundamento, para vaga inicial</dt><dd>Convocação para vaga inicial no Edital nº SIM15/2026, Perfil «Professor de Informática», recorte «Ampla concorrência (linha geral do quadro)»: a posição da pessoa na ordem de classificação vigente está dentro das vagas que a apuração de ocupação emitida em 10/11/2026 considerou, na faixa vigente deste recorte.</dd>
+      
+    </dl>
+    
+
+<p class="campo">
+  <label for="vencimento-individual">Vencimento do prazo</label>
+  <input type="datetime-local" id="vencimento-individual" name="vencimento" aria-describedby="ajuda-vencimento-individual">
+  <span class="ajuda" id="ajuda-vencimento-individual">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
+</p>
+
+
+    <p class="campo">
+      <label for="complemento-individual">Complemento do fundamento <span class="opcional">(opcional)</span></label>
+      <textarea id="complemento-individual" name="complemento" rows="2" aria-describedby="ajuda-complemento-individual"></textarea>
+      <span class="ajuda" id="ajuda-complemento-individual"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado.</span>
+    </p>
+    <p class="campo escolha">
+      <label><input type="checkbox" name="justifica_precedencia" value="1" aria-describedby="ajuda-precedencia"> Convocar à frente de quem ainda não foi chamado</label>
+    </p>
+    <span class="ajuda" id="ajuda-precedencia">Marque apenas se esta pessoa não é a próxima da fila e há fundamento para passá-la à frente. A exceção fica registrada na trilha.</span>
+    <p class="acoes"><button type="submit" class="botao">Convocar</button></p>
+  </form>
+  </details>
+  
+  
+</section>
+
+
+
+
+<section aria-labelledby="regularizar">
+  <h2 id="regularizar">Quem pode ser chamado para regularizar</h2>
+  <p class="nota">Inscrições que a faixa alcançou e cujo Resultado está indeferido. Convocar para regularizar não ocupa vaga: o que ocupa é a regularização, quando ela acontece.</p>
+  <ol class="consequencias">
+    
+    <li>INS-2026-2U4RJERD — Cecília Treinamento C15-03 · próxima na ordem</li>
+    
+  </ol>
+
+  
+  <details class="como-preencher">
+    <summary>Chamar para regularizar</summary>
+  <form method="post" action="/gestao/editais/71ed42cd-a440-4fc4-a6af-8402df0c274c/marcos/d57ac8ed-d5e6-56ef-8cf7-3d9533b6570a/convocacao/convocar" class="confirmar">
+    <input type="hidden" name="csrfmiddlewaretoken" value="">
+    <input type="hidden" name="lista" value="">
+    <input type="hidden" name="chave" value="0302a015446947e59e8b8517952787e0-regularizar">
+    <input type="hidden" name="especie" value="PARA_REGULARIZAR">
+    <p><strong>Convocar é irreversível.</strong> O ato é imutável e fica na trilha do certame; corrigi-lo é sucedê-lo com motivo.</p>
+    <p class="campo">
+      <label for="inscricao-regularizar">Inscrição a convocar para regularizar</label>
+      <select id="inscricao-regularizar" name="inscricao" required="">
+        
+        <option value="6a3bbcad-3227-4c47-b2d3-f97ad71e804d">INS-2026-2U4RJERD — Cecília Treinamento C15-03 (próxima na ordem)</option>
+        
+      </select>
+    </p>
+    
+
+<p class="campo">
+  <label for="vencimento-regularizar">Vencimento do prazo</label>
+  <input type="datetime-local" id="vencimento-regularizar" name="vencimento" aria-describedby="ajuda-vencimento-regularizar">
+  <span class="ajuda" id="ajuda-vencimento-regularizar">Data e hora locais. O prazo corre <strong>a partir do envio da comunicação</strong>, e não desta tela. Deixe em branco se o Edital não publica prazo.</span>
+</p>
+
+
+    
+    <dl class="dados-da-inscricao"><dt>O candidato lerá este fundamento</dt><dd>Convocação para regularizar o indeferimento no Edital nº SIM15/2026, Perfil «Professor de Informática», recorte «Ampla concorrência (linha geral do quadro)»: a faixa vigente alcançou a pessoa, o Resultado dela está indeferido, e a apuração de ocupação emitida em 10/11/2026 registra vaga faltante. <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd></dl>
+    <p class="campo">
+      <label for="complemento-regularizar">Complemento do fundamento <span class="opcional">(opcional)</span></label>
+      <textarea id="complemento-regularizar" name="complemento" rows="2" aria-describedby="ajuda-complemento-regularizar"></textarea>
+      <span class="ajuda" id="ajuda-complemento-regularizar"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado.</span>
+    </p>
+    <p class="acoes"><button type="submit" class="botao">Convocar para regularizar</button></p>
+  </form>
+  </details>
+  
+</section>
+
+
+
+
+
+
+
+<section aria-labelledby="chamadas">
+  <h2 id="chamadas">Chamadas praticadas</h2>
+  
+  <p class="aviso" role="status">Nenhuma convocação praticada neste recorte.</p>
+  
+</section>
+<script src="/static/interface/correcao-da-convocacao.js?v=35197519a61a" defer=""></script>
+
+</main>
+
+</div>
+</div>
+
+
+
+</body></html>

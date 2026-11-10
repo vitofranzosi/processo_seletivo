@@ -1,0 +1,32 @@
+/* Protótipo do estudo de continuidade operacional (10/11/2026). Só tokens de shared/tokens.css, e
+   só o que as peças novas pedem: o resto do "depois" usa as classes que a gestão já tem. */
+
+/* A faixa que diz "isto é protótipo". Fora da linguagem da gestão de propósito, para não ser
+   confundida com tela real numa captura. */
+.prototipo-faixa{margin:0 0 1rem;padding:.5rem .75rem;border:1px dashed var(--texto-fraco);
+  border-radius:6px;font-size:.875rem;color:var(--texto-fraco);background:var(--branco)}
+
+/* Melhoria M-03: o objetivo da tela, na voz do Centro, logo abaixo do título. */
+.objetivo-da-tela{margin:.2rem 0 .8rem;max-width:60rem}
+.passos-da-tela{margin:.2rem 0 1rem;padding-left:1.4rem;max-width:60rem}
+.passos-da-tela li{margin-bottom:.2rem}
+
+/* Melhoria M-01: o retorno ao Centro, no bloco do "Próximo nesta lista". */
+.retorno-ao-centro{margin:.2rem 0 .8rem}
+
+/* Melhoria M-05: um índice curto das seções de uma tela longa. */
+.indice-da-tela{display:flex;flex-wrap:wrap;gap:.25rem .9rem;margin:.2rem 0 1rem;
+  font-size:.9375rem;max-width:60rem}
+.indice-da-tela strong{font-weight:600}
+
+/* O que depende da D-5, e por isso não se adota sem ela: contorno tracejado e rótulo à vista. */
+.dependente-da-d5{border:2px dashed var(--amarelo);border-radius:6px;padding:.5rem .75rem;
+  background:var(--amarelo-fundo);max-width:60rem}
+.dependente-da-d5::before{content:"Depende da D-5 · ";font-weight:600}
+
+/* O método do sorteio recolhido: continua a um clique, e deixa de empurrar o ato para baixo. */
+.metodo-recolhido > summary{cursor:pointer;font-weight:600;margin:.4rem 0}
+
+/* A conferência da convocação: o texto que a pessoa vai ler, destacado como citação. */
+.texto-do-candidato{margin:.4rem 0;padding:.6rem .8rem;border-left:4px solid var(--verde);
+  background:var(--branco)}
