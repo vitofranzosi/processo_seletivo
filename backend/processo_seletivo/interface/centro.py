@@ -21,7 +21,7 @@ e revê a recusa de barra de fases da `127` conservando a razão dela: o Edital 
 dela. A fase Conclusão, em particular, nunca diz que o Edital pode ser encerrado (FR-4714): quem
 decide é a tela do ato, com as pendências do encerramento.
 
-Os nomes e as frases moram em `conceitos.py`, provisórios.
+Os nomes e as frases moram em `conceitos.py`.
 """
 
 from dataclasses import dataclass, field

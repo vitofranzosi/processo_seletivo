@@ -39,7 +39,7 @@ def cenario(treinamento):
 
 
 def _centro(client, edital):
-    resposta = client.get(reverse("interface:centro-do-edital", args=[edital.id]))
+    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
     assert resposta.status_code == 200
     return resposta
 
@@ -113,7 +113,7 @@ def c06_depois_de_congelar_a_ampla_a_ppp_e_link_e_o_bloco_volta_ao_centro(
     assert link.group(1).endswith(f"#{a.ancora_do_recorte(ppp)}"), link.group(1)
     assert f'id="{link.group(1).partition("#")[2]}"' in corpo
 
-    centro = reverse("interface:centro-do-edital", args=[edital.id])
+    centro = reverse("interface:detalhe", args=[edital.id])
     assert f'{RETORNO}<a href="{centro}">Voltar ao Centro de Controle do Edital</a></p>' in corpo
 
 

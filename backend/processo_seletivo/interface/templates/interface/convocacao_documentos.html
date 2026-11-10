@@ -1,10 +1,38 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Documentos da convocação — {{ inscricao.protocolo }}{% endblock %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/convocacao-documentos.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/convocacao.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/convocacao-documentos.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Convocação</a> › <span aria-current="page">Documentos</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Documentos da convocação</h1>
 <p class="sub">{{ inscricao.protocolo }} — {{ inscricao.nome }} · {{ convocacao.get_especie_display }}{% if convocacao.vencimento %} · vencimento em {{ convocacao.vencimento|date:"d/m/Y H:i" }}{% endif %}</p>
+{% comment %}
+**A pessoa no lugar dela** (143, FR-5019; E3 do estudo): o Edital, o Perfil e a lista ficavam só na
+migalha, e quem conferia não sabia de que recorte era a pessoa. A situação do prazo é a mesma
+pastilha do cartão da chamada.
+{% endcomment %}
+{% with lugar=contexto_do_recorte %}
+<dl class="contexto-da-convocacao">
+  <div><dt>Edital</dt><dd>{{ edital.number }}/{{ edital.year }}</dd></div>
+  {% if lugar.perfil %}<div><dt>Perfil</dt><dd>{{ lugar.perfil }}</dd></div>{% endif %}
+  {% if lugar.marco %}<div><dt>Marco</dt><dd>{{ lugar.marco }}</dd></div>{% endif %}
+  {% if lugar.lista %}<div><dt>Lista</dt><dd>{{ lugar.lista }}</dd></div>{% endif %}
+  <div><dt>Situação do prazo</dt><dd>{% if linha.estado == "CONVOCADO_PRAZO_NAO_INICIADO" %}<span class="situacao s-CANCELADO">{{ linha.canal.pastilha_sem_comunicacao }}</span>{% elif linha.estado == "CONVOCADO_PRAZO_EM_CURSO" %}<span class="situacao s-PUBLICADO">Prazo em curso</span>{% elif linha.estado == "CONVOCADO_VENCIMENTO_DECORRIDO" %}<span class="situacao s-EM_REVISAO">Vencimento decorrido</span>{% else %}<span class="situacao s-ENCERRADO">Com desfecho</span>{% endif %}{% if enviada_em %} <span class="ajuda">comunicação de {{ enviada_em|date:"d/m/Y H:i" }}</span>{% endif %}</dd></div>
+</dl>
+{% endwith %}
+
+{% comment %}
+**As pessoas do recorte** (143, FR-5024): a anterior e a seguinte na ordem da convocação, a próxima
+com documento a conferir, e a volta às chamadas e à fila de conferência. Depois de conferir, a
+volta levava ao topo da convocação, e a pessoa seguinte ficava a uma rolagem inteira.
+{% endcomment %}
+<nav class="pessoas-do-recorte" id="pessoas-do-recorte" aria-label="Pessoas convocadas deste recorte">
+  {% if vizinhas.posicao %}<span class="posicao">Pessoa {{ vizinhas.posicao }} de {{ vizinhas.total }}</span>{% endif %}
+  {% if vizinhas.anterior %}<a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.anterior.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">← Anterior: {{ vizinhas.anterior.nome }}</a>{% endif %}
+  {% if vizinhas.seguinte %}<a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.seguinte.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Seguinte: {{ vizinhas.seguinte.nome }} →</a>{% endif %}
+  {% if vizinhas.proxima_a_conferir %}<a class="acao" href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.proxima_a_conferir.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Próxima com documento a conferir: {{ vizinhas.proxima_a_conferir.nome }}</a>{% endif %}
+  <a href="{{ url_da_convocacao }}#chamadas">Todas as chamadas</a>
+  <a href="{{ url_da_convocacao }}{% if lista_id %}&amp;{% else %}?{% endif %}ordem=documentos#chamadas">Fila de conferência</a>
+</nav>
 
 {% comment %}
 **Conferir é juízo sobre um documento, e não sobre a pessoa** (115, FR-3585). Cada item tem as
@@ -19,6 +47,29 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
 {% if aviso %}<p class="aviso" role="status">{{ aviso }}</p>{% endif %}
 {% if aviso %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
+{% comment %}
+**O que acontece agora, e depois da conferência** (143, FR-5021 a FR-5023). O passo e a situação do
+aviso são os do cartão desta chamada na convocação. Pendência registrada não é candidato avisado:
+o gesto do aviso é do recorte e mora na convocação (D-006); o desfecho também, no cartão desta
+pessoa, onde o formulário vem aberto quando é o passo (D-005).
+{% endcomment %}
+<section class="situacao-da-convocacao tom-{{ linha.passo.tom }}" id="situacao-da-convocacao" aria-labelledby="titulo-da-situacao">
+  <h2 id="titulo-da-situacao">Situação desta convocação</h2>
+  <p class="passo-da-chamada"><span class="rotulo-do-passo">{% if linha.passo.tom == "feito" %}Situação{% else %}Próximo passo{% endif %}</span> {{ linha.passo.frase }}
+    {% if linha.passo.acao == "conferir" and pode_conferir and primeiro_a_conferir %}<a class="acao acao-do-passo" href="#item-{{ primeiro_a_conferir.item.id }}">Ir ao primeiro documento a conferir</a>
+    {% elif linha.passo.acao == "desfecho" and pode_emitir %}<a class="acao acao-do-passo" href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">Registrar o desfecho desta convocação</a>
+    {% elif linha.passo.acao == "desfecho" or linha.passo.acao == "emitir" %}<span class="ajuda">É ato de quem conduz a convocação{% if pode_emitir %}: <a href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">abrir esta pessoa na convocação</a>{% endif %}.</span>{% endif %}</p>
+  {% if linha.aviso %}<p class="aviso-da-pendencia">{{ linha.aviso.frase_da_pendencia }} {{ linha.aviso.frase_do_aviso }}{% if linha.aviso.oferece_o_aviso %} <a href="{{ url_da_convocacao }}#avisar-pendencias">Ir ao aviso das pessoas com documento pendente</a> <span class="ajuda">— o gesto alcança todas as pessoas com pendência deste recorte, no máximo um aviso por pessoa por dia.</span>{% endif %}</p>{% endif %}
+  {% with c=leitura.contagens %}
+  <ul class="resumo" aria-label="Documentos pedidos nesta convocação">
+    <li><strong>{{ c.conformes }}</strong>Conforme{{ c.conformes|pluralize }}</li>
+    <li><strong>{{ c.recebidos }}</strong>Recebido{{ c.recebidos|pluralize }}, a conferir</li>
+    {% if c.complementados %}<li><strong>{{ c.complementados }}</strong>Reenviado{{ c.complementados|pluralize }}, a conferir de novo</li>{% endif %}
+    <li><strong>{{ c.pendentes }}</strong>Pendente{{ c.pendentes|pluralize }}</li>
+    <li><strong>{{ c.a_apresentar }}</strong>A apresentar</li>
+    {% if c.nao_se_aplica %}<li><strong>{{ c.nao_se_aplica }}</strong>Não se aplica após análise</li>{% endif %}
+  </ul>
+  {% endwith %}
 <p class="aviso" role="status"><strong>{{ rotulo_documental }}</strong>{% if desfecho %} — {{ desfecho.get_especie_display }}, registrado em {{ desfecho.registrado_em|date:"d/m/Y H:i" }}{% endif %}</p>
 {% if leitura.pendencias_para_incluir and not desfecho %}
 <p class="nota">Aceite e regularização ainda não podem ser registrados: falta conferir como conforme, ou como não se aplica quando o Edital publicou a condição — {% for lido in leitura.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
@@ -26,6 +77,7 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
 {% if leitura.facultativos_sem_conferencia and not desfecho %}
 <p class="nota">Documento facultativo recebido e ainda não conferido: {% for lido in leitura.facultativos_sem_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. Isso não impede o desfecho.</p>
 {% endif %}
+</section>
 
 {% for lido in leitura.pedidos %}
 <article class="recorte documento-da-convocacao" id="item-{{ lido.item.id }}" aria-labelledby="item-titulo-{{ forloop.counter }}">
@@ -120,5 +172,5 @@ cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote
 </article>
 {% endfor %}
 
-<p><a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Voltar à convocação</a></p>
+<p class="volta-da-conferencia"><a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Voltar à convocação</a> · <a href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">Esta pessoa na convocação</a>{% if vizinhas.proxima_a_conferir %} · <a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.proxima_a_conferir.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Próxima com documento a conferir</a>{% endif %}</p>
 {% endblock %}

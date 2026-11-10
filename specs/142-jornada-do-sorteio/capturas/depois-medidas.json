@@ -1,0 +1,161 @@
+{
+ "04-c07-todas-congeladas-sem-semente": {
+  "rolagem_horizontal": false,
+  "altura": 2598,
+  "fixar": 1132,
+  "observar": 1821,
+  "sortear": null,
+  "formularios": [
+   "/ocorrencia|",
+   "/relacao|",
+   "/relacao|ff38d139-5860-5ed1-a696-a8f3fe21b34e"
+  ]
+ },
+ "01-c06-nada-preparado": {
+  "rolagem_horizontal": false,
+  "altura": 3368,
+  "fixar": 1679,
+  "observar": 2591,
+  "sortear": null,
+  "formularios": [
+   "/ocorrencia|",
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ },
+ "02-c06-ampla-fixada-ppp-pendente": {
+  "rolagem_horizontal": false,
+  "altura": 3079,
+  "fixar": 1539,
+  "observar": 2302,
+  "sortear": null,
+  "formularios": [
+   "/ocorrencia|",
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ },
+ "03-c06-todas-fixadas": {
+  "rolagem_horizontal": false,
+  "altura": 2820,
+  "fixar": 1354,
+  "observar": 2043,
+  "sortear": null,
+  "formularios": [
+   "/ocorrencia|",
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ },
+ "05-c06-semente-observada": {
+  "rolagem_horizontal": false,
+  "altura": 3035,
+  "fixar": 1297,
+  "observar": null,
+  "sortear": 2448,
+  "formularios": [
+   "/realizar|7bffc893-cb98-4e6f-9f2d-9f1793365ad5",
+   "/realizar|b705bf24-d5f9-431a-8f30-b08078a383a2",
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ },
+ "06-c06-ampla-sorteada-ppp-nao": {
+  "rolagem_horizontal": false,
+  "altura": 3852,
+  "fixar": 1380,
+  "observar": null,
+  "sortear": 2814,
+  "formularios": [
+   "/realizar|b705bf24-d5f9-431a-8f30-b08078a383a2",
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ },
+ "07-c06-sorteio-concluido": {
+  "rolagem_horizontal": false,
+  "altura": 3957,
+  "fixar": 1380,
+  "observar": null,
+  "sortear": null,
+  "formularios": [
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ },
+ "07b-c06-concluido-aberto-pelo-topo": {
+  "rolagem_horizontal": false,
+  "altura": 3273,
+  "fixar": 1132,
+  "observar": null,
+  "sortear": null,
+  "formularios": [
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ },
+ "11-c06-centro-depois-dos-sorteios": {
+  "rolagem_horizontal": false,
+  "altura": 2209,
+  "fixar": null,
+  "observar": null,
+  "sortear": null,
+  "formularios": []
+ },
+ "10-c06-auditoria-sem-permissao-de-conduzir": {
+  "rolagem_horizontal": false,
+  "altura": 3063,
+  "fixar": null,
+  "observar": null,
+  "sortear": null,
+  "formularios": []
+ },
+ "09-c06r2-semente-antes-da-ppp": {
+  "rolagem_horizontal": false,
+  "altura": 3171,
+  "fixar": 1482,
+  "observar": null,
+  "sortear": 2665,
+  "formularios": [
+   "/realizar|93a12882-c2d6-4896-973c-fc8288a83f66",
+   "/relacao|",
+   "/relacao|945d4336-95ff-5b2b-9ad6-255896de66ac"
+  ]
+ },
+ "08-c06r2-sorteio-recusado": {
+  "rolagem_horizontal": false,
+  "altura": 3078,
+  "fixar": 1340,
+  "observar": null,
+  "sortear": 2491,
+  "formularios": [
+   "/realizar|93a12882-c2d6-4896-973c-fc8288a83f66",
+   "/realizar|cda943f8-9c9f-4083-9a5b-c894827aec45",
+   "/relacao|",
+   "/relacao|945d4336-95ff-5b2b-9ad6-255896de66ac"
+  ]
+ },
+ "04-c07-375": {
+  "rolagem_horizontal": false,
+  "altura": 4138,
+  "fixar": 2082,
+  "observar": 3202,
+  "sortear": null,
+  "formularios": [
+   "/ocorrencia|",
+   "/relacao|",
+   "/relacao|ff38d139-5860-5ed1-a696-a8f3fe21b34e"
+  ]
+ },
+ "07-c06-375": {
+  "rolagem_horizontal": false,
+  "altura": 4298,
+  "fixar": 1679,
+  "observar": null,
+  "sortear": null,
+  "formularios": [
+   "/relacao|",
+   "/relacao|10f19622-72b4-5b4a-ab26-9967c36763f2"
+  ]
+ }
+}

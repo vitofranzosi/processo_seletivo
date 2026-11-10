@@ -2,3 +2,80 @@
    `FR-1743`). Quebram por caractere, sem hífen: copiar continua dando o valor inteiro. Os do método
    já quebravam, por regra própria. */
 .imutavel code{overflow-wrap:anywhere}
+
+/* A jornada do sorteio (142). Os passos de relance, no alto: um cartão por passo, lado a lado onde
+   cabem e um sob o outro no estreito. Sem barra de progresso — um passo de várias listas pode estar
+   feito numa e pendente noutra. A situação é palavra e sinal (UX-350); a cor só acompanha, pelas
+   classes do andamento (`andamento.css`), as mesmas do Centro. */
+.contexto-do-sorteio strong{color:var(--texto);font-weight:600}
+.passos-do-sorteio{margin:1.25rem 0 2rem}
+.passos-do-sorteio>h2{margin:0 0 .35rem}
+.passos-do-sorteio>.meta{max-width:var(--leitura);margin:0 0 .75rem}
+.passos{list-style:none;margin:0;padding:0;display:grid;gap:.6rem;
+  grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr))}
+.passo{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:.7rem .85rem;
+  min-width:0}
+/* A tarefa de agora: borda mais forte e a marca escrita — nunca só a cor (FR-4910). */
+.passo-agora{border:2px solid var(--verde);background:var(--verde-claro)}
+.passo-nome{margin:0;font-weight:600;line-height:1.3}
+.passo-nome a{color:var(--texto);text-decoration:none}
+.passo-nome a:hover{text-decoration:underline}
+.passo-numero{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;
+  margin-right:.3rem;border-radius:50%;background:var(--cinza-fundo);color:var(--texto);
+  font-size:.8125rem;font-weight:700;vertical-align:.1em}
+.passo-agora .passo-numero{background:var(--verde);color:var(--branco)}
+.marca-agora{display:inline-block;margin-left:.25rem;padding:0 .45rem;border-radius:999px;
+  background:var(--verde);color:var(--branco);font-size:.75rem;font-weight:700;vertical-align:.1em}
+.passo-termo{margin:.15rem 0 0;color:var(--texto-fraco);font-size:.8125rem}
+.passo-situacao{margin:.4rem 0 0;font-size:.875rem}
+.passo-contagem{color:var(--texto-fraco)}
+.passo-listas-do-marco{margin:.25rem 0 0;color:var(--texto-fraco);font-size:.8125rem}
+.passo-listas{list-style:none;margin:.3rem 0 0;padding:0;font-size:.8125rem}
+.passo-listas li{margin:.1rem 0;overflow-wrap:anywhere}
+.passo-listas .situacao-do-andamento{white-space:normal}
+
+/* As seções, uma por passo. O número repete o do cartão, e o nome no GPS fica ao lado, menor: o
+   vocabulário do domínio continua à vista, sem ser a primeira coisa a saber (FR-4900). */
+.passo-do-sorteio{margin:2rem 0;padding-top:1.25rem;border-top:1px solid var(--borda)}
+.passo-do-sorteio>h2{margin:0 0 .35rem}
+.passo-do-sorteio>h2 .passo-numero{width:1.75rem;height:1.75rem;font-size:.9375rem}
+.termo-do-gps{display:inline-block;font-size:.8125rem;font-weight:400;color:var(--texto-fraco)}
+.o-que-se-faz{margin:0 0 .5rem;max-width:var(--leitura)}
+/* O que o passo pede, alcança, desencadeia e se volta atrás (FR-4901): curto, em duas colunas
+   onde cabe, e uma sob a outra no estreito. */
+.contexto-do-passo{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:.15rem .9rem;
+  margin:0;max-width:var(--leitura)}
+.contexto-do-passo dt{font-weight:600;color:var(--texto-fraco)}
+.contexto-do-passo dd{margin:0}
+.sobre-o-passo,.o-que-e-cada-coisa{margin:0 0 .75rem;max-width:var(--leitura);font-size:.875rem}
+.sobre-o-passo>summary,.o-que-e-cada-coisa>summary{cursor:pointer;color:var(--verde-texto);
+  font-weight:600}
+.sobre-o-passo[open]>summary{margin-bottom:.35rem}
+.o-que-e-cada-coisa dl{margin:.35rem 0 0}
+.o-que-e-cada-coisa dt{font-weight:600}
+.o-que-e-cada-coisa dd{margin:0 0 .35rem}
+.situacao-da-lista{margin:0 0 .6rem}
+
+/* A conferência antes de fixar (FR-4908): no cartão, antes da tabela e do botão. Moldura de aviso
+   leve, porque o ato não volta atrás. */
+.conferencia-do-ato{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);
+  padding:.6rem 1rem;margin:0 0 .75rem;max-width:var(--leitura)}
+.conferencia-do-ato p{margin:0}
+.conferencia-do-ato ul{margin:.35rem 0 0;padding-left:1.2rem}
+.rotulo-do-gps{margin-left:.5rem}
+.participantes-fixados,.ordem-sorteada,.metodo-do-sorteio{margin:.5rem 0}
+.participantes-fixados>summary,.ordem-sorteada>summary,.metodo-do-sorteio>summary{cursor:pointer;
+  color:var(--verde-texto);font-weight:600}
+.participantes-fixados[open]>summary,.ordem-sorteada[open]>summary,
+.metodo-do-sorteio[open]>summary{margin-bottom:.4rem}
+/* O resumo do método a 375 px: 64 caracteres sem espaço. Já quebrava pela regra comum; a borda
+   da área recolhida não pode reabrir a rolagem que o estudo mediu (M-21). */
+.metodo-do-sorteio{max-width:100%;min-width:0}
+
+/* A execução e o resultado, lista a lista: o mesmo bloco do cartão da lista, para que a mesma
+   lista se reconheça nos três passos. */
+.execucao,.resultado-da-lista{border:1px solid var(--borda);border-radius:4px;padding:1rem;
+  margin:1rem 0;background:var(--branco);min-width:0}
+.execucao h3,.resultado-da-lista h3{margin:0 0 .5rem}
+.situacao-da-divulgacao{margin:0 0 .5rem;max-width:var(--leitura)}
+.sem-ordem{margin:.5rem 0}

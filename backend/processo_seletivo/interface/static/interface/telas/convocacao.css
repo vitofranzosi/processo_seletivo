@@ -1,0 +1,90 @@
+/* A convocação de um recorte, pelas perguntas de quem conduz (143). Só esta tela e a dos documentos
+   da convocação a leem: o índice, os dois grupos de números, as áreas e o cartão da chamada. */
+
+/* O lugar do recorte, abaixo do título (FR-5000). */
+.contexto-do-recorte{margin:-.25rem 0 .5rem;font-size:.9375rem;color:var(--texto-fraco);
+  overflow-wrap:anywhere}
+
+/* O índice "Neste recorte, agora" (FR-5001, UX-370). Uma lista de perguntas em duas colunas, que
+   cabe na primeira tela; a linha com trabalho para quem vê ganha a borda verde (D-002: estilo, e
+   não ordem). */
+.neste-recorte{border:1px solid var(--borda);border-radius:6px;background:var(--branco);
+  padding:.75rem 1rem;margin:0 0 1.25rem;max-width:56rem}
+.neste-recorte h2{margin:0 0 .5rem;font-size:1.0625rem}
+.perguntas{list-style:none;margin:0;padding:0;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.35rem .75rem}
+.pergunta{padding:.35rem .6rem;border-left:3px solid var(--borda);font-size:.9375rem;
+  overflow-wrap:anywhere}
+.pergunta strong{font-size:1.0625rem;margin-right:.15rem}
+.pergunta a{color:var(--texto);text-decoration:underline;text-decoration-color:var(--borda)}
+.pergunta a:hover,.pergunta a:focus{color:var(--verde-texto);text-decoration-color:currentColor}
+.pergunta.com-trabalho{border-left-color:var(--verde);background:var(--verde-claro)}
+.pergunta.sem-ninguem{color:var(--texto-fraco)}
+.pergunta .detalhe{display:block;font-size:.8125rem;color:var(--texto-fraco)}
+.pergunta .detalhe a{color:var(--verde-texto)}
+.sem-providencia{margin:.6rem 0 0}
+
+/* As vagas: o calculado e o praticado, distintos à vista (FR-5005, FR-5006, UX-372). */
+.vagas-e-chamadas{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));
+  gap:0 1.25rem;max-width:72rem}
+.vagas-e-chamadas>h2,.vagas-e-chamadas>p,.vagas-e-chamadas>ul{grid-column:1/-1}
+.grupo-de-numeros{border-radius:6px;padding:.75rem 1rem;margin:0 0 .75rem}
+.grupo-de-numeros h3{margin:0 0 .2rem;font-size:1rem;display:flex;flex-wrap:wrap;gap:.4rem;
+  align-items:baseline}
+.grupo-de-numeros .resumo{margin-bottom:.5rem}
+.grupo-de-numeros .resumo li{flex:1 1 7rem}
+.grupo-de-numeros.calculado{border:2px dashed var(--borda);background:var(--fundo)}
+.grupo-de-numeros.praticado{border:2px solid var(--borda);background:var(--branco)}
+.selo{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco);border:1px dashed var(--texto-fraco);border-radius:3px;padding:0 .35rem}
+.fonte{margin:0 0 .5rem;font-size:.8125rem;color:var(--texto-fraco)}
+.distincao{max-width:var(--leitura)}
+
+/* As explicações recolhidas (FR-5025): um "?" discreto, e no máximo três frases. */
+.explicacao-do-termo{margin:.25rem 0 .5rem;max-width:var(--leitura);font-size:.875rem}
+.explicacao-do-termo>summary{cursor:pointer;color:var(--verde-texto);font-weight:600;font-size:.8125rem}
+.explicacao-do-termo p{margin:.35rem 0;color:var(--texto)}
+.explicacao-curta{max-width:var(--leitura)}
+
+/* As áreas de trabalho (FR-5008, D-001). Um rótulo e uma frase; as seções seguem como eram. */
+.area-de-trabalho{border-top:3px solid var(--verde);margin:2rem 0 0;padding-top:.6rem}
+.area-de-trabalho.excecoes{border-top-color:var(--borda)}
+.rotulo-da-area{margin:0;font-size:.8125rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--verde-texto)}
+.excecoes .rotulo-da-area{color:var(--texto-fraco)}
+.area-de-trabalho>.ajuda{display:block;margin:.1rem 0 .75rem;max-width:var(--leitura)}
+
+/* O cartão da chamada: o passo primeiro, com a borda do tom (FR-5011, UX-371). A palavra do passo
+   diz o mesmo que a cor. */
+.chamada{border-left-width:4px}
+.chamada.tom-acao{border-left-color:var(--verde)}
+.chamada.tom-alerta{border-left-color:var(--vermelho)}
+.chamada.tom-espera{border-left-color:var(--amarelo)}
+.chamada.tom-feito{border-left-color:var(--borda)}
+.chamada:target{box-shadow:0 0 0 3px var(--verde-claro)}
+.passo-da-chamada{margin:.1rem 0 .6rem;padding:.45rem .6rem;border-radius:4px;
+  background:var(--cinza-fundo);display:flex;flex-wrap:wrap;gap:.25rem .5rem;align-items:baseline;
+  overflow-wrap:anywhere}
+.tom-acao .passo-da-chamada{background:var(--verde-claro)}
+.tom-alerta .passo-da-chamada{background:var(--vermelho-fundo)}
+.tom-espera .passo-da-chamada{background:var(--amarelo-fundo)}
+.rotulo-do-passo{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco)}
+.passo-da-chamada .acao-do-passo{background:var(--verde);color:var(--branco);border-color:var(--verde)}
+.aviso-da-pendencia{margin:0 0 .6rem;padding:.4rem .6rem;border-left:3px solid var(--amarelo);
+  font-size:.875rem;max-width:var(--leitura);overflow-wrap:anywhere}
+.aviso-da-pendencia a{font-weight:600}
+.desfecho-da-chamada.acao-do-passo>summary{background:var(--verde);color:var(--branco);
+  border-color:var(--verde)}
+
+/* As exceções numa linha secundária (FR-5014, UX-374): aberta, a que se abriu ocupa a largura. */
+.outras-acoes{display:flex;flex-wrap:wrap;gap:.4rem;align-items:flex-start;margin-top:.5rem;
+  padding-top:.5rem;border-top:1px dashed var(--borda)}
+.outras-acoes>details,.outras-acoes>form{margin:0}
+.outras-acoes>details[open]{flex-basis:100%;}
+.outras-acoes>form .acoes{margin:0}
+
+@media (max-width:40rem){
+  .perguntas{grid-template-columns:1fr}
+  .vagas-e-chamadas{display:block}
+}
