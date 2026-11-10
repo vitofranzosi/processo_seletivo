@@ -12,6 +12,9 @@ evidência, o que se sabe e o que não se sabe, e uma proposta de investigação
 > - **F-2** é falha confirmada na derivação;
 > - **F-3** é intencional (127, D-019).
 >
+> A D-5 foi decidida em 10/11 pela alternativa (d): a observação continua como está. O F-2 segue para a
+> spec 141. O F-3 está encerrado, sem correção.
+>
 > O texto abaixo é o de antes da triagem.
 
 ## F-1 — No sorteio, a semente observada antes da segunda lista condena a segunda lista em silêncio, e o Centro continua oferecendo o sorteio dela

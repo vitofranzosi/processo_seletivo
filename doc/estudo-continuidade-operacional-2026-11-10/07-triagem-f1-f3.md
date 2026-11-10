@@ -245,7 +245,18 @@ As duas leituras estão certas: é a única ação da pessoa. Mas, ali, o retorn
 
 ---
 
-## 4. A D-5 — as alternativas, sem decisão
+## 4. A D-5 — as alternativas
+
+> **Decidida pelo usuário em 10/11/2026: alternativa (d).**
+> - A observação da semente continua como está: o GPS não impede e não exige confirmação adicional
+>   quando há lista por congelar. Os motivos dele: a observação é compartilhada, e um bloqueio
+>   prenderia a lista preparada no prazo por causa da atrasada, inclusive entre Editais.
+> - Como melhoria pontual, a considerar, e não aprovada como escopo: usar o instante já observado
+>   para diagnosticar a relação inviável na fonte de treinamento que publica a hora (seção 1.6).
+> - Ressalva registrada por ele: a Loteria Federal real não foi exercitada. A conclusão sobre produção
+>   apoia-se no código, nos testes e na fonte "só a data".
+> - O texto abaixo é o das alternativas, como foram apresentadas.
+
 
 **A pergunta.** Quando uma ocorrência vai ser observada e ainda há lista com participantes por
 congelar, o GPS deve **(a)** impedir a observação, **(b)** exigir uma confirmação adicional, ou **(c)**
@@ -286,7 +297,7 @@ em produção, o risco que motivou a D-5 já está coberto pela 102.
 | **F-1b** — o Centro oferece o sorteio condenado | particularidade da fonte de demonstração (102, D-006; 134, D-004) | `a10`, `a11`; rodada 4, `t01`, `t02` e o shell no dia da extração | baixo em produção (não ocorre); médio no treinamento (ensina a armadilha) | **opcional:** usar o instante observado no diagnóstico e no aviso da 102 (1.6) | só se adotada: emenda à 102, com revisão da D-006 (decisão do usuário) |
 | **F-2** — a ordem sucessora e o corte antes da avaliação do reabilitado | **falha confirmada na derivação**; o serviço aceita a parcial por decisão (128) | `c09`, `c10`, `t03`–`t06`; a função pura `situacao_da_ordem` | médio: retrabalho em cascata, sem resultado oficial errado (a publicação recusa) | derivação: sucessora e corte não são providência com Etapa por fazer ou reingresso pendente; aviso opcional no corte (2.6) | **sim, mínima**, no molde da 135 (correções da derivação) |
 | **F-3** — o resultado do sorteio com a Etapa enumerada sem consolidação | comportamento intencional (127, FR-4060 e D-019; 136, D-008) | `a16`–`a22`; `andamento.py`, laço das esperadas | nenhum | nenhuma; a nota "Paralela ao sorteio" no retorno, se couber na 139 | não |
-| **D-5** | decisão de domínio pendente | seção 4 | em produção, coberto pela 102 | — | depende da decisão |
+| **D-5** | **decidida em 10/11: alternativa (d)** | seção 4 | em produção, coberto pela 102 | nenhuma regra nova na observação; a melhoria do F-1 (1.6), a considerar | não |
 
 ## Capturas novas
 
