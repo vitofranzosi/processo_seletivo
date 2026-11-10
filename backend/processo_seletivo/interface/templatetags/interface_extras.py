@@ -47,6 +47,12 @@ def ancora_do_recorte(lista_id):
 
 
 @register.filter
+def ancora_do_sorteio(lista_id):
+    """O id da execução da lista na tela do sorteio (142, FR-4915), da mesma função da derivação."""
+    return andamento.ancora_do_sorteio(lista_id)
+
+
+@register.filter
 def situacao(valor):
     return SITUACOES.get(valor, valor)
 

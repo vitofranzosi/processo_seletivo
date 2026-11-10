@@ -11,6 +11,10 @@ from django.urls import reverse
 from tests.fixtures.sorteio import certame_de_sorteio
 from tests.interface.conftest import identificar
 
+# O botão de fixar desde a `142`: "Fixar os N participantes desta lista" (no GPS: publicar e
+# congelar a relação). O rótulo antigo, procurado com `not in`, passaria calado.
+BOTAO_DE_FIXAR = "participantes desta lista</button>"
+
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
 
@@ -32,7 +36,7 @@ def test_com_o_periodo_correndo_a_tela_diz_por_que_e_nao_oferece_o_botao(
 
     assert "Ainda não é possível publicar a relação." in corpo
     assert "deixaria fora do sorteio quem se inscrever depois" in corpo
-    assert "Publicar e congelar a relação" not in corpo
+    assert BOTAO_DE_FIXAR not in corpo
     assert (
         reverse(
             "interface:publicar-relacao-do-sorteio", args=[certame["edital"].id, certame["marco"]]
@@ -48,5 +52,5 @@ def test_sem_periodo_correndo_o_botao_continua_e_o_aviso_nao_aparece(
 
     corpo = _abrir(client, certame)
 
-    assert "Publicar e congelar a relação" in corpo
+    assert BOTAO_DE_FIXAR in corpo
     assert "Ainda não é possível publicar a relação." not in corpo

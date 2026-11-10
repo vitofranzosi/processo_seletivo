@@ -46,11 +46,13 @@ def _sortear_pela_tela(client, manifesto):
     marco = identificador(manifesto.unidade, "C07", manifesto.rodada, "a1")
     identificar(client, "treino.presidencia", [])
     tela = reverse("interface:sorteio", args=[edital.id, marco])
+    # O formulário, e não a prosa: desde a `142`, "Realizar o sorteio" é também o nome do passo 3.
+    sortear = reverse("interface:realizar-sorteio", args=[edital.id, marco])
     antes = client.get(tela)
     assert antes.status_code == 200
-    assert "Realizar o sorteio" not in antes.content.decode(), "sem ocorrência não há o que sortear"
+    assert sortear not in antes.content.decode(), "sem ocorrência não há o que sortear"
     client.post(reverse("interface:observar-ocorrencia-do-sorteio", args=[edital.id, marco]), {})
-    assert "Realizar o sorteio" in client.get(tela).content.decode()
+    assert sortear in client.get(tela).content.decode()
     ocorrencia = OcorrenciaDaFonte.objects.get(
         referencia=concurso_da_rodada(manifesto.unidade, "C07", manifesto.rodada)
     )

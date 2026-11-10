@@ -1,10 +1,18 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/sorteio.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/andamento.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/sorteio.css' %}">{% endblock %}
 {% block titulo %}Sorteio — {{ marco.name }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Sorteio — {{ marco.name }}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Sorteio — {{ marco.name }}</h1>
-<p class="sub">{{ perfil.name }} — o universo é comprometido <strong>antes</strong> de a semente existir.</p>
+{% comment %}
+**A tela é a jornada de quem conduz, e não a estrutura do método** (142). Ela abria pelo algoritmo,
+pela derivação e pelo resumo do método — sete linhas que quem conduz não decide —, punha a semente
+antes das listas e o corte antes do sorteio, e não mostrava a ordem sorteada. Agora: o contexto, os
+quatro passos, e uma seção por passo, na ordem do trabalho. A situação de cada passo é a da derivação
+da `127`, a mesma do Centro (FR-4902); os formulários são os de antes, sob as mesmas condições
+(FR-4903). A sequência é de leitura: cada lista anda no seu ritmo, e nada aqui trava um ato.
+{% endcomment %}
+<p class="sub contexto-do-sorteio">{{ perfil.name }} · Edital {{ edital.number }}/{{ edital.year }} · {{ recortes|length }} lista{{ recortes|length|pluralize }} neste marco: {% for recorte in recortes %}{% if not forloop.first %}{% if forloop.last %} e {% else %}, {% endif %}{% endif %}<strong>{{ recorte.nome }}</strong>{% endfor %}.</p>
 {% comment %}
 Os termos do domínio definidos no primeiro uso desta tela (030, FR-424, SC-141). Fora de qualquer
 ramo, porque uma definição que só aparece em um dos ramos não é "no primeiro uso" — é "às vezes".
@@ -39,6 +47,9 @@ e congelada, com  participante"; depois de **realizar o sorteio**, dizia "Relaç
 congelada, com 327 participantes", omitindo justamente a semente e a ordem. Era falso no minuto mais
 visto do certame, com a transmissão aberta — e a faixa de recusa tinha o mesmo vício, anunciando
 "não foi possível publicar" quando o que falhara era a fonte externa.
+
+**No alto, antes dos passos** (142, FR-4916): é o que acabou de acontecer, e o "Próximo nesta lista"
+da `127` continua logo abaixo.
 {% endcomment %}
 {% if erro %}
 <p class="erro" role="alert" tabindex="-1" autofocus><strong>
@@ -76,7 +87,8 @@ diz qual ocorrência a substitui.
 <p class="sucesso" role="status" tabindex="-1"><strong>Sorteio realizado</strong>, com
   {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }} na ordem. A semente
   usada foi <code>{{ resultado.semente }}</code> e o manifesto é
-  <code>{{ resultado.manifestoHash }}</code>. Falta publicar a classificação.</p>
+  <code>{{ resultado.manifestoHash }}</code>. <a href="#ordem-{{ resultado.listaId|default:'ampla' }}">Ver a ordem sorteada</a>.
+  Falta publicar a classificação.</p>
 {% elif resultado.tipo == "anulacao" %}
 <p class="sucesso" role="status" tabindex="-1"><strong>Sorteio sucessor constituído</strong>, com
   {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }}. O sorteio anulado
@@ -86,153 +98,76 @@ diz qual ocorrência a substitui.
 {% if resultado %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
 {% comment %}
-O método é **lido**, e não editado. Não há campo, não há botão de alterar: ele é conteúdo publicado
-do Edital, e trocá-lo é Retificação — com a autoridade daquele ato, e não com a de quem conduz o
-sorteio (021, D-013, FR-014). Exibi-lo aqui é o que permite conferir, antes de congelar, sob que
-regra este certame vai sortear.
+**Os quatro passos, de relance** (142, FR-4900, FR-4905, UX-351). Cada um diz a situação dele com a
+palavra e o sinal da derivação (UX-350), e as listas pelo nome; o da semente é do marco, e diz
+uma vez só (FR-4906). "Agora" marca o primeiro passo com algo a praticar por quem conduz (FR-4910);
+quem só lê não o vê (FR-4917). Não há barra de progresso: um passo de várias listas pode estar
+feito numa e pendente noutra, e a tela diz as duas coisas.
 {% endcomment %}
-<section aria-labelledby="titulo-metodo">
-  <h2 id="titulo-metodo">Método declarado no Edital</h2>
-  {% if metodo %}
-  <dl class="metodo">
-    <dt>Algoritmo</dt><dd>{{ metodo.algorithm }}</dd>
-    <dt>Fonte da semente</dt><dd>{{ metodo.source }}</dd>
-    <dt>Ocorrência</dt><dd>{{ metodo.occurrence }}</dd>
-    <dt>Derivação</dt><dd>{{ metodo.derivation }}</dd>
-    <dt>Normalização</dt><dd>{{ metodo.normalization.text }}</dd>
-    <dt>Se a ocorrência faltar</dt><dd>{{ metodo.substitutionRule.text }}</dd>
-    <dt>Resumo do método</dt><dd><code>{{ metodo_hash }}</code></dd>
-  </dl>
-  {% if pode_conferir_a_referencia %}
-  {% comment %} Antes de congelar, sob demanda (116, FR-3645): a tela não consulta a Caixa sozinha, e a
-  mensagem é a que o congelamento daria. {% endcomment %}
-  <p class="meta"><button type="button" class="acao"
-          hx-get="{% url 'interface:fragmento-conferir-referencia' %}?edital={{ edital.id }}&amp;marco={{ marco.id }}"
-          hx-target="#conferencia-sorteio" hx-swap="innerHTML">Conferir na Caixa</button>
-    <span id="conferencia-sorteio" class="conferencia-sob-demanda" aria-live="polite"></span></p>
-  {% endif %}
-  {% comment %}
-  A frase mandava retificar e não dizia por onde — e até a `026` não havia por onde: a Retificação
-  não oferecia um único dos dez campos do método. Era a contradição mais visível do produto, e a
-  auditoria de 13/09 a registrou nestas palavras.
+<nav class="passos-do-sorteio" aria-labelledby="titulo-passos">
+  <h2 id="titulo-passos">Os passos do sorteio</h2>
+  <p class="meta">O universo é comprometido <strong>antes</strong> de a semente existir: primeiro se
+    fixam os participantes, depois se obtém a semente pública, e só então se sorteia. Cada lista
+    anda no seu ritmo — uma pode estar sorteada enquanto outra ainda é fixada.</p>
+  <ol class="passos">
+    {% for passo in passos %}
+    <li class="passo{% if passo.agora %} passo-agora{% endif %}">
+      <p class="passo-nome"><a href="#{{ passo.ancora }}"><span class="passo-numero">{{ passo.numero }}</span> {{ passo.simples }}</a>{% if passo.agora %} <span class="marca-agora">Agora</span>{% endif %}</p>
+      {% if passo.jargao %}<p class="passo-termo">no GPS: {{ passo.termo }}</p>{% endif %}
+      {% with s=passo.situacao %}{% if s %}<p class="passo-situacao"><span class="situacao-do-andamento s-{{ s.situacao }}"><span aria-hidden="true">{{ s.sinal }}</span> {{ s.rotulo }}</span>{% if passo.contagem %}<span class="passo-contagem">{{ passo.contagem }}</span>{% endif %}</p>{% endif %}{% endwith %}
+      {% if passo.do_marco %}
+      <p class="passo-listas-do-marco">Uma só, para {% if recortes|length == 1 %}a lista{% else %}as {{ recortes|length }} listas{% endif %} do marco.</p>
+      {% elif passo.listas|length > 1 %}
+      <ul class="passo-listas">
+        {% for rotulo, celula in passo.listas %}<li><span class="situacao-do-andamento s-{{ celula.situacao }}"><span aria-hidden="true">{{ celula.sinal }}</span> {{ celula.rotulo }}</span> {{ rotulo }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>
 
-  Agora o caminho existe, e a frase o nomeia. Dizer "é uma Retificação" sem apontar a tela deixava
-  quem lê com a regra e sem o meio (026, US4, FR-308).
-  {% endcomment %}
-  <p class="meta">Este método é conteúdo publicado do Edital. Alterá-lo é uma Retificação, e não
-    uma decisão desta tela{% if pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir
-    a Retificação deste Edital</a>{% else %}: quem elabora Retificações é quem pode alterá-lo{% endif %}.</p>
-  {% else %}
-  {% comment %}
-  **A palavra "por Retificação" aqui precisa de ressalva**, e ela é do contrato: a `026` decidiu
-  que o método **não** pode passar a existir por Retificação — um marco que não declarou método não
-  sorteia, e fazê-lo sortear depois de publicado muda a espécie da ordenação, e não um parâmetro
-  dela. Quem precisa do método num Edital já publicado declara marco novo (FR-313).
-  {% endcomment %}
-  <p class="erro">Este marco não declara método de sorteio no Edital publicado, e a Retificação não
-    cria a declaração: um marco que não declarou método não sorteia, e fazê-lo sortear depois de
-    publicado mudaria a espécie da ordenação. Enquanto ele não for declarado, a relação não pode
-    ser congelada — congelar sob método indefinido seria escolher o método depois de conhecer o
-    universo.</p>
-  {% endif %}
-</section>
+{% if not metodo %}
+{% comment %}
+**A falta de método impede todos os passos**, e por isso fica fora de qualquer área recolhida
+(142, FR-4907).
 
+**A palavra "por Retificação" aqui precisa de ressalva**, e ela é do contrato: a `026` decidiu
+que o método **não** pode passar a existir por Retificação — um marco que não declarou método não
+sorteia, e fazê-lo sortear depois de publicado muda a espécie da ordenação, e não um parâmetro
+dela. Quem precisa do método num Edital já publicado declara marco novo (FR-313).
+{% endcomment %}
+<p class="erro">Este marco não declara método de sorteio no Edital publicado, e a Retificação não
+  cria a declaração: um marco que não declarou método não sorteia, e fazê-lo sortear depois de
+  publicado mudaria a espécie da ordenação. Enquanto ele não for declarado, a relação não pode
+  ser congelada — congelar sob método indefinido seria escolher o método depois de conhecer o
+  universo.</p>
+{% endif %}
+
+{% comment %}
+O cabeçalho de cada passo: o nome simples, o do GPS e o que se faz, sempre à vista; o que ele pede,
+alcança e desencadeia, se volta atrás e por quê (FR-4901), abertos no passo da vez e a um clique nos
+outros — os pré-requisitos e as consequências aparecem quando são a pergunta.
+{% endcomment %}
+{% with passo=passos.0 %}
 {% comment %}
 Os recortes juntos, e não um por página: um marco com cotas tem três, e listá-los separados é o que
 faz alguém publicar dois e esquecer o terceiro. A prévia é **da relação**, e nunca da ordem — não há
 botão de simular, e não há o que simular antes da semente (FR-030, D-010).
 {% endcomment %}
-{% comment %}
-A semente **à vista antes do ato**, que é o que a transmissão precisa mostrar. Observar é comando
-distinto de sortear, e a tela os separa porque eles são separados: o primeiro vai à fonte e
-registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
-{% endcomment %}
-<section aria-labelledby="titulo-ocorrencia">
-  <h2 id="titulo-ocorrencia">Ocorrência da fonte</h2>
-  {% comment %}
-  **As ocorrências descartadas ficam visíveis**, e é o controle da R-006: sem elas, alguém poderia
-  observar até a semente agradar e o registro contaria uma história limpa. Aqui elas aparecem com a
-  evidência da indisponibilidade que a regra publicada usou para seguir adiante.
-  {% endcomment %}
-  {% if ocorrencias_descartadas %}
-  <div class="descartadas">
-    <h3>Ocorrências indisponíveis, e a substituição que a regra determinou</h3>
-    <ul>
-      {% for descartada in ocorrencias_descartadas %}
-      <li><strong>{{ descartada.referencia }}</strong> — {{ descartada.evidencia }}
-        {% if descartada.motivo %}<span class="erro">{{ descartada.motivo }}</span>{% endif %}</li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
-  {% if ocorrencia %}
-  <dl class="ocorrencia">
-    <dt>Fonte e ocorrência</dt><dd>{{ ocorrencia.fonte }} — {{ ocorrencia.referencia }}</dd>
-    <dt>Material bruto observado</dt><dd><code>{{ ocorrencia.material_bruto }}</code></dd>
-    {% comment %}
-    **Três frases, porque são três coisas que a tela pode saber** (124, FR-3964, FR-3965). A frase
-    única dizia "04/11/2026 00:00 — é o que a fonte publica", e a Loteria Federal não publica hora:
-    publica o dia, e a meia-noite é o limite que o sistema deduz (102, FR-2649). Quem conduz lia
-    00h00 como a hora da extração. A fonte que publica a hora tem a frase dela, para que o texto não
-    erre no sentido inverso; e a fonte fora do vocabulário deste ambiente não ganha afirmação
-    nenhuma sobre o que publica.
-    {% endcomment %}
-    <dt>Aconteceu não antes de</dt><dd>{% if not ocorrencia.ocorrida_nao_antes_de %}<span class="erro">a fonte não informou, e sem isso ela não semeia sorteio</span>{% elif fonte_publica_so_a_data %}{{ ocorrencia.ocorrida_nao_antes_de|date:"d/m/Y" }} — a fonte publica só a data da extração, sem o horário. O sistema conta desde 00h00 desse dia: é o limite inferior, e não a hora em que a extração aconteceu, e é ele que se compara com o congelamento{% elif fonte_publica_so_a_data is False %}{{ ocorrencia.ocorrida_nao_antes_de|date:"d/m/Y H:i" }} — é o instante que a fonte publica para a extração, e é ele, como limite inferior, que se compara com o congelamento{% else %}{{ ocorrencia.ocorrida_nao_antes_de|date:"d/m/Y H:i" }} — é o limite inferior que se compara com o congelamento{% endif %}</dd>
-    <dt>Observada em</dt><dd>{{ ocorrencia.observada_em|date:"d/m/Y H:i:s" }} por {% nome_de_pessoa ocorrencia.observada_por %}</dd>
-  </dl>
-  {% elif proxima_referencia %}
-  {% comment %}
-  A referência da vez é **derivada** da regra publicada, e não escolhida: a tela a mostra para que
-  quem observa saiba o que vai buscar, e não há campo para trocá-la (FR-015, FR-017).
-  {% endcomment %}
-  <p class="aviso">A ocorrência <strong>{{ proxima_referencia }}</strong> de
-    {{ metodo.source }} ainda não foi observada. É a que a regra publicada determina agora.</p>
-  {% if pode_emitir and metodo %}
-  <form method="post" action="{% url 'interface:observar-ocorrencia-do-sorteio' edital.id marco.id %}">
-    {% csrf_token %}
-    {% comment %}
-    A chave viaja no formulário, como na tela da `015`. Sem ela, cada envio gerava uma chave nova e
-    o duplo clique deixava de ser repetição: o segundo pedido batia numa recusa e pintava a tela de
-    vermelho depois de o primeiro ter dado certo.
-    {% endcomment %}
-    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-ocorrencia">
-    <button type="submit" class="botao">Observar a ocorrência {{ proxima_referencia }} na fonte</button>
-  </form>
-  {% endif %}
-  {% elif recusa_da_ocorrencia.causa == "declaracao" %}
-  {% comment %}
-  **A causa é a declaração, e não a fonte** (035, FR-516, FR-517). Aqui se lia que a ocorrência e
-  todas as substitutas estavam indisponíveis — frase falsa neste caso, e que culpa quem não errou:
-  a fonte nunca esteve indisponível, e quem lesse ficaria esperando por algo que não viria, para
-  depois Retificar sem saber o quê.
-
-  **A ordem das três frases é o requisito.** Primeiro qual campo e o que ele precisa conter, e só
-  então que corrigir exige Retificação: quem lê precisa saber **o que** antes de saber **como**.
-  {% endcomment %}
-  <p class="erro">A ocorrência declarada no Edital — <strong>{{ recusa_da_ocorrencia.referencia }}</strong> —
-    não pôde ser lida pela regra de substituição publicada. O campo <strong>{{ recusa_da_ocorrencia.campo }}</strong> —
-    {{ recusa_da_ocorrencia.o_que_e }} — precisa terminar no número da ocorrência, como
-    <code>5900</code> ou <code>Concurso 5900</code>: é do número final que a regra deriva a
-    substituta quando a fonte não publica.</p>
-  <p class="meta">A fonte não foi consultada, e não há o que esperar dela. Corrigir a declaração
-    exige Retificação, porque o método é conteúdo publicado deste Edital{% if pode_retificar %} —
-    <a href="{% url 'interface:retificar' edital.id %}">elabore a Retificação deste Edital</a>{% else %}:
-    quem elabora Retificações é quem pode alterá-lo{% endif %}.</p>
-  {% else %}
-  {% comment %}
-  **A indisponibilidade real, e a frase dela não mudou** (035, FR-518). A cadeia esgotou porque a
-  fonte esteve indisponível tantas vezes quanto a regra encadeia — e para **esta** causa o que está
-  escrito aqui é verdadeiro. Esta feature não mexe no que já está certo.
-  {% endcomment %}
-  <p class="erro">A ocorrência declarada e todas as substitutas previstas pela regra publicada estão
-    indisponíveis. Prosseguir exige Retificação que declare outro método: o sistema não escolhe
-    fonte por conta própria, e continuar tentando seria escolher.</p>
-  {% endif %}
-</section>
-
-<section aria-labelledby="titulo-recortes">
-  <h2 id="titulo-recortes">Recortes deste marco</h2>
+<section class="passo-do-sorteio" aria-labelledby="titulo-recortes">
+  <h2 id="titulo-recortes"><span class="passo-numero">{{ passo.numero }}</span> {{ passo.simples }} <span class="termo-do-gps">no GPS: {{ passo.termo }}</span></h2>
+  <p class="o-que-se-faz">{{ passo.curta }}</p>
+  <details class="sobre-o-passo"{% if passo.agora %} open{% endif %}>
+    <summary>O que este passo pede, e o que vem depois</summary>
+    <dl class="contexto-do-passo">
+      <dt>Precisa de</dt><dd>{{ passo.precisa }}</dd>
+      <dt>Vale para</dt><dd>{{ passo.afeta }}</dd>
+      <dt>Depois</dt><dd>{{ passo.depois }}</dd>
+      <dt>Volta atrás?</dt><dd>{{ passo.irreversivel }}</dd>
+      <dt>Por quê</dt><dd>{{ passo.porque }}</dd>
+    </dl>
+  </details>
   {% if frase_da_modalidade_apontada %}<p class="ajuda">{{ frase_da_modalidade_apontada }}</p>{% endif %}
   {% comment %}
   **Uma vez, e não por recorte**: o período é do Edital, e vale para as três listas. É a frase da
@@ -250,8 +185,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   continua disponível (D-005): a relação pode ter data no cronograma, e quem conduz decide sabendo.
   Escrito para quem conduz o sorteio (revisão de 30/10): o que fazer primeiro, a data pronta, e a
   sucessão também, porque ela congela na hora.
-  {% endcomment %}
-  {% comment %}
+
   **No topo, só quando há relação a congelar** (126, FR-4031): com todas congeladas, o aviso vale só
   para a sucessão, e mora dentro do bloco dela, mais abaixo (FR-4032). A regra é a da `102`. Quem
   não sucede não tem o bloco, e continua lendo o aviso aqui — é quem pode pedir a Retificação.
@@ -262,26 +196,9 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   {% for recorte in recortes %}
   <article class="recorte" id="{{ recorte.lista_id|ancora_do_recorte }}">
     <h3>{{ recorte.nome }}</h3>
-    {% comment %}
-    O estado do corte **deste** recorte, aqui e não numa visita por lista (014, UX-029). Num marco
-    com cotas são três, e conferir três telas para saber se alguma faixa ficou para trás é onde o
-    esforço vira erro.
-    {% endcomment %}
-    {% if recorte.corte %}
-      {% if recorte.corte.obsoleto %}
-      <p class="erro" role="status"><strong>A faixa deste recorte está obsoleta.</strong>
-        {% for causa in recorte.corte.causas %}{{ causa.descricao }} {% endfor %}
-        <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
-      {% elif recorte.corte.faixas %}
-      <p class="imutavel"><strong>Corte emitido</strong> — {{ recorte.corte.faixas|length }} faixa{{ recorte.corte.faixas|length|pluralize:"s" }} na geração vigente.
-        <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
-      {% else %}
-      <p class="aviso">Nenhum corte emitido neste recorte.
-        <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
-      {% endif %}
-    {% endif %}
+    {% with c=recorte.celula_da_relacao %}{% if c %}<p class="situacao-da-lista"><span class="situacao-do-andamento s-{{ c.situacao }}"><span aria-hidden="true">{{ c.sinal }}</span> {{ c.rotulo }}</span>{% if c.situacao != "feito" and c.razao %} — {{ c.razao }}{% endif %}</p>{% endif %}{% endwith %}
     {% if recorte.congelada %}
-    <p class="imutavel"><strong>Relação congelada em {{ recorte.relacao.publicada_em|date:"d/m/Y H:i" }}</strong>
+    <p class="imutavel"><strong>Participantes fixados — relação congelada em {{ recorte.relacao.publicada_em|date:"d/m/Y H:i" }}</strong>
       por {% nome_de_pessoa recorte.relacao.publicada_por %}, com {{ recorte.relacao.quantidade }} participante{{ recorte.relacao.quantidade|pluralize }}.
       Resumo <code>{{ recorte.relacao.resumo }}</code>.
       <a href="{% url 'portal:relacao-de-habilitados' recorte.relacao.id %}">Ver no canal público</a></p>
@@ -291,7 +208,26 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       compromisso. A relação <strong>não</strong> se altera: corrigi-la é publicar outra, com motivo.</p>
     {% endif %}
     {% elif recorte.projetados %}
+    {% if pode_emitir and metodo and not inscricoes_em_curso %}
+    {% comment %}
+    **A conferência do ato, no cartão e antes do botão** (142, FR-4908, D-005). A tabela logo abaixo
+    é a lista e a numeração que o ato grava; o que faltava era dizer, ali, a consequência e o passo
+    seguinte. Sem clique a mais: a tela já é a prévia sem efeito.
+    {% endcomment %}
+    <div class="conferencia-do-ato">
+      <p><strong>Confira antes de fixar.</strong> Fixando agora, participam
+        <strong>{{ recorte.projetados }} pessoa{{ recorte.projetados|pluralize }}</strong> desta lista,
+        com os números da tabela abaixo.</p>
+      <ul>
+        <li>A relação é publicada no canal público e não muda mais: corrigi-la é publicar outra,
+          que sucede esta, com motivo.</li>
+        <li>Depois de fixar, o passo seguinte é obter a semente pública, que vale para todas as
+          listas deste marco.</li>
+      </ul>
+    </div>
+    {% else %}
     <p class="aviso">Universo ainda não comprometido. Seriam {{ recorte.projetados }} participante{{ recorte.projetados|pluralize }} se publicado agora.</p>
+    {% endif %}
     {% else %}
     {% comment %}
     **Sem candidato não se oferece o botão.** Ele existia e a recusa era certa — "não existe
@@ -308,9 +244,12 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     não era o universo comprometido, e a divergência, quando havia, aparecia apenas como uma
     diferença de contagem no aviso ao lado.
 
-    A legenda é **visível** quando a relação está congelada: ali ela não repete o título, diz o que
-    a tabela é — o compromisso publicado, e não uma prévia.
+    **Recolhida depois de fixada** (142, D-007): antes, ela é a conferência e fica aberta; depois, é o
+    registro do compromisso, a um clique, com o resumo e o link público logo acima. Com três listas
+    e centenas de pessoas, aberta ela empurrava a semente e a execução para longe.
     {% endcomment %}
+    {% if recorte.participantes %}
+    {% if recorte.congelada %}<details class="participantes-fixados"><summary>Ver os {{ recorte.relacao.quantidade }} participantes fixados, com o número de cada um</summary>{% endif %}
     <div class="tabela-rolavel">
       <table>
         {% if recorte.congelada %}
@@ -326,12 +265,15 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
         </tbody>
       </table>
     </div>
+    {% if recorte.congelada %}</details>{% endif %}
+    {% endif %}
 
     {% if recorte.diagnostico_da_relacao %}
     {% comment %}
     **A relação que nunca sorteará com a extração dela** (102, FR-2660, FR-2661). O método lido é o
     da versão que a relação cita, que é o que o sorteio lê, e não o vigente. Bloco próprio, antes
     dos botões, e não um ramo da cadeia deles: esconder "Realizar o sorteio" não foi decidido.
+    Fica no cartão da lista, no passo 1, porque a saída é suceder a relação, aqui.
     {% endcomment %}
     {% with d=recorte.diagnostico_da_relacao %}
     <div class="erro">
@@ -366,28 +308,237 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
     </div>
     {% endwith %}
     {% endif %}
+
     {% comment %}
     Um botão só, e ele publica. **Não existe**, aqui nem em superfície alguma: incluir participante,
     excluir participante, renumerar, campo de semente, simular, refazer (FR-002, FR-017, FR-030).
+
+    **O formulário continua disponível depois do sorteio**, e é o passo 2 da anulação: o sucessor
+    nasce de relação nova, e ela é publicada aqui. Escondê-lo tornava a anulação — corrigida no
+    domínio — inalcançável pela tela, o que a Constituição §VI não admite.
     {% endcomment %}
+    {% if pode_emitir and metodo and recorte.projetados and not inscricoes_em_curso %}
+    {% if recorte.congelada %}
+    {% comment %}
+    **A sucessão da relação, recolhida** (126, FR-4010, FR-4011, UX-223). Aberta logo abaixo de
+    "Relação publicada e congelada", ela era a ação mais visível depois do ato que ela desfaria. Abre
+    sozinha quando a relação nunca sortearia, que é quando suceder é a saída. E é aqui que mora o
+    aviso de congelamento inviável quando ele vale só para a sucessão (FR-4032): a relação nova
+    seria congelada na hora.
+    {% endcomment %}
+    <details class="sucessao"{% if recorte.diagnostico_da_relacao %} open{% endif %}>
+    <summary>Suceder esta relação (exige motivo)</summary>
+    {% if congelar_agora_inviavel and not recorte.diagnostico_da_relacao %}
+    {% include "interface/_congelamento_inviavel.html" with para_a_sucessao=True %}
+    {% endif %}
+    {% endif %}
+    <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-relacao-{{ recorte.lista_id }}">
+      <input type="hidden" name="lista_id" value="{{ recorte.lista_id }}">
+      {% if recorte.congelada %}
+      <p class="campo">
+        <label for="motivo-{{ forloop.counter }}">Motivo da sucessão <span class="obrigatorio" aria-hidden="true">*</span></label>
+        {% comment %} Área de texto, como o motivo de sucessão da Ordenação e do Corte (058, FR-1082). O da anulação, acima, não sucede ato, e fica (D-008). {% endcomment %}
+        <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="3" required aria-required="true"
+                  aria-describedby="ajuda-motivo-{{ forloop.counter }}"></textarea>
+        <span class="oculto" id="ajuda-motivo-{{ forloop.counter }}">A relação publicada é o compromisso do universo. Substituí-la sem razão escrita apagaria o compromisso sem que ninguém respondesse por isso.</span>
+      </p>
+      <button type="submit" class="acao">Publicar relação nova, sucedendo a atual</button>
+      {% else %}
+      <button type="submit" class="botao">Fixar os {{ recorte.projetados }} participantes desta lista</button>
+      <span class="meta rotulo-do-gps">no GPS: publicar e congelar a relação</span>
+      {% endif %}
+    </form>
+    {% if recorte.congelada %}</details>{% endif %}
+    {% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endwith %}
+
+{% with passo=passos.1 %}
+{% comment %}
+A semente **à vista antes do ato**, que é o que a transmissão precisa mostrar. Observar é comando
+distinto de sortear, e a tela os separa porque eles são separados: o primeiro vai à fonte e
+registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
+
+**Do marco, e não de uma lista** (142, FR-4906): uma seção só, uma situação só. **E a regra de
+observar é a de antes** (FR-4909): nenhum bloqueio, nenhuma confirmação, nenhuma frase sobre a ordem
+entre fixar e observar — a decisão do usuário de 10/11. O que acompanha a tarefa de agora é só a
+ênfase do botão (D-004).
+{% endcomment %}
+<section class="passo-do-sorteio" aria-labelledby="titulo-ocorrencia">
+  <h2 id="titulo-ocorrencia"><span class="passo-numero">{{ passo.numero }}</span> {{ passo.simples }} <span class="termo-do-gps">no GPS: {{ passo.termo }}</span></h2>
+  <p class="o-que-se-faz">{{ passo.curta }}</p>
+  {% with c=passo.celula %}{% if c %}<p class="situacao-da-lista"><span class="situacao-do-andamento s-{{ c.situacao }}"><span aria-hidden="true">{{ c.sinal }}</span> {{ c.rotulo }}</span>{% if c.situacao != "feito" and c.razao %} — {{ c.razao }}{% endif %}</p>{% endif %}{% endwith %}
+  <details class="sobre-o-passo"{% if passo.agora %} open{% endif %}>
+    <summary>O que este passo pede, e o que vem depois</summary>
+    <dl class="contexto-do-passo">
+      <dt>Precisa de</dt><dd>{{ passo.precisa }}</dd>
+      <dt>Vale para</dt><dd>{{ passo.afeta }}</dd>
+      <dt>Depois</dt><dd>{{ passo.depois }}</dd>
+      <dt>Volta atrás?</dt><dd>{{ passo.irreversivel }}</dd>
+      <dt>Por quê</dt><dd>{{ passo.porque }}</dd>
+    </dl>
+  </details>
+  {% comment %}
+  **As ocorrências descartadas ficam visíveis**, e é o controle da R-006: sem elas, alguém poderia
+  observar até a semente agradar e o registro contaria uma história limpa. Aqui elas aparecem com a
+  evidência da indisponibilidade que a regra publicada usou para seguir adiante.
+  {% endcomment %}
+  {% if ocorrencias_descartadas %}
+  <div class="descartadas">
+    <h3>Ocorrências indisponíveis, e a substituição que a regra determinou</h3>
+    <ul>
+      {% for descartada in ocorrencias_descartadas %}
+      <li><strong>{{ descartada.referencia }}</strong> — {{ descartada.evidencia }}
+        {% if descartada.motivo %}<span class="erro">{{ descartada.motivo }}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if ocorrencia %}
+  <h3>Ocorrência da fonte</h3>
+  <dl class="ocorrencia">
+    <dt>Fonte e ocorrência</dt><dd>{{ ocorrencia.fonte }} — {{ ocorrencia.referencia }}</dd>
+    <dt>Material bruto observado</dt><dd><code>{{ ocorrencia.material_bruto }}</code></dd>
+    {% comment %}
+    **Três frases, porque são três coisas que a tela pode saber** (124, FR-3964, FR-3965). A frase
+    única dizia "04/11/2026 00:00 — é o que a fonte publica", e a Loteria Federal não publica hora:
+    publica o dia, e a meia-noite é o limite que o sistema deduz (102, FR-2649). Quem conduz lia
+    00h00 como a hora da extração. A fonte que publica a hora tem a frase dela, para que o texto não
+    erre no sentido inverso; e a fonte fora do vocabulário deste ambiente não ganha afirmação
+    nenhuma sobre o que publica.
+    {% endcomment %}
+    <dt>Aconteceu não antes de</dt><dd>{% if not ocorrencia.ocorrida_nao_antes_de %}<span class="erro">a fonte não informou, e sem isso ela não semeia sorteio</span>{% elif fonte_publica_so_a_data %}{{ ocorrencia.ocorrida_nao_antes_de|date:"d/m/Y" }} — a fonte publica só a data da extração, sem o horário. O sistema conta desde 00h00 desse dia: é o limite inferior, e não a hora em que a extração aconteceu, e é ele que se compara com o congelamento{% elif fonte_publica_so_a_data is False %}{{ ocorrencia.ocorrida_nao_antes_de|date:"d/m/Y H:i" }} — é o instante que a fonte publica para a extração, e é ele, como limite inferior, que se compara com o congelamento{% else %}{{ ocorrencia.ocorrida_nao_antes_de|date:"d/m/Y H:i" }} — é o limite inferior que se compara com o congelamento{% endif %}</dd>
+    <dt>Observada em</dt><dd>{{ ocorrencia.observada_em|date:"d/m/Y H:i:s" }} por {% nome_de_pessoa ocorrencia.observada_por %}</dd>
+  </dl>
+  {% elif proxima_referencia %}
+  {% comment %}
+  A referência da vez é **derivada** da regra publicada, e não escolhida: a tela a mostra para que
+  quem observa saiba o que vai buscar, e não há campo para trocá-la (FR-015, FR-017).
+  {% endcomment %}
+  <h3>Ocorrência da fonte</h3>
+  <p class="aviso">A ocorrência <strong>{{ proxima_referencia }}</strong> de
+    {{ metodo.source }} ainda não foi observada. É a que a regra publicada determina agora.</p>
+  {% if pode_emitir and metodo %}
+  <form method="post" action="{% url 'interface:observar-ocorrencia-do-sorteio' edital.id marco.id %}">
+    {% csrf_token %}
+    {% comment %}
+    A chave viaja no formulário, como na tela da `015`. Sem ela, cada envio gerava uma chave nova e
+    o duplo clique deixava de ser repetição: o segundo pedido batia numa recusa e pintava a tela de
+    vermelho depois de o primeiro ter dado certo.
+    {% endcomment %}
+    <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-ocorrencia">
+    <button type="submit" class="botao{% if fixar_por_fazer %} secundario{% endif %}">Observar a ocorrência {{ proxima_referencia }} na fonte</button>
+  </form>
+  {% endif %}
+  {% elif recusa_da_ocorrencia.causa == "declaracao" %}
+  {% comment %}
+  **A causa é a declaração, e não a fonte** (035, FR-516, FR-517). Aqui se lia que a ocorrência e
+  todas as substitutas estavam indisponíveis — frase falsa neste caso, e que culpa quem não errou:
+  a fonte nunca esteve indisponível, e quem lesse ficaria esperando por algo que não viria, para
+  depois Retificar sem saber o quê.
+
+  **A ordem das três frases é o requisito.** Primeiro qual campo e o que ele precisa conter, e só
+  então que corrigir exige Retificação: quem lê precisa saber **o que** antes de saber **como**.
+  {% endcomment %}
+  <p class="erro">A ocorrência declarada no Edital — <strong>{{ recusa_da_ocorrencia.referencia }}</strong> —
+    não pôde ser lida pela regra de substituição publicada. O campo <strong>{{ recusa_da_ocorrencia.campo }}</strong> —
+    {{ recusa_da_ocorrencia.o_que_e }} — precisa terminar no número da ocorrência, como
+    <code>5900</code> ou <code>Concurso 5900</code>: é do número final que a regra deriva a
+    substituta quando a fonte não publica.</p>
+  <p class="meta">A fonte não foi consultada, e não há o que esperar dela. Corrigir a declaração
+    exige Retificação, porque o método é conteúdo publicado deste Edital{% if pode_retificar %} —
+    <a href="{% url 'interface:retificar' edital.id %}">elabore a Retificação deste Edital</a>{% else %}:
+    quem elabora Retificações é quem pode alterá-lo{% endif %}.</p>
+  {% else %}
+  {% comment %}
+  **A indisponibilidade real, e a frase dela não mudou** (035, FR-518). A cadeia esgotou porque a
+  fonte esteve indisponível tantas vezes quanto a regra encadeia — e para **esta** causa o que está
+  escrito aqui é verdadeiro. Esta feature não mexe no que já está certo.
+  {% endcomment %}
+  <p class="erro">A ocorrência declarada e todas as substitutas previstas pela regra publicada estão
+    indisponíveis. Prosseguir exige Retificação que declare outro método: o sistema não escolhe
+    fonte por conta própria, e continuar tentando seria escolher.</p>
+  {% endif %}
+
+  {% comment %}
+  O método é **lido**, e não editado. Não há campo, não há botão de alterar: ele é conteúdo publicado
+  do Edital, e trocá-lo é Retificação — com a autoridade daquele ato, e não com a de quem conduz o
+  sorteio (021, D-013, FR-014). Exibi-lo aqui é o que permite conferir, antes de congelar, sob que
+  regra este certame vai sortear.
+
+  **Inteiro, e recolhido no passo da semente** (142, FR-4907): é a regra de como a semente vira
+  ordem, e quem conduz não a decide. Ficava na frente de tudo; agora está a um clique, com o
+  "Conferir na Caixa" da `116` e o caminho da Retificação.
+  {% endcomment %}
+  {% if metodo %}
+  <details class="metodo-do-sorteio">
+    <summary>Método declarado no Edital</summary>
+    <dl class="metodo">
+      <dt>Algoritmo</dt><dd>{{ metodo.algorithm }}</dd>
+      <dt>Fonte da semente</dt><dd>{{ metodo.source }}</dd>
+      <dt>Ocorrência</dt><dd>{{ metodo.occurrence }}</dd>
+      <dt>Derivação</dt><dd>{{ metodo.derivation }}</dd>
+      <dt>Normalização</dt><dd>{{ metodo.normalization.text }}</dd>
+      <dt>Se a ocorrência faltar</dt><dd>{{ metodo.substitutionRule.text }}</dd>
+      <dt>Resumo do método</dt><dd><code>{{ metodo_hash }}</code></dd>
+    </dl>
+    {% if pode_conferir_a_referencia %}
+    {% comment %} Antes de congelar, sob demanda (116, FR-3645): a tela não consulta a Caixa sozinha, e a
+    mensagem é a que o congelamento daria. {% endcomment %}
+    <p class="meta"><button type="button" class="acao"
+            hx-get="{% url 'interface:fragmento-conferir-referencia' %}?edital={{ edital.id }}&amp;marco={{ marco.id }}"
+            hx-target="#conferencia-sorteio" hx-swap="innerHTML">Conferir na Caixa</button>
+      <span id="conferencia-sorteio" class="conferencia-sob-demanda" aria-live="polite"></span></p>
+    {% endif %}
+    {% comment %}
+    A frase mandava retificar e não dizia por onde — e até a `026` não havia por onde: a Retificação
+    não oferecia um único dos dez campos do método. Era a contradição mais visível do produto, e a
+    auditoria de 13/09 a registrou nestas palavras.
+
+    Agora o caminho existe, e a frase o nomeia. Dizer "é uma Retificação" sem apontar a tela deixava
+    quem lê com a regra e sem o meio (026, US4, FR-308).
+    {% endcomment %}
+    <p class="meta">Este método é conteúdo publicado do Edital. Alterá-lo é uma Retificação, e não
+      uma decisão desta tela{% if pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir
+      a Retificação deste Edital</a>{% else %}: quem elabora Retificações é quem pode alterá-lo{% endif %}.</p>
+  </details>
+  {% endif %}
+</section>
+{% endwith %}
+
+{% with passo=passos.2 %}
+{% comment %}
+**A execução, lista a lista, com destino próprio** (142, FR-4911, FR-4915, D-002). A providência do
+sorteio chega aqui, e não ao cartão da lista no passo 1. O botão aparece exatamente quando aparecia
+(FR-4903); sem ele, a razão da derivação diz por quê.
+{% endcomment %}
+<section class="passo-do-sorteio" aria-labelledby="titulo-execucao">
+  <h2 id="titulo-execucao"><span class="passo-numero">{{ passo.numero }}</span> {{ passo.simples }}</h2>
+  <p class="o-que-se-faz">{{ passo.curta }}</p>
+  <details class="sobre-o-passo"{% if passo.agora %} open{% endif %}>
+    <summary>O que este passo pede, e o que vem depois</summary>
+    <dl class="contexto-do-passo">
+      <dt>Precisa de</dt><dd>{{ passo.precisa }}</dd>
+      <dt>Vale para</dt><dd>{{ passo.afeta }}</dd>
+      <dt>Depois</dt><dd>{{ passo.depois }}</dd>
+      <dt>Volta atrás?</dt><dd>{{ passo.irreversivel }}</dd>
+      <dt>Por quê</dt><dd>{{ passo.porque }}</dd>
+    </dl>
+  </details>
+  {% for recorte in recortes %}
+  <div class="execucao" id="{{ recorte.lista_id|ancora_do_sorteio }}">
+    <h3>{{ recorte.nome }}</h3>
+    {% with c=recorte.celula_do_sorteio %}{% if c %}<p class="situacao-da-lista"><span class="situacao-do-andamento s-{{ c.situacao }}"><span aria-hidden="true">{{ c.sinal }}</span> {{ c.rotulo }}</span>{% if c.situacao != "feito" and c.razao %} — {{ c.razao }}{% endif %}{% if recorte.diagnostico_da_relacao %} <a href="#{{ recorte.lista_id|ancora_do_recorte }}">Ver o que fazer, no cartão da lista</a>{% endif %}</p>{% endif %}{% endwith %}
     {% if recorte.sorteio %}
     <p class="imutavel"><strong>Sorteio realizado em {{ recorte.sorteio.executado_em|date:"d/m/Y H:i:s" }}</strong>
       por {% nome_de_pessoa recorte.sorteio.executado_por %}. Semente <code>{{ recorte.sorteio.semente_normalizada }}</code>,
       manifesto <code>{{ recorte.sorteio.manifesto_hash }}</code>.
-      <a href="{% url 'portal:verificar-sorteio' recorte.sorteio.id %}">Verificar no canal público</a></p>
-
-    {% comment %}
-    **O passo seguinte fica na tela em que o sorteio terminou** (`017`, FR-069). A ordem existe e é
-    imutável; o que falta é divulgá-la — e a divulgação era alcançada só reconstruindo a navegação
-    por cinco telas: voltar ao Edital, abrir os marcos, entrar na ordenação, achar o ato no
-    histórico e abri-lo. Com a transmissão no ar, isso é tempo morto e chance de erro.
-
-    Oferecido **só a quem publica**: `resultado:publicar` é capacidade própria e não decorre de
-    presidir a comissão, e um caminho que responde 403 é pior do que caminho nenhum.
-    {% endcomment %}
-    {% if pode_publicar %}
-    <p class="acoes"><a class="botao" href="{% url 'interface:previa-de-publicacao' edital.id marco.id recorte.sorteio.ato_id %}">Publicar a classificação deste sorteio</a></p>
-    {% endif %}
+      <a href="#ordem-{{ recorte.lista_id|default:'ampla' }}">Ver a ordem sorteada</a></p>
 
     {% comment %}
     **Anular não é refazer**, e a tela diz isso antes de oferecer o botão. O sucessor nasce de
@@ -411,7 +562,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% endcomment %}
       <ol class="passos-da-anulacao">
         <li>Retificar o Edital para declarar a ocorrência nova — a anulação não escolhe extração.</li>
-        <li>Publicar a relação nova, no bloco <strong>Suceder esta relação</strong>, logo abaixo desta caixa, com o motivo da sucessão.</li>
+        <li>Publicar a relação nova, no bloco <strong>Suceder esta relação</strong>, no cartão desta lista, no passo 1, com o motivo da sucessão.</li>
         <li>Observar a ocorrência que a Retificação declarou.</li>
         <li>Anular, escolhendo os dois abaixo.</li>
       </ol>
@@ -447,7 +598,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       {% else %}
       <p class="aviso">Faltam os insumos do sucessor:
         {% if not recorte.relacoes_sucessoras %}<strong>a relação nova</strong>, que se publica no
-        bloco "Suceder esta relação", logo abaixo desta caixa{% endif %}{% if not recorte.relacoes_sucessoras and not recorte.ocorrencias_disponiveis %} e {% endif %}{% if not recorte.ocorrencias_disponiveis %}<strong>a ocorrência nova</strong>, que se observa depois de a Retificação declará-la{% endif %}.
+        bloco "Suceder esta relação", no cartão desta lista, no passo 1{% endif %}{% if not recorte.relacoes_sucessoras and not recorte.ocorrencias_disponiveis %} e {% endif %}{% if not recorte.ocorrencias_disponiveis %}<strong>a ocorrência nova</strong>, que se observa depois de a Retificação declará-la{% endif %}.
         Enquanto eles não existirem, não há sucessor a constituir — e não há como anular sem
         sucessor.</p>
       {% endif %}
@@ -463,52 +614,105 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
       <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-sorteio-{{ recorte.lista_id }}">
       <input type="hidden" name="relacao_id" value="{{ recorte.relacao.id }}">
       <input type="hidden" name="ocorrencia_id" value="{{ ocorrencia.id }}">
-      <button type="submit" class="botao">Realizar o sorteio</button>
+      <p class="meta">Sorteia os {{ recorte.relacao.quantidade }} participantes fixados desta lista, com a semente
+        <code>{{ ocorrencia.material_bruto }}</code>. A ordem fica gravada e não se refaz.</p>
+      <button type="submit" class="botao">Realizar o sorteio desta lista</button>
     </form>
     {% endif %}
-
-    {% comment %}
-    **O formulário continua disponível depois do sorteio**, e é o passo 2 da anulação: o sucessor
-    nasce de relação nova, e ela é publicada aqui. Escondê-lo tornava a anulação — corrigida no
-    domínio — inalcançável pela tela, o que a Constituição §VI não admite.
-    {% endcomment %}
-    {% if pode_emitir and metodo and recorte.projetados and not inscricoes_em_curso %}
-    {% if recorte.congelada %}
-    {% comment %}
-    **A sucessão da relação, recolhida** (126, FR-4010, FR-4011, UX-223). Aberta logo abaixo de
-    "Relação publicada e congelada", ela era a ação mais visível depois do ato que ela desfaria. Abre
-    sozinha quando a relação nunca sortearia, que é quando suceder é a saída. E é aqui que mora o
-    aviso de congelamento inviável quando ele vale só para a sucessão (FR-4032): a relação nova
-    seria congelada na hora.
-    {% endcomment %}
-    <details class="sucessao"{% if recorte.diagnostico_da_relacao %} open{% endif %}>
-    <summary>Suceder esta relação (exige motivo)</summary>
-    {% if congelar_agora_inviavel and not recorte.diagnostico_da_relacao %}
-    {% include "interface/_congelamento_inviavel.html" with para_a_sucessao=True %}
-    {% endif %}
-    {% endif %}
-    <form method="post" action="{% url 'interface:publicar-relacao-do-sorteio' edital.id marco.id %}">
-      {% csrf_token %}
-      <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-relacao-{{ recorte.lista_id }}">
-      <input type="hidden" name="lista_id" value="{{ recorte.lista_id }}">
-      {% if recorte.congelada %}
-      <p class="campo">
-        <label for="motivo-{{ forloop.counter }}">Motivo da sucessão <span class="obrigatorio" aria-hidden="true">*</span></label>
-        {% comment %} Área de texto, como o motivo de sucessão da Ordenação e do Corte (058, FR-1082). O da anulação, acima, não sucede ato, e fica (D-008). {% endcomment %}
-        <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="3" required aria-required="true"
-                  aria-describedby="ajuda-motivo-{{ forloop.counter }}"></textarea>
-        <span class="oculto" id="ajuda-motivo-{{ forloop.counter }}">A relação publicada é o compromisso do universo. Substituí-la sem razão escrita apagaria o compromisso sem que ninguém respondesse por isso.</span>
-      </p>
-      <button type="submit" class="acao">Publicar relação nova, sucedendo a atual</button>
-      {% else %}
-      <button type="submit" class="botao">Publicar e congelar a relação</button>
-      {% endif %}
-    </form>
-    {% if recorte.congelada %}</details>{% endif %}
-    {% endif %}
-  </article>
+  </div>
   {% endfor %}
 </section>
+{% endwith %}
+
+{% with passo=passos.3 %}
+{% comment %}
+**O resultado, sem confundir com a divulgação** (142, FR-4912 a FR-4914). A ordem é a que o ato
+gravou (D-006) — leitura depois do ato, e nunca prévia. A divulgação é dita pelo dado da
+derivação (`divulgado`), e não por esta tela: sem resultado publicado, nenhuma frase o sugere. O
+corte só aparece onde já há sorteio ou corte: antes, "Nenhum corte emitido" encabeçava listas sem
+participantes fixados.
+
+**O passo seguinte fica na tela em que o sorteio terminou** (`017`, FR-069): publicar a
+classificação, oferecido **só a quem publica** — `resultado:publicar` é capacidade própria e não
+decorre de presidir a comissão, e um caminho que responde 403 é pior do que caminho nenhum.
+{% endcomment %}
+<section class="passo-do-sorteio" aria-labelledby="titulo-resultado">
+  <h2 id="titulo-resultado"><span class="passo-numero">{{ passo.numero }}</span> {{ passo.simples }}</h2>
+  <p class="o-que-se-faz">{{ passo.curta }}</p>
+  <details class="sobre-o-passo"{% if passo.agora %} open{% endif %}>
+    <summary>O que este passo pede, e o que vem depois</summary>
+    <dl class="contexto-do-passo">
+      <dt>Precisa de</dt><dd>{{ passo.precisa }}</dd>
+      <dt>Vale para</dt><dd>{{ passo.afeta }}</dd>
+      <dt>Depois</dt><dd>{{ passo.depois }}</dd>
+      <dt>Volta atrás?</dt><dd>{{ passo.irreversivel }}</dd>
+      <dt>Por quê</dt><dd>{{ passo.porque }}</dd>
+    </dl>
+  </details>
+  <details class="o-que-e-cada-coisa">
+    <summary>Relação, ordem, classificação e corte: o que é cada um</summary>
+    <dl>
+      <dt>Relação de participantes</dt><dd>Quem participa do sorteio de uma lista, com o número de cada pessoa. Fixada no passo 1.</dd>
+      <dt>Ordem do sorteio</dt><dd>A posição de cada participante, gravada pelo sorteio. É o que este passo mostra.</dd>
+      <dt>Classificação divulgada</dt><dd>A ordem publicada como resultado, preliminar ou definitivo, por quem publica resultado. Ato próprio, fora desta tela.</dd>
+      <dt>Corte</dt><dd>Até que posição de cada lista as pessoas seguem. Emitido depois do sorteio, na tela do corte.</dd>
+    </dl>
+  </details>
+  {% for recorte in recortes %}
+  {% if recorte.sorteio or recorte.corte.faixas or recorte.corte.obsoleto %}
+  <article class="resultado-da-lista" id="ordem-{{ recorte.lista_id|default:'ampla' }}">
+    <h3>{{ recorte.nome }}</h3>
+    {% if recorte.sorteio %}
+    {% if recorte.divulgado == "nada" %}
+    <p class="situacao-da-divulgacao">A ordem está gravada e pode ser verificada no canal público. <strong>Ainda não foi divulgada como resultado</strong>: divulgar a classificação é de quem publica resultado.</p>
+    {% elif recorte.divulgado == "preliminar" %}
+    <p class="situacao-da-divulgacao">Divulgada como <strong>resultado preliminar</strong>.</p>
+    {% elif recorte.divulgado == "definitivo" %}
+    <p class="situacao-da-divulgacao">Divulgada como <strong>resultado definitivo</strong>.</p>
+    {% endif %}
+    {% if recorte.ordem %}
+    <details class="ordem-sorteada"{% if resultado.tipo == "sorteio" and resultado.listaId|default:"" == recorte.lista_id %} open{% endif %}>
+      <summary>Ver a ordem sorteada — {{ recorte.ordem|length }} posiç{{ recorte.ordem|length|pluralize:"ão,ões" }}</summary>
+      <div class="tabela-rolavel">
+        <table>
+          <caption class="oculto">Ordem sorteada da lista {{ recorte.nome }}</caption>
+          <thead><tr><th scope="col">Posição</th><th scope="col">Número na relação</th><th scope="col">Candidato</th><th scope="col">Protocolo</th></tr></thead>
+          <tbody>
+            {% for linha in recorte.ordem %}
+            <tr><td>{% if linha.posicao %}{{ linha.posicao }}º{% else %}sem posição — {{ linha.motivo }}{% endif %}</td><td>{{ linha.numero|default:"—" }}</td><td>{{ linha.nome }}</td><td>{{ linha.protocolo }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+    {% endif %}
+    <p class="acoes"><a class="acao" href="{% url 'portal:verificar-sorteio' recorte.sorteio.id %}">Verificar no canal público</a>{% if pode_publicar %}
+      <a class="botao{% if ha_tarefa_agora %} secundario{% endif %}" href="{% url 'interface:previa-de-publicacao' edital.id marco.id recorte.sorteio.ato_id %}">Publicar a classificação deste sorteio</a>{% endif %}</p>
+    {% endif %}
+    {% comment %}
+    O estado do corte **deste** recorte, aqui e não numa visita por lista (014, UX-029). Num marco
+    com cotas são três, e conferir três telas para saber se alguma faixa ficou para trás é onde o
+    esforço vira erro. Só onde já há sorteio ou corte (142, FR-4914).
+    {% endcomment %}
+    {% if recorte.corte.obsoleto %}
+    <p class="erro" role="status"><strong>A faixa deste recorte está obsoleta.</strong>
+      {% for causa in recorte.corte.causas %}{{ causa.descricao }} {% endfor %}
+      <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
+    {% elif recorte.corte.faixas %}
+    <p class="imutavel"><strong>Corte emitido</strong> — {{ recorte.corte.faixas|length }} faixa{{ recorte.corte.faixas|length|pluralize:"s" }} na geração vigente.
+      <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
+    {% elif recorte.corte %}
+    <p class="meta">Corte ainda não emitido nesta lista.
+      <a href="{% url 'interface:corte' edital.id marco.id %}{% if recorte.lista_id %}?lista={{ recorte.lista_id }}{% endif %}">Abrir o corte</a></p>
+    {% endif %}
+  </article>
+  {% else %}
+  <p class="meta sem-ordem"><strong>{{ recorte.nome }}</strong>: ainda sem sorteio — a ordem aparece aqui depois dele.</p>
+  {% endif %}
+  {% endfor %}
+</section>
+{% endwith %}
+
 {% if registros_excedentes %}
 {% comment %}
 **O acervo do recorte excedente, à parte e só para consulta** (122, FR-3902, FR-3903). É o que o

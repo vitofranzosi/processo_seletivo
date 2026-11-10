@@ -9038,7 +9038,7 @@ def _marco_intermediario(edital, marco_id, rota):
     }
 
 
-def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=False):
+def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=False, atual=None):
     """O "Próximo nesta lista" da mensagem de sucesso de um ato (127, FR-4090 a FR-4092, D-015).
 
     **Um callable, e não o valor**: o template só o lê dentro do bloco de sucesso, uma vez, com
@@ -9050,37 +9050,46 @@ def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=Fa
     """
 
     def ler():
-        atual = andamento.do_edital(edital, ator, perfis=[_perfil_do_marco(edital, marco_id)])
-        if atual is None:
-            return None
-        desta, outras, perfil = andamento.da_lista(
-            atual, marco_id, lista_id, preferir=atual.e_sua, todas_as_listas=todas_as_listas
+        # A tela do sorteio já leu o andamento do Perfil para os passos (142, D-001): a mesma
+        # leitura serve aqui, e a segunda derivação do mesmo pedido sai.
+        lido = atual or andamento.do_edital(
+            edital, ator, perfis=[_perfil_do_marco(edital, marco_id)]
         )
-
-        def item(celula):
-            sua = atual.e_sua(celula, perfil)
-            ato = celula.ato or celula.rotulo
-            return {
-                "ato": ato,
-                "ato_minusculo": ato[:1].lower() + ato[1:],
-                "situacao": celula.situacao,
-                "rotulo": celula.rotulo,
-                "razao": celula.razao,
-                "sua": sua,
-                "url": celula.url if sua else "",
-                "papel": andamento.PAPEIS.get(celula.responsavel, ""),
-            }
-
-        return {
-            "desta": item(desta) if desta is not None else None,
-            "outras": [(rotulo, item(celula)) for rotulo, celula in outras],
-            # **O retorno vem com o bloco, e não de cada tela** (139, FR-4768, D-004): a tela que
-            # passar a mostrá-lo ganha a volta sem lembrar dela, e a volta nunca aparece sem ele. A
-            # porta do Centro é o escopo do Edital, a mesma desta tela.
-            "centro": reverse("interface:centro-do-edital", args=[edital.id]),
-        }
+        if lido is None:
+            return None
+        return _o_proximo(lido, edital, marco_id, lista_id, todas_as_listas)
 
     return ler
+
+
+def _o_proximo(atual, edital, marco_id, lista_id, todas_as_listas):
+    """O bloco do "Próximo nesta lista", lido de um andamento já derivado."""
+    desta, outras, perfil = andamento.da_lista(
+        atual, marco_id, lista_id, preferir=atual.e_sua, todas_as_listas=todas_as_listas
+    )
+
+    def item(celula):
+        sua = atual.e_sua(celula, perfil)
+        ato = celula.ato or celula.rotulo
+        return {
+            "ato": ato,
+            "ato_minusculo": ato[:1].lower() + ato[1:],
+            "situacao": celula.situacao,
+            "rotulo": celula.rotulo,
+            "razao": celula.razao,
+            "sua": sua,
+            "url": celula.url if sua else "",
+            "papel": andamento.PAPEIS.get(celula.responsavel, ""),
+        }
+
+    return {
+        "desta": item(desta) if desta is not None else None,
+        "outras": [(rotulo, item(celula)) for rotulo, celula in outras],
+        # **O retorno vem com o bloco, e não de cada tela** (139, FR-4768, D-004): a tela que
+        # passar a mostrá-lo ganha a volta sem lembrar dela, e a volta nunca aparece sem ele. A
+        # porta do Centro é o escopo do Edital, a mesma desta tela.
+        "centro": reverse("interface:centro-do-edital", args=[edital.id]),
+    }
 
 
 @require_http_methods(["GET"])
@@ -11601,6 +11610,7 @@ def sorteio(request, edital_id, marco_id):
     Um marco de sorteio com cotas tem três recortes, e cada um tem a sua relação, a sua ocorrência
     e o seu ato. Listá-los juntos é o que evita que alguém publique dois e esqueça o terceiro.
     """
+    from processo_seletivo.interface import jornada_do_sorteio
     from processo_seletivo.sorteios.application.previa import recortes_do_marco
 
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
@@ -11613,6 +11623,22 @@ def sorteio(request, edital_id, marco_id):
         if recusa.status == 404:
             raise Http404 from recusa
         raise
+    # **A situação de cada passo é a que o Centro mostra** (142, D-001, FR-4902): a derivação da
+    # `127`, lida uma vez para o Perfil do marco. Sem ela (Edital antes da publicação, ou a falha
+    # que `do_edital` registra no log), os passos aparecem sem situação e a tela opera como antes.
+    atual = andamento.do_edital(edital, ator, perfis=[perfil_id])
+    pontos = jornada_do_sorteio.pontos_do_marco(atual, marco_id)
+    recortes = _com_o_corte(edital, estado["marco"], estado["recortes"])
+    for recorte in recortes:
+        celulas = jornada_do_sorteio.celulas_da_lista(pontos, recorte["lista_id"])
+        recorte["celula_da_relacao"] = celulas.get(andamento.RELACAO)
+        recorte["celula_do_sorteio"] = celulas.get(andamento.SORTEIO)
+        # O que o público lê da lista — e é o dado, e não a frase, que decide (FR-4913).
+        resultado_da_lista = celulas.get(andamento.RESULTADO)
+        recorte["divulgado"] = resultado_da_lista.divulgado if resultado_da_lista else ""
+        # A ordem que o ato gravou, só depois dele (D-006): não é prévia, e sem sorteio é vazia.
+        recorte["ordem"] = jornada_do_sorteio.ordem_gravada(recorte["sorteio"])
+    passos = jornada_do_sorteio.da_tela(pontos, recortes, conduz=pode_emitir)
     return marcar_como_privada(
         render(
             request,
@@ -11670,7 +11696,14 @@ def sorteio(request, edital_id, marco_id):
                 # os recortes do marco; sem o corte aqui, enxergar o estado das três listas exigia
                 # uma visita por lista — e num certame com cotas é justamente onde o esforço se
                 # multiplica.
-                "recortes": _com_o_corte(edital, estado["marco"], estado["recortes"]),
+                "recortes": recortes,
+                # Os quatro passos (142, FR-4900); `None` sem derivação (FR-4918).
+                "passos": passos,
+                # Enquanto há lista a fixar, observar é ação secundária (D-004): a regra e o
+                # formulário são os de antes, e só a ênfase acompanha a tarefa de agora.
+                "fixar_por_fazer": bool(passos and passos[0].a_praticar),
+                # Com uma tarefa de agora, os atos posteriores da tela não a disputam (FR-4910).
+                "ha_tarefa_agora": any(passo.agora for passo in passos or ()),
                 # **O que mudou na `122`**, dito na tela: a Modalidade apontada como a ampla não tem
                 # sorteio (FR-3895), e o que o sorteio fez nela antes fica à parte (FR-3903).
                 "modalidade_apontada": estado["modalidade_apontada"],
@@ -11709,6 +11742,7 @@ def sorteio(request, edital_id, marco_id):
                     (resultado_do_sorteio or {}).get("listaId") or None,
                     # A semente vale para o marco: o próximo passo é do marco (item 4 do review).
                     todas_as_listas=(resultado_do_sorteio or {}).get("tipo") == "ocorrencia",
+                    atual=atual,
                 ),
                 "erro": request.session.pop("erro_do_sorteio", None),
                 # **A chave de idempotência nasce na leitura, e viaja no formulário** — como a tela
