@@ -33,7 +33,8 @@ DIAGNOSTICO = "Esta relação não pode ser sorteada com a extração do Edital.
 RETIFICADO = (
     "A extração já foi trocada por Retificação, mas esta relação continua presa à extração antiga."
 )
-BOTAO = "Publicar e congelar a relação"
+# O botão de fixar desde a `142` ("Fixar os N participantes desta lista").
+BOTAO = "participantes desta lista</button>"
 
 
 def _amanha():
