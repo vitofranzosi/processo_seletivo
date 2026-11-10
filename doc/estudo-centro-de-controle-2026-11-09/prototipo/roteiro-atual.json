@@ -1,0 +1,13 @@
+[
+ {"nome": "atual-c06-edital", "url": "/gestao/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/", "identidade": "treino.presidencia"},
+ {"nome": "atual-c06-edital-dobra", "url": "/gestao/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/", "identidade": "treino.presidencia", "pagina_inteira": false},
+ {"nome": "atual-c06-processo", "url": "/gestao/processos/413c16b6-f09e-436c-8546-f5ecddcac19d/", "identidade": "treino.presidencia"},
+ {"nome": "atual-c12-edital", "url": "/gestao/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/", "identidade": "treino.presidencia"},
+ {"nome": "atual-c12-edital-dobra", "url": "/gestao/editais/984bb23b-d6d9-4b6f-9940-305da7537dfb/", "identidade": "treino.presidencia", "pagina_inteira": false},
+ {"nome": "atual-c12-processo", "url": "/gestao/processos/68d51d6d-8c72-4bf1-b7d4-bb686a303017/", "identidade": "treino.presidencia"},
+ {"nome": "atual-c08-edital", "url": "/gestao/editais/ec9fa21d-3b7f-4910-9510-ca267d478309/", "identidade": "treino.presidencia"},
+ {"nome": "atual-c04-edital", "url": "/gestao/editais/856b6a7d-b982-47fd-9796-9fb8f58dc519/", "identidade": "treino.presidencia"},
+ {"nome": "atual-c14-edital", "url": "/gestao/editais/8201d0ef-04bf-4851-a8e1-3f8e2287d0c5/", "identidade": "treino.presidencia"},
+ {"nome": "atual-c06-edital-gestor", "url": "/gestao/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/", "identidade": "treino.gestao", "papeis": ["gestor"]},
+ {"nome": "atual-c06-edital-avaliacao", "url": "/gestao/editais/fc75a001-bc0a-46d3-83bb-8e8e08c66cae/", "identidade": "treino.avaliacao1"}
+]

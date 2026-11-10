@@ -133,6 +133,47 @@ MENSAGENS = {
     ),
 }
 
+# **A mesma espera, para quem já publicou o preliminar** (135, D-003, FR-4681). Duas das mensagens
+# acima terminam oferecendo "publique como resultado preliminar": é a escolha que a prévia e a
+# recusa do comando apresentam, e lá continuam. O andamento as lia também depois de o preliminar do
+# ato vigente estar publicado, e oferecia o que já fora feito (A-08 do estudo de 09/11). É uma
+# segunda redação, e não uma edição da primeira; mora aqui para que mudar uma lembre a outra. A
+# primeira frase é a mesma: o nível 1 agrupa as esperas por ela.
+MENSAGENS_COM_O_PRELIMINAR_PUBLICADO = {
+    RECURSO_PENDENTE: (
+        "Há recurso pendente de julgamento sobre este marco: chamar de definitivo o que ainda "
+        "está em disputa afirma o que não aconteceu. O resultado preliminar já está publicado, e o "
+        "definitivo vem depois do julgamento."
+    ),
+    JANELA_ABERTA: (
+        "O prazo recursal deste marco ainda está aberto: ele se encerra em {fecha}. "
+        "O resultado preliminar já está publicado, e o definitivo vem depois do encerramento."
+    ),
+}
+
+
+#: A janela aberta sem a data (135, a revisão do PR #441). A aferição que recusa por `DomainError`
+#: chega ao andamento sem `ate`, e devolver `None` ali fazia voltar a mensagem que oferece publicar
+#: como preliminar — o que a FR-4681 proíbe. Melhor sem a data do que com a oferta.
+JANELA_ABERTA_SEM_DATA_COM_O_PRELIMINAR_PUBLICADO = (
+    "O prazo recursal deste marco ainda está aberto. "
+    "O resultado preliminar já está publicado, e o definitivo vem depois do encerramento."
+)
+
+
+def mensagem_com_o_preliminar_publicado(codigo, ate=None):
+    """A razão da espera do definitivo para quem já publicou o preliminar, ou `None` quando o código
+    não tem segunda redação — e então vale a mensagem da aferição, como hoje (FR-4683)."""
+    mensagem = MENSAGENS_COM_O_PRELIMINAR_PUBLICADO.get(codigo)
+    if mensagem is None:
+        return None
+    if codigo == JANELA_ABERTA:
+        if ate is None:
+            return JANELA_ABERTA_SEM_DATA_COM_O_PRELIMINAR_PUBLICADO
+        return mensagem.format(fecha=_quando(ate))
+    return mensagem
+
+
 # Quais recusas admitem o remédio que a mensagem nomeia. É o que a tela lê para decidir se oferece
 # o caminho — e não o código da recusa, que a obrigaria a repetir aqui a regra do domínio.
 ADMITE_SUCESSOR = {
@@ -524,6 +565,8 @@ __all__ = [
     "DECLARACAO_EXIGIDA",
     "DECLARACAO_RECUSADA",
     "JANELA_ABERTA",
+    "JANELA_ABERTA_SEM_DATA_COM_O_PRELIMINAR_PUBLICADO",
+    "MENSAGENS_COM_O_PRELIMINAR_PUBLICADO",
     "MARCO_REMOVIDO",
     "PROVIDENCIA_PENDENTE",
     "REAVALIACAO_PENDENTE",
@@ -533,4 +576,5 @@ __all__ = [
     "SUCEDERA",
     "SUCEDIDO",
     "aferir",
+    "mensagem_com_o_preliminar_publicado",
 ]
