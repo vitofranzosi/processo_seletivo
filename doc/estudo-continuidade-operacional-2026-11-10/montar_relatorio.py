@@ -4,7 +4,7 @@
     cd backend && uv run --with markdown python ../doc/estudo-continuidade-operacional-2026-11-10/montar_relatorio.py
 
 Junta o README e as entregas 01 a 06, a validação e as capturas que sustentam as conclusões. As capturas
-vão embutidas, reduzidas a 1000 px de largura e em JPEG, para o arquivo caber num anexo. As 104
+vão embutidas, reduzidas a 1000 px de largura e em JPEG, para o arquivo caber num anexo. As 110
 capturas originais continuam em `capturas/`; o HTML não as substitui.
 
 Sem dependência externa no resultado: estilo inline, nenhuma fonte, nenhum script. É um arquivo para
@@ -31,6 +31,7 @@ DOCUMENTOS = [
     ("04-prototipos.md", "prototipos", "D · Protótipos"),
     ("05-plano-de-evolucao.md", "plano", "E · Plano de evolução"),
     ("06-achados-funcionais.md", "achados", "Achados funcionais"),
+    ("07-triagem-f1-f3.md", "triagem", "Triagem F-1 a F-3"),
 ]
 
 # As capturas que sustentam as conclusões principais, na ordem em que o leitor precisa delas.
@@ -58,6 +59,18 @@ EVIDENCIAS = [
     (
         "c10-c08-ordem-sucessora-previa",
         'C7 · A prévia da ordem sucessora: o reabilitado sairia "sem posição" (F-2).',
+    ),
+    (
+        "t03-c08-sucessora-conferencia",
+        "Triagem F-2 · A conferência da sucessora avisa que ela ficará obsoleta; o serviço aceita (128).",
+    ),
+    (
+        "t06-c08-corte-emitido-sobre-incompleta",
+        "Triagem F-2 · O corte sobre a ordem incompleta é aceito sem aviso; o próximo já é a Análise documental.",
+    ),
+    (
+        "t01-c06r4-so-a-data-apos-fixar-ampla",
+        'Triagem F-1 · Fonte "só a data": depois de fixar a ampla, o retorno não aponta a semente, que aguarda o dia da extração.',
     ),
 ]
 PROTOTIPOS = [
@@ -160,7 +173,7 @@ def main():
         if ancora == "diagnostico":
             secoes.append(
                 '<section id="evidencias" class="documento"><h1>Evidências — as capturas principais</h1>'
-                "<p>Reduzidas para caber no arquivo. As 104 originais estão em <code>capturas/</code>.</p>"
+                "<p>Reduzidas para caber no arquivo. As 110 originais estão em <code>capturas/</code>.</p>"
                 + "".join(figura(n, legenda) for n, legenda in EVIDENCIAS)
                 + "</section>"
             )
