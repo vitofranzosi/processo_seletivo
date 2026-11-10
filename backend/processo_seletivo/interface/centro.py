@@ -102,15 +102,22 @@ def agregar(celulas):
     Tudo feito (ou não se aplica, com algum feito) → concluída; tudo não se aplica → não se aplica;
     só *Depois* → ainda não começou; o resto → em curso. **Não diz se há o que fazer**: isso é das
     providências. A ausência de ato nunca é pendência, como na `127`.
+
+    **O *Depois* com ato vigente para trás é andamento** (141, FR-4845). A ordem sucessora que
+    espera a Etapa do reabilitado é *Depois*, mas a ordem vigente existe e produz efeito: dizer
+    "ainda não começou" da Classificação, no C08, apagava a ordem já emitida e divulgada.
     """
-    situacoes = [celula.situacao for celula in celulas if celula is not None]
+    presentes = [celula for celula in celulas if celula is not None]
+    situacoes = [celula.situacao for celula in presentes]
     if not situacoes:
         return None
     if all(s == a.NAO_SE_APLICA for s in situacoes):
         return c.NAO_SE_APLICA
     if all(s in (a.FEITO, a.NAO_SE_APLICA) for s in situacoes):
         return c.CONCLUIDA
-    if all(s in (a.DEPOIS, a.NAO_SE_APLICA) for s in situacoes):
+    if all(s in (a.DEPOIS, a.NAO_SE_APLICA) for s in situacoes) and not any(
+        celula.vigente_para_tras for celula in presentes
+    ):
         return c.NAO_INICIADA
     return c.EM_CURSO
 

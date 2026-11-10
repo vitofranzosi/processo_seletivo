@@ -8160,6 +8160,8 @@ def corte(request, edital_id, marco_id):
         if proposta and not geracao and pode_emitir
         else None
     )
+    # O mesmo dono do aviso de espera: só quem emite lê, e só quando há o que emitir (141, FR-4840).
+    reingressos = _reingressos_no_corte(edital, marco_id) if proposta and pode_emitir else 0
     para_a_ordenacao = reverse("interface:ordenacao", args=[edital.id, marco_id]) + (
         f"?lista={lista_id}" if lista_id else ""
     )
@@ -8190,6 +8192,7 @@ def corte(request, edital_id, marco_id):
                 "conducao_da_recusa": conducao_da_recusa,
                 "proposta": proposta,
                 "espera_do_corte": espera,
+                "reingressos": reingressos,
                 "recusa": recusa,
                 "geracao": geracao,
                 "corte_obsoleto": estado["obsoleto"],
@@ -8994,6 +8997,24 @@ def _espera_do_corte(edital, marco_id, lista_id):
     return andamento.espera_da_lista(
         edital=edital, marco=marco, lista_id=lista_id, at=timezone.now()
     )
+
+
+def _reingressos_no_corte(edital, marco_id):
+    """Quantas inscrições reabilitadas por recurso ainda não têm resultado numa Etapa do marco (141,
+    FR-4840, D-005).
+
+    **O predicado da publicação, e o mesmo que segura o corte no andamento** (D-003): a tela e o
+    Centro concordam sobre quando o corte espera. A conferência da ordem avisa a partir da proposta
+    da ordem, que esta tela não tem; o reingresso é o caso do F-2, em que o reabilitado fica sem
+    posição e, por isso, fora da faixa. O aviso não impede: o comando aceita o corte (FR-4841).
+    """
+    from processo_seletivo.divulgacao.domain.publicabilidade import reingressos_pendentes
+    from processo_seletivo.interface import andamento, conducao_do_marco
+
+    _, _, marco = conducao_do_marco.marco_publicado(edital, marco_id)
+    if marco is None or andamento.por_sorteio(marco):
+        return 0
+    return len(reingressos_pendentes(edital=edital, marco=marco, at=timezone.now()))
 
 
 def _marco_intermediario(edital, marco_id, rota):
