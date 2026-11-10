@@ -41,8 +41,9 @@ GPS.
 | D | [Protótipos navegáveis](04-prototipos.md) | 9 páginas antes/depois, montadas sobre o HTML real; 50 de 50 conferências automatizadas ([validacao.txt](validacao.txt)) |
 | E | [Plano de evolução incremental](05-plano-de-evolucao.md) | oito grupos mínimos, as dependências, o que se reaproveita, e duas tarefas para a validação com operadores da 136 |
 | — | [Achados funcionais](06-achados-funcionais.md) | F-1 a F-5, separados do escopo, com proposta de investigação |
+| — | [Triagem de F-1 a F-3](07-triagem-f1-f3.md) | as três camadas (Centro, tela, serviço) de cada achado; as alternativas da D-5, sem decisão; a tabela decisória |
 
-O caderno do walkthrough está em [`passeio/`](passeio/), e as 104 capturas, em [`capturas/`](capturas/).
+O caderno do walkthrough está em [`passeio/`](passeio/), e as 110 capturas (104 do estudo e 6 da triagem), em [`capturas/`](capturas/).
 
 ## Método
 

@@ -44,6 +44,8 @@ cada uma bloqueia**.
 
 **O que fica fora da divisão, de propósito:**
 - **C6 (sorteio).** Entra quando a D-5 for decidida, como spec própria, sem relação com o Centro.
+  **D-5 decidida em 10/11/2026: alternativa (d)**, sem regra nova na observação. Ver a
+  [triagem](../estudo-continuidade-operacional-2026-11-10/07-triagem-f1-f3.md), seção 4.
 - **Nenhuma spec de "componentes genéricos".** O que o Centro precisa nasce dentro da 136.
 
 **Por que a 136 junta a C1, a C2 e a C4 do plano anterior.** Separadas, cada uma entregaria uma página

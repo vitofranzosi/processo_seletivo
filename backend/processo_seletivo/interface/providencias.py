@@ -217,11 +217,16 @@ def _juntar(primeira, outra):
     # **Telas diferentes, um caminho comum** (item 15 da revisão): "Publicar o resultado — Ampla e
     # PPI" levava só à prévia da Ampla. Com destinos diferentes, vai para a condução do marco, onde
     # cada lista tem a sua célula; o sorteio e a convocação navegam entre listas pela mesma tela.
+    # **A mesma tela é o caminho sem a lista e sem o fragmento** (139, FR-4766): cada lista leva ao
+    # seu recorte, e comparar o endereço inteiro mandaria "Congelar — Ampla e PPP" para a condução
+    # do marco. Juntadas, chegam à seção que reúne os recortes, e não ao primeiro deles.
     url = primeira.url
     if outra.url and _sem_lista(outra.url) != _sem_lista(primeira.url):
         url = primeira.url_do_marco or primeira.url
     elif outra.url and outra.url != primeira.url:
-        url = _sem_lista(primeira.url)
+        url = a.com_ancora(
+            _sem_lista(primeira.url), a.ancora_comum(_ancora(primeira.url), _ancora(outra.url))
+        )
     lugares = _unicos([*primeira.lugar.split("; "), outra.lugar])
     listas = tuple(_unicos([*primeira.listas, *outra.listas]))
     ato = primeira.ato
@@ -238,7 +243,11 @@ def _juntar(primeira, outra):
 
 
 def _sem_lista(url):
-    return url.split("?", 1)[0]
+    return url.split("#", 1)[0].split("?", 1)[0]
+
+
+def _ancora(url):
+    return url.partition("#")[2]
 
 
 def _primeira_frase(texto):

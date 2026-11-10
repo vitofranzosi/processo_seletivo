@@ -5,8 +5,15 @@ tela confirmava e não conduzia (`J-08`): depois de emitir o corte, o botão de 
 detalhe do Edital — link se é da pessoa, o papel se não é, a razão se espera — e o que falta nas
 outras listas do mesmo marco. Sem nada em aberto, diz isso, e não inventa passo (FR-4091).
 `proximo_nesta_lista` é um callable: o `with` o lê uma vez, e só depois de um ato.
+
+**O próximo alcançável, e a volta** (139, FR-4768 a FR-4770). O item das outras listas que é da
+pessoa vira link — o endereço dele já é vazio quando não é —, e leva ao lugar do ato pelo mesmo
+fragmento da providência. O bloco termina no Centro, de onde a jornada partiu: a pessoa entendia o
+resultado e o próximo, e voltar custava dois cliques, pela migalha e pelo detalhe. A migalha não
+muda.
 {% endcomment %}
 {% with proximo=proximo_nesta_lista %}{% if proximo %}
 <p class="proximo-nesta-lista">{% if proximo.desta %}<strong>Próximo nesta lista:</strong> {% if proximo.desta.url %}<a href="{{ proximo.desta.url }}">{{ proximo.desta.ato }}</a>{% elif proximo.desta.situacao == "aguarda" or proximo.desta.situacao == "impedido" %}{{ proximo.desta.ato_minusculo }} ({{ proximo.desta.rotulo|lower }}{% if proximo.desta.razao %}: {{ proximo.desta.razao }}{% endif %}){% else %}{{ proximo.desta.ato_minusculo }}, com {{ proximo.desta.papel|lower }}{% endif %}.{% else %}Nada mais em aberto nesta lista.{% endif %}</p>
-{% if proximo.outras %}<p class="ainda-neste-marco"><strong>Ainda neste marco:</strong> {% for rotulo, item in proximo.outras %}{% if not forloop.first %}; {% endif %}{{ rotulo }} — {{ item.ato_minusculo }}{% if item.situacao == "aguarda" or item.situacao == "impedido" %} ({{ item.rotulo|lower }}){% elif not item.sua and item.papel %}, com {{ item.papel|lower }}{% endif %}{% endfor %}.</p>{% endif %}
+{% if proximo.outras %}<p class="ainda-neste-marco"><strong>Ainda neste marco:</strong> {% for rotulo, item in proximo.outras %}{% if not forloop.first %}; {% endif %}{% if item.url %}<a href="{{ item.url }}">{{ rotulo }} — {{ item.ato_minusculo }}</a>{% else %}{{ rotulo }} — {{ item.ato_minusculo }}{% endif %}{% if item.situacao == "aguarda" or item.situacao == "impedido" %} ({{ item.rotulo|lower }}){% elif not item.sua and item.papel %}, com {{ item.papel|lower }}{% endif %}{% endfor %}.</p>{% endif %}
+{% if proximo.centro %}<p class="retorno-ao-centro"><a href="{{ proximo.centro }}">Voltar ao Centro de Controle do Edital</a></p>{% endif %}
 {% endif %}{% endwith %}

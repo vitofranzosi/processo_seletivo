@@ -137,3 +137,51 @@ def test_sem_nada_em_aberto_a_lista_diz_isso():
     andamento = a.Andamento(perfis=[perfil], providencias=[], atencoes=[], inscricoes={})
     desta, outras, _ = a.da_lista(andamento, "m", None)
     assert desta is None and outras == []
+
+
+# --- a volta ao Centro e o próximo que chega ao ato (139) --------------------------------------
+
+RETORNO = '<p class="retorno-ao-centro">'
+
+
+def test_depois_do_ato_o_bloco_termina_no_centro_e_abrir_a_tela_nao_o_mostra(
+    client, gestor, api_client, manager_headers, process_payload, seletor_ligado
+):
+    """FR-4768, SC-1492: um clique de volta ao Centro, e só depois de um ato."""
+    edital, _, _ = montar_cenario_do_corte(
+        gestor, api_client, manager_headers, process_payload, prefixo="transicao-139-retorno"
+    )
+    identificar(client, "carlos", ["gestor"])
+    url = reverse("interface:corte", args=[edital.id, MARCO])
+    assert RETORNO not in client.get(url).content.decode()
+
+    resultado = emitir(edital, gestor, chave="transicao-139-retorno")
+    com_resultado(client, "resultado_do_corte", {"emitido": True, **(resultado or {})})
+    corpo = client.get(url).content.decode()
+
+    centro = reverse("interface:centro-do-edital", args=[edital.id])
+    retorno = corpo.split(RETORNO, 1)[1].split("</p>", 1)[0]
+    assert f'<a href="{centro}">Voltar ao Centro de Controle do Edital</a>' in retorno
+    # O retorno fecha o bloco: vem depois do próximo, e não antes.
+    assert corpo.index(PROXIMO) < corpo.index(RETORNO)
+    assert client.get(centro).status_code == 200
+
+
+def test_depois_de_convocar_o_proximo_leva_a_secao_das_pendentes(
+    client, gestor, api_client, manager_headers, process_payload, seletor_ligado
+):
+    """FR-4765: a providência que nasce do ato leva à seção dela na mesma tela, que está lá."""
+    edital, _, inscricoes = montar_cenario_da_convocacao(
+        gestor, api_client, manager_headers, process_payload, prefixo="transicao-139-conv"
+    )
+    convocar(edital, gestor, inscricoes[0], idempotency_key="transicao-139-conv")
+    identificar(client, "carlos", ["gestor"])
+    com_resultado(
+        client, "resultado_da_convocacao", {"protocolo": "x"}, acao_da_convocacao="convocacao"
+    )
+
+    corpo = client.get(reverse("interface:convocacao", args=[edital.id, MARCO])).content.decode()
+
+    proximo = corpo.split(PROXIMO, 1)[1].split("</p>", 1)[0]
+    assert "#pendentes" in proximo, proximo
+    assert 'id="pendentes"' in corpo
