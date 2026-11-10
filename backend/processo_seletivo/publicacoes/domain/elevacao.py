@@ -170,6 +170,10 @@ DEGRAUS_DE_MARCO = {
 # forma para o mesmo Edital.
 DEGRAUS_DE_EVENTO = {
     11: {"location": ""},
+    # **O degrau 20 é a visibilidade no PDF** (144, D-001). Todo Edital publicado antes imprimiu
+    # todos os Eventos na tabela do Cronograma: `true` é a verdade sobre o acervo, e não um padrão
+    # escolhido. Booleano e não `None`, pela convenção de `isRegistrationPeriod`, o vizinho dele.
+    20: {"shownInPdf": True},
 }
 
 COLECAO_DE_EVENTOS = "schedule"

@@ -890,8 +890,23 @@ def test_v9_periodo_de_inscricoes():
         "isRegistrationPeriod": True,
     }
 
-    assert pdf.frase_do_periodo_de_inscricoes(evento) == (
+    assert pdf.frase_do_periodo_de_inscricoes(evento, 3) == (
         "Período de inscrições: de 03/11/2026, às 08h, a 10/11/2026, às 23h59 (Cronograma, nº 3)."
+    )
+
+
+def test_v9_periodo_de_inscricoes_oculto_do_pdf_sai_sem_remissao():
+    """V9 com o Evento fora da tabela (144, FR-5107): o período fica, a remissão sai."""
+    evento = {
+        "order": 3,
+        "startAt": "2026-11-03T08:00:00-03:00",
+        "endAt": "2026-11-10T23:59:00-03:00",
+        "isRegistrationPeriod": True,
+        "shownInPdf": False,
+    }
+
+    assert pdf.frase_do_periodo_de_inscricoes(evento, None) == (
+        "Período de inscrições: de 03/11/2026, às 08h, a 10/11/2026, às 23h59."
     )
 
 

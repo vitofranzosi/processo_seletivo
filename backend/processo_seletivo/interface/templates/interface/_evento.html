@@ -1,4 +1,4 @@
-{% load interface_extras %}<fieldset class="linha evento"{% if somente_leitura %} disabled{% endif %}>
+{% load interface_extras %}<fieldset class="linha evento{% if evento.shownInPdf is False %} oculto-do-pdf{% endif %}"{% if somente_leitura %} disabled{% endif %}>
   {% comment %}
   A legenda diz **qual** Evento é (056, FR-1024, D-004): a categoria com a posição, que o
   `ordenacao.js` escreve em `[data-ordem]`, e o Tipo como o servidor o tem. Eram três legendas iguais
@@ -6,9 +6,21 @@
   `data-rotulo` é só a categoria: é dele que `remocao.js` monta a pergunta de confirmação, que não
   muda.
   {% endcomment %}
-  <legend data-rotulo="Evento do Cronograma"><span class="categoria">Evento do Cronograma<span data-ordem></span></span>{% if evento.type %}<span class="nome">{{ evento.type }}</span>{% endif %}</legend>
-  {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover este Evento" %}
+  {% comment %}
+  A marca "Oculto do PDF" mora na legenda, em texto (144, UX-391): é ela que diz o estado a quem lê
+  o cartão — o olho é o controle, e a cor atenuada só reforça. Em somente leitura o olho não sai, e
+  a marca continua dizendo o que foi decidido. `hidden`, e não ausente, quando exibido: o script a
+  mostra ao ocultar, sem montar texto.
+  {% endcomment %}
+  <legend data-rotulo="Evento do Cronograma"><span class="categoria">Evento do Cronograma<span data-ordem></span></span>{% if evento.type %}<span class="nome">{{ evento.type }}</span>{% endif %}<span class="marca-pdf" data-marca-pdf{% if evento.shownInPdf is not False %} hidden{% endif %}>Oculto do PDF</span></legend>
+  {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover este Evento" com_visibilidade_no_pdf=True exibido_no_pdf=evento.shownInPdf %}
   <input type="hidden" name="evento-{{ indice }}-id" value="{{ evento.id }}">
+  {% comment %}
+  Se a linha sai na tabela do Cronograma do PDF (144, D-007). Campo do formulário, e não preservado
+  do gravado: é a etapa que o decide, e ele viaja com o resto — na gravação, na recusa que reexibe o
+  digitado e no rascunho local. O olho só o alterna.
+  {% endcomment %}
+  <input type="hidden" name="evento-{{ indice }}-shownInPdf" value="{% if evento.shownInPdf is False %}false{% else %}true{% endif %}" data-campo-visibilidade-no-pdf>
   {% comment %}
   A ordem é dado enviado, e não a posição da linha: `_indices` ordena os índices numericamente
   antes de a leitura acontecer, de modo que mover a linha na tela, sozinho, não mudaria nada.

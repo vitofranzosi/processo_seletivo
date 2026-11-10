@@ -4,8 +4,9 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft, revisada em 10/11/2026 — nenhuma linha de código de produção nesta sessão. A
-revisão do usuário trouxe quatro ajustes (o foco na ordenação, a numeração de conteúdo antigo, a
+**Status**: Spec mergeada em 10/11/2026 (#454). **Incremento A (visibilidade no PDF) implementado
+em 10/11**, com a migration `editais/0026` e o degrau 20 — ver [verificacao.md](verificacao.md); B e C
+pendentes. A revisão do usuário trouxe quatro ajustes (o foco na ordenação, a numeração de conteúdo antigo, a
 prova sobre o PDF gerado e os seis canais) e a ordem das colunas da prévia; as duas questões (P-1 e
 P-2, ao fim) foram decididas na mesma revisão.
 

@@ -20,9 +20,22 @@ iguais e colados, os dois viram um alvo só — e foi a vizinhança deles que or
 
 Em somente leitura o grupo não sai (132, FR-4505): seta e lixeira desabilitadas ainda dizem que a
 lista se edita.
+
+**O olho é só do Evento** (144, UX-390): quem passa `com_visibilidade_no_pdf` é o cartão do
+Cronograma, com o estado em `exibido_no_pdf` — e não lido de uma variável `evento` do contexto de quem
+inclui —, e as demais linhas não mudam. Botão de alternância com nome constante — "Ocultar do PDF"
+—, e o estado em `aria-pressed`: o leitor de tela diz "pressionado" quando o Evento está oculto, e o
+`title` diz o estado em palavras a quem passa o mouse. Sai com `hidden`, e é o `cronograma.js` que o
+revela: sem o script, o botão não faria nada, e botão inerte é pior do que botão ausente.
 {% endcomment %}
 {% if not somente_leitura %}<p class="acoes-da-linha">
   <span class="grupo">
+    {% if com_visibilidade_no_pdf %}<button type="button" class="acao simbolo visibilidade-no-pdf" data-visibilidade-no-pdf hidden
+            aria-label="Ocultar do PDF"
+            aria-pressed="{% if exibido_no_pdf is False %}true{% else %}false{% endif %}"
+            title="{% if exibido_no_pdf is False %}Oculto do PDF — exibir{% else %}Exibido no PDF — ocultar{% endif %}">
+      {% include "interface/_olho.html" %}
+    </button>{% endif %}
     <button type="button" class="acao simbolo" data-mover="cima"
             aria-label="Subir" title="Subir"><span aria-hidden="true">↑</span></button>
     <button type="button" class="acao simbolo" data-mover="baixo"

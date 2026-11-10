@@ -108,6 +108,8 @@ CAMPOS = {
         "order": "Ordem",
         "location": "Local",
         "isRegistrationPeriod": "Período de inscrições",
+        # O rótulo da tela da Retificação, para quem retifica e quem lê reconhecerem o mesmo campo.
+        "shownInPdf": "Sai na tabela do Cronograma do PDF",
     },
     "stages": {
         "name": "Denominação",

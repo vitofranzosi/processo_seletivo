@@ -21,7 +21,7 @@ decide o que a resposta mostra sem ser mostrado; e `EXCLUIDO`, com o motivo.
 from __future__ import annotations
 
 #: A versão do conteúdo publicado que esta tabela classifica (`shared/canonical.py`).
-VERSAO_DO_ESQUEMA = 19
+VERSAO_DO_ESQUEMA = 20
 
 LOCALIZACAO = "LOCALIZACAO"
 #: O campo decide **o que** a resposta mostra, sem ser mostrado: a aplicabilidade do documento, o
@@ -152,6 +152,11 @@ COBERTURA = {
     "/schedule/*/status": ("P-01", "P-02"),
     "/schedule/*/location": ("P-01", "P-02", "P-08"),
     "/schedule/*/isRegistrationPeriod": REGRA,
+    # A visibilidade no PDF (144). O assistente responde por todos os Eventos, como a página
+    # pública: ocultar é da tabela do documento, e não dos outros canais (FR-5112, P-2).
+    "/schedule/*/shownInPdf": excluido(
+        "visibilidade na tabela do PDF (144): o assistente responde por todos os Eventos"
+    ),
     # ---- documentos exigidos
     "/documentRequirements/*/id": IDENTIDADE,
     "/documentRequirements/*/key": CODIGO_INTERNO,

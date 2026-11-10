@@ -120,6 +120,7 @@ def test_evento_acrescentado_por_retificacao_aparece(api_client, manager_headers
                     "status": "PLANEJADO",
                     "location": "",
                     "isRegistrationPeriod": False,
+                    "shownInPdf": True,
                 },
             }
         ],

@@ -158,7 +158,12 @@ from uuid import UUID
 # nulo diz "incondicional", e é verdade sobre todo documento publicado antes — a condição não
 # existia. Conversão sem invenção, no molde dos degraus 17 e 18, e nenhuma condição se infere das
 # instruções (131, D-012).
-SCHEMA_VERSION = 19
+#
+# **O degrau 20 é a visibilidade do Evento no PDF** (144, D-001, FR-5105): `shownInPdf` em cada
+# item de `schedule`, booleano sempre presente. `true` é verdade sobre todo Edital publicado antes
+# dele — a tabela do Cronograma imprimia todos os Eventos, porque a capacidade não existia.
+# Conversão sem invenção, no molde do degrau 11, o outro que mora no Evento.
+SCHEMA_VERSION = 20
 
 
 def _default(value):

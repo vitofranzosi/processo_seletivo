@@ -940,7 +940,7 @@ components:
         que PerfilPublicado o é de PerfilInput. `status` é produzido pelo sistema e entra como
         presença e tipo; a enumeração dele não é declarada aqui.
       required:
-        [id, type, description, startAt, endAt, order, status, location, isRegistrationPeriod]
+        [id, type, description, startAt, endAt, order, status, location, isRegistrationPeriod, shownInPdf]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         type: { type: string }
@@ -974,6 +974,10 @@ components:
         # e não "não informado". Quantos podem ser verdadeiros é coerência entre itens, verificada
         # na publicação, e não forma de um item.
         isRegistrationPeriod: { type: boolean }
+        # Se a linha do Evento sai na tabela do Cronograma do PDF (144). Sempre presente; versões
+        # anteriores à canônica 20 não trazem o campo, e a ausência é `true` — todo Evento saía.
+        # Ocultar não tira o Evento do conteúdo publicado: ele continua vinculável e operacional.
+        shownInPdf: { type: boolean }
     DocumentoExigidoPublicado:
       type: object
       description: >-

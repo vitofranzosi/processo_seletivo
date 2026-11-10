@@ -721,6 +721,10 @@ def ler_eventos(dados):
                 # Onde o evento acontece (021, D-008). Vazio significa "não declarado", e é o que
                 # a tela desenha por padrão: nenhum valor institucional se aplica sozinho.
                 "location": _texto(dados, f"{base}-location"),
+                # A visibilidade no PDF (144, D-007): o campo oculto que o olho alterna. Só
+                # `"false"` oculta; ausente — o rascunho local guardado antes do campo existir, o
+                # formulário montado à mão — é exibido, que é o que a pessoa via.
+                "shownInPdf": _texto(dados, f"{base}-shownInPdf") != "false",
             }
         )
     return _renumerar(eventos)
@@ -1189,6 +1193,8 @@ def eventos_do_edital(edital):
             else "",
             "order": evento.order,
             "location": evento.location,
+            # A visibilidade no PDF (144): a etapa a desenha no campo oculto do cartão.
+            "shownInPdf": evento.shown_in_pdf,
             # O rótulo que a Etapa mostra ao escolher o vínculo (FR-036). A Etapa se vincula a um
             # Evento **para herdar as datas** — é o que a ajuda promete —, e a lista mostrava
             # "tipo — descrição", cortava por falta de largura e não mostrava data nenhuma: para
@@ -1621,6 +1627,10 @@ def eventos_persistidos(edital):
             # seguinte, sem recusa e sem aviso — e o Edital seria publicado sem o local que alguém
             # digitou dois passos antes (021, FR-057).
             "location": evento.location,
+            # **E a visibilidade no PDF pelo mesmo motivo** (144, FR-5104): o quarto campo desta
+            # lista. Sem ele, ocultar no Cronograma e gravar Perfis, Etapas ou Inscrição depois
+            # voltaria a exibir o Evento sem aviso — e o PDF publicaria a linha que se ocultou.
+            "shownInPdf": evento.shown_in_pdf,
         }
         for evento in cronograma.eventos.order_by("order")
     ]

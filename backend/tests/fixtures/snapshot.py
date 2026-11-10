@@ -183,6 +183,8 @@ def evento(identificador, tipo, ordem, inicio):
         # A forma publicada exige o campo em todo Evento; a marca em si é de um só, e os testes
         # que falam dela a ligam explicitamente.
         "isRegistrationPeriod": False,
+        # A visibilidade no PDF (144): todo Evento sai, salvo o teste que o oculta.
+        "shownInPdf": True,
     }
 
 

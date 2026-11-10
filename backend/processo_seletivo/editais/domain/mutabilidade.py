@@ -441,6 +441,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     # com o documento exigido, e o nome do teste diz o que ele guarda: "a Retificação alcança o
     # documento e a designação". Encontrado na revisão do PR #114.
     ("schedule", "isRegistrationPeriod"): retificavel(),
+    # **Retificável por decisão do usuário** (144, P-1, 10/11/2026): ocultar por engano precisa de
+    # correção formal, e a Retificação é a única que alcança o ato publicado. É campo de
+    # apresentação — o Evento oculto continua no conteúdo e operacional —, e por isso alterá-lo não
+    # reinterpreta ato praticado.
+    ("schedule", "shownInPdf"): retificavel(),
     # ---- stages -----------------------------------------------------------------------------
     ("stages", "id"): estrutural(),
     ("stages", "order"): estrutural(),

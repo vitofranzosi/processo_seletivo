@@ -203,6 +203,10 @@ class EventSerializer(serializers.Serializer):
     # e a mais comum —, e **sem** validação de URL: "Página da chamada pública" não é endereço
     # eletrônico, e recusá-lo obrigaria a instituição a mentir para publicar (FR-061).
     location = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    # Se a linha do Evento sai na tabela do Cronograma do PDF (144, FR-5104). Ausente é exibido:
+    # o cliente que não conhece o campo não oculta nada sem ter pedido. O preço é o de todo campo
+    # desta lista — quem lê o rascunho e o reenvia sem a chave volta a exibir.
+    shownInPdf = serializers.BooleanField(required=False, default=True)
 
     def validate(self, attrs):
         try:

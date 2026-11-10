@@ -170,6 +170,7 @@ carregue todo campo faria o guardião falhar conforme a seção que a travessia 
 | `order` | | **E** | Posição no Cronograma. |
 | `status` | | **D** | Produzido pelo sistema. Nenhum esquema declara a enumeração dele. |
 | `location` | | **R** | **Canário 1.** Hoje nem forma declarada tem. |
+| `shownInPdf` | | **R** | *Acrescentado pela `144`.* Se a linha do Evento sai na tabela do Cronograma do PDF. Retificável por decisão do usuário de 10/11/2026: ocultar por engano precisa de correção formal (P-1 da `144`). |
 | `isRegistrationPeriod` | ⚠️ | **R** — *restaurado* | **A matriz contradizia a `009`.** `test_contrato_de_inscricao` retifica a designação do período, e o nome do teste é o que ele guarda: *"a Retificação alcança o documento e a designação"*. |
 
 ## 9. `stages` — 13 campos
