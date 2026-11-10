@@ -7,6 +7,7 @@ from django import template
 from django.http import QueryDict
 from django.utils import timezone
 
+from processo_seletivo.interface import andamento
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
 register = template.Library()
@@ -36,6 +37,13 @@ def inicial_minuscula(texto):
     """
     texto = str(texto or "")
     return texto[:1].lower() + texto[1:]
+
+
+@register.filter
+def ancora_do_recorte(lista_id):
+    """O id do recorte na tela do sorteio, da mesma função que o põe no endereço da providência
+    (139, FR-4762): a tela e a derivação não escrevem a regra cada uma."""
+    return andamento.ancora_do_recorte(lista_id)
 
 
 @register.filter

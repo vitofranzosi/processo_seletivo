@@ -260,7 +260,7 @@ registra; o segundo calcula e constitui, sem tocar na rede (R-006, D-010).
   {% include "interface/_congelamento_inviavel.html" with para_a_sucessao=False %}
   {% endif %}
   {% for recorte in recortes %}
-  <article class="recorte">
+  <article class="recorte" id="{{ recorte.lista_id|ancora_do_recorte }}">
     <h3>{{ recorte.nome }}</h3>
     {% comment %}
     O estado do corte **deste** recorte, aqui e não numa visita por lista (014, UX-029). Num marco
