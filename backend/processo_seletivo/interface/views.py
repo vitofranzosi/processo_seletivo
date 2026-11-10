@@ -165,6 +165,7 @@ from processo_seletivo.interface import (
     atos_processo,
     atos_retificacao,
     centro_do_edital,
+    conducao_da_convocacao,
     conducao_do_marco,
     conferencia_da_ordem,
     conferencia_do_texto,
@@ -8722,6 +8723,7 @@ def convocacao(request, edital_id, marco_id):
     da apuração — e pela mesma razão: um ato praticado por abrir uma página é um ato que ninguém
     decidiu praticar.
     """
+    from processo_seletivo.comissoes.domain.autorizacao import pode_conferir_documentos
     from processo_seletivo.convocacao.application import fluxo
     from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
 
@@ -8760,6 +8762,56 @@ def convocacao(request, edital_id, marco_id):
         "at": agora,
         "leitura": leitura,
     }
+    previas = _previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}
+    # O aviso de pendência documental (134, FR-4603, FR-4605): para quem confere este Perfil, com
+    # quantas pessoas o gesto alcançaria agora e quantas ficam de fora — e, desde a `143`, o motivo
+    # de cada chamada, que o cartão dela diz (FR-5017).
+    pendencias_a_avisar = avisos_pendencias.previa(
+        actor=ator,
+        edital=edital,
+        perfil_id=perfil_id,
+        marco_id=marco_id,
+        lista_id=lista_id,
+        agora=agora,
+        # A mesma fotografia que a tela acabou de ler, e não uma segunda leitura.
+        conducao={
+            "convocacoes": leitura["convocacoes"],
+            "raizes": raizes,
+            "leituras": leituras_documentais,
+        },
+    )
+    # **O passo de cada chamada e a situação do aviso dela** (143, FR-5011, FR-5015 a FR-5017):
+    # leituras dos estados que a tela já tem, e do registro do aviso, numa consulta para o recorte.
+    conducao_da_convocacao.anotar(
+        leitura["linhas"],
+        convocacoes=leitura["convocacoes"],
+        raizes=raizes,
+        previa_do_aviso=pendencias_a_avisar,
+        agora=agora,
+    )
+    sem_inscrito = (str(lista_id) if lista_id else None) in _recortes_sem_inscrito(edital, marco_id)
+    pode_convocar = pode_emitir and intermediario is None
+    # Quem desfecha confere (115, FR-3595); o membro alocado, só o Perfil da alocação.
+    confere = pode_emitir or pode_conferir_documentos(ator, edital, perfil_id) is not None
+    # **O índice responde perguntas, e não prioriza** (143, D-002): a ordem é fixa, e o próximo do
+    # andamento continua aparecendo depois de cada ato.
+    perguntas = conducao_da_convocacao.indice(
+        leitura=leitura,
+        # **Para todos os que leem** (revisão do #453): quem não convoca lê que há titulares
+        # esperando, por outro papel. A prévia é leitura, da mesma fotografia do recorte.
+        titulares=(
+            None
+            if sem_inscrito or intermediario is not None
+            else previas.get("titulares") or fluxo.previa_dos_titulares(**recorte)
+        ),
+        pode_convocar=pode_convocar,
+        pode_emitir=pode_emitir,
+        confere=confere,
+        sem_inscrito=sem_inscrito,
+        marco_intermediario=intermediario,
+        secao_dos_pendentes=bool(pode_emitir and (previas.get("pendentes") or {}).get("linhas")),
+        secao_dos_vencidos=bool(pode_emitir and (previas.get("vencidos") or {}).get("linhas")),
+    )
     return marcar_como_privada(
         render(
             request,
@@ -8775,7 +8827,15 @@ def convocacao(request, edital_id, marco_id):
                 "leitura": leitura,
                 # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
                 # quem só consulta, e calculá-las ali seria trabalho sem leitor.
-                **(_previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}),
+                **previas,
+                # O lugar do recorte, no alto (143, FR-5000), e o índice (FR-5001 a FR-5004).
+                "contexto_do_recorte": conducao_da_convocacao.contexto_do_recorte(
+                    edital, marco_id, lista_id
+                ),
+                "perguntas": perguntas,
+                "sem_providencia": conducao_da_convocacao.sem_providencia(perguntas),
+                "confere": confere,
+                "aptas": sum(1 for linha in leitura["linhas"] if linha.get("apto")),
                 # A conferência do texto pendente, consumida aqui (125, FR-3993).
                 "conferencia": (conferencia_do_texto.da_sessao(request) if pode_emitir else None),
                 **(
@@ -8786,8 +8846,7 @@ def convocacao(request, edital_id, marco_id):
                 # **A lista que ninguém declarou não tem convocação** (126, FR-4024). A tela mandava
                 # apurar a ocupação e, logo abaixo, pedir a faixa seguinte — dois caminhos que só
                 # terminam em recusa, para um recorte que nunca terá ordem.
-                "sem_inscrito": (str(lista_id) if lista_id else None)
-                in _recortes_sem_inscrito(edital, marco_id),
+                "sem_inscrito": sem_inscrito,
                 # **Se a fila esgotou porque o Edital não declarou quantidade** (027, FR-332).
                 # "Não há mais quem chamar dentro da faixa que o corte alcançou" é verdadeiro e
                 # manda a pessoa à Ocupação pedir a faixa seguinte — que responde "não há
@@ -8804,7 +8863,7 @@ def convocacao(request, edital_id, marco_id):
                 # cada POST, um duplo clique praticaria dois atos sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,
                 "pode_emitir": pode_emitir,
-                "pode_convocar": pode_emitir and intermediario is None,
+                "pode_convocar": pode_convocar,
                 "marco_intermediario": intermediario,
                 # O aviso complementar das chamadas comunicadas por publicação (066, `UX-174`): a
                 # mesma porta da comunicação, e nada para quem convoca por mensagem individual.
@@ -8813,22 +8872,7 @@ def convocacao(request, edital_id, marco_id):
                 )
                 if pode_emitir
                 else {"itens": []},
-                # O aviso de pendência documental (134, FR-4603, FR-4605): para quem confere este
-                # Perfil, com quantas pessoas o gesto alcançaria agora e quantas ficam de fora.
-                "pendencias_a_avisar": avisos_pendencias.previa(
-                    actor=ator,
-                    edital=edital,
-                    perfil_id=perfil_id,
-                    marco_id=marco_id,
-                    lista_id=lista_id,
-                    agora=agora,
-                    # A mesma fotografia que a tela acabou de ler, e não uma segunda leitura.
-                    conducao={
-                        "convocacoes": leitura["convocacoes"],
-                        "raizes": raizes,
-                        "leituras": leituras_documentais,
-                    },
-                ),
+                "pendencias_a_avisar": pendencias_a_avisar,
                 # **Qual ato aconteceu, e não só que algo deu certo** (`UX-036`). Foi o defeito
                 # `E2E16-004` da `016`: três ações voltavam para a mesma tela com um aviso único, e
                 # quem acabara de desfechar lia "Apuração emitida".
@@ -9006,7 +9050,12 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     exige (FR-3611).
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
-    from processo_seletivo.convocacao.application.selectors import desfecho_de, identidades_de
+    from processo_seletivo.convocacao.application.selectors import (
+        desfecho_de,
+        envio_de,
+        estado_de,
+        identidades_de,
+    )
     from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 
     ator, edital, convocacao, base = _convocacao_para_conferir(request, edital_id, convocacao_id)
@@ -9015,7 +9064,17 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     raiz = documentos_app.raiz_da_chamada(convocacao)
     vigente = documentos_app.vigente_da_chamada(raiz)
     desfecho = desfecho_de(vigente)
-    leitura = documentos_app.leitura_da_chamada(raiz, decidida=desfecho is not None)
+    # **A pessoa no recorte dela** (143, FR-5019 a FR-5024): as pessoas vizinhas, numa leitura do
+    # recorte que traz também a leitura documental e a identidade desta — não se leem de novo
+    # (revisão do #453). Fora do recorte, que não deveria acontecer, a leitura da chamada sozinha.
+    vizinhas = conducao_da_convocacao.pessoas_do_recorte(edital=edital, vigente=vigente)
+    leitura = vizinhas["leituras"].get(raiz.id) or documentos_app.leitura_da_chamada(
+        raiz, decidida=desfecho is not None
+    )
+    inscricao = (
+        vizinhas["identidades"].get(convocacao.inscricao_id)
+        or identidades_de({convocacao.inscricao_id})[convocacao.inscricao_id]
+    )
     with command_context() as agora:
         record_event(
             actor=ator,
@@ -9029,6 +9088,37 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
             new_revision=None,
         )
     apresentacoes = [a.id for lido in leitura.itens for a in lido.apresentacoes]
+    # O lugar (Edital, Perfil, marco e lista), o passo e o aviso da pendência — os mesmos do cartão
+    # da chamada. O recorte é o da convocação, e não o do endereço: a página sabe de que lista é.
+    agora = timezone.now()
+    lista_id = request.GET.get("lista") or (str(vigente.lista_id) if vigente.lista_id else "")
+    previa_do_aviso = avisos_pendencias.previa(
+        actor=ator,
+        edital=edital,
+        perfil_id=vigente.perfil_id,
+        marco_id=vigente.marco_id,
+        lista_id=vigente.lista_id,
+        agora=agora,
+        conducao={
+            "convocacoes": vizinhas["convocacoes"],
+            "raizes": vizinhas["raizes"],
+            "leituras": vizinhas["leituras"],
+        },
+    )
+    linha = {
+        "convocacao": vigente,
+        "desfecho": desfecho,
+        "estado": estado_de(vigente, agora=agora),
+        "documentos": leitura if leitura.pedidos else None,
+        **vizinhas["comunicacao"],
+    }
+    conducao_da_convocacao.anotar(
+        [linha],
+        convocacoes=vizinhas["convocacoes"],
+        raizes={vigente.id: raiz},
+        previa_do_aviso=previa_do_aviso,
+        agora=agora,
+    )
     abertas_por_voce = set(
         RegistroAuditoria.objects.filter(
             operation=documentos_app.CONSULTAR_APRESENTACAO,
@@ -9044,11 +9134,29 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
                 "processo": edital.processo,
                 "edital": edital,
                 "marco_id": marco_id,
-                "lista_id": request.GET.get("lista") or "",
+                "lista_id": lista_id,
                 "convocacao": vigente,
+                "contexto_do_recorte": conducao_da_convocacao.contexto_do_recorte(
+                    edital, marco_id, vigente.lista_id
+                ),
+                "linha": linha,
+                "enviada_em": envio_de(vigente),
+                "vizinhas": vizinhas,
+                "primeiro_a_conferir": next(
+                    (
+                        lido
+                        for lido in leitura.pedidos
+                        if lido.estado in ("RECEBIDO", "COMPLEMENTADO")
+                        or lido.sem_condicao_publicada
+                    ),
+                    None,
+                ),
+                # O desfecho é da gestão (D-005): o link ao cartão da chamada, só para quem conduz.
+                "pode_emitir": pode_gerir_comissao(ator, edital.processo) is not None,
+                "url_da_convocacao": _volta_para_convocacao(edital.id, marco_id, lista_id),
                 "raiz": raiz,
                 "desfecho": desfecho,
-                "inscricao": identidades_de({convocacao.inscricao_id})[convocacao.inscricao_id],
+                "inscricao": inscricao,
                 "leitura": leitura,
                 "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
                 "rotulo_do_item": ROTULO_DO_ITEM,

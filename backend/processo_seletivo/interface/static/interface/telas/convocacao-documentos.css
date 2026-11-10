@@ -12,3 +12,29 @@
    mesmo dos dois, e o aceite se apoiava nessa leitura. Contorno tracejado, sem a cor do atendido. */
 .s-NAO_SE_APLICA{background:#fff;color:#333;border:1px dashed #666}
 .condicao-publicada{margin:.25rem 0;font-size:.875rem;overflow-wrap:anywhere}
+
+/* A pessoa no lugar dela (143, FR-5019): o contexto em pares rótulo-valor, que quebram em linha. */
+.contexto-da-convocacao{display:flex;flex-wrap:wrap;gap:.35rem 1.5rem;margin:0 0 .75rem;
+  font-size:.875rem}
+.contexto-da-convocacao div{min-width:0}
+.contexto-da-convocacao dt{font-size:.75rem;color:var(--texto-fraco);font-weight:600}
+.contexto-da-convocacao dd{margin:0;overflow-wrap:anywhere}
+
+/* As pessoas do recorte (FR-5024): uma linha de links que quebra, e a posição à esquerda. */
+.pessoas-do-recorte{display:flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:baseline;
+  padding:.5rem 0;margin:0 0 1rem;border-top:1px solid var(--borda);border-bottom:1px solid var(--borda);
+  font-size:.875rem;overflow-wrap:anywhere}
+.pessoas-do-recorte .posicao{color:var(--texto-fraco);font-weight:600}
+/* O nome inteiro da próxima pessoa não cabe numa linha a 375 px: o link quebra, e a página não rola
+   de lado (UX-373). */
+.pessoas-do-recorte a{white-space:normal}
+
+/* A situação desta convocação (FR-5021): a mesma borda de tom do cartão da chamada. */
+.situacao-da-convocacao{border:1px solid var(--borda);border-left:4px solid var(--borda);
+  border-radius:4px;padding:.75rem 1rem;margin:0 0 1.25rem;background:var(--branco);max-width:56rem}
+.situacao-da-convocacao h2{margin:0 0 .5rem;font-size:1.0625rem}
+.situacao-da-convocacao.tom-acao{border-left-color:var(--verde)}
+.situacao-da-convocacao.tom-alerta{border-left-color:var(--vermelho)}
+.situacao-da-convocacao.tom-espera{border-left-color:var(--amarelo)}
+.situacao-da-convocacao .resumo{margin:.5rem 0}
+.volta-da-conferencia{margin-top:1.5rem}

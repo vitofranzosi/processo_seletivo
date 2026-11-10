@@ -141,6 +141,10 @@ BOTOES = {
         ("botao", "Conferir o acréscimo"),
     ],
     "ocupacao_historico.html": [],
+    # **A mesma lista, noutra ordem** (143, FR-5008, D-001): as seções se agruparam em áreas —
+    # convocar; acompanhar e conferir; fila, suplentes e regularização —, e nenhum botão mudou de
+    # rótulo nem de desenho. As comunicações a emitir vieram para "Convocar", logo depois dos
+    # titulares; a chamada individual e a regularização foram para depois das chamadas.
     "convocacao.html": [
         # O gesto dos titulares abre a conferência, e o rótulo o diz (140, FR-4816): no C10 da
         # `134`, "Convocar as 3" praticou e enviou três mensagens num clique.
@@ -148,11 +152,6 @@ BOTOES = {
             "botao",
             "Conferir e convocar "
             '{{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}',
-        ),
-        (
-            "botao",
-            'Registrar o não atendimento {{ vencidos.linhas|length|plural:"da,das" }} '
-            "{{ vencidos.linhas|length }}",
         ),
         (
             "botao",
@@ -164,8 +163,11 @@ BOTOES = {
             "Emitir {{ pendentes.linhas|length }} "
             '{{ pendentes.linhas|length|plural:"comunicação,comunicações" }}',
         ),
-        ("botao", "Convocar"),
-        ("botao", "Convocar para regularizar"),
+        (
+            "botao",
+            'Registrar o não atendimento {{ vencidos.linhas|length|plural:"da,das" }} '
+            "{{ vencidos.linhas|length }}",
+        ),
         # O aviso de pendência documental (134, FR-4603): grava avisos, e não muda a convocação.
         ("botao", "Avisar as pessoas com pendência nesta chamada"),
         ("botao", "Registrar desfecho"),
@@ -176,6 +178,8 @@ BOTOES = {
         # A palavra do canal (125, FR-4000): *"Registrar a publicação"* na publicação.
         ("acao", "{{ linha.canal.emitir_de_novo }}"),
         ("botao", "{{ linha.canal.emitir }}"),
+        ("botao", "Convocar"),
+        ("botao", "Convocar para regularizar"),
     ],
     "convocacao_historico.html": [],
     "matriculas.html": [("botao", "Ver o que sairá vazio"), ("botao", "Baixar o arquivo")],

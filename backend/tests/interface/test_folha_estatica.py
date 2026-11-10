@@ -332,6 +332,9 @@ QUEM_CARREGA = {
             "visao-geral",
         )
     },
+    # A convocação pelas perguntas de quem conduz (143): o passo da chamada e o aviso da pendência
+    # são os mesmos na convocação e nos documentos de uma convocação, e a folha também.
+    "interface/telas/convocacao.css": {"convocacao.html", "convocacao_documentos.html"},
 }
 
 

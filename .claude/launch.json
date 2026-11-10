@@ -593,6 +593,16 @@
       ],
       "port": 8142,
       "url": "http://localhost:8142"
+    },
+    {
+      "name": "convocacao-143",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps143 DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true CENARIOS_DE_TREINAMENTO=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps143-arquivos uv run python manage.py runserver 8143"
+      ],
+      "port": 8143,
+      "url": "http://localhost:8143"
     }
   ]
 }

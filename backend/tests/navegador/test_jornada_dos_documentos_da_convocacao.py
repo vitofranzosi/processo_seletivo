@@ -207,7 +207,11 @@ def registrar_aceite(gestao, servidor, edital):
     from django.urls import reverse
 
     gestao.goto(servidor.url + reverse("interface:convocacao", args=[edital.id, MARCO]))
-    gestao.locator("summary", has_text="Registrar desfecho").first.click()
+    # Pronta para o desfecho, o formulário já vem aberto no cartão (143, FR-5013): clicar no
+    # resumo o fecharia. Nos outros passos, ele vem recolhido, como antes.
+    desfecho = gestao.locator("details.desfecho-da-chamada").first
+    if not desfecho.evaluate("elemento => elemento.open"):
+        desfecho.locator("summary", has_text="Registrar desfecho").click()
     gestao.locator("select[name=especie]").first.select_option("ACEITE")
     gestao.locator("textarea[name=fundamento]").first.fill("Documentação conferida e conforme.")
     gestao.get_by_role("button", name="Registrar desfecho").first.click()
