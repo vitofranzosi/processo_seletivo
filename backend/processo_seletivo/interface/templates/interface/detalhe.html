@@ -1,7 +1,7 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/andamento.css' %}">{% endblock %}
-{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span></nav>{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › {% if pagina_anterior %}<a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">Página anterior</span>{% else %}<span aria-current="page">Edital {{ edital.number }}/{{ edital.year }}</span>{% endif %}</nav>{% endblock %}
 {% block conteudo %}
 <h1>Edital {{ edital.number }}/{{ edital.year }}</h1>
 <p class="sub">{{ edital.title }}
@@ -11,8 +11,6 @@
 <p class="sucesso" role="status">Ato registrado: {{ request.GET.ato|rotulo_do_ato }}.</p>
 {% endif %}
 {% include "interface/_conferencia_do_ato.html" %}
-{% comment %} O Centro de Controle (136), ao lado desta página durante a validação: só o link de ida, e só onde há andamento (FR-4703). {% endcomment %}
-{% if andamento %}<p class="ajuda"><a class="acao" href="{% url 'interface:centro-do-edital' edital.id %}">Abrir o Centro de Controle do Edital (em validação)</a></p>{% endif %}
 
 {% comment %} Depois da publicação a trilha não aparece (127, D-002): `trilha` chega vazia. {% endcomment %}
 {% if trilha %}

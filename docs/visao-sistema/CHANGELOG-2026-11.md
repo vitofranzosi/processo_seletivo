@@ -291,7 +291,7 @@ Entraram na `main`, que chegou a `daba322f`, sete specs implementadas, em PRs de
 - **134, aviso de pendência documental (#435):** a comissão aciona, na condução da convocação, *Avisar as pessoas com pendência nesta chamada*; o gesto grava um aviso da 066 por pessoa, com origem nova (`avisos/0002`), e o despacho o envia. É a quinta situação em que o sistema escreve (a FR-084 da 010 foi revista de quatro para cinco): o e-mail traz o nome publicado dos documentos pendentes, nunca o motivo, e o de modalidade vira "um documento da sua modalidade de concorrência". No máximo um por pessoa, por chamada, por dia; o despacho relê a pendência antes de enviar e interrompe se ela já não existe. A chave `AVISOS_AOS_CANDIDATOS` segue desligada em produção. A QI-7 deixou de ser pendência nas páginas que a citavam.
 - **134, cenários de treinamento e homologação (#436, #438):** o app `treinamento`, quatro comandos de gestão e nenhuma tela. Cria quinze Processos fictícios, `SIM-TREINAMENTO-001` a `015`, parados em etapas diferentes, pelos mesmos comandos da aplicação; três barreiras (ambiente, chave `CENARIOS_DE_TREINAMENTO` e `--banco`). A #438 deu aos cenários de sorteio C06 e C07 a cota PPP. Uma seção nova, "Cenários de treinamento e homologação". Nada foi carregado na homologação compartilhada.
 - **135, o andamento diz o que cada providência é (#440, #441):** quatro correções de linguagem da derivação da 127, sem regra nova: a ordem de uma lista em que ninguém concorre diz isso; o que foi divulgado do resultado vira dado; a espera do definitivo não oferece publicar como preliminar quando o preliminar já está publicado (a prévia e o comando mantêm a mensagem de antes); o resumo do Perfil conta "nos marcos".
-- **136, o Centro de Controle do Edital (#442, #443):** página nova de leitura em `/gestao/editais/<id>/centro/`, ao lado do detalhe, com oito fases em três grupos, andamento separado do que cada fase oferece, uma ação em destaque por três regras e o detalhe da fase consultada. Em validação: nomes e textos provisórios.
+- **136, o Centro de Controle do Edital (#442, #443):** página nova de leitura, que entrou em `/gestao/editais/<id>/centro/`, ao lado do detalhe, e que a 138 (#451) pôs na rota do Edital — a seção da Visão descreve os dois estados, com oito fases em três grupos, andamento separado do que cada fase oferece, uma ação em destaque por três regras e o detalhe da fase consultada. Em validação: nomes e textos provisórios.
 - **139, a chegada ao ato e a volta (#447):** a providência leva ao lugar do ato por fragmento no endereço, e o bloco "Próximo nesta lista" termina em "Voltar ao Centro de Controle do Edital". Sem rota, regra ou migration.
 - **140, a conferência antes de convocar (#448):** "Conferir e convocar as N" abre sempre a página "Confira antes de convocar", que não grava nada; só o botão dela pratica o ato, e o rótulo diz se mensagens saem.
 - **141, a sucessora espera o reabilitado (#449):** a ordem sucessora e o corte são *Depois* enquanto a Etapa de quem um recurso reabilitou está por fazer; o Centro mostra a fase *Em curso*; a tela do corte avisa e o botão continua.
@@ -307,3 +307,23 @@ Entraram também, sem mudar a descrição do sistema, o estudo do Centro de Cont
 - as telas não foram percorridas; os rótulos, as rotas e os códigos citados foram conferidos no código por três leituras paralelas, e as divergências entre spec e código foram resolvidas a favor do código;
 - a *Maturidade* não foi recontada (migrations, rotas, módulos, testes), e as tabelas de estados não citam a espera da sucessora;
 - ficam abertas a SC-1456 (um cenário percorrido só com o guia), a validação do Centro com operadores e as decisões 2 a 7 do estudo, a validação de LGPD e de SPF/DKIM do aviso, o texto da lista vazia da 135 sem teste no Centro, e as tarefas desmarcadas em `tasks.md` da 139 e da 140, cujas specs seguem como rascunho.
+
+## Acréscimo de 10/11: o Centro de Controle como página do Edital (136, 138)
+
+A página não descrevia o Centro de Controle do Edital da 136, que entrou em 09/11 numa rota própria e
+"em validação". A spec 138 o pôs na rota do Edital, por decisão do usuário em 10/11 (validação com
+operadores dispensada; o Centro mora na rota do Edital; os textos deixam de ser provisórios), e
+esta atualização vai no mesmo PR que a troca, de modo que chega à `main` com ela.
+
+- Seção nova, *A página do Edital publicado: o Centro de Controle (136, 138)*, depois do *Depois da
+  publicação* da 127: as quatro camadas, a escolha da composição pela rota, o retorno do ato, a volta
+  da 139, o endereço antigo `/centro/` e a página anterior por um ciclo.
+- *Depois da publicação* (127) ganhou uma frase dizendo que os cartões dele continuam na página
+  anterior.
+- Rótulos conferidos no código da worktree da 138: *Onde estamos*, *Situação administrativa*,
+  *Inscrições*, *Seu papel aqui*, *O que fazer agora*, *Por que esta*, *Onde cada lista está*,
+  *Administração e histórico*, *Voltar ao Centro de Controle do Edital* (`centro_do_edital.html`,
+  `_proximo_nesta_lista.html`).
+- Não foi recontada a seção *Maturidade*, e a 137 (o Processo agrega os Editais), que não foi feita,
+  não entrou.
+

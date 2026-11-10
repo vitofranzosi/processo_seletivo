@@ -2125,6 +2125,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       ato e mostra a resposta em dois níveis. Eles existem com o Edital <em>Publicado</em> ou <em>Encerrado</em>;
       nos demais estados o cartão é o de antes. Se a derivação falhar, o detalhe volta ao cartão de antes e o defeito
       vai ao log: a orientação não derruba a página.
+      Desde a 138, a página do Edital publicado é o <a href="#centro-de-controle">Centro de Controle</a>, que lê a
+      mesma derivação; os cartões descritos aqui continuam na página anterior, por um ciclo.
     </p>
     <p>
       <strong>Nível 1 — as providências em aberto, por papel.</strong> O cartão abre pela contagem —
@@ -2345,29 +2347,41 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>Especificação</dt><dd><code>specs/139-chegada-ao-ato-e-volta/</code> · estudo em <code>doc/estudo-continuidade-operacional-2026-11-10/</code></dd>
     </dl></div></details>
 
-    <h3 id="centro-de-controle">O Centro de Controle do Edital: uma página para ver onde a seleção está (136) <span class="selo selo-impl">Implementado</span></h3>
+    <h3 id="centro-de-controle">A página do Edital publicado: o Centro de Controle (136, 138) <span class="selo selo-impl">Implementado</span></h3>
     <p>
       O “Andamento da seleção” da <a href="#andamento-da-selecao">127</a> responde bem a quem já sabe onde olhar, mas
-      está dentro do detalhe do Edital, junto de tudo o mais. A 136 acrescenta, para cada Edital
-      <em>Publicado</em> ou <em>Encerrado</em>, uma página própria — o <strong>Centro de Controle</strong> —, em
-      <code>/gestao/editais/&lt;id&gt;/centro/</code>, <strong>ao lado</strong> do detalhe, que continua como estava. Ela
+      estava dentro do detalhe do Edital, junto de tudo o mais. A 136 acrescentou, para cada Edital
+      <em>Publicado</em> ou <em>Encerrado</em>, uma página própria — o <strong>Centro de Controle</strong> —, numa rota ao
+      lado do detalhe; a 138 a pôs <strong>na rota do Edital</strong>, <code>/gestao/editais/&lt;id&gt;/</code>. A página
       <strong>não cria regra, estado, tabela, coluna, permissão nem migration</strong>: pergunta às mesmas funções que a
       127 já usa e reorganiza a resposta. É só de leitura: nenhum botão pratica ato; cada um leva à tela real do ato,
       que continua a autorizar e a recusar como antes.
     </p>
-    <div class="aviso aviso-risco"><span class="titulo">Em validação: nomes e textos são provisórios</span>
-      <p>A página não é o padrão e não deve ser divulgada como pronta. O detalhe do Edital a oferece num link
-        <span class="rotulo-ui">Abrir o Centro de Controle do Edital (em validação)</span> — só onde há andamento — e o Centro
-        diz de volta, no topo, <em>“Em validação. Os nomes e os textos desta página são provisórios.”</em>, com o
-        <span class="rotulo-ui">Voltar à página atual do Edital</span>. Os nomes das fases e dos passos moram em
-        <code>interface/conceitos.py</code>. A liberação geral espera a validação com três a cinco operadores e duas
-        decisões do estudo (o critério do destaque e quem aprova os textos).</p>
-    </div>
+    <ul>
+      <li><strong>Antes da publicação, no cancelado ou com a derivação indisponível</strong>, a mesma rota desenha o detalhe
+        de antes, com a trilha e o bastão. A rota lê o Edital uma vez e escolhe a composição (138).</li>
+      <li><strong>O ato volta com retorno.</strong> Publicar e Encerrar chegam ao Centro com <em>“Ato registrado: …”</em> no
+        topo e, depois de publicar, o que a conferência do concurso disse (116); os demais atos do Edital chegam ao
+        detalhe, como antes.</li>
+      <li><strong>Ida e volta com as telas dos atos</strong> (139): a providência leva ao lugar do ato na tela de destino, e
+        o bloco <em>“Próximo nesta lista”</em> termina em <span class="rotulo-ui">Voltar ao Centro de Controle do
+        Edital</span>, que leva à página do Edital.</li>
+      <li><strong>O endereço antigo</strong> <code>/gestao/editais/&lt;id&gt;/centro/</code> leva à página do Edital, com os
+        mesmos parâmetros (<code>?fase=</code> escolhe a fase consultada).</li>
+      <li><strong>A página anterior, por um ciclo</strong>: o detalhe de antes continua em
+        <code>/gestao/editais/&lt;id&gt;/pagina-anterior/</code>, alcançado por um link só, no fim de
+        <span class="rotulo-ui">Administração e histórico</span>.</li>
+    </ul>
+    <p class="miudo">
+      A 136 implantou o Centro numa rota própria, ao lado do detalhe, “em validação”. Em 10/11/2026 o usuário dispensou a
+      validação com operadores, decidiu que o Centro mora na rota do Edital e aprovou os textos como estão; a 138 fez a
+      troca. O número de consultas da página é fixo por Edital, com o teto da 136 fixado por teste.
+    </p>
     <p>
       <strong>Quem abre.</strong> Quem alcança o Edital pela mesma porta do detalhe, no escopo da unidade; nenhum papel é
       exigido. Muda o que cada papel vê: a matriz por lista é de quem conduz a seleção ou audita; <em>Encerrar</em> e
       <em>Cancelar</em> só aparecem a quem o conjunto de ações oferece. Antes da publicação, com o Edital cancelado ou
-      com a derivação indisponível, a rota redireciona ao detalhe, sem erro; Edital inexistente ou de outra unidade é
+      com a derivação indisponível, a mesma rota desenha o detalhe de antes; Edital inexistente ou de outra unidade é
       <code>404</code>, e sem identidade o pedido vai a identificar.
     </p>
     <p><strong>O que a página mostra, de cima para baixo.</strong></p>
@@ -2420,21 +2434,19 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       (<a href="#cenarios-de-treinamento">134</a>), e a soma das providências das fases é testada contra o total do
       nível 1.
     </p>
-    <div class="aviso aviso-lacuna"><span class="titulo">O que a 136 deixa aberto</span>
-      <p>A validação com operadores, que é do plano de produção do estudo, na homologação. As decisões 2 a 7 do estudo:
-        onde o Centro mora (só a troca do padrão, que seria a spec 138), os nomes das fases e dos passos, o critério do
-        destaque, a observação da extração antes de congelar, quem vê o detalhe por lista e quem aprova os textos
-        pedagógicos. A conferência no navegador, a 1440 e a 375 pixels, foi feita antes da revisão do PR e não foi
-        refeita depois dela; ninguém ouviu a página com um leitor de tela. E o texto da lista em que ninguém concorre,
-        da <a href="#correcoes-do-andamento">135</a>, aparece no Centro só como <em>“no GPS: …”</em> e como nota, sem teste
-        próprio nem conferência no navegador. <span class="selo selo-parc">Parcial</span></p>
+    <div class="aviso aviso-lacuna"><span class="titulo">O que o Centro deixa aberto</span>
+      <p>A conferência no navegador, a 1440 e a 375 pixels, foi feita na 136, antes da revisão do PR, e não foi refeita
+        depois dela nem depois da troca de rota da 138; ninguém ouviu a página com um leitor de tela. O texto da lista em
+        que ninguém concorre, da <a href="#correcoes-do-andamento">135</a>, aparece no Centro só como <em>“no GPS: …”</em> e
+        como nota, sem teste próprio nem conferência no navegador. A validação com operadores, que o estudo previa, foi
+        dispensada pelo usuário em 10/11, e não aconteceu. <span class="selo selo-parc">Parcial</span></p>
     </div>
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>A rota e a composição</dt><dd><code>interface/centro_do_edital.py</code> (a view, que repete a porta do detalhe) · <code>interface/centro.py</code> (<code>compor</code>, <code>agregar</code>, <code>destaque</code>, <code>fase_consultada</code>, <code>onde_estamos</code>) · <code>interface:centro-do-edital</code> em <code>interface/urls.py</code></dd>
-      <dt>Os textos provisórios</dt><dd><code>interface/conceitos.py</code> (as oito fases, as perguntas, os nomes simples dos passos e as frases do destaque)</dd>
-      <dt>As telas</dt><dd><code>centro_do_edital.html</code> · <code>_marcas_da_fase.html</code> · <code>interface/telas/centro.css</code>; o link de ida em <code>detalhe.html</code></dd>
+      <dt>A rota e a leitura</dt><dd><code>detalhe</code>, <code>pagina_anterior</code> e <code>_leitura_do_edital</code> em <code>interface/views.py</code> · <code>desenhar</code> em <code>interface/centro_do_edital.py</code> · a composição em <code>interface/centro.py</code> (<code>compor</code>, <code>agregar</code>, <code>destaque</code>)</dd>
+      <dt>Os nomes e as frases</dt><dd><code>interface/conceitos.py</code> (as oito fases, as perguntas, os nomes simples dos passos e as frases do destaque)</dd>
+      <dt>As telas</dt><dd><code>centro_do_edital.html</code> · <code>_marcas_da_fase.html</code> · <code>interface/telas/centro.css</code></dd>
       <dt>A derivação que ele lê</dt><dd><code>interface/andamento.py</code> e <code>interface/providencias.py</code>, a mesma da <a href="#andamento-da-selecao">127</a></dd>
-      <dt>Especificação</dt><dd><code>specs/136-centro-de-controle-do-edital/</code> · estudo em <code>doc/estudo-centro-de-controle-2026-11-09/</code></dd>
+      <dt>Especificação</dt><dd><code>specs/136-centro-de-controle-do-edital/</code> · <code>specs/138-centro-como-pagina-do-edital/</code> · estudo em <code>doc/estudo-centro-de-controle-2026-11-09/</code></dd>
     </dl></div></details>
 
 
@@ -14205,6 +14217,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>22a722af</code>, spec 125</td><td><a href="#convocacao-segue-o-canal">A convocação segue o canal</a> (125): a convocação por publicação só aparece ao candidato depois do registro, o texto digitado que chega a ele passa por <em>Conferir o texto</em>, e a palavra da comunicação segue a forma. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>10/11/2026</td><td>PR da spec 138, sobre a <code>main</code> em <code>daba322f</code></td><td>O <a href="#centro-de-controle">Centro de Controle</a> como página do Edital publicado (136 e 138), com a volta da 139; a 127 remete a ele. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>08/11/2026</td><td><code>main</code> em <code>86cd0ee0</code>, specs 126 a 133 e a correção da 115</td><td>Descritas como entregues: a <a href="#orientacao-p0">orientação depois do ato</a> (126), o <a href="#andamento-da-selecao">Andamento da seleção</a> (127), a <a href="#ordem-sem-resultado">ordem recusada sem resultado</a> (128), a <a href="#lista-de-processos-recortada">Lista de Processos recortada</a> (129), a <a href="#encerrar-processo-adverte">advertência no Encerrar Processo</a> (130), a <a href="#condicao-de-exigencia">condição de exigência</a> (131), os <a href="#ajustes-de-leitura-dos-documentos">ajustes de leitura dos Documentos Exigidos</a> (132), o <a href="#marco-intermediario">marco intermediário</a> (133) e a <a href="#lista-no-gesto-de-titulares">lista de documentos no gesto de titulares</a> (correção da 115). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>daba322f</code>, specs 134 a 141</td><td>Descritas como entregues: o <a href="#aviso-de-pendencia">aviso de pendência documental por e-mail</a> (134, aviso), os <a href="#cenarios-de-treinamento">cenários de treinamento e homologação</a> (134, cenários), as <a href="#correcoes-do-andamento">correções da derivação do andamento</a> (135), o <a href="#centro-de-controle">Centro de Controle do Edital</a> (136), a <a href="#chegada-e-volta">chegada ao lugar do ato e a volta ao Centro</a> (139), a <a href="#conferencia-antes-de-convocar">conferência antes de convocar os titulares</a> (140) e a <a href="#sucessora-espera-o-reabilitado">sucessora que espera o reabilitado</a> (141). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>

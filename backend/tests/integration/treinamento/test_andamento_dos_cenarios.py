@@ -116,7 +116,7 @@ def test_c08_a_pagina_do_edital_diz_que_ninguem_concorre_no_nivel_1_e_na_matriz(
     """O que a presidência lê no detalhe do Edital: o cartão e a matriz."""
     m = cenario("C08")
     identificar(client, c.PRESIDENCIA, [])
-    pagina = client.get(reverse("interface:detalhe", args=[m.edital.id])).content.decode()
+    pagina = client.get(reverse("interface:pagina-anterior", args=[m.edital.id])).content.decode()
     assert "Emitir a ordem que declara que ninguém concorreu nesta lista" in pagina
     assert '<span class="nota-da-celula">lista em que ninguém concorre</span>' in pagina
     assert "sem inscritos" not in pagina

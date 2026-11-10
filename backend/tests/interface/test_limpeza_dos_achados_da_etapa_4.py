@@ -110,7 +110,7 @@ def test_no_edital_publicado_os_atos_terminais_sao_anunciados_como_irreversiveis
     """`FR-2060`, `SC-801`: "Encerrar" e "Cancelar" do Edital publicado; as ações que se desfazem,
     como as de navegação, não têm descrição."""
     identificar(client, "marcia.gestora", ["gestor"])
-    corpo = abrir(client, reverse("interface:detalhe", args=[publicado.id]))
+    corpo = abrir(client, reverse("interface:pagina-anterior", args=[publicado.id]))
 
     confere_a_marca(cartao(corpo, "acoes-titulo"), ["Encerrar", "Cancelar"])
 

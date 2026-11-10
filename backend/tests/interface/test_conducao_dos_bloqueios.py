@@ -46,7 +46,7 @@ def _cartao_de_acoes(client, edital):
     A `SC-189` conta bloqueios **naquele cartão**; procurar a frase no corpo inteiro acharia
     qualquer outra superfície e responderia "conduz" sem que o cartão tivesse mudado.
     """
-    corpo = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    corpo = client.get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
     bloco = _CARTAO.search(corpo)
     assert bloco is not None, "o cartão de ações não apareceu"
     return bloco.group(0)

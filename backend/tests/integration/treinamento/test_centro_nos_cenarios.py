@@ -50,7 +50,7 @@ def cenario(treinamento):
 
 def abrir(client, edital, papel, fase=None):
     identificar(client, *PAPEIS[papel])
-    url = reverse("interface:centro-do-edital", args=[edital.id])
+    url = reverse("interface:detalhe", args=[edital.id])
     resposta = client.get(url + (f"?fase={fase}" if fase else ""))
     assert resposta.status_code == 200, (papel, resposta.status_code)
     return resposta

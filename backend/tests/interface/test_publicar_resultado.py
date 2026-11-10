@@ -361,7 +361,9 @@ def test_o_caminho_oferecido_ao_publicador_puro_abre_a_divulgacao(client, seleto
     edital = cenario["edital"]
     identificar(client, "paula.publicadora", ["publicador"])
 
-    tela_do_edital = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    tela_do_edital = client.get(
+        reverse("interface:pagina-anterior", args=[edital.id])
+    ).content.decode()
     bloco = re.search(
         r'<section aria-labelledby="classificacao-titulo".*?</section>', tela_do_edital, re.DOTALL
     )
@@ -371,6 +373,20 @@ def test_o_caminho_oferecido_ao_publicador_puro_abre_a_divulgacao(client, seleto
     assert client.get(oferecido).status_code == 200, (
         f"a tela do Edital ofereceu {oferecido}, e a tela recusou quem o seguiu"
     )
+
+
+def test_o_centro_tambem_leva_o_publicador_puro_a_divulgacao(client, seletor_ligado, cenario):
+    """138, FR-4876: com o Centro na rota do Edital, o mesmo `SC-164` — um caminho lido da página,
+    que abre. Nenhuma regra nova: o caminho é a providência de quem publica resultado."""
+    edital = cenario["edital"]
+    identificar(client, "paula.publicadora", ["publicador"])
+    pagina = client.get(reverse("interface:detalhe", args=[edital.id]))
+    assert pagina.templates[0].name == "interface/centro_do_edital.html"
+
+    agora = pagina.content.decode().split('id="agora-titulo"', 1)[1].split("</section>", 1)[0]
+    oferecidos = re.findall(r'<a (?:class="botao" )?href="([^"#]+)[^"]*"', agora)
+    assert oferecidos, "o Centro não ofereceu caminho nenhum a quem publica"
+    assert all(client.get(url).status_code == 200 for url in oferecidos)
 
 
 def test_a_tela_de_ordenacao_diz_de_quem_e_o_ato_de_divulgar(client, seletor_ligado, cenario):

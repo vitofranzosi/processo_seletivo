@@ -47,7 +47,7 @@ def _ate(api_client, manager_headers, process_payload, *, parar_em, quem_homolog
 
 
 def bastao(client, edital):
-    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
+    resposta = client.get(reverse("interface:pagina-anterior", args=[edital.id]))
     return resposta.context["proximo_passo"], resposta.content.decode()
 
 

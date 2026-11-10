@@ -168,7 +168,7 @@ def test_c_a_devolvida_se_reconhece_e_a_reenviada_tambem(edital, vigente):
     # A marca diz de quem é a vez também a quem é a vez (129, R-9): sem a coluna, o ato fica na
     # faixa.
     assert "Retificação devolvida · aguarda" in corpo
-    pagina = ana.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    pagina = ana.get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
     assert ">Devolvida</span>" in pagina
     # Um verbo só para a devolvida (D-013): o cartão diz "Corrigir", e a seção abaixo também.
     assert "Corrigir a Retificação devolvida" in pagina
