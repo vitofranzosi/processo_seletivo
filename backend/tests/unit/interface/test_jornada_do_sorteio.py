@@ -50,6 +50,15 @@ FEITO, PENDENTE, NSA = C(a.FEITO), C(a.PENDENTE), C(a.NAO_SE_APLICA)
 DEPOIS = C(a.DEPOIS, razao="falta a semente")
 
 
+def _com_sorteio(*listas):
+    """Os recortes da tela, com o sorteio gravado nas listas dadas (o passo 4 lê o fato)."""
+    chaves = {"ampla": "", "ppi": PPI, "pcd": PCD}
+    return [
+        {**r, "sorteio": object() if r["lista_id"] in {chaves[n] for n in listas} else None}
+        for r in RECORTES
+    ]
+
+
 def _nada_fixado():
     return _pontos(
         {"ampla": PENDENTE, "ppi": PENDENTE, "pcd": NSA},
@@ -156,7 +165,7 @@ def test_uma_sorteada_e_outra_nao_o_sorteio_e_a_vez_e_a_ordem_existe_numa():
         FEITO,
         {"ampla": FEITO, "ppi": PENDENTE, "pcd": NSA},
     )
-    _, _, sorteio, ordem = j.da_tela(pontos, RECORTES, conduz=True)
+    _, _, sorteio, ordem = j.da_tela(pontos, _com_sorteio("ampla"), conduz=True)
 
     assert sorteio.agora and sorteio.contagem == "1 de 2 listas sorteadas"
     assert ordem.contagem == "1 de 2 listas com ordem gravada"
@@ -218,3 +227,64 @@ def test_a_execucao_tem_ancora_propria_e_a_tela_le_a_mesma_funcao():
     assert a.ancora_comum("sorteio-ampla", f"sorteio-{PPI}") == "titulo-execucao"
     assert a.ancora_comum("titulo-execucao", f"sorteio-{PCD}") == "titulo-execucao"
     assert a.ancora_comum("sorteio-ampla", "recorte-ampla") == ""
+
+
+# --- regressões da revisão do PR #452 ----------------------------------------------------------
+
+
+def test_a_ordem_gravada_e_dita_pelo_fato_e_nao_pela_celula_do_sorteio():
+    """Achado 3 (FR-4902): no passo 2 da anulação a célula do sorteio fica *Impedida* — a relação
+    foi sucedida, e anular pede ocorrência nova —, e a ordem continua gravada logo abaixo. O passo 4
+    dizia "Depois" e "0 de 1"; agora diz o fato."""
+    impedido = C(a.IMPEDIDO, razao="a relação que originou o sorteio foi sucedida")
+    pontos = _pontos(
+        {"ampla": FEITO, "ppi": NSA, "pcd": NSA},
+        FEITO,
+        {"ampla": impedido, "ppi": NSA, "pcd": NSA},
+    )
+    ordem = j.da_tela(pontos, _com_sorteio("ampla"), conduz=True)[3]
+
+    assert ordem.contagem == "1 de 1 lista com ordem gravada"
+    assert [c.situacao for _, c in ordem.listas] == [a.FEITO, a.NAO_SE_APLICA, a.NAO_SE_APLICA]
+    # E sem sorteio gravado, a mesma célula impedida não inventa ordem.
+    sem = j.da_tela(pontos, _com_sorteio(), conduz=True)[3]
+    assert sem.contagem == "0 de 1 lista com ordem gravada"
+
+
+def test_o_depois_de_fixar_acompanha_a_situacao_da_semente():
+    """Achado 6: com a semente do marco já obtida, o passo seguinte a fixar é sortear."""
+    sem_semente = j.da_tela(_nada_fixado(), RECORTES, conduz=True)[0]
+    assert sem_semente.depois.startswith("Obter a semente pública")
+
+    pontos = _pontos(
+        {"ampla": FEITO, "ppi": PENDENTE, "pcd": NSA},
+        FEITO,
+        {"ampla": PENDENTE, "ppi": DEPOIS, "pcd": NSA},
+    )
+    com_semente = j.da_tela(pontos, RECORTES, conduz=True)[0]
+    assert com_semente.depois == j.DEPOIS_DE_FIXAR_COM_A_SEMENTE
+    assert "semente pública do marco já foi obtida" in com_semente.depois
+
+
+def test_a_divulgacao_so_e_afirmada_quando_a_celula_e_do_ato_vigente():
+    """Achado 2 (FR-4913): numa célula *Obsoleta* ou *Depois*, `divulgado` é do ato anterior — a
+    tela diz a razão da derivação, e não "divulgada"."""
+    for situacao in (a.OBSOLETO, a.DEPOIS):
+        celula = C(situacao, divulgado=a.PRELIMINAR, razao="a ordem foi sucedida")
+        assert j.divulgacao(celula) == {"tipo": j.EM_ESPERA, "celula": celula}
+
+    assert j.divulgacao(C(a.PENDENTE, divulgado=a.NADA))["tipo"] == j.NAO_DIVULGADA
+    assert j.divulgacao(C(a.PENDENTE, divulgado=a.PRELIMINAR))["tipo"] == j.AFIRMADA_PRELIMINAR
+    assert j.divulgacao(C(a.FEITO, divulgado=a.DEFINITIVO))["tipo"] == j.AFIRMADA_DEFINITIVA
+    assert j.divulgacao(C(a.FEITO)) is None, "sem o dado, a tela não afirma nada"
+    assert j.divulgacao(None) is None
+
+
+def test_a_ordem_tem_ancora_propria_lida_pela_tela_da_mesma_funcao():
+    """Achado 1: o id, o link da mensagem e a abertura saem de uma função só."""
+    from processo_seletivo.interface.templatetags.interface_extras import ancora_da_ordem
+
+    assert a.ancora_da_ordem(None) == a.ancora_da_ordem("") == "ordem-ampla"
+    assert a.ancora_da_ordem(PPI) == f"ordem-{PPI}"
+    for lista in (None, "", PPI):
+        assert ancora_da_ordem(lista) == a.ancora_da_ordem(lista)

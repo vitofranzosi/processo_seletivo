@@ -87,7 +87,7 @@ diz qual ocorrência a substitui.
 <p class="sucesso" role="status" tabindex="-1"><strong>Sorteio realizado</strong>, com
   {{ resultado.quantidade }} participante{{ resultado.quantidade|pluralize }} na ordem. A semente
   usada foi <code>{{ resultado.semente }}</code> e o manifesto é
-  <code>{{ resultado.manifestoHash }}</code>. <a href="#ordem-{{ resultado.listaId|default:'ampla' }}">Ver a ordem sorteada</a>.
+  <code>{{ resultado.manifestoHash }}</code>. <a href="#{{ resultado.listaId|ancora_da_ordem }}">Ver a ordem sorteada</a>.
   Falta publicar a classificação.</p>
 {% elif resultado.tipo == "anulacao" %}
 <p class="sucesso" role="status" tabindex="-1"><strong>Sorteio sucessor constituído</strong>, com
@@ -221,8 +221,7 @@ botão de simular, e não há o que simular antes da semente (FR-030, D-010).
       <ul>
         <li>A relação é publicada no canal público e não muda mais: corrigi-la é publicar outra,
           que sucede esta, com motivo.</li>
-        <li>Depois de fixar, o passo seguinte é obter a semente pública, que vale para todas as
-          listas deste marco.</li>
+        <li>Depois de fixar: {{ passo.depois|lower }}</li>
       </ul>
     </div>
     {% else %}
@@ -538,7 +537,7 @@ sorteio chega aqui, e não ao cartão da lista no passo 1. O botão aparece exat
     <p class="imutavel"><strong>Sorteio realizado em {{ recorte.sorteio.executado_em|date:"d/m/Y H:i:s" }}</strong>
       por {% nome_de_pessoa recorte.sorteio.executado_por %}. Semente <code>{{ recorte.sorteio.semente_normalizada }}</code>,
       manifesto <code>{{ recorte.sorteio.manifesto_hash }}</code>.
-      <a href="#ordem-{{ recorte.lista_id|default:'ampla' }}">Ver a ordem sorteada</a></p>
+      <a href="#{{ recorte.lista_id|ancora_da_ordem }}">Ver a ordem sorteada</a></p>
 
     {% comment %}
     **Anular não é refazer**, e a tela diz isso antes de oferecer o botão. O sucessor nasce de
@@ -614,9 +613,11 @@ sorteio chega aqui, e não ao cartão da lista no passo 1. O botão aparece exat
       <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}-sorteio-{{ recorte.lista_id }}">
       <input type="hidden" name="relacao_id" value="{{ recorte.relacao.id }}">
       <input type="hidden" name="ocorrencia_id" value="{{ ocorrencia.id }}">
-      <p class="meta">Sorteia os {{ recorte.relacao.quantidade }} participantes fixados desta lista, com a semente
-        <code>{{ ocorrencia.material_bruto }}</code>. A ordem fica gravada e não se refaz.</p>
-      <button type="submit" class="botao">Realizar o sorteio desta lista</button>
+      {% comment %} Antes do ato são os números que a fonte publicou; a semente é o que o sorteio
+      deriva deles, e é ela que a mensagem do ato diz depois (a revisão do PR #452). {% endcomment %}
+      <p class="meta">Sorteia os {{ recorte.relacao.quantidade }} participantes fixados desta lista, a partir dos
+        números observados na fonte, <code>{{ ocorrencia.material_bruto }}</code>. A ordem fica gravada e não se refaz.</p>
+      <button type="submit" class="botao{% if fixar_e_a_vez %} secundario{% endif %}">Realizar o sorteio desta lista</button>
     </form>
     {% endif %}
   </div>
@@ -660,16 +661,22 @@ decorre de presidir a comissão, e um caminho que responde 403 é pior do que ca
   </details>
   {% for recorte in recortes %}
   {% if recorte.sorteio or recorte.corte.faixas or recorte.corte.obsoleto %}
-  <article class="resultado-da-lista" id="ordem-{{ recorte.lista_id|default:'ampla' }}">
+  <article class="resultado-da-lista" id="{{ recorte.lista_id|ancora_da_ordem }}">
     <h3>{{ recorte.nome }}</h3>
     {% if recorte.sorteio %}
-    {% if recorte.divulgado == "nada" %}
+    {% with d=recorte.divulgacao %}
+    {% if d.tipo == "nada" %}
     <p class="situacao-da-divulgacao">A ordem está gravada e pode ser verificada no canal público. <strong>Ainda não foi divulgada como resultado</strong>: divulgar a classificação é de quem publica resultado.</p>
-    {% elif recorte.divulgado == "preliminar" %}
+    {% elif d.tipo == "preliminar" %}
     <p class="situacao-da-divulgacao">Divulgada como <strong>resultado preliminar</strong>.</p>
-    {% elif recorte.divulgado == "definitivo" %}
+    {% elif d.tipo == "definitivo" %}
     <p class="situacao-da-divulgacao">Divulgada como <strong>resultado definitivo</strong>.</p>
+    {% elif d.tipo == "espera" %}
+    {% comment %} Obsoleta ou Depois: o que o público lê é do ato anterior, e afirmar a divulgação
+    falaria do sucessor como se ele tivesse saído (FR-4913). A tela diz a razão da derivação. {% endcomment %}
+    <p class="situacao-da-divulgacao">Divulgação do resultado: <span class="situacao-do-andamento s-{{ d.celula.situacao }}"><span aria-hidden="true">{{ d.celula.sinal }}</span> {{ d.celula.rotulo }}</span>{% if d.celula.razao %} — {{ d.celula.razao }}{% endif %}</p>
     {% endif %}
+    {% endwith %}
     {% if recorte.ordem %}
     <details class="ordem-sorteada"{% if resultado.tipo == "sorteio" and resultado.listaId|default:"" == recorte.lista_id %} open{% endif %}>
       <summary>Ver a ordem sorteada — {{ recorte.ordem|length }} posiç{{ recorte.ordem|length|pluralize:"ão,ões" }}</summary>

@@ -35,7 +35,7 @@ CONTEXTO = {
     a.RELACAO: {
         "precisa": "As inscrições encerradas e, se o Edital exigir, a habilitação feita.",
         "afeta": "Cada lista é fixada à parte.",
-        "depois": "Obter a semente pública.",
+        "depois": "Obter a semente pública, que vale para todas as listas deste marco.",
         "irreversivel": "Não muda mais. Corrigir é publicar uma relação nova, que sucede a "
         "anterior, com motivo.",
     },
@@ -61,6 +61,13 @@ CONTEXTO = {
     },
 }
 
+#: O que vem depois de fixar quando a semente do marco já foi obtida (a revisão do PR #452): o
+#: passo 2 está feito, e o seguinte desta lista é sortear. Escolhido pela situação do passo 2, que é
+#: a da derivação — e não por uma regra desta tela sobre a ordem entre fixar e observar.
+DEPOIS_DE_FIXAR_COM_A_SEMENTE = (
+    "Realizar o sorteio desta lista: a semente pública do marco já foi obtida."
+)
+
 #: A contagem de cada passo por lista: `(singular, plural)` do particípio.
 _FEITAS = {
     a.RELACAO: ("lista fixada", "listas fixadas"),
@@ -80,9 +87,12 @@ _ANCORAS = {
     ORDEM_SORTEADA: "titulo-resultado",
 }
 
-#: O passo 4 de uma lista ainda sem sorteio. Construída aqui porque o passo é consulta: não há
-#: célula da derivação para "consultar", e a consulta só existe depois do sorteio.
-_SEM_ORDEM = a.Celula(a.DEPOIS, razao="a ordem existe depois do sorteio desta lista")
+#: O passo 4 é consulta, e não ato: a derivação não tem célula para "consultar". A situação dele
+#: sai **do fato** — há ordem gravada para a lista, ou não (a revisão do PR #452). Recalculá-la da
+#: célula do sorteio errava no passo 2 da anulação: a célula *Impedida*, a ordem gravada logo
+#: abaixo, e o passo dizia "Depois".
+COM_ORDEM = a.Celula(a.FEITO, nota="ordem gravada")
+SEM_ORDEM = a.Celula(a.DEPOIS, razao="a ordem existe depois do sorteio desta lista")
 
 
 @dataclass
@@ -214,17 +224,30 @@ def da_tela(pontos, recortes, *, conduz):
             None,
         )
 
-    def consulta(celula):
-        if celula.situacao in (a.FEITO, a.OBSOLETO, a.NAO_SE_APLICA):
-            return celula
-        return _SEM_ORDEM
+    def consulta():
+        saida = []
+        if a.SORTEIO not in pontos:
+            return saida
+        for recorte in recortes:
+            celula = pontos[a.SORTEIO].celula(recorte["lista_id"] or None)
+            if celula is None:
+                continue
+            if recorte.get("sorteio") is not None:
+                saida.append((recorte["nome"], COM_ORDEM))
+            elif celula.situacao == a.NAO_SE_APLICA:
+                saida.append((recorte["nome"], celula))
+            else:
+                saida.append((recorte["nome"], SEM_ORDEM))
+        return saida
 
     passos = [
         _passo(1, a.RELACAO, conceitos.CONCEITOS[a.RELACAO], listas=por_lista(a.RELACAO)),
         _passo(2, a.SEMENTE, conceitos.CONCEITOS[a.SEMENTE], celula=semente),
         _passo(3, a.SORTEIO, conceitos.CONCEITOS[a.SORTEIO], listas=por_lista(a.SORTEIO)),
-        _passo(4, ORDEM_SORTEADA, CONCEITO_DA_ORDEM, listas=por_lista(a.SORTEIO, consulta)),
+        _passo(4, ORDEM_SORTEADA, CONCEITO_DA_ORDEM, listas=consulta()),
     ]
+    if semente is not None and semente.situacao == a.FEITO:
+        passos[0].depois = DEPOIS_DE_FIXAR_COM_A_SEMENTE
     if conduz and pontos:
         # **O primeiro, na ordem, com algo a praticar** (FR-4910). O passo 4 é consulta, e nunca
         # é a tarefa de agora: com a ordem gravada, o que falta é de outro ato e de outra tela.
@@ -232,6 +255,35 @@ def da_tela(pontos, recortes, *, conduz):
         if vez is not None:
             vez.agora = True
     return passos
+
+
+#: O que o passo 4 diz da divulgação de uma lista: `(tipo, célula)`.
+AFIRMADA_PRELIMINAR, AFIRMADA_DEFINITIVA, NAO_DIVULGADA, EM_ESPERA = (
+    "preliminar",
+    "definitivo",
+    "nada",
+    "espera",
+)
+
+
+def divulgacao(celula):
+    """O que a tela pode afirmar da divulgação de uma lista (FR-4913; a revisão do PR #452).
+
+    `divulgado` diz o que o público lê **hoje**, e numa célula *Obsoleta* ou *Depois* ele descreve o
+    ato anterior — o resultado que saiu antes de a ordem ser sucedida. Afirmar "divulgada" ali seria
+    falar do sucessor como se ele tivesse sido divulgado. Nesses casos a tela mostra a razão da
+    derivação; sem célula, não diz nada.
+    """
+    if celula is None:
+        return None
+    if celula.situacao in (a.OBSOLETO, a.DEPOIS):
+        return {"tipo": EM_ESPERA, "celula": celula}
+    tipo = {
+        a.PRELIMINAR: AFIRMADA_PRELIMINAR,
+        a.DEFINITIVO: AFIRMADA_DEFINITIVA,
+        a.NADA: NAO_DIVULGADA,
+    }.get(celula.divulgado)
+    return {"tipo": tipo, "celula": celula} if tipo else None
 
 
 def ordem_gravada(sorteio):

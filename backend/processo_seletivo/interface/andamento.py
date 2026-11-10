@@ -203,6 +203,13 @@ def ancora_do_sorteio(lista_id):
     return f"sorteio-{lista_id or 'ampla'}"
 
 
+def ancora_da_ordem(lista_id):
+    """O id da ordem gravada de uma lista, no passo 4 da tela do sorteio (142). Uma função só para o
+    id, o link da mensagem do ato e a abertura da lista que acabou de ser sorteada: escrito à mão em
+    três lugares, a mensagem do sorteio de uma cota apontava para a ampla (a revisão do PR #452)."""
+    return f"ordem-{lista_id or 'ampla'}"
+
+
 def com_ancora(url, ancora):
     """O endereço com o fragmento. Sem endereço, nenhum: o fragmento não cria link onde a
     derivação não deu um (quem não tem consulta continua sem)."""

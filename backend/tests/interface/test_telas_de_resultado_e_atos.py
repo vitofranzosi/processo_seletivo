@@ -124,7 +124,10 @@ BOTOES = {
             "Observar a ocorrência {{ proxima_referencia }} na fonte",
         ),
         ("botao perigoso", "Anular e constituir o sucessor"),
-        ("botao", "Realizar o sorteio desta lista"),
+        (
+            "botao{% if fixar_e_a_vez %} secundario{% endif %}",
+            "Realizar o sorteio desta lista",
+        ),
     ],
     "corte.html": [("botao", "Emitir corte"), ("botao", "Emitir faixa seguinte")],
     "corte_historico.html": [],
@@ -210,11 +213,12 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
     # é o indeferimento pelas pendências de documento (115): o mesmo desenho do desfecho, que ele é.
     # O 24º é o aviso de pendência documental (134): não desfaz nada porque não muda ato nenhum — o
     # prazo, a lista e o desfecho ficam como estão —, e o despacho manda no máximo um por dia.
-    # O 25º desenho é o de observar a semente na `142`: o mesmo `botao`, que passa a secundário
-    # enquanto há lista a fixar — perde peso, e não ganha.
+    # Os desenhos de observar a semente e de sortear, na `142`: o mesmo `botao`, que passa a
+    # secundário enquanto fixar é a tarefa de agora — perdem peso, e não ganham.
     assert desenhos == {
-        "botao": 23,
+        "botao": 22,
         "botao{% if fixar_por_fazer %} secundario{% endif %}": 1,
+        "botao{% if fixar_e_a_vez %} secundario{% endif %}": 1,
         "botao perigoso": 2,
         "acao": 2,
     }

@@ -9038,12 +9038,21 @@ def _marco_intermediario(edital, marco_id, rota):
     }
 
 
-def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=False, atual=None):
+#: O andamento que a tela ainda não leu — distinto de `None`, que é "lido, e não há" (a revisão do
+#: PR #452): sem ele, uma derivação que falhou era refeita, e o `andamento_indisponivel` ia duas
+#: vezes ao log.
+_NAO_LIDO = object()
+
+
+def _proximo_nesta_lista(
+    edital, ator, marco_id, lista_id, *, todas_as_listas=False, atual=_NAO_LIDO
+):
     """O "Próximo nesta lista" da mensagem de sucesso de um ato (127, FR-4090 a FR-4092, D-015).
 
     **Um callable, e não o valor**: o template só o lê dentro do bloco de sucesso, uma vez, com
-    `{% with %}`. Abrir a tela não paga a derivação; quem acabou de praticar um ato paga a do
-    Perfil do marco, e não a do Edital inteiro.
+    `{% with %}`. Nas telas dos atos, abrir a tela não paga a derivação; quem acabou de praticar um
+    ato paga a do Perfil do marco, e não a do Edital inteiro. A tela do sorteio é a exceção: ela já
+    lê a derivação do Perfil para os passos (142), e a passa em `atual`.
 
     **"Sua" é a regra do andamento** (`Andamento.e_sua`), a mesma do nível 1: a porta do papel, a
     mesa da `104` e a alocação à conferência. Refazê-la aqui era a segunda regra que diverge.
@@ -9052,8 +9061,10 @@ def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=Fa
     def ler():
         # A tela do sorteio já leu o andamento do Perfil para os passos (142, D-001): a mesma
         # leitura serve aqui, e a segunda derivação do mesmo pedido sai.
-        lido = atual or andamento.do_edital(
-            edital, ator, perfis=[_perfil_do_marco(edital, marco_id)]
+        lido = (
+            andamento.do_edital(edital, ator, perfis=[_perfil_do_marco(edital, marco_id)])
+            if atual is _NAO_LIDO
+            else atual
         )
         if lido is None:
             return None
@@ -11633,9 +11644,9 @@ def sorteio(request, edital_id, marco_id):
         celulas = jornada_do_sorteio.celulas_da_lista(pontos, recorte["lista_id"])
         recorte["celula_da_relacao"] = celulas.get(andamento.RELACAO)
         recorte["celula_do_sorteio"] = celulas.get(andamento.SORTEIO)
-        # O que o público lê da lista — e é o dado, e não a frase, que decide (FR-4913).
-        resultado_da_lista = celulas.get(andamento.RESULTADO)
-        recorte["divulgado"] = resultado_da_lista.divulgado if resultado_da_lista else ""
+        # O que a tela pode afirmar da divulgação: o dado, e não a frase, decide (FR-4913) — e numa
+        # célula *Obsoleta* ou *Depois* ele é do ato anterior, e a tela diz a razão.
+        recorte["divulgacao"] = jornada_do_sorteio.divulgacao(celulas.get(andamento.RESULTADO))
         # A ordem que o ato gravou, só depois dele (D-006): não é prévia, e sem sorteio é vazia.
         recorte["ordem"] = jornada_do_sorteio.ordem_gravada(recorte["sorteio"])
     passos = jornada_do_sorteio.da_tela(pontos, recortes, conduz=pode_emitir)
@@ -11697,13 +11708,17 @@ def sorteio(request, edital_id, marco_id):
                 # uma visita por lista — e num certame com cotas é justamente onde o esforço se
                 # multiplica.
                 "recortes": recortes,
-                # Os quatro passos (142, FR-4900); `None` sem derivação (FR-4918).
+                # Os quatro passos (142, FR-4900), sempre; sem derivação, sem situação (FR-4918).
                 "passos": passos,
                 # Enquanto há lista a fixar, observar é ação secundária (D-004): a regra e o
                 # formulário são os de antes, e só a ênfase acompanha a tarefa de agora.
                 "fixar_por_fazer": bool(passos and passos[0].a_praticar),
                 # Com uma tarefa de agora, os atos posteriores da tela não a disputam (FR-4910).
-                "ha_tarefa_agora": any(passo.agora for passo in passos or ()),
+                "ha_tarefa_agora": any(passo.agora for passo in passos),
+                # E sortear também: com fixar como a tarefa de agora, o botão de sortear de outra
+                # lista é ação secundária (FR-4910; a revisão do PR #452). O formulário é o de
+                # antes.
+                "fixar_e_a_vez": passos[0].agora,
                 # **O que mudou na `122`**, dito na tela: a Modalidade apontada como a ampla não tem
                 # sorteio (FR-3895), e o que o sorteio fez nela antes fica à parte (FR-3903).
                 "modalidade_apontada": estado["modalidade_apontada"],
@@ -11886,6 +11901,24 @@ def _desfecho_do_sorteio(request, tipo, declarado):
     request.session["resultado_do_sorteio"] = {"tipo": tipo, **(declarado or {})}
 
 
+def _com_a_lista_da_relacao(declarado):
+    """O desfecho do sorteio e da anulação, com a lista da relação que o ato sorteou (142).
+
+    A publicação da relação já trazia `listaId`; o sorteio e a anulação não, e a tela lia o campo
+    ausente como a ampla: depois de sortear uma cota, "Ver a ordem sorteada" levava à ordem da
+    ampla, a ampla abria, e o "Próximo nesta lista" era o da ampla (a revisão do PR #452). A lista
+    vem da relação que o comando gravou, e nunca do formulário.
+    """
+    from processo_seletivo.sorteios.models import RelacaoDeHabilitados
+
+    lista_id = (
+        RelacaoDeHabilitados.objects.filter(pk=(declarado or {}).get("relacao"))
+        .values_list("lista_id", flat=True)
+        .first()
+    )
+    return {**(declarado or {}), "listaId": str(lista_id) if lista_id else ""}
+
+
 def _recusa_do_sorteio(request, tipo, recusa):
     request.session["erro_do_sorteio"] = {"tipo": tipo, "detalhe": recusa.detail}
 
@@ -12001,14 +12034,16 @@ def realizar_sorteio(request, edital_id, marco_id):
         _desfecho_do_sorteio(
             request,
             SORTEIO,
-            constituir_sorteio(
-                actor=ator,
-                processo_id=edital.processo_id,
-                edital_id=edital.id,
-                relacao_id=request.POST.get("relacao_id"),
-                ocorrencia_id=request.POST.get("ocorrencia_id"),
-                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-                correlation_id=getattr(request, "correlation_id", ""),
+            _com_a_lista_da_relacao(
+                constituir_sorteio(
+                    actor=ator,
+                    processo_id=edital.processo_id,
+                    edital_id=edital.id,
+                    relacao_id=request.POST.get("relacao_id"),
+                    ocorrencia_id=request.POST.get("ocorrencia_id"),
+                    idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
             ),
         )
     except DomainError as recusa:
@@ -12031,16 +12066,18 @@ def anular_o_sorteio(request, edital_id, marco_id):
         _desfecho_do_sorteio(
             request,
             ANULACAO,
-            anular_sorteio(
-                actor=ator,
-                processo_id=edital.processo_id,
-                edital_id=edital.id,
-                sorteio_anterior_id=request.POST.get("sorteio_anterior_id"),
-                relacao_id=request.POST.get("relacao_id"),
-                ocorrencia_id=request.POST.get("ocorrencia_id"),
-                motivo=request.POST.get("motivo", ""),
-                idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
-                correlation_id=getattr(request, "correlation_id", ""),
+            _com_a_lista_da_relacao(
+                anular_sorteio(
+                    actor=ator,
+                    processo_id=edital.processo_id,
+                    edital_id=edital.id,
+                    sorteio_anterior_id=request.POST.get("sorteio_anterior_id"),
+                    relacao_id=request.POST.get("relacao_id"),
+                    ocorrencia_id=request.POST.get("ocorrencia_id"),
+                    motivo=request.POST.get("motivo", ""),
+                    idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+                    correlation_id=getattr(request, "correlation_id", ""),
+                )
             ),
         )
     except DomainError as recusa:

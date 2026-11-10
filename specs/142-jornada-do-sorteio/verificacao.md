@@ -111,3 +111,25 @@ que procuravam um rótulo com `not in` trocaram de marca — com o rótulo antig
 `test_sorteio_extracao_inviavel.py`, `test_recortes_alinhados.py` (a seção dos cartões termina na da
 semente) e `test_telas_de_resultado_e_atos.py` (os rótulos e o desenho dos botões da tela, com a
 razão).
+
+## A revisão do PR #452
+
+A revisão encontrou oito achados, corrigidos na branch antes do merge, com teste de regressão para
+os seis primeiros:
+
+| # | Achado | Correção | Regressão |
+|---|---|---|---|
+| 1 | O desfecho do sorteio e da anulação não trazia a lista: depois de sortear uma cota, "Ver a ordem sorteada" e a abertura eram da ampla, e o "Próximo nesta lista" também | `listaId` tirado da relação que o comando gravou (`_com_a_lista_da_relacao`), e o id da ordem por `andamento.ancora_da_ordem` | `ij::test_depois_de_sortear_a_cota_a_mensagem_e_a_abertura_sao_da_cota`, `uj::test_a_ordem_tem_ancora_propria_lida_pela_tela_da_mesma_funcao` |
+| 2 | "Divulgada como…" saía de `divulgado` mesmo com a célula *Obsoleta* ou *Depois*, quando o dado é do ato anterior | `jornada_do_sorteio.divulgacao`: nesses casos, a razão da derivação | `uj::test_a_divulgacao_so_e_afirmada_quando_a_celula_e_do_ato_vigente` |
+| 3 | O passo 4 recalculava a situação da célula do sorteio: *Impedida* com ordem gravada virava "Depois" | o passo 4 decide pelo fato — há ordem gravada ou não | `uj::test_a_ordem_gravada_e_dita_pelo_fato_e_nao_pela_celula_do_sorteio` |
+| 4 | Sortear continuava primário com fixar como a tarefa de agora | `fixar_e_a_vez`, da view; o formulário é o de antes | `ij::test_com_fixar_como_a_vez_sortear_e_secundario_e_o_texto_fala_dos_numeros`, `ij::test_com_tudo_fixado_sortear_volta_a_ser_o_botao_principal` |
+| 5 | Antes do ato, o material bruto era chamado de semente | "a partir dos números observados na fonte" | o mesmo da linha 4 |
+| 6 | A conferência de fixar prometia "obter a semente" com a semente já obtida | o "depois" do passo 1 escolhido pela situação do passo 2 | `uj::test_o_depois_de_fixar_acompanha_a_situacao_da_semente`, e o da linha 4 |
+| 7 | Uma derivação que falhava era refeita pelo "Próximo nesta lista" | sentinela `_NAO_LIDO`, distinto de `None` | — |
+| 8 | Dois comentários falsos na view | corrigidos; `passos or ()` saiu | — |
+
+Os guardiões dos botões (`test_telas_de_resultado_e_atos.py`) registram o desenho novo de sortear.
+Depois das correções: `make lint check` limpo, e os testes da tela, da derivação, do Centro, dos
+cenários de treinamento e os guardiões (citação, README, vocabulário, acessibilidade, estáticos,
+CSP, folhas) — **2125 passando, 11 pulados**. A suíte inteira não rodou de novo: ela roda uma vez
+sobre a integração dos PRs #451, #452 e #453.

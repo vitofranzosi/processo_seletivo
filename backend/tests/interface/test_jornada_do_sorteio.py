@@ -352,3 +352,69 @@ def test_a_tela_diz_o_mesmo_que_o_centro_e_a_providencia_chega_a_execucao(certam
     fixar_ppi = pontos[a.RELACAO].celula(LISTA_PPI)
     assert fixar_ppi.url.endswith(f"#recorte-{LISTA_PPI}"), fixar_ppi.url
     assert f'id="recorte-{LISTA_PPI}"' in corpo
+
+
+# --- regressões da revisão do PR #452 ----------------------------------------------------------
+
+
+def test_depois_de_sortear_a_cota_a_mensagem_e_a_abertura_sao_da_cota(certame, client):
+    """Achado 1: o desfecho do sorteio não trazia a lista, e a tela lia a ampla — "Ver a ordem
+    sorteada" apontava para a ordem da ampla, e era ela que abria."""
+    from processo_seletivo.interface.views import _com_a_lista_da_relacao
+    from processo_seletivo.sorteios.models import RelacaoDeHabilitados
+
+    _fixar(client, certame, "")
+    _fixar(client, certame, LISTA_PPI)
+    _observar(certame)
+    _sortear(client, certame, "")
+
+    retorno = _sortear(client, certame, LISTA_PPI).content.decode()
+    ancora = a.ancora_da_ordem(LISTA_PPI)
+
+    mensagem = retorno.split('<p class="sucesso"', 1)[1].split("</p>", 1)[0]
+    assert f'href="#{ancora}"' in mensagem
+    assert '<details class="ordem-sorteada" open>' in _bloco(retorno, ancora)
+    assert '<details class="ordem-sorteada" open>' not in _bloco(retorno, a.ancora_da_ordem(""))
+    # E o "Próximo nesta lista" é o da cota, que não tem mais nada a sortear: nada diz "realizar
+    # o sorteio" da ampla, que já foi feito.
+    proximo = retorno.split('class="proximo-nesta-lista"', 1)[1].split("</p>", 1)[0]
+    assert "Realizar o sorteio" not in proximo
+
+    # A anulação usa o mesmo caminho: a lista vem da relação que o comando gravou.
+    ppi = RelacaoDeHabilitados.objects.get(lista_id=LISTA_PPI)
+    assert _com_a_lista_da_relacao({"relacao": str(ppi.id)})["listaId"] == LISTA_PPI
+    ampla = RelacaoDeHabilitados.objects.get(lista_id=None)
+    assert _com_a_lista_da_relacao({"relacao": str(ampla.id)})["listaId"] == ""
+
+
+def test_com_fixar_como_a_vez_sortear_e_secundario_e_o_texto_fala_dos_numeros(certame, client):
+    """Achados 4, 5 e 6: a ampla fixada e a semente obtida, a PPI por fixar. Fixar é a tarefa de
+    agora; o botão de sortear a ampla existe, como antes, e é ação secundária; antes do ato a tela
+    fala dos números observados, e não da semente; e o passo seguinte a fixar a PPI é sortear."""
+    _fixar(client, certame, "")
+    _observar(certame)
+
+    corpo = _abrir(client, certame)
+    cartoes = _cartoes(corpo)
+    assert "passo-agora" in cartoes[0][0], "a PPI por fixar"
+
+    execucao = _bloco(corpo, "sorteio-ampla")
+    assert 'class="botao secundario">Realizar o sorteio desta lista' in execucao
+    texto = " ".join(execucao.split())
+    assert "a partir dos números observados na fonte" in texto
+    assert "com a semente" not in texto
+
+    ppi = " ".join(_bloco(corpo, f"recorte-{LISTA_PPI}").split())
+    assert "Depois de fixar: realizar o sorteio desta lista" in ppi
+    assert "obter a semente pública" not in ppi
+
+
+def test_com_tudo_fixado_sortear_volta_a_ser_o_botao_principal(certame, client):
+    """Achado 4, a contraprova: sem lista a fixar, o botão de sortear é o da tarefa de agora."""
+    _fixar(client, certame, "")
+    _fixar(client, certame, LISTA_PPI)
+    _observar(certame)
+
+    corpo = _abrir(client, certame)
+    assert corpo.count('class="botao">Realizar o sorteio desta lista') == 2
+    assert 'class="botao secundario">Realizar o sorteio' not in corpo

@@ -53,6 +53,12 @@ def ancora_do_sorteio(lista_id):
 
 
 @register.filter
+def ancora_da_ordem(lista_id):
+    """O id da ordem gravada da lista no passo 4 da tela do sorteio (142)."""
+    return andamento.ancora_da_ordem(lista_id)
+
+
+@register.filter
 def situacao(valor):
     return SITUACOES.get(valor, valor)
 
