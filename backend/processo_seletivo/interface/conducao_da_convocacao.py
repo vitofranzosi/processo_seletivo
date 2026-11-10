@@ -1,0 +1,621 @@
+"""A convocação de um recorte, lida pelas perguntas de quem conduz (143).
+
+**Nada aqui decide; tudo aqui lê.** O estado do prazo é o da `019` (`selectors.estado_de`), o
+estado documental é o da `115` (`documentos.leituras_por_chamada`), a ocupação é a da `016`, o aviso
+de pendência e as tentativas de envio são da `066` e da `134`. Este módulo junta essas leituras na
+forma das perguntas que a tela responde — quem convocar, quem foi, quem responde, quem tem documento
+a conferir ou pendente, quem está pronto para o desfecho — e no passo de cada chamada.
+
+**Ele não prioriza** (D-002 da `143`): a ordem do índice é fixa, e a prioridade continua sendo a do
+andamento (`interface/andamento.py`), que aparece depois de um ato no bloco do próximo passo.
+
+**O passo orienta, e não autoriza** (D-007): quem decide se o ato pode ser praticado é o comando.
+O passo só escolhe qual ação rotineira aparece primeiro no cartão.
+
+**"Pendência registrada" nunca é "candidato comunicado"** (FR-5018). A conferência pendente não
+gera aviso — a `134` é por gesto, e nunca por evento —; o que o cartão diz do aviso vem do registro
+do aviso e das tentativas de envio dele, e só disso.
+"""
+
+from dataclasses import dataclass
+
+from django.utils import timezone
+
+from processo_seletivo.convocacao.domain import nomes
+
+# --- O passo da chamada (data-model, FR-5011) ---------------------------------------------------
+
+DESFECHADA = "DESFECHADA"
+SEM_COMUNICACAO = "SEM_COMUNICACAO"
+VENCIDA = "VENCIDA"
+REENVIADO = "REENVIADO"
+A_CONFERIR = "A_CONFERIR"
+REFAZER_CONFERENCIA = "REFAZER_CONFERENCIA"
+PENDENCIA = "PENDENCIA"
+AGUARDANDO_DOCUMENTOS = "AGUARDANDO_DOCUMENTOS"
+PRONTA = "PRONTA"
+AGUARDANDO_RESPOSTA = "AGUARDANDO_RESPOSTA"
+
+#: As ações rotineiras que um passo pode oferecer, e de quem cada uma é.
+CONFERIR = "conferir"
+DESFECHO = "desfecho"
+EMITIR = "emitir"
+
+
+@dataclass(frozen=True)
+class Passo:
+    codigo: str
+    frase: str
+    #: `acao` (há o que fazer), `espera` (é o candidato quem age), `alerta` (o prazo passou),
+    #: `feito` (desfecho registrado). Vira classe na folha; a palavra da frase diz o mesmo, porque a
+    #: cor sozinha não é informação (UX-371).
+    tom: str
+    acao: str = ""
+
+
+def _n(quantos, singular, plural):
+    return f"{quantos} {singular if quantos == 1 else plural}"
+
+
+def _quando(instante):
+    return timezone.localtime(instante).strftime("%d/%m/%Y %H:%M") if instante else ""
+
+
+def passo_da_chamada(*, estado, desfecho, documentos, vencimento=None, canal=None):
+    """O passo de uma convocação vigente, pela precedência do data-model (D-007).
+
+    `documentos` é a `LeituraDocumental` da chamada, ou `None` quando ela não pede documento.
+    **O vencimento vem antes dos documentos**: decorrido, nenhum desfecho nasce dele, e é o desfecho
+    que a Administração deve registrar — a linha dos documentos continua dizendo o que há a
+    conferir.
+    """
+    if desfecho is not None:
+        return Passo(DESFECHADA, f"Desfecho registrado: {desfecho.get_especie_display()}.", "feito")
+    if estado == nomes.CONVOCADO_PRAZO_NAO_INICIADO:
+        # A palavra do canal (125, FR-4000): por publicação, quem age registra a publicação.
+        emitir = canal.emitir if canal is not None else "Emitir a comunicação"
+        return Passo(
+            SEM_COMUNICACAO,
+            f"{emitir}: o prazo desta convocação ainda não começou a correr.",
+            "acao",
+            EMITIR,
+        )
+    if estado == nomes.CONVOCADO_VENCIMENTO_DECORRIDO:
+        return Passo(
+            VENCIDA,
+            "Registrar o desfecho: o vencimento decorreu, e nenhum desfecho nasce dele.",
+            "alerta",
+            DESFECHO,
+        )
+    if documentos is not None:
+        contagens = documentos.contagens
+        if documentos.estado == nomes.DOCUMENTOS_PARA_CONFERIR:
+            if contagens["complementados"]:
+                return Passo(
+                    REENVIADO,
+                    "Conferir de novo: o candidato reenviou "
+                    + _n(
+                        contagens["complementados"],
+                        "documento que estava pendente",
+                        "documentos que estavam pendentes",
+                    )
+                    + ".",
+                    "acao",
+                    CONFERIR,
+                )
+            return Passo(
+                A_CONFERIR,
+                "Conferir "
+                + _n(contagens["recebidos"], "documento recebido", "documentos recebidos")
+                + ".",
+                "acao",
+                CONFERIR,
+            )
+        if documentos.estado == nomes.DOCUMENTOS_COM_PENDENCIA:
+            if not contagens["pendentes"]:
+                # O "não se aplica" registrado sem condição publicada conta como pendência (131,
+                # FR-4470), mas quem age é a conferência, e não o candidato.
+                return Passo(
+                    REFAZER_CONFERENCIA,
+                    "Registrar outra conferência: um “não se aplica” foi registrado num "
+                    "documento que o Edital exige de todos.",
+                    "acao",
+                    CONFERIR,
+                )
+            return Passo(
+                PENDENCIA,
+                "Aguardando o candidato corrigir "
+                + _n(contagens["pendentes"], "documento pendente", "documentos pendentes")
+                + ".",
+                "espera",
+            )
+        if documentos.estado == nomes.DOCUMENTOS_AGUARDANDO:
+            return Passo(
+                AGUARDANDO_DOCUMENTOS,
+                "Aguardando o candidato enviar "
+                + _n(contagens["a_apresentar"], "documento", "documentos")
+                + ".",
+                "espera",
+            )
+        if documentos.estado == nomes.DOCUMENTOS_PRONTA:
+            return Passo(
+                PRONTA,
+                "Pronta para o desfecho: os documentos obrigatórios estão conferidos.",
+                "acao",
+                DESFECHO,
+            )
+    if vencimento:
+        frase = f"Aguardando a resposta do candidato, até {_quando(vencimento)}."
+    else:
+        frase = "Aguardando a resposta do candidato; o Edital não publica prazo."
+    return Passo(AGUARDANDO_RESPOSTA, frase, "espera")
+
+
+# --- O aviso da pendência (FR-5015 a FR-5018) ---------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SituacaoDoAviso:
+    """O que se sabe do aviso de pendência de uma chamada, lido dos registros.
+
+    `alcancavel` é `None` quando a tela não sabe — quem não pode conferir não recebe a prévia do
+    gesto, e a frase sobre o gesto não aparece para essa pessoa.
+    """
+
+    pendencia_em: object = None
+    reenviado_em: object = None
+    aviso_em: object = None
+    estado: str = ""
+    aceito_em: object = None
+    alcancavel: bool | None = None
+    motivo: str = ""
+    habilitado: bool = True
+
+    @property
+    def frase_da_pendencia(self):
+        if self.pendencia_em is not None:
+            return f"Pendência registrada em {_quando(self.pendencia_em)}."
+        if self.reenviado_em is not None:
+            return (
+                f"O candidato reenviou o documento pendente em {_quando(self.reenviado_em)}; "
+                "a nova conferência está por fazer."
+            )
+        return ""
+
+    @property
+    def frase_do_aviso(self):
+        """A situação do aviso desde a pendência — com as palavras da `066` (UX-172 dela)."""
+        from processo_seletivo.avisos.domain import nomes as avisos
+
+        if self.pendencia_em is None:
+            return ""
+        if self.aviso_em is not None:
+            registrado = f"Aviso de pendência registrado em {_quando(self.aviso_em)}"
+            if self.estado == avisos.PENDENTE:
+                return f"{registrado}; ele sai pelo despacho dos avisos e ainda não foi enviado."
+            if self.estado == avisos.EM_ENVIO:
+                return f"{registrado}; o envio está em curso."
+            if self.estado == avisos.ESTADO_ACEITA:
+                return (
+                    f"{registrado} e aceito pelo servidor de correio em {_quando(self.aceito_em)}."
+                )
+            return f"{registrado}: {avisos.ROTULO_DO_ESTADO.get(self.estado, self.estado)}."
+        frase = (
+            "Nenhum aviso desde esta pendência: o candidato a vê no portal, e nenhum e-mail "
+            "sobre ela foi pedido."
+        )
+        if not self.habilitado:
+            return f"{frase} O envio de avisos está desabilitado nesta instalação."
+        if self.alcancavel:
+            return f"{frase} O aviso pode ser pedido agora."
+        if self.motivo:
+            return f"{frase} O aviso não a alcança agora: {self.motivo}."
+        return frase
+
+    @property
+    def oferece_o_aviso(self):
+        return bool(self.pendencia_em and self.aviso_em is None and self.alcancavel)
+
+
+def _pendencia_e_reenvio(documentos):
+    """O instante da pendência mais recente e o do reenvio mais recente, dos itens que os têm."""
+    pendencia = reenvio = None
+    for lido in documentos.pedidos:
+        if lido.estado == nomes.ITEM_PENDENTE and lido.conferencia is not None:
+            instante = lido.conferencia.conferido_em
+            pendencia = instante if pendencia is None else max(pendencia, instante)
+        elif lido.estado == nomes.ITEM_COMPLEMENTADO and lido.vigente is not None:
+            instante = lido.vigente.apresentado_em
+            reenvio = instante if reenvio is None else max(reenvio, instante)
+    return pendencia, reenvio
+
+
+def _raiz_no_recorte(convocacao, por_id):
+    atual = convocacao
+    while atual.convocacao_anterior_id in por_id:
+        atual = por_id[atual.convocacao_anterior_id]
+    return atual.id
+
+
+def avisos_por_raiz(convocacoes, *, agora):
+    """`{id da raiz: (destinatário mais recente, estado, aceito_em)}` dos avisos de pendência.
+
+    **Uma consulta, com as tentativas em `prefetch`** (FR-5027): a tela não paga uma por linha. O
+    destinatário pode ser de uma convocação que outra corrigiu depois: a raiz é subida dentro das
+    convocações do recorte, que a tela já leu, e cai na mesma chamada que o cartão mostra.
+    """
+    from django.conf import settings
+
+    from processo_seletivo.avisos.application.selectors import tentativas_de
+    from processo_seletivo.avisos.domain import estado as estado_do_aviso
+    from processo_seletivo.avisos.domain import nomes as avisos
+    from processo_seletivo.avisos.models import DestinatarioDoAviso, InterrupcaoDoAviso
+
+    por_id = {c.id: c for c in convocacoes}
+    if not por_id:
+        return {}
+    destinatarios = (
+        DestinatarioDoAviso.objects.filter(
+            aviso__origem=avisos.PENDENCIA, convocacao_id__in=list(por_id)
+        )
+        .select_related("aviso", "aviso__interrupcao")
+        .prefetch_related("tentativas__resultado")
+        .order_by("aviso__solicitado_em", "id")
+    )
+    ultimos = {}
+    for destinatario in destinatarios:
+        raiz = _raiz_no_recorte(por_id[destinatario.convocacao_id], por_id)
+        ultimos[raiz] = destinatario
+    resultado = {}
+    for raiz, destinatario in ultimos.items():
+        tentativas = tentativas_de(destinatario)
+        try:
+            interrompido = destinatario.aviso.interrupcao is not None
+        except InterrupcaoDoAviso.DoesNotExist:
+            interrompido = False
+        estado = estado_do_aviso.estado_do_destinatario(
+            elegibilidade=destinatario.elegibilidade,
+            endereco=destinatario.endereco,
+            tentativas=tentativas,
+            interrompido=interrompido,
+            solicitado_em=destinatario.aviso.solicitado_em,
+            agora=agora,
+            max_tentativas=settings.AVISOS_MAX_TENTATIVAS,
+            janela_horas=settings.AVISOS_JANELA_DE_DESPACHO_HORAS,
+        )
+        aceito_em = tentativas[-1].registrado_em if estado == avisos.ESTADO_ACEITA else None
+        resultado[raiz] = (destinatario, estado, aceito_em)
+    return resultado
+
+
+def situacao_do_aviso(documentos, *, aviso=None, motivo=None, habilitado=True):
+    """A situação de uma chamada, ou `None` quando ela não tem pendência nem reenvio.
+
+    `aviso` é o item de `avisos_por_raiz` desta chamada; `motivo` é o da prévia do gesto (`""`,
+    alcançada; `None`, a tela não sabe). Aviso anterior à pendência mais recente não a cobre.
+    """
+    if documentos is None:
+        return None
+    pendencia, reenvio = _pendencia_e_reenvio(documentos)
+    if pendencia is None and reenvio is None:
+        return None
+    aviso_em = estado = ""
+    aceito_em = None
+    if aviso is not None and pendencia is not None:
+        destinatario, estado_lido, aceito = aviso
+        if destinatario.aviso.solicitado_em >= pendencia:
+            aviso_em, estado, aceito_em = destinatario.aviso.solicitado_em, estado_lido, aceito
+    return SituacaoDoAviso(
+        pendencia_em=pendencia,
+        reenviado_em=reenvio,
+        aviso_em=aviso_em or None,
+        estado=estado,
+        aceito_em=aceito_em,
+        alcancavel=None if motivo is None else motivo == "",
+        motivo=motivo or "",
+        habilitado=habilitado,
+    )
+
+
+def anotar(linhas, *, convocacoes, raizes, previa_do_aviso, agora):
+    """Acrescenta `passo` e `aviso` a cada linha que a view já montou (com `documentos`).
+
+    `convocacoes` são todas as do recorte, sucedidas inclusive — as que a leitura do recorte já
+    trouxe —: o aviso pedido para a convocação que outra corrigiu é da mesma chamada.
+    `previa_do_aviso` é o que a prévia do gesto da `134` devolveu, ou `None` para quem não confere
+    ou quando ninguém tem pendência.
+    """
+    from processo_seletivo.avisos.application.comando import envio_habilitado
+
+    avisos = avisos_por_raiz(convocacoes, agora=agora)
+    por_chamada = (previa_do_aviso or {}).get("por_chamada")
+    habilitado = (
+        previa_do_aviso.get("habilitado", True)
+        if previa_do_aviso is not None
+        else envio_habilitado()
+    )
+    for linha in linhas:
+        raiz = raizes[linha["convocacao"].id]
+        linha["passo"] = passo_da_chamada(
+            estado=linha["estado"],
+            desfecho=linha["desfecho"],
+            documentos=linha.get("documentos"),
+            vencimento=linha["convocacao"].vencimento,
+            canal=linha.get("canal"),
+        )
+        linha["aviso"] = (
+            situacao_do_aviso(
+                linha.get("documentos"),
+                aviso=avisos.get(raiz.id),
+                motivo=None if por_chamada is None else por_chamada.get(str(raiz.id)),
+                habilitado=habilitado,
+            )
+            if linha["desfecho"] is None
+            else None
+        )
+    return linhas
+
+
+# --- O índice "Neste recorte, agora" (FR-5001 a FR-5004) ----------------------------------------
+
+
+@dataclass(frozen=True)
+class Pergunta:
+    chave: str
+    quantas: object
+    texto: str
+    ancora: str = ""
+    #: Se há o que fazer — e se é de quem está vendo, só para o estilo (D-002).
+    trabalho: bool = False
+    detalhe: str = ""
+    detalhe_ancora: str = ""
+
+
+def _primeira(linhas, condicao):
+    for linha in linhas:
+        if condicao(linha):
+            return f"convocacao-{linha['convocacao'].id}"
+    return "chamadas"
+
+
+def _estado_documental(linha):
+    if linha["desfecho"] is not None or not linha.get("documentos"):
+        return ""
+    return linha["documentos"].estado
+
+
+def indice(
+    *,
+    leitura,
+    titulares,
+    pode_convocar,
+    pode_emitir,
+    confere,
+    pendencias_a_avisar,
+    sem_inscrito,
+    marco_intermediario,
+    secao_dos_pendentes,
+    secao_dos_vencidos,
+):
+    """As perguntas do índice, na ordem fixa da FR-5001, com o número e o lugar do ato.
+
+    `secao_dos_*` diz se a tela desenhou a seção — o link só vai para onde há o que ver.
+    """
+    linhas = leitura["linhas"]
+    por_estado = leitura["porEstado"]
+    perguntas = []
+    if sem_inscrito:
+        return perguntas
+    if pode_convocar and not marco_intermediario:
+        quantas = len((titulares or {}).get("pessoas") or [])
+        perguntas.append(
+            Pergunta(
+                "a_convocar",
+                quantas,
+                "titular a convocar" if quantas == 1 else "titulares a convocar",
+                "titulares" if quantas else "",
+                trabalho=bool(quantas),
+            )
+        )
+    sem_comunicacao = por_estado.get(nomes.CONVOCADO_PRAZO_NAO_INICIADO, 0)
+    if sem_comunicacao:
+        perguntas.append(
+            Pergunta(
+                "sem_comunicacao",
+                sem_comunicacao,
+                leitura["canal"].pastilha_sem_comunicacao.lower() + " — o prazo não corre",
+                "pendentes"
+                if secao_dos_pendentes
+                else _primeira(linhas, lambda x: x["estado"] == nomes.CONVOCADO_PRAZO_NAO_INICIADO),
+                trabalho=pode_emitir,
+            )
+        )
+    perguntas.append(
+        Pergunta(
+            "convocadas",
+            leitura["convocadas"],
+            "pessoa convocada neste recorte"
+            if leitura["convocadas"] == 1
+            else "pessoas convocadas neste recorte",
+            "chamadas" if leitura["convocadas"] else "",
+        )
+    )
+    em_curso = [x for x in linhas if x["estado"] == nomes.CONVOCADO_PRAZO_EM_CURSO]
+    vencimentos = [x["convocacao"].vencimento for x in em_curso if x["convocacao"].vencimento]
+    perguntas.append(
+        Pergunta(
+            "aguardando",
+            len(em_curso),
+            "aguardando resposta, com o prazo em curso",
+            "chamadas" if em_curso else "",
+            detalhe=f"o primeiro vence em {_quando(min(vencimentos))}" if vencimentos else "",
+        )
+    )
+    vencidas = por_estado.get(nomes.CONVOCADO_VENCIMENTO_DECORRIDO, 0)
+    if vencidas:
+        perguntas.append(
+            Pergunta(
+                "vencidas",
+                vencidas,
+                "com o vencimento decorrido e sem desfecho",
+                "vencidos"
+                if secao_dos_vencidos
+                else _primeira(
+                    linhas, lambda x: x["estado"] == nomes.CONVOCADO_VENCIMENTO_DECORRIDO
+                ),
+                trabalho=pode_emitir,
+            )
+        )
+    for chave, estado, texto, de_quem in (
+        ("a_conferir", nomes.DOCUMENTOS_PARA_CONFERIR, "com documento a conferir", confere),
+        (
+            "pendencia",
+            nomes.DOCUMENTOS_COM_PENDENCIA,
+            "com pendência, aguardando o candidato",
+            False,
+        ),
+        (
+            "aguardando_documentos",
+            nomes.DOCUMENTOS_AGUARDANDO,
+            "aguardando o envio dos documentos",
+            False,
+        ),
+        ("prontas", nomes.DOCUMENTOS_PRONTA, "prontas para o desfecho", pode_emitir),
+    ):
+        quantas = sum(1 for x in linhas if _estado_documental(x) == estado)
+        if chave in ("a_conferir", "pendencia", "prontas") or quantas:
+            detalhe = detalhe_ancora = ""
+            if chave == "pendencia" and pendencias_a_avisar and pendencias_a_avisar["alcancadas"]:
+                alcancadas = pendencias_a_avisar["alcancadas"]
+                detalhe = _n(alcancadas, "pode ser avisada agora", "podem ser avisadas agora")
+                detalhe_ancora = "avisar-pendencias"
+            perguntas.append(
+                Pergunta(
+                    chave,
+                    quantas,
+                    texto,
+                    _primeira(linhas, lambda x, e=estado: _estado_documental(x) == e)
+                    if quantas
+                    else "",
+                    trabalho=bool(quantas and de_quem),
+                    detalhe=detalhe,
+                    detalhe_ancora=detalhe_ancora,
+                )
+            )
+    desfechadas = por_estado.get(nomes.DESFECHADO, 0)
+    aptas = sum(1 for x in linhas if x.get("apto"))
+    perguntas.append(
+        Pergunta(
+            "com_desfecho",
+            desfechadas,
+            "com desfecho registrado",
+            "chamadas" if desfechadas else "",
+            detalhe=_n(aptas, "apta para formalização", "aptas para formalização") if aptas else "",
+        )
+    )
+    return perguntas
+
+
+def sem_providencia(perguntas):
+    """Se nenhuma pergunta tem ato a praticar por alguém (FR-5004): a resposta é dita, sem link."""
+    praticaveis = {"a_convocar", "sem_comunicacao", "vencidas", "a_conferir", "prontas"}
+    return not any(p.quantas for p in perguntas if p.chave in praticaveis)
+
+
+# --- O contexto do recorte (FR-5000, FR-5019) ---------------------------------------------------
+
+
+def contexto_do_recorte(edital, marco_id, lista_id):
+    """`{edital, perfil, marco, lista}` pela versão vigente — uma leitura dela."""
+    from processo_seletivo.interface import conducao_do_marco
+
+    conteudo, perfil, marco = conducao_do_marco.marco_publicado(edital, marco_id)
+    lista = ""
+    if perfil is not None:
+        alvo = str(lista_id) if lista_id else None
+        lista = next(
+            (
+                rotulo
+                for identificador, rotulo in conducao_do_marco.recortes_do_marco(conteudo, perfil)
+                if (str(identificador) if identificador else None) == alvo
+            ),
+            "",
+        )
+    return {
+        "edital": f"Edital {edital.number}/{edital.year}",
+        "perfil": (perfil or {}).get("name") or "",
+        "marco": (marco or {}).get("name") or "",
+        "lista": lista,
+    }
+
+
+# --- As pessoas do recorte, na página dos documentos (FR-5024) ------------------------------------
+
+
+def pessoas_do_recorte(*, edital, vigente):
+    """A chamada entre as outras do recorte: a anterior, a seguinte e a próxima com documento a
+    conferir, na ordem da tela da convocação (`leitura_do_recorte`: chamada, e o protocolo
+    desempata).
+
+    **Em consultas de número fixo**, para o recorte inteiro: as convocações com desfechos e
+    sucessoras em `prefetch`, as identidades, e a leitura documental de todas as chamadas. Devolve
+    também o que a prévia do aviso e a situação dele precisam, para não lerem o recorte de novo.
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+    from processo_seletivo.convocacao.application.selectors import (
+        convocacoes_do_recorte,
+        desfecho_de,
+        identidades_de,
+        vigentes,
+    )
+
+    todas = convocacoes_do_recorte(
+        edital=edital,
+        perfil_id=vigente.perfil_id,
+        marco_id=vigente.marco_id,
+        lista_id=vigente.lista_id,
+    )
+    em_vigor = vigentes(todas)
+    identidades = identidades_de({c.inscricao_id for c in em_vigor})
+    em_vigor.sort(key=lambda c: (c.criado_em, identidades[c.inscricao_id]["protocolo"]))
+    raizes = documentos_app.raizes_das(em_vigor)
+    decididas = {raizes[c.id].id for c in em_vigor if desfecho_de(c) is not None}
+    leituras = documentos_app.leituras_por_chamada(set(raizes.values()), decididas=decididas)
+    posicao = next((i for i, c in enumerate(em_vigor) if c.id == vigente.id), None)
+
+    def pessoa(convocacao):
+        if convocacao is None:
+            return None
+        return {"convocacao": convocacao, **identidades[convocacao.inscricao_id]}
+
+    anterior = seguinte = proxima = None
+    if posicao is not None:
+        anterior = em_vigor[posicao - 1] if posicao > 0 else None
+        seguinte = em_vigor[posicao + 1] if posicao + 1 < len(em_vigor) else None
+        # A próxima a conferir **depois** desta, e depois as de antes: quem confere segue adiante.
+        for convocacao in em_vigor[posicao + 1 :] + em_vigor[:posicao]:
+            leitura = leituras.get(raizes[convocacao.id].id)
+            if (
+                leitura is not None
+                and leitura.pedidos
+                and leitura.estado == nomes.DOCUMENTOS_PARA_CONFERIR
+            ):
+                proxima = convocacao
+                break
+    from processo_seletivo.convocacao.application.selectors import (
+        _forma_do_recorte,
+        comunicacao_da_linha,
+    )
+
+    return {
+        # As frases do canal desta chamada, como no cartão dela (125, FR-4000).
+        "comunicacao": comunicacao_da_linha(vigente, _forma_do_recorte(em_vigor)),
+        "anterior": pessoa(anterior),
+        "seguinte": pessoa(seguinte),
+        "proxima_a_conferir": pessoa(proxima),
+        "posicao": None if posicao is None else posicao + 1,
+        "total": len(em_vigor),
+        "convocacoes": todas,
+        "raizes": raizes,
+        "leituras": leituras,
+    }
