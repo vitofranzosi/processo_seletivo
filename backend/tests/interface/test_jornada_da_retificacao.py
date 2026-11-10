@@ -531,7 +531,9 @@ def test_h_cada_papel_alcanca_a_retificacao_pela_barra(edital, vigente, situacao
 
 
 def test_h_sem_retificacao_o_edital_publicado_diz_que_nao_ha(edital, vigente):
-    corpo = sessao(*BRUNO).get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    corpo = (
+        sessao(*BRUNO).get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
+    )
 
     assert "Retificações em curso" in corpo
     assert "Nenhuma Retificação em curso." in corpo

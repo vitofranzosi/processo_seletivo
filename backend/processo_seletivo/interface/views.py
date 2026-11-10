@@ -11,6 +11,7 @@ import logging
 import re
 import secrets
 from collections import Counter
+from dataclasses import dataclass
 from datetime import timedelta
 from uuid import UUID, uuid4
 
@@ -163,6 +164,7 @@ from processo_seletivo.interface import (
     atos,
     atos_processo,
     atos_retificacao,
+    centro_do_edital,
     conducao_do_marco,
     conferencia_da_ordem,
     conferencia_do_texto,
@@ -3906,16 +3908,34 @@ def _documentos_publicados(edital):
     return documentos
 
 
-@require_http_methods(["GET"])
-def detalhe(request, edital_id):
-    """Situação do Edital, quem já atuou e o que se pode fazer agora (US3 da 002)."""
-    ator = identidade.ator_da_sessao(request)
-    if ator is None:
-        return identidade.pedir_identificacao(request)
-    edital = obter_edital(actor=ator, edital_id=edital_id)
-    if edital is None:
-        raise Http404
+@dataclass
+class LeituraDoEdital:
+    """O que a página do Edital lê do Edital para a pessoa, uma vez só (138, FR-4861, R-001).
 
+    **Uma leitura, duas composições.** O Centro de Controle (136) e o detalhe liam as mesmas
+    funções, na mesma ordem (FR-4705), cada um na sua view; com o Centro na rota do Edital, a rota
+    precisa do andamento para escolher qual desenhar, e lê-lo de novo para desenhar divergiria na
+    próxima mudança — a lição da `103` e da `104`. A porta fica fora daqui, em cada view, para que o
+    inventário da `033` continue lendo o 404 na função que o responde.
+    """
+
+    ator: object
+    edital: object
+    participantes: dict
+    pendencias: list
+    segregacao: bool
+    conjunto: list
+    em_curso: list
+    andamento: object
+    marcos: list
+    documentos: list
+    pode_ver_avisos: bool
+    pode_conversar_com_o_assistente: bool
+    conducao_do_imutavel: str
+    conferencia_do_ato: list
+
+
+def _leitura_do_edital(request, ator, edital):
     participantes = participantes_do_edital(edital)
     pendencias = _pendencias(edital)
     segregacao = impede_por_segregacao(participantes, ator)
@@ -3927,7 +3947,6 @@ def detalhe(request, edital_id):
     # **O andamento da seleção, depois da publicação** (127, FR-4050, FR-4080). `None` antes dela:
     # o cartão continua o de hoje, com a trilha e o bastão, que orientam bem até ali.
     andamento_do_edital = andamento.do_edital(edital, ator, em_curso=em_curso)
-    nivel_1 = andamento_do_edital.nivel_1 if andamento_do_edital is not None else None
     marcos_classificatorios = _marcos_publicados(edital, ator)
     if andamento_do_edital is not None:
         # **O nível 2 leva os destinos do cartão que substitui** (127, FR-4108): os mesmos que
@@ -3938,11 +3957,95 @@ def detalhe(request, edital_id):
                 for item in marcos_classificatorios
                 if str(item["perfil"].get("id")) == str(perfil.perfil.get("id"))
             ]
+    return LeituraDoEdital(
+        ator=ator,
+        edital=edital,
+        participantes=participantes,
+        pendencias=pendencias,
+        segregacao=segregacao,
+        conjunto=conjunto,
+        em_curso=em_curso,
+        andamento=andamento_do_edital,
+        marcos=marcos_classificatorios,
+        documentos=_documentos_publicados(edital),
+        # O caminho para os avisos aos candidatos (066), condicionado a quem os lê: oferecer um
+        # destino que a autorização recusa é o `N-03` da 038.
+        pode_ver_avisos=_pode_ver_avisos(ator, edital),
+        # O piloto do assistente (071), só para quem participa dele, e só com o piloto ligado:
+        # a mesma regra que a tela aplica, para que a entrada não leve a uma recusa.
+        pode_conversar_com_o_assistente=settings.ASSISTENTE_PILOTO
+        and ator.can(PERMISSAO_DO_PILOTO),
+        # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
+        # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar
+        # da tela. A pergunta é a **mesma** que decidiu se `Retificar` entrou em `conjunto`, e
+        # é derivada uma vez (`FR-541a`) — duas respostas divergiriam na primeira mudança.
+        #
+        # A decisão fica aqui, e não no template, pela razão de sempre: deixá-la lá obrigaria
+        # a tela a conhecer metade da derivação. E é **prosa no aviso**, nunca uma ação
+        # desabilitada com motivo (`FR-541c`) — a lista não oferece destino que o ator não
+        # abre, e desfazer isso desfaria a regra da `007` e da `033`.
+        conducao_do_imutavel=(
+            "" if acoes.pode_retificar(edital, ator) else CONDUCAO_DA_RETIFICACAO
+        ),
+        # O retorno do ato que acabou de acontecer (116, FR-3646), nas duas composições: o ato
+        # que chega a um Edital publicado chega ao Centro (138, FR-4865).
+        conferencia_do_ato=_conferencia_do_ato(
+            edital, OPERACAO_DO_ATO_COM_CONFERENCIA.get(request.GET.get("ato", ""))
+        ),
+    )
+
+
+@require_http_methods(["GET"])
+def detalhe(request, edital_id):
+    """A página do Edital: o Centro de Controle, quando há andamento; o detalhe, quando não (138).
+
+    **A rota escolhe a composição, e não redireciona** (FR-4860, D-002). Antes da publicação, no
+    cancelado, ou com a derivação indisponível, o detalhe desenha bem o Edital, com a trilha e o
+    bastão — a mesma regra pela qual o Centro mandava ao detalhe (a segunda decisão da `136`).
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    leitura = _leitura_do_edital(request, ator, edital)
+    if leitura.andamento is not None:
+        return centro_do_edital.desenhar(request, leitura)
+    return _desenhar_o_detalhe(request, leitura)
+
+
+@require_http_methods(["GET"])
+def pagina_anterior(request, edital_id):
+    """O detalhe de antes, por um ciclo (138, FR-4873, D-004). A mesma porta da página do Edital.
+
+    Alcançada por um link só, no bloco "Administração e histórico" do Centro (FR-4874). Sai quando
+    a spec que a retirar disser — o ciclo é decisão do usuário.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    return _desenhar_o_detalhe(
+        request, _leitura_do_edital(request, ator, edital), pagina_anterior=True
+    )
+
+
+def _desenhar_o_detalhe(request, leitura, *, pagina_anterior=False):
+    """Situação do Edital, quem já atuou e o que se pode fazer agora (US3 da 002)."""
+    edital, ator = leitura.edital, leitura.ator
+    andamento_do_edital = leitura.andamento
+    nivel_1 = andamento_do_edital.nivel_1 if andamento_do_edital is not None else None
+    conjunto, em_curso = leitura.conjunto, leitura.em_curso
     return render(
         request,
         "interface/detalhe.html",
         {
             "edital": edital,
+            # O caminho de navegação da página anterior leva de volta ao Centro (138, FR-4875).
+            "pagina_anterior": pagina_anterior,
             # **A trilha sai depois da publicação** (127, D-002, FR-4089): o selo ao lado do título
             # diz a situação, e a trilha sugeria que faltava pouco quando a seleção nem começara.
             "trilha": _trilha(edital) if andamento_do_edital is None else [],
@@ -3962,52 +4065,34 @@ def detalhe(request, edital_id):
                 if andamento_do_edital is not None and not nivel_1
                 else ""
             ),
-            "participantes": participantes,
-            "documentos": _documentos_publicados(edital),
+            "participantes": leitura.participantes,
+            "documentos": leitura.documentos,
             # As Retificações ainda não publicadas (103, FR-2701). As publicadas estão em
             # `documentos`, e não se repetem aqui (FR-2703): a seção é do trabalho em curso.
             "retificacoes_em_curso": em_curso,
             # Se alguma delas espera esta pessoa (104, FR-2819): o cartão "O que fazer agora" a
             # nomeia, e deixa de afirmar que não há ato.
             "retificacao_aguarda_voce": any(item["meu_ato"] for item in em_curso),
-            "pendencias": pendencias,
+            "pendencias": leitura.pendencias,
             "acoes": conjunto,
             # O mesmo conjunto, repartido pelo peso de cada ação (057, D-002). É de `grupo` que
             # a tela desenha a lista **e** a mensagem de ausência — uma variável só, que é o que a
             # FR-023 guarda; `acoes` fica para quem lê o conjunto inteiro, na ordem de origem.
             "grupo": acoes.hierarquia(conjunto),
-            "impedido_por_segregacao": segregacao,
-            # O caminho para os avisos aos candidatos (066), condicionado a quem os lê: oferecer um
-            # destino que a autorização recusa é o `N-03` da 038.
-            "pode_ver_avisos": _pode_ver_avisos(ator, edital),
-            # O piloto do assistente (071), só para quem participa dele, e só com o piloto ligado:
-            # a mesma regra que a tela aplica, para que a entrada não leve a uma recusa.
-            "pode_conversar_com_o_assistente": settings.ASSISTENTE_PILOTO
-            and ator.can(PERMISSAO_DO_PILOTO),
-            # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
-            # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar
-            # da tela. A pergunta é a **mesma** que decidiu se `Retificar` entrou em `conjunto`, e
-            # é derivada uma vez (`FR-541a`) — duas respostas divergiriam na primeira mudança.
-            #
-            # A decisão fica aqui, e não no template, pela razão de sempre: deixá-la lá obrigaria
-            # a tela a conhecer metade da derivação. E é **prosa no aviso**, nunca uma ação
-            # desabilitada com motivo (`FR-541c`) — a lista não oferece destino que o ator não
-            # abre, e desfazer isso desfaria a regra da `007` e da `033`.
-            "conducao_do_imutavel": (
-                "" if acoes.pode_retificar(edital, ator) else CONDUCAO_DA_RETIFICACAO
-            ),
-            "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=segregacao),
+            "impedido_por_segregacao": leitura.segregacao,
+            "pode_ver_avisos": leitura.pode_ver_avisos,
+            "pode_conversar_com_o_assistente": leitura.pode_conversar_com_o_assistente,
+            "conducao_do_imutavel": leitura.conducao_do_imutavel,
+            "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=leitura.segregacao),
             # **Quem vê o "Andamento da seleção" é quem via o cartão "Classificação"** (127, D-004,
             # FR-4100): a mesma lista, que é vazia para quem não alcança destino nenhum.
-            "marcos_classificatorios": marcos_classificatorios,
+            "marcos_classificatorios": leitura.marcos,
             "linha_das_inscricoes": (
                 andamento.linha_das_inscricoes(andamento_do_edital.inscricoes)
                 if andamento_do_edital is not None
                 else ""
             ),
-            "conferencia_do_ato": _conferencia_do_ato(
-                edital, OPERACAO_DO_ATO_COM_CONFERENCIA.get(request.GET.get("ato", ""))
-            ),
+            "conferencia_do_ato": leitura.conferencia_do_ato,
         },
     )
 
@@ -9074,10 +9159,11 @@ def _proximo_nesta_lista(edital, ator, marco_id, lista_id, *, todas_as_listas=Fa
         return {
             "desta": item(desta) if desta is not None else None,
             "outras": [(rotulo, item(celula)) for rotulo, celula in outras],
-            # **O retorno vem com o bloco, e não de cada tela** (139, FR-4768, D-004): a tela que
-            # passar a mostrá-lo ganha a volta sem lembrar dela, e a volta nunca aparece sem ele. A
-            # porta do Centro é o escopo do Edital, a mesma desta tela.
-            "centro": reverse("interface:centro-do-edital", args=[edital.id]),
+            # **O retorno vem com o bloco, e não de cada tela** (139, FR-4768): a tela que passar a
+            # mostrá-lo ganha a volta sem lembrar dela, e a volta nunca aparece sem ele. Desde a
+            # `138` o Centro é a página do Edital (FR-4864), cuja porta é o escopo do Edital, a
+            # mesma desta tela.
+            "centro": reverse("interface:detalhe", args=[edital.id]),
         }
 
     return ler

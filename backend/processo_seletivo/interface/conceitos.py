@@ -1,14 +1,15 @@
-"""Os nomes e as frases do Centro de Controle do Edital (136) — **provisórios**.
+"""Os nomes e as frases do Centro de Controle do Edital (136).
 
 **Por que um módulo só** (D-006). Os nomes das fases, dos grupos e dos passos, e as frases que
 explicam cada passo, são exatamente o que a validação com operadores vai medir. Trocá-los tem de ser
 editar uma tabela, e não caçar texto em template. Por isso `centro.py` conhece só as chaves, e o
 template recebe o texto pronto.
 
-**Provisórios, e a tela não esconde isso.** Os textos são os da versão 2 do protótipo do estudo de
-09/11/2026 (`doc/estudo-centro-de-controle-2026-11-09/07-refinamento.md`). Quem aprova os textos
-pedagógicos e quais nomes ficam são a sétima e a terceira decisões do estudo, ambas pendentes. Até
-lá, nada aqui é explicação oficial do GPS: a página diz que está em validação.
+**Os textos valem como estão** (138, D-001). São os da versão 2 do protótipo do estudo de 09/11/2026
+(`doc/estudo-centro-de-controle-2026-11-09/07-refinamento.md`). Em 10/11/2026 o usuário dispensou a
+validação com operadores, pôs o Centro na rota do Edital e aprovou os textos como estão, o que
+responde à sétima decisão do estudo (quem aprova os textos pedagógicos). Mudar um nome continua
+sendo editar uma tabela daqui.
 
 **O que nenhum texto daqui usa**: «recorte», «faixa» e «geração». A varredura de vocabulário
 (`test_vocabulario_da_composicao.py`) exige que a tela defina esses termos no primeiro uso, e ela lê

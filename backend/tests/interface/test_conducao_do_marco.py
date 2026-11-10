@@ -253,7 +253,7 @@ def test_a_pagina_do_edital_resume_cada_marco_e_leva_a_ele(client, cenario, gest
     emitir_recorte(edital, gestor, chave="marco-049-resumo")
     gerir(client)
 
-    pagina = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    pagina = client.get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
 
     # O resumo de presença virou o resumo em palavras do "Andamento da seleção" (127, FR-4101), que
     # conta feitos sobre os que se aplicam — a mesma presença, por ato.
@@ -261,6 +261,17 @@ def test_a_pagina_do_edital_resume_cada_marco_e_leva_a_ele(client, cenario, gest
     assert "ordem 1 de 3" in pagina and "corte 0 de 3" in pagina
     assert reverse("interface:marco", args=[edital.id, MARCO]) in pagina
     assert "conduzir o marco" in pagina
+
+
+def test_o_centro_leva_a_tela_do_marco(client, cenario, gestor):
+    """138: na página do Edital, que é o Centro, o marco continua a um clique."""
+    edital, _ = cenario
+    emitir_recorte(edital, gestor, chave="marco-138-centro")
+    gerir(client)
+
+    pagina = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    assert "Onde estamos" in pagina
+    assert reverse("interface:marco", args=[edital.id, MARCO]) in pagina
 
 
 def test_o_resumo_nao_cresce_com_o_numero_de_marcos(cenario):

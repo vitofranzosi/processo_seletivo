@@ -605,8 +605,9 @@ def test_nenhum_texto_dos_conceitos_usa_termo_que_a_tela_nao_define():
     assert [t for t in textos if proibidos.search(t)] == []
 
 
-def test_os_conceitos_se_declaram_provisorios():
-    assert "provisórios" in c.__doc__
+def test_os_conceitos_deixaram_de_ser_provisorios():
+    """138, FR-4869: os textos valem como estão, por decisão do usuário em 10/11."""
+    assert "provisóri" not in c.__doc__.lower()
 
 
 @pytest.mark.parametrize(
