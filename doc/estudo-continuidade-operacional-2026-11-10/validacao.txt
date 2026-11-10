@@ -1,0 +1,52 @@
+Validação dos protótipos — 50 de 50 conferências passaram.
+
+ok | V0 | centro-c06-apos-fixar-a-ampla a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | centro-c06-inicial a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | centro-c12 a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | convocacao-c12 a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | convocacao-c15 a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | convocar-c15-conferencia a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | documentos-c12-apos-conferir a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | sorteio-c06-apos-fixar-a-ampla a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | sorteio-c06-inicial a 1440px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | centro-c06-apos-fixar-a-ampla a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | centro-c06-inicial a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | centro-c12 a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | convocacao-c12 a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | convocacao-c15 a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | convocar-c15-conferencia a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | documentos-c12-apos-conferir a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | sorteio-c06-apos-fixar-a-ampla a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=True depois=True
+ok | V0 | sorteio-c06-inicial a 375px: sem CSP nova e sem rolagem horizontal nova | csp antes=0 depois=0; rolagem antes=False depois=False
+ok | V0 | centro-c06-apos-fixar-a-ampla: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | centro-c06-inicial: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | centro-c12: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | convocacao-c12: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | convocacao-c15: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | convocar-c15-conferencia: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | documentos-c12-apos-conferir: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | sorteio-c06-apos-fixar-a-ampla: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V0 | sorteio-c06-inicial: nenhum estilo ou script inline novo | antes=0 depois=0
+ok | V1 | sorteio: fixar vem antes de observar | antes fixar=1681 observar=887; depois fixar=1053 observar=1720
+ok | V1 | sorteio: o primeiro 'fixar' sobe | 1681px → 1053px (dobra 900)
+ok | V2 | sorteio: sem 'Nenhum corte emitido' antes do sorteio | 
+ok | V3 | sorteio: o resumo do método publicado continua na tela, recolhido | db65d97ed8b7
+ok | V10 | sorteio: a frase da ordem semente × fixar só aparece marcada D-5 | 1 de 1
+ok | V11 | sorteio: o Tab alcança 'fixar' antes de 'observar' | posições 15 e 17
+ok | V5 | Centro C06 → sorteio aterrissa nos recortes, dentro da dobra | #titulo-recortes
+ok | V6 | fixar a ampla leva ao estado seguinte | pois/sorteio-c06-apos-fixar-a-ampla.html
+ok | V4 | feedback: 'Ainda neste marco' é link para a lista que falta, e ela existe | 
+ok | V4 | feedback: o retorno ao Centro está na dobra | y=655
+ok | V6 | o retorno chega ao Centro no estado novo | 
+ok | V5 | Centro → a lista que falta (PPP), na dobra | 
+ok | V5 | Centro C12 → chamadas praticadas, na dobra (antes: no topo, a chamada a tantos px) | antes a seção ficava a 2151px
+ok | V7 | convocação: o índice das seções existe e leva a cada uma | 
+ok | V7 | documentos: o próximo passo desta pessoa é o desfecho, e leva à chamada dela | 
+ok | V7 | documentos: o contexto Edital · Perfil · lista está no alto | 
+ok | V7 | o desfecho da Cecília fica na dobra ao chegar | 
+ok | V6 | documentos → Centro do C12 | 
+ok | V9 | convocação: os números das vagas não mudam, só o rótulo | ['3', '3', '2', '1', '0', '0']
+ok | V8 | convocação: a ajuda não promete mais uma conferência que não existe | 
+ok | V8 | convocar leva à conferência (antes: o botão praticava no clique) | 
+ok | V8 | a conferência mostra as 2 pessoas, o texto do candidato, o prazo e quem fica de fora | 
+ok | V8 | cancelar volta à convocação | 

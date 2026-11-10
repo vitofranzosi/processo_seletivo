@@ -1,0 +1,4 @@
+/* Os resumos SHA-256 do manifesto não tinham onde quebrar, e a 375 px a página tinha 643 px (077,
+   `FR-1743`). Quebram por caractere, sem hífen: copiar continua dando o valor inteiro. Os do método
+   já quebravam, por regra própria. */
+.imutavel code{overflow-wrap:anywhere}

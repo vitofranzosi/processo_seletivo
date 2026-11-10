@@ -1,0 +1,28 @@
+/*
+Os tokens visuais do produto, num lugar só.
+
+Duas bases os incluem — a administrativa e a do portal — e é isso que impede as duas paletas de
+divergirem na primeira mudança de cor. O que está aqui é **só** token: as regras de cada canal
+continuam em cada base, porque o que o candidato lê num celular não é o que quem elabora lê num
+formulário de dez campos.
+*/
+:root{
+  /* --verde preenche (precisa contrastar com texto branco); --verde-texto escreve
+     (precisa contrastar com fundos claros). Um só token para os dois papéis fazia
+     o rótulo da etapa cair a 4,45:1 sobre o verde claro e os links a 4,28:1 sobre o
+     vermelho claro — WCAG 2.1 AA exige 4,5:1. */
+  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
+  --texto:#1c1c1c; --texto-fraco:#555; --borda:#d4d4d4; --fundo:#f8f8f8; --branco:#fff;
+  --sucesso:#146c37; --sucesso-fundo:#e7f5ec; --amarelo:#8a5300; --amarelo-fundo:#fdf5e5;
+  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --cinza-fundo:#eee;
+
+  /* **Duas larguras, porque são dois trabalhos.** Um limite só, em `main`, fazia os três ao mesmo
+     tempo — medida de texto, largura de tabela e largura de painel — e fazia os três mal: media-se
+     84 caracteres por linha no portal e 147 na gestão, contra os 65 a 75 confortáveis, e ao mesmo
+     tempo sobravam 412 px de tela vazia ao lado de um PDF renderizado a 69% do tamanho.
+
+     `--leitura` é a medida do texto corrido e dos campos que se escrevem. `--pagina` é o quanto a
+     estrutura pode ocupar: tabelas, matrizes, painéis e grades de cartão. Quem lê ganha linha
+     curta; quem trabalha ganha a tela. */
+  --leitura:68ch; --pagina:96rem;
+}

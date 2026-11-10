@@ -536,6 +536,23 @@
       ],
       "port": 8150,
       "url": "http://localhost:8150"
+    },
+    {
+      "name": "continuidade-operacional",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_continuidade DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-continuidade uv run python manage.py runserver 8170"
+      ],
+      "port": 8170,
+      "url": "http://localhost:8170"
+    },
+    {
+      "name": "continuidade-prototipo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["doc/estudo-continuidade-operacional-2026-11-10/prototipo/servidor.py", "8171"],
+      "port": 8171,
+      "url": "http://localhost:8171"
     }
   ]
 }
