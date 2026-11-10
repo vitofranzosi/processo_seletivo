@@ -1,8 +1,9 @@
 """A página do Centro de Controle do Edital: a porta, os dois links e os casos-limite (136).
 
 **A porta é a do detalhe** (FR-4701, D-002): o mesmo 404 para o Edital de outra unidade, e o detalhe
-para o Edital sem andamento. **O detalhe não muda**, salvo o link de ida (FR-4703): a suíte dele
-continua passando sem alteração, e este arquivo prende só a linha nova.
+para o Edital sem andamento. **Desde a `138` o Centro é a página do Edital** (FR-4860): estes casos
+abrem a rota do Edital; o redirecionamento de `/centro/` e a página anterior estão em
+`test_centro_como_pagina.py`.
 """
 
 import pytest
@@ -26,7 +27,7 @@ def mapa(texto):
 
 
 def centro(client, edital, fase=None):
-    url = reverse("interface:centro-do-edital", args=[edital.id])
+    url = reverse("interface:detalhe", args=[edital.id])
     return client.get(url + (f"?fase={fase}" if fase else ""))
 
 
@@ -35,16 +36,17 @@ def s1(gestor, api_client, manager_headers, process_payload, seletor_ligado):
     return certame_s1(gestor, api_client, manager_headers, process_payload)
 
 
-def test_o_centro_abre_e_volta_ao_detalhe_e_o_detalhe_leva_a_ele(client, s1):
-    """US6, FR-4703, FR-4704, SC-1478: ida e volta."""
+def test_a_pagina_do_edital_publicado_e_o_centro_e_leva_a_pagina_anterior(client, s1):
+    """138, FR-4860, FR-4867, FR-4874: o Centro na rota do Edital, sem faixa, e o link de volta."""
     edital = s1["edital"]
     identificar(client, "carlos", ["gestor"])
 
     resposta = centro(client, edital)
     assert resposta.status_code == 200
     texto = resposta.content.decode()
-    assert f'href="{reverse("interface:detalhe", args=[edital.id])}"' in texto
-    assert "Em validação." in texto and "Onde estamos" in texto
+    anterior = reverse("interface:pagina-anterior", args=[edital.id])
+    assert texto.count(f'href="{anterior}"') == 1
+    assert "Em validação" not in texto and "Onde estamos" in texto
     # FR-4720: três estados separados, cada um com rótulo.
     for rotulo in ("Situação administrativa", "Inscrições", "Seu papel aqui"):
         assert f"<dt>{rotulo}</dt>" in texto
@@ -55,8 +57,9 @@ def test_o_centro_abre_e_volta_ao_detalhe_e_o_detalhe_leva_a_ele(client, s1):
         assert f"<h3>{titulo}</h3>" in administracao
     assert texto.index('id="agora-titulo"') < texto.index('id="administracao-titulo"')
 
-    detalhe = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
-    assert f'href="{reverse("interface:centro-do-edital", args=[edital.id])}"' in detalhe
+    detalhe = client.get(anterior).content.decode()
+    assert "Abrir o Centro de Controle" not in detalhe
+    assert f'href="{reverse("interface:detalhe", args=[edital.id])}"' in detalhe
 
 
 def test_o_mapa_tem_oito_fases_e_uma_so_consultada(client, s1):
@@ -74,10 +77,10 @@ def test_o_mapa_tem_oito_fases_e_uma_so_consultada(client, s1):
     assert texto.count('<span class="oculto">fase consultada: </span>') == 1
 
 
-def test_antes_da_publicacao_o_centro_leva_ao_detalhe(
+def test_antes_da_publicacao_a_pagina_do_edital_e_o_detalhe(
     client, api_client, manager_headers, process_payload, seletor_ligado
 ):
-    """D-002, FR-4702: o Edital em elaboração não tem andamento, e o detalhe não oferece o link."""
+    """D-002, FR-4702; 138, FR-4860: sem andamento, a rota do Edital desenha o detalhe."""
     from processo_seletivo.processos.models import Edital
 
     criado = api_client.post(
@@ -88,10 +91,9 @@ def test_antes_da_publicacao_o_centro_leva_ao_detalhe(
     identificar(client, "carlos", ["gestor"])
     resposta = centro(client, edital)
 
-    assert resposta.status_code == 302
-    assert resposta.url == reverse("interface:detalhe", args=[edital.id])
-    detalhe = client.get(resposta.url).content.decode()
-    assert reverse("interface:centro-do-edital", args=[edital.id]) not in detalhe
+    assert resposta.status_code == 200
+    assert [t.name for t in resposta.templates][0] == "interface/detalhe.html"
+    assert reverse("interface:pagina-anterior", args=[edital.id]) not in resposta.content.decode()
 
 
 def test_o_edital_de_outra_unidade_e_inexistente(client, s1):
@@ -100,7 +102,8 @@ def test_o_edital_de_outra_unidade_e_inexistente(client, s1):
     identificar(client, "carlos", ["gestor"], escopo=OUTRA)
 
     assert centro(client, s1["edital"]).status_code == 404
-    assert client.get(reverse("interface:detalhe", args=[s1["edital"].id])).status_code == 404
+    anterior = reverse("interface:pagina-anterior", args=[s1["edital"].id])
+    assert client.get(anterior).status_code == 404
 
 
 def test_sem_identidade_pede_identificacao(client, s1):
@@ -160,7 +163,7 @@ def test_a_retificacao_em_homologacao_e_a_acao_de_quem_homologa(client, s1, api_
     assert submissao.status_code == 200, submissao.content
     identificar(client, "bruno.homologador", ["homologador"])
 
-    detalhe = client.get(reverse("interface:detalhe", args=[s1["edital"].id]))
+    detalhe = client.get(reverse("interface:pagina-anterior", args=[s1["edital"].id]))
     assert detalhe.context["retificacao_aguarda_voce"]
 
     resposta = centro(client, s1["edital"])

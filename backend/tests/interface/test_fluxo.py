@@ -309,7 +309,7 @@ def test_detalhe_oferece_o_documento_de_cada_publicacao_sem_rotular_vigente(
     )
 
     identificar(client, "ana.elaboradora", ["elaborador"])
-    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
+    resposta = client.get(reverse("interface:pagina-anterior", args=[edital.id]))
     corpo = resposta.content.decode()
 
     documentos = resposta.context["documentos"]

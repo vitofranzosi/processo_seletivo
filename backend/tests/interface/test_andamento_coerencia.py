@@ -62,7 +62,7 @@ def marcador(item):
 
 
 def nivel_1(client, edital):
-    resposta = client.get(reverse("interface:detalhe", args=[edital.id]))
+    resposta = client.get(reverse("interface:pagina-anterior", args=[edital.id]))
     assert resposta.status_code == 200
     return resposta.context["nivel_1"], resposta.context["andamento"]
 

@@ -33,7 +33,7 @@ def _destinos(client, edital):
     divulgação no corpo inteiro acharia o menu, a trilha ou o histórico e responderia "oferece"
     sem que o bloco tivesse mudado.
     """
-    corpo = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+    corpo = client.get(reverse("interface:pagina-anterior", args=[edital.id])).content.decode()
     bloco = _SECAO.search(corpo)
     if bloco is None:
         return None

@@ -110,7 +110,7 @@ class TestQuemDivulgaEncontraCadaRecorte:
     def test_a_pagina_do_edital_tem_um_caminho_de_divulgacao_por_marco(self, client, com_acervo):
         identificar(client, "paula.publicadora", ["publicador"])
 
-        corpo = client.get(reverse("interface:detalhe", args=[com_acervo["edital"].id]))
+        corpo = client.get(reverse("interface:pagina-anterior", args=[com_acervo["edital"].id]))
         secao = _SECAO_CLASSIFICACAO.search(corpo.content.decode()).group(0)
 
         assert secao.count(">divulgar o resultado</a>") == 1

@@ -10,6 +10,24 @@
 Este documento substitui a sequência do [06](06-plano-de-implementacao.md) onde as duas divergem. O 06
 continua valendo pelo detalhe de cada correção (C3) e pelos riscos.
 
+> **Atualização de 10/11/2026 — o incremento 3 foi feito, pela spec
+> [`138`](../../specs/138-centro-como-pagina-do-edital/spec.md).** Ao ver o botão "Abrir o Centro de
+> Controle do Edital (em validação)" no detalhe, o usuário escreveu: *"Pensei que o centro de controle
+> já seria aplicado. Não vejo necessidade deste botão para validação."* Depois do merge da `139`, da
+> `140` e da `141`, disse *"Siga"*. Ficaram decididas por ele:
+>
+> - **a validação com operadores fica dispensada** como pré-condição (a seção 5 continua dizendo como
+>   fazê-la, se for útil depois);
+> - **D-2: o Centro mora na rota do Edital** (`/gestao/editais/<id>/`);
+> - **D-7: os textos deixam de ser provisórios** — o usuário os aprova como estão.
+>
+> A `135` já estava mergeada. A `137` (o Processo agrega os Editais) **não** fez parte da troca, e
+> continua por fazer. A página anterior ficou acessível por um ciclo, em
+> `/gestao/editais/<id>/pagina-anterior/`, por um link só no bloco "Administração e histórico" — a
+> opção conservadora da seção 3 ("a vista anterior continua acessível por um ciclo"), que o usuário
+> não vetou. As tabelas abaixo ficam como estavam em 09/11; o estado atual de cada decisão está nesta
+> nota.
+
 ## 1. As decisões pendentes, classificadas
 
 D-1 e D-8 estão decididas desde 09/11. Nenhuma das pendentes é tomada aqui. Esta seção só diz **o que
@@ -17,12 +35,12 @@ cada uma bloqueia**.
 
 | # | Decisão | Classe | Por quê | O que a implementação faz até lá |
 |---|---|---|---|---|
-| D-2 | Onde mora o Centro de Controle | **Postergável** até o incremento 3 | A estratégia pedida é implantar "mantendo a experiência anterior acessível durante a validação". O incremento 1 entra numa rota própria do Edital, ao lado do detalhe atual, e a pergunta só precisa de resposta na hora de trocar o padrão | Rota nova, ligada nos dois sentidos ao detalhe atual. O detalhe não muda |
+| D-2 | Onde mora o Centro de Controle — **decidida em 10/11: na rota do Edital** | **Postergável** até o incremento 3 | A estratégia pedida é implantar "mantendo a experiência anterior acessível durante a validação". O incremento 1 entra numa rota própria do Edital, ao lado do detalhe atual, e a pergunta só precisa de resposta na hora de trocar o padrão | Rota nova, ligada nos dois sentidos ao detalhe atual. O detalhe não muda |
 | D-3 | Os nomes das fases e dos passos | **Validável com operadores** | É exatamente o que o teste com pessoas mede, e nenhum código depende do texto | Os nomes da versão 2, todos num módulo só, para que trocá-los seja editar uma tabela |
 | D-4 | O critério do destaque | **Validável com operadores**, e **bloqueante para a liberação geral** | A regra (d) da versão 2 só fica segura com a spec 135 (lista vazia) | Implementa a regra (d), dita na tela. A liberação espera a 135 |
 | D-5 | Observar a extração antes de congelar todas as relações | **Postergável** para o Centro de Controle; recomendada **logo**, pelo risco | É regra da tela do sorteio, e não do Centro. Mas é um ato irreversível de um clique | Nada. O Centro só mostra o que a derivação diz (a semente fica *Ainda não* até haver relação congelada) |
 | D-6 | Quem vê o detalhe por lista | **Postergável** | Preservar a regra atual (D-004 da `127`: quem conduz ou audita) não exige decisão; só mudá-la exigiria | A regra atual, testada no HTML |
-| D-7 | Quem aprova os textos pedagógicos | **Bloqueante para a liberação geral**; não bloqueia o desenvolvimento | Os textos vão ao ar como explicação oficial do GPS | Textos da versão 2 marcados como provisórios no módulo de conceitos. A liberação espera a aprovação |
+| D-7 | Quem aprova os textos pedagógicos — **decidida em 10/11: o usuário os aprova como estão** | **Bloqueante para a liberação geral**; não bloqueia o desenvolvimento | Os textos vão ao ar como explicação oficial do GPS | Textos da versão 2 marcados como provisórios no módulo de conceitos. A liberação espera a aprovação |
 
 **Bloqueia o desenvolvimento:** nenhuma.
 
@@ -40,7 +58,7 @@ cada uma bloqueia**.
 | **135** (PR #440, só a spec) | — | A derivação diz menos do que sabe: lista vazia, preliminar como texto, espera que oferece o já feito, contagens sem escopo | As quatro correções da C3 | Nada. **Gate da liberação geral** |
 | **136** — Centro de Controle do Edital | 1 | O operador não vê onde a seleção está, o que é dele e o que vem depois | A página do Edital publicado, com as quatro camadas da versão 2, numa rota própria; os conceitos num módulo único; o link de e para o detalhe atual | Nada para começar. A 135 para liberar |
 | **137** — O Processo agrega os Editais | 2 | O Processo diz "nenhum ato" ao lado de um Edital com providências (A-02) | "Onde cada Edital está" com mini-trilha e contagens, numa leitura em lote; o "O que fazer agora" do Processo dá lugar ao agregado (D-8); "Próximos marcos" honesto (A-10) | 136 (reusa a composição) |
-| **138** — O Centro de Controle passa a ser o padrão | 3 | A troca definitiva | O detalhe do Edital publicado passa a ser o Centro; a vista anterior fica acessível por um ciclo; os ajustes que a validação com operadores pedir (D-3, D-4) | 136, 137, a D-2, a D-7, a validação e a 135 |
+| **138** — O Centro de Controle passa a ser o padrão (**feita em 10/11**) | 3 | A troca definitiva | O detalhe do Edital publicado passa a ser o Centro; a vista anterior fica acessível por um ciclo; os ajustes que a validação com operadores pedir (D-3, D-4) | 136, 137, a D-2, a D-7, a validação e a 135 |
 
 **O que fica fora da divisão, de propósito:**
 - **C6 (sorteio).** Entra quando a D-5 for decidida, como spec própria, sem relação com o Centro.
@@ -113,10 +131,11 @@ elas formam uma página nova que nasce completa, numa rota própria, sem regress
   teste.
 
 ### 138 — Troca do padrão
-- A decisão D-2 está registrada.
-- A validação com operadores foi feita, e os ajustes que ela pediu estão aplicados.
-- A 135 está mergeada.
-- A vista anterior continua acessível por um ciclo.
+- A decisão D-2 está registrada. **Feito: D-001 da `138`.**
+- A validação com operadores foi feita, e os ajustes que ela pediu estão aplicados. **Dispensada pelo
+  usuário em 10/11.**
+- A 135 está mergeada. **Feito (#441).**
+- A vista anterior continua acessível por um ciclo. **Feito: `/gestao/editais/<id>/pagina-anterior/`.**
 
 ## 4. A sequência
 

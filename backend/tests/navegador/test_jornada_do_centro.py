@@ -64,7 +64,7 @@ def abrir(navegador, live_server, edital, largura, altura=900):
     contexto.add_cookies([sessao_da_presidencia(live_server)])
     contexto.add_init_script(OUVIR_A_CSP)
     pagina = contexto.new_page()
-    pagina.goto(live_server.url + reverse("interface:centro-do-edital", args=[edital.id]))
+    pagina.goto(live_server.url + reverse("interface:detalhe", args=[edital.id]))
     return pagina
 
 
