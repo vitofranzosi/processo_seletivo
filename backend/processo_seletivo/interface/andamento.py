@@ -167,6 +167,51 @@ def _c(situacao, **campos):
 
 
 # ---------------------------------------------------------------------------------------------
+# O lugar do ato na tela de destino (139, FR-4760 a FR-4766) — puro
+# ---------------------------------------------------------------------------------------------
+#
+# **Um fragmento, e não um parâmetro que a tela leia** (D-001 da 139): o navegador já rola até o
+# id, sem script e sem passar pela CSP. Sem ele a providência levava ao topo — o congelamento do
+# sorteio ficava a 1.681 px, as chamadas da convocação a 2.151 px —, e o `?lista=` do sorteio não
+# rola nada, porque a tela mostra todos os recortes do marco.
+
+#: A seção que reúne as âncoras de um mesmo tipo: duas listas juntadas numa providência só (o
+#: caminho comum da `127`) chegam a ela, e não à primeira das duas.
+_SECAO_DAS_ANCORAS = {"recorte-": "titulo-recortes", "chamada-": "chamadas"}
+
+
+def ancora_do_recorte(lista_id):
+    """O id do recorte de uma lista na tela do sorteio (FR-4762). A ampla não tem identificador de
+    lista, e ganha um próprio; uma lista é um UUID, e nunca colide com ele. A tela lê esta mesma
+    função, pelo filtro `ancora_do_recorte`, para que as duas não escrevam a regra cada uma."""
+    return f"recorte-{lista_id or 'ampla'}"
+
+
+def com_ancora(url, ancora):
+    """O endereço com o fragmento. Sem endereço, nenhum: o fragmento não cria link onde a
+    derivação não deu um (quem não tem consulta continua sem)."""
+    return f"{url}#{ancora}" if url and ancora else url
+
+
+def ancora_comum(uma, outra):
+    """A âncora de duas providências da mesma tela juntadas (FR-4766): a mesma, se iguais; a seção
+    que reúne as duas, se são do mesmo tipo; nenhuma, se não.
+
+    A seção conta como do seu tipo: a terceira lista de um marco com cotas se junta a uma
+    providência que já leva a `titulo-recortes`, e não pode desfazê-la."""
+    if uma == outra:
+        return uma
+
+    def secao(ancora):
+        for prefixo, reune in _SECAO_DAS_ANCORAS.items():
+            if ancora.startswith(prefixo) or ancora == reune:
+                return reune
+        return None
+
+    return secao(uma) if secao(uma) is not None and secao(uma) == secao(outra) else ""
+
+
+# ---------------------------------------------------------------------------------------------
 # A expectativa das Etapas (FR-4060, D-012) — pura
 # ---------------------------------------------------------------------------------------------
 
@@ -1015,7 +1060,11 @@ def situacoes_da_convocacao(f):
     `por_publicacao`, `vencidos`, `em_curso` (quantas com prazo correndo) e `ate` (o vencimento mais
     próximo delas), `faltando` (a ocupar), `fila` (quantos chamáveis), `esgotou`, `corte_vigente`,
     `com_quadro`, `conferir` e `decidir` (chamadas com documento a conferir, e prontas para o
-    desfecho), `aguardando_documentos`, `convocadas`, `desfechadas`, `url`, `url_da_ocupacao`.
+    desfecho), `primeira_pronta` (a posição dela na tela, ou `None`), `aguardando_documentos`,
+    `convocadas`, `desfechadas`, `url`, `url_da_ocupacao`.
+
+    **Cada providência leva à seção do seu ato** (139, FR-4763 a FR-4765), pelos ids que a tela da
+    convocação já tem. O impedimento e o *Feito* ficam sem fragmento: não há ato a alcançar.
     """
     from processo_seletivo.convocacao.domain import nomes
 
@@ -1065,7 +1114,7 @@ def situacoes_da_convocacao(f):
                 ato=texto,
                 responsavel=CONDUZ,
                 razao="o prazo não começou a correr",
-                url=url,
+                url=com_ancora(url, "pendentes"),
                 contagem=pendentes,
             )
         )
@@ -1078,7 +1127,7 @@ def situacoes_da_convocacao(f):
                 ato="Registrar o não atendimento de "
                 + _n(vencidos, "convocação vencida", "convocações vencidas"),
                 responsavel=CONDUZ,
-                url=url,
+                url=com_ancora(url, "vencidos"),
                 contagem=vencidos,
             )
         )
@@ -1092,7 +1141,11 @@ def situacoes_da_convocacao(f):
                 + _n(decidir, "convocação pronta", "convocações prontas"),
                 responsavel=CONDUZ,
                 razao="os documentos obrigatórios estão conferidos",
-                url=url,
+                # O formulário do desfecho está na chamada, e não no alto das chamadas.
+                url=com_ancora(
+                    url,
+                    f"chamada-{f['primeira_pronta']}" if f.get("primeira_pronta") else "chamadas",
+                ),
                 contagem=decidir,
             )
         )
@@ -1104,7 +1157,7 @@ def situacoes_da_convocacao(f):
                 natureza=CONFERIR,
                 ato=f"Conferir os documentos de {_n(conferir, 'convocação', 'convocações')}",
                 responsavel=CONFERE,
-                url=f.get("url_da_conferencia") or url,
+                url=com_ancora(f.get("url_da_conferencia") or url, "chamadas"),
                 contagem=conferir,
             )
         )
@@ -1116,7 +1169,7 @@ def situacoes_da_convocacao(f):
                 natureza=CONVOCACAO,
                 ato=f"Convocar {_n(titulares, 'titular', 'titulares')}",
                 responsavel=CONDUZ,
-                url=url,
+                url=com_ancora(url, "titulares"),
                 contagem=titulares,
             )
         )
@@ -1132,7 +1185,7 @@ def situacoes_da_convocacao(f):
                     responsavel=CONDUZ,
                     razao=_n(sem_chamada, "vaga a ocupar", "vagas a ocupar")
                     + " sem chamada em aberto",
-                    url=url,
+                    url=com_ancora(url, "fila"),
                     condicional=True,
                     contagem=sem_chamada,
                 )
@@ -1164,7 +1217,7 @@ def situacoes_da_convocacao(f):
                     if f.get("ate")
                     else "o prazo está correndo"
                 ),
-                url=url,
+                url=com_ancora(url, "chamadas"),
                 ate=f.get("ate"),
                 contagem=em_curso,
             )
@@ -1985,16 +2038,27 @@ class _Leitor:
         base = reverse("interface:sorteio", args=[self.edital.id, marco_id])
 
         def url(lista):
+            """O endereço do recorte de uma lista — a ampla também, cuja chave é `None`."""
             if not self.alcance.consulta:
                 return ""
-            return f"{base}?lista={lista}" if lista else base
+            return com_ancora(f"{base}?lista={lista}" if lista else base, ancora_do_recorte(lista))
+
+        def da_tela(ancora):
+            """O endereço do que é do marco, e não de uma lista (D-002 da 139)."""
+            return com_ancora(base, ancora) if self.alcance.consulta else ""
 
         try:
             lido = previa.recortes_do_marco(
                 edital=self.edital, perfil_id=perfil.get("id"), marco_id=marco_id, at=self.agora
             )
         except DomainError as recusa:
-            impedida = _c(IMPEDIDO, natureza=SEMENTE, razao=_frase(recusa.detail), url=url(None))
+            # A leitura dos recortes recusou: a tela diz por quê no alto dos recortes.
+            impedida = _c(
+                IMPEDIDO,
+                natureza=SEMENTE,
+                razao=_frase(recusa.detail),
+                url=da_tela("titulo-recortes"),
+            )
             return {
                 "semente": impedida,
                 "relacoes": {},
@@ -2036,7 +2100,8 @@ class _Leitor:
                 "ocorre_em": lido.get("ocorre_em"),
                 "agora": self.agora,
                 "referencia": lido.get("proxima_referencia") or "",
-                "url": url(None),
+                # Observar é na seção da ocorrência, e não nos recortes (D-002 da 139).
+                "url": da_tela("titulo-ocorrencia"),
             }
         )
         anulavel = {
@@ -2196,6 +2261,7 @@ class _Leitor:
             is not None,
             "conferir": documentos["conferir"],
             "decidir": documentos["decidir"],
+            "primeira_pronta": documentos["primeira_pronta"],
             "aguardando_documentos": documentos["aguardando"],
             "convocadas": leitura.get("convocadas") or 0,
             "desfechadas": leitura.get("respondidas") or 0,
@@ -2218,12 +2284,15 @@ class _Leitor:
         """
         from processo_seletivo.convocacao.application import documentos as documentos_app
 
-        contagem = {"conferir": 0, "decidir": 0, "aguardando": 0}
+        contagem = {"conferir": 0, "decidir": 0, "aguardando": 0, "primeira_pronta": None}
         abertas = [lin for lin in linhas if lin["desfecho"] is None]
         if not abertas:
             return contagem
         raizes = documentos_app.raizes_das(lin["convocacao"] for lin in abertas)
         leituras = documentos_app.leituras_por_chamada(set(raizes.values()))
+        # **A posição conta todas as linhas**, e não só as abertas: é o `forloop.counter` com que a
+        # tela da convocação numera `#chamada-N`, na ordem da leitura do recorte (139, FR-4764).
+        posicao = {id(lin): n for n, lin in enumerate(linhas, start=1)}
         for linha in abertas:
             leitura = leituras.get(raizes[linha["convocacao"].id].id)
             if leitura is None or not leitura.pedidos:
@@ -2234,6 +2303,8 @@ class _Leitor:
                 contagem["conferir"] += 1
             elif leitura.estado == "PRONTA_PARA_DECIDIR":
                 contagem["decidir"] += 1
+                if contagem["primeira_pronta"] is None:
+                    contagem["primeira_pronta"] = posicao[id(linha)]
             elif leitura.estado in ("AGUARDANDO_DOCUMENTACAO", "COM_PENDENCIA"):
                 contagem["aguardando"] += 1
         return contagem

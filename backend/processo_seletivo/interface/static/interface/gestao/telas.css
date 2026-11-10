@@ -848,3 +848,6 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
 /* O próximo passo da lista, abaixo da mensagem de sucesso de um ato (127, FR-4090). */
 .proximo-nesta-lista{margin:.4rem 0 .2rem}
 .ainda-neste-marco{margin:0 0 .6rem;color:var(--texto-fraco)}
+/* A volta ao Centro, no fim do bloco (139, FR-4768): um link de texto, e não um botão — o bloco
+   diz o próximo, e a volta é a saída (UX-320). */
+.retorno-ao-centro{margin:0 0 .8rem}
