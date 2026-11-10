@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquete — Cronograma (144)</title>
+<!--
+  Maquete da spec 144: referência de comportamento, e não código a copiar. É um arquivo solto, fora
+  do Django, e por isso tem estilo e script embutidos — o que a CSP da gestão recusa. Na
+  implementação, o estilo vai para telas/compor-cronograma.css e o script para cronograma.js.
+  As cores são os tokens da folha comum da gestão.
+-->
+<style>
+:root{--borda:#d4d4d4;--fundo:#f8f8f8;--texto:#1c1c1c;--texto-fraco:#555;--verde:#15803d;
+  --verde-escuro:#0b5a2a;--verde-claro:#e7f5ec;--vermelho:#a91b1b;--amarelo:#8a5300;
+  --amarelo-fundo:#fdf5e5;--cinza-fundo:#eee}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:var(--fundo);color:var(--texto);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:64rem;margin:0 auto;padding:1.5rem 1rem 4rem}
+.nota{background:var(--amarelo-fundo);color:var(--amarelo);border:1px solid #ecd9b0;border-radius:6px;padding:.6rem .8rem;font-size:.85rem;margin-bottom:1.25rem}
+h1{font-size:1.35rem;margin:.2rem 0 1rem}
+h2{font-size:1.1rem;margin:0 0 .5rem}
+.ajuda{color:var(--texto-fraco);margin:.25rem 0 1rem;max-width:68ch}
+/* A prévia */
+.previa{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem}
+.previa h3{font-size:.95rem;margin:0}
+.previa .conta{color:var(--texto-fraco);font-size:.875rem;margin:.15rem 0 .6rem}
+.previa table{width:100%;border-collapse:collapse;font-size:.875rem}
+.previa th{text-align:left;font-weight:600;color:var(--texto-fraco);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--borda);padding:.3rem .4rem}
+.previa td{padding:.35rem .4rem;border-bottom:1px solid #eee;vertical-align:top}
+.previa td.quando{white-space:nowrap;font-variant-numeric:tabular-nums}
+.previa tr.oculta td{color:var(--texto-fraco)}
+.previa tr.oculta td.nome{text-decoration:line-through;text-decoration-color:#aaa}
+.selo{display:inline-block;font-size:.72rem;font-weight:600;border-radius:999px;padding:.05rem .5rem;white-space:nowrap}
+.selo.no-pdf{background:var(--verde-claro);color:var(--verde-escuro)}
+.selo.fora{background:var(--cinza-fundo);color:var(--texto-fraco)}
+.previa .vazio{color:var(--texto-fraco);margin:.25rem 0 0}
+.previa .aviso{background:var(--amarelo-fundo);color:var(--amarelo);border-radius:6px;padding:.4rem .6rem;margin:.5rem 0 0;font-size:.85rem}
+/* A linha da contagem e o ordenar */
+.barra{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.6rem}
+.contadores{margin:0;color:var(--texto-fraco)}
+.botao{font:inherit;border-radius:6px;padding:.4rem .8rem;cursor:pointer}
+.botao.secundario{background:#fff;border:1px solid var(--verde);color:var(--verde-escuro)}
+.botao.secundario:disabled{border-color:var(--borda);color:#999;cursor:not-allowed}
+/* O cartão */
+fieldset.evento{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:.4rem 1rem 1rem;margin:0 0 .75rem;min-width:0}
+fieldset.evento legend{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--texto-fraco);padding:0 .35rem}
+legend .nome{text-transform:none;letter-spacing:0;color:var(--texto);font-weight:600;margin-left:.4rem;font-size:.85rem}
+legend .marca{text-transform:none;letter-spacing:0;margin-left:.4rem}
+fieldset.oculto-do-pdf{background:#fbfbfb;border-style:dashed}
+fieldset.oculto-do-pdf .campos input{color:var(--texto-fraco)}
+.acoes{display:flex;justify-content:flex-end;gap:.4rem;margin:.1rem 0 .6rem}
+.acao{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--borda);border-radius:6px;cursor:pointer;color:var(--texto)}
+.acao:disabled{color:#bbb;cursor:not-allowed}
+.acao[aria-pressed="true"]{background:var(--cinza-fundo)}
+.acao.perigo{color:var(--vermelho);margin-left:.7rem}
+.acao svg{width:1.1rem;height:1.1rem}
+.campos{display:flex;flex-wrap:wrap;gap:.6rem 1rem}
+.campo{display:flex;flex-direction:column;flex:1 1 11rem;min-width:0}
+.campo.largo{flex:2 1 16rem}
+.campo label{font-size:.8125rem;font-weight:600;margin-bottom:.15rem}
+.campo input{font:inherit;border:1px solid var(--borda);border-radius:5px;padding:.35rem .45rem;min-width:0;width:100%}
+.oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:40rem){
+  .previa thead{display:none}
+  .previa tr{display:grid;grid-template-columns:1fr auto;border-bottom:1px solid #eee;padding:.3rem 0}
+  .previa td{border:0;padding:.05rem .2rem}
+  .previa td.nome{grid-column:1;grid-row:1;font-weight:600}
+  .previa td.pdf{grid-column:2;grid-row:1}
+  .previa td.inicio{grid-column:1}
+  .previa td.termino{grid-column:1}
+  .previa td.inicio::before{content:"Início: ";color:var(--texto-fraco)}
+  .previa td.termino:not(:empty)::before{content:"Término: ";color:var(--texto-fraco)}
+}
+</style>
+</head>
+<body>
+<main>
+  <p class="nota">Maquete da spec 144 — interativa: alterne o olho, mude uma data, ordene, mova pelas
+    setas, acrescente e remova. Nada é gravado; recarregar volta ao início.</p>
+  <h1>Elaborar o Edital · 3 de 8 · Cronograma</h1>
+  <section aria-labelledby="cronograma-titulo">
+    <h2 id="cronograma-titulo">Cronograma</h2>
+    <p class="ajuda">Eventos pontuais e períodos deste Edital. A ordem segue a sequência em tela; as
+      datas usam o horário de Brasília.</p>
+
+    <section class="previa" aria-labelledby="previa-titulo">
+      <h3 id="previa-titulo">O Cronograma em uma olhada</h3>
+      <p class="conta" id="conta"></p>
+      <table id="tabela-previa">
+        <thead><tr><th scope="col">Evento</th><th scope="col">Início</th><th scope="col">Término</th><th scope="col">PDF</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="vazio" id="previa-vazia" hidden>Nenhum Evento no Cronograma ainda.</p>
+      <p class="aviso" id="previa-todos-ocultos" hidden>Nenhum Evento sai no PDF: a seção Cronograma
+        não será impressa.</p>
+    </section>
+
+    <div class="barra">
+      <p class="contadores"><strong id="total">0</strong> <span id="total-rotulo">Eventos</span></p>
+      <button type="button" class="botao secundario" id="ordenar">Ordenar por data de início ↑</button>
+    </div>
+    <p class="oculto" role="status" id="anuncio"></p>
+    <div id="eventos"></div>
+    <button type="button" class="botao secundario" id="acrescentar">Acrescentar Evento</button>
+  </section>
+</main>
+
+<template id="modelo">
+  <fieldset class="evento">
+    <legend><span class="categoria">Evento do Cronograma <span data-ordem></span></span><span class="nome" data-nome></span><span class="selo fora marca" data-marca hidden>Oculto do PDF</span></legend>
+    <p class="acoes">
+      <button type="button" class="acao" data-pdf aria-label="Ocultar do PDF" aria-pressed="false" title="Exibido no PDF — ocultar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-olho-aberto><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-olho-fechado hidden><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+      </button>
+      <button type="button" class="acao" data-mover="cima" aria-label="Subir" title="Subir"><span aria-hidden="true">↑</span></button>
+      <button type="button" class="acao" data-mover="baixo" aria-label="Descer" title="Descer"><span aria-hidden="true">↓</span></button>
+      <button type="button" class="acao perigo" data-remover aria-label="Remover este Evento" title="Remover este Evento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+    </p>
+    <input type="hidden" data-campo="shownInPdf" value="true">
+    <div class="campos">
+      <p class="campo"><label>Tipo *</label><input type="text" data-campo="type"></p>
+      <p class="campo largo"><label>Descrição *</label><input type="text" data-campo="description"></p>
+      <p class="campo"><label>Início *</label><input type="datetime-local" data-campo="startAt"></p>
+      <p class="campo"><label>Término (opcional)</label><input type="datetime-local" data-campo="endAt"></p>
+    </div>
+  </fieldset>
+</template>
+
+<script>
+(function () {
+  var lista = document.getElementById("eventos");
+  var modelo = document.getElementById("modelo");
+  var iniciais = [
+    ["Inscrições", "Período de inscrições", "2026-11-03T08:00", "2026-11-10T23:59", true],
+    ["Avaliação", "Avaliação curricular (interna)", "2026-11-12T08:00", "2026-11-14T18:00", false],
+    ["Resultado", "Divulgação do resultado preliminar", "2026-11-01T14:00", "", true]
+  ];
+
+  function campo(linha, nome) { return linha.querySelector('[data-campo="' + nome + '"]'); }
+  function linhas() { return [].slice.call(lista.children); }
+
+  function acrescentar(dados) {
+    var linha = modelo.content.firstElementChild.cloneNode(true);
+    var nomes = ["type", "description", "startAt", "endAt"];
+    nomes.forEach(function (nome, i) {
+      var c = campo(linha, nome);
+      c.value = dados ? dados[i] : "";
+      c.id = "e" + Math.random().toString(36).slice(2) + nome;
+      c.previousElementSibling.htmlFor = c.id;
+    });
+    if (dados && dados[4] === false) alternar(linha);
+    lista.appendChild(linha);
+  }
+
+  /* D-007: o campo oculto é o dado; o botão só o alterna e diz o estado. */
+  function alternar(linha) {
+    var oculto = campo(linha, "shownInPdf").value === "true";
+    campo(linha, "shownInPdf").value = oculto ? "false" : "true";
+    var botao = linha.querySelector("[data-pdf]");
+    botao.setAttribute("aria-pressed", oculto ? "true" : "false");
+    botao.title = oculto ? "Oculto do PDF — exibir" : "Exibido no PDF — ocultar";
+    botao.querySelector("[data-olho-aberto]").hidden = oculto;
+    botao.querySelector("[data-olho-fechado]").hidden = !oculto;
+    linha.querySelector("[data-marca]").hidden = !oculto;
+    linha.classList.toggle("oculto-do-pdf", oculto);
+  }
+
+  /* D-005: estável, sem início ao fim, comparação de texto AAAA-MM-DDTHH:MM. */
+  function ordemPorInicio(itens) {
+    return itens
+      .map(function (item, posicao) { return { item: item, posicao: posicao }; })
+      .sort(function (a, b) {
+        var x = a.item.inicio, y = b.item.inicio;
+        if (!x !== !y) return x ? -1 : 1;
+        if (x !== y) return x < y ? -1 : 1;
+        return a.posicao - b.posicao;
+      })
+      .map(function (par) { return par.item.chave; });
+  }
+
+  function data(valor) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(valor || "");
+    return m ? m[3] + "/" + m[2] + "/" + m[1] + " " + m[4] + ":" + m[5] : "";
+  }
+
+  function plural(n, um, varios) { return n + " " + (n === 1 ? um : varios); }
+
+  function atualizar() {
+    var todas = linhas();
+    todas.forEach(function (linha, i) {
+      linha.querySelector("[data-ordem]").textContent = (i + 1) + " de " + todas.length;
+      linha.querySelector("[data-nome]").textContent = campo(linha, "type").value;
+      linha.querySelector('[data-mover="cima"]').disabled = i === 0;
+      linha.querySelector('[data-mover="baixo"]').disabled = i === todas.length - 1;
+    });
+    document.getElementById("total").textContent = todas.length;
+    document.getElementById("total-rotulo").textContent = todas.length === 1 ? "Evento" : "Eventos";
+    document.getElementById("ordenar").disabled = todas.length < 2;
+
+    var corpo = document.querySelector("#tabela-previa tbody");
+    corpo.textContent = "";
+    var noPdf = 0;
+    todas.forEach(function (linha) {
+      var exibido = campo(linha, "shownInPdf").value !== "false";
+      if (exibido) noPdf += 1;
+      var tr = document.createElement("tr");
+      if (!exibido) tr.className = "oculta";
+      var inicio = data(campo(linha, "startAt").value) || "sem data de início";
+      var nome = campo(linha, "description").value || campo(linha, "type").value || "(sem nome)";
+      /* O quê antes do quando: a ordem em que o cartão se preenche (revisão de 10/11). */
+      [["nome", nome], ["inicio quando", inicio], ["termino quando", data(campo(linha, "endAt").value)]]
+        .forEach(function (par) {
+          var td = document.createElement("td");
+          td.className = par[0];
+          td.textContent = par[1];
+          tr.appendChild(td);
+        });
+      var pdf = document.createElement("td");
+      pdf.className = "pdf";
+      var selo = document.createElement("span");
+      selo.className = "selo " + (exibido ? "no-pdf" : "fora");
+      selo.textContent = exibido ? "No PDF" : "Oculto";
+      pdf.appendChild(selo);
+      tr.appendChild(pdf);
+      corpo.appendChild(tr);
+    });
+    var ocultos = todas.length - noPdf;
+    var partes = [plural(todas.length, "evento", "eventos")];
+    if (todas.length) partes.push(noPdf + " no PDF");
+    if (ocultos) partes.push(plural(ocultos, "oculto", "ocultos"));
+    document.getElementById("conta").textContent = partes.join(" · ");
+    document.getElementById("tabela-previa").hidden = todas.length === 0;
+    document.getElementById("previa-vazia").hidden = todas.length !== 0;
+    document.getElementById("previa-todos-ocultos").hidden = !(todas.length && noPdf === 0);
+  }
+
+  lista.addEventListener("click", function (e) {
+    var botao = e.target.closest("button");
+    if (!botao) return;
+    var linha = botao.closest("fieldset");
+    if (botao.hasAttribute("data-pdf")) alternar(linha);
+    else if (botao.dataset.mover === "cima" && linha.previousElementSibling) lista.insertBefore(linha, linha.previousElementSibling);
+    else if (botao.dataset.mover === "baixo" && linha.nextElementSibling) lista.insertBefore(linha.nextElementSibling, linha);
+    else if (botao.hasAttribute("data-remover")) linha.remove();
+    atualizar();
+  });
+  lista.addEventListener("input", atualizar);
+
+  document.getElementById("ordenar").addEventListener("click", function () {
+    var atuais = linhas();
+    var ordem = ordemPorInicio(atuais.map(function (linha, i) {
+      return { chave: i, inicio: campo(linha, "startAt").value };
+    }));
+    var mudaram = ordem.filter(function (chave, i) { return chave !== i; }).length;
+    ordem.forEach(function (chave) { lista.appendChild(atuais[chave]); });
+    var semInicio = atuais.filter(function (linha) { return !campo(linha, "startAt").value; }).length;
+    var anuncio = mudaram
+      ? plural(mudaram, "Evento mudou", "Eventos mudaram") + " de posição."
+      : "Os Eventos já estão em ordem de início.";
+    if (semInicio) anuncio += " " + plural(semInicio, "Evento sem data de início ficou", "Eventos sem data de início ficaram") + " no fim.";
+    document.getElementById("anuncio").textContent = anuncio;
+    atualizar();
+  });
+
+  document.getElementById("acrescentar").addEventListener("click", function () {
+    acrescentar(null);
+    atualizar();
+  });
+
+  iniciais.forEach(acrescentar);
+  atualizar();
+})();
+</script>
+</body>
+</html>
