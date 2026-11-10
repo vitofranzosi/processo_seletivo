@@ -514,16 +514,157 @@ def _chave_da_lista(item, ordem_das_listas):
     Edital eventualmente declare com esse nome. Uma lista que o vigente já não conhece vai para o
     fim, pelo nome gravado, em vez de sumir.
     """
-    lista_id = item["publicacao"].lista_id
+    return posicao_da_lista(item["publicacao"].lista_id, item["lista"], ordem_das_listas)
+
+
+def posicao_da_lista(lista_id, nome, ordem_das_listas):
+    """A chave de ordenação de uma lista — a mesma para resultados e para sorteios (145)."""
     if lista_id is None:
         return (0, 0, "")
     if str(lista_id) in ordem_das_listas:
         return (1, ordem_das_listas[str(lista_id)], "")
-    return (2, 0, item["lista"])
+    return (2, 0, nome)
+
+
+def nome_da_lista_citada(relacao):
+    """O nome da lista na versão que a relação citou; "" quando ela não tem lista (021, FR-045).
+
+    Da versão citada, e não do conteúdo vigente, que uma Retificação posterior pode ter mudado.
+    """
+    if not relacao.lista_id:
+        return ""
+    for perfil in relacao.versao.content.get("profiles") or []:
+        if str(perfil.get("id")) != str(relacao.perfil_id):
+            continue
+        for modalidade in perfil.get("competitionModalities") or []:
+            if str(modalidade.get("id")) == str(relacao.lista_id):
+                return modalidade.get("name") or ""
+    return ""
 
 
 def _mais_recente(itens):
     return max(itens, key=lambda item: item["publicacao"].publicado_em)
+
+
+# ---------------------------------------------------------------------------
+# O sorteio de cada vaga, no cartão dela (145)
+# ---------------------------------------------------------------------------
+
+AMPLA_CONCORRENCIA = "Ampla concorrência"
+
+
+def sorteios_por_vaga(sorteios, conteudo):
+    """Os sorteios do Edital na forma do cartão: vaga, marco, lista (145, FR-5150 a FR-5153).
+
+    **A lateral dizia cada lista num bloco próprio**, com o nome inteiro da vaga em cada um: num
+    Edital de três vagas e três listas eram nove blocos, mais de quatro mil pontos de altura ao lado
+    de cartões de duzentos e poucos, e do título de uma vaga até a relação dela eram duas telas e
+    meia de celular. Quem chega pergunta pela vaga — é a mesma razão de `resultados_por_perfil`.
+
+    Recebe o que `sorteios_do_edital` já leu e o conteúdo vigente que a página já carregou, e **não
+    lê nada**: as duas consultas do sorteio continuam sendo duas (FR-5161).
+
+    Devolve `(por_vaga, resumo)`. `por_vaga` é indexado pelo identificador do Perfil; `resumo` é o
+    que o Edital inteiro tem a dizer, mais as relações de vaga que o conteúdo vigente já não conhece
+    — elas continuam publicadas, e sumir da página seria esconder um ato (FR-5160).
+    """
+    perfis = {str(perfil.get("id")): perfil for perfil in conteudo.get("profiles") or []}
+    grupos, sem_vaga = {}, []
+    for item in sorteios:
+        relacao = item["relacao"]
+        if str(relacao.perfil_id) not in perfis:
+            sem_vaga.append(item)
+            continue
+        grupos.setdefault(str(relacao.perfil_id), {}).setdefault(str(relacao.marco_id), []).append(
+            item
+        )
+
+    por_vaga = {}
+    for perfil_id, por_marco in grupos.items():
+        perfil = perfis[perfil_id]
+        ordem_dos_marcos = {
+            str(marco.get("id")): i
+            for i, marco in enumerate(perfil.get("classificationMilestones") or [])
+        }
+        ordem_das_listas = {
+            str(modalidade.get("id")): i
+            for i, modalidade in enumerate(perfil.get("competitionModalities") or [])
+        }
+        marcos = [
+            _marco_do_sorteio(itens, ordem_das_listas)
+            # Marco que o vigente já não declara vai para o fim, em vez de sumir.
+            for _, itens in sorted(
+                por_marco.items(),
+                key=lambda par: ordem_dos_marcos.get(par[0], len(ordem_dos_marcos)),
+            )
+        ]
+        por_vaga[perfil_id] = {
+            "marcos": marcos,
+            # O marco é nomeado só quando a vaga tem mais de um: com um só, o nome repetiria em
+            # cada cartão o que o rótulo do bloco já diz (FR-5151).
+            "varios_marcos": len(marcos) > 1,
+        }
+
+    return por_vaga, {
+        "total": len(sorteios),
+        "realizados": sum(1 for item in sorteios if item["sorteio"]),
+        # A frase "está na vaga dele" só é verdade havendo cartão que o receba.
+        "em_cartao": bool(por_vaga),
+        # Com o nome da lista — também o da ampla, e o que o vigente já não diz (FR-5153): sem
+        # ele, duas relações da mesma vaga retirada seriam dois acessos de texto igual.
+        "sem_vaga": [{**item, "lista": _nome_da_lista_do_sorteio(item)} for item in sem_vaga],
+    }
+
+
+def _marco_do_sorteio(itens, ordem_das_listas):
+    listas = sorted(
+        (
+            {
+                "nome": _nome_da_lista_do_sorteio(item),
+                "relacao": item["relacao"],
+                "sorteio": item["sorteio"],
+            }
+            for item in itens
+        ),
+        key=lambda lista: posicao_da_lista(
+            lista["relacao"].lista_id, lista["nome"], ordem_das_listas
+        ),
+    )
+    realizados = [lista["sorteio"] for lista in listas if lista["sorteio"]]
+    # **O estado é dito uma vez quando as listas estão no mesmo ponto** (FR-5154): três listas
+    # aguardando são uma frase, e não três. Sorteadas em instantes diferentes, a frase única diria
+    # a hora de uma só — então cada linha diz a sua.
+    fechamentos = {_ate_o_minuto(lista["relacao"].publicada_em) for lista in listas}
+    execucoes = {_ate_o_minuto(sorteio.executado_em) for sorteio in realizados}
+    aguardando = not realizados and len(fechamentos) == 1
+    realizado = len(realizados) == len(listas) and len(execucoes) == 1
+    return {
+        "nome": itens[0]["marco"],
+        "listas": listas,
+        "aguardando": aguardando,
+        "realizado": realizado,
+        "uniforme": aguardando or realizado,
+        "realizados": len(realizados),
+        "fechada_em": listas[0]["relacao"].publicada_em,
+        "executado_em": realizados[0].executado_em if realizados else None,
+    }
+
+
+def _nome_da_lista_do_sorteio(item):
+    """O recorte sem lista **é** a ampla concorrência (FR-5153) — o mesmo de `_chave_da_lista`.
+
+    Lista que o conteúdo vigente já não nomeia é lida da versão que a relação citou, como faz a
+    página da própria relação: inventar um rótulo seria afirmar uma denominação que o Edital não
+    publica, e deixá-la sem nome a confundiria com a ampla.
+    """
+    relacao = item["relacao"]
+    if not relacao.lista_id:
+        return AMPLA_CONCORRENCIA
+    return item["lista"] or nome_da_lista_citada(relacao)
+
+
+def _ate_o_minuto(instante):
+    return instante.replace(second=0, microsecond=0)
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,10 @@
+# Tasks: O sorteio de cada vaga no cartão dela (145)
+
+- [x] T001 `sorteios_por_vaga` em `backend/processo_seletivo/portal/leitura.py` (FR-5150 a FR-5154, FR-5160, FR-5161)
+- [x] T002 Ligar a leitura no contexto da página, em `backend/processo_seletivo/portal/views.py` (FR-5150, FR-5158)
+- [x] T003 O bloco do Edital antes das vagas, em `selecao.html` (FR-5158 a FR-5160)
+- [x] T004 O bloco da vaga no cartão, em `selecao.html` (FR-5150 a FR-5157, UX-401, UX-402)
+- [x] T005 As regras na folha do portal e a ordem das áreas (FR-5159, UX-400)
+- [x] T006 Testes de unidade da reorganização (FR-5150 a FR-5154, FR-5160)
+- [x] T007 Testes da página (FR-5150 a FR-5162, SC-1601 a SC-1603)
+- [x] T008 Verificação no preview a 1280 e a 375 (SC-1600, UX-400)
