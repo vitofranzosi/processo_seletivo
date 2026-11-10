@@ -267,8 +267,8 @@ def test_o_resumo_conta_feitos_sobre_os_que_se_aplicam():
     por_tipo[a.CORTE].celulas["pcd"] = a.Celula(a.PENDENTE)
     por_tipo[a.APURACAO].celulas["pcd"] = a.Celula(a.NAO_SE_APLICA)
     por_tipo[a.RESULTADO].celulas = {
-        "": a.Celula(a.PENDENTE, nota="resultado preliminar"),
-        "pcd": a.Celula(a.PENDENTE, nota="resultado preliminar"),
+        "": a.Celula(a.PENDENTE, nota="resultado preliminar", divulgado=a.PRELIMINAR),
+        "pcd": a.Celula(a.PENDENTE, nota="resultado preliminar", divulgado=a.PRELIMINAR),
     }
     resumo = a.resumo_do_perfil(perfil)
     assert resumo.startswith("2 listas")
@@ -319,9 +319,9 @@ def _perfil_com_resultado(*celulas):
 
 def test_o_resultado_em_palavras_le_qualquer_situacao():
     """Item 1 da revisão do B2: o preliminar na janela recursal é *Aguarda*, e está publicado."""
-    preliminar = a.Celula(a.AGUARDA, nota="resultado preliminar")
+    preliminar = a.Celula(a.AGUARDA, nota="resultado preliminar", divulgado=a.PRELIMINAR)
     assert a._resultado_em_palavras(_perfil_com_resultado(preliminar)) == "resultado preliminar"
-    definitivo = a.Celula(a.FEITO, nota="resultado definitivo")
+    definitivo = a.Celula(a.FEITO, nota="resultado definitivo", divulgado=a.DEFINITIVO)
     nada = a.Celula(a.PENDENTE)
     assert a._resultado_em_palavras(_perfil_com_resultado(definitivo, nada, nada)) == (
         "resultado publicado em 1 de 3 listas"

@@ -91,8 +91,8 @@ O mesmo estudo achou mais três pontos em que o andamento diz menos do que sabe,
 ### O que esta spec cobre, e o que fica fora
 
 **Cobre:**
-- a informação de lista sem inscritos na célula e na providência da ordem por pontuação, antes da
-  emissão;
+- a informação de lista em que ninguém concorre na célula e na providência da ordem por pontuação,
+  antes da emissão;
 - a natureza do que foi divulgado, como dado da célula do resultado;
 - a razão da espera do definitivo no andamento;
 - a redação das duas contagens.
@@ -123,8 +123,8 @@ descobre na tela do ato que não há classificação a fazer, e sim uma declara�
 **Why this priority**: é o defeito que torna inseguro destacar uma ação — a C1 do estudo depende dele.
 É também o que mais induz a uma leitura errada: "há uma classificação a fazer na PPP".
 
-**Independent Test**: no C08 (PPP sem inscritos), como a presidência, três lugares dizem que a lista
-não tem inscritos e que o ato declara que ninguém concorreu:
+**Independent Test**: no C08 (PPP sem inscritos), como a presidência, três lugares dizem que ninguém
+concorre pela lista e que o ato declara que ninguém concorreu:
 - o cartão "O que fazer agora";
 - o "Andamento da seleção";
 - o "Próximo nesta lista".
@@ -136,16 +136,16 @@ No C04 (PPP com inscritos), nada muda.
 1. **Given** um Edital por pontuação, com uma lista pela qual nenhuma inscrição concorre e a ordem
    dessa lista não emitida, **When** quem conduz abre o detalhe do Edital, **Then** a providência da
    ordem dessa lista:
-   - diz que a lista não tem inscritos e que emitir declara que ninguém concorreu;
+   - diz que ninguém concorre pela lista e que emitir declara que ninguém concorreu;
    - continua sendo providência de quem conduz, com o link para a mesma tela.
 2. **Given** o mesmo Edital, **When** a pessoa abre a matriz do "Andamento da seleção", **Then** a
-   célula da ordem da lista vazia continua *Pendente* e traz a nota de lista sem inscritos.
+   célula da ordem da lista vazia continua *Pendente* e traz a nota de que ninguém concorre.
 3. **Given** a ordem vazia já emitida, **When** a pessoa abre o detalhe, **Then** a célula fica
    *Feito*, com a nota "ninguém concorreu", como hoje.
 4. **Given** uma lista com ao menos uma inscrição, **When** a pessoa abre o detalhe, **Then** a
    providência e a célula são as de hoje, sem menção a lista vazia.
 5. **Given** quem publica resultado, ou quem só acompanha, **When** abre o detalhe, **Then** a
-   providência de outro papel ("Quem conduz a seleção: …") também diz que a lista não tem inscritos.
+   providência de outro papel ("Quem conduz a seleção: …") também diz que ninguém concorre.
 
 ---
 
@@ -231,9 +231,13 @@ providências dos marcos. Nenhum dos dois números muda.
   concorrer por ela). A contagem é a do conteúdo vigente na data da leitura, a mesma que a tela do
   ato usa.
 - **A lista vazia com a ordem obsoleta.** A célula é *Obsoleto*, como hoje. Se a lista seguir vazia, a
-  nota de lista sem inscritos acompanha.
+  nota de que ninguém concorre acompanha.
 - **A lista que tinha inscritos e ficou sem nenhum que concorra** (desistência antes da ordem, por
-  exemplo). Vale a contagem da leitura: a providência diz que a lista não tem inscritos.
+  exemplo). Vale a contagem da leitura: a providência diz que ninguém concorre pela lista.
+- **A lista cujas inscrições foram todas eliminadas numa Etapa anterior à do marco.** Ninguém
+  concorre por ela no marco, pelo critério da tela da ordenação, e a lista é vazia. Por isso a
+  frase diz que **ninguém concorre**, e não que a lista não tem inscritos: houve inscrição, e quem
+  lesse "sem inscritos" entenderia que ninguém se inscreveu (a revisão do PR #441).
 - **A ordem que o comando recusa por falta de resultado** (`128`). A recusa continua prevalecendo
   sobre a lista vazia: a célula é a de hoje (*Depois* ou *Impedido*), e a lista vazia não a transforma
   em *Pendente*.
@@ -247,24 +251,25 @@ providências dos marcos. Nenhum dos dois números muda.
   providências com a menção à lista vazia. Não ganha acesso a nada novo.
 - **Duas listas vazias no mesmo marco.** A providência agrupada (a decisão da `127` de uma providência
   por ato) diz quais listas são,
-  e que nenhuma tem inscritos. Uma lista vazia e uma com inscritos, no mesmo ato, não se agrupam como
-  se fossem iguais.
+  e que ninguém concorre em nenhuma. Uma lista vazia e uma em que alguém concorre, no mesmo ato,
+  não se agrupam como se fossem iguais.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-**A lista sem inscritos (A-09, G-1)**
+**A lista em que ninguém concorre (A-09, G-1)**
 
 - **FR-4670**: Para cada lista de um marco por pontuação cuja ordem ainda não foi emitida, a derivação
   do andamento MUST saber se alguma inscrição concorre por ela. O critério MUST ser o mesmo que a tela
   da ordenação usa para dizer "ninguém concorreu por este recorte".
-- **FR-4671**: Para lista sem inscritos, a célula da ordem:
+- **FR-4671**: Para lista em que ninguém concorre, a célula da ordem:
   - MUST continuar *Pendente*, de quem conduz, com o mesmo link de hoje;
-  - MUST trazer a nota de que a lista não tem inscritos.
-- **FR-4672**: A providência dessa célula MUST dizer, na própria frase do ato, que a lista não tem
-  inscritos e que emitir declara que ninguém concorreu, em linguagem simples e sem identificador
-  interno. O texto exato é do plano.
+  - MUST trazer a nota de que ninguém concorre pela lista.
+- **FR-4672**: A providência dessa célula MUST dizer, na própria frase do ato, que ninguém concorre
+  pela lista e que emitir declara que ninguém concorreu, em linguagem simples e sem identificador
+  interno. MUST NOT dizer que a lista não tem inscritos, que é falso quando as inscrições dela foram
+  eliminadas numa Etapa anterior. O texto exato é do plano.
 - **FR-4673**: A providência MUST carregar a informação de lista vazia também como dado, além do texto,
   para que a apresentação possa tratá-la sem ler a frase.
 - **FR-4674**: O agrupamento das providências (a decisão da `127` de uma providência por ato) MUST NOT juntar num mesmo item a ordem
@@ -304,14 +309,14 @@ providências dos marcos. Nenhum dos dois números muda.
 **Restrições**
 
 - **FR-4686**: O custo de leitura do detalhe do Edital MUST continuar fixo por Edital (FR-4120 da
-  `127`). Se a FR-4670 exigir leitura nova, ela MUST ser uma por Edital ou por marco, e nunca uma por
-  inscrição.
+  `127`). Se a FR-4670 exigir leitura nova, ela MUST ter custo fixo por Edital ou por marco, e nunca
+  crescer com as inscrições.
 - **FR-4687**: Nenhuma mudança MUST alterar o que um comando aceita ou recusa, quem vê o quê, ou
   qualquer documento já publicado.
 
 ### Key Entities
 
-- **Célula do andamento** (`127`). Ganha dois dados de leitura: lista sem inscritos (na ordem) e
+- **Célula do andamento** (`127`). Ganha dois dados de leitura: lista em que ninguém concorre (na ordem) e
   natureza do divulgado (no resultado). Nada é persistido.
 - **Providência** (`127`). Ganha o dado de lista vazia, herdado da célula.
 
@@ -320,7 +325,7 @@ providências dos marcos. Nenhum dos dois números muda.
 ### Measurable Outcomes
 
 - **SC-1460**: Nos C08, C12 e C14 da `134` (PPP sem inscritos), **zero** providências de ordem da PPP
-  sem a menção à lista sem inscritos, para qualquer papel que veja a providência.
+  sem a menção de que ninguém concorre pela lista, para qualquer papel que veja a providência.
 - **SC-1461**: No C04 (PPP com inscritos), **zero** menções a lista vazia.
 - **SC-1462**: No C08 e no C12:
   - **zero** razões de espera do definitivo, no andamento, que ofereçam publicar como preliminar;
