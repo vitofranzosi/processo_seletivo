@@ -158,9 +158,15 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
     <p class="campo">
       <label for="complemento-titulares">Complemento do fundamento <span class="opcional">(opcional)</span></label>
       <textarea id="complemento-titulares" name="complemento" rows="2" aria-describedby="ajuda-complemento-titulares"></textarea>
-      <span class="ajuda" id="ajuda-complemento-titulares"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado, igual em todas as convocações deste ato; antes de confirmar, você o verá como o candidato.</span>
+      <span class="ajuda" id="ajuda-complemento-titulares"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado, igual em todas as convocações deste ato.</span>
     </p>
-    <p class="acoes"><button type="submit" class="botao">Convocar {{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}</button></p>
+    {% comment %}
+    **O botão abre a conferência, e não pratica** (140, FR-4800, FR-4816). A ajuda antiga dizia
+    "antes de confirmar, você o verá como o candidato", e a conferência só existia com complemento
+    digitado: no C10 da `134`, o clique sem complemento praticou e enviou três mensagens.
+    {% endcomment %}
+    <p class="acoes"><button type="submit" class="botao">Conferir e convocar {{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}</button></p>
+    <p class="ajuda">Este botão abre a conferência: quem será convocado, o texto que cada pessoa lerá, o prazo e quem fica de fora. Nada é praticado nem enviado antes de você confirmar nela.</p>
   </form>
   {% endif %}
 </section>

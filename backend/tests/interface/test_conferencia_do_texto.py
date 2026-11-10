@@ -16,7 +16,14 @@ from processo_seletivo.convocacao.models import Convocacao, DesfechoDaConvocacao
 from tests.fixtures.convocacao import montar_cenario_da_convocacao
 from tests.fixtures.corte import MARCO, regra
 from tests.interface.conftest import identificar
-from tests.interface.test_convocacao_em_fluxo import VENCIMENTO, abrir, postar_titulares, previa
+from tests.interface.test_convocacao_em_fluxo import (
+    VENCIMENTO,
+    abrir,
+    campos_da_conferencia,
+    conferir_titulares,
+    postar_titulares,
+    previa,
+)
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -67,32 +74,41 @@ def test_cada_campo_diz_que_o_texto_chega_ao_candidato(client, seletor_ligado, c
     assert "O candidato lerá este fundamento" in pagina
 
 
-def test_sem_complemento_o_gesto_e_direto_como_hoje(client, seletor_ligado, cenario_da_tela):
-    """D-004: sem texto digitado, nada a conferir — o derivado já está na tela."""
+def test_sem_complemento_o_gesto_passa_pela_conferencia_da_140(
+    client, seletor_ligado, cenario_da_tela
+):
+    """D-004 da `125` revista pela `140` no gesto dos titulares: sem texto digitado, a
+    conferência continua, e nada é praticado antes dela (FR-4800 da `140`)."""
     edital, _, _ = cenario_da_tela
     identificar(client, "carlos", ["gestor"])
 
-    postar_titulares(client, edital, previa(edital)["assinatura"])
+    resposta = conferir_titulares(client, edital, previa(edital)["assinatura"])
 
-    assert Convocacao.objects.count() == 2
+    assert resposta.status_code == 200
+    assert "Confira antes de convocar" in resposta.content.decode()
+    assert Convocacao.objects.count() == 0
 
 
 def test_com_complemento_a_previa_vem_antes_e_nao_pratica_nada(
     client, seletor_ligado, cenario_da_tela
 ):
-    """FR-3993, FR-3994, FR-3996: o texto composto e quantas pessoas, sem ato nenhum."""
+    """FR-3993, FR-3994, FR-3996: o texto composto e quantas pessoas, sem ato nenhum.
+
+    Nos titulares, desde a `140`, pela conferência dela: a página diz as pessoas uma a uma, e o
+    botão repete o número.
+    """
     edital, _, _ = cenario_da_tela
     identificar(client, "carlos", ["gestor"])
     p = previa(edital)
 
-    pagina = _seguir(
-        client, postar_titulares(client, edital, p["assinatura"], complemento=COMPLEMENTO)
-    )
+    pagina = conferir_titulares(
+        client, edital, p["assinatura"], complemento=COMPLEMENTO
+    ).content.decode()
 
     assert Convocacao.objects.count() == 0
-    assert "Conferir o texto" in pagina
+    assert "Confira antes de convocar" in pagina
     assert f"{p['fundamento']} Complemento: {COMPLEMENTO}" in pagina
-    assert "Este texto será mostrado a 2 pessoas." in pagina
+    assert "Serão convocadas (2)" in pagina
     assert "Convocar as 2" in pagina
 
 
@@ -101,12 +117,8 @@ def test_confirmada_a_previa_o_candidato_le_o_mesmo_texto(client, seletor_ligado
     edital, _, _ = cenario_da_tela
     identificar(client, "carlos", ["gestor"])
     p = previa(edital)
-    pagina = _seguir(
-        client, postar_titulares(client, edital, p["assinatura"], complemento=COMPLEMENTO)
-    )
-    acao, campos = _campos_da_conferencia(pagina)
 
-    client.post(acao, {**campos, "etapa": "confirmar"})
+    postar_titulares(client, edital, p["assinatura"], complemento=COMPLEMENTO)
 
     gravados = list(Convocacao.objects.values_list("fundamento", flat=True))
     assert len(gravados) == 2
@@ -117,14 +129,15 @@ def test_texto_editado_na_previa_volta_a_previa(client, seletor_ligado, cenario_
     """R-006: a prévia assina o texto; o editado e confirmado direto volta, sem ato."""
     edital, _, _ = cenario_da_tela
     identificar(client, "carlos", ["gestor"])
-    pagina = _seguir(
-        client,
-        postar_titulares(client, edital, previa(edital)["assinatura"], complemento=COMPLEMENTO),
+    conferencia = conferir_titulares(
+        client, edital, previa(edital)["assinatura"], complemento=COMPLEMENTO
     )
-    acao, campos = _campos_da_conferencia(pagina)
+    campos = campos_da_conferencia(conferencia)
 
-    resposta = client.post(acao, {**campos, "complemento": "Outro texto.", "etapa": "confirmar"})
-    pagina = _seguir(client, resposta)
+    pagina = client.post(
+        reverse("interface:convocar-titulares", args=[edital.id, MARCO]),
+        {**campos, "complemento": "Outro texto.", "etapa": "confirmar"},
+    ).content.decode()
 
     assert Convocacao.objects.count() == 0
     assert "O texto mudou desde a prévia" in pagina
@@ -136,11 +149,10 @@ def test_a_volta_preserva_o_que_foi_preenchido(client, seletor_ligado, cenario_d
     edital, _, _ = cenario_da_tela
     identificar(client, "carlos", ["gestor"])
     p = previa(edital)
-    pagina = _seguir(
-        client, postar_titulares(client, edital, p["assinatura"], complemento=COMPLEMENTO)
-    )
 
-    _, campos = _campos_da_conferencia(pagina)
+    campos = campos_da_conferencia(
+        conferir_titulares(client, edital, p["assinatura"], complemento=COMPLEMENTO)
+    )
 
     assert campos["complemento"] == COMPLEMENTO
     assert campos["vencimento"] == VENCIMENTO

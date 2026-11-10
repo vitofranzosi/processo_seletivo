@@ -1,0 +1,80 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}Conferir — Convocar os titulares{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/aviso.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{{ destino }}">Convocação</a> › <span aria-current="page">Conferir</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A conferência antes de convocar os titulares (140, FR-4800 a FR-4818, UX-330 a UX-332).
+
+**Esta página não grava nada** (FR-4807): ela é a resposta do próprio pedido, e não um
+redirecionamento com portador na sessão, como a conferência de texto da `125`. Recarregá-la pede a
+prévia de novo. As peças são as de `marco_conferir.html` — o ato irreversível em destaque, os grupos
+com título e contagem, e "Cancelar e voltar" —, e a mensagem usa a moldura da prévia dos avisos
+(066), que já mostra texto de e-mail como sai.
+
+**A confirmação leva o que a tela da convocação emitiu**, intacto: a chave de idempotência e a
+assinatura do alcance (FR-4808). O resumo do texto é desta conferência (FR-4809).
+{% endcomment %}
+<h1>Confira antes de convocar</h1>
+<p class="sub">Convocar os titulares — {{ rotulo_do_recorte }}, {{ rotulo_do_edital }}</p>
+
+{% if conferencia.recusa %}
+<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não é possível convocar agora:</strong> {{ conferencia.recusa.detalhe }}</p>
+<p><a href="{{ destino }}" class="acao">Voltar à convocação</a></p>
+{% else %}
+{% if erro %}<p class="aviso" role="alert" tabindex="-1" autofocus>{{ erro }}</p>{% endif %}
+<p class="ajuda">Nasce <strong>uma convocação imutável por pessoa</strong>, com você como autor{% if conferencia.publicacao %}. Nenhuma mensagem sai neste ato: a forma deste Perfil é a publicação, que você registra depois, e o candidato só vê a convocação a partir do registro.{% else %}, e a mensagem sai no mesmo ato para cada uma — e não volta.{% endif %} Corrigir uma convocação é sucedê-la com motivo, uma a uma.</p>
+
+<section aria-labelledby="convocadas-titulo" class="consequencias irreversivel">
+  <h2 id="convocadas-titulo">{% if conferencia.pessoas|length == 1 %}Será convocada (1){% else %}Serão convocadas ({{ conferencia.pessoas|length }}){% endif %}, para vaga inicial</h2>
+  <ol>{% for pessoa in conferencia.pessoas %}<li>{{ pessoa.protocolo }} — {{ pessoa.nome }} · para vaga inicial</li>{% endfor %}</ol>
+  <p class="ajuda">A espécie vem da posição na fila: {{ conferencia.pessoas|length|plural:"está,estão" }} entre as vagas da apuração vigente.</p>
+</section>
+
+<section aria-labelledby="texto-titulo" class="consequencias">
+  <h2 id="texto-titulo">O que cada pessoa lerá</h2>
+  <dl class="dados-da-inscricao">
+    <dt>No portal, como fundamento da convocação</dt><dd>{{ conferencia.fundamento }}</dd>
+  </dl>
+  {% if conferencia.publicacao %}
+  <p>Nenhuma mensagem sai neste ato.</p>
+  {% else %}
+  {% for mensagem in conferencia.mensagens %}
+  <h3>{% if conferencia.mensagens|length == 1 %}Na mensagem, enviada a {{ mensagem.pessoas|length|plural:"esta pessoa,cada uma" }}{% else %}Na mensagem para {{ mensagem.pessoas|join:", " }}{% endif %}</h3>
+  <p><strong>Assunto:</strong> {{ mensagem.assunto }}</p>
+  <pre class="texto-do-aviso">{{ mensagem.corpo }}</pre>
+  {% endfor %}
+  <p class="ajuda">O texto é o do modelo que o envio usa. No lugar indicado, cada pessoa recebe o link da própria convocação.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="prazo-titulo" class="consequencias">
+  <h2 id="prazo-titulo">Prazo</h2>
+  <p>{{ conferencia.prazo.frase }}</p>
+  {% if not conferencia.prazo.informado %}<p class="ajuda">Se o Edital publica prazo para atender, cancele, volte e informe-o: ele corre {{ conferencia.canal.a_partir_de }}.</p>{% endif %}
+</section>
+
+{% if conferencia.fora %}
+<section aria-labelledby="fora-titulo" class="consequencias">
+  <h2 id="fora-titulo">{% if conferencia.fora|length == 1 %}Fica de fora (1){% else %}Ficam de fora ({{ conferencia.fora|length }}){% endif %}</h2>
+  <ul>{% for item in conferencia.fora %}<li><strong>{{ item.rotulo }}</strong> — {{ item.razao }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+<form method="post" action="{% url 'interface:convocar-titulares' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  {% for chave, valor in campos.items %}<input type="hidden" name="{{ chave }}" value="{{ valor }}">
+  {% endfor %}<input type="hidden" name="texto_conferido" value="{{ resumo }}">
+  <p class="campo">
+    <label for="complemento-da-conferencia">Complemento do fundamento <span class="opcional">(opcional)</span></label>
+    <textarea id="complemento-da-conferencia" name="complemento" rows="2" aria-describedby="ajuda-complemento-da-conferencia">{{ complemento }}</textarea>
+    <span class="ajuda" id="ajuda-complemento-da-conferencia"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado, igual em todas as convocações deste ato. Editou? Confira de novo antes de convocar.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" name="etapa" value="confirmar" class="botao perigoso">{{ rotulo_do_botao }}</button>
+    <button type="submit" name="etapa" value="conferir" class="acao">Conferir de novo</button>
+    <a href="{{ destino }}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endif %}
+{% endblock %}

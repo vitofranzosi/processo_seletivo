@@ -14,6 +14,11 @@ precisa funcionar sem ele (FR-3995). A composição é a mesma que o ato grava �
 *"O candidato lerá este fundamento"*, e o formulário confirma direto, como sempre. O desfecho exige
 fundamento, e por isso passa sempre por aqui.
 
+**O gesto dos titulares não passa mais por aqui** (140, FR-4800): ele envia N mensagens num ato, e
+desde a `140` tem conferência própria, sempre, que mostra também a mensagem, o prazo e quem fica de
+fora, e não grava nada na sessão (`convocacao_conferir.html`). Ela usa o `resumo` e o `TEXTO_MUDOU`
+daqui, para que as duas conferências assinem e recusem do mesmo jeito.
+
 **A prévia assina o texto** (R-006). A confirmação recompõe e compara o resumo: se o fundamento
 derivado mudou entre a prévia e o clique — outra apuração, outra versão —, ou se o operador editou o
 texto na própria prévia, ela não pratica nada, e volta com a prévia nova à vista. A chave de
