@@ -9,10 +9,12 @@ O pendente é dito em texto, e não só por cor. A comprovação usa o mesmo pai
 documentos acima, pelo mesmo atributo de dados: abrir pela ficha é a mesma abertura, com o mesmo
 registro na trilha.
 
-Concluída, a mesma tabela vira leitura, com o barema da versão que a conclusão cita (D-011).
+Concluída, a mesma tabela vira leitura, com o barema da versão que a conclusão cita (D-011). Na
+tela de julgamento de recurso é o mesmo componente (FR-5227): a comprovação fica só com o nome,
+porque o painel da Mesa passa pela Atribuição de quem avalia.
 {% endcomment %}
-<section class="ficha-do-barema" aria-labelledby="ficha-do-barema-titulo"{% if not ficha.concluida %} data-ficha-do-barema{% endif %}>
-  <h3 id="ficha-do-barema-titulo">Barema</h3>
+<section class="ficha-do-barema" aria-labelledby="ficha-{{ ficha.chave }}-titulo"{% if not ficha.concluida %} data-ficha-do-barema{% endif %}>
+  <h3 id="ficha-{{ ficha.chave }}-titulo">{{ ficha.titulo }}</h3>
   {% if not ficha.concluida %}
   <p class="ajuda" id="ajuda-da-ficha">Informe a quantidade ou os pontos de cada critério; o total é calculado pelo sistema. Zero também é resposta, e a justificativa é opcional — quando escrita, o candidato a lê junto da pontuação.</p>
   {% endif %}
@@ -35,7 +37,7 @@ Concluída, a mesma tabela vira leitura, com o barema da versão que a conclusã
           {% if linha.descricao %}<span class="descricao-do-criterio">{{ linha.descricao }}</span>{% endif %}
           {% if linha.documento %}
           <span class="comprovacao-do-criterio">Comprovação: {{ linha.documento.nome }}
-            {% if linha.documento.enviado %}<a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id linha.documento.id %}" target="_blank" rel="noopener" data-documento="{{ linha.documento.nome }}" aria-label="Abrir {{ linha.documento.nome }}, comprovação de {{ linha.nome }}">Abrir</a>{% else %}<span class="ausente">não apresentado</span>{% endif %}
+            {% if not ficha.na_mesa %}{% elif linha.documento.enviado %}<a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id linha.documento.id %}" target="_blank" rel="noopener" data-documento="{{ linha.documento.nome }}" aria-label="Abrir {{ linha.documento.nome }}, comprovação de {{ linha.nome }}">Abrir</a>{% else %}<span class="ausente">não apresentado</span>{% endif %}
           </span>
           {% endif %}
         </th>

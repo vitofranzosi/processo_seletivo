@@ -256,13 +256,28 @@ def ficha_da_avaliacao(avaliacao, etapa_vigente, etapa_id, documentos, conteudo_
     )
 
 
-def ficha_do_barema(criterios, detalhamento, documentos, conteudo, *, total=None, concluida=False):
+def ficha_do_barema(
+    criterios,
+    detalhamento,
+    documentos,
+    conteudo,
+    *,
+    total=None,
+    concluida=False,
+    titulo="Barema",
+    chave="do-barema",
+    na_mesa=True,
+):
     """As linhas da ficha, com a comprovação resolvida — o que o template desenha (UX-422).
 
     `documentos` é a lista que a Mesa já mostra; o critério ligado a um deles ganha o "Abrir" do
     mesmo painel. O documento que a inscrição não apresentou aparece como "não apresentado", e zero
     é a resposta esperada. A parcela de cada linha do rascunho é refeita sem recusar: o valor que a
     máxima nova não admite precisa aparecer para ser corrigido, e quem recusa é a gravação.
+
+    É o mesmo componente na tela de julgamento de recurso (146, FR-5227), com `na_mesa=False`: lá o
+    "Abrir" da Mesa não vale — ele passa pela Atribuição de quem avalia —, e a comprovação é só o
+    nome do documento. `titulo` e `chave` distinguem duas fichas na mesma página.
     """
     from processo_seletivo.publicacoes.infrastructure.pdf import pontuacao_do_criterio
 
@@ -325,6 +340,9 @@ def ficha_do_barema(criterios, detalhamento, documentos, conteudo, *, total=None
         "maxima": sum((Decimal(str(c.get("maximumScore") or 0)) for c in criterios), Decimal("0")),
         "pendentes": [linha["nome"] for linha in linhas if linha["pendente"]],
         "concluida": concluida,
+        "titulo": titulo,
+        "chave": chave,
+        "na_mesa": na_mesa,
     }
 
 

@@ -4,7 +4,9 @@ A jornada é a de `quickstart.md` §2–§3, pelos comandos reais: a Etapa do ma
 14/2026, duas inscrições são pontuadas pela ficha, a presidência consolida, emite a ordem e publica
 o preliminar. Daí em diante nada sabe do barema (FR-5220): a consolidação copia o total, e a ordem
 o combina. O que é novo é o que o titular lê — a pontuação critério a critério, pela versão que o
-Resultado cita — e a recusa da correção fixada enquanto o incremento C não chega (FR-5232).
+Resultado cita — e a reavaliação determinada pela ficha. A correção fixada com detalhamento é do
+incremento C, em `integration/recursos/test_correcao_com_barema.py`; a recusa temporária que o B
+punha no lugar dela (FR-5232) saiu com ele.
 """
 
 import re
@@ -14,26 +16,23 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.classificacao.models import PosicaoNaOrdem
-from processo_seletivo.portal.identidade import IdentidadeDoCandidato
-from processo_seletivo.recursos.application.admitir import admitir
-from processo_seletivo.recursos.application.interpor import interpor
-from processo_seletivo.recursos.application.julgar import CORRECAO_FIXADA_SEM_BAREMA, julgar
+from processo_seletivo.recursos.application.julgar import julgar
 from processo_seletivo.recursos.models import DecisaoRecurso
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from processo_seletivo.resultados.application.selectors import detalhamento_do_resultado
 from processo_seletivo.resultados.models import ResultadoEtapa
-from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.barema import (
     concluir_com_ficha,
     criterio_de,
     ficha,
     montar_marco_com_barema,
     pontuar_com_ficha,
+    recorrer_do_preliminar,
 )
 from tests.fixtures.divulgacao import emitir, entrar_como_titular, publicar_o_ato
 from tests.fixtures.mesa import distribuir_para
 from tests.fixtures.publicacao import retify
-from tests.fixtures.recursos_us4 import assinatura_de, julgador
+from tests.fixtures.recursos_us4 import julgador
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -147,51 +146,7 @@ def test_retificacao_posterior_nao_muda_o_que_o_titular_le(client, api_client, c
 
 @pytest.fixture
 def peca(cenario, gestor):
-    """O recurso da eliminada, interposto e admitido pelo caminho real, contra o preliminar."""
-    ato = emitir(cenario, gestor, chave="emitir-146d")
-    publicar_o_ato(cenario, chave="publicar-146d", ato=ato)
-    inscricao = cenario["inscricoes"][1]
-    superado = ResultadoEtapa.vigentes.get(inscricao=inscricao, etapa_id=cenario["etapa"])
-    recurso = interpor(
-        identidade=IdentidadeDoCandidato(
-            inscricao.identity_subject, inscricao.nome, inscricao.cpf_normalizado, "c@ex.br"
-        ),
-        inscricao=inscricao,
-        resultado=superado,
-        fundamentacao="A especialização é da área: o certificado diz Educação a Distância.",
-        assinatura_do_objeto=str(superado.pk),
-        idempotency_key="interpor-146",
-    )
-    admitir(
-        actor=julgador(),
-        recurso_id=recurso.id,
-        admitido=True,
-        motivo="Tempestivo.",
-        assinatura_do_estado=assinatura_de(recurso),
-        idempotency_key="admitir-146",
-    )
-    return {"recurso": recurso, "superado": superado, "inscricao": inscricao}
-
-
-def test_a_correcao_fixada_e_recusada_enquanto_o_c_nao_chega(cenario, peca):
-    """T036, FR-5232, SC-1635: 409 com a orientação para a reavaliação, e nada gravado."""
-    with pytest.raises(DomainError) as recusa:
-        julgar(
-            actor=julgador(),
-            recurso_id=peca["recurso"].id,
-            especie=DecisaoRecurso.Especie.CORRECAO_FIXADA,
-            motivacao="A especialização é da área.",
-            etapa_id=cenario["etapa"],
-            pontuacao="35.0000",
-            assinatura_do_resultado=str(peca["superado"].id),
-            idempotency_key="corrigir-146",
-        )
-
-    assert recusa.value.code == CORRECAO_FIXADA_SEM_BAREMA
-    assert recusa.value.status == 409
-    assert "reavaliação determinada" in recusa.value.detail
-    assert not DecisaoRecurso.objects.exists()
-    assert not ResultadoEtapa.objects.filter(resultado_anterior__isnull=False).exists()
+    return recorrer_do_preliminar(cenario, gestor, cenario["inscricoes"][1], sufixo="146d")
 
 
 def test_a_reavaliacao_determinada_continua_e_percorre_a_ficha(client, cenario, peca, gestor):

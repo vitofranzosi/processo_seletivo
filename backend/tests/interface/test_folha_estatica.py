@@ -253,8 +253,12 @@ QUEM_CARREGA = {
         "convocacao_conferir.html",
     },
     "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
-    # A ficha do barema (146): na Mesa, e resumida nas conclusões preservadas.
-    "interface/grupos/ficha-do-barema.css": {"mesa_inscricao.html", "conclusoes.html"},
+    # A ficha do barema (146): na Mesa, resumida nas conclusões preservadas, e no julgamento.
+    "interface/grupos/ficha-do-barema.css": {
+        "mesa_inscricao.html",
+        "conclusoes.html",
+        "recurso.html",
+    },
     "interface/grupos/serie.css": {"processo_detalhe.html", "supervisao.html"},
     "interface/grupos/terminais.css": {
         # O Centro de Controle (136) desenha Encerrar e Cancelar como o detalhe os desenha.

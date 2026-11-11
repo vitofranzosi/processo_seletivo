@@ -231,7 +231,14 @@ def resultados_visiveis(inscricao):
         # recebe, e buscá-lo depois custaria uma consulta por Resultado corrigido — o tipo de custo
         # que só aparece quando o histórico cresce. A `avaliacao` entra pela mesma razão: é dela que
         # vem o detalhamento por critério (146), e sem a junção seria uma consulta por Etapa.
-        .select_related("resultado_anterior", "decisao", "decisao__recurso", "avaliacao")
+        .select_related(
+            "resultado_anterior",
+            "resultado_anterior__avaliacao",
+            "resultado_anterior__decisao",
+            "decisao",
+            "decisao__recurso",
+            "avaliacao",
+        )
         .order_by("consolidado_em")
     )
     fichas = _fichas_dos_resultados(resultados)
@@ -320,7 +327,7 @@ def _fichas_dos_resultados(resultados):
         conteudo = conteudos.get(resultado.versao_id)
         criterios = barema_da_versao(conteudo, resultado.etapa_id)
         if criterios:
-            fichas[resultado.id] = ficha_do_barema(
+            ficha = ficha_do_barema(
                 criterios,
                 com_detalhamento[resultado.id],
                 [],
@@ -328,7 +335,49 @@ def _fichas_dos_resultados(resultados):
                 total=resultado.pontuacao,
                 concluida=True,
             )
+            _marcar_alterados(ficha, resultado)
+            fichas[resultado.id] = ficha
     return fichas
+
+
+def _marcar_alterados(ficha, resultado):
+    """Os critérios que o recurso mudou, marcados (146, FR-5228).
+
+    Só no sucessor, e comparando com o detalhamento do Resultado que ele superou: o titular precisa
+    ver **qual parcela** a decisão corrigiu, e não a ficha inteira de novo. Critério que não existia
+    antes conta como alterado. Sem detalhamento anterior, nada se marca — não há com o que comparar.
+    """
+    anterior = resultado.resultado_anterior if resultado.resultado_anterior_id else None
+    antes = {
+        str(linha.get("criterionId")): linha
+        for linha in (detalhamento_do_resultado(anterior) if anterior else [])
+    }
+    ficha["alterados"] = 0
+    for linha in ficha["linhas"]:
+        if not antes:
+            linha["alterado"] = False
+            continue
+        velha = antes.get(linha["id"])
+        # A parcela **ou** o que foi informado: 3 certificados que viram 4 continuam em 10, no teto,
+        # e mesmo assim a decisão mudou o que se reconheceu.
+        linha["alterado"] = velha is None or (
+            _comparavel(velha.get("parcela")) != _comparavel(linha["parcela"])
+            or _comparavel(velha.get("quantidade")) != _comparavel(linha["quantidade"])
+            or _comparavel(velha.get("pontos")) != _comparavel(linha["pontos"])
+        )
+        ficha["alterados"] += int(linha["alterado"])
+
+
+def _comparavel(valor):
+    """`"10.0000"`, `Decimal("10")`, `10` e `"10"` são o mesmo número; vazio e `None`, nada."""
+    from decimal import Decimal, InvalidOperation
+
+    if valor in (None, ""):
+        return None
+    try:
+        return Decimal(str(valor)).normalize()
+    except (InvalidOperation, ValueError):
+        return str(valor)
 
 
 def historico_do_par(inscricao_id, etapa_id):

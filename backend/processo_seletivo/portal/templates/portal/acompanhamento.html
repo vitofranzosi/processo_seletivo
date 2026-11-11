@@ -195,7 +195,7 @@ As duas coisas são possíveis porque as projeções são duas (FR-017, FR-059).
     {% for linha in etapa.ficha.linhas %}
     <li>
       <p class="criterio-da-ficha">{{ linha.nome }}{% if linha.descricao %}<span class="descricao-do-criterio">{{ linha.descricao }}</span>{% endif %}</p>
-      <p class="meta">Máxima {{ linha.maxima|pontuacao }} · pontuação reconhecida <strong>{{ linha.parcela|pontuacao }}</strong>{% if linha.limitada %} — limitada ao máximo{% endif %}</p>
+      <p class="meta">Máxima {{ linha.maxima|pontuacao }} · pontuação reconhecida <strong>{{ linha.parcela|pontuacao }}</strong>{% if linha.limitada %} — limitada ao máximo{% endif %}{% if linha.alterado %} · <strong>alterada pelo recurso</strong>{% endif %}</p>
       {% if linha.justificativa %}<p class="meta">Justificativa: {{ linha.justificativa }}</p>{% endif %}
     </li>
     {% endfor %}

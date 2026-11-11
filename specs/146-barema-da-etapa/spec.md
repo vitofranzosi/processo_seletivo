@@ -6,7 +6,7 @@
 
 **Status**: Spec, plano e tarefas escritos em 10/11/2026 (PR #460) e revisados no mesmo dia pela
 avaliação do usuário — seis ajustes, listados em [research.md](research.md) §4. **Incremento A
-implementado em 11/11/2026** (T001–T015); **incremento B implementado em 11/11/2026** (T016–T028, T036), C não iniciado. Sete questões (P-1 a P-7, ao fim) esperam validação institucional, e nenhuma delas bloqueia
+implementado em 11/11/2026** (T001–T015); **incrementos B e C implementados em 11/11/2026** (T016–T036; a recusa temporária da T036 saiu com o C). Sete questões (P-1 a P-7, ao fim) esperam validação institucional, e nenhuma delas bloqueia
 o incremento A.
 
 **Uma regra muda, e as outras ficam.** Hoje a comissão soma o barema fora do sistema — no Anexo IV

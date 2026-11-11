@@ -40,10 +40,9 @@ cumprimento se prova pela citação que o ato sucessor carrega, quando ele é pu
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
-from processo_seletivo.avaliacoes.domain.barema import tem_barema
 from processo_seletivo.publicacoes.application.selectors import selecao_publica
 from processo_seletivo.recursos.application.porta import exigir_elegibilidade, travar
-from processo_seletivo.recursos.domain.consequencia import derivar, etapa_publicada
+from processo_seletivo.recursos.domain.consequencia import derivar
 from processo_seletivo.recursos.domain.pejus import MENSAGEM as PIORARIA
 from processo_seletivo.recursos.domain.pejus import PIORA, piora
 from processo_seletivo.recursos.models import DecisaoRecurso
@@ -64,18 +63,6 @@ RESULTADO_MUDOU = (
     "confira antes de decidir."
 )
 SEM_RESULTADO = "Não há resultado vigente desta Etapa para corrigir."
-
-# **A recusa temporária do incremento B da 146** (FR-5232, D-009). Com a pontuação por critério na
-# Mesa e sem o detalhamento na correção fixada, o julgamento gravaria um Resultado com total
-# corrigido e sem parcelas — o candidato veria a nota nova e as parcelas da avaliação anterior, dois
-# números para a mesma ficha. A reavaliação determinada já percorre a ficha, e é ela que a frase
-# aponta. O incremento C entrega a correção com detalhamento e remove a recusa.
-CORRECAO_FIXADA_SEM_BAREMA = "correcao_fixada_sem_barema"
-FRASE_DA_CORRECAO_COM_BAREMA = (
-    "Esta Etapa é pontuada por barema, e a correção fixada ainda não registra a pontuação critério "
-    "a critério. Para corrigir a nota, decida pela reavaliação determinada: outro avaliador pontua "
-    "a inscrição pela ficha na Mesa, e a consolidação produz o Resultado que sucede este."
-)
 
 # O que a trilha escreve de cada espécie: o **efeito**, em uma frase, e nada do conteúdo.
 ESPECIE_NA_TRILHA = {
@@ -103,8 +90,13 @@ def julgar(
     assinatura_do_resultado="",
     idempotency_key,
     correlation_id="",
+    criterios=None,
 ):
-    """Grava a decisão e o que ela produz, ou não grava nada."""
+    """Grava a decisão e o que ela produz, ou não grava nada.
+
+    `criterios` é o detalhamento da correção fixada numa Etapa com barema (146, FR-5227): o total
+    sai dele, pela função da Mesa, e não de `pontuacao`.
+    """
     require_permission(actor, PERMISSAO)
     if not (motivacao or "").strip():
         raise DomainError("appeal_reason_required", SEM_MOTIVACAO, 422)
@@ -130,6 +122,9 @@ def julgar(
                 "etapa": str(etapa_id or ""),
                 "pontuacao": str(pontuacao or ""),
                 "sentido": str(sentido or ""),
+                # O detalhamento entra na chave: reenviar a mesma chave com outra ficha não é a
+                # repetição do mesmo ato (FR-097).
+                "criterios": criterios or [],
             },
         )
         if reserva.result_id:
@@ -149,7 +144,7 @@ def julgar(
         versao = selecao_publica(edital_id=peca.inscricao.edital_id)
         protegido = _protegido(peca, especie, etapa_id, assinatura_do_resultado)
         efeito, motivo_da_regra, conclusao = _conclusao(
-            peca, versao, especie, etapa_id, pontuacao, sentido
+            peca, versao, especie, etapa_id, pontuacao, sentido, criterios
         )
         _recusar_se_piora(especie, protegido, efeito, conclusao)
 
@@ -166,6 +161,7 @@ def julgar(
             forma=conclusao.forma if conclusao is not None else "",
             pontuacao=conclusao.pontuacao if conclusao is not None else None,
             sentido=conclusao.sentido if conclusao is not None else "",
+            criterios=list(conclusao.criterios) if conclusao is not None else [],
         )
         sucessor = None
         if especie == DecisaoRecurso.Especie.CORRECAO_FIXADA:
@@ -256,7 +252,7 @@ def _protegido(peca, especie, etapa_id, assinatura):
     return vigente
 
 
-def _conclusao(peca, versao, especie, etapa_id, pontuacao, sentido):
+def _conclusao(peca, versao, especie, etapa_id, pontuacao, sentido, criterios=None):
     """A consequência **derivada** da regra publicada, e nunca digitada (FR-059).
 
     O desfecho sem grandeza é o ramo do recurso contra Ocorrência: nem a decisão nem o sucessor
@@ -273,10 +269,12 @@ def _conclusao(peca, versao, especie, etapa_id, pontuacao, sentido):
         efeito = ResultadoEtapa.Consequencia.HABILITADA
         return str(efeito), "recurso deferido: a ocorrência não subsiste", None
 
-    if tem_barema(etapa_publicada(versao, etapa_id)):
-        raise DomainError(CORRECAO_FIXADA_SEM_BAREMA, FRASE_DA_CORRECAO_COM_BAREMA, 409)
     efeito, motivo, conclusao = derivar(
-        versao=versao, etapa_id=etapa_id, pontuacao=pontuacao, sentido=sentido
+        versao=versao,
+        etapa_id=etapa_id,
+        pontuacao=pontuacao,
+        sentido=sentido,
+        criterios=criterios,
     )
     return str(efeito), motivo, conclusao
 

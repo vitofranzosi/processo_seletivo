@@ -1005,7 +1005,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # privilégio ausente. Ela **não** guarda cópia de documento, nem texto de parecer, nem lista
         # de quem pode ver: o alcance é derivado do estado do recurso, e é isso que a separa de uma
         # permissão (036, FR-527, FR-528, FR-530).
-        "recursos": 2,
+        # **Sobe para 3 com a 146**: a `recursos/0003` acrescenta à `DecisaoRecurso` o detalhamento
+        # da correção fixada numa Etapa com barema. Uma coluna com default `[]`, que não reescreve
+        # linha nem dispara o append-only; o total segue em `pontuacao`, e a 022 lê o de sempre.
+        "recursos": 3,
         # **Sobe para 6 com a 019**: a `resultados/0006` acrescenta a quinta linha legítima de
         # `ck_resultado_origem` — o sucessor por regularização — e a fonte jurídica própria dele.
         # Não é a 022 tocando o que lê: é outra feature, e a constraint foi **estendida**, não
