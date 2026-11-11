@@ -1,0 +1,118 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}Publicação das convocações — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/publicacao-de-convocados.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Publicação das convocações</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+**A publicação das convocações no GPS** (149, FR-5727 a FR-5732). A sequência é a da tela, de cima
+para baixo: o que já foi publicado, a escolha dos recortes, a prévia do que será público e do efeito,
+e o formulário que publica. Abrir a página e mudar a escolha não grava nada (FR-5708).
+
+**Ato oficial e relação informativa ficam separados em palavra**, e não só em cor: o efeito de cada
+grupo é dito na prévia como será dito na página pública (FR-5728).
+{% endcomment %}
+<h1>Publicação das convocações</h1>
+<p class="sub">Edital {{ edital.number }}/{{ edital.year }} — a relação de convocados na página pública da seleção, com documento oficial.</p>
+
+{% if feita_agora %}
+<p class="sucesso" role="status" tabindex="-1" autofocus><strong>{{ feita_agora.titulo|capfirst }} feita.</strong>
+  {% if feita_agora.convoca %}{{ feita_agora.convoca }} {{ feita_agora.convoca|plural:"convocação foi publicada,convocações foram publicadas" }} como ato oficial: o prazo {{ feita_agora.convoca|plural:"dela corre,delas corre" }} a partir de agora, e {{ feita_agora.convoca|plural:"o candidato já vê a convocação,cada candidato já vê a sua" }}.{% endif %}
+  {% if feita_agora.divulga %}{{ feita_agora.divulga }} {{ feita_agora.divulga|plural:"convocação já comunicada foi divulgada,convocações já comunicadas foram divulgadas" }}, sem mudar prazo nenhum.{% endif %}
+  <a href="{% url 'portal:convocados' feita_agora.id %}">Ver a página pública</a> · <a href="{% url 'portal:convocados-documento' feita_agora.id %}">Baixar o documento</a></p>
+{% endif %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>A publicação não foi feita:</strong> {{ erro }}</p>{% endif %}
+
+{% if feitas %}
+<section aria-labelledby="feitas-titulo" class="publicacoes-feitas">
+  <h2 id="feitas-titulo">Publicações feitas</h2>
+  <ul class="lista-de-publicacoes">
+    {% for item in feitas %}
+    <li><a href="{% url 'portal:convocados' item.id %}">{{ item.titulo|capfirst }}</a>
+      <span class="nota">{{ item.natureza }} · {{ item.publicada_em|date:"d/m/Y" }} às {{ item.publicada_em|date:"H\hi" }} · {{ item.pessoas }} {{ item.pessoas|plural:"pessoa,pessoas" }} · {{ item.vagas|join:", " }}</span>
+      <a class="acao" href="{% url 'portal:convocados-documento' item.id %}">Documento</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section aria-labelledby="proxima-titulo">
+  <h2 id="proxima-titulo">{{ previa.titulo|capfirst }}</h2>
+  {% if not previa.com_o_que_publicar %}
+  <p class="aviso" role="status">Não há convocação a publicar agora. Entram aqui as convocações por publicação ainda não comunicadas — que esta publicação convoca — e as já comunicadas por mensagem ou por publicação registrada fora do GPS, que ela divulga.</p>
+  {% else %}
+  <form method="get" action="{{ destino }}" class="escolha-dos-recortes">
+    <input type="hidden" name="escolha" value="1">
+    <fieldset>
+      <legend>Vagas e listas desta publicação</legend>
+      <div class="opcoes">
+        {% for recorte in previa.com_o_que_publicar %}
+        <p class="opcao"><input type="checkbox" id="recorte-{{ forloop.counter }}" name="recorte" value="{{ recorte.chave }}"{% if recorte.escolhido %} checked{% endif %}>
+          <label for="recorte-{{ forloop.counter }}"><strong>{{ recorte.perfil }}</strong> — {{ recorte.lista }}{% if recorte.convoca %} · {{ recorte.convoca }} a convocar{% endif %}{% if recorte.divulga %} · {{ recorte.divulga }} a divulgar{% endif %}</label></p>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <p class="acoes"><button type="submit" class="acao">Atualizar a prévia</button></p>
+  </form>
+  {% endif %}
+
+  {% if previa.fora %}
+  <section aria-labelledby="fora-titulo" class="consequencias">
+    <h3 id="fora-titulo">{% if previa.fora == 1 %}Fica de fora (1){% else %}Ficam de fora ({{ previa.fora }}){% endif %}</h3>
+    <ul>
+      {% for recorte in previa.recortes %}{% for item in recorte.fora %}<li><strong>{{ item.protocolo }} — {{ item.nome }}</strong> ({{ recorte.perfil }} — {{ recorte.lista }}): {{ item.motivo }}.</li>{% endfor %}{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if previa.grupos %}
+  <section aria-labelledby="efeito-titulo" class="consequencias irreversivel">
+    <h3 id="efeito-titulo">O que acontece ao publicar</h3>
+    <ul>
+      {% if previa.convoca %}<li><strong>{{ previa.convoca }} {{ previa.convoca|plural:"convocação será publicada,convocações serão publicadas" }} como ato oficial.</strong> O prazo {{ previa.convoca|plural:"dela,de cada uma" }} começa a correr no instante da publicação, e {{ previa.convoca|plural:"o candidato passa,cada candidato passa" }} a ver a convocação na área do candidato.</li>{% endif %}
+      {% if previa.divulga %}<li><strong>{{ previa.divulga }} {{ previa.divulga|plural:"convocação já comunicada será divulgada,convocações já comunicadas serão divulgadas" }}</strong> como relação informativa: nenhum prazo muda, e nenhuma mensagem sai.</li>{% endif %}
+      <li>A relação abaixo vai para a página pública da seleção, sem identificação de quem consulta, e o documento oficial é gerado uma vez. <strong>A publicação não se desfaz</strong>: corrigir uma convocação depois é sucedê-la, e a correção sai na publicação seguinte.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="publico-titulo" class="o-que-sera-publico">
+    <h3 id="publico-titulo">O que será público</h3>
+    <p class="ajuda">Nome, protocolo, vaga, lista e prazo de cada pessoa — e nada além: nem CPF, nem contato, nem fundamento, nem situação dos documentos.</p>
+    {% for grupo in grupos_da_previa %}
+    <div class="grupo-da-previa">
+      <h4>{{ grupo.perfil }} — {{ grupo.lista }}{% if grupo.marco %} ({{ grupo.marco }}){% endif %}</h4>
+      <p class="nota">{% if grupo.efeito == "CONVOCA" %}<span class="efeito-convoca">Ato oficial</span>{% else %}<span class="efeito-divulga">Informativa</span>{% endif %} {{ grupo.nota }}</p>
+      {% if grupo.vencimentoUnico %}<p class="nota">Prazo para atender: {% if grupo.prazo %}até {{ grupo.prazo|date:"d/m/Y" }} às {{ grupo.prazo|date:"H\hi" }}{% else %}o estabelecido no Edital{% endif %}.</p>{% endif %}
+      <ul class="pessoas-da-previa">
+        {% for pessoa in grupo.pessoas %}<li><strong>{{ pessoa.nome }}</strong> <span class="nota">{{ pessoa.protocolo }}{% if not grupo.vencimentoUnico %} · prazo {% if pessoa.prazo %}até {{ pessoa.prazo|date:"d/m/Y H\hi" }}{% else %}do Edital{% endif %}{% endif %}{% if not grupo.canalUnico and pessoa.canal %} · convocação oficial {{ pessoa.canal }}{% endif %}{% if pessoa.corrige %} · corrige a convocação divulgada na {{ pessoa.corrige }}ª publicação{% endif %}</span></li>{% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </section>
+
+  {% if pode_emitir %}
+  <form method="post" action="{{ destino }}" class="confirmar">
+    {% csrf_token %}
+    <input type="hidden" name="chave" value="{{ chave }}">
+    <input type="hidden" name="alcance" value="{{ previa.assinatura }}">
+    {% for recorte in previa.recortes %}{% if recorte.escolhido %}<input type="hidden" name="recorte" value="{{ recorte.chave }}">
+    {% endif %}{% endfor %}
+    {% include "interface/_escolha_da_autoridade.html" with escolha=escolha_da_autoridade campo="autoridade" rotulo="Autoridade signatária" ajuda="Nome, cargo e ato de nomeação ficam gravados na publicação e impressos no documento." com_vazio=True %}
+    {% if previa.convoca %}
+    <p class="campo largo">
+      <label for="declaracao_do_veiculo">Onde o Edital admite a página pública do GPS como veículo da convocação <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <input type="text" id="declaracao_do_veiculo" name="declaracao_do_veiculo" value="{{ declaracao }}" required aria-required="true" aria-describedby="ajuda-declaracao-do-veiculo" placeholder="por exemplo, item 7.2 do Edital">
+      <span class="ajuda" id="ajuda-declaracao-do-veiculo">Esta publicação é o ato que convoca, e o prazo corre dela: diga o item do Edital que a admite. A declaração fica gravada no ato e na trilha. Se o Edital manda publicar em outro lugar, publique lá e registre a publicação na tela da convocação de cada vaga e lista.</span>
+    </p>
+    {% endif %}
+    <p class="salvar">
+      <button type="submit" class="botao perigoso"{% if not escolha_da_autoridade.opcoes %} disabled{% endif %}>Publicar a {{ previa.titulo }} — {{ previa.escolhidas|length }} {{ previa.escolhidas|length|plural:"pessoa,pessoas" }}</button>
+    </p>
+  </form>
+  {% else %}
+  <p class="nota">Publicar é ato de quem conduz a comissão do certame. Você vê a prévia e as publicações feitas.</p>
+  {% endif %}
+  {% elif previa.com_o_que_publicar %}
+  <p class="aviso" role="status">Nenhuma vaga ou lista escolhida: marque ao menos uma e atualize a prévia.</p>
+  {% endif %}
+</section>
+{% endblock %}
