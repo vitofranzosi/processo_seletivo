@@ -594,6 +594,12 @@ def selecao(request, edital_id, *, assistente=True):
     # cada uma leva as publicações que sucedeu. Antes, o preliminar sucedido só era alcançável por
     # quem tinha guardado o endereço dele.
     contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
+    # **As convocações publicadas no GPS** (148, FR-5421 a FR-5423), logo depois dos resultados: é o
+    # passo seguinte do certame, e é onde quem procura o resultado procura a convocação. Sem
+    # publicação, `None`, e a seção não aparece. Uma consulta, qualquer que seja o número delas.
+    from processo_seletivo.convocacao.application.publicacoes import publicacoes_da_selecao
+
+    contexto["convocacoes_publicadas"] = publicacoes_da_selecao(versao.edital_id)
     # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). A conta é a mesma da
     # página do resultado e da interposição, sobre a versão que cada ato citou e a vigente, que já
     # está carregada (RC-121) — e é a mesma função que a vitrine chama (072, FR-1635).
@@ -2563,8 +2569,23 @@ def convocacao(request, inscricao_id):
             "aceite": situacao_da_inscricao.frase_do_aceite(desfecho),
             "consequencia": situacao_da_inscricao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO,
             "atendimento": atendimento,
+            # **"Publicada em" leva à publicação, quando ela foi feita no GPS** (148, FR-5425).
+            # Só nesta tela, que mostra uma convocação, e só na forma por publicação comunicada:
+            # a consulta não se paga na mensagem, e a lista e o acompanhamento ficam como estão.
+            "publicacao_no_gps": _publicacao_no_gps(chamada, da_convocacao),
         },
     )
+
+
+def _publicacao_no_gps(chamada, da_convocacao):
+    from processo_seletivo.convocacao.application.publicacoes import publicacao_da_convocacao
+
+    comunicacao = da_convocacao["comunicacao"]
+    if chamada is None or comunicacao is None or not da_convocacao["enviada_em"]:
+        return None
+    if not da_convocacao["canal_da_comunicacao"].publicacao:
+        return None
+    return publicacao_da_convocacao(chamada)
 
 
 def _prazo_correndo(da_convocacao, politica):
@@ -3369,6 +3390,47 @@ def resultado_em_pdf(request, publicacao_id):
     # `attachment`, como o comprovante: quem vem buscar o documento oficial vem buscar um arquivo
     # para guardar, e abri-lo no visualizador o devolveria à mesma tela de onde saiu.
     resposta["Content-Disposition"] = 'attachment; filename="Resultado.pdf"'
+    return resposta
+
+
+@require_http_methods(["GET"])
+def convocados(request, publicacao_id):
+    """A página pública de uma publicação de convocados, sem autenticação (148, FR-5418).
+
+    **Abrir não recompõe nada** (FR-5419): o que o ato afirma sai dos bytes gravados. Fora deles, só
+    o que aconteceu depois e não o altera — a correção de alguém numa publicação posterior
+    (FR-5420), dita como tal.
+    """
+    from processo_seletivo.convocacao.application.publicacoes import publicacao_publica
+
+    leitura = publicacao_publica(publicacao_id)
+    if leitura is None:
+        raise Http404
+    return render(
+        request,
+        "portal/convocados.html",
+        {**leitura, "edital_id": leitura["ato"].edital_id},
+    )
+
+
+@require_http_methods(["GET"])
+def convocados_em_pdf(request, publicacao_id):
+    """Os bytes gravados na publicação, e nada recomposto (148, FR-5410, FR-5418)."""
+    from processo_seletivo.convocacao.models import DocumentoDaPublicacaoDeConvocados
+
+    documento = (
+        DocumentoDaPublicacaoDeConvocados.objects.filter(publicacao_id=publicacao_id)
+        .select_related("publicacao")
+        .first()
+    )
+    if documento is None:
+        raise Http404
+    resposta = HttpResponse(bytes(documento.bytes), content_type=documento.content_type)
+    resposta["ETag"] = f'"{documento.documento_hash}"'
+    # `attachment`, como o resultado: quem vem buscar o documento oficial vem buscar um arquivo.
+    resposta["Content-Disposition"] = (
+        f'attachment; filename="Convocados-{documento.publicacao.numero}.pdf"'
+    )
     return resposta
 
 

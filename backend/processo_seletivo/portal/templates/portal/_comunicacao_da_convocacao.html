@@ -4,6 +4,6 @@ envio; na publicação, a referência que a comissão registrou, e nunca o insta
 a data da publicação. Sem comunicação, nada: o prazo não iniciado já está dito no cartão do prazo.
 {% endcomment %}
 {% if enviada_em %}
-{% if canal_da_comunicacao.publicacao %}<dt>{{ canal_da_comunicacao.rotulo_da_comunicacao }}</dt><dd>{{ comunicacao.referencia|default:"referência não registrada" }}</dd>
+{% if canal_da_comunicacao.publicacao %}<dt>{{ canal_da_comunicacao.rotulo_da_comunicacao }}</dt><dd>{% if publicacao_no_gps %}<a href="{% url 'portal:convocados' publicacao_no_gps.id %}">{{ comunicacao.referencia }}</a>{% else %}{{ comunicacao.referencia|default:"referência não registrada" }}{% endif %}</dd>
 {% else %}<dt>{{ canal_da_comunicacao.rotulo_da_comunicacao }}</dt><dd>{{ enviada_em|data_e_hora_do_prazo }}</dd>{% endif %}
 {% endif %}

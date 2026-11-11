@@ -157,6 +157,12 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
         "formalizacao_revogacaodadesignacao",
         "formalizacao_exportacaodeformalizacao",
     )
-    assert TABELAS_APPEND_ONLY[-12:] == novas + da_107 + da_115 + da_117
-    assert len(TABELAS_APPEND_ONLY) == 53
-    assert len(set(TABELAS_APPEND_ONLY)) == 53
+    # E a 148, as três da publicação de convocados, depois das da 117.
+    da_148 = (
+        "convocacao_publicacaodeconvocados",
+        "convocacao_convocacaopublicada",
+        "convocacao_documentodapublicacaodeconvocados",
+    )
+    assert TABELAS_APPEND_ONLY[-15:] == novas + da_107 + da_115 + da_117 + da_148
+    assert len(TABELAS_APPEND_ONLY) == 56
+    assert len(set(TABELAS_APPEND_ONLY)) == 56

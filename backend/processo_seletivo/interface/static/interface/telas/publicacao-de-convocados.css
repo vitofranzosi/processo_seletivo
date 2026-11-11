@@ -1,0 +1,24 @@
+/* A publicação das convocações no GPS (148, FR-5427 a FR-5432). Cabe em 375 px sem rolagem
+   horizontal: os nomes quebram onde precisarem, e as ações descem para a linha de baixo. O que será
+   público é lido como a página pública o dirá, em lista e não em tabela. */
+.publicacoes-feitas{margin:0 0 1.5rem}
+.lista-de-publicacoes{list-style:none;margin:0;padding:0}
+.lista-de-publicacoes li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;
+  padding:.5rem 0;border-bottom:1px solid var(--borda);overflow-wrap:anywhere}
+.lista-de-publicacoes .nota{flex:1 1 16rem;margin:0}
+.escolha-dos-recortes fieldset{border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem;
+  margin:0 0 .5rem;max-width:var(--leitura)}
+.escolha-dos-recortes legend{font-weight:600;padding:0 .25rem}
+.escolha-dos-recortes .opcao label{overflow-wrap:anywhere}
+.o-que-sera-publico{margin:1.25rem 0}
+.grupo-da-previa{margin:0 0 1rem;padding-left:.75rem;border-left:3px solid var(--borda);
+  max-width:var(--leitura)}
+.grupo-da-previa h4{margin:.25rem 0;font-size:1rem}
+.grupo-da-previa .nota{margin:.15rem 0}
+.efeito-convoca,.efeito-divulga{display:inline-block;font-size:.75rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;padding:.05rem .4rem;border-radius:3px;
+  margin-right:.25rem}
+.efeito-convoca{background:var(--vermelho-fundo);color:var(--vermelho)}
+.efeito-divulga{background:var(--amarelo-fundo);color:var(--texto)}
+.pessoas-da-previa{margin:.35rem 0 0;padding-left:1.1rem}
+.pessoas-da-previa li{margin:.15rem 0;overflow-wrap:anywhere}

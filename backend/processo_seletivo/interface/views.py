@@ -8877,6 +8877,7 @@ def convocacao(request, edital_id, marco_id):
     """
     from processo_seletivo.comissoes.domain.autorizacao import pode_conferir_documentos
     from processo_seletivo.convocacao.application import fluxo
+    from processo_seletivo.convocacao.application.publicar import chave_do_recorte
     from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
 
     ator, edital, pode_emitir = _edital_para_classificar(
@@ -8980,6 +8981,19 @@ def convocacao(request, edital_id, marco_id):
                 # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
                 # quem só consulta, e calculá-las ali seria trabalho sem leitor.
                 **previas,
+                # A publicação no GPS (148, FR-5431): o caminho com este recorte escolhido, e a
+                # publicação de cada chamada que saiu numa — uma consulta para o recorte inteiro.
+                "publicar_no_gps": (
+                    reverse("interface:publicacao-de-convocados", args=[edital.id])
+                    + "?"
+                    + urlencode(
+                        {
+                            "escolha": "1",
+                            "recorte": chave_do_recorte(perfil_id, marco_id, lista_id),
+                        }
+                    )
+                ),
+                "publicadas_no_gps": _publicadas_no_gps(leitura),
                 # O lugar do recorte, no alto (143, FR-5000), e o índice (FR-5001 a FR-5004).
                 "contexto_do_recorte": conducao_da_convocacao.contexto_do_recorte(
                     edital, marco_id, lista_id
@@ -10054,6 +10068,114 @@ def nao_atendimento_dos_vencidos_view(request, edital_id, marco_id):
 
     return _gesto_da_convocacao(
         request, edital_id, marco_id, acao="vencidos", praticar=praticar, compor=compor
+    )
+
+
+def _publicadas_no_gps(leitura):
+    """`{convocacao_id: publicação}` das chamadas do recorte que saíram numa publicação do GPS."""
+    from processo_seletivo.convocacao.models import ConvocacaoPublicada
+
+    ids = [linha["convocacao"].id for linha in leitura["linhas"]]
+    if not ids:
+        return {}
+    return {
+        vinculo.convocacao_id: vinculo.publicacao
+        for vinculo in ConvocacaoPublicada.objects.filter(convocacao_id__in=ids).select_related(
+            "publicacao"
+        )
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def publicacao_de_convocados(request, edital_id):
+    """A publicação das convocações do Edital no GPS: a prévia e o ato (148, FR-5427 a FR-5432).
+
+    **Abrir, escolher recortes e ver a prévia não grava nada** (FR-5408, SC-1714): a prévia é a
+    resposta do GET, e o ato é só o POST, com a assinatura do que a prévia mostrou. É o desenho da
+    conferência dos titulares (`140`): o que se confirma é o que se viu.
+
+    **A porta é a da condução** (FR-5432): presidência e auditoria leem as publicações e a prévia;
+    publicar exige a base de gestão da comissão, e o comando volta a conferi-la sob a trava.
+    """
+    from processo_seletivo.convocacao.application import publicacoes
+    from processo_seletivo.convocacao.application.publicar import (
+        previa_da_publicacao,
+        publicar_convocados,
+    )
+    from processo_seletivo.convocacao.domain import publicacao as dominio_da_publicacao
+
+    ator, edital, pode_emitir = _edital_para_classificar(
+        request, edital_id, somente_gestao=request.method == "POST"
+    )
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    destino = reverse("interface:publicacao-de-convocados", args=[edital.id])
+    erro, declaracao, autoridade = None, "", ""
+    if request.method == "POST":
+        recortes = request.POST.getlist("recorte")
+        declaracao = request.POST.get("declaracao_do_veiculo") or ""
+        autoridade = request.POST.get("autoridade") or ""
+        try:
+            declarado = publicar_convocados(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                recortes=recortes,
+                alcance_confirmado=request.POST.get("alcance") or "",
+                autoridade=autoridade or None,
+                declaracao_do_veiculo=declaracao,
+                idempotency_key=request.POST.get("chave") or "",
+                correlation_id=request.correlation_id,
+            )
+        except DomainError as recusa:
+            # **A recusa volta à mesma prévia, com o que foi digitado** (FR-5408): a declaração e a
+            # autoridade não se perdem, e a prévia é a de agora — a que a pessoa vai conferir de
+            # novo antes de tentar outra vez.
+            erro = recusa.detail
+        else:
+            request.session["publicacao_de_convocados_feita"] = declarado
+            return redirect(destino)
+        escolhidos = set(recortes)
+    else:
+        escolhidos = (
+            set(request.GET.getlist("recorte")) if request.GET.get("escolha") == "1" else None
+        )
+    previa = previa_da_publicacao(edital=edital, recortes=escolhidos, at=timezone.now())
+    feitas = publicacoes.publicacoes_da_selecao(edital.id)
+    # Os grupos como a página pública os dirá: a mesma frase de efeito e o prazo como instante.
+    # Uma cópia, e não os grupos da prévia, que são o que a confirmação congela.
+    grupos_da_previa = [
+        {
+            **grupo,
+            "nota": dominio_da_publicacao.nota_do_grupo(grupo),
+            "prazo": dominio_da_publicacao.instante(grupo["vencimento"]),
+            "pessoas": [
+                {**pessoa, "prazo": dominio_da_publicacao.instante(pessoa["vencimento"])}
+                for pessoa in grupo["pessoas"]
+            ],
+        }
+        for grupo in previa["grupos"]
+    ]
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/publicacao_de_convocados.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "previa": previa,
+                "grupos_da_previa": grupos_da_previa,
+                "feitas": [*feitas["recentes"], *feitas["anteriores"]] if feitas else [],
+                "feita_agora": request.session.pop("publicacao_de_convocados_feita", None),
+                "pode_emitir": pode_emitir,
+                "erro": erro,
+                "declaracao": declaracao,
+                "autoridade_escolhida": autoridade,
+                "escolha_da_autoridade": _escolha_da_autoridade(edital) if pode_emitir else None,
+                "chave": request.POST.get("chave") or f"ui-{uuid4().hex}",
+                "destino": destino,
+            },
+        )
     )
 
 

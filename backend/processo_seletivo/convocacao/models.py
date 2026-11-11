@@ -650,3 +650,123 @@ class ConferenciaDeDocumento(_AppendOnly):
 
     def __str__(self):
         return f"{self.resultado} — item {self.item_id}"
+
+
+# -------------------------------------------------------------------------------------------------
+# A publicação de convocados no GPS (148)
+# -------------------------------------------------------------------------------------------------
+
+
+class PublicacaoDeConvocados(_AppendOnly):
+    """O ato que torna pública a relação das convocações de um Edital (148, FR-5401).
+
+    **O molde é a divulgação do resultado da `017`** (D-001): bytes canônicos congelados, o resumo
+    deles, a autoridade e a unidade como estavam no dia, e um documento gerado uma vez. A página e o
+    documento leem `conteudo_publico`, e nunca as convocações de hoje (D-005): um nome corrigido na
+    inscrição, ou o rótulo da lista mudado por Retificação, não reescreve o que foi publicado.
+
+    **Não tem sucessão.** Quem se corrige é a convocação (`120`), e a correção sai na publicação
+    seguinte, marcada; a anterior continua como foi (D-006).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    edital = models.ForeignKey(
+        Edital, on_delete=models.PROTECT, related_name="publicacoes_de_convocados"
+    )
+    # Sequencial por Edital, atribuído sob a trava do Processo; a constraint é a segunda guarda.
+    numero = models.PositiveIntegerField()
+    conteudo_publico = models.BinaryField()
+    conteudo_publico_hash = models.CharField(max_length=64)
+    publicado_por = models.CharField(max_length=255)
+    # **O instante de onde o prazo de cada convocado corre**, no efeito *convoca*: é o mesmo
+    # `enviado_em` de cada comunicação gravada pelo ato (D-003), e o gatilho de coerência o confere.
+    publicado_em = models.DateTimeField()
+    # Onde o Edital admite a página pública do GPS como veículo da convocação, nas palavras de quem
+    # publica (1ª decisão do usuário, D-012). Vazia quando a publicação não convoca ninguém.
+    declaracao_do_veiculo = models.TextField(blank=True, default="")
+    signatario_id = models.UUIDField()
+    signatario_nome = models.CharField(max_length=255)
+    signatario_cargo = models.CharField(max_length=255)
+    signatario_ato_de_nomeacao = models.CharField(max_length=255, blank=True, default="")
+    unidade_codigo = models.CharField(max_length=100, blank=True, default="")
+    unidade_sigla = models.CharField(max_length=30, blank=True, default="")
+    unidade_nome = models.CharField(max_length=255, blank=True, default="")
+    unidade_cabecalho = models.JSONField(default=list)
+    unidade_local = models.CharField(max_length=120, blank=True, default="")
+
+    class Meta:
+        ordering = ["edital", "numero"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["edital", "numero"], name="uq_publicacao_de_convocados_numero"
+            ),
+            models.CheckConstraint(
+                condition=Q(numero__gte=1), name="ck_publicacao_de_convocados_numero_positivo"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.numero}ª publicação de convocados — {self.edital_id}"
+
+
+class ConvocacaoPublicada(_AppendOnly):
+    """Uma convocação na publicação que a divulgou, e o efeito dela ali (148, FR-5402, FR-5405).
+
+    **Não é lida para exibir** (D-005): o que a página mostra está nos bytes do ato. Esta linha
+    existe para o banco garantir que cada convocação está em no máximo uma publicação (FR-5407), e
+    para a leitura chegar da comunicação à publicação — o portal do candidato, a correção seguinte.
+
+    **A comunicação é sempre a que convocou**: no *convoca*, a que o próprio ato gravou; no
+    *divulga*, a anterior a ele — a mensagem enviada, ou a publicação registrada fora do GPS.
+    """
+
+    class Efeito(models.TextChoices):
+        CONVOCA = "CONVOCA", "Convoca"
+        DIVULGA = "DIVULGA", "Divulga"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    publicacao = models.ForeignKey(
+        PublicacaoDeConvocados, on_delete=models.PROTECT, related_name="convocacoes_publicadas"
+    )
+    convocacao = models.ForeignKey(
+        Convocacao, on_delete=models.PROTECT, related_name="publicacoes_de_convocados"
+    )
+    comunicacao = models.ForeignKey(
+        ComunicacaoEmitida, on_delete=models.PROTECT, related_name="publicacoes_de_convocados"
+    )
+    efeito = models.CharField(max_length=8, choices=Efeito.choices)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["convocacao"], name="uq_convocacao_publicada_uma_vez"),
+            models.UniqueConstraint(
+                fields=["comunicacao"], name="uq_convocacao_publicada_por_comunicacao"
+            ),
+            models.CheckConstraint(
+                condition=Q(efeito__in=["CONVOCA", "DIVULGA"]),
+                name="ck_convocacao_publicada_efeito",
+            ),
+        ]
+        indexes = [models.Index(fields=["publicacao"], name="ix_convocacao_publicada_ato")]
+
+    def __str__(self):
+        return f"{self.efeito} — convocação {self.convocacao_id} na {self.publicacao_id}"
+
+
+class DocumentoDaPublicacaoDeConvocados(_AppendOnly):
+    """Os bytes do documento oficial, gerados uma vez dos bytes do ato (148, FR-5410).
+
+    O molde de `DocumentoDoResultado`: tabela própria, para a ausência de documento ser a ausência
+    de linha, e o resumo como integridade — dois documentos idênticos são legítimos.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    publicacao = models.OneToOneField(
+        PublicacaoDeConvocados, on_delete=models.PROTECT, related_name="documento"
+    )
+    bytes = models.BinaryField()
+    content_type = models.CharField(max_length=100, default="application/pdf")
+    documento_hash = models.CharField(max_length=64)
+
+    def __str__(self):
+        return f"Documento de {self.publicacao_id}"

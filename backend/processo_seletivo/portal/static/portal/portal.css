@@ -1086,3 +1086,48 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 .recusa-no-cartao{margin:.25rem 0 .5rem;font-weight:600}
 .recusa-no-cartao:focus{outline:3px solid var(--vermelho);outline-offset:2px}
 .dados-da-convocacao{max-width:var(--leitura)}
+/* As convocações publicadas no GPS (148, FR-5421 a FR-5424). A seção é uma lista curta, uma linha por
+   publicação: o número é o link, a natureza e a data vêm logo abaixo, e o documento fica à mão. A
+   relação mora na página de cada publicação, que lista as pessoas sem tabela — em 375 px cada uma é
+   uma linha legível, e em tela larga o texto corrido não passa da medida de leitura. */
+.convocacoes-da-selecao{margin:0 0 1.5rem}
+.orientacao-da-secao{margin:.25rem 0 .75rem;max-width:var(--leitura)}
+/* Em grade que se adapta, e não numa coluna de medida de leitura: no celular uma publicação por
+   linha; numa tela larga duas ou três lado a lado, sem a metade direita vazia. A mais recente
+   continua a primeira na ordem de leitura. */
+.publicacoes-de-convocados{list-style:none;margin:0;padding:0;display:grid;gap:.6rem;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))}
+.publicacao-de-convocados{display:flex;flex-wrap:wrap;gap:.1rem .9rem;align-items:baseline;
+  align-content:flex-start;padding:.6rem .8rem;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px}
+.titulo-da-publicacao{font-weight:600}
+.publicacao-de-convocados .meta{flex-basis:100%;margin:0;color:var(--texto-fraco);font-size:.875rem}
+.vagas-da-publicacao{flex:1 1 12rem;font-size:.9375rem;overflow-wrap:anywhere}
+.documento-da-publicacao{font-size:.9375rem;white-space:nowrap}
+.acoes-da-publicacao{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:baseline;margin:.5rem 0 1rem}
+.acoes-da-publicacao .documento{margin-top:0}
+.orientacao-dos-convocados{max-width:var(--leitura);margin:0 0 1.5rem;padding:.75rem 1rem;
+  border-left:4px solid var(--verde);background:var(--branco);border-radius:0 6px 6px 0}
+.orientacao-dos-convocados h2{margin:0 0 .35rem;font-size:1rem}
+.orientacao-dos-convocados ul{margin:0 0 .5rem;padding-left:1.1rem}
+.grupo-de-convocados{margin:0 0 1.5rem}
+.lista-do-grupo{font-weight:400;color:var(--texto-fraco)}
+.nota-do-grupo{margin:.25rem 0;max-width:var(--leitura);font-size:.9375rem}
+.prazo-do-grupo{margin:.25rem 0 .6rem;max-width:var(--leitura)}
+.convocados{list-style:none;margin:0;padding:0;border-top:1px solid var(--borda);
+  max-width:var(--leitura)}
+.convocados li{display:flex;flex-wrap:wrap;gap:.1rem .9rem;align-items:baseline;padding:.45rem 0;
+  border-bottom:1px solid var(--borda)}
+.nome-do-convocado{font-weight:600;overflow-wrap:anywhere}
+.protocolo-do-convocado{color:var(--texto-fraco);font-size:.875rem;white-space:nowrap}
+.detalhe-do-convocado{flex-basis:100%;font-size:.875rem;color:var(--texto-fraco)}
+.corrigida-depois{color:var(--texto)}
+.outras-publicacoes ul{margin:.25rem 0 0;padding-left:1.1rem}
+.integridade-da-publicacao code{overflow-wrap:anywhere;font-size:.8125rem}
+.corpo-da-publicacao{display:grid;gap:0 2.5rem}
+@media (min-width:64rem){
+  .corpo-da-publicacao{grid-template-columns:minmax(0,var(--leitura)) minmax(16rem,22rem);
+    align-items:start}
+  .corpo-da-publicacao .orientacao-dos-convocados{grid-column:2;grid-row:1;position:sticky;top:1rem}
+  .corpo-da-publicacao .relacao-de-convocados{grid-column:1;grid-row:1;min-width:0}
+}

@@ -616,6 +616,14 @@ urlpatterns = [
         views.ocupacao_historico,
         name="ocupacao-historico",
     ),
+    # A publicação das convocações no GPS (148, FR-5427). Pende do **Edital**, e não do marco: uma
+    # publicação reúne os recortes que a comissão escolher, e a 1ª chamada de um Edital de N vagas e
+    # listas é um ato, e não N (D-009). GET mostra a prévia; POST publica.
+    path(
+        "editais/<uuid:edital_id>/convocacoes/publicacao",
+        views.publicacao_de_convocados,
+        name="publicacao-de-convocados",
+    ),
     # A convocação (019). Pende do **marco**, como a ocupação, e pela mesma razão: é o recorte que
     # ela conduz, e um marco com cotas tem três — cada um com a sua fila. O recorte vem em
     # `?lista=`, e não no caminho, pelo mesmo precedente do histórico da `016`.

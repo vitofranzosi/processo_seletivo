@@ -1,0 +1,25 @@
+{% comment %}
+**As convocações publicadas no GPS** (148, FR-5421 a FR-5424, D-007). Uma linha por publicação, da
+mais recente para a mais antiga; as três mais recentes à vista e as anteriores recolhidas. A relação
+mora na página de cada publicação, como a ordem do resultado mora na dela: aqui, quarenta nomes por
+publicação transformariam a página da seleção numa lista.
+
+**A orientação, uma vez** (FR-5422): onde estão as providências de quem foi convocado, e que estar
+convocado não é ter a documentação aceita. Repeti-la em cada publicação seria o texto administrativo
+repetido que o pedido recusou.
+{% endcomment %}
+<section class="convocacoes-da-selecao" aria-labelledby="convocacoes-titulo">
+  <h2 id="convocacoes-titulo">Convocações</h2>
+  <p class="orientacao-da-secao">Foi convocado? As providências — documentos, prazos e envio — estão em <a href="{% url 'portal:inscricoes' %}">Minhas inscrições</a>, a área do candidato. Estar convocado não é ter a documentação aceita nem a matrícula concluída.</p>
+  <ul class="publicacoes-de-convocados">
+    {% for item in convocacoes_publicadas.recentes %}{% include "portal/_publicacao_de_convocados.html" %}{% endfor %}
+  </ul>
+  {% if convocacoes_publicadas.anteriores %}
+  <details class="publicacoes-anteriores">
+    <summary>Publicações anteriores ({{ convocacoes_publicadas.anteriores|length }})</summary>
+    <ul class="publicacoes-de-convocados">
+      {% for item in convocacoes_publicadas.anteriores %}{% include "portal/_publicacao_de_convocados.html" %}{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>

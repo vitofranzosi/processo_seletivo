@@ -309,6 +309,8 @@ QUEM_CARREGA = {
     # classes: a cor de cada situação não pode divergir entre o Centro e a tela do ato.
     "interface/telas/andamento.css": {"centro_do_edital.html", "detalhe.html", "sorteio.html"},
     "interface/telas/centro.css": {"centro_do_edital.html"},
+    # A publicação das convocações no GPS (148): a prévia, a escolha dos recortes e o que já saiu.
+    "interface/telas/publicacao-de-convocados.css": {"publicacao_de_convocados.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
         for tela in (

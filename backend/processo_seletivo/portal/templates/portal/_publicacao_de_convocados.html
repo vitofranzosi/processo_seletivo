@@ -1,0 +1,11 @@
+{% comment %}
+Uma publicação de convocados na seção da seleção (148, FR-5421). O texto visível do link é o número
+da publicação; o nome acessível continua com a data, para que duas publicações do mesmo dia não se
+anunciem iguais a quem ouve a página.
+{% endcomment %}
+<li class="publicacao-de-convocados">
+  <a class="titulo-da-publicacao" href="{% url 'portal:convocados' item.id %}">{{ item.titulo|capfirst }}<span class="oculto"> — {{ item.publicada_em|date:"d/m/Y" }}</span></a>
+  <span class="meta">{{ item.natureza }} · publicada em {{ item.publicada_em|date:"d/m/Y" }} às {{ item.publicada_em|date:"H\hi" }} · {{ item.pessoas }} {{ item.pessoas|pluralize:"pessoa,pessoas" }}{% if item.prazo %} · prazo até {{ item.prazo|date:"d/m/Y" }} às {{ item.prazo|date:"H\hi" }}{% endif %}{% if item.traz_correcao %} · traz correção de convocação anterior{% endif %}</span>
+  <span class="vagas-da-publicacao">{{ item.vagas|join:" · " }}</span>
+  <a class="documento-da-publicacao" href="{% url 'portal:convocados-documento' item.id %}">Documento (PDF)<span class="oculto"> da {{ item.titulo }}</span></a>
+</li>

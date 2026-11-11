@@ -170,6 +170,8 @@ destaque: a seção está no mesmo lugar, e o que muda é o peso dela (FR-050, S
 </section>
 {% endif %}
 
+{% if convocacoes_publicadas %}{% include "portal/_convocacoes_da_selecao.html" %}{% endif %}
+
 {% comment %}
 Duas colunas em tela larga, uma em 375px — e a ordem de leitura no celular é vagas, cronograma,
 documentos, que é a ordem das perguntas de quem decide.

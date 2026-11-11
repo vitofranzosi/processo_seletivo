@@ -39,6 +39,9 @@ APPS = (
     # A entrega documental à formalização da 117: quatro tabelas append-only e a coerência da
     # exportação contra a designação e a definição do mesmo Edital.
     "formalizacao",
+    # A publicação de convocados da 148: três tabelas append-only e a coerência do vínculo entre a
+    # convocação, a comunicação e o ato.
+    "convocacao",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -167,6 +170,15 @@ TRIGGERS_POR_APP = {
         "revogacao_formalizacao_append_only",
         "exportacao_formalizacao_append_only",
         "exportacao_formalizacao_coerente",
+    ),
+    # A publicação de convocados (148). As três de imutabilidade são **absolutas**: a publicação não
+    # se sucede, e a correção é da convocação (D-006). A quarta confere que o vínculo liga a
+    # convocação à comunicação dela, no mesmo Edital, e que o *convoca* cita a publicação do ato.
+    "convocacao": (
+        "publicacao_de_convocados_append_only",
+        "convocacao_publicada_append_only",
+        "documento_da_publicacao_de_convocados_append_only",
+        "convocacao_publicada_coerente",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
