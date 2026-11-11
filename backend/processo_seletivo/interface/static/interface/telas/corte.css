@@ -1,0 +1,52 @@
+/* O corte e a progressão numa coluna só (polish do corte). Os avisos tinham a medida do texto
+   corrido, os números a largura do próprio conteúdo e a tabela a da página: cada bloco terminava num
+   lugar. A coluna é a da convocação, e o texto corrido de fora dos blocos guarda a medida própria. */
+.tela-do-corte{max-width:72rem}
+
+/* A situação e a próxima providência lado a lado, da mesma altura; empilhadas no estreito. */
+.situacao-do-corte{display:grid;gap:.75rem;margin:0 0 1.5rem}
+.situacao-do-corte>p{margin:0}
+.providencia-do-corte{background:var(--branco);border:1px solid var(--borda);border-radius:4px;
+  padding:.7rem 1rem;font-size:.9375rem}
+.providencia-do-corte strong{display:block;font-size:.75rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--texto-fraco);margin-bottom:.15rem}
+@media (min-width:60rem){
+  .situacao-do-corte{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+}
+
+/* Os seis números em células iguais: seis numa fila no largo, três e três no médio, dois a dois
+   no estreito — sempre em linhas cheias. Eram caixas do tamanho do número, apertadas à esquerda de
+   uma linha vazia. */
+.tela-do-corte .resumo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:.5rem;margin-bottom:1.25rem}
+@media (min-width:36rem){
+  .tela-do-corte .resumo{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:75rem){
+  .tela-do-corte .resumo{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+.tela-do-corte .resumo li{padding:.65rem .9rem;font-size:.8125rem;color:var(--texto-fraco);
+  border-radius:6px}
+.tela-do-corte .resumo strong{font-size:1.5rem;line-height:1.25;min-height:1.875rem;
+  color:var(--texto);font-variant-numeric:tabular-nums}
+.tela-do-corte .resumo .valor-em-texto{display:block;font-size:.9375rem;line-height:1.35}
+.tela-do-corte .resumo .nenhuma{font-size:1rem;line-height:1.875rem}
+/* Quem progride é o número que a tela existe para mostrar: a cor o separa dos que o delimitam. Pela
+   posição, e não por classe: o guardião da 055 lê cada bloco como `<li><strong>`, e a ordem dos
+   seis está presa por ele. */
+.tela-do-corte .resumo li:nth-child(4){border-color:var(--verde);background:var(--verde-claro);
+  color:var(--verde-escuro)}
+
+/* A tabela num cartão, como os demais blocos da coluna. */
+.tela-do-corte .tabela-rolavel{background:var(--branco);border:1px solid var(--borda);border-radius:6px}
+
+/* A ordem sem inscrição: dito no lugar da tabela, alinhado à esquerda como o resto. */
+.tela-do-corte .ordem-vazia{max-width:none;text-align:left;padding:1.25rem 1.5rem;margin:0}
+
+.faixas-da-geracao ol{margin:0;padding-left:1.25rem}
+.faixas-da-geracao li{margin-bottom:.3rem;font-size:.9375rem}
+
+/* A sucessão recolhida ocupa a coluna quando aberta, como o formulário da faixa seguinte. */
+.tela-do-corte .sucessao{max-width:none}
+.tela-do-corte form.confirmar+form.confirmar,.tela-do-corte .sucessao+form.confirmar{margin-top:1rem}
+.tela-do-corte form.confirmar>p:first-of-type{margin-top:0}

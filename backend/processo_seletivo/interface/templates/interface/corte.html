@@ -1,8 +1,16 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Corte — progressão para a Etapa seguinte{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/corte.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Corte</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Corte e progressão</h1>
+{% comment %}
+**Uma coluna só, da largura da convocação** (polish do corte e da conferência). Os avisos tinham a
+medida do texto corrido e a tabela a da página, e cada bloco terminava num lugar: a coluna dá a
+todos a mesma borda direita, e o texto corrido continua com a medida própria. O título fica fora
+dela: o conteúdo começa por ele (FR-1882).
+{% endcomment %}
+<div class="tela-do-corte">
 
 <p class="sub">A <dfn>faixa</dfn> é o trecho da ordem que progride para a Etapa seguinte — do
   primeiro colocado ao último que o alvo alcançou —, calculada a partir da ordem vigente e da
@@ -78,10 +86,28 @@ a Retificação recebe a condução em vez do link, e ela sai do mecanismo únic
 <p class="aviso" role="status">{{ recusa }}{% if caminho_da_recusa %} <a href="{{ caminho_da_recusa.url }}">{{ caminho_da_recusa.rotulo }}</a>.{% endif %}{% if conducao_da_recusa %} {{ conducao_da_recusa }}{% endif %}</p>
 {% endif %}
 
+{% comment %}
+**A situação e a próxima providência lado a lado.** As frases da situação são as de antes; a
+providência só nomeia o que esta tela já sabe — emitir, ou suceder a faixa obsoleta —, e não
+deriva o andamento do Edital, que é do "Próximo nesta lista" depois de um ato. Ela não contradiz
+os avisos da tela: com recomendação de aguardar ou reingresso pendente, aponta para eles em vez de
+mandar emitir; com recusa, não diz "nenhuma".
+
+"O que está abaixo é uma proposta" saía também com a recusa, quando abaixo não havia proposta
+nenhuma: o aviso agora depende dela.
+{% endcomment %}
+{% if geracao or proposta %}
+<div class="situacao-do-corte">
 {% if geracao %}
 <p class="imutavel"><strong>Geração vigente com {{ geracao|length }} faixa{{ geracao|length|pluralize:"s" }}</strong>, emitida em {{ geracao.0.emitido_em|date:"d/m/Y H:i" }} por {% nome_de_pessoa geracao.0.emitido_por %}. Abrir esta tela não a altera.</p>
 {% else %}
 <p class="aviso">Ainda não existe corte emitido neste recorte. O que está abaixo é uma proposta calculada agora, e nada foi gravado.</p>
+{% endif %}
+{% if geracao and corte_obsoleto and pode_emitir and proposta %}<p class="providencia-do-corte"><strong>Próxima providência</strong>Suceder o corte, com motivo, no fim desta página.</p>
+{% elif geracao and not corte_obsoleto and not recusa %}<p class="providencia-do-corte"><strong>Próxima providência</strong>Nenhuma nesta tela: a faixa vigente produz efeito, e sucedê-la é exceção, com motivo.</p>
+{% elif not geracao and proposta and pode_emitir %}<p class="providencia-do-corte"><strong>Próxima providência</strong>{% if espera_do_corte or reingressos %}Conferir a faixa calculada e, antes de emitir, ler o aviso logo abaixo dela: emitir agora continua possível.{% else %}Conferir a faixa calculada e emitir o corte, logo abaixo dela.{% endif %}</p>
+{% endif %}
+</div>
 {% endif %}
 
 {% if corte_obsoleto %}
@@ -108,13 +134,21 @@ divergência genérica uma vez.
   dependia de contar posições numa tela de ato irreversível. A marcação é a da Convocação.
   {% endcomment %}
   <ul class="resumo" aria-label="A faixa calculada, em números">
-    <li><strong>{% if proposta.regra.targetKind == "FROM_VACANCY_TABLE" %}O que o quadro de vagas publicar no recorte{% else %}{{ proposta.regra.targetCount }}{% endif %}</strong>Alvo declarado</li>
+    <li><strong>{% if proposta.regra.targetKind == "FROM_VACANCY_TABLE" %}<span class="valor-em-texto">O que o quadro de vagas publicar no recorte</span>{% else %}{{ proposta.regra.targetCount }}{% endif %}</strong>Alvo declarado</li>
     <li><strong>{{ proposta.alvo }}</strong>Alvo apurado{% if proposta.origem_do_alvo.rowId %} <span class="ajuda">lido da linha do quadro de vagas deste recorte</span>{% endif %}</li>
     <li><strong>{{ proposta.excedente }}</strong>Suplentes</li>
     <li><strong>{{ proposta.progrediram }}</strong>Progridem</li>
     <li><strong>{{ proposta.fora }}</strong>Ficam fora</li>
     <li><strong>{% if proposta.ultima_posicao %}{{ proposta.ultima_posicao }}º{% else %}<span class="nenhuma">Nenhuma</span>{% endif %}</strong>Última posição alcançada</li>
   </ul>
+  {% comment %}
+  **A ordem vazia não é tabela vazia** (polish do corte). Sem participante, a tabela saía só com o
+  cabeçalho, e parecia carga que falhou. O cálculo lê as posições do ato de ordenação vigente; sem
+  nenhuma, é a própria ordem que não tem inscrição — e a classificação diz o porquê.
+  {% endcomment %}
+  {% if not proposta.itens %}
+  <p class="vazio ordem-vazia">A ordem vigente deste recorte não tem nenhuma inscrição, e por isso a faixa não alcança ninguém: não há quem progrida nem quem fique fora. <a href="{{ para_a_ordenacao }}">Ver a ordem deste recorte</a></p>
+  {% else %}
   <div class="tabela-rolavel">
   <table>
     <caption class="oculto">Participantes considerados, com posição, consequência e causa</caption>
@@ -131,9 +165,19 @@ divergência genérica uma vez.
     </tbody>
   </table>
   </div>
+  {% endif %}
 </section>
+{% endif %}
 
-{% if pode_emitir %}
+{% comment %} O histórico antes das ações: suceder e continuar se decidem lendo as faixas que já existem. {% endcomment %}
+{% if geracao %}
+<section aria-labelledby="titulo-geracao" class="faixas-da-geracao">
+  <h2 id="titulo-geracao">Faixas desta geração</h2>
+  <ol>{% for faixa in geracao %}<li><a href="{% url 'interface:corte-historico' edital.id faixa.id %}">{{ faixa.emitido_em|date:"d/m/Y H:i" }}</a> — {% nome_de_pessoa faixa.emitido_por %}: {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante — {{ faixa.motivo }}{% else %}faixa inicial, até a posição {{ faixa.ultima_posicao|default:"nenhuma" }}{% endif %}</li>{% endfor %}</ol>
+</section>
+{% endif %}
+
+{% if proposta and pode_emitir %}
 {% if geracao %}
 {% comment %}
 **A sucessão, recolhida** (126, FR-4010, FR-4011, UX-223). Era o mesmo formulário da primeira
@@ -186,11 +230,5 @@ faixa seguinte, abaixo, não é sucessão, e continua como era (FR-4013).
 </form>
 {% endif %}
 {% endif %}
-{% endif %}
-{% if geracao %}
-<section aria-labelledby="titulo-geracao">
-  <h2 id="titulo-geracao">Faixas desta geração</h2>
-  <ol>{% for faixa in geracao %}<li><a href="{% url 'interface:corte-historico' edital.id faixa.id %}">{{ faixa.emitido_em|date:"d/m/Y H:i" }}</a> — {% nome_de_pessoa faixa.emitido_por %}: {% if faixa.faixa_anterior_id %}continuação, da posição {{ faixa.primeira_posicao }} em diante — {{ faixa.motivo }}{% else %}faixa inicial, até a posição {{ faixa.ultima_posicao|default:"nenhuma" }}{% endif %}</li>{% endfor %}</ol>
-</section>
-{% endif %}
+</div>
 {% endblock %}

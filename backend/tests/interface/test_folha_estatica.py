@@ -333,8 +333,12 @@ QUEM_CARREGA = {
             # A seção Barema do cartão da Etapa (146).
             "compor-etapas",
             "compor-revisao",
+            # A conferência antes de convocar os titulares (polish da 140).
+            "convocacao-conferir",
             # Os documentos de uma convocação (115).
             "convocacao-documentos",
+            # O corte e a progressão numa coluna só (polish da 014).
+            "corte",
             "duvidas",
             "inscricao-detalhe",
             # O kit de divulgação (111).
