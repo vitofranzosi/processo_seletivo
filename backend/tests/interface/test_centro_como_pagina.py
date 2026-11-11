@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from processo_seletivo.interface import andamento, atos
 from processo_seletivo.processos.models import Edital
@@ -284,7 +285,9 @@ def test_o_centro_oferece_o_que_so_o_detalhe_oferecia(client, s1):
     assert reverse("interface:assistente", args=[edital.id]) not in administracao
     assert "<strong>Conteúdo imutável.</strong>" in administracao
     assert "Autoridade, unidade e datas" not in texto
-    publicou_em = resposta.context["participantes"]["publicou_em"]
+    # **No fuso da aplicação**, como o template a mostra. O instante vem em UTC, e formatá-lo cru dá
+    # o dia seguinte entre 21h e meia-noite de Brasília — a falha do CI do #460, às 00:15 UTC.
+    publicou_em = timezone.localtime(resposta.context["participantes"]["publicou_em"])
     assert publicou_em.strftime("%d/%m/%Y") in administracao.split("<h3>Quem atuou</h3>", 1)[1]
 
 
