@@ -10,58 +10,58 @@ anterior (arquivos distintos, sem dependência).
 
 ## Phase 1: Incremento A — o dado e o contrato
 
-- [ ] T001 [A] `CriterioAvaliacao` em `editais/models/etapas.py` e
+- [X] T001 [A] `CriterioAvaliacao` em `editais/models/etapas.py` e
   `editais/migrations/0027_criterios_de_avaliacao.py`, com os CHECKs do data-model;
   `migrations/test_migrations.py` passa a `editais: 27` (FR-5200, FR-5201)
-- [ ] T002 [A] `validate_stages` em `editais/domain/etapas.py`: nome obrigatório e único, máxima > 0,
+- [X] T002 [A] `validate_stages` em `editais/domain/etapas.py`: nome obrigatório e único, máxima > 0,
   pontos por unidade ≤ máxima, unidade obrigatória com pontos, soma = máxima da Etapa, critério em
   decisória, documento do Edital e da inscrição, documento com restrição de Perfil, modalidade ou
   condição (pela leitura de aplicabilidade existente), soma acima de 999,9999; a mesma conferência do
   documento na validação de publicação, com o caso da restrição acrescentada depois do vínculo; testes
   unitários de cada recusa (FR-5201, FR-5203, FR-5204, FR-5205, SC-1634) — depende de T001
-- [ ] T003 [A] `replace_draft` cria os critérios depois das Etapas (molde dos critérios de desempate);
+- [X] T003 [A] `replace_draft` cria os critérios depois das Etapas (molde dos critérios de desempate);
   `CriterionSerializer` em `editais/api/serializers.py` com `default=list`; ids de outro Edital
   recusados; teste da API com e sem a chave (FR-5213) — depende de T002
-- [ ] T004 [A] Degrau 21: `SCHEMA_VERSION = 21` e o parágrafo em `shared/canonical.py`; `criteria` em
+- [X] T004 [A] Degrau 21: `SCHEMA_VERSION = 21` e o parágrafo em `shared/canonical.py`; `criteria` em
   `publish_edital.py::_stages`; `DEGRAUS[21]` e `diz_o_mesmo_que_a_ausencia` em
   `publicacoes/domain/elevacao.py`; `CRITERIO_PUBLICADO` em `editais/domain/validation.py`; fixture
   `fixtures/snapshot.py`; `contract/test_elevacao_degrau_21.py` no molde do 20 (FR-5208) — depende de
   T003
-- [ ] T005 [A] [P] Contrato: os pares de `stages/criteria` em `editais/domain/mutabilidade.py`;
+- [X] T005 [A] [P] Contrato: os pares de `stages/criteria` em `editais/domain/mutabilidade.py`;
   `"/stages/*/criteria"` em `publicacoes/domain/colecoes.py`; nome e rótulos em
   `publicacoes/domain/alteracoes.py`; `VERSAO_DO_ESQUEMA = 21` e caminhos em
   `duvidas/domain/cobertura.py`; os guardiões `test_mutabilidade.py` (treze coleções,
   `conteudo_maximo` com critérios), `test_colecoes.py`, `test_cobertura.py` (FR-5210) — depende de T004
-- [ ] T006 [A] [P] Reaproveitamento: ids novos e `documento` remapeado em
+- [X] T006 [A] [P] Reaproveitamento: ids novos e `documento` remapeado em
   `editais/domain/reaproveitamento.py`; caso em `integration/editais/test_reaproveitamento.py`
   (FR-5212, SC-1625) — depende de T003
 
 ## Phase 2: Incremento A — User Story 1, configurar e publicar (P1)
 
-- [ ] T007 [US1] Seção Barema em `interface/templates/interface/_etapa.html`, linha em
+- [X] T007 [US1] Seção Barema em `interface/templates/interface/_etapa.html`, linha em
   `_criterio_de_avaliacao.html`, `fragmento_criterio_de_avaliacao` em `interface/views.py` e a rota;
   a máxima vira leitura com critérios; regras na folha de `compor-etapas` (FR-5206, UX-420)
-- [ ] T008 [US1] Travessia: `ler_etapas` (prefixo `criterio-etapa-<i>-<n>-`), `etapas_do_edital`,
+- [X] T008 [US1] Travessia: `ler_etapas` (prefixo `criterio-etapa-<i>-<n>-`), `etapas_do_edital`,
   `etapas_persistidas` em `interface/forms.py`; `interface/aplicacao.py` (FR-5206) — depende de T007
-- [ ] T009 [US1] Testes da travessia em `interface/test_barema_na_elaboracao.py`: gravar e recarregar;
+- [X] T009 [US1] Testes da travessia em `interface/test_barema_na_elaboracao.py`: gravar e recarregar;
   gravar Perfis, Cronograma e Inscrição depois e conferir que o barema ficou; recusa que reexibe o
   digitado; troca para decisória (FR-5204, FR-5206, FR-5213) — depende de T008
-- [ ] T010 [US1] `interface/static/interface/barema.js`: prévia, soma e máxima derivada ao vivo,
+- [X] T010 [US1] `interface/static/interface/barema.js`: prévia, soma e máxima derivada ao vivo,
   acrescentar/remover/mover pelo `ordenacao.js`; `javascript/barema.test.js` (FR-5203, FR-5207,
   UX-421) — depende de T007
-- [ ] T011 [US1] [P] Conferência: `criteria` em `_LIDOS_POR_COLECAO["stages"]` e o bloco em
+- [X] T011 [US1] [P] Conferência: `criteria` em `_LIDOS_POR_COLECAO["stages"]` e o bloco em
   `interface/revisao.py`; `unit/interface/test_revisao.py` (FR-5211)
-- [ ] T012 [US1] [P] Retificação: `CAMPOS_CRITERIO_DE_AVALIACAO` em `interface/retificacao.py`;
+- [X] T012 [US1] [P] Retificação: `CAMPOS_CRITERIO_DE_AVALIACAO` em `interface/retificacao.py`;
   `contract/test_retificacoes_api.py` e `interface/test_campos_vem_do_contrato.py`; caso que
   acrescenta critério e altera máxima, e outro que quebra a soma e é recusado (FR-5210) — depende de
   T005
-- [ ] T013 [US1] PDF: `_tabela_do_barema` em `publicacoes/infrastructure/pdf.py`, chamada por `_etapas`
+- [X] T013 [US1] PDF: `_tabela_do_barema` em `publicacoes/infrastructure/pdf.py`, chamada por `_etapas`
   e pela redação em prosa, e em `apresentacao.py`; `interface/test_barema_no_pdf.py` com o texto
   extraído do 14/2026 e a igualdade do texto de um Edital sem barema antes e depois (FR-5209, SC-1620,
   SC-1624) — depende de T004
-- [ ] T014 [US1] Guardiões de tela: varredura de vocabulário (lista literal) e acessibilidade para as
+- [X] T014 [US1] Guardiões de tela: varredura de vocabulário (lista literal) e acessibilidade para as
   classes novas (FR-5206)
-- [ ] T015 [A] Checkpoint: `make lint check test-pg`; o quickstart §1 à mão; PR do incremento A
+- [X] T015 [A] Checkpoint: `make lint check test-pg`; o quickstart §1 à mão; PR do incremento A
 
 ## Phase 3: Incremento B — User Story 2, pontuar na Mesa (P1)
 

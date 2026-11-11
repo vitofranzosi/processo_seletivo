@@ -290,6 +290,26 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
       <span class="ajuda">Um Evento acrescentado entra no Cronograma quando a Retificação for
         publicada, continuando a ordem dos que já estão acima.</span>
     </p>
+    {% elif secao.id == 'etapas' %}
+    {% comment %}
+    O critério do barema acrescentado (146, FR-5210). Mora na seção das Etapas, junto dos critérios
+    que já estão no Edital. A soma das máximas precisa continuar sendo a máxima da Etapa: quem
+    acrescenta altera a máxima da Etapa no mesmo ato, e a conferência diz o valor quando não fecha.
+    {% endcomment %}
+    <div id="novos-criterios-de-avaliacao">
+      {% for linha in novos_criterios_de_avaliacao %}
+      {% include "interface/_retificacao_criterio_de_avaliacao.html" with indice=linha.indice campos=linha.campos %}
+      {% endfor %}
+    </div>
+    <p class="acrescentar">
+      <button type="button" class="botao secundario"
+              hx-get="{% url 'interface:fragmento-retificacao-criterio-de-avaliacao' edital.id %}"
+              hx-target="#novos-criterios-de-avaliacao"
+              hx-swap="beforeend">Acrescentar critério ao barema</button>
+      <span class="ajuda">O critério entra no fim do barema da Etapa escolhida quando a Retificação
+        for publicada. A pontuação máxima da Etapa precisa continuar sendo a soma das máximas dos
+        critérios: altere-a no mesmo ato.</span>
+    </p>
     {% elif secao.id == 'anexos' %}
     <div id="novos-anexos">
       {% for linha in novos_anexos %}

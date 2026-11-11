@@ -38,7 +38,7 @@ from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 def _e_colecao(valor):
     """Coleção é toda lista cujos itens são objetos — **sem lista nomeada** (FR-303).
 
-    Nenhum literal com os nomes das doze coleções: acrescentar uma ao conteúdo publicado passa a
+    Nenhum literal com os nomes das treze coleções: acrescentar uma ao conteúdo publicado passa a
     ser suficiente para o guardião cobri-la. Lista de escalares (`requirements`, `stages`) é campo,
     e não coleção: o que se corrige ali é a lista inteira.
     """
@@ -198,10 +198,11 @@ def test_toda_razao_registrada_nao_e_vazia():
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.contract
-def test_a_travessia_alcanca_as_doze_colecoes(conteudo_maximo):
+def test_a_travessia_alcanca_as_treze_colecoes(conteudo_maximo):
     """O mapa do trabalho, e o sintoma de o Edital não ser máximo.
 
-    Falhar aqui não é defeito da travessia: é a fixture ter encolhido.
+    Falhar aqui não é defeito da travessia: é a fixture ter encolhido. Eram doze até a `146`, que
+    trouxe o barema da Etapa (`criteria`).
     """
     encontradas = {colecao for colecao, _ in campos_publicados(conteudo_maximo)}
     assert encontradas == {
@@ -217,6 +218,7 @@ def test_a_travessia_alcanca_as_doze_colecoes(conteudo_maximo):
         "declaredFacts",
         "classificationMilestones",
         "tiebreakers",
+        "criteria",
     }
 
 
@@ -283,6 +285,10 @@ def test_o_edital_maximo_exercita_o_que_o_emissor_sabe_emitir(conteudo_maximo):
     for objeto in ("calculation", "rounding", "distribution", "callRules", "effectiveFrom"):
         assert regra.get(objeto), f"a Regra Normativa do Edital máximo não declara {objeto}"
     assert any(evento.get("location") for evento in conteudo_maximo["schedule"])
+    # O barema (146): um critério com cada campo opcional preenchido, ou a travessia não os acha.
+    criterios = [c for etapa in conteudo_maximo["stages"] for c in etapa["criteria"]]
+    for campo in ("description", "pointsPerUnit", "unitLabel", "documentRequirementId"):
+        assert any(c.get(campo) for c in criterios), f"nenhum critério do barema declara {campo}"
     # O método comum do Edital (030, FR-429). Sem ele, as nove entradas `(raiz, "drawMethod/…")`
     # ficariam fora da travessia e o guardião as acusaria como classificação de campo inexistente —
     # que é o sintoma de a fixture ter encolhido, e não de o contrato estar errado.

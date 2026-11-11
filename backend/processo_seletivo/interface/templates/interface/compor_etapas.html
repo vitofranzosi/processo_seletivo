@@ -1,5 +1,7 @@
-{% extends "interface/compor_base.html" %}
+{% extends "interface/compor_base.html" %}{% load estaticos %}
 {% block etapa_titulo %}Etapas de Avaliação{% endblock %}
+{% comment %} A seção Barema do cartão da Etapa (146, UX-420, UX-421): só esta etapa a desenha. {% endcomment %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/compor-etapas.css' %}">{% endblock %}
 {% block etapa %}
 <form method="post" id="formulario"
       {% if editavel and ator %}data-rascunho="{{ edital.id }}:{{ etapa }}:{{ ator.subject }}"
@@ -39,6 +41,17 @@
         <dt>Evento do Cronograma</dt>
         <dd>Vincular a Etapa a um Evento traz as datas de lá; não há data para digitar aqui. Sem
           vínculo, a Etapa não publica data.</dd>
+        <dt><dfn>Barema</dfn></dt>
+        <dd>O barema é a ficha com que a comissão pontua uma Etapa com pontuação — títulos, formação,
+          experiência —, uma linha por critério. A pontuação máxima da Etapa passa a ser a soma das
+          máximas dos critérios, e o Edital imprime a ficha como tabela. Por unidade, a comissão
+          informa quantas unidades o candidato comprovou, e a parcela não passa da máxima do
+          critério; na pontuação atribuída, ela dá os pontos diretamente, de zero à máxima.</dd>
+        <dt>Documento que comprova</dt>
+        <dd>Opcional. Só os Documentos Exigidos na inscrição de todo candidato, sem restrição de
+          Perfil, de modalidade ou de condição: o barema vale para todas as inscrições da Etapa. Um
+          mesmo documento pode comprovar vários critérios — "Títulos acadêmicos" para Doutorado,
+          Mestrado e Especialização.</dd>
         <dt>Avaliações por inscrição</dt>
         <dd>Mais de uma avaliação pede uma regra que diga como combiná-las — média, maior nota,
           terceira leitura —, e o sistema ainda não publica essa regra. Uma Etapa assim não tem
@@ -62,6 +75,7 @@
 {% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 <script src="{% static 'interface/assistente.js' %}" defer></script>
 <script src="{% static 'interface/ordenacao.js' %}" defer></script>
+<script src="{% static 'interface/barema.js' %}" defer></script>
 <script src="{% static 'interface/rascunho.js' %}" defer></script>
 <script src="{% static 'interface/remocao.js' %}" defer></script>
 {% endblock %}

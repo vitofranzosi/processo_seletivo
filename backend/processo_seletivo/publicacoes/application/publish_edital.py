@@ -43,6 +43,29 @@ def _decimal_canonico(valor):
     return None if valor is None else f"{Decimal(valor):.4f}"
 
 
+def _criteria(etapa) -> list[dict]:
+    """O barema da Etapa, na ordem da ficha (146, FR-5208).
+
+    **Sem campo de ordem**: a lista é a ordem, e a coluna `ordem` só a guarda entre gravações. Os
+    decimais na forma canônica, como os da Etapa; a unidade vazia e o documento ausente viajam como
+    `null`, que é como este conteúdo diz "não declarado" (`rotuloFavoravel`, `scheduleEventId`).
+    """
+    return [
+        {
+            "id": str(criterio.id),
+            "name": criterio.nome,
+            "description": criterio.descricao,
+            "maximumScore": _decimal_canonico(criterio.maxima),
+            "pointsPerUnit": _decimal_canonico(criterio.pontos_por_unidade),
+            "unitLabel": criterio.unidade or None,
+            "documentRequirementId": None
+            if criterio.documento is None
+            else str(criterio.documento),
+        }
+        for criterio in etapa.criterios.all()
+    ]
+
+
 def _stages(edital: Edital) -> list[dict]:
     return [
         {
@@ -67,8 +90,12 @@ def _stages(edital: Edital) -> list[dict]:
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel or None,
             # A Etapa referencia o Evento; as datas são dele e não são copiadas (FR-021).
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
+            # O barema (146, degrau 21). Lista sempre presente, vazia na Etapa sem critério.
+            "criteria": _criteria(etapa),
         }
-        for etapa in edital.etapas.all()
+        # Os critérios numa consulta só, e não uma por Etapa: o conteúdo é montado em toda
+        # submissão, prévia e conferência.
+        for etapa in edital.etapas.prefetch_related("criterios")
     ]
 
 

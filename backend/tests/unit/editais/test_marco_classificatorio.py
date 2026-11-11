@@ -34,6 +34,8 @@ def etapa(identificador, *, classificatory, weight="1.0000"):
         "rotuloFavoravel": None,
         "rotuloDesfavoravel": None,
         "scheduleEventId": None,
+        # O barema (146, degrau 21): sempre presente, vazio na Etapa sem critério.
+        "criteria": [],
     }
 
 

@@ -25,8 +25,15 @@ ETAPA_V4 = {
 # A mesma Etapa já na forma da versão 5: ela ainda precisa do degrau da 6.
 ETAPA_V5 = {**ETAPA_V4, "evaluationsPerRegistration": 1, "maximumScore": None}
 
-# E na forma vigente, que não precisa de degrau nenhum.
-ETAPA_V6 = {**ETAPA_V5, "forma": "PONTUADA", "rotuloFavoravel": None, "rotuloDesfavoravel": None}
+# E na forma vigente, que não precisa de degrau nenhum. O nome ficou o da 6, e a forma vigente
+# ganhou desde então o barema do degrau 21 (146): a lista vazia, que é o que a ausência dele diz.
+ETAPA_V6 = {
+    **ETAPA_V5,
+    "forma": "PONTUADA",
+    "rotuloFavoravel": None,
+    "rotuloDesfavoravel": None,
+    "criteria": [],
+}
 
 
 def conteudo(versao, etapas):

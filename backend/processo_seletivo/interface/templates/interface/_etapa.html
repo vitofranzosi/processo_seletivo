@@ -85,10 +85,16 @@
           <span class="oculto" id="ajuda-nota-{{ indice }}">Vazio: não há nota mínima.</span>
         </p>
         <p class="campo curto">
-          <label for="etapa-{{ indice }}-maximumScore">Pontuação máxima <span class="opcional">(opcional)</span></label>
+          <label for="etapa-{{ indice }}-maximumScore">Pontuação máxima <span class="opcional" data-maxima-opcional{% if etapa_linha.criteria %} hidden{% endif %}>(opcional)</span><span class="soma-do-barema" data-soma-do-barema{% if not etapa_linha.criteria %} hidden{% endif %}>soma dos critérios</span></label>
           {% recusa_de recusas "etapa" indice "maximumScore" as recusado %}
+          {% comment %}
+          Com barema, a máxima é a soma das máximas dos critérios, e vira leitura (146, D-003,
+          UX-420). `readonly`, e não `disabled`: o campo continua sendo enviado, e quem a calcula de
+          fato é `ler_etapas` — o script só a mostra ao vivo.
+          {% endcomment %}
           <input type="number" step="0.0001" min="0.0001" id="etapa-{{ indice }}-maximumScore"
                  name="etapa-{{ indice }}-maximumScore" value="{{ etapa_linha.maximumScore|default:'' }}"
+                 data-maxima-da-etapa{% if etapa_linha.criteria %} readonly{% endif %}
                  {% comment %}"Limite não declarado" precisa de 152 px e o campo oferece 140: aparecia cortado. A frase inteira do domínio fica na descrição, que o campo aponta.{% endcomment %}
                  placeholder="Sem limite"
                  aria-describedby="ajuda-maxima-{{ indice }}{% if recusado %} recusa-etapa-{{ indice }}-maximumScore{% endif %}"
@@ -202,4 +208,54 @@
       </label>
     </fieldset>
   </div>
+  {% comment %}
+  O barema (146, FR-5206, FR-5207, UX-420, UX-421). Dentro do cartão, abaixo da pontuação máxima, e
+  só na Etapa pontuada: a decisória não produz nota (FR-5204). Na decisória sem critério a folha
+  esconde a seção; **com critério, ela fica à vista**, com o aviso de que a decisória não tem barema
+  e sem o botão de acrescentar. Esconder também ali faria a pessoa gravar sem ver o que perderia, e
+  a gravação recusa a decisória com barema — os critérios precisam estar à mão para serem removidos.
+
+  `section` com título, e não `fieldset`: as linhas de dentro já são `fieldset.linha`, e um terceiro
+  nível de legenda faria o leitor de tela anunciar "grupo" três vezes antes do primeiro campo. O `id`
+  é a âncora da recusa que é do barema inteiro, e não de um critério.
+
+  A prévia é uma tabela com as colunas da ficha dos Editais — título, como se pontua, teto e
+  comprovação — e o total; não há página nem modal próprios (UX-421). O servidor a desenha, e o
+  `barema.js` a refaz a cada tecla.
+  {% endcomment %}
+  {% previa_do_barema etapa_linha documentos_do_barema as previa %}
+  <section class="barema" id="etapa-{{ indice }}-criteria" data-barema
+           aria-labelledby="barema-{{ indice }}-titulo">
+    <h3 id="barema-{{ indice }}-titulo" class="titulo-do-barema">Barema</h3>
+    <p class="descricao-do-barema">Opcional. Sem barema, a comissão lança o total.</p>
+    <p class="aviso aviso-da-decisoria">A Etapa com decisão, sem nota, não tem barema. Remova os
+      critérios abaixo para gravar, ou volte a «Com pontuação».</p>
+    {% recusa_de recusas "etapa" indice "criteria" as recusado %}
+    {% if recusado %}<p class="recusa" role="alert">{{ recusado }}</p>{% endif %}
+    <div class="criterios-do-barema" id="criterios-etapa-{{ indice }}" data-ordenavel data-criterios-do-barema>
+      {% for criterio in etapa_linha.criteria %}{% include "interface/_criterio_de_avaliacao.html" with n=forloop.counter0 %}{% endfor %}
+    </div>
+    {% if not somente_leitura and edital %}
+    <button type="button" class="botao secundario acrescentar-criterio"
+            hx-get="{% url 'interface:fragmento-criterio-de-avaliacao' edital.id indice %}"
+            hx-target="#criterios-etapa-{{ indice }}" hx-swap="beforeend">Acrescentar critério</button>
+    {% endif %}
+    <div class="previa-do-barema" data-previa-do-barema{% if not previa.linhas %} hidden{% endif %}>
+      <h4 class="titulo-da-previa" id="previa-barema-{{ indice }}">Prévia: como o Edital imprimirá a ficha</h4>
+      <table class="tabela tabela-do-barema" aria-labelledby="previa-barema-{{ indice }}">
+        <thead>
+          <tr><th scope="col">Critério</th><th scope="col">Pontuação</th><th scope="col" class="numero">Máxima</th><th scope="col">Comprovação</th></tr>
+        </thead>
+        <tbody data-linhas-da-previa>
+          {% for linha in previa.linhas %}
+          <tr><td data-rotulo="Critério">{{ linha.0 }}</td><td data-rotulo="Pontuação">{{ linha.1 }}</td><td data-rotulo="Máxima" class="numero">{{ linha.2 }}</td><td data-rotulo="Comprovação">{{ linha.3 }}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><th scope="row">Total</th><td></td><td class="numero" data-total-do-barema>{{ previa.total }}</td><td></td></tr>
+        </tfoot>
+      </table>
+      <p class="oculto" role="status" aria-live="polite" data-anuncio-do-barema></p>
+    </div>
+  </section>
 </fieldset>

@@ -100,4 +100,6 @@ def test_a_retificacao_nao_acrescenta_marco_e_por_isso_nao_deriva_nada(publicado
         "fragmento-retificacao-linha-do-quadro",
         "fragmento-retificacao-criterio",
         "fragmento-retificacao-modalidade",
+        # O critério do barema (146): acrescenta-se inteiro, sem derivar nada do que já está.
+        "fragmento-retificacao-criterio-de-avaliacao",
     }

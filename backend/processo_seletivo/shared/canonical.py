@@ -163,7 +163,13 @@ from uuid import UUID
 # item de `schedule`, booleano sempre presente. `true` é verdade sobre todo Edital publicado antes
 # dele — a tabela do Cronograma imprimia todos os Eventos, porque a capacidade não existia.
 # Conversão sem invenção, no molde do degrau 11, o outro que mora no Evento.
-SCHEMA_VERSION = 20
+#
+# **O degrau 21 é o barema da Etapa** (146, D-001, FR-5208): `criteria` em cada item de `stages`,
+# lista sempre presente, na ordem da ficha. A lista vazia é verdade sobre todo Edital publicado
+# antes dele — a comissão somava o barema fora do sistema, e a Etapa não publicava parcela nenhuma.
+# Conversão sem invenção, no molde do degrau 7, que trouxe as coleções do Perfil: nenhuma Etapa
+# antiga ganha critério por elevação.
+SCHEMA_VERSION = 21
 
 
 def _default(value):

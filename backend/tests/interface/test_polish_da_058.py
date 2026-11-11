@@ -226,6 +226,8 @@ def _etapa(**numeros):
         weight=None,
         minimum_score=None,
         maximum_score=None,
+        # O barema (146): a Etapa sem critério, que é a destas linhas.
+        criterios=SimpleNamespace(all=lambda: []),
     )
     return SimpleNamespace(**{**campos, **numeros})
 
@@ -238,7 +240,12 @@ def test_os_numeros_das_etapas_chegam_ao_campo_sem_zeros_a_direita():
         _etapa(maximum_score=Decimal("87.5000"), weight=Decimal("100.0000")),
         _etapa(minimum_score=Decimal("60.0050"), weight=Decimal("0.0001")),
     ]
-    edital = SimpleNamespace(etapas=SimpleNamespace(order_by=lambda *_: etapas))
+    # `prefetch_related` desde a 146: o barema de cada Etapa vem numa consulta só.
+    edital = SimpleNamespace(
+        etapas=SimpleNamespace(
+            order_by=lambda *_: SimpleNamespace(prefetch_related=lambda *_: etapas)
+        )
+    )
 
     linhas = forms.etapas_do_edital(edital)
 

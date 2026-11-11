@@ -384,7 +384,33 @@ def _etapa(etapa, snapshot):
                 _instante(vinculado.get("startAt")),
             )
         )
+    linhas.extend(_barema(etapa, snapshot))
     return {"titulo": f"{etapa.get('order', '')}. {etapa.get('name', '')}", "linhas": linhas}
+
+
+def _barema(etapa, snapshot):
+    """O barema da Etapa, uma linha por critério e a soma (146, FR-5211).
+
+    Quem homologa confere a ficha que o PDF imprimirá, e por isso as linhas vêm da mesma leitura da
+    tabela do documento (`pdf.linhas_do_barema`): o título com a exigência, como se pontua, o teto
+    e o documento que comprova. A soma é dita como o que ela é — a pontuação máxima da Etapa.
+    """
+    lido = pdf.linhas_do_barema(etapa, snapshot)
+    if lido is None:
+        return []
+    criterios, total = lido
+    linhas = [
+        Rotulada(
+            "Barema",
+            f"{contagem(len(criterios), 'critério,critérios')}, somando {total} — a pontuação "
+            "máxima da Etapa",
+        )
+    ]
+    for posicao, (titulo, pontos, maxima, comprovacao) in enumerate(criterios, 1):
+        partes = [titulo, pontos or f"de 0 a {maxima}", f"máxima {maxima}"]
+        partes.append(f"comprova: {comprovacao}" if comprovacao != "—" else "sem documento ligado")
+        linhas.append(Rotulada(f"Critério {posicao}", " · ".join(partes)))
+    return linhas
 
 
 def _nomes_do_alcance(snapshot):
@@ -996,6 +1022,15 @@ _LIDOS_POR_COLECAO = {
         # A visibilidade no PDF (144, D-009): "Não sai na tabela do Cronograma do PDF".
         "shownInPdf",
     ),
+    # O barema (146, FR-5211): cada critério numa linha da Etapa — o documento, pelo nome.
+    "criteria": (
+        "name",
+        "description",
+        "maximumScore",
+        "pointsPerUnit",
+        "unitLabel",
+        "documentRequirementId",
+    ),
     "stages": (
         "order",
         "scheduleEventId",
@@ -1083,6 +1118,7 @@ NAO_MOSTRADOS = {
         "que são a declaração"
     ),
     ("stages", "id"): _IDENTIDADE,
+    ("criteria", "id"): _IDENTIDADE,
     ("sections", "id"): _IDENTIDADE,
     ("sections", "key"): "identidade da seção no catálogo; a conferência mostra o título",
     ("attachments", "id"): _IDENTIDADE,

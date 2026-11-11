@@ -24,6 +24,7 @@ from uuid import NAMESPACE_URL, uuid4, uuid5
 from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.marcos import declara_sorteio
+from processo_seletivo.editais.domain.validation import vazio_e_ausencia
 from processo_seletivo.interface.forms import opcoes_do_metodo
 from processo_seletivo.interface.templatetags.interface_extras import contagem
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
@@ -425,6 +426,17 @@ CAMPOS_ETAPA = [
     ("rotuloFavoravel", "Rótulo do resultado favorável", TEXTO),
     ("rotuloDesfavoravel", "Rótulo do resultado desfavorável", TEXTO),
 ]
+# O barema da Etapa (146, FR-5210): todo campo do critério, com os rótulos da seção Barema da
+# composição. A igualdade da soma com a máxima da Etapa não é campo — é a conferência do conteúdo
+# consolidado que a cobra, e por isso acrescentar um critério pede alterar a máxima no mesmo ato.
+CAMPOS_CRITERIO_DE_AVALIACAO = [
+    ("name", "Critério", TEXTO),
+    ("description", "Exigências e observações", TEXTO_LONGO),
+    ("maximumScore", "Pontuação máxima do critério", DECIMAL),
+    ("pointsPerUnit", "Pontos por unidade", DECIMAL),
+    ("unitLabel", "Unidade", TEXTO),
+    ("documentRequirementId", "Documento que comprova", REFERENCIA),
+]
 # Só o conteúdo. O catálogo de seções é fixo: título, ordem, tipo e origem divergentes são
 # recusados pela verificação de topologia, e uma seção gerada nem campo de conteúdo tem.
 CAMPOS_SECAO = [("content", "Texto da seção", TEXTO_LONGO)]
@@ -496,6 +508,7 @@ COLECAO_DA_LISTA = {
     "CAMPOS_CRITERIO": "tiebreakers",
     "CAMPOS_EVENTO": "schedule",
     "CAMPOS_ETAPA": "stages",
+    "CAMPOS_CRITERIO_DE_AVALIACAO": "criteria",
     "CAMPOS_SECAO": "sections",
     "CAMPOS_ANEXO": "attachments",
     "CAMPOS_DOCUMENTO": "documentRequirements",
@@ -696,6 +709,24 @@ QUANDO_O_VALOR_NAO_EXISTE = (
 )
 _POR_ETAPA = "MAIOR_PONTUACAO_NA_ETAPA"
 _SEPARADOR = "|"
+# Um critério do barema acrescentado por Retificação (146, FR-5210). A Etapa é uma escolha só,
+# entre as pontuadas — a decisória não tem barema (FR-5204) —, e o caminho da Alteração passa por
+# ela. Sem "por unidade" ou "direta": o conteúdo deduz a forma da presença dos pontos (D-002), e a
+# linha em branco nos pontos é a pontuação atribuída pela comissão.
+NOVO_CRITERIO_DE_AVALIACAO = [
+    ("id", "", OCULTO),
+    ("stage", "Etapa", REFERENCIA),
+    ("name", "Critério", TEXTO),
+    ("description", "Exigências e observações", TEXTO_LONGO),
+    ("maximumScore", "Pontuação máxima do critério", DECIMAL),
+    ("pointsPerUnit", "Pontos por unidade (em branco: a comissão atribui)", DECIMAL),
+    ("unitLabel", "Unidade", TEXTO),
+    ("documentRequirementId", "Documento que comprova", REFERENCIA),
+]
+#: O prefixo das linhas novas do barema. **Não** `criterio-de-avaliacao`: `_indices_novos` lê o
+#: índice depois de `novo-criterio-`, e um prefixo que começasse por ele daria ao desempate uma
+#: linha fantasma de índice `de`.
+PREFIXO_DO_CRITERIO_DE_AVALIACAO = "barema"
 # Um Anexo acrescentado por Retificação. O arquivo entra como os demais — enviado antes, citado
 # pela identidade —, e o resumo é resolvido no servidor: nem aqui nem em lugar nenhum alguém digita
 # um SHA-256 (020, FR-031, FR-035).
@@ -1142,6 +1173,58 @@ def opcoes_do_criterio_novo(conteudo):
     }
 
 
+def opcoes_do_barema(conteudo):
+    """O documento que comprova um critério do barema — lido do conteúdo **vigente** (146).
+
+    Todos os documentos da inscrição, e não só os que valem para toda inscrição: o `select` é
+    conferido contra estas opções, e o critério cujo documento ganhou restrição precisa continuar
+    reexibível para ser corrigido. Quem recusa o documento restrito é a conferência do conteúdo
+    consolidado (D-010). A leitura e o rótulo são os da composição (`documentos_do_barema`).
+    """
+    from processo_seletivo.editais.domain.documentos import documentos_do_barema
+
+    return {
+        "documentRequirementId": tuple(
+            (documento.id, documento.rotulo)
+            for documento in documentos_do_barema(conteudo.get("documentRequirements"))
+        )
+    }
+
+
+def opcoes_do_criterio_de_avaliacao_novo(conteudo):
+    """As Etapas pontuadas e os documentos, para o critério acrescentado (146)."""
+    etapas = tuple(
+        (str(etapa["id"]), etapa.get("name") or "")
+        for etapa in conteudo.get("stages") or []
+        if isinstance(etapa, dict) and etapa.get("id") and etapa.get("forma") != "DECISORIA"
+    )
+    return {"stage": etapas, **opcoes_do_barema(conteudo)}
+
+
+def _criterio_de_avaliacao_novo(valores):
+    """O critério que a linha declara, com o caminho em que ele entra (146, FR-5210).
+
+    Na forma publicada inteira — `CRITERIO_PUBLICADO` exige toda chave —, e a coerência (soma,
+    unidade com pontos, documento da inscrição) fica para a conferência do conteúdo consolidado,
+    que é a mesma da gravação do rascunho.
+    """
+    etapa = valores.get("stage")
+    if not etapa:
+        raise ValueError("Etapa: diga a que Etapa o critério do barema se acrescenta.")
+    criterio = {
+        "id": str(valores.get("id") or uuid4()),
+        "name": valores.get("name") or "",
+        "description": valores.get("description") or "",
+        "maximumScore": valores.get("maximumScore"),
+        "pointsPerUnit": valores.get("pointsPerUnit"),
+        "unitLabel": valores.get("unitLabel") or None,
+        "documentRequirementId": valores.get("documentRequirementId") or None,
+    }
+    if criterio["maximumScore"] is None:
+        raise ValueError("Pontuação máxima do critério: o critério acrescentado precisa dela.")
+    return f"/stages/id={etapa}/criteria/-", criterio
+
+
 def _criterio_novo(valores, conteudo, ordens_por_marco):
     """O critério que a linha declara, com o caminho em que ele entra — ou a recusa que o impede.
 
@@ -1516,6 +1599,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
             )
         )
 
+    documentos_do_barema = opcoes_do_barema(conteudo)
     for etapa in conteudo.get("stages") or []:
         nome = f"{etapa.get('order', '')} — {etapa.get('name', '')}".strip(" —")
         grupos.append(
@@ -1528,6 +1612,25 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 nome=nome,
             )
         )
+        # O barema da Etapa, um cartão por critério, logo abaixo dela (146, FR-5210). Removível:
+        # tirar um critério é Retificação como as outras, e a soma que deixa de fechar é recusada
+        # pela conferência do conteúdo consolidado, com a mensagem que nomeia a Etapa.
+        for criterio in etapa.get("criteria") or []:
+            if not isinstance(criterio, dict):
+                continue
+            rotulo = f"{criterio.get('name', '')} — Etapa {etapa.get('name', '')}".strip(" —")
+            grupos.append(
+                _grupo(
+                    f"Critério {rotulo}",
+                    f"/stages/id={etapa.get('id', '')}/criteria/id={criterio.get('id', '')}",
+                    criterio,
+                    CAMPOS_CRITERIO_DE_AVALIACAO,
+                    opcoes=documentos_do_barema,
+                    rotulos_do_vazio={"documentRequirementId": "Nenhum documento"},
+                    tipo="Critério de avaliação",
+                    nome=rotulo,
+                )
+            )
 
     aplicabilidade = opcoes_de_aplicabilidade(conteudo)
     for documento in conteudo.get("documentRequirements") or []:
@@ -1635,7 +1738,7 @@ SECOES_DA_TELA = (
         ),
     ),
     ("cronograma", "Cronograma", ("Evento",)),
-    ("etapas", "Etapas de Avaliação", ("Etapa",)),
+    ("etapas", "Etapas de Avaliação", ("Etapa", "Critério de avaliação")),
     ("documentos", "Documentos Exigidos", ("Documento exigido",)),
     ("anexos", "Anexos", ("Anexo",)),
     ("secoes", "Seções do texto", ("Seção",)),
@@ -1654,6 +1757,8 @@ TIPOS_ANINHADOS = frozenset(
         "Fato declarado",
         "Marco",
         "Critério de desempate",
+        # O critério do barema pertence à Etapa acima dele (146).
+        "Critério de avaliação",
     }
 )
 
@@ -1670,6 +1775,7 @@ COLECAO_DO_TIPO = {
     "Critério de desempate": "tiebreakers",
     "Evento": "schedule",
     "Etapa": "stages",
+    "Critério de avaliação": "criteria",
     "Documento exigido": "documentRequirements",
     "Anexo": "attachments",
     "Seção": "sections",
@@ -1872,7 +1978,10 @@ def _exibir(valor, campo):
     if campo["tipo"] != REFERENCIA:
         return _para_formulario(valor, campo["tipo"])
     if valor is None:
-        return "sem restrição"
+        # O critério do barema sem documento não é "sem restrição" (146): é sem comprovação ligada.
+        return (
+            "nenhum documento" if campo.get("chave") == "documentRequirementId" else "sem restrição"
+        )
     for identificador, rotulo in campo.get("opcoes", ()):
         if identificador == valor:
             return rotulo
@@ -2135,6 +2244,17 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 enviado, campo["tipo"], campo["rotulo"], campo.get("opcoes", ())
             )
             anterior = _ler(conteudo, campo["caminho"])
+            # **O texto apagado vira vazio onde vazio é a ausência** (146): o local do Evento, as
+            # atribuições do Perfil, a descrição do critério do barema. `_converter` devolve nulo
+            # para todo texto em branco, e nulo num campo que não o admite era recusado na
+            # publicação — a pessoa não conseguia apagar o que a forma publicada declara opcional.
+            # Quem decide é a forma publicada, e não uma lista daqui.
+            if (
+                novo_valor is None
+                and campo["tipo"] in (TEXTO, TEXTO_LONGO)
+                and vazio_e_ausencia(COLECAO_DO_TIPO.get(grupo["tipo"], ""), campo["chave"])
+            ):
+                novo_valor = ""
             chaves = campo.get("chave", "").split("/")
             objeto = f"{grupo['caminho']}/{chaves[0]}" if len(chaves) > 1 else ""
             if objeto and _ler(conteudo, objeto) is None:
@@ -2349,6 +2469,26 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                     f"{criterio['order']} — {dict(TIPOS_DE_CRITERIO).get(criterio['type'], '')}"
                     f": {dict(opcoes_do_criterio['target']).get(valores.get('target'), '')}"
                 ),
+            }
+        )
+
+    # Os critérios do barema acrescentados (146, FR-5210). A soma que deixa de fechar com a máxima
+    # da Etapa é recusada pela conferência do conteúdo consolidado, e a mensagem diz o valor que a
+    # máxima precisa ter: quem acrescenta corrige a máxima no mesmo ato.
+    opcoes_do_barema_novo = opcoes_do_criterio_de_avaliacao_novo(conteudo)
+    for valores in _linhas_novas(
+        dados, PREFIXO_DO_CRITERIO_DE_AVALIACAO, NOVO_CRITERIO_DE_AVALIACAO, opcoes_do_barema_novo
+    ):
+        caminho, criterio = _criterio_de_avaliacao_novo(valores)
+        alteracoes.append({"targetPath": caminho, "operation": "ADD", "newValue": criterio})
+        resumo.append(
+            {
+                "grupo": "Critério do barema da Etapa "
+                + dict(opcoes_do_barema_novo["stage"]).get(valores.get("stage"), ""),
+                "rotulo": "Acréscimo",
+                "antes": "—",
+                "depois": f"{criterio['name'] or 'novo critério'} — "
+                f"{pdf.pontuacao_do_criterio(criterio)}",
             }
         )
 

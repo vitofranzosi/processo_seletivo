@@ -22,6 +22,10 @@ COLECOES_COM_CHAVE = frozenset(
         "/profiles",
         "/schedule",
         "/stages",
+        # O barema da Etapa (146, FR-5210). Declarado **antes** de o snapshot o emitir, pela lição
+        # do quadro de vagas: sem esta linha o seletor `id=` seria recusado, e o primeiro Edital
+        # publicado com barema nasceria irretificável nele.
+        "/stages/*/criteria",
         "/sections",
         "/profiles/*/competitionModalities",
         # As duas da leva da `015`. Aninhadas no Perfil pela mesma razão que a Modalidade: a regra
@@ -123,6 +127,7 @@ FORMA_DA_COLECAO = {
     "tiebreakers": "/profiles/*/classificationMilestones/*/tiebreakers/*",
     "schedule": "/schedule/*",
     "stages": "/stages/*",
+    "criteria": "/stages/*/criteria/*",
     "sections": "/sections/*",
     "attachments": "/attachments/*",
     "documentRequirements": "/documentRequirements/*",

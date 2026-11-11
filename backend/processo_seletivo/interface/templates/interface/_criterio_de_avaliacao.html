@@ -1,0 +1,99 @@
+{% load interface_extras %}<fieldset class="linha criterio-de-avaliacao{% if criterio.novo %} criterio-de-avaliacao-novo{% endif %}" data-criterio-de-avaliacao{% if somente_leitura %} disabled{% endif %}>
+  {% comment %}
+  Uma linha do barema da Etapa (146, FR-5201, FR-5206, UX-420).
+
+  Os nomes são `criterio-etapa-<i>-<n>-…`, e não `etapa-<i>-criterio-<n>-…`: `_indices` casa todo
+  campo que comece por `etapa-` e termine em `-id`, e o segundo formato criaria uma Etapa espúria.
+
+  **A forma de pontuar é a escolha que governa**, como a da Etapa: "por unidade" pede os pontos e a
+  unidade, "a comissão atribui" não pede nada além da máxima. A escolha é da tela, e não do conteúdo
+  — o conteúdo deduz a forma da presença dos pontos (D-002) —, e quem descarta os pontos da
+  pontuação direta é `ler_etapas`, porque campo escondido continua sendo enviado. O rádio se chama
+  `-modo`, e não `-forma`: a folha esconde o barema pela `-forma` da Etapa, e um rádio de mesmo
+  sufixo dentro do cartão seria lido por aquela regra.
+  {% endcomment %}
+  <legend data-rotulo="Critério do barema"><span class="categoria">Critério do barema<span data-ordem></span></span>{% if criterio.name %}<span class="nome">{{ criterio.name }}</span>{% endif %}</legend>
+  {% include "interface/_acoes_da_linha.html" with rotulo_remover="Remover este critério" %}
+  <input type="hidden" name="criterio-etapa-{{ indice }}-{{ n }}-id" value="{{ criterio.id }}">
+  <input type="hidden" name="criterio-etapa-{{ indice }}-{{ n }}-order" value="{{ n|add:1 }}">
+  <div class="campos">
+    <p class="campo largo">
+      <label for="criterio-etapa-{{ indice }}-{{ n }}-name">Critério <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% recusa_de recusas "criterio-etapa" indice "name" n as recusado %}
+      <input type="text" id="criterio-etapa-{{ indice }}-{{ n }}-name" name="criterio-etapa-{{ indice }}-{{ n }}-name" maxlength="200"
+             value="{{ criterio.name|default:'' }}" placeholder="ex.: Diploma de Doutorado"
+             aria-required="true" data-barema-nome
+             {% if recusado %}aria-invalid="true" aria-describedby="recusa-criterio-etapa-{{ indice }}-{{ n }}-name"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-criterio-etapa-{{ indice }}-{{ n }}-name">{{ recusado }}</span>{% endif %}
+    </p>
+    <p class="campo curto">
+      <label for="criterio-etapa-{{ indice }}-{{ n }}-maximumScore">Pontuação máxima <span class="obrigatorio" aria-hidden="true">*</span></label>
+      {% recusa_de recusas "criterio-etapa" indice "maximumScore" n as recusado %}
+      <input type="number" step="0.0001" min="0.0001" max="999.9999" inputmode="decimal"
+             id="criterio-etapa-{{ indice }}-{{ n }}-maximumScore" name="criterio-etapa-{{ indice }}-{{ n }}-maximumScore"
+             value="{{ criterio.maximumScore|default:'' }}" aria-required="true" data-barema-maxima
+             aria-describedby="ajuda-criterio-etapa-{{ indice }}-{{ n }}-maxima{% if recusado %} recusa-criterio-etapa-{{ indice }}-{{ n }}-maximumScore{% endif %}"
+             {% if recusado %}aria-invalid="true"{% endif %}>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-criterio-etapa-{{ indice }}-{{ n }}-maximumScore">{{ recusado }}</span>{% endif %}
+      <span class="oculto" id="ajuda-criterio-etapa-{{ indice }}-{{ n }}-maxima">O teto deste critério. A soma dos tetos é a
+        pontuação máxima da Etapa.</span>
+    </p>
+  </div>
+  <fieldset class="opcoes modo-do-criterio">
+    <legend>Como a comissão pontua</legend>
+    <p class="opcao">
+      <input type="radio" id="criterio-etapa-{{ indice }}-{{ n }}-modo-unidade" name="criterio-etapa-{{ indice }}-{{ n }}-modo" value="POR_UNIDADE"
+             {% if criterio.modo != "DIRETA" %}checked{% endif %} data-barema-modo>
+      <label for="criterio-etapa-{{ indice }}-{{ n }}-modo-unidade">Por unidade apresentada <span class="exemplo">— ex.: 5 pontos por certificado</span></label>
+    </p>
+    <div class="campos dependentes so-por-unidade">
+      <p class="campo curto">
+        <label for="criterio-etapa-{{ indice }}-{{ n }}-pointsPerUnit">Pontos por unidade <span class="obrigatorio" aria-hidden="true">*</span></label>
+        {% recusa_de recusas "criterio-etapa" indice "pointsPerUnit" n as recusado %}
+        <input type="number" step="0.0001" min="0.0001" max="999.9999" inputmode="decimal"
+               id="criterio-etapa-{{ indice }}-{{ n }}-pointsPerUnit" name="criterio-etapa-{{ indice }}-{{ n }}-pointsPerUnit"
+               value="{{ criterio.pointsPerUnit|default:'' }}" data-barema-pontos
+               {% if recusado %}aria-invalid="true" aria-describedby="recusa-criterio-etapa-{{ indice }}-{{ n }}-pointsPerUnit"{% endif %}>
+        {% if recusado %}<span class="recusa" role="alert" id="recusa-criterio-etapa-{{ indice }}-{{ n }}-pointsPerUnit">{{ recusado }}</span>{% endif %}
+      </p>
+      <p class="campo curto">
+        <label for="criterio-etapa-{{ indice }}-{{ n }}-unitLabel">Unidade <span class="obrigatorio" aria-hidden="true">*</span></label>
+        {% recusa_de recusas "criterio-etapa" indice "unitLabel" n as recusado %}
+        <input type="text" id="criterio-etapa-{{ indice }}-{{ n }}-unitLabel" name="criterio-etapa-{{ indice }}-{{ n }}-unitLabel" maxlength="60"
+               value="{{ criterio.unitLabel|default:'' }}" placeholder="ex.: certificado, mês"
+               data-barema-unidade
+               {% if recusado %}aria-invalid="true" aria-describedby="recusa-criterio-etapa-{{ indice }}-{{ n }}-unitLabel"{% endif %}>
+        {% if recusado %}<span class="recusa" role="alert" id="recusa-criterio-etapa-{{ indice }}-{{ n }}-unitLabel">{{ recusado }}</span>{% endif %}
+      </p>
+    </div>
+    <p class="opcao">
+      <input type="radio" id="criterio-etapa-{{ indice }}-{{ n }}-modo-direta" name="criterio-etapa-{{ indice }}-{{ n }}-modo" value="DIRETA"
+             {% if criterio.modo == "DIRETA" %}checked{% endif %} data-barema-modo>
+      <label for="criterio-etapa-{{ indice }}-{{ n }}-modo-direta">A comissão atribui os pontos <span class="exemplo">— de zero à pontuação máxima</span></label>
+    </p>
+  </fieldset>
+  <div class="campos">
+    <p class="campo largo">
+      <label for="criterio-etapa-{{ indice }}-{{ n }}-documentRequirementId">Documento que comprova <span class="opcional">(opcional)</span></label>
+      {% recusa_de recusas "criterio-etapa" indice "documentRequirementId" n as recusado %}
+      <select id="criterio-etapa-{{ indice }}-{{ n }}-documentRequirementId" name="criterio-etapa-{{ indice }}-{{ n }}-documentRequirementId" data-barema-documento
+              aria-describedby="ajuda-criterio-etapa-{{ indice }}-{{ n }}-documento{% if recusado %} recusa-criterio-etapa-{{ indice }}-{{ n }}-documentRequirementId{% endif %}"
+              {% if recusado %}aria-invalid="true"{% endif %}>
+        <option value="">Nenhum documento</option>
+        {% for documento in documentos_do_barema %}
+        {% if documento.elegivel or documento.id == criterio.documentRequirementId %}
+        <option value="{{ documento.id }}" {% if documento.id == criterio.documentRequirementId %}selected{% endif %}>{{ documento.rotulo }}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-criterio-etapa-{{ indice }}-{{ n }}-documentRequirementId">{{ recusado }}</span>{% endif %}
+      <span class="oculto" id="ajuda-criterio-etapa-{{ indice }}-{{ n }}-documento">Só os pedidos na
+        inscrição de todo candidato.</span>
+    </p>
+  </div>
+  <p class="campo descricao-do-criterio">
+    <label for="criterio-etapa-{{ indice }}-{{ n }}-description">Exigências e observações <span class="opcional">(opcional)</span></label>
+    <textarea id="criterio-etapa-{{ indice }}-{{ n }}-description" name="criterio-etapa-{{ indice }}-{{ n }}-description" rows="2"
+              placeholder="ex.: na área da Educação; só cursos concluídos" data-barema-descricao>{{ criterio.description|default:'' }}</textarea>
+  </p>
+</fieldset>

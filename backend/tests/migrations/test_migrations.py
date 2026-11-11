@@ -716,7 +716,11 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 26 com a 144**: a `editais/0026` acrescenta `shown_in_pdf` ao Evento do
         # Cronograma — se a linha dele sai na tabela do PDF. Elaboração pela mesma razão, e a coluna
         # nasce verdadeira, que é o que todo Edital anterior imprimiu (FR-5100).
-        "editais": 26,
+        # **Sobe para 27 com a 146**: a `editais/0027` cria `CriterioAvaliacao`, o barema da Etapa.
+        # Elaboração, como a própria Etapa — muda até publicar, e depois só por Retificação —, e por
+        # isso não é append-only nem entra no `M` do provisionamento. Só acrescenta tabela: nenhuma
+        # Etapa existente ganha critério (FR-5200, D-001).
+        "editais": 27,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -931,7 +935,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 26 com a 144**: a `editais/0026` acrescenta `shown_in_pdf` ao Evento do
         # Cronograma — se a linha dele sai na tabela do PDF. Elaboração pela mesma razão, e a coluna
         # nasce verdadeira, que é o que todo Edital anterior imprimiu (FR-5100).
-        "editais": 26,
+        # **Sobe para 27 com a 146**: a `editais/0027` cria `CriterioAvaliacao`, o barema da Etapa.
+        # Elaboração, como a própria Etapa — muda até publicar, e depois só por Retificação —, e por
+        # isso não é append-only nem entra no `M` do provisionamento. Só acrescenta tabela: nenhuma
+        # Etapa existente ganha critério (FR-5200, D-001).
+        "editais": 27,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se

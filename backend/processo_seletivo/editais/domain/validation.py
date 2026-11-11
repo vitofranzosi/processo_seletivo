@@ -42,6 +42,11 @@ from processo_seletivo.editais.domain.documentos import (
     problemas_do_momento,
     rotulo_da_modalidade,
 )
+from processo_seletivo.editais.domain.etapas import (
+    criterios_de,
+    criterios_repetidos,
+    problemas_do_barema,
+)
 from processo_seletivo.editais.domain.perfis import (
     CAMPOS_DO_METODO,
     ProfileValidationError,
@@ -90,6 +95,12 @@ class Campo:
     valores: tuple[str, ...] = ()
     tipo_do_item: type | None = None
     padrao: str = ""
+    # O texto em que `""` é a grafia da ausência — "não declarado" —, e não um valor (146). É o que
+    # a tela de Retificação lê para gravar o campo apagado como vazio, e não como nulo: nulo, num
+    # campo que não o admite, era recusado na publicação, e a pessoa não tinha como apagar o local
+    # de um Evento ou as atribuições de um Perfil. Os nomes ficam de fora de propósito: vazio neles
+    # não é ausência, e a recusa do nulo é o que impede publicá-los em branco.
+    vazio_e_ausencia: bool = False
 
 
 RESERVA = ("NONE", "LIMITED", "UNLIMITED")
@@ -98,7 +109,7 @@ PERFIL_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("code", str),
     Campo("name", str),
-    Campo("description", str),
+    Campo("description", str, vazio_e_ausencia=True),
     # **Itens de texto**, transcrito do contrato (026). A declaração faltava, e a API aceitava
     # qualquer JSON dentro da lista: número, objeto, outra lista. A tela de Retificação a oferece
     # numa caixa de texto, uma exigência por linha, e item que não é texto não volta de lá igual —
@@ -112,12 +123,12 @@ PERFIL_PUBLICADO = (
     # apontar. Que a identidade aponte Modalidade **deste** Perfil é conferido à parte, porque
     # depende do conteúdo do Perfil inteiro e não da forma do campo.
     Campo("generalCompetitionModalityId", str, formato="uuid", admite_nulo=True),
-    Campo("locality", str),
+    Campo("locality", str, vazio_e_ausencia=True),
     # `str` sem `admite_nulo`: os três são **sempre presentes**, com `""` quando não informados
     # (FR-014). Declará-los assim é o que faz a versão canônica 3 identificar uma forma só.
-    Campo("duties", str),
-    Campo("workload", str),
-    Campo("compensation", str),
+    Campo("duties", str, vazio_e_ausencia=True),
+    Campo("workload", str, vazio_e_ausencia=True),
+    Campo("compensation", str, vazio_e_ausencia=True),
     Campo("classificationInformation", dict),
     Campo("callInformation", dict),
     # A forma de **dentro** de cada Modalidade não é declarada. Que cada item seja objeto, é —
@@ -191,7 +202,7 @@ EVENTO_PUBLICADO = (
     # `str` sem `admite_nulo`, como `duties` e `workload` do Perfil: sempre presente, com `""`
     # quando não declarado. Uma segunda convenção para texto faria a versão canônica admitir mais
     # de uma forma.
-    Campo("location", str),
+    Campo("location", str, vazio_e_ausencia=True),
     # Sempre presente, nunca nulo: a ausência de marca é `false`, e não "não informado". A regra
     # de quantos podem ser verdadeiros é de coerência entre itens e vive em
     # `_periodo_de_inscricoes`, porque a forma confere um campo por vez.
@@ -208,7 +219,7 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("key", str),
     Campo("name", str),
-    Campo("instructions", str),
+    Campo("instructions", str, vazio_e_ausencia=True),
     Campo("required", bool),
     Campo("order", int, minimo=0),
     Campo("profileId", str, admite_nulo=True, formato="uuid"),
@@ -270,7 +281,34 @@ ETAPA_PUBLICADA = (
     Campo("rotuloFavoravel", str, admite_nulo=True),
     Campo("rotuloDesfavoravel", str, admite_nulo=True),
     Campo("scheduleEventId", str, admite_nulo=True, formato="uuid"),
+    # O barema (146, degrau 21). Sempre presente, lista vazia na Etapa sem critério; a forma de
+    # cada item é `CRITERIO_PUBLICADO`, conferida em `_coerencia_do_barema` pela régua do marco —
+    # aqui se declara que a coleção existe e que cada item é objeto.
+    Campo("criteria", list, tipo_do_item=dict),
 )
+
+# Um critério do barema na forma publicada (146, FR-5201). Os decimais na forma canônica da Etapa;
+# `pointsPerUnit` nulo é a pontuação direta (D-002), e `unitLabel` e `documentRequirementId` nulos
+# são "não declarado". Que a unidade acompanhe os pontos, que a soma feche e que o documento seja
+# da inscrição é coerência entre campos, e mora em `etapas.problemas_do_barema`.
+CRITERIO_PUBLICADO = (
+    Campo("id", str, formato="uuid"),
+    Campo("name", str),
+    Campo("description", str, vazio_e_ausencia=True),
+    Campo("maximumScore", str, formato="decimal", padrao=DECIMAL),
+    Campo("pointsPerUnit", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
+    Campo("unitLabel", str, admite_nulo=True),
+    Campo("documentRequirementId", str, admite_nulo=True, formato="uuid"),
+)
+
+
+def vazio_e_ausencia(colecao: str, campo: str) -> bool:
+    """Se, naquela coleção publicada, o texto vazio é a grafia de "não declarado" (146)."""
+    return any(
+        declarado.nome == campo and declarado.vazio_e_ausencia
+        for declarado in _FORMA_POR_COLECAO.get(colecao, ())
+    )
+
 
 # `content` e `source` **não entram**: dependem do tipo, e `Campo` não expressa coerência entre
 # campos. A ausência é deliberada, e o que ela deixa de fora está em `_topologia_das_secoes`.
@@ -306,6 +344,10 @@ COLECOES_PUBLICADAS = (
     ("attachments", ANEXO_PUBLICADO),
     ("documentRequirements", DOCUMENTO_EXIGIDO_PUBLICADO),
 )
+
+# A forma de cada coleção com forma declarada, pelo nome com que o contrato de mutabilidade a
+# chama — o barema é coleção aninhada, e a forma dele é conferida em `_coerencia_do_barema`.
+_FORMA_POR_COLECAO = {**dict(COLECOES_PUBLICADAS), "criteria": CRITERIO_PUBLICADO}
 
 CAMPO_AUSENTE = "field_required"
 TIPO_INVALIDO = "field_type_invalid"
@@ -1499,6 +1541,65 @@ def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _coerencia_do_barema(snapshot: dict) -> list[ValidationFinding]:
+    """A forma de cada critério, e a mesma regra que a gravação aplica (146, FR-5203 a FR-5205).
+
+    **Em todo ato**, e não só na publicação: a Retificação confere o conteúdo consolidado por aqui,
+    e é assim que a igualdade da soma vale também depois dela (FR-5210). E é aqui que se pega a
+    restrição acrescentada ao documento depois do vínculo — por Retificação do documento, que não
+    passa pela gravação do rascunho (D-010, SC-1634).
+
+    A regra é a de `etapas.problemas_do_barema`, a mesma da gravação: uma regra, duas leituras.
+    Critério fora de forma não entra nela — o achado de forma já diz o que corrigir, e a regra
+    leria um decimal que não é decimal.
+    """
+    itens = snapshot.get("stages")
+    if not isinstance(itens, list):
+        return []
+    documentos = [
+        documento
+        for documento in snapshot.get("documentRequirements") or []
+        if isinstance(documento, dict)
+    ]
+    # A identidade repetida, que a Retificação poderia produzir acrescentando um critério com o id
+    # de outro: a mesma regra da gravação.
+    findings = [
+        _impeditivo(BAREMA_INCOERENTE, mensagem, f"/stages/id={etapa}/criteria")
+        for etapa, mensagem in criterios_repetidos(
+            [etapa for etapa in itens if isinstance(etapa, dict)]
+        )
+    ]
+    for posicao, etapa in enumerate(itens):
+        if not isinstance(etapa, dict) or not isinstance(etapa.get("criteria"), list):
+            continue
+        caminho = _caminho_da_entidade("stages", etapa, posicao)
+        de_forma = []
+        for indice, criterio in enumerate(criterios_de(etapa)):
+            if not isinstance(criterio, dict):
+                continue
+            base = f"{caminho}{_caminho_da_entidade('criteria', criterio, indice)}"
+            de_forma.extend(
+                achado
+                for campo in CRITERIO_PUBLICADO
+                if (achado := _violacao(campo, criterio, f"{base}/{campo.nome}")) is not None
+            )
+        findings.extend(de_forma)
+        if de_forma:
+            continue
+        for identidade, campo, mensagem in problemas_do_barema(etapa, documentos):
+            if identidade and identidade != str(etapa.get("id") or ""):
+                alvo = f"{caminho}/criteria/id={identidade}/{campo}"
+            else:
+                alvo = f"{caminho}/{campo}"
+            findings.append(_impeditivo(BAREMA_INCOERENTE, mensagem, alvo))
+    return findings
+
+
+#: A recusa do barema que não fecha (146). Código próprio, e não `field_constraint_violated`: a
+#: mensagem já nomeia a Etapa e o critério, e quem a lê pela API precisa distingui-la da forma.
+BAREMA_INCOERENTE = "stage_criteria_inconsistent"
+
+
 def _decimal_ou_none(valor):
     """Valor fora da forma decimal não é assunto daqui: a forma declarada já o reporta."""
     try:
@@ -1592,6 +1693,7 @@ def validate_for_publication(
         findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
     findings.extend(_topologia_das_secoes(snapshot, topologia))
     findings.extend(_coerencia_das_etapas(snapshot))
+    findings.extend(_coerencia_do_barema(snapshot))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_faixa_do_teto(snapshot))
@@ -3930,6 +4032,24 @@ def _textos_impressos(snapshot: dict):
                     f"{lugar} {entidade} «{_nome(item, *chaves)}»",
                     item.get(campo),
                 )
+    # O barema (146): a tabela da Etapa imprime o título, a descrição e a unidade de cada critério.
+    for posicao, etapa in enumerate(snapshot.get("stages") or []):
+        if not isinstance(etapa, dict):
+            continue
+        caminho_da_etapa = _caminho_da_entidade("stages", etapa, posicao)
+        for indice, criterio in enumerate(criterios_de(etapa)):
+            if not isinstance(criterio, dict):
+                continue
+            caminho = f"{caminho_da_etapa}{_caminho_da_entidade('criteria', criterio, indice)}"
+            do_criterio = (
+                f"do critério «{_nome(criterio, 'name')}» da Etapa «{_nome(etapa, 'name')}»"
+            )
+            for campo, lugar in (
+                ("name", "no nome"),
+                ("description", "nas exigências"),
+                ("unitLabel", "na unidade"),
+            ):
+                yield f"{caminho}/{campo}", f"{lugar} {do_criterio}", criterio.get(campo)
 
 
 def _caractere_sem_grafia(snapshot: dict) -> list[ValidationFinding]:

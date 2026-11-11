@@ -21,7 +21,7 @@ decide o que a resposta mostra sem ser mostrado; e `EXCLUIDO`, com o motivo.
 from __future__ import annotations
 
 #: A versão do conteúdo publicado que esta tabela classifica (`shared/canonical.py`).
-VERSAO_DO_ESQUEMA = 20
+VERSAO_DO_ESQUEMA = 21
 
 LOCALIZACAO = "LOCALIZACAO"
 #: O campo decide **o que** a resposta mostra, sem ser mostrado: a aplicabilidade do documento, o
@@ -44,6 +44,10 @@ OPACO = excluido(
 SEM_PERGUNTA = excluido(
     "nenhuma das doze perguntas trata disto; registrado para a revisão do catálogo com o setor "
     "de seleção (070, T046)"
+)
+
+BAREMA = excluido(
+    "o barema da Etapa (146): a resposta sobre as Etapas mostra a máxima, e a ficha se lê no PDF"
 )
 
 #: Padrão de caminho → classe. `*` é qualquer item de coleção; `/**` cobre a subárvore inteira.
@@ -190,6 +194,11 @@ COBERTURA = {
     "/stages/*/evaluationsPerRegistration": excluido(
         "quantas avaliações cada inscrição recebe é organização interna da banca"
     ),
+    # O barema da Etapa (146). O assistente ainda não o lê: a resposta sobre as Etapas mostra a
+    # máxima, que é a soma, e o candidato lê a ficha no PDF. Lê-lo é decisão da pergunta P-07 com o
+    # setor de seleção, e não desta feature.
+    "/stages/*/criteria": BAREMA,
+    "/stages/*/criteria/**": BAREMA,
     "/stages/*/rotuloFavoravel": ("P-07",),
     "/stages/*/rotuloDesfavoravel": ("P-07",),
     "/stages/*/scheduleEventId": excluido(

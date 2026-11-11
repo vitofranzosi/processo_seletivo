@@ -200,8 +200,13 @@ def test_a_migration_deixa_exibido_o_evento_que_ja_existia(
 ):
     """SC-1580, FR-5100: o Evento gravado antes da `editais/0026` sai na tabela, como saía.
 
-    Volta-se só a `0026` — nada depende dela —, com um Evento já gravado, e reaplica-se. A coluna
-    renasce com o padrão, e a linha antiga, que nunca teve o campo, fica exibida.
+    Volta-se a `0026`, com um Evento já gravado, e reaplica-se. A coluna renasce com o padrão, e a
+    linha antiga, que nunca teve o campo, fica exibida.
+
+    **Reaplica-se até a última de `editais`, e não só até a `0026`.** Desde a `146` a `0027` (o
+    barema) depende dela, e voltar à `0025` a desfaz junto: parar na `0026` deixava o banco do
+    worker sem a tabela dos critérios, e todo caso seguinte nele desabava — a limpeza dos
+    transacionais não conseguia truncar a Etapa, e o resto era cascata.
     """
     from django.db import connection
     from django.db.migrations.executor import MigrationExecutor
@@ -210,7 +215,7 @@ def test_a_migration_deixa_exibido_o_evento_que_ja_existia(
     executor = MigrationExecutor(connection)
     executor.migrate([("editais", "0025_condicao_do_documento_exigido")])
     executor.loader.build_graph()
-    executor.migrate([("editais", "0026_visibilidade_do_evento_no_pdf")])
+    executor.migrate(executor.loader.graph.leaf_nodes("editais"))
 
     assert set(
         EventoCronograma.objects.filter(cronograma__edital=publicado).values_list(

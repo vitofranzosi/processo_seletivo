@@ -781,6 +781,29 @@ components:
         rotuloFavoravel: { type: [string, 'null'] }
         rotuloDesfavoravel: { type: [string, 'null'] }
         scheduleEventId: { type: [string, 'null'], format: uuid }
+        # O barema da Etapa pontuada (146, FR-5213). Ausente é sem critérios — e quem reenvia o
+        # rascunho sem a chave apaga o barema, como em toda coleção deste contrato. A ordem da lista
+        # é a ordem da ficha.
+        criteria:
+          type: array
+          items: { $ref: '#/components/schemas/CriterioDeAvaliacaoInput' }
+    CriterioDeAvaliacaoInput:
+      type: object
+      description: >-
+        Um critério do barema da Etapa (146, FR-5201). Sem pointsPerUnit, a comissão atribui os
+        pontos de zero à máxima; com eles, informa a quantidade, e a parcela é o produto limitado
+        pela máxima (D-002). A soma das máximas precisa ser a maximumScore da Etapa, a decisória não
+        tem barema, e o documento é do mesmo Edital, da inscrição e pedido a toda inscrição — regras
+        de domínio, recusadas com 422 invalid_stages (FR-5203 a FR-5205).
+      required: [id, name, maximumScore]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string, maxLength: 200 }
+        description: { type: string }
+        maximumScore: { type: number, exclusiveMinimum: 0 }
+        pointsPerUnit: { type: [number, 'null'], exclusiveMinimum: 0 }
+        unitLabel: { type: [string, 'null'], maxLength: 60 }
+        documentRequirementId: { type: [string, 'null'], format: uuid }
     SecaoInput:
       type: object
       description: >-
@@ -1098,7 +1121,7 @@ components:
       required:
         [id, name, order, weight, eliminatory, classificatory, minimumScore,
          evaluationsPerRegistration, maximumScore, forma, rotuloFavoravel,
-         rotuloDesfavoravel, scheduleEventId]
+         rotuloDesfavoravel, scheduleEventId, criteria]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         name: { type: string }
@@ -1137,6 +1160,36 @@ components:
         rotuloFavoravel: { type: [string, 'null'] }
         rotuloDesfavoravel: { type: [string, 'null'] }
         scheduleEventId: { type: [string, 'null'], format: uuid }
+        # O barema (146, degrau 21). Sempre presente, lista vazia na Etapa sem critério — e é a
+        # forma que todo conteúdo elevado da versão 20 recebe. Coleção com identidade estável,
+        # endereçada por id na Retificação; sem campo de ordem, porque a lista é a ordem da ficha.
+        criteria:
+          type: array
+          items: { $ref: '#/components/schemas/CriterioDeAvaliacaoPublicado' }
+    CriterioDeAvaliacaoPublicado:
+      type: object
+      description: >-
+        Um critério do barema na forma publicada (146, FR-5201). Os decimais na forma canônica da
+        Etapa; pointsPerUnit nulo é a pontuação atribuída pela comissão, e unitLabel e
+        documentRequirementId nulos são "não declarado". A soma das máximas, a unidade com os
+        pontos e o documento pedido a toda inscrição são verificados na publicação e na Retificação
+        (stage_criteria_inconsistent).
+      required:
+        [id, name, description, maximumScore, pointsPerUnit, unitLabel, documentRequirementId]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        description: { type: string }
+        maximumScore:
+          type: string
+          format: decimal
+          pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        pointsPerUnit:
+          type: [string, 'null']
+          format: decimal
+          pattern: '^-?(0|[1-9]\d{0,2})\.\d{4}$'
+        unitLabel: { type: [string, 'null'] }
+        documentRequirementId: { type: [string, 'null'], format: uuid }
     SecaoPublicada:
       type: object
       description: >-

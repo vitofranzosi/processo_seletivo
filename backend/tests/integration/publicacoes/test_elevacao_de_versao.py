@@ -482,9 +482,13 @@ def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6
 #: **E muda com a `144`, também de propósito**: o degrau 20 escreve `shownInPdf: true` em todo
 #: Evento do Cronograma — "sai na tabela do PDF" —, que é verdade sobre todo Edital publicado antes:
 #: a tabela imprimia todos os Eventos (144, D-001, FR-5105).
+#:
+#: **E muda com a `146`, também de propósito**: o degrau 21 escreve `criteria: []` em toda Etapa —
+#: "nenhum critério publicado" —, que é verdade sobre todo Edital publicado antes: a comissão somava
+#: o barema fora do sistema, e nenhuma Etapa ganha critério por elevação (146, D-001, FR-5208).
 CENSO_DOS_DEGRAUS_ANTES_DA_032 = {
-    "SCHEMA_VERSION": 20,
-    "DEGRAUS": (5, 6),
+    "SCHEMA_VERSION": 21,
+    "DEGRAUS": (5, 6, 21),
     "DEGRAUS_DE_PERFIL": (7, 12, 13, 14, 15),
     "DEGRAUS_DA_RAIZ": (7, 9, 16),
     "DEGRAUS_DE_MARCO": (8, 10, 13),

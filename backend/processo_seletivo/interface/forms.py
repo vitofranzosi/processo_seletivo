@@ -13,6 +13,7 @@ from uuid import uuid4
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import duplicacao, quadro, secoes
+from processo_seletivo.editais.domain.etapas import soma_das_maximas
 from processo_seletivo.editais.domain.marcos import POR_SORTEIO
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
@@ -744,6 +745,63 @@ def _renumerar(itens):
     return itens
 
 
+def _criterios_de_avaliacao(dados, indice):
+    """O barema de uma Etapa, na ordem em que a pessoa o deixou (146, FR-5206).
+
+    `criterio-etapa-<i>-<n>-…`, e não `etapa-<i>-criterio-<n>-…`: `_indices` casa todo campo que
+    comece por `etapa-` e termine em `-id`, e `etapa-0-criterio-1-id` criaria uma Etapa espúria de
+    índice `0-criterio-1`. O prefixo próprio separa as duas coleções, como `criterio-<perfil>-…`
+    separa o desempate do marco.
+
+    A `order` só ordena: é o campo que `ordenacao.js` reescreve ao mover, e o conteúdo publicado não
+    a tem — a lista é a ordem. Linha inteiramente em branco não é critério: é o cartão que a pessoa
+    acrescentou e não preencheu, e gravá-la seria recusar um critério que ninguém escreveu.
+    """
+    prefixo = f"criterio-etapa-{indice}"
+    linhas = []
+    for sub in _indices(dados, prefixo):
+        base = f"{prefixo}-{sub}"
+        # "A comissão atribui os pontos" descarta o que só a pontuação por unidade usa, pela régua
+        # da forma da Etapa: o campo escondido continua sendo enviado (D-002, FR-5202). Sem o rádio
+        # — envio montado à mão —, a escolha é a que os campos preenchidos dizem.
+        modo = _texto(dados, f"{base}-modo")
+        if modo not in (POR_UNIDADE, DIRETA):
+            pontos = _texto(dados, f"{base}-pointsPerUnit")
+            modo = POR_UNIDADE if pontos or _texto(dados, f"{base}-unitLabel") else DIRETA
+        direta = modo == DIRETA
+        criterio = {
+            "id": _texto(dados, f"{base}-id") or str(uuid4()),
+            "name": _texto(dados, f"{base}-name"),
+            "description": _texto(dados, f"{base}-description"),
+            "maximumScore": _decimal(dados, f"{base}-maximumScore"),
+            "pointsPerUnit": None if direta else _decimal(dados, f"{base}-pointsPerUnit"),
+            "unitLabel": "" if direta else _texto(dados, f"{base}-unitLabel"),
+            "documentRequirementId": _texto(dados, f"{base}-documentRequirementId") or None,
+            # A escolha da tela, e não campo do conteúdo (D-002): viaja com o digitado para a recusa
+            # reexibir o rádio como a pessoa o deixou, e para a view recusar o "por unidade" sem
+            # pontos (`_conferir_pontuacao_por_unidade`) — gravado, seria pontuação atribuída.
+            "modo": modo,
+        }
+        preenchidos = (
+            criterio["name"],
+            criterio["description"],
+            criterio["maximumScore"],
+            criterio["pointsPerUnit"],
+            criterio["unitLabel"],
+            criterio["documentRequirementId"],
+        )
+        if not any(valor not in (None, "") for valor in preenchidos):
+            continue
+        linhas.append((_inteiro(dados, f"{base}-order", 0), criterio))
+    # Estável: sem JavaScript as ordens chegam iguais, e vale a ordem de leitura.
+    linhas.sort(key=lambda par: par[0])
+    return [criterio for _, criterio in linhas]
+
+
+#: As duas escolhas do rádio "Como a comissão pontua" do cartão do critério (146).
+POR_UNIDADE, DIRETA = "POR_UNIDADE", "DIRETA"
+
+
 def ler_etapas(dados):
     etapas = []
     for indice in _indices(dados, "etapa"):
@@ -761,6 +819,22 @@ def ler_etapas(dados):
         # `forma` continua sendo lida crua: trocá-la por um dos dois valores conhecidos faria uma
         # forma inválida virar PONTUADA em silêncio, e a validação deixaria de alcançá-la.
         decisoria = (_texto(dados, f"{base}-forma") or Forma.PONTUADA) == Forma.DECISORIA
+        # O barema é da pontuada (146, FR-5204), mas a decisória **não** o descarta, ao contrário
+        # das notas logo abaixo: a nota é um número que se digita de novo, e a ficha são vários
+        # critérios compostos um a um. Descartá-los em silêncio por um clique no rádio errado era
+        # perda que ninguém via. A ficha viaja, o domínio recusa a decisória com barema, e a tela
+        # mantém a seção à vista para os critérios serem removidos ou a forma voltar a pontuada.
+        # Com critérios, a máxima é a soma deles — a tela a mostra como leitura; quem a calcula é
+        # aqui (FR-5203).
+        criterios = _criterios_de_avaliacao(dados, indice)
+        # A soma é a do domínio (`etapas.soma_das_maximas`), e não uma segunda conta da tela: a
+        # máxima que se grava é a mesma que a gravação confere. Sem critério, não há soma.
+        soma = soma_das_maximas({"criteria": criterios}) if criterios else None
+        maxima = (
+            None
+            if decisoria
+            else (soma if soma is not None else _decimal(dados, f"{base}-maximumScore"))
+        )
         etapas.append(
             {
                 "id": _texto(dados, f"{base}-id"),
@@ -783,7 +857,7 @@ def ler_etapas(dados):
                 "evaluationsPerRegistration": _inteiro_opcional(
                     dados, f"{base}-evaluationsPerRegistration"
                 ),
-                "maximumScore": (None if decisoria else _decimal(dados, f"{base}-maximumScore")),
+                "maximumScore": maxima,
                 # As três do incremento da revisão (D-008). A forma vem sempre preenchida, porque o
                 # controle é um par de opções com uma marcada: `_texto` vazio só acontece em envio
                 # forjado, e ali `or PONTUADA` devolve o que a ausência significa (FR-120). Os
@@ -795,6 +869,7 @@ def ler_etapas(dados):
                 ),
                 # Vazio é "não vinculada a Evento", e não Evento inexistente.
                 "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
+                "criteria": criterios,
             }
         )
     return _renumerar(etapas)
@@ -1563,8 +1638,62 @@ def etapas_do_edital(edital):
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
+            # O barema (146), no formato que o cartão desenha: números sem zeros à direita.
+            "criteria": [
+                {
+                    "id": str(criterio.id),
+                    "name": criterio.nome,
+                    "description": criterio.descricao,
+                    "maximumScore": _no_campo(criterio.maxima),
+                    "pointsPerUnit": _no_campo(criterio.pontos_por_unidade),
+                    "unitLabel": criterio.unidade,
+                    "documentRequirementId": (
+                        "" if criterio.documento is None else str(criterio.documento)
+                    ),
+                    "modo": POR_UNIDADE if criterio.pontos_por_unidade is not None else DIRETA,
+                }
+                for criterio in etapa.criterios.all()
+            ],
         }
-        for etapa in edital.etapas.order_by("order")
+        for etapa in edital.etapas.order_by("order").prefetch_related("criterios")
+    ]
+
+
+def _criterios_persistidos(etapa):
+    """O barema gravado, no formato do command (146, risco 2 do plano)."""
+    return [
+        {
+            "id": str(criterio.id),
+            "name": criterio.nome,
+            "description": criterio.descricao,
+            "maximumScore": criterio.maxima,
+            "pointsPerUnit": criterio.pontos_por_unidade,
+            "unitLabel": criterio.unidade,
+            "documentRequirementId": None
+            if criterio.documento is None
+            else str(criterio.documento),
+        }
+        for criterio in etapa.criterios.all()
+    ]
+
+
+def documentos_para_o_barema(edital):
+    """Os documentos que a seção Barema oferece para comprovar um critério (146, FR-5205).
+
+    A leitura é a do domínio (`documentos.documentos_do_barema`), a mesma da tela de Retificação. A
+    seção oferece só os que valem para toda inscrição (D-010): oferecer o que a gravação recusa
+    seria convidar ao erro. O ligado que deixou de valer continua, marcado, pelo `elegivel`.
+    """
+    from processo_seletivo.editais.domain.documentos import documentos_do_barema
+
+    return [
+        {
+            "id": documento.id,
+            "name": documento.nome,
+            "rotulo": documento.rotulo,
+            "elegivel": documento.vale_para_toda_inscricao,
+        }
+        for documento in documentos_do_barema(documentos_do_edital(edital))
     ]
 
 
@@ -1585,8 +1714,12 @@ def etapas_persistidas(edital):
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
+            # **E o barema, pela razão de tudo nesta lista** (146, risco 2 do plano): sem ele,
+            # gravar Perfis, Cronograma ou Inscrição depois de compor a ficha a apagaria em
+            # silêncio — `replace_draft` recria as Etapas, e a `CASCADE` leva os critérios junto.
+            "criteria": _criterios_persistidos(etapa),
         }
-        for etapa in edital.etapas.order_by("order")
+        for etapa in edital.etapas.order_by("order").prefetch_related("criterios")
     ]
 
 

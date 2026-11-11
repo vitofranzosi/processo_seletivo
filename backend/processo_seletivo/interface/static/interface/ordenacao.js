@@ -70,7 +70,13 @@
     return true;
   }
 
-  document.querySelectorAll("[data-ordenavel]").forEach(function (lista) {
+  /* Uma lista se liga uma vez. A guarda existe porque a lista também chega **dentro** de uma linha
+     acrescentada pelo HTMX — o barema dentro da Etapa nova (146) —, e o `htmx:load` de uma linha
+     que contém outra já ligada não pode dar dois ouvintes à mesma lista: cada clique moveria duas
+     vezes. */
+  function ligar(lista) {
+    if (lista.dataset.ordenacaoLigada) return;
+    lista.dataset.ordenacaoLigada = "1";
     // Também na carga e a cada mutação: a linha acrescentada pelo HTMX nasce sem ordem, e a
     // removida deixaria buraco na numeração.
     renumerar(lista);
@@ -102,5 +108,20 @@
         }
       }
     });
-  });
+  }
+
+  document.querySelectorAll("[data-ordenavel]").forEach(ligar);
+  /* A lista que nasce depois da carga: o barema da Etapa acrescentada (146). Sem isto, os botões
+     de subir e descer dos critérios dela não fariam nada até recarregar a página — botão inerte, o
+     defeito que a FR-035 nomeia. Aninhada numa lista que já se ordena, ela não confunde a de fora:
+     a linha que o clique move é a mais próxima do botão, e a lista de fora não a tem entre os
+     filhos. */
+  if (typeof document.addEventListener === "function") {
+    document.addEventListener("htmx:load", function (evento) {
+      var raiz = evento.target;
+      if (!raiz || typeof raiz.querySelectorAll !== "function") return;
+      if (raiz.matches && raiz.matches("[data-ordenavel]")) ligar(raiz);
+      raiz.querySelectorAll("[data-ordenavel]").forEach(ligar);
+    });
+  }
 })();

@@ -1,0 +1,66 @@
+/* A seção Barema do cartão da Etapa (146, UX-420, UX-421).
+
+   Dentro do cartão, abaixo da pontuação máxima, separada dos atributos da Etapa por um fio: é a
+   ficha da Etapa, e não mais um campo dela. Os critérios são cartões aninhados, como a Modalidade
+   no Perfil, e a prévia é a tabela que o Edital imprimirá. */
+.barema{margin:.6rem 0 0;padding:.9rem 0 0;border-top:1px solid var(--borda)}
+/* A decisória não tem barema (FR-5204). Sem critério, a seção sai; com critério, fica, com o aviso
+   e sem o botão de acrescentar, para a pessoa remover o que a gravação recusaria — esconder também
+   aqui era a perda silenciosa da ficha. A regra é a das demais da forma: esconde **quando** a
+   decisória está marcada, e onde `:has` não existir tudo aparece. */
+.barema .aviso-da-decisoria{display:none;}
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .aviso-da-decisoria{
+  display:block;}
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .acrescentar-criterio,
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .previa-do-barema,
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .descricao-do-barema,
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked)
+  .barema:not(:has([data-criterio-de-avaliacao])){
+  display:none;}
+.barema .titulo-do-barema{margin:0 0 .2rem;font-size:1rem}
+.barema .descricao-do-barema{margin:0 0 .8rem;font-size:.875rem;color:var(--texto-fraco)}
+.barema>.recusa{display:block;margin:0 0 .8rem}
+.criterios-do-barema{margin:0 0 .6rem}
+/* O critério se lê como parte da Etapa: recuado e com a faixa à esquerda, como a Modalidade. */
+fieldset.linha.criterio-de-avaliacao{border-left:3px solid var(--borda);margin:0 0 .8rem;
+  background:var(--branco)}
+/* A linha ainda não gravada tem a borda tracejada, como as da Retificação. */
+fieldset.linha.criterio-de-avaliacao-novo{border-style:dashed;border-left-style:solid}
+.criterio-de-avaliacao .modo-do-criterio{margin:0 0 .6rem}
+.criterio-de-avaliacao .opcao .exemplo{color:var(--texto-fraco);font-size:.8125rem}
+.criterio-de-avaliacao .descricao-do-criterio{margin:0}
+.criterio-de-avaliacao .descricao-do-criterio textarea{width:100%;min-height:3rem}
+/* "Por unidade" pede os pontos e a unidade; "a comissão atribui", não. A regra é a mesma da forma
+   da Etapa: esconde **quando** a outra opção está marcada, e onde `:has` não existir tudo aparece —
+   quem descarta de fato é `ler_etapas`. */
+fieldset.criterio-de-avaliacao:has(input[name$="-modo"][value="DIRETA"]:checked) .so-por-unidade{
+  display:none;}
+/* A máxima da Etapa com barema é leitura (D-003): o campo fica, com o fundo de quem não se digita,
+   e a marca diz de onde o número vem. */
+.campo input[readonly]{background:var(--fundo);color:var(--texto)}
+.soma-do-barema{font-weight:400;font-size:.8125rem;color:var(--texto-fraco);margin-left:.35rem}
+/* A prévia. Larga como o cartão, e a coluna da máxima alinhada pelo número. */
+.previa-do-barema{margin:.4rem 0 0}
+.previa-do-barema .titulo-da-previa{margin:0 0 .4rem;font-size:.875rem;color:var(--texto-fraco);
+  font-weight:600}
+/* A célula quebra palavra só quando ela não cabe inteira — um título colado sem espaço, um nome de
+   documento longo —, e a coluna da máxima não quebra nunca: "MÁXIMA" partido em "MÁX/IMA" foi o
+   que a primeira versão desta regra, com `anywhere`, fez no cabeçalho. */
+.tabela-do-barema td,.tabela-do-barema th{overflow-wrap:break-word}
+.tabela-do-barema .numero{white-space:nowrap;width:1%;}
+.tabela-do-barema tfoot th,.tabela-do-barema tfoot td{font-weight:700;border-top:2px solid var(--borda);
+  border-bottom:none}
+/* No celular a tabela de quatro colunas espremia o título do critério em duas palavras por linha.
+   Cada critério vira um bloco, com o nome da coluna antes do valor — o mesmo conteúdo, sem rolagem
+   horizontal da página (375 px). */
+@media (max-width:40rem){
+  .tabela-do-barema thead{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap}
+  .tabela-do-barema tbody tr{display:block;padding:.5rem 0;border-bottom:1px solid var(--borda)}
+  .tabela-do-barema tbody td{display:flex;gap:.5rem;padding:.1rem 0;border:none;text-align:left}
+  .tabela-do-barema tbody td::before{content:attr(data-rotulo);flex:0 0 6.5rem;font-size:.75rem;
+    color:var(--texto-fraco);text-transform:uppercase;letter-spacing:.03em}
+  .tabela-do-barema tbody td.numero{text-align:left}
+  .tabela-do-barema tfoot tr{display:flex;justify-content:space-between}
+  .tabela-do-barema tfoot td:empty{display:none}
+}
