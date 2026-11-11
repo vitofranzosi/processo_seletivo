@@ -9,7 +9,7 @@
    cabe na primeira tela; a linha com trabalho para quem vê ganha a borda verde (D-002: estilo, e
    não ordem). */
 .neste-recorte{border:1px solid var(--borda);border-radius:6px;background:var(--branco);
-  padding:.75rem 1rem;margin:0 0 1.25rem;max-width:56rem}
+  padding:.75rem 1rem;margin:0 0 1.25rem}
 .neste-recorte h2{margin:0 0 .5rem;font-size:1.0625rem}
 .perguntas{list-style:none;margin:0;padding:0;display:grid;
   grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.35rem .75rem}
@@ -24,21 +24,29 @@
 .pergunta .detalhe a{color:var(--verde-texto)}
 .sem-providencia{margin:.6rem 0 0}
 
-/* As vagas: o calculado e o praticado, distintos à vista (FR-5005, FR-5006, UX-372). */
-.vagas-e-chamadas{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));
-  gap:0 1.25rem;max-width:72rem}
-.vagas-e-chamadas>h2,.vagas-e-chamadas>p,.vagas-e-chamadas>ul{grid-column:1/-1}
-.grupo-de-numeros{border-radius:6px;padding:.75rem 1rem;margin:0 0 .75rem}
+/* As vagas: o calculado e o praticado, distintos à vista (FR-5005, FR-5006, UX-372). Dois grupos de
+   mesma largura, na largura da coluna: o teto de 72rem era daqui, e o índice tinha outro, de 56rem.
+   Duas trilhas declaradas, e não `auto-fit`: o título que atravessava todas as trilhas impedia o
+   recolhimento das vazias, e os dois grupos ocupavam duas de três colunas. */
+.vagas-e-chamadas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 1rem}
+.vagas-e-chamadas>:not(.grupo-de-numeros){grid-column:1/-1}
+/* Sem apuração, sem quadro ou sem inscrito, só as chamadas têm números: o grupo ocupa a coluna, e
+   não a metade dela. */
+.vagas-e-chamadas:not(:has(>.calculado))>.praticado{grid-column:1/-1}
+.grupo-de-numeros{border-radius:6px;padding:.75rem 1rem;margin:0 0 .75rem;display:flex;
+  flex-direction:column}
 .grupo-de-numeros h3{margin:0 0 .2rem;font-size:1rem;display:flex;flex-wrap:wrap;gap:.4rem;
   align-items:baseline}
-.grupo-de-numeros .resumo{margin-bottom:.5rem}
-.grupo-de-numeros .resumo li{flex:1 1 7rem}
+.grupo-de-numeros .resumo{margin-bottom:.5rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.grupo-de-numeros .resumo li{font-size:.8125rem;line-height:1.35}
+.leitura-dos-numeros{margin:-.4rem 0 .75rem}
 .grupo-de-numeros.calculado{border:2px dashed var(--borda);background:var(--fundo)}
 .grupo-de-numeros.praticado{border:2px solid var(--borda);background:var(--branco)}
 .selo{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
   color:var(--texto-fraco);border:1px dashed var(--texto-fraco);border-radius:3px;padding:0 .35rem}
 .fonte{margin:0 0 .5rem;font-size:.8125rem;color:var(--texto-fraco)}
-.distincao{max-width:var(--leitura)}
+.distincao{max-width:var(--leitura);margin:0 0 .75rem}
+.distincao strong{color:var(--texto)}
 
 /* As explicações recolhidas (FR-5025): um "?" discreto, e no máximo três frases. */
 .explicacao-do-termo{margin:.25rem 0 .5rem;max-width:var(--leitura);font-size:.875rem}
@@ -46,13 +54,17 @@
 .explicacao-do-termo p{margin:.35rem 0;color:var(--texto)}
 .explicacao-curta{max-width:var(--leitura)}
 
-/* As áreas de trabalho (FR-5008, D-001). Um rótulo e uma frase; as seções seguem como eram. */
-.area-de-trabalho{border-top:3px solid var(--verde);margin:2rem 0 0;padding-top:.6rem}
-.area-de-trabalho.excecoes{border-top-color:var(--borda)}
+/* Os momentos da tela (FR-5008, D-001): a situação, convocar, acompanhar e a fila. Um rótulo e uma
+   frase; as seções seguem como eram. A classe era `area-de-trabalho`, a mesma da moldura do shell, e
+   esta regra pintava o filete e o recuo no alto da página inteira — daí o nome próprio. */
+.momento{border-top:3px solid var(--verde);margin:2rem 0 0;padding-top:.6rem}
+.momento.situacao-atual{margin-top:1rem}
+.momento.excecoes{border-top-color:var(--borda)}
+.momento>.rotulo-da-area{margin-bottom:.5rem}
 .rotulo-da-area{margin:0;font-size:.8125rem;font-weight:700;text-transform:uppercase;
   letter-spacing:.06em;color:var(--verde-texto)}
 .excecoes .rotulo-da-area{color:var(--texto-fraco)}
-.area-de-trabalho>.ajuda{display:block;margin:.1rem 0 .75rem;max-width:var(--leitura)}
+.momento>.ajuda{display:block;margin:-.4rem 0 .75rem;max-width:var(--leitura)}
 
 /* O cartão da chamada: o passo primeiro, com a borda do tom (FR-5011, UX-371). A palavra do passo
    diz o mesmo que a cor. */
@@ -88,3 +100,5 @@
   .perguntas{grid-template-columns:1fr}
   .vagas-e-chamadas{display:block}
 }
+/* A publicação externa como alternativa nomeada, abaixo de "Publicar no GPS" (149, FR-5731). */
+.rotulo-da-alternativa{margin:1rem 0 .25rem;padding-top:.75rem;border-top:1px solid var(--borda)}

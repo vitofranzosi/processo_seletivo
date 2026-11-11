@@ -353,6 +353,6 @@ def test_o_botao_da_tela_leva_a_conferencia_e_a_ajuda_nao_promete_o_que_nao_ha(
 
     pagina = abrir(client, edital)
 
-    assert "Conferir e convocar as 2" in pagina
+    assert "Conferir antes de convocar as 2" in pagina
     assert "Nada é praticado nem enviado antes de você confirmar nela." in pagina
     assert "antes de confirmar, você o verá como o candidato" not in pagina

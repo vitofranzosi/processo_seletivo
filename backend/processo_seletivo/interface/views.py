@@ -6027,6 +6027,7 @@ def inscricoes_recebidas(request, edital_id):
                 "perfil": perfil,
                 "modalidade": modalidade,
                 "filtrando": bool(busca or perfil or modalidade),
+                "pode_ver_publicacoes": acoes.pode_consultar_a_divulgacao(ator),
                 "filtro": filtro,
                 # Sem o Perfil, para que o cartão possa trocá-lo sem descartar o resto.
                 "filtro_sem_perfil": _querystring(busca=busca, modalidade=modalidade),
@@ -8881,6 +8882,7 @@ def convocacao(request, edital_id, marco_id):
     """
     from processo_seletivo.comissoes.domain.autorizacao import pode_conferir_documentos
     from processo_seletivo.convocacao.application import fluxo
+    from processo_seletivo.convocacao.application.publicar import chave_do_recorte
     from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
 
     ator, edital, pode_emitir = _edital_para_classificar(
@@ -8984,6 +8986,19 @@ def convocacao(request, edital_id, marco_id):
                 # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
                 # quem só consulta, e calculá-las ali seria trabalho sem leitor.
                 **previas,
+                # A publicação no GPS (149, FR-5731): o caminho com este recorte escolhido, e a
+                # publicação de cada chamada que saiu numa — uma consulta para o recorte inteiro.
+                "publicar_no_gps": (
+                    reverse("interface:publicacao-de-convocados", args=[edital.id])
+                    + "?"
+                    + urlencode(
+                        {
+                            "escolha": "1",
+                            "recorte": chave_do_recorte(perfil_id, marco_id, lista_id),
+                        }
+                    )
+                ),
+                "publicadas_no_gps": _publicadas_no_gps(leitura),
                 # O lugar do recorte, no alto (143, FR-5000), e o índice (FR-5001 a FR-5004).
                 "contexto_do_recorte": conducao_da_convocacao.contexto_do_recorte(
                     edital, marco_id, lista_id
@@ -9282,6 +9297,9 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
             aggregate_id__in=apresentacoes,
         ).values_list("aggregate_id", flat=True)
     )
+    # E com o Processo aberto: o comando recusa conferir em estado final, e o formulário seria
+    # convite a um ato que não existe mais (revisão do #369).
+    pode_conferir = desfecho is None and edital.processo.status not in PROCESSO_FINAL
     return marcar_como_privada(
         render(
             request,
@@ -9317,11 +9335,9 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
                 "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
                 "rotulo_do_item": ROTULO_DO_ITEM,
                 "abertas_por_voce": abertas_por_voce,
-                # E com o Processo aberto: o comando recusa conferir em estado final, e o
-                # formulário seria convite a um ato que não existe mais (revisão do #369).
-                "pode_conferir": desfecho is None and edital.processo.status not in PROCESSO_FINAL,
+                "pode_conferir": pode_conferir,
                 "chave_idempotencia": uuid4().hex,
-                "erro": request.session.pop("erro_da_conferencia", None),
+                "recusa": _recusa_da_conferencia(request, leitura, pode_conferir=pode_conferir),
                 "aviso": request.session.pop("aviso_da_conferencia", None),
                 "proximo_nesta_lista": _proximo_nesta_lista(
                     edital, ator, marco_id, getattr(vigente, "lista_id", None)
@@ -9329,6 +9345,28 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
             },
         )
     )
+
+
+def _recusa_da_conferencia(request, leitura, *, pode_conferir):
+    """A recusa da última conferência, e onde a página a imprime (FR-3611).
+
+    **No cartão do item, quando o formulário dele está na página**; no topo, quando não está. O
+    formulário some quando a chamada ganhou desfecho ou o Processo se encerrou entre abrir a página
+    e registrar — e são justamente as recusas dessas duas corridas que se perdiam se a recusa só
+    morasse no cartão. O item volta como UUID, para o template compará-lo ao id do item; o que não
+    se lê como UUID se perde, e a página abre sem recusa, como abriria sem ela.
+    """
+    recusa = request.session.pop("recusa_da_conferencia", None)
+    if not isinstance(recusa, dict):
+        return None
+    try:
+        item = UUID(str(recusa.get("item")))
+    except ValueError:
+        return None
+    no_cartao = pode_conferir and any(lido.item.id == item for lido in leitura.pedidos)
+    # O item fica nulo quando a recusa vai ao topo: nenhum cartão a reclama, e a âncora do endereço
+    # (`#recusa-<item>`) passa a ser a do topo.
+    return {**recusa, "item": item if no_cartao else None, "no_topo": not no_cartao, "ancora": item}
 
 
 def _espera_do_corte(edital, marco_id, lista_id):
@@ -9537,35 +9575,63 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
 def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id):
     """Registra a conferência de um item e volta à página dos documentos (FR-3585)."""
     from processo_seletivo.convocacao.application import documentos as documentos_app
+    from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
 
     ator, edital, convocacao, _ = _convocacao_para_conferir(request, edital_id, convocacao_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
-    destino = (
-        reverse("interface:documentos-da-convocacao", args=[edital.id, marco_id, convocacao.id])
-        + (f"?lista={request.POST.get('lista')}" if request.POST.get("lista") else "")
-        + f"#item-{item_id}"
-    )
+    # O recorte vem do formulário, e vai codificado: um valor com `#` ou `&` deslocaria a âncora do
+    # item, ou da recusa, para dentro da query.
+    lista = request.POST.get("lista")
+    destino = reverse(
+        "interface:documentos-da-convocacao", args=[edital.id, marco_id, convocacao.id]
+    ) + (f"?{urlencode({'lista': lista})}" if lista else "")
     raiz = documentos_app.raiz_da_chamada(convocacao)
     if not raiz.itens_da_lista.filter(pk=item_id).exists():
         raise Http404
+    preenchido = {
+        "resultado": request.POST.get("resultado") or "",
+        "motivo": request.POST.get("motivo") or "",
+        "motivo_da_substituicao": request.POST.get("motivo_da_substituicao") or "",
+    }
     try:
         documentos_app.conferir(
             actor=ator,
             item_id=item_id,
             apresentacao_id=request.POST.get("apresentacao") or None,
-            resultado=request.POST.get("resultado") or "",
-            motivo=request.POST.get("motivo") or "",
-            motivo_da_substituicao=request.POST.get("motivo_da_substituicao") or "",
             idempotency_key=request.POST.get("chave") or uuid4().hex,
             correlation_id=f"interface-conferencia-{convocacao.id}",
+            **preenchido,
         )
         request.session["aviso_da_conferencia"] = "Conferência registrada."
     except DomainError as erro:
         if erro.status == 404:
             raise Http404 from erro
-        request.session["erro_da_conferencia"] = erro.detail
-    return redirect(destino)
+        # **A recusa volta ao cartão do documento, e não ao topo** (FR-3611). O endereço leva a tela
+        # ao item, e a recusa era impressa acima do contexto e da situação, a uma tela inteira dali:
+        # quem marcava "conforme" sem abrir o arquivo via a página recarregar no mesmo lugar e
+        # concluía que o botão não fazia nada. O que foi marcado e digitado volta junto — o motivo
+        # do "não se aplica", que a mesma regra recusa, se perdia.
+        superada = erro.code == nomes_da_convocacao.VERSAO_SUPERADA
+        request.session["recusa_da_conferencia"] = {
+            "item": str(item_id),
+            "detalhe": erro.detail,
+            # O link "abrir a versão" só acompanha a recusa que pede a abertura — a da versão
+            # superada também, que manda abrir a atual. Ao lado de "diga o motivo", ele mandaria
+            # abrir o arquivo para resolver outra coisa.
+            "falta_abrir": superada
+            or erro.code
+            in (
+                nomes_da_convocacao.CONFORME_SEM_ABERTURA,
+                nomes_da_convocacao.NAO_SE_APLICA_SEM_ABERTURA,
+            ),
+            **preenchido,
+            # O juízo era sobre a versão anterior: marcado de volta, ele apareceria como juízo sobre
+            # a nova, que a pessoa ainda não viu. O texto digitado fica, para ser relido.
+            **({"resultado": ""} if superada else {}),
+        }
+        return redirect(f"{destino}#recusa-{item_id}")
+    return redirect(f"{destino}#item-{item_id}")
 
 
 @require_http_methods(["POST"])
@@ -10058,6 +10124,114 @@ def nao_atendimento_dos_vencidos_view(request, edital_id, marco_id):
 
     return _gesto_da_convocacao(
         request, edital_id, marco_id, acao="vencidos", praticar=praticar, compor=compor
+    )
+
+
+def _publicadas_no_gps(leitura):
+    """`{convocacao_id: publicação}` das chamadas do recorte que saíram numa publicação do GPS."""
+    from processo_seletivo.convocacao.models import ConvocacaoPublicada
+
+    ids = [linha["convocacao"].id for linha in leitura["linhas"]]
+    if not ids:
+        return {}
+    return {
+        vinculo.convocacao_id: vinculo.publicacao
+        for vinculo in ConvocacaoPublicada.objects.filter(convocacao_id__in=ids).select_related(
+            "publicacao"
+        )
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def publicacao_de_convocados(request, edital_id):
+    """A publicação das convocações do Edital no GPS: a prévia e o ato (149, FR-5727 a FR-5732).
+
+    **Abrir, escolher recortes e ver a prévia não grava nada** (FR-5708, SC-1864): a prévia é a
+    resposta do GET, e o ato é só o POST, com a assinatura do que a prévia mostrou. É o desenho da
+    conferência dos titulares (`140`): o que se confirma é o que se viu.
+
+    **A porta é a da condução** (FR-5732): presidência e auditoria leem as publicações e a prévia;
+    publicar exige a base de gestão da comissão, e o comando volta a conferi-la sob a trava.
+    """
+    from processo_seletivo.convocacao.application import publicacoes
+    from processo_seletivo.convocacao.application.publicar import (
+        previa_da_publicacao,
+        publicar_convocados,
+    )
+    from processo_seletivo.convocacao.domain import publicacao as dominio_da_publicacao
+
+    ator, edital, pode_emitir = _edital_para_classificar(
+        request, edital_id, somente_gestao=request.method == "POST"
+    )
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    destino = reverse("interface:publicacao-de-convocados", args=[edital.id])
+    erro, declaracao, autoridade = None, "", ""
+    if request.method == "POST":
+        recortes = request.POST.getlist("recorte")
+        declaracao = request.POST.get("declaracao_do_veiculo") or ""
+        autoridade = request.POST.get("autoridade") or ""
+        try:
+            declarado = publicar_convocados(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                recortes=recortes,
+                alcance_confirmado=request.POST.get("alcance") or "",
+                autoridade=autoridade or None,
+                declaracao_do_veiculo=declaracao,
+                idempotency_key=request.POST.get("chave") or "",
+                correlation_id=request.correlation_id,
+            )
+        except DomainError as recusa:
+            # **A recusa volta à mesma prévia, com o que foi digitado** (FR-5708): a declaração e a
+            # autoridade não se perdem, e a prévia é a de agora — a que a pessoa vai conferir de
+            # novo antes de tentar outra vez.
+            erro = recusa.detail
+        else:
+            request.session["publicacao_de_convocados_feita"] = declarado
+            return redirect(destino)
+        escolhidos = set(recortes)
+    else:
+        escolhidos = (
+            set(request.GET.getlist("recorte")) if request.GET.get("escolha") == "1" else None
+        )
+    previa = previa_da_publicacao(edital=edital, recortes=escolhidos, at=timezone.now())
+    feitas = publicacoes.publicacoes_da_selecao(edital.id)
+    # Os grupos como a página pública os dirá: a mesma frase de efeito e o prazo como instante.
+    # Uma cópia, e não os grupos da prévia, que são o que a confirmação congela.
+    grupos_da_previa = [
+        {
+            **grupo,
+            "nota": dominio_da_publicacao.nota_do_grupo(grupo),
+            "prazo": dominio_da_publicacao.instante(grupo["vencimento"]),
+            "pessoas": [
+                {**pessoa, "prazo": dominio_da_publicacao.instante(pessoa["vencimento"])}
+                for pessoa in grupo["pessoas"]
+            ],
+        }
+        for grupo in previa["grupos"]
+    ]
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/publicacao_de_convocados.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "previa": previa,
+                "grupos_da_previa": grupos_da_previa,
+                "feitas": [*feitas["recentes"], *feitas["anteriores"]] if feitas else [],
+                "feita_agora": request.session.pop("publicacao_de_convocados_feita", None),
+                "pode_emitir": pode_emitir,
+                "erro": erro,
+                "declaracao": declaracao,
+                "autoridade_escolhida": autoridade,
+                "escolha_da_autoridade": _escolha_da_autoridade(edital) if pode_emitir else None,
+                "chave": request.POST.get("chave") or f"ui-{uuid4().hex}",
+                "destino": destino,
+            },
+        )
     )
 
 

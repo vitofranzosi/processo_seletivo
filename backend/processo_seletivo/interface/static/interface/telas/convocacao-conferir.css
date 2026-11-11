@@ -1,0 +1,46 @@
+/* A conferência antes de convocar os titulares (polish da 140). Uma coluna da largura da
+   convocação, e nela as respostas na ordem de quem confirma: quem entra, quem fica de fora, o prazo
+   e o texto, e o clique. Os cartões eram da largura da página com o texto num canto. */
+.tela-da-conferencia{max-width:72rem}
+.tela-da-conferencia .consequencias{margin-bottom:1rem}
+
+/* Os fatos da operação numa linha de quatro no largo, em duas no médio, empilhados no estreito. */
+.fatos-da-operacao{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));
+  gap:.5rem 1.25rem;margin:0 0 .9rem;padding:0 0 .9rem;border-bottom:1px solid var(--borda)}
+.fatos-da-operacao dt{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--texto-fraco)}
+.fatos-da-operacao dd{margin:0;font-size:.9375rem;overflow-wrap:anywhere}
+.convocadas{margin:0;padding-left:1.4rem}
+.convocadas li{margin-bottom:.35rem;font-size:.9375rem}
+.convocadas+.ajuda{margin-top:.5rem}
+
+.fora-da-operacao p{margin:0;font-size:.9375rem}
+
+/* Prazo e fundamento à esquerda, a mensagem à direita: lado a lado no largo, e a mensagem aberta
+   cabe na coluna dela com a medida do texto. */
+.tela-da-conferencia form.confirmar{background:none;border:0;padding:0}
+.colunas-da-comunicacao{display:grid;gap:1rem 2rem}
+@media (min-width:64rem){
+  .colunas-da-comunicacao{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+.dados-da-comunicacao{margin:0 0 1rem}
+.dados-da-comunicacao dt{font-size:.8125rem;font-weight:600;color:var(--texto-fraco)}
+.dados-da-comunicacao dd{margin:.15rem 0 .85rem;font-size:.9375rem}
+.dados-da-comunicacao .ajuda{margin-top:.35rem}
+.comunicacao-e-prazo .campo{margin:0}
+.mensagens-da-conferencia h3{margin:0 0 .4rem}
+.mensagens-da-conferencia .assunto{margin:0 0 .5rem;font-size:.9375rem}
+.mensagem-inteira{margin:0 0 .5rem}
+.mensagem-inteira>summary{display:inline-block;cursor:pointer;font-size:.875rem;font-weight:600;
+  color:var(--verde-texto);padding:.3rem .7rem;border:1px solid var(--borda);border-radius:4px;
+  background:var(--branco)}
+.mensagem-inteira>summary:hover{border-color:var(--verde-texto)}
+.mensagem-inteira>summary::before{content:"▸ "/""}
+.mensagem-inteira[open]>summary::before{content:"▾ "/""}
+.mensagem-inteira .texto-do-aviso{margin:.5rem 0 0}
+
+/* O clique e o que ele faz, juntos: a frase do ato irreversível ao lado do botão definitivo. */
+.confirmacao-da-convocacao{background:var(--branco);border:1px solid var(--borda);
+  border-top:4px solid var(--vermelho);border-radius:6px;padding:1rem 1.25rem 0;margin:0 0 2rem}
+.confirmacao-da-convocacao>p:first-child{margin:0 0 .25rem;max-width:var(--leitura);font-size:.9375rem}
+.confirmacao-da-convocacao .salvar{border-top:0;padding:.75rem 0 1rem}

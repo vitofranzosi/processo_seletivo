@@ -39,6 +39,9 @@ APPS = (
     # A entrega documental à formalização da 117: quatro tabelas append-only e a coerência da
     # exportação contra a designação e a definição do mesmo Edital.
     "formalizacao",
+    # A publicação de convocados da 149: três tabelas append-only e a coerência do vínculo entre a
+    # convocação, a comunicação e o ato.
+    "convocacao",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -91,6 +94,11 @@ TRIGGERS_POR_APP = {
         "situacao_divulgada_append_only",
         "documento_do_resultado_append_only",
         "publicacao_resultado_coerente",
+        # A publicação das inscrições (148): duas de imutabilidade absoluta, uma por tabela, e a
+        # coerência do sucessor — mesmo Edital, natureza que não regride (FR-5406, FR-5425).
+        "publicacao_das_inscricoes_append_only",
+        "inscricao_na_publicacao_append_only",
+        "publicacao_das_inscricoes_coerente",
     ),
     # A contestação da 018. As três de imutabilidade são **absolutas** — interpor, admitir e julgar
     # acontecem uma vez cada, e não há ato em curso que legitime mutação. As duas de coerência são
@@ -167,6 +175,15 @@ TRIGGERS_POR_APP = {
         "revogacao_formalizacao_append_only",
         "exportacao_formalizacao_append_only",
         "exportacao_formalizacao_coerente",
+    ),
+    # A publicação de convocados (149). As três de imutabilidade são **absolutas**: a publicação não
+    # se sucede, e a correção é da convocação (D-006). A quarta confere que o vínculo liga a
+    # convocação à comunicação dela, no mesmo Edital, e que o *convoca* cita a publicação do ato.
+    "convocacao": (
+        "publicacao_de_convocados_append_only",
+        "convocacao_publicada_append_only",
+        "documento_da_publicacao_de_convocados_append_only",
+        "convocacao_publicada_coerente",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)
@@ -761,7 +778,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
         # Outra feature, e não esta lendo: `ADD COLUMN` com padrão constante, que não reescreve
         # linha nem dispara o gatilho append-only (060, FR-1128).
-        "divulgacao": 4,
+        # **Sobe para 5 com a 148**: a `divulgacao/0005` cria as duas tabelas da publicação das
+        # inscrições e os seus gatilhos. Só cria: nenhuma coluna em tabela existente, nenhuma linha
+        # percorrida (148, FR-5437).
+        "divulgacao": 5,
     }
     for app, quantas in esperadas.items():
         migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))
@@ -888,7 +908,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
         # Outra feature, e não esta lendo: `ADD COLUMN` com padrão constante, que não reescreve
         # linha nem dispara o gatilho append-only (060, FR-1128).
-        "divulgacao": 4,
+        # **Sobe para 5 com a 148**: a `divulgacao/0005` cria as duas tabelas da publicação das
+        # inscrições. Não é a 022 tocando o que lê: é outra feature, e só cria — nenhuma coluna em
+        # tabela existente, nenhuma linha percorrida (148, FR-5437).
+        "divulgacao": 5,
         # **Sobe para 15 com a 021**: a `editais/0014` põe o método de sorteio no marco e a `0015`
         # o local do Evento. As duas são elaboração — quem declara é o Edital —, e nenhuma delas é
         # da supervisão.

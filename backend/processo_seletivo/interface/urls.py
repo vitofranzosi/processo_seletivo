@@ -7,6 +7,7 @@ from processo_seletivo.interface import (
     centro_do_edital,
     documentacao,
     duvidas,
+    inscricoes_publicadas,
     kit_de_divulgacao,
     prototipo_do_assistente,
     relatorio,
@@ -322,6 +323,13 @@ urlpatterns = [
         views.inscricoes_recebidas,
         name="inscricoes",
     ),
+    # A publicação das inscrições (148): histórico, próximo ato, prévia e confirmação numa tela só
+    # (UX-460). A porta é a da divulgação de resultado — publicar é de quem divulga; a auditoria lê.
+    path(
+        "editais/<uuid:edital_id>/inscricoes/publicacoes",
+        inscricoes_publicadas.publicacoes_das_inscricoes,
+        name="publicacoes-das-inscricoes",
+    ),
     path(
         "inscricoes/<uuid:inscricao_id>/",
         views.inscricao_recebida,
@@ -615,6 +623,14 @@ urlpatterns = [
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/historico",
         views.ocupacao_historico,
         name="ocupacao-historico",
+    ),
+    # A publicação das convocações no GPS (149, FR-5727). Pende do **Edital**, e não do marco: uma
+    # publicação reúne os recortes que a comissão escolher, e a 1ª chamada de um Edital de N vagas e
+    # listas é um ato, e não N (D-009). GET mostra a prévia; POST publica.
+    path(
+        "editais/<uuid:edital_id>/convocacoes/publicacao",
+        views.publicacao_de_convocados,
+        name="publicacao-de-convocados",
     ),
     # A convocação (019). Pende do **marco**, como a ocupação, e pela mesma razão: é o recorte que
     # ela conduz, e um marco com cotas tem três — cada um com a sua fila. O recorte vem em

@@ -253,6 +253,12 @@ QUEM_CARREGA = {
         "convocacao_conferir.html",
     },
     "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
+    # A coluna das três telas que conduzem um recorte (polimento de 11/11).
+    "interface/grupos/conducao-do-recorte.css": {
+        "convocacao.html",
+        "ordenacao.html",
+        "ordenacao_confirmar.html",
+    },
     # A ficha do barema (146): na Mesa, resumida nas conclusões preservadas, e no julgamento.
     "interface/grupos/ficha-do-barema.css": {
         "mesa_inscricao.html",
@@ -314,6 +320,8 @@ QUEM_CARREGA = {
     "interface/telas/centro.css": {"centro_do_edital.html", "processo_detalhe.html"},
     "interface/telas/lista.css": {"lista.html", "processo_detalhe.html"},
     "interface/telas/processo.css": {"processo_detalhe.html"},
+    # A publicação das convocações no GPS (149): a prévia, a escolha dos recortes e o que já saiu.
+    "interface/telas/publicacao-de-convocados.css": {"publicacao_de_convocados.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
         for tela in (
@@ -327,8 +335,12 @@ QUEM_CARREGA = {
             # A seção Barema do cartão da Etapa (146).
             "compor-etapas",
             "compor-revisao",
+            # A conferência antes de convocar os titulares (polish da 140).
+            "convocacao-conferir",
             # Os documentos de uma convocação (115).
             "convocacao-documentos",
+            # O corte e a progressão numa coluna só (polish da 014).
+            "corte",
             "duvidas",
             "inscricao-detalhe",
             # O kit de divulgação (111).
@@ -347,6 +359,8 @@ QUEM_CARREGA = {
     # A convocação pelas perguntas de quem conduz (143): o passo da chamada e o aviso da pendência
     # são os mesmos na convocação e nos documentos de uma convocação, e a folha também.
     "interface/telas/convocacao.css": {"convocacao.html", "convocacao_documentos.html"},
+    # As publicações das inscrições (148): a escolha do ato e a conferência dos nomes.
+    "interface/telas/publicacoes-das-inscricoes.css": {"publicacoes_das_inscricoes.html"},
 }
 
 

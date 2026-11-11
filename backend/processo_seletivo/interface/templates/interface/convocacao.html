@@ -1,9 +1,11 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Convocação — quem foi chamado e o que respondeu{% endblock %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/convocacao.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/conducao-do-recorte.css' %}">
+<link rel="stylesheet" href="{% estatico 'interface/telas/convocacao.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Convocação</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Convocação</h1>
+<div class="conducao">
 {% comment %}
 **O lugar do recorte, fora da migalha** (143, FR-5000): o estudo encontrou quem conferia sem saber
 de que Perfil e de que lista era a pessoa. A migalha continua; esta linha diz o que ela não diz.
@@ -69,6 +71,13 @@ A mensagem de sucesso nomeia **o ato praticado**, e nao "deu certo". Foi o defei
 {% if conferencia %}{% include "interface/_conferir_o_texto.html" %}{% endif %}
 
 {% comment %}
+**Quatro momentos, e o primeiro é a situação** (polimento de 11/11). O índice e os números eram blocos
+soltos acima das três áreas, cada um com a sua largura; agrupados, a tela se lê em quatro tempos —
+a situação, convocar, acompanhar, a fila — com o mesmo rótulo e o mesmo filete.
+{% endcomment %}
+<div class="momento situacao-atual" role="group" aria-labelledby="area-situacao">
+  <p class="rotulo-da-area" id="area-situacao">Situação atual</p>
+{% comment %}
 **Neste recorte, agora** (143, FR-5001 a FR-5004, D-002). As perguntas de quem conduz, na ordem
 fixa, com o número lido da mesma leitura do recorte que a tela faz e o link para o lugar do ato. Não
 é painel nem prioridade: a prioridade é do andamento, e aparece no bloco do próximo passo depois de
@@ -88,8 +97,6 @@ cada ato. A marca de "trabalho" é só estilo, para quem pode praticar aquele at
   {% endif %}
 </nav>
 
-<p class="imutavel">Abrir esta tela <strong>não convoca ninguém e não apura nada</strong>. Os números abaixo vêm de atos já emitidos.</p>
-
 {% comment %}
 **Os números da apuração e os das chamadas, em grupos distintos** (143, FR-5005 a FR-5007, UX-372;
 M-09 do estudo). Os quatro primeiros são da `016`, e esta tela não os recalcula (UX-035, SC-092);
@@ -100,6 +107,8 @@ chamada. Os demais são contagens de **chamadas**, que são outra coisa.
 {% endcomment %}
 <section aria-labelledby="numeros" class="vagas-e-chamadas">
   <h2 id="numeros">As vagas e as chamadas deste recorte</h2>
+  {% comment %} A garantia ao operador, junto dos números que ela qualifica: era uma faixa verde própria, de outra largura, entre o índice e os números. {% endcomment %}
+  <p class="nota leitura-dos-numeros">Abrir esta tela <strong>não convoca ninguém e não apura nada</strong>: os números vêm de atos já emitidos.</p>
   {% if sem_inscrito %}
   {% comment %}
   **Não se aplica, e nenhum caminho** (126, FR-4024). A lista que nenhuma inscrição declarou não terá
@@ -148,17 +157,20 @@ chamada. Os demais são contagens de **chamadas**, que são outra coisa.
       <li><strong>{{ aptas }}</strong>Aptas para formalização</li>
     </ul>
   </div>
-  {% if not sem_inscrito and leitura.ocupacao.estado != "NOT_APPRAISED" and leitura.ocupacao.estado != "NO_VACANCY_TABLE" %}<p class="nota distincao">Considerada ocupada na apuração não quer dizer convocada, nem apta para formalização: são três leituras diferentes, e cada uma tem o seu número acima.</p>{% endif %}
+  {% if not sem_inscrito and leitura.ocupacao.estado != "NOT_APPRAISED" and leitura.ocupacao.estado != "NO_VACANCY_TABLE" %}<p class="nota distincao"><strong>Ocupada na apuração não quer dizer convocada.</strong> A apuração conta vagas, desde que é emitida; as chamadas contam pessoas, ato a ato. Por isso <em>Consideradas ocupadas na apuração</em> e <em>Pessoas convocadas</em> não precisam coincidir, e nenhum dos dois números diz quem está apta para formalização.</p>{% endif %}
   <p class="acoes"><a class="acao" href="{% url 'interface:convocacao-historico' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Ver o histórico deste recorte</a></p>
 </section>
+</div>
 
 {% comment %}
-**Três áreas, e não abas** (143, FR-5008, D-001). As seções continuam todas na página, com os ids
+**Três áreas, e não abas** (143, FR-5008, D-001) — e a situação antes delas, desde o polimento de 11/11. A
+classe era `area-de-trabalho`, que é também a da moldura do shell: a regra desta tela pintava o filete
+verde e o recuo no alto da página inteira. As seções continuam todas na página, com os ids
 que as providências da `139` apontam; o que muda é o agrupamento e a ordem: o que se faz para
 convocar, o que se acompanha e confere depois, e as chamadas fora do gesto dos titulares.
 {% endcomment %}
 {% if pode_convocar and not sem_inscrito and titulares.pessoas or pode_convocar and not sem_inscrito and titulares.impedimento or pode_emitir and pendentes.linhas or pode_emitir and pendentes.indeterminadas %}
-<div class="area-de-trabalho" role="group" aria-labelledby="area-convocar">
+<div class="momento" role="group" aria-labelledby="area-convocar">
   <p class="rotulo-da-area" id="area-convocar">Convocar</p>
   <p class="ajuda">Os titulares que a apuração indica, num ato só, e as comunicações que ainda não saíram.</p>
 {% comment %}
@@ -193,15 +205,16 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
   {% if titulares.parada %}
   <p class="nota">Fica de fora {{ titulares.parada.protocolo }} — {{ titulares.parada.nome }}: {% if titulares.parada.motivo == "reabilitado" %}a decisão de recurso a pôs à frente, e ela não está entre as vagas da apuração; o gesto para nela, e chamá-la é a chamada individual.{% else %}é suplente. O gesto convoca só titulares; chamar a vaga que vagou é a chamada individual, abaixo.{% endif %}</p>
   {% endif %}
-  <dl class="dados-da-inscricao">
-    <dt>Comunicação</dt><dd>{% if titulares.forma == "PUBLICATION" %}Por publicação — o prazo corre da publicação, que você registra depois{% else %}Por mensagem individual, enviada a cada pessoa no mesmo ato{% endif %} <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
-    <dt>O candidato lerá este fundamento</dt><dd>{{ titulares.fundamento }} <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd>
-  </dl>
   <form method="post" action="{% url 'interface:convocar-titulares' edital.id marco_id %}" class="confirmar">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-titulares">
     <input type="hidden" name="alcance" value="{{ titulares.assinatura }}">
+    {% comment %} A comunicação e o fundamento entram no cartão (polimento de 11/11): são parte do que se confere antes do botão, e soltos entre a lista e o formulário eram uma terceira largura. {% endcomment %}
+    <dl class="ficha-do-ato">
+      <dt>Comunicação</dt><dd>{% if titulares.forma == "PUBLICATION" %}Por publicação — o prazo corre da publicação, que você registra depois{% else %}Por mensagem individual, enviada a cada pessoa no mesmo ato{% endif %} <span class="ajuda">(do Edital publicado, Perfil deste recorte)</span></dd>
+      <dt>O candidato lerá este fundamento</dt><dd>{{ titulares.fundamento }} <span class="ajuda">(derivado do Edital e dos atos deste recorte)</span></dd>
+    </dl>
     <p><strong>Convocar é irreversível.</strong> Nasce uma convocação por pessoa, imutável e com o seu nome como autor; corrigir qualquer uma é sucedê-la com motivo, uma a uma.</p>
     {% include "interface/_vencimento_da_convocacao.html" with prefixo="titulares" eventos=titulares.eventos %}
     <p class="campo">
@@ -214,8 +227,9 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
     "antes de confirmar, você o verá como o candidato", e a conferência só existia com complemento
     digitado: no C10 da `134`, o clique sem complemento praticou e enviou três mensagens.
     {% endcomment %}
-    <p class="acoes"><button type="submit" class="botao">Conferir e convocar {{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}</button></p>
-    <p class="ajuda">Este botão abre a conferência: quem será convocado, o texto que cada pessoa lerá, o prazo e quem fica de fora. Nada é praticado nem enviado antes de você confirmar nela.</p>
+    {% comment %} "Conferir antes de convocar", e não "Conferir e convocar" (polimento de 11/11): o "e" lia-se como os dois atos num clique, e o clique só confere — o mesmo rótulo da emissão da ordem. {% endcomment %}
+    <p class="acoes"><button type="submit" class="botao">Conferir antes de convocar {{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}</button></p>
+    <p class="ajuda">Abre a conferência: quem será convocado, o texto que cada pessoa lerá, o prazo e quem fica de fora. Nada é praticado nem enviado antes de você confirmar nela.</p>
   </form>
   {% endif %}
 </section>
@@ -235,6 +249,14 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-pendentes">
     <input type="hidden" name="alcance" value="{{ pendentes.assinatura }}">
     {% if pendentes.porPublicacao %}
+    {% comment %}
+    **Publicar no GPS, e a publicação externa como alternativa nomeada** (149, FR-5731). O caminho
+    principal leva à publicação das convocações do Edital com este recorte escolhido, onde a prévia
+    mostra o que será público e o efeito; o registro de sempre continua aqui, para o Edital que manda
+    publicar em outro lugar.
+    {% endcomment %}
+    <p class="acoes"><a class="botao" href="{{ publicar_no_gps }}">Publicar no GPS</a> <span class="ajuda">A relação vai para a página pública da seleção, com documento oficial, quando o Edital admite o GPS como veículo. A prévia vem antes, e nada é publicado sem a sua confirmação.</span></p>
+    <p class="rotulo-da-alternativa"><strong>Publicada fora do GPS?</strong> Registre onde e quando.</p>
     <p class="campo">
       <label for="publicacao-pendentes">Onde e quando a lista foi publicada</label>
       <input type="text" id="publicacao-pendentes" name="referencia_da_publicacao" required aria-describedby="ajuda-publicacao-pendentes">
@@ -257,7 +279,7 @@ pendentes, e a tela diz por quê: reenviar por conta própria entregaria a mesma
 </div>
 {% endif %}
 
-<div class="area-de-trabalho" role="group" aria-labelledby="area-acompanhar">
+<div class="momento" role="group" aria-labelledby="area-acompanhar">
   <p class="rotulo-da-area" id="area-acompanhar">Acompanhar e conferir</p>
   <p class="ajuda">Quem foi chamado, o que respondeu e o que falta: documentos, avisos e desfechos.</p>
 {% comment %}
@@ -377,6 +399,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     <dl class="dados-da-inscricao">
       <dt>Espécie</dt><dd>{{ linha.convocacao.get_especie_display }}</dd>
       {% if linha.enviadaEm %}<dt>{{ linha.canal.rotulo_do_registro }}</dt><dd>{{ linha.enviadaEm|date:"d/m/Y H:i" }}{% if linha.canal.publicacao %} — {{ linha.comunicacao.referencia }}{% endif %}</dd>{% endif %}
+      {% with publicada=publicadas_no_gps|dicionario_simples:linha.convocacao.id %}{% if publicada %}<dt>Na página pública</dt><dd><a href="{% url 'portal:convocados' publicada.id %}">{{ publicada.numero }}ª publicação de convocados</a></dd>{% endif %}{% endwith %}
       {% if linha.convocacao.vencimento %}<dt>Vencimento</dt><dd>{{ linha.convocacao.vencimento|date:"d/m/Y H:i" }} — {{ linha.canal.contado_de_na_gestao }}</dd>{% endif %}
       {% if linha.convocacao.convocacao_anterior_id %}<dt>Correção</dt><dd>Corrigida em {{ linha.convocacao.criado_em|date:"d/m/Y H:i" }} — <a href="{% url 'interface:convocacao-historico' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">ver o histórico</a></dd>{% endif %}
       {% comment %}
@@ -600,7 +623,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
 </div>
 
 {% if not marco_intermediario and not sem_inscrito or not marco_intermediario and leitura.regularizaveis %}
-<div class="area-de-trabalho excecoes" role="group" aria-labelledby="area-fila">
+<div class="momento excecoes" role="group" aria-labelledby="area-fila">
   <p class="rotulo-da-area" id="area-fila">Fila, suplentes e regularização</p>
   <p class="ajuda">Chamadas fora do gesto dos titulares: a próxima da fila para a vaga que vagou, as exceções à ordem e a convocação para regularizar. Cada uma é ato irreversível, praticado pessoa a pessoa.</p>
   <details class="explicacao-do-termo">
@@ -768,5 +791,6 @@ classificado antes do primeiro.
 {% endif %}
 </div>
 {% endif %}
+</div>
 <script src="{% estatico 'interface/correcao-da-convocacao.js' %}" defer></script>
 {% endblock %}
