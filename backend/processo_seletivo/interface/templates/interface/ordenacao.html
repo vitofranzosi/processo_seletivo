@@ -1,8 +1,10 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Classificação — {{ marco.name }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">{{ marco.name }}</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/conducao-do-recorte.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>{{ marco.name }}</h1>
+<div class="conducao">
 <p class="sub">{{ perfil.name }} — ordem calculada conforme a versão normativa vigente.</p>
 
 {% comment %}
@@ -45,17 +47,24 @@ contraprova da `FR-493` vista na tela.
 </nav>
 {% endif %}
 
-
-
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
 {% comment %} O que foi gravado, e em qual recorte (126, FR-4015); sem o próximo passo, que é da orientação da jornada. {% endcomment %}
 {% if resultado %}<p class="sucesso" role="status" tabindex="-1"><strong>Ordem emitida</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}{% if resultado.comPosicao is not None %}: {{ resultado.comPosicao }} com posição, {{ resultado.semPosicao }} sem posição{% endif %}. O ato é imutável e já pode ser consultado.</p>{% endif %}
 {% if resultado %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
+{% comment %}
+**O ato e a divulgação, lado a lado** (polimento de 11/11). Eram dois avisos empilhados, de larguras
+e cores diferentes, e o ato vigente divulgado em dia não dizia nada da divulgação — o silêncio era a
+única marca de que ela estava em dia. Cada estado tem agora o seu rótulo, e as frases são as mesmas.
+{% endcomment %}
+<section class="situacao-do-recorte" aria-labelledby="titulo-situacao">
+<h2 id="titulo-situacao">Situação deste recorte</h2>
+<div class="estado-do-recorte">
+<h3>Ato vigente</h3>
 {% if ato_vigente %}
 {% comment %}
 **O terceiro caminho para a mesma tela, e o único que existe quando não há aviso de divulgação**
-(033, `FR-477`). Os dois avisos abaixo aparecem conforme o estado da publicação; este link aparece
+(033, `FR-477`). O bloco da divulgação, ao lado, diz o estado da publicação e a quem pedir; este link aparece
 sempre que há ato vigente, e é por ele que a presidência chega à tela do ato no caso comum — o do
 ato já divulgado e em dia. Deixá-lo mudo diria "consulte" a quem vai lá para divulgar e não pode.
 
@@ -66,7 +75,7 @@ publicar que conclua o ato"*, e não inventa uma segunda (`FR-486`).
 esta dizia só a quem pedir. Dizer o destinatário sem dizer o pedido entrega meio endereço — quem lê
 sabe a quem se dirigir e não sabe pedir o quê.
 {% endcomment %}
-<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {% nome_de_pessoa ato_vigente.emitido_por %}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.{% if not pode_divulgar %} Divulgá-lo não é ato seu: peça a alguém com a permissão de publicar resultado que o divulgue.{% endif %}</p>
+<p class="imutavel"><strong>Ato vigente emitido em {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}</strong> por {% nome_de_pessoa ato_vigente.emitido_por %}. Abrir esta tela não o altera. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato_vigente.id %}">Consultar ato e proveniência</a>.</p>
 {% else %}
 {% comment %}
 Três ausências diferentes, e elas pedem providências diferentes (034, FR-492a, FR-498, FR-504).
@@ -91,7 +100,7 @@ Três ausências diferentes, e elas pedem providências diferentes (034, FR-492a
 <p class="aviso">Ainda não existe ato emitido para este recorte, e é aqui que ele se emite. A lista abaixo é uma proposta calculada agora, e abrir esta tela não constitui ato algum.</p>
 {% endif %}
 {% endif %}
-
+</div>
 {% comment %}
 O estado da divulgação, logo abaixo do ato — porque é aqui que a diferença entre **emitir** e
 **publicar** importa, e era aqui que ela não existia. Sucedido o ato por um recurso deferido, esta
@@ -104,11 +113,13 @@ operador não ter como saber que o ato e a divulgação tinham se separado. O ca
 do ato, que é onde o critério o coloca.
 {% endcomment %}
 {% if divulgacao %}
+<div class="estado-do-recorte">
+<h3>Divulgação</h3>
 {% if divulgacao.nunca_divulgado %}
 <p class="aviso">
   <strong>Este ato ainda não foi divulgado.</strong> O público não lê esta ordem enquanto a
   publicação não acontecer. A divulgação é ato do próprio ato emitido, e sai de lá — em
-  <em>Consultar ato e proveniência</em>, acima.{% if not pode_divulgar %} Ela não é sua: peça a
+  <em>Consultar ato e proveniência</em>, no bloco do ato.{% if not pode_divulgar %} Ela não é sua: peça a
   alguém com a permissão de publicar resultado que a conclua.{% endif %}
 </p>
 {% elif divulgacao.defasadas %}
@@ -118,11 +129,24 @@ do ato, que é onde o critério o coloca.
   O que está público é {{ publicacao.get_natureza_display|lower }}, de
   {{ publicacao.publicado_em|date:"d/m/Y H:i" }}, e corresponde a uma ordem anterior.
   {% endfor %}
-  Divulgar o ato vigente é ato dele, e sai de <em>Consultar ato e proveniência</em>, acima.{% if not pode_divulgar %}
+  Divulgar o ato vigente é ato dele, e sai de <em>Consultar ato e proveniência</em>, no bloco do ato.{% if not pode_divulgar %}
   Ela não é sua: peça a alguém com a permissão de publicar resultado que a conclua.{% endif %}
 </p>
+{% else %}
+{% comment %}
+**O que está público, e o pedido a quem não divulga** (polimento de 11/11). "Divulgado" sozinho
+dizia o mesmo do preliminar e do definitivo; e o pedido da `FR-477` — divulgá-lo não é ato seu —
+morava no bloco do ato, onde contradizia este ("peça que o divulgue" ao lado de "Divulgado"). Aqui
+ele fala do que ainda pode vir, como o definitivo depois do preliminar.
+{% endcomment %}
+<p class="imutavel"><strong>Divulgado.</strong> O que o público lê é deste ato:
+  {% for publicacao in divulgacao.vigentes %}{{ publicacao.get_natureza_display|lower }}, de
+  {{ publicacao.publicado_em|date:"d/m/Y H:i" }}{% if not forloop.last %}; {% else %}.{% endif %}{% endfor %}{% if not pode_divulgar %}
+  Divulgá-lo de novo não é ato seu: peça a alguém com a permissão de publicar resultado que o divulgue.{% endif %}</p>
 {% endif %}
+</div>
 {% endif %}
+</section>
 
 {% if corte_obsoleto %}
 {% comment %}
@@ -278,6 +302,9 @@ sucessora, e as citações vão com ela.
 {% endcomment %}
 <details class="sucessao"{% if obsoleto or decisoes_a_citar %} open{% endif %}>
   <summary>Suceder esta ordem (exige motivo)</summary>
+{% else %}
+<section aria-labelledby="titulo-emissao">
+<h2 id="titulo-emissao">Emissão da ordem</h2>
 {% endif %}
 <form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
   {% csrf_token %}
@@ -289,7 +316,12 @@ sucessora, e as citações vão com ela.
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao_do_calculo }}">
   {% comment %}A posição, a nota e o desempate nunca vêm do navegador. O POST só confirma que o servidor deve recalcular e constituir o ato.{% endcomment %}
-  <p><strong>Emitir é irreversível.</strong> O sistema recalcula sob trava e grava um ato imutável; esta tela não envia posição, pontuação nem desempate.</p>
+  {% comment %}
+  **O botão abre a conferência, e o rótulo o diz** (polimento de 11/11) — como o gesto dos titulares
+  na convocação (140, FR-4816). Ele dizia "Emitir ordem", e o que abria era "Confira antes de
+  emitir": a irreversibilidade é dita aqui, e praticada só lá.
+  {% endcomment %}
+  <p><strong>Emitir é irreversível.</strong> O sistema recalcula a ordem e grava um ato imutável; esta tela não envia posição, pontuação nem desempate. O botão abre a conferência do que será gravado, e nada é emitido antes de você confirmar nela.</p>
   {% if ato_vigente %}<p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required></textarea><span class="ajuda">O ato vigente permanece íntegro; este motivo explica por que uma nova ordem o sucede.</span></p>{% endif %}
   {% if decisoes_a_citar %}
   {% comment %}
@@ -313,9 +345,9 @@ sucessora, e as citações vão com ela.
     {% endfor %}
   </fieldset>
   {% endif %}
-  <p class="acoes"><button type="submit" class="botao">Emitir ordem</button></p>
+  <p class="acoes"><button type="submit" class="botao">Conferir antes de emitir</button></p>
 </form>
-{% if ato_vigente %}</details>{% endif %}
+{% if ato_vigente %}</details>{% else %}</section>{% endif %}
 {% endif %}
 
 {% if historico %}
@@ -326,7 +358,8 @@ marco" mentiria sobre a raiz de uma cota emitida depois da ampla.
 {% endcomment %}
 <section aria-labelledby="titulo-historico">
   <h2 id="titulo-historico">Histórico de atos{% if recorte_atual %} — {{ recorte_atual.rotulo }}{% endif %}</h2>
-  <ol>{% for ato in historico %}<li><a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato.id %}">{{ ato.emitido_em|date:"d/m/Y H:i" }} — {% nome_de_pessoa ato.emitido_por %}</a>{% if ato.ato_anterior_id %}: sucede o ato de {{ ato.ato_anterior.emitido_em|date:"d/m/Y H:i" }} — {{ ato.motivo_da_sucessao }}{% else %}: primeiro ato deste recorte{% endif %}</li>{% endfor %}</ol>
+  <ol class="historico-de-atos">{% for ato in historico %}<li><a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ato.id %}">{{ ato.emitido_em|date:"d/m/Y H:i" }} — {% nome_de_pessoa ato.emitido_por %}</a>{% if ato.ato_anterior_id %}: sucede o ato de {{ ato.ato_anterior.emitido_em|date:"d/m/Y H:i" }} — {{ ato.motivo_da_sucessao }}{% else %}: primeiro ato deste recorte{% endif %}</li>{% endfor %}</ol>
 </section>
 {% endif %}
+</div>
 {% endblock %}

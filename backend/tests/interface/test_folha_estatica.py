@@ -253,6 +253,12 @@ QUEM_CARREGA = {
         "convocacao_conferir.html",
     },
     "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
+    # A coluna das três telas que conduzem um recorte (polimento de 11/11).
+    "interface/grupos/conducao-do-recorte.css": {
+        "convocacao.html",
+        "ordenacao.html",
+        "ordenacao_confirmar.html",
+    },
     # A ficha do barema (146): na Mesa, resumida nas conclusões preservadas, e no julgamento.
     "interface/grupos/ficha-do-barema.css": {
         "mesa_inscricao.html",

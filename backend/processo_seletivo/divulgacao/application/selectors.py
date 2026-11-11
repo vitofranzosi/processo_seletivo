@@ -267,7 +267,9 @@ def divulgacao_do_ato(*, edital, marco_id, ato, lista_id=None, historico=None):
         if linha["vigente"] and str(linha["publicacao"].ato.lista_id or "") == str(lista_id or "")
     ]
     defasadas = [publicacao for publicacao in vigentes if str(publicacao.ato_id) != str(ato.id)]
-    return {"nunca_divulgado": not vigentes, "defasadas": defasadas}
+    # As vigentes vão junto para quem diz **o que** está público quando nada está para trás: a tela
+    # da ordem dizia "divulgado" igual para o preliminar e para o definitivo (polimento de 11/11).
+    return {"nunca_divulgado": not vigentes, "defasadas": defasadas, "vigentes": vigentes}
 
 
 __all__ = [
