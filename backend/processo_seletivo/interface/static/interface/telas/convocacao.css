@@ -76,7 +76,7 @@
 .chamada:target{box-shadow:0 0 0 3px var(--verde-claro)}
 .passo-da-chamada{margin:.1rem 0 .6rem;padding:.45rem .6rem;border-radius:4px;
   background:var(--cinza-fundo);display:flex;flex-wrap:wrap;gap:.25rem .5rem;align-items:baseline;
-  overflow-wrap:anywhere}
+  overflow-wrap:anywhere;max-width:none}
 .tom-acao .passo-da-chamada{background:var(--verde-claro)}
 .tom-alerta .passo-da-chamada{background:var(--vermelho-fundo)}
 .tom-espera .passo-da-chamada{background:var(--amarelo-fundo)}

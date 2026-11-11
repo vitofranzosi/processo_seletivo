@@ -176,13 +176,13 @@ de borda não entra na matriz de rastreabilidade, e nenhuma ferramenta a cobra:
 
 **Processo, "O que fazer agora" (R1)**
 
-- **FR-1069**: Entre os atos do Processo em "O que fazer agora", nenhum MUST ser preenchido. Encerrar
+- **FR-1069**: ~~Entre os atos do Processo em "O que fazer agora", nenhum MUST ser preenchido. Encerrar
   e Cancelar MUST vir por último, num grupo próprio depois de um filete, contornados em vermelho,
-  cada um com o marcador "irreversível" — a regra que a `057` fixou para o Detalhe do Edital.
-- **FR-1070**: "Ativar Processo" MUST continuar secundário, com a ajuda de sempre. Processo sem ato
+  cada um com o marcador "irreversível" — a regra que a `057` fixou para o Detalhe do Edital.~~ **SUBSTITUÍDA pela `FR-5323` da [`147`](../147-pagina-do-processo/spec.md)**, em 11/11/2026: os atos do Processo foram para "Administração do Processo", no fim da página; Encerrar e Cancelar ficam recolhidos, com o marcador, e desabilitados quando impedidos.
+- **FR-1070**: ~~"Ativar Processo" MUST continuar secundário, com a ajuda de sempre. Processo sem ato
   para o papel MUST continuar dizendo "Nenhum ato disponível para seus papéis nesta situação"; sem
   ato irreversível, não há grupo nem filete. O aviso de impedimento MUST continuar depois dos atos,
-  e cada link MUST levar ao mesmo lugar de antes.
+  e cada link MUST levar ao mesmo lugar de antes.~~ **SUBSTITUÍDA pela `FR-5323` da [`147`](../147-pagina-do-processo/spec.md)**, em 11/11/2026: "Ativar Processo" continua secundário e com a ajuda, na Administração; sem ato, a Administração não aparece e "O que fazer agora" diz onde o trabalho está; o impedimento vem antes dos atos, que ficam desabilitados.
 
 **375 px (R2)**
 

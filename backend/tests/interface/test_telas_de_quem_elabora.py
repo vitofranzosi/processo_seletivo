@@ -45,7 +45,12 @@ def antes(corpo, primeiro, segundo):
 
 
 def comeca_pelo_titulo(corpo):
-    return conteudo(corpo).split(">", 1)[1].lstrip().startswith("<h1>")
+    """Nada antes do título. O cabeçalho que o envolve (o do Centro, o do Processo da 147) não
+    conta: é moldura, e o `h1` continua sendo a primeira coisa que se lê."""
+    resto = conteudo(corpo).split(">", 1)[1].lstrip()
+    if resto.startswith("<header"):
+        resto = resto.split(">", 1)[1].lstrip()
+    return resto.startswith("<h1>")
 
 
 # ---- as causas latentes, na folha comum ------------------------------------------------------
@@ -203,19 +208,24 @@ def test_no_processo_o_que_fazer_vem_antes_dos_editais_e_do_pulso(client, seleto
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_no_processo_publicado_o_pulso_vem_depois_e_os_atos_nao_mudam(
+def test_no_processo_publicado_os_atos_vao_para_a_administracao_no_fim(
     client, seletor_ligado, publicado
 ):
-    """`FR-1764`: o pulso continua na página, depois; os atos continuam os mesmos, na mesma ordem
-    (058, `FR-1069`)."""
+    """A ordem da `147` (UX-440), que substitui a `FR-1764`: o que fazer e a atenção, os Editais, a
+    administração. Os atos saem de "O que fazer agora" (FR-5306) e continuam os mesmos, na mesma
+    ordem e com a marca de irreversível."""
     identificar(client, "marcia.gestora", ["gestor"])
     corpo = abrir_processo(client, publicado.processo)
 
-    assert antes(corpo, 'id="acoes-processo"', 'id="editais-titulo"')
-    assert antes(corpo, 'id="editais-titulo"', 'id="conducao-titulo"')
+    assert antes(corpo, 'id="acoes-processo"', 'id="atencao-titulo"')
+    assert antes(corpo, 'id="atencao-titulo"', 'id="editais-titulo"')
+    assert antes(corpo, 'id="editais-titulo"', 'id="administracao-titulo"')
     cartao = conteudo(corpo).split('id="acoes-processo"')[1].split("</section>")[0]
-    assert cartao.index("Encerrar Processo") < cartao.index("Cancelar Processo")
-    assert "irreversível" in cartao
+    assert "Encerrar Processo" not in cartao
+    assert "Cancelar Processo" not in cartao
+    administracao = conteudo(corpo).split('id="administracao-titulo"')[1].split("</section>")[0]
+    assert administracao.index("Encerrar Processo") < administracao.index("Cancelar Processo")
+    assert "irreversível" in administracao
 
 
 @pytest.mark.django_db
@@ -310,24 +320,20 @@ def test_em_toda_etapa_da_composicao_a_trilha_passa_pelo_processo(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_os_editais_do_processo_sao_a_tabela_da_lista(client, seletor_ligado, publicado):
-    """`FR-1771`, `FR-1773`: Edital, Título e Situação, uma linha por Edital, na moldura."""
+def test_os_editais_do_processo_sao_uma_linha_cada(client, seletor_ligado, publicado):
+    """A `147` (FR-5310, FR-5312, FR-5315) substitui a tabela da `FR-1771`: uma linha por Edital, em
+    lista, com o título como o link único dela e a situação na pastilha de sempre. Lista, e não
+    tabela — a tabela cortava colunas no celular."""
     identificar(client, "marcia.gestora", ["gestor"])
     corpo = abrir_processo(client, publicado.processo)
 
     regiao = conteudo(corpo).split('id="editais-titulo"')[1].split("</section>")[0]
-    moldura = regiao.split('<div class="tabela-rolavel">')[1].split("</div>")[0]
-    assert '<table aria-labelledby="editais-titulo">' in moldura
-    cabecalhos = re.findall(r'<th scope="col">([^<]+)</th>', moldura)
-    assert cabecalhos == ["Edital", "Título", "Situação"]
+    assert "<table" not in regiao
+    assert regiao.count('<li class="edital-no-processo') == 1
     destino = reverse("interface:detalhe", args=[publicado.id])
-    assert (
-        f'<th scope="row"><a class="codigo" href="{destino}">'
-        f"{publicado.number}/{publicado.year}</a></th>"
-    ) in moldura
-    assert f'<td><a href="{destino}">{publicado.title}</a></td>' in moldura
-    assert f'<span class="situacao s-{publicado.status}">' in moldura
-    assert moldura.count("<tr>") == 2  # o cabeçalho e o Edital
+    assert regiao.count(f'href="{destino}"') == 1
+    assert f"Edital {publicado.number}/{publicado.year}: </span>{publicado.title}</a>" in regiao
+    assert f'<span class="situacao s-{publicado.status}">' in regiao
 
 
 @pytest.mark.django_db
@@ -359,11 +365,12 @@ def test_sem_secao_do_processo_a_faixa_nao_vem(client, seletor_ligado, edital):
     """`FR-1776`: quem não alcança Supervisão, Comissão, Alocação nem Auditoria não vê a faixa —
     nem vazia —; o gestor continua vendo as mesmas seções."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    assert "acoes-do-painel" not in conteudo(abrir_processo(client, edital.processo))
+    assert "processo-acessos" not in conteudo(abrir_processo(client, edital.processo))
 
     identificar(client, "marcia.gestora", ["gestor"])
     corpo = abrir_processo(client, edital.processo)
-    faixa = conteudo(corpo).split('<p class="acoes-do-painel">')[1].split("</p>")[0]
+    # Desde a 147 o grupo mora no topo, nomeado "Comissão e supervisão" (FR-5300).
+    faixa = conteudo(corpo).split('<nav class="processo-acessos"')[1].split("</nav>")[0]
     processo = edital.processo
     for rota in ("interface:supervisao", "interface:comissao", "interface:alocacoes"):
         assert reverse(rota, args=[processo.id]) in faixa, rota

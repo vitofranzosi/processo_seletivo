@@ -475,9 +475,20 @@ form.identificar{background:var(--branco);border:1px solid var(--borda);border-r
 .papel .perms{display:block;font-size:.8125rem;color:var(--texto-fraco)}
 /* Consulta das inscrições recebidas (009). Reaproveita a tabela e o cartão que já existem; o que
    é novo é a lista de requisitos, onde o arquivo aparece **dentro** do requisito que ele atende. */
-.dados-da-inscricao{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;margin:0}
+/* `minmax(0,1fr)`, e não `1fr`: a coluna `1fr` não encolhe abaixo da palavra mais longa, e o e-mail
+   da inscrição é uma palavra só. A 375 px ele alargava a grade além da tela, e a ficha inteira rolava
+   de lado (21 a 26 px nas fichas medidas em 11/11). Com a coluna livre para encolher, o valor quebra
+   onde precisar. */
+.dados-da-inscricao{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.35rem .75rem;margin:0}
 .dados-da-inscricao dt{color:var(--texto-fraco)}
-.dados-da-inscricao dd{margin:0}
+.dados-da-inscricao dd{margin:0;overflow-wrap:anywhere}
+/* No telefone o rótulo sobe para cima do valor: ao lado dele, o valor ficava com 200 px e o e-mail
+   quebrava no meio. A margem vai no `dd`, e não no `dt` seguinte, para que a grade de duas colunas
+   da revisão, que vence esta por especificidade, só ganhe respiro entre as linhas. */
+@media (max-width:34rem){
+  .dados-da-inscricao{grid-template-columns:minmax(0,1fr);row-gap:.1rem}
+  .dados-da-inscricao dd{margin-bottom:.45rem}
+}
 /* O que saiu da Mesa: uma linha por retirada, com o motivo à vista. Era uma lista com marcador e
    frases longas, em que o protocolo, o motivo e o instante se misturavam num parágrafo só. */
 ul.retiradas{list-style:none;margin:0;padding:0;border:1px solid var(--borda);border-radius:6px;

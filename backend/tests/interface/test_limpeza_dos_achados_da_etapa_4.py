@@ -90,20 +90,27 @@ def publicado(api_client, manager_headers, process_payload):
 
 
 def test_no_processo_os_dois_atos_terminais_sao_anunciados_como_irreversiveis(client, publicado):
-    """`FR-2060`, `FR-2061`, `SC-801`: "Encerrar Processo" e "Cancelar Processo", e só eles; o
-    rótulo, o destino e o desenho não mudam."""
+    """`FR-2060`, `FR-2061`, `SC-801`: "Encerrar Processo" e "Cancelar Processo", e só eles.
+
+    Desde a `147` os dois moram em "Administração do Processo" (FR-5306), e com o Edital publicado
+    estão impedidos: aparecem desabilitados, sem link (FR-5307). A marca continua descrevendo cada
+    um — quem ouve a tela sabe que é irreversível e que não está disponível.
+    """
     identificar(client, "marcia.gestora", ["gestor"])
     processo = publicado.processo
     corpo = abrir(client, reverse("interface:processo-detalhe", args=[processo.id]))
 
-    atos = cartao(corpo, "acoes-processo")
-    confere_a_marca(atos, ["Encerrar Processo", "Cancelar Processo"])
-    encerrar = reverse("interface:processo-ato", args=[processo.id, "encerrar"])
-    assert (
-        f'<a class="botao secundario" href="{encerrar}" '
-        'aria-describedby="irreversivel-encerrar">Encerrar Processo</a>'
-    ) in atos
-    assert '<span class="marca-irreversivel" id="irreversivel-encerrar">irreversível</span>' in atos
+    administracao = cartao(corpo, "administracao-titulo")
+    for chave, rotulo in (("encerrar", "Encerrar Processo"), ("cancelar", "Cancelar Processo")):
+        assert (
+            '<span class="botao desabilitado" tabindex="0" role="link" aria-disabled="true" '
+            f'aria-describedby="irreversivel-{chave}">{rotulo}</span>'
+        ) in administracao
+        assert (
+            f'<span class="marca-irreversivel" id="irreversivel-{chave}">irreversível</span>'
+        ) in administracao
+        assert reverse("interface:processo-ato", args=[processo.id, chave]) not in administracao
+    assert "irreversível" not in cartao(corpo, "acoes-processo")
 
 
 def test_no_edital_publicado_os_atos_terminais_sao_anunciados_como_irreversiveis(client, publicado):

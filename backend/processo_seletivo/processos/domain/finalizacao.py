@@ -124,6 +124,15 @@ def ensure_edital_accepts_changes(edital):
         raise _reject("Edital em estado final não admite alteração.")
 
 
-def pending_editais(processo):
-    """Editais que ainda impedem o cancelamento e o encerramento do Processo, em ordem estável."""
+def pending_editais(processo, editais=None):
+    """Editais que ainda impedem o cancelamento e o encerramento do Processo, em ordem estável.
+
+    `editais` são os do Processo já lidos por quem chama (a página do Processo, 147): a regra é esta
+    mesma, sobre a lista, sem voltar ao banco — e continua sendo uma definição só de "pendente".
+    """
+    if editais is not None:
+        return sorted(
+            (edital for edital in editais if edital.status not in EDITAL_FINAL),
+            key=lambda edital: (edital.year, edital.number, str(edital.id)),
+        )
     return list(processo.editais.exclude(status__in=EDITAL_FINAL).order_by("year", "number", "id"))
