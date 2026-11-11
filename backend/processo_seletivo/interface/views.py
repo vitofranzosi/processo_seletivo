@@ -9283,6 +9283,9 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
             aggregate_id__in=apresentacoes,
         ).values_list("aggregate_id", flat=True)
     )
+    # E com o Processo aberto: o comando recusa conferir em estado final, e o formulário seria
+    # convite a um ato que não existe mais (revisão do #369).
+    pode_conferir = desfecho is None and edital.processo.status not in PROCESSO_FINAL
     return marcar_como_privada(
         render(
             request,
@@ -9318,11 +9321,9 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
                 "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
                 "rotulo_do_item": ROTULO_DO_ITEM,
                 "abertas_por_voce": abertas_por_voce,
-                # E com o Processo aberto: o comando recusa conferir em estado final, e o
-                # formulário seria convite a um ato que não existe mais (revisão do #369).
-                "pode_conferir": desfecho is None and edital.processo.status not in PROCESSO_FINAL,
+                "pode_conferir": pode_conferir,
                 "chave_idempotencia": uuid4().hex,
-                "erro": request.session.pop("erro_da_conferencia", None),
+                "recusa": _recusa_da_conferencia(request, leitura, pode_conferir=pode_conferir),
                 "aviso": request.session.pop("aviso_da_conferencia", None),
                 "proximo_nesta_lista": _proximo_nesta_lista(
                     edital, ator, marco_id, getattr(vigente, "lista_id", None)
@@ -9330,6 +9331,28 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
             },
         )
     )
+
+
+def _recusa_da_conferencia(request, leitura, *, pode_conferir):
+    """A recusa da última conferência, e onde a página a imprime (FR-3611).
+
+    **No cartão do item, quando o formulário dele está na página**; no topo, quando não está. O
+    formulário some quando a chamada ganhou desfecho ou o Processo se encerrou entre abrir a página
+    e registrar — e são justamente as recusas dessas duas corridas que se perdiam se a recusa só
+    morasse no cartão. O item volta como UUID, para o template compará-lo ao id do item; o que não
+    se lê como UUID se perde, e a página abre sem recusa, como abriria sem ela.
+    """
+    recusa = request.session.pop("recusa_da_conferencia", None)
+    if not isinstance(recusa, dict):
+        return None
+    try:
+        item = UUID(str(recusa.get("item")))
+    except ValueError:
+        return None
+    no_cartao = pode_conferir and any(lido.item.id == item for lido in leitura.pedidos)
+    # O item fica nulo quando a recusa vai ao topo: nenhum cartão a reclama, e a âncora do endereço
+    # (`#recusa-<item>`) passa a ser a do topo.
+    return {**recusa, "item": item if no_cartao else None, "no_topo": not no_cartao, "ancora": item}
 
 
 def _espera_do_corte(edital, marco_id, lista_id):
@@ -9538,35 +9561,63 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
 def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id):
     """Registra a conferência de um item e volta à página dos documentos (FR-3585)."""
     from processo_seletivo.convocacao.application import documentos as documentos_app
+    from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
 
     ator, edital, convocacao, _ = _convocacao_para_conferir(request, edital_id, convocacao_id)
     if ator is None:
         return identidade.pedir_identificacao(request)
-    destino = (
-        reverse("interface:documentos-da-convocacao", args=[edital.id, marco_id, convocacao.id])
-        + (f"?lista={request.POST.get('lista')}" if request.POST.get("lista") else "")
-        + f"#item-{item_id}"
-    )
+    # O recorte vem do formulário, e vai codificado: um valor com `#` ou `&` deslocaria a âncora do
+    # item, ou da recusa, para dentro da query.
+    lista = request.POST.get("lista")
+    destino = reverse(
+        "interface:documentos-da-convocacao", args=[edital.id, marco_id, convocacao.id]
+    ) + (f"?{urlencode({'lista': lista})}" if lista else "")
     raiz = documentos_app.raiz_da_chamada(convocacao)
     if not raiz.itens_da_lista.filter(pk=item_id).exists():
         raise Http404
+    preenchido = {
+        "resultado": request.POST.get("resultado") or "",
+        "motivo": request.POST.get("motivo") or "",
+        "motivo_da_substituicao": request.POST.get("motivo_da_substituicao") or "",
+    }
     try:
         documentos_app.conferir(
             actor=ator,
             item_id=item_id,
             apresentacao_id=request.POST.get("apresentacao") or None,
-            resultado=request.POST.get("resultado") or "",
-            motivo=request.POST.get("motivo") or "",
-            motivo_da_substituicao=request.POST.get("motivo_da_substituicao") or "",
             idempotency_key=request.POST.get("chave") or uuid4().hex,
             correlation_id=f"interface-conferencia-{convocacao.id}",
+            **preenchido,
         )
         request.session["aviso_da_conferencia"] = "Conferência registrada."
     except DomainError as erro:
         if erro.status == 404:
             raise Http404 from erro
-        request.session["erro_da_conferencia"] = erro.detail
-    return redirect(destino)
+        # **A recusa volta ao cartão do documento, e não ao topo** (FR-3611). O endereço leva a tela
+        # ao item, e a recusa era impressa acima do contexto e da situação, a uma tela inteira dali:
+        # quem marcava "conforme" sem abrir o arquivo via a página recarregar no mesmo lugar e
+        # concluía que o botão não fazia nada. O que foi marcado e digitado volta junto — o motivo
+        # do "não se aplica", que a mesma regra recusa, se perdia.
+        superada = erro.code == nomes_da_convocacao.VERSAO_SUPERADA
+        request.session["recusa_da_conferencia"] = {
+            "item": str(item_id),
+            "detalhe": erro.detail,
+            # O link "abrir a versão" só acompanha a recusa que pede a abertura — a da versão
+            # superada também, que manda abrir a atual. Ao lado de "diga o motivo", ele mandaria
+            # abrir o arquivo para resolver outra coisa.
+            "falta_abrir": superada
+            or erro.code
+            in (
+                nomes_da_convocacao.CONFORME_SEM_ABERTURA,
+                nomes_da_convocacao.NAO_SE_APLICA_SEM_ABERTURA,
+            ),
+            **preenchido,
+            # O juízo era sobre a versão anterior: marcado de volta, ele apareceria como juízo sobre
+            # a nova, que a pessoa ainda não viu. O texto digitado fica, para ser relido.
+            **({"resultado": ""} if superada else {}),
+        }
+        return redirect(f"{destino}#recusa-{item_id}")
+    return redirect(f"{destino}#item-{item_id}")
 
 
 @require_http_methods(["POST"])
