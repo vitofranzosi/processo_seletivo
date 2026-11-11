@@ -128,6 +128,18 @@ falha junto de outros, `make test-pg PYTEST_WORKERS=0` volta ao serial. As medi�
 [doc/estudo-paralelizacao-da-suite.md](doc/estudo-paralelizacao-da-suite.md). No CI, o primeiro run
 paralelo levou 836s de pytest e 14m35s de job, contra 1729s a 2856s em série — o runner varia muito.
 
+**No CI, a suíte roda em três fatias, cada uma num runner com o seu PostgreSQL** (desde 11/11). Com a
+suíte em 18 mil casos, o pytest de um runner só chegou a 1610s–2287s, e mais workers no mesmo runner
+não rendem. `tests/fatias.py` reparte pelo hash do nodeid (`-p tests.fatias --fatia=K/N`, chamado
+por `python -m pytest`); o lint virou job próprio, e o job `test` é só o veredito das fatias. Uma
+falha que aparece numa fatia e não na suíte local inteira é acoplamento entre casos: rode a fatia.
+
+**Várias sessões rodando a suíte ao mesmo tempo multiplicam o tempo de todas.** Em 11/11, com outras
+três suítes no mesmo cluster, a de uma worktree levou 55 minutos, e quatro casos de menos de um
+segundo levaram ~7 minutos cada, parados atrás do `DROP DATABASE` do fim de outra suíte. Sozinha, a
+mesma árvore fechou em 8. Enquanto trabalha, rode o diretório que a mudança toca; a suíte inteira, uma
+de cada vez, ou o CI.
+
 **Um teste de tempo oscila sob carga.**
 `tests/performance/test_ocupacao.py::test_a_apuracao_cabe_no_dobro_do_tempo_da_emissao_da_ordem`
 exige que a apuração de um recorte custe no máximo o dobro da emissão da ordem, e os dois tempos são
@@ -153,12 +165,16 @@ garantias deste sistema morarem no banco — gatilho append-only, privilégio au
 desfeita.
 
 **A limpeza depois de cada caso transacional não é a do Django** desde 10/17. O `tests/conftest.py`
-trunca só as tabelas com linha, mais as que têm chave estrangeira para elas, que o PostgreSQL exige
-no mesmo `TRUNCATE`. E só emite o `post_migrate` quando `django_content_type` ou `auth_permission`
-mudaram. O banco que o caso seguinte recebe é o mesmo, e a suíte cai ~20% (576s → 451s, em rodadas
-seguidas). Desconfiou dela? `LIMPEZA_INTEGRAL=1` devolve a do Django. As medições, e a variante com
-`DELETE` que tiraria 60% mas expõe um teste dependente da ordem física das linhas, estão em
-[doc/estudo-limpeza-dos-casos-transacionais.md](doc/estudo-limpeza-dos-casos-transacionais.md).
+apaga por `DELETE` só as tabelas com linha, com `session_replication_role = replica` naquela
+transação — que desliga os gatilhos de chave estrangeira e os append-only só durante a limpeza —, e
+só emite o `post_migrate` quando `django_content_type` ou `auth_permission` mudaram. Em 11/11 a suíte
+foi de **831s com `TRUNCATE` a 456s e 507s com `DELETE`** (−39% a −45%, mesma máquina livre, mesmo
+resultado caso a caso). **O preço é a ordem física das linhas**: num heap que já teve linha apagada,
+o PostgreSQL deixa de ler na ordem de inserção, e consulta sem `ORDER BY` completo, que passava por
+sorte, falha **no meio da suíte e não sozinha**. É defeito da consulta — foi assim que
+`situacoes_do_candidato` ganhou desempate. Desconfiou da limpeza? `LIMPEZA_POR_TRUNCATE=1` volta ao
+`TRUNCATE` (e é o caminho sem superusuário); `LIMPEZA_INTEGRAL=1` devolve a do Django. As medições
+estão em [doc/estudo-limpeza-dos-casos-transacionais.md](doc/estudo-limpeza-dos-casos-transacionais.md).
 
 **`--reuse-db` não economiza nada, e já foi medido — não repita o experimento.** Duas rodadas com a
 bandeira ligada deram 670s e 686s, contra 733s sem ela; e a segunda, que **reusava** o banco, saiu
