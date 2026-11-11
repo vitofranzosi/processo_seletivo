@@ -100,3 +100,5 @@
   .perguntas{grid-template-columns:1fr}
   .vagas-e-chamadas{display:block}
 }
+/* A publicação externa como alternativa nomeada, abaixo de "Publicar no GPS" (149, FR-5731). */
+.rotulo-da-alternativa{margin:1rem 0 .25rem;padding-top:.75rem;border-top:1px solid var(--borda)}

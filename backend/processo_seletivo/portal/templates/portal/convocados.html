@@ -1,0 +1,72 @@
+{% extends "portal/base.html" %}
+{% block titulo %}{{ cabecalho.titulo|capfirst }} — {{ cabecalho.edital }}{% endblock %}
+{% block conteudo %}
+{% comment %}
+**A página pública de uma publicação de convocados** (149, FR-5718 a FR-5720). Tudo o que o ato
+afirma sai dos bytes congelados; o aviso de correção é a única leitura de depois, e é dito como tal.
+
+Sem tabela (FR-5724): a lista de nomes cabe em 375 px sem rolagem, e cada pessoa é uma linha legível
+também a quem ouve a página.
+{% endcomment %}
+<h1>{{ cabecalho.titulo|capfirst }}</h1>
+<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }}</p>
+
+{% if corrigidas %}
+{% comment %}
+**A correção posterior, dita em texto e fora do ato** (FR-5720, D-006). A página continua mostrando
+o que foi publicado; o caminho leva à publicação que trouxe a correção.
+{% endcomment %}
+<p class="aviso" role="note"><strong>Uma ou mais convocações desta publicação foram corrigidas depois</strong>, {% for posterior in corrigidas %}{% if not forloop.first %}{% if forloop.last %} e {% else %}, {% endif %}{% endif %}na <a href="{% url 'portal:convocados' posterior.id %}">{{ posterior.titulo }}</a>{% endfor %}. Esta página continua mostrando o que foi publicado em {{ publicada_em|date:"d/m/Y" }}.</p>
+{% endif %}
+
+<p class="meta"><strong>{{ natureza }}.</strong> Publicada em {{ publicada_em|date:"d/m/Y" }} às {{ publicada_em|date:"H\hi" }}, na página pública da seleção. Assinada por {% if cabecalho.signatario.nome %}{{ cabecalho.signatario.nome }} — {% endif %}{{ cabecalho.signatario.cargo }}. {{ pessoas }} {{ pessoas|pluralize:"pessoa,pessoas" }}.</p>
+<p class="acoes-da-publicacao"><a class="documento secundaria" href="{% url 'portal:convocados-documento' ato.id %}">Baixar o documento (PDF)</a> <a href="{% url 'portal:selecao' edital_id %}">Ver a página do {{ cabecalho.edital }}</a></p>
+
+{% comment %}
+Em tela larga, a orientação vai para a coluna ao lado da relação, e não acima dela: a lista ocupa a
+coluna principal na medida de leitura, e o caminho para a área do candidato fica à vista enquanto se
+procura o nome. No celular, a ordem é a do documento — a orientação primeiro, depois a relação.
+{% endcomment %}
+<div class="corpo-da-publicacao">
+<aside class="orientacao-dos-convocados" aria-labelledby="orientacoes-titulo">
+  <h2 id="orientacoes-titulo">Está nesta relação?</h2>
+  <ul>
+    {% for frase in orientacoes %}<li>{{ frase }}</li>{% endfor %}
+  </ul>
+  <a class="documento" href="{% url 'portal:inscricoes' %}">Ir para Minhas inscrições</a>
+</aside>
+<div class="relacao-de-convocados">
+
+{% for grupo in grupos %}
+<section class="grupo-de-convocados" aria-labelledby="grupo-{{ forloop.counter }}">
+  <h2 id="grupo-{{ forloop.counter }}">{{ grupo.perfil }} <span class="lista-do-grupo">— {{ grupo.lista }}{% if grupo.marco %} ({{ grupo.marco }}){% endif %}</span></h2>
+  <p class="nota-do-grupo">{{ grupo.nota }}</p>
+  {% if grupo.vencimentoUnico %}<p class="prazo-do-grupo"><strong>Prazo para atender:</strong> {% if grupo.prazo %}até {{ grupo.prazo|date:"d/m/Y" }} às {{ grupo.prazo|date:"H\hi" }}{% else %}o estabelecido no Edital{% endif %}.</p>{% endif %}
+  <ul class="convocados">
+    {% for pessoa in grupo.pessoas %}
+    <li>
+      <span class="nome-do-convocado">{{ pessoa.nome }}</span>
+      <span class="protocolo-do-convocado">Protocolo {{ pessoa.protocolo }}</span>
+      {% if not grupo.vencimentoUnico %}<span class="detalhe-do-convocado">Prazo: {% if pessoa.prazo %}até {{ pessoa.prazo|date:"d/m/Y" }} às {{ pessoa.prazo|date:"H\hi" }}{% else %}o estabelecido no Edital{% endif %}</span>{% endif %}
+      {% if not grupo.canalUnico and pessoa.canal %}<span class="detalhe-do-convocado">Convocação oficial {{ pessoa.canal }}</span>{% endif %}
+      {% if pessoa.corrige %}<span class="detalhe-do-convocado">Corrige a convocação divulgada na {{ pessoa.corrige }}ª publicação</span>{% endif %}
+      {% if pessoa.corrigida_na %}<span class="detalhe-do-convocado corrigida-depois">Corrigida depois, na <a href="{% url 'portal:convocados' pessoa.corrigida_na.id %}">{{ pessoa.corrigida_na.titulo }}</a></span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+</div>
+</div>
+
+{% if outras %}
+<nav class="outras-publicacoes" aria-labelledby="outras-titulo">
+  <h2 id="outras-titulo">Outras publicações de convocados deste Edital</h2>
+  <ul>
+    {% for outra in outras %}<li><a href="{% url 'portal:convocados' outra.id %}">{{ outra.titulo|capfirst }}</a> <span class="meta">publicada em {{ outra.publicado_em|date:"d/m/Y" }}</span></li>{% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
+<p class="meta integridade-da-publicacao">Resumo SHA-256 do conteúdo publicado: <code>{{ ato.conteudo_publico_hash }}</code> — o mesmo impresso no documento.</p>
+{% endblock %}

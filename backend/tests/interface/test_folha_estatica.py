@@ -320,6 +320,8 @@ QUEM_CARREGA = {
     "interface/telas/centro.css": {"centro_do_edital.html", "processo_detalhe.html"},
     "interface/telas/lista.css": {"lista.html", "processo_detalhe.html"},
     "interface/telas/processo.css": {"processo_detalhe.html"},
+    # A publicação das convocações no GPS (149): a prévia, a escolha dos recortes e o que já saiu.
+    "interface/telas/publicacao-de-convocados.css": {"publicacao_de_convocados.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}
         for tela in (
@@ -333,8 +335,12 @@ QUEM_CARREGA = {
             # A seção Barema do cartão da Etapa (146).
             "compor-etapas",
             "compor-revisao",
+            # A conferência antes de convocar os titulares (polish da 140).
+            "convocacao-conferir",
             # Os documentos de uma convocação (115).
             "convocacao-documentos",
+            # O corte e a progressão numa coluna só (polish da 014).
+            "corte",
             "duvidas",
             "inscricao-detalhe",
             # O kit de divulgação (111).

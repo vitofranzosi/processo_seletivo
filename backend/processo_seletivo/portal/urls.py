@@ -123,6 +123,15 @@ urlpatterns = [
         views.publicacao_das_inscricoes_em_pdf,
         name="publicacao-das-inscricoes-documento",
     ),
+    # A publicação de convocados (149, FR-5718). Endereço **estável pela identidade do ato**, como o
+    # resultado: a publicação não se sucede, e o que ela publicou responde sempre aqui. Não colide
+    # com `<uuid:edital_id>/`: `convocacoes` não casa com `uuid`.
+    path("convocacoes/<uuid:publicacao_id>/", views.convocados, name="convocados"),
+    path(
+        "convocacoes/<uuid:publicacao_id>/documento.pdf",
+        views.convocados_em_pdf,
+        name="convocados-documento",
+    ),
     # O sorteio auditável (021). **Endereço estável e histórico pela identidade do artefato**, e
     # não pelo recorte: uma relação sucedida continua respondendo no mesmo lugar, dizendo que foi
     # sucedida — é o precedente que `resultados/<uuid>` estabeleceu, e é o que permite ao manifesto

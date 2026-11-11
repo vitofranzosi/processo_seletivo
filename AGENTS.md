@@ -37,7 +37,7 @@ ficou anos sem efeito nenhum.
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
 migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
-— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, eram **46** com a suspensão de pessoa da `107`, eram **49** com os documentos da convocação da `115`, eram **53** com a entrega documental à formalização da `117`, são **55** desde a publicação das inscrições da `148` — e é por isso que a armadilha é o zero,
+— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, eram **46** com a suspensão de pessoa da `107`, eram **49** com os documentos da convocação da `115`, eram **53** com a entrega documental à formalização da `117`, eram **55** com a publicação das inscrições da `148`, são **58** desde a publicação de convocados da `149` — e é por isso que a armadilha é o zero,
 e não o total.
 
 **Depois dos três, o `make preparar` semeia as Unidades** de

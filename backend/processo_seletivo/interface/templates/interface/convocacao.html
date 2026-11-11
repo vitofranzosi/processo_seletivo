@@ -249,6 +249,14 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-pendentes">
     <input type="hidden" name="alcance" value="{{ pendentes.assinatura }}">
     {% if pendentes.porPublicacao %}
+    {% comment %}
+    **Publicar no GPS, e a publicação externa como alternativa nomeada** (149, FR-5731). O caminho
+    principal leva à publicação das convocações do Edital com este recorte escolhido, onde a prévia
+    mostra o que será público e o efeito; o registro de sempre continua aqui, para o Edital que manda
+    publicar em outro lugar.
+    {% endcomment %}
+    <p class="acoes"><a class="botao" href="{{ publicar_no_gps }}">Publicar no GPS</a> <span class="ajuda">A relação vai para a página pública da seleção, com documento oficial, quando o Edital admite o GPS como veículo. A prévia vem antes, e nada é publicado sem a sua confirmação.</span></p>
+    <p class="rotulo-da-alternativa"><strong>Publicada fora do GPS?</strong> Registre onde e quando.</p>
     <p class="campo">
       <label for="publicacao-pendentes">Onde e quando a lista foi publicada</label>
       <input type="text" id="publicacao-pendentes" name="referencia_da_publicacao" required aria-describedby="ajuda-publicacao-pendentes">
@@ -391,6 +399,7 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     <dl class="dados-da-inscricao">
       <dt>Espécie</dt><dd>{{ linha.convocacao.get_especie_display }}</dd>
       {% if linha.enviadaEm %}<dt>{{ linha.canal.rotulo_do_registro }}</dt><dd>{{ linha.enviadaEm|date:"d/m/Y H:i" }}{% if linha.canal.publicacao %} — {{ linha.comunicacao.referencia }}{% endif %}</dd>{% endif %}
+      {% with publicada=publicadas_no_gps|dicionario_simples:linha.convocacao.id %}{% if publicada %}<dt>Na página pública</dt><dd><a href="{% url 'portal:convocados' publicada.id %}">{{ publicada.numero }}ª publicação de convocados</a></dd>{% endif %}{% endwith %}
       {% if linha.convocacao.vencimento %}<dt>Vencimento</dt><dd>{{ linha.convocacao.vencimento|date:"d/m/Y H:i" }} — {{ linha.canal.contado_de_na_gestao }}</dd>{% endif %}
       {% if linha.convocacao.convocacao_anterior_id %}<dt>Correção</dt><dd>Corrigida em {{ linha.convocacao.criado_em|date:"d/m/Y H:i" }} — <a href="{% url 'interface:convocacao-historico' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">ver o histórico</a></dd>{% endif %}
       {% comment %}

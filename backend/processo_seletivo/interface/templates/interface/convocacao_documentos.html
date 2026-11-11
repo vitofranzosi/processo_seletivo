@@ -42,8 +42,12 @@ instante e motivo. O "conforme" pede que você tenha aberto aquela versão (FR-3
 
 **Conforme quer dizer conforme ao exigido pelo Edital**, e não autêntico nem original: o arquivo é
 cópia simples enviada pelo interessado (FR-3589). Não há conferência em lote (FR-3609).
+
+A recusa de uma conferência mora no cartão do documento, dentro do formulário que a provocou — ver
+`recusa`, adiante. Aqui só a que não tem formulário onde morar: a chamada ganhou desfecho, ou o
+Processo se encerrou, entre abrir a página e registrar, e o formulário não é mais oferecido.
 {% endcomment %}
-{% if erro %}<p class="aviso" role="alert">{{ erro }}</p>{% endif %}
+{% if recusa.no_topo %}<p class="erro" role="alert" tabindex="-1" autofocus id="recusa-{{ recusa.ancora }}"><strong>A conferência não foi registrada.</strong> {{ recusa.detalhe }}</p>{% endif %}
 {% if aviso %}<p class="aviso" role="status">{{ aviso }}</p>{% endif %}
 {% if aviso %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
@@ -125,25 +129,43 @@ pessoa, onde o formulário vem aberto quando é o passo (D-005).
   {% if pode_conferir %}
   {% comment %}
   Aberto só quando há versão esperando conferência: nos itens já julgados, o formulário recolhido
-  é a revisão, e não o trabalho do dia.
+  é a revisão, e não o trabalho do dia. E aberto quando a última conferência deste item foi
+  recusada: a recusa mora dentro dele.
   {% endcomment %}
-  <details class="como-preencher" {% if lido.estado == "RECEBIDO" or lido.estado == "COMPLEMENTADO" %}open{% endif %}>
+  <details class="como-preencher" {% if lido.estado == "RECEBIDO" or lido.estado == "COMPLEMENTADO" or recusa.item == lido.item.id %}open{% endif %}>
     <summary>{% if lido.estado == "RECEBIDO" or lido.estado == "COMPLEMENTADO" %}Conferir a versão {{ lido.vigente.numero }}{% elif lido.conferencias %}Registrar outra conferência{% else %}Conferir este documento{% endif %}</summary>
   <form method="post" action="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" class="confirmar">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ lista_id }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ forloop.counter }}">
     {% if lido.vigente %}<input type="hidden" name="apresentacao" value="{{ lido.vigente.id }}">{% endif %}
+    {% comment %}
+    **A recusa no lugar do gesto** (FR-3611). Ficava no topo da página, e o endereço levava a tela
+    ao cartão: a recusa existia e ninguém a via. Recebe o foco ao carregar, e oferece abrir a versão
+    só quando é a abertura que falta.
+    {% endcomment %}
+    {% if recusa.item == lido.item.id %}
+    <p class="erro" role="alert" tabindex="-1" autofocus id="recusa-{{ lido.item.id }}"><strong>A conferência não foi registrada.</strong> {{ recusa.detalhe }}{% if recusa.falta_abrir and lido.vigente and lido.vigente.id not in abertas_por_voce %} <a href="{% url 'interface:documento-da-convocacao' edital.id marco_id raiz.id lido.vigente.id %}" target="_blank" rel="noopener">Abrir a versão {{ lido.vigente.numero }}</a>{% endif %}</p>
+    {% endif %}
     <fieldset class="opcoes">
       <legend>Resultado {% if lido.vigente %}da versão {{ lido.vigente.numero }}{% endif %}</legend>
+      {% comment %}
+      **Antes do clique, e não só na recusa** (FR-3611, FR-4460): o "conforme" — e o "não se
+      aplica", quando há arquivo — só se registra depois que quem confere abre a versão. A frase é
+      a do carregamento da página: aberta em outra aba, a versão só perde a frase ao recarregar, e o
+      comando aceita assim mesmo.
+      {% endcomment %}
+      {% if lido.vigente and lido.vigente.id not in abertas_por_voce %}
+      <p class="ajuda" id="abertura-{{ forloop.counter }}">Você ainda não abriu a versão {{ lido.vigente.numero }}. O «conforme»{% if lido.admite_nao_se_aplica %} e o «não se aplica»{% endif %} só se registra{% if lido.admite_nao_se_aplica %}m{% endif %} depois de abri-la.</p>
+      {% endif %}
       {% if lido.vigente %}
-      <p class="opcao"><input type="radio" id="conforme-{{ forloop.counter }}" name="resultado" value="CONFORME" required>
+      <p class="opcao"><input type="radio" id="conforme-{{ forloop.counter }}" name="resultado" value="CONFORME" required{% if recusa.item == lido.item.id and recusa.resultado == "CONFORME" %} checked{% endif %}{% if lido.vigente.id not in abertas_por_voce %} aria-describedby="abertura-{{ forloop.counter }}"{% endif %}>
         <label for="conforme-{{ forloop.counter }}">Conforme ao exigido pelo Edital</label></p>
       {% endif %}
-      <p class="opcao"><input type="radio" id="pendente-{{ forloop.counter }}" name="resultado" value="PENDENTE" required>
+      <p class="opcao"><input type="radio" id="pendente-{{ forloop.counter }}" name="resultado" value="PENDENTE" required{% if recusa.item == lido.item.id and recusa.resultado == "PENDENTE" %} checked{% endif %}>
         <label for="pendente-{{ forloop.counter }}">Pendente</label></p>
       {% if lido.admite_nao_se_aplica %}
-      <p class="opcao"><input type="radio" id="nao-se-aplica-{{ forloop.counter }}" name="resultado" value="NAO_SE_APLICA" required>
+      <p class="opcao"><input type="radio" id="nao-se-aplica-{{ forloop.counter }}" name="resultado" value="NAO_SE_APLICA" required{% if recusa.item == lido.item.id and recusa.resultado == "NAO_SE_APLICA" %} checked{% endif %}{% if lido.vigente and lido.vigente.id not in abertas_por_voce %} aria-describedby="abertura-{{ forloop.counter }}"{% endif %}>
         <label for="nao-se-aplica-{{ forloop.counter }}">Não se aplica: a condição publicada não alcança esta pessoa</label></p>
       {% endif %}
     </fieldset>
@@ -153,7 +175,7 @@ pessoa, onde o formulário vem aberto quando é o passo (D-005).
       {% else %}
       <label for="motivo-{{ forloop.counter }}">Motivo <span class="opcional">(obrigatório em pendente; a pessoa convocada o lê)</span></label>
       {% endif %}
-      <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="2"></textarea>
+      <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="2">{% if recusa.item == lido.item.id %}{{ recusa.motivo }}{% endif %}</textarea>
     </p>
     {% comment %}
     O motivo da revisão: sobre a mesma versão (FR-3586 da `115`), e sempre que o "não se aplica"
@@ -162,7 +184,7 @@ pessoa, onde o formulário vem aberto quando é o passo (D-005).
     {% if lido.conferencia and lido.vigente and lido.conferencia.apresentacao_id == lido.vigente.id or lido.conferencia and lido.admite_nao_se_aplica or lido.conferencia and lido.estado == "NAO_SE_APLICA" %}
     <p class="campo">
       <label for="revisao-{{ forloop.counter }}">Por que mudar a conferência desta versão</label>
-      <textarea id="revisao-{{ forloop.counter }}" name="motivo_da_substituicao" rows="2"></textarea>
+      <textarea id="revisao-{{ forloop.counter }}" name="motivo_da_substituicao" rows="2">{% if recusa.item == lido.item.id %}{{ recusa.motivo_da_substituicao }}{% endif %}</textarea>
     </p>
     {% endif %}
     <p class="acoes"><button type="submit" class="botao">Registrar conferência</button></p>
