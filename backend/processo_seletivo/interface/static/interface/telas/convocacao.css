@@ -96,11 +96,7 @@
 .outras-acoes>details[open]{flex-basis:100%;}
 .outras-acoes>form .acoes{margin:0}
 
-/* A ficha de dados do cartão empilha no estreito: em duas colunas, o valor ficava com uma palavra por
-   linha a 390 px, ao lado de um rótulo de quatro. */
 @media (max-width:40rem){
   .perguntas{grid-template-columns:1fr}
   .vagas-e-chamadas{display:block}
-  .conducao .dados-da-inscricao{grid-template-columns:minmax(0,1fr);gap:.1rem}
-  .conducao .dados-da-inscricao dd{margin-bottom:.5rem}
 }
