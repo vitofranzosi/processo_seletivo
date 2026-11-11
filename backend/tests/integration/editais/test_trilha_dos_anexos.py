@@ -30,7 +30,10 @@ def arquivo(nome="requerimento-de-inscricao-versao-final.pdf", marca="A"):
 
 
 def operacoes():
-    return [registro.operation for registro in RegistroAuditoria.objects.all()]
+    # Ordenado pelo instante do ato: sem `ORDER BY`, a ordem é a física das linhas, e a limpeza
+    # por `DELETE` dos casos transacionais (#474) a embaralha — o PostgreSQL reaproveita o espaço
+    # das linhas apagadas. A asserção é sobre a sequência dos atos, e não sobre onde caíram.
+    return [registro.operation for registro in RegistroAuditoria.objects.order_by("occurred_at")]
 
 
 def test_cada_operacao_sobre_o_anexo_deixa_o_seu_registro(edital):
