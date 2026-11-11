@@ -93,8 +93,10 @@ def test_a_reabertura_preserva_o_conteudo_e_so_zera_a_conclusao(cenario, gestor,
         {"parecer": "Reescrito"},
         {"concluida_por": "outra-pessoa"},
         {"identity_subject": "outra-pessoa"},
+        # O detalhamento por critério da 146 (SC-1630): a coluna nova entrou na lista do gatilho.
+        {"criterios": [{"criterionId": "x", "quantidade": 3, "parcela": "9.0000"}]},
     ],
-    ids=["nota", "parecer", "autoria", "avaliador"],
+    ids=["nota", "parecer", "autoria", "avaliador", "detalhamento"],
 )
 def test_a_concluida_nao_muda_pelo_queryset(concluida, como_producao, campos):  # noqa: F811
     antes = Avaliacao.objects.values().get(pk=concluida.pk)
@@ -107,8 +109,15 @@ def test_a_concluida_nao_muda_pelo_queryset(concluida, como_producao, campos):  
 
 @pytest.mark.parametrize(
     "extra",
-    [{"pontuacao": "99"}, {"parecer": "Reescrito"}, {"forma": "DECISORIA", "pontuacao": None}],
-    ids=["nota", "parecer", "forma"],
+    [
+        {"pontuacao": "99"},
+        {"parecer": "Reescrito"},
+        {"forma": "DECISORIA", "pontuacao": None},
+        # Sem a coluna na função recriada pela `avaliacoes/0005`, este era o caminho: reabrir e
+        # trocar o detalhamento no mesmo `UPDATE` (146, D-004).
+        {"criterios": [{"criterionId": "x", "pontos": "15.0000", "parcela": "15.0000"}]},
+    ],
+    ids=["nota", "parecer", "forma", "detalhamento"],
 )
 def test_reabertura_que_leva_conteudo_junto_e_recusada(concluida, como_producao, extra):  # noqa: F811
     """A forma da reabertura com mais uma coluna mudada não é reabertura: é reescrita."""

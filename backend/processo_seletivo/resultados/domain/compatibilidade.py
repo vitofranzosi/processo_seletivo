@@ -5,8 +5,8 @@ que corrige a remuneração de um Perfil não muda nada do que esta feature calc
 identidade de versão bloquearia toda consolidação pendente a cada Retificação, o que é o oposto do
 que esta verificação existe para fazer.
 
-**Cinco campos, e só eles**: forma da conclusão, caráter eliminatório, nota mínima, quantidade de
-avaliações e pontuação máxima. São os que podem mudar o Resultado.
+**Seis campos, e só eles**: forma da conclusão, caráter eliminatório, nota mínima, quantidade de
+avaliações, pontuação máxima e — desde a 146 — o barema. São os que podem mudar o Resultado.
 
 **Nome, cronograma, peso, caráter classificatório, ordem e os rótulos ficam de fora, de
 propósito.** Peso e
@@ -21,12 +21,55 @@ canônica de quatro casas, e `"60.0000" != "60.00"` como texto sem que haja dife
 alguma. Os dois lados passam pelos mesmos leitores herdados da 012 antes de serem comparados.
 """
 
+from decimal import Decimal, InvalidOperation
+
+from processo_seletivo.avaliacoes.domain.barema import criterios_da_etapa
 from processo_seletivo.avaliacoes.domain.previsao import (
     avaliacoes_previstas,
     forma_publicada,
     pontuacao_maxima,
 )
 from processo_seletivo.resultados.domain.regra import eliminatoria, nota_minima
+
+
+def _decimal(valor):
+    if valor in (None, ""):
+        return None
+    try:
+        return Decimal(str(valor))
+    except (InvalidOperation, ValueError, TypeError):
+        return str(valor)
+
+
+def _texto(valor):
+    return (valor or "").strip() if isinstance(valor, str) else valor
+
+
+def barema_comparavel(etapa):
+    """O barema da Etapa como **conjunto**, para comparar sem a ordem (146, D-006, FR-5221).
+
+    **Tudo menos a ordem**: a identidade e, de cada critério, nome, descrição, máxima, pontos por
+    unidade, unidade e documento ligado. A descrição é onde mora a condição material ("só
+    experiência em EaD"), e o sistema não distingue redação de regra; a recusa custa reabrir e
+    concluir de novo, com a ficha já preenchida, e o contrário custaria um Resultado consolidado sob
+    regra que não é a publicada. A ordem só muda onde a linha aparece.
+
+    Os decimais são normalizados como os outros campos daqui — `"20.0000"` e `"20"` são a mesma
+    máxima —, e a Etapa sem barema, ou do acervo sem a chave, é o conjunto vazio.
+    """
+    return frozenset(
+        (
+            str(criterio.get("id")),
+            _texto(criterio.get("name")),
+            _texto(criterio.get("description")) or "",
+            _decimal(criterio.get("maximumScore")),
+            _decimal(criterio.get("pointsPerUnit")),
+            _texto(criterio.get("unitLabel")) or "",
+            str(criterio.get("documentRequirementId") or ""),
+        )
+        for criterio in criterios_da_etapa(etapa)
+    )
+
 
 VERSAO_SEM_A_ETAPA = "versao_sem_a_etapa"
 NORMA_DIVERGENTE = "norma_divergente"
@@ -46,6 +89,10 @@ CAMPOS_COMPARADOS = (
     ("nota mínima", nota_minima),
     ("quantidade de avaliações previstas", avaliacoes_previstas),
     ("pontuação máxima", pontuacao_maxima),
+    # O barema da 146 entra **inteiro**, salvo a ordem (D-006). Sem ele, uma Retificação que
+    # mudasse a máxima de um critério, ou a condição escrita na descrição dele, deixaria consolidar
+    # a conclusão feita sob o barema anterior — e o total dela seria a soma de outra regra.
+    ("barema", barema_comparavel),
 )
 
 

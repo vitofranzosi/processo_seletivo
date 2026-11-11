@@ -17,8 +17,8 @@ from django.db import connection
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.avaliacoes.domain import barema, previsao
 from processo_seletivo.avaliacoes.domain import pontuacao as regras
-from processo_seletivo.avaliacoes.domain import previsao
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, ConclusaoAvaliacao
@@ -139,6 +139,37 @@ def _recusar_campo_da_outra_forma(forma, pontuacao, sentido):
         )
 
 
+def _total_do_barema(etapa, pontuacao, criterios, *, exigir):
+    """`(total, detalhamento)` na Etapa com barema; `None` na Etapa sem ele (146, FR-5215).
+
+    **Com barema, o total é do servidor.** Uma pontuação enviada junto é recusada, e não somada nem
+    ignorada: aceitá-la faria a tela escolher entre dois números para a mesma Avaliação, e
+    ignorá-la esconderia de quem forjou o envio que ele não valeu. **Sem barema, o detalhamento é
+    recusado** pela mesma razão — a Etapa não publicou critério contra o qual conferi-lo.
+    """
+    if not barema.tem_barema(etapa):
+        if criterios:
+            raise DomainError(
+                barema.CRITERIO_INVALIDO,
+                "Esta Etapa não publicou barema: a pontuação é lançada pelo total.",
+                422,
+                campo="criterios",
+            )
+        return None
+    if pontuacao not in (None, ""):
+        raise DomainError(
+            "pontuacao_calculada",
+            "Esta Etapa tem barema: o total é calculado pelo sistema a partir dos critérios, e não "
+            "é informado.",
+            422,
+            campo="pontuacao",
+        )
+    linhas, total = barema.calcular(
+        barema.criterios_da_etapa(etapa), criterios or [], exigir=exigir
+    )
+    return total, linhas
+
+
 def gravar(
     *,
     ator,
@@ -150,8 +181,13 @@ def gravar(
     expected_revision,
     correlation_id,
     sentido=None,
+    criterios=None,
 ):
-    """O rascunho, gravado sem exigir conclusão (FR-031)."""
+    """O rascunho, gravado sem exigir conclusão (FR-031).
+
+    Com barema, `criterios` é o detalhamento — critério em branco é aceito, e o total gravado é a
+    soma do que já foi respondido (146, FR-5217).
+    """
     atribuicao = _autorizar(ator, edital, etapa_id, inscricao_id)
     with command_context() as agora:
         atribuicao = _travar_e_reautorizar(ator, edital, etapa_id, atribuicao)
@@ -171,7 +207,12 @@ def gravar(
         # com efeito (FR-031, FR-032, FR-033).
         forma = previsao.forma_publicada(etapa)
         _recusar_campo_da_outra_forma(forma, pontuacao, sentido)
-        valor = None if pontuacao in (None, "") else regras.normalizar(pontuacao)
+        calculado = _total_do_barema(etapa, pontuacao, criterios, exigir=False)
+        if calculado is None:
+            valor = None if pontuacao in (None, "") else regras.normalizar(pontuacao)
+            detalhamento = []
+        else:
+            valor, detalhamento = calculado
         escolha = regras.normalizar_sentido(sentido, exigir=False)
         nova = compare_and_swap(
             Avaliacao.objects,
@@ -180,6 +221,7 @@ def gravar(
             pontuacao=valor,
             sentido=escolha,
             parecer=parecer or "",
+            criterios=detalhamento,
         )
         auditar(
             actor=ator,
@@ -206,6 +248,7 @@ def concluir(
     versao_reconhecida,
     correlation_id,
     sentido=None,
+    criterios=None,
 ):
     """Ato explícito, distinto de salvar (FR-032).
 
@@ -256,6 +299,10 @@ def concluir(
         if forma == Forma.DECISORIA:
             escolha = regras.normalizar_sentido(sentido, exigir=True)
             valor = None
+            # A decisória não tem barema: a publicação o recusa (FR-5204), e o envio que o traga é
+            # recusado aqui pela mesma porta da pontuação.
+            _total_do_barema({}, None, criterios, exigir=True)
+            detalhamento = []
             if regras.exige_parecer_do_sentido(escolha) and not texto:
                 _, desfavoravel = previsao.rotulos(etapa)
                 raise DomainError(
@@ -267,7 +314,16 @@ def concluir(
                 )
         else:
             escolha = ""
-            valor = regras.validar(pontuacao, etapa)
+            # Com barema, o total sai das parcelas — todas respondidas — e passa depois pela mesma
+            # validação da pontuação única: a máxima da Etapa é a soma das máximas (D-003), e a
+            # regra do parecer obrigatório continua sendo sobre o total (D-008, FR-5218).
+            calculado = _total_do_barema(etapa, pontuacao, criterios, exigir=True)
+            if calculado is None:
+                detalhamento = []
+                valor = regras.validar(pontuacao, etapa)
+            else:
+                total, detalhamento = calculado
+                valor = regras.validar(total, etapa)
             if regras.exige_parecer(valor, etapa) and not texto:
                 raise DomainError(
                     "parecer_obrigatorio",
@@ -285,6 +341,7 @@ def concluir(
             pontuacao=valor,
             sentido=escolha,
             parecer=texto,
+            criterios=detalhamento,
             # **A versão validada é a versão gravada** (FR-071, FR-096).
             versao=versao,
             concluida_em=agora,
@@ -298,6 +355,8 @@ def concluir(
             pontuacao=valor,
             sentido=escolha,
             parecer=texto,
+            # O detalhamento que governou a conclusão, junto da versão que o lê (146, FR-5219).
+            criterios=detalhamento,
             versao=versao,
             concluida_em=agora,
             concluida_por=ator.subject,

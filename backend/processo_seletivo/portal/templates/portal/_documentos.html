@@ -38,6 +38,9 @@ exige.
         <span>{{ linha.nome }}{% if not linha.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</span>
       </p>
       {% if linha.instrucao %}<p class="instrucao">{{ linha.instrucao }}</p>{% endif %}
+      {% comment %} O que o documento comprova no barema da Etapa, e até quanto vale cada critério
+         (146, FR-5224): é com isso que o candidato decide o que juntar no arquivo. {% endcomment %}
+      {% if linha.comprova %}<p class="instrucao">Comprova: {{ linha.comprova|join:"; " }}.</p>{% endif %}
       {% comment %}
       O modelo vem **antes** do campo de envio, e não depois: quem chega aqui sem o documento
       pronto precisa primeiro baixar o formulário, preencher, assinar e digitalizar. Pôr o link

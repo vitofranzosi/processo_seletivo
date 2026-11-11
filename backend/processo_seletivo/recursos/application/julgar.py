@@ -40,9 +40,10 @@ cumprimento se prova pela citação que o ato sucessor carrega, quando ele é pu
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.avaliacoes.domain.barema import tem_barema
 from processo_seletivo.publicacoes.application.selectors import selecao_publica
 from processo_seletivo.recursos.application.porta import exigir_elegibilidade, travar
-from processo_seletivo.recursos.domain.consequencia import derivar
+from processo_seletivo.recursos.domain.consequencia import derivar, etapa_publicada
 from processo_seletivo.recursos.domain.pejus import MENSAGEM as PIORARIA
 from processo_seletivo.recursos.domain.pejus import PIORA, piora
 from processo_seletivo.recursos.models import DecisaoRecurso
@@ -63,6 +64,18 @@ RESULTADO_MUDOU = (
     "confira antes de decidir."
 )
 SEM_RESULTADO = "Não há resultado vigente desta Etapa para corrigir."
+
+# **A recusa temporária do incremento B da 146** (FR-5232, D-009). Com a pontuação por critério na
+# Mesa e sem o detalhamento na correção fixada, o julgamento gravaria um Resultado com total
+# corrigido e sem parcelas — o candidato veria a nota nova e as parcelas da avaliação anterior, dois
+# números para a mesma ficha. A reavaliação determinada já percorre a ficha, e é ela que a frase
+# aponta. O incremento C entrega a correção com detalhamento e remove a recusa.
+CORRECAO_FIXADA_SEM_BAREMA = "correcao_fixada_sem_barema"
+FRASE_DA_CORRECAO_COM_BAREMA = (
+    "Esta Etapa é pontuada por barema, e a correção fixada ainda não registra a pontuação critério "
+    "a critério. Para corrigir a nota, decida pela reavaliação determinada: outro avaliador pontua "
+    "a inscrição pela ficha na Mesa, e a consolidação produz o Resultado que sucede este."
+)
 
 # O que a trilha escreve de cada espécie: o **efeito**, em uma frase, e nada do conteúdo.
 ESPECIE_NA_TRILHA = {
@@ -260,6 +273,8 @@ def _conclusao(peca, versao, especie, etapa_id, pontuacao, sentido):
         efeito = ResultadoEtapa.Consequencia.HABILITADA
         return str(efeito), "recurso deferido: a ocorrência não subsiste", None
 
+    if tem_barema(etapa_publicada(versao, etapa_id)):
+        raise DomainError(CORRECAO_FIXADA_SEM_BAREMA, FRASE_DA_CORRECAO_COM_BAREMA, 409)
     efeito, motivo, conclusao = derivar(
         versao=versao, etapa_id=etapa_id, pontuacao=pontuacao, sentido=sentido
     )

@@ -965,6 +965,16 @@ form.convite{margin:.75rem 0 0}
   letter-spacing:.04em;color:var(--texto-fraco)}
 .resultado-da-etapa .texto-do-parecer{margin:.25rem 0 0;color:var(--texto)}
 .resultado-da-etapa .sem-parecer{font-style:italic}
+/* A nota critério a critério (146, UX-423), sob a nota que a caixa já mostra. Lista, e não
+   tabela, como toda esta tela: cada critério é um item com o nome, a máxima, a pontuação
+   reconhecida e, quando escrita, a justificativa. */
+.resultado-da-etapa .titulo-da-ficha{margin:.75rem 0 .25rem;font-size:1rem}
+.ficha-da-etapa{list-style:none;margin:0 0 .5rem;padding:0}
+.ficha-da-etapa>li{padding:.4rem 0;border-bottom:1px solid var(--borda)}
+.ficha-da-etapa .criterio-da-ficha{margin:0;font-weight:600}
+.ficha-da-etapa .descricao-do-criterio{display:block;font-weight:400;font-size:.8125rem;
+  color:var(--texto-fraco)}
+.ficha-da-etapa .meta{margin:.1rem 0 0}
 
 /* Os anexos do Edital (020). Cada item já é um botão, então o marcador de lista não organiza nada;
    e o formato vem no rótulo porque estes links baixam, enquanto o do Edital abre no navegador. */

@@ -111,6 +111,12 @@ class Avaliacao(models.Model):
     # e duas análises documentais podem afirmar sentidos opostos — resolver isso é da 013 (P-006).
     sentido = models.CharField(max_length=20, choices=Sentido.choices, blank=True, default="")
     parecer = models.TextField(blank=True)
+    # O detalhamento por critério, na Etapa com barema (146, D-004): o que o avaliador afirmou em
+    # cada linha, com a parcela que o servidor calculou. **O total continua em `pontuacao`**, e é
+    # ele que a consolidação copia. Vazio na Etapa sem barema. Guarda só `criterionId`: nome,
+    # descrição e máxima se leem da versão que o ato cita (D-011). A imutabilidade da concluída
+    # cobre a coluna — o gatilho de `avaliacoes/0005` a compara na reabertura.
+    criterios = models.JSONField(default=list, blank=True)
     # A regra que governou o ato. **Não** se copiam máxima, mínima e caráter: a versão os
     # reproduz, e duplicá-los criaria a segunda fonte divergente que o princípio da fonte
     # autoritativa única proíbe (FR-071, FR-072).
@@ -199,6 +205,9 @@ class ConclusaoAvaliacao(models.Model):
     pontuacao = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
     sentido = models.CharField(max_length=20, choices=Sentido.choices, blank=True, default="")
     parecer = models.TextField(blank=True)
+    # O detalhamento daquela conclusão, copiado da Avaliação no mesmo ato (146, FR-5219): reabrir
+    # não destrói o que foi afirmado critério a critério, como não destrói a nota.
+    criterios = models.JSONField(default=list, blank=True)
     versao = models.ForeignKey(
         VersaoConsolidada, on_delete=models.PROTECT, related_name="conclusoes_de_avaliacao"
     )

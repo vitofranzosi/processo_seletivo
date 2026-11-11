@@ -2267,6 +2267,9 @@ def _documentos(conteudo, inscricao):
                 # alguém, depois, afirmar que o arquivo em mãos é o que foi entregue.
                 "tamanho": None if documento is None else tamanho_legivel(documento.tamanho),
                 "modelo": modelo_do_requisito(conteudo, requisito),
+                # Os critérios do barema que este documento comprova, com o teto de cada um (146,
+                # FR-5224), lidos do conteúdo publicado que a pessoa vê. Vazio sem barema.
+                "comprova": _comprova(conteudo, requisito["id"]),
             }
         )
     obrigatorios = [linha for linha in linhas if linha["obrigatorio"]]
@@ -2277,6 +2280,19 @@ def _documentos(conteudo, inscricao):
         "recebidos": recebidos,
         "faltam": len(obrigatorios) - recebidos,
     }
+
+
+def _comprova(conteudo, requirement_id):
+    """ "Diploma de Doutorado (até 20)" — um por critério que o documento comprova (146, UX-423)."""
+    from processo_seletivo.avaliacoes.domain.barema import comprovados_pelo_documento
+    from processo_seletivo.publicacoes.infrastructure import humano
+
+    return [
+        "{} (até {})".format(
+            (criterio.get("name") or "").strip(), humano.decimal(criterio.get("maximumScore"))
+        )
+        for criterio in comprovados_pelo_documento(conteudo, requirement_id)
+    ]
 
 
 def _modelos_alterados(inscricao, conteudo_vigente):

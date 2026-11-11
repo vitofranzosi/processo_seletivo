@@ -1,0 +1,76 @@
+{% load interface_extras %}
+{% comment %}
+A ficha do barema na Mesa (146, FR-5214, UX-422): uma linha por critério no lugar do campo único de
+pontuação. É uma tabela só, com o total ao pé, e o total que ela mostra é refeito ao digitar por
+arquivo estático — a política de conteúdo recusa script escrito na página. O servidor refaz a
+conta ao gravar, e é a conta dele que vale: o total não viaja no envio (FR-5215).
+
+O pendente é dito em texto, e não só por cor. A comprovação usa o mesmo painel da lista de
+documentos acima, pelo mesmo atributo de dados: abrir pela ficha é a mesma abertura, com o mesmo
+registro na trilha.
+
+Concluída, a mesma tabela vira leitura, com o barema da versão que a conclusão cita (D-011).
+{% endcomment %}
+<section class="ficha-do-barema" aria-labelledby="ficha-do-barema-titulo"{% if not ficha.concluida %} data-ficha-do-barema{% endif %}>
+  <h3 id="ficha-do-barema-titulo">Barema</h3>
+  {% if not ficha.concluida %}
+  <p class="ajuda" id="ajuda-da-ficha">Informe a quantidade ou os pontos de cada critério; o total é calculado pelo sistema. Zero também é resposta, e a justificativa é opcional — quando escrita, o candidato a lê junto da pontuação.</p>
+  {% endif %}
+  <table class="tabela-da-ficha">
+    <caption class="oculto">Pontuação por critério desta inscrição</caption>
+    <thead>
+      <tr>
+        <th scope="col">Critério</th>
+        <th scope="col">Como se pontua</th>
+        <th scope="col">Informado</th>
+        <th scope="col">Pontuação</th>
+        <th scope="col">Justificativa</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for linha in ficha.linhas %}
+      <tr data-criterio-da-ficha data-maxima="{{ linha.maxima }}" data-pontos-por-unidade="{{ linha.pontos_por_unidade|default_if_none:'' }}">
+        <th scope="row" data-rotulo="Critério">
+          <span class="nome-do-criterio">{{ linha.nome }}</span>
+          {% if linha.descricao %}<span class="descricao-do-criterio">{{ linha.descricao }}</span>{% endif %}
+          {% if linha.documento %}
+          <span class="comprovacao-do-criterio">Comprovação: {{ linha.documento.nome }}
+            {% if linha.documento.enviado %}<a class="acao" href="{% url 'interface:mesa-documento' edital.id etapa_id inscricao.id linha.documento.id %}" target="_blank" rel="noopener" data-documento="{{ linha.documento.nome }}" aria-label="Abrir {{ linha.documento.nome }}, comprovação de {{ linha.nome }}">Abrir</a>{% else %}<span class="ausente">não apresentado</span>{% endif %}
+          </span>
+          {% endif %}
+        </th>
+        <td data-rotulo="Como se pontua"><span>{{ linha.frase }}<span class="maxima-do-criterio">máxima {{ linha.maxima|pontuacao }}</span></span></td>
+        <td data-rotulo="Informado">
+          {% if ficha.concluida %}
+          <span>{% if linha.por_unidade %}{{ linha.quantidade|default:"0" }} {{ linha.unidade }}{% else %}{{ linha.pontos|pontuacao }}{% endif %}</span>
+          {% elif linha.por_unidade %}
+          <label class="oculto" for="ficha-{{ linha.id }}-quantidade">Quantidade — {{ linha.nome }}</label>
+          <span class="entrada-do-criterio"><input type="number" step="1" min="0" max="9999" inputmode="numeric" id="ficha-{{ linha.id }}-quantidade" name="ficha-{{ linha.id }}-quantidade" value="{{ linha.quantidade }}" data-quantidade>
+            <span class="unidade-do-criterio">{{ linha.unidade }}</span></span>
+          {% else %}
+          <label class="oculto" for="ficha-{{ linha.id }}-pontos">Pontos — {{ linha.nome }}</label>
+          <span class="entrada-do-criterio"><input type="number" step="0.0001" min="0" max="{{ linha.maxima }}" inputmode="decimal" id="ficha-{{ linha.id }}-pontos" name="ficha-{{ linha.id }}-pontos" value="{{ linha.pontos }}" data-pontos>
+            <span class="unidade-do-criterio">pontos</span></span>
+          {% endif %}
+        </td>
+        <td data-rotulo="Pontuação"><output class="parcela-do-criterio" data-parcela{% if not ficha.concluida %} for="ficha-{{ linha.id }}-{% if linha.por_unidade %}quantidade{% else %}pontos{% endif %}"{% endif %}>{% if linha.pendente %}<span class="pendente">pendente</span>{% else %}{{ linha.parcela|pontuacao }}{% if linha.limitada %} <span class="limitada">— limitada ao máximo</span>{% endif %}{% endif %}</output></td>
+        <td data-rotulo="Justificativa">
+          {% if ficha.concluida %}
+          <span>{% if linha.justificativa %}{{ linha.justificativa|linebreaksbr }}{% else %}<span class="ausente">—</span>{% endif %}</span>
+          {% else %}
+          <label class="oculto" for="ficha-{{ linha.id }}-justificativa">Justificativa — {{ linha.nome }} (opcional)</label>
+          <textarea id="ficha-{{ linha.id }}-justificativa" name="ficha-{{ linha.id }}-justificativa" rows="2">{{ linha.justificativa }}</textarea>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th scope="row" colspan="3">Total</th>
+        <td colspan="2"><output class="total-da-ficha" data-total-da-ficha aria-live="polite"><strong>{{ ficha.total|pontuacao }}</strong> de {{ ficha.maxima|pontuacao }}</output>
+          {% if not ficha.concluida %}<span class="pendentes-da-ficha" data-pendentes-da-ficha>{% if ficha.pendentes %}Pendentes: {{ ficha.pendentes|join:"; " }}.{% endif %}</span>{% endif %}</td>
+      </tr>
+    </tfoot>
+  </table>
+</section>

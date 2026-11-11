@@ -6,6 +6,7 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 """
 
 import json
+import re
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
@@ -1614,7 +1615,32 @@ def ler_avaliacao(dados):
         "parecer": _texto(dados, "parecer"),
         "expected_revision": _inteiro(dados, "expected_revision", 0),
         "versao_reconhecida": _texto(dados, "versao_reconhecida") or None,
+        "criterios": _criterios_da_ficha(dados),
     }
+
+
+# `ficha-<id do critério>-quantidade|pontos|justificativa`, como `_ficha_do_barema.html` os nomeia.
+# O prefixo **não** é `criterio-`: esse é o da composição do barema (`criterio-etapa-…`), e a Mesa e
+# a composição não dividem formulário, mas dividem a leitura de quem procura campos por prefixo.
+_CAMPO_DA_FICHA = re.compile(
+    r"^ficha-(?P<id>[0-9a-fA-F-]{36})-(?P<campo>quantidade|pontos|justificativa)$"
+)
+
+
+def _criterios_da_ficha(dados):
+    """O detalhamento que a ficha da Mesa enviou, na ordem dos campos — ou `None` sem ficha.
+
+    `None`, e não lista vazia, quando o formulário não tem ficha: é a Etapa sem barema, e o domínio
+    distingue "não mandou detalhamento" de "mandou um vazio" para recusar o segundo onde não cabe.
+    """
+    linhas = {}
+    for chave in dados:
+        casou = _CAMPO_DA_FICHA.match(chave)
+        if not casou:
+            continue
+        linha = linhas.setdefault(casou["id"], {"criterionId": casou["id"]})
+        linha[casou["campo"]] = _texto(dados, chave)
+    return list(linhas.values()) or None
 
 
 def etapas_do_edital(edital):
