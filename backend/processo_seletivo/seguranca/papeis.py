@@ -69,6 +69,12 @@ TABELAS_APPEND_ONLY = (
     "divulgacao_documentodoresultado",
     "divulgacao_publicacaoresultado",
     "divulgacao_situacaodivulgada",
+    # A publicação das inscrições (148) e a sua projeção individual: o ato publicado sobre as
+    # inscrições e a situação de cada uma naquele ato. Históricas pela razão da divulgação de
+    # resultado — o que guardam já é público, ou é a prova do que foi —, e a sucessão já cria linha
+    # nova, de modo que nenhuma alteração de linha existente é sequer legítima (148, FR-5425).
+    "divulgacao_publicacaodasinscricoes",
+    "divulgacao_inscricaonapublicacao",
     # A contestação do que foi divulgado (018): a peça, o juízo de admissibilidade e a decisão.
     # Históricas pela mesma razão das demais — nascem e não mudam —, e com um agravante próprio:
     # a decisão é a fonte jurídica de um Resultado sucessor, e reescrevê-la depois faria o

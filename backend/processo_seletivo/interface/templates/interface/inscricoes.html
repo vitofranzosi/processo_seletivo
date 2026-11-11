@@ -5,6 +5,12 @@
 <h1>Inscrições — {{ total }}</h1>
 <p class="sub">{{ edital.title }}</p>
 {% comment %}
+O caminho para os atos sobre estas inscrições (148, UX-460) — relação de recebidas, resultado
+preliminar, homologação —, só para quem os publica ou audita: quem só consulta inscrições não abre
+aquela tela, e oferecer o link seria oferecer um 403.
+{% endcomment %}
+{% if pode_ver_publicacoes %}<p><a href="{% url 'interface:publicacoes-das-inscricoes' edital.id %}">Publicações das inscrições</a> — relação de recebidas, resultado preliminar da análise e homologação das inscrições.</p>{% endif %}
+{% comment %}
 `total` conta o que foi **entregue**. Um rascunho aberto e abandonado não é inscrição recebida: o
 candidato não submeteu nada, e somá-lo aqui faria o painel anunciar centenas de inscrições numa
 seleção que recebeu dezenas (FR-066). Ele continua visível — abaixo, e sob o nome do que é.

@@ -3,7 +3,7 @@
 **Nascem append-only, nas três camadas**: `save`/`delete` recusam na aplicação, as triggers abaixo
 recusam a mutação mesmo de quem tem privilégio, e o papel de runtime não recebe `UPDATE` nem
 `DELETE` — o terceiro vem de `TABELAS_APPEND_ONLY`, e é por isso que o provisionamento precisa rodar
-de novo depois desta migration (o `M` passa de 53 a 56).
+de novo depois desta migration (o `M` passa de 55 a 58).
 
 **A trigger de coerência confere o que `CHECK` não alcança**, porque atravessa tabelas: a
 convocação, a comunicação e o ato são do mesmo Edital; a comunicação é da convocação; e, no efeito

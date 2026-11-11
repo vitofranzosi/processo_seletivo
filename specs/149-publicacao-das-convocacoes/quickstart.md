@@ -53,5 +53,5 @@ e entre na gestão como **Gestor** (`carlos`).
 cd backend && make lint check test-pg
 ```
 
-O `provisionar_papeis` passa a proteger **56** tabelas append-only (eram 53): a segunda passada do
+O `provisionar_papeis` passa a proteger **58** tabelas append-only (eram 55): a segunda passada do
 `make preparar` precisa rodar depois da migration `convocacao/0007`.

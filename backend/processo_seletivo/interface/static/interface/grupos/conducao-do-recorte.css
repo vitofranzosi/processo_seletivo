@@ -1,0 +1,64 @@
+/* A coluna das telas que conduzem um recorte: a conferência da emissão da ordem, a classificação e a
+   convocação (polimento de 11/11/2026).
+
+   **Por que as larguras divergiam.** `main` serve à estrutura e vai a 96rem; a medida de leitura
+   (`main>p`, 68ch) só alcança o parágrafo que é filho direto de `main`. Um aviso escrito como
+   parágrafo ficava em 68ch; o mesmo aviso escrito como seção, a tabela, o formulário e o cartão
+   iam à página inteira; e a convocação ainda fixava 56rem no índice e 72rem nos números. Cinco
+   larguras numa tela só, nenhuma escolhida.
+
+   A coluna dá uma largura só a todos os blocos, e o texto continua com medida própria: o parágrafo
+   corrido para em `--leitura`, e o aviso ocupa a coluna com o texto parado a 80ch, de modo que a
+   borda dos blocos alinha sem que a linha de texto cresça. */
+.conducao{max-width:72rem}
+.conducao>p,.conducao section>p,.conducao nav>p{max-width:var(--leitura)}
+.conducao :is(.aviso,.imutavel,.sucesso,.erro){max-width:none;
+  padding-right:max(1rem,calc(100% - 80ch))}
+
+/* O vazio de uma lista, do tamanho de uma linha: a caixa de página inteira, com 2,5rem de respiro e
+   texto centrado, parecia erro de carga no meio da tela, e não "ninguém aqui". */
+.conducao .vazio{max-width:none;padding:.85rem 1.1rem;text-align:left;margin:0}
+
+/* O formulário recolhido ocupa a coluna como os demais; o glossário continua na medida de leitura. */
+.conducao .como-preencher:has(>form){max-width:none}
+
+/* A barra de gravação dentro do cartão de confirmação: o filete e o rodapé de 2rem são da barra solta
+   no fim da página, e aqui desenhavam uma linha vazia acima do botão. */
+.conducao form.confirmar .salvar{border-top:0;padding:0;margin:0}
+.conducao form.confirmar .campo~.salvar{margin-top:1rem}
+
+/* Rótulo e valor na mesma linha de base, com a coluna do rótulo do tamanho do maior. */
+.ficha-do-ato{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:.6rem 1.5rem;margin:0;
+  align-items:baseline}
+.ficha-do-ato dt{color:var(--texto-fraco);font-size:.875rem}
+.ficha-do-ato dd{margin:0;overflow-wrap:anywhere}
+.ficha-do-ato dd>ul{margin:.35rem 0 0;padding-left:1.1rem;font-size:.9375rem}
+.ficha-do-ato dd>ul li{margin-bottom:.2rem}
+.ficha-do-ato .resumo{margin:0;padding:0}
+.ficha-do-ato .resumo li{min-width:7.5rem}
+.protocolos{color:var(--texto-fraco);font-size:.875rem}
+
+/* O recorte é a primeira linha do que será gravado, e não um parágrafo solto entre o bloco e o botão. */
+.recorte-do-ato{margin:0 0 .85rem;font-size:.9375rem}
+
+/* A situação do recorte: o ato e a divulgação lado a lado, cada um com a sua palavra. São dois
+   estados distintos, e a tela os mostrava como dois avisos empilhados de cores diferentes. Linha
+   flexível: os dois dividem a coluna ao meio, e quebram para baixo quando não cabem lado a lado. */
+.situacao-do-recorte{display:flex;flex-wrap:wrap;gap:.75rem}
+.situacao-do-recorte>h2{flex:1 1 100%;margin:0}
+.estado-do-recorte{flex:1 1 min(100%,22rem);display:flex;flex-direction:column;margin:0}
+.estado-do-recorte>h3{margin:0 0 .3rem;font-size:.75rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--texto-fraco)}
+.estado-do-recorte>p{flex:1;margin:0}
+
+/* O histórico de atos, uma linha por ato, como as demais listas da coluna. */
+.historico-de-atos{list-style-position:inside;margin:0;padding:0;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px}
+.historico-de-atos li{padding:.55rem 1rem;border-bottom:1px solid var(--fundo);font-size:.9375rem;
+  overflow-wrap:anywhere}
+.historico-de-atos li:last-child{border-bottom:0}
+
+@media (max-width:40rem){
+  .ficha-do-ato{grid-template-columns:minmax(0,1fr);gap:.1rem}
+  .ficha-do-ato dd{margin-bottom:.6rem}
+}

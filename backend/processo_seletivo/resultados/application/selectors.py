@@ -167,6 +167,27 @@ def contestacoes_supervenientes(resultados):
     }
 
 
+def _etapas_das_publicacoes_das_inscricoes(inscricao):
+    """`[(etapa_id, versao_id)]` das Etapas que a publicação das inscrições já publicou (148).
+
+    Qualquer ato da cadeia que tenha Etapa autoriza, e não só o vigente: o que a instituição
+    afirmou uma vez não deixa de ter sido afirmado porque o ato foi sucedido. A versão é a que o
+    primeiro ato citou, e é dela que vem o nome da Etapa.
+    """
+    from processo_seletivo.divulgacao.models import PublicacaoDasInscricoes
+
+    vistas = {}
+    for etapa_id, versao_id in (
+        PublicacaoDasInscricoes.objects.filter(
+            edital_id=inscricao.edital_id, etapa_id__isnull=False
+        )
+        .order_by("publicado_em")
+        .values_list("etapa_id", "versao_id")
+    ):
+        vistas.setdefault(str(etapa_id), versao_id)
+    return list(vistas.items())
+
+
 def resultados_visiveis(inscricao):
     """O que o titular pode consultar do próprio Resultado de Etapa, e sob que autorização.
 
@@ -205,11 +226,25 @@ def resultados_visiveis(inscricao):
         .select_related("ato")
         .order_by("publicado_em")
     )
-    if not publicacoes:
+    # **O segundo fato autorizador: a publicação das inscrições que publicou uma Etapa** (148,
+    # FR-5415). A análise das inscrições é Etapa decisória que nenhum marco enumera, e por isso o
+    # titular indeferido não via o próprio motivo — nem tinha de que recorrer. O ato que publica o
+    # resultado preliminar (ou a homologação) da Etapa autoriza o mesmo acesso que a divulgação do
+    # marco autoriza, pela mesma razão: a instituição já afirmou aquele resultado.
+    das_inscricoes = _etapas_das_publicacoes_das_inscricoes(inscricao)
+    if not publicacoes and not das_inscricoes:
         return []
 
-    conteudos = conteudos_das_versoes({p.ato.versao_id for p in publicacoes})
+    conteudos = conteudos_das_versoes(
+        {p.ato.versao_id for p in publicacoes} | {versao for _etapa, versao in das_inscricoes}
+    )
     etapas_autorizadas = {}
+    for etapa_id, versao_id in das_inscricoes:
+        rotulos = {
+            str(item.get("id")): item
+            for item in (conteudos.get(versao_id) or {}).get("stages") or []
+        }
+        etapas_autorizadas.setdefault(etapa_id, rotulos.get(etapa_id) or {})
     for publicacao in publicacoes:
         conteudo = conteudos.get(publicacao.ato.versao_id) or {}
         perfil = por_identidade(conteudo.get("profiles"), publicacao.perfil_id)
@@ -248,6 +283,9 @@ def resultados_visiveis(inscricao):
             # formulário de recurso — e endereço não é linguagem apresentada, que é a distinção
             # que a 017 já fixou. Nenhum template o imprime como texto.
             "id": resultado.id,
+            # A identidade da Etapa, para quem precisa saber **qual** Etapa eliminou — o topo da
+            # situação distingue a análise das inscrições das demais (148, FR-5434).
+            "etapa_id": str(resultado.etapa_id),
             "etapa": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("name", ""),
             "ordem": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("order") or 0,
             "consequencia": resultado.consequencia,

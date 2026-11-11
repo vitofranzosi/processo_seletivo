@@ -110,6 +110,19 @@ urlpatterns = [
         views.resultado_em_pdf,
         name="resultado-documento",
     ),
+    # A publicação das inscrições (148): relação de recebidas, resultado preliminar da análise e
+    # homologação. Endereço estável e histórico pela identidade do ato, no precedente de
+    # `resultados/<uuid>` — o sucedido continua respondendo aqui, dizendo que foi sucedido.
+    path(
+        "inscricoes-publicadas/<uuid:publicacao_id>/",
+        views.publicacao_das_inscricoes,
+        name="publicacao-das-inscricoes",
+    ),
+    path(
+        "inscricoes-publicadas/<uuid:publicacao_id>/documento.pdf",
+        views.publicacao_das_inscricoes_em_pdf,
+        name="publicacao-das-inscricoes-documento",
+    ),
     # A publicação de convocados (149, FR-5718). Endereço **estável pela identidade do ato**, como o
     # resultado: a publicação não se sucede, e o que ela publicou responde sempre aqui. Não colide
     # com `<uuid:edital_id>/`: `convocacoes` não casa com `uuid`.

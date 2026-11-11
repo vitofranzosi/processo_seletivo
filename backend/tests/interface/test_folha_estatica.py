@@ -253,6 +253,12 @@ QUEM_CARREGA = {
         "convocacao_conferir.html",
     },
     "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
+    # A coluna das três telas que conduzem um recorte (polimento de 11/11).
+    "interface/grupos/conducao-do-recorte.css": {
+        "convocacao.html",
+        "ordenacao.html",
+        "ordenacao_confirmar.html",
+    },
     # A ficha do barema (146): na Mesa, resumida nas conclusões preservadas, e no julgamento.
     "interface/grupos/ficha-do-barema.css": {
         "mesa_inscricao.html",
@@ -349,6 +355,8 @@ QUEM_CARREGA = {
     # A convocação pelas perguntas de quem conduz (143): o passo da chamada e o aviso da pendência
     # são os mesmos na convocação e nos documentos de uma convocação, e a folha também.
     "interface/telas/convocacao.css": {"convocacao.html", "convocacao_documentos.html"},
+    # As publicações das inscrições (148): a escolha do ato e a conferência dos nomes.
+    "interface/telas/publicacoes-das-inscricoes.css": {"publicacoes_das_inscricoes.html"},
 }
 
 

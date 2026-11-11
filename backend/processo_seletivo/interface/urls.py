@@ -7,6 +7,7 @@ from processo_seletivo.interface import (
     centro_do_edital,
     documentacao,
     duvidas,
+    inscricoes_publicadas,
     kit_de_divulgacao,
     prototipo_do_assistente,
     relatorio,
@@ -321,6 +322,13 @@ urlpatterns = [
         "editais/<uuid:edital_id>/inscricoes",
         views.inscricoes_recebidas,
         name="inscricoes",
+    ),
+    # A publicação das inscrições (148): histórico, próximo ato, prévia e confirmação numa tela só
+    # (UX-460). A porta é a da divulgação de resultado — publicar é de quem divulga; a auditoria lê.
+    path(
+        "editais/<uuid:edital_id>/inscricoes/publicacoes",
+        inscricoes_publicadas.publicacoes_das_inscricoes,
+        name="publicacoes-das-inscricoes",
     ),
     path(
         "inscricoes/<uuid:inscricao_id>/",

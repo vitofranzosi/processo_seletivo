@@ -1,0 +1,172 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Publicações das inscrições — {{ edital }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/publicacoes-das-inscricoes.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Publicações das inscrições</span></nav>{% endblock %}
+{% block conteudo %}
+<h1>Publicações das inscrições</h1>
+<p class="sub">{{ processo.institutional_code }} · Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
+
+{% comment %}
+**A diferença entre os três atos, em uma frase, antes de tudo** (UX-462). "Homologação" sempre
+qualificada (UX-461): neste sistema a palavra sozinha é a homologação do Edital.
+{% endcomment %}
+<p>A relação de <strong>recebidas</strong> diz quem enviou a inscrição no prazo; o <strong>resultado preliminar</strong> diz quem a análise deferiu ou indeferiu, e abre o recurso; a <strong>homologação das inscrições</strong> é a relação final das aceitas. Nenhum deles é obrigatório, e nenhum é classificação.</p>
+
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível publicar:</strong> {{ erro }}</p>{% endif %}
+{% if publicada_agora %}<p class="sucesso" role="status" tabindex="-1">Ato publicado. Ele já pode ser consultado no portal, e cada candidato vê nele a situação da própria inscrição.</p>{% endif %}
+
+<h2 id="publicado-titulo">O que já foi publicado</h2>
+{% if cadeia %}
+{% if divergencia and divergencia.total %}
+{% comment %}
+**O ato não muda; a tela diz que ele envelheceu** (D-006, FR-5427). A correção é um ato sucessor
+da mesma natureza, com motivo — e o anterior continua no portal dizendo que foi sucedido.
+{% endcomment %}
+<p class="aviso" role="status"><strong>O ato vigente difere da situação atual em {{ divergencia.total }} inscriç{{ divergencia.total|pluralize:"ão,ões" }}</strong>{% if divergencia.novas %} — {{ divergencia.novas }} enviada{{ divergencia.novas|pluralize }} depois dele{% endif %}{% if divergencia.mudadas %} — {{ divergencia.mudadas }} com situação alterada depois dele, por recurso ou reavaliação{% endif %}. Ele continua publicado como estava; para corrigir, publique de novo o mesmo ato, com o motivo.</p>
+{% endif %}
+<div class="tabela-rolavel">
+<table aria-labelledby="publicado-titulo">
+  <thead>
+    <tr>
+      <th scope="col">Situação</th>
+      <th scope="col">Ato</th>
+      <th scope="col">Publicado em</th>
+      <th scope="col">Inscrições</th>
+      <th scope="col">Consultar</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for ato in cadeia %}
+    <tr>
+      <td>{% if ato.id == vigente.id %}<strong>Vigente</strong>{% else %}Sucedido{% endif %}</td>
+      <td>{{ ato.get_natureza_display }}{% if ato.motivo_da_sucessao %}<p class="ajuda">Correção: {{ ato.motivo_da_sucessao }}</p>{% endif %}{% if ato.recurso_ate %}<p class="ajuda">Recurso até {{ ato.recurso_ate|date:"d/m/Y" }} às {{ ato.recurso_ate|date:"H\hi" }}</p>{% elif ato.admite_recurso is False %}<p class="ajuda">Sem recurso previsto no Edital</p>{% endif %}</td>
+      <td>{{ ato.publicado_em|date:"d/m/Y H:i" }}<p class="ajuda">{{ ato.signatario_cargo }}</p></td>
+      <td>{{ ato.quantidade }}</td>
+      <td><a href="{% url 'portal:publicacao-das-inscricoes' ato.id %}">Página pública</a> · <a href="{% url 'portal:publicacao-das-inscricoes-documento' ato.id %}">PDF</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="nenhuma">Nenhum ato sobre as inscrições foi publicado neste Edital. Se o Edital não prevê nenhum, não é preciso fazer nada aqui: a seleção segue sem eles.</p>
+{% endif %}
+
+<h2 id="publicar-titulo">{% if pode_publicar %}Publicar{% else %}Próximo ato{% endif %}</h2>
+{% comment %}
+As três naturezas, e por que uma não está disponível (FR-5433). Links, e não um `select`: a prévia
+depende da escolha, e é recomposta pelo GET — nada é gravado até a confirmação.
+{% endcomment %}
+<nav class="atos-das-inscricoes" aria-label="Escolher o ato a publicar">
+  {% for opcao in opcoes %}
+  {% if opcao.disponivel %}
+  <a href="?natureza={{ opcao.valor }}" {% if opcao.atual %}aria-current="page"{% endif %}><strong>{{ opcao.rotulo }}</strong> <span>{% if opcao.correcao %}Correção do ato vigente. {% endif %}{{ opcao.descricao }}</span></a>
+  {% else %}
+  <span class="indisponivel"><strong>{{ opcao.rotulo }}</strong> <span>{{ opcao.motivo }}</span></span>
+  {% endif %}
+  {% endfor %}
+</nav>
+
+{% if afericao %}
+<h3>{{ rotulo_escolhida }}</h3>
+<p class="imutavel">Esta é uma <strong>prévia</strong>: nada foi gravado. O ato só existe depois de você confirmar.</p>
+<p class="ajuda">{{ explicacao }}</p>
+{% if afericao.etapa %}<p>Etapa de análise: <strong>{{ afericao.etapa.name }}</strong> — a decisão de cada inscrição é a conclusão consolidada nessa Etapa.</p>{% endif %}
+
+{% if escolher_etapa %}
+<form method="get" class="filtros">
+  <input type="hidden" name="natureza" value="{{ escolhida }}">
+  <p class="campo">
+    <label for="etapa">Etapa de análise das inscrições</label>
+    <select id="etapa" name="etapa" required>
+      {% for etapa in escolher_etapa %}<option value="{{ etapa.id }}">{{ etapa.nome }}</option>{% endfor %}
+    </select>
+  </p>
+  <button type="submit" class="botao secundario">Ver a prévia</button>
+</form>
+{% endif %}
+
+<div class="tabela-rolavel">
+<table aria-describedby="total-da-previa">
+  <caption class="oculto">Inscrições contempladas, por Perfil</caption>
+  <thead>
+    <tr>
+      <th scope="col">Perfil</th>
+      <th scope="col">{{ constam }}</th>
+      {% if nao_constam %}<th scope="col">{{ nao_constam|capfirst }}</th>{% endif %}
+    </tr>
+  </thead>
+  <tbody>
+  {% for grupo in afericao.projecao.perfis %}
+    <tr>
+      <td>{{ grupo.perfil|default:"Perfil" }}</td>
+      <td>{{ grupo.constam|length }}</td>
+      {% if nao_constam %}<td>{{ grupo.nao_constam }}</td>{% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p id="total-da-previa"><strong>{{ afericao.projecao.total }}</strong> inscriç{{ afericao.projecao.total|pluralize:"ão,ões" }} contemplada{{ afericao.projecao.total|pluralize }}{% if afericao.projecao.pendentes %}; <strong>{{ afericao.projecao.pendentes }}</strong> ainda sem conclusão na análise{% endif %}.</p>
+
+{% comment %}
+A conferência pela comissão: os nomes que serão publicados, recolhidos por Perfil. Só quem consta —
+o indeferido não é nomeado no ato (D-010), e a prévia não ensina o contrário.
+{% endcomment %}
+{% for grupo in afericao.projecao.perfis %}{% if grupo.constam %}
+<details class="conferir-nomes">
+  <summary>Conferir os nomes — {{ grupo.perfil|default:"Perfil" }} ({{ grupo.constam|length }})</summary>
+  <ul>{% for linha in grupo.constam %}<li>{{ linha.candidato }} · {{ linha.protocolo }}</li>{% endfor %}</ul>
+</details>
+{% endif %}{% endfor %}
+
+{% if afericao.impedimentos %}
+{% comment %}Havendo impedimento, a recusa é nomeada e o botão não é oferecido (FR-5432).{% endcomment %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-impedimento">
+  <h3 id="titulo-impedimento">Este ato ainda não pode ser publicado</h3>
+  {% for codigo, mensagem in afericao.impedimentos %}<p class="erro" role="alert">{{ mensagem }}</p>{% endfor %}
+</section>
+{% elif pode_publicar %}
+<section class="consequencias irreversivel" aria-labelledby="titulo-consequencias">
+  <h3 id="titulo-consequencias">O que acontece ao confirmar</h3>
+  <ul>
+    <li>O ato passa a ser <strong>público</strong> no portal, em página e em PDF, num endereço estável: protocolo e nome de quem consta{% if nao_constam %}, e só a quantidade de {{ nao_constam }}{% endif %}. Nenhum outro dado pessoal.</li>
+    {% if escolhida == "RECEBIDAS" %}<li>Nenhuma inscrição muda de situação: constar na relação não é ser aceito.</li>{% else %}<li>Cada candidato passa a ver, na própria inscrição, se foi aceito{% if escolhida == "PRELIMINAR" %}, e o indeferido vê o motivo e pode recorrer até o fim do prazo escolhido abaixo{% endif %}.</li>{% endif %}
+    {% if vigente %}<li>Este ato <strong>sucede</strong> o vigente ({{ vigente.get_natureza_display }}, de {{ vigente.publicado_em|date:"d/m/Y" }}), que continua consultável dizendo que foi sucedido.</li>{% endif %}
+    <li>O ato é <strong>imutável e não se despublica</strong>. Corrigir é publicar de novo, com o motivo.</li>
+  </ul>
+</section>
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="natureza" value="{{ escolhida }}">
+  {% if afericao.etapa %}<input type="hidden" name="etapa" value="{{ afericao.etapa.id }}">{% endif %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="confirmacao_da_previa" value="{{ afericao.assinatura }}">
+  {% if escolhida == "PRELIMINAR" %}
+  <p class="campo largo">
+    <label for="prazo">Período de recurso <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <select id="prazo" name="prazo" required aria-required="true" aria-describedby="ajuda-prazo">
+      <option value="">— escolha no Cronograma —</option>
+      {% for evento in afericao.eventos %}<option value="{{ evento.id }}">{{ evento.nome }} — até {{ evento.fim|date:"d/m/Y" }} às {{ evento.fim|date:"H\hi" }}</option>{% endfor %}
+      <option value="{{ sem_recurso }}">O Edital não prevê recurso contra este resultado</option>
+    </select>
+    <span class="ajuda" id="ajuda-prazo">Os Eventos do Cronograma vigente que ainda não terminaram. O término fica gravado no ato, e é até ele que o indeferido pode recorrer.</span>
+  </p>
+  {% endif %}
+  {% if pede_motivo %}
+  <p class="campo largo">
+    <label for="motivo">Motivo da correção <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-required="true" aria-describedby="ajuda-motivo"></textarea>
+    <span class="ajuda" id="ajuda-motivo">Publicar de novo o mesmo ato é uma correção. O motivo sai impresso no ato e na página pública.</span>
+  </p>
+  {% endif %}
+  {% include "interface/_escolha_da_autoridade.html" with escolha=escolha_da_autoridade campo="autoridade" rotulo="Autoridade signatária" ajuda="Quem responde institucionalmente pelo ato. Nome, cargo e ato de nomeação ficam gravados na publicação." %}
+  <button type="submit" class="botao perigoso"{% if not escolha_da_autoridade.opcoes %} disabled{% endif %}>Publicar {{ rotulo_escolhida|lower }}</button>
+  <a class="botao secundario" href="{% url 'interface:detalhe' edital.id %}">Voltar ao Edital</a>
+</form>
+{% else %}
+<p class="ajuda">Publicar é de quem tem a permissão de divulgar resultados. Esta tela mostra a você o que seria publicado.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

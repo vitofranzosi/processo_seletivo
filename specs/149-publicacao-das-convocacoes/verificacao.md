@@ -50,7 +50,7 @@ orientação em tela larga. Também uma concordância (*"o prazo de cada uma"* c
 ## Não verificado
 
 - O provisionamento de papéis num banco novo (`make preparar`) não foi rodado nesta worktree, para
-  não mexer nos papéis do cluster com suítes de outras sessões em curso. A contagem (56) e o
+  não mexer nos papéis do cluster com suítes de outras sessões em curso. A contagem (58) e o
   privilégio estão cobertos por `seguranca/test_homologacao_preservada.py` e
   `test_database_permissions.py`, que é parametrizado por `TABELAS_APPEND_ONLY`.
 - A divulgação informativa (efeito *divulga*) não tem captura de tela: o cenário de demonstração usa

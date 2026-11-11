@@ -50,7 +50,7 @@ tabelas.
 1. `save` só de linha nova e `delete` recusado (`_AppendOnly`).
 2. Gatilho `reject_published_call_mutation` em `UPDATE` e `DELETE` nas três.
 3. As três em `TABELAS_APPEND_ONLY` (`seguranca/papeis.py`): o papel de runtime não recebe `UPDATE`
-   nem `DELETE`. O `M` do provisionamento passa de 53 para 56.
+   nem `DELETE`. O `M` do provisionamento passa de 55 para 58 — os 55 já contam as duas da publicação das inscrições da `148`.
 
 ## O conteúdo público (`conteudo_publico`)
 

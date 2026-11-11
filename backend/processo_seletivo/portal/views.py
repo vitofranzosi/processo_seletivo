@@ -613,9 +613,12 @@ def selecao(request, edital_id, *, assistente=True):
     contexto["resultados_por_perfil"] = leitura.resultados_por_perfil(
         contexto["resultados_divulgados"], versao.content
     )
+    # **Os atos sobre as inscrições** (148, FR-5428): o vigente em destaque, os anteriores
+    # recolhidos — a forma do histórico de um resultado. Uma consulta, sem o documento.
+    contexto["inscricoes_publicadas"] = _inscricoes_publicadas(versao.edital)
     contexto["convite_da_situacao"] = (
         _convite_da_situacao(identidade, iniciadas, edital_id)
-        if contexto["resultados_divulgados"]
+        if contexto["resultados_divulgados"] or contexto["inscricoes_publicadas"]
         else None
     )
     # **O sorteio, antes de ele acontecer** (021, FR-011). A relação congelada era pública e não era
@@ -2020,6 +2023,7 @@ def acompanhamento(request, inscricao_id):
                 recursos=recursos,
                 politica_do_requerimento=politica,
                 obrigacoes=obrigacoes_da_convocacao,
+                inscricao_publicada=_inscricao_publicada(registro),
             ),
             # **A convocação, aberta ou concluída** (059, `FR-1093`). Mostrá-la aqui **não** grava
             # leitura na trilha: a trilha responde "a pessoa abriu a convocação?", e a resposta
@@ -3373,6 +3377,107 @@ def resultado(request, publicacao_id):
             "edital_id": publicacao.edital_id,
         },
     )
+
+
+def _inscricao_publicada(inscricao):
+    """O que o ato vigente das inscrições diz desta inscrição, pronto para a função pura (148)."""
+    from processo_seletivo.divulgacao.application.inscricoes import situacao_publicada
+
+    lida = situacao_publicada(inscricao)
+    if lida is None:
+        return None
+    ato = lida["ato"]
+    # A tradução para o vocabulário da tela: a função pura fala de "aceita", e não do ato.
+    traducao = {
+        "RECEBIDA": situacao_da_inscricao.RECEBIDA_NO_ATO,
+        "DEFERIDA": situacao_da_inscricao.ACEITA_NO_ATO,
+        "INDEFERIDA": situacao_da_inscricao.NAO_ACEITA_NO_ATO,
+    }
+    return {
+        "natureza": lida["natureza"],
+        "situacao": traducao[lida["situacao"]],
+        "publicado_em": ato.publicado_em,
+        "etapa_id": str(ato.etapa_id) if ato.etapa_id else "",
+        "link": reverse("portal:publicacao-das-inscricoes", args=[ato.id]),
+    }
+
+
+def _inscricoes_publicadas(edital):
+    """`{vigente, anteriores, recurso_ate}` da cadeia das inscrições, ou `None` sem ato (148)."""
+    from processo_seletivo.divulgacao.application.inscricoes import cadeia
+
+    atos = cadeia(edital)
+    if not atos:
+        return None
+    vigente = atos[-1]
+    aberto = vigente.recurso_ate is not None and timezone.now() <= vigente.recurso_ate
+    return {
+        "vigente": vigente,
+        "anteriores": list(reversed(atos[:-1])),
+        "recurso_ate": vigente.recurso_ate if aberto else None,
+    }
+
+
+@require_http_methods(["GET"])
+def publicacao_das_inscricoes(request, publicacao_id):
+    """A página pública de um ato sobre as inscrições (148, FR-5428).
+
+    **Lê os bytes gravados, e nada recompõe** — como a página do resultado: uma correção posterior
+    não alcança o ato porque não há o que alcançar. A sucessão é dita em texto, e o sucedido leva ao
+    vigente; o vigente leva aos anteriores.
+    """
+    from processo_seletivo.divulgacao.application import inscricoes as atos_das_inscricoes
+    from processo_seletivo.divulgacao.infrastructure.documento_das_inscricoes import (
+        frase_da_natureza,
+        frase_da_sucessao,
+    )
+
+    publicacao = atos_das_inscricoes.publica(publicacao_id)
+    if publicacao is None:
+        raise Http404
+    conteudo = json.loads(bytes(publicacao.conteudo_publico).decode("utf-8"))
+    cadeia = atos_das_inscricoes.cadeia(publicacao.edital)
+    vigente = cadeia[-1] if cadeia else None
+    foi_sucedida = vigente is not None and vigente.id != publicacao.id
+    anteriores = [ato for ato in cadeia if ato.publicado_em < publicacao.publicado_em]
+    prazo = None
+    if publicacao.recurso_ate is not None:
+        aberto = timezone.now() <= publicacao.recurso_ate
+        prazo = {"fecha": publicacao.recurso_ate, "aberto": aberto}
+    cabecalho = conteudo["cabecalho"]
+    return render(
+        request,
+        "portal/publicacao_das_inscricoes.html",
+        {
+            "publicacao": publicacao,
+            "cabecalho": cabecalho,
+            "conteudo": conteudo,
+            "explicacao": frase_da_natureza(cabecalho["natureza"]),
+            "sucessao": frase_da_sucessao(cabecalho.get("sucede")),
+            "sem_recurso": (cabecalho.get("prazo") or {}).get("admite") is False,
+            "evento_do_prazo": (cabecalho.get("prazo") or {}).get("evento", ""),
+            "prazo": prazo,
+            "foi_sucedida": foi_sucedida,
+            "vigente": vigente if foi_sucedida else None,
+            "anteriores": list(reversed(anteriores)),
+            "edital_id": publicacao.edital_id,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def publicacao_das_inscricoes_em_pdf(request, publicacao_id):
+    """Os bytes gravados, e nada recomposto (148, FR-5424), no molde do PDF do resultado."""
+    from processo_seletivo.divulgacao.application.inscricoes import documento_publico
+
+    documento = documento_publico(publicacao_id)
+    if documento is None:
+        raise Http404
+    dados, resumo = documento
+    resposta = HttpResponse(dados, content_type="application/pdf")
+    resposta["ETag"] = f'"{resumo}"'
+    resposta["Content-Disposition"] = 'attachment; filename="Inscricoes.pdf"'
+    return resposta
 
 
 @require_http_methods(["GET"])
