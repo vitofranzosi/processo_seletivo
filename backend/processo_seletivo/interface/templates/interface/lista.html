@@ -136,7 +136,7 @@ A aba aberta é a página atual para o leitor de tela e tem um traço que não d
       "aguarda" deixaria de dizer de quem é a vez. Devolvida e reenviada ditas como tais (FR-2821,
       FR-2822). {% endcomment %}
       {% for item in edital.retificacoes_em_curso %}
-      <a class="marca-da-retificacao" href="{{ item.url }}">Retificação {{ item.rotulo_situacao }}{% if item.parada %} · não pode mais prosseguir{% elif item.passo %} · aguarda {{ item.passo.papel }}{% endif %}</a>
+      {% include "interface/_marca_da_retificacao.html" with retificacao=item %}
       {% endfor %}
       </span>
     </li>

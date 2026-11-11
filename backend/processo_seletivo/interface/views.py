@@ -178,6 +178,7 @@ from processo_seletivo.interface import (
     lista_de_processos,
     navegacao,
     origens,
+    pagina_do_processo,
     providencias,
     relatorio_do_edital,
     revisao,
@@ -5803,60 +5804,63 @@ def processo_detalhe(request, processo_id):
     # dentro de `sinais` custaria a mesma leitura duas vezes.
     alcancadas = supervisao_do_processo.alcance(ator, processo)
     alguma = any(alcancadas.values())
+    editais = list(processo.editais.order_by("year", "number"))
+    pulso = supervisao_do_processo.pulso(processo)
+    sinais = supervisao_do_processo.sinais(processo, ator, alcancadas=alcancadas) if alguma else ()
+    pendentes = pending_editais(processo, editais)
+    atos = list(atos_processo.disponiveis(processo, ator))
+    # **Um Processo reúne Editais, e o painel só sabia mostrar o primeiro.** O modelo sempre
+    # admitiu mais de um, e `add_edital` já servia à API. Processo em estado final não recebe a
+    # porta: `ensure_processo_accepts_changes` recusaria, e oferecer o botão convidaria a um ato que
+    # será recusado.
+    pode_criar_edital = ator.can("edital:criar") and processo.status not in PROCESSO_FINAL
+    # As duas telas da comissão exigem gerir (011, FR-016): a oferta é a mesma decisão que a view de
+    # destino toma.
+    gere_a_comissao = pode_gerir_comissao(ator, processo) is not None
+    primeiro_em_elaboracao = next(
+        (edital for edital in editais if edital.status == Edital.Status.EM_ELABORACAO), None
+    )
+    # Criado o Processo, o próximo passo é elaborar o Edital: o primeiro em elaboração, para quem
+    # elabora. Para quem **gere** e não elabora, a mesma pergunta pelo outro lado — "Aguardando quem
+    # elabora" separa "não há o que fazer" de "não há o que **você** faça agora". Só para quem gere
+    # (147, FR-5304, D-005): a quem só avalia, julga ou divulga, a frase ocupava o lugar do trabalho
+    # dele com o de outro papel.
+    elaboravel = primeiro_em_elaboracao if ator.can("edital:elaborar") else None
+    aguardando = (
+        primeiro_em_elaboracao
+        if not ator.can("edital:elaborar") and (pode_criar_edital or gere_a_comissao)
+        else None
+    )
     return render(
         request,
         "interface/processo_detalhe.html",
         {
             "processo": processo,
             "trilha": _trilha_processo(processo),
-            # As mesmas chamadas da Supervisão — lidas, nunca recalculadas.
-            "pulso": supervisao_do_processo.pulso(processo),
+            # As mesmas chamadas da Supervisão — lidas, nunca recalculadas (038, FR-557).
+            "pulso": pulso,
             "atencao_visivel": alguma,
             # A linha de ausência sai do mesmo `alcancadas` que decide a região (045, `FR-730`):
             # global só para quem alcança o catálogo inteiro, relativa para quem alcança parte.
             "ausencia": supervisao_do_processo.frase_de_ausencia(alcancadas),
-            "sinais": (
-                supervisao_do_processo.sinais(processo, ator, alcancadas=alcancadas)
-                if alguma
-                else ()
-            ),
-            "editais": processo.editais.order_by("year", "number"),
-            "pendentes": pending_editais(processo),
-            "atos": list(atos_processo.disponiveis(processo, ator)),
-            # **Um Processo reúne Editais, e o painel só sabia mostrar o primeiro.** O modelo
-            # sempre admitiu mais de um — a suíte depende disso para demonstrar que "o total é a
-            # soma dos Editais" — e `add_edital` já servia à API. Faltava a porta.
-            #
-            # Processo em estado final não a recebe: `ensure_processo_accepts_changes` recusaria, e
-            # oferecer o botão convidaria a um ato que será recusado.
-            "pode_criar_edital": (
-                ator.can("edital:criar") and processo.status not in PROCESSO_FINAL
-            ),
+            "sinais": sinais,
+            "editais": editais,
+            "pendentes": pendentes,
+            "pode_criar_edital": pode_criar_edital,
             "pode_auditar": ator.can("auditoria:consultar"),
-            # As duas telas da comissão exigem gerir (011, FR-016). O painel as oferecia a
-            # qualquer identidade que enxergasse o Processo, e quem não gere batia num 404 sem
-            # explicação: a oferta agora é a mesma decisão que a view de destino toma.
-            "pode_gerir_comissao": pode_gerir_comissao(ator, processo) is not None,
-            # FR-021: criado o Processo, o próximo passo é elaborar o Edital — e era só um link
-            # discreto no número, enquanto o destaque ia para o impedimento de cancelar, ato que
-            # ninguém tentou. O primeiro Edital em elaboração que este ator pode compor.
-            "elaboravel": (
-                processo.editais.filter(status=Edital.Status.EM_ELABORACAO)
-                .order_by("year", "number")
-                .first()
-                if ator.can("edital:elaborar")
-                else None
-            ),
-            # O outro lado da mesma pergunta. Quem não elabora via o painel oferecer só "Ativar" e
-            # "Cancelar", sem nada dizer que o certame espera outra pessoa — enquanto a página do
-            # Edital já sabe dizer exatamente isso ("Aguardando quem elabora"). Nomear a espera é o
-            # que separa "não há o que fazer" de "não há o que **você** faça agora".
-            "aguardando_elaboracao": (
-                None
-                if ator.can("edital:elaborar")
-                else processo.editais.filter(status=Edital.Status.EM_ELABORACAO)
-                .order_by("year", "number")
-                .first()
+            "pode_gerir_comissao": gere_a_comissao,
+            "elaboravel": elaboravel,
+            "aguardando_elaboracao": aguardando,
+            # A página inteira reagrupada por Edital (147): nenhum número calculado aqui.
+            "pagina": pagina_do_processo.compor(
+                processo=processo,
+                ator=ator,
+                editais=editais,
+                pulso=pulso,
+                sinais=sinais,
+                atos=atos,
+                pendentes=pendentes,
+                elaboravel=elaboravel,
             ),
         },
     )

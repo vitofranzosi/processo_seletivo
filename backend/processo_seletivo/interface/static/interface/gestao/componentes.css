@@ -3,7 +3,14 @@
    regra que disputa a mesma propriedade estão listadas no R-002 da 091. */
 /* Texto corrido e ajuda de campo em linha curta. Dentro de cartão ou coluna estreita o limite não
    morde — ele só age onde havia largura sobrando. */
-main>p,main>section>p,.sub,.ajuda,.vazio,legend+p{max-width:var(--leitura)}
+main>p,main>section>p,.sub,.ajuda,legend+p{max-width:var(--leitura)}
+/* As caixas são painel, e não texto corrido: vão até a largura da página, como `.consequencias` e a
+   tabela abaixo delas. Escritas como `p` filho de `main`, herdavam a medida de leitura de cima — e,
+   como ela é em `ch`, cada uma parava num ponto: `.imutavel` em 642 px, `.aviso` em 685, `.sucesso`
+   em 725. Empilhadas, desenhavam uma escada ao lado do painel vermelho que ia até a borda. Medido em
+   11/11 sobre os quinze cenários de treinamento: 40 das 68 formas de tela tinham alguma. A `056` já
+   tinha corrigido dois casos isolados (`.navegacao-etapa`, `#anexos-lista>.vazio`); esta é a regra. */
+.aviso,.imutavel,.sucesso,.erro,.bastao,.vazio,.resultado-do-lote{max-width:none}
 .sub{color:var(--texto-fraco);margin:0 0 1.5rem}
 .aviso{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.75rem 1rem;
   margin-bottom:1.5rem;border-radius:0 4px 4px 0}
@@ -110,6 +117,10 @@ as duas linhas, em vez de se partir com o texto.
 .sucesso{background:var(--sucesso-fundo);border-left:4px solid var(--sucesso);
   padding:.75rem 1rem;margin-bottom:1.5rem;border-radius:0 4px 4px 0;color:var(--sucesso);font-weight:600}
 section[aria-labelledby]{margin-bottom:2rem}
+/* E o mesmo respiro antes dela quando quem vem antes não deixa nenhum: o formulário e a tabela não
+   têm margem embaixo, e na prévia da publicação "Publicar este resultado" encostava no título da
+   lista (0 px; no histórico de divulgações, a tabela no título dos avisos). */
+main>:is(form,.tabela-rolavel)+section[aria-labelledby]{margin-top:2rem}
 section h2{margin-bottom:.75rem}
 .ajuda{display:block;font-size:.75rem;color:var(--texto-fraco);margin-top:.25rem}
 /* A nota de rodapé de um bloco: a frase que explica o número acima dela, e que não é ajuda de
