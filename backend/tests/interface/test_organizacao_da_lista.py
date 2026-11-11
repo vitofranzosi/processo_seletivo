@@ -273,7 +273,10 @@ def test_a_busca_vazia_a_partir_de_uma_aba_volta_a_ela_e_o_nul_nao_derruba():
     html = corpo(gestora, "?situacao=cancelados")
     assert '<input type="hidden" name="situacao" value="cancelados">' in html
     assert aba_atual(corpo(gestora, "?situacao=cancelados&busca=++")) == ["Cancelados"]
-    assert "Nenhum Processo encontrado" in corpo(gestora, "?busca=%00x")
+    # O termo depois do NUL não pode ser letra solta: o código de `processo()` é "PS-LISTA-" mais
+    # letras de um contador do worker, e um "x" casava com o "PS-LISTA-X" do próprio Processo
+    # quando casos anteriores no mesmo worker tinham levado o contador até lá.
+    assert "Nenhum Processo encontrado" in corpo(gestora, "?busca=%00inexistente")
 
 
 def test_a_busca_sem_resultado_mantem_o_texto_e_oferece_limpar():
