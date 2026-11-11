@@ -1,0 +1,47 @@
+/*
+A ficha do barema (146, UX-422): na Mesa, no lugar do campo único de pontuação, e na leitura da
+conclusão. Só as páginas que a mostram carregam esta folha — a Mesa de uma Etapa sem barema não
+paga por ela, e o teto de bytes de `test_escala_da_mesa.py` fica onde estava.
+
+A tabela vira cartões empilhados quando o espaço dela é estreito — no celular e também em tela larga
+com o documento aberto ao lado, que divide a largura ao meio. Por isso a pergunta é feita ao
+contêiner da ficha, e não à janela. Cada célula leva o nome da coluna em atributo de dados, e é ele
+que reaparece como rótulo quando o cabeçalho sai de vista.
+*/
+.ficha-do-barema{margin:1rem 0 1.25rem;container-type:inline-size}
+.ficha-do-barema h3{margin:0 0 .35rem;font-size:1rem}
+.ficha-do-barema .ajuda{margin:0 0 .75rem}
+table.tabela-da-ficha{width:100%;border-collapse:collapse;font-size:.9375rem}
+.tabela-da-ficha th,.tabela-da-ficha td{padding:.55rem .5rem;border-bottom:1px solid var(--borda);
+  vertical-align:top;text-align:left}
+.tabela-da-ficha thead th{font-size:.8125rem;font-weight:600;color:var(--texto-fraco)}
+.tabela-da-ficha tbody th{font-weight:400}
+.nome-do-criterio{display:block;font-weight:600}
+.descricao-do-criterio,.comprovacao-do-criterio,.maxima-do-criterio{display:block;margin-top:.15rem;
+  font-size:.8125rem;color:var(--texto-fraco)}
+.comprovacao-do-criterio .acao{margin-left:.25rem}
+.entrada-do-criterio{display:flex;align-items:center;gap:.35rem}
+.entrada-do-criterio input{width:6.5rem}
+.unidade-do-criterio{font-size:.8125rem;color:var(--texto-fraco)}
+.parcela-do-criterio{font-variant-numeric:tabular-nums}
+.parcela-do-criterio .pendente{font-style:italic;color:var(--texto-fraco)}
+.parcela-do-criterio .limitada{font-size:.8125rem}
+.tabela-da-ficha textarea{width:100%;min-width:9rem;font:inherit}
+.tabela-da-ficha tfoot th,.tabela-da-ficha tfoot td{border-bottom:0;padding-top:.75rem}
+.total-da-ficha strong{font-size:1.125rem}
+/* A mesma ficha resumida na tabela das conclusões preservadas, uma linha por critério. */
+.parcelas-da-conclusao{margin:.35rem 0 0;padding-left:1rem;font-size:.8125rem;color:var(--texto-fraco)}
+.pendentes-da-ficha{display:block;margin-top:.2rem;font-size:.8125rem;color:var(--texto-fraco)}
+@container (max-width:44rem){
+  .tabela-da-ficha thead{display:none}
+  .tabela-da-ficha,.tabela-da-ficha tbody,.tabela-da-ficha tfoot,.tabela-da-ficha tr{display:block}
+  .tabela-da-ficha tbody tr{margin:0 0 .75rem;padding:.35rem .6rem;border:1px solid var(--borda);
+    border-radius:6px}
+  .tabela-da-ficha tbody th{display:block;padding:.4rem 0;border-bottom:1px solid var(--fundo)}
+  .tabela-da-ficha tbody td{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:.5rem;
+    padding:.4rem 0;border-bottom:0}
+  .tabela-da-ficha tbody td::before{content:attr(data-rotulo);font-size:.8125rem;
+    color:var(--texto-fraco)}
+  .tabela-da-ficha tfoot tr{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem}
+  .tabela-da-ficha tfoot th,.tabela-da-ficha tfoot td{display:block;padding:.25rem 0}
+}

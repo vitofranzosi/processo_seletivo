@@ -180,6 +180,27 @@ As duas coisas são possíveis porque as projeções são duas (FR-017, FR-059).
   <p class="meta sem-parecer">{{ parecer.aviso }}</p>
   {% endif %}
   {% endwith %}
+  {% comment %}
+    **A nota, critério a critério** (146, FR-5225, UX-423). Só onde a Etapa tem barema, e sob a
+    mesma regra de visibilidade da nota: é o mesmo Resultado, do mesmo titular. Os nomes e as
+    máximas são os da versão que o Resultado cita, e não os da vigente — uma Retificação posterior
+    não muda o que já foi avaliado (FR-5233). É o que dá objeto a um recurso: saber qual parcela
+    contestar.
+  {% endcomment %}
+  {% if etapa.ficha %}
+  {% comment %} Lista, e não tabela: a tela do candidato não tem tabela, porque é o que estoura a
+     largura do celular. Cada critério diz as mesmas quatro coisas de UX-423. {% endcomment %}
+  <h4 class="titulo-da-ficha">Pontuação por critério</h4>
+  <ul class="ficha-da-etapa">
+    {% for linha in etapa.ficha.linhas %}
+    <li>
+      <p class="criterio-da-ficha">{{ linha.nome }}{% if linha.descricao %}<span class="descricao-do-criterio">{{ linha.descricao }}</span>{% endif %}</p>
+      <p class="meta">Máxima {{ linha.maxima|pontuacao }} · pontuação reconhecida <strong>{{ linha.parcela|pontuacao }}</strong>{% if linha.limitada %} — limitada ao máximo{% endif %}</p>
+      {% if linha.justificativa %}<p class="meta">Justificativa: {{ linha.justificativa }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   {% if etapa.corrigido %}
   {% comment %}
     **Mostrar sem explicar transformaria a correção em erro aparente.** Quem vê a nota mudar

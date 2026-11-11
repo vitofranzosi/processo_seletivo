@@ -6,6 +6,7 @@ mensagens que tornam um erro de conversão compreensível antes de chegar ao dom
 """
 
 import json
+import re
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
@@ -19,6 +20,7 @@ from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, l
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.decimais import no_campo as _no_campo
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -1362,16 +1364,6 @@ def perfis_alterados(digitados, gravados):
     }
 
 
-def _no_campo(valor):
-    """O número sem zeros à direita, no formato que o campo numérico aceita (058, FR-1078).
-
-    As colunas guardam quatro casas, e a leitura devolve `25.0000` onde se escreveu `25`. Com ponto
-    — o `value` de um campo numérico é sempre com ponto; quem o mostra com vírgula é o navegador.
-    Nada é arredondado: é o mesmo número, e o que "Salvar rascunho" grava não muda (D-005).
-    """
-    return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
-
-
 def _o_que_o_cartao_mostra(perfil):
     """O Perfil na forma em que a leitura do formulário e a gravação escrevem igual.
 
@@ -1614,7 +1606,32 @@ def ler_avaliacao(dados):
         "parecer": _texto(dados, "parecer"),
         "expected_revision": _inteiro(dados, "expected_revision", 0),
         "versao_reconhecida": _texto(dados, "versao_reconhecida") or None,
+        "criterios": _criterios_da_ficha(dados),
     }
+
+
+# `ficha-<id do critério>-quantidade|pontos|justificativa`, como `_ficha_do_barema.html` os nomeia.
+# O prefixo **não** é `criterio-`: esse é o da composição do barema (`criterio-etapa-…`), e a Mesa e
+# a composição não dividem formulário, mas dividem a leitura de quem procura campos por prefixo.
+_CAMPO_DA_FICHA = re.compile(
+    r"^ficha-(?P<id>[0-9a-fA-F-]{36})-(?P<campo>quantidade|pontos|justificativa)$"
+)
+
+
+def _criterios_da_ficha(dados):
+    """O detalhamento que a ficha da Mesa enviou, na ordem dos campos — ou `None` sem ficha.
+
+    `None`, e não lista vazia, quando o formulário não tem ficha: é a Etapa sem barema, e o domínio
+    distingue "não mandou detalhamento" de "mandou um vazio" para recusar o segundo onde não cabe.
+    """
+    linhas = {}
+    for chave in dados:
+        casou = _CAMPO_DA_FICHA.match(chave)
+        if not casou:
+            continue
+        linha = linhas.setdefault(casou["id"], {"criterionId": casou["id"]})
+        linha[casou["campo"]] = _texto(dados, chave)
+    return list(linhas.values()) or None
 
 
 def etapas_do_edital(edital):

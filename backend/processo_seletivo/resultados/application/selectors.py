@@ -225,14 +225,16 @@ def resultados_visiveis(inscricao):
     if not etapas_autorizadas:
         return []
 
-    resultados = (
+    resultados = list(
         ResultadoEtapa.vigentes.filter(inscricao=inscricao, etapa_id__in=list(etapas_autorizadas))
         # `decisao__recurso` entra na junção: o protocolo é o que identifica a decisão para quem a
         # recebe, e buscá-lo depois custaria uma consulta por Resultado corrigido — o tipo de custo
-        # que só aparece quando o histórico cresce.
-        .select_related("resultado_anterior", "decisao", "decisao__recurso")
+        # que só aparece quando o histórico cresce. A `avaliacao` entra pela mesma razão: é dela que
+        # vem o detalhamento por critério (146), e sem a junção seria uma consulta por Etapa.
+        .select_related("resultado_anterior", "decisao", "decisao__recurso", "avaliacao")
         .order_by("consolidado_em")
     )
+    fichas = _fichas_dos_resultados(resultados)
     return [
         {
             # O identificador vai no dicionário porque a tela precisa dele **no endereço** do
@@ -261,6 +263,11 @@ def resultados_visiveis(inscricao):
             # O instante **da decisão**, e não o da gravação do Resultado: é a decisão que corrige,
             # e é a data dela que o candidato reconhece.
             "corrigido_em": resultado.decisao.decidido_em if resultado.decisao_id else None,
+            # O detalhamento por critério, só onde a Etapa tem barema (146, FR-5225), lido com o
+            # barema **da versão que o Resultado cita** (D-011, FR-5233): uma Retificação posterior
+            # que renomeie critério não muda o que o titular lê. A visibilidade é a da nota — esta
+            # mesma função —, e nada além do próprio Resultado do titular entra aqui.
+            "ficha": fichas.get(resultado.id),
         }
         for resultado in sorted(
             resultados,
@@ -270,6 +277,58 @@ def resultados_visiveis(inscricao):
             ),
         )
     ]
+
+
+def detalhamento_do_resultado(resultado):
+    """O que fundamenta o total do Resultado, critério a critério — ou `[]`.
+
+    Do Resultado consolidado, o da Avaliação que ele cita; do sucessor por correção fixada, o da
+    Decisão (146, FR-5228). O Resultado não copia o detalhamento: ele já cita a fonte.
+    """
+    decisao = resultado.decisao if resultado.decisao_id else None
+    if decisao is not None and getattr(decisao, "criterios", None):
+        return decisao.criterios
+    if resultado.avaliacao_id:
+        return resultado.avaliacao.criterios or []
+    return []
+
+
+def _fichas_dos_resultados(resultados):
+    """`{resultado_id: ficha}` dos que têm detalhamento — **uma consulta a mais, e só se houver**.
+
+    O orçamento desta tela é de três consultas sem barema (T-009), e continua: o conteúdo das
+    versões citadas só é lido quando algum Resultado tem o que mostrar, e uma vez por versão
+    distinta.
+    """
+    from processo_seletivo.avaliacoes.application.ficha import ficha_do_barema
+    from processo_seletivo.avaliacoes.domain.barema import barema_da_versao
+
+    com_detalhamento = {}
+    for resultado in resultados:
+        detalhamento = detalhamento_do_resultado(resultado)
+        if detalhamento:
+            com_detalhamento[resultado.id] = detalhamento
+    if not com_detalhamento:
+        return {}
+    conteudos = conteudos_das_versoes(
+        {resultado.versao_id for resultado in resultados if resultado.id in com_detalhamento}
+    )
+    fichas = {}
+    for resultado in resultados:
+        if resultado.id not in com_detalhamento:
+            continue
+        conteudo = conteudos.get(resultado.versao_id)
+        criterios = barema_da_versao(conteudo, resultado.etapa_id)
+        if criterios:
+            fichas[resultado.id] = ficha_do_barema(
+                criterios,
+                com_detalhamento[resultado.id],
+                [],
+                conteudo,
+                total=resultado.pontuacao,
+                concluida=True,
+            )
+    return fichas
 
 
 def historico_do_par(inscricao_id, etapa_id):

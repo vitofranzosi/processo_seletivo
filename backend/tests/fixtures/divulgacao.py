@@ -165,8 +165,12 @@ def montar_marco(
     janela_recursal=None,
     regra_de_corte=None,
     etapa_do_desempate=None,
+    ajustar=None,
 ):
     """Edital publicado, comissão constituída e banca alocada nas duas Etapas.
+
+    `ajustar` entrou com a `146`: recebe o rascunho antes da publicação, para o cenário que precisa
+    de algo que as opções acima não declaram — o barema da Etapa do marco, com os seus documentos.
 
     `regra_de_corte` entrou com a `094`: a equivalência da prévia corta pelo caminho oficial, e
     `calcular_corte` lê a regra do conteúdo publicado — trocá-la depois exigiria Retificação.
@@ -182,6 +186,8 @@ def montar_marco(
     )
     if fatos is not None:
         rascunho["profiles"][0]["declaredFacts"] = fatos
+    if ajustar is not None:
+        ajustar(rascunho)
     edital = publish_original(
         api_client,
         {**manager_headers, "HTTP_IDEMPOTENCY_KEY": f"mvp-test-key-{seed:04d}"},

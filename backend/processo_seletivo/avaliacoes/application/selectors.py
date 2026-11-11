@@ -609,6 +609,27 @@ def _conteudos_historicos(versao_ids):
     return dict(VersaoConsolidada.objects.filter(id__in=identidades).values_list("id", "content"))
 
 
+def _ficha_da_conclusao(conclusao, conteudos, etapa_id):
+    """A ficha preservada, ou `None` na conclusão sem detalhamento — a da Etapa sem barema."""
+    from processo_seletivo.avaliacoes.application.ficha import ficha_do_barema
+    from processo_seletivo.avaliacoes.domain.barema import barema_da_versao
+
+    if not conclusao.criterios:
+        return None
+    conteudo = conteudos.get(conclusao.versao_id)
+    criterios = barema_da_versao(conteudo, etapa_id)
+    if not criterios:
+        return None
+    return ficha_do_barema(
+        criterios,
+        conclusao.criterios,
+        [],
+        conteudo,
+        total=conclusao.pontuacao,
+        concluida=True,
+    )
+
+
 def _exibivel(forma, pontuacao, sentido, conteudos, versao_id, etapa_id):
     """A conclusão histórica lida sob a **sua** norma, e não sob a vigente (FR-117)."""
     etapa = etapa_do_conteudo(conteudos.get(versao_id), etapa_id)
@@ -742,6 +763,10 @@ def conclusoes_preservadas(*, edital, etapa_id, inscricao_id=None, pagina=1):
                     conclusao.versao_id,
                     etapa_id,
                 ),
+                # O detalhamento daquela conclusão, com o barema **da versão que ela cita** (146,
+                # D-011, FR-5223): uma Retificação que renomeou critério entre duas conclusões não
+                # reescreve a primeira.
+                "ficha": _ficha_da_conclusao(conclusao, conteudos, etapa_id),
                 "situacao": (
                     "em_vigor"
                     if corrente and atribuicao.ativo

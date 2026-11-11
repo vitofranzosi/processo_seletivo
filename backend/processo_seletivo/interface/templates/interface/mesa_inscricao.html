@@ -1,5 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/lista-exigida.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/lista-exigida.css' %}">
+<link rel="stylesheet" href="{% estatico 'interface/grupos/ficha-do-barema.css' %}">{% endblock %}
 {% block titulo %}Inscrição {{ inscricao.protocolo|default:inscricao.id }}{% endblock %}
 {% comment %} A trilha está no cabeçalho de contexto (077, `FR-1746`), e não mais no conteúdo: uma por
    página. {% endcomment %}
@@ -207,6 +208,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
     {% endif %}
     <p class="quando">Avaliação concluída em {{ avaliacao.concluida_em|date:"d/m/Y" }} às {{ avaliacao.concluida_em|date:"H:i" }}</p>
   </div>
+  {% if ficha %}{% include "interface/_ficha_do_barema.html" %}{% endif %}
   <div class="parecer-registrado">
     <h3>Parecer</h3>
     {% if avaliacao.parecer %}<p>{{ avaliacao.parecer|linebreaksbr }}</p>
@@ -275,6 +277,12 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       <span class="ajuda" id="ajuda-sentido">Esta Etapa é concluída por decisão, e o Edital não
         publicou pontuação para ela.</span>
     </fieldset>
+    {% elif ficha %}
+    {% comment %}
+    Com barema, a ficha **no lugar** do campo único (146, FR-5214): o total é do servidor, e um
+    campo de pontuação ao lado das parcelas seria o segundo número para a mesma Avaliação.
+    {% endcomment %}
+    {% include "interface/_ficha_do_barema.html" %}
     {% else %}
     <p class="campo curto">
       <label for="pontuacao">Pontuação</label>
@@ -354,4 +362,5 @@ JavaScript, idem. Um painel que existisse no HTML e só funcionasse com script p
 cumpre.
 {% endcomment %}
 {% load static %}<script src="{% static 'interface/mesa.js' %}" defer></script>
+{% if ficha and avaliacao.estado != "CONCLUIDA" %}<script src="{% static 'interface/mesa_barema.js' %}" defer></script>{% endif %}
 {% endblock %}

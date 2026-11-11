@@ -1,5 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Conclusões preservadas — {{ etapa.name }}{% endblock %}
+{% block estilo_da_pagina %}{% load estaticos %}<link rel="stylesheet" href="{% estatico 'interface/grupos/ficha-do-barema.css' %}">{% endblock %}
 {% comment %} Nomear não é abrir (090, `FR-2062`; o padrão da 083): a Alocação e a Etapa são telas de quem
    gere a comissão, e para quem só audita ficam como texto — antes, eram dois links que lhe respondiam
    403. {% endcomment %}
@@ -60,7 +61,16 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
       <td>{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</td>
       <td>{% rotulo_ou_nome linha.membro.display_label linha.conclusao.concluida_por %}</td>
       {# A conclusão sob a norma que a governou, e não sob a vigente (FR-117). #}
-      <td>{% if linha.conclusao_exibivel %}{{ linha.conclusao_exibivel }}{% else %}{{ linha.conclusao.pontuacao|pontuacao }}{% endif %}</td>
+      <td>{% if linha.conclusao_exibivel %}{{ linha.conclusao_exibivel }}{% else %}{{ linha.conclusao.pontuacao|pontuacao }}{% endif %}
+        {% comment %} O detalhamento por critério da 146 (FR-5223), lido com o barema da versão que
+           esta conclusão cita, e não com o vigente (D-011). {% endcomment %}
+        {% if linha.ficha %}
+        <ul class="parcelas-da-conclusao" aria-label="Pontuação por critério">
+          {% for parcela in linha.ficha.linhas %}
+          <li>{{ parcela.nome }}: {{ parcela.parcela|pontuacao }} de {{ parcela.maxima|pontuacao }}{% if parcela.limitada %} (limitada ao máximo){% endif %}{% if parcela.justificativa %} — {{ parcela.justificativa }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}</td>
       <td>{{ linha.conclusao.parecer|default:"—" }}</td>
       <td>vigente desde {{ linha.conclusao.versao.valid_from|date:"d/m/Y H:i" }}
         <span class="codigo">{{ linha.conclusao.versao.id }}</span></td>

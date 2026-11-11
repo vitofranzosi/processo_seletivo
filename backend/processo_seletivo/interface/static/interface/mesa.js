@@ -111,7 +111,10 @@
   fechador.setAttribute("aria-label", "Fechar o documento e voltar ao formulário");
   fechador.addEventListener("click", function () {
     fechar();
-    var primeiro = document.getElementById("pontuacao");
+    // O campo da nota, ou — na Etapa com barema, que não o tem — o primeiro campo da ficha.
+    var primeiro =
+      document.getElementById("pontuacao") ||
+      document.querySelector("[data-ficha-do-barema] input");
     if (primeiro) primeiro.focus();
   });
   titulo.parentNode.appendChild(fechador);

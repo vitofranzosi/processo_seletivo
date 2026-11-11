@@ -34,6 +34,7 @@ from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application import avaliacao as avaliacao_app
 from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
+from processo_seletivo.avaliacoes.application import ficha as ficha_app
 from processo_seletivo.avaliacoes.application import impedimento as impedimento_app
 from processo_seletivo.avaliacoes.application import mesa as mesa_app
 from processo_seletivo.avaliacoes.application import selectors as avaliacao_selectors
@@ -43,6 +44,7 @@ from processo_seletivo.avaliacoes.application.mesa import (
     INTEGRIDADE,
 )
 from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_ato
+from processo_seletivo.avaliacoes.domain import barema
 from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
@@ -7235,6 +7237,16 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
         for documento in contexto["documentos"]
     ]
     contexto["documentos"] = documentos
+    digitado = request.session.pop("digitado_na_avaliacao", None)
+    if contexto.get("ficha") and not contexto["ficha"]["concluida"] and digitado:
+        # **O digitado antes da recusa volta à ficha**, como volta ao campo único: a avaliadora que
+        # deixou um critério pendente e clicou "Concluir" não pode perder as outras linhas (146).
+        contexto["ficha"] = ficha_app.ficha_do_barema(
+            barema.criterios_da_etapa(contexto["etapa"]),
+            digitado.get("criterios") or [],
+            contexto["documentos"],
+            contexto["versao_vigente"].content,
+        )
     tem_documento = any(documento["enviado"] for documento in documentos)
     abertos = sum(1 for documento in documentos if documento["enviado"] and documento["aberto_em"])
     # A **página** carrega dado pessoal, e não só o arquivo: protocolo, nome e CPF mascarado não
@@ -7269,10 +7281,7 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                 # O que a tela exibe nos campos, resolvido **aqui**: o digitado antes da recusa
                 # tem prioridade — perder o parecer escrito porque a revisão estava obsoleta
                 # seria punir duas vezes —, e depois o que já estava gravado.
-                "valores": _valores_da_avaliacao(
-                    request.session.pop("digitado_na_avaliacao", None),
-                    contexto.get("avaliacao"),
-                ),
+                "valores": _valores_da_avaliacao(digitado, contexto.get("avaliacao")),
                 # **A recusa certa, dita antes do clique** (RC-62, revisão do PR 221). Sem isto a
                 # tela oferecia "Concluir avaliação" a quem já tem Resultado nesta Etapa, e a recusa
                 # só vinha depois de o parecer estar escrito. A frase é a do comando, e não outra.
@@ -7382,6 +7391,7 @@ def _registrar_avaliacao(
         "pontuacao": dados["pontuacao"],
         "sentido": dados["sentido"],
         "parecer": dados["parecer"],
+        "criterios": dados["criterios"],
         "expected_revision": dados["expected_revision"],
         "correlation_id": getattr(request, "correlation_id", ""),
     }
@@ -7401,6 +7411,7 @@ def _registrar_avaliacao(
             "pontuacao": dados["pontuacao"],
             "sentido": dados["sentido"],
             "parecer": dados["parecer"],
+            "criterios": dados["criterios"],
         }
     return redirect(destino)
 

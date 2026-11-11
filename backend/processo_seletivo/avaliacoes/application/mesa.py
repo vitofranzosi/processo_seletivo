@@ -19,6 +19,7 @@ esconder metade da identidade produziria a meia anonimização que é pior que n
 
 from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.avaliacoes.application.ficha import ficha_da_avaliacao
 from processo_seletivo.avaliacoes.domain.autorizacao import pode_avaliar_inscricao
 from processo_seletivo.avaliacoes.domain.previsao import decisoria, pontuacao_maxima, rotulos
 from processo_seletivo.editais.domain.documentos import (
@@ -195,6 +196,9 @@ def inscricao_para_avaliar(*, ator, edital, etapa_id, inscricao_id):
     )
     avaliacao = getattr(atribuicao, "avaliacao", None)
     return {
+        # A ficha do barema, só na Etapa que o publicou (146, FR-5214): o rascunho pela versão
+        # vigente, reconciliado; a concluída pela versão que ela cita (D-011).
+        "ficha": ficha_da_avaliacao(avaliacao, etapa, etapa_id, documentos, vigente.content),
         "atribuicao": atribuicao,
         "avaliacao": avaliacao,
         "etapa": etapa,

@@ -65,52 +65,52 @@ anterior (arquivos distintos, sem dependência).
 
 ## Phase 3: Incremento B — User Story 2, pontuar na Mesa (P1)
 
-- [ ] T016 [US2] `avaliacoes/domain/barema.py` (`calcular`, `barema_da_versao`, `reconciliar`) e
+- [X] T016 [US2] `avaliacoes/domain/barema.py` (`calcular`, `barema_da_versao`, `reconciliar`) e
   `unit/avaliacoes/test_barema.py`: cenários 1 e 2, limite, quantidade além do teto, pontos acima da
   máxima, quatro casas, pendentes nomeados, critério desconhecido ou repetido, ordem indiferente, zero
   sem justificativa aceito, reconciliação com critério mantido, removido e novo (FR-5202, FR-5215,
   FR-5216, FR-5217, FR-5218, FR-5222, SC-1620, SC-1621, SC-1626, SC-1627, SC-1629)
-- [ ] T017 [US2] `criterios` em `Avaliacao` e `ConclusaoAvaliacao`;
+- [X] T017 [US2] `criterios` em `Avaliacao` e `ConclusaoAvaliacao`;
   `avaliacoes/migrations/0005_detalhamento_por_criterio.py` recriando a função do gatilho com a coluna;
   teste de SQL direto recusado em `integration/avaliacoes/test_imutabilidade_da_concluida.py` (FR-5219,
   SC-1630) — depende de T016
-- [ ] T018 [US2] `gravar`, `concluir` e `reabrir` em `avaliacoes/application/avaliacao.py`: total do
+- [X] T018 [US2] `gravar`, `concluir` e `reabrir` em `avaliacoes/application/avaliacao.py`: total do
   servidor, `pontuacao` do cliente recusada com barema, `criterios` recusado sem barema, cópia para a
   Conclusão, trilha sem nota; reabrir e concluir de novo depois de uma Retificação do barema; testes
   de serviço (FR-5215, FR-5217, FR-5218, FR-5219, FR-5222, FR-5229, FR-5230) — depende de T017
-- [ ] T019 [US2] `mesa.py::inscricao_para_avaliar` entrega, no rascunho, o barema vigente com o
+- [X] T019 [US2] `mesa.py::inscricao_para_avaliar` entrega, no rascunho, o barema vigente com o
   detalhamento reconciliado e, na concluída, o barema de `avaliacao.versao`, com o documento ligado
   resolvido; `forms.ler_avaliacao` lê as linhas; autorização inalterada (FR-5214, FR-5222, FR-5229,
   FR-5233) — depende de T018
-- [ ] T020 [US2] `_ficha_do_barema.html` em `mesa_inscricao.html`; a leitura da ficha na concluída e em
+- [X] T020 [US2] `_ficha_do_barema.html` em `mesa_inscricao.html`; a leitura da ficha na concluída e em
   `conclusoes.html`, cada conclusão com o barema da versão dela; regras na folha da Mesa;
   `interface/test_mesa_com_barema.py`, com o caso da Retificação que renomeia critério entre duas
   conclusões preservadas (FR-5214, FR-5223, FR-5233, UX-422, SC-1633) — depende de T019
-- [ ] T021 [US2] [P] `interface/static/interface/mesa_barema.js` e `javascript/mesa_barema.test.js`:
+- [X] T021 [US2] [P] `interface/static/interface/mesa_barema.js` e `javascript/mesa_barema.test.js`:
   total ao vivo, "limitada ao máximo", pendentes em texto (UX-422) — depende de T020
-- [ ] T022 [US2] [P] Barema inteiro, menos a ordem, em
+- [X] T022 [US2] [P] Barema inteiro, menos a ordem, em
   `resultados/domain/compatibilidade.py::CAMPOS_COMPARADOS`; testes: versão mudada recusa concluir;
   conclusão antiga não consolida depois de mudar a máxima, e também depois de mudar só a descrição ou o
   documento; reordenar consolida (FR-5221, SC-1628) — depende de T018
-- [ ] T023 [US2] Integração de ponta a ponta sem tocar a jusante: concluir pela ficha, consolidar,
+- [X] T023 [US2] Integração de ponta a ponta sem tocar a jusante: concluir pela ficha, consolidar,
   emitir a ordem e publicar o preliminar; `integration/test_barema_ate_a_classificacao.py` (FR-5220,
   SC-1620) — depende de T022
-- [ ] T024 [US2] [P] Regressão: Mesa de Etapa sem barema com o campo único; Edital de sorteio publicado
+- [X] T024 [US2] [P] Regressão: Mesa de Etapa sem barema com o campo único; Edital de sorteio publicado
   com conteúdo idêntico salvo `criteria: []` (FR-5200, FR-5231, SC-1624)
 
 ## Phase 4: Incremento B — User Story 3, o candidato (P2)
 
-- [ ] T025 [US3] "Comprova: …" em `portal/templates/portal/_documentos.html`, lido do barema
+- [X] T025 [US3] "Comprova: …" em `portal/templates/portal/_documentos.html`, lido do barema
   publicado; teste do portal (FR-5224)
-- [ ] T026 [US3] Detalhamento em `resultados_visiveis` e em `acompanhamento.html`, lido com o barema de
+- [X] T026 [US3] Detalhamento em `resultados_visiveis` e em `acompanhamento.html`, lido com o barema de
   `resultado.versao`, com as justificativas escritas; titular vê, outro candidato e Resultado não
   divulgado não veem; Retificação posterior que renomeia critério não muda o que o titular lê (FR-5218,
   FR-5225, FR-5233, UX-423, SC-1631, SC-1633) — depende de T023
-- [ ] T027 [US3] Cenário 5: Edital com três Perfis e uma Etapa com barema, inscrições dos três
+- [X] T027 [US3] Cenário 5: Edital com três Perfis e uma Etapa com barema, inscrições dos três
   pontuadas pela mesma ficha (SC-1625) — depende de T023
-- [ ] T028 [US2] [US3] Jornada no navegador `navegador/test_jornada_do_barema.py`: configurar,
+- [X] T028 [US2] [US3] Jornada no navegador `navegador/test_jornada_do_barema.py`: configurar,
   publicar, inscrever com documento, pontuar, consolidar, ver no portal — depende de T026
-- [ ] T036 [US4] Recusa temporária em `recursos/application/julgar.py`: correção fixada contra Resultado
+- [X] T036 [US4] Recusa temporária em `recursos/application/julgar.py`: correção fixada contra Resultado
   de Etapa com barema responde 409 com a frase que orienta a reavaliação determinada; teste de que
   nenhum Resultado de Etapa com barema nasce sem detalhamento e de que a reavaliação continua (FR-5232,
   SC-1635) — depende de T018. Fica nesta fase, e não na 5, porque é ela que torna o B seguro sozinho

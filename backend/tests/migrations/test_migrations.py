@@ -318,6 +318,13 @@ def test_as_migrations_do_a03_se_desfazem_e_se_refazem(migration):
     executor.migrate([migration])
     assert gatilhos <= _installed_triggers()
 
+    # **Até a folha do app**, e não só até a migration do A-03: voltar à anterior desaplicou também
+    # o que veio depois dela — a `avaliacoes/0005` da 146 —, e o banco do worker ficaria sem a
+    # coluna nova para todos os casos seguintes. É a armadilha que a `editais/0027` encontrou em
+    # `test_cronograma_visibilidade.py`.
+    executor.loader.build_graph()
+    executor.migrate([no for no in executor.loader.graph.leaf_nodes() if no[0] == app])
+
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
@@ -857,7 +864,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 4 com o A-03**: a `avaliacoes/0004` leva ao banco a imutabilidade da Avaliação
         # concluída, admitindo só a forma exata da reabertura da presidência. Só gatilho: não cria
         # coluna nem percorre linha (`doc/parecer-a03-imutabilidade-2026-11-01.md`).
-        "avaliacoes": 4,
+        # **Sobe para 5 com a 146**: a `avaliacoes/0005` acrescenta o detalhamento por critério à
+        # Avaliação e à Conclusão preservada, e recria a função do gatilho da concluída com a
+        # coluna nova. Duas colunas com default `[]`, que não reescrevem linha nem disparam o
+        # append-only; o total continua em `pontuacao`, e a 022 lê o de sempre (D-004).
+        "avaliacoes": 5,
         # **Sobe para 5 com a 021**: a `classificacao/0005` dá ao ato de ordenação a origem e a
         # lista de concorrência — o ato passa a poder nascer de um sorteio, e não só de nota.
         # **Sobe para 6 com a 014**, e a justificativa é própria: a `classificacao/0006` cria o
