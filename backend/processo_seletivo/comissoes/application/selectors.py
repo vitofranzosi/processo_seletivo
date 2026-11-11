@@ -201,10 +201,13 @@ def etapas_por_membro(processo):
     return por_membro
 
 
-def minhas_etapas(ator):
+def minhas_etapas(ator, *, processo=None):
     """Todos e somente os objetos com alocação ativa desta identidade, no escopo dela (FR-043).
 
     Sem exceção por papel: privilégio administrativo não injeta Etapa aqui (FR-044, D-006).
+
+    `processo` recorta às alocações daquele Processo **na consulta** (147, FR-5309): cada Edital
+    alocado custa a leitura das Etapas vigentes dele, e a página do Processo pagava pelas de todos.
     """
     if ator is None or not getattr(ator, "subject", ""):
         return []
@@ -214,6 +217,8 @@ def minhas_etapas(ator):
         membro__identity_subject=ator.subject,
         membro__processo__institution_scope=ator.institution_scope,
     ).select_related("edital", "edital__processo", "membro")
+    if processo is not None:
+        alocacoes = alocacoes.filter(membro__processo=processo)
     return _atribuicoes(alocacoes)
 
 

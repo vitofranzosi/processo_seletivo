@@ -183,9 +183,14 @@ def _dos_recursos(editais, ator):
             )
 
 
-def _das_avaliacoes(ator):
-    """As Etapas em que a pessoa tem inscrição a avaliar — a mesma conta de Minhas Etapas."""
-    atribuicoes = comissao_selectors.minhas_etapas(ator)
+def _das_avaliacoes(ator, processo=None):
+    """As Etapas em que a pessoa tem inscrição a avaliar — a mesma conta de Minhas Etapas.
+
+    **Com `processo`, só as atribuições dele, e na consulta** (147, FR-5309). Recortar depois da
+    carga fazia a página do Processo pagar pelas Etapas de todos os Processos da avaliadora: 72
+    consultas viravam 195 no Processo de 31 Editais. A Lista não passa o argumento.
+    """
+    atribuicoes = comissao_selectors.minhas_etapas(ator, processo=processo)
     if not atribuicoes:
         return
     carga = avaliacao_selectors.carga_nas_etapas(ator=ator, atribuicoes=atribuicoes)
@@ -224,13 +229,14 @@ def _ordem(objeto):
     )
 
 
-def do_ator(ator, editais, *, em_curso=None):
+def do_ator(ator, editais, *, em_curso=None, processo=None):
     """Os objetos de trabalho do ator, um por objeto, na ordem da faixa (FR-2801 a FR-2806).
 
     `editais` são os que a tela já carregou, no escopo do ator — na Lista, **todos** os da unidade,
     e não os da página (129, FR-4323): o recorte não pode esconder trabalho. `em_curso` chega de
     quem já o leu para os mesmos Editais — a Lista o lê para a marca — e é lido aqui quando não
-    chega.
+    chega. `processo` recorta as avaliações ao Processo, na consulta (147, FR-5309); os demais
+    objetos já vêm só dos `editais` passados.
     """
     editais = list(editais)
     if em_curso is None:
@@ -239,7 +245,7 @@ def do_ator(ator, editais, *, em_curso=None):
         *_do_edital(editais, ator),
         *_da_retificacao(em_curso, editais),
         *_dos_recursos(editais, ator),
-        *_das_avaliacoes(ator),
+        *_das_avaliacoes(ator, processo),
     ]
     vistos, unicos = set(), []
     for objeto in sorted(objetos, key=_ordem):
