@@ -195,7 +195,7 @@ def test_o_recorte_sem_ordem_diz_o_que_falta_e_onde_se_faz(client, seletor_ligad
     pagina = abrir(client, edital, lista=MODALIDADE_PPI).content.decode()
 
     assert "ainda não tem ordem própria" in pagina
-    assert "Emitir ordem" in pagina, "e a ação que resolve está na mesma tela"
+    assert "Conferir antes de emitir" in pagina, "e a ação que resolve está na mesma tela"
 
 
 def test_o_corte_do_recorte_sem_ordem_leva_a_classificacao_dele(client, seletor_ligado, cenario):
@@ -305,7 +305,7 @@ def test_o_recorte_sem_autodeclarado_diz_que_ninguem_concorreu(
 
     assert "Ninguém concorreu por este recorte" in pagina
     assert "ainda não tem ordem própria" not in pagina, "não é a frase da pendência"
-    assert "Emitir ordem" in pagina, "e emitir continua sendo ato de quem conduz"
+    assert "Conferir antes de emitir" in pagina, "e emitir continua sendo ato de quem conduz"
 
 
 # --- T032 · o Edital que emitiu a ordem única antes desta feature --------------------------------

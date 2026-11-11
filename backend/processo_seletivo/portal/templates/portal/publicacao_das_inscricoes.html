@@ -1,0 +1,90 @@
+{% extends "portal/base.html" %}
+{% block titulo %}{{ cabecalho.titulo }} — {{ cabecalho.edital }}{% endblock %}
+{% block conteudo %}
+{% comment %}
+A página pública de um ato sobre as inscrições (148, FR-5428). Ela lê os bytes gravados, como a do
+resultado, e usa as mesmas classes dela — o candidato que já leu um resultado reconhece esta página
+sem aprender nada novo.
+{% endcomment %}
+<h1>{{ cabecalho.titulo }}</h1>
+<p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }}{% if cabecalho.etapa %} · Etapa: {{ cabecalho.etapa }}{% endif %}</p>
+
+{% if foi_sucedida %}
+<p class="aviso"><strong>Este ato foi sucedido.</strong> Ele permanece consultável como registro do que foi publicado em {{ publicacao.publicado_em|date:"d/m/Y" }}, e não é mais o que vale.
+{% if vigente %}<a href="{% url 'portal:publicacao-das-inscricoes' vigente.id %}">Ver o ato vigente</a>{% endif %}</p>
+{% else %}
+<p class="vigente" role="status">Esta é a versão que vale.</p>
+{% endif %}
+
+{% comment %}
+**Uma frase sobre o que o ato é, e o que ele não é** (UX-462, UX-463). "Recebida" lida como
+"aceita" é o equívoco que esta página existe para evitar; a mesma frase sai no documento.
+{% endcomment %}
+<p>{{ explicacao }}</p>
+
+{% if sucessao %}<p class="corrigido">Sucede: {{ sucessao }}.</p>{% endif %}
+
+<p class="meta">
+  Publicado em {{ publicacao.publicado_em|date:"d/m/Y" }} às {{ publicacao.publicado_em|date:"H:i" }}.
+  Assinado por {% if cabecalho.signatario_nome %}{{ cabecalho.signatario_nome }} — {% endif %}{{ cabecalho.signatario_cargo }}.
+</p>
+
+{% comment %}
+O prazo de recurso, quando o ato é o preliminar e o Edital o prevê. Recorre-se pela área do
+candidato, e só ali: esta página é pública e não identifica ninguém (017, FR-055).
+{% endcomment %}
+{% if prazo %}
+<p class="prazo-recursal">
+  {% if prazo.aberto %}
+  <strong>Prazo de recurso aberto</strong> até {{ prazo.fecha|date:"d/m/Y" }} às {{ prazo.fecha|date:"H\hi" }}{% if evento_do_prazo %} ({{ evento_do_prazo }}){% endif %}. Quem teve a inscrição indeferida vê o motivo e recorre pela própria área do candidato.
+  {% else %}
+  Prazo de recurso encerrado em {{ prazo.fecha|date:"d/m/Y" }} às {{ prazo.fecha|date:"H\hi" }}.
+  {% endif %}
+</p>
+{% elif sem_recurso %}
+<p class="prazo-recursal">O Edital não prevê recurso contra este resultado.</p>
+{% endif %}
+
+{% if anteriores %}
+<details class="publicacoes-anteriores">
+  <summary>Publicações anteriores sobre as inscrições ({{ anteriores|length }})</summary>
+  <ul>
+    {% for anterior in anteriores %}
+    <li><a href="{% url 'portal:publicacao-das-inscricoes' anterior.id %}">{{ anterior.get_natureza_display }}</a>
+      <span class="meta">publicado em {{ anterior.publicado_em|date:"d/m/Y" }}</span></li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
+
+<p><a href="{% url 'portal:selecao' edital_id %}">Ver o {{ cabecalho.edital }}</a></p>
+
+{% for grupo in conteudo.perfis %}
+<h2 id="perfil-{{ forloop.counter }}">{{ grupo.perfil|default:"Perfil" }}</h2>
+{% if grupo.constam %}
+<div class="tabela-rolavel">
+<table class="resultado" aria-labelledby="perfil-{{ forloop.counter }}">
+  <thead>
+    <tr><th scope="col">Candidato</th><th scope="col">Protocolo</th></tr>
+  </thead>
+  <tbody>
+  {% for linha in grupo.constam %}
+    <tr><td data-rotulo="Candidato">{{ linha.candidato }}</td><td data-rotulo="Protocolo">{{ linha.protocolo }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="nenhuma">Nenhuma inscrição neste Perfil está nesta relação.</p>
+{% endif %}
+{% comment %}
+**Quem não consta é contado, e não nomeado** (D-010): é a regra da divulgação de resultado, que não
+expõe publicamente quem foi eliminado. O próprio candidato vê a situação e o motivo na área dele.
+{% endcomment %}
+{% if conteudo.rotulo_nao_constam and grupo.nao_constam %}
+<p class="meta">{{ conteudo.rotulo_nao_constam|capfirst }} neste Perfil: {{ grupo.nao_constam }}. Elas não são nomeadas aqui: cada candidato consulta a própria situação e o motivo na área do candidato.</p>
+{% endif %}
+{% endfor %}
+
+<p><a class="documento secundaria" href="{% url 'portal:publicacao-das-inscricoes-documento' publicacao.id %}">Baixar o documento oficial (PDF)</a></p>
+{% endblock %}

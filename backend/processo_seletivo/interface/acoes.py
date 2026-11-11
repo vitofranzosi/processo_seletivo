@@ -125,6 +125,15 @@ def _navegacao(edital, ator):
             reverse("interface:inscricoes", args=[edital.id]),
             quantidade=recebidas,
         )
+    # **As publicações das inscrições** (148, UX-460): relação de recebidas, resultado preliminar da
+    # análise, homologação. A porta é a da divulgação de resultado — quem divulga publica, a
+    # auditoria consulta —, e é a mesma pergunta que `pode_consultar_a_divulgacao` responde.
+    if edital.status in ESTADOS_COM_INSCRICOES and pode_consultar_a_divulgacao(ator):
+        yield Acao(
+            "publicacoes-das-inscricoes",
+            "Publicações das inscrições",
+            reverse("interface:publicacoes-das-inscricoes", args=[edital.id]),
+        )
     # Quem julga recurso não tinha por onde chegar ao próprio trabalho: a tela existia e nada
     # apontava para ela. O avaliador tem "Minhas Etapas" no cabeçalho de toda página; o julgador
     # não tem equivalente. O total no rótulo pela mesma razão das inscrições — decide se vale abrir.

@@ -237,3 +237,195 @@ class DocumentoDoResultado(models.Model):
 
     def delete(self, *args, **kwargs):
         raise TypeError("DocumentoDoResultado é append-only")
+
+
+# ---------------------------------------------------------------------------
+# A publicação das inscrições (148)
+# ---------------------------------------------------------------------------
+
+
+class NaturezaDasInscricoes(models.TextChoices):
+    """As três naturezas, na ordem em que um certame as pratica — e a ordem tem sentido único.
+
+    **"Homologação" é sempre das inscrições** (148, UX-461). A palavra já nomeia, no código e na
+    tela, o ato sobre a revisão do Edital (`publicacoes.Homologacao`); aqui ela vive dentro de um
+    agregado cujo nome diz de quê, e o rótulo a qualifica sempre.
+    """
+
+    RECEBIDAS = "RECEBIDAS", "Relação de inscrições recebidas"
+    PRELIMINAR = "PRELIMINAR", "Resultado preliminar da análise das inscrições"
+    HOMOLOGACAO = "HOMOLOGACAO", "Homologação das inscrições"
+
+
+ORDEM_DAS_NATUREZAS = {
+    NaturezaDasInscricoes.RECEBIDAS: 0,
+    NaturezaDasInscricoes.PRELIMINAR: 1,
+    NaturezaDasInscricoes.HOMOLOGACAO: 2,
+}
+
+
+class PublicacaoDasInscricoes(models.Model):
+    """O ato público sobre as inscrições de um Edital — recebidas, preliminar ou homologação (148).
+
+    **Não decide nada sobre inscrição nenhuma.** A decisão de deferir ou indeferir é o
+    `ResultadoEtapa` da Etapa decisória que o Edital já declara, com motivo, sucessão e recurso;
+    este ato a **publica**, de uma vez e para todos, e guarda o que publicou (D-001). Por isso não
+    há estado novo na `Inscricao`: ele seria uma segunda resposta à mesma pergunta, e esbarraria no
+    gatilho da inscrição enviada.
+
+    **Uma cadeia por Edital, e não por Perfil.** A análise é por inscrição, e a comissão publica a
+    relação do Edital inteiro, agrupada por Perfil. Corrigir é suceder — mesma natureza exige
+    motivo —, e o anterior continua legível no mesmo endereço (D-006).
+
+    **O documento mora na própria linha.** Ao contrário da divulgação de resultado, cuja publicação
+    nasceu antes do documento, este ato nasce com ele: não há estado "sem documento" a representar,
+    e uma tabela a mais seria um vínculo a manter sem nada a ganhar.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    edital = models.ForeignKey(
+        Edital, on_delete=models.PROTECT, related_name="publicacoes_das_inscricoes"
+    )
+    natureza = models.CharField(max_length=20, choices=NaturezaDasInscricoes.choices)
+    # A identidade **publicada** da Etapa decisória, e não chave estrangeira — pela mesma razão que
+    # `ResultadoEtapa.etapa_id`: existe Etapa vigente sem linha em elaboração.
+    etapa_id = models.UUIDField(null=True, blank=True)
+    versao = models.ForeignKey(
+        "publicacoes.VersaoConsolidada",
+        on_delete=models.PROTECT,
+        related_name="publicacoes_das_inscricoes",
+    )
+    publicacao_anterior = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="sucessoras",
+    )
+    motivo_da_sucessao = models.TextField(blank=True, default="")
+    # O período de recurso do preliminar, **congelado** (D-002, FR-5413). `None` em
+    # `admite_recurso` fora do preliminar; `False` quando quem publicou declarou que o Edital não
+    # prevê recurso contra a análise; `True` com o Evento do Cronograma e o seu término.
+    admite_recurso = models.BooleanField(null=True, blank=True)
+    recurso_evento_id = models.UUIDField(null=True, blank=True)
+    recurso_ate = models.DateTimeField(null=True, blank=True)
+    quantidade = models.PositiveIntegerField()
+    conteudo_publico = models.BinaryField()
+    conteudo_publico_hash = models.CharField(max_length=64, db_index=True)
+    documento = models.BinaryField()
+    documento_hash = models.CharField(max_length=64)
+    publicado_por = models.CharField(max_length=255)
+    publicado_em = models.DateTimeField()
+    signatario_id = models.UUIDField()
+    signatario_nome = models.CharField(max_length=255)
+    signatario_cargo = models.CharField(max_length=255)
+    signatario_ato_de_nomeacao = models.CharField(max_length=255, blank=True, default="")
+    unidade_codigo = models.CharField(max_length=100, blank=True, default="")
+    unidade_sigla = models.CharField(max_length=30, blank=True, default="")
+    unidade_nome = models.CharField(max_length=255, blank=True, default="")
+    unidade_cabecalho = models.JSONField(default=list)
+    unidade_local = models.CharField(max_length=120, blank=True, default="")
+
+    class Meta:
+        constraints = [
+            # Uma raiz por Edital: a segunda "primeira publicação" de duas abas morre aqui, e não
+            # numa cadeia bifurcada que ninguém saberia ler (FR-5406).
+            models.UniqueConstraint(
+                fields=["edital"],
+                condition=Q(publicacao_anterior__isnull=True),
+                name="uq_publicacao_das_inscricoes_raiz",
+            ),
+            models.UniqueConstraint(
+                fields=["publicacao_anterior"],
+                condition=Q(publicacao_anterior__isnull=False),
+                name="uq_publicacao_das_inscricoes_sucessor",
+            ),
+            # O preliminar sempre tem a Etapa que ele publica; a relação de recebidas nunca tem.
+            models.CheckConstraint(
+                condition=~Q(natureza="PRELIMINAR") | Q(etapa_id__isnull=False),
+                name="ck_preliminar_tem_etapa",
+            ),
+            models.CheckConstraint(
+                condition=~Q(natureza="RECEBIDAS") | Q(etapa_id__isnull=True),
+                name="ck_recebidas_sem_etapa",
+            ),
+            # O prazo é do preliminar, e só existe quando ele admite recurso.
+            models.CheckConstraint(
+                condition=Q(recurso_ate__isnull=True)
+                | (Q(natureza="PRELIMINAR") & Q(admite_recurso=True)),
+                name="ck_prazo_so_no_preliminar_que_admite",
+            ),
+            models.CheckConstraint(
+                condition=Q(admite_recurso__isnull=True) | Q(natureza="PRELIMINAR"),
+                name="ck_admite_recurso_so_no_preliminar",
+            ),
+            models.CheckConstraint(
+                condition=Q(quantidade__gte=1), name="ck_publicacao_das_inscricoes_nao_vazia"
+            ),
+        ]
+        indexes = [models.Index(fields=["edital", "publicado_em"])]
+
+    def __str__(self):
+        return f"{self.get_natureza_display()} — {self.publicado_em}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("PublicacaoDasInscricoes é append-only")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("PublicacaoDasInscricoes é append-only")
+
+
+class InscricaoNaPublicacao(models.Model):
+    """A situação de **uma** inscrição naquele ato — a projeção individual, nunca pública (148).
+
+    Guarda o `ResultadoEtapa` de onde a situação veio, e é isso que torna a divergência derivável:
+    o resultado sucedido depois da publicação deixa de ser o vigente, e a comparação o encontra sem
+    que coluna alguma precise ser mantida (D-006, FR-5427).
+    """
+
+    class Situacao(models.TextChoices):
+        RECEBIDA = "RECEBIDA", "Recebida"
+        DEFERIDA = "DEFERIDA", "Deferida"
+        INDEFERIDA = "INDEFERIDA", "Indeferida"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    publicacao = models.ForeignKey(
+        PublicacaoDasInscricoes, on_delete=models.PROTECT, related_name="itens"
+    )
+    inscricao = models.ForeignKey(
+        Inscricao, on_delete=models.PROTECT, related_name="publicacoes_das_inscricoes"
+    )
+    situacao = models.CharField(max_length=20, choices=Situacao.choices)
+    resultado = models.ForeignKey(
+        "resultados.ResultadoEtapa",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="publicacoes_das_inscricoes",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["publicacao", "inscricao"], name="uq_inscricao_por_publicacao"
+            ),
+            # A indeferida sempre vem de um resultado: indeferir sem decisão seria o ato decidindo.
+            models.CheckConstraint(
+                condition=~Q(situacao="INDEFERIDA") | Q(resultado__isnull=False),
+                name="ck_indeferida_tem_resultado",
+            ),
+        ]
+        indexes = [models.Index(fields=["inscricao"])]
+
+    def __str__(self):
+        return f"{self.inscricao_id}: {self.situacao}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("InscricaoNaPublicacao é append-only")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("InscricaoNaPublicacao é append-only")

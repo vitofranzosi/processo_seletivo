@@ -16,7 +16,11 @@ from tests.interface.conftest import identificar
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
-BOTAO_DE_EMITIR = re.compile(r"<button[^>]*>\s*Emitir (a )?ordem\s*</button>")
+# O botão da tela da ordem abre a conferência, e o rótulo o diz desde o polimento de 11/11; o da
+# conferência continua "Emitir a ordem". A ausência de qualquer dos dois é o que os casos provam.
+BOTAO_DE_EMITIR = re.compile(
+    r"<button[^>]*>\s*(Emitir (a )?ordem|Conferir antes de emitir)\s*</button>"
+)
 
 
 def _texto(resposta):

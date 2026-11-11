@@ -90,7 +90,7 @@ def test_a_previa_declara_o_alcance_antes_do_botao_e_nao_pratica_nada(
     pagina = abrir(client, edital)
 
     assert "2 pessoas serão convocadas" in pagina
-    assert "Conferir e convocar as 2" in pagina
+    assert "Conferir antes de convocar as 2" in pagina
     assert "da posição na fila" in pagina
     assert "é suplente. O gesto convoca só titulares" in pagina
     assert "derivado do Edital e dos atos deste recorte" in pagina
