@@ -149,3 +149,22 @@ usa Etapa decisória continua a usá-la; o ato só acrescenta a publicação col
 | Resultado muda depois da homologação | a divergência é derivada e mostrada; o ato não muda; corrige-se publicando sucessor com motivo |
 | Concorrência entre duas abas | trava do Processo, idempotência, prévia assinada e unicidade de raiz/sucessor no banco |
 | Recurso aberto contra resultado já homologado | a homologação é impedida enquanto há recurso pendente, reavaliação pendente ou prazo correndo |
+
+## 6. Decisões tomadas durante a implementação
+
+| Ponto | Decisão | Por quê |
+|---|---|---|
+| Consultas de `resultados_visiveis` | de 3 para 4 (e de 1 para 2 sem publicação) | o segundo fato autorizador mora noutra tabela; a consulta é uma e constante — não cresce com marcos nem com atos (`tests/performance/test_resultado_da_etapa.py`) |
+| Vocabulário da função pura da situação | a view traduz recebida/deferida/indeferida para recebida/aceita/não aceita antes de chamá-la | a varredura do requerimento (UX-058) lê `portal/situacao.py`, e o topo não usa o vocabulário do deferimento |
+| Perfil sem inscrição | aparece no ato, com "Nenhuma inscrição … neste Perfil" | achado da validação: num Edital de dois Perfis, o segundo sumia |
+| Prazo de recurso | do instante da publicação ao término do Evento | a âncora no ato é a regra da `018` — publicação atrasada não nasce com prazo vencido; o término é o que o Cronograma publica |
+
+## 7. Trabalhos futuros (registrados, não escopo)
+
+- "Minhas inscrições" continua dizendo "Inscrição enviada" depois do ato; a situação mora no
+  acompanhamento, a um clique.
+- O cartão "Resultado das etapas" diz "Eliminada" para a análise, enquanto o topo diz "não aceita":
+  o vocabulário do cartão é o da `063` para toda Etapa.
+- Aviso por e-mail ao publicar (P-5): uma origem nova nos avisos da `066`.
+- Informar na tela da relação do sorteio se a homologação das inscrições já foi publicada —
+  informação, nunca trava (D-005).
