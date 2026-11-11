@@ -1,301 +1,196 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}{{ processo.institutional_code }}{% endblock %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}"><link rel="stylesheet" href="{% estatico 'interface/grupos/serie.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/terminais.css' %}"><link rel="stylesheet" href="{% estatico 'interface/grupos/serie.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/lista.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/centro.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/processo.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <span aria-current="page">{{ processo.institutional_code }}</span></nav>{% endblock %}
 {% block conteudo %}
-<h1>{{ processo.title }}</h1>
-<p class="sub"><span class="codigo">{{ processo.institutional_code }}</span>
-  <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span></p>
-
-{% comment %} Sem lugar nenhum a oferecer, a faixa não vem — nem vazia (078, `FR-1776`, a regra da lista na
-   077). Para quem elabora ela era um parágrafo em branco de 1,5rem entre o título e a situação. {% endcomment %}
-{% if pode_gerir_comissao or pode_auditar %}
-<p class="acoes-do-painel">
-  {% if pode_gerir_comissao %}
-  {% comment %}
-  022, FR-008: o caminho até a supervisão entra no catálogo de ações que já existe, e sob a mesma
-  base que a página consulta uma vez — a de gerir a comissão, que é também a porta da supervisão.
-  Um segundo cálculo aqui seria a segunda derivação que a spec proíbe.
-  {% endcomment %}
-  <a class="acao" href="{% url 'interface:supervisao' processo.id %}">Supervisão</a>
-  <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
-  <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
-  {% endif %}
-  {% if pode_auditar %}
-  <a class="acao" href="{% url 'interface:auditoria-comissao' processo.id %}">Auditoria da comissão</a>
-  {% endif %}
-</p>
-{% endif %}
-
-{% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
-
-<ol class="etapas" aria-label="Situação do Processo">
-  {% for etapa in trilha %}
-  <li class="e-{{ etapa.estado }}">
-    <span class="ponto" aria-hidden="true"></span>
-    <span class="rotulo">{{ etapa.rotulo }}</span>
-    {% if etapa.estado == 'atual' %}<span class="agora">situação atual</span>{% endif %}
-  </li>
-  {% endfor %}
-</ol>
-{% if processo.status == 'CANCELADO' %}
-<p class="aviso"><strong>Cancelado.</strong> Interrupção administrativa anterior à conclusão
-regular. Os Editais mantêm suas próprias situações e todo o histórico permanece preservado.</p>
-{% endif %}
-
 {% comment %}
-**O que fazer agora, antes do resto** (078, `FR-1764`). O cartão vinha depois de "Onde cada Edital
-está", que no Processo do inventário tem 1250 px a 1280 de janela: "Elaborar o Edital" ficava a dois
-terços da página. Sobe inteiro, com a ordem de dentro intacta — os atos, as terminais por último, o
-impedimento depois deles (058, `FR-1069`, `FR-1070`) —, e a lista dos Editais vem ao lado, porque é
-o conteúdo próprio do Processo. O pulso e a Atenção continuam na página (038, `FR-556`), depois.
+A página do Processo (147): o conjunto dos Editais, e o que fazer nele. A ordem é a de UX-440 — quem é
+e como está; o que fazer agora e o que pede atenção; os Editais; a série dos períodos em curso; a
+administração. O vocabulário e o desenho do topo, da grade e da administração são os da página do
+Edital (UX-441), e as classes `cc-` vêm da folha dela.
+
+**Nenhum número é calculado aqui** (FR-5322): tudo chega pronto de `pagina_do_processo.compor`, que só
+reagrupa o pulso e os sinais da Supervisão, os atos do Processo, as Retificações em curso e a faixa
+da 104. O andamento de cada Edital — fase, mapa, providências — fica na página do Edital (D-003).
 {% endcomment %}
-<div class="colunas ao-topo">
-  <section aria-labelledby="acoes-processo" class="cartao">
+{% with p=pagina %}
+
+{# ============ Quem é e como está ============ #}
+<header class="cc-cabecalho processo-cabecalho">
+  <h1>{{ processo.title }}</h1>
+  <div class="processo-identificacao">
+    <p><span class="codigo">{{ processo.institutional_code }}</span> <span class="situacao s-{{ processo.status }}">{{ processo.status|situacao }}</span></p>
+    {% comment %} Os caminhos da comissão, num grupo nomeado e junto do código (FR-5300). As mesmas
+       condições de antes: a comissão e a supervisão para quem gere (011, a regra da 033), a auditoria
+       para quem audita; sem nenhum, o grupo não vem, nem vazio (FR-1776 da 078). {% endcomment %}
+    {% if pode_gerir_comissao or pode_auditar %}
+    <nav class="processo-acessos" aria-label="Comissão e supervisão">
+      {% if pode_gerir_comissao %}
+      <a class="acao" href="{% url 'interface:supervisao' processo.id %}">Supervisão</a>
+      <a class="acao" href="{% url 'interface:comissao' processo.id %}">Comissão</a>
+      <a class="acao" href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a>
+      {% endif %}
+      {% if pode_auditar %}<a class="acao" href="{% url 'interface:auditoria-comissao' processo.id %}">Auditoria da comissão</a>{% endif %}
+    </nav>
+    {% endif %}
+  </div>
+  {% if request.GET.ato %}<p class="sucesso" role="status">Ato registrado.</p>{% endif %}
+  {% comment %} "Onde estamos" diz o conjunto, e só com contagens que a página tem (FR-5301): o
+     Processo não tem fase — o certame anda em cada Edital. {% endcomment %}
+  <div class="cc-onde">
+    <p class="cc-onde-frase"><span class="cc-onde-rotulo">Onde estamos</span> {{ p.onde.0 }}</p>
+    {% if p.onde.1 %}<p class="cc-onde-detalhe">{{ p.onde.1 }}</p>{% endif %}
+  </div>
+  <dl class="cc-estados">
+    {% comment %} Três situações administrativas, e não uma jornada (FR-5302): numa linha, a atual em
+       texto e símbolo. Era um cartão de largura total repetindo o selo de cima. {% endcomment %}
+    <div><dt>Situação administrativa</dt><dd>
+      <ol class="ciclo-do-processo" aria-label="Ciclo administrativo do Processo">
+        {% for etapa in trilha %}<li class="e-{{ etapa.estado }}"{% if etapa.estado == 'atual' %} aria-current="step"{% endif %}><span aria-hidden="true">{% if etapa.estado == 'concluida' %}✓{% elif etapa.estado == 'atual' %}●{% elif etapa.estado == 'fora' %}✕{% else %}○{% endif %}</span> {{ etapa.rotulo }}{% if etapa.estado == 'atual' %}<span class="oculto"> (situação atual)</span>{% elif etapa.estado == 'fora' %}<span class="oculto"> (fora do ciclo)</span>{% endif %}</li>{% endfor %}
+      </ol></dd></div>
+    {% if pulso %}
+    {% comment %} O agregado do pulso, como estado e com o instante da leitura (FR-5321): a contagem
+       recente só com período em curso, porque fora dele é sempre zero (a regra da Supervisão). {% endcomment %}
+    <div><dt>Inscrições no Processo</dt><dd>{{ pulso.submetidas_no_processo }} {{ pulso.submetidas_no_processo|plural:"recebida,recebidas" }} · {{ pulso.rascunhos_no_processo }} em preenchimento{% if pulso.ultimas_24h is not None %} · {{ pulso.ultimas_24h }} nas últimas 24 horas{% endif %}
+      <span class="leitura-do-pulso">Leitura de {{ pulso.lido_em|date:"d/m/Y, H\hi" }}</span></dd></div>
+    {% endif %}
+  </dl>
+</header>
+
+{# ============ O que fazer agora · Precisa de atenção ============ #}
+<div class="cc-grade{% if not atencao_visivel %} sem-atencao{% endif %}">
+  <section class="cartao cc-agora" aria-labelledby="acoes-processo">
     <h2 id="acoes-processo">O que fazer agora</h2>
-
-    {% comment %}
-    FR-021: o próximo passo primeiro. A tela seguinte à criação destacava, em amarelo, por que o
-    cancelamento estava impedido — um ato que ninguém tentou — enquanto elaborar o Edital, que é o
-    motivo de tudo, existia como link discreto no número, no cartão ao lado.
-    {% endcomment %}
+    {% comment %} O próximo passo primeiro, e o trabalho da pessoa depois (FR-5303). O trabalho é o da
+       faixa da Lista (104), recortado aos Editais deste Processo — e não um segundo mecanismo
+       (D-002). O Edital do botão não se repete na lista. Os atos do Processo não estão aqui: são
+       excepcionais e vão para a Administração, no fim (FR-5306). {% endcomment %}
     {% if elaboravel %}
-    <p class="proximo-passo">
-      <a class="botao" href="{% url 'interface:compor' elaboravel.id %}">Elaborar o Edital
-        {{ elaboravel.number }}/{{ elaboravel.year }}</a>
-    </p>
+    <p class="proximo-passo"><a class="botao" href="{% url 'interface:compor' elaboravel.id %}">Elaborar o Edital {{ elaboravel.number }}/{{ elaboravel.year }}</a></p>
     {% elif aguardando_elaboracao %}
-    <p class="proximo-passo">
-      <strong>Aguardando quem elabora</strong> para compor o Edital
-      <a href="{% url 'interface:detalhe' aguardando_elaboracao.id %}">{{ aguardando_elaboracao.number }}/{{ aguardando_elaboracao.year }}</a>.
-    </p>
+    <p class="proximo-passo"><strong>Aguardando quem elabora</strong> para compor o Edital <a href="{% url 'interface:detalhe' aguardando_elaboracao.id %}">{{ aguardando_elaboracao.number }}/{{ aguardando_elaboracao.year }}</a>.</p>
     {% endif %}
+    {% if p.faixa %}
+    <ul class="itens-de-trabalho">
+      {% for objeto in p.faixa.mostrados %}{% include "interface/_item_de_trabalho.html" with prefixo="processo-mostrado" %}{% endfor %}
+    </ul>
+    {% if p.faixa.demais %}<details class="demais-acoes"><summary>Mostrar as outras {{ p.faixa.demais|length }}</summary><ul class="itens-de-trabalho">{% for objeto in p.faixa.demais %}{% include "interface/_item_de_trabalho.html" with prefixo="processo-demais" %}{% endfor %}</ul></details>{% endif %}
+    {% elif not elaboravel and not aguardando_elaboracao %}
+    {% comment %} Sem nada da pessoa, a frase diz onde o trabalho está (FR-5305), e não "nenhum ato":
+       no Processo ativo, o certame anda em cada Edital. {% endcomment %}
+    <p class="nada-no-processo"><strong>Nenhuma ação sua no nível do Processo.</strong>
+      {% if processo.status == 'ATIVO' %}O trabalho do certame está em cada Edital: abra o Edital na lista abaixo para ver o que ele pede.{% elif processo.status == 'EM_ELABORACAO' %}O próximo passo é compor e publicar o Edital.{% else %}O Processo está em situação final; a consulta continua disponível.{% endif %}</p>
+    {% endif %}
+    {% comment %} A cobertura da faixa, a mesma da Lista (129, FR-4324): sem ela, a lista se passa por
+       fila completa, e quem tem um resultado a divulgar conclui que não há nada. {% endcomment %}
+    <p class="cobertura-no-processo">{{ p.faixa.fora_da_faixa }}</p>
+  </section>
 
-    {% comment %}
-    A regra que a 057 fixou para o Edital (058, FR-1069, D-001): nenhum ato do Processo é cheio, e os
-    irreversíveis — Encerrar e Cancelar — vêm por último, num grupo próprio depois de um filete, só
-    contornados. Eram os dois únicos botões preenchidos do cartão, verde e vermelho, logo acima do
-    aviso de que estavam impedidos. A repartição é pelo que o próprio ato declara (`irreversivel`), e
-    não por `hierarquia()`: a preferência de lá é a do Edital, e nenhum ato do Processo está nela.
-
-    `regroup` só junta vizinhos, e por isso o conjunto é ordenado antes: os não irreversíveis primeiro,
-    qualquer que seja a ordem em que `ATOS` os declare. Cada grupo só existe quando tem ato — sem grupo
-    acima, as terminais não desenham filete.
-
-    Encerrar leva `secundario`, como no Edital: contornado pelo grupo, e discreto mesmo fora dele.
-    {% endcomment %}
-    {% if atos %}
-    {% regroup atos|dictsort:"irreversivel" by irreversivel as grupos %}
-    {% for grupo in grupos %}
-    {% if grupo.grouper %}
-    <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Processo">
-      {% for ato in grupo.list %}
+  {% comment %} Os sinais da Supervisão, lidos da mesma função (038, FR-557), agrupados por Edital
+     (FR-5317). Quem não alcança espécie alguma não recebe a região: dizer-lhe "nenhuma condição"
+     afirmaria uma ausência (FR-5318, a regra da 038). {% endcomment %}
+  {% if atencao_visivel %}
+  <section class="cartao processo-atencao" aria-labelledby="atencao-titulo">
+    <h2 id="atencao-titulo">Precisa de atenção{% if p.total_de_sinais %} <span class="fraco-no-titulo">({{ p.total_de_sinais }} em {{ p.com_sinal|length }} {{ p.com_sinal|length|plural:"Edital,Editais" }})</span>{% endif %}</h2>
+    {% if sinais %}
+    <ul class="atencao-por-edital">
+      {% for linha in p.com_sinal %}
       <li>
-        {% comment %} A marca descreve o ato (090, `FR-2060`), como na Distribuição (081, `FR-1827`): sem isso o
-           leitor de tela anunciava "Encerrar Processo" no foco, e "irreversível" só para quem lesse a
-           página linha a linha. {% endcomment %}
-        <a class="botao {% if ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id ato.chave %}" aria-describedby="irreversivel-{{ ato.chave }}">{{ ato.rotulo }}</a>
-        <span class="marca-irreversivel" id="irreversivel-{{ ato.chave }}">irreversível</span>
+        <details{% if p.com_sinal|length == 1 %} open{% endif %}>
+          <summary>Edital {{ linha.edital.number }}/{{ linha.edital.year }} · {{ linha.sinais|length }} {{ linha.sinais|length|plural:"condição,condições" }} <span class="titulo-no-resumo">— {{ linha.edital.title|truncatechars:60 }}</span></summary>
+          <ul class="sinais">{% for sinal in linha.sinais %}{% include "interface/_sinal.html" %}{% endfor %}</ul>
+        </details>
       </li>
       {% endfor %}
     </ul>
-    {% else %}
-    <ul class="lista-acoes em-linha">
-      {% for ato in grupo.list %}
-      <li>
-        <a class="botao secundario" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
-        {% comment %}
-        A ativação é derivada: publicar o primeiro Edital do Processo já a pratica, com o motivo
-        "Ativação derivada da publicação do primeiro Edital do Processo". O ato continua existindo
-        porque a abertura formal pode preceder a publicação — o que não pode é o painel apresentá-lo
-        como se fosse o passo que falta.
-        {% endcomment %}
-        {% if ato.chave == 'ativar' %}
-        <span class="ajuda">Publicar o primeiro Edital deste Processo já o ativa. Este ato existe
-          para quando a abertura formal precisa vir antes.</span>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-    {% endfor %}
-    {% else %}
-    <ul class="lista-acoes">
-      <li class="nenhuma">Nenhum ato disponível para seus papéis nesta situação.</li>
-    </ul>
-    {% endif %}
-
-    {% comment %}
-    Depois da lista, e não antes dela: o impedimento explica por que "Cancelar Processo" — que está
-    logo acima — seria recusado. Abrindo o cartão, ele anunciava a recusa de um ato que ninguém
-    tentou antes de mostrar qualquer ato que se pudesse praticar.
-    {% endcomment %}
-    {% if pendentes and processo.status != 'CANCELADO' %}
-    <details class="aviso">
-      <summary><strong>{% if processo.status == 'ATIVO' %}O encerramento e o cancelamento do Processo estão impedidos.{% else %}O cancelamento do Processo está impedido.{% endif %}</strong></summary>
-      <p>Estes Editais precisam ser encerrados ou cancelados antes:</p>
-      <ul class="impedimentos">
-        {% for edital in pendentes %}
-        <li><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>
-          <span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></li>
-        {% endfor %}
-      </ul>
-      <p class="ajuda">Encerrar ou cancelar o Processo não encerra nem cancela os Editais: cada um exige ato próprio.</p>
-    </details>
-    {% endif %}
+    {% else %}<p class="nenhuma">{{ ausencia }}</p>{% endif %}
   </section>
-  <section aria-labelledby="editais-titulo" class="cartao">
-    <h2 id="editais-titulo">Editais ({{ editais|length }})</h2>
-    {% comment %}
-    A tabela da lista de Processos, e não uma lista corrida (078, `FR-1771`): é a mesma informação,
-    e lá ela já está em colunas desde a 058. O número, o título e a situação se liam numa linha que
-    quebrava onde desse — a pastilha caía sozinha embaixo do título longo. A coluna "O que posso
-    fazer" da lista não vem: as ações do Edital estão no Edital, e as do Processo no cartão ao lado.
-    {% endcomment %}
-    {% if editais %}
-    <div class="tabela-rolavel">
-    <table aria-labelledby="editais-titulo">
-      <thead>
-        <tr>
-          <th scope="col">Edital</th>
-          <th scope="col">Título</th>
-          <th scope="col">Situação</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for edital in editais %}
-        <tr>
-          <th scope="row"><a class="codigo" href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a></th>
-          <td><a href="{% url 'interface:detalhe' edital.id %}">{{ edital.title }}</a></td>
-          <td><span class="situacao s-{{ edital.status }}">{{ edital.status|situacao }}</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    </div>
-    {% else %}
-    {% comment %} O estado vazio das outras telas, com a frase da lista (078, `FR-1772`). Era um item de lista
-       com a classe de "pendente", como se faltasse alguma coisa a alguém. {% endcomment %}
-    <p class="vazio">Nenhum Edital neste Processo.</p>
-    {% endif %}
-    {% comment %}
-    Junto da lista, e não no cartão de atos: quem vem acrescentar o segundo Edital está olhando
-    para o primeiro. O cartão ao lado é o do ciclo de vida do Processo — ativar, encerrar,
-    cancelar —, e acrescentar Edital não é um passo dele.
-    {% endcomment %}
-    {% if pode_criar_edital %}
-    <p>
-      <a class="botao secundario" href="{% url 'interface:edital-criar' processo.id %}">Novo Edital
-        neste Processo</a>
-    </p>
-    {% endif %}
-  </section>
+  {% endif %}
 
+  {% comment %} Os marcos de todos os Editais numa lista só, por data, cada um com o Edital que o
+     sustenta — não existe marco do Processo (a decisão da 022) (FR-5319). Seção própria da coluna
+     do trabalho, para que no estreito a Atenção venha antes dela (UX-440). {% endcomment %}
+  <section class="cartao processo-marcos" aria-labelledby="marcos-titulo">
+    <h2 id="marcos-titulo">Próximos marcos</h2>
+    {% if p.marcos %}
+    <ol class="marcos-do-processo">
+      {% for marco in p.marcos %}{% include "interface/_marco_do_processo.html" %}{% endfor %}
+    </ol>
+    {% if p.marcos_demais %}<details class="demais-acoes"><summary>Ver os outros {{ p.marcos_demais|length }}</summary><ol class="marcos-do-processo">{% for marco in p.marcos_demais %}{% include "interface/_marco_do_processo.html" %}{% endfor %}</ol></details>{% endif %}
+    {% else %}<p class="nenhuma">Nenhum marco por vir nos cronogramas publicados.</p>{% endif %}
+  </section>
 </div>
 
-{% comment %}
-038, FR-556: **o guia não desliga quando o Edital é publicado.** Até aqui esta página listava
-Editais e oferecia encerrar ou cancelar — dois atos terminais — justamente no momento em que há
-inscrição chegando e avaliação a organizar. O pulso e a Atenção já existiam; faltava reuni-los onde
-quem conduz o certame chega primeiro.
-
-**Nada é calculado aqui.** A view lê as duas funções que a Supervisão lê, e por isso as duas telas
-dizem a mesma coisa sobre o mesmo Edital (FR-557).
-
-**O Pulso é de quem alcança o Processo**, e não só de quem alcança a Supervisão: ele é agregado,
-não carrega destino nem dado pessoal, e esta página já diz que o Processo existe e quais são os
-Editais dele. A porta é **por sinal** (FR-004) — e quem não alcança espécie nenhuma não recebe a
-região da Atenção, porque dizer-lhe "nenhuma condição" afirmaria que não há nada quando o que há é
-coisa que ela não pode ver.
-{% endcomment %}
-{% if pulso %}
-<section aria-labelledby="conducao-titulo" class="cartao">
-  <h2 id="conducao-titulo">Onde cada Edital está</h2>
-  {% comment %}
-  **O caminho só é oferecido a quem o abre** (033, FR-476). A porta da Supervisão é a mesma que a
-  lista de ações acima já consulta, e `pode_supervisionar` não faz outra pergunta: delega a ela.
-  Esta linha nasceu sem a guarda, e o defeito só apareceu quando o Pulso deixou de pender da porta
-  — a região passou a ser desenhada para todo papel, e o link foi junto, devolvendo 404 a auditor,
-  publicador, julgador e elaborador. O beco que a 033 e a 037 gastaram duas features removendo
-  tinha voltado na tela nova.
-  {% endcomment %}
-  <p class="sub">Lido em {{ pulso.lido_em|date:"d/m/Y, H\hi" }}.
-    {% if pode_gerir_comissao %}<a href="{% url 'interface:supervisao' processo.id %}">Abrir a Supervisão</a>{% endif %}</p>
-
-  <ul class="resumo" aria-label="Inscrições no Processo">
-    <li><strong>{{ pulso.submetidas_no_processo }}</strong>inscriç{{ pulso.submetidas_no_processo|pluralize:"ão,ões" }} recebida{{ pulso.submetidas_no_processo|pluralize:"s" }} no Processo</li>
-    <li><strong>{{ pulso.rascunhos_no_processo }}</strong>em preenchimento</li>
-    {% comment %}
-    A contagem recente some quando nenhum período está em curso, porque ali ela é sempre zero — e
-    zero apresentado como notícia é ruído. É a mesma regra da Supervisão, e o valor é o mesmo.
-    {% endcomment %}
-    {% if pulso.ultimas_24h is not None %}
-    <li><strong>{{ pulso.ultimas_24h }}</strong>nas últimas 24 horas</li>
-    {% endif %}
-  </ul>
-
-  {% comment %}
-  D-005: o prazo pende do Edital, e cada linha o nomeia. Não existe data do Processo, e escolher a
-  de um dos Editais para representá-lo seria inventá-la.
-  {% endcomment %}
-  {% for item in pulso.por_edital %}
-  <p>
-    <strong>Edital {{ item.edital.number }}/{{ item.edital.year }}</strong> —
-    {{ item.submetidas }} recebida{{ item.submetidas|pluralize:"s" }},
-    {{ item.rascunhos }} em preenchimento.
-    {% if item.ausencia == "sem-cronograma" %}Sem cronograma vigente.
-    {% elif item.ausencia == "sem-periodo" %}O cronograma não marca período de inscrições.
-    {% elif item.periodo.cancelado %}Período de inscrições cancelado.
-    {% else %}Inscrições até
-      {% if item.periodo.fim %}{{ item.periodo.fim|date:"d/m/Y, H\hi" }}{% else %}sem término declarado{% endif %}.
-    {% endif %}
-  </p>
-
-  {% comment %}
-  A série e os próximos marcos vêm do **mesmo** `pulso` que a Supervisão lê, e o mesmo parcial
-  desenha a série nas duas telas. Sem eles a página responderia "quanto chegou" e não "o que vem",
-  que é metade do que a US1 promete — e o Pulso apresentado pela metade seria uma terceira leitura,
-  nem a da Supervisão nem nenhuma.
-  {% endcomment %}
-  {% if item.serie %}{% include "interface/_serie_de_inscricoes.html" %}{% endif %}
-
-  {% if item.proximos_marcos %}
-  <h4>Próximos marcos — Edital {{ item.edital.number }}/{{ item.edital.year }}</h4>
-  <ul class="marcos">
-    {% for marco in item.proximos_marcos %}
-    {% comment %}
-    A fase do marco é a do relógio (045, FR-735, UX-088), e não o estado declarado: ele nascia
-    planejado e ficava. Só o marco em curso ganha marca; o futuro, a data já diz.
-    {% endcomment %}
-    <li>
-      <strong>{{ marco.descricao }}</strong>
-      — {{ marco.inicio|date:"d/m/Y" }}{% if marco.fim %} a {{ marco.fim|date:"d/m/Y" }}{% endif %}
-      {% if marco.em_andamento %}<span class="marca">em andamento</span>{% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+{# ============ Os Editais ============ #}
+<section aria-labelledby="editais-titulo" class="cartao">
+  <div class="titulo-com-acao">
+    <h2 id="editais-titulo">Editais <span class="fraco-no-titulo">({{ editais|length }}{% if p.situacoes %}: {{ p.situacoes }}{% endif %})</span></h2>
+    {% if pode_criar_edital %}<a class="botao secundario" href="{% url 'interface:edital-criar' processo.id %}">Novo Edital</a>{% endif %}
+  </div>
+  {% comment %} Uma linha por Edital, em grupos por situação (FR-5310). Lista, e não tabela (FR-5315):
+     a tabela cortava inscrições e próximo marco no celular. Os encerrados e cancelados vêm recolhidos
+     no Processo em curso, e abertos no final (FR-5311, D-006). {% endcomment %}
+  {% for grupo in p.grupos %}
+  {% if grupo.recolhido %}<details class="grupo-de-editais"><summary><h3 class="titulo-do-grupo">{{ grupo.rotulo }} <span class="fraco-no-titulo">({{ grupo.linhas|length }})</span></h3></summary>{% else %}<div class="grupo-de-editais">{% if p.grupos|length > 1 %}<h3 class="titulo-do-grupo">{{ grupo.rotulo }} <span class="fraco-no-titulo">({{ grupo.linhas|length }})</span></h3>{% endif %}{% endif %}
+    <ul class="editais-do-conjunto" aria-label="{{ grupo.rotulo }}">
+      {% for linha in grupo.linhas %}{% include "interface/_linha_do_edital_no_processo.html" %}{% endfor %}
+    </ul>
+  {% if grupo.recolhido %}</details>{% else %}</div>{% endif %}
+  {% empty %}
+  {% comment %} Não nasce pela aplicação — o Processo é criado com o primeiro Edital —, mas o dado
+     legado existe (FR-1772 da 078). {% endcomment %}
+  <p class="vazio">Nenhum Edital neste Processo.</p>
   {% endfor %}
+</section>
 
-  {% comment %}
-  FR-559: sinal ausente não ocupa espaço, e não há seção permanente por espécie. A região encolhe a
-  **uma linha** quando não há nada a sinalizar, mas não some — sumir não distinguiria "nada a
-  sinalizar" de "a página não carregou". É a mesma forma que a Supervisão usa, e o mesmo parcial.
-
-  A linha tem duas formas desde a 045 (FR-730): a global só para quem alcança o catálogo inteiro, a
-  relativa para quem alcança parte. Quem escolhe é `frase_de_ausencia`, sobre o alcance do leitor.
-  {% endcomment %}
-  {% if atencao_visivel %}
-  <h3>Atenção</h3>
-  {% if sinais %}
-  <ul class="sinais">
-    {% for sinal in sinais %}{% include "interface/_sinal.html" %}{% endfor %}
-  </ul>
-  {% else %}
-  <p class="nenhuma">{{ ausencia }}</p>
-  {% endif %}
-  {% endif %}
+{# ============ Submissões por dia — só dos períodos em curso ============ #}
+{% comment %} A série só tem valor enquanto o período corre; encerrado, ela vive na Supervisão (FR-5320,
+   D-004). O parcial é o mesmo da Supervisão. {% endcomment %}
+{% if p.com_inscricoes_abertas %}
+<section class="cartao" aria-labelledby="serie-titulo">
+  <h2 id="serie-titulo">Submissões por dia</h2>
+  <p class="sub">Dos Editais com inscrições abertas. Leitura de {{ pulso.lido_em|date:"d/m/Y, H\hi" }}{% if pode_gerir_comissao %}; os períodos encerrados estão na <a href="{% url 'interface:supervisao' processo.id %}">Supervisão</a>{% endif %}.</p>
+  <div class="series-do-processo">
+  {% for linha in p.com_inscricoes_abertas %}{% with item=linha.pulso %}<div>{% include "interface/_serie_de_inscricoes.html" %}</div>{% endwith %}{% endfor %}
+  </div>
 </section>
 {% endif %}
 
+{# ============ Administração do Processo ============ #}
+{% comment %} Os atos do Processo, por último e recolhidos os irreversíveis (FR-5306) — a regra que a
+   página do Edital já segue (FR-4741 da 136). Impedidos, desabilitados e com os Editais pendentes
+   nomeados antes deles (FR-5307): pareciam disponíveis, e o impedimento vinha depois, fechado. {% endcomment %}
+{% if p.tem_administracao %}
+<section class="cc-administracao" aria-labelledby="administracao-titulo">
+  <h2 id="administracao-titulo">Administração do Processo</h2>
+  {% if p.ativar %}
+  <p class="ativar-o-processo"><a class="botao secundario" href="{% url 'interface:processo-ato' processo.id p.ativar.chave %}">{{ p.ativar.rotulo }}</a>
+    <span class="ajuda">Publicar o primeiro Edital deste Processo já o ativa. Este ato existe para quando a abertura formal precisa vir antes.</span></p>
+  {% endif %}
+  {% if p.terminais %}
+  <details class="cc-terminais">
+    <summary>Encerrar ou cancelar o Processo{% if p.algum_impedido %} <span class="fraco-no-titulo">— impedidos enquanto houver Edital em andamento</span>{% endif %}</summary>
+    {% if p.algum_impedido %}
+    <p>{{ pendentes|length }} {{ pendentes|length|plural:"Edital precisa ser encerrado ou cancelado,Editais precisam ser encerrados ou cancelados" }} antes:
+      {% for edital in pendentes %}<a href="{% url 'interface:detalhe' edital.id %}">{{ edital.number }}/{{ edital.year }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+    {% else %}
+    <p class="cc-fraco">Atos de fim de ciclo, irreversíveis. A tela de cada um mostra as consequências antes da confirmação.</p>
+    {% endif %}
+    <ul class="lista-acoes em-linha terminais" aria-label="Encerrar ou interromper o Processo">
+      {% for item in p.terminais %}
+      <li>
+        {% comment %} A marca descreve o ato (090, FR-2060). Impedido, não é link: um `span` com o
+           desenho do indisponível, anunciado como tal. {% endcomment %}
+        {% if item.impedido %}<span class="botao desabilitado" role="link" aria-disabled="true" aria-describedby="irreversivel-{{ item.ato.chave }}">{{ item.ato.rotulo }}</span>
+        {% else %}<a class="botao {% if item.ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id item.ato.chave %}" aria-describedby="irreversivel-{{ item.ato.chave }}">{{ item.ato.rotulo }}</a>{% endif %}
+        <span class="marca-irreversivel" id="irreversivel-{{ item.ato.chave }}">irreversível</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="ajuda">Encerrar ou cancelar o Processo não encerra nem cancela os Editais: cada um exige ato próprio.</p>
+  </details>
+  {% endif %}
+</section>
+{% endif %}
+{% endwith %}
 {% endblock %}

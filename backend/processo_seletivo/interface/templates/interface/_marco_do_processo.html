@@ -1,0 +1,3 @@
+{% comment %} Um marco na lista consolidada do Processo (147, FR-5319): a data, a descrição e o Edital que o
+   sustenta. A fase é a do relógio (045, FR-735): só o marco em curso ganha marca. {% endcomment %}
+<li><span class="data-do-marco">{{ marco.inicio|date:"d/m" }}</span><span>{{ marco.descricao|truncatechars:80 }}{% if marco.em_andamento %} <span class="marca">em andamento</span>{% endif %} <span class="edital-do-marco">· Edital {{ marco.edital.number }}/{{ marco.edital.year }}</span></span></li>
