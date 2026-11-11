@@ -91,3 +91,66 @@ class EtapaAvaliacao(models.Model):
 
     def __str__(self):
         return f"{self.order} — {self.name}"
+
+
+class CriterioAvaliacao(models.Model):
+    """Uma linha do barema de uma Etapa pontuada (146, D-001, FR-5200, FR-5201).
+
+    **Mora na Etapa, e não no Perfil nem numa biblioteca.** A Etapa já é do Edital e vale para todos
+    os Perfis, e é por isso que a mesma ficha serve às vagas de um Edital de três Perfis sem cópia
+    (SC-1625). No Perfil, multiplicaria a configuração no caso comum e anteciparia a decisão do
+    alcance da Etapa (P-5); numa biblioteca, não haveria caso que reusasse entre Editais — o
+    reaproveitamento do Edital inteiro já copia.
+
+    **Elaboração, como a Etapa**: muda até publicar, e depois só por Retificação. Não é append-only,
+    e por isso não entra na contagem das tabelas protegidas. O molde é o de `CriterioDesempate`:
+    `id` recebido e preservado na gravação, `ordem` única dentro do contêiner.
+
+    **Duas formas de pontuar, sem campo de tipo** (D-002, FR-5202). Com `pontos_por_unidade`, a
+    comissão informa a quantidade e a parcela é `min(quantidade × pontos, máxima)`; sem eles, a
+    comissão atribui os pontos, de zero à máxima. "Doutorado, 20 pontos" é por quantidade, com os
+    pontos iguais à máxima. Um campo de tipo diria de novo o que a ausência já diz.
+
+    **`documento` é UUID, e não chave estrangeira.** `replace_draft` apaga e recria os Documentos
+    Exigidos a cada gravação de etapa, e uma FK com `SET_NULL` desfaria o vínculo em toda gravação
+    — o barema perderia a comprovação sem que ninguém tocasse nele. O vínculo é conferido pelo
+    domínio contra os documentos da mesma gravação (FR-5205).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    etapa = models.ForeignKey(EtapaAvaliacao, on_delete=models.CASCADE, related_name="criterios")
+    ordem = models.PositiveIntegerField()
+    nome = models.CharField(max_length=200)
+    # Onde vão as exigências que o Edital escreve junto do título — "na área da Educação", "só
+    # experiência em EaD" — e as observações com asterisco. Texto livre, que o sistema não avalia.
+    descricao = models.TextField(blank=True, default="")
+    maxima = models.DecimalField(max_digits=7, decimal_places=4)
+    pontos_por_unidade = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
+    # "certificado", "mês", "diploma". Obrigatória com pontos por unidade, porque "5 pontos por"
+    # não se lê; vazia sem eles, porque a pontuação direta não tem unidade.
+    unidade = models.CharField(max_length=60, blank=True, default="")
+    documento = models.UUIDField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["ordem", "id"]
+        constraints = [
+            models.UniqueConstraint(fields=["etapa", "ordem"], name="uq_criterio_avaliacao_ordem"),
+            models.UniqueConstraint(fields=["etapa", "nome"], name="uq_criterio_avaliacao_nome"),
+            # Máxima zero afirmaria um critério que não pontua, pela razão da máxima da Etapa.
+            models.CheckConstraint(
+                condition=Q(maxima__gt=0), name="ck_criterio_avaliacao_maxima_positiva"
+            ),
+            models.CheckConstraint(
+                condition=Q(pontos_por_unidade__isnull=True)
+                | (Q(pontos_por_unidade__gt=0) & Q(pontos_por_unidade__lte=models.F("maxima"))),
+                name="ck_criterio_avaliacao_pontos_na_faixa",
+            ),
+            models.CheckConstraint(
+                condition=(Q(pontos_por_unidade__isnull=True) & Q(unidade=""))
+                | (Q(pontos_por_unidade__isnull=False) & ~Q(unidade="")),
+                name="ck_criterio_avaliacao_unidade_com_pontos",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.ordem}. {self.nome}"

@@ -604,3 +604,23 @@ def nome_de_pessoa(context, valor):
         if request is not None:
             setattr(request, _NOMES_DA_REQUISICAO, nomes)
     return nomes.get(texto, texto)
+
+
+@register.simple_tag
+def previa_do_barema(etapa, documentos):
+    """A prévia da seção Barema como o servidor a desenha (146, UX-421).
+
+    A mesma leitura da tabela do PDF (`pdf.linhas_do_barema`), sobre o barema como o cartão o tem —
+    gravado ou digitado —, para que a primeira prévia diga o que o documento dirá. O `barema.js` a
+    refaz a cada tecla; sem o script, ela continua certa até a próxima gravação.
+    """
+    from processo_seletivo.publicacoes.infrastructure import pdf
+
+    lido = pdf.linhas_do_barema(
+        etapa or {},
+        {"documentRequirements": [{"id": d["id"], "name": d["name"]} for d in documentos or []]},
+    )
+    if lido is None:
+        return {"linhas": [], "total": "0"}
+    linhas, total = lido
+    return {"linhas": linhas, "total": total}

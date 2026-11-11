@@ -1317,6 +1317,14 @@ def _recusa(exc, digitados, etapa):
     for indice, linha in enumerate(linhas):
         if str(linha.get("id", "")) == identidade:
             return {"mensagem": mensagem, "ancora": f"{prefixo}-{indice}-{campo}"}
+        # O critério do barema é entidade **dentro** da Etapa, e a recusa nomeia o critério (146):
+        # a âncora é o campo da linha dele, na posição em que a tela o redesenha.
+        for n, criterio in enumerate(linha.get("criteria") or []):
+            if str(criterio.get("id", "")) == identidade:
+                return {
+                    "mensagem": mensagem,
+                    "ancora": f"criterio-etapa-{indice}-{n}-{campo}",
+                }
         # A linha do quadro é entidade **dentro** do Perfil, e a recusa nomeia a linha, não o
         # Perfil. Sem esta descida a mensagem viraria texto solto no resumo, e quem compõe um
         # Edital de sete polos teria de procurar em qual deles o número não fecha (025, UX-023).
@@ -2022,6 +2030,11 @@ def compor_etapa(request, edital_id, etapa):
                 if etapa == "etapas" and digitados is not None
                 else forms.etapas_do_edital(edital)
             ),
+            # Os documentos que comprovam critério do barema (146, FR-5205). Só no passo das
+            # Etapas, pela razão das listas da classificação acima.
+            "documentos_do_barema": (
+                forms.documentos_para_o_barema(edital) if etapa == "etapas" else []
+            ),
             "secoes": (
                 _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
@@ -2405,9 +2418,23 @@ def _reexibir_etapas(etapas):
             "weight": "" if etapa["weight"] is None else f"{etapa['weight']:f}",
             "minimumScore": "" if etapa["minimumScore"] is None else f"{etapa['minimumScore']:f}",
             "scheduleEventId": etapa["scheduleEventId"] or "",
+            # O barema digitado (146), com o número como foi escrito e o vazio como vazio.
+            "criteria": [
+                {
+                    **criterio,
+                    "maximumScore": _decimal_digitado(criterio.get("maximumScore")),
+                    "pointsPerUnit": _decimal_digitado(criterio.get("pointsPerUnit")),
+                    "documentRequirementId": criterio.get("documentRequirementId") or "",
+                }
+                for criterio in etapa.get("criteria") or []
+            ],
         }
         for etapa in etapas
     ]
+
+
+def _decimal_digitado(valor):
+    return "" if valor is None else f"{valor:f}"
 
 
 def _reexibir_eventos(eventos):
@@ -2678,6 +2705,9 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
             {**evento, "isRegistrationPeriod": str(evento["id"]) == digitados["periodo"]}
             for evento in conteudo["schedule"]
         ]
+        conteudo["stages"] = _sem_documento_removido(
+            conteudo["stages"], conteudo["documentRequirements"]
+        )
         # **O teto, primeiro de tudo** (RC-12). É coluna de raiz, como o requerimento logo abaixo,
         # e pelo mesmo ato próprio. Vem antes dos outros dois porque é o único destes campos que o
         # formulário deixa digitar à vontade: a recusa dele interrompe a gravação antes que
@@ -2750,6 +2780,30 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
     )
+
+
+def _sem_documento_removido(etapas, documentos):
+    """O barema sem o vínculo com o documento que esta gravação remove (146, casos-limite).
+
+    Remover o Documento Exigido na etapa Inscrição desfaz o vínculo do critério que ele comprovava,
+    e o critério continua: o barema é da Etapa, e o documento é só a comprovação esperada. Sem isto,
+    a gravação seria recusada por um vínculo que a pessoa não vê nesta tela. A API não passa por
+    aqui — quem a usa envia o barema que quer, e o vínculo pendente é recusado (FR-5205).
+    """
+    existentes = {str(documento.get("id")) for documento in documentos}
+    return [
+        {
+            **etapa,
+            "criteria": [
+                {**criterio, "documentRequirementId": None}
+                if criterio.get("documentRequirementId")
+                and str(criterio["documentRequirementId"]) not in existentes
+                else criterio
+                for criterio in etapa.get("criteria") or []
+            ],
+        }
+        for etapa in etapas
+    ]
 
 
 #: Os campos da regra normativa que a etapa Perfis não desenha (051, FR-933, R-007). A fusão de
@@ -3580,6 +3634,34 @@ def fragmento_etapa(request, edital_id):
             "etapa_linha": {"id": str(uuid4()), "nova": True},
             "indice": _indice_de_linha(request),
             "eventos": forms.eventos_do_edital(edital),
+            "documentos_do_barema": forms.documentos_para_o_barema(edital),
+            "edital": edital,
+        },
+    )
+
+
+@require_http_methods(["GET"])
+def fragmento_criterio_de_avaliacao(request, edital_id, indice):
+    """Uma linha nova do barema, dentro do cartão da Etapa `indice` (146, FR-5206).
+
+    Nasce com identidade, como a Etapa: a gravação preserva o `id` recebido, e é por ele que a
+    Retificação alcança a linha depois de publicada. Escopada ao Edital porque a escolha do
+    documento que comprova o critério lista os Documentos Exigidos **daquele** Edital.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    edital = obter_edital(actor=ator, edital_id=edital_id)
+    if edital is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_criterio_de_avaliacao.html",
+        {
+            "criterio": {"id": str(uuid4()), "novo": True},
+            "indice": indice if str(indice).isdigit() else "0",
+            "n": _indice_de_linha(request),
+            "documentos_do_barema": forms.documentos_para_o_barema(edital),
             "edital": edital,
         },
     )
@@ -3693,6 +3775,30 @@ def fragmento_retificacao_criterio(request, edital_id):
     return render(
         request,
         "interface/_retificacao_criterio.html",
+        {"indice": _indice_de_linha(request), "campos": campos},
+    )
+
+
+@require_http_methods(["GET"])
+def fragmento_retificacao_criterio_de_avaliacao(request, edital_id):
+    """Um critério do barema a acrescentar por Retificação (146, FR-5210).
+
+    Escopado ao Edital, como o critério de desempate: a Etapa e o documento que ele escolhe saem
+    do conteúdo vigente **daquele** Edital.
+    """
+    if identidade.ator_da_sessao(request) is None:
+        return identidade.pedir_identificacao(request)
+    campos = _campos_do_fragmento_de_retificacao(
+        request,
+        edital_id,
+        retificacao_ui.NOVO_CRITERIO_DE_AVALIACAO,
+        retificacao_ui.opcoes_do_criterio_de_avaliacao_novo,
+    )
+    if campos is None:
+        raise Http404
+    return render(
+        request,
+        "interface/_retificacao_criterio_de_avaliacao.html",
         {"indice": _indice_de_linha(request), "campos": campos},
     )
 
@@ -4749,6 +4855,13 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
                 "criterio",
                 retificacao_ui.NOVO_CRITERIO,
                 opcoes=retificacao_ui.opcoes_do_criterio_novo(projecao),
+            ),
+            # O critério do barema acrescentado (146), com as opções pela mesma razão.
+            "novos_criterios_de_avaliacao": retificacao_ui.novas_para_formulario(
+                dados or {},
+                retificacao_ui.PREFIXO_DO_CRITERIO_DE_AVALIACAO,
+                retificacao_ui.NOVO_CRITERIO_DE_AVALIACAO,
+                opcoes=retificacao_ui.opcoes_do_criterio_de_avaliacao_novo(projecao),
             ),
             "resumo": resumo,
             # Os gestos declarados (051): os valores voltam ocultos no formulário, e cada um que

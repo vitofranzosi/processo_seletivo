@@ -313,6 +313,8 @@ QUEM_CARREGA = {
             "compor-anexos",
             "compor-conteudo",
             "compor-cronograma",
+            # A seção Barema do cartão da Etapa (146).
+            "compor-etapas",
             "compor-revisao",
             # Os documentos de uma convocação (115).
             "convocacao-documentos",

@@ -119,6 +119,8 @@ def _publicada(**extra):
         "rotuloFavoravel": None,
         "rotuloDesfavoravel": None,
         "scheduleEventId": None,
+        # O barema (146, degrau 21): sempre presente, vazio na Etapa sem critério.
+        "criteria": [],
         **extra,
     }
 

@@ -16,6 +16,7 @@ import re
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
 
 from django.utils import timezone
@@ -2249,6 +2250,36 @@ def frase_da_etapa(etapa, eventos):
     return " ".join(frases)
 
 
+def _pontos(valor) -> str:
+    """`1 ponto`, `0,5 ponto`, `5 pontos` — o plural a partir de dois, como se escreve."""
+    texto = humano.decimal(valor)
+    try:
+        singular = Decimal(str(valor)) < 2
+    except (InvalidOperation, ValueError):
+        singular = False
+    return f"{texto} ponto" if singular else f"{texto} pontos"
+
+
+def pontuacao_do_criterio(criterio) -> str:
+    """Como o critério do barema se pontua, numa expressão (146, UX-421, FR-5202).
+
+    Por unidade: `5 pontos por certificado, até 10` — o teto só aparece quando ele limita, porque
+    `20 pontos por diploma, até 20` repete o que a coluna da máxima já diz. Direta: `de 0 a 15`.
+    É a mesma frase na prévia da composição, na conferência e no PDF.
+    """
+    maxima = criterio.get("maximumScore")
+    pontos = criterio.get("pointsPerUnit")
+    if pontos in (None, ""):
+        return f"de 0 a {humano.decimal(maxima)}" if maxima not in (None, "") else ""
+    unidade = (criterio.get("unitLabel") or "").strip()
+    frase = f"{_pontos(pontos)} por {unidade}" if unidade else _pontos(pontos)
+    try:
+        limita = maxima not in (None, "") and Decimal(str(pontos)) < Decimal(str(maxima))
+    except (InvalidOperation, ValueError):
+        limita = False
+    return f"{frase}, até {humano.decimal(maxima)}" if limita else frase
+
+
 def _com_a_condicao(texto, documento):
     """O nome seguido da condição de exigência, depois de vírgula (131, FR-4454, UX-302).
 
@@ -4084,6 +4115,68 @@ def _periodo_do_evento(evento):
     return _instante(evento.get("startAt"))
 
 
+def linhas_do_barema(etapa, snapshot):
+    """As linhas da tabela do barema, e o total — ou `None` na Etapa sem critério (146, UX-421).
+
+    Uma leitura só, para a tabela do PDF nas duas apresentações e para a conferência: as colunas da
+    ficha dos Editais da amostra — o título, como se pontua, o teto e a comprovação. A descrição vai
+    junto do título, depois de travessão: é onde mora a exigência ("na área da Educação"), e uma
+    coluna só para ela ficaria vazia na maior parte das linhas.
+    """
+    criterios = [c for c in (etapa.get("criteria") or []) if isinstance(c, dict)]
+    if not criterios:
+        return None
+    documentos = {
+        documento.get("id"): documento
+        for documento in snapshot.get("documentRequirements") or []
+        if isinstance(documento, dict)
+    }
+    linhas, total = [], Decimal("0")
+    for criterio in criterios:
+        nome = (criterio.get("name") or "").strip()
+        descricao = (criterio.get("description") or "").strip()
+        documento = documentos.get(criterio.get("documentRequirementId"))
+        linhas.append(
+            [
+                f"{nome} — {descricao}" if descricao else nome,
+                pontuacao_do_criterio(criterio),
+                humano.decimal(criterio.get("maximumScore")),
+                (documento.get("name") or "").strip() if documento else "—",
+            ]
+        )
+        try:
+            total += Decimal(str(criterio.get("maximumScore")))
+        except (InvalidOperation, ValueError):
+            pass
+    return linhas, humano.decimal(total)
+
+
+CABECALHO_DO_BAREMA = ["Critério", "Pontuação", "Máxima", "Comprovação"]
+
+
+def tabela_do_barema(composicao, etapa, snapshot, tabelas=None):
+    """O barema da Etapa como tabela, logo depois da descrição dela (146, FR-5209, SC-1620).
+
+    **Etapa sem critério não chama nada**, e o texto extraído do documento não muda (SC-1624). Com
+    critério, a tabela entra na numeração das tabelas do documento, como o Cronograma e o quadro de
+    vagas, e `tabelas_do_documento` a conta pela mesma régua.
+    """
+    lido = linhas_do_barema(etapa, snapshot)
+    if lido is None:
+        return
+    linhas, total = lido
+    nome = (etapa.get("name") or "").strip()
+    _tabela(
+        composicao,
+        CABECALHO_DO_BAREMA,
+        linhas,
+        recuo=0.0,
+        alinhamentos=[ESQUERDA, ESQUERDA, CENTRO, ESQUERDA],
+        legenda=tabelas.legenda(f"Barema da Etapa {nome}") if tabelas is not None else None,
+        rodape=["Total", "", total, ""],
+    )
+
+
 def _etapas(composicao, snapshot, secao=0, tabelas=None):
     """As Etapas na ordem definida, com o que estiver informado.
 
@@ -4111,6 +4204,7 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 # E1 a E3: os pares viram uma frase, com o mesmo que estava declarado.
                 if frase := frase_da_etapa(etapa, eventos):
                     composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
+                tabela_do_barema(composicao, etapa, snapshot, tabelas)
                 continue
             caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
             pares = []
@@ -4148,6 +4242,9 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
             # Poucos atributos de um único objeto se descrevem com peso tipográfico, não com
             # grade: emoldurá-los produzia ficha administrativa, não Edital.
             _pares(composicao, pares)
+            # O barema é outra coisa: várias linhas com as mesmas colunas, que é o que a ficha dos
+            # Editais é (146, FR-5209).
+            tabela_do_barema(composicao, etapa, snapshot, tabelas)
 
 
 def _alinea(indice):
@@ -4615,6 +4712,13 @@ def tabelas_do_documento(snapshot):
                 total += 1 if perfil.get("competitionModalities") else 0
         elif corpo is _cronograma:
             total += 1
+        elif corpo is _etapas:
+            # Uma tabela por Etapa com barema, pela regra de `tabela_do_barema` (146).
+            total += sum(
+                1
+                for etapa in snapshot.get("stages") or []
+                if isinstance(etapa, dict) and linhas_do_barema(etapa, snapshot) is not None
+            )
     return total
 
 

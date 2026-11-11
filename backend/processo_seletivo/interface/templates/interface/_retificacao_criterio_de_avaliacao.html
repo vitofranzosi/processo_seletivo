@@ -1,0 +1,40 @@
+<fieldset class="linha criterio-novo">
+  <legend><span class="nome">Critério do barema a acrescentar</span></legend>
+  {% comment %}
+  Os rótulos são os da seção Barema da composição (146, UX-420). A Etapa é uma escolha só, entre as
+  pontuadas, porque o caminho da Alteração passa por ela. Pontos por unidade em branco é a pontuação
+  atribuída pela comissão — o conteúdo deduz a forma da presença dos pontos (D-002).
+  {% endcomment %}
+  <div class="campos">
+    {% for campo in campos %}
+    {% if campo.tipo == 'oculto' %}
+    {% comment %}A identidade do critério, nascida no fragmento: confirmar de novo produz o mesmo ato (020).{% endcomment %}
+    <input type="hidden" name="novo-barema-{{ indice }}-{{ campo.chave }}" value="{{ campo.valor }}">
+    {% else %}
+    <p class="campo{% if campo.tipo == 'decimal' %} curto{% else %} largo{% endif %}">
+      <label for="nb-{{ indice }}-{{ campo.chave }}">{{ campo.rotulo }}</label>
+      {% if campo.tipo == 'referencia' %}
+      <select id="nb-{{ indice }}-{{ campo.chave }}" name="novo-barema-{{ indice }}-{{ campo.chave }}">
+        <option value="">{% if campo.chave == 'documentRequirementId' %}Nenhum documento{% else %}Escolha{% endif %}</option>
+        {% for identificador, rotulo in campo.opcoes %}
+        <option value="{{ identificador }}"{% if campo.valor == identificador %} selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+      {% elif campo.tipo == 'texto_longo' %}
+      <textarea id="nb-{{ indice }}-{{ campo.chave }}" name="novo-barema-{{ indice }}-{{ campo.chave }}" rows="2">{{ campo.valor }}</textarea>
+      {% elif campo.tipo == 'decimal' %}
+      <input id="nb-{{ indice }}-{{ campo.chave }}" name="novo-barema-{{ indice }}-{{ campo.chave }}"
+             type="number" min="0.0001" step="0.0001" inputmode="decimal" value="{{ campo.valor }}">
+      {% else %}
+      <input id="nb-{{ indice }}-{{ campo.chave }}" name="novo-barema-{{ indice }}-{{ campo.chave }}"
+             type="text" value="{{ campo.valor }}">
+      {% endif %}
+    </p>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <p class="acoes-linha">
+    <button type="button" class="acao" hx-get="{% url 'interface:fragmento-remover' %}"
+            hx-target="closest fieldset" hx-swap="outerHTML">Não acrescentar este critério</button>
+  </p>
+</fieldset>

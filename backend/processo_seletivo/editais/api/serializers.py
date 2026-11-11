@@ -216,6 +216,28 @@ class EventSerializer(serializers.Serializer):
         return attrs
 
 
+class CriterionSerializer(serializers.Serializer):
+    """Um critério do barema da Etapa (146, FR-5201, FR-5213).
+
+    A forma, só: nome, faixa e documento ligado são conferidos no domínio, porque a interface
+    administrativa não atravessa este serializer. A ordem é a da lista — o conteúdo publicado não
+    tem campo de ordem, e mover um critério é mudar a posição dele no envio.
+    """
+
+    id = serializers.UUIDField()
+    name = serializers.CharField(max_length=200, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True, default="")
+    maximumScore = serializers.DecimalField(max_digits=7, decimal_places=4)
+    # Ausentes ou nulos, a comissão atribui os pontos diretamente (D-002, FR-5202).
+    pointsPerUnit = serializers.DecimalField(
+        max_digits=7, decimal_places=4, required=False, allow_null=True, default=None
+    )
+    unitLabel = serializers.CharField(
+        max_length=60, required=False, allow_blank=True, allow_null=True, default=""
+    )
+    documentRequirementId = serializers.UUIDField(required=False, allow_null=True, default=None)
+
+
 class StageSerializer(serializers.Serializer):
     """Etapa de Avaliação no rascunho.
 
@@ -259,6 +281,10 @@ class StageSerializer(serializers.Serializer):
         max_length=100, required=False, allow_null=True, allow_blank=True
     )
     scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
+    # O barema (146, FR-5213). **Ausente é sem critérios**, e o preço é o de todo campo deste
+    # contrato: quem lê o rascunho e o reenvia sem a chave apaga a ficha. É a regra que a API já
+    # tem para as outras coleções, e a única grafia que a FR-5213 admite.
+    criteria = CriterionSerializer(many=True, required=False, default=list)
 
 
 class SectionSerializer(serializers.Serializer):

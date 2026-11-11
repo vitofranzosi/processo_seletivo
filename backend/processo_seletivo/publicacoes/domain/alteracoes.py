@@ -49,6 +49,8 @@ COLECOES = {
     "profiles": ("Perfil", "name"),
     "schedule": ("Evento do cronograma", "description"),
     "stages": ("Etapa", "name"),
+    # O barema (146): o critério se reconhece pelo título, como os Editais o imprimem.
+    "criteria": ("Critério de avaliação", "name"),
     "sections": ("Seção", "title"),
     "attachments": ("Anexo", "label"),
     "documentRequirements": ("Documento exigido", "name"),
@@ -202,6 +204,16 @@ CAMPOS = {
         "drawMethod": "Método do sorteio",
     },
     "tiebreakers": {"order": "Ordem de aplicação"},
+    # Os rótulos da seção Barema da composição (146, UX-420), para quem retifica e quem lê o
+    # histórico reconhecerem o mesmo campo.
+    "criteria": {
+        "name": "Critério",
+        "description": "Descrição do critério",
+        "maximumScore": "Pontuação máxima do critério",
+        "pointsPerUnit": "Pontos por unidade",
+        "unitLabel": "Unidade",
+        "documentRequirementId": "Documento que comprova",
+    },
 }
 
 # Os campos de topo do Edital: alterados sem passar por coleção nenhuma.

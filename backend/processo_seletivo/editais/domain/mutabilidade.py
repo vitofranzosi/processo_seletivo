@@ -460,6 +460,18 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("stages", "forma"): retificavel(),
     ("stages", "rotuloFavoravel"): retificavel(),
     ("stages", "rotuloDesfavoravel"): retificavel(),
+    # ---- criteria (o barema da Etapa, 146) ----------------------------------------------------
+    # **Todos retificáveis, menos a identidade** (FR-5210). O barema é a regra contra a qual a
+    # comissão pontua, e um título errado, uma máxima trocada ou o documento que não comprova o que
+    # se pede precisam de correção formal. O que protege as conclusões já feitas não é congelar o
+    # campo: é a versão da norma, que a conclusão guarda e a consolidação compara (D-006).
+    ("criteria", "id"): estrutural(),
+    ("criteria", "name"): retificavel(),
+    ("criteria", "description"): retificavel(),
+    ("criteria", "maximumScore"): retificavel(),
+    ("criteria", "pointsPerUnit"): retificavel(),
+    ("criteria", "unitLabel"): retificavel(),
+    ("criteria", "documentRequirementId"): retificavel(),
     # ---- sections ---------------------------------------------------------------------------
     ("sections", "id"): estrutural(),
     ("sections", "key"): estrutural(),

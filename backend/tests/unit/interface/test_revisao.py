@@ -210,6 +210,59 @@ def test_a_conferencia_mostra_o_que_a_012_acrescentou_a_etapa(
     assert "Avaliações por inscrição: 2" in tudo
 
 
+def test_a_conferencia_mostra_o_barema_de_cada_etapa():
+    """FR-5211 (146): quem homologa confere a ficha que o PDF imprimirá, linha a linha e a soma."""
+    etapa = {
+        "id": "00000000-0000-0000-0000-000000014690",
+        "order": 1,
+        "name": "Prova de Títulos",
+        "forma": "PONTUADA",
+        "classificatory": True,
+        "maximumScore": "30.0000",
+        "criteria": [
+            {
+                "id": "00000000-0000-0000-0000-000000014691",
+                "name": "Especialização",
+                "description": "Na área da Educação.",
+                "maximumScore": "10.0000",
+                "pointsPerUnit": "5.0000",
+                "unitLabel": "certificado",
+                "documentRequirementId": "00000000-0000-0000-0000-000000014692",
+            },
+            {
+                "id": "00000000-0000-0000-0000-000000014693",
+                "name": "Entrevista",
+                "description": "",
+                "maximumScore": "20.0000",
+                "pointsPerUnit": None,
+                "unitLabel": None,
+                "documentRequirementId": None,
+            },
+        ],
+    }
+    snapshot = {
+        "stages": [etapa],
+        "documentRequirements": [
+            {"id": "00000000-0000-0000-0000-000000014692", "name": "Títulos acadêmicos"}
+        ],
+    }
+
+    linhas = revisao._etapa(etapa, snapshot)["linhas"]
+
+    assert "Barema: 2 critérios, somando 30 — a pontuação máxima da Etapa" in linhas
+    assert (
+        "Critério 1: Especialização — Na área da Educação. · 5 pontos por certificado, até 10 · "
+        "máxima 10 · comprova: Títulos acadêmicos"
+    ) in linhas
+    assert "Critério 2: Entrevista · de 0 a 20 · máxima 20 · sem documento ligado" in linhas
+
+
+def test_a_etapa_sem_barema_nao_ganha_linha_de_barema():
+    etapa = {"order": 1, "name": "Prova", "forma": "PONTUADA", "criteria": []}
+
+    assert not any(linha.startswith("Barema") for linha in revisao._etapa(etapa, {})["linhas"])
+
+
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
 def test_a_etapa_que_nada_declara_nao_inventa_o_padrao(

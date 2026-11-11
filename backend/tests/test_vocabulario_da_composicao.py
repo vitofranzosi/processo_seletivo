@@ -127,14 +127,27 @@ def _definicoes(texto):
     ]
 
 
-CASOS = [(tela, termo) for tela in TELAS for termo in TERMOS]
+#: Os termos de **uma** tela só, e a tela que os usa (146). Literal pela razão de `TELAS`, e à parte
+#: dela porque cruzar «barema» com as onze telas acima produziria onze pulados — nenhuma delas o usa
+#: — e cruzar a tela das Etapas com os três termos acima, outros três. A regra é a mesma: o primeiro
+#: uso visível é um `<dfn>` seguido de definição.
+TERMOS_DE_UMA_TELA = {
+    # A seção Barema do cartão da Etapa: a palavra é a dos Editais, e quem compõe pela primeira vez
+    # não a conhece necessariamente — a definição está na ajuda da etapa, que precede os cartões.
+    "compor_etapas.html": {"barema": r"\bbarema"},
+}
+
+CASOS = [(tela, termo) for tela in TELAS for termo in TERMOS] + [
+    (tela, termo) for tela, termos in TERMOS_DE_UMA_TELA.items() for termo in termos
+]
 
 
 @pytest.mark.parametrize(("tela", "termo"), CASOS, ids=lambda item: item)
 def test_o_termo_usado_pela_tela_se_define_no_primeiro_uso(tela, termo):
     texto = visivel(TEMPLATES / tela)
     sem_acento = _sem_acento(texto)
-    primeira = re.search(TERMOS[termo], sem_acento)
+    padrao = TERMOS_DE_UMA_TELA.get(tela, {}).get(termo) or TERMOS[termo]
+    primeira = re.search(padrao, sem_acento)
     if primeira is None:
         pytest.skip(f"{tela} não usa «{termo}» em texto visível")
 

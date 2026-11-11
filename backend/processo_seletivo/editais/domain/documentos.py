@@ -444,6 +444,23 @@ def aplicaveis(
     ]
 
 
+def vale_para_toda_inscricao(requisito: dict) -> bool:
+    """Se o documento é pedido a **toda** inscrição: da inscrição, sem recorte e sem condição (146).
+
+    É a pergunta do barema (D-010, FR-5205): o critério vale para toda inscrição da Etapa, e o
+    documento que o comprova também precisa valer — senão haveria candidato a quem se pede pontuar
+    um critério cujo documento ele não podia apresentar. Lida pelas mesmas três leituras que decidem
+    o que o candidato vê (`momento_de`, `recorte_de`, `condicao_de`), e não por regra paralela: o
+    recorte `TODOS` é o único que `_se_aplica` aceita para qualquer Perfil e qualquer Modalidade.
+    """
+    return (
+        isinstance(requisito, dict)
+        and momento_de(requisito) == NA_INSCRICAO
+        and recorte_de(requisito).forma == TODOS
+        and condicao_de(requisito) is None
+    )
+
+
 def _se_aplica(recorte: Recorte, profile_id, modality_id, modalidade_escolhida) -> bool:
     if recorte.forma == TODOS:
         return True

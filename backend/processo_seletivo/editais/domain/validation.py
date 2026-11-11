@@ -42,6 +42,7 @@ from processo_seletivo.editais.domain.documentos import (
     problemas_do_momento,
     rotulo_da_modalidade,
 )
+from processo_seletivo.editais.domain.etapas import criterios_de, problemas_do_barema
 from processo_seletivo.editais.domain.perfis import (
     CAMPOS_DO_METODO,
     ProfileValidationError,
@@ -270,6 +271,24 @@ ETAPA_PUBLICADA = (
     Campo("rotuloFavoravel", str, admite_nulo=True),
     Campo("rotuloDesfavoravel", str, admite_nulo=True),
     Campo("scheduleEventId", str, admite_nulo=True, formato="uuid"),
+    # O barema (146, degrau 21). Sempre presente, lista vazia na Etapa sem critério; a forma de
+    # cada item é `CRITERIO_PUBLICADO`, conferida em `_coerencia_do_barema` pela régua do marco —
+    # aqui se declara que a coleção existe e que cada item é objeto.
+    Campo("criteria", list, tipo_do_item=dict),
+)
+
+# Um critério do barema na forma publicada (146, FR-5201). Os decimais na forma canônica da Etapa;
+# `pointsPerUnit` nulo é a pontuação direta (D-002), e `unitLabel` e `documentRequirementId` nulos
+# são "não declarado". Que a unidade acompanhe os pontos, que a soma feche e que o documento seja
+# da inscrição é coerência entre campos, e mora em `etapas.problemas_do_barema`.
+CRITERIO_PUBLICADO = (
+    Campo("id", str, formato="uuid"),
+    Campo("name", str),
+    Campo("description", str),
+    Campo("maximumScore", str, formato="decimal", padrao=DECIMAL),
+    Campo("pointsPerUnit", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
+    Campo("unitLabel", str, admite_nulo=True),
+    Campo("documentRequirementId", str, admite_nulo=True, formato="uuid"),
 )
 
 # `content` e `source` **não entram**: dependem do tipo, e `Campo` não expressa coerência entre
@@ -1499,6 +1518,58 @@ def _coerencia_das_etapas(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _coerencia_do_barema(snapshot: dict) -> list[ValidationFinding]:
+    """A forma de cada critério, e a mesma regra que a gravação aplica (146, FR-5203 a FR-5205).
+
+    **Em todo ato**, e não só na publicação: a Retificação confere o conteúdo consolidado por aqui,
+    e é assim que a igualdade da soma vale também depois dela (FR-5210). E é aqui que se pega a
+    restrição acrescentada ao documento depois do vínculo — por Retificação do documento, que não
+    passa pela gravação do rascunho (D-010, SC-1634).
+
+    A regra é a de `etapas.problemas_do_barema`, a mesma da gravação: uma regra, duas leituras.
+    Critério fora de forma não entra nela — o achado de forma já diz o que corrigir, e a regra
+    leria um decimal que não é decimal.
+    """
+    itens = snapshot.get("stages")
+    if not isinstance(itens, list):
+        return []
+    documentos = [
+        documento
+        for documento in snapshot.get("documentRequirements") or []
+        if isinstance(documento, dict)
+    ]
+    findings = []
+    for posicao, etapa in enumerate(itens):
+        if not isinstance(etapa, dict) or not isinstance(etapa.get("criteria"), list):
+            continue
+        caminho = _caminho_da_entidade("stages", etapa, posicao)
+        de_forma = []
+        for indice, criterio in enumerate(criterios_de(etapa)):
+            if not isinstance(criterio, dict):
+                continue
+            base = f"{caminho}{_caminho_da_entidade('criteria', criterio, indice)}"
+            de_forma.extend(
+                achado
+                for campo in CRITERIO_PUBLICADO
+                if (achado := _violacao(campo, criterio, f"{base}/{campo.nome}")) is not None
+            )
+        findings.extend(de_forma)
+        if de_forma:
+            continue
+        for identidade, campo, mensagem in problemas_do_barema(etapa, documentos):
+            if identidade and identidade != str(etapa.get("id") or ""):
+                alvo = f"{caminho}/criteria/id={identidade}/{campo}"
+            else:
+                alvo = f"{caminho}/{campo}"
+            findings.append(_impeditivo(BAREMA_INCOERENTE, mensagem, alvo))
+    return findings
+
+
+#: A recusa do barema que não fecha (146). Código próprio, e não `field_constraint_violated`: a
+#: mensagem já nomeia a Etapa e o critério, e quem a lê pela API precisa distingui-la da forma.
+BAREMA_INCOERENTE = "stage_criteria_inconsistent"
+
+
 def _decimal_ou_none(valor):
     """Valor fora da forma decimal não é assunto daqui: a forma declarada já o reporta."""
     try:
@@ -1592,6 +1663,7 @@ def validate_for_publication(
         findings.extend(_violacoes_da_colecao(snapshot, colecao, forma))
     findings.extend(_topologia_das_secoes(snapshot, topologia))
     findings.extend(_coerencia_das_etapas(snapshot))
+    findings.extend(_coerencia_do_barema(snapshot))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_faixa_do_teto(snapshot))
@@ -3930,6 +4002,24 @@ def _textos_impressos(snapshot: dict):
                     f"{lugar} {entidade} «{_nome(item, *chaves)}»",
                     item.get(campo),
                 )
+    # O barema (146): a tabela da Etapa imprime o título, a descrição e a unidade de cada critério.
+    for posicao, etapa in enumerate(snapshot.get("stages") or []):
+        if not isinstance(etapa, dict):
+            continue
+        caminho_da_etapa = _caminho_da_entidade("stages", etapa, posicao)
+        for indice, criterio in enumerate(criterios_de(etapa)):
+            if not isinstance(criterio, dict):
+                continue
+            caminho = f"{caminho_da_etapa}{_caminho_da_entidade('criteria', criterio, indice)}"
+            do_criterio = (
+                f"do critério «{_nome(criterio, 'name')}» da Etapa «{_nome(etapa, 'name')}»"
+            )
+            for campo, lugar in (
+                ("name", "no nome"),
+                ("description", "nas exigências"),
+                ("unitLabel", "na unidade"),
+            ):
+                yield f"{caminho}/{campo}", f"{lugar} {do_criterio}", criterio.get(campo)
 
 
 def _caractere_sem_grafia(snapshot: dict) -> list[ValidationFinding]:

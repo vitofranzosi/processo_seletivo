@@ -54,6 +54,11 @@ CRITERIO = {
     "ETAPA": "00000000-0000-0000-0000-000000000592",
     "FATO": "00000000-0000-0000-0000-000000000593",
 }
+# Os critérios do barema (146), distintos dos de desempate acima: são outra coleção.
+CRITERIO_DO_BAREMA = {
+    "TITULO": "00000000-0000-0000-0000-000000000597",
+    "ENTREVISTA": "00000000-0000-0000-0000-000000000598",
+}
 LINHA = {
     "GERAL": "00000000-0000-0000-0000-000000000594",
     "PPI": "00000000-0000-0000-0000-000000000595",
@@ -465,6 +470,32 @@ def rascunho_completo():
     # publicar. O marco continua declarando o **próprio** método — é a divergência da FR-430, e é
     # ela que mantém as dez entradas do marco vivas.
     base["drawMethod"] = METODO_COMUM
+    # O barema da Etapa B (146). **Os dois formatos e todo campo com valor**, pela razão de todo
+    # este construtor: a travessia do contrato só classifica o que o Edital máximo publica, e
+    # `pointsPerUnit`, `unitLabel` e `documentRequirementId` nulos num critério só não seriam
+    # encontrados. O documento é o A, o único pedido a toda inscrição (D-010).
+    etapa_com_barema = base["stages"][1]
+    etapa_com_barema["maximumScore"] = "30.0000"
+    etapa_com_barema["criteria"] = [
+        {
+            "id": CRITERIO_DO_BAREMA["TITULO"],
+            "name": "Certificado de especialização",
+            "description": "Na área da Educação.",
+            "maximumScore": "10.0000",
+            "pointsPerUnit": "5.0000",
+            "unitLabel": "certificado",
+            "documentRequirementId": DOCUMENTO["A"],
+        },
+        {
+            "id": CRITERIO_DO_BAREMA["ENTREVISTA"],
+            "name": "Memorial descritivo",
+            "description": "",
+            "maximumScore": "20.0000",
+            "pointsPerUnit": None,
+            "unitLabel": None,
+            "documentRequirementId": None,
+        },
+    ]
     base["documentRequirements"] = [
         {
             "id": DOCUMENTO["A"],

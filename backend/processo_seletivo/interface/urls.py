@@ -356,6 +356,13 @@ urlpatterns = [
         views.fragmento_etapa,
         name="fragmento-etapa",
     ),
+    # A linha do barema (146): escopada ao Edital pela lista de documentos que ela oferece, e à
+    # Etapa pelo índice do cartão, que compõe o nome de cada campo.
+    path(
+        "editais/<uuid:edital_id>/fragmentos/etapa/<str:indice>/criterio",
+        views.fragmento_criterio_de_avaliacao,
+        name="fragmento-criterio-de-avaliacao",
+    ),
     path(
         "editais/<uuid:edital_id>/fragmentos/documento",
         views.fragmento_documento,
@@ -453,6 +460,11 @@ urlpatterns = [
         "fragmentos/retificacao/<uuid:edital_id>/criterio",
         views.fragmento_retificacao_criterio,
         name="fragmento-retificacao-criterio",
+    ),
+    path(
+        "editais/<uuid:edital_id>/fragmentos/retificacao/criterio-de-avaliacao",
+        views.fragmento_retificacao_criterio_de_avaliacao,
+        name="fragmento-retificacao-criterio-de-avaliacao",
     ),
     path("fragmentos/remover", views.fragmento_remover, name="fragmento-remover"),
     # A organização do trabalho (011). Nenhuma rota usa `etapas/` como segmento: a palavra já

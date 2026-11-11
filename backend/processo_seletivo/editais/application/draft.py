@@ -17,7 +17,7 @@ from processo_seletivo.editais.domain.perfis import (
 )
 from processo_seletivo.editais.models.cronograma import Cronograma, EventoCronograma
 from processo_seletivo.editais.models.documentos import DocumentoExigido
-from processo_seletivo.editais.models.etapas import EtapaAvaliacao
+from processo_seletivo.editais.models.etapas import CriterioAvaliacao, EtapaAvaliacao
 from processo_seletivo.editais.models.perfis import (
     CriterioDesempate,
     FatoDeclarado,
@@ -106,6 +106,28 @@ def _identidades_aninhadas_alheias(profiles):
     return alheios
 
 
+def _criterios_de_avaliacao_alheios(stages):
+    """O critério do barema, contra a **sua** Etapa (146, FR-5213).
+
+    Mesma régua do critério de desempate contra o marco: duas Etapas trocarem critérios, ou um
+    critério de outro Edital ser reparentado aqui, faria a identidade estável — que a Retificação
+    endereça — passar a designar outra linha de outra ficha.
+    """
+    criterios = {
+        str(criterio["id"]): str(stage.get("id") or "")
+        for stage in stages
+        for criterio in stage.get("criteria") or []
+        if isinstance(criterio, dict) and criterio.get("id")
+    }
+    return {
+        str(identificador)
+        for identificador, etapa in CriterioAvaliacao.objects.filter(
+            id__in=list(criterios)
+        ).values_list("id", "etapa_id")
+        if str(etapa) != criterios[str(identificador)]
+    }
+
+
 def _reject_identifiers_of_other_editais(edital, profiles, schedule, stages):
     """FR-017: Perfil, Evento ou Etapa já vinculado a outro Edital é inconsistência determinável.
 
@@ -132,6 +154,7 @@ def _reject_identifiers_of_other_editais(edital, profiles, schedule, stages):
                 .values_list("id", flat=True)
             )
             | _identidades_aninhadas_alheias(profiles)
+            | _criterios_de_avaliacao_alheios(stages)
         )
     )
     if alheios:
@@ -256,7 +279,7 @@ def replace_draft(
     try:
         # Contra o Cronograma **desta gravação**, e não contra o banco: `replace_draft` substitui o
         # rascunho inteiro, então um Evento removido no mesmo POST já não existe.
-        validate_stages(stages, schedule=schedule)
+        validate_stages(stages, schedule=schedule, document_requirements=document_requirements)
     except StageValidationError as exc:
         # `campo` e `identidade` seguem junto: sem eles a interface não teria como ancorar a
         # recusa no controle que a causou, e o resumo voltaria a ser texto solto (FR-033).
@@ -459,6 +482,33 @@ def replace_draft(
                     evento_id=stage.get("scheduleEventId"),
                 )
                 for stage in stages
+            ]
+        )
+        # O barema, depois das Etapas, porque o critério é delas (146, FR-5213). A `CASCADE` acima
+        # já levou os critérios gravados junto com as Etapas, e eles renascem com o `id` recebido:
+        # é por ele que a Retificação alcança cada linha da ficha depois de publicada. A ordem vem
+        # da posição no envio — o conteúdo publicado não tem campo de ordem, e a lista é a ordem.
+        #
+        # **Etapa sem a chave é Etapa sem critério**, que é o que a FR-5213 pede. Quem grava outra
+        # etapa do assistente reenvia o barema por `etapas_persistidas` — sem isso, gravar os Perfis
+        # apagaria a ficha, que é o risco 2 do plano.
+        CriterioAvaliacao.objects.bulk_create(
+            [
+                CriterioAvaliacao(
+                    id=criterio["id"],
+                    etapa_id=stage["id"],
+                    ordem=ordem,
+                    nome=(criterio.get("name") or "").strip(),
+                    descricao=(criterio.get("description") or "").strip(),
+                    maxima=criterio["maximumScore"],
+                    pontos_por_unidade=criterio.get("pointsPerUnit"),
+                    unidade=(criterio.get("unitLabel") or "").strip()
+                    if criterio.get("pointsPerUnit") is not None
+                    else "",
+                    documento=criterio.get("documentRequirementId") or None,
+                )
+                for stage in stages
+                for ordem, criterio in enumerate(stage.get("criteria") or [], 1)
             ]
         )
         # A identidade da linha é a mesma do snapshot: uma identidade só para a seção, e não uma

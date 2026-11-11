@@ -424,6 +424,11 @@ def fragmentos(client, seletor_ligado, com_etapas):
             {"edital": str(edital.id)},
         ),
         "etapa": (reverse("interface:fragmento-etapa", args=[edital.id]), {}),
+        # A linha do barema, dentro do cartão da Etapa (146): a mesma régua dos cartões acima.
+        "criterio-de-avaliacao": (
+            reverse("interface:fragmento-criterio-de-avaliacao", args=[edital.id, "0"]),
+            {},
+        ),
     }
     return {
         nome: client.get(url, {**dados, "indice": "0"}).content.decode()
@@ -431,7 +436,9 @@ def fragmentos(client, seletor_ligado, com_etapas):
     }
 
 
-@pytest.mark.parametrize("parcial", ["perfil", "evento", "documento", "marco", "etapa"])
+@pytest.mark.parametrize(
+    "parcial", ["perfil", "evento", "documento", "marco", "etapa", "criterio-de-avaliacao"]
+)
 def test_nenhum_cartao_do_assistente_carrega_ajuda_visivel(fragmentos, parcial):
     """Explicação que não muda de um cartão para o outro não se imprime uma vez por cartão.
 
@@ -441,7 +448,9 @@ def test_nenhum_cartao_do_assistente_carrega_ajuda_visivel(fragmentos, parcial):
     assert 'class="ajuda"' not in fragmentos[parcial]
 
 
-@pytest.mark.parametrize("parcial", ["perfil", "evento", "documento", "marco", "etapa"])
+@pytest.mark.parametrize(
+    "parcial", ["perfil", "evento", "documento", "marco", "etapa", "criterio-de-avaliacao"]
+)
 def test_toda_descricao_escondida_continua_apontada_por_algum_campo(fragmentos, parcial):
     """Sair de vista não é sair da página — mas só se alguém ainda apontar para ela.
 
@@ -462,7 +471,9 @@ def test_toda_descricao_escondida_continua_apontada_por_algum_campo(fragmentos, 
     )
 
 
-@pytest.mark.parametrize("parcial", ["perfil", "evento", "documento", "marco", "etapa"])
+@pytest.mark.parametrize(
+    "parcial", ["perfil", "evento", "documento", "marco", "etapa", "criterio-de-avaliacao"]
+)
 def test_nenhum_campo_aponta_para_descricao_que_nao_existe(fragmentos, parcial):
     """O outro lado do mesmo laço: apontar para nada é pior do que não apontar."""
     marcacao = fragmentos[parcial]

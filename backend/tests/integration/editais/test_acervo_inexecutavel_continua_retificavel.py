@@ -34,6 +34,7 @@ from processo_seletivo.editais.domain.validation import (
     validate_for_publication,
 )
 from processo_seletivo.editais.models.perfis import MarcoClassificatorio
+from processo_seletivo.publicacoes.domain.elevacao import elevar
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.fixtures.legado import publicar_sem_aferir
 from tests.fixtures.publicacao import retify
@@ -267,7 +268,10 @@ def test_o_conteudo_do_acervo_nao_produz_impedimento_algum_ao_retificar(do_acerv
     O teste acima prova o caminho; este prova a **razão**, e nomeia os achados: nenhum dos quatro
     da família alcança o ato de Retificação, seja ele impeditivo ou aviso.
     """
-    conteudo = vigente(do_acervo).content
+    # **Elevado, como `retificacoes.py` o lê** (`conteudo_base` eleva a versão antes de conferir).
+    # O acervo deste teste foi publicado sem a aferição, na versão em que nasceu: desde a `146`,
+    # sem elevá-lo, a forma publicada acusaria a falta da lista `criteria` do degrau 21.
+    conteudo = elevar(vigente(do_acervo).content)
 
     achados = validate_for_publication(conteudo, ato=ATO_DE_RETIFICACAO)
     codigos = {item.code for item in achados}

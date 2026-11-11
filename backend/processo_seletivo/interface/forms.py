@@ -744,6 +744,58 @@ def _renumerar(itens):
     return itens
 
 
+def _criterios_de_avaliacao(dados, indice):
+    """O barema de uma Etapa, na ordem em que a pessoa o deixou (146, FR-5206).
+
+    `criterio-etapa-<i>-<n>-…`, e não `etapa-<i>-criterio-<n>-…`: `_indices` casa todo campo que
+    comece por `etapa-` e termine em `-id`, e `etapa-0-criterio-1-id` criaria uma Etapa espúria de
+    índice `0-criterio-1`. O prefixo próprio separa as duas coleções, como `criterio-<perfil>-…`
+    separa o desempate do marco.
+
+    A `order` só ordena: é o campo que `ordenacao.js` reescreve ao mover, e o conteúdo publicado não
+    a tem — a lista é a ordem. Linha inteiramente em branco não é critério: é o cartão que a pessoa
+    acrescentou e não preencheu, e gravá-la seria recusar um critério que ninguém escreveu.
+    """
+    prefixo = f"criterio-etapa-{indice}"
+    linhas = []
+    for sub in _indices(dados, prefixo):
+        base = f"{prefixo}-{sub}"
+        # "A comissão atribui os pontos" descarta o que só a pontuação por unidade usa, pela régua
+        # da forma da Etapa: o campo escondido continua sendo enviado (D-002, FR-5202).
+        direta = _texto(dados, f"{base}-modo") == "DIRETA"
+        criterio = {
+            "id": _texto(dados, f"{base}-id") or str(uuid4()),
+            "name": _texto(dados, f"{base}-name"),
+            "description": _texto(dados, f"{base}-description"),
+            "maximumScore": _decimal(dados, f"{base}-maximumScore"),
+            "pointsPerUnit": None if direta else _decimal(dados, f"{base}-pointsPerUnit"),
+            "unitLabel": "" if direta else _texto(dados, f"{base}-unitLabel"),
+            "documentRequirementId": _texto(dados, f"{base}-documentRequirementId") or None,
+        }
+        preenchidos = (
+            criterio["name"],
+            criterio["description"],
+            criterio["maximumScore"],
+            criterio["pointsPerUnit"],
+            criterio["unitLabel"],
+            criterio["documentRequirementId"],
+        )
+        if not any(valor not in (None, "") for valor in preenchidos):
+            continue
+        linhas.append((_inteiro(dados, f"{base}-order", 0), criterio))
+    # Estável: sem JavaScript as ordens chegam iguais, e vale a ordem de leitura.
+    linhas.sort(key=lambda par: par[0])
+    return [criterio for _, criterio in linhas]
+
+
+def _soma_das_maximas(criterios):
+    """A máxima da Etapa que a tela deriva do barema (146, D-003, FR-5203), ou `None`."""
+    maximas = [criterio["maximumScore"] for criterio in criterios]
+    if not maximas or any(maxima is None for maxima in maximas):
+        return None
+    return sum(maximas, Decimal("0"))
+
+
 def ler_etapas(dados):
     etapas = []
     for indice in _indices(dados, "etapa"):
@@ -761,6 +813,16 @@ def ler_etapas(dados):
         # `forma` continua sendo lida crua: trocá-la por um dos dois valores conhecidos faria uma
         # forma inválida virar PONTUADA em silêncio, e a validação deixaria de alcançá-la.
         decisoria = (_texto(dados, f"{base}-forma") or Forma.PONTUADA) == Forma.DECISORIA
+        # O barema é da pontuada (146, FR-5204), pela régua das notas logo abaixo: a decisória o
+        # descarta, e a tela o esconde. Com critérios, a máxima é a soma deles — a tela a mostra
+        # como leitura, e o campo digitável não é enviado; quem a calcula é aqui (FR-5203).
+        criterios = [] if decisoria else _criterios_de_avaliacao(dados, indice)
+        soma = _soma_das_maximas(criterios)
+        maxima = (
+            None
+            if decisoria
+            else (soma if soma is not None else _decimal(dados, f"{base}-maximumScore"))
+        )
         etapas.append(
             {
                 "id": _texto(dados, f"{base}-id"),
@@ -783,7 +845,7 @@ def ler_etapas(dados):
                 "evaluationsPerRegistration": _inteiro_opcional(
                     dados, f"{base}-evaluationsPerRegistration"
                 ),
-                "maximumScore": (None if decisoria else _decimal(dados, f"{base}-maximumScore")),
+                "maximumScore": maxima,
                 # As três do incremento da revisão (D-008). A forma vem sempre preenchida, porque o
                 # controle é um par de opções com uma marcada: `_texto` vazio só acontece em envio
                 # forjado, e ali `or PONTUADA` devolve o que a ausência significa (FR-120). Os
@@ -795,6 +857,7 @@ def ler_etapas(dados):
                 ),
                 # Vazio é "não vinculada a Evento", e não Evento inexistente.
                 "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
+                "criteria": criterios,
             }
         )
     return _renumerar(etapas)
@@ -1563,9 +1626,73 @@ def etapas_do_edital(edital):
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
+            # O barema (146), no formato que o cartão desenha: números sem zeros à direita.
+            "criteria": [
+                {
+                    "id": str(criterio.id),
+                    "name": criterio.nome,
+                    "description": criterio.descricao,
+                    "maximumScore": _no_campo(criterio.maxima),
+                    "pointsPerUnit": _no_campo(criterio.pontos_por_unidade),
+                    "unitLabel": criterio.unidade,
+                    "documentRequirementId": (
+                        "" if criterio.documento is None else str(criterio.documento)
+                    ),
+                }
+                for criterio in etapa.criterios.all()
+            ],
         }
-        for etapa in edital.etapas.order_by("order")
+        for etapa in edital.etapas.order_by("order").prefetch_related("criterios")
     ]
+
+
+def _criterios_persistidos(etapa):
+    """O barema gravado, no formato do command (146, risco 2 do plano)."""
+    return [
+        {
+            "id": str(criterio.id),
+            "name": criterio.nome,
+            "description": criterio.descricao,
+            "maximumScore": criterio.maxima,
+            "pointsPerUnit": criterio.pontos_por_unidade,
+            "unitLabel": criterio.unidade,
+            "documentRequirementId": None
+            if criterio.documento is None
+            else str(criterio.documento),
+        }
+        for criterio in etapa.criterios.all()
+    ]
+
+
+def documentos_para_o_barema(edital):
+    """Os documentos que a seção Barema oferece para comprovar um critério (146, FR-5205).
+
+    Só os que valem para toda inscrição, pela mesma leitura que o domínio confere (D-010): oferecer
+    o que a gravação recusa seria convidar ao erro. O documento ligado que deixou de valer — a
+    restrição acrescentada na etapa Inscrição depois do vínculo — continua na lista, marcado, para
+    que a recusa tenha o que mostrar e a pessoa saiba o que trocar.
+    """
+    from processo_seletivo.editais.domain.documentos import vale_para_toda_inscricao
+
+    documentos = []
+    for documento in documentos_do_edital(edital):
+        requisito = {
+            "moment": documento["moment"],
+            "profileId": documento["profileId"] or None,
+            "modalityId": documento["modalityId"] or None,
+            "modalityCode": documento["modalityCode"] or None,
+            "requiredWhen": documento["requiredWhen"] or None,
+        }
+        if documento["moment"] != "AT_ENROLLMENT":
+            continue
+        documentos.append(
+            {
+                "id": documento["id"],
+                "name": documento["name"],
+                "elegivel": vale_para_toda_inscricao(requisito),
+            }
+        )
+    return documentos
 
 
 def etapas_persistidas(edital):
@@ -1585,8 +1712,12 @@ def etapas_persistidas(edital):
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
+            # **E o barema, pela razão de tudo nesta lista** (146, risco 2 do plano): sem ele,
+            # gravar Perfis, Cronograma ou Inscrição depois de compor a ficha a apagaria em
+            # silêncio — `replace_draft` recria as Etapas, e a `CASCADE` leva os critérios junto.
+            "criteria": _criterios_persistidos(etapa),
         }
-        for etapa in edital.etapas.order_by("order")
+        for etapa in edital.etapas.order_by("order").prefetch_related("criterios")
     ]
 
 

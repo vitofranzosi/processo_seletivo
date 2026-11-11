@@ -30,6 +30,7 @@ CAMPOS_SEM_TELA = ("classificationInformation", "callInformation")
 # E os decimais pela mesma razão, descoberta na implementação: `_decimal_canonico` publica
 # `"1.5000"`, e `validate_stage` compara `peso <= 0` — comparação entre `str` e `int` levanta
 # `TypeError`. Quem chega de outro formato converte na entrada.
+DECIMAIS_DO_CRITERIO = ("maximumScore", "pointsPerUnit")
 DECIMAIS_DA_ETAPA = ("weight", "minimumScore", "maximumScore")
 
 
@@ -76,6 +77,11 @@ def mapa_de_identidades(conteudo, *, nova=uuid.uuid4) -> dict[str, str]:
         registrar(evento.get("id"))
     for etapa in conteudo.get("stages") or []:
         registrar(etapa.get("id"))
+        # O barema viaja com a Etapa, com identidades novas (146, FR-5212): a mesma ficha em dois
+        # Editais são duas fichas, e a Retificação de uma não pode alcançar a outra.
+        for criterio in etapa.get("criteria") or []:
+            if isinstance(criterio, dict):
+                registrar(criterio.get("id"))
     for documento in conteudo.get("documentRequirements") or []:
         registrar(documento.get("id"))
     for anexo in conteudo.get("attachments") or []:
@@ -211,6 +217,19 @@ def remapear(conteudo, mapa):
                 **etapa,
                 "id": trocar(etapa.get("id"), "stages[].id"),
                 "scheduleEventId": trocar(etapa.get("scheduleEventId"), "stages[].scheduleEventId"),
+                # O documento ligado é o novo correspondente (146, FR-5212): o vínculo com o
+                # documento da origem apontaria o Edital anterior, e a gravação o recusaria.
+                "criteria": [
+                    {
+                        **criterio,
+                        "id": trocar(criterio.get("id"), "criteria[].id"),
+                        "documentRequirementId": trocar(
+                            criterio.get("documentRequirementId"),
+                            "criteria[].documentRequirementId",
+                        ),
+                    }
+                    for criterio in etapa.get("criteria") or []
+                ],
             }
             for etapa in conteudo.get("stages") or []
         ],
@@ -282,7 +301,18 @@ def converter_valores(conteudo):
             for evento in conteudo.get("schedule") or []
         ],
         "stages": [
-            {**etapa, **{campo: decimal(etapa.get(campo)) for campo in DECIMAIS_DA_ETAPA}}
+            {
+                **etapa,
+                **{campo: decimal(etapa.get(campo)) for campo in DECIMAIS_DA_ETAPA},
+                # Os dois decimais do critério (146), pela mesma razão dos da Etapa.
+                "criteria": [
+                    {
+                        **criterio,
+                        **{campo: decimal(criterio.get(campo)) for campo in DECIMAIS_DO_CRITERIO},
+                    }
+                    for criterio in etapa.get("criteria") or []
+                ],
+            }
             for etapa in conteudo.get("stages") or []
         ],
     }

@@ -656,6 +656,9 @@ def _parte(composicao, snapshot, plano_, secao, parte, tabelas):
         }
         if frase := composicao_pdf.frase_da_etapa(parte.etapa, eventos):
             _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_PARAGRAFO)
+        # O barema logo depois da frase da Etapa, pelo mesmo compositor da apresentação plana
+        # (146, FR-5209). Sem critério, nada é escrito.
+        composicao_pdf.tabela_do_barema(composicao, parte.etapa, snapshot, tabelas)
         return
     if parte.lugar == secoes.LEMBRETE_DO_REQUERIMENTO:
         _lembrete(

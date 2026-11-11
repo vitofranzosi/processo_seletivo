@@ -43,6 +43,11 @@ from processo_seletivo.shared.canonical import SCHEMA_VERSION
 DEGRAUS = {
     5: {"evaluationsPerRegistration": 1, "maximumScore": None},
     6: {"forma": "PONTUADA", "rotuloFavoravel": None, "rotuloDesfavoravel": None},
+    # **O degrau 21 é o barema** (146, D-001, FR-5208). A lista vazia diz "esta Etapa não publicou
+    # critério", e é verdade sobre todo Edital anterior: a comissão somava a ficha fora do sistema.
+    # Lista e não `None`, pela convenção das coleções do degrau 7 — uma segunda grafia da ausência
+    # é o que a versão canônica existe para não admitir.
+    21: {"criteria": []},
 }
 
 # **O degrau 7 não é de Etapa, e é o primeiro que não é.** A leva da `015` acrescentou uma coleção
@@ -216,7 +221,9 @@ def elevar_etapa(etapa, *, de=VERSAO_DE_ORIGEM):
     if not isinstance(etapa, dict):
         return etapa
     faltando = {
-        chave: valor
+        # A lista é copiada a cada Etapa: a mesma `[]` em todas faria o critério acrescentado a uma
+        # aparecer nas outras, e no dicionário de degraus.
+        chave: list(valor) if isinstance(valor, list) else valor
         for versao, degrau in sorted(DEGRAUS.items())
         if versao > de
         for chave, valor in degrau.items()
@@ -423,6 +430,9 @@ def diz_o_mesmo_que_a_ausencia(etapa):
     # os rótulos ausentes dizem "não se aplica". Sem isto, uma Retificação elaborada antes do salto
     # entraria em conflito com o conteúdo elevado por uma diferença que não é diferença (T-017).
     if etapa.get("forma") not in (None, AUSENCIA["forma"]):
+        return False
+    # O barema (146), pela mesma régua: ausente e vazio dizem "nenhum critério publicado".
+    if etapa.get("criteria") not in (None, []):
         return False
     return etapa.get("rotuloFavoravel") is None and etapa.get("rotuloDesfavoravel") is None
 
