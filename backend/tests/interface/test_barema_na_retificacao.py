@@ -279,3 +279,63 @@ def test_acrescentar_sem_alterar_a_maxima_e_recusado_e_com_ela_passa():
     )
 
     assert _consolidado(base, com_a_maxima) == []
+
+
+# --- o texto apagado, pela forma publicada (revisão do PR #461) ---------------------------------
+
+EVENTO = "aaaaaaaa-0000-4000-8000-000000014685"
+
+
+def com_evento():
+    base = conteudo()
+    base["schedule"] = [
+        {
+            "id": EVENTO,
+            "type": "AVALIACAO",
+            "description": "Prova de Títulos",
+            "startAt": "2027-01-10T12:00:00+00:00",
+            "endAt": None,
+            "order": 1,
+            "status": "PLANEJADO",
+            "location": "Auditório do Cefor",
+            "isRegistrationPeriod": False,
+            "shownInPdf": True,
+        }
+    ]
+    return base
+
+
+def campo_do_evento(base, chave):
+    grupo = next(g for g in ui.campos_editaveis(base) if g["tipo"] == "Evento")
+    return next(c for c in grupo["campos"] if c["chave"] == chave)
+
+
+@pytest.mark.parametrize(
+    ("chave", "esperado"),
+    [("location", ""), ("description", None)],
+    ids=["local-vazio-e-ausencia", "descricao-e-o-nome"],
+)
+def test_o_texto_apagado_segue_a_forma_publicada(chave, esperado):
+    """O local apagado é "não declarado" (`""`); a descrição do Evento é o nome dele, e apagada
+    continua nula — a forma publicada a recusa, e é essa a recusa certa."""
+    base = com_evento()
+    campo = campo_do_evento(base, chave)
+    alteracoes, _ = ui.diferencas(base, enviado(base, **{f"campo:{campo['referencia']}": ""}))
+
+    assert alteracoes == [
+        {
+            "targetPath": f"/schedule/id={EVENTO}/{chave}",
+            "operation": "REPLACE",
+            "newValue": esperado,
+        }
+    ]
+
+
+def test_o_documento_restrito_e_oferecido_marcado_na_retificacao():
+    """A mesma leitura e o mesmo rótulo da composição (`documentos.documentos_do_barema`)."""
+    base = conteudo()
+    base["documentRequirements"][0]["profileId"] = "aaaaaaaa-0000-4000-8000-000000014686"
+
+    opcoes = ui.opcoes_do_barema(base)["documentRequirementId"]
+
+    assert opcoes == ((TITULOS, "Títulos acadêmicos (não é pedido a toda inscrição)"),)

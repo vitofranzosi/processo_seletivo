@@ -13,6 +13,7 @@ from uuid import uuid4
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
 from processo_seletivo.editais.domain import duplicacao, quadro, secoes
+from processo_seletivo.editais.domain.etapas import soma_das_maximas
 from processo_seletivo.editais.domain.marcos import POR_SORTEIO
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
@@ -801,14 +802,6 @@ def _criterios_de_avaliacao(dados, indice):
 POR_UNIDADE, DIRETA = "POR_UNIDADE", "DIRETA"
 
 
-def _soma_das_maximas(criterios):
-    """A máxima da Etapa que a tela deriva do barema (146, D-003, FR-5203), ou `None`."""
-    maximas = [criterio["maximumScore"] for criterio in criterios]
-    if not maximas or any(maxima is None for maxima in maximas):
-        return None
-    return sum(maximas, Decimal("0"))
-
-
 def ler_etapas(dados):
     etapas = []
     for indice in _indices(dados, "etapa"):
@@ -834,7 +827,9 @@ def ler_etapas(dados):
         # Com critérios, a máxima é a soma deles — a tela a mostra como leitura; quem a calcula é
         # aqui (FR-5203).
         criterios = _criterios_de_avaliacao(dados, indice)
-        soma = _soma_das_maximas(criterios)
+        # A soma é a do domínio (`etapas.soma_das_maximas`), e não uma segunda conta da tela: a
+        # máxima que se grava é a mesma que a gravação confere. Sem critério, não há soma.
+        soma = soma_das_maximas({"criteria": criterios}) if criterios else None
         maxima = (
             None
             if decisoria
@@ -1685,32 +1680,21 @@ def _criterios_persistidos(etapa):
 def documentos_para_o_barema(edital):
     """Os documentos que a seção Barema oferece para comprovar um critério (146, FR-5205).
 
-    Só os que valem para toda inscrição, pela mesma leitura que o domínio confere (D-010): oferecer
-    o que a gravação recusa seria convidar ao erro. O documento ligado que deixou de valer — a
-    restrição acrescentada na etapa Inscrição depois do vínculo — continua na lista, marcado, para
-    que a recusa tenha o que mostrar e a pessoa saiba o que trocar.
+    A leitura é a do domínio (`documentos.documentos_do_barema`), a mesma da tela de Retificação. A
+    seção oferece só os que valem para toda inscrição (D-010): oferecer o que a gravação recusa
+    seria convidar ao erro. O ligado que deixou de valer continua, marcado, pelo `elegivel`.
     """
-    from processo_seletivo.editais.domain.documentos import vale_para_toda_inscricao
+    from processo_seletivo.editais.domain.documentos import documentos_do_barema
 
-    documentos = []
-    for documento in documentos_do_edital(edital):
-        requisito = {
-            "moment": documento["moment"],
-            "profileId": documento["profileId"] or None,
-            "modalityId": documento["modalityId"] or None,
-            "modalityCode": documento["modalityCode"] or None,
-            "requiredWhen": documento["requiredWhen"] or None,
+    return [
+        {
+            "id": documento.id,
+            "name": documento.nome,
+            "rotulo": documento.rotulo,
+            "elegivel": documento.vale_para_toda_inscricao,
         }
-        if documento["moment"] != "AT_ENROLLMENT":
-            continue
-        documentos.append(
-            {
-                "id": documento["id"],
-                "name": documento["name"],
-                "elegivel": vale_para_toda_inscricao(requisito),
-            }
-        )
-    return documentos
+        for documento in documentos_do_barema(documentos_do_edital(edital))
+    ]
 
 
 def etapas_persistidas(edital):

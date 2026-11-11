@@ -461,6 +461,43 @@ def vale_para_toda_inscricao(requisito: dict) -> bool:
     )
 
 
+@dataclass(frozen=True)
+class DocumentoDoBarema:
+    """Um documento que um critério do barema pode citar, e se a gravação o aceitaria (146)."""
+
+    id: str
+    nome: str
+    vale_para_toda_inscricao: bool
+
+    @property
+    def rotulo(self) -> str:
+        """O nome na escolha das duas telas, com a marca do que a gravação recusaria (D-010)."""
+        if self.vale_para_toda_inscricao:
+            return self.nome
+        return f"{self.nome} (não é pedido a toda inscrição)"
+
+
+def documentos_do_barema(requisitos) -> list[DocumentoDoBarema]:
+    """Os documentos da inscrição, na ordem dada, com o veredito de `vale_para_toda_inscricao`.
+
+    Uma leitura só para a composição e para a Retificação: as duas oferecem os mesmos documentos, e
+    a que se oferece com a marca é a que deixou de valer depois do vínculo — continua na lista para
+    a recusa ter o que mostrar. Aceita o requisito do conteúdo e o do formulário, em que o "sem
+    restrição" vem como texto vazio: as leituras de recorte e de condição tratam os dois iguais.
+    """
+    return [
+        DocumentoDoBarema(
+            str(requisito["id"]),
+            requisito.get("name") or requisito.get("key") or "",
+            vale_para_toda_inscricao(requisito),
+        )
+        for requisito in requisitos or []
+        if isinstance(requisito, dict)
+        and requisito.get("id")
+        and momento_de(requisito) == NA_INSCRICAO
+    ]
+
+
 def _se_aplica(recorte: Recorte, profile_id, modality_id, modalidade_escolhida) -> bool:
     if recorte.forma == TODOS:
         return True

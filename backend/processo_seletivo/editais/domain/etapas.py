@@ -402,7 +402,11 @@ def _problemas_da_soma(etapa, identidade_da_etapa, nome_da_etapa):
 
 
 def _legivel(numero: Decimal) -> str:
-    texto = format(numero, "f")
-    if "." in texto:
-        texto = texto.rstrip("0").rstrip(".")
-    return texto.replace(".", ",")
+    """O número como o PDF o escreve — `30`, `12,5` —, pela mesma função (`humano.decimal`).
+
+    Importada aqui dentro, como `validation` importa o compositor: o módulo de formatação é puro,
+    sem banco e sem locale, e a recusa precisa escrever a soma como a tabela do barema a imprime.
+    """
+    from processo_seletivo.publicacoes.infrastructure import humano
+
+    return humano.decimal(numero)

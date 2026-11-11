@@ -96,3 +96,11 @@ test("a prévia inteira: linhas na ordem da ficha e o total", () => {
   );
   assert.equal(previa.total, 60);
 });
+
+test("pontos acima da máxima avisam na prévia, como a gravação recusaria", () => {
+  assert.equal(
+    regras.pontuacao(porUnidade(25, 10, "certificado")),
+    "Pontos por unidade acima da máxima: uma unidade já passaria do teto"
+  );
+  assert.equal(regras.pontuacao(porUnidade(10, 10, "certificado")), "10 pontos por certificado");
+});

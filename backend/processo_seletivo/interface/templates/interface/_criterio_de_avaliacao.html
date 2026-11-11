@@ -82,7 +82,7 @@
         <option value="">Nenhum documento</option>
         {% for documento in documentos_do_barema %}
         {% if documento.elegivel or documento.id == criterio.documentRequirementId %}
-        <option value="{{ documento.id }}" {% if documento.id == criterio.documentRequirementId %}selected{% endif %}>{{ documento.name }}{% if not documento.elegivel %} (não é pedido a toda inscrição){% endif %}</option>
+        <option value="{{ documento.id }}" {% if documento.id == criterio.documentRequirementId %}selected{% endif %}>{{ documento.rotulo }}</option>
         {% endif %}
         {% endfor %}
       </select>

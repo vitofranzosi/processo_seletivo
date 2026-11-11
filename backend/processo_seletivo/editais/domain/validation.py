@@ -95,6 +95,12 @@ class Campo:
     valores: tuple[str, ...] = ()
     tipo_do_item: type | None = None
     padrao: str = ""
+    # O texto em que `""` é a grafia da ausência — "não declarado" —, e não um valor (146). É o que
+    # a tela de Retificação lê para gravar o campo apagado como vazio, e não como nulo: nulo, num
+    # campo que não o admite, era recusado na publicação, e a pessoa não tinha como apagar o local
+    # de um Evento ou as atribuições de um Perfil. Os nomes ficam de fora de propósito: vazio neles
+    # não é ausência, e a recusa do nulo é o que impede publicá-los em branco.
+    vazio_e_ausencia: bool = False
 
 
 RESERVA = ("NONE", "LIMITED", "UNLIMITED")
@@ -103,7 +109,7 @@ PERFIL_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("code", str),
     Campo("name", str),
-    Campo("description", str),
+    Campo("description", str, vazio_e_ausencia=True),
     # **Itens de texto**, transcrito do contrato (026). A declaração faltava, e a API aceitava
     # qualquer JSON dentro da lista: número, objeto, outra lista. A tela de Retificação a oferece
     # numa caixa de texto, uma exigência por linha, e item que não é texto não volta de lá igual —
@@ -117,12 +123,12 @@ PERFIL_PUBLICADO = (
     # apontar. Que a identidade aponte Modalidade **deste** Perfil é conferido à parte, porque
     # depende do conteúdo do Perfil inteiro e não da forma do campo.
     Campo("generalCompetitionModalityId", str, formato="uuid", admite_nulo=True),
-    Campo("locality", str),
+    Campo("locality", str, vazio_e_ausencia=True),
     # `str` sem `admite_nulo`: os três são **sempre presentes**, com `""` quando não informados
     # (FR-014). Declará-los assim é o que faz a versão canônica 3 identificar uma forma só.
-    Campo("duties", str),
-    Campo("workload", str),
-    Campo("compensation", str),
+    Campo("duties", str, vazio_e_ausencia=True),
+    Campo("workload", str, vazio_e_ausencia=True),
+    Campo("compensation", str, vazio_e_ausencia=True),
     Campo("classificationInformation", dict),
     Campo("callInformation", dict),
     # A forma de **dentro** de cada Modalidade não é declarada. Que cada item seja objeto, é —
@@ -196,7 +202,7 @@ EVENTO_PUBLICADO = (
     # `str` sem `admite_nulo`, como `duties` e `workload` do Perfil: sempre presente, com `""`
     # quando não declarado. Uma segunda convenção para texto faria a versão canônica admitir mais
     # de uma forma.
-    Campo("location", str),
+    Campo("location", str, vazio_e_ausencia=True),
     # Sempre presente, nunca nulo: a ausência de marca é `false`, e não "não informado". A regra
     # de quantos podem ser verdadeiros é de coerência entre itens e vive em
     # `_periodo_de_inscricoes`, porque a forma confere um campo por vez.
@@ -213,7 +219,7 @@ DOCUMENTO_EXIGIDO_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("key", str),
     Campo("name", str),
-    Campo("instructions", str),
+    Campo("instructions", str, vazio_e_ausencia=True),
     Campo("required", bool),
     Campo("order", int, minimo=0),
     Campo("profileId", str, admite_nulo=True, formato="uuid"),
@@ -288,12 +294,21 @@ ETAPA_PUBLICADA = (
 CRITERIO_PUBLICADO = (
     Campo("id", str, formato="uuid"),
     Campo("name", str),
-    Campo("description", str),
+    Campo("description", str, vazio_e_ausencia=True),
     Campo("maximumScore", str, formato="decimal", padrao=DECIMAL),
     Campo("pointsPerUnit", str, admite_nulo=True, formato="decimal", padrao=DECIMAL),
     Campo("unitLabel", str, admite_nulo=True),
     Campo("documentRequirementId", str, admite_nulo=True, formato="uuid"),
 )
+
+
+def vazio_e_ausencia(colecao: str, campo: str) -> bool:
+    """Se, naquela coleção publicada, o texto vazio é a grafia de "não declarado" (146)."""
+    return any(
+        declarado.nome == campo and declarado.vazio_e_ausencia
+        for declarado in _FORMA_POR_COLECAO.get(colecao, ())
+    )
+
 
 # `content` e `source` **não entram**: dependem do tipo, e `Campo` não expressa coerência entre
 # campos. A ausência é deliberada, e o que ela deixa de fora está em `_topologia_das_secoes`.
@@ -329,6 +344,10 @@ COLECOES_PUBLICADAS = (
     ("attachments", ANEXO_PUBLICADO),
     ("documentRequirements", DOCUMENTO_EXIGIDO_PUBLICADO),
 )
+
+# A forma de cada coleção com forma declarada, pelo nome com que o contrato de mutabilidade a
+# chama — o barema é coleção aninhada, e a forma dele é conferida em `_coerencia_do_barema`.
+_FORMA_POR_COLECAO = {**dict(COLECOES_PUBLICADAS), "criteria": CRITERIO_PUBLICADO}
 
 CAMPO_AUSENTE = "field_required"
 TIPO_INVALIDO = "field_type_invalid"

@@ -24,6 +24,7 @@ from uuid import NAMESPACE_URL, uuid4, uuid5
 from processo_seletivo.editais.domain import mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.marcos import declara_sorteio
+from processo_seletivo.editais.domain.validation import vazio_e_ausencia
 from processo_seletivo.interface.forms import opcoes_do_metodo
 from processo_seletivo.interface.templatetags.interface_extras import contagem
 from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
@@ -1178,25 +1179,16 @@ def opcoes_do_barema(conteudo):
     Todos os documentos da inscrição, e não só os que valem para toda inscrição: o `select` é
     conferido contra estas opções, e o critério cujo documento ganhou restrição precisa continuar
     reexibível para ser corrigido. Quem recusa o documento restrito é a conferência do conteúdo
-    consolidado, com a mensagem que diz por quê (D-010).
+    consolidado (D-010). A leitura e o rótulo são os da composição (`documentos_do_barema`).
     """
-    from processo_seletivo.editais.domain.documentos import (
-        NA_INSCRICAO,
-        momento_de,
-        vale_para_toda_inscricao,
-    )
+    from processo_seletivo.editais.domain.documentos import documentos_do_barema
 
-    documentos = []
-    for documento in conteudo.get("documentRequirements") or []:
-        if not isinstance(documento, dict) or not documento.get("id"):
-            continue
-        if momento_de(documento) != NA_INSCRICAO:
-            continue
-        nome = documento.get("name") or documento.get("key") or ""
-        if not vale_para_toda_inscricao(documento):
-            nome = f"{nome} (não é pedido a toda inscrição)"
-        documentos.append((str(documento["id"]), nome))
-    return {"documentRequirementId": tuple(documentos)}
+    return {
+        "documentRequirementId": tuple(
+            (documento.id, documento.rotulo)
+            for documento in documentos_do_barema(conteudo.get("documentRequirements"))
+        )
+    }
 
 
 def opcoes_do_criterio_de_avaliacao_novo(conteudo):
@@ -2252,12 +2244,15 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 enviado, campo["tipo"], campo["rotulo"], campo.get("opcoes", ())
             )
             anterior = _ler(conteudo, campo["caminho"])
-            # A descrição do critério do barema apagada é texto vazio, e não `null` (146): é como o
-            # conteúdo publicado a grafa, e a forma publicada não admite nulo nela.
+            # **O texto apagado vira vazio onde vazio é a ausência** (146): o local do Evento, as
+            # atribuições do Perfil, a descrição do critério do barema. `_converter` devolve nulo
+            # para todo texto em branco, e nulo num campo que não o admite era recusado na
+            # publicação — a pessoa não conseguia apagar o que a forma publicada declara opcional.
+            # Quem decide é a forma publicada, e não uma lista daqui.
             if (
                 novo_valor is None
-                and grupo["tipo"] == "Critério de avaliação"
-                and campo["chave"] == "description"
+                and campo["tipo"] in (TEXTO, TEXTO_LONGO)
+                and vazio_e_ausencia(COLECAO_DO_TIPO.get(grupo["tipo"], ""), campo["chave"])
             ):
                 novo_valor = ""
             chaves = campo.get("chave", "").split("/")

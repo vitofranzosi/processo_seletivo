@@ -60,9 +60,9 @@
     return formatar(valor) + (valor < 2 ? " ponto" : " pontos");
   }
 
-  /* A coluna "Pontuação", na frase de `pdf.pontuacao_do_criterio`. A única que só a prévia diz é a
-     do critério por unidade sem os pontos: gravado assim, ele seria lido como pontuação atribuída,
-     e a prévia avisa antes de a pessoa descobrir isso no documento. */
+  /* A coluna "Pontuação", na frase de `pdf.pontuacao_do_criterio`. As duas que só a prévia diz são
+     as das recusas da gravação — o critério por unidade sem os pontos e os pontos acima da máxima
+     —, para a pessoa as ver antes de gravar, e não depois. */
   function pontuacao(criterio) {
     var maxima = criterio.maxima;
     if (criterio.porUnidade && criterio.pontos === null) {
@@ -70,6 +70,11 @@
     }
     if (!criterio.porUnidade || criterio.pontos === null) {
       return maxima === null ? "" : "de 0 a " + formatar(maxima);
+    }
+    /* A mesma recusa do domínio (`etapas.problemas_do_barema`), dita antes de gravar: uma frase de
+       aparência normal com o total intacto escondia o erro até o "Salvar". */
+    if (maxima !== null && emEscala(criterio.pontos) > emEscala(maxima)) {
+      return "Pontos por unidade acima da máxima: uma unidade já passaria do teto";
     }
     var unidade = (criterio.unidade || "").trim();
     var frase = unidade ? pontos(criterio.pontos) + " por " + unidade : pontos(criterio.pontos);
