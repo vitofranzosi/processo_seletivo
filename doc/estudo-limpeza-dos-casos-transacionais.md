@@ -5,7 +5,8 @@
 com linha, e dispensar o `post_migrate` depois de cada caso.
 **Natureza:** estudo com proposta. As variantes foram medidas como plugin de fora do repositório;
 **a proposta 1 + 2 foi aprovada pelo usuário em 17/10** e está em `backend/tests/conftest.py`,
-medida de novo em *A implementação, medida*, abaixo. A variante com `DELETE` continua só proposta.
+medida de novo em *A implementação, medida*, abaixo. A variante com `DELETE` foi implementada em
+11/11 — ver *O `DELETE`, implementado*, no fim.
 **Base:** a branch do PR #295 (`ebdbe0f7`, paralelo `-n 4 --dist worksteal`), que ainda não está na
 `main`.
 
@@ -160,3 +161,35 @@ compara dois tempos de parede, de milissegundos, medidos um depois do outro no m
 11 ms contra 4 ms, com um teto de 2×. Entre as duas medidas não há limpeza nenhuma. É a carga dos
 outros três workers, e o caso pode reprovar com a limpeza de hoje do mesmo jeito. Fica registrado,
 e não corrigido.
+
+## O `DELETE`, implementado (11/11/2026)
+
+**Origem:** a revisão do protocolo de testes de 11/11, pedida porque o pytest do CI tinha ido de
+836s (17/10) a 1610s–2287s com a suíte em 18 306 casos. O tempo por caso, medido na suíte inteira,
+mostrou o teardown dos transacionais ainda como a maior parcela — ~0,66 s por caso, mais que os
+428 ms de 10/17, porque há mais tabelas no fecho.
+
+**O que mudou.** `_apagar_as_linhas`, em `backend/tests/conftest.py`: `DELETE` só das tabelas com
+linha, numa transação com `SET LOCAL session_replication_role = replica`. Sem superusuário, ou com
+`LIMPEZA_POR_TRUNCATE=1`, o caminho é o `TRUNCATE` do fecho, como antes. A falha que a variante
+expunha foi corrigida na consulta, e não no teste: `situacoes_do_candidato` desempata, dentro do
+marco, pela ampla concorrência e depois pelo nome da lista.
+
+| Rodada (`-n 4 --dist worksteal`, máquina sem outra suíte) | Parede | Resultado |
+|---|---:|---|
+| `DELETE`, 1ª | **456s** | 18 293 passando, 23 pulados |
+| `DELETE`, 2ª, logo em seguida | **507s** | idêntico, mesma lista de pulados |
+| `LIMPEZA_POR_TRUNCATE=1`, logo em seguida | 831s | 18 294 passando, 23 pulados |
+
+O caso a mais da última é o `tests/fatias.py`, criado durante a segunda rodada, que a varredura de
+`test_sem_dado_pessoal_da_amostra.py` passou a ler. −39% a −45%: menos que os −60% de 10/17, que
+mediam outra proporção entre setup e teardown, e mais que qualquer outra alavanca medida.
+
+**Rebaixar transacionais que não precisam sê-lo rende menos.** Numa amostra de 40 arquivos sem
+motivo visível para `transaction=True`, 272 de 274 casos passaram rebaixados a `ROLLBACK` (os dois
+que não passaram desligam gatilho para fabricar data passada), e o tempo caiu 20% — com o
+`TRUNCATE`. Com o `DELETE`, o teardown que o rebaixamento pouparia quase não existe mais.
+
+**`fsync=off` não muda nada no macOS**: num cluster descartável, 88s e 91s com, 84s e 93s sem, numa
+amostra de 479 casos. No Linux do CI não foi medido.
+
