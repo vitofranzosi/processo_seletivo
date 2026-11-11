@@ -26,14 +26,20 @@ from tests.interface.test_polish_da_057 import FOLHA, GESTAO, da_pagina, regra
 from tests.interface.test_processo import ato, sem_publicacao  # noqa: F401 — fixture
 
 ATO_DO_PROCESSO = re.compile(r'<a class="([^"]*)" href="[^"]*/atos/(\w+)"')
+DESABILITADO = re.compile(r'<span class="botao desabilitado"[^>]*>([^<]+)</span>')
 
 
 def _atos(corpo):
-    """`{chave: classe}` dos links de ato do Processo, e o trecho do grupo das terminais."""
-    cartao = corpo.split('id="acoes-processo"', 1)[1].split("</section>", 1)[0]
-    terminais = cartao.split('class="lista-acoes em-linha terminais"', 1)
+    """`{chave: classe}` dos links de ato do Processo, os desabilitados e o grupo das terminais.
+
+    Desde a `147` os atos moram em "Administração do Processo", no fim (FR-5306), e o impedido é
+    um `span` desabilitado, sem link (FR-5307).
+    """
+    regiao = corpo.split('id="administracao-titulo"', 1)[1].split("</section>", 1)[0]
+    terminais = regiao.split('class="lista-acoes em-linha terminais"', 1)
     return (
-        {chave: classe for classe, chave in ATO_DO_PROCESSO.findall(cartao)},
+        {chave: classe for classe, chave in ATO_DO_PROCESSO.findall(regiao)},
+        DESABILITADO.findall(regiao),
         terminais[1].split("</ul>", 1)[0] if len(terminais) == 2 else "",
     )
 
@@ -66,58 +72,61 @@ def test_o_processo_em_elaboracao_tem_ativar_secundario_e_cancelar_a_parte(
     seletor_ligado,
     sem_publicacao,  # noqa: F811
 ):
-    """FR-1069, FR-1070: Ativar secundário; Cancelar no grupo de baixo, contornado, marcado."""
+    """FR-1069, FR-1070, revistas pela `147` (FR-5306, FR-5307): Ativar secundário e com a ajuda;
+    Cancelar no grupo das terminais, marcado — e, com o Edital em elaboração, desabilitado."""
     identificar(client, "marcia.gestora", ["gestor"])
     corpo = client.get(
         reverse("interface:processo-detalhe", args=[sem_publicacao.id])
     ).content.decode()
 
-    classes, terminais = _atos(corpo)
-    assert classes == {"ativar": "botao secundario", "cancelar": "botao perigoso"}
-    # A ordem dos grupos não depende da ordem em que `ATOS` declara os atos.
-    fonte = (GESTAO / "processo_detalhe.html").read_text()
-    assert '{% regroup atos|dictsort:"irreversivel" by irreversivel as grupos %}' in fonte
-    assert "/atos/cancelar" in terminais and "irreversível" in terminais
+    classes, desabilitados, terminais = _atos(corpo)
+    assert classes == {"ativar": "botao secundario"}
+    assert desabilitados == ["Cancelar Processo"]
+    assert "Cancelar Processo" in terminais and "irreversível" in terminais
     assert "/atos/ativar" not in terminais
-    assert corpo.index("/atos/ativar") < corpo.index("/atos/cancelar")
+    assert corpo.index("/atos/ativar") < corpo.index("Cancelar Processo</span>")
     assert "Publicar o primeiro Edital deste Processo já o ativa" in corpo
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
 def test_o_processo_ativo_nao_tem_ato_cheio_fora_do_grupo(client, seletor_ligado, sem_publicacao):  # noqa: F811
-    """SC-411: Encerrar e Cancelar só no grupo das terminais, cada um com o marcador; o aviso
-    de impedimento continua depois deles, e os destinos são os de antes."""
+    """SC-411, revisto pela `147`: Encerrar e Cancelar só no grupo das terminais, cada um com o
+    marcador; o impedimento vem **antes** deles e nomeia o Edital (FR-5307), e nenhum dos dois é
+    link enquanto houver Edital em andamento."""
     identificar(client, "marcia.gestora", ["gestor"])
     assert ato(client, sem_publicacao, "ativar", "Abertura formal").status_code == 302
     corpo = client.get(
         reverse("interface:processo-detalhe", args=[sem_publicacao.id])
     ).content.decode()
 
-    classes, terminais = _atos(corpo)
-    # Encerrar `secundario`, como no Edital: discreto mesmo fora do grupo que o contorna.
-    assert classes == {"encerrar": "botao secundario", "cancelar": "botao perigoso"}
+    classes, desabilitados, terminais = _atos(corpo)
+    assert classes == {}
+    assert desabilitados == ["Encerrar Processo", "Cancelar Processo"]
     assert terminais.count("irreversível") == 2
-    assert "/atos/encerrar" in terminais and "/atos/cancelar" in terminais
-    # Sem ato comum acima, não há primeira lista — e o filete, que é de irmão, não se desenha.
-    assert (
-        'class="lista-acoes em-linha">'
-        not in corpo.split('id="acoes-processo"', 1)[1].split("</section>", 1)[0]
+    assert "/atos/encerrar" not in corpo and "/atos/cancelar" not in corpo
+    edital = sem_publicacao.editais.get()
+    destino = reverse("interface:detalhe", args=[edital.id])
+    assert corpo.index(f'href="{destino}">{edital.number}/{edital.year}</a>') < corpo.index(
+        "Encerrar Processo</span>"
     )
-    assert corpo.index("/atos/cancelar") < corpo.index("estão impedidos")
+    assert "impedidos enquanto houver Edital em andamento" in corpo
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
 def test_sem_ato_o_cartao_diz_que_nao_ha(client, seletor_ligado, sem_publicacao):  # noqa: F811
-    """FR-1070: a frase de ausência, e nenhum grupo vazio."""
+    """FR-1070, revista pela `147` (FR-5305, FR-5308): sem ato, a Administração não aparece, e
+    "O que fazer agora" diz que não há ação da pessoa e onde o trabalho está."""
     identificar(client, "leitora", ["auditor"])
     corpo = client.get(
         reverse("interface:processo-detalhe", args=[sem_publicacao.id])
     ).content.decode()
 
-    assert "Nenhum ato disponível para seus papéis nesta situação." in corpo
-    assert "terminais" not in corpo.split('id="acoes-processo"', 1)[1].split("</section>", 1)[0]
+    assert 'id="administracao-titulo"' not in corpo
+    cartao = corpo.split('id="acoes-processo"', 1)[1].split("</section>", 1)[0]
+    assert "Nenhuma ação sua no nível do Processo." in cartao
+    assert "terminais" not in cartao
 
 
 # ---- R2: 375 px ---------------------------------------------------------------------------------

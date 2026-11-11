@@ -81,8 +81,11 @@ def test_impedimento_do_cancelamento_e_mostrado_antes_da_tentativa(client, selet
     identificar(client, "marcia.gestora", GESTOR)
 
     detalhe = client.get(reverse("interface:processo-detalhe", args=[processo.id])).content.decode()
-    # Ativo, o Processo tem os dois desfechos impedidos pelo mesmo Edital (RC-118, 28/09).
-    assert "O encerramento e o cancelamento do Processo estão impedidos" in detalhe
+    # Ativo, o Processo tem os dois desfechos impedidos pelo mesmo Edital (RC-118, 28/09). Desde a
+    # 147 o resumo do grupo diz o impedimento antes de abri-lo, e o corpo nomeia o Edital (FR-5307).
+    assert "Encerrar ou cancelar o Processo" in detalhe
+    assert "impedidos enquanto houver Edital em andamento" in detalhe
+    assert "1 Edital precisa ser encerrado ou cancelado antes" in detalhe
     assert f"{edital.number}/{edital.year}" in detalhe
     assert reverse("interface:detalhe", args=[edital.id]) in detalhe, "link para a pendência"
 
