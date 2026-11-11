@@ -17,9 +17,10 @@ Nada aqui é regra nova. `resultados/domain/regra.py` é a mesma função que a 
 mesma consequência para a mesma nota — duas tabelas-verdade divergiriam no primeiro Edital atípico.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 
+from processo_seletivo.avaliacoes.domain import barema
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.avaliacoes.domain.pontuacao import normalizar_sentido, validar
 from processo_seletivo.avaliacoes.domain.previsao import forma_publicada
@@ -40,6 +41,8 @@ class Conclusao:
     forma: str
     pontuacao: Decimal | None
     sentido: str
+    # O detalhamento por critério, na Etapa com barema (146, FR-5227); vazio fora dela.
+    criterios: list = field(default_factory=list)
 
 
 def etapa_publicada(versao, etapa_id):
@@ -51,7 +54,7 @@ def etapa_publicada(versao, etapa_id):
     return None
 
 
-def derivar(*, versao, etapa_id, pontuacao=None, sentido=""):
+def derivar(*, versao, etapa_id, pontuacao=None, sentido="", criterios=None):
     """`(consequencia, motivo, conclusao)` — ou recusa dizendo o que falta.
 
     A recusa é `422` e nomeia o campo ausente: uma correção fixada sem Etapa, ou sem a conclusão que
@@ -75,12 +78,12 @@ def derivar(*, versao, etapa_id, pontuacao=None, sentido=""):
         raise DomainError(INCOMPLETA, f"A Etapa não tem regra suficiente: {impedimento[1]}.", 422)
 
     forma = forma_publicada(etapa)
-    conclusao = _conclusao(forma, pontuacao, sentido, etapa)
+    conclusao = _conclusao(forma, pontuacao, sentido, etapa, criterios)
     efeito, motivo = consequencia_da_regra(etapa, conclusao)
     return efeito, motivo, conclusao
 
 
-def _conclusao(forma, pontuacao, sentido, etapa):
+def _conclusao(forma, pontuacao, sentido, etapa, criterios=None):
     """O que o julgador fixou, validado **pelas mesmas regras que o avaliador enfrenta**.
 
     A ausência é recusada aqui, e com código próprio: decisão sem a conclusão que a forma exige não
@@ -106,11 +109,49 @@ def _conclusao(forma, pontuacao, sentido, etapa):
             pontuacao=None,
             sentido=normalizar_sentido(sentido, exigir=True),
         )
+    if barema.tem_barema(etapa):
+        return _conclusao_pelo_barema(forma, pontuacao, etapa, criterios)
+    if criterios:
+        raise DomainError(
+            INCOMPLETA,
+            "Esta Etapa não publicou barema: a correção fixa a pontuação, e não critérios.",
+            422,
+        )
     if pontuacao is None or str(pontuacao).strip() == "":
         raise DomainError(
             INCOMPLETA, "Esta Etapa é pontuada: a correção precisa fixar a pontuação.", 422
         )
     return Conclusao(forma=str(forma), pontuacao=validar(pontuacao, etapa), sentido="")
+
+
+def _conclusao_pelo_barema(forma, pontuacao, etapa, criterios):
+    """A correção critério a critério, pela **mesma função** da Mesa (146, D-005, FR-5227).
+
+    O total é do servidor, como na Mesa: a pontuação vinda junto é recusada, e não somada nem
+    ignorada. Todo critério precisa de resposta — a decisão é ato com efeito, como a conclusão —,
+    e o total passa depois pela mesma `validar` da pontuação única. A vedação de piora continua
+    sobre o total, no caminho de sempre (`julgar._recusar_se_piora`).
+
+    O barema é o da Etapa **na versão que a decisão cita** — a vigente no julgamento —, e é com ele
+    que o detalhamento gravado se lê depois (D-011).
+    """
+    if pontuacao is not None and str(pontuacao).strip() != "":
+        raise DomainError(
+            "pontuacao_calculada",
+            "Esta Etapa tem barema: a correção é informada critério a critério, e o total é "
+            "calculado pelo sistema.",
+            422,
+        )
+    if not criterios:
+        raise DomainError(
+            INCOMPLETA,
+            "Esta Etapa tem barema: a correção precisa fixar a pontuação de cada critério.",
+            422,
+        )
+    linhas, total = barema.calcular(barema.criterios_da_etapa(etapa), criterios, exigir=True)
+    return Conclusao(
+        forma=str(forma), pontuacao=validar(total, etapa), sentido="", criterios=linhas
+    )
 
 
 __all__ = ["INCOMPLETA", "Conclusao", "derivar", "etapa_publicada"]

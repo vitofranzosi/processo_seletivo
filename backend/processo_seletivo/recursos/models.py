@@ -208,6 +208,11 @@ class DecisaoRecurso(models.Model):
     forma = models.CharField(max_length=20, choices=Forma.choices, blank=True, default="")
     pontuacao = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True)
     sentido = models.CharField(max_length=20, choices=Sentido.choices, blank=True, default="")
+    # O detalhamento da correção fixada numa Etapa com barema (146, FR-5227): o que quem julga
+    # fixou em cada critério, com a parcela que o servidor calculou — a mesma forma da Avaliação.
+    # O total continua em `pontuacao`, e é ele que o sucessor copia e que a vedação de piora mede.
+    # Vazio nas outras espécies e na Etapa sem barema. Lido com o barema de `versao` (D-011).
+    criterios = models.JSONField(default=list, blank=True)
 
     class Meta:
         constraints = [

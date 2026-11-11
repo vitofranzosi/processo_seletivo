@@ -32,7 +32,12 @@ from processo_seletivo.avaliacoes.domain.previsao import (
 from processo_seletivo.resultados.domain.regra import eliminatoria, nota_minima
 
 
-def _decimal(valor):
+def decimal_comparavel(valor):
+    """`"10.0000"`, `"10"` e `10` comparam iguais; vazio e `None` são a ausência; o resto, texto.
+
+    É a normalização dos dois lados de toda comparação de valor do barema — aqui e na marca de
+    critério alterado pelo recurso, no acompanhamento (146).
+    """
     if valor in (None, ""):
         return None
     try:
@@ -62,8 +67,8 @@ def barema_comparavel(etapa):
             str(criterio.get("id")),
             _texto(criterio.get("name")),
             _texto(criterio.get("description")) or "",
-            _decimal(criterio.get("maximumScore")),
-            _decimal(criterio.get("pointsPerUnit")),
+            decimal_comparavel(criterio.get("maximumScore")),
+            decimal_comparavel(criterio.get("pointsPerUnit")),
             _texto(criterio.get("unitLabel")) or "",
             str(criterio.get("documentRequirementId") or ""),
         )

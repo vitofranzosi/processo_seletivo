@@ -114,22 +114,22 @@ anterior (arquivos distintos, sem dependência).
   de Etapa com barema responde 409 com a frase que orienta a reavaliação determinada; teste de que
   nenhum Resultado de Etapa com barema nasce sem detalhamento e de que a reavaliação continua (FR-5232,
   SC-1635) — depende de T018. Fica nesta fase, e não na 5, porque é ela que torna o B seguro sozinho
-- [ ] T029 [B] Checkpoint: `make lint check test-pg` e `make test-navegador`; quickstart §2–§3; PR do
+- [X] T029 [B] Checkpoint: `make lint check test-pg` e `make test-navegador`; quickstart §2–§3; PR do
   incremento B. **B não sobe para produção antes do C** (D-009); T036 é a rede se subir
 
 ## Phase 5: Incremento C — User Story 4, recurso (P2)
 
-- [ ] T030 [US4] `criterios` em `DecisaoRecurso` e `recursos/migrations/0003_detalhamento_da_correcao.py`
+- [X] T030 [US4] `criterios` em `DecisaoRecurso` e `recursos/migrations/0003_detalhamento_da_correcao.py`
   (FR-5227)
-- [ ] T031 [US4] `recursos/domain/consequencia.py::derivar` com barema chama `barema.calcular` contra o
+- [X] T031 [US4] `recursos/domain/consequencia.py::derivar` com barema chama `barema.calcular` contra o
   barema de `decisao.versao`; vedação de piora sobre o total; remove a recusa de T036 e inverte o teste
   dela; testes do julgamento (FR-5227, FR-5232, SC-1622) — depende de T030
-- [ ] T032 [US4] Tela de julgamento: detalhamento do Resultado atacado, com o barema da versão dele, e a
+- [X] T032 [US4] Tela de julgamento: detalhamento do Resultado atacado, com o barema da versão dele, e a
   ficha pré-preenchida na correção fixada, com o barema vigente (FR-5226, FR-5233) — depende de T031
-- [ ] T033 [US4] Portal: detalhamento da decisão, critérios alterados marcados; ordem desatualizada e
+- [X] T033 [US4] Portal: detalhamento da decisão, critérios alterados marcados; ordem desatualizada e
   reemitida com o total novo (FR-5228, SC-1622) — depende de T031
-- [ ] T034 [US4] [P] Reavaliação determinada cumprida pela ficha e consolidada como sucessora (FR-5222,
+- [X] T034 [US4] [P] Reavaliação determinada cumprida pela ficha e consolidada como sucessora (FR-5222,
   SC-1623) — depende de T031
-- [ ] T035 [C] Checkpoint: `make lint check test-pg`; quickstart §4; conferir no diff que nenhuma rota de
+- [X] T035 [C] Checkpoint: `make lint check test-pg`; quickstart §4; conferir no diff que nenhuma rota de
   área nova, permissão, tabela append-only ou módulo em `classificacao/` foi criado (SC-1632); README e
   Visão do Sistema; PR do incremento C

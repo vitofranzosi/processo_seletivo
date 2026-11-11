@@ -1,5 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
 {% block titulo %}Recurso {{ peca.protocolo }}{% endblock %}
+{% block estilo_da_pagina %}{% load estaticos %}<link rel="stylesheet" href="{% estatico 'interface/grupos/ficha-do-barema.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <a href="{% url 'interface:recursos' edital.id %}">Recursos</a> › <span aria-current="page">{{ peca.protocolo }}</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Recurso {{ peca.protocolo }}</h1>
@@ -260,7 +261,13 @@ ler a peça, e separá-las obrigaria a decidir a espécie antes de escrever a mo
     </select>
   </div>
   {% for alvo in alcancaveis %}
-  {% if alvo.forma == "PONTUADA" %}
+  {% comment %} Na Etapa com barema (146, FR-5226, FR-5227): a pontuação atacada critério a critério,
+     lida pela versão que o Resultado cita, e a correção pela mesma ficha da Mesa, com o total
+     calculado pelo sistema — no lugar do campo de pontuação. {% endcomment %}
+  {% if alvo.ficha_atacada %}{% include "interface/_ficha_do_barema.html" with ficha=alvo.ficha_atacada %}{% endif %}
+  {% if alvo.ficha_corrigir %}
+  {% include "interface/_ficha_do_barema.html" with ficha=alvo.ficha_corrigir %}
+  {% elif alvo.forma == "PONTUADA" %}
   <div class="campo curto">
     <label for="pontuacao-{{ alvo.etapa_id }}">Pontuação corrigida — {{ alvo.nome }}</label>
     <input type="text" id="pontuacao-{{ alvo.etapa_id }}" name="pontuacao-{{ alvo.etapa_id }}"
@@ -288,6 +295,8 @@ ler a peça, e separá-las obrigaria a decidir a espécie antes de escrever a mo
   <p class="salvar"><button type="submit" class="botao">Registrar a decisão</button></p>
 </form>
 {% endif %}
+
+{% if tem_ficha %}{% load static %}<script src="{% static 'interface/mesa_barema.js' %}" defer></script>{% endif %}
 
 {% if proveniencia.decisao %}
 <h2>Decisão</h2>

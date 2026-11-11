@@ -185,9 +185,13 @@ def test_a_tela_do_recurso_nao_faz_uma_consulta_por_ato(
     # (D-001 de lá): uma leitura por página, pela chave, e não memória do processo, que envelheceria
     # depois de um `sincronizar_unidades`.
     #
+    # A décima é o conteúdo da versão vigente do Edital (146): é por ela que o julgamento calcula,
+    # e por isso é ela que decide se a Etapa alcançada tem barema e a tela oferece a ficha. Uma
+    # leitura por página, e não por Etapa, e só quando há Resultado a corrigir.
+    #
     # O número é **constante** — não cresce com a proveniência, e é isso que este orçamento
     # protege.
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(10):
         client.get(caminho)
 
 

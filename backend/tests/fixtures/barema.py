@@ -237,3 +237,40 @@ def pontuar_com_ficha(cenario, gestor, fichas, *, primeiro, sufixo, avaliador="j
         correlation_id="fixture",
     )
     return inscricoes
+
+
+def recorrer_do_preliminar(cenario, gestor, inscricao, *, sufixo):
+    """Emite e publica o preliminar, e a inscrição recorre do próprio Resultado — admitido.
+
+    O caminho real: `interpor` pelo comando do candidato e `admitir` pelo da instituição, como
+    `recursos_us4.cenario_julgavel`, que não serve aqui porque pontua pelo total.
+    """
+    from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+    from processo_seletivo.recursos.application.admitir import admitir
+    from processo_seletivo.recursos.application.interpor import interpor
+    from processo_seletivo.resultados.models import ResultadoEtapa
+    from tests.fixtures.divulgacao import emitir, publicar_o_ato
+    from tests.fixtures.recursos_us4 import assinatura_de, julgador
+
+    ato = emitir(cenario, gestor, chave=f"emitir-{sufixo}")
+    publicar_o_ato(cenario, chave=f"publicar-{sufixo}", ato=ato)
+    superado = ResultadoEtapa.vigentes.get(inscricao=inscricao, etapa_id=cenario["etapa"])
+    recurso = interpor(
+        identidade=IdentidadeDoCandidato(
+            inscricao.identity_subject, inscricao.nome, inscricao.cpf_normalizado, "c@ex.br"
+        ),
+        inscricao=inscricao,
+        resultado=superado,
+        fundamentacao="A especialização é da área: o certificado diz Educação a Distância.",
+        assinatura_do_objeto=str(superado.pk),
+        idempotency_key=f"interpor-{sufixo}",
+    )
+    admitir(
+        actor=julgador(),
+        recurso_id=recurso.id,
+        admitido=True,
+        motivo="Tempestivo.",
+        assinatura_do_estado=assinatura_de(recurso),
+        idempotency_key=f"admitir-{sufixo}",
+    )
+    return {"recurso": recurso, "superado": superado, "inscricao": inscricao, "ato": ato}
