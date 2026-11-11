@@ -95,6 +95,8 @@ def validate_stages(
     orders = [stage.get("order", 0) for stage in stages]
     if len(orders) != len(set(orders)):
         raise StageValidationError("Etapas não podem repetir ordem no Edital.")
+    for identidade_da_etapa, mensagem in criterios_repetidos(stages):
+        raise StageValidationError(mensagem, campo="criteria", identidade=identidade_da_etapa)
     event_ids = frozenset(str(event["id"]) for event in schedule)
     for stage in stages:
         validate_stage(stage, event_ids=event_ids)
@@ -157,6 +159,32 @@ def criterios_de(etapa) -> list:
         return []
     criterios = etapa.get("criteria")
     return criterios if isinstance(criterios, list) else []
+
+
+def criterios_repetidos(etapas) -> list[tuple[str, str]]:
+    """A identidade de critério que aparece duas vezes no Edital, como `(etapa, mensagem)` (146).
+
+    No Edital inteiro, e não por Etapa: a identidade é a chave primária da linha e o endereço da
+    Retificação, e duas linhas com a mesma, na mesma Etapa ou em duas, não se gravam — o banco as
+    recusaria com erro cru, e a Retificação não saberia qual delas alcança.
+    """
+    vistos, repetidos = set(), []
+    for etapa in etapas or []:
+        for criterio in criterios_de(etapa):
+            identidade = str(criterio.get("id") or "") if isinstance(criterio, dict) else ""
+            if not identidade:
+                continue
+            if identidade in vistos:
+                repetidos.append(
+                    (
+                        str(etapa.get("id") or ""),
+                        f"O barema da Etapa «{_nome_da_etapa(etapa)}» repete a identidade "
+                        f"{identidade}, que já é de outro critério deste Edital. Cada critério tem "
+                        "identidade própria.",
+                    )
+                )
+            vistos.add(identidade)
+    return repetidos
 
 
 def soma_das_maximas(etapa) -> Decimal | None:

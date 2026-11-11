@@ -761,8 +761,13 @@ def _criterios_de_avaliacao(dados, indice):
     for sub in _indices(dados, prefixo):
         base = f"{prefixo}-{sub}"
         # "A comissão atribui os pontos" descarta o que só a pontuação por unidade usa, pela régua
-        # da forma da Etapa: o campo escondido continua sendo enviado (D-002, FR-5202).
-        direta = _texto(dados, f"{base}-modo") == "DIRETA"
+        # da forma da Etapa: o campo escondido continua sendo enviado (D-002, FR-5202). Sem o rádio
+        # — envio montado à mão —, a escolha é a que os campos preenchidos dizem.
+        modo = _texto(dados, f"{base}-modo")
+        if modo not in (POR_UNIDADE, DIRETA):
+            pontos = _texto(dados, f"{base}-pointsPerUnit")
+            modo = POR_UNIDADE if pontos or _texto(dados, f"{base}-unitLabel") else DIRETA
+        direta = modo == DIRETA
         criterio = {
             "id": _texto(dados, f"{base}-id") or str(uuid4()),
             "name": _texto(dados, f"{base}-name"),
@@ -771,6 +776,10 @@ def _criterios_de_avaliacao(dados, indice):
             "pointsPerUnit": None if direta else _decimal(dados, f"{base}-pointsPerUnit"),
             "unitLabel": "" if direta else _texto(dados, f"{base}-unitLabel"),
             "documentRequirementId": _texto(dados, f"{base}-documentRequirementId") or None,
+            # A escolha da tela, e não campo do conteúdo (D-002): viaja com o digitado para a recusa
+            # reexibir o rádio como a pessoa o deixou, e para a view recusar o "por unidade" sem
+            # pontos (`_conferir_pontuacao_por_unidade`) — gravado, seria pontuação atribuída.
+            "modo": modo,
         }
         preenchidos = (
             criterio["name"],
@@ -786,6 +795,10 @@ def _criterios_de_avaliacao(dados, indice):
     # Estável: sem JavaScript as ordens chegam iguais, e vale a ordem de leitura.
     linhas.sort(key=lambda par: par[0])
     return [criterio for _, criterio in linhas]
+
+
+#: As duas escolhas do rádio "Como a comissão pontua" do cartão do critério (146).
+POR_UNIDADE, DIRETA = "POR_UNIDADE", "DIRETA"
 
 
 def _soma_das_maximas(criterios):
@@ -813,10 +826,14 @@ def ler_etapas(dados):
         # `forma` continua sendo lida crua: trocá-la por um dos dois valores conhecidos faria uma
         # forma inválida virar PONTUADA em silêncio, e a validação deixaria de alcançá-la.
         decisoria = (_texto(dados, f"{base}-forma") or Forma.PONTUADA) == Forma.DECISORIA
-        # O barema é da pontuada (146, FR-5204), pela régua das notas logo abaixo: a decisória o
-        # descarta, e a tela o esconde. Com critérios, a máxima é a soma deles — a tela a mostra
-        # como leitura, e o campo digitável não é enviado; quem a calcula é aqui (FR-5203).
-        criterios = [] if decisoria else _criterios_de_avaliacao(dados, indice)
+        # O barema é da pontuada (146, FR-5204), mas a decisória **não** o descarta, ao contrário
+        # das notas logo abaixo: a nota é um número que se digita de novo, e a ficha são vários
+        # critérios compostos um a um. Descartá-los em silêncio por um clique no rádio errado era
+        # perda que ninguém via. A ficha viaja, o domínio recusa a decisória com barema, e a tela
+        # mantém a seção à vista para os critérios serem removidos ou a forma voltar a pontuada.
+        # Com critérios, a máxima é a soma deles — a tela a mostra como leitura; quem a calcula é
+        # aqui (FR-5203).
+        criterios = _criterios_de_avaliacao(dados, indice)
         soma = _soma_das_maximas(criterios)
         maxima = (
             None
@@ -1638,6 +1655,7 @@ def etapas_do_edital(edital):
                     "documentRequirementId": (
                         "" if criterio.documento is None else str(criterio.documento)
                     ),
+                    "modo": POR_UNIDADE if criterio.pontos_por_unidade is not None else DIRETA,
                 }
                 for criterio in etapa.criterios.all()
             ],

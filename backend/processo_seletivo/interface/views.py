@@ -2673,6 +2673,8 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
 
     Com `gesto` (051), grava pelo mesmo `replace_draft` e registra o gesto na mesma transação.
     """
+    if etapa == "etapas":
+        _conferir_pontuacao_por_unidade(digitados)
     if etapa == "identificacao":
         # A identificação não é conteúdo do rascunho: tem ato próprio, com auditoria própria.
         return update_edital_identification(
@@ -2780,6 +2782,32 @@ def _gravar_etapa(request, ator, edital, etapa, digitados, *, gesto=None):
         # O rótulo da etapa, como quem elabora a vê no assistente (FR-042).
         area=dict((chave, rotulo) for chave, rotulo, _ in ETAPAS_COMPOSICAO).get(etapa, ""),
     )
+
+
+def _conferir_pontuacao_por_unidade(etapas):
+    """O critério marcado "por unidade" e sem pontos por unidade é recusado (146, D-002).
+
+    Na tela, e não no domínio: o conteúdo não tem a escolha — deduz a forma da presença dos pontos
+    —, e gravado assim o critério seria pontuação atribuída pela comissão, o contrário do que a
+    pessoa marcou. A recusa nomeia o critério e se ancora no campo que falta.
+    """
+    for etapa in etapas or []:
+        # Na decisória o que se recusa é o barema inteiro (FR-5204), e é essa a frase que a pessoa
+        # precisa ler primeiro: corrigir os pontos de uma ficha que não pode existir é perda.
+        if etapa.get("forma") == Forma.DECISORIA:
+            continue
+        for criterio in etapa.get("criteria") or []:
+            if criterio.get("modo") == forms.POR_UNIDADE and criterio.get("pointsPerUnit") is None:
+                nome = criterio.get("name") or "sem nome"
+                raise DomainError(
+                    "invalid_stages",
+                    f"O critério «{nome}» da Etapa «{etapa.get('name') or 'sem nome'}» é pontuado "
+                    "por unidade apresentada e não diz quantos pontos vale cada unidade. Informe "
+                    "os pontos por unidade, ou escolha «A comissão atribui os pontos».",
+                    422,
+                    campo="pointsPerUnit",
+                    identidade=str(criterio.get("id") or ""),
+                )
 
 
 def _sem_documento_removido(etapas, documentos):
@@ -3658,7 +3686,7 @@ def fragmento_criterio_de_avaliacao(request, edital_id, indice):
         request,
         "interface/_criterio_de_avaliacao.html",
         {
-            "criterio": {"id": str(uuid4()), "novo": True},
+            "criterio": {"id": str(uuid4()), "novo": True, "modo": forms.POR_UNIDADE},
             "indice": indice if str(indice).isdigit() else "0",
             "n": _indice_de_linha(request),
             "documentos_do_barema": forms.documentos_para_o_barema(edital),

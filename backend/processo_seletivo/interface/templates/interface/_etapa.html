@@ -210,8 +210,10 @@
   </div>
   {% comment %}
   O barema (146, FR-5206, FR-5207, UX-420, UX-421). Dentro do cartão, abaixo da pontuação máxima, e
-  só na Etapa pontuada: a decisória não produz nota, e a folha esconde a seção quando ela é a forma
-  marcada — quem descarta os critérios de fato é `ler_etapas` (FR-5204).
+  só na Etapa pontuada: a decisória não produz nota (FR-5204). Na decisória sem critério a folha
+  esconde a seção; **com critério, ela fica à vista**, com o aviso de que a decisória não tem barema
+  e sem o botão de acrescentar. Esconder também ali faria a pessoa gravar sem ver o que perderia, e
+  a gravação recusa a decisória com barema — os critérios precisam estar à mão para serem removidos.
 
   `section` com título, e não `fieldset`: as linhas de dentro já são `fieldset.linha`, e um terceiro
   nível de legenda faria o leitor de tela anunciar "grupo" três vezes antes do primeiro campo. O `id`
@@ -222,17 +224,19 @@
   `barema.js` a refaz a cada tecla.
   {% endcomment %}
   {% previa_do_barema etapa_linha documentos_do_barema as previa %}
-  <section class="barema so-pontuada" id="etapa-{{ indice }}-criteria" data-barema
+  <section class="barema" id="etapa-{{ indice }}-criteria" data-barema
            aria-labelledby="barema-{{ indice }}-titulo">
     <h3 id="barema-{{ indice }}-titulo" class="titulo-do-barema">Barema</h3>
     <p class="descricao-do-barema">Opcional. Sem barema, a comissão lança o total.</p>
+    <p class="aviso aviso-da-decisoria">A Etapa com decisão, sem nota, não tem barema. Remova os
+      critérios abaixo para gravar, ou volte a «Com pontuação».</p>
     {% recusa_de recusas "etapa" indice "criteria" as recusado %}
     {% if recusado %}<p class="recusa" role="alert">{{ recusado }}</p>{% endif %}
     <div class="criterios-do-barema" id="criterios-etapa-{{ indice }}" data-ordenavel data-criterios-do-barema>
       {% for criterio in etapa_linha.criteria %}{% include "interface/_criterio_de_avaliacao.html" with n=forloop.counter0 %}{% endfor %}
     </div>
     {% if not somente_leitura and edital %}
-    <button type="button" class="botao secundario"
+    <button type="button" class="botao secundario acrescentar-criterio"
             hx-get="{% url 'interface:fragmento-criterio-de-avaliacao' edital.id indice %}"
             hx-target="#criterios-etapa-{{ indice }}" hx-swap="beforeend">Acrescentar critério</button>
     {% endif %}

@@ -354,3 +354,53 @@ test("a tela restaurada não oferece de novo, e não apaga o guardado", () => {
   assert.equal(botao, undefined);
   assert.notEqual(armazem.getItem(CHAVE), null);
 });
+
+/* O barema da Etapa (146): o critério acrescentado nasce com índice sorteado no cliente, e a
+   recusa o reexibe renumerado. A comparação com o renderizado precisa ser pelo campo, e não pelo
+   nome cru — senão a tela que mostra exatamente o que foi digitado oferece "restaurar" o mesmo. */
+
+function comCriterio(indice, nome) {
+  return new Formulario(
+    [
+      linha("etapa", 0, { id: "e1", name: "Prova de Títulos" }),
+      linha("criterio-etapa", `0-${indice}`, { id: "c1", name: nome, maximumScore: "20" }),
+    ],
+    { rascunho: "edital:perfis:ana", lista: "#perfis" }
+  );
+}
+
+test("o critério renumerado pela recusa não é oferecido de novo", async () => {
+  const digitado = comCriterio("769862236394348", "Doutorado");
+  const armazem = new Armazem();
+  montar({ formulario: digitado, armazem });
+  carregar(SCRIPT);
+  digitado.elements.find((campo) => campo.name.endsWith("-name") && campo.value === "Doutorado")
+    .value = "Diploma de Doutorado";
+  digitado.disparar("input");
+  await new Promise((pronto) => setTimeout(pronto, 450));
+  const guardado = armazem.getItem(CHAVE);
+  assert.notEqual(guardado, null, "o digitado ficou guardado");
+
+  const reexibido = new Armazem({ [CHAVE]: guardado });
+  montar({ formulario: comCriterio("0", "Diploma de Doutorado"), armazem: reexibido });
+  carregar(SCRIPT);
+
+  assert.equal(reexibido.getItem(CHAVE), null, "igual ao que a tela mostra: nada a oferecer");
+});
+
+test("o critério com conteúdo diferente continua sendo oferecido", async () => {
+  const digitado = comCriterio("769862236394348", "Doutorado");
+  const armazem = new Armazem();
+  montar({ formulario: digitado, armazem });
+  carregar(SCRIPT);
+  digitado.elements.find((campo) => campo.name.endsWith("-name") && campo.value === "Doutorado")
+    .value = "Diploma de Doutorado";
+  digitado.disparar("input");
+  await new Promise((pronto) => setTimeout(pronto, 450));
+
+  const reexibido = new Armazem({ [CHAVE]: armazem.getItem(CHAVE) });
+  montar({ formulario: comCriterio("0", "Outro"), armazem: reexibido });
+  carregar(SCRIPT);
+
+  assert.notEqual(reexibido.getItem(CHAVE), null);
+});

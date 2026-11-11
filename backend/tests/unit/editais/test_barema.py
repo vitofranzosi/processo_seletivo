@@ -227,6 +227,21 @@ def test_soma_acima_do_que_a_coluna_comporta_e_recusada():
     assert "999,9999" in str(erro)
 
 
+def test_identidade_de_criterio_repetida_e_recusada_na_gravacao():
+    """Sem isto, a linha repetida chegava ao `bulk_create` e o banco a recusava com erro cru."""
+    repetido = criterio(ESPECIALIZACAO, name="Especialização")
+    outra_etapa = {
+        **etapa([criterio(ESPECIALIZACAO, name="Especialização")]),
+        "id": "00000000-0000-0000-0000-000000014602",
+        "name": "Entrevista",
+        "order": 2,
+    }
+    for etapas_ in ([etapa([criterio(), repetido, repetido])], [etapa([repetido]), outra_etapa]):
+        with pytest.raises(StageValidationError, match="repete a identidade") as erro:
+            validate_stages(etapas_, schedule=[])
+        assert erro.value.campo == "criteria"
+
+
 def test_barema_em_etapa_decisoria_e_recusado():
     """FR-5204: a decisória não produz nota."""
     erro = recusa(etapa([criterio()], forma="DECISORIA", maximumScore=None))
@@ -340,6 +355,18 @@ def test_a_publicacao_confere_a_forma_de_cada_criterio():
     achados = achados_do_barema(snapshot)
     assert [achado.code for achado in achados] == ["field_required"]
     assert achados[0].path.endswith(f"/criteria/id={DOUTORADO}/unitLabel")
+
+
+def test_a_publicacao_recusa_identidade_de_criterio_repetida():
+    """A Retificação poderia acrescentar um critério com o id de outro: a mesma regra pega."""
+    snapshot = publicado(
+        [criterio_publicado(), criterio_publicado(name="Mestrado")],
+        [documento()],
+        maximumScore="40.0000",
+    )
+
+    achados = achados_do_barema(snapshot)
+    assert any("repete a identidade" in achado.message for achado in achados)
 
 
 def test_a_etapa_publicada_sem_a_lista_e_achado_de_forma():

@@ -116,10 +116,37 @@
     if (campo.checked) destino[chave].push(campo.value);
   }
 
+  /* O nome do campo aninhado sem os índices que o cliente sorteia: cada segmento numérico vira a
+     ordem em que ele aparece dentro do segmento anterior. `criterio-etapa-0-769862236394348-name`
+     e `criterio-etapa-0-0-name` são o mesmo campo — o primeiro critério da primeira Etapa —, e o
+     servidor renumera o segundo índice ao reexibir uma recusa. Comparar pelo nome cru acusava
+     "preenchimento não enviado" na tela que mostrava exatamente o que foi digitado (146). O
+     último segmento é o campo, e fica como está. */
+  function semIndices(nome, ordinais) {
+    var partes = nome.split("-");
+    var contexto = "";
+    return partes
+      .map(function (parte, posicao) {
+        if (!/^\d+$/.test(parte) || posicao === partes.length - 1) {
+          contexto += "-" + parte;
+          return parte;
+        }
+        var mapa = ordinais[contexto] || (ordinais[contexto] = {});
+        if (!Object.prototype.hasOwnProperty.call(mapa, parte)) {
+          mapa[parte] = Object.keys(mapa).length;
+        }
+        var normalizado = "#" + mapa[parte];
+        contexto += "-" + normalizado;
+        return normalizado;
+      })
+      .join("-");
+  }
+
   function ler() {
     var linhas = {};
     var ordem = [];
     var simples = {};
+    var ordinais = {};
     var caixas = caixasPorNome();
     Array.prototype.forEach.call(form.elements, function (campo) {
       if (!campo.name || IGNORADOS.indexOf(campo.name) >= 0) return;
@@ -130,7 +157,7 @@
       var emGrupo = campo.type === "checkbox" && caixas[campo.name] > 1;
       var partes = campo.name.match(/^([a-z]+)-(\d+)-(\w+)$/);
       if (!partes) {
-        anotar(simples, campo.name, campo, emGrupo);
+        anotar(simples, semIndices(campo.name, ordinais), campo, emGrupo);
         return;
       }
       if (!linhas[partes[2]]) {

@@ -42,7 +42,11 @@ from processo_seletivo.editais.domain.documentos import (
     problemas_do_momento,
     rotulo_da_modalidade,
 )
-from processo_seletivo.editais.domain.etapas import criterios_de, problemas_do_barema
+from processo_seletivo.editais.domain.etapas import (
+    criterios_de,
+    criterios_repetidos,
+    problemas_do_barema,
+)
 from processo_seletivo.editais.domain.perfis import (
     CAMPOS_DO_METODO,
     ProfileValidationError,
@@ -1538,7 +1542,14 @@ def _coerencia_do_barema(snapshot: dict) -> list[ValidationFinding]:
         for documento in snapshot.get("documentRequirements") or []
         if isinstance(documento, dict)
     ]
-    findings = []
+    # A identidade repetida, que a Retificação poderia produzir acrescentando um critério com o id
+    # de outro: a mesma regra da gravação.
+    findings = [
+        _impeditivo(BAREMA_INCOERENTE, mensagem, f"/stages/id={etapa}/criteria")
+        for etapa, mensagem in criterios_repetidos(
+            [etapa for etapa in itens if isinstance(etapa, dict)]
+        )
+    ]
     for posicao, etapa in enumerate(itens):
         if not isinstance(etapa, dict) or not isinstance(etapa.get("criteria"), list):
             continue

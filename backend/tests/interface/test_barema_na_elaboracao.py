@@ -412,22 +412,39 @@ def test_nome_repetido_e_recusado_no_segundo(client, com_documentos):
     assert 'href="#criterio-etapa-0-1-name"' in resposta.content.decode()
 
 
-def test_trocar_para_decisoria_descarta_o_barema(client, com_barema):
-    """FR-5204: a decisória não tem barema — a tela esconde a seção, e a leitura a descarta."""
-    resposta = gravar(
-        client,
-        com_barema,
-        "etapas",
-        etapas(
-            **{
-                "etapa-0-forma": "DECISORIA",
-                "etapa-0-rotuloFavoravel": "Apto",
-                "etapa-0-rotuloDesfavoravel": "Inapto",
-                "etapa-0-eliminatoryDecisoria": "on",
-                "etapa-0-caraterPorForma": "1",
-            }
-        ),
-    )
+DECISORIA = {
+    "etapa-0-forma": "DECISORIA",
+    "etapa-0-rotuloFavoravel": "Apto",
+    "etapa-0-rotuloDesfavoravel": "Inapto",
+    "etapa-0-eliminatoryDecisoria": "on",
+    "etapa-0-caraterPorForma": "1",
+}
+
+
+def test_trocar_para_decisoria_com_barema_e_recusado_e_nada_se_perde(client, com_barema):
+    """FR-5204: a decisória não tem barema — e a troca de forma **não** o apaga em silêncio.
+
+    O clique no rádio errado descartava a ficha inteira na gravação, sem aviso. Agora a gravação é
+    recusada, a ficha volta na tela com o aviso, e o barema gravado continua o mesmo.
+    """
+    antes = barema(com_barema)
+    resposta = gravar(client, com_barema, "etapas", etapas(**DECISORIA))
+
+    assert resposta.status_code == 200
+    html = resposta.content.decode()
+    assert "concluída com decisão, sem nota, e por isso não tem barema" in html
+    assert 'href="#etapa-0-criteria"' in html
+    assert "Remova os\n      critérios abaixo para gravar" in html
+    assert 'value="Diploma de Doutorado"' in html, "a ficha volta à tela, para ser removida"
+    assert barema(com_barema) == antes
+    assert EtapaAvaliacao.objects.get(id=ETAPA_CLASSIFICATORIA).forma == "PONTUADA"
+
+
+def test_trocar_para_decisoria_tirando_os_criterios_grava(client, com_barema):
+    sem_criterios = {
+        chave: valor for chave, valor in etapas(**DECISORIA).items() if "criterio-" not in chave
+    }
+    resposta = gravar(client, com_barema, "etapas", sem_criterios)
 
     assert resposta.status_code == 302, resposta.content
     etapa = EtapaAvaliacao.objects.get(id=ETAPA_CLASSIFICATORIA)
@@ -436,8 +453,46 @@ def test_trocar_para_decisoria_descarta_o_barema(client, com_barema):
     assert barema(com_barema) == []
 
 
-def test_a_secao_so_aparece_na_forma_pontuada(client, com_barema):
-    """A folha esconde a seção pela forma marcada; a marcação a carrega como `so-pontuada`."""
+def test_por_unidade_sem_pontos_e_recusado_e_nao_vira_pontuacao_atribuida(client, com_documentos):
+    """A escolha "por unidade" sem os pontos não se grava como pontuação direta em silêncio."""
+    resposta = gravar(
+        client,
+        com_documentos,
+        "etapas",
+        etapas(
+            **{
+                "criterio-etapa-0-1-pointsPerUnit": "",
+                "criterio-etapa-0-1-unitLabel": "",
+            }
+        ),
+    )
+
+    assert resposta.status_code == 200
+    html = resposta.content.decode()
+    assert "é pontuado por unidade apresentada e não diz quantos pontos" in html
+    assert 'href="#criterio-etapa-0-1-pointsPerUnit"' in html
+    assert re.search(r'id="criterio-etapa-0-1-modo-unidade"[^>]*\bchecked', html), (
+        "a recusa reexibe a escolha como a pessoa a deixou"
+    )
+    assert barema(com_documentos) == []
+
+
+def test_sem_o_radio_a_escolha_vem_dos_campos(client, com_documentos):
+    """Envio montado à mão, sem `-modo`: com pontos é por unidade; sem nada, é atribuída."""
+    dados = {chave: valor for chave, valor in etapas().items() if not chave.endswith("-modo")}
+    dados["criterio-etapa-0-2-pointsPerUnit"] = ""
+    dados["criterio-etapa-0-2-unitLabel"] = ""
+
+    resposta = gravar(client, com_documentos, "etapas", dados)
+
+    assert resposta.status_code == 302, resposta.content
+    assert [linha[3] is None for linha in barema(com_documentos)] == [False, False, True]
+
+
+def test_a_secao_fica_no_cartao_com_o_aviso_da_decisoria(client, com_barema):
+    """A folha esconde a seção na decisória **sem critério**; com critério, mostra o aviso."""
     html = pagina(client, com_barema)
 
-    assert '<section class="barema so-pontuada" id="etapa-0-criteria"' in html
+    assert '<section class="barema" id="etapa-0-criteria"' in html
+    assert 'class="aviso aviso-da-decisoria"' in html
+    assert "acrescentar-criterio" in html

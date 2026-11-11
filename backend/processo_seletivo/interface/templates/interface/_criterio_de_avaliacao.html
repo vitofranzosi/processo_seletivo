@@ -43,7 +43,7 @@
     <legend>Como a comissão pontua</legend>
     <p class="opcao">
       <input type="radio" id="criterio-etapa-{{ indice }}-{{ n }}-modo-unidade" name="criterio-etapa-{{ indice }}-{{ n }}-modo" value="POR_UNIDADE"
-             {% if criterio.novo or criterio.pointsPerUnit or criterio.unitLabel %}checked{% endif %} data-barema-modo>
+             {% if criterio.modo != "DIRETA" %}checked{% endif %} data-barema-modo>
       <label for="criterio-etapa-{{ indice }}-{{ n }}-modo-unidade">Por unidade apresentada <span class="exemplo">— ex.: 5 pontos por certificado</span></label>
     </p>
     <div class="campos dependentes so-por-unidade">
@@ -68,7 +68,7 @@
     </div>
     <p class="opcao">
       <input type="radio" id="criterio-etapa-{{ indice }}-{{ n }}-modo-direta" name="criterio-etapa-{{ indice }}-{{ n }}-modo" value="DIRETA"
-             {% if not criterio.novo and not criterio.pointsPerUnit and not criterio.unitLabel %}checked{% endif %} data-barema-modo>
+             {% if criterio.modo == "DIRETA" %}checked{% endif %} data-barema-modo>
       <label for="criterio-etapa-{{ indice }}-{{ n }}-modo-direta">A comissão atribui os pontos <span class="exemplo">— de zero à pontuação máxima</span></label>
     </p>
   </fieldset>

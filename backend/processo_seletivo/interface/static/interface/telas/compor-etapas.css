@@ -4,6 +4,19 @@
    ficha da Etapa, e não mais um campo dela. Os critérios são cartões aninhados, como a Modalidade
    no Perfil, e a prévia é a tabela que o Edital imprimirá. */
 .barema{margin:.6rem 0 0;padding:.9rem 0 0;border-top:1px solid var(--borda)}
+/* A decisória não tem barema (FR-5204). Sem critério, a seção sai; com critério, fica, com o aviso
+   e sem o botão de acrescentar, para a pessoa remover o que a gravação recusaria — esconder também
+   aqui era a perda silenciosa da ficha. A regra é a das demais da forma: esconde **quando** a
+   decisória está marcada, e onde `:has` não existir tudo aparece. */
+.barema .aviso-da-decisoria{display:none;}
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .aviso-da-decisoria{
+  display:block;}
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .acrescentar-criterio,
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .previa-do-barema,
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .barema .descricao-do-barema,
+fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked)
+  .barema:not(:has([data-criterio-de-avaliacao])){
+  display:none;}
 .barema .titulo-do-barema{margin:0 0 .2rem;font-size:1rem}
 .barema .descricao-do-barema{margin:0 0 .8rem;font-size:.875rem;color:var(--texto-fraco)}
 .barema>.recusa{display:block;margin:0 0 .8rem}
