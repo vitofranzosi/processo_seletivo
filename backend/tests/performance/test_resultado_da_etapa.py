@@ -90,18 +90,27 @@ def test_o_custo_e_constante_entre_um_e_dois_marcos(com_um_marco, com_dois_marco
     assert com_dois == com_um
 
 
-def test_o_custo_e_de_tres_consultas(com_um_marco):
-    """O número declarado: uma regressão silenciosa aparece como número, e não como lentidão."""
-    assert consultas(com_um_marco["inscricoes"][0]) == 3
+def test_o_custo_e_de_quatro_consultas(com_um_marco):
+    """O número declarado: uma regressão silenciosa aparece como número, e não como lentidão.
+
+    **Eram três até a 148**, que acrescentou o segundo fato autorizador — a publicação das
+    inscrições, que publica a Etapa de análise (FR-5415). Uma consulta, e constante: ela não cresce
+    com marcos nem com publicações, e o teste do custo constante acima continua valendo.
+    """
+    assert consultas(com_um_marco["inscricoes"][0]) == 4
 
 
 def test_sem_publicacao_o_custo_e_de_uma_consulta(
     gestor, api_client, manager_headers, process_payload
 ):
-    """Sem publicação a leitura para na primeira: não há norma a ler nem Resultado a buscar."""
+    """Sem publicação a leitura para cedo: não há norma a ler nem Resultado a buscar.
+
+    **Duas, e não uma, desde a 148**: a ausência de publicação de resultado e a de publicação das
+    inscrições são duas perguntas a duas tabelas (FR-5415).
+    """
     cenario = montar_marco(
         gestor, api_client, manager_headers, process_payload, seed=87, codigo="0787"
     )
     inscricoes = pontuar(cenario, gestor, ["90.0000"], primeiro=871, sufixo="87")
 
-    assert consultas(inscricoes[0]) == 1
+    assert consultas(inscricoes[0]) == 2

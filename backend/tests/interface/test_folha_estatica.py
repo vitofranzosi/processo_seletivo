@@ -353,6 +353,8 @@ QUEM_CARREGA = {
     # A convocação pelas perguntas de quem conduz (143): o passo da chamada e o aviso da pendência
     # são os mesmos na convocação e nos documentos de uma convocação, e a folha também.
     "interface/telas/convocacao.css": {"convocacao.html", "convocacao_documentos.html"},
+    # As publicações das inscrições (148): a escolha do ato e a conferência dos nomes.
+    "interface/telas/publicacoes-das-inscricoes.css": {"publicacoes_das_inscricoes.html"},
 }
 
 

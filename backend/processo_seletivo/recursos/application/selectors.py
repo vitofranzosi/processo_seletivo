@@ -442,6 +442,31 @@ def recursos_pendentes_do_marco(*, edital, marco_id, marco, publicacoes_do_marco
     return [peca for peca in pertinentes if peca.pk not in decididos and peca.pk not in inadmitidos]
 
 
+def recursos_pendentes_da_etapa(*, edital, etapa_id):
+    """Os recursos contra resultado **desta** Etapa ainda sem decisão e não inadmitidos (148).
+
+    A pergunta da homologação das inscrições, que não tem marco: é a segunda metade de
+    `recursos_pertinentes` — o recurso contra o `ResultadoEtapa` —, com a mesma régua de pendência
+    de `recursos_pendentes_do_marco`. Inadmitido está resolvido; sem decisão, não (D-004 da 148).
+    """
+    pecas = list(
+        Recurso.objects.filter(
+            inscricao__edital=edital, resultado_atacado__etapa_id=etapa_id
+        ).values_list("pk", flat=True)
+    )
+    if not pecas:
+        return []
+    decididos = set(
+        DecisaoRecurso.objects.filter(recurso_id__in=pecas).values_list("recurso_id", flat=True)
+    )
+    inadmitidos = set(
+        JuizoDeAdmissibilidade.objects.filter(recurso_id__in=pecas, admitido=False).values_list(
+            "recurso_id", flat=True
+        )
+    )
+    return [peca for peca in pecas if peca not in decididos and peca not in inadmitidos]
+
+
 def reavaliacoes_pendentes_do_marco(*, edital, marco):
     """As reavaliações determinadas e não cumpridas que alcançam Etapa deste marco (FR-082)."""
     etapas = _etapas_do_marco(marco)

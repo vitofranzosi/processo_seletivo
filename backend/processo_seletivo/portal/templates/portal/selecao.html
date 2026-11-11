@@ -95,6 +95,43 @@ que ele procura.
 Recebendo inscrição, a vaga é a manchete. Não recebendo, o resultado é — e a diferença é só de
 destaque: a seção está no mesmo lugar, e o que muda é o peso dela (FR-050, SC-018).
 {% endcomment %}
+{% if inscricoes_publicadas %}
+{% comment %}
+**Os atos sobre as inscrições** (148, FR-5428): relação de recebidas, resultado preliminar da
+análise, homologação. Um bloco só, antes dos resultados, porque vem antes deles no certame — e na
+mesma forma: o vigente em destaque, os anteriores recolhidos, o prazo que ainda corre ao lado.
+{% endcomment %}
+<section class="resultados{% if not recebe_inscricoes %} em-destaque{% endif %}"
+         aria-labelledby="inscricoes-publicadas-titulo">
+  <h2 id="inscricoes-publicadas-titulo">Inscrições</h2>
+  <ul class="listas-da-etapa">
+    <li class="lista-divulgada">
+      <a href="{% url 'portal:publicacao-das-inscricoes' inscricoes_publicadas.vigente.id %}">{{ inscricoes_publicadas.vigente.get_natureza_display }}</a>
+      <span class="meta">publicado em {{ inscricoes_publicadas.vigente.publicado_em|date:"d/m/Y" }}</span>
+      {% if inscricoes_publicadas.recurso_ate %}<span class="prazo-recursal">recurso até {{ inscricoes_publicadas.recurso_ate|date:"d/m/Y" }} às {{ inscricoes_publicadas.recurso_ate|date:"H\hi" }}</span>{% endif %}
+    </li>
+  </ul>
+  {% if inscricoes_publicadas.anteriores %}
+  <details class="publicacoes-anteriores">
+    <summary>Publicações anteriores ({{ inscricoes_publicadas.anteriores|length }})</summary>
+    <ul>
+      {% for anterior in inscricoes_publicadas.anteriores %}
+      <li><a href="{% url 'portal:publicacao-das-inscricoes' anterior.id %}">{{ anterior.get_natureza_display }}</a>
+        <span class="meta">publicado em {{ anterior.publicado_em|date:"d/m/Y" }} · sucedido</span></li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+  {% if convite_da_situacao and not resultados_divulgados %}
+  <aside class="convite-da-situacao" aria-label="Sua situação">
+    <p><strong>Você se inscreveu?</strong></p>
+    <p>Consulte a situação da sua inscrição.</p>
+    <a class="documento secundaria" href="{{ convite_da_situacao.url }}">{{ convite_da_situacao.texto }}</a>
+  </aside>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if resultados_divulgados %}
 <section class="resultados{% if not recebe_inscricoes %} em-destaque{% endif %}"
          aria-labelledby="resultados-titulo">

@@ -158,5 +158,5 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
         "formalizacao_exportacaodeformalizacao",
     )
     assert TABELAS_APPEND_ONLY[-12:] == novas + da_107 + da_115 + da_117
-    assert len(TABELAS_APPEND_ONLY) == 53
-    assert len(set(TABELAS_APPEND_ONLY)) == 53
+    assert len(TABELAS_APPEND_ONLY) == 55
+    assert len(set(TABELAS_APPEND_ONLY)) == 55
