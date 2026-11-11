@@ -26,6 +26,7 @@ from decimal import Decimal, InvalidOperation
 
 from processo_seletivo.avaliacoes.domain.pontuacao import CASAS, TETO_DA_PERSISTENCIA
 from processo_seletivo.avaliacoes.domain.previsao import etapa_do_conteudo
+from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.shared.api.problems import DomainError
 
 # Inteiro de zero a 9999 (FR-5216): "52 meses" num critério de 1 ponto por mês até 40 é resposta
@@ -148,17 +149,10 @@ def _pontos(criterio, bruto, maxima):
         raise _recusa(criterio, "os pontos precisam ser um número.") from exc
     if valor > maxima:
         raise _recusa(
-            criterio, f"os pontos não podem superar {_humano(maxima)}, que é a máxima do critério."
+            criterio,
+            f"os pontos não podem superar {humano.decimal(maxima)}, que é a máxima do critério.",
         )
     return valor.quantize(CASAS)
-
-
-def _humano(valor):
-    """`10.0000` → `10`; `2.5000` → `2,5` — a grafia das frases (a mesma de `humano.decimal`)."""
-    texto = format(valor, "f")
-    if "." in texto:
-        texto = texto.rstrip("0").rstrip(".")
-    return texto.replace(".", ",")
 
 
 def _texto(valor):
@@ -303,16 +297,19 @@ def reconciliar(detalhamento, criterios_vigentes):
 
 
 def parcela_exibivel(criterio, linha):
-    """A parcela de uma linha do rascunho, para a tela — ou `(None, False)` se não houver.
+    """A parcela de uma linha do rascunho, para a tela: `(parcela, limitada, erro)`.
 
     Não recusa: o rascunho reaberto pode trazer um valor que a máxima nova não admite, e a tela
-    precisa mostrá-lo para que a avaliadora o corrija. Quem recusa é `calcular`, ao gravar.
+    precisa mostrá-lo **com a razão** — "os pontos não podem superar 10" —, e não como um pendente
+    qualquer, para que a avaliadora o corrija antes de gravar. Quem recusa é `calcular`, ao gravar,
+    com a mesma frase.
     """
     try:
         linhas, _ = calcular([criterio], [{**linha, "criterionId": criterio["id"]}], exigir=False)
-    except DomainError:
-        return None, False
-    return linhas[0]["parcela"], linhas[0]["limitada"]
+    except DomainError as recusa:
+        # A frase do domínio começa pelo nome do critério, que a linha da tela já mostra.
+        return None, False, recusa.detail.split(": ", 1)[-1]
+    return linhas[0]["parcela"], linhas[0]["limitada"], ""
 
 
 __all__ = [

@@ -93,7 +93,7 @@
     if (resultado.pendente || resultado.erro) {
       var marca = document.createElement("span");
       marca.className = "pendente";
-      marca.textContent = resultado.erro ? "pendente — " + resultado.erro : "pendente";
+      marca.textContent = resultado.erro ? "a corrigir — " + resultado.erro : "pendente";
       saida.appendChild(marca);
       return;
     }
@@ -110,6 +110,7 @@
     var linhas = [].slice.call(ficha.querySelectorAll("[data-criterio-da-ficha]"));
     var parcelas = [];
     var pendentes = [];
+    var aCorrigir = [];
     var maxima = 0;
     linhas.forEach(function (linha) {
       var criterio = criterioDa(linha);
@@ -118,7 +119,12 @@
       var resultado = parcela(criterio, campo ? campo.value : null);
       var saida = linha.querySelector("[data-parcela]");
       if (saida) escrever(saida, resultado);
-      if (resultado.pendente || resultado.erro) {
+      /* O valor que a regra recusa não é pendente — está respondido, e errado —, e o rodapé diz
+         as duas coisas em separado, como a tela que o servidor desenha. */
+      if (resultado.erro) {
+        aCorrigir.push(criterio.nome.trim());
+        parcelas.push(null);
+      } else if (resultado.pendente) {
         pendentes.push(criterio.nome.trim());
         parcelas.push(null);
       } else {
@@ -135,7 +141,10 @@
     }
     var aviso = ficha.querySelector("[data-pendentes-da-ficha]");
     if (aviso) {
-      aviso.textContent = pendentes.length ? "Pendentes: " + pendentes.join("; ") + "." : "";
+      var partes = [];
+      if (pendentes.length) partes.push("Pendentes: " + pendentes.join("; ") + ".");
+      if (aCorrigir.length) partes.push("A corrigir: " + aCorrigir.join("; ") + ".");
+      aviso.textContent = partes.join(" ");
     }
   }
 

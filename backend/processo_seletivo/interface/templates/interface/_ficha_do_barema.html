@@ -47,15 +47,15 @@ porque o painel da Mesa passa pela Atribuição de quem avalia.
           <span>{% if linha.por_unidade %}{{ linha.quantidade|default:"0" }} {{ linha.unidade }}{% else %}{{ linha.pontos|pontuacao }}{% endif %}</span>
           {% elif linha.por_unidade %}
           <label class="oculto" for="ficha-{{ linha.id }}-quantidade">Quantidade — {{ linha.nome }}</label>
-          <span class="entrada-do-criterio"><input type="number" step="1" min="0" max="9999" inputmode="numeric" id="ficha-{{ linha.id }}-quantidade" name="ficha-{{ linha.id }}-quantidade" value="{{ linha.quantidade }}" data-quantidade>
+          <span class="entrada-do-criterio"><input type="number" step="1" min="0" max="9999" inputmode="numeric" id="ficha-{{ linha.id }}-quantidade" name="ficha-{{ linha.id }}-quantidade" value="{{ linha.quantidade }}" data-quantidade{% if forloop.first and foco_na_nota and not aviso %} autofocus{% endif %}>
             <span class="unidade-do-criterio">{{ linha.unidade }}</span></span>
           {% else %}
           <label class="oculto" for="ficha-{{ linha.id }}-pontos">Pontos — {{ linha.nome }}</label>
-          <span class="entrada-do-criterio"><input type="number" step="0.0001" min="0" max="{{ linha.maxima }}" inputmode="decimal" id="ficha-{{ linha.id }}-pontos" name="ficha-{{ linha.id }}-pontos" value="{{ linha.pontos }}" data-pontos>
+          <span class="entrada-do-criterio"><input type="number" step="0.0001" min="0" max="{{ linha.maxima }}" inputmode="decimal" id="ficha-{{ linha.id }}-pontos" name="ficha-{{ linha.id }}-pontos" value="{{ linha.pontos }}" data-pontos{% if forloop.first and foco_na_nota and not aviso %} autofocus{% endif %}>
             <span class="unidade-do-criterio">pontos</span></span>
           {% endif %}
         </td>
-        <td data-rotulo="Pontuação"><output class="parcela-do-criterio" data-parcela{% if not ficha.concluida %} for="ficha-{{ linha.id }}-{% if linha.por_unidade %}quantidade{% else %}pontos{% endif %}"{% endif %}>{% if linha.pendente %}<span class="pendente">pendente</span>{% else %}{{ linha.parcela|pontuacao }}{% if linha.limitada %} <span class="limitada">— limitada ao máximo</span>{% endif %}{% endif %}</output></td>
+        <td data-rotulo="Pontuação"><output class="parcela-do-criterio" data-parcela{% if not ficha.concluida %} for="ficha-{{ linha.id }}-{% if linha.por_unidade %}quantidade{% else %}pontos{% endif %}"{% endif %}>{% if linha.erro %}<span class="pendente">a corrigir — {{ linha.erro }}</span>{% elif linha.pendente %}<span class="pendente">pendente</span>{% else %}{{ linha.parcela|pontuacao }}{% if linha.limitada %} <span class="limitada">— limitada ao máximo</span>{% endif %}{% endif %}</output></td>
         <td data-rotulo="Justificativa">
           {% if ficha.concluida %}
           <span>{% if linha.justificativa %}{{ linha.justificativa|linebreaksbr }}{% else %}<span class="ausente">—</span>{% endif %}</span>
@@ -71,7 +71,7 @@ porque o painel da Mesa passa pela Atribuição de quem avalia.
       <tr>
         <th scope="row" colspan="3">Total</th>
         <td colspan="2"><output class="total-da-ficha" data-total-da-ficha aria-live="polite"><strong>{{ ficha.total|pontuacao }}</strong> de {{ ficha.maxima|pontuacao }}</output>
-          {% if not ficha.concluida %}<span class="pendentes-da-ficha" data-pendentes-da-ficha>{% if ficha.pendentes %}Pendentes: {{ ficha.pendentes|join:"; " }}.{% endif %}</span>{% endif %}</td>
+          {% if not ficha.concluida %}<span class="pendentes-da-ficha" data-pendentes-da-ficha>{% if ficha.pendentes %}Pendentes: {{ ficha.pendentes|join:"; " }}.{% endif %}{% if ficha.pendentes and ficha.com_erro %} {% endif %}{% if ficha.com_erro %}A corrigir: {{ ficha.com_erro|join:"; " }}.{% endif %}</span>{% endif %}</td>
       </tr>
     </tfoot>
   </table>

@@ -307,14 +307,14 @@ def _fichas_dos_resultados(resultados):
     versões citadas só é lido quando algum Resultado tem o que mostrar, e uma vez por versão
     distinta.
     """
-    from processo_seletivo.avaliacoes.application.mesa import ficha_do_barema
+    from processo_seletivo.avaliacoes.application.ficha import ficha_do_barema
     from processo_seletivo.avaliacoes.domain.barema import barema_da_versao
 
-    com_detalhamento = {
-        resultado.id: detalhamento_do_resultado(resultado)
-        for resultado in resultados
-        if detalhamento_do_resultado(resultado)
-    }
+    com_detalhamento = {}
+    for resultado in resultados:
+        detalhamento = detalhamento_do_resultado(resultado)
+        if detalhamento:
+            com_detalhamento[resultado.id] = detalhamento
     if not com_detalhamento:
         return {}
     conteudos = conteudos_das_versoes(
@@ -347,6 +347,8 @@ def _marcar_alterados(ficha, resultado):
     ver **qual parcela** a decisão corrigiu, e não a ficha inteira de novo. Critério que não existia
     antes conta como alterado. Sem detalhamento anterior, nada se marca — não há com o que comparar.
     """
+    from processo_seletivo.resultados.domain.compatibilidade import decimal_comparavel
+
     anterior = resultado.resultado_anterior if resultado.resultado_anterior_id else None
     antes = {
         str(linha.get("criterionId")): linha
@@ -360,24 +362,11 @@ def _marcar_alterados(ficha, resultado):
         velha = antes.get(linha["id"])
         # A parcela **ou** o que foi informado: 3 certificados que viram 4 continuam em 10, no teto,
         # e mesmo assim a decisão mudou o que se reconheceu.
-        linha["alterado"] = velha is None or (
-            _comparavel(velha.get("parcela")) != _comparavel(linha["parcela"])
-            or _comparavel(velha.get("quantidade")) != _comparavel(linha["quantidade"])
-            or _comparavel(velha.get("pontos")) != _comparavel(linha["pontos"])
+        linha["alterado"] = velha is None or any(
+            decimal_comparavel(velha.get(campo)) != decimal_comparavel(linha[campo])
+            for campo in ("parcela", "quantidade", "pontos")
         )
         ficha["alterados"] += int(linha["alterado"])
-
-
-def _comparavel(valor):
-    """`"10.0000"`, `Decimal("10")`, `10` e `"10"` são o mesmo número; vazio e `None`, nada."""
-    from decimal import Decimal, InvalidOperation
-
-    if valor in (None, ""):
-        return None
-    try:
-        return Decimal(str(valor)).normalize()
-    except (InvalidOperation, ValueError):
-        return str(valor)
 
 
 def historico_do_par(inscricao_id, etapa_id):

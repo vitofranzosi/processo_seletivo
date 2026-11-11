@@ -34,6 +34,7 @@ from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application import avaliacao as avaliacao_app
 from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
+from processo_seletivo.avaliacoes.application import ficha as ficha_app
 from processo_seletivo.avaliacoes.application import impedimento as impedimento_app
 from processo_seletivo.avaliacoes.application import mesa as mesa_app
 from processo_seletivo.avaliacoes.application import selectors as avaliacao_selectors
@@ -7240,7 +7241,7 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
     if contexto.get("ficha") and not contexto["ficha"]["concluida"] and digitado:
         # **O digitado antes da recusa volta à ficha**, como volta ao campo único: a avaliadora que
         # deixou um critério pendente e clicou "Concluir" não pode perder as outras linhas (146).
-        contexto["ficha"] = mesa_app.ficha_do_barema(
+        contexto["ficha"] = ficha_app.ficha_do_barema(
             barema.criterios_da_etapa(contexto["etapa"]),
             digitado.get("criterios") or [],
             contexto["documentos"],
@@ -11520,6 +11521,11 @@ def _alvo_da_correcao(peca, digitado=None):
     from processo_seletivo.resultados.models import ResultadoEtapa
 
     alcancaveis, etapas_do_objeto = [], []
+    # A versão vigente, lida **uma vez** e só se houver o que corrigir: é por ela que o julgamento
+    # calcula (a decisão cita a vigente), e por isso é ela, e não a da interposição, que decide se a
+    # Etapa tem barema — uma Retificação entre as duas deixaria a tela oferecendo o campo que o
+    # julgamento recusa (146).
+    vigente_do_edital = None
     for etapa_id in _etapas_alcancaveis(peca):
         etapa = etapa_publicada(peca.versao, etapa_id) or {}
         # **A leitura é mais larga que a correção**, e por isso esta lista é montada antes do
@@ -11535,6 +11541,8 @@ def _alvo_da_correcao(peca, digitado=None):
             # Sem Resultado vigente não há o que corrigir naquela Etapa — e oferecê-la levaria a
             # uma recusa que a tela poderia ter evitado (FR-013).
             continue
+        if vigente_do_edital is None:
+            vigente_do_edital = _conteudo_vigente(peca.inscricao.edital_id)
         alcancaveis.append(
             {
                 "resultado": vigente,
@@ -11544,13 +11552,7 @@ def _alvo_da_correcao(peca, digitado=None):
                 # consequência diretamente (FR-059).
                 "forma": "" if vigente.forma == "" else forma_publicada(etapa),
                 "sentidos": rotulos(etapa),
-                # Só a Etapa com barema paga as leituras das fichas: a tela do recurso tem
-                # orçamento de consultas, e a Etapa sem barema não muda nada nele.
-                **(
-                    _fichas_do_julgamento(peca, vigente, etapa_id, digitado)
-                    if barema.tem_barema(etapa)
-                    else {}
-                ),
+                **_fichas_do_julgamento(vigente, etapa_id, digitado, vigente_do_edital),
             }
         )
     return {
@@ -11560,7 +11562,22 @@ def _alvo_da_correcao(peca, digitado=None):
     }
 
 
-def _fichas_do_julgamento(peca, vigente, etapa_id, digitado):
+def _conteudo_vigente(edital_id):
+    """O conteúdo da versão vigente do Edital, numa consulta só — a mesma que `effective_version`
+    escolhe, sem as proveniências e sem reler a linha, que esta tela não usa. A tela do recurso tem
+    orçamento de consultas, e é por ele que esta leitura não passa por `selecao_publica`.
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    return (
+        VersaoConsolidada.objects.filter(edital_id=edital_id, valid_from__lte=timezone.now())
+        .order_by("-valid_from", "-materialized_at")
+        .values_list("content", flat=True)
+        .first()
+    ) or {}
+
+
+def _fichas_do_julgamento(vigente, etapa_id, digitado, conteudo_vigente):
     """As duas fichas da tela de julgamento numa Etapa com barema (146, FR-5226, FR-5227).
 
     **A do Resultado atacado**, em leitura, com o barema da versão que ele cita (D-011): é o que
@@ -11568,20 +11585,21 @@ def _fichas_do_julgamento(peca, vigente, etapa_id, digitado):
     vigente — a decisão cita a versão vigente no julgamento, e é contra ela que o total é calculado
     —, pré-preenchida com o detalhamento atacado reconciliado: quem corrige uma parcela não digita
     as outras quatro de novo. Depois de uma recusa, o digitado volta no lugar do atacado.
+
+    Só a Etapa com barema **na versão vigente** paga as leituras das fichas: a tela do recurso tem
+    orçamento de consultas, e a Etapa sem barema não muda nada nele.
     """
-    from processo_seletivo.publicacoes.application.selectors import selecao_publica
     from processo_seletivo.resultados.application.selectors import detalhamento_do_resultado
 
-    if vigente.forma == "":
+    vigentes = barema.barema_da_versao(conteudo_vigente, etapa_id)
+    if vigente.forma == "" or not vigentes:
         return {}
     atacado = detalhamento_do_resultado(vigente)
     versao_do_resultado = vigente.versao
     criterios_atacados = barema.barema_da_versao(versao_do_resultado, etapa_id)
-    versao_vigente = selecao_publica(edital_id=peca.inscricao.edital_id)
-    vigentes = barema.barema_da_versao(versao_vigente, etapa_id)
     fichas = {}
     if criterios_atacados and atacado:
-        fichas["ficha_atacada"] = mesa_app.ficha_do_barema(
+        fichas["ficha_atacada"] = ficha_app.ficha_do_barema(
             criterios_atacados,
             atacado,
             [],
@@ -11592,19 +11610,18 @@ def _fichas_do_julgamento(peca, vigente, etapa_id, digitado):
             chave=f"atacada-{etapa_id}",
             na_mesa=False,
         )
-    if vigentes:
-        base = digitado if digitado else barema.reconciliar(atacado, vigentes)
-        fichas["ficha_corrigir"] = mesa_app.ficha_do_barema(
-            vigentes,
-            base,
-            [],
-            # O conteúdo vigente, e não um vazio: é dele que sai o nome do documento que comprova
-            # cada critério — sem ele a linha dizia "Comprovação:" e nada mais.
-            versao_vigente.content,
-            titulo="Correção por critério",
-            chave=f"corrigir-{etapa_id}",
-            na_mesa=False,
-        )
+    base = digitado if digitado else barema.reconciliar(atacado, vigentes)
+    fichas["ficha_corrigir"] = ficha_app.ficha_do_barema(
+        vigentes,
+        base,
+        [],
+        # O conteúdo vigente, e não um vazio: é dele que sai o nome do documento que comprova
+        # cada critério — sem ele a linha dizia "Comprovação:" e nada mais.
+        conteudo_vigente,
+        titulo="Correção por critério",
+        chave=f"corrigir-{etapa_id}",
+        na_mesa=False,
+    )
     return fichas
 
 

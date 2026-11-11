@@ -232,3 +232,56 @@ def test_a_recusa_na_tela_devolve_a_ficha_digitada(client, seletor_ligado, cenar
     assert resposta.status_code == 422
     texto = resposta.content.decode()
     assert f'name="ficha-{criterio_de(4, SEED)}-quantidade" value="7"' in texto
+
+
+def test_a_tela_decide_a_ficha_pela_versao_vigente_e_nao_pela_da_interposicao(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload
+):
+    """Revisão de 11/11: a Etapa sem barema na interposição ganha barema por Retificação.
+
+    O julgamento calcula pela versão vigente; a tela decidia pela da interposição e oferecia o campo
+    de pontuação que o julgamento recusa por falta de detalhamento. Ela passa a oferecer a ficha.
+    """
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+    from tests.fixtures.publicacao import retify
+    from tests.fixtures.recursos_us4 import cenario_julgavel
+
+    peca = cenario_julgavel(
+        gestor, api_client, manager_headers, process_payload, seed=154, codigo="0154"
+    )
+    etapa = peca["cenario"]["etapa"]
+    conteudo = (
+        VersaoConsolidada.objects.filter(edital=peca["cenario"]["edital"])
+        .latest("materialized_at")
+        .content
+    )
+    assert next(e for e in conteudo["stages"] if e["id"] == str(etapa))["criteria"] == []
+    unico = {
+        "id": "00000000-0000-4000-8000-000000015401",
+        "name": "Aula expositiva",
+        "description": "",
+        "maximumScore": "100.0000",
+        "pointsPerUnit": None,
+        "unitLabel": None,
+        "documentRequirementId": None,
+    }
+    retify(
+        api_client,
+        peca["cenario"]["edital"],
+        [
+            {"targetPath": f"/stages/id={etapa}/criteria/-", "operation": "ADD", "newValue": unico},
+            {
+                "targetPath": f"/stages/id={etapa}/maximumScore",
+                "operation": "REPLACE",
+                "newValue": "100.0000",
+            },
+        ],
+        suffix="154",
+    )
+
+    identificar(client, JULGADORA, ["julgador"])
+    corpo = client.get(reverse("interface:recurso", args=[peca["recurso"].id])).content.decode()
+
+    assert "Correção por critério" in corpo
+    assert f'name="ficha-{unico["id"]}-pontos"' in corpo
+    assert f'name="pontuacao-{etapa}"' not in corpo

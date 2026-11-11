@@ -326,8 +326,9 @@ def test_a_tela_instruida_custa_uma_leitura_a_mais_e_ela_nao_cresce(
     """O orçamento da tela **sem** instrução não mudou; o da instruída é constante (`T020`).
 
     A tela **sem** ato custa as mesmas consultas do caso que as prende em
-    `test_proveniencia_do_recurso.py` — oito, e nove desde a `109`, que lê a sigla da unidade na
-    moldura da gestão. Esta paga cinco a mais, e cada uma tem nome:
+    `test_proveniencia_do_recurso.py` — oito, nove desde a `109`, que lê a sigla da unidade na
+    moldura da gestão, e dez desde a `146`, que lê o conteúdo vigente para decidir se a Etapa
+    alcançada tem barema. Esta paga cinco a mais, e cada uma tem nome:
 
     ```text
     +1  as linhas do ato de instrução
@@ -345,7 +346,7 @@ def test_a_tela_instruida_custa_uma_leitura_a_mais_e_ela_nao_cresce(
     caminho = reverse("interface:recurso", args=[instruivel["recurso"].id])
     client.get(caminho)
 
-    with django_assert_num_queries(14) as contexto:
+    with django_assert_num_queries(15) as contexto:
         client.get(caminho)
     com_dois_atos = len(contexto)
 
