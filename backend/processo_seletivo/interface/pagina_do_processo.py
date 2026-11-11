@@ -106,7 +106,8 @@ class Pagina:
     com_sinal: list
     total_de_sinais: int
     com_inscricoes_abertas: list
-    ativar: object
+    #: Os atos que se desfazem — hoje só Ativar —, na ordem do catálogo; cada um com a ajuda dele.
+    comuns: list
     terminais: list
 
     @property
@@ -115,7 +116,7 @@ class Pagina:
 
     @property
     def tem_administracao(self):
-        return bool(self.ativar or self.terminais)
+        return bool(self.comuns or self.terminais)
 
 
 def _editais(n):
@@ -220,7 +221,9 @@ def compor(*, processo, ator, editais, pulso, sinais, atos, pendentes, elaborave
         com_sinal=com_sinal,
         total_de_sinais=sum(len(linha.sinais) for linha in linhas),
         com_inscricoes_abertas=abertas,
-        ativar=next((ato for ato in atos if not ato.irreversivel), None),
+        # Pela marca do próprio ato, e não "o primeiro que não é irreversível": um ato comum novo
+        # não herda a ajuda da ativação, nem some da página (revisão do PR #466).
+        comuns=[ato for ato in atos if not ato.irreversivel],
         terminais=[
             AtoDaAdministracao(ato, impedido=ato.depende_dos_editais and impedidos)
             for ato in atos

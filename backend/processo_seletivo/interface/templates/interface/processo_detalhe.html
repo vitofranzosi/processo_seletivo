@@ -163,10 +163,10 @@ da 104. O andamento de cada Edital — fase, mapa, providências — fica na pá
 {% if p.tem_administracao %}
 <section class="cc-administracao" aria-labelledby="administracao-titulo">
   <h2 id="administracao-titulo">Administração do Processo</h2>
-  {% if p.ativar %}
-  <p class="ativar-o-processo"><a class="botao secundario" href="{% url 'interface:processo-ato' processo.id p.ativar.chave %}">{{ p.ativar.rotulo }}</a>
-    <span class="ajuda">Publicar o primeiro Edital deste Processo já o ativa. Este ato existe para quando a abertura formal precisa vir antes.</span></p>
-  {% endif %}
+  {% for ato in p.comuns %}
+  <p class="ativar-o-processo"><a class="botao secundario" href="{% url 'interface:processo-ato' processo.id ato.chave %}">{{ ato.rotulo }}</a>
+    {% if ato.chave == 'ativar' %}<span class="ajuda">Publicar o primeiro Edital deste Processo já o ativa. Este ato existe para quando a abertura formal precisa vir antes.</span>{% endif %}</p>
+  {% endfor %}
   {% if p.terminais %}
   <details class="cc-terminais">
     <summary>Encerrar ou cancelar o Processo{% if p.algum_impedido %} <span class="fraco-no-titulo">— impedidos enquanto houver Edital em andamento</span>{% endif %}</summary>
@@ -180,8 +180,10 @@ da 104. O andamento de cada Edital — fase, mapa, providências — fica na pá
       {% for item in p.terminais %}
       <li>
         {% comment %} A marca descreve o ato (090, FR-2060). Impedido, não é link: um `span` com o
-           desenho do indisponível, anunciado como tal. {% endcomment %}
-        {% if item.impedido %}<span class="botao desabilitado" role="link" aria-disabled="true" aria-describedby="irreversivel-{{ item.ato.chave }}">{{ item.ato.rotulo }}</span>
+           desenho do indisponível, anunciado como tal — e na ordem do Tab, para que quem navega pelo
+           teclado encontre o ato e o motivo, como encontra no mouse (a FR-024 mostra o controle e o
+           motivo). {% endcomment %}
+        {% if item.impedido %}<span class="botao desabilitado" tabindex="0" role="link" aria-disabled="true" aria-describedby="irreversivel-{{ item.ato.chave }}">{{ item.ato.rotulo }}</span>
         {% else %}<a class="botao {% if item.ato.interrupcao %}perigoso{% else %}secundario{% endif %}" href="{% url 'interface:processo-ato' processo.id item.ato.chave %}" aria-describedby="irreversivel-{{ item.ato.chave }}">{{ item.ato.rotulo }}</a>{% endif %}
         <span class="marca-irreversivel" id="irreversivel-{{ item.ato.chave }}">irreversível</span>
       </li>

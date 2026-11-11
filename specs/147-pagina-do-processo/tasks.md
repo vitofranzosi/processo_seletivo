@@ -67,3 +67,13 @@ código relativos a `backend/processo_seletivo/`; de teste, a `backend/tests/`.
   depois (a linha da 147 no README e a quarta porta da Retificação em
   `test_auditoria_passagem_da_retificacao.py`) e a terceira o teste de tempo da ocupação, que passou
   cinco de cinco isolado — o ruído descrito na CLAUDE.md.
+
+## Revisão do PR #466 (11/11/2026)
+
+Oito achados do code review, todos corrigidos: o período sem término ("sem término declarado"); a
+data com ano e o término nos marcos e na linha; o marco em curso "até" o término, e não "Próximo" com
+data passada; o ato impedido na ordem do Tab; os atos comuns pela marca do ato, e não "o primeiro";
+`pending_editais` sobre a lista já lida, sem consulta a mais; a marca da Retificação num parcial comum
+à Lista e ao Processo (`_marca_da_retificacao.html`); as marcas da linha com a `cc-marca` do mapa do
+Edital. `make test-pg` depois: 18.357 passando, 12 pulados e 1 falha, de navegador, na convocação da
+121 (`net::ERR_ABORTED` sob carga), que passou 15 de 15 isolada.

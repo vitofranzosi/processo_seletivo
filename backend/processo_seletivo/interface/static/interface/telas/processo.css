@@ -167,7 +167,7 @@
 
 .marcos-do-processo li {
   display: grid;
-  grid-template-columns: 3.2rem minmax(0, 1fr);
+  grid-template-columns: 7.5rem minmax(0, 1fr);
   gap: .5rem;
   padding: .3rem 0;
   border-top: 1px solid var(--fundo);
@@ -273,36 +273,16 @@ div.grupo-de-editais .titulo-do-grupo {
   text-align: right;
 }
 
-.marca-de-atencao {
-  display: inline-block;
-  padding: .05rem .45rem;
-  border-radius: 3px;
+/* A marca de atenção da linha: a forma da `cc-marca` do mapa do Edital (UX-441), no tom da Atenção.
+   "1 sua" usa a `cc-marca sua` do mapa sem nada daqui. */
+.cc-marca.atencao {
+  border-color: var(--amarelo);
   background: var(--amarelo-fundo);
   color: var(--amarelo);
-  font-size: .75rem;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
-.marca-de-atencao span {
-  display: inline-block;
-  width: 1rem;
-  border-radius: 50%;
-  background: var(--amarelo);
-  color: var(--branco);
-  text-align: center;
-}
-
-.marca-sua-no-processo {
-  display: inline-block;
+.marcas-no-processo .cc-marca + .cc-marca {
   margin-left: .3rem;
-  padding: .05rem .45rem;
-  border-radius: 3px;
-  background: var(--verde-claro);
-  color: var(--verde-escuro);
-  font-size: .75rem;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 .series-do-processo {

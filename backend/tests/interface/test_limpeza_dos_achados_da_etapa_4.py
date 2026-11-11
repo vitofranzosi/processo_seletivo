@@ -103,7 +103,7 @@ def test_no_processo_os_dois_atos_terminais_sao_anunciados_como_irreversiveis(cl
     administracao = cartao(corpo, "administracao-titulo")
     for chave, rotulo in (("encerrar", "Encerrar Processo"), ("cancelar", "Cancelar Processo")):
         assert (
-            '<span class="botao desabilitado" role="link" aria-disabled="true" '
+            '<span class="botao desabilitado" tabindex="0" role="link" aria-disabled="true" '
             f'aria-describedby="irreversivel-{chave}">{rotulo}</span>'
         ) in administracao
         assert (

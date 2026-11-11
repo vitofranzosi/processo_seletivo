@@ -4,20 +4,22 @@ inscrições, próximo marco, atenção e ações da pessoa — os fatos, e não
 
 **O título é o único link da linha**, com o número no nome acessível: uma parada de teclado por
 Edital, como o item da faixa da 104. O número visível fica fora do nome, para não ser lido duas vezes.
-A marca de atenção é texto **e** traço à esquerda (UX-442): o traço nunca sozinho.
+A marca de atenção é texto **e** traço à esquerda (UX-442): o traço nunca sozinho. As marcas são as do mapa do
+Edital (`cc-marca`), com a mesma palavra — "1 sua" —, porque o desenho das duas páginas é um só (UX-441).
 {% endcomment %}{% with e=linha.edital pe=linha.pulso %}
 <li class="edital-no-processo{% if linha.sinais %} com-atencao{% endif %}{% if linha.ainda_nao_publicado %} em-preparo{% endif %}">
   <span class="codigo numero-no-processo" aria-hidden="true">{{ e.number }}/{{ e.year }}</span>
   <a class="titulo-no-processo" href="{% url 'interface:detalhe' e.id %}"><span class="oculto">Edital {{ e.number }}/{{ e.year }}: </span>{{ e.title }}</a>
   <span class="estado-no-processo"><span class="situacao s-{{ e.status }}">{{ e.status|situacao }}</span>
-    {% comment %} A marca da Retificação, a da Lista (103, FR-2706, FR-2708): a situação dela e quem ela aguarda. {% endcomment %}
-    {% for r in linha.retificacoes %}<a class="marca-da-retificacao" href="{{ r.url }}">Retificação {{ r.rotulo_situacao }}{% if r.parada %} · não pode mais prosseguir{% elif r.passo %} · aguarda {{ r.passo.papel }}{% endif %}</a>{% endfor %}</span>
+    {% for retificacao in linha.retificacoes %}{% include "interface/_marca_da_retificacao.html" %}{% endfor %}</span>
   {% comment %} As inscrições pelo pulso do Edital (FR-5313). Edital ainda não publicado não diz nada:
      a situação já disse, e a linha fica com uma altura só. {% endcomment %}
   {% if not linha.ainda_nao_publicado %}
-  <span class="inscricoes-no-processo">{% if pe and pe.periodo %}{% if pe.periodo.cancelado %}Período cancelado{% elif pe.periodo.em_curso %}<strong>Inscrições abertas</strong> até {{ pe.periodo.fim|date:"d/m" }} · {{ pe.submetidas }} {{ pe.submetidas|plural:"recebida,recebidas" }}{% elif pe.periodo.situacao == 'futuro' %}Inscrições a partir de {{ pe.periodo.inicio|date:"d/m" }}{% else %}Inscrições encerradas · {{ pe.submetidas }} {{ pe.submetidas|plural:"recebida,recebidas" }}{% endif %}{% else %}Sem período de inscrições{% endif %}</span>
-  <span class="marco-no-processo">{% if linha.proximo_marco %}Próximo: {{ linha.proximo_marco.inicio|date:"d/m" }} · {{ linha.proximo_marco.descricao|truncatechars:56 }}{% if linha.proximo_marco.em_andamento %} <span class="marca">em andamento</span>{% endif %}{% endif %}</span>
+  <span class="inscricoes-no-processo">{% if pe and pe.periodo %}{% if pe.periodo.cancelado %}Período cancelado{% elif pe.periodo.em_curso %}<strong>Inscrições abertas</strong> {% if pe.periodo.fim %}até {{ pe.periodo.fim|date:"d/m/Y" }}{% else %}sem término declarado{% endif %} · {{ pe.submetidas }} {{ pe.submetidas|plural:"recebida,recebidas" }}{% elif pe.periodo.situacao == 'futuro' %}Inscrições a partir de {{ pe.periodo.inicio|date:"d/m/Y" }}{% else %}Inscrições encerradas · {{ pe.submetidas }} {{ pe.submetidas|plural:"recebida,recebidas" }}{% endif %}{% else %}Sem período de inscrições{% endif %}</span>
+  {% comment %} O marco que já começou diz até quando vai, e não a data em que começou: "Próximo: 01/11" com a data já
+     passada era o que a linha mostrava. {% endcomment %}
+  <span class="marco-no-processo">{% with m=linha.proximo_marco %}{% if m %}{% if m.em_andamento %}<span class="marca">em andamento</span>{% if m.fim %} até {{ m.fim|date:"d/m/Y" }}{% endif %}{% else %}Próximo: {{ m.inicio|date:"d/m/Y" }}{% endif %} · {{ m.descricao|truncatechars:56 }}{% endif %}{% endwith %}</span>
   {% endif %}
-  <span class="marcas-no-processo">{% if linha.sinais %}<span class="marca-de-atencao"><span aria-hidden="true">!</span> {{ linha.sinais|length }} de atenção</span>{% endif %}{% if linha.meus %}<span class="marca-sua-no-processo">{{ linha.meus|length }} {{ linha.meus|length|plural:"sua,suas" }}</span>{% endif %}</span>
+  <span class="marcas-no-processo">{% if linha.sinais %}<span class="cc-marca atencao">{{ linha.sinais|length }} de atenção</span>{% endif %}{% if linha.meus %}<span class="cc-marca sua">{{ linha.meus|length }} {{ linha.meus|length|plural:"sua,suas" }}</span>{% endif %}</span>
 </li>
 {% endwith %}

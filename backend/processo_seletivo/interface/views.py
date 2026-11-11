@@ -5807,7 +5807,7 @@ def processo_detalhe(request, processo_id):
     editais = list(processo.editais.order_by("year", "number"))
     pulso = supervisao_do_processo.pulso(processo)
     sinais = supervisao_do_processo.sinais(processo, ator, alcancadas=alcancadas) if alguma else ()
-    pendentes = list(pending_editais(processo))
+    pendentes = pending_editais(processo, editais)
     atos = list(atos_processo.disponiveis(processo, ator))
     # **Um Processo reúne Editais, e o painel só sabia mostrar o primeiro.** O modelo sempre
     # admitiu mais de um, e `add_edital` já servia à API. Processo em estado final não recebe a

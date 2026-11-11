@@ -216,7 +216,7 @@ def test_os_irreversiveis_vao_para_as_terminais_e_impedem_com_edital_pendente(se
         ato("cancelar", irreversivel=True, depende=True),
     ]
     composta = compor([edital(1)], atos=atos, pendentes=[edital(1)])
-    assert composta.ativar.chave == "ativar"
+    assert [ato.chave for ato in composta.comuns] == ["ativar"]
     assert [(t.ato.chave, t.impedido) for t in composta.terminais] == [
         ("encerrar", True),
         ("cancelar", True),
@@ -224,8 +224,81 @@ def test_os_irreversiveis_vao_para_as_terminais_e_impedem_com_edital_pendente(se
     assert composta.algum_impedido
     livre = compor([edital(1, "ENCERRADO")], atos=atos[1:], pendentes=[])
     assert not livre.algum_impedido
-    assert livre.ativar is None
+    assert livre.comuns == []
 
 
 def test_sem_ato_nao_ha_administracao(sem_leituras):
     assert not compor([edital(1)]).tem_administracao
+
+
+def test_um_ato_comum_novo_nao_herda_a_ajuda_nem_some(sem_leituras):
+    """Revisão do PR #466: os comuns vêm pela marca do ato, todos, e não "o primeiro"."""
+    composta = compor([edital(1)], atos=[ato("ativar"), ato("reabrir")])
+    assert [a.chave for a in composta.comuns] == ["ativar", "reabrir"]
+
+
+# ---- as datas da linha e dos marcos (revisão do PR #466) ---------------------------------------
+
+
+def renderizar(modelo, **contexto):
+    import re
+
+    from django.template.loader import render_to_string
+
+    html = render_to_string(f"interface/{modelo}", contexto)
+    return " ".join(re.sub(r"<[^>]+>", " ", html).split())
+
+
+def marco_de(e, *, inicio, fim=None, fase="planejado"):
+    return SimpleNamespace(
+        edital=e,
+        descricao="Prazo recursal",
+        inicio=inicio,
+        fim=fim,
+        em_andamento=fase == "em_andamento",
+    )
+
+
+def linha_com(e, *, per=None, marcos=()):
+    linha = pagina.LinhaDoEdital(e)
+    linha.pulso = SimpleNamespace(
+        periodo=per, submetidas=3, proximos_marcos=tuple(marcos), edital=e
+    )
+    return linha
+
+
+def test_periodo_em_curso_sem_termino_diz_que_nao_ha_termino():
+    e = edital(1)
+    per = SimpleNamespace(situacao="aberto", cancelado=False, em_curso=True, fim=None, inicio=AGORA)
+    html = renderizar("_linha_do_edital_no_processo.html", linha=linha_com(e, per=per))
+    assert "Inscrições abertas sem término declarado · 3 recebidas" in html
+    assert "até ·" not in html
+
+
+def test_o_marco_em_curso_diz_ate_quando_e_o_futuro_tem_ano():
+    e = edital(1)
+    em_curso = marco_de(
+        e, inicio=AGORA - timedelta(days=10), fim=AGORA + timedelta(days=30), fase="em_andamento"
+    )
+    html = renderizar("_linha_do_edital_no_processo.html", linha=linha_com(e, marcos=[em_curso]))
+    assert "em andamento até 11/12/2026" in html
+    assert "Próximo:" not in html
+
+    futuro = marco_de(e, inicio=datetime(2027, 1, 15, 12), fim=datetime(2027, 1, 20, 12))
+    html = renderizar("_marco_do_processo.html", marco=futuro)
+    assert "15/01/2027" in html
+    assert "até 20/01/2027" in html
+
+
+def test_pendentes_sobre_a_lista_dizem_o_mesmo_que_a_consulta():
+    """Revisão do PR #466: a página do Processo passa os Editais já lidos, e a regra é a mesma."""
+    from processo_seletivo.processos.domain.finalizacao import pending_editais
+
+    editais = [
+        edital(2),
+        edital(1, "ENCERRADO"),
+        edital(1, "EM_ELABORACAO"),
+        edital(3, "CANCELADO"),
+    ]
+    pendentes = pending_editais(None, editais)
+    assert [(p.number, p.status) for p in pendentes] == [("1", "EM_ELABORACAO"), ("2", "PUBLICADO")]

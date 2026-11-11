@@ -187,7 +187,8 @@ def test_a_linha_do_edital_diz_os_fatos_dele(
     linha = editais.split(f"{edital_c.number}/{edital_c.year}: </span>")[1].split("</li>")[0]
     assert "Inscrições abertas" in texto(linha)
     assert "2 recebidas" in texto(linha)
-    assert "Próximo:" in texto(linha)
+    # O marco do período já começou: a linha diz até quando vai, e não "Próximo" com data passada.
+    assert "em andamento até" in texto(linha)
     assert "<table" not in editais
 
 
@@ -265,7 +266,8 @@ def test_impedidos_sao_desabilitados_e_nomeiam_o_edital(
     assert "2 Editais precisam ser encerrados ou cancelados antes" in texto(administracao)
     for edital in (edital_a, edital_c):
         assert reverse("interface:detalhe", args=[edital.id]) in administracao
-    assert '<span class="botao desabilitado" role="link" aria-disabled="true"' in administracao
+    desabilitado = '<span class="botao desabilitado" tabindex="0" role="link" aria-disabled="true"'
+    assert desabilitado in administracao
     assert "/atos/encerrar" not in administracao and "/atos/cancelar" not in administracao
 
 

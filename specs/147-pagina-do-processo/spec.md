@@ -268,11 +268,13 @@ contar os gráficos.
   curso, com a situação e quem aguardam (`FR-2706` e `FR-2708` da `103`); o estado das inscrições;
   o próximo marco; a marca de atenção; e a marca das ações da pessoa.
 - **FR-5313**: O estado das inscrições MUST ser, conforme o pulso do Edital: "Inscrições abertas até
-  dd/mm · N recebidas"; "Inscrições a partir de dd/mm"; "Inscrições encerradas · N recebidas";
+  dd/mm/aaaa · N recebidas", ou "sem término declarado" no lugar da data quando o período não declara
+  fim; "Inscrições a partir de dd/mm/aaaa"; "Inscrições encerradas · N recebidas";
   "Período cancelado"; "Sem período de inscrições" para o publicado sem período; e nada para o
   Edital ainda não publicado, cuja linha tem uma altura só.
-- **FR-5314**: O próximo marco MUST ser o primeiro dos próximos marcos do pulso do Edital, com data e
-  descrição, e "em andamento" quando for o caso. A marca de atenção MUST dizer "N de atenção" em
+- **FR-5314**: O próximo marco MUST ser o primeiro dos próximos marcos do pulso do Edital, com a
+  descrição e a data com ano: o início, para o marco que ainda vem; "em andamento até" o término,
+  para o que já começou — nunca uma data passada sob "Próximo". A marca de atenção MUST dizer "N de atenção" em
   texto; a das ações, "N sua(s)".
 - **FR-5315**: A lista MUST NOT ser tabela, e a página MUST NOT rolar para o lado em nenhuma largura;
   no estreito, cada linha empilha sem perder fato.
@@ -289,7 +291,8 @@ contar os gráficos.
 - **FR-5318**: Sem sinal, a região MUST mostrar a linha de ausência de hoje, global ou relativa
   (`FR-559` da `038`, `FR-730` da `045`). Quem não alcança espécie alguma MUST NOT receber a região.
 - **FR-5319**: Os próximos marcos de todos os Editais MUST aparecer numa lista única em "O que fazer
-  agora", ordenada por data, cada um com o Edital que o sustenta. Seis à vista, os demais em
+  agora", ordenada por data, cada um com o Edital que o sustenta, a data com ano e, quando houver, o
+  término; o marco em curso diz até quando vai. Seis à vista, os demais em
   "Ver os outros N". Sem marco, uma linha diz que não há marco por vir.
 - **FR-5320**: A série diária de submissões MUST aparecer só para os Editais com período de
   inscrições em curso, numa seção "Submissões por dia", com o parcial de sempre. Sem período em
