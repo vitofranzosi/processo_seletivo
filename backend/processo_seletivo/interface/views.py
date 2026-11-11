@@ -11577,9 +11577,8 @@ def _fichas_do_julgamento(peca, vigente, etapa_id, digitado):
     atacado = detalhamento_do_resultado(vigente)
     versao_do_resultado = vigente.versao
     criterios_atacados = barema.barema_da_versao(versao_do_resultado, etapa_id)
-    vigentes = barema.barema_da_versao(
-        selecao_publica(edital_id=peca.inscricao.edital_id), etapa_id
-    )
+    versao_vigente = selecao_publica(edital_id=peca.inscricao.edital_id)
+    vigentes = barema.barema_da_versao(versao_vigente, etapa_id)
     fichas = {}
     if criterios_atacados and atacado:
         fichas["ficha_atacada"] = mesa_app.ficha_do_barema(
@@ -11599,7 +11598,9 @@ def _fichas_do_julgamento(peca, vigente, etapa_id, digitado):
             vigentes,
             base,
             [],
-            {},
+            # O conteúdo vigente, e não um vazio: é dele que sai o nome do documento que comprova
+            # cada critério — sem ele a linha dizia "Comprovação:" e nada mais.
+            versao_vigente.content,
             titulo="Correção por critério",
             chave=f"corrigir-{etapa_id}",
             na_mesa=False,

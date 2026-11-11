@@ -189,6 +189,8 @@ def test_a_tela_de_julgamento_mostra_a_ficha_atacada_e_corrige_por_ela(
 
     assert "Pontuação por critério do resultado atacado" in corpo
     assert "Correção por critério" in corpo
+    # As duas fichas nomeiam o documento que comprova — a da correção também.
+    assert corpo.count("Comprovação: Declaração de exercício de docência") == 2
     # Pré-preenchida com o detalhamento atacado, e sem o campo de pontuação única.
     assert f'name="ficha-{criterio_de(4, SEED)}-quantidade" value="10"' in corpo
     assert f'name="pontuacao-{cenario["etapa"]}"' not in corpo
