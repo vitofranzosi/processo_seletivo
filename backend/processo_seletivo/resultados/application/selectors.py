@@ -300,14 +300,14 @@ def _fichas_dos_resultados(resultados):
     versões citadas só é lido quando algum Resultado tem o que mostrar, e uma vez por versão
     distinta.
     """
-    from processo_seletivo.avaliacoes.application.mesa import ficha_do_barema
+    from processo_seletivo.avaliacoes.application.ficha import ficha_do_barema
     from processo_seletivo.avaliacoes.domain.barema import barema_da_versao
 
-    com_detalhamento = {
-        resultado.id: detalhamento_do_resultado(resultado)
-        for resultado in resultados
-        if detalhamento_do_resultado(resultado)
-    }
+    com_detalhamento = {}
+    for resultado in resultados:
+        detalhamento = detalhamento_do_resultado(resultado)
+        if detalhamento:
+            com_detalhamento[resultado.id] = detalhamento
     if not com_detalhamento:
         return {}
     conteudos = conteudos_das_versoes(

@@ -34,6 +34,7 @@ from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.avaliacoes.application import avaliacao as avaliacao_app
 from processo_seletivo.avaliacoes.application import distribuicao as distribuicao_app
+from processo_seletivo.avaliacoes.application import ficha as ficha_app
 from processo_seletivo.avaliacoes.application import impedimento as impedimento_app
 from processo_seletivo.avaliacoes.application import mesa as mesa_app
 from processo_seletivo.avaliacoes.application import selectors as avaliacao_selectors
@@ -7240,7 +7241,7 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
     if contexto.get("ficha") and not contexto["ficha"]["concluida"] and digitado:
         # **O digitado antes da recusa volta à ficha**, como volta ao campo único: a avaliadora que
         # deixou um critério pendente e clicou "Concluir" não pode perder as outras linhas (146).
-        contexto["ficha"] = mesa_app.ficha_do_barema(
+        contexto["ficha"] = ficha_app.ficha_do_barema(
             barema.criterios_da_etapa(contexto["etapa"]),
             digitado.get("criterios") or [],
             contexto["documentos"],

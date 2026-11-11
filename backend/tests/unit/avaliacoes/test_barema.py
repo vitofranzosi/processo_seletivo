@@ -248,6 +248,25 @@ def test_reconciliar_descarta_o_valor_quando_a_forma_do_criterio_mudou():
     assert barema.reconciliar(anterior, [direto])[0]["quantidade"] is None
 
 
-def test_parcela_exibivel_nao_recusa():
-    assert barema.parcela_exibivel(ENTREVISTA, {"pontos": "99"}) == (None, False)
-    assert barema.parcela_exibivel(EXPERIENCIA, {"quantidade": 7}) == ("10.0000", True)
+def test_parcela_exibivel_nao_recusa_e_diz_a_razao():
+    parcela, limitada, erro = barema.parcela_exibivel(ENTREVISTA, {"pontos": "99"})
+
+    assert (parcela, limitada) == (None, False)
+    assert erro == "os pontos não podem superar 15, que é a máxima do critério."
+    assert barema.parcela_exibivel(EXPERIENCIA, {"quantidade": 7}) == ("10.0000", True, "")
+    assert barema.parcela_exibivel(EXPERIENCIA, {}) == (None, False, "")
+
+
+def test_a_ficha_separa_o_pendente_do_valor_a_corrigir():
+    """O valor que a máxima nova não admite aparece com a razão, e não como pendente."""
+    from processo_seletivo.avaliacoes.application.ficha import ficha_do_barema
+
+    ficha = ficha_do_barema(
+        [ENTREVISTA, EXPERIENCIA], [{"criterionId": "c-ent", "pontos": "16"}], [], {}
+    )
+
+    entrevista, experiencia = ficha["linhas"]
+    assert (entrevista["pendente"], entrevista["pontos"]) == (False, "16")
+    assert "não podem superar 15" in entrevista["erro"]
+    assert (experiencia["pendente"], experiencia["erro"]) == (True, "")
+    assert (ficha["pendentes"], ficha["com_erro"]) == (["Experiência"], ["Entrevista"])

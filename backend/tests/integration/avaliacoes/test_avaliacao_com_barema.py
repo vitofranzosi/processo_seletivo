@@ -17,7 +17,7 @@ from processo_seletivo.avaliacoes.application.avaliacao import (
     eventos_da_avaliacao,
     reabrir,
 )
-from processo_seletivo.avaliacoes.application.mesa import ficha_da_avaliacao
+from processo_seletivo.avaliacoes.application.ficha import ficha_da_avaliacao
 from processo_seletivo.avaliacoes.application.selectors import conclusoes_preservadas
 from processo_seletivo.avaliacoes.models import Avaliacao, ConclusaoAvaliacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada

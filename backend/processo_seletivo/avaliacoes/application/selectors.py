@@ -611,7 +611,7 @@ def _conteudos_historicos(versao_ids):
 
 def _ficha_da_conclusao(conclusao, conteudos, etapa_id):
     """A ficha preservada, ou `None` na conclusão sem detalhamento — a da Etapa sem barema."""
-    from processo_seletivo.avaliacoes.application.mesa import ficha_do_barema
+    from processo_seletivo.avaliacoes.application.ficha import ficha_do_barema
     from processo_seletivo.avaliacoes.domain.barema import barema_da_versao
 
     if not conclusao.criterios:

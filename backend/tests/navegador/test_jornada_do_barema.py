@@ -25,10 +25,7 @@ from tests.fixtures.barema import montar_marco_com_barema  # noqa: E402
 from tests.fixtures.comissao import inscrever  # noqa: E402
 from tests.fixtures.divulgacao import emitir, publicar_o_ato  # noqa: E402
 from tests.fixtures.mesa import distribuir_para  # noqa: E402
-from tests.navegador.test_jornada_dos_documentos_da_convocacao import (  # noqa: E402
-    CELULAR,
-    Tela,
-)
+from tests.fixtures.tela_do_navegador import CELULAR, Tela  # noqa: E402
 
 pytestmark = pytest.mark.django_db(transaction=True)
 

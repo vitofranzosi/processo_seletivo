@@ -20,6 +20,7 @@ from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, l
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.decimais import no_campo as _no_campo
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
 # A zona institucional mora em `shared/tempo.py` desde a 018: a contagem do prazo recursal é
@@ -1361,16 +1362,6 @@ def perfis_alterados(digitados, gravados):
         for perfil in digitados
         if por_identidade.get(str(perfil["id"])) != _o_que_o_cartao_mostra(perfil)
     }
-
-
-def _no_campo(valor):
-    """O número sem zeros à direita, no formato que o campo numérico aceita (058, FR-1078).
-
-    As colunas guardam quatro casas, e a leitura devolve `25.0000` onde se escreveu `25`. Com ponto
-    — o `value` de um campo numérico é sempre com ponto; quem o mostra com vírgula é o navegador.
-    Nada é arredondado: é o mesmo número, e o que "Salvar rascunho" grava não muda (D-005).
-    """
-    return "" if valor in (None, "") else format(Decimal(str(valor)).normalize(), "f")
 
 
 def _o_que_o_cartao_mostra(perfil):
