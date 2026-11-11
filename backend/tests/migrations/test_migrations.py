@@ -91,6 +91,11 @@ TRIGGERS_POR_APP = {
         "situacao_divulgada_append_only",
         "documento_do_resultado_append_only",
         "publicacao_resultado_coerente",
+        # A publicação das inscrições (148): duas de imutabilidade absoluta, uma por tabela, e a
+        # coerência do sucessor — mesmo Edital, natureza que não regride (FR-5406, FR-5425).
+        "publicacao_das_inscricoes_append_only",
+        "inscricao_na_publicacao_append_only",
+        "publicacao_das_inscricoes_coerente",
     ),
     # A contestação da 018. As três de imutabilidade são **absolutas** — interpor, admitir e julgar
     # acontecem uma vez cada, e não há ato em curso que legitime mutação. As duas de coerência são
@@ -761,7 +766,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
         # Outra feature, e não esta lendo: `ADD COLUMN` com padrão constante, que não reescreve
         # linha nem dispara o gatilho append-only (060, FR-1128).
-        "divulgacao": 4,
+        # **Sobe para 5 com a 148**: a `divulgacao/0005` cria as duas tabelas da publicação das
+        # inscrições e os seus gatilhos. Só cria: nenhuma coluna em tabela existente, nenhuma linha
+        # percorrida (148, FR-5437).
+        "divulgacao": 5,
     }
     for app, quantas in esperadas.items():
         migrations = sorted((raiz / app / "migrations").glob("[0-9]*.py"))

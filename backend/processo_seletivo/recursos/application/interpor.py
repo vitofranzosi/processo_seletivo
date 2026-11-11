@@ -223,7 +223,41 @@ def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
         )
         if computada is not None:
             janelas.append(computada)
+    if resultado is not None and publicacao is None:
+        _janela_da_publicacao_das_inscricoes(edital, resultado, janelas, negados)
     return janelas, bool(negados) and all(negados)
+
+
+def _janela_da_publicacao_das_inscricoes(edital, resultado, janelas, negados):
+    """A janela do resultado preliminar da análise das inscrições, quando é desta Etapa (148).
+
+    **Soma-se às dos marcos**, e não as substitui (FR-5417): a Etapa de análise raramente está num
+    marco, mas se estiver vale a mais generosa, que é o que esta função já aplica entre marcos.
+
+    O prazo é o do **último** preliminar da cadeia — a correção que republica o preliminar declara
+    o seu. Declarado "não prevê recurso", é negativa; homologação publicada sem preliminar algum
+    também é: o Edital não abriu prazo contra a análise, e a homologação é definitiva. Sem ato que
+    publique a Etapa, nada se acrescenta, e o comportamento de antes continua.
+    """
+    from processo_seletivo.divulgacao.models import PublicacaoDasInscricoes
+
+    atos = list(
+        PublicacaoDasInscricoes.objects.filter(edital=edital, etapa_id=resultado.etapa_id)
+        .order_by("publicado_em")
+        .only("natureza", "admite_recurso", "recurso_ate", "publicado_em")
+    )
+    if not atos:
+        return
+    preliminares = [ato for ato in atos if ato.natureza == "PRELIMINAR"]
+    if preliminares:
+        ultimo = preliminares[-1]
+        if ultimo.admite_recurso and ultimo.recurso_ate is not None:
+            janelas.append((ultimo.publicado_em, ultimo.recurso_ate))
+            negados.append(False)
+        else:
+            negados.append(True)
+        return
+    negados.append(True)
 
 
 def _janela(inscricao, publicacao, resultado, agora):
