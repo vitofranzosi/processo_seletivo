@@ -37,8 +37,10 @@ from tests.fixtures.documentos_da_convocacao import (  # noqa: E402
 pytestmark = pytest.mark.django_db(transaction=True)
 
 # A tela de cada pessoa saiu daqui para `tests/fixtures/tela_do_navegador.py` com a 146: a jornada
-# do barema usa a mesma, e importá-la de outro módulo de teste acoplava as duas.
-from tests.fixtures.tela_do_navegador import Tela  # noqa: E402
+# do barema usa a mesma, e importá-la de outro módulo de teste acoplava as duas. Os três nomes
+# continuam **reexportados** daqui porque as jornadas da 119, 120, 121 e 117 os importam deste
+# módulo junto com os ajudantes que moram nele (`sem_rolagem_horizontal`, `enviar`…).
+from tests.fixtures.tela_do_navegador import CELULAR, DESKTOP, Tela  # noqa: E402, F401
 
 
 @pytest.fixture
