@@ -1831,7 +1831,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tr><th>Quando faz sentido</th><td>Pós-graduação, bolsas, processos por títulos.</td></tr>
       <tr><th>O que configurar</th><td>Duas Etapas; a curricular classificatória, com máxima, peso e (se eliminatória) mínima; marco “Pela pontuação” enumerando a curricular; desempates por fato declarado (tempo de docência em meses, data de nascimento); janela recursal.</td></tr>
       <tr><th>Decisões</th><td>A mínima; os critérios de desempate e o que fazer quando o valor falta.</td></tr>
-      <tr><th>Limites</th><td>Barema com itens não existe: a comissão soma fora e registra o total. Uma avaliação por inscrição (dupla leitura não consolida). A mesma ficha para todos os Perfis.</td></tr>
+      <tr><th>Limites</th><td>O <a href="#barema-da-etapa">barema</a> (146) pontua critério a critério, mas só vale a ficha cujas linhas se pontuam cada uma por si — “só o maior título” e o teto por expectativa do candidato continuam fora. Uma avaliação por inscrição (dupla leitura não consolida). A mesma ficha para todos os Perfis.</td></tr>
     </tbody></table></div>
 
     <h3 id="r-fases">Receita 5 — Duas fases com corte entre elas</h3>
@@ -1953,7 +1953,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td>Atribuições, carga, remuneração no Perfil</td><td class="centro"><span class="m m-nao">—</span> raramente</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td></tr>
         <tr><td>Requerimento de Matrícula e exportação</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
         <tr><td>Cadastro de reserva (declarado)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
-        <tr><td>Barema, heteroidentificação, submodalidades</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+        <tr><td>Barema (146: critérios independentes)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
+        <tr><td>Heteroidentificação, submodalidades</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
       </tbody>
     </table></div>
     <p class="miudo">Quais famílias entram no alvo do produto é decisão pendente (DP-10). <a href="#pg-evolucoes">O que ainda precisa evoluir</a></p>
@@ -3073,7 +3074,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <span class="titulo">O maior custo não é do sistema</span>
       <p>Com o barema fora do sistema, a Mesa de uma avaliação de títulos leva, pela estimativa do estudo
         de operação de 27/09, de 10 a 20 minutos por inscrição — é ali que um certame grande gasta a
-        maior parte do seu tempo, e é trabalho que nenhum lote substitui.</p>
+        maior parte do seu tempo, e é trabalho que nenhum lote substitui. A 146 traz a soma e o limite
+        para dentro do sistema (<a href="#barema-da-etapa">o barema</a>); o tempo de ler os títulos
+        continua sendo da comissão, e a medida com o barema ainda não foi feita.</p>
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
@@ -6122,7 +6125,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dl>
         <dt>Por que existe</dt><dd>Porque o Edital precisa dizer, antes de qualquer inscrição, como cada
           pessoa será julgada. O sistema aplica o que foi publicado e não inventa critério: sem nota
-          mínima publicada, ninguém é eliminado por nota.</dd>
+          mínima publicada, ninguém é eliminado por nota. Na Etapa pontuada, a ficha de critérios
+          (o <a href="#barema-da-etapa">barema</a>) é publicada junto, e é contra ela que a comissão pontua.</dd>
         <dt>Exemplo</dt><dd>“Análise documental”, decisória, eliminatória, rótulos
           <em>Deferido/Indeferido</em>, uma avaliação por inscrição, vinculada ao Evento “Análise
           dos documentos”. Depois, “Avaliação curricular”, pontuada, máxima 100, mínima 60, peso 1,
@@ -6135,7 +6139,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           nota</span>); declarar caráter eliminatório e classificatório, notas, peso, rótulos e o
           Evento que dá datas a ela.</dd>
         <dt>O que não posso</dt><dd>Dar a uma Etapa ficha diferente por Perfil (a Etapa vale para o
-          Edital inteiro); declarar como combinar duas avaliações; “abrir” ou “fechar” a Etapa — ela
+          Edital inteiro — o <a href="#barema-da-etapa">barema</a> também); declarar como combinar duas avaliações; “abrir” ou “fechar” a Etapa — ela
           não tem estado; mudar a ordem ou o vínculo com o Evento depois de publicar.</dd>
         <dt>Relaciona-se com</dt><dd><a href="#cronograma">Cronograma</a> ·
           <a href="#comissao">Alocação</a> · <a href="#consolidacao">Resultado da Etapa</a> ·
@@ -6163,10 +6167,11 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <tr><td><span class="rotulo-ui">Como esta Etapa é concluída</span></td><td><code>forma</code> = <code>PONTUADA</code> · <code>DECISORIA</code></td><td>Qual campo da conclusão vale: a pontuação, ou o sentido (favorável/desfavorável)</td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Rótulo do resultado favorável</span> / <span class="rotulo-ui">desfavorável</span> (só decisória)</td><td><code>rotuloFavoravel</code> · <code>rotuloDesfavoravel</code></td><td>O motivo do Resultado cita o rótulo publicado — <em>“Indeferido”</em> —, nunca o enum interno</td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Nota mínima</span> <em>(opcional)</em></td><td><code>minimumScore</code></td><td>Critério de eliminação — só se a Etapa for eliminatória. Comparação decimal exata: nota <em>igual</em> à mínima habilita</td><td>Retificável</td></tr>
-          <tr><td><span class="rotulo-ui">Pontuação máxima</span> <em>(opcional)</em></td><td><code>maximumScore</code></td><td>Teto validado na Mesa. Vazio = “o Edital não declara limite”</td><td>Retificável</td></tr>
+          <tr><td><span class="rotulo-ui">Pontuação máxima</span> <em>(opcional)</em></td><td><code>maximumScore</code></td><td>Teto validado na Mesa. Vazio = “o Edital não declara limite”. Com <a href="#barema-da-etapa">barema</a>, é a soma das máximas dos critérios, e a tela a mostra como leitura</td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Peso</span> <em>(opcional até um marco enumerar esta Etapa)</em></td><td><code>weight</code></td><td>Mora na Etapa, e não no marco. Marco que enumera Etapa sem peso não calcula</td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Avaliações por inscrição</span> (<em>Padrão: 1</em>)</td><td><code>evaluationsPerRegistration</code></td><td>Quantas pessoas avaliam cada inscrição. <strong>Mais de uma não se consolida</strong> — ver <a href="#consolidacao-recusas">as recusas de Etapa inteira</a></td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Caráter</span>: <span class="rotulo-ui">Eliminatória</span></td><td><code>eliminatory</code></td><td>Sem o caráter, nota abaixo da mínima <strong>não elimina</strong>. Há uma caixa por forma; na decisória ela já nasce marcada, porque a decisória não eliminatória nunca se consolida</td><td>Retificável</td></tr>
+          <tr><td><span class="rotulo-ui">Barema</span> <em>(opcional, só na Etapa com pontuação)</em></td><td><code>criteria</code></td><td>Os critérios que a comissão pontua um a um; o total vira a pontuação. Ver <a href="#barema-da-etapa">O barema da Etapa</a></td><td>Retificável: acrescentar, remover e alterar; a soma das máximas precisa continuar igual à máxima da Etapa</td></tr>
           <tr><td><span class="rotulo-ui">Caráter</span>: <span class="rotulo-ui">Classificatória</span></td><td><code>classificatory</code></td><td>Não decide nada localmente — é o <a href="#marco">marco</a> que enumera quais Etapas compõem a ordem</td><td>Retificável</td></tr>
         </tbody>
       </table>
@@ -6234,13 +6239,121 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       acumula as duas pode fazer os dois atos (ver <a href="#papeis">a equipe pequena</a>).
     </p>
 
+    <h3 id="barema-da-etapa">O barema da Etapa: critérios publicados, pontuação por critério (146) <span class="selo selo-impl">Implementado</span></h3>
+    <p>
+      Até a 146 a comissão somava a ficha do Edital — o Anexo IV, uma planilha — fora do sistema e
+      lançava na Mesa só o total. Agora a Etapa <strong>pontuada</strong> pode publicar uma lista de
+      <strong>Critérios de Avaliação</strong> (o <em>barema</em>), e, quando publica, a avaliadora pontua
+      critério a critério e o sistema calcula o total. <strong>O total continua sendo o mesmo número, no
+      mesmo campo</strong>: a consolidação copia, a classificação combina, a publicação divulga e o recurso
+      supera como já faziam. O barema é <strong>opcional</strong>; sem ele, tudo é como era — o campo único
+      de pontuação na Mesa, a máxima digitada, o PDF idêntico.
+    </p>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Passo</th><th>Quem</th><th>O que acontece, e onde</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Configurar</strong></td><td>Quem elabora o Edital</td><td>No cartão da Etapa pontuada, a seção <span class="rotulo-ui">Barema</span> (<em>“Opcional. Sem barema, a comissão lança o total.”</em>) e o botão <span class="rotulo-ui">Acrescentar critério</span>. Cada critério pede <span class="rotulo-ui">Critério</span> (nome, único na Etapa), <span class="rotulo-ui">Pontuação máxima</span>, <span class="rotulo-ui">Como a comissão pontua</span>, <span class="rotulo-ui">Documento que comprova</span> <em>(opcional)</em> e <span class="rotulo-ui">Exigências e observações</span> <em>(opcional — é onde mora “na área da Educação”)</em>. Os critérios sobem, descem e se removem como as outras linhas do assistente. Abaixo, a <span class="rotulo-ui">Prévia: como o Edital imprimirá a ficha</span> — <em>Critério, Pontuação, Máxima, Comprovação</em> e a linha <em>Total</em> —, refeita ao digitar</td></tr>
+          <tr><td><strong>A máxima da Etapa</strong></td><td>—</td><td>Com critérios, o campo <span class="rotulo-ui">Pontuação máxima</span> deixa de ser digitável e mostra <em>“soma dos critérios”</em>: a máxima da Etapa é a soma das máximas dos critérios. Conteúdo que chegue por outro caminho com soma diferente é <strong>erro impeditivo</strong> de publicação</td></tr>
+          <tr><td><strong>Publicar</strong></td><td>—</td><td>O conteúdo publicado traz a lista <code>criteria</code> de cada Etapa (degrau 21 da elevação; conteúdo anterior é elevado com a lista vazia — nenhuma Etapa antiga ganha barema). O <strong>PDF</strong> imprime a ficha como tabela dentro da descrição da Etapa. A Revisão antes de publicar traz <em>Barema</em> (quantos critérios, somando quanto) e uma linha <em>Critério N</em> para cada um — a mesma leitura do PDF</td></tr>
+          <tr><td><strong>Pontuar</strong></td><td>Quem avalia</td><td>Na Mesa, o bloco <span class="rotulo-ui">Barema</span> toma o lugar do campo único de pontuação: uma linha por critério, com a máxima, <em>Como se pontua</em>, <em>Informado</em>, <em>Pontuação</em> e <em>Justificativa</em>, e o total ao pé (<em>“70 de 100”</em>), refeito ao digitar. Ver adiante</td></tr>
+          <tr><td><strong>O candidato comprova e lê</strong></td><td>Candidato</td><td>Na lista de documentos da inscrição, a linha do documento ligado diz <em>“Comprova: Diploma de Doutorado (até 20); …”</em>. Divulgado o resultado, o acompanhamento mostra, sob a nota, <span class="rotulo-ui">Pontuação por critério</span>: máxima, pontuação reconhecida, <em>“limitada ao máximo”</em> e a justificativa, quando escrita. Só o titular vê, e só quando a nota dele já apareceria</td></tr>
+          <tr><td><strong>Recorrer e corrigir</strong></td><td>Quem julga recurso</td><td>Ver <a href="#recurso-com-barema">o recurso contra nota com barema</a></td></tr>
+          <tr><td><strong>Retificar</strong></td><td>Quem retifica o Edital</td><td>Os critérios se acrescentam (<span class="rotulo-ui">Acrescentar critério ao barema</span>), removem e alteram pela tela de <a href="#retificacao">Retificação</a>, como coleção com chave dentro da Etapa. A soma das máximas precisa continuar igual à máxima da Etapa: quem acrescenta altera a máxima no mesmo ato, e a conferência diz o valor quando não fecha</td></tr>
+          <tr><td><strong>Reaproveitar</strong></td><td>Quem elabora</td><td>Os critérios viajam com a Etapa, com identidades novas, e o documento ligado é remapeado para o correspondente do Edital novo</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="barema-regras">As regras do barema, em uma tabela</h3>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Regra</th><th>O que vale</th></tr></thead>
+        <tbody>
+          <tr><td>Duas formas de pontuar, <strong>deduzidas</strong> dos pontos por unidade</td><td><em>Por unidade apresentada</em> (“5 pontos por certificado”): a parcela é <code>mín(quantidade × pontos por unidade, máxima)</code>. <em>A comissão atribui os pontos</em>: a parcela é o valor atribuído, de zero à máxima. O critério de valor fixo (“Doutorado, 20 pontos”) é o por unidade com pontos iguais à máxima. Não há campo de tipo, fórmula nem grupo de critérios</td></tr>
+          <tr><td>O total é do servidor</td><td>Soma das parcelas, cada uma limitada pela sua máxima, com quatro casas, em qualquer ordem. O cliente não envia o total: um total enviado junto com o detalhamento é recusado, e a conta que a tela mostra ao digitar é só leitura</td></tr>
+          <tr><td>Limites</td><td>A quantidade é inteiro de 0 a 9999 — “52 meses” num critério de 1 ponto por mês até 40 é aceito, e a parcela é 40, dita <em>“limitada ao máximo”</em>. Pontos atribuídos acima da máxima do critério são recusados</td></tr>
+          <tr><td>Rascunho e conclusão</td><td>O rascunho aceita critério em branco. A conclusão exige todos respondidos e a recusa <strong>nomeia os pendentes</strong>. <strong>Zero é resposta</strong>: o arquivo comum a vários critérios não é reivindicação de todos eles</td></tr>
+          <tr><td>Justificativa</td><td>Opcional por critério, mesmo para zero. A fundamentação obrigatória continua no <strong>parecer</strong>, pelas regras que já existiam sobre o total. A justificativa escrita chega ao candidato junto da parcela</td></tr>
+          <tr><td>O documento que comprova</td><td>É um vínculo opcional a um Documento Exigido <strong>da inscrição, do mesmo Edital e aplicável a toda inscrição</strong> — sem restrição de Perfil, de modalidade ou de condição, nem quando a restrição é acrescentada depois ao documento. Não há envio novo: o candidato continua anexando os PDF de hoje</td></tr>
+          <tr><td>Etapa decisória</td><td>Não tem barema: a seção não é oferecida, e conteúdo que chegue com critérios nessa forma é recusado</td></tr>
+          <tr><td>Leitura pela versão do ato</td><td>Conclusão preservada, Resultado e decisão de recurso mostram nome, descrição e máxima <strong>da versão que cada um cita</strong>, e não os da vigente. Só o rascunho se lê pela vigente</td></tr>
+          <tr><td>Retificação depois de conclusões</td><td>Concluir sob a versão anterior é recusado (<em>“o Edital foi retificado enquanto você avaliava”</em>), e a conclusão feita antes <strong>não consolida</strong> até ser reaberta. A comparação é conservadora: qualquer diferença em nome, descrição, máxima, pontos por unidade, unidade ou documento ligado bloqueia; <strong>só a troca de ordem não</strong>. Ao reabrir, o rascunho volta com o detalhamento anterior pelo barema vigente: o que continua é mantido, o removido sai, o novo fica pendente</td></tr>
+          <tr><td>Imutabilidade</td><td>O detalhamento é gravado na Avaliação e copiado para a Conclusão preservada. A imutabilidade da conclusão, garantida por gatilho no banco, cobre a coluna nova; alterá-la por SQL direto é recusado</td></tr>
+          <tr><td>Nada a jusante muda</td><td>Consolidação, classificação, desempate, publicação de resultado e reemissão de ordem recebem o total, no campo de sempre. A trilha continua sem guardar nota nem detalhamento. Nenhuma permissão nova; a autorização e o isolamento por escopo são os de antes</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="barema-na-mesa">A Mesa com a ficha <span class="selo selo-impl">Implementado</span></h3>
+    <p>
+      A avaliadora abre a inscrição e, em vez de <span class="rotulo-ui">Pontuação</span>, vê a ficha: o
+      nome do critério e a exigência, <em>“Comprovação: {documento}”</em> com o botão que abre o arquivo no
+      <strong>mesmo painel</strong> da lista de documentos (e o mesmo registro na trilha) — ou <em>“não
+      apresentado”</em> —, a quantidade (ou os pontos) a informar, a parcela e a justificativa. Ao pé,
+      <em>“Pendentes: …”</em> em texto, e não só em cor, e o total. Salva o rascunho, volta, conclui. Concluída,
+      a mesma tabela vira leitura, com o barema da versão que a conclusão cita; as
+      <span class="rotulo-ui">conclusões preservadas</span> mostram, sob cada nota, <em>“Pontuação por
+      critério”</em> com a parcela, a máxima e a justificativa. Quando o espaço da ficha é estreito — no celular, ou em tela larga com o documento aberto ao
+      lado — a tabela vira cartões empilhados.
+    </p>
+
+    <h3 id="recurso-com-barema">O recurso contra uma nota com barema <span class="selo selo-impl">Implementado</span></h3>
+    <p>
+      Na tela de julgamento, quem julga vê <em>“Pontuação por critério do resultado atacado”</em> — pela versão
+      que o Resultado cita. Escolhendo <span class="rotulo-ui">Deferir fixando a correção</span>, informa a
+      <em>“Correção por critério”</em>, pela <strong>mesma ficha da Mesa</strong>, já preenchida com o detalhamento
+      atacado; o total é calculado pela mesma função, e a decisão guarda o detalhamento. A vedação de piora
+      continua aplicada <strong>sobre o total</strong>. O Resultado sucessor nasce com o detalhamento novo, o
+      acompanhamento do candidato marca os critérios <strong>alterados pelo recurso</strong>, a ordem vigente
+      aparece desatualizada como sempre, e a presidência a reemite com o total novo. A
+      <span class="rotulo-ui">reavaliação determinada</span> percorre a mesma ficha: outro avaliador pontua e a
+      consolidação produz o sucessor. O candidato continua nomeando no texto o critério que contesta — o
+      formulário de recurso não tem seletor de critério.
+    </p>
+
+    <div class="aviso aviso-risco"><span class="titulo">Atende a ficha cujas linhas se pontuam cada uma por si — e isso falta confirmar, Edital a Edital</span>
+      <p>
+        Nenhum dos Editais da amostra escreve se os títulos <strong>acumulam</strong> ou se vale só o maior;
+        a soma dos tetos dar 100 é compatível com as duas leituras. O barema trata cada critério como
+        independente. <strong>Edital que exija “só o maior título” não é atendido</strong> — continua lançando o
+        total, ou espera uma regra de exclusividade validada. Por Edital: o <strong>14/2026</strong> e o
+        <strong>90/2026</strong> sim, <em>se</em> a comissão confirmar a independência; o <strong>173/2025</strong>
+        em parte, porque o teto pela expectativa declarada pelo candidato continua sendo aplicado fora do
+        sistema; o <strong>140/2025</strong> não, porque o teto do Doutorado varia por curso. A confirmação é com a
+        CPS/Cefor, antes de operar um Edital pelo barema.
+      </p>
+    </div>
+
+    <div class="aviso aviso-lacuna"><span class="titulo">O que o barema não faz, e o que espera validação (P-1 a P-7)</span>
+      <ul>
+        <li>Não há motor de regras, fórmula, exclusividade, grupo de critérios nem biblioteca de baremas; <strong>não há barema por Perfil</strong> (a Etapa continua sendo do Edital — DP-10).</li>
+        <li>O candidato <strong>não declara</strong> quantos títulos tem: a autopontuação e o teto por expectativa (173/2025) estão fora; a comissão a respeita fora do sistema.</li>
+        <li>O desempate continua lendo a nota da Etapa ou um fato declarado, não uma parcela do barema.</li>
+        <li>Mais de uma avaliação por inscrição continua bloqueada na consolidação pela regra de combinação ausente, com ou sem barema.</li>
+        <li>O sistema não calcula duração a partir de datas nem lê o conteúdo dos documentos: contar meses e vínculos concomitantes é juízo da comissão, que informa a quantidade.</li>
+        <li>O detalhamento é <strong>só do titular</strong>: a lista pública e o resultado continuam com o total.</li>
+        <li>A <strong>justificativa por critério</strong> não é obrigatória (P-2): sem a expectativa do candidato, o sistema não distingue “não reivindicou” de “reivindicou e foi recusado”.</li>
+      </ul>
+    </div>
+
+    <details class="evidencia"><summary>Onde o barema mora no código, e como foi entregue</summary><div class="evidencia-corpo"><dl>
+      <dt>Entrega</dt><dd>Três incrementos na <code>main</code>: A, configurar, publicar e imprimir (#461); B, pontuar na Mesa, o candidato e a consolidação (#462); C, o recurso (#463). A spec é a <code>146</code> (#460). B e C são <strong>uma entrega só</strong> para produção (D-009): enquanto o C não existia, o B recusava a correção fixada contra Resultado com barema, e essa recusa saiu com o C</dd>
+      <dt>Modelo</dt><dd><code>editais/models/etapas.py</code> (<code>CriterioAvaliacao</code>, migração <code>editais/0027</code>) · <code>avaliacoes</code> <code>0005</code> (<code>criterios</code> na Avaliação e na Conclusão, com o gatilho de imutabilidade refeito) · <code>recursos</code> <code>0003</code> (<code>criterios</code> na Decisão)</dd>
+      <dt>A conta</dt><dd><code>avaliacoes/domain/barema.py</code> (<code>calcular</code>, <code>reconciliar</code>) — uma função só, usada pela Mesa e pelo recurso</dd>
+      <dt>Validação e publicação</dt><dd><code>editais/domain/etapas.py</code> · <code>editais/domain/validation.py</code> · <code>publicacoes/domain/elevacao.py</code> · <code>publicacoes/infrastructure/pdf.py</code> (<code>_tabela_do_barema</code>)</dd>
+      <dt>Telas</dt><dd><code>interface/templates/interface/_criterio_de_avaliacao.html</code> · <code>_ficha_do_barema.html</code> · <code>interface/static/interface/barema.js</code> · <code>mesa_barema.js</code> · <code>portal/templates/portal/acompanhamento.html</code></dd>
+      <dt>Compatibilidade</dt><dd><code>resultados/domain/compatibilidade.py</code> (<code>CAMPOS_COMPARADOS</code>)</dd>
+      <dt>Spec</dt><dd><code>specs/146-barema-da-etapa/</code> — a jornada ponta a ponta no navegador está em <code>capturas/jornada/</code></dd>
+    </dl></div></details>
+
     <div class="aviso aviso-lacuna">
       <span class="titulo">Lacuna: a Etapa é do Edital, e a ficha de avaliação varia por curso</span>
       <p>
         A Etapa pertence ao Edital, não ao Perfil (a tela diz: <em>“Valem para todos os Perfis deste
         Edital.”</em>). Um Edital cujos Perfis usam fichas diferentes não tem como declarar isso: só
-        há uma Etapa “Avaliação curricular”, com um peso, uma nota mínima e uma forma. O “alcance da
-        Etapa” continua como decisão pendente.
+        há uma Etapa “Avaliação curricular”, com um peso, uma nota mínima, uma forma e, desde a 146,
+        <a href="#barema-da-etapa">um barema</a>. O “alcance da Etapa” continua como decisão pendente.
       </p>
     </div>
 
@@ -6598,7 +6711,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <a href="#recursos">Recurso</a></dd>
         <dt>Na interface</dt><dd><code>/gestao/minhas-etapas/&lt;edital&gt;/&lt;etapa&gt;/inscricoes/&lt;id&gt;</code>,
           bloco <span class="rotulo-ui">Conclusão da análise</span>: rádios com os rótulos publicados
-          ou <span class="rotulo-ui">Pontuação</span>, e <span class="rotulo-ui">Parecer</span>.</dd>
+          ou <span class="rotulo-ui">Pontuação</span>, e <span class="rotulo-ui">Parecer</span>. Quando a
+          Etapa tem <a href="#barema-da-etapa">barema</a>, o campo único dá lugar à
+          <a href="#barema-na-mesa">ficha por critério</a> (146).</dd>
         <dt>Evidência técnica</dt><dd><code>avaliacoes/models.py</code> (<code>Avaliacao</code>,
           <code>ConclusaoAvaliacao</code>) · <code>avaliacoes/application/avaliacao.py</code>
           (<code>gravar</code>, <code>concluir</code>) · <code>avaliacoes/domain/pontuacao.py</code> ·
@@ -8439,7 +8554,7 @@ FILA        = chamáveis
           <tr><td><strong>Como a semente é definida?</strong></td><td>Por uma <strong>ocorrência futura da Loteria Federal</strong>, declarada no Edital (por exemplo, o concurso 5900), transformada em semente pela regra de normalização publicada — em geral, <span class="rotulo-ui">Os dígitos do material, na ordem em que aparecem</span>. Não existe campo para digitar semente. Desde a 116, concurso já realizado é recusado antes de publicar e de congelar (<a href="#sorteio-conferencia">ver</a>).</td></tr>
           <tr><td><strong>Dá para reproduzir?</strong></td><td>Sim, por qualquer pessoa: a ordem é função determinística da relação publicada, do recorte e da semente. Ver <a href="#sorteio-verificacao">verificação</a>.</td></tr>
           <tr><td><strong>Que evidências ficam?</strong></td><td>A relação congelada (com resumo), a ocorrência observada (inclusive as indisponíveis), o sorteio com a semente, o manifesto em JSON e a trilha de auditoria de cada passo.</td></tr>
-          <tr><td><strong>Há link público?</strong></td><td>Sim: a página do Edital mostra <span class="rotulo-ui">Sorteio público</span> antes e depois; a relação, a verificação e o manifesto têm endereço estável, sem login.</td></tr>
+          <tr><td><strong>Há link público?</strong></td><td>Sim: a página do Edital mostra o sorteio de cada vaga <strong>no cartão dela</strong> (<a href="#sorteio-no-cartao-da-vaga">145</a>) e, em <span class="rotulo-ui">Sorteio público</span>, o andamento do Edital, antes e depois; a relação, a verificação e o manifesto têm endereço estável, sem login.</td></tr>
           <tr><td><strong>Há integração externa?</strong></td><td>Sim: o sistema consulta o serviço de loterias da <strong>Caixa</strong> para obter a extração declarada. É a única fonte de produção.</td></tr>
           <tr><td><strong>O sistema executa ou só registra?</strong></td><td><strong>Executa.</strong> Busca a extração, calcula a semente, calcula a ordem e constitui o ato — cada passo por um clique de quem conduz. Transmitir o sorteio ao vivo é prática institucional, fora do sistema.</td></tr>
         </tbody>
@@ -8655,6 +8770,33 @@ FILA        = chamáveis
         <span class="selo selo-parc">Parcial</span></p>
     </div>
 
+    <h3 id="sorteio-no-cartao-da-vaga">O sorteio de cada vaga, no cartão dela (145) <span class="selo selo-impl">Implementado</span></h3>
+    <p>
+      O que é de uma vaga mora no <strong>cartão da vaga</strong> da página pública do Edital, e o bloco
+      <span class="rotulo-ui">Sorteio público</span> diz só o que é do Edital inteiro. Mudou o <em>onde</em>:
+      as relações de habilitados, os endereços e as regras de publicação são os mesmos. Antes, cada lista tinha
+      um bloco ao lado do Cronograma, repetindo o nome da vaga — num Edital de quatro vagas e nove relações,
+      a relação da segunda vaga ficava a 2.801 px do título dela em tela de celular; no cartão são 508 px.
+    </p>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Onde</th><th>O que diz</th></tr></thead>
+        <tbody>
+          <tr><td>Cartão da vaga, vaga com relação vigente</td><td>O estado, <strong>dito uma vez</strong> por marco quando as listas dele estão no mesmo ponto: <em>“Aguardando o sorteio”</em> com a data e a hora em que a lista foi fechada, ou <em>“Sorteio realizado”</em> com a data e a hora do sorteio. Cada lista oferece <span class="rotulo-ui">Ver quem vai participar, e com que número</span> (com a quantidade de habilitados); depois do sorteio, <span class="rotulo-ui">Ver quem participou</span> e <span class="rotulo-ui">Como este sorteio foi feito</span></td></tr>
+          <tr><td>Vaga com duas ou mais listas</td><td>Um controle de abrir e fechar — <em>“Ver quem vai participar, e com que número — 3 listas”</em> —, com a ampla concorrência primeiro e as demais na ordem em que o Perfil as declara. Listas em pontos diferentes: <em>“Sorteio em andamento”</em>, <em>“N de M listas sorteadas”</em>, e cada linha diz o estado e a data da sua. Marco com nome só quando a vaga tem relação em mais de um marco</td></tr>
+          <tr><td>Vaga sem sorteio, ou sem relação publicada</td><td>Nada: nem bloco, nem frase de ausência</td></tr>
+          <tr><td>Bloco <span class="rotulo-ui">Sorteio público</span></td><td>Antes das vagas na ordem do documento (em tela larga, na coluna lateral, acima do Cronograma). Diz o andamento do Edital em uma frase — <em>“Aguardando o sorteio”</em>, <em>“1 de 3 sorteios realizados”</em> — e, uma única vez, que a lista de cada sorteio é fechada antes de existirem os números. Não nomeia vaga nem lista, e não existe sem relação vigente. A relação de uma vaga que a Retificação retirou continua alcançável por ele</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="miudo">
+      Sem rota, modelo, migração nem regra de visibilidade novos; só a relação vigente é anunciada; a página
+      continua lendo o sorteio em duas consultas, qualquer que seja o número de vagas e listas. A tabela de
+      participantes continua nas páginas da relação e da verificação. Quem pesquisa pela vaga acha o
+      sorteio nela; a seção <span class="rotulo-ui">Resultados divulgados</span> tem a mesma separação por
+      vaga e ficou de fora (estudo próprio).
+    </p>
+
     <h3 id="sorteio-conferencia">O concurso conferido na Caixa antes do compromisso (116) <span class="selo selo-impl">Implementado</span></h3>
     <p>
       A 102 confere a <em>data</em> da extração contra o fim das inscrições; não conferia se o
@@ -8800,7 +8942,7 @@ FILA        = chamáveis
       <table>
         <thead><tr><th>Quando</th><th>O quê</th><th>Onde</th></tr></thead>
         <tbody>
-          <tr><td>Antes do sorteio</td><td><span class="rotulo-ui">Sorteio público</span> — <span class="rotulo-ui">Aguardando o sorteio</span>, quantos habilitados, <span class="rotulo-ui">Ver quem vai participar, e com que número</span></td><td>página pública do Edital</td></tr>
+          <tr><td>Antes do sorteio</td><td>No cartão da vaga (145): <span class="rotulo-ui">Aguardando o sorteio</span>, quantos habilitados, <span class="rotulo-ui">Ver quem vai participar, e com que número</span>; no bloco <span class="rotulo-ui">Sorteio público</span>, só o andamento do Edital</td><td>página pública do Edital</td></tr>
           <tr><td>Antes do sorteio</td><td>A relação: critério de quem entrou, números públicos, nome e protocolo, resumo</td><td><code>/selecoes/sorteio/relacoes/&lt;id&gt;/</code></td></tr>
           <tr><td>Depois</td><td><span class="rotulo-ui">Verificar este sorteio</span> (na página do Edital, o link <span class="rotulo-ui">Como este sorteio foi feito</span>): o que foi conferido e como conferir por conta própria</td><td><code>/selecoes/sorteio/&lt;id&gt;/verificar</code></td></tr>
           <tr><td>Depois</td><td>O manifesto em JSON: relação, método, semente, chaves e posições</td><td><code>/selecoes/sorteio/&lt;id&gt;/manifesto.json</code></td></tr>
@@ -9234,7 +9376,7 @@ há Impedimento declarado seu quanto a esta inscrição?        → impedido</pr
         <thead><tr><th>Botão</th><th>O que o julgador fixa</th><th>O que o sistema faz</th><th>O candidato lê</th></tr></thead>
         <tbody>
           <tr><td><span class="rotulo-ui">Indeferir</span></td><td>A motivação</td><td>Nada muda</td><td>“Recurso indeferido”</td></tr>
-          <tr><td><span class="rotulo-ui">Deferir fixando a correção</span></td><td>A <strong>conclusão</strong> — pontuação na Etapa pontuada, sentido na decisória</td><td>Cria o <strong>Resultado sucessor na mesma transação</strong>. A consequência é <em>derivada</em> da regra, nunca digitada</td><td>“Recurso deferido — o resultado foi corrigido”</td></tr>
+          <tr><td><span class="rotulo-ui">Deferir fixando a correção</span></td><td>A <strong>conclusão</strong> — pontuação na Etapa pontuada (por critério, quando a Etapa tem <a href="#recurso-com-barema">barema</a>), sentido na decisória</td><td>Cria o <strong>Resultado sucessor na mesma transação</strong>. A consequência é <em>derivada</em> da regra, nunca digitada</td><td>“Recurso deferido — o resultado foi corrigido”</td></tr>
           <tr><td><span class="rotulo-ui">Deferir determinando reavaliação</span></td><td>Que a Etapa seja reavaliada</td><td>A inscrição volta à distribuição com uma avaliação a mais; quem concluiu a original não reavalia. O sucessor nasce na consolidação</td><td>“Recurso deferido — a etapa será reavaliada”</td></tr>
           <tr><td><span class="rotulo-ui">Deferir determinando providência a jusante</span></td><td>Uma providência fora da Etapa</td><td>Fica pendente até que um ato do marco que <strong>cite a decisão</strong> (<span class="rotulo-ui">Decisões de recurso que este ato executa</span>) seja publicado</td><td>“Recurso deferido — a instituição praticará o ato corretivo”</td></tr>
         </tbody>
@@ -10689,9 +10831,9 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <tr><td>Situação</td><td>O desfecho vence o período: <em>“Edital cancelado em …”</em>, <em>“Processo seletivo encerrado em …”</em>; senão, o período — <em>“Faltam N dias.”</em>, <em>“Último dia.”</em>, <em>“Inscrições encerradas em …”</em>, <em>“Período de inscrições cancelado. Não recebe inscrições.”</em>. O motivo do ato de encerramento não é exibido</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Agora e próximo</td><td><em>“Acontecendo agora, até …: {Evento}”</em> e <em>“Próximo, em …: {Evento}”</em>, pela mesma régua que a gestão usa; Evento cancelado é dito cancelado. Sem Evento, nada é dito</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Resultados divulgados</td><td>Por Perfil, depois por etapa, depois por lista (062). Os Perfis na ordem da seção Vagas, com o nome vigente; o que saiu por Retificação vai para o fim, com o nome publicado. As etapas na ordem do certame. Em cada etapa, a ampla primeiro e as cotas na ordem das Modalidades; o <strong>texto do link é o nome da lista</strong>, com <em>“{natureza} · publicado em …”</em> e <em>“recurso até …”</em> enquanto o prazo corre. Um só <span class="rotulo-ui">Publicações anteriores (N)</span> por etapa, cada item com a lista e <em>“sucedido”</em>. Abaixo, <em>“Participou deste processo seletivo?”</em>: <span class="rotulo-ui">Entrar para ver minha situação</span>, <span class="rotulo-ui">Ver minha situação</span> ou <span class="rotulo-ui">Ver minhas inscrições</span>, conforme quem lê; sem inscrição enviada, o convite não aparece</td><td><span class="selo selo-impl">Implementado</span></td></tr>
-          <tr><td>Vagas</td><td>Por Perfil: vagas imediatas (ou <em>“Cadastro reserva”</em> quando é o que há), requisitos, atribuições, carga horária, remuneração, as Modalidades de concorrência pelo nome, e <em>“N documento(s) obrigatório(s) na inscrição”</em> — só os obrigatórios pedidos a todos do Perfil; o facultativo leva <em>“(facultativo)”</em> — com <em>“Se concorrer em {Modalidade}, também: …”</em>. Quando o Requerimento de Matrícula é pedido na inscrição, a seção o diz antes do primeiro Perfil (072). <strong>Não há quantidade de vagas por Modalidade</strong></td><td><span class="selo selo-parc">Parcial</span></td></tr>
+          <tr><td>Vagas</td><td>Por Perfil: vagas imediatas (ou <em>“Cadastro reserva”</em> quando é o que há), requisitos, atribuições, carga horária, remuneração, as Modalidades de concorrência pelo nome, e <em>“N documento(s) obrigatório(s) na inscrição”</em> — só os obrigatórios pedidos a todos do Perfil; o facultativo leva <em>“(facultativo)”</em> — com <em>“Se concorrer em {Modalidade}, também: …”</em>. Quando o Requerimento de Matrícula é pedido na inscrição, a seção o diz antes do primeiro Perfil (072). Quando a vaga tem relação de habilitados vigente, o cartão traz <strong>o sorteio dela</strong> (<a href="#sorteio-no-cartao-da-vaga">145</a>). <strong>Não há quantidade de vagas por Modalidade</strong></td><td><span class="selo selo-parc">Parcial</span></td></tr>
           <tr><td>Teto</td><td>Quando o Edital declara, a frase do documento; atingido, o convite dá lugar a <em>“Limite atingido: você já enviou N inscrições neste Edital.”</em></td><td><span class="selo selo-impl">Implementado</span></td></tr>
-          <tr><td>Sorteio público</td><td>Relação de habilitados, manifesto e verificação. Ver <a href="#sorteio">Sorteio</a></td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Sorteio público</td><td>Só o andamento do Edital inteiro, e a garantia de que a lista fecha antes dos números (145). Vem antes das vagas. O sorteio de cada vaga está no <strong>cartão dela</strong>. Ver <a href="#sorteio-no-cartao-da-vaga">O sorteio de cada vaga, no cartão dela</a></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Cronograma</td><td>Os Eventos com a fase de cada um</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Edital e documentos</td><td>O documento oficial, anexos e, se houve Retificação, <em>“Este Edital foi retificado…”</em> com o que mudou em linguagem de domínio</td><td><span class="selo selo-impl">Implementado</span></td></tr>
         </tbody>
@@ -12399,7 +12541,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#etapas">Etapa com pontuação ou com decisão</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#etapas">Caráter eliminatório e classificatório, peso, mínima, máxima</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="parc"><td><a href="#etapas">Mais de uma avaliação por inscrição</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Distribui; não consolida (sem regra de combinação).</td></tr>
-<tr data-marca="lacun"><td><a href="#etapas">Ficha de avaliação por Perfil (barema)</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>A Etapa é do Edital; total somado fora.</td></tr>
+<tr data-marca="impl"><td><a href="#barema-da-etapa">Barema da Etapa: critérios publicados e pontuação por critério (146)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Critérios independentes; a confirmação de que os títulos de cada Edital não são exclusivos espera a CPS/Cefor (P-1).</td></tr>
+<tr data-marca="lacun"><td><a href="#etapas">Ficha de avaliação por Perfil</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>A Etapa é do Edital, e o barema também (DP-10).</td></tr>
 <tr data-marca="impl"><td><a href="#comissao">Comissão com presidente e membros</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só duas funções.</td></tr>
 <tr data-marca="impl"><td><a href="#comissao">Alocação por Etapa (matriz)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="lacun"><td><a href="#comissao">Alocação por Perfil ou polo</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Decisão pendente.</td></tr>
@@ -12592,7 +12735,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <details class="pergunta"><summary>O que o candidato acompanha?</summary><div><p>A própria situação — rótulo, por quê, o que fazer —, a posição em cada lista, a situação em cada Etapa com o motivo, o prazo de recurso, os recursos, o comprovante, a convocação e o requerimento pedido nela. <a href="#quem-ve-o-que">Quem vê o quê</a></p></div></details>
     <details class="pergunta"><summary>Quem pode publicar um resultado?</summary><div><p>Quem tem a permissão de publicar (papel Publicador). Quem emitiu a ordem não ganha, por isso, o poder de publicá-la. <a href="#pg-permissoes">Matriz de permissões</a></p></div></details>
     <details class="pergunta"><summary>Somos duas ou três pessoas. Dá para acumular papéis?</summary><div><p>Sim, com dois cuidados: a mesma pessoa não pode submeter, homologar <em>e</em> publicar o mesmo Edital; e quem julga recursos não pode ter avaliado, consolidado, ordenado ou publicado o que se contesta. Escolha primeiro quem vai julgar. <a href="#pg-permissoes">Mais</a></p></div></details>
-    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real (a gestão está pronta para ela; falta o adaptador do provedor do Ifes); regra de combinação para dupla avaliação; barema, heteroidentificação e submodalidades; comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico; um assistente de dúvidas aberto ao candidato. E o sistema, como um todo, ainda não está em produção. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
+    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real (a gestão está pronta para ela; falta o adaptador do provedor do Ifes); regra de combinação para dupla avaliação; barema de critérios exclusivos ou por Perfil, heteroidentificação e submodalidades; comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico; um assistente de dúvidas aberto ao candidato. E o sistema, como um todo, ainda não está em produção. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
     <details class="pergunta"><summary>O sistema já está em produção?</summary><div><p>Não. Sem o seletor de identidade de desenvolvimento, que a configuração de produção recusa, a gestão responde <code>503</code>; a autenticação institucional (o LDAP do Ifes, resposta de 28/08) tem a gestão preparada desde 31/10, mas o adaptador do provedor não existe, e não há política de retenção dos dados pessoais. O caminho de implantação está escrito, e esses são os dois bloqueadores que ele declara. <a href="#estado-atual">Estado atual</a></p></div></details>
     <details class="pergunta"><summary>O candidato já pode tirar dúvidas com um assistente?</summary><div><p>Não. Existem, só na gestão, as respostas prontas sobre o Edital publicado, para validação interna (070), e um piloto com modelo de linguagem para participantes escolhidos (071), com um protótipo de como o painel apareceria na página pública. Na máquina de desenvolvimento, uma chave abre esse painel na própria página da seleção (074), para testar a visão do candidato; a produção recusa subir com ela. <a href="#assistente-do-edital">Mais</a></p></div></details>
     <details class="pergunta"><summary>Por que o PDF do Edital novo tem resumo e perguntas como títulos?</summary><div><p>Desde a 069, o Edital novo sai em linguagem simples: um resumo que remete aos itens, um sumário, as seções reunidas sob as perguntas do candidato e as frases do sistema reescritas sem mudar regra. O documento já publicado não se regenera, e o Edital que nasceu antes, mesmo retificado depois, mantém a forma plana. As frases novas esperam a aprovação do responsável pelo produto antes do primeiro Edital real. <a href="#publicacao">Mais</a></p></div></details>
@@ -13317,7 +13460,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <h2>Maturidade por domínio</h2>
     <p class="lead">
       O certame corre inteiro, pela interface, para as famílias de Edital do piloto — ampla
-      concorrência com cotas, sorteio, títulos sem barema. O que não está pronto é a
+      concorrência com cotas, sorteio, títulos com barema de critérios independentes. O que não está pronto é a
       <strong>operação institucional</strong>: a gestão está preparada para a autenticação real, mas o
       provedor do Ifes não foi integrado, e não há caminho de produção no ar.
     </p>
@@ -14026,7 +14169,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Alocação e distribuição sem Perfil nem polo</strong></td><td>Com 7 polos, a comissão inteira alcança os sete; nenhuma comissão local recebe só o que é dela</td><td><code>comissoes/models.py</code>; <code>distribuicao.html</code> e <code>alocacoes.html</code> sem “Perfil”</td></tr>
         <tr><td><strong>Integração com o Registro Acadêmico</strong></td><td>A exportação nunca foi importada no destino. É do setor dono do destino</td><td><code>matriculas/domain/colunas.py</code> (34 colunas)</td></tr>
         <tr><td><strong>Polo como eixo próprio; Curso, Área e Campus</strong> (<code>AX-5</code>, <code>AX-6</code>)</td><td>O Edital multipolo real já existe na amostra (140/2025, 28/2026) — a ressalva “não abstrair antes de tê-lo na mão” deixou de valer, e a pergunta continua aberta</td><td><code>editais/models/perfis.py</code></td></tr>
-        <tr><td><strong>Ficha de avaliação por curso, barema</strong> (<code>AX-4</code>)</td><td>A nota não é conferível contra norma publicada; o barema é somado fora</td><td>nenhuma ocorrência de “barema” no código</td></tr>
+        <tr><td><strong>Ficha de avaliação por curso, barema</strong> (<code>AX-4</code>)</td><td>Feito em parte pela 146: o barema por Etapa, de critérios independentes. Continua aberta a ficha que varia por curso (<code>DP-10</code>)</td><td><code>avaliacoes/domain/barema.py</code> · <code>editais/models/etapas.py</code></td></tr>
         <tr><td><strong>Submodalidades de PPI/PPIQ</strong> (<code>AX-15</code>)</td><td>Excluídas por decisão da spec 044</td><td>—</td></tr>
       </tbody>
     </table></div>
@@ -14207,7 +14350,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <div class="rolagem"><table>
       <thead><tr><th>O quê</th><th>Por quê</th></tr></thead>
       <tbody>
-        <tr><td>Somar o barema fora e digitar o total</td><td>Não há barema como objeto</td></tr>
+        <tr><td>Somar fora o barema que não é de critérios independentes e digitar o total</td><td>O barema da 146 só pontua critério a critério; “só o maior título” e o teto por expectativa do candidato não têm representação</td></tr>
         <tr><td>Verificar a autodeclaração (heteroidentificação) fora</td><td>Não há Etapa aplicável só a quem declarou a Modalidade, nem comissão própria</td></tr>
         <tr><td>Conferir que o Cronograma e a janela recursal dizem a mesma data</td><td>O Evento “prazo para recurso” é texto livre; nada o liga ao marco que abre a janela (decidido: depois do piloto). Desde a 067, a Revisão os põe lado a lado, sem afirmar que correspondem</td></tr>
         <tr><td>Declarar a hora real do Evento, e não <code>00:00</code></td><td>A hora é obrigatória, e meia-noite sai “às 00h” no documento (decidido: rever com a spec do documento)</td></tr>
@@ -14258,7 +14401,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>DP-07</strong></td><td>As três recusas em <code>404</code> passam a <code>403</code>?</td><td>Decidido <em>quando</em> (com a preparação de produção); não executado</td></tr>
         <tr><td><strong>DP-08</strong> (itens 1 e 3)</td><td>A spec 039 (catálogo de Modalidades no Edital) está encerrada? Para onde vai o alcance da Etapa por Perfil ou Modalidade?</td><td>Registrar o encerramento; o alcance espera a DP-10. (O item 2, a Modalidade por Retificação, foi feito pela 048)</td></tr>
         <tr><td><strong>DP-09</strong></td><td>A proibição de prova nova no recurso continua?</td><td>Recomendação “manter”, sem decisão registrada</td></tr>
-        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo — títulos com barema, cota racial com heteroidentificação, cascata de grupos, submodalidades?</td><td>Decidir por família, com o Edital na mão</td></tr>
+        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo — títulos com barema (a 146 construiu o de critérios independentes; o por Perfil e o exclusivo continuam abertos), cota racial com heteroidentificação, cascata de grupos, submodalidades?</td><td>Decidir por família, com o Edital na mão</td></tr>
         <tr><td><strong>DP-11</strong></td><td>A comissão local enxerga só o seu Perfil ou polo?</td><td>Recomendação: coluna e filtro de Perfil já, recorte de autorização depois — nada feito</td></tr>
         <tr><td><strong>DP-12</strong></td><td>O campo <code>Status</code> das specs é mantido ou abolido?</td><td>Aberta</td></tr>
         <tr><td><strong>DP-15</strong></td><td>Documento público por marco, em vez de por recorte?</td><td>Aberta; “só se o setor precisar”</td></tr>
@@ -14289,7 +14432,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>Não trocar <code>404</code> por <code>403</code> em bloco: quatro das recusas em <code>404</code> protegem vínculo enumerável e estão certas.</li>
         <li>Não silenciar os sinais do painel para limpá-lo, nem juntar a ele os avisos de composição sem decidir a fronteira: são naturezas diferentes.</li>
         <li>Não modelar responsável individual: o que falta é a capacidade a pedir, e o produto já sabe dizê-la. A presidência vem do vínculo, e a equipe inicial acumula papéis.</li>
-        <li>Não criar barema, submodalidade, cascata ou heteroidentificação antes de a família entrar no alvo: a Constituição pede nada de estrutura antes de haver Edital que a consuma.</li>
+        <li>Não criar submodalidade, cascata ou heteroidentificação, nem estender o barema a critérios exclusivos ou por Perfil, antes de a família entrar no alvo: a Constituição pede nada de estrutura antes de haver Edital que a consuma.</li>
         <li>Não mover a Modalidade para o Edital: ela continua sendo do Perfil (decisão de 25/09).</li>
         <li>Não tratar <span class="rotulo-ui">Aplicar a todos</span> como herança: é materialização. Herdar no conteúdo publicado faria uma Retificação do padrão alterar N Perfis sem dizer.</li>
         <li>Não reduzir a validação por haver padrões: a Retificação, a API e as exceções continuam produzindo qualquer configuração.</li>
@@ -14416,6 +14559,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>daba322f</code>, specs 134 a 141</td><td>Descritas como entregues: o <a href="#aviso-de-pendencia">aviso de pendência documental por e-mail</a> (134, aviso), os <a href="#cenarios-de-treinamento">cenários de treinamento e homologação</a> (134, cenários), as <a href="#correcoes-do-andamento">correções da derivação do andamento</a> (135), o <a href="#centro-de-controle">Centro de Controle do Edital</a> (136), a <a href="#chegada-e-volta">chegada ao lugar do ato e a volta ao Centro</a> (139), a <a href="#conferencia-antes-de-convocar">conferência antes de convocar os titulares</a> (140) e a <a href="#sucessora-espera-o-reabilitado">sucessora que espera o reabilitado</a> (141). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>b202a7c0</code>, specs 142 a 144</td><td>Descritas como entregues: a <a href="#jornada-do-sorteio">tela do sorteio como a jornada de quem o conduz</a> (142) e a <a href="#convocacao-pelas-perguntas">convocação e a conferência documental pelas perguntas de quem conduz</a> (143). A 144, o <a href="#cronograma-pdf-ordem-previa">Cronograma</a> com ocultar do PDF, ordenar por data e prévia, entra como <em>Previsto</em>: só a especificação foi mergeada. Rótulos corrigidos nas seções que citavam os botões do sorteio e a ordem dos avisos da convocação. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>d184fcee</code>, 144 (A)</td><td>O incremento A da 144, a <a href="#cronograma-pdf-ordem-previa">visibilidade do Evento no PDF</a>, descrito como entregue; a ordenação por data e a prévia seguem como <em>Previsto</em>. Corrigidas as seções que listavam os campos do passo Cronograma e a linha da Retificação. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>11/11/2026</td><td><code>main</code> em <code>04797399</code>, 145 e 146</td><td>O sorteio no cartão da vaga (145) e o <a href="#barema-da-etapa">barema da Etapa</a> (146, incrementos A, B e C), descritos como entregues; a Mesa, o recurso, o portal, a Retificação, a Revisão e o PDF ganharam o que a 146 mudou. Corrigidas as frases que diziam que o barema não existe. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>05/11/2026</td><td><code>main</code> em <code>4e6d211f</code>, specs 120, 121 e 122 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">a experiência da convocação</a> (121): a tela que abre pelo título e pelo prazo, <a href="#convocacao-pelo-link">o link que passa pelo acesso e o e-mail em HTML</a>, com o modelo gravado em cada envio; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
@@ -14438,6 +14582,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>A atualização de 10/11 foi feita depois dos merges, por três leituras paralelas — as duas 134; 135 e 136; 139, 140 e 141 —, cada uma conferindo no código da <code>main</code> em <code>daba322f</code> os rótulos, as rotas e os códigos citados; as divergências entre spec e código foram resolvidas a favor do código. Não rodou a suíte inteira: rodaram os guardiões que leem <code>specs/</code> e <code>doc/</code>. Os números de teste e de consulta vêm do <code>verificacao.md</code> de cada spec, e nenhum deles mede a <code>main</code> com as sete entregas juntas. As telas não foram percorridas. A <em>Maturidade</em> não foi recontada (migrations, rotas, módulos e contagem de testes), e as tabelas de estados ainda não citam a espera da sucessora (141). Ficam abertas as pendências que cada seção descreve, entre elas a validação do Centro com operadores, a chave do aviso desligada em produção e a numeração repetida da 133 e da 134.</li>
         <li>A atualização de 10/11 sobre as specs 142 a 144 foi feita por três leituras paralelas, uma por spec, conferindo rótulos, rotas e códigos no código da <code>main</code> em <code>b202a7c0</code>; as divergências entre spec e código foram resolvidas a favor do código. Não rodou a suíte inteira: rodaram os guardiões que leem <code>specs/</code> e <code>doc/</code>. As telas não foram percorridas, e os números de teste e de consulta vêm do <code>verificacao.md</code> de cada spec. A <em>Maturidade</em> não foi recontada, e o <code>estado-atual</code> ainda não conta as pastas de <code>specs/</code> até a 144.</li>
         <li>A atualização de 10/11 sobre o incremento A da 144 foi feita por leitura do código da <code>main</code> em <code>d184fcee</code>, conferindo o olho, as frases da Revisão, a numeração do PDF e a regra de omissão da seção. Não rodou a suíte inteira, e a tela não foi percorrida; o número de testes vem do <code>verificacao.md</code> da spec.</li>
+        <li>A atualização de 11/11 sobre a 145 e a 146 foi feita por leitura das specs e do código da <code>main</code> em <code>04797399</code>: os rótulos das telas, as frases da ficha, do portal e da Revisão, o PDF e as regras de cálculo. Não rodou a suíte inteira, e nenhuma tela foi percorrida aqui — a jornada do barema no navegador está registrada em <code>specs/146-barema-da-etapa/capturas/jornada/</code>. A medida de tempo da Mesa com o barema (hoje de 10 a 20 minutos por inscrição, sem ele) não foi refeita, e a confirmação institucional dos Editais (P-1) continua aberta.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
         <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
@@ -14479,7 +14624,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
   (<code>a3e23b1f</code>), a 120 a 122, com as seis famílias que faltavam da 119, em 05/11/2026
-  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) a 142 a 144, esta só como especificação, e o incremento A da 144, tudo em 10/11/2026 (<code>d184fcee</code>). Onde documentação e código
+  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) a 142 a 144, esta só como especificação, e o incremento A da 144, tudo em 10/11/2026 (<code>d184fcee</code>) a 145 e a 146, em 11/11/2026 (<code>04797399</code>). Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>

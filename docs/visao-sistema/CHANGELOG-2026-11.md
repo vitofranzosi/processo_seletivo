@@ -356,3 +356,19 @@ Entraram na `main`, que chegou a `d184fcee`, o incremento A da 144 (#456) e um a
 - a suíte inteira não rodou aqui; rodaram os guardiões que leem `specs/` e `doc/`. O número de testes vem do `verificacao.md` da spec, que registra 17.923 passando e 3 falhas corrigidas, sem repetir a suíte inteira;
 - a tela não foi percorrida, e a *Maturidade* não foi recontada;
 - ficam abertos o Cronograma a 375 px, o rótulo *“(vazia — não sai no documento)”* da etapa Conteúdo com todos os Eventos ocultos, e os incrementos B e C.
+
+## Acréscimo de 11/11: o sorteio no cartão da vaga (145) e o barema da Etapa (146)
+
+Entraram na `main`, que chegou a `04797399`, a 145 (#459) e a 146 inteira: a spec (#460) e os incrementos A (#461), B (#462) e C (#463). Leitura das specs e do código, sem agentes.
+
+- **145:** nova seção `#sorteio-no-cartao-da-vaga`, dentro do Sorteio. O sorteio de cada vaga passou para o cartão dela na página pública do Edital (estado dito uma vez por marco, acesso à relação, verificação depois do sorteio, controle de abrir com duas ou mais listas); o bloco *Sorteio público* ficou com o andamento do Edital. Corrigidos a linha *Sorteio público* e a linha *Vagas* de *O que a página pública do Edital mostra*, a pergunta *Há link público?* e a tabela *O que é público, e onde*.
+- **146:** nova seção `#barema-da-etapa`, dentro de *A Etapa de Avaliação*, com as regras (`#barema-regras`), a Mesa com a ficha (`#barema-na-mesa`) e o recurso contra nota com barema (`#recurso-com-barema`). Registra o que não faz e o que espera validação institucional (P-1 a P-7), e que **só vale a ficha de critérios independentes** — o Edital que exija “só o maior título” não é atendido.
+- **Corrigidas as frases que diziam que o barema não existe:** a Receita 4 (*Limites*), a tabela de famílias do alvo, a nota do custo da Mesa, as linhas do catálogo e de *Lacunas antigas*, a lista do que o sistema ainda não faz, a síntese do certame, DP-10 e a lista do que não criar. Atualizados o cartão da Etapa, a tabela *O que uma Etapa declara* (linha *Barema*), a Mesa (*Na interface*) e a tabela das espécies de decisão do recurso.
+- **Fora do que a spec diz:** a Visão afirma só o que o código mostra — os rótulos são os dos templates, e a ficha vira cartões em espaço estreito, como a folha dela declara.
+
+**Não verificado:**
+
+- a suíte inteira não rodou aqui; rodaram os guardiões que leem `specs/` e `doc/`, e a Visão passou pela conferência de ids, links e tags;
+- nenhuma tela foi percorrida; a jornada do barema no navegador está registrada em `specs/146-barema-da-etapa/capturas/jornada/`;
+- ficam abertos a medida de tempo da Mesa com o barema, a confirmação com a CPS/Cefor de que os títulos de cada Edital se pontuam independentemente (P-1), e as sete questões da spec;
+- as seções `#cronograma-pdf-ordem-previa` (144, B e C) e as demais pendências anteriores não mudaram.
