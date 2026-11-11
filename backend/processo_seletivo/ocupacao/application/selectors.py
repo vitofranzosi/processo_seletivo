@@ -6,7 +6,11 @@ mesmo desenho de `classificacao/application/corte.py`, e as causas vêm **nomead
 "divergências": a `018` já pagou esse preço.
 """
 
-from processo_seletivo.classificacao.application.corte import geracao_vigente, linha_do_quadro
+from processo_seletivo.classificacao.application.corte import (
+    admite_continuacao,
+    geracao_vigente,
+    linha_do_quadro,
+)
 from processo_seletivo.classificacao.application.selectors import ato_vigente, estado_do_marco
 from processo_seletivo.classificacao.models import ItemDoCorte
 
@@ -294,6 +298,11 @@ def ocupacao_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         # marco do acervo carrega `cutRule` nulo, e é exatamente esse o caso que a tela precisa
         # deixar de oferecer.
         "faixaDisponivel": bool(marco and marco.get("cutRule")),
+        # **E só a pede quem a publicou** (014, D-011, FR-226): com a regra de corte e sem
+        # continuação admitida, o comando recusa a faixa seguinte — e a tela a oferecia, inclusive
+        # na vaga da cota sem concorrente (achado 02 do estudo de 11/11/2026). Aditivo, como o
+        # anterior.
+        "continuacaoAdmitida": bool(marco) and admite_continuacao(marco.get("cutRule")),
         # **`temOrdem` é o guarda que `apuravel` deixou de ser** (034, `FR-501a`, `FR-502`,
         # `SC-170`). Não é o mesmo campo com outro nome, e a diferença é a razão de este existir:
         #

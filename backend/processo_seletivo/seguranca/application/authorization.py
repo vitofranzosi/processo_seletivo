@@ -58,7 +58,13 @@ def _com_de(nome):
     a permissão"*, que ninguém escreve. A contração é aqui, e não no nome, para que o mesmo `Base`
     sirva às duas posições da frase.
     """
-    return f"da {nome[2:]}" if nome.startswith("a ") else f"de {nome}"
+    if nome.startswith("a "):
+        return f"da {nome[2:]}"
+    # "o papel Formalização" (117) produzia *"depende de o papel Formalização"* (achado 22 do
+    # estudo de 11/11/2026): o masculino pede a mesma contração.
+    if nome.startswith("o "):
+        return f"do {nome[2:]}"
+    return f"de {nome}"
 
 
 def _depende(bases) -> str:

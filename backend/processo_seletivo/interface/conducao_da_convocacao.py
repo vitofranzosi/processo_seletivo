@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 from django.utils import timezone
 
+from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.convocacao.domain import nomes
 
 # --- O passo da chamada (data-model, FR-5011) ---------------------------------------------------
@@ -454,6 +455,9 @@ def indice(
                     ato=bool(pessoas),
                 )
             )
+        sem_chamada = vagas_sem_chamada(leitura)
+        if not pessoas and not impedimento and sem_chamada:
+            perguntas.append(_vaga_sem_chamada(leitura, sem_chamada, pode_convocar=pode_convocar))
     sem_comunicacao = por_estado.get(nomes.CONVOCADO_PRAZO_NAO_INICIADO, 0)
     if sem_comunicacao:
         perguntas.append(
@@ -573,6 +577,61 @@ def indice(
     return perguntas
 
 
+def chamadas_que_nao_ocupam(linhas):
+    """Quantas chamadas sem desfecho ainda não ocupam vaga (133, FR-4547, CV-03).
+
+    O titular conta como ocupado desde a apuração; a chamada para a vaga que vagou, ou para
+    regularizar, ainda não ocupa — ela responde pela vaga, e chamar outra pessoa a dobraria. **É a
+    mesma conta do Centro do Edital** (`andamento.py`), e mora aqui para que as duas telas não
+    divirjam: divergiam, e a convocação dizia "Nenhum ato a praticar" com o Centro mandando chamar a
+    próxima da fila (achado 03 do estudo de 11/11/2026).
+    """
+    return sum(
+        1
+        for linha in linhas
+        if linha["desfecho"] is None
+        and getattr(linha.get("convocacao"), "especie", None) != nomes.VAGA_INICIAL
+    )
+
+
+def vagas_sem_chamada(leitura):
+    """As vagas que a apuração vigente dá como faltando e que nenhuma chamada em aberto cobre."""
+    faltando = (leitura.get("ocupacao") or {}).get("faltando") or 0
+    return max(faltando - chamadas_que_nao_ocupam(leitura["linhas"]), 0)
+
+
+def _vaga_sem_chamada(leitura, quantas, *, pode_convocar):
+    """A vaga reaberta — por desistência, não atendimento, indeferimento — e quem a ocupa a seguir.
+
+    **Com alguém na fila, é ato**: a chamada individual, na seção da fila. **Sem ninguém, não é**:
+    a tela já diz, na seção da fila, se ampliar a faixa é possível; o índice só conta a vaga, para
+    que a frase "Nenhum ato a praticar" não a esconda.
+    """
+    texto = (
+        "vaga a ocupar sem chamada em aberto"
+        if quantas == 1
+        else "vagas a ocupar sem chamada em aberto"
+    )
+    fila = leitura.get("fila") or []
+    if not fila:
+        return Pergunta(
+            "vaga_sem_chamada", quantas, texto, detalhe="não há mais quem chamar na fila"
+        )
+    proxima = fila[0]
+    detalhe = f"a próxima da fila é {proxima['protocolo']} — {proxima['nome']}"
+    if not pode_convocar:
+        detalhe += ", por quem conduz a convocação"
+    return Pergunta(
+        "vaga_sem_chamada",
+        quantas,
+        texto,
+        "fila",
+        trabalho=pode_convocar,
+        detalhe=detalhe,
+        ato=True,
+    )
+
+
 def sem_providencia(perguntas):
     """Se nenhuma pergunta tem ato a praticar **por ninguém** no recorte (FR-5004): só então a
     frase "Nenhum ato a praticar" aparece. O ato de outro papel conta — a auditoria lia a frase
@@ -604,6 +663,9 @@ def contexto_do_recorte(edital, marco_id, lista_id):
         "perfil": (perfil or {}).get("name") or "",
         "marco": (marco or {}).get("name") or "",
         "lista": lista,
+        # Se ampliar a faixa é possível (014, D-011): a tela só manda pedir a faixa seguinte onde o
+        # Edital a publicou (achado 02 do estudo de 11/11/2026). Da mesma leitura, sem consulta.
+        "continuacao_admitida": faixa.admite_continuacao((marco or {}).get("cutRule")),
     }
 
 
