@@ -1,4 +1,4 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Conferir emissão — {{ marco.name }}{% endblock %}
 {% comment %}
 A trilha volta **ao recorte que se está conferindo** (034, FR-497). Sem a `?lista=`, ela leva à
@@ -6,8 +6,10 @@ ampla concorrência: quem sobe a trilha de uma conferência de PPI cai noutro re
 abre é legítima — o que torna o desvio silencioso.
 {% endcomment %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{{ url_do_recorte }}">{{ marco.name }}</a> › <span aria-current="page">Conferir</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/conducao-do-recorte.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>Confira antes de emitir</h1>
+<div class="conducao">
 <p class="sub">{{ marco.name }} — {{ perfil.name }}, Edital {{ edital.number }}/{{ edital.year }}</p>
 
 {% comment %}
@@ -19,9 +21,9 @@ Esta tela **não repete a ordem**: ela está na anterior, inteira, e reimprimi-l
 começar de novo em vez de terminar. O que ela declara é o que o clique constitui — quantas posições,
 quantas ficam sem, o que este ato sucede e quais decisões ele executa.
 {% endcomment %}
-<p class="ajuda">O sistema recalcula sob trava e grava um <strong>ato imutável</strong>: esta tela
-  não envia posição, pontuação nem desempate. Corrigir uma ordem emitida é sucedê-la com motivo, e
-  a emitida permanece registrada.</p>
+<p class="ajuda">Emitir grava um <strong>ato imutável</strong>, com a ordem que o sistema recalcula no
+  momento da emissão: esta tela não envia posição, pontuação nem desempate. Corrigir depois é emitir
+  uma ordem sucessora, com motivo, e esta continua registrada.</p>
 
 {% comment %}
 **Recompor a assinatura não é esconder a mudança.** O alcance abaixo é o cálculo de agora, e não o
@@ -65,16 +67,27 @@ precisa ler isso aqui. A emissão continua possível: recusá-la é decisão de 
 </section>
 {% endif %}
 
+{% comment %}
+**O recorte entra no bloco, e as contagens viram números** (polimento de 11/11). O recorte era um
+parágrafo solto entre o bloco e o botão, e as contagens eram uma lista de definições sem estilo, com
+o valor recuado sob o rótulo — "9" numa linha e "nenhum" noutra, duas formas para o mesmo dado.
+Os grupos sem posição continuam inteiros, com os protocolos: são o que a pessoa confere.
+{% endcomment %}
 <section aria-labelledby="alcance" class="consequencias">
   <h2 id="alcance">O que será gravado</h2>
-  <dl class="conferencia">
-    <dt>Participantes com posição</dt>
-    <dd><strong>{{ quantas_com_posicao }}</strong></dd>
-    <dt>Participantes sem posição</dt>
+  {% comment %}
+  **A confirmação nomeia o recorte** (034, FR-490). Esta tela declara o alcance do clique, e o alcance
+  mudou: um marco com cotas tem três ordens, e confirmar sem saber qual é confirmar no escuro.
+  {% endcomment %}
+  {% if recorte_atual %}<p class="recorte-do-ato">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>{% endif %}
+  <dl class="ficha-do-ato">
+    <dt>Participantes</dt>
     {% comment %} Agrupados pelo motivo (126, FR-4037): a contagem sozinha não dizia por que ficam de fora. {% endcomment %}
-    <dd>{% if sem_posicao %}<strong>{{ sem_posicao|length }}</strong>
-      <ul>{% for grupo in conferencia.grupos %}<li>{{ grupo.protocolos|length }} — {% if grupo.consequencia %}{{ grupo.consequencia|lower }}: {% endif %}{{ grupo.motivo|default:"sem motivo registrado" }} ({{ grupo.protocolos|join:", " }})</li>{% endfor %}</ul>
-      {% else %}nenhum{% endif %}</dd>
+    <dd><ul class="resumo" aria-label="Participantes que esta ordem grava">
+        <li><strong>{{ quantas_com_posicao }}</strong>com posição</li>
+        <li><strong>{{ sem_posicao|length }}</strong>sem posição</li>
+      </ul>
+      {% if sem_posicao %}<ul>{% for grupo in conferencia.grupos %}<li><strong>{{ grupo.protocolos|length }}</strong> — {% if grupo.consequencia %}{{ grupo.consequencia|lower }}: {% endif %}{{ grupo.motivo|default:"sem motivo registrado" }} <span class="protocolos">({{ grupo.protocolos|join:", " }})</span></li>{% endfor %}</ul>{% endif %}</dd>
     <dt>Este ato</dt>
     {% comment %}
     **"deste recorte", e não "deste marco"** (034, FR-490). O vigente passou a ser lido por recorte:
@@ -83,25 +96,18 @@ precisa ler isso aqui. A emissão continua possível: recusá-la é decisão de 
     Afirmação falsa na tela que a pessoa lê para decidir.
     {% endcomment %}
     <dd>{% if ato_vigente %}sucede o ato de {{ ato_vigente.emitido_em|date:"d/m/Y H:i" }}{% else %}é o primeiro ato deste recorte{% endif %}</dd>
-    <dt>Decisões de recurso executadas</dt>
+    <dt>Decisões de recurso</dt>
     {% comment %}
     Citar é declarar que este ato executa aquela decisão, e a citação publicada é o que prova o
     cumprimento (FR-089). Quem não citou nenhuma lê a ausência aqui: emitir sem citar deixa a
     providência pendente, e descobrir isso depois custa outro ato.
     {% endcomment %}
-    <dd>{% if decisoes %}
+    <dd>{% if decisoes %}executa {{ decisoes|length }}:
       <ul>{% for decisao in decisoes %}<li>Recurso {{ decisao.recurso.protocolo }} — {{ decisao.motivacao }}</li>{% endfor %}</ul>
-      {% else %}<span class="ausente">nenhuma — as providências pendentes deste marco continuam pendentes</span>{% endif %}</dd>
+      {% else %}<span class="ausente">nenhuma citada — as providências pendentes deste marco continuam pendentes</span>{% endif %}</dd>
   </dl>
 </section>
 
-{% if recorte_atual %}
-{% comment %}
-**A confirmação nomeia o recorte** (034, FR-490). Esta tela declara o alcance do clique, e o alcance
-mudou: um marco com cotas tem três ordens, e confirmar sem saber qual é confirmar no escuro.
-{% endcomment %}
-<p class="sub">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>
-{% endif %}
 <form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
   {% csrf_token %}
   <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
@@ -139,4 +145,5 @@ mudou: um marco com cotas tem três ordens, e confirmar sem saber qual é confir
     <a href="{{ url_do_recorte }}" class="acao">Cancelar e voltar</a>
   </p>
 </form>
+</div>
 {% endblock %}

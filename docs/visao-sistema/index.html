@@ -1350,7 +1350,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <ol>
         <li><span class="rotulo-ui">Cortar o marco…</span> → <span class="rotulo-ui">Emitir 3 cortes</span>. Ampla: 28 + 10 = 38 na faixa (mais os empatados na última posição, pela regra escolhida).</li>
         <li><span class="rotulo-ui">Apurar a ocupação do marco…</span> → publicadas 28, efetivas 28, ocupadas 0, <strong>a ocupar 28</strong>. Se o PcD não preencher e a reversão foi declarada, a apuração da cota cede o saldo para a ampla (e a ampla precisa ser apurada de novo).</li>
-        <li>Na <em>Convocação</em> de cada recorte, seção “Convocar os titulares num ato só”: a lista, quem fica de fora e por quê, o fundamento derivado, o vencimento (digitado ou “do Cronograma publicado”) → <span class="rotulo-ui">Conferir e convocar as 28</span>, que abre a página <em>Confira antes de convocar</em> (quem será convocado, o texto da mensagem, o prazo e quem fica de fora); o ato é o botão dela, <span class="rotulo-ui">Convocar as 28 e enviar 28 mensagens</span>. Por mensagem individual, o e-mail sai no ato; por publicação, registre depois onde a lista saiu.</li>
+        <li>Na <em>Convocação</em> de cada recorte, seção “Convocar os titulares num ato só”: a lista, quem fica de fora e por quê, o fundamento derivado, o vencimento (digitado ou “do Cronograma publicado”) → <span class="rotulo-ui">Conferir antes de convocar as 28</span>, que abre a página <em>Confira antes de convocar</em> (quem será convocado, o texto da mensagem, o prazo e quem fica de fora); o ato é o botão dela, <span class="rotulo-ui">Convocar as 28 e enviar 28 mensagens</span>. Por mensagem individual, o e-mail sai no ato; por publicação, registre depois onde a lista saiu.</li>
         <li>Registre os desfechos (Aceite, Desistência expressa, Não atendimento…). Os vencidos sem resposta: <span class="rotulo-ui">Registrar o não atendimento das N</span>. Cada desfecho de exclusão abre vaga; a apuração seguinte é emitida no mesmo ato quando possível, e o próximo da fila aparece “para vaga que vagou”.</li>
         <li>Se o Edital pede o Requerimento na convocação, o convocado o preenche no portal. Por fim, o Exportador gera o arquivo: <span class="rotulo-ui">Exportar para matrícula</span> → população → <span class="rotulo-ui">Ver o que sairá vazio</span> → <span class="rotulo-ui">Baixar o arquivo</span>.</li>
       </ol>
@@ -7526,7 +7526,7 @@ Depois das Etapas consolidadas:
         <p class="frase">A ordem de um recorte de um marco, emitida por alguém, sob uma versão do Edital, e que não se altera nunca mais.</p></header>
       <dl>
         <dt>O que representa</dt><dd>A classificação oficial daquele recorte: cada participante considerado com a sua posição — ou sem posição, com o motivo —, a pontuação combinada, o valor usado em cada critério de desempate e qual critério o separou.</dd>
-        <dt>Quando nasce</dt><dd>Quando alguém clica <span class="rotulo-ui">Emitir ordem</span> e depois confirma <span class="rotulo-ui">Emitir a ordem</span> — ou pelo gesto <span class="rotulo-ui">Ordenar o marco…</span>. O botão não é oferecido, e o comando recusa, enquanto nenhuma inscrição do recorte tem resultado numa Etapa que o marco enumera (128, <a href="#ordem-sem-resultado">ver</a>). No marco de sorteio, nasce do <span class="rotulo-ui">Realizar o sorteio</span>, com origem “Constituído por sorteio”.</dd>
+        <dt>Quando nasce</dt><dd>Quando alguém clica <span class="rotulo-ui">Conferir antes de emitir</span> e depois confirma <span class="rotulo-ui">Emitir a ordem</span> — ou pelo gesto <span class="rotulo-ui">Ordenar o marco…</span>. O botão não é oferecido, e o comando recusa, enquanto nenhuma inscrição do recorte tem resultado numa Etapa que o marco enumera (128, <a href="#ordem-sem-resultado">ver</a>). No marco de sorteio, nasce do <span class="rotulo-ui">Realizar o sorteio</span>, com origem “Constituído por sorteio”.</dd>
         <dt>Quem cria</dt><dd>Quem gere a comissão (<code>comissao:gerir</code>) ou preside <em>aquele</em> Processo. Publicar é de outra autoridade.</dd>
         <dt>Efeito</dt><dd>Passa a existir uma ordem oficial daquele recorte, que pode ser <a href="#resultados">publicada</a> e <a href="#corte">cortada</a>. Emitir não publica nada e não chama ninguém.</dd>
         <dt>Altera estado?</dt><dd>Não altera nenhum estado de inscrição. Não existe coluna de estado depois de “submetida”: posição, faixa, titular e ocupante são leituras dos atos. O próprio ato é imutável — corrigir é emitir um <strong>sucessor</strong>, com motivo.</dd>
@@ -7586,7 +7586,7 @@ Marco ─ pontuação ─► [Emitir ordem] ──┐
     <h3>Emitir é um ato, e ele congela tudo</h3>
     <p>
       Abrir a tela da ordem <strong>não grava nada</strong>: ela calcula a proposta daquele recorte e
-      a mostra ao lado do ato vigente. <span class="rotulo-ui">Emitir ordem</span> leva a
+      a mostra ao lado do ato vigente. <span class="rotulo-ui">Conferir antes de emitir</span> leva a
       <span class="rotulo-ui">Confira antes de emitir</span>, que diz quantos recebem posição, quantos
       ficam sem, o que o ato sucede e quais decisões de recurso ele executa. A confirmação carrega uma
       assinatura do que foi lido: se o cálculo mudou no meio, a emissão é recusada
@@ -9810,7 +9810,7 @@ Em paralelo, se o Edital pede:
       que ninguém tivesse lido o texto.
     </p>
     <p>
-      Agora o botão se chama <span class="rotulo-ui">Conferir e convocar as N</span> e <strong>só abre uma conferência</strong>,
+      Agora o botão se chama <span class="rotulo-ui">Conferir e convocar as N</span> (desde 11/11, <span class="rotulo-ui">Conferir antes de convocar as N</span>) e <strong>só abre uma conferência</strong>,
       sempre, com ou sem complemento. A página, <span class="rotulo-ui">Confira antes de convocar</span>, mostra quem será
       convocado (protocolo e nome, na ordem da fila, <em>“para vaga inicial”</em>), o fundamento como o candidato o lê no
       portal, o assunto e o texto da mensagem — compostos pela mesma função do envio, com o link indicado como
@@ -9882,7 +9882,7 @@ Em paralelo, se o Edital pede:
         <em>Pessoas convocadas</em>, <em>Aguardando resposta</em>, <em>Com desfecho registrado</em>, <em>Aptas para formalização</em>. O recolhido <em>“O que é a ocupação?”</em> explica
         que a apuração conta cada titular habilitado como ocupante desde que é emitida, antes de qualquer chamada, e a tela diz que <em>considerada ocupada na apuração não quer dizer
         convocada, nem apta para formalização</em>. É o que o <a href="#ocupacao">painel da Ocupação</a> chama de <em>Ocupadas</em> e <em>A ocupar</em>: os mesmos números, com o nome completo.</li>
-      <li><strong>Três áreas, sem abas.</strong> <em>“Convocar”</em> (convocar os titulares num ato só, com o <span class="rotulo-ui">Conferir e convocar as N</span> da 140, e as comunicações que ainda não saíram);
+      <li><strong>Três áreas, sem abas.</strong> <em>“Convocar”</em> (convocar os titulares num ato só, com o <span class="rotulo-ui">Conferir antes de convocar as N</span> da 140, e as comunicações que ainda não saíram);
         <em>“Acompanhar e conferir”</em> (o não atendimento dos vencidos, o aviso de pendência, o aviso dos convocados de uma chamada publicada e as chamadas praticadas); e
         <em>“Fila, suplentes e regularização”</em>, depois das chamadas, onde ficam <span class="rotulo-ui">Chamar uma pessoa da fila</span> e <span class="rotulo-ui">Chamar para regularizar</span>. Os formulários são os de
         antes. O aviso de pendência passou a vir <strong>antes</strong> do aviso dos convocados de uma chamada publicada.</li>
@@ -11976,9 +11976,9 @@ ENVIADO ──(chamada em aberto + algo a corrigir)──▶ novo RASCUNHO que c
       <table>
         <thead><tr><th>Leitura</th><th>Quando</th><th>O que se faz</th></tr></thead>
         <tbody>
-          <tr><td>falta</td><td>o recorte não tem ato</td><td>“Emitir ordem”: gestão da comissão, no marco ou no recorte, enquanto algum resultado numa Etapa enumerada existir; sem nenhum, a emissão é recusada (128)</td></tr>
+          <tr><td>falta</td><td>o recorte não tem ato</td><td>“Conferir antes de emitir”: gestão da comissão, no marco ou no recorte, enquanto algum resultado numa Etapa enumerada existir; sem nenhum, a emissão é recusada (128)</td></tr>
           <tr><td>vigente</td><td>ninguém o sucedeu, e nada mudou</td><td>publicar, cortar</td></tr>
-          <tr><td>obsoleto</td><td>a comparação com o agora encontra diferença: participante reingressou, resultado superado por recurso, regra retificada</td><td>“Emitir ordem” sucessor, com <span class="rotulo-ui">Motivo da sucessão</span> e as decisões que ele executa</td></tr>
+          <tr><td>obsoleto</td><td>a comparação com o agora encontra diferença: participante reingressou, resultado superado por recurso, regra retificada</td><td>“Conferir antes de emitir” no sucessor, com <span class="rotulo-ui">Motivo da sucessão</span> e as decisões que ele executa</td></tr>
           <tr><td>sucedido</td><td>tem sucessor</td><td>continua legível pelo endereço histórico</td></tr>
         </tbody>
       </table>

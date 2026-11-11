@@ -110,7 +110,7 @@ def test_os_niveis_do_edital_tem_uma_fonte_so():
 # desfazem estão aqui com o peso que já tinham (D-004): uma mudança de desenho em qualquer um deles
 # é decisão de governança, e tem de passar por este arquivo, à vista.
 BOTOES = {
-    "ordenacao.html": [("botao", "Emitir ordem")],
+    "ordenacao.html": [("botao", "Conferir antes de emitir")],
     "ordenacao_confirmar.html": [("botao perigoso", "Emitir a ordem")],
     "ato_ordenacao.html": [],
     # A `142` mudou a tela do sorteio de propósito: os rótulos dizem a tarefa ("Fixar os N
@@ -150,7 +150,7 @@ BOTOES = {
         # `134`, "Convocar as 3" praticou e enviou três mensagens num clique.
         (
             "botao",
-            "Conferir e convocar "
+            "Conferir antes de convocar "
             '{{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}',
         ),
         (
