@@ -29,9 +29,10 @@
    de lado (UX-373). */
 .pessoas-do-recorte a{white-space:normal}
 
-/* A situação desta convocação (FR-5021): a mesma borda de tom do cartão da chamada. */
+/* A situação desta convocação (FR-5021): a mesma borda de tom do cartão da chamada, e a largura das
+   outras caixas da gestão — a página inteira, e não 56rem. */
 .situacao-da-convocacao{border:1px solid var(--borda);border-left:4px solid var(--borda);
-  border-radius:4px;padding:.75rem 1rem;margin:0 0 1.25rem;background:var(--branco);max-width:56rem}
+  border-radius:4px;padding:.75rem 1rem;margin:0 0 1.25rem;background:var(--branco)}
 .situacao-da-convocacao h2{margin:0 0 .5rem;font-size:1.0625rem}
 .situacao-da-convocacao.tom-acao{border-left-color:var(--verde)}
 .situacao-da-convocacao.tom-alerta{border-left-color:var(--vermelho)}
