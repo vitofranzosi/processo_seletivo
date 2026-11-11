@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft — três questões para o usuário (fim do documento)
+**Status**: Draft — as três questões respondidas pelo usuário em 11/11/2026 (D-002, D-010, D-011)
 
 **Uma regra nova, e só uma.** Com o prazo em curso e documento ainda não conforme, o indeferimento
 passa a exigir a ciência de quem registra, e o comando a confere (FR-5805). O resto é **quando e com
@@ -99,8 +99,10 @@ irreversíveis protegidos de forma diferente dos vizinhos, ou oferecidos onde n�
 
 Quem conduz a convocação vê o cartão de uma chamada. O atalho "Indeferir pelas pendências de
 documento" aparece só quando a comissão registrou pendência num documento pedido, ou quando o prazo
-venceu sem que um obrigatório fosse apresentado. Documento a apresentar com o prazo correndo, ou
-enviado e ainda não conferido, não faz o atalho aparecer.
+venceu sem que um obrigatório fosse apresentado, tendo a pessoa apresentado ao menos um documento.
+Documento a apresentar com o prazo correndo, ou enviado e ainda não conferido, não faz o atalho
+aparecer. Com o prazo vencido e nada apresentado, o cartão orienta para o não atendimento à
+convocação.
 
 **Why this priority**: é o achado de prioridade alta do estudo, e o único dos três em que a tela
 convida a um ato contra a própria leitura dela.
@@ -119,11 +121,14 @@ fundamento citando só o documento pendente e o motivo.
 3. **Given** uma chamada com um documento pendente e outro enviado ainda sem conferência, **When**
    quem conduz abre o atalho, **Then** o fundamento cita só o pendente, e o formulário diz que o
    outro aguarda conferência e que o indeferimento o deixa sem conferir.
-4. **Given** uma chamada com o vencimento decorrido e um obrigatório nunca apresentado, **When**
-   quem conduz abre o cartão, **Then** o atalho aparece, e o fundamento diz que o documento não foi
-   apresentado no prazo.
+4. **Given** uma chamada com o vencimento decorrido, um documento apresentado e um obrigatório nunca
+   apresentado, **When** quem conduz abre o cartão, **Then** o atalho aparece, e o fundamento diz que
+   o documento não foi apresentado no prazo.
 5. **Given** uma chamada com documentos apenas enviados e ainda não conferidos, **When** quem conduz
    abre o cartão, **Then** o atalho não aparece; o passo do cartão continua sendo conferir.
+6. **Given** uma chamada com o vencimento decorrido e nenhum documento apresentado, **When** quem
+   conduz abre o cartão, **Then** o atalho não aparece, o cartão diz que nada foi apresentado no prazo
+   e aponta o desfecho "Não atendimento à convocação", e o indeferimento continua no desfecho geral.
 
 ---
 
@@ -258,7 +263,7 @@ vencimento e "Cancelamento de matrícula por inércia" com a exigência do atest
 
 O gesto "Atestar fato externo" — que só serve de insumo ao cancelamento por inércia — aparece só nas
 chamadas cuja espécie admite a inércia. O vocabulário dos fatos, que hoje é de curso a distância,
-espera a questão 2.
+continua o de hoje nesta entrega (D-010).
 
 **Why this priority**: é a menor parte do achado 12; o atestado não decide nada sozinho, mas oferecê-lo
 onde a inércia não cabe ensina um caminho que não leva a desfecho nenhum.
@@ -291,8 +296,12 @@ para vaga inicial e encontrá-lo.
   aceita se vier, e não recusa por ela.
 - **Convocação corrigida entre a abertura e o clique** (`120`). O comando já recusa desfecho em
   convocação sucedida; a ciência não muda isso.
-- **Nada enviado e o prazo vencido.** O atalho aparece (FR-5800), e o desfecho geral oferece também o
-  não atendimento. Qual dos dois cabe é a questão 3.
+- **Nada enviado e o prazo vencido.** O atalho não aparece, e o cartão orienta para o não
+  atendimento à convocação (FR-5809, D-011). O indeferimento continua no desfecho geral, para quem
+  tiver outro fundamento.
+- **Só um facultativo apresentado, e o prazo vencido sem os obrigatórios.** Houve apresentação: o
+  atalho aparece pelos obrigatórios não apresentados (FR-5800). A pessoa respondeu à convocação, e o
+  que falta é documento.
 - **Chamada individual sem ninguém na fila.** O gesto não aparece, como hoje; a conferência pedida
   diretamente recusa com a razão do comando.
 - **A conferência da chamada recarregada.** Pede a prévia de novo: nada é gravado, e a página mostra
@@ -318,7 +327,8 @@ para vaga inicial e encontrá-lo.
 - **FR-5800**: O atalho de indeferimento pelas pendências MUST ser oferecido só quando a chamada tem
   ao menos um documento pedido em uma destas situações:
   - conferido como **pendente**, com o motivo registrado pela comissão;
-  - **obrigatório não apresentado**, com o vencimento informado já decorrido.
+  - **obrigatório não apresentado**, com o vencimento informado já decorrido e com ao menos um
+    documento apresentado pela pessoa nesta chamada (D-011).
 
   Documento a apresentar com o prazo em curso, ou apresentado e ainda sem conferência, MUST NOT, por
   si, fazer o atalho aparecer.
@@ -346,6 +356,11 @@ para vaga inicial e encontrá-lo.
 - **FR-5808**: Nenhum outro desfecho MUST passar a depender do estado documental ou do prazo por esta
   spec. O indeferimento continua possível em qualquer estado documental (FR-3593 da `115`); o que
   muda é a ciência. Nada nasce do decurso (FR-274 da `019`).
+- **FR-5809**: Com o vencimento informado decorrido e nenhum documento apresentado pela pessoa nesta
+  chamada, o atalho MUST NOT aparecer, e o cartão MUST dizer que nada foi apresentado no prazo e
+  apontar o desfecho "Não atendimento à convocação" (D-011). O documento aproveitado da inscrição não
+  conta como apresentado nesta chamada. O indeferimento MUST continuar disponível pelo desfecho
+  geral, com as regras desta spec.
 
 #### A chamada individual e a chamada para regularizar
 
@@ -434,8 +449,9 @@ para vaga inicial e encontrá-lo.
 - **FR-5840**: O gesto "Atestar fato externo" MUST aparecer só nas chamadas cuja espécie admite o
   cancelamento por inércia; nas chamadas para regularizar, MUST NOT aparecer.
 - **FR-5841**: Os rótulos das espécies de desfecho e dos fatos do atestado MUST continuar os de hoje
-  até a resposta da questão 2. Esta spec MUST NOT mudar rótulo de espécie já registrada, nem texto de
-  documento publicado.
+  nesta entrega (D-010). Esta spec MUST NOT mudar rótulo de espécie já registrada, nem texto de
+  documento publicado, e MUST NOT inferir a natureza da seleção de dado nenhum — em particular, da
+  declaração do Requerimento de Matrícula.
 
 #### Comum
 
@@ -462,6 +478,9 @@ para vaga inicial e encontrá-lo.
   título "Ainda não cabem nesta chamada".
 - **UX-534**: A recusa numa conferência MUST dizer a razão com as palavras do comando e oferecer a
   volta à tela, sem formulário.
+- **UX-535**: A orientação da FR-5809 MUST ocupar o lugar do passo do cartão, e não o de uma ação:
+  por exemplo, *"O prazo venceu em 11/12/2026 17:44 sem nenhum documento apresentado. O desfecho que
+  descreve isso é o não atendimento à convocação."*, com o caminho ao formulário do desfecho.
 
 ### Key Entities
 
@@ -497,13 +516,16 @@ do cálculo do corte, e a leitura documental da `115`.
   375 px sem rolagem horizontal e sem violação da política de conteúdo.
 - **SC-1909**: Quem não pode praticar um gesto hoje continua recusado, na conferência e na confirmação,
   com a mesma resposta.
+- **SC-1910**: Em 100% das chamadas com o vencimento decorrido e nenhum documento apresentado, o
+  atalho do indeferimento não aparece e o cartão aponta o não atendimento; com ao menos um apresentado
+  e um obrigatório faltando, o atalho aparece.
 
 ## Decisões
 
 ### D-001 — O atalho segue a pendência, e não o que impede o aceite
 
 *Proposta.* "Pendência" no atalho é o documento conferido como pendente, com motivo, ou o obrigatório
-não apresentado depois do vencimento (FR-5800). Hoje a tela usa a lista do que impede o aceite, que
+não apresentado depois do vencimento por quem apresentou ao menos um documento (FR-5800, D-011). Hoje a tela usa a lista do que impede o aceite, que
 inclui o documento ainda no prazo e o enviado à espera da comissão.
 
 **Por quê**: as duas listas respondem a perguntas diferentes. "O que impede o aceite?" inclui o que
@@ -514,8 +536,9 @@ prazo em curso, o atalho é útil, e a FR-5803 protege o caso.
 
 ### D-002 — Avisar e pedir ciência, nos dois caminhos
 
-*Proposta, sujeita à questão 1.* Com o prazo em curso e documento não conforme, o indeferimento pede
-a ciência — pelo atalho e pelo desfecho geral —, e não é bloqueado.
+**Decisão do usuário (11/11/2026), questão 1, opção A.** Com o prazo em curso e documento não
+conforme, o indeferimento pede a ciência explícita — pelo atalho e pelo desfecho geral —, conferida
+pelo comando, e não é bloqueado: pode haver fundamento para decidir antes do vencimento.
 
 **Por quê**: a FR-3593 da `115` diz que os demais desfechos não dependem do estado documental, e a
 decisão "Nada automático" da mesma spec deixa o desfecho a quem conduz. Há indeferimento legítimo no
@@ -583,51 +606,53 @@ divirjam.
 ### D-009 — O atestado segue a inércia
 
 *Proposta.* O gesto do atestado aparece só onde a inércia é admitida (FR-5840). Os fatos oferecidos
-não mudam até a questão 2.
+não mudam nesta entrega (D-010).
 
 **Por quê**: o atestado não tem outro uso no sistema senão fundamentar a inércia. Filtrar os fatos por
-natureza da seleção exige um eixo que o sistema não tem (questão 2).
+natureza da seleção exige um eixo que o sistema não tem, e fica para spec própria (D-010).
 
-## Questões para o usuário
+### D-010 — Os rótulos ficam; o vocabulário por natureza é spec própria
 
-### Questão 1 — Com o prazo em curso, o indeferimento é avisado ou bloqueado?
+**Decisão do usuário (11/11/2026), questão 2, opção A.** Os rótulos das espécies de desfecho e dos
+fatos do atestado continuam os de hoje nesta entrega (FR-5841). O vocabulário por natureza da seleção
+fica para uma spec própria, e **sem** inferir a natureza pela existência de Requerimento de Matrícula.
 
-**Contexto.** A FR-3593 da `115` diz que nenhum desfecho além do aceite e da regularização depende do
-estado documental, e a decisão "Nada automático" da mesma spec deixa o desfecho a quem conduz. O
-estudo pede que a tela diga que o candidato ainda pode corrigir e peça confirmação explícita.
+**Por quê**: o sistema não tem natureza do Processo — a `029` decidiu não criá-la —, e inventá-la
+aqui, ou deduzi-la da declaração do requerimento, mudaria o vocabulário de todos os certames por um
+sinal que não foi feito para isso. O filtro por estado desta spec já tira do seletor o que a chamada
+não admite.
 
-| Opção | Resposta | Implicações |
-|-------|----------|-------------|
-| A *(proposta, D-002)* | Avisar e exigir a ciência, pelo atalho e pelo desfecho geral; o comando confere a ciência | A regra da `115` fica; o indeferimento no prazo continua possível e passa a ser deliberado |
-| B | Esconder o atalho até o vencimento, e avisar com ciência no desfecho geral | Com prazo em curso, indeferir pelas pendências exige o caminho longo, sem o fundamento pré-redigido |
-| C | Recusar todo indeferimento com documento não conforme até o vencimento | Revê a FR-3593 da `115`; impede também o indeferimento no prazo por motivo que não é documental |
+### D-011 — Prazo vencido sem nada apresentado aponta o não atendimento
 
-### Questão 2 — O vocabulário dos desfechos e dos atestados muda com a natureza da seleção?
+**Decisão do usuário (11/11/2026), questão 3, opção B.** Com o vencimento decorrido e nenhum
+documento apresentado, o atalho de indeferimento não aparece, e o cartão orienta para "Não
+atendimento à convocação" (FR-5809). Com apresentação parcial, o atalho aparece pelos obrigatórios
+não apresentados e pelas pendências (FR-5800). O indeferimento continua disponível pelo desfecho
+geral.
 
-**Contexto.** "Cancelamento de matrícula por inércia", "Não acessou o ambiente" e "Ausente na
-primeira semana" são de curso; numa seleção de professor, bolsista ou servidor, não se aplicam. O
-sistema **não tem natureza do Processo**: a `029` decidiu não criá-la, por ser um eixo que nenhuma
-outra feature consumia, e confinou o Requerimento de Matrícula à declaração do Edital. A espécie de
-desfecho registrada aparece ao candidato no portal.
+**Por quê**: o não atendimento é o desfecho que a `019` desenhou para quem foi chamado e não
+respondeu; o indeferimento pelas pendências descreve quem respondeu com falta. A distinção fica na
+tela, sem tirar de quem conduz o caminho do desfecho geral.
 
-| Opção | Resposta | Implicações |
-|-------|----------|-------------|
-| A *(proposta, FR-5841)* | Manter os rótulos; só o filtro por estado desta spec | Nenhum eixo novo; a seleção de professor continua lendo "matrícula" na nota da inércia |
-| B | Rótulos neutros para todos ("Cancelamento por inércia"; fatos genéricos) | Muda o texto de desfechos já registrados onde a espécie é exibida; precisa de cuidado com documento publicado |
-| C | Criar a natureza da seleção no Processo, com vocabulário por natureza | Revê a decisão da `029`; spec própria, com a natureza declarada na criação do Processo |
-| D | Usar a declaração do Requerimento de Matrícula do Edital como sinal de seleção de curso | Inferência: Edital de curso que não declara requerimento perderia o vocabulário de matrícula |
+*Proposta, na leitura da decisão.* "Apresentado" é o que a pessoa enviou **nesta chamada**. O
+documento aproveitado da inscrição não conta: ele não é resposta à convocação, e contá-lo faria o
+atalho aparecer para quem nunca respondeu.
 
-### Questão 3 — Prazo vencido sem nada apresentado: o atalho de indeferimento aparece?
+## Questões respondidas
 
-**Contexto.** Depois do vencimento, a pessoa que não apresentou um obrigatório não pode mais
-apresentá-lo (FR-3578 da `115`). Se ela apresentou parte, o indeferimento pelas pendências descreve o
-que aconteceu. Se não apresentou nada, o não atendimento à convocação também descreve — e é o
-desfecho que a `019` desenhou para "foi chamada e não respondeu".
+As três questões foram respondidas pelo usuário em 11/11/2026, e as respostas estão nas decisões.
 
-| Opção | Resposta | Implicações |
-|-------|----------|-------------|
-| A *(proposta, FR-5800)* | Aparece sempre que há obrigatório não apresentado após o vencimento | A comissão escolhe entre indeferimento e não atendimento pelo desfecho geral |
-| B | Aparece só se a pessoa apresentou ao menos um documento; sem nada apresentado, a tela aponta o não atendimento | Distingue "respondeu com falta" de "não respondeu"; o indeferimento continua possível pelo desfecho geral |
+- **Questão 1 — Com o prazo em curso, o indeferimento é avisado ou bloqueado?** Avisado, com ciência
+  explícita pelos dois caminhos, conferida pelo comando (D-002). Descartados: esconder o atalho até o
+  vencimento; recusar todo indeferimento com documento não conforme até o vencimento, que reveria a
+  FR-3593 da `115`.
+- **Questão 2 — O vocabulário muda com a natureza da seleção?** Não nesta entrega; fica para spec
+  própria, sem inferência pelo Requerimento de Matrícula (D-010). Descartados nesta entrega: rótulos
+  neutros para todos; criar a natureza da seleção no Processo; deduzi-la da declaração do
+  requerimento.
+- **Questão 3 — Prazo vencido sem nada apresentado: o atalho aparece?** Não; o cartão orienta para o
+  não atendimento, e o atalho fica para a apresentação parcial (D-011). Descartado: o atalho sempre
+  que houver obrigatório não apresentado após o vencimento.
 
 ## Achados registrados
 
@@ -655,7 +680,7 @@ Encontrados ao escrever esta spec, fora do escopo dela. Governança é do usuár
 ## Fora do escopo
 
 - A correção da convocação (`120`), que tem prévia assinada própria.
-- A mudança de rótulos por natureza da seleção, até a resposta da questão 2.
+- A mudança de rótulos por natureza da seleção, que fica para spec própria (D-010).
 - O gesto da inércia de quem aceitou (achado registrado).
 - A conferência de texto do desfecho além do aviso da FR-5807.
 - Qualquer mudança de quem é chamado, da espécie, da fila, do fundamento, da mensagem, da faixa ou

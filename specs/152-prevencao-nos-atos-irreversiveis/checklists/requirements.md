@@ -31,15 +31,13 @@
 
 ## Notes
 
-- **Sem marcadores, mas com três questões abertas.** Governança é do usuário: as decisões que o
-  pedido reservou a ele — bloquear ou avisar o indeferimento no prazo, o vocabulário por natureza da
-  seleção — e a que apareceu ao escrever — o atalho com nada apresentado após o vencimento — estão na
-  seção "Questões para o usuário", cada uma com a proposta que a spec adota enquanto não houver
-  resposta (D-002, FR-5841, FR-5800). A spec é planejável com as propostas; a resposta muda poucos
-  requisitos, nomeados em cada questão.
+- **Sem marcadores; as três questões foram respondidas pelo usuário em 11/11/2026.** Aviso com
+  ciência pelos dois caminhos (D-002), rótulos mantidos com o vocabulário por natureza em spec
+  própria (D-010), e prazo vencido sem nada apresentado apontando o não atendimento (D-011, FR-5809).
+  A leitura de "apresentado" como o que a pessoa enviou nesta chamada é proposta, registrada na D-011.
 - **Detalhe de implementação deliberadamente ausente.** Onde a ciência do indeferimento é gravada
   (FR-5806) e como a conferência da chamada individual reaproveita a do lote (D-004) são do plano.
   As citações ao comando, à conferência do cálculo e à chave de idempotência descrevem garantias que
   já existem, e não mecanismo novo.
-- **Rótulos de tela** (UX-530 a UX-534) seguem os do #467 e do #468, que estão na `main`.
-- `/speckit-clarify` pode ser usado para levar as três questões ao usuário antes do plano.
+- **Rótulos de tela** (UX-530 a UX-535) seguem os do #467 e do #468, que estão na `main`.
+- Pronta para `/speckit-plan`.
