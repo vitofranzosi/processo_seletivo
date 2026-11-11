@@ -1,11 +1,11 @@
-"""As leituras da publicação de convocados: a seção da seleção, a página e o candidato (148).
+"""As leituras da publicação de convocados: a seção da seleção, a página e o candidato (149).
 
-**Tudo o que o ato afirma sai dos bytes congelados** (FR-5419, D-005). O que se lê do banco, fora
+**Tudo o que o ato afirma sai dos bytes congelados** (FR-5719, D-005). O que se lê do banco, fora
 deles, é só o que acontece **depois** do ato e não o altera: que uma convocação dele foi corrigida
-numa publicação posterior (FR-5420). Essa leitura vai ao lado do conteúdo, nunca dentro dele, e o
+numa publicação posterior (FR-5720). Essa leitura vai ao lado do conteúdo, nunca dentro dele, e o
 documento PDF não a tem.
 
-**Consultas fixas** (FR-5436): a seção lê as publicações do Edital numa consulta; a página, o ato,
+**Consultas fixas** (FR-5736): a seção lê as publicações do Edital numa consulta; a página, o ato,
 os vínculos dele, os posteriores e a cadeia do Edital — uma cada, qualquer que seja o número de
 pessoas.
 """
@@ -19,7 +19,7 @@ from processo_seletivo.convocacao.models import (
     PublicacaoDeConvocados,
 )
 
-#: Quantas publicações a seção mostra antes de recolher as anteriores (FR-5421).
+#: Quantas publicações a seção mostra antes de recolher as anteriores (FR-5721).
 A_VISTA = 3
 
 
@@ -56,10 +56,10 @@ def _resumo(ato):
 
 
 def publicacoes_da_selecao(edital_id):
-    """As publicações de convocados do Edital, da mais recente para a mais antiga (FR-5421).
+    """As publicações de convocados do Edital, da mais recente para a mais antiga (FR-5721).
 
     Devolve `{"recentes": [...], "anteriores": [...]}`, ou `None` sem publicação — e então a seção
-    não aparece (FR-5423).
+    não aparece (FR-5723).
     """
     atos = list(PublicacaoDeConvocados.objects.filter(edital_id=edital_id).order_by("-numero"))
     if not atos:
@@ -69,7 +69,7 @@ def publicacoes_da_selecao(edital_id):
 
 
 def publicacao_publica(publicacao_id):
-    """O ato para a página pública, ou `None` (FR-5418, FR-5419, FR-5420)."""
+    """O ato para a página pública, ou `None` (FR-5718, FR-5719, FR-5720)."""
     ato = PublicacaoDeConvocados.objects.filter(id=publicacao_id).select_related("edital").first()
     if ato is None:
         return None
@@ -170,7 +170,7 @@ def _corrigidas_depois(ato):
 
 
 def publicacao_da_convocacao(convocacao):
-    """A publicação do GPS que **convocou** esta convocação, ou `None` (FR-5425).
+    """A publicação do GPS que **convocou** esta convocação, ou `None` (FR-5725).
 
     Só o *convoca*: o *"Publicada em"* do candidato fala do ato oficial, e a relação informativa
     que espelhou uma publicação externa não é onde a convocação dele foi publicada.

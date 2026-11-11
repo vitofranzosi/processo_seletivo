@@ -1,12 +1,12 @@
-"""A publicação de convocados vista de fora: o portal, a área do candidato e a gestão (148).
+"""A publicação de convocados vista de fora: o portal, a área do candidato e a gestão (149).
 
 Três leitores, e cada um com a sua garantia:
 
 - **quem consulta a seleção**, sem sessão, vê a seção e a relação, e só os quatro dados de cada
-  pessoa (FR-5412, SC-1709, SC-1710);
+  pessoa (FR-5712, SC-1859, SC-1860);
 - **o convocado** lê na área dele o mesmo número, a mesma data e o mesmo prazo, e chega à publicação
-  pelo *"Publicada em"* (FR-5425, FR-5426, SC-1712);
-- **a comissão** vê a prévia sem gravar nada e publica pelo formulário (FR-5427 a FR-5432).
+  pelo *"Publicada em"* (FR-5725, FR-5726, SC-1862);
+- **a comissão** vê a prévia sem gravar nada e publica pelo formulário (FR-5727 a FR-5732).
 """
 
 import re
@@ -86,7 +86,7 @@ def texto(resposta):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", corpo))
 
 
-# --- O portal, sem sessão (FR-5418 a FR-5424, SC-1709) --------------------------------------------
+# --- O portal, sem sessão (FR-5718 a FR-5724, SC-1859) --------------------------------------------
 
 
 def test_sem_publicacao_a_selecao_nao_tem_a_secao(
@@ -128,7 +128,7 @@ def test_publicacao_inexistente_e_404(client, db):
 
 
 def test_a_pagina_e_o_documento_nao_publicam_dado_pessoal_alem_dos_quatro(client, publicado):
-    """SC-1710: nem CPF, nem contato, nem fundamento, nem espécie — conferido contra os dados."""
+    """SC-1860: nem CPF, nem contato, nem fundamento, nem espécie — conferido contra os dados."""
     ato, pessoa = publicado["ato"], publicado["pessoa"]
     pagina = texto(client.get(reverse("portal:convocados", args=[ato.id])))
     documento = texto_de_pdf_bytes(
@@ -149,7 +149,7 @@ def test_a_pagina_e_o_documento_nao_publicam_dado_pessoal_alem_dos_quatro(client
 
 
 def test_pagina_documento_e_area_do_candidato_dizem_o_mesmo(client, publicado):
-    """SC-1712: nome, protocolo, número, data e prazo iguais nos três lugares."""
+    """SC-1862: nome, protocolo, número, data e prazo iguais nos três lugares."""
     ato, pessoa, convocacao = publicado["ato"], publicado["pessoa"], publicado["convocacao"]
     local = timezone.localtime(convocacao.vencimento)
     publicada = timezone.localtime(ato.publicado_em)
@@ -175,7 +175,7 @@ def test_pagina_documento_e_area_do_candidato_dizem_o_mesmo(client, publicado):
 
 
 def test_a_pagina_publica_custa_o_mesmo_com_mais_gente(client, publicado):
-    """SC-1715, metade da página: o custo não acompanha o número de pessoas do conteúdo."""
+    """SC-1865, metade da página: o custo não acompanha o número de pessoas do conteúdo."""
     ato = publicado["ato"]
     with CaptureQueriesContext(connection) as uma:
         client.get(reverse("portal:convocados", args=[ato.id]))
@@ -203,7 +203,7 @@ def test_a_pagina_publica_custa_o_mesmo_com_mais_gente(client, publicado):
     assert len(cinco) == len(uma)
 
 
-# --- A gestão (FR-5427 a FR-5432, SC-1714) --------------------------------------------------------
+# --- A gestão (FR-5727 a FR-5732, SC-1864) --------------------------------------------------------
 
 
 def test_a_pagina_de_publicacao_pede_identificacao(client, seletor_ligado, publicado):

@@ -1,4 +1,4 @@
-"""A publicação de convocados no GPS: o ato, o vínculo de cada convocação e o documento (148).
+"""A publicação de convocados no GPS: o ato, o vínculo de cada convocação e o documento (149).
 
 **Nascem append-only, nas três camadas**: `save`/`delete` recusam na aplicação, as triggers abaixo
 recusam a mutação mesmo de quem tem privilégio, e o papel de runtime não recebe `UPDATE` nem

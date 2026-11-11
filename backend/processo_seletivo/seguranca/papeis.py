@@ -172,7 +172,7 @@ TABELAS_APPEND_ONLY = (
     "formalizacao_designacaoparaformalizacao",
     "formalizacao_revogacaodadesignacao",
     "formalizacao_exportacaodeformalizacao",
-    # As três da publicação de convocados (148): o ato, o vínculo de cada convocação e o documento.
+    # As três da publicação de convocados (149): o ato, o vínculo de cada convocação e o documento.
     # Append-only pela razão das demais, e com um agravante próprio: no efeito *convoca*, o ato é o
     # que inicia o prazo de cada convocado. Reescrevê-lo mudaria, sem rastro, quem foi convocado em
     # público e quando — e o que a página e o documento disseram a quem os consultou.

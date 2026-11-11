@@ -157,7 +157,7 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
         "formalizacao_revogacaodadesignacao",
         "formalizacao_exportacaodeformalizacao",
     )
-    # E a 148, as três da publicação de convocados, depois das da 117.
+    # E a 149, as três da publicação de convocados, depois das da 117.
     da_148 = (
         "convocacao_publicacaodeconvocados",
         "convocacao_convocacaopublicada",

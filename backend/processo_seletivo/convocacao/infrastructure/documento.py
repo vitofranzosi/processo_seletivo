@@ -1,11 +1,11 @@
-"""A publicação de convocados como documento oficial — o quarto a entrar pela costura (148, D-013).
+"""A publicação de convocados como documento oficial — o quarto a entrar pela costura (149, D-013).
 
 O Edital, o comprovante e o resultado já passam por `Composicao` e `render_documento`; este entra
 pelo mesmo lugar, com `_tabela` para cada grupo. Nenhuma biblioteca nova.
 
 **Nada aqui consulta banco.** A função recebe o conteúdo já composto — o mesmo objeto que virou
 `conteudo_publico` — e devolve bytes: a página e o documento dizem o mesmo porque saem da mesma
-origem, e não por coincidência a conferir (FR-5426).
+origem, e não por coincidência a conferir (FR-5726).
 
 **Determinismo.** O instante impresso é o da publicação, gravado no conteúdo, e não o relógio da
 geração: o mesmo conteúdo produz sempre o mesmo arquivo.
@@ -83,7 +83,7 @@ def _par(composicao, rotulo, valor):
 
 
 def _grupo(composicao, grupo):
-    """Um grupo: a vaga e a lista, o que ele é, o prazo, e as pessoas (FR-5414, FR-5415)."""
+    """Um grupo: a vaga e a lista, o que ele é, o prazo, e as pessoas (FR-5714, FR-5715)."""
     titulo = f"{grupo['perfil']} — {grupo['lista']}"
     if grupo["marco"]:
         titulo += f" ({grupo['marco']})"

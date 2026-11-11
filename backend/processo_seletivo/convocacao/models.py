@@ -653,12 +653,12 @@ class ConferenciaDeDocumento(_AppendOnly):
 
 
 # -------------------------------------------------------------------------------------------------
-# A publicação de convocados no GPS (148)
+# A publicação de convocados no GPS (149)
 # -------------------------------------------------------------------------------------------------
 
 
 class PublicacaoDeConvocados(_AppendOnly):
-    """O ato que torna pública a relação das convocações de um Edital (148, FR-5401).
+    """O ato que torna pública a relação das convocações de um Edital (149, FR-5701).
 
     **O molde é a divulgação do resultado da `017`** (D-001): bytes canônicos congelados, o resumo
     deles, a autoridade e a unidade como estavam no dia, e um documento gerado uma vez. A página e o
@@ -710,10 +710,10 @@ class PublicacaoDeConvocados(_AppendOnly):
 
 
 class ConvocacaoPublicada(_AppendOnly):
-    """Uma convocação na publicação que a divulgou, e o efeito dela ali (148, FR-5402, FR-5405).
+    """Uma convocação na publicação que a divulgou, e o efeito dela ali (149, FR-5702, FR-5705).
 
     **Não é lida para exibir** (D-005): o que a página mostra está nos bytes do ato. Esta linha
-    existe para o banco garantir que cada convocação está em no máximo uma publicação (FR-5407), e
+    existe para o banco garantir que cada convocação está em no máximo uma publicação (FR-5707), e
     para a leitura chegar da comunicação à publicação — o portal do candidato, a correção seguinte.
 
     **A comunicação é sempre a que convocou**: no *convoca*, a que o próprio ato gravou; no
@@ -754,7 +754,7 @@ class ConvocacaoPublicada(_AppendOnly):
 
 
 class DocumentoDaPublicacaoDeConvocados(_AppendOnly):
-    """Os bytes do documento oficial, gerados uma vez dos bytes do ato (148, FR-5410).
+    """Os bytes do documento oficial, gerados uma vez dos bytes do ato (149, FR-5710).
 
     O molde de `DocumentoDoResultado`: tabela própria, para a ausência de documento ser a ausência
     de linha, e o resumo como integridade — dois documentos idênticos são legítimos.

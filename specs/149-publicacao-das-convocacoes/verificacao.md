@@ -1,4 +1,4 @@
-# Verificação: A publicação das convocações no GPS (148)
+# Verificação: A publicação das convocações no GPS (149)
 
 Feita em 11/11/2026, sobre a `main` em `d3e98a89`.
 
@@ -9,7 +9,7 @@ Feita em 11/11/2026, sobre a `main` em `d3e98a89`.
 satisfazer, e foram corrigidas depois:
 
 - `test_readme_acompanha_o_codigo.py::test_toda_pasta_de_specs_aparece_na_tabela_de_incrementos` —
-  faltava a linha da `148` na tabela de incrementos do README;
+  faltava a linha da `149` na tabela de incrementos do README;
 - `unit/convocacao/test_append_only.py::test_nao_existe_entidade_de_vaga` — o conjunto literal dos
   modelos do app não tinha os três novos (nenhum deles é vaga).
 

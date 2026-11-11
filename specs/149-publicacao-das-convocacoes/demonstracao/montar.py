@@ -1,11 +1,11 @@
-"""O cenário da demonstração da 148, num banco novo — o mesmo dos testes de integração.
+"""O cenário da demonstração da 149, num banco novo — o mesmo dos testes de integração.
 
 Rodar de `backend/`, num banco migrado e vazio (ver o quickstart):
 
     DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps148demo DB_USER=$USER \
     DB_RUNTIME_USER=$USER DJANGO_ALLOWED_HOSTS=localhost,testserver \
     ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps148demo \
-    uv run python manage.py shell < ../specs/148-publicacao-das-convocacoes/demonstracao/montar.py
+    uv run python manage.py shell < ../specs/149-publicacao-das-convocacoes/demonstracao/montar.py
 
 Monta: um Edital por publicação, com a ampla e a reserva PPI da mesma vaga; uma convocação em cada;
 a 1ª publicação de convocados no GPS, com as duas; a correção do vencimento da convocação da ampla;

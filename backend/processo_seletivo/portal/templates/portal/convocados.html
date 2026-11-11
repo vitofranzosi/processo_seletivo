@@ -2,10 +2,10 @@
 {% block titulo %}{{ cabecalho.titulo|capfirst }} — {{ cabecalho.edital }}{% endblock %}
 {% block conteudo %}
 {% comment %}
-**A página pública de uma publicação de convocados** (148, FR-5418 a FR-5420). Tudo o que o ato
+**A página pública de uma publicação de convocados** (149, FR-5718 a FR-5720). Tudo o que o ato
 afirma sai dos bytes congelados; o aviso de correção é a única leitura de depois, e é dito como tal.
 
-Sem tabela (FR-5424): a lista de nomes cabe em 375 px sem rolagem, e cada pessoa é uma linha legível
+Sem tabela (FR-5724): a lista de nomes cabe em 375 px sem rolagem, e cada pessoa é uma linha legível
 também a quem ouve a página.
 {% endcomment %}
 <h1>{{ cabecalho.titulo|capfirst }}</h1>
@@ -13,7 +13,7 @@ também a quem ouve a página.
 
 {% if corrigidas %}
 {% comment %}
-**A correção posterior, dita em texto e fora do ato** (FR-5420, D-006). A página continua mostrando
+**A correção posterior, dita em texto e fora do ato** (FR-5720, D-006). A página continua mostrando
 o que foi publicado; o caminho leva à publicação que trouxe a correção.
 {% endcomment %}
 <p class="aviso" role="note"><strong>Uma ou mais convocações desta publicação foram corrigidas depois</strong>, {% for posterior in corrigidas %}{% if not forloop.first %}{% if forloop.last %} e {% else %}, {% endif %}{% endif %}na <a href="{% url 'portal:convocados' posterior.id %}">{{ posterior.titulo }}</a>{% endfor %}. Esta página continua mostrando o que foi publicado em {{ publicada_em|date:"d/m/Y" }}.</p>

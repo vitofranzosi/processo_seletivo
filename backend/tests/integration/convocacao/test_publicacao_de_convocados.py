@@ -1,4 +1,4 @@
-"""A publicação de convocados no GPS: o ato, os dois efeitos e o prazo (148, US1, US3, US4).
+"""A publicação de convocados no GPS: o ato, os dois efeitos e o prazo (149, US1, US3, US4).
 
 **O que estes casos prendem é a fronteira entre ato oficial e relação informativa.** Na forma *por
 publicação*, a publicação é o ato que convoca: ela grava a comunicação, e o prazo corre dela. Em
@@ -134,7 +134,7 @@ def recusada(codigo, praticar):
     return erro.value
 
 
-# --- A prévia não pratica nada (FR-5408, SC-1714) -------------------------------------------------
+# --- A prévia não pratica nada (FR-5708, SC-1864) -------------------------------------------------
 
 
 def test_a_previa_mostra_o_que_seria_publicado_e_nao_grava_nada(fixtures, gestor):
@@ -153,7 +153,7 @@ def test_a_previa_mostra_o_que_seria_publicado_e_nao_grava_nada(fixtures, gestor
     assert escolhida_nenhuma["escolhidas"] == [], "desmarcar o recorte tira as pessoas dele"
 
 
-# --- B. Publicação nativa como ato oficial (FR-5402, SC-1702) -------------------------------------
+# --- B. Publicação nativa como ato oficial (FR-5702, SC-1852) -------------------------------------
 
 
 def test_a_publicacao_nativa_convoca_e_o_prazo_corre_dela(fixtures, gestor):
@@ -186,7 +186,7 @@ def test_a_publicacao_nativa_convoca_e_o_prazo_corre_dela(fixtures, gestor):
     assert selectors.visivel_ao_candidato(convocacao)
     assert selectors.estado_de(convocacao, agora=timezone.now()) == nomes.CONVOCADO_PRAZO_EM_CURSO
     assert selectors.vigentes_por_inscricao([pessoa.id])[pessoa.id] == convocacao
-    # A trilha do ato e a da comunicação (FR-5411).
+    # A trilha do ato e a da comunicação (FR-5711).
     assert RegistroAuditoria.objects.filter(operation=PUBLICAR, aggregate_id=ato.id).exists()
     trilha = RegistroAuditoria.objects.get(operation=COMUNICAR, aggregate_id=emitida.id)
     assert "1ª publicação de convocados" in trilha.reason
@@ -213,7 +213,7 @@ def test_vencimento_ja_passado_fica_fora_com_o_motivo(fixtures, gestor):
     assert recorte["fora"][0]["motivo"] == dominio.MOTIVOS_DE_FORA[dominio.FORA_VENCIMENTO_PASSADO]
 
 
-# --- A. Mensagem individual: informativa, sem mexer no prazo (FR-5405, SC-1701) ------------------
+# --- A. Mensagem individual: informativa, sem mexer no prazo (FR-5705, SC-1851) ------------------
 
 
 def test_a_mensagem_enviada_entra_como_divulgacao_e_o_prazo_nao_muda(
@@ -242,7 +242,7 @@ def test_a_mensagem_enviada_entra_como_divulgacao_e_o_prazo_nao_muda(
 
 
 def test_a_mensagem_que_nao_saiu_nao_entra_em_publicacao_nenhuma(fixtures, gestor):
-    """A publicação não substitui o envio individual (FR-5406)."""
+    """A publicação não substitui o envio individual (FR-5706)."""
     edital, _, _ = cenario = certame(
         fixtures, forma=FORMA_POR_MENSAGEM_INDIVIDUAL, prefixo="p148-msg-k"
     )
@@ -256,7 +256,7 @@ def test_a_mensagem_que_nao_saiu_nao_entra_em_publicacao_nenhuma(fixtures, gesto
     recusada(NADA_A_PUBLICAR, lambda: publicar(edital, gestor, chave="p148-msg-k-pub"))
 
 
-# --- C. Publicação externa: preservada, e espelhável (FR-5434, SC-1703) --------------------------
+# --- C. Publicação externa: preservada, e espelhável (FR-5734, SC-1853) --------------------------
 
 
 def test_a_publicacao_externa_registrada_continua_e_a_relacao_a_cita(fixtures, gestor):
@@ -274,7 +274,7 @@ def test_a_publicacao_externa_registrada_continua_e_a_relacao_a_cita(fixtures, g
     assert grupo["canal"] == f"publicada em {REFERENCIA_EXTERNA}"
 
 
-# --- Publicações sucessivas, sucessão e correção (SC-1704, SC-1706, SC-1707) ----------------------
+# --- Publicações sucessivas, sucessão e correção (SC-1854, SC-1856, SC-1857) ----------------------
 
 
 def test_a_suplente_chamada_depois_entra_na_2a_publicacao(fixtures, gestor):
@@ -341,7 +341,7 @@ def test_a_correcao_de_convocacao_publicada_sai_marcada_na_seguinte(fixtures, ge
 MOTIVO_DA_CORRECAO_NAO_VAI = "A mensagem saiu com dois dias de atraso"
 
 
-# --- Duplicidade e idempotência (FR-5407, FR-5408, SC-1708) ---------------------------------------
+# --- Duplicidade e idempotência (FR-5707, FR-5708, SC-1858) ---------------------------------------
 
 
 def test_a_mesma_chave_devolve_o_mesmo_ato_e_outra_chave_e_recusada(fixtures, gestor):
@@ -391,7 +391,7 @@ def test_o_banco_recusa_a_mesma_convocacao_em_duas_publicacoes(fixtures, gestor)
         )
 
 
-# --- Append-only nas camadas do banco (FR-5410) ---------------------------------------------------
+# --- Append-only nas camadas do banco (FR-5710) ---------------------------------------------------
 
 
 @postgresql
@@ -441,7 +441,7 @@ def _conteudo(ato):
     return json.loads(bytes(ato.conteudo_publico).decode("utf-8"))
 
 
-# --- Uma publicação, duas listas da mesma vaga (SC-1705) ------------------------------------------
+# --- Uma publicação, duas listas da mesma vaga (SC-1855) ------------------------------------------
 
 
 def test_uma_publicacao_com_duas_listas_tem_um_grupo_para_cada(fixtures, gestor):
@@ -495,7 +495,7 @@ def test_uma_publicacao_com_duas_listas_tem_um_grupo_para_cada(fixtures, gestor)
         lida = previa(edital)
     declarado = publicar(edital, gestor, chave="p148-l-pub")
 
-    # SC-1715, metade da gestão: a prévia lê o Edital em consultas fixas (FR-5436).
+    # SC-1865, metade da gestão: a prévia lê o Edital em consultas fixas (FR-5736).
     assert len(com_dois_recortes) == len(com_um_recorte)
 
     assert [grupo["lista"] for grupo in lida["grupos"]] == [
@@ -511,7 +511,7 @@ def test_uma_publicacao_com_duas_listas_tem_um_grupo_para_cada(fixtures, gestor)
     assert "Ampla concorrência" in documento and "Pretos, pardos e indígenas" in documento
 
 
-# --- O aviso aos convocados de uma chamada publicada alcança a nativa (FR-5435) -------------------
+# --- O aviso aos convocados de uma chamada publicada alcança a nativa (FR-5735) -------------------
 
 
 def test_o_aviso_da_chamada_publicada_alcanca_a_publicacao_nativa(fixtures, gestor):

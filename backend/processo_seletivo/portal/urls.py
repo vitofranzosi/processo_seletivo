@@ -110,7 +110,7 @@ urlpatterns = [
         views.resultado_em_pdf,
         name="resultado-documento",
     ),
-    # A publicação de convocados (148, FR-5418). Endereço **estável pela identidade do ato**, como o
+    # A publicação de convocados (149, FR-5718). Endereço **estável pela identidade do ato**, como o
     # resultado: a publicação não se sucede, e o que ela publicou responde sempre aqui. Não colide
     # com `<uuid:edital_id>/`: `convocacoes` não casa com `uuid`.
     path("convocacoes/<uuid:publicacao_id>/", views.convocados, name="convocados"),

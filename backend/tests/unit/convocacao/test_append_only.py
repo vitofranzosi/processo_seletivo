@@ -114,7 +114,7 @@ class TestVigenciaNaoEColuna:
             "ItemDaListaDaConvocacao",
             "ApresentacaoDeDocumento",
             "ConferenciaDeDocumento",
-            # A publicação de convocados (148): o ato, o vínculo de cada convocação e o documento.
+            # A publicação de convocados (149): o ato, o vínculo de cada convocação e o documento.
             # Publica pessoas convocadas, e não vagas numeradas: nenhum dos três é vaga.
             "PublicacaoDeConvocados",
             "ConvocacaoPublicada",

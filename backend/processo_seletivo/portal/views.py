@@ -594,7 +594,7 @@ def selecao(request, edital_id, *, assistente=True):
     # cada uma leva as publicações que sucedeu. Antes, o preliminar sucedido só era alcançável por
     # quem tinha guardado o endereço dele.
     contexto["resultados_divulgados"] = historico_publico_do_edital(versao.edital)
-    # **As convocações publicadas no GPS** (148, FR-5421 a FR-5423), logo depois dos resultados: é o
+    # **As convocações publicadas no GPS** (149, FR-5721 a FR-5723), logo depois dos resultados: é o
     # passo seguinte do certame, e é onde quem procura o resultado procura a convocação. Sem
     # publicação, `None`, e a seção não aparece. Uma consulta, qualquer que seja o número delas.
     from processo_seletivo.convocacao.application.publicacoes import publicacoes_da_selecao
@@ -2569,7 +2569,7 @@ def convocacao(request, inscricao_id):
             "aceite": situacao_da_inscricao.frase_do_aceite(desfecho),
             "consequencia": situacao_da_inscricao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO,
             "atendimento": atendimento,
-            # **"Publicada em" leva à publicação, quando ela foi feita no GPS** (148, FR-5425).
+            # **"Publicada em" leva à publicação, quando ela foi feita no GPS** (149, FR-5725).
             # Só nesta tela, que mostra uma convocação, e só na forma por publicação comunicada:
             # a consulta não se paga na mensagem, e a lista e o acompanhamento ficam como estão.
             "publicacao_no_gps": _publicacao_no_gps(chamada, da_convocacao),
@@ -3395,11 +3395,11 @@ def resultado_em_pdf(request, publicacao_id):
 
 @require_http_methods(["GET"])
 def convocados(request, publicacao_id):
-    """A página pública de uma publicação de convocados, sem autenticação (148, FR-5418).
+    """A página pública de uma publicação de convocados, sem autenticação (149, FR-5718).
 
-    **Abrir não recompõe nada** (FR-5419): o que o ato afirma sai dos bytes gravados. Fora deles, só
+    **Abrir não recompõe nada** (FR-5719): o que o ato afirma sai dos bytes gravados. Fora deles, só
     o que aconteceu depois e não o altera — a correção de alguém numa publicação posterior
-    (FR-5420), dita como tal.
+    (FR-5720), dita como tal.
     """
     from processo_seletivo.convocacao.application.publicacoes import publicacao_publica
 
@@ -3415,7 +3415,7 @@ def convocados(request, publicacao_id):
 
 @require_http_methods(["GET"])
 def convocados_em_pdf(request, publicacao_id):
-    """Os bytes gravados na publicação, e nada recomposto (148, FR-5410, FR-5418)."""
+    """Os bytes gravados na publicação, e nada recomposto (149, FR-5710, FR-5718)."""
     from processo_seletivo.convocacao.models import DocumentoDaPublicacaoDeConvocados
 
     documento = (

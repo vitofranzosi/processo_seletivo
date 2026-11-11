@@ -8985,7 +8985,7 @@ def convocacao(request, edital_id, marco_id):
                 # **Só para quem pode praticar os gestos**: as seções que as leem não aparecem para
                 # quem só consulta, e calculá-las ali seria trabalho sem leitor.
                 **previas,
-                # A publicação no GPS (148, FR-5431): o caminho com este recorte escolhido, e a
+                # A publicação no GPS (149, FR-5731): o caminho com este recorte escolhido, e a
                 # publicação de cada chamada que saiu numa — uma consulta para o recorte inteiro.
                 "publicar_no_gps": (
                     reverse("interface:publicacao-de-convocados", args=[edital.id])
@@ -10092,13 +10092,13 @@ def _publicadas_no_gps(leitura):
 
 @require_http_methods(["GET", "POST"])
 def publicacao_de_convocados(request, edital_id):
-    """A publicação das convocações do Edital no GPS: a prévia e o ato (148, FR-5427 a FR-5432).
+    """A publicação das convocações do Edital no GPS: a prévia e o ato (149, FR-5727 a FR-5732).
 
-    **Abrir, escolher recortes e ver a prévia não grava nada** (FR-5408, SC-1714): a prévia é a
+    **Abrir, escolher recortes e ver a prévia não grava nada** (FR-5708, SC-1864): a prévia é a
     resposta do GET, e o ato é só o POST, com a assinatura do que a prévia mostrou. É o desenho da
     conferência dos titulares (`140`): o que se confirma é o que se viu.
 
-    **A porta é a da condução** (FR-5432): presidência e auditoria leem as publicações e a prévia;
+    **A porta é a da condução** (FR-5732): presidência e auditoria leem as publicações e a prévia;
     publicar exige a base de gestão da comissão, e o comando volta a conferi-la sob a trava.
     """
     from processo_seletivo.convocacao.application import publicacoes
@@ -10132,7 +10132,7 @@ def publicacao_de_convocados(request, edital_id):
                 correlation_id=request.correlation_id,
             )
         except DomainError as recusa:
-            # **A recusa volta à mesma prévia, com o que foi digitado** (FR-5408): a declaração e a
+            # **A recusa volta à mesma prévia, com o que foi digitado** (FR-5708): a declaração e a
             # autoridade não se perdem, e a prévia é a de agora — a que a pessoa vai conferir de
             # novo antes de tentar outra vez.
             erro = recusa.detail

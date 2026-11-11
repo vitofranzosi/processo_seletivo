@@ -1,13 +1,13 @@
-# Data Model: A publicação das convocações no GPS (148)
+# Data Model: A publicação das convocações no GPS (149)
 
 Três tabelas novas no app `convocacao`, na migration `0007_publicacao_de_convocados`. Nenhuma tabela
-existente muda de forma (FR-5433, D-002).
+existente muda de forma (FR-5733, D-002).
 
 ## `PublicacaoDeConvocados` — o ato
 
 | Campo | Tipo | Regra |
 |---|---|---|
-| `id` | UUID | identidade do ato, e do endereço público (FR-5418) |
+| `id` | UUID | identidade do ato, e do endereço público (FR-5718) |
 | `edital` | FK `Edital`, `PROTECT` | |
 | `numero` | inteiro positivo | sequencial por Edital, atribuído sob a trava do Processo (D-009) |
 | `conteudo_publico` | bytes | `canonical_bytes` do conteúdo composto na confirmação (D-005) |
@@ -15,7 +15,7 @@ existente muda de forma (FR-5433, D-002).
 | `publicado_por` | 255 | o sujeito do ator |
 | `publicado_em` | instante | o `now` do comando; igual ao `enviado_em` de cada comunicação gravada (D-003) |
 | `declaracao_do_veiculo` | texto | obrigatória com efeito *convoca*; vazia sem ele (D-012) |
-| `signatario_id`, `signatario_nome`, `signatario_cargo`, `signatario_ato_de_nomeacao` | | congelados (FR-5409) |
+| `signatario_id`, `signatario_nome`, `signatario_cargo`, `signatario_ato_de_nomeacao` | | congelados (FR-5709) |
 | `unidade_codigo`, `unidade_sigla`, `unidade_nome`, `unidade_cabecalho`, `unidade_local` | | `colunas_da_unidade` |
 
 Constraints: `uq_publicacao_de_convocados_numero` (`edital`, `numero`);
@@ -27,7 +27,7 @@ Constraints: `uq_publicacao_de_convocados_numero` (`edital`, `numero`);
 |---|---|---|
 | `id` | UUID | |
 | `publicacao` | FK `PublicacaoDeConvocados`, `PROTECT` | |
-| `convocacao` | FK `Convocacao`, `PROTECT` | **única**: `uq_convocacao_publicada_uma_vez` (FR-5407) |
+| `convocacao` | FK `Convocacao`, `PROTECT` | **única**: `uq_convocacao_publicada_uma_vez` (FR-5707) |
 | `comunicacao` | FK `ComunicacaoEmitida`, `PROTECT` | única; no *convoca*, a gravada pelo ato; no *divulga*, a anterior |
 | `efeito` | `CONVOCA` ou `DIVULGA` | `ck_convocacao_publicada_efeito` |
 
@@ -41,7 +41,7 @@ tabelas.
 | Campo | Tipo | Regra |
 |---|---|---|
 | `publicacao` | 1:1 `PROTECT` | |
-| `bytes` | bytes | gerados uma vez, dos mesmos bytes do conteúdo (FR-5410) |
+| `bytes` | bytes | gerados uma vez, dos mesmos bytes do conteúdo (FR-5710) |
 | `content_type` | 100 | `application/pdf` |
 | `documento_hash` | 64 | sha256 dos bytes; `ETag` |
 

@@ -1,4 +1,4 @@
-"""A publicação de convocados, sem banco: o efeito de cada convocação e o que é público (148).
+"""A publicação de convocados, sem banco: o efeito de cada convocação e o que é público (149).
 
 **Dois efeitos, e nenhuma forma nova** (D-002). A forma de comunicar continua a que o Perfil
 publicado declarou; o que esta feature decide é o que a publicação faz com cada convocação:
@@ -9,7 +9,7 @@ publicado declarou; o que esta feature decide é o que a publicação faz com ca
   fora do GPS: a relação é informativa, e nada se grava (D-004).
 
 Tudo aqui recebe dados já lidos e devolve dados: a prévia e a confirmação chamam as mesmas funções,
-e é isso que faz a prévia mostrar exatamente o que a confirmação grava (FR-5428).
+e é isso que faz a prévia mostrar exatamente o que a confirmação grava (FR-5728).
 """
 
 from dataclasses import dataclass
@@ -31,7 +31,7 @@ VERSAO_DO_CONTEUDO = 1
 
 # --- Por que uma convocação fica fora ----------------------------------------------------------
 # As causas do `comunicar`, ditas em frase de quem conduz, e com o caminho de cada correção
-# (FR-5404). Nenhuma diz "erro": são estados legítimos do certame.
+# (FR-5704). Nenhuma diz "erro": são estados legítimos do certame.
 FORA_COM_DESFECHO = "com_desfecho"
 FORA_VENCIMENTO_PASSADO = "vencimento_passado"
 FORA_INDETERMINADA = "emissao_indeterminada"
@@ -87,7 +87,7 @@ def avaliar(*, forma, desfechada, enviada_em, indeterminada, vencimento, ja_publ
     if forma is None:
         return Avaliada(None, FORA_SEM_FORMA)
     if forma != FORMA_POR_PUBLICACAO:
-        # **A publicação não substitui o envio individual** (FR-5406): a mensagem que falhou, ou
+        # **A publicação não substitui o envio individual** (FR-5706): a mensagem que falhou, ou
         # que ainda não saiu, continua sendo do gesto das pendentes.
         return Avaliada(None, FORA_MENSAGEM_PENDENTE)
     if indeterminada:
@@ -128,7 +128,7 @@ def referencia_nativa(numero, instante):
 
 
 def canal_da_divulgacao(forma, referencia):
-    """Como a convocação oficial foi feita, na frase que a relação informativa diz (FR-5405)."""
+    """Como a convocação oficial foi feita, na frase que a relação informativa diz (FR-5705)."""
     if forma == FORMA_POR_PUBLICACAO:
         return f"publicada em {referencia}" if referencia else "publicada fora do GPS"
     if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
@@ -145,7 +145,7 @@ def compor_grupos(linhas):
 
     Cada linha é um `dict` com: `chave` (o recorte), `ordem` (a posição do recorte no Edital),
     `perfil`, `lista`, `marco`, `efeito`, `canal` (no divulga), `vencimento`, `nome`, `protocolo`
-    e `corrige` (o número da publicação anterior, ou `None`). **Só o que é público entra** (FR-5412,
+    e `corrige` (o número da publicação anterior, ou `None`). **Só o que é público entra** (FR-5712,
     D-008): nenhum identificador, nenhuma espécie, nenhum fundamento.
 
     Um grupo por recorte **e** efeito: um recorte pode ter, na mesma publicação, quem ela convoca e
@@ -175,7 +175,7 @@ def compor_grupos(linhas):
     for grupo in grupos:
         vencimentos = {pessoa["vencimento"] for pessoa in grupo["pessoas"]}
         canais = {pessoa["canal"] for pessoa in grupo["pessoas"]}
-        # **O prazo uma vez no grupo, quando é um só** (FR-5415). O mesmo para o canal do divulga:
+        # **O prazo uma vez no grupo, quando é um só** (FR-5715). O mesmo para o canal do divulga:
         # quarenta linhas dizendo "por mensagem individual" não informam mais que uma.
         grupo["vencimentoUnico"] = len(vencimentos) == 1
         grupo["vencimento"] = next(iter(vencimentos)) if len(vencimentos) == 1 else None
@@ -197,7 +197,7 @@ def _distinguir_rotulos_repetidos(grupos):
 
 
 def assinatura(*, edital_id, numero, itens):
-    """A identidade do alcance que a prévia mostrou (FR-5408).
+    """A identidade do alcance que a prévia mostrou (FR-5708).
 
     `itens` são `(convocacao_id, efeito, comunicacao_id)`, e a comunicação do divulga entra porque
     é ela que o vínculo cita. **O número entra**: se outra publicação acontecer entre a prévia e a
@@ -218,7 +218,7 @@ def conteudo(*, cabecalho, grupos):
 
 
 def natureza(grupos):
-    """*Convocação oficial*, *Divulgação informativa*, ou as duas (FR-5421)."""
+    """*Convocação oficial*, *Divulgação informativa*, ou as duas (FR-5721)."""
     efeitos = {grupo["efeito"] for grupo in grupos}
     if efeitos == {CONVOCA}:
         return "Convocação oficial"
@@ -228,7 +228,7 @@ def natureza(grupos):
 
 
 def nota_do_grupo(grupo):
-    """O que o grupo é, numa frase — a mesma na página, na prévia e no documento (FR-5402, FR-5405).
+    """O que o grupo é, numa frase — a mesma na página, na prévia e no documento (FR-5702, FR-5705).
 
     A diferença entre ato oficial e relação informativa é a que o pedido manda não confundir, e por
     isso é dita em cada grupo, e não só no cabeçalho: uma publicação pode ter os dois.
@@ -253,7 +253,7 @@ SEM_VENCIMENTO = "o estabelecido no Edital"
 
 
 def orientacoes(*, requerimento_na_convocacao):
-    """As orientações gerais, texto do sistema e não da comissão, ditas uma vez (FR-5416).
+    """As orientações gerais, texto do sistema e não da comissão, ditas uma vez (FR-5716).
 
     **Fixas de propósito**: o texto livre que chega ao candidato é o caminho por onde dado de
     terceiro vaza (`125`), e aqui ele seria público.

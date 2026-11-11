@@ -1,4 +1,4 @@
-# Checklist da especificação: A publicação das convocações no GPS (148)
+# Checklist da especificação: A publicação das convocações no GPS (149)
 
 **Propósito**: conferir completude e qualidade da spec antes do plano · **Criado**: 2026-11-11
 

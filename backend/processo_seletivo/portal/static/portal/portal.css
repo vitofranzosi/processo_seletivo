@@ -1086,7 +1086,7 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 .recusa-no-cartao{margin:.25rem 0 .5rem;font-weight:600}
 .recusa-no-cartao:focus{outline:3px solid var(--vermelho);outline-offset:2px}
 .dados-da-convocacao{max-width:var(--leitura)}
-/* As convocações publicadas no GPS (148, FR-5421 a FR-5424). A seção é uma lista curta, uma linha por
+/* As convocações publicadas no GPS (149, FR-5721 a FR-5724). A seção é uma lista curta, uma linha por
    publicação: o número é o link, a natureza e a data vêm logo abaixo, e o documento fica à mão. A
    relação mora na página de cada publicação, que lista as pessoas sem tabela — em 375 px cada uma é
    uma linha legível, e em tela larga o texto corrido não passa da medida de leitura. */

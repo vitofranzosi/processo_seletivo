@@ -1,4 +1,4 @@
-"""Publicar as convocações no GPS: a prévia do Edital e o ato (148, FR-5401 a FR-5411).
+"""Publicar as convocações no GPS: a prévia do Edital e o ato (149, FR-5701 a FR-5711).
 
 ```text
 prévia (GET)  → lê o Edital inteiro em consultas fixas, avalia cada convocação, compõe os grupos
@@ -72,11 +72,11 @@ def chave_do_recorte(perfil_id, marco_id, lista_id):
 
 
 def previa_da_publicacao(*, edital, recortes=None, at):
-    """O que a publicação de agora faria, recorte a recorte — sem gravar nada (FR-5408, SC-1714).
+    """O que a publicação de agora faria, recorte a recorte — sem gravar nada (FR-5708, SC-1864).
 
     `recortes` é o conjunto de chaves escolhidas; `None` escolhe todos os que têm o que publicar.
 
-    **Consultas fixas** (FR-5436): as convocações do Edital, as três coleções que a vigência, o
+    **Consultas fixas** (FR-5736): as convocações do Edital, as três coleções que a vigência, o
     desfecho e o envio leem, as versões citadas, as identidades, as reservas indeterminadas e as
     publicações anteriores — uma cada, qualquer que seja o número de recortes e de pessoas.
     """
@@ -199,7 +199,7 @@ def _recorte(chave, convocacao, conteudo):
     listas = recortes_do_perfil(conteudo, perfil_id=convocacao.perfil_id)
     alvo = str(convocacao.lista_id) if convocacao.lista_id else None
     posicao_da_lista = next((i for i, (lista, _) in enumerate(listas) if lista == alvo), 0)
-    # **O nome da lista é o que a divulgação do resultado publica** (FR-5426, D-008): a ampla por
+    # **O nome da lista é o que a divulgação do resultado publica** (FR-5726, D-008): a ampla por
     # extenso, e a reserva pelo nome da Modalidade. O rótulo da gestão — "linha geral do quadro",
     # o código entre parênteses — é vocabulário de quem conduz, e não de quem consulta.
     rotulo_da_lista = ((nomes["modalidades"].get(alvo) or "") if alvo else LISTA_AMPLA) or next(
@@ -256,7 +256,7 @@ def publicar_convocados(
     idempotency_key,
     correlation_id,
 ):
-    """Pratica a publicação de convocados que a prévia mostrou (FR-5401 a FR-5411).
+    """Pratica a publicação de convocados que a prévia mostrou (FR-5701 a FR-5711).
 
     `recortes` é o conjunto de chaves escolhidas, como a prévia o recebeu; `None` escolhe todos.
     """
@@ -278,7 +278,7 @@ def publicar_convocados(
     ) as ctx:
         if ctx.repetido:
             # A repetição devolve o ato que o primeiro pedido praticou, e não uma leitura do mundo
-            # depois dele (FR-5407): o duplo clique recebe a mesma publicação.
+            # depois dele (FR-5707): o duplo clique recebe a mesma publicação.
             return ctx.desfecho_anterior
         agora = ctx.now
         edital = _edital_do_processo(ctx.processo, edital_id)
@@ -355,7 +355,7 @@ def publicar_convocados(
                     resultado="ENVIADA",
                 )
                 # A frase da publicação registrada da `125` (R-008 dela), com o ato que publicou: a
-                # trilha de cada pessoa diz de onde o prazo dela corre (FR-5411).
+                # trilha de cada pessoa diz de onde o prazo dela corre (FR-5711).
                 auditar(
                     actor=actor,
                     permissao=ctx.base.permissao,
@@ -410,7 +410,7 @@ def publicar_convocados(
 
 
 def _cabecalho(edital, versao, numero, agora, assinante, unidade):
-    """A identificação do ato, como estava no dia (FR-5413)."""
+    """A identificação do ato, como estava no dia (FR-5713)."""
     from processo_seletivo.classificacao.domain.nomes import edital_por_extenso
 
     conteudo = versao.content or {}
@@ -431,7 +431,7 @@ def _cabecalho(edital, versao, numero, agora, assinante, unidade):
             "cargo": assinante.cargo,
             "atoDeNomeacao": assinante.ato_de_nomeacao,
         },
-        # Para a orientação dizer que o Requerimento também está na Área do candidato (FR-5416).
+        # Para a orientação dizer que o Requerimento também está na Área do candidato (FR-5716).
         "requerimentoNaConvocacao": (
             momento_declarado(conteudo) == requerimento_nomes.NA_CONVOCACAO
         ),
@@ -439,7 +439,7 @@ def _cabecalho(edital, versao, numero, agora, assinante, unidade):
 
 
 def _gravar_documento(ato, conteudo):
-    """O documento oficial, dos mesmos bytes que a página lê, gravado uma vez (FR-5410)."""
+    """O documento oficial, dos mesmos bytes que a página lê, gravado uma vez (FR-5710)."""
     from processo_seletivo.convocacao.infrastructure.documento import render_convocados_pdf
 
     arquivo = render_convocados_pdf(conteudo)

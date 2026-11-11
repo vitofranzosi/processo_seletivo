@@ -84,7 +84,7 @@ DA_019 = [
     RAIZ / "convocacao/templates/convocacao/mensagem/correcao.txt",
     RAIZ / "convocacao/domain/mensagem.py",
     RAIZ / "convocacao/domain/prazo_apresentado.py",
-    # A `148`: a publicação de convocados no GPS. A página pública e o documento são lidos por
+    # A `149`: a publicação de convocados no GPS. A página pública e o documento são lidos por
     # quem foi convocado e por quem não foi, e é ali que "estar convocado" mais tenta virar
     # "ter a vaga"; a gestão diz o efeito do ato, e o efeito é prazo, e não recebimento.
     PORTAL / "convocados.html",

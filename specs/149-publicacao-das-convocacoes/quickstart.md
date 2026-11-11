@@ -1,4 +1,4 @@
-# Quickstart: A publicação das convocações no GPS (148)
+# Quickstart: A publicação das convocações no GPS (149)
 
 ## Para a comissão
 
@@ -41,7 +41,7 @@ DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps148demo DB_USER=$US
 ```
 
 ```bash
-DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps148demo DB_USER=$USER DB_RUNTIME_USER=$USER DJANGO_ALLOWED_HOSTS=localhost,testserver ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps148demo uv run python manage.py shell < ../specs/148-publicacao-das-convocacoes/demonstracao/montar.py
+DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps148demo DB_USER=$USER DB_RUNTIME_USER=$USER DJANGO_ALLOWED_HOSTS=localhost,testserver ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps148demo uv run python manage.py shell < ../specs/149-publicacao-das-convocacoes/demonstracao/montar.py
 ```
 
 O script imprime o identificador do Edital. Suba o servidor com `INTERFACE_SELETOR_IDENTIDADE=true`

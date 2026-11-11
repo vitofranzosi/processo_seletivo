@@ -16,12 +16,14 @@ comissão prepara e confere a chamada no GPS, publica a lista em outro site e vo
 registrar onde publicou. O pedido é publicar no próprio GPS quando ele for o veículo oficial admitido
 pelo Edital, sem mudar a semântica das formas de comunicar da `019` e da `125`.
 
-> **Faixa de identificadores.** Esta spec abre em **FR-5401** e **SC-1701**. O teto foi medido em
-> 11/11/2026 em `specs/` de todas as worktrees desta máquina e nos PRs abertos: o requisito cinco mil
-> trezentos e vinte e três e o critério mil seiscentos e sessenta e seis, da `147` (PR #466), ainda
-> fora da `main`. A pasta `147` está tomada, e por isso esta é a `148`. A folga até a FR-5401 e a
-> SC-1701 é a de sempre: duas sessões do mesmo dia já colidiram contando do mesmo teto. **Nenhum
-> `UX-` é aberto aqui.** As decisões reiniciam em `D-001`.
+> **Faixa de identificadores.** Esta spec abre em **FR-5701** e **SC-1851**. **Nasceu como `148`,
+> com FR a partir de 5401 e SC a partir de 1701**, medidos em 11/11/2026 sobre as worktrees desta
+> máquina e os PRs abertos. No mesmo dia, a publicação e homologação das inscrições entrou na `main`
+> (#469) também como `148`, com FR-5400 a 5438 e SC-1700 a 1708 — a mesma pasta e uma faixa
+> sobreposta, que nenhuma das duas sessões via. Esta foi renumerada para a `149`, e cada identificador
+> deslocado por um valor fixo (FR + 300, SC + 150), para não haver erro de transcrição. O teto, então,
+> era o requisito cinco mil seiscentos e catorze e o critério mil oitocentos e cinco, da `150` (PR #471).
+> **Nenhum `UX-` é aberto aqui.** As decisões reiniciam em `D-001`.
 >
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-288 da `019`"). Uma decisão de outra feature é citada pelo assunto e pela feature,
@@ -274,140 +276,140 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
 #### A. O ato
 
-- **FR-5401**: A comissão MUST poder publicar pelo GPS a relação das convocações de um Edital, num
+- **FR-5701**: A comissão MUST poder publicar pelo GPS a relação das convocações de um Edital, num
   **ato único**, a *publicação de convocados*, numerado por Edital (1ª, 2ª, …) na ordem das
   confirmações, que reúne as convocações dos recortes escolhidos.
-- **FR-5402**: Uma convocação vigente, sem desfecho, que cita a forma *por publicação* e não tem
+- **FR-5702**: Uma convocação vigente, sem desfecho, que cita a forma *por publicação* e não tem
   comunicação bem-sucedida MUST entrar com efeito **convoca**: a confirmação MUST gravar, **na mesma
   transação** do ato, a comunicação dela — forma publicação, resultado *enviada*, instante igual ao
   da publicação, e referência que identifica a publicação no GPS. O prazo MUST correr desse instante,
   como corre do registro externo (a FR-288 da `019`), e a convocação MUST ficar visível ao candidato
   pela regra da FR-3981 da `125`, sem regra nova.
-- **FR-5403**: Uma publicação com efeito *convoca* MUST exigir a **declaração do veículo**: o texto em
+- **FR-5703**: Uma publicação com efeito *convoca* MUST exigir a **declaração do veículo**: o texto em
   que a comissão diz onde o Edital admite a página pública do GPS como veículo da convocação (por
   exemplo, *"item 7.2 do Edital"*). Sem ela, a confirmação MUST ser recusada (`veiculo_nao_declarado`)
   sem gravar nada. A declaração MUST ser gravada no ato e na trilha, e MUST NOT ser pedida nem gravada
   quando nenhuma pessoa tiver efeito *convoca* (1ª decisão).
-- **FR-5404**: MUST NOT entrar como *convoca* a convocação: com desfecho; com emissão em estado
+- **FR-5704**: MUST NOT entrar como *convoca* a convocação: com desfecho; com emissão em estado
   indeterminado; cuja forma citada não seja a publicação; ou cujo vencimento preceda o instante da
   publicação. A prévia MUST dizer quantas ficaram fora e por quê, com o caminho de cada correção.
-- **FR-5405**: Uma convocação vigente com comunicação bem-sucedida, em qualquer forma, ainda não
+- **FR-5705**: Uma convocação vigente com comunicação bem-sucedida, em qualquer forma, ainda não
   divulgada por publicação do GPS, MAY entrar com efeito **divulga**: nenhuma comunicação é gravada e
   nenhum instante de prazo muda. A página e o documento MUST dizer, no grupo, que a relação é
   informativa e como a convocação oficial foi feita — *"por mensagem individual"* ou *"publicada em
   ‹referência registrada›"* (2ª decisão).
-- **FR-5406**: Uma convocação sem comunicação bem-sucedida cuja forma não seja a publicação — a
+- **FR-5706**: Uma convocação sem comunicação bem-sucedida cuja forma não seja a publicação — a
   mensagem que falhou ou ainda não saiu — MUST NOT entrar com efeito nenhum: a publicação não
   substitui o envio individual.
-- **FR-5407**: Cada convocação MUST aparecer em **no máximo uma** publicação de convocados, garantido
+- **FR-5707**: Cada convocação MUST aparecer em **no máximo uma** publicação de convocados, garantido
   pelo banco. A repetição com a mesma chave MUST devolver o ato original sem gravar outro; uma
   segunda confirmação com outra chave MUST ser recusada antes da gravação.
-- **FR-5408**: A confirmação MUST carregar a assinatura do alcance da prévia — quem entra, com que
+- **FR-5708**: A confirmação MUST carregar a assinatura do alcance da prévia — quem entra, com que
   efeito, e a comunicação citada no *divulga* — e MUST ser recusada sem gravar nada
   (`publicacao_previa_obsoleta`) quando o alcance de agora for outro. Abrir a página de publicação,
   mudar a escolha de recortes ou ver a prévia MUST NOT gravar nada.
-- **FR-5409**: O ato MUST levar a autoridade signatária escolhida, habilitada na unidade do Edital e
+- **FR-5709**: O ato MUST levar a autoridade signatária escolhida, habilitada na unidade do Edital e
   vigente na data do ato, conferida pela mesma regra da divulgação do resultado (a FR-1125 da `060`);
   nome, cargo e ato de nomeação MUST ficar congelados no ato (4ª decisão).
-- **FR-5410**: O ato MUST registrar o número, o instante, quem publicou, a declaração do veículo, a
+- **FR-5710**: O ato MUST registrar o número, o instante, quem publicou, a declaração do veículo, a
   unidade como estava no dia, o **conteúdo público congelado** (bytes canônicos e o resumo deles) e o
   vínculo com cada convocação publicada, o efeito dela e a comunicação que a convocou. O documento PDF
   MUST ser gerado uma vez, na confirmação, a partir dos mesmos bytes. As três tabelas MUST ser
   append-only nas três camadas (aplicação, gatilho e privilégio ausente).
-- **FR-5411**: A trilha MUST registrar o ato (número, quantas pessoas com cada efeito, a declaração do
+- **FR-5711**: A trilha MUST registrar o ato (número, quantas pessoas com cada efeito, a declaração do
   veículo) e, para cada comunicação gravada, o registro da publicação dela, na frase da publicação
   registrada da `125`.
 
 #### B. O que é público
 
-- **FR-5412**: Por pessoa, o conteúdo público MUST ter **só**: nome, protocolo da inscrição, vaga
+- **FR-5712**: Por pessoa, o conteúdo público MUST ter **só**: nome, protocolo da inscrição, vaga
   (Perfil), lista de concorrência nomeada — inclusive a ampla — e o vencimento registrado. MUST NOT
   ter CPF, inteiro ou parcial, endereço eletrônico, telefone, endereço, data de nascimento, arquivo
   ou documento, fundamento digitado, espécie da convocação, motivo de correção, desfecho ou situação
   documental (3ª decisão). A página e o documento MUST ler os mesmos campos.
-- **FR-5413**: O cabeçalho MUST identificar a unidade (o cabeçalho do ato, como estava no dia), o
+- **FR-5713**: O cabeçalho MUST identificar a unidade (o cabeçalho do ato, como estava no dia), o
   Edital por número e ano, o título do Processo, o número da publicação, a data e a hora, e a
   autoridade signatária.
-- **FR-5414**: As pessoas MUST vir agrupadas por vaga e, dentro dela, por lista, na ordem em que o
+- **FR-5714**: As pessoas MUST vir agrupadas por vaga e, dentro dela, por lista, na ordem em que o
   Edital publicado declara vagas e listas; dentro do grupo, na ordem em que foram convocadas, com o
   protocolo desempatando.
-- **FR-5415**: O vencimento MUST ser dito uma vez no grupo quando for o mesmo para todos, e na linha de
+- **FR-5715**: O vencimento MUST ser dito uma vez no grupo quando for o mesmo para todos, e na linha de
   cada pessoa quando não for. Sem vencimento, MUST dizer que o prazo é o estabelecido no Edital, sem
   data.
-- **FR-5416**: As orientações gerais MUST ser texto do sistema, ditas uma vez por publicação, e não
+- **FR-5716**: As orientações gerais MUST ser texto do sistema, ditas uma vez por publicação, e não
   texto livre da comissão: as providências — documentos, envio e acompanhamento — estão na Área do
   candidato; estar na relação não significa documentação aceita nem matrícula concluída; e, quando o
   Edital pede o Requerimento de Matrícula na convocação, que ele também está lá.
-- **FR-5417**: A convocação que corrige outra já divulgada numa publicação anterior MUST vir marcada
+- **FR-5717**: A convocação que corrige outra já divulgada numa publicação anterior MUST vir marcada
   *"corrige a convocação divulgada na ‹N›ª publicação"*, sem o motivo da correção.
 
 #### C. A página pública
 
-- **FR-5418**: Cada publicação MUST ter página pública, sem autenticação, em endereço estável pela
+- **FR-5718**: Cada publicação MUST ter página pública, sem autenticação, em endereço estável pela
   identidade do ato, e o documento PDF num endereço irmão, entregue como arquivo, com o resumo dos
   bytes como `ETag`.
-- **FR-5419**: A página MUST ler o conteúdo do ato dos bytes congelados, e MUST NOT recompô-lo a partir
+- **FR-5719**: A página MUST ler o conteúdo do ato dos bytes congelados, e MUST NOT recompô-lo a partir
   do estado atual das convocações, inscrições ou do Edital.
-- **FR-5420**: Quando uma convocação da publicação tiver sido corrigida por convocação divulgada numa
+- **FR-5720**: Quando uma convocação da publicação tiver sido corrigida por convocação divulgada numa
   publicação posterior, a página MUST dizer isso no topo e na linha, com o caminho para a posterior.
   É leitura da cadeia, fora do ato: o documento PDF não muda.
-- **FR-5421**: A página pública da seleção MUST ter a seção **Convocações** quando houver publicação de
+- **FR-5721**: A página pública da seleção MUST ter a seção **Convocações** quando houver publicação de
   convocados, depois dos *Resultados divulgados*, com as publicações da mais recente para a mais
   antiga. Cada uma MUST dizer: o número, a data, a natureza — *"Convocação oficial"*, *"Divulgação
   informativa"* ou as duas —, quantas pessoas, as vagas, o prazo quando for um só, se traz correção, e
   os caminhos para a relação e para o documento. As três mais recentes MUST ficar à vista; as
   anteriores, recolhidas em *"Publicações anteriores (N)"*.
-- **FR-5422**: A seção MUST dizer **uma vez**, e não em cada publicação, onde estão as providências
+- **FR-5722**: A seção MUST dizer **uma vez**, e não em cada publicação, onde estão as providências
   individuais (a Área do candidato, com o caminho) e que estar convocado não é ter a documentação
   aceita nem a matrícula concluída.
-- **FR-5423**: Sem publicação de convocados, a seção MUST NOT aparecer.
-- **FR-5424**: A seção e a página da publicação MUST funcionar sem script, sob a CSP da `091` e da
+- **FR-5723**: Sem publicação de convocados, a seção MUST NOT aparecer.
+- **FR-5724**: A seção e a página da publicação MUST funcionar sem script, sob a CSP da `091` e da
   `092`, sem tabela, e em 375 px sem rolagem horizontal; e MUST NOT ficar mais estreitas que o
   conteúdo pede em telas largas, nem esticar linhas de texto além da medida legível.
 
 #### D. A área do candidato
 
-- **FR-5425**: Na convocação publicada no GPS, o *"Publicada em ‹referência›"* da área do candidato
+- **FR-5725**: Na convocação publicada no GPS, o *"Publicada em ‹referência›"* da área do candidato
   MUST levar à página pública da publicação. A convocação, os documentos, o Requerimento e o
   acompanhamento continuam ali, como hoje.
-- **FR-5426**: Os textos da área do candidato e da página pública MUST concordar: a mesma data da
+- **FR-5726**: Os textos da área do candidato e da página pública MUST concordar: a mesma data da
   publicação, o mesmo vencimento e o mesmo número da publicação.
 
 #### E. A gestão
 
-- **FR-5427**: A gestão MUST ter, por Edital, a página **Publicação das convocações**, com: as
+- **FR-5727**: A gestão MUST ter, por Edital, a página **Publicação das convocações**, com: as
   publicações feitas (número, data, natureza, quantas pessoas, caminhos para a página pública e para
   o documento); a escolha dos recortes que entram, todos marcados por padrão; e a prévia do que será
   público.
-- **FR-5428**: A prévia MUST dizer, antes do botão: quantas pessoas, com cada efeito; quais vagas e
+- **FR-5728**: A prévia MUST dizer, antes do botão: quantas pessoas, com cada efeito; quais vagas e
   listas; o canal de cada grupo; quem ficou de fora e por quê; e o efeito da confirmação — *"o prazo
   de N convocações começa a correr agora, e cada candidato passa a ver a sua"* no *convoca*, e
   *"nenhum prazo muda"* no *divulga*. O conteúdo da prévia MUST sair da mesma composição que a
   confirmação grava.
-- **FR-5429**: O botão MUST nomear o ato e o número: *"Publicar a ‹N›ª publicação de convocados"*,
+- **FR-5729**: O botão MUST nomear o ato e o número: *"Publicar a ‹N›ª publicação de convocados"*,
   com quantas pessoas. A declaração do veículo e a autoridade MUST estar no mesmo formulário, sem
   passo a mais.
-- **FR-5430**: Depois da confirmação, a página MUST dizer qual publicação foi feita, quantas pessoas
+- **FR-5730**: Depois da confirmação, a página MUST dizer qual publicação foi feita, quantas pessoas
   ela convocou e quantas divulgou, e levar à página pública e ao documento.
-- **FR-5431**: Na tela do recorte, a seção das comunicações pendentes por publicação MUST oferecer
+- **FR-5731**: Na tela do recorte, a seção das comunicações pendentes por publicação MUST oferecer
   *"Publicar no GPS"*, levando à página de publicação com aquele recorte escolhido, e MUST manter o
   registro da publicação externa como alternativa nomeada (*"Publicada fora do GPS?"*). O cartão da
   convocação publicada no GPS MUST dizer em qual publicação ela saiu, com o caminho para a página
   pública.
-- **FR-5432**: Ler a página de publicação MUST seguir a porta da condução da convocação (presidência e
+- **FR-5732**: Ler a página de publicação MUST seguir a porta da condução da convocação (presidência e
   auditoria leem); publicar MUST exigir a base de gestão da comissão. Quem lê vê as publicações e a
   prévia, sem o formulário.
 
 #### F. Compatibilidade
 
-- **FR-5433**: Os registros anteriores MUST ficar como estão: nenhuma migração de dados, nenhuma
+- **FR-5733**: Os registros anteriores MUST ficar como estão: nenhuma migração de dados, nenhuma
   comunicação reescrita. Convocação comunicada antes desta feature MAY entrar numa publicação como
   *divulga*.
-- **FR-5434**: O registro da publicação externa (o gesto das pendentes e a comunicação individual da
+- **FR-5734**: O registro da publicação externa (o gesto das pendentes e a comunicação individual da
   `050` e da `125`) e a mensagem individual MUST continuar funcionando como hoje.
-- **FR-5435**: O aviso aos convocados de uma chamada publicada (`066`) MUST alcançar a publicação
+- **FR-5735**: O aviso aos convocados de uma chamada publicada (`066`) MUST alcançar a publicação
   nativa, pela referência que ela grava em cada comunicação.
-- **FR-5436**: O custo de consulta da página de publicação MUST NOT crescer com o número de recortes
+- **FR-5736**: O custo de consulta da página de publicação MUST NOT crescer com o número de recortes
   nem de convocações, e o da página pública e da seção MUST NOT crescer com o número de pessoas.
 
 ### Key Entities
@@ -428,38 +430,38 @@ Nenhuma entidade existente muda de forma. A comunicação continua sendo a `Comu
 
 Os doze casos de validação do pedido estão mapeados no fim da [rastreabilidade](rastreabilidade.md).
 
-- **SC-1701**: Numa convocação por mensagem enviada, publicada com efeito *divulga*, o número de
+- **SC-1851**: Numa convocação por mensagem enviada, publicada com efeito *divulga*, o número de
   comunicações, o instante de envio e o estado do prazo são os mesmos antes e depois da publicação.
-- **SC-1702**: Numa convocação por publicação pendente, publicada com efeito *convoca*, há exatamente
+- **SC-1852**: Numa convocação por publicação pendente, publicada com efeito *convoca*, há exatamente
   uma comunicação *enviada*, com instante igual ao da publicação; o estado passa a prazo em curso; e
   a convocação aparece no portal do candidato.
-- **SC-1703**: Numa convocação com publicação registrada fora do GPS, a referência registrada continua
+- **SC-1853**: Numa convocação com publicação registrada fora do GPS, a referência registrada continua
   a única comunicação, e a relação informativa a cita.
-- **SC-1704**: Duas confirmações sucessivas num mesmo Edital produzem a 1ª e a 2ª publicação, e a
+- **SC-1854**: Duas confirmações sucessivas num mesmo Edital produzem a 1ª e a 2ª publicação, e a
   seção *Convocações* as lista da mais nova para a mais antiga.
-- **SC-1705**: Uma publicação com convocações de duas vagas, ou de duas listas da mesma vaga, mostra um
+- **SC-1855**: Uma publicação com convocações de duas vagas, ou de duas listas da mesma vaga, mostra um
   grupo para cada uma, na página e no documento.
-- **SC-1706**: A convocação de suplente para vaga que vagou, praticada depois da 1ª publicação, entra
+- **SC-1856**: A convocação de suplente para vaga que vagou, praticada depois da 1ª publicação, entra
   na 2ª com efeito *convoca*, e a 1ª não muda.
-- **SC-1707**: Depois da correção de uma convocação publicada e da publicação da correção, os bytes do
+- **SC-1857**: Depois da correção de uma convocação publicada e da publicação da correção, os bytes do
   documento da 1ª publicação são idênticos aos de antes, a página da 1ª avisa da correção, e a 2ª
   marca a linha como correção.
-- **SC-1708**: A mesma chave repetida devolve a mesma publicação; outra chave sobre o mesmo alcance é
+- **SC-1858**: A mesma chave repetida devolve a mesma publicação; outra chave sobre o mesmo alcance é
   recusada; e a inserção direta de uma convocação já publicada é recusada pelo banco.
-- **SC-1709**: A seção, a página da publicação e o documento respondem 200 sem sessão; a página de
+- **SC-1859**: A seção, a página da publicação e o documento respondem 200 sem sessão; a página de
   publicação da gestão não abre sem identificação.
-- **SC-1710**: Nenhum CPF, endereço eletrônico, telefone, fundamento digitado ou espécie de convocação
+- **SC-1860**: Nenhum CPF, endereço eletrônico, telefone, fundamento digitado ou espécie de convocação
   dos convocados aparece no texto da página nem do documento, conferido com dados que os contêm.
-- **SC-1711**: Um Edital só com publicações externas, de antes desta feature, abre a página da seleção
+- **SC-1861**: Um Edital só com publicações externas, de antes desta feature, abre a página da seleção
   sem a seção, e o portal do candidato continua dizendo *"Publicada em ‹referência›"* sem caminho.
-- **SC-1712**: O nome, o protocolo, o número da publicação, a data e o vencimento de uma pessoa são os
+- **SC-1862**: O nome, o protocolo, o número da publicação, a data e o vencimento de uma pessoa são os
   mesmos na página pública, no texto do documento e na área do candidato.
-- **SC-1713**: Em navegador real, a seção e a página da publicação, a 375 px, 1280 px e 1920 px, não
+- **SC-1863**: Em navegador real, a seção e a página da publicação, a 375 px, 1280 px e 1920 px, não
   têm rolagem horizontal, e o texto corrido não passa da medida legível; a página de publicação da
   gestão, idem a 375 px e 1280 px.
-- **SC-1714**: Abrir a página de publicação, mudar os recortes escolhidos e ver a prévia não grava
+- **SC-1864**: Abrir a página de publicação, mudar os recortes escolhidos e ver a prévia não grava
   linha nenhuma, em tabela nenhuma.
-- **SC-1715**: O número de consultas da página de publicação não muda de um para três recortes, e o
+- **SC-1865**: O número de consultas da página de publicação não muda de um para três recortes, e o
   da página pública não muda de uma para cinco pessoas.
 
 ## Assumptions
@@ -485,5 +487,5 @@ Achados do diagnóstico que esta spec **não** resolve — governança é do usu
   um degrau de schema.
 - **Listar as publicações externas na página pública.** A referência registrada é texto livre; se ela
   passar a ser pública, convém que a comissão saiba disso ao digitá-la, como na 2ª decisão da `125`.
-- **Orientações livres da comissão na publicação.** Ficaram fixas (FR-5416) pela mesma razão do texto
+- **Orientações livres da comissão na publicação.** Ficaram fixas (FR-5716) pela mesma razão do texto
   livre da `125`; se forem necessárias, pedem aviso e prévia.

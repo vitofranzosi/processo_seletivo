@@ -314,7 +314,7 @@ QUEM_CARREGA = {
     "interface/telas/centro.css": {"centro_do_edital.html", "processo_detalhe.html"},
     "interface/telas/lista.css": {"lista.html", "processo_detalhe.html"},
     "interface/telas/processo.css": {"processo_detalhe.html"},
-    # A publicação das convocações no GPS (148): a prévia, a escolha dos recortes e o que já saiu.
+    # A publicação das convocações no GPS (149): a prévia, a escolha dos recortes e o que já saiu.
     "interface/telas/publicacao-de-convocados.css": {"publicacao_de_convocados.html"},
     **{
         f"interface/telas/{tela}.css": {f"{tela.replace('-', '_')}.html"}

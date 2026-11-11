@@ -1,4 +1,4 @@
-# Research: A publicação das convocações no GPS (148)
+# Research: A publicação das convocações no GPS (149)
 
 O diagnóstico e as decisões de desenho. As dez primeiras respondem, na ordem, às dez perguntas de
 arquitetura do pedido; as três últimas, ao que o diagnóstico encontrou além delas. Em cada uma, a
@@ -61,7 +61,7 @@ vínculo com o ato (`ConvocacaoPublicada.comunicacao`).
 
 **A referência gravada na nativa** é a frase *"página pública da seleção no GPS, ‹data› às ‹hora› —
 ‹N›ª publicação de convocados"*. Ela satisfaz a constraint, lê-se bem depois de *"Publicada em"* no
-portal (FR-3998 da `125`), e é o que agrupa a chamada publicada nos avisos da `066` (FR-5435).
+portal (FR-3998 da `125`), e é o que agrupa a chamada publicada nos avisos da `066` (FR-5735).
 
 ## D-003 — O evento oficial é o `commit` da confirmação, e um instante só
 
@@ -85,7 +85,7 @@ reservas de chave, e a possibilidade de um ato publicado com prazos não iniciad
 nas duas formas, e a visibilidade ao candidato é a FR-3981 da `125`. A publicação nativa só **grava**
 a comunicação; quem decide o prazo e a visibilidade é o código de sempre. No *divulga*, a publicação
 não grava comunicação, e por isso não tem como mexer em prazo — a garantia é estrutural, e o teste a
-confere (SC-1701).
+confere (SC-1851).
 
 **As guardas do envio valem no convoca.** As que `comunicar()` aplica — desfecho registrado,
 vencimento anterior ao envio, emissão indeterminada, forma não declarada — são aplicadas pela prévia,
@@ -94,10 +94,10 @@ e conferidas de novo dentro da transação pela assinatura.
 ## D-005 — A relação histórica são os bytes do ato, e o vínculo é de integridade
 
 **Decisão.** O que a página e o documento mostram sai **só** de `conteudo_publico`, composto na
-confirmação e nunca recomposto (FR-5419): nomes, protocolos, rótulos de vaga e lista lidos da versão
+confirmação e nunca recomposto (FR-5719): nomes, protocolos, rótulos de vaga e lista lidos da versão
 que cada convocação citou, vencimentos, a autoridade e a unidade como estavam. A tabela
 `ConvocacaoPublicada` não é lida para exibir: ela existe para o banco garantir que cada convocação
-está em no máximo uma publicação (FR-5407), para a área do candidato achar a publicação da sua
+está em no máximo uma publicação (FR-5707), para a área do candidato achar a publicação da sua
 comunicação, e para a correção posterior achar a publicação que corrige.
 
 **Alternativa recusada.** Compor a página das tabelas a cada leitura: um nome corrigido na inscrição,
@@ -109,7 +109,7 @@ ou uma Retificação do rótulo da lista, reescreveria em silêncio o que foi pu
 sucessão com motivo; a sucessora nasce sem comunicação e entra na publicação seguinte com efeito
 *convoca*, marcada *"corrige a convocação divulgada na ‹N›ª publicação"* — a marca é congelada no ato
 seguinte, que sabe o número do anterior. A página da publicação anterior **deriva**, da cadeia de
-convocações, o aviso de que uma linha dela foi corrigida depois (FR-5420), sem tocar os bytes nem o
+convocações, o aviso de que uma linha dela foi corrigida depois (FR-5720), sem tocar os bytes nem o
 PDF.
 
 **Por que não uma sucessão de publicações, como o resultado.** O resultado é uma lista inteira que se
@@ -155,7 +155,7 @@ sorteio — não publica CPF em forma nenhuma.
 
 **Decisão.** O número é sequencial por Edital, atribuído dentro da trava do Processo, com
 `UniqueConstraint(edital, numero)` como segunda guarda. Uma publicação reúne quantos recortes a
-comissão escolher, em grupos por vaga e lista (FR-5414); a 2ª chamada de uma pessoa (suplência,
+comissão escolher, em grupos por vaga e lista (FR-5714); a 2ª chamada de uma pessoa (suplência,
 reclassificação) é outra convocação, e entra na publicação em que for publicada. O recorte é a chave
 `(perfil, marco, lista)`; quando dois grupos de uma publicação teriam o mesmo rótulo (dois marcos da
 mesma vaga e lista), o nome do marco os distingue.
@@ -168,9 +168,9 @@ pedido quer eliminar.
 
 **Decisão.** Nenhuma migração de dados. As comunicações registradas antes desta feature continuam
 como estão, e o portal continua dizendo *"Publicada em ‹referência›"* sem caminho para elas
-(SC-1711). Uma convocação comunicada antes pode entrar numa publicação do GPS como *divulga*. O gesto
+(SC-1861). Uma convocação comunicada antes pode entrar numa publicação do GPS como *divulga*. O gesto
 das pendentes continua aceitando a referência externa, e a mensagem individual continua saindo como
-hoje (FR-5434).
+hoje (FR-5734).
 
 ## D-011 — *Publicação de convocados*, e não *chamada*
 

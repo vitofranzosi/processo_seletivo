@@ -1,4 +1,4 @@
-# Implementation Plan: A publicação das convocações no GPS (148)
+# Implementation Plan: A publicação das convocações no GPS (149)
 
 **Branch**: `claude/gps-public-convocacoes-db0f9b` | **Date**: 2026-11-11 | **Spec**: [spec.md](spec.md)
 
@@ -15,7 +15,7 @@ seleção; a gestão ganha a página de publicação do Edital e o caminho a par
 **Language/Version**: Python 3.12, Django 5 · **Storage**: PostgreSQL (append-only por gatilho e
 privilégio) · **Testing**: pytest contra PostgreSQL (`make test-pg`), Playwright opcional ·
 **Target**: monólito Django, templates sem script inline (CSP da `091`/`092`) · **Constraints**:
-número fixo de consultas na prévia e na página pública (FR-5436); nada de `<table>` no portal; folhas
+número fixo de consultas na prévia e na página pública (FR-5736); nada de `<table>` no portal; folhas
 estáticas.
 
 ## Constitution Check
@@ -52,11 +52,11 @@ backend/tests/
 
 ## Ordem
 
-1. Modelo, migration, append-only (FR-5407, FR-5410).
-2. Domínio puro: efeitos e composição (FR-5402, FR-5404–FR-5406, FR-5412–FR-5417).
-3. Comando e prévia (FR-5401–FR-5411).
-4. Portal: página, PDF, seção, área do candidato (FR-5418–FR-5426).
-5. Gestão: página de publicação e o caminho do recorte (FR-5427–FR-5432).
+1. Modelo, migration, append-only (FR-5707, FR-5710).
+2. Domínio puro: efeitos e composição (FR-5702, FR-5704–FR-5706, FR-5712–FR-5717).
+3. Comando e prévia (FR-5701–FR-5711).
+4. Portal: página, PDF, seção, área do candidato (FR-5718–FR-5726).
+5. Gestão: página de publicação e o caminho do recorte (FR-5727–FR-5732).
 6. Guardiões: contagem de migrations, gatilhos, inventário de negativas, folhas, vocabulário.
 7. Navegador: capturas em 375, 1280 e 1920 px.
 
