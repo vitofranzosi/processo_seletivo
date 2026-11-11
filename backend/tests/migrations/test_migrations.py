@@ -896,7 +896,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # nomeação de quem respondeu pelo ato e as cinco colunas da unidade, congelados no dia.
         # Outra feature, e não esta lendo: `ADD COLUMN` com padrão constante, que não reescreve
         # linha nem dispara o gatilho append-only (060, FR-1128).
-        "divulgacao": 4,
+        # **Sobe para 5 com a 148**: a `divulgacao/0005` cria as duas tabelas da publicação das
+        # inscrições. Não é a 022 tocando o que lê: é outra feature, e só cria — nenhuma coluna em
+        # tabela existente, nenhuma linha percorrida (148, FR-5437).
+        "divulgacao": 5,
         # **Sobe para 15 com a 021**: a `editais/0014` põe o método de sorteio no marco e a `0015`
         # o local do Evento. As duas são elaboração — quem declara é o Edital —, e nenhuma delas é
         # da supervisão.

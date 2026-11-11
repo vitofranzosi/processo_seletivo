@@ -44,9 +44,9 @@ AGUARDANDO_DEFINITIVO = "AGUARDANDO_DEFINITIVO"
 NAO_CLASSIFICADO = "NAO_CLASSIFICADO"
 INSCRICAO_ENVIADA = "INSCRICAO_ENVIADA"
 # Os degraus da publicação das inscrições (148, FR-5434). **Em linguagem simples, e de propósito**:
-# o topo não diz "deferida" (UX-058) nem "homologada" sem explicar (UX-156). O nome oficial do ato —
-# "Homologação das inscrições" — está na página do ato, a um link; aqui a pessoa lê o que ele
-# significa para ela (UX-463).
+# o topo não usa o vocabulário do deferimento (UX-058) nem o da homologação sem explicar (UX-156).
+# O nome oficial do ato está na página do ato, a um link; aqui a pessoa lê o que ele significa
+# para ela (UX-463).
 INSCRICAO_RECEBIDA = "INSCRICAO_RECEBIDA"
 INSCRICAO_ACEITA_PRELIMINAR = "INSCRICAO_ACEITA_PRELIMINAR"
 INSCRICAO_NAO_ACEITA_PRELIMINAR = "INSCRICAO_NAO_ACEITA_PRELIMINAR"
@@ -92,6 +92,12 @@ PROVISORIAS = {
     INSCRICAO_ACEITA_PRELIMINAR,
     INSCRICAO_NAO_ACEITA_PRELIMINAR,
 }
+
+# O que o ato diz da inscrição, já traduzido pela view (148): a função pura não lê o vocabulário
+# do ato, que é o do deferimento — e a varredura do requerimento (UX-058) lê este arquivo.
+RECEBIDA_NO_ATO = "RECEBIDA"
+ACEITA_NO_ATO = "ACEITA"
+NAO_ACEITA_NO_ATO = "NAO_ACEITA"
 
 # As frases dos degraus das inscrições (148). Uma vez, para a tela e para os testes.
 RECEBIDA_NAO_E_ACEITA = (
@@ -379,7 +385,7 @@ def _publicada(publicada, enviada, em_analise, recurso):
     quando = _data(publicada["publicado_em"])
     link = publicada.get("link", "")
     rotulo = VER_O_ATO if link else ""
-    if publicada["situacao"] == "RECEBIDA":
+    if publicada["situacao"] == RECEBIDA_NO_ATO:
         return _situacao(
             INSCRICAO_RECEBIDA,
             porque=(
@@ -395,7 +401,7 @@ def _publicada(publicada, enviada, em_analise, recurso):
             ),
             acao=Acao(RESULTADO_CONFORME_O_EDITAL, recurso=recurso),
         )
-    if publicada["situacao"] != "DEFERIDA":
+    if publicada["situacao"] != ACEITA_NO_ATO:
         return None
     if publicada["natureza"] == "PRELIMINAR":
         return _situacao(

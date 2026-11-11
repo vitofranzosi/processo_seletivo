@@ -3366,9 +3366,15 @@ def _inscricao_publicada(inscricao):
     if lida is None:
         return None
     ato = lida["ato"]
+    # A tradução para o vocabulário da tela: a função pura fala de "aceita", e não do ato.
+    traducao = {
+        "RECEBIDA": situacao_da_inscricao.RECEBIDA_NO_ATO,
+        "DEFERIDA": situacao_da_inscricao.ACEITA_NO_ATO,
+        "INDEFERIDA": situacao_da_inscricao.NAO_ACEITA_NO_ATO,
+    }
     return {
         "natureza": lida["natureza"],
-        "situacao": lida["situacao"],
+        "situacao": traducao[lida["situacao"]],
         "publicado_em": ato.publicado_em,
         "etapa_id": str(ato.etapa_id) if ato.etapa_id else "",
         "link": reverse("portal:publicacao-das-inscricoes", args=[ato.id]),

@@ -86,6 +86,19 @@ def test_o_preliminar_le_o_resultado_e_so_conta_a_indeferida():
     assert indeferida.resultado_id == resultado(2, False)["id"]
 
 
+def test_perfil_sem_inscricao_aparece_vazio_e_nao_some():
+    """Visto na validação: num Edital de dois Perfis, o que não recebeu inscrição sumia do ato."""
+    projecao = dominio.projetar(
+        natureza=dominio.RECEBIDAS, inscricoes=INSCRICOES[:1], resultados=None, perfis=PERFIS
+    )
+
+    assert [grupo["perfil"] for grupo in projecao.perfis] == [
+        "Professor de Matemática",
+        "Tutor a distância",
+    ]
+    assert projecao.perfis[1]["constam"] == []
+
+
 def test_inscricao_sem_resultado_e_pendente_e_fica_fora():
     resultados = {INSCRICOES[0]["id"]: resultado(1, True)}
 

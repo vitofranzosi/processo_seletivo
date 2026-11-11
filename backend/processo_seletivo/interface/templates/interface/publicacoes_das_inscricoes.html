@@ -124,7 +124,7 @@ o indeferido não é nomeado no ato (D-010), e a prévia não ensina o contrári
 {% comment %}Havendo impedimento, a recusa é nomeada e o botão não é oferecido (FR-5432).{% endcomment %}
 <section class="consequencias irreversivel" aria-labelledby="titulo-impedimento">
   <h3 id="titulo-impedimento">Este ato ainda não pode ser publicado</h3>
-  <ul>{% for codigo, mensagem in afericao.impedimentos %}<li class="erro">{{ mensagem }}</li>{% endfor %}</ul>
+  {% for codigo, mensagem in afericao.impedimentos %}<p class="erro" role="alert">{{ mensagem }}</p>{% endfor %}
 </section>
 {% elif pode_publicar %}
 <section class="consequencias irreversivel" aria-labelledby="titulo-consequencias">

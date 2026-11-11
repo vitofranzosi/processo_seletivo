@@ -121,6 +121,11 @@ def projetar(*, natureza, inscricoes, resultados, perfis):
 
     ordem = [str(perfil_id) for perfil_id, _nome in perfis]
     nomes = {str(perfil_id): nome for perfil_id, nome in perfis}
+    # **Todo Perfil da versão aparece, inclusive sem inscrição**: "ninguém se inscreveu" é resposta,
+    # e não ausência dela — o precedente da tela de Inscrições (009). Visto na validação, num Edital
+    # de dois Perfis em que o segundo sumia do ato.
+    for chave in ordem:
+        por_perfil.setdefault(chave, {"constam": [], "nao": 0})
     # Perfil que a versão não nomeia vai para o fim, sem nome inventado — não deve acontecer, porque
     # a inscrição nasce num Perfil publicado; se acontecer, a inscrição não desaparece do ato.
     chaves = sorted(por_perfil, key=lambda chave: (ordem.index(chave) if chave in ordem else 10**6))
