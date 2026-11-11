@@ -24,8 +24,36 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
+  # **O lint num job próprio**, sem banco nem navegador: devolve em segundos o que antes esperava a
+  # instalação do Chromium, e não se repete em cada fatia.
+  lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --extra dev --locked
+      - run: uv run ruff check .
+      # O `check` não olha formatação: sem este passo a divergência cresce sem sinal —
+      # foi assim que a árvore chegou a 101 arquivos fora de formato antes de alguém rodar
+      # `ruff format` pela primeira vez.
+      - run: uv run ruff format --check .
+
+  # **A suíte em três fatias, cada uma num runner com o seu PostgreSQL** (`tests/fatias.py`). Num
+  # runner só, o pytest foi de 836s (17/10) a 2287s (11/11) com a suíte crescendo 60%, e mais workers
+  # no mesmo runner não rendem: o disco do serviço é um só. Outro runner traz outro disco, e o
+  # repositório é público. `fail-fast: false` para uma fatia vermelha não esconder as outras.
+  fatia:
+    name: test (${{ matrix.fatia }}/3)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fatia: [1, 2, 3]
     services:
       postgres:
         # **Pelo espelho do Docker Hub, e não por ele.** O Docker Hub limita os downloads sem login
@@ -68,17 +96,29 @@ jobs:
       # rodou. `--with-deps` instala as bibliotecas do sistema que o Chromium pede no Ubuntu.
       - run: uv sync --extra dev --extra assistente --extra navegador --locked
       - run: uv run playwright install --with-deps chromium
-      - run: uv run ruff check .
-      # O `check` não olha formatação: sem este passo a divergência cresce sem sinal —
-      # foi assim que a árvore chegou a 101 arquivos fora de formato antes de alguém rodar
-      # `ruff format` pela primeira vez.
-      - run: uv run ruff format --check .
-      - run: uv run python manage.py makemigrations --check --dry-run
+      # Uma vez, e não em cada fatia: a resposta não depende de qual caso a fatia roda.
+      - if: matrix.fatia == 1
+        run: uv run python manage.py makemigrations --check --dry-run
       # **Quatro workers, porque o runner tem quatro vCPUs** — o `ubuntu-latest` de repositório
       # público —, e o PostgreSQL do serviço divide com eles. `worksteal`, e não a distribuição
       # padrão, que deixava três workers ociosos esperando o quarto. Cada worker cria o seu banco de
       # teste no mesmo serviço; as medições estão em `doc/estudo-paralelizacao-da-suite.md`.
-      - run: uv run pytest -n 4 --dist worksteal
+      # `python -m`, e não o executável `pytest`: o `-p tests.fatias` é importado antes de o
+      # `pythonpath` do `pyproject.toml` valer, e só o `-m` põe o diretório corrente no caminho.
+      - run: uv run python -m pytest -n 4 --dist worksteal -p tests.fatias --fatia=${{ matrix.fatia }}/3
+
+  # **O nome `test` continua sendo o veredito da suíte**, para quem lê os checks e para o que
+  # dependa dele: verde só com o lint e as três fatias verdes. `!cancelled()` para que uma fatia
+  # vermelha dê um `test` vermelho, e não um `test` pulado — pulado conta como aprovado —, sem fazê-lo
+  # rodar numa run que a concorrência cancelou, como `always()` faria.
+  test:
+    needs: [lint, fatia]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          test "${{ needs.lint.result }}" = success
+          test "${{ needs.fatia.result }}" = success
 
   # O ambiente containerizado é o caminho canônico de desenvolvimento, e caminho documentado que
   # ninguém executa apodrece calado. Este job é o que impede isso: ele sobe a mesma pilha que a

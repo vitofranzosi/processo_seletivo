@@ -429,8 +429,11 @@ def _preparar_limpeza(conexao):
     tabelas = conexao.introspection.django_table_names(only_existing=True, include_views=False)
     try:
         with conexao.cursor() as cursor:
+            cursor.execute("SELECT current_setting('is_superuser') = 'on'")
+            (superusuario,) = cursor.fetchone()
             return {
                 "tabelas": tabelas,
+                "superusuario": superusuario,
                 "quem_referencia": _quem_referencia(cursor, tabelas),
                 "impressao": _impressao_das_tabelas_de_referencia(cursor),
                 # Uma ida ao banco, e não uma por tabela.
@@ -459,8 +462,39 @@ def _limpar_como_o_django(db_name):
     )
 
 
+def _apagar_as_linhas(conexao, tabelas):
+    """`DELETE` das tabelas com linha, com os gatilhos desligados só nesta transação.
+
+    **`DELETE`, e não `TRUNCATE`, porque o `TRUNCATE` é o que custava.** Ele cria um arquivo novo
+    para cada tabela e exige junto todas as que a referenciam, vazias ou não — dezenas de tabelas
+    por caso, para apagar umas vinte com linha. O `DELETE` apaga só as sujas: o teardown do caso
+    transacional caiu de ~430 ms para ~20 ms, e a suíte, ~60% (o estudo está em
+    `doc/estudo-limpeza-dos-casos-transacionais.md`).
+
+    **`session_replication_role = replica` desliga os gatilhos**: os de chave estrangeira, para a
+    ordem dos `DELETE` não importar, e os append-only, que recusariam o `DELETE`. O `TRUNCATE` de
+    antes também passava por cima dos de linha. A garantia continua provada dentro do caso; a
+    limpeza acontece depois dele, e só ela tem os gatilhos desligados. Exige superusuário — o
+    `make test-pg` e o CI conectam como um; sem ele, a limpeza continua no `TRUNCATE`.
+
+    **O preço é a ordem física.** Num heap que já teve linha apagada, o PostgreSQL reaproveita o
+    espaço, e a ordem em que lê deixa de ser a de inserção. Consulta sem desempate que passava por
+    sorte passa a falhar no meio da suíte e não sozinha — foi assim que `situacoes_do_candidato`
+    apareceu. É defeito da consulta, e não desta limpeza. `LIMPEZA_POR_TRUNCATE=1` devolve o
+    `TRUNCATE`, para confirmar a suspeita.
+    """
+    from django.db import transaction
+
+    with transaction.atomic(using=conexao.alias), conexao.cursor() as cursor:
+        cursor.execute("SET LOCAL session_replication_role = replica")
+        for tabela in sorted(tabelas):
+            cursor.execute(f"DELETE FROM {conexao.ops.quote_name(tabela)}")
+
+
 def _limpar_so_o_que_mudou(conexao, preparo, db_name):
     """Devolve `False` quando o banco não está como o preparo o viu, e a limpeza não foi feita."""
+    import os
+
     from django.core.management.color import no_style
     from django.core.management.sql import emit_post_migrate_signal
     from django.db import DatabaseError
@@ -475,14 +509,19 @@ def _limpar_so_o_que_mudou(conexao, preparo, db_name):
         return False
     if intactas:
         sujas -= _TABELAS_DE_REFERENCIA
-    alvo = _fecho(sujas, preparo["quem_referencia"])
+    if preparo["superusuario"] and os.environ.get("LIMPEZA_POR_TRUNCATE") != "1":
+        alvo = sujas
+        if alvo:
+            _apagar_as_linhas(conexao, alvo)
+    else:
+        alvo = _fecho(sujas, preparo["quem_referencia"])
+        if alvo:
+            conexao.ops.execute_sql_flush(
+                conexao.ops.sql_flush(no_style(), sorted(alvo), reset_sequences=False)
+            )
     # Nenhuma tabela suja é referenciada pelas de referência hoje, e o fecho não chega a elas. Se
-    # um dia chegar, elas são truncadas, e então precisam do sinal que as repovoa.
+    # um dia chegar, elas são esvaziadas, e então precisam do sinal que as repovoa.
     repovoar = not intactas or bool(alvo & _TABELAS_DE_REFERENCIA)
-    if alvo:
-        conexao.ops.execute_sql_flush(
-            conexao.ops.sql_flush(no_style(), sorted(alvo), reset_sequences=False)
-        )
     if repovoar:
         emit_post_migrate_signal(0, False, db_name)
         # Repovoadas, as linhas voltam com ids novos. Sem a impressão nova, toda limpeza seguinte
@@ -496,10 +535,11 @@ def _limpar_so_o_que_mudou(conexao, preparo, db_name):
 def _limpeza_enxuta(self):
     """O `TransactionTestCase._fixture_teardown`, sem o trabalho que não muda o banco.
 
-    **Trunca só as tabelas com linha, e as que as referenciam.** O PostgreSQL só aceita truncar
-    uma tabela junto de todas as que têm chave estrangeira para ela, vazias ou não — o fecho é
-    dessas, e não um excesso de zelo. As que ficam de fora já estavam vazias, e o `TRUNCATE` do
-    Django não reinicia sequência: o banco que o caso seguinte recebe é o mesmo.
+    **Apaga só as tabelas com linha**, por `DELETE` (`_apagar_as_linhas`). Sem superusuário, ou com
+    `LIMPEZA_POR_TRUNCATE=1`, trunca-as junto das que as referenciam: o PostgreSQL só aceita
+    truncar uma tabela junto de todas as que têm chave estrangeira para ela, vazias ou não — o
+    fecho é dessas, e não um excesso de zelo. As que ficam de fora já estavam vazias, e nenhum dos
+    dois caminhos reinicia sequência: o banco que o caso seguinte recebe é o mesmo.
 
     **Não emite o `post_migrate` quando as tabelas de referência continuam como estavam.** Ele só
     recria tipos de conteúdo e permissões, e elas ficam fora do `TRUNCATE`. Se um caso mexer
