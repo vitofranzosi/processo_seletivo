@@ -1,4 +1,4 @@
-"""A projeção da publicação das inscrições — a conta que a prévia, o ato e a divergência dividem (148).
+"""A projeção da publicação das inscrições — a conta da prévia, do ato e da divergência (148).
 
 Pura: nada de banco nem relógio. É aqui que se prende a fronteira pública (D-010) — o conteúdo que
 vira bytes não tem como carregar motivo, modalidade nem dado pessoal, porque a função que o monta
@@ -52,7 +52,7 @@ def test_a_relacao_de_recebidas_contempla_todas_e_nao_le_resultado():
 
 
 def test_a_ordem_ignora_caixa_e_acento_e_desempata_pelo_protocolo():
-    """`ana Lima` e `Ana Lima` são a mesma chave de nome: o protocolo decide, e a ordem é estável."""
+    """`ana Lima` e `Ana Lima` têm a mesma chave: o protocolo decide, e a ordem é estável."""
     projecao = dominio.projetar(
         natureza=dominio.RECEBIDAS, inscricoes=INSCRICOES, resultados=None, perfis=PERFIS
     )

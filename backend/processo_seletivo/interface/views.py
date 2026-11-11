@@ -6023,6 +6023,7 @@ def inscricoes_recebidas(request, edital_id):
                 "perfil": perfil,
                 "modalidade": modalidade,
                 "filtrando": bool(busca or perfil or modalidade),
+                "pode_ver_publicacoes": acoes.pode_consultar_a_divulgacao(ator),
                 "filtro": filtro,
                 # Sem o Perfil, para que o cartão possa trocá-lo sem descartar o resto.
                 "filtro_sem_perfil": _querystring(busca=busca, modalidade=modalidade),

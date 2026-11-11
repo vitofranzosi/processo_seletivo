@@ -83,8 +83,8 @@ def _perfil(composicao, grupo, conteudo):
     if grupo["constam"]:
         _tabela(
             composicao,
-            ["Protocolo", "Candidato"],
-            [[linha["protocolo"], linha["candidato"]] for linha in grupo["constam"]],
+            ["Candidato", "Protocolo"],
+            [[linha["candidato"], linha["protocolo"]] for linha in grupo["constam"]],
             recuo=0.0,
             alinhamentos=[ESQUERDA, ESQUERDA],
         )
@@ -96,8 +96,9 @@ def _perfil(composicao, grupo, conteudo):
         )
     if conteudo.get("rotulo_nao_constam") and grupo["nao_constam"]:
         composicao.escrever(
-            f"{grupo['nao_constam']} {conteudo['rotulo_nao_constam']} neste Perfil — não nomeadas; "
-            "cada candidato consulta a própria situação e o motivo na área do candidato.",
+            f"{conteudo['rotulo_nao_constam'].capitalize()} neste Perfil: "
+            f"{grupo['nao_constam']} — não nomeadas; cada candidato consulta a própria situação "
+            "e o motivo na área do candidato.",
             tamanho=CORPO_NOTA,
             antes=ANTES_DE_LINHA,
         )

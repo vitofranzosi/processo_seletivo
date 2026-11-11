@@ -43,6 +43,15 @@ AGUARDANDO_CHAMADA = "AGUARDANDO_CHAMADA"
 AGUARDANDO_DEFINITIVO = "AGUARDANDO_DEFINITIVO"
 NAO_CLASSIFICADO = "NAO_CLASSIFICADO"
 INSCRICAO_ENVIADA = "INSCRICAO_ENVIADA"
+# Os degraus da publicação das inscrições (148, FR-5434). **Em linguagem simples, e de propósito**:
+# o topo não diz "deferida" (UX-058) nem "homologada" sem explicar (UX-156). O nome oficial do ato —
+# "Homologação das inscrições" — está na página do ato, a um link; aqui a pessoa lê o que ele
+# significa para ela (UX-463).
+INSCRICAO_RECEBIDA = "INSCRICAO_RECEBIDA"
+INSCRICAO_ACEITA_PRELIMINAR = "INSCRICAO_ACEITA_PRELIMINAR"
+INSCRICAO_NAO_ACEITA_PRELIMINAR = "INSCRICAO_NAO_ACEITA_PRELIMINAR"
+INSCRICAO_ACEITA = "INSCRICAO_ACEITA"
+INSCRICAO_NAO_ACEITA = "INSCRICAO_NAO_ACEITA"
 
 ROTULOS = {
     CONVOCADO: "Convocado",
@@ -53,6 +62,11 @@ ROTULOS = {
     AGUARDANDO_DEFINITIVO: "Aguardando resultado definitivo",
     NAO_CLASSIFICADO: "Não classificado",
     INSCRICAO_ENVIADA: "Inscrição enviada",
+    INSCRICAO_RECEBIDA: "Inscrição recebida",
+    INSCRICAO_ACEITA_PRELIMINAR: "Inscrição aceita (resultado preliminar)",
+    INSCRICAO_NAO_ACEITA_PRELIMINAR: "Inscrição não aceita (resultado preliminar)",
+    INSCRICAO_ACEITA: "Inscrição aceita",
+    INSCRICAO_NAO_ACEITA: "Inscrição não aceita",
 }
 
 # **O rótulo de cada desfecho em linguagem simples, e nenhum promovido a matrícula** (FR-1172). O
@@ -69,7 +83,24 @@ DESFECHOS = {
     convocacao_nomes.RECLASSIFICACAO: "Reclassificado",
 }
 
-PROVISORIAS = {CONVOCADO, AGUARDANDO_CHAMADA, AGUARDANDO_DEFINITIVO, INSCRICAO_ENVIADA}
+PROVISORIAS = {
+    CONVOCADO,
+    AGUARDANDO_CHAMADA,
+    AGUARDANDO_DEFINITIVO,
+    INSCRICAO_ENVIADA,
+    INSCRICAO_RECEBIDA,
+    INSCRICAO_ACEITA_PRELIMINAR,
+    INSCRICAO_NAO_ACEITA_PRELIMINAR,
+}
+
+# As frases dos degraus das inscrições (148). Uma vez, para a tela e para os testes.
+RECEBIDA_NAO_E_ACEITA = (
+    "Recebida quer dizer que a inscrição chegou dentro do prazo, e não que já foi aceita."
+)
+PRELIMINAR_DA_ANALISE_PODE_MUDAR = (
+    "Este resultado é preliminar e pode mudar até a relação final das inscrições aceitas."
+)
+VER_O_ATO = "Ver a relação publicada"
 
 # --- As frases de consequência: estas duas, e nenhuma outra (FR-1177) --------------------------
 # **Nenhuma promete perda.** A primeira não diz que haverá chamada; a segunda não diz que a pessoa
@@ -181,6 +212,7 @@ def situacao_da_inscricao(
     recursos,
     politica_do_requerimento=None,
     obrigacoes=None,
+    inscricao_publicada=None,
 ):
     """A situação, pela primeira regra da precedência que se aplica (D-002).
 
@@ -236,6 +268,9 @@ def situacao_da_inscricao(
         )
 
     eliminacoes = [etapa for etapa in resultados_das_etapas if not etapa["habilitada"]]
+    nao_aceita = _nao_aceita_na_analise(eliminacoes, inscricao_publicada, em_analise, recurso)
+    if nao_aceita is not None:
+        return nao_aceita
     if eliminacoes:
         return _situacao(
             ELIMINADO,
@@ -289,9 +324,106 @@ def situacao_da_inscricao(
         if inscricao.submitted_at
         else ()
     )
+    publicada = _publicada(inscricao_publicada, enviada, em_analise, recurso)
+    if publicada is not None:
+        return publicada
     return _situacao(
         INSCRICAO_ENVIADA,
         porque=(*enviada, *em_analise),
+        acao=Acao(RESULTADO_CONFORME_O_EDITAL, recurso=recurso),
+    )
+
+
+def _nao_aceita_na_analise(eliminacoes, publicada, em_analise, recurso):
+    """A inscrição que a análise das inscrições não aceitou — antes do degrau "Eliminado" (148).
+
+    Só quando a eliminação é **da Etapa que o ato publicou**: eliminação numa Etapa posterior
+    continua sendo "Eliminado", com a frase de sempre. O motivo detalhado é o parecer de quem
+    analisou, que a seção da Etapa, logo abaixo, mostra enquanto o prazo corre (036); o topo não
+    repete o motivo da consolidação, que só diria o rótulo da decisão.
+    """
+    if not publicada or not publicada.get("etapa_id"):
+        return None
+    da_analise = [e for e in eliminacoes if str(e.get("etapa_id")) == publicada["etapa_id"]]
+    if not da_analise:
+        return None
+    preliminar = publicada["natureza"] == "PRELIMINAR"
+    quando = _data(publicada["publicado_em"])
+    if preliminar:
+        texto = (
+            f"Sua inscrição não foi aceita na análise das inscrições ({da_analise[0]['etapa']}), "
+            f"no resultado preliminar publicado em {quando}."
+        )
+    else:
+        texto = (
+            f"Sua inscrição não está na relação final das inscrições aceitas, publicada em "
+            f"{quando}. A análise das inscrições ({da_analise[0]['etapa']}) não a aceitou."
+        )
+    porque = [
+        Linha(texto, publicada.get("link", ""), VER_O_ATO if publicada.get("link") else ""),
+        Linha("O que faltou está na fundamentação da etapa, logo abaixo."),
+    ]
+    if preliminar:
+        porque.append(Linha(PRELIMINAR_DA_ANALISE_PODE_MUDAR))
+    return _situacao(
+        INSCRICAO_NAO_ACEITA_PRELIMINAR if preliminar else INSCRICAO_NAO_ACEITA,
+        porque=(*porque, *em_analise),
+        acao=Acao(NADA_POR_ENQUANTO, recurso=recurso),
+    )
+
+
+def _publicada(publicada, enviada, em_analise, recurso):
+    """Recebida, aceita no preliminar ou aceita em definitivo — quando nada depois disso existe."""
+    if not publicada:
+        return None
+    quando = _data(publicada["publicado_em"])
+    link = publicada.get("link", "")
+    rotulo = VER_O_ATO if link else ""
+    if publicada["situacao"] == "RECEBIDA":
+        return _situacao(
+            INSCRICAO_RECEBIDA,
+            porque=(
+                *enviada,
+                Linha(
+                    f"Sua inscrição consta na relação de inscrições recebidas, publicada em "
+                    f"{quando}.",
+                    link,
+                    rotulo,
+                ),
+                Linha(RECEBIDA_NAO_E_ACEITA),
+                *em_analise,
+            ),
+            acao=Acao(RESULTADO_CONFORME_O_EDITAL, recurso=recurso),
+        )
+    if publicada["situacao"] != "DEFERIDA":
+        return None
+    if publicada["natureza"] == "PRELIMINAR":
+        return _situacao(
+            INSCRICAO_ACEITA_PRELIMINAR,
+            porque=(
+                Linha(
+                    f"Sua inscrição foi aceita na análise das inscrições, no resultado preliminar "
+                    f"publicado em {quando}.",
+                    link,
+                    rotulo,
+                ),
+                Linha(PRELIMINAR_DA_ANALISE_PODE_MUDAR),
+                *em_analise,
+            ),
+            acao=Acao(RESULTADO_CONFORME_O_EDITAL, recurso=recurso),
+        )
+    return _situacao(
+        INSCRICAO_ACEITA,
+        porque=(
+            Linha(
+                f"Sua inscrição está na relação final das inscrições aceitas, publicada em "
+                f"{quando}. Isso ainda não é a classificação: a seleção continua conforme o "
+                "Edital.",
+                link,
+                rotulo,
+            ),
+            *em_analise,
+        ),
         acao=Acao(RESULTADO_CONFORME_O_EDITAL, recurso=recurso),
     )
 

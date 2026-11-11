@@ -1,4 +1,4 @@
-"""O cenário da 148: um Edital com análise das inscrições, inscrições analisadas e um prazo de recurso.
+"""O cenário da 148: Edital com análise das inscrições, inscrições analisadas e prazo de recurso.
 
 **A montagem percorre o caminho normal** — publicação pelo canal administrativo, comissão
 constituída, distribuição, conclusão na Mesa e consolidação pelos comandos —, porque o que a 148

@@ -110,6 +110,19 @@ urlpatterns = [
         views.resultado_em_pdf,
         name="resultado-documento",
     ),
+    # A publicação das inscrições (148): relação de recebidas, resultado preliminar da análise e
+    # homologação. Endereço estável e histórico pela identidade do ato, no precedente de
+    # `resultados/<uuid>` — o sucedido continua respondendo aqui, dizendo que foi sucedido.
+    path(
+        "inscricoes-publicadas/<uuid:publicacao_id>/",
+        views.publicacao_das_inscricoes,
+        name="publicacao-das-inscricoes",
+    ),
+    path(
+        "inscricoes-publicadas/<uuid:publicacao_id>/documento.pdf",
+        views.publicacao_das_inscricoes_em_pdf,
+        name="publicacao-das-inscricoes-documento",
+    ),
     # O sorteio auditável (021). **Endereço estável e histórico pela identidade do artefato**, e
     # não pelo recorte: uma relação sucedida continua respondendo no mesmo lugar, dizendo que foi
     # sucedida — é o precedente que `resultados/<uuid>` estabeleceu, e é o que permite ao manifesto

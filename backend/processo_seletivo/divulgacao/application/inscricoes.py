@@ -264,6 +264,42 @@ def divergencia_do_vigente(edital, ato=None, *, at=None):
     return dominio.divergencia(publicados, atuais)
 
 
+def publica(publicacao_id):
+    """O ato pelo endereço público — qualquer um, vigente ou sucedido; sem o documento."""
+    return (
+        PublicacaoDasInscricoes.objects.filter(pk=publicacao_id)
+        .select_related("edital")
+        .defer("documento")
+        .first()
+    )
+
+
+def documento_publico(publicacao_id):
+    """`(bytes, resumo)` do documento gravado, ou `None`."""
+    linha = (
+        PublicacaoDasInscricoes.objects.filter(pk=publicacao_id)
+        .values_list("documento", "documento_hash")
+        .first()
+    )
+    return (bytes(linha[0]), linha[1]) if linha else None
+
+
+def situacao_publicada(inscricao):
+    """O que o ato vigente diz da inscrição — `None` sem ato, ou sem a inscrição nele (FR-5434).
+
+    Lê só o **vigente**: o candidato quer saber como está, e o histórico mora na página do ato. A
+    inscrição que chegou depois do ato (Retificação que reabriu o prazo) não está nele, e a tela
+    não inventa uma situação para ela.
+    """
+    ato = vigente(inscricao.edital)
+    if ato is None:
+        return None
+    item = ato.itens.filter(inscricao=inscricao).values_list("situacao", flat=True).first()
+    if item is None:
+        return None
+    return {"ato": ato, "natureza": ato.natureza, "situacao": item}
+
+
 def recurso_ate_do_preliminar(atos):
     """O último preliminar da cadeia, que é o que declara o prazo vigente — ou `None`."""
     preliminares = [ato for ato in atos if ato.natureza == dominio.PRELIMINAR]
@@ -618,9 +654,12 @@ __all__ = [
     "assinatura_da_previa",
     "cadeia",
     "divergencia_do_vigente",
+    "documento_publico",
     "etapa_da_cadeia",
     "projetar_agora",
+    "publica",
     "publicar_inscricoes",
     "recurso_ate_do_preliminar",
+    "situacao_publicada",
     "vigente",
 ]

@@ -283,6 +283,9 @@ def resultados_visiveis(inscricao):
             # formulário de recurso — e endereço não é linguagem apresentada, que é a distinção
             # que a 017 já fixou. Nenhum template o imprime como texto.
             "id": resultado.id,
+            # A identidade da Etapa, para quem precisa saber **qual** Etapa eliminou — o topo da
+            # situação distingue a análise das inscrições das demais (148, FR-5434).
+            "etapa_id": str(resultado.etapa_id),
             "etapa": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("name", ""),
             "ordem": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("order") or 0,
             "consequencia": resultado.consequencia,
