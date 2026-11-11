@@ -18,7 +18,10 @@ para a jornada guiada do Edital"*. Ele trata o achado de experiência número 05
 > setecentos e trinta e seis e o critério mil oitocentos e sessenta e cinco, os dois da `149`; o
 > critério de experiência quatrocentos e sessenta e cinco, da `148`; e, no PR #471 da `150`, a faixa
 > do requisito cinco mil e seiscentos, do critério mil e oitocentos e da experiência quinhentos. O
-> número `151` fica livre para a spec irmã de prevenção nos atos da convocação, aberta no mesmo dia.
+> número desta spec é `153`: ela nasceu como `152`, e a spec irmã de prevenção nos atos da
+> convocação (#475), aberta no mesmo dia, também tomou a `152`. As faixas não se sobrepõem — a irmã
+> abre no requisito cinco mil e oitocentos, no critério mil e novecentos e na experiência quinhentos
+> e trinta —, e por isso só a pasta mudou.
 > As decisões reiniciam em `D-001`.
 >
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
