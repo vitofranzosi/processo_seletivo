@@ -122,7 +122,19 @@ def situacoes_do_candidato(inscricao):
                 "motivo": linha.motivo,
             }
         )
-    return sorted(resumos, key=lambda item: (item["marco_codigo"], item["marco"]))
+    # **Dentro do marco, a ampla concorrência e depois as reservas pelo nome.** Sem esse desempate,
+    # duas listas do mesmo marco publicadas no mesmo instante saíam na ordem em que o PostgreSQL
+    # lesse as linhas — a de inserção só enquanto a tabela nunca tivesse tido linha apagada. Foi a
+    # limpeza da suíte por `DELETE` que expôs (doc/estudo-limpeza-dos-casos-transacionais.md).
+    return sorted(
+        resumos,
+        key=lambda item: (
+            item["marco_codigo"],
+            item["marco"],
+            item["lista_id"] is not None,
+            item["lista"],
+        ),
+    )
 
 
 def historico_publico_do_edital(edital):
