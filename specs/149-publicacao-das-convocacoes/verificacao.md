@@ -19,6 +19,9 @@ Os 25 testes novos (`integration/convocacao/test_publicacao_de_convocados.py`, 1
 `interface/test_publicacao_de_convocados.py`, 9) passam; `ruff check`, `ruff format --check`,
 `manage.py check` e `makemigrations --check` estão limpos.
 
+**Depois do merge da `main` com a `148` da publicação das inscrições (#469)** e da renumeração desta
+para `149`: `make test-pg`, mesmas condições — **18 450 passando e 23 pulados, sem falha**, em 1011 s.
+
 ## Navegador real
 
 Num banco de demonstração montado por [`demonstracao/montar.py`](demonstracao/montar.py) — o mesmo
