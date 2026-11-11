@@ -308,7 +308,12 @@ QUEM_CARREGA = {
     # sua por cima. A tela do sorteio (142) mostra as mesmas situações em cada passo, com as mesmas
     # classes: a cor de cada situação não pode divergir entre o Centro e a tela do ato.
     "interface/telas/andamento.css": {"centro_do_edital.html", "detalhe.html", "sorteio.html"},
-    "interface/telas/centro.css": {"centro_do_edital.html"},
+    # A página do Processo (147) usa o topo, a grade e a administração do Centro — o mesmo desenho
+    # nas duas páginas é requisito (UX-441) —, e a faixa de trabalho e a marca da Retificação da
+    # Lista. A folha dela só acrescenta o que é do Processo.
+    "interface/telas/centro.css": {"centro_do_edital.html", "processo_detalhe.html"},
+    "interface/telas/lista.css": {"lista.html", "processo_detalhe.html"},
+    "interface/telas/processo.css": {"processo_detalhe.html"},
     # A publicação das convocações no GPS (148): a prévia, a escolha dos recortes e o que já saiu.
     "interface/telas/publicacao-de-convocados.css": {"publicacao_de_convocados.html"},
     **{
@@ -330,7 +335,6 @@ QUEM_CARREGA = {
             "inscricao-detalhe",
             # O kit de divulgação (111).
             "kit-de-divulgacao",
-            "lista",
             "marco",
             "minhas-etapas",
             "prototipo-do-assistente",

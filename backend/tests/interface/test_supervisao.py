@@ -380,23 +380,29 @@ def abrir_o_processo(client, processo, subject="maria", papeis=()):
     return resposta.content.decode()
 
 
+def topo_do_processo(corpo):
+    """O cabeçalho da página do Processo, onde o pulso agregado mora desde a `147` (FR-5321)."""
+    abertura = corpo.index('<header class="cc-cabecalho')
+    return corpo[abertura : corpo.index("</header>", abertura)]
+
+
 def test_a_pagina_do_processo_apresenta_o_pulso_e_a_atencao(
     client, seletor_ligado, processo_a, edital_a, edital_c, comissao_de_a
 ):
     """`FR-556`: o guia não desliga quando o Edital é publicado.
 
     Antes desta feature a página listava Editais e oferecia encerrar ou cancelar — dois atos
-    terminais — e nada dizia sobre o certame em curso.
+    terminais — e nada dizia sobre o certame em curso. Desde a `147` o pulso agregado é estado do
+    topo, o do Edital vai para a linha dele (FR-5313), e a Atenção é região própria (FR-5317).
     """
     submeter(edital_c, 3, seed=SEGUNDO_SEED)
 
-    conducao = regiao(abrir_o_processo(client, processo_a), "conducao-titulo")
+    corpo = abrir_o_processo(client, processo_a)
 
-    lido = texto(conducao)
-    assert "3" in lido
-    assert f"Edital {edital_c.number}/{edital_c.year}" in lido
+    assert "3 recebidas" in texto(topo_do_processo(corpo))
+    assert f"Edital {edital_c.number}/{edital_c.year}" in texto(regiao(corpo, "editais-titulo"))
     # A Atenção veio junto, e não só o pulso.
-    assert "Atenção" in lido
+    assert "Precisa de atenção" in texto(regiao(corpo, "atencao-titulo"))
 
 
 def test_o_processo_e_a_supervisao_dizem_a_mesma_coisa_do_mesmo_edital(
@@ -409,32 +415,37 @@ def test_o_processo_e_a_supervisao_dizem_a_mesma_coisa_do_mesmo_edital(
 
     **A comparação é frase a frase, e não por um número solto.** Uma asserção de que o dígito `4`
     aparece nas duas telas passaria com o Pulso pela metade — e passou, até a revisão da `038`
-    apontar que a série e os próximos marcos não estavam sendo apresentados.
+    apontar que a série e os próximos marcos não estavam sendo apresentados. A `147` reorganizou a
+    página — marcos numa lista só, série só do período em curso —, e a igualdade continua sendo a
+    prova: cada marco, cada série em curso e cada sinal da Supervisão estão aqui.
     """
     submeter(edital_c, 4, seed=SEGUNDO_SEED)
 
-    do_processo = texto(regiao(abrir_o_processo(client, processo_a), "conducao-titulo"))
+    corpo = abrir_o_processo(client, processo_a)
     do_painel = abrir(client, processo_a)
     pulso_da_supervisao = texto(regiao(do_painel, "pulso-titulo"))
     atencao_da_supervisao = texto(regiao(do_painel, "atencao-titulo"))
 
-    # **O que aconteceu**: a soma do Processo, dita com as mesmas palavras.
-    assert "4 inscrições recebidas no Processo" in do_processo
+    # **O que aconteceu**: a soma do Processo.
     assert "4 inscrições recebidas no Processo" in pulso_da_supervisao
+    assert "4 recebidas" in texto(topo_do_processo(corpo))
 
-    # **O que vem**: cada marco que a Supervisão anuncia é anunciado aqui também. O marco se conta
-    # pela data depois do travessão — desde a `045` ele não carrega mais *"declarado …"*.
+    # **O que vem**: cada marco que a Supervisão anuncia é anunciado aqui também, na lista
+    # consolidada, cada um com o Edital que o sustenta (147, FR-5319).
     marcos = re.findall(r"— \d{2}/\d{2}/\d{4}", pulso_da_supervisao)
     assert marcos, "sem marco na Supervisão, este teste não provaria a igualdade"
-    assert len(re.findall(r"— \d{2}/\d{2}/\d{4}", do_processo)) == len(marcos)
+    assert regiao(corpo, "marcos-titulo").count('class="data-do-marco"') == len(marcos)
 
-    # A série tem o mesmo equivalente textual nas duas — é o mesmo parcial, lido do mesmo Pulso.
-    for valores in re.findall(r"Valores da série — \d+ dias?", pulso_da_supervisao):
-        assert valores in do_processo, f"a Supervisão mostra {valores!r} e o Processo não"
+    # A série do período em curso tem o mesmo equivalente textual nas duas — é o mesmo parcial,
+    # lido do mesmo Pulso (147, FR-5320).
+    series = re.findall(r"Valores da série — \d+ dias?", pulso_da_supervisao)
+    assert series, "sem série na Supervisão, este teste não provaria a igualdade"
+    for valores in series:
+        assert valores in texto(regiao(corpo, "serie-titulo")), f"falta {valores!r} no Processo"
 
     # **O que pede ação**: as mesmas frases, e não paráfrases.
     for mensagem in re.findall(r"A Etapa [^.]+\.", atencao_da_supervisao):
-        assert mensagem in do_processo, f"a Supervisão diz {mensagem!r} e o Processo não"
+        assert mensagem in texto(regiao(corpo, "atencao-titulo")), f"falta {mensagem!r}"
 
 
 def test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho(
@@ -450,7 +461,7 @@ def test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho(
     existe e quais são os Editais dele. O que carrega destino é o **sinal**, e é ele que `alcance`
     suprime espécie a espécie (`FR-004`). Quem não alcança espécie nenhuma não recebe a região da
     Atenção — dizer-lhe *"nenhuma condição"* afirmaria que não há nada quando o que há é coisa que
-    ela não pode ver.
+    ela não pode ver (147, FR-5318).
     """
     submeter(edital_c, 3, seed=SEGUNDO_SEED)
 
@@ -458,21 +469,19 @@ def test_quem_alcanca_o_processo_le_o_estado_e_nao_recebe_caminho(
     lido = texto(corpo)
 
     # Lê o estado.
-    assert 'aria-labelledby="conducao-titulo"' in corpo
-    assert "3 inscrições recebidas no Processo" in lido
+    assert "3 recebidas" in texto(topo_do_processo(corpo))
 
-    # E não recebe caminho algum: nem sinal, nem a linha que anunciaria a ausência deles.
-    assert "Atenção" not in texto(regiao(corpo, "conducao-titulo"))
+    # E não recebe caminho algum: nem a região, nem sinal, nem a linha que anunciaria a ausência.
+    assert 'aria-labelledby="atencao-titulo"' not in corpo
     assert "Nenhuma condição de atenção" not in lido
     assert 'class="sinal"' not in corpo
 
     # **E nem o caminho que estava fora da conta.** A redação anterior conferia só os sinais, e
     # por isso afirmava no nome o que não verificava: o link da região continuava sendo oferecido
     # a quem a Supervisão recusa, e 7478 casos passaram com o 404 de pé. O guarda que não segue a
-    # região inteira deixa de guardá-la — a mesma lição que a varredura de `test_fronteira`
+    # página inteira deixa de guardá-la — a mesma lição que a varredura de `test_fronteira`
     # aprendeu quando esta página entrou nela.
     assert url(processo_a) not in corpo, "a página oferece a Supervisão a quem ela recusa"
-    assert "Abrir a Supervisão" not in lido
 
 
 def test_quem_preside_recebe_a_atencao_na_mesma_regiao(
@@ -485,16 +494,14 @@ def test_quem_preside_recebe_a_atencao_na_mesma_regiao(
     """
     submeter(edital_c, 2, seed=SEGUNDO_SEED)
     corpo = abrir_o_processo(client, processo_a)
-    conducao = regiao(corpo, "conducao-titulo")
 
-    assert "Atenção" in texto(conducao)
-    assert "sem avaliador suficiente" in texto(conducao)
+    assert "sem avaliador suficiente" in texto(regiao(corpo, "atencao-titulo"))
 
     # **A contraprova do caminho**, pela mesma razão que esta função existe: sem ela, o caso acima
-    # passaria sobre uma região que nunca oferece a Supervisão a ninguém — e apagar o link seria
-    # uma correção tão verde quanto a certa.
-    assert url(processo_a) in corpo
-    assert "Abrir a Supervisão" in texto(conducao)
+    # passaria sobre uma página que nunca oferece a Supervisão a ninguém — e apagar o link seria
+    # uma correção tão verde quanto a certa. Desde a `147` ele mora no grupo "Comissão e
+    # supervisão" do topo (FR-5300).
+    assert f'href="{url(processo_a)}">Supervisão</a>' in topo_do_processo(corpo)
 
 
 def test_sem_nenhuma_condicao_o_processo_tambem_declara_a_ausencia_em_uma_linha(
@@ -505,10 +512,10 @@ def test_sem_nenhuma_condicao_o_processo_tambem_declara_a_ausencia_em_uma_linha(
     A mesma regra da Supervisão, e pela mesma razão: sumir não distinguiria *nada a sinalizar* de
     *a página não carregou*, e um cabeçalho por espécie diria dez vezes que não há nada.
     """
-    conducao = regiao(abrir_o_processo(client, processo_limpo), "conducao-titulo")
+    atencao = regiao(abrir_o_processo(client, processo_limpo), "atencao-titulo")
 
-    assert "Nenhuma condição de atenção" in texto(conducao)
-    assert '<li class="sinal"' not in conducao
+    assert "Nenhuma condição de atenção" in texto(atencao)
+    assert '<li class="sinal"' not in atencao
 
 
 # ---------------------------------------------------------------------------
@@ -523,15 +530,15 @@ def test_sem_nenhuma_condicao_o_processo_tambem_declara_a_ausencia_em_uma_linha(
 
 
 def atencao_do_processo(corpo):
-    """O trecho da Atenção na página do Processo — do título dela ao fim da região de condução.
+    """A região "Precisa de atenção" da página do Processo, que é `<section>` própria desde a `147`.
 
-    Na página do Processo a Atenção não é `<section>` própria: é um bloco da região de condução,
-    depois do pulso. Comparar a região inteira misturaria a Atenção com as contagens do pulso,
-    que mudam a cada inscrição — e o teste do vazamento compararia a coisa errada.
+    Até ela, a Atenção era um bloco da região de condução, depois do pulso. Comparar a página
+    inteira misturaria a Atenção com as contagens do pulso, que mudam a cada inscrição — e o teste
+    do vazamento compararia a coisa errada. O título leva o total, que muda com o que a pessoa
+    alcança e só com isso; o trecho comparado é o corpo, depois do título.
     """
-    conducao = regiao(corpo, "conducao-titulo")
-    assert "<h3>Atenção</h3>" in conducao, "a região da Atenção não foi apresentada"
-    return conducao.split("<h3>Atenção</h3>", 1)[1]
+    trecho = regiao(corpo, "atencao-titulo")
+    return trecho.split("</h2>", 1)[1]
 
 
 def edital_do(processo):

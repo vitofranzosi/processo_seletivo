@@ -239,10 +239,10 @@ e as mesmas pastilhas; sem Edital, o estado vazio.
 
 #### A ação que o fluxo pede, antes do resto
 
-- **FR-1764**: No detalhe do Processo, a região "O que fazer agora" MUST vir antes da região dos
+- **FR-1764**: ~~No detalhe do Processo, a região "O que fazer agora" MUST vir antes da região dos
   Editais, e as duas MUST vir antes de "Onde cada Edital está". O conteúdo de cada região MUST
   continuar o mesmo, na mesma ordem interna (`FR-1069` e `FR-1070` da `058`; `FR-556` e `FR-557` da
-  `038`).
+  `038`).~~ **SUBSTITUÍDA pela `FR-5323` da [`147`](../147-pagina-do-processo/spec.md)**, em 11/11/2026: a página do Processo passou a ter, nesta ordem, o topo, "O que fazer agora" ao lado de "Precisa de atenção", os Editais, a série dos períodos em curso e a Administração; os atos saíram do cartão.
 - **FR-1765**: No detalhe do Edital, a região "O que fazer agora" MUST vir antes de "Quem atuou". As
   ações MUST continuar as mesmas, no mesmo peso e na mesma ordem (`FR-1043` a `FR-1046` da `057`), e
   as colunas MUST continuar alinhadas pelo topo (`FR-1047` da `057`).
@@ -274,13 +274,13 @@ e as mesmas pastilhas; sem Edital, o estado vazio.
 
 #### Os Editais do Processo
 
-- **FR-1771**: No detalhe do Processo, os Editais MUST aparecer em tabela, com as colunas Edital,
+- **FR-1771**: ~~No detalhe do Processo, os Editais MUST aparecer em tabela, com as colunas Edital,
   Título e Situação, uma linha por Edital, na ordem de hoje; o número e o título MUST levar ao Edital,
-  e a situação MUST ser a pastilha de sempre.
+  e a situação MUST ser a pastilha de sempre.~~ **SUBSTITUÍDA pela `FR-5323` da [`147`](../147-pagina-do-processo/spec.md)**, em 11/11/2026: os Editais passaram a uma lista agrupada por situação, uma linha por Edital, com inscrições, próximo marco, atenção e ações da pessoa; a tabela cortava colunas no celular.
 - **FR-1772**: Sem Edital, a região MUST mostrar "Nenhum Edital neste Processo." no estado vazio das
   demais telas. "Novo Edital neste Processo" MUST continuar logo abaixo, só para quem pode criar.
 - **FR-1773**: A tabela dos Editais MUST rolar dentro da própria moldura quando não couber, e a
-  página MUST NOT rolar para o lado.
+  página MUST NOT rolar para o lado. **REVISTA em parte pela `FR-5323` da [`147`](../147-pagina-do-processo/spec.md)**, em 11/11/2026: sem tabela, não há moldura que role; a página continua sem rolar para o lado.
 
 #### O que não pode piorar
 

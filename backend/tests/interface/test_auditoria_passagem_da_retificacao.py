@@ -227,10 +227,13 @@ def test_a_lista_e_o_edital_citam_a_retificacao_pendente(edital, vigente):
     assert reverse("interface:agenda") in paginas
     # O Centro de Controle do Edital (136) cita a Retificação em curso como o detalhe a cita, com
     # o mesmo resumo da 103 (FR-4728 da 136). Desde a 138 ele é a página do Edital, e o detalhe de
-    # antes é a página anterior, alcançada pelo link único do Centro: as mesmas três portas.
+    # antes é a página anterior, alcançada pelo link único do Centro. A página do Processo é a
+    # quarta porta desde a 147: a linha do Edital traz a marca da Retificação em curso, a mesma da
+    # Lista (FR-5312).
     assert sorted(alcancada(paginas, retificacao)) == sorted(
         [
             reverse("interface:lista"),
+            reverse("interface:processo-detalhe", args=[edital.processo_id]),
             reverse("interface:detalhe", args=[edital.id]),
             reverse("interface:pagina-anterior", args=[edital.id]),
         ]

@@ -1,0 +1,358 @@
+/* A página do Processo Seletivo (147). Carregada depois de grupos/terminais.css, grupos/serie.css,
+   telas/lista.css e telas/centro.css, e sem alterar nenhuma delas: da Lista vêm a faixa de trabalho
+   (`itens-de-trabalho`, `item-de-trabalho`, `demais-acoes`) e a marca da Retificação; do Centro, o topo
+   (`cc-onde`, `cc-estados`), a grade (`cc-grade`), a administração (`cc-administracao`,
+   `cc-terminais`) e `cc-fraco`. Esta folha só acrescenta o que é do Processo: o ciclo em uma linha, a
+   grade de três seções, a lista dos Editais e as marcas. */
+
+/* ---- o topo ---- */
+
+.processo-cabecalho h1 {
+  margin: 0;
+}
+
+.processo-identificacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 1rem;
+  margin: .4rem 0 .75rem;
+}
+
+.processo-identificacao p {
+  margin: 0;
+}
+
+.processo-acessos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+/* O ciclo administrativo em uma linha (FR-5302): símbolo e texto, nunca só cor. */
+.ciclo-do-processo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .15rem .9rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--texto-fraco);
+}
+
+.ciclo-do-processo li {
+  white-space: nowrap;
+}
+
+.ciclo-do-processo .e-concluida span {
+  color: var(--sucesso);
+}
+
+.ciclo-do-processo .e-atual {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.ciclo-do-processo .e-atual span {
+  color: var(--verde);
+}
+
+.ciclo-do-processo .e-fora span {
+  color: var(--vermelho);
+}
+
+.leitura-do-pulso {
+  display: block;
+  font-size: .8125rem;
+  color: var(--texto-fraco);
+}
+
+.fraco-no-titulo {
+  color: var(--texto-fraco);
+  font-weight: 400;
+}
+
+.titulo-com-acao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 1rem;
+  margin-bottom: .75rem;
+}
+
+.titulo-com-acao h2 {
+  margin: 0;
+}
+
+/* ---- a grade: o trabalho e os marcos à esquerda, a atenção à direita (UX-440) ----
+
+   Três seções na grade do Centro. Os marcos ficam sob o trabalho, e a atenção ocupa a coluna da
+   direita nas duas linhas. No estreito, a grade vira uma coluna e a ordem de leitura é a do HTML:
+   trabalho, atenção, marcos. Sem a atenção, o trabalho e os marcos dividem a largura. */
+
+.cc-grade {
+  margin-bottom: 1.25rem;
+}
+
+/* `margin: 0` aqui porque `section[aria-labelledby]` da folha comum põe 2rem embaixo e vence a regra
+   de uma classe só do Centro: entre o trabalho e os marcos sobrava um vão maior que o da grade. */
+.cc-grade > .cc-agora {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+}
+
+.cc-grade > .processo-atencao {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin: 0;
+}
+
+.cc-grade > .processo-marcos {
+  grid-column: 1;
+  grid-row: 2;
+  margin: 0;
+  min-width: 0;
+}
+
+.cc-grade.sem-atencao > .processo-marcos {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.proximo-passo {
+  margin: 0 0 .75rem;
+}
+
+.nada-no-processo {
+  margin: 0 0 .5rem;
+  max-width: var(--leitura);
+}
+
+.cobertura-no-processo {
+  margin: .6rem 0 0;
+  font-size: .8125rem;
+  color: var(--texto-fraco);
+  max-width: var(--leitura);
+}
+
+.atencao-por-edital {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.atencao-por-edital > li + li {
+  margin-top: .4rem;
+}
+
+.atencao-por-edital summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: .25rem 0;
+}
+
+.titulo-no-resumo {
+  color: var(--texto-fraco);
+  font-weight: 400;
+}
+
+.marcos-do-processo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.marcos-do-processo li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: .5rem;
+  padding: .3rem 0;
+  border-top: 1px solid var(--fundo);
+  font-size: .9rem;
+}
+
+.marcos-do-processo li:first-child {
+  border-top: 0;
+}
+
+.data-do-marco {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.edital-do-marco {
+  color: var(--texto-fraco);
+}
+
+/* "em andamento", na lista de marcos e na linha do Edital: texto pequeno em pastilha, como na
+   Supervisão. Escopado às duas listas, porque `.marca` tem regras próprias em outras telas. */
+.marcos-do-processo .marca,
+.editais-do-conjunto .marca {
+  display: inline-block;
+  padding: 0 .4rem;
+  border-radius: 3px;
+  background: var(--verde-claro);
+  color: var(--verde-escuro);
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+/* ---- os Editais (FR-5310 a FR-5315) ---- */
+
+.grupo-de-editais {
+  margin-top: .5rem;
+}
+
+.titulo-do-grupo {
+  display: inline;
+  margin: 0;
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--texto-fraco);
+}
+
+details.grupo-de-editais summary {
+  cursor: pointer;
+  padding: .4rem 0;
+}
+
+div.grupo-de-editais .titulo-do-grupo {
+  display: block;
+  padding: .4rem 0;
+}
+
+.editais-do-conjunto {
+  list-style: none;
+  margin: 0 0 .75rem;
+  padding: 0;
+  border-top: 1px solid var(--borda);
+}
+
+/* Uma linha por Edital, em grade e não em tabela: as colunas alinham entre as linhas e, no estreito,
+   empilham sem rolar de lado. Largo: tudo numa linha. */
+.edital-no-processo {
+  display: grid;
+  grid-template-columns: 6rem minmax(12rem, 2fr) 9rem minmax(11rem, 1.3fr) minmax(12rem, 1.4fr) 8rem;
+  gap: .25rem 1rem;
+  align-items: baseline;
+  padding: .55rem .25rem;
+  border-bottom: 1px solid var(--borda);
+}
+
+/* O traço âmbar acompanha a marca em texto, e nunca a substitui (UX-442). */
+.edital-no-processo.com-atencao {
+  box-shadow: inset 3px 0 0 var(--amarelo);
+}
+
+.numero-no-processo {
+  justify-self: start;
+}
+
+.titulo-no-processo {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.estado-no-processo .marca-da-retificacao {
+  display: block;
+}
+
+.inscricoes-no-processo,
+.marco-no-processo {
+  font-size: .875rem;
+}
+
+/* Sempre na última coluna, também quando a linha do Edital em preparo não tem inscrições nem marco. */
+.marcas-no-processo {
+  grid-column: -2 / -1;
+  text-align: right;
+}
+
+/* A marca de atenção da linha: a forma da `cc-marca` do mapa do Edital (UX-441), no tom da Atenção.
+   "1 sua" usa a `cc-marca sua` do mapa sem nada daqui. */
+.cc-marca.atencao {
+  border-color: var(--amarelo);
+  background: var(--amarelo-fundo);
+  color: var(--amarelo);
+}
+
+.marcas-no-processo .cc-marca + .cc-marca {
+  margin-left: .3rem;
+}
+
+.series-do-processo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr));
+  gap: 1rem 2rem;
+}
+
+.ativar-o-processo {
+  margin: 0 0 1rem;
+}
+
+/* Notebook: o título fica na linha de cima com a situação e as marcas; os fatos, na de baixo. */
+@media (max-width: 96rem) {
+  .edital-no-processo {
+    grid-template-columns: 6rem minmax(0, 1fr) 9rem 8rem;
+  }
+
+  .numero-no-processo {
+    grid-row: 1;
+  }
+
+  .inscricoes-no-processo {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .marco-no-processo {
+    grid-column: 3 / 5;
+    grid-row: 2;
+  }
+
+  .marcas-no-processo {
+    grid-row: 1;
+  }
+}
+
+/* A grade do Centro vira uma coluna em 60rem; aqui as três seções seguem a ordem do HTML. */
+@media (max-width: 60rem) {
+  .cc-grade > .cc-agora,
+  .cc-grade > .processo-atencao,
+  .cc-grade > .processo-marcos,
+  .cc-grade.sem-atencao > .processo-marcos {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 40rem) {
+  .edital-no-processo {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .numero-no-processo {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .estado-no-processo {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .titulo-no-processo,
+  .inscricoes-no-processo,
+  .marco-no-processo,
+  .marcas-no-processo {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    text-align: left;
+  }
+}

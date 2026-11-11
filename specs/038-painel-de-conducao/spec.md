@@ -192,7 +192,7 @@ confunde o `UX-003` com trabalho parado e o `UX-005` com recurso pendente.
 ### O Processo passa a conduzir
 
 - **FR-556**: A página do Processo MUST apresentar, por Edital, o **pulso** e a **Atenção** que hoje
-  existem apenas na Supervisão.
+  existem apenas na Supervisão. **REVISTA em parte pela `FR-5323` da [`147`](../147-pagina-do-processo/spec.md)**, em 11/11/2026: o pulso e a Atenção continuam na página do Processo, por Edital; a série diária só aparece para o período em curso, e a do período encerrado vive na Supervisão.
 - **FR-557**: Cada indicador MUST derivar da **mesma leitura** que governa a tela de destino, e
   MUST levar a ela. *Indicador que calcula por conta própria é a segunda verdade que este projeto
   passou a semana removendo.*
