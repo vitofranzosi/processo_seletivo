@@ -133,8 +133,8 @@ def test_o_corte_emitido_no_intervalo_recusa_a_confirmacao(cliente_no_corte, ges
 
 
 def test_a_tela_sem_geracao_aberta_depois_do_outro_corte_e_dita(
-    cliente_no_corte,
-    gestor,  # noqa: F811
+    cliente_no_corte,  # noqa: F811
+    gestor,
 ):
     """Revisão do #502: a conferência pedida da tela de antes do primeiro corte não vira sucessão
     em silêncio — ela diz que outro corte foi emitido, com a frase do comando."""
