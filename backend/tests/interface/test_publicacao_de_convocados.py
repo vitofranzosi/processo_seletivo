@@ -352,4 +352,4 @@ def test_por_mensagem_a_tela_e_o_centro_levam_a_publicacao(
 
     publicar(edital, gestor, "i149-msg-pub")
     depois = client.get(reverse("interface:convocacao", args=[edital.id, MARCO])).content.decode()
-    assert "Na página pública da seleção" not in depois, "publicada, a seção sai"
+    assert 'id="pagina-publica"' not in depois, "publicada, a seção sai"

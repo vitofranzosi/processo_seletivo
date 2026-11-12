@@ -44,7 +44,7 @@ chave e os campos da tela da convocação viajam intactos; a pessoa e o vencimen
     <div><dt>Edital</dt><dd>{{ rotulo_do_edital }}</dd></div>
     <div><dt>Perfil e recorte</dt><dd>{{ rotulo_do_recorte }}</dd></div>
     <div><dt>Chamada</dt><dd>{{ conferencia.especie_por_extenso|capfirst }}</dd></div>
-    <div><dt>Comunicação</dt><dd>{% if conferencia.publicacao %}Por publicação, que você registra depois{% else %}Uma mensagem a esta pessoa, no mesmo ato{% endif %}</dd></div>
+    <div><dt>Comunicação</dt><dd>{% if conferencia.publicacao %}Por publicação: no GPS, nesta confirmação, ou fora dele, registrada depois{% else %}Uma mensagem a esta pessoa, no mesmo ato{% endif %}</dd></div>
   </dl>
   <ol class="convocadas"><li>{{ conferencia.pessoa.protocolo }} — {{ conferencia.pessoa.nome }} · {{ conferencia.pessoa.posicao }}ª {% if conferencia.especie == "PARA_REGULARIZAR" %}na ordem dos indeferidos{% else %}na fila{% endif %}</li></ol>
   <p class="ajuda">A espécie vem da posição: {{ conferencia.origem_da_especie }}.</p>
@@ -67,7 +67,7 @@ chave e os campos da tela da convocação viajam intactos; a pessoa e o vencimen
     <div><dt>Edital</dt><dd>{{ rotulo_do_edital }}</dd></div>
     <div><dt>Perfil e recorte</dt><dd>{{ rotulo_do_recorte }}</dd></div>
     <div><dt>Chamada</dt><dd>Titulares, para vaga inicial</dd></div>
-    <div><dt>Comunicação</dt><dd>{% if conferencia.publicacao %}Por publicação, que você registra depois{% else %}Uma mensagem a cada pessoa, no mesmo ato{% endif %}</dd></div>
+    <div><dt>Comunicação</dt><dd>{% if conferencia.publicacao %}Por publicação: no GPS, nesta confirmação, ou fora dele, registrada depois{% else %}Uma mensagem a cada pessoa, no mesmo ato{% endif %}</dd></div>
   </dl>
   <ol class="convocadas">{% for pessoa in conferencia.pessoas %}<li>{{ pessoa.protocolo }} — {{ pessoa.nome }} · para vaga inicial</li>{% endfor %}</ol>
   <p class="ajuda">A espécie vem da posição na fila: {{ conferencia.pessoas|length|plural:"está,estão" }} entre as vagas da apuração vigente.</p>
@@ -125,15 +125,61 @@ chave e os campos da tela da convocação viajam intactos; a pessoa e o vencimen
     </div>
   </section>
 
+  {% comment %}
+  **A publicação, nesta mesma conferência** (159, FR-6801 a FR-6804, FR-6808). O que será público, a
+  natureza, quando o prazo começa, a autoridade e — na forma por publicação — a declaração do veículo.
+  O veículo é o botão apertado, e nenhum dos dois é presumido (D-006).
+  {% endcomment %}
+  <section aria-labelledby="publicacao-titulo" class="consequencias publicacao-na-conferencia">
+    <h2 id="publicacao-titulo">Na página pública da seleção</h2>
+    <dl class="dados-da-comunicacao">
+      <dt>O que será público</dt>
+      <dd>{{ conferencia.publico.vaga }} — {{ conferencia.publico.lista }}: nome e protocolo {% if chamada %}da pessoa{% else %}de cada pessoa{% endif %}, e o prazo. Nada além: nem CPF, nem contato, nem fundamento, nem situação dos documentos.</dd>
+      {% if conferencia.publicacao %}
+      <dt>Publicar no GPS</dt>
+      <dd>A relação é publicada nesta confirmação como <strong>ato oficial de convocação</strong>: o prazo de cada pessoa começa no instante da publicação, e cada candidato passa a ver a sua convocação.</dd>
+      <dt>Publicação fora do GPS</dt>
+      <dd>A convocação aguarda o registro de onde e quando a lista foi publicada; o prazo começa nesse registro, e o registro divulga a relação no GPS, como informação.</dd>
+      {% else %}
+      <dt>Natureza</dt>
+      <dd><strong>Relação informativa</strong>, publicada logo depois dos envios, só com as mensagens que saírem. O prazo de cada pessoa começa no envio da mensagem dela, e não na publicação; quem tiver a mensagem falhada fica fora da relação, e a tela diz quem.</dd>
+      {% endif %}
+    </dl>
+    {% if escolha_da_autoridade.opcoes %}
+    <p class="campo">
+      <label for="autoridade-da-conferencia">Autoridade signatária da publicação <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="autoridade-da-conferencia" name="autoridade" required aria-required="true" aria-describedby="ajuda-autoridade-da-conferencia">
+        <option value="">— escolha a autoridade —</option>
+        {% for opcao in escolha_da_autoridade.opcoes %}<option value="{{ opcao.valor }}"{% if opcao.valor == autoridade_escolhida %} selected{% endif %}>{{ opcao.rotulo }}</option>{% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-autoridade-da-conferencia">Nome, cargo e ato de nomeação ficam gravados na publicação e impressos no documento.</span>
+    </p>
+    {% else %}
+    <p class="aviso" role="status">Nenhuma autoridade vigente para {{ escolha_da_autoridade.unidade }} hoje: sem quem assine a publicação, a convocação não pode ser confirmada aqui. Quem tem a permissão de gerir autoridades da unidade as cadastra.</p>
+    {% endif %}
+    {% if conferencia.publicacao %}
+    <p class="campo">
+      <label for="declaracao-da-conferencia">Onde o Edital admite a página pública do GPS como veículo <span class="opcional">(para publicar no GPS)</span></label>
+      <input type="text" id="declaracao-da-conferencia" name="declaracao_do_veiculo" value="{{ declaracao }}" aria-describedby="ajuda-declaracao-da-conferencia" placeholder="por exemplo, item 7.2 do Edital">
+      <span class="ajuda" id="ajuda-declaracao-da-conferencia">Exigida para publicar no GPS: a declaração fica gravada no ato e na trilha. Se o Edital manda publicar em outro lugar, use o segundo botão.</span>
+    </p>
+    {% endif %}
+  </section>
+
   <div class="confirmacao-da-convocacao">
     {% if chamada %}
-    <p>{% if conferencia.publicacao %}<strong>Ao confirmar, nasce uma convocação imutável</strong>, com você como autor. Nenhuma mensagem sai neste ato: a forma deste Perfil é a publicação, que você registra depois, e o candidato só vê a convocação a partir do registro.{% else %}<strong>Ao confirmar, nasce uma convocação imutável</strong>, com você como autor, e a mensagem sai no mesmo ato — e não volta.{% endif %} Corrigir a convocação é sucedê-la com motivo.</p>
+    <p>{% if conferencia.publicacao %}<strong>Ao confirmar, nasce uma convocação imutável</strong>, com você como autor, e nenhuma mensagem sai. Publicando no GPS, a publicação nasce junto e não se desfaz; fora dele, o candidato só vê a convocação depois do registro.{% else %}<strong>Ao confirmar, nasce uma convocação imutável</strong>, com você como autor; a mensagem sai no mesmo ato — e não volta —, e a relação vai para a página pública.{% endif %} Corrigir a convocação é sucedê-la com motivo.</p>
     {% else %}
-    <p>{% if conferencia.publicacao %}<strong>Ao confirmar, nasce uma convocação imutável por pessoa</strong>, com você como autor. Nenhuma mensagem sai neste ato: a forma deste Perfil é a publicação, que você registra depois, e o candidato só vê a convocação a partir do registro.{% else %}<strong>Ao confirmar, nasce uma convocação imutável por pessoa</strong>, com você como autor, e a mensagem sai no mesmo ato para cada uma — e não volta.{% endif %} Corrigir uma convocação é sucedê-la com motivo, uma a uma.</p>
+    <p>{% if conferencia.publicacao %}<strong>Ao confirmar, nasce uma convocação imutável por pessoa</strong>, com você como autor, e nenhuma mensagem sai. Publicando no GPS, a publicação nasce junto e não se desfaz; fora dele, o candidato só vê a convocação depois do registro.{% else %}<strong>Ao confirmar, nasce uma convocação imutável por pessoa</strong>, com você como autor; a mensagem sai para cada uma — e não volta —, e a relação vai para a página pública.{% endif %} Corrigir uma convocação é sucedê-la com motivo, uma a uma.</p>
     {% endif %}
     <p class="salvar">
-      <button type="submit" name="etapa" value="confirmar" class="botao perigoso">{{ rotulo_do_botao }}</button>
-      <button type="submit" name="etapa" value="conferir" class="acao">Conferir de novo</button>
+      {% if conferencia.publicacao %}
+      <button type="submit" name="etapa" value="confirmar-gps" class="botao perigoso"{% if not escolha_da_autoridade.opcoes %} disabled{% endif %}>Convocar {{ sujeito }} e publicar no GPS</button>
+      <button type="submit" name="etapa" value="confirmar-externo" class="botao" formnovalidate>Convocar {{ sujeito }} (a publicação será registrada depois)</button>
+      {% else %}
+      <button type="submit" name="etapa" value="confirmar" class="botao perigoso"{% if not escolha_da_autoridade.opcoes %} disabled{% endif %}>{{ rotulo_do_botao }}</button>
+      {% endif %}
+      <button type="submit" name="etapa" value="conferir" class="acao" formnovalidate>Conferir de novo</button>
       <a href="{{ destino }}" class="acao">Cancelar e voltar</a>
     </p>
   </div>

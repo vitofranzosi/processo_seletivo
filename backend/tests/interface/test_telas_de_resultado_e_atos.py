@@ -154,15 +154,17 @@ BOTOES = {
             "Conferir antes de convocar "
             '{{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}',
         ),
+        # **Convocar e publicar num gesto só** (159, FR-6801, FR-6803): o registro da publicação
+        # externa e o reenvio também publicam, e o rótulo o diz.
         (
             "botao",
             'Registrar a publicação {{ pendentes.linhas|length|plural:"da,das" }} '
-            "{{ pendentes.linhas|length }}",
+            "{{ pendentes.linhas|length }} e divulgar no GPS",
         ),
         (
             "botao",
             "Emitir {{ pendentes.linhas|length }} "
-            '{{ pendentes.linhas|length|plural:"comunicação,comunicações" }}',
+            '{{ pendentes.linhas|length|plural:"comunicação,comunicações" }} e publicar a relação',
         ),
         (
             "botao",
@@ -195,7 +197,11 @@ def test_nenhum_botao_muda_de_rotulo_desenho_ou_lugar(tela):
     achados = [
         (classe, " ".join(rotulo.split()))
         for classe, rotulo in re.findall(
-            r'<button type="submit" class="([^"]+)">(.*?)</button>', fonte, re.S
+            # Atributos depois da classe — o `name`/`value` que leva o veículo no botão (159) — não
+            # tiram o botão da conferência.
+            r'<button type="submit" class="([^"]+)"[^>]*>(.*?)</button>',
+            fonte,
+            re.S,
         )
     ]
 

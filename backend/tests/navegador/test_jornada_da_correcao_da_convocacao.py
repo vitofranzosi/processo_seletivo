@@ -142,6 +142,8 @@ def test_corrigida_na_gestao_o_convocado_complementa_e_envia(tela, fx, pdfs):
     formulario.locator("input[name=vencimento]").fill(novo.strftime("%Y-%m-%dT%H:%M"))
     expect(formulario.get_by_text(re.compile("O prazo é estendido até"))).to_be_visible()
     tela.capturar(comissao, "gestao-previa")
+    # Desde a `159`, corrigir também publica a relação, e a autoridade que a assina é obrigatória.
+    formulario.locator("select[name=autoridade]").select_option(index=1)
     formulario.get_by_role("button", name=re.compile("Corrigir a convocação de")).click()
     comissao.wait_for_load_state()
     expect(comissao.get_by_text(re.compile("corrigida. O vencimento passou de"))).to_be_visible()
@@ -248,6 +250,8 @@ def test_corrige_pela_tela_nos_outros_estados_em_aberto(tela, fx, comunicada):
     formulario.locator("input[name=vencimento]").fill(antecipado.strftime("%Y-%m-%dT%H:%M"))
     expect(formulario.get_by_text(re.compile("O prazo é antecipado para"))).to_be_visible()
     tela.capturar(comissao, "gestao-previa-" + ("em-curso" if comunicada else "sem-comunicacao"))
+    # Desde a `159`, corrigir também publica a relação, e a autoridade que a assina é obrigatória.
+    formulario.locator("select[name=autoridade]").select_option(index=1)
     formulario.get_by_role("button", name=re.compile("Corrigir a convocação de")).click()
     comissao.wait_for_load_state()
 

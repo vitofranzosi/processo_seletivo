@@ -1,0 +1,32 @@
+{% comment %}
+**A publicação no próprio gesto de convocar** (159, FR-6801, FR-6802, FR-6816). O que será público, a
+autoridade que assina e, na forma por publicação, a declaração do veículo — no formulário que
+convoca, e não num segundo percurso. O veículo vai no botão que a pessoa aperta (D-006): nenhum dos
+dois é presumido.
+
+Recebe: `escolha` (as autoridades de `_escolha_da_autoridade`), `publicacao` (a forma é a
+publicação), `registro` (o registro de uma publicação feita fora do GPS), `sufixo` (para os identificadores não se repetirem entre os formulários da tela) e
+`autoridade_escolhida`.
+{% endcomment %}
+<div class="publicacao-no-gesto">
+  <p class="nota">{% if publicacao %}<strong>Na página pública da seleção.</strong> «Publicar no GPS» faz desta confirmação o ato oficial: a convocação é publicada com nome, protocolo, vaga, lista e prazo, e o prazo corre do instante da publicação. «A publicação será registrada depois» convoca e aguarda o registro da publicação feita fora do GPS — e esse registro a divulga no GPS.{% elif registro %}<strong>Na página pública da seleção.</strong> Registrada a publicação feita fora do GPS, a relação das registradas é divulgada no GPS, com nome, protocolo, vaga, lista e prazo, citando onde foi publicada. O prazo corre do registro, e não da divulgação.{% else %}<strong>Na página pública da seleção.</strong> Se a mensagem sair, a convocação entra na relação informativa, com nome, protocolo, vaga, lista e prazo. O prazo corre do envio, e não da publicação; se a mensagem falhar, ela fica fora da relação.{% endif %}</p>
+  {% if escolha.opcoes %}
+  <p class="campo">
+    <label for="autoridade-{{ sufixo }}">Autoridade signatária da publicação <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <select id="autoridade-{{ sufixo }}" name="autoridade" required aria-required="true" aria-describedby="ajuda-autoridade-{{ sufixo }}">
+      <option value="">— escolha a autoridade —</option>
+      {% for opcao in escolha.opcoes %}<option value="{{ opcao.valor }}"{% if opcao.valor == autoridade_escolhida %} selected{% endif %}>{{ opcao.rotulo }}</option>{% endfor %}
+    </select>
+    <span class="ajuda" id="ajuda-autoridade-{{ sufixo }}">Nome, cargo e ato de nomeação ficam gravados na publicação e impressos no documento.</span>
+  </p>
+  {% else %}
+  <p class="aviso" role="status">Nenhuma autoridade vigente para {{ escolha.unidade }} hoje: sem quem assine a publicação, a convocação não pode ser confirmada aqui. Quem tem a permissão de gerir autoridades da unidade as cadastra.</p>
+  {% endif %}
+  {% if publicacao %}
+  <p class="campo">
+    <label for="declaracao-{{ sufixo }}">Onde o Edital admite a página pública do GPS como veículo <span class="opcional">(para publicar no GPS)</span></label>
+    <input type="text" id="declaracao-{{ sufixo }}" name="declaracao_do_veiculo" aria-describedby="ajuda-declaracao-{{ sufixo }}" placeholder="por exemplo, item 7.2 do Edital">
+    <span class="ajuda" id="ajuda-declaracao-{{ sufixo }}">Exigida para publicar no GPS: a declaração fica gravada no ato e na trilha.</span>
+  </p>
+  {% endif %}
+</div>

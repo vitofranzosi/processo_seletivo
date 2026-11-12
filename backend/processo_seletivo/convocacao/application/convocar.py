@@ -57,6 +57,7 @@ def convocar(
     especie="",
     fundamento_por_especie=None,
     correcao=None,
+    ao_gravar=None,
 ):
     """Pratica a convocação e devolve o que ela declarou. Recusa antes de gravar qualquer coisa.
 
@@ -79,6 +80,10 @@ def convocar(
         "inscricao": str(inscricao_id),
         "especie": (especie or "").strip(),
     }
+    if ao_gravar is not None:
+        # **Publicar no GPS é outro pedido** (159, D-006): a mesma chave com o outro veículo recebe
+        # `idempotency_conflict`, e não a resposta do gesto que não publicou.
+        payload["publicaNoGps"] = True
     if correcao is not None:
         # **O que se assinou entra na reserva**: a mesma chave com outra prévia é outro pedido, e
         # recebe `idempotency_conflict`, como em todo comando.
@@ -151,6 +156,10 @@ def convocar(
         from processo_seletivo.convocacao.application.documentos import gravar_lista_da_chamada
 
         gravar_lista_da_chamada(convocacao, versao=verificada.versao)
+        # **O que nasce com a convocação, na mesma transação** (159, D-004): a publicação oficial no
+        # GPS, quando é ela o veículo. A recusa dela desfaz a convocação — convocar e publicar no
+        # GPS é um ato só —, e o que ela declara volta junto do que a convocação declarou.
+        extra = ao_gravar(ctx, convocacao) if ao_gravar is not None else None
         return _concluir(
             ctx,
             convocacao,
@@ -160,6 +169,7 @@ def convocar(
             precedencia_justificada=bool(justifica_precedencia)
             and bool(fila.precedencia(contexto["fila"], inscricao)),
             razao_adicional=razao_adicional,
+            extra=extra,
         )
 
 
@@ -700,6 +710,7 @@ def _concluir(
     *,
     precedencia_justificada=False,
     razao_adicional="",
+    extra=None,
 ):
     _auditar(
         ctx,
@@ -711,6 +722,8 @@ def _concluir(
         razao_adicional=razao_adicional,
     )
     declarado = declarado_da_convocacao(convocacao)
+    if extra is not None:
+        declarado["publicacao"] = extra
     ctx.concluir_sem_resultado(201, declarado)
     return declarado
 

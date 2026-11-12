@@ -71,7 +71,7 @@ def chave_do_recorte(perfil_id, marco_id, lista_id):
     return f"{perfil_id}:{marco_id}:{lista_id or 'ampla'}"
 
 
-def previa_da_publicacao(*, edital, recortes=None, at):
+def previa_da_publicacao(*, edital, recortes=None, at, convocacoes=None):
     """O que a publicação de agora faria, recorte a recorte — sem gravar nada (FR-5708, SC-1864).
 
     `recortes` é o conjunto de chaves escolhidas; `None` escolhe todos os que têm o que publicar.
@@ -82,6 +82,7 @@ def previa_da_publicacao(*, edital, recortes=None, at):
     """
     from processo_seletivo.convocacao.application.fluxo import _com_emissao_indeterminada
 
+    do_gesto = None if convocacoes is None else {str(c) for c in convocacoes}
     convocacoes = list(
         Convocacao.objects.filter(edital=edital)
         .prefetch_related("sucessoras", "desfechos", "comunicacoes")
@@ -89,6 +90,11 @@ def previa_da_publicacao(*, edital, recortes=None, at):
     )
     por_id = {c.id: c for c in convocacoes}
     em_vigor = vigentes(convocacoes)
+    if do_gesto is not None:
+        # **Só as convocações do gesto** (159, FR-6815): a publicação que nasce de uma confirmação
+        # de convocar diz quem aquela confirmação convocou, e não o que mais houver a publicar no
+        # Edital. A cadeia inteira continua em `por_id`, para a marca de correção (FR-6817).
+        em_vigor = [c for c in em_vigor if str(c.id) in do_gesto]
     versoes = VersaoConsolidada.objects.in_bulk({c.versao_id for c in em_vigor})
     identidades = identidades_de({c.inscricao_id for c in em_vigor})
     indeterminadas = _com_emissao_indeterminada(
@@ -224,33 +230,52 @@ def _posicoes_na_classificacao(convocacoes):
     }
 
 
-def _recorte(chave, convocacao, conteudo):
-    """O recorte com os nomes da versão que a convocação citou, e a posição dele no Edital."""
+def nomes_publicos(conteudo, *, perfil_id, marco_id, lista_id):
+    """A vaga, a lista e o marco pelos nomes que a relação pública imprime (FR-5726).
+
+    Uma função só para a publicação e para a conferência de convocar (159, FR-6802): o que se
+    confere como público é, letra a letra, o que se publica.
+    """
     from processo_seletivo.classificacao.domain.nomes import nomes_do_marco
 
-    nomes = nomes_do_marco(conteudo, perfil_id=convocacao.perfil_id, marco_id=convocacao.marco_id)
-    perfis = [str(p.get("id")) for p in conteudo.get("profiles") or [] if isinstance(p, dict)]
-    listas = recortes_do_perfil(conteudo, perfil_id=convocacao.perfil_id)
-    alvo = str(convocacao.lista_id) if convocacao.lista_id else None
-    posicao_da_lista = next((i for i, (lista, _) in enumerate(listas) if lista == alvo), 0)
+    nomes = nomes_do_marco(conteudo, perfil_id=perfil_id, marco_id=marco_id)
+    listas = recortes_do_perfil(conteudo, perfil_id=perfil_id)
+    alvo = str(lista_id) if lista_id else None
     # **O nome da lista é o que a divulgação do resultado publica** (FR-5726, D-008): a ampla por
     # extenso, e a reserva pelo nome da Modalidade. O rótulo da gestão — "linha geral do quadro",
     # o código entre parênteses — é vocabulário de quem conduz, e não de quem consulta.
     rotulo_da_lista = ((nomes["modalidades"].get(alvo) or "") if alvo else LISTA_AMPLA) or next(
         (r for lista, r in listas if lista == alvo), ""
     )
+    return {
+        "perfil": nomes["perfil"].get("name") or "",
+        "lista": rotulo_da_lista,
+        "marco": nomes["marco"].get("name") or "",
+        "posicao_da_lista": next((i for i, (lista, _) in enumerate(listas) if lista == alvo), 0),
+    }
+
+
+def _recorte(chave, convocacao, conteudo):
+    """O recorte com os nomes da versão que a convocação citou, e a posição dele no Edital."""
+    nomes = nomes_publicos(
+        conteudo,
+        perfil_id=convocacao.perfil_id,
+        marco_id=convocacao.marco_id,
+        lista_id=convocacao.lista_id,
+    )
+    perfis = [str(p.get("id")) for p in conteudo.get("profiles") or [] if isinstance(p, dict)]
     perfil = str(convocacao.perfil_id)
     return {
         "chave": chave,
         "perfil_id": convocacao.perfil_id,
         "marco_id": convocacao.marco_id,
         "lista_id": convocacao.lista_id,
-        "perfil": nomes["perfil"].get("name") or "",
-        "lista": rotulo_da_lista,
-        "marco": nomes["marco"].get("name") or "",
+        "perfil": nomes["perfil"],
+        "lista": nomes["lista"],
+        "marco": nomes["marco"],
         "ordem": (
             perfis.index(perfil) if perfil in perfis else len(perfis),
-            posicao_da_lista,
+            nomes["posicao_da_lista"],
             str(convocacao.marco_id),
         ),
         "linhas": [],
@@ -344,103 +369,231 @@ def publicar_convocados(
                 422,
                 campo="declaracao_do_veiculo",
             )
-        if not previa["convoca"]:
-            # Sem ninguém convocado aqui, a declaração não tem objeto, e não é gravada (D-012).
-            declaracao = ""
-        # A autoridade habilitada na unidade do Edital e vigente hoje, conferida pela mesma regra
-        # da publicação do Edital e do resultado (060, FR-1125).
-        contexto = contexto_do_ato(edital, autoridade, agora)
-        assinante = contexto.autoridade
-        numero = previa["numero"]
-        versao = effective_version(edital_id=edital.id, at=agora)
-        conteudo = dominio.conteudo(
-            cabecalho=_cabecalho(edital, versao, numero, agora, assinante, contexto.unidade),
-            grupos=previa["grupos"],
-        )
-        try:
-            ato = PublicacaoDeConvocados.objects.create(
-                edital=edital,
-                numero=numero,
-                conteudo_publico=canonical_bytes(conteudo),
-                conteudo_publico_hash=canonical_sha256(conteudo),
-                publicado_por=actor.subject,
-                publicado_em=agora,
-                declaracao_do_veiculo=declaracao,
-                signatario_id=assinante.pk,
-                signatario_nome=assinante.nome,
-                signatario_cargo=assinante.cargo,
-                signatario_ato_de_nomeacao=assinante.ato_de_nomeacao,
-                **colunas_da_unidade(contexto.unidade),
-            )
-        except IntegrityError as erro:
-            # A trava do Processo serializa as publicações; a constraint é a segunda guarda.
-            raise DomainError(PREVIA_OBSOLETA, "Outra publicação foi feita agora.", 409) from erro
-
-        referencia = dominio.referencia_nativa(numero, agora)
-        vinculos = []
-        for escolhida in previa["escolhidas"]:
-            convocacao = escolhida["convocacao"]
-            if escolhida["linha"]["efeito"] == dominio.CONVOCA:
-                comunicacao = ComunicacaoEmitida.objects.create(
-                    convocacao=convocacao,
-                    forma=FORMA_POR_PUBLICACAO,
-                    referencia_da_publicacao=referencia,
-                    enviado_em=agora,
-                    resultado="ENVIADA",
-                )
-                # A frase da publicação registrada da `125` (R-008 dela), com o ato que publicou: a
-                # trilha de cada pessoa diz de onde o prazo dela corre (FR-5711).
-                auditar(
-                    actor=actor,
-                    permissao=ctx.base.permissao,
-                    operation=COMUNICAR,
-                    aggregate=comunicacao,
-                    now=agora,
-                    correlation_id=correlation_id,
-                    reason=(
-                        f"Publicação da convocação {convocacao.id}, inscrição "
-                        f"{convocacao.inscricao_id}, pela {dominio.titulo(numero)} no GPS "
-                        f"({ato.id}): {referencia}. Registro em {agora.isoformat()}."
-                    ),
-                    idempotency_key=idempotency_key,
-                )
-            else:
-                comunicacao = escolhida["comunicacao"]
-            vinculos.append(
-                ConvocacaoPublicada(
-                    publicacao=ato,
-                    convocacao=convocacao,
-                    comunicacao=comunicacao,
-                    efeito=escolhida["linha"]["efeito"],
-                )
-            )
-        ConvocacaoPublicada.objects.bulk_create(vinculos)
-        _gravar_documento(ato, conteudo)
-        auditar(
+        declarado = gravar_publicacao(
+            ctx,
             actor=actor,
-            permissao=ctx.base.permissao,
-            operation=PUBLICAR,
-            aggregate=ato,
-            now=agora,
+            edital=edital,
+            previa=previa,
+            autoridade=autoridade,
+            declaracao=declaracao,
             correlation_id=correlation_id,
-            reason=(
-                f"{dominio.titulo(numero).capitalize()} do Edital {edital.number}/{edital.year} "
-                f"publicada no GPS: {previa['convoca']} convocada(s) por ela e "
-                f"{previa['divulga']} divulgada(s). "
-                + (f"Veículo declarado: {declaracao}." if declaracao else "Nenhuma convocada.")
-            ),
             idempotency_key=idempotency_key,
         )
-        declarado = {
-            "id": str(ato.id),
-            "numero": numero,
-            "titulo": dominio.titulo(numero),
-            "convoca": previa["convoca"],
-            "divulga": previa["divulga"],
-            "publicadaEm": agora.isoformat(),
-        }
         ctx.concluir_sem_resultado(201, declarado)
         return declarado
+
+
+ATO_DO_GESTO = "convocacao:publicar_do_gesto"
+
+
+def publicar_na_transacao(
+    ctx, *, actor, edital, convocacoes, autoridade, declaracao, correlation_id, idempotency_key
+):
+    """Convocar e publicar no GPS num ato só: a publicação dentro da transação do gesto (D-004).
+
+    Toda convocação do gesto precisa sair com efeito *convoca*: uma que não saísse — vencimento já
+    passado, forma que não é a publicação — ficaria convocada e invisível, aguardando uma publicação
+    que a confirmação prometeu fazer. A recusa desfaz o gesto inteiro (FR-6809).
+    """
+    declaracao = (declaracao or "").strip()
+    if not declaracao:
+        raise DomainError(
+            VEICULO_NAO_DECLARADO,
+            "Para convocar e publicar no GPS, diga onde o Edital admite a página pública do GPS "
+            "como veículo da convocação — por exemplo, «item 7.2 do Edital». Se o Edital manda "
+            "publicar em outro lugar, escolha «Fora do GPS».",
+            422,
+            campo="declaracao_do_veiculo",
+        )
+    previa = previa_da_publicacao(edital=edital, at=ctx.now, convocacoes=convocacoes)
+    if previa["convoca"] != len(convocacoes):
+        raise DomainError(
+            NADA_A_PUBLICAR,
+            "Nem todas as convocações deste gesto podem ser publicadas como ato oficial agora — "
+            "confira a forma de comunicar do Perfil e o vencimento. Nada foi convocado.",
+            409,
+        )
+    return gravar_publicacao(
+        ctx,
+        actor=actor,
+        edital=edital,
+        previa=previa,
+        autoridade=autoridade,
+        declaracao=declaracao,
+        correlation_id=correlation_id,
+        idempotency_key=idempotency_key,
+    )
+
+
+def publicar_do_gesto(
+    *, actor, processo_id, edital_id, convocacoes, autoridade, idempotency_key, correlation_id
+):
+    """A relação informativa das convocações de um gesto já comunicadas (159, D-005, D-007).
+
+    Depois dos envios, ou dos registros da publicação externa, numa transação própria e com a chave
+    derivada do gesto: a falha aqui não desfaz convocação nem comunicação (FR-6812), e repetir a
+    confirmação completa a publicação sem repetir o resto (FR-6813). Só entram as do gesto que a
+    prévia avalia como *divulga* — as comunicadas com sucesso e ainda não publicadas; a que falhou
+    fica fora (FR-6806). Sem nenhuma, nada é publicado, e devolve `None`.
+    """
+    ids = sorted(str(c) for c in convocacoes)
+    # **As convocações não entram na reserva**: a chave já é derivada do gesto, e nas pendentes a
+    # lista é lida no momento do pedido — a segunda tentativa do mesmo clique veria outra, e
+    # receberia `idempotency_conflict` em vez do que a primeira publicou.
+    payload = {"edital": str(edital_id), "autoridade": str(autoridade or "")}
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation=ATO_DO_GESTO,
+        payload=payload,
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            return ctx.desfecho_anterior
+        edital = _edital_do_processo(ctx.processo, edital_id)
+        previa = previa_da_publicacao(edital=edital, at=ctx.now, convocacoes=ids)
+        if previa["convoca"]:
+            # Ninguém a convocar aqui: a publicação que convoca é a do GPS, na transação do gesto.
+            previa = _so_as_divulgadas(previa)
+        if not previa["escolhidas"]:
+            ctx.concluir_sem_resultado(200, None)
+            return None
+        declarado = gravar_publicacao(
+            ctx,
+            actor=actor,
+            edital=edital,
+            previa=previa,
+            autoridade=autoridade,
+            declaracao="",
+            correlation_id=correlation_id,
+            idempotency_key=idempotency_key,
+        )
+        ctx.concluir_sem_resultado(201, declarado)
+        return declarado
+
+
+def _so_as_divulgadas(previa):
+    """A prévia sem as linhas *convoca* — a publicação informativa não convoca ninguém."""
+    escolhidas = [x for x in previa["escolhidas"] if x["linha"]["efeito"] == dominio.DIVULGA]
+    grupos = dominio.compor_grupos([x["linha"] for x in escolhidas])
+    return {
+        **previa,
+        "escolhidas": escolhidas,
+        "grupos": grupos,
+        "convoca": 0,
+        "divulga": len(escolhidas),
+    }
+
+
+def gravar_publicacao(
+    ctx, *, actor, edital, previa, autoridade, declaracao, correlation_id, idempotency_key
+):
+    """Grava o ato que a prévia descreve, no `comando_de_comissao` de quem chama (159, D-003).
+
+    **Extraída de `publicar_convocados`** para que convocar e publicar sejam uma confirmação: a
+    página da `149` a chama depois de conferir a prévia do Edital; o gesto de convocar, com a prévia
+    das convocações dele — dentro da própria transação, quando o GPS é o veículo oficial (D-004), ou
+    numa transação própria depois dos envios, quando a relação é informativa (D-005). O que se grava
+    é o mesmo nos três caminhos: o ato, a comunicação de cada *convoca*, os vínculos, o documento e
+    a trilha.
+    """
+    agora = ctx.now
+    if not previa["convoca"]:
+        # Sem ninguém convocado aqui, a declaração não tem objeto, e não é gravada (D-012).
+        declaracao = ""
+    # A autoridade habilitada na unidade do Edital e vigente hoje, conferida pela mesma regra
+    # da publicação do Edital e do resultado (060, FR-1125).
+    contexto = contexto_do_ato(edital, autoridade, agora)
+    assinante = contexto.autoridade
+    numero = previa["numero"]
+    versao = effective_version(edital_id=edital.id, at=agora)
+    conteudo = dominio.conteudo(
+        cabecalho=_cabecalho(edital, versao, numero, agora, assinante, contexto.unidade),
+        grupos=previa["grupos"],
+    )
+    try:
+        ato = PublicacaoDeConvocados.objects.create(
+            edital=edital,
+            numero=numero,
+            conteudo_publico=canonical_bytes(conteudo),
+            conteudo_publico_hash=canonical_sha256(conteudo),
+            publicado_por=actor.subject,
+            publicado_em=agora,
+            declaracao_do_veiculo=declaracao,
+            signatario_id=assinante.pk,
+            signatario_nome=assinante.nome,
+            signatario_cargo=assinante.cargo,
+            signatario_ato_de_nomeacao=assinante.ato_de_nomeacao,
+            **colunas_da_unidade(contexto.unidade),
+        )
+    except IntegrityError as erro:
+        # A trava do Processo serializa as publicações; a constraint é a segunda guarda.
+        raise DomainError(PREVIA_OBSOLETA, "Outra publicação foi feita agora.", 409) from erro
+
+    referencia = dominio.referencia_nativa(numero, agora)
+    vinculos = []
+    for escolhida in previa["escolhidas"]:
+        convocacao = escolhida["convocacao"]
+        if escolhida["linha"]["efeito"] == dominio.CONVOCA:
+            comunicacao = ComunicacaoEmitida.objects.create(
+                convocacao=convocacao,
+                forma=FORMA_POR_PUBLICACAO,
+                referencia_da_publicacao=referencia,
+                enviado_em=agora,
+                resultado="ENVIADA",
+            )
+            # A frase da publicação registrada da `125` (R-008 dela), com o ato que publicou: a
+            # trilha de cada pessoa diz de onde o prazo dela corre (FR-5711).
+            auditar(
+                actor=actor,
+                permissao=ctx.base.permissao,
+                operation=COMUNICAR,
+                aggregate=comunicacao,
+                now=agora,
+                correlation_id=correlation_id,
+                reason=(
+                    f"Publicação da convocação {convocacao.id}, inscrição "
+                    f"{convocacao.inscricao_id}, pela {dominio.titulo(numero)} no GPS "
+                    f"({ato.id}): {referencia}. Registro em {agora.isoformat()}."
+                ),
+                idempotency_key=idempotency_key,
+            )
+        else:
+            comunicacao = escolhida["comunicacao"]
+        vinculos.append(
+            ConvocacaoPublicada(
+                publicacao=ato,
+                convocacao=convocacao,
+                comunicacao=comunicacao,
+                efeito=escolhida["linha"]["efeito"],
+            )
+        )
+    ConvocacaoPublicada.objects.bulk_create(vinculos)
+    _gravar_documento(ato, conteudo)
+    auditar(
+        actor=actor,
+        permissao=ctx.base.permissao,
+        operation=PUBLICAR,
+        aggregate=ato,
+        now=agora,
+        correlation_id=correlation_id,
+        reason=(
+            f"{dominio.titulo(numero).capitalize()} do Edital {edital.number}/{edital.year} "
+            f"publicada no GPS: {previa['convoca']} convocada(s) por ela e "
+            f"{previa['divulga']} divulgada(s). "
+            + (f"Veículo declarado: {declaracao}." if declaracao else "Nenhuma convocada.")
+        ),
+        idempotency_key=idempotency_key,
+    )
+    declarado = {
+        "id": str(ato.id),
+        "numero": numero,
+        "titulo": dominio.titulo(numero),
+        "convoca": previa["convoca"],
+        "divulga": previa["divulga"],
+        "publicadaEm": agora.isoformat(),
+    }
+    return declarado
 
 
 def _cabecalho(edital, versao, numero, agora, assinante, unidade):

@@ -95,6 +95,9 @@ DA_019 = [
     RAIZ / "convocacao/application/publicar.py",
     RAIZ / "convocacao/application/publicacoes.py",
     RAIZ / "convocacao/infrastructure/documento.py",
+    # A `159`: a publicação no gesto de convocar diz o que fica público e quando o prazo começa.
+    TEMPLATES / "_publicacao_no_gesto.html",
+    TEMPLATES / "convocacao_conferir.html",
 ]
 
 # Cada termo com o que ele afirmaria indevidamente. A mensagem entra na falha, para que quem a

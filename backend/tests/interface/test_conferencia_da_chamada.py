@@ -129,7 +129,8 @@ def test_a_conferencia_diz_a_pessoa_a_especie_o_texto_e_o_prazo(
     assert "Assunto:" in pagina
     assert LINK_NA_CONFERENCIA in pagina
     assert "informado neste ato" in pagina
-    assert f"Convocar {proxima['nome']} e enviar 1 mensagem</button>" in pagina
+    # Desde a `159`, o botão diz também a publicação da relação (FR-6803).
+    assert f"Convocar {proxima['nome']}, enviar 1 mensagem e publicar a relação</button>" in pagina
     assert "Cancelar e voltar" in pagina
     assert "Passa à frente de" not in pagina
 
@@ -254,7 +255,9 @@ def test_por_publicacao_a_conferencia_nao_promete_envio(
 
     assert "Nenhuma mensagem sai neste ato" in pagina
     assert "Assunto:" not in pagina
-    assert f"Convocar {proxima['nome']}</button>" in pagina
+    # Desde a `159`, um botão por veículo, e nenhum presumido (D-006).
+    assert f"Convocar {proxima['nome']} e publicar no GPS</button>" in pagina
+    assert f"Convocar {proxima['nome']} (a publicação será registrada depois)</button>" in pagina
 
 
 @pytest.mark.parametrize(("subject", "papeis"), [("auditora", ["auditor"]), ("x", ["elaborador"])])
