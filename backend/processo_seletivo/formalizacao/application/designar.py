@@ -13,6 +13,14 @@ Perfis é revogar e designar de novo. A redação anterior desta docstring dizia
 
 **A pessoa trancada serializa duas designações** do mesmo Edital, como a concessão da `107`: trancar
 a designação seria `FOR UPDATE` numa append-only, que a role de runtime não pode.
+
+**O Processo é trancado antes da pessoa, e a base é reavaliada sob a trava** (a ordem da `011`, em
+`comissoes/application/__init__.py`). A presidência é vínculo que muda: entre a conferência da view
+e a gravação, um gestor pode rebaixar ou remover a presidente, e a designação sairia gravada com a
+base `comissao:presidir` por quem já não preside. A conferência de fora da transação continua, para
+não trabalhar por quem não pode; a que decide é a de dentro, e é a base dela que vai à trilha. O
+Processo vem antes da pessoa porque é a ordem dos comandos da comissão, e a mesma ordem nos dois
+lados não deixa trava cruzada.
 """
 
 from django.contrib.auth import get_user_model
@@ -29,7 +37,7 @@ from processo_seletivo.formalizacao.models import (
     DesignacaoParaFormalizacao,
     RevogacaoDaDesignacao,
 )
-from processo_seletivo.processos.models import Edital
+from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.seguranca.acessos import GERIR
 from processo_seletivo.seguranca.application import acessos
 from processo_seletivo.seguranca.application.authorization import require_permission
@@ -47,6 +55,12 @@ def _motivo(motivo):
             campo="motivo",
         )
     return motivo
+
+
+def _trancar_o_processo_e_reavaliar(actor, edital):
+    """A trava do Processo do Edital e a base relida depois dela (`011`). Dentro da transação."""
+    ProcessoSeletivo.objects.select_for_update().filter(pk=edital.processo_id).first()
+    return exigir_quem_designa(actor, edital)
 
 
 def edital_da_unidade(actor, edital_id):
@@ -144,9 +158,10 @@ def conferir(actor, *, edital, pessoa, perfis):
 
 def designar(actor, *, edital_id, pessoa, perfis, motivo, now, correlation_id=""):
     """A designação nova, depois de todas as recusas, com a trilha da unidade e do Edital."""
-    edital, base = edital_da_unidade(actor, edital_id)
+    edital, _ = edital_da_unidade(actor, edital_id)
     motivo = _motivo(motivo)
     with transaction.atomic():
+        base = _trancar_o_processo_e_reavaliar(actor, edital)
         travada = get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
         if travada is None:
             raise DomainError(nomes.PESSOA_INDISPONIVEL, "Esta pessoa não está disponível.", 409)
@@ -179,7 +194,7 @@ def revogar(actor, *, designacao_id, motivo, now, correlation_id="", edital_id=N
     designacao = designacoes.select_related("edital__processo").first()
     if designacao is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
-    base = exigir_quem_designa(actor, designacao.edital)
+    exigir_quem_designa(actor, designacao.edital)
     if designacao.pessoa == actor.subject:
         raise DomainError(
             nomes.AUTODESIGNACAO,
@@ -189,6 +204,7 @@ def revogar(actor, *, designacao_id, motivo, now, correlation_id="", edital_id=N
     motivo = _motivo(motivo)
     ja_revogada = DomainError(nomes.DESIGNACAO_JA_REVOGADA, "Esta designação já foi revogada.", 409)
     with transaction.atomic():
+        base = _trancar_o_processo_e_reavaliar(actor, designacao.edital)
         get_user_model().objects.select_for_update().filter(username=designacao.pessoa).first()
         if RevogacaoDaDesignacao.objects.filter(designacao=designacao).exists():
             raise ja_revogada

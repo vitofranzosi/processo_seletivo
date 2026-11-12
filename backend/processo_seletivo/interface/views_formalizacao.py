@@ -589,9 +589,10 @@ def _recusa_de_negocio(recusa):
 def designar_na_definicao(request, edital_id):
     """A designação nova pela seção "Quem acessa os documentos" (FR-6700 a FR-6702, UX-700).
 
-    **O mesmo comando da tela de acessos**, que confere o escopo e a base de novo, sob a trava.
-    Aqui a base é perguntada antes de procurar a pessoa: quem não designa recebe a recusa de
-    autorização, e não aprende pelo erro quem é pessoa institucional.
+    **O mesmo comando da tela de acessos**, que confere o escopo e a base de novo, dentro da
+    transação, depois de trancar o Processo: a presidência que mudou entre esta view e a gravação
+    é recusada ali. A primeira conferência, aqui, vem antes de procurar a pessoa: quem não designa
+    recebe a recusa de autorização, e não aprende pelo erro quem é pessoa institucional.
     """
     from processo_seletivo.seguranca.application import acessos
 

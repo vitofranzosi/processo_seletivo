@@ -32,6 +32,7 @@ from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.api.problems import DomainError
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.formalizacao import definir_documentos, designar_direto
+from tests.integration.formalizacao.apoio import documentos_de, exportar_pessoa, verificar
 from tests.interface.conftest import identificar
 from tests.seguranca.apoio import entrar, pessoa, vincular
 
@@ -286,22 +287,34 @@ def test_a_presidencia_designa_no_proprio_processo(cenario, com_papel):
         ("comissao:gerir sem presidir", 403),
         ("membro da comissão", 403),
         ("auditor", 403),
+        ("presidência inativa", 403),
+        ("presidente rebaixada a membro", 403),
         ("presidência de outra unidade", 404),
     ],
 )
 def test_so_a_presidencia_do_proprio_processo_designa(cenario, com_papel, quem, status):
     """FR-6700, FR-6707, SC-2200: as demais bases são recusadas, e nenhuma grava.
 
-    `comissao:gerir` sem presidir continua recusado: o pedido é específico sobre a presidência.
+    `comissao:gerir` sem presidir continua recusado: o pedido é específico sobre a presidência. A
+    presidência que deixou de valer — o vínculo inativado, ou a função rebaixada a membro — também.
     """
     atores = {
         "presidência de outro Processo": Actor("lia", "cefor", frozenset()),
         "comissao:gerir sem presidir": Actor("carlos", "cefor", frozenset({"comissao:gerir"})),
         "membro da comissão": Actor("joao", "cefor", frozenset()),
         "auditor": Actor("auditora", "cefor", frozenset({"auditoria:consultar"})),
+        "presidência inativa": MARIA,
+        "presidente rebaixada a membro": MARIA,
         "presidência de outra unidade": Actor("maria", "outra", frozenset()),
     }
     _presidir(_outro_processo(), "lia")
+    a_dela = MembroComissao.objects.filter(
+        processo=cenario.edital.processo, identity_subject="maria"
+    )
+    if quem == "presidência inativa":
+        a_dela.update(ativo=False, inativado_em=timezone.now(), inativado_por="fixture")
+    elif quem == "presidente rebaixada a membro":
+        a_dela.update(funcao=Funcao.MEMBRO)
     ator = atores[quem]
 
     with pytest.raises(DomainError) as recusa:
@@ -349,15 +362,63 @@ def test_a_presidencia_nao_designa_quem_nao_tem_o_papel(cenario):
     }
 
 
-def test_designar_nao_da_a_presidencia_acesso_aos_documentos(cenario, com_papel, client, seletor):
-    """FR-6704, SC-2201: depois de designar, a presidência continua fora da página do setor."""
+def test_designar_nao_da_a_presidencia_acesso_aos_documentos(
+    cenario, com_papel, client, seletor, gestor
+):
+    """FR-6704, SC-2201: depois de designar, a presidência fica fora da página, dos arquivos, da
+    verificação e da exportação do setor."""
+    definir_documentos(cenario.edital, gestor)
     _designar(MARIA, cenario.edital, com_papel)
+    inscricao, _ = cenario.aptas[0]
+    documento = documentos_de(cenario.edital, inscricao)[0]
 
     with pytest.raises(DomainError) as recusa:
         pode_acessar(MARIA, cenario.edital.id)
     assert recusa.value.status == 403
     identificar(client, "maria", [])
     assert client.get(_pagina(cenario.edital)).status_code == 403
+    arquivo = client.get(
+        reverse(
+            "interface:formalizacao-documento",
+            args=[cenario.edital.id, inscricao.id, documento.origem, documento.objeto_id],
+        )
+    )
+    assert arquivo.status_code == 403
+    assert verificar(client, cenario.edital, alcance="todos").status_code == 403
+    assert exportar_pessoa(client, cenario.edital, inscricao).status_code == 403
+
+
+@pytest.mark.parametrize("comando", ["designar", "revogar"])
+def test_a_base_e_reavaliada_sob_a_trava_do_processo(cenario, com_papel, monkeypatch, comando):
+    """`011`: a presidência rebaixada entre a conferência de fora e a gravação é recusada.
+
+    A troca acontece **dentro** da trava, logo antes da releitura, que é exatamente o que um gestor
+    concorrente faria se tivesse feito commit antes de a trava ser obtida. A conferência de fora da
+    transação já tinha aceitado a presidente; a de dentro recusa, e nada se grava.
+    """
+    feita = _designar(GIL, cenario.edital, com_papel) if comando == "revogar" else None
+    original = designar._trancar_o_processo_e_reavaliar
+
+    def rebaixar_e_trancar(actor, edital):
+        MembroComissao.objects.filter(processo=edital.processo_id, identity_subject="maria").update(
+            funcao=Funcao.MEMBRO
+        )
+        return original(actor, edital)
+
+    monkeypatch.setattr(designar, "_trancar_o_processo_e_reavaliar", rebaixar_e_trancar)
+    assert pode_designar(MARIA, cenario.edital) == "comissao:presidir"
+
+    with pytest.raises(DomainError) as recusa:
+        if comando == "designar":
+            _designar(MARIA, cenario.edital, com_papel)
+        else:
+            designar.revogar(MARIA, designacao_id=feita.id, motivo="x", now=timezone.now())
+    assert recusa.value.status == 403
+    assert DesignacaoParaFormalizacao.objects.count() == (1 if comando == "revogar" else 0)
+    assert not RevogacaoDaDesignacao.objects.exists()
+    assert not RegistroAuditoria.objects.filter(
+        operation__in=[nomes.DESIGNAR, nomes.REVOGAR], permission="comissao:presidir"
+    ).exists()
 
 
 def test_cada_base_revoga_a_designacao_da_outra(cenario, com_papel):

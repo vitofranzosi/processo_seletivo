@@ -115,7 +115,7 @@ Prefixos: `ac` = `tests/integration/formalizacao/test_acesso.py`; `ps` =
 
 | Requisito | Tarefas | Testes |
 |---|---|---|
-| FR-6700 (duas bases; só a presidência do próprio Processo; `comissao:gerir` sem presidir não basta) | T041, T044 | `ac::test_a_presidencia_designa_no_proprio_processo`, `::test_so_a_presidencia_do_proprio_processo_designa` (cinco atores) |
+| FR-6700 (duas bases; só a presidência do próprio Processo; `comissao:gerir` sem presidir não basta) | T041, T044 | `ac::test_a_presidencia_designa_no_proprio_processo`, `::test_so_a_presidencia_do_proprio_processo_designa` (sete atores, com a presidência inativa e a rebaixada), `::test_a_base_e_reavaliada_sob_a_trava_do_processo` (designar e revogar) |
 | FR-6701 (o papel continua com `acesso:gerir`; só quem já o tem) | T041, T044 | `ac::test_a_presidencia_nao_designa_quem_nao_tem_o_papel`, `::test_designar_quem_nao_tem_o_papel_e_recusado_com_codigo_proprio` |
 | FR-6702 (sem autodesignação nem autorrevogação, em qualquer base) | T041, T044 | `ac::test_a_presidencia_nao_designa_a_si_mesma`, `::test_ninguem_designa_a_si_mesmo` |
 | FR-6703 (qualquer base revoga qualquer designação do Edital) | T041, T042, T044 | `ac::test_cada_base_revoga_a_designacao_da_outra`, `::test_a_presidencia_designa_e_revoga_na_tela_da_definicao` |
@@ -128,7 +128,7 @@ Prefixos: `ac` = `tests/integration/formalizacao/test_acesso.py`; `ps` =
 | UX-701 (sem ninguém com o papel: a quem pedir, sem link à tela de acessos) | T042, T044 | `ac::test_sem_ninguem_com_o_papel_a_secao_diz_a_quem_pedir` |
 | UX-702 (recusa de negócio e sucesso voltam à seção) | T042, T044 | `ac::test_a_presidencia_designa_e_revoga_na_tela_da_definicao` |
 | SC-2200 | T044 | `ac::test_so_a_presidencia_do_proprio_processo_designa`, `::test_a_presidencia_designa_no_proprio_processo` |
-| SC-2201 | T044 | `ac::test_designar_nao_da_a_presidencia_acesso_aos_documentos` |
+| SC-2201 | T044 | `ac::test_designar_nao_da_a_presidencia_acesso_aos_documentos` (a página, o arquivo, a verificação e a exportação) |
 | SC-2202 | T044 | `ac::test_cada_base_revoga_a_designacao_da_outra` |
 | SC-2203 | T044 | `ac::test_a_presidencia_nao_designa_a_si_mesma`, `::test_a_presidencia_nao_designa_quem_nao_tem_o_papel` |
 | SC-2204 | T044 | `ac::test_a_presidencia_designa_no_proprio_processo` |

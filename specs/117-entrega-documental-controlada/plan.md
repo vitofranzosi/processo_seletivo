@@ -269,6 +269,10 @@ ou evento de trilha novo.
   `require_authorization_base` nomeando as duas bases (403, FR-6707). A base vai ao `record_event`,
   e a trilha diz quem autorizou (FR-6705). As recusas da FR-3663 (papel, autodesignação, vigente,
   Perfil) não mudam e valem para as duas bases.
+- **A trava da `011`.** Dentro da transação, os dois comandos trancam o `ProcessoSeletivo` do Edital
+  antes da pessoa e releem a base depois da trava, como os comandos da comissão. A presidência
+  rebaixada ou removida entre a view e a gravação é recusada, e a base que vai à trilha é a relida.
+  A conferência de fora da transação continua, para não trabalhar por quem não pode.
 - **Quem tem o papel.** `pessoas_com_o_papel` passa a receber o Edital e pergunta o mesmo predicado,
   para a tela da presidência desenhar a escolha (FR-6701).
 - **A tela.** A seção "Quem acessa os documentos" da definição ganha o formulário de designar e o
