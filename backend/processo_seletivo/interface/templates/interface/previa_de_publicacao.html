@@ -174,8 +174,22 @@ confirmação adicional (D-001, FR-004, FR-006).
     </tbody>
   </table>
   </div>
+  {% elif not consideradas %}
+  <p class="nenhuma">Ninguém concorreu por esta lista.</p>
   {% else %}
   <p class="nenhuma">Nenhum participante recebeu posição neste marco.</p>
   {% endif %}
 </section>
+{% if acompanhantes %}
+{% comment %}
+As listas do marco em que ninguém concorreu saem nesta mesma publicação (155, FR-6330): uma
+confirmação, um registro por lista, e nenhuma linha de candidato.
+{% endcomment %}
+<section aria-labelledby="titulo-acompanhantes">
+  <h2 id="titulo-acompanhantes">Também nesta publicação</h2>
+  <ul class="consequencias">
+    {% for item in acompanhantes %}<li>E a lista {{ item.rotulo }}: {{ item.frase }}.</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 {% endblock %}

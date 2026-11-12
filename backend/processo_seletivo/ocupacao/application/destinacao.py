@@ -113,14 +113,42 @@ def leitura_da_vaga(*, edital, perfil_id, marco_id, lista_id, fatos_externos=Non
         ),
     }
     if vigente is None:
-        # Sem apuração não há saldo afirmado: nada a destinar nem a declarar.
+        # **A lista de sorteio sem relação, com a ausência comprovada** (155, D-011, FR-6332): a
+        # vaga dela não precisa de apuração, e a leitura vem do quadro e dos atos da vaga. Fora
+        # dela, sem apuração não há saldo afirmado: nada a destinar nem a declarar (FR-6333).
+        ausencia = _ausencia(
+            fatos_externos,
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            at=at,
+        )
+        if ausencia is not None and ausencia["comprovada"]:
+            return _leitura_sem_relacao(
+                base,
+                ausencia,
+                perfil=perfil,
+                edital=edital,
+                perfil_id=perfil_id,
+                marco_id=marco_id,
+                lista_id=lista_id,
+                fatos_externos=fatos_externos,
+                at=at,
+            )
         situacao = conta.situacao(
             declaracao=declaracao,
             lista_id=lista_id,
             saldo=None,
             destinadas=base["destinadas"],
         )
-        return {**base, "situacao": situacao, "quantidadePelaCondicao": 0, "restantes": []}
+        return {
+            **base,
+            "ausencia": ausencia,
+            "situacao": situacao,
+            "quantidadePelaCondicao": 0,
+            "restantes": [],
+        }
 
     causas = selectors.causas_de_obsolescencia(vigente, at=at)
     saldo = calculo.faltando(
@@ -213,6 +241,123 @@ def leitura_da_vaga(*, edital, perfil_id, marco_id, lista_id, fatos_externos=Non
         if lista_id is not None
         else 0,
     }
+
+
+def _ausencia(fatos_externos, *, edital, perfil_id, marco_id, lista_id, at):
+    """A ausência de concorrente lida na relação definitiva pertinente, ou `None` (155, R-007).
+
+    **Pergunta à interface, e não ao sorteio**: a ocupação não importa o sorteio, e a composição
+    dos fatos externos já é quem lê o que outros módulos respondem (R-004). Quem a injeta sem a
+    pergunta — a prévia da classificação, um *callable* de teste — não tem lista de sorteio sem
+    relação, e recebe `None`: a ausência de registro não é lida como lista vazia (FR-6333).
+    """
+    if lista_id is None or fatos_externos is None:
+        return None
+    perguntar = getattr(fatos_externos, "ausencia_de_concorrente", None)
+    if perguntar is None:
+        return None
+    return perguntar(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, at=at
+    )
+
+
+#: Os impedimentos que são do resultado **da lista**, e que a lista sem relação não tem: não houve
+#: sorteio, nem publicação, nem prazo contra ela. A prova da ausência é a relação definitiva da
+#: ampla (155, FR-6332); os demais impedimentos da FR-6306 continuam valendo.
+_SO_DO_RESULTADO_DA_LISTA = frozenset({conta.RESULTADO_NAO_DEFINITIVO, conta.PRAZO_RECURSAL_ABERTO})
+
+
+def _leitura_sem_relacao(
+    base, ausencia, *, perfil, edital, perfil_id, marco_id, lista_id, fatos_externos, at
+):
+    """A vaga da lista de sorteio comprovadamente sem concorrente, **sem apuração** (155, R-007).
+
+    As efetivas são as da conta da apuração (`apuracao.apurar`) sem ninguém na ordem: as publicadas
+    no quadro, as acrescidas, e os movimentos que a alcançam — o que a destinação cedeu sai daqui,
+    e é por isso que, destinada, a vaga não é oferecida de novo (FR-6314). Ninguém ocupa: não há
+    quem concorra, e a relação congelada o comprova.
+    """
+    from processo_seletivo.classificacao.application.corte import linha_do_quadro
+    from processo_seletivo.ocupacao.domain import acrescimo as conta_do_acrescimo
+
+    versao = base["versao"]
+    publicadas = selectors._quantidade(
+        linha_do_quadro(versao.content, perfil_id=perfil_id, lista_id=lista_id)
+    )
+    if publicadas is None:
+        # Sem quadro não há quantidade a afirmar (UX-032 da `016`): a ausência continua dita, e
+        # nenhum ato é oferecido.
+        situacao = conta.situacao(
+            declaracao=base["declaracao"],
+            lista_id=lista_id,
+            saldo=None,
+            destinadas=base["destinadas"],
+        )
+        return {**base, "ausencia": ausencia, "situacao": situacao, "restantes": []}
+    acrescimos = selectors.acrescimos_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    recebidas, cedidas = calculo.recebidas_e_cedidas(
+        (m.especie, calculo.mesma_lista(m.destino_lista_id, lista_id), m.quantidade)
+        for m in base["movimentos"]
+    )
+    efetivas = (
+        int(publicadas)
+        + recebidas
+        - cedidas
+        + conta_do_acrescimo.saldo((a.especie, a.quantidade) for a in acrescimos)
+    )
+    saldo = calculo.faltando(efetivas=efetivas, ocupadas=0, nao_preenchidas=base["declaradas"])
+    externos = (
+        fatos_externos(
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            etapa_governada_id=None,
+            eliminados=(),
+            at=at,
+        )
+        if fatos_externos is not None
+        else {}
+    )
+    impedimentos = [
+        i for i in conta.impedimentos(externos) if i.codigo not in _SO_DO_RESULTADO_DA_LISTA
+    ]
+    situacao = conta.situacao(
+        declaracao=base["declaracao"],
+        lista_id=lista_id,
+        saldo=saldo,
+        restantes=[],
+        impedimentos=impedimentos,
+        destinadas=base["destinadas"],
+    )
+    return {
+        **base,
+        "ausencia": ausencia,
+        "causas": [],
+        "saldo": saldo,
+        "publicadas": publicadas,
+        "efetivas": efetivas,
+        "situacao": situacao,
+        "restantes": [],
+        "quantidadePelaCondicao": conta.quantidade_destinavel(
+            gatilho=reversao.especie_que_move(perfil), saldo=saldo, ainda_podem_ocupar=0
+        ),
+    }
+
+
+def _efetivas(leitura):
+    """As efetivas que a conferência mostra: as da apuração, ou as da conta sem ela (R-007)."""
+    if leitura["apuracao"] is not None:
+        return leitura["apuracao"].efetivas
+    return leitura.get("efetivas")
+
+
+def _sem_relacao(leitura):
+    """A leitura é a da lista de sorteio sem relação, com a ausência comprovada (R-007)."""
+    ausencia = leitura.get("ausencia")
+    return bool(ausencia and ausencia.get("comprovada")) and leitura["apuracao"] is None
 
 
 def _condicao(*, edital, perfil_id, marco_id, lista_id, versao, efetivas):
@@ -344,9 +489,12 @@ def previa_da_destinacao(*, edital, perfil_id, marco_id, lista_id, fatos_externo
         "quantidade": quantidade,
         "recusa": _recusa(leitura),
         "ampla": ampla,
+        "efetivasAntes": _efetivas(leitura),
         "amplaDepois": (ampla.efetivas + quantidade) if ampla is not None else None,
         "origemDepois": (
-            leitura["apuracao"].efetivas - quantidade if leitura["apuracao"] is not None else None
+            leitura["apuracao"].efetivas - quantidade
+            if leitura["apuracao"] is not None
+            else (leitura["efetivas"] - quantidade if _sem_relacao(leitura) else None)
         ),
         # **A assinatura cobre o que o ato lê** (FR-6342): a apuração, os movimentos, a versão e a
         # declaração. Qualquer um que mude entre a conferência e o clique é leitura nova, e o ato
@@ -355,6 +503,8 @@ def previa_da_destinacao(*, edital, perfil_id, marco_id, lista_id, fatos_externo
             {
                 "gesto": "destinacao",
                 "apuracao": str(leitura["apuracao"].id) if leitura["apuracao"] else None,
+                # A relação que comprova a ausência (R-007): sucedida, a prova é outra.
+                "relacao": (leitura.get("ausencia") or {}).get("relacao"),
                 "movimentos": [str(m.id) for m in leitura["movimentos"]],
                 "versao": str(leitura["versao"].id),
                 "declaracao": leitura["declaracao"],
@@ -387,11 +537,8 @@ def _recusa(leitura):
             nomes.REVERSAO_POR_SALDO_AGUARDA_DECISAO,
             "A destinação por ato próprio não se aplica à reversão pelo saldo não preenchido.",
         )
-    if leitura["apuracao"] is None or leitura.get("saldo") is None:
-        return (
-            nomes.SEM_SALDO_A_DESTINAR,
-            "Esta lista ainda não tem apuração: não há vaga a ocupar afirmada para destinar.",
-        )
+    if leitura["apuracao"] is None and leitura.get("saldo") is None:
+        return (nomes.SEM_SALDO_A_DESTINAR, _sem_apuracao(leitura, "destinar"))
     if situacao["estado"] == conta.IMPEDIDA and situacao["impedimentos"]:
         primeiro = situacao["impedimentos"][0]
         return (nomes.DESTINACAO_IMPEDIDA, _frase_do_impedimento(primeiro))
@@ -414,6 +561,14 @@ def _recusa(leitura):
             "A vaga desta lista não está disponível para destinação.",
         )
     return None
+
+
+def _sem_apuracao(leitura, gesto):
+    """Por que a lista sem apuração não tem vaga afirmada — e, no sorteio, o que falta (FR-6333)."""
+    ausencia = leitura.get("ausencia") or {}
+    if ausencia.get("frase"):
+        return ausencia["frase"]
+    return f"Esta lista ainda não tem apuração: não há vaga a ocupar afirmada para {gesto}."
 
 
 def _frase_do_impedimento(impedimento):
@@ -496,7 +651,7 @@ def destinar_vaga(
             quantidade=quantidade,
             causa=(
                 f"Destinação à ampla concorrência por ato próprio: {quantidade} de "
-                f"{previa['apuracao'].publicadas}."
+                f"{_publicadas(previa)}."
             ),
             gatilho=previa["declaracao"],
             fundamento=_fundamento(previa),
@@ -504,15 +659,19 @@ def destinar_vaga(
             registrado_por=str(getattr(actor, "subject", actor)),
             registrado_em=ctx.now,
         )
-        seguinte = _emitir_seguinte(
-            ctx,
-            actor,
-            edital=edital,
-            perfil_id=perfil,
-            marco_id=marco,
-            lista_id=lista,
-            motivo=f"Destinação de {quantidade} vaga(s) à ampla concorrência.",
-            correlation_id=correlation_id,
+        seguinte = (
+            _SEM_APURACAO_A_SUCEDER
+            if _sem_relacao(previa)
+            else _emitir_seguinte(
+                ctx,
+                actor,
+                edital=edital,
+                perfil_id=perfil,
+                marco_id=marco,
+                lista_id=lista,
+                motivo=f"Destinação de {quantidade} vaga(s) à ampla concorrência.",
+                correlation_id=correlation_id,
+            )
         )
         auditar(
             actor=actor,
@@ -599,6 +758,32 @@ def _pendente(codigo, detalhe):
     return {"apuracaoSeguinte": None, "apuracaoPendente": {"codigo": codigo, "detalhe": detalhe}}
 
 
+#: A lista de sorteio sem relação não tem apuração a suceder (R-007): o ato é a única leitura da
+#: vaga dela, e a apuração da ampla, que recebe, fica obsoleta pelo movimento, como sempre.
+_SEM_APURACAO_A_SUCEDER = _pendente(
+    "sem_apuracao_de_origem",
+    "esta lista não tem apuração — ninguém concorreu, como a relação da ampla concorrência "
+    "comprova —, e não há apuração dela a suceder.",
+)
+
+
+def _publicadas(previa):
+    """As vagas publicadas da lista lida: da apuração, ou do quadro na lista sem relação."""
+    if previa["apuracao"] is not None:
+        return previa["apuracao"].publicadas
+    return previa.get("publicadas")
+
+
+def _lida(previa):
+    """O que a trilha diz que o ato leu: a apuração, ou a relação que comprovou a ausência."""
+    if previa["apuracao"] is not None:
+        return f"Apuração lida: {previa['apuracao'].id}"
+    return (
+        "Sem apuração: ausência de concorrente comprovada pela relação da ampla concorrência "
+        f"{(previa.get('ausencia') or {}).get('relacao')}"
+    )
+
+
 def _razao(movimento, previa, seguinte):
     """O que a trilha guarda para reconstruir o ato sem abrir o banco (FR-6310, FR-6341)."""
     emitida = seguinte["apuracaoSeguinte"]
@@ -606,7 +791,7 @@ def _razao(movimento, previa, seguinte):
         f"Destinação de {movimento.quantidade} vaga(s) da lista {movimento.origem_lista_id} à "
         f"ampla concorrência, no marco {movimento.marco_id}, Perfil {movimento.perfil_id}, por "
         f"esgotamento. Fundamento: {movimento.fundamento}. "
-        f"Apuração lida: {previa['apuracao'].id}; "
+        f"{_lida(previa)}; "
         + (
             f"sucessora: {emitida['id']}."
             if emitida
@@ -665,6 +850,7 @@ def previa_da_nao_preenchida(*, edital, perfil_id, marco_id, lista_id, fatos_ext
         **leitura,
         "quantidade": quantidade,
         "recusa": _recusa_da_nao_preenchida(leitura),
+        "efetivasAntes": _efetivas(leitura),
         "faltandoDepois": (saldo - quantidade) if saldo is not None else None,
         # **A assinatura cobre o que o ato lê** (FR-6342), como a da destinação, mais as
         # declarações do recorte: uma declaração feita por outra pessoa entre a conferência e o
@@ -673,6 +859,7 @@ def previa_da_nao_preenchida(*, edital, perfil_id, marco_id, lista_id, fatos_ext
             {
                 "gesto": "nao_preenchida",
                 "apuracao": str(leitura["apuracao"].id) if leitura["apuracao"] else None,
+                "relacao": (leitura.get("ausencia") or {}).get("relacao"),
                 "movimentos": [str(m.id) for m in leitura["movimentos"]],
                 "naoPreenchidas": [str(d["registro"].id) for d in leitura["naoPreenchidas"]],
                 "versao": str(leitura["versao"].id),
@@ -714,12 +901,8 @@ def _recusa_da_nao_preenchida(leitura):
             + ". O caminho é a destinação à ampla concorrência, e não a declaração de vaga não "
             "preenchida.",
         )
-    if leitura["apuracao"] is None or leitura.get("saldo") is None:
-        return (
-            nomes.SEM_SALDO_A_DESTINAR,
-            "Esta lista ainda não tem apuração: não há vaga a ocupar afirmada para declarar não "
-            "preenchida.",
-        )
+    if leitura["apuracao"] is None and leitura.get("saldo") is None:
+        return (nomes.SEM_SALDO_A_DESTINAR, _sem_apuracao(leitura, "declarar não preenchida"))
     if situacao["estado"] == conta.IMPEDIDA and situacao["impedimentos"]:
         return (nomes.DESTINACAO_IMPEDIDA, _frase_do_impedimento(situacao["impedimentos"][0]))
     if not leitura["saldo"]:
@@ -812,10 +995,12 @@ def declarar_nao_preenchida(
             )
         quantidade = previa["quantidade"]
         apuracao = previa["apuracao"]
+        sem_relacao = _sem_relacao(previa)
         conferir_limite(
-            efetivas=apuracao.efetivas,
-            ocupadas=apuracao.ocupadas,
-            nao_preenchidas=apuracao.nao_preenchidas + quantidade,
+            efetivas=previa["efetivas"] if sem_relacao else apuracao.efetivas,
+            ocupadas=0 if sem_relacao else apuracao.ocupadas,
+            nao_preenchidas=(previa["declaradas"] if sem_relacao else apuracao.nao_preenchidas)
+            + quantidade,
         )
         registro = VagaNaoPreenchida.objects.create(
             edital=edital,
@@ -832,16 +1017,20 @@ def declarar_nao_preenchida(
             registrado_por=str(getattr(actor, "subject", actor)),
             registrado_em=ctx.now,
         )
-        seguinte = _emitir_seguinte(
-            ctx,
-            actor,
-            edital=edital,
-            perfil_id=perfil,
-            marco_id=marco,
-            lista_id=lista,
-            motivo=f"Declaração de {quantidade} vaga(s) não preenchida(s). Fundamento: {texto}",
-            correlation_id=correlation_id,
-            causa_do_ato=nomes.CAUSA_DECLARACAO_POSTERIOR,
+        seguinte = (
+            _SEM_APURACAO_A_SUCEDER
+            if sem_relacao
+            else _emitir_seguinte(
+                ctx,
+                actor,
+                edital=edital,
+                perfil_id=perfil,
+                marco_id=marco,
+                lista_id=lista,
+                motivo=f"Declaração de {quantidade} vaga(s) não preenchida(s). Fundamento: {texto}",
+                correlation_id=correlation_id,
+                causa_do_ato=nomes.CAUSA_DECLARACAO_POSTERIOR,
+            )
         )
         auditar(
             actor=actor,
@@ -853,8 +1042,7 @@ def declarar_nao_preenchida(
             reason=(
                 f"Declaração de {quantidade} vaga(s) não preenchida(s) na lista "
                 f"{lista or 'ampla concorrência'}, no marco {marco}, Perfil {perfil}. "
-                f"Fundamento: {texto}. Apuração lida: {apuracao.id}; "
-                + _sucessora_na_razao(seguinte)
+                f"Fundamento: {texto}. {_lida(previa)}; " + _sucessora_na_razao(seguinte)
             ),
             idempotency_key=idempotency_key,
         )

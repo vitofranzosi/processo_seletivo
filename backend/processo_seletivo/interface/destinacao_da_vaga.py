@@ -32,6 +32,7 @@ class Composicao:
         self.at = at
         self._do_marco = {}
         self._da_lista = {}
+        self._do_sorteio = {}
 
     def __call__(
         self,
@@ -117,6 +118,96 @@ class Composicao:
                 "chamados": chamados,
             }
         return self._da_lista[chave]
+
+    # --- a lista de sorteio sem relação (155, R-007) ------------------------------------------
+
+    def ausencia_de_concorrente(self, *, edital, perfil_id, marco_id, lista_id, at=None):
+        """A ausência de concorrente na lista reservada de sorteio, lida na relação definitiva
+        pertinente — `None` quando a pergunta não se coloca (155, D-011, FR-6332, FR-6333).
+
+        `{"comprovada", "frase", "relacao"}`. **Comprovada são três fatos juntos** (R-007): a
+        lista não tem inscrito (as inscrições encerradas e ninguém a declarou —
+        `sorteios.previa.recortes_sem_inscrito`), a relação vigente da **ampla** do marco existe, e
+        nenhum participante dela declarou a lista. Sem a relação da ampla, a lista é "relação não
+        congelada", e não lista vazia: ausência de registro não é ausência de concorrente.
+
+        `None` também para a lista que tem relação ou ordem, e para a que alguém declarou: essas
+        têm o caminho de sempre, e a tela já diz o que falta nelas.
+        """
+        if lista_id is None:
+            return None
+        sorteio = self._sorteio_do_marco(edital, perfil_id, marco_id, at or self.at)
+        if sorteio is None or str(lista_id) not in sorteio["semInscrito"]:
+            return None
+        if sorteio["relacaoDaAmpla"] is None:
+            return {
+                "comprovada": False,
+                "relacao": None,
+                "frase": (
+                    "Relação não congelada: a relação de habilitados da ampla concorrência deste "
+                    "marco ainda não foi congelada, e só ela comprova que ninguém concorre por "
+                    "esta lista. Nenhum ato é oferecido antes dela."
+                ),
+            }
+        if str(lista_id) in sorteio["declaradasNaAmpla"]:
+            return {
+                "comprovada": False,
+                "relacao": sorteio["relacaoDaAmpla"],
+                "frase": (
+                    "A relação da ampla concorrência deste marco tem participante que declarou "
+                    "esta lista: a ausência de concorrente não está comprovada, e nenhum ato é "
+                    "oferecido."
+                ),
+            }
+        return {"comprovada": True, "relacao": sorteio["relacaoDaAmpla"], "frase": ""}
+
+    def _sorteio_do_marco(self, edital, perfil_id, marco_id, at):
+        """Os fatos do sorteio do marco, lidos uma vez: `None` quando o marco não sorteia."""
+        chave = (str(perfil_id), str(marco_id))
+        if chave not in self._do_sorteio:
+            from processo_seletivo.editais.domain import marcos
+            from processo_seletivo.sorteios.application.previa import recortes_sem_inscrito
+            from processo_seletivo.sorteios.application.selectors import relacao_vigente
+            from processo_seletivo.sorteios.models import ParticipanteHabilitado
+
+            conteudo = _conteudo(edital, at)
+            if not marcos.marco_ordena_por_sorteio(
+                conteudo, perfil_id=perfil_id, marco_id=marco_id
+            ):
+                self._do_sorteio[chave] = None
+                return None
+            sem_inscrito = {
+                str(lista)
+                for lista in recortes_sem_inscrito(
+                    edital=edital,
+                    conteudo=conteudo,
+                    perfil_id=perfil_id,
+                    marco_id=marco_id,
+                    agora=at,
+                )
+                if lista
+            }
+            ampla = (
+                relacao_vigente(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
+                if sem_inscrito
+                else None
+            )
+            self._do_sorteio[chave] = {
+                "semInscrito": sem_inscrito,
+                "relacaoDaAmpla": str(ampla.id) if ampla is not None else None,
+                # **A terceira prova, pela relação congelada, e não pelas inscrições de hoje**: é a
+                # relação que fixou o universo do sorteio, e é ela a relação definitiva pertinente.
+                "declaradasNaAmpla": {
+                    str(modalidade)
+                    for modalidade in ParticipanteHabilitado.objects.filter(relacao=ampla)
+                    .values_list("inscricao__modality_id", flat=True)
+                    .distinct()
+                    if modalidade
+                }
+                if ampla is not None
+                else set(),
+            }
+        return self._do_sorteio[chave]
 
     # --- o que é da eliminação na Etapa que o corte governa ------------------------------------
 
@@ -252,6 +343,24 @@ def situacao_do_recorte(
     declaracao = leitura["declaracao"]
     if declaracao == nomes.REVERSAO_POR_SALDO:
         return None
+    ausencia = leitura.get("ausencia")
+    if ausencia and not ausencia["comprovada"]:
+        # **O que falta, dito como o que é** (155, FR-6333): a relação não congelada não é lista
+        # vazia, e nenhum ato é oferecido.
+        return {
+            **leitura["situacao"],
+            "frase": ausencia["frase"],
+            "impedimentos": [],
+            "declarada": leitura["frase"],
+            "ato": "",
+            "disponivel": False,
+            "destinacao": False,
+            "naoPreenchida": False,
+            "silente": False,
+            "limitacao": False,
+            "movimentos": [],
+            "naoPreenchidas": [],
+        }
     if lista_id is None and declaracao == nomes.PASSAGEM_ENTRE_COTAS:
         # A passagem entre cotas é da vaga reservada: a linha geral do Perfil que a declara não
         # ganha ato nem frase nesta entrega (FR-6318).
@@ -396,6 +505,16 @@ def anotar_recortes(*, edital, perfil_id, marco_id, recortes, at=None):
                 composicao=composicao,
             )
             if recorte.get("apuracao") is not None
+            # **A lista de sorteio sem relação pergunta também** (155, R-007): sem apuração, a
+            # vaga dela é lida pela relação da ampla — ou dita "relação não congelada".
+            or composicao.ausencia_de_concorrente(
+                edital=edital,
+                perfil_id=perfil_id,
+                marco_id=marco_id,
+                lista_id=recorte.get("listaId"),
+                at=at,
+            )
+            is not None
             else None
         )
     return recortes
@@ -435,11 +554,19 @@ def frase_da_situacao(leitura, rotulo):
     else:
         declara = ""
     estado = situacao["estado"]
+    sem_relacao = bool((leitura.get("ausencia") or {}).get("comprovada"))
     if estado in (conta.DESTINACAO_DISPONIVEL, conta.NAO_PREENCHIDA_DISPONIVEL):
         quantidade = situacao["quantidade"]
+        porque = (
+            # A lista de sorteio sem relação não tem ordem (155, R-007): a prova é a relação.
+            "ninguém concorreu por esta lista, como a relação da ampla concorrência congelada "
+            "comprova."
+            if sem_relacao
+            else f"ninguém mais na ordem desta lista pode ocupá-la{'s' if quantidade != 1 else ''}."
+        )
         return (
             f"{_vagas(quantidade)} da {lista} sem quem a{'s' if quantidade != 1 else ''} ocupe: "
-            f"ninguém mais na ordem desta lista pode ocupá-la{'s' if quantidade != 1 else ''}."
+            + porque
             + declara
         )
     if estado == conta.PASSAGEM_ENTRE_COTAS:

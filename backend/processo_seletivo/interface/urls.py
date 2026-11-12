@@ -9,6 +9,7 @@ from processo_seletivo.interface import (
     duvidas,
     inscricoes_publicadas,
     kit_de_divulgacao,
+    lista_sem_concorrente,
     prototipo_do_assistente,
     relatorio,
     trilha_da_unidade,
@@ -554,6 +555,14 @@ urlpatterns = [
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/emitir",
         views.emitir_ordenacao,
         name="emitir-ordenacao",
+    ),
+    # A lista em que ninguém concorre, num gesto: a ordem vazia e o corte vazio, com uma
+    # conferência (155, FR-6328). O GET abre a conferência — é por link que a providência do
+    # andamento chega aqui —, e o POST confirmado pratica o gesto.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/lista-sem-concorrente",
+        lista_sem_concorrente.registrar,
+        name="registrar-lista-sem-concorrente",
     ),
     # A leitura de um corte pela identidade dele, sucedido ou vigente (014, UX-024). Pende do
     # Edital, e não do marco: o corte histórico continua legível depois de a Retificação remover o

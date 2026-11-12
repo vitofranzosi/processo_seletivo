@@ -49,7 +49,7 @@ contraprova da `FR-493` vista na tela.
 
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível emitir:</strong> {{ erro }}</p>{% endif %}
 {% comment %} O que foi gravado, e em qual recorte (126, FR-4015); sem o próximo passo, que é da orientação da jornada. {% endcomment %}
-{% if resultado %}<p class="sucesso" role="status" tabindex="-1"><strong>Ordem emitida</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}{% if resultado.comPosicao is not None %}: {{ resultado.comPosicao }} com posição, {{ resultado.semPosicao }} sem posição{% endif %}. O ato é imutável e já pode ser consultado.</p>{% endif %}
+{% if resultado.listaSemConcorrente %}<p class="sucesso" role="status" tabindex="-1"><strong>Registrado que ninguém concorreu</strong>{% if recorte_atual %} em {{ recorte_atual.rotulo }}{% endif %}: a ordem vazia{% if resultado.listaSemConcorrente.corte %} e o corte vazio{% endif %}, sem linha de candidato. A lista sai junto da publicação do resultado do marco.</p>{% elif resultado %}<p class="sucesso" role="status" tabindex="-1"><strong>Ordem emitida</strong>{% if recorte_atual %} para {{ recorte_atual.rotulo }}{% endif %}{% if resultado.comPosicao is not None %}: {{ resultado.comPosicao }} com posição, {{ resultado.semPosicao }} sem posição{% endif %}. O ato é imutável e já pode ser consultado.</p>{% endif %}
 {% if resultado %}{% include "interface/_proximo_nesta_lista.html" %}{% endif %}
 
 {% comment %}
@@ -90,7 +90,7 @@ Três ausências diferentes, e elas pedem providências diferentes (034, FR-492a
 3. **Ainda não emitiram.** O caso comum, e a frase diz onde se emite: aqui mesmo.
 {% endcomment %}
 {% if recorte_sem_ninguem %}
-<p class="aviso"><strong>Ninguém concorreu por este recorte.</strong> Nenhuma inscrição se autodeclarou nesta Modalidade de Concorrência, e por isso a ordem dele é vazia. Isso não é pendência de conferência: a ordem vazia é um fato normativo, e emiti-la declara que ninguém concorreu ali. Emitir continua sendo ato seu — nada foi constituído automaticamente.</p>
+<p class="aviso"><strong>Ninguém concorreu por este recorte.</strong> Nenhuma inscrição se autodeclarou nesta Modalidade de Concorrência, e por isso a ordem dele é vazia. Isso não é pendência de conferência: a ordem vazia é um fato normativo, e emiti-la declara que ninguém concorreu ali. Registrar continua sendo ato seu — nada foi constituído automaticamente —, e é um gesto só, com uma conferência: a ordem vazia e, se o marco corta, o corte vazio. A lista sai junto da publicação do resultado do marco.</p>
 {% elif ordem_unica_do_marco %}
 <p class="aviso"><strong>Este recorte ainda não tem ordem própria.</strong> O que este marco tem é a ordem da ampla concorrência, emitida em {{ ordem_unica_do_marco.emitido_em|date:"d/m/Y H:i" }}, e ela alcança <em>todos</em> os inscritos do Perfil — inclusive quem se autodeclarou nesta Modalidade. Ela não é corrigida nem substituída por esta: emitir a ordem deste recorte é ato novo, e a da ampla continua vigente. <a href="{% url 'interface:ato-de-ordenacao' edital.id marco.id ordem_unica_do_marco.id %}">Consultar a ordem da ampla concorrência</a>.</p>
 {% elif sem_resultado %}
@@ -306,6 +306,14 @@ sucessora, e as citações vão com ela.
 <section aria-labelledby="titulo-emissao">
 <h2 id="titulo-emissao">Emissão da ordem</h2>
 {% endif %}
+{% comment %}
+A lista em que ninguém concorre tem o gesto no lugar da emissão (155, FR-6328): ordem vazia e corte
+vazio numa conferência, e a publicação junto da do marco. Só no primeiro ato: suceder exige motivo.
+{% endcomment %}
+{% if recorte_sem_ninguem and not ato_vigente %}
+<p>O botão abre a conferência do que será gravado, e nada é registrado antes de você confirmar nela.</p>
+<p class="acoes"><a class="botao" href="{% url 'interface:registrar-lista-sem-concorrente' edital.id marco.id %}?lista={{ lista_id }}">Conferir o registro de que ninguém concorreu</a></p>
+{% else %}
 <form method="post" action="{% url 'interface:emitir-ordenacao' edital.id marco.id %}" class="confirmar">
   {% csrf_token %}
   {% comment %}
@@ -347,6 +355,7 @@ sucessora, e as citações vão com ela.
   {% endif %}
   <p class="acoes"><button type="submit" class="botao">Conferir antes de emitir</button></p>
 </form>
+{% endif %}
 {% if ato_vigente %}</details>{% else %}</section>{% endif %}
 {% endif %}
 

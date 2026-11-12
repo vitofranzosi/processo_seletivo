@@ -14,7 +14,10 @@ ele confira. O instante impresso é `publicado_em`, que é um fato passado — u
 geração faria o mesmo resultado produzir arquivos diferentes a cada download.
 """
 
-from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
+from processo_seletivo.divulgacao.domain.conteudo import (
+    FRASE_DA_LISTA_SEM_CONCORRENTE,
+    nome_da_lista,
+)
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     ALTURA_DO_BRASAO,
     ANTES_DE_LINHA,
@@ -47,7 +50,7 @@ def render_resultado_pdf(conteudo: dict) -> bytes:
     composicao = Composicao()
     _timbre(composicao, cabecalho)
     _identificacao(composicao, cabecalho)
-    _lista(composicao, conteudo["posicoes"])
+    _lista(composicao, conteudo["posicoes"], ninguem=conteudo.get("ninguemConcorreu", False))
     _sorteio(composicao, cabecalho)
     _autoridade(composicao, cabecalho)
     _integridade(composicao, conteudo)
@@ -145,13 +148,17 @@ def _par(composicao, rotulo, valor):
     composicao.escrever(valor, tamanho=CORPO_TEXTO, recuo=RECUO_DO_VALOR, antes=SUBIR_PARA_A_LINHA)
 
 
-def _lista(composicao, posicoes):
+def _lista(composicao, posicoes, *, ninguem=False):
     composicao.escrever(
         "Resultado", tamanho=CORPO_SECAO, fonte=NEGRITO, antes=ENTRE_SECOES, junto=True
     )
     if not posicoes:
         composicao.escrever(
-            "Nenhum participante recebeu posição neste marco.",
+            # A lista em que ninguém concorreu é dita como tal (155, FR-6330): "nenhum participante
+            # recebeu posição" faria ler que houve quem concorresse e ficasse sem posição.
+            FRASE_DA_LISTA_SEM_CONCORRENTE
+            if ninguem
+            else "Nenhum participante recebeu posição neste marco.",
             tamanho=CORPO_TEXTO,
             antes=ANTES_DE_LINHA + 3,
         )

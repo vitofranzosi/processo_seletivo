@@ -30,18 +30,18 @@ efetivas e a quantidade publicada ficam como estao (D-003).
 <dl class="meta">
   <dt>Lista</dt><dd>{{ rotulo }}</dd>
   <dt>Quantidade</dt><dd>{{ previa.quantidade|contagem:"vaga,vagas" }}</dd>
-  <dt>Por que ninguém a ocupa</dt><dd>ninguém mais na ordem de {{ rotulo }} pode ocupá-la</dd>
+  <dt>Por que ninguém a ocupa</dt><dd>{% if previa.apuracao %}ninguém mais na ordem de {{ rotulo }} pode ocupá-la{% else %}ninguém concorreu por {{ rotulo }}, como a relação da ampla concorrência congelada comprova{% endif %}</dd>
   <dt>O que o Edital declara</dt><dd>{% if lista_id %}nada sobre a vaga reservada não preenchida{% else %}a ampla concorrência não tem para onde levar a vaga{% endif %}</dd>
   <dt>Versão do Edital lida</dt><dd>a vigente desde {{ previa.versao.valid_from|date:"d/m/Y H:i" }}</dd>
 </dl>
 
 <h2>O efeito</h2>
 <ul class="resumo" aria-label="Vagas antes e depois deste ato">
-  <li><strong>{{ previa.apuracao.efetivas }}</strong>Efetivas em {{ rotulo }}, antes e depois</li>
+  <li><strong>{{ previa.efetivasAntes }}</strong>Efetivas em {{ rotulo }}, antes e depois</li>
   <li><strong>{{ previa.saldo }}</strong>A ocupar hoje</li>
   <li><strong>{{ previa.faltandoDepois }}</strong>A ocupar depois</li>
 </ul>
-<p class="nota">A vaga passa a aparecer como não preenchida: deixa de contar como "a ocupar", e a quantidade publicada e as vagas efetivas não mudam. A apuração seguinte de {{ rotulo }} será emitida por este ato, em seu nome, com o fundamento que você escrever.</p>
+<p class="nota">A vaga passa a aparecer como não preenchida: deixa de contar como "a ocupar", e a quantidade publicada e as vagas efetivas não mudam. {% if previa.apuracao %}A apuração seguinte de {{ rotulo }} será emitida por este ato, em seu nome, com o fundamento que você escrever.{% else %}{{ rotulo }} não tem apuração a suceder: ninguém concorreu nela.{% endif %}</p>
 {% comment %}
 O fundamento nao move a vaga (FR-6320, D-006): nenhum texto escrito no ato substitui a declaracao
 publicada. Onde o Edital deveria declarar a reversao, o caminho e a Retificacao.
@@ -125,18 +125,18 @@ conferencia do acrescimo (097).
   <dt>De</dt><dd>{{ rotulo }}</dd>
   <dt>Para</dt><dd>a ampla concorrência deste Perfil</dd>
   <dt>Quantidade</dt><dd>{{ previa.quantidade|contagem:"vaga,vagas" }}</dd>
-  <dt>Gatilho declarado</dt><dd>por esgotamento: ninguém mais na ordem de {{ rotulo }} pode ocupar a vaga</dd>
+  <dt>Gatilho declarado</dt><dd>por esgotamento: {% if previa.apuracao %}ninguém mais na ordem de {{ rotulo }} pode ocupar a vaga{% else %}ninguém concorreu por {{ rotulo }}, como a relação da ampla concorrência congelada comprova{% endif %}</dd>
   <dt>O que o Edital declara</dt><dd>«{{ previa.frase }}»</dd>
   <dt>Versão do Edital lida</dt><dd>a vigente desde {{ previa.versao.valid_from|date:"d/m/Y H:i" }}</dd>
 </dl>
 
 <h2>O efeito</h2>
 <ul class="resumo" aria-label="Vagas efetivas antes e depois deste ato">
-  <li><strong>{{ previa.apuracao.efetivas }}</strong>Efetivas em {{ rotulo }} hoje</li>
+  <li><strong>{{ previa.efetivasAntes }}</strong>Efetivas em {{ rotulo }} hoje</li>
   <li><strong>{{ previa.origemDepois }}</strong>Efetivas em {{ rotulo }} depois</li>
   {% if previa.ampla %}<li><strong>{{ previa.amplaDepois }}</strong>Efetivas na ampla concorrência depois</li>{% endif %}
 </ul>
-<p class="nota">A quantidade publicada não muda: o que o Edital publicou é intocável, e a soma das vagas efetivas do Perfil continua a mesma. A apuração seguinte de {{ rotulo }} será emitida por este ato, em seu nome, com o motivo “Destinação de {{ previa.quantidade }} vaga(s) à ampla concorrência.”. A apuração da ampla concorrência ficará obsoleta pelo movimento, e a seguinte é emitida na ocupação, por quem conduz — é ela que muda quem é chamado a seguir.</p>
+<p class="nota">A quantidade publicada não muda: o que o Edital publicou é intocável, e a soma das vagas efetivas do Perfil continua a mesma. {% if previa.apuracao %}A apuração seguinte de {{ rotulo }} será emitida por este ato, em seu nome, com o motivo “Destinação de {{ previa.quantidade }} vaga(s) à ampla concorrência.”.{% else %}{{ rotulo }} não tem apuração a suceder: ninguém concorreu nela.{% endif %} A apuração da ampla concorrência ficará obsoleta pelo movimento, e a seguinte é emitida na ocupação, por quem conduz — é ela que muda quem é chamado a seguir.</p>
 
 {% comment %}
 O lembrete da FR-6309: se o Edital manda passar antes por outras cotas, a destinacao direta a ampla

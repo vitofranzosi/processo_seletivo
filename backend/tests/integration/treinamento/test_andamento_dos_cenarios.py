@@ -86,6 +86,23 @@ def test_a_ordem_da_ppp_em_que_ninguem_concorre_diz_isso_para_qualquer_papel(cen
     # A ordem da ampla, já emitida, não é providência e não ganha nota nenhuma.
 
 
+def test_c08_a_providencia_da_ppp_leva_ao_gesto_da_lista_vazia(cenario, client, seletor_ligado):
+    """FR-4671, revista pela `155` (FR-6328): quem conduz vai da providência à conferência do
+    gesto, que registra a ordem vazia e o corte vazio; abri-la não grava nada."""
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao
+
+    m = cenario("C08")
+    _, nivel = _nivel(m, c.PRESIDENCIA)
+    [ordem] = _ordens(nivel)
+    assert "lista-sem-concorrente" in ordem.url
+    antes = AtoDeOrdenacao.objects.filter(edital=m.edital).count()
+    identificar(client, c.PRESIDENCIA, [])
+    resposta = client.get(ordem.url, follow=True)
+    assert resposta.status_code == 200
+    assert "Registrar que ninguém concorreu" in resposta.content.decode()
+    assert AtoDeOrdenacao.objects.filter(edital=m.edital).count() == antes
+
+
 def test_c04_a_ppp_com_inscritos_nao_menciona_lista_vazia(cenario):
     """SC-1461, US1 cenário 4: a mesma providência de antes, as duas listas numa linha só."""
     m = cenario("C04")

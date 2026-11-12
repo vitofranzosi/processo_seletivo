@@ -258,6 +258,8 @@ QUEM_CARREGA = {
         "convocacao.html",
         "ordenacao.html",
         "ordenacao_confirmar.html",
+        # A conferência da lista em que ninguém concorre (155, FR-6328), na moldura da emissão.
+        "ordenacao_lista_sem_concorrente.html",
     },
     # A ficha do barema (146): na Mesa, resumida nas conclusões preservadas, e no julgamento.
     "interface/grupos/ficha-do-barema.css": {

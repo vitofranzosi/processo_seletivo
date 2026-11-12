@@ -3364,6 +3364,9 @@ def resultado(request, publicacao_id):
             # marco abriam com o mesmo cabeçalho.
             "lista": nome_da_lista(conteudo["cabecalho"]),
             "posicoes": conteudo["posicoes"],
+            # A lista em que ninguém concorreu, dita como tal, dos mesmos bytes que o documento lê
+            # (155, FR-6330).
+            "ninguem_concorreu": bool(conteudo.get("ninguemConcorreu")),
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
             "prazo": prazo,

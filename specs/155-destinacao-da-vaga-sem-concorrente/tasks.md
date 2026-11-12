@@ -148,19 +148,19 @@ sucessora da origem e a ampla obsoleta.
 ausência comprovada.
 **Independent Test**: a US5 no C09 e num sorteio com a PPI vazia.
 
-- [ ] T038 [P] [US5] Testes em `tests/interface/test_lista_sem_concorrente.py`:
+- [X] T038 [P] [US5] Testes em `tests/interface/test_lista_sem_concorrente.py`:
   - o gesto emite a ordem vazia e o corte vazio numa conferência;
   - nenhuma posição gravada (FR-6329);
   - recusa `lista_com_concorrente`;
   - a idempotência.
-- [ ] T039 [US5] A view `interface:registrar-lista-sem-concorrente` e a conferência, sobre `emitir_ordem` e `emitir_corte`, em `processo_seletivo/interface/views.py` e `templates/interface/ordenacao_lista_sem_concorrente.html`; o evento `CLASSIFICACAO_LISTA_SEM_CONCORRENTE`; a providência da `135` aponta o gesto em `processo_seletivo/interface/andamento.py`
-- [ ] T040 [P] [US5] Testes da publicação conjunta em `tests/integration/divulgacao/test_publicacao_conjunta.py`:
+- [X] T039 [US5] A view `interface:registrar-lista-sem-concorrente` e a conferência, sobre `emitir_ordem` e `emitir_corte`, em `processo_seletivo/interface/views.py` e `templates/interface/ordenacao_lista_sem_concorrente.html`; o evento `CLASSIFICACAO_LISTA_SEM_CONCORRENTE`; a providência da `135` aponta o gesto em `processo_seletivo/interface/andamento.py`
+- [X] T040 [P] [US5] Testes da publicação conjunta em `tests/integration/divulgacao/test_publicacao_conjunta.py`:
   - a lista vazia publicada na mesma transação;
   - a assinatura cobre;
   - a natureza é a mesma;
   - não republica.
-- [ ] T041 [US5] A publicação conjunta em `processo_seletivo/divulgacao/application/publicar.py` e a prévia em `processo_seletivo/interface/views.py::publicar_resultado`; a célula do resultado da lista vazia no andamento
-- [ ] T042 [US5] O sorteio sem relação (R-007): a ausência comprovada em `processo_seletivo/interface/destinacao_da_vaga.py`, com o movimento sem apuração de origem; testes em `tests/integration/ocupacao/test_destinacao_no_sorteio.py` (relação da ampla congelada; não congelada não oferece)
+- [X] T041 [US5] A publicação conjunta em `processo_seletivo/divulgacao/application/publicar.py` e a prévia em `processo_seletivo/interface/views.py::publicar_resultado`; a célula do resultado da lista vazia no andamento
+- [X] T042 [US5] O sorteio sem relação (R-007): a ausência comprovada em `processo_seletivo/interface/destinacao_da_vaga.py`, com o movimento sem apuração de origem; testes em `tests/integration/ocupacao/test_destinacao_no_sorteio.py` (relação da ampla congelada; não congelada não oferece)
 
 ---
 

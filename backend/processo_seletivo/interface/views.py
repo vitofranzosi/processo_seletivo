@@ -10733,6 +10733,10 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
             raise Http404 from recusa
         raise
     projecao = compor_divulgacao(ato)
+    # As listas sem concorrente do marco que saem junto (155, FR-6330): listadas e assinadas.
+    from processo_seletivo.interface.lista_sem_concorrente import acompanhantes_da_previa
+
+    acompanhantes = acompanhantes_da_previa(edital=edital, marco_id=marco_id, ato=ato)
     return marcar_como_privada(
         render(
             request,
@@ -10764,8 +10768,12 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 "sucede": sucede,
                 "naturezas": _naturezas_oferecidas(sucede),
                 "escolha_da_autoridade": _escolha_da_autoridade(edital),
+                "acompanhantes": acompanhantes["itens"],
                 "confirmacao_da_previa": assinatura_da_previa(
-                    ato=ato, publicacao_anterior=sucede, projecao=projecao
+                    ato=ato,
+                    publicacao_anterior=sucede,
+                    projecao=projecao,
+                    acompanhantes=acompanhantes["candidatas"],
                 ),
                 # O campo da declaração só existe onde ela é exigida: onde há janela computável o
                 # sistema verifica, e oferecer o campo ali ensinaria a preenchê-lo sempre (FR-086).
@@ -10816,6 +10824,8 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
             # não há janela computável (FR-085, FR-086). O comando decide se ela é exigida, se é
             # recusada ou se é gravada — a tela apenas a transporta.
             declaracao_de_encerramento=request.POST.get("declaracao_de_encerramento", ""),
+            # A prévia listou e assinou as listas sem concorrente do marco (155, FR-6330).
+            com_as_listas_sem_concorrente=True,
         )
     except DomainError as recusa:
         if recusa.status == 404:

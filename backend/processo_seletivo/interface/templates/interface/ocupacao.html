@@ -172,6 +172,11 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   {% endcomment %}
   {% if recorte.semInscrito %}
   <p class="nota"><strong>Não se aplica.</strong> Nenhuma inscrição enviada declarou esta lista: não há ordem a emitir nem ocupação a apurar neste recorte.</p>
+  {% comment %}
+  A lista de sorteio sem relação (155, R-007, FR-6332): a vaga dela, lida pela relação da ampla, sem
+  apuração; ou o que falta para a prova, dito como o que é (FR-6333).
+  {% endcomment %}
+  {% include "interface/_situacao_da_vaga.html" %}
   {% elif pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and not recorte.temOrdem %}
   {% comment %}
   **A razao no lugar do botao, e o caminho junto** (034, FR-498, SC-170). Apurar exige ordem vigente

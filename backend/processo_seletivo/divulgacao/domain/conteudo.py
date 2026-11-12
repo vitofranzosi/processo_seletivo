@@ -45,6 +45,10 @@ COLUNAS_DA_POSICAO = (
 ESCALA_PADRAO = 2
 
 
+#: A frase da lista em que ninguém concorreu, na página pública e no documento (155, FR-6330).
+FRASE_DA_LISTA_SEM_CONCORRENTE = "Ninguém concorreu por esta lista."
+
+
 def compor(ato):
     """As duas projeções do ato, com os rótulos da versão que ele cita já resolvidos.
 
@@ -204,6 +208,11 @@ def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, unidad
             **({"retificacoes": list(retificacoes)} if retificacoes else {}),
         },
         "posicoes": composicao["posicoes"],
+        # **A lista em que ninguém concorreu, dita nos bytes** (155, FR-6330): a ordem sem linha
+        # nenhuma — nem posição, nem sem posição. A página e o documento leem daqui, e a chave só
+        # existe quando é verdade, como as retificações: o resumo de todo resultado com gente
+        # continua o mesmo.
+        **({"ninguemConcorreu": True} if composicao.get("situacoes") == [] else {}),
     }
 
 

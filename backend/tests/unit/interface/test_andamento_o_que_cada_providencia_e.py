@@ -60,6 +60,44 @@ def test_a_ordem_da_lista_vazia_continua_pendente_e_diz_o_que_e():
     assert cheia.ato == "Emitir a ordem"
 
 
+def test_a_ordem_da_lista_vazia_leva_ao_gesto_quando_ele_vem_dito():
+    """FR-4671 da `135`, revista pela `155` (FR-6328): o link é o do gesto que registra a ordem
+    vazia e o corte vazio numa conferência. Sem o endereço do gesto, o de antes; a sucessora
+    continua na ordenação, porque suceder exige motivo."""
+    gesto = "/marcos/m/lista-sem-concorrente?lista=ppp"
+    vazia = a.situacao_da_ordem(
+        {
+            "celula": {"estado": "falta", "url": "/ordenacao?lista=ppp"},
+            "vazia": True,
+            "url_do_gesto": gesto,
+        }
+    )
+    assert vazia.url == gesto and vazia.situacao == a.PENDENTE and vazia.lista_vazia
+    sucessora = a.situacao_da_ordem(
+        {
+            "celula": {"estado": "obsoleto", "url": "/ordenacao?lista=ppp"},
+            "vazia": True,
+            "url_do_gesto": gesto,
+        }
+    )
+    assert sucessora.url == "/ordenacao?lista=ppp"
+
+
+def test_o_resultado_da_lista_vazia_que_sai_junto_nao_e_providencia_propria():
+    """155, FR-6330, R-006: a lista vazia sai junto da publicação de outra lista do marco, e a
+    célula diz isso; o impedimento continua sendo dito como impedimento."""
+    junto = resultado("falta", junto_do_marco=True)
+    assert junto.situacao == a.DEPOIS and junto.razao == a.SAI_JUNTO_DO_MARCO
+    assert not junto.em_aberto and not junto.ato
+    preliminar = resultado("feito", "PRELIMINAR", junto_do_marco=True)
+    assert preliminar.situacao == a.DEPOIS and preliminar.divulgado == a.PRELIMINAR
+    assert resultado("feito", "DEFINITIVA", junto_do_marco=True).situacao == a.FEITO
+    impedida = resultado(
+        "falta", junto_do_marco=True, afericao={"nivel": p.IMPEDIMENTO, "mensagem": "Corte."}
+    )
+    assert impedida.situacao == a.IMPEDIDO
+
+
 def test_a_lista_vazia_nao_muda_situacao_nenhuma():
     """FR-4676 e os casos-limite da spec: *Depois* (a recusa da `128` e as Etapas não feitas),
     *Feito* com "ninguém concorreu" e *Obsoleto* continuam decidindo como antes."""
