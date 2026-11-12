@@ -287,11 +287,24 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   não atendimento dos vencidos; fundamento do desfecho; fundamento do indeferimento pelas pendências.
 - **FR-3992**: O aviso MUST NOT ficar só na ajuda dos leitores de tela, nem dentro de bloco recolhível:
   ele é visível ao lado do campo, sempre. É aviso de consequência, e não ajuda de preenchimento.
-- **FR-3993**: Com texto digitado em algum desses campos, o formulário MUST mostrar, **antes** do botão
-  que pratica o ato, a **prévia** do texto como o candidato o verá: na convocação, o fundamento composto
-  — o derivado seguido do complemento —, sob o rótulo *"Fundamento"*; no desfecho, a linha
-  *"Resultado registrado: ‹rótulo do desfecho› — ‹fundamento›"*, como a tela da convocação a mostra. A prévia MUST usar a
-  mesma composição que o ato gravará, e não uma segunda.
+- **FR-3993** *(revista pela `156` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Com texto digitado em algum desses campos, o formulário MUST mostrar, **antes** do botão
+  que pratica o ato, a **prévia** do texto como o candidato o verá, nas duas camadas da `156`
+  (FR-6400 da `156`): na convocação, a frase simples da espécie (FR-6442 da `156`) e, recolhido sob
+  *"Fundamento da convocação"*, o fundamento composto — o derivado seguido do complemento —; no
+  desfecho, o rótulo, a frase simples (FR-6406 da `156`) e, recolhido sob *"Fundamento do registro"*,
+  o fundamento. A prévia MUST usar a mesma composição que o ato gravará e que o portal mostrará, e não
+  uma segunda.
+
+  > **Redação anterior à `156`, preservada:**
+  > Com texto digitado em algum desses campos, o formulário MUST mostrar, **antes** do botão
+  > que pratica o ato, a **prévia** do texto como o candidato o verá: na convocação, o fundamento composto
+  > — o derivado seguido do complemento —, sob o rótulo *"Fundamento"*; no desfecho, a linha
+  > *"Resultado registrado: ‹rótulo do desfecho› — ‹fundamento›"*, como a tela da convocação a mostra. A prévia MUST usar a
+  > mesma composição que o ato gravará, e não uma segunda.
+  >
+  > *Por que mudou:* o portal passou a mostrar o fundamento recolhido sob uma frase simples (achado 18 do estudo da jornada final de 11/11/2026), e a prévia precisa mostrar o que o candidato de fato lerá.
+
 - **FR-3994**: A prévia MUST dizer a **quantas pessoas** o mesmo texto será mostrado: *"Este texto será
   mostrado a N pessoas."*, com N igual ao número de convocações ou desfechos que a confirmação
   praticará. Com uma pessoa, *"Este texto será mostrado a 1 pessoa."*

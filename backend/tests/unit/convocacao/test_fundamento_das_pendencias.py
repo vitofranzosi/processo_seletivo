@@ -65,3 +65,23 @@ def test_o_espaco_depois_do_ponto_nao_o_esconde():
 
 def test_sem_pendencia_nao_ha_fundamento():
     assert fundamento_das_pendencias([]) == ""
+
+
+def test_o_fundamento_do_atalho_cita_o_pendente_e_o_nao_apresentado():
+    """152, FR-5801: o pendente com o motivo; o não apresentado com a frase do prazo."""
+    from processo_seletivo.convocacao.domain.documentos import fundamento_do_atalho
+
+    texto = fundamento_do_atalho(
+        [("Histórico escolar", "Falta a página 2.")], ["Comprovante de residência"]
+    )
+
+    assert texto == (
+        INICIO + "Histórico escolar: Falta a página 2; "
+        "Comprovante de residência: não apresentado no prazo."
+    )
+
+
+def test_o_fundamento_do_atalho_sem_motivo_e_vazio():
+    from processo_seletivo.convocacao.domain.documentos import fundamento_do_atalho
+
+    assert fundamento_do_atalho([], []) == ""

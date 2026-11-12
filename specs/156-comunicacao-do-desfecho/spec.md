@@ -1,13 +1,23 @@
 # Feature Specification: O desfecho da convocação comunicado ao candidato
 
-**Feature Branch**: `claude/intelligent-robinson-4466a5`, sobre a `main` em `d1ec1e0a` (com a `154`, PR #479, mergeada)
+**Feature Branch**: `claude/intelligent-robinson-4466a5`, sobre a `main` em `d1ec1e0a` (com a `154`, PR #479, mergeada).
+Revista em `claude/156-revisao-das-decisoes`, sobre a `main` em `17e9665c`.
 
 **Created**: 2026-11-11
 
-**Status**: **Rascunho, só a spec.** Não há plano, tarefas nem código. As propostas de desenho
-(D-001 a D-014, ao fim) estão sujeitas à revisão do PR, e as **nove perguntas ao usuário** (P-1 a
-P-9, em *Perguntas ao usuário*) estão abertas. Onde uma pergunta está aberta, o texto adota a
-recomendação dela, marcada como tal, para que a spec continue coerente; a resposta pode trocá-la.
+**Status**: **Mergeada em 11/11/2026 (PR #485) e revista no mesmo dia com as decisões do usuário;
+sem plano nem código.** As nove perguntas (P-1 a P-9) foram respondidas pelo usuário — a *1ª* à *9ª
+decisão*, em *Clarifications* —, e **não se reabrem**. Cada requisito alterado por elas traz a marca
+*"revista em 2026-11-11"* e a redação mergeada ao fim da alínea; os acrescidos trazem *"acrescida em
+2026-11-11"*. Nenhum identificador mergeado mudou de sentido nem de número. As propostas de desenho
+(D-001 a D-017) continuam sujeitas à revisão do PR. A **validação institucional** do envio está nas
+pendências PI-1 a PI-6, que condicionam só a habilitação do envio.
+
+> **Status anterior, de 11/11/2026 (PR #485), preservado:** *"Rascunho, só a spec. Não há plano,
+> tarefas nem código. As propostas de desenho (D-001 a D-014, ao fim) estão sujeitas à revisão do PR,
+> e as nove perguntas ao usuário (P-1 a P-9, em Perguntas ao usuário) estão abertas. Onde uma
+> pergunta está aberta, o texto adota a recomendação dela, marcada como tal, para que a spec continue
+> coerente; a resposta pode trocá-la."*
 
 **Input**: o [estudo da jornada final](../../doc/estudo-jornada-final-2026-11-11/index.html) de
 11/11/2026 (PR #472), achados **07**, **17** e **18**, os três de prioridade média, e a orientação
@@ -110,53 +120,266 @@ ela. A orientação do usuário pede justamente essa separação.
 - Canais além do e-mail, descadastro e rastreio de abertura (fora pela `066`).
 - O dado do canal em cada ambiente: preencher o canal das unidades e o `PORTAL_ATENDIMENTO` é
   configuração, e não requisito.
+- *(acrescidos em 2026-11-11)* **Campo de contato da comissão** (5ª decisão) e campo estruturado do
+  próximo passo no Edital (4ª decisão); **aviso da disponibilização ao setor** (9ª decisão); e as
+  frases do portal que dizem *"contado do envio da comunicação"* no cartão do prazo (FR-3998 da
+  `125`), porque o achado 18 é sobre a mensagem.
 
 ---
 
-## A dependência de LGPD, nomeada
+## Clarifications
 
-Esta seção responde à orientação do usuário: qual validação falta, de quem, sobre qual tratamento,
-e o que ela impede.
+### Session 2026-11-11 (decisões do usuário sobre as perguntas P-1 a P-9)
 
-### Qual validação
+*Acrescida em 2026-11-11.* As respostas do usuário às nove perguntas da redação mergeada. Não se
+reabrem. Onde a redação mergeada adotava uma recomendação que a resposta não confirmou, a alínea foi
+revista, com a redação anterior preservada.
 
-**O parecer do Encarregado pelo Tratamento de Dados Pessoais do Ifes** (art. 41 da LGPD), em nome do
-controlador, que é o Ifes, sobre o tratamento descrito abaixo. É a mesma *"validação institucional,
-com o encarregado de dados"* que a `066` registrou como precondição de produção e que a `134`
-herdou; esta spec pede que ela cubra **uma finalidade a mais**, e a nomeia. Nada indica, no
-repositório, que esse parecer tenha sido pedido ou emitido (P-3).
+- Q (P-1): O que o e-mail do desfecho diz? → A: **Texto neutro**, que informa que há resultado
+  registrado e indica o acesso ao portal. Resultado e fundamento ficam no ambiente autenticado.
+  *(1ª decisão)*
+- Q (P-2): Chave própria ou a da `066`? → A: **Chave própria, dependente também da chave geral dos
+  avisos.** O envio permanece desligado até a validação institucional correspondente. *(2ª decisão)*
+- Q (P-3): Quem valida, e um pedido só cobre as três finalidades? → A: **O responsável, a abrangência
+  e a existência do pedido de validação continuam como pendências institucionais**, e não se
+  confirmam por inferência. A spec distingue o que as specs anteriores exigem das hipóteses desta
+  proposta. O envio permanece desligado; as partes independentes podem avançar. *(3ª decisão)*
+- Q (P-4): Qual é o próximo passo do aceite? → A: **Orientar para a seção aplicável do Edital publicado
+  e oferecer o contato. Não presumir matrícula**: pode haver bolsa, contratação ou outra formalização.
+  Sem orientação identificável, indicar a consulta ao Edital e ao atendimento, **sem inventar um
+  próximo passo**. *(4ª decisão)*
+- Q (P-5): Qual contato? → A: **O canal da unidade, com alternativa no canal da instalação.** Nenhum
+  campo da comissão nesta entrega. A linha é omitida **somente quando os dois faltarem**. *(5ª
+  decisão)*
+- Q (P-6): O pedido de desistência pode ser cancelado? → A: **Sim, enquanto a comissão não tiver
+  registrado o desfecho.** Pedido e cancelamento preservam o histórico. A tela deixa claro que
+  **solicitar a desistência ainda não é ter a desistência efetivada**. *(6ª decisão)*
+- Q (P-7): Com o pedido pendente, o envio de documentos fica suspenso? → A: **Não.** Os envios
+  previstos nas regras vigentes continuam permitidos enquanto o pedido estiver pendente; o prazo não é
+  suspenso nem prorrogado; o candidato não é bloqueado enquanto ainda pode cancelar o pedido e cumprir
+  a convocação. *(7ª decisão)*
+- Q (P-8): A opção de avisar vem marcada? → A: **Desmarcada por padrão**, com solicitação explícita.
+  A confirmação distingue **aviso solicitado** de **aviso enviado**. *(8ª decisão)*
+- Q (P-9): O portal diz que a documentação foi disponibilizada ao setor? → A: **Sem aviso específico
+  nesta entrega.** Essa operação interna não se apresenta como matrícula, contratação ou formalização
+  concluída. *(9ª decisão)*
+- Instrução que acompanhou as decisões: registrar as alterações em revisão explícita, preservando as
+  redações anteriores; incorporar as revisões dos requisitos de outras specs na documentação **antes
+  do plano**; e explicitar as consequências do novo pedido de desistência e os encontros com a `152`
+  e a `153`.
 
-Ao lado dela, e **independente dela**, continua pendente a validação da infraestrutura de correio
-(SPF e DKIM do remetente), que a `066` e a `134` também exigem. Não é LGPD, e a habilitação depende
-das duas (FR-6440).
+---
 
-### Sobre qual tratamento
+## A validação institucional do envio
+
+*Seção revista em 2026-11-11 pela 3ª decisão; a redação anterior, sob o título "A dependência de LGPD,
+nomeada", está ao fim dela.* Ela separa o que já é exigência escrita do que é hipótese desta
+proposta, e diz o que a falta da validação impede.
+
+### O que as specs anteriores exigem
+
+São requisitos escritos e vigentes. Esta spec não os altera; ela os estende à finalidade nova.
+
+| Origem | O que está escrito |
+|---|---|
+| decisão 10 da `066` (decisões recebidas) | *"A validação institucional fica registrada como pendente, e é exigida antes da entrada em produção."* |
+| precondição de produção da `066` | *"A base legal do uso do e-mail para aviso complementar e a retenção da lista de destinatários dependem de validação institucional, com o encarregado de dados, antes da entrada em produção."* E: *"Se a base legal exigir direito de oposição, o descadastro entra como incremento."* |
+| decisão da chave de habilitação da `066` | `AVISOS_AOS_CANDIDATOS` desligada em produção *"até a validação institucional de LGPD e da infraestrutura de correio"*; a reativação não envia o que ficou fora da janela de despacho |
+| 5ª decisão da `134` | a mesma chave, desligada em produção *"até a validação de LGPD e de SPF/DKIM"* |
+| PC-003 da `010` | a área do candidato não entra em produção com dados reais sem política institucional documentada de retenção e descarte |
+
+O que essas exigências deixam dito: há uma validação institucional de LGPD pendente, sobre a base
+legal do uso do e-mail para aviso e sobre a retenção da lista de destinatários, e há uma validação,
+separada, da infraestrutura de correio. Quem a emite, se foi pedida e quanto ela alcança não está
+escrito em lugar nenhum, e esta spec não o supõe (PI-1 a PI-3).
+
+### As hipóteses desta proposta
+
+Não confirmadas. Servem para preparar a validação, e não a substituem nem a antecipam.
+
+- **H-1 — A base legal.** As hipóteses que a validação deve confirmar ou afastar: o art. 7º, III, com
+  o art. 23 da LGPD (tratamento pelo poder público para executar atribuição legal do serviço
+  público); e o art. 7º, II (obrigação legal), se se entender que o dever de dar ciência ao
+  interessado dos atos que restringem direito (Lei nº 9.784/1999, art. 26 e 28) alcança este aviso. A
+  proposta **não** usa consentimento: entre poder público e candidato ele não é livre, e o aviso
+  deixaria de alcançar quem não respondesse.
+- **H-2 — A minimização.** A hipótese é que o texto neutro da 1ª decisão reduza o tratamento ao
+  endereço e ao fato de haver resultado registrado no Edital tal, sem a espécie do desfecho, que no
+  indeferimento de quem concorre por reserva de vagas poderia revelar dado sensível por inferência
+  (art. 5º, II, e art. 11).
+
+### O tratamento a validar
 
 | | O que é |
 |---|---|
-| **Dado tratado** | o endereço de e-mail da pessoa convocada, na ordem que a `066` usa (a credencial verificada pelo código de acesso antes do endereço da inscrição); o número e o ano do Edital; o instante do registro; e, por consequência do próprio envio, **o fato de que esta pessoa foi convocada e teve o resultado da convocação registrado**. Com o texto recomendado (P-1), o corpo não leva a espécie do desfecho, o motivo, o nome, o CPF, a modalidade nem a posição |
-| **Dado que o texto recomendado evita** | a espécie do desfecho (*indeferido*, *não atendida*), que é resultado individual, e que no indeferimento de quem concorre por reserva de vagas pode revelar, por inferência, dado sensível (art. 5º, II, e art. 11 da LGPD) — a razão pela qual a decisão 5 da `066` tirou o resultado individual do corpo do aviso |
+| **Dado tratado** | o endereço de e-mail da pessoa convocada, na ordem da `066` (a credencial verificada pelo código de acesso antes do endereço da inscrição); o número e o ano do Edital; e, pelo próprio envio, o fato de que esta pessoa foi convocada e teve o resultado da convocação registrado. Sem espécie, rótulo, fundamento, nome, CPF, protocolo, modalidade nem posição (FR-6435) |
 | **Finalidade** | avisar a pessoa de que há resultado registrado da sua convocação, para que ela o consulte no portal e cumpra a providência seguinte que o Edital indica, ou exerça no prazo o direito de recorrer que o Edital preveja. O aviso não é o ato, não intima e não altera prazo nem resultado |
-| **Base legal** | **a definir pelo parecer**. As hipóteses que ele deve confirmar ou afastar: o art. 7º, III, com o art. 23 (tratamento pelo poder público para executar política pública e atribuição legal do serviço público); e o art. 7º, II (cumprimento de obrigação legal), se o parecer entender que o dever de dar ciência ao interessado dos atos que restringem direito (Lei nº 9.784/1999, art. 26 e 28) alcança este aviso. A spec **não** propõe consentimento: entre poder público e candidato ele não é livre, e o aviso deixaria de alcançar quem não respondesse |
-| **Operador** | o serviço de correio que transmite a mensagem. Se for de terceiro, o parecer diz se o contrato o cobre |
-| **Retenção** | o registro do aviso e de cada destinatário, que a `066` guarda; a política de retenção é a mesma que a PC-003 da `010` já exige do portal, e continua pendente |
-| **Direitos do titular** | se a base legal escolhida exigir direito de oposição, o descadastro entra como incremento, como a `066` já previa |
+| **Base legal** | a confirmar (H-1, PI-4) |
+| **Operador** | o serviço de correio que transmite a mensagem |
+| **Retenção** | o registro do aviso e de cada destinatário, que a `066` guarda, pela política da PC-003 da `010` |
+| **Direitos do titular** | se a base legal exigir oposição, o descadastro entra como incremento, como a `066` previa |
 
-### O que ela impede
+### As pendências institucionais
+
+Condicionam só a habilitação do envio (FR-6440). São o que precisa existir fora do sistema antes de
+ligar a chave, e nenhum texto do sistema as dá por resolvidas.
+
+- **PI-1 — Responsável pela validação**: quem a emite e quem a aprova.
+- **PI-2 — Existência do pedido**: se a validação foi pedida, por quem e quando.
+- **PI-3 — Abrangência**: se uma validação cobre a `066`, a `134` e esta, ou se esta precisa de uma
+  própria. A chave própria (2ª decisão) funciona nos dois casos.
+- **PI-4 — Base legal**: a hipótese confirmada, e o que ela exige (H-1).
+- **PI-5 — Retenção**: a política da PC-003 da `010`.
+- **PI-6 — Infraestrutura de correio**: SPF e DKIM do remetente. Não é LGPD, e é exigida pela `066`
+  e pela `134` do mesmo modo.
+
+### O que a falta impede
 
 **Só o envio do aviso do desfecho por e-mail**: a opção de avisar, no registro do desfecho, e a
 saída da mensagem pelo despacho. Com a habilitação desligada, a opção não aparece, nada é gravado, e
-o despacho não tem o que enviar (FR-6430, FR-6437 e FR-6438).
+o despacho não tem o que enviar (FR-6430, FR-6437 e FR-6438). O envio fica implementado e desligado.
 
 ### O que ela não impede
 
-| Parte desta spec | Por que não depende do parecer |
+| Parte desta spec | Por que não depende da validação |
 |---|---|
 | O portal em cada desfecho, nas duas camadas (§A a §C) | Mostra à própria pessoa, autenticada, o que o sistema já mostra a ela hoje, em outras palavras. Nenhum dado novo, nenhuma finalidade nova |
-| O contato da comissão (§D) | É dado institucional, e não pessoal |
-| A desistência pelo portal (§E e §F) | É manifestação da pessoa no próprio procedimento do certame, pela mesma via e com a mesma base em que ela se inscreveu e envia documentos. Sem campo de motivo (D-007), não coleta dado novo. A PC-003 da `010` vale para ela como vale para o resto do portal |
-| O texto corrigido da mensagem da convocação (§G) | A mensagem já sai, na terceira situação da FR-084 da `010`, que é o próprio ato; a correção muda a redação, e não o tratamento |
-| A implementação e os testes do aviso | A chave vem ligada em `development` e `test`, como a da `066`; tudo pode ser construído e verificado antes do parecer |
+| O contato (§D) | É dado institucional, e não pessoal |
+| A desistência pelo portal (§E e §F) | É manifestação da pessoa no próprio procedimento do certame, pela mesma via em que ela se inscreve e envia documentos. Sem campo de motivo (D-007), não coleta dado novo. A PC-003 da `010` vale para ela como vale para o resto do portal |
+| O texto corrigido da mensagem da convocação (§G) | A mensagem já sai, na terceira situação da FR-084 da `010`, que é o próprio ato; muda a redação, e não o tratamento |
+| O plano, a implementação e os testes do aviso | A chave vem ligada em `development` e `test`, como a da `066` |
+
+### Redação anterior desta seção, preservada
+
+*Mergeada em 11/11/2026 (PR #485) sob o título "A dependência de LGPD, nomeada". A 3ª decisão a substituiu: o responsável, o alcance e a existência do pedido não estão confirmados, e o que esta redação dizia deles era recomendação, e não fato.*
+
+>
+> Esta seção responde à orientação do usuário: qual validação falta, de quem, sobre qual tratamento,
+> e o que ela impede.
+>
+> ### Qual validação
+>
+> **O parecer do Encarregado pelo Tratamento de Dados Pessoais do Ifes** (art. 41 da LGPD), em nome do
+> controlador, que é o Ifes, sobre o tratamento descrito abaixo. É a mesma *"validação institucional,
+> com o encarregado de dados"* que a `066` registrou como precondição de produção e que a `134`
+> herdou; esta spec pede que ela cubra **uma finalidade a mais**, e a nomeia. Nada indica, no
+> repositório, que esse parecer tenha sido pedido ou emitido (P-3).
+>
+> Ao lado dela, e **independente dela**, continua pendente a validação da infraestrutura de correio
+> (SPF e DKIM do remetente), que a `066` e a `134` também exigem. Não é LGPD, e a habilitação depende
+> das duas (FR-6440).
+>
+> ### Sobre qual tratamento
+>
+> | | O que é |
+> |---|---|
+> | **Dado tratado** | o endereço de e-mail da pessoa convocada, na ordem que a `066` usa (a credencial verificada pelo código de acesso antes do endereço da inscrição); o número e o ano do Edital; o instante do registro; e, por consequência do próprio envio, **o fato de que esta pessoa foi convocada e teve o resultado da convocação registrado**. Com o texto recomendado (P-1), o corpo não leva a espécie do desfecho, o motivo, o nome, o CPF, a modalidade nem a posição |
+> | **Dado que o texto recomendado evita** | a espécie do desfecho (*indeferido*, *não atendida*), que é resultado individual, e que no indeferimento de quem concorre por reserva de vagas pode revelar, por inferência, dado sensível (art. 5º, II, e art. 11 da LGPD) — a razão pela qual a decisão 5 da `066` tirou o resultado individual do corpo do aviso |
+> | **Finalidade** | avisar a pessoa de que há resultado registrado da sua convocação, para que ela o consulte no portal e cumpra a providência seguinte que o Edital indica, ou exerça no prazo o direito de recorrer que o Edital preveja. O aviso não é o ato, não intima e não altera prazo nem resultado |
+> | **Base legal** | **a definir pelo parecer**. As hipóteses que ele deve confirmar ou afastar: o art. 7º, III, com o art. 23 (tratamento pelo poder público para executar política pública e atribuição legal do serviço público); e o art. 7º, II (cumprimento de obrigação legal), se o parecer entender que o dever de dar ciência ao interessado dos atos que restringem direito (Lei nº 9.784/1999, art. 26 e 28) alcança este aviso. A spec **não** propõe consentimento: entre poder público e candidato ele não é livre, e o aviso deixaria de alcançar quem não respondesse |
+> | **Operador** | o serviço de correio que transmite a mensagem. Se for de terceiro, o parecer diz se o contrato o cobre |
+> | **Retenção** | o registro do aviso e de cada destinatário, que a `066` guarda; a política de retenção é a mesma que a PC-003 da `010` já exige do portal, e continua pendente |
+> | **Direitos do titular** | se a base legal escolhida exigir direito de oposição, o descadastro entra como incremento, como a `066` já previa |
+>
+> ### O que ela impede
+>
+> **Só o envio do aviso do desfecho por e-mail**: a opção de avisar, no registro do desfecho, e a
+> saída da mensagem pelo despacho. Com a habilitação desligada, a opção não aparece, nada é gravado, e
+> o despacho não tem o que enviar (FR-6430, FR-6437 e FR-6438).
+>
+> ### O que ela não impede
+>
+> | Parte desta spec | Por que não depende do parecer |
+> |---|---|
+> | O portal em cada desfecho, nas duas camadas (§A a §C) | Mostra à própria pessoa, autenticada, o que o sistema já mostra a ela hoje, em outras palavras. Nenhum dado novo, nenhuma finalidade nova |
+> | O contato da comissão (§D) | É dado institucional, e não pessoal |
+> | A desistência pelo portal (§E e §F) | É manifestação da pessoa no próprio procedimento do certame, pela mesma via e com a mesma base em que ela se inscreveu e envia documentos. Sem campo de motivo (D-007), não coleta dado novo. A PC-003 da `010` vale para ela como vale para o resto do portal |
+> | O texto corrigido da mensagem da convocação (§G) | A mensagem já sai, na terceira situação da FR-084 da `010`, que é o próprio ato; a correção muda a redação, e não o tratamento |
+> | A implementação e os testes do aviso | A chave vem ligada em `development` e `test`, como a da `066`; tudo pode ser construído e verificado antes do parecer |
+
+---
+
+## O que o pedido de desistência muda, e o que não muda
+
+*Acrescida em 2026-11-11.* O pedido é registro novo, da pessoa, sobre a chamada (D-009). **Pedir não
+é desistir** (6ª decisão): até a comissão registrar o desfecho, a convocação continua a mesma.
+
+| Onde | Com o pedido pendente | Requisito |
+|---|---|---|
+| Prazo da convocação | não suspende, não prorroga, não reinicia | FR-6419, FR-6421 |
+| Envio de documentos e do Requerimento | continua pelas regras vigentes (FR-3578 e FR-3582 da `115`) | FR-6421 |
+| Conferência dos documentos | continua; a comissão pode conferir o que chegar | FR-6421 |
+| Aviso de pendência da `134` | continua alcançando a pessoa: o pedido não é desfecho, e a pessoa pode cancelar e cumprir | D-015 |
+| Ocupação, apuração, fila e sucessora | nada muda; o efeito na contagem nasce só do desfecho (FR-273 da `019`) | D-006 |
+| Registro do desfecho individual, de qualquer espécie | possível; a confirmação avisa do pedido e pede ciência, salvo pelo atalho da desistência pedida | FR-6425 |
+| Registro do não atendimento dos vencidos em lote | a pessoa fica de fora, contada à parte (FR-878 da `050`, revista) | FR-6426 |
+| Atalho de indeferimento pelas pendências (`152`) | continua oferecido nas condições da FR-5800 da `152`; ao confirmar, a ciência do pedido se soma à da FR-5803 da `152` | FR-6425 |
+| Correção da convocação por sucessão (`120`) | o pedido acompanha a convocação vigente da chamada | D-009 |
+| "O que fazer agora" da condução (`127`) | ganha a providência *"Registrar a desistência pedida pelo portal"* | FR-6427 |
+| Encerramento do Edital e do Processo | a confirmação adverte dos pedidos pendentes, sem impedir | FR-6444 |
+| Formalização (`117`, `153`) | nada: a pessoa só fica apta com aceite | §Encontros |
+| Trilha | pedido e cancelamento, sem endereço | FR-6423 |
+
+---
+
+## Encontros com a `152` e a `153`
+
+*Acrescida em 2026-11-11.*
+
+**Com a `152`** (prevenção nos atos irreversíveis):
+
+- **O seletor do desfecho continua sem espécie pré-escolhida** (FR-5839 da `152`). O atalho
+  *"Registrar a desistência pedida"* não é o seletor: é gesto próprio, como o atalho de indeferimento
+  da `152`, com a espécie fixa e o fundamento derivado do pedido (FR-6424, D-016). O seletor continua
+  oferecendo as espécies que o comando aceita agora (FR-5835 da `152`); o pedido não muda essa
+  verificação.
+- **As ciências se somam.** Indeferir com o prazo em curso pede a ciência da FR-5803 da `152`; com
+  pedido pendente, a confirmação pede também a da FR-6425. São duas marcas, cada uma com a sua frase,
+  e o comando confere as duas.
+- **A conferência do texto mostra as duas camadas.** A FR-5813 da `152` manda a conferência da
+  chamada mostrar o fundamento *"como o candidato o lerá no portal"*, e a FR-3993 da `125` manda a
+  prévia mostrar o texto *"como o candidato o verá"*. Com as duas camadas, a prévia passa a mostrar a
+  frase simples e o fundamento (FR-6404; FR-3993 da `125`, revista). A FR-5813 não muda de redação:
+  ela segue o portal.
+- **O cartão sem nada apresentado** (FR-5809 da `152`) aponta o não atendimento; com pedido
+  pendente, o cartão mostra antes o pedido e o atalho (FR-6443).
+- **Nenhuma fronteira da `152` se afrouxa**: o comando de desfecho continua recusando o que recusa.
+
+**Com a `153`** (formalização na jornada guiada):
+
+- **Pessoa apta é a do aceite** (FR-6101 da `153`, FR-3669 da `117`). O pedido pendente não a torna
+  apta nem a tira dessa condição; a desistência homologada é desfecho de exclusão, e a pessoa nunca
+  chega à formalização.
+- **As providências não se misturam**: as três da `153` são da fase Conclusão; a desta spec é da
+  fase da convocação, na ordem fixa da FR-4082 da `127` (FR-6427).
+- **A advertência do encerramento** (FR-6124 e FR-6128 da `153`) ganha uma linha irmã, a dos pedidos
+  pendentes (FR-6444), na mesma confirmação e pela mesma regra de caminho.
+- **O vocabulário é o mesmo** (9ª decisão; FR-6123 da `153`, FR-3751 da `118`): nada no portal diz
+  que a documentação foi *encaminhada*, *entregue* ou *recebida*, nem apresenta a disponibilização
+  ao setor como matrícula, contratação ou formalização concluída (FR-6413).
+
+---
+
+## As revisões, escritas nas specs de origem
+
+*Acrescida em 2026-11-11.* Cada alínea revista tem a nova redação, a marca *"revista pela `156` em
+2026-11-11, que vigora com a implementação dela"* e a redação anterior preservada ao fim da alínea.
+
+| Spec | Requisito | O que muda |
+|---|---|---|
+| `010` | FR-084 | sexta situação: o aviso do desfecho da convocação, pedido por quem registra o desfecho |
+| `063` | FR-1172 | o porquê do desfecho em duas camadas: a frase simples e o fundamento recolhido, com a data |
+| `063` | FR-1177 | acréscimo, sobre a redação da `154`: a frase simples de desfecho registrado descreve o ato, e não é frase de consequência |
+| `118` | FR-3750 | a segunda frase do aceite dá lugar ao próximo passo pelo Edital publicado e ao contato |
+| `121` | FR-3883 | o prazo da mensagem inicial sem *"contado do envio desta mensagem"*, e o atendimento omitido sem canal |
+| `125` | FR-3993 | a prévia mostra as duas camadas, como o portal as mostrará |
+| `050` | FR-878 | o lote do não atendimento deixa de fora quem tem pedido de desistência pendente |
+
+**Sem mudança de redação, e por quê**: a FR-6206 da `154` (a FR-3750 revista mantém o título, o
+rótulo e a frase de que o registro não é matrícula, bolsa nem contrato); a FR-5813 e a FR-5839 da
+`152` (a primeira segue o portal; a segunda vale para o seletor, e o atalho é gesto próprio); a
+FR-3885 da `121` (o rótulo *"Prazo válido para atender"* não muda; a cláusula do envio vem do *"resto
+como a inicial"*, e sai com a FR-3883); a FR-4606 da `134` (o pedido não é desfecho, D-015).
 
 ---
 
@@ -183,8 +406,12 @@ a seção do Edital e o contato, sem abrir o fundamento.
 1. **Given** Alice com aceite, num Edital cujo texto publicado tem a seção da matrícula preenchida,
    **When** ela abre a convocação ou o acompanhamento, **Then** lê *"Vaga aceita"*, a frase simples do
    aceite, o caminho para a seção do Edital que diz como será a matrícula e o contato.
-2. **Given** um Edital cuja seção da matrícula está vazia, **When** Alice abre a convocação, **Then** a
-   frase diz que o próximo passo é o que o Edital publica, sem caminho para seção, e o contato aparece.
+2. **Given** um Edital sem a seção aplicável preenchida — uma seleção de bolsista, por exemplo —,
+   **When** Alice abre a convocação, **Then** lê *"Consulte o Edital publicado para saber o que vem
+   depois."* e o contato, e nada fala de matrícula como próximo passo. *(Revisto em 2026-11-11 pela 4ª
+   decisão; antes: "Given um Edital cuja seção da matrícula está vazia, When Alice abre a convocação,
+   Then a frase diz que o próximo passo é o que o Edital publica, sem caminho para seção, e o contato
+   aparece.")*
 3. **Given** Alice com aceite, **When** ela lê a página, **Then** nada diz *matriculado*, *contratado*,
    *bolsa concedida*, *encaminhado* nem *apto para formalização*.
 4. **Given** a regularização registrada, **When** a pessoa abre a convocação, **Then** a frase é a da
@@ -224,8 +451,9 @@ fundamento.
 ### User Story 3 — A convocação ainda aberta diz por que a pessoa foi chamada (Priority: P2)
 
 Antes de qualquer desfecho, a página da convocação diz em uma frase por que a pessoa foi chamada —
-porque a posição dela está dentro das vagas, ou porque uma vaga ficou livre — e recolhe o fundamento
-derivado da norma.
+para uma das vagas da lista, pela posição dela, ou porque uma vaga ficou livre — e recolhe o
+fundamento derivado da norma. *(Revisto em 2026-11-11: antes, "porque a posição dela está dentro das
+vagas".)*
 
 **Why this priority**: o mesmo jargão do achado 18, numa tela que a pessoa lê antes de agir.
 
@@ -235,7 +463,9 @@ recolhido; *"faixa vigente"* e *"recorte"* não aparecem fora dele.
 **Acceptance Scenarios**:
 
 1. **Given** uma convocação para vaga inicial, **When** a pessoa abre a convocação, **Then** lê que foi
-   chamada porque a posição dela na lista está dentro das vagas da lista.
+   chamada para uma das vagas da lista, pela posição dela na classificação. *(Revisto em 2026-11-11:
+   antes, "porque a posição dela na lista está dentro das vagas da lista", expressão que a UX-158 da
+   `063` proíbe.)*
 2. **Given** uma convocação para vaga que vagou, **Then** lê que foi chamada porque uma vaga da lista
    ficou livre e ela é a próxima na classificação.
 3. **Given** o complemento do fundamento escrito por quem convocou, **Then** ele aparece dentro do
@@ -289,10 +519,15 @@ vê; a trilha tem o pedido, sem endereço; nenhum desfecho foi registrado.
 3. **Given** a ciência marcada, **When** ele confirma, **Then** o pedido é gravado com instante,
    credencial e protocolo, e a convocação diz *"Pedido de desistência enviado em ‹data e hora›. A
    comissão vai registrá-lo."*.
-4. **Given** o pedido pendente, **When** Fábio abre a convocação, **Then** o envio de documentos não é
-   oferecido, e o prazo continua visível com a frase de que o pedido não o suspende (P-7).
+4. **Given** o pedido pendente e o prazo correndo, **When** Fábio abre a convocação, **Then** o envio
+   de documentos e do Requerimento continua oferecido pelas regras vigentes, e o prazo é o mesmo de
+   antes do pedido. *(Revisto em 2026-11-11 pela 7ª decisão; antes: "Then o envio de documentos não é
+   oferecido, e o prazo continua visível com a frase de que o pedido não o suspende (P-7).")*
 5. **Given** o pedido pendente, **When** Fábio aciona *"Cancelar o pedido de desistência"* e confirma,
-   **Then** o cancelamento é gravado, e a convocação volta a ser a de antes (P-6).
+   **Then** o cancelamento é gravado como registro próprio, o pedido continua no histórico como
+   cancelado, e a convocação volta a oferecer *"Desistir desta convocação"*. *(Revisto em 2026-11-11
+   pela 6ª decisão; antes: "Then o cancelamento é gravado, e a convocação volta a ser a de antes
+   (P-6).")*
 6. **Given** um duplo clique na confirmação, **Then** um pedido só é gravado.
 
 ---
@@ -330,9 +565,12 @@ desfecho cita o protocolo do pedido; o pedido passa a homologado; o portal mostr
 ### User Story 7 — O resultado chega por e-mail, quando a habilitação estiver ligada (Priority: P3)
 
 Com a habilitação ligada, quem registra o desfecho vê, na confirmação, *"Avisar a pessoa por
-e-mail"*, marcado (P-8). Confirmado, o aviso é gravado no registro de avisos e o despacho da `066` o
-envia: um e-mail neutro (P-1) que diz que o resultado da convocação no Edital tal foi registrado e
-traz o link da convocação e o contato. Com a habilitação desligada, nada disso aparece, e o portal é
+e-mail"*, **desmarcado**. Marcado por ela e confirmado, a tela diz *"Aviso solicitado"*; o despacho da
+`066` o envia depois, e só então o cartão diz *"Aviso enviado em ‹data›"*. O e-mail é neutro: diz que
+há resultado registrado e como entrar no portal, com o contato. *(Revisto em 2026-11-11 pela 1ª e
+pela 8ª decisão; antes: "vê, na confirmação, Avisar a pessoa por e-mail, marcado (P-8). Confirmado, o
+aviso é gravado no registro de avisos e o despacho da 066 o envia: um e-mail neutro (P-1) que diz que
+o resultado da convocação no Edital tal foi registrado e traz o link da convocação e o contato.")* Com a habilitação desligada, nada disso aparece, e o portal é
 o mesmo.
 
 **Why this priority**: é a parte do achado 07 que depende do parecer. Vem por último porque a
@@ -344,7 +582,9 @@ aviso, e `despachar_avisos` o envia; com ela desligada, a opção não aparece e
 **Acceptance Scenarios**:
 
 1. **Given** a habilitação ligada, **When** a comissão registra o desfecho com a opção marcada, **Then**
-   um aviso é gravado para a pessoa, na mesma transação, e nenhuma mensagem sai na requisição.
+   um aviso é gravado para a pessoa, na mesma transação, nenhuma mensagem sai na requisição, e a
+   resposta diz *"Aviso solicitado"*, e não *"enviado"*; sem marcar a opção, nenhum aviso é gravado.
+   *(Revisto em 2026-11-11 pela 8ª decisão; antes, sem a última oração.)*
 2. **Given** o aviso gravado, **When** o despacho corre, **Then** a mensagem sai com o assunto e o
    corpo das FR-6433 a FR-6435.
 3. **Given** o aviso gravado, **When**, antes do despacho, a convocação é corrigida por sucessão e o
@@ -393,8 +633,9 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
 - **Pedido depois do vencimento**: admitido enquanto não houver desfecho (D-010).
 - **Processo encerrado ou cancelado**: o pedido e o cancelamento são recusados; o pendente continua
   visível à comissão.
-- **Pessoa sem endereço**, com a habilitação ligada: não há aviso, e a confirmação do desfecho diz que
-  a pessoa não será avisada por falta de endereço.
+- **Pessoa sem endereço**, com a habilitação ligada: não há aviso, e a opção de avisar aparece
+  desabilitada, com a razão. *(Revisto em 2026-11-11 pela 8ª decisão; antes: "a confirmação do
+  desfecho diz que a pessoa não será avisada por falta de endereço.")*
 - **Desfecho registrado com a habilitação desligada, e ela ligada depois**: nenhum aviso retroativo
   (D-011).
 - **Duas sessões do mesmo candidato** pedindo ao mesmo tempo: um pedido só, pela trava da convocação.
@@ -422,25 +663,51 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
   conter *"faixa vigente"*, *"recorte"*, *"apuração"*, *"decorreu"*, *"desfecho registrado"*,
   *"vencimento informado no ato"* nem *"espécie"*. A varredura de vocabulário da `063` MUST alcançar
   as frases desta spec.
-- **FR-6404**: A tela de quem registra o desfecho e a de quem convoca MUST continuar mostrando o
-  fundamento como hoje; as duas camadas são do portal.
+- **FR-6404** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  As telas da gestão MUST continuar mostrando o fundamento como hoje; as duas camadas são
+  do portal. A prévia do texto (FR-3993 da `125`, revista) MUST mostrar as duas camadas, como o
+  portal as mostrará.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > A tela de quem registra o desfecho e a de quem convoca MUST continuar mostrando o
+  > fundamento como hoje; as duas camadas são do portal.
+  >
+  > *Por que mudou:* a prévia da FR-3993 da `125` e a conferência da FR-5813 da `152` mostram o texto como o candidato o lerá; com as duas camadas no portal, elas precisam mostrar as duas (encontro com a `152`).
+
 
 #### B. O portal em cada desfecho
 
 - **FR-6405**: O rótulo de cada desfecho MUST continuar o da tabela da FR-1172 da `063`, e o título da
   página o da FR-3858 da `121` (*"Resultado da sua convocação"*), como a `154` o deixou.
-- **FR-6406**: A frase simples de cada desfecho MUST ser a desta tabela, com ‹data› a data local do
+- **FR-6406** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  A frase simples de cada desfecho MUST ser a desta tabela, com ‹data› a data local do
   registro e ‹fim do prazo› o vencimento da convocação vigente:
 
   | Desfecho | Frase simples |
   |---|---|
-  | Aceite | *"A comissão registrou o resultado da sua convocação em ‹data›. Este registro ainda não é a matrícula, a bolsa nem o contrato."*, seguida do próximo passo (FR-6410 a FR-6413) |
-  | Regularização | *"A comissão registrou a regularização da sua situação nesta convocação em ‹data›. Este registro ainda não é a matrícula, a bolsa nem o contrato."*, seguida do próximo passo |
+  | Aceite | *"A comissão registrou o resultado da sua convocação em ‹data›. Este registro não é matrícula, bolsa nem contrato."*, seguida do próximo passo (FR-6410 a FR-6413) |
+  | Regularização | *"A comissão registrou a regularização da sua situação nesta convocação em ‹data›. Este registro não é matrícula, bolsa nem contrato."*, seguida do próximo passo |
   | Indeferimento | *"A comissão registrou o indeferimento desta convocação em ‹data›: ela concluiu que o que o Edital pede nesta etapa não foi cumprido. O motivo está no fundamento, abaixo."*, seguida do caminho para recorrer (FR-6414) |
   | Desistência expressa | *"A comissão registrou a sua desistência desta convocação em ‹data›. Esta convocação está encerrada para você."* |
   | Não atendimento | *"O prazo desta convocação terminou em ‹fim do prazo› sem que ela fosse atendida, e a comissão registrou isso em ‹data›. Esta convocação está encerrada para você."* |
   | Cancelamento por inércia | *"A comissão registrou o cancelamento em ‹data›, porque ‹fato atestado, FR-6407›. Esta convocação está encerrada para você."* |
   | Reclassificação | *"A comissão registrou a sua reclassificação em ‹data›. Esta convocação está encerrada para você; o que acontece depois é o que o Edital diz."* |
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > A frase simples de cada desfecho MUST ser a desta tabela, com ‹data› a data local do
+  > registro e ‹fim do prazo› o vencimento da convocação vigente:
+  >
+  > | Desfecho | Frase simples |
+  > |---|---|
+  > | Aceite | *"A comissão registrou o resultado da sua convocação em ‹data›. Este registro ainda não é a matrícula, a bolsa nem o contrato."*, seguida do próximo passo (FR-6410 a FR-6413) |
+  > | Regularização | *"A comissão registrou a regularização da sua situação nesta convocação em ‹data›. Este registro ainda não é a matrícula, a bolsa nem o contrato."*, seguida do próximo passo |
+  > | Indeferimento | *"A comissão registrou o indeferimento desta convocação em ‹data›: ela concluiu que o que o Edital pede nesta etapa não foi cumprido. O motivo está no fundamento, abaixo."*, seguida do caminho para recorrer (FR-6414) |
+  > | Desistência expressa | *"A comissão registrou a sua desistência desta convocação em ‹data›. Esta convocação está encerrada para você."* |
+  > | Não atendimento | *"O prazo desta convocação terminou em ‹fim do prazo› sem que ela fosse atendida, e a comissão registrou isso em ‹data›. Esta convocação está encerrada para você."* |
+  > | Cancelamento por inércia | *"A comissão registrou o cancelamento em ‹data›, porque ‹fato atestado, FR-6407›. Esta convocação está encerrada para você."* |
+  > | Reclassificação | *"A comissão registrou a sua reclassificação em ‹data›. Esta convocação está encerrada para você; o que acontece depois é o que o Edital diz."* |
+  >
+  > *Por que mudou:* *"ainda não é a matrícula, a bolsa nem o contrato"* presumia que um dos três viria depois; a 4ª decisão manda não presumir matrícula, e a frase volta à forma da FR-3750 da `118`, que só nega.
 
 - **FR-6407**: No cancelamento por inércia, o fato atestado MUST ser dito assim: *"não houve acesso ao
   ambiente do curso"*, *"não houve presença na primeira semana do curso"* e *"a entrega presencial não
@@ -451,33 +718,102 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
 - **FR-6409**: A FR-1177 da `063` MUST ser revista para dizer que a frase simples de um desfecho
   **registrado** descreve o ato, e não é frase de consequência; a regra das duas frases neutras
   continua valendo antes do desfecho.
+- **FR-6442** *(acrescida em 2026-11-11, pelas decisões do usuário)*: A frase simples da convocação sem desfecho MUST ser, por espécie: vaga
+  inicial — *"Você foi chamado para uma das vagas da lista ‹nome da lista›, pela sua posição na
+  classificação."*; vaga que vagou — *"Você foi chamado porque uma vaga da lista ‹nome da lista› ficou
+  livre e você é a próxima pessoa na classificação."*; para regularizar — *"Você foi chamado para
+  regularizar a sua situação na lista ‹nome da lista›, porque há vaga."*. A User Story 3 pedia estas
+  frases, e nenhuma alínea as fixava. Nenhuma delas MUST dizer *"dentro das vagas"*, que a UX-158 da
+  `063` proíbe no acompanhamento porque se lê como aprovação.
 
 #### C. O próximo passo do aceite e da regularização
 
-- **FR-6410**: Com aceite ou regularização, a página MUST dizer o próximo passo depois da frase
+- **FR-6410** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Com aceite ou regularização, a página MUST dizer o próximo passo depois da frase
   simples, no lugar de *"Os próximos passos são os que o Edital indica."* (FR-3750 da `118`, revista).
-- **FR-6411**: Quando o texto publicado do Edital vigente tiver a seção da matrícula não vazia (*"Da
-  Matrícula"*, ou *"Como será a matrícula?"* no catálogo da `069`), o próximo passo MUST ser *"O
-  Edital diz como será a próxima etapa em «‹título da seção›»."*, com o caminho para essa seção na
-  página pública do Edital. *(Adota a recomendação de P-4.)*
-- **FR-6412**: Sem essa seção, o próximo passo MUST ser *"A próxima etapa é a que o Edital publica."*,
-  sem caminho para seção.
-- **FR-6413**: O próximo passo MUST terminar com *"Se tiver dúvida sobre a próxima etapa, fale com
-  ‹contato›."* quando houver canal (FR-6415), e MUST NOT nomear setor, pessoa ou data que o Edital não
-  publique, nem dizer que a documentação foi disponibilizada a alguém. *(Adota a recomendação de
-  P-9.)*
+  O próximo passo MUST vir só do texto publicado do Edital vigente e do contato, e MUST NOT ser
+  inventado pelo sistema (4ª decisão).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Com aceite ou regularização, a página MUST dizer o próximo passo depois da frase
+  > simples, no lugar de *"Os próximos passos são os que o Edital indica."* (FR-3750 da `118`, revista).
+  >
+  > *Por que mudou:* a 4ª decisão: orientar para o Edital publicado e o contato, sem inventar um próximo passo.
+
+- **FR-6411** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  A **seção aplicável** MUST ser a seção do catálogo que trata da etapa depois do resultado
+  da convocação — a de chave `matricula` (*"Da Matrícula"*, ou *"Como será a matrícula?"* no catálogo
+  da `069`, com as partes *Acesso ao curso* e *Homologação da matrícula* que esse catálogo lhe junta)
+  —, quando o texto publicado a tiver não vazia. O título MUST ser o que o Edital publicado lhe dá, e
+  o próximo passo MUST ser *"O Edital explica o que vem depois em «‹título da seção›»."*, com o
+  caminho para essa seção na página pública do Edital (D-004).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Quando o texto publicado do Edital vigente tiver a seção da matrícula não vazia (*"Da
+  > Matrícula"*, ou *"Como será a matrícula?"* no catálogo da `069`), o próximo passo MUST ser *"O
+  > Edital diz como será a próxima etapa em «‹título da seção›»."*, com o caminho para essa seção na
+  > página pública do Edital. *(Adota a recomendação de P-4.)*
+  >
+  > *Por que mudou:* a 4ª decisão: a frase anterior dizia *"a próxima etapa"* sob o título da matrícula e adotava a recomendação de P-4; agora é a seção aplicável, com o título que o próprio Edital publica, e a frase não nomeia a etapa.
+
+- **FR-6412** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Sem seção aplicável não vazia, o próximo passo MUST ser *"Consulte o Edital publicado
+  para saber o que vem depois."*, com o caminho para a página pública do Edital, e nenhuma frase MUST
+  presumir matrícula, bolsa ou contratação como próximo passo.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Sem essa seção, o próximo passo MUST ser *"A próxima etapa é a que o Edital publica."*,
+  > sem caminho para seção.
+  >
+  > *Por que mudou:* a 4ª decisão: sem orientação identificável, indicar a consulta ao Edital e ao atendimento, sem inventar um próximo passo.
+
+- **FR-6413** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  O próximo passo MUST terminar com *"Se tiver dúvida, fale com ‹contato›."* quando houver
+  canal (FR-6415), e MUST NOT nomear setor, pessoa ou data que o Edital não publique. Nenhum texto do
+  portal MUST dizer que a documentação da pessoa foi disponibilizada, encaminhada, entregue ou
+  recebida por setor, nem apresentar a disponibilização da `117` como matrícula, contratação ou
+  formalização concluída (9ª decisão).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > O próximo passo MUST terminar com *"Se tiver dúvida sobre a próxima etapa, fale com
+  > ‹contato›."* quando houver canal (FR-6415), e MUST NOT nomear setor, pessoa ou data que o Edital não
+  > publique, nem dizer que a documentação foi disponibilizada a alguém. *(Adota a recomendação de
+  > P-9.)*
+  >
+  > *Por que mudou:* a 9ª decisão (sem aviso da disponibilização ao setor, e sem apresentá-la como formalização) substitui a recomendação de P-9 que esta alínea adotava; a frase do contato perde *"sobre a próxima etapa"*, pela 4ª.
+
 - **FR-6414**: Com indeferimento, quando o texto publicado do Edital tiver a seção de recursos não
   vazia, a página MUST dizer *"O Edital diz se e como recorrer em «‹título da seção›»."*, com o
   caminho para ela; sem a seção, nada sobre recurso.
 
 #### D. O contato
 
-- **FR-6415**: O contato MUST ser o canal de atendimento da unidade do Edital, com a recaída da FR-3214
-  da `109`, mostrado como link (e-mail ou endereço) na convocação, no resultado e no aviso.
-  *(Adota a recomendação de P-5.)*
-- **FR-6416**: Sem canal nenhum, a linha *"Atendimento"* e a frase *"fale com o atendimento"* MUST NOT
-  aparecer nas telas da convocação e do resultado, e nenhuma delas MUST dizer *"o atendimento
-  institucional"*. As outras telas do portal que usam a frase genérica não mudam.
+- **FR-6415** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  O contato MUST ser o canal de atendimento da unidade do Edital, com a recaída no canal
+  da instalação da FR-3214 da `109`, mostrado como link (e-mail ou endereço) na convocação, no
+  resultado e no aviso. Nenhum campo de contato da comissão MUST ser criado nesta entrega (5ª
+  decisão).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > O contato MUST ser o canal de atendimento da unidade do Edital, com a recaída da FR-3214
+  > da `109`, mostrado como link (e-mail ou endereço) na convocação, no resultado e no aviso.
+  > *(Adota a recomendação de P-5.)*
+  >
+  > *Por que mudou:* a 5ª decisão confirma o canal da unidade com a alternativa da instalação, que esta alínea adotava como recomendação de P-5, e exclui o campo da comissão nesta entrega.
+
+- **FR-6416** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Sem canal nenhum — nem o da unidade, nem o da instalação —, a linha *"Atendimento"* e
+  a frase *"fale com o atendimento"* MUST NOT aparecer nas telas da convocação e do resultado, nem
+  nas mensagens da convocação, da correção e do aviso do desfecho, e nenhuma delas MUST dizer *"o
+  atendimento institucional"*. As outras telas do portal que usam a frase genérica não mudam.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Sem canal nenhum, a linha *"Atendimento"* e a frase *"fale com o atendimento"* MUST NOT
+  > aparecer nas telas da convocação e do resultado, e nenhuma delas MUST dizer *"o atendimento
+  > institucional"*. As outras telas do portal que usam a frase genérica não mudam.
+  >
+  > *Por que mudou:* a 5ª decisão: omitir a linha somente quando os dois canais faltarem, e a regra vale também nas mensagens que citam o atendimento.
+
 - **FR-6417**: Os cenários de treinamento da `134` MUST declarar um canal fictício na unidade que
   usam, para que os estudos vejam o contato como em produção.
 
@@ -486,39 +822,115 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
 - **FR-6418**: A página da convocação MUST oferecer *"Desistir desta convocação"* à pessoa cuja
   convocação vigente está visível no portal, sem desfecho e sem pedido pendente, com o Processo fora de
   estado final. A oferta MUST ser link secundário, no fim da página, e nunca a ação principal.
-- **FR-6419**: O link MUST levar a uma página de confirmação que diga, nesta ordem: que o pedido vai
-  à comissão, que registra a desistência; que, registrada, a desistência encerra a convocação e não
-  se desfaz pelo portal; que o pedido não suspende nem prorroga o prazo; e que, até o registro, o
-  pedido pode ser cancelado (P-6). A página MUST pedir a ciência, numa caixa a marcar, e MUST NOT ter
-  campo de motivo nem texto livre.
+- **FR-6419** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  O link MUST levar a uma página de confirmação que diga, nesta ordem: que o pedido vai
+  à comissão; que **pedir ainda não é desistir** — a desistência só vale quando a comissão a
+  registrar; que, registrada, ela encerra a convocação e não se desfaz pelo portal; que o pedido não
+  suspende nem prorroga o prazo, e que até o registro a pessoa pode continuar enviando o que as regras
+  vigentes permitem; e que, até o registro, o pedido pode ser cancelado. A página MUST pedir a
+  ciência, numa caixa a marcar, e MUST NOT ter campo de motivo nem texto livre.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > O link MUST levar a uma página de confirmação que diga, nesta ordem: que o pedido vai
+  > à comissão, que registra a desistência; que, registrada, a desistência encerra a convocação e não
+  > se desfaz pelo portal; que o pedido não suspende nem prorroga o prazo; e que, até o registro, o
+  > pedido pode ser cancelado (P-6). A página MUST pedir a ciência, numa caixa a marcar, e MUST NOT ter
+  > campo de motivo nem texto livre.
+  >
+  > *Por que mudou:* a 6ª decisão (deixar claro que solicitar a desistência ainda não é tê-la efetivada) e a 7ª (os envios continuam).
+
 - **FR-6420**: O pedido MUST ser gravado com a convocação, a inscrição, a credencial que o fez, o
   instante e um protocolo, em registro que não se altera nem se exclui, e MUST ser recusado sem a
   ciência, com a convocação já desfechada, com pedido pendente, com o Processo em estado final ou com
   a convocação fora do portal. O comando MUST correr sob a trava da convocação e com chave de
   idempotência.
-- **FR-6421**: Com pedido pendente, a página MUST dizer *"Pedido de desistência enviado em ‹data e
-  hora›, protocolo ‹protocolo›. A comissão vai registrá-lo."*, MUST continuar mostrando o prazo, e MUST
-  NOT oferecer envio de documento nem do Requerimento. *(Adota a recomendação de P-7.)*
-- **FR-6422**: Com pedido pendente, a página MUST oferecer *"Cancelar o pedido de desistência"*, com
-  confirmação; o cancelamento MUST ser gravado como registro próprio, e a convocação MUST voltar ao
-  estado de antes do pedido. *(Adota a recomendação de P-6.)*
+- **FR-6421** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Com pedido pendente, a página MUST dizer *"Pedido de desistência enviado em ‹data e
+  hora›, protocolo ‹protocolo›. A desistência ainda não foi registrada: até a comissão registrá-la, a
+  sua convocação continua, com o mesmo prazo, e você pode cancelar o pedido."*, MUST continuar
+  mostrando o prazo como antes do pedido, e MUST continuar oferecendo os envios de documento e do
+  Requerimento que as regras vigentes permitem. O pedido pendente MUST NOT mudar o que a pessoa pode
+  enviar nem o que a comissão pode conferir, e o prazo não se suspende, não se prorroga e não se
+  reinicia (7ª decisão).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Com pedido pendente, a página MUST dizer *"Pedido de desistência enviado em ‹data e
+  > hora›, protocolo ‹protocolo›. A comissão vai registrá-lo."*, MUST continuar mostrando o prazo, e MUST
+  > NOT oferecer envio de documento nem do Requerimento. *(Adota a recomendação de P-7.)*
+  >
+  > *Por que mudou:* a 7ª decisão: os envios previstos nas regras vigentes continuam permitidos enquanto o pedido estiver pendente, e o prazo não se suspende nem se prorroga. A redação anterior, que suspendia o envio, adotava a recomendação de P-7, que o usuário não aceitou.
+
+- **FR-6422** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Com pedido pendente, a página MUST oferecer *"Cancelar o pedido de desistência"*, com
+  confirmação. O cancelamento MUST ser gravado como registro próprio, que não altera nem exclui o
+  pedido; o pedido cancelado MUST continuar no histórico da convocação, na gestão, com o
+  cancelamento; e a página MUST voltar a oferecer *"Desistir desta convocação"*. O cancelamento MUST
+  ser recusado depois do desfecho (6ª decisão).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Com pedido pendente, a página MUST oferecer *"Cancelar o pedido de desistência"*, com
+  > confirmação; o cancelamento MUST ser gravado como registro próprio, e a convocação MUST voltar ao
+  > estado de antes do pedido. *(Adota a recomendação de P-6.)*
+  >
+  > *Por que mudou:* a 6ª decisão: cancelar enquanto a comissão não tiver registrado o desfecho, com o pedido e o cancelamento preservados no histórico.
+
 - **FR-6423**: O pedido e o cancelamento MUST entrar na trilha, sem endereço de e-mail.
 
 #### F. A desistência pelo portal: a homologação
 
-- **FR-6424**: Na condução da convocação, o cartão da pessoa com pedido pendente MUST mostrar *"Pedido
+- **FR-6424** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Na condução da convocação, o cartão da pessoa com pedido pendente MUST mostrar *"Pedido
   de desistência pelo portal em ‹data e hora›"* e oferecer *"Registrar a desistência pedida"* a quem
-  pode registrar desfecho, que abre o registro do desfecho com a desistência expressa escolhida e o
-  fundamento *"Desistência expressa pedida pela pessoa convocada, pelo portal, em ‹data e hora›,
-  protocolo ‹protocolo›."*, ao qual quem registra pode acrescentar complemento.
-- **FR-6425**: Registrar o desfecho de uma convocação com pedido pendente MUST encerrar o pedido:
-  como **homologado**, se o desfecho for a desistência expressa; como **encerrado por outro desfecho**,
-  nos demais casos, e então a confirmação do desfecho MUST avisar que há pedido pendente e pedir
-  ciência. Nenhum pedido MUST virar desfecho sem esse registro.
+  pode registrar desfecho. O atalho MUST ser gesto próprio, e não o seletor do desfecho (D-016): a
+  espécie é a desistência expressa, e o fundamento derivado é *"Desistência expressa pedida pela
+  pessoa convocada, pelo portal, em ‹data e hora›, protocolo ‹protocolo›."*, ao qual quem registra
+  pode acrescentar complemento. A conferência do texto e a prévia da FR-3993 da `125` MUST valer.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Na condução da convocação, o cartão da pessoa com pedido pendente MUST mostrar *"Pedido
+  > de desistência pelo portal em ‹data e hora›"* e oferecer *"Registrar a desistência pedida"* a quem
+  > pode registrar desfecho, que abre o registro do desfecho com a desistência expressa escolhida e o
+  > fundamento *"Desistência expressa pedida pela pessoa convocada, pelo portal, em ‹data e hora›,
+  > protocolo ‹protocolo›."*, ao qual quem registra pode acrescentar complemento.
+  >
+  > *Por que mudou:* encontro com a `152`: a FR-5839 dela proíbe espécie pré-escolhida no seletor, e o atalho precisa ser dito como gesto próprio.
+
+- **FR-6425** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Registrar o desfecho de uma convocação com pedido pendente MUST encerrar o pedido como
+  **homologado**, se o desfecho for a desistência expressa, ou como **encerrado por outro desfecho**,
+  nos demais casos. Na confirmação de qualquer outro desfecho individual, a tela MUST dizer que há
+  pedido de desistência pendente, com data e protocolo, e MUST pedir ciência numa marca desmarcada,
+  que o comando confere; essa ciência se soma às da `152` (FR-5803 da `152`), sem substituí-las.
+  Nenhum pedido MUST virar desfecho sem esse registro.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > Registrar o desfecho de uma convocação com pedido pendente MUST encerrar o pedido:
+  > como **homologado**, se o desfecho for a desistência expressa; como **encerrado por outro desfecho**,
+  > nos demais casos, e então a confirmação do desfecho MUST avisar que há pedido pendente e pedir
+  > ciência. Nenhum pedido MUST virar desfecho sem esse registro.
+  >
+  > *Por que mudou:* encontro com a `152`: o indeferimento com o prazo em curso já pede uma ciência, e as duas precisam conviver.
+
 - **FR-6426**: O registro do não atendimento dos vencidos em lote MUST deixar de fora a pessoa com
   pedido pendente, contada à parte como *"pedido de desistência pendente"*.
-- **FR-6427**: O *"O que fazer agora"* da condução MUST derivar a providência *"Registrar a desistência
-  pedida pelo portal"* enquanto houver pedido pendente no recorte, do mesmo cálculo do cartão.
+- **FR-6427** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  O *"O que fazer agora"* da condução MUST derivar a providência *"Registrar a desistência
+  pedida pelo portal"* enquanto houver pedido pendente no recorte, do mesmo cálculo do cartão, como
+  providência *Pendente* de quem pode registrar desfecho, na ordem da FR-4082 da `127`, uma só por
+  recorte, com a contagem.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > O *"O que fazer agora"* da condução MUST derivar a providência *"Registrar a desistência
+  > pedida pelo portal"* enquanto houver pedido pendente no recorte, do mesmo cálculo do cartão.
+  >
+  > *Por que mudou:* encontro com a `153`, que acrescentou providências ao mesmo nível 1: a desta spec precisa da posição na ordem fixa da `127`.
+
+- **FR-6443** *(acrescida em 2026-11-11, pelas decisões do usuário)*: Com pedido pendente, o cartão MUST mostrar o pedido e o atalho antes de
+  qualquer outra indicação de desfecho, inclusive a do não atendimento da FR-5809 da `152`.
+- **FR-6444** *(acrescida em 2026-11-11, pelas decisões do usuário)*: A confirmação de encerrar o Edital e a de encerrar o Processo MUST advertir
+  dos pedidos de desistência pendentes, com a contagem e o caminho para a condução, ao lado da
+  advertência da FR-6124 e da FR-6128 da `153`. A advertência MUST NOT impedir o encerramento
+  (D-017).
 
 #### G. A mensagem da convocação
 
@@ -533,26 +945,69 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
   convocação**, que quem registra o desfecho decide enviar à pessoa convocada, sem efeito sobre prazo,
   resultado ou direito. As redações anteriores MUST ficar ao fim da alínea, e a guarda
   `backend/tests/test_situacoes_de_mensagem.py` MUST contar seis.
-- **FR-6430**: O aviso MUST ser oferecido na confirmação de todo registro de desfecho — individual,
-  pelo atalho da desistência pedida e no registro do não atendimento dos vencidos em lote —, como a
-  opção *"Avisar a pessoa por e-mail"* (no lote, *"Avisar as pessoas por e-mail"*), marcada por padrão
-  e desmarcável. *(Adota a recomendação de P-8.)* Nada MUST gravar aviso de desfecho sem esse gesto.
+- **FR-6430** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  Com a habilitação ligada, a confirmação de todo registro de desfecho — individual,
+  pelo atalho da desistência pedida e no registro do não atendimento dos vencidos em lote — MUST
+  oferecer *"Avisar a pessoa por e-mail"* (no lote, *"Avisar as pessoas por e-mail"*), **desmarcada**
+  por padrão (8ª decisão). Nada MUST gravar aviso de desfecho sem que quem confirma a marque.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > O aviso MUST ser oferecido na confirmação de todo registro de desfecho — individual,
+  > pelo atalho da desistência pedida e no registro do não atendimento dos vencidos em lote —, como a
+  > opção *"Avisar a pessoa por e-mail"* (no lote, *"Avisar as pessoas por e-mail"*), marcada por padrão
+  > e desmarcável. *(Adota a recomendação de P-8.)* Nada MUST gravar aviso de desfecho sem esse gesto.
+  >
+  > *Por que mudou:* a 8ª decisão: desmarcada por padrão, com solicitação explícita. A redação anterior a marcava, pela recomendação de P-8, que o usuário não aceitou.
+
 - **FR-6431**: Marcada a opção, o aviso MUST ser gravado na mesma transação do desfecho, no registro de
   avisos da `066`, e enviado só pelo despacho dela, fora da requisição.
 - **FR-6432**: Antes de cada tentativa, o despacho MUST reler o desfecho e interromper o aviso, com o
   motivo, quando ele deixou de ser o desfecho da convocação vigente, como a FR-4623 da `134` faz com a
   pendência. A janela de despacho da `066` MUST valer.
-- **FR-6433**: O assunto MUST ser *"‹instituição› · Edital ‹número›/‹ano›: há atualização na sua
-  convocação"*, e MUST NOT começar por "Convocação".
-- **FR-6434**: O corpo MUST dizer *"O resultado da sua convocação no Edital ‹número›/‹ano› foi
-  registrado pela comissão em ‹data›. Veja o resultado e o que fazer depois na sua área do
-  candidato."*, com o link da convocação (o mesmo da mensagem da convocação), a instrução de acesso
-  por código, o contato (FR-6415) e o rodapé fixo *"Este aviso não é o registro oficial e não altera
-  prazo nem resultado. O que vale é o que está na sua área do candidato e o que o Edital publica."*
-  O texto MUST ser o mesmo para todas as espécies. *(Adota a recomendação de P-1.)*
+- **FR-6433** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  O assunto MUST ser *"‹instituição› · Edital ‹número›/‹ano›: há resultado registrado na
+  sua convocação"*, e MUST NOT começar por "Convocação".
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > O assunto MUST ser *"‹instituição› · Edital ‹número›/‹ano›: há atualização na sua
+  > convocação"*, e MUST NOT começar por "Convocação".
+  >
+  > *Por que mudou:* a 1ª decisão: o texto neutro informa que há resultado registrado, e o assunto diz o mesmo, sem dizer qual.
+
+- **FR-6434** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  O corpo MUST dizer *"Há resultado registrado da sua convocação no Edital ‹número›/‹ano›.
+  Para ver o resultado e o que fazer depois, entre na sua área do candidato."*, com o link da
+  convocação (o mesmo da mensagem da convocação), a instrução de acesso por código, o contato
+  (FR-6415), quando houver, e o rodapé fixo *"Este aviso não é o registro oficial e não altera prazo
+  nem resultado. O que vale é o que está na sua área do candidato e o que o Edital publica."* O texto
+  MUST ser o mesmo para todas as espécies (1ª decisão).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > O corpo MUST dizer *"O resultado da sua convocação no Edital ‹número›/‹ano› foi
+  > registrado pela comissão em ‹data›. Veja o resultado e o que fazer depois na sua área do
+  > candidato."*, com o link da convocação (o mesmo da mensagem da convocação), a instrução de acesso
+  > por código, o contato (FR-6415) e o rodapé fixo *"Este aviso não é o registro oficial e não altera
+  > prazo nem resultado. O que vale é o que está na sua área do candidato e o que o Edital publica."*
+  > O texto MUST ser o mesmo para todas as espécies. *(Adota a recomendação de P-1.)*
+  >
+  > *Por que mudou:* a 1ª decisão: informar que há resultado registrado e indicar o acesso ao portal; resultado e fundamento ficam no ambiente autenticado. A redação anterior dava a data do registro, que não é necessária para isso.
+
 - **FR-6435**: O corpo e o assunto MUST NOT conter a espécie do desfecho, o rótulo, o fundamento, o
   nome, o CPF, o protocolo, a modalidade nem a posição, e a mensagem MUST NOT ter anexo.
-- **FR-6436**: A pessoa sem endereço MUST ficar sem aviso, e a confirmação do desfecho MUST dizê-lo.
+- **FR-6436** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  A pessoa sem endereço MUST ficar sem aviso, e a confirmação do desfecho MUST mostrar a
+  opção de avisar desabilitada, com a razão.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > A pessoa sem endereço MUST ficar sem aviso, e a confirmação do desfecho MUST dizê-lo.
+  >
+  > *Por que mudou:* a 8ª decisão: com a solicitação explícita, quem confirma precisa saber, antes de marcar, que a pessoa não pode ser avisada.
+
+- **FR-6445** *(acrescida em 2026-11-11, pelas decisões do usuário)*: A resposta da confirmação do desfecho MUST dizer *"Aviso solicitado"*, e
+  nunca *"enviado"*. O cartão da convocação MUST mostrar o estado do aviso pelo registro da `066`:
+  *"Aviso solicitado em ‹data›"* até a tentativa; *"Aviso enviado em ‹data e hora›"* depois de o
+  servidor de correio aceitar a mensagem — nunca *"recebido"* (FR-288a da `019`) —; e, falhando,
+  expirando ou interrompido, o estado e o motivo (8ª decisão).
 
 #### I. A habilitação
 
@@ -564,17 +1019,36 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
   enviar aviso de desfecho.
 - **FR-6439**: A habilitação MUST NOT condicionar nenhum outro requisito desta spec: as seções A a G
   MUST funcionar igualmente com ela ligada ou desligada.
-- **FR-6440**: A chave MUST ser ligada em produção só depois do parecer do Encarregado sobre o
-  tratamento da seção *A dependência de LGPD, nomeada* e da validação do correio. A ligação é ato de
-  configuração; o registro do parecer, e da data em que a chave foi ligada, MUST ficar no documento de
-  implantação.
+- **FR-6440** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  A chave MUST ser ligada em produção só depois de resolvidas, para esta finalidade, as
+  pendências institucionais PI-1 a PI-6. A ligação é ato de configuração; o documento de implantação
+  MUST registrar a validação obtida, quem a emitiu e a data dela, e a data em que a chave foi ligada.
+  Nenhum texto do sistema MUST afirmar quem valida nem se a validação foi pedida (3ª decisão).
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > A chave MUST ser ligada em produção só depois do parecer do Encarregado sobre o
+  > tratamento da seção *A dependência de LGPD, nomeada* e da validação do correio. A ligação é ato de
+  > configuração; o registro do parecer, e da data em que a chave foi ligada, MUST ficar no documento de
+  > implantação.
+  >
+  > *Por que mudou:* a 3ª decisão: o responsável, o alcance e a existência do pedido não estão confirmados, e ficam como pendências institucionais. A redação anterior nomeava o responsável como fato.
+
 
 #### J. As revisões
 
-- **FR-6441**: As revisões que esta spec impõe — a FR-084 da `010`, a FR-1172 e a FR-1177 da `063`, a
-  FR-3750 da `118` e o texto da mensagem da `121`; e a FR-6206 da `154`, que passa a citar a FR-3750
-  revista — MUST ser escritas nas specs de origem, com a
-  redação anterior preservada, no PR da implementação desta spec (D-001).
+- **FR-6441** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  As revisões que esta spec impõe MUST estar escritas nas specs de origem, com a redação
+  anterior preservada, e vigorar com a implementação desta: a FR-084 da `010`; a FR-1172 e a FR-1177
+  da `063`; a FR-3750 da `118`; a FR-3883 da `121`; a FR-3993 da `125`; e a FR-878 da `050`.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > As revisões que esta spec impõe — a FR-084 da `010`, a FR-1172 e a FR-1177 da `063`, a
+  > FR-3750 da `118` e o texto da mensagem da `121`; e a FR-6206 da `154`, que passa a citar a FR-3750
+  > revista — MUST ser escritas nas specs de origem, com a
+  > redação anterior preservada, no PR da implementação desta spec (D-001).
+  >
+  > *Por que mudou:* o usuário pediu as revisões na documentação antes do plano (D-001, revista).
+
 
 ### Requisitos de experiência
 
@@ -582,11 +1056,29 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
   de qualquer data técnica, protocolo ou fundamento.
 - **UX-621**: O fundamento recolhido MUST abrir pelo teclado, anunciar o estado (aberto ou fechado) e
   não ter rolagem horizontal a 375 px.
-- **UX-622**: *"Desistir desta convocação"* MUST ter aparência de link secundário, sem a cor de ação
+- **UX-622** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  *"Desistir desta convocação"* MUST ter aparência de link secundário, sem a cor de ação
   principal nem a de perigo, e a confirmação MUST ter o botão *"Enviar o pedido de desistência"* e o
-  caminho de volta *"Voltar à convocação"*, este primeiro na ordem do teclado.
-- **UX-623**: A opção *"Avisar a pessoa por e-mail"* MUST dizer, ao lado, *"O e-mail diz só que há
-  resultado registrado, sem dizer qual."*
+  caminho de volta *"Voltar à convocação"*, este primeiro na ordem do teclado. *"Cancelar o pedido de
+  desistência"* MUST ter o mesmo peso visual de *"Desistir desta convocação"*.
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > *"Desistir desta convocação"* MUST ter aparência de link secundário, sem a cor de ação
+  > principal nem a de perigo, e a confirmação MUST ter o botão *"Enviar o pedido de desistência"* e o
+  > caminho de volta *"Voltar à convocação"*, este primeiro na ordem do teclado.
+  >
+  > *Por que mudou:* a 6ª decisão trouxe o cancelamento, que precisa do mesmo peso do pedido.
+
+- **UX-623** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+  A opção *"Avisar a pessoa por e-mail"* MUST dizer, ao lado, *"O e-mail diz só que há
+  resultado registrado, sem dizer qual. Ele sai depois, pelo envio automático."*
+
+  > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+  > A opção *"Avisar a pessoa por e-mail"* MUST dizer, ao lado, *"O e-mail diz só que há
+  > resultado registrado, sem dizer qual."*
+  >
+  > *Por que mudou:* a 8ª decisão: a confirmação distingue aviso solicitado de aviso enviado, e a ajuda da opção já o diz.
+
 
 ### Key Entities
 
@@ -624,6 +1116,13 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
   modalidade.
 - **SC-2128**: Nenhuma mensagem de convocação ou de correção enviada depois da implementação contém
   *"contado do envio"*.
+- **SC-2129** *(acrescido em 2026-11-11)*: Num Edital sem a seção aplicável preenchida, nenhuma tela do
+  aceite fala de matrícula, bolsa ou contratação como próximo passo.
+- **SC-2130** *(acrescido em 2026-11-11)*: Com pedido pendente, o vencimento e o que a pessoa pode
+  enviar são, em 100% dos casos, os mesmos de antes do pedido.
+- **SC-2131** *(acrescido em 2026-11-11)*: Com a habilitação ligada, só os desfechos registrados com a
+  opção marcada produzem aviso, e nenhuma tela diz *"enviado"* antes de o despacho registrar a
+  aceitação pelo servidor de correio.
 
 ---
 
@@ -645,6 +1144,9 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
 
 ## Perguntas ao usuário
 
+*Respondidas pelo usuário em 11/11/2026; as respostas estão em Clarifications e, abaixo de cada
+pergunta, a indicação de onde a redação mudou.* O texto das perguntas fica como foi mergeado.
+
 Nove decisões que a spec não toma. Cada uma tem a recomendação, e o texto acima a adota
 provisoriamente, marcada.
 
@@ -655,10 +1157,14 @@ segue a decisão 5 da `066` (sem resultado individual no corpo), não revela por
 sensível no indeferimento de cota, e facilita o parecer; o custo é a pessoa precisar entrar no portal
 para saber qual foi.
 
+> **Resposta (1ª decisão):** texto neutro, que informa que há resultado registrado e indica o acesso ao portal; resultado e fundamento ficam no ambiente autenticado. Coincide com a recomendação; revistos o assunto e o corpo (FR-6433, FR-6434), que agora dizem *"há resultado registrado"*.
+
 **P-2 — A habilitação.** *Recomendado:* **chave própria**, `AVISOS_DE_DESFECHO`, que só vale com a
 `AVISOS_AOS_CANDIDATOS` também ligada. Alternativa: a mesma chave da `066`, como a `134` decidiu. A
 própria deixa o parecer aprovar uma finalidade sem aprovar a outra; o custo é uma chave a mais na
 implantação.
+
+> **Resposta (2ª decisão):** chave própria, dependente também da chave geral dos avisos; o envio permanece desligado até a validação institucional correspondente. Coincide com a recomendação; nenhuma alínea mudou por ela.
 
 **P-3 — O parecer.** Você confirma que a validação é do **Encarregado pelo Tratamento de Dados
 Pessoais do Ifes**, e que **um pedido só** pode cobrir as três finalidades pendentes — o aviso
@@ -666,34 +1172,48 @@ complementar da `066`, o de pendência da `134` e o do desfecho desta —, com a
 tratamento desta spec? Quem leva o pedido, e se ele já foi feito, é informação que o repositório não
 tem.
 
+> **Resposta (3ª decisão):** responsável, abrangência e existência do pedido de validação continuam como pendências institucionais (PI-1 a PI-3), sem confirmação por inferência. O envio permanece desligado; as partes independentes avançam. Revistas a seção da validação e a FR-6440.
+
 **P-4 — O próximo passo do aceite.** *Recomendado:* o **caminho para a seção da matrícula** do Edital
 publicado, sem campo novo. Alternativa: um campo estruturado e curto no Edital — *"Depois do resultado
 da convocação"*: quem conduz a etapa seguinte e como procura a pessoa —, mostrado no portal e,
 conforme P-1, no aviso. O campo responde melhor ao *"quem vai procurá-lo"* do achado 07, mas é norma
 nova no Edital, com a regra de Retificação que isso traz.
 
+> **Resposta (4ª decisão):** a seção aplicável do Edital publicado e o contato, sem presumir matrícula e sem inventar próximo passo. Revistas a FR-6406, a FR-6410, a FR-6411, a FR-6412 e a FR-6413.
+
 **P-5 — O contato.** *Recomendado:* o **canal da unidade**, com a recaída da instalação, e a linha
 omitida quando não houver nenhum. Alternativa: um canal da comissão por Edital ou por Processo, que
 recai no da unidade. O recomendado não muda dado; a alternativa serve à unidade que conduz certames
 com comissões de contatos diferentes.
+
+> **Resposta (5ª decisão):** o canal da unidade, com alternativa no da instalação; sem campo da comissão; a linha é omitida somente quando os dois faltarem. Revistas a FR-6415 e a FR-6416.
 
 **P-6 — Cancelar o pedido.** *Recomendado:* **sim**, até a comissão registrar o desfecho. O endereço
 de e-mail pode ser compartilhado, e o pedido é uma manifestação que a pessoa pode reconsiderar enquanto
 nada foi decidido. Alternativa: pedido irrevogável pelo portal, e a reconsideração pelo canal da
 comissão.
 
+> **Resposta (6ª decisão):** sim, enquanto a comissão não tiver registrado o desfecho, com pedido e cancelamento no histórico, e a tela diz que pedir ainda não é desistir. Revistas a FR-6419, a FR-6421 e a FR-6422.
+
 **P-7 — Enviar documento com o pedido pendente.** *Recomendado:* **não**: o envio fica suspenso até o
 cancelamento, porque enviar e desistir ao mesmo tempo deixa a comissão sem saber o que vale. O prazo
 corre do mesmo jeito. Alternativa: o envio continua oferecido, com aviso.
+
+> **Resposta (7ª decisão):** os envios previstos nas regras vigentes continuam permitidos; o prazo não é suspenso nem prorrogado. **Contrária à recomendação.** Revista a FR-6421.
 
 **P-8 — A opção de avisar no registro do desfecho.** *Recomendado:* **marcada por padrão**,
 desmarcável. Alternativa: desmarcada por padrão. A marcada faz o aviso ser a regra quando a
 habilitação estiver ligada; ela continua sendo um gesto humano, porque é parte da confirmação.
 
+> **Resposta (8ª decisão):** desmarcada por padrão, com solicitação explícita; a confirmação distingue aviso solicitado de aviso enviado. **Contrária à recomendação.** Revistas a FR-6430 e a FR-6436, e acrescida a FR-6445.
+
 **P-9 — Dizer ao candidato que a documentação foi disponibilizada ao setor (`117`).** *Recomendado:*
 **não**. O GPS sabe que disponibilizou, e não sabe se o setor agiu; a frase criaria a expectativa de
 contato que o sistema não acompanha. Alternativa: *"A comissão disponibilizou a sua documentação ao
 setor responsável pela próxima etapa em ‹data›."*, depois do aceite.
+
+> **Resposta (9ª decisão):** sem aviso específico nesta entrega, e a operação interna não se apresenta como matrícula, contratação ou formalização concluída. Revista a FR-6413.
 
 ---
 
@@ -701,12 +1221,19 @@ setor responsável pela próxima etapa em ‹data›."*, depois do aceite.
 
 Propostas de desenho, sujeitas à revisão do PR.
 
-#### D-001 — As revisões de outras specs se escrevem na implementação
+#### D-001 — As revisões de outras specs se escrevem na implementação *(revista em 2026-11-11 — a redação anterior está ao fim)*
 
-A `154` acabou de rever a `063`, a `118`, a `121` e a `134`, e as sessões da `152`, da `153` e da `155`
-seguem abertas sobre a mesma jornada. Revisar alíneas normativas neste PR, com nove perguntas ainda
-abertas, produziria texto que a resposta pode mudar e conflito resolvido à mão. Esta spec nomeia o que
-revê (FR-6441) e deixa a escrita para o PR da implementação, já com as respostas.
+A instrução do usuário de 11/11/2026 pediu as revisões na documentação antes do plano. Elas estão
+escritas nas specs de origem, com a marca de vigência na implementação desta: o plano e as tarefas
+leem a regra que vão implementar, e a redação anterior continua descrevendo o sistema até lá.
+
+> **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+> A `154` acabou de rever a `063`, a `118`, a `121` e a `134`, e as sessões da `152`, da `153` e da `155`
+> seguem abertas sobre a mesma jornada. Revisar alíneas normativas neste PR, com nove perguntas ainda
+> abertas, produziria texto que a resposta pode mudar e conflito resolvido à mão. Esta spec nomeia o que
+> revê (FR-6441) e deixa a escrita para o PR da implementação, já com as respostas.
+>
+> *Por que mudou:* a instrução do usuário que acompanhou as decisões.
 
 #### D-002 — Duas camadas, derivadas na leitura
 
@@ -720,11 +1247,20 @@ O indeferimento pode ser regularizado (a convocação para regularizar da `019`)
 devolve a pessoa à fila. *"Perdeu a vaga"* seria falso em dois de cinco desfechos de exclusão. A frase
 diz o efeito sobre a chamada, que é o que o desfecho registra.
 
-#### D-004 — O próximo passo vem do Edital, nunca do sistema
+#### D-004 — O próximo passo vem do Edital, nunca do sistema *(revista em 2026-11-11 — a redação anterior está ao fim)*
 
-O GPS não conduz a formalização (`117`): para em *disponibilizado*. O que vem depois do aceite é o que
-o Edital publica, e a tela aponta para lá. Sem a seção, ela diz que é o que o Edital publica, e dá o
-contato.
+O GPS não conduz a formalização (`117`): para em *disponibilizado*. O catálogo das seções é
+declarado (`054`, `069`), e a seção que trata da etapa depois do resultado tem chave fixa. O sistema
+não lê o texto para adivinhar o próximo passo: ele só aponta a seção que existe, com o título que o
+Edital lhe deu. Um Edital de bolsista que não a preencha cai na consulta ao Edital, e nada presume
+matrícula (4ª decisão).
+
+> **Redação anterior, de 11/11/2026 (PR #485), preservada:**
+> O GPS não conduz a formalização (`117`): para em *disponibilizado*. O que vem depois do aceite é o que
+> o Edital publica, e a tela aponta para lá. Sem a seção, ela diz que é o que o Edital publica, e dá o
+> contato.
+>
+> *Por que mudou:* a 4ª decisão: não presumir matrícula, e indicar a consulta ao Edital quando não houver orientação identificável.
 
 #### D-005 — Sem canal, nenhuma linha
 
@@ -779,3 +1315,21 @@ aconteceu. A pessoa fica para o atalho da desistência pedida.
 
 O prazo é a data informada no ato, e o envio só o põe em curso (o achado do reenvio, de 09/10/2026).
 *"Contado do envio desta mensagem"* é inexato na primeira mensagem e enganoso na segunda.
+
+#### D-015 — O pedido não muda a convocação *(acrescida em 2026-11-11)*
+
+Pedir não é desistir (6ª decisão), e a pessoa pode cancelar e cumprir (7ª decisão). Por isso o prazo,
+os envios, a conferência e o aviso de pendência da `134` continuam como estavam: tirá-la do aviso de
+pendência a deixaria sem saber de uma correção justamente quando ainda pode voltar atrás.
+
+#### D-016 — O atalho da desistência pedida é gesto próprio *(acrescida em 2026-11-11)*
+
+A FR-5839 da `152` proíbe espécie pré-escolhida no seletor, para que ninguém registre por inércia a
+única espécie oferecida. O atalho não é o seletor: nasce de um pedido registrado, nomeia a espécie no
+botão e passa pela conferência do texto, como o atalho de indeferimento da `152`.
+
+#### D-017 — Encerrar com pedido pendente adverte, e não impede *(acrescida em 2026-11-11)*
+
+O encerramento fecha a escrita, e o pedido pendente ficaria sem homologação. Impedir encerrar por
+pedido de candidato daria a ele um veto sobre o calendário do certame; a advertência, ao lado da da
+`153`, dá à comissão a chance de registrar antes.

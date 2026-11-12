@@ -82,6 +82,18 @@ def passo_da_chamada(*, estado, desfecho, documentos, vencimento=None, canal=Non
             EMITIR,
         )
     if estado == nomes.CONVOCADO_VENCIMENTO_DECORRIDO:
+        if documentos is not None and not documentos.houve_apresentacao:
+            # **Nada apresentado no prazo aponta o não atendimento** (152, FR-5809, UX-535, D-011).
+            # Quem não respondeu à convocação não atendeu; o indeferimento pelas pendências é de
+            # quem respondeu com falta. O código continua `VENCIDA`: a precedência dos passos da
+            # `143` não muda, e o desfecho continua de quem registra — o geral oferece os outros.
+            return Passo(
+                VENCIDA,
+                f"O prazo venceu em {_quando(vencimento)} sem nenhum documento apresentado. O "
+                "desfecho que descreve isso é o não atendimento à convocação.",
+                "alerta",
+                DESFECHO,
+            )
         return Passo(
             VENCIDA,
             "Registrar o desfecho: o vencimento decorreu, e nenhum desfecho nasce dele.",

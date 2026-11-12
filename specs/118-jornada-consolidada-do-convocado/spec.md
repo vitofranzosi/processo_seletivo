@@ -774,11 +774,24 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   > quando a escrita estiver aberta e houver tarefa ou opcional a enviar. Esta regra **prevalece** sobre
   > toda menção ao prazo: a data do vencimento MUST NOT aparecer como prazo em nenhum bloco, cartão,
   > opcional ou frase de conclusão; ela fica só no bloco *Sobre esta convocação*.
-- **FR-3750**: O desfecho MUST ter, na tela da convocação e no acompanhamento, o mesmo rótulo: o da
+- **FR-3750** *(revista pela `156` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O desfecho MUST ter, na tela da convocação e no acompanhamento, o mesmo rótulo: o da
   tabela da FR-1172 da `063` (por exemplo, *"Vaga aceita"*). Com aceite ou regularização, as duas
-  telas MUST dizer *"Este registro não é matrícula, bolsa nem contrato: ele registra o resultado desta
-  convocação. Os próximos passos são os que o Edital indica."* É a frase que a User Story 2 da `115`
-  prometia, e que não existia em tela nenhuma.
+  telas MUST dizer a frase simples da FR-6406 da `156` — que termina em *"Este registro não é
+  matrícula, bolsa nem contrato."* — e, depois dela, o próximo passo das FR-6410 a FR-6413 da `156`:
+  o caminho para a seção aplicável do Edital publicado, com o título que o Edital lhe dá, ou, sem
+  ela, *"Consulte o Edital publicado para saber o que vem depois."*; e o contato, quando houver.
+  Nenhum próximo passo MUST presumir matrícula, bolsa ou contratação.
+
+  > **Redação anterior à `156`, preservada:**
+  > O desfecho MUST ter, na tela da convocação e no acompanhamento, o mesmo rótulo: o da
+  > tabela da FR-1172 da `063` (por exemplo, *"Vaga aceita"*). Com aceite ou regularização, as duas
+  > telas MUST dizer *"Este registro não é matrícula, bolsa nem contrato: ele registra o resultado desta
+  > convocação. Os próximos passos são os que o Edital indica."* É a frase que a User Story 2 da `115`
+  > prometia, e que não existia em tela nenhuma.
+  >
+  > *Por que mudou:* *"Os próximos passos são os que o Edital indica"* não dizia qual, nem onde, nem a quem perguntar (achado 07 do estudo da jornada final de 11/11/2026); e o próximo passo não pode presumir matrícula, porque há seleção de bolsa e de contratação (4ª decisão da `156`).
+
 - **FR-3751**: Nenhum texto desta feature MUST dizer *"apto para formalização"*, *"encaminhado"*,
   *"matriculado"*, *"matrícula efetivada"*, *"bolsa concedida"*, *"vinculado"*, *"contratado"*,
   *"autêntico"*, *"aprovado"*, *"atendido"* ou *"aceito"* sobre documento, nem *"você enviou tudo"*.

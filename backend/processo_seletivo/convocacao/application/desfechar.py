@@ -24,7 +24,7 @@ from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
-from processo_seletivo.convocacao.domain import nomes, prazo
+from processo_seletivo.convocacao.domain import desfechos_cabiveis, nomes, prazo
 from processo_seletivo.convocacao.models import (
     AtestadoDeFatoExterno,
     Convocacao,
@@ -226,24 +226,14 @@ def _recusar_inclusao_sem_documentos(convocacao, *, especie, ciencia=None):
             409,
         )
     leitura = leitura_da_chamada(convocacao)
-    pendentes = leitura.pendencias_para_incluir
-    if pendentes:
-        # O "não se aplica" registrado sem condição publicada não atende (131, FR-4470, 11ª
-        # decisão), e a recusa diz por quê: sem isto, a comissão leria "falta" num item que a tela
-        # mostra como conferido.
-        nomes_dos_itens = ", ".join(
-            f'{lido.nome} ("não se aplica" registrado sem condição publicada)'
-            if lido.sem_condicao_publicada
-            else lido.nome
-            for lido in pendentes
-        )
-        raise DomainError(
-            nomes.DOCUMENTOS_NAO_CONFERIDOS,
-            "Para registrar este desfecho, todo documento obrigatório da convocação precisa estar "
-            "conferido como conforme, ou como não se aplica quando o Edital publicou a condição. "
-            f"Falta: {nomes_dos_itens}.",
-            409,
-        )
+    # A frase é a do predicado que a tela também lê (152, FR-5838): a nota do seletor e esta recusa
+    # dizem a mesma coisa porque são a mesma função.
+    _recusar(
+        desfechos_cabiveis.inclusao_por_conferir(
+            especie=especie, pendentes=leitura.pendencias_para_incluir
+        ),
+        409,
+    )
     return _conferir_a_ciencia(leitura, ciencia)
 
 
@@ -445,13 +435,12 @@ def _recusar_desfecho_incompativel(convocacao, *, especie):
 
     O registro é append-only: a transição impossível entraria uma vez e ficaria.
     """
-    admitidos = nomes.DESFECHOS_POR_ESPECIE.get(convocacao.especie, ())
-    if especie in admitidos:
-        return
-    raise DomainError(
-        nomes.DESFECHO_INCOMPATIVEL_COM_A_CHAMADA,
-        f"Uma convocação da espécie {convocacao.get_especie_display().lower()} não admite este "
-        "desfecho.",
+    _recusar(
+        desfechos_cabiveis.desfecho_incompativel(
+            especie_da_chamada=convocacao.especie,
+            especie=especie,
+            rotulo_da_chamada=convocacao.get_especie_display(),
+        ),
         422,
         campo="especie",
     )
@@ -474,23 +463,20 @@ def _recusar_nao_atendimento_prematuro(convocacao, *, especie, agora):
     if especie != nomes.NAO_ATENDIMENTO:
         return
     enviado_em = selectors.envio_de(convocacao)
-    if not prazo.prazo_corre(enviado_em=enviado_em):
-        # A frase do canal (125, FR-4001): na publicação, nada foi enviado.
-        raise DomainError(
-            nomes.NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO,
-            selectors.canal_de(convocacao).recusa_do_nao_atendimento
-            + "correr, e não há não atendimento a registrar.",
-            409,
-        )
-    if convocacao.vencimento is not None and not prazo.decorrido(
-        vencimento=convocacao.vencimento, enviado_em=enviado_em, agora=agora
-    ):
-        raise DomainError(
-            nomes.NAO_ATENDIMENTO_ANTES_DO_VENCIMENTO,
-            "O vencimento informado nesta convocação ainda não passou: a pessoa está dentro do "
-            "prazo dela.",
-            409,
-        )
+    # A frase do canal (125, FR-4001): na publicação, nada foi enviado. **Lido só quando a recusa
+    # o usa**, como antes do predicado: com o prazo correndo, o canal não entra na frase, e lê-lo
+    # seria uma consulta a mais em todo não atendimento.
+    canal = None if prazo.prazo_corre(enviado_em=enviado_em) else selectors.canal_de(convocacao)
+    _recusar(
+        desfechos_cabiveis.nao_atendimento_prematuro(
+            especie=especie,
+            enviado_em=enviado_em,
+            vencimento=convocacao.vencimento,
+            agora=agora,
+            canal=canal,
+        ),
+        409,
+    )
 
 
 def _recusar_inercia_sem_ocupacao(convocacao, *, especie, agora):
@@ -508,13 +494,11 @@ def _recusar_inercia_sem_ocupacao(convocacao, *, especie, agora):
         lista_id=convocacao.lista_id,
         at=agora,
     )
-    if chave_da_inscricao(convocacao.inscricao_id) in contexto["ocupando"]:
-        return
-    raise DomainError(
-        nomes.INERCIA_SEM_OCUPACAO,
-        "Esta Inscrição não consta ocupando vaga neste recorte: não há matrícula a cancelar por "
-        "inércia. Quem foi chamado e não respondeu tem desfecho próprio — não atendimento à "
-        "convocação.",
+    _recusar(
+        desfechos_cabiveis.inercia_sem_ocupacao(
+            especie=especie,
+            ocupando=chave_da_inscricao(convocacao.inscricao_id) in contexto["ocupando"],
+        ),
         409,
     )
 
@@ -544,14 +528,13 @@ def _atestado(especie, atestado_id, convocacao):
     """
     if especie != nomes.INERCIA:
         return None
-    if atestado_id is None:
-        raise DomainError(
-            nomes.ATESTADO_OBRIGATORIO,
-            "O cancelamento de matrícula por inércia exige atestado de fato externo: registre "
-            "quem atestou e o que concluiu.",
-            422,
-            campo="atestado",
-        )
+    _recusar(
+        desfechos_cabiveis.inercia_sem_atestado(
+            especie=especie, tem_atestado=atestado_id is not None
+        ),
+        422,
+        campo="atestado",
+    )
     atestado = AtestadoDeFatoExterno.objects.filter(id=identificador(atestado_id)).first()
     if atestado is None or atestado.inscricao_id != convocacao.inscricao_id:
         # O atestado é de **outra** pessoa: aceitá-lo cancelaria a matrícula de quem nunca foi
@@ -604,6 +587,16 @@ def declarado_do_desfecho(desfecho):
         "especie": desfecho.especie,
         "efeito": desfecho.efeito.especie,
     }
+
+
+def _recusar(impedimento, status, **extra):
+    """A recusa de uma guarda, a partir do predicado que a tela também lê (152, R-005).
+
+    O código e a frase são do predicado; o status e o campo continuam da guarda, que é quem sabe
+    como o comando responde.
+    """
+    if impedimento is not None:
+        raise DomainError(impedimento.codigo, impedimento.frase, status, **extra)
 
 
 def _convocacao_do_processo(processo, convocacao_id):
