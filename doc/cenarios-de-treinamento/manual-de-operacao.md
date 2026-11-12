@@ -35,7 +35,7 @@ trazem uma pessoa fictícia do setor, para que o fim do certame se treine pela t
 Quem concede e designa na trilha é `treino.acessos`, que não é pessoa nem tem vínculo: ninguém entra
 com esse poder. Nenhum outro papel é concedido, e nada é revogado na carga. A pré-visualização do
 C16 e do C17 diz se a pessoa e o papel serão criados ou mantidos. Uma `treino.formalizacao`
-desativada não é reativada: o cenário falha, com a frase da recusa.
+desativada ou suspensa não é reativada: o cenário falha com `pessoa_indisponivel`.
 
 ## As três barreiras
 
@@ -172,9 +172,10 @@ Depois, confirmando com o código:
 uv run python manage.py restaurar_cenario_de_treinamento --cenario C07 --banco processo_seletivo --confirmar C07
 ```
 
-No C16 e no C17, a restauração também **revoga**, com motivo, as designações para a formalização
-no Edital cancelado — senão o setor continuaria vendo o Edital antigo na lista dele. A pessoa
-`treino.formalizacao` e o papel dela ficam como estão.
+A restauração também **revoga**, com motivo, as designações para a formalização vigentes nos
+Editais da rodada anterior, inclusive no encerrado — senão o setor continuaria vendo o Edital antigo
+na lista dele. A pré-visualização diz quantas. A pessoa `treino.formalizacao` e os papéis ficam
+como estão.
 
 A restauração é recusada quando a propriedade do Processo não se comprova pelo manifesto e pela
 trilha, quando o cenário não tem rodada em uso, ou quando a rodada nova encontraria conflito. Nesses

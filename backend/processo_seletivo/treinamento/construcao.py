@@ -923,25 +923,47 @@ class Montagem:
 
         **A única pessoa escrita pelo ORM** (FR-6721), como a identidade do candidato fictício:
         no GPS a pessoa institucional nasce do provedor, e o gerador não é provedor. Ela nasce sem
-        senha utilizável e sem identidade externa, e quem já existe não é tocado — inclusive a
-        inativa, que a concessão recusa, e o cenário falha com a frase do domínio. O vínculo é pelo
+        senha utilizável e sem identidade externa, e quem já existe não é tocado. O vínculo é pelo
         comando da `107`, com motivo e trilha (FR-6722).
+
+        **A inativa é recusada aqui, e não só na concessão.** A suspensão da `107` desliga a pessoa
+        e deixa o vínculo vigente: com ele, a concessão nem seria chamada, e o C17 nasceria pronto
+        com uma pessoa que ninguém consegue designar.
+
+        **Duas cargas ao mesmo tempo**, em unidades diferentes, criam a mesma pessoa: a segunda
+        espera a primeira e recebe a violação de unicidade. Num ponto de salvamento, ela relê a
+        pessoa que a outra criou, em vez de virar `ERRO`.
         """
         from django.contrib.auth import get_user_model
+        from django.db import IntegrityError, transaction
 
         from processo_seletivo.formalizacao.domain import nomes
         from processo_seletivo.seguranca.application import acessos
+        from processo_seletivo.shared.api.problems import DomainError
 
-        pessoa = get_user_model().objects.filter(username=FORMALIZACAO).first()
+        pessoas = get_user_model().objects
+        pessoa = pessoas.filter(username=FORMALIZACAO).first()
         if pessoa is None:
-            pessoa = get_user_model()(
+            nova = get_user_model()(
                 username=FORMALIZACAO,
                 first_name="Formalização Treinamento",
                 email=f"formalizacao@{ids.DOMINIO}",
             )
-            pessoa.set_unusable_password()
-            pessoa.save()
-            self.anotar("pessoa_da_formalizacao", pessoa.pk)
+            nova.set_unusable_password()
+            try:
+                with transaction.atomic():
+                    nova.save()
+                pessoa = nova
+                self.anotar("pessoa_da_formalizacao", pessoa.pk)
+            except IntegrityError:
+                pessoa = pessoas.get(username=FORMALIZACAO)
+        if not pessoa.is_active:
+            raise DomainError(
+                acessos.PESSOA_INDISPONIVEL,
+                f"{FORMALIZACAO} está suspensa ou desativada, e o gerador não a reativa: reative-a "
+                "pela gestão de acessos, ou deixe este cenário de fora",
+                409,
+            )
         vigente = acessos.vigentes().filter(pessoa=pessoa, escopo=self.unidade, papel=nomes.PAPEL)
         if not vigente.exists():
             vinculo = acessos.conceder(

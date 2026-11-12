@@ -174,7 +174,8 @@ comandos da aplicação que a tela usa.
   `treinamento.exemplo.test`, sem senha utilizável e sem identidade externa. Por isso ela não entra
   pela autenticação institucional, e a busca de pessoas da gestão de acessos não a encontra, porque
   só lê identificadores institucionais. Ela se reaproveita entre cenários, rodadas e unidades, sem
-  nenhuma escrita. O gerador nunca a altera: inativa, o cenário falha pela recusa do domínio
+  nenhuma escrita; duas cargas simultâneas que a criem ficam com uma só. O gerador nunca a altera:
+  inativa — mesmo suspensa com o vínculo vigente —, o cenário falha com `pessoa_indisponivel`
   (`FALHOU`, FR-4612), e ela não é reativada.
 - **FR-6722**: **O vínculo.** O gerador concede à identidade o papel Formalização na unidade do
   cenário, pelo comando de concessão da `107`, com motivo e trilha, só quando ela não o tem vigente
@@ -190,11 +191,14 @@ comandos da aplicação que a tela usa.
   C16 ou do C17, e por isso está sob a chave e o banco por extenso (FR-4601, FR-4602), na transação
   do cenário (FR-4612) e na idempotência da carga (FR-4611): cenário pronto não provisiona de novo.
   A pré-visualização do C16 e do C17 diz se a identidade e o vínculo seriam criados ou mantidos
-  (FR-4604).
+  (FR-4604); com os dois no mesmo plano, só o primeiro os cria, e o segundo diz que vêm dele.
 - **FR-6726**: **Restaurar não exclui.** A restauração do C16 ou do C17 cria a rodada seguinte, como
-  a dos outros (FR-4621): a identidade e o vínculo são reaproveitados, e as designações vigentes no
-  Edital da rodada anterior são revogadas pelo comando de revogação da `117`, com motivo, antes de o
-  Edital ser cancelado. Sem isso, a lista do setor continuaria oferecendo o Edital cancelado.
+  a dos outros (FR-4621), e a identidade e o vínculo são reaproveitados. A restauração de
+  **qualquer** cenário revoga, pelo comando de revogação da `117` e com motivo, as designações
+  vigentes em **todos** os Editais do Processo da rodada anterior — também o encerrado, que não se
+  cancela e continua designável —, e a pré-visualização diz quantas serão revogadas. Sem isso, a
+  lista do setor continuaria oferecendo o Edital antigo, e a designação feita pela tela num cenário
+  de convocação sairia sem aviso.
 - **FR-6727**: **A entrada.** A identidade fica fora das sugestões por papel da página de acesso,
   como todo ator `treino.` (o plano desta spec); a lista das comissões da FR-4653 não a alcança,
   porque ela não integra comissão. A equipe entra pelo campo livre, com `treino.formalizacao`,

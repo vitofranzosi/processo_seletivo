@@ -253,6 +253,9 @@ def planejar(codigos, unidade):
     """
     plano = []
     ano = ano_local()
+    # O que um cenário anterior deste mesmo plano já provisiona: com o C16 e o C17 juntos num banco
+    # novo, só o primeiro cria a pessoa e concede o papel (FR-6725).
+    provisionado = False
     for cenario in escolher(codigos):
         manifesto = _em_uso(cenario, unidade)
         if manifesto is not None:
@@ -265,15 +268,21 @@ def planejar(codigos, unidade):
             continue
         rodada = _proxima_rodada(cenario, unidade)
         conflitos = conflitos_de_montagem(cenario, unidade, rodada, ano)
-        detalhes = conflitos or [f"rodada {rodada}", *_provisionamento(cenario, unidade)]
+        detalhes = conflitos or [
+            f"rodada {rodada}",
+            *_provisionamento(cenario, unidade, ja_provisionado=provisionado),
+        ]
+        provisionado = provisionado or (not conflitos and cenario.provisiona_formalizacao)
         plano.append((cenario, "RECUSAR" if conflitos else "CRIAR", detalhes))
     return plano
 
 
-def _provisionamento(cenario, unidade):
+def _provisionamento(cenario, unidade, *, ja_provisionado=False):
     """O que o C16 e o C17 criariam ou manteriam da pessoa do setor (FR-6725)."""
     if not cenario.provisiona_formalizacao:
         return []
+    if ja_provisionado:
+        return [f"pessoa {FORMALIZACAO} e papel Formalização em {unidade}: do cenário anterior"]
     from django.contrib.auth import get_user_model
 
     from processo_seletivo.formalizacao.domain import nomes
@@ -290,16 +299,28 @@ def _provisionamento(cenario, unidade):
     ]
 
 
-def _revogar_designacoes(editais, unidade, motivo, correlacao):
-    """As designações vigentes nos Editais da rodada anterior, revogadas com motivo (FR-6726).
+def _designacoes_da_rodada(processo):
+    """As designações vigentes em **todos** os Editais do Processo da rodada (FR-6726).
 
-    Pelo comando da `117`, e não por exclusão: a designação fica no histórico do Edital cancelado,
-    e a lista do setor deixa de oferecê-lo.
+    Todos, e não só os que a restauração cancela: o Edital encerrado continua designável (a
+    FR-3710 da `117`) e a lista do setor não filtra por estado — a designação que ficasse nele
+    mostraria o Edital velho ao lado do novo. E de qualquer cenário, e não só do C16 e do C17: com
+    a designação feita pela tela, num cenário de convocação, o caso é o mesmo.
     """
-    from processo_seletivo.formalizacao.application.designar import revogar
     from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
 
-    for designacao in designacoes_vigentes().filter(edital__in=editais).order_by("id"):
+    return designacoes_vigentes().filter(edital__processo=processo).order_by("id")
+
+
+def _revogar_designacoes(processo, unidade, motivo, correlacao):
+    """As designações vigentes da rodada anterior, revogadas com motivo (FR-6726).
+
+    Pelo comando da `117`, e não por exclusão: a designação fica no histórico do Edital, e a lista
+    do setor deixa de oferecê-lo.
+    """
+    from processo_seletivo.formalizacao.application.designar import revogar
+
+    for designacao in _designacoes_da_rodada(processo):
         revogar(
             ator(ACESSOS, unidade),
             designacao_id=designacao.id,
@@ -440,6 +461,7 @@ def plano_de_restauracao(codigo, unidade):
         not in (ProcessoSeletivo.Status.ENCERRADO, ProcessoSeletivo.Status.CANCELADO)
         else None,
         "mudancas": atual.mudancas,
+        "designacoes_a_revogar": _designacoes_da_rodada(processo).count(),
     }
 
 
@@ -498,7 +520,7 @@ def restaurar(plano, unidade, *, saida=None, por="linha de comando", autoridade=
         )
         correlacao = f"{anterior.correlation_id}-substituida"
         a_cancelar = _editais_a_cancelar(anterior.processo, travar=True)
-        _revogar_designacoes(a_cancelar, unidade, motivo, correlacao)
+        _revogar_designacoes(anterior.processo, unidade, motivo, correlacao)
         for edital in a_cancelar:
             cancel_edital(
                 actor=gestor,

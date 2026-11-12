@@ -30,6 +30,7 @@ from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
 from tests.fixtures.treinamento import carregar, restaurar, retomar
 from tests.integration.formalizacao.apoio import abrir_zip, baixar, comprovante_da, verificar
 from tests.interface.conftest import identificar
+from tests.seguranca.apoio import vincular
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 
@@ -127,8 +128,9 @@ def test_o_provisionamento_cria_uma_pessoa_e_um_vinculo_e_nada_mais_nem_de_novo(
     """SC-2212, FR-6721, FR-6722, FR-6725."""
     pessoas, vinculos = get_user_model().objects.count(), Vinculo.objects.count()
     previa = carregar("C16", "C17", dry_run=True)
-    assert f"pessoa {k.FORMALIZACAO}: criar" in previa
-    assert "papel Formalização em cefor: conceder" in previa
+    assert previa.count(f"pessoa {k.FORMALIZACAO}: criar") == 1, "só o primeiro do plano cria"
+    assert previa.count("papel Formalização em cefor: conceder") == 1
+    assert "papel Formalização em cefor: do cenário anterior" in previa
 
     saida = carregar("C16", "C17", autoridade=AUTORIDADE)
     assert saida.count("CRIADO") == 2, saida
@@ -140,19 +142,28 @@ def test_o_provisionamento_cria_uma_pessoa_e_um_vinculo_e_nada_mais_nem_de_novo(
     assert not pessoa.identidades_externas.exists()
 
     assert k.FORMALIZACAO not in carregar("C01", dry_run=True), "só o C16 e o C17 provisionam"
-    assert "MANTER" in carregar("C16", "C17", autoridade=AUTORIDADE)
+    assert carregar("C16", "C17", autoridade=AUTORIDADE).count("MANTER") == 2
     assert get_user_model().objects.count() == pessoas + 1
     assert Vinculo.objects.count() == vinculos + 1
 
 
-def test_a_pessoa_inativa_nao_e_reativada_e_o_cenario_falha_pela_recusa(treinamento):
-    """FR-6721: o gerador nunca altera a pessoa que encontra."""
+@pytest.mark.parametrize("com_o_papel", [False, True], ids=["sem-vinculo", "suspensa-com-vinculo"])
+def test_a_pessoa_inativa_nao_e_reativada_e_o_cenario_falha_pela_recusa(treinamento, com_o_papel):
+    """FR-6721: o gerador nunca altera a pessoa que encontra.
+
+    A suspensão da `107` desliga a pessoa e deixa o vínculo vigente: sem a recusa própria, o C17
+    nasceria pronto com uma pessoa que ninguém consegue designar.
+    """
     pessoa = get_user_model().objects.create(username=k.FORMALIZACAO, is_active=False)
+    if com_o_papel:
+        vincular(pessoa, "cefor", nomes.PAPEL)
+    vinculos = Vinculo.objects.count()
     saida = carregar("C17", autoridade=AUTORIDADE)
     assert "C17  FALHOU" in saida, saida
+    assert "pessoa_indisponivel" in saida, saida
     pessoa.refresh_from_db()
     assert not pessoa.is_active
-    assert not _da_formalizacao().exists()
+    assert Vinculo.objects.count() == vinculos
     assert not CenarioDeTreinamento.objects.filter(codigo="C17").exists()
 
 
@@ -178,3 +189,42 @@ def test_restaurar_o_c16_revoga_a_designacao_anterior_e_reaproveita_pessoa_e_vin
     lista = client.get(reverse("interface:formalizacao")).content.decode()
     assert str(novo.id) in lista
     assert str(anterior.id) not in lista
+
+
+def test_restaurar_revoga_e_avisa_a_designacao_feita_a_mao_mesmo_no_edital_encerrado(cenario):
+    """FR-6726, nos dois avessos de uma vez: o Edital **encerrado** não se cancela, mas continua
+    designável e na lista do setor; e o cenário que **não** provisiona (o C14) também tem a
+    designação da rodada revogada, e dita antes.
+    """
+    from processo_seletivo.processos.application.finalizacao import close_edital
+    from tests.seguranca.apoio import pessoa
+
+    edital = cenario("C14")
+    rui = pessoa("rui-treino", nome="Rui Registro", email="rui@ifes.edu.br")
+    vincular(rui, "cefor", nomes.PAPEL)
+    m = retomar(CenarioDeTreinamento.objects.get(codigo="C14"), autoridade=AUTORIDADE)
+    designar(
+        m.ator(k.ACESSOS),
+        edital_id=edital.id,
+        pessoa=rui,
+        perfis=[],
+        motivo="Exercício.",
+        now=m.agora,
+    )
+    edital.refresh_from_db()
+    close_edital(
+        actor=m.ator(k.GESTAO, "edital:encerrar"),
+        edital_id=edital.id,
+        expected_revision=edital.revision,
+        reason="Encerramento (exercício).",
+        idempotency_key="exercicio-c14-encerrar",
+        correlation_id="exercicio",
+    )
+    edital.refresh_from_db()
+    assert edital.status == Edital.Status.ENCERRADO
+
+    previa = restaurar("C14", dry_run=True)
+    assert "Serão revogadas, com motivo, 1 designação(ões)" in previa, previa
+    restaurar("C14", confirmar="C14", autoridade=AUTORIDADE)
+    assert not designacoes_vigentes(edital=edital).exists()
+    assert not _da_formalizacao().exists(), "o C14 não provisiona"

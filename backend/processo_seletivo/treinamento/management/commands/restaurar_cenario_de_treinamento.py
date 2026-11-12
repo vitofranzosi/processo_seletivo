@@ -43,10 +43,11 @@ class Command(ComandoDeTreinamento):
         self.stdout.write(
             "  Um Edital que entrar no Processo até a gravação também será cancelado."
         )
-        if plano["cenario"].provisiona_formalizacao:
+        if plano["designacoes_a_revogar"]:
             self.stdout.write(
-                "  As designações para a formalização nos Editais cancelados serão revogadas, com "
-                "motivo; a pessoa do setor e o papel dela ficam como estão."
+                f"  Serão revogadas, com motivo, {plano['designacoes_a_revogar']} designação(ões) "
+                "para a formalização nos Editais deste Processo; as pessoas e os papéis delas "
+                "ficam como estão."
             )
         if plano["processo_a_cancelar"] is not None:
             self.stdout.write(

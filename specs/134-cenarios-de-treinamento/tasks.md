@@ -63,6 +63,13 @@
   `treino.formalizacao`, e a dependência do exercício de designar.
 - [x] T027 Verificação no navegador num banco novo; registro na [verificação](verificacao.md).
 
+- [x] T028 Revisão do #500: a restauração revoga as designações de todos os Editais do Processo,
+  também do encerrado e em qualquer cenário, e a pré-visualização as conta (FR-6726); a pessoa
+  suspensa com vínculo é recusada, e a criação simultânea não vira `ERRO` (FR-6721); a
+  pré-visualização acumula o provisionamento do plano (FR-6725).
+- [ ] T029 Depois do merge da revisão da `117` (presidência designa): o C17 pela presidência, e as
+  identidades `treino.*` só contadas e oferecidas nos Editais de treinamento.
+
 ## Pendente
 
 - [ ] T017 Carga na homologação compartilhada, pelo administrador, depois do ensaio.
