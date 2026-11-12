@@ -38,10 +38,19 @@ frase neutra é a mesma do acompanhamento, e vem da mesma constante (063, FR-118
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
 
 {% elif obrigacoes %}
-{% comment %}Com documento pedido na chamada: a chamada da 121 e os blocos da 118 (FR-3735, revista).{% endcomment %}
+{% comment %}
+Com documento pedido na chamada: a chamada da 121 e os blocos da 118 (FR-3735, revista).
+
+**Numa moldura só**, para que chamada, andamento e cartões se alinhem pela mesma borda. Em tela
+larga o andamento sobe para o lado da chamada, e os cartões ocupam a largura que a coluna de
+leitura deixava vazia. A ordem do documento não muda: é a da FR-3859, e é a do leitor de tela e do
+Tab — a grade só move as caixas.
+{% endcomment %}
+<div class="pagina-da-convocacao{% if obrigacoes.andamento %} com-andamento{% endif %}">
 {% include "portal/_chamada_da_convocacao.html" %}
 {% include "portal/_obrigacoes_da_convocacao.html" %}
-<p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+<p class="volta-da-convocacao"><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
+</div>
 
 {% else %}
 {% comment %}

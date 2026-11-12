@@ -1038,7 +1038,7 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 /* O cartão do documento da convocação (118, FR-3744). O estado vai no selo, em palavra; a borda e a
    cor só acompanham, e sobrevivem ao preto e branco pela palavra. O pendente ganha o fundo e a borda
    do aviso, que é onde a pessoa precisa agir. O cartão recebe o foco quando a âncora o alcança. */
-.cartao-do-documento>h3{margin:0 0 .25rem;font-size:1rem;overflow-wrap:anywhere}
+.cabeca-do-documento>h3{margin:0;font-size:1rem;overflow-wrap:anywhere;flex:1 1 12rem;min-width:0}
 .cartao-do-documento:focus{outline:3px solid var(--verde);outline-offset:2px}
 .cartao-do-documento.destaque{background:var(--amarelo-fundo);border-color:var(--amarelo);
   border-left:4px solid var(--amarelo)}
@@ -1077,15 +1077,90 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 .confirmacao-do-envio p{margin:0 0 .25rem}
 .confirmacao-do-envio p:last-child{margin-bottom:0}
 .confirmacao-do-envio:focus{outline:3px solid var(--verde);outline-offset:2px}
-/* O andamento (FR-3865): palavra e número, sem barra e sem percentual. */
+/* O andamento (FR-3865): palavra e número, sem barra e sem percentual. Um indicador por contagem,
+   o rótulo à esquerda e o número em destaque à direita, na ordem do texto "Rótulo: N". A moldura separa o que é da pessoa (âmbar, só quando há o que fazer) do que é da
+   comissão (neutra); o zero fica apagado, para que "0" não pese como resultado. */
 .andamento-da-convocacao>h2{margin:0 0 .35rem}
-.contagens-do-andamento{margin:0;padding-left:1.1rem;display:grid;gap:.2rem}
+.contagens-do-andamento{margin:0;padding:0;list-style:none;display:grid;gap:.4rem;
+  max-width:22rem}
+@media (min-width:40rem){
+  .contagens-do-andamento{grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));max-width:none}
+}
+.indicador-do-andamento{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  padding:.3rem .75rem;background:var(--branco);
+  border:1px solid var(--borda);border-left:4px solid var(--texto-fraco);border-radius:0 6px 6px 0;
+  line-height:1.3}
+.indicador-do-andamento strong{font-size:1.375rem;line-height:1.25}
+.rotulo-da-contagem{font-size:.875rem}
+.indicador-do-andamento.da-pessoa{border-left-color:var(--amarelo);background:var(--amarelo-fundo)}
+.indicador-do-andamento.da-comissao{border-left-color:var(--texto-fraco)}
+.indicador-do-andamento.zerada{border-left-color:var(--borda);background:var(--branco);color:var(--texto-fraco)}
+.indicador-do-andamento.zerada strong{font-weight:600}
 /* O Requerimento a preencher no bloco "O que falta", alvo da ação quando ele é a única tarefa. */
 .requerimento-a-preencher:focus{outline:3px solid var(--verde);outline-offset:2px}
 /* A recusa do envio no cartão do item (FR-3871), com o foco que `recusa.js` lhe dá. */
 .recusa-no-cartao{margin:.25rem 0 .5rem;font-weight:600}
 .recusa-no-cartao:focus{outline:3px solid var(--vermelho);outline-offset:2px}
 .dados-da-convocacao{max-width:var(--leitura)}
+/* A convocação com documento numa moldura só (polish de 12/11/2026). Até aqui cada bloco tinha a
+   medida de leitura e a página parava em ~600 px, com a metade direita vazia a 1280 px. A moldura vai
+   à largura das grades de cartão do portal; o texto corrido continua na medida de leitura, e só as
+   caixas — indicadores, cartões e dados do ato — usam o resto. A ordem do documento é a da FR-3859. */
+.pagina-da-convocacao{display:grid;grid-template-columns:minmax(0,1fr);gap:0 2.5rem;max-width:76rem}
+.pagina-da-convocacao>.bloco-da-convocacao{max-width:none;min-width:0}
+.pagina-da-convocacao>.bloco-da-convocacao>p{max-width:var(--leitura)}
+.volta-da-convocacao{margin:.5rem 0 0}
+/* Em tela larga, o andamento sobe para o lado da chamada: é o resumo do que a chamada conta, e lido
+   ao lado dela não empurra os cartões para a segunda tela. */
+@media (min-width:64rem){
+  .pagina-da-convocacao.com-andamento{grid-template-columns:minmax(0,var(--leitura)) minmax(16rem,1fr)}
+  .pagina-da-convocacao.com-andamento>*{grid-column:1/-1}
+  .pagina-da-convocacao.com-andamento>.chamada-da-convocacao{grid-column:1;grid-row:1}
+  .pagina-da-convocacao.com-andamento>.andamento-da-convocacao{grid-column:2;grid-row:1;
+    align-self:start;margin-top:2.1rem}
+  .pagina-da-convocacao.com-andamento .contagens-do-andamento{grid-template-columns:minmax(0,1fr);
+    max-width:20rem}
+}
+/* O resumo diz o estado (FR-3862), e é ele que a pessoa procura: ganha moldura. Com tarefa, a do
+   aviso, e logo abaixo a ação; sem tarefa, a do recebido — os envios dela estão feitos, e a frase
+   continua dizendo que a análise não terminou. Sem tarefa, o cartão do prazo perde o verde e fica
+   neutro: continua ali, com a data no maior texto (FR-3861), mas não chama para ato nenhum. */
+.resumo-da-chamada{padding:.6rem .9rem;border-left:4px solid var(--sucesso);
+  background:var(--sucesso-fundo);border-radius:0 6px 6px 0}
+.chamada-da-convocacao:has(.acao-da-chamada) .resumo-da-chamada{border-left-color:var(--amarelo);
+  background:var(--amarelo-fundo)}
+.chamada-da-convocacao:not(:has(.acao-da-chamada)) .cartao-do-prazo{border-left-color:var(--borda)}
+/* Os cartões em duas colunas a partir de 640 px — quando há mais de um; o cartão sozinho fica na
+   medida de leitura, e não espremido em meia tela —, da mesma altura por linha, e com as ações no pé:
+   a estrutura se repete de cartão para cartão, e o olho acha o botão no mesmo lugar. */
+@media (min-width:40rem){
+  .pagina-da-convocacao .requisitos-lista:has(>li+li){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+.pagina-da-convocacao .requisitos-lista>li:only-child{max-width:var(--leitura)}
+.pagina-da-convocacao .cartao-do-documento{display:flex;flex-direction:column;min-width:0}
+.cabeca-do-documento{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;
+  margin:0 0 .35rem}
+.cabeca-do-documento .selos{margin:0}
+.acoes-do-documento{display:flex;flex-direction:column;align-items:flex-start;gap:.25rem;
+  margin-top:auto;padding-top:.75rem}
+/* Ver o arquivo é ação de consulta: contorno, e não a faixa verde do tamanho do cartão. Substituir
+   vem embaixo, mais quieto ainda — link sublinhado, com alvo de toque de 44 px —, e aberto ocupa a
+   largura do cartão. */
+.ver-o-arquivo{display:inline-block;padding:.4rem .7rem;border:1px solid var(--verde-texto);
+  border-radius:4px;background:var(--branco);color:var(--verde-texto);font-weight:600;
+  font-size:.875rem;text-decoration:none}
+.ver-o-arquivo:hover{background:var(--verde-claro)}
+.acoes-do-documento details.envio-de-novo{margin:0;min-width:0;align-self:stretch}
+.acoes-do-documento details.envio-de-novo summary{width:fit-content;min-height:44px;
+  display:list-item;padding:.6rem 0;font-weight:600;font-size:.875rem;
+  text-decoration:underline;text-underline-offset:3px}
+.efeito-do-reenvio{margin:.25rem 0 0;font-size:.9375rem;max-width:var(--leitura)}
+/* Os dados do ato em grade de pares (FR-3740: visíveis, sem `details`). As frases tomam a linha. */
+dl.dados-do-ato-da-convocacao{grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:.75rem 1.5rem;
+  margin:0}
+.dados-do-ato-da-convocacao>div{min-width:0}
+dl.dados-do-ato-da-convocacao dd{margin:0}
+.dados-do-ato-da-convocacao .dado-longo{grid-column:1/-1;max-width:var(--leitura)}
 /* As convocações publicadas no GPS (149, FR-5721 a FR-5724). A seção é uma lista curta, uma linha por
    publicação: o número é o link, a natureza e a data vêm logo abaixo, e o documento fica à mão. A
    relação mora na página de cada publicação, que lista as pessoas sem tabela — em 375 px cada uma é

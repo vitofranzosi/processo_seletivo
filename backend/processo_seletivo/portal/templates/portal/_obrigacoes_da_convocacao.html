@@ -37,11 +37,16 @@ Toda frase de estado vem de `portal/obrigacoes.py`; o template so a coloca no bl
 O andamento conta so documentos obrigatorios, e sem o Requerimento (D-004): o Requerimento enviado
 nao fica "aguardando conferencia" no sentido da 115. Sem barra, sem percentual e sem frase de
 conclusao — "100 % enviado" leria como aprovado (FR-3865).
+
+**Um indicador por contagem, e o zero apagado.** Em lista, "A enviar: 0" pesava o mesmo que
+"Aguardando conferência: 4", e o olho lia três números sem saber qual importava. O que é da pessoa
+(a corrigir, a enviar) se separa do que é da comissão (aguardando, conferidos) pela moldura, e a
+palavra continua dizendo tudo: o texto é o mesmo "Rótulo: N" de antes.
 {% endcomment %}
 <section class="bloco-da-convocacao andamento-da-convocacao" id="andamento" aria-labelledby="bloco-andamento">
   <h2 id="bloco-andamento">Andamento</h2>
   <ul class="contagens-do-andamento">
-    {% for rotulo, numero in o.andamento %}<li>{{ rotulo }}: <strong>{{ numero }}</strong></li>{% endfor %}
+    {% for rotulo, numero in o.andamento %}<li class="indicador-do-andamento{% if rotulo == 'A corrigir' or rotulo == 'A enviar' %} da-pessoa{% else %} da-comissao{% endif %}{% if not numero %} zerada{% endif %}"><span class="rotulo-da-contagem">{{ rotulo }}:</span> <strong>{{ numero }}</strong></li>{% endfor %}
   </ul>
 </section>
 {% endif %}
@@ -85,14 +90,20 @@ conclusao — "100 % enviado" leria como aprovado (FR-3865).
 
 <section class="bloco-da-convocacao sobre-esta-convocacao" id="sobre-esta-convocacao" aria-labelledby="bloco-sobre">
   <h2 id="bloco-sobre">Sobre esta convocação</h2>
-  <dl class="campos">
-    <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
-    <dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada</dd>
-    {% include "portal/_comunicacao_da_convocacao.html" %}
-    {% if substituida %}<dt>Convocação substituída</dt><dd>{{ substituida }}</dd>{% endif %}
-    {% if convocacao.vencimento %}<dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd>{% endif %}
-    <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>
-    <dt>Atendimento</dt><dd>{% include "portal/_atendimento.html" %}</dd>
+  {% comment %}
+  Em grade de pares, e não numa coluna de rótulos e valores: os seis dados curtos ficam lado a lado
+  em tela larga, e o fundamento e a substituída, que são frases, tomam a linha inteira. Tudo
+  visível, sem `details` — é o ato que a pessoa tem direito de ler (FR-3740). O `div` que agrupa
+  `dt` e `dd` é o que o HTML admite dentro de `dl`.
+  {% endcomment %}
+  <dl class="campos dados-do-ato-da-convocacao">
+    <div><dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd></div>
+    <div><dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada</dd></div>
+    {% if enviada_em %}<div>{% include "portal/_comunicacao_da_convocacao.html" %}</div>{% endif %}
+    {% if substituida %}<div class="dado-longo"><dt>Convocação substituída</dt><dd>{{ substituida }}</dd></div>{% endif %}
+    {% if convocacao.vencimento %}<div><dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd></div>{% endif %}
+    <div class="dado-longo"><dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd></div>
+    <div><dt>Atendimento</dt><dd>{% include "portal/_atendimento.html" %}</dd></div>
   </dl>
 </section>
 {% endwith %}

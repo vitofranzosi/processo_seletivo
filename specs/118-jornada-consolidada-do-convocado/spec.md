@@ -637,10 +637,30 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   envio de arquivo da `115` e o cartão do Requerimento *a preencher*. Os opcionais a enviar
   — *a apresentar* ou *pendentes* — MUST vir no fim do bloco, sob o título de terceiro nível
   *"Opcional"*, com o mesmo envio, fora de qualquer contagem. Sem tarefa, o bloco tem só eles.
-- **FR-3739**: O bloco **O que você já apresentou** MUST conter, na ordem do Edital, os cartões com
+- **FR-3739** *(revista em 2026-11-12, por decisão do usuário no polish da tela da convocação — a redação anterior está ao fim desta alínea)*:
+  O bloco **O que você já apresentou** MUST conter, na ordem do Edital, os cartões com
   a comissão (o facultativo com o selo *"Opcional"*), depois os conferidos, e a linha do Requerimento
-  *enviado* (FR-3731). O cartão com a comissão MUST oferecer *"Enviar outro arquivo"* recolhido, como
-  a `115` já oferece, enquanto a chamada estiver aberta.
+  *enviado* (FR-3731). O cartão com a comissão MUST oferecer a substituição do arquivo recebido,
+  recolhida, enquanto a chamada estiver aberta, como a `115` já oferece:
+  - o controle recolhido diz *"Substituir o arquivo enviado"*, vem abaixo de *"Ver o arquivo
+    recebido"* e tem menos destaque visual do que ele, sem perder texto legível, alvo de toque nem
+    acesso por teclado;
+  - aberto, antes da escolha do arquivo, ele diz *"Envie um PDF completo. Ele substituirá o arquivo
+    atual na conferência. O anterior continuará registrado."* — o efeito da FR-3579 da `115`;
+  - o botão final do formulário diz *"Enviar novo arquivo"*.
+
+  O mesmo controle vale no cartão com correção pedida e arquivo recebido, onde já vem aberto. A
+  permissão de substituir não muda: continua a do comando da `115`, recusada depois da conferência,
+  do resultado ou do prazo.
+
+  *Por que mudou:* *"Enviar outro arquivo"* se lia como acrescentar um segundo arquivo ao documento
+  — no histórico escolar, que pede todas as páginas num arquivo só, como o jeito de mandar a página
+  que faltou —, e o botão repetido nos cartões enfraquecia a frase de que não havia nada a fazer.
+  Esconder a substituição até haver pendência foi descartado: tiraria da pessoa a correção espontânea
+  de um arquivo errado, e o servidor continuaria aceitando o envio.
+
+  > **Redação anterior, preservada:** O cartão com a comissão MUST oferecer *"Enviar outro
+  > arquivo"* recolhido, como a `115` já oferece, enquanto a chamada estiver aberta. O resto, igual.
 - **FR-3740** *(acrescida pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
   O bloco **Sobre esta convocação** MUST continuar visível, sem `details`: espécie,
   chamada, comunicação enviada em, vencimento registrado, fundamento e atendimento. É o ato que a
