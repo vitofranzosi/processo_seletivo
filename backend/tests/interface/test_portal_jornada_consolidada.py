@@ -316,13 +316,16 @@ def test_f_cada_botao_diz_o_nome_do_documento(fx, client):
         nome_acessivel(rotulo)
         for rotulo in re.findall(r'<label class="botao-arquivo"[^>]*>(.*?)</label>', pagina, re.S)
     ]
-    assert "Enviar: Histórico escolar do ensino médio" in enviar
+    # O histórico tem arquivo recebido e correção pedida: o envio dele é a substituição, e o botão
+    # o diz (FR-3739 da 118, revista em 12/11/2026). O comprovante nunca recebeu arquivo.
+    assert "Enviar novo arquivo: Histórico escolar do ensino médio" in enviar
     assert "Enviar: Comprovante de residência" in enviar
     assert len(enviar) == len(set(enviar)) and len(escolher) == len(set(escolher))
     assert all(":" in rotulo or " para " in rotulo for rotulo in escolher)
     for campo in re.findall(r'<input type="file"[^>]*>', pagina):
         descrito = re.search(r'aria-describedby="([^"]*)"', campo).group(1).split()
-        assert len(descrito) == 2
+        # A situação e o limite; na substituição, também a frase do efeito (FR-3739, revista).
+        assert len(descrito) in (2, 3)
         for alvo in descrito:
             assert f'id="{alvo}"' in pagina
 

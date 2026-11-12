@@ -218,8 +218,8 @@ possível. Enviar o diploma; depois, escolher o mesmo PDF no cartão do comprova
   "não feche esta página" já estava à vista.
 - **A pessoa volta pelo botão "voltar" do navegador depois do envio.** A página restaurada não deixa
   botão desabilitado nem aviso de envio à mostra (o cuidado que a `121` já tem com o envio de um).
-- **Cartão de "Enviar outro arquivo"**, dos documentos já apresentados, e cartão de documento
-  opcional. Contam como qualquer outro: com arquivo escolhido, entram no envio de vários.
+- **Cartão de "Substituir o arquivo enviado"** (até 12/11/2026, *"Enviar outro arquivo"*; FR-3739
+  da `118`, revista), dos documentos já apresentados, e cartão de documento opcional. Contam como qualquer outro: com arquivo escolhido, entram no envio de vários.
 - **Um cartão só tem envio possível.** Nada muda em relação a hoje.
 - **Escolher de novo um arquivo no mesmo cartão.** Troca a escolha; a contagem não muda.
 - **Um arquivo acima do limite no meio do lote** *(acrescentado em 2026-11-11, pela análise cruzada do
@@ -238,11 +238,17 @@ possível. Enviar o diploma; depois, escolher o mesmo PDF no cartão do comprova
 - **FR-5600**: Com script, nenhum envio iniciado na tela da convocação MUST descartar o arquivo
   escolhido em outro cartão sem que esse arquivo tenha sido enviado ou sem que a tela diga, no cartão
   dele, que não foi.
-- **FR-5601**: Com dois ou mais cartões com arquivo escolhido, o botão de enviar de **cada um desses
+- **FR-5601** *(revista em 2026-11-12 com a FR-3739 da `118` — a redação anterior está ao fim desta alínea)*:
+  Com dois ou mais cartões com arquivo escolhido, o botão de enviar de **cada um desses
   cartões** MUST dizer "Enviar os N documentos escolhidos", com o N corrente, e enviar todos eles.
-  Com exatamente um, o botão MUST dizer "Enviar" e enviar só aquele, como hoje.
+  Com exatamente um, o botão MUST dizer o rótulo próprio do cartão e enviar só aquele: "Enviar", ou
+  "Enviar novo arquivo" no cartão que substitui um arquivo recebido (FR-3739 da `118`, revista).
+
+  > **Redação anterior:** Com exatamente um, o botão MUST dizer "Enviar" e enviar só aquele, como
+  > hoje. O resto, igual.
 - **FR-5602**: O N MUST contar todos os cartões da tela com envio possível e arquivo escolhido — os
-  de "O que falta", os opcionais e os de "Enviar outro arquivo" dos já apresentados.
+  de "O que falta", os opcionais e os de substituição dos já apresentados (*"Substituir o arquivo
+  enviado"*, FR-3739 da `118`, revista; antes, *"Enviar outro arquivo"*).
 - **FR-5603**: Cada cartão com arquivo escolhido MUST oferecer "Remover a escolha", que volta o
   cartão a "Nenhum arquivo escolhido" e atualiza o N dos demais.
 - **FR-5604**: Com script, acionar o envio num cartão sem arquivo escolhido MUST NOT sair da página:
