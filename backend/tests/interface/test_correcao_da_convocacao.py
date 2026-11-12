@@ -330,9 +330,9 @@ class TestAPrevia:
         protocolo = Inscricao.objects.get(id=raiz.inscricao_id).protocolo
         identificar(client, "carlos", ["gestor"])
 
-        assert f"Corrigir a convocação de {protocolo}</button>" in formulario_de(
-            abrir(client, edital), raiz
-        )
+        # Desde a `159`, o botão diz também o reenvio e a publicação (FR-6803, FR-6816).
+        rotulo = f"Corrigir a convocação de {protocolo}, reenviar a mensagem e publicar</button>"
+        assert rotulo in formulario_de(abrir(client, edital), raiz)
 
     def test_o_ato_se_chama_corrigir_esta_convocacao(self, client, cenario, gestor):
         """`FR-3856`: os atos que não existem não aparecem como nome de ato."""

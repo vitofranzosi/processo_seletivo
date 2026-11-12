@@ -121,7 +121,8 @@ def test_a_conferencia_diz_quem_o_texto_o_prazo_e_quem_fica_de_fora(
     assert "Fica de fora (1)" in pagina
     assert f"{p['parada']['protocolo']} — {p['parada']['nome']}" in pagina
     assert "é suplente" in pagina
-    assert "Convocar as 2 e enviar 2 mensagens" in pagina
+    # Desde a `159`, o botão diz também a publicação da relação (FR-6803).
+    assert "Convocar as 2, enviar 2 mensagens e publicar a relação" in pagina
     assert "Cancelar e voltar" in pagina
     assert 'class="consequencias irreversivel"' in pagina
 
@@ -208,7 +209,10 @@ def test_por_publicacao_a_conferencia_nao_promete_envio(
 
     assert "Nenhuma mensagem sai neste ato" in pagina
     assert "Assunto:" not in pagina
-    assert "Convocar as 2</button>" in pagina
+    # Desde a `159`, um botão por veículo, nenhum presumido (FR-6808): o de fora do GPS não
+    # promete envio, e o do GPS publica.
+    assert "Convocar as 2 (a publicação será registrada depois)</button>" in pagina
+    assert "Convocar as 2 e publicar no GPS</button>" in pagina
     assert "enviar 2 mensagens" not in pagina
 
 
