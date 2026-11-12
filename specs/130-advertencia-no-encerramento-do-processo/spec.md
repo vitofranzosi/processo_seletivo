@@ -285,6 +285,8 @@ que a tela traz a lista nova; enviar de novo e conferir o encerramento.
   resultado definitivo não publicado e apuração desatualizada) e as que a `113` acrescenta sobre recurso
   (prazo de recurso em curso, prazo de recurso não declarado, recurso aguardando decisão, reavaliação e
   providência determinadas em recurso e pendentes).
+  *Revista pela `153` em 11/11/2026:* também a das inscrições aptas sem documentos disponibilizados
+  ao setor, que a confirmação do Edital passou a repetir do relatório (FR-6128 da `153`).
 - **FR-4352**: As situações do período de inscrições e das Retificações MUST NOT ser exibidas (D-002).
 - **FR-4353**: Todas as providências MUST ser exibidas como advertência, inclusive as que a `113` trata
   como impedimento de encerrar o Edital; nenhuma MUST impedir o encerramento do Processo (D-003).

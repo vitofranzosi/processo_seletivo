@@ -239,7 +239,8 @@ bytes entregues, e "emissão nº 1" e "nº 2" nos documentos.
   resultado definitivo vigente em alguma lista; marco sem nenhum resultado publicado; recurso
   aguardando admissibilidade ou julgamento; reavaliação determinada por recurso ainda não concluída; providência pendente de marco; apuração vigente com causa
   de desatualização; convocação sem desfecho com prazo em curso; convocação sem desfecho com prazo
-  encerrado.
+  encerrado. *Revista pela `153` em 11/11/2026:* também inscrição apta para formalização sem
+  documentos disponibilizados ao setor, do Edital inteiro e com a causa (FR-6127 da `153`).
 - **FR-2525**: O relatório de encerramento MUST dizer, junto da espécie, que não há providência
   pendente **registrada no GPS** e que atividades que o GPS não acompanha, como a matrícula, não estão
   refletidas nele. MUST NOT dizer que a seleção foi concluída.

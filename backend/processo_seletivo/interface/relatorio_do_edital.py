@@ -58,6 +58,7 @@ from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.portal.situacao import DESFECHOS
 from processo_seletivo.processos.application.pendencias_do_edital import (
+    APTAS_SEM_DISPONIBILIZACAO,
     APURACAO_DESATUALIZADA,
     CONVOCACAO_AGUARDANDO,
     CONVOCACAO_SEM_COMUNICACAO,
@@ -455,6 +456,8 @@ class Pendencia:
     marco: str = ""
     #: O prazo mais distante, na convocação aguardando resposta.
     ate: datetime | None = None
+    #: `((causa, quantas), …)` das pessoas aptas sem documentos disponibilizados (153, FR-6125).
+    detalhe: tuple = ()
 
     @property
     def publica(self):
@@ -800,6 +803,7 @@ def fatos_do_edital(edital, *, agora):
     pendencias.extend(pendencias_de_convocacao)
     if recursos_total.aguardando:
         pendencias.append(Pendencia(RECURSO_AGUARDANDO, None, recursos_total.aguardando))
+    pendencias.extend(_pendencia_da_passagem(edital))
 
     if edital.status == Edital.Status.CANCELADO:
         especie = INTERRUPCAO
@@ -898,7 +902,58 @@ def texto_da_pendencia(pendencia):
         )
     if pendencia.tipo == RECURSO_AGUARDANDO:
         return f"{n} {_plural(n, 'recurso aguarda', 'recursos aguardam')} decisão"
+    if pendencia.tipo == APTAS_SEM_DISPONIBILIZACAO:
+        return texto_da_passagem(n, pendencia.detalhe)
     raise ValueError(pendencia.tipo)
+
+
+#: O que falta, por causa, na frase do relatório e da confirmação de encerrar (153, FR-6125).
+FALTA_NA_PASSAGEM = {
+    "sem_definicao": "falta definir os documentos",
+    "sem_quem_receba": "falta designar quem recebe",
+    "a_exportar": "falta o setor exportar",
+}
+
+
+def texto_da_passagem(n, detalhe):
+    """ "2 inscrições aptas para formalização ainda sem documentos disponibilizados ao setor (…)".
+
+    **"Inscrições", e não "pessoas"**: a camada executiva do relatório não fala de pessoas (FR-2546
+    da `099`), e a confirmação de encerrar repete esta frase, por regra (FR-4351 da `130`). Sem
+    "encaminhado", "entregue" nem "recebido" (FR-6123): o GPS afirma só o que ele fez.
+    """
+    frase = (
+        f"{n} {_plural(n, 'inscrição apta', 'inscrições aptas')} para formalização ainda sem "
+        "documentos disponibilizados ao setor"
+    )
+    causas = [(FALTA_NA_PASSAGEM[causa], quantas) for causa, quantas in detalhe]
+    if len(causas) == 1:
+        return f"{frase} ({causas[0][0]})"
+    if causas:
+        partes = "; ".join(f"{quantas}, {falta}" for falta, quantas in causas)
+        return f"{frase} ({partes})"
+    return frase
+
+
+def _pendencia_da_passagem(edital):
+    """A pendência da passagem ao setor, pela regra única da `formalizacao` (153, FR-6127)."""
+    from processo_seletivo.formalizacao.application.passagem import da_passagem
+
+    passagem = da_passagem(edital)
+    if passagem is None or not passagem.total_pendentes:
+        return []
+    return [
+        Pendencia(
+            APTAS_SEM_DISPONIBILIZACAO,
+            None,
+            passagem.total_pendentes,
+            detalhe=passagem.causas,
+        )
+    ]
+
+
+#: As pendências ditas do Edital inteiro, sem Perfil: o recurso aguardando e a passagem ao setor.
+DO_EDITAL_INTEIRO = frozenset({RECURSO_AGUARDANDO, APTAS_SEM_DISPONIBILIZACAO})
 
 
 def redigir_pendencias(fatos):
@@ -913,7 +968,7 @@ def redigir_pendencias(fatos):
     nao_publicas = [
         (p.perfil_id, texto_da_pendencia(p))
         for p in fatos.pendencias
-        if not p.publica and p.tipo != RECURSO_AGUARDANDO
+        if not p.publica and p.tipo not in DO_EDITAL_INTEIRO
     ]
     if fatos.total_omitido:
         # Nem a quantidade: num Edital abaixo do limiar, quantas providências não públicas há já é
@@ -922,9 +977,7 @@ def redigir_pendencias(fatos):
             redigidas.append(f"providência pendente com {FRASE_DO_EDITAL}")
         return redigidas
     redigidas.extend(_redigir(nao_publicas, perfis, fatos.omitidos, fatos.complementares))
-    redigidas.extend(
-        texto_da_pendencia(p) for p in fatos.pendencias if p.tipo == RECURSO_AGUARDANDO
-    )
+    redigidas.extend(texto_da_pendencia(p) for p in fatos.pendencias if p.tipo in DO_EDITAL_INTEIRO)
     return redigidas
 
 
