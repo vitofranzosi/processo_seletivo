@@ -23,8 +23,9 @@ gravado direto, como `tests/integration/ocupacao/test_obsolescencia.py` já faz.
 - A **N-3** do levantamento deixa de ser "a verificar": está medida (V-1).
 - A **V-2** entra na decisão do usuário sobre o esgotamento: inabilitação é eliminação, e conta como
   ausência quando não cabe mais recurso.
-- A **V-3** é o que dá corpo à condição própria da reversão por saldo (FR-6305): a vaga que a faixa
-  da própria reserva ainda pode preencher não é saldo. Antes da `155`, era.
+- A **V-3** mostra o comportamento de hoje, e não o que o Edital autoriza: o usuário devolveu a
+  primeira leitura que a spec tirou dela (a faixa como critério). O confronto com o 57/2026 e o
+  35/2026 está na D-015 da spec, e os cenários que o tornam reproduzível estão abaixo.
 
 ## Como reproduzir
 
@@ -37,3 +38,32 @@ os `MovimentoDeVaga` com origem na PPI. Os quatro casos passaram em 8,8 s, com `
 
 A implementação da `155` transforma V-1 a V-4 em testes de integração com o resultado **novo** — e é
 por isso que este arquivo registra o antigo.
+
+## Os cenários da D-015 — reversão por saldo, como o 57/2026 e o 35/2026 a declaram
+
+**Pedidos pelo usuário em 11/11/2026**, para fundamentar a condição da reversão por saldo antes de
+fechá-la. Mesma fixture, com `reversao=` por saldo, `quantos=8`, `geral=1`, uma vaga na PPI e três
+autodeclarados PPI, todos habilitados. **Hoje** foi medido em 11/11/2026, sobre `666e01d1`, contra
+PostgreSQL, num arquivo exploratório não commitado, do mesmo jeito da V-3. As colunas das opções são o
+resultado esperado de cada opção da D-015; a implementação transforma a coluna da opção escolhida em
+teste de integração.
+
+| # | Cenário | Cláusula | Hoje (medido) | A2 (recomendada) | A1 | B | C |
+|---|---|---|---|---|---|---|---|
+| S-1 | Faixa com alvo 1 e excedente 2 (os três analisados); o titular desiste | 8.8 e 8.12 do 57/2026; 8.8 e 8.11 do 35/2026 | **cede 1 à ampla** (efetivas da PPI: 0) | nada cedido; o 2º autodeclarado é chamado | o mesmo | cede | nada cedido |
+| S-2 | Faixa com alvo 1 e excedente 0 (só o titular analisado); o titular desiste; os outros dois estão fora da faixa | 8.8; 8.13 e 8.14.1 do 57/2026 (8.12 e 8.13.1 do 35/2026) | **cede 1 à ampla** | nada cedido; o caminho é a chamada de suplentes, que os alcança | o mesmo | cede | **cede** |
+| S-3 | O S-2, e a administração encerra a chamada de suplentes da PPI por ato fundamentado no 8.14.1 (8.13.1) | 4.3 e 8.14.1 (4.3 e 8.13.1) | não há o ato | a destinação é oferecida, com o encerramento citado | não é oferecida enquanto houver autodeclarado na ordem | — | — |
+| S-4 | Um só autodeclarado, titular; ele desiste, e ninguém mais está na ordem da reserva | 4.3 | não medido; pela mesma conta do S-1, cede 1 à ampla na apuração seguinte, sem ato próprio | a destinação é oferecida por ato próprio | o mesmo | o mesmo | o mesmo |
+
+**Requisitos que sustentam o resultado esperado de A1 e A2**: FR-6304 (quem ainda pode ocupar pela
+reserva, dentro ou fora da faixa), FR-6305 (a condição do saldo, à espera da D-015), FR-6306 (a chamada
+em curso impede), FR-6307 (as espécies não se fundem) e FR-6308 a FR-6310 (o ato com fundamento e
+registro). O S-3 só existe na A2, e o ato de encerramento ganha requisito próprio quando ela for
+escolhida.
+
+**Medidos: S-1 e S-2.** O S-3 não tem ato hoje, e o S-4 segue a conta do S-1.
+
+**Como reproduzir S-1 e S-2**: os passos da V-3, com `cotistas_ppi=3` e `excedente=2` (S-1) ou
+`excedente=0` (S-2); a desistência é a exclusão do primeiro da ordem da PPI, que é quem a ocupa. Os dois
+passaram em 9,0 s, com `-n 0`; em ambos, a apuração seguinte devolveu `efetivas=0` e `reverteu=1`.
+

@@ -5,8 +5,9 @@
 **Created**: 2026-11-11
 
 **Status**: Draft para revisão — as dez perguntas foram respondidas pelo usuário em 11/11/2026 e
-viraram as decisões D-005 a D-014. Duas leituras desta spec sobre essas respostas, D-015 e D-016,
-esperam a confirmação dele na revisão do PR.
+viraram as decisões D-005 a D-014. A D-016 foi aprovada por ele em 11/11/2026. **A D-015 — a
+condição da reversão por saldo — está em aberto**: o confronto com as cláusulas do 57/2026 e do
+35/2026, pedido por ele, está na própria D-015, e a regra não fecha sem a escolha dele.
 
 **Input**: *"Escrever a spec para a destinação da vaga de cota sem concorrente. Não adote reversão
 automática nem declare a vaga não preenchida por padrão. Levante o que o sistema já permite e proponha
@@ -142,7 +143,7 @@ lei teria algo a dizer, nenhum texto escrito no ato a substitui para mover a vag
   noutro Edital pela `097`: o fato registrado aqui é o ponto de partida, e o ato de lá continua o de lá;
 - um documento PDF da destinação (D-013);
 - a pendência da `095` sobre a faixa da reservada que conta quem ocupa pela ampla: o corte continua
-  como está, e a D-015 só decide o que é saldo depois dele;
+  como está, e a D-015 só decide quando há saldo reversível;
 - o recurso contra o indeferimento da convocação, que a `115` deixou fora: enquanto ele não existir, o
   desfecho excludente é definitivo para esta spec.
 
@@ -161,21 +162,21 @@ seguinte e chamar a próxima da fila.
 **Why this priority**: é o caso em que o Edital já disse o que fazer, e hoje a vaga só chega à ampla
 como efeito da apuração da reservada, sem confirmação — e, por saldo, chega cedo demais (N-6).
 
-**Independent Test**: um Perfil com reversão por saldo, 1 vaga PPP e ninguém na faixa da reserva que
-ainda possa ocupá-la: o ato produz um registro com fundamento e quantidade, a soma das vagas efetivas
+**Independent Test**: um Perfil com reversão por saldo, 1 vaga PPP e a condição da D-015 cumprida: o ato produz um registro com fundamento e quantidade, a soma das vagas efetivas
 do Perfil não muda, e uma segunda confirmação idêntica não produz outro registro.
 
 **Acceptance Scenarios**:
 
-1. **Given** reversão por saldo e 1 vaga PPP sem ninguém na faixa que ainda possa ocupá-la, **When** a
+1. **Given** reversão por saldo e 1 vaga PPP com a condição da D-015 cumprida, **When** a
    presidência abre a ocupação, **Then** a tela diz a situação, a frase publicada e o ato, e nenhum
    outro ato para aquela vaga.
 2. **Given** o mesmo estado, **When** a presidência confirma, **Then** fica registrado quem, quando, a
    origem, o destino, a quantidade, o gatilho, a declaração do Edital lida e a versão dela, e a ampla
    mostra a causa da obsolescência.
 3. **Given** reversão por saldo e o ocupante da PPP desistiu, com outros dois autodeclarados
-   habilitados na faixa da reserva, **When** a apuração seguinte é emitida, **Then** nada é cedido, e a
-   tela leva à chamada da próxima da fila da reserva — o oposto do que acontece hoje (V-3).
+   habilitados na ordem da reserva, **When** a apuração seguinte é emitida, **Then** nada é cedido, e a
+   tela leva à chamada do autodeclarado seguinte — o oposto do que acontece hoje (V-3), e o que o item
+   8.8 do 57/2026 e do 35/2026 manda. Vale nas opções A1 e A2 da D-015; a opção B o inverte.
 4. **Given** reversão por esgotamento e uma pessoa da reserva com chamada em curso, **When** a
    presidência abre a ocupação, **Then** o ato não é oferecido, e a tela diz qual chamada o impede.
 5. **Given** a apuração da reservada emitida antes da `155`, que já cedeu a vaga, **When** a
@@ -241,7 +242,8 @@ cotista (V-3).
    destinação não é oferecida em nenhum dos dois gatilhos.
 7. **Given** por esgotamento, a faixa da reserva sem ninguém, mas autodeclarados fora dela e o Edital
    admitindo continuação, **When** a presidência abre a ocupação, **Then** a destinação não é oferecida,
-   e o caminho é a faixa seguinte; **Given** o mesmo por saldo, **Then** a destinação é oferecida.
+   e o caminho é a faixa seguinte. **O mesmo por saldo depende da D-015**: nas opções A1 e A2, também
+   não é oferecida enquanto a chamada de suplentes estiver aberta.
 
 ---
 
@@ -342,8 +344,8 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 
 ### Edge Cases
 
-- **Por saldo com parte da reserva ocupada**: 2 vagas PPP, 1 ocupada e ninguém mais na faixa. O ato
-  destina 1, e nunca mais que o saldo.
+- **Por saldo com parte da reserva ocupada**: 2 vagas PPP, 1 ocupada e a condição da D-015 cumprida
+  para a outra. O ato destina 1, e nunca mais que o saldo.
 - **Duas confirmações simultâneas**: um registro só; a segunda é recusada por falta de saldo.
 - **Movimento antigo e destinação nova**: a vaga que a apuração já cedeu antes da `155` conta como
   destinada, e o saldo sai das efetivas líquidas dela; nenhum caminho a destina de novo.
@@ -383,10 +385,11 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
   reserva, ninguém que ainda possa ocupar a vaga por ela. Ainda pode ocupar quem tem posição, não saiu
   por desfecho excludente, não ocupa pela ampla com aceite registrado e é alcançável — dentro da faixa
   vigente, ou fora dela quando o Edital admite continuação.
-- **FR-6305**: Na reversão **por saldo**, a condição MUST ser haver vagas da reserva a ocupar que
-  nenhuma chamada em curso cobre e que ninguém da faixa vigente da reserva ainda possa ocupar, pelos
-  critérios da FR-6304 restritos à faixa. Quem está fora da faixa MUST NOT impedir a reversão por
-  saldo (D-015).
+- **FR-6305** *(depende da D-015)*: Na reversão **por saldo**, a condição MUST ser a que a D-015
+  fixar, fundamentada nas cláusulas do Edital, e MUST NOT ser a faixa vigente só porque ela existe no
+  sistema. Em qualquer opção, a vaga MUST ser de quem ainda pode ocupá-la pela reserva enquanto a
+  chamada de suplentes daquela lista estiver aberta, como mandam os itens 8.8 e 8.11 a 8.13 do
+  35/2026 e os correspondentes do 57/2026 — salvo a opção B.
 - **FR-6306**: Nos dois gatilhos, a destinação MUST ser impedida enquanto: o resultado do marco não
   for definitivo; houver prazo recursal aberto ou recurso pendente sobre o marco, ou sobre a eliminação
   ou a inabilitação de alguém da ordem da reserva; houver chamada em curso para a reserva; alguém da
@@ -426,9 +429,11 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 
 - **FR-6317**: O passo Perfis MUST admitir uma terceira resposta à pergunta da reversão: *"Passa antes
   por outras cotas, na ordem do Edital"*, conteúdo publicado e retificável como as outras duas (FR-249
-  e FR-250 da `016`), com frase própria no documento do Edital.
-- **FR-6318**: Com essa resposta, nenhum ato desta spec MUST mover a vaga nem declará-la não
-  preenchida; a tela MUST dizer que o Edital manda passar por outras cotas antes da ampla e que o GPS
+  e FR-250 da `016`), com frase própria no documento do Edital. Os Editais já publicados MUST
+  continuar lidos pela declaração que publicaram; a troca para a terceira resposta MUST ser por
+  Retificação.
+- **FR-6318**: Com essa resposta, nenhum ato desta spec MUST mover a vaga, declará-la não preenchida
+  ou presumir a ordem entre cotas; a tela MUST dizer que o Edital manda passar por outras cotas antes da ampla e que o GPS
   ainda não aplica essa ordem.
 - **FR-6319**: A passagem entre cotas MUST continuar sem aplicação até a spec própria
   ([encaminhamento](../../doc/encaminhamento-passagem-entre-cotas.md)).
@@ -543,8 +548,8 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 - **SC-2103**: Nenhum movimento de vaga nem declaração de não preenchida nasce sem confirmação própria:
   zero, conferido varrendo os caminhos de gravação.
 - **SC-2104**: Os cenários V-1 a V-4 da [verificação](verificacao-do-levantamento.md) passam a dar o
-  resultado da US3: destinação oferecida em V-1, V-2 (sem recurso) e V-4 (com aceite); nada cedido em
-  V-3 enquanto houver autodeclarado habilitado na faixa.
+  resultado da US3: destinação oferecida em V-1, V-2 (sem recurso) e V-4 (com aceite); e os cenários
+  S-1 a S-4 dão o resultado da opção da D-015 escolhida.
 - **SC-2105**: Num Edital com cota sem inscrito no marco por pontuação, as confirmações dedicadas à
   lista vazia caem de três para uma, e nenhuma linha de candidato é registrada para ela.
 - **SC-2106**: A soma das vagas efetivas por recorte de um Perfil é a mesma antes e depois de toda
@@ -693,30 +698,69 @@ seleção e relatório, com origem, destino, quantidade e fundamento.
 *Decisão do usuário, 11/11/2026 (décima pergunta, opção a).* Sob as mesmas verificações, nunca
 automaticamente.
 
-### D-015 — O saldo é o que a faixa da reserva não preenche *(leitura desta spec, a confirmar na revisão)*
+### D-015 — Quando há saldo reversível *(em aberto: a escolha é do usuário)*
 
-A `016` define a reversão por saldo como *"a quantidade não preenchida, ainda que a lista tenha
-gente"*. A medição V-3 mostrou o que essa leitura, aplicada a cada apuração, faz: depois de uma
-desistência, a vaga vai à ampla com dois autodeclarados habilitados na faixa da reserva, que a fila
-chamaria. Esta spec lê a decisão do usuário — *"por saldo, aplicar a condição própria dessa
-modalidade"* e *"chamadas em curso"* como impedimento — assim: **saldo é a vaga da reserva que ninguém
-da faixa vigente da reserva pode mais ocupar**. Quem está fora da faixa não impede (é o que distingue
-o saldo do esgotamento, que olha a ordem toda quando o Edital admite continuação). Alternativa
-recusada: manter a conta da `016` como está, que tira vaga de cotista na primeira desistência.
+**Estado.** A primeira leitura desta spec — *"o saldo é o que a faixa da reserva não preenche"* — foi
+devolvida pelo usuário em 11/11/2026: *"O teste comprova o comportamento atual; sozinho, não demonstra
+qual destinação o Edital autoriza. […] Não transforme a faixa em critério normativo universal apenas
+porque ela existe no sistema."* Ele pediu o confronto com as cláusulas publicadas do 57/2026 e do
+35/2026, que declaram reversão por saldo. O confronto está abaixo, e **não sustenta a faixa**. Os
+cenários reproduzíveis estão na [verificação](verificacao-do-levantamento.md), S-1 a S-4.
 
-### D-016 — O Edital declara a passagem entre cotas como terceira resposta *(leitura desta spec, a confirmar na revisão)*
+**As cláusulas.** Os dois Editais têm a mesma redação; a numeração do 57/2026 vem primeiro, a do
+35/2026 entre parênteses.
 
-Para "não oferecer reversão direta à ampla quando o Edital exige destinos intermediários", a tela
-precisa saber que ele os exige, e o único lugar confiável é o conteúdo publicado. Ler o texto livre do
-Edital, ou o fundamento normativo da Modalidade, seria casar nome por escrito, que a `016` e a `025`
-recusaram. A spec acrescenta, por isso, uma terceira resposta à pergunta que já existe (FR-6317) — sem
-campo novo, sem a ordem dos destinos, que é da spec própria. Custo aceito: a frase no documento do
-Edital e a entrada no catálogo de Retificação, que a resposta herda das outras duas.
+| Pergunta | O que os Editais dizem | Leitura |
+|---|---|---|
+| Quando há saldo reversível | 4.3 (4.3): *"Na hipótese do não preenchimento total das vagas destinadas às ações afirmativas (PPI e PcD), o quantitativo de vagas será destinado para a respectiva ampla concorrência."* | O gatilho é o **não preenchimento**, e não a ausência de aprovados (que é a redação do 28/2026). O texto não diz quando o não preenchimento se apura. |
+| Como a vaga se preenche antes disso | 8.3 (8.3): indeferido o sorteado, *"haverá a análise da documentação do próximo candidato classificado, respeitando-se a ordem do sorteio, até que se preencha o número total de vagas"*. 8.6 (8.6): sem deferimento, *"a vaga será disponibilizada para o próximo candidato habilitado"*. | O preenchimento percorre a **ordem**, um a um, até as vagas. Nenhuma das duas cláusulas para numa faixa. |
+| Desistência com candidatos ainda disponíveis | 8.8 (8.8): *"Caso um candidato sorteado em vaga reservada desista de realizar o curso, a vaga será preenchida pelo candidato autodeclarado sorteado e classificado imediatamente após este"*. 8.12 (8.11): *"haverá chamada de suplentes dos próximos candidatos habilitados, conforme a ordem de classificação do sorteio"*. | A vaga reaberta é do **autodeclarado seguinte**. Reverter nesse momento contraria o 8.8 — é o que o sistema faz hoje (V-3). |
+| Habilitados dentro e fora da faixa vigente | 8.13 (8.12): *"haverá a análise dos documentos de até 20 (vinte) [15 (quinze), no 35] suplentes para chamada imediata"*. 8.14.1 (8.13.1): *"A chamada de suplentes será realizada conforme o interesse da administração, levando em consideração a necessidade e disponibilidade de vagas."* 10.2 (10.2): a administração *"poderá"* chamar os indeferidos para regularizar. | Os 20 (15) são **capacidade de análise para a chamada imediata**, e não limite de quem pode ocupar: quem está além deles continua na ordem, e a chamada de suplentes os alcança. O que encerra a chamada é decisão da administração, e não a faixa. |
+
+**O que o confronto sustenta.** A faixa vigente não tem apoio no texto. O que distingue o saldo do
+esgotamento, nestes dois Editais, é o **motivo** do não preenchimento: a vaga pode deixar de ser
+preenchida porque a ordem da reserva acabou (que é também o esgotamento), ou porque a administração
+encerrou a chamada de suplentes daquela lista, com gente ainda na ordem (8.14.1). Só o saldo admite o
+segundo motivo. O esgotamento do 28/2026 (*"havendo ausência de candidatos aprovados na reserva"*) não
+o admite: enquanto houver aprovado, não há ausência.
+
+**As opções.**
+
+| Opção | Saldo reversível quando | Após desistência com autodeclarado disponível | Distingue de esgotamento? | Fundamento |
+|---|---|---|---|---|
+| **A2 (recomendada)** | a ordem da reserva não tem mais quem possa ocupar (FR-6304), **ou** a chamada de suplentes daquela lista foi encerrada por ato próprio, com fundamento no item do Edital que dá a decisão à administração | o autodeclarado seguinte é chamado; nada é cedido enquanto a chamada estiver aberta | sim, pelo segundo motivo | 4.3, 8.3, 8.6, 8.8, 8.12 a 8.14.1 do 57/2026 e os correspondentes do 35/2026 |
+| A1 | só quando a ordem da reserva não tem mais quem possa ocupar | o mesmo | não, nestes Editais: as condições coincidem, e a diferença fica só na declaração | 4.3, 8.3, 8.6, 8.8, 8.12 |
+| B | como a `016` faz hoje: a cada apuração, a vaga não ocupada naquele momento | a vaga vai à ampla (V-3) | sim | a definição da `016` (*"ainda que a lista tenha gente"*); **contraria o 8.8** |
+| C | a primeira leitura desta spec: ninguém da faixa vigente pode ocupar | o autodeclarado da faixa é chamado; o de fora dela, não | sim, pela faixa | nenhum: as cláusulas não falam de faixa |
+
+**Recomendação: A2.** É a única que guarda a diferença entre as duas espécies com apoio no texto. O
+encerramento da chamada de suplentes seria um ato a mais, com "Confira antes", fundamento — o item do
+Edital — e registro, e os impedimentos da FR-6306 continuariam valendo. Com A1, a FR-6305 passa a
+remeter à FR-6304; com B, a US1.3, a US3.7 e a medição V-3 ficam como hoje; com C, a FR-6305 volta à
+redação da primeira leitura.
+
+**Os requisitos que sustentam o resultado esperado** (A1 ou A2): FR-6304 (quem ainda pode ocupar),
+FR-6306 (a chamada em curso impede), FR-6307 (as espécies não se fundem), FR-6308 a FR-6310 (o ato
+com fundamento) e, só na A2, o ato de encerramento da chamada de suplentes, que ganha requisito
+próprio quando a opção for escolhida.
+
+### D-016 — O Edital declara a passagem entre cotas como terceira resposta
+
+*Proposta desta spec, aprovada pelo usuário em 11/11/2026:* *"D-016 aprovada: inclua a declaração
+«Passa antes por outras cotas, na ordem do Edital». Ela deve impedir a reversão direta à ampla e
+explicar a limitação atual. Não executa movimentos nem presume a ordem entre cotas. Preserve a leitura
+dos Editais já publicados; alterações posteriores seguem por Retificação."*
+
+Para recusar a reversão direta onde o Edital exige destinos intermediários, a tela precisa saber que
+ele os exige, e o único lugar confiável é o conteúdo publicado. Ler o texto livre do Edital, ou o
+fundamento normativo da Modalidade, seria casar nome por escrito, que a `016` e a `025` recusaram. A
+terceira resposta entra na pergunta que já existe (FR-6317), sem campo novo e sem a ordem dos destinos,
+que é da spec própria. Custo aceito: a frase no documento do Edital e a entrada no catálogo de
+Retificação, herdadas das outras duas respostas.
 
 ## Achados fora do escopo (registro)
 
 - **Um Edital do corpus cita a Lei nº 12.990/2014 ao lado da Lei nº 15.142/2025**; se a citação ainda é
   a correta é questão do Edital, não do sistema.
-- **A faixa da reservada que conta quem ocupa pela ampla** (pendência da `095`) continua aberta, e a
-  V-3 a agrava: a D-015 impede a reversão por saldo antes da faixa acabar, mas não muda o tamanho da
-  faixa.
+- **A faixa da reservada que conta quem ocupa pela ampla** (pendência da `095`) continua aberta. A
+  D-015, em qualquer opção, não muda o tamanho da faixa.
