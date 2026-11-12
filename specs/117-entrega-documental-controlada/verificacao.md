@@ -174,3 +174,27 @@ ocupação; isolado, ele passou quatro de quatro, e na rodada anterior a suíte 
   resposta (`cv::test_o_cliente_que_desconecta_fecha_o_temporario_e_o_registro_continua`) e pela
   conexão fechada soltando a trava (`cv::test_a_conexao_fechada_solta_a_trava`), e não matando um
   gunicorn de verdade: isso é o item 4 do roteiro da VM.
+
+## Revisão de 12/11/2026 — a presidência também designa (D-025)
+
+**No navegador, com dados sintéticos** (banco próprio `ps_117pres_dev`, `seed_demo` e duas pessoas
+fictícias com o papel Formalização, *Rui Registro* e *Bia Coordenação*; Edital 51/2026 de
+demonstração, presidido por `paulo.presidente`):
+
+1. Como presidência, a seção "Quem acessa os documentos" mostra a frase de que designar não dá
+   acesso aos documentos, a escolha entre as duas pessoas com o papel, os dois Perfis do Edital e o
+   motivo. Rui designado só em *Professor de Informática*: a seção confirma e lista a designação com
+   o Perfil, a data e a autoria (`capturas/revisao-1211-presidencia-designou-1280.jpg`).
+2. A segunda designação de Rui volta à seção com a frase do domínio, "Esta pessoa já está designada
+   para este Edital…" (`capturas/revisao-1211-recusa-ja-vigente-1280.jpg`).
+3. A revogação, com motivo, volta à seção com a confirmação, e a lista fica vazia.
+4. Na trilha, os dois eventos têm a base `comissao:presidir`, o autor, a unidade e o motivo.
+5. A presidência que acabou de designar recebe **403** na página do setor do mesmo Edital
+   (FR-6704).
+6. Como gestor com `comissao:gerir` e sem presidir, a seção diz "só para leitura", sem formulário; o
+   POST forjado recebe **403**, com a frase que nomeia as duas bases: *"…depende da permissão de
+   conceder e revogar os acessos da unidade ou da presidência deste Processo — cada uma basta
+   sozinha…"*.
+7. A 375 px, a seção cabe sem rolagem horizontal (`scrollWidth` igual a 375), com o "Revogar"
+   abaixo do motivo (`capturas/revisao-1211-presidencia-375.jpg`). O console mostra só o 403
+   esperado do passo 5, sem violação de CSP.
