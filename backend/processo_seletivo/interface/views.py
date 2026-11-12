@@ -5598,9 +5598,7 @@ OPERACOES = {
     # A vaga acrescida depois da publicação e o ato que a desfaz (097).
     "OCUPACAO_ACRESCENTAR_VAGAS": "Acréscimo de vagas depois da publicação",
     "OCUPACAO_DESFAZER_ACRESCIMO": "Desfazimento de vaga acrescida",
-    # A destinação da vaga reservada sem quem a ocupe (155, FR-6341).
-    "OCUPACAO_DESTINAR_VAGA": "Destinação de vaga à ampla concorrência",
-    "OCUPACAO_DESFAZER_DESTINACAO": "Desfazimento de destinação de vaga",
+    # A vaga não preenchida e o desfazimento dela (155, FR-6341).
     "OCUPACAO_DECLARAR_NAO_PREENCHIDA": "Declaração de vaga não preenchida",
     "OCUPACAO_DESFAZER_NAO_PREENCHIDA": "Desfazimento de declaração de vaga não preenchida",
     "OCUPACAO_DESFAZIMENTO_IMPEDIDO": "Pedido de desfazimento recusado por pessoa chamada",
@@ -8485,7 +8483,7 @@ def ocupacao(request, edital_id, marco_id):
     perfil_id = _perfil_do_marco(edital, marco_id)
     recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
     _com_o_acrescimo(edital, perfil_id, recortes)
-    # A vaga reservada sem quem a ocupe, com a mesma conta do Centro e da convocação (155, R-008).
+    # A vaga sem quem a ocupe, com a mesma conta do Centro e da convocação (155, R-008).
     destinacao_da_vaga.anotar_recortes(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, recortes=recortes
     )
@@ -8516,10 +8514,9 @@ def ocupacao(request, edital_id, marco_id):
                 # numa tela que se anuncia somente leitura, e trocar o beco sem saída por um beco
                 # sinalizado não é ganho.
                 "pode_retificar": ator.can("retificacao:elaborar"),
-                # O caminho da Retificação no Edital silente (155, FR-6321): o predicado da ação
-                # "Retificar" do Edital, que inclui a fase.
-                # A fase admite a Retificação (155, FR-6321); quem pode praticá-la é outra pergunta,
-                # e a tela nomeia o caminho mesmo para quem não o pratica.
+                # O caminho da Retificação no Edital silente (155, FR-6321): a fase a admite; quem
+                # pode praticá-la é outra pergunta, e a tela nomeia o caminho mesmo para quem não o
+                # pratica.
                 "retificacao_admitida": edital.status == "PUBLICADO",
                 # A chave nasce no GET pela razão que o corte já registra: gerada a cada POST, um
                 # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
@@ -10754,10 +10751,6 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
             raise Http404 from recusa
         raise
     projecao = compor_divulgacao(ato)
-    # As listas sem concorrente do marco que saem junto (155, FR-6330): listadas e assinadas.
-    from processo_seletivo.interface.lista_sem_concorrente import acompanhantes_da_previa
-
-    acompanhantes = acompanhantes_da_previa(edital=edital, marco_id=marco_id, ato=ato)
     return marcar_como_privada(
         render(
             request,
@@ -10789,12 +10782,8 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 "sucede": sucede,
                 "naturezas": _naturezas_oferecidas(sucede),
                 "escolha_da_autoridade": _escolha_da_autoridade(edital),
-                "acompanhantes": acompanhantes["itens"],
                 "confirmacao_da_previa": assinatura_da_previa(
-                    ato=ato,
-                    publicacao_anterior=sucede,
-                    projecao=projecao,
-                    acompanhantes=acompanhantes["candidatas"],
+                    ato=ato, publicacao_anterior=sucede, projecao=projecao
                 ),
                 # O campo da declaração só existe onde ela é exigida: onde há janela computável o
                 # sistema verifica, e oferecer o campo ali ensinaria a preenchê-lo sempre (FR-086).
@@ -10845,8 +10834,6 @@ def publicar_resultado(request, edital_id, marco_id, ato_id):
             # não há janela computável (FR-085, FR-086). O comando decide se ela é exigida, se é
             # recusada ou se é gravada — a tela apenas a transporta.
             declaracao_de_encerramento=request.POST.get("declaracao_de_encerramento", ""),
-            # A prévia listou e assinou as listas sem concorrente do marco (155, FR-6330).
-            com_as_listas_sem_concorrente=True,
         )
     except DomainError as recusa:
         if recusa.status == 404:

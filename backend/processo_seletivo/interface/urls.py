@@ -9,13 +9,12 @@ from processo_seletivo.interface import (
     duvidas,
     inscricoes_publicadas,
     kit_de_divulgacao,
-    lista_sem_concorrente,
     prototipo_do_assistente,
     relatorio,
     trilha_da_unidade,
     unidades,
     views,
-    views_da_destinacao,
+    views_da_nao_preenchida,
     views_formalizacao,
 )
 
@@ -556,14 +555,6 @@ urlpatterns = [
         views.emitir_ordenacao,
         name="emitir-ordenacao",
     ),
-    # A lista em que ninguém concorre, num gesto: a ordem vazia e o corte vazio, com uma
-    # conferência (155, FR-6328). O GET abre a conferência — é por link que a providência do
-    # andamento chega aqui —, e o POST confirmado pratica o gesto.
-    path(
-        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/lista-sem-concorrente",
-        lista_sem_concorrente.registrar,
-        name="registrar-lista-sem-concorrente",
-    ),
     # A leitura de um corte pela identidade dele, sucedido ou vigente (014, UX-024). Pende do
     # Edital, e não do marco: o corte histórico continua legível depois de a Retificação remover o
     # marco da versão vigente, e exigir o marco na rota a tornaria inalcançável justamente aí.
@@ -620,28 +611,16 @@ urlpatterns = [
         views.desfazer_acrescimo_view,
         name="desfazer-acrescimo",
     ),
-    # A destinação da vaga reservada sem quem a ocupe à ampla concorrência (155, FR-6308). Pende da
-    # ocupação, onde a situação é dita, e tem os dois passos na mesma rota, como o acréscimo.
-    path(
-        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/destinar-vaga",
-        views_da_destinacao.destinar_vaga,
-        name="destinar-vaga",
-    ),
-    # A declaração de vaga não preenchida e os desfazimentos (155, FR-6323, FR-6334), na mesma
-    # forma de dois passos.
+    # A declaração de vaga não preenchida e o desfazimento dela (155, FR-6323, FR-6334). Pendem da
+    # ocupação, onde a situação é dita, e têm os dois passos na mesma rota, como o acréscimo.
     path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/declarar-nao-preenchida",
-        views_da_destinacao.declarar_nao_preenchida,
+        views_da_nao_preenchida.declarar_nao_preenchida,
         name="declarar-nao-preenchida",
     ),
     path(
-        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-destinacao",
-        views_da_destinacao.desfazer_destinacao,
-        name="desfazer-destinacao",
-    ),
-    path(
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-nao-preenchida",
-        views_da_destinacao.desfazer_nao_preenchida,
+        views_da_nao_preenchida.desfazer_nao_preenchida,
         name="desfazer-nao-preenchida",
     ),
     # O histórico de um recorte (016, FR-259). O caminho **carrega** o marco, como a leitura, e o

@@ -117,12 +117,6 @@ _DIVULGADO_POR_NATUREZA = {"PRELIMINAR": PRELIMINAR, "DEFINITIVA": DEFINITIVO}
 #: ler que ninguém se inscreveu. É o que a tela da ordenação diz: "Ninguém concorreu por este
 #: recorte" (a revisão do PR #441).
 NOTA_DA_LISTA_VAZIA = "lista em que ninguém concorre"
-#: A nota da célula da ordem vazia no indicador do marco (`conducao_do_marco._celula_da_ordem`).
-NINGUEM_CONCORREU_NA_ORDEM = "ninguém concorreu"
-#: O resultado da lista em que ninguém concorreu, que sai junto do de outra lista (155, FR-6330).
-SAI_JUNTO_DO_MARCO = (
-    "ninguém concorreu nesta lista: o resultado dela sai junto da publicação do resultado do marco"
-)
 ATO_DA_ORDEM_VAZIA = "Emitir a ordem que declara que ninguém concorreu nesta lista"
 ATO_DAS_ORDENS_VAZIAS = "Emitir as ordens que declaram que ninguém concorreu nestas listas"
 ATO_DA_SUCESSORA_VAZIA = "Emitir a ordem sucessora, que declara que ninguém concorreu nesta lista"
@@ -778,14 +772,12 @@ def situacao_da_ordem(f):
             else f"a ordem lê {_lista_de_nomes(faltam)}, que ainda não estão feitas",
         )
     if vazia:
-        # **O link leva ao gesto** (155, FR-6328; FR-4671 da `135`, revista): a ordem vazia e o
-        # corte vazio numa conferência, e não mais a tela da ordenação, que pedia três atos.
         return _c(
             PENDENTE,
             natureza=ORDEM,
             ato=ATO_DA_ORDEM_VAZIA,
             responsavel=CONDUZ,
-            url=f.get("url_do_gesto") or url,
+            url=url,
             nota=NOTA_DA_LISTA_VAZIA,
             lista_vazia=True,
         )
@@ -1073,17 +1065,6 @@ def _situacao_do_resultado(f, divulgado):
             razao="a ordem vigente está para trás: o ato sucessor vem antes de divulgar",
         )
     afericao = f.get("afericao")
-    junto = bool(f.get("junto_do_marco")) and divulgado != DEFINITIVO and estado != "obsoleto"
-    if junto and (afericao is None or afericao.get("nivel") != p.IMPEDIMENTO):
-        # **A lista em que ninguém concorreu não é providência própria** (155, FR-6330, R-006): a
-        # prévia da publicação de outra lista do marco a lista e a publica junto, como «ninguém
-        # concorreu». A célula diz isso, e não manda o Publicador a uma segunda publicação.
-        return _c(
-            DEPOIS,
-            natureza=RESULTADO,
-            nota=nota,
-            razao=SAI_JUNTO_DO_MARCO,
-        )
     if estado != "feito" and afericao and afericao.get("nivel") == p.IMPEDIMENTO:
         return _c(
             IMPEDIDO,
@@ -1299,9 +1280,9 @@ def situacoes_da_convocacao(f):
             and f.get("com_quadro")
             and f.get("continuacao_admitida", True)
             # **Com a ordem inteira lida e ninguém livre que ainda possa ocupar, a faixa seguinte
-            # não alcança ninguém** (155, FR-6304, UX-602): o caminho é a destinação — disponível,
-            # ou impedida pelo fato que a tela nomeia —, e um ato por caminho. Oferecer a faixa ali
-            # mandaria pedir uma faixa vazia.
+            # não alcança ninguém** (155, FR-6304, UX-602): a situação da vaga diz o caminho — a
+            # declaração de não preenchida, o impedimento dela, ou a reversão que a apuração aplica
+            # —, e um ato por caminho. Oferecer a faixa ali mandaria pedir uma faixa vazia.
             and not f.get("vaga")
         ):
             providencias.append(
@@ -1336,9 +1317,9 @@ def situacoes_da_convocacao(f):
             )
         )
     vaga = f.get("vaga") or {}
-    # **O ato que a vaga pede**: a destinação, onde o Edital declara a reversão, ou a declaração de
-    # não preenchida, no Edital silente e na linha geral (155, FR-6321, D-014).
-    ato_da_vaga = vaga.get("ato") or "Destinar à ampla concorrência"
+    # **O ato que a vaga pede**: a declaração de não preenchida, no Edital silente e na linha geral
+    # (155, FR-6321, D-014). Onde o Edital declara a reversão, nenhum: ela é da apuração.
+    ato_da_vaga = vaga.get("ato") or "Declarar a vaga não preenchida"
     if not providencias and sem_chamada and not titulares and vaga.get("disponivel"):
         # **O caminho disponível, e não "impedida"** (155, UX-602): ninguém mais pode ocupar a
         # vaga, e nada impede — o ato próprio, na ocupação, com a conferência antes.
@@ -1367,6 +1348,21 @@ def situacoes_da_convocacao(f):
                     url=f.get("url_da_retificacao") or "",
                 )
             )
+    elif not providencias and sem_chamada and not titulares and vaga.get("reversao"):
+        # **A reversão que a apuração aplica, e nenhum ato** (155, FR-6303, FR-6327): a frase diz
+        # por que a vaga ainda não saiu e qual é o próximo passo, no lugar do "não há mais quem
+        # chamar", que mandaria procurar um ato que esta entrega não tem.
+        providencias.append(
+            _c(
+                IMPEDIDO,
+                natureza=CONVOCACAO,
+                ato="Ocupar a vaga",
+                responsavel=CONDUZ,
+                razao=_frase(vaga["frase"]),
+                url=f.get("url_da_ocupacao") or url,
+                ate=next((i.get("ate") for i in vaga["impedimentos"] if i.get("ate")), None),
+            )
+        )
     elif not providencias and sem_chamada and not titulares and vaga.get("impedimentos"):
         # **O impedimento nomeado** (155, UX-602, FR-6303): qual fato impede o ato, e até quando,
         # quando há data — e não "não há mais quem chamar", que só dizia o sintoma.
@@ -1379,19 +1375,6 @@ def situacoes_da_convocacao(f):
                 razao="; ".join(i["frase"] for i in vaga["impedimentos"]),
                 url=f.get("url_da_ocupacao") or url,
                 ate=next((i.get("ate") for i in vaga["impedimentos"] if i.get("ate")), None),
-            )
-        )
-    elif not providencias and sem_chamada and not titulares and vaga.get("limitacao"):
-        # **A passagem entre cotas: a limitação, e nenhum ato** (155, FR-6318, UX-603). Dita como
-        # limite do GPS, no lugar do "não há mais quem chamar", que mandaria procurar um ato.
-        providencias.append(
-            _c(
-                IMPEDIDO,
-                natureza=CONVOCACAO,
-                ato="Ocupar a vaga",
-                responsavel=CONDUZ,
-                razao=_frase(vaga["frase"]),
-                url=f.get("url_da_ocupacao") or url,
             )
         )
     if not providencias and sem_chamada and not titulares:
@@ -2133,26 +2116,11 @@ class _Leitor:
                     if vazias is None:
                         vazias = self._listas_vazias(perfil, marco)
                     vazia = chave in vazias
-                ordem = situacao_da_ordem(
-                    {
-                        "celula": ordenar,
-                        "faltam": faltam,
-                        "vazia": vazia,
-                        "url_do_gesto": reverse(
-                            "interface:registrar-lista-sem-concorrente",
-                            args=[self.edital.id, str(marco.get("id"))],
-                        )
-                        + f"?lista={lista}"
-                        if vazia and estado == "falta" and ordenar.get("url")
-                        else "",
-                    }
-                )
+                ordem = situacao_da_ordem({"celula": ordenar, "faltam": faltam, "vazia": vazia})
                 derivadas = {ORDEM: ordem}
             # **O resultado antes do corte** (133, FR-4541): a espera do corte lê a mesma aferição
             # da definitiva que a célula do resultado leu.
-            resultado, definitiva = self._resultado(
-                marco, lista, celulas.get("publicar"), ordem, por_lista=por_lista
-            )
+            resultado, definitiva = self._resultado(marco, lista, celulas.get("publicar"), ordem)
             if CORTE in pontos:
                 corte = celulas.get("cortar") or {}
                 # **Só pergunta quando o corte seria providência** (141, FR-4843): com a ordem à
@@ -2371,15 +2339,13 @@ class _Leitor:
 
     # --- o resultado -----------------------------------------------------------------------
 
-    def _resultado(self, marco, lista, celula, ordem, *, por_lista=None):
+    def _resultado(self, marco, lista, celula, ordem):
         """`(célula do resultado, aferição da definitiva ou None)` — a segunda é o que a espera do
         corte lê (133, FR-4546)."""
         from processo_seletivo.classificacao.application.selectors import ato_vigente
 
         celula = celula or {}
         fatos = {"celula": celula, "ordem": ordem}
-        if lista is not None and por_lista and self._sai_junto(marco, lista, por_lista):
-            fatos["junto_do_marco"] = True
         estado = celula.get("estado")
         precisa_do_ato = (
             estado == "obsoleto"
@@ -2410,34 +2376,6 @@ class _Leitor:
             fatos["definitiva" if preliminar else "afericao"] = lida
             return situacao_do_resultado(fatos), (lida if preliminar else None)
         return situacao_do_resultado(fatos), None
-
-    def _sai_junto(self, marco, lista, por_lista):
-        """A lista em que ninguém concorreu sai junto da publicação de outra lista do marco? (155,
-        FR-6330, R-006).
-
-        Sai quando a ordem vigente dela é vazia e há, no marco, outra lista **com quem concorra**
-        cujo resultado ainda não tem o definitivo: é a publicação dela, pela prévia, que leva esta
-        junto. Com todas as outras definitivas, ou vazias também, nada mais a levaria — e a célula
-        continua sendo a providência própria de antes, para que nenhuma lista fique sem caminho.
-
-        **Nenhuma consulta**: a ordem vazia já é nota da célula da ordem no indicador do marco
-        (`conducao_do_marco._celula_da_ordem`, "ninguém concorreu"), lida para todas as listas.
-        """
-        vazias = {
-            chave
-            for chave, celulas in por_lista.items()
-            if chave
-            and ((celulas or {}).get("ordenar") or {}).get("nota") == NINGUEM_CONCORREU_NA_ORDEM
-        }
-        chave = _chave(lista)
-        if chave not in vazias:
-            return False
-        return any(
-            outra != chave
-            and outra not in vazias
-            and divulgado_da_celula((celulas or {}).get("publicar")) != DEFINITIVO
-            for outra, celulas in por_lista.items()
-        )
 
     # --- a convocação ----------------------------------------------------------------------
 
@@ -2544,7 +2482,7 @@ class _Leitor:
         return situacoes_da_convocacao(fatos)
 
     def _vaga_sem_quem_a_ocupe(self, perfil, marco_id, lista, fatos):
-        """A situação da vaga da reserva, **só onde a providência a lê** (155, R-008, UX-602).
+        """A situação da vaga do recorte, **só onde a providência a lê** (155, R-008, UX-602).
 
         Perguntada quando há vaga a ocupar sem chamada, sem titular a chamar e sem ninguém na fila
         — o único ramo que a diz. Os fatos externos de cada marco ficam na composição do pedido,

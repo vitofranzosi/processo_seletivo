@@ -305,11 +305,7 @@ def test_o_recorte_sem_autodeclarado_diz_que_ninguem_concorreu(
 
     assert "Ninguém concorreu por este recorte" in pagina
     assert "ainda não tem ordem própria" not in pagina, "não é a frase da pendência"
-    # Desde a `155` (FR-6328), o ato de quem conduz é o gesto da lista vazia, com a conferência
-    # da ordem vazia e do corte vazio, e não mais a emissão da ordem sozinha.
-    assert "Conferir o registro de que ninguém concorreu" in pagina, (
-        "e registrar é ato de quem conduz"
-    )
+    assert "Conferir antes de emitir" in pagina, "e emitir continua sendo ato de quem conduz"
 
 
 # --- T032 · o Edital que emitiu a ordem única antes desta feature --------------------------------
