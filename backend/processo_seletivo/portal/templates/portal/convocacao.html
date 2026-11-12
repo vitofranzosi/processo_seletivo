@@ -83,12 +83,17 @@ do prazo, e a correcao dita nele. A frase "Voce foi convocada(o)" saiu, porque o
 <p><a href="{% url 'portal:acompanhamento' inscricao.id %}">Voltar ao acompanhamento</a></p>
 {% endif %}
 {% comment %}
-Os tres scripts da inscricao, e nenhum novo (121, FR-3872): o nome do arquivo escolhido, o
-progresso do envio e o foco na recusa. Sem eles, o envio funciona, e a confirmacao continua
-recebendo o foco pela ancora.
+Os tres scripts da inscricao (121, FR-3872): o nome do arquivo escolhido, o progresso do envio e o
+foco na recusa. Sem eles, o envio funciona, e a confirmacao continua recebendo o foco pela ancora.
+
+E o do envio de varios (150, FR-5614, R-001), antes do `envio.js`: com dois ou mais arquivos
+escolhidos, ele envia todos, um por requisicao. A regiao viva e dele, para dizer a contagem e o
+progresso sem mover o foco (UX-501); sem script, fica vazia.
 {% endcomment %}
 {% if obrigacoes %}
+<p class="oculto" role="status" aria-live="polite" data-anuncio-de-varios></p>
 <script src="{% static 'portal/arquivo.js' %}" defer></script>
+<script src="{% static 'portal/varios.js' %}" defer></script>
 <script src="{% static 'portal/envio.js' %}" defer></script>
 <script src="{% static 'portal/recusa.js' %}" defer></script>
 {% endif %}

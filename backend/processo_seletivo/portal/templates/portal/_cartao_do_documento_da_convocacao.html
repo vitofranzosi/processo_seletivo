@@ -16,13 +16,15 @@ aponta a situacao do item e o limite do arquivo.
 
 O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584 da 115).
 {% endcomment %}
-<li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1">
+<li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1" data-documento="{{ item.nome }}">
   <h3>{{ item.nome }}</h3>
   {% comment %}
   A recusa do envio mora no cartao do item, e nao no topo (121, FR-3871): a volta e a ancora do item, e
   `recusa.js` move o foco para ela. Sem script, a ancora leva ao cartao, e a recusa esta nele.
+  No envio de varios (150, FR-5608, FR-5609) as recusas sao uma lista, uma por cartao; `recusa.js`
+  foca a primeira da pagina, que e a do primeiro recusado.
   {% endcomment %}
-  {% if recusa_do_envio and recusa_do_envio.ancora == item.ancora %}<p class="recusa recusa-no-cartao" role="alert" tabindex="-1" data-recusa>{{ recusa_do_envio.frase }}</p>{% endif %}
+  {% for recusa in recusas_do_envio %}{% if recusa.ancora == item.ancora %}<p class="recusa recusa-no-cartao" role="alert" tabindex="-1" data-recusa>{{ recusa.frase }}</p>{% endif %}{% endfor %}
   {% if item.selos %}<p class="selos">{% for selo in item.selos %}<span class="selo selo-{{ selo.tipo }}">{{ selo }}</span>{% endfor %}</p>{% endif %}
   {% comment %}A condição de exigência que o Edital publicou (131, FR-4454): é ela que diz a quem o documento se aplica.{% endcomment %}
   {% if item.lido.condicao and not obrigacoes.decidida %}<p class="instrucao">Condição publicada: {{ item.lido.condicao }}.</p>{% endif %}
@@ -43,7 +45,8 @@ O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584
   {% if item.envio_recolhido %}<details class="envio-de-novo" {% if item.com_motivo %}open{% endif %}><summary>Enviar outro arquivo<span class="oculto">: {{ item.nome }}</span></summary>{% endif %}
   <div class="envio">
     <form method="post" enctype="multipart/form-data"
-          action="{% url 'portal:apresentar-documento-da-convocacao' inscricao.id item.id %}" data-envio>
+          action="{% url 'portal:apresentar-documento-da-convocacao' inscricao.id item.id %}" data-envio
+          data-limite-em-bytes="{% limite_de_arquivo_em_bytes %}">
       {% csrf_token %}
       <div class="escolher">
         <input type="file" id="arquivo-{{ item.id }}" name="arquivo" accept="application/pdf"

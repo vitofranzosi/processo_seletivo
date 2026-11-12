@@ -234,6 +234,86 @@ class ConfirmacaoDoEnvio:
     #: Sem tarefa restante, a frase de conclusão da FR-3728 no lugar da próxima tarefa.
     conclusao: str = ""
     rotulo: str = PROXIMA_TAREFA
+    #: No envio de vários (150, FR-5608): uma linha por documento recebido, na ordem de chegada.
+    recebidos: tuple = ()
+    #: E os recusados do mesmo envio, como `(nome, âncora do cartão)`, com o rótulo que os conta.
+    nao_recebidos: tuple = ()
+    rotulo_dos_nao_recebidos: str = ""
+
+
+# --- A volta do envio de vários (150, FR-5608) ---------------------------------------------------
+# **"Recebemos R de N"**, com N o que a pessoa mandou: a frase diz, antes da lista, que pode faltar
+# algum. O mesmo cuidado da D-010 da `121` com o verbo: o arquivo **aguarda**, nunca foi "aceito".
+RECEBEMOS_DE = "Recebemos {recebidos} de {total} documentos. {aguarda}"
+AGUARDA_UM = "O arquivo aguarda a conferência da comissão."
+AGUARDAM = "Os arquivos aguardam a conferência da comissão."
+LINHA_DO_RECEBIDO = "{documento}, em {data}, às {hora}."
+LINHA_DO_JA_RECEBIDO = "{documento}: este arquivo já tinha sido recebido."
+UM_NAO_RECEBIDO = "1 documento não foi recebido:"
+NAO_RECEBIDOS = "{quantos} documentos não foram recebidos:"
+
+
+def confirmacao_do_lote(projecao, *, envios, total, recusas=()):
+    """A confirmação do envio de vários documentos, montada da projeção depois do último (FR-5608).
+
+    **Com um só, é a de hoje** (`confirmacao_do_envio`), sem "1 de 1". Com mais, a frase conta os
+    recebidos sobre os enviados, lista cada recebido com data e hora, e liga cada recusado ao cartão
+    dele, onde a recusa está (FR-3871 da `121`).
+
+    **A próxima tarefa e a conclusão não são recalculadas aqui**: vêm de `confirmacao_do_envio`
+    sobre o último recebido, e só a frase é trocada. Assim o que a `154` mudar ali vale igual para
+    o envio de um e para o de vários, sem duas regras para manter.
+    """
+    if total <= 1 and len(envios) == 1 and not recusas:
+        return confirmacao_do_envio(projecao, **envios[0])
+    linhas = []
+    base = None
+    for envio in envios:
+        item = next((i for i in projecao.itens if str(i.id) == str(envio["item_id"])), None)
+        if item is None:
+            continue
+        if envio["ja_recebido"]:
+            linhas.append(LINHA_DO_JA_RECEBIDO.format(documento=item.nome))
+        else:
+            apresentacao = next(
+                (a for a in item.lido.apresentacoes if str(a.id) == str(envio["apresentacao_id"])),
+                None,
+            )
+            instante = apresentacao.apresentado_em if apresentacao is not None else None
+            linhas.append(
+                LINHA_DO_RECEBIDO.format(
+                    documento=item.nome,
+                    data=data(instante) if instante else "",
+                    hora=hora(instante) if instante else "",
+                )
+            )
+        # O `ja_recebido=False` só pede a cauda inteira — próxima tarefa ou conclusão —, que o
+        # caminho do mesmo arquivo de novo omite; a frase dele é descartada logo abaixo.
+        base = confirmacao_do_envio(projecao, **{**envio, "ja_recebido": False})
+    if base is None:
+        return None
+    por_ancora = {i.ancora: i.nome for i in projecao.itens}
+    nao_recebidos = tuple(
+        (por_ancora[r["ancora"]], r["ancora"]) for r in recusas if r["ancora"] in por_ancora
+    )
+    rotulo = ""
+    if nao_recebidos:
+        rotulo = (
+            UM_NAO_RECEBIDO
+            if len(nao_recebidos) == 1
+            else NAO_RECEBIDOS.format(quantos=len(nao_recebidos))
+        )
+    return replace(
+        base,
+        frase=RECEBEMOS_DE.format(
+            recebidos=len(linhas),
+            total=max(total, len(linhas)),
+            aguarda=AGUARDA_UM if len(linhas) == 1 else AGUARDAM,
+        ),
+        recebidos=tuple(linhas),
+        nao_recebidos=nao_recebidos,
+        rotulo_dos_nao_recebidos=rotulo,
+    )
 
 
 def confirmacao_do_envio(projecao, *, item_id, apresentacao_id, ja_recebido):
