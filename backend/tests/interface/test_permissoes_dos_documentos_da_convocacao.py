@@ -189,7 +189,9 @@ def test_a_conducao_mostra_o_resumo_e_o_caminho_dos_documentos(chamada, client):
     assert "Documentos para conferir" in corpo
     assert "1 para conferir" in corpo
     assert chamada["pagina"] in corpo
-    assert "Indeferir pelas pendências de documento" in corpo
+    # Um documento à espera da comissão e o prazo correndo não são falta da pessoa: o atalho do
+    # indeferimento só aparece com pendência registrada (152, FR-5800).
+    assert "Indeferir pelas pendências de documento" not in corpo
 
 
 def test_a_linha_nova_de_documento_oferece_o_aproveitamento(chamada, client):

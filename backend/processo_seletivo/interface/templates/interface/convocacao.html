@@ -491,6 +491,13 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
         </select>
       </p>
       {% endif %}
+      {% comment %}
+      O que chegou e a comissão ainda não viu (152, FR-5802): o indeferimento o deixa sem conferir,
+      e quem indefere lê isso antes, nos dois formulários.
+      {% endcomment %}
+      {% if linha.documentos.aguardando_conferencia %}
+      <p class="nota">Aguarda{{ linha.documentos.aguardando_conferencia|pluralize:"m" }} conferência: {% for lido in linha.documentos.aguardando_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. O indeferimento {{ linha.documentos.aguardando_conferencia|pluralize:"o,os" }} deixa sem conferir.</p>
+      {% endif %}
       {% if linha.documentos.pendencias_para_incluir %}
       <p class="nota">Aceite e regularização são recusados enquanto faltar conferir: {% for lido in linha.documentos.pendencias_para_incluir %}{{ lido.nome }}{% if lido.sem_condicao_publicada %} ("não se aplica" registrado sem condição publicada){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
       {% endif %}
@@ -527,10 +534,16 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
     <div class="outras-acoes" role="group" aria-label="Outras ações desta chamada">
     {% if pode_emitir and not linha.desfecho %}
     {% comment %}
-    O indeferimento com o fundamento pre-redigido a partir das pendencias (115, FR-3594): o texto e
-    sugestao, editavel, e continua obrigatorio e de quem o registra. So aparece onde ha pendencia.
+    O indeferimento com o fundamento pre-redigido (115, FR-3594): o texto e sugestao, editavel, e
+    continua obrigatorio e de quem o registra.
+
+    **So aparece pelo que a pessoa deixou de cumprir** (152, FR-5800, D-001, D-011): o obrigatorio
+    conferido como pendente, ou o nunca apresentado depois do vencimento por quem apresentou algum
+    documento. O que ainda esta no prazo e o que espera a comissao nao o fazem aparecer, e o
+    fundamento cita so o que o fez aparecer (FR-5801). Ate a 152 ele seguia a lista do aceite, e
+    era oferecido a quem nada tinha enviado e ainda tinha 30 dias de prazo.
     {% endcomment %}
-    {% if linha.documentos.pendencias_para_incluir %}
+    {% if linha.motivos_do_atalho %}
     <details class="como-preencher">
       <summary>Indeferir pelas pendências de documento</summary>
     <form method="post" action="{% url 'interface:desfechar' edital.id marco_id linha.convocacao.id %}" class="confirmar">
@@ -541,9 +554,12 @@ chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pess
       <p><strong>Registrar o desfecho é irreversível.</strong> Confira e ajuste o fundamento antes de registrar.</p>
       <p class="campo">
         <label for="fundamento-indeferimento-{{ forloop.counter }}">Fundamento do indeferimento</label>
-        <textarea id="fundamento-indeferimento-{{ forloop.counter }}" name="fundamento" rows="3" required aria-describedby="ajuda-fundamento-indeferimento-{{ forloop.counter }}">{{ linha.documentos.fundamento_do_indeferimento }}</textarea>
+        <textarea id="fundamento-indeferimento-{{ forloop.counter }}" name="fundamento" rows="3" required aria-describedby="ajuda-fundamento-indeferimento-{{ forloop.counter }}">{{ linha.fundamento_do_atalho }}</textarea>
         <span class="ajuda" id="ajuda-fundamento-indeferimento-{{ forloop.counter }}"><strong>Este texto será mostrado ao candidato.</strong> Ele aparece no portal ao lado do resultado; antes de registrar, você o verá como o candidato.</span>
       </p>
+      {% if linha.documentos.aguardando_conferencia %}
+      <p class="nota">Aguarda{{ linha.documentos.aguardando_conferencia|pluralize:"m" }} conferência: {% for lido in linha.documentos.aguardando_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. O indeferimento {{ linha.documentos.aguardando_conferencia|pluralize:"o,os" }} deixa sem conferir.</p>
+      {% endif %}
       <p class="acoes"><button type="submit" class="botao">Registrar indeferimento</button></p>
     </form>
     </details>

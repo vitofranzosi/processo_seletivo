@@ -360,6 +360,16 @@ class ItemLido:
         return {"de": "chamada", "em": origem.apresentado_em, "origem": origem}
 
     @property
+    def apresentado_pela_pessoa(self):
+        """A pessoa enviou algum arquivo deste item **nesta chamada** (152, R-003, D-011).
+
+        Qualquer versão conta, e não só a vigente. O aproveitamento grava apresentação sem arquivo —
+        da inscrição ou de uma chamada anterior —, feita pelo sistema ao convocar: não é resposta da
+        pessoa à convocação, e contá-la faria o atalho aparecer para quem nunca respondeu.
+        """
+        return any(apresentacao.arquivo for apresentacao in self.apresentacoes)
+
+    @property
     def exigencia_mudou(self):
         """A versão da exigência mudou desde a apresentação de origem (FR-3621)."""
         aproveitada = self.aproveitada
@@ -430,6 +440,60 @@ class LeituraDocumental:
             "obrigatorios": sum(1 for lido in self.pedidos if lido.obrigatorio),
             "total": len(self.pedidos),
         }
+
+    @property
+    def houve_apresentacao(self):
+        """A pessoa apresentou ao menos um documento nesta chamada (152, FR-5800, FR-5809)."""
+        return any(lido.apresentado_pela_pessoa for lido in self.pedidos)
+
+    @property
+    def aguardando_conferencia(self):
+        """O que chegou e a comissão ainda não viu (152, FR-5802): o indeferimento o deixa sem
+        conferir, e o formulário o diz."""
+        return [
+            lido
+            for lido in self.pedidos
+            if lido.estado in (nomes.ITEM_RECEBIDO, nomes.ITEM_COMPLEMENTADO)
+        ]
+
+    def motivos_do_atalho(self, *, prazo_decorrido):
+        """Os documentos que fazem o atalho do indeferimento aparecer (152, FR-5800, D-001, D-011).
+
+        **O que a pessoa deixou de cumprir, e não o que impede o aceite.** A lista do aceite inclui
+        o que ainda está no prazo e o que espera a comissão; o fundamento do indeferimento é
+        mostrado à pessoa, e não pode dizer que ela não atendeu o que ainda podia atender, ou o que
+        ninguém leu. Ficam:
+
+        - o obrigatório conferido como pendente, com o motivo da comissão;
+        - o obrigatório nunca apresentado, com o vencimento decorrido, **se a pessoa apresentou
+          algum documento**. Sem nenhum, ela não respondeu à convocação, e o desfecho que descreve
+          isso é o não atendimento (FR-5809).
+
+        **Só obrigatório**, pela leitura da R-002: o facultativo não decide desfecho nenhum
+        (FR-3592 da `115`), e indeferir por ele seria fundamento sem regra.
+        """
+        apresentou = prazo_decorrido and self.houve_apresentacao
+        return [
+            lido
+            for lido in self.pedidos
+            if lido.obrigatorio
+            and (
+                lido.estado == nomes.ITEM_PENDENTE
+                or (apresentou and lido.estado == nomes.ITEM_A_APRESENTAR)
+            )
+        ]
+
+    def fundamento_do_atalho(self, *, prazo_decorrido):
+        """O fundamento pré-redigido do atalho: só o que o fez aparecer (152, FR-5801)."""
+        motivos = self.motivos_do_atalho(prazo_decorrido=prazo_decorrido)
+        return dominio.fundamento_do_atalho(
+            [
+                (lido.nome, getattr(lido.conferencia, "motivo", "") or "")
+                for lido in motivos
+                if lido.estado == nomes.ITEM_PENDENTE
+            ],
+            [lido.nome for lido in motivos if lido.estado == nomes.ITEM_A_APRESENTAR],
+        )
 
     def fundamento_do_indeferimento(self):
         # O motivo do *"não se aplica"* sem condição publicada não é pendência da pessoa: é a
