@@ -4,14 +4,18 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft — **a regra não fecha sem as respostas do usuário** às dez perguntas da seção
-*Perguntas ao usuário*. Os requisitos que dependem de uma delas dizem qual.
+**Status**: Draft para revisão — as dez perguntas foram respondidas pelo usuário em 11/11/2026 e
+viraram as decisões D-005 a D-014. Duas leituras desta spec sobre essas respostas, D-015 e D-016,
+esperam a confirmação dele na revisão do PR.
 
 **Input**: *"Escrever a spec para a destinação da vaga de cota sem concorrente. Não adote reversão
 automática nem declare a vaga não preenchida por padrão. Levante o que o sistema já permite e proponha
 uma spec para aplicar a destinação prevista no Edital, com fundamento e registro explícitos. Traga os
 casos que exigem minha decisão antes de fechar a regra."* A orientação entre aspas é do usuário,
-literal; o restante do pedido veio da sessão que coordena os achados do estudo.
+literal; o restante do pedido veio da sessão que coordena os achados do estudo. As respostas dele às
+dez perguntas, de 11/11/2026, estão em *Decisões* e pediram ainda: *"Atualize os requisitos, cenários
+e revisões das specs afetadas. Confirme por teste os comportamentos levantados apenas pela leitura do
+código."*
 
 > **Faixa de identificadores.** Esta spec usa:
 >
@@ -19,8 +23,9 @@ literal; o restante do pedido veio da sessão que coordena os achados do estudo.
 > - os critérios de dois mil e cem a dois mil cento e dezenove;
 > - os requisitos de experiência de seiscentos a seiscentos e dezenove.
 >
-> Os números não usados ficam livres. As decisões reiniciam em `D-001`; as perguntas ao usuário são
-> `P-1` a `P-10`, e quando respondidas viram decisões numeradas a partir da última.
+> Os números não usados ficam livres. As decisões reiniciam em `D-001`. As perguntas da primeira
+> versão, numeradas de um a dez, foram respondidas e viraram as decisões `D-005` a `D-014`, na mesma
+> ordem.
 >
 > A reserva está nas notas compartilhadas das sessões do estudo, ao lado das da `152`, da `153` e da
 > `154`, que mexem em convocação e documentos e não em ocupação.
@@ -68,7 +73,7 @@ confirmada como tal.
 | I-5 | **O desfecho de convocação não move vaga** | FR-885 da `050`, FR-270 da `019`; `convocacao/application/desfechar.py::apuracao_seguinte` | Quando a apuração seguinte de um desfecho cederia vaga, ela não é gravada, e o ato devolve a pendência *"emita-a na ocupação, onde o movimento é ato próprio"*. |
 | I-6 | **A apuração da ampla fica obsoleta, com causa** | FR-263 da `016` | Recebida a vaga, a ampla mostra a apuração vigente como obsoleta por "um movimento de vaga alcançou este recorte depois dela", e o número novo sai na emissão seguinte. |
 | I-7 | **Concorrência concomitante não é movimento** | FR-252 e FR-253 da `016` | Quem ocupa pela ampla não conta na reservada, e a vaga reservada continua na reserva. |
-| I-8 | **Vaga acrescida e o desfazimento** | `097` | Vaga que chega de fora do Edital entra por ato com motivo, e se corrige pelo ato contrário, que cita o que desfaz. É o modelo de correção sem apagar que esta spec reaproveita (P-8). |
+| I-8 | **Vaga acrescida e o desfazimento** | `097` | Vaga que chega de fora do Edital entra por ato com motivo, e se corrige pelo ato contrário, que cita o que desfaz. É o modelo de correção sem apagar que esta spec reaproveita (D-012). |
 | I-9 | **A ordem de universo vazio é ato** | FR-4205 da `128`; `135` | No marco por pontuação, a ordem da lista sem inscrito se emite e declara que ninguém concorreu; a `135` decidiu mantê-la como providência, e a providência diz que ninguém concorre (FR-4671 e FR-4672 da `135`). Depois dela vêm o corte e a publicação do resultado, e só então a apuração. |
 | I-10 | **A tela não sugere o ato que o comando recusa** | #477 | Sem continuação publicada, o Centro diz "Ocupar a vaga — impedida" e a ocupação mostra a razão no lugar do botão. |
 
@@ -77,8 +82,9 @@ confirmada como tal.
 | # | O caso | Por quê |
 |---|---|---|
 | N-1 | **Sorteio com lista reservada vazia, reversão declarada** | A relação vazia é recusada (*"não existe universo a comprometer"*), e sem relação não há corte nem apuração. Como o movimento só nasce na apuração (I-4), **nenhuma espécie de reversão chega a ser consultada** — nem a por saldo. É o achado registrado na `098`, [`doc/achado-reservada-vazia-nao-reverte.md`](../../doc/achado-reservada-vazia-nao-reverte.md), que esperava decisão do usuário. |
-| N-2 | **Por esgotamento, com autodeclarados que ocupam pela ampla** | "Há quem ocupar" conta toda posição da ordem, inclusive a de quem já ocupa pela ampla e nunca ocupará a reserva. Uma reservada assim nunca esgota. É a pendência da `095` ("há quem ocupar conta quem ocupa pela ampla") e o Q4 do estudo do Edital 35. |
-| N-3 | **Por esgotamento, depois de desistência ou indeferimento de todos** | Pela leitura de `reversao.ha_quem_ocupar`, quem saiu por desfecho continua com posição na ordem, e por isso conta como "quem ocupar" enquanto as ocupadas caem. A reserva em que todos desistiram não esgota. **A verificar por teste no plano**: o estudo não exercitou este caminho. |
+| N-2 | **Por esgotamento, com autodeclarados que ocupam pela ampla** | "Há quem ocupar" conta toda posição da ordem, inclusive a de quem já ocupa pela ampla e nunca ocupará a reserva. Uma reservada assim nunca esgota. É a pendência da `095` ("há quem ocupar conta quem ocupa pela ampla") e o Q4 do estudo do Edital 35. Medido no caminho oficial (V-4 da [verificação](verificacao-do-levantamento.md)). |
+| N-3 | **Por esgotamento, depois de desistência ou inabilitação de todos** | Quem saiu por desfecho, ou não habilitou, continua com posição na ordem, e por isso conta como "quem ocupar" enquanto as ocupadas caem. A reserva em que ninguém mais pode ocupar não esgota. **Medido** (V-1 e V-2 da [verificação](verificacao-do-levantamento.md)). |
+| N-6 | **Por saldo, a vaga reaberta com a fila da reserva ainda cheia** | Depois de uma desistência, a apuração seguinte cede a vaga à ampla **mesmo com autodeclarados habilitados na faixa da reserva**, que a fila chamaria. A desistência derruba as ocupadas, e o saldo não olha a faixa. **Medido** (V-3 da [verificação](verificacao-do-levantamento.md)); é parente da pendência da `095` sobre a faixa da reservada. |
 | N-4 | **Remanejamento entre cotas antes da ampla** | Três Editais do Cefor (140/2025, 10.5.1; 173/2025, 9.5.1; 90/2026, 11.3) mandam, pelo Decreto nº 12.536/2025, que a vaga de uma submodalidade de PPIQ sem habilitado vá às demais submodalidades e, persistindo a ausência, à ampla. O 33/2026 do IFFluminense (Anexo 7) declara uma ordem completa entre oito cotas da Lei nº 12.711/2012. O conteúdo estruturado só sabe dizer "reverte à linha geral" (I-3): a ordem entre cotas não tem onde ser declarada. |
 | N-5 | **A faixa sem continuação, na ampla que recebeu a vaga** | A vaga revertida chega à ampla. Se a fila da ampla também acabou e o Edital não publicou continuação (como no C09 e no 14/2026), a vaga troca um beco por outro. |
 
@@ -108,274 +114,251 @@ confirmada como tal.
 Decreto nº 7.824/2012) para cursos, e a Lei nº 15.142/2025 com o Decreto nº 12.536/2025 para
 seleção de pessoal; um deles ainda cita a Lei nº 12.990/2014 ao lado da Lei nº 15.142/2025. Esta spec
 **não interpreta lei**: o que o sistema aplica é o que o Edital publicou. Onde o Edital é silente e a
-lei teria algo a dizer, quem decide é a comissão, com fundamento — ou o usuário, nesta spec (P-2).
-
-## Perguntas ao usuário
-
-As dez perguntas abaixo decidem a regra. Cada uma diz as opções, o custo de cada uma e a recomendação
-desta spec, que **não está adotada**. Os requisitos que dependem de uma delas estão marcados.
-
-### P-1 — A reversão que nasce dentro da apuração (I-4) continua?
-
-O pedido diz *"não adote reversão automática"*. A de hoje não é automática no sentido estrito — nasce
-de um ato de quem emite a apuração —, mas o ato não diz que vai ceder vaga, e quem o pratica não
-confirma a cessão.
-
-| Opção | O que acontece | Custo |
-|---|---|---|
-| **(a)** A apuração deixa de mover vaga; a destinação é sempre o ato desta spec | Uma regra só para os dois casos (lista que apura e lista vazia). A apuração da reservada passa a dizer "1 a ocupar — destinação disponível", e a ampla só muda quando alguém pratica a destinação. | Muda um comportamento mergeado da `016`, com emenda registrada; Editais em andamento que já reverteram ficam como estão (nada se reescreve). |
-| (b) A apuração continua movendo; o ato novo só existe onde a apuração não roda | Menor mudança. | Duas portas para o mesmo efeito, uma confirmada e outra não. |
-| (c) A apuração continua movendo, mas o "Confira antes" da emissão passa a dizer que vai ceder vaga | Sem ato novo para o caso que já funciona. | Não resolve a lista que não apura (N-1). |
-
-**Recomendação: (a).** É a leitura direta da orientação, e a `050` já tirou o movimento do desfecho
-pelo mesmo motivo (I-5).
-
-### P-2 — O Edital que não declara destinação nenhuma
-
-C09 e a maior parte do corpus. A orientação exclui declarar a vaga não preenchida **por padrão**.
-
-| Opção | O que a tela oferece | Custo |
-|---|---|---|
-| **(a)** Dois caminhos, ambos explícitos: retificar o Edital para declarar a reversão (já admitido como acréscimo — `vacancyReversion` é retificável) e então destinar; ou declarar a vaga não preenchida, com fundamento escrito | O sistema nunca reverte sem declaração publicada; a comissão escolhe e responde pela escolha. | A Retificação depois do resultado precisa ser admitida pela fase do Edital; o plano confere. |
-| (b) Também admitir a reversão à ampla sem Retificação, com o fundamento legal citado pela comissão no próprio ato | Mais rápido. | O sistema passa a aplicar destinação que o Edital publicado não tem, por fundamento externo declarado — contraria a decisão da `016` de que ausência não move. |
-| (c) Nenhum ato; a situação é dita e a vaga fica aberta até o encerramento do Edital | Nada novo. | É o beco de hoje, com texto melhor. |
-
-**Recomendação: (a).**
-
-### P-3 — Quem conta como "há quem ocupar" na reversão por esgotamento
-
-Três situações em que a lista tem inscritos e ninguém mais pode ocupar a vaga reservada:
-
-1. todos **eliminados** — sem posição na ordem (hoje, pela leitura do código: esgota);
-2. todos **saíram por desfecho** — desistência, não atendimento, indeferimento (hoje, pela leitura do
-   código: não esgota; N-3);
-3. todos **ocupam pela ampla** (hoje: não esgota; N-2).
-
-| Opção | Leitura |
-|---|---|
-| **(a)** Conta só quem ainda pode ser chamado para a reserva: com posição, sem desfecho excludente e sem ocupar pela ampla | Os três casos esgotam. Responde também a pendência da `095` sobre a concomitância. |
-| (b) Como hoje | Os casos 2 e 3 nunca esgotam. |
-| (c) (a) para os casos 1 e 2, e o 3 fica para a decisão da `095` | Separa a concomitância, que tem estudo próprio. |
-
-**Recomendação: (a)**, se o usuário aceitar decidir aqui a pendência da `095`; senão, (c).
-
-### P-4 — Remanejamento entre cotas (N-4)
-
-| Opção | O que muda | Custo |
-|---|---|---|
-| **(a)** Fora desta spec; registrado como achado. Edital com cascata no texto é tratado como silente para a parte da cascata (P-2) | Nada no conteúdo publicado. | Os três Editais do Cefor do corpus que a declaram não ganham a cascata. |
-| (b) Nesta spec: o Perfil passa a declarar, por Modalidade, a ordem dos destinos antes da ampla | Atende o Decreto nº 12.536/2025 e a Lei nº 12.711/2012 como os Editais os escrevem. | Campo normativo novo: elevação de versão canônica, PDF, catálogo de Retificação, prévia da `095`/`098`. É o dobro desta spec. |
-| (c) Nesta spec, sem campo novo: a comissão escolhe, no ato, a Modalidade de destino, citando o item do Edital | Rápido. | O sistema aplica destino que o conteúdo estruturado não declara. |
-
-**Recomendação: (a)**, com spec própria para (b) quando houver Edital real que a use no GPS.
-
-### P-5 — A partir de quando a destinação é oferecida
-
-| Opção | Momento |
-|---|---|
-| **(a)** Quando o resultado do marco é definitivo e a ordem vigente da reservada não tem ninguém que ainda possa ser chamado (pela leitura da P-3); para o sorteio, quando as relações do marco estão congeladas e a da reservada não existe por falta de inscrito | O primeiro momento em que a ausência não muda mais por recurso. |
-| (b) Só depois do fim do prazo de convocação da ampla | Mais tarde; protege contra recurso tardio. |
-| (c) A qualquer momento depois do fim das inscrições, a critério da comissão | Mais cedo; arrisca destinar vaga que um recurso devolveria à cota. |
-
-**Recomendação: (a).** Em todos os casos o ato é explícito: o momento só decide quando ele aparece.
-
-### P-6 — A lista vazia no marco por pontuação: os três atos (achado 16)
-
-A `135` decidiu que a ordem vazia é ato normativo e continua providência.
-
-| Opção | O que muda | Custo |
-|---|---|---|
-| **(a)** Um gesto só, "Registrar que ninguém concorreu por esta lista", que pratica a ordem vazia e o corte vazio na mesma confirmação, e leva a lista à próxima publicação do resultado do marco junto das outras | Os três registros continuam existindo; o operador confirma uma vez, e o Publicador não publica um resultado só para a lista vazia. | O plano confere se a publicação do resultado admite várias listas num ato. |
-| (b) Um ato novo, "ninguém concorreu", que substitui ordem, corte e resultado | Um registro em vez de três. | Muda a decisão da `135` e todas as leituras que esperam ordem vigente. |
-| (c) Como hoje | Nada. | O achado 16 continua. |
-
-**Recomendação: (a).**
-
-### P-7 — A lista reservada vazia no sorteio (N-1)
-
-| Opção | O que muda |
-|---|---|
-| **(a)** A destinação lê a ausência de relação diretamente — não precisa de apuração (decorre da P-1 (a)) | Nada no sorteio. A relação vazia continua recusada, e o "Não se aplica" da `126` continua. |
-| (b) A relação vazia passa a ser publicável, e a lista segue o caminho comum até a apuração | Responde a primeira pergunta do achado da `098`. Mexe no sorteio e na prévia. |
-| (c) Uma apuração de lista sem ordem ("0 de 1") | Responde a segunda pergunta do achado da `098`. |
-
-**Recomendação: (a).** Se a P-1 for (b) ou (c), a recomendação passa a (c).
-
-### P-8 — A destinação se corrige?
-
-| Opção | Regra |
-|---|---|
-| **(a)** Por ato contrário, com motivo, que cita a destinação que desfaz — como o desfazimento da vaga acrescida (`097`) —, **só enquanto a vaga destinada não tiver chamada** | Erro de operação tem conserto; vaga que já chamou alguém não volta. |
-| (b) Nunca: destinação é definitiva | Mais simples; erro só por Retificação ou fora do sistema. |
-| (c) Por ato contrário a qualquer tempo | Desfaz chamada já feita — não recomendado. |
-
-**Recomendação: (a).**
-
-### P-9 — A destinação é publicada?
-
-| Opção | Onde aparece |
-|---|---|
-| **(a)** Registro do ato com trilha, visível na ocupação, no histórico do recorte e no relatório do Edital (`099`); a chamada de quem ocupa a vaga revertida cita a destinação no fundamento | Sem documento público novo. |
-| (b) Também na página pública da seleção e no documento da próxima publicação de convocados (`149`) | Transparência ao candidato da cota. |
-
-**Recomendação: (a)**, e (b) em spec própria se a comissão quiser publicar.
-
-### P-10 — A ampla que recebe a vaga e também não tem mais quem chamar (N-5)
-
-| Opção | Regra |
-|---|---|
-| **(a)** A declaração de vaga não preenchida vale para a linha geral também, com o mesmo ato e o mesmo fundamento escrito | Fecha o beco do outro lado. Estende o ato à ampla. |
-| (b) Só para a reservada; a ampla esgotada fica como achado | Escopo menor. |
-
-**Recomendação: (a)**, porque a vaga revertida que não acha ocupante é o mesmo problema do C09, uma
-lista adiante.
+lei teria algo a dizer, nenhum texto escrito no ato a substitui para mover a vaga (D-006).
 
 ## O que esta spec cobre, e o que fica fora
 
 **Cobre:**
-- a leitura da situação da vaga reservada sem quem a ocupe, dita igual no Centro, na ocupação e na
-  convocação;
-- o ato de destinação que aplica a reversão declarada pelo Edital, com conferência antes, fundamento e
-  registro;
-- o ato que declara a vaga não preenchida, nunca por padrão;
-- o Edital silente (P-2);
-- a lista vazia, no marco por pontuação (P-6) e no sorteio (P-7);
-- a correção da destinação (P-8).
+- a leitura da situação da vaga sem quem a ocupe, dita igual no Centro, na ocupação e na convocação;
+- as condições dos dois gatilhos publicados — por esgotamento e por saldo —, cada um com a sua, e os
+  impedimentos comuns (resultado provisório, recurso, chamada em curso);
+- o ato que destina à ampla a vaga que o Edital manda reverter, com "Confira antes", fundamento,
+  quantidade e registro, separado da apuração;
+- a limitação dita quando o Edital manda passar antes por outras cotas;
+- o Edital silente, sem reversão por padrão;
+- a declaração fundamentada de vaga não preenchida, na reserva e na ampla, nunca automática;
+- a lista vazia, no marco por pontuação (um gesto) e no sorteio (sem apuração artificial);
+- a correção por ato contrário, e o impedimento dito quando há chamada dependente;
+- a destinação na página pública da seleção e no relatório do Edital;
+- as revisões das specs afetadas: a `016`, a `050`, a `095`, a `098` e a `135`.
 
 **Fica fora:**
-- a cascata entre cotas, salvo resposta (b) ou (c) à P-4;
+- a **passagem entre cotas** em si — a ordem dos destinos intermediários, como se declara e como se
+  aplica. Tem spec própria, encaminhada em
+  [`doc/encaminhamento-passagem-entre-cotas.md`](../../doc/encaminhamento-passagem-entre-cotas.md)
+  (D-008). Aqui entra só a declaração de que ela existe, para que a destinação direta seja recusada;
 - o remanejamento entre Perfis: o 57/2026 o proíbe, e a FR-246 da `016` continua;
 - o destino da vaga não preenchida **fora** do Edital — Edital de vagas remanescentes, vaga acrescida
   noutro Edital pela `097`: o fato registrado aqui é o ponto de partida, e o ato de lá continua o de lá;
-- a publicação da destinação em documento público, salvo resposta (b) à P-9;
-- a concorrência concomitante no corte e na fila (estudos de 05/11 e 07/11), salvo o que a P-3 (a)
-  decidir;
-- qualquer mudança no que a apuração conta, além do que a P-1 e a P-3 decidirem.
+- um documento PDF da destinação (D-013);
+- a pendência da `095` sobre a faixa da reservada que conta quem ocupa pela ampla: o corte continua
+  como está, e a D-015 só decide o que é saldo depois dele;
+- o recurso contra o indeferimento da convocação, que a `115` deixou fora: enquanto ele não existir, o
+  desfecho excludente é definitivo para esta spec.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — A presidência destina a vaga que o Edital manda reverter (Priority: P1)
 
-O Perfil declara reversão (por saldo ou por esgotamento). A lista reservada não tem quem ocupe a vaga.
-A presidência vê, na ocupação e no Centro, *"1 vaga da PPP sem quem a ocupe. O Edital, no Perfil,
-declara: «As vagas reservadas … que não forem preenchidas passam para a ampla concorrência»"*, e o
-ato "Destinar à ampla concorrência". O "Confira antes" mostra origem, destino, quantidade, a frase
-publicada e a versão do Edital. Confirmado, a reserva passa a "0 a ocupar — 1 destinada à ampla em
+O Perfil declara reversão. A condição do gatilho publicado está cumprida e nada a impede. A
+presidência vê, na ocupação e no Centro, *"1 vaga da PPP sem quem a ocupe. O Edital declara: «As
+vagas reservadas … que não forem preenchidas passam para a ampla concorrência»"*, e o ato "Destinar à
+ampla concorrência". O "Confira antes" mostra origem, destino, quantidade, a frase publicada, a versão
+do Edital e o efeito na ampla. Confirmado, a reserva passa a "0 a ocupar — 1 destinada à ampla em
 11/11, por …", e a ampla mostra a apuração obsoleta pelo movimento, com o caminho para emitir a
 seguinte e chamar a próxima da fila.
 
 **Why this priority**: é o caso em que o Edital já disse o que fazer, e hoje a vaga só chega à ampla
-quando a apuração da reservada roda — e sem confirmação.
+como efeito da apuração da reservada, sem confirmação — e, por saldo, chega cedo demais (N-6).
 
-**Independent Test**: um Perfil com reversão por saldo, 1 vaga PPP, lista PPP com ordem emitida e
-ninguém a chamar: o ato produz um registro com fundamento, a soma das vagas por recorte não muda, e
-uma segunda confirmação idêntica não produz outro registro.
+**Independent Test**: um Perfil com reversão por saldo, 1 vaga PPP e ninguém na faixa da reserva que
+ainda possa ocupá-la: o ato produz um registro com fundamento e quantidade, a soma das vagas efetivas
+do Perfil não muda, e uma segunda confirmação idêntica não produz outro registro.
 
 **Acceptance Scenarios**:
 
-1. **Given** reversão por saldo declarada e 1 vaga PPP sem quem ocupar, **When** a presidência abre a
-   ocupação, **Then** a tela diz a situação, a frase publicada e o ato disponível, e nenhum outro ato
-   para aquela vaga.
-2. **Given** o mesmo estado, **When** a presidência confirma a destinação, **Then** fica registrado
-   quem, quando, a origem, o destino, a quantidade, a causa e a versão do Edital lida, e a ampla mostra
-   a causa da obsolescência.
-3. **Given** reversão por esgotamento e uma pessoa ainda chamável na reserva, **When** a presidência
-   abre a ocupação, **Then** o ato não é oferecido, e a tela diz por quê (há quem ocupar).
-4. **Given** o ato já praticado, **When** alguém tenta de novo, **Then** o comando recusa dizendo que
-   não há saldo a destinar.
+1. **Given** reversão por saldo e 1 vaga PPP sem ninguém na faixa que ainda possa ocupá-la, **When** a
+   presidência abre a ocupação, **Then** a tela diz a situação, a frase publicada e o ato, e nenhum
+   outro ato para aquela vaga.
+2. **Given** o mesmo estado, **When** a presidência confirma, **Then** fica registrado quem, quando, a
+   origem, o destino, a quantidade, o gatilho, a declaração do Edital lida e a versão dela, e a ampla
+   mostra a causa da obsolescência.
+3. **Given** reversão por saldo e o ocupante da PPP desistiu, com outros dois autodeclarados
+   habilitados na faixa da reserva, **When** a apuração seguinte é emitida, **Then** nada é cedido, e a
+   tela leva à chamada da próxima da fila da reserva — o oposto do que acontece hoje (V-3).
+4. **Given** reversão por esgotamento e uma pessoa da reserva com chamada em curso, **When** a
+   presidência abre a ocupação, **Then** o ato não é oferecido, e a tela diz qual chamada o impede.
+5. **Given** a apuração da reservada emitida antes da `155`, que já cedeu a vaga, **When** a
+   presidência abre a ocupação, **Then** a vaga aparece como já destinada, citando aquele movimento, e
+   nenhum ato novo a destina de novo.
 
 ---
 
 ### User Story 2 — O Edital silente: a vaga não some, e o sistema não decide (Priority: P1)
 
-O caso do C09. O Perfil não declara reversão. A tela diz *"1 vaga da PPP sem quem a ocupe. Este
-Edital não declara o que acontece com a vaga reservada não preenchida."*, e oferece os caminhos da
-resposta à P-2 — na recomendação, retificar o Edital para declarar, ou declarar a vaga não
-preenchida com fundamento escrito.
+O caso do C09. O Perfil não declara reversão. A tela diz *"1 vaga da PPP sem quem a ocupe. Este Edital
+não declara o que acontece com a vaga reservada não preenchida."*, e oferece dois caminhos
+explícitos: retificar o Edital para declarar a reversão, quando a fase admite, ou declarar a vaga não
+preenchida com fundamento escrito. Nenhum texto escrito no ato move a vaga.
 
 **Why this priority**: é o caso do achado 02, e o mais comum do corpus.
 
-**Independent Test**: no C09, a vaga PPP sai do estado "impedida" para um estado final registrado,
-por ato com fundamento, sem nenhum registro gerado sem confirmação.
+**Independent Test**: no C09, a vaga PPP sai de "impedida" para um estado final registrado por ato
+com fundamento, e nenhum movimento de vaga é gravado sem reversão declarada no Edital.
 
 **Acceptance Scenarios**:
 
 1. **Given** o C09 com o resultado definitivo divulgado, **When** a presidência abre o Centro, **Then**
-   a providência da PPP diz que o Edital não declara destinação e mostra os caminhos, e não "Pedir a
-   faixa seguinte" nem "Destinar à ampla".
-2. **Given** o mesmo estado, **When** a presidência declara a vaga não preenchida sem escrever o
-   fundamento, **Then** o comando recusa e pede o fundamento.
-3. **Given** a declaração feita com fundamento, **When** a presidência volta ao Centro, **Then** a
-   fase Vagas não tem mais providência para a PPP, e o registro diz quem, quando e por quê.
-4. **Given** o Edital retificado para declarar reversão por saldo, **When** a presidência volta à
-   ocupação, **Then** a vaga passa ao caso da US1.
+   a providência da PPP diz que o Edital não declara destinação e mostra os dois caminhos, e não "Pedir
+   a faixa seguinte" nem "Destinar à ampla".
+2. **Given** o mesmo estado, **When** a presidência declara a vaga não preenchida sem fundamento,
+   **Then** o comando recusa e pede o fundamento.
+3. **Given** a declaração feita com fundamento, **When** a presidência volta ao Centro, **Then** a fase
+   Vagas não tem mais providência para a PPP, e o registro diz quem, quando e por quê.
+4. **Given** o fundamento escrito cita uma lei que manda reverter, **When** a presidência procura um
+   ato que mova a vaga com esse fundamento, **Then** não há: o caminho é a Retificação.
+5. **Given** o Edital retificado para declarar reversão por saldo, **When** a presidência volta à
+   ocupação, **Then** a vaga passa ao caso da US1, lida a versão retificada.
 
 ---
 
-### User Story 3 — A lista vazia não pede três atos sem efeito (Priority: P2)
+### User Story 3 — A condição de cada gatilho, com os casos que hoje erram (Priority: P1)
 
-No marco por pontuação, a lista PPP sem inscrito pede hoje ordem, corte e publicação (achado 16). Com
-a resposta à P-6, a presidência registra, num gesto, que ninguém concorreu; a lista entra na
-publicação do resultado do marco junto das outras; e a destinação fica disponível pela P-5.
+A presidência confia no que a tela diz porque a condição é a do gatilho publicado e os casos de
+fronteira estão cobertos: ocupação pela ampla, desistência, eliminação e inabilitação, recurso e
+chamada em curso.
 
-**Why this priority**: tira três passos do caminho de todo Edital com cota sem inscrito, mas o
-problema crítico é a US1 e a US2.
+**Why this priority**: os três defeitos medidos (V-1 a V-4) são deste grupo, e um deles tira vaga de
+cotista (V-3).
 
-**Independent Test**: no C09, da emissão da ordem da ampla até a destinação da PPP, o número de
-confirmações dedicadas à lista PPP cai de três para uma, e os registros normativos de hoje continuam
-legíveis.
+**Independent Test**: os cenários abaixo, um por caso, no caminho oficial.
 
 **Acceptance Scenarios**:
 
-1. **Given** a lista PPP sem inscrito, **When** a presidência abre a ordenação, **Then** a providência
-   diz que ninguém concorre e oferece o gesto único.
+1. **Given** por esgotamento e o único autodeclarado ocupa a ampla com aceite registrado, **When** a
+   presidência abre a ocupação da PPP, **Then** a destinação é oferecida (hoje não é: V-4).
+2. **Given** por esgotamento e o único autodeclarado ocupa a ampla sem aceite registrado — titular da
+   apuração ou com chamada sem desfecho —, **When** a presidência abre a ocupação da PPP, **Then** a destinação não é oferecida, e a tela diz
+   que a ocupação pela ampla ainda pode mudar.
+3. **Given** por esgotamento e todos os autodeclarados desistiram, **When** a apuração seguinte é
+   emitida, **Then** a destinação é oferecida (hoje não é: V-1).
+4. **Given** por esgotamento e todos os autodeclarados foram eliminados ou inabilitados, sem prazo
+   recursal aberto nem recurso pendente, **When** a presidência abre a ocupação, **Then** a destinação é
+   oferecida (a inabilitação hoje impede: V-2).
+5. **Given** o mesmo, com o prazo recursal da eliminação aberto, **When** a presidência abre a
+   ocupação, **Then** a destinação não é oferecida, e a tela diz até quando cabe recurso.
+6. **Given** o resultado do marco ainda preliminar, **When** a presidência abre a ocupação, **Then** a
+   destinação não é oferecida em nenhum dos dois gatilhos.
+7. **Given** por esgotamento, a faixa da reserva sem ninguém, mas autodeclarados fora dela e o Edital
+   admitindo continuação, **When** a presidência abre a ocupação, **Then** a destinação não é oferecida,
+   e o caminho é a faixa seguinte; **Given** o mesmo por saldo, **Then** a destinação é oferecida.
+
+---
+
+### User Story 4 — O Edital manda passar antes por outras cotas (Priority: P2)
+
+O Perfil declara que a vaga reservada não preenchida passa antes por outras cotas, na ordem do Edital
+(o Decreto nº 12.536/2025, no 173/2025). O GPS ainda não representa essa ordem. A tela diz isso, sem
+oferecer a destinação direta à ampla nem a declaração de não preenchida, e diz que a ordem entre cotas
+é trabalho encaminhado.
+
+**Why this priority**: sem ela, um Perfil desses seria destinado direto à ampla, contra o Edital.
+
+**Independent Test**: um Perfil com a declaração de passagem entre cotas e uma vaga PPI sem quem a
+ocupe: nenhum ato de destinação é aceito, e a tela diz a limitação.
+
+**Acceptance Scenarios**:
+
+1. **Given** a declaração de passagem entre cotas, **When** a presidência abre a ocupação, **Then** a
+   tela diz que o Edital manda passar por outras cotas antes da ampla e que o GPS ainda não aplica essa
+   ordem.
+2. **Given** o mesmo, **When** alguém pede a destinação à ampla pelo comando, **Then** o comando recusa,
+   com a mesma razão.
+3. **Given** um Perfil já publicado com reversão direta e um Edital cujo texto manda a cascata,
+   **When** a presidência abre o "Confira antes" da destinação, **Then** a tela lembra que, se o Edital
+   manda passar antes por outras cotas, o caminho é retificar a declaração, e não confirmar.
+
+---
+
+### User Story 5 — A lista vazia não pede três atos sem efeito (Priority: P2)
+
+No marco por pontuação, a lista PPP em que ninguém concorre pede hoje ordem, corte e publicação
+(achado 16). A presidência registra, num gesto com conferência, que ninguém concorreu; a lista entra na
+publicação do resultado do marco junto das outras, como "ninguém concorreu", sem linha de candidato.
+No sorteio, a lista reservada sem relação por falta de autodeclarado não precisa de apuração: a
+ausência é lida na relação definitiva.
+
+**Why this priority**: tira três passos de todo Edital com cota sem inscrito; o crítico é a US1 a US3.
+
+**Independent Test**: no C09, as confirmações dedicadas à lista PPP caem de três para uma, os registros
+normativos de hoje continuam legíveis, e nenhum registro de classificação ou resultado nomeia
+candidato.
+
+**Acceptance Scenarios**:
+
+1. **Given** a lista PPP em que ninguém concorre, **When** a presidência abre a ordenação, **Then** a
+   providência diz que ninguém concorre e oferece o gesto, com a conferência do que ele registra.
 2. **Given** o gesto confirmado, **When** o Publicador publica o resultado do marco, **Then** a lista
-   PPP aparece nele como "ninguém concorreu", sem publicação à parte.
-3. **Given** um marco por sorteio com a reservada vazia e as relações congeladas, **When** a
-   presidência abre a ocupação, **Then** a vaga reservada aparece com a destinação disponível pela
-   P-7, e não "corte não emitido" para sempre.
+   PPP aparece nele como "ninguém concorreu", sem publicação à parte e sem linha de candidato.
+3. **Given** um marco por sorteio com a relação da ampla congelada e nenhum autodeclarado PPI nela,
+   **When** a presidência abre a ocupação, **Then** a PPI aparece com a destinação disponível pela
+   condição do gatilho, sem apuração.
+4. **Given** um marco por sorteio com as relações ainda não congeladas, **When** a presidência abre a
+   ocupação, **Then** a PPI aparece como "relação não congelada", e não como lista vazia.
 
 ---
 
-### User Story 4 — A destinação errada se corrige por outro ato (Priority: P3)
+### User Story 6 — A destinação errada se corrige, e a que não se corrige é dita (Priority: P3)
 
-Pela resposta à P-8. A presidência destinou a vaga por engano (o Edital foi retificado, ou havia
-recurso pendente). Enquanto a vaga destinada não tiver chamada, ela pratica o ato contrário, com
-motivo, que cita o que desfaz; a vaga volta ao recorte de origem.
+A presidência destinou a vaga por engano. Enquanto nenhuma chamada depender da destinação, ela pratica
+o ato contrário, com motivo, que cita o que desfaz. Se já houver chamada, o pedido é recusado, a tela
+diz quais chamadas dependem dela e o que cada uma precisa antes, e o pedido recusado fica na trilha.
 
-**Why this priority**: raro, mas sem ele o erro de um clique só se corrige por Retificação.
+**Why this priority**: raro, mas sem ele o erro de um clique só se corrige por Retificação, ou some.
 
-**Independent Test**: destinar, desfazer, e conferir que os dois registros existem, que as vagas por
-recorte voltaram ao de antes e que, com uma chamada na vaga destinada, o desfazimento é recusado.
+**Independent Test**: destinar, desfazer e conferir que os dois registros existem e as vagas voltaram;
+destinar, chamar alguém da ampla, pedir o desfazimento e conferir a recusa com as chamadas nomeadas e o
+registro na trilha.
 
 **Acceptance Scenarios**:
 
-1. **Given** uma destinação sem chamada na vaga, **When** a presidência a desfaz com motivo, **Then**
-   os dois registros ficam, e a origem volta a ter a vaga a ocupar.
-2. **Given** uma destinação em que a ampla já chamou alguém para a vaga, **When** a presidência tenta
-   desfazê-la, **Then** o comando recusa e diz qual chamada a ocupa.
+1. **Given** uma destinação sem chamada dependente, **When** a presidência a desfaz com motivo,
+   **Then** os dois registros ficam, e a origem volta a ter a vaga a ocupar.
+2. **Given** uma destinação e uma chamada da ampla para a vaga destinada, **When** a presidência pede o
+   desfazimento, **Then** o comando recusa, a tela nomeia a chamada e diz que ela precisa do seu
+   desfecho antes, e a trilha registra o pedido, a recusa e as chamadas nomeadas.
+
+---
+
+### User Story 7 — O candidato vê para onde a vaga foi (Priority: P3)
+
+Na página pública da seleção e no relatório do Edital, a destinação aparece com origem, destino,
+quantidade e fundamento: *"1 vaga reservada à PPP foi destinada à ampla concorrência em 11/11/2026,
+conforme o item 4.3 do Edital (a quantidade não preenchida)."*
+
+**Why this priority**: transparência pedida pelo usuário; depende das US1 e US2.
+
+**Independent Test**: depois de uma destinação e de uma declaração de não preenchida, a página pública
+da seleção e o relatório mostram as duas, com os quatro dados, sem documento PDF novo.
+
+**Acceptance Scenarios**:
+
+1. **Given** uma destinação registrada, **When** alguém abre a página pública da seleção sem login,
+   **Then** vê origem, destino, quantidade e fundamento, e nenhum nome de candidato.
+2. **Given** a destinação desfeita, **When** alguém abre a mesma página, **Then** vê as duas, a segunda
+   citando a primeira.
 
 ---
 
 ### Edge Cases
 
-- **Reversão por saldo com parte da reserva ocupada**: 2 vagas PPP, 1 ocupada e ninguém mais chamável.
-  O ato destina 1, e nunca mais que o saldo.
-- **Reversão por esgotamento com alguém ainda chamável**: o ato não é oferecido; a tela diz quantos
-  ainda podem ser chamados.
-- **Recurso pendente no marco**: o ato não é oferecido antes do resultado definitivo (P-5 (a)).
-- **Retificação do quadro depois da destinação**: a destinação não é reescrita; ela fica lida contra a
+- **Por saldo com parte da reserva ocupada**: 2 vagas PPP, 1 ocupada e ninguém mais na faixa. O ato
+  destina 1, e nunca mais que o saldo.
+- **Duas confirmações simultâneas**: um registro só; a segunda é recusada por falta de saldo.
+- **Movimento antigo e destinação nova**: a vaga que a apuração já cedeu antes da `155` conta como
+  destinada, e o saldo sai das efetivas líquidas dela; nenhum caminho a destina de novo.
+- **Retificação do quadro depois da destinação**: a destinação não é reescrita; fica lida contra a
   versão que citou, e a apuração mostra a obsolescência pela causa do quadro retificado, como hoje.
-- **Duas confirmações simultâneas**: produzem um registro só; a segunda é recusada por falta de saldo.
-- **Edital que declara a cascata entre cotas só no texto** (P-4 (a)): o sistema o trata como silente
-  para a cascata, e a tela diz que a ordem entre cotas não está declarada no conteúdo do Edital.
-- **Perfis diferentes**: a destinação nunca alcança outro Perfil (FR-246 da `016`), nem com
-  fundamento escrito.
-- **Edital encerrado**: a destinação não é oferecida depois do encerramento; a vaga que ficou "a
-  ocupar" aparece no relatório do Edital como tal.
-- **Ampla esgotada que recebeu a vaga**: pela P-10.
-- **Ator sem permissão**: a recusa é a de qualquer ato da comissão sobre o Processo; a tela não
-  oferece o ato a quem não pode praticá-lo, e diz de quem ele é.
+- **Retificação da declaração depois da destinação**: a destinação fica, com a versão que citou; a
+  nova declaração vale para o que ainda não foi destinado.
+- **Perfis diferentes**: a destinação nunca alcança outro Perfil (FR-246 da `016`).
+- **Edital encerrado**: nenhum ato desta spec é oferecido; a vaga que ficou "a ocupar" aparece no
+  relatório como tal.
+- **Lista em que ninguém concorre porque todos foram eliminados numa Etapa anterior**: não é lista sem
+  inscrito (FR-4672 da `135`); o gesto da lista vazia diz "ninguém concorre", e a eliminação, com o
+  prazo recursal dela, entra nos impedimentos da destinação.
+- **Ator sem permissão**: a recusa é a de qualquer ato da comissão sobre o Processo; a tela não oferece
+  o ato a quem não pode praticá-lo, e diz de quem ele é.
 
 ## Requirements *(mandatory)*
 
@@ -383,125 +366,169 @@ recorte voltaram ao de antes e que, com uma chamada na vaga destinada, o desfazi
 
 **A leitura da situação**
 
-- **FR-6300**: O sistema MUST reconhecer, por recorte reservado, a **vaga sem quem a ocupe**: saldo a
-  ocupar maior que zero e ninguém que ainda possa ser chamado para a reserva, pela leitura da P-3, no
-  momento da P-5.
+- **FR-6300**: O sistema MUST reconhecer, por recorte, a **vaga sem quem a ocupe**: a condição do
+  gatilho publicado cumprida (FR-6304 e FR-6305) e nenhum impedimento (FR-6306); sem reversão
+  declarada, as mesmas condições da reversão por esgotamento.
 - **FR-6301**: Para cada vaga assim, o Centro, a ocupação e a convocação MUST dizer a mesma situação,
-  derivada de uma conta só: a quantidade, o recorte, a destinação que o Edital declara — com a frase
-  publicada e a versão — ou que ele não declara nenhuma.
+  derivada de uma conta só: a quantidade, o recorte, e a destinação que o Edital declara — com a frase
+  publicada e a versão —, ou a passagem entre cotas que ele declara, ou que ele não declara nenhuma.
 - **FR-6302**: A tela MUST oferecer só os atos que o comando aceitaria naquele estado, e MUST NOT
-  oferecer "Pedir a faixa seguinte" onde o Edital não publicou continuação (o que o #477 já faz, e
-  que esta spec mantém).
-- **FR-6303**: Quando o ato não é oferecido por haver quem ocupar, por recurso pendente ou por falta de
-  permissão, a tela MUST dizer qual das três razões, e de quem é o próximo passo.
+  oferecer "Pedir a faixa seguinte" onde o Edital não publicou continuação (o que o #477 já faz).
+- **FR-6303**: Quando um ato desta spec não é oferecido, a tela MUST dizer a razão — qual impedimento,
+  com a data em que ele pode acabar quando houver — e de quem é o próximo passo.
+
+**A condição de cada gatilho e os impedimentos**
+
+- **FR-6304**: Na reversão **por esgotamento**, a condição MUST ser não haver, na ordem vigente da
+  reserva, ninguém que ainda possa ocupar a vaga por ela. Ainda pode ocupar quem tem posição, não saiu
+  por desfecho excludente, não ocupa pela ampla com aceite registrado e é alcançável — dentro da faixa
+  vigente, ou fora dela quando o Edital admite continuação.
+- **FR-6305**: Na reversão **por saldo**, a condição MUST ser haver vagas da reserva a ocupar que
+  nenhuma chamada em curso cobre e que ninguém da faixa vigente da reserva ainda possa ocupar, pelos
+  critérios da FR-6304 restritos à faixa. Quem está fora da faixa MUST NOT impedir a reversão por
+  saldo (D-015).
+- **FR-6306**: Nos dois gatilhos, a destinação MUST ser impedida enquanto: o resultado do marco não
+  for definitivo; houver prazo recursal aberto ou recurso pendente sobre o marco, ou sobre a eliminação
+  ou a inabilitação de alguém da ordem da reserva; houver chamada em curso para a reserva; alguém da
+  reserva ocupar a ampla sem aceite registrado; ou a apuração vigente da reserva estiver
+  obsoleta.
+- **FR-6307**: As condições da FR-6304 e da FR-6305 MUST continuar distintas: nenhuma leitura MUST
+  aplicar a um gatilho a condição do outro.
 
 **O ato de destinação à ampla**
 
-- **FR-6304**: A reversão declarada pelo Perfil MUST ser aplicada por ato próprio, "Destinar à ampla
-  concorrência", praticado por quem pode emitir a apuração do recorte, e MUST NOT ser efeito de
-  nenhum outro ato (P-1).
-- **FR-6305**: Antes da confirmação, o sistema MUST mostrar origem, destino, quantidade, a frase da
-  reversão publicada, a versão do Edital e o efeito na ampla.
-- **FR-6306**: O ato MUST registrar ator, instante, origem, destino, quantidade, causa (lista vazia,
-  esgotada ou saldo), a declaração do Edital lida e a versão dela, e a correlação.
-- **FR-6307**: A quantidade destinada MUST NOT exceder o saldo do recorte de origem, e a soma das
-  quantidades por recorte MUST ser a mesma antes e depois (como a FR-247 da `016`).
-- **FR-6308**: O ato MUST ser recusado, com a razão dita, quando o Perfil não declara reversão, quando
-  há quem ocupar sob a espécie declarada, quando o resultado do marco não é definitivo ou quando não há
-  saldo.
-- **FR-6309**: A quantidade **publicada** MUST NOT mudar por destinação; muda a efetiva, como já muda
-  pelo movimento da `016`.
-- **FR-6310**: Destinada a vaga, a apuração vigente da ampla MUST aparecer obsoleta pela causa do
-  movimento posterior, como hoje (FR-263 da `016`), e o Centro MUST levar à emissão seguinte da ampla.
-- **FR-6311**: Duas confirmações do mesmo ato, simultâneas ou repetidas, MUST produzir um registro só.
+- **FR-6308**: A reversão declarada pelo Perfil MUST ser aplicada por ato próprio, "Destinar à ampla
+  concorrência", praticado por quem pode emitir a apuração do recorte, e MUST NOT ser efeito de nenhum
+  outro ato.
+- **FR-6309**: Antes da confirmação, o sistema MUST mostrar origem, destino, quantidade, o gatilho, a
+  frase da reversão publicada, a versão do Edital e o efeito na ampla, e MUST lembrar que, se o Edital
+  manda passar antes por outras cotas, o caminho é retificar a declaração.
+- **FR-6310**: O ato MUST registrar ator, instante, origem, destino, quantidade, gatilho, a declaração
+  do Edital lida e a versão dela, a apuração vigente lida e a correlação.
+- **FR-6311**: A quantidade destinada MUST NOT exceder o saldo; a soma das vagas efetivas por recorte
+  do Perfil MUST ser a mesma antes e depois (como a FR-247 da `016`); e a quantidade publicada MUST NOT
+  mudar.
+- **FR-6312**: O ato MUST ser recusado, com a razão dita, sem reversão declarada, com a passagem entre
+  cotas declarada, com a condição do gatilho não cumprida, com impedimento ou sem saldo.
+- **FR-6313**: Destinada a vaga, a apuração vigente da ampla MUST aparecer obsoleta pela causa do
+  movimento posterior (FR-263 da `016`), e o Centro MUST levar à emissão seguinte da ampla.
+- **FR-6314**: Duas confirmações do mesmo ato, simultâneas ou repetidas, MUST produzir um registro só.
 
-**A apuração deixa de mover vaga** *(depende da P-1)*
+**A apuração deixa de mover vaga**
 
-- **FR-6312**: Com a resposta (a) à P-1, a emissão da apuração MUST NOT gravar movimento de vaga; a
-  apuração da reservada com saldo MUST dizer que a destinação está disponível.
-- **FR-6313**: Os movimentos já gravados pela emissão da apuração MUST continuar legíveis e válidos
-  como estão, com a mesma causa; nenhum MUST ser reescrito.
+- **FR-6315**: A emissão da apuração MUST NOT gravar movimento de vaga; a apuração da reserva MUST
+  informar a ocupação e, cumprida a condição, que a destinação está disponível.
+- **FR-6316**: Os movimentos já gravados pela emissão da apuração MUST continuar legíveis e válidos,
+  com a mesma causa, e MUST contar como destinação feita: o saldo MUST sair das efetivas líquidas
+  deles, e nenhum ato MUST destinar outra vez a vaga que eles já cederam.
 
-**O Edital silente** *(depende da P-2)*
+**A passagem entre cotas: a limitação**
 
-- **FR-6314**: Sem reversão declarada, o sistema MUST NOT destinar a vaga à ampla por nenhum caminho
-  desta spec, salvo resposta (b) à P-2.
-- **FR-6315**: Sem reversão declarada, a tela MUST dizer *"Este Edital não declara o que acontece com
-  a vaga reservada não preenchida"* e oferecer os caminhos da resposta à P-2 — na recomendação, a
-  Retificação que declara a reversão e a declaração de vaga não preenchida.
-- **FR-6316**: Retificado o Edital para declarar a reversão, a vaga MUST passar ao caso da destinação
+- **FR-6317**: O passo Perfis MUST admitir uma terceira resposta à pergunta da reversão: *"Passa antes
+  por outras cotas, na ordem do Edital"*, conteúdo publicado e retificável como as outras duas (FR-249
+  e FR-250 da `016`), com frase própria no documento do Edital.
+- **FR-6318**: Com essa resposta, nenhum ato desta spec MUST mover a vaga nem declará-la não
+  preenchida; a tela MUST dizer que o Edital manda passar por outras cotas antes da ampla e que o GPS
+  ainda não aplica essa ordem.
+- **FR-6319**: A passagem entre cotas MUST continuar sem aplicação até a spec própria
+  ([encaminhamento](../../doc/encaminhamento-passagem-entre-cotas.md)).
+
+**O Edital silente**
+
+- **FR-6320**: Sem reversão declarada, o sistema MUST NOT destinar a vaga à ampla por nenhum caminho,
+  e nenhum texto escrito num ato MUST substituir a declaração publicada para mover a vaga.
+- **FR-6321**: Sem reversão declarada, a tela MUST dizer *"Este Edital não declara o que acontece com
+  a vaga reservada não preenchida"* e oferecer dois caminhos: a Retificação que declara a reversão,
+  quando a fase do Edital a admite, e a declaração de vaga não preenchida.
+- **FR-6322**: Retificado o Edital para declarar a reversão, a vaga MUST passar ao caso da destinação
   à ampla, lida a versão retificada.
 
 **A vaga não preenchida**
 
-- **FR-6317**: O sistema MUST permitir declarar a vaga **não preenchida** por ato próprio, com
-  fundamento escrito obrigatório, e MUST NOT fazê-lo por padrão, por prazo ou por efeito de outro ato.
-- **FR-6318**: A declaração MUST registrar ator, instante, recorte, quantidade, fundamento e a versão
+- **FR-6323**: O sistema MUST permitir declarar a vaga **não preenchida** por ato próprio, com
+  fundamento escrito obrigatório, sob as condições e os impedimentos da FR-6300, e MUST NOT fazê-lo por
+  padrão, por prazo ou por efeito de outro ato.
+- **FR-6324**: A declaração MUST valer para recorte reservado sem reversão declarada e para a linha
+  geral sem ninguém que ainda possa ocupá-la, inclusive a que recebeu vaga destinada.
+- **FR-6325**: A declaração MUST registrar ator, instante, recorte, quantidade, fundamento e a versão
   do Edital, e MUST NOT exceder o saldo do recorte.
-- **FR-6319**: Declarada, a vaga MUST deixar de contar como "a ocupar", MUST aparecer como "não
-  preenchida" na ocupação, no histórico do recorte e no relatório do Edital, e a quantidade publicada
-  MUST continuar a mesma.
-- **FR-6320**: Onde o Perfil declara reversão e ela é aplicável, a declaração de não preenchida MUST
-  ser recusada, dizendo que o Edital manda destinar à ampla.
-- **FR-6321**: Com a resposta (a) à P-10, a declaração MUST valer também para a linha geral; com (b),
-  só para recorte reservado.
+- **FR-6326**: Declarada, a vaga MUST deixar de contar como "a ocupar" e MUST aparecer como "não
+  preenchida" na ocupação, no histórico do recorte, no relatório e na página pública; a quantidade
+  publicada MUST continuar a mesma.
+- **FR-6327**: Onde a reversão declarada é aplicável, ou onde o Edital manda a passagem entre cotas, a
+  declaração MUST ser recusada, dizendo o que o Edital manda.
 
-**A lista vazia** *(depende da P-6 e da P-7)*
+**A lista vazia**
 
-- **FR-6322**: No marco por pontuação, a lista reservada sem inscrito MUST poder ser levada, num gesto
-  com uma confirmação, à ordem vazia e ao corte vazio — os dois registros de hoje, sem perder nenhum.
-- **FR-6323**: A lista vazia MUST entrar na publicação do resultado do marco junto das outras listas,
+- **FR-6328**: No marco por pontuação, a lista em que ninguém concorre MUST poder ser levada, num gesto
+  com uma conferência, à ordem vazia e ao corte vazio — os dois registros de hoje, sem perder nenhum.
+- **FR-6329**: Nenhum registro do gesto MUST conter linha de classificação ou de resultado de
+  candidato: a ordem e o corte registram que ninguém concorreu, e nada além.
+- **FR-6330**: A lista vazia MUST entrar na publicação do resultado do marco junto das outras listas,
   dita como "ninguém concorreu", e MUST NOT exigir publicação própria.
-- **FR-6324**: O gesto MUST continuar a dizer, antes da confirmação, que a ordem vazia declara que
-  ninguém concorreu, como a providência da `135` já diz (FR-4672 da `135`).
-- **FR-6325**: No sorteio, com as relações do marco congeladas e a reservada sem relação por falta de
-  inscrito, a destinação (ou a declaração de não preenchida) MUST ser oferecida sem apuração da
-  reservada (P-7 (a)).
+- **FR-6331**: A conferência do gesto MUST continuar a dizer que a ordem vazia declara que ninguém
+  concorreu (FR-4672 da `135`).
+- **FR-6332**: No sorteio, a lista reservada sem relação por falta de autodeclarado MUST dispensar a
+  apuração, desde que a ausência esteja comprovada na relação definitiva pertinente — a relação da
+  ampla congelada no marco, sem nenhuma inscrição daquela Modalidade.
+- **FR-6333**: A ausência de registro MUST NOT ser lida como lista vazia: relação não congelada,
+  inscrições ainda não encerradas ou dado que falta MUST aparecer como o que são, e o ato MUST NOT ser
+  oferecido.
 
-**Quem conta como "há quem ocupar"** *(depende da P-3)*
+**A correção**
 
-- **FR-6326**: Sob a reversão por esgotamento, "há quem ocupar" MUST contar só quem a resposta à P-3
-  admitir; na recomendação, quem tem posição na ordem da reserva, não saiu por desfecho excludente e
-  não ocupa pela ampla.
-- **FR-6327**: A prévia da classificação e a do sorteio (`095`, `098`) MUST fazer a mesma conta da
-  FR-6326, e a equivalência delas com o caminho oficial MUST continuar verificada.
-
-**A correção** *(depende da P-8)*
-
-- **FR-6328**: A destinação MUST poder ser desfeita por ato contrário, com motivo, que cita a
-  destinação que desfaz, enquanto nenhuma chamada ocupar a vaga destinada; depois disso, o desfazimento
-  MUST ser recusado, dizendo qual chamada a ocupa.
-- **FR-6329**: Destinação e desfazimento MUST continuar ambos legíveis; nada MUST ser apagado ou
+- **FR-6334**: A destinação e a declaração de não preenchida MUST poder ser desfeitas por ato contrário,
+  com motivo, que cita o ato que desfaz, enquanto nenhuma chamada depender delas.
+- **FR-6335**: Com chamada dependente, o desfazimento MUST ser recusado; a tela MUST nomear cada
+  chamada e dizer o que ela precisa antes (o desfecho dela); e a trilha MUST registrar o pedido, a
+  recusa e as chamadas nomeadas.
+- **FR-6336**: O ato e o desfazimento MUST continuar ambos legíveis; nada MUST ser apagado ou
   reescrito.
 
-**Registro e permissão**
+**A publicidade**
 
-- **FR-6330**: Todo ato desta spec MUST exigir a mesma permissão e o mesmo escopo da emissão da
-  apuração, MUST ser negado por padrão a quem não os tem, e MUST entrar na trilha com correlação.
-- **FR-6331**: Todo ato desta spec MUST ser reproduzível: relido depois, MUST devolver a quantidade, a
-  causa e a declaração que leu, e não as de hoje.
-- **FR-6332**: A chamada de quem ocupa uma vaga destinada à ampla MUST citar a destinação no
+- **FR-6337**: A página pública da seleção MUST mostrar cada destinação e cada declaração de não
+  preenchida, com origem, destino (ou "não preenchida"), quantidade e fundamento, e MUST NOT mostrar
+  nome nem protocolo de candidato.
+- **FR-6338**: O relatório do Edital MUST mostrar os mesmos dados, e os desfazimentos citando o que
+  desfazem.
+- **FR-6339**: Esta entrega MUST NOT exigir documento PDF novo.
+- **FR-6340**: A chamada de quem ocupa uma vaga destinada à ampla MUST citar a destinação no
   fundamento.
-- **FR-6333**: As telas e os registros desta spec MUST NOT dizer que alguém foi convocado, aceitou ou
+
+**Registro, permissão e equivalência**
+
+- **FR-6341**: Todo ato desta spec MUST exigir a mesma permissão e o mesmo escopo da emissão da
+  apuração, MUST ser negado por padrão a quem não os tem, e MUST entrar na trilha com correlação.
+- **FR-6342**: Todo ato desta spec MUST ser reproduzível: relido depois, MUST devolver a quantidade, a
+  condição e a declaração que leu, e não as de hoje.
+- **FR-6343**: A prévia da classificação e a do sorteio (`095`, `098`) MUST fazer a conta das FR-6304 e
+  FR-6305 e mostrar o que a destinação faria, e a equivalência delas com o caminho oficial MUST
+  continuar verificada.
+- **FR-6344**: As telas e os registros desta spec MUST NOT dizer que alguém foi convocado, aceitou ou
   se matriculou (como a FR-258 da `016`).
 
 ### Requisitos de experiência
 
 - **UX-600**: A frase da situação MUST nomear a lista, a quantidade e o que o Edital declara, em
   palavras, sem código de espécie nem identificador.
-- **UX-601**: O "Confira antes" da destinação e da declaração de não preenchida MUST seguir o da
-  emissão (#467), com o efeito na ampla dito por extenso.
-- **UX-602**: No Centro, a providência da vaga sem quem a ocupe MUST ter um ato só por caminho, e a
-  "impedida" do #477 MUST desaparecer onde houver caminho.
+- **UX-601**: O "Confira antes" da destinação, da declaração de não preenchida e do gesto da lista
+  vazia MUST seguir o da emissão (#467), com o efeito dito por extenso.
+- **UX-602**: No Centro, a providência da vaga sem quem a ocupe MUST ter um ato por caminho, e a
+  "impedida" do #477 MUST dar lugar ao impedimento nomeado ou ao caminho disponível.
+- **UX-603**: A limitação da passagem entre cotas MUST ser dita como limite do GPS, e não do Edital
+  nem da comissão.
 
 ### Key Entities
 
 - **Destinação de vaga**: ato append-only que leva quantidade de um recorte reservado à linha geral do
-  mesmo Perfil, com causa, declaração e versão do Edital lidas, ator e instante. O movimento de vaga da
-  `016` é o candidato natural para guardá-la; a escolha é do plano.
+  mesmo Perfil, com gatilho, declaração e versão do Edital lidas, apuração lida, ator e instante. O
+  movimento de vaga da `016` é o candidato natural para guardá-la; a escolha é do plano.
 - **Declaração de vaga não preenchida**: ato append-only que tira quantidade do "a ocupar" de um
   recorte sem a mover, com fundamento escrito, ator e instante.
-- **Desfazimento da destinação**: ato contrário que cita o que desfaz (P-8).
+- **Desfazimento**: ato contrário que cita o que desfaz.
+- **Pedido de desfazimento recusado**: entrada de trilha com as chamadas dependentes nomeadas.
+- **Declaração da passagem entre cotas**: a terceira resposta à pergunta da reversão no Perfil.
 
 ## Success Criteria *(mandatory)*
 
@@ -511,72 +538,167 @@ recorte voltaram ao de antes e que, com uma chamada na vaga destinada, o desfazi
   com **uma** confirmação, e o Centro não mostra mais providência na fase Vagas para aquela lista.
 - **SC-2101**: Em nenhum dos 15 cenários de treinamento a tela oferece, para vaga reservada, um ato
   que o comando recusa.
-- **SC-2102**: Toda destinação e toda declaração de não preenchida têm fundamento, ator, instante e
-  versão do Edital no registro: 100% dos registros, conferido por teste.
-- **SC-2103**: Nenhum registro de movimento ou de não preenchida nasce sem confirmação própria: zero,
-  conferido varrendo os caminhos de gravação.
-- **SC-2104**: Num Edital com cota sem inscrito no marco por pontuação, o número de confirmações
-  dedicadas à lista vazia cai de três para uma (P-6 (a)).
-- **SC-2105**: A soma das vagas efetivas por recorte de um Perfil é a mesma antes e depois de toda
+- **SC-2102**: Toda destinação e toda declaração de não preenchida têm fundamento, quantidade, ator,
+  instante e versão do Edital no registro: 100%, conferido por teste.
+- **SC-2103**: Nenhum movimento de vaga nem declaração de não preenchida nasce sem confirmação própria:
+  zero, conferido varrendo os caminhos de gravação.
+- **SC-2104**: Os cenários V-1 a V-4 da [verificação](verificacao-do-levantamento.md) passam a dar o
+  resultado da US3: destinação oferecida em V-1, V-2 (sem recurso) e V-4 (com aceite); nada cedido em
+  V-3 enquanto houver autodeclarado habilitado na faixa.
+- **SC-2105**: Num Edital com cota sem inscrito no marco por pontuação, as confirmações dedicadas à
+  lista vazia caem de três para uma, e nenhuma linha de candidato é registrada para ela.
+- **SC-2106**: A soma das vagas efetivas por recorte de um Perfil é a mesma antes e depois de toda
   destinação e todo desfazimento.
-- **SC-2106**: Num roteiro com a presidência de treinamento, a pessoa responde corretamente, sem ajuda,
-  o que aconteceu com a vaga PPP do C09 e por quê, lendo só a ocupação.
+- **SC-2107**: Num Perfil com a passagem entre cotas declarada, zero atos de destinação aceitos.
+- **SC-2108**: Num roteiro com a presidência de treinamento, a pessoa responde corretamente, sem
+  ajuda, o que aconteceu com a vaga PPP do C09 e por quê, lendo só a ocupação; e um leitor sem login
+  diz, pela página pública, para onde a vaga foi.
 
 ## Assumptions
 
 - O ato é da presidência ou de quem pode emitir a apuração do recorte; não há papel novo.
 - A Retificação que declara a reversão já é admitida como acréscimo pelo catálogo; se a fase do Edital
-  a impedir depois do resultado, o plano registra e a P-2 volta ao usuário.
-- O C09 é o cenário de referência; o plano acrescenta à `134` um cenário com reversão declarada e um
-  de sorteio com reserva vazia, se não houver.
+  a impedir depois do resultado, a tela diz isso, e o caminho que sobra é a declaração de não
+  preenchida.
+- O recurso contra o indeferimento da convocação não existe (`115`); quando existir, o prazo dele entra
+  nos impedimentos da FR-6306.
+- O C09 é o cenário de referência; o plano acrescenta à `134` um cenário com reversão declarada, um de
+  sorteio com reserva vazia e um com a passagem entre cotas declarada, se não houver.
 - O estado de partida é o do #477; nada aqui o refaz.
-- As três respostas que esta spec recomenda e mais mudam o código são a P-1 (a), a P-3 (a) e a P-6
-  (a); a estimativa de esforço do plano parte delas.
 
 ## Compatibilidade com regras anteriores
 
+As revisões abaixo foram feitas nas próprias specs, com a redação anterior preservada, e vigoram com a
+implementação desta.
+
 | Regra | O que acontece |
 |---|---|
-| FR-245 a FR-251 da `016` (declaração da reversão) | continuam; esta spec só muda **quando** a reversão se aplica |
-| A emissão da apuração que move vaga (I-4) | muda pela P-1 (a), com emenda registrada na `016` no PR da implementação; os movimentos gravados ficam (FR-6313) |
-| FR-246 da `016` (nunca outro Perfil) | continua |
-| FR-885 da `050` e FR-270 da `019` (o desfecho não move vaga) | continuam; a pendência que o desfecho devolve passa a levar ao ato desta spec |
-| FR-4205 da `128` e a decisão da `135` sobre a ordem vazia | continuam: a ordem vazia é registrada, agora no gesto da FR-6322 |
-| A recusa da relação vazia no sorteio | continua (P-7 (a)) |
-| A pendência da `095` sobre a concomitância em "há quem ocupar" | respondida aqui só com a P-3 (a) |
-| O achado da `098` sobre a reservada vazia | respondido pela P-7 |
+| FR-245, FR-246 e FR-251 da `016` | continuam |
+| FR-248 da `016` (o registro da reversão) | **revista**: a reversão é ato próprio, com fundamento (FR-6308, FR-6310) |
+| FR-249 da `016` (as espécies) | **revista**: a terceira resposta, a passagem entre cotas, sem aplicação (FR-6317) |
+| A emissão da apuração que move vaga | deixa de mover (FR-6315); os movimentos gravados ficam (FR-6316) |
+| FR-885 da `050` (o desfecho não move vaga) | **revista**: a tela leva à destinação, e não à emissão na ocupação |
+| FR-270 da `019` | continua |
+| FR-2327 e FR-2328 da `095`, e a pendência sobre "há quem ocupar" | **revistas** e **respondida**: a prévia mostra o que a destinação faria, com as condições das FR-6304 e FR-6305 |
+| FR-2507 da `098` e o achado da reservada vazia | **revista** e **respondido** (FR-6332, FR-6333) |
+| FR-4671 e FR-4672 da `135` | **revistas**: a providência da lista vazia leva ao gesto (FR-6328) |
+| FR-4205 da `128` | continua: a ordem vazia é registrada, agora no gesto |
+| A recusa da relação vazia no sorteio | continua |
+| A pendência da `095` sobre a faixa da reservada | continua aberta (fora) |
 
 ## Decisões
 
-### D-001 — Nenhum caminho novo move vaga sem ato próprio
+### D-001 — Nenhum caminho move vaga sem ato próprio
 
 *Da orientação do usuário, 11/11/2026: "não adote reversão automática".*
 
 Todo efeito desta spec sobre a quantidade de um recorte — destinar, declarar não preenchida, desfazer
-— nasce de um ato que alguém confirma depois de ver o efeito. A alternativa recusada é o gatilho por
-estado (a vaga reverte sozinha quando a lista esgota), que é a "reversão automática" que a orientação
-exclui. O que acontece com o caminho **antigo**, o da apuração, é a P-1.
+— nasce de um ato que alguém confirma depois de ver o efeito. O gatilho por estado (a vaga reverte
+sozinha quando a lista esgota) é a "reversão automática" que a orientação exclui. A D-005 estende a
+regra ao caminho antigo, o da apuração.
 
 ### D-002 — O sistema aplica o que o Edital declara, e não infere
 
 Herdada da decisão da `016` de que ausência de declaração não move. A destinação à ampla só existe
-onde o Perfil publicado a declara, e a espécie é a declarada. A lei citada pelo Edital fundamenta a
-cota e não a calcula, como a `016` já fixou para o percentual.
+onde o Perfil publicado a declara, e a condição é a da espécie declarada. A lei citada pelo Edital
+fundamenta a cota e não a calcula, como a `016` já fixou para o percentual.
 
 ### D-003 — A vaga não preenchida é fato registrado, e não zero
 
-A vaga que ninguém ocupa e que não vai a lugar nenhum precisa existir como registro, e não como a
-ausência de um número: é dela que parte o Edital de vagas remanescentes, e é ela que o relatório do
-Edital mostra. Por isso a declaração é ato com fundamento, e a quantidade publicada não muda.
+A vaga que ninguém ocupa e que não vai a lugar nenhum precisa existir como registro: é dela que parte
+o Edital de vagas remanescentes, e é ela que o relatório e a página pública mostram. Por isso a
+declaração é ato com fundamento, e a quantidade publicada não muda.
 
 ### D-004 — Uma conta só para as três telas
 
 A situação da vaga sem quem a ocupe é derivada num lugar e lida pelo Centro, pela ocupação e pela
 convocação, como o #477 fez para a vaga reaberta. Duas contas divergiriam na primeira regra nova.
 
+### D-005 — A destinação é ato separado da apuração
+
+*Decisão do usuário, 11/11/2026 (primeira pergunta, opção a).* *"A apuração informa a ocupação; a
+destinação exige ato explícito, com «Confira antes», fundamento e quantidade. Preserve os atos
+anteriores e impeça contabilização duplicada."* Os movimentos que a apuração gravou antes da `155`
+continuam válidos e contam como destinação feita (FR-6316).
+
+### D-006 — No Edital silente, nenhuma reversão por padrão
+
+*Decisão do usuário, 11/11/2026 (segunda pergunta, opção a).* Os caminhos são a Retificação, quando
+cabível, e a declaração fundamentada de vaga não preenchida. *"Texto livre não pode substituir a
+autorização normativa para mover a vaga."*
+
+### D-007 — Esgotamento é ninguém mais que possa ocupar pela reserva
+
+*Decisão do usuário, 11/11/2026 (terceira pergunta).* Conta quem ainda pode ocupar pela lista
+reservada; a pendência da `095` sobre quem ocupa pela ampla é decidida aqui, com cenários para
+ocupação pela ampla, desistência e eliminação. *"Situações ainda reversíveis por recurso ou chamadas
+pendentes não devem produzir esgotamento definitivo."* A inabilitação (V-2) é tratada como eliminação.
+
+### D-008 — A passagem entre cotas tem spec própria, e a 155 mostra a limitação
+
+*Decisão do usuário, 11/11/2026 (quarta pergunta).* A `155` não oferece destinação direta à ampla onde
+o Edital exige destinos intermediários. O trabalho fica encaminhado em
+[`doc/encaminhamento-passagem-entre-cotas.md`](../../doc/encaminhamento-passagem-entre-cotas.md). Como a
+tela fica sabendo que o Edital os exige é a D-016.
+
+### D-009 — Cada gatilho com a sua condição, e impedimentos comuns
+
+*Decisão do usuário, 11/11/2026 (quinta pergunta), com a correção dele:* a `016` distingue esgotamento
+de saldo, e exigir lista esgotada para os dois mudaria a regra. Por esgotamento, ausência de pessoas
+ainda elegíveis (FR-6304); por saldo, a condição própria (FR-6305, lida pela D-015). Os impedimentos —
+resultado provisório, recurso, chamada em curso — são comuns (FR-6306), sem fundir os gatilhos.
+
+### D-010 — A lista vazia num gesto, sem candidato fabricado
+
+*Decisão do usuário, 11/11/2026 (sexta pergunta, opção a).* Um gesto com conferência, os registros
+necessários preservados, a lista na publicação conjunta, e nenhuma classificação ou resultado de
+candidato inexistente.
+
+### D-011 — Sorteio sem concorrente dispensa apuração, com ausência comprovada
+
+*Decisão do usuário, 11/11/2026 (sétima pergunta, opção a).* *"Ausência de registro não significa
+lista vazia."* A prova é a relação definitiva pertinente (FR-6332).
+
+### D-012 — Correção por ato contrário, e o impedimento dito
+
+*Decisão do usuário, 11/11/2026 (oitava pergunta, opção a).* Com chamada dependente, nada se desfaz
+em silêncio: a tela explicita o impedimento e a trilha registra o tratamento que os atos dependentes
+pedem (FR-6335).
+
+### D-013 — A destinação é pública, sem PDF novo
+
+*Decisão do usuário, 11/11/2026 (nona pergunta, com a página pública incluída).* Página pública da
+seleção e relatório, com origem, destino, quantidade e fundamento.
+
+### D-014 — A ampla também esgotada admite a declaração de não preenchida
+
+*Decisão do usuário, 11/11/2026 (décima pergunta, opção a).* Sob as mesmas verificações, nunca
+automaticamente.
+
+### D-015 — O saldo é o que a faixa da reserva não preenche *(leitura desta spec, a confirmar na revisão)*
+
+A `016` define a reversão por saldo como *"a quantidade não preenchida, ainda que a lista tenha
+gente"*. A medição V-3 mostrou o que essa leitura, aplicada a cada apuração, faz: depois de uma
+desistência, a vaga vai à ampla com dois autodeclarados habilitados na faixa da reserva, que a fila
+chamaria. Esta spec lê a decisão do usuário — *"por saldo, aplicar a condição própria dessa
+modalidade"* e *"chamadas em curso"* como impedimento — assim: **saldo é a vaga da reserva que ninguém
+da faixa vigente da reserva pode mais ocupar**. Quem está fora da faixa não impede (é o que distingue
+o saldo do esgotamento, que olha a ordem toda quando o Edital admite continuação). Alternativa
+recusada: manter a conta da `016` como está, que tira vaga de cotista na primeira desistência.
+
+### D-016 — O Edital declara a passagem entre cotas como terceira resposta *(leitura desta spec, a confirmar na revisão)*
+
+Para "não oferecer reversão direta à ampla quando o Edital exige destinos intermediários", a tela
+precisa saber que ele os exige, e o único lugar confiável é o conteúdo publicado. Ler o texto livre do
+Edital, ou o fundamento normativo da Modalidade, seria casar nome por escrito, que a `016` e a `025`
+recusaram. A spec acrescenta, por isso, uma terceira resposta à pergunta que já existe (FR-6317) — sem
+campo novo, sem a ordem dos destinos, que é da spec própria. Custo aceito: a frase no documento do
+Edital e a entrada no catálogo de Retificação, que a resposta herda das outras duas.
+
 ## Achados fora do escopo (registro)
 
-- **A cascata entre cotas** (N-4) tem demanda real em três Editais do Cefor e no 33/2026 do
-  IFFluminense; fica para spec própria pela P-4 (a).
-- **Um Edital do corpus cita a Lei nº 12.990/2014 ao lado da Lei nº 15.142/2025**; se a citação
-  ainda é a correta é questão do Edital, não do sistema.
+- **Um Edital do corpus cita a Lei nº 12.990/2014 ao lado da Lei nº 15.142/2025**; se a citação ainda é
+  a correta é questão do Edital, não do sistema.
+- **A faixa da reservada que conta quem ocupa pela ampla** (pendência da `095`) continua aberta, e a
+  V-3 a agrava: a D-015 impede a reversão por saldo antes da faixa acabar, mas não muda o tamanho da
+  faixa.

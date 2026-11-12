@@ -410,13 +410,26 @@ anúncio contém o resumo por recorte.
 - **FR-2326**: A espécie de reversão MUST ser lida do Perfil gravado, e o painel MUST dizer de onde a
   leu. Sem declaração, o painel MUST dizer que o Perfil não declara reversão e que vaga reservada sem
   ocupante continua reservada; MUST NOT presumir espécie nenhuma (`FR-245`, `FR-251` da `016`).
-- **FR-2327**: Com reversão declarada, o painel MUST dizer, por reservada, quantas vagas seriam cedidas
-  à ampla do **mesmo** Perfil, pela função oficial, e com a espécie nomeada pelo rótulo do passo
-  Perfis — *"Só quando a lista reservada esgota"* ou *"A quantidade que ficou sem preencher"*. A reversão MUST aparecer como o que a apuração faria, e não como fato ocorrido.
-- **FR-2328**: Para a espécie por esgotamento, "há quem ocupar" MUST ser calculado como o caminho
-  oficial o calcula hoje, e o painel MUST dizer, quando nenhuma vaga for cedida por isso, quantas
-  pessoas com posição a regra contou e quantas vagas estão ocupadas, identificando-o como comportamento
-  atual (DP-2).
+- **FR-2327** *(revista pela `155` em 2026-11-11, que vigora com a implementação dela — a redação
+  anterior está ao fim desta alínea)*: Com reversão declarada, o painel MUST dizer, por reservada,
+  quantas vagas seriam cedidas à ampla do **mesmo** Perfil, pela função oficial, e com a espécie nomeada
+  pelo rótulo do passo Perfis — *"Só quando a lista reservada esgota"*, *"A quantidade que ficou sem
+  preencher"* ou *"Passa antes por outras cotas, na ordem do Edital"*, esta última sem cessão e com a
+  limitação dita (FR-6318 da `155`). A reversão MUST aparecer como o que a destinação faria, e não como
+  fato ocorrido nem como efeito da apuração (FR-6343 da `155`).
+
+  > **Redação anterior à `155`, preservada:** a mesma, com as duas espécies apenas e o final "A
+  > reversão MUST aparecer como o que a apuração faria, e não como fato ocorrido."
+- **FR-2328** *(revista pela `155` em 2026-11-11, que vigora com a implementação dela — a redação
+  anterior está ao fim desta alínea)*: Para cada espécie, a condição MUST ser a do caminho oficial — a
+  FR-6304 da `155` por esgotamento, a FR-6305 por saldo —, e o painel MUST dizer, quando nenhuma vaga
+  for cedida, quantas pessoas ainda podem ocupar pela reserva e por quê. A prévia não simula desfecho
+  nem recurso, e por isso os impedimentos da FR-6306 da `155` não aparecem nela.
+
+  > **Redação anterior à `155`, preservada:** "Para a espécie por esgotamento, "há quem ocupar" MUST ser
+  > calculado como o caminho oficial o calcula hoje, e o painel MUST dizer, quando nenhuma vaga for
+  > cedida por isso, quantas pessoas com posição a regra contou e quantas vagas estão ocupadas,
+  > identificando-o como comportamento atual (DP-2)."
 - **FR-2329**: A prévia MUST NOT mostrar reversão para outro Perfil, nem para outra Modalidade
   reservada (`FR-246` da `016`).
 - **FR-2330**: Com reversão declarada e nenhuma vaga sem ocupante, o painel MUST dizer que não há o que
@@ -453,8 +466,9 @@ anúncio contém o resumo por recorte.
   desistências e efeitos de convocação; faixa seguinte; movimentos de vaga anteriores; encadeamento de
   apurações; cascata entre recortes por regra de chamada; remanejamento entre Perfis; o percentual da
   Modalidade, que fundamenta e não calcula; e o sorteio por lista.
-- **FR-2337**: Onde a prévia mostrar comportamento que esta spec registra como pendente de decisão
-  (DP-1, DP-2), o painel MUST descrevê-lo como comportamento atual e MUST NOT apresentá-lo como a leitura
+- **FR-2337** *(revista pela `155` em 2026-11-11: a DP-2 deixou de ser pendente, e a alínea vale
+  para a DP-1; a redação anterior citava as duas)*: Onde a prévia mostrar comportamento que esta spec
+  registra como pendente de decisão (DP-1), o painel MUST descrevê-lo como comportamento atual e MUST NOT apresentá-lo como a leitura
   definitiva da norma. Esta feature MUST NOT alterar a regra, o rótulo nem o documento.
 
 #### O motor
@@ -606,6 +620,11 @@ próximo suplente autodeclarado"*; se a reversão por saldo, nesse caso, cumpre 
 a declara, é leitura de norma.
 
 ### DP-2 — "Há quem ocupar" conta quem ocupa pela ampla
+
+> **Respondida pelo usuário em 11/11/2026, na `155`** (FR-6304 da `155`): conta só quem ainda pode
+> ocupar pela lista reservada. Quem ocupa pela ampla com aceite registrado não conta; quem ocupa pela
+> ampla sem aceite ainda impede a reversão, porque a situação pode mudar. Vigora com a implementação
+> da `155`. O texto abaixo é o registro da pendência, preservado.
 
 Sob reversão por esgotamento, a reservada só cede quando não há mais quem ocupar, e a regra de hoje
 compara o número de pessoas com posição na ordem da reservada com as vagas ocupadas — contando quem já

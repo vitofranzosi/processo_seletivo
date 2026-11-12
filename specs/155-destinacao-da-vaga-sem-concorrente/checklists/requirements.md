@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -24,17 +24,20 @@
 
 ## Feature Readiness
 
-- [ ] All functional requirements have clear acceptance criteria
+- [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
 - [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
 
 ## Notes
 
-- Não há marcador `[NEEDS CLARIFICATION]` no texto: no lugar dele, a spec traz dez perguntas
-  numeradas (P-1 a P-10), por pedido explícito do usuário de que "a regra não fecha sem a resposta".
-  Os dois itens desmarcados ficam assim até as respostas: os requisitos marcados "depende da P-n"
-  descrevem a recomendação, que não está adotada.
-- O levantamento cita módulos do código (`ocupacao/…`, `desfechar.py`) porque o pedido mandava
-  levantar o que já existe; os requisitos não dependem deles.
-- Não rode `/speckit-plan` antes das respostas: a P-1, a P-3 e a P-6 mudam o tamanho do plano.
+- As dez perguntas da primeira versão foram respondidas pelo usuário em 11/11/2026 e viraram as
+  decisões D-005 a D-014. Não há marcador `[NEEDS CLARIFICATION]`.
+- Duas leituras da spec sobre essas respostas — D-015 (o saldo é o que a faixa da reserva não
+  preenche) e D-016 (a passagem entre cotas como terceira resposta da reversão) — esperam a
+  confirmação do usuário na revisão do PR. Se ele recusar alguma, a FR-6305 ou as FR-6317 a FR-6319
+  mudam.
+- Os comportamentos que o levantamento só tinha lido no código foram medidos
+  (`verificacao-do-levantamento.md`); dois fatos novos saíram da medição (V-2 e V-3).
+- O levantamento cita módulos do código porque o pedido mandava levantar o que já existe; os
+  requisitos não dependem deles.
