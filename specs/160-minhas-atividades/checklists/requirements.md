@@ -35,10 +35,8 @@
   `test_andamento_em_escala.py`. São deliberados: o pedido fixa a fonte da presidência e o endereço que
   não muda, e o teto de custo segue um teste que já existe. Não é escolha de implementação deixada ao
   plano.
-- **Três decisões do estudo estão abertas** (a 6ª, a 7ª e a 8ª), registradas em *Clarifications* com a
-  sugestão do estudo, em vez de marcadores `[NEEDS CLARIFICATION]`: a governança é do usuário, e os
-  requisitos foram escritos sem fechar nenhuma delas. O plano não deve começar antes de o usuário
-  decidi-las.
+- **As três decisões do estudo que estavam abertas** (a 6ª, a 7ª e a 8ª) foram tomadas pelo usuário
+  em 12/11/2026 e estão em *Clarifications*, como respostas dele.
 - **SC-2281 é humano** e fica pendente até a validação com pessoas.
 - **SC-2274 e FR-6878 deixam o número do teto ao plano**, que o fixa pela medição, como o estudo
   recomenda.
