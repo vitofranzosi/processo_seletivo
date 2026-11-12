@@ -1,0 +1,88 @@
+{% comment %}
+**Os documentos da inscrição, na Mesa** (012, FR-025). Parcial desde a 157: o visualizador a relê
+depois de uma abertura, e a marca "aberto" volta da trilha, sem recarregar a página (FR-6547).
+{% endcomment %}
+<div id="documentos-da-inscricao">
+<p class="retorno-ao-ponto" data-retorno></p>
+  {% if documentos_entregues > 1 %}
+  <p class="ajuda">{{ documentos_abertos }} de {{ documentos_entregues }} abertos por você.</p>
+  {% endif %}
+
+  {% comment %}
+  A lista é a dos **requisitos**, e o arquivo aparece dentro do seu (FR-025). É a diferença entre
+  este sistema e uma pasta compartilhada: requisito sem arquivo aparece como requisito sem
+  arquivo, que é informação para quem avalia — e não uma linha que some.
+  {% endcomment %}
+  {% comment %}
+  A lista reconstruída se anuncia uma vez, acima dela (044, UX-083). A inscrição foi enviada antes
+  de o sistema gravar o que pedia, e o que se vê aqui é o recorte da versão aceita refeito agora —
+  o analista precisa saber que não é o registro do envio.
+  {% endcomment %}
+  {% if lista_reconstruida %}
+  <p class="aviso-da-lista">Esta inscrição foi enviada antes de o sistema gravar a lista de documentos pedidos. A lista abaixo foi reconstruída a partir da versão do Edital que ela aceitou.</p>
+  {% endif %}
+  <ul class="documentos">
+    {% for documento in documentos %}
+    <li>
+      <span class="requisito">{{ documento.nome }}{% if documento.instrucoes %}<span class="instrucao">{{ documento.instrucoes }}</span>{% endif %}{% if documento.razao %}<span class="razao">{{ documento.razao }}</span>{% endif %}</span>
+      <span class="celula-marca">{% if documento.obrigatorio %}<span class="marca">obrigatório</span>{% else %}<span class="marca">facultativo</span>{% endif %}</span>
+      {% comment %}
+      O modelo que o Edital fornecia **na versão que esta inscrição aceitou** (020, FR-050). Não é
+      o vigente: uma Retificação pode ter substituído o formulário depois, e conferir o que voltou
+      contra a forma nova seria conferir contra o que não foi pedido.
+
+      A tela mostra qual era a forma, e **não** afirma que foi este o arquivo que a pessoa baixou —
+      ela pode ter baixado sob outra versão, e os bytes devolvidos não dizem de onde vieram.
+      Concluir se o que voltou serve é juízo de quem avalia (D-004).
+      {% endcomment %}
+      {% if documento.modelo %}
+      <span class="modelo"><a class="acao" href="{% url 'public-anexo' documento.modelo.artefato_id %}"
+         target="_blank" rel="noopener"
+         aria-label="Abrir o modelo exigido: {{ documento.modelo.rotulo }}">Modelo exigido</a></span>
+      {% else %}
+      <span class="modelo"></span>
+      {% endif %}
+      {% if documento.enviado %}
+      {% comment %}
+      **Aba própria, e não a mesma.** O PDF é servido `inline`, então abrir na mesma aba substitui
+      a página — e quem já tinha digitado a nota para conferir uma última coisa no documento sai
+      daqui com o formulário preenchido e não salvo. Não é lentidão: é trabalho que se perde. E são
+      dois cliques por documento — abrir e voltar — cobrados uma vez por inscrição.
+      {% endcomment %}
+      {% comment %}
+      O rótulo não anuncia "nova aba" porque nem sempre é: em tela larga o documento abre no painel
+      ao lado, e prometer aba nova ali seria descrever o que não acontece. `target` continua como o
+      caminho de quem não tem o painel.
+      {% endcomment %}
+      {% comment %}
+      **O fato, e não o minuto.** Quem avalia dezenas de inscrições por dia pergunta "já vi este?",
+      e a resposta é sim ou não. A hora exata não muda decisão nenhuma: ela é dado de auditoria, e
+      o lugar dela é a trilha — fica no `title`, à mão de quem precisar, fora do caminho de quem
+      não precisa. Impressa na linha, competia em largura com o nome do documento.
+      {% endcomment %}
+      <span class="leitura">{% if documento.aberto_em %}<span class="marca-lida"
+        title="Aberto por você em {{ documento.aberto_em|date:'d/m/Y' }} às {{ documento.aberto_em|date:'H:i' }}">aberto</span>{% endif %}</span>
+      <span class="entrega">
+        {% url 'interface:mesa-documento' edital.id etapa_id inscricao.id documento.id as url_do_documento %}
+        <a class="acao" href="{{ url_do_documento }}"
+           target="_blank" rel="noopener"
+           data-abrir-documento
+           data-documento="{{ documento.nome }}"
+           data-rotulo="{{ documento.nome }}"
+           data-tamanho="{{ documento.tamanho }}"
+           data-baixar="{{ url_do_documento }}?baixar=1"
+           data-cartao="{% url 'interface:mesa-documentos' edital.id etapa_id inscricao.id %}"
+           data-alvo="documentos-da-inscricao"
+           {% if documento.aberto_em %}data-aberto{% endif %}
+           {% if forloop.first and not ja_abriu_documento and not aviso and avaliacao.estado != "CONCLUIDA" %}autofocus{% endif %}
+           aria-label="Abrir {{ documento.nome }}">Abrir</a>
+        <span class="tamanho">{{ documento.tamanho }}</span>
+      </span>
+      {% else %}
+      <span class="leitura"></span>
+      <span class="entrega ausente">não apresentado</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>

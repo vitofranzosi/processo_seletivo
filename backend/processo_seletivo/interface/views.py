@@ -22,10 +22,10 @@ from django.db.models import Exists, OuterRef, Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.utils.html import escape
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.html import escape
 from django.utils.http import urlencode
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
@@ -7482,22 +7482,75 @@ def documento_da_mesa(request, edital_id, etapa_id, inscricao_id, requirement_id
     # Uma passagem só: a cópia é conferida e é **ela** que vai para a resposta. Verificar um
     # conteúdo e servir outro é pior do que não verificar, porque produz a afirmação de
     # integridade que ninguém checou (FR-029).
+    # **No painel, a recusa é legível** (157, FR-6545): com `?painel=1`, a recusa da entrega volta
+    # como o documento pequeno da recusa, emoldurável, e não como a página da área, que a moldura
+    # bloquearia. Só a forma muda: o evento e a autorização são os de sempre.
+    no_painel = bool(request.GET.get("painel"))
     try:
         copia, calculado = copia_verificada(documento)
-    except ArquivoIndisponivel:
+    except ArquivoIndisponivel as recusa:
         _registrar_na_mesa(ator, atribuicao, documento, request, "ARQUIVO_INDISPONIVEL")
+        if no_painel:
+            return _recusa_no_painel(request, recusa)
         raise
     if calculado != documento.content_hash:
         copia.close()
         _registrar_na_mesa(ator, atribuicao, documento, request, INTEGRIDADE)
-        raise DomainError(
+        recusa = DomainError(
             "document_integrity_failed",
             "O arquivo guardado não confere com o que foi recebido. O documento não pode ser "
             "apresentado como íntegro; registre a ocorrência à presidência.",
             409,
         )
+        if no_painel:
+            return _recusa_no_painel(request, recusa)
+        raise recusa
+    # **A abertura da Mesa continua gravada antes da entrega** (157, FR-6548). Na Mesa ela só
+    # informa — nenhuma regra a exige para avaliar —, e a FR-027 da `012` não foi revista; a da
+    # convocação, que autoriza o "conforme", passou a ser gravada ao fim (FR-6544).
     _registrar_na_mesa(ator, atribuicao, documento, request, CONSULTAR_DOCUMENTO)
     return entregar(documento, anexo=bool(request.GET.get("baixar")), verificado=copia)
+
+
+@require_http_methods(["GET"])
+def documentos_da_mesa(request, edital_id, etapa_id, inscricao_id):
+    """A lista de documentos da inscrição, relida depois de uma abertura (157, FR-6547, R-005).
+
+    Pela porta da Mesa e pela Atribuição, como a página; sem registro, que é da abertura de cada
+    arquivo. A marca "aberto" volta da trilha, e não do clique.
+    """
+    ator, edital = _mesa_do_avaliador(request, edital_id, etapa_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    try:
+        contexto = mesa_app.inscricao_para_avaliar(
+            ator=ator, edital=edital, etapa_id=etapa_id, inscricao_id=inscricao_id
+        )
+    except DomainError as recusa:
+        raise Http404 from recusa
+    leituras = _leituras_por_requisito(ator, contexto["atribuicao"])
+    documentos = [
+        {**documento, "aberto_em": leituras.get(str(documento["id"]))}
+        for documento in contexto["documentos"]
+    ]
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/_documentos_da_mesa.html",
+            {
+                **contexto,
+                "documentos": documentos,
+                "edital": edital,
+                "etapa_id": etapa_id,
+                "documentos_abertos": sum(
+                    1 for documento in documentos if documento["enviado"] and documento["aberto_em"]
+                ),
+                "documentos_entregues": sum(1 for d in documentos if d["enviado"]),
+                # A lista relida não ganha foco automático: o foco é do visualizador.
+                "ja_abriu_documento": True,
+            },
+        )
+    )
 
 
 def _registrar_na_mesa(ator, atribuicao, documento, request, operacao):
@@ -9370,8 +9423,7 @@ def _contexto_dos_documentos(request, ator, edital, marco_id, convocacao):
             (
                 lido
                 for lido in leitura.pedidos
-                if lido.estado in ("RECEBIDO", "COMPLEMENTADO")
-                or lido.sem_condicao_publicada
+                if lido.estado in ("RECEBIDO", "COMPLEMENTADO") or lido.sem_condicao_publicada
             ),
             None,
         ),
@@ -9399,8 +9451,8 @@ def _arquivos_dos_documentos(edital, marco_id, raiz, leitura):
     """O endereço e o tamanho legível do arquivo de cada apresentação (157, FR-6512, UX-641).
 
     O tamanho é o do arquivo guardado, lido do armazenamento e não do banco: o mesmo que o envio
-    conferiu contra o limite. O arquivo que não se lê fica sem tamanho, e quem o abre recebe a recusa
-    de arquivo indisponível (FR-3695 da `117`).
+    conferiu contra o limite. O arquivo que não se lê fica sem tamanho, e quem o abre recebe a
+    recusa de arquivo indisponível (FR-3695 da `117`).
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
 
@@ -9573,11 +9625,12 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
     ação secundária individual. Não há lote. A abertura fica na trilha, sob a apresentação — é ela
     que o "conforme" lê (FR-3611).
 
-    **A abertura é o acesso ao arquivo, gravado ao fim da entrega** (157, FR-6544; decisão do usuário
-    de 11/11/2026: *"abertura como acesso ao arquivo vigente, sem afirmar comprovação de exibição ou
-    leitura"*). Antes, a consulta era gravada aqui, antes da resposta, e o pedido que caía no
-    primeiro byte virava abertura. Agora quem a grava é a própria entrega, depois do último bloco
-    (`entregar_e_registrar_ao_fim`); o clique, o painel e o pedido interrompido não gravam nada.
+    **A abertura é o acesso ao arquivo, gravado ao fim da entrega** (157, FR-6544; decisão do
+    usuário de 11/11/2026: *"abertura como acesso ao arquivo vigente, sem afirmar comprovação
+    de exibição ou leitura"*). Antes, a consulta era gravada aqui, antes da resposta, e o pedido
+    que caía no primeiro byte virava abertura. Agora quem a grava é a própria entrega, depois do
+    último bloco (`entregar_e_registrar_ao_fim`); o clique, o painel e o pedido interrompido não
+    gravam nada.
 
     **Emoldurável pela própria origem** (157, FR-6504), como o documento da Mesa: a conferência o
     mostra num painel ao lado do formulário. E o painel pede com `?painel=1`, que muda só a forma da
@@ -9794,7 +9847,8 @@ def _conferencia_sem_recarga(request, ator, edital, marco_id, convocacao, item_i
         },
         request=request,
     )
-    for parcial in ("interface/_situacao_dos_documentos.html", "interface/_pessoas_do_recorte.html"):
+    parciais = ("interface/_situacao_dos_documentos.html", "interface/_pessoas_do_recorte.html")
+    for parcial in parciais:
         corpo += render_to_string(parcial, {**contexto, "oob": True}, request=request)
     return marcar_como_privada(HttpResponse(corpo))
 
@@ -9809,11 +9863,7 @@ def _confirmacao_da_conferencia(contexto, lido):
     de aviso dela (D-008 da 157).
     """
     conferencia = lido.conferencia
-    resultado = (
-        conferencia.get_resultado_display().lower()
-        if conferencia is not None
-        else ""
-    )
+    resultado = conferencia.get_resultado_display().lower() if conferencia is not None else ""
     proximo = next(
         (
             outro
@@ -9861,6 +9911,61 @@ def _oferta_do_pedido_de_aviso(aviso):
             "a_partir_de": avisos_pendencias.proximo_dia_do_pedido(timezone.now()),
         }
     return {"motivo": aviso.motivo}
+
+
+@require_http_methods(["POST"])
+def pedir_aviso_de_pendencia_view(request, edital_id, marco_id, convocacao_id):
+    """*"Pedir aviso para ‹nome›"*: o aviso de pendência de uma pessoa (157, D-008).
+
+    FR-6537 a FR-6542 da `157`.
+
+    **O gesto da `134`, no recorte de uma pessoa** (FR-4603 da `134`, revista): o mesmo comando, a
+    mesma autorização de quem confere, o mesmo limite de um aviso por pessoa, por chamada, por dia,
+    e nada agendado. Grava, e não envia: quem envia é o despacho (FR-4619 da `134`). Registrar a
+    pendência continua sem gravar aviso (FR-4604 da `134`): este é sempre um gesto à parte.
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+
+    sem_recarga = request.headers.get("HX-Request") == "true"
+    ator, edital, convocacao, _ = _convocacao_para_conferir(request, edital_id, convocacao_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    vigente = documentos_app.vigente_da_chamada(documentos_app.raiz_da_chamada(convocacao))
+    try:
+        avisos_pendencias.avisar_pendencias(
+            actor=ator,
+            edital_id=edital.id,
+            perfil_id=vigente.perfil_id,
+            marco_id=vigente.marco_id,
+            lista_id=vigente.lista_id,
+            endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            idempotency_key=request.POST.get("chave") or uuid4().hex,
+            correlation_id=getattr(request, "correlation_id", ""),
+            convocacao_id=vigente.id,
+        )
+        frase = (
+            "Aviso solicitado; aguardando envio. A mensagem sai pelo despacho dos avisos, e não "
+            "neste clique."
+        )
+    except DomainError as erro:
+        if erro.status == 404:
+            raise Http404 from erro
+        frase = erro.detail
+    if not sem_recarga:
+        request.session["aviso_da_conferencia"] = frase
+        lista = request.POST.get("lista")
+        return redirect(
+            reverse("interface:documentos-da-convocacao", args=[edital.id, marco_id, convocacao.id])
+            + (f"?{urlencode({'lista': lista})}" if lista else "")
+            + "#situacao-da-convocacao"
+        )
+    contexto = _contexto_dos_documentos(request, ator, edital, marco_id, convocacao)
+    corpo = render_to_string(
+        "interface/_resultado_do_pedido_de_aviso.html", {"frase": frase}, request=request
+    ) + render_to_string(
+        "interface/_situacao_dos_documentos.html", {**contexto, "oob": True}, request=request
+    )
+    return marcar_como_privada(HttpResponse(corpo))
 
 
 @require_http_methods(["GET"])

@@ -83,9 +83,7 @@ def entregar_e_registrar_ao_fim(documento, *, anexo=False, verificado, ao_fim):
 
     resposta = StreamingHttpResponse(blocos(), content_type="application/pdf")
     resposta["Content-Length"] = str(tamanho)
-    resposta["Content-Disposition"] = content_disposition_header(
-        anexo, documento.nome_original
-    )
+    resposta["Content-Disposition"] = content_disposition_header(anexo, documento.nome_original)
     return marcar_como_privada(resposta)
 
 

@@ -190,24 +190,31 @@ def test_envio_desabilitado_e_dito():
 @pytest.mark.parametrize(
     ("estado", "esperado"),
     [
-        (avisos.PENDENTE, "ainda não foi enviado"),
-        (avisos.EM_ENVIO, "o envio está em curso"),
-        (avisos.ESTADO_ACEITA, "aceito pelo servidor de correio em 10/11/2026 12:05"),
-        (avisos.ESTADO_FALHA_DEFINITIVA, ": falha."),
-        (avisos.SEM_ENDERECO, ": sem endereço."),
+        # Os três grupos da FR-6543 da `157` (UX-649), com as palavras da `066`.
+        (avisos.PENDENTE, "Aviso solicitado em 10/11/2026 12:01; aguardando envio."),
+        (avisos.EM_ENVIO, "Aviso solicitado em 10/11/2026 12:01; aguardando envio."),
+        (avisos.ESTADO_FALHA_TEMPORARIA, "Aviso solicitado em 10/11/2026 12:01; aguardando envio."),
+        (
+            avisos.ESTADO_ACEITA,
+            "Aviso enviado em 10/11/2026 12:05: aceito pelo servidor de correio.",
+        ),
+        (avisos.ESTADO_FALHA_DEFINITIVA, "Aviso não enviado: falha."),
+        (avisos.ESTADO_INDETERMINADA, "Aviso não enviado: resultado indeterminado."),
+        (avisos.SEM_ENDERECO, "Aviso não enviado: sem endereço."),
+        (avisos.INTERROMPIDO_ANTES_DO_ENVIO, "Aviso não enviado: interrompido antes do envio."),
     ],
 )
 def test_o_aviso_depois_da_pendencia_diz_a_situacao_do_envio(estado, esperado):
-    """FR-5016: as palavras da `066` — aceita pelo servidor de correio, nunca entregue."""
+    """FR-5016 da `143` e FR-6543 da `157`: aceita pelo servidor de correio, nunca entregue."""
     situacao = c.situacao_do_aviso(
         _com_pendencia(),
         aviso=_aviso(AGORA + timedelta(minutes=1), estado, AGORA + timedelta(minutes=5)),
         motivo="já avisada hoje",
     )
 
-    assert situacao.frase_do_aviso.startswith("Aviso de pendência registrado em 10/11/2026 12:01")
-    assert esperado in situacao.frase_do_aviso
+    assert situacao.frase_do_aviso == esperado
     assert "entregue" not in situacao.frase_do_aviso
+    assert "lido" not in situacao.frase_do_aviso
     assert not situacao.oferece_o_aviso
 
 
