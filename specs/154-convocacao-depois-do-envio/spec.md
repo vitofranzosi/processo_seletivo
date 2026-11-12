@@ -4,14 +4,16 @@
 
 **Created**: 2026-11-11
 
-**Status**: **Rascunho, só a spec — revisão de requisitos vigentes.** Não há plano, tarefas nem
-código. **Todas as decisões são do usuário, e nenhuma está pendente:**
+**Status**: **Revisão de requisitos vigentes; plano e tarefas no PR #484, sem código.** **Todas as
+decisões são do usuário, e nenhuma está pendente:**
 
 - **Sobre os achados 20 e 23 do estudo da jornada final, em 11/11/2026:** transcritas na seção
   *Clarifications* e citadas como *1ª a 8ª decisão*.
 - **Sobre as propostas de desenho desta spec, no mesmo dia:** D-001 a D-005 aprovadas — a D-002 e a
   D-004 com ajuste de redação do usuário —, e a pergunta sobre a chamada que não pede documento pelo
   portal respondida, registrada como D-006.
+- **Sobre a contradição que o `/speckit-analyze` achou, no mesmo dia:** a tela da convocação sem
+  documento pedido fica como hoje, sem a advertência, registrada como D-007.
 
 Nenhuma delas se reabre.
 
@@ -99,6 +101,13 @@ coluna, migration, rota ou tela nova.
   portal, mantém-se a orientação de seguir as instruções do Edital e o comportamento atual até o
   desfecho, porque o sistema não consegue verificar o cumprimento externo (D-006).
 
+### Session 2026-11-11 (decisão do usuário depois da análise)
+
+- Q: A cena 5 da US2 e a SC-2001 dizem que a tela de hoje da chamada sem documento traz a
+  advertência; a página da convocação sem documento nunca a mostrou — só o acompanhamento. Qual
+  vale? → A: **A página fica como hoje**: sem a advertência na página da convocação sem documento; a
+  advertência dessa chamada continua só no acompanhamento (D-007).
+
 ## User Scenarios & Testing *(mandatory)*
 
 Os cenários são os do estudo, no Edital de treinamento SIM09/2026 (C09), e os da `118` e da `121`
@@ -167,8 +176,9 @@ de cada cartão.
    **Then** o título é *"Acompanhe sua convocação"*, o prazo aparece, a advertência não, e a frase
    da conferência terminada também não (D-006).
 5. **Given** a chamada que não pede nada pelo portal, sem desfecho, **When** a pessoa abre a
-   convocação, **Then** a tela é a de hoje: *"Você foi convocado!"*, *"Siga as instruções do Edital
-   para esta convocação."* e a advertência (D-006).
+   convocação, **Then** a tela é a de hoje: *"Você foi convocado!"* e *"Siga as instruções do Edital
+   para esta convocação."*, sem a advertência, que nessa chamada só aparece no acompanhamento (D-006,
+   D-007).
 6. **Given** I1 (vaga aceita), **When** a pessoa abre a convocação, **Then** o título é *"Resultado
    da sua convocação"*, com o rótulo do desfecho e a frase do aceite, como hoje — é a convocação
    concluída.
@@ -239,12 +249,12 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **Convocação corrigida, com documento aproveitado da chamada anterior sem conferência.** O
   aproveitado está com a comissão: vale a frase de conclusão.
 - **Chamada que pede só o Requerimento, ainda não enviado.** É providência pendente: *"Você foi
-  convocado!"* e a advertência, como hoje (FR-6201).
+  convocado!"*, e a advertência no acompanhamento, como hoje (FR-6201, D-007).
 - **Chamada que pede só o Requerimento, já enviado.** Sem providência pendente: *"Acompanhe sua
   convocação"*, o prazo visível, sem a advertência e sem a frase da conferência terminada (FR-6201).
 - **Chamada que não pede nada pelo portal.** Fica como hoje até o desfecho: *"Você foi convocado!"*,
-  *"Siga as instruções do Edital para esta convocação."* e a advertência na condição da FR-1177 da
-  `063` (FR-6201).
+  *"Siga as instruções do Edital para esta convocação."* e, no acompanhamento, a advertência na
+  condição da FR-1177 da `063` (FR-6201, D-007).
 - **Pessoa com mais de uma inscrição convocada.** Tudo é por convocação: cada uma tem o seu título.
 
 ## Requirements *(mandatory)*
@@ -266,8 +276,9 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
     mudam;
   - **sem nada pedido pelo portal**: a pessoa MUST ser tratada como com providência pendente até o
     desfecho — título *"Você foi convocado!"*, a ação *"Siga as instruções do Edital para esta
-    convocação."* e a advertência na condição da FR-1177 da `063` —, como hoje, porque o sistema não
-    verifica o cumprimento externo.
+    convocação."* e, no acompanhamento, a advertência na condição da FR-1177 da `063` —, como hoje,
+    porque o sistema não verifica o cumprimento externo. Nos dois casos, a página da convocação sem
+    documento continua **sem** a advertência, como hoje (D-007).
 
 #### B. O título
 
@@ -371,7 +382,9 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   acompanhamento.
 - **SC-2001**: Nos cenários C1, F, *pendência nova depois de tudo enviado*, *só Requerimento, ainda
   não enviado* e *nada pedido pelo portal, sem desfecho*, com o prazo correndo, o título é *"Você
-  foi convocado!"* e a advertência aparece **exatamente uma** vez em cada tela.
+  foi convocado!"* e a advertência aparece **exatamente uma** vez em cada tela que a mostra hoje: a
+  convocação e o acompanhamento na chamada que pede documento; só o acompanhamento na que não pede
+  (D-007).
 - **SC-2002**: Em 100% dos cenários com chamada aberta e vencimento registrado, o prazo aparece,
   com ou sem providência pendente.
 - **SC-2003**: Zero falsas conclusões: em nenhum cenário sem desfecho aparece *aprovado*, *aceito*,
@@ -600,3 +613,16 @@ registrado, ninguém vai conferir, e *"aguardando nova conferência"* seria fals
 - **Nada pedido pelo portal:** mantém-se a orientação de seguir as instruções do Edital e o
   comportamento atual até o desfecho — *"Você foi convocado!"* e a advertência na condição da
   FR-1177 da `063` —, porque o sistema não consegue verificar o cumprimento externo.
+
+### D-007 — A página da convocação sem documento fica como hoje
+
+**Decisão do usuário (11/11/2026), respondendo à contradição que o `/speckit-analyze` achou.** A cena 5
+da US2 e a SC-2001 diziam que a tela de hoje da chamada sem documento traz a advertência do não
+atendimento. A página da convocação sem documento nunca a mostrou: o parcial da chamada só a põe com
+a projeção das obrigações, que essa chamada não tem; quem a mostra é o acompanhamento. **Fica como
+hoje.** Na chamada que não pede documento — só o Requerimento ainda não enviado, ou nada pedido pelo
+portal —, a advertência aparece só no acompanhamento, na condição da FR-1177 da `063` revista pela
+FR-6209; a página da convocação continua sem ela (FR-6201, SC-2001).
+
+*Alternativa descartada:* pôr a advertência também na página sem documento — seria mudança de tela
+que a D-006 não pediu, e que a spec dizia ser "a de hoje".

@@ -517,7 +517,7 @@ Do mesmo defeito: quem tem `comissao:gerir` e não integra a comissão não rece
 ela. A permissão existia, o caminho não — e quem constitui a comissão é justamente quem ainda não a
 integra.
 
-**FR-112** — **Ler o documento e registrar a avaliação acontecem na mesma tela.** O documento
+**FR-112** *(acrescida pela `157` em 2026-11-11, por decisão do usuário, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)* — **Ler o documento e registrar a avaliação acontecem na mesma tela.** O documento
 abria por cima da página, e ler e avaliar eram duas telas que se revezavam — com o formulário
 preenchido correndo o risco de se perder no caminho. Em tela larga, o documento fica ao lado do
 formulário.
@@ -551,6 +551,25 @@ valesse para um navegador e mentisse para o outro. É o mesmo endereço: a mesma
 conferência, e uma abertura a mais na trilha, que é o que ela é. Controles próprios de zoom e
 rotação foram descartados: o visualizador nativo não se deixa comandar de fora da moldura, e
 recarregá-la a cada clique gravaria uma abertura por clique.
+
+**Acréscimo da `157`.** O painel passa a dizer, em texto, o que impede o documento de aparecer, e a
+volta de um documento aberto fora da página passa a ter caminho (FR-6545 a FR-6548 da `157`):
+
+- a recusa por integridade e a de arquivo indisponível aparecem no painel com a frase de hoje, e não
+  como a página de bloqueio que o navegador mostra quando a resposta de recusa não se deixa
+  emoldurar;
+- em tela larga, quando o navegador declara que não mostra PDF dentro da página, o painel mostra a
+  alternativa — *"Abrir em aba própria"* e *"Baixar"* —, e a barra passa a oferecer o download ao
+  lado da aba própria e do fechar;
+- abaixo de tela larga o documento continua abrindo em aba própria, como acima; na volta, a nota, o
+  parecer e a ficha do barema estão como o avaliador os deixou, inclusive se o navegador recarregou a
+  página, a marca *"aberto"* é relida, e a página oferece o retorno à linha do documento.
+
+**Nada disso cria exigência de abertura para avaliar.** A Avaliação continua aceita como hoje, abra
+ou não o avaliador os documentos, e o registro da abertura continua o desta alínea. Sem JavaScript,
+a Mesa funciona como hoje.
+
+> **Redação anterior à `157`:** a mesma, sem este acréscimo.
 
 **FR-111** — **O seletor de identidade oferece quem tem trabalho de comissão.** Presidir e avaliar
 não são papéis — vêm do vínculo, objeto a objeto —, e nenhuma caixa daquela tela os concede. Quem
