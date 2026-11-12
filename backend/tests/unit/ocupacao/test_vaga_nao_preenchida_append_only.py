@@ -21,34 +21,42 @@ from django.utils import timezone
 from processo_seletivo.ocupacao.domain import nomes
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao, VagaNaoPreenchida
 from processo_seletivo.seguranca.papeis import TABELAS_APPEND_ONLY, comandos_de_privilegios
-from tests.unit.ocupacao.test_movimento_com_recorte import edital_com_versao
 
 postgresql_only = pytest.mark.skipif(
     connection.vendor != "postgresql", reason="gatilho e nome de constraint só no PostgreSQL"
 )
 
-PERFIL = uuid.uuid4()
-MARCO = uuid.uuid4()
-
 
 @pytest.fixture
-def edital_e_versao(db):
-    return edital_com_versao("nao-preenchida")
+def edital_e_apuracao(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """Uma apuração de verdade, e o Edital e a versão dela.
+
+    **A apuração é obrigatória na declaração**, e montá-la à mão exigiria a ordem que o gatilho
+    `check_ordering_act_provenance` confere contra a versão publicada: o percurso oficial é mais
+    curto do que imitá-lo. É o certame da V-1, sem reversão declarada — o C09.
+    """
+    from tests.integration.ocupacao.test_condicao_do_esgotamento import esgotado
+
+    certame = esgotado(
+        gestor, api_client, manager_headers, process_payload, "np-tabela", reversao=None
+    )
+    apuracao = ApuracaoDeOcupacao.objects.filter(lista_id__isnull=True).latest("emitida_em")
+    return certame["edital"], apuracao
 
 
-def gravar(edital_, versao_, **campos):
+def gravar(edital_, apuracao_, **campos):
     padrao = {
         "edital": edital_,
-        "perfil_id": PERFIL,
-        "marco_id": MARCO,
+        "perfil_id": apuracao_.perfil_id,
+        "marco_id": apuracao_.marco_id,
         # A linha geral: a declaração vale também para a ampla sem quem a ocupe (D-014).
         "lista_id": None,
-        "apuracao": None,
+        "apuracao": apuracao_,
         "especie": nomes.NAO_PREENCHIDA_DECLARACAO,
         "desfaz": None,
         "quantidade": 1,
         "fundamento": "Edital silente; a comissão declara a vaga não preenchida.",
-        "versao": versao_,
+        "versao": apuracao_.versao,
         "registrado_por": "teste",
         "registrado_em": timezone.now(),
     }
@@ -74,10 +82,11 @@ class TestAPrimeiraCamadaEOModelo:
         assert campo.related_model is VagaNaoPreenchida
         assert campo.null
 
-    def test_o_recorte_e_identidade_publicada_e_a_apuracao_pode_faltar(self):
+    def test_o_recorte_e_identidade_publicada_e_a_apuracao_e_obrigatoria(self):
+        """A declaração cita a apuração que leu (FR-6342): sem ela não há vaga a ocupar afirmada."""
         for nome in ("perfil_id", "marco_id", "lista_id"):
             assert VagaNaoPreenchida._meta.get_field(nome).get_internal_type() == "UUIDField"
-        assert VagaNaoPreenchida._meta.get_field("apuracao").null
+        assert not VagaNaoPreenchida._meta.get_field("apuracao").null
 
     def test_faltando_desconta_as_nao_preenchidas_e_nao_as_efetivas(self):
         """A vaga existe e ninguém a preencheu (FR-6326): sai do "a ocupar", e as efetivas ficam."""
@@ -100,13 +109,13 @@ class TestATerceiraCamadaEOPrivilegioAusente:
 
 @pytest.mark.django_db
 class TestAInsercaoValida:
-    def test_a_declaracao_e_o_desfazimento_gravam(self, edital_e_versao):
-        edital, versao = edital_e_versao
-        declaracao = gravar(edital, versao, quantidade=2)
+    def test_a_declaracao_e_o_desfazimento_gravam(self, edital_e_apuracao):
+        edital, apuracao = edital_e_apuracao
+        declaracao = gravar(edital, apuracao, quantidade=2)
 
         desfazimento = gravar(
             edital,
-            versao,
+            apuracao,
             especie=nomes.NAO_PREENCHIDA_DESFAZIMENTO,
             desfaz=declaracao,
             quantidade=1,
@@ -119,9 +128,9 @@ class TestAInsercaoValida:
 @pytest.mark.django_db
 @postgresql_only
 class TestAsGarantiasDoBanco:
-    def test_o_gatilho_recusa_alteracao_e_exclusao_por_queryset(self, edital_e_versao):
-        edital, versao = edital_e_versao
-        declaracao = gravar(edital, versao)
+    def test_o_gatilho_recusa_alteracao_e_exclusao_por_queryset(self, edital_e_apuracao):
+        edital, apuracao = edital_e_apuracao
+        declaracao = gravar(edital, apuracao)
 
         with pytest.raises(DatabaseError, match="immutable"), transaction.atomic():
             VagaNaoPreenchida.objects.filter(id=declaracao.id).update(quantidade=2)
@@ -137,28 +146,28 @@ class TestAsGarantiasDoBanco:
         ],
     )
     def test_as_constraints_recusam_a_declaracao_malformada(
-        self, edital_e_versao, campos, constraint
+        self, edital_e_apuracao, campos, constraint
     ):
-        edital, versao = edital_e_versao
+        edital, apuracao = edital_e_apuracao
 
         with pytest.raises(IntegrityError, match=constraint), transaction.atomic():
-            gravar(edital, versao, **campos)
+            gravar(edital, apuracao, **campos)
 
-    def test_o_desfazimento_sem_citacao_e_recusado(self, edital_e_versao):
-        edital, versao = edital_e_versao
-
-        with (
-            pytest.raises(IntegrityError, match="ck_nao_preenchida_desfazimento_cita"),
-            transaction.atomic(),
-        ):
-            gravar(edital, versao, especie=nomes.NAO_PREENCHIDA_DESFAZIMENTO)
-
-    def test_a_declaracao_que_cita_outra_e_recusada(self, edital_e_versao):
-        edital, versao = edital_e_versao
-        anterior = gravar(edital, versao)
+    def test_o_desfazimento_sem_citacao_e_recusado(self, edital_e_apuracao):
+        edital, apuracao = edital_e_apuracao
 
         with (
             pytest.raises(IntegrityError, match="ck_nao_preenchida_desfazimento_cita"),
             transaction.atomic(),
         ):
-            gravar(edital, versao, desfaz=anterior)
+            gravar(edital, apuracao, especie=nomes.NAO_PREENCHIDA_DESFAZIMENTO)
+
+    def test_a_declaracao_que_cita_outra_e_recusada(self, edital_e_apuracao):
+        edital, apuracao = edital_e_apuracao
+        anterior = gravar(edital, apuracao)
+
+        with (
+            pytest.raises(IntegrityError, match="ck_nao_preenchida_desfazimento_cita"),
+            transaction.atomic(),
+        ):
+            gravar(edital, apuracao, desfaz=anterior)
