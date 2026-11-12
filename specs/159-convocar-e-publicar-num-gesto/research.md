@@ -20,8 +20,9 @@ formas (a decisão de prazo por canal da `149`).
 A `140` já tem a conferência antes de convocar, no mesmo endereço do gesto, sem gravar nada, com a
 confirmação que leva a assinatura do alcance e o resumo do texto conferido. Esta feature acrescenta a
 ela o que será público, o veículo, a declaração, a autoridade e o botão que diz as consequências — e
-não cria tela nova. O resumo do texto conferido passa a incluir o veículo e a autoridade, para que a
-confirmação recuse o que não foi visto.
+não cria tela nova. O veículo, a autoridade e a declaração são escolhidos **na própria conferência**, no
+formulário que confirma — não há o que mudar entre vê-los e confirmá-los —, e por isso não entram no
+resumo do texto conferido, que continua cobrindo o fundamento, o prazo e as mensagens.
 
 ## D-003 — O núcleo da publicação, extraído e reutilizado
 
