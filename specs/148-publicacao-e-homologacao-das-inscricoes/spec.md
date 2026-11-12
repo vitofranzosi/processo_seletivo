@@ -5,8 +5,9 @@
 **Created**: 2026-11-11 · **Revista**: 2026-11-12 (a relação por lista de concorrência, D-011)
 
 **Status**: Spec, plano, tarefas e implementação em 11/11/2026. Seis questões (P-1 a P-6, ao fim)
-esperam validação institucional, e nenhuma bloqueia o que foi entregue: cada uma tem um padrão
-conservador escrito. **A P-2 foi respondida pelo usuário em 12/11/2026** (D-011).
+foram abertas para validação institucional, e nenhuma bloqueia o que foi entregue: cada uma tem um
+padrão conservador escrito. **A P-2 foi respondida pelo usuário em 12/11/2026** (D-011); as outras
+cinco continuam esperando.
 
 > **Revisão de 12/11/2026 — a relação por lista de concorrência (D-011).** O usuário respondeu à
 > P-2: a modalidade aparece no ato, e o ato se reparte por lista, como os Editais do Ifes publicam.
@@ -82,7 +83,7 @@ recebida e nenhum outro dado pessoal.
 **Acceptance Scenarios**:
 
 1. **Given** um Edital publicado com inscrições enviadas e período encerrado, **When** quem publica
-   abre a prévia da relação de recebidas, **Then** vê o total e a contagem por Perfil, o que
+   abre a prévia da relação de recebidas, **Then** vê o total e a contagem por Perfil e por lista (FR-5445), o que
    acontece ao confirmar, e que nada foi gravado.
 2. **Given** a prévia, **When** confirma com a autoridade signatária, **Then** a relação é publicada,
    congelada, com PDF gravado, e aparece na página pública da seleção.
@@ -333,14 +334,21 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
 
 - **FR-5429**: Publicar MUST exigir a capacidade de publicar resultado (`resultado:publicar`) e o
   Edital no escopo institucional do ator; consultar a tela MUST admitir também a auditoria.
-- **FR-5430**: A publicação MUST ser idempotente pela chave do pedido, serializada com os demais
-  comandos do Processo, e MUST recusar a confirmação quando a projeção ou a cadeia mudaram desde a
-  prévia.
+- **FR-5430** *(revista em 2026-11-12, D-011 — a redação anterior está ao fim desta alínea)*: A
+  publicação MUST ser idempotente pela chave do pedido, serializada com os demais comandos do
+  Processo, e MUST recusar a confirmação quando a projeção, a cadeia ou a versão do Edital que o ato
+  cita mudaram desde a prévia. A versão entra porque as listas de concorrência saem dela (FR-5439):
+  uma Retificação publicada entre a prévia e a confirmação mudaria a repartição sem mudar as
+  inscrições.
+
+  > **Redação anterior à revisão de 12/11, preservada:** A publicação MUST ser idempotente pela
+  > chave do pedido, serializada com os demais comandos do Processo, e MUST recusar a confirmação
+  > quando a projeção ou a cadeia mudaram desde a prévia.
 - **FR-5431**: A publicação MUST gravar a trilha de auditoria com ator, operação, ato, versão citada
   e sucessão, sem dado pessoal.
 - **FR-5432**: A tela da gestão MUST mostrar, antes da confirmação: a natureza, a Etapa, o prazo, o
-  total e a contagem por Perfil, as pendências que impedem, o aviso de sucessão, o que acontece ao
-  confirmar e qual documento ficará disponível.
+  total e a contagem por Perfil (e, desde a revisão de 12/11, por lista — FR-5445), as pendências
+  que impedem, o aviso de sucessão, o que acontece ao confirmar e qual documento ficará disponível.
 - **FR-5433**: A tela MUST oferecer só as naturezas permitidas no estado atual, e dizer por que as
   demais não estão.
 
@@ -406,7 +414,8 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
 - **UX-464**: A página pública do ato MUST ser legível a 375 px sem rolagem horizontal da página.
 - **UX-465**: Nenhum estilo ou script inline (CSP); toda classe nova com regra na folha.
 - **UX-466** *(revisão de 12/11, D-011)*: Na página pública, cada lista MUST ser um título abaixo do
-  Perfil, com a quantidade de inscrições que ela contém, e a tabela legível a 375 px.
+  Perfil, com a quantidade de inscrições nomeadas nela — as indeferidas são contadas à parte
+  (FR-5443) —, e a tabela legível a 375 px.
 - **UX-467** *(revisão de 12/11, D-011)*: O candidato que procura o próprio nome MUST encontrá-lo na
   ampla concorrência, qualquer que seja a Modalidade que declarou: a ampla é a lista de todos.
 
