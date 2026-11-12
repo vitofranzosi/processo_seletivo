@@ -618,6 +618,23 @@ urlpatterns = [
         views_da_destinacao.destinar_vaga,
         name="destinar-vaga",
     ),
+    # A declaração de vaga não preenchida e os desfazimentos (155, FR-6323, FR-6334), na mesma
+    # forma de dois passos.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/declarar-nao-preenchida",
+        views_da_destinacao.declarar_nao_preenchida,
+        name="declarar-nao-preenchida",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-destinacao",
+        views_da_destinacao.desfazer_destinacao,
+        name="desfazer-destinacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-nao-preenchida",
+        views_da_destinacao.desfazer_nao_preenchida,
+        name="desfazer-nao-preenchida",
+    ),
     # O histórico de um recorte (016, FR-259). O caminho **carrega** o marco, como a leitura, e o
     # recorte vem em `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte
     # identifica.

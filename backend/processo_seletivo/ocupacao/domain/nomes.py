@@ -143,8 +143,7 @@ DESFAZIMENTO_COM_PESSOAS_CHAMADAS = "desfazimento_com_pessoas_chamadas"
 OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"
 
 # --- Recusas da destinação e da vaga não preenchida (155, contrato `comandos-e-telas.md`) -------
-# Os atos que as usam vêm nos incrementos seguintes; os códigos ficam aqui desde já, pela razão do
-# topo deste módulo, e porque a tela da passagem entre cotas já precisa dizer a dela.
+# Os códigos ficam aqui pela razão do topo deste módulo: a aplicação, a tela e o teste os leem.
 SEM_REVERSAO_DECLARADA = "sem_reversao_declarada"
 RECUSA_PASSAGEM_ENTRE_COTAS = "passagem_entre_cotas"
 REVERSAO_POR_SALDO_AGUARDA_DECISAO = "reversao_por_saldo_aguarda_decisao"
@@ -153,3 +152,12 @@ DESTINACAO_IMPEDIDA = "destinacao_impedida"
 SEM_SALDO_A_DESTINAR = "sem_saldo_a_destinar"
 DESTINACAO_COM_CHAMADA_DEPENDENTE = "destinacao_com_chamada_dependente"
 O_EDITAL_MANDA_DESTINAR = "o_edital_manda_destinar"
+# Os desfazimentos (155, R-005): o ato que já foi desfeito, o que não existe neste Edital, e a vaga
+# destinada que a ampla declarou não preenchida depois de recebê-la — desfazer a destinação ali
+# faria a apuração seguinte passar das vagas.
+ATO_JA_DESFEITO = "ato_ja_desfeito"
+ATO_INEXISTENTE = "ato_inexistente"
+DESTINACAO_COM_DECLARACAO_DEPENDENTE = "destinacao_com_declaracao_dependente"
+# **A conta que o banco recusaria, dita pelo nome** (155, R-002): `ocupadas + nao_preenchidas`
+# acima das efetivas. A emissão e a declaração a recusam antes de chegar à constraint.
+NAO_PREENCHIDAS_ALEM_DAS_VAGAS = "nao_preenchidas_alem_das_vagas"

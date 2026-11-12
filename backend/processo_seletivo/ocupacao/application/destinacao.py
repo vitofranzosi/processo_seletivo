@@ -33,19 +33,27 @@ from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupaca
 from processo_seletivo.ocupacao.application import selectors
 from processo_seletivo.ocupacao.application.emissao import (
     _edital_do_processo,
+    conferir_limite,
     emitir_sucessora_por_efeito,
 )
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.ocupacao.domain import destinacao as conta
 from processo_seletivo.ocupacao.domain import nomes, reversao
-from processo_seletivo.ocupacao.models import MovimentoDeVaga
+from processo_seletivo.ocupacao.models import MovimentoDeVaga, VagaNaoPreenchida
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
 
 DESTINAR = "OCUPACAO_DESTINAR_VAGA"
+DECLARAR_NAO_PREENCHIDA = "OCUPACAO_DECLARAR_NAO_PREENCHIDA"
+DESFAZER_DESTINACAO = "OCUPACAO_DESFAZER_DESTINACAO"
+DESFAZER_NAO_PREENCHIDA = "OCUPACAO_DESFAZER_NAO_PREENCHIDA"
+DESFAZIMENTO_IMPEDIDO = "OCUPACAO_DESFAZIMENTO_IMPEDIDO"
 ATO_DE_DESTINAR = "ocupacao:destinar_vaga"
+ATO_DE_DECLARAR = "ocupacao:declarar_nao_preenchida"
+ATO_DE_DESFAZER_DESTINACAO = "ocupacao:desfazer_destinacao"
+ATO_DE_DESFAZER_NAO_PREENCHIDA = "ocupacao:desfazer_nao_preenchida"
 
 
 # --- A leitura ---------------------------------------------------------------------------------
@@ -86,21 +94,30 @@ def leitura_da_vaga(*, edital, perfil_id, marco_id, lista_id, fatos_externos=Non
     movimentos = selectors._movimentos_que_alcancam(
         edital=edital, perfil=perfil_id, marco=marco_id, lista=lista_id
     )
+    declaracoes = selectors.nao_preenchidas_do_recorte(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
     base = {
         "versao": versao,
         "declaracao": declaracao,
         "frase": frase_publicada(versao, declaracao),
+        "listaId": lista_id,
         "apuracao": vigente,
         "movimentos": movimentos,
         "destinadas": _destinadas(movimentos, lista_id),
+        # **As declarações de hoje, cada uma com o que ainda tem a desfazer** (155, FR-6326): a
+        # tela as mostra como "não preenchida", e a conta da apuração as lê pelos ids congelados.
+        "naoPreenchidas": _com_o_restante(declaracoes),
+        "declaradas": calculo.saldo_das_nao_preenchidas(
+            (d.especie, d.quantidade) for d in declaracoes
+        ),
     }
-    if vigente is None or lista_id is None:
-        # Sem apuração não há saldo afirmado; a linha geral não é origem de destinação — a vaga
-        # dela é a da declaração de não preenchida, no incremento seguinte (155, D-014).
+    if vigente is None:
+        # Sem apuração não há saldo afirmado: nada a destinar nem a declarar.
         situacao = conta.situacao(
             declaracao=declaracao,
             lista_id=lista_id,
-            saldo=None if vigente is None else 0,
+            saldo=None,
             destinadas=base["destinadas"],
         )
         return {**base, "situacao": situacao, "quantidadePelaCondicao": 0, "restantes": []}
@@ -186,11 +203,15 @@ def leitura_da_vaga(*, edital, perfil_id, marco_id, lista_id, fatos_externos=Non
         # **A condição sozinha, sem os impedimentos** (155, R-011): é o que a prévia da
         # classificação e a do sorteio fazem sobre a ordem fictícia, onde não há desfecho, recurso
         # nem chamada a simular; a equivalência delas com o caminho oficial lê este número.
+        # A linha geral não é origem de destinação (D-014): a vaga dela é a da declaração de não
+        # preenchida, e a prévia não tem o que simular ali.
         "quantidadePelaCondicao": conta.quantidade_destinavel(
             gatilho=reversao.especie_que_move(perfil),
             saldo=saldo,
             ainda_podem_ocupar=len(pela_condicao),
-        ),
+        )
+        if lista_id is not None
+        else 0,
     }
 
 
@@ -216,17 +237,24 @@ def _condicao(*, edital, perfil_id, marco_id, lista_id, versao, efetivas):
         )
     )
     try:
-        ocupantes_da_ampla = {
-            conta.chave(i)
-            for i in selectors.ocupantes_da_ampla(
-                edital=edital, perfil_id=perfil_id, marco_id=marco_id, versao=versao
-            )
-        }
+        # **Na linha geral, ninguém "ocupa a ampla" à parte** (155, D-014): a concorrência
+        # concomitante é pergunta da reserva, e na ampla quem a ocupa é o titular dela mesma — a
+        # conta de `ocupantes`, abaixo. É o que a emissão faz (`emissao._apurar`).
+        ocupantes_da_ampla = (
+            {
+                conta.chave(i)
+                for i in selectors.ocupantes_da_ampla(
+                    edital=edital, perfil_id=perfil_id, marco_id=marco_id, versao=versao
+                )
+            }
+            if lista_id is not None
+            else set()
+        )
     except calculo.EmpateNaFronteiraDoAlvo:
         # A ampla não apura com o empate não julgado, e a reserva também não: a vigente dela está
         # obsoleta, e a causa impede o ato. Ninguém conta como ocupante da ampla, e a conta segue.
         ocupantes_da_ampla = set()
-    confirmados = conta.incluidos_por_efeito(da_ampla) & membros
+    confirmados = conta.incluidos_por_efeito(da_ampla) & membros if lista_id is not None else set()
     # **Os ocupantes da reserva, pela conta da apuração** (`apuracao.titulares_iniciais` e
     # `ocupantes`), sobre as efetivas que a vigente gravou: a pergunta é se há alguém para a vaga
     # que **sobra**, e quem já ocupa outra não responde por ela.
@@ -517,18 +545,30 @@ def _fundamento(previa):
     )
 
 
-def _emitir_seguinte(ctx, actor, *, edital, perfil_id, marco_id, lista_id, motivo, correlation_id):
-    """A sucessora da apuração de origem, ou o que a impede — o molde do acréscimo (`T-004`).
+def _emitir_seguinte(
+    ctx,
+    actor,
+    *,
+    edital,
+    perfil_id,
+    marco_id,
+    lista_id,
+    motivo,
+    correlation_id,
+    causa_do_ato=nomes.CAUSA_MOVIMENTO_POSTERIOR,
+):
+    """A sucessora da apuração do recorte, ou o que a impede — o molde do acréscimo (`T-004`).
 
-    **Só quando o movimento é a única causa**: o ato só é aceito sobre apuração vigente sem
-    obsolescência, e a causa nova é a dele. Num *savepoint*: a recusa da emissão não desfaz a
-    destinação, que aconteceu, e a origem aparece obsoleta pela causa dita.
+    **Só quando o ato é a única causa** (`causa_do_ato`: o movimento, ou a declaração de não
+    preenchida): o ato só é aceito sobre apuração vigente sem obsolescência, e a causa nova é a
+    dele. Num *savepoint*: a recusa da emissão não desfaz o ato, que aconteceu, e o recorte aparece
+    obsoleto pela causa dita.
     """
     vigente = selectors.apuracao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     causas = {c["causa"] for c in selectors.causas_de_obsolescencia(vigente, at=ctx.now)}
-    if vigente is not None and causas - {nomes.CAUSA_MOVIMENTO_POSTERIOR}:
+    if vigente is not None and causas - {causa_do_ato}:
         return _pendente(
             nomes.OUTRA_CAUSA_DE_OBSOLESCENCIA,
             "A apuração desta lista já estava obsoleta por outra causa: emita a seguinte na "
@@ -575,10 +615,765 @@ def _razao(movimento, previa, seguinte):
     )
 
 
+def _com_o_restante(declaracoes):
+    """Cada declaração de não preenchida com o que ainda tem a desfazer, numa passada (FR-6334).
+
+    A forma de `selectors.com_o_restante` do acréscimo, com as espécies desta tabela: os
+    desfazimentos citam a declaração pela FK, e a lista é a do recorte.
+    """
+    desfeitas = {}
+    for registro in declaracoes:
+        if registro.especie == nomes.NAO_PREENCHIDA_DESFAZIMENTO:
+            desfeitas[registro.desfaz_id] = desfeitas.get(registro.desfaz_id, 0) + (
+                registro.quantidade
+            )
+    return [
+        {
+            "registro": registro,
+            "restante": max(registro.quantidade - desfeitas.get(registro.id, 0), 0)
+            if registro.especie == nomes.NAO_PREENCHIDA_DECLARACAO
+            else 0,
+        }
+        for registro in declaracoes
+    ]
+
+
+# --- A vaga não preenchida (155, US2, R-002) ----------------------------------------------------
+
+
+def previa_da_nao_preenchida(*, edital, perfil_id, marco_id, lista_id, fatos_externos, at=None):
+    """O que a declaração faria agora, e a recusa que daria — **sem gravar nada** (FR-6323).
+
+    **A mesma leitura da destinação** (155, D-004): a condição, os impedimentos e o saldo são os
+    da FR-6300, e o que muda é para onde a vaga vai — para lugar nenhum. A declaração não mexe nas
+    efetivas (D-003): tira a vaga do "a ocupar", e a quantidade publicada continua a mesma.
+    """
+    leitura = leitura_da_vaga(
+        edital=edital,
+        perfil_id=perfil_id,
+        marco_id=marco_id,
+        lista_id=lista_id,
+        fatos_externos=fatos_externos,
+        at=at,
+    )
+    situacao = leitura["situacao"]
+    quantidade = (
+        situacao["quantidade"] if situacao["estado"] == conta.NAO_PREENCHIDA_DISPONIVEL else 0
+    )
+    saldo = leitura.get("saldo")
+    return {
+        **leitura,
+        "quantidade": quantidade,
+        "recusa": _recusa_da_nao_preenchida(leitura),
+        "faltandoDepois": (saldo - quantidade) if saldo is not None else None,
+        # **A assinatura cobre o que o ato lê** (FR-6342), como a da destinação, mais as
+        # declarações do recorte: uma declaração feita por outra pessoa entre a conferência e o
+        # clique é leitura nova.
+        "assinatura": canonical_sha256(
+            {
+                "gesto": "nao_preenchida",
+                "apuracao": str(leitura["apuracao"].id) if leitura["apuracao"] else None,
+                "movimentos": [str(m.id) for m in leitura["movimentos"]],
+                "naoPreenchidas": [str(d["registro"].id) for d in leitura["naoPreenchidas"]],
+                "versao": str(leitura["versao"].id),
+                "declaracao": leitura["declaracao"],
+                "quantidade": quantidade,
+            }
+        ),
+    }
+
+
+def _recusa_da_nao_preenchida(leitura):
+    """`(codigo, frase)` da recusa que a declaração daria, na ordem do contrato, ou `None`.
+
+    **O que o Edital manda vem antes de tudo** (FR-6327): onde ele declara a reversão, a vaga que
+    ninguém mais pode ocupar é destinada, e não declarada não preenchida; onde manda a passagem
+    entre cotas, nenhum ato a leva a lugar nenhum. Só depois a condição e os impedimentos, que são
+    os da destinação (FR-6323).
+    """
+    situacao = leitura["situacao"]
+    declaracao = leitura["declaracao"]
+    reservada = leitura["listaId"] is not None
+    if declaracao == nomes.PASSAGEM_ENTRE_COTAS:
+        return (
+            nomes.RECUSA_PASSAGEM_ENTRE_COTAS,
+            "Este Edital manda a vaga passar antes por outras cotas, e o GPS ainda não aplica essa "
+            "ordem: a vaga não é declarada não preenchida.",
+        )
+    if declaracao == nomes.REVERSAO_POR_SALDO:
+        # A mesma frase da destinação (155, R-010): o saldo fica como estava, sem ato novo.
+        return (
+            nomes.REVERSAO_POR_SALDO_AGUARDA_DECISAO,
+            "A destinação por ato próprio não se aplica à reversão pelo saldo não preenchido.",
+        )
+    if reservada and declaracao == nomes.REVERSAO_POR_ESGOTAMENTO:
+        return (
+            nomes.O_EDITAL_MANDA_DESTINAR,
+            "Este Edital declara para onde vai a vaga desta lista que ninguém mais pode ocupar"
+            + (f": «{leitura['frase']}»" if leitura["frase"] else "")
+            + ". O caminho é a destinação à ampla concorrência, e não a declaração de vaga não "
+            "preenchida.",
+        )
+    if leitura["apuracao"] is None or leitura.get("saldo") is None:
+        return (
+            nomes.SEM_SALDO_A_DESTINAR,
+            "Esta lista ainda não tem apuração: não há vaga a ocupar afirmada para declarar não "
+            "preenchida.",
+        )
+    if situacao["estado"] == conta.IMPEDIDA and situacao["impedimentos"]:
+        return (nomes.DESTINACAO_IMPEDIDA, _frase_do_impedimento(situacao["impedimentos"][0]))
+    if not leitura["saldo"]:
+        return (
+            nomes.SEM_SALDO_A_DESTINAR,
+            "Esta lista não tem vaga a ocupar"
+            + (": a vaga já foi declarada não preenchida." if leitura["declaradas"] else "."),
+        )
+    if situacao["aindaPodemOcupar"]:
+        quantas = situacao["aindaPodemOcupar"]
+        return (
+            nomes.AINDA_HA_QUEM_OCUPAR,
+            f"Ainda há {quantas} pessoa{'s' if quantas != 1 else ''} na ordem desta lista que "
+            f"{'podem' if quantas != 1 else 'pode'} ocupar a vaga: ela não é declarada não "
+            "preenchida enquanto houver.",
+        )
+    if situacao["estado"] != conta.NAO_PREENCHIDA_DISPONIVEL:
+        return (
+            nomes.DESTINACAO_IMPEDIDA,
+            "A vaga desta lista não está disponível para a declaração de não preenchida.",
+        )
+    return None
+
+
+def declarar_nao_preenchida(
+    *,
+    actor,
+    processo_id,
+    edital_id,
+    perfil_id,
+    marco_id,
+    lista_id,
+    fundamento,
+    assinatura,
+    fatos_externos,
+    idempotency_key,
+    correlation_id,
+):
+    """Grava a declaração de vaga não preenchida e a sucessora do recorte (FR-6323, FR-6325).
+
+    **Nunca por padrão nem por efeito de outro ato** (FR-6323): só aqui, com o fundamento escrito
+    por quem declara. O fundamento não move a vaga para lugar nenhum (FR-6320, D-006) — ele diz por
+    que a vaga fica sem ocupante, e o que o Edital manda continua sendo lido na declaração dele.
+    """
+    texto = (fundamento or "").strip()
+    payload = {
+        "edital": str(edital_id),
+        "perfil": str(perfil_id),
+        "marco": str(marco_id),
+        "lista": str(lista_id) if lista_id else "",
+        "fundamento": texto,
+        "leitura": assinatura or "",
+    }
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation=ATO_DE_DECLARAR,
+        payload=payload,
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            return ctx.desfecho_anterior
+        if not texto:
+            raise DomainError(
+                nomes.FUNDAMENTO_OBRIGATORIO,
+                "Diga por que a vaga fica sem ocupante: a declaração exige fundamento escrito.",
+                422,
+                campo="fundamento",
+            )
+        edital = _edital_do_processo(ctx.processo, edital_id)
+        perfil, marco = identificador(perfil_id), identificador(marco_id)
+        lista = identificador(lista_id) if lista_id else None
+        previa = previa_da_nao_preenchida(
+            edital=edital,
+            perfil_id=perfil,
+            marco_id=marco,
+            lista_id=lista,
+            fatos_externos=fatos_externos,
+            at=ctx.now,
+        )
+        if previa["recusa"] is not None:
+            codigo, frase = previa["recusa"]
+            raise DomainError(codigo, frase, 409)
+        if (assinatura or "") != previa["assinatura"]:
+            raise DomainError(
+                nomes.LEITURA_DO_RECORTE_MUDOU,
+                "As vagas desta lista mudaram desde que a conferência foi aberta: confira de novo "
+                "antes de confirmar.",
+                409,
+            )
+        quantidade = previa["quantidade"]
+        apuracao = previa["apuracao"]
+        conferir_limite(
+            efetivas=apuracao.efetivas,
+            ocupadas=apuracao.ocupadas,
+            nao_preenchidas=apuracao.nao_preenchidas + quantidade,
+        )
+        registro = VagaNaoPreenchida.objects.create(
+            edital=edital,
+            perfil_id=perfil,
+            marco_id=marco,
+            lista_id=lista,
+            # A apuração **lida** (FR-6342): reproduzir a declaração é reler esta, com a versão
+            # que ela leu.
+            apuracao=apuracao,
+            especie=nomes.NAO_PREENCHIDA_DECLARACAO,
+            quantidade=quantidade,
+            fundamento=texto,
+            versao=previa["versao"],
+            registrado_por=str(getattr(actor, "subject", actor)),
+            registrado_em=ctx.now,
+        )
+        seguinte = _emitir_seguinte(
+            ctx,
+            actor,
+            edital=edital,
+            perfil_id=perfil,
+            marco_id=marco,
+            lista_id=lista,
+            motivo=f"Declaração de {quantidade} vaga(s) não preenchida(s). Fundamento: {texto}",
+            correlation_id=correlation_id,
+            causa_do_ato=nomes.CAUSA_DECLARACAO_POSTERIOR,
+        )
+        auditar(
+            actor=actor,
+            permissao=ctx.base.permissao,
+            operation=DECLARAR_NAO_PREENCHIDA,
+            aggregate=registro,
+            now=ctx.now,
+            correlation_id=correlation_id,
+            reason=(
+                f"Declaração de {quantidade} vaga(s) não preenchida(s) na lista "
+                f"{lista or 'ampla concorrência'}, no marco {marco}, Perfil {perfil}. "
+                f"Fundamento: {texto}. Apuração lida: {apuracao.id}; "
+                + _sucessora_na_razao(seguinte)
+            ),
+            idempotency_key=idempotency_key,
+        )
+        declarado = {"naoPreenchida": str(registro.id), "quantidade": quantidade, **seguinte}
+        ctx.concluir_sem_resultado(201, declarado)
+        return declarado
+
+
+def _sucessora_na_razao(seguinte):
+    emitida = seguinte["apuracaoSeguinte"]
+    return (
+        f"sucessora: {emitida['id']}."
+        if emitida
+        else f"sucessora pendente: {seguinte['apuracaoPendente']['codigo']}."
+    )
+
+
+# --- Os desfazimentos (155, US6, R-005) ---------------------------------------------------------
+
+
+def previa_do_desfazimento_da_destinacao(*, edital, movimento_id, chamadas_dependentes, at=None):
+    """O que o desfazimento da destinação faria agora, e a recusa que daria (FR-6334, FR-6335).
+
+    `chamadas_dependentes(edital=, perfil_id=, marco_id=, lista_id=, movimento_id=,
+    nao_preenchida_id=, at=)` devolve `[{"id", "rotulo", "ocupa"}]`: as chamadas no recorte de
+    destino cuja apuração leu este movimento, e que ainda respondem pela vaga. É a pergunta que só
+    a condução responde, e chega como argumento (R-005) — esta feature não a conhece.
+    """
+    movimento = _destinacao_do_edital(edital, movimento_id)
+    perfil_id, marco_id = movimento.perfil_id, movimento.marco_id
+    dependentes = list(
+        chamadas_dependentes(
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=movimento.destino_lista_id,
+            movimento_id=movimento.id,
+            nao_preenchida_id=None,
+            at=at,
+        )
+        or []
+    )
+    origem = selectors.apuracao_vigente(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=movimento.origem_lista_id
+    )
+    destino = selectors.apuracao_vigente(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=movimento.destino_lista_id
+    )
+    desfeito = movimento.desfazimentos.exists()
+    declarada = _declaracao_que_leu(edital, movimento)
+    recusa = None
+    if desfeito:
+        recusa = (nomes.ATO_JA_DESFEITO, "Esta destinação já foi desfeita.")
+    elif declarada:
+        recusa = (
+            nomes.DESTINACAO_COM_DECLARACAO_DEPENDENTE,
+            "A vaga destinada foi declarada não preenchida na ampla concorrência depois de "
+            "recebida: desfaça antes essa declaração, com motivo, e então a destinação.",
+        )
+    elif dependentes:
+        recusa = (nomes.DESTINACAO_COM_CHAMADA_DEPENDENTE, _frase_dos_dependentes(dependentes))
+    return {
+        "movimento": movimento,
+        "versao": effective_version(edital_id=edital.id, at=at),
+        "origem": origem,
+        "destino": destino,
+        "dependentes": dependentes,
+        "recusa": recusa,
+        "assinatura": canonical_sha256(
+            {
+                "gesto": "desfazer_destinacao",
+                "movimento": str(movimento.id),
+                "desfeito": desfeito,
+                "origem": str(origem.id) if origem else None,
+                "destino": str(destino.id) if destino else None,
+                "dependentes": [str(d.get("id")) for d in dependentes],
+            }
+        ),
+    }
+
+
+def desfazer_destinacao(
+    *,
+    actor,
+    processo_id,
+    edital_id,
+    movimento_id,
+    motivo,
+    assinatura,
+    chamadas_dependentes,
+    idempotency_key,
+    correlation_id,
+):
+    """O ato contrário à destinação, citando-a, ou a recusa registrada (FR-6334 a FR-6336).
+
+    **Com chamada dependente, a recusa fica na trilha** (FR-6335, R-005): o pedido, a recusa e as
+    chamadas nomeadas. Por isso ela não é levantada dentro da transação — levantar desfaria o
+    registro —, e sim depois dela, com o desfecho guardado na chave: a repetição recusa de novo, e
+    não grava outro evento.
+    """
+    texto = (motivo or "").strip()
+    payload = {
+        "edital": str(edital_id),
+        "movimento": str(movimento_id),
+        "motivo": texto,
+        "leitura": assinatura or "",
+    }
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation=ATO_DE_DESFAZER_DESTINACAO,
+        payload=payload,
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            recusado = (ctx.desfecho_anterior or {}).get("recusa")
+            if not recusado:
+                return ctx.desfecho_anterior
+        else:
+            _exigir_motivo(texto)
+            edital = _edital_do_processo(ctx.processo, edital_id)
+            previa = previa_do_desfazimento_da_destinacao(
+                edital=edital,
+                movimento_id=movimento_id,
+                chamadas_dependentes=chamadas_dependentes,
+                at=ctx.now,
+            )
+            recusado = _registrar_se_impedido(
+                ctx, actor, previa, previa["movimento"], payload, correlation_id
+            )
+            if recusado is None:
+                return _desfazer_destinacao(
+                    ctx, actor, edital, previa, texto, assinatura, idempotency_key, correlation_id
+                )
+    raise DomainError(recusado["codigo"], recusado["detalhe"], 409)
+
+
+def _desfazer_destinacao(
+    ctx, actor, edital, previa, texto, assinatura, idempotency_key, correlation_id
+):
+    _conferir_assinatura(previa, assinatura)
+    original = previa["movimento"]
+    registro = MovimentoDeVaga.objects.create(
+        # A apuração lida é a do recorte que devolve a vaga — o destino da destinação —, e é nela
+        # que a vaga destinada estava (FR-6342).
+        apuracao=previa["destino"],
+        edital=edital,
+        perfil_id=original.perfil_id,
+        marco_id=original.marco_id,
+        especie=nomes.MOVIMENTO_DESFAZIMENTO,
+        # **Origem e destino invertidos, a mesma quantidade** (R-005): a apuração lê este como lê
+        # qualquer movimento, e a soma das efetivas do Perfil volta à de antes (SC-2106).
+        origem_lista_id=original.destino_lista_id,
+        destino_lista_id=original.origem_lista_id,
+        quantidade=original.quantidade,
+        causa=f"Desfazimento da destinação de {original.registrado_em:%d/%m/%Y}: "
+        f"{original.quantidade} vaga(s) devolvida(s).",
+        gatilho=original.gatilho,
+        fundamento=texto,
+        versao=previa["versao"],
+        desfaz=original,
+        registrado_por=str(getattr(actor, "subject", actor)),
+        registrado_em=ctx.now,
+    )
+    # A sucessora é a da reserva, que recebe a vaga de volta. A ampla fica obsoleta pelo
+    # movimento, e a seguinte dela é de quem conduz, como na destinação (FR-6313).
+    seguinte = _emitir_seguinte(
+        ctx,
+        actor,
+        edital=edital,
+        perfil_id=original.perfil_id,
+        marco_id=original.marco_id,
+        lista_id=original.origem_lista_id,
+        motivo=f"Destinação desfeita: {original.quantidade} vaga(s) de volta. Motivo: {texto}",
+        correlation_id=correlation_id,
+    )
+    auditar(
+        actor=actor,
+        permissao=ctx.base.permissao,
+        operation=DESFAZER_DESTINACAO,
+        aggregate=registro,
+        now=ctx.now,
+        correlation_id=correlation_id,
+        reason=(
+            f"Desfazimento da destinação {original.id}: {original.quantidade} vaga(s) da ampla "
+            f"concorrência de volta à lista {original.origem_lista_id}. Motivo: {texto}. "
+            + _sucessora_na_razao(seguinte)
+        ),
+        idempotency_key=idempotency_key,
+    )
+    declarado = {
+        "movimento": str(registro.id),
+        "desfaz": str(original.id),
+        "quantidade": registro.quantidade,
+        **seguinte,
+    }
+    ctx.concluir_sem_resultado(201, declarado)
+    return declarado
+
+
+def previa_do_desfazimento_da_nao_preenchida(
+    *, edital, declaracao_id, chamadas_dependentes, at=None
+):
+    """O que o desfazimento da declaração faria agora, e a recusa que daria (FR-6334, FR-6335).
+
+    A chamada dependente é a do **mesmo** recorte cuja apuração leu a declaração (R-005): ela foi
+    feita sobre a conta que a declaração mudou.
+    """
+    declaracao = _declaracao_do_edital(edital, declaracao_id)
+    restante = next(
+        (
+            item["restante"]
+            for item in _com_o_restante(
+                selectors.nao_preenchidas_do_recorte(
+                    edital=edital,
+                    perfil_id=declaracao.perfil_id,
+                    marco_id=declaracao.marco_id,
+                    lista_id=declaracao.lista_id,
+                )
+            )
+            if item["registro"].id == declaracao.id
+        ),
+        0,
+    )
+    dependentes = list(
+        chamadas_dependentes(
+            edital=edital,
+            perfil_id=declaracao.perfil_id,
+            marco_id=declaracao.marco_id,
+            lista_id=declaracao.lista_id,
+            movimento_id=None,
+            nao_preenchida_id=declaracao.id,
+            at=at,
+        )
+        or []
+    )
+    vigente = selectors.apuracao_vigente(
+        edital=edital,
+        perfil_id=declaracao.perfil_id,
+        marco_id=declaracao.marco_id,
+        lista_id=declaracao.lista_id,
+    )
+    recusa = None
+    if not restante:
+        recusa = (nomes.ATO_JA_DESFEITO, "Esta declaração de vaga não preenchida já foi desfeita.")
+    elif dependentes:
+        recusa = (nomes.DESTINACAO_COM_CHAMADA_DEPENDENTE, _frase_dos_dependentes(dependentes))
+    return {
+        "declaracao": declaracao,
+        "restante": restante,
+        "versao": effective_version(edital_id=edital.id, at=at),
+        "apuracao": vigente,
+        "dependentes": dependentes,
+        "recusa": recusa,
+        "assinatura": canonical_sha256(
+            {
+                "gesto": "desfazer_nao_preenchida",
+                "declaracao": str(declaracao.id),
+                "restante": restante,
+                "apuracao": str(vigente.id) if vigente else None,
+                "dependentes": [str(d.get("id")) for d in dependentes],
+            }
+        ),
+    }
+
+
+def desfazer_nao_preenchida(
+    *,
+    actor,
+    processo_id,
+    edital_id,
+    declaracao_id,
+    motivo,
+    assinatura,
+    chamadas_dependentes,
+    idempotency_key,
+    correlation_id,
+):
+    """O ato contrário à declaração de não preenchida, ou a recusa registrada (FR-6334, FR-6335)."""
+    texto = (motivo or "").strip()
+    payload = {
+        "edital": str(edital_id),
+        "declaracao": str(declaracao_id),
+        "motivo": texto,
+        "leitura": assinatura or "",
+    }
+    with comando_de_comissao(
+        actor=actor,
+        processo_id=processo_id,
+        operation=ATO_DE_DESFAZER_NAO_PREENCHIDA,
+        payload=payload,
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            recusado = (ctx.desfecho_anterior or {}).get("recusa")
+            if not recusado:
+                return ctx.desfecho_anterior
+        else:
+            _exigir_motivo(texto)
+            edital = _edital_do_processo(ctx.processo, edital_id)
+            previa = previa_do_desfazimento_da_nao_preenchida(
+                edital=edital,
+                declaracao_id=declaracao_id,
+                chamadas_dependentes=chamadas_dependentes,
+                at=ctx.now,
+            )
+            recusado = _registrar_se_impedido(
+                ctx, actor, previa, previa["declaracao"], payload, correlation_id
+            )
+            if recusado is None:
+                _conferir_assinatura(previa, assinatura)
+                original = previa["declaracao"]
+                quantidade = previa["restante"]
+                registro = VagaNaoPreenchida.objects.create(
+                    edital=edital,
+                    perfil_id=original.perfil_id,
+                    marco_id=original.marco_id,
+                    lista_id=original.lista_id,
+                    apuracao=previa["apuracao"],
+                    especie=nomes.NAO_PREENCHIDA_DESFAZIMENTO,
+                    desfaz=original,
+                    quantidade=quantidade,
+                    fundamento=texto,
+                    versao=previa["versao"],
+                    registrado_por=str(getattr(actor, "subject", actor)),
+                    registrado_em=ctx.now,
+                )
+                seguinte = _emitir_seguinte(
+                    ctx,
+                    actor,
+                    edital=edital,
+                    perfil_id=original.perfil_id,
+                    marco_id=original.marco_id,
+                    lista_id=original.lista_id,
+                    motivo=(
+                        f"Declaração de vaga não preenchida desfeita: {quantidade} vaga(s) de "
+                        f"volta a ocupar. Motivo: {texto}"
+                    ),
+                    correlation_id=correlation_id,
+                    causa_do_ato=nomes.CAUSA_DECLARACAO_POSTERIOR,
+                )
+                auditar(
+                    actor=actor,
+                    permissao=ctx.base.permissao,
+                    operation=DESFAZER_NAO_PREENCHIDA,
+                    aggregate=registro,
+                    now=ctx.now,
+                    correlation_id=correlation_id,
+                    reason=(
+                        f"Desfazimento da declaração de vaga não preenchida {original.id}: "
+                        f"{quantidade} vaga(s) de volta a ocupar. Motivo: {texto}. "
+                        + _sucessora_na_razao(seguinte)
+                    ),
+                    idempotency_key=idempotency_key,
+                )
+                declarado = {
+                    "naoPreenchida": str(registro.id),
+                    "desfaz": str(original.id),
+                    "quantidade": quantidade,
+                    **seguinte,
+                }
+                ctx.concluir_sem_resultado(201, declarado)
+                return declarado
+    raise DomainError(recusado["codigo"], recusado["detalhe"], 409)
+
+
+def _registrar_se_impedido(ctx, actor, previa, aggregate, payload, correlation_id):
+    """A recusa da prévia; com chamada dependente, registrada na trilha antes (FR-6335).
+
+    As outras recusas — já desfeito, declaração dependente — levantam aqui, como qualquer recusa:
+    não há pedido a registrar sobre o que não existe mais. A da chamada dependente é a que a spec
+    manda deixar na trilha, com as chamadas nomeadas, e a transação a confirma.
+    """
+    if previa["recusa"] is None:
+        return None
+    codigo, frase = previa["recusa"]
+    if codigo != nomes.DESTINACAO_COM_CHAMADA_DEPENDENTE:
+        raise DomainError(codigo, frase, 409)
+    chamadas = [
+        {"id": str(d.get("id")), "rotulo": d.get("rotulo") or "", "ocupa": bool(d.get("ocupa"))}
+        for d in previa["dependentes"]
+    ]
+    auditar(
+        actor=actor,
+        permissao=ctx.base.permissao,
+        operation=DESFAZIMENTO_IMPEDIDO,
+        aggregate=aggregate,
+        now=ctx.now,
+        correlation_id=correlation_id,
+        reason=(
+            f"Pedido de desfazimento de {aggregate.__class__.__name__} {aggregate.id}, recusado: "
+            + "; ".join(c["rotulo"] or c["id"] for c in chamadas)
+            + f". Motivo do pedido: {payload['motivo']}"
+        ),
+        detalhe={"chamadas": chamadas, "pedido": payload},
+    )
+    recusado = {"codigo": codigo, "detalhe": frase, "chamadas": chamadas}
+    ctx.concluir_sem_resultado(409, {"recusa": recusado})
+    return recusado
+
+
+def _frase_dos_dependentes(dependentes):
+    """A recusa que nomeia cada pessoa chamada para esta vaga e o que a chamada precisa antes."""
+    itens = "; ".join(
+        (d.get("rotulo") or "sem identificação")
+        + (", que ocupa a vaga" if d.get("ocupa") else ", ainda sem desfecho")
+        for d in dependentes
+    )
+    return (
+        f"Há {_pessoas(len(dependentes))} chamada{'s' if len(dependentes) != 1 else ''} para "
+        f"esta vaga: {itens}. Cada chamada precisa do seu desfecho antes, e só depois de um "
+        "desfecho que libere a vaga o ato pode ser desfeito."
+    )
+
+
+def _pessoas(quantas):
+    return f"{quantas} pessoa" if quantas == 1 else f"{quantas} pessoas"
+
+
+def _exigir_motivo(texto):
+    if not texto:
+        raise DomainError(
+            nomes.MOTIVO_OBRIGATORIO,
+            "Diga por que o ato está sendo desfeito.",
+            422,
+            campo="motivo",
+        )
+
+
+def _conferir_assinatura(previa, assinatura):
+    if (assinatura or "") != previa["assinatura"]:
+        raise DomainError(
+            nomes.LEITURA_DO_RECORTE_MUDOU,
+            "As vagas desta lista mudaram desde que a conferência foi aberta: confira de novo "
+            "antes de confirmar.",
+            409,
+        )
+
+
+def _destinacao_do_edital(edital, movimento_id):
+    """A destinação **por ato próprio** deste Edital, ou a recusa (R-005).
+
+    **Só o ato da `155`**, reconhecido pelo recorte próprio: o movimento que a apuração gravava
+    antes dela conta como destinação feita (FR-6316), mas desfazê-lo sob a reversão por saldo
+    seria devolvido à ampla pela emissão seguinte, que ainda move vaga ali (R-010).
+    """
+    try:
+        identidade = identificador(movimento_id) if movimento_id else None
+    except DomainError:
+        identidade = None
+    registro = (
+        MovimentoDeVaga.objects.filter(
+            edital=edital, id=identidade, especie=nomes.MOVIMENTO_REVERSAO
+        ).first()
+        if identidade
+        else None
+    )
+    if registro is None:
+        raise DomainError(nomes.ATO_INEXISTENTE, "Não há esta destinação neste Edital.", 404)
+    return registro
+
+
+def _declaracao_do_edital(edital, declaracao_id):
+    try:
+        identidade = identificador(declaracao_id) if declaracao_id else None
+    except DomainError:
+        identidade = None
+    registro = (
+        VagaNaoPreenchida.objects.filter(
+            edital=edital, id=identidade, especie=nomes.NAO_PREENCHIDA_DECLARACAO
+        ).first()
+        if identidade
+        else None
+    )
+    if registro is None:
+        raise DomainError(
+            nomes.ATO_INEXISTENTE,
+            "Não há esta declaração de vaga não preenchida neste Edital.",
+            404,
+        )
+    return registro
+
+
+def _declaracao_que_leu(edital, movimento):
+    """Se a ampla declarou não preenchida, ainda de pé, uma vaga que contava com este movimento.
+
+    Desfazer a destinação tiraria das efetivas da ampla a vaga que a declaração tirou do "a
+    ocupar", e a apuração seguinte passaria das vagas (`conferir_limite`).
+    """
+    declaracoes = selectors.nao_preenchidas_do_recorte(
+        edital=edital,
+        perfil_id=movimento.perfil_id,
+        marco_id=movimento.marco_id,
+        lista_id=movimento.destino_lista_id,
+    )
+    alvo = str(movimento.id)
+    return any(
+        item["restante"]
+        and item["registro"].apuracao is not None
+        and alvo
+        in {str(i) for i in (item["registro"].apuracao.universo or {}).get("movimentosLidos") or []}
+        for item in _com_o_restante(declaracoes)
+    )
+
+
 __all__ = [
+    "DECLARAR_NAO_PREENCHIDA",
+    "DESFAZER_DESTINACAO",
+    "DESFAZER_NAO_PREENCHIDA",
+    "DESFAZIMENTO_IMPEDIDO",
     "DESTINAR",
+    "declarar_nao_preenchida",
+    "desfazer_destinacao",
+    "desfazer_nao_preenchida",
     "destinar_vaga",
     "frase_publicada",
     "leitura_da_vaga",
     "previa_da_destinacao",
+    "previa_da_nao_preenchida",
+    "previa_do_desfazimento_da_destinacao",
+    "previa_do_desfazimento_da_nao_preenchida",
 ]

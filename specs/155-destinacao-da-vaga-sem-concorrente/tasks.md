@@ -119,7 +119,7 @@ sucessora da origem e a ampla obsoleta.
 **Goal**: sem reversão declarada, nada move; a declaração fundamentada, também na linha geral (D-014).
 **Independent Test**: a US2 no C09.
 
-- [ ] T031 [P] [US2] Testes em `tests/integration/ocupacao/test_nao_preenchida.py`:
+- [X] T031 [P] [US2] Testes em `tests/integration/ocupacao/test_nao_preenchida.py`:
   - a declaração com e sem fundamento;
   - na reserva sem reversão;
   - na linha geral;
@@ -127,18 +127,18 @@ sucessora da origem e a ampla obsoleta.
   - `faltando` desconta;
   - a causa `declaracao_posterior`;
   - a reprodução da declaração relida depois (FR-6342).
-- [ ] T032 [US2] Escrever `previa_da_nao_preenchida` e `declarar_nao_preenchida` em `processo_seletivo/ocupacao/application/destinacao.py`, com o evento `OCUPACAO_DECLARAR_NAO_PREENCHIDA` e a sucessora do recorte
-- [ ] T033 [US2] Rota `interface:declarar-nao-preenchida`, a conferência e o campo de fundamento (área de texto, molde da `058`), em `processo_seletivo/interface/views.py` e `templates/interface/ocupacao_destinacao.html`
-- [ ] T034 [US2] A frase do Edital silente com os dois caminhos — o link para a Retificação, quando a fase a admite, e a declaração — em `_situacao_da_vaga.html`; teste em `tests/interface/test_destinacao_na_ocupacao.py` (o C09)
+- [X] T032 [US2] Escrever `previa_da_nao_preenchida` e `declarar_nao_preenchida` em `processo_seletivo/ocupacao/application/destinacao.py`, com o evento `OCUPACAO_DECLARAR_NAO_PREENCHIDA` e a sucessora do recorte
+- [X] T033 [US2] Rota `interface:declarar-nao-preenchida`, a conferência e o campo de fundamento (área de texto, molde da `058`), em `processo_seletivo/interface/views.py` e `templates/interface/ocupacao_destinacao.html`
+- [X] T034 [US2] A frase do Edital silente com os dois caminhos — o link para a Retificação, quando a fase a admite, e a declaração — em `_situacao_da_vaga.html`; teste em `tests/interface/test_destinacao_na_ocupacao.py` (o C09)
 
 ## Phase 7: US6 — Os desfazimentos (incremento C, P3)
 
-- [ ] T035 [P] [US6] Testes em `tests/integration/ocupacao/test_desfazimento_da_destinacao.py`:
+- [X] T035 [P] [US6] Testes em `tests/integration/ocupacao/test_desfazimento_da_destinacao.py`:
   - sem chamada dependente, os dois registros e a soma de volta;
   - com chamada dependente, a recusa 409 e o evento `OCUPACAO_DESFAZIMENTO_IMPEDIDO` gravado com as chamadas;
   - o mesmo para a não preenchida.
-- [ ] T036 [US6] Escrever `desfazer_destinacao` e `desfazer_nao_preenchida`, com `chamadas_dependentes` injetado (R-005), em `processo_seletivo/ocupacao/application/destinacao.py`; a composição do *callable* em `processo_seletivo/interface/destinacao_da_vaga.py`
-- [ ] T037 [US6] Rotas `interface:desfazer-destinacao` e `interface:desfazer-nao-preenchida`, a conferência com motivo, e a recusa que nomeia "pessoa chamada para esta vaga" (sem o vocabulário que a varredura da ocupação proíbe)
+- [X] T036 [US6] Escrever `desfazer_destinacao` e `desfazer_nao_preenchida`, com `chamadas_dependentes` injetado (R-005), em `processo_seletivo/ocupacao/application/destinacao.py`; a composição do *callable* em `processo_seletivo/interface/destinacao_da_vaga.py`
+- [X] T037 [US6] Rotas `interface:desfazer-destinacao` e `interface:desfazer-nao-preenchida`, a conferência com motivo, e a recusa que nomeia "pessoa chamada para esta vaga" (sem o vocabulário que a varredura da ocupação proíbe)
 
 ---
 

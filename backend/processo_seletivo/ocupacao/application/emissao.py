@@ -266,6 +266,14 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     identidade_do_movimento = uuid4() if cede else None
     if cede:
         efetivas -= cede
+    nao_preenchidas = calculo.saldo_das_nao_preenchidas(
+        (n.especie, n.quantidade) for n in nao_preenchidas_lidas
+    )
+    # **A conta que passaria das vagas é recusada pelo nome** (155, R-002), e não pela constraint:
+    # uma inclusão posterior à declaração de não preenchida faria a sucessora estourar
+    # `ck_apuracao_ocupadas_no_limite` com `IntegrityError` — que nenhum *savepoint* de quem chama
+    # trata como recusa. Nada é rebaixado em silêncio.
+    conferir_limite(efetivas=efetivas, ocupadas=ocupadas, nao_preenchidas=nao_preenchidas)
 
     apuracao = ApuracaoDeOcupacao(
         edital=edital,
@@ -280,9 +288,7 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
         publicadas=publicadas,
         efetivas=efetivas,
         ocupadas=ocupadas,
-        nao_preenchidas=calculo.saldo_das_nao_preenchidas(
-            (n.especie, n.quantidade) for n in nao_preenchidas_lidas
-        ),
+        nao_preenchidas=nao_preenchidas,
         linha_do_quadro_id=linha.get("id"),
         universo={
             "rowId": str(linha.get("id")) if linha.get("id") else None,
@@ -321,6 +327,26 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
         else None
     )
     return apuracao, movimento
+
+
+def conferir_limite(*, efetivas, ocupadas, nao_preenchidas):
+    """Recusa, pelo nome, a conta que o banco recusaria com `IntegrityError` (155, R-002).
+
+    `ck_apuracao_ocupadas_no_limite` exige `ocupadas + nao_preenchidas <= efetivas`. A declaração
+    não passa do saldo, mas o mundo muda depois dela: uma inclusão registrada pela condução, ou o
+    desfazimento de uma destinação que a ampla recebeu, pode fazer a apuração seguinte contar mais
+    ocupadas do que cabem ao lado das não preenchidas. **Nada é ajustado em silêncio** — rebaixar a
+    declaração na conta seria desfazê-la sem ato —, e a recusa diz o caminho: desfazer a
+    declaração, com motivo, antes de apurar de novo.
+    """
+    if int(ocupadas) + int(nao_preenchidas) > int(efetivas):
+        raise DomainError(
+            nomes.NAO_PREENCHIDAS_ALEM_DAS_VAGAS,
+            f"Este recorte tem {efetivas} vaga(s) efetiva(s), {ocupadas} ocupada(s) e "
+            f"{nao_preenchidas} declarada(s) não preenchida(s): a conta passa das vagas. Desfaça "
+            "a declaração de vaga não preenchida, com motivo, antes de apurar de novo.",
+            409,
+        )
 
 
 def _perfil(conteudo, perfil_id):
@@ -414,4 +440,4 @@ def _edital_do_processo(processo, edital_id):
         raise DomainError("edital_nao_encontrado", "Edital não encontrado.", 404) from erro
 
 
-__all__ = ["emitir_apuracao", "emitir_sucessora_por_efeito"]
+__all__ = ["conferir_limite", "emitir_apuracao", "emitir_sucessora_por_efeito"]

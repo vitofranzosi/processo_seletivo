@@ -5600,6 +5600,10 @@ OPERACOES = {
     "OCUPACAO_DESFAZER_ACRESCIMO": "Desfazimento de vaga acrescida",
     # A destinação da vaga reservada sem quem a ocupe (155, FR-6341).
     "OCUPACAO_DESTINAR_VAGA": "Destinação de vaga à ampla concorrência",
+    "OCUPACAO_DESFAZER_DESTINACAO": "Desfazimento de destinação de vaga",
+    "OCUPACAO_DECLARAR_NAO_PREENCHIDA": "Declaração de vaga não preenchida",
+    "OCUPACAO_DESFAZER_NAO_PREENCHIDA": "Desfazimento de declaração de vaga não preenchida",
+    "OCUPACAO_DESFAZIMENTO_IMPEDIDO": "Pedido de desfazimento recusado por pessoa chamada",
     # **As quatro frases dizem o ato praticado, e não o nome da função** (`FR-296`). "Convocação
     # praticada" é o que aconteceu; `CONVOCACAO_CONVOCAR` é como o sistema o chama internamente, e
     # quem audita não tem por que aprender esse vocabulário.
@@ -8512,6 +8516,9 @@ def ocupacao(request, edital_id, marco_id):
                 # numa tela que se anuncia somente leitura, e trocar o beco sem saída por um beco
                 # sinalizado não é ganho.
                 "pode_retificar": ator.can("retificacao:elaborar"),
+                # O caminho da Retificação no Edital silente (155, FR-6321): o predicado da ação
+                # "Retificar" do Edital, que inclui a fase.
+                "retificacao_admitida": acoes.pode_retificar(edital, ator),
                 # A chave nasce no GET pela razão que o corte já registra: gerada a cada POST, um
                 # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,

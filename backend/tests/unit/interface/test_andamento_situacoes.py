@@ -455,6 +455,50 @@ def test_a_vaga_impedida_nomeia_o_impedimento_e_a_data():
     assert providencias[0].ate == ate
 
 
+def test_o_edital_silente_tem_um_ato_por_caminho():
+    """155, FR-6321, UX-602: a declaração de não preenchida e, se a fase admite, a Retificação."""
+    vaga = {
+        "disponivel": True,
+        "silente": True,
+        "ato": "Declarar a vaga não preenchida",
+        "quantidade": 1,
+        "frase": "1 vaga da PPP sem quem a ocupe.",
+        "impedimentos": [],
+    }
+    fatos = {
+        "faltando": 1,
+        "fila": 0,
+        "esgotou": True,
+        "corte_vigente": True,
+        "com_quadro": True,
+        "continuacao_admitida": False,
+        "vaga": vaga,
+        "url_da_ocupacao": "/ocupacao",
+        "url_da_retificacao": "/retificar",
+    }
+
+    _, providencias = convocacao(**fatos, retificacao_admitida=True)
+    _, encerrado = convocacao(**fatos, retificacao_admitida=False)
+
+    assert [(c.situacao, c.ato, c.responsavel) for c in providencias] == [
+        (a.PENDENTE, "Declarar a vaga não preenchida", a.CONDUZ),
+        (a.PENDENTE, "Retificar o Edital para declarar a reversão", a.RETIFICA),
+    ]
+    assert providencias[1].url == "/retificar"
+    assert [c.ato for c in encerrado] == ["Declarar a vaga não preenchida"]
+
+
+def test_a_passagem_entre_cotas_diz_a_limitacao_e_nenhum_ato():
+    """155, FR-6318, UX-603: a limitação do GPS no lugar do "não há mais quem chamar"."""
+    vaga = {"disponivel": False, "limitacao": True, "impedimentos": [], "frase": "Limite do GPS."}
+
+    _, providencias = convocacao(faltando=1, fila=0, esgotou=True, corte_vigente=True, vaga=vaga)
+
+    assert [(c.situacao, c.ato, c.razao) for c in providencias] == [
+        (a.IMPEDIDO, "Ocupar a vaga", "Limite do GPS")
+    ]
+
+
 def test_a_convocacao_espera_a_etapa_governada_mesmo_com_a_apuracao_feita():
     """FR-4070: a fila é de quem habilitou na governada; com ela aberta, nada a chamar."""
     resumo, providencias = convocacao(

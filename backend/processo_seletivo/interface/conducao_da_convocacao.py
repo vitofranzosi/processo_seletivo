@@ -645,7 +645,7 @@ def _situacao_da_vaga(leitura):
     from processo_seletivo.interface import destinacao_da_vaga
 
     apuracao = (leitura.get("ocupacao") or {}).get("apuracao")
-    if apuracao is None or apuracao.lista_id is None:
+    if apuracao is None:
         return ""
     vaga = destinacao_da_vaga.situacao_do_recorte(
         edital=apuracao.edital,
@@ -658,11 +658,21 @@ def _situacao_da_vaga(leitura):
     )
     if vaga is None:
         return ""
+    # O ato pelo nome que a ocupação lhe dá: a destinação, ou a declaração de vaga não preenchida
+    # no Edital silente e na linha geral (155, FR-6321, D-014).
+    ato = (
+        "a destinação à ampla concorrência"
+        if vaga.get("destinacao") or vaga.get("ato") == destinacao_da_vaga.DESTINAR
+        else "a declaração de vaga não preenchida"
+    )
     if vaga["disponivel"]:
-        return f"; {vaga['frase']} A destinação à ampla concorrência é ato da ocupação"
+        return f"; {vaga['frase']} {ato[0].upper()}{ato[1:]} é ato da ocupação"
     if vaga["impedimentos"]:
         motivos = "; ".join(i["frase"] for i in vaga["impedimentos"])
-        return f"; a destinação à ampla concorrência ainda não cabe: {motivos}"
+        return f"; {ato} ainda não cabe: {motivos}"
+    if vaga.get("limitacao"):
+        # A passagem entre cotas: a limitação do GPS, e nenhum ato (UX-603).
+        return f"; {vaga['frase']}"
     return ""
 
 

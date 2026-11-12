@@ -233,14 +233,14 @@ def situacao_do_recorte(
 ):
     """A leitura da vaga do recorte e a frase de UX-600, ou `None` onde a tela não diz nada novo.
 
-    **Só a reversão por esgotamento ganha frase nesta entrega.** Sob a por saldo a tela continua
-    como estava (155, R-010); o Edital silente e a linha geral ganham a declaração de não
-    preenchida no incremento seguinte, e a passagem entre cotas já tem a frase dela nas prévias.
+    **Quatro casos ganham frase** (155, FR-6301): a reversão por esgotamento (a destinação), o
+    Edital silente (FR-6321), a linha geral sem quem a ocupe (D-014) e a passagem entre cotas, que
+    diz a limitação do GPS sem ato nenhum (UX-603). **Sob a reversão por saldo, nada muda** (R-010):
+    nem na reserva, nem na linha geral do Perfil que a declara — a espera é da decisão do usuário,
+    e a tela continua como estava.
     """
     from processo_seletivo.ocupacao.application.destinacao import leitura_da_vaga
 
-    if lista_id is None:
-        return None
     leitura = leitura_da_vaga(
         edital=edital,
         perfil_id=perfil_id,
@@ -249,12 +249,19 @@ def situacao_do_recorte(
         fatos_externos=composicao if composicao is not None else Composicao(at=at),
         at=at,
     )
-    if leitura["declaracao"] != nomes.REVERSAO_POR_ESGOTAMENTO:
+    declaracao = leitura["declaracao"]
+    if declaracao == nomes.REVERSAO_POR_SALDO:
+        return None
+    if lista_id is None and declaracao == nomes.PASSAGEM_ENTRE_COTAS:
+        # A passagem entre cotas é da vaga reservada: a linha geral do Perfil que a declara não
+        # ganha ato nem frase nesta entrega (FR-6318).
         return None
     situacao = leitura["situacao"]
     frase = frase_da_situacao(leitura, rotulo)
     if not frase:
         return None
+    estado = situacao["estado"]
+    destina = declaracao == nomes.REVERSAO_POR_ESGOTAMENTO and lista_id is not None
     return {
         **situacao,
         "frase": frase,
@@ -263,22 +270,118 @@ def situacao_do_recorte(
             for i in situacao["impedimentos"]
         ],
         "declarada": leitura["frase"],
-        "disponivel": situacao["estado"] == conta.DESTINACAO_DISPONIVEL,
-        "movimentos": [
-            m
-            for m in leitura["movimentos"]
-            if m.especie == nomes.MOVIMENTO_REVERSAO
-            and m.origem_lista_id is not None
-            and str(m.origem_lista_id) == str(lista_id)
-        ],
+        # **O ato que a vaga pede, pelo nome da tela** (UX-602): um ato por caminho.
+        "ato": DESTINAR if destina else (DECLARAR if estado != conta.PASSAGEM_ENTRE_COTAS else ""),
+        "disponivel": estado in (conta.DESTINACAO_DISPONIVEL, conta.NAO_PREENCHIDA_DISPONIVEL),
+        "destinacao": estado == conta.DESTINACAO_DISPONIVEL,
+        "naoPreenchida": estado == conta.NAO_PREENCHIDA_DISPONIVEL,
+        # O Edital silente, na reserva (FR-6321): a frase e os dois caminhos.
+        "silente": declaracao is None and lista_id is not None,
+        "limitacao": estado == conta.PASSAGEM_ENTRE_COTAS,
+        "movimentos": _movimentos_da_reserva(leitura["movimentos"], lista_id),
+        "naoPreenchidas": leitura["naoPreenchidas"],
     }
+
+
+def _movimentos_da_reserva(movimentos, lista_id):
+    """As destinações da reserva e os desfazimentos delas, cada uma dizendo se ainda se desfaz.
+
+    **Só a destinação por ato próprio se desfaz aqui** (R-005): o movimento que a apuração gravava
+    antes da `155` conta como feita (FR-6316), e o desfazimento é a linha que cita a destinação.
+    """
+    if lista_id is None:
+        return []
+    desfeitos = {m.desfaz_id for m in movimentos if m.desfaz_id}
+    lista = str(lista_id)
+    return [
+        {
+            "registro": m,
+            "desfazivel": m.especie == nomes.MOVIMENTO_REVERSAO
+            and m.edital_id is not None
+            and m.id not in desfeitos,
+        }
+        for m in movimentos
+        if (m.especie == nomes.MOVIMENTO_REVERSAO and str(m.origem_lista_id or "") == lista)
+        or (m.especie == nomes.MOVIMENTO_DESFAZIMENTO and str(m.destino_lista_id or "") == lista)
+    ]
+
+
+#: Os atos da vaga sem quem a ocupe, com as palavras que o Centro e a ocupação dizem.
+DESTINAR = "Destinar à ampla concorrência"
+DECLARAR = "Declarar a vaga não preenchida"
+#: A frase da FR-6321, literal: o Edital que não diz o que acontece com a vaga da reserva.
+EDITAL_SILENTE = "Este Edital não declara o que acontece com a vaga reservada não preenchida."
+#: A limitação da passagem entre cotas, dita como limite do GPS (UX-603), e não do Edital.
+LIMITACAO_DA_PASSAGEM = (
+    "Este Edital manda a vaga passar antes por outras cotas, na ordem que ele estabelece, e o GPS "
+    "ainda não aplica essa ordem: nenhum ato desta tela leva a vaga à ampla concorrência nem a "
+    "declara não preenchida."
+)
+
+
+def chamadas_dependentes(
+    *, edital, perfil_id, marco_id, lista_id, movimento_id=None, nao_preenchida_id=None, at=None
+):
+    """As chamadas que dependem do ato a desfazer — `[{id, rotulo, ocupa}]` (155, R-005).
+
+    **Dependente é a chamada vigente do recorte cuja apuração leu o ato**: o movimento em
+    `movimentosLidos`, ou a declaração em `naoPreenchidasLidas`. Ela foi feita sobre a conta que o
+    ato mudou, e desfazê-lo tiraria a vaga de quem foi chamado para ela. Continua dependente
+    enquanto não tem desfecho, ou quando o desfecho a pôs na vaga (efeito de inclusão); o desfecho
+    que a tirou da vaga a libera.
+
+    **Mora aqui, e não na ocupação** (155, R-004): a ocupação não importa a condução, e esta função
+    é o *callable* que o ato recebe, como `pessoas_chamadas` no acréscimo.
+    """
+    from processo_seletivo.convocacao.application import selectors as conducao
+
+    chave, alvo = (
+        ("movimentosLidos", movimento_id)
+        if movimento_id is not None
+        else ("naoPreenchidasLidas", nao_preenchida_id)
+    )
+    alvo = str(alvo)
+    lidas = [
+        c
+        for c in conducao.vigentes(
+            conducao.convocacoes_do_recorte(
+                edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+            )
+        )
+        if alvo in {str(i) for i in ((c.apuracao.universo or {}).get(chave) or [])}
+    ]
+    dependentes = []
+    for chamada in lidas:
+        desfecho = conducao.desfecho_de(chamada)
+        ocupa = desfecho is not None and desfecho.efeito.especie == nomes.EFEITO_INCLUSAO
+        if desfecho is None or ocupa:
+            dependentes.append((chamada, ocupa))
+    if not dependentes:
+        return []
+    identidades = conducao.identidades_de({c.inscricao_id for c, _ in dependentes})
+    return [
+        {
+            "id": str(chamada.id),
+            "rotulo": _rotulo_da_pessoa(identidades.get(chamada.inscricao_id) or {}),
+            "ocupa": ocupa,
+        }
+        for chamada, ocupa in dependentes
+    ]
+
+
+def _rotulo_da_pessoa(identidade):
+    return " — ".join(
+        parte for parte in (identidade.get("protocolo"), identidade.get("nome")) if parte
+    )
 
 
 def anotar_recortes(*, edital, perfil_id, marco_id, recortes, at=None):
     """A situação da vaga em cada recorte da ocupação, com uma composição para o marco inteiro.
 
     `recorte["vaga"]` fica `None` onde a tela não diz nada novo. Só o recorte apurado pergunta: sem
-    apuração não há vaga a ocupar afirmada, e a leitura custaria consultas para dizer nada.
+    apuração não há vaga a ocupar afirmada, e a leitura custaria consultas para dizer nada. A linha
+    geral pergunta também (155, D-014): a ampla sem ninguém que ainda possa ocupá-la admite a
+    declaração de não preenchida.
     """
     composicao = Composicao(at=at)
     for recorte in recortes:
@@ -292,7 +395,7 @@ def anotar_recortes(*, edital, perfil_id, marco_id, recortes, at=None):
                 at=at,
                 composicao=composicao,
             )
-            if recorte.get("listaId") and recorte.get("apuracao") is not None
+            if recorte.get("apuracao") is not None
             else None
         )
     return recortes
@@ -321,29 +424,60 @@ def frase_da_situacao(leitura, rotulo):
     """
     situacao = leitura["situacao"]
     lista = rotulo or "esta lista"
-    declara = f" O Edital declara: «{leitura['frase']}»" if leitura["frase"] else ""
+    reservada = leitura.get("listaId") is not None
+    declaracao = leitura["declaracao"]
+    destina = declaracao == nomes.REVERSAO_POR_ESGOTAMENTO and reservada
+    silente = declaracao is None and reservada
+    if destina:
+        declara = f" O Edital declara: «{leitura['frase']}»" if leitura["frase"] else ""
+    elif silente:
+        declara = f" {EDITAL_SILENTE}"
+    else:
+        declara = ""
     estado = situacao["estado"]
-    if estado == conta.DESTINACAO_DISPONIVEL:
+    if estado in (conta.DESTINACAO_DISPONIVEL, conta.NAO_PREENCHIDA_DISPONIVEL):
         quantidade = situacao["quantidade"]
         return (
             f"{_vagas(quantidade)} da {lista} sem quem a{'s' if quantidade != 1 else ''} ocupe: "
             f"ninguém mais na ordem desta lista pode ocupá-la{'s' if quantidade != 1 else ''}."
             + declara
         )
+    if estado == conta.PASSAGEM_ENTRE_COTAS:
+        if situacao["livres"]:
+            # Com alguém livre na ordem, o caminho é chamá-lo, e a limitação ainda não pesa.
+            return ""
+        return f"{_vagas(leitura.get('saldo') or 0)} da {lista} a ocupar. {LIMITACAO_DA_PASSAGEM}"
     if estado == conta.IMPEDIDA:
         motivos = "; ".join(_com_data(i) for i in situacao["impedimentos"])
-        return (
-            f"{_vagas(leitura.get('saldo') or 0)} da {lista} a ocupar, e a destinação à ampla "
-            f"concorrência ainda não cabe: {motivos}." + declara
+        ato = (
+            "a destinação à ampla concorrência"
+            if destina
+            else "a declaração de vaga não preenchida"
         )
-    if estado == conta.SEM_VAGA_A_DESTINAR and situacao["destinadas"] and not leitura.get("saldo"):
-        # **O movimento antigo conta como destinação feita** (US1.5, FR-6316): a tela o cita, e
-        # nenhum ato a destina de novo.
         return (
-            f"{_vagas(situacao['destinadas'])} da {lista} já "
-            + ("foi destinada" if situacao["destinadas"] == 1 else "foram destinadas")
-            + " à ampla concorrência."
+            f"{_vagas(leitura.get('saldo') or 0)} da {lista} a ocupar, e {ato} ainda não cabe: "
+            f"{motivos}." + declara
         )
+    if estado == conta.SEM_VAGA_A_DESTINAR and not leitura.get("saldo"):
+        partes = []
+        if situacao["destinadas"]:
+            # **O movimento antigo conta como destinação feita** (US1.5, FR-6316): a tela o cita,
+            # e nenhum ato a destina de novo.
+            partes.append(
+                f"{_vagas(situacao['destinadas'])} da {lista} já "
+                + ("foi destinada" if situacao["destinadas"] == 1 else "foram destinadas")
+                + " à ampla concorrência."
+            )
+        if leitura.get("declaradas"):
+            # **Declarada, a vaga aparece como "não preenchida"** (FR-6326), e não como zero.
+            partes.append(
+                f"{_vagas(leitura['declaradas'])} da {lista} "
+                + ("declarada" if leitura["declaradas"] == 1 else "declaradas")
+                + " não preenchida"
+                + ("" if leitura["declaradas"] == 1 else "s")
+                + "."
+            )
+        return " ".join(partes)
     return ""
 
 
@@ -362,8 +496,13 @@ def _com_data(impedimento):
 
 
 __all__ = [
+    "DECLARAR",
+    "DESTINAR",
+    "EDITAL_SILENTE",
+    "LIMITACAO_DA_PASSAGEM",
     "Composicao",
     "anotar_recortes",
+    "chamadas_dependentes",
     "frase_da_situacao",
     "rotulo_do_recorte",
     "situacao_do_recorte",

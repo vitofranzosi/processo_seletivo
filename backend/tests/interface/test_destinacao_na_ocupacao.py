@@ -253,3 +253,236 @@ def test_por_saldo_nenhuma_tela_muda(
     assert BOTAO not in pagina
     assert "sem quem a ocupe" not in pagina
     assert "destinação" not in pagina.lower()
+
+
+# --- O Edital silente, a não preenchida e os desfazimentos (155, T034, T037) ---------------------
+
+SILENTE = "Este Edital não declara o que acontece com a vaga reservada não preenchida."
+DECLARAR = "Declarar a vaga não preenchida"
+
+
+@pytest.fixture
+def silente(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """O C09: sem reversão declarada, a lista PPI esgotada e o resultado definitivo publicado."""
+    certame = pela_desistencia(
+        gestor, api_client, manager_headers, process_payload, "tela-np-155", reversao=None
+    )
+    publicar_definitivo(certame)
+    return certame
+
+
+def declarar_pela_tela(client, certame, **extra):
+    from tests.fixtures.ocupacao_sorteada import LISTA_PPI as PPI
+
+    return client.post(
+        reverse("interface:declarar-nao-preenchida", args=[certame["edital"].id, MARCO]),
+        {"lista": PPI, "chave": "tela-np-155-chave", **extra},
+    )
+
+
+def secao_da_ppi(pagina):
+    inicio = pagina.index("Pretos, pardos e indígenas (PPI)</h2>")
+    return pagina[inicio : pagina.index("</section>", inicio)]
+
+
+def centro(client, certame):
+    return client.get(
+        reverse("interface:pagina-anterior", args=[certame["edital"].id])
+    ).content.decode()
+
+
+class TestOEditalSilente:
+    def test_a_ocupacao_diz_a_frase_e_os_dois_caminhos(
+        self, client, seletor_ligado, silente, prazo_encerrado
+    ):
+        """FR-6321, US2.1: a frase, a Retificação e a declaração — e nenhuma destinação."""
+        identificar(client, "carlos", ["gestor", "elaborador"])
+
+        pagina = ocupacao(client, silente)
+
+        assert SILENTE in pagina
+        assert DECLARAR in pagina
+        assert "abrir a Retificação deste Edital" in pagina
+        assert BOTAO not in pagina, "FR-6320: sem reversão declarada, nada vai à ampla"
+        # Só a seção da PPP: a faixa de outra lista depende de quem o sorteio pôs onde.
+        assert "Pedir a faixa seguinte" not in secao_da_ppi(pagina)
+
+    def test_o_centro_tem_um_ato_por_caminho(
+        self, client, seletor_ligado, silente, prazo_encerrado
+    ):
+        identificar(client, "carlos", ["gestor", "elaborador"])
+
+        corpo = centro(client, silente)
+
+        assert DECLARAR in corpo
+        assert "Retificar o Edital para declarar a reversão" in corpo
+        assert BOTAO not in corpo
+        assert "Ocupar a vaga" not in corpo
+
+    def test_a_convocacao_diz_a_mesma_situacao(
+        self, client, seletor_ligado, silente, prazo_encerrado
+    ):
+        from tests.fixtures.ocupacao_sorteada import LISTA_PPI as PPI
+
+        identificar(client, "carlos", ["gestor"])
+
+        corpo = client.get(
+            reverse("interface:convocacao", args=[silente["edital"].id, MARCO]) + f"?lista={PPI}"
+        ).content.decode()
+
+        assert SILENTE in corpo
+        assert "A declaração de vaga não preenchida é ato da ocupação" in corpo
+
+    def test_sem_o_definitivo_o_impedimento_e_dito(
+        self,
+        client,
+        seletor_ligado,
+        db,
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        raiz_de_arquivos,
+    ):
+        certame = pela_desistencia(
+            gestor, api_client, manager_headers, process_payload, "tela-np-imp", reversao=None
+        )
+        identificar(client, "carlos", ["gestor"])
+
+        pagina = ocupacao(client, certame)
+
+        assert "a declaração de vaga não preenchida ainda não cabe" in pagina
+        assert "o resultado deste marco ainda não foi divulgado" in pagina
+        assert DECLARAR + "</button>" not in pagina, "SC-2101: o impedimento no lugar do ato"
+
+
+class TestADeclaracaoPelaTela:
+    def test_sem_fundamento_a_conferencia_volta_com_a_recusa(
+        self, client, seletor_ligado, silente, prazo_encerrado
+    ):
+        """US2.2: o fundamento é obrigatório, e nada é gravado."""
+        from processo_seletivo.ocupacao.models import VagaNaoPreenchida
+
+        identificar(client, "carlos", ["gestor"])
+        conferencia = declarar_pela_tela(client, silente).content.decode()
+        assert "Conferir a declaração de 1 vaga não preenchida" in conferencia
+        assert 'name="fundamento" rows="3"' in conferencia
+
+        resposta = declarar_pela_tela(
+            client, silente, confirmar="1", leitura=assinatura_de(conferencia), fundamento=" "
+        )
+
+        assert resposta.status_code == 200
+        assert "exige fundamento escrito" in resposta.content.decode()
+        assert VagaNaoPreenchida.objects.count() == 0
+
+    def test_com_fundamento_grava_e_o_centro_nao_tem_mais_providencia(
+        self, client, seletor_ligado, silente, prazo_encerrado
+    ):
+        """US2.3, SC-2100: um estado final com uma confirmação, e a fase sem providência da PPP."""
+        from processo_seletivo.ocupacao.models import VagaNaoPreenchida
+
+        identificar(client, "carlos", ["gestor"])
+        conferencia = declarar_pela_tela(client, silente).content.decode()
+
+        resposta = declarar_pela_tela(
+            client,
+            silente,
+            confirmar="1",
+            leitura=assinatura_de(conferencia),
+            fundamento="O Edital não declara reversão, e ninguém concorre pela cota.",
+        )
+
+        assert resposta.status_code == 302
+        assert VagaNaoPreenchida.objects.count() == 1
+        pagina = ocupacao(client, silente)
+        assert "Vaga declarada não preenchida: 1 vaga." in pagina
+        assert "1 vaga declarada não preenchida. Fundamento: O Edital não declara" in pagina
+        assert "Desfazer esta declaração" in pagina
+        assert DECLARAR + "</button>" not in pagina
+        corpo = centro(client, silente)
+        assert DECLARAR not in corpo and "Ocupar a vaga" not in corpo
+
+
+def chamar_na_ampla(certame, gestor, prefixo):
+    """Chama quem a ampla alcança com a vaga recebida: a chamada lê o movimento (R-005)."""
+    from processo_seletivo.convocacao.application import fluxo
+    from tests.fixtures.edital import PROFILE_ID
+    from tests.integration.convocacao.test_suplencia import chamar
+    from tests.integration.ocupacao.test_concomitancia import apurar
+
+    apurar(certame, gestor, chave=f"{prefixo}-ampla-recebe", motivo="Vaga recebida")
+    pessoas = fluxo.previa_dos_titulares(
+        edital=certame["edital"], perfil_id=PROFILE_ID, marco_id=MARCO
+    )["pessoas"]
+    assert pessoas, "a ampla tem quem chamar para a vaga recebida"
+    return chamar(certame, gestor, pessoas[-1]["id"], lista_id=None, chave=f"{prefixo}-chamar-a")
+
+
+class TestOsDesfazimentosPelaTela:
+    def destinar(self, client, certame):
+        conferencia = conferir(client, certame).content.decode()
+        conferir(client, certame, confirmar="1", leitura=assinatura_de(conferencia))
+        return MovimentoDeVaga.objects.get()
+
+    def desfazer(self, client, certame, movimento, **extra):
+        return client.post(
+            reverse("interface:desfazer-destinacao", args=[certame["edital"].id, MARCO]),
+            {"ato": str(movimento.id), "chave": "tela-desf-155", **extra},
+        )
+
+    def test_sem_chamada_dependente_desfaz_e_os_dois_ficam(
+        self, client, seletor_ligado, disponivel
+    ):
+        identificar(client, "carlos", ["gestor"])
+        movimento = self.destinar(client, disponivel)
+        assert "Desfazer esta destinação" in ocupacao(client, disponivel)
+        conferencia = self.desfazer(client, disponivel, movimento).content.decode()
+        assert "Desfazer a destinação de 1 vaga" in conferencia
+        assert "pessoa chamada para esta vaga" not in conferencia
+
+        resposta = self.desfazer(
+            client,
+            disponivel,
+            movimento,
+            confirmar="1",
+            leitura=assinatura_de(conferencia),
+            motivo="Destinada por engano.",
+        )
+
+        assert resposta.status_code == 302
+        assert MovimentoDeVaga.objects.count() == 2
+        pagina = ocupacao(client, disponivel)
+        assert "Destinação desfeita: 1 vaga volta à lista de origem." in pagina
+        assert "desfazendo a destinação de" in pagina
+        assert "Desfazer esta destinação" not in pagina
+
+    def test_com_chamada_dependente_a_tela_nomeia_e_a_trilha_registra(
+        self, client, seletor_ligado, disponivel, gestor
+    ):
+        """US6.2, FR-6335: a chamada nomeada, o desfecho antes, e o pedido recusado na trilha."""
+        from processo_seletivo.auditoria.models import RegistroAuditoria
+
+        identificar(client, "carlos", ["gestor"])
+        movimento = self.destinar(client, disponivel)
+        chamar_na_ampla(disponivel, gestor, "tela-desf-dep")
+        conferencia = self.desfazer(client, disponivel, movimento).content.decode()
+        assert "Há pessoa chamada para esta vaga" in conferencia
+        assert "a chamada precisa do seu desfecho antes" in conferencia
+
+        resposta = self.desfazer(
+            client,
+            disponivel,
+            movimento,
+            confirmar="1",
+            leitura=assinatura_de(conferencia),
+            motivo="Destinada por engano.",
+        )
+
+        assert resposta.status_code == 302
+        pagina = ocupacao(client, disponivel)
+        assert "Não foi possível desfazer a destinação:" in pagina
+        assert "precisa do seu desfecho antes" in pagina
+        assert MovimentoDeVaga.objects.count() == 1, "nada desfeito"
+        evento = RegistroAuditoria.objects.get(operation="OCUPACAO_DESFAZIMENTO_IMPEDIDO")
+        assert len(evento.detalhe["chamadas"]) == 1
