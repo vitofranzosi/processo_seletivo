@@ -1,0 +1,79 @@
+# Research: Convocar e publicar num gesto só (159)
+
+## D-001 — O que esta spec substitui
+
+Evolução deliberada pedida pelo usuário em 12/11/2026. Ficam substituídos:
+
+| De onde | O que dizia | O que passa a valer |
+|---|---|---|
+| `149`, a decisão da declaração do veículo no ato de publicar, e a FR-5703 | a declaração é campo da página de publicação | ela também está na conferência de convocar, quando o veículo escolhido é o GPS (FR-6809) |
+| `149`, a FR-5727 e a FR-5731 | publicar é percurso próprio: a página do Edital, e o "Publicar no GPS" das pendentes | publicar é consequência da confirmação de convocar (FR-6801); a página continua para o pendente (FR-6814) |
+| `149`, o achado 3 do roteiro de 12/11 | "publicar não é automático, e isso é de propósito" | revisto pelo usuário: o ato aconteceu, e a relação é consequência dele |
+| `140`, o botão da conferência dos titulares | *"Convocar as N e enviar N mensagens"* | o botão diz as três consequências (FR-6803) |
+| `125`, a convocação por publicação como "aguardando a publicação" em todo caso | o sistema não publica; a comissão registra | com o GPS como veículo, a publicação é a própria confirmação; fora dele, como antes (FR-6810) |
+
+Nada da semântica de prazo muda: o prazo continua correndo da comunicação bem-sucedida, nas duas
+formas (a decisão de prazo por canal da `149`).
+
+## D-002 — A conferência dos titulares é a conferência única
+
+A `140` já tem a conferência antes de convocar, no mesmo endereço do gesto, sem gravar nada, com a
+confirmação que leva a assinatura do alcance e o resumo do texto conferido. Esta feature acrescenta a
+ela o que será público, o veículo, a declaração, a autoridade e o botão que diz as consequências — e
+não cria tela nova. O resumo do texto conferido passa a incluir o veículo e a autoridade, para que a
+confirmação recuse o que não foi visto.
+
+## D-003 — O núcleo da publicação, extraído e reutilizado
+
+`publicar_convocados` (149) faz duas coisas: confere a prévia do Edital e grava o ato. A gravação —
+o ato, a comunicação de cada *convoca*, os vínculos, o documento e a trilha — passa a uma função que
+recebe a prévia já calculada e roda dentro de um `comando_de_comissao` aberto por quem chama. A prévia
+ganha um filtro por convocações: a publicação de um gesto considera **só** as convocações daquele
+gesto (FR-6815), com a mesma avaliação de efeito da `149`.
+
+## D-004 — No GPS, convocar e publicar são uma transação
+
+Na forma por publicação com o GPS como veículo, a publicação nasce dentro do mesmo `comando_de_comissao`
+que cria as convocações, no mesmo `now`. Não há efeito externo a proteger de `rollback`, e a
+atomicidade é o que garante a FR-6809: nenhuma convocação "aguardando publicação" sobra de uma
+confirmação que publicaria. As validações que poderiam recusar a publicação — declaração, autoridade
+— são feitas antes de gravar a primeira convocação.
+
+## D-005 — Na mensagem, a publicação vem depois dos envios, em transação própria
+
+A decisão de envio depois do `commit` da `050` continua: o SMTP não roda dentro da trava. A
+publicação informativa vem depois, num `comando_de_comissao` próprio com a chave derivada
+`‹chave do gesto›:publicar`, e só com as comunicadas com sucesso. Falhou a publicação, as convocações
+e as mensagens ficam (FR-6812); repetir a confirmação com a mesma chave reaproveita o que já
+aconteceu e completa a publicação (FR-6813).
+
+## D-006 — O veículo é escolhido, nunca presumido
+
+Na forma por publicação, a conferência oferece *"Na página pública do GPS"* e *"Fora do GPS"*, sem
+nenhum marcado. O comando, sem veículo informado, mantém o comportamento de hoje (fora do GPS): é o
+que preserva as chamadas feitas por outros caminhos e não presume o GPS.
+
+## D-007 — A publicação externa registrada também divulga
+
+O gesto das pendentes por publicação já registra, pessoa a pessoa, a referência externa. Ele ganha a
+autoridade e, depois dos registros, publica a relação informativa das registradas (o efeito *divulga*
+da `149`), que cita a referência. O mesmo gesto, na mensagem, reenvia as que falharam e publica as
+que saírem (FR-6807).
+
+## D-008 — Uma publicação por gesto
+
+Cada confirmação que publica gera uma publicação numerada. Agrupar por dia exigiria rotina agendada e
+deixaria a relação fora do ar até ela rodar; o pedido é a relação publicada ao confirmar.
+
+## D-009 — A chamada individual e a correção, pelo mesmo formulário de hoje
+
+`convocar_view` atende a chamada da fila, a regularização e a correção. Os três ganham, por um
+parcial comum, a autoridade, o veículo (na forma por publicação), a declaração e a frase do que será
+público, e o botão que diz as consequências. A conferência antes de chamar uma pessoa da `152` (PR
+#502) é tela própria; quando ela entrar, estes campos vão para ela — o comando já os recebe.
+
+## D-010 — Sem autoridade informada, o comando não publica
+
+O comando de convocar continua aceitando a chamada sem autoridade — é o que mantém os demais caminhos
+e a suíte —, e então não publica. A interface sempre a pede: é ela que garante a FR-6801 a quem
+confirma pela conferência.
