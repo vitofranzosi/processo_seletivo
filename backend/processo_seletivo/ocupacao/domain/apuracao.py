@@ -8,6 +8,10 @@ apuração antiga alimentando a função com o que o ato congelou.
 gravadas; `faltando` é `efetivas - ocupadas`, calculado na leitura. Guardar a quarta seria
 armazenar o derivável — e `efetivas`, ao contrário, **precisa** ser gravada, porque depende de
 somar movimentos e `CHECK` não agrega (016, R-006).
+
+**A vaga não preenchida entra no "a ocupar", e não nas efetivas** (155, R-002): `faltando` passa a
+`efetivas - ocupadas - nao_preenchidas`, e a soma das declarações é gravada ao lado das três, pela
+mesma razão de `efetivas`.
 """
 
 from processo_seletivo.ocupacao.domain import nomes
@@ -31,6 +35,49 @@ def mesma_lista(a, b):
     `UUID` de um lado e `str` do outro — normalizar num lugar só evita a divergência silenciosa.
     """
     return (str(a) if a else None) == (str(b) if b else None)
+
+
+def recebidas_e_cedidas(movimentos_lidos):
+    """`(recebidas, cedidas)` dos `(especie, recebida, quantidade)` que a apuração leu.
+
+    **O desfazimento da reversão é lido como movimento** (155, R-005), e não como estorno de
+    sinal: ele grava a mesma quantidade com origem e destino trocados, e o `recebida` de cada
+    tupla — que vem do destino — já diz o sentido. A reserva que cedeu 2 e teve a destinação
+    desfeita recebe 2 de volta, e a ampla cede as 2 que tinha recebido; a soma das efetivas do
+    Perfil continua a mesma (FR-6311).
+
+    **Espécie desconhecida é recusada, e não ignorada.** As duas são as de `ESPECIES_DE_MOVIMENTO`,
+    que a constraint do banco também exige; uma terceira que chegasse aqui por um caminho de teste
+    ou de prévia seria contada em silêncio, ou descartada em silêncio — os dois dão um número
+    plausível e errado.
+    """
+    recebidas = cedidas = 0
+    for especie, recebida, quantidade in movimentos_lidos:
+        if especie not in nomes.ESPECIES_DE_MOVIMENTO:
+            raise ValueError(f"espécie de movimento desconhecida: {especie!r}")
+        if recebida:
+            recebidas += int(quantidade)
+        else:
+            cedidas += int(quantidade)
+    return recebidas, cedidas
+
+
+def saldo_das_nao_preenchidas(lidas):
+    """Declarações menos desfazimentos, sobre `(especie, quantidade)` na ordem congelada (155).
+
+    A forma de `acrescimo.saldo`, e pela mesma razão: a quantidade é sempre positiva, e o sinal vem
+    da espécie. **Sem piso em zero**: o desfazimento que passasse da declaração é defeito do ato,
+    que o recusa sob a trava, e um zero aqui o esconderia — negativo, a coluna o recusa no banco.
+    """
+    total = 0
+    for especie, quantidade in lidas:
+        if especie == nomes.NAO_PREENCHIDA_DECLARACAO:
+            total += int(quantidade)
+        elif especie == nomes.NAO_PREENCHIDA_DESFAZIMENTO:
+            total -= int(quantidade)
+        else:
+            raise ValueError(f"espécie de vaga não preenchida desconhecida: {especie!r}")
+    return total
 
 
 class EmpateNaFronteiraDoAlvo(Exception):
@@ -240,8 +287,7 @@ def ocupantes_pela_ampla(
     **As efetivas são somadas aqui e em `apurar`, cada uma por si**, de propósito: unificar as duas
     seria mudança no caminho oficial sem efeito na prévia (R-003 da `095`).
     """
-    recebidas = sum(q for _, recebida, q in movimentos_lidos if recebida)
-    cedidas = sum(q for _, recebida, q in movimentos_lidos if not recebida)
+    recebidas, cedidas = recebidas_e_cedidas(movimentos_lidos)
     efetivas = int(publicadas) + recebidas - cedidas
     return ocupantes(
         titulares=titulares_iniciais(
@@ -305,8 +351,7 @@ def apurar(
     já líquido dos desfazimentos. **Entra antes da janela de titulares**, como os movimentos: é por
     isso que, no recorte de 0 vagas publicadas, a vaga acrescida faz do 1º da ordem um titular.
     """
-    recebidas = sum(q for _, recebida, q in movimentos_lidos if recebida)
-    cedidas = sum(q for _, recebida, q in movimentos_lidos if not recebida)
+    recebidas, cedidas = recebidas_e_cedidas(movimentos_lidos)
     efetivas = int(publicadas) + recebidas - cedidas + int(acrescidas)
     # **Suplente não ocupa vaga, e o teto diz isso.** A faixa pode ser maior que o quadro: no
     # 77/2026 são 40 vagas com 30 suplentes alcançados na mesma faixa (`D-011` da `014`), e se
@@ -330,14 +375,17 @@ def apurar(
     return int(publicadas), efetivas, ocupadas
 
 
-def faltando(*, efetivas, ocupadas):
-    """`efetivas - ocupadas`, nunca abaixo de zero.
+def faltando(*, efetivas, ocupadas, nao_preenchidas=0):
+    """`efetivas - ocupadas - nao_preenchidas`, nunca abaixo de zero.
 
     Não é coluna: é aritmética da mesma linha, sem junção e sem agregado. O piso em zero existe
     porque a fronteira do empate pode fazer a faixa alcançar mais gente que o alvo — e nesse caso
     não faltam vagas negativas, faltam zero.
+
+    `nao_preenchidas` tem padrão zero porque é o que toda conta anterior à `155` leu, e a prévia da
+    classificação não tem declaração nenhuma a ler (155, FR-6326).
     """
-    return max(int(efetivas) - int(ocupadas), 0)
+    return max(int(efetivas) - int(ocupadas) - int(nao_preenchidas), 0)
 
 
 def estado(*, tem_quadro, tem_apuracao, causas_de_obsolescencia):

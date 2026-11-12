@@ -27,6 +27,7 @@ from processo_seletivo.classificacao.application import previa as calculo
 from processo_seletivo.classificacao.domain import cenarios_da_previa as cenarios
 from processo_seletivo.editais.domain.recortes import FRASE_DA_MODALIDADE_APONTADA
 from processo_seletivo.interface import previa_da_classificacao as pontuacao
+from processo_seletivo.ocupacao.domain import nomes
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.sorteios.application import simulacao as aplicacao
 from processo_seletivo.sorteios.domain import simulacao
@@ -418,7 +419,11 @@ def _rodadas(resumo, p, recortes):
             + ("autodeclarado ocuparia" if pela == 1 else "autodeclarados ocupariam")
             + " pela ampla"
         )
-        if especie:
+        if especie == nomes.PASSAGEM_ENTRE_COTAS:
+            # A mesma frase da prévia da classificação (155, UX-603): a passagem entre cotas não
+            # roda, e "nenhuma vaga cedida em rodada nenhuma" pareceria resultado da regra.
+            frases.append(pontuacao.FRASE_DA_PASSAGEM_ENTRE_COTAS)
+        elif especie:
             cedidas = dados["cedidas"]
             if cedidas["constante"] and not cedidas["valor"]:
                 frases.append(
@@ -427,7 +432,7 @@ def _rodadas(resumo, p, recortes):
                         " — pela regra de hoje, a lista sempre tem “quem ocupar”, porque a conta "
                         "inclui quem ocupa pela ampla (comportamento atual, pendente de decisão "
                         "na spec 095)"
-                        if sem["media"] and especie == "ON_EXHAUSTION"
+                        if sem["media"] and especie == nomes.REVERSAO_POR_ESGOTAMENTO
                         else ""
                     )
                 )

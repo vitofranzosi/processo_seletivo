@@ -1159,7 +1159,11 @@ def _reversao_declarada(perfil, *, base) -> list[ValidationFinding]:
     **E reverter pressupõe quantidade por recorte**: declarar reversão num Perfil sem quadro é regra
     inexequível, e regra publicada inexequível é o que a `014` já recusou a publicar.
     """
-    from processo_seletivo.ocupacao.domain.nomes import ESPECIES_DE_REVERSAO
+    # **As três declarações, e não só as duas que movem** (155, FR-6317): a passagem entre cotas é
+    # resposta publicável à mesma pergunta. Ler `ESPECIES_DE_REVERSAO` aqui recusaria publicar o
+    # Edital que manda a vaga passar antes por outras cotas — e a saída seria declarar uma das duas
+    # que movem, contra o que ele escreveu.
+    from processo_seletivo.ocupacao.domain.nomes import DECLARACOES_DE_REVERSAO
 
     objeto = perfil.get("vacancyReversion")
     if objeto is None:
@@ -1173,11 +1177,12 @@ def _reversao_declarada(perfil, *, base) -> list[ValidationFinding]:
             _impeditivo(
                 "vacancy_reversion_kind_required",
                 "O Perfil declara reversão de vaga sem dizer sob qual gatilho: declare por "
-                "esgotamento da lista reservada ou por saldo não preenchido.",
+                "esgotamento da lista reservada, por saldo não preenchido, ou que a vaga passa "
+                "antes por outras cotas, na ordem do Edital.",
                 f"{caminho}/kind",
             )
         ]
-    if especie not in ESPECIES_DE_REVERSAO:
+    if especie not in DECLARACOES_DE_REVERSAO:
         return [
             _impeditivo(
                 "vacancy_reversion_kind_unknown",

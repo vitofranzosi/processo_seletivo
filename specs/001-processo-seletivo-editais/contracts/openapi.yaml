@@ -695,14 +695,18 @@ components:
       properties:
         kind:
           type: string
-          enum: [ON_EXHAUSTION, ON_BALANCE]
+          enum: [ON_EXHAUSTION, ON_BALANCE, THROUGH_OTHER_QUOTAS]
           description: >-
-            Duas espécies, porque os Editais escrevem a reversão de modo diferente e o sistema não
-            pode escolher por eles: ON_EXHAUSTION reverte só quando a lista reservada esgota (a
-            redação do 28/2026, item 4.3, "havendo ausência de candidatos aprovados");
+            Duas espécies que movem vaga, porque os Editais escrevem a reversão de modo diferente e
+            o sistema não pode escolher por eles: ON_EXHAUSTION reverte só quando a lista reservada
+            esgota (a redação do 28/2026, item 4.3, "havendo ausência de candidatos aprovados");
             ON_BALANCE reverte o saldo ainda que a lista tenha gente por analisar (a do 57/2026,
             item 4.3, "na hipótese do não preenchimento total"). Tratá-las como o mesmo efeito
-            fixaria, em ato publicado, uma divergência que é de norma.
+            fixaria, em ato publicado, uma divergência que é de norma. **A terceira,
+            THROUGH_OTHER_QUOTAS, chegou com a 155** (FR-6317): o Edital manda a vaga passar antes
+            por outras cotas, na ordem que ele estabelece, e só depois à ampla. Ela é publicada e
+            retificável como as outras, e não move vaga nenhuma até a spec própria (FR-6318,
+            FR-6319). Não há degrau canônico novo: o objeto foi desenhado para receber valor novo.
     ModalidadeInput:
       type: object
       description: >-
@@ -926,7 +930,7 @@ components:
 
             **A forma de dentro é a de ReversaoDeVagaInput e não é declarada aqui**, pela mesma
             régua de competitionModalities: a forma publicada confere que o campo existe e é objeto
-            ou nulo, e que kind seja um dos dois declaráveis é conferido à parte, porque a recusa
+            ou nulo, e que kind seja um dos três declaráveis é conferido à parte, porque a recusa
             tem código próprio — vacancy_reversion_kind_required — em vez de "tipo inválido".
         callForm:
           type: [string, 'null']

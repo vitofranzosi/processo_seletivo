@@ -124,6 +124,11 @@ def com_esgotamento(client, seletor_ligado, edital):
     return montar(client, edital, "ON_EXHAUSTION")
 
 
+@pytest.fixture
+def com_passagem(client, seletor_ligado, edital):
+    return montar(client, edital, "THROUGH_OTHER_QUOTAS")
+
+
 def previa(client, edital, cartao=None, **dados):
     url = reverse("interface:fragmento-previa-da-classificacao", args=[PERFIL, "0"])
     resposta = client.get(url, {"edital": str(edital.id), **(cartao or do_quadro()), **dados})
@@ -221,6 +226,20 @@ def test_por_esgotamento_e_o_comportamento_atual(client, com_esgotamento):
     assert "nenhuma vaga seria cedida" in visivel
     assert "a conta inclui quem ocupa pela ampla" in visivel
     assert "comportamento atual do sistema" in visivel
+
+
+def test_a_passagem_entre_cotas_diz_que_o_gps_nao_a_aplica(client, com_passagem):
+    """A terceira resposta (155, FR-6318, UX-603): o limite é do GPS, e não do Edital.
+
+    "Nenhuma vaga seria cedida", a frase das outras duas, pareceria resultado da regra — quando é
+    a regra que ainda não roda.
+    """
+    visivel = texto(previa(client, com_passagem, **CONCOMITANTE))
+    assert "passa antes por outras cotas, na ordem do Edital" in visivel
+    assert "O GPS ainda não aplica essa ordem" in visivel
+    assert "nenhuma vaga é cedida" in visivel
+    assert "cedida à ampla concorrência deste Perfil" not in visivel
+    assert "Este Perfil não declara reversão" not in visivel
 
 
 # --- O detalhe: o seletor e as marcas (FR-2313 a FR-2315) -------------------------------------

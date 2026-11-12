@@ -70,7 +70,37 @@ class TestAsTresRecusas:
         assert conferir(perfil("ON_BALANCE"))[0][1] == f"{BASE}/vacancyReversion"
 
 
-class TestAsDuasEspeciesPublicam:
-    @pytest.mark.parametrize("especie", [nomes.REVERSAO_POR_ESGOTAMENTO, nomes.REVERSAO_POR_SALDO])
+class TestAsTresRespostasPublicam:
+    @pytest.mark.parametrize(
+        "especie",
+        [nomes.REVERSAO_POR_ESGOTAMENTO, nomes.REVERSAO_POR_SALDO, nomes.PASSAGEM_ENTRE_COTAS],
+    )
     def test_declaracao_completa_com_quadro_passa(self, especie):
         assert conferir(perfil({"kind": especie})) == []
+
+    def test_a_passagem_entre_cotas_e_declaravel_e_nao_reverte(self):
+        """**Declarável, e fora das que movem** (155, FR-6317, FR-6318).
+
+        Se ela entrasse em `ESPECIES_DE_REVERSAO`, `quantidade_a_reverter` cederia o saldo como a
+        por saldo — a cota iria à ampla contra a ordem que o Edital escreveu.
+        """
+        assert nomes.PASSAGEM_ENTRE_COTAS == "THROUGH_OTHER_QUOTAS"
+        assert nomes.PASSAGEM_ENTRE_COTAS in nomes.DECLARACOES_DE_REVERSAO
+        assert nomes.PASSAGEM_ENTRE_COTAS not in nomes.ESPECIES_DE_REVERSAO
+        assert nomes.ESPECIES_DE_REVERSAO == (
+            nomes.REVERSAO_POR_ESGOTAMENTO,
+            nomes.REVERSAO_POR_SALDO,
+        )
+
+    def test_a_passagem_sem_quadro_e_recusada_como_as_outras(self):
+        """A declaração é sobre vaga reservada, e sem quadro não há vaga a dizer para onde vai."""
+        achados = conferir(perfil({"kind": nomes.PASSAGEM_ENTRE_COTAS}, com_quadro=False))
+
+        assert achados == [("vacancy_reversion_sem_quadro", f"{BASE}/vacancyReversion")]
+
+    def test_a_mensagem_sem_kind_nomeia_as_tres(self):
+        mensagem = _reversao_declarada(perfil({}), base=BASE)[0].message
+
+        assert "esgotamento" in mensagem
+        assert "saldo" in mensagem
+        assert "outras cotas" in mensagem

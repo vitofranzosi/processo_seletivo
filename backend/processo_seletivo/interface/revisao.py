@@ -245,6 +245,8 @@ def _perfil(perfil, snapshot):
 REVERSAO = {
     "ON_EXHAUSTION": "só quando a lista reservada esgota",
     "ON_BALANCE": "a quantidade que ficou sem preencher",
+    # A terceira resposta (155, FR-6317). Sem ela, a conferência diria o código cru.
+    "THROUGH_OTHER_QUOTAS": "passa antes por outras cotas, na ordem do Edital",
 }
 
 

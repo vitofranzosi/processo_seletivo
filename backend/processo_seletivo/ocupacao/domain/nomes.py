@@ -16,7 +16,19 @@ antes da `019`. Os nomes abaixo são o que sobra depois dessa proibição.
 # divergência de norma.
 REVERSAO_POR_ESGOTAMENTO = "ON_EXHAUSTION"
 REVERSAO_POR_SALDO = "ON_BALANCE"
+# **As que movem vaga, e só elas.** `reversao.quantidade_a_reverter` cede o saldo de tudo o que
+# estiver nesta tupla; uma resposta nova que entrasse aqui reverteria como a por saldo, sem que
+# ninguém a tivesse escrito assim.
 ESPECIES_DE_REVERSAO = (REVERSAO_POR_ESGOTAMENTO, REVERSAO_POR_SALDO)
+# **A terceira resposta, que não move nada** (155, FR-6317, FR-6318). Há Edital que manda a vaga da
+# cota passar antes por outras cotas, numa ordem que ele estabelece, e só depois à ampla. O GPS
+# ainda não aplica essa ordem (FR-6319): a declaração é publicada e retificável como as outras, e a
+# tela diz o que o Edital manda. Por isso ela mora numa tupla própria — o que se **declara** — ao
+# lado da que **reverte**. A alternativa recusada era acrescentá-la a `ESPECIES_DE_REVERSAO` e
+# tratar a exceção em cada chamador: bastava um esquecer para a cota ceder o saldo à ampla contra a
+# ordem que o Edital escreveu.
+PASSAGEM_ENTRE_COTAS = "THROUGH_OTHER_QUOTAS"
+DECLARACOES_DE_REVERSAO = (*ESPECIES_DE_REVERSAO, PASSAGEM_ENTRE_COTAS)
 
 # --- Espécie de movimento de vaga ---------------------------------------------------------------
 # **Uma só, e a ausência da segunda é o achado.** A reversão move quantidade da cota para a linha
@@ -27,7 +39,19 @@ ESPECIES_DE_REVERSAO = (REVERSAO_POR_ESGOTAMENTO, REVERSAO_POR_SALDO)
 #
 # A exclusão mora no cálculo, em `apuracao.apurar`, e não aqui (016, FR-252).
 MOVIMENTO_REVERSAO = "REVERSAO_DE_COTA"
-ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO,)
+# **A segunda espécie é o ato contrário, e não um sentido novo** (155, R-005). Desfazer a destinação
+# grava outro movimento, com a mesma quantidade e o sentido invertido, citando o que desfaz: nada se
+# apaga, e a apuração o lê como lê qualquer movimento — recebida ou cedida, pelo destino.
+MOVIMENTO_DESFAZIMENTO = "DESFAZIMENTO_DA_REVERSAO"
+ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO, MOVIMENTO_DESFAZIMENTO)
+
+# --- A vaga não preenchida (155, R-002) ---------------------------------------------------------
+# **Não é acréscimo negativo.** Reduzir as efetivas diria que a vaga deixou de existir; ela existe,
+# e ninguém a preencheu. A declaração sai do "a ocupar" e não mexe nas efetivas. O desfazimento é o
+# ato contrário, na mesma tabela, citando a declaração — a forma da vaga acrescida.
+NAO_PREENCHIDA_DECLARACAO = "DECLARACAO"
+NAO_PREENCHIDA_DESFAZIMENTO = "DESFAZIMENTO"
+ESPECIES_DE_NAO_PREENCHIDA = (NAO_PREENCHIDA_DECLARACAO, NAO_PREENCHIDA_DESFAZIMENTO)
 
 # --- A vaga acrescida depois da publicação (097, `T-001`) -----------------------------------------
 # **Não é movimento, e a diferença é de onde a quantidade vem.** O movimento leva vaga de um recorte
@@ -72,6 +96,10 @@ CAUSA_EFEITO_POSTERIOR = "efeito_posterior"
 # **A sexta, e ela chegou com a `097`.** Vaga acrescida ou desfeita depois da apuração muda as
 # efetivas do recorte — o mesmo desenho das duas anteriores: obsolescência em vez de orquestração.
 CAUSA_ACRESCIMO_POSTERIOR = "acrescimo_posterior"
+# **A sétima, e ela chegou com a `155`.** Vaga declarada não preenchida, ou o desfazimento dessa
+# declaração, depois da apuração muda o "a ocupar" do recorte. O desenho das três anteriores:
+# obsolescência em vez de orquestração.
+CAUSA_DECLARACAO_POSTERIOR = "declaracao_posterior"
 
 # --- Espécies de efeito de ocupação (019, R-003) ------------------------------------------------
 # **A porta por onde a `019` mexe na contagem, e ela mora aqui porque a tabela mora aqui.** A `016`
@@ -113,3 +141,15 @@ ACRESCIMO_INEXISTENTE = "acrescimo_inexistente"
 DESFAZIMENTO_ALEM_DO_ACRESCIMO = "desfazimento_alem_do_acrescimo"
 DESFAZIMENTO_COM_PESSOAS_CHAMADAS = "desfazimento_com_pessoas_chamadas"
 OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"
+
+# --- Recusas da destinação e da vaga não preenchida (155, contrato `comandos-e-telas.md`) -------
+# Os atos que as usam vêm nos incrementos seguintes; os códigos ficam aqui desde já, pela razão do
+# topo deste módulo, e porque a tela da passagem entre cotas já precisa dizer a dela.
+SEM_REVERSAO_DECLARADA = "sem_reversao_declarada"
+RECUSA_PASSAGEM_ENTRE_COTAS = "passagem_entre_cotas"
+REVERSAO_POR_SALDO_AGUARDA_DECISAO = "reversao_por_saldo_aguarda_decisao"
+AINDA_HA_QUEM_OCUPAR = "ainda_ha_quem_ocupar"
+DESTINACAO_IMPEDIDA = "destinacao_impedida"
+SEM_SALDO_A_DESTINAR = "sem_saldo_a_destinar"
+DESTINACAO_COM_CHAMADA_DEPENDENTE = "destinacao_com_chamada_dependente"
+O_EDITAL_MANDA_DESTINAR = "o_edital_manda_destinar"

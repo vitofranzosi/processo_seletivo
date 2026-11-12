@@ -190,6 +190,12 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     acrescimos = selectors.acrescimos_do_recorte(
         edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
     )
+    # **As vagas declaradas não preenchidas, congeladas como os acréscimos** (155, R-002). Saem do
+    # "a ocupar" e não das efetivas; os ids vão ao universo, para que reproduzir seja reler estas
+    # (FR-6342).
+    nao_preenchidas_lidas = selectors.nao_preenchidas_do_recorte(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
+    )
     lidos = [
         (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
         for m in movimentos
@@ -230,7 +236,11 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     # **A cessão é calculada antes de a apuração existir, e o id do movimento nasce aqui.**
     # É o que permite a apuração citar o próprio movimento em `movimentosLidos` e nascer com a
     # `efetivas` líquida — sem isso ela nascia obsoleta pelo movimento que ela mesma causou.
-    especie_da_reversao = _declaracao(versao.content, perfil_id=perfil)
+    #
+    # **A espécie que move, e não a declaração** (155, FR-6318): a passagem entre cotas é declarada
+    # e não cede nada. `quantidade_a_reverter` já devolveria zero para ela; ler `especie_que_move`
+    # aqui é o que impede que isso dependa de a tupla das que revertem nunca crescer.
+    especie_da_reversao = _especie_que_move(versao.content, perfil_id=perfil)
     cede = (
         movimento_de_vaga.quantidade_que_a_cota_cede(
             especie=especie_da_reversao,
@@ -264,10 +274,15 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
         publicadas=publicadas,
         efetivas=efetivas,
         ocupadas=ocupadas,
+        nao_preenchidas=calculo.saldo_das_nao_preenchidas(
+            (n.especie, n.quantidade) for n in nao_preenchidas_lidas
+        ),
         linha_do_quadro_id=linha.get("id"),
         universo={
             "rowId": str(linha.get("id")) if linha.get("id") else None,
             "immediateVacancies": publicadas,
+            # **A declaração, das três** (155, FR-6317): a passagem entre cotas é congelada como
+            # as outras, e quem relê a apuração sabe o que o Edital mandava naquele dia.
             "vacancyReversion": _declaracao(versao.content, perfil_id=perfil),
             "governedStage": str(etapa) if etapa else None,
             "orderId": str(ato.id),
@@ -279,6 +294,7 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
             + ([str(identidade_do_movimento)] if identidade_do_movimento else []),
             "efeitosLidos": [str(e.id) for e in efeitos],
             "acrescimosLidos": [str(a.id) for a in acrescimos],
+            "naoPreenchidasLidas": [str(n.id) for n in nao_preenchidas_lidas],
         },
         emitida_por=str(getattr(actor, "subject", actor)),
         emitida_em=now,
@@ -301,11 +317,18 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     return apuracao, movimento
 
 
-def _declaracao(conteudo, *, perfil_id):
+def _perfil(conteudo, perfil_id):
     from processo_seletivo.classificacao.domain.universo import por_identidade
 
-    perfil = por_identidade((conteudo or {}).get("profiles"), perfil_id) or {}
-    return reversao.declarada(perfil)
+    return por_identidade((conteudo or {}).get("profiles"), perfil_id) or {}
+
+
+def _declaracao(conteudo, *, perfil_id):
+    return reversao.declarada(_perfil(conteudo, perfil_id))
+
+
+def _especie_que_move(conteudo, *, perfil_id):
+    return reversao.especie_que_move(_perfil(conteudo, perfil_id))
 
 
 def _quantidade(linha):

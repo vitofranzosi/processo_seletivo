@@ -24,7 +24,7 @@ from processo_seletivo.classificacao.application import previa as calculo
 from processo_seletivo.classificacao.domain import cenarios_da_previa as cenarios
 from processo_seletivo.classificacao.domain import jornada as jornada_do_perfil
 from processo_seletivo.classificacao.domain.desempate import _valor_do_criterio
-from processo_seletivo.ocupacao.domain import apuracao, rodada_da_previa
+from processo_seletivo.ocupacao.domain import apuracao, nomes, rodada_da_previa
 
 C = calculo
 
@@ -56,7 +56,17 @@ DESFECHO = {"ADMITS_SURPLUS": "“Todos os empatados progridem”", "STRICT": "�
 REVERSAO = {
     "ON_EXHAUSTION": "“Só quando a lista reservada esgota”",
     "ON_BALANCE": "“A quantidade que ficou sem preencher”",
+    nomes.PASSAGEM_ENTRE_COTAS: "“Passa antes por outras cotas, na ordem do Edital”",
 }
+#: A terceira resposta, numa frase só para as duas prévias (155, FR-6318, UX-603). **O limite é
+#: do GPS, e não do Edital nem da comissão**: o Edital manda, e o sistema ainda não sabe aplicar a
+#: ordem entre as cotas. Dizer "nenhuma vaga seria cedida", como diz das outras duas, faria a
+#: prévia parecer um resultado da regra, quando é a regra que não roda.
+FRASE_DA_PASSAGEM_ENTRE_COTAS = (
+    "Este Perfil declara que a vaga reservada sem ocupante passa antes por outras cotas, na ordem "
+    "do Edital, e só depois à ampla concorrência. O GPS ainda não aplica essa ordem: nesta prévia, "
+    "nenhuma vaga é cedida."
+)
 
 
 def apurar_vagas(progrediram, vagas, empates):
@@ -990,6 +1000,8 @@ def _frase_da_reversao(apurado, rotulo, especie):
         return "Não há o que reverter: nenhuma vaga ficaria sem ocupante." if especie else ""
     if not especie:
         return "Este Perfil não declara reversão: a vaga reservada sem ocupante continua reservada."
+    if especie == nomes.PASSAGEM_ENTRE_COTAS:
+        return FRASE_DA_PASSAGEM_ENTRE_COTAS
     nome = REVERSAO.get(especie, especie)
     if apurado["cederia"]:
         cede = apurado["cederia"]

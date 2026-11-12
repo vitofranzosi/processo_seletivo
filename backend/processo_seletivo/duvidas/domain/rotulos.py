@@ -16,6 +16,8 @@ RESERVA = {
 REVERSAO = {
     "ON_EXHAUSTION": "só quando a lista reservada esgota",
     "ON_BALANCE": "a quantidade que ficou sem preencher",
+    # A terceira resposta (155, FR-6317), na grafia da opção da composição.
+    "THROUGH_OTHER_QUOTAS": "passa antes por outras cotas, na ordem do Edital",
 }
 
 FORMA_DE_CONVOCACAO = {

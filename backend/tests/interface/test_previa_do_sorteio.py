@@ -341,6 +341,15 @@ def test_por_esgotamento_nada_e_cedido_e_e_comportamento_atual(client, com_esgot
     assert "comportamento atual, pendente de decisão na spec 095" in rodadas
 
 
+def test_a_passagem_entre_cotas_nao_e_cedida_e_o_limite_e_do_gps(client, seletor_ligado, edital):
+    """A terceira resposta (155, UX-603), com a mesma frase da prévia da classificação."""
+    com_passagem = montar(client, edital, "THROUGH_OTHER_QUOTAS")
+    rodadas = bloco(previa(client, com_passagem), "rodadas-do-sorteio")
+
+    assert "O GPS ainda não aplica essa ordem" in rodadas
+    assert "nenhuma vaga seria cedida à ampla em rodada nenhuma" not in rodadas
+
+
 def test_resultado_igual_em_todas_as_rodadas_nao_vira_porcentagem(client, com_reservas):
     """Uma PPI para 3 vagas: sobra vaga em toda rodada (FR-2503)."""
     rodadas = bloco(previa(client, com_reservas, **{f"inscritos-{PPI}": "1"}), "rodadas-do-sorteio")

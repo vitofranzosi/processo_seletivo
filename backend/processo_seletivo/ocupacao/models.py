@@ -25,9 +25,10 @@ from processo_seletivo.publicacoes.models import VersaoConsolidada
 class ApuracaoDeOcupacao(models.Model):
     """Quantas vagas um recorte publicou, quantas tem efetivamente, e quantas estão ocupadas.
 
-    **Três quantidades são colunas e a quarta não é.** `faltando` é `efetivas - ocupadas`,
-    aritmética da mesma linha — guardá-la seria armazenar o derivável. `efetivas`, ao contrário,
-    **precisa** ser coluna: depende de somar movimentos, e `CHECK` não agrega (016, `R-006`).
+    **Quatro quantidades são colunas e a quinta não é.** `faltando` é
+    `efetivas - ocupadas - nao_preenchidas`, aritmética da mesma linha — guardá-la seria armazenar o
+    derivável. `efetivas` e `nao_preenchidas`, ao contrário, **precisam** ser colunas: dependem de
+    somar registros de outras tabelas, e `CHECK` não agrega (016, `R-006`; 155, R-002).
 
     **`publicadas` nunca muda por movimento** (`FR-239a`). O que a reversão move é a quantidade
     efetiva; o publicado é intocável, e sem esta separação reverter faria o sistema afirmar que o
@@ -65,6 +66,12 @@ class ApuracaoDeOcupacao(models.Model):
     publicadas = models.PositiveIntegerField()
     efetivas = models.PositiveIntegerField()
     ocupadas = models.PositiveIntegerField()
+    # **As vagas declaradas não preenchidas que esta apuração leu**, já líquidas dos desfazimentos
+    # (155, R-002, FR-6326). Saem do "a ocupar" e **não** das efetivas: a vaga existe, e ninguém a
+    # preencheu — reduzir as efetivas diria que ela deixou de existir. Padrão zero, que é o que toda
+    # apuração anterior à `155` leu: a coluna entra sem reescrever linha, e o gatilho append-only
+    # não dispara em `ADD COLUMN`.
+    nao_preenchidas = models.PositiveIntegerField(default=0)
     # **Qual** linha do quadro foi lida. É a lição literal do `Corte`, que guarda o `rowId` do alvo
     # derivado: sem ela, retificado o quadro, não há como dizer se **esta** apuração ficou para
     # trás — a quantidade sozinha não identifica a linha (`FR-263`).
@@ -103,8 +110,14 @@ class ApuracaoDeOcupacao(models.Model):
             # O limite é contra **efetivas**, e não contra publicadas: recebida a reversão, a linha
             # geral passa de 28 para 35, e as 35 são ocupáveis. Comparar com `publicadas` recusaria
             # o ato justamente no cenário de sucesso da feature.
+            #
+            # **E as não preenchidas entram na mesma conta** (155, R-002): vaga declarada não
+            # preenchida não é ocupável, e uma apuração que dissesse 3 ocupadas e 1 não preenchida
+            # de 3 efetivas afirmaria quatro vagas onde há três. O nome fica, porque a garantia é a
+            # mesma — ninguém ocupa além do que existe —, só que agora com as duas parcelas.
             models.CheckConstraint(
-                condition=Q(ocupadas__lte=F("efetivas")), name="ck_apuracao_ocupadas_no_limite"
+                condition=Q(ocupadas__lte=F("efetivas") - F("nao_preenchidas")),
+                name="ck_apuracao_ocupadas_no_limite",
             ),
             # Sucessão exige motivo, e a primeira apuração não o tem. É a mesma forma que o
             # `AtoDeOrdenacao` usa para `motivo_da_sucessao`.
@@ -133,37 +146,100 @@ class ApuracaoDeOcupacao(models.Model):
 
     @property
     def faltando(self):
-        """`efetivas - ocupadas`, nunca negativo. Não é coluna, de propósito."""
-        return max(self.efetivas - self.ocupadas, 0)
+        """`efetivas - ocupadas - nao_preenchidas`, nunca negativo. Não é coluna, de propósito.
+
+        A vaga declarada não preenchida deixa de contar como "a ocupar" (155, FR-6326): é o que
+        impede a tela de pedir a alguém que chame para uma vaga que a comissão já declarou que
+        ninguém vai preencher.
+        """
+        return max(self.efetivas - self.ocupadas - (self.nao_preenchidas or 0), 0)
 
 
 class MovimentoDeVaga(models.Model):
     """A quantidade que sai de um recorte e entra em outro: a reversão de cota (016, `FR-246`).
 
-    **Uma espécie só, e a ausência da segunda é o achado da US4.** A concorrência concomitante do
-    item 8.9 do 28/2026 parecia ser o sentido oposto deste movimento, e não é: ela não transfere
-    quantidade nenhuma. O autodeclarado que ocupa pela ampla apenas **não é computado** no
-    preenchimento da reservada, que continua com as vagas que publicou. Aquilo é exclusão no
-    cálculo de `ocupadas`, e mora em `apuracao.apurar`.
+    **Um sentido só, e a ausência do segundo é o achado da US4 da `016`.** A concorrência
+    concomitante do item 8.9 do 28/2026 parecia ser o sentido oposto deste movimento, e não é: ela
+    não transfere quantidade nenhuma. O autodeclarado que ocupa pela ampla apenas **não é
+    computado** no preenchimento da reservada, que continua com as vagas que publicou. Aquilo é
+    exclusão no cálculo de `ocupadas`, e mora em `apuracao.apurar`.
 
-    **O movimento nasce com a apuração da origem**, na mesma transação que o determina, e com o id
-    gerado **antes** dela — para que ela o inclua nos próprios `movimentosLidos` e já nasça com a
-    `efetivas` líquida da cessão. Sem isso a apuração de origem nascia obsoleta, porque o
-    movimento que ela mesma causou não constava da lista que ela leu.
+    **A segunda espécie é o ato contrário** (155, R-005): desfazer a destinação grava outro
+    movimento, com a mesma quantidade e origem e destino trocados, citando o que desfaz. Não é o
+    sentido oposto da concorrência concomitante — é a correção com rastro, como a da vaga acrescida.
+
+    **Até a `155`, o movimento nascia com a apuração da origem**, na mesma transação que o
+    determinava, e com o id gerado **antes** dela — para que ela o incluísse nos próprios
+    `movimentosLidos` e já nascesse com a `efetivas` líquida da cessão. Os movimentos gravados assim
+    continuam válidos e contam como destinação feita (FR-6316). Daqui em diante a destinação é ato
+    próprio (R-001): `apuracao` passa a ser **a apuração lida pelo ato**, e o movimento carrega o
+    recorte, o gatilho, o fundamento e a versão do Edital que o autorizaram.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # **Nula só onde a origem não tem apuração**: a lista de sorteio sem relação, que não chega a
+    # ter ordem a apurar (155, R-007, D-011). Uma apuração artificial para preencher a coluna foi
+    # recusada pelo usuário — ela afirmaria uma ocupação que ninguém apurou. A falta da apuração é
+    # compensada pelo recorte próprio, e `ck_movimento_com_recorte` exige um dos dois.
     apuracao = models.ForeignKey(
-        ApuracaoDeOcupacao, on_delete=models.PROTECT, related_name="movimentos"
+        ApuracaoDeOcupacao,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="movimentos",
     )
     especie = models.CharField(
         max_length=32,
-        choices=[(nomes.MOVIMENTO_REVERSAO, "Reversão de cota")],
+        choices=[
+            (nomes.MOVIMENTO_REVERSAO, "Reversão de cota"),
+            (nomes.MOVIMENTO_DESFAZIMENTO, "Desfazimento da reversão"),
+        ],
     )
+    # **O recorte do próprio movimento** (155, R-001). Nulo nos movimentos anteriores à `155`, que o
+    # liam pela apuração; preenchido nos novos. Identidades publicadas, e não FKs para a
+    # elaboração, pela razão que a apuração registra. Toda leitura por recorte pergunta pelos dois
+    # caminhos — `apuracao__...` **ou** estes —, e uma varredura prende que nenhuma ficou para trás.
+    edital = models.ForeignKey(
+        Edital,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="movimentos_de_vaga",
+    )
+    perfil_id = models.UUIDField(null=True, blank=True)
+    marco_id = models.UUIDField(null=True, blank=True)
     origem_lista_id = models.UUIDField(null=True, blank=True)
     destino_lista_id = models.UUIDField(null=True, blank=True)
     quantidade = models.PositiveIntegerField()
     causa = models.TextField()
+    # O gatilho que o Edital declarou e sob o qual o ato moveu a vaga. Vazio nos anteriores à `155`:
+    # eles não o guardavam, e preenchê-los agora seria `UPDATE` numa tabela append-only — além de
+    # afirmar, depois do fato, uma leitura que o ato não registrou.
+    gatilho = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        choices=[
+            (nomes.REVERSAO_POR_ESGOTAMENTO, "Por esgotamento da lista reservada"),
+            (nomes.REVERSAO_POR_SALDO, "Pelo saldo não preenchido"),
+        ],
+    )
+    # A frase publicada da reversão, ou o motivo do desfazimento (FR-6310). Obrigatório nos novos —
+    # `ck_movimento_com_fundamento` — e vazio nos antigos, que tinham só a `causa`.
+    fundamento = models.TextField(blank=True, default="")
+    # A versão do Edital cuja declaração o ato leu (FR-6310, FR-6342): uma Retificação posterior
+    # pode trocar a reversão, e a pergunta "sob que norma esta vaga saiu da reserva" continua tendo
+    # resposta.
+    versao = models.ForeignKey(
+        VersaoConsolidada,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="movimentos_de_vaga",
+    )
+    desfaz = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="desfazimentos"
+    )
     registrado_por = models.CharField(max_length=255)
     registrado_em = models.DateTimeField()
 
@@ -171,6 +247,37 @@ class MovimentoDeVaga(models.Model):
         constraints = [
             models.CheckConstraint(
                 condition=Q(quantidade__gt=0), name="ck_movimento_quantidade_positiva"
+            ),
+            # As espécies eram só *choices*, e *choices* o banco não vê. Com duas, uma terceira
+            # escrita por engano seria lida pela apuração como movimento — a forma de
+            # `ck_acrescimo_especie`.
+            models.CheckConstraint(
+                condition=Q(especie__in=list(nomes.ESPECIES_DE_MOVIMENTO)),
+                name="ck_movimento_especie",
+            ),
+            # **A apuração ou o recorte, e nunca nenhum dos dois** (155, R-001). Sem uma das duas
+            # portas, o movimento não alcançaria recorte nenhum: nenhuma apuração o leria, e a vaga
+            # teria saído da reserva sem chegar a lugar algum.
+            models.CheckConstraint(
+                condition=Q(apuracao__isnull=False)
+                | Q(edital__isnull=False, perfil_id__isnull=False, marco_id__isnull=False),
+                name="ck_movimento_com_recorte",
+            ),
+            # O desfazimento cita o movimento que desfaz, e a reversão não cita nenhum. Sem a
+            # citação, a trava do saldo somaria desfazimentos de nada (a lição do acréscimo).
+            # Escrita como "não desfazimento ⇔ sem citação", e não pela lista das espécies, para
+            # que a espécie desconhecida seja recusada só por `ck_movimento_especie`: com as duas
+            # disparando, a recusa nomearia a errada.
+            models.CheckConstraint(
+                condition=(~Q(especie=nomes.MOVIMENTO_DESFAZIMENTO) & Q(desfaz__isnull=True))
+                | Q(especie=nomes.MOVIMENTO_DESFAZIMENTO, desfaz__isnull=False),
+                name="ck_desfazimento_cita_o_movimento",
+            ),
+            # **Fundamento nos novos**, reconhecidos pelo recorte próprio. Os antigos não o tinham,
+            # e exigir dos dois tornaria inválida, pela migration, linha que já foi lida.
+            models.CheckConstraint(
+                condition=Q(edital__isnull=True) | ~Q(fundamento=""),
+                name="ck_movimento_com_fundamento",
             ),
             # Origem e destino distintos. **`NULL` exige o cuidado de sempre**: em SQL,
             # `NULL = NULL` não é verdadeiro, então a comparação direta deixaria passar
@@ -189,6 +296,8 @@ class MovimentoDeVaga(models.Model):
         ]
         indexes = [
             models.Index(fields=["destino_lista_id"], name="ix_movimento_destino"),
+            # A leitura pelo recorte próprio, que a apuração faz a cada emissão.
+            models.Index(fields=["edital", "perfil_id", "marco_id"], name="ix_movimento_recorte"),
         ]
 
     def __str__(self):
@@ -367,3 +476,100 @@ class AcrescimoDeVagas(models.Model):
 
     def delete(self, *args, **kwargs):
         raise TypeError("AcrescimoDeVagas é append-only")
+
+
+class VagaNaoPreenchida(models.Model):
+    """A vaga que ninguém vai preencher, declarada por ato, e o ato contrário (155, R-002, D-003).
+
+    **Não é acréscimo negativo.** Reduzir as efetivas, como um desfazimento de acréscimo, diria que
+    a vaga deixou de existir; ela existe e não foi preenchida, e é isso que o relatório e a página
+    pública precisam poder dizer (FR-6326). A apuração lê a soma em `nao_preenchidas`, que sai do
+    "a ocupar" e deixa as efetivas como estão.
+
+    **Não é `MovimentoDeVaga`**: nada sai de um recorte para outro. E não é coluna da apuração
+    sozinha: a declaração precede a apuração que a lê, tem fundamento e autor, e se desfaz — a
+    forma de `AcrescimoDeVagas`, com uma tabela para as duas espécies e a quantidade sempre
+    positiva, o sinal vindo da espécie.
+
+    **O recorte é o exato, e a linha geral é `lista_id` nulo** (D-014): a declaração vale para a
+    ampla sem ninguém que ainda possa ocupá-la, inclusive a que recebeu vaga destinada (FR-6324).
+
+    **O que o banco não garante, a aplicação garante sob a trava do Processo**: que a declaração não
+    passe do saldo do recorte, e que o desfazimento não passe do que resta dela. `CHECK` não agrega.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    edital = models.ForeignKey(
+        Edital, on_delete=models.PROTECT, related_name="vagas_nao_preenchidas"
+    )
+    perfil_id = models.UUIDField()
+    marco_id = models.UUIDField()
+    lista_id = models.UUIDField(null=True, blank=True)
+    # A apuração que o ato leu. **Nula só no sorteio sem relação** (R-007), onde a origem não tem
+    # apuração — pela razão que o movimento registra.
+    apuracao = models.ForeignKey(
+        ApuracaoDeOcupacao,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="declaracoes_de_nao_preenchida",
+    )
+    especie = models.CharField(
+        max_length=16,
+        choices=[
+            (nomes.NAO_PREENCHIDA_DECLARACAO, "Declaração de vaga não preenchida"),
+            (nomes.NAO_PREENCHIDA_DESFAZIMENTO, "Desfazimento da declaração"),
+        ],
+    )
+    desfaz = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="desfazimentos"
+    )
+    quantidade = models.PositiveIntegerField()
+    # O porquê da declaração, ou o motivo do desfazimento. **Escrito e obrigatório** (FR-6323):
+    # declarar que uma vaga não será preenchida sem dizer por quê é o "por padrão" que a spec veda.
+    fundamento = models.TextField()
+    # A versão do Edital lida pelo ato (FR-6325): é ela que diz se havia reversão declarada.
+    versao = models.ForeignKey(
+        VersaoConsolidada, on_delete=models.PROTECT, related_name="vagas_nao_preenchidas"
+    )
+    registrado_por = models.CharField(max_length=255)
+    registrado_em = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(quantidade__gt=0), name="ck_nao_preenchida_quantidade_positiva"
+            ),
+            models.CheckConstraint(
+                condition=Q(especie__in=list(nomes.ESPECIES_DE_NAO_PREENCHIDA)),
+                name="ck_nao_preenchida_especie",
+            ),
+            # Na forma da do movimento, pela mesma razão: a espécie desconhecida é recusada só pela
+            # constraint da espécie.
+            models.CheckConstraint(
+                condition=(~Q(especie=nomes.NAO_PREENCHIDA_DESFAZIMENTO) & Q(desfaz__isnull=True))
+                | Q(especie=nomes.NAO_PREENCHIDA_DESFAZIMENTO, desfaz__isnull=False),
+                name="ck_nao_preenchida_desfazimento_cita",
+            ),
+            models.CheckConstraint(
+                condition=~Q(fundamento=""), name="ck_nao_preenchida_com_fundamento"
+            ),
+        ]
+        indexes = [
+            # A leitura que a apuração faz a cada emissão, como a do acréscimo.
+            models.Index(
+                fields=["edital", "perfil_id", "marco_id", "lista_id"],
+                name="ix_nao_preenchida_recorte",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.especie} {self.quantidade} no marco {self.marco_id}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("VagaNaoPreenchida é append-only")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("VagaNaoPreenchida é append-only")
